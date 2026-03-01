@@ -1,242 +1,240 @@
-# MFRM Estimation (Streamlit)
+# mfrmr
 
-A Streamlit application for estimating **Many-Facet Rasch Models (MFRM)** without FACETS. The app supports RSM/PCM, JMLE/MML, fit and bias diagnostics, rich visualizations, and APA-style reporting outputs.
+[![GitHub](https://img.shields.io/badge/GitHub-mfrmr-181717?logo=github)](https://github.com/Ryuya-dot-com/mfrmr)
+[![R-CMD-check](https://github.com/Ryuya-dot-com/mfrmr/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/Ryuya-dot-com/mfrmr/actions/workflows/R-CMD-check.yaml)
+[![pkgdown](https://github.com/Ryuya-dot-com/mfrmr/actions/workflows/pkgdown.yaml/badge.svg)](https://github.com/Ryuya-dot-com/mfrmr/actions/workflows/pkgdown.yaml)
+[![test-coverage](https://github.com/Ryuya-dot-com/mfrmr/actions/workflows/test-coverage.yaml/badge.svg)](https://github.com/Ryuya-dot-com/mfrmr/actions/workflows/test-coverage.yaml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## Table of Contents
-- Overview
-- Key Features
-- Requirements & Installation
-- Run the App
-- Data Requirements
-- Workflow (UI Flow)
-- Models and Estimation
-- Core Equations (Quick Reference)
-- Constraints & Anchoring
-- Anchor Guide & Templates
-- Reporting Options
-- Diagnostics (Quick Guide)
-- Tabs and Outputs
-- Downloaded Files
-- Performance Tips
-- Troubleshooting
-- Files
+Native R package for flexible many-facet Rasch model (MFRM) estimation without TAM/sirt backends.
 
-## Overview
-- 1 row = 1 observation (one rating instance).
-- Estimate measures for **Person** and multiple **facets** (e.g., Rater, Task, Criterion) on a common logit scale.
-- Export tables, diagnostic files, and APA-ready text.
+## Current scope
 
-## Key Features
-- MFRM estimation: **RSM / PCM**, **JMLE / MML**
-- Constraints: anchors, group anchors, non-centering, dummy facets, positive-orientation facets
-- Fit statistics: Infit/Outfit, ZSTD, WH exact option
-- Bias/interaction (FACETS-style re-estimation)
-- Category diagnostics, residual PCA (dimensionality), subset connectivity diagnostics
-- Visuals: Wright map, pathway map, category curves, step plots
-- Exports: CSV/TXT including Facets-style report and APA drafts
+- Flexible facet count (`facets = c(...)`)
+- Estimation methods: `MML` (default) and `JML` (`JMLE` internally)
+- Models: `RSM`, `PCM`
+- FACETS-style one-shot wrapper (`run_mfrm_facets()`, alias `mfrmRFacets()`)
+- Bias/interaction iterative estimation (FACETS-style)
+- Optional fixed-width text reports for console/log audits (FACETS-style)
+- APA-style narrative output helpers (`build_apa_outputs()`)
+- Visual warning and summary maps (`build_visual_summaries()`)
+- Residual PCA for unidimensionality checks (`overall` / `facet` / `both`)
+- TAM-style descriptive data snapshot (`describe_mfrm_data()`)
+- Anchor audit / normalization helper (`audit_mfrm_anchors()`)
+- Anchor export helper for linking workflows (`make_anchor_table()`)
 
-## Requirements & Installation
-- Python 3.x
-- Packages: `streamlit`, `numpy`, `pandas`, `scipy`, `plotly`
+## Installation
 
-### Recommended (virtual environment)
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install --upgrade pip
-python -m pip install streamlit numpy pandas scipy plotly
+```r
+# GitHub (development version)
+if (!requireNamespace("remotes", quietly = TRUE)) install.packages("remotes")
+remotes::install_github("Ryuya-dot-com/mfrmr")
+
+# CRAN (after release)
+# install.packages("mfrmr")
 ```
 
-> Note: On macOS/Homebrew Python, system-wide `pip install` is blocked (PEP 668). Use a venv as above.
+## Core workflow (recommended)
 
-## Run the App
-```bash
-cd MFRM_App/MFRM_R_Estimation_NoFACETS
-streamlit run streamlit_app.py
+1. Fit model: `fit_mfrm()`
+2. Diagnostics: `diagnose_mfrm()`
+3. Optional residual PCA: `analyze_residual_pca()`
+4. Optional interaction bias: `estimate_bias()`
+5. Reporting: `apa_table()`, `build_apa_outputs()`, `build_visual_summaries()`
+6. Optional FACETS-style parity audit: `facets_parity_report()`
+7. Reproducible inspection: `summary()` and `plot(..., draw = FALSE)`
+
+## Help-page navigation
+
+All exported help pages are now aligned with two practical sections:
+
+- `Interpreting output`
+- `Typical workflow`
+
+Recommended entry points:
+
+- `?mfrmr-package` (package overview)
+- `?mfrmr_workflow_methods` (method map for `summary()` / `plot()`)
+- `?fit_mfrm`, `?diagnose_mfrm`, `?run_mfrm_facets`
+- `?build_apa_outputs`, `?build_visual_summaries`, `?apa_table`
+
+## Quick start (stepwise)
+
+```r
+library(mfrmr)
+
+data("ej2021_study1", package = "mfrmr")
+df <- ej2021_study1
+desc <- describe_mfrm_data(
+  data = df,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score"
+)
+aud <- audit_mfrm_anchors(
+  data = df,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  min_common_anchors = 5,
+  min_obs_per_element = 30,
+  min_obs_per_category = 10
+)
+fit <- fit_mfrm(
+  data = df,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  method = "MML",   # default
+  model = "RSM",
+  anchor_policy = "warn"
+)
+fit_s <- summary(fit)
+fit_p <- plot(fit, draw = FALSE)
+
+diag <- diagnose_mfrm(fit, residual_pca = "both")
+diag_s <- summary(diag)
+pca <- analyze_residual_pca(diag, mode = "both")
+p_scree <- plot_residual_pca(pca, mode = "overall", plot_type = "scree", draw = FALSE)
+p_load <- plot_residual_pca(pca, mode = "facet", facet = "Rater", plot_type = "loadings", draw = FALSE)
+
+bias <- estimate_bias(fit, diag, facet_a = "Rater", facet_b = "Criterion")
+bias_s <- summary(bias)
+bias_p <- plot_bias_interaction(bias, draw = FALSE)
+
+fixed <- build_fixed_reports(bias)
+fixed_s <- summary(fixed)
+
+apa <- build_apa_outputs(
+  fit,
+  diag,
+  context = list(line_width = 92)
+)
+apa_s <- summary(apa)
+cat(apa$report_text)
+
+warn <- build_visual_summaries(fit, diag)
+warn_s <- summary(warn)
+warn_p <- plot(warn, type = "comparison", draw = FALSE)
+
+warn_strict <- build_visual_summaries(fit, diag, threshold_profile = "strict")
+profiles <- mfrm_threshold_profiles()
+profiles_s <- summary(profiles)
+
+tbl <- apa_table(fit, which = "summary", branch = "facets")
+tbl_s <- summary(tbl)
+tbl_p <- plot(tbl, draw = FALSE)
+
+parity <- facets_parity_report(fit, diagnostics = diag, branch = "facets")
+parity_s <- summary(parity)
+
+anchors_next_run <- make_anchor_table(fit)
 ```
 
-## Data Requirements
-### Required Columns
-- **Person**: unit being rated (e.g., student ID)
-- **Score**: ordered rating category (integer)
-- **Facet columns (2+)**: e.g., Rater, Task, Criterion
+`build_apa_outputs()` and `build_visual_summaries()` automatically include
+residual PCA narratives when diagnostics contain residual PCA results.
+Residual PCA summaries now show literature-based multi-threshold bands
+(eigenvalue and explained variance) with configurable profiles.
 
-### Optional Column
-- **Weight**: positive numeric weight/frequency; rows with weight ≤ 0 are dropped
+`report_text` (default) now includes convergence metrics, anchor/constraint
+summary, threshold ordering details, top misfit levels, and bias-screen counts.
 
-### Important Notes
-- **1 row = 1 observation**.
-- Column names must be unique.
-- Score must be numeric; it is cast to `int`.
-- Missing values are dropped.
+`build_apa_outputs()` returns an `mfrm_apa_outputs` object and supports
+`summary(apa)` for compact coverage checks.
 
-### Non-contiguous categories
-If your categories are non-contiguous (e.g., 1, 3, 5), enable **Keep original category values (K)**. Otherwise, the app remaps to contiguous integers.
+`mfrm_threshold_profiles()` returns an `mfrm_threshold_profiles` object and supports
+`summary(profiles)` for side-by-side threshold comparison.
 
-### Minimal Example (CSV)
-```csv
-Person,Rater,Task,Criterion,Score
-P01,R1,T1,C1,3
-P01,R2,T1,C1,4
-P02,R1,T2,C2,2
+## FACETS-style one-shot wrapper
+
+```r
+run <- run_mfrm_facets(
+  data = df,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  method = "JML",
+  model = "RSM"
+)
+run_s <- summary(run)
+run_fit_plot <- plot(run, type = "fit", draw = FALSE)
+run_qc_plot <- plot(run, type = "qc", draw = FALSE)
+
+# Alias
+run2 <- mfrmRFacets(
+  data = df,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score"
+)
 ```
 
-### With Weight
-```csv
-Person,Rater,Task,Criterion,Score,Weight
-P01,R1,T1,C1,3,2
-P01,R2,T1,C1,4,1
+## Public API map
+
+Model and diagnostics:
+
+- `fit_mfrm()`, `run_mfrm_facets()`, `mfrmRFacets()`
+- `diagnose_mfrm()`, `analyze_residual_pca()`
+- `estimate_bias()`, `bias_count_table()`
+
+Table/report outputs:
+
+- `specifications_report()`, `data_quality_report()`, `estimation_iteration_report()`
+- `subset_connectivity_report()`, `facet_statistics_report()`
+- `measurable_summary_table()`, `rating_scale_table()`
+- `category_structure_report()`, `category_curves_report()`
+- `unexpected_response_table()`, `unexpected_after_bias_table()`
+- `fair_average_table()`, `displacement_table()`
+- `interrater_agreement_table()`, `facets_chisq_table()`
+- `facets_output_file_bundle()`, `facets_parity_report()`
+- `bias_interaction_report()`, `build_fixed_reports()`
+- `apa_table()`, `build_apa_outputs()`, `build_visual_summaries()`
+
+Plots and QA dashboards:
+
+- `plot_unexpected()`, `plot_fair_average()`, `plot_displacement()`
+- `plot_interrater_agreement()`, `plot_facets_chisq()`
+- `plot_bias_interaction()`, `plot_residual_pca()`, `plot_qc_dashboard()`
+- `plot_bubble()` — Rasch-convention bubble chart (Measure x Fit x SE)
+- `plot(fit, show_ci = TRUE)` — confidence-interval whiskers on Wright map and facet plots
+
+Export and data utilities:
+
+- `export_mfrm()` — batch CSV export of all result tables
+- `as.data.frame(fit)` — tidy data.frame for one-liner `write.csv()` export
+- `describe_mfrm_data()`, `audit_mfrm_anchors()`, `make_anchor_table()`
+- `mfrm_threshold_profiles()`, `list_mfrmr_data()`, `load_mfrmr_data()`
+
+Legacy FACETS-style numbered names are internal and not exported.
+
+## FACETS reference mapping
+
+See:
+
+- `inst/references/FACETS_manual_mapping.md`
+- `inst/references/CODE_READING_GUIDE.md` (for developers/readers)
+
+## Packaged synthetic datasets
+
+Installed at `system.file("extdata", package = "mfrmr")`:
+
+- `eckes_jin_2021_study1_sim.csv`
+- `eckes_jin_2021_study2_sim.csv`
+- `eckes_jin_2021_combined_sim.csv`
+- `eckes_jin_2021_study1_itercal_sim.csv`
+- `eckes_jin_2021_study2_itercal_sim.csv`
+- `eckes_jin_2021_combined_itercal_sim.csv`
+
+The same datasets are also packaged in `data/` and can be loaded with:
+
+```r
+data("ej2021_study1", package = "mfrmr")
+# or
+df <- load_mfrmr_data("study1")
 ```
 
-### Data Input Modes
-- **Sample data**: synthetic demo
-- **Paste table**: tab-delimited recommended
-- **Upload file**: CSV/TSV/TXT
+## Citation
 
-## Workflow (UI Flow)
-1. Choose **Data source**
-2. Select **Person**, **Score**, and **Facet columns (2+)**
-3. Select **Model** (RSM/PCM) and **Estimation** (JMLE/MML)
-4. Set constraints / anchors if needed
-5. Click **Run estimation**
-6. Review results per tab and export files
-
-## Models and Estimation
-### Model
-- **RSM**: common thresholds across elements
-- **PCM**: thresholds vary by a specified **step facet**
-
-### Estimation
-- **JMLE**: traditional many-facet estimation
-- **MML**: EAP/SD for persons using Gaussian–Hermite quadrature
-
-### Behavior Notes
-- PCM requires a **Step facet**.
-- Step parameters are centered (sum to zero within a set).
-
-## Core Equations (Quick Reference)
-### Linear predictor (MFRM)
-For observation *i* (person *p* and facet levels *l_f*):
+```r
+citation("mfrmr")
 ```
-eta_i = theta_p + sum_f (s_f * beta_{f, l_f})
-```
-- `s_f = +1` for **Positive facets**, otherwise `-1` (default).
-
-### Category probability
-Let `k = 0..K-1` and `step_cum[0] = 0`, `step_cum[k] = sum_{j<=k} tau_j`.
-
-**RSM**
-```
-P(Y_i = k) = exp(k*eta_i - step_cum[k]) / sum_m exp(m*eta_i - step_cum[m])
-```
-
-**PCM** (step facet = c)
-```
-P(Y_i = k | c_i) = exp(k*eta_i - step_cum_c[k]) / sum_m exp(m*eta_i - step_cum_c[m])
-```
-
-### Weighted log-likelihood
-```
-log L = sum_i w_i * log P(Y_i = k_i)
-```
-
-### Separation / Strata / Reliability (facet summaries)
-Let `mv = Var(Estimate)` (ddof=1), `ev = mean(SE^2)`, `TV = max(mv - ev, 0)`.
-```
-Separation = sqrt(TV / ev)
-Strata     = (4*Separation + 1) / 3
-Reliability = TV / mv
-RMSE       = sqrt(ev)
-```
-
-## Constraints & Anchoring
-### Non-centering
-- Exactly one facet can be non-centered; others are centered to sum 0.
-
-### Dummy facet
-- All elements fixed to 0 (useful for adjustment or interaction-only facets).
-
-### Positive orientation
-- By default, higher facet values are *more severe* (decrease scores).
-- **Positive facets** reverse the sign (higher = increases scores).
-
-### Anchors
-- **Anchor**: fixes specific element values
-- **Group anchor**: fixes a group mean
-
-**Anchor CSV**
-```csv
-Facet,Level,Anchor
-Rater,R1,0.2
-Rater,R2,-0.1
-```
-
-**Group Anchor CSV**
-```csv
-Facet,Level,Group,GroupValue
-Rater,R1,GroupA,0.0
-Rater,R2,GroupA,0.0
-Rater,R3,GroupB,0.2
-```
-
-## Anchor Guide & Templates
-- User guide: `anchor_templates_and_guideline/anchor_user_guidelines.md`
-- Anchor example: `anchor_templates_and_guideline/anchor_table_example.csv`
-- Group anchor example: `anchor_templates_and_guideline/group_anchor_table_example.csv`
-- Anchor blank template: `anchor_templates_and_guideline/anchor_table_blank.csv`
-- Group anchor blank template: `anchor_templates_and_guideline/group_anchor_table_blank.csv`
-
-## Reporting Options
-- **Total scores reported**: include extreme elements (Totalscore=Yes)
-- **Omit unobserved elements**: hide elements with zero observations
-- **Xtreme correction**: fractional adjustment for extreme-only elements
-- **Umean / Uscale / Udecimals**: transform logits into user units
-
-## Diagnostics (Quick Guide)
-- **Infit/Outfit**: near 1.0 is expected; >1 suggests underfit; <1 suggests overfit
-- **ZSTD**: exact-fit z score; can inflate with large samples
-- **Reliability / Separation**: how well elements are distinguishable
-- **Bias/Interaction**: systematic effects between facet pairs
-- **Category diagnostics**: low counts or disordered thresholds signal scale issues
-
-## Tabs and Outputs
-- **Data**: preview, facet summary, category distribution
-- **Summary**: estimation summary, anchor summary
-- **Results**: quick overview + reliability snapshot
-- **Person / Facets**: measures & distributions
-- **Report**: Facets-style measurement report
-- **Fit / Reliability**: fit statistics, chi-square, agreement
-- **Bias / Interactions**: FACETS-style bias tables and pairwise reports
-- **Steps / Categories**: step estimates and category diagnostics
-- **Dimensionality**: residual PCA
-- **Subsets**: connectivity diagnostics
-- **Visuals**: APA notes, warnings, summaries
-- **Downloads**: export tables and text
-- **Help**: glossary, reporting guidance, examples
-
-## Downloaded Files
-- `mfrm_summary.csv`: log-likelihood, AIC/BIC, N, categories
-- `mfrm_measures.csv`: measures, SE, fit, bias, reliability
-- `mfrm_fit.csv`: facet-level fit statistics
-- `mfrm_steps.csv`: step/threshold estimates
-- `mfrm_scorefile.csv`: expected scores, residuals, category probabilities
-- `mfrm_residuals.csv`: residuals + standardized residuals
-- `mfrm_facets_report_all.csv`: Facets-style report
-- Bias/interaction CSVs and fixed-width TXT
-- APA method/results and table/figure notes (TXT)
-
-## Performance Tips
-- Bias estimation, PCM, MML, and WHEXACT can be slow.
-- Start with **RSM + JMLE** for large datasets.
-- Collapse sparse categories or simplify facets if convergence is unstable.
-
-## Troubleshooting
-- **Need 2+ facets**: Person/Score 제외 2つ以上必須
-- **Duplicate columns**: rename columns to be unique
-- **Score not numeric**: convert to integers before upload
-- **Only extreme scores**: consider Xtreme correction; interpret with caution
-- **No convergence**: simplify model, reduce facets, or add anchors
-
-## Files
-- App: `streamlit_app.py`
-- R version (reference): `app.R`

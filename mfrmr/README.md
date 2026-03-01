@@ -195,9 +195,13 @@ Plots and QA dashboards:
 - `plot_unexpected()`, `plot_fair_average()`, `plot_displacement()`
 - `plot_interrater_agreement()`, `plot_facets_chisq()`
 - `plot_bias_interaction()`, `plot_residual_pca()`, `plot_qc_dashboard()`
+- `plot_bubble()` — Rasch-convention bubble chart (Measure x Fit x SE)
+- `plot(fit, show_ci = TRUE)` — confidence-interval whiskers on Wright map and facet plots
 
-Data and anchor utilities:
+Export and data utilities:
 
+- `export_mfrm()` — batch CSV export of all result tables
+- `as.data.frame(fit)` — tidy data.frame for one-liner `write.csv()` export
 - `describe_mfrm_data()`, `audit_mfrm_anchors()`, `make_anchor_table()`
 - `mfrm_threshold_profiles()`, `list_mfrmr_data()`, `load_mfrmr_data()`
 
