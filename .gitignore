@@ -5,5 +5,14 @@
 *.Rcheck/
 *_*.tar.gz
 
-# testthat local plotting artifact
+# testthat local artifacts
 tests/testthat/Rplots.pdf
+tests/testthat/testthat-problems.rds
+tests/testthat/_problems/
+
+# analysis scratch
+analysis/
+
+# .Rhistory
+.Rhistory
+R/.Rhistory
