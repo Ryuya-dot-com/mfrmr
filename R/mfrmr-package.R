@@ -128,15 +128,22 @@
 #' mfrm_threshold_profiles()
 #' list_mfrmr_data()
 #'
-#' @import dplyr
-#' @import tidyr
-#' @import tibble
-#' @import purrr
-#' @import stringr
-#' @import psych
-#' @import utils
+#' @importFrom dplyr across all_of any_of arrange bind_cols bind_rows
+#'   case_when coalesce count desc distinct everything filter group_by
+#'   if_all inner_join lag last left_join mutate n n_distinct pull rename
+#'   row_number rowwise select slice slice_head slice_tail summarise
+#'   summarize transmute ungroup
+#' @importFrom tidyr drop_na expand_grid pivot_wider replace_na unite
+#' @importFrom tibble as_tibble column_to_rownames tibble
+#' @importFrom purrr map map_dbl map_dfr pmap_chr
+#' @importFrom stringr regex str_count str_detect str_extract str_pad
+#'   str_replace str_replace_all str_trunc
+#' @importFrom psych cor.smooth describe principal
+#' @importFrom utils combn data globalVariables head modifyList packageVersion
+#'   read.csv tail write.csv
+#' @importFrom lifecycle deprecate_soft
 #' @importFrom rlang .data
-#' @importFrom stats na.omit optim rnorm sd setNames uniroot
+#' @importFrom stats na.omit optim p.adjust pchisq pt rnorm sd setNames uniroot
 #'
 #' @name mfrmr-package
 "_PACKAGE"

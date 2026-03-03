@@ -12,3 +12,6 @@
 ^SECURITY\.md$
 ^cran-comments\.md$
 ^analysis$
+^\.claude$
+^doc$
+^Meta$

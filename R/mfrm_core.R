@@ -374,10 +374,17 @@ build_indices <- function(prep, step_facet = NULL) {
   } else {
     NULL
   }
+  # Pre-split observation indices by criterion for PCM (avoids repeated which())
+  criterion_splits <- if (!is.null(step_idx)) {
+    split(seq_len(nrow(df)), step_idx)
+  } else {
+    NULL
+  }
   list(
     person = as.integer(df$Person),
     facets = facets_idx,
     step_idx = step_idx,
+    criterion_splits = criterion_splits,
     score_k = as.integer(df$score_k),
     weight = suppressWarnings(as.numeric(df$Weight))
   )
@@ -481,21 +488,25 @@ loglik_rsm <- function(eta, score_k, step_cum, weight = NULL) {
 # Under the Partial Credit Model (Masters, 1982):
 #   P(X = k | eta, criterion c) = exp(k*eta - tau_{c,k}) / sum_j exp(j*eta - tau_{c,j})
 # step_cum_mat has one row per criterion level, columns = cumulative thresholds.
-loglik_pcm <- function(eta, score_k, step_cum_mat, criterion_idx, weight = NULL) {
+loglik_pcm <- function(eta, score_k, step_cum_mat, criterion_idx, weight = NULL,
+                       criterion_splits = NULL) {
   n <- length(eta)
   if (n == 0) return(0)
   k_cat <- ncol(step_cum_mat)
   total <- 0
-  for (c_idx in seq_len(nrow(step_cum_mat))) {
-    rows <- which(criterion_idx == c_idx)
+  splits <- criterion_splits %||% split(seq_len(n), criterion_idx)
+  for (ci in seq_along(splits)) {
+    rows <- splits[[ci]]
     if (length(rows) == 0) next
+    c_idx <- as.integer(names(splits)[ci])
     eta_c <- eta[rows]
     step_cum <- step_cum_mat[c_idx, ]
+    nr <- length(rows)
     eta_mat <- outer(eta_c, 0:(k_cat - 1))
-    log_num <- eta_mat - matrix(step_cum, nrow = length(rows), ncol = k_cat, byrow = TRUE)
-    row_max <- apply(log_num, 1, max)
+    log_num <- eta_mat - matrix(step_cum, nrow = nr, ncol = k_cat, byrow = TRUE)
+    row_max <- log_num[cbind(seq_len(nr), max.col(log_num))]
     log_denom <- row_max + log(rowSums(exp(log_num - row_max)))
-    log_num_obs <- log_num[cbind(seq_len(length(rows)), score_k[rows] + 1)]
+    log_num_obs <- log_num[cbind(seq_len(nr), score_k[rows] + 1)]
     diff <- log_num_obs - log_denom
     if (is.null(weight)) {
       total <- total + sum(diff)
@@ -522,14 +533,17 @@ category_prob_rsm <- function(eta, step_cum) {
 
 # Category response probabilities under PCM (criterion-specific thresholds).
 # Returns an n x K matrix; each row sums to 1.
-category_prob_pcm <- function(eta, step_cum_mat, criterion_idx) {
+category_prob_pcm <- function(eta, step_cum_mat, criterion_idx,
+                              criterion_splits = NULL) {
   n <- length(eta)
   if (n == 0) return(matrix(0, nrow = 0, ncol = ncol(step_cum_mat)))
   k_cat <- ncol(step_cum_mat)
   probs <- matrix(0, nrow = n, ncol = k_cat)
-  for (c_idx in seq_len(nrow(step_cum_mat))) {
-    rows <- which(criterion_idx == c_idx)
+  splits <- criterion_splits %||% split(seq_len(n), criterion_idx)
+  for (ci in seq_along(splits)) {
+    rows <- splits[[ci]]
     if (length(rows) == 0) next
+    c_idx <- as.integer(names(splits)[ci])
     step_cum <- step_cum_mat[c_idx, ]
     eta_c <- eta[rows]
     eta_mat <- outer(eta_c, 0:(k_cat - 1))
@@ -609,7 +623,8 @@ mfrm_loglik_jmle <- function(par, idx, config, sizes) {
     ll <- loglik_rsm(eta, idx$score_k, step_cum, weight = idx$weight)
   } else {
     step_cum_mat <- t(apply(params$steps_mat, 1, function(x) c(0, cumsum(x))))
-    ll <- loglik_pcm(eta, idx$score_k, step_cum_mat, idx$step_idx, weight = idx$weight)
+    ll <- loglik_pcm(eta, idx$score_k, step_cum_mat, idx$step_idx, weight = idx$weight,
+                     criterion_splits = idx$criterion_splits)
   }
   -ll
 }
@@ -625,32 +640,91 @@ mfrm_loglik_mml <- function(par, idx, config, sizes, quad) {
   if (n == 0) return(0)
 
   base_eta <- compute_base_eta(idx, params, config)
-  rows_by_person <- split(seq_len(n), idx$person)
+  person_int <- idx$person
   log_w <- log(quad$weights)
+  n_nodes <- length(quad$nodes)
+  score_k <- idx$score_k
 
   if (config$model == "RSM") {
     step_cum <- c(0, cumsum(params$steps))
-    ll_person <- vapply(rows_by_person, function(rows) {
-      base <- base_eta[rows]
-      score_k <- idx$score_k[rows]
-      w <- if (!is.null(idx$weight)) idx$weight[rows] else NULL
-      ll_nodes <- vapply(quad$nodes, function(theta) {
-        loglik_rsm(theta + base, score_k, step_cum, weight = w)
-      }, numeric(1))
-      logsumexp(log_w + ll_nodes)
-    }, numeric(1))
+    k_cat <- length(step_cum)
+    step_cum_row <- matrix(step_cum, nrow = n, ncol = k_cat, byrow = TRUE)
+    obs_col <- score_k + 1L
+    obs_idx <- cbind(seq_len(n), obs_col)
+
+    # Vectorized: Q passes over all observations, then per-person aggregation
+    log_prob_mat <- matrix(0, n, n_nodes)
+    for (q in seq_len(n_nodes)) {
+      eta_q <- base_eta + quad$nodes[q]
+      eta_mat <- outer(eta_q, 0:(k_cat - 1))
+      log_num <- eta_mat - step_cum_row
+      row_max <- log_num[cbind(seq_len(n), max.col(log_num))]
+      log_denom <- row_max + log(rowSums(exp(log_num - row_max)))
+      lp <- log_num[obs_idx] - log_denom
+      if (!is.null(idx$weight)) lp <- lp * idx$weight
+      log_prob_mat[, q] <- lp
+    }
+
+    # Per-person sum via rowsum (highly optimized)
+    ll_by_person <- rowsum(log_prob_mat, person_int, reorder = FALSE)
+
+    # Vectorized logsumexp across quadrature nodes
+    log_w_mat <- matrix(log_w, nrow = nrow(ll_by_person), ncol = n_nodes,
+                        byrow = TRUE)
+    combined <- log_w_mat + ll_by_person
+    row_max <- combined[cbind(seq_len(nrow(combined)),
+                              max.col(combined))]
+    ll_person <- row_max + log(rowSums(exp(combined - row_max)))
+
   } else {
     step_cum_mat <- t(apply(params$steps_mat, 1, function(x) c(0, cumsum(x))))
-    ll_person <- vapply(rows_by_person, function(rows) {
-      base <- base_eta[rows]
-      score_k <- idx$score_k[rows]
-      crit <- idx$step_idx[rows]
-      w <- if (!is.null(idx$weight)) idx$weight[rows] else NULL
-      ll_nodes <- vapply(quad$nodes, function(theta) {
-        loglik_pcm(theta + base, score_k, step_cum_mat, crit, weight = w)
-      }, numeric(1))
-      logsumexp(log_w + ll_nodes)
-    }, numeric(1))
+    k_cat <- ncol(step_cum_mat)
+    crit <- idx$step_idx
+    obs_col <- score_k + 1L
+
+    # Vectorized: Q passes, criterion-aware
+    log_prob_mat <- matrix(0, n, n_nodes)
+    for (q in seq_len(n_nodes)) {
+      eta_q <- base_eta + quad$nodes[q]
+      lp_q <- numeric(n)
+      if (!is.null(idx$criterion_splits)) {
+        for (ci in seq_along(idx$criterion_splits)) {
+          rows <- idx$criterion_splits[[ci]]
+          if (length(rows) == 0) next
+          nr <- length(rows)
+          sc <- step_cum_mat[ci, ]
+          eta_c <- eta_q[rows]
+          eta_mat <- outer(eta_c, 0:(k_cat - 1))
+          log_num <- eta_mat - matrix(sc, nrow = nr, ncol = k_cat, byrow = TRUE)
+          rm <- log_num[cbind(seq_len(nr), max.col(log_num))]
+          ld <- rm + log(rowSums(exp(log_num - rm)))
+          lp_q[rows] <- log_num[cbind(seq_len(nr), obs_col[rows])] - ld
+        }
+      } else {
+        for (c_idx in seq_len(nrow(step_cum_mat))) {
+          rows <- which(crit == c_idx)
+          if (length(rows) == 0) next
+          nr <- length(rows)
+          sc <- step_cum_mat[c_idx, ]
+          eta_c <- eta_q[rows]
+          eta_mat <- outer(eta_c, 0:(k_cat - 1))
+          log_num <- eta_mat - matrix(sc, nrow = nr, ncol = k_cat, byrow = TRUE)
+          rm <- log_num[cbind(seq_len(nr), max.col(log_num))]
+          ld <- rm + log(rowSums(exp(log_num - rm)))
+          lp_q[rows] <- log_num[cbind(seq_len(nr), obs_col[rows])] - ld
+        }
+      }
+      if (!is.null(idx$weight)) lp_q <- lp_q * idx$weight
+      log_prob_mat[, q] <- lp_q
+    }
+
+    ll_by_person <- rowsum(log_prob_mat, person_int, reorder = FALSE)
+    log_w_mat <- matrix(log_w, nrow = nrow(ll_by_person), ncol = n_nodes,
+                        byrow = TRUE)
+    combined <- log_w_mat + ll_by_person
+    row_max <- combined[cbind(seq_len(nrow(combined)),
+                              max.col(combined))]
+    ll_person <- row_max + log(rowSums(exp(combined - row_max)))
   }
 
   -sum(ll_person)
@@ -666,46 +740,90 @@ compute_person_eap <- function(idx, config, params, quad) {
     return(tibble(Person = character(0), Estimate = numeric(0), SD = numeric(0)))
   }
   base_eta <- compute_base_eta(idx, params, config)
-  rows_by_person <- split(seq_len(n), idx$person)
+  person_int <- idx$person
   log_w <- log(quad$weights)
+  n_nodes <- length(quad$nodes)
+  score_k <- idx$score_k
 
+  # Build per-obs log-prob matrix (n x n_nodes), same as mfrm_loglik_mml
   if (config$model == "RSM") {
     step_cum <- c(0, cumsum(params$steps))
-    estimates <- lapply(rows_by_person, function(rows) {
-      base <- base_eta[rows]
-      score_k <- idx$score_k[rows]
-      w <- if (!is.null(idx$weight)) idx$weight[rows] else NULL
-      ll_nodes <- vapply(quad$nodes, function(theta) {
-        loglik_rsm(theta + base, score_k, step_cum, weight = w)
-      }, numeric(1))
-      log_post <- log_w + ll_nodes
-      log_post <- log_post - logsumexp(log_post)
-      post_w <- exp(log_post)
-      eap <- sum(quad$nodes * post_w)
-      sd <- sqrt(sum((quad$nodes - eap)^2 * post_w))
-      c(eap = eap, sd = sd)
-    })
+    k_cat <- length(step_cum)
+    step_cum_row <- matrix(step_cum, nrow = n, ncol = k_cat, byrow = TRUE)
+    obs_idx <- cbind(seq_len(n), score_k + 1L)
+
+    log_prob_mat <- matrix(0, n, n_nodes)
+    for (q in seq_len(n_nodes)) {
+      eta_q <- base_eta + quad$nodes[q]
+      eta_mat <- outer(eta_q, 0:(k_cat - 1))
+      log_num <- eta_mat - step_cum_row
+      row_max <- log_num[cbind(seq_len(n), max.col(log_num))]
+      log_denom <- row_max + log(rowSums(exp(log_num - row_max)))
+      lp <- log_num[obs_idx] - log_denom
+      if (!is.null(idx$weight)) lp <- lp * idx$weight
+      log_prob_mat[, q] <- lp
+    }
   } else {
     step_cum_mat <- t(apply(params$steps_mat, 1, function(x) c(0, cumsum(x))))
-    estimates <- lapply(rows_by_person, function(rows) {
-      base <- base_eta[rows]
-      score_k <- idx$score_k[rows]
-      crit <- idx$step_idx[rows]
-      w <- if (!is.null(idx$weight)) idx$weight[rows] else NULL
-      ll_nodes <- vapply(quad$nodes, function(theta) {
-        loglik_pcm(theta + base, score_k, step_cum_mat, crit, weight = w)
-      }, numeric(1))
-      log_post <- log_w + ll_nodes
-      log_post <- log_post - logsumexp(log_post)
-      post_w <- exp(log_post)
-      eap <- sum(quad$nodes * post_w)
-      sd <- sqrt(sum((quad$nodes - eap)^2 * post_w))
-      c(eap = eap, sd = sd)
-    })
+    k_cat <- ncol(step_cum_mat)
+    crit <- idx$step_idx
+    obs_col <- score_k + 1L
+
+    log_prob_mat <- matrix(0, n, n_nodes)
+    for (q in seq_len(n_nodes)) {
+      eta_q <- base_eta + quad$nodes[q]
+      lp_q <- numeric(n)
+      if (!is.null(idx$criterion_splits)) {
+        for (ci in seq_along(idx$criterion_splits)) {
+          rows <- idx$criterion_splits[[ci]]
+          if (length(rows) == 0) next
+          nr <- length(rows)
+          sc <- step_cum_mat[ci, ]
+          eta_c <- eta_q[rows]
+          eta_mat <- outer(eta_c, 0:(k_cat - 1))
+          log_num <- eta_mat - matrix(sc, nrow = nr, ncol = k_cat, byrow = TRUE)
+          rm <- log_num[cbind(seq_len(nr), max.col(log_num))]
+          ld <- rm + log(rowSums(exp(log_num - rm)))
+          lp_q[rows] <- log_num[cbind(seq_len(nr), obs_col[rows])] - ld
+        }
+      } else {
+        for (c_idx in seq_len(nrow(step_cum_mat))) {
+          rows <- which(crit == c_idx)
+          if (length(rows) == 0) next
+          nr <- length(rows)
+          sc <- step_cum_mat[c_idx, ]
+          eta_c <- eta_q[rows]
+          eta_mat <- outer(eta_c, 0:(k_cat - 1))
+          log_num <- eta_mat - matrix(sc, nrow = nr, ncol = k_cat, byrow = TRUE)
+          rm <- log_num[cbind(seq_len(nr), max.col(log_num))]
+          ld <- rm + log(rowSums(exp(log_num - rm)))
+          lp_q[rows] <- log_num[cbind(seq_len(nr), obs_col[rows])] - ld
+        }
+      }
+      if (!is.null(idx$weight)) lp_q <- lp_q * idx$weight
+      log_prob_mat[, q] <- lp_q
+    }
   }
 
-  est_mat <- do.call(rbind, estimates)
-  tibble(Estimate = est_mat[, "eap"], SD = est_mat[, "sd"])
+  # Per-person sum of log-probs via rowsum
+  ll_by_person <- rowsum(log_prob_mat, person_int, reorder = FALSE)
+  n_persons <- nrow(ll_by_person)
+
+  # Posterior weights: log_w + ll_nodes, normalized per person
+  log_w_mat <- matrix(log_w, nrow = n_persons, ncol = n_nodes, byrow = TRUE)
+  log_post <- log_w_mat + ll_by_person
+  # Normalize each row
+  row_max <- log_post[cbind(seq_len(n_persons), max.col(log_post))]
+  log_norm <- row_max + log(rowSums(exp(log_post - row_max)))
+  log_post <- log_post - log_norm
+  post_w <- exp(log_post)
+
+  # EAP and SD
+  nodes_mat <- matrix(quad$nodes, nrow = n_persons, ncol = n_nodes, byrow = TRUE)
+  eap <- rowSums(nodes_mat * post_w)
+  sd_eap <- sqrt(rowSums((nodes_mat - eap)^2 * post_w))
+
+  tibble(Estimate = eap, SD = sd_eap)
 }
 
 prepare_constraint_specs <- function(prep,
@@ -1567,7 +1685,8 @@ expected_score_table <- function(res) {
     probs <- category_prob_rsm(eta, step_cum)
   } else {
     step_cum_mat <- t(apply(params$steps_mat, 1, function(x) c(0, cumsum(x))))
-    probs <- category_prob_pcm(eta, step_cum_mat, idx$step_idx)
+    probs <- category_prob_pcm(eta, step_cum_mat, idx$step_idx,
+                                criterion_splits = idx$criterion_splits)
   }
   k_vals <- 0:(ncol(probs) - 1)
   expected_k <- as.vector(probs %*% k_vals)
@@ -1602,7 +1721,8 @@ compute_obs_table <- function(res) {
     probs <- category_prob_rsm(eta, step_cum)
   } else {
     step_cum_mat <- t(apply(params$steps_mat, 1, function(x) c(0, cumsum(x))))
-    probs <- category_prob_pcm(eta, step_cum_mat, idx$step_idx)
+    probs <- category_prob_pcm(eta, step_cum_mat, idx$step_idx,
+                                criterion_splits = idx$criterion_splits)
   }
 
   k_vals <- 0:(ncol(probs) - 1)
@@ -1766,7 +1886,8 @@ compute_prob_matrix_with_bias <- function(res, bias_results = NULL) {
     category_prob_rsm(eta, step_cum)
   } else {
     step_cum_mat <- t(apply(params$steps_mat, 1, function(x) c(0, cumsum(x))))
-    category_prob_pcm(eta, step_cum_mat, idx$step_idx)
+    category_prob_pcm(eta, step_cum_mat, idx$step_idx,
+                                criterion_splits = idx$criterion_splits)
   }
 }
 
@@ -1801,7 +1922,8 @@ compute_obs_table_with_bias <- function(res, bias_results = NULL) {
     probs <- category_prob_rsm(eta, step_cum)
   } else {
     step_cum_mat <- t(apply(params$steps_mat, 1, function(x) c(0, cumsum(x))))
-    probs <- category_prob_pcm(eta, step_cum_mat, idx$step_idx)
+    probs <- category_prob_pcm(eta, step_cum_mat, idx$step_idx,
+                                criterion_splits = idx$criterion_splits)
   }
 
   k_vals <- 0:(ncol(probs) - 1)
@@ -1973,7 +2095,8 @@ compute_prob_matrix <- function(res) {
     probs <- category_prob_rsm(eta, step_cum)
   } else {
     step_cum_mat <- t(apply(params$steps_mat, 1, function(x) c(0, cumsum(x))))
-    probs <- category_prob_pcm(eta, step_cum_mat, idx$step_idx)
+    probs <- category_prob_pcm(eta, step_cum_mat, idx$step_idx,
+                                criterion_splits = idx$criterion_splits)
   }
   probs
 }
@@ -2990,7 +3113,8 @@ calc_expected_category_counts <- function(res) {
     probs <- category_prob_rsm(eta, step_cum)
   } else {
     step_cum_mat <- t(apply(params$steps_mat, 1, function(x) c(0, cumsum(x))))
-    probs <- category_prob_pcm(eta, step_cum_mat, idx$step_idx)
+    probs <- category_prob_pcm(eta, step_cum_mat, idx$step_idx,
+                                criterion_splits = idx$criterion_splits)
   }
   if (length(probs) == 0) return(tibble())
   w <- idx$weight

@@ -1,6 +1,9 @@
 # macOS
 .DS_Store
 
+# Claude Code
+.claude/
+
 # R build/check artifacts
 *.Rcheck/
 *_*.tar.gz
@@ -16,3 +19,5 @@ analysis/
 # .Rhistory
 .Rhistory
 R/.Rhistory
+/doc/
+/Meta/

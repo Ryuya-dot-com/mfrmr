@@ -1,8 +1,20 @@
-%\VignetteIndexEntry{mfrmr Workflow}
-%\VignetteEngine{knitr::knitr}
-%\VignetteEncoding{UTF-8}
+---
+title: "mfrmr Workflow"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{mfrmr Workflow}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
 
-# mfrmr Workflow
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 5
+)
+```
 
 This vignette outlines a reproducible workflow for:
 
@@ -13,7 +25,7 @@ This vignette outlines a reproducible workflow for:
 
 ## Load Data
 
-```{r}
+```{r load-data}
 library(mfrmr)
 
 list_mfrmr_data()
@@ -27,7 +39,9 @@ identical(names(ej2021_study1), names(study1_alt))
 
 ## Minimal Runnable Example
 
-```{r}
+We start with a small toy dataset that fits quickly:
+
+```{r toy-setup}
 toy <- expand.grid(
   Person = paste0("P", 1:4),
   Rater = paste0("R", 1:2),
@@ -56,9 +70,9 @@ summary(diag_toy)$overview
 names(plot(fit_toy, draw = FALSE))
 ```
 
-## Runnable Diagnostics and Reporting
+## Diagnostics and Reporting
 
-```{r}
+```{r diagnostics-reporting}
 t4_toy <- unexpected_response_table(
   fit_toy,
   diagnostics = diag_toy,
@@ -68,7 +82,9 @@ t4_toy <- unexpected_response_table(
 )
 t12_toy <- fair_average_table(fit_toy, diagnostics = diag_toy)
 t13_toy <- bias_interaction_report(
-  estimate_bias(fit_toy, diag_toy, facet_a = "Rater", facet_b = "Criterion", max_iter = 2),
+  estimate_bias(fit_toy, diag_toy,
+                facet_a = "Rater", facet_b = "Criterion",
+                max_iter = 2),
   top_n = 10
 )
 
@@ -81,9 +97,11 @@ names(plot(t12_toy, draw = FALSE))
 names(plot(t13_toy, draw = FALSE))
 ```
 
-## Fit and Diagnose
+## Fit and Diagnose with Full Data
 
-```{r, eval=FALSE}
+For a realistic analysis, we use the packaged Study 1 dataset:
+
+```{r fit-full}
 fit <- fit_mfrm(
   data = ej2021_study1,
   person = "Person",
@@ -98,14 +116,19 @@ diag <- diagnose_mfrm(
   residual_pca = "both",
   pca_max_factors = 6
 )
+
+summary(fit)
+summary(diag)
 ```
 
 ## Residual PCA and Reporting
 
-```{r, eval=FALSE}
+```{r residual-pca}
 pca <- analyze_residual_pca(diag, mode = "both")
 plot_residual_pca(pca, mode = "overall", plot_type = "scree")
+```
 
+```{r bias-apa}
 bias <- estimate_bias(fit, diag, facet_a = "Rater", facet_b = "Criterion")
 fixed <- build_fixed_reports(bias)
 apa <- build_apa_outputs(fit, diag, bias_results = bias)
@@ -117,7 +140,7 @@ vis$warning_map$residual_pca_overall
 
 ## Human-Readable Reporting API
 
-```{r, eval=FALSE}
+```{r reporting-api}
 spec <- specifications_report(fit, title = "Study run")
 data_qc <- data_quality_report(
   fit,
@@ -127,7 +150,7 @@ data_qc <- data_quality_report(
   score = "Score"
 )
 iter <- estimation_iteration_report(fit, max_iter = 8)
-subset <- subset_connectivity_report(fit, diagnostics = diag)
+subset_rep <- subset_connectivity_report(fit, diagnostics = diag)
 facet_stats <- facet_statistics_report(fit, diagnostics = diag)
 cat_structure <- category_structure_report(fit, diagnostics = diag)
 cat_curves <- category_curves_report(fit, theta_points = 101)

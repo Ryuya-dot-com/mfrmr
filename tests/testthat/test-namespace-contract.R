@@ -51,7 +51,21 @@ test_that("NAMESPACE roxygen contract keeps expected exports and methods", {
     "list_mfrmr_data",
     "load_mfrmr_data",
     "export_mfrm",
-    "plot_bubble"
+    "plot_bubble",
+    "compare_mfrm",
+    "analyze_dif",
+    "compute_information",
+    "plot_information",
+    "plot_wright_unified",
+    "dif_interaction_table",
+    "plot_dif_heatmap",
+    "dif_report",
+    "anchor_to_baseline",
+    "detect_anchor_drift",
+    "build_equating_chain",
+    "plot_anchor_drift",
+    "run_qc_pipeline",
+    "plot_qc_pipeline"
   )
   expect_setequal(exports, expected_exports)
 
@@ -90,7 +104,31 @@ test_that("NAMESPACE roxygen contract keeps expected exports and methods", {
     "S3method(summary,mfrm_bias)",
     "S3method(summary,mfrm_fit)",
     "S3method(summary,mfrm_threshold_profiles)",
-    "S3method(as.data.frame,mfrm_fit)"
+    "S3method(as.data.frame,mfrm_fit)",
+    "S3method(print,mfrm_comparison)",
+    "S3method(print,summary.mfrm_comparison)",
+    "S3method(summary,mfrm_comparison)",
+    "S3method(print,mfrm_dif)",
+    "S3method(print,summary.mfrm_dif)",
+    "S3method(summary,mfrm_dif)",
+    "S3method(print,mfrm_dif_interaction)",
+    "S3method(print,summary.mfrm_dif_interaction)",
+    "S3method(summary,mfrm_dif_interaction)",
+    "S3method(print,mfrm_dif_report)",
+    "S3method(print,summary.mfrm_dif_report)",
+    "S3method(summary,mfrm_dif_report)",
+    "S3method(print,mfrm_anchored_fit)",
+    "S3method(print,summary.mfrm_anchored_fit)",
+    "S3method(summary,mfrm_anchored_fit)",
+    "S3method(print,mfrm_anchor_drift)",
+    "S3method(print,summary.mfrm_anchor_drift)",
+    "S3method(summary,mfrm_anchor_drift)",
+    "S3method(print,mfrm_equating_chain)",
+    "S3method(print,summary.mfrm_equating_chain)",
+    "S3method(summary,mfrm_equating_chain)",
+    "S3method(print,mfrm_qc_pipeline)",
+    "S3method(print,summary.mfrm_qc_pipeline)",
+    "S3method(summary,mfrm_qc_pipeline)"
   )
   expect_setequal(s3, expected_s3)
 })

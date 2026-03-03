@@ -8,7 +8,7 @@
 
 Native R package for flexible many-facet Rasch model (MFRM) estimation without TAM/sirt backends.
 
-## Current scope
+## Features
 
 - Flexible facet count (`facets = c(...)`)
 - Estimation methods: `MML` (default) and `JML` (`JMLE` internally)
@@ -19,9 +19,14 @@ Native R package for flexible many-facet Rasch model (MFRM) estimation without T
 - APA-style narrative output helpers (`build_apa_outputs()`)
 - Visual warning and summary maps (`build_visual_summaries()`)
 - Residual PCA for unidimensionality checks (`overall` / `facet` / `both`)
-- TAM-style descriptive data snapshot (`describe_mfrm_data()`)
-- Anchor audit / normalization helper (`audit_mfrm_anchors()`)
-- Anchor export helper for linking workflows (`make_anchor_table()`)
+- DIF analysis with ETS classification (`analyze_dif()`, `dif_report()`)
+- Model comparison with information criteria (`compare_mfrm()`)
+- Test information functions (`compute_information()`, `plot_information()`)
+- Unified Wright map across facets (`plot_wright_unified()`)
+- Anchoring and equating across administrations (`anchor_to_baseline()`, `detect_anchor_drift()`, `build_equating_chain()`)
+- Automated 10-check QC pipeline (`run_qc_pipeline()`, `plot_qc_pipeline()`)
+- Data descriptives and anchor audit helpers (`describe_mfrm_data()`, `audit_mfrm_anchors()`)
+- Anchor export for linking workflows (`make_anchor_table()`)
 
 ## Installation
 
@@ -34,19 +39,34 @@ remotes::install_github("Ryuya-dot-com/mfrmr")
 # install.packages("mfrmr")
 ```
 
-## Core workflow (recommended)
+## Core workflow
+
+```
+fit_mfrm() --> diagnose_mfrm() --> reporting / advanced analysis
+                    |
+                    +--> analyze_residual_pca()
+                    +--> estimate_bias()
+                    +--> analyze_dif()
+                    +--> compare_mfrm()
+                    +--> run_qc_pipeline()
+                    +--> anchor_to_baseline() / detect_anchor_drift()
+```
 
 1. Fit model: `fit_mfrm()`
 2. Diagnostics: `diagnose_mfrm()`
 3. Optional residual PCA: `analyze_residual_pca()`
 4. Optional interaction bias: `estimate_bias()`
-5. Reporting: `apa_table()`, `build_apa_outputs()`, `build_visual_summaries()`
-6. Optional FACETS-style parity audit: `facets_parity_report()`
-7. Reproducible inspection: `summary()` and `plot(..., draw = FALSE)`
+5. DIF analysis: `analyze_dif()`, `dif_report()`
+6. Model comparison: `compare_mfrm()`
+7. Reporting: `apa_table()`, `build_apa_outputs()`, `build_visual_summaries()`
+8. Quality control: `run_qc_pipeline()`
+9. Anchoring & equating: `anchor_to_baseline()`, `detect_anchor_drift()`, `build_equating_chain()`
+10. FACETS-style parity audit: `facets_parity_report()`
+11. Reproducible inspection: `summary()` and `plot(..., draw = FALSE)`
 
 ## Help-page navigation
 
-All exported help pages are now aligned with two practical sections:
+All exported help pages include practical sections:
 
 - `Interpreting output`
 - `Typical workflow`
@@ -54,96 +74,116 @@ All exported help pages are now aligned with two practical sections:
 Recommended entry points:
 
 - `?mfrmr-package` (package overview)
-- `?mfrmr_workflow_methods` (method map for `summary()` / `plot()`)
 - `?fit_mfrm`, `?diagnose_mfrm`, `?run_mfrm_facets`
+- `?analyze_dif`, `?compare_mfrm`, `?run_qc_pipeline`
+- `?anchor_to_baseline`, `?detect_anchor_drift`, `?build_equating_chain`
 - `?build_apa_outputs`, `?build_visual_summaries`, `?apa_table`
 
-## Quick start (stepwise)
+## Quick start
 
 ```r
 library(mfrmr)
 
-data("ej2021_study1", package = "mfrmr")
-df <- ej2021_study1
-desc <- describe_mfrm_data(
-  data = df,
-  person = "Person",
-  facets = c("Rater", "Criterion"),
-  score = "Score"
-)
-aud <- audit_mfrm_anchors(
-  data = df,
-  person = "Person",
-  facets = c("Rater", "Criterion"),
-  score = "Score",
-  min_common_anchors = 5,
-  min_obs_per_element = 30,
-  min_obs_per_category = 10
-)
+df <- load_mfrmr_data("study1")
+
+# Fit
 fit <- fit_mfrm(
   data = df,
   person = "Person",
   facets = c("Rater", "Criterion"),
   score = "Score",
-  method = "MML",   # default
-  model = "RSM",
-  anchor_policy = "warn"
+  method = "MML",
+  model = "RSM"
 )
-fit_s <- summary(fit)
-fit_p <- plot(fit, draw = FALSE)
+summary(fit)
 
+# Diagnostics
 diag <- diagnose_mfrm(fit, residual_pca = "both")
-diag_s <- summary(diag)
-pca <- analyze_residual_pca(diag, mode = "both")
-p_scree <- plot_residual_pca(pca, mode = "overall", plot_type = "scree", draw = FALSE)
-p_load <- plot_residual_pca(pca, mode = "facet", facet = "Rater", plot_type = "loadings", draw = FALSE)
+summary(diag)
 
+# Bias estimation
 bias <- estimate_bias(fit, diag, facet_a = "Rater", facet_b = "Criterion")
-bias_s <- summary(bias)
-bias_p <- plot_bias_interaction(bias, draw = FALSE)
+summary(bias)
 
-fixed <- build_fixed_reports(bias)
-fixed_s <- summary(fixed)
-
-apa <- build_apa_outputs(
-  fit,
-  diag,
-  context = list(line_width = 92)
-)
-apa_s <- summary(apa)
+# APA outputs
+apa <- build_apa_outputs(fit, diag)
 cat(apa$report_text)
 
-warn <- build_visual_summaries(fit, diag)
-warn_s <- summary(warn)
-warn_p <- plot(warn, type = "comparison", draw = FALSE)
-
-warn_strict <- build_visual_summaries(fit, diag, threshold_profile = "strict")
-profiles <- mfrm_threshold_profiles()
-profiles_s <- summary(profiles)
-
-tbl <- apa_table(fit, which = "summary", branch = "facets")
-tbl_s <- summary(tbl)
-tbl_p <- plot(tbl, draw = FALSE)
-
-parity <- facets_parity_report(fit, diagnostics = diag, branch = "facets")
-parity_s <- summary(parity)
-
-anchors_next_run <- make_anchor_table(fit)
+# QC pipeline
+qc <- run_qc_pipeline(fit)
+summary(qc)
 ```
 
-`build_apa_outputs()` and `build_visual_summaries()` automatically include
-residual PCA narratives when diagnostics contain residual PCA results.
-Residual PCA summaries now show literature-based multi-threshold bands
-(eigenvalue and explained variance) with configurable profiles.
+## DIF analysis
 
-`report_text` (default) now includes convergence metrics, anchor/constraint
-summary, threshold ordering details, top misfit levels, and bias-screen counts.
+```r
+# Add a grouping variable
+df$Group <- ifelse(as.integer(factor(df$Person)) %% 2 == 0, "A", "B")
+dif <- analyze_dif(fit, diag, facet = "Rater", group = "Group", data = df)
+dif$dif_table
+dif$summary
 
-`build_apa_outputs()` returns an `mfrm_apa_outputs` object and supports
-`summary(apa)` for compact coverage checks.
+# DIF interaction table for cell-level detail
+dit <- dif_interaction_table(fit, diag, facet = "Rater", group = "Group", data = df)
 
-`mfrm_threshold_profiles()` returns an `mfrm_threshold_profiles` object and supports
-`summary(profiles)` for side-by-side threshold comparison.
+# Visual and narrative report
+plot_dif_heatmap(dif)
+dr <- dif_report(fit, diag, facet = "Rater", group = "Group", data = df)
+```
+
+## Model comparison
+
+```r
+fit_rsm <- fit_mfrm(df, "Person", c("Rater", "Criterion"), "Score",
+                     method = "MML", model = "RSM")
+fit_pcm <- fit_mfrm(df, "Person", c("Rater", "Criterion"), "Score",
+                     method = "MML", model = "PCM")
+cmp <- compare_mfrm(RSM = fit_rsm, PCM = fit_pcm)
+cmp$table
+
+# Test information functions
+info <- compute_information(fit)
+plot_information(info)
+```
+
+## Anchoring and equating
+
+```r
+d1 <- load_mfrmr_data("study1")
+d2 <- load_mfrmr_data("study2")
+fit1 <- fit_mfrm(d1, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
+fit2 <- fit_mfrm(d2, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
+
+# Anchored calibration
+res <- anchor_to_baseline(d2, fit1, "Person", c("Rater", "Criterion"), "Score")
+summary(res)
+res$drift
+
+# Drift detection
+drift <- detect_anchor_drift(list(Wave1 = fit1, Wave2 = fit2))
+summary(drift)
+plot_anchor_drift(drift, type = "drift")
+
+# Equating chain
+chain <- build_equating_chain(list(Form1 = fit1, Form2 = fit2))
+summary(chain)
+plot_anchor_drift(chain, type = "chain")
+```
+
+## QC pipeline
+
+```r
+qc <- run_qc_pipeline(fit, threshold_profile = "standard")
+qc$overall      # "Pass", "Warn", or "Fail"
+qc$verdicts     # per-check verdicts
+qc$recommendations
+
+plot_qc_pipeline(qc, type = "traffic_light")
+plot_qc_pipeline(qc, type = "detail")
+
+# Threshold profiles: "strict", "standard", "lenient"
+qc_strict <- run_qc_pipeline(fit, threshold_profile = "strict")
+```
 
 ## FACETS-style one-shot wrapper
 
@@ -156,17 +196,8 @@ run <- run_mfrm_facets(
   method = "JML",
   model = "RSM"
 )
-run_s <- summary(run)
-run_fit_plot <- plot(run, type = "fit", draw = FALSE)
-run_qc_plot <- plot(run, type = "qc", draw = FALSE)
-
-# Alias
-run2 <- mfrmRFacets(
-  data = df,
-  person = "Person",
-  facets = c("Rater", "Criterion"),
-  score = "Score"
-)
+summary(run)
+plot(run, type = "fit", draw = FALSE)
 ```
 
 ## Public API map
@@ -176,6 +207,21 @@ Model and diagnostics:
 - `fit_mfrm()`, `run_mfrm_facets()`, `mfrmRFacets()`
 - `diagnose_mfrm()`, `analyze_residual_pca()`
 - `estimate_bias()`, `bias_count_table()`
+
+DIF and model comparison:
+
+- `analyze_dif()`, `dif_interaction_table()`, `dif_report()`
+- `compare_mfrm()`
+- `compute_information()`, `plot_information()`
+
+Anchoring and equating:
+
+- `anchor_to_baseline()`, `detect_anchor_drift()`, `build_equating_chain()`
+- `plot_anchor_drift()`
+
+QC pipeline:
+
+- `run_qc_pipeline()`, `plot_qc_pipeline()`
 
 Table/report outputs:
 
@@ -190,18 +236,20 @@ Table/report outputs:
 - `bias_interaction_report()`, `build_fixed_reports()`
 - `apa_table()`, `build_apa_outputs()`, `build_visual_summaries()`
 
-Plots and QA dashboards:
+Plots and dashboards:
 
 - `plot_unexpected()`, `plot_fair_average()`, `plot_displacement()`
 - `plot_interrater_agreement()`, `plot_facets_chisq()`
 - `plot_bias_interaction()`, `plot_residual_pca()`, `plot_qc_dashboard()`
-- `plot_bubble()` — Rasch-convention bubble chart (Measure x Fit x SE)
-- `plot(fit, show_ci = TRUE)` — confidence-interval whiskers on Wright map and facet plots
+- `plot_bubble()` -- Rasch-convention bubble chart (Measure x Fit x SE)
+- `plot_dif_heatmap()` -- DIF heatmap across groups
+- `plot_wright_unified()` -- unified Wright map across all facets
+- `plot(fit, show_ci = TRUE)` -- confidence-interval whiskers on Wright map
 
 Export and data utilities:
 
-- `export_mfrm()` — batch CSV export of all result tables
-- `as.data.frame(fit)` — tidy data.frame for one-liner `write.csv()` export
+- `export_mfrm()` -- batch CSV export of all result tables
+- `as.data.frame(fit)` -- tidy data.frame for `write.csv()` export
 - `describe_mfrm_data()`, `audit_mfrm_anchors()`, `make_anchor_table()`
 - `mfrm_threshold_profiles()`, `list_mfrmr_data()`, `load_mfrmr_data()`
 
