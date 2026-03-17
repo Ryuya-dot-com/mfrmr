@@ -178,6 +178,61 @@ expand_facet_with_constraints <- function(free, spec) {
   out
 }
 
+# ---- Constraint gradient projection ----
+# Reverse of expand_facet_with_constraints: projects gradient from expanded
+# (full-length) parameter space back to the free (optimizable) parameter space.
+# This computes J^T * grad_expanded, where J is the Jacobian of
+# expand_facet_with_constraints w.r.t. the free parameters.
+constraint_grad_project <- function(grad_expanded, spec) {
+  anchors <- spec$anchors
+  groups <- spec$groups
+  centered <- isTRUE(spec$centered)
+  free_idx <- which(is.na(anchors))
+  if (length(free_idx) == 0 || spec$n_params == 0) return(numeric(0))
+
+  grad_free <- numeric(spec$n_params)
+  pos <- 1L
+
+  # Grouped levels: last free in group = target - anchor_sum - sum(others)
+  group_ids <- unique(na.omit(groups[free_idx]))
+  if (length(group_ids) > 0) {
+    for (gid in group_ids) {
+      group_levels <- which(groups == gid)
+      free_in_group <- group_levels[is.na(anchors[group_levels])]
+      k <- length(free_in_group)
+      if (k <= 1) next
+      last_g <- grad_expanded[free_in_group[k]]
+      for (j in seq_len(k - 1)) {
+        grad_free[pos] <- grad_expanded[free_in_group[j]] - last_g
+        pos <- pos + 1L
+      }
+    }
+  }
+
+  # Ungrouped levels
+  ungrouped_idx <- free_idx[is.na(groups[free_idx]) | groups[free_idx] == ""]
+  m <- length(ungrouped_idx)
+  if (m > 0) {
+    if (centered) {
+      if (m >= 2) {
+        last_g <- grad_expanded[ungrouped_idx[m]]
+        for (j in seq_len(m - 1)) {
+          grad_free[pos] <- grad_expanded[ungrouped_idx[j]] - last_g
+          pos <- pos + 1L
+        }
+      }
+      # m == 1: constrained to 0, no free params
+    } else {
+      for (j in seq_len(m)) {
+        grad_free[pos] <- grad_expanded[ungrouped_idx[j]]
+        pos <- pos + 1L
+      }
+    }
+  }
+
+  grad_free
+}
+
 build_param_sizes <- function(config) {
   n_steps <- max(config$n_cat - 1, 0)
   sizes <- list(
@@ -555,6 +610,24 @@ category_prob_pcm <- function(eta, step_cum_mat, criterion_idx,
   probs
 }
 
+# Compute P(X >= s) matrix for s = 1,...,K-1 from category probabilities.
+# Input: probs (n x K matrix of category probabilities, columns for k=0,...,K-1)
+# Output: P_geq (n x (K-1) matrix), P_geq[i,s] = P(X_i >= s)
+compute_P_geq <- function(probs) {
+  k_cat <- ncol(probs)
+  n_steps <- k_cat - 1
+  if (n_steps == 0) return(matrix(0, nrow(probs), 0))
+  n <- nrow(probs)
+  P_geq <- matrix(0, n, n_steps)
+  P_geq[, n_steps] <- probs[, k_cat]
+  if (n_steps >= 2) {
+    for (s in (n_steps - 1):1) {
+      P_geq[, s] <- P_geq[, s + 1] + probs[, s + 1]
+    }
+  }
+  P_geq
+}
+
 # Convert mean-square fit statistic to a standardized z-score (ZSTD).
 # Default uses the Wilson-Hilferty (1931) cube-root approximation:
 #   ZSTD = (MnSq^(1/3) - (1 - 2/(9*df))) / sqrt(2/(9*df))
@@ -627,6 +700,119 @@ mfrm_loglik_jmle <- function(par, idx, config, sizes) {
                      criterion_splits = idx$criterion_splits)
   }
   -ll
+}
+
+# ---- Analytical gradient for JMLE ----
+# Returns gradient of -LL (negative log-likelihood) w.r.t. free parameters.
+# Key derivation:
+#   d(LL)/d(eta_i)      = k_i - E[k|eta_i]  (observed minus expected score)
+#   d(LL)/d(delta_s)    = P(X >= s) - I(X >= s)  (for step parameters)
+# Chain rule maps these through constraint Jacobians to free parameters.
+mfrm_grad_jmle <- function(par, idx, config, sizes) {
+  params <- expand_params(par, sizes, config)
+  eta <- compute_eta(idx, params, config)
+  n <- length(eta)
+  score_k <- idx$score_k
+  weight <- idx$weight
+
+  if (config$model == "RSM") {
+    step_cum <- c(0, cumsum(params$steps))
+    probs <- category_prob_rsm(eta, step_cum)
+    k_cat <- ncol(probs)
+    n_steps <- k_cat - 1
+
+    # Residuals: observed - expected
+    expected <- as.vector(probs %*% (0:(k_cat - 1)))
+    residual <- score_k - expected
+    if (!is.null(weight)) residual <- residual * weight
+
+    # Gradient w.r.t. expanded theta
+    n_theta <- length(params$theta)
+    grad_theta_exp <- numeric(n_theta)
+    if (n_theta > 0) {
+      rs <- rowsum(matrix(residual, ncol = 1), idx$person)
+      grad_theta_exp[as.integer(rownames(rs))] <- as.vector(rs)
+    }
+
+    # Gradient w.r.t. expanded facets
+    grad_facets_exp <- list()
+    for (facet in config$facet_names) {
+      sign_f <- if (!is.null(config$facet_signs[[facet]])) config$facet_signs[[facet]] else -1
+      n_lev <- length(params$facets[[facet]])
+      g <- numeric(n_lev)
+      rs <- rowsum(matrix(sign_f * residual, ncol = 1), idx$facets[[facet]])
+      g[as.integer(rownames(rs))] <- as.vector(rs)
+      grad_facets_exp[[facet]] <- g
+    }
+
+    # Gradient w.r.t. centered step parameters
+    P_geq <- compute_P_geq(probs)
+    I_geq <- outer(score_k, seq_len(n_steps), ">=") * 1.0
+    step_resid <- P_geq - I_geq
+    if (!is.null(weight)) step_resid <- step_resid * weight
+    grad_step_centered <- colSums(step_resid)
+
+    # Map to free step params (centering: centered = raw - mean(raw))
+    grad_step_free <- grad_step_centered - mean(grad_step_centered)
+
+  } else {
+    # PCM
+    step_cum_mat <- t(apply(params$steps_mat, 1, function(x) c(0, cumsum(x))))
+    probs <- category_prob_pcm(eta, step_cum_mat, idx$step_idx,
+                               criterion_splits = idx$criterion_splits)
+    k_cat <- ncol(probs)
+    n_steps <- k_cat - 1
+    n_criteria <- nrow(params$steps_mat)
+
+    expected <- as.vector(probs %*% (0:(k_cat - 1)))
+    residual <- score_k - expected
+    if (!is.null(weight)) residual <- residual * weight
+
+    n_theta <- length(params$theta)
+    grad_theta_exp <- numeric(n_theta)
+    if (n_theta > 0) {
+      rs <- rowsum(matrix(residual, ncol = 1), idx$person)
+      grad_theta_exp[as.integer(rownames(rs))] <- as.vector(rs)
+    }
+
+    grad_facets_exp <- list()
+    for (facet in config$facet_names) {
+      sign_f <- if (!is.null(config$facet_signs[[facet]])) config$facet_signs[[facet]] else -1
+      n_lev <- length(params$facets[[facet]])
+      g <- numeric(n_lev)
+      rs <- rowsum(matrix(sign_f * residual, ncol = 1), idx$facets[[facet]])
+      g[as.integer(rownames(rs))] <- as.vector(rs)
+      grad_facets_exp[[facet]] <- g
+    }
+
+    # Step gradients per criterion
+    P_geq <- compute_P_geq(probs)
+    I_geq <- outer(score_k, seq_len(n_steps), ">=") * 1.0
+    step_resid <- P_geq - I_geq
+    if (!is.null(weight)) step_resid <- step_resid * weight
+
+    grad_step_mat <- matrix(0, n_criteria, n_steps)
+    splits <- idx$criterion_splits %||% split(seq_len(n), idx$step_idx)
+    for (ci in seq_along(splits)) {
+      rows <- splits[[ci]]
+      if (length(rows) == 0) next
+      c_idx <- as.integer(names(splits)[ci])
+      grad_step_mat[c_idx, ] <- colSums(step_resid[rows, , drop = FALSE])
+    }
+
+    # Center each criterion row, then flatten to row-major vector
+    grad_step_mat_free <- t(apply(grad_step_mat, 1, function(g) g - mean(g)))
+    grad_step_free <- as.vector(t(grad_step_mat_free))
+  }
+
+  # Project through constraints
+  grad_theta_free <- constraint_grad_project(grad_theta_exp, config$theta_spec)
+  grad_facet_free <- unlist(lapply(config$facet_names, function(f) {
+    constraint_grad_project(grad_facets_exp[[f]], config$facet_specs[[f]])
+  }))
+
+  # Return negative gradient (minimizing -LL)
+  -c(grad_theta_free, grad_facet_free, grad_step_free)
 }
 
 # Marginal Maximum Likelihood (MML) negative log-likelihood.
@@ -728,6 +914,174 @@ mfrm_loglik_mml <- function(par, idx, config, sizes, quad) {
   }
 
   -sum(ll_person)
+}
+
+# ---- Analytical gradient for MML ----
+# Returns gradient of -LL w.r.t. free parameters under marginal ML.
+# Key formula:
+#   d(LL)/d(param) = sum_p sum_q posterior_pq * d(ll_pq)/d(param)
+# where posterior_pq = w_q * L_p(theta_q) / sum_q' w_q' * L_p(theta_q')
+# and d(ll_pq)/d(param) uses the same residual/step derivatives as JMLE
+# but evaluated at each quadrature node theta_q.
+mfrm_grad_mml <- function(par, idx, config, sizes, quad) {
+  params <- expand_params(par, sizes, config)
+  n <- length(idx$score_k)
+  if (n == 0) return(rep(0, length(par)))
+
+  base_eta <- compute_base_eta(idx, params, config)
+  person_int <- idx$person
+  log_w <- log(quad$weights)
+  n_nodes <- length(quad$nodes)
+  score_k <- idx$score_k
+  weight <- idx$weight
+  n_persons <- max(person_int)
+
+  if (config$model == "RSM") {
+    step_cum <- c(0, cumsum(params$steps))
+    k_cat <- length(step_cum)
+    n_steps <- k_cat - 1
+
+    # Phase 1: Compute log-prob matrix and category probs at each node
+    log_prob_mat <- matrix(0, n, n_nodes)
+    prob_list <- vector("list", n_nodes)
+
+    for (q in seq_len(n_nodes)) {
+      eta_q <- base_eta + quad$nodes[q]
+      probs_q <- category_prob_rsm(eta_q, step_cum)
+      log_p <- log(pmax(probs_q[cbind(seq_len(n), score_k + 1L)], 1e-300))
+      if (!is.null(weight)) log_p <- log_p * weight
+      log_prob_mat[, q] <- log_p
+      prob_list[[q]] <- probs_q
+    }
+
+    # Phase 2: Compute posterior weights
+    ll_by_person <- rowsum(log_prob_mat, person_int)
+    person_ids <- as.integer(rownames(ll_by_person))
+    log_w_mat <- matrix(log_w, nrow = nrow(ll_by_person), ncol = n_nodes, byrow = TRUE)
+    combined <- log_w_mat + ll_by_person
+    row_max <- apply(combined, 1, max)
+    log_posterior <- combined - (row_max + log(rowSums(exp(combined - row_max))))
+    posterior <- exp(log_posterior)
+
+    # Map person_int to posterior row indices
+    person_to_row <- integer(n_persons)
+    person_to_row[person_ids] <- seq_along(person_ids)
+    obs_person_row <- person_to_row[person_int]
+
+    # Pre-compute I(X >= s) (doesn't depend on quadrature node)
+    I_geq <- outer(score_k, seq_len(n_steps), ">=") * 1.0
+
+    # Phase 3: Accumulate gradients
+    grad_facets_exp <- lapply(config$facet_names, function(f) numeric(length(params$facets[[f]])))
+    names(grad_facets_exp) <- config$facet_names
+    grad_step_centered <- numeric(n_steps)
+
+    for (q in seq_len(n_nodes)) {
+      probs_q <- prob_list[[q]]
+      expected_q <- as.vector(probs_q %*% (0:(k_cat - 1)))
+      residual_q <- score_k - expected_q
+      if (!is.null(weight)) residual_q <- residual_q * weight
+
+      obs_post_q <- posterior[obs_person_row, q]
+      w_residual <- residual_q * obs_post_q
+
+      # Facet gradients
+      for (facet in config$facet_names) {
+        sign_f <- if (!is.null(config$facet_signs[[facet]])) config$facet_signs[[facet]] else -1
+        rs <- rowsum(matrix(sign_f * w_residual, ncol = 1), idx$facets[[facet]])
+        f_ids <- as.integer(rownames(rs))
+        grad_facets_exp[[facet]][f_ids] <- grad_facets_exp[[facet]][f_ids] + as.vector(rs)
+      }
+
+      # Step gradients
+      P_geq <- compute_P_geq(probs_q)
+      step_resid <- P_geq - I_geq
+      if (!is.null(weight)) step_resid <- step_resid * weight
+      step_resid_w <- step_resid * obs_post_q
+      grad_step_centered <- grad_step_centered + colSums(step_resid_w)
+    }
+
+    grad_step_free <- grad_step_centered - mean(grad_step_centered)
+
+  } else {
+    # PCM case
+    step_cum_mat <- t(apply(params$steps_mat, 1, function(x) c(0, cumsum(x))))
+    k_cat <- ncol(step_cum_mat)
+    n_steps <- k_cat - 1
+    n_criteria <- nrow(params$steps_mat)
+
+    log_prob_mat <- matrix(0, n, n_nodes)
+    prob_list <- vector("list", n_nodes)
+
+    for (q in seq_len(n_nodes)) {
+      eta_q <- base_eta + quad$nodes[q]
+      probs_q <- category_prob_pcm(eta_q, step_cum_mat, idx$step_idx,
+                                   criterion_splits = idx$criterion_splits)
+      log_p <- log(pmax(probs_q[cbind(seq_len(n), score_k + 1L)], 1e-300))
+      if (!is.null(weight)) log_p <- log_p * weight
+      log_prob_mat[, q] <- log_p
+      prob_list[[q]] <- probs_q
+    }
+
+    ll_by_person <- rowsum(log_prob_mat, person_int)
+    person_ids <- as.integer(rownames(ll_by_person))
+    log_w_mat <- matrix(log_w, nrow = nrow(ll_by_person), ncol = n_nodes, byrow = TRUE)
+    combined <- log_w_mat + ll_by_person
+    row_max <- apply(combined, 1, max)
+    log_posterior <- combined - (row_max + log(rowSums(exp(combined - row_max))))
+    posterior <- exp(log_posterior)
+
+    person_to_row <- integer(n_persons)
+    person_to_row[person_ids] <- seq_along(person_ids)
+    obs_person_row <- person_to_row[person_int]
+
+    I_geq <- outer(score_k, seq_len(n_steps), ">=") * 1.0
+    splits <- idx$criterion_splits %||% split(seq_len(n), idx$step_idx)
+
+    grad_facets_exp <- lapply(config$facet_names, function(f) numeric(length(params$facets[[f]])))
+    names(grad_facets_exp) <- config$facet_names
+    grad_step_mat <- matrix(0, n_criteria, n_steps)
+
+    for (q in seq_len(n_nodes)) {
+      probs_q <- prob_list[[q]]
+      expected_q <- as.vector(probs_q %*% (0:(k_cat - 1)))
+      residual_q <- score_k - expected_q
+      if (!is.null(weight)) residual_q <- residual_q * weight
+
+      obs_post_q <- posterior[obs_person_row, q]
+      w_residual <- residual_q * obs_post_q
+
+      for (facet in config$facet_names) {
+        sign_f <- if (!is.null(config$facet_signs[[facet]])) config$facet_signs[[facet]] else -1
+        rs <- rowsum(matrix(sign_f * w_residual, ncol = 1), idx$facets[[facet]])
+        f_ids <- as.integer(rownames(rs))
+        grad_facets_exp[[facet]][f_ids] <- grad_facets_exp[[facet]][f_ids] + as.vector(rs)
+      }
+
+      P_geq <- compute_P_geq(probs_q)
+      step_resid <- P_geq - I_geq
+      if (!is.null(weight)) step_resid <- step_resid * weight
+      step_resid_w <- step_resid * obs_post_q
+
+      for (ci in seq_along(splits)) {
+        rows <- splits[[ci]]
+        if (length(rows) == 0) next
+        c_idx <- as.integer(names(splits)[ci])
+        grad_step_mat[c_idx, ] <- grad_step_mat[c_idx, ] + colSums(step_resid_w[rows, , drop = FALSE])
+      }
+    }
+
+    grad_step_mat_free <- t(apply(grad_step_mat, 1, function(g) g - mean(g)))
+    grad_step_free <- as.vector(t(grad_step_mat_free))
+  }
+
+  # Project facet gradients through constraints
+  grad_facet_free <- unlist(lapply(config$facet_names, function(f) {
+    constraint_grad_project(grad_facets_exp[[f]], config$facet_specs[[f]])
+  }))
+
+  # Return negative gradient (minimizing -LL); no theta in MML
+  -c(grad_facet_free, grad_step_free)
 }
 
 # Expected A Posteriori (EAP) person ability estimates under MML.
@@ -1478,9 +1832,9 @@ run_mfrm_optimization <- function(start,
                                   maxit,
                                   reltol) {
   control <- list(maxit = maxit, reltol = reltol)
-  run_optim <- function(fn, extra_args = list()) {
+  run_optim <- function(fn, gr = NULL, extra_args = list()) {
     tryCatch(
-      do.call(optim, c(list(par = start, fn = fn, method = "BFGS",
+      do.call(optim, c(list(par = start, fn = fn, gr = gr, method = "BFGS",
                              control = control), extra_args)),
       error = function(e) {
         stop("Model optimization failed: ", conditionMessage(e), ". ",
@@ -1494,10 +1848,12 @@ run_mfrm_optimization <- function(start,
 
   if (method == "JMLE") {
     opt <- run_optim(mfrm_loglik_jmle,
+                     gr = mfrm_grad_jmle,
                      list(idx = idx, config = config, sizes = sizes))
   } else {
     quad <- gauss_hermite_normal(quad_points)
     opt <- run_optim(mfrm_loglik_mml,
+                     gr = mfrm_grad_mml,
                      list(idx = idx, config = config, sizes = sizes, quad = quad))
   }
 
