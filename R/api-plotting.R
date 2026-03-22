@@ -182,7 +182,7 @@ build_wright_map_data <- function(x, top_n = 30L, se_tbl = NULL) {
       dplyr::mutate(.Abs = abs(.data$Estimate)) |>
       dplyr::arrange(dplyr::desc(.data$.Abs)) |>
       dplyr::slice_head(n = top_n) |>
-      dplyr::select(-.data$.Abs)
+      dplyr::select(-".Abs")
   }
 
   group_levels <- unique(point_tbl$Group)
@@ -2066,7 +2066,7 @@ plot.mfrm_fit <- function(x,
       dplyr::arrange(dplyr::desc(.data$AbsEstimate)) |>
       dplyr::slice_head(n = top_n) |>
       dplyr::arrange(.data$Estimate) |>
-      dplyr::select(-.data$AbsEstimate)
+      dplyr::select(-"AbsEstimate")
   }
   facet_title <- if (is.null(facet)) "Facet-level estimates" else paste0("Facet-level estimates: ", as.character(facet[1]))
   if (!is.null(title)) facet_title <- as.character(title[1])
