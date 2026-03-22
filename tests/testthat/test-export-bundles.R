@@ -2,7 +2,7 @@ export_bundle_fixture <- local({
   old_opt <- options(lifecycle_verbosity = "quiet")
   on.exit(options(old_opt), add = TRUE)
 
-  dat <- load_mfrmr_data("example_bias")
+  dat <- mfrmr:::sample_mfrm_data(seed = 123)
   fit <- suppressWarnings(fit_mfrm(
     dat,
     "Person",

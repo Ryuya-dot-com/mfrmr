@@ -105,7 +105,7 @@ you.
 }
 
 \examples{
-toy <- load_mfrmr_data("example_core")
+toy <- mfrmr:::sample_mfrm_data(seed = 123)
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "JML", maxit = 25)
 replay <- build_mfrm_replay_script(fit, data_file = "your_data.csv")

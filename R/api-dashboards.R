@@ -62,7 +62,7 @@
 #'
 #' @seealso [diagnose_mfrm()], [estimate_bias()], [plot_qc_dashboard()]
 #' @examples
-#' toy <- load_mfrmr_data("example_core")
+#' toy <- mfrmr:::sample_mfrm_data(seed = 123)
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
 #' dash <- facet_quality_dashboard(fit, diagnostics = diag)
@@ -497,7 +497,7 @@ dashboard_draw_plot <- function(tbl,
 #' @return An object of class `summary.mfrm_facet_dashboard`.
 #' @seealso [facet_quality_dashboard()], [plot_facet_quality_dashboard()]
 #' @examples
-#' toy <- load_mfrmr_data("example_core")
+#' toy <- mfrmr:::sample_mfrm_data(seed = 123)
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
 #' summary(facet_quality_dashboard(fit, diagnostics = diag))
@@ -594,7 +594,7 @@ print.summary.mfrm_facet_dashboard <- function(x, ...) {
 #' @return A plotting-data object of class `mfrm_plot_data`.
 #' @seealso [facet_quality_dashboard()], [summary.mfrm_facet_dashboard()]
 #' @examples
-#' toy <- load_mfrmr_data("example_core")
+#' toy <- mfrmr:::sample_mfrm_data(seed = 123)
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
 #' p <- plot_facet_quality_dashboard(fit, diagnostics = diag, draw = FALSE)

@@ -75,7 +75,7 @@ A plotting-data object of class \code{mfrm_plot_data}.
 Plot a facet-quality dashboard
 }
 \examples{
-toy <- load_mfrmr_data("example_core")
+toy <- mfrmr:::sample_mfrm_data(seed = 123)
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 p <- plot_facet_quality_dashboard(fit, diagnostics = diag, draw = FALSE)

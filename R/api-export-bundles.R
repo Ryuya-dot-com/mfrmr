@@ -176,7 +176,7 @@ export_extract_bias_pairs <- function(bias_results) {
 #' @seealso [export_mfrm_bundle()], [build_mfrm_replay_script()],
 #'   [make_anchor_table()], [reporting_checklist()]
 #' @examples
-#' toy <- load_mfrmr_data("example_core")
+#' toy <- mfrmr:::sample_mfrm_data(seed = 123)
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "JML", maxit = 25)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
@@ -346,7 +346,7 @@ build_mfrm_manifest <- function(fit,
 #' @return A named list with class `mfrm_replay_script`.
 #' @seealso [build_mfrm_manifest()], [export_mfrm_bundle()], [run_mfrm_facets()]
 #' @examples
-#' toy <- load_mfrmr_data("example_core")
+#' toy <- mfrmr:::sample_mfrm_data(seed = 123)
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "JML", maxit = 25)
 #' replay <- build_mfrm_replay_script(fit, data_file = "your_data.csv")
@@ -636,7 +636,7 @@ build_mfrm_replay_script <- function(fit,
 #' @seealso [build_mfrm_manifest()], [build_mfrm_replay_script()],
 #'   [export_mfrm()], [reporting_checklist()]
 #' @examples
-#' toy <- load_mfrmr_data("example_core")
+#' toy <- mfrmr:::sample_mfrm_data(seed = 123)
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "JML", maxit = 25)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
