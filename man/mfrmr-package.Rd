@@ -154,9 +154,8 @@ list_mfrmr_data()
 \seealso{
 Useful links:
 \itemize{
-  \item \url{https://github.com/Ryuya-dot-com/mfrmr}
-  \item \url{https://ryuya-dot-com.github.io/mfrmr/}
-  \item Report bugs at \url{https://github.com/Ryuya-dot-com/mfrmr/issues}
+  \item \url{https://github.com/Ryuya-dot-com/R_package_mfrmr}
+  \item Report bugs at \url{https://github.com/Ryuya-dot-com/R_package_mfrmr/issues}
 }
 
 }

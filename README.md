@@ -1,9 +1,9 @@
 # mfrmr
 
-[![GitHub](https://img.shields.io/badge/GitHub-mfrmr-181717?logo=github)](https://github.com/Ryuya-dot-com/mfrmr)
-[![R-CMD-check](https://github.com/Ryuya-dot-com/mfrmr/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/Ryuya-dot-com/mfrmr/actions/workflows/R-CMD-check.yaml)
-[![pkgdown](https://github.com/Ryuya-dot-com/mfrmr/actions/workflows/pkgdown.yaml/badge.svg)](https://github.com/Ryuya-dot-com/mfrmr/actions/workflows/pkgdown.yaml)
-[![test-coverage](https://github.com/Ryuya-dot-com/mfrmr/actions/workflows/test-coverage.yaml/badge.svg)](https://github.com/Ryuya-dot-com/mfrmr/actions/workflows/test-coverage.yaml)
+[![GitHub](https://img.shields.io/badge/GitHub-mfrmr-181717?logo=github)](https://github.com/Ryuya-dot-com/R_package_mfrmr)
+[![R-CMD-check](https://github.com/Ryuya-dot-com/R_package_mfrmr/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/Ryuya-dot-com/R_package_mfrmr/actions/workflows/R-CMD-check.yaml)
+[![pkgdown](https://github.com/Ryuya-dot-com/R_package_mfrmr/actions/workflows/pkgdown.yaml/badge.svg)](https://github.com/Ryuya-dot-com/R_package_mfrmr/actions/workflows/pkgdown.yaml)
+[![test-coverage](https://github.com/Ryuya-dot-com/R_package_mfrmr/actions/workflows/test-coverage.yaml/badge.svg)](https://github.com/Ryuya-dot-com/R_package_mfrmr/actions/workflows/test-coverage.yaml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 Native R package for flexible many-facet Rasch model (MFRM) estimation without TAM/sirt backends.
@@ -33,7 +33,7 @@ Native R package for flexible many-facet Rasch model (MFRM) estimation without T
 ```r
 # GitHub (development version)
 if (!requireNamespace("remotes", quietly = TRUE)) install.packages("remotes")
-remotes::install_github("Ryuya-dot-com/mfrmr")
+remotes::install_github("Ryuya-dot-com/R_package_mfrmr")
 
 # CRAN (after release)
 # install.packages("mfrmr")

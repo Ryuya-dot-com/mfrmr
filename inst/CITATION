@@ -6,5 +6,5 @@ bibentry(
   author = person("Ryuya", "Komuro"),
   year = "2026",
   note = "R package version 0.1.0",
-  url = "https://github.com/Ryuya-dot-com/mfrmr"
+  url = "https://github.com/Ryuya-dot-com/R_package_mfrmr"
 )
