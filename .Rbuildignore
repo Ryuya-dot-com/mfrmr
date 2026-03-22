@@ -15,3 +15,8 @@
 ^\.claude$
 ^doc$
 ^Meta$
+^PACKAGES$
+^PACKAGES\.gz$
+^PACKAGES\.rds$
+^Library$
+^Outputs$

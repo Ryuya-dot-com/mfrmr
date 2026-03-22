@@ -6,7 +6,12 @@
 
 # R build/check artifacts
 *.Rcheck/
-*_*.tar.gz
+*.tar.gz
+build_run.log
+
+# Generated docs / metadata
+/doc/
+/Meta/
 
 # testthat local artifacts
 tests/testthat/Rplots.pdf
@@ -16,8 +21,14 @@ tests/testthat/_problems/
 # analysis scratch
 analysis/
 
-# .Rhistory
+# R history
 .Rhistory
-R/.Rhistory
-/doc/
-/Meta/
+
+# local package repository artifacts
+PACKAGES
+PACKAGES.gz
+PACKAGES.rds
+
+# local scratch directories
+Library/
+Outputs/

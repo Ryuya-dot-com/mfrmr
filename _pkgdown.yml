@@ -13,7 +13,23 @@ home:
   title: mfrmr
   description: Flexible many-facet Rasch model estimation without FACETS
 
+articles:
+  - title: Workflow Guides
+    contents:
+      - mfrmr-workflow
+      - mfrmr-visual-diagnostics
+      - mfrmr-reporting-and-apa
+      - mfrmr-linking-and-dff
+
 reference:
+  - title: Guide Pages
+    contents:
+      - mfrmr_workflow_methods
+      - mfrmr_visual_diagnostics
+      - mfrmr_reports_and_tables
+      - mfrmr_reporting_and_apa
+      - mfrmr_linking_and_dff
+      - mfrmr_compatibility_layer
   - title: Estimation
     contents:
       - fit_mfrm
@@ -21,7 +37,7 @@ reference:
       - mfrm_threshold_profiles
       - diagnose_mfrm
       - estimate_bias
-  - title: FACETS-Style Reports
+  - title: Reports and Tables
     contents:
       - specifications_report
       - data_quality_report
@@ -40,8 +56,6 @@ reference:
       - bias_interaction_report
       - category_structure_report
       - category_curves_report
-      - facets_output_file_bundle
-      - facets_parity_report
   - title: Integrated Outputs
     contents:
       - build_fixed_reports
@@ -63,6 +77,17 @@ reference:
       - plot_interrater_agreement
       - plot_facets_chisq
       - plot_residual_pca
+  - title: Linking, DFF, and Anchors
+    contents:
+      - analyze_dff
+      - analyze_dif
+      - dif_interaction_table
+      - dif_report
+      - plot_dif_heatmap
+      - anchor_to_baseline
+      - detect_anchor_drift
+      - build_equating_chain
+      - plot_anchor_drift
   - title: Data and Anchors
     contents:
       - describe_mfrm_data
@@ -70,3 +95,10 @@ reference:
       - make_anchor_table
       - list_mfrmr_data
       - load_mfrmr_data
+  - title: Compatibility Layer
+    contents:
+      - run_mfrm_facets
+      - mfrmRFacets
+      - build_fixed_reports
+      - facets_output_file_bundle
+      - facets_parity_report
