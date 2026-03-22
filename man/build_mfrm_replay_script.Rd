@@ -22,8 +22,7 @@ build_mfrm_replay_script(
 diagnostics are reused from \code{run_mfrm_facets()} when available, otherwise
 recomputed.}
 
-\item{bias_results}{Optional output from \code{\link[=estimate_bias]{estimate_bias()}},
-\code{\link[=estimate_all_bias]{estimate_all_bias()}}, or a named list of bias bundles. When supplied, the
+\item{bias_results}{Optional output from \code{\link[=estimate_bias]{estimate_bias()}} or a named list of bias bundles. When supplied, the
 generated script includes package-native bias estimation calls.}
 
 \item{data_file}{Path to the analysis data file used in the generated script.}

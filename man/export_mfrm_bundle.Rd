@@ -27,8 +27,7 @@ diagnostics are reused from \code{run_mfrm_facets()} when available, otherwise
 computed with \code{residual_pca = "none"} (or \code{"both"} when visual summaries
 are requested).}
 
-\item{bias_results}{Optional output from \code{\link[=estimate_bias]{estimate_bias()}},
-\code{\link[=estimate_all_bias]{estimate_all_bias()}}, or a named list of bias bundles.}
+\item{bias_results}{Optional output from \code{\link[=estimate_bias]{estimate_bias()}} or a named list of bias bundles.}
 
 \item{output_dir}{Directory where files will be written.}
 

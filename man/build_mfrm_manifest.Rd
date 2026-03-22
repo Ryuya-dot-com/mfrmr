@@ -17,8 +17,7 @@ build_mfrm_manifest(
 \item{diagnostics}{Optional output from \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}. When \code{NULL},
 diagnostics are computed with \code{residual_pca = "none"}.}
 
-\item{bias_results}{Optional output from \code{\link[=estimate_bias]{estimate_bias()}},
-\code{\link[=estimate_all_bias]{estimate_all_bias()}}, or a named list of bias bundles.}
+\item{bias_results}{Optional output from \code{\link[=estimate_bias]{estimate_bias()}} or a named list of bias bundles.}
 
 \item{include_person_anchors}{If \code{TRUE}, include person measures in the
 exported anchor table.}

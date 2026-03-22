@@ -20,9 +20,11 @@ export_bundle_fixture <- local({
     method = "JML",
     maxit = 20
   ))
-  bias_all <- suppressWarnings(estimate_all_bias(
+  bias_all <- suppressWarnings(estimate_bias(
     fit,
     diagnostics = diagnostics,
+    facet_a = "Rater",
+    facet_b = "Criterion",
     max_iter = 2
   ))
 
@@ -67,7 +69,7 @@ test_that("build_mfrm_manifest and replay script support FACETS-mode runs", {
   expect_s3_class(replay, "mfrm_replay_script")
   expect_match(replay$script, "run_mfrm_facets\\(")
   expect_match(replay$script, "analysis_data\\.csv")
-  expect_match(replay$script, "estimate_all_bias\\(")
+  expect_match(replay$script, "estimate_bias\\(")
 })
 
 test_that("build_mfrm_replay_script preserves keep_original and rating range", {

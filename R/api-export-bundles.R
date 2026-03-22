@@ -124,8 +124,8 @@ export_extract_bias_pairs <- function(bias_results) {
 #' @param fit Output from [fit_mfrm()] or [run_mfrm_facets()].
 #' @param diagnostics Optional output from [diagnose_mfrm()]. When `NULL`,
 #'   diagnostics are computed with `residual_pca = "none"`.
-#' @param bias_results Optional output from [estimate_bias()],
-#'   [estimate_all_bias()], or a named list of bias bundles.
+#' @param bias_results Optional output from [estimate_bias()] or a named list of
+#'   bias bundles.
 #' @param include_person_anchors If `TRUE`, include person measures in the
 #'   exported anchor table.
 #'
@@ -288,9 +288,9 @@ build_mfrm_manifest <- function(fit,
 #' @param diagnostics Optional output from [diagnose_mfrm()]. When `NULL`,
 #'   diagnostics are reused from `run_mfrm_facets()` when available, otherwise
 #'   recomputed.
-#' @param bias_results Optional output from [estimate_bias()],
-#'   [estimate_all_bias()], or a named list of bias bundles. When supplied, the
-#'   generated script includes package-native bias estimation calls.
+#' @param bias_results Optional output from [estimate_bias()] or a named list of
+#'   bias bundles. When supplied, the generated script includes package-native
+#'   bias estimation calls.
 #' @param data_file Path to the analysis data file used in the generated script.
 #' @param script_mode One of `"auto"`, `"fit"`, or `"facets"`. `"auto"` uses
 #'   `run_mfrm_facets()` when the input object came from that workflow.
@@ -504,13 +504,24 @@ build_mfrm_replay_script <- function(fit,
   }
 
   if (length(bias_pairs) > 0) {
+    bias_lines <- vapply(seq_along(bias_pairs), function(i) {
+      pair <- as.character(bias_pairs[[i]])
+      pair <- pair[!is.na(pair) & nzchar(pair)][seq_len(min(2L, length(pair)))]
+      paste0(
+        "  bias_", i, " = estimate_bias(",
+        "fit, diagnostics = diagnostics, facet_a = ",
+        render_r_object_literal(pair[1]), ", facet_b = ",
+        render_r_object_literal(pair[2]), ")",
+        if (i < length(bias_pairs)) "," else ""
+      )
+    }, character(1))
     lines <- c(
       lines,
       "",
       "# Bias / interaction analysis",
-      paste0("bias_results <- estimate_all_bias(",
-             "fit, diagnostics = diagnostics, pairs = ",
-             render_r_object_literal(bias_pairs), ")")
+      "bias_results <- list(",
+      bias_lines,
+      ")"
     )
   } else {
     lines <- c(lines, "", "bias_results <- NULL")
@@ -569,8 +580,8 @@ build_mfrm_replay_script <- function(fit,
 #'   diagnostics are reused from `run_mfrm_facets()` when available, otherwise
 #'   computed with `residual_pca = "none"` (or `"both"` when visual summaries
 #'   are requested).
-#' @param bias_results Optional output from [estimate_bias()],
-#'   [estimate_all_bias()], or a named list of bias bundles.
+#' @param bias_results Optional output from [estimate_bias()] or a named list of
+#'   bias bundles.
 #' @param output_dir Directory where files will be written.
 #' @param prefix File-name prefix.
 #' @param include Components to export. Supported values are
