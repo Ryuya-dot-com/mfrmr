@@ -26,9 +26,11 @@ build_apa_outputs(
 \value{
 An object of class \code{mfrm_apa_outputs} with:
 \itemize{
-\item \code{report_text}: APA-style Method/Results prose
-\item \code{table_figure_notes}: consolidated notes for tables/visuals
-\item \code{table_figure_captions}: caption-ready labels without figure numbering
+\item \code{report_text}: APA-style Method/Results draft prose
+\item \code{table_figure_notes}: consolidated draft notes for tables/visuals
+\item \code{table_figure_captions}: draft caption candidates without figure numbering
+\item \code{section_map}: package-native section table for manuscript assembly
+\item \code{contract}: structured APA reporting contract used for downstream checks
 }
 }
 \description{
@@ -44,7 +46,7 @@ Frequently used fields include:
 \item \code{line_width} (optional text wrapping width for \code{report_text}; default = 92)
 }
 
-Output text includes residual PCA interpretation if PCA diagnostics are
+Output text includes residual-PCA screening commentary if PCA diagnostics are
 available in \code{diagnostics}.
 
 By default, \code{report_text} includes:
@@ -60,10 +62,17 @@ By default, \code{report_text} includes:
 \section{Interpreting output}{
 
 \itemize{
-\item \code{report_text}: manuscript-ready narrative core.
-\item \code{table_figure_notes}: reusable note blocks for table/figure appendices.
-\item \code{table_figure_captions}: caption candidates aligned to generated outputs.
+\item \code{report_text}: manuscript-draft narrative covering Method (model
+specification, estimation, convergence) and Results (global fit,
+facet separation/reliability, misfit triage, category diagnostics,
+residual-PCA screening, bias screening).  Written in third-person past tense
+following APA 7th edition conventions, but still intended for human review.
+\item \code{table_figure_notes}: reusable draft note blocks for table/figure appendices.
+\item \code{table_figure_captions}: draft caption candidates aligned to generated outputs.
 }
+
+When bias results or PCA diagnostics are not supplied, those sections
+are omitted from the narrative rather than producing placeholder text.
 }
 
 \section{Typical workflow}{
@@ -72,7 +81,8 @@ By default, \code{report_text} includes:
 \item Build diagnostics (and optional bias results).
 \item Run \code{build_apa_outputs(...)}.
 \item Check \code{summary(apa)} for completeness.
-\item Insert \code{apa$report_text} and note/caption fields into manuscript drafts.
+\item Insert \code{apa$report_text} and note/caption fields into manuscript drafts
+after checking the listed cautions.
 }
 }
 
@@ -88,17 +98,7 @@ A minimal \code{context} list can include fields such as:
 }
 
 \examples{
-toy <- expand.grid(
-  Person = paste0("P", 1:4),
-  Rater = paste0("R", 1:2),
-  Criterion = c("Content", "Organization", "Language"),
-  stringsAsFactors = FALSE
-)
-toy$Score <- (
-  as.integer(factor(toy$Person)) +
-  2 * as.integer(factor(toy$Rater)) +
-  as.integer(factor(toy$Criterion))
-) \%\% 3
+toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 diag <- diagnose_mfrm(fit, residual_pca = "both")
 apa <- build_apa_outputs(
@@ -115,8 +115,12 @@ names(apa)
 class(apa)
 s_apa <- summary(apa)
 s_apa$overview
+chk <- reporting_checklist(fit, diagnostics = diag)
+head(chk$checklist[, c("Section", "Item", "DraftReady", "NextAction")])
 cat(apa$report_text)
+apa$section_map[, c("SectionId", "Available")]
 }
 \seealso{
-\code{\link[=build_visual_summaries]{build_visual_summaries()}}, \code{\link[=estimate_bias]{estimate_bias()}}
+\code{\link[=build_visual_summaries]{build_visual_summaries()}}, \code{\link[=estimate_bias]{estimate_bias()}},
+\code{\link[=reporting_checklist]{reporting_checklist()}}, \link{mfrmr_reporting_and_apa}
 }

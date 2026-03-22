@@ -13,9 +13,11 @@ fit2 <- fit_mfrm(d2, person = "Person", facets = c("Rater", "Criterion"),
 # ================================================================
 
 test_that("anchor_to_baseline returns correct class and structure", {
-  res <- anchor_to_baseline(d2, fit1, person = "Person",
-                            facets = c("Rater", "Criterion"),
-                            score = "Score")
+  res <- suppressWarnings(
+    anchor_to_baseline(d2, fit1, person = "Person",
+                       facets = c("Rater", "Criterion"),
+                       score = "Score")
+  )
 
   expect_s3_class(res, "mfrm_anchored_fit")
   expect_true(is.list(res))
@@ -33,7 +35,7 @@ test_that("anchor_to_baseline returns correct class and structure", {
   # drift is a tibble with expected columns
   expect_true(is.data.frame(res$drift))
   drift_cols <- c("Facet", "Level", "Baseline", "New", "Drift",
-                  "SE_New", "Drift_SE_Ratio", "Flag")
+                  "SE_Baseline", "SE_New", "SE_Diff", "Drift_SE_Ratio", "Flag")
   expect_true(all(drift_cols %in% names(res$drift)))
 })
 
@@ -59,10 +61,57 @@ test_that("anchor_to_baseline rejects non-mfrm_fit input", {
   )
 })
 
+test_that("fit_mfrm surfaces malformed anchor schemas instead of silently dropping them", {
+  toy <- load_mfrmr_data("example_core")
+  bad_anchors <- data.frame(
+    WrongFacet = "Rater",
+    WrongLevel = "R1",
+    WrongValue = 0,
+    stringsAsFactors = FALSE
+  )
+
+  expect_warning(
+    withCallingHandlers(
+      fit_mfrm(
+        toy,
+        person = "Person",
+        facets = c("Rater", "Criterion"),
+        score = "Score",
+        method = "JML",
+        maxit = 15,
+        anchors = bad_anchors,
+        anchor_policy = "warn"
+      ),
+      warning = function(w) {
+        if (grepl("Optimizer did not fully converge", conditionMessage(w), fixed = TRUE)) {
+          invokeRestart("muffleWarning")
+        }
+      }
+    ),
+    "anchor_schema_mismatch"
+  )
+
+  expect_error(
+    fit_mfrm(
+      toy,
+      person = "Person",
+      facets = c("Rater", "Criterion"),
+      score = "Score",
+      method = "JML",
+      maxit = 15,
+      anchors = bad_anchors,
+      anchor_policy = "error"
+    ),
+    "anchor_schema_mismatch"
+  )
+})
+
 test_that("anchor_to_baseline S3 methods produce output", {
-  res <- anchor_to_baseline(d2, fit1, person = "Person",
-                            facets = c("Rater", "Criterion"),
-                            score = "Score")
+  res <- suppressWarnings(
+    anchor_to_baseline(d2, fit1, person = "Person",
+                       facets = c("Rater", "Criterion"),
+                       score = "Score")
+  )
 
   # summary returns expected class
   s <- summary(res)
@@ -84,23 +133,29 @@ test_that("detect_anchor_drift returns correct class and structure", {
   drift <- detect_anchor_drift(list(Wave1 = fit1, Wave2 = fit2))
 
   expect_s3_class(drift, "mfrm_anchor_drift")
-  expect_named(drift, c("drift_table", "summary", "common_elements", "config"),
+  expect_named(drift, c("drift_table", "summary", "common_elements", "common_by_facet", "config"),
                ignore.order = TRUE)
 
   # drift_table is a tibble with expected columns
   expect_true(is.data.frame(drift$drift_table))
   dt_cols <- c("Facet", "Level", "Reference", "Wave",
-               "Ref_Est", "Wave_Est", "Drift", "SE",
-               "Drift_SE_Ratio", "Flag")
+               "Ref_Est", "Wave_Est", "LinkOffset", "Drift", "SE_Ref", "SE_Wave", "SE",
+               "Drift_SE_Ratio", "LinkSupportAdequate", "Flag")
   expect_true(all(dt_cols %in% names(drift$drift_table)))
 
   # common_elements has expected columns
   expect_true(is.data.frame(drift$common_elements))
   expect_true(all(c("Wave1", "Wave2", "N_Common") %in% names(drift$common_elements)))
+  expect_true(is.data.frame(drift$common_by_facet))
+  expect_true(all(c("Reference", "Wave", "Facet", "N_Common", "N_Retained",
+                    "GuidelineMinCommon", "LinkSupportAdequate") %in% names(drift$common_by_facet)))
 
   # config preserves settings
   expect_equal(drift$config$reference, "Wave1")
+  expect_equal(drift$config$method, "screened_common_element_alignment")
+  expect_equal(drift$config$intended_use, "review_screen")
   expect_equal(drift$config$drift_threshold, 0.5)
+  expect_equal(drift$config$min_common_per_facet, 5L)
   expect_equal(drift$config$waves, c("Wave1", "Wave2"))
 })
 
@@ -110,6 +165,52 @@ test_that("detect_anchor_drift finds common elements", {
   # Should have at least some common elements
   expect_true(nrow(drift$common_elements) > 0)
   expect_true(all(drift$common_elements$N_Common >= 0))
+})
+
+test_that("detect_anchor_drift uses aligned drift and combined standard errors", {
+  drift <- detect_anchor_drift(list(W1 = fit1, W2 = fit2))
+
+  if (nrow(drift$drift_table) > 0) {
+    expected_se <- sqrt(drift$drift_table$SE_Ref^2 + drift$drift_table$SE_Wave^2)
+    expect_equal(drift$drift_table$SE, expected_se, tolerance = 1e-8)
+    expect_equal(
+      drift$drift_table$Drift_SE_Ratio,
+      abs(drift$drift_table$Drift) / drift$drift_table$SE,
+      tolerance = 1e-8
+    )
+  }
+})
+
+test_that("detect_anchor_drift warns when retained link support is thin", {
+  d_small1 <- simulate_mfrm_data(
+    n_person = 20,
+    n_rater = 4,
+    n_criterion = 3,
+    raters_per_person = 2,
+    seed = 901
+  )
+  d_small2 <- simulate_mfrm_data(
+    n_person = 20,
+    n_rater = 4,
+    n_criterion = 3,
+    raters_per_person = 2,
+    seed = 902
+  )
+  fit_small1 <- suppressWarnings(
+    fit_mfrm(d_small1, "Person", c("Rater", "Criterion"), "Score",
+             method = "JML", maxit = 10)
+  )
+  fit_small2 <- suppressWarnings(
+    fit_mfrm(d_small2, "Person", c("Rater", "Criterion"), "Score",
+             method = "JML", maxit = 10)
+  )
+
+  expect_warning(
+    drift <- detect_anchor_drift(list(W1 = fit_small1, W2 = fit_small2), facets = "Rater"),
+    "Thin linking support"
+  )
+
+  expect_true(any(!drift$common_by_facet$LinkSupportAdequate))
 })
 
 test_that("detect_anchor_drift flagging logic works", {
@@ -145,8 +246,8 @@ test_that("detect_anchor_drift S3 methods produce output", {
   expect_true(is.numeric(s$n_comparisons))
   expect_true(is.numeric(s$n_flagged))
 
-  expect_output(print(drift), "Anchor Drift Detection")
-  expect_output(print(s), "Anchor Drift Detection")
+  expect_output(print(drift), "Anchor Drift Screen")
+  expect_output(print(s), "Anchor Drift Screen")
 })
 
 # ================================================================
@@ -157,13 +258,16 @@ test_that("build_equating_chain returns correct class and structure", {
   chain <- build_equating_chain(list(Form1 = fit1, Form2 = fit2))
 
   expect_s3_class(chain, "mfrm_equating_chain")
-  expect_named(chain, c("links", "cumulative", "element_detail", "config"),
+  expect_named(chain, c("links", "cumulative", "element_detail", "common_by_facet", "config"),
                ignore.order = TRUE)
 
   # links is a tibble with expected columns
   expect_true(is.data.frame(chain$links))
-  link_cols <- c("Link", "From", "To", "N_Common", "Offset", "Offset_SD",
-                 "Max_Residual")
+  link_cols <- c("Link", "From", "To", "N_Common", "N_Retained",
+                 "Min_Common_Per_Facet", "Min_Retained_Per_Facet",
+                 "Offset_Prelim", "Offset", "Offset_SD", "Max_Residual",
+                 "LinkSupportAdequate",
+                 "Offset_Method")
   expect_true(all(link_cols %in% names(chain$links)))
   expect_equal(nrow(chain$links), 1)  # 2 fits -> 1 link
 
@@ -174,6 +278,9 @@ test_that("build_equating_chain returns correct class and structure", {
 
   # First wave offset is always 0
   expect_equal(chain$cumulative$Cumulative_Offset[1], 0)
+  expect_true(is.data.frame(chain$common_by_facet))
+  expect_equal(chain$config$method, "screened_common_element_alignment")
+  expect_equal(chain$config$intended_use, "screened_linking_aid")
 })
 
 test_that("build_equating_chain with 3 fits produces 2 links", {
@@ -188,6 +295,51 @@ test_that("build_equating_chain with 3 fits produces 2 links", {
   expect_equal(chain$cumulative$Cumulative_Offset[1], 0)
 })
 
+test_that("build_equating_chain uses inverse-variance weighted offsets", {
+  chain <- build_equating_chain(list(F1 = fit1, F2 = fit2))
+  detail <- chain$element_detail
+
+  if (nrow(detail) > 0) {
+    w <- 1 / (detail$SE_From^2 + detail$SE_To^2)
+    keep <- is.finite(w) & detail$Retained
+    expected_offset <- stats::weighted.mean(detail$Diff[keep], w = w[keep])
+    expect_equal(chain$links$Offset[1], expected_offset, tolerance = 1e-8)
+  }
+})
+
+test_that("build_equating_chain warns when retained link support is thin", {
+  d_small1 <- simulate_mfrm_data(
+    n_person = 20,
+    n_rater = 4,
+    n_criterion = 3,
+    raters_per_person = 2,
+    seed = 903
+  )
+  d_small2 <- simulate_mfrm_data(
+    n_person = 20,
+    n_rater = 4,
+    n_criterion = 3,
+    raters_per_person = 2,
+    seed = 904
+  )
+  fit_small1 <- suppressWarnings(
+    fit_mfrm(d_small1, "Person", c("Rater", "Criterion"), "Score",
+             method = "JML", maxit = 10)
+  )
+  fit_small2 <- suppressWarnings(
+    fit_mfrm(d_small2, "Person", c("Rater", "Criterion"), "Score",
+             method = "JML", maxit = 10)
+  )
+
+  expect_warning(
+    chain <- build_equating_chain(list(F1 = fit_small1, F2 = fit_small2), anchor_facets = "Rater"),
+    "Thin linking support"
+  )
+
+  expect_true(any(!chain$links$LinkSupportAdequate))
+  expect_true(any(chain$common_by_facet$N_Retained < chain$config$min_common_per_facet))
+})
+
 test_that("build_equating_chain rejects invalid input", {
   expect_error(build_equating_chain(list()), "length")
   expect_error(build_equating_chain(list(a = 1, b = 2)), "mfrm_fit")
@@ -200,8 +352,8 @@ test_that("build_equating_chain S3 methods produce output", {
   expect_s3_class(s, "summary.mfrm_equating_chain")
   expect_true(is.numeric(s$n_flagged))
 
-  expect_output(print(chain), "Equating Chain")
-  expect_output(print(s), "Equating Chain")
+  expect_output(print(chain), "Screened Linking Chain")
+  expect_output(print(s), "Screened Linking Chain")
 })
 
 # ================================================================
@@ -215,24 +367,28 @@ chain_obj <- build_equating_chain(list(F1 = fit1, F2 = fit2))
 test_that("plot_anchor_drift drift type returns data with draw=FALSE", {
   result <- plot_anchor_drift(drift_obj, type = "drift", draw = FALSE)
 
-  expect_true(is.data.frame(result) || is.null(result))
-  if (is.data.frame(result)) {
-    expect_true(nrow(result) > 0)
-  }
+  expect_s3_class(result, "mfrm_plot_data")
+  expect_identical(result$data$plot, "drift")
+  expect_true(is.data.frame(result$data$table))
+  expect_true(nrow(result$data$table) > 0)
+  expect_true(all(c("title", "subtitle", "legend", "reference_lines") %in% names(result$data)))
 })
 
 test_that("plot_anchor_drift heatmap type returns data with draw=FALSE", {
   result <- plot_anchor_drift(drift_obj, type = "heatmap", draw = FALSE)
 
-  # Returns matrix or NULL
-  expect_true(is.matrix(result) || is.null(result))
+  expect_s3_class(result, "mfrm_plot_data")
+  expect_identical(result$data$plot, "heatmap")
+  expect_true(is.matrix(result$data$matrix))
 })
 
 test_that("plot_anchor_drift chain type returns data with draw=FALSE", {
   result <- plot_anchor_drift(chain_obj, type = "chain", draw = FALSE)
 
-  expect_true(is.data.frame(result))
-  expect_true(all(c("Wave", "Cumulative_Offset") %in% names(result)))
+  expect_s3_class(result, "mfrm_plot_data")
+  expect_identical(result$data$plot, "chain")
+  expect_true(is.data.frame(result$data$table))
+  expect_true(all(c("Wave", "Cumulative_Offset") %in% names(result$data$table)))
 })
 
 test_that("plot_anchor_drift drift type draws without error", {
@@ -256,6 +412,14 @@ test_that("plot_anchor_drift heatmap type draws without error", {
   expect_no_error(plot_anchor_drift(drift_obj, type = "heatmap"))
 })
 
+test_that("plot_anchor_drift accepts publication preset", {
+  pdf(NULL)
+  on.exit(dev.off(), add = TRUE)
+
+  expect_no_error(plot_anchor_drift(drift_obj, type = "drift", preset = "publication"))
+  expect_no_error(plot_anchor_drift(chain_obj, type = "chain", preset = "publication"))
+})
+
 test_that("plot_anchor_drift rejects unsupported type/class combo", {
   # chain object with drift type should error
   expect_error(plot_anchor_drift(chain_obj, type = "drift"),
@@ -266,7 +430,7 @@ test_that("plot_anchor_drift facet filter works", {
   result <- plot_anchor_drift(drift_obj, type = "drift", facet = "Rater",
                               draw = FALSE)
 
-  if (is.data.frame(result) && nrow(result) > 0) {
-    expect_true(all(result$Facet == "Rater"))
+  if (inherits(result, "mfrm_plot_data") && nrow(result$data$table) > 0) {
+    expect_true(all(result$data$table$Facet == "Rater"))
   }
 })

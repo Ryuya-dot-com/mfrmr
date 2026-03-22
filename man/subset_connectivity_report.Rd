@@ -31,7 +31,8 @@ Build a subset connectivity report (preferred alias)
 \code{summary(out)} is supported through \code{summary()}.
 \code{plot(out)} is dispatched through \code{plot()} for class
 \code{mfrm_subset_connectivity} (\code{type = "subset_observations"},
-\code{"facet_levels"}).
+\code{"facet_levels"}, or \code{"linking_matrix"} / \code{"coverage_matrix"} /
+\code{"design_matrix"}).
 }
 \section{Interpreting output}{
 
@@ -52,23 +53,17 @@ Build a subset connectivity report (preferred alias)
 }
 
 \examples{
-toy <- expand.grid(
-  Person = paste0("P", 1:4),
-  Rater = paste0("R", 1:2),
-  Criterion = c("Content", "Organization", "Language"),
-  stringsAsFactors = FALSE
-)
-toy$Score <- (
-  as.integer(factor(toy$Person)) +
-  2 * as.integer(factor(toy$Rater)) +
-  as.integer(factor(toy$Criterion))
-) \%\% 3
+toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 out <- subset_connectivity_report(fit)
 summary(out)
 p_sub <- plot(out, draw = FALSE)
+p_design <- plot(out, type = "design_matrix", draw = FALSE)
 class(p_sub)
+class(p_design)
+out$summary[, c("Subset", "Observations", "ObservationPercent")]
 }
 \seealso{
-\code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=measurable_summary_table]{measurable_summary_table()}}, \code{\link[=data_quality_report]{data_quality_report()}}
+\code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=measurable_summary_table]{measurable_summary_table()}}, \code{\link[=data_quality_report]{data_quality_report()}},
+\link{mfrmr_linking_and_dff}, \link{mfrmr_visual_diagnostics}
 }

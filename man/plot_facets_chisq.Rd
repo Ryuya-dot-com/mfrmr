@@ -2,7 +2,7 @@
 % Please edit documentation in R/api-plotting.R
 \name{plot_facets_chisq}
 \alias{plot_facets_chisq}
-\title{Plot FACETS-style facet chi-square diagnostics using base R}
+\title{Plot facet variability diagnostics using base R}
 \usage{
 plot_facets_chisq(
   x,
@@ -13,6 +13,7 @@ plot_facets_chisq(
   main = NULL,
   palette = NULL,
   label_angle = 45,
+  preset = c("standard", "publication", "compact"),
   draw = TRUE
 )
 }
@@ -34,36 +35,58 @@ plot_facets_chisq(
 
 \item{label_angle}{X-axis label angle for bar-style plots.}
 
+\item{preset}{Visual preset (\code{"standard"}, \code{"publication"}, or \code{"compact"}).}
+
 \item{draw}{If \code{TRUE}, draw with base graphics.}
 }
 \value{
 A plotting-data object of class \code{mfrm_plot_data}.
 }
 \description{
-Plot FACETS-style facet chi-square diagnostics using base R
+Plot facet variability diagnostics using base R
 }
 \details{
-Facet chi-square plots provide facet-level global fit diagnostics using
-fixed/random chi-square summaries and random-variance magnitudes.
+Facet chi-square tests assess whether the elements within each facet
+differ significantly.
+
+\strong{Fixed-effect chi-square} tests the null hypothesis
+\eqn{H_0: \delta_1 = \delta_2 = \cdots = \delta_J} (all element
+measures are equal). A flagged result (\eqn{p <} \code{fixed_p_max})
+suggests detectable between-element spread under the fitted model, but
+it should be interpreted alongside design quality, sample size, and other
+diagnostics.
+
+\strong{Random-effect chi-square} tests whether element heterogeneity
+exceeds what would be expected from measurement error alone, treating
+element measures as random draws. A flagged result is screening
+evidence that the facet may not be exchangeable under the current model.
+
+\strong{Random variance} is the estimated between-element variance
+component after removing measurement error.  It quantifies the
+magnitude of true heterogeneity on the logit scale.
 }
 \section{Plot types}{
 
 \describe{
 \item{\code{"fixed"} (default)}{Bar chart of fixed-effect chi-square by
-facet.  Bars colored red when the null hypothesis (all elements
-equal) is rejected at \code{fixed_p_max}.}
+facet. Bars colored red when the null hypothesis is rejected at
+\code{fixed_p_max}. A flagged (red) bar means the facet shows spread worth
+reviewing under the fitted model.}
 \item{\code{"random"}}{Bar chart of random-effect chi-square by facet.
 Bars colored red when rejected at \code{random_p_max}.}
-\item{\code{"variance"}}{Bar chart of estimated random variance by facet.
-Reference line at 0.  Larger variance indicates greater
-heterogeneity among elements.}
+\item{\code{"variance"}}{Bar chart of estimated random variance
+(logit\eqn{^2}) by facet.  Reference line at 0.  Larger values
+indicate greater true heterogeneity among elements.}
 }
 }
 
 \section{Interpreting output}{
 
 Colored flags reflect configured p-value thresholds (\code{fixed_p_max},
-\code{random_p_max}) when available.
+\code{random_p_max}). For the fixed test, a flagged (red) result suggests
+facet spread worth reviewing under the current model. For the random test, a
+flagged result is screening evidence that the facet may contribute
+non-trivial heterogeneity beyond measurement error.
 }
 
 \section{Typical workflow}{
@@ -76,17 +99,7 @@ Colored flags reflect configured p-value thresholds (\code{fixed_p_max},
 }
 
 \examples{
-toy <- expand.grid(
-  Person = paste0("P", 1:4),
-  Rater = paste0("R", 1:2),
-  Criterion = c("Content", "Organization", "Language"),
-  stringsAsFactors = FALSE
-)
-toy$Score <- (
-  as.integer(factor(toy$Person)) +
-  2 * as.integer(factor(toy$Rater)) +
-  as.integer(factor(toy$Criterion))
-) \%\% 3
+toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 p <- plot_facets_chisq(fit, draw = FALSE)
 if (interactive()) {
@@ -94,6 +107,7 @@ if (interactive()) {
     fit,
     draw = TRUE,
     plot_type = "fixed",
+    preset = "publication",
     main = "Facet Chi-square (Customized)",
     palette = c(fixed_ok = "#2b8cbe", fixed_flag = "#cb181d"),
     label_angle = 45

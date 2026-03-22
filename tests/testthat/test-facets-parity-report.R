@@ -1,13 +1,15 @@
 test_that("facets_parity_report returns full-coverage audit in facets branch", {
   d <- mfrmr:::sample_mfrm_data(seed = 123)
-  fit <- mfrmr::fit_mfrm(
-    data = d,
-    person = "Person",
-    facets = c("Rater", "Task", "Criterion"),
-    score = "Score",
-    method = "JML",
-    model = "RSM",
-    maxit = 20
+  fit <- suppressWarnings(
+    mfrmr::fit_mfrm(
+      data = d,
+      person = "Person",
+      facets = c("Rater", "Task", "Criterion"),
+      score = "Score",
+      method = "JML",
+      model = "RSM",
+      maxit = 20
+    )
   )
   diag <- mfrmr::diagnose_mfrm(fit, residual_pca = "none")
   bias <- mfrmr::estimate_bias(fit, diag, facet_a = "Rater", facet_b = "Task", max_iter = 2)
@@ -27,6 +29,8 @@ test_that("facets_parity_report returns full-coverage audit in facets branch", {
   expect_true(is.data.frame(parity$overall))
   expect_true(is.data.frame(parity$column_audit))
   expect_true(is.data.frame(parity$metric_audit))
+  expect_identical(parity$settings$intended_use, "compatibility_contract_audit")
+  expect_false(isTRUE(parity$settings$external_validation))
 
   expect_equal(parity$overall$ColumnMismatches[1], 0)
   expect_equal(parity$overall$ColumnMismatchRate[1], 0)
@@ -39,14 +43,16 @@ test_that("facets_parity_report returns full-coverage audit in facets branch", {
 
 test_that("facets_parity_report integrates with summary() and plot()", {
   d <- mfrmr:::sample_mfrm_data(seed = 123)
-  fit <- mfrmr::fit_mfrm(
-    data = d,
-    person = "Person",
-    facets = c("Rater", "Task", "Criterion"),
-    score = "Score",
-    method = "JML",
-    model = "RSM",
-    maxit = 20
+  fit <- suppressWarnings(
+    mfrmr::fit_mfrm(
+      data = d,
+      person = "Person",
+      facets = c("Rater", "Task", "Criterion"),
+      score = "Score",
+      method = "JML",
+      model = "RSM",
+      maxit = 20
+    )
   )
   diag <- mfrmr::diagnose_mfrm(fit, residual_pca = "none")
   bias <- mfrmr::estimate_bias(fit, diag, facet_a = "Rater", facet_b = "Task", max_iter = 2)
@@ -63,7 +69,7 @@ test_that("facets_parity_report integrates with summary() and plot()", {
   expect_identical(s$summary_kind, "mfrm_parity_report")
 
   printed <- paste(capture.output(print(s)), collapse = "\n")
-  expect_match(printed, "mfrmr FACETS Parity Summary", fixed = TRUE)
+  expect_match(printed, "mfrmr Compatibility Contract Audit Summary", fixed = TRUE)
 
   p1 <- plot(parity, draw = FALSE)
   p2 <- plot(parity, type = "table_coverage", draw = FALSE)
@@ -78,14 +84,16 @@ test_that("facets_parity_report integrates with summary() and plot()", {
 
 test_that("facets_parity_report contract coverage includes unavailable rows", {
   d <- mfrmr:::sample_mfrm_data(seed = 123)
-  fit <- mfrmr::fit_mfrm(
-    data = d,
-    person = "Person",
-    facets = c("Rater"),
-    score = "Score",
-    method = "JML",
-    model = "RSM",
-    maxit = 20
+  fit <- suppressWarnings(
+    mfrmr::fit_mfrm(
+      data = d,
+      person = "Person",
+      facets = c("Rater"),
+      score = "Score",
+      method = "JML",
+      model = "RSM",
+      maxit = 20
+    )
   )
 
   parity <- mfrmr::facets_parity_report(
@@ -99,4 +107,44 @@ test_that("facets_parity_report contract coverage includes unavailable rows", {
   expect_lt(parity$overall$MinColumnCoverage[1], 1)
   expect_equal(parity$overall$MeanColumnCoverageAvailable[1], 1)
   expect_equal(parity$overall$MinColumnCoverageAvailable[1], 1)
+})
+
+test_that("reference_case_audit exposes package-native audit wording", {
+  d <- mfrmr:::sample_mfrm_data(seed = 123)
+  fit <- suppressWarnings(
+    mfrmr::fit_mfrm(
+      data = d,
+      person = "Person",
+      facets = c("Rater", "Task", "Criterion"),
+      score = "Score",
+      method = "JML",
+      model = "RSM",
+      maxit = 20
+    )
+  )
+  diag <- mfrmr::diagnose_mfrm(fit, residual_pca = "none")
+
+  audit <- mfrmr::reference_case_audit(
+    fit = fit,
+    diagnostics = diag,
+    reference_profile = "core"
+  )
+
+  expect_s3_class(audit, "mfrm_reference_audit")
+  expect_true(all(c(
+    "overall", "component_summary", "attention_items",
+    "metric_summary", "metric_checks", "settings", "parity"
+  ) %in% names(audit)))
+  expect_identical(as.character(audit$overall$ReferenceProfile[1]), "core")
+  expect_identical(as.character(audit$overall$CompatibilityLayer[1]), "package-native")
+  expect_identical(audit$settings$intended_use, "internal_contract_audit")
+  expect_false(isTRUE(audit$settings$external_validation))
+
+  s <- summary(audit)
+  expect_s3_class(s, "summary.mfrm_bundle")
+  expect_true(is.data.frame(s$overview))
+  expect_identical(as.character(s$overview$Class[1]), "mfrm_reference_audit")
+
+  printed <- paste(capture.output(print(s)), collapse = "\n")
+  expect_match(printed, "mfrmr Internal Reference Audit Summary", fixed = TRUE)
 })

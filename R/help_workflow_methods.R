@@ -6,15 +6,45 @@
 #'
 #' @section Typical workflow:
 #' 1. Fit a model with [fit_mfrm()].
+#'    For final reporting, prefer `method = "MML"` unless you explicitly want
+#'    a fast exploratory JML pass.
 #' 2. (Optional) Use [run_mfrm_facets()] or [mfrmRFacets()] for a
-#'    FACETS-style one-shot workflow wrapper.
+#'    legacy-compatible one-shot workflow wrapper.
 #' 3. Build diagnostics with [diagnose_mfrm()].
 #' 4. (Optional) Estimate interaction bias with [estimate_bias()].
 #' 5. Generate reporting bundles:
 #'    [apa_table()], [build_fixed_reports()], [build_visual_summaries()].
-#' 6. (Optional) Audit FACETS parity with `facets_parity_report()`.
-#' 7. Use `summary()` for compact text checks and `plot()` (or dedicated plot
+#' 6. (Optional) Audit report completeness with [reference_case_audit()].
+#'    Use `facets_parity_report()` only when you explicitly need the
+#'    compatibility layer.
+#' 7. (Optional) Benchmark packaged reference cases with
+#'    [reference_case_benchmark()] when you want an internal package-native
+#'    benchmark/audit run.
+#' 8. (Optional) For design planning or future scoring, move to the
+#'    simulation/prediction layer:
+#'    [build_mfrm_sim_spec()] / [extract_mfrm_sim_spec()] ->
+#'    [evaluate_mfrm_design()] / [predict_mfrm_population()] ->
+#'    [predict_mfrm_units()] / [sample_mfrm_plausible_values()].
+#'    Fixed-calibration unit scoring currently requires an `MML` fit, and
+#'    prediction export requires actual prediction objects in addition to
+#'    `include = "predictions"`.
+#' 9. Use `summary()` for compact text checks and `plot()` (or dedicated plot
 #'    helpers) for base-R visual diagnostics.
+#'
+#' @section Three practical routes:
+#' - Quick first pass:
+#'   [fit_mfrm()] -> [diagnose_mfrm()] -> [plot_qc_dashboard()].
+#' - Linking and coverage review:
+#'   [subset_connectivity_report()] -> `plot(..., type = "design_matrix")` ->
+#'   [plot_wright_unified()].
+#' - Manuscript prep:
+#'   [reporting_checklist()] -> [build_apa_outputs()] -> [apa_table()].
+#' - Design planning and forecasting:
+#'   [build_mfrm_sim_spec()] or [extract_mfrm_sim_spec()] ->
+#'   [evaluate_mfrm_design()] -> [predict_mfrm_population()] ->
+#'   [predict_mfrm_units()] or [sample_mfrm_plausible_values()] from an `MML`
+#'   fit -> `export_mfrm_bundle(population_prediction = ..., unit_prediction = ...,
+#'   plausible_values = ..., include = "predictions", ...)`.
 #'
 #' @section Interpreting output:
 #' This help page is a map, not an estimator:
@@ -33,6 +63,12 @@
 #' - `apa_table`: `summary(tbl)` and `plot(tbl, ...)`.
 #' - `mfrm_apa_outputs`: `summary(apa)` for compact diagnostics of report text.
 #' - `mfrm_threshold_profiles`: `summary(profiles)` for preset threshold grids.
+#' - `mfrm_population_prediction`: `summary(pred)` for design-level forecast
+#'   tables.
+#' - `mfrm_unit_prediction`: `summary(pred)` for fixed-calibration unit-level
+#'   posterior summaries.
+#' - `mfrm_plausible_values`: `summary(pv)` for draw-level uncertainty
+#'   summaries.
 #' - `mfrm_bundle` families:
 #'   `summary()` and class-aware `plot(bundle, ...)`.
 #'   Key bundle classes now also use class-aware `summary(bundle)`:
@@ -42,7 +78,8 @@
 #'   `mfrm_measurable`, `mfrm_unexpected_after_bias`, `mfrm_output_bundle`,
 #'   `mfrm_residual_pca`, `mfrm_specifications`, `mfrm_data_quality`,
 #'   `mfrm_iteration_report`, `mfrm_subset_connectivity`,
-#'   `mfrm_facet_statistics`, `mfrm_parity_report`.
+#'   `mfrm_facet_statistics`, `mfrm_parity_report`, `mfrm_reference_audit`,
+#'   `mfrm_reference_benchmark`.
 #'
 #' @section `plot.mfrm_bundle()` coverage:
 #' Default dispatch now covers:
@@ -53,28 +90,22 @@
 #' - `mfrm_measurable`, `mfrm_unexpected_after_bias`, `mfrm_output_bundle`
 #' - `mfrm_residual_pca`, `mfrm_specifications`, `mfrm_data_quality`
 #' - `mfrm_iteration_report`, `mfrm_subset_connectivity`, `mfrm_facet_statistics`
-#' - `mfrm_parity_report`
+#' - `mfrm_parity_report`, `mfrm_reference_audit`, `mfrm_reference_benchmark`
 #'
 #' For unknown bundle classes, use dedicated plotting helpers or custom base-R
 #' plots from component tables.
 #'
 #' @seealso [fit_mfrm()], [run_mfrm_facets()], [mfrmRFacets()],
-#'   [diagnose_mfrm()], [estimate_bias()],
+#'   [diagnose_mfrm()], [estimate_bias()], [mfrmr_visual_diagnostics],
+#'   [mfrmr_reports_and_tables], [mfrmr_reporting_and_apa],
+#'   [mfrmr_linking_and_dff], [mfrmr_compatibility_layer],
 #'   [summary.mfrm_fit()], `summary(diag)`,
 #'   `summary()`, [plot.mfrm_fit()], `plot()`
 #'
 #' @examples
-#' toy <- expand.grid(
-#'   Person = paste0("P", 1:4),
-#'   Rater = paste0("R", 1:2),
-#'   Criterion = c("Content", "Organization", "Language"),
-#'   stringsAsFactors = FALSE
-#' )
-#' toy$Score <- (
-#'   as.integer(factor(toy$Person)) +
-#'   2 * as.integer(factor(toy$Rater)) +
-#'   as.integer(factor(toy$Criterion))
-#' ) %% 3
+#' toy <- load_mfrmr_data("example_core")
+#' keep_people <- unique(toy$Person)[1:15]
+#' toy <- toy[toy$Person %in% keep_people, , drop = FALSE]
 #'
 #' fit <- fit_mfrm(
 #'   toy,
@@ -82,7 +113,7 @@
 #'   facets = c("Rater", "Criterion"),
 #'   score = "Score",
 #'   method = "JML",
-#'   maxit = 25
+#'   maxit = 15
 #' )
 #' class(summary(fit))
 #'
@@ -92,6 +123,23 @@
 #' t4 <- unexpected_response_table(fit, diagnostics = diag, top_n = 10)
 #' class(summary(t4))
 #' p <- plot(t4, draw = FALSE)
+#'
+#' sc <- subset_connectivity_report(fit, diagnostics = diag)
+#' p_design <- plot(sc, type = "design_matrix", draw = FALSE, preset = "publication")
+#' class(p_design)
+#'
+#' chk <- reporting_checklist(fit, diagnostics = diag)
+#' head(chk$checklist[, c("Section", "Item", "DraftReady", "NextAction")])
+#'
+#' sim_spec <- build_mfrm_sim_spec(
+#'   n_person = 30,
+#'   n_rater = 4,
+#'   n_criterion = 4,
+#'   raters_per_person = 2,
+#'   assignment = "rotating"
+#' )
+#' pred_pop <- predict_mfrm_population(sim_spec = sim_spec, reps = 2, maxit = 10, seed = 1)
+#' summary(pred_pop)$forecast[, c("Facet", "MeanSeparation", "McseSeparation")]
 #'
 #' @name mfrmr_workflow_methods
 NULL

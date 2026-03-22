@@ -8,10 +8,13 @@ export_mfrm_bundle(
   fit,
   diagnostics = NULL,
   bias_results = NULL,
+  population_prediction = NULL,
+  unit_prediction = NULL,
+  plausible_values = NULL,
   output_dir = ".",
   prefix = "mfrmr_bundle",
   include = c("core_tables", "checklist", "dashboard", "apa", "anchors", "manifest",
-    "visual_summaries", "script", "html"),
+    "visual_summaries", "predictions", "script", "html"),
   facet = NULL,
   include_person_anchors = FALSE,
   overwrite = FALSE,
@@ -27,7 +30,15 @@ diagnostics are reused from \code{run_mfrm_facets()} when available, otherwise
 computed with \code{residual_pca = "none"} (or \code{"both"} when visual summaries
 are requested).}
 
-\item{bias_results}{Optional output from \code{\link[=estimate_bias]{estimate_bias()}} or a named list of bias bundles.}
+\item{bias_results}{Optional output from \code{\link[=estimate_bias]{estimate_bias()}} or a named list of
+bias bundles.}
+
+\item{population_prediction}{Optional output from
+\code{\link[=predict_mfrm_population]{predict_mfrm_population()}}.}
+
+\item{unit_prediction}{Optional output from \code{\link[=predict_mfrm_units]{predict_mfrm_units()}}.}
+
+\item{plausible_values}{Optional output from \code{\link[=sample_mfrm_plausible_values]{sample_mfrm_plausible_values()}}.}
 
 \item{output_dir}{Directory where files will be written.}
 
@@ -35,7 +46,8 @@ are requested).}
 
 \item{include}{Components to export. Supported values are
 \code{"core_tables"}, \code{"checklist"}, \code{"dashboard"}, \code{"apa"}, \code{"anchors"},
-\code{"manifest"}, \code{"visual_summaries"}, \code{"script"}, and \code{"html"}.}
+\code{"manifest"}, \code{"visual_summaries"}, \code{"predictions"}, \code{"script"}, and
+\code{"html"}.}
 
 \item{facet}{Optional facet for \code{\link[=facet_quality_dashboard]{facet_quality_dashboard()}}.}
 
@@ -95,6 +107,8 @@ Depending on \code{include}, the exporter can write:
 \item anchor CSV via \code{\link[=make_anchor_table]{make_anchor_table()}}
 \item manifest CSV/TXT via \code{\link[=build_mfrm_manifest]{build_mfrm_manifest()}}
 \item visual warning/summary artifacts via \code{\link[=build_visual_summaries]{build_visual_summaries()}}
+\item prediction/forecast CSVs via \code{\link[=predict_mfrm_population]{predict_mfrm_population()}},
+\code{\link[=predict_mfrm_units]{predict_mfrm_units()}}, and \code{\link[=sample_mfrm_plausible_values]{sample_mfrm_plausible_values()}}
 \item a package-native replay script via \code{\link[=build_mfrm_replay_script]{build_mfrm_replay_script()}}
 \item a lightweight HTML report that bundles the exported tables/text
 }
@@ -120,7 +134,7 @@ replay script, and HTML summary.
 }
 
 \examples{
-toy <- mfrmr:::sample_mfrm_data(seed = 123)
+toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "JML", maxit = 25)
 diag <- diagnose_mfrm(fit, residual_pca = "none")

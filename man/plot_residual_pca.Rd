@@ -11,6 +11,7 @@ plot_residual_pca(
   plot_type = c("scree", "loadings"),
   component = 1L,
   top_n = 20L,
+  preset = c("standard", "publication", "compact"),
   draw = TRUE
 )
 }
@@ -26,6 +27,8 @@ plot_residual_pca(
 \item{component}{Component index for loadings plot.}
 
 \item{top_n}{Maximum number of variables shown in loadings plot.}
+
+\item{preset}{Visual preset (\code{"standard"}, \code{"publication"}, or \code{"compact"}).}
 
 \item{draw}{If \code{TRUE}, draws the plot using base graphics.}
 }
@@ -61,8 +64,10 @@ For \code{mode = "facet"} and \code{facet = NULL}, the first available facet is 
 \section{Interpreting output}{
 
 \itemize{
-\item \code{plot_type = "scree"}: look for dominant early components
-(eigenvalue notably above 1 as a practical warning sign).
+\item \code{plot_type = "scree"}: look for dominant early components relative
+to later components and the unit-eigenvalue reference line. Treat
+this as exploratory residual-structure screening, not a standalone
+unidimensionality test.
 \item \code{plot_type = "loadings"}: identifies variables/elements driving each
 component; inspect both sign and absolute magnitude.
 }
@@ -81,26 +86,23 @@ specific facet after global PCA review.
 }
 
 \examples{
-toy <- expand.grid(
-  Person = paste0("P", 1:4),
-  Rater = paste0("R", 1:2),
-  Criterion = c("Content", "Organization", "Language"),
-  stringsAsFactors = FALSE
+toy_full <- load_mfrmr_data("example_core")
+toy_people <- unique(toy_full$Person)[1:24]
+toy <- toy_full[match(toy_full$Person, toy_people, nomatch = 0L) > 0L, , drop = FALSE]
+fit <- suppressWarnings(
+  fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 15)
 )
-toy$Score <- (
-  as.integer(factor(toy$Person)) +
-  2 * as.integer(factor(toy$Rater)) +
-  as.integer(factor(toy$Criterion))
-) \%\% 3
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
-diag <- diagnose_mfrm(fit, residual_pca = "both")
-pca <- analyze_residual_pca(diag, mode = "both")
+diag <- diagnose_mfrm(fit, residual_pca = "overall")
+pca <- analyze_residual_pca(diag, mode = "overall")
 plt <- plot_residual_pca(pca, mode = "overall", plot_type = "scree", draw = FALSE)
 head(plt$data)
 plt_load <- plot_residual_pca(
   pca, mode = "overall", plot_type = "loadings", component = 1, draw = FALSE
 )
 head(plt_load$data)
+if (interactive()) {
+  plot_residual_pca(pca, mode = "overall", plot_type = "scree", preset = "publication")
+}
 }
 \seealso{
 \code{\link[=analyze_residual_pca]{analyze_residual_pca()}}, \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}

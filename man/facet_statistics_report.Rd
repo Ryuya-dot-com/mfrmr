@@ -8,7 +8,9 @@ facet_statistics_report(
   fit,
   diagnostics = NULL,
   metrics = c("Estimate", "Infit", "Outfit", "SE"),
-  ruler_width = 41
+  ruler_width = 41,
+  distribution_basis = c("both", "sample", "population"),
+  se_mode = c("both", "model", "fit_adjusted")
 )
 }
 \arguments{
@@ -19,6 +21,12 @@ facet_statistics_report(
 \item{metrics}{Numeric columns in \code{diagnostics$measures} to summarize.}
 
 \item{ruler_width}{Width of the fixed-width ruler used for \code{M/S/Q/X} marks.}
+
+\item{distribution_basis}{Which distribution basis to keep in the appended
+precision summary: \code{"both"} (default), \code{"sample"}, or \code{"population"}.}
+
+\item{se_mode}{Which standard-error mode to keep in the appended precision
+summary: \code{"both"} (default), \code{"model"}, or \code{"fit_adjusted"}.}
 }
 \value{
 A named list with facet-statistics components. Class:
@@ -36,7 +44,7 @@ Build a facet statistics report (preferred alias)
 
 \itemize{
 \item facet-level means/SD/ranges of selected metrics (\code{Estimate}, fit indices, \code{SE}).
-\item fixed-width ruler rows (\code{M/S/Q/X}) for FACETS-like profile scanning.
+\item fixed-width ruler rows (\code{M/S/Q/X}) for compact profile scanning.
 }
 }
 
@@ -46,21 +54,18 @@ Build a facet statistics report (preferred alias)
 \item Run \code{facet_statistics_report(fit)}.
 \item Inspect summary/ranges for anomalous facets.
 \item Cross-check flagged facets with fit and chi-square diagnostics.
+The returned bundle now includes:
+}
+\itemize{
+\item \code{precision_summary}: facet precision/separation indices by
+\code{DistributionBasis} and \code{SEMode}
+\item \code{variability_tests}: fixed/random variability tests by facet
+\item \code{se_modes}: compact list of available SE modes by facet
 }
 }
 
 \examples{
-toy <- expand.grid(
-  Person = paste0("P", 1:4),
-  Rater = paste0("R", 1:2),
-  Criterion = c("Content", "Organization", "Language"),
-  stringsAsFactors = FALSE
-)
-toy$Score <- (
-  as.integer(factor(toy$Person)) +
-  2 * as.integer(factor(toy$Rater)) +
-  as.integer(factor(toy$Criterion))
-) \%\% 3
+toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 out <- facet_statistics_report(fit)
 summary(out)
@@ -68,5 +73,6 @@ p_fs <- plot(out, draw = FALSE)
 class(p_fs)
 }
 \seealso{
-\code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=summary.mfrm_fit]{summary.mfrm_fit()}}, \code{\link[=plot_facets_chisq]{plot_facets_chisq()}}
+\code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=summary.mfrm_fit]{summary.mfrm_fit()}}, \code{\link[=plot_facets_chisq]{plot_facets_chisq()}},
+\link{mfrmr_reports_and_tables}
 }

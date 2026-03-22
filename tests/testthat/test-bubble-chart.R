@@ -23,6 +23,9 @@ test_that("plot_bubble returns mfrm_plot_data with draw=FALSE", {
   expect_equal(out$name, "bubble")
   expect_true(is.data.frame(out$data$table))
   expect_true(nrow(out$data$table) > 0)
+  expect_true(all(c("title", "subtitle", "legend", "reference_lines") %in% names(out$data)))
+  expect_true(is.data.frame(out$data$legend))
+  expect_true(is.data.frame(out$data$reference_lines))
 })
 
 test_that("plot_bubble table excludes Person facet", {
@@ -147,4 +150,15 @@ test_that("plot.mfrm_fit show_ci=FALSE does not include SE in wright data", {
   out <- suppressWarnings(plot(fit, type = "wright", show_ci = FALSE, draw = FALSE))
   loc <- out$data$locations
   expect_false("SE" %in% names(loc))
+})
+
+test_that("plot.mfrm_fit and plot_bubble store visual preset metadata", {
+  fit <- local_fit()
+  out_fit <- suppressWarnings(plot(fit, type = "facet", draw = FALSE, preset = "publication"))
+  expect_identical(as.character(out_fit$data$preset), "publication")
+  expect_true(all(c("title", "subtitle", "legend", "reference_lines") %in% names(out_fit$data)))
+
+  out_bubble <- suppressWarnings(plot_bubble(fit, draw = FALSE, preset = "publication"))
+  expect_identical(as.character(out_bubble$data$preset), "publication")
+  expect_true(all(c("title", "subtitle", "legend", "reference_lines") %in% names(out_bubble$data)))
 })

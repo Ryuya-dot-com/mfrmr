@@ -2,7 +2,7 @@
 % Please edit documentation in R/api-tables.R
 \name{bias_count_table}
 \alias{bias_count_table}
-\title{Build a FACETS Table 11-style bias-count report}
+\title{Build a bias-cell count report}
 \usage{
 bias_count_table(
   bias_results,
@@ -17,7 +17,7 @@ bias_count_table(
 \item{min_count_warn}{Minimum count threshold for flagging sparse bias cells.}
 
 \item{branch}{Output branch:
-\code{"facets"} keeps FACETS-style naming, \code{"original"} returns compact QC-oriented names.}
+\code{"facets"} keeps legacy manual-aligned naming, \code{"original"} returns compact QC-oriented names.}
 
 \item{fit}{Optional \code{\link[=fit_mfrm]{fit_mfrm()}} result used to attach run context metadata.}
 }
@@ -34,17 +34,17 @@ A named list with:
 }
 }
 \description{
-Build a FACETS Table 11-style bias-count report
+Build a bias-cell count report
 }
 \details{
-FACETS Table 11 emphasizes how many observations contribute to each
-bias-cell estimate. This helper extracts those counts and summarizes
-sparsity patterns.
+This helper summarizes how many observations contribute to each
+bias-cell estimate and flags sparse cells.
 
 Branch behavior:
 \itemize{
-\item \code{"facets"}: keeps FACETS-like column labels (\code{Sq}, \verb{Observd Count},
-\verb{Obs-Exp Average}, \verb{Model S.E.}) for side-by-side interpretation.
+\item \code{"facets"}: keeps legacy manual-aligned column labels (\code{Sq},
+\verb{Observd Count}, \verb{Obs-Exp Average}, \verb{Model S.E.}) for side-by-side
+comparison with external workflows.
 \item \code{"original"}: keeps compact field names (\code{Count}, \code{BiasSize}, \code{SE}) for
 custom QC workflows and scripting.
 }
@@ -71,9 +71,16 @@ can become unstable with sparse support.
 }
 }
 
+\section{Further guidance}{
+
+For a plot-selection guide and a longer walkthrough, see
+\link{mfrmr_visual_diagnostics} and
+\code{vignette("mfrmr-visual-diagnostics", package = "mfrmr")}.
+}
+
 \section{Output columns}{
 
-The \code{table} data.frame contains (FACETS-style branch):
+The \code{table} data.frame contains, in the legacy-compatible branch:
 \describe{
 \item{\if{html}{\out{<FacetA>}}, \if{html}{\out{<FacetB>}}}{Interaction facet level identifiers.}
 \item{Sq}{Sequential row number.}
@@ -94,17 +101,7 @@ cells.}
 }
 
 \examples{
-toy <- expand.grid(
-  Person = paste0("P", 1:4),
-  Rater = paste0("R", 1:2),
-  Criterion = c("Content", "Organization", "Language"),
-  stringsAsFactors = FALSE
-)
-toy$Score <- (
-  as.integer(factor(toy$Person)) +
-  2 * as.integer(factor(toy$Rater)) +
-  as.integer(factor(toy$Criterion))
-) \%\% 3
+toy <- load_mfrmr_data("example_bias")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 bias <- estimate_bias(fit, diag, facet_a = "Rater", facet_b = "Criterion", max_iter = 2)
@@ -125,5 +122,6 @@ if (interactive()) {
 }
 }
 \seealso{
-\code{\link[=estimate_bias]{estimate_bias()}}, \code{\link[=unexpected_after_bias_table]{unexpected_after_bias_table()}}, \code{\link[=build_fixed_reports]{build_fixed_reports()}}
+\code{\link[=estimate_bias]{estimate_bias()}}, \code{\link[=unexpected_after_bias_table]{unexpected_after_bias_table()}}, \code{\link[=build_fixed_reports]{build_fixed_reports()}},
+\link{mfrmr_visual_diagnostics}
 }

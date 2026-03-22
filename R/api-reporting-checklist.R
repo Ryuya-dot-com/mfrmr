@@ -26,10 +26,31 @@
 #' The output is designed for manuscript preparation, audit trails, and
 #' reproducible reporting workflows.
 #'
+#' @section What this checklist means:
+#' `reporting_checklist()` is a content-availability contract. It tells you
+#' which reporting elements are already present in the current analysis
+#' objects and which still need to be generated or documented. The primary
+#' draft-status column is `DraftReady`; `ReadyForAPA` is retained as a
+#' backward-compatible alias.
+#'
+#' @section What this checklist does not justify:
+#' - It is not a single run-level pass/fail decision for publication.
+#' - `DraftReady = TRUE` / `ReadyForAPA = TRUE` does not certify formal
+#'   inferential adequacy.
+#' - Missing bias rows may simply mean `bias_results` were not supplied.
+#'
 #' @section Interpreting output:
 #' - `checklist`: one row per reporting item with `Available = TRUE/FALSE`.
+#'   `DraftReady = TRUE` means the item can be drafted into a report with the
+#'   package's documented caveats. `ReadyForAPA` is a backward-compatible alias
+#'   of the same flag; neither field certifies formal inferential adequacy.
 #' - `section_summary`: available items by section.
 #' - `references`: core background references when requested.
+#'
+#' @section Recommended next step:
+#' Review the rows with `Available = FALSE` or `DraftReady = FALSE`, then add
+#' the missing diagnostics, bias results, or narrative context before calling
+#' [build_apa_outputs()] for draft text generation.
 #'
 #' @section Typical workflow:
 #' 1. Fit with [fit_mfrm()].
@@ -42,14 +63,14 @@
 #' @seealso [build_apa_outputs()], [build_visual_summaries()],
 #'   [specifications_report()], [data_quality_report()]
 #' @examples
-#' toy <- mfrmr:::sample_mfrm_data(seed = 123)
+#' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "JML", maxit = 25)
 #' diag <- diagnose_mfrm(fit, residual_pca = "both")
 #' chk <- reporting_checklist(fit, diagnostics = diag)
 #' summary(chk)
 #' apa <- build_apa_outputs(fit, diag)
-#' head(chk$checklist[, c("Section", "Item", "ReadyForAPA", "NextAction")])
+#' head(chk$checklist[, c("Section", "Item", "DraftReady", "NextAction")])
 #' nchar(apa$report_text)
 #' @export
 reporting_checklist <- function(fit,
@@ -57,13 +78,13 @@ reporting_checklist <- function(fit,
                                 bias_results = NULL,
                                 include_references = TRUE) {
   if (!inherits(fit, "mfrm_fit")) {
-    stop("`fit` must be an mfrm_fit object from fit_mfrm().")
+    stop("`fit` must be an mfrm_fit object from fit_mfrm().", call. = FALSE)
   }
   if (is.null(diagnostics)) {
     diagnostics <- diagnose_mfrm(fit, residual_pca = "none")
   }
   if (!is.list(diagnostics) || is.null(diagnostics$obs)) {
-    stop("`diagnostics` must be output from diagnose_mfrm().")
+    stop("`diagnostics` must be output from diagnose_mfrm().", call. = FALSE)
   }
 
   config <- fit$config %||% list()
@@ -78,6 +99,8 @@ reporting_checklist <- function(fit,
     diagnostics$residual_pca_by_facet %||%
     NULL
   bias_tbls <- collect_bias_tables_for_checklist(bias_results)
+  bias_error_tbl <- attr(bias_tbls, "errors", exact = TRUE)
+  n_bias_errors <- if (is.data.frame(bias_error_tbl)) nrow(bias_error_tbl) else 0L
 
   converged <- isTRUE(fit$summary$Converged %||% FALSE)
   summary_msg <- if (is.data.frame(fit$summary) && "Message" %in% names(fit$summary)) {
@@ -88,10 +111,16 @@ reporting_checklist <- function(fit,
   conv_msg <- as.character(fit$opt$message %||% summary_msg %||% "")
   n_bias_pairs <- length(bias_tbls)
   has_bias_sig <- FALSE
+  bias_stat_parse_issue <- FALSE
   if (n_bias_pairs > 0) {
     has_bias_sig <- any(vapply(bias_tbls, function(tbl) {
       if (!is.data.frame(tbl) || nrow(tbl) == 0 || !"t" %in% names(tbl)) return(FALSE)
-      t_vals <- suppressWarnings(as.numeric(tbl$t))
+      raw_t <- as.character(tbl$t)
+      t_vals <- suppressWarnings(as.numeric(raw_t))
+      bad_t <- is.na(t_vals) & !is.na(raw_t) & nzchar(trimws(raw_t))
+      if (any(bad_t)) {
+        bias_stat_parse_issue <<- TRUE
+      }
       any(is.finite(t_vals) & abs(t_vals) >= 2)
     }, logical(1)))
   }
@@ -102,7 +131,17 @@ reporting_checklist <- function(fit,
   has_ci <- has_meas && "SE" %in% names(measures)
   has_rel <- nrow(rel_df) > 0
   precision_tier <- as.character(precision_profile_df$PrecisionTier[1] %||% NA_character_)
-  formal_precision <- identical(precision_tier, "model_based")
+  formal_precision <- isTRUE(precision_profile_df$SupportsFormalInference[1] %||% FALSE) && converged
+  measure_formal <- if (has_meas && "SupportsFormalInference" %in% names(measures)) {
+    any(as.logical(measures$SupportsFormalInference), na.rm = TRUE)
+  } else {
+    formal_precision
+  }
+  ci_ready <- if (has_meas && "CIEligible" %in% names(measures)) {
+    any(as.logical(measures$CIEligible), na.rm = TRUE)
+  } else {
+    has_ci && formal_precision
+  }
   has_steps <- nrow(steps_df) > 0
   has_pca <- !is.null(pca_obj) && length(pca_obj) > 0
   has_counts <- has_resid && "Observed" %in% names(obs_df)
@@ -132,15 +171,16 @@ reporting_checklist <- function(fit,
     }
     if (is.null(available_action) || !nzchar(as.character(available_action))) {
       available_action <- if (ready_for_apa) {
-        "Available; integrate this evidence into the manuscript."
+        "Available; adapt this evidence into the manuscript draft after methodological review."
       } else {
-        "Available, but report it with the documented cautionary language."
+        "Available, but keep the documented cautionary language when drafting."
       }
     }
     data.frame(
       Section = as.character(section),
       Item = as.character(item),
       Available = isTRUE(available),
+      DraftReady = ready_for_apa,
       ReadyForAPA = ready_for_apa,
       Severity = as.character(severity),
       Priority = as.character(priority),
@@ -217,7 +257,8 @@ reporting_checklist <- function(fit,
         detail = if (!is.null(diagnostics$subsets)) "Connectivity/subset output available" else "No subset output",
         source_component = "diagnostics$subsets",
         severity = "recommended",
-        missing_action = "Run the subset/connectivity diagnostics and summarize whether the design is connected."
+        missing_action = "Run the subset/connectivity diagnostics and summarize whether the design is connected.",
+        available_action = "Document the connectivity result before making common-scale or linking claims."
       ),
       add_item(
         "Global Fit",
@@ -225,7 +266,8 @@ reporting_checklist <- function(fit,
         has_resid,
         detail = if (has_resid) "Observation-level standardized residuals available" else "No standardized residuals",
         source_component = "diagnostics$obs",
-        missing_action = "Compute diagnostics so global fit and local residual screening can be reported."
+        missing_action = "Compute diagnostics so global fit and local residual screening can be reported.",
+        available_action = "Use standardized residuals as screening diagnostics, not as standalone proof of model adequacy."
       ),
       add_item(
         "Global Fit",
@@ -234,7 +276,8 @@ reporting_checklist <- function(fit,
         detail = if (has_pca) "Residual PCA output available" else "Residual PCA not computed",
         source_component = "diagnostics$pca",
         severity = "recommended",
-        missing_action = "Run residual PCA if you want to comment on unexplained residual structure."
+        missing_action = "Run residual PCA if you want to comment on unexplained residual structure.",
+        available_action = "Report residual PCA as exploratory residual-structure follow-up, not as a standalone dimensionality test."
       ),
       add_item(
         "Facet-Level Statistics",
@@ -250,6 +293,7 @@ reporting_checklist <- function(fit,
           "No reliability table"
         },
         source_component = "diagnostics$reliability",
+        ready_for_apa = has_rel && formal_precision,
         missing_action = "Compute facet reliability/separation before describing facet spread and precision.",
         available_action = if (formal_precision) {
           "Report facet reliability/separation directly in the APA results section."
@@ -271,6 +315,7 @@ reporting_checklist <- function(fit,
           "No variability summary"
         },
         source_component = "diagnostics$reliability + diagnostics$facets_chisq",
+        ready_for_apa = has_rel && formal_precision,
         missing_action = "Compute facet variability summaries before discussing fixed/random spread across facets.",
         available_action = if (formal_precision) {
           "Use the fixed/random variability summary in the results text or table notes."
@@ -301,6 +346,7 @@ reporting_checklist <- function(fit,
           "Estimate/SE columns not complete"
         },
         source_component = "diagnostics$measures",
+        ready_for_apa = has_ci && measure_formal,
         missing_action = "Compute element-level measures and SE before reporting facet-level results.",
         available_action = if (formal_precision) {
           "Use ModelSE/RealSE language consistently in tables and notes."
@@ -323,6 +369,7 @@ reporting_checklist <- function(fit,
         },
         source_component = "diagnostics$measures",
         severity = "recommended",
+        ready_for_apa = ci_ready,
         missing_action = "Add SE first if you plan to report approximate confidence intervals.",
         available_action = if (formal_precision) {
           "Report approximate normal intervals if they are substantively useful."
@@ -353,7 +400,8 @@ reporting_checklist <- function(fit,
         has_counts,
         detail = if (has_counts) "Observed score distribution available" else "Observed score counts unavailable",
         source_component = "diagnostics$obs",
-        missing_action = "Expose observed score counts before commenting on category use."
+        missing_action = "Expose observed score counts before commenting on category use.",
+        available_action = "Use category counts as descriptive support for category use, not as a standalone quality verdict."
       ),
       add_item(
         "Rating Scale Diagnostics",
@@ -362,7 +410,8 @@ reporting_checklist <- function(fit,
         detail = if (has_person_measure) "Person measures can be summarized by observed category" else "Person measures unavailable",
         source_component = "diagnostics$obs",
         severity = "recommended",
-        missing_action = "Retain person-measure information if the manuscript discusses average measures by category."
+        missing_action = "Retain person-measure information if the manuscript discusses average measures by category.",
+        available_action = "Report average measures by category as descriptive scale-functioning evidence."
       ),
       add_item(
         "Rating Scale Diagnostics",
@@ -370,7 +419,8 @@ reporting_checklist <- function(fit,
         has_steps,
         detail = if (has_steps) "Step/threshold table available" else "No step table",
         source_component = "fit$steps",
-        missing_action = "Fit step/threshold estimates before reporting category structure."
+        missing_action = "Fit step/threshold estimates before reporting category structure.",
+        available_action = "Describe threshold ordering as category-structure evidence under the fitted model, not as a standalone proof of scale validity."
       ),
       add_item(
         "Rating Scale Diagnostics",
@@ -379,13 +429,18 @@ reporting_checklist <- function(fit,
         detail = if (has_steps) "Curve inputs available from threshold table" else "No step table for curves",
         source_component = "fit$steps",
         severity = "recommended",
-        missing_action = "Retain the threshold table if you plan to include category probability curves."
+        missing_action = "Retain the threshold table if you plan to include category probability curves.",
+        available_action = "Use category probability curves as descriptive follow-up for scale structure."
       ),
       add_item(
         "Bias / Interaction Analysis",
         "Facet pairs tested",
-        n_bias_pairs > 0,
-        detail = sprintf("%d bias result bundle(s)", n_bias_pairs),
+        n_bias_pairs > 0 || n_bias_errors > 0,
+        detail = if (n_bias_errors > 0) {
+          sprintf("%d bias result bundle(s); %d requested pair(s) failed", n_bias_pairs, n_bias_errors)
+        } else {
+          sprintf("%d bias result bundle(s)", n_bias_pairs)
+        },
         source_component = "bias_results",
         severity = "recommended",
         missing_action = "Run bias screening if the manuscript needs interaction-level follow-up."
@@ -393,8 +448,16 @@ reporting_checklist <- function(fit,
       add_item(
         "Bias / Interaction Analysis",
         "Screen-positive interactions",
-        n_bias_pairs > 0,
-        detail = if (has_bias_sig) {
+        n_bias_pairs > 0 || n_bias_errors > 0,
+        detail = if (n_bias_errors > 0) {
+          sprintf(
+            "Bias screening completed for %d bundle(s), but %d requested pair(s) failed; review the bias collection errors before interpreting screen-positive counts.",
+            n_bias_pairs,
+            n_bias_errors
+          )
+        } else if (bias_stat_parse_issue) {
+          "Bias screening output included non-numeric screening statistics; verify the bias tables before interpreting screen-positive counts."
+        } else if (has_bias_sig) {
           "At least one interaction row exceeded the screening threshold."
         } else if (n_bias_pairs > 0) {
           "Bias screening was run and no interaction rows crossed the current screening threshold."
@@ -403,7 +466,7 @@ reporting_checklist <- function(fit,
         },
         source_component = "bias_results$table",
         severity = "recommended",
-        ready_for_apa = n_bias_pairs > 0,
+        ready_for_apa = FALSE,
         missing_action = "Run bias screening before discussing interaction-level anomalies.",
         available_action = "Report these findings as screening results, not as formal hypothesis tests."
       ),
@@ -433,8 +496,10 @@ reporting_checklist <- function(fit,
     dplyr::summarise(
       Items = dplyr::n(),
       Available = sum(.data$Available, na.rm = TRUE),
+      DraftReady = sum(.data$DraftReady, na.rm = TRUE),
       ReadyForAPA = sum(.data$ReadyForAPA, na.rm = TRUE),
       Missing = .data$Items - .data$Available,
+      NeedsDraftWork = .data$Items - .data$DraftReady,
       NeedsAction = .data$Items - .data$ReadyForAPA,
       .groups = "drop"
     )
@@ -465,6 +530,7 @@ reporting_checklist <- function(fit,
     include_references = isTRUE(include_references),
     diagnostics_supplied = !missing(diagnostics) && !is.null(diagnostics),
     bias_result_count = n_bias_pairs,
+    bias_error_count = n_bias_errors,
     precision_tier = precision_tier
   )
 
@@ -480,11 +546,15 @@ reporting_checklist <- function(fit,
 
 collect_bias_tables_for_checklist <- function(bias_results) {
   if (is.null(bias_results)) return(list())
+  error_tbl <- data.frame()
   if (inherits(bias_results, "mfrm_bias_collection")) {
+    error_tbl <- as.data.frame(bias_results$errors %||% data.frame(), stringsAsFactors = FALSE)
     bias_results <- bias_results$by_pair %||% list()
   }
   if (inherits(bias_results, "mfrm_bias")) {
-    return(list(bias = as.data.frame(bias_results$table %||% data.frame(), stringsAsFactors = FALSE)))
+    out <- list(bias = as.data.frame(bias_results$table %||% data.frame(), stringsAsFactors = FALSE))
+    attr(out, "errors") <- error_tbl
+    return(out)
   }
   if (is.list(bias_results) && !is.data.frame(bias_results)) {
     out <- list()
@@ -498,7 +568,10 @@ collect_bias_tables_for_checklist <- function(bias_results) {
         out[[nms[i]]] <- as.data.frame(obj$table %||% data.frame(), stringsAsFactors = FALSE)
       }
     }
+    attr(out, "errors") <- error_tbl
     return(out)
   }
-  list()
+  out <- list()
+  attr(out, "errors") <- error_tbl
+  out
 }

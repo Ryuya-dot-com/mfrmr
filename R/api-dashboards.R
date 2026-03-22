@@ -62,7 +62,7 @@
 #'
 #' @seealso [diagnose_mfrm()], [estimate_bias()], [plot_qc_dashboard()]
 #' @examples
-#' toy <- mfrmr:::sample_mfrm_data(seed = 123)
+#' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
 #' dash <- facet_quality_dashboard(fit, diagnostics = diag)
@@ -235,7 +235,11 @@ facet_quality_dashboard <- function(fit,
   if (sum(detail$AnyFlag, na.rm = TRUE) == 0L) {
     notes <- c(notes, "No level-level flags were triggered under the current thresholds.")
   }
-  if (nrow(bias_meta$sources) > 0 && any(bias_meta$sources$Used %in% FALSE)) {
+  if (nrow(bias_meta$sources) > 0 && any(grepl("^pair error:", bias_meta$sources$Reason))) {
+    notes <- c(notes, "Some requested bias bundles failed and were excluded from the dashboard counts.")
+  }
+  if (nrow(bias_meta$sources) > 0 &&
+      any(bias_meta$sources$Used %in% FALSE & !grepl("^pair error:", bias_meta$sources$Reason))) {
     notes <- c(notes, "Some bias bundles were skipped because they did not involve the target facet.")
   }
   if (length(notes) == 0) {
@@ -285,13 +289,21 @@ dashboard_round_numeric_df <- function(df, digits = 3L) {
 
 dashboard_normalize_bias_inputs <- function(bias_results) {
   if (is.null(bias_results)) return(list())
+  error_tbl <- data.frame()
   if (inherits(bias_results, "mfrm_bias_collection")) {
+    error_tbl <- as.data.frame(bias_results$errors %||% data.frame(), stringsAsFactors = FALSE)
     bias_results <- bias_results$by_pair %||% list()
   }
   if (is.list(bias_results) && !is.null(bias_results$table) && nrow(bias_results$table) > 0) {
-    return(stats::setNames(list(bias_results), "bias_1"))
+    out <- stats::setNames(list(bias_results), "bias_1")
+    attr(out, "errors") <- error_tbl
+    return(out)
   }
-  if (!is.list(bias_results) || length(bias_results) == 0) return(list())
+  if (!is.list(bias_results) || length(bias_results) == 0) {
+    out <- list()
+    attr(out, "errors") <- error_tbl
+    return(out)
+  }
 
   out <- list()
   nm <- names(bias_results)
@@ -304,6 +316,7 @@ dashboard_normalize_bias_inputs <- function(bias_results) {
       out[[key]] <- item
     }
   }
+  attr(out, "errors") <- error_tbl
   out
 }
 
@@ -313,10 +326,20 @@ dashboard_bias_level_counts <- function(bias_results,
                                         bias_abs_size_warn = 0.5,
                                         bias_p_max = 0.05) {
   sources <- dashboard_normalize_bias_inputs(bias_results)
+  error_tbl <- attr(sources, "errors", exact = TRUE)
   if (length(sources) == 0) {
-    return(list(
-      levels = data.frame(Level = character(0), BiasCount = integer(0), BiasSources = integer(0), stringsAsFactors = FALSE),
-      sources = data.frame(
+    source_tbl <- if (is.data.frame(error_tbl) && nrow(error_tbl) > 0) {
+      data.frame(
+        Source = as.character(error_tbl$Interaction %||% paste0("bias_error_", seq_len(nrow(error_tbl)))),
+        Used = FALSE,
+        Reason = paste0("pair error: ", as.character(error_tbl$Error)),
+        Facets = as.character(error_tbl$Facets %||% NA_character_),
+        Rows = 0L,
+        FlaggedRows = NA_integer_,
+        stringsAsFactors = FALSE
+      )
+    } else {
+      data.frame(
         Source = character(0),
         Used = logical(0),
         Reason = character(0),
@@ -325,6 +348,10 @@ dashboard_bias_level_counts <- function(bias_results,
         FlaggedRows = integer(0),
         stringsAsFactors = FALSE
       )
+    }
+    return(list(
+      levels = data.frame(Level = character(0), BiasCount = integer(0), BiasSources = integer(0), stringsAsFactors = FALSE),
+      sources = source_tbl
     ))
   }
 
@@ -409,6 +436,20 @@ dashboard_bias_level_counts <- function(bias_results,
   }
 
   source_tbl <- dplyr::bind_rows(source_rows)
+  if (is.data.frame(error_tbl) && nrow(error_tbl) > 0) {
+    source_tbl <- dplyr::bind_rows(
+      source_tbl,
+      data.frame(
+        Source = as.character(error_tbl$Interaction %||% paste0("bias_error_", seq_len(nrow(error_tbl)))),
+        Used = FALSE,
+        Reason = paste0("pair error: ", as.character(error_tbl$Error)),
+        Facets = as.character(error_tbl$Facets %||% NA_character_),
+        Rows = 0L,
+        FlaggedRows = NA_integer_,
+        stringsAsFactors = FALSE
+      )
+    )
+  }
   list(levels = level_tbl, sources = source_tbl)
 }
 
@@ -497,7 +538,7 @@ dashboard_draw_plot <- function(tbl,
 #' @return An object of class `summary.mfrm_facet_dashboard`.
 #' @seealso [facet_quality_dashboard()], [plot_facet_quality_dashboard()]
 #' @examples
-#' toy <- mfrmr:::sample_mfrm_data(seed = 123)
+#' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
 #' summary(facet_quality_dashboard(fit, diagnostics = diag))
@@ -594,7 +635,7 @@ print.summary.mfrm_facet_dashboard <- function(x, ...) {
 #' @return A plotting-data object of class `mfrm_plot_data`.
 #' @seealso [facet_quality_dashboard()], [summary.mfrm_facet_dashboard()]
 #' @examples
-#' toy <- mfrmr:::sample_mfrm_data(seed = 123)
+#' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
 #' p <- plot_facet_quality_dashboard(fit, diagnostics = diag, draw = FALSE)

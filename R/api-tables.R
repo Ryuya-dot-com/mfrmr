@@ -1,4 +1,4 @@
-#' Build a FACETS Table 10-style inter-rater agreement report
+#' Build an inter-rater agreement report
 #'
 #' @param fit Output from [fit_mfrm()].
 #' @param diagnostics Optional output from [diagnose_mfrm()].
@@ -7,11 +7,14 @@
 #'   agreement. If `NULL`, all remaining facets (including `Person`) are used.
 #' @param exact_warn Warning threshold for exact agreement.
 #' @param corr_warn Warning threshold for pairwise correlation.
+#' @param include_precision If `TRUE`, append rater severity spread indices from
+#'   the facet precision summary when available.
 #' @param top_n Optional maximum number of pair rows to keep.
 #'
 #' @details
 #' This helper computes pairwise rater agreement on matched contexts
-#' and returns both a pair-level table and a one-row summary.
+#' and returns both a pair-level table and a one-row summary. The output is
+#' package-native and does not require knowledge of legacy report numbering.
 #'
 #' @section Interpreting output:
 #' - `summary`: overall agreement level, number/share of flagged pairs.
@@ -38,6 +41,8 @@
 #'   \item{MAD}{Mean absolute score difference.}
 #'   \item{Corr}{Pearson correlation between paired scores.}
 #'   \item{Flag}{Logical; `TRUE` when Exact < `exact_warn` or Corr < `corr_warn`.}
+#'   \item{OpportunityCount, ExactCount, ExpectedExactCount, AdjacentCount}{Raw
+#'     counts behind the agreement proportions.}
 #' }
 #'
 #' The `summary` data.frame contains:
@@ -45,8 +50,12 @@
 #'   \item{RaterFacet}{Name of the rater facet analyzed.}
 #'   \item{TotalPairs}{Number of rater pairs evaluated.}
 #'   \item{ExactAgreement}{Mean exact agreement across all pairs.}
+#'   \item{AgreementMinusExpected}{Observed exact agreement minus expected exact
+#'     agreement.}
 #'   \item{MeanCorr}{Mean pairwise correlation.}
 #'   \item{FlaggedPairs, FlaggedShare}{Count and proportion of flagged pairs.}
+#'   \item{RaterSeparation, RaterReliability}{Severity-spread indices for the
+#'     rater facet, reported separately from agreement.}
 #' }
 #'
 #' @return A named list with:
@@ -54,19 +63,10 @@
 #' - `pairs`: pair-level agreement table
 #' - `settings`: applied options and thresholds
 #'
-#' @seealso [diagnose_mfrm()], [facets_chisq_table()], [plot_interrater_agreement()]
+#' @seealso [diagnose_mfrm()], [facets_chisq_table()], [plot_interrater_agreement()],
+#'   [mfrmr_visual_diagnostics]
 #' @examples
-#' toy <- expand.grid(
-#'   Person = paste0("P", 1:4),
-#'   Rater = paste0("R", 1:2),
-#'   Criterion = c("Content", "Organization", "Language"),
-#'   stringsAsFactors = FALSE
-#' )
-#' toy$Score <- (
-#'   as.integer(factor(toy$Person)) +
-#'   2 * as.integer(factor(toy$Rater)) +
-#'   as.integer(factor(toy$Criterion))
-#' ) %% 3
+#' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 #' ir <- interrater_agreement_table(fit, rater_facet = "Rater")
 #' summary(ir)
@@ -79,6 +79,7 @@ interrater_agreement_table <- function(fit,
                                        context_facets = NULL,
                                        exact_warn = 0.50,
                                        corr_warn = 0.30,
+                                       include_precision = TRUE,
                                        top_n = NULL) {
   if (!inherits(fit, "mfrm_fit")) {
     stop("`fit` must be an mfrm_fit object from fit_mfrm().")
@@ -150,6 +151,16 @@ interrater_agreement_table <- function(fit,
     }
   }
 
+  agreement <- if (isTRUE(include_precision)) {
+    augment_interrater_with_precision(
+      agreement,
+      reliability_tbl = diagnostics$reliability,
+      rater_facet = rater_facet
+    )
+  } else {
+    agreement
+  }
+
   summary_tbl <- as.data.frame(agreement$summary, stringsAsFactors = FALSE)
   if (nrow(summary_tbl) > 0) {
     summary_tbl$FlaggedPairs <- flagged_n
@@ -163,13 +174,14 @@ interrater_agreement_table <- function(fit,
       rater_facet = rater_facet,
       context_facets = setdiff(facet_cols, rater_facet),
       exact_warn = exact_warn,
-      corr_warn = corr_warn
+      corr_warn = corr_warn,
+      include_precision = include_precision
     )
   )
   as_mfrm_bundle(out, "mfrm_interrater")
 }
 
-#' Build FACETS-style facet chi-square and random-effect diagnostics
+#' Build facet variability diagnostics with fixed/random reference tests
 #'
 #' @param fit Output from [fit_mfrm()].
 #' @param diagnostics Optional output from [diagnose_mfrm()].
@@ -179,7 +191,7 @@ interrater_agreement_table <- function(fit,
 #'
 #' @details
 #' This helper summarizes facet-level variability with fixed and random
-#' chi-square indices, aligned to FACETS-style facet variance checks.
+#' chi-square indices for spread and heterogeneity checks.
 #'
 #' @section Interpreting output:
 #' - `table`: facet-level fixed/random chi-square and p-value flags.
@@ -217,17 +229,7 @@ interrater_agreement_table <- function(fit,
 #'
 #' @seealso [diagnose_mfrm()], [interrater_agreement_table()], [plot_facets_chisq()]
 #' @examples
-#' toy <- expand.grid(
-#'   Person = paste0("P", 1:4),
-#'   Rater = paste0("R", 1:2),
-#'   Criterion = c("Content", "Organization", "Language"),
-#'   stringsAsFactors = FALSE
-#' )
-#' toy$Score <- (
-#'   as.integer(factor(toy$Person)) +
-#'   2 * as.integer(factor(toy$Rater)) +
-#'   as.integer(factor(toy$Criterion))
-#' ) %% 3
+#' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 #' chi <- facets_chisq_table(fit)
 #' summary(chi)
@@ -296,7 +298,7 @@ facets_chisq_table <- function(fit,
   as_mfrm_bundle(out, "mfrm_facets_chisq")
 }
 
-#' Build a FACETS Table 4-style unexpected-response report
+#' Build an unexpected-response screening report
 #'
 #' @param fit Output from [fit_mfrm()].
 #' @param diagnostics Optional output from [diagnose_mfrm()].
@@ -326,6 +328,11 @@ facets_chisq_table <- function(fit,
 #' 1. Start with `rule = "either"` for broad screening.
 #' 2. Re-run with `rule = "both"` for strict subset.
 #' 3. Inspect top rows and visualize with [plot_unexpected()].
+#'
+#' @section Further guidance:
+#' For a plot-selection guide and a longer walkthrough, see
+#' [mfrmr_visual_diagnostics] and
+#' `vignette("mfrmr-visual-diagnostics", package = "mfrmr")`.
 #'
 #' @section Output columns:
 #' The `table` data.frame contains:
@@ -357,19 +364,10 @@ facets_chisq_table <- function(fit,
 #' - `summary`: one-row overview
 #' - `thresholds`: applied thresholds
 #'
-#' @seealso [diagnose_mfrm()], [displacement_table()], [fair_average_table()]
+#' @seealso [diagnose_mfrm()], [displacement_table()], [fair_average_table()],
+#'   [mfrmr_visual_diagnostics]
 #' @examples
-#' toy <- expand.grid(
-#'   Person = paste0("P", 1:4),
-#'   Rater = paste0("R", 1:2),
-#'   Criterion = c("Content", "Organization", "Language"),
-#'   stringsAsFactors = FALSE
-#' )
-#' toy$Score <- (
-#'   as.integer(factor(toy$Person)) +
-#'   2 * as.integer(factor(toy$Rater)) +
-#'   as.integer(factor(toy$Criterion))
-#' ) %% 3
+#' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 #' t4 <- unexpected_response_table(fit, abs_z_min = 1.5, prob_max = 0.4, top_n = 10)
 #' summary(t4)
@@ -423,23 +421,30 @@ unexpected_response_table <- function(fit,
   as_mfrm_bundle(out, "mfrm_unexpected")
 }
 
-#' Build a FACETS Table 12-style fair-average table bundle
+#' Build an adjusted-score reference table bundle
 #'
 #' @param fit Output from [fit_mfrm()].
 #' @param diagnostics Optional output from [diagnose_mfrm()].
 #' @param facets Optional subset of facets.
 #' @param totalscore Include all observations for score totals (`TRUE`) or apply
-#'   FACETS-style extreme-row exclusion (`FALSE`).
+#'   legacy extreme-row exclusion (`FALSE`).
 #' @param umean Additive score-to-report origin shift.
 #' @param uscale Multiplicative score-to-report scale.
 #' @param udecimals Rounding digits used in formatted output.
+#' @param reference Which adjusted-score reference to keep in formatted outputs:
+#'   `"both"` (default), `"mean"`, or `"zero"`.
+#' @param label_style Column-label style for formatted outputs:
+#'   `"both"` (default), `"native"`, or `"legacy"`.
 #' @param omit_unobserved If `TRUE`, remove unobserved levels.
 #' @param xtreme Extreme-score adjustment amount.
 #'
 #' @details
-#' This function wraps internal FACETS-style fair-average calculations and
-#' returns both facet-wise and stacked tables, including `Fair(M) Average`
-#' and `Fair(Z) Average`.
+#' This function wraps the package's adjusted-score calculations and returns
+#' both facet-wise and stacked tables. Historical display columns such as
+#' `Fair(M) Average` and `Fair(Z) Average` are retained for compatibility, and
+#' package-native aliases such as `AdjustedAverage`,
+#' `StandardizedAdjustedAverage`, `ModelBasedSE`, and `FitAdjustedSE` are
+#' appended to the formatted outputs.
 #'
 #' @section Interpreting output:
 #' - `stacked`: cross-facet table for global comparison.
@@ -461,10 +466,12 @@ unexpected_response_table <- function(fit,
 #'   \item{Facet}{Facet name for this row.}
 #'   \item{Level}{Element label within the facet.}
 #'   \item{Obsvd Average}{Observed raw-score average.}
-#'   \item{Fair(M) Average}{Model-adjusted fair average (mean-based).}
-#'   \item{Fair(Z) Average}{Model-adjusted fair average (z-score-based).}
+#'   \item{Fair(M) Average}{Model-adjusted reference average on the reported score scale.}
+#'   \item{Fair(Z) Average}{Standardized adjusted reference average.}
+#'   \item{ObservedAverage, AdjustedAverage, StandardizedAdjustedAverage}{Package-native aliases for the three average columns above.}
 #'   \item{Measure}{Estimated logit measure for this level.}
-#'   \item{SE}{Standard error of the measure.}
+#'   \item{SE}{Compatibility alias for the model-based standard error.}
+#'   \item{ModelBasedSE, FitAdjustedSE}{Package-native aliases for `Model S.E.` and `Real S.E.`.}
 #'   \item{Infit MnSq, Outfit MnSq}{Fit statistics for this level.}
 #' }
 #'
@@ -476,19 +483,10 @@ unexpected_response_table <- function(fit,
 #'
 #' @seealso [diagnose_mfrm()], [unexpected_response_table()], [displacement_table()]
 #' @examples
-#' toy <- expand.grid(
-#'   Person = paste0("P", 1:4),
-#'   Rater = paste0("R", 1:2),
-#'   Criterion = c("Content", "Organization", "Language"),
-#'   stringsAsFactors = FALSE
-#' )
-#' toy$Score <- (
-#'   as.integer(factor(toy$Person)) +
-#'   2 * as.integer(factor(toy$Rater)) +
-#'   as.integer(factor(toy$Criterion))
-#' ) %% 3
+#' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 #' t12 <- fair_average_table(fit, udecimals = 2)
+#' t12_native <- fair_average_table(fit, reference = "mean", label_style = "native")
 #' summary(t12)
 #' p_t12 <- plot(t12, draw = FALSE)
 #' class(p_t12)
@@ -500,8 +498,12 @@ fair_average_table <- function(fit,
                                umean = 0,
                                uscale = 1,
                                udecimals = 2,
+                               reference = c("both", "mean", "zero"),
+                               label_style = c("both", "native", "legacy"),
                                omit_unobserved = FALSE,
                                xtreme = 0) {
+  reference <- match.arg(reference)
+  label_style <- match.arg(label_style)
   if (!inherits(fit, "mfrm_fit")) {
     stop("`fit` must be an mfrm_fit object from fit_mfrm().")
   }
@@ -520,6 +522,8 @@ fair_average_table <- function(fit,
     umean = umean,
     uscale = uscale,
     udecimals = udecimals,
+    reference = reference,
+    label_style = label_style,
     omit_unobserved = omit_unobserved,
     xtreme = xtreme
   )
@@ -529,6 +533,8 @@ fair_average_table <- function(fit,
     umean = umean,
     uscale = uscale,
     udecimals = udecimals,
+    reference = reference,
+    label_style = label_style,
     omit_unobserved = omit_unobserved,
     xtreme = xtreme
   )
@@ -583,17 +589,7 @@ fair_average_table <- function(fit,
 #'
 #' @seealso [diagnose_mfrm()], [unexpected_response_table()], [fair_average_table()]
 #' @examples
-#' toy <- expand.grid(
-#'   Person = paste0("P", 1:4),
-#'   Rater = paste0("R", 1:2),
-#'   Criterion = c("Content", "Organization", "Language"),
-#'   stringsAsFactors = FALSE
-#' )
-#' toy$Score <- (
-#'   as.integer(factor(toy$Person)) +
-#'   2 * as.integer(factor(toy$Rater)) +
-#'   as.integer(factor(toy$Criterion))
-#' ) %% 3
+#' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 #' disp <- displacement_table(fit, anchored_only = FALSE)
 #' summary(disp)
@@ -655,7 +651,7 @@ displacement_table <- function(fit,
   as_mfrm_bundle(out, "mfrm_displacement")
 }
 
-#' Build a FACETS Table 5-style measurable data summary
+#' Build a measurable-data summary
 #'
 #' @param fit Output from [fit_mfrm()].
 #' @param diagnostics Optional output from [diagnose_mfrm()].
@@ -680,6 +676,11 @@ displacement_table <- function(fit,
 #' 1. Run `measurable_summary_table(fit)`.
 #' 2. Check `summary(t5)` for subset/connectivity warnings.
 #' 3. Use `plot(t5, ...)` to inspect facet/category/subset views.
+#'
+#' @section Further guidance:
+#' For a plot-selection guide and a longer walkthrough, see
+#' [mfrmr_visual_diagnostics] and
+#' `vignette("mfrmr-visual-diagnostics", package = "mfrmr")`.
 #'
 #' @section Output columns:
 #' The `summary` data.frame (one row) contains:
@@ -714,19 +715,10 @@ displacement_table <- function(fit,
 #' - `category_stats`: category-level usage/fit summary
 #' - `subsets`: subset summary table (when available)
 #'
-#' @seealso [diagnose_mfrm()], [rating_scale_table()], [describe_mfrm_data()]
+#' @seealso [diagnose_mfrm()], [rating_scale_table()], [describe_mfrm_data()],
+#'   [mfrmr_visual_diagnostics]
 #' @examples
-#' toy <- expand.grid(
-#'   Person = paste0("P", 1:4),
-#'   Rater = paste0("R", 1:2),
-#'   Criterion = c("Content", "Organization", "Language"),
-#'   stringsAsFactors = FALSE
-#' )
-#' toy$Score <- (
-#'   as.integer(factor(toy$Person)) +
-#'   2 * as.integer(factor(toy$Rater)) +
-#'   as.integer(factor(toy$Criterion))
-#' ) %% 3
+#' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 #' t5 <- measurable_summary_table(fit)
 #' summary(t5)
@@ -789,7 +781,7 @@ measurable_summary_table <- function(fit, diagnostics = NULL) {
   as_mfrm_bundle(out, "mfrm_measurable")
 }
 
-#' Build a FACETS Table 8.1-style rating-scale report
+#' Build a rating-scale diagnostics report
 #'
 #' @param fit Output from [fit_mfrm()].
 #' @param diagnostics Optional output from [diagnose_mfrm()].
@@ -798,28 +790,41 @@ measurable_summary_table <- function(fit, diagnostics = NULL) {
 #'
 #' @details
 #' This helper provides category usage/fit statistics and threshold summaries
-#' in a format aligned with FACETS Table 8.1 style checks.
+#' for reviewing score-category functioning.
+#' The category usage portion is a global observed-score screen. In PCM fits
+#' with a `step_facet`, threshold diagnostics should be interpreted within each
+#' `StepFacet` rather than as one pooled whole-scale verdict.
 #'
 #' Typical checks:
 #' - sparse category usage (`Count`, `ExpectedCount`)
 #' - category fit (`Infit`, `Outfit`, `ZStd`)
-#' - threshold ordering (`threshold_table$Estimate`, `GapFromPrev`)
+#' - threshold ordering within each `StepFacet`
+#'   (`threshold_table$Estimate`, `GapFromPrev`)
 #'
 #' @section Interpreting output:
 #' Start with `summary`:
-#' - `UsedCategories` close to total `Categories` suggests stable category usage.
+#' - `UsedCategories` close to total `Categories` suggests that most score
+#'   categories are represented in the observed data.
 #' - very small `MinCategoryCount` indicates potential instability.
-#' - `ThresholdMonotonic = FALSE` indicates disordered thresholds.
+#' - `ThresholdMonotonic = FALSE` indicates disordered thresholds within at
+#'   least one threshold set. In PCM fits, inspect `threshold_table` by
+#'   `StepFacet` before drawing scale-wide conclusions.
 #'
 #' Then inspect:
-#' - `category_table` for category-level misfit/sparsity.
-#' - `threshold_table` for adjacent-step gaps and ordering.
+#' - `category_table` for global category-level misfit/sparsity.
+#' - `threshold_table` for adjacent-step gaps and ordering within each
+#'   `StepFacet`.
 #'
 #' @section Typical workflow:
 #' 1. Fit model: [fit_mfrm()].
 #' 2. Build diagnostics: [diagnose_mfrm()].
 #' 3. Run `rating_scale_table()` and review `summary()`.
 #' 4. Use `plot()` to visualize category profile quickly.
+#'
+#' @section Further guidance:
+#' For a plot-selection guide and a longer walkthrough, see
+#' [mfrmr_visual_diagnostics] and
+#' `vignette("mfrmr-visual-diagnostics", package = "mfrmr")`.
 #'
 #' @section Output columns:
 #' The `category_table` data.frame contains:
@@ -840,9 +845,15 @@ measurable_summary_table <- function(fit, diagnostics = NULL) {
 #' \describe{
 #'   \item{Step}{Step label (e.g., "1-2", "2-3").}
 #'   \item{Estimate}{Estimated threshold/step difficulty (logits).}
-#'   \item{GapFromPrev}{Difference from the previous threshold.  Gaps below
+#'   \item{StepFacet}{Threshold family identifier when the fit uses facet-specific
+#'     threshold sets.}
+#'   \item{GapFromPrev}{Difference from the previous threshold within the same
+#'     `StepFacet` when thresholds are facet-specific. Gaps below
 #'     1.4 logits may indicate category underuse; gaps above 5.0 may
 #'     indicate wide unused regions (Linacre, 2002).}
+#'   \item{ThresholdMonotonic}{Logical flag repeated within each threshold set.
+#'     For PCM fits, read this within `StepFacet`, not as a pooled item-bank
+#'     verdict.}
 #' }
 #'
 #' @return A named list with:
@@ -850,19 +861,10 @@ measurable_summary_table <- function(fit, diagnostics = NULL) {
 #' - `threshold_table`: model step/threshold estimates
 #' - `summary`: one-row summary (usage and threshold monotonicity)
 #'
-#' @seealso [diagnose_mfrm()], [measurable_summary_table()], [plot.mfrm_fit()]
+#' @seealso [diagnose_mfrm()], [measurable_summary_table()], [plot.mfrm_fit()],
+#'   [mfrmr_visual_diagnostics]
 #' @examples
-#' toy <- expand.grid(
-#'   Person = paste0("P", 1:4),
-#'   Rater = paste0("R", 1:2),
-#'   Criterion = c("Content", "Organization", "Language"),
-#'   stringsAsFactors = FALSE
-#' )
-#' toy$Score <- (
-#'   as.integer(factor(toy$Person)) +
-#'   2 * as.integer(factor(toy$Rater)) +
-#'   as.integer(factor(toy$Criterion))
-#' ) %% 3
+#' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 #' t8 <- rating_scale_table(fit)
 #' summary(t8)
@@ -891,14 +893,42 @@ rating_scale_table <- function(fit,
 
   step_tbl <- as.data.frame(fit$steps, stringsAsFactors = FALSE)
   if (nrow(step_tbl) > 0 && all(c("Step", "Estimate") %in% names(step_tbl))) {
-    ord <- order(step_index_from_label(step_tbl$Step))
+    monotonic_flag <- function(x) {
+      x <- suppressWarnings(as.numeric(x))
+      x <- x[is.finite(x)]
+      if (length(x) < 2) {
+        return(NA)
+      }
+      all(diff(x) >= -sqrt(.Machine$double.eps))
+    }
+    if ("StepFacet" %in% names(step_tbl)) {
+      ord <- order(as.character(step_tbl$StepFacet), step_index_from_label(step_tbl$Step))
+    } else {
+      ord <- order(step_index_from_label(step_tbl$Step))
+    }
     step_tbl <- step_tbl[ord, , drop = FALSE]
-    step_tbl$GapFromPrev <- c(NA_real_, diff(suppressWarnings(as.numeric(step_tbl$Estimate))))
+    est <- suppressWarnings(as.numeric(step_tbl$Estimate))
+    if ("StepFacet" %in% names(step_tbl)) {
+      groups <- as.character(step_tbl$StepFacet)
+      step_tbl$GapFromPrev <- stats::ave(est, groups, FUN = function(x) c(NA_real_, diff(x)))
+      step_tbl$ThresholdMonotonic <- stats::ave(
+        est,
+        groups,
+        FUN = function(x) rep(monotonic_flag(x), length(x))
+      )
+    } else {
+      step_tbl$GapFromPrev <- c(NA_real_, diff(est))
+      step_tbl$ThresholdMonotonic <- rep(monotonic_flag(est), nrow(step_tbl))
+    }
   }
 
   threshold_monotonic <- if (nrow(step_tbl) > 1 && "Estimate" %in% names(step_tbl)) {
-    est <- suppressWarnings(as.numeric(step_tbl$Estimate))
-    all(diff(est) >= -sqrt(.Machine$double.eps), na.rm = TRUE)
+    if ("StepFacet" %in% names(step_tbl)) {
+      group_flags <- vapply(split(step_tbl$Estimate, step_tbl$StepFacet), monotonic_flag, logical(1))
+      if (any(is.na(group_flags))) NA else all(group_flags)
+    } else {
+      monotonic_flag(step_tbl$Estimate)
+    }
   } else {
     NA
   }
@@ -922,22 +952,22 @@ rating_scale_table <- function(fit,
   as_mfrm_bundle(out, "mfrm_rating_scale")
 }
 
-#' Build a FACETS Table 11-style bias-count report
+#' Build a bias-cell count report
 #'
 #' @param bias_results Output from [estimate_bias()].
 #' @param min_count_warn Minimum count threshold for flagging sparse bias cells.
 #' @param branch Output branch:
-#'   `"facets"` keeps FACETS-style naming, `"original"` returns compact QC-oriented names.
+#'   `"facets"` keeps legacy manual-aligned naming, `"original"` returns compact QC-oriented names.
 #' @param fit Optional [fit_mfrm()] result used to attach run context metadata.
 #'
 #' @details
-#' FACETS Table 11 emphasizes how many observations contribute to each
-#' bias-cell estimate. This helper extracts those counts and summarizes
-#' sparsity patterns.
+#' This helper summarizes how many observations contribute to each
+#' bias-cell estimate and flags sparse cells.
 #'
 #' Branch behavior:
-#' - `"facets"`: keeps FACETS-like column labels (`Sq`, `Observd Count`,
-#'   `Obs-Exp Average`, `Model S.E.`) for side-by-side interpretation.
+#' - `"facets"`: keeps legacy manual-aligned column labels (`Sq`,
+#'   `Observd Count`, `Obs-Exp Average`, `Model S.E.`) for side-by-side
+#'   comparison with external workflows.
 #' - `"original"`: keeps compact field names (`Count`, `BiasSize`, `SE`) for
 #'   custom QC workflows and scripting.
 #'
@@ -955,8 +985,13 @@ rating_scale_table <- function(fit,
 #' 2. Build `bias_count_table(...)` in desired branch.
 #' 3. Review low-count flags before interpreting bias magnitudes.
 #'
+#' @section Further guidance:
+#' For a plot-selection guide and a longer walkthrough, see
+#' [mfrmr_visual_diagnostics] and
+#' `vignette("mfrmr-visual-diagnostics", package = "mfrmr")`.
+#'
 #' @section Output columns:
-#' The `table` data.frame contains (FACETS-style branch):
+#' The `table` data.frame contains, in the legacy-compatible branch:
 #' \describe{
 #'   \item{<FacetA>, <FacetB>}{Interaction facet level identifiers.}
 #'   \item{Sq}{Sequential row number.}
@@ -984,19 +1019,10 @@ rating_scale_table <- function(fit,
 #' - `branch`, `style`: output branch metadata
 #' - `fit_overview`: optional one-row fit metadata when `fit` is supplied
 #'
-#' @seealso [estimate_bias()], [unexpected_after_bias_table()], [build_fixed_reports()]
+#' @seealso [estimate_bias()], [unexpected_after_bias_table()], [build_fixed_reports()],
+#'   [mfrmr_visual_diagnostics]
 #' @examples
-#' toy <- expand.grid(
-#'   Person = paste0("P", 1:4),
-#'   Rater = paste0("R", 1:2),
-#'   Criterion = c("Content", "Organization", "Language"),
-#'   stringsAsFactors = FALSE
-#' )
-#' toy$Score <- (
-#'   as.integer(factor(toy$Person)) +
-#'   2 * as.integer(factor(toy$Rater)) +
-#'   as.integer(factor(toy$Criterion))
-#' ) %% 3
+#' toy <- load_mfrmr_data("example_bias")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
 #' bias <- estimate_bias(fit, diag, facet_a = "Rater", facet_b = "Criterion", max_iter = 2)
@@ -1136,7 +1162,7 @@ bias_count_table <- function(bias_results,
   out
 }
 
-#' Build a FACETS Table 10-style unexpected-after-bias report
+#' Build an unexpected-after-adjustment screening report
 #'
 #' @param fit Output from [fit_mfrm()].
 #' @param bias_results Output from [estimate_bias()].
@@ -1147,9 +1173,8 @@ bias_count_table <- function(bias_results,
 #' @param rule Flagging rule: `"either"` or `"both"`.
 #'
 #' @details
-#' FACETS Table 10 reports responses that remain unexpected after bias terms
-#' are introduced. This helper recomputes expected values and residuals using
-#' the estimated bias contrasts from [estimate_bias()].
+#' This helper recomputes expected values and residuals after interaction
+#' adjustments from [estimate_bias()] have been introduced.
 #'
 #' `summary(t10)` is supported through `summary()`.
 #' `plot(t10)` is dispatched through `plot()` for class
@@ -1168,6 +1193,11 @@ bias_count_table <- function(bias_results,
 #' 1. Run [unexpected_response_table()] as baseline.
 #' 2. Estimate bias via [estimate_bias()].
 #' 3. Run `unexpected_after_bias_table(...)` and compare reductions.
+#'
+#' @section Further guidance:
+#' For a plot-selection guide and a longer walkthrough, see
+#' [mfrmr_visual_diagnostics] and
+#' `vignette("mfrmr-visual-diagnostics", package = "mfrmr")`.
 #'
 #' @section Output columns:
 #' The `table` data.frame has the same structure as
@@ -1189,19 +1219,10 @@ bias_count_table <- function(bias_results,
 #' - `thresholds`: applied thresholds
 #' - `facets`: analyzed bias facet pair
 #'
-#' @seealso [estimate_bias()], [unexpected_response_table()], [bias_count_table()]
+#' @seealso [estimate_bias()], [unexpected_response_table()], [bias_count_table()],
+#'   [mfrmr_visual_diagnostics]
 #' @examples
-#' toy <- expand.grid(
-#'   Person = paste0("P", 1:4),
-#'   Rater = paste0("R", 1:2),
-#'   Criterion = c("Content", "Organization", "Language"),
-#'   stringsAsFactors = FALSE
-#' )
-#' toy$Score <- (
-#'   as.integer(factor(toy$Person)) +
-#'   2 * as.integer(factor(toy$Rater)) +
-#'   as.integer(factor(toy$Criterion))
-#' ) %% 3
+#' toy <- load_mfrmr_data("example_bias")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
 #' bias <- estimate_bias(fit, diag, facet_a = "Rater", facet_b = "Criterion", max_iter = 2)
@@ -1452,16 +1473,18 @@ as_mfrm_bundle <- function(x, class_name) {
   x
 }
 
-#' Build a FACETS Table 1-style specification summary
+#' Build a legacy-compatible Table 1 specification summary
 #'
 #' @param fit Output from [fit_mfrm()].
 #' @param title Optional analysis title.
 #' @param data_file Optional data-file label (for reporting only).
 #' @param output_file Optional output-file label (for reporting only).
-#' @param include_fixed If `TRUE`, include a FACETS-style fixed-width text block.
+#' @param include_fixed If `TRUE`, include a legacy-compatible fixed-width text
+#'   block.
 #'
 #' @details
-#' FACETS Table 1 groups model settings by function (data, output, convergence).
+#' The legacy-compatible Table 1 layout groups model settings by function
+#' (data, output, convergence).
 #' This helper assembles those settings from a fitted object.
 #'
 #' @section Lifecycle:
@@ -1492,17 +1515,7 @@ as_mfrm_bundle <- function(x, class_name) {
 #'
 #' @seealso [fit_mfrm()], [data_quality_report()], [estimation_iteration_report()]
 #' @examples
-#' toy <- expand.grid(
-#'   Person = paste0("P", 1:4),
-#'   Rater = paste0("R", 1:2),
-#'   Criterion = c("Content", "Organization", "Language"),
-#'   stringsAsFactors = FALSE
-#' )
-#' toy$Score <- (
-#'   as.integer(factor(toy$Person)) +
-#'   2 * as.integer(factor(toy$Rater)) +
-#'   as.integer(factor(toy$Criterion))
-#' ) %% 3
+#' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 #' t1 <- specifications_report(fit, title = "Toy run")
 #' @keywords internal
@@ -1624,7 +1637,7 @@ table1_specifications <- function(fit,
 
   if (isTRUE(include_fixed)) {
     out$fixed <- build_sectioned_fixed_report(
-      title = "FACETS-style Table 1 Specification Summary",
+      title = "Legacy-compatible Table 1 Specification Summary",
       sections = list(
         list(title = "Header", data = header),
         list(title = "Data specification", data = data_spec),
@@ -1639,7 +1652,7 @@ table1_specifications <- function(fit,
   out
 }
 
-#' Build a FACETS Table 2-style data summary report
+#' Build a legacy-compatible Table 2 data summary report
 #'
 #' @param fit Output from [fit_mfrm()].
 #' @param data Optional raw data frame used for additional row-level audit.
@@ -1647,12 +1660,13 @@ table1_specifications <- function(fit,
 #' @param facets Optional facet column names in `data`.
 #' @param score Optional score column name in `data`.
 #' @param weight Optional weight column name in `data`.
-#' @param include_fixed If `TRUE`, include a FACETS-style fixed-width text block.
+#' @param include_fixed If `TRUE`, include a legacy-compatible fixed-width text
+#'   block.
 #'
 #' @details
 #' When `data` is supplied, this function performs row-level validity checks
 #' (missing identifiers, missing score, non-positive weight, out-of-range score)
-#' and reports dropped rows similarly to FACETS Table 2 diagnostics.
+#' and reports dropped rows in a legacy-compatible Table 2 layout.
 #'
 #' @section Lifecycle:
 #' Soft-deprecated. Prefer [data_quality_report()].
@@ -1682,17 +1696,7 @@ table1_specifications <- function(fit,
 #'
 #' @seealso [fit_mfrm()], [specifications_report()], [describe_mfrm_data()]
 #' @examples
-#' toy <- expand.grid(
-#'   Person = paste0("P", 1:4),
-#'   Rater = paste0("R", 1:2),
-#'   Criterion = c("Content", "Organization", "Language"),
-#'   stringsAsFactors = FALSE
-#' )
-#' toy$Score <- (
-#'   as.integer(factor(toy$Person)) +
-#'   2 * as.integer(factor(toy$Rater)) +
-#'   as.integer(factor(toy$Criterion))
-#' ) %% 3
+#' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 #' t2 <- data_quality_report(
 #'   fit, data = toy, person = "Person",
@@ -1760,7 +1764,7 @@ table2_data_summary <- function(fit,
     )
     if (isTRUE(include_fixed)) {
       out$fixed <- build_sectioned_fixed_report(
-        title = "FACETS-style Table 2 Data Summary",
+        title = "Legacy-compatible Table 2 Data Summary",
         sections = list(
           list(title = "Summary", data = summary_tbl),
           list(title = "Model match", data = model_match),
@@ -1860,7 +1864,7 @@ table2_data_summary <- function(fit,
   )
   if (isTRUE(include_fixed)) {
     out$fixed <- build_sectioned_fixed_report(
-      title = "FACETS-style Table 2 Data Summary",
+      title = "Legacy-compatible Table 2 Data Summary",
       sections = list(
         list(title = "Summary", data = summary_tbl),
         list(title = "Model match", data = model_match),
@@ -1874,16 +1878,18 @@ table2_data_summary <- function(fit,
   out
 }
 
-#' Build a FACETS Table 3-style iteration report
+#' Build a legacy-compatible Table 3 iteration report
 #'
 #' @param fit Output from [fit_mfrm()].
 #' @param max_iter Maximum replay iterations (excluding optional initial row).
 #' @param reltol Stopping tolerance for replayed max-logit change.
 #' @param include_prox If `TRUE`, include an initial pseudo-row labeled `PROX`.
-#' @param include_fixed If `TRUE`, include a FACETS-style fixed-width text block.
+#' @param include_fixed If `TRUE`, include a legacy-compatible fixed-width text
+#'   block.
 #'
 #' @details
-#' FACETS prints per-iteration score residual and logit-change diagnostics.
+#' The legacy-compatible Table 3 layout prints per-iteration score residual and
+#' logit-change diagnostics.
 #' The underlying optimizer in this package does not expose the exact internal
 #' per-iteration path, so this function reconstructs an approximation by
 #' repeatedly running one-iteration updates from the current parameter vector.
@@ -1916,17 +1922,7 @@ table2_data_summary <- function(fit,
 #'
 #' @seealso [fit_mfrm()], [specifications_report()], [data_quality_report()]
 #' @examples
-#' toy <- expand.grid(
-#'   Person = paste0("P", 1:4),
-#'   Rater = paste0("R", 1:2),
-#'   Criterion = c("Content", "Organization", "Language"),
-#'   stringsAsFactors = FALSE
-#' )
-#' toy$Score <- (
-#'   as.integer(factor(toy$Person)) +
-#'   2 * as.integer(factor(toy$Rater)) +
-#'   as.integer(factor(toy$Criterion))
-#' ) %% 3
+#' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 #' t3 <- estimation_iteration_report(fit, max_iter = 5)
 #' @keywords internal
@@ -2056,7 +2052,7 @@ table3_iteration_report <- function(fit,
   )
   if (isTRUE(include_fixed)) {
     out$fixed <- build_sectioned_fixed_report(
-      title = "FACETS-style Table 3 Iteration Report",
+      title = "Legacy-compatible Table 3 Iteration Report",
       sections = list(
         list(title = "Iteration rows", data = as.data.frame(tbl, stringsAsFactors = FALSE), max_rows = 200L),
         list(title = "Summary", data = summary_tbl),
@@ -2068,7 +2064,7 @@ table3_iteration_report <- function(fit,
   out
 }
 
-#' Build a FACETS Table 6.0.0-style subset/disjoint-element listing
+#' Build a legacy-compatible Table 6.0.0 subset/disjoint-element listing
 #'
 #' @param fit Output from [fit_mfrm()].
 #' @param diagnostics Optional output from [diagnose_mfrm()].
@@ -2076,8 +2072,9 @@ table3_iteration_report <- function(fit,
 #' @param min_observations Minimum observations required to keep a subset row.
 #'
 #' @details
-#' FACETS Table 6.0.0 reports disjoint subsets when the design is not fully
-#' connected. This helper exposes the same design-check idea with:
+#' The legacy-compatible Table 6.0.0 layout reports disjoint subsets when the
+#' design is not fully connected. This helper exposes the same design-check
+#' idea with:
 #' 1) subset-level counts and percentages, and
 #' 2) per-subset/per-facet element listings.
 #'
@@ -2109,17 +2106,7 @@ table3_iteration_report <- function(fit,
 #'
 #' @seealso [diagnose_mfrm()], [measurable_summary_table()], [data_quality_report()]
 #' @examples
-#' toy <- expand.grid(
-#'   Person = paste0("P", 1:4),
-#'   Rater = paste0("R", 1:2),
-#'   Criterion = c("Content", "Organization", "Language"),
-#'   stringsAsFactors = FALSE
-#' )
-#' toy$Score <- (
-#'   as.integer(factor(toy$Person)) +
-#'   2 * as.integer(factor(toy$Rater)) +
-#'   as.integer(factor(toy$Criterion))
-#' ) %% 3
+#' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 #' t6 <- subset_connectivity_report(fit)
 #' @keywords internal
@@ -2239,7 +2226,7 @@ table6_subsets_listing <- function(fit,
   )
 }
 
-#' Build a FACETS Table 6.2-style facet-statistics graphic summary
+#' Build a legacy-compatible Table 6.2 facet-statistics graphic summary
 #'
 #' @param fit Output from [fit_mfrm()].
 #' @param diagnostics Optional output from [diagnose_mfrm()].
@@ -2247,7 +2234,8 @@ table6_subsets_listing <- function(fit,
 #' @param ruler_width Width of the fixed-width ruler used for `M/S/Q/X` marks.
 #'
 #' @details
-#' FACETS Table 6.2 describes each facet with a compact graphical ruler where:
+#' The legacy-compatible Table 6.2 layout describes each facet with a compact
+#' graphical ruler where:
 #' - `M` marks the mean
 #' - `S` marks one SD from the mean
 #' - `Q` marks two SD from the mean
@@ -2277,17 +2265,7 @@ table6_subsets_listing <- function(fit,
 #'
 #' @seealso [diagnose_mfrm()], [summary.mfrm_fit()], [plot_facets_chisq()]
 #' @examples
-#' toy <- expand.grid(
-#'   Person = paste0("P", 1:4),
-#'   Rater = paste0("R", 1:2),
-#'   Criterion = c("Content", "Organization", "Language"),
-#'   stringsAsFactors = FALSE
-#' )
-#' toy$Score <- (
-#'   as.integer(factor(toy$Person)) +
-#'   2 * as.integer(factor(toy$Rater)) +
-#'   as.integer(factor(toy$Criterion))
-#' ) %% 3
+#' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 #' t62 <- facet_statistics_report(fit)
 #' @keywords internal
@@ -2431,18 +2409,19 @@ closest_theta_for_target <- function(theta, y, target) {
   theta[which.min(abs(y - target))]
 }
 
-#' Build a FACETS Table 8 bar-chart style scale-structure export
+#' Build a legacy-compatible Table 8 bar-chart style scale-structure export
 #'
 #' @param fit Output from [fit_mfrm()].
 #' @param diagnostics Optional output from [diagnose_mfrm()].
 #' @param theta_range Theta/logit range used to derive mode/mean transition points.
 #' @param theta_points Number of grid points used for transition-point search.
 #' @param drop_unused If `TRUE`, remove zero-count categories from `category_table`.
-#' @param include_fixed If `TRUE`, include a FACETS-style fixed-width text block.
+#' @param include_fixed If `TRUE`, include a legacy-compatible fixed-width text
+#'   block.
 #' @param fixed_max_rows Maximum rows per section in the fixed-width text output.
 #'
 #' @details
-#' FACETS Table 8 bar-chart output describes category structure with
+#' The legacy-compatible Table 8 bar-chart output describes category structure with
 #' mode / median / mean landmarks along the latent scale.
 #' This helper returns those landmarks as numeric tables:
 #' - mode peaks and mode transition points
@@ -2463,17 +2442,7 @@ closest_theta_for_target <- function(theta, y, target) {
 #'
 #' @seealso [rating_scale_table()], [category_curves_report()], [plot.mfrm_fit()]
 #' @examples
-#' toy <- expand.grid(
-#'   Person = paste0("P", 1:4),
-#'   Rater = paste0("R", 1:2),
-#'   Criterion = c("Content", "Organization", "Language"),
-#'   stringsAsFactors = FALSE
-#' )
-#' toy$Score <- (
-#'   as.integer(factor(toy$Person)) +
-#'   2 * as.integer(factor(toy$Rater)) +
-#'   as.integer(factor(toy$Criterion))
-#' ) %% 3
+#' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 #' t8b <- category_structure_report(fit)
 #' @keywords internal
@@ -2605,7 +2574,7 @@ table8_barchart_export <- function(fit,
   if (isTRUE(include_fixed)) {
     fixed_max_rows <- max(10L, as.integer(fixed_max_rows))
     out$fixed <- build_sectioned_fixed_report(
-      title = "FACETS-style Table 8 Bar-chart Export",
+      title = "Legacy-compatible Table 8 Bar-chart Export",
       sections = list(
         list(title = "Category table", data = category_table, max_rows = fixed_max_rows),
         list(title = "Mode peaks", data = mode_peaks, max_rows = fixed_max_rows),
@@ -2619,17 +2588,19 @@ table8_barchart_export <- function(fit,
   out
 }
 
-#' Build a FACETS Graphfile-style Table 8 curves export
+#' Build a legacy-compatible graphfile-style Table 8 curves export
 #'
 #' @param fit Output from [fit_mfrm()].
 #' @param theta_range Theta/logit range for curve coordinates.
 #' @param theta_points Number of points on the theta grid.
 #' @param digits Rounding digits for numeric graph output.
-#' @param include_fixed If `TRUE`, include a FACETS-style fixed-width text block.
+#' @param include_fixed If `TRUE`, include a legacy-compatible fixed-width text
+#'   block.
 #' @param fixed_max_rows Maximum rows shown in the fixed-width graph table.
 #'
 #' @details
-#' FACETS `Graphfile=` output for Table 8 contains curve coordinates:
+#' The legacy-compatible `Graphfile=` output for Table 8 contains curve
+#' coordinates:
 #' scale number, measure, expected score, expected category, and
 #' category probabilities by measure. This helper returns the same
 #' information as data frames ready for CSV export.
@@ -2647,17 +2618,7 @@ table8_barchart_export <- function(fit,
 #'
 #' @seealso [category_structure_report()], [rating_scale_table()], [plot.mfrm_fit()]
 #' @examples
-#' toy <- expand.grid(
-#'   Person = paste0("P", 1:4),
-#'   Rater = paste0("R", 1:2),
-#'   Criterion = c("Content", "Organization", "Language"),
-#'   stringsAsFactors = FALSE
-#' )
-#' toy$Score <- (
-#'   as.integer(factor(toy$Person)) +
-#'   2 * as.integer(factor(toy$Rater)) +
-#'   as.integer(factor(toy$Criterion))
-#' ) %% 3
+#' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 #' t8c <- category_curves_report(fit, theta_points = 101)
 #' @keywords internal
@@ -2766,7 +2727,7 @@ table8_curves_export <- function(fit,
   if (isTRUE(include_fixed)) {
     fixed_max_rows <- max(25L, as.integer(fixed_max_rows))
     out$fixed <- build_sectioned_fixed_report(
-      title = "FACETS-style Table 8 Curves Graphfile",
+      title = "Legacy-compatible Table 8 Curves Graphfile",
       sections = list(
         list(title = "Graphfile wide table", data = out$graphfile, max_rows = fixed_max_rows),
         list(title = "Scale map", data = out$settings$scales),
@@ -2778,7 +2739,7 @@ table8_curves_export <- function(fit,
   out
 }
 
-#' Build FACETS-style output-file bundle (`GRAPH=` / `SCORE=`)
+#' Build a legacy-compatible output-file bundle (`GRAPH=` / `SCORE=`)
 #'
 #' @param fit Output from [fit_mfrm()].
 #' @param diagnostics Optional output from [diagnose_mfrm()] (used for score file).
@@ -2794,7 +2755,7 @@ table8_curves_export <- function(fit,
 #' @param overwrite If `FALSE`, existing output files are not overwritten.
 #'
 #' @details
-#' FACETS output files often include:
+#' Legacy-compatible output files often include:
 #' - graph coordinates for Table 8 curves (`GRAPH=` / `Graphfile=`), and
 #' - observation-level modeled score lines (`SCORE=`-style inspection).
 #'
@@ -2807,13 +2768,20 @@ table8_curves_export <- function(fit,
 #' `"obs_probability"`).
 #'
 #' @section Interpreting output:
-#' - `graphfile`: FACETS-style wide curve coordinates (human-readable labels).
+#' - `graphfile`: legacy-compatible wide curve coordinates (human-readable labels).
 #' - `graphfile_syntactic`: same curves with syntactic column names for programmatic use.
 #' - `scorefile`: observation-level observed/expected/residual diagnostics.
 #' - `written_files`: audit trail of files produced when `write_files = TRUE`.
 #'
 #' For reproducible pipelines, prefer `graphfile_syntactic` and keep
 #' `written_files` in run logs.
+#'
+#' @section Preferred route for new analyses:
+#' For new scripts, prefer [category_curves_report()] or
+#' [category_structure_report()] for scale outputs, then use
+#' [export_mfrm_bundle()] for file handoff. Use
+#' `facets_output_file_bundle()` only when a legacy-compatible graphfile or
+#' scorefile contract is required.
 #'
 #' @section Typical workflow:
 #' 1. Fit and diagnose model.
@@ -2828,19 +2796,11 @@ table8_curves_export <- function(fit,
 #' - `written_files` when `write_files = TRUE`
 #' - `settings`: applied options
 #'
-#' @seealso [category_curves_report()], [diagnose_mfrm()], [unexpected_response_table()]
+#' @seealso [category_curves_report()], [diagnose_mfrm()], [unexpected_response_table()],
+#'   [export_mfrm_bundle()], [mfrmr_reports_and_tables],
+#'   [mfrmr_compatibility_layer]
 #' @examples
-#' toy <- expand.grid(
-#'   Person = paste0("P", 1:4),
-#'   Rater = paste0("R", 1:2),
-#'   Criterion = c("Content", "Organization", "Language"),
-#'   stringsAsFactors = FALSE
-#' )
-#' toy$Score <- (
-#'   as.integer(factor(toy$Person)) +
-#'   2 * as.integer(factor(toy$Rater)) +
-#'   as.integer(factor(toy$Criterion))
-#' ) %% 3
+#' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 #' out <- facets_output_file_bundle(fit, diagnostics = diagnose_mfrm(fit, residual_pca = "none"))
 #' summary(out)
@@ -2986,7 +2946,7 @@ facets_output_file_bundle <- function(fit,
     out$scorefile <- round_numeric_df(scorefile, digits = digits)
     if (include_fixed) {
       out$scorefile_fixed <- build_sectioned_fixed_report(
-        title = "FACETS-style SCORE Output",
+        title = "Legacy-compatible SCORE Output",
         sections = list(
           list(title = "Score file", data = out$scorefile, max_rows = fixed_max_rows)
         ),
@@ -3076,9 +3036,9 @@ infer_facet_names <- function(diagnostics) {
   character(0)
 }
 
-#' Run residual PCA for unidimensionality checks
+#' Run exploratory residual PCA summaries
 #'
-#' FACETS-style residual diagnostics can be inspected in two ways:
+#' Legacy-compatible residual diagnostics can be inspected in two ways:
 #' 1) overall residual PCA on the person x combined-facet matrix
 #' 2) facet-specific residual PCA on person x facet-level matrices
 #'
@@ -3091,6 +3051,13 @@ infer_facet_names <- function(diagnostics) {
 #' The function works on standardized residual structures derived from
 #' [diagnose_mfrm()]. When a fitted object from [fit_mfrm()] is supplied,
 #' diagnostics are computed internally.
+#'
+#' Conceptually, this follows the Rasch residual-PCA tradition of examining
+#' structure in model residuals after the primary Rasch dimension has been
+#' extracted. In `mfrmr`, however, the implementation is an **exploratory
+#' many-facet adaptation**: it works on standardized residual matrices built as
+#' person x combined-facet or person x facet-level layouts, rather than
+#' reproducing FACETS/Winsteps residual-contrast tables one-to-one.
 #'
 #' Output tables use:
 #' - `Component`: principal-component index (1, 2, ...)
@@ -3108,14 +3075,26 @@ infer_facet_names <- function(diagnostics) {
 #'
 #' @section Interpreting output:
 #' Use `overall_table` first:
-#' - high PC1 eigenvalue and high `Proportion` suggest stronger residual
-#'   structure beyond the main Rasch dimension.
+#' - early components with noticeably larger eigenvalues or proportions
+#'   suggest stronger residual structure that may deserve follow-up.
 #'
 #' Then inspect `by_facet_table`:
 #' - helps localize which facet contributes most to residual structure.
 #'
 #' Finally, inspect loadings via [plot_residual_pca()] to identify which
 #' variables/elements drive each component.
+#'
+#' @section References:
+#' The residual-PCA idea follows the Rasch residual-structure literature,
+#' especially Linacre's discussions of principal components of Rasch residuals.
+#' The current `mfrmr` implementation should be interpreted as an exploratory
+#' extension for many-facet workflows rather than as a direct reproduction of a
+#' single FACETS/Winsteps output table.
+#'
+#' - Linacre, J. M. (1998). *Structure in Rasch residuals: Why principal
+#'   components analysis (PCA)?* Rasch Measurement Transactions, 12(2), 636.
+#' - Linacre, J. M. (1998). *Detecting multidimensionality: Which residual
+#'   data-type works best?* Journal of Outcome Measurement, 2(3), 266-283.
 #'
 #' @section Typical workflow:
 #' 1. Fit model and run [diagnose_mfrm()] with `residual_pca = "none"` or `"both"`.
@@ -3132,19 +3111,9 @@ infer_facet_names <- function(diagnostics) {
 #' - `overall_table`: variance table for overall PCA
 #' - `by_facet_table`: stacked variance table across facets
 #'
-#' @seealso [diagnose_mfrm()], [plot_residual_pca()]
+#' @seealso [diagnose_mfrm()], [plot_residual_pca()], [mfrmr_visual_diagnostics]
 #' @examples
-#' toy <- expand.grid(
-#'   Person = paste0("P", 1:4),
-#'   Rater = paste0("R", 1:2),
-#'   Criterion = c("Content", "Organization", "Language"),
-#'   stringsAsFactors = FALSE
-#' )
-#' toy$Score <- (
-#'   as.integer(factor(toy$Person)) +
-#'   2 * as.integer(factor(toy$Rater)) +
-#'   as.integer(factor(toy$Criterion))
-#' ) %% 3
+#' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 #' diag <- diagnose_mfrm(fit, residual_pca = "both")
 #' pca <- analyze_residual_pca(diag, mode = "both")
@@ -3228,6 +3197,19 @@ analyze_residual_pca <- function(diagnostics,
     tbls <- tbls[vapply(tbls, nrow, integer(1)) > 0]
     if (length(tbls) == 0) data.frame() else dplyr::bind_rows(tbls)
   }
+  pca_errors <- list(
+    overall = if (is.list(out_overall)) as.character(out_overall$error %||% NA_character_) else NA_character_,
+    by_facet = if (length(out_by_facet) == 0) {
+      data.frame(Facet = character(0), Error = character(0), stringsAsFactors = FALSE)
+    } else {
+      err_tbl <- data.frame(
+        Facet = names(out_by_facet),
+        Error = vapply(out_by_facet, function(x) as.character(x$error %||% ""), character(1)),
+        stringsAsFactors = FALSE
+      )
+      err_tbl[nzchar(err_tbl$Error), , drop = FALSE]
+    }
+  )
 
   out <- list(
     mode = mode,
@@ -3235,7 +3217,8 @@ analyze_residual_pca <- function(diagnostics,
     overall = out_overall,
     by_facet = out_by_facet,
     overall_table = overall_table,
-    by_facet_table = by_facet_table
+    by_facet_table = by_facet_table,
+    errors = pca_errors
   )
   as_mfrm_bundle(out, "mfrm_residual_pca")
 }
@@ -3282,6 +3265,7 @@ extract_loading_table <- function(pca_bundle, component = 1L, top_n = 20L) {
 #' @param plot_type `"scree"` or `"loadings"`.
 #' @param component Component index for loadings plot.
 #' @param top_n Maximum number of variables shown in loadings plot.
+#' @param preset Visual preset (`"standard"`, `"publication"`, or `"compact"`).
 #' @param draw If `TRUE`, draws the plot using base graphics.
 #'
 #' @details
@@ -3297,8 +3281,10 @@ extract_loading_table <- function(pca_bundle, component = 1L, top_n = 20L) {
 #' For `mode = "facet"` and `facet = NULL`, the first available facet is used.
 #'
 #' @section Interpreting output:
-#' - `plot_type = "scree"`: look for dominant early components
-#'   (eigenvalue notably above 1 as a practical warning sign).
+#' - `plot_type = "scree"`: look for dominant early components relative
+#'   to later components and the unit-eigenvalue reference line. Treat
+#'   this as exploratory residual-structure screening, not a standalone
+#'   unidimensionality test.
 #' - `plot_type = "loadings"`: identifies variables/elements driving each
 #'   component; inspect both sign and absolute magnitude.
 #'
@@ -3320,26 +3306,23 @@ extract_loading_table <- function(pca_bundle, component = 1L, top_n = 20L) {
 #'
 #' @seealso [analyze_residual_pca()], [diagnose_mfrm()]
 #' @examples
-#' toy <- expand.grid(
-#'   Person = paste0("P", 1:4),
-#'   Rater = paste0("R", 1:2),
-#'   Criterion = c("Content", "Organization", "Language"),
-#'   stringsAsFactors = FALSE
+#' toy_full <- load_mfrmr_data("example_core")
+#' toy_people <- unique(toy_full$Person)[1:24]
+#' toy <- toy_full[match(toy_full$Person, toy_people, nomatch = 0L) > 0L, , drop = FALSE]
+#' fit <- suppressWarnings(
+#'   fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 15)
 #' )
-#' toy$Score <- (
-#'   as.integer(factor(toy$Person)) +
-#'   2 * as.integer(factor(toy$Rater)) +
-#'   as.integer(factor(toy$Criterion))
-#' ) %% 3
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
-#' diag <- diagnose_mfrm(fit, residual_pca = "both")
-#' pca <- analyze_residual_pca(diag, mode = "both")
+#' diag <- diagnose_mfrm(fit, residual_pca = "overall")
+#' pca <- analyze_residual_pca(diag, mode = "overall")
 #' plt <- plot_residual_pca(pca, mode = "overall", plot_type = "scree", draw = FALSE)
 #' head(plt$data)
 #' plt_load <- plot_residual_pca(
 #'   pca, mode = "overall", plot_type = "loadings", component = 1, draw = FALSE
 #' )
 #' head(plt_load$data)
+#' if (interactive()) {
+#'   plot_residual_pca(pca, mode = "overall", plot_type = "scree", preset = "publication")
+#' }
 #' @export
 plot_residual_pca <- function(x,
                               mode = c("overall", "facet"),
@@ -3347,9 +3330,11 @@ plot_residual_pca <- function(x,
                               plot_type = c("scree", "loadings"),
                               component = 1L,
                               top_n = 20L,
+                              preset = c("standard", "publication", "compact"),
                               draw = TRUE) {
   mode <- match.arg(tolower(mode), c("overall", "facet"))
   plot_type <- match.arg(tolower(plot_type), c("scree", "loadings"))
+  style <- resolve_plot_preset(preset)
   pca_obj <- resolve_pca_input(x)
 
   pca_bundle <- NULL
@@ -3374,28 +3359,47 @@ plot_residual_pca <- function(x,
     tbl <- build_pca_variance_table(pca_bundle)
     if (nrow(tbl) == 0) stop("No eigenvalues available for scree plot.")
     title <- paste0(title_suffix, " (Scree)")
+    subtitle <- if (mode == "overall") {
+      "Variance explained by residual components"
+    } else {
+      paste0("Facet-specific scree profile: ", facet)
+    }
     if (isTRUE(draw)) {
+      apply_plot_preset(style)
       graphics::plot(
         x = tbl$Component,
         y = tbl$Eigenvalue,
         type = "b",
         pch = 16,
-        col = "black",
+        col = style$accent_primary,
         xlab = "Component",
         ylab = "Eigenvalue",
         main = title
       )
-      graphics::abline(h = 1, lty = 2, col = "gray40")
+      graphics::abline(h = pretty(graphics::par("usr")[3:4], n = 5), col = style$grid, lty = 1)
+      graphics::abline(v = pretty(graphics::par("usr")[1:2], n = 5), col = style$grid, lty = 1)
+      graphics::abline(h = 1, lty = 2, col = style$neutral)
     }
 
-    out <- list(
-      plot = "scree",
-      mode = mode,
-      facet = if (mode == "facet") facet else NULL,
-      title = title,
-      data = tbl
+    out <- new_mfrm_plot_data(
+      "residual_pca",
+      list(
+        plot = "scree",
+        mode = mode,
+        facet = if (mode == "facet") facet else NULL,
+        title = title,
+        subtitle = subtitle,
+        legend = new_plot_legend(
+          label = c("Residual eigenvalues", "Unit-eigenvalue reference"),
+          role = c("component", "reference"),
+          aesthetic = c("line-point", "line"),
+          value = c(style$accent_primary, style$neutral)
+        ),
+        reference_lines = new_reference_lines("h", 1, "Unit-eigenvalue reference", "dashed", "reference"),
+        data = tbl,
+        preset = style$name
+      )
     )
-    class(out) <- c("mfrm_plot_data", class(out))
     return(invisible(out))
   }
 
@@ -3408,34 +3412,48 @@ plot_residual_pca <- function(x,
 
   load_tbl <- load_tbl[order(load_tbl$Loading), , drop = FALSE]
   title <- paste0(title_suffix, " (Loadings: PC", as.integer(component), ")")
+  subtitle <- paste0("Top ", min(nrow(load_tbl), as.integer(top_n)), " absolute loadings")
 
   if (isTRUE(draw)) {
-    cols <- ifelse(load_tbl$Loading >= 0, "#1b9e77", "#d95f02")
+    apply_plot_preset(style)
+    cols <- ifelse(load_tbl$Loading >= 0, style$accent_tertiary, style$accent_secondary)
     graphics::barplot(
       height = load_tbl$Loading,
       names.arg = load_tbl$Variable,
       horiz = TRUE,
       las = 1,
       col = cols,
+      border = style$background,
       xlab = "Loading",
       main = title
     )
-    graphics::abline(v = 0, lty = 2, col = "gray40")
+    graphics::abline(v = 0, lty = 2, col = style$neutral)
   }
 
-  out <- list(
-    plot = "loadings",
-    mode = mode,
-    facet = if (mode == "facet") facet else NULL,
-    title = title,
-    component = as.integer(component),
-    data = load_tbl
+  out <- new_mfrm_plot_data(
+    "residual_pca",
+    list(
+      plot = "loadings",
+      mode = mode,
+      facet = if (mode == "facet") facet else NULL,
+      title = title,
+      subtitle = subtitle,
+      legend = new_plot_legend(
+        label = c("Positive loadings", "Negative loadings"),
+        role = c("loading", "loading"),
+        aesthetic = c("bar", "bar"),
+        value = c(style$accent_tertiary, style$accent_secondary)
+      ),
+      reference_lines = new_reference_lines("v", 0, "Zero-loading reference", "dashed", "reference"),
+      component = as.integer(component),
+      data = load_tbl,
+      preset = style$name
+    )
   )
-  class(out) <- c("mfrm_plot_data", class(out))
   invisible(out)
 }
 
-#' Estimate FACETS-style bias/interaction terms iteratively
+#' Estimate legacy-compatible bias/interaction terms iteratively
 #'
 #' @param fit Output from [fit_mfrm()].
 #' @param diagnostics Output from [diagnose_mfrm()].
@@ -3450,29 +3468,62 @@ plot_residual_pca <- function(x,
 #' @param tol Convergence tolerance.
 #'
 #' @details
-#' The function estimates interaction contrasts with iterative recalibration in
-#' a FACETS-like style.
+#' **Bias (interaction) in MFRM** refers to a systematic departure from
+#' the additive model: a specific rater-criterion (or higher-order)
+#' combination produces scores that are consistently higher or lower than
+#' predicted by the main effects alone.  For example, Rater A might be
+#' unexpectedly harsh on Criterion 2 despite being lenient overall.
+#'
+#' Mathematically, the bias term \eqn{b_{jc}} for rater \eqn{j} on
+#' criterion \eqn{c} modifies the linear predictor:
+#'
+#' \deqn{\eta_{njc} = \theta_n - \delta_j - \beta_c - b_{jc}}
+#'
+#' The function estimates \eqn{b_{jc}} from the residuals of the fitted
+#' (additive) model using iterative recalibration in a legacy-compatible style
+#' (Myford & Wolfe, 2003, 2004):
+#'
+#' \deqn{b_{jc} = \frac{\sum_n (X_{njc} - E_{njc})}
+#'                     {\sum_n \mathrm{Var}_{njc}}}
+#'
+#' Each iteration updates expected scores using the current bias
+#' estimates, then re-computes the bias.  Convergence is reached when
+#' the maximum absolute change in bias estimates falls below `tol`.
 #'
 #' - For two-way mode, use `facet_a` and `facet_b` (or `interaction_facets`
 #'   with length 2).
 #' - For higher-order mode, provide `interaction_facets` with length >= 3.
 #'
-#' Typical usage:
-#' 1. fit model via [fit_mfrm()]
-#' 2. compute diagnostics via [diagnose_mfrm()]
-#' 3. call `estimate_bias()` for one 2-way or higher-order interaction
-#' 4. format output with [build_fixed_reports()]
+#' @section What this screening means:
+#' `estimate_bias()` summarizes interaction departures from the additive MFRM.
+#' It is best read as a targeted screening tool for potentially noteworthy
+#' cells or facet combinations that may merit substantive review.
+#'
+#' @section What this screening does not justify:
+#' - `t` and `Prob.` are screening metrics, not formal inferential quantities.
+#' - A flagged interaction cell is not, by itself, proof of rater bias or
+#'   construct-irrelevant variance.
+#' - Non-flagged cells should not be over-read as evidence that interaction
+#'   effects are absent.
 #'
 #' @section Interpreting output:
 #' Use `summary` for global magnitude, then inspect `table` for cell-level
 #' interaction effects.
 #'
 #' Prioritize rows with:
-#' - larger `|Bias Size|`
-#' - larger `|t|`
-#' - smaller `Prob.`
+#' - larger `|Bias Size|` (effect on logit scale; \eqn{> 0.5} logits is
+#'   typically noteworthy, \eqn{> 1.0} is large)
+#' - larger `|t|` among the screening metrics (\eqn{|t| \ge 2} suggests a
+#'   screen-positive interaction cell)
+#' - smaller `Prob.` among the screening metrics
+#'
+#' A positive `Obs-Exp Average` means the cell produced *higher* scores
+#' than the additive model predicts (unexpected leniency); negative
+#' means unexpected harshness.
 #'
 #' `iteration` helps verify whether iterative recalibration stabilized.
+#' If the maximum change on the final iteration is still above `tol`,
+#' consider increasing `max_iter`.
 #'
 #' @section Typical workflow:
 #' 1. Fit and diagnose model.
@@ -3482,18 +3533,25 @@ plot_residual_pca <- function(x,
 #'
 #' @section Interpreting key output columns:
 #' In `bias$table`, the most-used columns are:
-#' - `Bias Size`: estimated interaction effect (logit scale)
-#' - `t` and `Prob.`: significance-style screening metrics
-#' - `Obs-Exp Average`: direction and practical size of observed-vs-expected gap
+#' - `Bias Size`: estimated interaction effect \eqn{b_{jc}} (logit scale)
+#' - `t` and `Prob.`: screening metrics, not formal inferential quantities
+#' - `Obs-Exp Average`: direction and practical size of observed-vs-expected
+#'   gap on the raw-score metric
 #'
-#' `bias$iteration` records recalibration trajectory and can be checked to assess
-#' whether additional iterations may be needed.
+#' The `chi_sq` element provides a fixed-effect heterogeneity screen across all
+#' interaction cells.
+#'
+#' @section Recommended next step:
+#' Use [plot_bias_interaction()] to inspect the flagged cells visually, then
+#' integrate the result with DFF, linking, or substantive scoring review before
+#' making formal claims about fairness or invariance.
 #'
 #' @return
 #' An object of class `mfrm_bias` with:
-#' - `table`: interaction rows with effect size, SE, t, p, fit columns
+#' - `table`: interaction rows with effect size, SE, screening t/p metadata,
+#'   reporting-use flags, and fit columns
 #' - `summary`: compact summary statistics
-#' - `chi_sq`: fixed-effect chi-square style summary
+#' - `chi_sq`: fixed-effect chi-square style screening summary
 #' - `facet_a`, `facet_b`: first two analyzed facet names (legacy compatibility)
 #' - `interaction_facets`, `interaction_order`, `interaction_mode`: full
 #'   interaction metadata
@@ -3501,17 +3559,7 @@ plot_residual_pca <- function(x,
 #'
 #' @seealso [build_fixed_reports()], [build_apa_outputs()]
 #' @examples
-#' toy <- expand.grid(
-#'   Person = paste0("P", 1:4),
-#'   Rater = paste0("R", 1:2),
-#'   Criterion = c("Content", "Organization", "Language"),
-#'   stringsAsFactors = FALSE
-#' )
-#' toy$Score <- (
-#'   as.integer(factor(toy$Person)) +
-#'   2 * as.integer(factor(toy$Rater)) +
-#'   as.integer(factor(toy$Criterion))
-#' ) %% 3
+#' toy <- load_mfrmr_data("example_bias")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
 #' bias <- estimate_bias(fit, diag, facet_a = "Rater", facet_b = "Criterion", max_iter = 2)
@@ -3569,12 +3617,12 @@ estimate_bias <- function(fit,
   out
 }
 
-#' Build FACETS-style fixed-width text reports
+#' Build legacy-compatible fixed-width text reports
 #'
 #' @param bias_results Output from [estimate_bias()].
 #' @param target_facet Optional target facet for pairwise contrast table.
 #' @param branch Output branch:
-#'   `"facets"` keeps FACETS-like fixed-width text;
+#'   `"facets"` keeps the legacy-compatible fixed-width layout;
 #'   `"original"` returns compact sectioned fixed-width text for internal reporting.
 #'
 #' @details
@@ -3597,25 +3645,21 @@ estimate_bias <- function(fit,
 #' 2. Build text bundle with `build_fixed_reports(...)`.
 #' 3. Use `summary()`/`plot()` for quick checks, then export text blocks.
 #'
+#' @section Preferred route for new analyses:
+#' For new reporting workflows, prefer [bias_interaction_report()] and
+#' [build_apa_outputs()]. Use `build_fixed_reports()` when a fixed-width text
+#' artifact is specifically required for a compatibility handoff.
+#'
 #' @return
 #' A named list with:
 #' - `bias_fixed`: fixed-width interaction table text
 #' - `pairwise_fixed`: fixed-width pairwise contrast text
 #' - `pairwise_table`: underlying pairwise data.frame
 #'
-#' @seealso [estimate_bias()], [build_apa_outputs()]
+#' @seealso [estimate_bias()], [build_apa_outputs()], [bias_interaction_report()],
+#'   [mfrmr_reports_and_tables], [mfrmr_compatibility_layer]
 #' @examples
-#' toy <- expand.grid(
-#'   Person = paste0("P", 1:4),
-#'   Rater = paste0("R", 1:2),
-#'   Criterion = c("Content", "Organization", "Language"),
-#'   stringsAsFactors = FALSE
-#' )
-#' toy$Score <- (
-#'   as.integer(factor(toy$Person)) +
-#'   2 * as.integer(factor(toy$Rater)) +
-#'   as.integer(factor(toy$Criterion))
-#' ) %% 3
+#' toy <- load_mfrmr_data("example_bias")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
 #' bias <- estimate_bias(fit, diag, facet_a = "Rater", facet_b = "Criterion", max_iter = 2)
@@ -3764,7 +3808,7 @@ build_fixed_reports <- function(bias_results,
   if (length(facets) != 2) {
     pairwise_tbl <- tibble::tibble()
     pairwise_fixed <- paste0(
-      "Pairwise Table 14-style contrasts are available only for 2-way interactions.\n",
+      "Legacy-compatible pairwise contrasts are available only for 2-way interactions.\n",
       "Current interaction: ", interaction_label, " (order ", length(facets), ")."
     )
   } else {
@@ -3926,7 +3970,7 @@ normalize_bias_plot_input <- function(x,
   stop("`x` must be output from estimate_bias() or an mfrm_fit object.")
 }
 
-#' Build a FACETS Table 13-style bias-plot export bundle
+#' Build a legacy-compatible Table 13 bias-plot export bundle
 #'
 #' @param x Output from [estimate_bias()] or [fit_mfrm()].
 #' @param diagnostics Optional output from [diagnose_mfrm()] (used when `x` is fit).
@@ -3945,8 +3989,9 @@ normalize_bias_plot_input <- function(x,
 #' @param sort_by Ranking key: `"abs_t"`, `"abs_bias"`, or `"prob"`.
 #'
 #' @details
-#' FACETS Table 13 is often inspected graphically (bias size, observed-minus-expected
-#' average, significance). This helper prepares a plotting-ready bundle with:
+#' The legacy-compatible Table 13 layout is often inspected graphically
+#' (bias size, observed-minus-expected average, significance). This helper
+#' prepares a plotting-ready bundle with:
 #' - ranked table for lollipop/strip displays
 #' - scatter table (`Obs-Exp Average` vs `Bias Size`)
 #' - summary and threshold metadata
@@ -3966,17 +4011,7 @@ normalize_bias_plot_input <- function(x,
 #'
 #' @seealso [estimate_bias()], [plot_bias_interaction()], [build_fixed_reports()]
 #' @examples
-#' toy <- expand.grid(
-#'   Person = paste0("P", 1:4),
-#'   Rater = paste0("R", 1:2),
-#'   Criterion = c("Content", "Organization", "Language"),
-#'   stringsAsFactors = FALSE
-#' )
-#' toy$Score <- (
-#'   as.integer(factor(toy$Person)) +
-#'   2 * as.integer(factor(toy$Rater)) +
-#'   as.integer(factor(toy$Criterion))
-#' ) %% 3
+#' toy <- load_mfrmr_data("example_bias")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
 #' bias <- estimate_bias(fit, diag, facet_a = "Rater", facet_b = "Criterion", max_iter = 2)
@@ -4145,11 +4180,15 @@ table13_bias_plot_export <- function(x,
     facet_b = facet_b,
     interaction_facets = interaction_facets,
     interaction_order = interaction_order,
-    interaction_mode = interaction_mode
+    interaction_mode = interaction_mode,
+    orientation_audit = as.data.frame(bias_results$orientation_audit %||% data.frame(), stringsAsFactors = FALSE),
+    mixed_sign = isTRUE(bias_results$mixed_sign),
+    direction_note = as.character(bias_results$direction_note %||% ""),
+    recommended_action = as.character(bias_results$recommended_action %||% "")
   )
 }
 
-#' Plot FACETS Table 13-style bias diagnostics using base R
+#' Plot interaction-bias diagnostics using base R
 #'
 #' @param x Output from [bias_interaction_report()], [estimate_bias()], or [fit_mfrm()].
 #' @param plot Plot type: `"scatter"`, `"ranked"`, `"abs_t_hist"`, or
@@ -4168,6 +4207,7 @@ table13_bias_plot_export <- function(x,
 #' @param palette Optional named color overrides (`normal`, `flag`, `hist`,
 #'   `profile`).
 #' @param label_angle Label angle hint for ranked/profile labels.
+#' @param preset Visual preset (`"standard"`, `"publication"`, or `"compact"`).
 #' @param draw If `TRUE`, draw with base graphics.
 #'
 #' @section Lifecycle:
@@ -4176,17 +4216,7 @@ table13_bias_plot_export <- function(x,
 #' @return A plotting-data object of class `mfrm_plot_data`.
 #' @seealso [bias_interaction_report()], [estimate_bias()], [plot_displacement()]
 #' @examples
-#' toy <- expand.grid(
-#'   Person = paste0("P", 1:4),
-#'   Rater = paste0("R", 1:2),
-#'   Criterion = c("Content", "Organization", "Language"),
-#'   stringsAsFactors = FALSE
-#' )
-#' toy$Score <- (
-#'   as.integer(factor(toy$Person)) +
-#'   2 * as.integer(factor(toy$Rater)) +
-#'   as.integer(factor(toy$Criterion))
-#' ) %% 3
+#' toy <- load_mfrmr_data("example_bias")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 #' p13 <- plot_bias_interaction(
 #'   fit,
@@ -4211,6 +4241,7 @@ plot_table13_bias <- function(x,
                               main = NULL,
                               palette = NULL,
                               label_angle = 45,
+                              preset = c("standard", "publication", "compact"),
                               draw = TRUE) {
   signal_legacy_name_deprecation(
     old_name = "plot_table13_bias",
@@ -4223,13 +4254,14 @@ plot_table13_bias <- function(x,
   label_angle <- suppressWarnings(as.numeric(label_angle[1]))
   if (!is.finite(label_angle)) label_angle <- 45
   las_rank <- if (label_angle >= 45) 2 else 1
+  style <- resolve_plot_preset(preset)
   pal <- resolve_palette(
     palette = palette,
     defaults = c(
-      normal = "#2b8cbe",
-      flag = "#cb181d",
-      hist = "#c7e9c0",
-      profile = "#756bb1"
+      normal = style$accent_primary,
+      flag = style$fail,
+      hist = style$fill_soft,
+      profile = style$accent_tertiary
     )
   )
 
@@ -4256,34 +4288,99 @@ plot_table13_bias <- function(x,
   scatter <- as.data.frame(bundle$scatter_data, stringsAsFactors = FALSE)
   profile <- as.data.frame(bundle$facet_profile %||% data.frame(), stringsAsFactors = FALSE)
   thr <- bundle$thresholds
+  plot_title <- switch(
+    plot,
+    scatter = "Bias interaction scatter",
+    ranked = "Ranked bias interaction size",
+    abs_t_hist = "Screening |t| distribution",
+    facet_profile = "Facet-level bias profile"
+  )
+  if (!is.null(main)) plot_title <- as.character(main[1])
+  plot_subtitle <- paste0(
+    "Interaction facets: ",
+    paste(bundle$summary$InteractionFacets[1] %||% paste(interaction_facets %||% c(facet_a, facet_b), collapse = " x ")),
+    "; screening thresholds |t| >= ", format(abs_t_warn),
+    ", |bias| >= ", format(abs_bias_warn)
+  )
+  plot_legend <- switch(
+    plot,
+    scatter = new_plot_legend(
+      label = c("Within review band", "Screen-positive cell"),
+      role = c("status", "status"),
+      aesthetic = c("point", "point"),
+      value = c(pal["normal"], pal["flag"])
+    ),
+    ranked = new_plot_legend(
+      label = c("Within review band", "Screen-positive pair"),
+      role = c("status", "status"),
+      aesthetic = c("point", "point"),
+      value = c(pal["normal"], pal["flag"])
+    ),
+    abs_t_hist = new_plot_legend(
+      label = "Absolute screening t",
+      role = "screening",
+      aesthetic = "histogram",
+      value = pal["hist"]
+    ),
+    facet_profile = new_plot_legend(
+      label = c("No flagged cells", "Contains flagged cells"),
+      role = c("status", "status"),
+      aesthetic = c("point", "point"),
+      value = c(pal["profile"], pal["flag"])
+    )
+  )
+  plot_reference <- switch(
+    plot,
+    scatter = new_reference_lines(
+      axis = c("h", "h", "h", "v"),
+      value = c(-thr$abs_bias_warn, 0, thr$abs_bias_warn, 0),
+      label = c("Bias review threshold", "Centered bias reference", "Bias review threshold", "Residual balance reference"),
+      linetype = c("dashed", "solid", "dashed", "dashed"),
+      role = c("threshold", "reference", "threshold", "reference")
+    ),
+    ranked = new_reference_lines(
+      axis = c("v", "v", "v"),
+      value = c(-thr$abs_bias_warn, 0, thr$abs_bias_warn),
+      label = c("Bias review threshold", "Centered bias reference", "Bias review threshold"),
+      linetype = c("dashed", "solid", "dashed"),
+      role = c("threshold", "reference", "threshold")
+    ),
+    abs_t_hist = new_reference_lines("v", thr$abs_t_warn, "Screening |t| threshold", "dashed", "threshold"),
+    facet_profile = new_reference_lines("v", thr$abs_bias_warn, "Mean |bias| review threshold", "dashed", "threshold")
+  )
 
   if (isTRUE(draw)) {
+    apply_plot_preset(style)
     if (plot == "scatter") {
-      if (nrow(scatter) == 0) {
+      scatter_plot <- scatter[is.finite(scatter$ObsExpAverage) & is.finite(scatter$BiasSize), , drop = FALSE]
+      if (nrow(scatter_plot) == 0) {
         graphics::plot.new()
-        graphics::title(main = main %||% "Table 13 bias scatter")
+        graphics::title(main = plot_title)
         graphics::text(0.5, 0.5, "No data")
       } else {
-        col <- ifelse(as.logical(scatter$Flag), pal["flag"], pal["normal"])
+        col <- ifelse(as.logical(scatter_plot$Flag), pal["flag"], pal["normal"])
         graphics::plot(
-          x = scatter$ObsExpAverage,
-          y = scatter$BiasSize,
+          x = scatter_plot$ObsExpAverage,
+          y = scatter_plot$BiasSize,
           pch = 16,
           col = col,
           xlab = "Obs-Exp Average",
           ylab = "Bias Size (logits)",
-          main = main %||% "Table 13: Bias scatter"
+          main = plot_title
         )
-        graphics::abline(h = c(-thr$abs_bias_warn, 0, thr$abs_bias_warn), lty = c(2, 1, 2), col = c("gray45", "gray30", "gray45"))
-        graphics::abline(v = 0, lty = 2, col = "gray45")
+        graphics::abline(h = pretty(graphics::par("usr")[3:4], n = 5), col = style$grid, lty = 1)
+        graphics::abline(v = pretty(graphics::par("usr")[1:2], n = 5), col = style$grid, lty = 1)
+        graphics::abline(h = c(-thr$abs_bias_warn, 0, thr$abs_bias_warn), lty = c(2, 1, 2), col = c(style$neutral, style$axis, style$neutral))
+        graphics::abline(v = 0, lty = 2, col = style$neutral)
       }
     } else if (plot == "ranked") {
-      if (nrow(ranked) == 0) {
+      ranked_plot <- ranked[is.finite(suppressWarnings(as.numeric(ranked$BiasSize))), , drop = FALSE]
+      if (nrow(ranked_plot) == 0) {
         graphics::plot.new()
-        graphics::title(main = main %||% "Table 13 ranked bias")
+        graphics::title(main = plot_title)
         graphics::text(0.5, 0.5, "No data")
       } else {
-        sub <- ranked[seq_len(min(nrow(ranked), top_n)), , drop = FALSE]
+        sub <- ranked_plot[seq_len(min(nrow(ranked_plot), top_n)), , drop = FALSE]
         y <- rev(seq_len(nrow(sub)))
         vals <- rev(suppressWarnings(as.numeric(sub$BiasSize)))
         lbl <- truncate_axis_label(rev(as.character(sub$Pair)), width = 28L)
@@ -4295,35 +4392,37 @@ plot_table13_bias <- function(x,
           yaxt = "n",
           ylab = "",
           xlab = "Bias Size (logits)",
-          main = main %||% "Table 13: Ranked bias size"
+          main = plot_title
         )
-        graphics::segments(0, y, vals, y, col = "gray60")
+        graphics::abline(v = pretty(graphics::par("usr")[1:2], n = 5), col = style$grid, lty = 1)
+        graphics::segments(0, y, vals, y, col = style$neutral)
         graphics::points(vals, y, pch = 16, col = col)
         graphics::axis(side = 2, at = y, labels = lbl, las = las_rank, cex.axis = 0.75)
-        graphics::abline(v = c(-thr$abs_bias_warn, 0, thr$abs_bias_warn), lty = c(2, 1, 2), col = c("gray45", "gray30", "gray45"))
+        graphics::abline(v = c(-thr$abs_bias_warn, 0, thr$abs_bias_warn), lty = c(2, 1, 2), col = c(style$neutral, style$axis, style$neutral))
       }
     } else if (plot == "abs_t_hist") {
       tvals <- abs(suppressWarnings(as.numeric(scatter$t)))
       tvals <- tvals[is.finite(tvals)]
       if (length(tvals) == 0) {
         graphics::plot.new()
-        graphics::title(main = main %||% "Table 13 |t| distribution")
+        graphics::title(main = plot_title)
         graphics::text(0.5, 0.5, "No data")
       } else {
         graphics::hist(
           x = tvals,
           breaks = "FD",
           col = pal["hist"],
-          border = "white",
+          border = style$background,
           xlab = "|t|",
-          main = main %||% "Table 13: |t| distribution"
+          main = plot_title
         )
-        graphics::abline(v = thr$abs_t_warn, lty = 2, col = "gray45")
+        graphics::abline(v = pretty(graphics::par("usr")[1:2], n = 5), col = style$grid, lty = 1)
+        graphics::abline(v = thr$abs_t_warn, lty = 2, col = style$neutral)
       }
     } else {
       if (nrow(profile) == 0 || !all(c("Facet", "Level", "MeanAbsBias", "FlagRate") %in% names(profile))) {
         graphics::plot.new()
-        graphics::title(main = main %||% "Table 13 facet profile")
+        graphics::title(main = plot_title)
         graphics::text(0.5, 0.5, "No data")
       } else {
         prof <- profile |>
@@ -4335,7 +4434,7 @@ plot_table13_bias <- function(x,
           dplyr::arrange(.data$Facet, dplyr::desc(.data$MeanAbsBias))
         if (nrow(prof) == 0) {
           graphics::plot.new()
-          graphics::title(main = main %||% "Table 13 facet profile")
+          graphics::title(main = plot_title)
           graphics::text(0.5, 0.5, "No data")
         } else {
           lbl <- truncate_axis_label(paste0(prof$Facet, ": ", prof$Level), width = 34L)
@@ -4348,9 +4447,10 @@ plot_table13_bias <- function(x,
             cex = 0.8,
             cex.axis = 0.75,
             xlab = "Mean |Bias Size| (logits)",
-            main = main %||% "Table 13: Facet-level mean |Bias|"
+            main = plot_title
           )
-          graphics::abline(v = thr$abs_bias_warn, lty = 2, col = "gray45")
+          graphics::abline(v = pretty(graphics::par("usr")[1:2], n = 5), col = style$grid, lty = 1)
+          graphics::abline(v = thr$abs_bias_warn, lty = 2, col = style$neutral)
         }
       }
     }
@@ -4364,11 +4464,15 @@ plot_table13_bias <- function(x,
       scatter_data = scatter,
       facet_profile = profile,
       summary = bundle$summary,
-      thresholds = thr
+      thresholds = thr,
+      title = plot_title,
+      subtitle = plot_subtitle,
+      legend = plot_legend,
+      reference_lines = plot_reference,
+      preset = style$name
     )
   )
   invisible(out)
 }
 
 # Human-friendly API aliases (preferred names)
-

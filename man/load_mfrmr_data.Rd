@@ -5,8 +5,8 @@
 \title{Load a packaged simulation dataset}
 \usage{
 load_mfrmr_data(
-  name = c("study1", "study2", "combined", "study1_itercal", "study2_itercal",
-    "combined_itercal")
+  name = c("example_core", "example_bias", "study1", "study2", "combined",
+    "study1_itercal", "study2_itercal", "combined_itercal")
 )
 }
 \arguments{
@@ -22,8 +22,10 @@ Load a packaged simulation dataset
 This helper is useful in scripts/functions where you want to choose a dataset
 by string key instead of calling \code{data()} manually.
 
-Returned columns are always:
-\code{Study}, \code{Person}, \code{Rater}, \code{Criterion}, \code{Score}.
+All returned datasets include the core long-format columns
+\code{Study}, \code{Person}, \code{Rater}, \code{Criterion}, and \code{Score}.
+Some datasets, such as the packaged documentation examples, also include
+auxiliary variables like \code{Group} for DIF/bias demonstrations.
 }
 \section{Interpreting output}{
 
@@ -41,8 +43,10 @@ in \code{\link[=fit_mfrm]{fit_mfrm()}} without additional reshaping.
 }
 
 \examples{
-d <- load_mfrmr_data("study1")
-head(d)
+data("mfrmr_example_core", package = "mfrmr")
+head(mfrmr_example_core)
+
+d <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(
   data = d,
   person = "Person",

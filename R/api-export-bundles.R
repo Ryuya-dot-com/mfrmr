@@ -126,6 +126,10 @@ export_extract_bias_pairs <- function(bias_results) {
 #'   diagnostics are computed with `residual_pca = "none"`.
 #' @param bias_results Optional output from [estimate_bias()] or a named list of
 #'   bias bundles.
+#' @param population_prediction Optional output from
+#'   [predict_mfrm_population()].
+#' @param unit_prediction Optional output from [predict_mfrm_units()].
+#' @param plausible_values Optional output from [sample_mfrm_plausible_values()].
 #' @param include_person_anchors If `TRUE`, include person measures in the
 #'   exported anchor table.
 #'
@@ -151,7 +155,8 @@ export_extract_bias_pairs <- function(bias_results) {
 #' - `estimation_control`: key-value optimizer settings table
 #' - `anchor_summary`: facet-level anchor summary
 #' - `anchors`: machine-readable anchor table
-#' - `available_outputs`: availability table for diagnostics/bias/PCA outputs
+#' - `available_outputs`: availability table for diagnostics/bias/PCA/prediction
+#'   outputs
 #' - `settings`: manifest build settings
 #'
 #' @section Interpreting output:
@@ -159,10 +164,10 @@ export_extract_bias_pairs <- function(bias_results) {
 #' the intended analysis. The `model_settings`, `source_columns`, and
 #' `estimation_control` tables are designed for audit trails and method write-up.
 #' The `available_outputs` table is especially useful before building bundles,
-#' because it tells you whether residual PCA, anchors, or bias results are
-#' already available. A practical reading order is `summary` first,
-#' `available_outputs` second, and `anchors` last when reproducibility depends
-#' on fixed constraints.
+#' because it tells you whether residual PCA, anchors, bias results, or
+#' prediction-side artifacts are already available. A practical reading order is
+#' `summary` first, `available_outputs` second, and `anchors` last when
+#' reproducibility depends on fixed constraints.
 #'
 #' @section Typical workflow:
 #' 1. Fit a model with [fit_mfrm()] or [run_mfrm_facets()].
@@ -176,7 +181,7 @@ export_extract_bias_pairs <- function(bias_results) {
 #' @seealso [export_mfrm_bundle()], [build_mfrm_replay_script()],
 #'   [make_anchor_table()], [reporting_checklist()]
 #' @examples
-#' toy <- mfrmr:::sample_mfrm_data(seed = 123)
+#' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "JML", maxit = 25)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
@@ -187,6 +192,9 @@ export_extract_bias_pairs <- function(bias_results) {
 build_mfrm_manifest <- function(fit,
                                 diagnostics = NULL,
                                 bias_results = NULL,
+                                population_prediction = NULL,
+                                unit_prediction = NULL,
+                                plausible_values = NULL,
                                 include_person_anchors = FALSE) {
   ctx <- resolve_mfrm_export_context(
     x = fit,
@@ -198,6 +206,21 @@ build_mfrm_manifest <- function(fit,
   diagnostics_supplied <- ctx$diagnostics_supplied
 
   bias_inputs <- export_normalize_bias_inputs(bias_results)
+  population_prediction <- export_validate_optional_object(
+    population_prediction,
+    "mfrm_population_prediction",
+    "population_prediction"
+  )
+  unit_prediction <- export_validate_optional_object(
+    unit_prediction,
+    "mfrm_unit_prediction",
+    "unit_prediction"
+  )
+  plausible_values <- export_validate_optional_object(
+    plausible_values,
+    "mfrm_plausible_values",
+    "plausible_values"
+  )
   anchor_tbl <- make_anchor_table(
     fit = fit,
     include_person = isTRUE(include_person_anchors)
@@ -258,13 +281,19 @@ build_mfrm_manifest <- function(fit,
   available_outputs <- export_available_outputs_table(
     diagnostics = diagnostics,
     bias_inputs = bias_inputs,
-    anchor_tbl = anchor_tbl
+    anchor_tbl = anchor_tbl,
+    population_prediction = population_prediction,
+    unit_prediction = unit_prediction,
+    plausible_values = plausible_values
   )
 
   settings <- dashboard_settings_table(list(
     diagnostics_supplied = diagnostics_supplied,
     include_person_anchors = isTRUE(include_person_anchors),
     bias_collection = inherits(bias_results, "mfrm_bias_collection"),
+    population_prediction = !is.null(population_prediction),
+    unit_prediction = !is.null(unit_prediction),
+    plausible_values = !is.null(plausible_values),
     input_mode = ctx$input_mode
   ))
 
@@ -291,6 +320,12 @@ build_mfrm_manifest <- function(fit,
 #' @param bias_results Optional output from [estimate_bias()] or a named list of
 #'   bias bundles. When supplied, the generated script includes package-native
 #'   bias estimation calls.
+#' @param population_prediction Optional output from
+#'   [predict_mfrm_population()] to recreate in the generated script.
+#' @param unit_prediction Optional output from [predict_mfrm_units()] to
+#'   recreate in the generated script.
+#' @param plausible_values Optional output from
+#'   [sample_mfrm_plausible_values()] to recreate in the generated script.
 #' @param data_file Path to the analysis data file used in the generated script.
 #' @param script_mode One of `"auto"`, `"fit"`, or `"facets"`. `"auto"` uses
 #'   `run_mfrm_facets()` when the input object came from that workflow.
@@ -346,7 +381,7 @@ build_mfrm_manifest <- function(fit,
 #' @return A named list with class `mfrm_replay_script`.
 #' @seealso [build_mfrm_manifest()], [export_mfrm_bundle()], [run_mfrm_facets()]
 #' @examples
-#' toy <- mfrmr:::sample_mfrm_data(seed = 123)
+#' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "JML", maxit = 25)
 #' replay <- build_mfrm_replay_script(fit, data_file = "your_data.csv")
@@ -356,6 +391,9 @@ build_mfrm_manifest <- function(fit,
 build_mfrm_replay_script <- function(fit,
                                      diagnostics = NULL,
                                      bias_results = NULL,
+                                     population_prediction = NULL,
+                                     unit_prediction = NULL,
+                                     plausible_values = NULL,
                                      data_file = "your_data.csv",
                                      script_mode = c("auto", "fit", "facets"),
                                      include_bundle = FALSE,
@@ -394,6 +432,31 @@ build_mfrm_replay_script <- function(fit,
   residual_pca_mode <- infer_export_residual_pca_mode(diagnostics)
   bias_pairs <- export_extract_bias_pairs(bias_results)
   include_diagnostics <- TRUE
+  population_prediction <- export_validate_optional_object(
+    population_prediction,
+    "mfrm_population_prediction",
+    "population_prediction"
+  )
+  unit_prediction <- export_validate_optional_object(
+    unit_prediction,
+    "mfrm_unit_prediction",
+    "unit_prediction"
+  )
+  plausible_values <- export_validate_optional_object(
+    plausible_values,
+    "mfrm_plausible_values",
+    "plausible_values"
+  )
+
+  render_classed_literal <- function(x, class_name) {
+    paste0(
+      "structure(",
+      render_r_object_literal(unclass(x)),
+      ", class = ",
+      render_r_object_literal(as.character(class_name[1])),
+      ")"
+    )
+  }
 
   lines <- c(
     "#!/usr/bin/env Rscript",
@@ -527,7 +590,100 @@ build_mfrm_replay_script <- function(fit,
     lines <- c(lines, "", "bias_results <- NULL")
   }
 
+  if (!is.null(population_prediction)) {
+    pop_settings <- population_prediction$settings %||% list()
+    lines <- c(
+      lines,
+      "",
+      "# Scenario-level population forecast",
+      paste0(
+        "population_prediction_sim_spec <- ",
+        render_classed_literal(population_prediction$sim_spec, "mfrm_sim_spec")
+      ),
+      "population_prediction <- predict_mfrm_population(",
+      "  sim_spec = population_prediction_sim_spec,",
+      paste0("  reps = ", render_r_object_literal(as.integer(pop_settings$reps %||% 50L)), ","),
+      paste0("  fit_method = ", render_r_object_literal(as.character(pop_settings$fit_method %||% "MML")), ","),
+      paste0("  model = ", render_r_object_literal(as.character(pop_settings$model %||% cfg$model %||% "RSM")), ","),
+      paste0("  maxit = ", render_r_object_literal(as.integer(pop_settings$maxit %||% est_ctl$maxit %||% 25L)), ","),
+      paste0("  quad_points = ", render_r_object_literal(as.integer(pop_settings$quad_points %||% est_ctl$quad_points %||% 7L)), ","),
+      paste0("  residual_pca = ", render_r_object_literal(as.character(pop_settings$residual_pca %||% "none")), ","),
+      paste0("  seed = ", if (!is.null(pop_settings$seed)) render_r_object_literal(pop_settings$seed) else "NULL"),
+      ")"
+    )
+  } else {
+    lines <- c(lines, "", "population_prediction <- NULL")
+  }
+
+  if (!is.null(unit_prediction)) {
+    unit_settings <- unit_prediction$settings %||% list()
+    unit_cols <- unit_settings$source_columns %||% list(
+      person = "Person",
+      facets = character(0),
+      score = "Score",
+      weight = NULL
+    )
+    lines <- c(
+      lines,
+      "",
+      "# Fixed-calibration scoring for future or partially observed units",
+      paste0(
+        "unit_prediction_input <- ",
+        render_r_object_literal(as.data.frame(unit_prediction$input_data %||% data.frame(), stringsAsFactors = FALSE))
+      ),
+      "unit_prediction <- predict_mfrm_units(",
+      "  fit = fit,",
+      "  new_data = unit_prediction_input,",
+      paste0("  person = ", render_r_object_literal(as.character(unit_cols$person %||% "Person")), ","),
+      paste0("  facets = ", render_r_object_literal(as.character(unit_cols$facets %||% character(0))), ","),
+      paste0("  score = ", render_r_object_literal(as.character(unit_cols$score %||% "Score")), ","),
+      paste0("  weight = ", if (!is.null(unit_cols$weight) && nzchar(as.character(unit_cols$weight))) render_r_object_literal(as.character(unit_cols$weight)) else "NULL", ","),
+      paste0("  interval_level = ", render_r_object_literal(as.numeric(unit_settings$interval_level %||% 0.95)), ","),
+      paste0("  n_draws = ", render_r_object_literal(as.integer(unit_settings$n_draws %||% 0L)), ","),
+      paste0("  seed = ", if (!is.null(unit_settings$seed)) render_r_object_literal(unit_settings$seed) else "NULL"),
+      ")"
+    )
+  } else {
+    lines <- c(lines, "", "unit_prediction <- NULL")
+  }
+
+  if (!is.null(plausible_values)) {
+    pv_settings <- plausible_values$settings %||% list()
+    pv_cols <- pv_settings$source_columns %||% list(
+      person = "Person",
+      facets = character(0),
+      score = "Score",
+      weight = NULL
+    )
+    lines <- c(
+      lines,
+      "",
+      "# Approximate plausible-value summaries under the fixed calibration",
+      paste0(
+        "plausible_value_input <- ",
+        render_r_object_literal(as.data.frame(plausible_values$input_data %||% data.frame(), stringsAsFactors = FALSE))
+      ),
+      "plausible_values <- sample_mfrm_plausible_values(",
+      "  fit = fit,",
+      "  new_data = plausible_value_input,",
+      paste0("  person = ", render_r_object_literal(as.character(pv_cols$person %||% "Person")), ","),
+      paste0("  facets = ", render_r_object_literal(as.character(pv_cols$facets %||% character(0))), ","),
+      paste0("  score = ", render_r_object_literal(as.character(pv_cols$score %||% "Score")), ","),
+      paste0("  weight = ", if (!is.null(pv_cols$weight) && nzchar(as.character(pv_cols$weight))) render_r_object_literal(as.character(pv_cols$weight)) else "NULL", ","),
+      paste0("  n_draws = ", render_r_object_literal(as.integer(pv_settings$n_draws %||% 5L)), ","),
+      paste0("  interval_level = ", render_r_object_literal(as.numeric(pv_settings$interval_level %||% 0.95)), ","),
+      paste0("  seed = ", if (!is.null(pv_settings$seed)) render_r_object_literal(pv_settings$seed) else "NULL"),
+      ")"
+    )
+  } else {
+    lines <- c(lines, "", "plausible_values <- NULL")
+  }
+
   if (isTRUE(include_bundle)) {
+    bundle_include <- c("core_tables", "checklist", "dashboard", "manifest", "html")
+    if (!is.null(population_prediction) || !is.null(unit_prediction) || !is.null(plausible_values)) {
+      bundle_include <- c(bundle_include, "predictions")
+    }
     lines <- c(
       lines,
       "",
@@ -536,9 +692,12 @@ build_mfrm_replay_script <- function(fit,
       "  fit = fit,",
       "  diagnostics = diagnostics,",
       "  bias_results = bias_results,",
+      "  population_prediction = population_prediction,",
+      "  unit_prediction = unit_prediction,",
+      "  plausible_values = plausible_values,",
       paste0("  output_dir = ", render_r_object_literal(as.character(bundle_dir[1])) , ","),
       paste0("  prefix = ", render_r_object_literal(as.character(bundle_prefix[1])) , ","),
-      '  include = c("core_tables", "checklist", "dashboard", "manifest", "html"),',
+      paste0("  include = ", render_r_object_literal(bundle_include), ","),
       "  overwrite = TRUE",
       ")"
     )
@@ -549,6 +708,9 @@ build_mfrm_replay_script <- function(fit,
     ScriptMode = resolved_mode,
     ResidualPCA = residual_pca_mode,
     BiasPairs = length(bias_pairs),
+    PopulationPrediction = !is.null(population_prediction),
+    UnitPrediction = !is.null(unit_prediction),
+    PlausibleValues = !is.null(plausible_values),
     Anchors = nrow(anchor_df),
     GroupAnchors = nrow(group_anchor_df),
     IncludeBundle = isTRUE(include_bundle),
@@ -582,11 +744,16 @@ build_mfrm_replay_script <- function(fit,
 #'   are requested).
 #' @param bias_results Optional output from [estimate_bias()] or a named list of
 #'   bias bundles.
+#' @param population_prediction Optional output from
+#'   [predict_mfrm_population()].
+#' @param unit_prediction Optional output from [predict_mfrm_units()].
+#' @param plausible_values Optional output from [sample_mfrm_plausible_values()].
 #' @param output_dir Directory where files will be written.
 #' @param prefix File-name prefix.
 #' @param include Components to export. Supported values are
 #'   `"core_tables"`, `"checklist"`, `"dashboard"`, `"apa"`, `"anchors"`,
-#'   `"manifest"`, `"visual_summaries"`, `"script"`, and `"html"`.
+#'   `"manifest"`, `"visual_summaries"`, `"predictions"`, `"script"`, and
+#'   `"html"`.
 #' @param facet Optional facet for [facet_quality_dashboard()].
 #' @param include_person_anchors If `TRUE`, include person measures in the
 #'   exported anchor table.
@@ -627,6 +794,8 @@ build_mfrm_replay_script <- function(fit,
 #' - anchor CSV via [make_anchor_table()]
 #' - manifest CSV/TXT via [build_mfrm_manifest()]
 #' - visual warning/summary artifacts via [build_visual_summaries()]
+#' - prediction/forecast CSVs via [predict_mfrm_population()],
+#'   [predict_mfrm_units()], and [sample_mfrm_plausible_values()]
 #' - a package-native replay script via [build_mfrm_replay_script()]
 #' - a lightweight HTML report that bundles the exported tables/text
 #'
@@ -647,7 +816,7 @@ build_mfrm_replay_script <- function(fit,
 #' @seealso [build_mfrm_manifest()], [build_mfrm_replay_script()],
 #'   [export_mfrm()], [reporting_checklist()]
 #' @examples
-#' toy <- mfrmr:::sample_mfrm_data(seed = 123)
+#' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "JML", maxit = 25)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
@@ -665,16 +834,19 @@ build_mfrm_replay_script <- function(fit,
 export_mfrm_bundle <- function(fit,
                                diagnostics = NULL,
                                bias_results = NULL,
+                               population_prediction = NULL,
+                               unit_prediction = NULL,
+                               plausible_values = NULL,
                                output_dir = ".",
                                prefix = "mfrmr_bundle",
-                               include = c("core_tables", "checklist", "dashboard", "apa", "anchors", "manifest", "visual_summaries", "script", "html"),
+                               include = c("core_tables", "checklist", "dashboard", "apa", "anchors", "manifest", "visual_summaries", "predictions", "script", "html"),
                                facet = NULL,
                                include_person_anchors = FALSE,
                                overwrite = FALSE,
                                zip_bundle = FALSE,
                                zip_name = NULL) {
   include <- unique(tolower(as.character(include)))
-  allowed <- c("core_tables", "checklist", "dashboard", "apa", "anchors", "manifest", "visual_summaries", "script", "html")
+  allowed <- c("core_tables", "checklist", "dashboard", "apa", "anchors", "manifest", "visual_summaries", "predictions", "script", "html")
   bad <- setdiff(include, allowed)
   if (length(bad) > 0) {
     stop("Unsupported `include` values: ", paste(bad, collapse = ", "), ". Allowed: ", paste(allowed, collapse = ", "), call. = FALSE)
@@ -706,6 +878,28 @@ export_mfrm_bundle <- function(fit,
   diagnostics_supplied <- ctx$diagnostics_supplied
 
   bias_inputs <- export_normalize_bias_inputs(bias_results)
+  population_prediction <- export_validate_optional_object(
+    population_prediction,
+    "mfrm_population_prediction",
+    "population_prediction"
+  )
+  unit_prediction <- export_validate_optional_object(
+    unit_prediction,
+    "mfrm_unit_prediction",
+    "unit_prediction"
+  )
+  plausible_values <- export_validate_optional_object(
+    plausible_values,
+    "mfrm_plausible_values",
+    "plausible_values"
+  )
+  if ("predictions" %in% include &&
+      all(vapply(list(population_prediction, unit_prediction, plausible_values), is.null, logical(1)))) {
+    stop(
+      "`include = 'predictions'` requires at least one of `population_prediction`, `unit_prediction`, or `plausible_values`.",
+      call. = FALSE
+    )
+  }
   written_files <- data.frame(
     Component = character(0),
     Format = character(0),
@@ -758,6 +952,114 @@ export_mfrm_bundle <- function(fit,
     writeLines(enc2utf8(as.character(text)), con = path, useBytes = TRUE)
     add_written(component, "r", path)
     invisible(path)
+  }
+
+  write_settings_table <- function(settings, filename, component) {
+    tbl <- export_flatten_named_values(settings %||% list())
+    names(tbl) <- c("Setting", "Value")
+    write_csv(tbl, filename, component)
+  }
+
+  write_sim_spec_bundle <- function(sim_spec, prefix_base) {
+    if (!inherits(sim_spec, "mfrm_sim_spec")) return(invisible(NULL))
+
+    scalar_settings <- list(
+      source = sim_spec$source %||% "unknown",
+      model = sim_spec$model %||% NA_character_,
+      step_facet = sim_spec$step_facet %||% NA_character_,
+      assignment = sim_spec$assignment %||% NA_character_,
+      latent_distribution = sim_spec$latent_distribution %||% NA_character_,
+      n_person = sim_spec$n_person %||% NA_integer_,
+      n_rater = sim_spec$n_rater %||% NA_integer_,
+      n_criterion = sim_spec$n_criterion %||% NA_integer_,
+      raters_per_person = sim_spec$raters_per_person %||% NA_integer_,
+      score_levels = sim_spec$score_levels %||% NA_integer_,
+      theta_sd = sim_spec$theta_sd %||% NA_real_,
+      rater_sd = sim_spec$rater_sd %||% NA_real_,
+      criterion_sd = sim_spec$criterion_sd %||% NA_real_,
+      noise_sd = sim_spec$noise_sd %||% NA_real_,
+      step_span = sim_spec$step_span %||% NA_real_,
+      group_levels = paste(as.character(sim_spec$group_levels %||% character(0)), collapse = ", ")
+    )
+    write_settings_table(
+      scalar_settings,
+      paste0(prefix, "_", prefix_base, "_settings.csv"),
+      paste0(prefix_base, "_settings")
+    )
+
+    threshold_tbl <- as.data.frame(sim_spec$threshold_table %||% data.frame(), stringsAsFactors = FALSE)
+    if (nrow(threshold_tbl) > 0) {
+      write_csv(
+        threshold_tbl,
+        paste0(prefix, "_", prefix_base, "_thresholds.csv"),
+        paste0(prefix_base, "_thresholds")
+      )
+    }
+
+    if (is.list(sim_spec$empirical_support) && length(sim_spec$empirical_support) > 0) {
+      empirical_tbl <- do.call(
+        rbind,
+        lapply(names(sim_spec$empirical_support), function(nm) {
+          vals <- suppressWarnings(as.numeric(sim_spec$empirical_support[[nm]]))
+          vals <- vals[is.finite(vals)]
+          if (length(vals) == 0) return(NULL)
+          data.frame(Facet = nm, Value = vals, stringsAsFactors = FALSE)
+        })
+      )
+      if (is.data.frame(empirical_tbl) && nrow(empirical_tbl) > 0) {
+        write_csv(
+          empirical_tbl,
+          paste0(prefix, "_", prefix_base, "_empirical_support.csv"),
+          paste0(prefix_base, "_empirical_support")
+        )
+      }
+    }
+
+    assignment_profiles_tbl <- as.data.frame(sim_spec$assignment_profiles %||% data.frame(), stringsAsFactors = FALSE)
+    if (nrow(assignment_profiles_tbl) > 0) {
+      write_csv(
+        assignment_profiles_tbl,
+        paste0(prefix, "_", prefix_base, "_assignment_profiles.csv"),
+        paste0(prefix_base, "_assignment_profiles")
+      )
+    }
+
+    design_skeleton_tbl <- as.data.frame(sim_spec$design_skeleton %||% data.frame(), stringsAsFactors = FALSE)
+    if (nrow(design_skeleton_tbl) > 0) {
+      write_csv(
+        design_skeleton_tbl,
+        paste0(prefix, "_", prefix_base, "_design_skeleton.csv"),
+        paste0(prefix_base, "_design_skeleton")
+      )
+    }
+
+    dif_tbl <- as.data.frame(sim_spec$dif_effects %||% data.frame(), stringsAsFactors = FALSE)
+    if (nrow(dif_tbl) > 0) {
+      write_csv(
+        dif_tbl,
+        paste0(prefix, "_", prefix_base, "_dif_effects.csv"),
+        paste0(prefix_base, "_dif_effects")
+      )
+    }
+
+    interaction_tbl <- as.data.frame(sim_spec$interaction_effects %||% data.frame(), stringsAsFactors = FALSE)
+    if (nrow(interaction_tbl) > 0) {
+      write_csv(
+        interaction_tbl,
+        paste0(prefix, "_", prefix_base, "_interaction_effects.csv"),
+        paste0(prefix_base, "_interaction_effects")
+      )
+    }
+
+    if (length(sim_spec$source_summary %||% list()) > 0) {
+      write_csv(
+        export_flatten_named_values(sim_spec$source_summary),
+        paste0(prefix, "_", prefix_base, "_source_summary.csv"),
+        paste0(prefix_base, "_source_summary")
+      )
+    }
+
+    invisible(NULL)
   }
 
   if ("core_tables" %in% include) {
@@ -874,12 +1176,85 @@ export_mfrm_bundle <- function(fit,
     html_tables$anchors <- anchor_tbl
   }
 
+  if ("predictions" %in% include) {
+    if (!is.null(population_prediction)) {
+      pop_sum <- summary(population_prediction, digits = 6)
+      write_csv(population_prediction$design, paste0(prefix, "_population_prediction_design.csv"), "population_prediction_design")
+      write_csv(population_prediction$forecast, paste0(prefix, "_population_prediction_forecast.csv"), "population_prediction_forecast")
+      write_csv(population_prediction$overview, paste0(prefix, "_population_prediction_overview.csv"), "population_prediction_overview")
+      write_settings_table(population_prediction$settings, paste0(prefix, "_population_prediction_settings.csv"), "population_prediction_settings")
+      write_sim_spec_bundle(population_prediction$sim_spec, "population_prediction_sim_spec")
+      if (!is.null(population_prediction$ademp) && length(population_prediction$ademp) > 0) {
+        write_csv(
+          export_flatten_named_values(population_prediction$ademp),
+          paste0(prefix, "_population_prediction_ademp.csv"),
+          "population_prediction_ademp"
+        )
+      }
+      if (length(population_prediction$notes %||% character(0)) > 0) {
+        write_text(
+          paste(population_prediction$notes, collapse = "\n"),
+          paste0(prefix, "_population_prediction_notes.txt"),
+          "population_prediction_notes"
+        )
+      }
+      html_tables$population_prediction_forecast <- pop_sum$forecast
+      html_tables$population_prediction_overview <- pop_sum$overview
+    }
+
+    if (!is.null(unit_prediction)) {
+      unit_sum <- summary(unit_prediction, digits = 6)
+      write_csv(unit_prediction$estimates, paste0(prefix, "_unit_prediction_estimates.csv"), "unit_prediction_estimates")
+      write_csv(unit_prediction$audit, paste0(prefix, "_unit_prediction_audit.csv"), "unit_prediction_audit")
+      write_settings_table(unit_prediction$settings, paste0(prefix, "_unit_prediction_settings.csv"), "unit_prediction_settings")
+      if (nrow(as.data.frame(unit_prediction$input_data %||% data.frame(), stringsAsFactors = FALSE)) > 0) {
+        write_csv(unit_prediction$input_data, paste0(prefix, "_unit_prediction_input.csv"), "unit_prediction_input")
+      }
+      if (nrow(as.data.frame(unit_prediction$draws %||% data.frame(), stringsAsFactors = FALSE)) > 0) {
+        write_csv(unit_prediction$draws, paste0(prefix, "_unit_prediction_draws.csv"), "unit_prediction_draws")
+      }
+      if (length(unit_prediction$notes %||% character(0)) > 0) {
+        write_text(
+          paste(unit_prediction$notes, collapse = "\n"),
+          paste0(prefix, "_unit_prediction_notes.txt"),
+          "unit_prediction_notes"
+        )
+      }
+      html_tables$unit_prediction_estimates <- unit_sum$estimates
+      html_tables$unit_prediction_audit <- unit_sum$audit
+    }
+
+    if (!is.null(plausible_values)) {
+      pv_sum <- summary(plausible_values, digits = 6)
+      write_csv(plausible_values$values, paste0(prefix, "_plausible_values.csv"), "plausible_values")
+      write_csv(plausible_values$estimates, paste0(prefix, "_plausible_value_estimates.csv"), "plausible_value_estimates")
+      write_csv(plausible_values$audit, paste0(prefix, "_plausible_value_audit.csv"), "plausible_value_audit")
+      write_settings_table(plausible_values$settings, paste0(prefix, "_plausible_value_settings.csv"), "plausible_value_settings")
+      if (nrow(as.data.frame(plausible_values$input_data %||% data.frame(), stringsAsFactors = FALSE)) > 0) {
+        write_csv(plausible_values$input_data, paste0(prefix, "_plausible_value_input.csv"), "plausible_value_input")
+      }
+      if (length(plausible_values$notes %||% character(0)) > 0) {
+        write_text(
+          paste(plausible_values$notes, collapse = "\n"),
+          paste0(prefix, "_plausible_value_notes.txt"),
+          "plausible_value_notes"
+        )
+      }
+      if (nrow(as.data.frame(pv_sum$draw_summary %||% data.frame(), stringsAsFactors = FALSE)) > 0) {
+        html_tables$plausible_value_summary <- pv_sum$draw_summary
+      }
+    }
+  }
+
   manifest <- NULL
   if ("manifest" %in% include || "html" %in% include) {
     manifest <- build_mfrm_manifest(
       fit = fit,
       diagnostics = diagnostics,
       bias_results = if (inherits(bias_results, "mfrm_bias_collection")) bias_results else bias_inputs,
+      population_prediction = population_prediction,
+      unit_prediction = unit_prediction,
+      plausible_values = plausible_values,
       include_person_anchors = include_person_anchors
     )
   }
@@ -934,6 +1309,9 @@ export_mfrm_bundle <- function(fit,
       fit = if (ctx$input_mode == "facets_run") ctx$run else fit,
       diagnostics = diagnostics,
       bias_results = if (inherits(bias_results, "mfrm_bias_collection")) bias_results else bias_inputs,
+      population_prediction = population_prediction,
+      unit_prediction = unit_prediction,
+      plausible_values = plausible_values,
       include_bundle = TRUE,
       bundle_dir = "replayed_bundle",
       bundle_prefix = prefix
@@ -967,13 +1345,13 @@ export_mfrm_bundle <- function(fit,
       as.character(zip_name[1])
     }
     zip_path <- file.path(output_dir, zip_file)
-    rel_files <- basename(written_files$Path)
-    old_wd <- getwd()
-    on.exit(setwd(old_wd), add = TRUE)
-    setwd(output_dir)
+    if (file.exists(zip_path) && !overwrite) {
+      stop("File already exists: ", zip_path, ". Set `overwrite = TRUE` to replace.", call. = FALSE)
+    }
+    zip_inputs <- unique(normalizePath(written_files$Path, winslash = "/", mustWork = TRUE))
     zip_result <- tryCatch(
       {
-        utils::zip(zipfile = zip_file, files = rel_files)
+        utils::zip(zipfile = zip_path, files = zip_inputs, extras = "-j")
         TRUE
       },
       error = function(e) e
@@ -1051,22 +1429,72 @@ export_primary_bias_result <- function(bias_results, bias_inputs = NULL) {
   if (length(vals) > 0) vals[[1]] else NULL
 }
 
+export_validate_optional_object <- function(x, class_name, arg_name) {
+  if (is.null(x)) return(NULL)
+  if (!inherits(x, class_name)) {
+    stop("`", arg_name, "` must be output from ", class_name, " helpers.", call. = FALSE)
+  }
+  x
+}
+
+export_flatten_named_values <- function(x, parent = NULL) {
+  key <- if (is.null(parent) || !nzchar(parent)) "value" else parent
+  if (is.null(x)) {
+    return(data.frame(Key = character(0), Value = character(0), stringsAsFactors = FALSE))
+  }
+  if (is.data.frame(x)) {
+    value <- paste(utils::capture.output(print(x, row.names = FALSE)), collapse = "\n")
+    return(data.frame(Key = key, Value = value, stringsAsFactors = FALSE))
+  }
+  if (is.list(x)) {
+    nms <- names(x)
+    if (is.null(nms)) nms <- rep("", length(x))
+    parts <- lapply(seq_along(x), function(i) {
+      child_nm <- nms[i]
+      if (!nzchar(child_nm)) child_nm <- paste0("item", i)
+      child_key <- if (identical(key, "value")) child_nm else paste(key, child_nm, sep = ".")
+      export_flatten_named_values(x[[i]], child_key)
+    })
+    if (length(parts) == 0) {
+      return(data.frame(Key = character(0), Value = character(0), stringsAsFactors = FALSE))
+    }
+    return(do.call(rbind, parts))
+  }
+  value <- if (length(x) == 0) "" else paste(as.character(x), collapse = " | ")
+  data.frame(Key = key, Value = value, stringsAsFactors = FALSE)
+}
+
 export_has_residual_pca <- function(diagnostics) {
   overall <- diagnostics$residual_pca_overall %||% NULL
   by_facet <- diagnostics$residual_pca_by_facet %||% NULL
   (!is.null(overall) && length(overall) > 0) || (!is.null(by_facet) && length(by_facet) > 0)
 }
 
-export_available_outputs_table <- function(diagnostics, bias_inputs, anchor_tbl) {
+export_available_outputs_table <- function(diagnostics,
+                                           bias_inputs,
+                                           anchor_tbl,
+                                           population_prediction = NULL,
+                                           unit_prediction = NULL,
+                                           plausible_values = NULL) {
+  pop_forecast <- as.data.frame(population_prediction$forecast %||% data.frame(), stringsAsFactors = FALSE)
+  unit_estimates <- as.data.frame(unit_prediction$estimates %||% data.frame(), stringsAsFactors = FALSE)
+  pv_values <- as.data.frame(plausible_values$values %||% data.frame(), stringsAsFactors = FALSE)
   data.frame(
-    Component = c("observed_residuals", "measures", "reliability", "residual_pca", "bias_results", "anchors"),
+    Component = c(
+      "observed_residuals", "measures", "reliability", "residual_pca",
+      "bias_results", "anchors", "population_prediction",
+      "unit_prediction", "plausible_values"
+    ),
     Available = c(
       !is.null(diagnostics$obs) && nrow(as.data.frame(diagnostics$obs, stringsAsFactors = FALSE)) > 0,
       !is.null(diagnostics$measures) && nrow(as.data.frame(diagnostics$measures, stringsAsFactors = FALSE)) > 0,
       !is.null(diagnostics$reliability) && nrow(as.data.frame(diagnostics$reliability, stringsAsFactors = FALSE)) > 0,
       export_has_residual_pca(diagnostics),
       length(bias_inputs) > 0,
-      nrow(as.data.frame(anchor_tbl, stringsAsFactors = FALSE)) > 0
+      nrow(as.data.frame(anchor_tbl, stringsAsFactors = FALSE)) > 0,
+      !is.null(population_prediction) && nrow(pop_forecast) > 0,
+      !is.null(unit_prediction) && nrow(unit_estimates) > 0,
+      !is.null(plausible_values) && nrow(pv_values) > 0
     ),
     Detail = c(
       "diagnostics$obs",
@@ -1074,7 +1502,10 @@ export_available_outputs_table <- function(diagnostics, bias_inputs, anchor_tbl)
       "diagnostics$reliability",
       "diagnostics$residual_pca_overall / residual_pca_by_facet",
       if (length(bias_inputs) > 0) paste0(length(bias_inputs), " bundle(s)") else "none",
-      paste0(nrow(as.data.frame(anchor_tbl, stringsAsFactors = FALSE)), " row(s)")
+      paste0(nrow(as.data.frame(anchor_tbl, stringsAsFactors = FALSE)), " row(s)"),
+      if (!is.null(population_prediction)) paste0(nrow(pop_forecast), " forecast row(s)") else "none",
+      if (!is.null(unit_prediction)) paste0(nrow(unit_estimates), " estimate row(s)") else "none",
+      if (!is.null(plausible_values)) paste0(nrow(pv_values), " draw row(s)") else "none"
     ),
     stringsAsFactors = FALSE
   )

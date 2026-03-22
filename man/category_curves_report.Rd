@@ -22,7 +22,8 @@ category_curves_report(
 
 \item{digits}{Rounding digits for numeric graph output.}
 
-\item{include_fixed}{If \code{TRUE}, include a FACETS-style fixed-width text block.}
+\item{include_fixed}{If \code{TRUE}, include a legacy-compatible fixed-width text
+block.}
 
 \item{fixed_max_rows}{Maximum rows shown in fixed-width graph tables.}
 }
@@ -65,17 +66,7 @@ Recommended read order:
 }
 
 \examples{
-toy <- expand.grid(
-  Person = paste0("P", 1:4),
-  Rater = paste0("R", 1:2),
-  Criterion = c("Content", "Organization", "Language"),
-  stringsAsFactors = FALSE
-)
-toy$Score <- (
-  as.integer(factor(toy$Person)) +
-  2 * as.integer(factor(toy$Rater)) +
-  as.integer(factor(toy$Criterion))
-) \%\% 3
+toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 out <- category_curves_report(fit, theta_points = 101)
 summary(out)
@@ -84,5 +75,6 @@ p_cc <- plot(out, draw = FALSE)
 class(p_cc)
 }
 \seealso{
-\code{\link[=category_structure_report]{category_structure_report()}}, \code{\link[=rating_scale_table]{rating_scale_table()}}, \code{\link[=plot.mfrm_fit]{plot.mfrm_fit()}}
+\code{\link[=category_structure_report]{category_structure_report()}}, \code{\link[=rating_scale_table]{rating_scale_table()}}, \code{\link[=plot.mfrm_fit]{plot.mfrm_fit()}},
+\link{mfrmr_reports_and_tables}, \link{mfrmr_visual_diagnostics}
 }

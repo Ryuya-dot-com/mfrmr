@@ -581,6 +581,8 @@ test_that("summary.mfrm_apa_outputs covers lines 6421-6501", {
   expect_s3_class(s, "summary.mfrm_apa_outputs")
   expect_true("overview" %in% names(s))
   expect_true("components" %in% names(s))
+  expect_true("DraftContractPass" %in% names(s$overview))
+  expect_true(any(grepl("contract completeness", s$notes, fixed = TRUE)))
 
   # error guard (line 6421): non-mfrm_apa_outputs
   expect_error(summary.mfrm_apa_outputs(list()), "mfrm_apa_outputs")
@@ -1194,8 +1196,7 @@ test_that("fit_mfrm with anchor_policy error triggers error", {
     stringsAsFactors = FALSE
   )
 
-  # anchor_policy = "error" -> line 224, triggers stop()
-  tryCatch(
+  expect_error(
     mfrmr::fit_mfrm(
       data = d, person = "Person",
       facets = c("Rater", "Task", "Criterion"), score = "Score",
@@ -1203,25 +1204,20 @@ test_that("fit_mfrm with anchor_policy error triggers error", {
       anchors = bad_anchor,
       anchor_policy = "error"
     ),
-    error = function(e) {
-      expect_true(grepl("anchor|Anchor|audit|issue", e$message, ignore.case = TRUE) ||
-                  TRUE)  # just ensure we hit the code path
-    }
+    regexp = "anchor|Anchor|audit|issue",
+    ignore.case = TRUE
   )
 
   # Also test anchor_policy = "silent" path for code coverage
-  # This should NOT produce warnings/errors even with issues
-  result <- tryCatch(
+  # This should continue after removing invalid rows.
+  result <- suppressWarnings(
     suppressWarnings(mfrmr::fit_mfrm(
       data = d, person = "Person",
       facets = c("Rater", "Task", "Criterion"), score = "Score",
       method = "JML", maxit = 15,
       anchors = bad_anchor,
       anchor_policy = "silent"
-    )),
-    error = function(e) NULL
+    ))
   )
-  # If no error, we covered the silent path (line 226 skipped)
-  # If error from estimation (not from policy), that's fine
-  expect_true(TRUE)
+  expect_s3_class(result, "mfrm_fit")
 })

@@ -2,18 +2,19 @@
 % Please edit documentation in R/api-advanced.R
 \name{plot_dif_heatmap}
 \alias{plot_dif_heatmap}
-\title{Plot DIF interaction heatmap}
+\title{Plot a differential-functioning heatmap}
 \usage{
 plot_dif_heatmap(x, metric = c("obs_exp", "t", "contrast"), draw = TRUE, ...)
 }
 \arguments{
-\item{x}{Output from \code{\link[=dif_interaction_table]{dif_interaction_table()}} or \code{\link[=analyze_dif]{analyze_dif()}}.
-When an \code{mfrm_dif} object is passed, the \code{cell_table} element
+\item{x}{Output from \code{\link[=dif_interaction_table]{dif_interaction_table()}}, \code{\link[=analyze_dff]{analyze_dff()}}, or
+\code{\link[=analyze_dif]{analyze_dif()}}. When an \code{mfrm_dff}/\code{mfrm_dif} object is passed,
+the \code{cell_table} element
 is used (requires \code{method = "residual"}).}
 
 \item{metric}{Which metric to plot: \code{"obs_exp"} for observed-minus-expected
 average (default), \code{"t"} for the standardized residual / t-statistic,
-or \code{"contrast"} for pairwise DIF contrast (only for \code{mfrm_dif}
+or \code{"contrast"} for pairwise differential-functioning contrast (only for \code{mfrm_dff}
 objects with \code{dif_table}).}
 
 \item{draw}{If \code{TRUE} (default), draw the plot.}
@@ -36,36 +37,33 @@ underestimates the facet level for that group).
 \item Cool colors (blue) indicate negative Obs-Exp values (the model
 overestimates).
 \item White/neutral indicates no systematic difference.
+\item The \code{"contrast"} view is best for pairwise differential-functioning
+summaries, whereas
+\code{"obs_exp"} and \code{"t"} are best for cell-level diagnostics.
 }
 }
 
 \section{Typical workflow}{
 
 \enumerate{
-\item Compute interaction with \code{\link[=dif_interaction_table]{dif_interaction_table()}}.
-\item Plot with \code{plot_dif_heatmap(interaction_result)}.
-\item Identify extreme cells for follow-up.
+\item Compute interaction with \code{\link[=dif_interaction_table]{dif_interaction_table()}} or differential-
+functioning contrasts with \code{\link[=analyze_dff]{analyze_dff()}}.
+\item Plot with \code{plot_dif_heatmap(...)}.
+\item Identify extreme cells or contrasts for follow-up.
 }
 }
 
 \examples{
-set.seed(42)
-toy <- expand.grid(
-  Person = paste0("P", 1:8),
-  Rater = paste0("R", 1:3),
-  Criterion = c("Content", "Organization"),
-  stringsAsFactors = FALSE
-)
-toy$Score <- sample(0:2, nrow(toy), replace = TRUE)
-toy$Group <- ifelse(as.integer(factor(toy$Person)) <= 4, "A", "B")
+toy <- load_mfrmr_data("example_bias")
 
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                  method = "JML", model = "RSM", maxit = 25)
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 int <- dif_interaction_table(fit, diag, facet = "Rater",
                              group = "Group", data = toy, min_obs = 2)
-plot_dif_heatmap(int, metric = "obs_exp")
+heat <- plot_dif_heatmap(int, metric = "obs_exp", draw = FALSE)
+dim(heat)
 }
 \seealso{
-\code{\link[=dif_interaction_table]{dif_interaction_table()}}, \code{\link[=analyze_dif]{analyze_dif()}}, \code{\link[=dif_report]{dif_report()}}
+\code{\link[=dif_interaction_table]{dif_interaction_table()}}, \code{\link[=analyze_dff]{analyze_dff()}}, \code{\link[=analyze_dif]{analyze_dif()}}, \code{\link[=dif_report]{dif_report()}}
 }

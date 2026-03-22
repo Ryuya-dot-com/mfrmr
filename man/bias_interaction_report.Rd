@@ -68,11 +68,11 @@ Preferred bundle API for interaction-bias diagnostics. The function can:
 }
 \section{Interpreting output}{
 
-Focus on ranked rows where multiple criteria converge:
+Focus on ranked rows where multiple screening criteria converge:
 \itemize{
 \item large absolute t statistic
 \item large absolute bias size
-\item small p-value
+\item small screening tail area
 }
 
 The bundle is optimized for downstream \code{summary()} and
@@ -89,17 +89,7 @@ The bundle is optimized for downstream \code{summary()} and
 }
 
 \examples{
-toy <- expand.grid(
-  Person = paste0("P", 1:4),
-  Rater = paste0("R", 1:2),
-  Criterion = c("Content", "Organization", "Language"),
-  stringsAsFactors = FALSE
-)
-toy$Score <- (
-  as.integer(factor(toy$Person)) +
-  2 * as.integer(factor(toy$Rater)) +
-  as.integer(factor(toy$Criterion))
-) \%\% 3
+toy <- load_mfrmr_data("example_bias")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 bias <- estimate_bias(fit, diag, facet_a = "Rater", facet_b = "Criterion", max_iter = 2)

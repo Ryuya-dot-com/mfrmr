@@ -61,17 +61,7 @@ Base-R visualization helper for anchor audit outputs.
 }
 
 \examples{
-toy <- expand.grid(
-  Person = paste0("P", 1:4),
-  Rater = paste0("R", 1:2),
-  Criterion = c("Content", "Organization", "Language"),
-  stringsAsFactors = FALSE
-)
-toy$Score <- (
-  as.integer(factor(toy$Person)) +
-  2 * as.integer(factor(toy$Rater)) +
-  as.integer(factor(toy$Criterion))
-) \%\% 3
+toy <- load_mfrmr_data("example_core")
 aud <- audit_mfrm_anchors(toy, "Person", c("Rater", "Criterion"), "Score")
 p <- plot(aud, draw = FALSE)
 }

@@ -8,10 +8,11 @@ plot_fair_average(
   x,
   diagnostics = NULL,
   facet = NULL,
-  metric = c("FairM", "FairZ"),
+  metric = c("AdjustedAverage", "StandardizedAdjustedAverage", "FairM", "FairZ"),
   plot_type = c("difference", "scatter"),
   top_n = 40,
   draw = TRUE,
+  preset = c("standard", "publication", "compact"),
   ...
 )
 }
@@ -22,7 +23,9 @@ plot_fair_average(
 
 \item{facet}{Optional facet name for level-wise lollipop plots.}
 
-\item{metric}{Fair-average metric (\code{"FairM"} or \code{"FairZ"}).}
+\item{metric}{Adjusted-score metric. Accepts legacy names (\code{"FairM"},
+\code{"FairZ"}) and package-native names (\code{"AdjustedAverage"},
+\code{"StandardizedAdjustedAverage"}).}
 
 \item{plot_type}{\code{"difference"} or \code{"scatter"}.}
 
@@ -30,10 +33,14 @@ plot_fair_average(
 
 \item{draw}{If \code{TRUE}, draw with base graphics.}
 
+\item{preset}{Visual preset (\code{"standard"}, \code{"publication"}, or \code{"compact"}).}
+
 \item{...}{Additional arguments passed to \code{\link[=fair_average_table]{fair_average_table()}} when \code{x} is \code{mfrm_fit}.}
 }
 \value{
 A plotting-data object of class \code{mfrm_plot_data}.
+With \code{draw = FALSE}, the payload includes \code{title}, \code{subtitle},
+\code{legend}, \code{reference_lines}, and the stacked fair-average data.
 }
 \description{
 Plot fair-average diagnostics using base R
@@ -41,6 +48,19 @@ Plot fair-average diagnostics using base R
 \details{
 Fair-average plots compare observed scoring tendency against model-based
 fair metrics.
+
+\strong{FairM} is the model-predicted mean score for each element, adjusting
+for the ability distribution of persons actually encountered.  It
+answers: "What average score would this rater/criterion produce if all
+raters/criteria saw the same mix of persons?"
+
+\strong{FairZ} standardises FairM to a z-score across elements within each
+facet, making it easier to compare relative severity across facets
+with different raw-score scales.
+
+Use FairM when the raw-score metric is meaningful (e.g., reporting
+average ratings on the original 1--4 scale).
+Use FairZ when comparing standardised severity ranks across facets.
 }
 \section{Plot types}{
 
@@ -77,24 +97,22 @@ model-adjusted scoring.
 }
 }
 
+\section{Further guidance}{
+
+For a plot-selection guide and a longer walkthrough, see
+\link{mfrmr_visual_diagnostics} and
+\code{vignette("mfrmr-visual-diagnostics", package = "mfrmr")}.
+}
+
 \examples{
-toy <- expand.grid(
-  Person = paste0("P", 1:4),
-  Rater = paste0("R", 1:2),
-  Criterion = c("Content", "Organization", "Language"),
-  stringsAsFactors = FALSE
-)
-toy$Score <- (
-  as.integer(factor(toy$Person)) +
-  2 * as.integer(factor(toy$Rater)) +
-  as.integer(factor(toy$Criterion))
-) \%\% 3
+toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
-p <- plot_fair_average(fit, metric = "FairM", draw = FALSE)
+p <- plot_fair_average(fit, metric = "AdjustedAverage", draw = FALSE)
 if (interactive()) {
-  plot_fair_average(fit, metric = "FairM", plot_type = "difference")
+  plot_fair_average(fit, metric = "AdjustedAverage", plot_type = "difference")
 }
 }
 \seealso{
-\code{\link[=fair_average_table]{fair_average_table()}}, \code{\link[=plot_unexpected]{plot_unexpected()}}, \code{\link[=plot_displacement]{plot_displacement()}}, \code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}}
+\code{\link[=fair_average_table]{fair_average_table()}}, \code{\link[=plot_unexpected]{plot_unexpected()}}, \code{\link[=plot_displacement]{plot_displacement()}},
+\code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}}, \link{mfrmr_visual_diagnostics}
 }

@@ -27,7 +27,8 @@ data_quality_report(
 
 \item{weight}{Optional weight column name in \code{data}.}
 
-\item{include_fixed}{If \code{TRUE}, include a FACETS-style fixed-width text block.}
+\item{include_fixed}{If \code{TRUE}, include a legacy-compatible fixed-width text
+block.}
 }
 \value{
 A named list with data-quality report components. Class:
@@ -62,17 +63,7 @@ Build a data quality summary report (preferred alias)
 }
 
 \examples{
-toy <- expand.grid(
-  Person = paste0("P", 1:4),
-  Rater = paste0("R", 1:2),
-  Criterion = c("Content", "Organization", "Language"),
-  stringsAsFactors = FALSE
-)
-toy$Score <- (
-  as.integer(factor(toy$Person)) +
-  2 * as.integer(factor(toy$Rater)) +
-  as.integer(factor(toy$Criterion))
-) \%\% 3
+toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 out <- data_quality_report(
   fit, data = toy, person = "Person",
@@ -83,5 +74,6 @@ p_dq <- plot(out, draw = FALSE)
 class(p_dq)
 }
 \seealso{
-\code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=describe_mfrm_data]{describe_mfrm_data()}}, \code{\link[=specifications_report]{specifications_report()}}
+\code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=describe_mfrm_data]{describe_mfrm_data()}}, \code{\link[=specifications_report]{specifications_report()}},
+\link{mfrmr_reports_and_tables}, \link{mfrmr_compatibility_layer}
 }

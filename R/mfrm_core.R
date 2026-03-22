@@ -18,6 +18,11 @@ weighted_mean <- function(x, w) {
   sum(x[ok] * w[ok]) / sum(w[ok])
 }
 
+row_max_fast <- function(mat) {
+  if (nrow(mat) == 0 || ncol(mat) == 0) return(numeric(0))
+  mat[cbind(seq_len(nrow(mat)), max.col(mat, ties.method = "first"))]
+}
+
 get_weights <- function(df) {
   if (!is.null(df) && "Weight" %in% names(df)) {
     w <- suppressWarnings(as.numeric(df$Weight))
@@ -347,16 +352,35 @@ prepare_mfrm_data <- function(data, person_col, facet_cols, score_col,
     df <- df |> rename(Weight = all_of(weight_col))
   }
 
+  raw_score <- as.character(df$Score)
+  raw_weight <- if ("Weight" %in% names(df)) as.character(df$Weight) else NULL
+
+  score_num <- suppressWarnings(as.numeric(raw_score))
+  bad_score <- is.na(score_num) & !is.na(raw_score) & nzchar(trimws(raw_score))
+  if (any(bad_score)) {
+    warning(
+      "`Score` contained ", sum(bad_score), " non-numeric value(s); affected row(s) will be removed before estimation.",
+      call. = FALSE
+    )
+  }
   df <- df |>
     mutate(
       Person = as.character(Person),
       across(all_of(facet_cols), ~ as.character(.x)),
-      Score = suppressWarnings(as.numeric(Score))
+      Score = score_num
     )
   if (!"Weight" %in% names(df)) {
     df <- df |> mutate(Weight = 1)
   } else {
-    df <- df |> mutate(Weight = suppressWarnings(as.numeric(Weight)))
+    weight_num <- suppressWarnings(as.numeric(raw_weight))
+    bad_weight <- is.na(weight_num) & !is.na(raw_weight) & nzchar(trimws(raw_weight))
+    if (any(bad_weight)) {
+      warning(
+        "`Weight` contained ", sum(bad_weight), " non-numeric value(s); affected row(s) will be removed before estimation.",
+        call. = FALSE
+      )
+    }
+    df <- df |> mutate(Weight = weight_num)
   }
 
   df <- df |>
@@ -371,6 +395,8 @@ prepare_mfrm_data <- function(data, person_col, facet_cols, score_col,
 
   df <- df |>
     mutate(Score = as.integer(Score))
+
+  observed_score_values <- sort(unique(df$Score))
 
   if (length(unique(df$Score)) < 2) {
     stop("Only one score category found in the data (Score = ",
@@ -389,6 +415,18 @@ prepare_mfrm_data <- function(data, person_col, facet_cols, score_col,
         mutate(Score = match(Score, score_vals) + rating_min - 1)
       rating_max <- rating_min + length(score_vals) - 1
     }
+  }
+
+  if (isTRUE(keep_original)) {
+    score_map <- tibble(
+      OriginalScore = seq(rating_min, rating_max),
+      InternalScore = seq(rating_min, rating_max)
+    )
+  } else {
+    score_map <- tibble(
+      OriginalScore = observed_score_values,
+      InternalScore = seq(rating_min, rating_max)
+    )
   }
 
   df <- df |>
@@ -411,6 +449,7 @@ prepare_mfrm_data <- function(data, person_col, facet_cols, score_col,
     n_person = length(levels(df$Person)),
     rating_min = rating_min,
     rating_max = rating_max,
+    score_map = score_map,
     facet_names = facet_names,
     levels = c(list(Person = levels(df$Person)), facet_levels),
     weight_col = if (!is.null(weight_col)) weight_col else NULL,
@@ -450,33 +489,56 @@ build_indices <- function(prep, step_facet = NULL) {
 }
 
 sample_mfrm_data <- function(seed = 20240131) {
-  set.seed(seed)
-  persons <- paste0("P", sprintf("%02d", 1:36))
-  raters <- paste0("R", 1:3)
-  tasks <- paste0("T", 1:4)
-  criteria <- paste0("C", 1:3)
-  df <- expand_grid(
-    Person = persons,
-    Rater = raters,
-    Task = tasks,
-    Criterion = criteria
-  )
-  ability <- rnorm(length(persons), 0, 1)
-  rater_eff <- c(-0.4, 0, 0.4)
-  task_eff <- seq(-0.5, 0.5, length.out = length(tasks))
-  crit_eff <- c(-0.3, 0, 0.3)
-  eta <- ability[match(df$Person, persons)] -
-    rater_eff[match(df$Rater, raters)] -
-    task_eff[match(df$Task, tasks)] -
-    crit_eff[match(df$Criterion, criteria)]
-  raw <- eta + rnorm(nrow(df), 0, 0.6)
-  score <- as.integer(cut(
-    raw,
-    breaks = c(-Inf, -1.0, -0.3, 0.3, 1.0, Inf),
-    labels = 1:5
-  ))
-  df$Score <- score
-  df
+  with_preserved_rng_seed(seed, {
+    persons <- paste0("P", sprintf("%02d", 1:36))
+    raters <- paste0("R", 1:3)
+    tasks <- paste0("T", 1:4)
+    criteria <- paste0("C", 1:3)
+    df <- expand_grid(
+      Person = persons,
+      Rater = raters,
+      Task = tasks,
+      Criterion = criteria
+    )
+    ability <- rnorm(length(persons), 0, 1)
+    rater_eff <- c(-0.4, 0, 0.4)
+    task_eff <- seq(-0.5, 0.5, length.out = length(tasks))
+    crit_eff <- c(-0.3, 0, 0.3)
+    eta <- ability[match(df$Person, persons)] -
+      rater_eff[match(df$Rater, raters)] -
+      task_eff[match(df$Task, tasks)] -
+      crit_eff[match(df$Criterion, criteria)]
+    raw <- eta + rnorm(nrow(df), 0, 0.6)
+    score <- as.integer(cut(
+      raw,
+      breaks = c(-Inf, -1.0, -0.3, 0.3, 1.0, Inf),
+      labels = 1:5
+    ))
+    df$Score <- score
+    df
+  })
+}
+
+with_preserved_rng_seed <- function(seed, expr) {
+  if (is.null(seed)) {
+    return(force(expr))
+  }
+
+  had_seed <- exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
+  if (had_seed) {
+    old_seed <- get(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
+  }
+
+  on.exit({
+    if (had_seed) {
+      assign(".Random.seed", old_seed, envir = .GlobalEnv)
+    } else if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
+      rm(".Random.seed", envir = .GlobalEnv)
+    }
+  }, add = TRUE)
+
+  set.seed(as.integer(seed[1]))
+  force(expr)
 }
 
 format_tab_template <- function(df) {
@@ -532,7 +594,7 @@ loglik_rsm <- function(eta, score_k, step_cum, weight = NULL) {
   k_cat <- length(step_cum)
   eta_mat <- outer(eta, 0:(k_cat - 1))
   log_num <- eta_mat - matrix(step_cum, nrow = n, ncol = k_cat, byrow = TRUE)
-  row_max <- apply(log_num, 1, max)
+  row_max <- row_max_fast(log_num)
   log_denom <- row_max + log(rowSums(exp(log_num - row_max)))
   log_num_obs <- log_num[cbind(seq_len(n), score_k + 1)]
   diff <- log_num_obs - log_denom
@@ -585,7 +647,7 @@ category_prob_rsm <- function(eta, step_cum) {
   k_cat <- length(step_cum)
   eta_mat <- outer(eta, 0:(k_cat - 1))
   log_num <- eta_mat - matrix(step_cum, nrow = n, ncol = k_cat, byrow = TRUE)
-  row_max <- apply(log_num, 1, max)
+  row_max <- row_max_fast(log_num)
   log_denom <- row_max + log(rowSums(exp(log_num - row_max)))
   exp(log_num - matrix(log_denom, nrow = n, ncol = k_cat))
 }
@@ -607,7 +669,7 @@ category_prob_pcm <- function(eta, step_cum_mat, criterion_idx,
     eta_c <- eta[rows]
     eta_mat <- outer(eta_c, 0:(k_cat - 1))
     log_num <- eta_mat - matrix(step_cum, nrow = length(rows), ncol = k_cat, byrow = TRUE)
-    row_max <- apply(log_num, 1, max)
+    row_max <- row_max_fast(log_num)
     log_denom <- row_max + log(rowSums(exp(log_num - row_max)))
     probs[rows, ] <- exp(log_num - matrix(log_denom, nrow = length(rows), ncol = k_cat))
   }
@@ -706,6 +768,85 @@ mfrm_loglik_jmle <- function(par, idx, config, sizes) {
   -ll
 }
 
+# Cached version of JMLE log-likelihood (uses pre-computed params/eta/step_cum)
+mfrm_loglik_jmle_cached <- function(cache, idx, config) {
+  eta <- cache$eta()
+  step_cum <- cache$step_cum()
+  if (config$model == "RSM") {
+    ll <- loglik_rsm(eta, idx$score_k, step_cum, weight = idx$weight)
+  } else {
+    ll <- loglik_pcm(eta, idx$score_k, step_cum, idx$step_idx, weight = idx$weight,
+                     criterion_splits = idx$criterion_splits)
+  }
+  -ll
+}
+
+# Cached version of MML log-likelihood (uses pre-computed params/base_eta/step_cum)
+mfrm_loglik_mml_cached <- function(cache, idx, config, quad) {
+  params <- cache$params()
+  base_eta <- cache$base_eta()
+  step_cum <- cache$step_cum()
+  n <- length(idx$score_k)
+  if (n == 0) return(0)
+
+  person_int <- idx$person
+  log_w <- log(quad$weights)
+  n_nodes <- length(quad$nodes)
+  score_k <- idx$score_k
+
+  if (config$model == "RSM") {
+    k_cat <- length(step_cum)
+    step_cum_row <- matrix(step_cum, nrow = n, ncol = k_cat, byrow = TRUE)
+    obs_idx <- cbind(seq_len(n), score_k + 1L)
+
+    log_prob_mat <- matrix(0, n, n_nodes)
+    for (q in seq_len(n_nodes)) {
+      eta_q <- base_eta + quad$nodes[q]
+      eta_mat <- outer(eta_q, 0:(k_cat - 1))
+      log_num <- eta_mat - step_cum_row
+      row_max <- log_num[cbind(seq_len(n), max.col(log_num))]
+      log_denom <- row_max + log(rowSums(exp(log_num - row_max)))
+      lp <- log_num[obs_idx] - log_denom
+      if (!is.null(idx$weight)) lp <- lp * idx$weight
+      log_prob_mat[, q] <- lp
+    }
+  } else {
+    k_cat <- ncol(step_cum)
+    crit <- idx$step_idx
+    obs_idx <- cbind(seq_len(n), score_k + 1L)
+    step_cum_obs <- step_cum[crit, , drop = FALSE]
+    k_vals <- 0:(k_cat - 1)
+
+    log_prob_mat <- matrix(0, n, n_nodes)
+    for (q in seq_len(n_nodes)) {
+      eta_q <- base_eta + quad$nodes[q]
+      log_num <- outer(eta_q, k_vals) - step_cum_obs
+      rm <- log_num[cbind(seq_len(n), max.col(log_num))]
+      ld <- rm + log(rowSums(exp(log_num - rm)))
+      lp <- log_num[obs_idx] - ld
+      if (!is.null(idx$weight)) lp <- lp * idx$weight
+      log_prob_mat[, q] <- lp
+    }
+  }
+
+  ll_by_person <- rowsum(log_prob_mat, person_int, reorder = FALSE)
+  log_w_mat <- matrix(log_w, nrow = nrow(ll_by_person), ncol = n_nodes, byrow = TRUE)
+  combined <- log_w_mat + ll_by_person
+  row_max <- combined[cbind(seq_len(nrow(combined)), max.col(combined))]
+  ll_person <- row_max + log(rowSums(exp(combined - row_max)))
+  -sum(ll_person)
+}
+
+# Cached version of JMLE gradient (uses pre-computed params/eta/step_cum)
+mfrm_grad_jmle_cached <- function(cache, idx, config, sizes) {
+  mfrm_grad_jmle_core(cache$params(), cache$eta(), idx, config, sizes)
+}
+
+# Cached version of MML gradient (uses pre-computed params/base_eta/step_cum)
+mfrm_grad_mml_cached <- function(cache, idx, config, sizes, quad) {
+  mfrm_grad_mml_core(cache$params(), cache$base_eta(), idx, config, sizes, quad)
+}
+
 # ---- Analytical gradient for JMLE ----
 # Returns gradient of -LL (negative log-likelihood) w.r.t. free parameters.
 # Key derivation:
@@ -715,6 +856,10 @@ mfrm_loglik_jmle <- function(par, idx, config, sizes) {
 mfrm_grad_jmle <- function(par, idx, config, sizes) {
   params <- expand_params(par, sizes, config)
   eta <- compute_eta(idx, params, config)
+  mfrm_grad_jmle_core(params, eta, idx, config, sizes)
+}
+
+mfrm_grad_jmle_core <- function(params, eta, idx, config, sizes) {
   n <- length(eta)
   score_k <- idx$score_k
   weight <- idx$weight
@@ -795,17 +940,14 @@ mfrm_grad_jmle <- function(par, idx, config, sizes) {
     step_resid <- P_geq - I_geq
     if (!is.null(weight)) step_resid <- step_resid * weight
 
+    # Vectorized step gradient aggregation via rowsum
     grad_step_mat <- matrix(0, n_criteria, n_steps)
-    splits <- idx$criterion_splits %||% split(seq_len(n), idx$step_idx)
-    for (ci in seq_along(splits)) {
-      rows <- splits[[ci]]
-      if (length(rows) == 0) next
-      c_idx <- as.integer(names(splits)[ci])
-      grad_step_mat[c_idx, ] <- colSums(step_resid[rows, , drop = FALSE])
-    }
+    rs_step <- rowsum(step_resid, idx$step_idx)
+    rs_ids <- as.integer(rownames(rs_step))
+    grad_step_mat[rs_ids, ] <- rs_step
 
     # Center each criterion row, then flatten to row-major vector
-    grad_step_mat_free <- t(apply(grad_step_mat, 1, function(g) g - mean(g)))
+    grad_step_mat_free <- grad_step_mat - rowMeans(grad_step_mat)
     grad_step_free <- as.vector(t(grad_step_mat_free))
   }
 
@@ -871,41 +1013,21 @@ mfrm_loglik_mml <- function(par, idx, config, sizes, quad) {
     k_cat <- ncol(step_cum_mat)
     crit <- idx$step_idx
     obs_col <- score_k + 1L
+    obs_idx <- cbind(seq_len(n), obs_col)
 
-    # Vectorized: Q passes, criterion-aware
+    # Vectorized: hoist per-observation step parameters outside quadrature loop
+    step_cum_obs <- step_cum_mat[crit, , drop = FALSE]
+    k_vals <- 0:(k_cat - 1)
+
     log_prob_mat <- matrix(0, n, n_nodes)
     for (q in seq_len(n_nodes)) {
       eta_q <- base_eta + quad$nodes[q]
-      lp_q <- numeric(n)
-      if (!is.null(idx$criterion_splits)) {
-        for (ci in seq_along(idx$criterion_splits)) {
-          rows <- idx$criterion_splits[[ci]]
-          if (length(rows) == 0) next
-          nr <- length(rows)
-          sc <- step_cum_mat[ci, ]
-          eta_c <- eta_q[rows]
-          eta_mat <- outer(eta_c, 0:(k_cat - 1))
-          log_num <- eta_mat - matrix(sc, nrow = nr, ncol = k_cat, byrow = TRUE)
-          rm <- log_num[cbind(seq_len(nr), max.col(log_num))]
-          ld <- rm + log(rowSums(exp(log_num - rm)))
-          lp_q[rows] <- log_num[cbind(seq_len(nr), obs_col[rows])] - ld
-        }
-      } else {
-        for (c_idx in seq_len(nrow(step_cum_mat))) {
-          rows <- which(crit == c_idx)
-          if (length(rows) == 0) next
-          nr <- length(rows)
-          sc <- step_cum_mat[c_idx, ]
-          eta_c <- eta_q[rows]
-          eta_mat <- outer(eta_c, 0:(k_cat - 1))
-          log_num <- eta_mat - matrix(sc, nrow = nr, ncol = k_cat, byrow = TRUE)
-          rm <- log_num[cbind(seq_len(nr), max.col(log_num))]
-          ld <- rm + log(rowSums(exp(log_num - rm)))
-          lp_q[rows] <- log_num[cbind(seq_len(nr), obs_col[rows])] - ld
-        }
-      }
-      if (!is.null(idx$weight)) lp_q <- lp_q * idx$weight
-      log_prob_mat[, q] <- lp_q
+      log_num <- outer(eta_q, k_vals) - step_cum_obs
+      rm <- log_num[cbind(seq_len(n), max.col(log_num))]
+      ld <- rm + log(rowSums(exp(log_num - rm)))
+      lp <- log_num[obs_idx] - ld
+      if (!is.null(idx$weight)) lp <- lp * idx$weight
+      log_prob_mat[, q] <- lp
     }
 
     ll_by_person <- rowsum(log_prob_mat, person_int, reorder = FALSE)
@@ -929,10 +1051,13 @@ mfrm_loglik_mml <- function(par, idx, config, sizes, quad) {
 # but evaluated at each quadrature node theta_q.
 mfrm_grad_mml <- function(par, idx, config, sizes, quad) {
   params <- expand_params(par, sizes, config)
-  n <- length(idx$score_k)
-  if (n == 0) return(rep(0, length(par)))
-
   base_eta <- compute_base_eta(idx, params, config)
+  mfrm_grad_mml_core(params, base_eta, idx, config, sizes, quad)
+}
+
+mfrm_grad_mml_core <- function(params, base_eta, idx, config, sizes, quad) {
+  n <- length(idx$score_k)
+  if (n == 0) return(rep(0, sum(unlist(sizes))))
   person_int <- idx$person
   log_w <- log(quad$weights)
   n_nodes <- length(quad$nodes)
@@ -963,7 +1088,7 @@ mfrm_grad_mml <- function(par, idx, config, sizes, quad) {
     person_ids <- as.integer(rownames(ll_by_person))
     log_w_mat <- matrix(log_w, nrow = nrow(ll_by_person), ncol = n_nodes, byrow = TRUE)
     combined <- log_w_mat + ll_by_person
-    row_max <- apply(combined, 1, max)
+    row_max <- row_max_fast(combined)
     log_posterior <- combined - (row_max + log(rowSums(exp(combined - row_max))))
     posterior <- exp(log_posterior)
 
@@ -1031,7 +1156,7 @@ mfrm_grad_mml <- function(par, idx, config, sizes, quad) {
     person_ids <- as.integer(rownames(ll_by_person))
     log_w_mat <- matrix(log_w, nrow = nrow(ll_by_person), ncol = n_nodes, byrow = TRUE)
     combined <- log_w_mat + ll_by_person
-    row_max <- apply(combined, 1, max)
+    row_max <- row_max_fast(combined)
     log_posterior <- combined - (row_max + log(rowSums(exp(combined - row_max))))
     posterior <- exp(log_posterior)
 
@@ -1040,7 +1165,7 @@ mfrm_grad_mml <- function(par, idx, config, sizes, quad) {
     obs_person_row <- person_to_row[person_int]
 
     I_geq <- outer(score_k, seq_len(n_steps), ">=") * 1.0
-    splits <- idx$criterion_splits %||% split(seq_len(n), idx$step_idx)
+    step_idx_int <- idx$step_idx
 
     grad_facets_exp <- lapply(config$facet_names, function(f) numeric(length(params$facets[[f]])))
     names(grad_facets_exp) <- config$facet_names
@@ -1067,15 +1192,13 @@ mfrm_grad_mml <- function(par, idx, config, sizes, quad) {
       if (!is.null(weight)) step_resid <- step_resid * weight
       step_resid_w <- step_resid * obs_post_q
 
-      for (ci in seq_along(splits)) {
-        rows <- splits[[ci]]
-        if (length(rows) == 0) next
-        c_idx <- as.integer(names(splits)[ci])
-        grad_step_mat[c_idx, ] <- grad_step_mat[c_idx, ] + colSums(step_resid_w[rows, , drop = FALSE])
-      }
+      # Vectorized step gradient aggregation via rowsum
+      rs_step <- rowsum(step_resid_w, step_idx_int)
+      rs_ids <- as.integer(rownames(rs_step))
+      grad_step_mat[rs_ids, ] <- grad_step_mat[rs_ids, ] + rs_step
     }
 
-    grad_step_mat_free <- t(apply(grad_step_mat, 1, function(g) g - mean(g)))
+    grad_step_mat_free <- grad_step_mat - rowMeans(grad_step_mat)
     grad_step_free <- as.vector(t(grad_step_mat_free))
   }
 
@@ -1126,40 +1249,21 @@ compute_person_eap <- function(idx, config, params, quad) {
     k_cat <- ncol(step_cum_mat)
     crit <- idx$step_idx
     obs_col <- score_k + 1L
+    obs_idx <- cbind(seq_len(n), obs_col)
+
+    # Vectorized: hoist per-observation step parameters outside quadrature loop
+    step_cum_obs <- step_cum_mat[crit, , drop = FALSE]
+    k_vals <- 0:(k_cat - 1)
 
     log_prob_mat <- matrix(0, n, n_nodes)
     for (q in seq_len(n_nodes)) {
       eta_q <- base_eta + quad$nodes[q]
-      lp_q <- numeric(n)
-      if (!is.null(idx$criterion_splits)) {
-        for (ci in seq_along(idx$criterion_splits)) {
-          rows <- idx$criterion_splits[[ci]]
-          if (length(rows) == 0) next
-          nr <- length(rows)
-          sc <- step_cum_mat[ci, ]
-          eta_c <- eta_q[rows]
-          eta_mat <- outer(eta_c, 0:(k_cat - 1))
-          log_num <- eta_mat - matrix(sc, nrow = nr, ncol = k_cat, byrow = TRUE)
-          rm <- log_num[cbind(seq_len(nr), max.col(log_num))]
-          ld <- rm + log(rowSums(exp(log_num - rm)))
-          lp_q[rows] <- log_num[cbind(seq_len(nr), obs_col[rows])] - ld
-        }
-      } else {
-        for (c_idx in seq_len(nrow(step_cum_mat))) {
-          rows <- which(crit == c_idx)
-          if (length(rows) == 0) next
-          nr <- length(rows)
-          sc <- step_cum_mat[c_idx, ]
-          eta_c <- eta_q[rows]
-          eta_mat <- outer(eta_c, 0:(k_cat - 1))
-          log_num <- eta_mat - matrix(sc, nrow = nr, ncol = k_cat, byrow = TRUE)
-          rm <- log_num[cbind(seq_len(nr), max.col(log_num))]
-          ld <- rm + log(rowSums(exp(log_num - rm)))
-          lp_q[rows] <- log_num[cbind(seq_len(nr), obs_col[rows])] - ld
-        }
-      }
-      if (!is.null(idx$weight)) lp_q <- lp_q * idx$weight
-      log_prob_mat[, q] <- lp_q
+      log_num <- outer(eta_q, k_vals) - step_cum_obs
+      rm <- log_num[cbind(seq_len(n), max.col(log_num))]
+      ld <- rm + log(rowSums(exp(log_num - rm)))
+      lp <- log_num[obs_idx] - ld
+      if (!is.null(idx$weight)) lp <- lp * idx$weight
+      log_prob_mat[, q] <- lp
     }
   }
 
@@ -1398,7 +1502,7 @@ build_anchor_recommendations <- function(facet_summary,
       rec <- c(rec, "Levels listed in both anchor and group-anchor tables are directly anchored (fixed anchors take precedence).")
     }
     if (length(n_missing) > 0 && n_missing > 0) {
-      rec <- c(rec, "Some group anchors had missing GroupValue; default 0 was applied (FACETS-style group centering).")
+      rec <- c(rec, "Some group anchors had missing GroupValue; default 0 was applied using the legacy-compatible group-centering rule.")
     }
     if (length(n_dup_anchor) > 0 && n_dup_anchor > 0) {
       rec <- c(rec, "Duplicate anchors were detected; the last row per Facet-Level was retained.")
@@ -1483,6 +1587,39 @@ audit_anchor_tables <- function(prep,
   all_facets <- c("Person", prep$facet_names)
   level_df <- collect_anchor_levels(prep)
   valid_keys <- safe_join_key(level_df$Facet, level_df$Level)
+  anchor_schema_issue <- if (!is.null(anchor_df) && nrow(anchor_df) > 0) {
+    nm <- tolower(names(anchor_df))
+    has_facet <- any(nm %in% c("facet", "facets"))
+    has_level <- any(nm %in% c("level", "element", "label"))
+    has_anchor <- any(nm %in% c("anchor", "value", "measure"))
+    if (!(has_facet && has_level && has_anchor)) {
+      tibble::tibble(
+        Columns = paste(names(anchor_df), collapse = ", "),
+        Required = "facet + level + anchor/value/measure"
+      )
+    } else {
+      tibble::tibble()
+    }
+  } else {
+    tibble::tibble()
+  }
+  group_schema_issue <- if (!is.null(group_anchor_df) && nrow(group_anchor_df) > 0) {
+    nm <- tolower(names(group_anchor_df))
+    has_facet <- any(nm %in% c("facet", "facets"))
+    has_level <- any(nm %in% c("level", "element", "label"))
+    has_group <- any(nm %in% c("group", "subset"))
+    has_value <- any(nm %in% c("groupvalue", "value", "anchor"))
+    if (!(has_facet && has_level && has_group && has_value)) {
+      tibble::tibble(
+        Columns = paste(names(group_anchor_df), collapse = ", "),
+        Required = "facet + level + group/subset + groupvalue/value/anchor"
+      )
+    } else {
+      tibble::tibble()
+    }
+  } else {
+    tibble::tibble()
+  }
 
   anchor_in <- normalize_anchor_df(anchor_df) |>
     mutate(
@@ -1509,6 +1646,8 @@ audit_anchor_tables <- function(prep,
     )
 
   issues <- list(
+    anchor_schema_mismatch = anchor_schema_issue,
+    group_anchor_schema_mismatch = group_schema_issue,
     unknown_anchor_facets = anchor_in |>
       filter(!.ValidFacet) |>
       select(Facet, Level, Anchor),
@@ -1761,6 +1900,53 @@ build_facet_signs <- function(facet_names, positive_facets = character(0)) {
   list(signs = signs, positive_facets = positives)
 }
 
+audit_interaction_orientation <- function(config, interaction_facets) {
+  interaction_facets <- unique(as.character(interaction_facets %||% character(0)))
+  interaction_facets <- interaction_facets[!is.na(interaction_facets) & nzchar(interaction_facets)]
+  if (length(interaction_facets) == 0) {
+    return(list(
+      table = tibble(),
+      mixed_sign = FALSE,
+      direction_note = "No interaction facets were supplied for orientation audit.",
+      recommended_action = "None."
+    ))
+  }
+
+  sign_map <- config$facet_signs %||% list()
+  sign_vals <- vapply(interaction_facets, function(facet) {
+    sign_map[[facet]] %||% ifelse(identical(facet, "Person"), 1, -1)
+  }, numeric(1))
+  positive_facets <- as.character(config$positive_facets %||% character(0))
+  orientation_tbl <- tibble(
+    Facet = interaction_facets,
+    Sign = sign_vals,
+    Orientation = ifelse(sign_vals >= 0, "positive", "negative"),
+    InPositiveFacets = interaction_facets %in% positive_facets
+  )
+
+  mixed_sign <- length(unique(sign_vals[is.finite(sign_vals)])) > 1L
+  if (mixed_sign) {
+    direction_note <- paste(
+      "Selected interaction facets mix positive and negative score orientations.",
+      "Report cells as higher-than-expected or lower-than-expected rather than using directional labels tied to a single facet."
+    )
+    recommended_action <- paste(
+      "For clearer interpretation, either align the selected facets through `positive_facets`",
+      "or keep the mixed orientation and use neutral higher/lower-than-expected wording in reports."
+    )
+  } else {
+    direction_note <- "Selected interaction facets share the same score orientation."
+    recommended_action <- "Directional wording is stable across the selected interaction facets."
+  }
+
+  list(
+    table = orientation_tbl,
+    mixed_sign = mixed_sign,
+    direction_note = direction_note,
+    recommended_action = recommended_action
+  )
+}
+
 build_estimation_config <- function(prep,
                                     model,
                                     method,
@@ -1782,7 +1968,8 @@ build_estimation_config <- function(prep,
     step_facet = step_facet,
     keep_original = isTRUE(prep$keep_original),
     rating_min = prep$rating_min,
-    rating_max = prep$rating_max
+    rating_max = prep$rating_max,
+    score_map = prep$score_map
   )
   config$weight_col <- if (!is.null(weight_col)) weight_col else NULL
   config$positive_facets <- positive_facets
@@ -1830,6 +2017,41 @@ build_initial_param_vector <- function(config, sizes) {
   )
 }
 
+# Parameter cache shared between fn and gr to avoid redundant expand_params /
+# compute_eta calls within the same optim iteration (BFGS calls fn then gr
+# with identical par).
+make_param_cache <- function(sizes, config, idx, is_mml = FALSE) {
+  cached_par <- NULL
+  cached_params <- NULL
+  cached_eta <- NULL      # full eta for JMLE
+  cached_base_eta <- NULL  # base_eta for MML
+  cached_step_cum <- NULL  # step_cum (RSM) or step_cum_mat (PCM)
+
+  list(
+    ensure = function(par) {
+      if (identical(par, cached_par)) return(invisible(NULL))
+      cached_par <<- par
+      cached_params <<- expand_params(par, sizes, config)
+      if (is_mml) {
+        cached_base_eta <<- compute_base_eta(idx, cached_params, config)
+      } else {
+        cached_eta <<- compute_eta(idx, cached_params, config)
+      }
+      if (config$model == "RSM") {
+        cached_step_cum <<- c(0, cumsum(cached_params$steps))
+      } else {
+        cached_step_cum <<- t(apply(cached_params$steps_mat, 1,
+                                    function(x) c(0, cumsum(x))))
+      }
+      invisible(NULL)
+    },
+    params = function() cached_params,
+    eta = function() cached_eta,
+    base_eta = function() cached_base_eta,
+    step_cum = function() cached_step_cum
+  )
+}
+
 run_mfrm_optimization <- function(start,
                                   method,
                                   idx,
@@ -1840,30 +2062,45 @@ run_mfrm_optimization <- function(start,
                                   reltol,
                                   suppress_convergence_warning = FALSE) {
   control <- list(maxit = maxit, reltol = reltol)
-  run_optim <- function(fn, gr = NULL, extra_args = list()) {
-    tryCatch(
-      do.call(optim, c(list(par = start, fn = fn, gr = gr, method = "BFGS",
-                             control = control), extra_args)),
-      error = function(e) {
-        stop("Model optimization failed: ", conditionMessage(e), ". ",
-             "Possible causes: (1) insufficient data for the number of parameters, ",
-             "(2) extreme score distributions, (3) near-constant responses. ",
-             "Try reducing facets, increasing maxit, or checking data quality.",
-             call. = FALSE)
-      }
-    )
-  }
+  quad <- NULL
 
   if (method == "JMLE") {
-    opt <- run_optim(mfrm_loglik_jmle,
-                     gr = mfrm_grad_jmle,
-                     list(idx = idx, config = config, sizes = sizes))
+    cache <- make_param_cache(sizes, config, idx, is_mml = FALSE)
   } else {
     quad <- gauss_hermite_normal(quad_points)
-    opt <- run_optim(mfrm_loglik_mml,
-                     gr = mfrm_grad_mml,
-                     list(idx = idx, config = config, sizes = sizes, quad = quad))
+    cache <- make_param_cache(sizes, config, idx, is_mml = TRUE)
   }
+
+  fn <- function(par, idx, config, sizes, quad = NULL) {
+    cache$ensure(par)
+    if (method == "JMLE") {
+      mfrm_loglik_jmle_cached(cache, idx, config)
+    } else {
+      mfrm_loglik_mml_cached(cache, idx, config, quad)
+    }
+  }
+
+  gr <- function(par, idx, config, sizes, quad = NULL) {
+    cache$ensure(par)
+    if (method == "JMLE") {
+      mfrm_grad_jmle_cached(cache, idx, config, sizes)
+    } else {
+      mfrm_grad_mml_cached(cache, idx, config, sizes, quad)
+    }
+  }
+
+  opt <- tryCatch(
+    optim(par = start, fn = fn, gr = gr, method = "BFGS",
+          control = control, idx = idx, config = config, sizes = sizes,
+          quad = quad),
+    error = function(e) {
+      stop("Model optimization failed: ", conditionMessage(e), ". ",
+           "Possible causes: (1) insufficient data for the number of parameters, ",
+           "(2) extreme score distributions, (3) near-constant responses. ",
+           "Try reducing facets, increasing maxit, or checking data quality.",
+           call. = FALSE)
+    }
+  )
 
   if (opt$convergence != 0 && !isTRUE(suppress_convergence_warning)) {
     warning("Optimizer did not fully converge (code = ", opt$convergence, "). ",
@@ -2613,7 +2850,7 @@ compute_scorefile <- function(res) {
   probs <- compute_prob_matrix(res)
   if (is.null(probs) || nrow(probs) != nrow(obs)) return(obs)
   cat_vals <- seq(res$prep$rating_min, res$prep$rating_max)
-  prob_df <- as_tibble(probs)
+  prob_df <- as_tibble(probs, .name_repair = "minimal")
   names(prob_df) <- paste0("P_", cat_vals)
   max_idx <- apply(probs, 1, which.max)
   max_prob <- probs[cbind(seq_len(nrow(probs)), max_idx)]
@@ -2691,6 +2928,7 @@ calc_facet_fit <- function(obs_df, facet_cols, whexact = FALSE) {
   })
 }
 
+# Approximate facet-level SE from summed observation information.
 calc_facet_se <- function(obs_df, facet_cols) {
   obs_df <- obs_df |> mutate(.Weight = get_weights(obs_df))
   purrr::map_dfr(facet_cols, function(facet) {
@@ -2972,6 +3210,10 @@ calc_interrater_agreement <- function(obs_df, facet_cols, rater_facet, res = NUL
       Rater1 = pair[1],
       Rater2 = pair[2],
       N = n_ok,
+      OpportunityCount = n_ok,
+      ExactCount = exact_count,
+      ExpectedExactCount = if (length(exp_vals) > 0) sum(exp_vals) else NA_real_,
+      AdjacentCount = sum(abs(diff) <= 1, na.rm = TRUE),
       Exact = exact_count / n_ok,
       ExpectedExact = exp_mean,
       Adjacent = mean(abs(diff) <= 1, na.rm = TRUE),
@@ -2996,16 +3238,57 @@ calc_interrater_agreement <- function(obs_df, facet_cols, rater_facet, res = NUL
     Pairs = nrow(pair_tbl),
     Contexts = contexts_with_pairs,
     TotalPairs = total_pairs,
+    OpportunityCount = total_pairs,
     ExactAgreements = total_exact,
     ExpectedAgreements = ifelse(expected_available, total_expected, NA_real_),
     ExactAgreement = ifelse(total_pairs > 0, total_exact / total_pairs, NA_real_),
     ExpectedExactAgreement = ifelse(expected_available && total_pairs > 0, total_expected / total_pairs, NA_real_),
+    AgreementMinusExpected = ifelse(
+      expected_available && total_pairs > 0,
+      (total_exact - total_expected) / total_pairs,
+      NA_real_
+    ),
+    AdjacentAgreements = sum(pair_tbl$AdjacentCount, na.rm = TRUE),
     AdjacentAgreement = weighted_mean_safe(pair_tbl$Adjacent, pair_tbl$N),
     MeanAbsDiff = weighted_mean_safe(pair_tbl$MAD, pair_tbl$N),
     MeanCorr = weighted_mean_safe(pair_tbl$Corr, pair_tbl$N)
   )
 
   list(summary = summary_tbl, pairs = pair_tbl)
+}
+
+augment_interrater_with_precision <- function(agreement, reliability_tbl, rater_facet = NULL) {
+  if (is.null(agreement) || !is.list(agreement)) return(agreement)
+  summary_tbl <- as.data.frame(agreement$summary %||% data.frame(), stringsAsFactors = FALSE)
+  if (nrow(summary_tbl) == 0) return(agreement)
+
+  if (is.null(rater_facet) || !nzchar(as.character(rater_facet[1]))) {
+    if ("RaterFacet" %in% names(summary_tbl)) {
+      rater_facet <- as.character(summary_tbl$RaterFacet[1])
+    }
+  } else {
+    rater_facet <- as.character(rater_facet[1])
+  }
+
+  rel_tbl <- as.data.frame(reliability_tbl %||% data.frame(), stringsAsFactors = FALSE)
+  if (!"Facet" %in% names(rel_tbl) || !nzchar(rater_facet)) {
+    agreement$summary <- summary_tbl
+    return(agreement)
+  }
+
+  rel_row <- rel_tbl[as.character(rel_tbl$Facet) == rater_facet, , drop = FALSE]
+  if (nrow(rel_row) == 0) {
+    agreement$summary <- summary_tbl
+    return(agreement)
+  }
+
+  summary_tbl$RaterSeparation <- suppressWarnings(as.numeric(rel_row$Separation[1]))
+  summary_tbl$RaterStrata <- suppressWarnings(as.numeric(rel_row$Strata[1]))
+  summary_tbl$RaterReliability <- suppressWarnings(as.numeric(rel_row$Reliability[1]))
+  summary_tbl$RaterRealSeparation <- suppressWarnings(as.numeric(rel_row$RealSeparation[1]))
+  summary_tbl$RaterRealReliability <- suppressWarnings(as.numeric(rel_row$RealReliability[1]))
+  agreement$summary <- summary_tbl
+  agreement
 }
 
 calc_ptmea <- function(obs_df, facet_cols) {
@@ -3162,7 +3445,7 @@ calc_facets_report_tbls <- function(res,
     extreme_count <- rep(0, nrow(obs_df))
   }
 
-  # Stage 4: Build one FACETS-style table per facet.
+  # Stage 4: Build one compatibility table per facet.
   out <- purrr::map(facet_names, function(facet) {
     if (!facet %in% names(obs_df)) return(tibble())
     status_tbl <- obs_df |>
@@ -3179,7 +3462,7 @@ calc_facets_report_tbls <- function(res,
     if (isTRUE(totalscore)) {
       score_source <- obs_df
     } else {
-      # FACETS convention: remove rows with multiple extreme flags,
+      # Legacy printer-style rule: remove rows with multiple extreme flags,
       # but keep rows where the focal facet is the only extreme flag.
       flag <- extreme_flags[[facet]]
       if (is.null(flag)) {
@@ -3217,7 +3500,7 @@ calc_facets_report_tbls <- function(res,
     meas_tbl <- measures |>
       filter(Facet == facet) |>
       mutate(Level = as.character(Level)) |>
-      select(Level, Estimate, SE, Infit, Outfit, InfitZSTD, OutfitZSTD, PTMEA)
+      select(Level, Estimate, SE, ModelSE, RealSE, Infit, Outfit, InfitZSTD, OutfitZSTD, PTMEA)
 
     tbl <- level_tbl |>
       left_join(score_tbl, by = "Level") |>
@@ -3305,8 +3588,20 @@ calc_facets_report_tbls <- function(res,
         FairM = fair_m,
         FairZ = fair_z,
         Measure = ifelse(is.finite(measure_logit), measure_logit * scale_factor + scale_origin, NA_real_),
-        ModelSE = ifelse(is.finite(SE), abs(scale_factor) * SE, NA_real_),
-        RealSE = ifelse(is.finite(SE) & is.finite(Infit), abs(scale_factor) * SE * sqrt(pmax(Infit, 0)), NA_real_),
+        ModelSE = ifelse(
+          is.finite(dplyr::coalesce(ModelSE, SE)),
+          abs(scale_factor) * dplyr::coalesce(ModelSE, SE),
+          NA_real_
+        ),
+        RealSE = ifelse(
+          is.finite(dplyr::coalesce(RealSE, ModelSE, SE)),
+          abs(scale_factor) * dplyr::coalesce(
+            RealSE,
+            ModelSE * sqrt(pmax(dplyr::coalesce(Infit, 1), 1)),
+            SE * sqrt(pmax(dplyr::coalesce(Infit, 1), 1))
+          ),
+          NA_real_
+        ),
         Infit = ifelse(Status %in% c("Minimum", "Maximum"), NA_real_, Infit),
         Outfit = ifelse(Status %in% c("Minimum", "Maximum"), NA_real_, Outfit),
         InfitZSTD = ifelse(Status %in% c("Minimum", "Maximum"), NA_real_, InfitZSTD),
@@ -3347,7 +3642,14 @@ calc_facets_report_tbls <- function(res,
   out
 }
 
-format_facets_report_gt <- function(tbl, facet, decimals = 2, totalscore = TRUE) {
+format_facets_report_gt <- function(tbl,
+                                    facet,
+                                    decimals = 2,
+                                    totalscore = TRUE,
+                                    reference = c("both", "mean", "zero"),
+                                    label_style = c("both", "native", "legacy")) {
+  reference <- match.arg(reference)
+  label_style <- match.arg(label_style)
   if (is.null(tbl) || nrow(tbl) == 0) {
     return(data.frame(Message = "No facet report available.", stringsAsFactors = FALSE))
   }
@@ -3387,8 +3689,43 @@ format_facets_report_gt <- function(tbl, facet, decimals = 2, totalscore = TRUE)
   )
   for (col in value_cols) out[[col]] <- round(as.numeric(out[[col]]), digits = decimals)
 
+  # Preserve the legacy display labels while exposing package-native aliases.
+  if ("Obsvd Average" %in% names(out) && !"ObservedAverage" %in% names(out)) {
+    out$ObservedAverage <- out[["Obsvd Average"]]
+  }
+  if ("Fair(M) Average" %in% names(out) && !"AdjustedAverage" %in% names(out)) {
+    out$AdjustedAverage <- out[["Fair(M) Average"]]
+  }
+  if ("Fair(Z) Average" %in% names(out) && !"StandardizedAdjustedAverage" %in% names(out)) {
+    out$StandardizedAdjustedAverage <- out[["Fair(Z) Average"]]
+  }
+  if ("Model S.E." %in% names(out) && !"ModelBasedSE" %in% names(out)) {
+    out$ModelBasedSE <- out[["Model S.E."]]
+  }
+  if ("Real S.E." %in% names(out) && !"FitAdjustedSE" %in% names(out)) {
+    out$FitAdjustedSE <- out[["Real S.E."]]
+  }
+
+  if (identical(reference, "mean")) {
+    drop_cols <- intersect(c("Fair(Z) Average", "StandardizedAdjustedAverage"), names(out))
+    out <- out[, setdiff(names(out), drop_cols), drop = FALSE]
+  } else if (identical(reference, "zero")) {
+    drop_cols <- intersect(c("Fair(M) Average", "AdjustedAverage"), names(out))
+    out <- out[, setdiff(names(out), drop_cols), drop = FALSE]
+  }
+
+  if (identical(label_style, "native")) {
+    drop_cols <- intersect(c("Obsvd Average", "Fair(M) Average", "Fair(Z) Average", "Model S.E.", "Real S.E."), names(out))
+    out <- out[, setdiff(names(out), drop_cols), drop = FALSE]
+  } else if (identical(label_style, "legacy")) {
+    drop_cols <- intersect(c("ObservedAverage", "AdjustedAverage", "StandardizedAdjustedAverage", "ModelBasedSE", "FitAdjustedSE"), names(out))
+    out <- out[, setdiff(names(out), drop_cols), drop = FALSE]
+  }
+
   attr(out, "facet") <- facet
   attr(out, "totalscore") <- isTRUE(totalscore)
+  attr(out, "reference") <- reference
+  attr(out, "label_style") <- label_style
   out
 }
 
@@ -3399,8 +3736,12 @@ calc_fair_average_bundle <- function(res,
                                      umean = 0,
                                      uscale = 1,
                                      udecimals = 2,
+                                     reference = c("both", "mean", "zero"),
+                                     label_style = c("both", "native", "legacy"),
                                      omit_unobserved = FALSE,
                                      xtreme = 0) {
+  reference <- match.arg(reference)
+  label_style <- match.arg(label_style)
   raw_tbls <- calc_facets_report_tbls(
     res = res,
     diagnostics = diagnostics,
@@ -3433,7 +3774,9 @@ calc_fair_average_bundle <- function(res,
       tbl = tbl,
       facet = facet,
       decimals = udecimals,
-      totalscore = totalscore
+      totalscore = totalscore,
+      reference = reference,
+      label_style = label_style
     )
   })
   names(by_facet) <- names(raw_tbls)
@@ -3823,6 +4166,11 @@ estimate_bias_interaction <- function(res,
   }
   if (length(groups) == 0) return(list())
 
+  orientation_audit <- audit_interaction_orientation(config, selected_facets)
+  has_bias_error <- function(x) {
+    is.character(x) && length(x) > 0L && isTRUE(nzchar(x[1]))
+  }
+
   estimate_bias_for_group <- function(idx_rows) {
     eta_sub <- eta_base[idx_rows]
     score_k_sub <- score_k[idx_rows]
@@ -3834,9 +4182,14 @@ estimate_bias_interaction <- function(res,
     } else {
       nll <- function(b) -loglik_pcm(eta_sub + b, score_k_sub, step_cum_mat, step_idx_sub, weight = weight_sub)
     }
-    opt <- tryCatch(stats::optimize(nll, interval = c(-max_abs, max_abs)), error = function(e) NULL)
-    if (is.null(opt)) return(NA_real_)
-    opt$minimum
+    opt <- tryCatch(
+      stats::optimize(nll, interval = c(-max_abs, max_abs)),
+      error = function(e) e
+    )
+    if (inherits(opt, "error")) {
+      return(list(value = NA_real_, error = conditionMessage(opt)))
+    }
+    list(value = opt$minimum, error = NULL)
   }
 
   iteration_metrics <- function(bias_map) {
@@ -3846,6 +4199,7 @@ estimate_bias_interaction <- function(res,
       g <- groups[[key]]
       idx_rows <- g$idx
       bias <- bias_map[[key]]
+      if (!is.finite(bias) || has_bias_error(bias_error_map[[key]])) next
       eta_sub <- eta_base[idx_rows] + ifelse(is.finite(bias), bias, 0)
       score_k_sub <- score_k[idx_rows]
       step_idx_sub <- if (!is.null(step_idx)) step_idx[idx_rows] else NULL
@@ -3879,6 +4233,7 @@ estimate_bias_interaction <- function(res,
   }
 
   bias_map <- stats::setNames(as.list(rep(0, length(groups))), names(groups))
+  bias_error_map <- stats::setNames(as.list(rep(NA_character_, length(groups))), names(groups))
 
   iter_rows <- list()
   for (it in seq_len(max_iter)) {
@@ -3887,7 +4242,8 @@ estimate_bias_interaction <- function(res,
     changes <- numeric(0)
     for (key in names(groups)) {
       g <- groups[[key]]
-      bias_hat <- estimate_bias_for_group(g$idx)
+      bias_result <- estimate_bias_for_group(g$idx)
+      bias_hat <- bias_result$value
       prev <- bias_map[[key]]
       if (is.finite(bias_hat) && is.finite(prev)) {
         delta <- bias_hat - prev
@@ -3900,6 +4256,7 @@ estimate_bias_interaction <- function(res,
         changes <- c(changes, NA_real_)
       }
       bias_map[[key]] <- bias_hat
+      bias_error_map[[key]] <- if (has_bias_error(bias_result$error)) bias_result$error else NA_character_
     }
     resid_info <- iteration_metrics(bias_map)
     iter_rows[[it]] <- tibble(
@@ -3924,41 +4281,50 @@ estimate_bias_interaction <- function(res,
     idx_rows <- g$idx
     levels <- g$levels
     bias_hat <- bias_map[[key]]
+    bias_error <- bias_error_map[[key]]
+    bias_ok <- is.finite(bias_hat) && !has_bias_error(bias_error)
     eta_sub <- eta_base[idx_rows]
     score_k_sub <- score_k[idx_rows]
     weight_sub <- if (!is.null(weight)) weight[idx_rows] else rep(1, length(idx_rows))
     step_idx_sub <- if (!is.null(step_idx)) step_idx[idx_rows] else NULL
 
-    probs <- if (config$model == "RSM") {
-      category_prob_rsm(eta_sub + ifelse(is.finite(bias_hat), bias_hat, 0), step_cum)
-    } else {
-      category_prob_pcm(eta_sub + ifelse(is.finite(bias_hat), bias_hat, 0), step_cum_mat, step_idx_sub)
-    }
-    k_vals <- 0:(ncol(probs) - 1)
-    expected_k <- as.vector(probs %*% k_vals)
-    var_k <- as.vector(probs %*% (k_vals^2)) - expected_k^2
-    var_k <- ifelse(var_k <= 1e-10, NA_real_, var_k)
-    resid_k <- score_k_sub - expected_k
-    std_sq <- resid_k^2 / var_k
+    if (bias_ok) {
+      probs <- if (config$model == "RSM") {
+        category_prob_rsm(eta_sub + bias_hat, step_cum)
+      } else {
+        category_prob_pcm(eta_sub + bias_hat, step_cum_mat, step_idx_sub)
+      }
+      k_vals <- 0:(ncol(probs) - 1)
+      expected_k <- as.vector(probs %*% k_vals)
+      var_k <- as.vector(probs %*% (k_vals^2)) - expected_k^2
+      var_k <- ifelse(var_k <= 1e-10, NA_real_, var_k)
+      resid_k <- score_k_sub - expected_k
+      std_sq <- resid_k^2 / var_k
 
-    info <- sum(var_k * weight_sub, na.rm = TRUE)
-    se <- ifelse(is.finite(info) && info > 0, 1 / sqrt(info), NA_real_)
-    infit <- ifelse(sum(var_k * weight_sub, na.rm = TRUE) > 0,
-                    sum(std_sq * var_k * weight_sub, na.rm = TRUE) / sum(var_k * weight_sub, na.rm = TRUE),
-                    NA_real_)
-    outfit <- ifelse(sum(weight_sub, na.rm = TRUE) > 0,
-                     sum(std_sq * weight_sub, na.rm = TRUE) / sum(weight_sub, na.rm = TRUE),
-                     NA_real_)
+      info <- sum(var_k * weight_sub, na.rm = TRUE)
+      se <- ifelse(is.finite(info) && info > 0, 1 / sqrt(info), NA_real_)
+      infit <- ifelse(sum(var_k * weight_sub, na.rm = TRUE) > 0,
+                      sum(std_sq * var_k * weight_sub, na.rm = TRUE) / sum(var_k * weight_sub, na.rm = TRUE),
+                      NA_real_)
+      outfit <- ifelse(sum(weight_sub, na.rm = TRUE) > 0,
+                       sum(std_sq * weight_sub, na.rm = TRUE) / sum(weight_sub, na.rm = TRUE),
+                       NA_real_)
+    } else {
+      expected_k <- rep(NA_real_, length(score_k_sub))
+      se <- NA_real_
+      infit <- NA_real_
+      outfit <- NA_real_
+    }
 
     obs_slice <- obs_df[idx_rows, , drop = FALSE]
     w_obs <- if ("Weight" %in% names(obs_slice)) obs_slice$Weight else rep(1, nrow(obs_slice))
     obs_score <- sum(obs_slice$Observed * w_obs, na.rm = TRUE)
-    exp_score <- sum((prep$rating_min + expected_k) * w_obs, na.rm = TRUE)
+    exp_score <- if (bias_ok) sum((prep$rating_min + expected_k) * w_obs, na.rm = TRUE) else NA_real_
     obs_count <- sum(w_obs, na.rm = TRUE)
-    obs_exp_avg <- ifelse(obs_count > 0, (obs_score - exp_score) / obs_count, NA_real_)
+    obs_exp_avg <- ifelse(bias_ok && obs_count > 0 && is.finite(exp_score), (obs_score - exp_score) / obs_count, NA_real_)
 
     n_obs <- nrow(obs_slice)
-    df_t <- max(n_obs - 1, 0)
+    df_t <- ifelse(is.finite(obs_count), max(obs_count - 1, 0), NA_real_)
     t_val <- ifelse(is.finite(bias_hat) && is.finite(se) && se > 0, bias_hat / se, NA_real_)
     p_val <- ifelse(is.finite(t_val) && df_t > 0, 2 * stats::pt(-abs(t_val), df = df_t), NA_real_)
 
@@ -3973,9 +4339,20 @@ estimate_bias_interaction <- function(res,
       t = t_val,
       `d.f.` = df_t,
       `Prob.` = p_val,
+      InferenceTier = "screening",
+      SupportsFormalInference = FALSE,
+      FormalInferenceEligible = FALSE,
+      PrimaryReportingEligible = FALSE,
+      ReportingUse = "screening_only",
+      SEBasis = "conditional plug-in information",
+      DFBasis = "observed-count minus 1 approximation",
+      StatisticLabel = "screening t",
+      ProbabilityMetric = "screening tail area",
       Infit = infit,
       Outfit = outfit,
       ObsN = n_obs,
+      OptimizationStatus = if (bias_ok) "ok" else "failed",
+      OptimizationDetail = if (bias_ok) NA_character_ else bias_error,
       InteractionFacets = interaction_label,
       InteractionOrder = interaction_order,
       InteractionMode = interaction_mode
@@ -4034,6 +4411,7 @@ estimate_bias_interaction <- function(res,
       InteractionFacets = interaction_label,
       InteractionOrder = interaction_order,
       InteractionMode = interaction_mode,
+      MixedSign = orientation_audit$mixed_sign,
       .before = 1
     )
 
@@ -4048,10 +4426,31 @@ estimate_bias_interaction <- function(res,
   }
   fixed_df <- max(nrow(bias_tbl) - 1, 0)
   fixed_prob <- ifelse(is.finite(fixed_chi) && fixed_df > 0, 1 - stats::pchisq(fixed_chi, df = fixed_df), NA_real_)
+  optimization_failures <- purrr::imap_dfr(groups, function(g, key) {
+    err <- bias_error_map[[key]]
+    if (!has_bias_error(err)) {
+      return(tibble::tibble())
+    }
+    out <- tibble::tibble(
+      InteractionKey = key,
+      Error = err
+    )
+    for (facet_j in selected_facets) {
+      out[[facet_j]] <- as.character(g$levels[[facet_j]])
+    }
+    out
+  })
+
   chi_tbl <- tibble(
     FixedChiSq = fixed_chi,
     FixedDF = fixed_df,
     FixedProb = fixed_prob,
+    InferenceTier = "screening",
+    SupportsFormalInference = FALSE,
+    FormalInferenceEligible = FALSE,
+    PrimaryReportingEligible = FALSE,
+    ReportingUse = "screening_only",
+    TestBasis = "conditional plug-in heterogeneity screen",
     InteractionFacets = interaction_label,
     InteractionOrder = interaction_order,
     InteractionMode = interaction_mode
@@ -4066,7 +4465,13 @@ estimate_bias_interaction <- function(res,
     table = bias_tbl,
     summary = summary_tbl,
     chi_sq = chi_tbl,
-    iteration = bind_rows(iter_rows)
+    iteration = bind_rows(iter_rows),
+    orientation_audit = orientation_audit$table,
+    mixed_sign = orientation_audit$mixed_sign,
+    direction_note = orientation_audit$direction_note,
+    recommended_action = orientation_audit$recommended_action,
+    inference_tier = "screening",
+    optimization_failures = optimization_failures
   )
 }
 
@@ -4115,16 +4520,16 @@ calc_bias_pairwise <- function(bias_tbl, target_facet, context_facet) {
       se2 <- ifelse(is.finite(tgt_se) & is.finite(bias_se2), sqrt(tgt_se^2 + bias_se2^2), NA_real_)
 
       contrast <- ifelse(is.finite(local1) & is.finite(local2), local1 - local2, NA_real_)
-      se_contrast <- ifelse(is.finite(se1) & is.finite(se2), sqrt(se1^2 + se2^2), NA_real_)
+      se_contrast <- ifelse(
+        is.finite(bias_se1) & is.finite(bias_se2),
+        sqrt(bias_se1^2 + bias_se2^2),
+        NA_real_
+      )
       t_val <- ifelse(is.finite(contrast) & is.finite(se_contrast) & se_contrast > 0, contrast / se_contrast, NA_real_)
 
       n1 <- ifelse(is.finite(r1$ObsN), r1$ObsN, 0)
       n2 <- ifelse(is.finite(r2$ObsN), r2$ObsN, 0)
-      df_num <- (se1^2 + se2^2)^2
-      df_den <- 0
-      if (is.finite(se1) && n1 > 1) df_den <- df_den + (se1^4) / (n1 - 1)
-      if (is.finite(se2) && n2 > 1) df_den <- df_den + (se2^4) / (n2 - 1)
-      df_t <- ifelse(df_den > 0, df_num / df_den, NA_real_)
+      df_t <- welch_satterthwaite_df(c(bias_se1^2, bias_se2^2), c(n1 - 1, n2 - 1))
       p_val <- ifelse(is.finite(t_val) & is.finite(df_t) & df_t > 0,
                       2 * stats::pt(-abs(t_val), df = df_t),
                       NA_real_)
@@ -4140,17 +4545,29 @@ calc_bias_pairwise <- function(bias_tbl, target_facet, context_facet) {
         SE1 = se1,
         `Obs-Exp Avg1` = r1$`Obs-Exp Average`,
         Count1 = r1$`Observd Count`,
+        ObsN1 = n1,
         Context2 = c2,
         `Context2 N` = r2[[paste0(context_prefix, "_Index")]],
         `Local Measure2` = local2,
         SE2 = se2,
         `Obs-Exp Avg2` = r2$`Obs-Exp Average`,
         Count2 = r2$`Observd Count`,
+        ObsN2 = n2,
         Contrast = contrast,
         SE = se_contrast,
         t = t_val,
         `d.f.` = df_t,
-        `Prob.` = p_val
+        `Prob.` = p_val,
+        InferenceTier = "screening",
+        SupportsFormalInference = FALSE,
+        FormalInferenceEligible = FALSE,
+        PrimaryReportingEligible = FALSE,
+        ReportingUse = "screening_only",
+        ContrastBasis = "difference between local target measures across contexts (target term cancels to a bias contrast)",
+        SEBasis = "combined context-specific bias standard errors",
+        StatisticLabel = "Bias-contrast Welch screening t",
+        ProbabilityMetric = "screening tail area",
+        DFBasis = "Welch-Satterthwaite approximation"
       )
     }
   }
@@ -4183,26 +4600,6 @@ extract_anchor_tables <- function(config) {
   })
 
   list(anchors = anchor_tbl, groups = group_tbl)
-}
-
-# Facet-level separation, reliability, and strata (Wright & Masters, 1982).
-# Separation G = SD(estimates) / RMSE(standard errors)
-# Reliability R = G^2 / (1 + G^2)  -- analogous to Cronbach's alpha
-# Strata H = (4*G + 1) / 3  -- number of statistically distinct levels
-calc_reliability <- function(measure_df) {
-  measure_df |>
-    group_by(Facet) |>
-    summarize(
-      Levels = n(),
-      SD = sd(Estimate, na.rm = TRUE),
-      RMSE = sqrt(mean(SE^2, na.rm = TRUE)),
-      Separation = ifelse(RMSE > 0, SD / RMSE, NA_real_),
-      Strata = ifelse(RMSE > 0, (4 * (SD / RMSE) + 1) / 3, NA_real_),
-      Reliability = ifelse(RMSE > 0, (Separation^2) / (1 + Separation^2), NA_real_),
-      MeanInfit = mean(Infit, na.rm = TRUE),
-      MeanOutfit = mean(Outfit, na.rm = TRUE),
-      .groups = "drop"
-    )
 }
 
 calc_facets_chisq <- function(measure_df) {
@@ -4258,6 +4655,699 @@ calc_facets_chisq <- function(measure_df) {
     select(-EstimateVec, -SEVec)
 }
 
+build_param_slices <- function(sizes) {
+  out <- list()
+  idx <- 1L
+  for (nm in names(sizes)) {
+    k <- as.integer(sizes[[nm]] %||% 0L)
+    if (k > 0L) {
+      out[[nm]] <- idx:(idx + k - 1L)
+      idx <- idx + k
+    } else {
+      out[[nm]] <- integer(0)
+    }
+  }
+  out
+}
+
+constraint_jacobian <- function(spec) {
+  n_levels <- length(spec$levels %||% character(0))
+  n_params <- as.integer(spec$n_params %||% 0L)
+  out <- matrix(0, nrow = n_levels, ncol = n_params)
+  rownames(out) <- as.character(spec$levels %||% character(0))
+  if (n_levels == 0L || n_params == 0L) {
+    return(out)
+  }
+
+  baseline <- expand_facet_with_constraints(numeric(n_params), spec)
+  for (j in seq_len(n_params)) {
+    free_vec <- numeric(n_params)
+    free_vec[j] <- 1
+    out[, j] <- expand_facet_with_constraints(free_vec, spec) - baseline
+  }
+  out
+}
+
+symmetrize_matrix <- function(mat) {
+  if (is.null(mat)) return(NULL)
+  (mat + t(mat)) / 2
+}
+
+invert_information_matrix <- function(info_mat) {
+  if (is.null(info_mat)) {
+    return(list(cov = NULL, regularized = FALSE, rank = 0L))
+  }
+
+  info_mat <- suppressWarnings(as.matrix(info_mat))
+  if (!is.numeric(info_mat) || length(info_mat) == 0L || any(!is.finite(info_mat))) {
+    return(list(cov = NULL, regularized = FALSE, rank = 0L))
+  }
+
+  info_mat <- symmetrize_matrix(info_mat)
+  eig <- tryCatch(
+    eigen(info_mat, symmetric = TRUE),
+    error = function(e) NULL
+  )
+  if (is.null(eig)) {
+    return(list(cov = NULL, regularized = FALSE, rank = 0L))
+  }
+
+  values <- eig$values
+  max_val <- suppressWarnings(max(abs(values), na.rm = TRUE))
+  tol <- if (is.finite(max_val) && max_val > 0) {
+    max_val * sqrt(.Machine$double.eps)
+  } else {
+    sqrt(.Machine$double.eps)
+  }
+  rank <- sum(values > tol)
+  regularized <- any(values <= tol)
+  safe_values <- pmax(values, tol)
+  cov_mat <- eig$vectors %*% diag(1 / safe_values, nrow = length(safe_values)) %*% t(eig$vectors)
+  cov_mat <- symmetrize_matrix(cov_mat)
+
+  list(
+    cov = cov_mat,
+    regularized = regularized,
+    rank = rank
+  )
+}
+
+compute_mml_facet_model_se <- function(res) {
+  method <- as.character(res$summary$Method[1] %||% res$config$method %||% NA_character_)
+  if (!identical(method, "MML")) {
+    return(list(
+      table = tibble(),
+      status = "not_applicable",
+      detail = "MML observed-information SEs are only computed for MML fits."
+    ))
+  }
+
+  if (is.null(res$opt$par) || length(res$opt$par) == 0L) {
+    return(list(
+      table = tibble(),
+      status = "fallback",
+      detail = "Optimized parameter vector was not available; fell back to observation-table SEs."
+    ))
+  }
+
+  config <- res$config
+  sizes <- build_param_sizes(config)
+  idx <- build_indices(res$prep, step_facet = config$step_facet)
+  quad_points <- max(1L, as.integer(config$estimation_control$quad_points %||% 15L))
+  quad <- gauss_hermite_normal(quad_points)
+  cache <- make_param_cache(sizes, config, idx, is_mml = TRUE)
+
+  fn <- function(par, idx, config, sizes, quad) {
+    cache$ensure(par)
+    mfrm_loglik_mml_cached(cache, idx, config, quad)
+  }
+  gr <- function(par, idx, config, sizes, quad) {
+    cache$ensure(par)
+    mfrm_grad_mml_cached(cache, idx, config, sizes, quad)
+  }
+
+  hess <- tryCatch(
+    stats::optimHess(
+      par = res$opt$par,
+      fn = fn,
+      gr = gr,
+      idx = idx,
+      config = config,
+      sizes = sizes,
+      quad = quad
+    ),
+    error = function(e) e
+  )
+
+  if (inherits(hess, "error") || is.null(hess)) {
+    msg <- if (inherits(hess, "error")) conditionMessage(hess) else "Unknown Hessian error."
+    return(list(
+      table = tibble(),
+      status = "fallback",
+      detail = paste0("Observed-information Hessian was unavailable; fell back to observation-table SEs. ", msg)
+    ))
+  }
+
+  inv_info <- invert_information_matrix(hess)
+  cov_free <- inv_info$cov
+  if (is.null(cov_free)) {
+    return(list(
+      table = tibble(),
+      status = "fallback",
+      detail = "Observed-information matrix could not be inverted; fell back to observation-table SEs."
+    ))
+  }
+
+  param_slices <- build_param_slices(sizes)
+  facet_tbl <- purrr::map_dfr(config$facet_names, function(facet) {
+    spec <- config$facet_specs[[facet]]
+    levels <- as.character(spec$levels %||% res$prep$levels[[facet]] %||% character(0))
+    slice <- param_slices[[facet]] %||% integer(0)
+
+    if (length(levels) == 0L) {
+      return(tibble(Facet = character(0), Level = character(0), ModelSE = numeric(0)))
+    }
+
+    if (length(slice) == 0L || is.null(spec) || (spec$n_params %||% 0L) == 0L) {
+      return(tibble(
+        Facet = facet,
+        Level = levels,
+        ModelSE = NA_real_
+      ))
+    }
+
+    jac <- constraint_jacobian(spec)
+    cov_block <- cov_free[slice, slice, drop = FALSE]
+    cov_expanded <- symmetrize_matrix(jac %*% cov_block %*% t(jac))
+    diag_var <- diag(cov_expanded)
+    diag_var[diag_var < 0 & abs(diag_var) < 1e-10] <- 0
+
+    tibble(
+      Facet = facet,
+      Level = levels,
+      ModelSE = ifelse(diag_var >= 0, sqrt(diag_var), NA_real_)
+    )
+  })
+
+  detail <- if (isTRUE(inv_info$regularized)) {
+    "MML facet ModelSE values use the observed information of the marginal log-likelihood; a near-singular Hessian was regularized during inversion."
+  } else {
+    "MML facet ModelSE values use the observed information of the marginal log-likelihood."
+  }
+
+  list(
+    table = facet_tbl,
+    status = if (isTRUE(inv_info$regularized)) "regularized" else "ok",
+    detail = detail
+  )
+}
+
+build_measure_se_table <- function(res, obs_df, facet_cols, fit_tbl) {
+  approx_tbl <- calc_facet_se(obs_df, facet_cols) |>
+    rename(ApproxSE = SE)
+
+  base_tbl <- bind_rows(
+    res$facets$person |>
+      transmute(Facet = "Person", Level = as.character(Person)),
+    res$facets$others |>
+      transmute(Facet = as.character(Facet), Level = as.character(Level))
+  ) |>
+    distinct(Facet, Level)
+
+  method <- as.character(res$summary$Method[1] %||% res$config$method %||% NA_character_)
+  converged <- isTRUE(as.logical(res$summary$Converged[1] %||% FALSE))
+  fallback_label <- if (identical(method, "MML")) {
+    "Fallback observation-table information"
+  } else {
+    "Observation-table information"
+  }
+
+  person_model_tbl <- if (identical(method, "MML") && "SD" %in% names(res$facets$person)) {
+    res$facets$person |>
+      transmute(
+        Facet = "Person",
+        Level = as.character(Person),
+        ModelSE = as.numeric(SD),
+        SE_Method = "Posterior SD (EAP)"
+      )
+  } else {
+    tibble(
+      Facet = character(0),
+      Level = character(0),
+      ModelSE = numeric(0),
+      SE_Method = character(0)
+    )
+  }
+
+  facet_model_bundle <- compute_mml_facet_model_se(res)
+  facet_model_tbl <- facet_model_bundle$table |>
+    mutate(SE_Method = "Observed information (MML)")
+
+  base_tbl |>
+    left_join(approx_tbl, by = c("Facet", "Level")) |>
+    left_join(
+      bind_rows(person_model_tbl, facet_model_tbl) |>
+        rename(ModelSE_Raw = ModelSE, SE_Method_Raw = SE_Method),
+      by = c("Facet", "Level")
+    ) |>
+    left_join(
+      fit_tbl |>
+        select("Facet", "Level", "Infit"),
+      by = c("Facet", "Level")
+    ) |>
+    mutate(
+      PrecisionTier = dplyr::case_when(
+        identical(method, "MML") & !is.na(.data$SE_Method_Raw) ~ "model_based",
+        identical(method, "MML") ~ "hybrid",
+        TRUE ~ "exploratory"
+      ),
+      Converged = converged,
+      SupportsFormalInference = .data$PrecisionTier == "model_based" & .data$Converged,
+      ModelSE = dplyr::coalesce(.data$ModelSE_Raw, .data$ApproxSE),
+      RealSE = ifelse(
+        is.finite(.data$ModelSE),
+        .data$ModelSE * sqrt(pmax(dplyr::coalesce(.data$Infit, 1), 1)),
+        NA_real_
+      ),
+      SE = .data$ModelSE,
+      SE_Method = dplyr::coalesce(.data$SE_Method_Raw, fallback_label),
+      SEUse = dplyr::case_when(
+        .data$PrecisionTier == "model_based" & .data$Converged ~ "primary_reporting",
+        .data$PrecisionTier == "model_based" ~ "review_before_reporting",
+        .data$PrecisionTier == "hybrid" ~ "review_before_reporting",
+        TRUE ~ "screening_only"
+      ),
+      CIBasis = dplyr::case_when(
+        .data$PrecisionTier == "model_based" & .data$Converged ~ "Normal interval from model-based SE",
+        .data$PrecisionTier == "model_based" ~ "Normal interval from model-based SE; optimizer convergence review required",
+        .data$PrecisionTier == "hybrid" ~ "Normal interval from fallback observation-table SE",
+        TRUE ~ "Normal interval from exploratory observation-table SE"
+      ),
+      CIUse = dplyr::case_when(
+        .data$PrecisionTier == "model_based" & .data$Converged ~ "primary_reporting",
+        .data$PrecisionTier == "model_based" ~ "review_before_reporting",
+        .data$PrecisionTier == "hybrid" ~ "review_before_reporting",
+        TRUE ~ "screening_only"
+      )
+    ) |>
+    select("Facet", "Level", "N", "SE", "ModelSE", "RealSE", "SE_Method",
+           "Converged",
+           "PrecisionTier", "SupportsFormalInference", "SEUse", "CIBasis", "CIUse") |>
+    arrange(.data$Facet, .data$Level) |>
+    structure(mml_se_status = facet_model_bundle$status, mml_se_detail = facet_model_bundle$detail)
+}
+
+# Separation, reliability, and strata indices used in package diagnostics.
+# Model statistics use ModelSE; fit-adjusted statistics use RealSE when available.
+# Separation G = TrueSD / RMSE
+# Reliability R = TrueVariance / ObservedVariance = G^2 / (1 + G^2)
+# Strata H = (4*G + 1) / 3
+summarize_precision_basis <- function(df, se_col, distribution_basis = c("sample", "population")) {
+  distribution_basis <- match.arg(distribution_basis)
+
+  est <- suppressWarnings(as.numeric(df$Estimate))
+  se_vals <- if (se_col %in% names(df)) suppressWarnings(as.numeric(df[[se_col]])) else rep(NA_real_, nrow(df))
+  ok_est <- is.finite(est)
+  ok_se <- is.finite(se_vals) & se_vals >= 0
+  n_est <- sum(ok_est)
+
+  observed_mean <- if (n_est > 0L) mean(est[ok_est]) else NA_real_
+  observed_var <- if (n_est == 0L) {
+    NA_real_
+  } else if (identical(distribution_basis, "sample")) {
+    if (n_est >= 2L) stats::var(est[ok_est]) else NA_real_
+  } else {
+    mean((est[ok_est] - observed_mean)^2)
+  }
+  observed_sd <- if (is.finite(observed_var)) sqrt(observed_var) else NA_real_
+  rmse <- if (any(ok_se)) sqrt(mean(se_vals[ok_se]^2, na.rm = TRUE)) else NA_real_
+  error_var <- if (is.finite(rmse)) rmse^2 else NA_real_
+  true_var <- if (is.finite(observed_var) && is.finite(error_var)) {
+    pmax(observed_var - error_var, 0)
+  } else {
+    NA_real_
+  }
+  true_sd <- if (is.finite(true_var)) sqrt(true_var) else NA_real_
+  separation <- if (is.finite(rmse) && rmse > 0 && is.finite(true_sd)) true_sd / rmse else NA_real_
+  reliability <- if (is.finite(observed_var) && observed_var > 0 && is.finite(true_var)) true_var / observed_var else NA_real_
+  strata <- if (is.finite(separation)) (4 * separation + 1) / 3 else NA_real_
+
+  list(
+    ObservedMean = observed_mean,
+    ObservedSD = observed_sd,
+    RMSE = rmse,
+    TrueSD = true_sd,
+    ObservedVariance = observed_var,
+    ErrorVariance = error_var,
+    TrueVariance = true_var,
+    Separation = separation,
+    Strata = strata,
+    Reliability = reliability,
+    SEAvailable = sum(ok_se),
+    MeanSE = if (any(ok_se)) mean(se_vals[ok_se], na.rm = TRUE) else NA_real_,
+    MedianSE = if (any(ok_se)) stats::median(se_vals[ok_se], na.rm = TRUE) else NA_real_
+  )
+}
+
+build_facet_precision_summary <- function(measure_df, variability_tbl = NULL) {
+  if (is.null(measure_df) || nrow(measure_df) == 0) return(tibble())
+
+  variability_tbl <- as.data.frame(variability_tbl %||% data.frame(), stringsAsFactors = FALSE)
+  variability_keep <- intersect(
+    c("Facet", "FixedChiSq", "FixedDF", "FixedProb", "RandomVar", "RandomChiSq", "RandomDF", "RandomProb"),
+    names(variability_tbl)
+  )
+  variability_tbl <- variability_tbl[, variability_keep, drop = FALSE]
+
+  mode_map <- c(model = "ModelSE", fit_adjusted = "RealSE")
+  rows <- list()
+  row_id <- 1L
+
+  facets <- unique(as.character(measure_df$Facet))
+  facets <- facets[!is.na(facets) & nzchar(facets)]
+  for (facet in facets) {
+    sub <- measure_df[as.character(measure_df$Facet) == facet, , drop = FALSE]
+    for (mode_name in names(mode_map)) {
+      se_col <- mode_map[[mode_name]]
+      if (!se_col %in% names(sub)) next
+      for (basis_name in c("sample", "population")) {
+        stats <- summarize_precision_basis(sub, se_col = se_col, distribution_basis = basis_name)
+        rows[[row_id]] <- tibble(
+          Facet = facet,
+          Levels = nrow(sub),
+          DistributionBasis = basis_name,
+          SEMode = mode_name,
+          SEColumn = se_col,
+          ObservedMean = stats$ObservedMean,
+          ObservedSD = stats$ObservedSD,
+          RMSE = stats$RMSE,
+          TrueSD = stats$TrueSD,
+          ObservedVariance = stats$ObservedVariance,
+          ErrorVariance = stats$ErrorVariance,
+          TrueVariance = stats$TrueVariance,
+          Separation = stats$Separation,
+          Strata = stats$Strata,
+          Reliability = stats$Reliability,
+          SEAvailable = stats$SEAvailable,
+          MeanSE = stats$MeanSE,
+          MedianSE = stats$MedianSE,
+          MeanInfit = if ("Infit" %in% names(sub)) mean(sub$Infit, na.rm = TRUE) else NA_real_,
+          MeanOutfit = if ("Outfit" %in% names(sub)) mean(sub$Outfit, na.rm = TRUE) else NA_real_
+        )
+        row_id <- row_id + 1L
+      }
+    }
+  }
+
+  out <- bind_rows(rows)
+  if (nrow(out) == 0) {
+    return(tibble())
+  }
+  if (nrow(variability_tbl) > 0 && "Facet" %in% names(variability_tbl)) {
+    out <- left_join(out, variability_tbl, by = "Facet")
+  }
+  out |>
+    arrange(.data$Facet, .data$DistributionBasis, .data$SEMode)
+}
+
+build_precision_profile <- function(res, measure_df, reliability_tbl, facet_precision_tbl) {
+  measure_df <- as.data.frame(measure_df %||% data.frame(), stringsAsFactors = FALSE)
+  reliability_tbl <- as.data.frame(reliability_tbl %||% data.frame(), stringsAsFactors = FALSE)
+  facet_precision_tbl <- as.data.frame(facet_precision_tbl %||% data.frame(), stringsAsFactors = FALSE)
+
+  method <- as.character(res$summary$Method[1] %||% res$config$method %||% NA_character_)
+  method <- ifelse(identical(method, "JMLE"), "JML", method)
+  converged <- isTRUE(as.logical(res$summary$Converged[1] %||% FALSE))
+
+  person_labels <- character(0)
+  nonperson_labels <- character(0)
+  all_labels <- character(0)
+  if (nrow(measure_df) > 0 && "SE_Method" %in% names(measure_df) && "Facet" %in% names(measure_df)) {
+    all_labels <- unique(as.character(stats::na.omit(measure_df$SE_Method)))
+    person_labels <- unique(as.character(stats::na.omit(measure_df$SE_Method[measure_df$Facet == "Person"])))
+    nonperson_labels <- unique(as.character(stats::na.omit(measure_df$SE_Method[measure_df$Facet != "Person"])))
+  }
+
+  has_fallback <- identical(method, "MML") &&
+    any(grepl("Fallback observation-table information", all_labels))
+  precision_tier <- if (!identical(method, "MML")) {
+    "exploratory"
+  } else if (has_fallback) {
+    "hybrid"
+  } else {
+    "model_based"
+  }
+  supports_formal <- identical(precision_tier, "model_based") && converged
+
+  has_fit_adjusted <- nrow(measure_df) > 0 &&
+    "RealSE" %in% names(measure_df) &&
+    any(is.finite(suppressWarnings(as.numeric(measure_df$RealSE))))
+
+  coverage_complete <- FALSE
+  if (nrow(facet_precision_tbl) > 0 &&
+      all(c("Facet", "DistributionBasis", "SEMode") %in% names(facet_precision_tbl))) {
+    precision_facets <- unique(as.character(facet_precision_tbl$Facet))
+    precision_facets <- precision_facets[!is.na(precision_facets) & nzchar(precision_facets)]
+    if (length(precision_facets) > 0) {
+      expected <- expand.grid(
+        DistributionBasis = c("sample", "population"),
+        SEMode = c("model", "fit_adjusted"),
+        stringsAsFactors = FALSE
+      )
+      coverage_complete <- all(vapply(precision_facets, function(facet_name) {
+        sub <- facet_precision_tbl[facet_precision_tbl$Facet == facet_name, c("DistributionBasis", "SEMode"), drop = FALSE]
+        all(apply(expected, 1, function(row) {
+          any(sub$DistributionBasis == row[["DistributionBasis"]] & sub$SEMode == row[["SEMode"]])
+        }))
+      }, logical(1)))
+    }
+  }
+
+  tibble(
+    Method = method,
+    Converged = converged,
+    PrecisionTier = precision_tier,
+    SupportsFormalInference = supports_formal,
+    HasFallbackSE = has_fallback,
+    PersonSEBasis = if (length(person_labels) > 0) paste(sort(person_labels), collapse = "; ") else NA_character_,
+    NonPersonSEBasis = if (length(nonperson_labels) > 0) paste(sort(nonperson_labels), collapse = "; ") else NA_character_,
+    CIBasis = if (identical(precision_tier, "model_based")) {
+      if (isTRUE(converged)) {
+        "Normal interval from model-based SE"
+      } else {
+        "Normal interval from model-based SE; optimizer convergence review required"
+      }
+    } else if (identical(precision_tier, "hybrid")) {
+      "Normal interval from mixed model-based and fallback SE"
+    } else {
+      "Normal interval from exploratory SE"
+    },
+    ReliabilityBasis = if (identical(precision_tier, "model_based")) {
+      if (isTRUE(converged)) {
+        "Observed variance with model-based and fit-adjusted error bounds"
+      } else {
+        "Observed variance with model-based and fit-adjusted error bounds; optimizer convergence review required"
+      }
+    } else if (identical(precision_tier, "hybrid")) {
+      "Observed variance with mixed model-based and fallback error bounds"
+    } else {
+      "Exploratory variance summary with model-based and fit-adjusted error bounds"
+    },
+    HasFitAdjustedSE = has_fit_adjusted,
+    HasSamplePopulationCoverage = coverage_complete,
+    RecommendedUse = if (identical(precision_tier, "model_based") && isTRUE(converged)) {
+      "Use for primary reporting of SE, CI, and reliability in this package."
+    } else if (identical(precision_tier, "model_based")) {
+      "This run reached the model-based precision path, but optimizer convergence should be reviewed before primary reporting."
+    } else if (identical(precision_tier, "hybrid")) {
+      "Use model-based rows for primary reporting, but review levels that fell back to observation-table information before treating the whole run as formal inference."
+    } else {
+      "Use for screening and calibration triage; confirm formal SE, CI, and reliability with an MML fit."
+    }
+  )
+}
+
+audit_precision_outputs <- function(res, measure_df, reliability_tbl, facet_precision_tbl, precision_profile_tbl = NULL) {
+  measure_df <- as.data.frame(measure_df %||% data.frame(), stringsAsFactors = FALSE)
+  reliability_tbl <- as.data.frame(reliability_tbl %||% data.frame(), stringsAsFactors = FALSE)
+  facet_precision_tbl <- as.data.frame(facet_precision_tbl %||% data.frame(), stringsAsFactors = FALSE)
+  precision_profile_tbl <- as.data.frame(precision_profile_tbl %||% data.frame(), stringsAsFactors = FALSE)
+
+  method <- as.character(res$summary$Method[1] %||% res$config$method %||% NA_character_)
+  method <- ifelse(identical(method, "JMLE"), "JML", method)
+  converged <- isTRUE(as.logical(res$summary$Converged[1] %||% FALSE))
+
+  finite_model <- if ("ModelSE" %in% names(measure_df)) is.finite(suppressWarnings(as.numeric(measure_df$ModelSE))) else logical(0)
+  model_share <- if (length(finite_model) > 0) mean(finite_model) else NA_real_
+
+  real_ok <- TRUE
+  if (all(c("ModelSE", "RealSE") %in% names(measure_df))) {
+    model_vals <- suppressWarnings(as.numeric(measure_df$ModelSE))
+    real_vals <- suppressWarnings(as.numeric(measure_df$RealSE))
+    ok <- is.finite(model_vals) & is.finite(real_vals)
+    if (any(ok)) {
+      real_ok <- all(real_vals[ok] >= model_vals[ok])
+    }
+  }
+
+  rel_ok <- TRUE
+  if (all(c("Reliability", "RealReliability") %in% names(reliability_tbl))) {
+    rel_vals <- suppressWarnings(as.numeric(reliability_tbl$Reliability))
+    real_rel_vals <- suppressWarnings(as.numeric(reliability_tbl$RealReliability))
+    ok <- is.finite(rel_vals) & is.finite(real_rel_vals)
+    if (any(ok)) {
+      rel_ok <- all(real_rel_vals[ok] <= rel_vals[ok])
+    }
+  }
+
+  coverage_ok <- FALSE
+  if (nrow(precision_profile_tbl) > 0 && "HasSamplePopulationCoverage" %in% names(precision_profile_tbl)) {
+    coverage_ok <- isTRUE(precision_profile_tbl$HasSamplePopulationCoverage[1])
+  }
+
+  label_status <- "review"
+  label_detail <- "SE source labels were not available for audit."
+  if (nrow(measure_df) > 0 && all(c("Facet", "SE_Method") %in% names(measure_df))) {
+    labels <- as.character(measure_df$SE_Method)
+    person_labels <- labels[measure_df$Facet == "Person"]
+    nonperson_labels <- labels[measure_df$Facet != "Person"]
+    if (identical(method, "MML")) {
+      has_person_eap <- length(person_labels) == 0 || any(grepl("Posterior SD \\(EAP\\)", person_labels))
+      has_nonperson_info <- length(nonperson_labels) == 0 || any(grepl("Observed information \\(MML\\)", nonperson_labels))
+      has_fallback <- any(grepl("Fallback observation-table information", labels))
+      if (has_person_eap && has_nonperson_info && !has_fallback) {
+        label_status <- "pass"
+        label_detail <- "Person and non-person SE labels match the MML precision path."
+      } else if (has_person_eap && (has_nonperson_info || has_fallback)) {
+        label_status <- "review"
+        label_detail <- "MML labels were found, but at least one level fell back to observation-table information."
+      } else {
+        label_status <- "warn"
+        label_detail <- "MML SE labels did not consistently identify posterior-SD/person and observed-information/facet sources."
+      }
+    } else {
+      uses_obs_info <- all(grepl("Observation-table information", labels))
+      if (uses_obs_info) {
+        label_status <- "pass"
+        label_detail <- "JML SE labels consistently identify observation-table information."
+      } else {
+        label_status <- "warn"
+        label_detail <- "JML SE labels were expected to indicate observation-table information throughout."
+      }
+    }
+  }
+
+  tibble(
+    Check = c(
+      "Precision tier",
+      "Optimizer convergence",
+      "ModelSE availability",
+      "Fit-adjusted SE ordering",
+      "Reliability ordering",
+      "Facet precision coverage",
+      "SE source labels"
+    ),
+    Status = c(
+      if (nrow(precision_profile_tbl) > 0) {
+        if (identical(as.character(precision_profile_tbl$PrecisionTier[1]), "model_based")) "pass" else "review"
+      } else if (identical(method, "MML")) {
+        "review"
+      } else {
+        "review"
+      },
+      if (isTRUE(converged)) "pass" else "review",
+      if (!is.finite(model_share)) "warn" else if (model_share >= 0.99) "pass" else if (model_share >= 0.90) "review" else "warn",
+      if (isTRUE(real_ok)) "pass" else "warn",
+      if (isTRUE(rel_ok)) "pass" else "warn",
+      if (isTRUE(coverage_ok)) "pass" else "review",
+      label_status
+    ),
+    Detail = c(
+      if (nrow(precision_profile_tbl) > 0 && identical(as.character(precision_profile_tbl$PrecisionTier[1]), "model_based")) {
+        if (isTRUE(converged)) {
+          "This run uses the package's model-based precision path."
+        } else {
+          "This run uses the package's model-based precision path, but optimizer convergence should be reviewed before formal reporting."
+        }
+      } else if (nrow(precision_profile_tbl) > 0 && identical(as.character(precision_profile_tbl$PrecisionTier[1]), "hybrid")) {
+        "This run mixes model-based SE with fallback observation-table SE for at least one level; review before treating the full run as formal inference."
+      } else {
+        "This run uses the package's exploratory precision path; prefer MML for formal SE, CI, and reliability reporting."
+      },
+      if (isTRUE(converged)) {
+        "The optimizer reported convergence."
+      } else {
+        "The optimizer did not report convergence; keep SE, CI, and reliability in review mode."
+      },
+      if (!is.finite(model_share)) {
+        "ModelSE coverage could not be computed."
+      } else {
+        paste0("Finite ModelSE values were available for ", sprintf("%.1f", 100 * model_share), "% of rows.")
+      },
+      if (isTRUE(real_ok)) {
+        "Fit-adjusted SE values were not smaller than their paired ModelSE values."
+      } else {
+        "At least one RealSE value was smaller than ModelSE."
+      },
+      if (isTRUE(rel_ok)) {
+        "Conservative reliability values were not larger than the model-based values."
+      } else {
+        "At least one RealReliability value exceeded Reliability."
+      },
+      if (isTRUE(coverage_ok)) {
+        "Each facet had sample/population summaries for both model and fit-adjusted SE modes."
+      } else {
+        "At least one facet is missing a sample/population or model/fit-adjusted precision combination."
+      },
+      label_detail
+    )
+  )
+}
+
+calc_reliability <- function(measure_df) {
+  measure_df |>
+    dplyr::group_by(Facet) |>
+    dplyr::group_modify(function(.x, .y) {
+      model_stats <- summarize_precision_basis(.x, if ("ModelSE" %in% names(.x)) "ModelSE" else "SE", distribution_basis = "sample")
+      real_stats <- summarize_precision_basis(.x, if ("RealSE" %in% names(.x)) "RealSE" else if ("ModelSE" %in% names(.x)) "ModelSE" else "SE", distribution_basis = "sample")
+      tier_vals <- unique(as.character(stats::na.omit(.x$PrecisionTier %||% character(0))))
+      converged_vals <- unique(as.logical(stats::na.omit(.x$Converged %||% logical(0))))
+      facet_converged <- if (length(converged_vals) == 0) {
+        FALSE
+      } else {
+        all(converged_vals)
+      }
+      facet_tier <- if (length(tier_vals) == 0) {
+        NA_character_
+      } else if (all(tier_vals == "model_based")) {
+        "model_based"
+      } else if (any(tier_vals == "exploratory")) {
+        "exploratory"
+      } else {
+        "hybrid"
+      }
+      supports_formal <- identical(facet_tier, "model_based") && isTRUE(facet_converged)
+
+      tibble(
+        Levels = nrow(.x),
+        Converged = facet_converged,
+        PrecisionTier = facet_tier,
+        SupportsFormalInference = supports_formal,
+        ReliabilityUse = dplyr::case_when(
+          identical(facet_tier, "model_based") && isTRUE(facet_converged) ~ "primary_reporting",
+          identical(facet_tier, "model_based") ~ "review_before_reporting",
+          identical(facet_tier, "hybrid") ~ "review_before_reporting",
+          identical(facet_tier, "exploratory") ~ "screening_only",
+          TRUE ~ NA_character_
+        ),
+        SD = model_stats$ObservedSD,
+        RMSE = model_stats$RMSE,
+        TrueSD = model_stats$TrueSD,
+        ObservedVariance = model_stats$ObservedVariance,
+        ModelErrorVariance = model_stats$ErrorVariance,
+        ModelTrueVariance = model_stats$TrueVariance,
+        Separation = model_stats$Separation,
+        Strata = model_stats$Strata,
+        Reliability = model_stats$Reliability,
+        ModelRMSE = model_stats$RMSE,
+        ModelTrueSD = model_stats$TrueSD,
+        ModelSeparation = model_stats$Separation,
+        ModelStrata = model_stats$Strata,
+        ModelReliability = model_stats$Reliability,
+        RealRMSE = real_stats$RMSE,
+        RealTrueSD = real_stats$TrueSD,
+        RealErrorVariance = real_stats$ErrorVariance,
+        RealTrueVariance = real_stats$TrueVariance,
+        RealSeparation = real_stats$Separation,
+        RealStrata = real_stats$Strata,
+        RealReliability = real_stats$Reliability,
+        MeanInfit = if ("Infit" %in% names(.x)) mean(.x$Infit, na.rm = TRUE) else NA_real_,
+        MeanOutfit = if ("Outfit" %in% names(.x)) mean(.x$Outfit, na.rm = TRUE) else NA_real_
+      )
+    }) |>
+    dplyr::ungroup()
+}
+
 ensure_positive_definite <- function(mat) {
   eig <- tryCatch(eigen(mat, symmetric = TRUE, only.values = TRUE)$values, error = function(e) NULL)
   if (is.null(eig)) return(mat)
@@ -4275,6 +5365,9 @@ ensure_positive_definite <- function(mat) {
 }
 
 compute_pca_overall <- function(obs_df, facet_names, max_factors = 10L) {
+  pca_failure <- function(message, residual_matrix = NULL, cor_matrix = NULL) {
+    list(pca = NULL, residual_matrix = residual_matrix, cor_matrix = cor_matrix, error = message)
+  }
   if (length(facet_names) == 0) return(NULL)
   df_aug <- obs_df |>
     mutate(
@@ -4296,29 +5389,52 @@ compute_pca_overall <- function(obs_df, facet_names, max_factors = 10L) {
         values_fill = list(std_residual = NA)
       ) |>
       tibble::column_to_rownames("Person")
-  }, error = function(e) NULL)
+  }, error = function(e) e)
 
+  if (inherits(residual_matrix_wide, "error")) {
+    return(pca_failure(paste0("Could not reshape the residual matrix: ", conditionMessage(residual_matrix_wide))))
+  }
   if (is.null(residual_matrix_wide) || nrow(residual_matrix_wide) < 2 || ncol(residual_matrix_wide) < 2) {
-    return(NULL)
+    return(pca_failure("Residual PCA requires at least two persons and two combined-facet columns."))
   }
 
   residual_matrix_clean <- residual_matrix_wide[, colSums(is.na(residual_matrix_wide)) < nrow(residual_matrix_wide), drop = FALSE]
-  if (ncol(residual_matrix_clean) < 2) return(NULL)
+  if (ncol(residual_matrix_clean) < 2) {
+    return(pca_failure("Residual PCA requires at least two combined-facet columns with observed residuals.", residual_matrix = residual_matrix_wide))
+  }
 
-  cor_matrix <- tryCatch(suppressWarnings(stats::cor(residual_matrix_clean, use = "pairwise.complete.obs")), error = function(e) NULL)
-  if (is.null(cor_matrix)) return(NULL)
+  cor_matrix <- tryCatch(suppressWarnings(stats::cor(residual_matrix_clean, use = "pairwise.complete.obs")), error = function(e) e)
+  if (inherits(cor_matrix, "error")) {
+    return(pca_failure(
+      paste0("Could not compute the residual correlation matrix: ", conditionMessage(cor_matrix)),
+      residual_matrix = residual_matrix_wide
+    ))
+  }
+  if (is.null(cor_matrix)) {
+    return(pca_failure("Residual correlation matrix was not available.", residual_matrix = residual_matrix_wide))
+  }
   cor_matrix[is.na(cor_matrix)] <- 0
   diag(cor_matrix) <- 1
   cor_matrix <- ensure_positive_definite(cor_matrix)
 
   n_factors <- max(1, min(as.integer(max_factors), ncol(cor_matrix) - 1, nrow(cor_matrix) - 1))
-  pca_result <- tryCatch(psych::principal(cor_matrix, nfactors = n_factors, rotate = "none"), error = function(e) NULL)
-  list(pca = pca_result, residual_matrix = residual_matrix_wide, cor_matrix = cor_matrix)
+  pca_result <- tryCatch(psych::principal(cor_matrix, nfactors = n_factors, rotate = "none"), error = function(e) e)
+  if (inherits(pca_result, "error")) {
+    return(pca_failure(
+      paste0("Principal components could not be computed: ", conditionMessage(pca_result)),
+      residual_matrix = residual_matrix_wide,
+      cor_matrix = cor_matrix
+    ))
+  }
+  list(pca = pca_result, residual_matrix = residual_matrix_wide, cor_matrix = cor_matrix, error = NULL)
 }
 
 compute_pca_by_facet <- function(obs_df, facet_names, max_factors = 10L) {
   out <- list()
   for (facet in facet_names) {
+    pca_failure <- function(message, residual_matrix = NULL, cor_matrix = NULL) {
+      list(pca = NULL, residual_matrix = residual_matrix, cor_matrix = cor_matrix, error = message)
+    }
     facet_sym <- rlang::sym(facet)
     prep <- obs_df |>
       mutate(Person = as.character(Person), .Level = as.character(!!facet_sym)) |>
@@ -4335,23 +5451,34 @@ compute_pca_by_facet <- function(obs_df, facet_names, max_factors = 10L) {
         values_fill = list(std_residual = NA)
       ) |>
         tibble::column_to_rownames("Person")
-    }, error = function(e) NULL)
+    }, error = function(e) e)
 
+    if (inherits(wide, "error")) {
+      out[[facet]] <- pca_failure(paste0("Could not reshape the residual matrix: ", conditionMessage(wide)))
+      next
+    }
     if (is.null(wide) || nrow(wide) < 2 || ncol(wide) < 2) {
-      out[[facet]] <- NULL
+      out[[facet]] <- pca_failure("Residual PCA requires at least two persons and two facet-level columns.")
       next
     }
 
     keep <- colSums(is.na(wide)) < nrow(wide)
     wide <- wide[, keep, drop = FALSE]
     if (ncol(wide) < 2) {
-      out[[facet]] <- NULL
+      out[[facet]] <- pca_failure("Residual PCA requires at least two facet-level columns with observed residuals.", residual_matrix = wide)
       next
     }
 
-    cor_mat <- tryCatch(suppressWarnings(stats::cor(wide, use = "pairwise.complete.obs")), error = function(e) NULL)
+    cor_mat <- tryCatch(suppressWarnings(stats::cor(wide, use = "pairwise.complete.obs")), error = function(e) e)
+    if (inherits(cor_mat, "error")) {
+      out[[facet]] <- pca_failure(
+        paste0("Could not compute the residual correlation matrix: ", conditionMessage(cor_mat)),
+        residual_matrix = wide
+      )
+      next
+    }
     if (is.null(cor_mat)) {
-      out[[facet]] <- NULL
+      out[[facet]] <- pca_failure("Residual correlation matrix was not available.", residual_matrix = wide)
       next
     }
     cor_mat[is.na(cor_mat)] <- 0
@@ -4359,8 +5486,16 @@ compute_pca_by_facet <- function(obs_df, facet_names, max_factors = 10L) {
     cor_mat <- ensure_positive_definite(cor_mat)
 
     n_factors <- max(1, min(as.integer(max_factors), ncol(cor_mat) - 1, nrow(cor_mat) - 1))
-    pca_obj <- tryCatch(psych::principal(cor_mat, nfactors = n_factors, rotate = "none"), error = function(e) NULL)
-    out[[facet]] <- list(pca = pca_obj, cor_matrix = cor_mat, residual_matrix = wide)
+    pca_obj <- tryCatch(psych::principal(cor_mat, nfactors = n_factors, rotate = "none"), error = function(e) e)
+    if (inherits(pca_obj, "error")) {
+      out[[facet]] <- pca_failure(
+        paste0("Principal components could not be computed: ", conditionMessage(pca_obj)),
+        residual_matrix = wide,
+        cor_matrix = cor_mat
+      )
+      next
+    }
+    out[[facet]] <- list(pca = pca_obj, cor_matrix = cor_mat, residual_matrix = wide, error = NULL)
   }
   out
 }
@@ -4376,7 +5511,7 @@ mfrm_diagnostics <- function(res,
   facet_cols <- c("Person", res$config$facet_names)
   overall_fit <- calc_overall_fit(obs_df, whexact = whexact)
   fit_tbl <- calc_facet_fit(obs_df, facet_cols, whexact = whexact)
-  se_tbl <- calc_facet_se(obs_df, facet_cols)
+  se_tbl <- build_measure_se_table(res, obs_df, facet_cols, fit_tbl)
   bias_tbl <- calc_bias_facet(obs_df, facet_cols)
   interaction_tbl <- calc_bias_interactions(obs_df, facet_cols, pairs = interaction_pairs,
                                              top_n = top_n_interactions)
@@ -4386,27 +5521,31 @@ mfrm_diagnostics <- function(res,
   person_tbl <- res$facets$person |>
     mutate(
       Facet = "Person",
-      Level = Person,
-      SE = if ("SD" %in% names(res$facets$person)) SD else NA_real_
+      Level = Person
     )
   facet_tbl <- res$facets$others |>
-    mutate(Level = as.character(Level), SE = NA_real_)
+    mutate(Level = as.character(Level))
 
   measures <- bind_rows(
     person_tbl |>
-      select(Facet, Level, Estimate, SE),
+      select(Facet, Level, Estimate),
     facet_tbl |>
-      select(Facet, Level, Estimate, SE)
+      select(Facet, Level, Estimate)
   ) |>
     left_join(se_tbl, by = c("Facet", "Level")) |>
-    mutate(SE = dplyr::coalesce(SE.x, SE.y)) |>
-    select(-SE.x, -SE.y) |>
     left_join(fit_tbl, by = c("Facet", "Level")) |>
     left_join(bias_tbl, by = c("Facet", "Level")) |>
     left_join(ptmea_tbl, by = c("Facet", "Level")) |>
     mutate(
       CI_Lower = ifelse(is.finite(SE), Estimate - 1.96 * SE, NA_real_),
-      CI_Upper = ifelse(is.finite(SE), Estimate + 1.96 * SE, NA_real_)
+      CI_Upper = ifelse(is.finite(SE), Estimate + 1.96 * SE, NA_real_),
+      CIEligible = dplyr::coalesce(.data$SupportsFormalInference, FALSE),
+      CILabel = dplyr::case_when(
+        .data$PrecisionTier == "model_based" ~ "Model-based normal interval",
+        .data$PrecisionTier == "hybrid" ~ "Approximate interval; review fallback SE",
+        .data$PrecisionTier == "exploratory" ~ "Approximate interval; screening only",
+        TRUE ~ "Approximate interval"
+      )
     )
 
   if (!"N" %in% names(measures)) {
@@ -4421,12 +5560,17 @@ mfrm_diagnostics <- function(res,
 
   reliability_tbl <- calc_reliability(measures)
   facets_chisq_tbl <- calc_facets_chisq(measures)
+  facet_precision_tbl <- build_facet_precision_summary(measures, facets_chisq_tbl)
   default_rater_facet <- infer_default_rater_facet(res$config$facet_names)
-  interrater_tbl <- calc_interrater_agreement(
-    obs_df = obs_df,
-    facet_cols = facet_cols,
-    rater_facet = default_rater_facet,
-    res = res
+  interrater_tbl <- augment_interrater_with_precision(
+    calc_interrater_agreement(
+      obs_df = obs_df,
+      facet_cols = facet_cols,
+      rater_facet = default_rater_facet,
+      res = res
+    ),
+    reliability_tbl = reliability_tbl,
+    rater_facet = default_rater_facet
   )
 
   unexpected_abs_z_min <- 2
@@ -4493,6 +5637,42 @@ mfrm_diagnostics <- function(res,
     )
   }
 
+  method <- as.character(res$summary$Method[1] %||% res$config$method %||% NA_character_)
+  se_detail <- attr(se_tbl, "mml_se_detail", exact = TRUE) %||%
+    "SE values default to observation-table information approximations."
+  precision_profile_tbl <- build_precision_profile(res, measures, reliability_tbl, facet_precision_tbl)
+  precision_audit_tbl <- audit_precision_outputs(
+    res,
+    measures,
+    reliability_tbl,
+    facet_precision_tbl,
+    precision_profile_tbl = precision_profile_tbl
+  )
+  approximation_notes <- tibble::tibble(
+    Component = c("SE", "RealSE", "CI", "Reliability"),
+    Method = c(
+      if (identical(method, "MML")) "Model-based SE (MML)" else "Model-based SE (exploratory JML)",
+      "Fit-adjusted SE",
+      "Normal interval",
+      "Variance decomposition"
+    ),
+    Detail = c(
+      paste0(
+        "The `SE` column is kept as a compatibility alias for `ModelSE`. ",
+        if (identical(method, "MML")) {
+          "Persons use posterior SD from EAP estimation; non-person facets use observed-information SEs from the marginal log-likelihood. "
+        } else {
+          "JML uses observation-table information as an exploratory approximation. "
+        },
+        se_detail,
+        " Row-level `PrecisionTier`, `Converged`, `SupportsFormalInference`, and `SEUse` indicate whether a given estimate is suitable for primary reporting."
+      ),
+      "RealSE is a fit-adjusted companion to ModelSE: ModelSE * sqrt(max(Infit, 1)), so it is never smaller than ModelSE.",
+      "CI_Lower and CI_Upper are symmetric bands computed as Estimate +/- 1.96 * SE. Use `CIEligible`, `Converged`, `CIBasis`, and `CIUse` to distinguish primary-reporting intervals from review or screening approximations.",
+      "Reliability tables report model and real bounds using observed variance, error variance, and true variance (Observed variance - mean SE^2). `Reliability`/`Separation` remain compatibility aliases for the model-based values, while `PrecisionTier`, `Converged`, `SupportsFormalInference`, and `ReliabilityUse` indicate how strongly each facet summary supports formal reporting."
+    )
+  )
+
   list(
     obs = obs_df,
     facet_names = res$config$facet_names,
@@ -4500,6 +5680,9 @@ mfrm_diagnostics <- function(res,
     measures = measures,
     fit = fit_tbl,
     reliability = reliability_tbl,
+    precision_profile = precision_profile_tbl,
+    precision_audit = precision_audit_tbl,
+    facet_precision = facet_precision_tbl,
     facets_chisq = facets_chisq_tbl,
     bias = bias_tbl,
     interactions = interaction_tbl,
@@ -4522,6 +5705,7 @@ mfrm_diagnostics <- function(res,
         abs_t_warn = displacement_abs_t_warn
       )
     ),
+    approximation_notes = approximation_notes,
     subsets = subset_tbls,
     residual_pca_mode = residual_pca,
     residual_pca_overall = pca_overall,

@@ -11,15 +11,48 @@ output objects support \code{summary()} and \code{plot()}.
 
 \enumerate{
 \item Fit a model with \code{\link[=fit_mfrm]{fit_mfrm()}}.
+For final reporting, prefer \code{method = "MML"} unless you explicitly want
+a fast exploratory JML pass.
 \item (Optional) Use \code{\link[=run_mfrm_facets]{run_mfrm_facets()}} or \code{\link[=mfrmRFacets]{mfrmRFacets()}} for a
-FACETS-style one-shot workflow wrapper.
+legacy-compatible one-shot workflow wrapper.
 \item Build diagnostics with \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}.
 \item (Optional) Estimate interaction bias with \code{\link[=estimate_bias]{estimate_bias()}}.
 \item Generate reporting bundles:
 \code{\link[=apa_table]{apa_table()}}, \code{\link[=build_fixed_reports]{build_fixed_reports()}}, \code{\link[=build_visual_summaries]{build_visual_summaries()}}.
-\item (Optional) Audit FACETS parity with \code{facets_parity_report()}.
+\item (Optional) Audit report completeness with \code{\link[=reference_case_audit]{reference_case_audit()}}.
+Use \code{facets_parity_report()} only when you explicitly need the
+compatibility layer.
+\item (Optional) Benchmark packaged reference cases with
+\code{\link[=reference_case_benchmark]{reference_case_benchmark()}} when you want an internal package-native
+benchmark/audit run.
+\item (Optional) For design planning or future scoring, move to the
+simulation/prediction layer:
+\code{\link[=build_mfrm_sim_spec]{build_mfrm_sim_spec()}} / \code{\link[=extract_mfrm_sim_spec]{extract_mfrm_sim_spec()}} ->
+\code{\link[=evaluate_mfrm_design]{evaluate_mfrm_design()}} / \code{\link[=predict_mfrm_population]{predict_mfrm_population()}} ->
+\code{\link[=predict_mfrm_units]{predict_mfrm_units()}} / \code{\link[=sample_mfrm_plausible_values]{sample_mfrm_plausible_values()}}.
+Fixed-calibration unit scoring currently requires an \code{MML} fit, and
+prediction export requires actual prediction objects in addition to
+\code{include = "predictions"}.
 \item Use \code{summary()} for compact text checks and \code{plot()} (or dedicated plot
 helpers) for base-R visual diagnostics.
+}
+}
+
+\section{Three practical routes}{
+
+\itemize{
+\item Quick first pass:
+\code{\link[=fit_mfrm]{fit_mfrm()}} -> \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} -> \code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}}.
+\item Linking and coverage review:
+\code{\link[=subset_connectivity_report]{subset_connectivity_report()}} -> \code{plot(..., type = "design_matrix")} ->
+\code{\link[=plot_wright_unified]{plot_wright_unified()}}.
+\item Manuscript prep:
+\code{\link[=reporting_checklist]{reporting_checklist()}} -> \code{\link[=build_apa_outputs]{build_apa_outputs()}} -> \code{\link[=apa_table]{apa_table()}}.
+\item Design planning and forecasting:
+\code{\link[=build_mfrm_sim_spec]{build_mfrm_sim_spec()}} or \code{\link[=extract_mfrm_sim_spec]{extract_mfrm_sim_spec()}} ->
+\code{\link[=evaluate_mfrm_design]{evaluate_mfrm_design()}} -> \code{\link[=predict_mfrm_population]{predict_mfrm_population()}} ->
+\code{\link[=predict_mfrm_units]{predict_mfrm_units()}} or \code{\link[=sample_mfrm_plausible_values]{sample_mfrm_plausible_values()}} from an \code{MML}
+fit -> \code{export_mfrm_bundle(population_prediction = ..., unit_prediction = ..., plausible_values = ..., include = "predictions", ...)}.
 }
 }
 
@@ -46,6 +79,12 @@ such as \code{\link[=plot_unexpected]{plot_unexpected()}}, \code{\link[=plot_dis
 \item \code{apa_table}: \code{summary(tbl)} and \code{plot(tbl, ...)}.
 \item \code{mfrm_apa_outputs}: \code{summary(apa)} for compact diagnostics of report text.
 \item \code{mfrm_threshold_profiles}: \code{summary(profiles)} for preset threshold grids.
+\item \code{mfrm_population_prediction}: \code{summary(pred)} for design-level forecast
+tables.
+\item \code{mfrm_unit_prediction}: \code{summary(pred)} for fixed-calibration unit-level
+posterior summaries.
+\item \code{mfrm_plausible_values}: \code{summary(pv)} for draw-level uncertainty
+summaries.
 \item \code{mfrm_bundle} families:
 \code{summary()} and class-aware \code{plot(bundle, ...)}.
 Key bundle classes now also use class-aware \code{summary(bundle)}:
@@ -55,7 +94,8 @@ Key bundle classes now also use class-aware \code{summary(bundle)}:
 \code{mfrm_measurable}, \code{mfrm_unexpected_after_bias}, \code{mfrm_output_bundle},
 \code{mfrm_residual_pca}, \code{mfrm_specifications}, \code{mfrm_data_quality},
 \code{mfrm_iteration_report}, \code{mfrm_subset_connectivity},
-\code{mfrm_facet_statistics}, \code{mfrm_parity_report}.
+\code{mfrm_facet_statistics}, \code{mfrm_parity_report}, \code{mfrm_reference_audit},
+\code{mfrm_reference_benchmark}.
 }
 }
 
@@ -70,7 +110,7 @@ Default dispatch now covers:
 \item \code{mfrm_measurable}, \code{mfrm_unexpected_after_bias}, \code{mfrm_output_bundle}
 \item \code{mfrm_residual_pca}, \code{mfrm_specifications}, \code{mfrm_data_quality}
 \item \code{mfrm_iteration_report}, \code{mfrm_subset_connectivity}, \code{mfrm_facet_statistics}
-\item \code{mfrm_parity_report}
+\item \code{mfrm_parity_report}, \code{mfrm_reference_audit}, \code{mfrm_reference_benchmark}
 }
 
 For unknown bundle classes, use dedicated plotting helpers or custom base-R
@@ -78,17 +118,9 @@ plots from component tables.
 }
 
 \examples{
-toy <- expand.grid(
-  Person = paste0("P", 1:4),
-  Rater = paste0("R", 1:2),
-  Criterion = c("Content", "Organization", "Language"),
-  stringsAsFactors = FALSE
-)
-toy$Score <- (
-  as.integer(factor(toy$Person)) +
-  2 * as.integer(factor(toy$Rater)) +
-  as.integer(factor(toy$Criterion))
-) \%\% 3
+toy <- load_mfrmr_data("example_core")
+keep_people <- unique(toy$Person)[1:15]
+toy <- toy[toy$Person \%in\% keep_people, , drop = FALSE]
 
 fit <- fit_mfrm(
   toy,
@@ -96,7 +128,7 @@ fit <- fit_mfrm(
   facets = c("Rater", "Criterion"),
   score = "Score",
   method = "JML",
-  maxit = 25
+  maxit = 15
 )
 class(summary(fit))
 
@@ -107,10 +139,29 @@ t4 <- unexpected_response_table(fit, diagnostics = diag, top_n = 10)
 class(summary(t4))
 p <- plot(t4, draw = FALSE)
 
+sc <- subset_connectivity_report(fit, diagnostics = diag)
+p_design <- plot(sc, type = "design_matrix", draw = FALSE, preset = "publication")
+class(p_design)
+
+chk <- reporting_checklist(fit, diagnostics = diag)
+head(chk$checklist[, c("Section", "Item", "DraftReady", "NextAction")])
+
+sim_spec <- build_mfrm_sim_spec(
+  n_person = 30,
+  n_rater = 4,
+  n_criterion = 4,
+  raters_per_person = 2,
+  assignment = "rotating"
+)
+pred_pop <- predict_mfrm_population(sim_spec = sim_spec, reps = 2, maxit = 10, seed = 1)
+summary(pred_pop)$forecast[, c("Facet", "MeanSeparation", "McseSeparation")]
+
 }
 \seealso{
 \code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=run_mfrm_facets]{run_mfrm_facets()}}, \code{\link[=mfrmRFacets]{mfrmRFacets()}},
-\code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=estimate_bias]{estimate_bias()}},
+\code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=estimate_bias]{estimate_bias()}}, \link{mfrmr_visual_diagnostics},
+\link{mfrmr_reports_and_tables}, \link{mfrmr_reporting_and_apa},
+\link{mfrmr_linking_and_dff}, \link{mfrmr_compatibility_layer},
 \code{\link[=summary.mfrm_fit]{summary.mfrm_fit()}}, \code{summary(diag)},
 \code{summary()}, \code{\link[=plot.mfrm_fit]{plot.mfrm_fit()}}, \code{plot()}
 }

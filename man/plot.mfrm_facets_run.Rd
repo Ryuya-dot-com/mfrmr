@@ -2,7 +2,7 @@
 % Please edit documentation in R/facets_mode_methods.R
 \name{plot.mfrm_facets_run}
 \alias{plot.mfrm_facets_run}
-\title{Plot outputs from a FACETS-mode workflow run}
+\title{Plot outputs from a legacy-compatible workflow run}
 \usage{
 \method{plot}{mfrm_facets_run}(x, y = NULL, type = c("fit", "qc"), ...)
 }
@@ -20,7 +20,7 @@ delegates to \code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}}.}
 A plotting object from the delegated plot route.
 }
 \description{
-Plot outputs from a FACETS-mode workflow run
+Plot outputs from a legacy-compatible workflow run
 }
 \details{
 This method is a router for fast visualization from a one-shot workflow
@@ -46,13 +46,14 @@ Returns the plotting object produced by the delegated route:
 }
 
 \examples{
-toy <- mfrmr:::sample_mfrm_data(seed = 123)
+toy <- load_mfrmr_data("example_core")
+toy_small <- toy[toy$Person \%in\% unique(toy$Person)[1:12], , drop = FALSE]
 out <- run_mfrm_facets(
-  data = toy,
+  data = toy_small,
   person = "Person",
-  facets = c("Rater", "Task", "Criterion"),
+  facets = c("Rater", "Criterion"),
   score = "Score",
-  maxit = 15
+  maxit = 10
 )
 p_fit <- plot(out, type = "fit", draw = FALSE)
 class(p_fit)
@@ -61,5 +62,6 @@ class(p_qc)
 
 }
 \seealso{
-\code{\link[=run_mfrm_facets]{run_mfrm_facets()}}, \code{\link[=plot.mfrm_fit]{plot.mfrm_fit()}}, \code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}}
+\code{\link[=run_mfrm_facets]{run_mfrm_facets()}}, \code{\link[=plot.mfrm_fit]{plot.mfrm_fit()}}, \code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}},
+\link{mfrmr_visual_diagnostics}, \link{mfrmr_workflow_methods}
 }

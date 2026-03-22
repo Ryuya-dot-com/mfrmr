@@ -2,7 +2,7 @@
 % Please edit documentation in R/api-tables.R
 \name{interrater_agreement_table}
 \alias{interrater_agreement_table}
-\title{Build a FACETS Table 10-style inter-rater agreement report}
+\title{Build an inter-rater agreement report}
 \usage{
 interrater_agreement_table(
   fit,
@@ -11,6 +11,7 @@ interrater_agreement_table(
   context_facets = NULL,
   exact_warn = 0.5,
   corr_warn = 0.3,
+  include_precision = TRUE,
   top_n = NULL
 )
 }
@@ -28,6 +29,9 @@ agreement. If \code{NULL}, all remaining facets (including \code{Person}) are us
 
 \item{corr_warn}{Warning threshold for pairwise correlation.}
 
+\item{include_precision}{If \code{TRUE}, append rater severity spread indices from
+the facet precision summary when available.}
+
 \item{top_n}{Optional maximum number of pair rows to keep.}
 }
 \value{
@@ -39,11 +43,12 @@ A named list with:
 }
 }
 \description{
-Build a FACETS Table 10-style inter-rater agreement report
+Build an inter-rater agreement report
 }
 \details{
 This helper computes pairwise rater agreement on matched contexts
-and returns both a pair-level table and a one-row summary.
+and returns both a pair-level table and a one-row summary. The output is
+package-native and does not require knowledge of legacy report numbering.
 }
 \section{Interpreting output}{
 
@@ -79,6 +84,8 @@ The \code{pairs} data.frame contains:
 \item{MAD}{Mean absolute score difference.}
 \item{Corr}{Pearson correlation between paired scores.}
 \item{Flag}{Logical; \code{TRUE} when Exact < \code{exact_warn} or Corr < \code{corr_warn}.}
+\item{OpportunityCount, ExactCount, ExpectedExactCount, AdjacentCount}{Raw
+counts behind the agreement proportions.}
 }
 
 The \code{summary} data.frame contains:
@@ -86,23 +93,17 @@ The \code{summary} data.frame contains:
 \item{RaterFacet}{Name of the rater facet analyzed.}
 \item{TotalPairs}{Number of rater pairs evaluated.}
 \item{ExactAgreement}{Mean exact agreement across all pairs.}
+\item{AgreementMinusExpected}{Observed exact agreement minus expected exact
+agreement.}
 \item{MeanCorr}{Mean pairwise correlation.}
 \item{FlaggedPairs, FlaggedShare}{Count and proportion of flagged pairs.}
+\item{RaterSeparation, RaterReliability}{Severity-spread indices for the
+rater facet, reported separately from agreement.}
 }
 }
 
 \examples{
-toy <- expand.grid(
-  Person = paste0("P", 1:4),
-  Rater = paste0("R", 1:2),
-  Criterion = c("Content", "Organization", "Language"),
-  stringsAsFactors = FALSE
-)
-toy$Score <- (
-  as.integer(factor(toy$Person)) +
-  2 * as.integer(factor(toy$Rater)) +
-  as.integer(factor(toy$Criterion))
-) \%\% 3
+toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 ir <- interrater_agreement_table(fit, rater_facet = "Rater")
 summary(ir)
@@ -110,5 +111,6 @@ p_ir <- plot(ir, draw = FALSE)
 class(p_ir)
 }
 \seealso{
-\code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=facets_chisq_table]{facets_chisq_table()}}, \code{\link[=plot_interrater_agreement]{plot_interrater_agreement()}}
+\code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=facets_chisq_table]{facets_chisq_table()}}, \code{\link[=plot_interrater_agreement]{plot_interrater_agreement()}},
+\link{mfrmr_visual_diagnostics}
 }

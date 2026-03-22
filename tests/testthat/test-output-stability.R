@@ -42,6 +42,31 @@ test_that("MML fit includes person SD column", {
   expect_true(all(fit$facets$person$SD > 0))
 })
 
+test_that("MML diagnostics expose model and real precision columns", {
+  d <- mfrmr:::sample_mfrm_data(seed = 42)
+  fit <- suppressWarnings(fit_mfrm(d, "Person",
+    c("Rater", "Task", "Criterion"), "Score", method = "MML", maxit = 30, quad_points = 7))
+  dx <- diagnose_mfrm(fit, residual_pca = "none")
+  se_mask <- is.finite(dx$measures$SE) & is.finite(dx$measures$ModelSE)
+  real_mask <- is.finite(dx$measures$RealSE) & is.finite(dx$measures$ModelSE)
+  rel_mask <- is.finite(dx$reliability$RealReliability) & is.finite(dx$reliability$Reliability)
+
+  expect_true(all(c(
+    "SE", "ModelSE", "RealSE", "SE_Method", "PrecisionTier",
+    "Converged", "SupportsFormalInference", "SEUse", "CIBasis", "CIUse",
+    "CIEligible", "CILabel"
+  ) %in% names(dx$measures)))
+  expect_true(all(dx$measures$SE[se_mask] == dx$measures$ModelSE[se_mask]))
+  expect_true(all(dx$measures$RealSE[real_mask] >= dx$measures$ModelSE[real_mask]))
+  expect_true(all(c(
+    "ModelReliability", "RealReliability", "Converged", "PrecisionTier",
+    "SupportsFormalInference", "ReliabilityUse"
+  ) %in% names(dx$reliability)))
+  expect_true(all(dx$reliability$RealReliability[rel_mask] <= dx$reliability$Reliability[rel_mask]))
+  expect_true(all(dx$measures$CIEligible == dx$measures$SupportsFormalInference))
+  expect_true(all(dx$measures$Converged == fit$summary$Converged[1]))
+})
+
 # === 5.3 diagnose_mfrm output structure ===================================
 
 test_that("diagnose_mfrm returns all required components", {
@@ -51,14 +76,27 @@ test_that("diagnose_mfrm returns all required components", {
   dx <- diagnose_mfrm(fit, residual_pca = "none")
   expect_s3_class(dx, "mfrm_diagnostics")
   # Required components
-  required <- c("obs", "measures", "overall_fit", "reliability")
+  required <- c("obs", "measures", "overall_fit", "reliability", "precision_profile", "precision_audit", "facet_precision")
   expect_true(all(required %in% names(dx)))
   # measures columns
-  expect_true(all(c("Facet", "Level", "Estimate", "SE", "Infit", "Outfit") %in%
+  expect_true(all(c(
+    "Facet", "Level", "Estimate", "SE", "ModelSE", "RealSE",
+    "Converged", "PrecisionTier", "SupportsFormalInference", "SEUse",
+    "CIBasis", "CIUse", "CIEligible", "CILabel", "Infit", "Outfit"
+  ) %in%
     names(dx$measures)))
   # reliability columns
-  expect_true(all(c("Facet", "Separation", "Reliability") %in%
+  expect_true(all(c(
+    "Facet", "Separation", "Reliability", "Converged", "PrecisionTier",
+    "SupportsFormalInference", "ReliabilityUse"
+  ) %in%
     names(dx$reliability)))
+  expect_true(all(c("Method", "Converged", "PrecisionTier", "SupportsFormalInference", "HasFallbackSE", "RecommendedUse") %in%
+    names(dx$precision_profile)))
+  expect_true(all(c("Check", "Status", "Detail") %in%
+    names(dx$precision_audit)))
+  expect_true(all(c("Facet", "DistributionBasis", "SEMode", "SEColumn", "Separation", "Reliability") %in%
+    names(dx$facet_precision)))
   # obs should be data.frame
   expect_true(is.data.frame(dx$obs))
 })
@@ -81,9 +119,27 @@ test_that("unexpected_response_table returns table + summary", {
 
 test_that("fair_average_table returns stacked + by_facet", {
   res <- fair_average_table(.stab_fit, diagnostics = .stab_dx)
+  alias_mask <- is.finite(res$stacked$AdjustedAverage) & is.finite(res$stacked$`Fair(M) Average`)
+  se_mask <- is.finite(res$stacked$ModelBasedSE) & is.finite(res$stacked$`Model S.E.`)
+  fit_adj_mask <- is.finite(res$stacked$FitAdjustedSE) & is.finite(res$stacked$`Real S.E.`)
   expect_true(all(c("stacked", "by_facet") %in% names(res)))
   expect_true(is.data.frame(res$stacked))
   expect_true(is.list(res$by_facet))
+  expect_true(all(c(
+    "ObservedAverage", "AdjustedAverage", "StandardizedAdjustedAverage",
+    "ModelBasedSE", "FitAdjustedSE"
+  ) %in% names(res$stacked)))
+  expect_true(all(res$stacked$AdjustedAverage[alias_mask] == res$stacked$`Fair(M) Average`[alias_mask]))
+  expect_true(all(res$stacked$ModelBasedSE[se_mask] == res$stacked$`Model S.E.`[se_mask]))
+  expect_true(all(res$stacked$FitAdjustedSE[fit_adj_mask] == res$stacked$`Real S.E.`[fit_adj_mask]))
+})
+
+test_that("fair_average_table native label style hides legacy aliases", {
+  res <- fair_average_table(.stab_fit, diagnostics = .stab_dx, reference = "mean", label_style = "native")
+  expect_true(all(c("ObservedAverage", "AdjustedAverage", "ModelBasedSE", "FitAdjustedSE") %in% names(res$stacked)))
+  expect_false(any(c("Obsvd Average", "Fair(M) Average", "Fair(Z) Average", "Model S.E.", "Real S.E.") %in%
+    names(res$stacked)))
+  expect_false("StandardizedAdjustedAverage" %in% names(res$stacked))
 })
 
 test_that("displacement_table returns table + summary", {
@@ -114,6 +170,10 @@ test_that("interrater_agreement_table returns pairs + summary", {
   expect_true(all(c("pairs", "summary") %in% names(res)))
   expect_true(is.data.frame(res$pairs))
   expect_true(is.data.frame(res$summary))
+  expect_true(all(c("OpportunityCount", "ExactCount", "ExpectedExactCount", "AdjacentCount") %in%
+    names(res$pairs)))
+  expect_true(all(c("AgreementMinusExpected", "RaterSeparation", "RaterReliability") %in%
+    names(res$summary)))
 })
 
 test_that("facets_chisq_table returns table + summary", {
@@ -184,6 +244,8 @@ test_that("all Estimate and SE columns are numeric", {
   se_vals <- dx$measures$SE
   se_finite <- se_vals[is.finite(se_vals)]
   expect_true(all(se_finite > 0))
+  expect_true(all(dx$measures$ModelSE[is.finite(dx$measures$ModelSE)] > 0))
+  expect_true(all(dx$measures$RealSE[is.finite(dx$measures$RealSE)] > 0))
 })
 
 # === 5.9 Fit statistics are in expected range ==============================

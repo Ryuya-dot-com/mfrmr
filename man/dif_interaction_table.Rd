@@ -51,9 +51,9 @@ Object of class \code{mfrm_dif_interaction} with:
 }
 }
 \description{
-Produces a FACETS Table 30/31-style interaction table showing
-Obs-Exp differences, standardized residuals, and significance
-for each facet-level x group-value cell.
+Produces a cell-level interaction table showing Obs-Exp differences,
+standardized residuals, and screening statistics for each
+facet-level x group-value cell.
 }
 \details{
 This function uses the fitted model's observation-level residuals
@@ -72,6 +72,20 @@ it computes:
 \item p_value: two-tailed p-value from the t-distribution
 }
 }
+\section{When to use this instead of analyze_dff()}{
+
+Use \code{dif_interaction_table()} when you want cell-level screening for a
+single facet-by-group table. Use \code{\link[=analyze_dff]{analyze_dff()}} when you want group-pair
+contrasts summarized into differential-functioning effect sizes and
+method-appropriate classifications.
+}
+
+\section{Further guidance}{
+
+For plot selection and follow-up diagnostics, see
+\link{mfrmr_visual_diagnostics}.
+}
+
 \section{Interpreting output}{
 
 \itemize{
@@ -95,24 +109,17 @@ are flagged in the \code{flag_t} and \code{flag_bias} columns.
 }
 
 \examples{
-set.seed(42)
-toy <- expand.grid(
-  Person = paste0("P", 1:8),
-  Rater = paste0("R", 1:3),
-  Criterion = c("Content", "Organization"),
-  stringsAsFactors = FALSE
-)
-toy$Score <- sample(0:2, nrow(toy), replace = TRUE)
-toy$Group <- ifelse(as.integer(factor(toy$Person)) <= 4, "A", "B")
+toy <- load_mfrmr_data("example_bias")
 
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                  method = "JML", model = "RSM", maxit = 25)
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 int <- dif_interaction_table(fit, diag, facet = "Rater",
                              group = "Group", data = toy, min_obs = 2)
-int$table
+int$summary
+head(int$table[, c("Level", "GroupValue", "ObsExpAvg", "flag_bias")])
 }
 \seealso{
-\code{\link[=analyze_dif]{analyze_dif()}}, \code{\link[=plot_dif_heatmap]{plot_dif_heatmap()}}, \code{\link[=dif_report]{dif_report()}},
+\code{\link[=analyze_dff]{analyze_dff()}}, \code{\link[=analyze_dif]{analyze_dif()}}, \code{\link[=plot_dif_heatmap]{plot_dif_heatmap()}}, \code{\link[=dif_report]{dif_report()}},
 \code{\link[=estimate_bias]{estimate_bias()}}
 }

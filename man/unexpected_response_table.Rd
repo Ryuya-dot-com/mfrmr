@@ -2,7 +2,7 @@
 % Please edit documentation in R/api-tables.R
 \name{unexpected_response_table}
 \alias{unexpected_response_table}
-\title{Build a FACETS Table 4-style unexpected-response report}
+\title{Build an unexpected-response screening report}
 \usage{
 unexpected_response_table(
   fit,
@@ -35,7 +35,7 @@ A named list with:
 }
 }
 \description{
-Build a FACETS Table 4-style unexpected-response report
+Build an unexpected-response screening report
 }
 \details{
 A response is flagged as unexpected when:
@@ -69,6 +69,13 @@ conservative your screening should be.
 }
 }
 
+\section{Further guidance}{
+
+For a plot-selection guide and a longer walkthrough, see
+\link{mfrmr_visual_diagnostics} and
+\code{vignette("mfrmr-visual-diagnostics", package = "mfrmr")}.
+}
+
 \section{Output columns}{
 
 The \code{table} data.frame contains:
@@ -97,17 +104,7 @@ The \code{summary} data.frame contains:
 }
 
 \examples{
-toy <- expand.grid(
-  Person = paste0("P", 1:4),
-  Rater = paste0("R", 1:2),
-  Criterion = c("Content", "Organization", "Language"),
-  stringsAsFactors = FALSE
-)
-toy$Score <- (
-  as.integer(factor(toy$Person)) +
-  2 * as.integer(factor(toy$Rater)) +
-  as.integer(factor(toy$Criterion))
-) \%\% 3
+toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 t4 <- unexpected_response_table(fit, abs_z_min = 1.5, prob_max = 0.4, top_n = 10)
 summary(t4)
@@ -115,5 +112,6 @@ p_t4 <- plot(t4, draw = FALSE)
 class(p_t4)
 }
 \seealso{
-\code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=displacement_table]{displacement_table()}}, \code{\link[=fair_average_table]{fair_average_table()}}
+\code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=displacement_table]{displacement_table()}}, \code{\link[=fair_average_table]{fair_average_table()}},
+\link{mfrmr_visual_diagnostics}
 }

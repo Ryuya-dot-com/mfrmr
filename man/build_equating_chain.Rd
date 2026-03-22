@@ -5,7 +5,7 @@
 \alias{print.mfrm_equating_chain}
 \alias{summary.mfrm_equating_chain}
 \alias{print.summary.mfrm_equating_chain}
-\title{Build an equating chain across ordered calibrations}
+\title{Build a screened linking chain across ordered calibrations}
 \usage{
 build_equating_chain(
   fits,
@@ -42,6 +42,7 @@ Object of class \code{mfrm_equating_chain} with components:
 \item{links}{Tibble of link-level statistics (offset, SD, etc.).}
 \item{cumulative}{Tibble of cumulative offsets per wave.}
 \item{element_detail}{Tibble of element-level linking details.}
+\item{common_by_facet}{Tibble of retained common-element counts by facet.}
 \item{config}{List of analysis configuration.}
 }
 }
@@ -50,41 +51,67 @@ Links a series of calibration waves by computing mean offsets between
 adjacent pairs of fits. Common linking elements (e.g., raters or items
 that appear in consecutive administrations) are used to estimate the
 scale shift. Cumulative offsets place all waves on a common metric
-anchored to the first wave.
+anchored to the first wave. The procedure is intended as a practical
+screened linking aid, not as a full general-purpose equating framework.
 }
 \details{
-The equating chain uses the \strong{mean offset} method.  For each pair of
+The screened linking chain uses a screened link-offset method.  For each pair of
 adjacent waves \eqn{(A, B)}, the function:
 \enumerate{
 \item Identifies common linking elements (facet levels present in both fits).
 \item Computes per-element differences:
 \deqn{d_e = \hat{\delta}_{e,B} - \hat{\delta}_{e,A}}
-\item Estimates the link offset as the mean of these differences:
-\deqn{\text{Offset}_{A \to B} = \bar{d}}
-\item Records \code{Offset_SD} (standard deviation of \eqn{d_e}) and
+\item Computes a preliminary link offset using the inverse-variance weighted
+mean of these differences when standard errors are available (otherwise
+an unweighted mean).
+\item Screens out elements whose residual from that preliminary offset exceeds
+\code{drift_threshold}, then recomputes the final offset on the retained set.
+\item Records \code{Offset_SD} (standard deviation of retained residuals) and
 \code{Max_Residual} (maximum absolute deviation from the mean) as
 indicators of link quality.
+\item Flags links with fewer than 5 retained common elements in any linking
+facet as having thin support.
 }
 
 Cumulative offsets are computed by chaining link offsets from Wave 1
 forward, placing all waves onto the metric of the first wave.
 
 Elements whose per-link residual exceeds \code{drift_threshold} are flagged
-in \verb{$element_detail$Flag}.  A high \code{Offset_SD} or many flagged elements
-signals an unstable link that may compromise the equating.
+in \verb{$element_detail$Flag}.  A high \code{Offset_SD}, many flagged elements, or a
+thin retained anchor set signals an unstable link that may compromise the
+resulting scale placement.
 }
+\section{Which function should I use?}{
+
+\itemize{
+\item Use \code{\link[=anchor_to_baseline]{anchor_to_baseline()}} for a single new wave anchored to a known
+baseline.
+\item Use \code{\link[=detect_anchor_drift]{detect_anchor_drift()}} when you want direct comparison against one
+reference wave.
+\item Use \code{build_equating_chain()} when no single wave should dominate and you
+want ordered, adjacent links across the series.
+}
+}
+
 \section{Interpreting output}{
 
 \itemize{
-\item \verb{$links}: one row per adjacent pair with \code{Link}, \code{N_Common}, \code{Offset},
-\code{Offset_SD}, \code{Max_Residual}, and \code{N_Flagged}.  Small \code{Offset_SD}
+\item \verb{$links}: one row per adjacent pair with \code{From}, \code{To}, \code{N_Common},
+\code{N_Retained}, \code{Offset_Prelim}, \code{Offset}, \code{Offset_SD}, and
+\code{Max_Residual}. Small \code{Offset_SD}
 relative to the offset indicates a consistent shift across elements.
+\code{LinkSupportAdequate = FALSE} means at least one linking facet retained
+fewer than 5 common elements after screening.
 \item \verb{$cumulative}: one row per wave with its cumulative offset from Wave 1.
 Wave 1 always has offset 0.
 \item \verb{$element_detail}: per-element linking statistics (estimate in each
 wave, difference, residual from mean offset, and flag status).
 Flagged elements may indicate DIF or rater re-training effects.
+\item \verb{$common_by_facet}: retained common-element counts by linking facet for
+each adjacent link.
 \item \verb{$config}: records wave names and analysis parameters.
+\item Read \code{links} before \code{cumulative}: weak adjacent links can make later
+cumulative offsets less trustworthy.
 }
 }
 
@@ -103,15 +130,17 @@ Flagged elements may indicate DIF or rater re-training effects.
 }
 
 \examples{
-d1 <- load_mfrmr_data("study1")
-d2 <- load_mfrmr_data("study2")
+toy <- load_mfrmr_data("example_core")
+people <- unique(toy$Person)
+d1 <- toy[toy$Person \%in\% people[1:12], , drop = FALSE]
+d2 <- toy[toy$Person \%in\% people[13:24], , drop = FALSE]
 fit1 <- fit_mfrm(d1, "Person", c("Rater", "Criterion"), "Score",
-                 method = "JML", maxit = 25)
+                 method = "JML", maxit = 10)
 fit2 <- fit_mfrm(d2, "Person", c("Rater", "Criterion"), "Score",
-                 method = "JML", maxit = 25)
+                 method = "JML", maxit = 10)
 chain <- build_equating_chain(list(Form1 = fit1, Form2 = fit2))
 summary(chain)
-chain$links
+chain$cumulative
 }
 \seealso{
 \code{\link[=detect_anchor_drift]{detect_anchor_drift()}}, \code{\link[=anchor_to_baseline]{anchor_to_baseline()}},

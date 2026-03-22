@@ -313,10 +313,10 @@ test_that("invalid anchor (non-existent level) with warn policy triggers warning
   expect_warning(
     fit_mfrm(d, "Person",
       c("Rater", "Task", "Criterion"), "Score",
-      method = "JML", maxit = 30,
+      method = "JML", maxit = 60,
       anchors = anchor_tbl,
       anchor_policy = "warn"),
-    regex = "."
+    regex = "Anchor audit"
   )
 })
 
@@ -423,6 +423,26 @@ test_that("non-numeric score column (character) is coerced correctly", {
 
   expect_s3_class(fit, "mfrm_fit")
   expect_true(is.integer(fit$prep$data$Score) || is.numeric(fit$prep$data$Score))
+})
+
+test_that("non-numeric score or weight entries are surfaced before rows are dropped", {
+  d <- mfrmr:::sample_mfrm_data(seed = 42)
+  d$Score[1] <- "bad-score"
+  d$Weight <- 1
+  d$Weight[2] <- "bad-weight"
+
+  warning_messages <- character(0)
+  prep <- withCallingHandlers(
+    mfrmr:::prepare_mfrm_data(d, "Person", c("Rater", "Task", "Criterion"), "Score", weight_col = "Weight"),
+    warning = function(w) {
+      warning_messages <<- c(warning_messages, conditionMessage(w))
+      invokeRestart("muffleWarning")
+    }
+  )
+
+  expect_true(any(grepl("`Score` contained", warning_messages, fixed = TRUE)))
+  expect_true(any(grepl("`Weight` contained", warning_messages, fixed = TRUE)))
+  expect_equal(nrow(prep$data), nrow(d) - 2L)
 })
 
 test_that("prepare_mfrm_data returns expected structure", {

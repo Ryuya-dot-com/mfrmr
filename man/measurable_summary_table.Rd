@@ -2,7 +2,7 @@
 % Please edit documentation in R/api-tables.R
 \name{measurable_summary_table}
 \alias{measurable_summary_table}
-\title{Build a FACETS Table 5-style measurable data summary}
+\title{Build a measurable-data summary}
 \usage{
 measurable_summary_table(fit, diagnostics = NULL)
 }
@@ -21,7 +21,7 @@ A named list with:
 }
 }
 \description{
-Build a FACETS Table 5-style measurable data summary
+Build a measurable-data summary
 }
 \details{
 This helper consolidates measurable-data diagnostics into a dedicated
@@ -50,6 +50,13 @@ subset (connected-component) information.
 \item Check \code{summary(t5)} for subset/connectivity warnings.
 \item Use \code{plot(t5, ...)} to inspect facet/category/subset views.
 }
+}
+
+\section{Further guidance}{
+
+For a plot-selection guide and a longer walkthrough, see
+\link{mfrmr_visual_diagnostics} and
+\code{vignette("mfrmr-visual-diagnostics", package = "mfrmr")}.
 }
 
 \section{Output columns}{
@@ -82,17 +89,7 @@ and low-count flag.}
 }
 
 \examples{
-toy <- expand.grid(
-  Person = paste0("P", 1:4),
-  Rater = paste0("R", 1:2),
-  Criterion = c("Content", "Organization", "Language"),
-  stringsAsFactors = FALSE
-)
-toy$Score <- (
-  as.integer(factor(toy$Person)) +
-  2 * as.integer(factor(toy$Rater)) +
-  as.integer(factor(toy$Criterion))
-) \%\% 3
+toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 t5 <- measurable_summary_table(fit)
 summary(t5)
@@ -100,5 +97,6 @@ p_t5 <- plot(t5, draw = FALSE)
 class(p_t5)
 }
 \seealso{
-\code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=rating_scale_table]{rating_scale_table()}}, \code{\link[=describe_mfrm_data]{describe_mfrm_data()}}
+\code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=rating_scale_table]{rating_scale_table()}}, \code{\link[=describe_mfrm_data]{describe_mfrm_data()}},
+\link{mfrmr_visual_diagnostics}
 }

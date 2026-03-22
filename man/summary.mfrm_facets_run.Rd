@@ -2,7 +2,7 @@
 % Please edit documentation in R/facets_mode_methods.R
 \name{summary.mfrm_facets_run}
 \alias{summary.mfrm_facets_run}
-\title{Summarize a FACETS-mode workflow run}
+\title{Summarize a legacy-compatible workflow run}
 \usage{
 \method{summary}{mfrm_facets_run}(object, digits = 3, top_n = 10, ...)
 }
@@ -19,7 +19,7 @@
 An object of class \code{summary.mfrm_facets_run}.
 }
 \description{
-Summarize a FACETS-mode workflow run
+Summarize a legacy-compatible workflow run
 }
 \details{
 This method returns a compact cross-object summary that combines:
@@ -49,18 +49,20 @@ This method returns a compact cross-object summary that combines:
 }
 
 \examples{
-toy <- mfrmr:::sample_mfrm_data(seed = 123)
+toy <- load_mfrmr_data("example_core")
+toy_small <- toy[toy$Person \%in\% unique(toy$Person)[1:12], , drop = FALSE]
 out <- run_mfrm_facets(
-  data = toy,
+  data = toy_small,
   person = "Person",
-  facets = c("Rater", "Task", "Criterion"),
+  facets = c("Rater", "Criterion"),
   score = "Score",
-  maxit = 15
+  maxit = 10
 )
 s <- summary(out)
 s$overview[, c("Model", "Method", "Converged")]
 s$mapping
 }
 \seealso{
-\code{\link[=run_mfrm_facets]{run_mfrm_facets()}}, \code{\link[=summary.mfrm_fit]{summary.mfrm_fit()}}, \code{summary()}
+\code{\link[=run_mfrm_facets]{run_mfrm_facets()}}, \code{\link[=summary.mfrm_fit]{summary.mfrm_fit()}}, \link{mfrmr_workflow_methods},
+\code{summary()}
 }

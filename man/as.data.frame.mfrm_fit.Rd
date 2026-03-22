@@ -24,6 +24,32 @@ Returns all facet-level estimates (person and others) in a single
 tidy data.frame. Useful for quick interactive export:
 \code{write.csv(as.data.frame(fit), "results.csv")}.
 }
+\details{
+This method is intentionally lightweight: it returns just three columns
+(\code{Facet}, \code{Level}, \code{Estimate}) so that the result is easy to
+inspect, join, or write to disk.
+}
+\section{Interpreting output}{
+
+Person estimates are returned with \code{Facet = "Person"}.
+All non-person facets are stacked underneath in the same schema.
+}
+
+\section{Typical workflow}{
+
+\enumerate{
+\item Fit a model with \code{\link{fit_mfrm}()}.
+\item Convert with \code{as.data.frame(fit)} for a compact long-format export.
+\item Join additional diagnostics later if you need SE or fit statistics.
+}
+}
+
+\examples{
+toy <- load_mfrmr_data("example_core")
+fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
+                method = "JML", model = "RSM", maxit = 25)
+head(as.data.frame(fit))
+}
 \seealso{
 \code{\link{fit_mfrm}}, \code{\link{export_mfrm}}
 }

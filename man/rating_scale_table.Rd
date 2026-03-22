@@ -2,7 +2,7 @@
 % Please edit documentation in R/api-tables.R
 \name{rating_scale_table}
 \alias{rating_scale_table}
-\title{Build a FACETS Table 8.1-style rating-scale report}
+\title{Build a rating-scale diagnostics report}
 \usage{
 rating_scale_table(
   fit,
@@ -29,32 +29,40 @@ A named list with:
 }
 }
 \description{
-Build a FACETS Table 8.1-style rating-scale report
+Build a rating-scale diagnostics report
 }
 \details{
 This helper provides category usage/fit statistics and threshold summaries
-in a format aligned with FACETS Table 8.1 style checks.
+for reviewing score-category functioning.
+The category usage portion is a global observed-score screen. In PCM fits
+with a \code{step_facet}, threshold diagnostics should be interpreted within each
+\code{StepFacet} rather than as one pooled whole-scale verdict.
 
 Typical checks:
 \itemize{
 \item sparse category usage (\code{Count}, \code{ExpectedCount})
 \item category fit (\code{Infit}, \code{Outfit}, \code{ZStd})
-\item threshold ordering (\code{threshold_table$Estimate}, \code{GapFromPrev})
+\item threshold ordering within each \code{StepFacet}
+(\code{threshold_table$Estimate}, \code{GapFromPrev})
 }
 }
 \section{Interpreting output}{
 
 Start with \code{summary}:
 \itemize{
-\item \code{UsedCategories} close to total \code{Categories} suggests stable category usage.
+\item \code{UsedCategories} close to total \code{Categories} suggests that most score
+categories are represented in the observed data.
 \item very small \code{MinCategoryCount} indicates potential instability.
-\item \code{ThresholdMonotonic = FALSE} indicates disordered thresholds.
+\item \code{ThresholdMonotonic = FALSE} indicates disordered thresholds within at
+least one threshold set. In PCM fits, inspect \code{threshold_table} by
+\code{StepFacet} before drawing scale-wide conclusions.
 }
 
 Then inspect:
 \itemize{
-\item \code{category_table} for category-level misfit/sparsity.
-\item \code{threshold_table} for adjacent-step gaps and ordering.
+\item \code{category_table} for global category-level misfit/sparsity.
+\item \code{threshold_table} for adjacent-step gaps and ordering within each
+\code{StepFacet}.
 }
 }
 
@@ -66,6 +74,13 @@ Then inspect:
 \item Run \code{rating_scale_table()} and review \code{summary()}.
 \item Use \code{plot()} to visualize category profile quickly.
 }
+}
+
+\section{Further guidance}{
+
+For a plot-selection guide and a longer walkthrough, see
+\link{mfrmr_visual_diagnostics} and
+\code{vignette("mfrmr-visual-diagnostics", package = "mfrmr")}.
 }
 
 \section{Output columns}{
@@ -88,24 +103,20 @@ The \code{threshold_table} data.frame contains:
 \describe{
 \item{Step}{Step label (e.g., "1-2", "2-3").}
 \item{Estimate}{Estimated threshold/step difficulty (logits).}
-\item{GapFromPrev}{Difference from the previous threshold.  Gaps below
+\item{StepFacet}{Threshold family identifier when the fit uses facet-specific
+threshold sets.}
+\item{GapFromPrev}{Difference from the previous threshold within the same
+\code{StepFacet} when thresholds are facet-specific. Gaps below
 1.4 logits may indicate category underuse; gaps above 5.0 may
 indicate wide unused regions (Linacre, 2002).}
+\item{ThresholdMonotonic}{Logical flag repeated within each threshold set.
+For PCM fits, read this within \code{StepFacet}, not as a pooled item-bank
+verdict.}
 }
 }
 
 \examples{
-toy <- expand.grid(
-  Person = paste0("P", 1:4),
-  Rater = paste0("R", 1:2),
-  Criterion = c("Content", "Organization", "Language"),
-  stringsAsFactors = FALSE
-)
-toy$Score <- (
-  as.integer(factor(toy$Person)) +
-  2 * as.integer(factor(toy$Rater)) +
-  as.integer(factor(toy$Criterion))
-) \%\% 3
+toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 t8 <- rating_scale_table(fit)
 summary(t8)
@@ -114,5 +125,6 @@ p_t8 <- plot(t8, draw = FALSE)
 class(p_t8)
 }
 \seealso{
-\code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=measurable_summary_table]{measurable_summary_table()}}, \code{\link[=plot.mfrm_fit]{plot.mfrm_fit()}}
+\code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=measurable_summary_table]{measurable_summary_table()}}, \code{\link[=plot.mfrm_fit]{plot.mfrm_fit()}},
+\link{mfrmr_visual_diagnostics}
 }

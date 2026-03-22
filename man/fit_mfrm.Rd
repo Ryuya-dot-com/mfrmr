@@ -101,6 +101,33 @@ This is the package entry point. It wraps \code{mfrm_estimate()} and defaults to
 \details{
 Data must be in \strong{long format} (one row per observed rating event).
 }
+\section{Model}{
+
+\code{fit_mfrm()} estimates the many-facet Rasch model (Linacre, 1989).
+For a two-facet design (rater \eqn{j}, criterion \eqn{i}) the model is:
+
+\deqn{\ln\frac{P(X_{nij} = k)}{P(X_{nij} = k-1)} =
+  \theta_n - \delta_j - \beta_i - \tau_k}
+
+where \eqn{\theta_n} is person ability, \eqn{\delta_j} rater severity,
+\eqn{\beta_i} criterion difficulty, and \eqn{\tau_k} the \eqn{k}-th
+Rasch-Andrich threshold.  Any number of facets may be specified via the
+\code{facets} argument; each enters as an additive term in the linear
+predictor \eqn{\eta}.
+
+With \code{model = "RSM"}, thresholds \eqn{\tau_k} are shared across all
+levels of all facets.
+With \code{model = "PCM"}, each level of \code{step_facet} receives its own
+threshold vector \eqn{\tau_{i,k}} on the package's shared observed
+score scale.
+
+With \code{method = "MML"}, person parameters are integrated out using
+Gauss-Hermite quadrature and EAP estimates are computed post-hoc.
+With \code{method = "JML"}, all parameters are estimated jointly as fixed
+effects.  See the "Estimation methods" section of \link{mfrmr-package} for
+details.
+}
+
 \section{Input requirements}{
 
 Minimum required columns are:
@@ -145,13 +172,38 @@ This affects interpretation of reported facet measures.
 }
 }
 
+\section{Performance tips}{
+
+For exploratory work, \code{method = "JML"} is usually faster than \code{method = "MML"},
+but it may require a larger \code{maxit} to converge on larger datasets.
+
+For MML runs, \code{quad_points} is the main accuracy/speed trade-off:
+\itemize{
+\item \code{quad_points = 7} is a good lightweight default for quick iteration.
+\item \code{quad_points = 15} gives a more stable approximation for final reporting.
+}
+
+Downstream diagnostics can also be staged:
+\itemize{
+\item use \code{diagnose_mfrm(fit, residual_pca = "none")} for a quick first pass
+\item add residual PCA only when you need exploratory residual-structure evidence
+}
+
+Downstream diagnostics report \code{ModelSE} / \code{RealSE} columns and related
+reliability indices. For \code{MML}, non-person facet \code{ModelSE} values are based
+on the observed information of the marginal log-likelihood and person rows
+use posterior SDs from EAP scoring. For \code{JML}, these quantities remain
+exploratory approximations and should not be treated as equally formal.
+}
+
 \section{Interpreting output}{
 
 A typical first-pass read is:
 \enumerate{
 \item \code{fit$summary} for convergence and global fit indicators.
 \item \code{summary(fit)} for human-readable overviews.
-\item \code{diagnose_mfrm(fit)} for element-level fit, separation, and warning tables.
+\item \code{diagnose_mfrm(fit)} for element-level fit, approximate
+separation/reliability, and warning tables.
 }
 }
 
@@ -165,17 +217,7 @@ A typical first-pass read is:
 }
 
 \examples{
-toy <- expand.grid(
-  Person = paste0("P", 1:4),
-  Rater = paste0("R", 1:2),
-  Criterion = c("Content", "Organization", "Language"),
-  stringsAsFactors = FALSE
-)
-toy$Score <- (
-  as.integer(factor(toy$Person)) +
-  2 * as.integer(factor(toy$Rater)) +
-  as.integer(factor(toy$Criterion))
-) \%\% 3
+toy <- load_mfrmr_data("example_core")
 
 fit <- fit_mfrm(
   data = toy,
@@ -203,7 +245,13 @@ fit_mml <- fit_mfrm(
   maxit = 25
 )
 summary(fit_mml)
+
+# Next steps after fitting:
+diag_mml <- diagnose_mfrm(fit_mml, residual_pca = "none")
+chk <- reporting_checklist(fit_mml, diagnostics = diag_mml)
+head(chk$checklist[, c("Section", "Item", "DraftReady")])
 }
 \seealso{
-\code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=estimate_bias]{estimate_bias()}}, \code{\link[=build_apa_outputs]{build_apa_outputs()}}
+\code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=estimate_bias]{estimate_bias()}}, \code{\link[=build_apa_outputs]{build_apa_outputs()}},
+\link{mfrmr_workflow_methods}, \link{mfrmr_reporting_and_apa}
 }

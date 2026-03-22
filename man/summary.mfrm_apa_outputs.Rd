@@ -34,6 +34,12 @@ preview for quick QA before manuscript insertion.
 \item \code{overview}: total coverage across standard text components.
 \item \code{components}: per-component density and mention checks
 (including residual-PCA mentions).
+\item \code{sections}: package-native section coverage table.
+\item \code{content_checks}: contract-based alignment checks for APA drafting readiness.
+\item \code{overview$DraftContractPass}: the primary contract-completeness flag for
+draft text components.
+\item \code{overview$ReadyForAPA}: a backward-compatible alias of that contract flag,
+not a certification of inferential adequacy.
 \item \code{preview}: first non-empty lines for fast visual review.
 }
 }
@@ -44,22 +50,12 @@ preview for quick QA before manuscript insertion.
 \item Build outputs via \code{\link[=build_apa_outputs]{build_apa_outputs()}}.
 \item Run \code{summary(apa)} to screen for empty/short components.
 \item Use \code{apa$report_text}, \code{apa$table_figure_notes},
-and \code{apa$table_figure_captions} directly for final text.
+and \code{apa$table_figure_captions} as draft components for final-text review.
 }
 }
 
 \examples{
-toy <- expand.grid(
-  Person = paste0("P", 1:4),
-  Rater = paste0("R", 1:2),
-  Criterion = c("Content", "Organization", "Language"),
-  stringsAsFactors = FALSE
-)
-toy$Score <- (
-  as.integer(factor(toy$Person)) +
-  2 * as.integer(factor(toy$Rater)) +
-  as.integer(factor(toy$Criterion))
-) \%\% 3
+toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 diag <- diagnose_mfrm(fit, residual_pca = "both")
 apa <- build_apa_outputs(fit, diag)

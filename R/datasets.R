@@ -4,6 +4,8 @@
 #' All datasets include one row per observed rating.
 #'
 #' Available data objects:
+#' - `mfrmr_example_core`
+#' - `mfrmr_example_bias`
 #' - `ej2021_study1`
 #' - `ej2021_study2`
 #' - `ej2021_combined`
@@ -31,21 +33,21 @@
 #' @section Data dimensions:
 #' \tabular{lrrrr}{
 #'   \strong{Dataset} \tab \strong{Rows} \tab \strong{Persons} \tab \strong{Raters} \tab \strong{Criteria} \cr
-#'   study1 \tab 2160 \tab 60 \tab 6 \tab 6 \cr
-#'   study2 \tab 2160 \tab 60 \tab 6 \tab 6 \cr
-#'   combined \tab 4320 \tab 120 \tab 6 \tab 6 \cr
-#'   study1_itercal \tab 2160 \tab 60 \tab 6 \tab 6 \cr
-#'   study2_itercal \tab 2160 \tab 60 \tab 6 \tab 6 \cr
-#'   combined_itercal \tab 4320 \tab 120 \tab 6 \tab 6
+#'   study1 \tab 1842 \tab 307 \tab 18 \tab 3 \cr
+#'   study2 \tab 3287 \tab 206 \tab 12 \tab 9 \cr
+#'   combined \tab 5129 \tab 307 \tab 18 \tab 12 \cr
+#'   study1_itercal \tab 1842 \tab 307 \tab 18 \tab 3 \cr
+#'   study2_itercal \tab 3341 \tab 206 \tab 12 \tab 9 \cr
+#'   combined_itercal \tab 5183 \tab 307 \tab 18 \tab 12
 #' }
-#' Score range: 1--5 (five-category rating scale).
+#' Score range: 1--4 (four-category rating scale).
 #'
 #' @section Simulation design:
 #' Person ability is drawn from N(0, 1).  Rater severity effects span
 #' approximately -0.5 to +0.5 logits.  Criterion difficulty effects span
 #' approximately -0.3 to +0.3 logits.  Scores are generated from the
 #' resulting linear predictor plus Gaussian noise, then discretized into
-#' five categories.  The `_itercal` variants use a second iteration of
+#' four categories.  The `_itercal` variants use a second iteration of
 #' calibrated rater severity parameters.
 #'
 #' @section Interpreting output:
@@ -64,6 +66,63 @@
 #' @name ej2021_data
 #' @aliases ej2021_study1 ej2021_study2 ej2021_combined
 #' @aliases ej2021_study1_itercal ej2021_study2_itercal ej2021_combined_itercal
+NULL
+
+#' Purpose-built example datasets for package help pages
+#'
+#' Compact synthetic many-facet datasets designed for documentation examples.
+#' Both datasets are large enough to avoid tiny-sample toy behavior while
+#' remaining fast in `R CMD check` examples.
+#'
+#' Available data objects:
+#' - `mfrmr_example_core`
+#' - `mfrmr_example_bias`
+#'
+#' @format A data.frame with 6 columns:
+#' \describe{
+#'   \item{Study}{Example dataset label (`"ExampleCore"` or `"ExampleBias"`).}
+#'   \item{Person}{Person/respondent identifier.}
+#'   \item{Rater}{Rater identifier.}
+#'   \item{Criterion}{Criterion facet label.}
+#'   \item{Score}{Observed category score on a four-category scale (`1`--`4`).}
+#'   \item{Group}{Balanced grouping variable used in DFF/DIF examples (`"A"` / `"B"`).}
+#' }
+#' @source Synthetic documentation data generated from rating-scale Rasch facet
+#'   designs with fixed seeds in `data-raw/make-example-data.R`.
+#' @details
+#' `mfrmr_example_core` is generated from a single latent trait plus rater and
+#' criterion main effects, making it suitable for general fitting, plotting, and
+#' reporting examples.
+#'
+#' `mfrmr_example_bias` starts from the same basic design but adds:
+#' - a known `Group x Criterion` effect (`Group B` is advantaged on `Language`)
+#' - a known `Rater x Criterion` interaction (`R04 x Accuracy`)
+#'
+#' This lets differential-functioning and bias-analysis help pages demonstrate non-null findings.
+#'
+#' @section Data dimensions:
+#' \tabular{lrrrrr}{
+#'   \strong{Dataset} \tab \strong{Rows} \tab \strong{Persons} \tab \strong{Raters} \tab \strong{Criteria} \tab \strong{Groups} \cr
+#'   example_core \tab 768 \tab 48 \tab 4 \tab 4 \tab 2 \cr
+#'   example_bias \tab 384 \tab 48 \tab 4 \tab 4 \tab 2
+#' }
+#'
+#' @section Suggested usage:
+#' - Use `mfrmr_example_core` for fitting, diagnostics, design-weighted precision curves,
+#'   and generic plots/reports.
+#' - Use `mfrmr_example_bias` for [analyze_dff()], [analyze_dif()], [dif_interaction_table()],
+#'   [plot_dif_heatmap()], and [estimate_bias()].
+#'
+#' Both objects can be loaded either with [load_mfrmr_data()] or directly via
+#' `data("mfrmr_example_core", package = "mfrmr")` /
+#' `data("mfrmr_example_bias", package = "mfrmr")`.
+#'
+#' @examples
+#' data("mfrmr_example_core", package = "mfrmr")
+#' table(mfrmr_example_core$Score)
+#' table(mfrmr_example_core$Group)
+#' @name mfrmr_example_data
+#' @aliases mfrmr_example_core mfrmr_example_bias
 NULL
 
 #' List packaged simulation datasets
@@ -94,6 +153,8 @@ NULL
 #' @export
 list_mfrmr_data <- function() {
   c(
+    "example_core",
+    "example_bias",
     "study1",
     "study2",
     "combined",
@@ -112,8 +173,10 @@ list_mfrmr_data <- function() {
 #' This helper is useful in scripts/functions where you want to choose a dataset
 #' by string key instead of calling `data()` manually.
 #'
-#' Returned columns are always:
-#' `Study`, `Person`, `Rater`, `Criterion`, `Score`.
+#' All returned datasets include the core long-format columns
+#' `Study`, `Person`, `Rater`, `Criterion`, and `Score`.
+#' Some datasets, such as the packaged documentation examples, also include
+#' auxiliary variables like `Group` for DIF/bias demonstrations.
 #'
 #' @section Interpreting output:
 #' The return value is a plain long-format `data.frame`, ready for direct use
@@ -126,8 +189,10 @@ list_mfrmr_data <- function() {
 #'
 #' @seealso [list_mfrmr_data()], [ej2021_data]
 #' @examples
-#' d <- load_mfrmr_data("study1")
-#' head(d)
+#' data("mfrmr_example_core", package = "mfrmr")
+#' head(mfrmr_example_core)
+#'
+#' d <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(
 #'   data = d,
 #'   person = "Person",
@@ -139,6 +204,8 @@ list_mfrmr_data <- function() {
 #' summary(fit)
 #' @export
 load_mfrmr_data <- function(name = c(
+                            "example_core",
+                            "example_bias",
                             "study1",
                             "study2",
                             "combined",
@@ -150,6 +217,8 @@ load_mfrmr_data <- function(name = c(
 
   obj_name <- switch(
     key,
+    example_core = "mfrmr_example_core",
+    example_bias = "mfrmr_example_bias",
     study1 = "ej2021_study1",
     study2 = "ej2021_study2",
     combined = "ej2021_combined",

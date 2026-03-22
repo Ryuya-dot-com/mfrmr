@@ -2,7 +2,7 @@
 % Please edit documentation in R/api-advanced.R
 \name{plot_information}
 \alias{plot_information}
-\title{Plot test and item information functions}
+\title{Plot design-weighted precision curves}
 \usage{
 plot_information(
   x,
@@ -15,9 +15,10 @@ plot_information(
 \arguments{
 \item{x}{Output from \code{\link[=compute_information]{compute_information()}}.}
 
-\item{type}{\code{"tif"} for test information (default), \code{"iif"} for
-item/facet-level information, \code{"se"} for standard error of
-measurement, or \code{"both"} for TIF with SE on a secondary axis.}
+\item{type}{\code{"tif"} for the overall precision curve (default), \code{"iif"} for
+facet-level contribution curves, \code{"se"} for the approximate standard error
+implied by that curve, or \code{"both"} for precision with approximate SE on a
+secondary axis.}
 
 \item{facet}{For \code{type = "iif"}, which facet to plot. If \code{NULL},
 the first facet is used.}
@@ -31,44 +32,71 @@ the plot data invisibly.}
 Invisibly, the plot data (tibble).
 }
 \description{
-Visualize the test information function (TIF) and optionally
-per-facet-level item information functions (IIF) from
-\code{\link[=compute_information]{compute_information()}}.
+Visualize the design-weighted precision curve and optionally
+per-facet-level contribution curves from \code{\link[=compute_information]{compute_information()}}.
 }
+\section{Plot types}{
+
+\itemize{
+\item \code{"tif"}: overall design-weighted precision across theta.
+\item \code{"se"}: approximate standard error across theta.
+\item \code{"both"}: precision and approximate SE together, useful for presentations.
+\item \code{"iif"}: facet-level contribution curves for one selected facet in an
+RSM fit.
+}
+}
+
+\section{Which type should I use?}{
+
+\itemize{
+\item Use \code{"tif"} for a quick overall read on precision.
+\item Use \code{"se"} when standard-error language is easier to communicate than
+precision.
+\item Use \code{"both"} when you want both views in one figure.
+\item Use \code{"iif"} when you want to see which facet levels are shaping the total
+precision curve.
+}
+}
+
 \section{Interpreting output}{
 
 \itemize{
-\item TIF peaks where measurement is most precise.
-\item SE is the inverse square root of information; lower is better.
-\item IIF shows which facet levels contribute most information at each theta.
+\item The total curve peaks where the realized design is most precise.
+\item SE is derived as \code{1 / sqrt(precision)}; lower is better.
+\item Facet-level curves show which facet levels contribute most to that
+realized precision at each theta.
+\item If the precision peak sits far from the bulk of person measures, the
+realized design may be poorly targeted.
 }
+}
+
+\section{Returned data when draw = FALSE}{
+
+For \code{type = "tif"}, \code{"se"}, or \code{"both"}, the returned data come from
+\code{x$tif}. For \code{type = "iif"}, the returned data are the rows of \code{x$iif}
+filtered to the requested facet.
 }
 
 \section{Typical workflow}{
 
 \enumerate{
 \item Compute information with \code{\link[=compute_information]{compute_information()}}.
-\item Plot with \code{plot_information(info)} for TIF.
-\item Use \code{plot_information(info, type = "iif", facet = "Rater")} for IIF.
+\item Plot with \code{plot_information(info)} for the total precision curve.
+\item Use \code{plot_information(info, type = "iif", facet = "Rater")} for
+facet-level contributions.
+\item Use \code{draw = FALSE} when you want the plotting data for custom graphics.
 }
 }
 
 \examples{
-toy <- expand.grid(
-  Person = paste0("P", 1:4),
-  Rater = paste0("R", 1:2),
-  Criterion = c("Content", "Organization", "Language"),
-  stringsAsFactors = FALSE
-)
-toy$Score <- (
-  as.integer(factor(toy$Person)) +
-  2 * as.integer(factor(toy$Rater)) +
-  as.integer(factor(toy$Criterion))
-) \%\% 3
+toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                  method = "JML", model = "RSM", maxit = 25)
 info <- compute_information(fit)
-plot_information(info, type = "tif")
+tif_data <- plot_information(info, type = "tif", draw = FALSE)
+head(tif_data)
+iif_data <- plot_information(info, type = "iif", facet = "Rater", draw = FALSE)
+head(iif_data)
 }
 \seealso{
 \code{\link[=compute_information]{compute_information()}}, \code{\link[=fit_mfrm]{fit_mfrm()}}

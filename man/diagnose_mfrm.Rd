@@ -33,13 +33,20 @@ An object of class \code{mfrm_diagnostics} including:
 \item \code{measures}: facet/person fit table (\code{Infit}, \code{Outfit}, \code{ZSTD}, \code{PTMEA})
 \item \code{overall_fit}: overall fit summary
 \item \code{fit}: element-level fit diagnostics
-\item \code{reliability}: separation/reliability by facet
-\item \code{facets_chisq}: FACETS-style fixed/random facet chi-square summary
+\item \code{reliability}: facet-level model/real separation and reliability
+\item \code{precision_profile}: one-row summary of the active precision tier and its
+recommended use
+\item \code{precision_audit}: package-native checks for SE, CI, and reliability
+\item \code{facet_precision}: facet-level precision summary by distribution basis and
+SE mode
+\item \code{facets_chisq}: fixed/random facet variability summary
 \item \code{interactions}: top interaction diagnostics
-\item \code{interrater}: inter-rater agreement bundle (\code{summary}, \code{pairs})
-\item \code{unexpected}: FACETS Table 4-style unexpected-response bundle
-\item \code{fair_average}: FACETS Table 12-style fair-average bundle
+\item \code{interrater}: inter-rater agreement bundle (\code{summary}, \code{pairs}) including
+agreement and rater-severity spread indices
+\item \code{unexpected}: unexpected-response bundle
+\item \code{fair_average}: adjusted-score reference bundle
 \item \code{displacement}: displacement diagnostics bundle
+\item \code{approximation_notes}: method notes for SE/CI/reliability summaries
 \item \code{residual_pca_overall}: optional overall PCA object
 \item \code{residual_pca_by_facet}: optional facet PCA objects
 }
@@ -49,6 +56,35 @@ Compute diagnostics for an \code{mfrm_fit} object
 }
 \details{
 This function computes a diagnostic bundle used by downstream reporting.
+It calculates element-level fit statistics, approximate facet
+separation/reliability summaries, residual-based QC diagnostics, and
+optionally residual PCA for
+exploratory residual-structure screening.
+
+\strong{Key fit statistics computed for each element:}
+\itemize{
+\item \strong{Infit MnSq}: information-weighted mean-square residual; sensitive
+to on-target misfitting patterns.  Expected value = 1.0.
+\item \strong{Outfit MnSq}: unweighted mean-square residual; sensitive to
+off-target outliers.  Expected value = 1.0.
+\item \strong{ZSTD}: Wilson-Hilferty cube-root transformation of MnSq to an
+approximate standard normal deviate.
+\item \strong{PTMEA}: point-measure correlation (item-rest correlation in MFRM
+context); positive values confirm alignment with the latent trait.
+}
+
+\strong{Misfit flagging guidelines (Bond & Fox, 2015):}
+\itemize{
+\item MnSq < 0.5: overfit (too predictable; may inflate reliability)
+\item MnSq 0.5--1.5: productive for measurement
+\item MnSq > 1.5: underfit (noise degrades measurement)
+\item \eqn{|\mathrm{ZSTD}| > 2}: statistically significant misfit (5\\%)
+}
+
+When Infit and Outfit disagree, Infit is generally more informative
+because it downweights extreme observations.  Large Outfit with
+acceptable Infit typically indicates a few outlying responses rather
+than systematic misfit.
 
 \code{interaction_pairs} controls which facet interactions are summarized.
 Each element can be:
@@ -59,20 +95,30 @@ Each element can be:
 
 Residual PCA behavior:
 \itemize{
-\item \code{"none"}: skip PCA
-\item \code{"overall"}: compute only overall residual PCA
-\item \code{"facet"}: compute only facet-specific residual PCA
-\item \code{"both"}: compute both sets
+\item \code{"none"}: skip PCA (fastest; recommended for initial exploration)
+\item \code{"overall"}: compute overall residual PCA across all facets
+\item \code{"facet"}: compute facet-specific residual PCA for each facet
+\item \code{"both"}: compute both overall and facet-specific PCA
 }
+
+Overall PCA examines the person \eqn{\times} combined-facet residual
+matrix; facet-specific PCA examines person \eqn{\times} facet-level
+matrices. These summaries are exploratory screens for residual
+structure, not standalone proofs for or against unidimensionality.
+Facet-specific PCA can help localise where a stronger residual signal
+is concentrated.
 }
 \section{Reading key components}{
 
 Practical interpretation often starts with:
 \itemize{
 \item \code{overall_fit}: global infit/outfit and degrees of freedom.
-\item \code{reliability}: separation/reliability by facet (not a single pooled value).
+\item \code{reliability}: facet-level model/real separation and reliability. \code{MML}
+uses model-based \code{ModelSE} values where available; \code{JML} keeps these
+quantities as exploratory approximations.
 \item \code{fit}: element-level misfit scan (\code{Infit}, \code{Outfit}, \code{ZSTD}).
 \item \code{unexpected}, \code{fair_average}, \code{displacement}: targeted QC bundles.
+\item \code{approximation_notes}: method notes for SE/CI/reliability summaries.
 }
 }
 
@@ -83,7 +129,15 @@ diagnostics (\code{fit}) and targeted bundles (\code{unexpected}, \code{fair_ave
 \code{displacement}, \code{interrater}, \code{facets_chisq}).
 
 Consistent signals across multiple components are typically more robust than
-a single isolated warning.
+a single isolated warning.  For example, an element flagged for both high
+Outfit and high displacement is more concerning than one flagged on a
+single criterion.
+
+\code{SE} is kept as a compatibility alias for \code{ModelSE}. \code{RealSE} is a
+fit-adjusted companion defined as \code{ModelSE * sqrt(max(Infit, 1))}.
+Reliability tables report model and fit-adjusted bounds from observed
+variance, error variance, and true variance; \code{JML} entries should still be
+treated as exploratory.
 }
 
 \section{Typical workflow}{
@@ -96,17 +150,7 @@ a single isolated warning.
 }
 
 \examples{
-toy <- expand.grid(
-  Person = paste0("P", 1:4),
-  Rater = paste0("R", 1:2),
-  Criterion = c("Content", "Organization", "Language"),
-  stringsAsFactors = FALSE
-)
-toy$Score <- (
-  as.integer(factor(toy$Person)) +
-  2 * as.integer(factor(toy$Rater)) +
-  as.integer(factor(toy$Criterion))
-) \%\% 3
+toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 s_diag <- summary(diag)
@@ -118,7 +162,12 @@ class(p_qc)
 diag_pca <- diagnose_mfrm(fit, residual_pca = "overall")
 pca <- analyze_residual_pca(diag_pca, mode = "overall")
 head(pca$overall_table)
+
+# Reporting route:
+prec <- precision_audit_report(fit, diagnostics = diag)
+summary(prec)
 }
 \seealso{
-\code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=analyze_residual_pca]{analyze_residual_pca()}}, \code{\link[=build_visual_summaries]{build_visual_summaries()}}
+\code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=analyze_residual_pca]{analyze_residual_pca()}}, \code{\link[=build_visual_summaries]{build_visual_summaries()}},
+\link{mfrmr_visual_diagnostics}, \link{mfrmr_reporting_and_apa}
 }

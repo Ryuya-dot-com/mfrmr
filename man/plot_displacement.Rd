@@ -11,6 +11,7 @@ plot_displacement(
   facets = NULL,
   plot_type = c("lollipop", "hist"),
   top_n = 40,
+  preset = c("standard", "publication", "compact"),
   draw = TRUE,
   ...
 )
@@ -28,6 +29,8 @@ plot_displacement(
 
 \item{top_n}{Maximum levels shown in \code{"lollipop"} mode.}
 
+\item{preset}{Visual preset (\code{"standard"}, \code{"publication"}, or \code{"compact"}).}
+
 \item{draw}{If \code{TRUE}, draw with base graphics.}
 
 \item{...}{Additional arguments passed to \code{\link[=displacement_table]{displacement_table()}} when \code{x} is \code{mfrm_fit}.}
@@ -39,17 +42,34 @@ A plotting-data object of class \code{mfrm_plot_data}.
 Plot displacement diagnostics using base R
 }
 \details{
-Displacement plots focus on anchor stability and estimate movement.
+\strong{Displacement} quantifies how much a single element's calibration
+would shift the overall model if it were allowed to move freely.
+It is computed as:
+
+\deqn{\mathrm{Displacement}_j = \frac{\sum_i (X_{ij} - E_{ij})}
+                                     {\sum_i \mathrm{Var}_{ij}}}
+
+where the sums run over all observations involving element \eqn{j}.
+The standard error is \eqn{1 / \sqrt{\sum_i \mathrm{Var}_{ij}}}, and
+a t-statistic \eqn{t = \mathrm{Displacement} / \mathrm{SE}} flags
+elements whose observed residual pattern is inconsistent with the
+current anchor structure.
+
+Displacement is most informative after anchoring: large values suggest
+that anchored values may be drifting from the current sample.
+For non-anchored analyses, displacement reflects residual
+calibration tension.
 }
 \section{Plot types}{
 
 \describe{
 \item{\code{"lollipop"} (default)}{Dot-and-line chart of displacement values.
 X-axis: displacement (logits).  Y-axis: element labels.  Points
-colored red when flagged.  Dashed lines at +/- threshold.  Ordered
-by absolute displacement.}
+colored red when flagged (default: \eqn{|\mathrm{Disp.}| > 0.5}
+logits).  Dashed lines at \eqn{\pm} threshold.  Ordered by
+absolute displacement.}
 \item{\code{"hist"}}{Histogram of displacement values with Freedman-Diaconis
-breaks.  Dashed reference lines at +/- threshold.  Use for
+breaks.  Dashed reference lines at \eqn{\pm} threshold.  Use for
 inspecting the overall distribution shape.}
 }
 }
@@ -60,6 +80,8 @@ Lollipop: top absolute displacement levels; flagged points indicate
 larger movement from anchor expectations.
 
 Histogram: overall displacement distribution and threshold lines.
+A symmetric distribution centred near zero indicates good anchor
+stability; heavy tails or skew suggest systematic drift.
 
 Use \code{anchored_only = TRUE} when your main question is anchor robustness.
 }
@@ -73,24 +95,27 @@ Use \code{anchored_only = TRUE} when your main question is anchor robustness.
 }
 }
 
+\section{Further guidance}{
+
+For a plot-selection guide and a longer walkthrough, see
+\link{mfrmr_visual_diagnostics} and
+\code{vignette("mfrmr-visual-diagnostics", package = "mfrmr")}.
+}
+
 \examples{
-toy <- expand.grid(
-  Person = paste0("P", 1:4),
-  Rater = paste0("R", 1:2),
-  Criterion = c("Content", "Organization", "Language"),
-  stringsAsFactors = FALSE
-)
-toy$Score <- (
-  as.integer(factor(toy$Person)) +
-  2 * as.integer(factor(toy$Rater)) +
-  as.integer(factor(toy$Criterion))
-) \%\% 3
+toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 p <- plot_displacement(fit, anchored_only = FALSE, draw = FALSE)
 if (interactive()) {
-  plot_displacement(fit, anchored_only = FALSE, plot_type = "lollipop")
+  plot_displacement(
+    fit,
+    anchored_only = FALSE,
+    plot_type = "lollipop",
+    preset = "publication"
+  )
 }
 }
 \seealso{
-\code{\link[=displacement_table]{displacement_table()}}, \code{\link[=plot_unexpected]{plot_unexpected()}}, \code{\link[=plot_fair_average]{plot_fair_average()}}, \code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}}
+\code{\link[=displacement_table]{displacement_table()}}, \code{\link[=plot_unexpected]{plot_unexpected()}}, \code{\link[=plot_fair_average]{plot_fair_average()}},
+\code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}}, \link{mfrmr_visual_diagnostics}
 }

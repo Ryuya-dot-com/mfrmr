@@ -54,23 +54,13 @@ This method returns a compact interaction-bias summary:
 
 \enumerate{
 \item Estimate interactions with \code{\link[=estimate_bias]{estimate_bias()}}.
-\item Check \code{summary(bias)} for significant and unstable cells.
+\item Check \code{summary(bias)} for screen-positive and unstable cells.
 \item Use \code{\link[=bias_interaction_report]{bias_interaction_report()}} or \code{\link[=plot_bias_interaction]{plot_bias_interaction()}} for details.
 }
 }
 
 \examples{
-toy <- expand.grid(
-  Person = paste0("P", 1:4),
-  Rater = paste0("R", 1:2),
-  Criterion = c("Content", "Organization", "Language"),
-  stringsAsFactors = FALSE
-)
-toy$Score <- (
-  as.integer(factor(toy$Person)) +
-  2 * as.integer(factor(toy$Rater)) +
-  as.integer(factor(toy$Criterion))
-) \%\% 3
+toy <- load_mfrmr_data("example_bias")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 bias <- estimate_bias(fit, diag, facet_a = "Rater", facet_b = "Criterion", max_iter = 2)

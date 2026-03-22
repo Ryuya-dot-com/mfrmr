@@ -2,7 +2,7 @@
 % Please edit documentation in R/api-reports.R
 \name{facets_parity_report}
 \alias{facets_parity_report}
-\title{Build a FACETS parity report (column + metric contracts)}
+\title{Build a FACETS compatibility-contract audit}
 \usage{
 facets_parity_report(
   fit,
@@ -23,9 +23,9 @@ diagnostics are computed internally with \code{residual_pca = "none"}.}
 \item{bias_results}{Optional output from \code{\link[=estimate_bias]{estimate_bias()}}. If omitted and
 at least two facets exist, a 2-way bias run is computed internally.}
 
-\item{branch}{Contract branch. \code{"facets"} checks FACETS-style columns.
-\code{"original"} adapts branch-sensitive contracts (currently Table 11) to the
-package's compact naming.}
+\item{branch}{Contract branch. \code{"facets"} checks legacy-compatible columns.
+\code{"original"} adapts branch-sensitive contracts to the package's compact
+naming.}
 
 \item{contract_file}{Optional path to a custom contract CSV.}
 
@@ -37,7 +37,7 @@ package's compact naming.}
 \value{
 An object of class \code{mfrm_parity_report} with:
 \itemize{
-\item \code{overall}: one-row overall parity summary
+\item \code{overall}: one-row compatibility-audit summary
 \item \code{column_summary}: coverage summary by table ID
 \item \code{column_audit}: row-level contract audit
 \item \code{missing_preview}: lowest-coverage rows
@@ -48,16 +48,21 @@ An object of class \code{mfrm_parity_report} with:
 }
 }
 \description{
-Build a FACETS parity report (column + metric contracts)
+Build a FACETS compatibility-contract audit
 }
 \details{
-This function compares produced report components to a contract specification
-(\code{inst/references/facets_column_contract.csv}) and returns:
+This function audits produced report components against a compatibility
+contract specification (\code{inst/references/facets_column_contract.csv}) and
+returns:
 \itemize{
 \item column-level coverage per contract row
 \item table-level coverage summaries
 \item optional metric-level consistency checks
 }
+
+It is intended for compatibility-layer QA and regression auditing. It does
+not establish external validity or software equivalence beyond the specific
+schema/metric contract encoded in the audit file.
 
 Coverage interpretation in \code{overall}:
 \itemize{
@@ -75,10 +80,13 @@ only rows whose source component is available.
 \section{Interpreting output}{
 
 \itemize{
-\item \code{overall}: high-level contract coverage and metric-check pass rates.
-\item \code{column_summary} / \code{column_audit}: where schema mismatches occur.
-\item \code{metric_summary} / \code{metric_audit}: numerical consistency checks.
-\item \code{missing_preview}: quickest path to unresolved parity gaps.
+\item \code{overall}: high-level compatibility-contract coverage and metric-check pass
+rates.
+\item \code{column_summary} / \code{column_audit}: where compatibility-schema mismatches
+occur.
+\item \code{metric_summary} / \code{metric_audit}: numerical consistency checks tied to the
+current contract.
+\item \code{missing_preview}: quickest path to unresolved compatibility gaps.
 }
 }
 
@@ -87,22 +95,12 @@ only rows whose source component is available.
 \enumerate{
 \item Run \code{facets_parity_report(fit, branch = "facets")}.
 \item Inspect \code{summary(parity)} and \code{missing_preview}.
-\item Patch upstream table builders, then rerun parity report.
+\item Patch upstream table builders, then rerun the compatibility audit.
 }
 }
 
 \examples{
-toy <- expand.grid(
-  Person = paste0("P", 1:4),
-  Rater = paste0("R", 1:2),
-  Criterion = c("Content", "Organization", "Language"),
-  stringsAsFactors = FALSE
-)
-toy$Score <- (
-  as.integer(factor(toy$Person)) +
-  2 * as.integer(factor(toy$Rater)) +
-  as.integer(factor(toy$Criterion))
-) \%\% 3
+toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 parity <- facets_parity_report(fit, diagnostics = diag, branch = "facets")
@@ -110,5 +108,6 @@ summary(parity)
 p <- plot(parity, draw = FALSE)
 }
 \seealso{
-\code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=build_fixed_reports]{build_fixed_reports()}}
+\code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=build_fixed_reports]{build_fixed_reports()}},
+\link{mfrmr_compatibility_layer}
 }

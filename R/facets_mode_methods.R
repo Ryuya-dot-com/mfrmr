@@ -8,7 +8,7 @@ round_numeric_frame <- function(df, digits = 3L) {
   out
 }
 
-#' Summarize a FACETS-mode workflow run
+#' Summarize a legacy-compatible workflow run
 #'
 #' @param object Output from [run_mfrm_facets()].
 #' @param digits Number of digits for numeric rounding in summaries.
@@ -34,16 +34,18 @@ round_numeric_frame <- function(df, digits = 3L) {
 #'
 #' @return An object of class `summary.mfrm_facets_run`.
 #'
-#' @seealso [run_mfrm_facets()], [summary.mfrm_fit()], `summary()`
+#' @seealso [run_mfrm_facets()], [summary.mfrm_fit()], [mfrmr_workflow_methods],
+#'   `summary()`
 #'
 #' @examples
-#' toy <- mfrmr:::sample_mfrm_data(seed = 123)
+#' toy <- load_mfrmr_data("example_core")
+#' toy_small <- toy[toy$Person %in% unique(toy$Person)[1:12], , drop = FALSE]
 #' out <- run_mfrm_facets(
-#'   data = toy,
+#'   data = toy_small,
 #'   person = "Person",
-#'   facets = c("Rater", "Task", "Criterion"),
+#'   facets = c("Rater", "Criterion"),
 #'   score = "Score",
-#'   maxit = 15
+#'   maxit = 10
 #' )
 #' s <- summary(out)
 #' s$overview[, c("Model", "Method", "Converged")]
@@ -83,7 +85,7 @@ print.summary.mfrm_facets_run <- function(x, ...) {
   digits <- x$digits
   if (is.null(digits) || !is.finite(digits)) digits <- 3L
 
-  cat("FACETS-mode Workflow Summary\n")
+  cat("Legacy-compatible Workflow Summary\n")
   if (!is.null(x$overview) && nrow(x$overview) > 0) {
     ov <- round_numeric_frame(as.data.frame(x$overview), digits = digits)[1, , drop = FALSE]
     cat(sprintf("  Model: %s | Method: %s\n", ov$Model, ov$Method))
@@ -110,7 +112,7 @@ print.mfrm_facets_run <- function(x, ...) {
   invisible(x)
 }
 
-#' Plot outputs from a FACETS-mode workflow run
+#' Plot outputs from a legacy-compatible workflow run
 #'
 #' @param x A `mfrm_facets_run` object from [run_mfrm_facets()].
 #' @param y Unused.
@@ -135,16 +137,18 @@ print.mfrm_facets_run <- function(x, ...) {
 #'
 #' @return A plotting object from the delegated plot route.
 #'
-#' @seealso [run_mfrm_facets()], [plot.mfrm_fit()], [plot_qc_dashboard()]
+#' @seealso [run_mfrm_facets()], [plot.mfrm_fit()], [plot_qc_dashboard()],
+#'   [mfrmr_visual_diagnostics], [mfrmr_workflow_methods]
 #'
 #' @examples
-#' toy <- mfrmr:::sample_mfrm_data(seed = 123)
+#' toy <- load_mfrmr_data("example_core")
+#' toy_small <- toy[toy$Person %in% unique(toy$Person)[1:12], , drop = FALSE]
 #' out <- run_mfrm_facets(
-#'   data = toy,
+#'   data = toy_small,
 #'   person = "Person",
-#'   facets = c("Rater", "Task", "Criterion"),
+#'   facets = c("Rater", "Criterion"),
 #'   score = "Score",
-#'   maxit = 15
+#'   maxit = 10
 #' )
 #' p_fit <- plot(out, type = "fit", draw = FALSE)
 #' class(p_fit)

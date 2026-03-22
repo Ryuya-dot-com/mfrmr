@@ -29,6 +29,8 @@ All datasets include one row per observed rating.
 \details{
 Available data objects:
 \itemize{
+\item \code{mfrmr_example_core}
+\item \code{mfrmr_example_bias}
 \item \code{ej2021_study1}
 \item \code{ej2021_study2}
 \item \code{ej2021_combined}
@@ -50,14 +52,14 @@ Use \code{\link[=load_mfrmr_data]{load_mfrmr_data()}} for programmatic selection
 
 \tabular{lrrrr}{
 \strong{Dataset} \tab \strong{Rows} \tab \strong{Persons} \tab \strong{Raters} \tab \strong{Criteria} \cr
-study1 \tab 2160 \tab 60 \tab 6 \tab 6 \cr
-study2 \tab 2160 \tab 60 \tab 6 \tab 6 \cr
-combined \tab 4320 \tab 120 \tab 6 \tab 6 \cr
-study1_itercal \tab 2160 \tab 60 \tab 6 \tab 6 \cr
-study2_itercal \tab 2160 \tab 60 \tab 6 \tab 6 \cr
-combined_itercal \tab 4320 \tab 120 \tab 6 \tab 6
+study1 \tab 1842 \tab 307 \tab 18 \tab 3 \cr
+study2 \tab 3287 \tab 206 \tab 12 \tab 9 \cr
+combined \tab 5129 \tab 307 \tab 18 \tab 12 \cr
+study1_itercal \tab 1842 \tab 307 \tab 18 \tab 3 \cr
+study2_itercal \tab 3341 \tab 206 \tab 12 \tab 9 \cr
+combined_itercal \tab 5183 \tab 307 \tab 18 \tab 12
 }
-Score range: 1--5 (five-category rating scale).
+Score range: 1--4 (four-category rating scale).
 }
 
 \section{Simulation design}{
@@ -66,7 +68,7 @@ Person ability is drawn from N(0, 1).  Rater severity effects span
 approximately -0.5 to +0.5 logits.  Criterion difficulty effects span
 approximately -0.3 to +0.3 logits.  Scores are generated from the
 resulting linear predictor plus Gaussian noise, then discretized into
-five categories.  The \verb{_itercal} variants use a second iteration of
+four categories.  The \verb{_itercal} variants use a second iteration of
 calibrated rater severity parameters.
 }
 

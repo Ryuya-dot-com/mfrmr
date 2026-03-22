@@ -1,16 +1,18 @@
-test_that("run_mfrm_facets returns FACETS-mode workflow bundle", {
+test_that("run_mfrm_facets returns legacy-compatible workflow bundle", {
   old_opt <- options(lifecycle_verbosity = "quiet")
   on.exit(options(old_opt), add = TRUE)
 
   d <- mfrmr:::sample_mfrm_data(seed = 321)
 
-  out <- mfrmr::run_mfrm_facets(
-    data = d,
-    person = "Person",
-    facets = c("Rater", "Task", "Criterion"),
-    score = "Score",
-    maxit = 20,
-    top_n_interactions = 10
+  out <- suppressWarnings(
+    mfrmr::run_mfrm_facets(
+      data = d,
+      person = "Person",
+      facets = c("Rater", "Task", "Criterion"),
+      score = "Score",
+      maxit = 20,
+      top_n_interactions = 10
+    )
   )
 
   expect_s3_class(out, "mfrm_facets_run")
@@ -22,7 +24,7 @@ test_that("run_mfrm_facets returns FACETS-mode workflow bundle", {
   out_summary <- summary(out, top_n = 5)
   expect_s3_class(out_summary, "summary.mfrm_facets_run")
   printed <- capture.output(print(out_summary))
-  expect_true(any(grepl("FACETS-mode Workflow Summary", printed, fixed = TRUE)))
+  expect_true(any(grepl("Legacy-compatible Workflow Summary", printed, fixed = TRUE)))
 
   p_fit <- plot(out, type = "fit", draw = FALSE)
   expect_s3_class(p_fit, "mfrm_plot_bundle")
@@ -35,19 +37,23 @@ test_that("mfrmRFacets alias routes to run_mfrm_facets", {
   on.exit(options(old_opt), add = TRUE)
 
   d <- mfrmr:::sample_mfrm_data(seed = 999)
-  a <- mfrmr::run_mfrm_facets(
-    data = d,
-    person = "Person",
-    facets = c("Rater", "Task", "Criterion"),
-    score = "Score",
-    maxit = 15
+  a <- suppressWarnings(
+    mfrmr::run_mfrm_facets(
+      data = d,
+      person = "Person",
+      facets = c("Rater", "Task", "Criterion"),
+      score = "Score",
+      maxit = 15
+    )
   )
-  b <- mfrmr::mfrmRFacets(
-    data = d,
-    person = "Person",
-    facets = c("Rater", "Task", "Criterion"),
-    score = "Score",
-    maxit = 15
+  b <- suppressWarnings(
+    mfrmr::mfrmRFacets(
+      data = d,
+      person = "Person",
+      facets = c("Rater", "Task", "Criterion"),
+      score = "Score",
+      maxit = 15
+    )
   )
 
   expect_equal(a$mapping, b$mapping)
@@ -61,15 +67,17 @@ test_that("run_mfrm_facets accepts method/model options", {
 
   d <- mfrmr:::sample_mfrm_data(seed = 2026)
 
-  out_mml <- mfrmr::run_mfrm_facets(
-    data = d,
-    person = "Person",
-    facets = c("Rater", "Task", "Criterion"),
-    score = "Score",
-    model = "RSM",
-    method = "MML",
-    quad_points = 7,
-    maxit = 15
+  out_mml <- suppressWarnings(
+    mfrmr::run_mfrm_facets(
+      data = d,
+      person = "Person",
+      facets = c("Rater", "Task", "Criterion"),
+      score = "Score",
+      model = "RSM",
+      method = "MML",
+      quad_points = 7,
+      maxit = 15
+    )
   )
 
   expect_equal(out_mml$fit$summary$Model[[1]], "RSM")

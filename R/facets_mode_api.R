@@ -1,4 +1,4 @@
-# FACETS-mode API wrappers (defaults to public-spec: RSM + JML/JMLE path)
+# Legacy-compatible workflow wrappers (defaults to public-spec: RSM + JML/JMLE path)
 
 normalize_facets_mode_data <- function(data) {
   if (!is.data.frame(data)) {
@@ -67,10 +67,10 @@ infer_facets_mode_mapping <- function(dat, person = NULL, facets = NULL, score =
   list(person = person_col, facets = facet_cols, score = score_col, weight = weight_col)
 }
 
-#' Run FACETS-mode estimation workflow (public-spec mode)
+#' Run a legacy-compatible estimation workflow wrapper
 #'
 #' This helper mirrors `mfrmRFacets.R` behavior as a package API and keeps
-#' FACETS-like defaults (`model = "RSM"`, `method = "JML"`), while allowing
+#' legacy-compatible defaults (`model = "RSM"`, `method = "JML"`), while allowing
 #' users to choose compatible estimation options.
 #'
 #' `run_mfrm_facets()` is intended as a one-shot workflow helper:
@@ -107,7 +107,7 @@ infer_facets_mode_mapping <- function(dat, person = NULL, facets = NULL, score =
 #' - `mapping`: resolved column mapping
 #'
 #' @section Estimation-method notes:
-#' - `method = "JML"` (default): FACETS-style joint estimation route.
+#' - `method = "JML"` (default): legacy-compatible joint estimation route.
 #' - `method = "JMLE"`: explicit JMLE label; internally equivalent to JML route.
 #' - `method = "MML"`: marginal maximum likelihood route using `quad_points`.
 #'
@@ -136,19 +136,28 @@ infer_facets_mode_mapping <- function(dat, person = NULL, facets = NULL, score =
 #' 3. Visualize with `plot(out, type = "fit")` and `plot(out, type = "qc")`.
 #' 4. Export selected tables for reporting (`out$rating_scale`, `out$fair_average`).
 #'
+#' @section Preferred route for new analyses:
+#' For new scripts, prefer the package-native route:
+#' [fit_mfrm()] -> [diagnose_mfrm()] -> [reporting_checklist()] ->
+#' [build_apa_outputs()].
+#' Use `run_mfrm_facets()` when you specifically need the legacy-compatible
+#' one-shot wrapper.
+#'
 #' @seealso [fit_mfrm()], [diagnose_mfrm()], [estimation_iteration_report()],
-#'   [fair_average_table()], [rating_scale_table()]
+#'   [fair_average_table()], [rating_scale_table()], [mfrmr_visual_diagnostics],
+#'   [mfrmr_workflow_methods], [mfrmr_compatibility_layer]
 #'
 #' @examples
-#' toy <- mfrmr:::sample_mfrm_data(seed = 123)
+#' toy <- load_mfrmr_data("example_core")
+#' toy_small <- toy[toy$Person %in% unique(toy$Person)[1:12], , drop = FALSE]
 #'
-#' # FACETS-like default: RSM + JML
+#' # Legacy-compatible default: RSM + JML
 #' out <- run_mfrm_facets(
-#'   data = toy,
+#'   data = toy_small,
 #'   person = "Person",
-#'   facets = c("Rater", "Task", "Criterion"),
+#'   facets = c("Rater", "Criterion"),
 #'   score = "Score",
-#'   maxit = 15
+#'   maxit = 6
 #' )
 #' names(out)
 #' out$fit$summary[, c("Model", "Method")]
@@ -156,20 +165,20 @@ infer_facets_mode_mapping <- function(dat, person = NULL, facets = NULL, score =
 #' s$overview[, c("Model", "Method", "Converged")]
 #' p_fit <- plot(out, type = "fit", draw = FALSE)
 #' class(p_fit)
-#' p_qc <- plot(out, type = "qc", draw = FALSE)
-#' class(p_qc)
 #'
 #' # Optional: MML route
-#' out_mml <- run_mfrm_facets(
-#'   data = toy,
-#'   person = "Person",
-#'   facets = c("Rater", "Task", "Criterion"),
-#'   score = "Score",
-#'   method = "MML",
-#'   quad_points = 7,
-#'   maxit = 15
-#' )
-#' out_mml$fit$summary[, c("Model", "Method")]
+#' if (interactive()) {
+#'   out_mml <- run_mfrm_facets(
+#'     data = toy_small,
+#'     person = "Person",
+#'     facets = c("Rater", "Criterion"),
+#'     score = "Score",
+#'     method = "MML",
+#'     quad_points = 5,
+#'     maxit = 6
+#'   )
+#'   out_mml$fit$summary[, c("Model", "Method")]
+#' }
 #' @export
 run_mfrm_facets <- function(data,
                             person = NULL,
@@ -271,7 +280,7 @@ run_mfrm_facets <- function(data,
   out
 }
 
-#' Compatibility alias for FACETS-mode workflow
+#' Compatibility alias for the legacy-compatible workflow
 #'
 #' @rdname run_mfrm_facets
 #' @export

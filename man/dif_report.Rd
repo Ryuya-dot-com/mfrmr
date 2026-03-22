@@ -2,13 +2,14 @@
 % Please edit documentation in R/api-reports.R
 \name{dif_report}
 \alias{dif_report}
-\title{Generate DIF interpretation report}
+\title{Generate a differential-functioning interpretation report}
 \usage{
 dif_report(dif_result, ...)
 }
 \arguments{
-\item{dif_result}{Output from \code{\link[=analyze_dif]{analyze_dif()}} (class \code{mfrm_dif})
-or \code{\link[=dif_interaction_table]{dif_interaction_table()}} (class \code{mfrm_dif_interaction}).}
+\item{dif_result}{Output from \code{\link[=analyze_dff]{analyze_dff()}} / \code{\link[=analyze_dif]{analyze_dif()}}
+(class \code{mfrm_dff} with compatibility class \code{mfrm_dif}) or
+\code{\link[=dif_interaction_table]{dif_interaction_table()}} (class \code{mfrm_dif_interaction}).}
 
 \item{...}{Currently unused; reserved for future extensions.}
 }
@@ -17,29 +18,35 @@ Object of class \code{mfrm_dif_report} with \code{narrative},
 \code{counts}, \code{large_dif}, and \code{config}.
 }
 \description{
-Produces APA-style narrative text interpreting the results of a DIF
-analysis or DIF interaction table. The report summarises the number
-of facet levels classified as negligible (A), moderate (B), and large
-(C) DIF, lists the specific levels with large DIF and their
-direction, and includes a caveat about the distinction between
-construct-relevant variation and measurement bias.
+Produces APA-style narrative text interpreting the results of a differential-
+functioning analysis or interaction table. For \code{method = "refit"}, the
+report summarises the number of facet levels classified as negligible (A),
+moderate (B), and large (C). For \code{method = "residual"}, it summarises
+screening-positive results, lists the specific levels and their direction,
+and includes a caveat about the distinction between construct-relevant
+variation and measurement bias.
 }
 \details{
-When \code{dif_result} is an \code{mfrm_dif} object, the report is based on
-the pairwise DIF contrasts in \verb{$dif_table}. When it is an
+When \code{dif_result} is an \code{mfrm_dff}/\code{mfrm_dif} object, the report is based on
+the pairwise differential-functioning contrasts in \verb{$dif_table}. When it is an
 \code{mfrm_dif_interaction} object, the report uses the cell-level
 statistics and flags from \verb{$table}.
 
-Effect-size classification follows the ETS DIF guidelines:
-A (negligible, < 0.43 logits), B (moderate, 0.43--0.64 logits),
-C (large, >= 0.64 logits).
+For \code{method = "refit"}, ETS-style magnitude labels are used only when
+subgroup calibrations were successfully linked back to a common baseline
+scale; otherwise the report labels those contrasts as unclassified because
+the refit difference is descriptive rather than comparable on a linked
+logit scale. For \code{method = "residual"}, the report describes
+screening-positive versus screening-negative contrasts instead of applying
+ETS labels.
 }
 \section{Interpreting output}{
 
 \itemize{
 \item \verb{$narrative}: character scalar with the full narrative text.
-\item \verb{$counts}: named integer vector of A/B/C counts.
-\item \verb{$large_dif}: tibble of levels flagged as large (C) DIF.
+\item \verb{$counts}: named integer vector of method-appropriate counts.
+\item \verb{$large_dif}: tibble of large ETS results (\code{method = "refit"}) or
+screening-positive contrasts/cells (\code{method = "residual"}).
 \item \verb{$config}: analysis configuration inherited from the input.
 }
 }
@@ -47,7 +54,7 @@ C (large, >= 0.64 logits).
 \section{Typical workflow}{
 
 \enumerate{
-\item Run \code{\link[=analyze_dif]{analyze_dif()}} or \code{\link[=dif_interaction_table]{dif_interaction_table()}}.
+\item Run \code{\link[=analyze_dff]{analyze_dff()}} / \code{\link[=analyze_dif]{analyze_dif()}} or \code{\link[=dif_interaction_table]{dif_interaction_table()}}.
 \item Pass the result to \code{dif_report()}.
 \item Print the report or extract \verb{$narrative} for inclusion in a
 manuscript.
@@ -55,24 +62,16 @@ manuscript.
 }
 
 \examples{
-set.seed(42)
-toy <- expand.grid(
-  Person = paste0("P", 1:8),
-  Rater = paste0("R", 1:3),
-  Criterion = c("Content", "Organization"),
-  stringsAsFactors = FALSE
-)
-toy$Score <- sample(0:2, nrow(toy), replace = TRUE)
-toy$Group <- ifelse(as.integer(factor(toy$Person)) <= 4, "A", "B")
+toy <- load_mfrmr_data("example_bias")
 
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                  method = "JML", model = "RSM", maxit = 25)
 diag <- diagnose_mfrm(fit, residual_pca = "none")
-dif <- analyze_dif(fit, diag, facet = "Rater", group = "Group", data = toy)
+dif <- analyze_dff(fit, diag, facet = "Rater", group = "Group", data = toy)
 rpt <- dif_report(dif)
 cat(rpt$narrative)
 }
 \seealso{
-\code{\link[=analyze_dif]{analyze_dif()}}, \code{\link[=dif_interaction_table]{dif_interaction_table()}},
+\code{\link[=analyze_dff]{analyze_dff()}}, \code{\link[=analyze_dif]{analyze_dif()}}, \code{\link[=dif_interaction_table]{dif_interaction_table()}},
 \code{\link[=plot_dif_heatmap]{plot_dif_heatmap()}}, \code{\link[=build_apa_outputs]{build_apa_outputs()}}
 }

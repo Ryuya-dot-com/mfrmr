@@ -11,6 +11,9 @@ apa_table(
   digits = 2,
   caption = NULL,
   note = NULL,
+  bias_results = NULL,
+  context = list(),
+  whexact = FALSE,
   branch = c("apa", "facets")
 )
 }
@@ -27,6 +30,14 @@ apa_table(
 \item{caption}{Optional caption text.}
 
 \item{note}{Optional note text.}
+
+\item{bias_results}{Optional output from \code{\link[=estimate_bias]{estimate_bias()}} used when
+auto-generating APA metadata for fit-based tables.}
+
+\item{context}{Optional context list forwarded when auto-generating APA
+metadata for fit-based tables.}
+
+\item{whexact}{Logical forwarded to APA metadata helpers.}
 
 \item{branch}{Output branch:
 \code{"apa"} for manuscript-oriented labels, \code{"facets"} for FACETS-aligned labels.}
@@ -77,17 +88,7 @@ Supported \code{which} values:
 }
 
 \examples{
-toy <- expand.grid(
-  Person = paste0("P", 1:4),
-  Rater = paste0("R", 1:2),
-  Criterion = c("Content", "Organization", "Language"),
-  stringsAsFactors = FALSE
-)
-toy$Score <- (
-  as.integer(factor(toy$Person)) +
-  2 * as.integer(factor(toy$Rater)) +
-  as.integer(factor(toy$Criterion))
-) \%\% 3
+toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 tbl <- apa_table(fit, which = "summary", caption = "Model summary", note = "Toy example")
 tbl_facets <- apa_table(fit, which = "summary", branch = "facets")
@@ -104,7 +105,9 @@ if (interactive()) {
   )
 }
 class(tbl)
+tbl$note
 }
 \seealso{
-\code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=build_apa_outputs]{build_apa_outputs()}}
+\code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=build_apa_outputs]{build_apa_outputs()}},
+\code{\link[=reporting_checklist]{reporting_checklist()}}, \link{mfrmr_reporting_and_apa}
 }

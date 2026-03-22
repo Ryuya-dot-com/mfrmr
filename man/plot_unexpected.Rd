@@ -15,6 +15,7 @@ plot_unexpected(
   main = NULL,
   palette = NULL,
   label_angle = 45,
+  preset = c("standard", "publication", "compact"),
   draw = TRUE
 )
 }
@@ -39,6 +40,8 @@ plot_unexpected(
 
 \item{label_angle}{X-axis label angle for \code{"severity"} bar plot.}
 
+\item{preset}{Visual preset (\code{"standard"}, \code{"publication"}, or \code{"compact"}).}
+
 \item{draw}{If \code{TRUE}, draw with base graphics.}
 }
 \value{
@@ -48,36 +51,56 @@ A plotting-data object of class \code{mfrm_plot_data}.
 Plot unexpected responses using base R
 }
 \details{
-This helper visualizes flagged observations from \code{\link[=unexpected_response_table]{unexpected_response_table()}}:
+This helper visualizes flagged observations from \code{\link[=unexpected_response_table]{unexpected_response_table()}}.
+An observation is "unexpected" when its standardised residual and/or
+observed-category probability exceed user-specified cutoffs.
+
+The \strong{severity index} is a composite ranking metric that combines the
+absolute standardised residual \eqn{|Z|} and the negative log
+probability \eqn{-\log_{10} P_{\mathrm{obs}}}.  Higher severity
+indicates responses that are more surprising under the fitted model.
+
+The \code{rule} parameter controls flagging logic:
 \itemize{
-\item \code{"scatter"}: standardized residual vs \code{-log10(P_obs)}
-\item \code{"severity"}: ranked severity index bar chart
+\item \code{"either"}: flag if \eqn{|Z| \ge} \code{abs_z_min} \strong{or}
+\eqn{P_{\mathrm{obs}} \le} \code{prob_max}.
+\item \code{"both"}: flag only if \strong{both} conditions hold simultaneously.
 }
 
-It accepts either a fitted object (builds the unexpected table internally)
-or an existing unexpected-response bundle.
+Under common thresholds, many well-behaved runs will produce relatively few
+flagged observations, but the flagged proportion is design- and
+model-dependent. Treat the output as a screening display rather than a
+calibrated goodness-of-fit test.
 }
 \section{Plot types}{
 
 \describe{
-\item{\code{"scatter"} (default)}{X-axis: standardized residual.
-Y-axis: \code{-log10(P_obs)} (negative log of observed-category
-probability).  Points colored by direction (higher/lower than
-expected).  Dashed lines mark \code{abs_z_min} and \code{prob_max}
-thresholds.  Use for global pattern detection.}
+\item{\code{"scatter"} (default)}{X-axis: standardized residual \eqn{Z}.
+Y-axis: \eqn{-\log_{10}(P_{\mathrm{obs}})} (negative log of
+observed-category probability; higher = more surprising).
+Points colored orange when the observed score is \emph{higher} than
+expected, teal when \emph{lower}.  Dashed lines mark \code{abs_z_min} and
+\code{prob_max} thresholds.  Clusters of points in the upper corners
+indicate systematic misfit patterns worth investigating.}
 \item{\code{"severity"}}{Ranked bar chart of the composite severity index
-for the \code{top_n} most unexpected responses.  Use for QC triage
-and case-level prioritization.}
+for the \code{top_n} most unexpected responses.  Bar length reflects
+the combined unexpectedness; labels identify the specific
+person-facet combination.  Use for QC triage and case-level
+prioritization.}
 }
 }
 
 \section{Interpreting output}{
 
 Scatter plot: farther from zero on x-axis = larger residual mismatch;
-higher y-axis = lower observed-category probability.
+higher y-axis = lower observed-category probability.  A uniform
+scatter with few points beyond the threshold lines indicates fewer locally
+surprising responses under the current thresholds.
 
 Severity plot: focuses on the most extreme observations for targeted
-case review.
+case review.  Look for recurring persons or facet levels among the
+top entries---repeated appearances may signal rater misuse, scoring
+errors, or model misspecification.
 }
 
 \section{Typical workflow}{
@@ -89,18 +112,15 @@ case review.
 }
 }
 
+\section{Further guidance}{
+
+For a plot-selection guide and a longer walkthrough, see
+\link{mfrmr_visual_diagnostics} and
+\code{vignette("mfrmr-visual-diagnostics", package = "mfrmr")}.
+}
+
 \examples{
-toy <- expand.grid(
-  Person = paste0("P", 1:4),
-  Rater = paste0("R", 1:2),
-  Criterion = c("Content", "Organization", "Language"),
-  stringsAsFactors = FALSE
-)
-toy$Score <- (
-  as.integer(factor(toy$Person)) +
-  2 * as.integer(factor(toy$Rater)) +
-  as.integer(factor(toy$Criterion))
-) \%\% 3
+toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 p <- plot_unexpected(fit, abs_z_min = 1.5, prob_max = 0.4, top_n = 10, draw = FALSE)
 if (interactive()) {
@@ -110,6 +130,7 @@ if (interactive()) {
     prob_max = 0.4,
     top_n = 10,
     plot_type = "severity",
+    preset = "publication",
     main = "Unexpected Response Severity (Customized)",
     palette = c(higher = "#d95f02", lower = "#1b9e77", bar = "#2b8cbe"),
     label_angle = 45
@@ -117,5 +138,6 @@ if (interactive()) {
 }
 }
 \seealso{
-\code{\link[=unexpected_response_table]{unexpected_response_table()}}, \code{\link[=plot_fair_average]{plot_fair_average()}}, \code{\link[=plot_displacement]{plot_displacement()}}, \code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}}
+\code{\link[=unexpected_response_table]{unexpected_response_table()}}, \code{\link[=plot_fair_average]{plot_fair_average()}}, \code{\link[=plot_displacement]{plot_displacement()}},
+\code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}}, \link{mfrmr_visual_diagnostics}
 }

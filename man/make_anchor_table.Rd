@@ -22,9 +22,21 @@ A data.frame with \code{Facet}, \code{Level}, and \code{Anchor}.
 Build an anchor table from fitted estimates
 }
 \details{
-This helper supports FACETS-style linking workflows:
-estimate one run, export stable reference levels, and reuse them as anchors
-in subsequent calibrations.
+This function exports estimated facet parameters as an anchor table
+for use in subsequent calibrations.  This is the standard approach
+for \strong{linking} across administrations: a reference
+run establishes the measurement scale, and anchored re-analyses
+place new data on that same scale.
+
+Anchor values should be exported from a well-fitting reference run
+with adequate sample size.  If the reference model has convergence
+issues or large misfit, the exported anchors may propagate
+instability.  Re-run \code{\link[=audit_mfrm_anchors]{audit_mfrm_anchors()}} on the receiving data
+to verify compatibility before estimation.
+
+The \code{digits} parameter controls rounding precision.  Use at least 4
+digits for research applications; excessive rounding (e.g., 1 digit)
+can introduce avoidable calibration error.
 }
 \section{Interpreting output}{
 
@@ -45,17 +57,7 @@ in subsequent calibrations.
 }
 
 \examples{
-toy <- expand.grid(
-  Person = paste0("P", 1:4),
-  Rater = paste0("R", 1:2),
-  Criterion = c("Content", "Organization", "Language"),
-  stringsAsFactors = FALSE
-)
-toy$Score <- (
-  as.integer(factor(toy$Person)) +
-  2 * as.integer(factor(toy$Rater)) +
-  as.integer(factor(toy$Criterion))
-) \%\% 3
+toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 anchors_tbl <- make_anchor_table(fit)
 head(anchors_tbl)

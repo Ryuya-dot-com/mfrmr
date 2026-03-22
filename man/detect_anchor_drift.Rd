@@ -49,7 +49,8 @@ Object of class \code{mfrm_anchor_drift} with components:
 \describe{
 \item{drift_table}{Tibble of element-level drift statistics.}
 \item{summary}{Drift summary aggregated by facet and wave.}
-\item{common_elements}{Pairwise counts of common elements.}
+\item{common_elements}{Tibble of pairwise common-element counts.}
+\item{common_by_facet}{Tibble of retained common-element counts by facet.}
 \item{config}{List of analysis configuration.}
 }
 }
@@ -64,11 +65,16 @@ For each non-reference wave, the function extracts facet-level estimates
 using \code{\link[=make_anchor_table]{make_anchor_table()}} and computes the element-by-element difference
 against the reference wave.  Standard errors are obtained from
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} applied to each fit.  Only elements common to both the
-reference and a comparison wave are included.
+reference and a comparison wave are included. Before reporting drift, the
+function removes the weighted common-element link offset between the two
+waves so that \code{Drift} represents residual instability rather than the
+overall shift between calibrations. The function also records how many
+common elements survive the screening step within each linking facet and
+treats fewer than 5 retained common elements per facet as thin support.
 
 An element is \strong{flagged} when either condition is met:
 \deqn{|\Delta_e| > \texttt{drift\_threshold}}
-\deqn{|\Delta_e / SE_e| > \texttt{flag\_se\_ratio}}
+\deqn{|\Delta_e / SE_{\Delta_e}| > \texttt{flag\_se\_ratio}}
 The dual-criterion approach guards against flagging elements with large
 but imprecise estimates, and against missing small but precisely estimated
 shifts.
@@ -77,18 +83,38 @@ When \code{facets} is \code{NULL}, all non-Person facets are compared.  Providin
 subset (e.g., \code{facets = "Criterion"}) restricts comparison to those facets
 only.
 }
+\section{Which function should I use?}{
+
+\itemize{
+\item Use \code{\link[=anchor_to_baseline]{anchor_to_baseline()}} when your starting point is raw new data plus a
+single baseline fit.
+\item Use \code{detect_anchor_drift()} when you already have multiple fitted waves
+and want a reference-versus-wave comparison.
+\item Use \code{\link[=build_equating_chain]{build_equating_chain()}} when the waves form a sequence and you need
+cumulative linking offsets.
+}
+}
+
 \section{Interpreting output}{
 
 \itemize{
 \item \verb{$drift_table}: one row per element x wave combination, with columns
-\code{Facet}, \code{Level}, \code{Wave}, \code{Ref_Est}, \code{Wave_Est}, \code{Drift}, \code{SE},
-\code{Drift_SE_Ratio}, and \code{Flag}.  Large drift signals instability.
+\code{Facet}, \code{Level}, \code{Wave}, \code{Ref_Est}, \code{Wave_Est}, \code{LinkOffset}, \code{Drift},
+\code{SE_Ref}, \code{SE_Wave}, \code{SE}, \code{Drift_SE_Ratio}, \code{LinkSupportAdequate}, and
+\code{Flag}.  Large drift signals instability after alignment to the
+common-element link.
 \item \verb{$summary}: aggregated statistics by facet and wave: number of elements,
 mean/max absolute drift, and count of flagged elements.
-\item \verb{$common_elements}: matrix of pairwise common element counts.  Small
+\item \verb{$common_elements}: pairwise common-element counts in tidy table form.
+Small
 overlap weakens the comparison and results should be interpreted
 cautiously.
+\item \verb{$common_by_facet}: retained common-element counts by linking facet for
+each reference-vs-wave comparison. \code{LinkSupportAdequate = FALSE} means the
+link rests on fewer than 5 retained common elements in at least one facet.
 \item \verb{$config}: records the analysis parameters for reproducibility.
+\item A practical reading order is \code{summary(drift)} first, then
+\code{drift$drift_table}, then \code{drift$common_by_facet} if overlap looks thin.
 }
 }
 
@@ -108,14 +134,15 @@ investigated for substantive causes (e.g., rater re-training).
 d1 <- load_mfrmr_data("study1")
 d2 <- load_mfrmr_data("study2")
 fit1 <- fit_mfrm(d1, "Person", c("Rater", "Criterion"), "Score",
-                 method = "JML", maxit = 25)
+                 method = "JML", maxit = 15)
 fit2 <- fit_mfrm(d2, "Person", c("Rater", "Criterion"), "Score",
-                 method = "JML", maxit = 25)
+                 method = "JML", maxit = 15)
 drift <- detect_anchor_drift(list(Wave1 = fit1, Wave2 = fit2))
 summary(drift)
-drift$drift_table
+head(drift$drift_table[, c("Facet", "Level", "Wave", "Drift", "Flag")])
+drift$common_elements
 }
 \seealso{
 \code{\link[=anchor_to_baseline]{anchor_to_baseline()}}, \code{\link[=build_equating_chain]{build_equating_chain()}},
-\code{\link[=make_anchor_table]{make_anchor_table()}}, \code{\link[=plot_anchor_drift]{plot_anchor_drift()}}
+\code{\link[=make_anchor_table]{make_anchor_table()}}, \code{\link[=plot_anchor_drift]{plot_anchor_drift()}}, \link{mfrmr_linking_and_dff}
 }

@@ -553,7 +553,7 @@ test_that("compute_prob_matrix returns a matrix-like structure", {
 })
 
 test_that("compute_scorefile produces a data frame", {
-  sf <- mfrmr:::compute_scorefile(.fit)
+  sf <- expect_no_warning(mfrmr:::compute_scorefile(.fit))
   expect_true(is.data.frame(sf))
   expect_true(nrow(sf) > 0)
 })

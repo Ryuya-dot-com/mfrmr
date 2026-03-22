@@ -21,7 +21,8 @@ specifications_report(
 
 \item{output_file}{Optional output-file label (for reporting only).}
 
-\item{include_fixed}{If \code{TRUE}, include a FACETS-style fixed-width text block.}
+\item{include_fixed}{If \code{TRUE}, include a legacy-compatible fixed-width text
+block.}
 }
 \value{
 A named list with specification-report components. Class:
@@ -50,22 +51,12 @@ Build a specification summary report (preferred alias)
 \enumerate{
 \item Generate \code{specifications_report(fit)}.
 \item Verify model settings and convergence metadata.
-\item Use as Table 1-style documentation in reports.
+\item Use the output as methods and run-documentation support in reports.
 }
 }
 
 \examples{
-toy <- expand.grid(
-  Person = paste0("P", 1:4),
-  Rater = paste0("R", 1:2),
-  Criterion = c("Content", "Organization", "Language"),
-  stringsAsFactors = FALSE
-)
-toy$Score <- (
-  as.integer(factor(toy$Person)) +
-  2 * as.integer(factor(toy$Rater)) +
-  as.integer(factor(toy$Criterion))
-) \%\% 3
+toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 out <- specifications_report(fit, title = "Toy run")
 summary(out)
@@ -73,5 +64,6 @@ p_spec <- plot(out, draw = FALSE)
 class(p_spec)
 }
 \seealso{
-\code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=data_quality_report]{data_quality_report()}}, \code{\link[=estimation_iteration_report]{estimation_iteration_report()}}
+\code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=data_quality_report]{data_quality_report()}}, \code{\link[=estimation_iteration_report]{estimation_iteration_report()}},
+\link{mfrmr_reports_and_tables}, \link{mfrmr_compatibility_layer}
 }

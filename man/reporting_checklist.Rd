@@ -50,13 +50,42 @@ Checklist items are grouped into seven sections:
 The output is designed for manuscript preparation, audit trails, and
 reproducible reporting workflows.
 }
+\section{What this checklist means}{
+
+\code{reporting_checklist()} is a content-availability contract. It tells you
+which reporting elements are already present in the current analysis
+objects and which still need to be generated or documented. The primary
+draft-status column is \code{DraftReady}; \code{ReadyForAPA} is retained as a
+backward-compatible alias.
+}
+
+\section{What this checklist does not justify}{
+
+\itemize{
+\item It is not a single run-level pass/fail decision for publication.
+\item \code{DraftReady = TRUE} / \code{ReadyForAPA = TRUE} does not certify formal
+inferential adequacy.
+\item Missing bias rows may simply mean \code{bias_results} were not supplied.
+}
+}
+
 \section{Interpreting output}{
 
 \itemize{
 \item \code{checklist}: one row per reporting item with \code{Available = TRUE/FALSE}.
+\code{DraftReady = TRUE} means the item can be drafted into a report with the
+package's documented caveats. \code{ReadyForAPA} is a backward-compatible alias
+of the same flag; neither field certifies formal inferential adequacy.
 \item \code{section_summary}: available items by section.
 \item \code{references}: core background references when requested.
 }
+}
+
+\section{Recommended next step}{
+
+Review the rows with \code{Available = FALSE} or \code{DraftReady = FALSE}, then add
+the missing diagnostics, bias results, or narrative context before calling
+\code{\link[=build_apa_outputs]{build_apa_outputs()}} for draft text generation.
 }
 
 \section{Typical workflow}{
@@ -70,14 +99,14 @@ available from the current analysis objects.
 }
 
 \examples{
-toy <- mfrmr:::sample_mfrm_data(seed = 123)
+toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "JML", maxit = 25)
 diag <- diagnose_mfrm(fit, residual_pca = "both")
 chk <- reporting_checklist(fit, diagnostics = diag)
 summary(chk)
 apa <- build_apa_outputs(fit, diag)
-head(chk$checklist[, c("Section", "Item", "ReadyForAPA", "NextAction")])
+head(chk$checklist[, c("Section", "Item", "DraftReady", "NextAction")])
 nchar(apa$report_text)
 }
 \seealso{

@@ -2,7 +2,7 @@
 % Please edit documentation in R/api-tables.R
 \name{facets_output_file_bundle}
 \alias{facets_output_file_bundle}
-\title{Build FACETS-style output-file bundle (\verb{GRAPH=} / \verb{SCORE=})}
+\title{Build a legacy-compatible output-file bundle (\verb{GRAPH=} / \verb{SCORE=})}
 \usage{
 facets_output_file_bundle(
   fit,
@@ -55,10 +55,10 @@ A named list including:
 }
 }
 \description{
-Build FACETS-style output-file bundle (\verb{GRAPH=} / \verb{SCORE=})
+Build a legacy-compatible output-file bundle (\verb{GRAPH=} / \verb{SCORE=})
 }
 \details{
-FACETS output files often include:
+Legacy-compatible output files often include:
 \itemize{
 \item graph coordinates for Table 8 curves (\verb{GRAPH=} / \verb{Graphfile=}), and
 \item observation-level modeled score lines (\verb{SCORE=}-style inspection).
@@ -75,7 +75,7 @@ CSV/fixed-width text files to disk.
 \section{Interpreting output}{
 
 \itemize{
-\item \code{graphfile}: FACETS-style wide curve coordinates (human-readable labels).
+\item \code{graphfile}: legacy-compatible wide curve coordinates (human-readable labels).
 \item \code{graphfile_syntactic}: same curves with syntactic column names for programmatic use.
 \item \code{scorefile}: observation-level observed/expected/residual diagnostics.
 \item \code{written_files}: audit trail of files produced when \code{write_files = TRUE}.
@@ -83,6 +83,15 @@ CSV/fixed-width text files to disk.
 
 For reproducible pipelines, prefer \code{graphfile_syntactic} and keep
 \code{written_files} in run logs.
+}
+
+\section{Preferred route for new analyses}{
+
+For new scripts, prefer \code{\link[=category_curves_report]{category_curves_report()}} or
+\code{\link[=category_structure_report]{category_structure_report()}} for scale outputs, then use
+\code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}} for file handoff. Use
+\code{facets_output_file_bundle()} only when a legacy-compatible graphfile or
+scorefile contract is required.
 }
 
 \section{Typical workflow}{
@@ -96,17 +105,7 @@ For reproducible pipelines, prefer \code{graphfile_syntactic} and keep
 }
 
 \examples{
-toy <- expand.grid(
-  Person = paste0("P", 1:4),
-  Rater = paste0("R", 1:2),
-  Criterion = c("Content", "Organization", "Language"),
-  stringsAsFactors = FALSE
-)
-toy$Score <- (
-  as.integer(factor(toy$Person)) +
-  2 * as.integer(factor(toy$Rater)) +
-  as.integer(factor(toy$Criterion))
-) \%\% 3
+toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 out <- facets_output_file_bundle(fit, diagnostics = diagnose_mfrm(fit, residual_pca = "none"))
 summary(out)
@@ -114,5 +113,7 @@ p_out <- plot(out, draw = FALSE)
 class(p_out)
 }
 \seealso{
-\code{\link[=category_curves_report]{category_curves_report()}}, \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=unexpected_response_table]{unexpected_response_table()}}
+\code{\link[=category_curves_report]{category_curves_report()}}, \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=unexpected_response_table]{unexpected_response_table()}},
+\code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}}, \link{mfrmr_reports_and_tables},
+\link{mfrmr_compatibility_layer}
 }

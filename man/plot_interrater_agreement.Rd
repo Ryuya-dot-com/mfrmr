@@ -16,6 +16,7 @@ plot_interrater_agreement(
   main = NULL,
   palette = NULL,
   label_angle = 45,
+  preset = c("standard", "publication", "compact"),
   draw = TRUE
 )
 }
@@ -42,6 +43,8 @@ plot_interrater_agreement(
 
 \item{label_angle}{X-axis label angle for bar-style plots.}
 
+\item{preset}{Visual preset (\code{"standard"}, \code{"publication"}, or \code{"compact"}).}
+
 \item{draw}{If \code{TRUE}, draw with base graphics.}
 }
 \value{
@@ -52,7 +55,26 @@ Plot inter-rater agreement diagnostics using base R
 }
 \details{
 Inter-rater agreement plots summarize pairwise consistency for a chosen
-rater facet under matched contexts.
+rater facet.  Agreement statistics are computed over observations that
+share the same person and context-facet levels, ensuring that
+comparisons reflect identical rating targets.
+
+\strong{Exact agreement} is the proportion of matched observations where
+both raters assigned the same category score.  The \strong{expected
+agreement} line shows the proportion expected by chance given each
+rater's marginal category distribution, providing a baseline.
+
+\strong{Pairwise correlation} is the Pearson correlation between scores
+assigned by each rater pair on matched observations.
+
+The \strong{difference plot} decomposes disagreement into systematic bias
+(mean signed difference on x-axis: positive = Rater 1 more severe)
+and total inconsistency (mean absolute difference on y-axis).  Points
+near the origin indicate both low bias and low inconsistency.
+
+The \code{context_facets} parameter specifies which facets define "the
+same rating target" (e.g., Criterion).  When \code{NULL}, all non-rater
+facets are used as context.
 }
 \section{Plot types}{
 
@@ -60,20 +82,25 @@ rater facet under matched contexts.
 \item{\code{"exact"} (default)}{Bar chart of exact agreement proportion by
 rater pair.  Expected agreement overlaid as connected circles.
 Horizontal reference line at \code{exact_warn}.  Bars colored red when
-flagged.}
+observed agreement falls below the warning threshold.}
 \item{\code{"corr"}}{Bar chart of pairwise Pearson correlation by rater
 pair.  Reference line at \code{corr_warn}.  Ordered by correlation
-(lowest first).}
+(lowest first).  Low correlations suggest inconsistent rank
+ordering of persons between raters.}
 \item{\code{"difference"}}{Scatter plot.  X-axis: mean signed score
-difference (Rater1 - Rater2).  Y-axis: mean absolute difference.
-Points colored by flag status.  Vertical reference at 0.}
+difference (Rater 1 \eqn{-} Rater 2); positive values indicate
+Rater 1 is more severe.  Y-axis: mean absolute difference
+(overall disagreement magnitude).  Points colored red when
+flagged.  Vertical reference at 0.}
 }
 }
 
 \section{Interpreting output}{
 
 Pairs below \code{exact_warn} and/or \code{corr_warn} should be prioritized for
-calibration review.
+rater calibration review.  On the difference plot, points far from the
+origin along the x-axis indicate systematic bias; points high on the
+y-axis indicate large inconsistency regardless of direction.
 }
 
 \section{Typical workflow}{
@@ -85,18 +112,15 @@ calibration review.
 }
 }
 
+\section{Further guidance}{
+
+For a plot-selection guide and a longer walkthrough, see
+\link{mfrmr_visual_diagnostics} and
+\code{vignette("mfrmr-visual-diagnostics", package = "mfrmr")}.
+}
+
 \examples{
-toy <- expand.grid(
-  Person = paste0("P", 1:4),
-  Rater = paste0("R", 1:2),
-  Criterion = c("Content", "Organization", "Language"),
-  stringsAsFactors = FALSE
-)
-toy$Score <- (
-  as.integer(factor(toy$Person)) +
-  2 * as.integer(factor(toy$Rater)) +
-  as.integer(factor(toy$Criterion))
-) \%\% 3
+toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 p <- plot_interrater_agreement(fit, rater_facet = "Rater", draw = FALSE)
 if (interactive()) {
@@ -107,10 +131,12 @@ if (interactive()) {
     plot_type = "exact",
     main = "Inter-rater Agreement (Customized)",
     palette = c(ok = "#2b8cbe", flag = "#cb181d"),
-    label_angle = 45
+    label_angle = 45,
+    preset = "publication"
   )
 }
 }
 \seealso{
-\code{\link[=interrater_agreement_table]{interrater_agreement_table()}}, \code{\link[=plot_facets_chisq]{plot_facets_chisq()}}, \code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}}
+\code{\link[=interrater_agreement_table]{interrater_agreement_table()}}, \code{\link[=plot_facets_chisq]{plot_facets_chisq()}},
+\code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}}, \link{mfrmr_visual_diagnostics}
 }

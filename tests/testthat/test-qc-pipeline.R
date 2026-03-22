@@ -21,7 +21,7 @@ test_that("verdicts table has 10 rows with valid verdict values", {
   expect_true(all(qc$verdicts$Verdict %in% c("Pass", "Warn", "Fail", "Skip")))
   expected_checks <- c("Convergence", "Global Fit", "Reliability", "Separation",
                         "Element Misfit", "Unexpected Responses", "Category Structure",
-                        "Connectivity", "Inter-rater Agreement", "DIF/Bias")
+                        "Connectivity", "Inter-rater Agreement", "Functioning/Bias Screen")
   expect_equal(qc$verdicts$Check, expected_checks)
   expect_true(all(c("Check", "Verdict", "Value", "Threshold", "Detail") %in%
                     names(qc$verdicts)))
@@ -125,6 +125,72 @@ test_that("run_qc_pipeline works with pre-computed diagnostics", {
 
   expect_s3_class(qc, "mfrm_qc_pipeline")
   expect_equal(nrow(qc$verdicts), 10)
+})
+
+test_that("run_qc_pipeline records screening-tier bias metadata when bias results are provided", {
+  toy <- load_mfrmr_data("example_bias")
+  fit <- suppressWarnings(fit_mfrm(
+    toy, "Person", c("Rater", "Criterion"), "Score",
+    method = "JML", maxit = 20
+  ))
+  diag <- suppressWarnings(diagnose_mfrm(fit, residual_pca = "none"))
+  bias <- suppressWarnings(estimate_bias(
+    fit, diag,
+    facet_a = "Rater",
+    facet_b = "Criterion",
+    max_iter = 2
+  ))
+
+  qc <- run_qc_pipeline(fit, diagnostics = diag, bias_results = bias)
+
+  expect_match(qc$verdicts$Detail[10], "screened interactions crossed", fixed = TRUE)
+  expect_identical(qc$details$bias$inference_tier, "screening")
+  expect_true(qc$details$bias$available)
+  expect_true(is.finite(qc$details$bias$total))
+})
+
+test_that("run_qc_pipeline does not convert category-count failures into pass verdicts", {
+  toy <- load_mfrmr_data("study1")
+  fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
+                  method = "JML", maxit = 25)
+  diag <- diagnose_mfrm(fit, residual_pca = "none")
+  diag$obs <- structure(list(), class = "bogus_obs")
+
+  qc <- run_qc_pipeline(fit, diagnostics = diag)
+
+  expect_identical(as.character(qc$verdicts$Verdict[7]), "Skip")
+  expect_match(qc$verdicts$Detail[7], "Category counts could not be computed", fixed = TRUE)
+  expect_true(nzchar(qc$details$category_structure$error))
+  expect_false(identical(qc$overall, "Pass"))
+})
+
+test_that("run_qc_pipeline surfaces incomplete bias collections as warn rather than skip/pass", {
+  toy <- load_mfrmr_data("example_bias")
+  fit <- suppressWarnings(fit_mfrm(
+    toy, "Person", c("Rater", "Criterion"), "Score",
+    method = "JML", maxit = 20
+  ))
+  diag <- suppressWarnings(diagnose_mfrm(fit, residual_pca = "none"))
+  diag$interactions <- data.frame()
+  bias_collection <- structure(
+    list(
+      by_pair = list(),
+      errors = data.frame(
+        Interaction = "Rater x Criterion",
+        Facets = "Rater x Criterion",
+        Error = "forced pair failure",
+        stringsAsFactors = FALSE
+      )
+    ),
+    class = c("mfrm_bias_collection", "mfrm_bundle", "list")
+  )
+
+  qc <- run_qc_pipeline(fit, diagnostics = diag, bias_results = bias_collection)
+
+  expect_identical(as.character(qc$verdicts$Verdict[10]), "Warn")
+  expect_match(qc$verdicts$Detail[10], "incomplete", fixed = TRUE)
+  expect_identical(qc$details$bias$error_count, 1L)
+  expect_false(identical(qc$overall, "Pass"))
 })
 
 test_that("run_qc_pipeline rejects non-mfrm_fit input", {

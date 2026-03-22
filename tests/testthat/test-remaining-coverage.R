@@ -251,7 +251,7 @@ test_that("summary.mfrm_facets_run and print work", {
   expect_s3_class(s, "summary.mfrm_facets_run")
 
   printed <- capture.output(print(s))
-  expect_true(any(grepl("FACETS-mode", printed)))
+  expect_true(any(grepl("Legacy-compatible", printed)))
 
   # Direct print delegates to summary
   printed2 <- capture.output(print(out))

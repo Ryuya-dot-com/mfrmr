@@ -4,7 +4,8 @@
 #' @param title Optional analysis title.
 #' @param data_file Optional data-file label (for reporting only).
 #' @param output_file Optional output-file label (for reporting only).
-#' @param include_fixed If `TRUE`, include a FACETS-style fixed-width text block.
+#' @param include_fixed If `TRUE`, include a legacy-compatible fixed-width text
+#'   block.
 #' @details
 #' `summary(out)` is supported through `summary()`.
 #' `plot(out)` is dispatched through `plot()` for class
@@ -19,22 +20,13 @@
 #' @section Typical workflow:
 #' 1. Generate `specifications_report(fit)`.
 #' 2. Verify model settings and convergence metadata.
-#' 3. Use as Table 1-style documentation in reports.
+#' 3. Use the output as methods and run-documentation support in reports.
 #' @return A named list with specification-report components. Class:
 #'   `mfrm_specifications`.
-#' @seealso [fit_mfrm()], [data_quality_report()], [estimation_iteration_report()]
+#' @seealso [fit_mfrm()], [data_quality_report()], [estimation_iteration_report()],
+#'   [mfrmr_reports_and_tables], [mfrmr_compatibility_layer]
 #' @examples
-#' toy <- expand.grid(
-#'   Person = paste0("P", 1:4),
-#'   Rater = paste0("R", 1:2),
-#'   Criterion = c("Content", "Organization", "Language"),
-#'   stringsAsFactors = FALSE
-#' )
-#' toy$Score <- (
-#'   as.integer(factor(toy$Person)) +
-#'   2 * as.integer(factor(toy$Rater)) +
-#'   as.integer(factor(toy$Criterion))
-#' ) %% 3
+#' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 #' out <- specifications_report(fit, title = "Toy run")
 #' summary(out)
@@ -66,7 +58,8 @@ specifications_report <- function(fit,
 #' @param facets Optional facet column names in `data`.
 #' @param score Optional score column name in `data`.
 #' @param weight Optional weight column name in `data`.
-#' @param include_fixed If `TRUE`, include a FACETS-style fixed-width text block.
+#' @param include_fixed If `TRUE`, include a legacy-compatible fixed-width text
+#'   block.
 #' @details
 #' `summary(out)` is supported through `summary()`.
 #' `plot(out)` is dispatched through `plot()` for class
@@ -85,19 +78,10 @@ specifications_report <- function(fit,
 #' 3. Resolve issues before final estimation/reporting.
 #' @return A named list with data-quality report components. Class:
 #'   `mfrm_data_quality`.
-#' @seealso [fit_mfrm()], [describe_mfrm_data()], [specifications_report()]
+#' @seealso [fit_mfrm()], [describe_mfrm_data()], [specifications_report()],
+#'   [mfrmr_reports_and_tables], [mfrmr_compatibility_layer]
 #' @examples
-#' toy <- expand.grid(
-#'   Person = paste0("P", 1:4),
-#'   Rater = paste0("R", 1:2),
-#'   Criterion = c("Content", "Organization", "Language"),
-#'   stringsAsFactors = FALSE
-#' )
-#' toy$Score <- (
-#'   as.integer(factor(toy$Person)) +
-#'   2 * as.integer(factor(toy$Rater)) +
-#'   as.integer(factor(toy$Criterion))
-#' ) %% 3
+#' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 #' out <- data_quality_report(
 #'   fit, data = toy, person = "Person",
@@ -134,7 +118,8 @@ data_quality_report <- function(fit,
 #' @param max_iter Maximum replay iterations (excluding optional initial row).
 #' @param reltol Stopping tolerance for replayed max-logit change.
 #' @param include_prox If `TRUE`, include an initial pseudo-row labeled `PROX`.
-#' @param include_fixed If `TRUE`, include a FACETS-style fixed-width text block.
+#' @param include_fixed If `TRUE`, include a legacy-compatible fixed-width text
+#'   block.
 #' @details
 #' `summary(out)` is supported through `summary()`.
 #' `plot(out)` is dispatched through `plot()` for class
@@ -152,19 +137,10 @@ data_quality_report <- function(fit,
 #' 3. Adjust optimization settings if convergence looks weak.
 #' @return A named list with iteration-report components. Class:
 #'   `mfrm_iteration_report`.
-#' @seealso [fit_mfrm()], [specifications_report()], [data_quality_report()]
+#' @seealso [fit_mfrm()], [specifications_report()], [data_quality_report()],
+#'   [mfrmr_reports_and_tables], [mfrmr_compatibility_layer]
 #' @examples
-#' toy <- expand.grid(
-#'   Person = paste0("P", 1:4),
-#'   Rater = paste0("R", 1:2),
-#'   Criterion = c("Content", "Organization", "Language"),
-#'   stringsAsFactors = FALSE
-#' )
-#' toy$Score <- (
-#'   as.integer(factor(toy$Person)) +
-#'   2 * as.integer(factor(toy$Rater)) +
-#'   as.integer(factor(toy$Criterion))
-#' ) %% 3
+#' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 #' out <- estimation_iteration_report(fit, max_iter = 5)
 #' summary(out)
@@ -198,7 +174,8 @@ estimation_iteration_report <- function(fit,
 #' `summary(out)` is supported through `summary()`.
 #' `plot(out)` is dispatched through `plot()` for class
 #' `mfrm_subset_connectivity` (`type = "subset_observations"`,
-#' `"facet_levels"`).
+#' `"facet_levels"`, or `"linking_matrix"` / `"coverage_matrix"` /
+#' `"design_matrix"`).
 #'
 #' @section Interpreting output:
 #' - `summary`: number and size of connected subsets.
@@ -211,24 +188,18 @@ estimation_iteration_report <- function(fit,
 #' 3. Use results to justify linking/anchoring strategy.
 #' @return A named list with subset-connectivity components. Class:
 #'   `mfrm_subset_connectivity`.
-#' @seealso [diagnose_mfrm()], [measurable_summary_table()], [data_quality_report()]
+#' @seealso [diagnose_mfrm()], [measurable_summary_table()], [data_quality_report()],
+#'   [mfrmr_linking_and_dff], [mfrmr_visual_diagnostics]
 #' @examples
-#' toy <- expand.grid(
-#'   Person = paste0("P", 1:4),
-#'   Rater = paste0("R", 1:2),
-#'   Criterion = c("Content", "Organization", "Language"),
-#'   stringsAsFactors = FALSE
-#' )
-#' toy$Score <- (
-#'   as.integer(factor(toy$Person)) +
-#'   2 * as.integer(factor(toy$Rater)) +
-#'   as.integer(factor(toy$Criterion))
-#' ) %% 3
+#' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 #' out <- subset_connectivity_report(fit)
 #' summary(out)
 #' p_sub <- plot(out, draw = FALSE)
+#' p_design <- plot(out, type = "design_matrix", draw = FALSE)
 #' class(p_sub)
+#' class(p_design)
+#' out$summary[, c("Subset", "Observations", "ObservationPercent")]
 #' @export
 subset_connectivity_report <- function(fit,
                                        diagnostics = NULL,
@@ -251,6 +222,10 @@ subset_connectivity_report <- function(fit,
 #' @param diagnostics Optional output from [diagnose_mfrm()].
 #' @param metrics Numeric columns in `diagnostics$measures` to summarize.
 #' @param ruler_width Width of the fixed-width ruler used for `M/S/Q/X` marks.
+#' @param distribution_basis Which distribution basis to keep in the appended
+#'   precision summary: `"both"` (default), `"sample"`, or `"population"`.
+#' @param se_mode Which standard-error mode to keep in the appended precision
+#'   summary: `"both"` (default), `"model"`, or `"fit_adjusted"`.
 #' @details
 #' `summary(out)` is supported through `summary()`.
 #' `plot(out)` is dispatched through `plot()` for class
@@ -258,27 +233,24 @@ subset_connectivity_report <- function(fit,
 #'
 #' @section Interpreting output:
 #' - facet-level means/SD/ranges of selected metrics (`Estimate`, fit indices, `SE`).
-#' - fixed-width ruler rows (`M/S/Q/X`) for FACETS-like profile scanning.
+#' - fixed-width ruler rows (`M/S/Q/X`) for compact profile scanning.
 #'
 #' @section Typical workflow:
 #' 1. Run `facet_statistics_report(fit)`.
 #' 2. Inspect summary/ranges for anomalous facets.
 #' 3. Cross-check flagged facets with fit and chi-square diagnostics.
+#' The returned bundle now includes:
+#' - `precision_summary`: facet precision/separation indices by
+#'   `DistributionBasis` and `SEMode`
+#' - `variability_tests`: fixed/random variability tests by facet
+#' - `se_modes`: compact list of available SE modes by facet
+#'
 #' @return A named list with facet-statistics components. Class:
 #'   `mfrm_facet_statistics`.
-#' @seealso [diagnose_mfrm()], [summary.mfrm_fit()], [plot_facets_chisq()]
+#' @seealso [diagnose_mfrm()], [summary.mfrm_fit()], [plot_facets_chisq()],
+#'   [mfrmr_reports_and_tables]
 #' @examples
-#' toy <- expand.grid(
-#'   Person = paste0("P", 1:4),
-#'   Rater = paste0("R", 1:2),
-#'   Criterion = c("Content", "Organization", "Language"),
-#'   stringsAsFactors = FALSE
-#' )
-#' toy$Score <- (
-#'   as.integer(factor(toy$Person)) +
-#'   2 * as.integer(factor(toy$Rater)) +
-#'   as.integer(factor(toy$Criterion))
-#' ) %% 3
+#' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 #' out <- facet_statistics_report(fit)
 #' summary(out)
@@ -288,7 +260,15 @@ subset_connectivity_report <- function(fit,
 facet_statistics_report <- function(fit,
                                     diagnostics = NULL,
                                     metrics = c("Estimate", "Infit", "Outfit", "SE"),
-                                    ruler_width = 41) {
+                                    ruler_width = 41,
+                                    distribution_basis = c("both", "sample", "population"),
+                                    se_mode = c("both", "model", "fit_adjusted")) {
+  distribution_basis <- match.arg(distribution_basis)
+  se_mode <- match.arg(se_mode)
+  if (is.null(diagnostics)) {
+    diagnostics <- diagnose_mfrm(fit, residual_pca = "none")
+  }
+
   out <- with_legacy_name_warning_suppressed(
     table6_2_facet_statistics(
       fit = fit,
@@ -297,7 +277,120 @@ facet_statistics_report <- function(fit,
       ruler_width = ruler_width
     )
   )
+  precision_tbl <- as.data.frame(
+    diagnostics$facet_precision %||% build_facet_precision_summary(diagnostics$measures, diagnostics$facets_chisq),
+    stringsAsFactors = FALSE
+  )
+  if (nrow(precision_tbl) > 0) {
+    if (!identical(distribution_basis, "both")) {
+      precision_tbl <- precision_tbl[precision_tbl$DistributionBasis == distribution_basis, , drop = FALSE]
+    }
+    if (!identical(se_mode, "both")) {
+      precision_tbl <- precision_tbl[precision_tbl$SEMode == se_mode, , drop = FALSE]
+    }
+  }
+
+  variability_tbl <- as.data.frame(diagnostics$facets_chisq %||% data.frame(), stringsAsFactors = FALSE)
+  se_modes_tbl <- if (nrow(precision_tbl) == 0) {
+    data.frame()
+  } else {
+    precision_tbl |>
+      dplyr::group_by(.data$Facet, .data$SEMode, .data$SEColumn) |>
+      dplyr::summarize(
+        DistributionBases = paste(sort(unique(.data$DistributionBasis)), collapse = ", "),
+        MeanSE = mean(.data$MeanSE, na.rm = TRUE),
+        MedianSE = mean(.data$MedianSE, na.rm = TRUE),
+        AvailableLevels = max(.data$SEAvailable, na.rm = TRUE),
+        .groups = "drop"
+      ) |>
+      as.data.frame(stringsAsFactors = FALSE)
+  }
+
+  out$precision_summary <- precision_tbl
+  out$variability_tests <- variability_tbl
+  out$se_modes <- se_modes_tbl
+  out$settings$distribution_basis <- distribution_basis
+  out$settings$se_mode <- se_mode
   as_mfrm_bundle(out, "mfrm_facet_statistics")
+}
+
+#' Build a precision audit report
+#'
+#' @param fit Output from [fit_mfrm()].
+#' @param diagnostics Optional output from [diagnose_mfrm()].
+#'
+#' @details
+#' This helper summarizes how `mfrmr` derived SE, CI, and reliability values
+#' for the current run. It is package-native and is intended to help users
+#' distinguish model-based precision paths from exploratory ones without
+#' requiring external software conventions.
+#'
+#' @section What this audit means:
+#' `precision_audit_report()` is a reporting gatekeeper for precision claims.
+#' It tells you how the package derived uncertainty summaries for the current
+#' run and how cautiously those summaries should be written up.
+#'
+#' @section What this audit does not justify:
+#' - It does not, by itself, validate the measurement model or substantive
+#'   conclusions.
+#' - A favorable precision tier does not override convergence, fit, linking,
+#'   or design problems elsewhere in the analysis.
+#'
+#' @section Interpreting output:
+#' - `profile`: one-row overview of the active precision tier and recommended use.
+#' - `checks`: package-native audit checks for SE ordering, reliability ordering,
+#'   coverage of sample/population summaries, and SE source labels.
+#' - `approximation_notes`: method notes copied from `diagnose_mfrm()`.
+#'
+#' @section Recommended next step:
+#' Use the `profile$PrecisionTier` and `checks` table to decide whether SE, CI,
+#' and reliability language can be phrased as model-based, should be qualified
+#' as hybrid, or should remain exploratory in the final report.
+#'
+#' @section Typical workflow:
+#' 1. Run `diagnose_mfrm()` for the fitted model.
+#' 2. Build `precision_audit_report(fit, diagnostics = diag)`.
+#' 3. Use `summary()` to see whether the run supports model-based reporting
+#'    language or should remain in exploratory/screening mode.
+#'
+#' @return A named list with:
+#' - `profile`: one-row precision overview
+#' - `checks`: package-native precision audit checks
+#' - `approximation_notes`: detailed method notes
+#' - `settings`: resolved model and method labels
+#'
+#' @seealso [diagnose_mfrm()], [facet_statistics_report()], [reporting_checklist()]
+#' @examples
+#' toy <- load_mfrmr_data("example_core")
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
+#' diag <- diagnose_mfrm(fit, residual_pca = "none")
+#' out <- precision_audit_report(fit, diagnostics = diag)
+#' summary(out)
+#' @export
+precision_audit_report <- function(fit, diagnostics = NULL) {
+  if (!inherits(fit, "mfrm_fit")) {
+    stop("`fit` must be an mfrm_fit object from fit_mfrm().")
+  }
+  if (is.null(diagnostics)) {
+    diagnostics <- diagnose_mfrm(fit, residual_pca = "none")
+  }
+
+  profile_tbl <- as.data.frame(diagnostics$precision_profile %||% data.frame(), stringsAsFactors = FALSE)
+  checks_tbl <- as.data.frame(diagnostics$precision_audit %||% data.frame(), stringsAsFactors = FALSE)
+  notes_tbl <- as.data.frame(diagnostics$approximation_notes %||% data.frame(), stringsAsFactors = FALSE)
+  settings <- list(
+    model = as.character(fit$summary$Model[1] %||% fit$config$model %||% NA_character_),
+    method = as.character(fit$summary$Method[1] %||% fit$config$method %||% NA_character_),
+    precision_tier = as.character(profile_tbl$PrecisionTier[1] %||% NA_character_)
+  )
+
+  out <- list(
+    profile = profile_tbl,
+    checks = checks_tbl,
+    approximation_notes = notes_tbl,
+    settings = settings
+  )
+  as_mfrm_bundle(out, "mfrm_precision_audit")
 }
 
 #' Build a category structure report (preferred alias)
@@ -307,12 +400,13 @@ facet_statistics_report <- function(fit,
 #' @param theta_range Theta/logit range used to derive transition points.
 #' @param theta_points Number of grid points used for transition-point search.
 #' @param drop_unused If `TRUE`, remove zero-count categories from outputs.
-#' @param include_fixed If `TRUE`, include a FACETS-style fixed-width text block.
+#' @param include_fixed If `TRUE`, include a legacy-compatible fixed-width text
+#'   block.
 #' @param fixed_max_rows Maximum rows per fixed-width section.
 #'
 #' @details
 #' Preferred high-level API for category-structure diagnostics.
-#' This wraps the legacy Table 8 bar/transition export and returns a stable
+#' This wraps the legacy-compatible bar/transition export and returns a stable
 #' bundle interface for reporting and plotting.
 #'
 #' @section Interpreting output:
@@ -331,22 +425,13 @@ facet_statistics_report <- function(fit,
 #' 1. [fit_mfrm()] -> model.
 #' 2. [diagnose_mfrm()] -> residual/fit diagnostics (optional argument here).
 #' 3. `category_structure_report()` -> category health snapshot.
-#' 4. `summary()` and `plot()` for report-ready interpretation.
+#' 4. `summary()` and `plot()` for draft-oriented review of category structure.
 #' @return A named list with category-structure components. Class:
 #'   `mfrm_category_structure`.
-#' @seealso [rating_scale_table()], [category_curves_report()], [plot.mfrm_fit()]
+#' @seealso [rating_scale_table()], [category_curves_report()], [plot.mfrm_fit()],
+#'   [mfrmr_reports_and_tables], [mfrmr_visual_diagnostics]
 #' @examples
-#' toy <- expand.grid(
-#'   Person = paste0("P", 1:4),
-#'   Rater = paste0("R", 1:2),
-#'   Criterion = c("Content", "Organization", "Language"),
-#'   stringsAsFactors = FALSE
-#' )
-#' toy$Score <- (
-#'   as.integer(factor(toy$Person)) +
-#'   2 * as.integer(factor(toy$Rater)) +
-#'   as.integer(factor(toy$Criterion))
-#' ) %% 3
+#' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 #' out <- category_structure_report(fit)
 #' summary(out)
@@ -381,7 +466,8 @@ category_structure_report <- function(fit,
 #' @param theta_range Theta/logit range for curve coordinates.
 #' @param theta_points Number of points on the theta grid.
 #' @param digits Rounding digits for numeric graph output.
-#' @param include_fixed If `TRUE`, include a FACETS-style fixed-width text block.
+#' @param include_fixed If `TRUE`, include a legacy-compatible fixed-width text
+#'   block.
 #' @param fixed_max_rows Maximum rows shown in fixed-width graph tables.
 #'
 #' @details
@@ -406,19 +492,10 @@ category_structure_report <- function(fit,
 #' 3. Use `summary()` and `plot()`; export tables for manuscripts/dashboard use.
 #' @return A named list with category-curve components. Class:
 #'   `mfrm_category_curves`.
-#' @seealso [category_structure_report()], [rating_scale_table()], [plot.mfrm_fit()]
+#' @seealso [category_structure_report()], [rating_scale_table()], [plot.mfrm_fit()],
+#'   [mfrmr_reports_and_tables], [mfrmr_visual_diagnostics]
 #' @examples
-#' toy <- expand.grid(
-#'   Person = paste0("P", 1:4),
-#'   Rater = paste0("R", 1:2),
-#'   Criterion = c("Content", "Organization", "Language"),
-#'   stringsAsFactors = FALSE
-#' )
-#' toy$Score <- (
-#'   as.integer(factor(toy$Person)) +
-#'   2 * as.integer(factor(toy$Rater)) +
-#'   as.integer(factor(toy$Criterion))
-#' ) %% 3
+#' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 #' out <- category_curves_report(fit, theta_points = 101)
 #' summary(out)
@@ -470,10 +547,10 @@ category_curves_report <- function(fit,
 #' - estimate internally from `mfrm_fit` + facet specification.
 #'
 #' @section Interpreting output:
-#' Focus on ranked rows where multiple criteria converge:
+#' Focus on ranked rows where multiple screening criteria converge:
 #' - large absolute t statistic
 #' - large absolute bias size
-#' - small p-value
+#' - small screening tail area
 #'
 #' The bundle is optimized for downstream `summary()` and
 #' [plot_bias_interaction()] views.
@@ -486,17 +563,7 @@ category_curves_report <- function(fit,
 #'   `mfrm_bias_interaction`.
 #' @seealso [estimate_bias()], [build_fixed_reports()], [plot_bias_interaction()]
 #' @examples
-#' toy <- expand.grid(
-#'   Person = paste0("P", 1:4),
-#'   Rater = paste0("R", 1:2),
-#'   Criterion = c("Content", "Organization", "Language"),
-#'   stringsAsFactors = FALSE
-#' )
-#' toy$Score <- (
-#'   as.integer(factor(toy$Person)) +
-#'   2 * as.integer(factor(toy$Rater)) +
-#'   as.integer(factor(toy$Criterion))
-#' ) %% 3
+#' toy <- load_mfrmr_data("example_bias")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
 #' bias <- estimate_bias(fit, diag, facet_a = "Rater", facet_b = "Criterion", max_iter = 2)
@@ -540,6 +607,213 @@ bias_interaction_report <- function(x,
   as_mfrm_bundle(out, "mfrm_bias_interaction")
 }
 
+#' Build a bias-iteration report
+#'
+#' @inheritParams bias_interaction_report
+#' @param top_n Maximum number of iteration rows to keep in preview-oriented
+#'   summaries. The full iteration table is always returned.
+#'
+#' @details
+#' This report focuses on the recalibration path used by [estimate_bias()].
+#' It provides a package-native counterpart to legacy iteration printouts by
+#' exposing the iteration table, convergence summary, and orientation audit in
+#' one bundle.
+#'
+#' @return A named list with:
+#' - `table`: iteration history
+#' - `summary`: one-row convergence summary
+#' - `orientation_audit`: interaction-facet sign audit
+#' - `settings`: resolved reporting options
+#'
+#' @seealso [estimate_bias()], [bias_interaction_report()], [build_fixed_reports()]
+#' @examples
+#' toy <- load_mfrmr_data("example_bias")
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
+#' diag <- diagnose_mfrm(fit, residual_pca = "none")
+#' out <- bias_iteration_report(fit, diagnostics = diag, facet_a = "Rater", facet_b = "Criterion")
+#' summary(out)
+#' @export
+bias_iteration_report <- function(x,
+                                  diagnostics = NULL,
+                                  facet_a = NULL,
+                                  facet_b = NULL,
+                                  interaction_facets = NULL,
+                                  max_abs = 10,
+                                  omit_extreme = TRUE,
+                                  max_iter = 4,
+                                  tol = 1e-3,
+                                  top_n = 10) {
+  bias_results <- normalize_bias_plot_input(
+    x = x,
+    diagnostics = diagnostics,
+    facet_a = facet_a,
+    facet_b = facet_b,
+    interaction_facets = interaction_facets,
+    max_abs = max_abs,
+    omit_extreme = omit_extreme,
+    max_iter = max_iter,
+    tol = tol
+  )
+
+  iter_tbl <- as.data.frame(bias_results$iteration %||% data.frame(), stringsAsFactors = FALSE)
+  summary_tbl <- if (nrow(iter_tbl) == 0) {
+    data.frame()
+  } else {
+    tail_row <- iter_tbl[nrow(iter_tbl), , drop = FALSE]
+    data.frame(
+      InteractionFacets = paste(as.character(bias_results$interaction_facets %||% character(0)), collapse = " x "),
+      Iterations = nrow(iter_tbl),
+      FinalMaxLogitChange = suppressWarnings(as.numeric(tail_row$MaxLogitChange[1])),
+      FinalBiasCells = suppressWarnings(as.numeric(tail_row$BiasCells[1])),
+      FinalMaxScoreResidual = suppressWarnings(as.numeric(tail_row$MaxScoreResidual[1])),
+      Converged = isTRUE(abs(suppressWarnings(as.numeric(tail_row$MaxLogitChange[1]))) < tol),
+      MixedSign = isTRUE(bias_results$mixed_sign),
+      stringsAsFactors = FALSE
+    )
+  }
+
+  out <- list(
+    table = iter_tbl,
+    summary = summary_tbl,
+    orientation_audit = as.data.frame(bias_results$orientation_audit %||% data.frame(), stringsAsFactors = FALSE),
+    settings = list(
+      tol = tol,
+      max_iter = max_iter,
+      top_n = top_n
+    ),
+    direction_note = as.character(bias_results$direction_note %||% ""),
+    recommended_action = as.character(bias_results$recommended_action %||% "")
+  )
+  as_mfrm_bundle(out, "mfrm_bias_iteration")
+}
+
+#' Build a bias pairwise-contrast report
+#'
+#' @inheritParams bias_interaction_report
+#' @param target_facet Facet whose local contrasts should be compared across
+#'   the paired context facet. Defaults to the first interaction facet.
+#' @param context_facet Optional facet to condition on. Defaults to the other
+#'   facet in a 2-way interaction.
+#' @param p_max Flagging cutoff for pairwise p-values.
+#'
+#' @details
+#' This helper exposes the pairwise contrast table that was previously only
+#' reachable through fixed-width output generation. It is available only for
+#' 2-way interactions. The pairwise contrast statistic uses a
+#' Welch/Satterthwaite approximation and is labeled as a Rasch-Welch
+#' comparison in the output metadata.
+#'
+#' @return A named list with:
+#' - `table`: pairwise contrast rows
+#' - `summary`: one-row contrast summary
+#' - `orientation_audit`: interaction-facet sign audit
+#' - `settings`: resolved reporting options
+#'
+#' @seealso [estimate_bias()], [bias_interaction_report()], [build_fixed_reports()]
+#' @examples
+#' toy <- load_mfrmr_data("example_bias")
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
+#' diag <- diagnose_mfrm(fit, residual_pca = "none")
+#' out <- bias_pairwise_report(fit, diagnostics = diag, facet_a = "Rater", facet_b = "Criterion")
+#' summary(out)
+#' @export
+bias_pairwise_report <- function(x,
+                                 diagnostics = NULL,
+                                 facet_a = NULL,
+                                 facet_b = NULL,
+                                 interaction_facets = NULL,
+                                 max_abs = 10,
+                                 omit_extreme = TRUE,
+                                 max_iter = 4,
+                                 tol = 1e-3,
+                                 target_facet = NULL,
+                                 context_facet = NULL,
+                                 top_n = 50,
+                                 p_max = 0.05,
+                                 sort_by = c("abs_t", "abs_contrast", "prob")) {
+  sort_by <- match.arg(sort_by, c("abs_t", "abs_contrast", "prob"))
+  bias_results <- normalize_bias_plot_input(
+    x = x,
+    diagnostics = diagnostics,
+    facet_a = facet_a,
+    facet_b = facet_b,
+    interaction_facets = interaction_facets,
+    max_abs = max_abs,
+    omit_extreme = omit_extreme,
+    max_iter = max_iter,
+    tol = tol
+  )
+
+  spec <- extract_bias_facet_spec(bias_results)
+  if (is.null(spec) || length(spec$facets) != 2L) {
+    stop("`bias_pairwise_report()` is available only for 2-way interaction runs.")
+  }
+  if (is.null(target_facet)) {
+    target_facet <- spec$facets[1]
+  }
+  target_facet <- as.character(target_facet[1])
+  if (!target_facet %in% spec$facets) {
+    stop("`target_facet` must be one of: ", paste(spec$facets, collapse = ", "))
+  }
+  if (is.null(context_facet)) {
+    context_facet <- setdiff(spec$facets, target_facet)
+  }
+  context_facet <- as.character(context_facet[1])
+
+  pair_tbl <- as.data.frame(
+    calc_bias_pairwise(bias_results$table, target_facet = target_facet, context_facet = context_facet),
+    stringsAsFactors = FALSE
+  )
+  if (nrow(pair_tbl) > 0) {
+    pair_tbl$AbsT <- abs(suppressWarnings(as.numeric(pair_tbl$t)))
+    pair_tbl$AbsContrast <- abs(suppressWarnings(as.numeric(pair_tbl$Contrast)))
+    pair_tbl$Flag <- with(pair_tbl, is.finite(AbsT) & AbsT >= 2 | is.finite(`Prob.`) & `Prob.` <= p_max)
+    ord <- switch(
+      sort_by,
+      abs_t = order(pair_tbl$AbsT, decreasing = TRUE, na.last = NA),
+      abs_contrast = order(pair_tbl$AbsContrast, decreasing = TRUE, na.last = NA),
+      prob = order(pair_tbl$`Prob.`, decreasing = FALSE, na.last = NA)
+    )
+    if (length(ord) > 0) {
+      pair_tbl <- pair_tbl[ord, , drop = FALSE]
+    }
+    if (nrow(pair_tbl) > top_n) {
+      pair_tbl <- pair_tbl[seq_len(top_n), , drop = FALSE]
+    }
+  }
+
+  summary_tbl <- if (nrow(pair_tbl) == 0) {
+    data.frame()
+  } else {
+    data.frame(
+      TargetFacet = target_facet,
+      ContextFacet = context_facet,
+      Contrasts = nrow(pair_tbl),
+      Flagged = sum(pair_tbl$Flag, na.rm = TRUE),
+      MeanAbsContrast = mean(pair_tbl$AbsContrast, na.rm = TRUE),
+      MeanAbsT = mean(pair_tbl$AbsT, na.rm = TRUE),
+      MixedSign = isTRUE(bias_results$mixed_sign),
+      stringsAsFactors = FALSE
+    )
+  }
+
+  out <- list(
+    table = pair_tbl,
+    summary = summary_tbl,
+    orientation_audit = as.data.frame(bias_results$orientation_audit %||% data.frame(), stringsAsFactors = FALSE),
+    settings = list(
+      target_facet = target_facet,
+      context_facet = context_facet,
+      top_n = top_n,
+      p_max = p_max,
+      sort_by = sort_by
+    ),
+    direction_note = as.character(bias_results$direction_note %||% ""),
+    recommended_action = as.character(bias_results$recommended_action %||% "")
+  )
+  as_mfrm_bundle(out, "mfrm_bias_pairwise")
+}
+
 #' Plot bias interaction diagnostics (preferred alias)
 #'
 #' @inheritParams bias_interaction_report
@@ -549,6 +823,7 @@ bias_interaction_report <- function(x,
 #' @param palette Optional named color overrides (`normal`, `flag`, `hist`,
 #'   `profile`).
 #' @param label_angle Label angle hint for ranked/profile labels.
+#' @param preset Visual preset (`"standard"`, `"publication"`, or `"compact"`).
 #' @param draw If `TRUE`, draw with base graphics.
 #'
 #' @details
@@ -557,13 +832,13 @@ bias_interaction_report <- function(x,
 #' @section Plot types:
 #' \describe{
 #'   \item{`"scatter"` (default)}{Scatter plot of bias size (x) vs
-#'     t-statistic (y).  Points colored by flag status.  Dashed reference
+#'     screening t-statistic (y). Points colored by flag status. Dashed reference
 #'     lines at `abs_bias_warn` and `abs_t_warn`.  Use for overall triage
 #'     of interaction effects.}
 #'   \item{`"ranked"`}{Ranked bar chart of top `top_n` interactions sorted
 #'     by `sort_by` criterion (absolute t, absolute bias, or probability).
 #'     Bars colored red for flagged cells.}
-#'   \item{`"abs_t_hist"`}{Histogram of absolute t-statistics across all
+#'   \item{`"abs_t_hist"`}{Histogram of absolute screening t-statistics across all
 #'     interaction cells.  Dashed reference line at `abs_t_warn`.  Use for
 #'     assessing the overall distribution of interaction effect sizes.}
 #'   \item{`"facet_profile"`}{Per-facet-level aggregation showing mean
@@ -575,8 +850,9 @@ bias_interaction_report <- function(x,
 #' Start with `"scatter"` or `"ranked"` for triage, then confirm pattern shape
 #' using `"abs_t_hist"` and `"facet_profile"`.
 #'
-#' Consistent flags across multiple views are stronger evidence of systematic
-#' interaction bias than a single extreme row.
+#' Consistent flags across multiple views are stronger screening signals of
+#' systematic interaction bias than a single extreme row, but they do not by
+#' themselves establish formal inferential evidence.
 #'
 #' @section Typical workflow:
 #' 1. Estimate bias with [estimate_bias()] or pass `mfrm_fit` directly.
@@ -585,23 +861,14 @@ bias_interaction_report <- function(x,
 #' @return A plotting-data object of class `mfrm_plot_data`.
 #' @seealso [bias_interaction_report()], [estimate_bias()], [plot_displacement()]
 #' @examples
-#' toy <- expand.grid(
-#'   Person = paste0("P", 1:4),
-#'   Rater = paste0("R", 1:2),
-#'   Criterion = c("Content", "Organization", "Language"),
-#'   stringsAsFactors = FALSE
-#' )
-#' toy$Score <- (
-#'   as.integer(factor(toy$Person)) +
-#'   2 * as.integer(factor(toy$Rater)) +
-#'   as.integer(factor(toy$Criterion))
-#' ) %% 3
+#' toy <- load_mfrmr_data("example_bias")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 #' p <- plot_bias_interaction(
 #'   fit,
 #'   diagnostics = diagnose_mfrm(fit, residual_pca = "none"),
 #'   facet_a = "Rater",
 #'   facet_b = "Criterion",
+#'   preset = "publication",
 #'   draw = FALSE
 #' )
 #' @export
@@ -619,6 +886,7 @@ plot_bias_interaction <- function(x,
                                   main = NULL,
                                   palette = NULL,
                                   label_angle = 45,
+                                  preset = c("standard", "publication", "compact"),
                                   draw = TRUE) {
   with_legacy_name_warning_suppressed(
     plot_table13_bias(
@@ -636,6 +904,7 @@ plot_bias_interaction <- function(x,
       main = main,
       palette = palette,
       label_angle = label_angle,
+      preset = preset,
       draw = draw
     )
   )
@@ -657,7 +926,7 @@ plot_bias_interaction <- function(x,
 #' - `rater_facet` (used for targeted reliability note text)
 #' - `line_width` (optional text wrapping width for `report_text`; default = 92)
 #'
-#' Output text includes residual PCA interpretation if PCA diagnostics are
+#' Output text includes residual-PCA screening commentary if PCA diagnostics are
 #' available in `diagnostics`.
 #'
 #' By default, `report_text` includes:
@@ -669,15 +938,23 @@ plot_bias_interaction <- function(x,
 #' - facet reliability/separation, residual PCA summary, and bias-screen counts
 #'
 #' @section Interpreting output:
-#' - `report_text`: manuscript-ready narrative core.
-#' - `table_figure_notes`: reusable note blocks for table/figure appendices.
-#' - `table_figure_captions`: caption candidates aligned to generated outputs.
+#' - `report_text`: manuscript-draft narrative covering Method (model
+#'   specification, estimation, convergence) and Results (global fit,
+#'   facet separation/reliability, misfit triage, category diagnostics,
+#'   residual-PCA screening, bias screening).  Written in third-person past tense
+#'   following APA 7th edition conventions, but still intended for human review.
+#' - `table_figure_notes`: reusable draft note blocks for table/figure appendices.
+#' - `table_figure_captions`: draft caption candidates aligned to generated outputs.
+#'
+#' When bias results or PCA diagnostics are not supplied, those sections
+#' are omitted from the narrative rather than producing placeholder text.
 #'
 #' @section Typical workflow:
 #' 1. Build diagnostics (and optional bias results).
 #' 2. Run `build_apa_outputs(...)`.
 #' 3. Check `summary(apa)` for completeness.
-#' 4. Insert `apa$report_text` and note/caption fields into manuscript drafts.
+#' 4. Insert `apa$report_text` and note/caption fields into manuscript drafts
+#'    after checking the listed cautions.
 #'
 #' @section Context template:
 #' A minimal `context` list can include fields such as:
@@ -688,23 +965,16 @@ plot_bias_interaction <- function(x,
 #'
 #' @return
 #' An object of class `mfrm_apa_outputs` with:
-#' - `report_text`: APA-style Method/Results prose
-#' - `table_figure_notes`: consolidated notes for tables/visuals
-#' - `table_figure_captions`: caption-ready labels without figure numbering
+#' - `report_text`: APA-style Method/Results draft prose
+#' - `table_figure_notes`: consolidated draft notes for tables/visuals
+#' - `table_figure_captions`: draft caption candidates without figure numbering
+#' - `section_map`: package-native section table for manuscript assembly
+#' - `contract`: structured APA reporting contract used for downstream checks
 #'
-#' @seealso [build_visual_summaries()], [estimate_bias()]
+#' @seealso [build_visual_summaries()], [estimate_bias()],
+#'   [reporting_checklist()], [mfrmr_reporting_and_apa]
 #' @examples
-#' toy <- expand.grid(
-#'   Person = paste0("P", 1:4),
-#'   Rater = paste0("R", 1:2),
-#'   Criterion = c("Content", "Organization", "Language"),
-#'   stringsAsFactors = FALSE
-#' )
-#' toy$Score <- (
-#'   as.integer(factor(toy$Person)) +
-#'   2 * as.integer(factor(toy$Rater)) +
-#'   as.integer(factor(toy$Criterion))
-#' ) %% 3
+#' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 #' diag <- diagnose_mfrm(fit, residual_pca = "both")
 #' apa <- build_apa_outputs(
@@ -721,14 +991,17 @@ plot_bias_interaction <- function(x,
 #' class(apa)
 #' s_apa <- summary(apa)
 #' s_apa$overview
+#' chk <- reporting_checklist(fit, diagnostics = diag)
+#' head(chk$checklist[, c("Section", "Item", "DraftReady", "NextAction")])
 #' cat(apa$report_text)
+#' apa$section_map[, c("SectionId", "Available")]
 #' @export
 build_apa_outputs <- function(fit,
                               diagnostics,
                               bias_results = NULL,
                               context = list(),
                               whexact = FALSE) {
-  report_text <- build_apa_report_text(
+  contract <- build_apa_reporting_contract(
     res = fit,
     diagnostics = diagnostics,
     bias_results = bias_results,
@@ -738,25 +1011,141 @@ build_apa_outputs <- function(fit,
 
   out <- list(
     report_text = structure(
-      as.character(report_text),
+      as.character(contract$report_text),
       class = c("mfrm_apa_text", "character")
     ),
-    table_figure_notes = build_apa_table_figure_notes(
-      res = fit,
-      diagnostics = diagnostics,
-      bias_results = bias_results,
-      context = context,
-      whexact = whexact
-    ),
-    table_figure_captions = build_apa_table_figure_captions(
-      res = fit,
-      diagnostics = diagnostics,
-      bias_results = bias_results,
-      context = context
-    )
+    table_figure_notes = as.character(contract$note_text),
+    table_figure_captions = as.character(contract$caption_text),
+    section_map = as.data.frame(contract$section_table %||% data.frame(), stringsAsFactors = FALSE),
+    contract = contract
   )
   class(out) <- c("mfrm_apa_outputs", "list")
   out
+}
+
+normalize_apa_component_text <- function(text) {
+  text <- paste(as.character(text %||% character(0)), collapse = "\n")
+  gsub("\\s+", " ", trimws(text))
+}
+
+apa_text_has_fragment <- function(text, fragment) {
+  frag <- normalize_apa_component_text(fragment)
+  if (!nzchar(frag)) return(TRUE)
+  grepl(frag, normalize_apa_component_text(text), fixed = TRUE)
+}
+
+resolve_apa_output_checks <- function(object) {
+  contract <- object$contract %||% NULL
+  if (!inherits(contract, "mfrm_apa_contract")) {
+    return(data.frame())
+  }
+
+  report_text <- as.character(object$report_text %||% "")
+  note_text <- as.character(object$table_figure_notes %||% "")
+  caption_text <- as.character(object$table_figure_captions %||% "")
+  note_map <- contract$note_map %||% list()
+  caption_map <- contract$caption_map %||% list()
+  ordered_keys <- contract$ordered_keys %||% names(caption_map)
+
+  add_check <- function(check, passed, detail) {
+    data.frame(
+      Check = as.character(check),
+      Passed = isTRUE(passed),
+      Detail = as.character(detail),
+      stringsAsFactors = FALSE
+    )
+  }
+
+  checks <- list(
+    add_check(
+      "Method section heading",
+      grepl("^Method\\.", report_text),
+      "APA narrative should begin with a Method heading."
+    ),
+    add_check(
+      "Results section heading",
+      grepl("Results\\.", report_text),
+      "APA narrative should include a Results heading."
+    ),
+    add_check(
+      "Precision caution alignment",
+      if (nzchar(contract$precision$caution %||% "")) {
+        apa_text_has_fragment(report_text, contract$precision$caution) ||
+          apa_text_has_fragment(note_text, contract$precision$caution)
+      } else {
+        TRUE
+      },
+      if (nzchar(contract$precision$caution %||% "")) {
+        "Precision caution should appear in the report text or note blocks."
+      } else {
+        "No extra precision caution required for this run."
+      }
+    ),
+    add_check(
+      "Bias screening note alignment",
+      if (isTRUE(contract$availability$has_bias)) {
+        grepl("screening", normalize_apa_component_text(report_text), fixed = TRUE) &&
+          grepl("screening", normalize_apa_component_text(note_text), fixed = TRUE)
+      } else {
+        TRUE
+      },
+      if (isTRUE(contract$availability$has_bias)) {
+        "Bias outputs should be labeled as screening results in both prose and notes."
+      } else {
+        "No bias screening block required."
+      }
+    ),
+    add_check(
+      "Residual PCA coverage",
+      if (isTRUE(contract$availability$has_pca_overall) || isTRUE(contract$availability$has_pca_by_facet)) {
+        grepl("Residual PCA", report_text, fixed = TRUE) &&
+          grepl("Residual PCA", note_text, fixed = TRUE) &&
+          grepl("Residual PCA", caption_text, fixed = TRUE)
+      } else {
+        TRUE
+      },
+      "Residual PCA availability should be reflected in prose, notes, and captions."
+    ),
+    add_check(
+      "Note coverage",
+      all(vapply(ordered_keys[ordered_keys %in% names(note_map)], function(key) {
+        apa_text_has_fragment(note_text, note_map[[key]])
+      }, logical(1))),
+      "All note-map entries should be represented in the consolidated note text."
+    ),
+    add_check(
+      "Caption coverage",
+      all(vapply(ordered_keys[ordered_keys %in% names(caption_map)], function(key) {
+        apa_text_has_fragment(caption_text, caption_map[[key]])
+      }, logical(1))),
+      "All caption-map entries should be represented in the consolidated caption text."
+    ),
+    add_check(
+      "Core section coverage",
+      {
+        section_tbl <- as.data.frame(contract$section_table %||% data.frame(), stringsAsFactors = FALSE)
+        required_sections <- c("method_design", "method_estimation", "results_scale", "results_fit_precision")
+        all(required_sections %in% section_tbl$SectionId[section_tbl$Available])
+      },
+      "Core package-native sections should be available in the section map."
+    )
+  )
+
+  if (isTRUE(contract$availability$has_interrater) && nzchar(contract$summaries$interrater_sentence %||% "")) {
+    checks <- c(
+      checks,
+      list(
+        add_check(
+          "Interrater summary alignment",
+          apa_text_has_fragment(report_text, contract$summaries$interrater_sentence) ||
+            apa_text_has_fragment(note_text, contract$summaries$interrater_sentence),
+          "Interrater agreement wording should appear in the report text or notes."
+        )
+      )
+    )
+  }
+
+  do.call(rbind, checks)
 }
 
 #' Print APA narrative text with preserved line breaks
@@ -780,17 +1169,7 @@ build_apa_outputs <- function(fit,
 #'
 #' @return The input object (invisibly).
 #' @examples
-#' toy <- expand.grid(
-#'   Person = paste0("P", 1:4),
-#'   Rater = paste0("R", 1:2),
-#'   Criterion = c("Content", "Organization", "Language"),
-#'   stringsAsFactors = FALSE
-#' )
-#' toy$Score <- (
-#'   as.integer(factor(toy$Person)) +
-#'   2 * as.integer(factor(toy$Rater)) +
-#'   as.integer(factor(toy$Criterion))
-#' ) %% 3
+#' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 #' diag <- diagnose_mfrm(fit, residual_pca = "both")
 #' apa <- build_apa_outputs(fit, diag)
@@ -819,28 +1198,24 @@ print.mfrm_apa_text <- function(x, ...) {
 #' - `overview`: total coverage across standard text components.
 #' - `components`: per-component density and mention checks
 #'   (including residual-PCA mentions).
+#' - `sections`: package-native section coverage table.
+#' - `content_checks`: contract-based alignment checks for APA drafting readiness.
+#' - `overview$DraftContractPass`: the primary contract-completeness flag for
+#'   draft text components.
+#' - `overview$ReadyForAPA`: a backward-compatible alias of that contract flag,
+#'   not a certification of inferential adequacy.
 #' - `preview`: first non-empty lines for fast visual review.
 #'
 #' @section Typical workflow:
 #' 1. Build outputs via [build_apa_outputs()].
 #' 2. Run `summary(apa)` to screen for empty/short components.
 #' 3. Use `apa$report_text`, `apa$table_figure_notes`,
-#'    and `apa$table_figure_captions` directly for final text.
+#'    and `apa$table_figure_captions` as draft components for final-text review.
 #'
 #' @return An object of class `summary.mfrm_apa_outputs`.
 #' @seealso [build_apa_outputs()], [summary()]
 #' @examples
-#' toy <- expand.grid(
-#'   Person = paste0("P", 1:4),
-#'   Rater = paste0("R", 1:2),
-#'   Criterion = c("Content", "Organization", "Language"),
-#'   stringsAsFactors = FALSE
-#' )
-#' toy$Score <- (
-#'   as.integer(factor(toy$Person)) +
-#'   2 * as.integer(factor(toy$Rater)) +
-#'   as.integer(factor(toy$Criterion))
-#' ) %% 3
+#' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 #' diag <- diagnose_mfrm(fit, residual_pca = "both")
 #' apa <- build_apa_outputs(fit, diag)
@@ -910,30 +1285,48 @@ summary.mfrm_apa_outputs <- function(object, top_n = 3, preview_chars = 160, ...
     })
   )
 
+  content_checks <- resolve_apa_output_checks(object)
+  total_checks <- nrow(content_checks)
+  passed_checks <- if (total_checks > 0) sum(content_checks$Passed, na.rm = TRUE) else 0L
+  sections_tbl <- as.data.frame(object$section_map %||% data.frame(), stringsAsFactors = FALSE)
+
   overview <- data.frame(
     Components = nrow(stats_tbl),
     NonEmptyComponents = sum(stats_tbl$NonEmpty),
     TotalCharacters = sum(stats_tbl$Characters),
     TotalNonEmptyLines = sum(stats_tbl$NonEmptyLines),
+    Sections = nrow(sections_tbl),
+    AvailableSections = if (nrow(sections_tbl) > 0) sum(sections_tbl$Available, na.rm = TRUE) else 0L,
+    ContentChecks = total_checks,
+    ContentChecksPassed = passed_checks,
+    DraftContractPass = if (total_checks > 0) passed_checks == total_checks else TRUE,
+    ReadyForAPA = if (total_checks > 0) passed_checks == total_checks else TRUE,
     stringsAsFactors = FALSE
   )
 
   empty_components <- stats_tbl$Component[!stats_tbl$NonEmpty]
+  failed_checks <- if (total_checks > 0) content_checks$Check[!content_checks$Passed] else character(0)
   notes <- if (length(empty_components) == 0) {
-    c(
-      "All standard APA text components are populated.",
-      "Use object fields directly for full text; summary provides compact diagnostics."
-    )
+    c("All standard APA text components are populated.")
   } else {
-    c(
-      paste0("Empty components: ", paste(empty_components, collapse = ", "), "."),
-      "Use object fields directly for full text; summary provides compact diagnostics."
-    )
+    c(paste0("Empty components: ", paste(empty_components, collapse = ", "), "."))
   }
+  if (length(failed_checks) == 0) {
+    notes <- c(notes, "Contract-based content checks passed.")
+  } else {
+    notes <- c(notes, paste0("Content checks needing review: ", paste(failed_checks, collapse = ", "), "."))
+  }
+  notes <- c(
+    notes,
+    "In this summary, ReadyForAPA/DraftContractPass indicates contract completeness for draft text components; it does not certify formal inferential adequacy."
+  )
+  notes <- c(notes, "Use object fields directly for full text; summary provides compact diagnostics.")
 
   out <- list(
     overview = overview,
     components = stats_tbl,
+    sections = sections_tbl,
+    content_checks = content_checks,
     preview = preview_tbl,
     notes = notes,
     top_n = top_n,
@@ -955,6 +1348,14 @@ print.summary.mfrm_apa_outputs <- function(x, ...) {
     cat("\nComponent stats\n")
     print(round_numeric_df(as.data.frame(x$components), digits = 0), row.names = FALSE)
   }
+  if (!is.null(x$sections) && nrow(x$sections) > 0) {
+    cat("\nSections\n")
+    print(as.data.frame(x$sections), row.names = FALSE)
+  }
+  if (!is.null(x$content_checks) && nrow(x$content_checks) > 0) {
+    cat("\nContent checks\n")
+    print(as.data.frame(x$content_checks), row.names = FALSE)
+  }
   if (!is.null(x$preview) && nrow(x$preview) > 0) {
     cat("\nPreview\n")
     print(as.data.frame(x$preview), row.names = FALSE)
@@ -975,6 +1376,11 @@ print.summary.mfrm_apa_outputs <- function(x, ...) {
 #' @param digits Number of rounding digits for numeric columns.
 #' @param caption Optional caption text.
 #' @param note Optional note text.
+#' @param bias_results Optional output from [estimate_bias()] used when
+#'   auto-generating APA metadata for fit-based tables.
+#' @param context Optional context list forwarded when auto-generating APA
+#'   metadata for fit-based tables.
+#' @param whexact Logical forwarded to APA metadata helpers.
 #' @param branch Output branch:
 #'   `"apa"` for manuscript-oriented labels, `"facets"` for FACETS-aligned labels.
 #'
@@ -1006,19 +1412,10 @@ print.summary.mfrm_apa_outputs <- function(x, ...) {
 #' - `note`
 #' - `digits`
 #' - `branch`, `style`
-#' @seealso [fit_mfrm()], [diagnose_mfrm()], [build_apa_outputs()]
+#' @seealso [fit_mfrm()], [diagnose_mfrm()], [build_apa_outputs()],
+#'   [reporting_checklist()], [mfrmr_reporting_and_apa]
 #' @examples
-#' toy <- expand.grid(
-#'   Person = paste0("P", 1:4),
-#'   Rater = paste0("R", 1:2),
-#'   Criterion = c("Content", "Organization", "Language"),
-#'   stringsAsFactors = FALSE
-#' )
-#' toy$Score <- (
-#'   as.integer(factor(toy$Person)) +
-#'   2 * as.integer(factor(toy$Rater)) +
-#'   as.integer(factor(toy$Criterion))
-#' ) %% 3
+#' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 #' tbl <- apa_table(fit, which = "summary", caption = "Model summary", note = "Toy example")
 #' tbl_facets <- apa_table(fit, which = "summary", branch = "facets")
@@ -1035,6 +1432,7 @@ print.summary.mfrm_apa_outputs <- function(x, ...) {
 #'   )
 #' }
 #' class(tbl)
+#' tbl$note
 #' @export
 apa_table <- function(x,
                       which = NULL,
@@ -1042,12 +1440,16 @@ apa_table <- function(x,
                       digits = 2,
                       caption = NULL,
                       note = NULL,
+                      bias_results = NULL,
+                      context = list(),
+                      whexact = FALSE,
                       branch = c("apa", "facets")) {
   branch <- match.arg(tolower(as.character(branch[1])), c("apa", "facets"))
   style <- ifelse(branch == "facets", "facets_manual", "apa")
   digits <- max(0L, as.integer(digits))
   table_out <- NULL
   source_type <- "data.frame"
+  resolved_which <- NULL
 
   if (is.data.frame(x)) {
     table_out <- x
@@ -1069,6 +1471,7 @@ apa_table <- function(x,
     )
     if (is.null(which)) which <- "summary"
     which <- tolower(as.character(which[1]))
+    resolved_which <- which
 
     if (which %in% opts) {
       table_out <- switch(
@@ -1107,6 +1510,7 @@ apa_table <- function(x,
       which <- hit[1]
     }
     which <- as.character(which[1])
+    resolved_which <- which
     if (!which %in% names(x)) {
       stop("Requested `which` not found in list input.")
     }
@@ -1122,6 +1526,51 @@ apa_table <- function(x,
   if (nrow(table_out) > 0) {
     num_cols <- vapply(table_out, is.numeric, logical(1))
     table_out[num_cols] <- lapply(table_out[num_cols], round, digits = digits)
+  }
+
+  resolve_contract_key <- function(which_value) {
+    which_value <- tolower(as.character(which_value %||% ""))
+    switch(
+      which_value,
+      summary = "table1",
+      person = "table1",
+      facets = "table1",
+      measures = "table1",
+      steps = "table2",
+      obs = "table2",
+      overall_fit = "table3",
+      fit = "table3",
+      reliability = "table3",
+      facets_chisq = "table3",
+      interrater_summary = "table3",
+      interrater_pairs = "table3",
+      bias = "table4",
+      interactions = "table4",
+      table = "table4",
+      chi_sq = "table4",
+      NULL
+    )
+  }
+
+  if (branch == "apa" && (is.null(caption) || is.null(note)) && inherits(x, "mfrm_fit")) {
+    diag_for_contract <- diagnostics
+    if (is.null(diag_for_contract)) {
+      diag_for_contract <- diagnose_mfrm(x, residual_pca = "none")
+    }
+    contract <- build_apa_reporting_contract(
+      res = x,
+      diagnostics = diag_for_contract,
+      bias_results = bias_results,
+      context = context,
+      whexact = whexact
+    )
+    contract_key <- resolve_contract_key(resolved_which %||% which %||% source_type)
+    if (is.null(caption) && !is.null(contract_key) && contract_key %in% names(contract$caption_map)) {
+      caption <- contract$caption_map[[contract_key]]
+    }
+    if (is.null(note) && !is.null(contract_key) && contract_key %in% names(contract$note_map)) {
+      note <- extract_apa_note_body(contract$note_map[[contract_key]])
+    }
   }
 
   out <- list(
@@ -1184,17 +1633,7 @@ print.apa_table <- function(x, ...) {
 #' @return An object of class `summary.apa_table`.
 #' @seealso [apa_table()], [plot()]
 #' @examples
-#' toy <- expand.grid(
-#'   Person = paste0("P", 1:4),
-#'   Rater = paste0("R", 1:2),
-#'   Criterion = c("Content", "Organization", "Language"),
-#'   stringsAsFactors = FALSE
-#' )
-#' toy$Score <- (
-#'   as.integer(factor(toy$Person)) +
-#'   2 * as.integer(factor(toy$Rater)) +
-#'   as.integer(factor(toy$Criterion))
-#' ) %% 3
+#' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 #' tbl <- apa_table(fit, which = "summary")
 #' summary(tbl)
@@ -1303,17 +1742,7 @@ print.summary.apa_table <- function(x, ...) {
 #' @return A plotting-data object of class `mfrm_plot_data`.
 #' @seealso [apa_table()], [summary()]
 #' @examples
-#' toy <- expand.grid(
-#'   Person = paste0("P", 1:4),
-#'   Rater = paste0("R", 1:2),
-#'   Criterion = c("Content", "Organization", "Language"),
-#'   stringsAsFactors = FALSE
-#' )
-#' toy$Score <- (
-#'   as.integer(factor(toy$Person)) +
-#'   2 * as.integer(factor(toy$Rater)) +
-#'   as.integer(factor(toy$Criterion))
-#' ) %% 3
+#' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 #' tbl <- apa_table(fit, which = "summary")
 #' p <- plot(tbl, draw = FALSE)
@@ -1362,12 +1791,13 @@ plot.apa_table <- function(x,
     ord <- order(abs(vals), decreasing = TRUE, na.last = NA)
     vals <- vals[ord]
     labels <- num_cols[ord]
+    plot_title <- if (is.null(main)) "APA table numeric profile (column means)" else as.character(main[1])
     if (isTRUE(draw)) {
       barplot_rot45(
         height = vals,
         labels = labels,
         col = pal["numeric_profile"],
-        main = if (is.null(main)) "APA table numeric profile (column means)" else as.character(main[1]),
+        main = plot_title,
         ylab = "Mean",
         label_angle = label_angle,
         mar_bottom = 8.8
@@ -1376,7 +1806,15 @@ plot.apa_table <- function(x,
     }
     out <- new_mfrm_plot_data(
       "apa_table",
-      list(plot = "numeric_profile", column = labels, mean = vals)
+      list(
+        plot = "numeric_profile",
+        column = labels,
+        mean = vals,
+        title = plot_title,
+        subtitle = "Column-wise numeric means for manuscript triage",
+        legend = new_plot_legend("Column mean", "summary", "bar", pal["numeric_profile"]),
+        reference_lines = new_reference_lines("h", 0, "Zero reference", "dashed", "reference")
+      )
     )
     return(invisible(out))
   }
@@ -1387,20 +1825,29 @@ plot.apa_table <- function(x,
   if (length(vals) == 0) {
     stop("First numeric column does not contain finite values.")
   }
+  plot_title <- if (is.null(main)) paste0("Distribution of ", nm) else as.character(main[1])
   if (isTRUE(draw)) {
     graphics::hist(
       x = vals,
       breaks = "FD",
       col = pal["first_numeric"],
       border = "white",
-      main = if (is.null(main)) paste0("Distribution of ", nm) else as.character(main[1]),
+      main = plot_title,
       xlab = nm,
       ylab = "Count"
     )
   }
   out <- new_mfrm_plot_data(
     "apa_table",
-    list(plot = "first_numeric", column = nm, values = vals)
+    list(
+      plot = "first_numeric",
+      column = nm,
+      values = vals,
+      title = plot_title,
+      subtitle = "Distribution of the first numeric APA table column",
+      legend = new_plot_legend("Histogram", "distribution", "fill", pal["first_numeric"]),
+      reference_lines = new_reference_lines()
+    )
   )
   invisible(out)
 }
@@ -1654,17 +2101,7 @@ print.summary.mfrm_threshold_profiles <- function(x, ...) {
 #'
 #' @seealso [mfrm_threshold_profiles()], [build_apa_outputs()]
 #' @examples
-#' toy <- expand.grid(
-#'   Person = paste0("P", 1:4),
-#'   Rater = paste0("R", 1:2),
-#'   Criterion = c("Content", "Organization", "Language"),
-#'   stringsAsFactors = FALSE
-#' )
-#' toy$Score <- (
-#'   as.integer(factor(toy$Person)) +
-#'   2 * as.integer(factor(toy$Rater)) +
-#'   as.integer(factor(toy$Criterion))
-#' ) %% 3
+#' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 #' diag <- diagnose_mfrm(fit, residual_pca = "both")
 #' vis <- build_visual_summaries(fit, diag, threshold_profile = "strict")
@@ -1953,27 +2390,32 @@ build_parity_metric_audit <- function(outputs, tol = 1e-8) {
   dplyr::bind_rows(rows)
 }
 
-#' Build a FACETS parity report (column + metric contracts)
+#' Build a FACETS compatibility-contract audit
 #'
 #' @param fit Output from [fit_mfrm()].
 #' @param diagnostics Optional output from [diagnose_mfrm()]. If omitted,
 #'   diagnostics are computed internally with `residual_pca = "none"`.
 #' @param bias_results Optional output from [estimate_bias()]. If omitted and
 #'   at least two facets exist, a 2-way bias run is computed internally.
-#' @param branch Contract branch. `"facets"` checks FACETS-style columns.
-#'   `"original"` adapts branch-sensitive contracts (currently Table 11) to the
-#'   package's compact naming.
+#' @param branch Contract branch. `"facets"` checks legacy-compatible columns.
+#'   `"original"` adapts branch-sensitive contracts to the package's compact
+#'   naming.
 #' @param contract_file Optional path to a custom contract CSV.
 #' @param include_metrics If `TRUE`, run additional numerical consistency checks.
 #' @param top_n_missing Number of lowest-coverage contract rows to keep in
 #'   `missing_preview`.
 #'
 #' @details
-#' This function compares produced report components to a contract specification
-#' (`inst/references/facets_column_contract.csv`) and returns:
+#' This function audits produced report components against a compatibility
+#' contract specification (`inst/references/facets_column_contract.csv`) and
+#' returns:
 #' - column-level coverage per contract row
 #' - table-level coverage summaries
 #' - optional metric-level consistency checks
+#'
+#' It is intended for compatibility-layer QA and regression auditing. It does
+#' not establish external validity or software equivalence beyond the specific
+#' schema/metric contract encoded in the audit file.
 #'
 #' Coverage interpretation in `overall`:
 #' - `MeanColumnCoverage` and `MinColumnCoverage` are computed across all
@@ -1987,19 +2429,22 @@ build_parity_metric_audit <- function(outputs, tol = 1e-8) {
 #' `"metric_status"`, `"metric_by_table"`).
 #'
 #' @section Interpreting output:
-#' - `overall`: high-level contract coverage and metric-check pass rates.
-#' - `column_summary` / `column_audit`: where schema mismatches occur.
-#' - `metric_summary` / `metric_audit`: numerical consistency checks.
-#' - `missing_preview`: quickest path to unresolved parity gaps.
+#' - `overall`: high-level compatibility-contract coverage and metric-check pass
+#'   rates.
+#' - `column_summary` / `column_audit`: where compatibility-schema mismatches
+#'   occur.
+#' - `metric_summary` / `metric_audit`: numerical consistency checks tied to the
+#'   current contract.
+#' - `missing_preview`: quickest path to unresolved compatibility gaps.
 #'
 #' @section Typical workflow:
 #' 1. Run `facets_parity_report(fit, branch = "facets")`.
 #' 2. Inspect `summary(parity)` and `missing_preview`.
-#' 3. Patch upstream table builders, then rerun parity report.
+#' 3. Patch upstream table builders, then rerun the compatibility audit.
 #'
 #' @return
 #' An object of class `mfrm_parity_report` with:
-#' - `overall`: one-row overall parity summary
+#' - `overall`: one-row compatibility-audit summary
 #' - `column_summary`: coverage summary by table ID
 #' - `column_audit`: row-level contract audit
 #' - `missing_preview`: lowest-coverage rows
@@ -2008,19 +2453,10 @@ build_parity_metric_audit <- function(outputs, tol = 1e-8) {
 #' - `metric_audit`: row-level metric checks
 #' - `settings`: branch/contract metadata
 #'
-#' @seealso [fit_mfrm()], [diagnose_mfrm()], [build_fixed_reports()]
+#' @seealso [fit_mfrm()], [diagnose_mfrm()], [build_fixed_reports()],
+#'   [mfrmr_compatibility_layer]
 #' @examples
-#' toy <- expand.grid(
-#'   Person = paste0("P", 1:4),
-#'   Rater = paste0("R", 1:2),
-#'   Criterion = c("Content", "Organization", "Language"),
-#'   stringsAsFactors = FALSE
-#' )
-#' toy$Score <- (
-#'   as.integer(factor(toy$Person)) +
-#'   2 * as.integer(factor(toy$Rater)) +
-#'   as.integer(factor(toy$Criterion))
-#' ) %% 3
+#' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
 #' parity <- facets_parity_report(fit, diagnostics = diag, branch = "facets")
@@ -2303,6 +2739,8 @@ facets_parity_report <- function(fit,
     settings = list(
       branch = branch,
       contract_path = contract_info$path,
+      intended_use = "compatibility_contract_audit",
+      external_validation = FALSE,
       include_metrics = include_metrics,
       top_n_missing = top_n_missing,
       bias_included = !is.null(outputs$t10)
@@ -2311,41 +2749,240 @@ facets_parity_report <- function(fit,
   as_mfrm_bundle(out, "mfrm_parity_report")
 }
 
+#' Build a package-native reference audit for report completeness
+#'
+#' @param fit Output from [fit_mfrm()].
+#' @param diagnostics Optional output from [diagnose_mfrm()]. If omitted,
+#'   diagnostics are computed internally with `residual_pca = "none"`.
+#' @param bias_results Optional output from [estimate_bias()]. If omitted and
+#'   at least two facets exist, a 2-way interaction screen is computed internally.
+#' @param reference_profile Audit profile. `"core"` emphasizes package-native
+#'   report contracts. `"compatibility"` exposes the manual-aligned compatibility
+#'   layer used by `facets_parity_report(branch = "facets")`.
+#' @param include_metrics If `TRUE`, run numerical consistency checks in addition
+#'   to schema coverage checks.
+#' @param top_n_attention Number of lowest-coverage components to keep in
+#'   `attention_items`.
+#'
+#' @details
+#' This function repackages the internal contract audit into package-native
+#' terminology so users can review output completeness without needing external
+#' manual/table numbering. It reports:
+#' - component-level schema coverage
+#' - numerical consistency checks for derived report tables
+#' - the highest-priority attention items for follow-up
+#'
+#' It is an internal completeness audit for package-native outputs, not an
+#' external validation study.
+#'
+#' Use `reference_profile = "core"` for ordinary `mfrmr` workflows.
+#' Use `reference_profile = "compatibility"` only when you explicitly want to
+#' inspect the compatibility layer.
+#'
+#' @section Interpreting output:
+#' - `overall`: one-row internal audit summary with schema coverage and metric
+#'   pass rate.
+#' - `component_summary`: per-component coverage summary.
+#' - `attention_items`: quickest list of components needing review.
+#' - `metric_summary` / `metric_checks`: numerical consistency status.
+#'
+#' @return An object of class `mfrm_reference_audit`.
+#' @seealso [facets_parity_report()], [diagnose_mfrm()], [build_fixed_reports()]
+#' @examples
+#' toy <- load_mfrmr_data("example_core")
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
+#' diag <- diagnose_mfrm(fit, residual_pca = "none")
+#' audit <- reference_case_audit(fit, diagnostics = diag)
+#' summary(audit)
+#' @export
+reference_case_audit <- function(fit,
+                                 diagnostics = NULL,
+                                 bias_results = NULL,
+                                 reference_profile = c("core", "compatibility"),
+                                 include_metrics = TRUE,
+                                 top_n_attention = 15L) {
+  reference_profile <- match.arg(
+    tolower(as.character(reference_profile[1] %||% "core")),
+    c("core", "compatibility")
+  )
+  branch <- if (identical(reference_profile, "compatibility")) "facets" else "original"
+
+  parity <- facets_parity_report(
+    fit = fit,
+    diagnostics = diagnostics,
+    bias_results = bias_results,
+    branch = branch,
+    include_metrics = include_metrics,
+    top_n_missing = top_n_attention
+  )
+
+  overall_src <- as.data.frame(parity$overall, stringsAsFactors = FALSE)
+  overall <- tibble::tibble(
+    ReferenceProfile = reference_profile,
+    ContractBranch = as.character(overall_src$Branch[1] %||% branch),
+    SchemaCoverage = as.numeric(overall_src$MeanColumnCoverage[1] %||% NA_real_),
+    AvailableSchemaCoverage = as.numeric(overall_src$MeanColumnCoverageAvailable[1] %||% NA_real_),
+    MinSchemaCoverage = as.numeric(overall_src$MinColumnCoverage[1] %||% NA_real_),
+    MetricPassRate = as.numeric(overall_src$MetricPassRate[1] %||% NA_real_),
+    SchemaMismatches = as.integer(overall_src$ColumnMismatches[1] %||% NA_integer_),
+    AttentionItems = nrow(parity$missing_preview %||% data.frame()),
+    CompatibilityLayer = if (identical(reference_profile, "compatibility")) "manual-aligned" else "package-native"
+  )
+
+  component_summary <- as.data.frame(parity$column_summary, stringsAsFactors = FALSE)
+  names(component_summary) <- sub("^table_id$", "ComponentID", names(component_summary))
+  names(component_summary) <- sub("^function_name$", "Builder", names(component_summary))
+
+  attention_items <- as.data.frame(parity$missing_preview, stringsAsFactors = FALSE)
+  names(attention_items) <- sub("^table_id$", "ComponentID", names(attention_items))
+  names(attention_items) <- sub("^function_name$", "Builder", names(attention_items))
+  names(attention_items) <- sub("^component$", "Subtable", names(attention_items))
+  names(attention_items) <- sub("^coverage$", "Coverage", names(attention_items))
+  names(attention_items) <- sub("^missing$", "MissingColumns", names(attention_items))
+
+  out <- list(
+    overall = overall,
+    component_summary = component_summary,
+    attention_items = attention_items,
+    metric_summary = as.data.frame(parity$metric_summary, stringsAsFactors = FALSE),
+    metric_checks = as.data.frame(parity$metric_audit, stringsAsFactors = FALSE),
+    settings = list(
+      reference_profile = reference_profile,
+      contract_branch = branch,
+      intended_use = "internal_contract_audit",
+      external_validation = FALSE,
+      include_metrics = isTRUE(include_metrics),
+      top_n_attention = max(1L, as.integer(top_n_attention))
+    ),
+    parity = parity
+  )
+  as_mfrm_bundle(out, "mfrm_reference_audit")
+}
+
 # ============================================================================
-# DIF Report
+# Differential Functioning Report
 # ============================================================================
 
-#' Generate DIF interpretation report
+collect_bias_screening_summary <- function(diagnostics = NULL, bias_results = NULL) {
+  out <- list(
+    available = FALSE,
+    bias_pct = NA_real_,
+    flagged = NA_integer_,
+    total = NA_integer_,
+    inference_tier = NA_character_,
+    statistic_label = "screening t",
+    source = NA_character_,
+    error_count = 0L,
+    incomplete = FALSE,
+    detail = NA_character_
+  )
+
+  extract_tbl <- function(x) {
+    if (is.null(x)) return(NULL)
+    if (is.data.frame(x)) return(as.data.frame(x, stringsAsFactors = FALSE))
+    if (is.list(x) && is.data.frame(x$table)) return(as.data.frame(x$table, stringsAsFactors = FALSE))
+    if (is.list(x) && is.data.frame(x$bias_table)) return(as.data.frame(x$bias_table, stringsAsFactors = FALSE))
+    NULL
+  }
+
+  compute_from_tbl <- function(tbl, source_label) {
+    if (is.null(tbl) || !is.data.frame(tbl) || nrow(tbl) == 0) return(NULL)
+    t_col <- intersect(c("t_Residual", "t", "t.value", "Bias t"), names(tbl))
+    if (length(t_col) == 0) return(NULL)
+    t_vals <- suppressWarnings(as.numeric(tbl[[t_col[1]]]))
+    t_vals <- t_vals[is.finite(t_vals)]
+    if (length(t_vals) == 0) return(NULL)
+    tier_col <- intersect(c("InferenceTier", "inference_tier"), names(tbl))
+    metric_col <- intersect(c("ProbabilityMetric", "StatisticLabel"), names(tbl))
+    list(
+      available = TRUE,
+      bias_pct = 100 * sum(abs(t_vals) > 2) / length(t_vals),
+      flagged = sum(abs(t_vals) > 2),
+      total = length(t_vals),
+      inference_tier = if (length(tier_col) > 0) as.character(tbl[[tier_col[1]]][1]) else "screening",
+      statistic_label = if (length(metric_col) > 0) as.character(tbl[[metric_col[1]]][1]) else "screening t",
+      source = source_label
+    )
+  }
+
+  diag_tbl <- NULL
+  if (!is.null(diagnostics) && is.list(diagnostics) && is.data.frame(diagnostics$interactions)) {
+    diag_tbl <- as.data.frame(diagnostics$interactions, stringsAsFactors = FALSE)
+  }
+  diag_out <- compute_from_tbl(diag_tbl, "diagnostics")
+  if (!is.null(diag_out)) return(diag_out)
+
+  if (inherits(bias_results, "mfrm_bias_collection")) {
+    error_tbl <- as.data.frame(bias_results$errors %||% data.frame(), stringsAsFactors = FALSE)
+    tables <- lapply(bias_results$by_pair %||% list(), extract_tbl)
+    tables <- Filter(function(x) is.data.frame(x) && nrow(x) > 0, tables)
+    if (length(tables) > 0) {
+      combined <- dplyr::bind_rows(tables)
+      coll_out <- compute_from_tbl(combined, "bias_results_collection")
+      if (!is.null(coll_out)) {
+        coll_out$error_count <- nrow(error_tbl)
+        coll_out$incomplete <- nrow(error_tbl) > 0L
+        coll_out$detail <- if (nrow(error_tbl) > 0L) {
+          sprintf("%d requested bias pair(s) failed during collection.", nrow(error_tbl))
+        } else {
+          NA_character_
+        }
+        return(coll_out)
+      }
+    }
+    if (nrow(error_tbl) > 0L) {
+      out$source <- "bias_results_collection"
+      out$error_count <- nrow(error_tbl)
+      out$incomplete <- TRUE
+      out$detail <- sprintf("%d requested bias pair(s) failed during collection.", nrow(error_tbl))
+      return(out)
+    }
+  }
+
+  bias_out <- compute_from_tbl(extract_tbl(bias_results), "bias_results")
+  if (!is.null(bias_out)) return(bias_out)
+
+  out
+}
+
+#' Generate a differential-functioning interpretation report
 #'
-#' Produces APA-style narrative text interpreting the results of a DIF
-#' analysis or DIF interaction table. The report summarises the number
-#' of facet levels classified as negligible (A), moderate (B), and large
-#' (C) DIF, lists the specific levels with large DIF and their
-#' direction, and includes a caveat about the distinction between
-#' construct-relevant variation and measurement bias.
+#' Produces APA-style narrative text interpreting the results of a differential-
+#' functioning analysis or interaction table. For `method = "refit"`, the
+#' report summarises the number of facet levels classified as negligible (A),
+#' moderate (B), and large (C). For `method = "residual"`, it summarises
+#' screening-positive results, lists the specific levels and their direction,
+#' and includes a caveat about the distinction between construct-relevant
+#' variation and measurement bias.
 #'
-#' @param dif_result Output from [analyze_dif()] (class `mfrm_dif`)
-#'   or [dif_interaction_table()] (class `mfrm_dif_interaction`).
+#' @param dif_result Output from [analyze_dff()] / [analyze_dif()]
+#'   (class `mfrm_dff` with compatibility class `mfrm_dif`) or
+#'   [dif_interaction_table()] (class `mfrm_dif_interaction`).
 #' @param ... Currently unused; reserved for future extensions.
 #'
 #' @details
-#' When `dif_result` is an `mfrm_dif` object, the report is based on
-#' the pairwise DIF contrasts in `$dif_table`. When it is an
+#' When `dif_result` is an `mfrm_dff`/`mfrm_dif` object, the report is based on
+#' the pairwise differential-functioning contrasts in `$dif_table`. When it is an
 #' `mfrm_dif_interaction` object, the report uses the cell-level
 #' statistics and flags from `$table`.
 #'
-#' Effect-size classification follows the ETS DIF guidelines:
-#' A (negligible, < 0.43 logits), B (moderate, 0.43--0.64 logits),
-#' C (large, >= 0.64 logits).
+#' For `method = "refit"`, ETS-style magnitude labels are used only when
+#' subgroup calibrations were successfully linked back to a common baseline
+#' scale; otherwise the report labels those contrasts as unclassified because
+#' the refit difference is descriptive rather than comparable on a linked
+#' logit scale. For `method = "residual"`, the report describes
+#' screening-positive versus screening-negative contrasts instead of applying
+#' ETS labels.
 #'
 #' @section Interpreting output:
 #' - `$narrative`: character scalar with the full narrative text.
-#' - `$counts`: named integer vector of A/B/C counts.
-#' - `$large_dif`: tibble of levels flagged as large (C) DIF.
+#' - `$counts`: named integer vector of method-appropriate counts.
+#' - `$large_dif`: tibble of large ETS results (`method = "refit"`) or
+#'   screening-positive contrasts/cells (`method = "residual"`).
 #' - `$config`: analysis configuration inherited from the input.
 #'
 #' @section Typical workflow:
-#' 1. Run [analyze_dif()] or [dif_interaction_table()].
+#' 1. Run [analyze_dff()] / [analyze_dif()] or [dif_interaction_table()].
 #' 2. Pass the result to `dif_report()`.
 #' 3. Print the report or extract `$narrative` for inclusion in a
 #'    manuscript.
@@ -2353,38 +2990,31 @@ facets_parity_report <- function(fit,
 #' @return Object of class `mfrm_dif_report` with `narrative`,
 #'   `counts`, `large_dif`, and `config`.
 #'
-#' @seealso [analyze_dif()], [dif_interaction_table()],
+#' @seealso [analyze_dff()], [analyze_dif()], [dif_interaction_table()],
 #'   [plot_dif_heatmap()], [build_apa_outputs()]
 #' @examples
-#' set.seed(42)
-#' toy <- expand.grid(
-#'   Person = paste0("P", 1:8),
-#'   Rater = paste0("R", 1:3),
-#'   Criterion = c("Content", "Organization"),
-#'   stringsAsFactors = FALSE
-#' )
-#' toy$Score <- sample(0:2, nrow(toy), replace = TRUE)
-#' toy$Group <- ifelse(as.integer(factor(toy$Person)) <= 4, "A", "B")
+#' toy <- load_mfrmr_data("example_bias")
 #'
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                  method = "JML", model = "RSM", maxit = 25)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
-#' dif <- analyze_dif(fit, diag, facet = "Rater", group = "Group", data = toy)
+#' dif <- analyze_dff(fit, diag, facet = "Rater", group = "Group", data = toy)
 #' rpt <- dif_report(dif)
 #' cat(rpt$narrative)
 #' @export
 dif_report <- function(dif_result, ...) {
-  if (inherits(dif_result, "mfrm_dif")) {
+  if (inherits(dif_result, "mfrm_dff") || inherits(dif_result, "mfrm_dif")) {
     .dif_report_from_dif(dif_result)
   } else if (inherits(dif_result, "mfrm_dif_interaction")) {
     .dif_report_from_interaction(dif_result)
   } else {
-    stop("`dif_result` must be an `mfrm_dif` or `mfrm_dif_interaction` object.",
+    stop(
+      "`dif_result` must be an `mfrm_dff`, `mfrm_dif`, or `mfrm_dif_interaction` object.",
          call. = FALSE)
   }
 }
 
-# Internal: generate report from mfrm_dif
+# Internal: generate report from mfrm_dff / mfrm_dif
 .dif_report_from_dif <- function(dif_result) {
   cfg <- dif_result$config
   dt <- dif_result$dif_table
@@ -2392,74 +3022,151 @@ dif_report <- function(dif_result, ...) {
   facet_name <- cfg$facet
   group_name <- cfg$group
   method_label <- cfg$method %||% "refit"
+  functioning_label <- cfg$functioning_label %||% "DFF"
 
-  n_a <- sum(dt$ETS == "A", na.rm = TRUE)
-  n_b <- sum(dt$ETS == "B", na.rm = TRUE)
-  n_c <- sum(dt$ETS == "C", na.rm = TRUE)
-  n_total <- n_a + n_b + n_c
-  n_na <- sum(is.na(dt$ETS))
+  if (identical(method_label, "refit")) {
+    n_a <- sum(dt$ETS == "A", na.rm = TRUE)
+    n_b <- sum(dt$ETS == "B", na.rm = TRUE)
+    n_c <- sum(dt$ETS == "C", na.rm = TRUE)
+    n_total <- nrow(dt)
+    n_screen_only <- sum(dt$Classification == "Linked contrast (screening only)", na.rm = TRUE)
+    n_unclassified <- sum(dt$Classification == "Unclassified (insufficient linking)", na.rm = TRUE)
+    n_na <- sum(is.na(dt$ETS))
 
-  counts <- c(A = n_a, B = n_b, C = n_c, NA_count = n_na, Total = n_total)
+    counts <- c(
+      A = n_a,
+      B = n_b,
+      C = n_c,
+      Linked_screening_only = n_screen_only,
+      Unclassified = n_unclassified,
+      NA_count = n_na,
+      Total = n_total
+    )
+    large_dif <- dt[!is.na(dt$ETS) & dt$ETS == "C", , drop = FALSE]
 
-  # Large DIF levels
-
-  large_dif <- dt[!is.na(dt$ETS) & dt$ETS == "C", , drop = FALSE]
-
-  # Build narrative
-  lines <- character()
-  lines <- c(lines, paste0(
-    "Differential functioning analysis was conducted for the ",
-    facet_name, " facet across levels of ", group_name,
-    " using the ", method_label, " method. "
-  ))
-  lines <- c(lines, paste0(
-    "A total of ", n_total, " pairwise facet-level comparisons were evaluated. "
-  ))
-  lines <- c(lines, paste0(
-    "Following ETS DIF classification guidelines, ",
-    n_a, " comparison(s) showed negligible DIF (Category A), ",
-    n_b, " showed moderate DIF (Category B), and ",
-    n_c, " showed large DIF (Category C). "
-  ))
-  if (n_na > 0) {
+    lines <- character()
     lines <- c(lines, paste0(
-      n_na, " comparison(s) could not be classified due to insufficient ",
-      "data or estimation failures. "
+      functioning_label, " analysis was conducted for the ",
+      facet_name, " facet across levels of ", group_name,
+      " using the ", method_label, " method. "
     ))
-  }
-
-  if (n_c > 0) {
-    large_levels <- unique(as.character(large_dif$Level))
     lines <- c(lines, paste0(
-      "\nThe following ", facet_name, " level(s) exhibited large DIF (Category C): ",
-      paste(large_levels, collapse = ", "), ". "
+      "A total of ", n_total, " pairwise facet-level comparisons were evaluated. "
     ))
-    for (lev in large_levels) {
-      lev_rows <- large_dif[large_dif$Level == lev, , drop = FALSE]
-      for (r in seq_len(nrow(lev_rows))) {
-        direction <- if (is.finite(lev_rows$Contrast[r]) && lev_rows$Contrast[r] > 0) {
-          "higher"
-        } else if (is.finite(lev_rows$Contrast[r]) && lev_rows$Contrast[r] < 0) {
-          "lower"
-        } else {
-          "different"
+    lines <- c(lines, paste0(
+      "Using ETS-style magnitude labels on the linked logit scale, ",
+      n_a, " comparison(s) were classified as A (negligible), ",
+      n_b, " as B (moderate), and ",
+      n_c, " as C (large). "
+    ))
+    if (n_screen_only > 0) {
+      lines <- c(lines, paste0(
+        n_screen_only, " comparison(s) remained on a linked common scale but were retained as screening-only contrasts because the subgroup precision gate for primary reporting did not pass. "
+      ))
+    }
+    if (n_unclassified > 0) {
+      lines <- c(lines, paste0(
+        n_unclassified, " comparison(s) could not be classified because subgroup refits ",
+        "did not retain enough common linking anchors or failed to support a common-scale comparison. "
+      ))
+    }
+
+    if (n_c > 0) {
+      large_levels <- unique(as.character(large_dif$Level))
+      lines <- c(lines, paste0(
+        "\nThe following ", facet_name, " level(s) reached the current linked Category C threshold: ",
+        paste(large_levels, collapse = ", "), ". "
+      ))
+      for (lev in large_levels) {
+        lev_rows <- large_dif[large_dif$Level == lev, , drop = FALSE]
+        for (r in seq_len(nrow(lev_rows))) {
+          direction <- if (is.finite(lev_rows$Contrast[r]) && lev_rows$Contrast[r] > 0) {
+            "higher"
+          } else if (is.finite(lev_rows$Contrast[r]) && lev_rows$Contrast[r] < 0) {
+            "lower"
+          } else {
+            "different"
+          }
+          lines <- c(lines, paste0(
+            "  - ", lev, ": ",
+            lev_rows$Group1[r], " vs ", lev_rows$Group2[r],
+            " (contrast = ", sprintf("%.3f", lev_rows$Contrast[r]),
+            " logits; ", lev_rows$Group1[r], " was ", direction, "). "
+          ))
         }
-        lines <- c(lines, paste0(
-          "  - ", lev, ": ",
-          lev_rows$Group1[r], " vs ", lev_rows$Group2[r],
-          " (contrast = ", sprintf("%.3f", lev_rows$Contrast[r]),
-          " logits; ", lev_rows$Group1[r], " was ", direction, "). "
-        ))
       }
+    } else {
+      lines <- c(lines,
+        "\nNo linked facet levels reached the current Category C threshold under the ETS-style labeling rule. "
+      )
     }
   } else {
-    lines <- c(lines,
-      "\nNo facet levels showed large DIF, suggesting measurement equivalence across groups. "
+    class_col <- dt$Classification %||% rep(NA_character_, nrow(dt))
+    n_positive <- sum(class_col == "Screen positive", na.rm = TRUE)
+    n_negative <- sum(class_col == "Screen negative", na.rm = TRUE)
+    n_na <- sum(is.na(class_col))
+    n_total <- nrow(dt)
+
+    counts <- c(
+      Screen_positive = n_positive,
+      Screen_negative = n_negative,
+      Unclassified = n_na,
+      Total = n_total
     )
+    large_dif <- dt[class_col == "Screen positive", , drop = FALSE]
+
+    lines <- character()
+    lines <- c(lines, paste0(
+      functioning_label, " screening was conducted for the ",
+      facet_name, " facet across levels of ", group_name,
+      " using the ", method_label, " method. "
+    ))
+    lines <- c(lines, paste0(
+      "A total of ", n_total, " pairwise facet-level comparisons were evaluated. "
+    ))
+    lines <- c(lines, paste0(
+      n_positive, " comparison(s) were screening-positive and ",
+      n_negative, " were screening-negative based on the residual-contrast test. "
+    ))
+    if (n_na > 0) {
+      lines <- c(lines, paste0(
+        n_na, " comparison(s) were unclassified because of sparse data or unavailable statistics. "
+      ))
+    }
+
+    if (n_positive > 0) {
+      flagged_levels <- unique(as.character(large_dif$Level))
+      lines <- c(lines, paste0(
+        "\nThe following ", facet_name, " level(s) showed screening-positive residual contrasts: ",
+        paste(flagged_levels, collapse = ", "), ". "
+      ))
+      for (lev in flagged_levels) {
+        lev_rows <- large_dif[large_dif$Level == lev, , drop = FALSE]
+        for (r in seq_len(nrow(lev_rows))) {
+          direction <- if (is.finite(lev_rows$Contrast[r]) && lev_rows$Contrast[r] > 0) {
+            "higher"
+          } else if (is.finite(lev_rows$Contrast[r]) && lev_rows$Contrast[r] < 0) {
+            "lower"
+          } else {
+            "different"
+          }
+          lines <- c(lines, paste0(
+            "  - ", lev, ": ",
+            lev_rows$Group1[r], " vs ", lev_rows$Group2[r],
+            " (contrast = ", sprintf("%.3f", lev_rows$Contrast[r]),
+            " on the residual scale; ", lev_rows$Group1[r], " was ", direction, "). "
+          ))
+        }
+      }
+    } else {
+      lines <- c(lines,
+        "\nNo pairwise contrasts were screening-positive under the residual-screening method. This does not by itself establish invariance or consistent functioning across groups. "
+      )
+    }
   }
 
   lines <- c(lines, paste0(
-    "\nNote: The presence of DIF does not necessarily indicate measurement ",
+    "\nNote: The presence of differential functioning does not necessarily indicate measurement ",
     "bias. Differential functioning may reflect construct-relevant variation ",
     "(e.g., true group differences in the attribute being measured) rather ",
     "than unwanted measurement bias. Substantive review is recommended to ",
@@ -2486,6 +3193,7 @@ dif_report <- function(dif_result, ...) {
 
   facet_name <- cfg$facet
   group_name <- cfg$group
+  functioning_label <- cfg$functioning_label %||% "DFF"
 
   n_total <- nrow(int_tbl)
   n_sparse <- sum(int_tbl$sparse, na.rm = TRUE)
@@ -2504,7 +3212,7 @@ dif_report <- function(dif_result, ...) {
 
   lines <- character()
   lines <- c(lines, paste0(
-    "A DIF interaction analysis was conducted for the ",
+    functioning_label, " interaction screening was conducted for the ",
     facet_name, " facet across levels of ", group_name,
     " using model-based residuals. "
   ))
@@ -2536,7 +3244,7 @@ dif_report <- function(dif_result, ...) {
     }
   } else {
     lines <- c(lines,
-      "\nNo cells were flagged, suggesting consistent functioning across groups. "
+      "\nNo cells were flagged under the current screening thresholds. This does not by itself establish consistent functioning across groups. "
     )
   }
 
@@ -2561,7 +3269,7 @@ dif_report <- function(dif_result, ...) {
 
 #' @export
 print.mfrm_dif_report <- function(x, ...) {
-  cat("--- DIF Interpretation Report ---\n\n")
+  cat("--- Differential Functioning Interpretation Report ---\n\n")
   cat(x$narrative, "\n")
   invisible(x)
 }
@@ -2580,7 +3288,7 @@ summary.mfrm_dif_report <- function(object, ...) {
 
 #' @export
 print.summary.mfrm_dif_report <- function(x, ...) {
-  cat("--- DIF Report Summary ---\n")
+  cat("--- Differential Functioning Report Summary ---\n")
   cat("Facet:", x$config$facet, " | Group:", x$config$group, "\n\n")
   cat("Classification counts:\n")
   print(x$counts)
@@ -2618,6 +3326,12 @@ print.summary.mfrm_dif_report <- function(x, ...) {
 #' verdict across all checks.  Diagnostics are computed automatically via
 #' [diagnose_mfrm()] if not supplied.
 #'
+#' Reliability and separation are used here as QC signals. In `mfrmr`,
+#' `Reliability` / `Separation` are model-based facet indices and
+#' `RealReliability` / `RealSeparation` provide more conservative lower bounds.
+#' For `MML`, these rely on model-based `ModelSE` values for non-person facets;
+#' for `JML`, they remain exploratory approximations.
+#'
 #' Three threshold presets are available via `threshold_profile`:
 #'
 #' | Aspect            | strict  | standard | lenient |
@@ -2639,11 +3353,11 @@ print.summary.mfrm_dif_report <- function(x, ...) {
 #' The 10 checks are:
 #' \enumerate{
 #'   \item **Convergence**: Did the model converge?
-#'   \item **Global fit**: Infit/Outfit MnSq within acceptable bounds.
-#'   \item **Reliability**: Minimum non-person facet reliability.
-#'   \item **Separation**: Minimum non-person facet separation index.
+#'   \item **Global fit**: Infit/Outfit MnSq within the current review band.
+#'   \item **Reliability**: Minimum non-person facet model reliability index.
+#'   \item **Separation**: Minimum non-person facet model separation index.
 #'   \item **Element misfit**: Percentage of elements with Infit/Outfit
-#'         outside the acceptable range.
+#'         outside the current review band.
 #'   \item **Unexpected responses**: Percentage of observations with
 #'         large standardized residuals.
 #'   \item **Category structure**: Minimum category count and threshold
@@ -2651,8 +3365,8 @@ print.summary.mfrm_dif_report <- function(x, ...) {
 #'   \item **Connectivity**: All observations in a single connected subset.
 #'   \item **Inter-rater agreement**: Exact agreement percentage for the
 #'         rater facet (if applicable).
-#'   \item **DIF/Bias**: Percentage of flagged bias interactions (if
-#'         bias results are available).
+#'   \item **Functioning/Bias screen**: Percentage of interaction cells that
+#'         cross the screening threshold (if interaction results are available).
 #' }
 #'
 #' @section Interpreting output:
@@ -2836,7 +3550,7 @@ run_qc_pipeline <- function(fit,
   raw_details$global_fit <- list(infit = infit_global, outfit = outfit_global)
   if (verdicts[2] != "Pass") {
     recommendations <- c(recommendations,
-                         "Global fit indices outside acceptable range. Investigate element-level misfit.")
+                         "Global fit indices fall outside the current review band. Investigate element-level misfit.")
   }
 
   # ---- Check 3: Reliability ----
@@ -2855,19 +3569,19 @@ run_qc_pipeline <- function(fit,
   if (is.na(min_rel) || !is.finite(min_rel)) {
     verdicts[3] <- "Warn"
     values[3]   <- "NA"
-    details[3]  <- "Reliability could not be computed"
+    details[3]  <- "Model reliability could not be computed"
   } else if (min_rel >= thr$reliability_pass) {
     verdicts[3] <- "Pass"
     values[3]   <- fmt_num(min_rel)
-    details[3]  <- sprintf("Min non-person reliability = %.3f", min_rel)
+    details[3]  <- sprintf("Min non-person model reliability = %.3f", min_rel)
   } else if (min_rel >= thr$reliability_warn) {
     verdicts[3] <- "Warn"
     values[3]   <- fmt_num(min_rel)
-    details[3]  <- sprintf("Min non-person reliability = %.3f (below %.2f)", min_rel, thr$reliability_pass)
+    details[3]  <- sprintf("Min non-person model reliability = %.3f (below %.2f)", min_rel, thr$reliability_pass)
   } else {
     verdicts[3] <- "Fail"
     values[3]   <- fmt_num(min_rel)
-    details[3]  <- sprintf("Min non-person reliability = %.3f (below %.2f)", min_rel, thr$reliability_warn)
+    details[3]  <- sprintf("Min non-person model reliability = %.3f (below %.2f)", min_rel, thr$reliability_warn)
   }
   thresh[3] <- sprintf("Pass>=%.2f, Warn>=%.2f", thr$reliability_pass, thr$reliability_warn)
   raw_details$reliability <- list(min_reliability = min_rel, table = rel_tbl)
@@ -2891,19 +3605,19 @@ run_qc_pipeline <- function(fit,
   if (is.na(min_sep) || !is.finite(min_sep)) {
     verdicts[4] <- "Warn"
     values[4]   <- "NA"
-    details[4]  <- "Separation could not be computed"
+    details[4]  <- "Model separation could not be computed"
   } else if (min_sep >= thr$separation_pass) {
     verdicts[4] <- "Pass"
     values[4]   <- fmt_num(min_sep)
-    details[4]  <- sprintf("Min non-person separation = %.3f", min_sep)
+    details[4]  <- sprintf("Min non-person model separation = %.3f", min_sep)
   } else if (min_sep >= thr$separation_warn) {
     verdicts[4] <- "Warn"
     values[4]   <- fmt_num(min_sep)
-    details[4]  <- sprintf("Min non-person separation = %.3f (below %.2f)", min_sep, thr$separation_pass)
+    details[4]  <- sprintf("Min non-person model separation = %.3f (below %.2f)", min_sep, thr$separation_pass)
   } else {
     verdicts[4] <- "Fail"
     values[4]   <- fmt_num(min_sep)
-    details[4]  <- sprintf("Min non-person separation = %.3f (below %.2f)", min_sep, thr$separation_warn)
+    details[4]  <- sprintf("Min non-person model separation = %.3f (below %.2f)", min_sep, thr$separation_warn)
   }
   thresh[4] <- sprintf("Pass>=%.2f, Warn>=%.2f", thr$separation_pass, thr$separation_warn)
   raw_details$separation <- list(min_separation = min_sep)
@@ -2978,16 +3692,43 @@ run_qc_pipeline <- function(fit,
   }
 
   min_cat_count <- NA_real_
+  category_error <- NULL
+  category_available <- FALSE
   tryCatch({
-    rs <- rating_scale_table(fit, diagnostics)
-    if (!is.null(rs$summary) && "MinCategoryCount" %in% names(rs$summary)) {
-      min_cat_count <- as.numeric(rs$summary$MinCategoryCount[1])
+    obs_df <- diagnostics$obs
+    if (!is.null(obs_df) && nrow(obs_df) > 0) {
+      category_available <- TRUE
+      observed <- if ("Observed" %in% names(obs_df)) {
+        suppressWarnings(as.numeric(obs_df$Observed))
+      } else {
+        suppressWarnings(as.numeric(obs_df$Score))
+      }
+      weights <- get_weights(obs_df)
+      all_categories <- seq(fit$prep$rating_min, fit$prep$rating_max)
+      counts <- numeric(length(all_categories))
+      idx <- match(observed, all_categories)
+      ok <- is.finite(idx) & is.finite(weights)
+      if (any(ok)) {
+        grouped <- split(weights[ok], idx[ok])
+        counts[as.integer(names(grouped))] <- vapply(grouped, sum, numeric(1))
+      }
+      min_cat_count <- min(counts, na.rm = TRUE)
     }
-  }, error = function(e) NULL)
+  }, error = function(e) {
+    category_error <<- conditionMessage(e)
+    NULL
+  })
 
-  cat_count_ok <- is.na(min_cat_count) || min_cat_count >= thr$min_cat_count
+  cat_count_ok <- is.null(category_error) && isTRUE(category_available) &&
+    (is.na(min_cat_count) || min_cat_count >= thr$min_cat_count)
 
-  if (ordered_steps && cat_count_ok) {
+  if (!is.null(category_error)) {
+    verdicts[7] <- "Skip"
+    details[7]  <- paste0("Category counts could not be computed: ", category_error)
+  } else if (!isTRUE(category_available)) {
+    verdicts[7] <- "Skip"
+    details[7]  <- "Category counts were not available from diagnostics$obs."
+  } else if (ordered_steps && cat_count_ok) {
     verdicts[7] <- "Pass"
     details[7]  <- "Thresholds ordered"
     if (!is.na(min_cat_count)) {
@@ -3010,7 +3751,9 @@ run_qc_pipeline <- function(fit,
                         if (is.na(min_cat_count)) "NA" else as.character(as.integer(min_cat_count)))
   thresh[7] <- sprintf("Ordered + count>=%d", as.integer(thr$min_cat_count))
   raw_details$category_structure <- list(ordered = ordered_steps,
-                                          min_cat_count = min_cat_count)
+                                          min_cat_count = min_cat_count,
+                                          available = category_available,
+                                          error = category_error)
   if (verdicts[7] != "Pass") {
     recommendations <- c(recommendations,
                          "Category structure issues. Consider collapsing rating scale categories.")
@@ -3046,21 +3789,47 @@ run_qc_pipeline <- function(fit,
 
   ira_pct <- NA_real_
   ira_available <- FALSE
+  ira_error <- NULL
+  ira_summary <- diagnostics$interrater$summary
+  summary_rater <- if (!is.null(ira_summary) &&
+                       nrow(ira_summary) > 0 &&
+                       "RaterFacet" %in% names(ira_summary)) {
+    as.character(ira_summary$RaterFacet[1])
+  } else {
+    NA_character_
+  }
   tryCatch({
     if (!is.null(detected_rater) && detected_rater %in% fit$config$facet_names) {
-      ira <- interrater_agreement_table(fit, diagnostics, rater_facet = detected_rater)
-      if (!is.null(ira$summary) && nrow(ira$summary) > 0 &&
-          "ExactAgreement" %in% names(ira$summary)) {
-        ira_pct <- as.numeric(ira$summary$ExactAgreement[1]) * 100
-        ira_available <- TRUE
+      if (!is.null(ira_summary) &&
+          nrow(ira_summary) > 0 &&
+          "ExactAgreement" %in% names(ira_summary) &&
+          identical(summary_rater, detected_rater)) {
+        ira_pct <- as.numeric(ira_summary$ExactAgreement[1]) * 100
+        ira_available <- is.finite(ira_pct)
+      }
+      if (!ira_available) {
+        ira <- interrater_agreement_table(fit, diagnostics,
+                                          rater_facet = detected_rater)
+        if (!is.null(ira$summary) && nrow(ira$summary) > 0 &&
+            "ExactAgreement" %in% names(ira$summary)) {
+          ira_pct <- as.numeric(ira$summary$ExactAgreement[1]) * 100
+          ira_available <- TRUE
+        }
       }
     }
-  }, error = function(e) NULL)
+  }, error = function(e) {
+    ira_error <<- conditionMessage(e)
+    NULL
+  })
 
   if (!ira_available || is.na(ira_pct)) {
     verdicts[9] <- "Skip"
     values[9]   <- "NA"
-    details[9]  <- "No rater facet available or inter-rater agreement could not be computed"
+    details[9]  <- if (!is.null(ira_error)) {
+      paste0("Inter-rater agreement could not be computed: ", ira_error)
+    } else {
+      "No rater facet available or inter-rater agreement could not be computed"
+    }
     thresh[9]   <- sprintf("Pass>=%.0f%%, Warn>=%.0f%%",
                            thr$agreement_pass_pct, thr$agreement_warn_pct)
   } else {
@@ -3077,67 +3846,45 @@ run_qc_pipeline <- function(fit,
     details[9] <- sprintf("Exact agreement = %.1f%%", ira_pct)
   }
   raw_details$interrater <- list(exact_agreement_pct = ira_pct,
-                                  rater_facet = detected_rater)
+                                  rater_facet = detected_rater,
+                                  error = ira_error)
   if (verdicts[9] == "Fail") {
     recommendations <- c(recommendations,
                          "Low inter-rater agreement. Consider rater training or calibration.")
   }
 
-  # ---- Check 10: DIF/Bias ----
-  bias_pct <- NA_real_
-  bias_available <- FALSE
-
-  if (isTRUE(include_bias)) {
-    tryCatch({
-      br <- bias_results
-      if (is.null(br) && !is.null(diagnostics$interactions) &&
-          is.data.frame(diagnostics$interactions) &&
-          nrow(diagnostics$interactions) > 0) {
-        # Use interaction table from diagnostics as proxy
-        if (all(c("t_Residual") %in% names(diagnostics$interactions))) {
-          t_vals <- suppressWarnings(as.numeric(diagnostics$interactions$t_Residual))
-          t_vals <- t_vals[is.finite(t_vals)]
-          if (length(t_vals) > 0) {
-            n_sig <- sum(abs(t_vals) > 2)
-            bias_pct <- 100 * n_sig / length(t_vals)
-            bias_available <- TRUE
-          }
-        }
+  # ---- Check 10: Functioning/Bias screen ----
+  bias_screen_error <- NULL
+  bias_screen <- if (isTRUE(include_bias)) {
+    tryCatch(
+      collect_bias_screening_summary(diagnostics = diagnostics, bias_results = bias_results),
+      error = function(e) {
+        bias_screen_error <<- conditionMessage(e)
+        NULL
       }
-      if (!bias_available && !is.null(br)) {
-        # Use pre-computed bias_results
-        bias_tbl_src <- NULL
-        if (is.data.frame(br)) {
-          bias_tbl_src <- br
-        } else if (is.list(br) && !is.null(br$table) && is.data.frame(br$table)) {
-          bias_tbl_src <- br$table
-        } else if (is.list(br) && !is.null(br$bias_table) && is.data.frame(br$bias_table)) {
-          bias_tbl_src <- br$bias_table
-        }
-        if (!is.null(bias_tbl_src)) {
-          t_col <- intersect(c("t_Residual", "t", "t.value", "Bias t"), names(bias_tbl_src))
-          if (length(t_col) > 0) {
-            t_vals <- suppressWarnings(as.numeric(bias_tbl_src[[t_col[1]]]))
-            t_vals <- t_vals[is.finite(t_vals)]
-            if (length(t_vals) > 0) {
-              n_sig <- sum(abs(t_vals) > 2)
-              bias_pct <- 100 * n_sig / length(t_vals)
-              bias_available <- TRUE
-            }
-          }
-        }
-      }
-    }, error = function(e) NULL)
+    )
+  } else {
+    NULL
   }
+  bias_available <- is.list(bias_screen) && isTRUE(bias_screen$available)
+  bias_pct <- if (bias_available) as.numeric(bias_screen$bias_pct) else NA_real_
+  bias_incomplete <- is.list(bias_screen) && isTRUE(bias_screen$incomplete)
+  bias_detail <- if (is.list(bias_screen)) as.character(bias_screen$detail %||% "") else ""
 
   if (!bias_available || is.na(bias_pct)) {
-    verdicts[10] <- "Skip"
+    verdicts[10] <- if (bias_incomplete) "Warn" else "Skip"
     values[10]   <- "NA"
-    details[10]  <- "DIF/Bias check not available"
+    details[10]  <- if (!is.null(bias_screen_error)) {
+      paste0("Functioning/bias screen failed: ", bias_screen_error)
+    } else if (bias_incomplete && nzchar(bias_detail)) {
+      paste0("Functioning/bias screen was incomplete: ", bias_detail)
+    } else {
+      "Functioning/bias screen not available"
+    }
     thresh[10]   <- sprintf("Pass<=%.0f%%, Fail>%.0f%%", thr$bias_warn_pct, thr$bias_fail_pct)
   } else {
     if (bias_pct <= thr$bias_warn_pct) {
-      verdicts[10] <- "Pass"
+      verdicts[10] <- if (bias_incomplete) "Warn" else "Pass"
     } else if (bias_pct <= thr$bias_fail_pct) {
       verdicts[10] <- "Warn"
     } else {
@@ -3145,19 +3892,36 @@ run_qc_pipeline <- function(fit,
     }
     values[10]  <- fmt_pct(bias_pct)
     thresh[10]  <- sprintf("Pass<=%.0f%%, Fail>%.0f%%", thr$bias_warn_pct, thr$bias_fail_pct)
-    details[10] <- sprintf("%.1f%% of interactions with |t| > 2", bias_pct)
+    details[10] <- sprintf(
+      "%.1f%% of screened interactions crossed |%s| > 2%s",
+      bias_pct,
+      as.character(bias_screen$statistic_label %||% "screening t"),
+      if (bias_incomplete && nzchar(bias_detail)) paste0("; ", bias_detail) else ""
+    )
   }
-  raw_details$bias <- list(bias_pct = bias_pct, available = bias_available)
+  raw_details$bias <- list(
+    bias_pct = bias_pct,
+    available = bias_available,
+    flagged = if (bias_available) as.integer(bias_screen$flagged) else NA_integer_,
+    total = if (bias_available) as.integer(bias_screen$total) else NA_integer_,
+    inference_tier = if (bias_available) as.character(bias_screen$inference_tier) else NA_character_,
+    statistic_label = if (bias_available) as.character(bias_screen$statistic_label) else NA_character_,
+    source = if (bias_available) as.character(bias_screen$source) else NA_character_,
+    incomplete = bias_incomplete,
+    error_count = if (is.list(bias_screen)) as.integer(bias_screen$error_count %||% 0L) else 0L,
+    detail = bias_detail,
+    error = bias_screen_error
+  )
   if (isTRUE(verdicts[10] == "Fail")) {
     recommendations <- c(recommendations,
-                         "Significant DIF/bias detected. Investigate interaction patterns with estimate_bias().")
+                         "Many interaction cells were screen-positive. Review estimate_bias() or analyze_dff() before making substantive bias claims.")
   }
 
   # -- build verdicts tibble --
   verdicts_tbl <- tibble::tibble(
     Check     = c("Convergence", "Global Fit", "Reliability", "Separation",
                   "Element Misfit", "Unexpected Responses", "Category Structure",
-                  "Connectivity", "Inter-rater Agreement", "DIF/Bias"),
+                  "Connectivity", "Inter-rater Agreement", "Functioning/Bias Screen"),
     Verdict   = verdicts,
     Value     = values,
     Threshold = thresh,
@@ -3169,6 +3933,8 @@ run_qc_pipeline <- function(fit,
   if (any(active_verdicts == "Fail")) {
     overall <- "Fail"
   } else if (any(active_verdicts == "Warn")) {
+    overall <- "Warn"
+  } else if (any(verdicts == "Skip")) {
     overall <- "Warn"
   } else {
     overall <- "Pass"

@@ -339,6 +339,6 @@ test_that("build_pca_reference_text produces formatted reference text", {
   refs <- mfrmr:::warning_threshold_profiles()
   bprt <- mfrmr:::build_pca_reference_text
   result <- bprt(refs$pca_reference_bands)
-  expect_true(grepl("Literature bands", result))
+  expect_true(grepl("Heuristic reference bands", result))
   expect_true(grepl("EV >=", result))
 })

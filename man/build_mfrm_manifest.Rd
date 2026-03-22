@@ -8,6 +8,9 @@ build_mfrm_manifest(
   fit,
   diagnostics = NULL,
   bias_results = NULL,
+  population_prediction = NULL,
+  unit_prediction = NULL,
+  plausible_values = NULL,
   include_person_anchors = FALSE
 )
 }
@@ -17,7 +20,15 @@ build_mfrm_manifest(
 \item{diagnostics}{Optional output from \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}. When \code{NULL},
 diagnostics are computed with \code{residual_pca = "none"}.}
 
-\item{bias_results}{Optional output from \code{\link[=estimate_bias]{estimate_bias()}} or a named list of bias bundles.}
+\item{bias_results}{Optional output from \code{\link[=estimate_bias]{estimate_bias()}} or a named list of
+bias bundles.}
+
+\item{population_prediction}{Optional output from
+\code{\link[=predict_mfrm_population]{predict_mfrm_population()}}.}
+
+\item{unit_prediction}{Optional output from \code{\link[=predict_mfrm_units]{predict_mfrm_units()}}.}
+
+\item{plausible_values}{Optional output from \code{\link[=sample_mfrm_plausible_values]{sample_mfrm_plausible_values()}}.}
 
 \item{include_person_anchors}{If \code{TRUE}, include person measures in the
 exported anchor table.}
@@ -56,7 +67,8 @@ The returned bundle has class \code{mfrm_manifest} and includes:
 \item \code{estimation_control}: key-value optimizer settings table
 \item \code{anchor_summary}: facet-level anchor summary
 \item \code{anchors}: machine-readable anchor table
-\item \code{available_outputs}: availability table for diagnostics/bias/PCA outputs
+\item \code{available_outputs}: availability table for diagnostics/bias/PCA/prediction
+outputs
 \item \code{settings}: manifest build settings
 }
 }
@@ -67,10 +79,10 @@ The \code{summary} table is the quickest place to confirm that you are looking a
 the intended analysis. The \code{model_settings}, \code{source_columns}, and
 \code{estimation_control} tables are designed for audit trails and method write-up.
 The \code{available_outputs} table is especially useful before building bundles,
-because it tells you whether residual PCA, anchors, or bias results are
-already available. A practical reading order is \code{summary} first,
-\code{available_outputs} second, and \code{anchors} last when reproducibility depends
-on fixed constraints.
+because it tells you whether residual PCA, anchors, bias results, or
+prediction-side artifacts are already available. A practical reading order is
+\code{summary} first, \code{available_outputs} second, and \code{anchors} last when
+reproducibility depends on fixed constraints.
 }
 
 \section{Typical workflow}{
@@ -86,7 +98,7 @@ control over residual PCA.
 }
 
 \examples{
-toy <- mfrmr:::sample_mfrm_data(seed = 123)
+toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "JML", maxit = 25)
 diag <- diagnose_mfrm(fit, residual_pca = "none")

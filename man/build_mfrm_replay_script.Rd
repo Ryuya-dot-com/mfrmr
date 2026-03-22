@@ -8,6 +8,9 @@ build_mfrm_replay_script(
   fit,
   diagnostics = NULL,
   bias_results = NULL,
+  population_prediction = NULL,
+  unit_prediction = NULL,
+  plausible_values = NULL,
   data_file = "your_data.csv",
   script_mode = c("auto", "fit", "facets"),
   include_bundle = FALSE,
@@ -22,8 +25,18 @@ build_mfrm_replay_script(
 diagnostics are reused from \code{run_mfrm_facets()} when available, otherwise
 recomputed.}
 
-\item{bias_results}{Optional output from \code{\link[=estimate_bias]{estimate_bias()}} or a named list of bias bundles. When supplied, the
-generated script includes package-native bias estimation calls.}
+\item{bias_results}{Optional output from \code{\link[=estimate_bias]{estimate_bias()}} or a named list of
+bias bundles. When supplied, the generated script includes package-native
+bias estimation calls.}
+
+\item{population_prediction}{Optional output from
+\code{\link[=predict_mfrm_population]{predict_mfrm_population()}} to recreate in the generated script.}
+
+\item{unit_prediction}{Optional output from \code{\link[=predict_mfrm_units]{predict_mfrm_units()}} to
+recreate in the generated script.}
+
+\item{plausible_values}{Optional output from
+\code{\link[=sample_mfrm_plausible_values]{sample_mfrm_plausible_values()}} to recreate in the generated script.}
 
 \item{data_file}{Path to the analysis data file used in the generated script.}
 
@@ -104,7 +117,7 @@ you.
 }
 
 \examples{
-toy <- mfrmr:::sample_mfrm_data(seed = 123)
+toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "JML", maxit = 25)
 replay <- build_mfrm_replay_script(fit, data_file = "your_data.csv")

@@ -21,7 +21,9 @@ local({
 with_null_device <- function(expr) {
   grDevices::pdf(NULL)
   on.exit(grDevices::dev.off(), add = TRUE)
-  force(expr)
+  testthat::expect_gt(grDevices::dev.cur(), 1)
+  value <- force(expr)
+  invisible(value)
 }
 
 # ============================================================================
@@ -65,7 +67,7 @@ test_that("print.summary.mfrm_bundle: fair_average", {
   fa <- fair_average_table(.fit, diagnostics = .diag)
   s <- summary(fa)
   out <- capture.output(print(s))
-  expect_true(any(grepl("Fair Average", out)))
+  expect_true(any(grepl("Adjusted Score|Fair Average", out)))
 })
 
 # ---- displacement summary_kind ----
@@ -89,7 +91,7 @@ test_that("print.summary.mfrm_bundle: facets_chisq", {
   fc <- facets_chisq_table(.fit, diagnostics = .diag)
   s <- summary(fc)
   out <- capture.output(print(s))
-  expect_true(any(grepl("Chi-square", out)))
+  expect_true(any(grepl("Facet Variability|Chi-square", out)))
 })
 
 # ---- bias_interaction summary_kind ----
@@ -487,7 +489,7 @@ test_that("draw_specifications_bundle draws all sub-types", {
   # exercise the entry path and tolerate errors from graphics internals.
   tryCatch(
     with_null_device(plot(spec, type = "anchor_constraints", draw = TRUE)),
-    error = function(e) expect_true(TRUE)
+    error = function(e) expect_match(conditionMessage(e), ".+")
   )
   with_null_device(plot(spec, type = "convergence", draw = TRUE))
 })
@@ -554,7 +556,7 @@ test_that("plot_visual_summaries_bundle draws all sub-types", {
   # tolerate graphics errors while exercising the dispatch path.
   tryCatch(
     with_null_device(plot(vs, type = "comparison", draw = TRUE)),
-    error = function(e) expect_true(TRUE)
+    error = function(e) expect_match(conditionMessage(e), ".+")
   )
   with_null_device(plot(vs, type = "warning_counts", draw = TRUE))
   with_null_device(plot(vs, type = "summary_counts", draw = TRUE))

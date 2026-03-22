@@ -17,7 +17,8 @@ plot_qc_dashboard(
   fixed_p_max = 0.05,
   random_p_max = 0.05,
   top_n = 20,
-  draw = TRUE
+  draw = TRUE,
+  preset = c("standard", "publication", "compact")
 )
 }
 \arguments{
@@ -46,6 +47,8 @@ plot_qc_dashboard(
 \item{top_n}{Maximum elements displayed in displacement panel.}
 
 \item{draw}{If \code{TRUE}, draw with base graphics.}
+
+\item{preset}{Visual preset (\code{"standard"}, \code{"publication"}, or \code{"compact"}).}
 }
 \value{
 A plotting-data object of class \code{mfrm_plot_data}.
@@ -54,26 +57,28 @@ A plotting-data object of class \code{mfrm_plot_data}.
 Plot a base-R QC dashboard
 }
 \details{
-The dashboard draws nine QC panels:
-\itemize{
-\item observed vs expected category counts
-\item infit vs outfit scatter
-\item |ZSTD| histogram
-\item unexpected-response scatter
-\item fair-average gap by facet
-\item displacement lollipop (largest absolute values)
-\item inter-rater exact agreement by pair
-\item facet fixed-effect chi-square by facet
-\item separation reliability by facet
+The dashboard draws nine QC panels in a 3\eqn{\times}3 grid:\tabular{lll}{
+   Panel \tab What it shows \tab Key reference lines \cr
+   1. Category counts \tab Observed (bars) vs model-expected counts (line) \tab -- \cr
+   2. Infit vs Outfit \tab Scatter of element MnSq values \tab heuristic 0.5, 1.0, 1.5 bands \cr
+   3. |ZSTD| histogram \tab Distribution of absolute standardised residuals \tab |ZSTD| = 2 \cr
+   4. Unexpected responses \tab Standardised residual vs \eqn{-\log_{10} P_{\mathrm{obs}}} \tab \code{abs_z_min}, \code{prob_max} \cr
+   5. Fair-average gaps \tab Boxplots of (Observed - FairM) per facet \tab zero line \cr
+   6. Displacement \tab Top absolute displacement values \tab \eqn{\pm 0.5} logits \cr
+   7. Inter-rater agreement \tab Exact agreement with expected overlay per pair \tab \code{interrater_exact_warn} \cr
+   8. Fixed chi-square \tab Fixed-effect \eqn{\chi^2} per facet \tab \code{fixed_p_max} \cr
+   9. Separation & Reliability \tab Bar chart of separation index per facet \tab -- \cr
 }
 
-\code{threshold_profile} controls warning overlays used in applicable panels.
+
+\code{threshold_profile} controls warning overlays.  Three built-in profiles
+are available: \code{"strict"}, \code{"standard"} (default), and \code{"lenient"}.
 Use \code{thresholds} to override any profile value with named entries.
 }
 \section{Plot types}{
 
-This function draws a fixed 3x3 panel grid (no \code{plot_type} argument).
-For individual panel control, use the dedicated helpers:
+This function draws a fixed 3\eqn{\times}3 panel grid (no \code{plot_type}
+argument).  For individual panel control, use the dedicated helpers:
 \code{\link[=plot_unexpected]{plot_unexpected()}}, \code{\link[=plot_fair_average]{plot_fair_average()}}, \code{\link[=plot_displacement]{plot_displacement()}},
 \code{\link[=plot_interrater_agreement]{plot_interrater_agreement()}}, \code{\link[=plot_facets_chisq]{plot_facets_chisq()}}.
 }
@@ -82,10 +87,18 @@ For individual panel control, use the dedicated helpers:
 
 Recommended panel order for fast review:
 \enumerate{
-\item category counts and infit/outfit scatter (global health)
-\item unexpected responses and displacement (element-level outliers)
-\item inter-rater and facet chi-square panels (facet-level comparability)
-\item reliability panel (precision/separation context)
+\item \strong{Category counts + Infit/Outfit} (row 1): first-pass model screening.
+Category bars should roughly track the expected line; Infit/Outfit points
+are often reviewed against the heuristic 0.5--1.5 band.
+\item \strong{Unexpected responses + Displacement} (row 2): element-level
+outliers.  Sparse points and small displacements are desirable.
+\item \strong{Inter-rater + Chi-square} (row 3): facet-level comparability.
+Read these as screening panels: higher agreement suggests stronger
+scoring consistency, and significant fixed chi-square indicates
+detectable facet spread under the current model.
+\item \strong{Separation/Reliability} (row 3): approximate screening precision.
+Higher separation indicates more statistically distinct strata under the
+current SE approximation.
 }
 
 Treat this dashboard as a screening layer; follow up with dedicated helpers
@@ -103,17 +116,7 @@ Treat this dashboard as a screening layer; follow up with dedicated helpers
 }
 
 \examples{
-toy <- expand.grid(
-  Person = paste0("P", 1:4),
-  Rater = paste0("R", 1:2),
-  Criterion = c("Content", "Organization", "Language"),
-  stringsAsFactors = FALSE
-)
-toy$Score <- (
-  as.integer(factor(toy$Person)) +
-  2 * as.integer(factor(toy$Rater)) +
-  as.integer(factor(toy$Criterion))
-) \%\% 3
+toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 qc <- plot_qc_dashboard(fit, draw = FALSE)
 if (interactive()) {

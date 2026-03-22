@@ -2,7 +2,7 @@
 % Please edit documentation in R/api-tables.R
 \name{build_fixed_reports}
 \alias{build_fixed_reports}
-\title{Build FACETS-style fixed-width text reports}
+\title{Build legacy-compatible fixed-width text reports}
 \usage{
 build_fixed_reports(
   bias_results,
@@ -16,7 +16,7 @@ build_fixed_reports(
 \item{target_facet}{Optional target facet for pairwise contrast table.}
 
 \item{branch}{Output branch:
-\code{"facets"} keeps FACETS-like fixed-width text;
+\code{"facets"} keeps the legacy-compatible fixed-width layout;
 \code{"original"} returns compact sectioned fixed-width text for internal reporting.}
 }
 \value{
@@ -28,7 +28,7 @@ A named list with:
 }
 }
 \description{
-Build FACETS-style fixed-width text reports
+Build legacy-compatible fixed-width text reports
 }
 \details{
 This function generates plain-text, fixed-width output intended to be read in
@@ -58,18 +58,15 @@ skipped.
 }
 }
 
+\section{Preferred route for new analyses}{
+
+For new reporting workflows, prefer \code{\link[=bias_interaction_report]{bias_interaction_report()}} and
+\code{\link[=build_apa_outputs]{build_apa_outputs()}}. Use \code{build_fixed_reports()} when a fixed-width text
+artifact is specifically required for a compatibility handoff.
+}
+
 \examples{
-toy <- expand.grid(
-  Person = paste0("P", 1:4),
-  Rater = paste0("R", 1:2),
-  Criterion = c("Content", "Organization", "Language"),
-  stringsAsFactors = FALSE
-)
-toy$Score <- (
-  as.integer(factor(toy$Person)) +
-  2 * as.integer(factor(toy$Rater)) +
-  as.integer(factor(toy$Criterion))
-) \%\% 3
+toy <- load_mfrmr_data("example_bias")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 bias <- estimate_bias(fit, diag, facet_a = "Rater", facet_b = "Criterion", max_iter = 2)
@@ -90,5 +87,6 @@ if (interactive()) {
 }
 }
 \seealso{
-\code{\link[=estimate_bias]{estimate_bias()}}, \code{\link[=build_apa_outputs]{build_apa_outputs()}}
+\code{\link[=estimate_bias]{estimate_bias()}}, \code{\link[=build_apa_outputs]{build_apa_outputs()}}, \code{\link[=bias_interaction_report]{bias_interaction_report()}},
+\link{mfrmr_reports_and_tables}, \link{mfrmr_compatibility_layer}
 }

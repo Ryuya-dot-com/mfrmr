@@ -22,7 +22,7 @@ An object of class \code{summary.mfrm_facet_dashboard}.
 Summarize a facet-quality dashboard
 }
 \examples{
-toy <- mfrmr:::sample_mfrm_data(seed = 123)
+toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 summary(facet_quality_dashboard(fit, diagnostics = diag))

@@ -71,8 +71,9 @@ Object of class \code{mfrm_anchored_fit} with components:
 \description{
 Re-estimates a many-facet Rasch model on new data while holding selected
 facet parameters fixed at the values from a previous (baseline) calibration.
-This is the standard workflow for monitoring rater stability, linking test
-forms, or equating across administration windows.
+This is the standard workflow for placing new data onto an existing scale,
+linking test forms, or carrying a baseline calibration across
+administration windows.
 }
 \details{
 This function automates the baseline-anchored calibration workflow:
@@ -81,7 +82,7 @@ This function automates the baseline-anchored calibration workflow:
 \item Re-estimates the model on \code{new_data} with those anchors fixed via
 \code{fit_mfrm(..., anchors = anchor_table)}.
 \item Runs \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} on the anchored fit.
-\item Computes element-level drift statistics (new estimate minus baseline
+\item Computes element-level differences (new estimate minus baseline
 estimate) for every common element.
 }
 
@@ -91,19 +92,41 @@ anchor table but absent from the new data are handled according to
 \code{anchor_policy}: \code{"warn"} (default) emits a message, \code{"error"} stops
 execution, and \code{"silent"} ignores silently.
 
-Drift is calculated for every element that appears in both the baseline
-and the new calibration:
+The returned \code{drift} table is best interpreted as an anchored consistency
+check. When a facet is fixed through \code{anchor_facets}, those anchored levels
+are constrained in the new run, so their reported differences are not an
+independent drift analysis. For genuine cross-wave drift monitoring, fit the
+waves separately and use \code{\link[=detect_anchor_drift]{detect_anchor_drift()}} on the resulting fits.
+
+Element-level differences are calculated for every element that appears in
+both the baseline and the new calibration:
 \deqn{\Delta_e = \hat{\delta}_{e,\text{new}} - \hat{\delta}_{e,\text{base}}}
 An element is \strong{flagged} when \eqn{|\Delta_e| > 0.5} logits or
-\eqn{|\Delta_e / SE_e| > 2.0}.
+\eqn{|\Delta_e / SE_{\Delta_e}| > 2.0}, where
+\eqn{SE_{\Delta_e} = \sqrt{SE_{\mathrm{base}}^2 + SE_{\mathrm{new}}^2}}.
 }
+\section{Which function should I use?}{
+
+\itemize{
+\item Use \code{anchor_to_baseline()} when you have one new dataset and want to place
+it directly on a baseline scale.
+\item Use \code{\link[=detect_anchor_drift]{detect_anchor_drift()}} when you already have multiple fitted waves
+and want to compare their stability.
+\item Use \code{\link[=build_equating_chain]{build_equating_chain()}} when you need cumulative offsets across an
+ordered series of waves.
+}
+}
+
 \section{Interpreting output}{
 
 \itemize{
 \item \verb{$drift}: one row per common element with columns \code{Facet}, \code{Level},
-\code{Baseline}, \code{New}, \code{Drift}, \code{SE_New}, \code{Drift_SE_Ratio}, and \code{Flag}.
-Small absolute drift values (< 0.3 logits) indicate a stable scale.
-Flagged elements warrant further investigation.
+\code{Baseline}, \code{New}, \code{Drift}, \code{SE_Baseline}, \code{SE_New}, \code{SE_Diff},
+\code{Drift_SE_Ratio}, and \code{Flag}.
+Read this as an anchored consistency table. Small absolute differences
+indicate that the anchored re-fit stayed close to the baseline scale.
+Flagged rows warrant review, but they are not a substitute for a separate
+drift study on unanchored common elements.
 \item \verb{$fit}: the full anchored \code{mfrm_fit} object, usable with
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=measurable_summary_table]{measurable_summary_table()}}, etc.
 \item \verb{$diagnostics}: pre-computed diagnostics for the anchored calibration.
@@ -118,24 +141,30 @@ auditing which elements were constrained.
 \item Fit the baseline model: \code{fit1 <- fit_mfrm(...)}.
 \item Collect new data (e.g., a later administration).
 \item Call \code{res <- anchor_to_baseline(new_data, fit1, ...)}.
-\item Inspect \code{summary(res)} for flagged drift.
-\item For multi-wave monitoring, pass multiple fits to
+\item Inspect \code{summary(res)} to confirm the anchored run remains close to the
+baseline scale.
+\item For multi-wave drift monitoring, fit waves separately and pass the fits to
 \code{\link[=detect_anchor_drift]{detect_anchor_drift()}} or \code{\link[=build_equating_chain]{build_equating_chain()}}.
 }
 }
 
 \examples{
 d1 <- load_mfrmr_data("study1")
+keep1 <- unique(d1$Person)[1:15]
+d1 <- d1[d1$Person \%in\% keep1, , drop = FALSE]
 fit1 <- fit_mfrm(d1, "Person", c("Rater", "Criterion"), "Score",
-                 method = "JML", maxit = 25)
+                 method = "JML", maxit = 15)
 d2 <- load_mfrmr_data("study2")
+keep2 <- unique(d2$Person)[1:15]
+d2 <- d2[d2$Person \%in\% keep2, , drop = FALSE]
 res <- anchor_to_baseline(d2, fit1, "Person",
                           c("Rater", "Criterion"), "Score",
                           anchor_facets = "Criterion")
 summary(res)
-res$drift
+head(res$drift[, c("Facet", "Level", "Drift", "Flag")])
+res$baseline_anchors[1:3, ]
 }
 \seealso{
 \code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=make_anchor_table]{make_anchor_table()}}, \code{\link[=detect_anchor_drift]{detect_anchor_drift()}},
-\code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=build_equating_chain]{build_equating_chain()}}
+\code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=build_equating_chain]{build_equating_chain()}}, \link{mfrmr_linking_and_dff}
 }

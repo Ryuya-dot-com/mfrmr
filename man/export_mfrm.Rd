@@ -52,6 +52,36 @@ diagnostics).}
 }
 }
 
+\section{Interpreting output}{
+
+The returned data.frame tells you exactly which files were written and where.
+This is convenient for scripted pipelines where the output directory is created
+on the fly.
+}
+
+\section{Typical workflow}{
+
+\enumerate{
+\item Fit a model with \code{\link{fit_mfrm}()}.
+\item Optionally compute diagnostics with \code{\link{diagnose_mfrm}()} when you want enriched facet or measures exports.
+\item Call \code{export_mfrm(...)} and inspect the returned \code{Path} column.
+}
+}
+
+\examples{
+toy <- load_mfrmr_data("example_core")
+fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
+                method = "JML", model = "RSM", maxit = 25)
+diag <- diagnose_mfrm(fit, residual_pca = "none")
+out <- export_mfrm(
+  fit,
+  diagnostics = diag,
+  output_dir = tempdir(),
+  prefix = "mfrmr_example",
+  overwrite = TRUE
+)
+out$Table
+}
 \seealso{
 \code{\link{fit_mfrm}}, \code{\link{diagnose_mfrm}},
 \code{\link{as.data.frame.mfrm_fit}}

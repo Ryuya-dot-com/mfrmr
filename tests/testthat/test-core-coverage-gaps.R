@@ -532,27 +532,30 @@ test_that("facet_anchor_status reports correct status", {
 # ===========================================================================
 test_that("compute_pca_by_facet handles too-small data", {
   pca_fn <- mfrmr:::compute_pca_by_facet
-  # Minimal obs_df with only 1 person => wide will have 1 row => NULL
+  # Minimal obs_df with only 1 person => facet PCA should return a no-data bundle
   obs_df <- dplyr::tibble(
     Person     = "P1",
     Rater      = "R1",
     StdResidual = 0.5
   )
   result <- pca_fn(obs_df, facet_names = "Rater", max_factors = 3)
-  # Should return NULL for Rater since wide has < 2 rows or cols
-  expect_null(result[["Rater"]])
+  expect_true(is.list(result[["Rater"]]))
+  expect_null(result[["Rater"]]$pca)
+  expect_true(nzchar(if (is.null(result[["Rater"]]$error)) "" else result[["Rater"]]$error))
 })
 
 test_that("compute_pca_by_facet handles single-column wide matrix", {
   pca_fn <- mfrmr:::compute_pca_by_facet
-  # Multiple persons but only one level of the facet => ncol < 2
+  # Multiple persons but only one level of the facet => no usable facet PCA
   obs_df <- dplyr::tibble(
     Person      = c("P1", "P2", "P3"),
     Rater       = c("R1", "R1", "R1"),
     StdResidual = c(0.1, 0.2, 0.3)
   )
   result <- pca_fn(obs_df, facet_names = "Rater", max_factors = 3)
-  expect_null(result[["Rater"]])
+  expect_true(is.list(result[["Rater"]]))
+  expect_null(result[["Rater"]]$pca)
+  expect_true(nzchar(if (is.null(result[["Rater"]]$error)) "" else result[["Rater"]]$error))
 })
 
 # ===========================================================================

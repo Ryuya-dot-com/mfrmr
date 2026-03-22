@@ -4,15 +4,17 @@ test_that("core fit/diagnostics workflow runs", {
 
   d <- mfrmr:::sample_mfrm_data(seed = 123)
 
-  fit <- mfrmr::fit_mfrm(
-    data = d,
-    person = "Person",
-    facets = c("Rater", "Task", "Criterion"),
-    score = "Score",
-    method = "JML",
-    model = "RSM",
-    maxit = 20,
-    quad_points = 7
+  fit <- suppressWarnings(
+    mfrmr::fit_mfrm(
+      data = d,
+      person = "Person",
+      facets = c("Rater", "Task", "Criterion"),
+      score = "Score",
+      method = "JML",
+      model = "RSM",
+      maxit = 20,
+      quad_points = 7
+    )
   )
 
   expect_s3_class(fit, "mfrm_fit")
@@ -42,6 +44,10 @@ test_that("core fit/diagnostics workflow runs", {
   expect_s3_class(p_fit_ccc, "mfrm_plot_data")
   expect_s3_class(p_fit_person, "mfrm_plot_data")
   expect_s3_class(p_fit_step, "mfrm_plot_data")
+  expect_identical(as.character(p_fit_wright$data$preset), "standard")
+
+  p_fit_pub <- plot(fit, type = "wright", draw = FALSE, preset = "publication")
+  expect_identical(as.character(p_fit_pub$data$preset), "publication")
 
   diag <- mfrmr::diagnose_mfrm(fit, residual_pca = "both", pca_max_factors = 4)
   expect_s3_class(diag, "mfrm_diagnostics")
@@ -53,16 +59,37 @@ test_that("core fit/diagnostics workflow runs", {
   expect_true("displacement" %in% names(diag))
   expect_true("interrater" %in% names(diag))
   expect_true("facets_chisq" %in% names(diag))
+  expect_true("precision_profile" %in% names(diag))
+  expect_true("precision_audit" %in% names(diag))
+  expect_true("facet_precision" %in% names(diag))
+  expect_true("approximation_notes" %in% names(diag))
   expect_true(is.data.frame(diag$unexpected$table))
   expect_true(is.data.frame(diag$fair_average$stacked))
   expect_true(is.data.frame(diag$displacement$table))
   expect_true(is.data.frame(diag$interrater$pairs))
   expect_true(is.data.frame(diag$facets_chisq))
+  expect_true(is.data.frame(diag$precision_profile))
+  expect_true(is.data.frame(diag$precision_audit))
+  expect_true(is.data.frame(diag$facet_precision))
+  expect_true(is.data.frame(diag$approximation_notes))
+  expect_true(all(c("Method", "Converged", "PrecisionTier", "SupportsFormalInference", "HasFallbackSE", "RecommendedUse") %in% names(diag$precision_profile)))
+  expect_true(all(c("Check", "Status", "Detail") %in% names(diag$precision_audit)))
+  expect_true(all(c("DistributionBasis", "SEMode", "Separation", "Reliability") %in%
+    names(diag$facet_precision)))
+  expect_true(all(c("Converged", "PrecisionTier", "SupportsFormalInference", "SEUse", "CIBasis", "CIUse", "CIEligible", "CILabel") %in%
+    names(diag$measures)))
+  expect_true(all(c("Converged", "PrecisionTier", "SupportsFormalInference", "ReliabilityUse") %in%
+    names(diag$reliability)))
+  expect_true(all(c("RaterSeparation", "RaterReliability") %in%
+    names(diag$interrater$summary)))
   diag_summary <- summary(diag)
   expect_s3_class(diag_summary, "summary.mfrm_diagnostics")
   expect_true(all(c("overview", "overall_fit", "reliability", "top_fit", "flags") %in% names(diag_summary)))
   printed_diag <- capture.output(summary(diag))
   expect_true(any(grepl("Many-Facet Rasch Diagnostics Summary", printed_diag, fixed = TRUE)))
+  expect_true(any(grepl("Precision basis", printed_diag, fixed = TRUE)))
+  expect_true(any(grepl("Precision tier", printed_diag, fixed = TRUE)))
+  expect_true(any(grepl("SE/ModelSE, CI, and reliability conventions", printed_diag, fixed = TRUE)))
 
   t4 <- mfrmr::unexpected_response_table(fit, diagnostics = diag, abs_z_min = 1.5, prob_max = 0.4, top_n = 15)
   expect_s3_class(t4, "mfrm_unexpected")
@@ -307,7 +334,9 @@ test_that("core fit/diagnostics workflow runs", {
   expect_equal(names(t13_alias), names(t13))
 
   p13 <- mfrmr::plot_bias_interaction(t13, plot = "scatter", draw = FALSE)
+  p13_pub <- mfrmr::plot_bias_interaction(t13, plot = "scatter", draw = FALSE, preset = "publication")
   expect_s3_class(p13, "mfrm_plot_data")
+  expect_identical(as.character(p13_pub$data$preset), "publication")
   expect_equal(p13$name, "table13_bias")
   p13_alias <- mfrmr::plot_bias_interaction(t13, plot = "scatter", draw = FALSE)
   expect_s3_class(p13_alias, "mfrm_plot_data")
@@ -408,25 +437,34 @@ test_that("core fit/diagnostics workflow runs", {
 
   p_unexp <- mfrmr::plot_unexpected(fit, diagnostics = diag, abs_z_min = 1.5, prob_max = 0.4, top_n = 10, draw = FALSE)
   p_unexp2 <- mfrmr::plot_unexpected(t4, draw = FALSE)
+  p_unexp_pub <- mfrmr::plot_unexpected(fit, diagnostics = diag, abs_z_min = 1.5, prob_max = 0.4, top_n = 10, draw = FALSE, preset = "publication")
   p_fair <- mfrmr::plot_fair_average(fit, diagnostics = diag, draw = FALSE)
   p_fair2 <- mfrmr::plot_fair_average(t12, draw = FALSE)
   p_disp <- mfrmr::plot_displacement(fit, diagnostics = diag, anchored_only = FALSE, draw = FALSE)
   p_disp2 <- mfrmr::plot_displacement(disp, draw = FALSE)
+  p_disp_pub <- mfrmr::plot_displacement(fit, diagnostics = diag, anchored_only = FALSE, draw = FALSE, preset = "publication")
   p_ir <- mfrmr::plot_interrater_agreement(fit, diagnostics = diag, rater_facet = "Rater", draw = FALSE)
   p_ir2 <- mfrmr::plot_interrater_agreement(ir, draw = FALSE)
+  p_ir_pub <- mfrmr::plot_interrater_agreement(fit, diagnostics = diag, rater_facet = "Rater", draw = FALSE, preset = "publication")
   p_chi <- mfrmr::plot_facets_chisq(fit, diagnostics = diag, draw = FALSE)
   p_chi2 <- mfrmr::plot_facets_chisq(chi, draw = FALSE)
+  p_chi_pub <- mfrmr::plot_facets_chisq(fit, diagnostics = diag, draw = FALSE, preset = "publication")
   p_qc <- mfrmr::plot_qc_dashboard(fit, diagnostics = diag, draw = FALSE, top_n = 10)
   expect_s3_class(p_unexp, "mfrm_plot_data")
   expect_s3_class(p_unexp2, "mfrm_plot_data")
+  expect_identical(as.character(p_unexp_pub$data$preset), "publication")
   expect_s3_class(p_fair, "mfrm_plot_data")
   expect_s3_class(p_fair2, "mfrm_plot_data")
+  expect_true(all(c("title", "subtitle", "legend", "reference_lines") %in% names(p_fair$data)))
   expect_s3_class(p_disp, "mfrm_plot_data")
   expect_s3_class(p_disp2, "mfrm_plot_data")
+  expect_identical(as.character(p_disp_pub$data$preset), "publication")
   expect_s3_class(p_ir, "mfrm_plot_data")
   expect_s3_class(p_ir2, "mfrm_plot_data")
+  expect_identical(as.character(p_ir_pub$data$preset), "publication")
   expect_s3_class(p_chi, "mfrm_plot_data")
   expect_s3_class(p_chi2, "mfrm_plot_data")
+  expect_identical(as.character(p_chi_pub$data$preset), "publication")
   expect_s3_class(p_qc, "mfrm_plot_data")
   expect_true(all(c("unexpected", "fair_average", "displacement", "interrater", "facets_chisq", "reliability") %in% names(p_qc$data)))
 
@@ -441,9 +479,11 @@ test_that("core fit/diagnostics workflow runs", {
   p1 <- mfrmr::plot_residual_pca(pca, mode = "overall", plot_type = "scree", draw = FALSE)
   p2 <- mfrmr::plot_residual_pca(pca, mode = "facet", facet = "Rater", plot_type = "loadings", top_n = 5, draw = FALSE)
   p3 <- mfrmr::plot_residual_pca(fit, mode = "overall", plot_type = "scree", draw = FALSE)
+  p1_pub <- mfrmr::plot_residual_pca(pca, mode = "overall", plot_type = "scree", draw = FALSE, preset = "publication")
   expect_s3_class(p1, "mfrm_plot_data")
   expect_s3_class(p2, "mfrm_plot_data")
   expect_s3_class(p3, "mfrm_plot_data")
+  expect_identical(as.character(p1_pub$data$preset), "publication")
 
   vis <- mfrmr::build_visual_summaries(fit, diag)
   expect_s3_class(vis, "mfrm_visual_summaries")
@@ -452,7 +492,7 @@ test_that("core fit/diagnostics workflow runs", {
   expect_true("residual_pca_overall" %in% names(vis$summary_map))
   expect_true("residual_pca_by_facet" %in% names(vis$summary_map))
   expect_match(paste(vis$warning_map$residual_pca_overall, collapse = " "), "Threshold profile: standard", fixed = TRUE)
-  expect_match(paste(vis$summary_map$residual_pca_overall, collapse = " "), "Literature bands", fixed = TRUE)
+  expect_match(paste(vis$summary_map$residual_pca_overall, collapse = " "), "Heuristic reference bands", fixed = TRUE)
   vis_summary <- summary(vis)
   expect_s3_class(vis_summary, "summary.mfrm_bundle")
   vis_plot <- plot(vis, draw = FALSE)
@@ -468,20 +508,30 @@ test_that("core fit/diagnostics workflow runs", {
   apa <- mfrmr::build_apa_outputs(fit, diag)
   expect_s3_class(apa, "mfrm_apa_outputs")
   expect_s3_class(apa$report_text, "mfrm_apa_text")
+  expect_true("contract" %in% names(apa))
+  expect_true(inherits(apa$contract, "mfrm_apa_contract"))
+  expect_true(is.data.frame(apa$section_map))
+  expect_true(all(c("SectionId", "Parent", "Heading", "Available", "Text") %in% names(apa$section_map)))
   expect_match(apa$table_figure_notes, "Residual PCA scree", fixed = TRUE)
   expect_match(apa$table_figure_notes, "Residual PCA by facet", fixed = TRUE)
   expect_match(apa$table_figure_captions, "Residual PCA Scree", fixed = TRUE)
-  expect_match(apa$report_text, "Literature bands", fixed = TRUE)
+  expect_match(apa$report_text, "Heuristic reference bands", fixed = TRUE)
   expect_match(apa$report_text, "Optimization", fixed = TRUE)
   expect_match(apa$report_text, "Constraint settings:", fixed = TRUE)
   expect_match(apa$report_text, "Step/threshold summary:", fixed = TRUE)
   expect_match(apa$report_text, "Largest misfit", fixed = TRUE)
+  expect_match(apa$report_text, "Design and data\\.", perl = TRUE)
+  expect_match(apa$report_text, "Fit and precision\\.", perl = TRUE)
   printed_apa_text <- capture.output(print(apa$report_text))
   expect_true(any(grepl("Method\\.", printed_apa_text)))
   apa_summary <- summary(apa)
   expect_s3_class(apa_summary, "summary.mfrm_apa_outputs")
   expect_true(is.data.frame(apa_summary$overview))
   expect_true("report_text" %in% apa_summary$components$Component)
+  expect_true(is.data.frame(apa_summary$sections))
+  expect_true(nrow(apa_summary$sections) > 0)
+  expect_true(is.data.frame(apa_summary$content_checks))
+  expect_true(nrow(apa_summary$content_checks) > 0)
   apa_wrapped <- mfrmr::build_apa_outputs(fit, diag, context = list(line_width = 60))
   expect_true(grepl("Method\\.\\n\\n", apa_wrapped$report_text))
   expect_true(grepl("\\n\\nResults\\.\\n\\n", apa_wrapped$report_text))
@@ -498,6 +548,8 @@ test_that("core fit/diagnostics workflow runs", {
   at_ir <- mfrmr::apa_table(fit, which = "interrater_pairs", diagnostics = diag)
   expect_s3_class(at_ir, "apa_table")
   expect_true(is.data.frame(at_ir$table))
+  expect_true(nzchar(at_ir$caption))
+  expect_true(nzchar(at_ir$note))
   at_facets <- mfrmr::apa_table(fit, which = "summary", branch = "facets")
   expect_s3_class(at_facets, "apa_table")
   expect_equal(at_facets$branch, "facets")
@@ -686,15 +738,17 @@ test_that("packaged data objects are available via data() and loader", {
 test_that("MML + PCM path runs and returns diagnostics", {
   d <- mfrmr:::sample_mfrm_data(seed = 101)
 
-  fit <- mfrmr::fit_mfrm(
-    data = d,
-    person = "Person",
-    facets = c("Rater", "Task", "Criterion"),
-    score = "Score",
-    method = "MML",
-    model = "PCM",
-    maxit = 10,
-    quad_points = 7
+  fit <- suppressWarnings(
+    mfrmr::fit_mfrm(
+      data = d,
+      person = "Person",
+      facets = c("Rater", "Task", "Criterion"),
+      score = "Score",
+      method = "MML",
+      model = "PCM",
+      maxit = 10,
+      quad_points = 7
+    )
   )
 
   expect_s3_class(fit, "mfrm_fit")

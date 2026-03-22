@@ -49,9 +49,21 @@ This method draws quick pre-fit quality views from \code{\link[=describe_mfrm_da
 \section{Interpreting output}{
 
 \itemize{
-\item \code{"score_distribution"}: identifies sparse/unused categories.
-\item \code{"facet_levels"}: reveals highly imbalanced facet granularity.
-\item \code{"missing"}: pinpoints columns with potential data-quality bottlenecks.
+\item \code{"score_distribution"}: bar chart of weighted observation counts per
+score category.  Y-axis is \code{WeightedN} (sum of weights for each
+category).  Categories with very few observations (< 10) may produce
+unstable threshold estimates.  A roughly uniform or unimodal
+distribution is ideal; heavy floor/ceiling effects compress the
+measurement range.
+\item \code{"facet_levels"}: bar chart showing the number of distinct levels
+per facet.  Useful for verifying that the design structure matches
+expectations (e.g., expected number of raters or criteria).  Very
+large numbers of levels increase computation time and may require
+higher \code{maxit} in \code{\link[=fit_mfrm]{fit_mfrm()}}.
+\item \code{"missing"}: bar chart of missing-value counts per input column.
+Columns with non-zero counts should be investigated before
+fitting---rows with missing scores, persons, or facet IDs are
+dropped during estimation.
 }
 }
 
@@ -66,17 +78,7 @@ This method draws quick pre-fit quality views from \code{\link[=describe_mfrm_da
 }
 
 \examples{
-toy <- expand.grid(
-  Person = paste0("P", 1:4),
-  Rater = paste0("R", 1:2),
-  Criterion = c("Content", "Organization", "Language"),
-  stringsAsFactors = FALSE
-)
-toy$Score <- (
-  as.integer(factor(toy$Person)) +
-  2 * as.integer(factor(toy$Rater)) +
-  as.integer(factor(toy$Criterion))
-) \%\% 3
+toy <- load_mfrmr_data("example_core")
 ds <- describe_mfrm_data(toy, "Person", c("Rater", "Criterion"), "Score")
 p <- plot(ds, draw = FALSE)
 }

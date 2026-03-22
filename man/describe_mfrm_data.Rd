@@ -72,17 +72,39 @@ This function provides a compact descriptive bundle similar to the
 pre-fit summaries commonly checked in TAM workflows:
 sample size, score distribution, per-facet coverage, and linkage counts.
 \code{psych::describe()} is used for numeric descriptives of score and weight.
+
+\strong{Key data-quality checks to perform before fitting:}
+\itemize{
+\item \emph{Sparse categories}: any score category with fewer than 10 weighted
+observations may produce unstable threshold estimates
+(Linacre, 2002).  Consider collapsing adjacent categories.
+\item \emph{Unlinked elements}: if a facet level has zero overlap with one or
+more levels of another facet, the design is disconnected and
+parameters cannot be placed on a common scale.  Check
+\code{linkage_summary} for low connectivity.
+\item \emph{Extreme scores}: persons or facet levels with all-minimum or
+all-maximum scores yield infinite logit estimates under JML;
+they are handled via Bayesian shrinkage under MML.
+}
 }
 \section{Interpreting output}{
 
 Recommended order:
 \itemize{
 \item \code{overview}: confirms sample size, facet count, and category span.
+The \code{MinWeightedN} column shows the smallest weighted observation
+count across all facet levels; values below 30 may lead to
+unstable parameter estimates.
 \item \code{missing_by_column}: identifies immediate data-quality risks.
+Any non-zero count warrants investigation before fitting.
 \item \code{score_distribution}: checks sparse/unused score categories.
-\item \code{facet_level_summary} and \code{linkage_summary}: checks per-level support and
-person-facet connectivity.
-\item \code{agreement}: optional observed inter-rater consistency summary.
+Balanced usage across categories is ideal; heavily skewed
+distributions may compress the measurement range.
+\item \code{facet_level_summary} and \code{linkage_summary}: checks per-level
+support and person-facet connectivity.  Low linkage ratios
+indicate sparse or disconnected design blocks.
+\item \code{agreement}: optional observed inter-rater consistency summary
+(exact agreement, correlation, mean differences per rater pair).
 }
 }
 
@@ -96,17 +118,7 @@ person-facet connectivity.
 }
 
 \examples{
-toy <- expand.grid(
-  Person = paste0("P", 1:4),
-  Rater = paste0("R", 1:2),
-  Criterion = c("Content", "Organization", "Language"),
-  stringsAsFactors = FALSE
-)
-toy$Score <- (
-  as.integer(factor(toy$Person)) +
-  2 * as.integer(factor(toy$Rater)) +
-  as.integer(factor(toy$Criterion))
-) \%\% 3
+toy <- load_mfrmr_data("example_core")
 ds <- describe_mfrm_data(
   data = toy,
   person = "Person",

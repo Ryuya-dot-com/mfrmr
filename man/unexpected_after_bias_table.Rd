@@ -2,7 +2,7 @@
 % Please edit documentation in R/api-tables.R
 \name{unexpected_after_bias_table}
 \alias{unexpected_after_bias_table}
-\title{Build a FACETS Table 10-style unexpected-after-bias report}
+\title{Build an unexpected-after-adjustment screening report}
 \usage{
 unexpected_after_bias_table(
   fit,
@@ -39,12 +39,11 @@ A named list with:
 }
 }
 \description{
-Build a FACETS Table 10-style unexpected-after-bias report
+Build an unexpected-after-adjustment screening report
 }
 \details{
-FACETS Table 10 reports responses that remain unexpected after bias terms
-are introduced. This helper recomputes expected values and residuals using
-the estimated bias contrasts from \code{\link[=estimate_bias]{estimate_bias()}}.
+This helper recomputes expected values and residuals after interaction
+adjustments from \code{\link[=estimate_bias]{estimate_bias()}} have been introduced.
 
 \code{summary(t10)} is supported through \code{summary()}.
 \code{plot(t10)} is dispatched through \code{plot()} for class
@@ -72,6 +71,13 @@ persistent unexpected rows indicate remaining model-data mismatch.
 }
 }
 
+\section{Further guidance}{
+
+For a plot-selection guide and a longer walkthrough, see
+\link{mfrmr_visual_diagnostics} and
+\code{vignette("mfrmr-visual-diagnostics", package = "mfrmr")}.
+}
+
 \section{Output columns}{
 
 The \code{table} data.frame has the same structure as
@@ -89,17 +95,7 @@ The \code{summary} data.frame contains:
 }
 
 \examples{
-toy <- expand.grid(
-  Person = paste0("P", 1:4),
-  Rater = paste0("R", 1:2),
-  Criterion = c("Content", "Organization", "Language"),
-  stringsAsFactors = FALSE
-)
-toy$Score <- (
-  as.integer(factor(toy$Person)) +
-  2 * as.integer(factor(toy$Rater)) +
-  as.integer(factor(toy$Criterion))
-) \%\% 3
+toy <- load_mfrmr_data("example_bias")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 bias <- estimate_bias(fit, diag, facet_a = "Rater", facet_b = "Criterion", max_iter = 2)
@@ -109,5 +105,6 @@ p_t10 <- plot(t10, draw = FALSE)
 class(p_t10)
 }
 \seealso{
-\code{\link[=estimate_bias]{estimate_bias()}}, \code{\link[=unexpected_response_table]{unexpected_response_table()}}, \code{\link[=bias_count_table]{bias_count_table()}}
+\code{\link[=estimate_bias]{estimate_bias()}}, \code{\link[=unexpected_response_table]{unexpected_response_table()}}, \code{\link[=bias_count_table]{bias_count_table()}},
+\link{mfrmr_visual_diagnostics}
 }

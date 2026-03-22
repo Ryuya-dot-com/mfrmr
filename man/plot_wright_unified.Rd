@@ -9,7 +9,13 @@ plot_wright_unified(
   diagnostics = NULL,
   bins = 20L,
   show_thresholds = TRUE,
+  top_n = 30L,
+  show_ci = FALSE,
+  ci_level = 0.95,
   draw = TRUE,
+  preset = c("standard", "publication", "compact"),
+  palette = NULL,
+  label_angle = 45,
   ...
 )
 }
@@ -23,8 +29,22 @@ plot_wright_unified(
 \item{show_thresholds}{Logical; if \code{TRUE}, display threshold/step
 positions on the map. Default \code{TRUE}.}
 
+\item{top_n}{Maximum number of facet/step points retained for labeling.}
+
+\item{show_ci}{Logical; if \code{TRUE}, draw approximate confidence intervals when
+standard errors are available.}
+
+\item{ci_level}{Confidence level used when \code{show_ci = TRUE}.}
+
 \item{draw}{If \code{TRUE} (default), draw the plot. If \code{FALSE}, return
 plot data invisibly.}
+
+\item{preset}{Visual preset (\code{"standard"}, \code{"publication"}, \code{"compact"}).}
+
+\item{palette}{Optional named color overrides passed to the shared Wright-map
+drawer.}
+
+\item{label_angle}{Rotation angle for group labels on the facet panel.}
 
 \item{...}{Additional graphical parameters.}
 }
@@ -33,18 +53,22 @@ Invisibly, a list with \code{persons}, \code{facets}, and \code{thresholds}
 data used for the plot.
 }
 \description{
-Produces a FACETS-style variable map showing person ability distribution
+Produces a shared-logit variable map showing person ability distribution
 alongside measure estimates for every facet in side-by-side columns on
-the same logit scale.
+the same scale.
 }
 \details{
 This unified map arranges:
 \itemize{
 \item Column 1: Person measure distribution (horizontal histogram)
-\item Columns 2..N: One column per facet, with level labels positioned at
-their estimated measure on the shared logit axis
-\item Final column (optional): Threshold/step positions
+\item Shared facet/step panel: facet levels and optional threshold positions on
+the same vertical logit axis
+\item Range and interquartile overlays for each facet group to show spread
 }
+
+This is the package's most compact targeting view when you want one display
+that shows where persons, facet levels, and category thresholds sit
+relative to the same latent scale.
 
 The logit scale on the y-axis is shared, allowing direct visual
 comparison of all facets and persons.
@@ -56,6 +80,8 @@ comparison of all facets and persons.
 \item The person histogram shows where examinees cluster relative to the
 facet scale.
 \item Thresholds (if shown) indicate category boundary positions.
+\item Large gaps between the person distribution and facet locations can signal
+targeting problems.
 }
 }
 
@@ -65,25 +91,33 @@ facet scale.
 \item Fit a model with \code{\link[=fit_mfrm]{fit_mfrm()}}.
 \item Plot with \code{plot_wright_unified(fit)}.
 \item Compare person distribution with facet level locations.
+\item Use \code{show_thresholds = TRUE} when you want the category structure in the
+same view.
 }
 }
 
+\section{When to use this instead of plot_information}{
+
+Use \code{plot_wright_unified()} when your main question is targeting or coverage
+on the shared logit scale. Use \code{\link[=plot_information]{plot_information()}} when your main question
+is measurement precision across theta.
+}
+
+\section{Further guidance}{
+
+For a plot-selection guide and a longer walkthrough, see
+\link{mfrmr_visual_diagnostics} and
+\code{vignette("mfrmr-visual-diagnostics", package = "mfrmr")}.
+}
+
 \examples{
-toy <- expand.grid(
-  Person = paste0("P", 1:4),
-  Rater = paste0("R", 1:2),
-  Criterion = c("Content", "Organization", "Language"),
-  stringsAsFactors = FALSE
-)
-toy$Score <- (
-  as.integer(factor(toy$Person)) +
-  2 * as.integer(factor(toy$Rater)) +
-  as.integer(factor(toy$Criterion))
-) \%\% 3
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                 method = "JML", model = "RSM", maxit = 25)
-plot_wright_unified(fit)
+toy <- load_mfrmr_data("example_core")
+toy_small <- toy[toy$Person \%in\% unique(toy$Person)[1:12], , drop = FALSE]
+fit <- fit_mfrm(toy_small, "Person", c("Rater", "Criterion"), "Score",
+                 method = "JML", model = "RSM", maxit = 10)
+map_data <- plot_wright_unified(fit, draw = FALSE)
+names(map_data)
 }
 \seealso{
-\code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=plot.mfrm_fit]{plot.mfrm_fit()}}
+\code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=plot.mfrm_fit]{plot.mfrm_fit()}}, \link{mfrmr_visual_diagnostics}
 }

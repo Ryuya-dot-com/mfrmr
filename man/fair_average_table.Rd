@@ -2,7 +2,7 @@
 % Please edit documentation in R/api-tables.R
 \name{fair_average_table}
 \alias{fair_average_table}
-\title{Build a FACETS Table 12-style fair-average table bundle}
+\title{Build an adjusted-score reference table bundle}
 \usage{
 fair_average_table(
   fit,
@@ -12,6 +12,8 @@ fair_average_table(
   umean = 0,
   uscale = 1,
   udecimals = 2,
+  reference = c("both", "mean", "zero"),
+  label_style = c("both", "native", "legacy"),
   omit_unobserved = FALSE,
   xtreme = 0
 )
@@ -24,13 +26,19 @@ fair_average_table(
 \item{facets}{Optional subset of facets.}
 
 \item{totalscore}{Include all observations for score totals (\code{TRUE}) or apply
-FACETS-style extreme-row exclusion (\code{FALSE}).}
+legacy extreme-row exclusion (\code{FALSE}).}
 
 \item{umean}{Additive score-to-report origin shift.}
 
 \item{uscale}{Multiplicative score-to-report scale.}
 
 \item{udecimals}{Rounding digits used in formatted output.}
+
+\item{reference}{Which adjusted-score reference to keep in formatted outputs:
+\code{"both"} (default), \code{"mean"}, or \code{"zero"}.}
+
+\item{label_style}{Column-label style for formatted outputs:
+\code{"both"} (default), \code{"native"}, or \code{"legacy"}.}
 
 \item{omit_unobserved}{If \code{TRUE}, remove unobserved levels.}
 
@@ -46,12 +54,15 @@ A named list with:
 }
 }
 \description{
-Build a FACETS Table 12-style fair-average table bundle
+Build an adjusted-score reference table bundle
 }
 \details{
-This function wraps internal FACETS-style fair-average calculations and
-returns both facet-wise and stacked tables, including \verb{Fair(M) Average}
-and \verb{Fair(Z) Average}.
+This function wraps the package's adjusted-score calculations and returns
+both facet-wise and stacked tables. Historical display columns such as
+\verb{Fair(M) Average} and \verb{Fair(Z) Average} are retained for compatibility, and
+package-native aliases such as \code{AdjustedAverage},
+\code{StandardizedAdjustedAverage}, \code{ModelBasedSE}, and \code{FitAdjustedSE} are
+appended to the formatted outputs.
 }
 \section{Interpreting output}{
 
@@ -82,28 +93,21 @@ The \code{stacked} data.frame contains:
 \item{Facet}{Facet name for this row.}
 \item{Level}{Element label within the facet.}
 \item{Obsvd Average}{Observed raw-score average.}
-\item{Fair(M) Average}{Model-adjusted fair average (mean-based).}
-\item{Fair(Z) Average}{Model-adjusted fair average (z-score-based).}
+\item{Fair(M) Average}{Model-adjusted reference average on the reported score scale.}
+\item{Fair(Z) Average}{Standardized adjusted reference average.}
+\item{ObservedAverage, AdjustedAverage, StandardizedAdjustedAverage}{Package-native aliases for the three average columns above.}
 \item{Measure}{Estimated logit measure for this level.}
-\item{SE}{Standard error of the measure.}
+\item{SE}{Compatibility alias for the model-based standard error.}
+\item{ModelBasedSE, FitAdjustedSE}{Package-native aliases for \verb{Model S.E.} and \verb{Real S.E.}.}
 \item{Infit MnSq, Outfit MnSq}{Fit statistics for this level.}
 }
 }
 
 \examples{
-toy <- expand.grid(
-  Person = paste0("P", 1:4),
-  Rater = paste0("R", 1:2),
-  Criterion = c("Content", "Organization", "Language"),
-  stringsAsFactors = FALSE
-)
-toy$Score <- (
-  as.integer(factor(toy$Person)) +
-  2 * as.integer(factor(toy$Rater)) +
-  as.integer(factor(toy$Criterion))
-) \%\% 3
+toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 t12 <- fair_average_table(fit, udecimals = 2)
+t12_native <- fair_average_table(fit, reference = "mean", label_style = "native")
 summary(t12)
 p_t12 <- plot(t12, draw = FALSE)
 class(p_t12)

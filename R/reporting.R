@@ -1,4 +1,4 @@
-# Reporting and narrative helpers (FACETS-style / APA-style)
+# Reporting and narrative helpers (package-native / APA-style)
 
 `%||%` <- function(x, y) {
   if (is.null(x)) y else x
@@ -248,7 +248,21 @@ safe_residual_pca <- function(diagnostics, mode = "both", pca_max_factors = 10L)
       mode = mode,
       pca_max_factors = pca_max_factors
     ),
-    error = function(e) NULL
+    error = function(e) {
+      structure(
+        list(
+          overall_table = data.frame(),
+          by_facet_table = data.frame(),
+          overall = NULL,
+          by_facet = list(),
+          errors = list(
+            overall = conditionMessage(e),
+            by_facet = data.frame(Facet = character(0), Error = character(0), stringsAsFactors = FALSE)
+          )
+        ),
+        class = c("mfrm_bundle", "mfrm_residual_pca", "list")
+      )
+    }
   )
 }
 
@@ -258,7 +272,7 @@ safe_residual_pca <- function(diagnostics, mode = "both", pca_max_factors = 10L)
 #   - low_cat_min: Linacre (2002), minimum 10 observations per category for stable thresholds.
 #   - misfit_ratio_warn: Bond & Fox (2015), MnSq 0.5-1.5 acceptable range; >10% flagged.
 #   - zstd thresholds: |ZSTD| > 2 at 5% significance; >3 at 1% (Wright & Linacre, 1994).
-#   - pca_first_eigen_warn: Linacre (2007), eigenvalue > 2.0 suggests secondary dimension.
+#   - pca_first_eigen_warn: Linacre-style residual-PCA heuristic band; use only as exploratory screening, not direct proof of multidimensionality.
 #   - pca_first_prop_warn: Smith (2002), unexplained variance > 5-10% merits investigation.
 #   - pca_reference_bands: Raiche (2005) EV >= 1.4 critical minimum for parallel analysis.
 warning_threshold_profiles <- function() {
@@ -339,7 +353,7 @@ build_pca_reference_text <- function(reference_bands) {
   eigen <- reference_bands$eigenvalue
   prop <- reference_bands$proportion
   paste0(
-    "Literature bands: EV >= ", fmt_num(eigen[["critical_minimum"]], 1), " (critical minimum), ",
+    "Heuristic reference bands: EV >= ", fmt_num(eigen[["critical_minimum"]], 1), " (critical minimum), ",
     ">= ", fmt_num(eigen[["caution"]], 1), " (caution), ",
     ">= ", fmt_num(eigen[["common"]], 1), " (common), ",
     ">= ", fmt_num(eigen[["strong"]], 1), " (strong); ",
@@ -365,7 +379,7 @@ build_pca_check_text <- function(eigenvalue, proportion, reference_bands) {
     paste0("Var>=", fmt_num(100 * p[["caution"]], 0), "%:", ifelse(is.finite(prop) && prop >= p[["caution"]], "Y", "N")),
     paste0("Var>=", fmt_num(100 * p[["strong"]], 0), "%:", ifelse(is.finite(prop) && prop >= p[["strong"]], "Y", "N"))
   )
-  paste0("Current PC1 checks: ", paste(checks, collapse = ", "), ".")
+  paste0("Current exploratory PC1 checks: ", paste(checks, collapse = ", "), ".")
 }
 
 extract_overall_pca_first <- function(pca_obj) {
@@ -404,6 +418,19 @@ extract_facet_pca_first <- function(pca_obj) {
   if (length(out) == 0) return(data.frame())
   out <- dplyr::bind_rows(out)
   out[order(suppressWarnings(as.numeric(out$Eigenvalue)), decreasing = TRUE), , drop = FALSE]
+}
+
+extract_overall_pca_error <- function(pca_obj) {
+  if (is.null(pca_obj) || is.null(pca_obj$errors) || is.null(pca_obj$errors$overall)) return("")
+  err <- as.character(pca_obj$errors$overall[1] %||% "")
+  if (is.na(err)) "" else err
+}
+
+extract_facet_pca_errors <- function(pca_obj) {
+  if (is.null(pca_obj) || is.null(pca_obj$errors) || is.null(pca_obj$errors$by_facet)) {
+    return(data.frame(Facet = character(0), Error = character(0), stringsAsFactors = FALSE))
+  }
+  as.data.frame(pca_obj$errors$by_facet, stringsAsFactors = FALSE)
 }
 
 collapse_apa_paragraph <- function(sentences, width = 92L) {
@@ -595,12 +622,273 @@ summarize_bias_counts <- function(bias_results) {
   paste0(
     "Bias screening evaluated ", fmt_count(total_n),
     " interaction cell(s); ", fmt_count(sig_n),
-    " met p < .05 and ", fmt_count(large_n),
+    " met a screening tail area below .05 and ", fmt_count(large_n),
     " had |Bias Size| >= 0.50 logits."
   )
 }
 
-build_apa_report_text <- function(res, diagnostics, bias_results = NULL, context = list(), whexact = FALSE) {
+build_apa_table_figure_key_order <- function() {
+  c(
+    "table1", "table2", "table3", "table4",
+    "wright_map", "pathway_map", "facet_distribution", "step_thresholds", "category_curves",
+    "observed_expected", "fit_diagnostics", "fit_zstd_distribution", "misfit_levels",
+    "residual_pca_overall", "residual_pca_by_facet"
+  )
+}
+
+extract_apa_note_body <- function(note_text) {
+  lines <- strsplit(as.character(note_text %||% ""), "\n", fixed = TRUE)[[1]]
+  lines <- trimws(lines)
+  lines <- lines[nzchar(lines)]
+  if (length(lines) == 0) return("")
+  note_idx <- grep("^Note\\.", lines)
+  if (length(note_idx) == 0) return(paste(lines, collapse = " "))
+  body <- sub("^Note\\.\\s*", "", lines[note_idx[1]])
+  tail <- if (note_idx[1] < length(lines)) lines[(note_idx[1] + 1L):length(lines)] else character(0)
+  tail <- tail[nzchar(tail)]
+  paste(c(body, tail), collapse = " ")
+}
+
+build_apa_note_map_from_contract <- function(contract) {
+  meta <- contract$metadata
+  precision <- contract$precision
+  summaries <- contract$summaries
+  availability <- contract$availability
+  threshold_note_label <- summaries$threshold_text %||% ""
+  if (grepl("^thresholds were\\s+", threshold_note_label, ignore.case = TRUE)) {
+    threshold_note_label <- sub("^thresholds were\\s+", "", threshold_note_label, ignore.case = TRUE)
+  }
+
+  note_map <- list()
+  note_map$table1 <- paste0(
+    "Table 1. Facet summary\n",
+    "Note. Measures are reported in logits; higher values indicate more of the modeled trait for that facet. ",
+    precision$se_note,
+    "Model = ", meta$model, "; estimation = ", meta$method,
+    "; N = ", fmt_count(meta$n_obs), " observations from ", fmt_count(meta$n_person),
+    " persons on a ", fmt_count(meta$n_cat), "-category scale (",
+    fmt_count(meta$rating_min), "-", fmt_count(meta$rating_max), ")."
+  )
+
+  note_map$table2 <- paste0(
+    "Table 2. Rating scale diagnostics\n",
+    "Note. Category counts and thresholds summarize scale functioning. Thresholds were ",
+    threshold_note_label,
+    "; unused categories = ", fmt_count(summaries$unused_categories),
+    "; low-count categories (< 10) = ", fmt_count(summaries$low_count_categories), "."
+  )
+
+  fit_sentence <- if (is.finite(summaries$overall_fit_infit) && is.finite(summaries$overall_fit_outfit)) {
+    paste0(
+      "Overall fit: infit MnSq = ", fmt_num(summaries$overall_fit_infit),
+      ", outfit MnSq = ", fmt_num(summaries$overall_fit_outfit), "."
+    )
+  } else {
+    "Overall fit indices are reported as mean infit and outfit MnSq."
+  }
+
+  note_map$table3 <- paste0(
+    "Table 3. Fit and reliability summary\n",
+    if (precision$supports_formal_inference) {
+      "Note. Separation and reliability are based on observed variance, measurement error, and adjusted true variance. "
+    } else if (identical(precision$tier, "hybrid")) {
+      "Note. Separation and reliability combine model-based and fallback precision summaries and should be interpreted cautiously. "
+    } else {
+      "Note. Separation and reliability are exploratory summaries based on observed variance, measurement error, and adjusted true variance. "
+    },
+    fit_sentence
+  )
+
+  if (availability$has_rater_reliability) {
+    note_map$table3 <- paste0(
+      note_map$table3,
+      " Rater facet (", summaries$rater_facet, ") ",
+      precision$reliability_label,
+      " = ", fmt_num(summaries$rater_reliability$Reliability),
+      ", separation = ", fmt_num(summaries$rater_reliability$Separation), "."
+    )
+  }
+  if (nzchar(summaries$interrater_sentence %||% "")) {
+    note_map$table3 <- paste0(note_map$table3, " ", summaries$interrater_sentence)
+  }
+
+  if (availability$has_bias) {
+    note_map$table4 <- paste0(
+      "Table 4. Bias/interaction effects\n",
+      "Note. Bias contrasts are in logits and represent observed minus expected scores with main effects held fixed. ",
+      "The reported t and probability columns are screening metrics based on conditional plug-in information, not formal hypothesis tests. ",
+      "Rows with screening tail area below .05 = ", fmt_count(summaries$bias_sig_n), "."
+    )
+  } else {
+    note_map$table4 <- paste0(
+      "Table 4. Bias/interaction effects\n",
+      "Note. Bias contrasts are in logits and represent observed minus expected scores with main effects held fixed. ",
+      "Any t or probability columns should be read as screening metrics rather than formal hypothesis tests."
+    )
+  }
+
+  note_map$wright_map <- "Wright map\nNote. Persons and facet elements are located on a common logit scale; higher values indicate higher ability or greater severity/difficulty depending on facet orientation."
+  note_map$pathway_map <- "Pathway map\nNote. Curves show expected score across theta/logit levels from estimated thresholds."
+  note_map$facet_distribution <- "Facet estimate distribution\nNote. Distributions summarize severity/difficulty spread within each facet."
+  note_map$step_thresholds <- "Step/threshold estimates\nNote. Step ordering should generally increase; disordered thresholds suggest category structure issues."
+  note_map$category_curves <- "Category characteristic curves\nNote. Curves show category response probability across theta/logit levels; well-functioning categories show distinct peaks in order."
+  note_map$observed_expected <- "Observed vs expected scores\nNote. Points summarize mean observed and expected scores by bin; deviations from the diagonal suggest local misfit."
+  note_map$fit_diagnostics <- "Fit diagnostics (Infit vs Outfit)\nNote. Each point represents an element within a facet. Values near 1.0 indicate expected fit; values substantially above 1.0 suggest misfit."
+  note_map$fit_zstd_distribution <- "Fit ZSTD distribution\nNote. Distributions of standardized fit help identify unusually large residuals across facets."
+  note_map$misfit_levels <- "Misfit levels\nNote. Levels are ranked by maximum |ZSTD| to highlight potentially problematic elements."
+
+  if (availability$has_pca_overall) {
+    overall_tail <- paste0(
+      " PC1 eigenvalue = ", fmt_num(summaries$pca_overall_1$Eigenvalue),
+      " (", fmt_num(100 * to_float(summaries$pca_overall_1$Proportion), 1), "% variance)."
+    )
+    if (!is.null(summaries$pca_overall_2)) {
+      overall_tail <- paste0(
+        overall_tail,
+        " PC2 eigenvalue = ", fmt_num(summaries$pca_overall_2$Eigenvalue), "."
+      )
+    }
+    note_map$residual_pca_overall <- paste0(
+      "Residual PCA scree (overall)\n",
+      "Note. Eigenvalues are from PCA of the person x facet-combination standardized residual correlation matrix.",
+      overall_tail,
+      " ",
+      summaries$pca_reference_text
+    )
+  } else {
+    note_map$residual_pca_overall <- paste0(
+      "Residual PCA scree (overall)\n",
+      "Note. Overall residual PCA was not available for this run. ",
+      summaries$pca_reference_text
+    )
+  }
+
+  if (availability$has_pca_by_facet) {
+    top <- utils::head(summaries$pca_by_facet_first, 3)
+    labels <- vapply(seq_len(nrow(top)), function(i) {
+      paste0(
+        top$Facet[i], ": ", fmt_num(top$Eigenvalue[i]), " (",
+        fmt_num(100 * to_float(top$Proportion[i]), 1), "%)"
+      )
+    }, character(1))
+
+    note_map$residual_pca_by_facet <- paste0(
+      "Residual PCA by facet\n",
+      "Note. Each facet is analyzed using a person x facet-level standardized residual matrix. ",
+      "Largest PC1 signals: ", paste(labels, collapse = "; "), ". ",
+      summaries$pca_reference_text
+    )
+  } else {
+    note_map$residual_pca_by_facet <- paste0(
+      "Residual PCA by facet\n",
+      "Note. Facet-specific residual PCA was not available for this run. ",
+      summaries$pca_reference_text
+    )
+  }
+
+  note_map
+}
+
+build_apa_caption_map_from_contract <- function(contract) {
+  assessment <- trimws(as.character(contract$context$assessment %||% ""))
+  facet_pair <- contract$summaries$bias_facet_pair %||% ""
+  assessment_phrase <- if (nzchar(assessment)) paste0(" for ", assessment) else ""
+
+  list(
+    table1 = paste0("Table 1\nFacet Summary (Measures, Precision, Fit, Reliability)", assessment_phrase),
+    table2 = "Table 2\nRating Scale Diagnostics (Category Counts and Thresholds)",
+    table3 = "Table 3\nFit and Reliability Summary",
+    table4 = if (nzchar(facet_pair)) {
+      paste0("Table 4\nBias/Interaction Effects for ", facet_pair)
+    } else {
+      "Table 4\nBias/Interaction Effects"
+    },
+    wright_map = paste0("Wright Map\nPerson and Facet Measures", assessment_phrase),
+    pathway_map = "Pathway Map\nExpected Score by Theta",
+    facet_distribution = "Facet Estimate Distribution",
+    step_thresholds = "Step/Threshold Estimates",
+    category_curves = "Category Characteristic Curves",
+    observed_expected = "Observed vs. Expected Scores",
+    fit_diagnostics = "Fit Diagnostics (Infit vs Outfit)",
+    fit_zstd_distribution = "Fit ZSTD Distribution",
+    misfit_levels = "Misfit Levels (Max |ZSTD|)",
+    residual_pca_overall = "Residual PCA Scree (Overall)",
+    residual_pca_by_facet = "Residual PCA by Facet"
+  )
+}
+
+build_apa_section_entry <- function(parent, heading, sentences, width = 92L) {
+  sentences <- trimws(as.character(sentences %||% character(0)))
+  sentences <- sentences[nzchar(sentences)]
+  list(
+    Parent = as.character(parent),
+    Heading = as.character(heading),
+    Sentences = sentences,
+    SentenceCount = length(sentences),
+    Text = collapse_apa_paragraph(sentences, width = width),
+    Available = length(sentences) > 0
+  )
+}
+
+build_apa_section_map_from_contract <- function(contract) {
+  width <- contract$metadata$line_width %||% 92L
+  sections <- list(
+    method_design = build_apa_section_entry("Method", "Design and data", contract$method_design_sentences, width = width),
+    method_estimation = build_apa_section_entry("Method", "Estimation settings", contract$method_estimation_sentences, width = width),
+    results_scale = build_apa_section_entry("Results", "Scale functioning", contract$results_scale_sentences, width = width),
+    results_measures = build_apa_section_entry("Results", "Facet measures", contract$results_measure_sentences, width = width),
+    results_fit_precision = build_apa_section_entry("Results", "Fit and precision", contract$results_fit_precision_sentences, width = width),
+    results_residual_structure = build_apa_section_entry("Results", "Residual structure", contract$results_residual_sentences, width = width),
+    results_bias_screening = build_apa_section_entry("Results", "Bias screening", contract$results_bias_sentences, width = width),
+    results_cautions = build_apa_section_entry("Results", "Reporting cautions", contract$caution_sentences, width = width)
+  )
+  sections
+}
+
+flatten_apa_section_map <- function(section_map, order = names(section_map)) {
+  keys <- order[order %in% names(section_map)]
+  if (length(keys) == 0) return(data.frame())
+  do.call(
+    rbind,
+    lapply(keys, function(key) {
+      entry <- section_map[[key]]
+      data.frame(
+        SectionId = as.character(key),
+        Parent = as.character(entry$Parent %||% ""),
+        Heading = as.character(entry$Heading %||% ""),
+        Available = isTRUE(entry$Available),
+        SentenceCount = as.integer(entry$SentenceCount %||% 0L),
+        Text = as.character(entry$Text %||% ""),
+        stringsAsFactors = FALSE
+      )
+    })
+  )
+}
+
+build_apa_report_text_from_contract <- function(contract) {
+  section_map <- contract$section_map %||% build_apa_section_map_from_contract(contract)
+  method_keys <- c("method_design", "method_estimation")
+  results_keys <- c(
+    "results_scale", "results_measures", "results_fit_precision",
+    "results_residual_structure", "results_bias_screening", "results_cautions"
+  )
+
+  render_sections <- function(keys) {
+    blocks <- vapply(keys[keys %in% names(section_map)], function(key) {
+      entry <- section_map[[key]]
+      if (!isTRUE(entry$Available) || !nzchar(entry$Text)) return("")
+      paste0(entry$Heading, ".\n", entry$Text)
+    }, character(1))
+    blocks <- blocks[nzchar(blocks)]
+    paste(blocks, collapse = "\n\n")
+  }
+
+  method_text <- paste0("Method.\n\n", render_sections(method_keys))
+  results_text <- paste0("Results.\n\n", render_sections(results_keys))
+  paste0(method_text, "\n\n", results_text)
+}
+
+build_apa_reporting_contract <- function(res, diagnostics, bias_results = NULL, context = list(), whexact = FALSE) {
   summary <- if (!is.null(res$summary) && nrow(res$summary) > 0) res$summary[1, , drop = FALSE] else NULL
   prep <- res$prep
   config <- res$config
@@ -611,8 +899,13 @@ build_apa_report_text <- function(res, diagnostics, bias_results = NULL, context
   rating_min <- to_float(prep$rating_min)
   rating_max <- to_float(prep$rating_max)
 
-  facet_names <- config$facet_names
-  facet_counts <- vapply(facet_names, function(f) length(config$facet_levels[[f]]), numeric(1))
+  facet_names <- as.character(config$facet_names %||% character(0))
+  facet_levels <- config$facet_levels %||% list()
+  facet_counts <- if (length(facet_names) > 0) {
+    vapply(facet_names, function(f) length(facet_levels[[f]] %||% character(0)), numeric(1))
+  } else {
+    numeric(0)
+  }
   facets_text <- if (length(facet_counts) > 0) {
     paste(paste0(names(facet_counts), " (n = ", fmt_count(facet_counts), ")"), collapse = ", ")
   } else {
@@ -627,33 +920,92 @@ build_apa_report_text <- function(res, diagnostics, bias_results = NULL, context
   line_width <- suppressWarnings(as.integer(context$line_width %||% 92L))
   if (!is.finite(line_width) || line_width < 40L) line_width <- 92L
 
+  precision_profile <- as.data.frame(diagnostics$precision_profile %||% data.frame(), stringsAsFactors = FALSE)
+  precision_tier <- trimws(as.character(precision_profile$PrecisionTier[1] %||% NA_character_))
+  if (!nzchar(precision_tier)) {
+    precision_tier <- if (identical(config$method, "MML")) "hybrid" else "exploratory"
+  }
+  supports_formal_inference <- nrow(precision_profile) > 0 &&
+    isTRUE(precision_profile$SupportsFormalInference[1])
+  precision_label <- if (supports_formal_inference) {
+    "model-based"
+  } else if (identical(precision_tier, "hybrid")) {
+    "hybrid"
+  } else {
+    "exploratory"
+  }
+  recommended_use <- trimws(as.character(precision_profile$RecommendedUse[1] %||% ""))
+  reliability_label <- if (supports_formal_inference) {
+    "reliability"
+  } else if (identical(precision_tier, "hybrid")) {
+    "hybrid reliability summary"
+  } else {
+    "exploratory reliability summary"
+  }
+  se_note <- if (supports_formal_inference) {
+    "Model S.E. = model-based standard error; Real S.E. = fit-adjusted standard error; MnSq = mean-square fit. "
+  } else if (identical(precision_tier, "hybrid")) {
+    "Model S.E. = primarily model-based standard error with fallback approximations when required; Real S.E. = fit-adjusted precision summary; MnSq = mean-square fit. "
+  } else {
+    "Model S.E. = exploratory standard error; Real S.E. = fit-adjusted exploratory standard error; MnSq = mean-square fit. "
+  }
+  precision_sentence <- if (supports_formal_inference) {
+    "Model-based precision summaries were available for this run."
+  } else if (identical(precision_tier, "hybrid")) {
+    "Precision summaries combined model-based quantities with fallback approximations when needed."
+  } else {
+    "Precision summaries were exploratory in this run."
+  }
+  precision_caution <- if (supports_formal_inference) {
+    ""
+  } else if (identical(precision_tier, "hybrid")) {
+    "Precision note: this run mixed model-based and fallback approximations, so confidence intervals and reliability summaries should be interpreted cautiously."
+  } else {
+    "Precision note: this run relies on exploratory precision summaries, so confidence intervals and reliability summaries should not be treated as formal inferential quantities."
+  }
+
+  method_design_sentences <- character(0)
+  method_estimation_sentences <- character(0)
   method_sentences <- character(0)
   if (nzchar(assessment)) {
-    method_sentences <- c(method_sentences, if (nzchar(setting)) {
+    assessment_sentence <- if (nzchar(setting)) {
       paste0("The analysis focused on ", assessment, " in ", setting, ".")
     } else {
       paste0("The analysis focused on ", assessment, ".")
-    })
+    }
+    method_design_sentences <- c(method_design_sentences, assessment_sentence)
+    method_sentences <- c(method_sentences, assessment_sentence)
   }
 
-  method_sentences <- c(
-    method_sentences,
-    paste0(
-      "A many-facet Rasch model (MFRM) was fit to ", fmt_count(n_obs),
-      " observations from ", fmt_count(n_person),
-      " persons scored on a ", fmt_count(n_cat),
-      "-category scale (", fmt_count(rating_min), "-", fmt_count(rating_max), ")."
-    ),
-    if (length(facet_names) > 0) {
-      paste0("The design included facets for ", facets_text, ".")
-    } else {
-      "No additional facets beyond Person were modeled."
-    }
+  design_overview_sentence <- paste0(
+    "A many-facet Rasch model (MFRM) was fit to ", fmt_count(n_obs),
+    " observations from ", fmt_count(n_person),
+    " persons scored on a ", fmt_count(n_cat),
+    "-category scale (", fmt_count(rating_min), "-", fmt_count(rating_max), ")."
   )
+  design_facets_sentence <- if (length(facet_names) > 0) {
+    paste0("The design included facets for ", facets_text, ".")
+  } else {
+    "No additional facets beyond Person were modeled."
+  }
+  method_design_sentences <- c(method_design_sentences, design_overview_sentence, design_facets_sentence)
+  method_sentences <- c(method_sentences, design_overview_sentence, design_facets_sentence)
 
-  if (nzchar(scale_desc)) method_sentences <- c(method_sentences, paste0("The rating scale was described as ", scale_desc, "."))
-  if (nzchar(rater_training)) method_sentences <- c(method_sentences, paste0("Raters received ", rater_training, "."))
-  if (nzchar(raters_per_response)) method_sentences <- c(method_sentences, paste0("Each response was scored by ", raters_per_response, " raters on average."))
+  if (nzchar(scale_desc)) {
+    scale_sentence <- paste0("The rating scale was described as ", scale_desc, ".")
+    method_design_sentences <- c(method_design_sentences, scale_sentence)
+    method_sentences <- c(method_sentences, scale_sentence)
+  }
+  if (nzchar(rater_training)) {
+    training_sentence <- paste0("Raters received ", rater_training, ".")
+    method_design_sentences <- c(method_design_sentences, training_sentence)
+    method_sentences <- c(method_sentences, training_sentence)
+  }
+  if (nzchar(raters_per_response)) {
+    rater_load_sentence <- paste0("Each response was scored by ", raters_per_response, " raters on average.")
+    method_design_sentences <- c(method_design_sentences, rater_load_sentence)
+    method_sentences <- c(method_sentences, rater_load_sentence)
+  }
 
   model <- config$model
   method <- config$method
@@ -661,20 +1013,24 @@ build_apa_report_text <- function(res, diagnostics, bias_results = NULL, context
   if (identical(model, "PCM") && !is.null(config$step_facet) && nzchar(config$step_facet)) {
     model_sentence <- paste0(model_sentence, " The step structure varied by ", config$step_facet, ".")
   }
-  method_sentences <- c(method_sentences, model_sentence)
+  method_estimation_sentences <- c(method_estimation_sentences, model_sentence, precision_sentence)
+  method_sentences <- c(method_sentences, model_sentence, precision_sentence)
+  if (nzchar(recommended_use)) {
+    recommended_use_sentence <- paste0("Recommended use for this precision profile: ", recommended_use, ".")
+    method_estimation_sentences <- c(method_estimation_sentences, recommended_use_sentence)
+    method_sentences <- c(method_sentences, recommended_use_sentence)
+  }
 
   if (!is.null(config$weight_col) && nzchar(config$weight_col)) {
-    method_sentences <- c(method_sentences, "Observation weights were applied as frequency counts.")
+    weight_sentence <- "Observation weights were applied as frequency counts."
+    method_estimation_sentences <- c(method_estimation_sentences, weight_sentence)
+    method_sentences <- c(method_sentences, weight_sentence)
   }
-  method_sentences <- c(
-    method_sentences,
-    summarize_convergence_metrics(summary),
-    summarize_anchor_constraints(config)
-  )
+  convergence_sentence <- summarize_convergence_metrics(summary)
+  anchor_sentence <- summarize_anchor_constraints(config)
+  method_estimation_sentences <- c(method_estimation_sentences, convergence_sentence, anchor_sentence)
+  method_sentences <- c(method_sentences, convergence_sentence, anchor_sentence)
 
-  method_text <- paste0("Method.\n\n", collapse_apa_paragraph(method_sentences, width = line_width))
-
-  results_sentences <- character(0)
   cat_tbl <- if (!is.null(diagnostics)) calc_category_stats(diagnostics$obs, res = res, whexact = whexact) else tibble::tibble()
   step_order <- calc_step_order(res$steps)
   unused <- if (nrow(cat_tbl) > 0) sum(cat_tbl$Count == 0, na.rm = TRUE) else 0
@@ -683,18 +1039,30 @@ build_apa_report_text <- function(res, diagnostics, bias_results = NULL, context
   usage_label <- if (unused == 0 && low_count == 0) "adequate" else "uneven"
   threshold_text <- if (nrow(disordered) == 0) "thresholds were ordered" else paste0("thresholds were disordered for ", fmt_count(nrow(disordered)), " step(s)")
 
-  results_sentences <- c(results_sentences,
-    paste0("Category usage was ", usage_label, " (unused categories = ", fmt_count(unused),
-           ", low-count categories = ", fmt_count(low_count), "), and ", threshold_text, ".")
+  results_scale_sentences <- character(0)
+  results_measure_sentences <- character(0)
+  results_fit_precision_sentences <- character(0)
+  results_residual_sentences <- character(0)
+  results_bias_sentences <- character(0)
+  results_sentences <- character(0)
+  category_sentence <- paste0(
+    "Category usage was ", usage_label, " (unused categories = ", fmt_count(unused),
+    ", low-count categories = ", fmt_count(low_count), "), and ", threshold_text, "."
   )
-  results_sentences <- c(results_sentences, summarize_step_estimates(res$steps))
+  results_scale_sentences <- c(results_scale_sentences, category_sentence)
+  results_sentences <- c(results_sentences, category_sentence)
+  step_summary_sentence <- summarize_step_estimates(res$steps)
+  results_scale_sentences <- c(results_scale_sentences, step_summary_sentence)
+  results_sentences <- c(results_sentences, step_summary_sentence)
 
   person_stats <- describe_series(res$facets$person$Estimate)
   if (!is.null(person_stats)) {
-    results_sentences <- c(results_sentences,
-      paste0("Person measures ranged from ", fmt_num(person_stats$min), " to ", fmt_num(person_stats$max),
-             " logits (M = ", fmt_num(person_stats$mean), ", SD = ", fmt_num(person_stats$sd), ").")
+    person_sentence <- paste0(
+      "Person measures ranged from ", fmt_num(person_stats$min), " to ", fmt_num(person_stats$max),
+      " logits (M = ", fmt_num(person_stats$mean), ", SD = ", fmt_num(person_stats$sd), ")."
     )
+    results_measure_sentences <- c(results_measure_sentences, person_sentence)
+    results_sentences <- c(results_sentences, person_sentence)
   }
 
   if (!is.null(res$facets$others) && nrow(res$facets$others) > 0) {
@@ -702,10 +1070,12 @@ build_apa_report_text <- function(res, diagnostics, bias_results = NULL, context
       df_f <- res$facets$others |> dplyr::filter(Facet == facet)
       stats_f <- describe_series(df_f$Estimate)
       if (!is.null(stats_f)) {
-        results_sentences <- c(results_sentences,
-          paste0(facet, " measures ranged from ", fmt_num(stats_f$min), " to ", fmt_num(stats_f$max),
-                 " logits (M = ", fmt_num(stats_f$mean), ", SD = ", fmt_num(stats_f$sd), ").")
+        facet_sentence <- paste0(
+          facet, " measures ranged from ", fmt_num(stats_f$min), " to ", fmt_num(stats_f$max),
+          " logits (M = ", fmt_num(stats_f$mean), ", SD = ", fmt_num(stats_f$sd), ")."
         )
+        results_measure_sentences <- c(results_measure_sentences, facet_sentence)
+        results_sentences <- c(results_sentences, facet_sentence)
       }
     }
   }
@@ -715,33 +1085,70 @@ build_apa_report_text <- function(res, diagnostics, bias_results = NULL, context
     infit <- to_float(overall_fit$Infit)
     outfit <- to_float(overall_fit$Outfit)
     fit_label <- if (is.finite(infit) && is.finite(outfit) && infit >= 0.5 && infit <= 1.5 && outfit >= 0.5 && outfit <= 1.5) "acceptable" else "elevated"
-    results_sentences <- c(results_sentences,
-      paste0("Overall fit was ", fit_label, " (infit MnSq = ", fmt_num(infit), ", outfit MnSq = ", fmt_num(outfit), ").")
+    fit_sentence <- paste0(
+      "Overall fit was ", fit_label, " (infit MnSq = ", fmt_num(infit), ", outfit MnSq = ", fmt_num(outfit), ")."
     )
+    results_fit_precision_sentences <- c(results_fit_precision_sentences, fit_sentence)
+    results_sentences <- c(results_sentences, fit_sentence)
   }
 
   fit_tbl <- diagnostics$fit
+  misfit_n <- NA_integer_
+  misfit_total <- if (!is.null(fit_tbl)) nrow(fit_tbl) else 0L
+  top_misfit_sentence <- "Top misfit levels were not available."
   if (!is.null(fit_tbl) && nrow(fit_tbl) > 0) {
     misfit <- with(fit_tbl, (Infit < 0.5) | (Infit > 1.5) | (Outfit < 0.5) | (Outfit > 1.5))
-    results_sentences <- c(results_sentences,
-      paste0(fmt_count(sum(misfit, na.rm = TRUE)), " of ", fmt_count(nrow(fit_tbl)), " elements exceeded the 0.5-1.5 fit range.")
-    )
-    results_sentences <- c(results_sentences, summarize_top_misfit_levels(fit_tbl, top_n = 3L))
+    misfit_n <- sum(misfit, na.rm = TRUE)
+    misfit_sentence <- paste0(fmt_count(misfit_n), " of ", fmt_count(nrow(fit_tbl)), " elements exceeded the 0.5-1.5 fit range.")
+    results_fit_precision_sentences <- c(results_fit_precision_sentences, misfit_sentence)
+    results_sentences <- c(results_sentences, misfit_sentence)
+    top_misfit_sentence <- summarize_top_misfit_levels(fit_tbl, top_n = 3L)
+    results_fit_precision_sentences <- c(results_fit_precision_sentences, top_misfit_sentence)
+    results_sentences <- c(results_sentences, top_misfit_sentence)
   }
 
   rel_tbl <- diagnostics$reliability
+  rater_facet <- trimws(as.character(context$rater_facet %||% ""))
+  interrater_summary <- as.data.frame(diagnostics$interrater$summary %||% data.frame(), stringsAsFactors = FALSE)
+  if (!nzchar(rater_facet) && nrow(interrater_summary) > 0 && "RaterFacet" %in% names(interrater_summary)) {
+    rater_facet <- trimws(as.character(interrater_summary$RaterFacet[1] %||% ""))
+  }
+  rater_rel <- NULL
+  if (nzchar(rater_facet) && !is.null(rel_tbl) && nrow(rel_tbl) > 0) {
+    match <- rel_tbl |> dplyr::filter(.data$Facet == rater_facet)
+    if (nrow(match) > 0) rater_rel <- match[1, , drop = FALSE]
+  }
   if (!is.null(rel_tbl) && nrow(rel_tbl) > 0) {
     rel_lines <- vapply(seq_len(nrow(rel_tbl)), function(i) {
       row <- rel_tbl[i, , drop = FALSE]
-      paste0(row$Facet, " reliability = ", fmt_num(row$Reliability), " (separation = ", fmt_num(row$Separation), ").")
+      paste0(row$Facet, " ", reliability_label, " = ", fmt_num(row$Reliability), " (separation = ", fmt_num(row$Separation), ").")
     }, character(1))
-    results_sentences <- c(results_sentences, paste(rel_lines, collapse = " "))
+    reliability_sentence <- paste(rel_lines, collapse = " ")
+    results_fit_precision_sentences <- c(results_fit_precision_sentences, reliability_sentence)
+    results_sentences <- c(results_sentences, reliability_sentence)
+  }
+  interrater_sentence <- ""
+  if (nrow(interrater_summary) > 0) {
+    exact <- to_float(interrater_summary$ExactAgreement[1])
+    expected_exact <- to_float(interrater_summary$ExpectedExactAgreement[1])
+    adjacent <- to_float(interrater_summary$AdjacentAgreement[1])
+    if (any(is.finite(c(exact, expected_exact, adjacent)))) {
+      facet_label <- if (nzchar(rater_facet)) rater_facet else "the rater facet"
+      parts <- character(0)
+      if (is.finite(exact)) parts <- c(parts, paste0("exact agreement = ", fmt_num(exact)))
+      if (is.finite(expected_exact)) parts <- c(parts, paste0("expected exact agreement = ", fmt_num(expected_exact)))
+      if (is.finite(adjacent)) parts <- c(parts, paste0("adjacent agreement = ", fmt_num(adjacent)))
+      interrater_sentence <- paste0("For ", facet_label, ", ", paste(parts, collapse = ", "), ".")
+      results_fit_precision_sentences <- c(results_fit_precision_sentences, interrater_sentence)
+      results_sentences <- c(results_sentences, interrater_sentence)
+    }
   }
 
   pca_obj <- safe_residual_pca(diagnostics, mode = "both")
   pca_overall_1 <- extract_overall_pca_first(pca_obj)
   pca_overall_2 <- extract_overall_pca_second(pca_obj)
   pca_facet_1 <- extract_facet_pca_first(pca_obj)
+  pca_overall_error <- extract_overall_pca_error(pca_obj)
   pca_reference_text <- build_pca_reference_text(warning_threshold_profiles()$pca_reference_bands)
 
   if (!is.null(pca_overall_1)) {
@@ -749,42 +1156,49 @@ build_apa_report_text <- function(res, diagnostics, bias_results = NULL, context
     pr1 <- to_float(pca_overall_1$Proportion) * 100
     if (!is.null(pca_overall_2)) {
       ev2 <- to_float(pca_overall_2$Eigenvalue)
-      results_sentences <- c(
-        results_sentences,
-        paste0(
-          "Residual PCA (overall standardized residual matrix) showed PC1 eigenvalue = ",
-          fmt_num(ev1), " (", fmt_num(pr1, 1), "% variance), with PC2 eigenvalue = ", fmt_num(ev2), "."
-        )
+      pca_overall_sentence <- paste0(
+        "Exploratory residual PCA (overall standardized residual matrix) showed PC1 eigenvalue = ",
+        fmt_num(ev1), " (", fmt_num(pr1, 1), "% variance), with PC2 eigenvalue = ", fmt_num(ev2), "."
       )
     } else {
-      results_sentences <- c(
-        results_sentences,
-        paste0(
-          "Residual PCA (overall standardized residual matrix) showed PC1 eigenvalue = ",
-          fmt_num(ev1), " (", fmt_num(pr1, 1), "% variance)."
-        )
+      pca_overall_sentence <- paste0(
+        "Exploratory residual PCA (overall standardized residual matrix) showed PC1 eigenvalue = ",
+        fmt_num(ev1), " (", fmt_num(pr1, 1), "% variance)."
       )
     }
+    results_residual_sentences <- c(results_residual_sentences, pca_overall_sentence)
+    results_sentences <- c(results_sentences, pca_overall_sentence)
   } else {
-    results_sentences <- c(results_sentences, "Residual PCA was not available for this run.")
+    unavailable_msg <- if (nzchar(pca_overall_error)) {
+      paste0("Residual PCA was not available for this run: ", pca_overall_error)
+    } else {
+      "Residual PCA was not available for this run."
+    }
+    results_residual_sentences <- c(results_residual_sentences, unavailable_msg)
+    results_sentences <- c(results_sentences, unavailable_msg)
   }
 
   if (nrow(pca_facet_1) > 0) {
     top <- pca_facet_1[1, , drop = FALSE]
-    results_sentences <- c(
-      results_sentences,
-      paste0(
-        "Facet-specific residual PCA showed the largest first-component signal in ",
-        as.character(top$Facet), " (eigenvalue = ", fmt_num(top$Eigenvalue),
-        ", ", fmt_num(100 * to_float(top$Proportion), 1), "% variance)."
-      )
+    facet_pca_sentence <- paste0(
+      "Facet-specific exploratory residual PCA showed the largest first-component signal in ",
+      as.character(top$Facet), " (eigenvalue = ", fmt_num(top$Eigenvalue),
+      ", ", fmt_num(100 * to_float(top$Proportion), 1), "% variance)."
     )
+    results_residual_sentences <- c(results_residual_sentences, facet_pca_sentence)
+    results_sentences <- c(results_sentences, facet_pca_sentence)
   }
+  results_residual_sentences <- c(results_residual_sentences, pca_reference_text)
   results_sentences <- c(results_sentences, pca_reference_text)
 
   if (!is.null(bias_results) && !is.null(bias_results$table) && nrow(bias_results$table) > 0) {
-    results_sentences <- c(results_sentences, summarize_bias_counts(bias_results))
+    bias_summary_sentence <- summarize_bias_counts(bias_results)
+    results_bias_sentences <- c(results_bias_sentences, bias_summary_sentence)
+    results_sentences <- c(results_sentences, bias_summary_sentence)
     bias_tbl <- bias_results$table |> dplyr::filter(is.finite(t))
+    bias_sig_n <- sum(is.finite(suppressWarnings(as.numeric(bias_results$table$`Prob.`))) &
+      suppressWarnings(as.numeric(bias_results$table$`Prob.`)) < 0.05, na.rm = TRUE)
+    bias_facet_pair <- ""
     if (nrow(bias_tbl) > 0) {
       idx <- which.max(abs(bias_tbl$t))
       row <- bias_tbl[idx, , drop = FALSE]
@@ -794,220 +1208,168 @@ build_apa_report_text <- function(res, diagnostics, bias_results = NULL, context
       } else {
         paste0(bias_results$facet_a, " x ", bias_results$facet_b)
       }
-      results_sentences <- c(results_sentences,
-        paste0("Bias analysis for ", interaction_label,
-               " showed a largest contrast of ", fmt_num(row$`Bias Size`),
-               " logits (t = ", fmt_num(row$t), ", p ", fmt_pvalue(row$`Prob.`), ").")
+      bias_facet_pair <- interaction_label
+      bias_detail_sentence <- paste0(
+        "Bias analysis for ", interaction_label,
+        " showed a largest contrast of ", fmt_num(row$`Bias Size`),
+        " logits (screening t = ", fmt_num(row$t),
+        ", screening tail area ", fmt_pvalue(row$`Prob.`), ")."
       )
+      results_bias_sentences <- c(results_bias_sentences, bias_detail_sentence)
+      results_sentences <- c(results_sentences, bias_detail_sentence)
+    } else {
+      bias_facet_pair <- if (!is.null(bias_results$facet_a) && !is.null(bias_results$facet_b)) {
+        paste0(bias_results$facet_a, " x ", bias_results$facet_b)
+      } else {
+        ""
+      }
     }
   } else {
-    results_sentences <- c(results_sentences, summarize_bias_counts(bias_results))
+    bias_sig_n <- 0L
+    bias_facet_pair <- ""
   }
 
-  results_text <- paste0("Results.\n\n", collapse_apa_paragraph(results_sentences, width = line_width))
-  paste0(method_text, "\n\n", results_text)
+  bias_caution <- if (!is.null(bias_results) && !is.null(bias_results$table) && nrow(bias_results$table) > 0) {
+    "Bias note: bias contrasts and screening tail areas are screening metrics based on plug-in information rather than formal hypothesis tests."
+  } else {
+    ""
+  }
+
+  contract <- list(
+    metadata = list(
+      model = model,
+      method = method,
+      n_obs = n_obs,
+      n_person = n_person,
+      n_cat = n_cat,
+      rating_min = rating_min,
+      rating_max = rating_max,
+      facet_names = facet_names,
+      facet_counts = facet_counts,
+      facets_text = facets_text,
+      line_width = line_width
+    ),
+    context = list(
+      assessment = assessment,
+      setting = setting,
+      rater_training = rater_training,
+      raters_per_response = raters_per_response,
+      scale_desc = scale_desc,
+      rater_facet = rater_facet
+    ),
+    precision = list(
+      tier = precision_tier,
+      label = precision_label,
+      supports_formal_inference = supports_formal_inference,
+      recommended_use = recommended_use,
+      reliability_label = reliability_label,
+      se_note = se_note,
+      caution = precision_caution
+    ),
+    availability = list(
+      has_bias = !is.null(bias_results) && !is.null(bias_results$table) && nrow(bias_results$table) > 0,
+      has_pca_overall = !is.null(pca_overall_1),
+      has_pca_by_facet = nrow(pca_facet_1) > 0,
+      has_rater_reliability = !is.null(rater_rel),
+      has_interrater = nrow(interrater_summary) > 0
+    ),
+    summaries = list(
+      threshold_text = threshold_text,
+      unused_categories = unused,
+      low_count_categories = low_count,
+      step_summary = step_summary_sentence,
+      person_stats = person_stats,
+      overall_fit_infit = infit,
+      overall_fit_outfit = outfit,
+      misfit_n = misfit_n,
+      misfit_total = misfit_total,
+      top_misfit_sentence = top_misfit_sentence,
+      reliability = as.data.frame(rel_tbl %||% data.frame(), stringsAsFactors = FALSE),
+      rater_facet = rater_facet,
+      rater_reliability = rater_rel,
+      interrater_summary = interrater_summary,
+      interrater_sentence = interrater_sentence,
+      pca_overall_1 = pca_overall_1,
+      pca_overall_2 = pca_overall_2,
+      pca_by_facet_first = pca_facet_1,
+      pca_reference_text = pca_reference_text,
+      bias_summary = summarize_bias_counts(bias_results),
+      bias_sig_n = bias_sig_n,
+      bias_facet_pair = bias_facet_pair
+    ),
+    method_design_sentences = method_design_sentences,
+    method_estimation_sentences = method_estimation_sentences,
+    results_scale_sentences = results_scale_sentences,
+    results_measure_sentences = results_measure_sentences,
+    results_fit_precision_sentences = results_fit_precision_sentences,
+    results_residual_sentences = results_residual_sentences,
+    results_bias_sentences = results_bias_sentences,
+    method_sentences = method_sentences,
+    results_sentences = results_sentences,
+    caution_sentences = Filter(nzchar, c(precision_caution, bias_caution)),
+    section_order = c(
+      "method_design", "method_estimation",
+      "results_scale", "results_measures", "results_fit_precision",
+      "results_residual_structure", "results_bias_screening", "results_cautions"
+    ),
+    ordered_keys = build_apa_table_figure_key_order()
+  )
+
+  contract$section_map <- build_apa_section_map_from_contract(contract)
+  contract$section_table <- flatten_apa_section_map(contract$section_map, order = contract$section_order)
+  contract$note_map <- build_apa_note_map_from_contract(contract)
+  contract$caption_map <- build_apa_caption_map_from_contract(contract)
+  contract$note_text <- paste(
+    vapply(contract$ordered_keys[contract$ordered_keys %in% names(contract$note_map)], function(k) contract$note_map[[k]], character(1)),
+    collapse = "\n\n"
+  )
+  contract$caption_text <- paste(
+    vapply(contract$ordered_keys[contract$ordered_keys %in% names(contract$caption_map)], function(k) contract$caption_map[[k]], character(1)),
+    collapse = "\n\n"
+  )
+  contract$report_text <- build_apa_report_text_from_contract(contract)
+  class(contract) <- c("mfrm_apa_contract", "list")
+  contract
 }
 
-build_apa_table_figure_note_map <- function(res, diagnostics, bias_results = NULL, context = list(), whexact = FALSE) {
-  summary <- if (!is.null(res$summary) && nrow(res$summary) > 0) res$summary[1, , drop = FALSE] else NULL
-  prep <- res$prep
-  config <- res$config
-
-  n_obs <- if (!is.null(summary)) to_float(summary$N) else NA_real_
-  n_person <- if (!is.null(summary)) to_float(summary$Persons) else nrow(res$facets$person)
-  n_cat <- if (!is.null(summary)) to_float(summary$Categories) else to_float(config$n_cat)
-  rating_min <- to_float(prep$rating_min)
-  rating_max <- to_float(prep$rating_max)
-  model <- config$model
-  method <- config$method
-  rater_facet <- trimws(as.character(context$rater_facet %||% ""))
-
-  cat_tbl <- calc_category_stats(diagnostics$obs, res = res, whexact = whexact)
-  step_order <- calc_step_order(res$steps)
-  unused <- if (nrow(cat_tbl) > 0) sum(cat_tbl$Count == 0, na.rm = TRUE) else 0
-  low_count <- if (nrow(cat_tbl) > 0) sum(cat_tbl$Count < 10, na.rm = TRUE) else 0
-  disordered <- if (nrow(step_order) > 0) step_order |> dplyr::filter(Ordered == FALSE) else tibble::tibble()
-  threshold_text <- if (nrow(disordered) == 0) "ordered" else paste0("disordered in ", fmt_count(nrow(disordered)), " step(s)")
-
-  overall_fit <- if (!is.null(diagnostics$overall_fit) && nrow(diagnostics$overall_fit) > 0) diagnostics$overall_fit[1, , drop = FALSE] else NULL
-  infit <- if (!is.null(overall_fit)) to_float(overall_fit$Infit) else NA_real_
-  outfit <- if (!is.null(overall_fit)) to_float(overall_fit$Outfit) else NA_real_
-
-  rel_tbl <- diagnostics$reliability
-  rater_rel <- NULL
-  if (nzchar(rater_facet) && !is.null(rel_tbl) && nrow(rel_tbl) > 0) {
-    match <- rel_tbl |> dplyr::filter(Facet == rater_facet)
-    if (nrow(match) > 0) rater_rel <- match[1, , drop = FALSE]
-  }
-
-  pca_obj <- safe_residual_pca(diagnostics, mode = "both")
-  pca_overall_1 <- extract_overall_pca_first(pca_obj)
-  pca_overall_2 <- extract_overall_pca_second(pca_obj)
-  pca_facet_1 <- extract_facet_pca_first(pca_obj)
-  pca_reference_text <- build_pca_reference_text(warning_threshold_profiles()$pca_reference_bands)
-
-  note_map <- list()
-  note_map$table1 <- paste0(
-    "Table 1. Facet summary\n",
-    "Note. Measures are reported in logits; higher values indicate more of the modeled trait for that facet. ",
-    "SE = standard error; MnSq = mean-square fit. ",
-    "Model = ", model, "; estimation = ", method,
-    "; N = ", fmt_count(n_obs), " observations from ", fmt_count(n_person),
-    " persons on a ", fmt_count(n_cat), "-category scale (", fmt_count(rating_min), "-", fmt_count(rating_max), ")."
-  )
-
-  note_map$table2 <- paste0(
-    "Table 2. Rating scale diagnostics\n",
-    "Note. Category counts and thresholds summarize scale functioning. Thresholds were ", threshold_text,
-    "; unused categories = ", fmt_count(unused), "; low-count categories (< 10) = ", fmt_count(low_count), "."
-  )
-
-  fit_sentence <- if (is.finite(infit) && is.finite(outfit)) {
-    paste0("Overall fit: infit MnSq = ", fmt_num(infit), ", outfit MnSq = ", fmt_num(outfit), ".")
-  } else {
-    "Overall fit indices are reported as mean infit and outfit MnSq."
-  }
-
-  note_map$table3 <- paste0(
-    "Table 3. Fit and reliability summary\n",
-    "Note. Separation and reliability are based on observed variance and measurement error. ",
-    fit_sentence
-  )
-
-  if (!is.null(rater_rel)) {
-    note_map$table3 <- paste0(
-      note_map$table3,
-      " Rater facet (", rater_facet, ") reliability = ", fmt_num(rater_rel$Reliability),
-      ", separation = ", fmt_num(rater_rel$Separation), "."
-    )
-  }
-
-  if (!is.null(bias_results) && !is.null(bias_results$table) && nrow(bias_results$table) > 0) {
-    sig <- bias_results$table |> dplyr::filter(as.numeric(`Prob.`) < 0.05)
-    note_map$table4 <- paste0(
-      "Table 4. Bias/interaction effects\n",
-      "Note. Bias contrasts are in logits and represent observed minus expected scores with main effects held fixed. ",
-      "Significant interactions (p < .05) = ", fmt_count(nrow(sig)), "."
-    )
-  } else {
-    note_map$table4 <- paste0(
-      "Table 4. Bias/interaction effects\n",
-      "Note. Bias contrasts are in logits and represent observed minus expected scores with main effects held fixed."
-    )
-  }
-
-  note_map$wright_map <- "Wright map\nNote. Persons and facet elements are located on a common logit scale; higher values indicate higher ability or greater severity/difficulty depending on facet orientation."
-  note_map$pathway_map <- "Pathway map\nNote. Curves show expected score across theta/logit levels from estimated thresholds."
-  note_map$facet_distribution <- "Facet estimate distribution\nNote. Distributions summarize severity/difficulty spread within each facet."
-  note_map$step_thresholds <- "Step/threshold estimates\nNote. Step ordering should generally increase; disordered thresholds suggest category structure issues."
-  note_map$category_curves <- "Category characteristic curves\nNote. Curves show category response probability across theta/logit levels; well-functioning categories show distinct peaks in order."
-  note_map$observed_expected <- "Observed vs expected scores\nNote. Points summarize mean observed and expected scores by bin; deviations from the diagonal suggest local misfit."
-  note_map$fit_diagnostics <- "Fit diagnostics (Infit vs Outfit)\nNote. Each point represents an element within a facet. Values near 1.0 indicate expected fit; values substantially above 1.0 suggest misfit."
-  note_map$fit_zstd_distribution <- "Fit ZSTD distribution\nNote. Distributions of standardized fit help identify unusually large residuals across facets."
-  note_map$misfit_levels <- "Misfit levels\nNote. Levels are ranked by maximum |ZSTD| to highlight potentially problematic elements."
-
-  if (!is.null(pca_overall_1)) {
-    overall_tail <- paste0(
-      " PC1 eigenvalue = ", fmt_num(pca_overall_1$Eigenvalue),
-      " (", fmt_num(100 * to_float(pca_overall_1$Proportion), 1), "% variance)."
-    )
-    if (!is.null(pca_overall_2)) {
-      overall_tail <- paste0(overall_tail, " PC2 eigenvalue = ", fmt_num(pca_overall_2$Eigenvalue), ".")
-    }
-    note_map$residual_pca_overall <- paste0(
-      "Residual PCA scree (overall)\n",
-      "Note. Eigenvalues are from PCA of the person x facet-combination standardized residual correlation matrix.",
-      overall_tail,
-      " ",
-      pca_reference_text
-    )
-  } else {
-    note_map$residual_pca_overall <- paste0(
-      "Residual PCA scree (overall)\n",
-      "Note. Overall residual PCA was not available for this run. ",
-      pca_reference_text
-    )
-  }
-
-  if (nrow(pca_facet_1) > 0) {
-    top <- head(pca_facet_1, 3)
-    labels <- vapply(seq_len(nrow(top)), function(i) {
-      paste0(
-        top$Facet[i], ": ", fmt_num(top$Eigenvalue[i]), " (",
-        fmt_num(100 * to_float(top$Proportion[i]), 1), "%)"
-      )
-    }, character(1))
-
-    note_map$residual_pca_by_facet <- paste0(
-      "Residual PCA by facet\n",
-      "Note. Each facet is analyzed using a person x facet-level standardized residual matrix. ",
-      "Largest PC1 signals: ", paste(labels, collapse = "; "), ". ",
-      pca_reference_text
-    )
-  } else {
-    note_map$residual_pca_by_facet <- paste0(
-      "Residual PCA by facet\n",
-      "Note. Facet-specific residual PCA was not available for this run. ",
-      pca_reference_text
-    )
-  }
-
-  note_map
-}
-
-build_apa_table_figure_notes <- function(res, diagnostics, bias_results = NULL, context = list(), whexact = FALSE) {
-  note_map <- build_apa_table_figure_note_map(
+build_apa_report_text <- function(res, diagnostics, bias_results = NULL, context = list(), whexact = FALSE) {
+  build_apa_reporting_contract(
     res = res,
     diagnostics = diagnostics,
     bias_results = bias_results,
     context = context,
     whexact = whexact
-  )
+  )$report_text
+}
 
-  ordered_keys <- c(
-    "table1", "table2", "table3", "table4",
-    "wright_map", "pathway_map", "facet_distribution", "step_thresholds", "category_curves",
-    "observed_expected", "fit_diagnostics", "fit_zstd_distribution", "misfit_levels", "residual_pca_overall", "residual_pca_by_facet"
-  )
-  paste(vapply(ordered_keys[ordered_keys %in% names(note_map)], function(k) note_map[[k]], character(1)), collapse = "\n\n")
+build_apa_table_figure_note_map <- function(res, diagnostics, bias_results = NULL, context = list(), whexact = FALSE) {
+  build_apa_reporting_contract(
+    res = res,
+    diagnostics = diagnostics,
+    bias_results = bias_results,
+    context = context,
+    whexact = whexact
+  )$note_map
+}
+
+build_apa_table_figure_notes <- function(res, diagnostics, bias_results = NULL, context = list(), whexact = FALSE) {
+  build_apa_reporting_contract(
+    res = res,
+    diagnostics = diagnostics,
+    bias_results = bias_results,
+    context = context,
+    whexact = whexact
+  )$note_text
 }
 
 build_apa_table_figure_captions <- function(res, diagnostics, bias_results = NULL, context = list()) {
-  assessment <- trimws(as.character(context$assessment %||% ""))
-  facet_pair <- if (!is.null(bias_results) && !is.null(bias_results$table) && nrow(bias_results$table) > 0) {
-    spec <- extract_bias_facet_spec(bias_results)
-    if (!is.null(spec) && length(spec$facets) > 0) {
-      paste(spec$facets, collapse = " x ")
-    } else if (!is.null(bias_results$facet_a) && !is.null(bias_results$facet_b)) {
-      paste0(bias_results$facet_a, " x ", bias_results$facet_b)
-    } else {
-      ""
-    }
-  } else {
-    ""
-  }
-
-  assessment_phrase <- if (nzchar(assessment)) paste0(" for ", assessment) else ""
-
-  blocks <- c(
-    paste0("Table 1\nFacet Summary (Measures, SE, Fit, Reliability)", assessment_phrase),
-    "Table 2\nRating Scale Diagnostics (Category Counts and Thresholds)",
-    "Table 3\nFit and Reliability Summary",
-    if (nzchar(facet_pair)) paste0("Table 4\nBias/Interaction Effects for ", facet_pair) else "Table 4\nBias/Interaction Effects",
-    paste0("Wright Map\nPerson and Facet Measures", assessment_phrase),
-    "Pathway Map\nExpected Score by Theta",
-    "Facet Estimate Distribution",
-    "Step/Threshold Estimates",
-    "Category Characteristic Curves",
-    "Observed vs. Expected Scores",
-    "Fit Diagnostics (Infit vs Outfit)",
-    "Fit ZSTD Distribution",
-    "Misfit Levels (Max |ZSTD|)",
-    "Residual PCA Scree (Overall)",
-    "Residual PCA by Facet"
-  )
-
-  paste(blocks, collapse = "\n\n")
+  build_apa_reporting_contract(
+    res = res,
+    diagnostics = diagnostics,
+    bias_results = bias_results,
+    context = context,
+    whexact = FALSE
+  )$caption_text
 }
 
 build_visual_warning_map <- function(res,
@@ -1132,6 +1494,8 @@ build_visual_warning_map <- function(res,
   pca_obj <- safe_residual_pca(diagnostics, mode = "both")
   pca_overall_1 <- extract_overall_pca_first(pca_obj)
   pca_facet_1 <- extract_facet_pca_first(pca_obj)
+  pca_overall_error <- extract_overall_pca_error(pca_obj)
+  pca_facet_errors <- extract_facet_pca_errors(pca_obj)
   warnings$residual_pca_overall <- c(
     warnings$residual_pca_overall,
     paste0(
@@ -1152,7 +1516,10 @@ build_visual_warning_map <- function(res,
   )
 
   if (is.null(pca_overall_1)) {
-    warnings$residual_pca_overall <- c(warnings$residual_pca_overall, "Overall residual PCA is not available.")
+    warnings$residual_pca_overall <- c(
+      warnings$residual_pca_overall,
+      if (nzchar(pca_overall_error)) paste0("Overall residual PCA is not available: ", pca_overall_error) else "Overall residual PCA is not available."
+    )
   } else {
     warnings$residual_pca_overall <- c(
       warnings$residual_pca_overall,
@@ -1165,7 +1532,7 @@ build_visual_warning_map <- function(res,
     if (to_float(pca_overall_1$Eigenvalue) > pca_first_eigen_warn) {
       warnings$residual_pca_overall <- c(
         warnings$residual_pca_overall,
-        paste0("Overall residual PCA PC1 eigenvalue is high (", fmt_num(pca_overall_1$Eigenvalue), ").")
+        paste0("Overall residual PCA PC1 exceeds the current heuristic eigenvalue band (", fmt_num(pca_overall_1$Eigenvalue), ").")
       )
     }
     if (to_float(pca_overall_1$Proportion) > pca_first_prop_warn) {
@@ -1177,7 +1544,17 @@ build_visual_warning_map <- function(res,
   }
 
   if (nrow(pca_facet_1) == 0) {
-    warnings$residual_pca_by_facet <- c(warnings$residual_pca_by_facet, "Facet-specific residual PCA is not available.")
+    warnings$residual_pca_by_facet <- c(
+      warnings$residual_pca_by_facet,
+      if (nrow(pca_facet_errors) > 0) {
+        paste0(
+          "Facet-specific residual PCA is not available: ",
+          paste(paste0(pca_facet_errors$Facet, " (", pca_facet_errors$Error, ")"), collapse = "; ")
+        )
+      } else {
+        "Facet-specific residual PCA is not available."
+      }
+    )
   } else {
     top <- pca_facet_1[1, , drop = FALSE]
     warnings$residual_pca_by_facet <- c(
@@ -1200,7 +1577,7 @@ build_visual_warning_map <- function(res,
     if (nrow(flagged) > 0) {
       warnings$residual_pca_by_facet <- c(
         warnings$residual_pca_by_facet,
-        paste0("Facet residual PCA shows stronger PC1 signal in: ", paste(flagged$Facet, collapse = ", "), ".")
+        paste0("Facet residual PCA shows stronger exploratory PC1 signal in: ", paste(flagged$Facet, collapse = ", "), ".")
       )
     }
   }
@@ -1359,6 +1736,8 @@ build_visual_summary_map <- function(res,
   pca_overall_1 <- extract_overall_pca_first(pca_obj)
   pca_overall_2 <- extract_overall_pca_second(pca_obj)
   pca_facet_1 <- extract_facet_pca_first(pca_obj)
+  pca_overall_error <- extract_overall_pca_error(pca_obj)
+  pca_facet_errors <- extract_facet_pca_errors(pca_obj)
   summaries$residual_pca_overall <- c(
     summaries$residual_pca_overall,
     paste0(
@@ -1401,7 +1780,10 @@ build_visual_summary_map <- function(res,
       )
     }
   } else {
-    summaries$residual_pca_overall <- c(summaries$residual_pca_overall, "Overall residual PCA unavailable.")
+    summaries$residual_pca_overall <- c(
+      summaries$residual_pca_overall,
+      if (nzchar(pca_overall_error)) paste0("Overall residual PCA unavailable: ", pca_overall_error) else "Overall residual PCA unavailable."
+    )
   }
 
   if (nrow(pca_facet_1) > 0) {
@@ -1432,7 +1814,17 @@ build_visual_summary_map <- function(res,
       summaries$residual_pca_by_facet <- c(summaries$residual_pca_by_facet, "Additional facets omitted for brevity.")
     }
   } else {
-    summaries$residual_pca_by_facet <- c(summaries$residual_pca_by_facet, "Facet-specific residual PCA unavailable.")
+    summaries$residual_pca_by_facet <- c(
+      summaries$residual_pca_by_facet,
+      if (nrow(pca_facet_errors) > 0) {
+        paste0(
+          "Facet-specific residual PCA unavailable: ",
+          paste(paste0(pca_facet_errors$Facet, " (", pca_facet_errors$Error, ")"), collapse = "; ")
+        )
+      } else {
+        "Facet-specific residual PCA unavailable."
+      }
+    )
   }
 
   summaries

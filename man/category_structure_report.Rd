@@ -25,7 +25,8 @@ category_structure_report(
 
 \item{drop_unused}{If \code{TRUE}, remove zero-count categories from outputs.}
 
-\item{include_fixed}{If \code{TRUE}, include a FACETS-style fixed-width text block.}
+\item{include_fixed}{If \code{TRUE}, include a legacy-compatible fixed-width text
+block.}
 
 \item{fixed_max_rows}{Maximum rows per fixed-width section.}
 }
@@ -38,7 +39,7 @@ Build a category structure report (preferred alias)
 }
 \details{
 Preferred high-level API for category-structure diagnostics.
-This wraps the legacy Table 8 bar/transition export and returns a stable
+This wraps the legacy-compatible bar/transition export and returns a stable
 bundle interface for reporting and plotting.
 }
 \section{Interpreting output}{
@@ -65,22 +66,12 @@ Practical read order:
 \item \code{\link[=fit_mfrm]{fit_mfrm()}} -> model.
 \item \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} -> residual/fit diagnostics (optional argument here).
 \item \code{category_structure_report()} -> category health snapshot.
-\item \code{summary()} and \code{plot()} for report-ready interpretation.
+\item \code{summary()} and \code{plot()} for draft-oriented review of category structure.
 }
 }
 
 \examples{
-toy <- expand.grid(
-  Person = paste0("P", 1:4),
-  Rater = paste0("R", 1:2),
-  Criterion = c("Content", "Organization", "Language"),
-  stringsAsFactors = FALSE
-)
-toy$Score <- (
-  as.integer(factor(toy$Person)) +
-  2 * as.integer(factor(toy$Rater)) +
-  as.integer(factor(toy$Criterion))
-) \%\% 3
+toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 out <- category_structure_report(fit)
 summary(out)
@@ -89,5 +80,6 @@ p_cs <- plot(out, draw = FALSE)
 class(p_cs)
 }
 \seealso{
-\code{\link[=rating_scale_table]{rating_scale_table()}}, \code{\link[=category_curves_report]{category_curves_report()}}, \code{\link[=plot.mfrm_fit]{plot.mfrm_fit()}}
+\code{\link[=rating_scale_table]{rating_scale_table()}}, \code{\link[=category_curves_report]{category_curves_report()}}, \code{\link[=plot.mfrm_fit]{plot.mfrm_fit()}},
+\link{mfrmr_reports_and_tables}, \link{mfrmr_visual_diagnostics}
 }

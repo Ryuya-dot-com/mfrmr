@@ -2,7 +2,7 @@
 % Please edit documentation in R/api-tables.R
 \name{facets_chisq_table}
 \alias{facets_chisq_table}
-\title{Build FACETS-style facet chi-square and random-effect diagnostics}
+\title{Build facet variability diagnostics with fixed/random reference tests}
 \usage{
 facets_chisq_table(
   fit,
@@ -32,11 +32,11 @@ A named list with:
 }
 }
 \description{
-Build FACETS-style facet chi-square and random-effect diagnostics
+Build facet variability diagnostics with fixed/random reference tests
 }
 \details{
 This helper summarizes facet-level variability with fixed and random
-chi-square indices, aligned to FACETS-style facet variance checks.
+chi-square indices for spread and heterogeneity checks.
 }
 \section{Interpreting output}{
 
@@ -78,17 +78,7 @@ heterogeneity beyond sampling variation.}
 }
 
 \examples{
-toy <- expand.grid(
-  Person = paste0("P", 1:4),
-  Rater = paste0("R", 1:2),
-  Criterion = c("Content", "Organization", "Language"),
-  stringsAsFactors = FALSE
-)
-toy$Score <- (
-  as.integer(factor(toy$Person)) +
-  2 * as.integer(factor(toy$Rater)) +
-  as.integer(factor(toy$Criterion))
-) \%\% 3
+toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 chi <- facets_chisq_table(fit)
 summary(chi)

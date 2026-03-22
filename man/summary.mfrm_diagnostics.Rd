@@ -34,7 +34,7 @@ This method returns a compact diagnostics summary designed for quick review:
 \itemize{
 \item design overview (observations, persons, facets, categories, subsets)
 \item global fit statistics
-\item reliability/separation by facet
+\item approximate reliability/separation by facet
 \item top facet/person fit rows by absolute ZSTD
 \item counts of flagged diagnostics (unexpected, displacement, interactions)
 }
@@ -44,7 +44,8 @@ This method returns a compact diagnostics summary designed for quick review:
 \itemize{
 \item \code{overview}: analysis scale, subset count, and residual-PCA mode.
 \item \code{overall_fit}: global fit indices.
-\item \code{reliability}: facet separation/reliability block.
+\item \code{reliability}: facet separation/reliability block, including model and
+real bounds when available.
 \item \code{top_fit}: highest \verb{|ZSTD|} elements for immediate inspection.
 \item \code{flags}: compact counts for key warning domains.
 }
@@ -60,17 +61,7 @@ This method returns a compact diagnostics summary designed for quick review:
 }
 
 \examples{
-toy <- expand.grid(
-  Person = paste0("P", 1:4),
-  Rater = paste0("R", 1:2),
-  Criterion = c("Content", "Organization", "Language"),
-  stringsAsFactors = FALSE
-)
-toy$Score <- (
-  as.integer(factor(toy$Person)) +
-  2 * as.integer(factor(toy$Rater)) +
-  as.integer(factor(toy$Criterion))
-) \%\% 3
+toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 summary(diag)

@@ -2,7 +2,7 @@
 % Please edit documentation in R/api-tables.R
 \name{analyze_residual_pca}
 \alias{analyze_residual_pca}
-\title{Run residual PCA for unidimensionality checks}
+\title{Run exploratory residual PCA summaries}
 \usage{
 analyze_residual_pca(
   diagnostics,
@@ -32,7 +32,7 @@ A named list with:
 }
 }
 \description{
-FACETS-style residual diagnostics can be inspected in two ways:
+Legacy-compatible residual diagnostics can be inspected in two ways:
 \enumerate{
 \item overall residual PCA on the person x combined-facet matrix
 \item facet-specific residual PCA on person x facet-level matrices
@@ -42,6 +42,13 @@ FACETS-style residual diagnostics can be inspected in two ways:
 The function works on standardized residual structures derived from
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}. When a fitted object from \code{\link[=fit_mfrm]{fit_mfrm()}} is supplied,
 diagnostics are computed internally.
+
+Conceptually, this follows the Rasch residual-PCA tradition of examining
+structure in model residuals after the primary Rasch dimension has been
+extracted. In \code{mfrmr}, however, the implementation is an \strong{exploratory
+many-facet adaptation}: it works on standardized residual matrices built as
+person x combined-facet or person x facet-level layouts, rather than
+reproducing FACETS/Winsteps residual-contrast tables one-to-one.
 
 Output tables use:
 \itemize{
@@ -63,8 +70,8 @@ a \code{Facet} column.
 
 Use \code{overall_table} first:
 \itemize{
-\item high PC1 eigenvalue and high \code{Proportion} suggest stronger residual
-structure beyond the main Rasch dimension.
+\item early components with noticeably larger eigenvalues or proportions
+suggest stronger residual structure that may deserve follow-up.
 }
 
 Then inspect \code{by_facet_table}:
@@ -74,6 +81,21 @@ Then inspect \code{by_facet_table}:
 
 Finally, inspect loadings via \code{\link[=plot_residual_pca]{plot_residual_pca()}} to identify which
 variables/elements drive each component.
+}
+
+\section{References}{
+
+The residual-PCA idea follows the Rasch residual-structure literature,
+especially Linacre's discussions of principal components of Rasch residuals.
+The current \code{mfrmr} implementation should be interpreted as an exploratory
+extension for many-facet workflows rather than as a direct reproduction of a
+single FACETS/Winsteps output table.
+\itemize{
+\item Linacre, J. M. (1998). \emph{Structure in Rasch residuals: Why principal
+components analysis (PCA)?} Rasch Measurement Transactions, 12(2), 636.
+\item Linacre, J. M. (1998). \emph{Detecting multidimensionality: Which residual
+data-type works best?} Journal of Outcome Measurement, 2(3), 266-283.
+}
 }
 
 \section{Typical workflow}{
@@ -87,17 +109,7 @@ variables/elements drive each component.
 }
 
 \examples{
-toy <- expand.grid(
-  Person = paste0("P", 1:4),
-  Rater = paste0("R", 1:2),
-  Criterion = c("Content", "Organization", "Language"),
-  stringsAsFactors = FALSE
-)
-toy$Score <- (
-  as.integer(factor(toy$Person)) +
-  2 * as.integer(factor(toy$Rater)) +
-  as.integer(factor(toy$Criterion))
-) \%\% 3
+toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 diag <- diagnose_mfrm(fit, residual_pca = "both")
 pca <- analyze_residual_pca(diag, mode = "both")
@@ -109,5 +121,5 @@ head(p$data)
 head(pca$overall_table)
 }
 \seealso{
-\code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=plot_residual_pca]{plot_residual_pca()}}
+\code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=plot_residual_pca]{plot_residual_pca()}}, \link{mfrmr_visual_diagnostics}
 }

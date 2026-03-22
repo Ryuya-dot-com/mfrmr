@@ -14,7 +14,8 @@ plot_bubble(
   top_n = 60,
   main = NULL,
   palette = NULL,
-  draw = TRUE
+  draw = TRUE,
+  preset = c("standard", "publication", "compact")
 )
 }
 \arguments{
@@ -33,8 +34,8 @@ computed automatically.}
 \item{facets}{Character vector of facets to include. \code{NULL} (default)
 includes all non-person facets.}
 
-\item{fit_range}{Numeric length-2 vector defining the acceptable fit range
-shown as a shaded band (default \code{c(0.5, 1.5)}).}
+\item{fit_range}{Numeric length-2 vector defining the heuristic fit-review band
+shown as a shaded region (default \code{c(0.5, 1.5)}).}
 
 \item{top_n}{Maximum number of elements to plot (default 60).}
 
@@ -43,6 +44,8 @@ shown as a shaded band (default \code{c(0.5, 1.5)}).}
 \item{palette}{Optional named colour vector keyed by facet name.}
 
 \item{draw}{If \code{TRUE} (default), render the plot using base graphics.}
+
+\item{preset}{Visual preset (\code{"standard"}, \code{"publication"}, or \code{"compact"}).}
 }
 \value{
 Invisibly, an object of class \code{mfrm_plot_data}.
@@ -50,15 +53,61 @@ Invisibly, an object of class \code{mfrm_plot_data}.
 \description{
 Produces a Rasch-convention bubble chart where each element is a circle
 positioned at its measure estimate (x) and fit mean-square (y).
-Bubble radius reflects measurement precision or sample size.
+Bubble radius reflects approximate measurement precision or sample size.
+}
+\details{
+When \code{x} is an \code{mfrm_fit} object and \code{diagnostics} is omitted,
+the function computes diagnostics internally via \code{\link{diagnose_mfrm}()}.
+For repeated plotting in the same workflow, passing a precomputed diagnostics
+object avoids that extra work.
+
+The x-axis shows element measure estimates on the \strong{logit} scale
+(one logit = one unit change in log-odds of responding in a higher
+category).  The y-axis shows the selected fit mean-square statistic.
+A shaded band between \code{fit_range[1]} and \code{fit_range[2]}
+highlights a common heuristic review range.
+
+Bubble radius options:
+\itemize{
+\item \code{"SE"}: inversely proportional to standard error---larger
+circles indicate more precisely estimated elements under the current
+SE approximation.
+\item \code{"N"}: proportional to observation count---larger
+circles indicate elements with more data.
+\item \code{"equal"}: uniform size, useful when SE or N differences
+distract from the fit pattern.
+}
+
+Person estimates are excluded by default because they typically
+outnumber facet elements and obscure the display.
 }
 \section{Interpreting the plot}{
 
-Points near the horizontal reference line at 1.0 fit the model well.
-Points above 1.5 show underfit (unpredictable response patterns).
-Points below 0.5 show overfit (Guttman-like patterns).
+Points near the horizontal reference line at 1.0 are closer to model
+expectation on the selected MnSq scale.
+Points above 1.5 suggest underfit relative to common review heuristics;
+these elements may have inconsistent scoring.
+Points below 0.5 suggest overfit relative to common review heuristics;
+these may indicate redundancy or restricted range.
+Points are colored by facet for easy identification.
 }
 
+\section{Typical workflow}{
+
+\enumerate{
+\item Fit a model with \code{\link{fit_mfrm}()}.
+\item Compute diagnostics once with \code{\link{diagnose_mfrm}()}.
+\item Call \code{plot_bubble(fit, diagnostics = diag)} to inspect the most extreme elements.
+}
+}
+
+\examples{
+toy <- load_mfrmr_data("example_core")
+fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
+                method = "JML", model = "RSM", maxit = 25)
+diag <- diagnose_mfrm(fit, residual_pca = "none")
+plot_bubble(fit, diagnostics = diag, draw = FALSE)
+}
 \seealso{
 \code{\link{diagnose_mfrm}}, \code{\link{plot_unexpected}},
 \code{\link{plot_fair_average}}

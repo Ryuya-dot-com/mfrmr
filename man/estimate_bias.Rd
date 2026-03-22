@@ -2,7 +2,7 @@
 % Please edit documentation in R/api-tables.R
 \name{estimate_bias}
 \alias{estimate_bias}
-\title{Estimate FACETS-style bias/interaction terms iteratively}
+\title{Estimate legacy-compatible bias/interaction terms iteratively}
 \usage{
 estimate_bias(
   fit,
@@ -40,9 +40,10 @@ one interaction effect. When supplied, this takes precedence over
 \value{
 An object of class \code{mfrm_bias} with:
 \itemize{
-\item \code{table}: interaction rows with effect size, SE, t, p, fit columns
+\item \code{table}: interaction rows with effect size, SE, screening t/p metadata,
+reporting-use flags, and fit columns
 \item \code{summary}: compact summary statistics
-\item \code{chi_sq}: fixed-effect chi-square style summary
+\item \code{chi_sq}: fixed-effect chi-square style screening summary
 \item \code{facet_a}, \code{facet_b}: first two analyzed facet names (legacy compatibility)
 \item \code{interaction_facets}, \code{interaction_order}, \code{interaction_mode}: full
 interaction metadata
@@ -50,25 +51,54 @@ interaction metadata
 }
 }
 \description{
-Estimate FACETS-style bias/interaction terms iteratively
+Estimate legacy-compatible bias/interaction terms iteratively
 }
 \details{
-The function estimates interaction contrasts with iterative recalibration in
-a FACETS-like style.
+\strong{Bias (interaction) in MFRM} refers to a systematic departure from
+the additive model: a specific rater-criterion (or higher-order)
+combination produces scores that are consistently higher or lower than
+predicted by the main effects alone.  For example, Rater A might be
+unexpectedly harsh on Criterion 2 despite being lenient overall.
+
+Mathematically, the bias term \eqn{b_{jc}} for rater \eqn{j} on
+criterion \eqn{c} modifies the linear predictor:
+
+\deqn{\eta_{njc} = \theta_n - \delta_j - \beta_c - b_{jc}}
+
+The function estimates \eqn{b_{jc}} from the residuals of the fitted
+(additive) model using iterative recalibration in a legacy-compatible style
+(Myford & Wolfe, 2003, 2004):
+
+\deqn{b_{jc} = \frac{\sum_n (X_{njc} - E_{njc})}
+                    {\sum_n \mathrm{Var}_{njc}}}
+
+Each iteration updates expected scores using the current bias
+estimates, then re-computes the bias.  Convergence is reached when
+the maximum absolute change in bias estimates falls below \code{tol}.
 \itemize{
 \item For two-way mode, use \code{facet_a} and \code{facet_b} (or \code{interaction_facets}
 with length 2).
 \item For higher-order mode, provide \code{interaction_facets} with length >= 3.
 }
+}
+\section{What this screening means}{
 
-Typical usage:
-\enumerate{
-\item fit model via \code{\link[=fit_mfrm]{fit_mfrm()}}
-\item compute diagnostics via \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}
-\item call \code{estimate_bias()} for one 2-way or higher-order interaction
-\item format output with \code{\link[=build_fixed_reports]{build_fixed_reports()}}
+\code{estimate_bias()} summarizes interaction departures from the additive MFRM.
+It is best read as a targeted screening tool for potentially noteworthy
+cells or facet combinations that may merit substantive review.
+}
+
+\section{What this screening does not justify}{
+
+\itemize{
+\item \code{t} and \code{Prob.} are screening metrics, not formal inferential quantities.
+\item A flagged interaction cell is not, by itself, proof of rater bias or
+construct-irrelevant variance.
+\item Non-flagged cells should not be over-read as evidence that interaction
+effects are absent.
 }
 }
+
 \section{Interpreting output}{
 
 Use \code{summary} for global magnitude, then inspect \code{table} for cell-level
@@ -76,12 +106,20 @@ interaction effects.
 
 Prioritize rows with:
 \itemize{
-\item larger \verb{|Bias Size|}
-\item larger \verb{|t|}
-\item smaller \code{Prob.}
+\item larger \verb{|Bias Size|} (effect on logit scale; \eqn{> 0.5} logits is
+typically noteworthy, \eqn{> 1.0} is large)
+\item larger \verb{|t|} among the screening metrics (\eqn{|t| \ge 2} suggests a
+screen-positive interaction cell)
+\item smaller \code{Prob.} among the screening metrics
 }
 
+A positive \verb{Obs-Exp Average} means the cell produced \emph{higher} scores
+than the additive model predicts (unexpected leniency); negative
+means unexpected harshness.
+
 \code{iteration} helps verify whether iterative recalibration stabilized.
+If the maximum change on the final iteration is still above \code{tol},
+consider increasing \code{max_iter}.
 }
 
 \section{Typical workflow}{
@@ -98,27 +136,25 @@ Prioritize rows with:
 
 In \code{bias$table}, the most-used columns are:
 \itemize{
-\item \verb{Bias Size}: estimated interaction effect (logit scale)
-\item \code{t} and \code{Prob.}: significance-style screening metrics
-\item \verb{Obs-Exp Average}: direction and practical size of observed-vs-expected gap
+\item \verb{Bias Size}: estimated interaction effect \eqn{b_{jc}} (logit scale)
+\item \code{t} and \code{Prob.}: screening metrics, not formal inferential quantities
+\item \verb{Obs-Exp Average}: direction and practical size of observed-vs-expected
+gap on the raw-score metric
 }
 
-\code{bias$iteration} records recalibration trajectory and can be checked to assess
-whether additional iterations may be needed.
+The \code{chi_sq} element provides a fixed-effect heterogeneity screen across all
+interaction cells.
+}
+
+\section{Recommended next step}{
+
+Use \code{\link[=plot_bias_interaction]{plot_bias_interaction()}} to inspect the flagged cells visually, then
+integrate the result with DFF, linking, or substantive scoring review before
+making formal claims about fairness or invariance.
 }
 
 \examples{
-toy <- expand.grid(
-  Person = paste0("P", 1:4),
-  Rater = paste0("R", 1:2),
-  Criterion = c("Content", "Organization", "Language"),
-  stringsAsFactors = FALSE
-)
-toy$Score <- (
-  as.integer(factor(toy$Person)) +
-  2 * as.integer(factor(toy$Rater)) +
-  as.integer(factor(toy$Criterion))
-) \%\% 3
+toy <- load_mfrmr_data("example_bias")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 bias <- estimate_bias(fit, diag, facet_a = "Rater", facet_b = "Criterion", max_iter = 2)

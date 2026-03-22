@@ -46,6 +46,12 @@ The pipeline evaluates 10 quality checks and assigns a verdict
 verdict across all checks.  Diagnostics are computed automatically via
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} if not supplied.
 
+Reliability and separation are used here as QC signals. In \code{mfrmr},
+\code{Reliability} / \code{Separation} are model-based facet indices and
+\code{RealReliability} / \code{RealSeparation} provide more conservative lower bounds.
+For \code{MML}, these rely on model-based \code{ModelSE} values for non-person facets;
+for \code{JML}, they remain exploratory approximations.
+
 Three threshold presets are available via \code{threshold_profile}:\tabular{llll}{
    Aspect \tab strict \tab standard \tab lenient \cr
    Global fit warn \tab 1.3 \tab 1.5 \tab 1.7 \cr
@@ -68,11 +74,11 @@ Individual thresholds can be overridden via the \code{thresholds} argument
 The 10 checks are:
 \enumerate{
 \item \strong{Convergence}: Did the model converge?
-\item \strong{Global fit}: Infit/Outfit MnSq within acceptable bounds.
-\item \strong{Reliability}: Minimum non-person facet reliability.
-\item \strong{Separation}: Minimum non-person facet separation index.
+\item \strong{Global fit}: Infit/Outfit MnSq within the current review band.
+\item \strong{Reliability}: Minimum non-person facet model reliability index.
+\item \strong{Separation}: Minimum non-person facet model separation index.
 \item \strong{Element misfit}: Percentage of elements with Infit/Outfit
-outside the acceptable range.
+outside the current review band.
 \item \strong{Unexpected responses}: Percentage of observations with
 large standardized residuals.
 \item \strong{Category structure}: Minimum category count and threshold
@@ -80,8 +86,8 @@ ordering.
 \item \strong{Connectivity}: All observations in a single connected subset.
 \item \strong{Inter-rater agreement}: Exact agreement percentage for the
 rater facet (if applicable).
-\item \strong{DIF/Bias}: Percentage of flagged bias interactions (if
-bias results are available).
+\item \strong{Functioning/Bias screen}: Percentage of interaction cells that
+cross the screening threshold (if interaction results are available).
 }
 }
 

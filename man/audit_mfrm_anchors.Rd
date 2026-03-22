@@ -67,24 +67,41 @@ A list of class \code{mfrm_anchor_audit} with:
 \item \code{thresholds}: active threshold settings used for recommendations
 \item \code{issue_counts}: issue-type counts
 \item \code{issues}: list of issue tables
-\item \code{recommendations}: FACETS-oriented guidance strings
+\item \code{recommendations}: package-native anchor guidance strings
 }
 }
 \description{
 Audit and normalize anchor/group-anchor tables
 }
 \details{
-This function applies the same preprocessing and key-resolution rules as
-\code{fit_mfrm()}, but returns an audit object so constraints can be checked
-before estimation.
+\strong{Anchoring} (also called "fixing" or scale linking) constrains selected
+parameter estimates to pre-specified values, placing the current
+analysis on a previously established scale.  This is essential when
+comparing results across administrations, linking test forms, or
+monitoring rater drift over time.
 
-FACETS-style behaviors used here:
+This function applies the same preprocessing and key-resolution rules
+as \code{fit_mfrm()}, but returns an audit object so constraints can be
+checked \emph{before} estimation.  Running the audit first helps avoid
+estimation failures caused by misspecified or data-incompatible
+anchors.
+
+\strong{Anchor types:}
 \itemize{
-\item direct anchors fix level values
-\item grouped anchors constrain group means to \code{GroupValue}
-\item overlapping rows prefer direct anchors for that level
-\item missing \code{GroupValue} defaults to 0
+\item \emph{Direct anchors} fix individual element measures to specific logit
+values (e.g., Rater R1 anchored at 0.35 logits).
+\item \emph{Group anchors} constrain the mean of a set of elements to a
+target value, allowing individual elements to vary freely around
+that mean.
+\item When both types overlap for the same element, the direct anchor
+takes precedence.
 }
+
+\strong{Design checks} verify that each anchored element has at least
+\code{min_obs_per_element} weighted observations (default 30) and each
+score category has at least \code{min_obs_per_category} (default 10).
+These thresholds follow standard Rasch sample-size recommendations
+(Linacre, 1994).
 }
 \section{Interpreting output}{
 
@@ -106,17 +123,7 @@ FACETS-style behaviors used here:
 }
 
 \examples{
-toy <- expand.grid(
-  Person = paste0("P", 1:4),
-  Rater = paste0("R", 1:2),
-  Criterion = c("Content", "Organization", "Language"),
-  stringsAsFactors = FALSE
-)
-toy$Score <- (
-  as.integer(factor(toy$Person)) +
-  2 * as.integer(factor(toy$Rater)) +
-  as.integer(factor(toy$Criterion))
-) \%\% 3
+toy <- load_mfrmr_data("example_core")
 
 anchors <- data.frame(
   Facet = c("Rater", "Rater"),

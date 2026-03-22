@@ -19,7 +19,9 @@ local({
 with_null_device <- function(expr) {
   grDevices::pdf(NULL)
   on.exit(grDevices::dev.off(), add = TRUE)
-  force(expr)
+  testthat::expect_gt(grDevices::dev.cur(), 1)
+  value <- force(expr)
+  invisible(value)
 }
 
 # ---- plot.mfrm_fit drawing ----
@@ -98,6 +100,11 @@ test_that("plot_bias_interaction draws scatter", {
                           facet_a = "Rater", facet_b = "Task",
                           plot = "scatter", draw = TRUE)
   )
+  with_null_device(
+    plot_bias_interaction(.fit, diagnostics = .diag,
+                          facet_a = "Rater", facet_b = "Task",
+                          plot = "scatter", draw = TRUE, preset = "publication")
+  )
 })
 
 test_that("plot_bias_interaction draws ranked", {
@@ -130,6 +137,9 @@ test_that("plot_displacement draws", {
   with_null_device(
     plot_displacement(.fit, diagnostics = .diag, draw = TRUE)
   )
+  with_null_device(
+    plot_displacement(.fit, diagnostics = .diag, draw = TRUE, preset = "publication")
+  )
 })
 
 # ---- plot_fair_average drawing ----
@@ -145,6 +155,9 @@ test_that("plot_fair_average draws", {
 test_that("plot_facets_chisq draws", {
   with_null_device(
     plot_facets_chisq(.fit, diagnostics = .diag, draw = TRUE)
+  )
+  with_null_device(
+    plot_facets_chisq(.fit, diagnostics = .diag, draw = TRUE, preset = "publication")
   )
 })
 
@@ -162,6 +175,9 @@ test_that("plot_unexpected draws", {
   with_null_device(
     plot_unexpected(.fit, diagnostics = .diag, draw = TRUE)
   )
+  with_null_device(
+    plot_unexpected(.fit, diagnostics = .diag, draw = TRUE, preset = "publication")
+  )
 })
 
 # ---- plot_residual_pca drawing ----
@@ -170,6 +186,9 @@ test_that("plot_residual_pca draws scree", {
   pca <- analyze_residual_pca(.diag, mode = "overall")
   with_null_device(
     plot_residual_pca(pca, plot_type = "scree", draw = TRUE)
+  )
+  with_null_device(
+    plot_residual_pca(pca, plot_type = "scree", draw = TRUE, preset = "publication")
   )
 })
 

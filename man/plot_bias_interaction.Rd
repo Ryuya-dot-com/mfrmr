@@ -19,6 +19,7 @@ plot_bias_interaction(
   main = NULL,
   palette = NULL,
   label_angle = 45,
+  preset = c("standard", "publication", "compact"),
   draw = TRUE
 )
 }
@@ -55,6 +56,8 @@ or \code{"facet_profile"}.}
 
 \item{label_angle}{Label angle hint for ranked/profile labels.}
 
+\item{preset}{Visual preset (\code{"standard"}, \code{"publication"}, or \code{"compact"}).}
+
 \item{draw}{If \code{TRUE}, draw with base graphics.}
 }
 \value{
@@ -70,13 +73,13 @@ Visualization front-end for \code{\link[=bias_interaction_report]{bias_interacti
 
 \describe{
 \item{\code{"scatter"} (default)}{Scatter plot of bias size (x) vs
-t-statistic (y).  Points colored by flag status.  Dashed reference
+screening t-statistic (y). Points colored by flag status. Dashed reference
 lines at \code{abs_bias_warn} and \code{abs_t_warn}.  Use for overall triage
 of interaction effects.}
 \item{\code{"ranked"}}{Ranked bar chart of top \code{top_n} interactions sorted
 by \code{sort_by} criterion (absolute t, absolute bias, or probability).
 Bars colored red for flagged cells.}
-\item{\code{"abs_t_hist"}}{Histogram of absolute t-statistics across all
+\item{\code{"abs_t_hist"}}{Histogram of absolute screening t-statistics across all
 interaction cells.  Dashed reference line at \code{abs_t_warn}.  Use for
 assessing the overall distribution of interaction effect sizes.}
 \item{\code{"facet_profile"}}{Per-facet-level aggregation showing mean
@@ -90,8 +93,9 @@ individual facet levels drive systematic interaction patterns.}
 Start with \code{"scatter"} or \code{"ranked"} for triage, then confirm pattern shape
 using \code{"abs_t_hist"} and \code{"facet_profile"}.
 
-Consistent flags across multiple views are stronger evidence of systematic
-interaction bias than a single extreme row.
+Consistent flags across multiple views are stronger screening signals of
+systematic interaction bias than a single extreme row, but they do not by
+themselves establish formal inferential evidence.
 }
 
 \section{Typical workflow}{
@@ -104,23 +108,14 @@ interaction bias than a single extreme row.
 }
 
 \examples{
-toy <- expand.grid(
-  Person = paste0("P", 1:4),
-  Rater = paste0("R", 1:2),
-  Criterion = c("Content", "Organization", "Language"),
-  stringsAsFactors = FALSE
-)
-toy$Score <- (
-  as.integer(factor(toy$Person)) +
-  2 * as.integer(factor(toy$Rater)) +
-  as.integer(factor(toy$Criterion))
-) \%\% 3
+toy <- load_mfrmr_data("example_bias")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 p <- plot_bias_interaction(
   fit,
   diagnostics = diagnose_mfrm(fit, residual_pca = "none"),
   facet_a = "Rater",
   facet_b = "Criterion",
+  preset = "publication",
   draw = FALSE
 )
 }
