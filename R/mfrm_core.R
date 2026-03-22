@@ -406,11 +406,15 @@ prepare_mfrm_data <- function(data, person_col, facet_cols, score_col,
 
   list(
     data = df,
+    n_obs = nrow(df),
+    weighted_n = sum(df$Weight, na.rm = TRUE),
+    n_person = length(levels(df$Person)),
     rating_min = rating_min,
     rating_max = rating_max,
     facet_names = facet_names,
     levels = c(list(Person = levels(df$Person)), facet_levels),
     weight_col = if (!is.null(weight_col)) weight_col else NULL,
+    keep_original = isTRUE(keep_original),
     source_columns = list(
       person = person_col,
       facets = facet_cols,
@@ -1775,7 +1779,10 @@ build_estimation_config <- function(prep,
     n_cat = prep$rating_max - prep$rating_min + 1,
     facet_names = prep$facet_names,
     facet_levels = prep$levels[prep$facet_names],
-    step_facet = step_facet
+    step_facet = step_facet,
+    keep_original = isTRUE(prep$keep_original),
+    rating_min = prep$rating_min,
+    rating_max = prep$rating_max
   )
   config$weight_col <- if (!is.null(weight_col)) weight_col else NULL
   config$positive_facets <- positive_facets
@@ -1830,7 +1837,8 @@ run_mfrm_optimization <- function(start,
                                   sizes,
                                   quad_points,
                                   maxit,
-                                  reltol) {
+                                  reltol,
+                                  suppress_convergence_warning = FALSE) {
   control <- list(maxit = maxit, reltol = reltol)
   run_optim <- function(fn, gr = NULL, extra_args = list()) {
     tryCatch(
@@ -1857,7 +1865,7 @@ run_mfrm_optimization <- function(start,
                      list(idx = idx, config = config, sizes = sizes, quad = quad))
   }
 
-  if (opt$convergence != 0) {
+  if (opt$convergence != 0 && !isTRUE(suppress_convergence_warning)) {
     warning("Optimizer did not fully converge (code = ", opt$convergence, "). ",
             "Consider increasing maxit (current: ", maxit, ") ",
             "or relaxing reltol (current: ", reltol, ").",

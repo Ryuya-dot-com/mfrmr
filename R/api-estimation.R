@@ -191,8 +191,8 @@ fit_mfrm <- function(data,
   }
 
   model <- toupper(match.arg(model))
-  method <- toupper(match.arg(method))
-  method <- ifelse(method == "JML", "JMLE", method)
+  method_input <- toupper(match.arg(method))
+  method <- ifelse(method_input == "JML", "JMLE", method_input)
   anchor_policy <- tolower(match.arg(anchor_policy))
 
   anchor_audit <- audit_mfrm_anchors(
@@ -250,6 +250,7 @@ fit_mfrm <- function(data,
   )
 
   fit$config$anchor_audit <- anchor_audit
+  fit$config$method_input <- method_input
 
   class(fit) <- c("mfrm_fit", class(fit))
   fit

@@ -27,7 +27,9 @@ test_that("specifications_report returns a bundle", {
 # ---- estimation_iteration_report ----
 
 test_that("estimation_iteration_report returns a bundle", {
-  iter <- suppressWarnings(estimation_iteration_report(.fit))
+  expect_no_warning(
+    iter <- estimation_iteration_report(.fit)
+  )
   expect_s3_class(iter, "mfrm_bundle")
 })
 

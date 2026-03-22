@@ -1988,7 +1988,8 @@ table3_iteration_report <- function(fit,
       sizes = sizes,
       quad_points = quad_points,
       maxit = 1L,
-      reltol = reltol
+      reltol = reltol,
+      suppress_convergence_warning = TRUE
     )
     current_par <- opt_step$par
     state <- compute_iteration_state(
