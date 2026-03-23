@@ -323,12 +323,13 @@ list_mfrmr_data()
 \seealso{
 Useful links:
 \itemize{
+  \item \url{https://ryuya-dot-com.github.io/R_package_mfrmr/}
   \item \url{https://github.com/Ryuya-dot-com/R_package_mfrmr}
   \item Report bugs at \url{https://github.com/Ryuya-dot-com/R_package_mfrmr/issues}
 }
 
 }
 \author{
-\strong{Maintainer}: Ryuya Komuro \email{ryuya.komuro.c4@tohoku.ac.jp}
+\strong{Maintainer}: Ryuya Komuro \email{ryuya.komuro.c4@tohoku.ac.jp} (\href{https://orcid.org/0000-0001-9205-0926}{ORCID})
 
 }

@@ -17,7 +17,7 @@ Description: Estimates many-facet Rasch models and produces diagnostics,
     many-facet Rasch measurement practice and 'FACETS' documentation
     (Linacre, 1994, ISBN 0-941938-02-6; Linacre, 2023,
     <https://www.winsteps.com/a/Facets-Manual.pdf>).
-URL: https://ryuya-dot-com.github.io/R_package_mfrmr,
+URL: https://ryuya-dot-com.github.io/R_package_mfrmr/,
     https://github.com/Ryuya-dot-com/R_package_mfrmr
 BugReports: https://github.com/Ryuya-dot-com/R_package_mfrmr/issues
 License: MIT + file LICENSE

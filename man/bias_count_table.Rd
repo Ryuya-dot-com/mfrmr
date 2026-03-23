@@ -82,7 +82,8 @@ For a plot-selection guide and a longer walkthrough, see
 
 The \code{table} data.frame contains, in the legacy-compatible branch:
 \describe{
-\item{\if{html}{\out{<FacetA>}}, \if{html}{\out{<FacetB>}}}{Interaction facet level identifiers.}
+\item{FacetA, FacetB}{Interaction facet level identifiers; placeholder
+names for the two interaction facets.}
 \item{Sq}{Sequential row number.}
 \item{Observd Count}{Number of observations for this cell.}
 \item{Obs-Exp Average}{Observed minus expected average for this cell.}
