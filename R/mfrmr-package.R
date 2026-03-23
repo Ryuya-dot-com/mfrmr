@@ -1,8 +1,8 @@
-#' mfrmr: Flexible Many-Facet Rasch Modeling in R
+#' mfrmr: Many-Facet Rasch Modeling in R
 #'
 #' @description
 #' `mfrmr` provides estimation, diagnostics, and reporting utilities for
-#' many-facet Rasch models (MFRM) without relying on FACETS/TAM/sirt backends.
+#' many-facet Rasch models (MFRM) using a native R implementation.
 #'
 #' @details
 #' Recommended workflow:

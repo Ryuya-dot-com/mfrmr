@@ -6,7 +6,8 @@
 [![test-coverage](https://github.com/Ryuya-dot-com/R_package_mfrmr/actions/workflows/test-coverage.yaml/badge.svg)](https://github.com/Ryuya-dot-com/R_package_mfrmr/actions/workflows/test-coverage.yaml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Native R package for flexible many-facet Rasch model (MFRM) estimation without TAM/sirt backends.
+Native R package for many-facet Rasch model (MFRM) estimation, diagnostics,
+and reporting workflows.
 
 ## What this package is for
 
@@ -860,3 +861,9 @@ Current packaged dataset sizes:
 ```r
 citation("mfrmr")
 ```
+
+## Acknowledgements
+
+`mfrmr` has benefited from discussion and methodological input from
+[Dr. Atsushi Mizumoto](https://mizumot.com/) and
+[Dr. Taichi Yamashita](https://kugakujo.kansai-u.ac.jp/html/100000882_en.html).

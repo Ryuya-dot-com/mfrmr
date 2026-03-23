@@ -1,13 +1,22 @@
 Package: mfrmr
 Type: Package
-Title: Flexible Many-Facet Rasch Model Estimation Without FACETS
+Title: Many-Facet Rasch Model Estimation and Diagnostics in R
 Version: 0.1.0
 Authors@R:
-    person(given = "Ryuya", family = "Komuro", role = c("aut", "cre"), email = "ryuya.komuro.c4@tohoku.ac.jp")
-Description: Flexible many-facet Rasch model (MFRM) estimation and diagnostics
-    using a native R implementation. Supports arbitrary facet counts, RSM/PCM,
-    MML/JML estimation, FACETS-style bias iteration, fixed-width report output,
-    APA text generation, and visual warning summaries.
+    person(given = "Ryuya", family = "Komuro", role = c("aut", "cre"),
+           email = "ryuya.komuro.c4@tohoku.ac.jp",
+           comment = c(ORCID = "0000-0001-9205-0926"))
+Description: Estimates many-facet Rasch models and produces diagnostics,
+    reporting helpers, and reproducible analysis bundles using a native R
+    implementation. Supports arbitrary facet counts, rating-scale and
+    partial-credit parameterizations (Andrich, 1978
+    <doi:10.1007/BF02293814>; Masters, 1982
+    <doi:10.1007/BF02296272>), marginal maximum likelihood estimation via the
+    EM algorithm (Bock and Aitkin, 1981 <doi:10.1007/BF02293801>) and joint
+    maximum likelihood estimation, plus workflow helpers informed by
+    many-facet Rasch measurement practice and 'FACETS' documentation
+    (Linacre, 1994, ISBN 0-941938-02-6; Linacre, 2023,
+    <https://www.winsteps.com/a/Facets-Manual.pdf>).
 URL: https://github.com/Ryuya-dot-com/R_package_mfrmr
 BugReports: https://github.com/Ryuya-dot-com/R_package_mfrmr/issues
 License: MIT + file LICENSE

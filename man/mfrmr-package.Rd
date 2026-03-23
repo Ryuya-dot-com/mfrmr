@@ -4,10 +4,10 @@
 \name{mfrmr-package}
 \alias{mfrmr}
 \alias{mfrmr-package}
-\title{mfrmr: Flexible Many-Facet Rasch Modeling in R}
+\title{mfrmr: Many-Facet Rasch Modeling in R}
 \description{
 \code{mfrmr} provides estimation, diagnostics, and reporting utilities for
-many-facet Rasch models (MFRM) without relying on FACETS/TAM/sirt backends.
+many-facet Rasch models (MFRM) using a native R implementation.
 }
 \details{
 Recommended workflow:
