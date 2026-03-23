@@ -11,7 +11,7 @@ authors:
 
 home:
   title: mfrmr
-  description: Flexible many-facet Rasch model estimation without FACETS
+  description: Many-facet Rasch model estimation, diagnostics, and reporting workflows in R
 
 articles:
   - title: Workflow Guides
@@ -32,18 +32,36 @@ reference:
       - mfrmr_compatibility_layer
   - title: Estimation
     contents:
+      - mfrmr-package
       - fit_mfrm
       - analyze_residual_pca
       - mfrm_threshold_profiles
       - diagnose_mfrm
       - estimate_bias
+      - compare_mfrm
+      - compute_information
+      - as.data.frame.mfrm_fit
+  - title: Simulation and Prediction
+    contents:
+      - build_mfrm_sim_spec
+      - extract_mfrm_sim_spec
+      - simulate_mfrm_data
+      - evaluate_mfrm_design
+      - evaluate_mfrm_signal_detection
+      - recommend_mfrm_design
+      - predict_mfrm_population
+      - predict_mfrm_units
+      - sample_mfrm_plausible_values
   - title: Reports and Tables
     contents:
       - specifications_report
       - data_quality_report
       - estimation_iteration_report
+      - bias_iteration_report
+      - bias_pairwise_report
       - subset_connectivity_report
       - facet_statistics_report
+      - facet_quality_dashboard
       - measurable_summary_table
       - rating_scale_table
       - unexpected_response_table
@@ -58,38 +76,76 @@ reference:
       - category_curves_report
   - title: Integrated Outputs
     contents:
+      - build_mfrm_manifest
+      - build_mfrm_replay_script
       - build_fixed_reports
       - build_apa_outputs
       - build_visual_summaries
       - apa_table
+      - export_mfrm
+      - export_mfrm_bundle
+      - precision_audit_report
+      - reporting_checklist
+      - run_qc_pipeline
+      - reference_case_audit
+      - reference_case_benchmark
+      - print.mfrm_apa_text
       - summary.mfrm_fit
       - summary.mfrm_diagnostics
       - summary.mfrm_bias
+      - summary.apa_table
+      - summary.mfrm_apa_outputs
+      - summary.mfrm_anchor_audit
+      - summary.mfrm_bundle
+      - summary.mfrm_data_description
+      - summary.mfrm_design_evaluation
+      - summary.mfrm_facet_dashboard
+      - summary.mfrm_facets_run
+      - summary.mfrm_signal_detection
+      - summary.mfrm_population_prediction
+      - summary.mfrm_unit_prediction
+      - summary.mfrm_plausible_values
+      - summary.mfrm_threshold_profiles
   - title: Plotting
     contents:
+      - plot.apa_table
+      - plot.mfrm_anchor_audit
       - plot.mfrm_fit
       - plot.mfrm_bundle
+      - plot.mfrm_data_description
+      - plot.mfrm_design_evaluation
+      - plot.mfrm_facets_run
+      - plot.mfrm_signal_detection
       - plot_bias_interaction
+      - plot_bubble
+      - plot_facet_quality_dashboard
+      - plot_information
       - plot_qc_dashboard
+      - plot_qc_pipeline
       - plot_unexpected
       - plot_fair_average
       - plot_displacement
       - plot_interrater_agreement
       - plot_facets_chisq
       - plot_residual_pca
+      - plot_wright_unified
   - title: Linking, DFF, and Anchors
     contents:
       - analyze_dff
-      - analyze_dif
+      - analyze_facet_equivalence
       - dif_interaction_table
       - dif_report
       - plot_dif_heatmap
+      - plot_facet_equivalence
       - anchor_to_baseline
       - detect_anchor_drift
       - build_equating_chain
       - plot_anchor_drift
+      - estimate_all_bias
   - title: Data and Anchors
     contents:
+      - ej2021_data
+      - mfrmr_example_data
       - describe_mfrm_data
       - audit_mfrm_anchors
       - make_anchor_table
