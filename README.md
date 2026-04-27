@@ -350,7 +350,9 @@ when you want a customised version.
 ```r
 # GitHub (development version)
 if (!requireNamespace("remotes", quietly = TRUE)) install.packages("remotes")
-remotes::install_github("Ryuya-dot-com/R_package_mfrmr", build_vignettes = TRUE)
+remotes::install_github("Ryuya-dot-com/R_package_mfrmr",
+                        subdir = "mfrmr",
+                        build_vignettes = TRUE)
 
 # CRAN (after release)
 # install.packages("mfrmr")

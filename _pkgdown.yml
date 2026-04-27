@@ -38,9 +38,13 @@ reference:
       - analyze_residual_pca
       - mfrm_threshold_profiles
       - diagnose_mfrm
+      - mfrm_misfit_thresholds
       - estimate_bias
+      - interaction_effect_table
       - compare_mfrm
       - compute_information
+      - q3_statistic
+      - compute_person_fit_indices
       - as.data.frame.mfrm_fit
   - title: Simulation and Prediction
     contents:
@@ -166,6 +170,7 @@ reference:
       - facet_small_sample_audit
       - compute_facet_icc
       - compute_facet_design_effect
+      - mfrm_generalizability
       - analyze_hierarchical_structure
   - title: Additional Visualizations
     desc: >-
@@ -201,6 +206,15 @@ reference:
       - normalize_conquest_overlap_tables
       - compatibility_alias_table
       - gpcm_capability_matrix
+  - title: External Model Imports
+    desc: >-
+      Lightweight adapters for comparing package-native mfrmr summaries with
+      common external IRT fits. These helpers keep external engines optional
+      through Suggests.
+    contents:
+      - import_mirt_fit
+      - import_tam_fit
+      - import_erm_fit
   - title: Additional Exports
     desc: >-
       Topics surfaced by the package namespace that do not fit neatly into
