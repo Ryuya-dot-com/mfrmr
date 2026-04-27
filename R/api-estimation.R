@@ -1524,7 +1524,11 @@ audit_compare_mfrm_nesting <- function(fits, labels) {
 
   list(
     eligible = FALSE,
-    reason = "Automatic nesting audit currently supports only RSM nested inside PCM under shared design and constraints.",
+    reason = paste0(
+      "Automatic nesting audit currently supports only RSM nested inside PCM ",
+      "or same-family fixed facet-interaction extensions under shared design ",
+      "and constraints."
+    ),
     simpler = NA_character_,
     complex = NA_character_,
     relation = "unsupported"
@@ -3069,11 +3073,16 @@ diagnose_mfrm <- function(fit,
 #' comparison.
 #'
 #' In the **current `mfrmr` model space**, the automatic nesting audit is
-#' intentionally conservative: it treats `RSM` nested inside `PCM` under shared
-#' data and shared constraints as the only supported automatic relation.
-#' Same-family comparisons, cross-method comparisons, or comparisons that
-#' change anchors/dummying/centering are not automatically promoted to LRT
-#' claims.
+#' intentionally conservative. It currently supports two fixed-effect
+#' restrictions under shared data and shared constraints:
+#' - `RSM` nested inside `PCM` when the `PCM` fit has an explicit
+#'   `step_facet`;
+#' - same-family additive-vs-interaction comparisons when the smaller fit's
+#'   `facet_interactions` set is a subset of the larger fit's set.
+#'
+#' Cross-method comparisons, comparisons that change anchors/dummying/centering,
+#' and same-family comparisons that do not add fixed interaction terms are not
+#' automatically promoted to LRT claims.
 #'
 #' The **likelihood-ratio test (LRT)** is reported only when exactly two
 #' models are supplied, `nested = TRUE`, the structural audit passes, and the

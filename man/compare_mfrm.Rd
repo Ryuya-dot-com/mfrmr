@@ -64,11 +64,18 @@ usual sense---use information criteria rather than LRT for that
 comparison.
 
 In the \strong{current \code{mfrmr} model space}, the automatic nesting audit is
-intentionally conservative: it treats \code{RSM} nested inside \code{PCM} under shared
-data and shared constraints as the only supported automatic relation.
-Same-family comparisons, cross-method comparisons, or comparisons that
-change anchors/dummying/centering are not automatically promoted to LRT
-claims.
+intentionally conservative. It currently supports two fixed-effect
+restrictions under shared data and shared constraints:
+\itemize{
+\item \code{RSM} nested inside \code{PCM} when the \code{PCM} fit has an explicit
+\code{step_facet};
+\item same-family additive-vs-interaction comparisons when the smaller fit's
+\code{facet_interactions} set is a subset of the larger fit's set.
+}
+
+Cross-method comparisons, comparisons that change anchors/dummying/centering,
+and same-family comparisons that do not add fixed interaction terms are not
+automatically promoted to LRT claims.
 
 The \strong{likelihood-ratio test (LRT)} is reported only when exactly two
 models are supplied, \code{nested = TRUE}, the structural audit passes, and the
