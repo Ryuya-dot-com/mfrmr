@@ -2,7 +2,7 @@
 % Please edit documentation in R/api-reports.R
 \name{bias_iteration_report}
 \alias{bias_iteration_report}
-\title{Build a bias-iteration report}
+\title{Build a bias-iteration report (FACETS Table 9: iteration / convergence trace)}
 \usage{
 bias_iteration_report(
   x,
@@ -51,7 +51,12 @@ A named list with:
 }
 }
 \description{
-Build a bias-iteration report
+This report is NOT an alias of \code{\link[=bias_interaction_report]{bias_interaction_report()}} despite the
+similar name. It focuses on the \strong{recalibration path} of a bias run:
+iteration table, convergence summary, and orientation audit. Use this
+to confirm that the bias recalibration itself converged; use
+\code{\link[=bias_interaction_report]{bias_interaction_report()}} to review the ranked flagged cells from
+the converged run.
 }
 \details{
 This report focuses on the recalibration path used by \code{\link[=estimate_bias]{estimate_bias()}}.

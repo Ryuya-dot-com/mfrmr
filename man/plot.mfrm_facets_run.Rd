@@ -46,6 +46,7 @@ Returns the plotting object produced by the delegated route:
 }
 
 \examples{
+\donttest{
 toy <- load_mfrmr_data("example_core")
 toy_small <- toy[toy$Person \%in\% unique(toy$Person)[1:12], , drop = FALSE]
 out <- run_mfrm_facets(
@@ -56,9 +57,10 @@ out <- run_mfrm_facets(
   maxit = 10
 )
 p_fit <- plot(out, type = "fit", draw = FALSE)
-class(p_fit)
+p_fit$wright_map$data$plot
 p_qc <- plot(out, type = "qc", draw = FALSE)
-class(p_qc)
+p_qc$data$plot
+}
 
 }
 \seealso{

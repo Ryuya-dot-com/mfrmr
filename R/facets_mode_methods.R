@@ -39,13 +39,13 @@ round_numeric_frame <- function(df, digits = 3L) {
 #'
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
-#' toy_small <- toy[toy$Person %in% unique(toy$Person)[1:12], , drop = FALSE]
+#' toy_small <- toy[toy$Person %in% unique(toy$Person)[1:8], , drop = FALSE]
 #' out <- run_mfrm_facets(
 #'   data = toy_small,
 #'   person = "Person",
 #'   facets = c("Rater", "Criterion"),
 #'   score = "Score",
-#'   maxit = 10
+#'   maxit = 25
 #' )
 #' s <- summary(out)
 #' s$overview[, c("Model", "Method", "Converged")]
@@ -141,6 +141,7 @@ print.mfrm_facets_run <- function(x, ...) {
 #'   [mfrmr_visual_diagnostics], [mfrmr_workflow_methods]
 #'
 #' @examples
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' toy_small <- toy[toy$Person %in% unique(toy$Person)[1:12], , drop = FALSE]
 #' out <- run_mfrm_facets(
@@ -151,9 +152,10 @@ print.mfrm_facets_run <- function(x, ...) {
 #'   maxit = 10
 #' )
 #' p_fit <- plot(out, type = "fit", draw = FALSE)
-#' class(p_fit)
+#' p_fit$wright_map$data$plot
 #' p_qc <- plot(out, type = "qc", draw = FALSE)
-#' class(p_qc)
+#' p_qc$data$plot
+#' }
 #'
 #' @export
 plot.mfrm_facets_run <- function(x, y = NULL, type = c("fit", "qc"), ...) {
@@ -162,7 +164,14 @@ plot.mfrm_facets_run <- function(x, y = NULL, type = c("fit", "qc"), ...) {
   }
   type <- match.arg(type)
   if (identical(type, "fit")) {
-    return(plot(x$fit, ...))
+    # Preserve the FACETS-style overview bundle (Wright + pathway +
+    # CCC) that existing run_mfrm_facets() scripts expect. Callers
+    # that want just the Wright map can use plot(x$fit, type = "wright").
+    dots <- list(...)
+    if (is.null(dots$type)) {
+      dots$type <- "bundle"
+    }
+    return(do.call(plot, c(list(x$fit), dots)))
   }
   plot_qc_dashboard(fit = x$fit, diagnostics = x$diagnostics, ...)
 }

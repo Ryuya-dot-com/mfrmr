@@ -6,7 +6,7 @@
 \usage{
 plot_bias_interaction(
   x,
-  plot = c("scatter", "ranked", "abs_t_hist", "facet_profile"),
+  plot = c("scatter", "ranked", "heatmap", "abs_t_hist", "facet_profile"),
   diagnostics = NULL,
   facet_a = NULL,
   facet_b = NULL,
@@ -16,6 +16,8 @@ plot_bias_interaction(
   abs_bias_warn = 0.5,
   p_max = 0.05,
   sort_by = c("abs_t", "abs_bias", "prob"),
+  show_ci = FALSE,
+  ci_level = 0.95,
   main = NULL,
   palette = NULL,
   label_angle = 45,
@@ -48,6 +50,17 @@ or \code{"facet_profile"}.}
 \item{p_max}{Warning cutoff for p-values.}
 
 \item{sort_by}{Ranking key: \code{"abs_t"}, \code{"abs_bias"}, or \code{"prob"}.}
+
+\item{show_ci}{Logical. When \code{TRUE} and \code{plot} is \code{"scatter"} or
+\code{"ranked"}, draw approximate confidence-interval whiskers for
+\verb{Bias Size} using the per-cell standard error from
+\code{\link[=estimate_bias]{estimate_bias()}}. Ignored for \code{"abs_t_hist"} and
+\code{"facet_profile"}.}
+
+\item{ci_level}{Confidence level used when \code{show_ci = TRUE}; default
+\code{0.95}. The returned plot-data object gains \code{CI_Lower} / \code{CI_Upper}
+/ \code{CI_Level} columns on the \code{ranked_table} and \code{scatter_data}
+elements for downstream reuse.}
 
 \item{main}{Optional plot title override.}
 

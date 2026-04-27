@@ -50,7 +50,9 @@
 #' - `primary`: first successful bias bundle, useful for downstream helpers
 #'
 #' @section Typical workflow:
-#' 1. Fit with [fit_mfrm()] and diagnose with [diagnose_mfrm()].
+#' 1. Fit with [fit_mfrm()] and diagnose with [diagnose_mfrm()]. For
+#'    `RSM` / `PCM` reporting runs, prefer `method = "MML"` plus
+#'    `diagnostic_mode = "both"` in the diagnostics call.
 #' 2. Run `estimate_all_bias()` to compute app-style multi-pair interactions.
 #' 3. Pass the resulting `by_pair` list into [reporting_checklist()] or
 #'    [facet_quality_dashboard()].
@@ -58,12 +60,14 @@
 #' @return A named list with class `mfrm_bias_collection`.
 #' @seealso [estimate_bias()], [reporting_checklist()], [facet_quality_dashboard()]
 #' @examples
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                 method = "JML", maxit = 25)
-#' diag <- diagnose_mfrm(fit, residual_pca = "none")
+#'                 method = "MML", maxit = 200)
+#' diag <- diagnose_mfrm(fit, residual_pca = "none", diagnostic_mode = "both")
 #' bias_all <- estimate_all_bias(fit, diagnostics = diag)
 #' bias_all$summary[, c("Interaction", "Rows", "Significant")]
+#' }
 #' @export
 estimate_all_bias <- function(fit,
                               diagnostics = NULL,
@@ -97,10 +101,29 @@ estimate_all_bias <- function(fit,
   summary_rows <- vector("list", length(pair_specs))
   error_rows <- list()
 
+  # Show an interactive progress bar when more than one pair is being
+  # estimated. cli::cli_progress_bar is silent when not needed
+  # (e.g. unattended R CMD check) and respects options(cli.progress_show_after).
+  progress_id <- NULL
+  if (length(pair_specs) > 1L) {
+    progress_id <- cli::cli_progress_bar(
+      name = "estimate_all_bias",
+      total = length(pair_specs),
+      format = "{cli::pb_spin} bias interactions: {cli::pb_current}/{cli::pb_total} [{cli::pb_elapsed}]",
+      clear = TRUE,
+      .envir = parent.frame()
+    )
+    on.exit(cli::cli_progress_done(id = progress_id), add = TRUE)
+  }
+
   for (i in seq_along(pair_specs)) {
     spec <- pair_specs[[i]]
     label <- spec$label
     facets <- spec$facets
+
+    if (!is.null(progress_id)) {
+      cli::cli_progress_update(id = progress_id, set = i - 1L)
+    }
 
     bias_obj <- tryCatch(
       estimate_bias(

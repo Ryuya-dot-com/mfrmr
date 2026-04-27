@@ -11,7 +11,8 @@ build_mfrm_manifest(
   population_prediction = NULL,
   unit_prediction = NULL,
   plausible_values = NULL,
-  include_person_anchors = FALSE
+  include_person_anchors = FALSE,
+  data = NULL
 )
 }
 \arguments{
@@ -32,6 +33,13 @@ bias bundles.}
 
 \item{include_person_anchors}{If \code{TRUE}, include person measures in the
 exported anchor table.}
+
+\item{data}{Optional original analysis data frame. When supplied,
+the manifest's \code{input_hash} row for \code{data} is computed against
+the user's untouched input rather than the package's internal
+\code{prep$data} (which carries synthesised \code{Weight} / \code{score_k}
+columns) so the recorded fingerprint matches what
+\code{read.csv()} will produce in a replay session.}
 }
 \value{
 A named list with class \code{mfrm_manifest}.
@@ -78,6 +86,12 @@ outputs
 The \code{summary} table is the quickest place to confirm that you are looking at
 the intended analysis. The \code{model_settings}, \code{source_columns}, and
 \code{estimation_control} tables are designed for audit trails and method write-up.
+Active latent-regression fits also record their population-model provenance
+there, including the fitted scoring basis, stored \code{population_formula}, and
+person-level contract used by the fitted population model. When categorical
+background variables are expanded through \code{stats::model.matrix()},
+\code{population_xlevel_variables} and \code{population_contrast_variables} identify
+the variables whose fitted coding must be preserved for replay/scoring.
 The \code{available_outputs} table is especially useful before building bundles,
 because it tells you whether residual PCA, anchors, bias results, or
 prediction-side artifacts are already available. A practical reading order is
@@ -95,6 +109,11 @@ control over residual PCA.
 \item If you need files on disk, pass the same objects to
 \code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}}.
 }
+
+This manifest/export layer currently depends on diagnostics-compatible
+workflow objects. For bounded \code{GPCM} fits, that means the layer is
+intentionally unavailable until the diagnostics/reporting contract has been
+generalized beyond the ordered Rasch-family branch.
 }
 
 \examples{

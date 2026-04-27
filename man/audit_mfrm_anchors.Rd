@@ -15,6 +15,7 @@ audit_mfrm_anchors(
   rating_min = NULL,
   rating_max = NULL,
   keep_original = FALSE,
+  missing_codes = NULL,
   min_common_anchors = 5L,
   min_obs_per_element = 30,
   min_obs_per_category = 10,
@@ -43,6 +44,11 @@ audit_mfrm_anchors(
 \item{rating_max}{Optional maximum category value.}
 
 \item{keep_original}{Keep original category values.}
+
+\item{missing_codes}{Optional. \code{NULL} (default) is a no-op;
+\code{TRUE} or \code{"default"} converts the FACETS / SPSS / SAS sentinel
+set to \code{NA} on the person, facets, and score columns before
+auditing. Supply a character vector for a custom code set.}
 
 \item{min_common_anchors}{Minimum anchored levels per linking facet used in
 recommendations (default \code{5}).}
@@ -141,7 +147,7 @@ aud <- audit_mfrm_anchors(
 aud$issue_counts
 summary(aud)
 p_aud <- plot(aud, draw = FALSE)
-class(p_aud)
+p_aud$data$plot
 }
 \seealso{
 \code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=describe_mfrm_data]{describe_mfrm_data()}}, \code{\link[=make_anchor_table]{make_anchor_table()}}

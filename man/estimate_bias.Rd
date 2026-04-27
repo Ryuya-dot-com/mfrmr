@@ -21,13 +21,17 @@ estimate_bias(
 
 \item{diagnostics}{Output from \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}.}
 
-\item{facet_a}{First facet name.}
+\item{facet_a}{First facet name. Provide together with \code{facet_b} for the
+classic pairwise 2-way interaction. Ignored when \code{interaction_facets}
+is supplied.}
 
-\item{facet_b}{Second facet name.}
+\item{facet_b}{Second facet name. See \code{facet_a}.}
 
 \item{interaction_facets}{Character vector of two or more facets to model as
 one interaction effect. When supplied, this takes precedence over
-\code{facet_a}/\code{facet_b}.}
+\code{facet_a}/\code{facet_b}. Use this form (rather than \code{facet_a}/\code{facet_b})
+whenever you want 3+ way interactions, since \code{facet_a/facet_b} is
+restricted to the pairwise case.}
 
 \item{max_abs}{Bound for absolute bias size.}
 
@@ -158,9 +162,19 @@ toy <- load_mfrmr_data("example_bias")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 bias <- estimate_bias(fit, diag, facet_a = "Rater", facet_b = "Criterion", max_iter = 2)
-summary(bias)
+s_bias <- summary(bias)
+s_bias$overview
+# Look for: `MaxAbsBias` < ~0.5 logits and `Significant = 0` mean
+#   no cell exceeded the screen. The `BonferroniSignificant` /
+#   `HolmSignificant` columns count cells that survive multiple-
+#   testing correction; both being 0 is a stronger "no bias"
+#   signal than the raw screen-positive count alone.
+s_bias$top_rows
+# Look for: rows with `|t|` > 2 and |Bias Size| > 0.5 logits warrant
+#   review (large effect AND statistically reliable). Rows with only
+#   one of those triggered are usually small-cell artefacts.
 p_bias <- plot_bias_interaction(bias, draw = FALSE)
-class(p_bias)
+p_bias$data$plot
 }
 \seealso{
 \code{\link[=build_fixed_reports]{build_fixed_reports()}}, \code{\link[=build_apa_outputs]{build_apa_outputs()}}

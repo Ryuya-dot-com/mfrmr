@@ -7,6 +7,37 @@
 Quick guide to choosing the right base-R diagnostic plot in \code{mfrmr}.
 Use this page when you know the analysis question but do not yet know
 which plotting helper or \code{plot()} method to call.
+
+If you are preparing figures for a report, start with
+\code{\link[=reporting_checklist]{reporting_checklist()}} and inspect the \code{"Visual Displays"} rows first.
+Those rows now map directly onto the public plotting family covered on this
+page, so the checklist can act as a plot-readiness router rather than just a
+manuscript checklist.
+
+This guide is primarily written for diagnostics-based \code{RSM} / \code{PCM}
+workflows. \code{GPCM} fits also use the residual-based diagnostics stack
+through \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=plot_unexpected]{plot_unexpected()}}, \code{\link[=plot_displacement]{plot_displacement()}},
+\code{\link[=plot_interrater_agreement]{plot_interrater_agreement()}}, \code{\link[=plot_facets_chisq]{plot_facets_chisq()}},
+\code{\link[=plot_residual_pca]{plot_residual_pca()}}, and \code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}}, plus the
+posterior-scoring, design-weighted-information path via
+\code{\link[=compute_information]{compute_information()}} / \code{\link[=plot_information]{plot_information()}}, and the Wright /
+pathway / CCC fit plots. Two \code{GPCM}-specific caveats apply when
+interpreting these residual-based screens:
+\itemize{
+\item The free discrimination parameter means MnSq mean-square screens
+carry weaker invariance evidence than they do under \code{RSM} / \code{PCM}.
+Treat MnSq flags from \code{GPCM} as exploratory pointers to cells that
+merit closer inspection rather than as Rasch-style violations of
+strict invariance.
+\item FACETS-style fair averages are a Rasch-family measure-to-score
+transformation. Under \code{GPCM} the fair-average panel of
+\code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}} therefore renders as an explicit
+"unavailable" placeholder, and the broader compatibility-export
+helpers stay outside the validated \code{GPCM} boundary.
+}
+
+Use \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}} for the formal per-helper boundary
+before choosing a \code{GPCM} follow-up plot route.
 }
 \section{Start with the question}{
 
@@ -20,30 +51,130 @@ Use \code{plot(subset_connectivity_report(...), type = "design_matrix")} and
 \code{\link[=plot_anchor_drift]{plot_anchor_drift()}}.
 \item "Which responses or levels look locally problematic?"
 Use \code{\link[=plot_unexpected]{plot_unexpected()}} and \code{\link[=plot_displacement]{plot_displacement()}}.
+\item "Which facet/category cells drive strict marginal misfit?"
+Use \code{\link[=plot_marginal_fit]{plot_marginal_fit()}}.
+\item "Which level pairs drive strict local-dependence follow-up?"
+Use \code{\link[=plot_marginal_pairwise]{plot_marginal_pairwise()}}.
 \item "Do raters agree and do facets separate meaningfully?"
 Use \code{\link[=plot_interrater_agreement]{plot_interrater_agreement()}} and \code{\link[=plot_facets_chisq]{plot_facets_chisq()}}.
 \item "Is there notable residual structure after the main Rasch dimension?"
 Use \code{\link[=plot_residual_pca]{plot_residual_pca()}}.
 \item "Which interaction cells or facet levels drive bias screening results?"
 Use \code{\link[=plot_bias_interaction]{plot_bias_interaction()}}.
+\item "Do person response rows follow the expected Guttman-style
+ordering once persons and items are sorted on the logit scale?"
+Use \code{\link[=plot_guttman_scalogram]{plot_guttman_scalogram()}} as a teaching-oriented screen.
+\item "Do person-level standardized residuals look Gaussian, or are
+there heavy tails that warrant follow-up?"
+Use \code{\link[=plot_residual_qq]{plot_residual_qq()}}.
+\item "Is rater severity drifting across waves or training sessions
+(assuming the waves are already on a common anchored scale)?"
+Use \code{\link[=plot_rater_trajectory]{plot_rater_trajectory()}} together with \code{\link[=plot_anchor_drift]{plot_anchor_drift()}}
+for the linking-scale review.
+\item "I have many raters and want a compact pairwise agreement / correlation
+overview instead of the bar chart?"
+Use \code{\link[=plot_rater_agreement_heatmap]{plot_rater_agreement_heatmap()}}.
+\item "Are there pairs of facet levels whose residuals co-move beyond the
+main-effects MFRM? (Q3-style local-dependence screen)"
+Use \code{\link[=plot_local_dependence_heatmap]{plot_local_dependence_heatmap()}}.
+\item "How distinguishable is each facet on a single page (separation,
+strata, reliability)?"
+Use \code{\link[=plot_reliability_snapshot]{plot_reliability_snapshot()}}.
+\item "Where do persons with the largest residual aggregates accumulate
+across facet levels?"
+Use \code{\link[=plot_residual_matrix]{plot_residual_matrix()}}.
+\item "How much did empirical-Bayes shrinkage move each facet level?"
+Use \code{\link[=plot_shrinkage_funnel]{plot_shrinkage_funnel()}} on a fit augmented via
+\code{\link[=apply_empirical_bayes_shrinkage]{apply_empirical_bayes_shrinkage()}}.
 \item "I need one compact triage screen first."
-Use \code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}}.
+Use \code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}} for \code{RSM} / \code{PCM}. First-release \code{GPCM}
+can also use \code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}}, but its fair-average panel remains an
+explicit unavailable placeholder because that panel's score-metric
+semantics have not yet been generalized beyond the Rasch-family branch.
+\item "Which figures are already supported by my current run?"
+Use \code{\link[=reporting_checklist]{reporting_checklist()}} and review the \code{"Visual Displays"} rows before
+choosing the next plot.
+\item "Where should this figure go in a paper or appendix?"
+Use \code{\link[=visual_reporting_template]{visual_reporting_template()}} for a static reporting-use table, then
+cross-check run-specific availability with \code{reporting_checklist()$visual_scope}.
+\item "Do I need a 3D-style category probability surface?"
+Use \code{plot(fit, type = "ccc_surface", draw = FALSE)} to get a
+theta-by-category-by-probability payload for exploratory teaching or
+downstream interactive rendering. Keep 2D pathway/CCC plots as the
+default reporting figures.
 }
 }
 
 \section{Recommended visual route}{
 
 \enumerate{
+\item If you are drafting a report, run \code{\link[=reporting_checklist]{reporting_checklist()}} first and read
+the \code{"Visual Displays"} rows as the plot-readiness layer.
 \item Start with \code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}} for one-page triage.
-\item Move to \code{\link[=plot_unexpected]{plot_unexpected()}}, \code{\link[=plot_displacement]{plot_displacement()}}, and
+\item Move to \code{\link[=plot_unexpected]{plot_unexpected()}}, \code{\link[=plot_displacement]{plot_displacement()}},
+\code{\link[=plot_marginal_fit]{plot_marginal_fit()}}, \code{\link[=plot_marginal_pairwise]{plot_marginal_pairwise()}}, and
 \code{\link[=plot_interrater_agreement]{plot_interrater_agreement()}} for flagged local issues.
 \item Use \code{plot(fit, type = "wright")}, \code{plot(fit, type = "pathway")},
 and \code{plot_residual_pca()} for structural interpretation.
+\item Use \code{\link[=plot_bias_interaction]{plot_bias_interaction()}}, \code{\link[=plot_anchor_drift]{plot_anchor_drift()}}, and
+\code{\link[=plot_information]{plot_information()}} when the checklist or dashboard points to
+interaction, linking, or precision follow-up.
 \item Use \code{plot(..., draw = FALSE)} when you want reusable plotting payloads
 instead of immediate graphics.
+\item Use \code{plot(fit, type = "ccc_surface", draw = FALSE)} only when you need
+a 3D-ready category-probability payload; \code{mfrmr} intentionally does not
+add a package-native plotly/rgl renderer for this route.
 \item Use \code{preset = "publication"} when you want the package's cleaner
 manuscript-oriented styling.
 }
+}
+
+\section{Visual coverage for this release}{
+
+This release treats the plotting layer as sufficient when the current run
+supports all of the following follow-up roles through public helpers:
+\itemize{
+\item First-pass triage:
+\code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}} or the \code{"Visual Displays"} rows from
+\code{\link[=reporting_checklist]{reporting_checklist()}}.
+\item Structural interpretation:
+\code{plot(fit, type = "wright")}, \code{plot(fit, type = "pathway")},
+\code{plot(fit, type = "ccc")}, and \code{\link[=plot_residual_pca]{plot_residual_pca()}}.
+\item Local issue follow-up:
+\code{\link[=plot_unexpected]{plot_unexpected()}}, \code{\link[=plot_displacement]{plot_displacement()}},
+\code{\link[=plot_interrater_agreement]{plot_interrater_agreement()}}, and \code{\link[=plot_bias_interaction]{plot_bias_interaction()}}.
+\item Strict marginal follow-up:
+\code{\link[=plot_marginal_fit]{plot_marginal_fit()}} and \code{\link[=plot_marginal_pairwise]{plot_marginal_pairwise()}} for
+\code{diagnostic_mode = "both"}.
+\item Reporting/export handoff:
+\code{\link[=build_visual_summaries]{build_visual_summaries()}} and \code{draw = FALSE} routes that return reusable
+\code{mfrm_plot_data} payloads for downstream review and export. When step
+estimates are available, \code{build_visual_summaries()} also exposes
+\verb{$plot_payloads$category_probability_surface}.
+\item 3D-ready exploratory handoff:
+\code{plot(fit, type = "ccc_surface", draw = FALSE)} returns a
+theta-by-category-by-probability \code{mfrm_plot_data} payload. This is not a
+default APA/reporting figure and does not load plotly/rgl.
+}
+}
+
+\section{3D and surface payloads}{
+
+The package currently treats 3D as an exploratory data handoff, not as a
+default plotting layer. The supported route is
+\code{plot(fit, type = "ccc_surface", draw = FALSE)}, which returns
+\code{surface}, \code{categories}, \code{category_support}, \code{groups}, \code{axis_contract},
+\code{renderer_contract}, \code{interpretation_guide}, and \code{reporting_policy} tables
+inside an \code{mfrm_plot_data} object. These columns can be passed to an
+external renderer if needed, while \code{category_support} and
+\code{interpretation_guide} should be checked before interpreting retained
+zero-frequency categories or adjacent threshold ridges.
+
+Do not replace the standard 2D Wright map, pathway map, CCC plot,
+heatmap/profile diagnostics, or information curves with 3D figures in
+routine reports. In particular, 3D Wright maps are discouraged because
+perspective and occlusion obscure the shared-scale comparison that the
+Wright map is meant to support.
 }
 
 \section{Which plot answers which question}{
@@ -59,6 +190,12 @@ checking whether categories peak in sequence.}
 review and local misfit triage.}
 \item{\code{plot_displacement()}}{Level-wise anchor movement. Best for anchor
 robustness and residual calibration tension.}
+\item{\code{plot_marginal_fit()}}{Posterior-integrated first-order category
+residuals. Best for seeing which facet/category cells drive strict
+marginal flags.}
+\item{\code{plot_marginal_pairwise()}}{Posterior-integrated exact/adjacent
+agreement residuals. Best for exploratory local-dependence follow-up after
+strict marginal flags.}
 \item{\code{plot_interrater_agreement()}}{Exact agreement, expected agreement,
 pairwise correlation, and agreement gaps. Best for rater consistency.}
 \item{\code{plot_facets_chisq()}}{Facet variability and chi-square summaries.
@@ -72,6 +209,73 @@ additive main-effects model.}
 \item{\code{plot_anchor_drift()}}{Anchor drift and screened linking-chain visuals.
 Best for multi-form or multi-wave linking review after checking retained
 common-element support.}
+\item{\code{plot_guttman_scalogram()}}{Person x facet-level response matrix with
+unexpected-response overlay. Best for teaching-oriented scalogram intuition
+and visual triage of where the data depart from the expected ordering.}
+\item{\code{plot_residual_qq()}}{Normal Q-Q plot of person-level standardized
+residual aggregates. Best for checking the tail behavior of residuals as
+exploratory follow-up after a fit screen.}
+\item{\code{plot_rater_trajectory()}}{Per-rater severity trajectory across
+named waves / occasions. Best for rater-training or drift feedback when
+the supplied fits have already been placed on a common anchored scale;
+the helper itself does not perform linking.}
+\item{\code{plot_rater_agreement_heatmap()}}{Compact pairwise rater x rater
+heatmap of exact agreement (default) or Pearson-style correlation. Best
+when the rater count makes the bar-chart form of
+\code{\link[=plot_interrater_agreement]{plot_interrater_agreement()}} too busy.}
+\item{\code{plot_local_dependence_heatmap()}}{Yen Q3-style heatmap of
+pairwise residual correlations between facet levels. Best for
+exploratory local-dependence screening; pairs with very strong
+off-diagonal residual correlation merit content-level review.}
+\item{\code{plot_reliability_snapshot()}}{One-figure facet x reliability /
+separation / strata bar overview built from \code{diagnostics$reliability}.
+Best as a single small figure for "which facets are statistically
+distinguishable?".}
+\item{\code{plot_residual_matrix()}}{Person x facet-level standardized
+residual heatmap. Best as a follow-up to \code{\link[=plot_guttman_scalogram]{plot_guttman_scalogram()}} when
+the residual sign and magnitude matter, not just the response code.}
+\item{\code{plot_shrinkage_funnel()}}{Empirical-Bayes shrinkage caterpillar /
+funnel showing raw versus shrunken facet estimates. Best on fits
+produced via \code{\link[=apply_empirical_bayes_shrinkage]{apply_empirical_bayes_shrinkage()}} for reviewing how
+much each level moved under the prior.}
+}
+}
+
+\section{Cross-reference to FACETS / Winsteps tables}{
+
+For users coming from the standard Rasch-measurement software packages,
+the closest mfrmr helper for each table or figure family is summarised
+below. The mapping is approximate; mfrmr is designed for many-facet
+workflows, so column subsets and column names differ.
+\describe{
+\item{Wright (variable) map}{\code{plot(fit, type = "wright")} and
+\code{\link[=plot_wright_unified]{plot_wright_unified()}} correspond to FACETS Table 6 / Winsteps
+"Person-Item map".}
+\item{Pathway / probability curves}{\code{plot(fit, type = "pathway")}
+and \code{plot(fit, type = "ccc")} correspond to Winsteps Table 21
+("Probability category curves") and FACETS category-probability
+curves.}
+\item{Test / item information}{\code{\link[=compute_information]{compute_information()}} +
+\code{\link[=plot_information]{plot_information()}} correspond to Winsteps Table 17 ("Test
+characteristic curve, test information function").}
+\item{Misfit / Infit / Outfit}{\code{\link[=diagnose_mfrm]{diagnose_mfrm()}} and the Largest
+|ZSTD| / MnSq misfit blocks of \code{summary(diag)} correspond to
+Winsteps Table 10/13/14 (Misfit order) and FACETS Tables 7/8.}
+\item{Bias / interaction}{\code{\link[=estimate_bias]{estimate_bias()}} +
+\code{\link[=plot_bias_interaction]{plot_bias_interaction()}} correspond to FACETS Table 14
+("Bias / Interaction calibration report").}
+\item{Differential rater / item functioning}{\code{\link[=analyze_dff]{analyze_dff()}} /
+\code{\link[=analyze_dif]{analyze_dif()}} + \code{\link[=plot_dif_heatmap]{plot_dif_heatmap()}} cover the FACETS DIF /
+bias-by-group route and the Winsteps DIF (Table 30 group
+differences) report.}
+\item{Inter-rater agreement}{\code{\link[=interrater_agreement_table]{interrater_agreement_table()}} +
+\code{\link[=plot_interrater_agreement]{plot_interrater_agreement()}} / \code{\link[=plot_rater_agreement_heatmap]{plot_rater_agreement_heatmap()}}
+correspond to FACETS Table 7-style observed-vs-expected agreement
+reports.}
+\item{Anchoring / linking}{\code{\link[=plot_anchor_drift]{plot_anchor_drift()}} and
+\code{\link[=plot_information]{plot_information()}} cover the FACETS / Winsteps anchored-run
+review route; full equating-chain helpers are exposed via
+\code{\link[=build_equating_chain]{build_equating_chain()}}.}
 }
 }
 
@@ -83,8 +287,15 @@ locations; large gaps indicate weaker targeting.
 \item Pathway / CCC: look for monotone progression and clear category
 dominance bands; flat or overlapping curves suggest weak category
 separation.
+\item 3D-ready category surface: use as an exploratory view of the same
+category-probability information, not as a replacement for the 2D
+pathway/CCC figures in reports. Read \code{category_support} first when a
+retained category has zero observed responses.
 \item Unexpected / displacement: use as screening tools, not final evidence
 by themselves.
+\item Strict marginal and pairwise local-dependence plots are exploratory
+follow-up layers for \code{diagnostic_mode = "both"}, not standalone
+inferential tests.
 \item Inter-rater agreement and facet variability address different questions:
 agreement concerns scoring consistency, whereas variability concerns
 whether facet elements are statistically distinguishable.
@@ -96,8 +307,15 @@ after the main fit screen, not as first-pass diagnostics.
 \section{Typical workflow}{
 
 \itemize{
+\item Figure-readiness route:
+\code{\link[=fit_mfrm]{fit_mfrm()}} -> \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} -> \code{\link[=reporting_checklist]{reporting_checklist()}} ->
+inspect \code{"Visual Displays"} rows -> chosen public plot helper.
 \item Quick screening:
 \code{\link[=fit_mfrm]{fit_mfrm()}} -> \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} -> \code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}}.
+\item Strict marginal follow-up:
+\code{\link[=diagnose_mfrm]{diagnose_mfrm()}} with \code{diagnostic_mode = "both"} ->
+\code{\link[=plot_marginal_fit]{plot_marginal_fit()}} ->
+\code{\link[=plot_marginal_pairwise]{plot_marginal_pairwise()}}.
 \item Scale and targeting review:
 \code{plot(fit, type = "wright")} -> \code{plot(fit, type = "pathway")} ->
 \code{plot(fit, type = "ccc")}.
@@ -117,19 +335,30 @@ For a longer, plot-first walkthrough, run
 }
 
 \examples{
+\donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(
   toy,
   person = "Person",
   facets = c("Rater", "Criterion"),
   score = "Score",
-  method = "JML",
-  maxit = 25
+  method = "MML",
+  maxit = 200
 )
-diag <- diagnose_mfrm(fit, residual_pca = "none")
+diag <- diagnose_mfrm(fit, residual_pca = "none", diagnostic_mode = "both")
+checklist <- reporting_checklist(fit, diagnostics = diag)
+visual_reporting_template("manuscript")
+subset(
+  checklist$checklist,
+  Section == "Visual Displays" & Item \%in\% c("QC / facet dashboard", "Strict marginal visuals"),
+  c("Item", "Available", "NextAction")
+)
 
 qc <- plot_qc_dashboard(fit, diagnostics = diag, draw = FALSE, preset = "publication")
-names(qc$data)
+qc$data$plot
+
+p_marg <- plot_marginal_fit(diag, draw = FALSE, preset = "publication")
+p_marg$data$preset
 
 wright <- plot(fit, type = "wright", draw = FALSE, preset = "publication")
 wright$data$preset
@@ -137,13 +366,18 @@ wright$data$preset
 pca <- analyze_residual_pca(diag, mode = "overall")
 scree <- plot_residual_pca(pca, plot_type = "scree", draw = FALSE, preset = "publication")
 scree$data$preset
+}
 
 }
 \seealso{
 \link{mfrmr_workflow_methods}, \link{mfrmr_reports_and_tables},
 \link{mfrmr_reporting_and_apa}, \link{mfrmr_linking_and_dff},
+\link{gpcm_capability_matrix}, \code{\link[=visual_reporting_template]{visual_reporting_template()}},
 \code{\link[=plot.mfrm_fit]{plot.mfrm_fit()}}, \code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}},
-\code{\link[=plot_unexpected]{plot_unexpected()}}, \code{\link[=plot_displacement]{plot_displacement()}}, \code{\link[=plot_interrater_agreement]{plot_interrater_agreement()}},
+\code{\link[=plot_unexpected]{plot_unexpected()}}, \code{\link[=plot_displacement]{plot_displacement()}}, \code{\link[=plot_marginal_fit]{plot_marginal_fit()}},
+\code{\link[=plot_marginal_pairwise]{plot_marginal_pairwise()}}, \code{\link[=plot_interrater_agreement]{plot_interrater_agreement()}},
 \code{\link[=plot_facets_chisq]{plot_facets_chisq()}}, \code{\link[=plot_residual_pca]{plot_residual_pca()}}, \code{\link[=plot_bias_interaction]{plot_bias_interaction()}},
-\code{\link[=plot_anchor_drift]{plot_anchor_drift()}}
+\code{\link[=plot_anchor_drift]{plot_anchor_drift()}}, \code{\link[=plot_guttman_scalogram]{plot_guttman_scalogram()}},
+\code{\link[=plot_residual_qq]{plot_residual_qq()}}, \code{\link[=plot_rater_trajectory]{plot_rater_trajectory()}},
+\code{\link[=plot_rater_agreement_heatmap]{plot_rater_agreement_heatmap()}}
 }

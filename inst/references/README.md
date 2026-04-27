@@ -1,0 +1,69 @@
+# Reference Notes Index
+
+This directory mixes current specification notes, active roadmap notes, and
+historical audits. Read the files by role, not only by filename.
+
+## 1. Current truth
+
+Use these first when you need the current implementation boundary.
+
+- `M2_CONQUEST_OVERLAP_BOUNDARY_2026-04-03.md`
+- `M2_CONQUEST_MINIMAL_OVERLAP_BUNDLE_2026-04-03.md`
+- `M2_LATENT_REGRESSION_IMPLEMENTATION_STATUS_2026-04-10.md`
+- `M2_LATENT_REGRESSION_STATISTICAL_SPEC_2026-04-03.md`
+- `M3_GPCM_SPEC_2026-04-04.md`
+- `M3_GPCM_CONSISTENCY_AUDIT_2026-04-04.md`
+- `M3_SUMMARY_REPORTING_AUDIT_2026-04-06.md`
+- `PUBLIC_RELEASE_READINESS_AUDIT_2026-04-12.md`
+
+## 2. Active planning notes
+
+Use these when deciding what to implement next.
+
+- `M2_LATENT_REGRESSION_MASTER_PLAN_2026-04-03.md`
+- `M2_LATENT_REGRESSION_BENCHMARK_2026-04-03.md`
+- `M2_LATENT_REGRESSION_RECOVERY_2026-04-03.md`
+- `M3_PRIORITY_EXECUTION_QUEUE_2026-04-04.md`
+- `M3_ECOSYSTEM_COVERAGE_PLAN_2026-04-04.md`
+- `MAINTENANCE_AND_ROADMAP_CHECKLIST_2026-04-03.md`
+- `MFRMR_MASTER_PLAN_2026-04-03.md`
+- `MFRMR_EXECUTION_PROTOCOL_2026-04-03.md`
+
+## 3. Historical audits
+
+Read these as baseline or archival notes, not as the live specification.
+
+- `M2_LATENT_REGRESSION_READINESS_AUDIT_2026-04-03.md`
+- `M3_ARBITRARY_FACET_PLANNING_AUDIT_2026-04-04.md`
+- `M3_EXPANSION_FEASIBILITY_AUDIT_2026-04-04.md`
+- `M3_GPCM_FAIR_AVERAGE_AUDIT_2026-04-04.md`
+- `M3_GPCM_RECOVERY_BENCHMARK_2026-04-04.md`
+- `M3_TAM_SIRT_MIRT_ECOSYSTEM_AUDIT_2026-04-04.md`
+- `M1_AUDIT_FACETS_CONQUEST_THEORY_PERFORMANCE_2026-04-03.md`
+- `M1_PLANNING_BENCHMARK_2026-04-03.md`
+
+## 4. Developer navigation
+
+Use these when reading or maintaining the codebase rather than deciding the
+statistical boundary.
+
+- `CODE_READING_GUIDE.md`
+- `FACETS_manual_mapping.md`
+- `facets_column_contract.csv`
+
+## 5. Reading order for the current task
+
+For latent regression:
+
+1. `M2_LATENT_REGRESSION_IMPLEMENTATION_STATUS_2026-04-10.md`
+2. `M2_CONQUEST_OVERLAP_BOUNDARY_2026-04-03.md`
+3. `M2_CONQUEST_MINIMAL_OVERLAP_BUNDLE_2026-04-03.md`
+4. `M2_LATENT_REGRESSION_STATISTICAL_SPEC_2026-04-03.md`
+5. `M2_LATENT_REGRESSION_MASTER_PLAN_2026-04-03.md`
+
+For bounded `GPCM`:
+
+1. `M3_GPCM_SPEC_2026-04-04.md`
+2. `M3_GPCM_CONSISTENCY_AUDIT_2026-04-04.md`
+3. `M3_GPCM_FAIR_AVERAGE_AUDIT_2026-04-04.md`
+4. `M3_SUMMARY_REPORTING_AUDIT_2026-04-06.md`

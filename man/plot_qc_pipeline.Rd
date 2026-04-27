@@ -68,11 +68,13 @@ exact results to stakeholders.
 }
 
 \examples{
+\donttest{
 toy <- load_mfrmr_data("study1")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "JML", maxit = 25)
 qc <- run_qc_pipeline(fit)
 plot_qc_pipeline(qc, draw = FALSE)
+}
 }
 \seealso{
 \code{\link[=run_qc_pipeline]{run_qc_pipeline()}}, \code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}},

@@ -67,11 +67,13 @@ pass rate.
 }
 
 \examples{
+\donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 audit <- reference_case_audit(fit, diagnostics = diag)
 summary(audit)
+}
 }
 \seealso{
 \code{\link[=facets_parity_report]{facets_parity_report()}}, \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=build_fixed_reports]{build_fixed_reports()}}

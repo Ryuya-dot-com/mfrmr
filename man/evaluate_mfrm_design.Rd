@@ -9,6 +9,7 @@ evaluate_mfrm_design(
   n_rater = c(3, 5),
   n_criterion = c(3, 5),
   raters_per_person = n_rater,
+  design = NULL,
   reps = 10,
   score_levels = 4,
   theta_sd = 1,
@@ -17,13 +18,14 @@ evaluate_mfrm_design(
   noise_sd = 0,
   step_span = 1.4,
   fit_method = c("JML", "MML"),
-  model = c("RSM", "PCM"),
+  model = c("RSM", "PCM", "GPCM"),
   step_facet = NULL,
   maxit = 25,
   quad_points = 7,
   residual_pca = c("none", "overall", "facet", "both"),
   sim_spec = NULL,
-  seed = NULL
+  seed = NULL,
+  parallel = c("no", "future")
 )
 }
 \arguments{
@@ -34,6 +36,16 @@ evaluate_mfrm_design(
 \item{n_criterion}{Vector of criterion counts to evaluate.}
 
 \item{raters_per_person}{Vector of rater assignments per person.}
+
+\item{design}{Optional named design-grid override supplied as a named list,
+named vector, or one-row data frame. Names may use canonical variables
+(\code{n_person}, \code{n_rater}, \code{n_criterion}, \code{raters_per_person}), current
+public aliases implied by \code{sim_spec} (for example \code{n_judge}, \code{n_task},
+\code{judge_per_person}), or role keywords (\code{person}, \code{rater}, \code{criterion},
+\code{assignment}). Values may be vectors. The schema-only future branch input
+\code{design$facets = c(person = ..., judge = ..., task = ...)} is also
+accepted for the currently exposed facet keys. Do not specify the same
+variable through both \code{design} and the scalar design-grid arguments.}
 
 \item{reps}{Number of replications per design condition.}
 
@@ -51,7 +63,9 @@ evaluate_mfrm_design(
 
 \item{fit_method}{Estimation method passed to \code{\link[=fit_mfrm]{fit_mfrm()}}.}
 
-\item{model}{Measurement model passed to \code{\link[=fit_mfrm]{fit_mfrm()}}.}
+\item{model}{Measurement model passed to \code{\link[=fit_mfrm]{fit_mfrm()}}. The current design
+evaluator supports \code{RSM} and \code{PCM}; bounded \code{GPCM} is accepted only
+to produce an explicit unsupported-path error.}
 
 \item{step_facet}{Step facet passed to \code{\link[=fit_mfrm]{fit_mfrm()}} when \code{model = "PCM"}.
 When left \code{NULL}, the function inherits the generator step facet from
@@ -70,16 +84,38 @@ When supplied, the design grid still varies \code{n_person}, \code{n_rater},
 thresholds, and other generator settings come from \code{sim_spec}.
 If \code{sim_spec} contains step-facet-specific thresholds, the design grid may
 not vary the number of levels for that step facet away from the
-specification.}
+specification. If \code{sim_spec} stores an active latent-regression population
+generator, this helper currently requires \code{fit_method = "MML"} so each
+replication can refit the population model.}
 
 \item{seed}{Optional seed for reproducible replications.}
+
+\item{parallel}{Parallelisation strategy for the rep loop within
+each design row. \code{"no"} (default) runs serially; \code{"future"}
+uses \code{future.apply::future_lapply} and respects whatever
+\code{future::plan()} is currently active. The Suggests package
+\code{future.apply} must be installed for the parallel path to
+activate; otherwise the call falls back to serial execution
+with a single message. Cross-design-row parallelism is on the
+0.2.0 roadmap.}
 }
 \value{
 An object of class \code{mfrm_design_evaluation} with components:
 \itemize{
-\item \code{design_grid}: evaluated design conditions
-\item \code{results}: facet-level replicate results
-\item \code{rep_overview}: run-level status and timing
+\item \code{design_grid}: evaluated design conditions. When \code{sim_spec} carries custom
+public facet names, matching design-variable alias columns are included
+alongside the canonical internal columns.
+\item \code{results}: facet-level replicate results, with the same design-variable
+alias columns when applicable.
+\item \code{rep_overview}: run-level status and timing, with the same design-variable
+alias columns when applicable.
+\item \code{design_descriptor}: role-based design-variable metadata used by planning
+summaries and plots
+\item \code{planning_scope}: explicit record of the current planning contract
+\item \code{planning_constraints}: explicit record of which design variables remain
+mutable under the current simulation specification
+\item \code{planning_schema}: combined planner-schema contract bundling the role
+descriptor, scope boundary, and current mutability map
 \item \code{settings}: simulation settings
 \item \code{ademp}: simulation-study metadata (aims, DGM, estimands, methods, performance measures)
 }
@@ -124,10 +160,26 @@ data-generating mechanism. This is the recommended route when you want a
 design study to stay close to a previously fitted run while still varying the
 candidate sample sizes or rater-assignment counts.
 
+If that specification also stores a latent-regression population generator,
+each replication carries forward the simulated one-row-per-person background
+data and refits the MML population-model branch. This remains a scenario
+study under explicit assumptions; it is not a closed-form predictive
+distribution for one future administration.
+
+First-release \code{GPCM} is not yet available in this design-evaluation helper.
+The missing pieces are not just software wiring: the current package still
+needs a validated slope-generating simulation contract and downstream
+diagnostics compatible with the generalized ordered kernel. More broadly,
+the current planning layer is still role-based for exactly two non-person
+facets (\code{rater}-like and \code{criterion}-like), even though the estimation core
+supports arbitrary facet counts.
+
 Recovery metrics are reported only when the generator and fitted model target
 the same facet-parameter contract. In practice this means the same
 \code{model}, and for \code{PCM}, the same \code{step_facet}. When these do not align,
-recovery fields are set to \code{NA} and the output records the reason.
+recovery fields are set to \code{NA} and the output records the reason. Even when
+these contract checks pass, the recovery summaries still assume compatible
+orientation and anchoring conventions across the generator and fitted model.
 }
 \section{Reported metrics}{
 
@@ -179,7 +231,7 @@ published simulation study.
 \item Morris, T. P., White, I. R., & Crowther, M. J. (2019).
 \emph{Using simulation studies to evaluate statistical methods}.
 Statistics in Medicine, 38(11), 2074-2102.
-\item Siepe, B. S., Bartoš, F., Morris, T. P., Boulesteix, A.-L., Heck, D. W.,
+\item Siepe, B. S., Bartos, F., Morris, T. P., Boulesteix, A.-L., Heck, D. W.,
 & Pawel, S. (2024). \emph{Simulation studies for methodological research in
 psychology: A standardized template for planning, preregistration, and
 reporting}. Psychological Methods.
@@ -187,19 +239,18 @@ reporting}. Psychological Methods.
 }
 
 \examples{
-sim_eval <- evaluate_mfrm_design(
-  n_person = c(30, 50),
-  n_rater = 4,
-  n_criterion = 4,
-  raters_per_person = 2,
+\donttest{
+sim_eval <- suppressWarnings(evaluate_mfrm_design(
+  design = list(person = c(8, 12), rater = 2, criterion = 2, assignment = 1),
   reps = 1,
-  maxit = 15,
+  maxit = 8,
   seed = 123
-)
+))
 s_eval <- summary(sim_eval)
 s_eval$design_summary[, c("Facet", "n_person", "MeanSeparation", "MeanSeverityRMSE")]
 p_eval <- plot(sim_eval, facet = "Rater", metric = "separation", x_var = "n_person", draw = FALSE)
 names(p_eval)
+}
 }
 \seealso{
 \code{\link[=simulate_mfrm_data]{simulate_mfrm_data()}}, \link{summary.mfrm_design_evaluation}, \link{plot.mfrm_design_evaluation}

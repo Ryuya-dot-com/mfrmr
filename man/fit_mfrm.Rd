@@ -13,9 +13,14 @@ fit_mfrm(
   rating_max = NULL,
   weight = NULL,
   keep_original = FALSE,
-  model = c("RSM", "PCM"),
+  missing_codes = NULL,
+  model = c("RSM", "PCM", "GPCM"),
   method = c("MML", "JML", "JMLE"),
   step_facet = NULL,
+  slope_facet = NULL,
+  facet_interactions = NULL,
+  min_obs_per_interaction = 10,
+  interaction_policy = c("warn", "error", "silent"),
   anchors = NULL,
   group_anchors = NULL,
   noncenter_facet = "Person",
@@ -25,33 +30,99 @@ fit_mfrm(
   min_common_anchors = 5L,
   min_obs_per_element = 30,
   min_obs_per_category = 10,
-  quad_points = 15,
+  quad_points = 31,
   maxit = 400,
-  reltol = 1e-06
+  reltol = 1e-06,
+  mml_engine = c("direct", "em", "hybrid"),
+  population_formula = NULL,
+  person_data = NULL,
+  person_id = NULL,
+  population_policy = c("error", "omit"),
+  facet_shrinkage = c("none", "empirical_bayes", "laplace"),
+  facet_prior_sd = NULL,
+  shrink_person = FALSE,
+  attach_diagnostics = FALSE,
+  checkpoint = NULL
 )
 }
 \arguments{
-\item{data}{A data.frame with one row per observation.}
+\item{data}{A data.frame in long format with one row per observed rating
+event.}
 
 \item{person}{Column name for the person (character scalar).}
 
 \item{facets}{Character vector of facet column names.}
 
-\item{score}{Column name for observed category score.}
+\item{score}{Column name for the observed ordered category score. Values
+must be coercible to numeric integer category codes. Fractional values are
+rejected. Binary \code{0/1} or \code{1/2} responses are supported as the ordered
+two-category special case. When \code{keep_original = FALSE}, unused
+intermediate categories are collapsed to a contiguous internal scale and
+the mapping is recorded in \code{fit$prep$score_map}. If \code{rating_min} /
+\code{rating_max} are supplied and the observed scores are a contiguous
+subset of that range (for example a 1-5 scale with only 2-5 observed),
+the supplied full range is retained so zero-count boundary categories
+remain part of the fitted score support.}
 
-\item{rating_min}{Optional minimum category value.}
+\item{rating_min}{Optional minimum category value. Supply this with
+\code{rating_max} when the intended score scale includes unobserved boundary
+categories.}
 
-\item{rating_max}{Optional maximum category value.}
+\item{rating_max}{Optional maximum category value. Supply this with
+\code{rating_min} when the intended score scale includes unobserved boundary
+categories.}
 
 \item{weight}{Optional weight column name.}
 
-\item{keep_original}{Keep original category values.}
+\item{keep_original}{Logical. \code{FALSE} (the current default) collapses
+non-consecutive observed categories to a contiguous internal scale and
+records the mapping in \code{fit$prep$score_map} (the downstream Count = 0
+rows are consequently absent). \code{TRUE} preserves the declared scale so
+unused intermediate categories remain visible in
+\code{\link[=rating_scale_table]{rating_scale_table()}} and APA outputs, which is recommended for
+publication reporting.}
 
-\item{model}{\code{"RSM"} or \code{"PCM"}.}
+\item{missing_codes}{Optional pre-processing step that converts
+sentinel missing-code values to \code{NA} across the \code{person}, \code{facets},
+and \code{score} columns before any downstream logic. One of:
+\itemize{
+\item \code{NULL} (default): no recoding; strictly backward-compatible.
+\item \code{TRUE} or \code{"default"}: FACETS / SPSS / SAS convention set
+(\code{"99"}, \code{"999"}, \code{"-1"}, \code{"N"}, \code{"NA"}, \code{"n/a"}, \code{"."}, \code{""}).
+\item Character vector: an explicit code set, e.g.
+\code{c("99", "999", ".a")}.
+}
+Replacement counts are recorded in \code{fit$prep$missing_recoding} and
+surfaced by \code{\link[=build_mfrm_manifest]{build_mfrm_manifest()}}. Equivalent to calling
+\code{\link[=recode_missing_codes]{recode_missing_codes()}} manually before the fit.}
 
-\item{method}{\code{"MML"} (default) or \code{"JML"} / \code{"JMLE"}.}
+\item{model}{\code{"RSM"}, \code{"PCM"}, or bounded \code{"GPCM"}.}
 
-\item{step_facet}{Step facet for PCM.}
+\item{method}{\code{"MML"} (default) or \code{"JML"}. \code{"JMLE"} is accepted as a
+backward-compatible alias for the same joint-maximum-likelihood path.}
+
+\item{step_facet}{Step facet for \code{PCM} and the bounded \code{GPCM}
+branch. For \code{GPCM}, this should be supplied explicitly rather than
+relying on an implicit default.}
+
+\item{slope_facet}{Slope facet for the bounded \code{GPCM} branch. The
+current release requires \code{slope_facet == step_facet} and uses a
+positive-slope identification convention on the log scale with geometric
+mean discrimination fixed to 1.}
+
+\item{facet_interactions}{Optional confirmatory two-way interaction terms
+between non-person facets, supplied as explicit character terms such as
+\code{"Rater:Criterion"} or as a list of length-two character vectors. These
+interactions are estimated simultaneously as fixed effects in \code{RSM} and
+\code{PCM} fits. Person-involving interactions, higher-order interactions, and
+random-effect interaction terms are outside the current scope.}
+
+\item{min_obs_per_interaction}{Minimum weighted observations recommended for
+each interaction cell. Cells below this value are flagged in
+\code{interaction_effect_table()} and handled according to \code{interaction_policy}.}
+
+\item{interaction_policy}{How to handle sparse interaction cells:
+\code{"warn"} (default), \code{"error"}, or \code{"silent"}.}
 
 \item{anchors}{Optional anchor table.}
 
@@ -75,19 +146,124 @@ in anchor-audit recommendations.}
 \item{min_obs_per_category}{Minimum weighted observations per score category
 used in anchor-audit recommendations.}
 
-\item{quad_points}{Quadrature points for MML.}
+\item{quad_points}{Integer number of Gauss-Hermite quadrature points
+used for MML integration over the person distribution. Default is
+\code{31}, chosen so that marginal log-likelihood values are stable
+enough for direct manuscript reporting. Recommended tiers:
+\tabular{ll}{
+\code{7}  \tab fast exploratory scan; in-package helpers such as
+\code{\link[=predict_mfrm_population]{predict_mfrm_population()}} and
+\code{\link[=reference_case_benchmark]{reference_case_benchmark()}} use this value. \cr
+\code{15} \tab intermediate analysis when runtime matters. \cr
+\code{31} \tab default / publication tier. \cr
+\verb{61+} \tab ultra-precise runs when benchmarking or working on
+very narrow score supports.
+}
+Internal benchmarks show the marginal log-likelihood still drifts
+by ~0.5-1 logit between \code{quad_points = 15} and \code{quad_points = 61}
+on moderately sized designs, which is why the default now sits at
+the publication tier; set a lower value explicitly for
+exploratory runs.}
 
 \item{maxit}{Maximum optimizer iterations.}
 
 \item{reltol}{Optimization tolerance.}
+
+\item{mml_engine}{MML optimization engine for \code{method = "MML"}:
+\code{"direct"} (default) uses direct BFGS on the marginal log-likelihood,
+\code{"em"} uses an EM loop for \code{RSM} / \code{PCM} with \code{population = NULL}, and
+\code{"hybrid"} uses EM as a warm start before the direct optimizer. Unsupported
+combinations currently fall back to \code{"direct"} and record that fallback in
+\code{fit$summary}.}
+
+\item{population_formula}{Optional one-sided formula for a person-level
+latent-regression population model, for example \code{~ grade + ses}. In the
+current release, latent regression is implemented only for
+\code{method = "MML"} with a unidimensional conditional-normal population
+model.}
+
+\item{person_data}{Optional one-row-per-person data.frame holding background
+variables for \code{population_formula}. Numeric, logical, factor, ordered
+factor, and character predictors are expanded through \code{stats::model.matrix()};
+categorical xlevels and contrasts are stored for replay and scoring.
+Required when \code{population_formula} is supplied.}
+
+\item{person_id}{Optional person-ID column in \code{person_data}. Defaults to
+\code{person} when that column exists in \code{person_data}.}
+
+\item{population_policy}{How missing background data are handled for a
+latent-regression fit. \code{"error"} (default) requires complete person-level
+covariates; \code{"omit"} fits the model on the complete-case subset and records
+omitted persons / omitted response rows in the returned \code{population}
+metadata while retaining the observed-person-aligned pre-omit table for
+replay/export provenance.}
+
+\item{facet_shrinkage}{Character. \code{"none"} (default) keeps the 0.1.5
+fixed-effects behaviour. \code{"empirical_bayes"} applies a post-hoc
+James-Stein / empirical-Bayes shrinkage to each non-person facet
+(Efron & Morris, 1973); \code{fit$facets$others} gains \code{ShrunkEstimate},
+\code{ShrunkSE}, and \code{ShrinkageFactor} columns, and
+\code{fit$shrinkage_report} records the per-facet prior variance and
+effective degrees of freedom. \code{"laplace"} currently aliases to
+\code{"empirical_bayes"} and is reserved for a future penalised-MML
+implementation.}
+
+\item{facet_prior_sd}{Optional numeric scalar. When supplied, the
+shrinkage prior variance is fixed at \code{facet_prior_sd^2} instead
+of being estimated by method of moments. Useful for eliciting a
+prior from domain knowledge or a previous fit.}
+
+\item{shrink_person}{Logical. When \code{TRUE} and \code{facet_shrinkage} is
+active, the same empirical-Bayes shrinkage is applied to
+\code{fit$facets$person}. Default \code{FALSE}, since MML already integrates
+over an N(0, 1) prior on theta; the option mainly benefits JML.}
+
+\item{attach_diagnostics}{Logical. When \code{TRUE}, \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} is
+run once after the fit with \code{residual_pca = "none"}, and the
+per-level \code{SE}, \code{Infit}, \code{Outfit}, \code{InfitZSTD}, \code{OutfitZSTD}, and
+\code{PtMeaCorr} columns from \code{diagnostics$measures} are merged onto
+\code{fit$facets$others} (non-person facets) and \code{fit$facets$person}
+(Person rows). This is convenient when downstream code expects a
+FACETS Table 7 style facet table with fit statistics in one place,
+and lets \code{summary(fit)} show per-person fit columns alongside the
+measure. For person rows, an existing posterior \code{SE} (typical for
+\code{method = "MML"}) is preserved and the diagnostic \code{SE} is only
+attached when the existing column is empty. Adds diagnostic
+runtime (typically +1-2 s on moderate designs) and sets
+\code{fit$config$attached_diagnostics = TRUE}. Default \code{FALSE}
+preserves the minimal \code{Facet} / \code{Level} / \code{Estimate} layout.}
+
+\item{checkpoint}{Optional \code{list(file = ..., every_iter = ...)}.
+When supplied, the MML EM engine writes its state to \code{file}
+every \code{every_iter} outer EM iterations using \code{saveRDS()}.
+If the file already exists when the fit starts, the engine
+resumes from the recorded iteration. Only the EM engine
+(\code{mml_engine = "em"} or the EM warm-start step of
+\code{mml_engine = "hybrid"}) honours the checkpoint; the direct
+\code{optim()} engine ignores it. Use this to make long MML EM
+fits crash-resilient on shared compute environments.}
 }
 \value{
 An object of class \code{mfrm_fit} (named list) with:
 \itemize{
 \item \code{summary}: one-row model summary (\code{LogLik}, \code{AIC}, \code{BIC}, convergence)
+including public \code{Method}, internal \code{MethodUsed}, and
+\code{MMLEngineRequested}, \code{MMLEngineUsed}, and \code{EMIterations} for MML fits
 \item \code{facets$person}: person estimates (\code{Estimate}; plus \code{SD} for MML)
 \item \code{facets$others}: facet-level estimates for each facet
 \item \code{steps}: estimated threshold/step parameters
+\item \code{slopes}: estimated discrimination parameters for \code{GPCM} fits
+\item \code{interactions}: model-estimated facet interaction effects and metadata
+when \code{facet_interactions} is supplied
+\item \code{population}: population-model metadata. Ordinary fits keep an inactive
+scaffold (\code{active = FALSE}, \code{posterior_basis = "legacy_mml"}). Active
+latent-regression fits store the fitted design matrix, regression
+coefficients, residual variance, omission audit, the complete-case
+estimation table (\code{person_table}), and the observed-person-aligned
+replay/export provenance table retained before complete-case omission
+(\code{person_table_replay}), plus stored categorical \code{xlevels} / \code{contrasts}
+for model-matrix replay and scoring, together with
+\code{posterior_basis = "population_model"}.
 \item \code{config}: resolved model configuration used for estimation
 (includes \code{config$anchor_audit})
 \item \code{prep}: preprocessed data/level metadata
@@ -121,11 +297,36 @@ With \code{model = "PCM"}, each level of \code{step_facet} receives its own
 threshold vector \eqn{\tau_{i,k}} on the package's shared observed
 score scale.
 
+With only two ordered categories (\eqn{K = 1}), the same adjacent-category
+formulation reduces to the usual binary Rasch logit for the single category
+boundary:
+
+\deqn{\ln\frac{P(X_{n\cdot} = 1)}{P(X_{n\cdot} = 0)} = \eta - \tau_1}
+
 With \code{method = "MML"}, person parameters are integrated out using
 Gauss-Hermite quadrature and EAP estimates are computed post-hoc.
 With \code{method = "JML"}, all parameters are estimated jointly as fixed
-effects.  See the "Estimation methods" section of \link{mfrmr-package} for
-details.
+effects. \code{"JMLE"} remains an accepted compatibility alias, but package
+output now uses \code{"JML"} as the public label. See the "Estimation methods"
+section of \link{mfrmr-package} for details.
+}
+
+\section{Weighting policy}{
+
+\code{mfrmr} treats \code{RSM} / \code{PCM} as the equal-weighting reference route for
+operational many-facet measurement. In that Rasch-family branch,
+discrimination is fixed, so the scoring model does not differentially
+reweight item-facet combinations through estimated slopes.
+
+bounded \code{GPCM} is supported as an alternative when users explicitly accept
+discrimination-based reweighting. This often improves model fit, but the
+package does not treat better fit alone as a sufficient reason to replace an
+equal-weighting Rasch-family model.
+
+The \code{weight} argument is separate from that modeling choice. It supplies an
+observation-weight column; it does not create a free-form facet-weighting
+scheme and does not change the fixed-discrimination contract of \code{RSM} /
+\code{PCM}.
 }
 
 \section{Input requirements}{
@@ -138,13 +339,176 @@ Minimum required columns are:
 }
 
 Scores are treated as ordered categories.
-If your observed categories do not start at 0, set \code{rating_min}/\code{rating_max}
-explicitly to avoid unintended recoding assumptions.
+Non-numeric score labels are dropped with a warning after coercion, whereas
+fractional numeric scores are rejected with an error instead of being
+silently truncated.
 
-Supported model/estimation combinations:
+MFRM assumes conditional independence of observations given the person
+and facet parameters (Linacre, 1989). Repeated ratings of the same
+person-criterion combination by the same rater violate this assumption.
+When such structures may be present, follow fitting with
+\code{diagnose_mfrm(fit, diagnostic_mode = "both")}; its
+\code{strict_pairwise_local_dependence} screen is an exploratory check for
+residual dependence beyond what the additive linear predictor absorbs.
+
+Binary responses are therefore supported as ordered two-category scores
+(for example \code{0/1} or \code{1/2}) under the same \code{RSM} / \code{PCM} interface.
+If your observed categories do not start at 0, set \code{rating_min}/\code{rating_max}
+explicitly to avoid unintended recoding assumptions. For example, if the
+intended instrument is a 1-5 scale but the current sample only uses 2-5,
+set \verb{rating_min = 1, rating_max = 5} to retain the zero-count category 1
+in the score support.
+
+When \code{keep_original = FALSE}, observed gaps such as \verb{1, 3, 5} are recoded
+internally to a contiguous scale (\verb{1, 2, 3}) and the mapping is stored in
+\code{fit$prep$score_map}. To retain zero-count intermediate categories as part
+of the original scale, set \code{keep_original = TRUE} in addition to supplying
+the full \code{rating_min} / \code{rating_max} range.
+}
+
+\section{Fixed effects assumption (facets have no prior)}{
+
+\code{fit_mfrm()} follows the Linacre (1989) many-facet Rasch specification:
+person ability is integrated out under a \code{N(0, 1)} prior (or under the
+\verb{N(X\\beta, \\sigma^2)} latent-regression population model when
+\code{population_formula} is supplied), but every facet parameter
+(\code{Rater}, \code{Criterion}, \code{Task}, ...) is estimated as a fixed effect
+identified by a sum-to-zero constraint. There is no hierarchical
+prior, no shrinkage, and no variance component for the facets.
+
+Practical implication: when a facet has very few observed levels
+(for example 3 raters) or some of its levels have very few ratings
+(for example 5 ratings per rater), the fixed-effect estimates retain
+wide SEs, and extreme estimates are not pulled toward the facet
+mean. Jones and Wind (2018) note that rater estimates in particular
+are "more sensitive to link reductions" than examinee or task
+estimates. For a publication-workflow audit of this, use:
+\itemize{
+\item \code{\link[=facet_small_sample_audit]{facet_small_sample_audit()}} for per-level N and SE bands against
+Linacre (1994) sample-size guidelines.
+\item \code{\link[=detect_facet_nesting]{detect_facet_nesting()}} and
+\code{\link[=analyze_hierarchical_structure]{analyze_hierarchical_structure()}} when raters are nested in
+regions, schools, or other strata that the additive fixed-effects
+MFRM cannot partition out.
+\item \code{\link[=compute_facet_icc]{compute_facet_icc()}} and
+\code{\link[=compute_facet_design_effect]{compute_facet_design_effect()}} for descriptive variance-
+component summaries based on \code{lme4} (optional).
+}
+
+\code{fit$summary$FacetSampleSizeFlag} summarizes the worst Linacre band
+across non-person facet levels (\code{"sparse"} < 10, \code{"marginal"} < 30,
+\code{"standard"} < 50, \code{"strong"} >= 50).
+}
+
+\section{Model-estimated facet interactions}{
+
+\code{facet_interactions} adds confirmatory fixed-effect interaction terms to the
+linear predictor. For example, \code{facet_interactions = "Rater:Criterion"}
+estimates a rater-by-criterion deviation matrix in the same likelihood as
+the main MFRM fit. The additive reference is
+
+\deqn{\eta_{nij} = \theta_n - \delta_j - \beta_i}
+
+and the interaction extension is
+
+\deqn{\eta_{nij} = \theta_n - \delta_j - \beta_i + \gamma_{ji}}
+
+where the interaction block is identified by zero marginal sums:
+
+\deqn{\sum_j \gamma_{ji} = 0,\quad \sum_i \gamma_{ji} = 0.}
+
+With \eqn{J} levels of the first facet and \eqn{I} levels of the second
+facet, this contributes \eqn{(J - 1)(I - 1)} free parameters. Positive
+interaction estimates indicate scores higher than expected under the
+additive main-effects model for that facet-level combination; negative
+estimates indicate lower-than-expected scores.
+
+This is a model-estimated interaction term, not the residual screening
+reported by \code{\link[=estimate_bias]{estimate_bias()}} or \code{\link[=estimate_all_bias]{estimate_all_bias()}}. In line with the
+MFRM bias-interaction literature, the facet pair should be named explicitly
+before fitting. Exploratory use is possible, but should be reported as
+screening, with sparse-cell and multiplicity caveats. The current
+implementation is intentionally narrow: two-way non-person facet
+interactions for \code{RSM} and \code{PCM} only, estimated as fixed effects. GPCM
+interactions, person interactions, higher-order interactions, and
+random-effect facet interactions are deferred.
+
+This is ordered binary support, not a separate nominal-response model.
+In \code{PCM}, a binary fit still uses one threshold per \code{step_facet} level on
+the shared observed-score scale.
+
+Supported model/estimation combinations in the current release:
 \itemize{
 \item \code{model = "RSM"} with \code{method = "MML"} or \code{"JML"/"JMLE"}
 \item \code{model = "PCM"} with a designated \code{step_facet} (defaults to first facet)
+\item \code{facet_interactions} with \code{model = "RSM"} or \code{"PCM"} for explicit
+two-way non-person facet interactions
+\item \code{model = "GPCM"} is currently implemented only for the narrow bounded
+branch with \code{slope_facet == step_facet}; \code{MML} and \code{JML} fitting, core
+summaries, fixed-calibration posterior scoring, \code{\link[=compute_information]{compute_information()}},
+Wright/pathway/CCC fit plots, \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, residual-PCA follow-up,
+\code{\link[=interrater_agreement_table]{interrater_agreement_table()}}, \code{\link[=unexpected_response_table]{unexpected_response_table()}},
+\code{\link[=displacement_table]{displacement_table()}}, \code{\link[=measurable_summary_table]{measurable_summary_table()}},
+\code{\link[=rating_scale_table]{rating_scale_table()}}, \code{\link[=facet_quality_dashboard]{facet_quality_dashboard()}},
+\code{\link[=reporting_checklist]{reporting_checklist()}}, \code{\link[=category_structure_report]{category_structure_report()}},
+\code{\link[=category_curves_report]{category_curves_report()}}, and graph-only
+\code{\link[=facets_output_file_bundle]{facets_output_file_bundle()}} are available. Direct simulation
+specifications and data generation are also supported through
+\code{\link[=build_mfrm_sim_spec]{build_mfrm_sim_spec()}}, \code{\link[=extract_mfrm_sim_spec]{extract_mfrm_sim_spec()}}, and
+\code{\link[=simulate_mfrm_data]{simulate_mfrm_data()}} when the slope-aware generator contract is stored
+explicitly. Fair-average reporting, planning/forecasting, scorefile
+exports, and broader APA/QC pipelines should still be treated as
+unsupported unless documented otherwise. Use \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}} as
+the formal boundary statement for the current \code{GPCM} scope.
+}
+
+Latent-regression status:
+\itemize{
+\item \code{population_formula = NULL} keeps the legacy unconditional \code{MML} / \code{JML}
+behavior.
+\item Supplying \code{population_formula} activates a first-version latent-regression
+branch for \code{method = "MML"} only.
+\item The current branch assumes a one-dimensional conditional-normal population
+model with person-specific quadrature nodes
+\eqn{\theta_{nq} = x_n^\top \beta + \sigma z_q}.
+\item Background variables must be supplied in \code{person_data}; numeric/logical
+columns and categorical factor/character columns are expanded through
+\code{stats::model.matrix()}.
+\item Current overlap with the ConQuest latent-regression documentation is
+limited to direct estimation from response data under a unidimensional
+\code{MML} population model with package-built model-matrix covariates. It
+should not be described as parity for arbitrary imported design matrices,
+multidimensional models, or the full ConQuest plausible-values workflow.
+\item \code{predict_mfrm_units()} and \code{sample_mfrm_plausible_values()} can score
+latent-regression fits under the fitted population model, but they require
+one-row-per-person background data for scored units when the fitted
+population model includes covariates. Intercept-only latent-regression
+fits (\code{population_formula = ~ 1}) can reconstruct that minimal person
+table internally during scoring.
+}
+}
+
+\section{Latent-regression quick start}{
+
+For a first latent-regression run, keep the setup explicit:
+\enumerate{
+\item Put response data in \code{data}, with one row per rating event.
+\item Put background variables in \code{person_data}, with exactly one row per
+person. The ID column must match \code{person}, or be supplied through
+\code{person_id}.
+\item Use \code{method = "MML"} and a one-sided formula such as
+\code{population_formula = ~ Grade + Group}.
+\item Numeric/logical and factor/character predictors are expanded with
+\code{stats::model.matrix()}. After fitting, inspect
+\code{summary(fit)$population_coding} to see the fitted levels, contrasts, and
+encoded design columns that will be reused for scoring/replay.
+\item Start with \code{population_policy = "error"} while preparing data. Use
+\code{"omit"} only when complete-case removal is intended, and then inspect
+\code{summary(fit)$population_overview} and \code{summary(fit)$caveats} before
+reporting results.
+\item Report \code{summary(fit)$population_coefficients} as coefficients of the
+conditional-normal latent population model, not as a post hoc regression
+on EAP or MLE scores.
 }
 
 Anchor inputs are optional:
@@ -177,10 +541,23 @@ This affects interpretation of reported facet measures.
 For exploratory work, \code{method = "JML"} is usually faster than \code{method = "MML"},
 but it may require a larger \code{maxit} to converge on larger datasets.
 
-For MML runs, \code{quad_points} is the main accuracy/speed trade-off:
+For MML runs, \code{quad_points} is the main accuracy/speed trade-off.
+The \verb{@param quad_points} tier table is the authoritative reference;
+in short:
 \itemize{
-\item \code{quad_points = 7} is a good lightweight default for quick iteration.
-\item \code{quad_points = 15} gives a more stable approximation for final reporting.
+\item \code{quad_points = 7} is a lightweight setting for quick iteration.
+\item \code{quad_points = 15} is an intermediate option when runtime matters.
+\item \code{quad_points = 31} is the package default and the publication
+tier: the marginal log-likelihood is stable enough for direct
+manuscript reporting.
+\item \code{quad_points = 61} (or higher) is reserved for ultra-precise
+benchmarking on very narrow score supports.
+\item \code{mml_engine = "direct"} remains the most stable general-purpose path.
+\item \code{mml_engine = "em"} or \code{"hybrid"} currently target \code{RSM} / \code{PCM} fits
+without a latent-regression population model.
+\item Benchmark your own workload before using \code{mml_engine = "em"} or
+\code{"hybrid"} for final reporting; \code{direct} remains the safer default when
+you have not compared engines for your data.
 }
 
 Downstream diagnostics can also be staged:
@@ -194,6 +571,10 @@ reliability indices. For \code{MML}, non-person facet \code{ModelSE} values are 
 on the observed information of the marginal log-likelihood and person rows
 use posterior SDs from EAP scoring. For \code{JML}, these quantities remain
 exploratory approximations and should not be treated as equally formal.
+
+For bounded \code{GPCM}, residual-based mean-square fit screens are also
+best treated as exploratory diagnostics rather than strict Rasch-style
+invariance tests, because the discrimination parameter is free.
 }
 
 \section{Interpreting output}{
@@ -202,8 +583,11 @@ A typical first-pass read is:
 \enumerate{
 \item \code{fit$summary} for convergence and global fit indicators.
 \item \code{summary(fit)} for human-readable overviews.
-\item \code{diagnose_mfrm(fit)} for element-level fit, approximate
-separation/reliability, and warning tables.
+\item for \code{RSM} / \code{PCM}, \code{diagnose_mfrm(fit)} for element-level fit,
+approximate separation/reliability, and warning tables.
+\item for bounded \code{GPCM}, use \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} and the residual-based
+table helpers as exploratory screens, together with posterior scoring /
+\code{\link[=compute_information]{compute_information()}} where documented.
 }
 }
 
@@ -212,30 +596,65 @@ separation/reliability, and warning tables.
 \enumerate{
 \item Fit the model with \code{fit_mfrm(...)}.
 \item Validate convergence and scale structure with \code{summary(fit)}.
-\item Run \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} and proceed to reporting with \code{\link[=build_apa_outputs]{build_apa_outputs()}}.
+\item For \code{RSM} / \code{PCM}, run \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} and proceed to reporting with
+\code{\link[=build_apa_outputs]{build_apa_outputs()}}.
+\item For bounded \code{GPCM}, use the fitted object, slope summary,
+\code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, residual-based table helpers, posterior scoring
+helpers, and \code{\link[=compute_information]{compute_information()}} while broader downstream
+validation is still being completed. Use \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}} to
+confirm which helper families are currently supported, caveated, blocked,
+or deferred.
+}
+}
+
+\section{References}{
+
+The ordered-category many-facet formulation follows Linacre (1989), with
+the \code{RSM} and \code{PCM} branches grounded in Andrich (1978) and Masters (1982).
+The bounded \code{GPCM} branch follows the generalized partial credit
+formulation of Muraki (1992) under a package-specific positive
+log-slope identification convention. The \code{MML} route follows the
+quadrature-based marginal-likelihood framework of Bock and Aitkin (1981).
+\itemize{
+\item Andrich, D. (1978). \emph{A rating formulation for ordered response
+categories}. Psychometrika, 43(4), 561-573.
+\item Bock, R. D., & Aitkin, M. (1981). \emph{Marginal maximum likelihood estimation
+of item parameters: Application of an EM algorithm}. Psychometrika, 46(4),
+443-459.
+\item Linacre, J. M. (1989). \emph{Many-facet Rasch measurement}. MESA Press.
+\item Masters, G. N. (1982). \emph{A Rasch model for partial credit scoring}.
+Psychometrika, 47(2), 149-174.
+\item Myford, C. M., & Wolfe, E. W. (2003). Detecting and measuring rater
+effects using many-facet Rasch measurement: Part I. \emph{Journal of Applied
+Measurement}, 4(4), 386-422.
+\item Myford, C. M., & Wolfe, E. W. (2004). Detecting and measuring rater
+effects using many-facet Rasch measurement: Part II. \emph{Journal of Applied
+Measurement}, 5(2), 189-227.
+\item Muraki, E. (1992). \emph{A generalized partial credit model: Application of an
+EM algorithm}. Applied Psychological Measurement, 16(2), 159-176.
+\item Robitzsch, A., & Steinfeld, J. (2018). \emph{Modeling rater effects in
+achievements tests by item response models: Facets, generalized linear
+mixed models, or signal detection models?} Journal of Educational and
+Behavioral Statistics, 43(2), 218-244.
 }
 }
 
 \examples{
+# Fast smoke run: confirm the package is installed and the fit returns
+# a populated overview. JML on `example_core` finishes in well under
+# a second, so we keep this block always-run rather than gated.
 toy <- load_mfrmr_data("example_core")
+fit_quick <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
+                      method = "JML", maxit = 15)
+fit_quick$summary[, c("Model", "Method", "N", "Converged")]
 
+\donttest{
+# Full run with the package default MML estimator (recommended for
+# final reporting because person parameters are integrated out under
+# an N(0, 1) prior). The default `quad_points = 31` is the
+# publication tier; `quad_points = 7` below is an exploratory speed
+# setting and should not be used as the final manuscript fit.
 fit <- fit_mfrm(
-  data = toy,
-  person = "Person",
-  facets = c("Rater", "Criterion"),
-  score = "Score",
-  method = "JML",
-  model = "RSM",
-  maxit = 25
-)
-fit$summary
-s_fit <- summary(fit)
-s_fit$overview[, c("Model", "Method", "Converged")]
-p_fit <- plot(fit, draw = FALSE)
-class(p_fit)
-
-# MML is the default:
-fit_mml <- fit_mfrm(
   data = toy,
   person = "Person",
   facets = c("Rater", "Criterion"),
@@ -244,14 +663,83 @@ fit_mml <- fit_mfrm(
   quad_points = 7,
   maxit = 25
 )
-summary(fit_mml)
+fit$summary
+s_fit <- summary(fit)
+s_fit$overview[, c("Model", "Method", "Converged")]
+# Look for: Converged = TRUE. If FALSE, raise `maxit`, relax `reltol`,
+#   or inspect `summary(fit)$key_warnings` for sparse-cell or
+#   identification flags.
+s_fit$person_overview
+# Look for: Mean ~ 0 logits and SD ~ 1 logit are typical when the
+#   sample is centred on the test difficulty. SD < 0.5 suggests the
+#   test is too easy / hard for this group; SD > 1.5 suggests strong
+#   targeting mismatch or extreme-score persons (see `Extreme` flag).
+s_fit$targeting
+# Look for: |Targeting| < ~0.5 logits is comfortable; larger absolute
+#   values mean persons sit systematically above or below the facet
+#   means under the package's sum-to-zero identification.
+p_fit <- plot(fit, draw = FALSE)
+p_fit$wright_map$data$plot
+
+# JML is available for exploratory / fast iteration passes:
+fit_jml <- fit_mfrm(
+  data = toy,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  method = "JML",
+  model = "RSM",
+  maxit = 25
+)
+summary(fit_jml)$overview[, c("Model", "Method", "Converged")]
+
+# Latent regression (MML only) uses person-level background variables:
+person_tbl <- unique(toy[c("Person")])
+person_tbl$Grade <- seq_len(nrow(person_tbl))
+person_tbl$Group <- rep(c("A", "B"), length.out = nrow(person_tbl))
+fit_pop <- fit_mfrm(
+  data = toy,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  method = "MML",
+  population_formula = ~ Grade + Group,
+  person_data = person_tbl
+)
+summary(fit_pop)$population_overview
+summary(fit_pop)$population_coding
+
+# Binary responses are supported as ordered two-category scores:
+set.seed(1)
+binary_toy <- expand.grid(
+  Person = paste0("P", 1:30),
+  Item = paste0("I", 1:4),
+  stringsAsFactors = FALSE
+)
+theta <- stats::rnorm(length(unique(binary_toy$Person)))
+beta <- seq(-0.8, 0.8, length.out = length(unique(binary_toy$Item)))
+eta <- theta[match(binary_toy$Person, unique(binary_toy$Person))] -
+  beta[match(binary_toy$Item, unique(binary_toy$Item))]
+binary_toy$Score <- stats::rbinom(nrow(binary_toy), 1, stats::plogis(eta))
+fit_binary <- fit_mfrm(
+  data = binary_toy,
+  person = "Person",
+  facets = "Item",
+  score = "Score",
+  model = "RSM",
+  method = "JML",
+  maxit = 50
+)
+fit_binary$summary[, c("Model", "Categories", "Converged")]
 
 # Next steps after fitting:
-diag_mml <- diagnose_mfrm(fit_mml, residual_pca = "none")
-chk <- reporting_checklist(fit_mml, diagnostics = diag_mml)
+diag <- diagnose_mfrm(fit, residual_pca = "none")
+chk <- reporting_checklist(fit, diagnostics = diag)
 head(chk$checklist[, c("Section", "Item", "DraftReady")])
+}
 }
 \seealso{
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=estimate_bias]{estimate_bias()}}, \code{\link[=build_apa_outputs]{build_apa_outputs()}},
-\link{mfrmr_workflow_methods}, \link{mfrmr_reporting_and_apa}
+\link{gpcm_capability_matrix}, \link{mfrmr_workflow_methods},
+\link{mfrmr_reporting_and_apa}
 }

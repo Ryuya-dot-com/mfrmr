@@ -170,8 +170,12 @@ list_mfrmr_data <- function() {
 #'
 #' @return A data.frame in long format.
 #' @details
-#' This helper is useful in scripts/functions where you want to choose a dataset
-#' by string key instead of calling `data()` manually.
+#' `load_mfrmr_data("<key>")` is the canonical loader for the packaged
+#' datasets and the entry point used across the package help and
+#' vignettes. The equivalent base-R alternative
+#' `data("mfrmr_<key>", package = "mfrmr")` remains available for users
+#' who prefer the full `data()` spelling; both paths return identical
+#' long-format data frames and are supported long-term.
 #'
 #' All returned datasets include the core long-format columns
 #' `Study`, `Person`, `Rater`, `Criterion`, and `Score`.

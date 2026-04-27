@@ -23,6 +23,7 @@ run_mfrm_facets(
   quad_points = 15,
   maxit = 400,
   reltol = 1e-06,
+  mml_engine = c("direct", "em", "hybrid"),
   top_n_interactions = 20L
 )
 
@@ -44,6 +45,7 @@ mfrmRFacets(
   quad_points = 15,
   maxit = 400,
   reltol = 1e-06,
+  mml_engine = c("direct", "em", "hybrid"),
   top_n_interactions = 20L
 )
 }
@@ -83,6 +85,9 @@ columns after person/score/weight mapping.}
 
 \item{reltol}{Optimization tolerance.}
 
+\item{mml_engine}{MML optimization engine passed to \code{\link[=fit_mfrm]{fit_mfrm()}}. Applies
+only when \code{method = "MML"}.}
+
 \item{top_n_interactions}{Number of rows for interaction diagnostics.}
 }
 \value{
@@ -110,9 +115,17 @@ Returned objects can be inspected with \code{summary()} and \code{plot()}.
 \section{Estimation-method notes}{
 
 \itemize{
-\item \code{method = "JML"} (default): legacy-compatible joint estimation route.
-\item \code{method = "JMLE"}: explicit JMLE label; internally equivalent to JML route.
-\item \code{method = "MML"}: marginal maximum likelihood route using \code{quad_points}.
+\item \code{method = "JML"} (default): legacy-compatible joint estimation
+route; the default preserves the FACETS-style output continuity
+that existing one-shot scripts expect. For new analysis scripts,
+prefer \code{fit_mfrm(..., method = "MML")} -- MML is the package-wide
+recommended route because person parameters are integrated out
+under an N(0, 1) prior and per-person posterior SEs are available.
+\item \code{method = "JMLE"}: explicit JMLE label; internally equivalent to
+JML route.
+\item \code{method = "MML"}: marginal maximum likelihood route using
+\code{quad_points}. Use \code{mml_engine = "em"} or \code{"hybrid"} only for
+\code{RSM} / \code{PCM} fits when you want the staged MML alternatives.
 }
 
 \code{model = "PCM"} is supported; set \code{step_facet} when facet-specific step
@@ -165,6 +178,7 @@ one-shot wrapper.
 }
 
 \examples{
+\donttest{
 toy <- load_mfrmr_data("example_core")
 toy_small <- toy[toy$Person \%in\% unique(toy$Person)[1:12], , drop = FALSE]
 
@@ -176,12 +190,11 @@ out <- run_mfrm_facets(
   score = "Score",
   maxit = 6
 )
-names(out)
-out$fit$summary[, c("Model", "Method")]
+out$fit$summary[, c("Model", "Method", "MethodUsed")]
 s <- summary(out)
 s$overview[, c("Model", "Method", "Converged")]
 p_fit <- plot(out, type = "fit", draw = FALSE)
-class(p_fit)
+p_fit$wright_map$data$plot
 
 # Optional: MML route
 if (interactive()) {
@@ -194,7 +207,8 @@ if (interactive()) {
     quad_points = 5,
     maxit = 6
   )
-  out_mml$fit$summary[, c("Model", "Method")]
+  out_mml$fit$summary[, c("Model", "Method", "MethodUsed")]
+}
 }
 }
 \seealso{

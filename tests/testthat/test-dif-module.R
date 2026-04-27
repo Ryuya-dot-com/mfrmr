@@ -1,4 +1,4 @@
-# Tests for DIF analysis module (Phase 2) and compare_mfrm enhancements (Phase 3)
+# Tests for DIF analysis module and compare_mfrm enhancements.
 
 # ---------- shared fixtures ----------
 local_dif_fixtures <- function(env = parent.frame()) {
@@ -21,7 +21,7 @@ local_dif_fixtures <- function(env = parent.frame()) {
 }
 
 # ================================================================
-# Phase 2: DIF diagnostic module
+# DIF diagnostic module
 # ================================================================
 
 test_that("analyze_dff residual method returns expected structure", {
@@ -257,15 +257,17 @@ test_that("dif_interaction_table min_obs filter works", {
   expect_true(all(int$table$sparse))
 })
 
-test_that("plot_dif_heatmap returns matrix when draw = FALSE", {
+test_that("plot_dif_heatmap returns mfrm_plot_data with matrix payload (draw = FALSE)", {
   local_dif_fixtures()
 
   dif <- analyze_dif(fit, diag, facet = "Criterion", group = "Group",
                      data = toy, method = "residual")
 
   for (m in c("obs_exp", "t", "contrast")) {
-    mat <- plot_dif_heatmap(dif, metric = m, draw = FALSE)
-    expect_true(is.matrix(mat))
+    p <- plot_dif_heatmap(dif, metric = m, draw = FALSE)
+    expect_s3_class(p, "mfrm_plot_data")
+    expect_true(is.matrix(p$data$matrix))
+    expect_identical(p$data$metric, m)
   }
 })
 
@@ -275,8 +277,9 @@ test_that("plot_dif_heatmap works with dif_interaction_table", {
   int <- dif_interaction_table(fit, diag, facet = "Criterion", group = "Group",
                                data = toy, min_obs = 2)
 
-  mat <- plot_dif_heatmap(int, metric = "obs_exp", draw = FALSE)
-  expect_true(is.matrix(mat))
+  p <- plot_dif_heatmap(int, metric = "obs_exp", draw = FALSE)
+  expect_s3_class(p, "mfrm_plot_data")
+  expect_true(is.matrix(p$data$matrix))
 })
 
 test_that("dif_report produces interpretable output", {
@@ -315,7 +318,7 @@ test_that("print and summary S3 methods work for DIF objects", {
 
 
 # ================================================================
-# Phase 3: compare_mfrm enhancements
+# compare_mfrm enhancements
 # ================================================================
 
 test_that("compare_mfrm reports comparable IC quantities on a common basis", {

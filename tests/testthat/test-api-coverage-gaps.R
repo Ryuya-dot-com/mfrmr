@@ -300,6 +300,27 @@ test_that("build_fixed_reports handles NULL and empty bias", {
   expect_true(inherits(fixed_orig, "mfrm_bundle"))
 })
 
+test_that("build_fixed_reports validates malformed bias inputs early", {
+  expect_error(
+    mfrmr::build_fixed_reports(123),
+    "`bias_results` must be NULL, output from estimate_bias\\(\\), or a list-like bias bundle"
+  )
+
+  malformed_bias <- list(
+    table = data.frame(foo = 1:2, bar = 3:4),
+    summary = data.frame()
+  )
+  expect_error(
+    mfrmr::build_fixed_reports(malformed_bias),
+    "recognizable interaction facet columns"
+  )
+
+  expect_error(
+    mfrmr::build_fixed_reports(bias, target_facet = "NotAFacet"),
+    "`target_facet` must be one of the interaction facets"
+  )
+})
+
 # ==========================================================================
 # 10. plot_bias_interaction multiple plot types (lines 5472-5548)
 # ==========================================================================
@@ -599,6 +620,7 @@ test_that("print.mfrm_fit handles empty summary", {
   # Normal path
   out <- capture.output(print(fit))
   expect_true(any(grepl("mfrm_fit object", out, fixed = TRUE)))
+  expect_true(any(grepl("Next:", out, fixed = TRUE)))
 
   # Fake empty-summary object
   fake_fit <- list(summary = data.frame())
@@ -835,7 +857,7 @@ test_that("bundle_known_overview builds a one-row overview", {
 # 36. print.mfrm_plot_bundle (lines 13168-13176)
 # ==========================================================================
 test_that("print.mfrm_plot_bundle prints expected lines", {
-  p_bundle <- plot(fit, draw = FALSE)
+  p_bundle <- plot(fit, type = "bundle", draw = FALSE)
   out <- capture.output(print(p_bundle))
   expect_true(any(grepl("mfrm plot bundle", out, fixed = TRUE)))
   expect_true(any(grepl("wright_map", out, fixed = TRUE)))
@@ -876,7 +898,7 @@ test_that("facets_output_file_bundle plot types are drawn", {
 # ==========================================================================
 test_that("plot.mfrm_fit bundle drawn covers all three map types", {
   p_all <- with_null_device(
-    plot(fit, draw = TRUE)
+    plot(fit, type = "bundle", draw = TRUE)
   )
   expect_s3_class(p_all, "mfrm_plot_bundle")
   expect_true(all(c("wright_map", "pathway_map", "category_characteristic_curves") %in% names(p_all)))

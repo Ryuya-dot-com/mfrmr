@@ -149,6 +149,7 @@ baseline scale.
 }
 
 \examples{
+\donttest{
 d1 <- load_mfrmr_data("study1")
 keep1 <- unique(d1$Person)[1:15]
 d1 <- d1[d1$Person \%in\% keep1, , drop = FALSE]
@@ -163,6 +164,7 @@ res <- anchor_to_baseline(d2, fit1, "Person",
 summary(res)
 head(res$drift[, c("Facet", "Level", "Drift", "Flag")])
 res$baseline_anchors[1:3, ]
+}
 }
 \seealso{
 \code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=make_anchor_table]{make_anchor_table()}}, \code{\link[=detect_anchor_drift]{detect_anchor_drift()}},

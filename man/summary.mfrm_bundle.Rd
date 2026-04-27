@@ -47,7 +47,7 @@ Additional class-aware summaries are provided for:
 \item \code{mfrm_measurable}, \code{mfrm_unexpected_after_bias}, \code{mfrm_output_bundle}
 \item \code{mfrm_residual_pca}, \code{mfrm_specifications}, \code{mfrm_data_quality}
 \item \code{mfrm_iteration_report}, \code{mfrm_subset_connectivity}, \code{mfrm_facet_statistics}
-\item \code{mfrm_parity_report}
+\item \code{mfrm_parity_report}, \code{mfrm_reference_benchmark}
 }
 }
 \section{Interpreting output}{
@@ -57,6 +57,18 @@ Additional class-aware summaries are provided for:
 \item \code{summary}: one-row aggregate block when supplied by the bundle.
 \item \code{preview}: first \code{top_n} rows from the main table-like component.
 \item \code{settings}: resolved option values if available.
+\item \code{validation_scope}: internal-versus-external validation scope when
+summarizing \code{mfrm_reference_benchmark}.
+\item \code{conquest_command_scope}: ConQuest command-template scope when summarizing
+\code{mfrm_conquest_overlap_bundle}.
+\item \code{conquest_output_contract}: requested ConQuest outputs and audit handoff
+when summarizing \code{mfrm_conquest_overlap_bundle}.
+\item \code{normalization_scope}: extracted-table normalization scope when summarizing
+\code{mfrm_conquest_overlap_tables}.
+\item \code{audit_scope}: supplied-table audit scope when summarizing
+\code{mfrm_conquest_overlap_audit}.
+\item \code{conquest_overlap_checks} / \code{population_policy_checks}: specialized
+benchmark check previews when summarizing \code{mfrm_reference_benchmark}.
 }
 }
 
@@ -70,14 +82,20 @@ Additional class-aware summaries are provided for:
 }
 
 \examples{
-toy <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
-t4 <- unexpected_response_table(fit, abs_z_min = 1.5, prob_max = 0.4, top_n = 10)
+\donttest{
+toy_full <- load_mfrmr_data("example_core")
+toy_people <- unique(toy_full$Person)[1:12]
+toy <- toy_full[toy_full$Person \%in\% toy_people, , drop = FALSE]
+fit <- suppressWarnings(
+  fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 10)
+)
+t4 <- unexpected_response_table(fit, abs_z_min = 1.5, prob_max = 0.4, top_n = 5)
 summary(t4)
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 bias <- estimate_bias(fit, diag, facet_a = "Rater", facet_b = "Criterion", max_iter = 2)
 t11 <- bias_count_table(bias, branch = "facets")
 summary(t11)
+}
 }
 \seealso{
 \code{\link[=unexpected_response_table]{unexpected_response_table()}}, \code{\link[=fair_average_table]{fair_average_table()}}, \code{plot()}

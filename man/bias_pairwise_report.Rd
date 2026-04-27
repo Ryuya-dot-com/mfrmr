@@ -2,7 +2,7 @@
 % Please edit documentation in R/api-reports.R
 \name{bias_pairwise_report}
 \alias{bias_pairwise_report}
-\title{Build a bias pairwise-contrast report}
+\title{Build a bias pairwise-contrast report (FACETS Table 14: pairwise contrasts)}
 \usage{
 bias_pairwise_report(
   x,
@@ -64,7 +64,10 @@ A named list with:
 }
 }
 \description{
-Build a bias pairwise-contrast report
+Use this when you want to compare two levels of the target facet
+while conditioning on the paired context facet. For the ranked
+flagged-cells view see \code{\link[=bias_interaction_report]{bias_interaction_report()}}; for the
+iteration/convergence trace see \code{\link[=bias_iteration_report]{bias_iteration_report()}}.
 }
 \details{
 This helper exposes the pairwise contrast table that was previously only

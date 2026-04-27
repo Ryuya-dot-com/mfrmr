@@ -22,7 +22,10 @@ objects with \code{dif_table}).}
 \item{...}{Additional graphical parameters passed to \code{\link[graphics:image]{graphics::image()}}.}
 }
 \value{
-Invisibly, the matrix used for plotting.
+Invisibly, an \code{mfrm_plot_data} payload whose \code{data} slot bundles
+the row x column metric matrix (\verb{$matrix}), the source long table
+(\verb{$pairs}), and the metric label. Earlier 0.1.x releases returned the
+bare matrix; consume \verb{$data$matrix} to keep code forward-compatible.
 }
 \description{
 Visualizes the interaction between a facet and a grouping variable
@@ -62,7 +65,13 @@ diag <- diagnose_mfrm(fit, residual_pca = "none")
 int <- dif_interaction_table(fit, diag, facet = "Rater",
                              group = "Group", data = toy, min_obs = 2)
 heat <- plot_dif_heatmap(int, metric = "obs_exp", draw = FALSE)
-dim(heat)
+dim(heat$data$matrix)
+# Look for (`metric = "obs_exp"`): cells near 0 are aligned with
+#   model expectation; |Obs - Exp| > 0.5 logits is a substantive
+#   gap. With `metric = "t"` the cell scale becomes a standardized
+#   residual where |t| > 2 is a 5\%-level flag. With `metric = "contrast"`
+#   the layout switches to Level x GroupPair and reads as the
+#   pairwise differential-functioning contrast (use `analyze_dff()`).
 }
 \seealso{
 \code{\link[=dif_interaction_table]{dif_interaction_table()}}, \code{\link[=analyze_dff]{analyze_dff()}}, \code{\link[=analyze_dif]{analyze_dif()}}, \code{\link[=dif_report]{dif_report()}}

@@ -1,12 +1,13 @@
 cff-version: 1.2.0
 message: "If you use this package, please cite it as follows."
-title: "mfrmr: Flexible Many-Facet Rasch Model Estimation Without FACETS"
-version: "0.1.0"
-date-released: "2026-02-14"
+title: "mfrmr: Estimation and Diagnostics for Many-Facet Measurement Models"
+version: "0.1.6"
+date-released: "2026-04-20"
 license: "MIT"
 authors:
   - family-names: "Komuro"
     given-names: "Ryuya"
     email: "ryuya.komuro.c4@tohoku.ac.jp"
+    orcid: "https://orcid.org/0000-0001-9205-0926"
 repository-code: "https://github.com/Ryuya-dot-com/R_package_mfrmr"
-url: "https://github.com/Ryuya-dot-com/R_package_mfrmr"
+url: "https://ryuya-dot-com.github.io/R_package_mfrmr/"

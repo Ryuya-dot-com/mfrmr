@@ -6,8 +6,9 @@
 \usage{
 plot_anchor_drift(
   x,
-  type = c("drift", "chain", "heatmap"),
+  type = c("drift", "chain", "heatmap", "forest"),
   facet = NULL,
+  ci_level = 0.95,
   preset = c("standard", "publication", "compact"),
   draw = TRUE,
   ...
@@ -17,11 +18,17 @@ plot_anchor_drift(
 \item{x}{An \code{mfrm_anchor_drift} or \code{mfrm_equating_chain} object.}
 
 \item{type}{Plot type: \code{"drift"} (dot plot of element drift),
-\code{"chain"} (cumulative offset line plot), or \code{"heatmap"}
-(wave-by-element drift heatmap).}
+\code{"chain"} (cumulative offset line plot), \code{"heatmap"}
+(wave-by-element drift heatmap), or \code{"forest"} (per-(Facet, Level,
+Wave) anchor estimate with \verb{+/- z * SE} whiskers; requires
+\code{mfrm_anchor_drift}).}
 
 \item{facet}{Optional character vector to filter drift plots to specific
 facets.}
+
+\item{ci_level}{Confidence level used by \code{type = "forest"} for the
+anchor-estimate whiskers (default \code{0.95}). Ignored for other
+plot types.}
 
 \item{preset}{Visual preset (\code{"standard"}, \code{"publication"}, or \code{"compact"}).}
 
@@ -112,6 +119,7 @@ For a plot-selection guide and a longer walkthrough, see
 }
 
 \examples{
+\donttest{
 toy <- load_mfrmr_data("example_core")
 people <- unique(toy$Person)
 d1 <- toy[toy$Person \%in\% people[1:12], , drop = FALSE]
@@ -129,6 +137,7 @@ chain_plot <- plot_anchor_drift(chain, type = "chain", draw = FALSE)
 head(chain_plot$data$table)
 if (interactive()) {
   plot_anchor_drift(drift, type = "heatmap", preset = "publication")
+}
 }
 }
 \seealso{

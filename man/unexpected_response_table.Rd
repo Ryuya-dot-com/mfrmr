@@ -104,12 +104,16 @@ The \code{summary} data.frame contains:
 }
 
 \examples{
-toy <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
-t4 <- unexpected_response_table(fit, abs_z_min = 1.5, prob_max = 0.4, top_n = 10)
+toy_full <- load_mfrmr_data("example_core")
+toy_people <- unique(toy_full$Person)[1:12]
+toy <- toy_full[toy_full$Person \%in\% toy_people, , drop = FALSE]
+fit <- suppressWarnings(
+  fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 10)
+)
+t4 <- unexpected_response_table(fit, abs_z_min = 1.5, prob_max = 0.4, top_n = 5)
 summary(t4)
 p_t4 <- plot(t4, draw = FALSE)
-class(p_t4)
+p_t4$data$plot
 }
 \seealso{
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=displacement_table]{displacement_table()}}, \code{\link[=fair_average_table]{fair_average_table()}},

@@ -1,8 +1,14 @@
 ^data-raw$
-^\.DS_Store$
+(^|/)\.DS_Store$
 ^\.{2}Rcheck$
 ^mfrmr\.Rcheck$
 ^mfrmr_[0-9.]+\.tar\.gz$
+^src/.*[.](o|so|dll|dylib)$
+^src/.*[.](gcda|gcno|gcov)$
+^src/symbols[.]rds$
+^vignettes/[.]install_extras$
+^vignettes/.*[.]html$
+^vignettes/.*[.]R$
 ^\.github$
 ^\.gitignore$
 ^_pkgdown\.yml$
@@ -21,3 +27,9 @@
 ^PACKAGES\.rds$
 ^Library$
 ^Outputs$
+^man/.*DESKTOP-.*\.Rd$
+^inst/references/M[0-9]_.*[.]md$
+^inst/references/MFRMR_.*[.]md$
+^inst/references/MAINTENANCE_AND_ROADMAP_CHECKLIST_.*[.]md$
+^inst/references/PUBLIC_RELEASE_READINESS_AUDIT_.*[.]md$
+^inst/references/README[.]md$

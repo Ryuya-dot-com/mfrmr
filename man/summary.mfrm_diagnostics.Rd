@@ -19,9 +19,20 @@
 An object of class \code{summary.mfrm_diagnostics} with:
 \itemize{
 \item \code{overview}: design-level counts and residual-PCA mode
+\item \code{status}: concise front-door status block for quick review
+\item \code{key_warnings}: highest-priority warnings to review first
+\item \code{next_actions}: recommended follow-up helpers
+\item \code{diagnostic_basis}: guide to legacy versus strict diagnostic targets
 \item \code{overall_fit}: global fit block
 \item \code{reliability}: facet-level separation/reliability summary
 \item \code{top_fit}: top \verb{|ZSTD|} rows
+\item \code{marginal_fit}: optional strict marginal-fit overview when requested
+\item \code{top_marginal_cells}: largest strict marginal residual cells when requested
+\item \code{marginal_pairwise}: optional strict pairwise local-dependence overview
+\item \code{top_marginal_pairs}: largest strict pairwise residual summaries
+\item \code{marginal_guidance}: interpretation labels for strict marginal diagnostics
+\item \code{reporting_map}: manuscript-oriented guide to what is covered here versus
+which companion outputs should be consulted
 \item \code{flags}: compact flag counts for major diagnostics
 \item \code{notes}: short interpretation notes
 }
@@ -33,6 +44,7 @@ Summarize an \code{mfrm_diagnostics} object in a user-friendly format
 This method returns a compact diagnostics summary designed for quick review:
 \itemize{
 \item design overview (observations, persons, facets, categories, subsets)
+\item diagnostic-basis guide for legacy versus strict fit paths
 \item global fit statistics
 \item approximate reliability/separation by facet
 \item top facet/person fit rows by absolute ZSTD
@@ -43,6 +55,8 @@ This method returns a compact diagnostics summary designed for quick review:
 
 \itemize{
 \item \code{overview}: analysis scale, subset count, and residual-PCA mode.
+\item \code{diagnostic_basis}: plain-language map of which fit path was computed and
+what each path means statistically.
 \item \code{overall_fit}: global fit indices.
 \item \code{reliability}: facet separation/reliability block, including model and
 real bounds when available.
@@ -54,17 +68,32 @@ real bounds when available.
 \section{Typical workflow}{
 
 \enumerate{
-\item Run diagnostics with \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}.
-\item Review \code{summary(diag)} for major warnings.
+\item Run diagnostics with \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, using \code{diagnostic_mode = "both"}
+for \code{RSM} / \code{PCM} when you want legacy continuity plus strict marginal screening.
+\item Review \code{summary(diag)} for major warnings and inspect \code{diagnostic_basis}
+before comparing legacy and strict outputs.
 \item Follow up with dedicated tables/plots for flagged domains.
 }
 }
 
 \examples{
 toy <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
+toy <- toy[toy$Person \%in\% unique(toy$Person)[1:4], ]
+fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 50)
 diag <- diagnose_mfrm(fit, residual_pca = "none")
-summary(diag)
+s <- summary(diag, top_n = 3)
+s$key_warnings
+# Look for: lines beginning with "MnSq misfit:" name the worst
+#   element + Infit / Outfit values; "Unexpected responses flagged"
+#   counts how many cell-level surprises the screen returned.
+s$top_fit
+# Look for: rows with |InfitZSTD| or |OutfitZSTD| > 2 are misfitting
+#   at the 5\% level; > 3 is misfitting at the 1\% level. Investigate
+#   in order of the AbsZ column.
+s$facets_chisq
+# Look for: FixedProb < 0.05 in each non-Person facet means the
+#   facet contributes meaningful spread; FixedProb >= 0.05 means
+#   that facet is statistically indistinguishable.
 }
 \seealso{
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=summary.mfrm_fit]{summary.mfrm_fit()}}

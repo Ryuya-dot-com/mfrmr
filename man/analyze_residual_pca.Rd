@@ -109,6 +109,7 @@ data-type works best?} Journal of Outcome Measurement, 2(3), 266-283.
 }
 
 \examples{
+\donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 diag <- diagnose_mfrm(fit, residual_pca = "both")
@@ -116,9 +117,10 @@ pca <- analyze_residual_pca(diag, mode = "both")
 pca2 <- analyze_residual_pca(fit, mode = "both")
 summary(pca)
 p <- plot_residual_pca(pca, mode = "overall", plot_type = "scree", draw = FALSE)
-class(p)
+p$data$plot
 head(p$data)
 head(pca$overall_table)
+}
 }
 \seealso{
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=plot_residual_pca]{plot_residual_pca()}}, \link{mfrmr_visual_diagnostics}

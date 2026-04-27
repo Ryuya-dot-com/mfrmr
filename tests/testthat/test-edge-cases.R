@@ -5,10 +5,12 @@
 # ---- Minimal viable data ----
 
 test_that("fit_mfrm succeeds with minimal viable data", {
+  # Minimum data guard (0.1.6 polish) requires >= 10 observations.
+  # Original test used 8 obs; extend to 10 (5 persons x 2 raters).
   d <- data.frame(
-    Person = rep(c("P1", "P2", "P3", "P4"), each = 2),
-    Rater = rep(c("R1", "R2"), 4),
-    Score = c(0, 1, 1, 0, 0, 1, 1, 0)
+    Person = rep(c("P1", "P2", "P3", "P4", "P5"), each = 2),
+    Rater = rep(c("R1", "R2"), 5),
+    Score = c(0, 1, 1, 0, 0, 1, 1, 0, 0, 1)
   )
   fit <- suppressWarnings(
     fit_mfrm(d, "Person", "Rater", "Score", method = "JML", maxit = 30)
@@ -21,10 +23,14 @@ test_that("fit_mfrm succeeds with minimal viable data", {
 # ---- NA values dropped gracefully ----
 
 test_that("fit_mfrm drops NA rows and still fits", {
+  # Extended to clear the >= 10 observation guard introduced in 0.1.6
+  # while still exercising NA-row dropping.
   d <- data.frame(
-    Person = c("P1", "P2", "P3", "P4", NA, "P5", "P6"),
-    Rater = c("R1", "R2", "R1", "R2", "R1", "R2", "R1"),
-    Score = c(0, 1, NA, 2, 1, 0, 1)
+    Person = c("P1", "P2", "P3", "P4", NA, "P5", "P6",
+               "P1", "P2", "P3", "P4", "P5", "P6"),
+    Rater = c("R1", "R2", "R1", "R2", "R1", "R2", "R1",
+              "R2", "R1", "R2", "R1", "R1", "R2"),
+    Score = c(0, 1, NA, 2, 1, 0, 1, 2, 0, 1, 2, 1, 0)
   )
   fit <- suppressWarnings(
     fit_mfrm(d, "Person", "Rater", "Score", method = "JML", maxit = 30)
@@ -113,14 +119,18 @@ test_that("diagnose_mfrm with PCA produces eigenvalue output", {
 # ---- describe_mfrm_data ----
 
 test_that("describe_mfrm_data works with minimal data", {
+  # Extended to clear the >= 10 observation guard from 0.1.6 while
+  # keeping the "minimal" spirit of the original test.
   d <- data.frame(
-    Person = c("P1", "P2", "P3"),
-    Rater = c("R1", "R2", "R1"),
-    Score = c(0, 1, 2)
+    Person = rep(c("P1", "P2", "P3", "P4", "P5"), 2),
+    Rater = rep(c("R1", "R2"), each = 5),
+    Score = c(0, 1, 2, 1, 0, 1, 2, 0, 1, 2)
   )
-  ds <- describe_mfrm_data(d, "Person", "Rater", "Score")
+  expect_no_warning({
+    ds <- suppressMessages(describe_mfrm_data(d, "Person", "Rater", "Score"))
+  })
   expect_s3_class(ds, "mfrm_data_description")
-  expect_equal(ds$overview$Observations, 3)
+  expect_equal(ds$overview$Observations, 10)
 })
 
 test_that("describe_mfrm_data summary and print work", {

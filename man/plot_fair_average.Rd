@@ -11,6 +11,8 @@ plot_fair_average(
   metric = c("AdjustedAverage", "StandardizedAdjustedAverage", "FairM", "FairZ"),
   plot_type = c("difference", "scatter"),
   top_n = 40,
+  show_ci = FALSE,
+  ci_level = 0.95,
   draw = TRUE,
   preset = c("standard", "publication", "compact"),
   ...
@@ -30,6 +32,22 @@ plot_fair_average(
 \item{plot_type}{\code{"difference"} or \code{"scatter"}.}
 
 \item{top_n}{Maximum levels shown for \code{"difference"} plot.}
+
+\item{show_ci}{Logical. When \code{TRUE}, draw approximate
+confidence-interval whiskers on the fair metric using a
+delta-method propagation from the logit \code{Measure} standard error
+to the observed-score scale. The derivative equals the implied
+score variance \code{Var(X | Measure)}, so the fair-scale standard
+error is \code{Var(X) * ModelSE}. CI bounds are clipped to the rating
+range. Rows where the score variance is effectively zero (levels
+whose measure sits near the rating boundary, so the delta-method
+approximation becomes uninformative) are drawn with an open
+circle and excluded from the whiskers; the excluded count is
+reported in the subtitle.}
+
+\item{ci_level}{Confidence level used when \code{show_ci = TRUE};
+default \code{0.95}. The returned plot-data object gains \code{CI_Lower},
+\code{CI_Upper}, and \code{CI_Level} columns for downstream reuse.}
 
 \item{draw}{If \code{TRUE}, draw with base graphics.}
 
@@ -105,8 +123,12 @@ For a plot-selection guide and a longer walkthrough, see
 }
 
 \examples{
-toy <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
+toy_full <- load_mfrmr_data("example_core")
+toy_people <- unique(toy_full$Person)[1:12]
+toy <- toy_full[toy_full$Person \%in\% toy_people, , drop = FALSE]
+fit <- suppressWarnings(
+  fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 10)
+)
 p <- plot_fair_average(fit, metric = "AdjustedAverage", draw = FALSE)
 if (interactive()) {
   plot_fair_average(fit, metric = "AdjustedAverage", plot_type = "difference")

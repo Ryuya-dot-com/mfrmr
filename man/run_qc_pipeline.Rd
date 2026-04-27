@@ -68,6 +68,10 @@ Three threshold presets are available via \code{threshold_profile}:\tabular{llll
 
 Individual thresholds can be overridden via the \code{thresholds} argument
 (a named list keyed by the internal threshold names shown above).
+
+For bounded \code{GPCM}, this pipeline is intentionally unavailable because the
+current validated route stops before bundled pass/warn/fail synthesis for
+the free-discrimination branch.
 }
 \section{QC checks}{
 
@@ -122,6 +126,7 @@ checks that did not pass.
 }
 
 \examples{
+\donttest{
 toy <- load_mfrmr_data("study1")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "JML", maxit = 25)
@@ -129,6 +134,7 @@ qc <- run_qc_pipeline(fit)
 qc
 summary(qc)
 qc$verdicts
+}
 }
 \seealso{
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=estimate_bias]{estimate_bias()}},

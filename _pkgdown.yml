@@ -17,6 +17,7 @@ articles:
   - title: Workflow Guides
     contents:
       - mfrmr-workflow
+      - mfrmr-mml-and-marginal-fit
       - mfrmr-visual-diagnostics
       - mfrmr-reporting-and-apa
       - mfrmr-linking-and-dff
@@ -82,6 +83,8 @@ reference:
       - build_apa_outputs
       - build_visual_summaries
       - apa_table
+      - as_kable
+      - as_flextable
       - export_mfrm
       - export_mfrm_bundle
       - precision_audit_report
@@ -151,6 +154,40 @@ reference:
       - make_anchor_table
       - list_mfrmr_data
       - load_mfrmr_data
+      - recode_missing_codes
+  - title: Hierarchical Structure and Sample Adequacy
+    desc: >-
+      Descriptive audit of the observed design. All helpers leave
+      estimation unchanged; they classify nesting, surface small-N
+      facet levels, and add ICC / Kish design-effect summaries on
+      top of the fixed-effects MFRM fit.
+    contents:
+      - detect_facet_nesting
+      - facet_small_sample_audit
+      - compute_facet_icc
+      - compute_facet_design_effect
+      - analyze_hierarchical_structure
+  - title: Additional Visualizations
+    desc: >-
+      Visualizations added in 0.1.6 that complement the core plot.mfrm_fit
+      surface: threshold ladder for category-structure diagnostics, person-fit
+      bubble for KIDMAP-style review, rater severity profile with CI bands,
+      DIF summary, APA Figure 1 publication composite, and a second wave
+      of Guttman-scalogram / Q-Q / trajectory / agreement-heatmap views.
+    contents:
+      - plot_threshold_ladder
+      - plot_person_fit
+      - plot_rater_severity_profile
+      - plot_dif_summary
+      - plot_apa_figure_one
+      - plot_guttman_scalogram
+      - plot_residual_qq
+      - plot_rater_trajectory
+      - plot_rater_agreement_heatmap
+      - plot_local_dependence_heatmap
+      - plot_reliability_snapshot
+      - plot_residual_matrix
+      - plot_shrinkage_funnel
   - title: Compatibility Layer
     contents:
       - run_mfrm_facets
@@ -158,3 +195,41 @@ reference:
       - build_fixed_reports
       - facets_output_file_bundle
       - facets_parity_report
+      - audit_conquest_overlap
+      - build_conquest_overlap_bundle
+      - normalize_conquest_overlap_files
+      - normalize_conquest_overlap_tables
+      - compatibility_alias_table
+      - gpcm_capability_matrix
+  - title: Additional Exports
+    desc: >-
+      Topics surfaced by the package namespace that do not fit neatly into
+      any of the sections above. Kept as a catch-all so every documented
+      symbol appears somewhere in the reference index.
+    contents:
+      - apply_empirical_bayes_shrinkage
+      - shrinkage_report
+      - as_kable
+      - as_flextable
+      - as_kable.apa_table
+      - as_flextable.apa_table
+      - build_linking_review
+      - build_misfit_casebook
+      - build_weighting_audit
+      - build_summary_table_bundle
+      - export_summary_appendix
+      - evaluate_mfrm_diagnostic_screening
+      - visual_reporting_template
+      - plot.mfrm_facet_sample_audit
+      - plot.mfrm_facet_nesting
+      - plot.mfrm_equating_chain
+      - plot.mfrm_future_branch_active_branch
+      - plot.mfrm_summary_table_bundle
+      - plot_marginal_fit
+      - plot_marginal_pairwise
+      - summary.mfrm_future_branch_active_branch
+      - summary.mfrm_linking_review
+      - summary.mfrm_misfit_casebook
+      - summary.mfrm_reporting_checklist
+      - summary.mfrm_summary_table_bundle
+      - summary.mfrm_weighting_audit

@@ -94,18 +94,20 @@ current contract.
 
 \enumerate{
 \item Run \code{facets_parity_report(fit, branch = "facets")}.
-\item Inspect \code{summary(parity)} and \code{missing_preview}.
+\item Inspect \code{summary(contract_audit)} and \code{missing_preview}.
 \item Patch upstream table builders, then rerun the compatibility audit.
 }
 }
 
 \examples{
+\donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 diag <- diagnose_mfrm(fit, residual_pca = "none")
-parity <- facets_parity_report(fit, diagnostics = diag, branch = "facets")
-summary(parity)
-p <- plot(parity, draw = FALSE)
+contract_audit <- facets_parity_report(fit, diagnostics = diag, branch = "facets")
+summary(contract_audit)
+p <- plot(contract_audit, draw = FALSE)
+}
 }
 \seealso{
 \code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=build_fixed_reports]{build_fixed_reports()}},

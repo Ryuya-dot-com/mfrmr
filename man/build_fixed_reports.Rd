@@ -66,6 +66,7 @@ artifact is specifically required for a compatibility handoff.
 }
 
 \examples{
+\donttest{
 toy <- load_mfrmr_data("example_bias")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 diag <- diagnose_mfrm(fit, residual_pca = "none")
@@ -84,6 +85,7 @@ if (interactive()) {
     palette = c(pos = "#1b9e77", neg = "#d95f02"),
     label_angle = 45
   )
+}
 }
 }
 \seealso{

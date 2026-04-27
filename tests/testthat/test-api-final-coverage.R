@@ -782,8 +782,10 @@ test_that("summary.mfrm_bias covers lines 10867-10964", {
   out <- capture.output(print(s))
   expect_true(any(grepl("Bias Summary", out, fixed = TRUE)))
 
-  # line 10867: empty bias
-  expect_error(summary.mfrm_bias(list(table = data.frame())), "non-empty")
+  # line 10867: empty bias. Use S3 dispatch via an `mfrm_bias`-classed
+  # list so the test does not depend on the un-exported method name.
+  empty_bias <- structure(list(table = data.frame()), class = "mfrm_bias")
+  expect_error(summary(empty_bias), "non-empty")
 })
 
 # ---------------------------------------------------------------------------

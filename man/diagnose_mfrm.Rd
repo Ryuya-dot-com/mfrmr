@@ -9,6 +9,7 @@ diagnose_mfrm(
   interaction_pairs = NULL,
   top_n_interactions = 20,
   whexact = FALSE,
+  diagnostic_mode = c("both", "legacy", "marginal_fit"),
   residual_pca = c("none", "overall", "facet", "both"),
   pca_max_factors = 10L
 )
@@ -20,7 +21,27 @@ diagnose_mfrm(
 
 \item{top_n_interactions}{Number of top interactions.}
 
-\item{whexact}{Use exact ZSTD transformation.}
+\item{whexact}{Logical controlling the ZSTD standardisation of
+mean-square fit statistics. \code{FALSE} (default) applies the
+Wilson-Hilferty cube-root transformation
+\eqn{(\mathrm{MnSq}^{1/3} - (1 - 2/(9\,\mathit{df})))/\sqrt{2/(9\,\mathit{df})}}
+(recommended; the Winsteps/FACETS convention for \code{WHEXACT=Y}).
+\code{TRUE} uses the simpler linear-normal standardisation
+\eqn{(\mathrm{MnSq} - 1)\sqrt{\mathit{df}/2}}, which is kept for
+backward compatibility with earlier mfrmr summaries and with
+FACETS' \code{WHEXACT=N} mode.}
+
+\item{diagnostic_mode}{Diagnostic basis to compute: \code{"both"} (the
+current default) computes both the residual/EAP-based stack and
+the strict latent-integrated first-order marginal-fit companion;
+\code{"legacy"} keeps the residual/EAP-based stack only;
+\code{"marginal_fit"} returns only the marginal-fit companion. The
+\code{"both"} path adds a posterior-integrated pass that typically
+doubles to quintuples wall-clock time relative to \code{"legacy"};
+pass \code{"legacy"} explicitly when iterating on large designs and
+only the residual stack is needed. Use \code{"both"} for RSM/PCM
+reporting fits because it enables \code{\link[=plot_marginal_fit]{plot_marginal_fit()}} and
+\code{\link[=plot_marginal_pairwise]{plot_marginal_pairwise()}} follow-up.}
 
 \item{residual_pca}{Residual PCA mode: \code{"none"}, \code{"overall"}, \code{"facet"}, or \code{"both"}.}
 
@@ -44,9 +65,13 @@ SE mode
 \item \code{interrater}: inter-rater agreement bundle (\code{summary}, \code{pairs}) including
 agreement and rater-severity spread indices
 \item \code{unexpected}: unexpected-response bundle
-\item \code{fair_average}: adjusted-score reference bundle
+\item \code{fair_average}: adjusted-score reference bundle (placeholder only for
+bounded \code{GPCM})
 \item \code{displacement}: displacement diagnostics bundle
 \item \code{approximation_notes}: method notes for SE/CI/reliability summaries
+\item \code{diagnostic_basis}: guide to the statistical target of each diagnostic path
+\item \code{marginal_fit}: optional strict marginal-fit companion based on
+posterior-expected first-order category counts
 \item \code{residual_pca_overall}: optional overall PCA object
 \item \code{residual_pca_by_facet}: optional facet PCA objects
 }
@@ -60,6 +85,31 @@ It calculates element-level fit statistics, approximate facet
 separation/reliability summaries, residual-based QC diagnostics, and
 optionally residual PCA for
 exploratory residual-structure screening.
+
+\code{diagnostic_mode} keeps the legacy residual fit path explicit rather than
+silently replacing it. The legacy path is a compatibility-oriented
+residual/EAP stack, whereas the strict marginal path targets
+latent-integrated first-order category counts. When \code{diagnostic_mode = "both"}, the output includes a \code{diagnostic_basis} guide so downstream
+tables and summaries can distinguish these targets.
+
+Choosing \code{diagnostic_mode}:
+\itemize{
+\item \code{"legacy"}: use when continuity with historical residual-based workflows is
+the priority.
+\item \code{"marginal_fit"}: use when you want the strict latent-integrated screen
+without the extra legacy bundle.
+\item \code{"both"}: recommended when you want continuity with the legacy residual
+stack while making the strict marginal path explicit for \code{RSM}, \code{PCM},
+and bounded \code{GPCM} fits.
+}
+
+For bounded \code{GPCM}, the same generalized partial credit kernel now
+drives both the residual/probability tables and the strict marginal
+category-fit companion. Residual-based MnSq summaries should still be read
+as exploratory screening tools rather than strict Rasch-style invariance
+tests because discrimination is free, and the strict marginal companion
+should likewise be treated as a slope-aware screen rather than a finalized
+inferential test family.
 
 \strong{Key fit statistics computed for each element:}
 \itemize{
@@ -118,6 +168,9 @@ uses model-based \code{ModelSE} values where available; \code{JML} keeps these
 quantities as exploratory approximations.
 \item \code{fit}: element-level misfit scan (\code{Infit}, \code{Outfit}, \code{ZSTD}).
 \item \code{unexpected}, \code{fair_average}, \code{displacement}: targeted QC bundles.
+For bounded \code{GPCM}, \code{fair_average} is retained as an unavailable
+placeholder because that compatibility calculation has not yet been
+validated for the generalized model.
 \item \code{approximation_notes}: method notes for SE/CI/reliability summaries.
 }
 }
@@ -125,8 +178,9 @@ quantities as exploratory approximations.
 \section{Interpreting output}{
 
 Start with \code{overall_fit} and \code{reliability}, then move to element-level
-diagnostics (\code{fit}) and targeted bundles (\code{unexpected}, \code{fair_average},
-\code{displacement}, \code{interrater}, \code{facets_chisq}).
+diagnostics (\code{fit}) and targeted bundles (\code{unexpected}, \code{displacement},
+\code{interrater}, \code{facets_chisq}). Treat \code{fair_average} as available only for
+the \code{RSM} / \code{PCM} branch.
 
 Consistent signals across multiple components are typically more robust than
 a single isolated warning.  For example, an element flagged for both high
@@ -137,26 +191,54 @@ single criterion.
 fit-adjusted companion defined as \code{ModelSE * sqrt(max(Infit, 1))}.
 Reliability tables report model and fit-adjusted bounds from observed
 variance, error variance, and true variance; \code{JML} entries should still be
-treated as exploratory.
+treated as exploratory. Separation, strata, and reliability follow the
+Wright & Masters (1982) conventions:
+\eqn{G = \mathrm{TrueSD}/\mathrm{RMSE}},
+\eqn{R = G^2 / (1 + G^2)}, and \eqn{H = (4G + 1) / 3}.
 }
 
 \section{Typical workflow}{
 
 \enumerate{
-\item Run \code{diagnose_mfrm(fit, residual_pca = "none")} for baseline diagnostics.
-\item Inspect \code{summary(diag)} and targeted tables/plots.
+\item Start with \code{diagnose_mfrm(fit, diagnostic_mode = "both", residual_pca = "none")}.
+\item Inspect \code{summary(diag)} and use \code{diagnostic_basis} to separate legacy residual evidence from strict marginal evidence.
 \item If needed, rerun with residual PCA (\code{"overall"} or \code{"both"}).
 }
 }
 
 \examples{
+# Fast smoke run: legacy-only diagnostic mode is enough to confirm
+# the bundle has the expected slots. ~1 s on example_core.
 toy <- load_mfrmr_data("example_core")
+fit_quick <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
+                      method = "JML", maxit = 15)
+diag_quick <- diagnose_mfrm(fit_quick, diagnostic_mode = "legacy",
+                             residual_pca = "none")
+summary(diag_quick)$overview[, c("Observations", "Facets", "Categories")]
+
+\donttest{
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
-diag <- diagnose_mfrm(fit, residual_pca = "none")
+diag <- diagnose_mfrm(fit, diagnostic_mode = "both", residual_pca = "none")
 s_diag <- summary(diag)
 s_diag$overview[, c("Observations", "Facets", "Categories")]
+s_diag$diagnostic_basis[, c("DiagnosticPath", "Status", "Basis")]
+s_diag$key_warnings
+# Look for: "No immediate warnings ..." in `key_warnings` is the
+#   "all clear" signal. Lines starting with "MnSq misfit:" name the
+#   element + Infit / Outfit values that fell outside the
+#   0.5-1.5 acceptance band; review those first.
+s_diag$facets_chisq
+# Look for: `FixedProb` < 0.05 means that facet's elements differ
+#   reliably under the fixed-effect "all elements equal" null. A
+#   facet with a non-significant chi-square contributes little
+#   spread to the test scale.
+s_diag$interrater
+# Look for: ExactAgreement >= ExpectedExactAgreement and
+#   AgreementMinusExpected >= 0 indicate raters agree at least as
+#   often as the model expects. Negative values warrant a closer
+#   look at `diag$interrater$pairs`.
 p_qc <- plot_qc_dashboard(fit, diagnostics = diag, draw = FALSE)
-class(p_qc)
+p_qc$data$plot
 
 # Optional: include residual PCA in the diagnostic bundle
 diag_pca <- diagnose_mfrm(fit, residual_pca = "overall")
@@ -166,6 +248,7 @@ head(pca$overall_table)
 # Reporting route:
 prec <- precision_audit_report(fit, diagnostics = diag)
 summary(prec)
+}
 }
 \seealso{
 \code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=analyze_residual_pca]{analyze_residual_pca()}}, \code{\link[=build_visual_summaries]{build_visual_summaries()}},

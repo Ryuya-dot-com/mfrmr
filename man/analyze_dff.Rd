@@ -32,7 +32,12 @@ defines the grouping variable (e.g., \code{"Gender"}, \code{"Site"}).}
 
 \item{data}{Optional data frame containing at least the group column
 and the same person/facet/score columns used to fit the model. If
-\code{NULL} (default), the data stored in \code{fit$prep$data} is used.}
+\code{NULL} (default), mfrmr tries to recover the data from
+\code{fit$prep$data}. That slot only holds the columns that
+\code{fit_mfrm()} actually modelled; if the grouping column was not
+among them (common for DIF screening), pass the original data
+frame via \verb{data = <df>} explicitly. The same applies when the
+fit object has been serialized without the prep slot.}
 
 \item{focal}{Optional character vector of group levels to treat as focal.
 If \code{NULL} (default), all pairwise group comparisons are performed.}
@@ -157,7 +162,11 @@ subgroup linking diagnostics.
 \section{Typical workflow}{
 
 \enumerate{
-\item Fit a model with \code{\link[=fit_mfrm]{fit_mfrm()}}.
+\item Fit a model with \code{\link[=fit_mfrm]{fit_mfrm()}}. For \code{RSM} / \code{PCM} fairness review, prefer
+\code{method = "MML"}.
+\item Run \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} and, for \code{RSM} / \code{PCM}, prefer
+\code{diagnostic_mode = "both"} so legacy and strict marginal screens remain
+visible together.
 \item Run \code{analyze_dff(fit, diagnostics, facet = "Criterion", group = "Gender", data = my_data)}.
 \item Inspect \verb{$dif_table} for flagged levels and \verb{$summary} for counts.
 \item Use \code{\link[=dif_interaction_table]{dif_interaction_table()}} when you need cell-level diagnostics.
@@ -166,18 +175,32 @@ subgroup linking diagnostics.
 }
 
 \examples{
+\donttest{
 toy <- load_mfrmr_data("example_bias")
 
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                 method = "JML", model = "RSM", maxit = 25)
-diag <- diagnose_mfrm(fit, residual_pca = "none")
+                 method = "MML", model = "RSM", maxit = 200)
+diag <- diagnose_mfrm(fit, residual_pca = "none", diagnostic_mode = "both")
 dff <- analyze_dff(fit, diag, facet = "Rater", group = "Group", data = toy)
 dff$summary
+# Look for: a small `FlaggedPairs` count relative to `Pairs`. Each
+#   flagged level pair carries a `Classification` of "A" / "B" / "C"
+#   following Penfield's (2007) ETS DIF severity bands; "C" cells
+#   warrant the closest review.
 head(dff$dif_table[, c("Level", "Group1", "Group2", "Contrast", "Classification")])
+# Look for: |Contrast| < 0.43 logits is "A" (negligible); 0.43-0.64
+#   is "B" (moderate); >= 0.64 is "C" (large). The `ContrastDirection`
+#   column makes the residual / refit sign convention explicit so the
+#   contrast can be read against the same reference group.
 sc <- subset_connectivity_report(fit, diagnostics = diag)
 plot(sc, type = "design_matrix", draw = FALSE)
 if ("ScaleLinkStatus" \%in\% names(dff$dif_table)) {
   unique(dff$dif_table$ScaleLinkStatus)
+}
+# Look for: "linked" in `ScaleLinkStatus` confirms the focal and
+#   reference groups share enough common elements for a comparable
+#   contrast; "demoted_*" rows lose linking under the refit branch
+#   and should be read as exploratory.
 }
 }
 \seealso{

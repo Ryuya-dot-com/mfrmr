@@ -1,22 +1,20 @@
 Package: mfrmr
 Type: Package
-Title: Many-Facet Rasch Model Estimation and Diagnostics in R
-Version: 0.1.0
+Title: Estimation and Diagnostics for Many-Facet Measurement Models
+Version: 0.1.6
 Authors@R:
     person(given = "Ryuya", family = "Komuro", role = c("aut", "cre"),
            email = "ryuya.komuro.c4@tohoku.ac.jp",
            comment = c(ORCID = "0000-0001-9205-0926"))
-Description: Estimates many-facet Rasch models and produces diagnostics,
-    reporting helpers, and reproducible analysis bundles using a native R
-    implementation. Supports arbitrary facet counts, rating-scale and
-    partial-credit parameterizations (Andrich, 1978
-    <doi:10.1007/BF02293814>; Masters, 1982
-    <doi:10.1007/BF02296272>), marginal maximum likelihood estimation via the
-    EM algorithm (Bock and Aitkin, 1981 <doi:10.1007/BF02293801>) and joint
-    maximum likelihood estimation, plus workflow helpers informed by
-    many-facet Rasch measurement practice and 'FACETS' documentation
-    (Linacre, 1994, ISBN 0-941938-02-6; Linacre, 2023,
-    <https://www.winsteps.com/a/Facets-Manual.pdf>).
+Description: Native R implementation of many-facet Rasch measurement
+    with arbitrary facet counts, rating-scale and partial-credit
+    parameterizations, and both marginal and joint maximum likelihood
+    estimation. The package provides a fit / diagnose / report pipeline
+    covering anchoring, linking, bias and DFF screening, and
+    publication-oriented APA summaries, with reproducibility manifests
+    for replay. See 'Andrich' (1978) <doi:10.1007/BF02293814> and
+    'Masters' (1982) <doi:10.1007/BF02296272> for the underlying
+    rating-scale and partial-credit models.
 URL: https://ryuya-dot-com.github.io/R_package_mfrmr/,
     https://github.com/Ryuya-dot-com/R_package_mfrmr
 BugReports: https://github.com/Ryuya-dot-com/R_package_mfrmr/issues
@@ -29,6 +27,7 @@ RoxygenNote: 7.3.3
 Depends:
     R (>= 4.1)
 Imports:
+    cli,
     dplyr,
     tidyr,
     tibble,
@@ -37,12 +36,25 @@ Imports:
     psych,
     lifecycle,
     rlang,
+    methods,
     stats,
     utils
+LinkingTo:
+    cpp11
 Suggests:
     testthat (>= 3.0.0),
     covr,
     knitr,
-    rmarkdown
+    rmarkdown,
+    igraph,
+    lme4,
+    digest,
+    kableExtra,
+    flextable,
+    future.apply,
+    mirt,
+    TAM,
+    eRm
 VignetteBuilder: knitr
 Config/testthat/edition: 3
+Config/Needs/website: pkgdown

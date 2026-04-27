@@ -11,6 +11,80 @@ step_index_from_label <- function(step_labels) {
   idx
 }
 
+.build_wright_group_density <- function(x, group, group_data = NULL) {
+  # Returns a long-format data.frame with columns Group, Theta, Density
+  # for each subgroup of persons. The group label can come from:
+  #  * a column in `group_data` (data.frame with a Person column;
+  #    typical use for DIF screening when fit_mfrm was called without
+  #    the Group column);
+  #  * a column in `x$prep$data` (when the user passed it through the
+  #    fit), or
+  #  * a vector aligned with `x$facets$person$Person` (length match).
+  # NA / extreme rows are dropped before density estimation.
+  person_tbl <- as.data.frame(x$facets$person, stringsAsFactors = FALSE)
+  if (nrow(person_tbl) == 0L) {
+    stop("No person estimates available for group overlay.", call. = FALSE)
+  }
+  joined <- NULL
+  if (is.character(group) && length(group) == 1L) {
+    if (!is.null(group_data) && is.data.frame(group_data) &&
+        "Person" %in% names(group_data) &&
+        group %in% names(group_data)) {
+      lookup <- unique(group_data[, c("Person", group), drop = FALSE])
+      names(lookup)[2] <- "Group"
+      joined <- merge(person_tbl[, c("Person", "Estimate")], lookup,
+                      by = "Person", all.x = TRUE)
+    } else {
+      obs_df <- as.data.frame(x$prep$data %||% NULL, stringsAsFactors = FALSE)
+      if (group %in% names(obs_df) && "Person" %in% names(obs_df)) {
+        lookup <- unique(obs_df[, c("Person", group), drop = FALSE])
+        names(lookup)[2] <- "Group"
+        joined <- merge(person_tbl[, c("Person", "Estimate")], lookup,
+                        by = "Person", all.x = TRUE)
+      } else {
+        stop(sprintf(
+          "Group column '%s' not found. Pass `group_data = <data.frame>` ",
+          group
+        ), sprintf(
+          "with a Person column and a '%s' column, or include the column in fit_mfrm()'s data argument.",
+          group
+        ), call. = FALSE)
+      }
+    }
+  } else if (length(group) == nrow(person_tbl)) {
+    joined <- data.frame(
+      Person = person_tbl$Person,
+      Estimate = person_tbl$Estimate,
+      Group = as.character(group),
+      stringsAsFactors = FALSE
+    )
+  } else {
+    stop("`group` must be a column name (string) or a vector aligned ",
+         "with fit$facets$person rows.", call. = FALSE)
+  }
+  joined <- joined[is.finite(joined$Estimate) & !is.na(joined$Group), ,
+                    drop = FALSE]
+  groups <- unique(as.character(joined$Group))
+  if (length(groups) < 2L) {
+    stop("Group overlay requires at least two distinct group levels.",
+         call. = FALSE)
+  }
+  out <- do.call(rbind, lapply(groups, function(g) {
+    sub <- joined$Estimate[as.character(joined$Group) == g]
+    if (length(sub) < 5L) {
+      return(NULL)
+    }
+    d <- stats::density(sub, n = 256L)
+    data.frame(Group = g, Theta = d$x, Density = d$y,
+               stringsAsFactors = FALSE)
+  }))
+  if (is.null(out) || nrow(out) == 0L) {
+    stop("No subgroup had at least 5 finite person estimates.",
+         call. = FALSE)
+  }
+  out
+}
+
 build_step_curve_spec <- function(x) {
   step_tbl <- x$steps
   if (is.null(step_tbl) || nrow(step_tbl) == 0 || !"Estimate" %in% names(step_tbl)) {
@@ -19,7 +93,10 @@ build_step_curve_spec <- function(x) {
   step_tbl <- tibble::as_tibble(step_tbl)
 
   model <- toupper(as.character(x$config$model[1]))
-  rating_min <- suppressWarnings(min(as.numeric(x$prep$data$Score), na.rm = TRUE))
+  rating_min <- suppressWarnings(as.numeric(x$prep$rating_min %||% NA_real_))
+  if (!is.finite(rating_min)) {
+    rating_min <- suppressWarnings(min(as.numeric(x$prep$data$Score), na.rm = TRUE))
+  }
   if (!is.finite(rating_min)) rating_min <- 0
 
   n_cat <- suppressWarnings(as.integer(x$config$n_cat[1]))
@@ -53,15 +130,36 @@ build_step_curve_spec <- function(x) {
     if (is.null(ordered_levels)) {
       ordered_levels <- unique(as.character(step_tbl$StepFacet))
     }
+    slope_lookup <- NULL
+    if (model == "GPCM") {
+      slope_tbl <- tibble::as_tibble(x$slopes %||% tibble::tibble())
+      if (!all(c("SlopeFacet", "Estimate") %in% names(slope_tbl))) {
+        stop("GPCM pathway/CCC plots require a `fit$slopes` table with `SlopeFacet` and `Estimate` columns.")
+      }
+      slope_lookup <- stats::setNames(
+        suppressWarnings(as.numeric(slope_tbl$Estimate)),
+        as.character(slope_tbl$SlopeFacet)
+      )
+    }
     for (lvl in ordered_levels) {
       sub <- step_tbl[as.character(step_tbl$StepFacet) == as.character(lvl), , drop = FALSE]
       if (nrow(sub) == 0) next
       ord <- order(step_index_from_label(sub$Step))
       tau <- as.numeric(sub$Estimate[ord])
+      slope_val <- if (model == "GPCM") {
+        sval <- unname(slope_lookup[[as.character(lvl)]])
+        if (!is.finite(sval) || sval <= 0) {
+          stop("GPCM pathway/CCC plots require finite positive slopes for every `StepFacet` level.")
+        }
+        sval
+      } else {
+        1
+      }
       groups[[as.character(lvl)]] <- list(
         name = as.character(lvl),
         step_cum = c(0, cumsum(tau)),
-        tau = tau
+        tau = tau,
+        slope = slope_val
       )
       step_points <- dplyr::bind_rows(
         step_points,
@@ -69,7 +167,8 @@ build_step_curve_spec <- function(x) {
           CurveGroup = as.character(lvl),
           Step = as.character(sub$Step[ord]),
           StepIndex = seq_along(tau),
-          Threshold = tau
+          Threshold = tau,
+          Slope = slope_val
         )
       )
     }
@@ -94,7 +193,17 @@ build_curve_tables <- function(curve_spec, theta_grid) {
   idx_exp <- 1L
   for (g in names(curve_spec$groups)) {
     grp <- curve_spec$groups[[g]]
-    probs <- category_prob_rsm(theta_grid, grp$step_cum)
+    probs <- if (identical(curve_spec$model, "GPCM")) {
+      category_prob_gpcm(
+        eta = theta_grid,
+        step_cum_mat = matrix(grp$step_cum, nrow = 1L),
+        criterion_idx = rep(1L, length(theta_grid)),
+        slopes = grp$slope,
+        slope_idx = rep(1L, length(theta_grid))
+      )
+    } else {
+      category_prob_rsm(theta_grid, grp$step_cum)
+    }
     k_vals <- as.numeric(curve_spec$categories)
     expected <- as.numeric(probs %*% matrix(k_vals, ncol = 1))
     exp_tables[[idx_exp]] <- tibble::tibble(
@@ -188,11 +297,8 @@ build_wright_map_data <- function(x, top_n = 30L, se_tbl = NULL, include_steps =
   if (nrow(point_tbl) == 0) stop("No facet/step locations available for Wright map.")
 
   if (nrow(point_tbl) > top_n) {
-    point_tbl <- point_tbl |>
-      dplyr::mutate(.Abs = abs(.data$Estimate)) |>
-      dplyr::arrange(dplyr::desc(.data$.Abs)) |>
-      dplyr::slice_head(n = top_n) |>
-      dplyr::select(-.data$.Abs)
+    point_tbl <- point_tbl[order(abs(point_tbl$Estimate), decreasing = TRUE), , drop = FALSE]
+    point_tbl <- utils::head(point_tbl, top_n)
   }
 
   group_levels <- unique(point_tbl$Group)
@@ -606,6 +712,125 @@ build_ccc_data <- function(x, theta_range = c(-6, 6), theta_points = 241L) {
   )
 }
 
+build_ccc_surface_data <- function(x, theta_range = c(-6, 6), theta_points = 121L) {
+  curve_spec <- build_step_curve_spec(x)
+  theta_grid <- seq(theta_range[1], theta_range[2], length.out = theta_points)
+  prob_df <- as.data.frame(build_curve_tables(curve_spec, theta_grid)$probabilities, stringsAsFactors = FALSE)
+
+  category_levels <- as.character(curve_spec$categories)
+  prob_df$Category <- factor(as.character(prob_df$Category), levels = category_levels)
+  prob_df$CategoryIndex <- as.integer(prob_df$Category)
+  prob_df$CategoryScore <- suppressWarnings(as.numeric(as.character(prob_df$Category)))
+  prob_df$SurfaceX <- prob_df$Theta
+  prob_df$SurfaceY <- prob_df$CategoryIndex
+  prob_df$SurfaceZ <- prob_df$Probability
+  prob_df$Category <- as.character(prob_df$Category)
+  prob_df <- prob_df[order(prob_df$CurveGroup, prob_df$CategoryIndex, prob_df$Theta), , drop = FALSE]
+
+  data.frame_category <- data.frame(
+    Category = category_levels,
+    CategoryIndex = seq_along(category_levels),
+    CategoryScore = suppressWarnings(as.numeric(category_levels)),
+    stringsAsFactors = FALSE
+  )
+  data.frame_group <- data.frame(
+    CurveGroup = names(curve_spec$groups),
+    SurfacePanel = seq_along(curve_spec$groups),
+    Model = curve_spec$model,
+    stringsAsFactors = FALSE
+  )
+  observed_scores <- if (!is.null(x$prep$data) && "Score" %in% names(x$prep$data)) {
+    as.character(x$prep$data$Score)
+  } else {
+    character()
+  }
+  observed_counts <- table(observed_scores, useNA = "no")
+  category_counts <- unname(observed_counts[category_levels])
+  category_counts[is.na(category_counts)] <- 0L
+  category_support <- data.frame(
+    Category = category_levels,
+    CategoryIndex = seq_along(category_levels),
+    CategoryScore = suppressWarnings(as.numeric(category_levels)),
+    ObservedCount = as.integer(category_counts),
+    ZeroObserved = as.integer(category_counts) == 0L,
+    SupportRole = ifelse(
+      as.integer(category_counts) == 0L,
+      "retained score-support category with zero observed responses",
+      "observed response category"
+    ),
+    stringsAsFactors = FALSE
+  )
+  axis_contract <- data.frame(
+    Axis = c("x", "y", "z"),
+    Column = c("SurfaceX", "SurfaceY", "SurfaceZ"),
+    Label = c("Theta / Logit", "Observed category index", "Category probability"),
+    stringsAsFactors = FALSE
+  )
+  renderer_contract <- data.frame(
+    Renderer = c("base", "external 3D renderer"),
+    Status = c("not rendered as 3D in base graphics", "payload only; no plotly/rgl dependency"),
+    RecommendedUse = c(
+      "Use the 2D CCC/pathway views for default reports.",
+      "Use the surface payload for exploratory teaching, audit, or downstream interactive rendering."
+    ),
+    stringsAsFactors = FALSE
+  )
+  zero_count_message <- if (any(category_support$ZeroObserved)) {
+    paste0(
+      "Retained categories with zero observed responses: ",
+      paste(category_support$Category[category_support$ZeroObserved], collapse = ", "),
+      ". Keep these labels for scale support, but avoid overinterpreting adjacent threshold ridges."
+    )
+  } else {
+    "All retained categories have at least one observed response in the fitted data."
+  }
+  interpretation_guide <- data.frame(
+    Topic = c(
+      "Axes",
+      "Category dominance",
+      "Zero-frequency categories",
+      "Reporting use",
+      "Renderer boundary"
+    ),
+    Guidance = c(
+      "Read SurfaceX as theta/logit, SurfaceY as retained category index, and SurfaceZ as predicted category probability.",
+      "A high SurfaceZ ridge marks the theta region where that category is most probable; compare with the 2D CCC/pathway view before making a reporting claim.",
+      zero_count_message,
+      "Use the 2D pathway or CCC figure as the default manuscript/report figure; use this surface as exploratory or teaching material.",
+      "mfrmr returns the data contract only and does not execute plotly/rgl or any other interactive 3D renderer."
+    ),
+    stringsAsFactors = FALSE
+  )
+  reporting_policy <- data.frame(
+    UseCase = c(
+      "Manuscript core figure",
+      "Appendix or teaching figure",
+      "Interactive downstream rendering",
+      "FACETS/ConQuest/SPSS comparison"
+    ),
+    Recommendation = c(
+      "Prefer plot(fit, type = \"pathway\") or plot(fit, type = \"ccc\").",
+      "Acceptable when explicitly described as exploratory category-probability support.",
+      "Use surface, categories, groups, axis_contract, renderer_contract, and category_support as the renderer input contract.",
+      "Do not present the surface as a direct FACETS, ConQuest, or SPSS-equivalent display."
+    ),
+    stringsAsFactors = FALSE
+  )
+
+  list(
+    surface = prob_df,
+    categories = data.frame_category,
+    category_support = category_support,
+    groups = data.frame_group,
+    axis_contract = axis_contract,
+    renderer_contract = renderer_contract,
+    interpretation_guide = interpretation_guide,
+    reporting_policy = reporting_policy,
+    surface_role = "theta_by_category_by_probability",
+    recommended_use = "Exploratory surface payload only; keep 2D pathway/CCC views as the default reporting figures."
+  )
+}
+
 draw_ccc <- function(plot_data, title = NULL, palette = NULL) {
   prob_df <- plot_data$probabilities
   traces <- unique(paste(prob_df$CurveGroup, prob_df$Category, sep = " | Cat "))
@@ -726,19 +951,28 @@ draw_facet_plot <- function(facet_tbl,
 #' @param x An `mfrm_fit` object from [fit_mfrm()].
 #' @param type Plot type. Use `NULL`, `"bundle"`, or `"all"` for the
 #'   three-part fit bundle; otherwise choose one of `"facet"`, `"person"`,
-#'   `"step"`, `"wright"`, `"pathway"`, or `"ccc"`.
+#'   `"step"`, `"wright"`, `"pathway"`, `"ccc"`, `"ccc_surface"`, or
+#'   `"category_surface"`.
 #' @param facet Optional facet name for `type = "facet"`.
 #' @param top_n Maximum number of facet/step locations retained for
 #'   compact displays.
-#' @param theta_range Numeric length-2 range for pathway and CCC plots.
-#' @param theta_points Number of theta grid points used for pathway and
-#'   CCC plots.
+#' @param theta_range Numeric length-2 range for pathway, CCC, and
+#'   category-surface payloads.
+#' @param theta_points Number of theta grid points used for pathway, CCC, and
+#'   category-surface payloads.
 #' @param title Optional custom title.
 #' @param palette Optional color overrides.
 #' @param label_angle Rotation angle for x-axis labels where applicable.
 #' @param show_ci If `TRUE`, add approximate confidence intervals when
 #'   available.
 #' @param ci_level Confidence level used when `show_ci = TRUE`.
+#' @param group Optional grouping for `type = "wright"` to overlay
+#'   per-group person-density curves (DIF / DFF screening view).
+#'   Either a column name (looked up first in `group_data` when
+#'   supplied through `...`, then in `fit$prep$data`) or a vector
+#'   aligned with `fit$facets$person`. Ignored for other `type`
+#'   values. To pass the source data alongside, use
+#'   `plot(fit, type = "wright", group = "MyCol", group_data = <df>)`.
 #' @param draw If `TRUE`, draw the plot with base graphics.
 #' @param preset Visual preset (`"standard"`, `"publication"`, or
 #'   `"compact"`).
@@ -746,30 +980,43 @@ draw_facet_plot <- function(facet_tbl,
 #'
 #' @details
 #' This S3 plotting method provides the core fit-family visuals for
-#' `mfrmr`. When `type` is omitted, it returns a bundle containing a
+#' `mfrmr`. When `type` is omitted, it returns the Wright map alone as
+#' an `mfrm_plot_data` object (the most useful single figure for a
+#' first inspection). Pass `type = "bundle"` (or `"all"` / `"default"`)
+#' to obtain the legacy three-plot `mfrm_plot_bundle` containing a
 #' Wright map, pathway map, and category characteristic curves. The
-#' returned object still carries machine-readable metadata through the
-#' `mfrm_plot_data` contract, even when the plot is drawn immediately.
+#' returned object always carries machine-readable metadata through
+#' the `mfrm_plot_data` contract, even when the plot is drawn
+#' immediately.
 #'
 #' `type = "wright"` shows persons, facet levels, and step thresholds on
 #' a shared logit scale. `type = "pathway"` shows expected score traces
 #' and dominant-category regions across theta. `type = "ccc"` shows
-#' category response probabilities. The remaining types provide compact
-#' person, step, or facet-specific displays.
+#' category response probabilities. `type = "ccc_surface"` or
+#' `type = "category_surface"` returns a 3D-ready category-probability
+#' surface payload for external rendering; it deliberately does not add a
+#' plotly/rgl dependency or replace the 2D CCC/pathway reporting figures. The
+#' payload includes `category_support`, `interpretation_guide`, and
+#' `reporting_policy` tables so retained zero-frequency categories and
+#' manuscript-use boundaries remain visible to beginners. The remaining
+#' types (`"facet"`, `"person"`, `"step"`, `"shrinkage"`) provide
+#' compact location-specific displays.
 #'
 #' @section Typical workflow:
 #' 1. Fit a model with [fit_mfrm()].
-#' 2. Use `plot(fit)` to inspect the three core fit-family visuals.
-#' 3. Switch to `type = "wright"` or `type = "pathway"` when you need a
-#'    single figure for reporting or manuscript preparation.
+#' 2. Use `plot(fit)` to inspect the Wright map at a glance.
+#' 3. Switch to `type = "pathway"`, `"ccc"`, or `"shrinkage"` for the
+#'    relevant follow-up figure, or `type = "bundle"` for the
+#'    three-plot overview when preparing a FACETS-style summary.
 #'
 #' @section Further guidance:
 #' For a plot-selection guide and extended examples, see
 #' [mfrmr_visual_diagnostics] and
 #' `vignette("mfrmr-visual-diagnostics", package = "mfrmr")`.
 #'
-#' @return Invisibly, an `mfrm_plot_data` object or an `mfrm_plot_bundle`
-#'   when `type` is omitted.
+#' @return Invisibly, an `mfrm_plot_data` object (default and for any
+#'   single `type`), or an `mfrm_plot_bundle` when
+#'   `type = "bundle"` / `"all"` / `"default"`.
 #' @seealso [fit_mfrm()], [plot_wright_unified()], [plot_bubble()],
 #'   [mfrmr_visual_diagnostics]
 #' @examples
@@ -783,8 +1030,24 @@ draw_facet_plot <- function(facet_tbl,
 #'   model = "RSM",
 #'   maxit = 25
 #' )
-#' bundle <- plot(fit, draw = FALSE)
-#' names(bundle)
+#' wright <- plot(fit, draw = FALSE)
+#' wright$data$plot
+#' # Look for: persons clustered against the facet / step rows on the
+#' #   shared logit axis. Large gaps between the person density and
+#' #   the step / facet rails indicate weak targeting; ceiling /
+#' #   floor stripes mean the test is too easy / hard.
+#' bundle <- plot(fit, type = "bundle", draw = FALSE)
+#' bundle$wright_map$data$plot
+#' # Look for: pathway curves rising in the expected order with
+#' #   visible dominant-category bands; CCC curves peaking sequentially
+#' #   without one category being completely overlapped by neighbours.
+#' surface <- plot(fit, type = "ccc_surface", draw = FALSE)
+#' head(surface$data$surface)
+#' surface$data$category_support
+#' # Look for: every retained category having `Observed > 0`; categories
+#' #   with zero observations are returned as a placeholder slice and
+#' #   should not be interpreted as a real score region.
+#' surface$data$interpretation_guide
 #' if (interactive()) {
 #'   plot(
 #'     fit,
@@ -819,6 +1082,7 @@ plot.mfrm_fit <- function(x,
                           label_angle = 45,
                           show_ci = FALSE,
                           ci_level = 0.95,
+                          group = NULL,
                           draw = TRUE,
                           preset = c("standard", "publication", "compact"),
                           ...) {
@@ -837,8 +1101,14 @@ plot.mfrm_fit <- function(x,
 
   se_tbl_ci <- if (isTRUE(show_ci)) compute_se_for_plot(x, ci_level = ci_level) else NULL
 
-  default_bundle <- missing(type) || is.null(type)
-  if (default_bundle || tolower(as.character(type[1])) %in% c("bundle", "all", "default")) {
+  # Default routing: a bare plot(fit) call now renders the Wright map
+  # alone. The previous three-plot bundle (Wright + pathway + CCC) is
+  # still available via plot(fit, type = "bundle") for users who want
+  # the combined FACETS-style overview.
+  if (missing(type) || is.null(type)) {
+    type <- "wright"
+  }
+  if (tolower(as.character(type[1])) %in% c("bundle", "all", "default")) {
     out <- list(
       wright_map = as_plot_data("wright_map", c(
         build_wright_map_data(x, top_n = top_n, se_tbl = se_tbl_ci),
@@ -919,14 +1189,86 @@ plot.mfrm_fit <- function(x,
     return(invisible(out))
   }
 
-  type <- match.arg(tolower(as.character(type[1])), c("facet", "person", "step", "wright", "pathway", "ccc"))
+  # Locale-independent validation (match.arg() would produce a
+  # translated error string on non-English locales).
+  type_choices <- c("facet", "person", "step", "wright", "pathway",
+                    "ccc", "ccc_overlay", "ccc_surface", "category_surface",
+                    "shrinkage")
+  type_in <- tolower(as.character(type[1]))
+  if (!(type_in %in% type_choices)) {
+    stop(sprintf(
+      "`type = \"%s\"` is not a recognized plot type. Choose one of: %s.",
+      type_in, paste(shQuote(type_choices), collapse = ", ")
+    ), call. = FALSE)
+  }
+  type <- type_in
+  if (identical(type, "category_surface")) type <- "ccc_surface"
+
+  if (type == "shrinkage") {
+    data_list <- .build_shrinkage_plot_data(x)
+    out <- as_plot_data("shrinkage", list(
+      data = data_list$table,
+      shrinkage_report = data_list$report,
+      mode = data_list$mode,
+      title = title %||% "Empirical-Bayes shrinkage",
+      subtitle = sprintf(
+        "Original (filled) vs shrunk (open) estimates; mode = %s",
+        data_list$mode
+      ),
+      preset = style$name,
+      legend = new_plot_legend(
+        label = c("Original estimate", "Shrunk estimate",
+                  "Shrinkage direction", "Sum-to-zero (reference)"),
+        role = c("location", "location", "arrow", "reference"),
+        aesthetic = c("point", "point", "arrow", "line"),
+        value = c(style$accent_primary, style$accent_tertiary,
+                  style$neutral, style$neutral)
+      ),
+      reference_lines = new_reference_lines(
+        "v", 0, "Sum-to-zero reference", "dashed", "reference"
+      )
+    ))
+    if (isTRUE(draw)) {
+      apply_plot_preset(style)
+      .draw_shrinkage_plot(data_list, style = style,
+                           title = title %||% "Empirical-Bayes shrinkage",
+                           show_ci = isTRUE(show_ci))
+    }
+    return(invisible(out))
+  }
 
   if (type == "wright") {
+    # Build optional subgroup density payload when `group` names a
+    # column on the prepared data. Each subgroup gets its own per-bin
+    # density profile so DIF screening reads the same axis as the
+    # main Wright map.
+    group_payload <- NULL
+    if (!is.null(group)) {
+      group_payload <- tryCatch(
+        .build_wright_group_density(x, group = group,
+                                     group_data = list(...)$group_data),
+        error = function(e) {
+          message(sprintf(
+            "Wright group overlay disabled: %s",
+            conditionMessage(e)
+          ))
+          NULL
+        }
+      )
+    }
     out <- as_plot_data("wright_map", c(
       build_wright_map_data(x, top_n = top_n, se_tbl = se_tbl_ci),
       list(
         title = title %||% "Wright map",
-        subtitle = "Shared logit scale for persons, facets, and thresholds",
+        subtitle = if (is.null(group_payload)) {
+          "Shared logit scale for persons, facets, and thresholds"
+        } else {
+          sprintf(
+            "Shared logit scale; person density split by `%s` (%d level(s))",
+            group, length(unique(group_payload$Group))
+          )
+        },
+        group = group_payload,
         preset = style$name,
         legend = new_plot_legend(
           label = c("Person density", "Facet levels", "Step thresholds"),
@@ -955,6 +1297,26 @@ plot.mfrm_fit <- function(x,
         show_ci = show_ci,
         ci_level = ci_level
       )
+      if (!is.null(group_payload) && nrow(group_payload) > 0L) {
+        # Overlay per-group density curves on the Wright map's left
+        # density column, using the existing usr coordinate system.
+        usr <- graphics::par("usr")
+        groups <- unique(group_payload$Group)
+        cols <- grDevices::hcl.colors(length(groups), "Dark 3")
+        for (i in seq_along(groups)) {
+          sub <- group_payload[group_payload$Group == groups[i], ,
+                                drop = FALSE]
+          if (nrow(sub) < 2L) next
+          # Scale density to the left margin band (10% of the x-axis).
+          x_band <- usr[1] + diff(usr[1:2]) * 0.10 * sub$Density /
+            max(group_payload$Density, na.rm = TRUE)
+          graphics::lines(x_band, sub$Theta, col = cols[i], lwd = 2)
+        }
+        graphics::legend(
+          "topright", legend = groups, col = cols, lwd = 2,
+          bty = "n", cex = 0.8, inset = 0.02
+        )
+      }
     }
     return(invisible(out))
   }
@@ -1003,6 +1365,138 @@ plot.mfrm_fit <- function(x,
       draw_ccc(out$data, title = title, palette = palette %||% c(
         style$accent_primary, style$accent_secondary, style$accent_tertiary, style$warn
       ))
+    }
+    return(invisible(out))
+  }
+  if (type == "ccc_overlay") {
+    # Empirical category proportions binned by person measure, overlaid
+    # on the model CCC curves. Provides a visual model-data fit check.
+    base <- as_plot_data("category_characteristic_curves", c(
+      build_ccc_data(x, theta_range = theta_range,
+                     theta_points = theta_points),
+      list(preset = style$name)
+    ))
+    person_tbl <- as.data.frame(x$facets$person, stringsAsFactors = FALSE)
+    obs_df <- as.data.frame(x$prep$data %||% NULL, stringsAsFactors = FALSE)
+    overlay <- tryCatch({
+      if (nrow(person_tbl) == 0L || nrow(obs_df) == 0L) {
+        data.frame(Bin = integer(0), Theta = numeric(0),
+                   Category = integer(0), Proportion = numeric(0),
+                   N = integer(0), stringsAsFactors = FALSE)
+      } else {
+        merged <- merge(
+          obs_df[, c("Person", "Score")],
+          person_tbl[, c("Person", "Estimate")],
+          by = "Person", all.x = TRUE
+        )
+        merged <- merged[is.finite(merged$Estimate) &
+                           is.finite(merged$Score), , drop = FALSE]
+        if (nrow(merged) == 0L) {
+          data.frame(Bin = integer(0), Theta = numeric(0),
+                     Category = integer(0), Proportion = numeric(0),
+                     N = integer(0), stringsAsFactors = FALSE)
+        } else {
+          n_bins <- max(4L, min(12L, floor(nrow(merged) / 30)))
+          breaks <- stats::quantile(
+            merged$Estimate,
+            probs = seq(0, 1, length.out = n_bins + 1L),
+            na.rm = TRUE, names = FALSE
+          )
+          breaks <- unique(breaks)
+          if (length(breaks) < 2L) {
+            breaks <- range(merged$Estimate) + c(-0.05, 0.05)
+          }
+          merged$Bin <- as.integer(cut(merged$Estimate, breaks = breaks,
+                                       include.lowest = TRUE))
+          cats <- sort(unique(merged$Score))
+          rows <- list()
+          for (b in sort(unique(merged$Bin))) {
+            sub <- merged[merged$Bin == b, , drop = FALSE]
+            if (nrow(sub) == 0L) next
+            theta_b <- mean(sub$Estimate, na.rm = TRUE)
+            n_b <- nrow(sub)
+            for (k in cats) {
+              p_k <- mean(sub$Score == k, na.rm = TRUE)
+              rows[[length(rows) + 1L]] <- data.frame(
+                Bin = b, Theta = theta_b, Category = k,
+                Proportion = p_k, N = n_b,
+                stringsAsFactors = FALSE
+              )
+            }
+          }
+          do.call(rbind, rows) %||% data.frame()
+        }
+      }
+    }, error = function(e) {
+      data.frame(Bin = integer(0), Theta = numeric(0),
+                 Category = integer(0), Proportion = numeric(0),
+                 N = integer(0), stringsAsFactors = FALSE)
+    })
+    ccc_payload <- build_ccc_data(x, theta_range = theta_range,
+                                   theta_points = theta_points)
+    out <- as_plot_data("category_characteristic_curves_overlay", c(
+      ccc_payload,
+      list(
+        overlay = overlay,
+        title = title %||% "Category curves with empirical overlay",
+        subtitle = sprintf(
+          "Model curves vs observed proportions in %d theta bin(s)",
+          length(unique(overlay$Bin))
+        ),
+        preset = style$name,
+        legend = new_plot_legend(
+          label = c("Model category curves", "Observed bin proportion"),
+          role = c("probability", "empirical"),
+          aesthetic = c("line", "point"),
+          value = c(style$accent_primary, style$fail)
+        ),
+        reference_lines = new_reference_lines("v", 0, "Centered theta reference",
+                                               "dashed", "reference")
+      )
+    ))
+    if (isTRUE(draw)) {
+      apply_plot_preset(style)
+      draw_ccc(ccc_payload, title = out$title %||% "Category curves",
+               palette = palette %||% c(
+                 style$accent_primary, style$accent_secondary,
+                 style$accent_tertiary, style$warn
+               ))
+      if (nrow(overlay) > 0L) {
+        cats <- sort(unique(overlay$Category))
+        cat_palette <- grDevices::hcl.colors(length(cats), "Dark 3")
+        max_n <- max(overlay$N, na.rm = TRUE)
+        for (i in seq_along(cats)) {
+          sub <- overlay[overlay$Category == cats[i], , drop = FALSE]
+          graphics::points(sub$Theta, sub$Proportion, pch = 21,
+                           bg = cat_palette[i], col = "white",
+                           cex = 0.8 + 0.6 * sqrt(sub$N / max(1, max_n)))
+        }
+      }
+    }
+    return(invisible(out))
+  }
+  if (type == "ccc_surface") {
+    out <- as_plot_data("category_probability_surface", c(
+      build_ccc_surface_data(x, theta_range = theta_range, theta_points = theta_points),
+      list(
+        title = title %||% "Category probability surface",
+        subtitle = "3D-ready theta x category x probability payload; no package-native 3D renderer",
+        preset = style$name,
+        legend = new_plot_legend(
+          label = "Category probability surface",
+          role = "probability_surface",
+          aesthetic = "surface",
+          value = "SurfaceZ"
+        ),
+        reference_lines = new_reference_lines("x", 0, "Centered theta reference", "dashed", "reference")
+      )
+    ))
+    if (isTRUE(draw)) {
+      warning(
+        "`type = \"ccc_surface\"` currently returns a 3D-ready `mfrm_plot_data` payload; ",
+        "use `draw = FALSE` and pass `x$data$surface` to an external renderer if needed.",
+        call. = FALSE
+      )
     }
     return(invisible(out))
   }

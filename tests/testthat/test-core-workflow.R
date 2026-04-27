@@ -22,16 +22,38 @@ test_that("core fit/diagnostics workflow runs", {
   fit_summary <- summary(fit)
   expect_s3_class(fit_summary, "summary.mfrm_fit")
   expect_true(all(c("overview", "facet_overview", "person_overview", "step_overview") %in% names(fit_summary)))
+  expect_true(all(c("status", "key_warnings", "next_actions") %in% names(fit_summary)))
+  expect_true(all(c(
+    "MMLEngineRequested",
+    "MMLEngineUsed",
+    "OptimizerMethod",
+    "ConvergenceCode",
+    "ConvergenceBasis",
+    "ConvergenceStatus",
+    "ConvergenceSeverity",
+    "FunctionEvaluations",
+    "GradientEvaluations",
+    "TerminalGradientSupNorm"
+  ) %in% names(fit_summary$overview)))
   printed_summary <- capture.output(summary(fit))
   expect_true(any(grepl("Many-Facet Rasch Model Summary", printed_summary, fixed = TRUE)))
+  expect_true(any(grepl("Key warnings", printed_summary, fixed = TRUE)))
+  expect_true(any(grepl("Next actions", printed_summary, fixed = TRUE)))
+  expect_true(any(grepl("Status:", printed_summary, fixed = TRUE)))
+  expect_true(any(grepl("Basis:", printed_summary, fixed = TRUE)))
   expect_true(any(grepl("Facet overview", printed_summary, fixed = TRUE)))
+  # Default plot(fit) now returns the Wright map alone; the 3-plot
+  # bundle remains available via `type = "bundle"`.
   p_fit_default <- plot(fit, draw = FALSE)
-  expect_s3_class(p_fit_default, "mfrm_plot_bundle")
-  expect_true(all(c("wright_map", "pathway_map", "category_characteristic_curves") %in% names(p_fit_default)))
-  expect_s3_class(p_fit_default$wright_map, "mfrm_plot_data")
-  expect_s3_class(p_fit_default$pathway_map, "mfrm_plot_data")
-  expect_s3_class(p_fit_default$category_characteristic_curves, "mfrm_plot_data")
-  printed_bundle <- capture.output(print(p_fit_default))
+  expect_s3_class(p_fit_default, "mfrm_plot_data")
+  expect_identical(p_fit_default$name, "wright_map")
+  p_fit_bundle <- plot(fit, type = "bundle", draw = FALSE)
+  expect_s3_class(p_fit_bundle, "mfrm_plot_bundle")
+  expect_true(all(c("wright_map", "pathway_map", "category_characteristic_curves") %in% names(p_fit_bundle)))
+  expect_s3_class(p_fit_bundle$wright_map, "mfrm_plot_data")
+  expect_s3_class(p_fit_bundle$pathway_map, "mfrm_plot_data")
+  expect_s3_class(p_fit_bundle$category_characteristic_curves, "mfrm_plot_data")
+  printed_bundle <- capture.output(print(p_fit_bundle))
   expect_true(any(grepl("mfrm plot bundle", printed_bundle, fixed = TRUE)))
 
   p_fit_wright <- plot(fit, type = "wright", draw = FALSE)
@@ -84,12 +106,15 @@ test_that("core fit/diagnostics workflow runs", {
     names(diag$interrater$summary)))
   diag_summary <- summary(diag)
   expect_s3_class(diag_summary, "summary.mfrm_diagnostics")
-  expect_true(all(c("overview", "overall_fit", "reliability", "top_fit", "flags") %in% names(diag_summary)))
+  expect_true(all(c("overview", "status", "key_warnings", "next_actions", "overall_fit", "reliability", "top_fit", "flags") %in% names(diag_summary)))
   printed_diag <- capture.output(summary(diag))
   expect_true(any(grepl("Many-Facet Rasch Diagnostics Summary", printed_diag, fixed = TRUE)))
+  expect_true(any(grepl("Key warnings", printed_diag, fixed = TRUE)))
+  expect_true(any(grepl("Next actions", printed_diag, fixed = TRUE)))
   expect_true(any(grepl("Precision basis", printed_diag, fixed = TRUE)))
   expect_true(any(grepl("Precision tier", printed_diag, fixed = TRUE)))
   expect_true(any(grepl("SE/ModelSE, CI, and reliability conventions", printed_diag, fixed = TRUE)))
+  expect_true(any(grepl("Use `diagnostics$reliability` for facet-level separation/reliability", printed_diag, fixed = TRUE)))
 
   t4 <- mfrmr::unexpected_response_table(fit, diagnostics = diag, abs_z_min = 1.5, prob_max = 0.4, top_n = 15)
   expect_s3_class(t4, "mfrm_unexpected")
@@ -489,10 +514,25 @@ test_that("core fit/diagnostics workflow runs", {
   expect_s3_class(vis, "mfrm_visual_summaries")
   expect_true("residual_pca_overall" %in% names(vis$warning_map))
   expect_true("residual_pca_by_facet" %in% names(vis$warning_map))
+  expect_true("strict_marginal_fit" %in% names(vis$warning_map))
+  expect_true("strict_pairwise_local_dependence" %in% names(vis$warning_map))
   expect_true("residual_pca_overall" %in% names(vis$summary_map))
   expect_true("residual_pca_by_facet" %in% names(vis$summary_map))
+  expect_true("strict_marginal_fit" %in% names(vis$summary_map))
+  expect_true("strict_pairwise_local_dependence" %in% names(vis$summary_map))
   expect_match(paste(vis$warning_map$residual_pca_overall, collapse = " "), "Threshold profile: standard", fixed = TRUE)
   expect_match(paste(vis$summary_map$residual_pca_overall, collapse = " "), "Heuristic reference bands", fixed = TRUE)
+  expect_true(is.list(vis$plot_payloads))
+  expect_true(all(c("comparison", "warning_counts", "summary_counts") %in% names(vis$plot_payloads)))
+  expect_true("category_probability_surface" %in% names(vis$plot_payloads))
+  expect_s3_class(vis$plot_payloads$comparison, "mfrm_plot_data")
+  expect_s3_class(vis$plot_payloads$warning_counts, "mfrm_plot_data")
+  expect_s3_class(vis$plot_payloads$summary_counts, "mfrm_plot_data")
+  expect_s3_class(vis$plot_payloads$category_probability_surface, "mfrm_plot_data")
+  expect_true(is.data.frame(vis$plot_payloads$category_probability_surface$data$surface))
+  expect_true(is.data.frame(vis$public_plot_routes))
+  expect_true(all(c("Visual", "PlotHelper", "DrawFreeRoute", "PlotReturnClass", "Scope") %in% names(vis$public_plot_routes)))
+  expect_true("category_probability_surface" %in% vis$public_plot_routes$Visual)
   vis_summary <- summary(vis)
   expect_s3_class(vis_summary, "summary.mfrm_bundle")
   vis_plot <- plot(vis, draw = FALSE)
@@ -517,6 +557,7 @@ test_that("core fit/diagnostics workflow runs", {
   expect_match(apa$table_figure_captions, "Residual PCA Scree", fixed = TRUE)
   expect_match(apa$report_text, "Heuristic reference bands", fixed = TRUE)
   expect_match(apa$report_text, "Optimization", fixed = TRUE)
+  expect_match(apa$report_text, "Terminal gradient sup-norm", fixed = TRUE)
   expect_match(apa$report_text, "Constraint settings:", fixed = TRUE)
   expect_match(apa$report_text, "Step/threshold summary:", fixed = TRUE)
   expect_match(apa$report_text, "Largest misfit", fixed = TRUE)
@@ -565,15 +606,25 @@ test_that("core fit/diagnostics workflow runs", {
   expect_true("standard" %in% names(profiles_summary$thresholds))
 })
 
-test_that("packaged extdata includes baseline and iterative-calibrated CSVs", {
+test_that("packaged simulation datasets are accessible via load_mfrmr_data()", {
+  # Starting in 0.1.6, the Eckes-and-Jin-inspired simulation datasets
+  # are distributed as lazy-loaded .rda files under `data/` rather
+  # than duplicate CSVs under `inst/extdata/`. load_mfrmr_data() is
+  # the canonical loader; base-R data("mfrmr_<key>") is the
+  # equivalent direct path.
+  expected_keys <- c("study1", "study2", "combined",
+                     "study1_itercal", "study2_itercal", "combined_itercal")
+  for (key in expected_keys) {
+    df <- load_mfrmr_data(key)
+    expect_s3_class(df, "data.frame")
+    expect_true(all(c("Person", "Rater", "Criterion", "Score") %in% names(df)))
+  }
+
+  # extdata still exists as a doc pointer (README_sim_data.txt) but
+  # no longer holds duplicate CSVs.
   ext <- system.file("extdata", package = "mfrmr")
   expect_true(nzchar(ext))
-
-  files <- sort(list.files(ext))
-  expect_true("eckes_jin_2021_study1_sim.csv" %in% files)
-  expect_true("eckes_jin_2021_study2_sim.csv" %in% files)
-  expect_true("eckes_jin_2021_study1_itercal_sim.csv" %in% files)
-  expect_true("eckes_jin_2021_study2_itercal_sim.csv" %in% files)
+  expect_true(any(grepl("README", list.files(ext), ignore.case = TRUE)))
 })
 
 test_that("legacy numbered API names are internal (not exported)", {

@@ -2,7 +2,7 @@
 % Please edit documentation in R/api-reports.R
 \name{bias_interaction_report}
 \alias{bias_interaction_report}
-\title{Build a bias-interaction plot-data bundle (preferred alias)}
+\title{Build a bias-interaction plot-data bundle (FACETS Table 13: ranked bias list)}
 \usage{
 bias_interaction_report(
   x,
@@ -57,7 +57,21 @@ A named list with bias-interaction plotting/report components. Class:
 \code{mfrm_bias_interaction}.
 }
 \description{
-Build a bias-interaction plot-data bundle (preferred alias)
+Bundles the \strong{ranked flagged-cells} view of a bias-interaction run for
+downstream printing and plotting. The three sibling reports in this
+family are intentionally distinct:
+\itemize{
+\item \code{\link[=bias_interaction_report]{bias_interaction_report()}} (this one) = FACETS Table 13: a ranked
+list of interaction cells with \code{t}, \verb{bias size}, and screening tail
+area -- use when reviewing which \verb{(facet_a, facet_b)} cells deserve
+follow-up.
+\item \code{\link[=bias_iteration_report]{bias_iteration_report()}} = iteration history / convergence trace
+for the bias recalibration (FACETS Table 9 territory) -- use when
+diagnosing whether the bias run itself stabilised.
+\item \code{\link[=bias_pairwise_report]{bias_pairwise_report()}} = pairwise contrast table for a target
+facet (FACETS Table 14 territory) -- use when comparing levels
+within a facet while controlling for the other.
+}
 }
 \details{
 Preferred bundle API for interaction-bias diagnostics. The function can:
@@ -96,7 +110,7 @@ bias <- estimate_bias(fit, diag, facet_a = "Rater", facet_b = "Criterion", max_i
 out <- bias_interaction_report(bias, top_n = 10)
 summary(out)
 p_bi <- plot(out, draw = FALSE)
-class(p_bi)
+p_bi$data$plot
 }
 \seealso{
 \code{\link[=estimate_bias]{estimate_bias()}}, \code{\link[=build_fixed_reports]{build_fixed_reports()}}, \code{\link[=plot_bias_interaction]{plot_bias_interaction()}}

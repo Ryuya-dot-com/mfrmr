@@ -62,6 +62,7 @@ graphics.
 }
 
 \examples{
+\donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 tbl <- apa_table(fit, which = "summary")
@@ -75,6 +76,7 @@ if (interactive()) {
     palette = c(numeric_profile = "#2b8cbe", grid = "#d9d9d9"),
     label_angle = 45
   )
+}
 }
 }
 \seealso{

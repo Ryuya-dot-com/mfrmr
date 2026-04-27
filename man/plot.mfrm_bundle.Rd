@@ -45,6 +45,12 @@ Plot report/table bundles with base R defaults
 \item \code{mfrm_iteration_report} -> replayed-iteration trajectories
 \item \code{mfrm_subset_connectivity} -> subset-observation/connectivity plots
 \item \code{mfrm_facet_statistics} -> facet statistic profile plots
+\item \code{mfrm_export_bundle} / \code{mfrm_summary_appendix_export} -> export handoff
+plots (\code{formats}, \code{artifact_groups}, \code{selection_tables},
+\code{selection_handoff}, \code{selection_handoff_bundles},
+\code{selection_handoff_roles},
+\code{selection_handoff_role_sections}, \code{selection_bundles},
+\code{selection_roles}, \code{selection_sections})
 }
 
 If a class is outside these families, use dedicated plotting helpers
@@ -66,9 +72,14 @@ the selected route and payload; set \code{draw = TRUE} for immediate base graphi
 }
 
 \examples{
-toy <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
-t4 <- unexpected_response_table(fit, abs_z_min = 1.5, prob_max = 0.4, top_n = 10)
+\donttest{
+toy_full <- load_mfrmr_data("example_core")
+toy_people <- unique(toy_full$Person)[1:12]
+toy <- toy_full[toy_full$Person \%in\% toy_people, , drop = FALSE]
+fit <- suppressWarnings(
+  fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 10)
+)
+t4 <- unexpected_response_table(fit, abs_z_min = 1.5, prob_max = 0.4, top_n = 5)
 p <- plot(t4, draw = FALSE)
 vis <- build_visual_summaries(fit, diagnose_mfrm(fit, residual_pca = "none"))
 p_vis <- plot(vis, type = "comparison", draw = FALSE)
@@ -91,6 +102,7 @@ if (interactive()) {
     palette = c(warning = "#cb181d", summary = "#3182bd"),
     label_angle = 45
   )
+}
 }
 }
 \seealso{

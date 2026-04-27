@@ -8,6 +8,7 @@ reporting_checklist(
   fit,
   diagnostics = NULL,
   bias_results = NULL,
+  hierarchical_structure = NULL,
   include_references = TRUE
 )
 }
@@ -19,6 +20,13 @@ diagnostics are computed with \code{residual_pca = "none"}.}
 
 \item{bias_results}{Optional output from \code{\link[=estimate_bias]{estimate_bias()}} or a named list of
 such outputs.}
+
+\item{hierarchical_structure}{Optional output from
+\code{\link[=analyze_hierarchical_structure]{analyze_hierarchical_structure()}}. When supplied, the
+"Hierarchical structure audit" checklist item is flipped to
+\code{DraftReady = TRUE} and its \code{Detail} column surfaces the number
+of nested / crossed facet pairs and whether the ICC table is
+available.}
 
 \item{include_references}{If \code{TRUE}, include a compact reference table in the
 returned bundle.}
@@ -36,7 +44,7 @@ bundle. It does not try to judge substantive reporting quality; instead, it
 checks whether the fitted object and related diagnostics contain the evidence
 typically reported in MFRM write-ups.
 
-Checklist items are grouped into seven sections:
+Checklist items are grouped into seven core sections:
 \itemize{
 \item Method section
 \item Global fit
@@ -47,12 +55,17 @@ Checklist items are grouped into seven sections:
 \item Visual displays
 }
 
+When a fit uses the latent-regression population-model branch, the checklist
+also adds a \verb{Population Model} section covering coefficient reporting,
+categorical model-matrix coding, complete-case omissions, posterior-basis
+wording, and ConQuest scope wording.
+
 The output is designed for manuscript preparation, audit trails, and
 reproducible reporting workflows.
 }
 \section{What this checklist means}{
 
-\code{reporting_checklist()} is a content-availability contract. It tells you
+\code{reporting_checklist()} is a manuscript-preparation guide. It tells you
 which reporting elements are already present in the current analysis
 objects and which still need to be generated or documented. The primary
 draft-status column is \code{DraftReady}; \code{ReadyForAPA} is retained as a
@@ -77,6 +90,11 @@ inferential adequacy.
 package's documented caveats. \code{ReadyForAPA} is a backward-compatible alias
 of the same flag; neither field certifies formal inferential adequacy.
 \item \code{section_summary}: available items by section.
+\item \code{software_scope}: external-software relationship summary for \code{mfrmr},
+FACETS, ConQuest, and SPSS-style tabular handoffs.
+\item \code{visual_scope}: plotting-route summary that separates report-default
+2D figures from exploratory surface/3D-ready payloads, including a short
+\code{InterpretationCheck} for the main user-facing caveat.
 \item \code{references}: core background references when requested.
 }
 }
@@ -85,31 +103,72 @@ of the same flag; neither field certifies formal inferential adequacy.
 
 Review the rows with \code{Available = FALSE} or \code{DraftReady = FALSE}, then add
 the missing diagnostics, bias results, or narrative context before calling
-\code{\link[=build_apa_outputs]{build_apa_outputs()}} for draft text generation.
+\code{\link[=build_apa_outputs]{build_apa_outputs()}} for draft text generation. For \code{RSM} / \code{PCM}
+reporting runs, the preferred route is an \code{MML} fit plus
+\code{diagnose_mfrm(..., diagnostic_mode = "both")} so the checklist can see the
+legacy and strict marginal screens together.
+}
+
+\section{How this differs from operational review}{
+
+\code{reporting_checklist()} is the manuscript/reporting branch of the package.
+Use it when the question is "what is still missing from the report?" rather
+than "which observations or links need follow-up?" For operational review:
+\itemize{
+\item Use \code{\link[=build_misfit_casebook]{build_misfit_casebook()}} after \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} when you need ranked
+misfit cases and grouping views for local follow-up.
+\item Use \code{\link[=build_linking_review]{build_linking_review()}} after anchor/drift/chain helpers when you
+need operational linking triage rather than manuscript-oriented reporting
+tables.
+}
 }
 
 \section{Typical workflow}{
 
 \enumerate{
-\item Fit with \code{\link[=fit_mfrm]{fit_mfrm()}}.
-\item Compute diagnostics with \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}.
+\item Fit with \code{\link[=fit_mfrm]{fit_mfrm()}}. For \code{RSM} / \code{PCM} reporting runs, prefer
+\code{method = "MML"}.
+\item Compute diagnostics with \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}. For \code{RSM} / \code{PCM}, prefer
+\code{diagnostic_mode = "both"}.
 \item Run \code{reporting_checklist()} to see which reporting elements are already
 available from the current analysis objects.
+\item If the issue is operational rather than manuscript-facing, branch to
+\code{\link[=build_misfit_casebook]{build_misfit_casebook()}} or \code{\link[=build_linking_review]{build_linking_review()}} instead of treating
+\code{reporting_checklist()} as the single review hub.
 }
 }
 
 \examples{
+# Fast smoke run: a JML fit + legacy-only diagnostic produces a
+# populated checklist in well under a second.
 toy <- load_mfrmr_data("example_core")
+fit_quick <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
+                      method = "JML", maxit = 15)
+diag_quick <- diagnose_mfrm(fit_quick, residual_pca = "none",
+                             diagnostic_mode = "legacy")
+chk_quick <- reporting_checklist(fit_quick, diagnostics = diag_quick)
+head(chk_quick$checklist[, c("Section", "Item", "DraftReady")])
+
+\donttest{
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", maxit = 25)
-diag <- diagnose_mfrm(fit, residual_pca = "both")
+                method = "MML", maxit = 200)
+diag <- diagnose_mfrm(fit, residual_pca = "both", diagnostic_mode = "both")
 chk <- reporting_checklist(fit, diagnostics = diag)
 summary(chk)
+# Look for: a high `Ready` / `Total` ratio in the summary block.
+#   Sections with `Ready = 0` need follow-up before submitting
+#   (typically diagnostic_mode = "both" or a residual-PCA pass).
 apa <- build_apa_outputs(fit, diag)
 head(chk$checklist[, c("Section", "Item", "DraftReady", "NextAction")])
+# Look for: every row where `DraftReady = "yes"` is ready to paste
+#   into the manuscript. `"no"` rows include a concrete `NextAction`
+#   step (e.g. "run plot_qc_dashboard()") so the gap can be closed
+#   without re-reading the methodology guide.
 nchar(apa$report_text)
+}
 }
 \seealso{
 \code{\link[=build_apa_outputs]{build_apa_outputs()}}, \code{\link[=build_visual_summaries]{build_visual_summaries()}},
-\code{\link[=specifications_report]{specifications_report()}}, \code{\link[=data_quality_report]{data_quality_report()}}
+\code{\link[=specifications_report]{specifications_report()}}, \code{\link[=data_quality_report]{data_quality_report()}},
+\code{\link[=build_misfit_casebook]{build_misfit_casebook()}}, \code{\link[=build_linking_review]{build_linking_review()}}
 }

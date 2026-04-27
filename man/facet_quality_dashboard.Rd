@@ -10,7 +10,7 @@ facet_quality_dashboard(
   facet = NULL,
   bias_results = NULL,
   severity_warn = 1,
-  misfit_warn = 1.5,
+  misfit_warn = NULL,
   central_tendency_max = 0.25,
   bias_count_warn = 1L,
   bias_abs_t_warn = 2,
@@ -50,6 +50,17 @@ bias-row flags from a raw bias bundle.}
 \item{bias_p_max}{Probability cutoff used when deriving bias-row flags
 from a raw bias bundle.}
 }
+\value{
+An object of class \code{mfrm_facet_dashboard} (also inheriting from
+\code{mfrm_bundle} and \code{list}). The object summarizes one target facet:
+\code{overview} reports the facet-level screening totals, \code{summary} provides
+aggregate estimates and flag counts, \code{detail} contains one row per facet
+level with the computed screening indicators, \code{ranked} orders levels by
+review priority, \code{flagged} keeps only levels requiring follow-up,
+\code{bias_sources} records which bias-result bundles contributed to the
+counts, \code{settings} stores the resolved thresholds, and \code{notes} gives short
+interpretation messages about how to read the dashboard.
+}
 \description{
 Build a compact dashboard for one facet at a time, combining facet
 severity, misfit, central-tendency screening, and optional bias counts.
@@ -60,9 +71,12 @@ complementary criteria:
 \itemize{
 \item \strong{Severity}: elements with \eqn{|\mathrm{Estimate}| >}
 \code{severity_warn} logits are flagged as unusually harsh or lenient.
-\item \strong{Misfit}: elements with Infit or Outfit MnSq outside
+\item \strong{Misfit}: elements with Infit or Outfit MnSq outside the
+acceptance band are flagged. The band defaults to the package
+pair returned by \code{\link[=mfrm_misfit_thresholds]{mfrm_misfit_thresholds()}} (Linacre 0.5-1.5);
+pass \code{misfit_warn = 1.5} to keep the older symmetric
 \eqn{[1/}\code{misfit_warn}\eqn{,\;}\code{misfit_warn}\eqn{]}
-(default 0.67--1.5) are flagged.
+form (0.67-1.5).
 \item \strong{Central tendency}: elements with
 \eqn{|\mathrm{Estimate}| <} \code{central_tendency_max} logits
 are flagged.  Near-zero estimates may indicate a rater who avoids
@@ -97,7 +111,8 @@ The returned object is a bundle-like list with class
 
 \examples{
 toy <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
+toy <- toy[toy$Person \%in\% unique(toy$Person)[1:8], ]
+fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 50)
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 dash <- facet_quality_dashboard(fit, diagnostics = diag)
 summary(dash)
