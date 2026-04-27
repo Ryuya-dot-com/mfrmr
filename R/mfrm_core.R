@@ -289,8 +289,9 @@ facet_interactions_active <- function(x) {
     x
   }
   specs <- specs %||% list()
-  if (length(specs) == 0L) return(FALSE)
+  if (!is.list(specs) || length(specs) == 0L) return(FALSE)
   any(vapply(specs, function(spec) {
+    if (!is.list(spec) || is.null(spec$n_params)) return(FALSE)
     as.integer(spec$n_params %||% 0L) > 0L
   }, logical(1)))
 }
