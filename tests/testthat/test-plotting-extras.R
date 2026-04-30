@@ -126,6 +126,42 @@ test_that("plot_dif_summary rejects non-DIF inputs", {
                "analyze_dff|analyze_dif")
 })
 
+test_that("plot_dif_summary validates top_n", {
+  dff <- suppressWarnings(suppressMessages(
+    analyze_dff(.fit, diagnostics = .diag,
+                facet = "Rater", group = "Group",
+                data = .toy, method = "residual")
+  ))
+  expect_error(plot_dif_summary(dff, top_n = 0, draw = FALSE), "`top_n`")
+  expect_error(plot_dif_summary(dff, top_n = 1.5, draw = FALSE), "`top_n`")
+  expect_error(plot_dif_summary(dff, top_n = Inf, draw = FALSE), "`top_n`")
+})
+
+test_that("plot_dif_summary supports CI and threshold guides", {
+  dff <- suppressWarnings(suppressMessages(
+    analyze_dff(.fit, diagnostics = .diag,
+                facet = "Rater", group = "Group",
+                data = .toy, method = "residual")
+  ))
+  p <- plot_dif_summary(dff, draw = FALSE, ci_level = 0.90,
+                        effect_thresholds = c(screen = 0.5),
+                        effect_axis_label = "Screening contrast")
+
+  expect_true(all(c("CI_Lower", "CI_Upper", "ClassificationSystem") %in%
+                    names(p$data$data)))
+  expect_equal(p$data$settings$ci_level, 0.90)
+  expect_equal(unname(p$data$settings$effect_thresholds), 0.5)
+  expect_true(any(p$data$reference_lines$role == "threshold"))
+  expect_true(is.data.frame(p$data$interpretation_guide))
+
+  expect_error(plot_dif_summary(dff, draw = FALSE, ci_level = 1), "`ci_level`")
+  expect_error(plot_dif_summary(dff, draw = FALSE,
+                                effect_thresholds = c(-0.1)),
+               "`effect_thresholds`")
+  expect_error(plot_dif_summary(dff, draw = FALSE, effect_axis_label = ""),
+               "`effect_axis_label`")
+})
+
 test_that("plot_dif_summary sort_by = 'effect' orders by signed contrast", {
   dff <- suppressWarnings(suppressMessages(
     analyze_dff(.fit, diagnostics = .diag,

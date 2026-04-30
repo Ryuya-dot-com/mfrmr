@@ -454,9 +454,10 @@ plot_rater_severity_profile <- function(fit,
 #'
 #' Compact effect-size summary for a [analyze_dff()] / [analyze_dif()]
 #' result. Shows each contrast's signed effect size as a horizontal bar
-#' with a vertical reference at zero, coloured by the ETS-style A / B /
-#' C classification when available, and annotated with the contrast
-#' p-value (or t-statistic when p is missing).
+#' with a vertical reference at zero, coloured by the method-appropriate
+#' classification. ETS-style A / B / C colours are used only when they
+#' are actually available; residual-method screening labels otherwise use
+#' the neutral colour.
 #'
 #' @param x Output from [analyze_dff()] or [analyze_dif()].
 #' @param top_n Maximum rows shown (default `30`).
@@ -464,26 +465,38 @@ plot_rater_severity_profile <- function(fit,
 #'   `"classification"`.
 #' @param preset Visual preset.
 #' @param draw If `TRUE`, draw with base graphics.
+#' @param ci_level Optional confidence level for approximate normal
+#'   intervals drawn from `Effect +/- z * SE` when finite standard errors are
+#'   available. Use `NULL` (default) to omit intervals.
+#' @param effect_thresholds Optional numeric vector of absolute effect-size
+#'   guide lines to draw at `+/- threshold`. These are display aids; only use
+#'   ETS-like values when the source rows support ETS interpretation.
+#' @param effect_axis_label Optional x-axis label override. When `NULL`, the
+#'   label is chosen from the DFF method.
 #'
 #' @return An `mfrm_plot_data` object whose `data` slot contains
 #'   columns `Pair`, `Effect`, `SE`, `Classification`, `Color`.
 #'
 #' @section Interpreting output:
 #' Bars are anchored at zero. Width corresponds to effect size on the
-#' contrast's native scale (logit difference under the residual method;
-#' refit-method delta logit otherwise). The ETS classification (A
-#' negligible, B moderate, C large) drives bar colour when present;
-#' otherwise the bar uses the preset's neutral.
+#' contrast's native scale. For `method = "residual"`, this is the
+#' observed-minus-expected average screening contrast between groups. For
+#' `method = "refit"`, this is the subgroup parameter difference on the
+#' fitted logit scale when linking support allows a comparable contrast.
+#' The ETS classification (A negligible, B moderate, C large) drives bar
+#' colour only when `ClassificationSystem == "ETS"`; otherwise the bar
+#' uses the preset's neutral.
 #'
 #' @seealso [analyze_dff()], [analyze_dif()], [plot_dif_heatmap()].
 #'
 #' @examples
-#' toy <- load_mfrmr_data("example_core")
+#' toy <- load_mfrmr_data("example_bias")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "JML", maxit = 25)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
 #' dff <- analyze_dff(fit, diagnostics = diag,
 #'                    facet = "Rater", group = "Group", data = toy)
+#' unique(dff$dif_table$ClassificationSystem)
 #' p <- plot_dif_summary(dff, draw = FALSE)
 #' head(p$data$data)
 #' @export
@@ -491,13 +504,25 @@ plot_dif_summary <- function(x,
                              top_n = 30L,
                              sort_by = c("abs_effect", "effect", "classification"),
                              preset = c("standard", "publication", "compact"),
-                             draw = TRUE) {
+                             draw = TRUE,
+                             ci_level = NULL,
+                             effect_thresholds = NULL,
+                             effect_axis_label = NULL) {
   if (!inherits(x, c("mfrm_dff", "mfrm_dif"))) {
     stop("`x` must be output from analyze_dff() or analyze_dif().",
          call. = FALSE)
   }
   sort_by <- match.arg(sort_by)
-  top_n <- max(1L, as.integer(top_n))
+  top_n <- .validate_dff_count_arg(top_n, "top_n")
+  ci_level <- .validate_dff_probability(ci_level, "ci_level")
+  effect_thresholds <- .validate_dff_threshold_vector(effect_thresholds,
+                                                      "effect_thresholds")
+  if (!is.null(effect_axis_label) &&
+      (!is.character(effect_axis_label) || length(effect_axis_label) != 1L ||
+       is.na(effect_axis_label) || !nzchar(effect_axis_label))) {
+    stop("`effect_axis_label` must be a single non-empty character string.",
+         call. = FALSE)
+  }
   style <- resolve_plot_preset(preset)
   tbl <- as.data.frame(x$dif_table, stringsAsFactors = FALSE)
   if (nrow(tbl) == 0L) {
@@ -514,6 +539,11 @@ plot_dif_summary <- function(x,
   if (nrow(tbl) == 0L) {
     stop("No finite contrast values to plot.", call. = FALSE)
   }
+  method <- x$config$method %||% unique(as.character(tbl$Method))[1] %||% NA_character_
+  classification_system <- unique(as.character(tbl$ClassificationSystem %||% NA_character_))
+  classification_system <- classification_system[!is.na(classification_system)]
+  classification_system <- classification_system[1] %||% NA_character_
+  axis_label <- effect_axis_label %||% .dff_effect_axis_label(method)
   pair_cols <- intersect(c("Level", "Group1", "Group2"), names(tbl))
   if (length(pair_cols) > 0L) {
     tbl$Pair <- do.call(paste, c(tbl[pair_cols], sep = " | "))
@@ -545,6 +575,15 @@ plot_dif_summary <- function(x,
   )
   tbl <- tbl[ord, , drop = FALSE]
   tbl <- tbl[seq_len(min(nrow(tbl), top_n)), , drop = FALSE]
+  if (!is.null(ci_level)) {
+    z <- stats::qnorm(1 - (1 - ci_level) / 2)
+    finite_se <- is.finite(tbl$SE)
+    tbl$CI_Lower <- ifelse(finite_se, tbl$Effect - z * tbl$SE, NA_real_)
+    tbl$CI_Upper <- ifelse(finite_se, tbl$Effect + z * tbl$SE, NA_real_)
+  } else {
+    tbl$CI_Lower <- NA_real_
+    tbl$CI_Upper <- NA_real_
+  }
   plot_title <- "Differential functioning summary"
   plot_subtitle <- sprintf(
     "%d row(s) shown; sorted by %s",
@@ -554,16 +593,30 @@ plot_dif_summary <- function(x,
   if (isTRUE(draw)) {
     apply_plot_preset(style)
     y <- rev(seq_len(nrow(tbl)))
-    xlim <- range(c(tbl$Effect, 0), finite = TRUE) +
-      c(-0.05, 0.05) * diff(range(c(tbl$Effect, 0), finite = TRUE))
+    x_values <- c(tbl$Effect, tbl$CI_Lower, tbl$CI_Upper, 0,
+                  effect_thresholds, -effect_thresholds)
+    x_range <- range(x_values, finite = TRUE)
+    if (!all(is.finite(x_range)) || diff(x_range) == 0) {
+      x_range <- x_range[1] + c(-1, 1)
+    }
+    xlim <- x_range + c(-0.05, 0.05) * diff(x_range)
     graphics::plot(
       x = tbl$Effect, y = y, type = "n",
       xlim = xlim, yaxt = "n",
-      xlab = "Effect (logit)", ylab = "",
+      xlab = axis_label, ylab = "",
       main = plot_title
     )
     graphics::title(sub = plot_subtitle, line = 2.2, cex.sub = 0.9)
     graphics::abline(v = 0, lty = 2, col = style$neutral)
+    if (length(effect_thresholds) > 0L) {
+      for (thr in effect_thresholds) {
+        graphics::abline(v = c(-thr, thr), lty = 3, col = style$warn)
+      }
+    }
+    if (!is.null(ci_level) && any(is.finite(tbl$CI_Lower) & is.finite(tbl$CI_Upper))) {
+      graphics::segments(tbl$CI_Lower, y, tbl$CI_Upper, y,
+                         col = style$neutral, lwd = 1)
+    }
     graphics::segments(0, y, tbl$Effect, y,
                        col = tbl$Color, lwd = 5)
     graphics::points(tbl$Effect, y, pch = 19, col = tbl$Color)
@@ -574,10 +627,32 @@ plot_dif_summary <- function(x,
     Pair = as.character(tbl$Pair),
     Effect = tbl$Effect,
     SE = tbl$SE,
+    CI_Lower = tbl$CI_Lower,
+    CI_Upper = tbl$CI_Upper,
     Classification = tbl$Classification,
+    ClassificationSystem = if ("ClassificationSystem" %in% names(tbl)) {
+      as.character(tbl$ClassificationSystem)
+    } else {
+      NA_character_
+    },
     Color = tbl$Color,
     stringsAsFactors = FALSE
   )
+  threshold_lines <- if (length(effect_thresholds) > 0L) {
+    labs <- names(effect_thresholds)
+    labs[is.na(labs) | !nzchar(labs)] <- paste0("Effect threshold ",
+                                                effect_thresholds[is.na(labs) | !nzchar(labs)])
+    new_reference_lines(
+      "v",
+      rep(c(-1, 1), each = length(effect_thresholds)) *
+        rep(effect_thresholds, times = 2),
+      rep(labs, times = 2),
+      "dotted",
+      "threshold"
+    )
+  } else {
+    new_reference_lines()
+  }
   out <- new_mfrm_plot_data(
     "dif_summary",
     list(
@@ -591,8 +666,20 @@ plot_dif_summary <- function(x,
         aesthetic = rep("bar", 4),
         value = c(style$success, style$warn, style$fail, style$neutral)
       ),
-      reference_lines = new_reference_lines(
-        "v", 0, "Zero contrast", "dashed", "reference"
+      reference_lines = rbind(
+        new_reference_lines("v", 0, "Zero contrast", "dashed", "reference"),
+        threshold_lines
+      ),
+      interpretation_guide = .dff_interpretation_guide(
+        metric = "summary",
+        method = method,
+        classification_system = classification_system,
+        effect_thresholds = effect_thresholds
+      ),
+      settings = list(
+        ci_level = ci_level,
+        effect_thresholds = effect_thresholds,
+        effect_axis_label = axis_label
       ),
       preset = style$name
     )

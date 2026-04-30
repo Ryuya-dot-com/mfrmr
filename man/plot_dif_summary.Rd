@@ -9,7 +9,10 @@ plot_dif_summary(
   top_n = 30L,
   sort_by = c("abs_effect", "effect", "classification"),
   preset = c("standard", "publication", "compact"),
-  draw = TRUE
+  draw = TRUE,
+  ci_level = NULL,
+  effect_thresholds = NULL,
+  effect_axis_label = NULL
 )
 }
 \arguments{
@@ -23,6 +26,17 @@ plot_dif_summary(
 \item{preset}{Visual preset.}
 
 \item{draw}{If \code{TRUE}, draw with base graphics.}
+
+\item{ci_level}{Optional confidence level for approximate normal
+intervals drawn from \verb{Effect +/- z * SE} when finite standard errors are
+available. Use \code{NULL} (default) to omit intervals.}
+
+\item{effect_thresholds}{Optional numeric vector of absolute effect-size
+guide lines to draw at \verb{+/- threshold}. These are display aids; only use
+ETS-like values when the source rows support ETS interpretation.}
+
+\item{effect_axis_label}{Optional x-axis label override. When \code{NULL}, the
+label is chosen from the DFF method.}
 }
 \value{
 An \code{mfrm_plot_data} object whose \code{data} slot contains
@@ -31,26 +45,31 @@ columns \code{Pair}, \code{Effect}, \code{SE}, \code{Classification}, \code{Colo
 \description{
 Compact effect-size summary for a \code{\link[=analyze_dff]{analyze_dff()}} / \code{\link[=analyze_dif]{analyze_dif()}}
 result. Shows each contrast's signed effect size as a horizontal bar
-with a vertical reference at zero, coloured by the ETS-style A / B /
-C classification when available, and annotated with the contrast
-p-value (or t-statistic when p is missing).
+with a vertical reference at zero, coloured by the method-appropriate
+classification. ETS-style A / B / C colours are used only when they
+are actually available; residual-method screening labels otherwise use
+the neutral colour.
 }
 \section{Interpreting output}{
 
 Bars are anchored at zero. Width corresponds to effect size on the
-contrast's native scale (logit difference under the residual method;
-refit-method delta logit otherwise). The ETS classification (A
-negligible, B moderate, C large) drives bar colour when present;
-otherwise the bar uses the preset's neutral.
+contrast's native scale. For \code{method = "residual"}, this is the
+observed-minus-expected average screening contrast between groups. For
+\code{method = "refit"}, this is the subgroup parameter difference on the
+fitted logit scale when linking support allows a comparable contrast.
+The ETS classification (A negligible, B moderate, C large) drives bar
+colour only when \code{ClassificationSystem == "ETS"}; otherwise the bar
+uses the preset's neutral.
 }
 
 \examples{
-toy <- load_mfrmr_data("example_core")
+toy <- load_mfrmr_data("example_bias")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "JML", maxit = 25)
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 dff <- analyze_dff(fit, diagnostics = diag,
                    facet = "Rater", group = "Group", data = toy)
+unique(dff$dif_table$ClassificationSystem)
 p <- plot_dif_summary(dff, draw = FALSE)
 head(p$data$data)
 }

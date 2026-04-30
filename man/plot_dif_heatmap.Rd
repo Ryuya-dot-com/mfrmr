@@ -4,7 +4,17 @@
 \alias{plot_dif_heatmap}
 \title{Plot a differential-functioning heatmap}
 \usage{
-plot_dif_heatmap(x, metric = c("obs_exp", "t", "contrast"), draw = TRUE, ...)
+plot_dif_heatmap(
+  x,
+  metric = c("obs_exp", "t", "contrast"),
+  draw = TRUE,
+  show_values = TRUE,
+  value_digits = 2L,
+  flag_threshold = NULL,
+  scale_limit = NULL,
+  flag_color = "black",
+  ...
+)
 }
 \arguments{
 \item{x}{Output from \code{\link[=dif_interaction_table]{dif_interaction_table()}}, \code{\link[=analyze_dff]{analyze_dff()}}, or
@@ -18,6 +28,22 @@ or \code{"contrast"} for pairwise differential-functioning contrast (only for \c
 objects with \code{dif_table}).}
 
 \item{draw}{If \code{TRUE} (default), draw the plot.}
+
+\item{show_values}{Logical. If \code{TRUE} (default), print rounded cell values
+on top of the heatmap.}
+
+\item{value_digits}{Non-negative integer number of digits after the decimal
+point for cell labels.}
+
+\item{flag_threshold}{Optional non-negative absolute-value threshold. When
+supplied, cells with \code{abs(value) >= flag_threshold} are recorded in
+\verb{$data$flag_matrix} and outlined on the drawn heatmap.}
+
+\item{scale_limit}{Optional positive scalar for a symmetric color scale
+from \code{-scale_limit} to \code{+scale_limit}. Use this to make several heatmaps
+visually comparable.}
+
+\item{flag_color}{Border color for cells meeting \code{flag_threshold}.}
 
 \item{...}{Additional graphical parameters passed to \code{\link[graphics:image]{graphics::image()}}.}
 }
@@ -69,9 +95,10 @@ dim(heat$data$matrix)
 # Look for (`metric = "obs_exp"`): cells near 0 are aligned with
 #   model expectation; |Obs - Exp| > 0.5 logits is a substantive
 #   gap. With `metric = "t"` the cell scale becomes a standardized
-#   residual where |t| > 2 is a 5\%-level flag. With `metric = "contrast"`
-#   the layout switches to Level x GroupPair and reads as the
-#   pairwise differential-functioning contrast (use `analyze_dff()`).
+#   residual where |t| > 2 is a screening flag, not a standalone
+#   hypothesis test. With `metric = "contrast"` the layout switches
+#   to Level x GroupPair and reads as the pairwise differential-
+#   functioning contrast (use `analyze_dff()`).
 }
 \seealso{
 \code{\link[=dif_interaction_table]{dif_interaction_table()}}, \code{\link[=analyze_dff]{analyze_dff()}}, \code{\link[=analyze_dif]{analyze_dif()}}, \code{\link[=dif_report]{dif_report()}}
