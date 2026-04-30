@@ -1,3 +1,21 @@
+# mfrmr 0.2.0 (development version)
+
+## Documentation
+
+- `?analyze_dff`, `?plot_dif_summary`, `?mfrmr_linking_and_dff`,
+  and `?mfrmr_visual_diagnostics` now distinguish residual-method
+  screening labels from refit-method ETS A/B/C classifications more
+  explicitly and route users to both `plot_dif_heatmap()` and
+  `plot_dif_summary()`.
+- `plot_dif_heatmap()` gains display controls for cell labels, absolute
+  flag thresholds, and shared symmetric color limits. `plot_dif_summary()`
+  gains optional normal-approximation confidence intervals, effect-threshold
+  guide lines, method-aware axis labels, and interpretation-guide payloads.
+- `analyze_dff()` and `dif_interaction_table()` now reject invalid
+  `p_adjust`, non-integer `min_obs`, invalid `focal` groups, and
+  all-missing group columns before computing contrasts. Missing or
+  empty group rows are dropped with a message.
+
 # mfrmr 0.1.6
 
 This release adds empirical-Bayes shrinkage for small-N facets, a
