@@ -508,19 +508,23 @@ extract_dff_group_estimates <- function(sub_fit, sub_diag, facet, fallback_level
 #' diag <- diagnose_mfrm(fit, residual_pca = "none", diagnostic_mode = "both")
 #' dff <- analyze_dff(fit, diag, facet = "Rater", group = "Group", data = toy)
 #' dff$summary
-#' # Look for: a small `FlaggedPairs` count relative to `Pairs`. Each
-#' #   flagged level pair carries a `Classification` of "A" / "B" / "C"
-#' #   following Penfield's (2007) ETS DIF severity bands; "C" cells
-#' #   warrant the closest review.
-#' head(dff$dif_table[, c("Level", "Group1", "Group2", "Contrast", "Classification")])
-#' # Look for: |Contrast| < 0.43 logits is "A" (negligible); 0.43-0.64
-#' #   is "B" (moderate); >= 0.64 is "C" (large). The `ContrastDirection`
-#' #   column makes the residual / refit sign convention explicit so the
-#' #   contrast can be read against the same reference group.
+#' # Look for: a small `FlaggedPairs` count relative to `Pairs`. Under
+#' #   method = "residual", `ClassificationSystem` is "screening", not
+#' #   ETS. "Screen positive" rows are prompts for substantive review.
+#' head(dff$dif_table[, c("Level", "Group1", "Group2", "Contrast",
+#'                        "Classification", "ClassificationSystem")])
+#' # The residual contrast is an observed-minus-expected average contrast
+#' # between groups. It is useful for screening, but it is not an ETS
+#' # A/B/C logit-delta classification.
+#' dff_refit <- analyze_dff(fit, diag, facet = "Rater", group = "Group",
+#'                          data = toy, method = "refit")
+#' unique(dff_refit$dif_table$ClassificationSystem)
+#' # Look for: "ETS" only when subgroup calibration, linking, and precision
+#' #   checks all support a common-scale model-based contrast.
 #' sc <- subset_connectivity_report(fit, diagnostics = diag)
 #' plot(sc, type = "design_matrix", draw = FALSE)
-#' if ("ScaleLinkStatus" %in% names(dff$dif_table)) {
-#'   unique(dff$dif_table$ScaleLinkStatus)
+#' if ("ScaleLinkStatus" %in% names(dff_refit$dif_table)) {
+#'   unique(dff_refit$dif_table$ScaleLinkStatus)
 #' }
 #' # Look for: "linked" in `ScaleLinkStatus` confirms the focal and
 #' #   reference groups share enough common elements for a comparable
@@ -560,9 +564,8 @@ analyze_dff <- function(fit,
     stop("`group` must be a single character string naming a column in the ",
          "original data.", call. = FALSE)
   }
-  if (!is.numeric(min_obs) || length(min_obs) != 1 || min_obs < 1) {
-    stop("`min_obs` must be a positive integer.", call. = FALSE)
-  }
+  min_obs <- .validate_dff_count_arg(min_obs, "min_obs")
+  p_adjust <- .validate_p_adjust_method(p_adjust)
 
   # Recover data
   orig_data <- if (!is.null(data)) data else fit$prep$data
@@ -584,12 +587,16 @@ analyze_dff <- function(fit,
   }
 
   # Group levels
-  group_vals <- as.character(orig_data[[group]])
-  group_levels <- sort(unique(group_vals))
+  group_info <- .sanitize_dff_group_data(orig_data, group, "DFF analysis")
+  orig_data <- group_info$data
+  group_vals <- group_info$values
+  group_levels <- group_info$levels
   if (length(group_levels) < 2) {
     stop("Grouping variable '", group, "' must have at least 2 levels. ",
-         "Found: ", length(group_levels), ".", call. = FALSE)
+         "Found ", length(group_levels), " after removing missing or empty ",
+         "group values.", call. = FALSE)
   }
+  focal <- .validate_dff_focal(focal, group_levels)
 
   if (method == "residual") {
     out <- .analyze_dif_residual(
@@ -603,7 +610,7 @@ analyze_dff <- function(fit,
       fit = fit, diagnostics = diagnostics,
       facet = facet, group = group,
       orig_data = orig_data, facet_names = facet_names,
-      group_vals = as.character(orig_data[[group]]),
+      group_vals = group_vals,
       group_levels = group_levels, focal = focal,
       min_obs = min_obs, p_adjust = p_adjust
     )
@@ -620,6 +627,217 @@ analyze_dff <- function(fit,
 #' @export
 analyze_dif <- function(...) {
   analyze_dff(...)
+}
+
+.validate_dff_count_arg <- function(x, arg) {
+  if (!is.numeric(x) || length(x) != 1L || is.na(x) ||
+      !is.finite(x) || x < 1 ||
+      abs(x - round(x)) > sqrt(.Machine$double.eps)) {
+    stop("`", arg, "` must be a single positive integer.", call. = FALSE)
+  }
+  as.integer(round(x))
+}
+
+.validate_p_adjust_method <- function(p_adjust) {
+  if (length(p_adjust) != 1L || is.na(p_adjust)) {
+    stop("`p_adjust` must be one of: ",
+         paste(stats::p.adjust.methods, collapse = ", "), ".",
+         call. = FALSE)
+  }
+  p_adjust <- as.character(p_adjust)
+  if (!p_adjust %in% stats::p.adjust.methods) {
+    stop("`p_adjust` must be one of: ",
+         paste(stats::p.adjust.methods, collapse = ", "), ".",
+         call. = FALSE)
+  }
+  p_adjust
+}
+
+.sanitize_dff_group_data <- function(orig_data, group, context) {
+  group_vals <- trimws(as.character(orig_data[[group]]))
+  valid_group <- !is.na(group_vals) & nzchar(group_vals)
+  if (!any(valid_group)) {
+    stop("`group` column '", group,
+         "' has no non-missing, non-empty values after trimming.",
+         call. = FALSE)
+  }
+  if (any(!valid_group)) {
+    message("Dropped ", sum(!valid_group), " row(s) with missing or empty `",
+            group, "` values before ", context, ".")
+    orig_data <- orig_data[valid_group, , drop = FALSE]
+    group_vals <- group_vals[valid_group]
+  }
+  orig_data[[group]] <- group_vals
+  list(
+    data = orig_data,
+    values = group_vals,
+    levels = sort(unique(group_vals))
+  )
+}
+
+.validate_dff_focal <- function(focal, group_levels) {
+  if (is.null(focal)) return(NULL)
+  if (!is.character(focal) || length(focal) < 1L || anyNA(focal)) {
+    stop("`focal` must be a character vector of observed group levels.",
+         call. = FALSE)
+  }
+  focal <- unique(trimws(focal))
+  if (any(!nzchar(focal))) {
+    stop("`focal` must be a character vector of observed group levels.",
+         call. = FALSE)
+  }
+  unknown <- setdiff(focal, group_levels)
+  if (length(unknown) > 0L) {
+    stop("`focal` contains level(s) not found in `group`: ",
+         paste(unknown, collapse = ", "), ". Observed group levels: ",
+         paste(group_levels, collapse = ", "), ".",
+         call. = FALSE)
+  }
+  if (length(setdiff(group_levels, focal)) == 0L) {
+    stop("`focal` cannot include every observed group level; at least one ",
+         "reference group is required.", call. = FALSE)
+  }
+  focal
+}
+
+.validate_dff_probability <- function(x, arg, allow_null = TRUE) {
+  if (is.null(x) && isTRUE(allow_null)) return(NULL)
+  if (!is.numeric(x) || length(x) != 1L || is.na(x) ||
+      !is.finite(x) || x <= 0 || x >= 1) {
+    stop("`", arg, "` must be a single probability strictly between 0 and 1.",
+         call. = FALSE)
+  }
+  as.numeric(x)
+}
+
+.validate_dff_nonnegative_scalar <- function(x, arg, allow_null = TRUE) {
+  if (is.null(x) && isTRUE(allow_null)) return(NULL)
+  if (!is.numeric(x) || length(x) != 1L || is.na(x) ||
+      !is.finite(x) || x < 0) {
+    stop("`", arg, "` must be a single non-negative finite number.",
+         call. = FALSE)
+  }
+  as.numeric(x)
+}
+
+.validate_dff_positive_scalar <- function(x, arg, allow_null = TRUE) {
+  if (is.null(x) && isTRUE(allow_null)) return(NULL)
+  if (!is.numeric(x) || length(x) != 1L || is.na(x) ||
+      !is.finite(x) || x <= 0) {
+    stop("`", arg, "` must be a single positive finite number.",
+         call. = FALSE)
+  }
+  as.numeric(x)
+}
+
+.validate_dff_nonnegative_integer <- function(x, arg) {
+  if (!is.numeric(x) || length(x) != 1L || is.na(x) ||
+      !is.finite(x) || x < 0 ||
+      abs(x - round(x)) > sqrt(.Machine$double.eps)) {
+    stop("`", arg, "` must be a single non-negative integer.", call. = FALSE)
+  }
+  as.integer(round(x))
+}
+
+.validate_dff_threshold_vector <- function(x, arg) {
+  if (is.null(x)) return(numeric(0))
+  if (!is.numeric(x) || length(x) < 1L || anyNA(x) ||
+      any(!is.finite(x)) || any(x < 0)) {
+    stop("`", arg, "` must be a numeric vector of non-negative finite values.",
+         call. = FALSE)
+  }
+  vals <- as.numeric(x)
+  labs <- names(x)
+  if (is.null(labs)) labs <- rep("", length(vals))
+  ord <- order(vals)
+  vals <- vals[ord]
+  labs <- labs[ord]
+  keep <- !duplicated(vals)
+  vals <- vals[keep]
+  labs <- labs[keep]
+  names(vals) <- labs
+  vals
+}
+
+.validate_dff_logical_scalar <- function(x, arg) {
+  if (!is.logical(x) || length(x) != 1L || is.na(x)) {
+    stop("`", arg, "` must be TRUE or FALSE.", call. = FALSE)
+  }
+  isTRUE(x)
+}
+
+.dff_effect_axis_label <- function(method) {
+  method <- method %||% NA_character_
+  if (identical(method, "residual")) {
+    "Observed-minus-expected screening contrast"
+  } else if (identical(method, "refit")) {
+    "Differential-functioning contrast (logit)"
+  } else {
+    "Effect (native contrast scale)"
+  }
+}
+
+.dff_interpretation_guide <- function(metric,
+                                      method = NA_character_,
+                                      classification_system = NA_character_,
+                                      flag_threshold = NULL,
+                                      effect_thresholds = numeric()) {
+  rows <- list(
+    data.frame(
+      Item = "Zero reference",
+      Meaning = "Values near zero indicate little systematic group-by-facet departure on the selected scale.",
+      ReportingNote = "Use the sign convention and contrast basis reported in the source table.",
+      stringsAsFactors = FALSE
+    )
+  )
+  if (identical(metric, "obs_exp")) {
+    rows[[length(rows) + 1L]] <- data.frame(
+      Item = "Warm/cool colors",
+      Meaning = "Positive values mean observed scores exceed model expectation; negative values mean observed scores fall below model expectation.",
+      ReportingNote = "Read as residual screening evidence, not as a standalone inferential test.",
+      stringsAsFactors = FALSE
+    )
+  } else if (identical(metric, "t")) {
+    rows[[length(rows) + 1L]] <- data.frame(
+      Item = "Standardized residual",
+      Meaning = "Larger absolute values identify cells with stronger observed-minus-expected departure relative to model variance.",
+      ReportingNote = "Use as a screening statistic; combine with sample size and substantive review.",
+      stringsAsFactors = FALSE
+    )
+  } else if (identical(metric, "contrast") || identical(metric, "summary")) {
+    rows[[length(rows) + 1L]] <- data.frame(
+      Item = "Differential-functioning contrast",
+      Meaning = if (identical(method, "residual")) {
+        "Residual-method effects are observed-minus-expected average contrasts between groups."
+      } else {
+        "Refit-method effects are subgroup parameter differences when linking supports a comparable scale."
+      },
+      ReportingNote = if (identical(classification_system, "ETS")) {
+        "ETS A/B/C labels may be reported for rows that remain model-based and linked."
+      } else {
+        "Treat classifications as screening labels unless the row reports ClassificationSystem == 'ETS'."
+      },
+      stringsAsFactors = FALSE
+    )
+  }
+  if (!is.null(flag_threshold)) {
+    rows[[length(rows) + 1L]] <- data.frame(
+      Item = "Flag threshold",
+      Meaning = paste0("Cells with absolute value >= ", flag_threshold,
+                       " are marked in the plotting payload and outlined when drawn."),
+      ReportingNote = "The threshold is user-specified plotting guidance unless it comes from a documented analysis rule.",
+      stringsAsFactors = FALSE
+    )
+  }
+  if (length(effect_thresholds) > 0L) {
+    rows[[length(rows) + 1L]] <- data.frame(
+      Item = "Effect thresholds",
+      Meaning = paste(effect_thresholds, collapse = ", "),
+      ReportingNote = "Threshold guide lines are display aids; check the method and classification system before interpreting them as severity bands.",
+      stringsAsFactors = FALSE
+    )
+  }
+  do.call(rbind, rows)
 }
 
 # Internal: residual-based DIF analysis
@@ -1352,14 +1570,18 @@ dif_interaction_table <- function(fit, diagnostics, facet, group, data = NULL,
   if (!is.character(group) || length(group) != 1) {
     stop("`group` must be a single character string.", call. = FALSE)
   }
-  if (!is.numeric(min_obs) || length(min_obs) != 1 || min_obs < 1) {
-    stop("`min_obs` must be a positive integer.", call. = FALSE)
+  min_obs <- .validate_dff_count_arg(min_obs, "min_obs")
+  p_adjust <- .validate_p_adjust_method(p_adjust)
+  if (!is.numeric(abs_t_warn) || length(abs_t_warn) != 1 ||
+      is.na(abs_t_warn) || !is.finite(abs_t_warn) || abs_t_warn < 0) {
+    stop("`abs_t_warn` must be a single non-negative numeric value.",
+         call. = FALSE)
   }
-  if (!is.numeric(abs_t_warn) || length(abs_t_warn) != 1) {
-    stop("`abs_t_warn` must be a single numeric value.", call. = FALSE)
-  }
-  if (!is.numeric(abs_bias_warn) || length(abs_bias_warn) != 1) {
-    stop("`abs_bias_warn` must be a single numeric value.", call. = FALSE)
+  if (!is.numeric(abs_bias_warn) || length(abs_bias_warn) != 1 ||
+      is.na(abs_bias_warn) || !is.finite(abs_bias_warn) ||
+      abs_bias_warn < 0) {
+    stop("`abs_bias_warn` must be a single non-negative numeric value.",
+         call. = FALSE)
   }
 
   # Recover data
@@ -1380,10 +1602,14 @@ dif_interaction_table <- function(fit, diagnostics, facet, group, data = NULL,
          paste(facet_names, collapse = ", "), ".", call. = FALSE)
   }
 
-  group_levels <- sort(unique(as.character(orig_data[[group]])))
+  group_info <- .sanitize_dff_group_data(orig_data, group,
+                                         "DFF interaction analysis")
+  orig_data <- group_info$data
+  group_levels <- group_info$levels
   if (length(group_levels) < 2) {
-    stop("Grouping variable '", group, "' must have at least 2 levels.",
-         call. = FALSE)
+    stop("Grouping variable '", group, "' must have at least 2 levels. ",
+         "Found ", length(group_levels), " after removing missing or empty ",
+         "group values.", call. = FALSE)
   }
 
   # Compute observation table
@@ -1553,6 +1779,17 @@ print.mfrm_dif_interaction <- function(x, ...) {
 #'   or `"contrast"` for pairwise differential-functioning contrast (only for `mfrm_dff`
 #'   objects with `dif_table`).
 #' @param draw If `TRUE` (default), draw the plot.
+#' @param show_values Logical. If `TRUE` (default), print rounded cell values
+#'   on top of the heatmap.
+#' @param value_digits Non-negative integer number of digits after the decimal
+#'   point for cell labels.
+#' @param flag_threshold Optional non-negative absolute-value threshold. When
+#'   supplied, cells with `abs(value) >= flag_threshold` are recorded in
+#'   `$data$flag_matrix` and outlined on the drawn heatmap.
+#' @param scale_limit Optional positive scalar for a symmetric color scale
+#'   from `-scale_limit` to `+scale_limit`. Use this to make several heatmaps
+#'   visually comparable.
+#' @param flag_color Border color for cells meeting `flag_threshold`.
 #' @param ... Additional graphical parameters passed to [graphics::image()].
 #'
 #' @section Interpreting output:
@@ -1590,13 +1827,30 @@ print.mfrm_dif_interaction <- function(x, ...) {
 #' # Look for (`metric = "obs_exp"`): cells near 0 are aligned with
 #' #   model expectation; |Obs - Exp| > 0.5 logits is a substantive
 #' #   gap. With `metric = "t"` the cell scale becomes a standardized
-#' #   residual where |t| > 2 is a 5%-level flag. With `metric = "contrast"`
-#' #   the layout switches to Level x GroupPair and reads as the
-#' #   pairwise differential-functioning contrast (use `analyze_dff()`).
+#' #   residual where |t| > 2 is a screening flag, not a standalone
+#' #   hypothesis test. With `metric = "contrast"` the layout switches
+#' #   to Level x GroupPair and reads as the pairwise differential-
+#' #   functioning contrast (use `analyze_dff()`).
 #' @export
 plot_dif_heatmap <- function(x, metric = c("obs_exp", "t", "contrast"),
-                             draw = TRUE, ...) {
+                             draw = TRUE,
+                             show_values = TRUE,
+                             value_digits = 2L,
+                             flag_threshold = NULL,
+                             scale_limit = NULL,
+                             flag_color = "black",
+                             ...) {
   metric <- match.arg(metric)
+  show_values <- .validate_dff_logical_scalar(show_values, "show_values")
+  value_digits <- .validate_dff_nonnegative_integer(value_digits, "value_digits")
+  flag_threshold <- .validate_dff_nonnegative_scalar(flag_threshold,
+                                                     "flag_threshold")
+  scale_limit <- .validate_dff_positive_scalar(scale_limit, "scale_limit")
+  if (!is.character(flag_color) || length(flag_color) != 1L ||
+      is.na(flag_color) || !nzchar(flag_color)) {
+    stop("`flag_color` must be a single non-empty character string.",
+         call. = FALSE)
+  }
 
   # Resolve input: accept mfrm_dif_interaction or mfrm_dff/mfrm_dif
   if (inherits(x, "mfrm_dif_interaction")) {
@@ -1641,6 +1895,15 @@ plot_dif_heatmap <- function(x, metric = c("obs_exp", "t", "contrast"),
          call. = FALSE)
   }
 
+  method <- x$config$method %||% NA_character_
+  classification_system <- NA_character_
+  if (inherits(x, "mfrm_dif") && !is.null(x$dif_table) &&
+      "ClassificationSystem" %in% names(x$dif_table)) {
+    cs <- unique(as.character(x$dif_table$ClassificationSystem))
+    cs <- cs[!is.na(cs)]
+    classification_system <- cs[1] %||% NA_character_
+  }
+
   # Build matrix
   rows <- sort(unique(as.character(tbl[[row_var]])))
   cols <- sort(unique(as.character(tbl[[col_var]])))
@@ -1652,16 +1915,24 @@ plot_dif_heatmap <- function(x, metric = c("obs_exp", "t", "contrast"),
   if (any(ok)) {
     mat[cbind(row_idx[ok], col_idx[ok])] <- tbl[[value_col]][ok]
   }
+  flag_matrix <- if (!is.null(flag_threshold)) {
+    abs(mat) >= flag_threshold
+  } else {
+    matrix(FALSE, nrow = nrow(mat), ncol = ncol(mat),
+           dimnames = dimnames(mat))
+  }
+  flag_matrix[is.na(flag_matrix)] <- FALSE
 
   if (draw) {
     # Color scale: blue-white-red
     n_colors <- 64
-    max_abs <- max(abs(mat), na.rm = TRUE)
+    max_abs <- scale_limit %||% max(abs(mat), na.rm = TRUE)
     if (!is.finite(max_abs) || max_abs == 0) max_abs <- 1
     breaks <- seq(-max_abs, max_abs, length.out = n_colors + 1)
     blue_white_red <- grDevices::colorRampPalette(
       c("steelblue", "white", "firebrick")
     )(n_colors)
+    mat_draw <- pmax(pmin(mat, max_abs), -max_abs)
 
     old_par <- graphics::par(mar = c(6, 8, 4, 2), no.readonly = TRUE)
     on.exit(graphics::par(old_par), add = TRUE)
@@ -1681,7 +1952,7 @@ plot_dif_heatmap <- function(x, metric = c("obs_exp", "t", "contrast"),
     graphics::image(
       x = seq_len(ncol(mat)),
       y = seq_len(nrow(mat)),
-      z = t(mat),
+      z = t(mat_draw),
       col = blue_white_red,
       breaks = breaks,
       axes = FALSE,
@@ -1695,12 +1966,24 @@ plot_dif_heatmap <- function(x, metric = c("obs_exp", "t", "contrast"),
                    las = 1, cex.axis = 0.8)
     graphics::box()
 
-    # Add cell text
-    for (ri in seq_len(nrow(mat))) {
-      for (ci in seq_len(ncol(mat))) {
-        val <- mat[ri, ci]
-        if (is.finite(val)) {
-          graphics::text(ci, ri, sprintf("%.2f", val), cex = 0.6)
+    if (!is.null(flag_threshold) && any(flag_matrix, na.rm = TRUE)) {
+      flagged <- which(flag_matrix, arr.ind = TRUE)
+      for (ii in seq_len(nrow(flagged))) {
+        ri <- flagged[ii, 1]
+        ci <- flagged[ii, 2]
+        graphics::rect(ci - 0.5, ri - 0.5, ci + 0.5, ri + 0.5,
+                       border = flag_color, lwd = 1.2)
+      }
+    }
+
+    if (isTRUE(show_values)) {
+      for (ri in seq_len(nrow(mat))) {
+        for (ci in seq_len(ncol(mat))) {
+          val <- mat[ri, ci]
+          if (is.finite(val)) {
+            graphics::text(ci, ri, formatC(val, format = "f",
+                                           digits = value_digits), cex = 0.6)
+          }
         }
       }
     }
@@ -1715,12 +1998,36 @@ plot_dif_heatmap <- function(x, metric = c("obs_exp", "t", "contrast"),
     "dif_heatmap",
     list(
       matrix = mat,
+      flag_matrix = flag_matrix,
       pairs = as.data.frame(tbl, stringsAsFactors = FALSE),
       metric = metric,
       value_column = value_col,
       title = paste("DFF Heatmap:", metric_label),
       subtitle = sprintf("%d row x %d column matrix; metric column = `%s`",
-                         nrow(mat), ncol(mat), value_col)
+                         nrow(mat), ncol(mat), value_col),
+      thresholds = data.frame(
+        Metric = metric,
+        Threshold = flag_threshold %||% NA_real_,
+        Rule = if (!is.null(flag_threshold)) {
+          paste0("abs(value) >= ", flag_threshold)
+        } else {
+          "No plotting threshold supplied"
+        },
+        stringsAsFactors = FALSE
+      ),
+      interpretation_guide = .dff_interpretation_guide(
+        metric = metric,
+        method = method,
+        classification_system = classification_system,
+        flag_threshold = flag_threshold
+      ),
+      settings = list(
+        show_values = show_values,
+        value_digits = value_digits,
+        flag_threshold = flag_threshold,
+        scale_limit = scale_limit,
+        flag_color = flag_color
+      )
     )
   )
   invisible(out)

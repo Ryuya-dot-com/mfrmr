@@ -192,6 +192,54 @@ test_that("analyze_dif p_adjust works for all methods", {
   }
 })
 
+test_that("analyze_dif validates DFF control arguments", {
+  local_dif_fixtures()
+
+  expect_error(
+    analyze_dif(fit, diag, facet = "Criterion", group = "Group",
+                data = toy, method = "residual", p_adjust = "not_a_method"),
+    "`p_adjust`"
+  )
+  expect_error(
+    analyze_dif(fit, diag, facet = "Criterion", group = "Group",
+                data = toy, method = "residual", min_obs = 1.5),
+    "`min_obs`"
+  )
+  expect_error(
+    analyze_dif(fit, diag, facet = "Criterion", group = "Group",
+                data = toy, method = "residual", focal = "MissingGroup"),
+    "not found"
+  )
+  expect_error(
+    analyze_dif(fit, diag, facet = "Criterion", group = "Group",
+                data = toy, method = "residual", focal = unique(toy$Group)),
+    "reference group"
+  )
+})
+
+test_that("analyze_dif handles missing and empty group values explicitly", {
+  local_dif_fixtures()
+  toy_bad <- toy
+  toy_bad$Group[1] <- NA_character_
+  toy_bad$Group[2] <- " "
+
+  expect_message(
+    dif <- analyze_dif(fit, diag, facet = "Criterion", group = "Group",
+                       data = toy_bad, method = "residual"),
+    "Dropped 2 row"
+  )
+  expect_false(anyNA(dif$cell_table$GroupValue))
+  expect_false(any(dif$cell_table$GroupValue == ""))
+
+  toy_empty <- toy
+  toy_empty$Group <- NA_character_
+  expect_error(
+    analyze_dif(fit, diag, facet = "Criterion", group = "Group",
+                data = toy_empty, method = "residual"),
+    "no non-missing"
+  )
+})
+
 test_that("residual method uses screening labels instead of ETS categories", {
   local_dif_fixtures()
 
@@ -257,6 +305,36 @@ test_that("dif_interaction_table min_obs filter works", {
   expect_true(all(int$table$sparse))
 })
 
+test_that("dif_interaction_table validates controls and group missingness", {
+  local_dif_fixtures()
+
+  expect_error(
+    dif_interaction_table(fit, diag, facet = "Criterion", group = "Group",
+                          data = toy, p_adjust = "not_a_method"),
+    "`p_adjust`"
+  )
+  expect_error(
+    dif_interaction_table(fit, diag, facet = "Criterion", group = "Group",
+                          data = toy, min_obs = 2.5),
+    "`min_obs`"
+  )
+  expect_error(
+    dif_interaction_table(fit, diag, facet = "Criterion", group = "Group",
+                          data = toy, abs_t_warn = Inf),
+    "`abs_t_warn`"
+  )
+
+  toy_bad <- toy
+  toy_bad$Group[1] <- NA_character_
+  expect_message(
+    int <- dif_interaction_table(fit, diag, facet = "Criterion",
+                                 group = "Group", data = toy_bad,
+                                 min_obs = 2),
+    "Dropped 1 row"
+  )
+  expect_false(anyNA(int$table$GroupValue))
+})
+
 test_that("plot_dif_heatmap returns mfrm_plot_data with matrix payload (draw = FALSE)", {
   local_dif_fixtures()
 
@@ -269,6 +347,32 @@ test_that("plot_dif_heatmap returns mfrm_plot_data with matrix payload (draw = F
     expect_true(is.matrix(p$data$matrix))
     expect_identical(p$data$metric, m)
   }
+})
+
+test_that("plot_dif_heatmap supports interpretive display controls", {
+  local_dif_fixtures()
+
+  dif <- analyze_dif(fit, diag, facet = "Criterion", group = "Group",
+                     data = toy, method = "residual")
+  p <- plot_dif_heatmap(dif, metric = "t", draw = FALSE,
+                        show_values = FALSE, value_digits = 1,
+                        flag_threshold = 2, scale_limit = 3)
+
+  expect_s3_class(p, "mfrm_plot_data")
+  expect_true(is.matrix(p$data$flag_matrix))
+  expect_identical(dim(p$data$flag_matrix), dim(p$data$matrix))
+  expect_equal(p$data$thresholds$Threshold, 2)
+  expect_equal(p$data$settings$scale_limit, 3)
+  expect_true(is.data.frame(p$data$interpretation_guide))
+
+  expect_error(plot_dif_heatmap(dif, draw = FALSE, show_values = NA),
+               "`show_values`")
+  expect_error(plot_dif_heatmap(dif, draw = FALSE, value_digits = -1),
+               "`value_digits`")
+  expect_error(plot_dif_heatmap(dif, draw = FALSE, flag_threshold = -0.1),
+               "`flag_threshold`")
+  expect_error(plot_dif_heatmap(dif, draw = FALSE, scale_limit = 0),
+               "`scale_limit`")
 })
 
 test_that("plot_dif_heatmap works with dif_interaction_table", {

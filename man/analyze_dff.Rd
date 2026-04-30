@@ -183,19 +183,23 @@ fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 diag <- diagnose_mfrm(fit, residual_pca = "none", diagnostic_mode = "both")
 dff <- analyze_dff(fit, diag, facet = "Rater", group = "Group", data = toy)
 dff$summary
-# Look for: a small `FlaggedPairs` count relative to `Pairs`. Each
-#   flagged level pair carries a `Classification` of "A" / "B" / "C"
-#   following Penfield's (2007) ETS DIF severity bands; "C" cells
-#   warrant the closest review.
-head(dff$dif_table[, c("Level", "Group1", "Group2", "Contrast", "Classification")])
-# Look for: |Contrast| < 0.43 logits is "A" (negligible); 0.43-0.64
-#   is "B" (moderate); >= 0.64 is "C" (large). The `ContrastDirection`
-#   column makes the residual / refit sign convention explicit so the
-#   contrast can be read against the same reference group.
+# Look for: a small `FlaggedPairs` count relative to `Pairs`. Under
+#   method = "residual", `ClassificationSystem` is "screening", not
+#   ETS. "Screen positive" rows are prompts for substantive review.
+head(dff$dif_table[, c("Level", "Group1", "Group2", "Contrast",
+                       "Classification", "ClassificationSystem")])
+# The residual contrast is an observed-minus-expected average contrast
+# between groups. It is useful for screening, but it is not an ETS
+# A/B/C logit-delta classification.
+dff_refit <- analyze_dff(fit, diag, facet = "Rater", group = "Group",
+                         data = toy, method = "refit")
+unique(dff_refit$dif_table$ClassificationSystem)
+# Look for: "ETS" only when subgroup calibration, linking, and precision
+#   checks all support a common-scale model-based contrast.
 sc <- subset_connectivity_report(fit, diagnostics = diag)
 plot(sc, type = "design_matrix", draw = FALSE)
-if ("ScaleLinkStatus" \%in\% names(dff$dif_table)) {
-  unique(dff$dif_table$ScaleLinkStatus)
+if ("ScaleLinkStatus" \%in\% names(dff_refit$dif_table)) {
+  unique(dff_refit$dif_table$ScaleLinkStatus)
 }
 # Look for: "linked" in `ScaleLinkStatus` confirms the focal and
 #   reference groups share enough common elements for a comparable
