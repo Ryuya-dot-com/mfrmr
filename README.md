@@ -746,6 +746,7 @@ dff <- analyze_dff(
 )
 dff$summary
 plot_dif_heatmap(dff)
+plot_dif_summary(dff)
 ```
 
 For linking-specific guidance, see
@@ -771,6 +772,13 @@ dit <- dif_interaction_table(fit_bias, diag_bias, facet = "Criterion",
 
 # Visual, narrative, and bias reports
 plot_dif_heatmap(dff)
+plot_dif_summary(dff)
+
+# Optional display controls for review meetings or appendices
+plot_dif_heatmap(dff, metric = "t", flag_threshold = 2,
+                 show_values = FALSE, scale_limit = 3)
+plot_dif_summary(dff, ci_level = 0.90,
+                 effect_thresholds = c(screen = 0.5))
 dr <- dif_report(dff)
 cat(dr$narrative)
 
@@ -791,6 +799,7 @@ Interpretation rules:
 
 - `residual` DFF is a screening route.
 - `refit` DFF can support logit-scale contrasts only when subgroup linking is adequate.
+- Residual-method classifications are screening labels, not ETS A/B/C severity categories.
 - Check `ScaleLinkStatus`, `ContrastComparable`, and the reported classification system before treating a contrast as a strong interpretive claim.
 
 ## Model-estimated facet interactions
@@ -887,6 +896,7 @@ Notes:
 - Use `extract_mfrm_sim_spec(fit, latent_distribution = "empirical", assignment = "resampled")` when you want a more semi-parametric design study that reuses empirical fitted spreads and observed rater-assignment profiles.
 - Use `extract_mfrm_sim_spec(fit, latent_distribution = "empirical", assignment = "skeleton")` when you want a more plasmode-style study that preserves the observed person-by-facet design skeleton and resimulates only the responses.
 - `summary(sim_eval)$ademp` records the simulation-study contract: aims, DGM, estimands, methods, and performance measures.
+- `evaluate_mfrm_design()` is a Monte Carlo design-evaluation helper, not a closed-form generalizability-theory D-study calculator. It can show how separation, reliability, strata, RMSE, and fit-screen rates change as facet counts vary; use `mfrm_generalizability()` for observed variance-component summaries.
 
 ## Population forecast
 
@@ -1192,6 +1202,12 @@ correlations. Use `compute_facet_icc()` only when you want a complementary
 random-effects variance-share summary on the observed-score scale; for
 non-person facets such as raters, a large ICC is systematic facet variance,
 not better reliability.
+
+Scope note: version 0.1.6 does not estimate latent-class mixture models or
+response-time / careless-rating adjustments. Use person fit, residual
+matrices, Q3-style local-dependence screens, rater drift, and DFF diagnostics
+as screening evidence, not as substitutes for an explicit mixture or
+response-time model.
 
 ## FACETS reference mapping
 

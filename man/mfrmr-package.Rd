@@ -109,6 +109,10 @@ should not be described as the latent-regression estimator itself
 non-person facets rather than fully arbitrary-facet, with boundaries
 exposed through planner metadata such as \code{planning_scope},
 \code{planning_constraints}, and \code{planning_schema}
+\item latent-class mixture models and response-time / careless-rating
+adjustment are not estimated in 0.1.6; use residual, person-fit,
+local-dependence, and rater-drift diagnostics as screening layers rather
+than as mixture-model substitutes
 }
 }
 
@@ -240,7 +244,9 @@ fairness or interaction questions matter.
 \code{GPCM} also supports direct simulation via
 \code{\link[=extract_mfrm_sim_spec]{extract_mfrm_sim_spec()}} / \code{\link[=simulate_mfrm_data]{simulate_mfrm_data()}}, but not the broader
 planning helpers. Those helpers still assume two non-person facet roles
-even though the estimation core supports arbitrary facet counts.
+even though the estimation core supports arbitrary facet counts. Treat
+\code{\link[=evaluate_mfrm_design]{evaluate_mfrm_design()}} as Monte Carlo design evaluation rather than
+a closed-form generalizability-theory D-study planner.
 \code{predict_mfrm_population()} remains the scenario-level forecast helper,
 not the latent-regression estimator.
 \item For future-unit scoring, retain an \code{MML} calibration when you want the

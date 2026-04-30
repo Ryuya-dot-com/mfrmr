@@ -55,6 +55,9 @@
 #'   Use [plot_residual_pca()].
 #' - "Which interaction cells or facet levels drive bias screening results?"
 #'   Use [plot_bias_interaction()].
+#' - "Which group-by-facet contrasts drive DFF / DIF screening results?"
+#'   Use [plot_dif_heatmap()] and [plot_dif_summary()] after
+#'   [analyze_dff()].
 #' - "Do person response rows follow the expected Guttman-style
 #'    ordering once persons and items are sorted on the logit scale?"
 #'   Use [plot_guttman_scalogram()] as a teaching-oriented screen.
@@ -106,9 +109,11 @@
 #'    [plot_interrater_agreement()] for flagged local issues.
 #' 4. Use `plot(fit, type = "wright")`, `plot(fit, type = "pathway")`,
 #'    and `plot_residual_pca()` for structural interpretation.
-#' 5. Use [plot_bias_interaction()], [plot_anchor_drift()], and
+#' 5. Use [plot_bias_interaction()], [plot_dif_heatmap()],
+#'    [plot_dif_summary()], [plot_anchor_drift()], and
 #'    [plot_information()] when the checklist or dashboard points to
-#'    interaction, linking, or precision follow-up.
+#'    interaction, differential-functioning, linking, or precision
+#'    follow-up.
 #' 6. Use `plot(..., draw = FALSE)` when you want reusable plotting payloads
 #'    instead of immediate graphics.
 #' 7. Use `plot(fit, type = "ccc_surface", draw = FALSE)` only when you need
@@ -128,7 +133,8 @@
 #'   `plot(fit, type = "ccc")`, and [plot_residual_pca()].
 #' - Local issue follow-up:
 #'   [plot_unexpected()], [plot_displacement()],
-#'   [plot_interrater_agreement()], and [plot_bias_interaction()].
+#'   [plot_interrater_agreement()], [plot_bias_interaction()],
+#'   [plot_dif_heatmap()], and [plot_dif_summary()].
 #' - Strict marginal follow-up:
 #'   [plot_marginal_fit()] and [plot_marginal_pairwise()] for
 #'   `diagnostic_mode = "both"`.
@@ -187,6 +193,10 @@
 #'   \item{`plot_bias_interaction()`}{Interaction-bias screening views for
 #'   cells and facet profiles. Best for systematic departure from the
 #'   additive main-effects model.}
+#'   \item{`plot_dif_heatmap()` / `plot_dif_summary()`}{DFF / DIF
+#'   screening views for facet-level x group contrasts. Best for showing
+#'   which facet and group pair is involved before writing substantive
+#'   interpretations.}
 #'   \item{`plot_anchor_drift()`}{Anchor drift and screened linking-chain visuals.
 #'   Best for multi-form or multi-wave linking review after checking retained
 #'   common-element support.}
@@ -244,9 +254,9 @@
 #'   [plot_bias_interaction()] correspond to FACETS Table 14
 #'   ("Bias / Interaction calibration report").}
 #'   \item{Differential rater / item functioning}{[analyze_dff()] /
-#'   [analyze_dif()] + [plot_dif_heatmap()] cover the FACETS DIF /
-#'   bias-by-group route and the Winsteps DIF (Table 30 group
-#'   differences) report.}
+#'   [analyze_dif()] + [plot_dif_heatmap()] / [plot_dif_summary()]
+#'   cover the FACETS DIF / bias-by-group route and the Winsteps DIF
+#'   (Table 30 group differences) report.}
 #'   \item{Inter-rater agreement}{[interrater_agreement_table()] +
 #'   [plot_interrater_agreement()] / [plot_rater_agreement_heatmap()]
 #'   correspond to FACETS Table 7-style observed-vs-expected agreement
@@ -277,6 +287,9 @@
 #'   whether facet elements are statistically distinguishable.
 #' - Residual PCA and bias plots should be interpreted as follow-up layers
 #'   after the main fit screen, not as first-pass diagnostics.
+#' - DFF residual-method plots are screening visuals. ETS A/B/C labels
+#'   should be claimed only for rows whose refit output reports
+#'   `ClassificationSystem == "ETS"`.
 #'
 #' @section Typical workflow:
 #' - Figure-readiness route:
@@ -297,6 +310,10 @@
 #' - Interaction review:
 #'   [estimate_bias()] -> [plot_bias_interaction()] ->
 #'   [reporting_checklist()].
+#' - DFF / DIF review:
+#'   [analyze_dff()] -> [plot_dif_heatmap()] / [plot_dif_summary()] ->
+#'   inspect the explicit facet, level, and group-pair columns before
+#'   writing interpretation.
 #'
 #' @section Companion vignette:
 #' For a longer, plot-first walkthrough, run
@@ -309,7 +326,8 @@
 #'   [plot_unexpected()], [plot_displacement()], [plot_marginal_fit()],
 #'   [plot_marginal_pairwise()], [plot_interrater_agreement()],
 #'   [plot_facets_chisq()], [plot_residual_pca()], [plot_bias_interaction()],
-#'   [plot_anchor_drift()], [plot_guttman_scalogram()],
+#'   [plot_dif_heatmap()], [plot_dif_summary()], [plot_anchor_drift()],
+#'   [plot_guttman_scalogram()],
 #'   [plot_residual_qq()], [plot_rater_trajectory()],
 #'   [plot_rater_agreement_heatmap()]
 #'
@@ -400,7 +418,7 @@ visual_reporting_template <- function(scope = c("all", "manuscript", "appendix",
       "QC dashboard",
       "Unexpected / displacement",
       "Strict marginal visuals",
-      "Bias / DIF visuals",
+      "Bias / DFF visuals",
       "Residual PCA",
       "Guttman scalogram",
       "Residual Q-Q",
@@ -432,7 +450,7 @@ visual_reporting_template <- function(scope = c("all", "manuscript", "appendix",
       "plot_qc_dashboard(fit, diagnostics = diagnostics, preset = \"publication\")",
       "plot_unexpected(); plot_displacement()",
       "plot_marginal_fit(); plot_marginal_pairwise()",
-      "plot_bias_interaction(); plot_dif_heatmap()",
+      "plot_bias_interaction(); plot_dif_heatmap(); plot_dif_summary()",
       "analyze_residual_pca() -> plot_residual_pca()",
       "plot_guttman_scalogram(fit, diagnostics = diagnostics)",
       "plot_residual_qq(fit, diagnostics = diagnostics)",
@@ -448,7 +466,7 @@ visual_reporting_template <- function(scope = c("all", "manuscript", "appendix",
       "Screening dashboard; usually methods appendix or internal triage rather than the final main figure.",
       "Case-review appendix or quality-control supplement.",
       "Diagnostic appendix after diagnostic_mode = \"both\".",
-      "Main text only if interaction/DIF is a study question; otherwise diagnostic appendix.",
+      "Main text only if interaction/DFF is a study question; otherwise diagnostic appendix.",
       "Diagnostic appendix or sensitivity discussion.",
       "Teaching material or diagnostic appendix; not a standalone fit claim.",
       "Diagnostic appendix or supplement after a fit screen.",
@@ -464,7 +482,7 @@ visual_reporting_template <- function(scope = c("all", "manuscript", "appendix",
       "Describe which components triggered follow-up, not a single pass/fail publication verdict.",
       "Describe which responses or levels need local review.",
       "Describe which facet/category cells or pairwise structures need follow-up.",
-      "Describe screened interaction patterns with low-count and threshold caveats.",
+      "Describe screened interaction or group-by-facet DFF patterns with low-count and threshold caveats.",
       "Describe residual structure as exploratory follow-up after the main fit screen.",
       "Describe the Guttman-style ordering as a teaching screen and call out where the overlay marks unexpected responses.",
       "Describe tail behavior of person-level residuals as exploratory follow-up, not as a formal normality test.",
@@ -496,7 +514,7 @@ visual_reporting_template <- function(scope = c("all", "manuscript", "appendix",
       "The QC dashboard was used as a triage screen to identify components requiring more specific diagnostic follow-up.",
       "Unexpected-response and displacement displays were used to identify local cases or levels requiring review.",
       "Strict marginal displays were used as follow-up evidence for facet/category and pairwise local-dependence patterns.",
-      "Bias/DIF displays were used to screen interaction or group-functioning patterns under the documented screening threshold.",
+      "Bias/DFF displays were used to screen interaction or group-functioning patterns under the documented screening threshold.",
       "Residual PCA displays were used as exploratory follow-up for residual structure after the main model dimension.",
       "The Guttman scalogram was inspected as an exploratory teaching view of person x facet-level response ordering and unexpected responses.",
       "The residual Q-Q plot was inspected as exploratory follow-up on the distribution of person-level standardized residuals.",
@@ -528,7 +546,7 @@ visual_reporting_template <- function(scope = c("all", "manuscript", "appendix",
       "Open the component rows or plots behind any dashboard warning.",
       "Sort by magnitude and inspect repeated patterns, not isolated extremes only.",
       "Confirm diagnostic_mode = \"both\" and inspect low-count or sparse-cell caveats.",
-      "Confirm the tested facet pair, low-count cells, and screening threshold.",
+      "Confirm the tested facet pair or group-by-facet contrast, low-count cells, and screening threshold.",
       "Start with the scree plot, then inspect loadings only for targeted follow-up.",
       "Check whether the overlay concentrates in a few persons/facet cells rather than spreading uniformly.",
       "Check whether the tails depart sharply from the identity line before claiming non-Gaussian residuals.",

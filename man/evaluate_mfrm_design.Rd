@@ -217,6 +217,13 @@ separation and RMSE---this identifies the cost-effective design
 frontier.  \code{ConvergedRuns / reps} should be near 1.0; low
 convergence rates indicate the design is too small for the chosen
 estimation method.
+
+This is a Monte Carlo design-evaluation helper. It can visualize how
+separation, reliability, strata, RMSE, and fit-screen rates change when
+you vary person, rater, criterion, or assignment counts. It is not a
+closed-form generalizability-theory D-study calculator; use
+\code{\link[=mfrm_generalizability]{mfrm_generalizability()}} for observed variance-component summaries and
+treat analytic G/Phi coefficient planning as outside the 0.1.6 scope.
 }
 
 \section{References}{

@@ -1383,6 +1383,13 @@ design_eval_summarize_results <- function(results, rep_overview, design_variable
 #' convergence rates indicate the design is too small for the chosen
 #' estimation method.
 #'
+#' This is a Monte Carlo design-evaluation helper. It can visualize how
+#' separation, reliability, strata, RMSE, and fit-screen rates change when
+#' you vary person, rater, criterion, or assignment counts. It is not a
+#' closed-form generalizability-theory D-study calculator; use
+#' [mfrm_generalizability()] for observed variance-component summaries and
+#' treat analytic G/Phi coefficient planning as outside the 0.1.6 scope.
+#'
 #' @section References:
 #' The simulation logic follows the general Monte Carlo / operating-characteristic
 #' framework described by Morris, White, and Crowther (2019) and the

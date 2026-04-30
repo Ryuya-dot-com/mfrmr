@@ -95,6 +95,10 @@
 #'   non-person facets rather than fully arbitrary-facet, with boundaries
 #'   exposed through planner metadata such as `planning_scope`,
 #'   `planning_constraints`, and `planning_schema`
+#' - latent-class mixture models and response-time / careless-rating
+#'   adjustment are not estimated in 0.1.6; use residual, person-fit,
+#'   local-dependence, and rater-drift diagnostics as screening layers rather
+#'   than as mixture-model substitutes
 #'
 #' @section Equal weighting versus bounded GPCM:
 #' The package's operational reference route is still the Rasch-family
@@ -212,7 +216,9 @@
 #'    `GPCM` also supports direct simulation via
 #'    [extract_mfrm_sim_spec()] / [simulate_mfrm_data()], but not the broader
 #'    planning helpers. Those helpers still assume two non-person facet roles
-#'    even though the estimation core supports arbitrary facet counts.
+#'    even though the estimation core supports arbitrary facet counts. Treat
+#'    [evaluate_mfrm_design()] as Monte Carlo design evaluation rather than
+#'    a closed-form generalizability-theory D-study planner.
 #'    `predict_mfrm_population()` remains the scenario-level forecast helper,
 #'    not the latent-regression estimator.
 #' 7. For future-unit scoring, retain an `MML` calibration when you want the

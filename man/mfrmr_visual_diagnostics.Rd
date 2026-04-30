@@ -61,6 +61,9 @@ Use \code{\link[=plot_interrater_agreement]{plot_interrater_agreement()}} and \c
 Use \code{\link[=plot_residual_pca]{plot_residual_pca()}}.
 \item "Which interaction cells or facet levels drive bias screening results?"
 Use \code{\link[=plot_bias_interaction]{plot_bias_interaction()}}.
+\item "Which group-by-facet contrasts drive DFF / DIF screening results?"
+Use \code{\link[=plot_dif_heatmap]{plot_dif_heatmap()}} and \code{\link[=plot_dif_summary]{plot_dif_summary()}} after
+\code{\link[=analyze_dff]{analyze_dff()}}.
 \item "Do person response rows follow the expected Guttman-style
 ordering once persons and items are sorted on the logit scale?"
 Use \code{\link[=plot_guttman_scalogram]{plot_guttman_scalogram()}} as a teaching-oriented screen.
@@ -116,9 +119,11 @@ the \code{"Visual Displays"} rows as the plot-readiness layer.
 \code{\link[=plot_interrater_agreement]{plot_interrater_agreement()}} for flagged local issues.
 \item Use \code{plot(fit, type = "wright")}, \code{plot(fit, type = "pathway")},
 and \code{plot_residual_pca()} for structural interpretation.
-\item Use \code{\link[=plot_bias_interaction]{plot_bias_interaction()}}, \code{\link[=plot_anchor_drift]{plot_anchor_drift()}}, and
+\item Use \code{\link[=plot_bias_interaction]{plot_bias_interaction()}}, \code{\link[=plot_dif_heatmap]{plot_dif_heatmap()}},
+\code{\link[=plot_dif_summary]{plot_dif_summary()}}, \code{\link[=plot_anchor_drift]{plot_anchor_drift()}}, and
 \code{\link[=plot_information]{plot_information()}} when the checklist or dashboard points to
-interaction, linking, or precision follow-up.
+interaction, differential-functioning, linking, or precision
+follow-up.
 \item Use \code{plot(..., draw = FALSE)} when you want reusable plotting payloads
 instead of immediate graphics.
 \item Use \code{plot(fit, type = "ccc_surface", draw = FALSE)} only when you need
@@ -142,7 +147,8 @@ supports all of the following follow-up roles through public helpers:
 \code{plot(fit, type = "ccc")}, and \code{\link[=plot_residual_pca]{plot_residual_pca()}}.
 \item Local issue follow-up:
 \code{\link[=plot_unexpected]{plot_unexpected()}}, \code{\link[=plot_displacement]{plot_displacement()}},
-\code{\link[=plot_interrater_agreement]{plot_interrater_agreement()}}, and \code{\link[=plot_bias_interaction]{plot_bias_interaction()}}.
+\code{\link[=plot_interrater_agreement]{plot_interrater_agreement()}}, \code{\link[=plot_bias_interaction]{plot_bias_interaction()}},
+\code{\link[=plot_dif_heatmap]{plot_dif_heatmap()}}, and \code{\link[=plot_dif_summary]{plot_dif_summary()}}.
 \item Strict marginal follow-up:
 \code{\link[=plot_marginal_fit]{plot_marginal_fit()}} and \code{\link[=plot_marginal_pairwise]{plot_marginal_pairwise()}} for
 \code{diagnostic_mode = "both"}.
@@ -206,6 +212,10 @@ standalone unidimensionality test.}
 \item{\code{plot_bias_interaction()}}{Interaction-bias screening views for
 cells and facet profiles. Best for systematic departure from the
 additive main-effects model.}
+\item{\code{plot_dif_heatmap()} / \code{plot_dif_summary()}}{DFF / DIF
+screening views for facet-level x group contrasts. Best for showing
+which facet and group pair is involved before writing substantive
+interpretations.}
 \item{\code{plot_anchor_drift()}}{Anchor drift and screened linking-chain visuals.
 Best for multi-form or multi-wave linking review after checking retained
 common-element support.}
@@ -265,9 +275,9 @@ Winsteps Table 10/13/14 (Misfit order) and FACETS Tables 7/8.}
 \code{\link[=plot_bias_interaction]{plot_bias_interaction()}} correspond to FACETS Table 14
 ("Bias / Interaction calibration report").}
 \item{Differential rater / item functioning}{\code{\link[=analyze_dff]{analyze_dff()}} /
-\code{\link[=analyze_dif]{analyze_dif()}} + \code{\link[=plot_dif_heatmap]{plot_dif_heatmap()}} cover the FACETS DIF /
-bias-by-group route and the Winsteps DIF (Table 30 group
-differences) report.}
+\code{\link[=analyze_dif]{analyze_dif()}} + \code{\link[=plot_dif_heatmap]{plot_dif_heatmap()}} / \code{\link[=plot_dif_summary]{plot_dif_summary()}}
+cover the FACETS DIF / bias-by-group route and the Winsteps DIF
+(Table 30 group differences) report.}
 \item{Inter-rater agreement}{\code{\link[=interrater_agreement_table]{interrater_agreement_table()}} +
 \code{\link[=plot_interrater_agreement]{plot_interrater_agreement()}} / \code{\link[=plot_rater_agreement_heatmap]{plot_rater_agreement_heatmap()}}
 correspond to FACETS Table 7-style observed-vs-expected agreement
@@ -301,6 +311,9 @@ agreement concerns scoring consistency, whereas variability concerns
 whether facet elements are statistically distinguishable.
 \item Residual PCA and bias plots should be interpreted as follow-up layers
 after the main fit screen, not as first-pass diagnostics.
+\item DFF residual-method plots are screening visuals. ETS A/B/C labels
+should be claimed only for rows whose refit output reports
+\code{ClassificationSystem == "ETS"}.
 }
 }
 
@@ -325,6 +338,10 @@ inspect \code{"Visual Displays"} rows -> chosen public plot helper.
 \item Interaction review:
 \code{\link[=estimate_bias]{estimate_bias()}} -> \code{\link[=plot_bias_interaction]{plot_bias_interaction()}} ->
 \code{\link[=reporting_checklist]{reporting_checklist()}}.
+\item DFF / DIF review:
+\code{\link[=analyze_dff]{analyze_dff()}} -> \code{\link[=plot_dif_heatmap]{plot_dif_heatmap()}} / \code{\link[=plot_dif_summary]{plot_dif_summary()}} ->
+inspect the explicit facet, level, and group-pair columns before
+writing interpretation.
 }
 }
 
@@ -377,7 +394,8 @@ scree$data$preset
 \code{\link[=plot_unexpected]{plot_unexpected()}}, \code{\link[=plot_displacement]{plot_displacement()}}, \code{\link[=plot_marginal_fit]{plot_marginal_fit()}},
 \code{\link[=plot_marginal_pairwise]{plot_marginal_pairwise()}}, \code{\link[=plot_interrater_agreement]{plot_interrater_agreement()}},
 \code{\link[=plot_facets_chisq]{plot_facets_chisq()}}, \code{\link[=plot_residual_pca]{plot_residual_pca()}}, \code{\link[=plot_bias_interaction]{plot_bias_interaction()}},
-\code{\link[=plot_anchor_drift]{plot_anchor_drift()}}, \code{\link[=plot_guttman_scalogram]{plot_guttman_scalogram()}},
+\code{\link[=plot_dif_heatmap]{plot_dif_heatmap()}}, \code{\link[=plot_dif_summary]{plot_dif_summary()}}, \code{\link[=plot_anchor_drift]{plot_anchor_drift()}},
+\code{\link[=plot_guttman_scalogram]{plot_guttman_scalogram()}},
 \code{\link[=plot_residual_qq]{plot_residual_qq()}}, \code{\link[=plot_rater_trajectory]{plot_rater_trajectory()}},
 \code{\link[=plot_rater_agreement_heatmap]{plot_rater_agreement_heatmap()}}
 }

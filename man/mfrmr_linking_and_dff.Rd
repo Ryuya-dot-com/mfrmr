@@ -22,7 +22,7 @@ Use \code{\link[=detect_anchor_drift]{detect_anchor_drift()}} and \code{\link[=p
 \item "Can I synthesize anchor audit, drift, and chain evidence into one review?"
 Use \code{\link[=build_linking_review]{build_linking_review()}}.
 \item "Do specific facet levels function differently across groups?"
-Use \code{\link[=analyze_dff]{analyze_dff()}} and \code{\link[=plot_dif_heatmap]{plot_dif_heatmap()}}.
+Use \code{\link[=analyze_dff]{analyze_dff()}}, \code{\link[=plot_dif_heatmap]{plot_dif_heatmap()}}, and \code{\link[=plot_dif_summary]{plot_dif_summary()}}.
 }
 }
 
@@ -72,6 +72,11 @@ precision support stronger interpretation.}
 \itemize{
 \item Check connectedness before interpreting subgroup or wave differences.
 \item Use DFF outputs as screening results when common-scale linking is weak.
+\item Always name the facet, facet level, and group pair involved in a DFF
+contrast. A generic "DIF exists" statement is not interpretable in a
+many-facet design.
+\item Residual-method DFF classifications are screening labels. ETS A/B/C
+labels require refit output whose \code{ClassificationSystem} is \code{"ETS"}.
 \item Treat drift flags as prompts for review, not automatic evidence that an
 anchor must be removed.
 \item Treat \code{LinkSupportAdequate = FALSE} as a weak-link warning: at least one
@@ -94,7 +99,7 @@ fit each wave separately -> \code{\link[=detect_anchor_drift]{detect_anchor_drif
 \code{\link[=build_linking_review]{build_linking_review()}} -> \code{\link[=plot_anchor_drift]{plot_anchor_drift()}}.
 \item Group comparison route:
 \code{\link[=subset_connectivity_report]{subset_connectivity_report()}} -> \code{\link[=analyze_dff]{analyze_dff()}} ->
-\code{\link[=dif_report]{dif_report()}} -> \code{\link[=plot_dif_heatmap]{plot_dif_heatmap()}}.
+\code{\link[=dif_report]{dif_report()}} -> \code{\link[=plot_dif_heatmap]{plot_dif_heatmap()}} / \code{\link[=plot_dif_summary]{plot_dif_summary()}}.
 }
 }
 
@@ -126,7 +131,8 @@ subsets <- subset_connectivity_report(fit, diagnostics = diag)
 subsets$summary[, c("Subset", "Observations", "ObservationPercent")]
 
 dff <- analyze_dff(fit, diag, facet = "Rater", group = "Group", data = toy)
-head(dff$dif_table[, c("Level", "Group1", "Group2", "Classification")])
+head(dff$dif_table[, c("Level", "Group1", "Group2",
+                       "Classification", "ClassificationSystem")])
 }
 
 }
