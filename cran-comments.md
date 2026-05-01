@@ -40,6 +40,14 @@ No known reverse dependencies.
 
 ## Submission comment
 
+This file currently documents the 0.1.6 submission. The 0.2.0 cycle is in
+development on the `dev/0.2.0` branch; the submission comment, test
+environments, and R CMD check results below will be re-drafted before the
+0.2.0 tag. The headline changes for the new release will be sourced from
+the `# mfrmr 0.2.0` section of `NEWS.md`, and major design proposals
+shipping with the release live under `design-notes/` (excluded from the
+built package via `.Rbuildignore`).
+
 This is an update to mfrmr 0.1.5. Headline changes:
 
 - empirical-Bayes facet shrinkage (`apply_empirical_bayes_shrinkage()`,
