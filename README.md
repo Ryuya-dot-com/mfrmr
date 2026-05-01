@@ -1,9 +1,9 @@
 # mfrmr
 
-[![GitHub](https://img.shields.io/badge/GitHub-mfrmr-181717?logo=github)](https://github.com/Ryuya-dot-com/R_package_mfrmr)
-[![R-CMD-check](https://github.com/Ryuya-dot-com/R_package_mfrmr/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/Ryuya-dot-com/R_package_mfrmr/actions/workflows/R-CMD-check.yaml)
-[![pkgdown](https://github.com/Ryuya-dot-com/R_package_mfrmr/actions/workflows/pkgdown.yaml/badge.svg)](https://github.com/Ryuya-dot-com/R_package_mfrmr/actions/workflows/pkgdown.yaml)
-[![test-coverage](https://github.com/Ryuya-dot-com/R_package_mfrmr/actions/workflows/test-coverage.yaml/badge.svg)](https://github.com/Ryuya-dot-com/R_package_mfrmr/actions/workflows/test-coverage.yaml)
+[![GitHub](https://img.shields.io/badge/GitHub-mfrmr-181717?logo=github)](https://github.com/Ryuya-dot-com/mfrmr)
+[![R-CMD-check](https://github.com/Ryuya-dot-com/mfrmr/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/Ryuya-dot-com/mfrmr/actions/workflows/R-CMD-check.yaml)
+[![pkgdown](https://github.com/Ryuya-dot-com/mfrmr/actions/workflows/pkgdown.yaml/badge.svg)](https://github.com/Ryuya-dot-com/mfrmr/actions/workflows/pkgdown.yaml)
+[![test-coverage](https://github.com/Ryuya-dot-com/mfrmr/actions/workflows/test-coverage.yaml/badge.svg)](https://github.com/Ryuya-dot-com/mfrmr/actions/workflows/test-coverage.yaml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 Native R package for many-facet Rasch model (MFRM) estimation, diagnostics,
@@ -350,7 +350,7 @@ when you want a customised version.
 ```r
 # GitHub (development version)
 if (!requireNamespace("remotes", quietly = TRUE)) install.packages("remotes")
-remotes::install_github("Ryuya-dot-com/R_package_mfrmr",
+remotes::install_github("Ryuya-dot-com/mfrmr",
                         subdir = "mfrmr",
                         build_vignettes = TRUE)
 
@@ -1181,7 +1181,7 @@ The full exported function index (with categories such as *Model and
 diagnostics*, *Bias and DFF*, *Anchoring and linking*, *Reporting and
 APA*, *Plots and dashboards*, *Simulation and design*, and *Export
 utilities*) is generated from roxygen and published on the pkgdown
-site at <https://ryuya-dot-com.github.io/R_package_mfrmr/>. Within R
+site at <https://ryuya-dot-com.github.io/mfrmr/>. Within R
 the same grouping is available through the topic help pages
 `?mfrmr_workflow_methods`, `?mfrmr_visual_diagnostics`,
 `?mfrmr_reports_and_tables`, `?mfrmr_reporting_and_apa`,

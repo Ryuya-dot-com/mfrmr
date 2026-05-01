@@ -592,9 +592,9 @@ summary(diag)
 \seealso{
 Useful links:
 \itemize{
-  \item \url{https://ryuya-dot-com.github.io/R_package_mfrmr/}
-  \item \url{https://github.com/Ryuya-dot-com/R_package_mfrmr}
-  \item Report bugs at \url{https://github.com/Ryuya-dot-com/R_package_mfrmr/issues}
+  \item \url{https://ryuya-dot-com.github.io/mfrmr/}
+  \item \url{https://github.com/Ryuya-dot-com/mfrmr}
+  \item Report bugs at \url{https://github.com/Ryuya-dot-com/mfrmr/issues}
 }
 
 }

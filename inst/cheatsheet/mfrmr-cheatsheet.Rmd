@@ -147,8 +147,8 @@ fit$prep$missing_recoding
 
 ## Package links
 
-- Documentation: <https://ryuya-dot-com.github.io/R_package_mfrmr/>
-- Source:        <https://github.com/Ryuya-dot-com/R_package_mfrmr>
+- Documentation: <https://ryuya-dot-com.github.io/mfrmr/>
+- Source:        <https://github.com/Ryuya-dot-com/mfrmr>
 - Citation:      `citation("mfrmr")`
 
 *mfrmr 0.1.6 cheatsheet*. Distributed under MIT License.
