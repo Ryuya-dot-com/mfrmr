@@ -1,5 +1,22 @@
 # mfrmr 0.2.0 (development version)
 
+This section accumulates entries between the 0.1.6 CRAN release and the
+0.2.0 release. The headings mirror the 0.1.6 layout (default changes,
+new features, bug fixes, documentation) so that release notes can be
+read in the same order as previous versions.
+
+## Default changes
+
+(none yet)
+
+## New features
+
+(none yet)
+
+## Bug fixes
+
+(none yet)
+
 ## Documentation
 
 - `?analyze_dff`, `?plot_dif_summary`, `?mfrmr_linking_and_dff`,
