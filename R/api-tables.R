@@ -523,9 +523,10 @@ unexpected_response_table <- function(fit,
 #' Hessian; under JML no joint Hessian is built), so a true delta-method
 #' fair-average SE is not yet computed. **Do not use these columns as
 #' \eqn{\pm 1.96 \cdot \mathrm{SE}} confidence-interval bounds on the
-#' fair-average value.** A delta-method fair-average SE is planned for
-#' a future release and will be exposed under a distinct column name
-#' to avoid silent misinterpretation.
+#' fair-average value.** A delta-method fair-average SE is not
+#' provided in this release; if such an SE is added later it would be
+#' exposed under a distinct column name from the existing measure-SE
+#' columns to avoid silent misinterpretation.
 #'
 #' @return A named list with:
 #' - `by_facet`: named list of formatted data.frames

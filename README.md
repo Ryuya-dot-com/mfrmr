@@ -274,10 +274,13 @@ boundary in one place.
   `compute_information()`, Wright/pathway/CCC plots, and category reports.
 - Supported with caveat: `diagnose_mfrm()` and direct slope-aware simulation
   are exploratory; `reporting_checklist()` routes only the direct table/plot
-  path.
-- Not supported in this release: fair-average reporting, score-side exports,
-  APA/report bundles, QC pass/fail pipelines, linking synthesis, planning /
-  forecasting, posterior predictive computation, and `MCMC`.
+  path; `fair_average_table()` and `estimate_bias()` use the slope-aware
+  element-conditional GPCM kernel and report a `caveat` field reminding
+  users that the SE columns are scaled facet-measure SEs, not delta-method
+  SEs of the fair-average / bias values.
+- Not supported in this release: score-side exports, APA/report bundles,
+  QC pass/fail pipelines, linking synthesis, planning / forecasting,
+  posterior predictive computation, and `MCMC`.
 
 The unsupported helpers depend on score-side or planning assumptions that are
 validated for the Rasch-family route but not yet generalized to bounded `GPCM`.
@@ -350,9 +353,7 @@ when you want a customised version.
 ```r
 # GitHub (development version)
 if (!requireNamespace("remotes", quietly = TRUE)) install.packages("remotes")
-remotes::install_github("Ryuya-dot-com/mfrmr",
-                        subdir = "mfrmr",
-                        build_vignettes = TRUE)
+remotes::install_github("Ryuya-dot-com/mfrmr", build_vignettes = TRUE)
 
 # CRAN (after release)
 # install.packages("mfrmr")
@@ -1225,16 +1226,8 @@ established for any given fit.
 
 ## Packaged synthetic datasets
 
-Installed at `system.file("extdata", package = "mfrmr")`:
-
-- `eckes_jin_2021_study1_sim.csv`
-- `eckes_jin_2021_study2_sim.csv`
-- `eckes_jin_2021_combined_sim.csv`
-- `eckes_jin_2021_study1_itercal_sim.csv`
-- `eckes_jin_2021_study2_itercal_sim.csv`
-- `eckes_jin_2021_combined_itercal_sim.csv`
-
-The same datasets are also packaged in `data/` and can be loaded with:
+Lazy-loaded under `data/` and accessed either by name or via the
+canonical loader:
 
 ```r
 data("ej2021_study1", package = "mfrmr")

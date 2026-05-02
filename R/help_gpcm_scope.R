@@ -219,8 +219,9 @@ gpcm_capability_matrix <- function(status = c("all", "supported", "supported_wit
         "(conditional plug-in information at the bias point estimate,",
         "holding theta and structural parameters fixed); they are NOT",
         "delta-method standard errors that propagate joint parameter",
-        "uncertainty. A delta-method SE for the bias estimate is planned",
-        "for a future release once the joint-covariance machinery lands."
+        "uncertainty. A delta-method SE for the bias estimate is not",
+        "currently provided; it would require the joint-covariance",
+        "machinery noted on the FACETS-compatibility row below."
       ),
       paste(
         "Not yet generalized to free-discrimination score semantics.",

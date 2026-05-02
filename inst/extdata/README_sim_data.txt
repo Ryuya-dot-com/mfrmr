@@ -16,12 +16,12 @@ Access from R:
     mfrmr::load_mfrmr_data("study2_itercal")
     mfrmr::load_mfrmr_data("combined_itercal")
 
-    # Equivalent base-R form:
-    data("mfrmr_study1", package = "mfrmr")
+    # Equivalent base-R form (the lazy-loaded objects are named ej2021_*):
+    data("ej2021_study1", package = "mfrmr")
 
     # Export one of the datasets to a CSV file for external tooling:
     write.csv(mfrmr::load_mfrmr_data("study1"),
-              "eckes_jin_2021_study1_sim.csv",
+              "ej2021_study1.csv",
               row.names = FALSE)
 
 Source
