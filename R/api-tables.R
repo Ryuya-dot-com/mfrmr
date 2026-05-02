@@ -455,14 +455,31 @@ unexpected_response_table <- function(fit,
 #' `StandardizedAdjustedAverage`, `ModelBasedSE`, and `FitAdjustedSE` are
 #' appended to the formatted outputs.
 #'
-#' In the current release, these tables are source-backed only for the
-#' Rasch-family `RSM` / `PCM` branch. FACETS documents fair averages as
+#' For the Rasch-family `RSM` / `PCM` branch, these tables follow the
+#' standard FACETS Linacre construction: fair averages are
 #' Rasch-measure-to-score transformations evaluated in a standardized
-#' mean/zero-facet environment. The bounded `GPCM` branch already has a
-#' generalized ordered-category probability kernel, but this package has not
-#' yet validated a slope-aware analogue of that fair-average score contract.
-#' `fair_average_table()` therefore stops for `GPCM` fits instead of silently
-#' reusing the Rasch-only calculation.
+#' mean/zero-facet environment.
+#'
+#' Bounded `GPCM` fits are supported in 0.2.0 under the slope-aware
+#' kernel ("Option A" in the design rationale): for each slope-facet
+#' element \eqn{j^\star} the per-row fair-average is the GPCM expected
+#' score
+#' \deqn{\mathrm{FA}^A_{p, j^\star} = \sum_k k \cdot P_{GPCM}(X = k \mid \theta_p, a_{j^\star}, \boldsymbol{\delta}_{j^\star})}
+#' computed at the target element's own slope and thresholds. Non-slope
+#' facets (Person, Rater, ...) report fair averages under the
+#' geometric-mean-one slope (the GPCM identification convention), so
+#' those rows are continuous with the PCM construction. The kernel
+#' reduces exactly to the PCM fair-average when all slopes equal one
+#' (regression-tested at machine precision in
+#' `tests/testthat/test-gpcm-fair-average.R`).
+#'
+#' Standard errors on the fair-average value itself are NOT yet
+#' computed for GPCM fits in 0.2.0. The SE columns retain the same
+#' meaning as for PCM (scaled facet-measure SEs) and therefore should
+#' NOT be quoted as \eqn{\pm 1.96 \cdot \mathrm{SE}} bounds on the
+#' fair-average; see the "Standard-error caveat" section below for
+#' details. The full delta-method fair-average SE is on the 0.3.0
+#' roadmap.
 #'
 #' @section Interpreting output:
 #' - `stacked`: cross-facet table for global comparison.
@@ -548,13 +565,6 @@ fair_average_table <- function(fit,
     stop("`fit` must be an mfrm_fit object from fit_mfrm().")
   }
   fit_model <- as.character(fit$config$model %||% fit$summary$Model[1] %||% NA_character_)
-  if (identical(fit_model, "GPCM")) {
-    stop(
-      "`fair_average_table()` is not yet validated for `GPCM` fits. ",
-      gpcm_fair_average_rationale(),
-      call. = FALSE
-    )
-  }
   if (is.null(diagnostics)) {
     diagnostics <- diagnose_mfrm(fit, residual_pca = "none")
   }
@@ -584,8 +594,24 @@ fair_average_table <- function(fit,
     reference = reference,
     label_style = label_style,
     omit_unobserved = omit_unobserved,
-    xtreme = xtreme
+    xtreme = xtreme,
+    model = fit_model,
+    method = if (identical(fit_model, "GPCM")) "GPCM-A-slope-aware" else "PCM/RSM"
   )
+  if (identical(fit_model, "GPCM")) {
+    bundle$caveat <- paste0(
+      "GPCM fair-averages use the slope-aware kernel (Option A in the ",
+      "design rationale). Slope-facet element rows carry visible slope ",
+      "heterogeneity in the FairM / FairZ values; non-slope-facet rows ",
+      "(persons, raters, ...) are reported under the average-element ",
+      "convention with slope = 1 (geometric-mean-one identification). ",
+      "Standard errors on the fair-average value are NOT yet computed for ",
+      "GPCM fits; the SE / Model S.E. / Real S.E. columns are scaled ",
+      "facet-measure SEs as documented under `?fair_average_table` and ",
+      "are NOT delta-method standard errors of the fair-average value. ",
+      "See `gpcm_capability_matrix()` for the current support contract."
+    )
+  }
   as_mfrm_bundle(bundle, "mfrm_fair_average")
 }
 

@@ -64,14 +64,31 @@ package-native aliases such as \code{AdjustedAverage},
 \code{StandardizedAdjustedAverage}, \code{ModelBasedSE}, and \code{FitAdjustedSE} are
 appended to the formatted outputs.
 
-In the current release, these tables are source-backed only for the
-Rasch-family \code{RSM} / \code{PCM} branch. FACETS documents fair averages as
+For the Rasch-family \code{RSM} / \code{PCM} branch, these tables follow the
+standard FACETS Linacre construction: fair averages are
 Rasch-measure-to-score transformations evaluated in a standardized
-mean/zero-facet environment. The bounded \code{GPCM} branch already has a
-generalized ordered-category probability kernel, but this package has not
-yet validated a slope-aware analogue of that fair-average score contract.
-\code{fair_average_table()} therefore stops for \code{GPCM} fits instead of silently
-reusing the Rasch-only calculation.
+mean/zero-facet environment.
+
+Bounded \code{GPCM} fits are supported in 0.2.0 under the slope-aware
+kernel ("Option A" in the design rationale): for each slope-facet
+element \eqn{j^\star} the per-row fair-average is the GPCM expected
+score
+\deqn{\mathrm{FA}^A_{p, j^\star} = \sum_k k \cdot P_{GPCM}(X = k \mid \theta_p, a_{j^\star}, \boldsymbol{\delta}_{j^\star})}
+computed at the target element's own slope and thresholds. Non-slope
+facets (Person, Rater, ...) report fair averages under the
+geometric-mean-one slope (the GPCM identification convention), so
+those rows are continuous with the PCM construction. The kernel
+reduces exactly to the PCM fair-average when all slopes equal one
+(regression-tested at machine precision in
+\code{tests/testthat/test-gpcm-fair-average.R}).
+
+Standard errors on the fair-average value itself are NOT yet
+computed for GPCM fits in 0.2.0. The SE columns retain the same
+meaning as for PCM (scaled facet-measure SEs) and therefore should
+NOT be quoted as \eqn{\pm 1.96 \cdot \mathrm{SE}} bounds on the
+fair-average; see the "Standard-error caveat" section below for
+details. The full delta-method fair-average SE is on the 0.3.0
+roadmap.
 }
 \section{Interpreting output}{
 

@@ -39,6 +39,36 @@ alongside the figure.
 return value renders as a compact summary (name, title, payload
 shapes, legend / reference-line counts) instead of a raw list dump.
 
+### Bounded GPCM fair-average unblock (slope-aware Option A)
+
+`fair_average_table()` no longer hard-stops on `GPCM` fits. The
+slope-aware element-conditional fair-average ("Option A" in the
+design rationale) is now computed:
+
+- For slope-facet element rows, the fair-average uses that element's
+  own discrimination \eqn{a_{j^\star}} and threshold structure:
+  \eqn{\mathrm{FA}^A_{p,j^\star} = \sum_k k \cdot P_{GPCM}(X=k \mid \theta_p, a_{j^\star}, \boldsymbol{\delta}_{j^\star})}.
+- For non-slope facets (Person, Rater, ...), the fair-average uses the
+  geometric-mean-one slope by GPCM identification, so the construction
+  is continuous with the PCM Linacre fair-average and reduces to it
+  exactly when all slopes equal one (regression-tested at machine
+  precision).
+
+The output bundle gains `settings$method = "GPCM-A-slope-aware"` and a
+`caveat` field that names the slope convention and reminds the user
+that the SE columns are scaled facet-measure SEs, not delta-method
+fair-average SEs. The full delta-method fair-average SE is deferred to
+0.3.0; the underlying joint-covariance machinery
+(`vcov.mfrm_fit()`, joint Hessian on
+\eqn{(\theta, a, \boldsymbol{\delta})}) needs to land first. See
+`?fair_average_table` and `gpcm_capability_matrix()` for the full
+support contract.
+
+`estimate_bias()`, `build_apa_outputs()`, and other score-side
+compatibility-contract outputs remain blocked under GPCM in 0.2.0;
+they require the same SE infrastructure to ship as
+publication-quality outputs.
+
 ## Bug fixes
 
 - `analyze_dff()` and `dif_interaction_table()` now reject invalid

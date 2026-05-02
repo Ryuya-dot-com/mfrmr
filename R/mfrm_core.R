@@ -3915,11 +3915,36 @@ expected_score_from_eta <- function(eta, step_cum, rating_min) {
   rating_min + sum(probs * k_vals)
 }
 
-estimate_eta_from_target <- function(target, step_cum, rating_min, rating_max) {
+# Slope-aware element-conditional expected score for GPCM fair-averages
+# (Option A in design_gpcm_fair_average.md). Computes
+#     E[X | eta, a, step_cum] = sum_k k * exp(a * (k * eta - step_cum_k))
+#                                / sum_r exp(a * (r * eta - step_cum_r))
+# in the log-space-shifted form for numerical stability. Reduces exactly
+# to `expected_score_from_eta()` when `slope == 1` (the PCM/RSM special
+# case); a degenerate or non-finite slope falls back to slope = 1 with a
+# silent guard so partial fits do not error mid-report.
+expected_score_from_eta_gpcm <- function(eta, step_cum, slope, rating_min) {
+  if (!is.finite(eta) || length(step_cum) == 0) return(NA_real_)
+  if (!is.finite(slope) || slope <= 0) slope <- 1
+  k_vals <- 0:(length(step_cum) - 1)
+  log_num <- slope * (k_vals * eta - step_cum)
+  m <- max(log_num)
+  if (!is.finite(m)) return(NA_real_)
+  probs <- exp(log_num - m)
+  probs <- probs / sum(probs)
+  rating_min + sum(probs * k_vals)
+}
+
+estimate_eta_from_target <- function(target, step_cum, rating_min, rating_max,
+                                     slope = 1) {
   if (!is.finite(target) || length(step_cum) == 0) return(NA_real_)
   if (target <= rating_min) return(-Inf)
   if (target >= rating_max) return(Inf)
-  f <- function(eta) expected_score_from_eta(eta, step_cum, rating_min) - target
+  # Uses the slope-aware helper. At slope = 1 (the default and the
+  # RSM/PCM case) this is identical to `expected_score_from_eta()` to
+  # machine precision (verified in tests/testthat/test-gpcm-fair-
+  # average.R), so the existing PCM/RSM xtreme-eta path is unchanged.
+  f <- function(eta) expected_score_from_eta_gpcm(eta, step_cum, slope, rating_min) - target
   lower <- -10
   upper <- 10
   f_low <- f(lower)
@@ -4129,7 +4154,7 @@ calc_facets_report_tbls <- function(res,
       eta_z <- sign * tbl$Estimate
     }
 
-    if (config$model == "PCM" && !is.null(config$step_facet)) {
+    if (config$model %in% c("PCM", "GPCM") && !is.null(config$step_facet)) {
       step_levels <- prep$levels[[config$step_facet]]
       if (facet == config$step_facet && length(step_levels) > 0 && length(step_cum_common) > 0) {
         step_cum_list <- purrr::map(tbl$Level, function(lvl) {
@@ -4147,17 +4172,57 @@ calc_facets_report_tbls <- function(res,
       step_cum_list <- rep(list(step_cum_common), nrow(tbl))
     }
 
-    fair_m <- purrr::map2_dbl(eta_m, step_cum_list, ~ expected_score_from_eta(.x, .y, rating_min))
-    fair_z <- purrr::map2_dbl(eta_z, step_cum_list, ~ expected_score_from_eta(.x, .y, rating_min))
+    # Per-row slope vector for GPCM Option A (design_gpcm_fair_average.md
+    # §4 / §5). For the slope-facet's own rows, use that level's own
+    # slope from `params$slopes`; for all other rows (Person, Rater, ...,
+    # and any non-GPCM fit) the slope is 1, which by the geometric-mean-
+    # one identification convention represents the "average slope" and
+    # makes `expected_score_from_eta_gpcm()` reduce exactly to the
+    # PCM/RSM Linacre fair-average. This is the conservative Option A
+    # convention: only the slope-facet element rows carry visible slope
+    # heterogeneity in the fair-average column.
+    slope_facet <- config$slope_facet %||% config$step_facet
+    if (config$model == "GPCM" && !is.null(slope_facet) &&
+        !is.null(params$slopes) && facet == slope_facet) {
+      slope_levels <- prep$levels[[slope_facet]] %||% character(0)
+      slopes_vec <- as.numeric(params$slopes)
+      slope_list <- purrr::map_dbl(tbl$Level, function(lvl) {
+        idx <- match(lvl, slope_levels)
+        if (is.na(idx) || idx < 1L || idx > length(slopes_vec)) {
+          1
+        } else {
+          slopes_vec[idx]
+        }
+      })
+    } else {
+      slope_list <- rep(1, nrow(tbl))
+    }
+
+    if (config$model == "GPCM") {
+      fair_m <- purrr::pmap_dbl(
+        list(eta_m, step_cum_list, slope_list),
+        function(e, s, a) expected_score_from_eta_gpcm(e, s, a, rating_min)
+      )
+      fair_z <- purrr::pmap_dbl(
+        list(eta_z, step_cum_list, slope_list),
+        function(e, s, a) expected_score_from_eta_gpcm(e, s, a, rating_min)
+      )
+    } else {
+      fair_m <- purrr::map2_dbl(eta_m, step_cum_list, ~ expected_score_from_eta(.x, .y, rating_min))
+      fair_z <- purrr::map2_dbl(eta_z, step_cum_list, ~ expected_score_from_eta(.x, .y, rating_min))
+    }
 
     xtreme_target <- ifelse(
       status == "Minimum", rating_min + xtreme,
       ifelse(status == "Maximum", rating_max - xtreme, NA_real_)
     )
-    xtreme_eta <- purrr::map2_dbl(xtreme_target, step_cum_list, ~ {
-      if (!is.finite(.x) || xtreme <= 0) return(NA_real_)
-      estimate_eta_from_target(.x, .y, rating_min, rating_max)
-    })
+    xtreme_eta <- purrr::pmap_dbl(
+      list(xtreme_target, step_cum_list, slope_list),
+      function(t, s, a) {
+        if (!is.finite(t) || xtreme <= 0) return(NA_real_)
+        estimate_eta_from_target(t, s, rating_min, rating_max, slope = a)
+      }
+    )
 
     # Convert any xtreme-adjusted eta back to facet-specific measure units.
     measure_logit <- tbl$Estimate
