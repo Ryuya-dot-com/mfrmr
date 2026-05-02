@@ -103,6 +103,13 @@ publication-quality outputs.
   ability-information bias correction for `lz_star` is documented as
   a placeholder finite-N adjustment in `?compute_person_fit_indices`
   and scheduled for a follow-up release.
+- `displacement_table()$summary` now returns `NA_real_` for
+  `MaxAbsDisplacement` and `MaxAbsDisplacementT` when every flagged
+  level has zero information (so every `Displacement` is `NA`).
+  Previously the helper called `max(..., na.rm = TRUE)` on an
+  all-`NA` vector, which returned `-Inf` and emitted a "no
+  non-missing arguments to max; returning -Inf" warning. The
+  guarded version is regression-tested in `test-core-coverage-gaps.R`.
 - `analyze_dff()` and `dif_interaction_table()` now reject invalid
   `p_adjust`, non-integer `min_obs`, invalid `focal` groups, and
   all-missing group columns up front, instead of failing later inside
