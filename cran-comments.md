@@ -1,111 +1,72 @@
 ## Test environments
 
-- local macOS Tahoe 26.4 (aarch64-apple-darwin20), R 4.5.2
-- win-builder R-devel, Windows Server 2022 x64, R 4.6.0 beta
-  (2026-04-10 r89868 ucrt), GCC 14.3.0
+The exact check log will be regenerated against the v0.2.0 tag. The
+planned environments are:
 
-No reverse dependency checks were required because the package has no known
-reverse dependencies.
+- local macOS Tahoe 26.x (aarch64-apple-darwin20), R 4.5.x
+- win-builder R-devel, Windows Server 2022 x64, R 4.6.x
+- GitHub Actions matrix: ubuntu-latest (release / devel / oldrel-1),
+  macos-latest (release), windows-latest (release).
 
 ## R CMD check results
 
-- local macOS Tahoe 26.4, R 4.5.2, `R CMD check --as-cran` on
-  `mfrmr_0.1.6.tar.gz`:
-  0 errors | 1 warning | 0 notes
+The exact check log will be regenerated against the v0.2.0 tag.
+Expected outcomes:
 
-The remaining warning observed locally is from the R installation headers /
-Apple clang toolchain, not package source:
-
-- `/Library/Frameworks/R.framework/Resources/include/R_ext/Boolean.h:62:36:
-  warning: unknown warning group '-Wfixed-enum-extension', ignored`
-
-CRAN incoming feasibility, examples, `--run-donttest` examples, tests,
-vignettes, and PDF manual checks passed in the local run.
-
-- win-builder R-devel, Windows Server 2022 x64, R 4.6.0 beta:
-  0 errors | 0 warnings | 0 notes
-
-CRAN incoming feasibility, examples, tests, vignette rebuilding, PDF manual,
-and HTML manual checks passed on win-builder.
-
-If a Linux check returns a NOTE about installed package size (the local check
-classifies the 5.6 MB installed footprint at INFO level), it reflects the
-260+ exported documented API entries (`R/` subdir 3.1 MB of compiled Rd +
-bytecode, `help/` 1.0 MB); no large bundled data or pre-built binary is
-shipped. The `data/` directory is 44 KB and `inst/` is 1.0 MB.
+- 0 errors.
+- 0 warnings.
+- A possible INFO-level installed-size note. The 0.1.6 footprint was
+  5.6 MB; 0.2.0 grows by an estimated 200-400 KB from the new R sources,
+  vignettes, and tests, putting the total in the 5.8-6.0 MB range.
 
 ## Downstream dependencies
 
-No known reverse dependencies.
+No reverse dependencies. Verified via `revdepcheck::cran_revdeps("mfrmr")`
+returning an empty character vector. The `revdep/` subdirectory carries
+the `cran.md` note documenting this.
 
 ## Submission comment
 
-This file currently documents the 0.1.6 submission. The 0.2.0 cycle is in
-development on the `dev/0.2.0` branch; the submission comment, test
-environments, and R CMD check results below will be re-drafted before the
-0.2.0 tag. The headline changes for the new release will be sourced from
-the `# mfrmr 0.2.0` section of `NEWS.md`, and major design proposals
-shipping with the release live under `design-notes/` (excluded from the
-built package via `.Rbuildignore`).
+This is an update to mfrmr 0.1.6. Headline changes (sourced from NEWS.md):
 
-This is an update to mfrmr 0.1.5. Headline changes:
+- Bounded GPCM scope expansion. The fair-average table, bias detection,
+  and APA writer now support GPCM fits under the slope-aware kernel
+  (Linacre 1989 / Muraki 1992 generalisation), with the mean-slope
+  counterfactual and discrimination-stratified diagnostic exposed via
+  `slope_aware = FALSE` and `stratify_facet`. Only the FACETS
+  compatibility-contract score-side outputs remain blocked under GPCM.
 
-- empirical-Bayes facet shrinkage (`apply_empirical_bayes_shrinkage()`,
-  `fit_mfrm(facet_shrinkage = "empirical_bayes")`) with the
-  classical Efron-Morris (1973) variance estimator clearly documented;
-- hierarchical-audit family (`detect_facet_nesting()`,
-  `compute_facet_icc()`, `compute_facet_design_effect()`,
-  `analyze_hierarchical_structure()`) with profile / parametric-bootstrap
-  CIs for ICC;
-- APA output adapters (`build_apa_outputs()`, `apa_table()`,
-  `as_kable()`, `as_flextable()`) and the `reporting_checklist()`
-  manuscript-readiness companion;
-- expanded reporting surface: `summary(diagnose_mfrm())` now prints
-  the fixed/random chi-square, the inter-rater agreement summary, an
-  MnSq-misfit auto-flag block, and a category-usage table;
-  `summary(fit_mfrm())` adds a targeting block; `summary(estimate_bias())`
-  adds Bonferroni and Holm corrected counts. Thresholds are steered
-  package-wide via the new `mfrm_misfit_thresholds()` getter / setter;
-- second wave of visualisations (`plot_local_dependence_heatmap()`,
-  `plot_reliability_snapshot()`, `plot_residual_matrix()`,
-  `plot_shrinkage_funnel()`, plus the screening helpers
-  `plot_guttman_scalogram()`, `plot_residual_qq()`,
-  `plot_rater_trajectory()`, `plot_rater_agreement_heatmap()`),
-  Winsteps-Table-30-style `plot_bubble(view = "infit_outfit")`, and a
-  fixed `mfrm_plot_data` payload contract for `plot_dif_heatmap()`;
-- bug fixes:
-  - bias / interaction NA columns (`estimate_bias()` /
-    `estimate_all_bias()` no longer return NA for `S.E.`, `t`, `Prob.`,
-    `Obs-Exp Average`, `Infit`, `Outfit`);
-  - `estimate_bias()` informative error when `facet_a` / `facet_b` is
-    typo'd (was a silent empty-list);
-  - score-out-of-range guard in `prepare_mfrm_data()`;
-  - graphical helpers now restore the user's `par()` on exit;
-  - ZSTD numerical instability for very small df;
-  - `compute_facet_icc()` reports `ICC = NA` /
-    `Interpretation = "Non-identifiable"` for singular fits;
-  - `as_kable(format = "pipe")` consistently returns Markdown;
-  - `plot_dif_heatmap(draw = FALSE)` now returns the documented
-    `mfrm_plot_data` payload (was the bare matrix);
-- new public reference card (`inst/cheatsheet/mfrmr-cheatsheet.pdf`,
-  pre-rendered alongside the `.Rmd` source) and a Facets / Winsteps
-  cross-reference table inside `?mfrmr_visual_diagnostics`;
-- CITATION now tracks `DESCRIPTION` Version automatically.
+- Native classical DIF detection. The new `analyze_dif_classical()`
+  function adds Mantel-Haenszel (Holland & Thayer 1988), logistic
+  regression (Swaminathan & Rogers 1990), and SIBTEST (Shealy & Stout
+  1993) differential item functioning detection as native
+  implementations. No new package dependencies. Default polytomous
+  handling uses Liu & Agresti (1996) cumulative common odds-ratio for
+  MH, proportional-odds cumulative-link logistic for the logistic
+  family, and Poly-SIBTEST (Chang, Mazzeo & Roussos 1996) for SIBTEST.
+  Default matching is the calibrated person measure from the parent
+  fit; raw-score matching is exposed via `match = "sumscore"`.
 
-This release also flips three defaults (each clearly enumerated in NEWS.md
-under "Default changes (three breaking flips)" and individually reversible
-by passing the previous value):
+- Five new Rasch / IRT classic plots. `plot_kidmap()` (Mead 1985 KIDMAP),
+  `plot_tcc()` (Lord 1980 test characteristic curve),
+  `plot_expected_score_curve()` (per-element expected score),
+  `plot_cumulative_icc()` (cumulative category response curves), and
+  `plot_information_surface()` (test information surface across pairs
+  of facets).
 
-- `diagnose_mfrm(diagnostic_mode = ...)` default `"legacy"` -> `"both"`,
-  so RSM/PCM fits surface the latent-integrated marginal-fit screen
-  alongside the residual stack without explicit opt-in;
-- `plot(fit)` default returns the Wright map alone as `mfrm_plot_data`;
-  the previous three-plot overview is preserved at `plot(fit, type = "bundle")`
-  with the same `mfrm_plot_bundle` class and slot names;
-- `fit_mfrm(quad_points = ...)` default `15` -> `31` so a default MML fit
-  is stable enough for direct manuscript reporting; faster exploratory
-  iteration is still available with `quad_points = 7` or `15`.
+- Continuous integration. New GitHub Actions workflows: R-CMD-check
+  matrix on Ubuntu / macOS / Windows across R release / devel /
+  oldrel-1, plus test-coverage with covr (artifact upload, no external
+  service contacted).
 
-`analyze_facet_equivalence(conf_level = ...)` is renamed to `ci_level` for
-consistency with the rest of the package surface; passing the old name
-issues a deprecation warning and continues to work for one release.
+- Documentation. Three new vignettes covering the migration from
+  Facets, the bounded GPCM scope, and the classical DIF surface.
+
+## Default changes
+
+- `fair_average_table()` for GPCM fits no longer raises an error; the
+  slope-aware kernel (Option A in the documented rationale) is the
+  default. Code paths that previously caught the error in
+  `tryCatch()` will now receive a populated bundle. Pass
+  `slope_aware = FALSE, slope_summary = "geomean"` to obtain the
+  mean-slope counterfactual instead.
