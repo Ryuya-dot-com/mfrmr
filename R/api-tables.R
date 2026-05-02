@@ -4179,7 +4179,7 @@ estimate_bias <- function(fit,
     stop("`fit` must be an mfrm_fit object from fit_mfrm(). ",
          "Got: ", paste(class(fit), collapse = "/"), ".", call. = FALSE)
   }
-  stop_if_gpcm_out_of_scope(fit, "estimate_bias()")
+  fit_model <- as.character(fit$config$model %||% fit$summary$Model[1] %||% NA_character_)
   if (missing(diagnostics)) {
     stop("`diagnostics` is required. Call diagnose_mfrm(fit) first and ",
          "pass the result as the second argument: ",
@@ -4235,6 +4235,21 @@ estimate_bias <- function(fit,
   )
   if (is.list(out) && length(out) > 0) {
     class(out) <- c("mfrm_bias", class(out))
+    if (identical(fit_model, "GPCM")) {
+      out$method <- "GPCM-A-slope-aware"
+      out$caveat <- paste0(
+        "GPCM bias estimates use the slope-aware GPCM kernel (Option A): ",
+        "the bias parameter is the additive shift on the linear predictor ",
+        "that maximises the GPCM log-likelihood for the (facet_a, facet_b) ",
+        "cell. SE / t / Prob columns retain the screening-tier semantics ",
+        "documented in `?estimate_bias` (conditional plug-in information at ",
+        "the bias point estimate, holding theta and the structural ",
+        "parameters fixed); they are not delta-method standard errors that ",
+        "propagate joint-parameter uncertainty. The full delta-method SE is ",
+        "deferred to 0.3.0. See `gpcm_capability_matrix()` for the current ",
+        "support contract."
+      )
+    }
   }
   out
 }

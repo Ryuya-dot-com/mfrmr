@@ -124,14 +124,10 @@ test_that("GPCM summaries expose slope overview and diagnostics are now availabl
     "does not support `GPCM` fits",
     fixed = TRUE
   )
-  expect_error(
-    estimate_bias(fit, dx, facet_a = "Rater", facet_b = "Criterion"),
-    "does not support `GPCM` fits",
-    fixed = TRUE
-  )
-  # `fair_average_table()` is unblocked for GPCM fits in 0.2.0 under the
-  # slope-aware kernel (Option A). Confirm it now returns a populated
-  # bundle with the GPCM caveat instead of raising the legacy error.
+  # `fair_average_table()` and `estimate_bias()` are both unblocked for
+  # GPCM fits in 0.2.0 under the slope-aware kernel (Option A). Confirm
+  # they return populated bundles with the GPCM caveat instead of
+  # raising the legacy error.
   fa <- fair_average_table(fit)
   expect_s3_class(fa, "mfrm_fair_average")
   expect_true(nrow(fa$stacked) > 0)
@@ -139,6 +135,13 @@ test_that("GPCM summaries expose slope overview and diagnostics are now availabl
   expect_true(!is.null(fa$caveat))
   expect_true(grepl("slope-aware kernel", fa$caveat, fixed = TRUE))
   expect_true(grepl("Standard errors", fa$caveat, fixed = TRUE))
+
+  bias <- estimate_bias(fit, dx, facet_a = "Rater", facet_b = "Criterion")
+  expect_s3_class(bias, "mfrm_bias")
+  expect_true(nrow(bias$table) > 0)
+  expect_identical(bias$method, "GPCM-A-slope-aware")
+  expect_true(!is.null(bias$caveat))
+  expect_true(grepl("slope-aware GPCM kernel", bias$caveat, fixed = TRUE))
 
   expect_error(
     facets_parity_report(fit),

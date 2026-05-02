@@ -5420,6 +5420,18 @@ estimate_bias_interaction <- function(res,
   score_k <- idx$score_k
   weight <- idx$weight
   step_idx <- idx$step_idx
+  # Per-observation slope index for GPCM. For non-GPCM fits these stay
+  # NULL and the dispatch below falls through to the RSM/PCM branch.
+  slope_idx <- if (identical(config$model, "GPCM")) {
+    idx$slope_idx %||% idx$step_idx
+  } else {
+    NULL
+  }
+  slopes_full <- if (identical(config$model, "GPCM")) {
+    as.numeric(params$slopes)
+  } else {
+    NULL
+  }
 
   if (config$model == "RSM") {
     step_cum <- c(0, cumsum(params$steps))
@@ -5493,9 +5505,16 @@ estimate_bias_interaction <- function(res,
     score_k_sub <- score_k[idx_rows]
     weight_sub <- if (!is.null(weight)) weight[idx_rows] else NULL
     step_idx_sub <- if (!is.null(step_idx)) step_idx[idx_rows] else NULL
+    slope_idx_sub <- if (!is.null(slope_idx)) slope_idx[idx_rows] else NULL
 
     if (config$model == "RSM") {
       nll <- function(b) -loglik_rsm(eta_sub + b, score_k_sub, step_cum, weight = weight_sub)
+    } else if (identical(config$model, "GPCM")) {
+      nll <- function(b) -loglik_gpcm(eta_sub + b, score_k_sub, step_cum_mat,
+                                        criterion_idx = step_idx_sub,
+                                        slopes = slopes_full,
+                                        slope_idx = slope_idx_sub,
+                                        weight = weight_sub)
     } else {
       nll <- function(b) -loglik_pcm(eta_sub + b, score_k_sub, step_cum_mat, step_idx_sub, weight = weight_sub)
     }
@@ -5520,8 +5539,14 @@ estimate_bias_interaction <- function(res,
       eta_sub <- eta_base[idx_rows] + ifelse(is.finite(bias), bias, 0)
       score_k_sub <- score_k[idx_rows]
       step_idx_sub <- if (!is.null(step_idx)) step_idx[idx_rows] else NULL
+      slope_idx_sub <- if (!is.null(slope_idx)) slope_idx[idx_rows] else NULL
       probs <- if (config$model == "RSM") {
         category_prob_rsm(eta_sub, step_cum)
+      } else if (identical(config$model, "GPCM")) {
+        category_prob_gpcm(eta_sub, step_cum_mat,
+                            criterion_idx = step_idx_sub,
+                            slopes = slopes_full,
+                            slope_idx = slope_idx_sub)
       } else {
         category_prob_pcm(eta_sub, step_cum_mat, step_idx_sub)
       }
@@ -5604,10 +5629,16 @@ estimate_bias_interaction <- function(res,
     score_k_sub <- score_k[idx_rows]
     weight_sub <- if (!is.null(weight)) weight[idx_rows] else rep(1, length(idx_rows))
     step_idx_sub <- if (!is.null(step_idx)) step_idx[idx_rows] else NULL
+    slope_idx_sub <- if (!is.null(slope_idx)) slope_idx[idx_rows] else NULL
 
     if (bias_ok) {
       probs <- if (config$model == "RSM") {
         category_prob_rsm(eta_sub + bias_hat, step_cum)
+      } else if (identical(config$model, "GPCM")) {
+        category_prob_gpcm(eta_sub + bias_hat, step_cum_mat,
+                            criterion_idx = step_idx_sub,
+                            slopes = slopes_full,
+                            slope_idx = slope_idx_sub)
       } else {
         category_prob_pcm(eta_sub + bias_hat, step_cum_mat, step_idx_sub)
       }

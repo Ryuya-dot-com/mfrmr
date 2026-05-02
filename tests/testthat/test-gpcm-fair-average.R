@@ -118,6 +118,90 @@ test_that("fair_average_table() no longer hard-stops on GPCM fits", {
   expect_gt(stats::var(crit$AdjustedAverage), 0)
 })
 
+test_that("estimate_bias() no longer hard-stops on GPCM fits", {
+  d <- mfrmr:::sample_mfrm_data(seed = 42)
+  fit <- suppressWarnings(suppressMessages(fit_mfrm(
+    d, "Person", c("Rater", "Task", "Criterion"), "Score",
+    model = "GPCM", step_facet = "Criterion",
+    method = "MML", quad_points = 5, maxit = 20
+  )))
+  dx <- diagnose_mfrm(fit, residual_pca = "none", diagnostic_mode = "legacy")
+
+  bias <- estimate_bias(fit, dx, facet_a = "Rater", facet_b = "Criterion")
+
+  expect_s3_class(bias, "mfrm_bias")
+  expect_true(nrow(bias$table) > 0)
+  expect_identical(bias$method, "GPCM-A-slope-aware")
+  expect_true(!is.null(bias$caveat))
+  expect_true(grepl("slope-aware GPCM kernel", bias$caveat, fixed = TRUE))
+  # Bias point estimates must be finite, well-bounded, and accompanied
+  # by the screening-tier inference columns.
+  expect_true(all(is.finite(bias$table$`Bias Size`)))
+  expect_true(all(abs(bias$table$`Bias Size`) <= 10))
+  expect_true("S.E." %in% names(bias$table))
+  expect_true("InferenceTier" %in% names(bias$table))
+  expect_identical(unique(bias$table$InferenceTier), "screening")
+})
+
+test_that("estimate_bias() GPCM dispatch responds to slope clamping", {
+  # The GPCM bias dispatch (loglik_gpcm + category_prob_gpcm in
+  # `estimate_bias_interaction()`) must consume `params$slopes`. We
+  # confirm that by comparing bias estimates from a fit with the actual
+  # fitted slopes against bias estimates from the same fit with
+  # log-slopes clamped to zero. At least one cell must change, which
+  # proves the slope-aware kernel is in fact the active code path.
+  # (Closed-form reduction-to-PCM at slopes = 1 is already pinned at
+  # the helper layer in test-estimation-core.R:148-185, where
+  # `loglik_gpcm` and `category_prob_gpcm` are tested to agree with
+  # their PCM siblings byte-for-byte at unit slopes.)
+  d <- mfrmr:::sample_mfrm_data(seed = 42)
+  fit_gpcm <- suppressWarnings(suppressMessages(fit_mfrm(
+    d, "Person", c("Rater", "Task", "Criterion"), "Score",
+    model = "GPCM", step_facet = "Criterion",
+    method = "MML", quad_points = 5, maxit = 20
+  )))
+  config <- fit_gpcm$config
+  sizes <- mfrmr:::build_param_sizes(config)
+  if (is.null(sizes$log_slopes) || sizes$log_slopes == 0L) {
+    skip("GPCM fit has no log-slope parameter block to clamp.")
+  }
+  facets_n <- sum(unlist(sizes[c("theta", "facets", "steps")]))
+  log_slope_start <- facets_n + 1L
+  log_slope_end <- facets_n + sizes$log_slopes
+  fit_clamped <- fit_gpcm
+  fit_clamped$opt$par[log_slope_start:log_slope_end] <- 0  # log(1) = 0
+
+  dx_gpcm <- diagnose_mfrm(fit_gpcm, residual_pca = "none", diagnostic_mode = "legacy")
+  dx_clamped <- diagnose_mfrm(fit_clamped, residual_pca = "none",
+                                diagnostic_mode = "legacy")
+
+  bias_gpcm <- estimate_bias(fit_gpcm, dx_gpcm,
+                               facet_a = "Rater", facet_b = "Criterion")
+  bias_clamped <- estimate_bias(fit_clamped, dx_clamped,
+                                  facet_a = "Rater", facet_b = "Criterion")
+
+  expect_s3_class(bias_gpcm, "mfrm_bias")
+  expect_s3_class(bias_clamped, "mfrm_bias")
+
+  # Match cells via the package-emitted facet-level columns.
+  key_gpcm <- paste(bias_gpcm$table$Facet1_Level,
+                     bias_gpcm$table$Facet2_Level, sep = "||")
+  key_clamped <- paste(bias_clamped$table$Facet1_Level,
+                         bias_clamped$table$Facet2_Level, sep = "||")
+  common <- intersect(key_gpcm, key_clamped)
+  expect_gt(length(common), 0)
+
+  i_gpcm <- match(common, key_gpcm)
+  i_clamped <- match(common, key_clamped)
+  diffs <- abs(bias_gpcm$table$`Bias Size`[i_gpcm] -
+                 bias_clamped$table$`Bias Size`[i_clamped])
+
+  # Slope dispatch sanity: at least one cell must move when slopes are
+  # clamped to 1. If diff = 0 everywhere, the dispatch is silently
+  # ignoring `params$slopes`.
+  expect_gt(max(diffs, na.rm = TRUE), 1e-6)
+})
+
 test_that("GPCM dispatch: clamping slopes to 1 changes Criterion-row fair-averages", {
   # Construct a GPCM fit, then build a parallel parameter vector whose
   # slope block is all-zero on the log scale (i.e. all slopes = 1 by

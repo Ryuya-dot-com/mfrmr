@@ -39,34 +39,43 @@ alongside the figure.
 return value renders as a compact summary (name, title, payload
 shapes, legend / reference-line counts) instead of a raw list dump.
 
-### Bounded GPCM fair-average unblock (slope-aware Option A)
+### Bounded GPCM fair-average and bias unblock (slope-aware Option A)
 
-`fair_average_table()` no longer hard-stops on `GPCM` fits. The
-slope-aware element-conditional fair-average ("Option A" in the
-design rationale) is now computed:
+`fair_average_table()` and `estimate_bias()` no longer hard-stop on
+`GPCM` fits. Both helpers now use the slope-aware GPCM kernel
+("Option A" in the design rationale):
 
-- For slope-facet element rows, the fair-average uses that element's
-  own discrimination \eqn{a_{j^\star}} and threshold structure:
+- **`fair_average_table()`**: for slope-facet element rows, the
+  fair-average uses that element's own discrimination \eqn{a_{j^\star}}
+  and threshold structure:
   \eqn{\mathrm{FA}^A_{p,j^\star} = \sum_k k \cdot P_{GPCM}(X=k \mid \theta_p, a_{j^\star}, \boldsymbol{\delta}_{j^\star})}.
-- For non-slope facets (Person, Rater, ...), the fair-average uses the
+  For non-slope facets (Person, Rater, ...), the fair-average uses the
   geometric-mean-one slope by GPCM identification, so the construction
   is continuous with the PCM Linacre fair-average and reduces to it
   exactly when all slopes equal one (regression-tested at machine
-  precision).
+  precision in `tests/testthat/test-gpcm-fair-average.R`).
 
-The output bundle gains `settings$method = "GPCM-A-slope-aware"` and a
-`caveat` field that names the slope convention and reminds the user
-that the SE columns are scaled facet-measure SEs, not delta-method
-fair-average SEs. The full delta-method fair-average SE is deferred to
-0.3.0; the underlying joint-covariance machinery
+- **`estimate_bias()`**: the per-cell bias parameter is the additive
+  shift on the linear predictor that maximises the per-cell GPCM
+  log-likelihood. The dispatch routes the inner `nll` and the
+  per-iteration `category_prob` calls through `loglik_gpcm` and
+  `category_prob_gpcm` instead of their PCM siblings; SE / t / Prob
+  columns retain the screening-tier semantics documented in
+  `?estimate_bias`.
+
+Both helpers gain `method = "GPCM-A-slope-aware"` and a `caveat`
+field that names the slope convention and reminds the user that the
+SE columns are not delta-method standard errors of the
+fair-average / bias values. The full delta-method SE for both is
+deferred to 0.3.0; the underlying joint-covariance machinery
 (`vcov.mfrm_fit()`, joint Hessian on
 \eqn{(\theta, a, \boldsymbol{\delta})}) needs to land first. See
-`?fair_average_table` and `gpcm_capability_matrix()` for the full
-support contract.
+`?fair_average_table`, `?estimate_bias`, and
+`gpcm_capability_matrix()` for the full support contract.
 
-`estimate_bias()`, `build_apa_outputs()`, and other score-side
-compatibility-contract outputs remain blocked under GPCM in 0.2.0;
-they require the same SE infrastructure to ship as
+`build_apa_outputs()`, `facets_parity_report()`, and
+`facets_output_file_bundle(include = "score")` remain blocked under
+GPCM in 0.2.0; they require the same SE infrastructure to ship as
 publication-quality outputs.
 
 ## Bug fixes
