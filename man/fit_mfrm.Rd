@@ -251,8 +251,19 @@ including public \code{Method}, internal \code{MethodUsed}, and
 \code{MMLEngineRequested}, \code{MMLEngineUsed}, and \code{EMIterations} for MML fits
 \item \code{facets$person}: person estimates (\code{Estimate}; plus \code{SD} for MML)
 \item \code{facets$others}: facet-level estimates for each facet
-\item \code{steps}: estimated threshold/step parameters
-\item \code{slopes}: estimated discrimination parameters for \code{GPCM} fits
+\item \code{steps}: estimated threshold/step parameters as a one-row-per-step
+\code{tibble} with \code{Estimate} only. No \code{SE} column is currently
+provided; standard errors for steps are not in the structural
+Hessian block exposed by this release. Treat the values as
+point estimates; for step-structure quality, use the
+step-collapse and disordering warnings from \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} and
+\code{\link[=category_structure_report]{category_structure_report()}}.
+\item \code{slopes}: estimated discrimination parameters for \code{GPCM} fits as
+a one-row-per-slope-element \code{tibble} with \code{LogEstimate} and
+\code{Estimate} only. No \code{SE} column is currently provided; the
+identification convention pins the geometric mean of slopes at 1,
+and the structural Hessian block exposed by this release does
+not include slope SEs. Treat the values as point estimates.
 \item \code{interactions}: model-estimated facet interaction effects and metadata
 when \code{facet_interactions} is supplied
 \item \code{population}: population-model metadata. Ordinary fits keep an inactive

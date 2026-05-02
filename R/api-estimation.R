@@ -554,8 +554,19 @@
 #'   `MMLEngineRequested`, `MMLEngineUsed`, and `EMIterations` for MML fits
 #' - `facets$person`: person estimates (`Estimate`; plus `SD` for MML)
 #' - `facets$others`: facet-level estimates for each facet
-#' - `steps`: estimated threshold/step parameters
-#' - `slopes`: estimated discrimination parameters for `GPCM` fits
+#' - `steps`: estimated threshold/step parameters as a one-row-per-step
+#'   `tibble` with `Estimate` only. No `SE` column is currently
+#'   provided; standard errors for steps are not in the structural
+#'   Hessian block exposed by this release. Treat the values as
+#'   point estimates; for step-structure quality, use the
+#'   step-collapse and disordering warnings from [diagnose_mfrm()] and
+#'   [category_structure_report()].
+#' - `slopes`: estimated discrimination parameters for `GPCM` fits as
+#'   a one-row-per-slope-element `tibble` with `LogEstimate` and
+#'   `Estimate` only. No `SE` column is currently provided; the
+#'   identification convention pins the geometric mean of slopes at 1,
+#'   and the structural Hessian block exposed by this release does
+#'   not include slope SEs. Treat the values as point estimates.
 #' - `interactions`: model-estimated facet interaction effects and metadata
 #'   when `facet_interactions` is supplied
 #' - `population`: population-model metadata. Ordinary fits keep an inactive
