@@ -50,6 +50,9 @@
 #'     from `mirt::itemfit()`.}
 #'   \item{`steps`}{Per-item threshold parameters extracted from the
 #'     IRT parameterisation (`b1`, ..., `b(K-1)`).}
+#'   \item{`config`}{List with the resolved `model` and `item_facet`
+#'     used for the import; downstream plot and table helpers consult
+#'     this to dispatch correctly on the imported bundle.}
 #'   \item{`diagnostics`}{`mfrm_diagnostics`-shape bundle when
 #'     `compute_fit = TRUE`; `NULL` otherwise.}
 #'   \item{`source`}{Imported-from metadata.}

@@ -52,6 +52,20 @@ reporting-use flags, and fit columns
 \item \code{interaction_facets}, \code{interaction_order}, \code{interaction_mode}: full
 interaction metadata
 \item \code{iteration}: iteration history/metadata
+\item \code{orientation_audit}: facet-orientation sign-consistency audit table
+\item \code{mixed_sign}: logical flag indicating whether bias-size signs flip
+across facets in a way that complicates direction interpretation
+\item \code{direction_note}: one-line interpretive note describing the
+dominant bias direction (empty when not applicable)
+\item \code{recommended_action}: one-line recommended-action label routing
+the user to the appropriate follow-up helper
+\item \code{inference_tier}: always \code{"screening"} in this release; surfaces
+the SE/t/Prob inference tier so downstream reporting helpers can
+route correctly (a future delta-method release will introduce a
+\code{"primary"} tier alongside)
+\item \code{optimization_failures}: per-cell record of any inner-loop
+optimizer failures encountered while estimating the bias
+parameters; empty when every cell converged cleanly
 }
 }
 \description{

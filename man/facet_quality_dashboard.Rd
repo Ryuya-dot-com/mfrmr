@@ -96,8 +96,12 @@ certification, more lenient for formative assessment.
 \section{Output}{
 
 The returned object is a bundle-like list with class
-\code{mfrm_facet_dashboard} and components such as:
+\code{mfrm_facet_dashboard} and components:
 \itemize{
+\item \code{facet}: character scalar naming the dashboard's target facet
+\item \code{facet_source}: character scalar describing whether the target
+facet was inferred from the fit configuration or supplied
+explicitly
 \item \code{overview}: one-row structural overview
 \item \code{summary}: one-row screening summary
 \item \code{detail}: level-level detail table
@@ -106,6 +110,11 @@ The returned object is a bundle-like list with class
 \item \code{bias_sources}: per-bundle bias aggregation metadata
 \item \code{settings}: resolved threshold settings
 \item \code{notes}: short interpretation notes
+\item \code{diagnostics}: the \code{mfrm_diagnostics} bundle the dashboard was
+built from (echoed for downstream helpers that need to traverse
+the same diagnostics object)
+\item \code{bias_results}: the \code{mfrm_bias} bundle (or list of bundles)
+when \code{bias_results} was supplied; \code{NULL} otherwise
 }
 }
 

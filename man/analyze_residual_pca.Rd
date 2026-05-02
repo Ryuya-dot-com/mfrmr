@@ -29,6 +29,10 @@ A named list with:
 \item \code{by_facet}: named list of facet PCA bundles
 \item \code{overall_table}: variance table for overall PCA
 \item \code{by_facet_table}: stacked variance table across facets
+\item \code{errors}: named list of any per-facet PCA errors that were
+caught and turned into \code{NA_real_} rows in the variance tables
+(e.g., \code{psych::principal()} failure on a near-singular residual
+matrix). The list is empty when every facet PCA succeeded.
 }
 }
 \description{

@@ -1684,6 +1684,8 @@ audit_compare_mfrm_nesting <- function(fits, labels) {
 #' @return A list of class `mfrm_data_description` with:
 #' - `overview`: one-row run-level summary
 #' - `missing_by_column`: missing counts in selected input columns
+#' - `missing_rate_summary`: per-column missingness rate summary
+#'   (one row per input column, with raw and proportion-of-N columns)
 #' - `score_descriptives`: output from [psych::describe()] for score
 #' - `weight_descriptives`: output from [psych::describe()] for weight
 #' - `score_distribution`: weighted and raw score frequencies over the prepared
@@ -1691,6 +1693,10 @@ audit_compare_mfrm_nesting <- function(fits, labels) {
 #'   range was supplied explicitly; unused intermediate categories require
 #'   `keep_original = TRUE`.
 #' - `facet_level_summary`: per-level usage and score summaries
+#' - `facet_crosstabs`: pairwise observation-count crosstabs between
+#'   non-person facets (named list keyed `"facetA__facetB"`); used by
+#'   `summary(ds)$design_links` to flag sparse / disconnected
+#'   facet-pair coverage
 #' - `linkage_summary`: person-facet connectivity diagnostics
 #' - `agreement`: observed-score inter-rater agreement bundle
 #' - `score_support`: minimal prepared score-support metadata used by

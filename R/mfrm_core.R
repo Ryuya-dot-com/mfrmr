@@ -3390,13 +3390,15 @@ summarize_displacement_table <- function(displacement_tbl,
   } else {
     rep(FALSE, nrow(displacement_tbl))
   }
+  abs_disp <- abs(displacement_tbl$Displacement)
+  abs_t <- abs(displacement_tbl$DisplacementT)
   tibble(
     Levels = nrow(displacement_tbl),
     AnchoredLevels = sum(is_anchored, na.rm = TRUE),
     FlaggedLevels = sum(flagged, na.rm = TRUE),
     FlaggedAnchoredLevels = sum(flagged & is_anchored, na.rm = TRUE),
-    MaxAbsDisplacement = max(abs(displacement_tbl$Displacement), na.rm = TRUE),
-    MaxAbsDisplacementT = max(abs(displacement_tbl$DisplacementT), na.rm = TRUE),
+    MaxAbsDisplacement = if (any(is.finite(abs_disp))) max(abs_disp, na.rm = TRUE) else NA_real_,
+    MaxAbsDisplacementT = if (any(is.finite(abs_t))) max(abs_t, na.rm = TRUE) else NA_real_,
     AbsDisplacementThreshold = abs_displacement_warn,
     AbsTThreshold = abs_t_warn
   )

@@ -2179,6 +2179,11 @@ plot.mfrm_design_evaluation <- function(x,
 #' - `planning_scope`: explicit record of the current planning contract
 #' - `planning_constraints`: explicit record of mutable/locked design variables
 #' - `planning_schema`: combined planner-schema contract
+#' - `caveats`: structured warning rows for situations where the
+#'   recommendation rests on weak evidence (e.g., no design met every
+#'   threshold; the recommended design is at the boundary of the
+#'   evaluated grid; only one rep was simulated). Empty `tibble()`
+#'   when no caveats apply.
 #' @seealso [evaluate_mfrm_design()], [summary.mfrm_design_evaluation], [plot.mfrm_design_evaluation]
 #' @examples
 #' \donttest{

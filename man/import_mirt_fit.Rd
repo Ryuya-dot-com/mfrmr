@@ -40,6 +40,9 @@ Infit / Outfit / OutfitZSTD / Zh when \code{compute_fit = TRUE}.}
 from \code{mirt::itemfit()}.}
 \item{\code{steps}}{Per-item threshold parameters extracted from the
 IRT parameterisation (\code{b1}, ..., \code{b(K-1)}).}
+\item{\code{config}}{List with the resolved \code{model} and \code{item_facet}
+used for the import; downstream plot and table helpers consult
+this to dispatch correctly on the imported bundle.}
 \item{\code{diagnostics}}{\code{mfrm_diagnostics}-shape bundle when
 \code{compute_fit = TRUE}; \code{NULL} otherwise.}
 \item{\code{source}}{Imported-from metadata.}

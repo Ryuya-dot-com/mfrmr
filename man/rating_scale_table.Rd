@@ -29,6 +29,15 @@ A named list with:
 \item \code{threshold_table}: model step/threshold estimates
 \item \code{summary}: one-row summary (usage and threshold monotonicity)
 \item \code{caveats}: structured score-support warning/review rows
+\item \code{diagnostic_mode}: character scalar carried from
+\code{diagnostics$diagnostic_mode} (\code{"legacy"}, \code{"both"}, or
+\code{"marginal_fit"}); used by downstream reporting helpers to
+pick the correct expected-count basis
+\item \code{marginal_fit}: list bundle from \code{diagnostics$marginal_fit} when
+strict marginal fit was computed, otherwise \code{NULL}. Carries
+the raw OverallRMSD / OverallMaxAbsStdResidual / per-cell
+tables that feed the \code{MarginalOverallRMSD} columns in
+\code{summary}.
 }
 }
 \description{

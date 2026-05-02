@@ -61,6 +61,13 @@ A named list with:
 \item \code{summary}: one-row contrast summary
 \item \code{orientation_audit}: interaction-facet sign audit
 \item \code{settings}: resolved reporting options
+\item \code{direction_note}: one-line interpretive note describing the
+dominant pairwise-contrast direction (carried from the
+underlying bias estimator; empty string when not applicable)
+\item \code{recommended_action}: one-line recommended-action label
+(e.g. routing the user to follow-up review of the largest
+flagged pairs); empty string when the underlying estimator
+does not emit one
 }
 }
 \description{

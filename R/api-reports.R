@@ -760,6 +760,13 @@ bias_iteration_report <- function(x,
 #' - `summary`: one-row contrast summary
 #' - `orientation_audit`: interaction-facet sign audit
 #' - `settings`: resolved reporting options
+#' - `direction_note`: one-line interpretive note describing the
+#'   dominant pairwise-contrast direction (carried from the
+#'   underlying bias estimator; empty string when not applicable)
+#' - `recommended_action`: one-line recommended-action label
+#'   (e.g. routing the user to follow-up review of the largest
+#'   flagged pairs); empty string when the underlying estimator
+#'   does not emit one
 #'
 #' @seealso [estimate_bias()], [bias_interaction_report()], [build_fixed_reports()]
 #' @examples

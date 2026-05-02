@@ -3322,6 +3322,12 @@ print.summary.mfrm_anchored_fit <- function(x, ...) {
 #'     \item{drift_table}{Tibble of element-level drift statistics.}
 #'     \item{summary}{Drift summary aggregated by facet and wave.}
 #'     \item{common_elements}{Tibble of pairwise common-element counts.}
+#'     \item{common_vs_reference}{Tibble of common-element counts
+#'       between each wave and the reference wave (i.e., which
+#'       elements remain comparable across the entire chain).}
+#'     \item{n_common_all_waves}{Integer count of elements that are
+#'       common across every wave; used by `summary()` to gauge how
+#'       robust the chain is to chained linking error.}
 #'     \item{common_by_facet}{Tibble of retained common-element counts by facet.}
 #'     \item{config}{List of analysis configuration.}
 #'   }

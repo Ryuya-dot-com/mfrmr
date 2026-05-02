@@ -63,7 +63,11 @@
 #'
 #' @section Output:
 #' The returned object is a bundle-like list with class
-#' `mfrm_facet_dashboard` and components such as:
+#' `mfrm_facet_dashboard` and components:
+#' - `facet`: character scalar naming the dashboard's target facet
+#' - `facet_source`: character scalar describing whether the target
+#'   facet was inferred from the fit configuration or supplied
+#'   explicitly
 #' - `overview`: one-row structural overview
 #' - `summary`: one-row screening summary
 #' - `detail`: level-level detail table
@@ -72,6 +76,11 @@
 #' - `bias_sources`: per-bundle bias aggregation metadata
 #' - `settings`: resolved threshold settings
 #' - `notes`: short interpretation notes
+#' - `diagnostics`: the `mfrm_diagnostics` bundle the dashboard was
+#'   built from (echoed for downstream helpers that need to traverse
+#'   the same diagnostics object)
+#' - `bias_results`: the `mfrm_bias` bundle (or list of bundles)
+#'   when `bias_results` was supplied; `NULL` otherwise
 #'
 #' @seealso [diagnose_mfrm()], [estimate_bias()], [plot_qc_dashboard()]
 #' @examples

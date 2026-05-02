@@ -939,6 +939,15 @@ measurable_summary_table <- function(fit, diagnostics = NULL) {
 #' - `threshold_table`: model step/threshold estimates
 #' - `summary`: one-row summary (usage and threshold monotonicity)
 #' - `caveats`: structured score-support warning/review rows
+#' - `diagnostic_mode`: character scalar carried from
+#'   `diagnostics$diagnostic_mode` (`"legacy"`, `"both"`, or
+#'   `"marginal_fit"`); used by downstream reporting helpers to
+#'   pick the correct expected-count basis
+#' - `marginal_fit`: list bundle from `diagnostics$marginal_fit` when
+#'   strict marginal fit was computed, otherwise `NULL`. Carries
+#'   the raw OverallRMSD / OverallMaxAbsStdResidual / per-cell
+#'   tables that feed the `MarginalOverallRMSD` columns in
+#'   `summary`.
 #'
 #' @seealso [diagnose_mfrm()], [measurable_summary_table()], [plot.mfrm_fit()],
 #'   [mfrmr_visual_diagnostics]
@@ -3663,6 +3672,10 @@ infer_facet_names <- function(diagnostics) {
 #' - `by_facet`: named list of facet PCA bundles
 #' - `overall_table`: variance table for overall PCA
 #' - `by_facet_table`: stacked variance table across facets
+#' - `errors`: named list of any per-facet PCA errors that were
+#'   caught and turned into `NA_real_` rows in the variance tables
+#'   (e.g., `psych::principal()` failure on a near-singular residual
+#'   matrix). The list is empty when every facet PCA succeeded.
 #'
 #' @seealso [diagnose_mfrm()], [plot_residual_pca()], [mfrmr_visual_diagnostics]
 #' @examples
@@ -4142,6 +4155,20 @@ plot_residual_pca <- function(x,
 #' - `interaction_facets`, `interaction_order`, `interaction_mode`: full
 #'   interaction metadata
 #' - `iteration`: iteration history/metadata
+#' - `orientation_audit`: facet-orientation sign-consistency audit table
+#' - `mixed_sign`: logical flag indicating whether bias-size signs flip
+#'   across facets in a way that complicates direction interpretation
+#' - `direction_note`: one-line interpretive note describing the
+#'   dominant bias direction (empty when not applicable)
+#' - `recommended_action`: one-line recommended-action label routing
+#'   the user to the appropriate follow-up helper
+#' - `inference_tier`: always `"screening"` in this release; surfaces
+#'   the SE/t/Prob inference tier so downstream reporting helpers can
+#'   route correctly (a future delta-method release will introduce a
+#'   `"primary"` tier alongside)
+#' - `optimization_failures`: per-cell record of any inner-loop
+#'   optimizer failures encountered while estimating the bias
+#'   parameters; empty when every cell converged cleanly
 #'
 #' @seealso [build_fixed_reports()], [build_apa_outputs()]
 #' @examples
@@ -4285,10 +4312,21 @@ estimate_bias <- function(fit,
 #' artifact is specifically required for a compatibility handoff.
 #'
 #' @return
-#' A named list with:
+#' A named list with class `mfrm_fixed_reports` (and a branch-specific
+#' subclass `mfrm_fixed_reports_<branch>`):
 #' - `bias_fixed`: fixed-width interaction table text
 #' - `pairwise_fixed`: fixed-width pairwise contrast text
 #' - `pairwise_table`: underlying pairwise data.frame
+#' - `branch`: character scalar `"original"` or `"facets"` echoing
+#'   which fixed-width style was rendered
+#' - `style`: character scalar carrying the resolved style preset
+#'   used when building the text artifact
+#' - `interaction_label`: human-readable label for the interaction
+#'   that drove the bias run (`"Rater x Criterion"`-style); `NA`
+#'   when no bias rows are available
+#' - `target_facet`: character scalar identifying which facet was
+#'   used as the target facet for pairwise contrasts; `NA` when no
+#'   pairwise contrasts were requested or available
 #'
 #' @seealso [estimate_bias()], [build_apa_outputs()], [bias_interaction_report()],
 #'   [mfrmr_reports_and_tables], [mfrmr_compatibility_layer]
