@@ -734,6 +734,21 @@ bias_iteration_report <- function(x,
 #' Welch/Satterthwaite approximation and is labeled as a Rasch-Welch
 #' comparison in the output metadata.
 #'
+#' @section Standard-error caveat:
+#' The contrast standard error is computed as
+#' `SE(b_i - b_j) = sqrt(SE_i^2 + SE_j^2)` -- the independence
+#' approximation. For same-facet bias values that share a sum-to-zero
+#' identification, `Cov(b_i, b_j) < 0`, so the true contrast variance
+#' is `SE_i^2 + SE_j^2 - 2 * Cov(b_i, b_j)`, which is **smaller**
+#' than the reported value. The reported t-statistics and p-values
+#' are therefore conservative for same-facet contrasts (the true
+#' significance is higher than reported). For across-facet contrasts
+#' the covariance term is approximately zero and the approximation
+#' is appropriate. Use the report as a screening / triage table; for
+#' inferential claims that hinge on a marginally-significant
+#' same-facet contrast, follow up with a contrast that uses the full
+#' parameter covariance.
+#'
 #' @return A named list with:
 #' - `table`: pairwise contrast rows
 #' - `summary`: one-row contrast summary

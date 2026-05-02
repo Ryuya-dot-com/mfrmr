@@ -76,6 +76,23 @@ reachable through fixed-width output generation. It is available only for
 Welch/Satterthwaite approximation and is labeled as a Rasch-Welch
 comparison in the output metadata.
 }
+\section{Standard-error caveat}{
+
+The contrast standard error is computed as
+\code{SE(b_i - b_j) = sqrt(SE_i^2 + SE_j^2)} -- the independence
+approximation. For same-facet bias values that share a sum-to-zero
+identification, \code{Cov(b_i, b_j) < 0}, so the true contrast variance
+is \code{SE_i^2 + SE_j^2 - 2 * Cov(b_i, b_j)}, which is \strong{smaller}
+than the reported value. The reported t-statistics and p-values
+are therefore conservative for same-facet contrasts (the true
+significance is higher than reported). For across-facet contrasts
+the covariance term is approximately zero and the approximation
+is appropriate. Use the report as a screening / triage table; for
+inferential claims that hinge on a marginally-significant
+same-facet contrast, follow up with a contrast that uses the full
+parameter covariance.
+}
+
 \examples{
 toy <- load_mfrmr_data("example_bias")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
