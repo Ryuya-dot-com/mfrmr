@@ -616,6 +616,15 @@ without a latent-regression population model.
 \item Benchmark your own workload before using \code{mml_engine = "em"} or
 \code{"hybrid"} for final reporting; \code{direct} remains the safer default when
 you have not compared engines for your data.
+\item For RSM and PCM fits only, an opt-in C++ MML backend can be
+enabled with \code{options(mfrmr.use_cpp11_backend = TRUE)}. The
+backend implements the same physicist Gauss-Hermite quadrature and
+sum-to-zero identification as the pure-R engine, validated against
+the pure-R reference at \code{tolerance = 1e-12} on a fixed regression
+fixture. It is opt-in for this release; the default flip to ON is
+planned for a follow-up release after a cycle of community
+testing. GPCM fits stay on the pure-R engine regardless of the
+option.
 }
 
 Downstream diagnostics can also be staged:

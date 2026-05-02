@@ -599,6 +599,6 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Ryuya Komuro \email{ryuya.komuro.c4@tohoku.ac.jp} (\href{https://orcid.org/0000-0001-9205-0926}{ORCID})
+\strong{Maintainer}: Ryuya Komuro \email{ryuya.komuro.c4@tohoku.ac.jp} (\href{https://orcid.org/0000-0001-9205-0926}{ORCID}) [copyright holder]
 
 }
