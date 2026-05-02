@@ -296,7 +296,10 @@ test_that("NAMESPACE roxygen contract keeps expected exports and methods", {
     # 0.1.6 second-pass: print methods for the new public classes.
     "S3method(print,mfrm_q3)",
     "S3method(print,mfrm_generalizability)",
-    "S3method(print,mfrm_imported_fit)"
+    "S3method(print,mfrm_imported_fit)",
+    # 0.2.0: print method for the `draw = FALSE` plot payload class
+    # (added in commit f8409d4 so users don't see a raw list dump).
+    "S3method(print,mfrm_plot_data)"
   )
   expect_setequal(s3, expected_s3)
 })

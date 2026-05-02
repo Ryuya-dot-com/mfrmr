@@ -35,6 +35,5 @@
 ^inst/references/README[.]md$
 ^inst/references/CODE_READING_GUIDE[.]md$
 ^inst/references/FACETS_manual_mapping[.]md$
-^inst/references/facets_column_contract[.]csv$
 ^revdep$
 ^design-notes$
