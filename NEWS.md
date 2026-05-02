@@ -229,17 +229,15 @@ effective degrees of freedom.
 The estimator is the classical method-of-moments form (Efron & Morris,
 1973):
 
-- \eqn{\hat{\tau}^2 = \max(0, K^{-1}\sum_j \hat{\delta}_j^2 -
-  \overline{\mathrm{SE}^2})}, using the raw second moment under
-  mfrmr's sum-to-zero identification (the facet mean is exactly 0 by
-  construction, so no degree of freedom is consumed).
-- \eqn{B_j = \mathrm{SE}_j^2 / (\hat{\tau}^2 + \mathrm{SE}_j^2)}
-  (shrinkage factor).
-- \eqn{\hat{\delta}_j^{EB} = (1 - B_j)\hat{\delta}_j} and
-  \eqn{\mathrm{SE}_j^{EB} = \sqrt{(1 - B_j) \mathrm{SE}_j^2}}
-  (posterior mean / SE; the posterior SE treats \eqn{\hat{\tau}^2} as
-  known, omitting the Morris (1983) correction for \eqn{\hat{\tau}^2}
-  uncertainty).
+- `tau_hat^2 = max(0, mean(delta_hat_j^2) - mean(SE_j^2))`, using the
+  raw second moment under mfrmr's sum-to-zero identification (the
+  facet mean is exactly 0 by construction, so no degree of freedom is
+  consumed).
+- `B_j = SE_j^2 / (tau_hat^2 + SE_j^2)` (shrinkage factor).
+- `delta_hat_j^EB = (1 - B_j) * delta_hat_j` and
+  `SE_j^EB = sqrt((1 - B_j) * SE_j^2)` (posterior mean / SE; the
+  posterior SE treats `tau_hat^2` as known, omitting the Morris
+  (1983) correction for `tau_hat^2` uncertainty).
 
 Two post-hoc helpers make shrinkage available to existing fits:
 
@@ -252,7 +250,7 @@ and is reserved for a future penalised-MML implementation.
 
 Integration: `summary(fit)` exposes `FacetShrinkage` and
 `FacetShrinkageTau2Mean`; `build_apa_outputs()` adds a Method-section
-sentence naming the mode, mean \eqn{\hat{\tau}^2}, and mean shrinkage
+sentence naming the mode, mean `tau_hat^2`, and mean shrinkage
 with a Efron & Morris (1973) citation; `build_mfrm_manifest()` gains
 a `shrinkage_audit` table; `reporting_checklist()` gains an
 "Empirical-Bayes shrinkage" item.
