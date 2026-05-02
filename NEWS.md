@@ -1,15 +1,25 @@
-# mfrmr 0.2.0 (development version)
+# mfrmr 0.2.0
 
-This section accumulates entries between the 0.1.6 CRAN release and the
-0.2.0 release. The headings mirror the 0.1.6 layout (default changes,
-new features, bug fixes, documentation) so that release notes can be
-read in the same order as previous versions.
+This is a small infrastructure and polish release. No public function
+gains or removes its previous support contract, and no default value
+changes between 0.1.6 and 0.2.0. The headings mirror the 0.1.6 layout
+(default changes, new features, bug fixes, documentation) so that
+release notes can be read in the same order as previous versions.
 
 ## Default changes
 
-None.
+None. All 0.1.6 defaults (`quad_points = 31`, `diagnostic_mode = "both"`,
+`plot.mfrm_fit(type = "wright")`, `keep_original = FALSE`) are retained.
 
 ## New features
+
+### Continuous integration
+
+New GitHub Actions workflows: `R-CMD-check.yaml` matrix on Ubuntu
+(release / devel / oldrel-1) plus macos-latest and windows-latest
+(release), and `test-coverage.yaml` running `covr` with artifact
+upload (no external service contacted). Replaces the prior
+pkgdown-only workflow.
 
 ### Differential-functioning display controls
 
@@ -22,6 +32,12 @@ None.
 intervals, effect-threshold guide lines, method-aware axis labels, and
 an interpretation-guide payload that downstream code can render
 alongside the figure.
+
+### Plot payload printing
+
+`print.mfrm_plot_data()` is now defined, so the headline `draw = FALSE`
+return value renders as a compact summary (name, title, payload
+shapes, legend / reference-line counts) instead of a raw list dump.
 
 ## Bug fixes
 
@@ -38,6 +54,54 @@ alongside the figure.
   screening labels from refit-method ETS A/B/C classifications more
   explicitly and route users to both `plot_dif_heatmap()` and
   `plot_dif_summary()`.
+
+- `?compute_person_fit_indices` now describes the `lz_star` column
+  as a finite-sample-adjusted lz (placeholder `cn = 0`, `dn = 1/N`)
+  rather than the full Snijders (2001) bias correction. The full
+  Snijders ability-information correction is scheduled for a
+  follow-up release.
+
+## Build hygiene
+
+`.Rbuildignore` tightened to exclude three internal planning files
+in `inst/references/` (`CODE_READING_GUIDE.md`,
+`FACETS_manual_mapping.md`, `facets_column_contract.csv`) that were
+previously leaking into the tarball.
+
+## Performance note
+
+The cpp11 MML backend (`src/mml_backend.cpp`, RSM and PCM only) is
+opt-in via `options(mfrmr.use_cpp11_backend = TRUE)` for this release.
+Validated against the pure-R reference at `tolerance = 1e-12` in
+`tests/testthat/test-mml-cpp11-backend.R`. The default flip to ON is
+planned for 0.3.0 after a release of community testing.
+
+## Internal / non-user-facing changes
+
+The slope-aware GPCM kernel functions (`category_prob_gpcm`,
+`loglik_gpcm`) are present and tested to reduce exactly to PCM at
+unit slopes (`tolerance = 1e-12`,
+`tests/testthat/test-estimation-core.R:148-185`). They are not yet
+exposed through the user-facing `fair_average_table()`,
+`estimate_bias()`, or `build_apa_outputs()` paths, which continue to
+return the documented "not yet validated for GPCM fits" error. The
+score-side semantics review for those helpers is on the 0.3.0
+roadmap; see the design rationale referenced in
+`gpcm_capability_matrix()`.
+
+## Deferred to a follow-up release
+
+Items planned for 0.2.0 but deferred:
+
+- User-facing GPCM unblock for `fair_average_table()`,
+  `estimate_bias()`, and `build_apa_outputs()`.
+- Native `analyze_dif_classical()` covering Mantel-Haenszel,
+  logistic regression, and SIBTEST.
+- Five additional Rasch / IRT classic plots (KIDMAP, TCC, expected
+  score curve, cumulative ICC, information surface).
+- Migration / GPCM-scope / classical-DIF vignettes.
+
+These are scheduled for 0.3.0.
 
 # mfrmr 0.1.6
 
