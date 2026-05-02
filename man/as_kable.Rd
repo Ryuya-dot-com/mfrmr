@@ -11,6 +11,16 @@ as_kable(x, ...)
 
 \item{...}{Passed to methods.}
 }
+\value{
+A \code{knitr::kable} object (concrete return type from the
+underlying method, e.g. \verb{[as_kable.apa_table()]} returns a
+\code{kableExtra} object when the package is installed).
+}
 \description{
 Generic for converting objects to a \code{knitr::kable}
+}
+\seealso{
+\code{\link[=as_kable.apa_table]{as_kable.apa_table()}} for the \code{apa_table} method;
+\code{\link[=as_flextable]{as_flextable()}} for a \code{flextable}-targeted alternative;
+\code{\link[=apa_table]{apa_table()}} for constructing an \code{apa_table} in the first place.
 }

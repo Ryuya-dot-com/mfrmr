@@ -58,3 +58,10 @@ dim(p$data$matrix)
 #   negative cells = pairs systematically rank persons in opposite
 #   directions and are the highest-priority review cases.
 }
+\seealso{
+\code{\link[=interrater_agreement_table]{interrater_agreement_table()}} for the underlying numeric
+table; \code{\link[=plot_guttman_scalogram]{plot_guttman_scalogram()}} for a complementary
+person-by-element view of residual structure;
+\code{\link[=diagnose_mfrm]{diagnose_mfrm()}} for the diagnostics bundle the heatmap
+reads from.
+}

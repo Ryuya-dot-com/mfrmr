@@ -58,5 +58,12 @@ dim(p$data$matrix)
 #   upper-right triangle and lower scores in the lower-left, once
 #   rows are sorted by person ability. Cells circled by the
 #   unexpected-response overlay break the staircase and warrant
-#   case-level review with `plot_unexpected()`.
+#   case-level review with `unexpected_response_table()`.
+}
+\seealso{
+\code{\link[=unexpected_response_table]{unexpected_response_table()}} for the case-level review of
+the cells flagged in the overlay;
+\code{\link[=plot_rater_agreement_heatmap]{plot_rater_agreement_heatmap()}} for a complementary rater-pair
+view of the same residual structure;
+\code{\link[=diagnose_mfrm]{diagnose_mfrm()}} for the underlying diagnostics bundle.
 }

@@ -4899,14 +4899,32 @@ as_flextable.apa_table <- function(x, ...) {
 }
 
 #' Generic for converting objects to a `knitr::kable`
+#'
 #' @param x Object to convert.
 #' @param ... Passed to methods.
+#'
+#' @return A `knitr::kable` object (concrete return type from the
+#'   underlying method, e.g. `[as_kable.apa_table()]` returns a
+#'   `kableExtra` object when the package is installed).
+#'
+#' @seealso [as_kable.apa_table()] for the `apa_table` method;
+#'   [as_flextable()] for a `flextable`-targeted alternative;
+#'   [apa_table()] for constructing an `apa_table` in the first place.
 #' @export
 as_kable <- function(x, ...) UseMethod("as_kable")
 
 #' Generic for converting objects to a `flextable`
+#'
 #' @param x Object to convert.
 #' @param ... Passed to methods.
+#'
+#' @return A `flextable` object (concrete return type from the
+#'   underlying method, e.g. `[as_flextable.apa_table()]` returns a
+#'   `flextable` ready for `flextable::save_as_docx()`).
+#'
+#' @seealso [as_flextable.apa_table()] for the `apa_table` method;
+#'   [as_kable()] for a `knitr::kable`-targeted alternative;
+#'   [apa_table()] for constructing an `apa_table` in the first place.
 #' @export
 as_flextable <- function(x, ...) UseMethod("as_flextable")
 

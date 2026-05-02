@@ -39,6 +39,12 @@
 #' @return An `mfrm_plot_data` object whose `data` slot bundles the
 #'   scalogram matrix and the optional unexpected-response overlay.
 #'
+#' @seealso [unexpected_response_table()] for the case-level review of
+#'   the cells flagged in the overlay;
+#'   [plot_rater_agreement_heatmap()] for a complementary rater-pair
+#'   view of the same residual structure;
+#'   [diagnose_mfrm()] for the underlying diagnostics bundle.
+#'
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
@@ -49,7 +55,7 @@
 #' #   upper-right triangle and lower scores in the lower-left, once
 #' #   rows are sorted by person ability. Cells circled by the
 #' #   unexpected-response overlay break the staircase and warrant
-#' #   case-level review with `plot_unexpected()`.
+#' #   case-level review with `unexpected_response_table()`.
 #' @export
 plot_guttman_scalogram <- function(fit,
                                    diagnostics = NULL,
@@ -482,6 +488,12 @@ plot_rater_trajectory <- function(fits,
 #'
 #' @return An `mfrm_plot_data` object whose `data` slot bundles the
 #'   rater x rater matrix and the raw pairwise rows.
+#'
+#' @seealso [interrater_agreement_table()] for the underlying numeric
+#'   table; [plot_guttman_scalogram()] for a complementary
+#'   person-by-element view of residual structure;
+#'   [diagnose_mfrm()] for the diagnostics bundle the heatmap
+#'   reads from.
 #'
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
