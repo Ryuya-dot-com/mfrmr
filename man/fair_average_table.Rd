@@ -112,6 +112,28 @@ The \code{stacked} data.frame contains:
 }
 }
 
+\section{Standard-error caveat (read before quoting CIs)}{
+
+The \code{SE}, \verb{Model S.E.}, \code{ModelBasedSE}, \verb{Real S.E.}, and \code{FitAdjustedSE}
+columns in this table are the \strong{measure-level} standard errors of the
+underlying facet element (the same SE that would appear in
+\code{summary(fit)$facets}), rescaled by the fair-average score scale factor
+so the units line up with the reported \verb{Fair(M) Average} / \verb{Fair(Z) Average}
+columns. They are \strong{not} delta-method standard errors of the
+fair-average values themselves: a proper SE on a fair-average requires
+propagating the joint covariance of the relevant facet element, the
+threshold parameters, and the person measure through the gradient of
+\eqn{\mathrm{E}[X \mid \theta_p, j^\star]} with respect to those
+parameters. mfrmr does not currently expose that joint covariance
+(under MML the person measure is integrated out of the structural
+Hessian; under JML no joint Hessian is built), so a true delta-method
+fair-average SE is not yet computed. \strong{Do not use these columns as
+\eqn{\pm 1.96 \cdot \mathrm{SE}} confidence-interval bounds on the
+fair-average value.} The full delta-method fair-average SE is on the
+0.3.0 roadmap; once it lands, the column will be exposed under a
+distinct name to avoid silent misinterpretation.
+}
+
 \examples{
 \donttest{
 toy <- load_mfrmr_data("example_core")
