@@ -74,11 +74,13 @@ test_that("GPCM capability matrix is consistent with the helper", {
                     c("supported", "supported_with_caveat", "blocked", "deferred")))
 })
 
-test_that("GPCM blocks fair_average / build_apa_outputs (blocked rows)", {
+test_that("GPCM still blocks build_apa_outputs (blocked row)", {
   diag <- suppressMessages(suppressWarnings(
     diagnose_mfrm(.gpcm_fit, residual_pca = "none", diagnostic_mode = "legacy")
   ))
   # build_apa_outputs is `blocked` for GPCM in the capability matrix.
+  # fair_average_table() and estimate_bias() were unblocked in 0.2.0
+  # via the slope-aware kernel; build_apa_outputs() remains blocked.
   apa_attempt <- tryCatch(
     suppressMessages(build_apa_outputs(.gpcm_fit, diag)),
     error = function(e) e,

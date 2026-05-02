@@ -223,10 +223,10 @@ gpcm_capability_matrix <- function(status = c("all", "supported", "supported_wit
         "for a future release once the joint-covariance machinery lands."
       ),
       paste(
-        "Not yet generalized to free-discrimination score semantics. The",
-        "underlying joint covariance machinery (`vcov.mfrm_fit()`, a joint",
-        "Hessian on theta x slope x step) is the prerequisite that has",
-        "not yet been implemented."
+        "Not yet generalized to free-discrimination score semantics.",
+        "The underlying joint covariance machinery (a joint Hessian on",
+        "theta x slope x step) is the prerequisite for delta-method",
+        "score-side standard errors and has not yet been exposed."
       )
     ),
     Evidence = c(

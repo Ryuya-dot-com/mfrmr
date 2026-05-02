@@ -7,8 +7,8 @@
 # `mfrm_fit` contract (item / step parameters, person scores, basic
 # fit statistics) and returns a thin object that the mfrmr plot and
 # reporting helpers can consume. Full bundle import (bias / DIF /
-# anchor audit / replay) is on the roadmap for a future release
-# because the source packages do not always expose the underlying data.
+# anchor audit / replay) is deferred to a future release because the
+# source packages do not always expose the underlying data.
 #
 # All importers refuse to claim the `mfrm_fit` class outright; they
 # return an `mfrm_imported_fit` object that downstream helpers can
