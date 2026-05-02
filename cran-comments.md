@@ -28,9 +28,35 @@ the `cran.md` note documenting this.
 
 ## Submission comment
 
-This is an update to mfrmr 0.1.6. 0.2.0 is a small infrastructure +
-polish release; no public function gains or removes its previous
-support contract. Headline changes (sourced from NEWS.md):
+This is an update to mfrmr 0.1.6. Headline changes (sourced from
+NEWS.md):
+
+- Slope-aware GPCM fair-average and bias unblock.
+  `fair_average_table()` and `estimate_bias()` now accept GPCM
+  fits. The construction is the slope-aware element-conditional
+  expected score: each slope-facet element row uses that element's
+  own discrimination, while non-slope-facet rows (Person, Rater,
+  ...) use the geometric-mean-one slope from the GPCM
+  identification convention. The kernel reduces exactly to the PCM
+  Linacre fair-average when all slopes equal one (regression-tested
+  at machine precision against the existing PCM kernel reduction).
+  Both helpers gain a `caveat` field clarifying that the SE columns
+  are scaled facet-measure SEs, not delta-method standard errors of
+  the fair-average / bias values; a true delta-method SE is
+  scheduled for a follow-up release. `build_apa_outputs()`,
+  `facets_parity_report()`, and the score-side
+  `facets_output_file_bundle()` branch remain blocked under GPCM
+  in this release; `gpcm_capability_matrix()` documents the
+  current support contract.
+
+- Person-fit `lz` rewritten to the proper polytomous form. The
+  helper now reads the model category probability of the observed
+  category directly, replacing the Gaussian-residual approximation
+  used in earlier releases. The misnamed `ECI4` column has been
+  removed because its implementation was the standardized
+  Outfit-MnSq chi-square statistic, not the Tatsuoka & Tatsuoka
+  (1983) extended-caution index. The `OutfitZSTD` column under
+  the linear (Smith) approximation is the equivalent statistic.
 
 - Continuous integration. New GitHub Actions workflows: R-CMD-check
   matrix on Ubuntu / macOS / Windows across R release / devel /
@@ -56,36 +82,37 @@ support contract. Headline changes (sourced from NEWS.md):
   (name, title, payload shapes, legend / reference-line counts)
   instead of a raw list dump.
 
-- Documentation honesty pass. `?compute_person_fit_indices` now
-  describes the `lz_star` column as a finite-sample-adjusted lz
-  (placeholder `cn = 0`, `dn = 1/N`) rather than the full Snijders
-  (2001) bias correction. The full Snijders ability-information
-  correction is scheduled for a follow-up release.
+- Documentation honesty pass. `?fair_average_table` and `?fit_mfrm`
+  gain explicit caveats clarifying that (a) the existing
+  measure-level SE columns reported alongside fair-averages are
+  not delta-method SEs of the fair-average value, (b) JML point
+  estimates are biased per Neyman-Scott and MML is recommended for
+  manuscript reporting, and (c) the latent-regression
+  `population_coefficients` table is point-estimates only with no
+  SE / vcov / Wald exposure.
 
-- Build hygiene. `.Rbuildignore` tightened to exclude three
-  internal planning files in `inst/references/` that were
-  previously leaking into the tarball.
+- Build hygiene. `.Rbuildignore` tightened so an internal reading
+  guide in `inst/references/` no longer ships in the source
+  tarball; the runtime data file `facets_column_contract.csv` and
+  the user-facing FACETS helper-mapping reference
+  `FACETS_manual_mapping.md` are preserved.
 
 ## Default changes
 
-None. All 0.1.6 default values are retained in 0.2.0 (`quad_points = 31`,
+None. All 0.1.6 default values are retained (`quad_points = 31`,
 `diagnostic_mode = "both"`, `plot.mfrm_fit(type = "wright")`,
 `keep_original = FALSE`).
 
 ## Deferred to a follow-up release
 
-Items planned for 0.2.0 but deferred to keep this release tightly
-scoped to infrastructure and polish:
-
-- User-facing GPCM unblock for `fair_average_table()`,
-  `estimate_bias()`, and `build_apa_outputs()`. The slope-aware
-  category-probability and log-likelihood kernels exist internally
-  (`mfrmr:::category_prob_gpcm`, `mfrmr:::loglik_gpcm`) and reduce
-  exactly to PCM at unit slopes (regression-tested at 1e-12 in
-  `tests/testthat/test-estimation-core.R:148-185`); the user-facing
-  helpers still raise the documented "not yet validated for GPCM
-  fits" error so that the score-side semantics of slope-aware fair
-  averages can be reviewed before exposure.
+- User-facing GPCM unblock for `build_apa_outputs()`,
+  `facets_parity_report()`, and the score-side
+  `facets_output_file_bundle()` branch. These require the same
+  delta-method SE infrastructure that is being deferred for
+  `fair_average_table()` / `estimate_bias()`; rather than ship
+  publication-grade APA or compatibility-contract output without
+  those SEs, the helpers continue to raise the documented "not yet
+  validated for GPCM fits" error.
 - Native `analyze_dif_classical()` covering Mantel-Haenszel,
   logistic regression, and SIBTEST. Residual-method DIF
   (`analyze_dff()`, ETS A/B/C refit) remains the supported route.
@@ -94,4 +121,4 @@ scoped to infrastructure and polish:
 - Migration / GPCM-scope / classical-DIF vignettes. The five
   0.1.x vignettes ship unchanged.
 
-These are scheduled for 0.3.0.
+These are scheduled for a follow-up release.

@@ -100,18 +100,21 @@ publication-quality outputs.
 
 ## Build hygiene
 
-`.Rbuildignore` tightened to exclude three internal planning files
-in `inst/references/` (`CODE_READING_GUIDE.md`,
-`FACETS_manual_mapping.md`, `facets_column_contract.csv`) that were
-previously leaking into the tarball.
+`.Rbuildignore` tightened so a stale internal reading guide in
+`inst/references/` no longer ships into the source tarball. The two
+runtime / user-facing files in that directory --
+`facets_column_contract.csv` (read at runtime by
+`facets_parity_report()`) and `FACETS_manual_mapping.md` (the
+FACETS Table to `mfrmr` helper mapping cited in the README) -- are
+preserved.
 
 ## Performance note
 
 The cpp11 MML backend (`src/mml_backend.cpp`, RSM and PCM only) is
 opt-in via `options(mfrmr.use_cpp11_backend = TRUE)` for this release.
-Validated against the pure-R reference at `tolerance = 1e-12` in
-`tests/testthat/test-mml-cpp11-backend.R`. The default flip to ON is
-planned for 0.3.0 after a release of community testing.
+It is validated against the pure-R reference at `tolerance = 1e-12`
+on a fixed regression fixture. The default flip to ON is planned for
+a follow-up release after a cycle of community testing.
 
 ## Deferred to a follow-up release
 

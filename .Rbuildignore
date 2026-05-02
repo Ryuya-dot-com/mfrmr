@@ -34,6 +34,5 @@
 ^inst/references/PUBLIC_RELEASE_READINESS_AUDIT_.*[.]md$
 ^inst/references/README[.]md$
 ^inst/references/CODE_READING_GUIDE[.]md$
-^inst/references/FACETS_manual_mapping[.]md$
 ^revdep$
 ^design-notes$

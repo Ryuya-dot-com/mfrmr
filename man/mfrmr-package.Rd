@@ -110,7 +110,7 @@ non-person facets rather than fully arbitrary-facet, with boundaries
 exposed through planner metadata such as \code{planning_scope},
 \code{planning_constraints}, and \code{planning_schema}
 \item latent-class mixture models and response-time / careless-rating
-adjustment are not estimated in 0.1.6; use residual, person-fit,
+adjustment are not estimated by mfrmr; use residual, person-fit,
 local-dependence, and rater-drift diagnostics as screening layers rather
 than as mixture-model substitutes
 }

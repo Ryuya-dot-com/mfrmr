@@ -2,13 +2,13 @@
 # Import adapters: mirt / TAM / eRm fits to mfrmr-compatible bundles
 # ==============================================================================
 #
-# The 0.1.6 import path is **partial**: each helper extracts the
+# The current import path is **partial**: each helper extracts the
 # subset of measurement information that maps cleanly to the
 # `mfrm_fit` contract (item / step parameters, person scores, basic
 # fit statistics) and returns a thin object that the mfrmr plot and
 # reporting helpers can consume. Full bundle import (bias / DIF /
-# anchor audit / replay) is on the 0.2.0 roadmap because the source
-# packages do not always expose the underlying data.
+# anchor audit / replay) is on the roadmap for a future release
+# because the source packages do not always expose the underlying data.
 #
 # All importers refuse to claim the `mfrm_fit` class outright; they
 # return an `mfrm_imported_fit` object that downstream helpers can

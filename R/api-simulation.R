@@ -1294,8 +1294,8 @@ design_eval_summarize_results <- function(results, rep_overview, design_variable
 #'   `future::plan()` is currently active. The Suggests package
 #'   `future.apply` must be installed for the parallel path to
 #'   activate; otherwise the call falls back to serial execution
-#'   with a single message. Cross-design-row parallelism is on the
-#'   0.2.0 roadmap.
+#'   with a single message. Cross-design-row parallelism is planned
+#'   for a future release.
 #'
 #' @details
 #' This helper runs a compact Monte Carlo design study for common rater-by-item
@@ -1479,7 +1479,7 @@ evaluate_mfrm_design <- function(n_person = c(30, 50, 100),
     # release threads the request through the rep loop via
     # `future.apply::future_lapply` only when no per-rep state is
     # accumulated upstream. Full parallelisation across design rows
-    # is on the 0.2.0 roadmap; until then, set
+    # is planned for a future release; until then, set
     # `future::plan(multisession, workers = N)` and rerun to use
     # parallel rep execution within each design row.
     message("`evaluate_mfrm_design(parallel = 'future')` honours the ",

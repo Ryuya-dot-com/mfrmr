@@ -96,8 +96,8 @@ uses \code{future.apply::future_lapply} and respects whatever
 \code{future::plan()} is currently active. The Suggests package
 \code{future.apply} must be installed for the parallel path to
 activate; otherwise the call falls back to serial execution
-with a single message. Cross-design-row parallelism is on the
-0.2.0 roadmap.}
+with a single message. Cross-design-row parallelism is planned
+for a future release.}
 }
 \value{
 An object of class \code{mfrm_design_evaluation} with components:

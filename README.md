@@ -1203,7 +1203,7 @@ random-effects variance-share summary on the observed-score scale; for
 non-person facets such as raters, a large ICC is systematic facet variance,
 not better reliability.
 
-Scope note: version 0.1.6 does not estimate latent-class mixture models or
+Scope note: `mfrmr` does not estimate latent-class mixture models or
 response-time / careless-rating adjustments. Use person fit, residual
 matrices, Q3-style local-dependence screens, rater drift, and DFF diagnostics
 as screening evidence, not as substitutes for an explicit mixture or
@@ -1211,9 +1211,17 @@ response-time model.
 
 ## FACETS reference mapping
 
-See:
+A reference table mapping FACETS-program output tables (Table 1, Table 5,
+Table 7, ...) to the `mfrmr` helper functions that produce equivalent or
+adjacent reports ships with the installed package. Open it with:
 
-- `inst/references/FACETS_manual_mapping.md`
+```r
+file.path(system.file("references", package = "mfrmr"), "FACETS_manual_mapping.md")
+```
+
+The mapping is a package-output contract reference, not evidence that
+FACETS was executed or that numerical FACETS equivalence has been
+established for any given fit.
 
 ## Packaged synthetic datasets
 
