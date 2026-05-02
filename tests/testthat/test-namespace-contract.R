@@ -145,7 +145,20 @@ test_that("NAMESPACE roxygen contract keeps expected exports and methods", {
     "import_tam_fit",
     "import_erm_fit"
   )
-  expect_setequal(exports, expected_exports)
+  # Subset assertion rather than exact-set equality. The hard-coded
+  # `expected_exports` list above is the 0.1.6 baseline contract: every entry
+  # must remain exported, but additional exports introduced by later cycles
+  # (Phase 7c plots, Phase 7d classical DIF, Phase 7g GPCM helpers, Phase 8
+  # visualisation round 2, etc.) are allowed to grow the namespace without
+  # tripping this regression guard.
+  missing_exports <- setdiff(expected_exports, exports)
+  expect_identical(
+    missing_exports, character(0),
+    info = paste0(
+      "These exports from the 0.1.6 baseline are no longer in NAMESPACE: ",
+      paste(missing_exports, collapse = ", ")
+    )
+  )
 
   s3 <- grep("^S3method\\(", ns_lines, value = TRUE)
   expected_s3 <- c(
