@@ -7,15 +7,29 @@ read in the same order as previous versions.
 
 ## Default changes
 
-(none yet)
+None.
 
 ## New features
 
-(none yet)
+### Differential-functioning display controls
+
+`plot_dif_heatmap()` gains display controls for cell labels
+(`show_values`, `value_digits`), absolute flag thresholds
+(`flag_threshold`, `flag_color`), and shared symmetric color limits
+(`scale_limit`) so several heatmaps can be drawn on a comparable scale.
+
+`plot_dif_summary()` gains optional normal-approximation confidence
+intervals, effect-threshold guide lines, method-aware axis labels, and
+an interpretation-guide payload that downstream code can render
+alongside the figure.
 
 ## Bug fixes
 
-(none yet)
+- `analyze_dff()` and `dif_interaction_table()` now reject invalid
+  `p_adjust`, non-integer `min_obs`, invalid `focal` groups, and
+  all-missing group columns up front, instead of failing later inside
+  the contrast computation. Missing or empty group rows are dropped
+  with a `message()`.
 
 ## Documentation
 
@@ -24,14 +38,6 @@ read in the same order as previous versions.
   screening labels from refit-method ETS A/B/C classifications more
   explicitly and route users to both `plot_dif_heatmap()` and
   `plot_dif_summary()`.
-- `plot_dif_heatmap()` gains display controls for cell labels, absolute
-  flag thresholds, and shared symmetric color limits. `plot_dif_summary()`
-  gains optional normal-approximation confidence intervals, effect-threshold
-  guide lines, method-aware axis labels, and interpretation-guide payloads.
-- `analyze_dff()` and `dif_interaction_table()` now reject invalid
-  `p_adjust`, non-integer `min_obs`, invalid `focal` groups, and
-  all-missing group columns before computing contrasts. Missing or
-  empty group rows are dropped with a message.
 
 # mfrmr 0.1.6
 

@@ -148,8 +148,9 @@ r = \frac{T - \hat{\mathbb{E}}(T)}{\hat{s}_D},
 4. Posterior predictive follow-up.
    Sinharay et al. (2006) treat posterior predictive checking as a separate
    model-checking family built around replicated datasets and discrepancy
-   measures. That is the intended follow-up role of the package's currently
-   scaffolded `posterior_predictive_follow_up` path.
+   measures. That is the intended follow-up role of the package's
+   `posterior_predictive_follow_up` path, which is reserved for a future
+   release.
 
 5. Many-facet reporting context.
    Linacre's FACETS framework and applied MFRM studies such as Eckes (2005)
