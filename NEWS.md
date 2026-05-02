@@ -123,6 +123,36 @@ publication-quality outputs.
   Snijders ability-information correction is scheduled for a
   follow-up release.
 
+- `?mfrm_generalizability` now discloses that the lme4 random-effects
+  model is main-effects only (`Score ~ 1 + (1|Person) + (1|Facet) +
+  ... + Residual`, no explicit `(1|Person:Facet)` interaction terms),
+  which folds two-way interaction variance into Residual and can
+  bias `G` downward. The reported `Phi` does not apply Brennan
+  (2001) D-study scalings (`1/n_r`, `1/n_i`, `1/(n_r * n_i)`). Users
+  who need a full p x r x i decomposition with D-study scaling
+  should treat this output as a screening summary.
+
+- `?q3_statistic` now discloses that, when the chosen facet has
+  multiple residual rows per (Person, Level) cell because of
+  additional facets in the design, the standardized residuals are
+  mean-aggregated to one value per cell before the Pearson
+  correlation. Yen's (1984) original definition takes the
+  correlation over per-(Person, Item) residuals without aggregation,
+  so the published `|Q3| > 0.20` threshold and the Christensen et
+  al. (2017) critical values were derived for the original
+  formulation; the values returned here should be treated as a
+  screening summary rather than a direct substitute for those
+  thresholds.
+
+- `?bias_pairwise_report` now discloses that the contrast SE uses
+  the independence approximation `sqrt(SE_i^2 + SE_j^2)`. For
+  same-facet bias values that share a sum-to-zero identification
+  the true `Cov(b_i, b_j) < 0`, so the reported SE is an
+  over-estimate and the t-statistic / p-value are conservative
+  (the true significance is higher than reported). For across-facet
+  contrasts the covariance term is approximately zero and the
+  approximation is appropriate.
+
 ## Build hygiene
 
 `.Rbuildignore` tightened so a stale internal reading guide in
