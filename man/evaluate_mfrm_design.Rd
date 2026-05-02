@@ -223,7 +223,7 @@ separation, reliability, strata, RMSE, and fit-screen rates change when
 you vary person, rater, criterion, or assignment counts. It is not a
 closed-form generalizability-theory D-study calculator; use
 \code{\link[=mfrm_generalizability]{mfrm_generalizability()}} for observed variance-component summaries and
-treat analytic G/Phi coefficient planning as outside the 0.1.6 scope.
+treat analytic G/Phi coefficient planning as outside the current scope.
 }
 
 \section{References}{

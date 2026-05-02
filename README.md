@@ -144,7 +144,7 @@ Linking, fairness, and advanced review:
 - precision/targeting views via `compute_information()`, `plot_information()`, and `plot_wright_unified()`
 - equivalence and audit helpers such as `analyze_facet_equivalence()`, `describe_mfrm_data()`, and `audit_mfrm_anchors()`
 
-Design-adequacy audit and partial pooling (added in 0.1.6):
+Design-adequacy audit and partial pooling:
 
 - hierarchical-structure and sample-adequacy audit with `detect_facet_nesting()`, `facet_small_sample_audit()`, `compute_facet_icc()`, `compute_facet_design_effect()`, and the combined `analyze_hierarchical_structure()`
 - empirical-Bayes / James-Stein shrinkage for small-N facets via `fit_mfrm(..., facet_shrinkage = "empirical_bayes")` or post-hoc `apply_empirical_bayes_shrinkage()`, with `shrinkage_report()` as the accessor
@@ -1216,7 +1216,7 @@ Table 7, ...) to the `mfrmr` helper functions that produce equivalent or
 adjacent reports ships with the installed package. Open it with:
 
 ```r
-file.path(system.file("references", package = "mfrmr"), "FACETS_manual_mapping.md")
+file.show(system.file("references", "FACETS_manual_mapping.md", package = "mfrmr"))
 ```
 
 The mapping is a package-output contract reference, not evidence that

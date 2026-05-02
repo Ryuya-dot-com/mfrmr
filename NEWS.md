@@ -15,11 +15,11 @@ None. All 0.1.6 defaults (`quad_points = 31`, `diagnostic_mode = "both"`,
 
 ### Continuous integration
 
-New GitHub Actions workflows: `R-CMD-check.yaml` matrix on Ubuntu
+New GitHub Actions workflows added alongside the existing
+`pkgdown.yaml`: `R-CMD-check.yaml` runs the matrix on Ubuntu
 (release / devel / oldrel-1) plus macos-latest and windows-latest
-(release), and `test-coverage.yaml` running `covr` with artifact
-upload (no external service contacted). Replaces the prior
-pkgdown-only workflow.
+(release), and `test-coverage.yaml` runs `covr` with artifact
+upload (no external service contacted).
 
 ### Differential-functioning display controls
 
@@ -763,7 +763,7 @@ The imported objects carry the `mfrm_imported_fit` class and
 populate measurement-side slots (`facets$person`,
 `facets$others`, `steps`, `summary`) only. Bias / DIF / anchor /
 replay slots are explicitly not populated; full bundle import is
-on the 0.2.0 roadmap.
+planned for a future release.
 
 ### Parallel parametric-bootstrap ICC
 
@@ -779,7 +779,7 @@ worker processes hold their own copy of the progress state.
 argument. When `"future"` is requested and the `future.apply`
 Suggests package is installed, the rep loop within each design
 row honours whatever `future::plan()` is currently active;
-cross-design-row parallelism is on the 0.2.0 roadmap. Without
+cross-design-row parallelism is planned for a future release. Without
 `future.apply` the call falls back to serial execution with an
 explicit message.
 

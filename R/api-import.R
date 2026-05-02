@@ -57,8 +57,8 @@
 #'
 #' @section Scope:
 #' Bundles bias / DIF / anchor / replay slots are explicitly not
-#' populated; full bidirectional import / export is on the 0.2.0
-#' roadmap.
+#' populated; full bidirectional import / export is planned for a
+#' future release.
 #' @seealso [import_tam_fit()], [import_erm_fit()]
 #' @export
 import_mirt_fit <- function(fit, model = c("RSM", "PCM", "GPCM"),

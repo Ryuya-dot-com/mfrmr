@@ -1388,7 +1388,7 @@ design_eval_summarize_results <- function(results, rep_overview, design_variable
 #' you vary person, rater, criterion, or assignment counts. It is not a
 #' closed-form generalizability-theory D-study calculator; use
 #' [mfrm_generalizability()] for observed variance-component summaries and
-#' treat analytic G/Phi coefficient planning as outside the 0.1.6 scope.
+#' treat analytic G/Phi coefficient planning as outside the current scope.
 #'
 #' @section References:
 #' The simulation logic follows the general Monte Carlo / operating-characteristic
@@ -1482,9 +1482,9 @@ evaluate_mfrm_design <- function(n_person = c(30, 50, 100),
     # is planned for a future release; until then, set
     # `future::plan(multisession, workers = N)` and rerun to use
     # parallel rep execution within each design row.
-    message("`evaluate_mfrm_design(parallel = 'future')` honours the ",
-            "rep loop within each design row in 0.1.6. ",
-            "Cross-design-row parallelism lands in 0.2.0.")
+    message("`evaluate_mfrm_design(parallel = 'future')` currently ",
+            "parallelises the rep loop within each design row. ",
+            "Cross-design-row parallelism is planned for a future release.")
   }
   if (identical(model, "GPCM")) {
     stop(

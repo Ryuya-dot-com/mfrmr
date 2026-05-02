@@ -59,8 +59,8 @@ downstream plot helpers (Wright map, QC dashboard, etc.).
 \section{Scope}{
 
 Bundles bias / DIF / anchor / replay slots are explicitly not
-populated; full bidirectional import / export is on the 0.2.0
-roadmap.
+populated; full bidirectional import / export is planned for a
+future release.
 }
 
 \seealso{

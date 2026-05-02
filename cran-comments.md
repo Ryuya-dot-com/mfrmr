@@ -10,15 +10,19 @@ will be attached to the submission. The intended environments are:
 
 ## R CMD check results
 
-The full check log will accompany the submission. Expected outcomes
-based on the local 0.1.6 baseline plus the incremental 0.2.0 diff:
+The full check log will accompany the submission. Expected outcomes:
 
 - 0 errors.
-- 0 warnings.
-- A possible INFO-level installed-size NOTE. The 0.1.6 footprint was
-  5.6 MB; 0.2.0 is expected to be similar (the diff is small) and
-  may stay below the 5 MB soft note threshold once the tightened
-  `.Rbuildignore` rules take effect.
+- 0 warnings on win-builder and the GitHub Actions matrix
+  (Ubuntu release / devel / oldrel-1, macos-latest release,
+  windows-latest release). Local checks under macOS Tahoe + Apple
+  clang 21.x emit one benign `-Wfixed-enum-extension` ignored
+  warning that comes from R's own `R_ext/Boolean.h`, not from
+  mfrmr; this is a clang/R-headers interaction unrelated to the
+  package and does not appear on the CRAN-reference platforms.
+- Possibly one INFO-level installed-size NOTE. The 0.1.6 footprint
+  was 5.6 MB; 0.2.0 is expected to be similar or smaller after the
+  tightened `.Rbuildignore` rules take effect.
 
 ## Downstream dependencies
 

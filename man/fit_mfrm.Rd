@@ -698,9 +698,9 @@ Behavioral Statistics, 43(2), 218-244.
 }
 
 \examples{
-# Fast smoke run: confirm the package is installed and the fit returns
-# a populated overview. JML on `example_core` finishes in well under
-# a second, so we keep this block always-run rather than gated.
+# Fast smoke run: a JML fit on the bundled `example_core` toy
+# dataset finishes in well under a second and returns a populated
+# `summary` overview ready for inspection.
 toy <- load_mfrmr_data("example_core")
 fit_quick <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                       method = "JML", maxit = 15)
