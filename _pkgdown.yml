@@ -21,6 +21,10 @@ articles:
       - mfrmr-visual-diagnostics
       - mfrmr-reporting-and-apa
       - mfrmr-linking-and-dff
+  - title: Migration and Scope
+    contents:
+      - mfrmr-facets-migration
+      - mfrmr-gpcm-scope
 
 reference:
   - title: Guide Pages
