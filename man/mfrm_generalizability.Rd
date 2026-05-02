@@ -53,15 +53,31 @@ already emits.
 
 \itemize{
 \item \code{G} is appropriate for \strong{relative} decisions (rank-ordering
-persons): \code{G = sigma2(p) / (sigma2(p) + sigma2(error_rel))} where
-the relative error term uses person x facet interactions but not
-facet main effects.
+persons): \code{G = sigma2(p) / (sigma2(p) + sigma2(Residual))}.
 \item \code{Phi} is appropriate for \strong{absolute} decisions (cut-score
-classification): \code{Phi = sigma2(p) / (sigma2(p) + sigma2(error_abs))}
-where the absolute error term also includes facet main effects.
+classification): \verb{Phi = sigma2(p) / (sigma2(p) + sigma2(facet main effects) + sigma2(Residual))}.
 \item Reporting bands follow Brennan (2001): G / Phi >= 0.8 for
 high-stakes decisions, >= 0.7 for routine reporting.
 }
+}
+
+\section{Limitations}{
+
+This helper formulates the random-effects model with main effects
+only (\code{Score ~ 1 + (1|Person) + (1|Facet1) + ... + Residual}); no
+explicit \code{(1 | Person:Rater)}, \code{(1 | Person:Criterion)}, or
+\code{(1 | Rater:Criterion)} interaction terms are estimated. All
+two-way and higher interaction variance is therefore folded into
+the \code{Residual} term -- the standard one-observation-per-cell
+approximation -- which can bias \code{G} downward when person x facet
+interactions are substantively large. The reported \code{Phi} does
+\strong{not} apply Brennan (2001) D-study scalings (\code{1/n_r},
+\code{1/n_i}, \code{1/(n_r * n_i)}); it treats each random source as
+contributing one full observation, so it matches the canonical
+Phi only when the operational reporting design is also one rating
+per condition. For a full p x r x i decomposition with D-study
+scaling, treat this output as a screening summary and re-estimate
+externally.
 }
 
 \section{References}{
