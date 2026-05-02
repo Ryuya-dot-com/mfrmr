@@ -20,9 +20,13 @@ The full check log will accompany the submission. Expected outcomes:
   warning that comes from R's own `R_ext/Boolean.h`, not from
   mfrmr; this is a clang/R-headers interaction unrelated to the
   package and does not appear on the CRAN-reference platforms.
-- Possibly one INFO-level installed-size NOTE. The local installed
-  footprint is in the 5-6 MB range, comparable to 0.1.5 and slightly
-  reduced by the tightened `.Rbuildignore` rules.
+- Possibly one installed-size diagnostic. The local installed
+  footprint is in the 5-6 MB range (5.5 MB on the most recent
+  `R CMD check --as-cran` of `mfrmr_0.2.0.tar.gz`), comparable to
+  0.1.5 and slightly reduced by the tightened `.Rbuildignore` rules.
+  R CMD check reports this at the INFO severity level locally; if
+  CRAN's reference platforms emit a NOTE for the same line it would
+  be for the same size figure.
 
 ## Downstream dependencies
 
