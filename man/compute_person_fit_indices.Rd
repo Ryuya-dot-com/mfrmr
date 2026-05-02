@@ -10,9 +10,9 @@ compute_person_fit_indices(diagnostics, fit = NULL)
 \item{diagnostics}{Output from \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}.}
 
 \item{fit}{Optional \code{mfrm_fit} from \code{\link[=fit_mfrm]{fit_mfrm()}}. When supplied,
-the helper attaches the person measures and computes lz* using
-the Snijders (2001) bias correction; when \code{NULL}, only the
-uncorrected lz and ECI4 are returned.}
+the helper attaches the person measures and computes a
+finite-sample-adjusted variant of \code{lz} (column \code{lz_star});
+when \code{NULL}, only the uncorrected \code{lz} and \code{ECI4} are returned.}
 }
 \value{
 A data frame with one row per Person and columns:
@@ -21,16 +21,24 @@ A data frame with one row per Person and columns:
 \item{\code{N}}{Number of contributing response opportunities.}
 \item{\code{LogLik}}{Sum of log P(X = x | theta) under the model.}
 \item{\code{lz}}{Drasgow et al. (1985) standardized log-likelihood.}
-\item{\code{lz_star}}{Snijders (2001) bias-corrected lz, returned
-only when \code{fit} was supplied (otherwise \code{NA}).}
+\item{\code{lz_star}}{Finite-sample-adjusted lz, returned only when
+\code{fit} was supplied (otherwise \code{NA}). The current implementation
+uses the placeholder \eqn{c_n = 0}, \eqn{d_n = 1/N} so that
+\eqn{lz^* = lz / \sqrt{1 + 1/N}}; the full Snijders (2001)
+correction that propagates ability-information uncertainty is
+scheduled for a follow-up release. Treat the \code{lz_star} column
+as a finite-N inflation of \code{lz}, not as the published Snijders
+statistic.}
 \item{\code{ECI4}}{Tatsuoka & Tatsuoka (1983) standardized
 squared-residual index.}
 }
 
-Under the conditional-independence assumption of the MFRM, lz,
-lz*, and ECI4 are asymptotically standard normal. Practical
-reporting thresholds: |index| > 1.96 flags a person at the 5\%
-level; |index| > 2.58 at the 1\% level.
+Under the conditional-independence assumption of the MFRM, \code{lz}
+and \code{ECI4} are asymptotically standard normal. Practical reporting
+thresholds: |index| > 1.96 flags a person at the 5\% level;
+|index| > 2.58 at the 1\% level. The placeholder \code{lz_star} is on
+the same scale as \code{lz} but does not yet carry the published
+Snijders null distribution.
 }
 \description{
 Computes person-level fit statistics for an MFRM bundle, extending

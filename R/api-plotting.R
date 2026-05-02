@@ -94,6 +94,58 @@ new_mfrm_plot_data <- function(name, data) {
   out
 }
 
+#' @export
+print.mfrm_plot_data <- function(x, ...) {
+  data <- x$data %||% list()
+  cat("<mfrm_plot_data>\n")
+  cat("  name     : ", x$name %||% "<unnamed>", "\n", sep = "")
+  if (!is.null(data$title) && nzchar(data$title)) {
+    cat("  title    : ", data$title, "\n", sep = "")
+  }
+  if (!is.null(data$subtitle) && nzchar(data$subtitle)) {
+    cat("  subtitle : ", data$subtitle, "\n", sep = "")
+  }
+  payload_slots <- setdiff(
+    names(data),
+    c("title", "subtitle", "legend", "reference_lines")
+  )
+  if (length(payload_slots) > 0L) {
+    cat("  payload  :\n", sep = "")
+    for (slot in payload_slots) {
+      val <- data[[slot]]
+      shape <- if (is.data.frame(val)) {
+        sprintf("data.frame [%d x %d]", nrow(val), ncol(val))
+      } else if (is.matrix(val)) {
+        sprintf("matrix [%d x %d]", nrow(val), ncol(val))
+      } else if (is.list(val)) {
+        sprintf("list (%d slots)", length(val))
+      } else if (is.atomic(val)) {
+        sprintf("%s [%d]", typeof(val), length(val))
+      } else {
+        class(val)[1]
+      }
+      cat("    $", slot, " : ", shape, "\n", sep = "")
+    }
+  }
+  legend <- data$legend
+  if (!is.null(legend) && length(legend) > 0L) {
+    n_items <- if (is.list(legend) && !is.null(legend$labels)) {
+      length(legend$labels)
+    } else {
+      length(legend)
+    }
+    cat("  legend   : ", n_items, " entries\n", sep = "")
+  }
+  ref_lines <- data$reference_lines
+  if (!is.null(ref_lines) && length(ref_lines) > 0L) {
+    n_ref <- if (is.data.frame(ref_lines)) nrow(ref_lines) else length(ref_lines)
+    cat("  ref lines: ", n_ref, "\n", sep = "")
+  }
+  cat("Re-render via ggplot2 / plotly using `x$data`; or pass the\n")
+  cat("originating `draw = FALSE` plot helper its inverse to draw it.\n")
+  invisible(x)
+}
+
 truncate_axis_label <- function(x, width = 28L) {
   x <- as.character(x)
   width <- max(8L, as.integer(width))

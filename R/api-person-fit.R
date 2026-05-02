@@ -9,9 +9,12 @@
 # - lz (Drasgow, Levine & Williams, 1985): standardized log-likelihood
 #   under the fitted model. Asymptotically standard normal under the
 #   conditional-independence assumption when person ability is known.
-# - lz* (Snijders 2001): Snijders' bias-corrected version that
-#   accounts for the use of the JML / EAP estimate in place of the
-#   true ability. Recommended over lz in practice.
+# - lz* (placeholder): a finite-sample-adjusted variant of lz that
+#   uses cn = 0 and dn = 1/N. The full Snijders (2001)
+#   bias-correction (which propagates ability-information
+#   uncertainty) is scheduled for a follow-up release; for now,
+#   treat lz_star as a finite-N inflation of lz, not as the
+#   published Snijders statistic.
 # - ECI4 (Tatsuoka & Tatsuoka 1983): standardized squared-residual
 #   index, weighted by inverse expected information. Sensitive to
 #   careless responding and guessing.
@@ -27,9 +30,9 @@
 #'
 #' @param diagnostics Output from [diagnose_mfrm()].
 #' @param fit Optional `mfrm_fit` from [fit_mfrm()]. When supplied,
-#'   the helper attaches the person measures and computes lz* using
-#'   the Snijders (2001) bias correction; when `NULL`, only the
-#'   uncorrected lz and ECI4 are returned.
+#'   the helper attaches the person measures and computes a
+#'   finite-sample-adjusted variant of `lz` (column `lz_star`);
+#'   when `NULL`, only the uncorrected `lz` and `ECI4` are returned.
 #'
 #' @return A data frame with one row per Person and columns:
 #' \describe{
@@ -37,16 +40,24 @@
 #'   \item{`N`}{Number of contributing response opportunities.}
 #'   \item{`LogLik`}{Sum of log P(X = x | theta) under the model.}
 #'   \item{`lz`}{Drasgow et al. (1985) standardized log-likelihood.}
-#'   \item{`lz_star`}{Snijders (2001) bias-corrected lz, returned
-#'     only when `fit` was supplied (otherwise `NA`).}
+#'   \item{`lz_star`}{Finite-sample-adjusted lz, returned only when
+#'     `fit` was supplied (otherwise `NA`). The current implementation
+#'     uses the placeholder \eqn{c_n = 0}, \eqn{d_n = 1/N} so that
+#'     \eqn{lz^* = lz / \sqrt{1 + 1/N}}; the full Snijders (2001)
+#'     correction that propagates ability-information uncertainty is
+#'     scheduled for a follow-up release. Treat the `lz_star` column
+#'     as a finite-N inflation of `lz`, not as the published Snijders
+#'     statistic.}
 #'   \item{`ECI4`}{Tatsuoka & Tatsuoka (1983) standardized
 #'     squared-residual index.}
 #' }
 #'
-#' Under the conditional-independence assumption of the MFRM, lz,
-#' lz*, and ECI4 are asymptotically standard normal. Practical
-#' reporting thresholds: |index| > 1.96 flags a person at the 5%
-#' level; |index| > 2.58 at the 1% level.
+#' Under the conditional-independence assumption of the MFRM, `lz`
+#' and `ECI4` are asymptotically standard normal. Practical reporting
+#' thresholds: |index| > 1.96 flags a person at the 5% level;
+#' |index| > 2.58 at the 1% level. The placeholder `lz_star` is on
+#' the same scale as `lz` but does not yet carry the published
+#' Snijders null distribution.
 #'
 #' @section References:
 #' - Drasgow, F., Levine, M. V., & Williams, E. A. (1985).
