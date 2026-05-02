@@ -190,7 +190,7 @@ slightly optimistic. The documented follow-up is
 `strict_pairwise_local_dependence`, which surfaces evidence of
 dependence at the pair level. See Haberman and Sinharay (2013) for a
 generalized-residual framework that models such dependence
-explicitly; that path is not yet included in the 0.1.6 package
+explicitly; that path is not yet included in the current release
 scope.
 
 For many-facet reporting, one additional boundary matters. Facet-level
@@ -211,9 +211,14 @@ The current simulation-based validation covers:
 
 These checks target `RSM` and `PCM`. `GPCM` is now supported only within a
 bounded core route: fitting, slope summaries, posterior scoring, information
-curves, direct curve/category reports, and exploratory residual-based follow-up.
-Broader APA/report bundles, fair-average semantics, and planning/forecasting
-helpers remain out of scope for `GPCM` in this release.
+curves, direct curve/category reports, exploratory residual-based follow-up,
+and the slope-aware element-conditional `fair_average_table()` and
+`estimate_bias()` (with an explicit `caveat` field reminding users that the
+SE columns are scaled facet-measure SEs, not delta-method SEs of the
+fair-average / bias values). Broader APA/report bundles, score-side
+exports, QC pass/fail pipelines, linking synthesis, and planning /
+forecasting helpers remain out of scope for `GPCM` in this release. See
+`gpcm_capability_matrix()` for the full per-helper support contract.
 
 ## Why GPCM Is The Current Upper Scope
 
@@ -247,9 +252,15 @@ equal-weighting reference models and bounded `GPCM` as a supported alternative
 for users who explicitly want to inspect or allow discrimination-based
 reweighting.
 
-This is also why some score-side helpers remain out of scope for bounded
-`GPCM`. FACETS-style fair averages are Rasch-family score transformations, and
-a slope-aware analogue should not silently reuse the Rasch-family calculation.
+This is also why score-side compatibility-contract outputs (FACETS parity,
+score-side `facets_output_file_bundle()`, manuscript-grade APA bundles)
+remain out of scope for bounded `GPCM` in this release: their published
+forms are Rasch-family score transformations, and the slope-aware analogue
+that would replace them in a free-discrimination context requires
+delta-method standard-error machinery that is not yet exposed.
+`fair_average_table()` and `estimate_bias()` themselves are now unblocked
+under bounded `GPCM` via the slope-aware element-conditional kernel, with
+the explicit SE caveat noted above.
 
 One additional distinction matters for implementation. The `weight` argument in
 `fit_mfrm()` is an observation-weight column. It changes how rating events
