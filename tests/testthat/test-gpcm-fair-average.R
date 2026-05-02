@@ -105,7 +105,7 @@ test_that("fair_average_table() no longer hard-stops on GPCM fits", {
 
   expect_s3_class(fa, "mfrm_fair_average")
   expect_true(nrow(fa$stacked) > 0)
-  expect_identical(fa$settings$method, "GPCM-A-slope-aware")
+  expect_identical(fa$settings$method, "GPCM-slope-aware")
   expect_true(!is.null(fa$caveat))
   expect_true(grepl("slope-aware", fa$caveat, fixed = TRUE))
 
@@ -131,7 +131,7 @@ test_that("estimate_bias() no longer hard-stops on GPCM fits", {
 
   expect_s3_class(bias, "mfrm_bias")
   expect_true(nrow(bias$table) > 0)
-  expect_identical(bias$method, "GPCM-A-slope-aware")
+  expect_identical(bias$method, "GPCM-slope-aware")
   expect_true(!is.null(bias$caveat))
   expect_true(grepl("slope-aware GPCM kernel", bias$caveat, fixed = TRUE))
   # Bias point estimates must be finite, well-bounded, and accompanied

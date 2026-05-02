@@ -82,10 +82,10 @@ gpcm_capability_matrix <- function(status = c("all", "supported", "supported_wit
       "Operational linking synthesis",
       "Direct simulation-spec generation",
       "APA writer and bundle-style reporting",
-      "Fair-average semantics under bounded GPCM (slope-aware Option A)",
+      "Fair-average semantics under bounded GPCM (slope-aware)",
       "Design planning and forecasting",
       "MCMC and heavy-backend extensions",
-      "Residual-bias screening under bounded GPCM (Option A)",
+      "Residual-bias screening under bounded GPCM",
       "FACETS compatibility-contract score-side outputs"
     ),
     Helpers = c(
@@ -195,12 +195,12 @@ gpcm_capability_matrix <- function(status = c("all", "supported", "supported_wit
         "bundle, or QC claims."
       ),
       paste(
-        "Implements Option A from the design rationale: slope-facet element rows",
+        "Slope-aware element-conditional construction: slope-facet element rows",
         "use that level's own slope; non-slope-facet rows (Person, Rater, ...)",
         "use the geometric-mean-one slope by identification convention.",
         "SE columns in the output are scaled facet-measure SEs, NOT delta-method",
         "standard errors of the fair-average value (see `?fair_average_table`).",
-        "The full delta-method SE for fair-averages is on the 0.3.0 roadmap."
+        "A delta-method SE for fair-averages is planned for a future release."
       ),
       paste(
         "Still validated only for the role-based RSM/PCM planning layer, not",
@@ -211,15 +211,15 @@ gpcm_capability_matrix <- function(status = c("all", "supported", "supported_wit
         "current GPCM release scope."
       ),
       paste(
-        "Bias point estimates use the slope-aware GPCM kernel (Option A):",
-        "the bias parameter is the additive shift on the linear predictor",
-        "that maximises the per-cell GPCM log-likelihood. SE / t / Prob",
-        "columns retain the screening-tier semantics documented in",
-        "`?estimate_bias` (conditional plug-in information at the bias",
-        "point estimate, holding theta and structural parameters fixed);",
-        "they are NOT delta-method standard errors that propagate joint",
-        "parameter uncertainty. The full delta-method SE is on the 0.3.0",
-        "roadmap once the joint-covariance machinery lands."
+        "Bias point estimates use the slope-aware GPCM kernel: the bias",
+        "parameter is the additive shift on the linear predictor that",
+        "maximises the per-cell GPCM log-likelihood. SE / t / Prob columns",
+        "retain the screening-tier semantics documented in `?estimate_bias`",
+        "(conditional plug-in information at the bias point estimate,",
+        "holding theta and structural parameters fixed); they are NOT",
+        "delta-method standard errors that propagate joint parameter",
+        "uncertainty. A delta-method SE for the bias estimate is planned",
+        "for a future release once the joint-covariance machinery lands."
       ),
       paste(
         "Not yet generalized to free-discrimination score semantics; the",
@@ -238,10 +238,10 @@ gpcm_capability_matrix <- function(status = c("all", "supported", "supported_wit
       "not yet validated for the bounded GPCM route",
       "covered by slope-aware simulation checks",
       "not yet validated for the bounded GPCM route",
-      "covered by tests/testthat/test-gpcm-fair-average.R reduction-to-PCM and worked-example numerical agreement",
+      "covered by reduction-to-PCM and worked-example numerical-agreement tests",
       "not yet validated for the bounded GPCM route",
       "future extension",
-      "covered by tests/testthat/test-output-stability.R end-to-end check on a GPCM fit",
+      "covered by an end-to-end test on a fitted GPCM example",
       "not yet validated for free-discrimination score semantics"
     ),
     stringsAsFactors = FALSE

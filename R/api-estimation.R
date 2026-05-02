@@ -422,9 +422,9 @@
 #' marginal log-likelihood, and no `vcov()` method is exposed for these
 #' coefficients. Treat the coefficient table as point estimates suitable
 #' for descriptive reporting; **do not** quote \eqn{\hat{\beta}_j \pm 1.96
-#' \cdot \mathrm{SE}} bounds because the SE column is not provided. Adding
-#' a marginal-Hessian-based SE for \eqn{(\boldsymbol{\beta}, \sigma^2)} is
-#' on the 0.3.0 roadmap.
+#' \cdot \mathrm{SE}} bounds because the SE column is not provided. A
+#' marginal-Hessian-based SE for \eqn{(\boldsymbol{\beta}, \sigma^2)} is
+#' planned for a future release.
 #'
 #' Identification: the latent-regression intercept is identifiable only
 #' under the default `noncenter_facet = "Person"` (which sum-to-zero-

@@ -68,15 +68,17 @@
 #' 1% level. The placeholder `lz_star` is on the same scale as `lz`
 #' but does not yet carry the published Snijders null distribution.
 #'
-#' This release fixes the polytomous form of `lz`. Earlier mfrmr
-#' versions used a Gaussian-residual approximation
+#' Note: this implementation reads the model category probabilities
+#' directly from the diagnostics bundle. Earlier mfrmr releases used
+#' a Gaussian-residual approximation
 #' \eqn{\log P(X = x) \approx -\tfrac{1}{2}(R^2/V) - \tfrac{1}{2}\log(2\pi V)}
-#' that overstated the per-item variance of \eqn{\log P} by roughly
-#' a factor of 5 on a 4-category fixture (true Drasgow variance
-#' \eqn{\approx 0.10}; Gaussian approximation \eqn{0.5}), shrinking
-#' the reported `lz` toward zero and inflating the apparent fit of
-#' aberrant respondents. Numerical values from earlier mfrmr versions
-#' are not directly comparable to the values returned in 0.2.0.
+#' as a stand-in for \eqn{\log P}, which overstated the per-item
+#' variance of \eqn{\log P} for polytomous items, shrinking the
+#' reported `lz` toward zero. Numerical `lz` values are therefore
+#' not directly comparable across mfrmr releases; treat the values
+#' returned here as the polytomous statistic and re-evaluate any
+#' historical `|lz| > 1.96` flagging that was based on the earlier
+#' approximation.
 #'
 #' @section References:
 #' - Drasgow, F., Levine, M. V., & Williams, E. A. (1985).

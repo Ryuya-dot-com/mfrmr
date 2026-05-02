@@ -460,26 +460,23 @@ unexpected_response_table <- function(fit,
 #' Rasch-measure-to-score transformations evaluated in a standardized
 #' mean/zero-facet environment.
 #'
-#' Bounded `GPCM` fits are supported in 0.2.0 under the slope-aware
-#' kernel ("Option A" in the design rationale): for each slope-facet
-#' element \eqn{j^\star} the per-row fair-average is the GPCM expected
-#' score
-#' \deqn{\mathrm{FA}^A_{p, j^\star} = \sum_k k \cdot P_{GPCM}(X = k \mid \theta_p, a_{j^\star}, \boldsymbol{\delta}_{j^\star})}
-#' computed at the target element's own slope and thresholds. Non-slope
-#' facets (Person, Rater, ...) report fair averages under the
-#' geometric-mean-one slope (the GPCM identification convention), so
-#' those rows are continuous with the PCM construction. The kernel
-#' reduces exactly to the PCM fair-average when all slopes equal one
-#' (regression-tested at machine precision in
-#' `tests/testthat/test-gpcm-fair-average.R`).
+#' Bounded `GPCM` fits are supported under a slope-aware
+#' element-conditional construction. For each slope-facet element
+#' \eqn{j^\star} the per-row fair-average is the GPCM expected score
+#' \deqn{\mathrm{FA}_{p, j^\star} = \sum_k k \cdot P_{GPCM}(X = k \mid \theta_p, a_{j^\star}, \boldsymbol{\delta}_{j^\star})}
+#' computed at that element's own discrimination \eqn{a_{j^\star}}
+#' and threshold structure. Rows for non-slope facets (Person, Rater,
+#' \ldots) use the geometric-mean-one slope by the GPCM
+#' identification convention, so those rows remain continuous with
+#' the standard PCM Linacre fair-average and reduce to it exactly
+#' when all slopes equal one.
 #'
-#' Standard errors on the fair-average value itself are NOT yet
-#' computed for GPCM fits in 0.2.0. The SE columns retain the same
-#' meaning as for PCM (scaled facet-measure SEs) and therefore should
-#' NOT be quoted as \eqn{\pm 1.96 \cdot \mathrm{SE}} bounds on the
-#' fair-average; see the "Standard-error caveat" section below for
-#' details. The full delta-method fair-average SE is on the 0.3.0
-#' roadmap.
+#' Standard errors on the fair-average value itself are not currently
+#' computed for `GPCM` fits. The SE columns retain the same meaning
+#' as for PCM (scaled facet-measure SEs); see the
+#' "Standard-error caveat" section below for why they should not be
+#' quoted as \eqn{\pm 1.96 \cdot \mathrm{SE}} bounds on the
+#' fair-average value.
 #'
 #' @section Interpreting output:
 #' - `stacked`: cross-facet table for global comparison.
@@ -526,8 +523,8 @@ unexpected_response_table <- function(fit,
 #' Hessian; under JML no joint Hessian is built), so a true delta-method
 #' fair-average SE is not yet computed. **Do not use these columns as
 #' \eqn{\pm 1.96 \cdot \mathrm{SE}} confidence-interval bounds on the
-#' fair-average value.** The full delta-method fair-average SE is on the
-#' 0.3.0 roadmap; once it lands, the column will be exposed under a
+#' fair-average value.** A delta-method fair-average SE is planned for
+#' a future release; once it lands the column will be exposed under a
 #' distinct name to avoid silent misinterpretation.
 #'
 #' @return A named list with:
@@ -596,19 +593,18 @@ fair_average_table <- function(fit,
     omit_unobserved = omit_unobserved,
     xtreme = xtreme,
     model = fit_model,
-    method = if (identical(fit_model, "GPCM")) "GPCM-A-slope-aware" else "PCM/RSM"
+    method = if (identical(fit_model, "GPCM")) "GPCM-slope-aware" else "PCM/RSM"
   )
   if (identical(fit_model, "GPCM")) {
     bundle$caveat <- paste0(
-      "GPCM fair-averages use the slope-aware kernel (Option A in the ",
-      "design rationale). Slope-facet element rows carry visible slope ",
-      "heterogeneity in the FairM / FairZ values; non-slope-facet rows ",
-      "(persons, raters, ...) are reported under the average-element ",
-      "convention with slope = 1 (geometric-mean-one identification). ",
-      "Standard errors on the fair-average value are NOT yet computed for ",
-      "GPCM fits; the SE / Model S.E. / Real S.E. columns are scaled ",
-      "facet-measure SEs as documented under `?fair_average_table` and ",
-      "are NOT delta-method standard errors of the fair-average value. ",
+      "GPCM fair-averages use the slope-aware element-conditional ",
+      "construction: each slope-facet element row uses that element's ",
+      "own discrimination, while non-slope-facet rows (persons, raters, ",
+      "...) use the geometric-mean-one slope from the GPCM identification ",
+      "convention. Standard errors on the fair-average value are not yet ",
+      "computed for GPCM fits; the SE / Model S.E. / Real S.E. columns ",
+      "are scaled facet-measure SEs (see `?fair_average_table`) and are ",
+      "not delta-method standard errors of the fair-average value. ",
       "See `gpcm_capability_matrix()` for the current support contract."
     )
   }
@@ -4236,18 +4232,18 @@ estimate_bias <- function(fit,
   if (is.list(out) && length(out) > 0) {
     class(out) <- c("mfrm_bias", class(out))
     if (identical(fit_model, "GPCM")) {
-      out$method <- "GPCM-A-slope-aware"
+      out$method <- "GPCM-slope-aware"
       out$caveat <- paste0(
-        "GPCM bias estimates use the slope-aware GPCM kernel (Option A): ",
-        "the bias parameter is the additive shift on the linear predictor ",
-        "that maximises the GPCM log-likelihood for the (facet_a, facet_b) ",
-        "cell. SE / t / Prob columns retain the screening-tier semantics ",
+        "GPCM bias estimates use the slope-aware GPCM kernel: the bias ",
+        "parameter is the additive shift on the linear predictor that ",
+        "maximises the GPCM log-likelihood for the (facet_a, facet_b) cell. ",
+        "SE / t / Prob columns retain the screening-tier semantics ",
         "documented in `?estimate_bias` (conditional plug-in information at ",
         "the bias point estimate, holding theta and the structural ",
         "parameters fixed); they are not delta-method standard errors that ",
-        "propagate joint-parameter uncertainty. The full delta-method SE is ",
-        "deferred to 0.3.0. See `gpcm_capability_matrix()` for the current ",
-        "support contract."
+        "propagate joint-parameter uncertainty. A delta-method SE for the ",
+        "bias estimate is planned for a future release. See ",
+        "`gpcm_capability_matrix()` for the current support contract."
       )
     }
   }

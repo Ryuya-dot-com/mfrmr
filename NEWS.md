@@ -39,38 +39,36 @@ alongside the figure.
 return value renders as a compact summary (name, title, payload
 shapes, legend / reference-line counts) instead of a raw list dump.
 
-### Bounded GPCM fair-average and bias unblock (slope-aware Option A)
+### Bounded GPCM fair-average and bias unblock (slope-aware)
 
 `fair_average_table()` and `estimate_bias()` no longer hard-stop on
-`GPCM` fits. Both helpers now use the slope-aware GPCM kernel
-("Option A" in the design rationale):
+`GPCM` fits. Both helpers now use the slope-aware element-conditional
+GPCM construction:
 
 - **`fair_average_table()`**: for slope-facet element rows, the
   fair-average uses that element's own discrimination \eqn{a_{j^\star}}
   and threshold structure:
-  \eqn{\mathrm{FA}^A_{p,j^\star} = \sum_k k \cdot P_{GPCM}(X=k \mid \theta_p, a_{j^\star}, \boldsymbol{\delta}_{j^\star})}.
+  \eqn{\mathrm{FA}_{p,j^\star} = \sum_k k \cdot P_{GPCM}(X=k \mid \theta_p, a_{j^\star}, \boldsymbol{\delta}_{j^\star})}.
   For non-slope facets (Person, Rater, ...), the fair-average uses the
   geometric-mean-one slope by GPCM identification, so the construction
   is continuous with the PCM Linacre fair-average and reduces to it
   exactly when all slopes equal one (regression-tested at machine
-  precision in `tests/testthat/test-gpcm-fair-average.R`).
+  precision).
 
 - **`estimate_bias()`**: the per-cell bias parameter is the additive
   shift on the linear predictor that maximises the per-cell GPCM
   log-likelihood. The dispatch routes the inner `nll` and the
-  per-iteration `category_prob` calls through `loglik_gpcm` and
-  `category_prob_gpcm` instead of their PCM siblings; SE / t / Prob
-  columns retain the screening-tier semantics documented in
-  `?estimate_bias`.
+  per-iteration `category_prob` calls through the GPCM kernel instead
+  of the PCM kernel; SE / t / Prob columns retain the screening-tier
+  semantics documented in `?estimate_bias`.
 
-Both helpers gain `method = "GPCM-A-slope-aware"` and a `caveat`
+Both helpers gain `method = "GPCM-slope-aware"` and a `caveat`
 field that names the slope convention and reminds the user that the
 SE columns are not delta-method standard errors of the
-fair-average / bias values. The full delta-method SE for both is
-deferred to 0.3.0; the underlying joint-covariance machinery
-(`vcov.mfrm_fit()`, joint Hessian on
-\eqn{(\theta, a, \boldsymbol{\delta})}) needs to land first. See
-`?fair_average_table`, `?estimate_bias`, and
+fair-average / bias values. A delta-method SE for both is planned for
+a future release; it requires a `vcov()` method on the joint covariance
+of \eqn{(\theta, a, \boldsymbol{\delta})}, which is not yet exposed.
+See `?fair_average_table`, `?estimate_bias`, and
 `gpcm_capability_matrix()` for the full support contract.
 
 `build_apa_outputs()`, `facets_parity_report()`, and
@@ -115,32 +113,21 @@ Validated against the pure-R reference at `tolerance = 1e-12` in
 `tests/testthat/test-mml-cpp11-backend.R`. The default flip to ON is
 planned for 0.3.0 after a release of community testing.
 
-## Internal / non-user-facing changes
-
-The slope-aware GPCM kernel functions (`category_prob_gpcm`,
-`loglik_gpcm`) are present and tested to reduce exactly to PCM at
-unit slopes (`tolerance = 1e-12`,
-`tests/testthat/test-estimation-core.R:148-185`). They are not yet
-exposed through the user-facing `fair_average_table()`,
-`estimate_bias()`, or `build_apa_outputs()` paths, which continue to
-return the documented "not yet validated for GPCM fits" error. The
-score-side semantics review for those helpers is on the 0.3.0
-roadmap; see the design rationale referenced in
-`gpcm_capability_matrix()`.
-
 ## Deferred to a follow-up release
 
 Items planned for 0.2.0 but deferred:
 
-- User-facing GPCM unblock for `fair_average_table()`,
-  `estimate_bias()`, and `build_apa_outputs()`.
+- User-facing GPCM unblock for `build_apa_outputs()`,
+  `facets_parity_report()`, and `facets_output_file_bundle(include =
+  "score")`. (`fair_average_table()` and `estimate_bias()` are
+  unblocked above.)
 - Native `analyze_dif_classical()` covering Mantel-Haenszel,
   logistic regression, and SIBTEST.
 - Five additional Rasch / IRT classic plots (KIDMAP, TCC, expected
   score curve, cumulative ICC, information surface).
 - Migration / GPCM-scope / classical-DIF vignettes.
 
-These are scheduled for 0.3.0.
+These are scheduled for a follow-up release.
 
 # mfrmr 0.1.6
 

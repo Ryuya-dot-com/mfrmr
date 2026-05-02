@@ -3915,8 +3915,8 @@ expected_score_from_eta <- function(eta, step_cum, rating_min) {
   rating_min + sum(probs * k_vals)
 }
 
-# Slope-aware element-conditional expected score for GPCM fair-averages
-# (Option A in design_gpcm_fair_average.md). Computes
+# Slope-aware element-conditional expected score for GPCM fair-averages.
+# Computes
 #     E[X | eta, a, step_cum] = sum_k k * exp(a * (k * eta - step_cum_k))
 #                                / sum_r exp(a * (r * eta - step_cum_r))
 # in the log-space-shifted form for numerical stability. Reduces exactly
@@ -4172,15 +4172,18 @@ calc_facets_report_tbls <- function(res,
       step_cum_list <- rep(list(step_cum_common), nrow(tbl))
     }
 
-    # Per-row slope vector for GPCM Option A (design_gpcm_fair_average.md
-    # §4 / §5). For the slope-facet's own rows, use that level's own
-    # slope from `params$slopes`; for all other rows (Person, Rater, ...,
-    # and any non-GPCM fit) the slope is 1, which by the geometric-mean-
-    # one identification convention represents the "average slope" and
-    # makes `expected_score_from_eta_gpcm()` reduce exactly to the
-    # PCM/RSM Linacre fair-average. This is the conservative Option A
-    # convention: only the slope-facet element rows carry visible slope
-    # heterogeneity in the fair-average column.
+    # Per-row slope vector for the slope-aware GPCM fair-average
+    # construction. For the slope-facet's own rows, use that level's
+    # own slope from `params$slopes`; for all other rows (Person,
+    # Rater, ..., and any non-GPCM fit) the slope is 1. Setting the
+    # non-slope-facet slope to 1 is the geometric-mean-one
+    # identification convention: it represents the "average slope"
+    # across slope-facet elements and makes
+    # `expected_score_from_eta_gpcm()` reduce exactly to the PCM/RSM
+    # Linacre fair-average. Net effect: only the slope-facet element
+    # rows carry visible slope heterogeneity in the fair-average
+    # column; non-slope rows remain continuous with the standard PCM
+    # Linacre construction.
     slope_facet <- config$slope_facet %||% config$step_facet
     if (config$model == "GPCM" && !is.null(slope_facet) &&
         !is.null(params$slopes) && facet == slope_facet) {
