@@ -524,8 +524,8 @@ unexpected_response_table <- function(fit,
 #' fair-average SE is not yet computed. **Do not use these columns as
 #' \eqn{\pm 1.96 \cdot \mathrm{SE}} confidence-interval bounds on the
 #' fair-average value.** A delta-method fair-average SE is planned for
-#' a future release; once it lands the column will be exposed under a
-#' distinct name to avoid silent misinterpretation.
+#' a future release and will be exposed under a distinct column name
+#' to avoid silent misinterpretation.
 #'
 #' @return A named list with:
 #' - `by_facet`: named list of formatted data.frames

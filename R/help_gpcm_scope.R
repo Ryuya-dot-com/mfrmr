@@ -157,8 +157,9 @@ gpcm_capability_matrix <- function(status = c("all", "supported", "supported_wit
       ),
       paste(
         "Residual-based mean-square and strict-marginal outputs remain",
-        "exploratory screening tools because discrimination is free;",
-        "the dashboard's fair-average panel stays as an explicit unavailable placeholder."
+        "exploratory screening tools because discrimination is free.",
+        "The dashboard's fair-average panel reports an explicit",
+        "unavailability status when the underlying fit is GPCM."
       ),
       paste(
         "Covers fixed-calibration posterior scoring and information only;",
@@ -207,8 +208,8 @@ gpcm_capability_matrix <- function(status = c("all", "supported", "supported_wit
         "for the bounded GPCM branch."
       ),
       paste(
-        "These are future extensions. They are not required to justify the",
-        "current GPCM release scope."
+        "Future extensions, listed for transparency. Out of scope for",
+        "the current bounded GPCM branch."
       ),
       paste(
         "Bias point estimates use the slope-aware GPCM kernel: the bias",
@@ -222,9 +223,10 @@ gpcm_capability_matrix <- function(status = c("all", "supported", "supported_wit
         "for a future release once the joint-covariance machinery lands."
       ),
       paste(
-        "Not yet generalized to free-discrimination score semantics; the",
-        "underlying joint covariance machinery (`vcov.mfrm_fit()`, joint",
-        "Hessian on theta x slope x step) needs to land first."
+        "Not yet generalized to free-discrimination score semantics. The",
+        "underlying joint covariance machinery (`vcov.mfrm_fit()`, a joint",
+        "Hessian on theta x slope x step) is the prerequisite that has",
+        "not yet been implemented."
       )
     ),
     Evidence = c(

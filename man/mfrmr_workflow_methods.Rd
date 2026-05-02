@@ -110,10 +110,11 @@ For bounded \code{GPCM}, diagnostics are now available through
 \code{\link[=interrater_agreement_table]{interrater_agreement_table()}}, \code{\link[=unexpected_response_table]{unexpected_response_table()}},
 \code{\link[=displacement_table]{displacement_table()}}, \code{\link[=measurable_summary_table]{measurable_summary_table()}},
 \code{\link[=rating_scale_table]{rating_scale_table()}}, \code{\link[=facet_quality_dashboard]{facet_quality_dashboard()}},
-\code{\link[=reporting_checklist]{reporting_checklist()}}, and \code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}} with its
-fair-average panel retained as an explicit unavailable placeholder.
-Treat those residual-based summaries as
-exploratory screens because the discrimination parameter is free.
+\code{\link[=reporting_checklist]{reporting_checklist()}}, and \code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}} -- the
+fair-average panel of the dashboard reports an explicit
+unavailability indicator under GPCM. Treat those residual-based
+summaries as exploratory screens because the discrimination
+parameter is free.
 FACETS-style fair averages are Rasch-family measure-to-score
 transformations, so the score-side fair-average semantics remain blocked
 for bounded \code{GPCM}.

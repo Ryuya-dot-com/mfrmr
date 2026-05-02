@@ -559,7 +559,7 @@ approximation rather than as full ConQuest-style population modeling.
 
 The package now includes a first-version latent-regression \code{MML} branch, but
 the overlap with ConQuest should still be described conservatively. The
-defensible shared ground is:
+documented overlap is:
 ordered-response \code{RSM} / \code{PCM}, one latent dimension, a conditional-normal
 person population model, and person covariates supplied through an explicit
 one-row-per-person table and expanded through the package-built model

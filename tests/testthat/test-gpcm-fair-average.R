@@ -1,5 +1,5 @@
 # ==============================================================================
-# Tests for the GPCM Option A fair-average kernel and dispatch.
+# Tests for the slope-aware GPCM fair-average kernel and dispatch.
 # ==============================================================================
 #
 # These tests pin the mathematical contract of the slope-aware GPCM

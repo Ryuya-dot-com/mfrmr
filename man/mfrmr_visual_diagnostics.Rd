@@ -90,10 +90,11 @@ Use \code{\link[=plot_residual_matrix]{plot_residual_matrix()}}.
 Use \code{\link[=plot_shrinkage_funnel]{plot_shrinkage_funnel()}} on a fit augmented via
 \code{\link[=apply_empirical_bayes_shrinkage]{apply_empirical_bayes_shrinkage()}}.
 \item "I need one compact triage screen first."
-Use \code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}} for \code{RSM} / \code{PCM}. First-release \code{GPCM}
-can also use \code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}}, but its fair-average panel remains an
-explicit unavailable placeholder because that panel's score-metric
-semantics have not yet been generalized beyond the Rasch-family branch.
+Use \code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}} for \code{RSM} / \code{PCM}. The bounded \code{GPCM}
+branch can also call \code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}}, but its fair-average
+panel reports an explicit unavailability indicator because that
+panel's score-metric semantics have not yet been generalized
+beyond the Rasch-family branch.
 \item "Which figures are already supported by my current run?"
 Use \code{\link[=reporting_checklist]{reporting_checklist()}} and review the \code{"Visual Displays"} rows before
 choosing the next plot.

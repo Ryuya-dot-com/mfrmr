@@ -144,8 +144,8 @@ Hessian; under JML no joint Hessian is built), so a true delta-method
 fair-average SE is not yet computed. \strong{Do not use these columns as
 \eqn{\pm 1.96 \cdot \mathrm{SE}} confidence-interval bounds on the
 fair-average value.} A delta-method fair-average SE is planned for
-a future release; once it lands the column will be exposed under a
-distinct name to avoid silent misinterpretation.
+a future release and will be exposed under a distinct column name
+to avoid silent misinterpretation.
 }
 
 \examples{
