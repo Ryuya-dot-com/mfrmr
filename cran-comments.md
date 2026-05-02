@@ -130,9 +130,10 @@ revert paths.
   publication-grade APA or compatibility-contract output without
   those SEs, the helpers continue to raise the documented "not yet
   validated for GPCM fits" error.
-- Native `analyze_dif_classical()` covering Mantel-Haenszel,
-  logistic regression, and SIBTEST. Residual-method DIF
-  (`analyze_dff()`, ETS A/B/C refit) remains the supported route.
+- A classical-DIF helper (working title `analyze_dif_classical()`)
+  covering Mantel-Haenszel, logistic regression, and SIBTEST.
+  Residual-method DIF (`analyze_dff()`, ETS A/B/C refit) remains the
+  supported route in 0.2.0.
 - Five additional Rasch / IRT classic plots (KIDMAP, TCC,
   expected-score curve, cumulative ICC, information surface).
 - Migration / GPCM-scope / classical-DIF vignettes. The five

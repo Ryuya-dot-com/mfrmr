@@ -56,14 +56,13 @@ shapes, legend / reference-line counts) instead of a raw list dump.
 GPCM construction:
 
 - **`fair_average_table()`**: for slope-facet element rows, the
-  fair-average uses that element's own discrimination \eqn{a_{j^\star}}
-  and threshold structure:
-  \eqn{\mathrm{FA}_{p,j^\star} = \sum_k k \cdot P_{GPCM}(X=k \mid \theta_p, a_{j^\star}, \boldsymbol{\delta}_{j^\star})}.
-  For non-slope facets (Person, Rater, ...), the fair-average uses the
-  geometric-mean-one slope by GPCM identification, so the construction
-  is continuous with the PCM Linacre fair-average and reduces to it
-  exactly when all slopes equal one (regression-tested at machine
-  precision).
+  fair-average uses that element's own discrimination `a_{j*}` and
+  threshold structure: `FA_{p,j*} = sum_k k * P_GPCM(X = k | theta_p,
+  a_{j*}, delta_{j*})`. For non-slope facets (Person, Rater, ...), the
+  fair-average uses the geometric-mean-one slope by GPCM
+  identification, so the construction is continuous with the PCM
+  Linacre fair-average and reduces to it exactly when all slopes
+  equal one (regression-tested at machine precision).
 
 - **`estimate_bias()`**: the per-cell bias parameter is the additive
   shift on the linear predictor that maximises the per-cell GPCM
@@ -77,7 +76,7 @@ field that names the slope convention and reminds the user that the
 SE columns are not delta-method standard errors of the
 fair-average / bias values. A delta-method SE for both is planned for
 a future release; it requires a `vcov()` method on the joint covariance
-of \eqn{(\theta, a, \boldsymbol{\delta})}, which is not yet exposed.
+of `(theta, a, delta)`, which is not yet exposed.
 See `?fair_average_table`, `?estimate_bias`, and
 `gpcm_capability_matrix()` for the full support contract.
 
@@ -88,6 +87,22 @@ publication-quality outputs.
 
 ## Bug fixes
 
+- `compute_person_fit_indices()` now computes `lz` from the model
+  category probability of the observed category directly (true
+  Drasgow, Levine & Williams (1985) polytomous form), via three new
+  intermediate columns `PrObserved`, `ItemEntropy`, and `ItemVarLogP`
+  on `compute_obs_table()`. The previous Gaussian-residual
+  approximation overstated `Var[log P]` by roughly a factor of five
+  on a 4-category fixture and pulled `lz` toward zero.
+- The `ECI4` column is removed from `compute_person_fit_indices()`.
+  The previous implementation was the standardized chi-square
+  `(sum StdSq - n) / sqrt(2 * n)`, which is the linear (Smith)
+  approximation to `OutfitZSTD`, not the Tatsuoka & Tatsuoka (1983)
+  extended-caution index. Users who want the equivalent statistic
+  should use `OutfitZSTD` directly. The Snijders (2001) full
+  ability-information bias correction for `lz_star` is documented as
+  a placeholder finite-N adjustment in `?compute_person_fit_indices`
+  and scheduled for a follow-up release.
 - `analyze_dff()` and `dif_interaction_table()` now reject invalid
   `p_adjust`, non-integer `min_obs`, invalid `focal` groups, and
   all-missing group columns up front, instead of failing later inside
@@ -128,14 +143,15 @@ a follow-up release after a cycle of community testing.
 
 ## Deferred to a follow-up release
 
-Items planned for 0.2.0 but deferred:
+Scoped during 0.2.0 prep but not shipped in 0.2.0; carried over to a
+later release:
 
 - User-facing GPCM unblock for `build_apa_outputs()`,
   `facets_parity_report()`, and `facets_output_file_bundle(include =
   "score")`. (`fair_average_table()` and `estimate_bias()` are
   unblocked above.)
-- Native `analyze_dif_classical()` covering Mantel-Haenszel,
-  logistic regression, and SIBTEST.
+- A classical-DIF helper (working title `analyze_dif_classical()`)
+  covering Mantel-Haenszel, logistic regression, and SIBTEST.
 - Five additional Rasch / IRT classic plots (KIDMAP, TCC, expected
   score curve, cumulative ICC, information surface).
 - Migration / GPCM-scope / classical-DIF vignettes.
