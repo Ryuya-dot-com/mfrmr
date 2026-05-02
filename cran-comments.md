@@ -20,9 +20,9 @@ The full check log will accompany the submission. Expected outcomes:
   warning that comes from R's own `R_ext/Boolean.h`, not from
   mfrmr; this is a clang/R-headers interaction unrelated to the
   package and does not appear on the CRAN-reference platforms.
-- Possibly one INFO-level installed-size NOTE. The 0.1.6 footprint
-  was 5.6 MB; 0.2.0 is expected to be similar or smaller after the
-  tightened `.Rbuildignore` rules take effect.
+- Possibly one INFO-level installed-size NOTE. The local installed
+  footprint is in the 5-6 MB range, comparable to 0.1.5 and slightly
+  reduced by the tightened `.Rbuildignore` rules.
 
 ## Downstream dependencies
 
@@ -32,8 +32,11 @@ the `cran.md` note documenting this.
 
 ## Submission comment
 
-This is an update to mfrmr 0.1.6. Headline changes (sourced from
-NEWS.md):
+This is an update to mfrmr. The current version on CRAN is 0.1.5
+(published 2026-04-12); a 0.1.6 development version was tagged on
+GitHub but is not on CRAN, so its NEWS section is included alongside
+the 0.2.0 entry for completeness. Headline changes for 0.2.0 (sourced
+from NEWS.md):
 
 - Slope-aware GPCM fair-average and bias unblock.
   `fair_average_table()` and `estimate_bias()` now accept GPCM
@@ -62,11 +65,11 @@ NEWS.md):
   (1983) extended-caution index. The `OutfitZSTD` column under
   the linear (Smith) approximation is the equivalent statistic.
 
-- Continuous integration. New GitHub Actions workflows: R-CMD-check
-  matrix on Ubuntu / macOS / Windows across R release / devel /
-  oldrel-1, plus `test-coverage.yaml` running `covr` with artifact
-  upload (no external service contacted). Replaces the prior
-  pkgdown-only workflow.
+- Continuous integration. New GitHub Actions workflows added
+  alongside the existing `pkgdown.yaml`: `R-CMD-check.yaml` runs the
+  matrix on Ubuntu (release / devel / oldrel-1) plus macos-latest and
+  windows-latest (release), and `test-coverage.yaml` runs `covr` with
+  artifact upload (no external service contacted).
 
 - Differential-functioning display polish. `plot_dif_heatmap()` and
   `plot_dif_summary()` gain display controls (cell labels, flag
@@ -103,9 +106,19 @@ NEWS.md):
 
 ## Default changes
 
-None. All 0.1.6 default values are retained (`quad_points = 31`,
-`diagnostic_mode = "both"`, `plot.mfrm_fit(type = "wright")`,
-`keep_original = FALSE`).
+No defaults change between 0.1.6 and 0.2.0. The 0.1.6 defaults
+(`quad_points = 31`, `diagnostic_mode = "both"`,
+`plot.mfrm_fit(type = "wright")`, `keep_original = FALSE`) are
+retained.
+
+Because 0.1.6 was not published to CRAN, users upgrading directly
+from CRAN 0.1.5 to 0.2.0 will see three default flips that were
+introduced in 0.1.6: `diagnose_mfrm(diagnostic_mode)` from `"legacy"`
+to `"both"`, `plot(fit)` returning the Wright map alone instead of a
+three-plot overview (the overview remains available via `plot(fit,
+type = "bundle")`), and `fit_mfrm(quad_points)` from `15` to `31`.
+The 0.1.6 NEWS section in `NEWS.md` documents the rationale and
+revert paths.
 
 ## Deferred to a follow-up release
 

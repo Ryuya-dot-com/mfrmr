@@ -8,8 +8,18 @@ release notes can be read in the same order as previous versions.
 
 ## Default changes
 
-None. All 0.1.6 defaults (`quad_points = 31`, `diagnostic_mode = "both"`,
+No defaults change between 0.1.6 and 0.2.0. The 0.1.6 defaults
+(`quad_points = 31`, `diagnostic_mode = "both"`,
 `plot.mfrm_fit(type = "wright")`, `keep_original = FALSE`) are retained.
+
+Note for users upgrading directly from CRAN 0.1.5 to 0.2.0 (skipping
+the 0.1.6 development release): three defaults were flipped in 0.1.6
+and remain on those values in 0.2.0 -- `diagnose_mfrm(diagnostic_mode)`
+went from `"legacy"` to `"both"`, `plot(fit)` returns the Wright map
+alone instead of a three-plot overview (the overview is still
+available via `plot(fit, type = "bundle")`), and `fit_mfrm(quad_points)`
+went from `15` to `31`. See the "mfrmr 0.1.6" section below for the
+full description and revert paths.
 
 ## New features
 
