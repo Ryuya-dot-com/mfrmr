@@ -1,45 +1,57 @@
 # ==============================================================================
-# Person fit indices: lz, lz*, ECI4 (Snijders 2001 / Drasgow et al. 1985)
+# Person fit indices: lz, lz* (Drasgow et al. 1985 / Snijders 2001)
 # ==============================================================================
 #
 # `compute_person_fit_indices()` extends the Infit / Outfit / ZSTD
-# columns that `diagnose_mfrm()` already returns with three
+# columns that `diagnose_mfrm()` already returns with two
 # additional person-level statistics:
 #
 # - lz (Drasgow, Levine & Williams, 1985): standardized log-likelihood
-#   under the fitted model. Asymptotically standard normal under the
+#   under the fitted model. Computed in its proper polytomous form
+#   using the per-observation category probability `Pr(X = x | theta)`
+#   from the model (not the Gaussian-residual approximation used in
+#   earlier mfrmr releases). The centering term is the per-item
+#   negentropy E[log P_k] = sum_k P_k log P_k and the variance term is
+#   sum_k P_k (log P_k)^2 - (sum_k P_k log P_k)^2, summed across the
+#   person's observations. Asymptotically standard normal under the
 #   conditional-independence assumption when person ability is known.
 # - lz* (placeholder): a finite-sample-adjusted variant of lz that
-#   uses cn = 0 and dn = 1/N. The full Snijders (2001)
-#   bias-correction (which propagates ability-information
-#   uncertainty) is scheduled for a follow-up release; for now,
-#   treat lz_star as a finite-N inflation of lz, not as the
-#   published Snijders statistic.
-# - ECI4 (Tatsuoka & Tatsuoka 1983): standardized squared-residual
-#   index, weighted by inverse expected information. Sensitive to
-#   careless responding and guessing.
+#   uses cn = 0 and dn = 1/N. The full Snijders (2001) bias-correction
+#   (which propagates ability-information uncertainty) is scheduled
+#   for a follow-up release; for now treat lz_star as a finite-N
+#   inflation of lz, not as the published Snijders statistic.
 #
-# The helper consumes the `obs` and `measures` slots of a
-# `diagnose_mfrm()` bundle and returns one row per person.
+# Note: earlier mfrmr versions reported an `ECI4` column whose
+# implementation was the standardized chi-square (sum StdSq - n) /
+# sqrt(2 n) rather than the Tatsuoka & Tatsuoka (1983) extended-caution
+# index. That column was a duplicate of the existing `OutfitZSTD`
+# statistic in `diagnose_mfrm()$measures` under the linear (Smith
+# whexact) approximation and has been removed in 0.2.0; use
+# `OutfitZSTD` instead.
 
-#' Person fit indices: lz, lz*, ECI4
+#' Person fit indices: lz, lz*
 #'
 #' Computes person-level fit statistics for an MFRM bundle, extending
 #' the Infit / Outfit / ZSTD columns that `diagnose_mfrm()$measures`
-#' already exposes with three additional published indices.
+#' already exposes with the standardized log-likelihood `lz` and a
+#' finite-sample-adjusted variant `lz*`.
 #'
 #' @param diagnostics Output from [diagnose_mfrm()].
 #' @param fit Optional `mfrm_fit` from [fit_mfrm()]. When supplied,
 #'   the helper attaches the person measures and computes a
 #'   finite-sample-adjusted variant of `lz` (column `lz_star`);
-#'   when `NULL`, only the uncorrected `lz` and `ECI4` are returned.
+#'   when `NULL`, only the uncorrected `lz` is returned.
 #'
 #' @return A data frame with one row per Person and columns:
 #' \describe{
 #'   \item{`Person`}{Person ID.}
 #'   \item{`N`}{Number of contributing response opportunities.}
-#'   \item{`LogLik`}{Sum of log P(X = x | theta) under the model.}
-#'   \item{`lz`}{Drasgow et al. (1985) standardized log-likelihood.}
+#'   \item{`LogLik`}{Sum of log P(X = x | theta) under the fitted
+#'     model. Computed from the per-observation category probability
+#'     `PrObserved` (the model probability of the observed category),
+#'     not from a Gaussian residual approximation.}
+#'   \item{`lz`}{Drasgow et al. (1985) standardized log-likelihood,
+#'     in its proper polytomous form.}
 #'   \item{`lz_star`}{Finite-sample-adjusted lz, returned only when
 #'     `fit` was supplied (otherwise `NA`). The current implementation
 #'     uses the placeholder \eqn{c_n = 0}, \eqn{d_n = 1/N} so that
@@ -48,16 +60,23 @@
 #'     scheduled for a follow-up release. Treat the `lz_star` column
 #'     as a finite-N inflation of `lz`, not as the published Snijders
 #'     statistic.}
-#'   \item{`ECI4`}{Tatsuoka & Tatsuoka (1983) standardized
-#'     squared-residual index.}
 #' }
 #'
-#' Under the conditional-independence assumption of the MFRM, `lz`
-#' and `ECI4` are asymptotically standard normal. Practical reporting
-#' thresholds: |index| > 1.96 flags a person at the 5% level;
-#' |index| > 2.58 at the 1% level. The placeholder `lz_star` is on
-#' the same scale as `lz` but does not yet carry the published
-#' Snijders null distribution.
+#' Under the conditional-independence assumption of the MFRM, `lz` is
+#' asymptotically standard normal. Practical reporting thresholds:
+#' |lz| > 1.96 flags a person at the 5% level; |lz| > 2.58 at the
+#' 1% level. The placeholder `lz_star` is on the same scale as `lz`
+#' but does not yet carry the published Snijders null distribution.
+#'
+#' This release fixes the polytomous form of `lz`. Earlier mfrmr
+#' versions used a Gaussian-residual approximation
+#' \eqn{\log P(X = x) \approx -\tfrac{1}{2}(R^2/V) - \tfrac{1}{2}\log(2\pi V)}
+#' that overstated the per-item variance of \eqn{\log P} by roughly
+#' a factor of 5 on a 4-category fixture (true Drasgow variance
+#' \eqn{\approx 0.10}; Gaussian approximation \eqn{0.5}), shrinking
+#' the reported `lz` toward zero and inflating the apparent fit of
+#' aberrant respondents. Numerical values from earlier mfrmr versions
+#' are not directly comparable to the values returned in 0.2.0.
 #'
 #' @section References:
 #' - Drasgow, F., Levine, M. V., & Williams, E. A. (1985).
@@ -67,9 +86,6 @@
 #' - Snijders, T. A. B. (2001). Asymptotic null distribution of
 #'   person fit statistics with estimated person parameter.
 #'   *Psychometrika, 66*(3), 331-342.
-#' - Tatsuoka, K. K., & Tatsuoka, M. M. (1983). Spotting erroneous
-#'   rules of operation by the individual consistency index.
-#'   *Journal of Educational Measurement, 20*(3), 221-230.
 #'
 #' @seealso [diagnose_mfrm()]
 #' @examples
@@ -82,8 +98,7 @@
 #' head(pf)
 #' # Look for: |lz| or |lz*| > 1.96 (5% level) flags a person whose
 #' #   response pattern is statistically inconsistent with the model;
-#' #   > 2.58 is a 1% flag. ECI4 carries the same standard-normal
-#' #   reference and is sensitive to careless responding.
+#' #   > 2.58 is a 1% flag.
 #' @export
 compute_person_fit_indices <- function(diagnostics, fit = NULL) {
   if (is.null(diagnostics) || !is.list(diagnostics) ||
@@ -92,102 +107,72 @@ compute_person_fit_indices <- function(diagnostics, fit = NULL) {
          call. = FALSE)
   }
   obs <- as.data.frame(diagnostics$obs, stringsAsFactors = FALSE)
-  needed <- c("Person", "Observed", "Expected", "Residual")
+  needed <- c("Person", "PrObserved", "ItemEntropy", "ItemVarLogP")
   missing_cols <- setdiff(needed, names(obs))
   if (length(missing_cols) > 0L) {
     stop("`diagnostics$obs` is missing required columns: ",
-         paste(missing_cols, collapse = ", "), ".",
+         paste(missing_cols, collapse = ", "),
+         ". This typically means the diagnostics bundle was generated ",
+         "by an mfrmr version older than 0.2.0; refit and re-diagnose ",
+         "to populate the per-observation probability columns.",
          call. = FALSE)
   }
   obs$Person <- as.character(obs$Person)
-  obs$Observed <- suppressWarnings(as.numeric(obs$Observed))
-  obs$Expected <- suppressWarnings(as.numeric(obs$Expected))
-  obs$Residual <- suppressWarnings(as.numeric(obs$Residual))
+  obs$PrObserved <- suppressWarnings(as.numeric(obs$PrObserved))
+  obs$ItemEntropy <- suppressWarnings(as.numeric(obs$ItemEntropy))
+  obs$ItemVarLogP <- suppressWarnings(as.numeric(obs$ItemVarLogP))
 
-  # Recover per-observation log P(X = x | theta) from the residual
-  # variance when probabilities are not stored. We use the asymptotic
-  # form log P(X = x) ~= -0.5 * (Residual / sd)^2 - 0.5 * log(2 * pi * Var)
-  # Var = Var(X|theta) ~= ExpectedVar (from the model). For polytomous,
-  # we approximate Var(X | theta) using the second moment Sum(k^2 P) -
-  # E[X]^2 and reuse the Residual / Var pair when available.
-  if ("Var" %in% names(obs) && all(is.finite(obs$Var))) {
-    var_x <- obs$Var
-  } else {
-    # Variance of a polytomous response with mean E and bounded
-    # support is bounded above by E * (max_score - E). Use this as
-    # a robust approximation; lz / ECI4 are sensitive only to the
-    # ratio of residual to expected variance.
-    var_x <- obs$Expected * (max(obs$Observed, na.rm = TRUE) - obs$Expected)
-    var_x[!is.finite(var_x) | var_x <= 0] <- NA_real_
-  }
-  obs$.Var <- var_x
-
-  # log P(X = x | theta) approximated under a normal residual model.
-  # This matches the Drasgow et al. (1985) form for binary responses
-  # exactly and is the standard approximation for polytomous IRT
-  # (Glas & Meijer 2003).
-  log_p <- -0.5 * (obs$Residual^2 / obs$.Var) -
-            0.5 * log(2 * pi * obs$.Var)
+  # True Drasgow et al. (1985) lz computed from the polytomous category
+  # probabilities. log_p is the model log-probability of the observed
+  # category; e_logp is the per-item negentropy E[log P]; var_logp is
+  # the per-item Var(log P). All three terms are summed across each
+  # person's observations to form lz = (l - E[l]) / sqrt(Var[l]).
+  log_p <- log(pmax(obs$PrObserved, .Machine$double.eps))
 
   agg <- by(
-    data.frame(log_p = log_p, var_x = obs$.Var,
-               resid = obs$Residual, expected = obs$Expected,
-               observed = obs$Observed,
+    data.frame(log_p = log_p,
+               e_logp = obs$ItemEntropy,
+               var_logp = obs$ItemVarLogP,
                stringsAsFactors = FALSE),
     obs$Person,
     function(d) {
-      ok <- is.finite(d$log_p) & is.finite(d$var_x) & d$var_x > 0
+      ok <- is.finite(d$log_p) & is.finite(d$e_logp) &
+            is.finite(d$var_logp) & d$var_logp >= 0
       d <- d[ok, , drop = FALSE]
       if (nrow(d) == 0L) {
-        return(c(N = 0L, LogLik = NA_real_, lz = NA_real_,
-                 ECI4 = NA_real_))
+        return(c(N = 0L, LogLik = NA_real_, lz = NA_real_))
       }
       ll <- sum(d$log_p)
-      e_ll <- -0.5 * sum(1 + log(2 * pi * d$var_x))
-      var_ll <- 0.5 * nrow(d)
+      e_ll <- sum(d$e_logp)
+      var_ll <- sum(d$var_logp)
       lz_val <- if (var_ll > 0) (ll - e_ll) / sqrt(var_ll) else NA_real_
-      eci4_num <- sum(d$resid^2 / d$var_x) - nrow(d)
-      eci4_den <- sqrt(2 * nrow(d))
-      eci4_val <- if (eci4_den > 0) eci4_num / eci4_den else NA_real_
-      c(N = nrow(d), LogLik = ll, lz = lz_val, ECI4 = eci4_val)
+      c(N = nrow(d), LogLik = ll, lz = lz_val)
     }
   )
   out <- do.call(rbind, lapply(agg, function(x) as.data.frame(t(x))))
   out$Person <- rownames(out)
   rownames(out) <- NULL
-  out <- out[, c("Person", "N", "LogLik", "lz", "ECI4"), drop = FALSE]
+  out <- out[, c("Person", "N", "LogLik", "lz"), drop = FALSE]
   out$N <- as.integer(out$N)
 
-  # Snijders (2001) lz* correction. Requires the fit to access the
-  # person ability estimates (theta) and the ability-information
-  # function. We approximate the correction as
-  #   lz_star = (lz - cn(theta)) / sqrt(1 + dn(theta))
-  # where cn / dn are the Snijders correction terms aggregated to
-  # the person level. When `fit` is missing or the ability column is
-  # unavailable we leave lz_star = NA.
+  # lz* placeholder: cn = 0, dn = 1/N. The full Snijders (2001) form
+  # requires the score derivative r(theta) and test information
+  # I(theta) at the estimated theta; that derivation is scheduled for
+  # a follow-up release. The placeholder is a finite-sample inflation
+  # only and does not carry the published Snijders null distribution.
   out$lz_star <- NA_real_
   if (!is.null(fit) && inherits(fit, "mfrm_fit")) {
     person_tbl <- as.data.frame(fit$facets$person %||% data.frame(),
                                  stringsAsFactors = FALSE)
-    if (nrow(person_tbl) > 0L && all(c("Person", "Estimate") %in% names(person_tbl))) {
-      person_tbl$Person <- as.character(person_tbl$Person)
-      person_tbl$Estimate <- suppressWarnings(as.numeric(person_tbl$Estimate))
-      # Approximate cn and dn via the per-observation variance ratio.
-      # Snijders' exact form needs ability information; for the MFRM
-      # we use the empirical mean(var_x) / sum(var_x) ratio as a
-      # finite-sample correction. This is a workable approximation
-      # documented as such; full ability-information correction is on
-      # the 0.2.0 roadmap.
-      n_per <- tapply(obs$.Var, obs$Person, function(v) sum(is.finite(v)),
-                       simplify = FALSE)
-      mean_var <- tapply(obs$.Var, obs$Person, mean, na.rm = TRUE,
-                          simplify = TRUE)
-      out_idx <- match(out$Person, names(mean_var))
+    if (nrow(person_tbl) > 0L &&
+        all(c("Person", "Estimate") %in% names(person_tbl))) {
+      n_per <- tapply(obs$PrObserved, obs$Person,
+                       function(v) sum(is.finite(v)), simplify = FALSE)
       person_n <- as.numeric(unlist(n_per[out$Person]))
       cn_val <- 0
       dn_val <- 1 / pmax(person_n, 1L)
       out$lz_star <- (out$lz - cn_val) / sqrt(1 + dn_val)
     }
   }
-  out[, c("Person", "N", "LogLik", "lz", "lz_star", "ECI4"), drop = FALSE]
+  out[, c("Person", "N", "LogLik", "lz", "lz_star"), drop = FALSE]
 }

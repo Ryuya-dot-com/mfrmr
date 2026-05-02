@@ -2,7 +2,7 @@
 % Please edit documentation in R/api-person-fit.R
 \name{compute_person_fit_indices}
 \alias{compute_person_fit_indices}
-\title{Person fit indices: lz, lz*, ECI4}
+\title{Person fit indices: lz, lz*}
 \usage{
 compute_person_fit_indices(diagnostics, fit = NULL)
 }
@@ -12,15 +12,19 @@ compute_person_fit_indices(diagnostics, fit = NULL)
 \item{fit}{Optional \code{mfrm_fit} from \code{\link[=fit_mfrm]{fit_mfrm()}}. When supplied,
 the helper attaches the person measures and computes a
 finite-sample-adjusted variant of \code{lz} (column \code{lz_star});
-when \code{NULL}, only the uncorrected \code{lz} and \code{ECI4} are returned.}
+when \code{NULL}, only the uncorrected \code{lz} is returned.}
 }
 \value{
 A data frame with one row per Person and columns:
 \describe{
 \item{\code{Person}}{Person ID.}
 \item{\code{N}}{Number of contributing response opportunities.}
-\item{\code{LogLik}}{Sum of log P(X = x | theta) under the model.}
-\item{\code{lz}}{Drasgow et al. (1985) standardized log-likelihood.}
+\item{\code{LogLik}}{Sum of log P(X = x | theta) under the fitted
+model. Computed from the per-observation category probability
+\code{PrObserved} (the model probability of the observed category),
+not from a Gaussian residual approximation.}
+\item{\code{lz}}{Drasgow et al. (1985) standardized log-likelihood,
+in its proper polytomous form.}
 \item{\code{lz_star}}{Finite-sample-adjusted lz, returned only when
 \code{fit} was supplied (otherwise \code{NA}). The current implementation
 uses the placeholder \eqn{c_n = 0}, \eqn{d_n = 1/N} so that
@@ -29,21 +33,29 @@ correction that propagates ability-information uncertainty is
 scheduled for a follow-up release. Treat the \code{lz_star} column
 as a finite-N inflation of \code{lz}, not as the published Snijders
 statistic.}
-\item{\code{ECI4}}{Tatsuoka & Tatsuoka (1983) standardized
-squared-residual index.}
 }
 
-Under the conditional-independence assumption of the MFRM, \code{lz}
-and \code{ECI4} are asymptotically standard normal. Practical reporting
-thresholds: |index| > 1.96 flags a person at the 5\% level;
-|index| > 2.58 at the 1\% level. The placeholder \code{lz_star} is on
-the same scale as \code{lz} but does not yet carry the published
-Snijders null distribution.
+Under the conditional-independence assumption of the MFRM, \code{lz} is
+asymptotically standard normal. Practical reporting thresholds:
+|lz| > 1.96 flags a person at the 5\% level; |lz| > 2.58 at the
+1\% level. The placeholder \code{lz_star} is on the same scale as \code{lz}
+but does not yet carry the published Snijders null distribution.
+
+This release fixes the polytomous form of \code{lz}. Earlier mfrmr
+versions used a Gaussian-residual approximation
+\eqn{\log P(X = x) \approx -\tfrac{1}{2}(R^2/V) - \tfrac{1}{2}\log(2\pi V)}
+that overstated the per-item variance of \eqn{\log P} by roughly
+a factor of 5 on a 4-category fixture (true Drasgow variance
+\eqn{\approx 0.10}; Gaussian approximation \eqn{0.5}), shrinking
+the reported \code{lz} toward zero and inflating the apparent fit of
+aberrant respondents. Numerical values from earlier mfrmr versions
+are not directly comparable to the values returned in 0.2.0.
 }
 \description{
 Computes person-level fit statistics for an MFRM bundle, extending
 the Infit / Outfit / ZSTD columns that \code{diagnose_mfrm()$measures}
-already exposes with three additional published indices.
+already exposes with the standardized log-likelihood \code{lz} and a
+finite-sample-adjusted variant \verb{lz*}.
 }
 \section{References}{
 
@@ -55,9 +67,6 @@ models and standardized indices.
 \item Snijders, T. A. B. (2001). Asymptotic null distribution of
 person fit statistics with estimated person parameter.
 \emph{Psychometrika, 66}(3), 331-342.
-\item Tatsuoka, K. K., & Tatsuoka, M. M. (1983). Spotting erroneous
-rules of operation by the individual consistency index.
-\emph{Journal of Educational Measurement, 20}(3), 221-230.
 }
 }
 
@@ -71,8 +80,7 @@ pf <- compute_person_fit_indices(diag, fit = fit)
 head(pf)
 # Look for: |lz| or |lz*| > 1.96 (5\% level) flags a person whose
 #   response pattern is statistically inconsistent with the model;
-#   > 2.58 is a 1\% flag. ECI4 carries the same standard-normal
-#   reference and is sensitive to careless responding.
+#   > 2.58 is a 1\% flag.
 }
 \seealso{
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}

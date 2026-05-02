@@ -2877,6 +2877,30 @@ compute_obs_table <- function(res) {
   resid_k <- idx$score_k - prob_bundle$expected_k
   std_sq <- resid_k^2 / prob_bundle$var_k
 
+  # Per-observation categorical-distribution moments needed by
+  # `compute_person_fit_indices()` to compute Drasgow et al. (1985) lz
+  # in its proper polytomous form. `pr_obs` is the model probability of
+  # the observed category; `item_entropy` and `item_var_logp` are the
+  # per-item expectation and variance of log P(X|theta) under the model
+  # categorical, which are the centering and per-item-variance terms in
+  # Drasgow's lz.
+  probs_mat <- prob_bundle$probs
+  n_rows <- nrow(probs_mat)
+  if (n_rows > 0L) {
+    score_k_int <- as.integer(idx$score_k)
+    obs_col <- pmin(pmax(score_k_int + 1L, 1L), ncol(probs_mat))
+    pr_obs <- probs_mat[cbind(seq_len(n_rows), obs_col)]
+    eps <- .Machine$double.eps
+    log_probs_mat <- log(pmax(probs_mat, eps))
+    item_entropy <- as.numeric(rowSums(probs_mat * log_probs_mat))
+    item_e_logp_sq <- as.numeric(rowSums(probs_mat * log_probs_mat^2))
+    item_var_logp <- pmax(item_e_logp_sq - item_entropy^2, 0)
+  } else {
+    pr_obs <- numeric(0)
+    item_entropy <- numeric(0)
+    item_var_logp <- numeric(0)
+  }
+
   prep$data |>
     mutate(
       PersonMeasure = person_measure_by_row,
@@ -2887,7 +2911,10 @@ compute_obs_table <- function(res) {
       ScoreSlope = prob_bundle$slope_obs,
       Residual = Observed - Expected,
       StdResidual = Residual / sqrt(Var),
-      StdSq = std_sq
+      StdSq = std_sq,
+      PrObserved = pr_obs,
+      ItemEntropy = item_entropy,
+      ItemVarLogP = item_var_logp
     )
 }
 
