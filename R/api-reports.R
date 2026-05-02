@@ -650,6 +650,12 @@ bias_interaction_report <- function(x,
 #' - `summary`: one-row convergence summary
 #' - `orientation_audit`: interaction-facet sign audit
 #' - `settings`: resolved reporting options
+#' - `direction_note`: one-line interpretive note describing which
+#'   direction the iteration moved (carried from the bias estimator;
+#'   empty string when the underlying estimator does not emit one)
+#' - `recommended_action`: one-line recommended action label
+#'   (e.g. `"converged"`, `"increase max_iter"`); empty string when
+#'   the underlying estimator does not emit one
 #'
 #' @seealso [estimate_bias()], [bias_interaction_report()], [build_fixed_reports()]
 #' @examples

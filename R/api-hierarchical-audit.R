@@ -1164,6 +1164,9 @@ compute_facet_design_effect <- function(data, facets, icc_table = NULL,
 #' - `connectivity`: named list with bipartite-graph component summary
 #'   when `igraph` is available.
 #' - `summary`: one-row summary used by downstream reporting helpers.
+#' - `facets`: character vector of facet names that were audited
+#'   (echoed for downstream reporting helpers that need to label rows
+#'   by audit scope).
 #'
 #' @seealso [detect_facet_nesting()], [facet_small_sample_audit()],
 #'   [compute_facet_icc()], [compute_facet_design_effect()],

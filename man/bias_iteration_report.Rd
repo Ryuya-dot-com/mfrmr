@@ -48,6 +48,12 @@ A named list with:
 \item \code{summary}: one-row convergence summary
 \item \code{orientation_audit}: interaction-facet sign audit
 \item \code{settings}: resolved reporting options
+\item \code{direction_note}: one-line interpretive note describing which
+direction the iteration moved (carried from the bias estimator;
+empty string when the underlying estimator does not emit one)
+\item \code{recommended_action}: one-line recommended action label
+(e.g. \code{"converged"}, \code{"increase max_iter"}); empty string when
+the underlying estimator does not emit one
 }
 }
 \description{

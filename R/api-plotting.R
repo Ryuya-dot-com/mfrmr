@@ -3228,8 +3228,8 @@ export_mfrm <- function(fit,
 #' @param ... Additional arguments (ignored).
 #'
 #' @details
-#' This method is intentionally lightweight: it returns just three columns
-#' (\code{Facet}, \code{Level}, \code{Estimate}) so that the result is easy to
+#' This method returns four columns (\code{Facet}, \code{Level},
+#' \code{Estimate}, \code{Extreme}) so that the result is easy to
 #' inspect, join, or write to disk.
 #'
 #' @section Interpreting output:
@@ -3244,7 +3244,10 @@ export_mfrm <- function(fit,
 #' }
 #'
 #' @return A data.frame with columns \code{Facet}, \code{Level},
-#'   \code{Estimate}.
+#'   \code{Estimate}, and \code{Extreme}. The \code{Extreme} column
+#'   is populated for person rows from the extreme-score flag added
+#'   in 0.1.6 (\code{"Min"} / \code{"Max"} / \code{NA}); non-person
+#'   facet rows carry \code{NA} in that column by design.
 #' @seealso \code{\link{fit_mfrm}}, \code{\link{export_mfrm}}
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
