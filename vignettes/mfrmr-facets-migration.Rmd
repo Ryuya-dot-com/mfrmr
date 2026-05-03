@@ -1,0 +1,229 @@
+---
+title: "Migrating from Facets to mfrmr"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Migrating from Facets to mfrmr}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 5
+)
+```
+
+This vignette walks Facets users through the equivalent `mfrmr` workflow:
+preparing data, fitting a many-facet Rasch model with Facets-compatible
+defaults, generating the diagnostic and reporting tables that the canonical
+Facets output stack provides, and verifying numeric parity between the two
+systems.
+
+## Mental model
+
+The two stacks share the same psychometric framework but differ in
+operating model.
+
+| Concept | Facets (Linacre 2026) | mfrmr |
+|---|---|---|
+| Input | Specification file plus data file | `data.frame` in long format |
+| Estimation | JMLE by default | `JML` (legacy default) or `MML` (recommended for new analyses) |
+| Models | Rating-scale, partial-credit, polytomous step models | `RSM`, `PCM`, bounded `GPCM` |
+| Output | Tables 0-30 plus graphic files | Returned R objects with `summary()` and `plot()` methods |
+| Anchoring | `D=`, `A=` fields in the specification | `anchors` and `group_anchors` arguments to `fit_mfrm()` |
+| Bias / interaction | Table 14 | `estimate_bias()` and `bias_interaction_report()` |
+| Fair average | Table 7 fair-M average | `fair_average_table()` |
+| Reproducibility | Specification file is the manifest | `build_mfrm_manifest()` plus `build_mfrm_replay_script()` |
+
+## A one-shot legacy-compatible call
+
+If the goal is to reproduce a Facets-style script with minimal R-side
+plumbing, use `run_mfrm_facets()` (alias `mfrmRFacets()`):
+
+```{r facets-mode}
+library(mfrmr)
+data("ej2021_study1", package = "mfrmr")
+
+run <- run_mfrm_facets(
+  data = ej2021_study1,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  model = "RSM",
+  method = "JML"
+)
+
+names(run)
+```
+
+The wrapper returns the same `fit_mfrm()` and `diagnose_mfrm()` objects that
+a step-by-step pipeline produces, plus the iteration log, fair-average
+table, and rating-scale table:
+
+```{r facets-mode-summary}
+summary(run$fit)
+head(run$fair_average)
+```
+
+For new analysis scripts, prefer `fit_mfrm(method = "MML")` directly. MML
+integrates over the person distribution under an N(0, 1) prior and exposes
+per-person posterior SEs that JML cannot produce.
+
+## Translating the specification file
+
+The mapping below covers the most common Facets specification keywords.
+
+### Facets and labels
+
+```
+Facets = 3
+Models = ?,?,?,R5
+Labels =
+  1, Examinee
+    1 = P01
+    ...
+  2, Rater
+    1 = R1
+    ...
+  3, Criterion
+    1 = Content
+    ...
+```
+
+translates to:
+
+```r
+fit_mfrm(
+  data = examinee_long,
+  person = "Examinee",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  rating_min = 1,
+  rating_max = 5,
+  model = "RSM"
+)
+```
+
+`Models = ?,?,?,R5` becomes `model = "RSM"` and the `R5` rating-scale
+declaration becomes `rating_min = 1, rating_max = 5`. For a partial-credit
+specification, pass `model = "PCM"` and identify the facet that carries the
+step thresholds with `step_facet = "Rater"` (or the appropriate facet
+name).
+
+### Anchoring
+
+A Facets `D = 2, A =` block:
+
+```
+D = 2
+A = 1, 0.0
+    2, 0.5
+```
+
+becomes an `anchors` data frame:
+
+```r
+anchors <- data.frame(
+  facet = "Rater",
+  level = c("R1", "R2"),
+  estimate = c(0.0, 0.5),
+  stringsAsFactors = FALSE
+)
+fit <- fit_mfrm(..., anchors = anchors)
+```
+
+`audit_mfrm_anchors()` validates and reports on the anchor block before the
+fit runs, surfacing connectivity, overlap, and minimum-sample issues.
+
+### Bias and interaction
+
+Facets Table 14 bias output between Rater and Criterion has a direct
+equivalent:
+
+```r
+diag <- diagnose_mfrm(fit)
+bias <- estimate_bias(fit, diag,
+                      facet_a = "Rater", facet_b = "Criterion")
+summary(bias)
+```
+
+`estimate_all_bias()` enumerates every non-person facet pair in one call.
+
+### Group anchoring and DFF
+
+Facets `D = ..., G =` group-anchor blocks for differential facet
+functioning translate to the `group_anchors` argument and the
+`analyze_dff()` follow-up:
+
+```r
+group_anchors <- data.frame(
+  facet = "Criterion",
+  level = "Content",
+  group = c("Native", "Non-native"),
+  estimate = c(0.0, 0.0),
+  stringsAsFactors = FALSE
+)
+fit_g <- fit_mfrm(..., group_anchors = group_anchors)
+dff <- analyze_dff(fit_g, diag, facet = "Criterion",
+                   group = "FirstLanguage", method = "refit")
+```
+
+## Verifying numeric parity
+
+When migrating an existing study, `facets_parity_report()` compares
+the parameter estimates and fit statistics produced by the two systems:
+
+```r
+parity <- facets_parity_report(
+  fit,
+  facets_estimates = facets_table_csv,
+  tolerance = 0.05
+)
+summary(parity)
+```
+
+The resulting report lists per-element differences and flags rows that
+exceed the supplied tolerance. Use it as the sign-off step in a migration:
+once `parity$flagged` is empty under a tolerance you accept, the two stacks
+agree on the substantive output.
+
+## Producing Facets-style output files
+
+For audit trails or downstream tools that expect Facets output files,
+`facets_output_file_bundle()` writes a parallel set of fixed-width or CSV
+exports:
+
+```r
+files <- facets_output_file_bundle(
+  fit,
+  diagnostics = diag,
+  out_dir = tempdir(),
+  include = c("graph", "score")
+)
+```
+
+For RSM and PCM the score-side helpers are available. Under bounded `GPCM`
+the score-side bundle is intentionally restricted; see
+`?gpcm_capability_matrix` and the `mfrmr-gpcm-scope` vignette for the
+binding contract.
+
+## Recommended next steps
+
+After a Facets-equivalent fit is in hand, the canonical mfrmr reporting
+route extends the analysis with:
+
+- `diagnose_mfrm(diagnostic_mode = "both")` for the strict marginal screen
+  alongside the residual stack.
+- `reporting_checklist()` for a manuscript-readiness summary.
+- `build_apa_outputs()` for Method and Results paragraphs and APA tables.
+- `build_mfrm_manifest()` and `build_mfrm_replay_script()` for the
+  reproducibility bundle that Facets specifications cannot produce
+  out of the box.
+
+The `mfrmr-workflow` vignette covers the full sequence end to end; the
+`mfrmr-reporting-and-apa` vignette focuses on the manuscript surface; the
+`mfrmr-linking-and-dff` vignette covers anchoring, drift, and DFF in
+detail.

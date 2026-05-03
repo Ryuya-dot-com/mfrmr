@@ -1,0 +1,13 @@
+cff-version: 1.2.0
+message: "If you use this package, please cite it as follows."
+title: "mfrmr: Estimation and Diagnostics for Many-Facet Measurement Models"
+version: "0.2.0"
+date-released: "2026-05-02"
+license: "MIT"
+authors:
+  - family-names: "Komuro"
+    given-names: "Ryuya"
+    email: "ryuya.komuro.c4@tohoku.ac.jp"
+    orcid: "https://orcid.org/0000-0001-9205-0926"
+repository-code: "https://github.com/Ryuya-dot-com/mfrmr"
+url: "https://ryuya-dot-com.github.io/mfrmr/"

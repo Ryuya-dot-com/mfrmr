@@ -1,0 +1,168 @@
+---
+title: "GPCM scope and current limitations"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{GPCM scope and current limitations}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 5
+)
+```
+
+`mfrmr` includes a bounded implementation of the Generalized Partial Credit
+Model (GPCM; Muraki 1992). The estimator is fully functional, but several
+downstream reporting helpers remain restricted because score-side semantics
+under free discrimination differ from the Rasch-family case. This vignette
+documents which helpers are available, which are not, and what to use as a
+substitute when a helper is restricted.
+
+## Checking the support boundary
+
+`gpcm_capability_matrix()` is the canonical reference. It returns one row
+per helper family with a `Status` column drawn from `supported`,
+`supported_with_caveat`, `blocked`, and `deferred`, plus the rationale and
+the evidence trail behind each classification.
+
+```{r capability-supported}
+library(mfrmr)
+gpcm_capability_matrix("supported")[, c("Area", "Status")]
+```
+
+```{r capability-with-caveat}
+gpcm_capability_matrix("supported_with_caveat")[, c("Area", "Status")]
+```
+
+```{r capability-blocked}
+gpcm_capability_matrix("blocked")[, c("Area", "Status", "Boundary")]
+```
+
+```{r capability-deferred}
+gpcm_capability_matrix("deferred")[, c("Area", "Status")]
+```
+
+The matrix is intentionally conservative. A row stays in `blocked` or
+`deferred` even when some lower-level component already runs, because the
+scope statement reflects the validation evidence rather than the raw code
+path.
+
+## What works today
+
+The following routes are validated for bounded `GPCM`:
+
+- **Fitting and core summaries** via `fit_mfrm(model = "GPCM", step_facet =
+  ...)`. The validated default keeps `slope_facet == step_facet`, with the
+  direct `MML` engine.
+- **Posterior scoring and information** via `predict_mfrm_units()`,
+  `sample_mfrm_plausible_values()`, `compute_information()`, and
+  `plot_information()`.
+- **Curve and category views** via `plot(fit, type = c("wright",
+  "pathway", "ccc", "ccc_surface"))`, `category_structure_report()`, and
+  `category_curves_report()`.
+- **Slope-aware simulation specifications** via `build_mfrm_sim_spec()`
+  and `simulate_mfrm_data()`.
+
+## What works with caveats
+
+The following are exposed for `GPCM` but should be read as exploratory
+screens rather than as Rasch-style invariance evidence:
+
+- `diagnose_mfrm()` and the residual and unexpected-response stack:
+  `unexpected_response_table()`, `displacement_table()`,
+  `measurable_summary_table()`, `rating_scale_table()`,
+  `interrater_agreement_table()`, `facet_quality_dashboard()`,
+  `plot_qc_dashboard()`, `plot_marginal_fit()`,
+  `plot_marginal_pairwise()`.
+- `reporting_checklist()` and `precision_audit_report()` route to the
+  supported direct tables and plots only. They do not imply that the
+  broader APA writer is available.
+- `build_misfit_casebook()` inherits the exploratory screening framing of
+  its underlying sources.
+
+The dashboard's fair-average panel is preserved as an explicit unavailable
+placeholder under `GPCM`; treat it as a marker that the score-side
+substitute is needed (see below) rather than as an empty result.
+
+## What is intentionally restricted
+
+The fair-average / score-side semantics, the APA writer, and the full
+reporting bundle are restricted under `GPCM` because the free
+discrimination parameter changes the relationship between the latent
+measure and the expected category. Specifically:
+
+- `fair_average_table()`, `estimate_bias()`, `facets_parity_report()`, and
+  `facets_output_file_bundle(include = "score")` use Rasch-family
+  measure-to-score semantics that are not generalized to free
+  discrimination.
+- `build_apa_outputs()`, `build_visual_summaries()`, `run_qc_pipeline()`,
+  `build_mfrm_manifest()`, `build_mfrm_replay_script()`, and
+  `export_mfrm_bundle()` would convert those score-side outputs into
+  narrative or bundle claims, so they are also restricted.
+
+`build_linking_review()` is deferred under `GPCM` for the same reason. The
+underlying `audit_mfrm_anchors()` and `detect_anchor_drift()` helpers can
+still be called directly as exploratory support.
+
+## Recommended substitutes
+
+When a restricted helper is needed for a `GPCM` report, the practical paths
+are:
+
+- Refit with `model = "PCM"` if the discrimination-free assumption is
+  defensible for the data. The full APA / fair-average / parity stack
+  becomes available, and `compare_mfrm()` quantifies the loss in fit.
+- Keep the report on the `GPCM` fit itself but draft the manuscript section
+  manually around the supported tables: `summary(fit)` for parameters,
+  `diagnose_mfrm()` for residual fit, `facet_quality_dashboard()` for the
+  per-facet quality summary, and `compute_information()` for precision
+  evidence.
+- Generate the reproducibility manifest from a parallel `RSM` or `PCM`
+  baseline fit. The two fits can be reported side by side in the same
+  document, with the `GPCM` fit footnoted as the discrimination-aware
+  counterpart.
+
+## A worked example
+
+The `example_core` dataset includes a small synthetic block that supports a
+bounded `GPCM` fit:
+
+```r
+library(mfrmr)
+toy <- load_mfrmr_data("example_core")
+
+fit_gpcm <- fit_mfrm(
+  data = toy,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  step_facet = "Criterion",
+  score = "Score",
+  model = "GPCM",
+  method = "MML"
+)
+
+summary(fit_gpcm)
+
+diag_gpcm <- diagnose_mfrm(fit_gpcm)
+summary(diag_gpcm)
+
+info <- compute_information(fit_gpcm)
+plot_information(info)
+```
+
+The fit, summary, residual diagnostics, and information helpers all run
+under `GPCM`. Trying `fair_average_table(fit_gpcm)` or
+`build_apa_outputs(fit_gpcm)` raises an explicit message pointing back at
+`gpcm_capability_matrix()` rather than producing a partial output.
+
+## Roadmap
+
+The boundary above is a release-scope statement, not a permanent design
+choice. Score-side semantics for free-discrimination polytomous models are
+on the roadmap for a future release. Until then, the matrix returned by
+`gpcm_capability_matrix()` is the binding contract.

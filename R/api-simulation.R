@@ -1,0 +1,4484 @@
+#' Simulate long-format many-facet Rasch data for design studies
+#'
+#' @param n_person Number of persons/respondents.
+#' @param n_rater Number of rater facet levels.
+#' @param n_criterion Number of criterion/item facet levels.
+#' @param raters_per_person Number of raters assigned to each person.
+#' @param design Optional named design override supplied as a named list,
+#'   named vector, or one-row data frame. When `sim_spec = NULL`, names may use
+#'   canonical variables (`n_person`, `n_rater`, `n_criterion`,
+#'   `raters_per_person`) or role keywords (`person`, `rater`, `criterion`,
+#'   `assignment`). For the currently exposed facet keys, the schema-only
+#'   future branch input `design$facets = c(person = ..., rater = ...,
+#'   criterion = ...)` is also accepted. Do not specify the same variable
+#'   through both `design` and the scalar count arguments.
+#' @param score_levels Number of ordered score categories.
+#' @param theta_sd Standard deviation of simulated person measures.
+#' @param rater_sd Standard deviation of simulated rater severities.
+#' @param criterion_sd Standard deviation of simulated criterion difficulties.
+#' @param noise_sd Optional observation-level noise added to the linear predictor.
+#' @param step_span Spread of step thresholds on the logit scale.
+#' @param group_levels Optional character vector of group labels. When supplied,
+#'   a balanced `Group` column is added to the simulated data.
+#' @param dif_effects Optional data.frame describing true group-linked DIF
+#'   effects. Must include `Group`, at least one design column such as
+#'   `Criterion`, and numeric `Effect`.
+#' @param interaction_effects Optional data.frame describing true non-group
+#'   interaction effects. Must include at least one design column such as
+#'   `Rater` or `Criterion`, plus numeric `Effect`.
+#' @param seed Optional random seed.
+#' @param model Measurement model recorded in the simulation setup. The current
+#'   public generator supports `RSM`, `PCM`, and bounded `GPCM`.
+#' @param step_facet Step facet used when `model = "PCM"` and threshold values
+#'   vary across levels. Currently `"Criterion"` and `"Rater"` are supported.
+#' @param slope_facet Slope facet used when `model = "GPCM"`. The current
+#'   bounded `GPCM` branch requires `slope_facet == step_facet`.
+#' @param thresholds Optional threshold specification. Use either a numeric
+#'   vector of common thresholds or a data frame with columns `StepFacet`,
+#'   `Step`/`StepIndex`, and `Estimate`.
+#' @param slopes Optional slope specification used when `model = "GPCM"`.
+#'   Use either a numeric vector aligned to the generated slope-facet levels or
+#'   a data frame with columns `SlopeFacet` and `Estimate`. When omitted,
+#'   slopes default to 1 for every slope-facet level, giving an exact `PCM`
+#'   reduction.
+#' @param assignment Assignment design. `"crossed"` means every person sees
+#'   every rater; `"rotating"` uses a balanced rotating subset; `"resampled"`
+#'   reuses person-level rater-assignment profiles stored in `sim_spec`;
+#'   `"skeleton"` reuses an observed response skeleton stored in `sim_spec`,
+#'   including optional `Group`/`Weight` columns when available. When omitted,
+#'   the function chooses `"crossed"` if
+#'   `raters_per_person == n_rater`, otherwise `"rotating"`.
+#' @param sim_spec Optional output from [build_mfrm_sim_spec()] or
+#'   [extract_mfrm_sim_spec()]. When supplied, it defines the generator setup;
+#'   direct scalar arguments are treated as legacy inputs and should generally
+#'   be left at their defaults except for `seed`. Any custom public two-facet
+#'   names recorded in `sim_spec$facet_names` are also carried into the
+#'   simulated output and downstream planning helpers. If `sim_spec` stores an
+#'   active latent-regression population generator, the returned object also
+#'   carries the generated one-row-per-person background-data table needed to
+#'   refit that population model later.
+#'
+#' @details
+#' This function generates synthetic MFRM data from the Rasch model.
+#' The data-generating process is:
+#'
+#' 1. Draw person abilities: \eqn{\theta_n \sim N(0, \texttt{theta\_sd}^2)}
+#' 2. Draw rater severities: \eqn{\delta_j \sim N(0, \texttt{rater\_sd}^2)}
+#' 3. Draw criterion difficulties: \eqn{\beta_i \sim N(0, \texttt{criterion\_sd}^2)}
+#' 4. Generate evenly-spaced step thresholds spanning \eqn{\pm}\code{step_span/2}
+#' 5. For each observation, compute the linear predictor
+#'    \eqn{\eta = \theta_n - \delta_j - \beta_i + \epsilon} where
+#'    \eqn{\epsilon \sim N(0, \texttt{noise\_sd}^2)} (optional)
+#' 6. Compute category probabilities under the recorded measurement model
+#'    (`RSM`, `PCM`, or bounded `GPCM`) and sample the response
+#'
+#' Latent-value generation is explicit:
+#' - `latent_distribution = "normal"` draws centered normal person/rater/
+#'   criterion values using the supplied standard deviations
+#' - `latent_distribution = "empirical"` resamples centered support values
+#'   recorded in `sim_spec$empirical_support`
+#' - if `sim_spec$population$active = TRUE`, person measures are generated from
+#'   the stored latent-regression population model and template person
+#'   covariates rather than from `theta_sd`
+#'
+#' When `dif_effects` is supplied, the specified logit shift is added to
+#' \eqn{\eta} for the focal group on the target facet level, creating a
+#' known DIF signal.  Similarly, `interaction_effects` injects a known
+#' bias into specific facet-level combinations.
+#'
+#' The generator targets the common two-facet rating design (persons
+#' \eqn{\times} raters \eqn{\times} criteria).  `raters_per_person`
+#' controls the incomplete-block structure: when less than `n_rater`,
+#' each person is assigned a rotating subset of raters to keep coverage
+#' balanced and reproducible.
+#'
+#' Threshold handling is intentionally explicit:
+#' - if `thresholds = NULL`, common equally spaced thresholds are generated
+#'   from `step_span`
+#' - if `thresholds` is a numeric vector, it is used as one common threshold set
+#' - if `thresholds` is a data frame, threshold values may vary by `StepFacet`
+#'   (currently `Criterion` or `Rater`)
+#'
+#' For bounded `GPCM`, the generator now requires an explicit slope
+#' contract in parallel with the threshold table. The current public branch
+#' keeps `slope_facet == step_facet` and uses the internal `category_prob_gpcm()`
+#' helper for
+#' response sampling. Broader design-planning helpers remain restricted until
+#' that slope-aware contract is generalized beyond direct data generation.
+#'
+#' Assignment handling is also explicit:
+#' - `"crossed"` uses the full person x rater x criterion design
+#' - `"rotating"` assigns a deterministic rotating subset of raters per person
+#' - `"resampled"` reuses empirical person-level rater profiles stored in
+#'   `sim_spec$assignment_profiles`, optionally carrying over person-level
+#'   `Group`
+#' - `"skeleton"` reuses an observed person-by-rater-by-criterion response
+#'   skeleton stored in `sim_spec$design_skeleton`, optionally carrying over
+#'   `Group` and `Weight`
+#'
+#' For more controlled workflows, build a reusable simulation specification
+#' first via [build_mfrm_sim_spec()] or derive one from an observed fit with
+#' [extract_mfrm_sim_spec()], then pass it through `sim_spec`.
+#'
+#' Returned data include attributes:
+#' - `mfrm_truth`: simulated true parameters (for parameter-recovery checks)
+#' - `mfrm_truth$signals`: injected DIF and interaction signal tables
+#' - `mfrm_truth$slope_table`: simulated discrimination table for bounded
+#'   `GPCM`
+#' - `mfrm_population_data`: generated one-row-per-person background data when
+#'   the simulation specification stores an active latent-regression generator,
+#'   including model-matrix xlevel and contrast provenance for categorical
+#'   covariates
+#' - `mfrm_simulation_spec`: generation settings (for reproducibility)
+#'
+#' @section Interpreting output:
+#' - Higher `theta` values in `mfrm_truth$person` indicate higher person measures.
+#' - Higher values in `mfrm_truth$facets$Rater` indicate more severe raters.
+#' - Higher values in `mfrm_truth$facets$Criterion` indicate more difficult criteria.
+#' - `mfrm_truth$signals$dif_effects` and `mfrm_truth$signals$interaction_effects`
+#'   record any injected detection targets.
+#'
+#' @section Typical workflow:
+#' 1. Generate one design with `simulate_mfrm_data()`.
+#' 2. Fit with [fit_mfrm()] and diagnose with [diagnose_mfrm()].
+#' 3. For repeated design studies, use [evaluate_mfrm_design()].
+#'
+#' @return A long-format `data.frame` with core columns `Study`, `Person`,
+#'   two simulated non-person facet columns, and `Score`. By default those
+#'   facet columns are `Rater` and `Criterion`; when `sim_spec` records custom
+#'   public names, those names are used instead. If group labels are simulated
+#'   or reused from an observed response skeleton, a `Group` column is
+#'   included. If a weighted response skeleton is reused, a `Weight` column is
+#'   also included.
+#' @seealso [evaluate_mfrm_design()], [fit_mfrm()], [diagnose_mfrm()]
+#' @examples
+#' sim <- simulate_mfrm_data(
+#'   n_person = 40,
+#'   n_rater = 4,
+#'   n_criterion = 4,
+#'   raters_per_person = 2,
+#'   seed = 123
+#' )
+#' head(sim)
+#' names(attr(sim, "mfrm_truth"))
+#' @export
+simulate_mfrm_data <- function(n_person = 50,
+                               n_rater = 4,
+                               n_criterion = 4,
+                               raters_per_person = n_rater,
+                               design = NULL,
+                               score_levels = 4,
+                               theta_sd = 1,
+                               rater_sd = 0.35,
+                               criterion_sd = 0.25,
+                               noise_sd = 0,
+                               step_span = 1.4,
+                               group_levels = NULL,
+                               dif_effects = NULL,
+                               interaction_effects = NULL,
+                               seed = NULL,
+                               model = c("RSM", "PCM", "GPCM"),
+                               step_facet = "Criterion",
+                               slope_facet = NULL,
+                               thresholds = NULL,
+                               slopes = NULL,
+                               assignment = NULL,
+                               sim_spec = NULL) {
+  if (!is.null(sim_spec)) {
+    if (!inherits(sim_spec, "mfrm_sim_spec")) {
+      stop("`sim_spec` must be output from build_mfrm_sim_spec() or extract_mfrm_sim_spec().", call. = FALSE)
+    }
+    n_person <- sim_spec$n_person
+    n_rater <- sim_spec$n_rater
+    n_criterion <- sim_spec$n_criterion
+    raters_per_person <- sim_spec$raters_per_person
+    score_levels <- sim_spec$score_levels
+    theta_sd <- sim_spec$theta_sd
+    rater_sd <- sim_spec$rater_sd
+    criterion_sd <- sim_spec$criterion_sd
+    noise_sd <- sim_spec$noise_sd
+    step_span <- sim_spec$step_span
+    group_levels <- sim_spec$group_levels
+    dif_effects <- sim_spec$dif_effects
+    interaction_effects <- sim_spec$interaction_effects
+    model <- sim_spec$model
+    step_facet <- sim_spec$step_facet
+    slope_facet <- sim_spec$slope_facet %||% NULL
+    thresholds <- sim_spec$threshold_table
+    slopes <- sim_spec$slope_table %||% NULL
+    assignment <- sim_spec$assignment
+    latent_distribution <- as.character(sim_spec$latent_distribution %||% "normal")
+    empirical_support <- sim_spec$empirical_support %||% NULL
+    assignment_profiles <- sim_spec$assignment_profiles %||% NULL
+    design_skeleton <- sim_spec$design_skeleton %||% NULL
+    facet_names <- simulation_spec_output_facet_names(sim_spec)
+    population_spec <- sim_spec$population %||% simulation_empty_population_spec()
+  } else {
+    supplied_counts <- intersect(
+      names(as.list(match.call(expand.dots = FALSE))[-1]),
+      c("n_person", "n_rater", "n_criterion", "raters_per_person")
+    )
+    score_levels <- as.integer(score_levels[1])
+    model <- match.arg(toupper(as.character(model[1])), c("RSM", "PCM", "GPCM"))
+    facet_names <- simulation_default_output_facet_names()
+    design_counts <- simulation_resolve_design_counts(
+      sim_spec = list(facet_names = facet_names),
+      n_person = n_person,
+      n_rater = n_rater,
+      n_criterion = n_criterion,
+      raters_per_person = raters_per_person,
+      design = design,
+      defaults = list(
+        n_person = 50L,
+        n_rater = 4L,
+        n_criterion = 4L
+      ),
+      design_arg = "design",
+      explicit_scalar_names = supplied_counts
+    )
+    n_person <- as.integer(design_counts$n_person[1])
+    n_rater <- as.integer(design_counts$n_rater[1])
+    n_criterion <- as.integer(design_counts$n_criterion[1])
+    raters_per_person <- as.integer(design_counts$raters_per_person[1])
+    assignment <- if (is.null(assignment)) {
+      if (identical(raters_per_person, n_rater)) "crossed" else "rotating"
+    } else {
+      match.arg(tolower(as.character(assignment[1])), c("crossed", "rotating"))
+    }
+    if (identical(model, "GPCM")) {
+      resolved_facets <- resolve_step_and_slope_facets(
+        model = model,
+        step_facet = step_facet[1] %||% "Criterion",
+        slope_facet = slope_facet,
+        facet_names = unname(facet_names)
+      )
+      step_facet <- resolved_facets$step_facet
+      slope_facet <- resolved_facets$slope_facet
+    } else {
+      step_facet <- as.character(step_facet[1] %||% "Criterion")
+      slope_facet <- NULL
+    }
+    thresholds <- simulation_build_threshold_table(
+      thresholds = thresholds,
+      score_levels = score_levels,
+      step_span = as.numeric(step_span[1]),
+      model = model
+    )
+    slopes <- simulation_build_slope_table(
+      slopes = slopes,
+      model = model,
+      slope_facet = slope_facet,
+      facet_names = stats::setNames(facet_names, c("rater", "criterion")),
+      n_rater = n_rater,
+      n_criterion = n_criterion
+    )
+    latent_distribution <- "normal"
+    empirical_support <- NULL
+    assignment_profiles <- NULL
+    design_skeleton <- NULL
+    population_spec <- simulation_empty_population_spec()
+  }
+
+  if (!is.finite(n_person) || n_person < 2L) stop("`n_person` must be >= 2.", call. = FALSE)
+  if (!is.finite(n_rater) || n_rater < 2L) stop("`n_rater` must be >= 2.", call. = FALSE)
+  if (!is.finite(n_criterion) || n_criterion < 2L) stop("`n_criterion` must be >= 2.", call. = FALSE)
+  if (!is.finite(raters_per_person) || raters_per_person < 1L) stop("`raters_per_person` must be >= 1.", call. = FALSE)
+  if (raters_per_person > n_rater) stop("`raters_per_person` cannot exceed `n_rater`.", call. = FALSE)
+  if (!is.finite(score_levels) || score_levels < 2L) stop("`score_levels` must be >= 2.", call. = FALSE)
+  if (!step_facet %in% facet_names) {
+    stop(
+      "`step_facet` must match one of the simulated facet columns: ",
+      paste(facet_names, collapse = ", "),
+      ".",
+      call. = FALSE
+    )
+  }
+  if (!identical(assignment, "crossed") && !identical(assignment, "rotating") &&
+      !identical(assignment, "resampled") && !identical(assignment, "skeleton")) {
+    stop("`assignment` must be one of \"crossed\", \"rotating\", \"resampled\", or \"skeleton\".", call. = FALSE)
+  }
+  if (identical(assignment, "crossed") && raters_per_person != n_rater) {
+    stop("`assignment = \"crossed\"` requires `raters_per_person == n_rater`.", call. = FALSE)
+  }
+  if (!identical(latent_distribution, "normal") && !identical(latent_distribution, "empirical")) {
+    stop("`latent_distribution` must be either \"normal\" or \"empirical\".", call. = FALSE)
+  }
+  if (identical(latent_distribution, "empirical") && is.null(empirical_support)) {
+    stop("`latent_distribution = \"empirical\"` requires empirical support values in `sim_spec`.", call. = FALSE)
+  }
+  if (identical(assignment, "resampled") && is.null(assignment_profiles)) {
+    stop("`assignment = \"resampled\"` requires assignment profiles in `sim_spec`.", call. = FALSE)
+  }
+  if (identical(assignment, "skeleton") && is.null(design_skeleton)) {
+    stop("`assignment = \"skeleton\"` requires a design skeleton in `sim_spec`.", call. = FALSE)
+  }
+
+  if (!is.null(group_levels)) {
+    group_levels <- as.character(group_levels)
+    group_levels <- group_levels[!is.na(group_levels) & nzchar(group_levels)]
+    group_levels <- unique(group_levels)
+    if (length(group_levels) < 1L) stop("`group_levels` must contain at least one non-empty label.", call. = FALSE)
+  }
+
+  with_preserved_rng_seed(seed, {
+    assignment_facet <- facet_names[1]
+    criterion_facet <- facet_names[2]
+    expand_design <- function(person_values, assignment_values, criterion_values) {
+      expand.grid(
+        setNames(
+          list(person_values, assignment_values, criterion_values),
+          c("Person", assignment_facet, criterion_facet)
+        ),
+        stringsAsFactors = FALSE
+      )
+    }
+    person_ids <- sprintf("P%03d", seq_len(n_person))
+    rater_ids <- if (identical(assignment, "skeleton") && !is.null(design_skeleton)) {
+      sort(unique(as.character(design_skeleton$Rater)))
+    } else if (identical(assignment, "resampled") && !is.null(assignment_profiles)) {
+      sort(unique(as.character(assignment_profiles$Rater)))
+    } else {
+      simulation_spec_role_levels(sim_spec, "rater", count = n_rater)
+    }
+    criterion_ids <- if (identical(assignment, "skeleton") && !is.null(design_skeleton)) {
+      sort(unique(as.character(design_skeleton$Criterion)))
+    } else {
+      simulation_spec_role_levels(sim_spec, "criterion", count = n_criterion)
+    }
+
+    population_bundle <- if (isTRUE(population_spec$active)) {
+      simulation_generate_population_person_data(
+        population_spec = population_spec,
+        person_ids = person_ids
+      )
+    } else {
+      NULL
+    }
+    theta <- if (isTRUE(population_spec$active)) {
+      population_bundle$theta
+    } else {
+      stats::rnorm(n_person, mean = 0, sd = as.numeric(theta_sd[1]))
+    }
+    names(theta) <- person_ids
+
+    rater_effects <- sort(stats::rnorm(n_rater, mean = 0, sd = as.numeric(rater_sd[1])))
+    names(rater_effects) <- rater_ids
+
+    criterion_effects <- sort(stats::rnorm(n_criterion, mean = 0, sd = as.numeric(criterion_sd[1])))
+    names(criterion_effects) <- criterion_ids
+
+    if (identical(latent_distribution, "empirical")) {
+      if (!isTRUE(population_spec$active)) {
+        theta <- simulation_sample_empirical_support(empirical_support$person, n_person)
+        names(theta) <- person_ids
+      }
+      rater_effects <- simulation_sample_empirical_support(empirical_support$rater, n_rater)
+      names(rater_effects) <- rater_ids
+      criterion_effects <- simulation_sample_empirical_support(empirical_support$criterion, n_criterion)
+      names(criterion_effects) <- criterion_ids
+    }
+
+    if (score_levels == 2L) {
+      steps <- thresholds$Estimate[thresholds$StepFacet %in% c("Common", unique(thresholds$StepFacet)[1])][1]
+    }
+
+    if (assignment == "crossed") {
+      dat <- expand_design(person_ids, rater_ids, criterion_ids)
+    } else if (assignment == "skeleton") {
+      dat <- simulation_generate_skeleton_assignment(
+        person_ids = person_ids,
+        design_skeleton = design_skeleton,
+        facet_names = facet_names
+      )
+    } else if (assignment == "resampled") {
+      dat <- simulation_generate_resampled_assignment(
+        person_ids = person_ids,
+        criterion_ids = criterion_ids,
+        assignment_profiles = assignment_profiles,
+        facet_names = facet_names
+      )
+    } else {
+      rows <- vector("list", length(person_ids))
+      for (i in seq_along(person_ids)) {
+        assigned <- rater_ids[((i - 1L) + seq_len(raters_per_person) - 1L) %% n_rater + 1L]
+        rows[[i]] <- expand_design(person_ids[i], assigned, criterion_ids)
+      }
+      dat <- dplyr::bind_rows(rows)
+    }
+
+  threshold_table <- tibble::as_tibble(thresholds) |>
+      dplyr::mutate(
+        StepFacet = as.character(.data$StepFacet),
+        StepIndex = as.integer(.data$StepIndex),
+        Step = as.character(.data$Step),
+        Estimate = as.numeric(.data$Estimate)
+      ) |>
+      dplyr::arrange(.data$StepFacet, .data$StepIndex)
+    threshold_lookup <- split(threshold_table$Estimate, threshold_table$StepFacet)
+    if (!"Common" %in% names(threshold_lookup) && identical(model, "RSM")) {
+      stop("RSM simulation requires one common threshold set.", call. = FALSE)
+    }
+    slope_table <- if (identical(model, "GPCM")) {
+      tibble::as_tibble(slopes) |>
+        dplyr::mutate(
+          SlopeFacet = as.character(.data$SlopeFacet),
+          Estimate = as.numeric(.data$Estimate)
+        ) |>
+        dplyr::arrange(.data$SlopeFacet)
+    } else {
+      NULL
+    }
+    slope_lookup <- if (identical(model, "GPCM")) {
+      stats::setNames(as.numeric(slope_table$Estimate), as.character(slope_table$SlopeFacet))
+    } else {
+      NULL
+    }
+
+    if ("Group" %in% names(dat)) {
+      group_assign_tbl <- dat |>
+        dplyr::distinct(.data$Person, .data$Group)
+      group_assign <- stats::setNames(as.character(group_assign_tbl$Group),
+                                      as.character(group_assign_tbl$Person))
+    } else if (!is.null(group_levels)) {
+      group_assign <- rep(group_levels, length.out = n_person)
+      group_assign <- sample(group_assign, size = n_person, replace = FALSE)
+      names(group_assign) <- person_ids
+      dat$Group <- unname(group_assign[dat$Person])
+    } else {
+      group_assign <- NULL
+    }
+
+    allowed_effect_cols <- intersect(c("Group", "Person", facet_names), names(dat))
+    dif_effects <- simulation_normalize_effects(
+      effects = dif_effects,
+      arg_name = "dif_effects",
+      allowed_cols = allowed_effect_cols
+    )
+    if (nrow(dif_effects) > 0) {
+      if (!"Group" %in% names(dif_effects)) {
+        stop("`dif_effects` must include a `Group` column.", call. = FALSE)
+      }
+      if (!any(c("Person", facet_names) %in% names(dif_effects))) {
+        stop(
+          "`dif_effects` must include at least one of `Person`, `",
+          paste(facet_names, collapse = "`, or `"),
+          "`.",
+          call. = FALSE
+        )
+      }
+    }
+
+    interaction_effects <- simulation_normalize_effects(
+      effects = interaction_effects,
+      arg_name = "interaction_effects",
+      allowed_cols = allowed_effect_cols
+    )
+    if (nrow(interaction_effects) > 0 && !any(c("Person", facet_names) %in% names(interaction_effects))) {
+      stop(
+        "`interaction_effects` must include at least one of `Person`, `",
+        paste(facet_names, collapse = "`, or `"),
+        "`.",
+        call. = FALSE
+      )
+    }
+
+    eta <- theta[dat$Person] - rater_effects[dat[[assignment_facet]]] - criterion_effects[dat[[criterion_facet]]]
+    eta <- eta + simulation_apply_effects(dat, dif_effects)
+    eta <- eta + simulation_apply_effects(dat, interaction_effects)
+    if (isTRUE(is.finite(noise_sd)) && as.numeric(noise_sd[1]) > 0) {
+      eta <- eta + stats::rnorm(length(eta), mean = 0, sd = as.numeric(noise_sd[1]))
+    }
+
+    threshold_key <- if ("Common" %in% names(threshold_lookup)) {
+      rep("Common", nrow(dat))
+    } else {
+      as.character(dat[[step_facet]])
+    }
+    if (!all(threshold_key %in% names(threshold_lookup))) {
+      missing_keys <- setdiff(unique(threshold_key), names(threshold_lookup))
+      stop(
+        "Threshold specification is missing step-facet levels required for simulation: ",
+        paste(missing_keys, collapse = ", "),
+        ".",
+        call. = FALSE
+      )
+    }
+    if (identical(model, "PCM") || identical(model, "GPCM")) {
+      step_levels <- if ("Common" %in% names(threshold_lookup)) {
+        sort(unique(as.character(dat[[step_facet]])))
+      } else {
+        unique(as.character(threshold_table$StepFacet))
+      }
+      step_cum_mat <- t(vapply(step_levels, function(level) {
+        step_vec <- if ("Common" %in% names(threshold_lookup)) {
+          threshold_lookup[["Common"]]
+        } else {
+          threshold_lookup[[level]]
+        }
+        c(0, cumsum(step_vec))
+      }, numeric(score_levels)))
+      criterion_idx <- match(as.character(dat[[step_facet]]), step_levels)
+      if (anyNA(criterion_idx)) {
+        stop("PCM simulation could not align observations to step-facet thresholds.", call. = FALSE)
+      }
+      criterion_splits <- split(seq_along(criterion_idx), criterion_idx)
+      if (identical(model, "GPCM")) {
+        slope_levels <- sort(unique(as.character(dat[[slope_facet]])))
+        if (!all(slope_levels %in% names(slope_lookup))) {
+          missing_levels <- setdiff(slope_levels, names(slope_lookup))
+          stop(
+            "Slope specification is missing slope-facet levels required for simulation: ",
+            paste(missing_levels, collapse = ", "),
+            ".",
+            call. = FALSE
+          )
+        }
+        slope_vals <- unname(slope_lookup[slope_levels])
+        slope_idx <- match(as.character(dat[[slope_facet]]), slope_levels)
+        if (anyNA(slope_idx)) {
+          stop("GPCM simulation could not align observations to slope-facet values.", call. = FALSE)
+        }
+        prob_mat <- category_prob_gpcm(
+          eta = eta,
+          step_cum_mat = step_cum_mat,
+          criterion_idx = criterion_idx,
+          slopes = slope_vals,
+          slope_idx = slope_idx
+        )
+      } else {
+        prob_mat <- category_prob_pcm(
+          eta = eta,
+          step_cum_mat = step_cum_mat,
+          criterion_idx = criterion_idx,
+          criterion_splits = criterion_splits
+        )
+      }
+    } else {
+      step_cum <- c(0, cumsum(threshold_lookup[["Common"]]))
+      prob_mat <- category_prob_rsm(eta, step_cum)
+    }
+    dat$Score <- apply(prob_mat, 1, function(p) sample.int(score_levels, size = 1L, prob = p))
+    dat$Study <- "SimulatedDesign"
+    keep_cols <- c("Study", "Person", facet_names, "Score")
+    if ("Group" %in% names(dat)) keep_cols <- c(keep_cols, "Group")
+    if ("Weight" %in% names(dat)) keep_cols <- c(keep_cols, "Weight")
+    dat <- dat[, keep_cols]
+
+    truth_facets <- setNames(list(rater_effects, criterion_effects), facet_names)
+    attr(dat, "mfrm_truth") <- list(
+      person = theta,
+      facets = truth_facets,
+      steps = if ("Common" %in% names(threshold_lookup)) threshold_lookup$Common else threshold_table,
+      step_table = threshold_table,
+      slopes = if (identical(model, "GPCM")) unname(slope_lookup[as.character(slope_table$SlopeFacet)]) else NULL,
+      slope_table = slope_table,
+      population = if (isTRUE(population_spec$active)) {
+        list(
+          formula = population_spec$formula,
+          coefficients = population_spec$coefficients,
+          sigma2 = population_spec$sigma2,
+          design_columns = population_spec$design_columns,
+          xlevels = population_spec$xlevels,
+          contrasts = population_spec$contrasts,
+          linear_predictor = population_bundle$linear_predictor,
+          person_data = population_bundle$person_data
+        )
+      } else {
+        NULL
+      },
+      groups = group_assign,
+      signals = list(
+        dif_effects = dif_effects,
+        interaction_effects = interaction_effects
+      )
+    )
+    attr(dat, "mfrm_population_data") <- if (isTRUE(population_spec$active)) {
+      list(
+        active = TRUE,
+        person_data = population_bundle$person_data,
+        population_formula = population_spec$formula,
+        person_id = "Person",
+        population_policy = "error",
+        design_columns = population_spec$design_columns,
+        xlevels = population_spec$xlevels,
+        contrasts = population_spec$contrasts,
+        coefficients = population_spec$coefficients,
+        sigma2 = population_spec$sigma2
+      )
+    } else {
+      NULL
+    }
+    attr(dat, "mfrm_simulation_spec") <- list(
+      n_person = n_person,
+      n_rater = n_rater,
+      n_criterion = n_criterion,
+      raters_per_person = raters_per_person,
+      score_levels = score_levels,
+      theta_sd = theta_sd,
+      rater_sd = rater_sd,
+      criterion_sd = criterion_sd,
+      noise_sd = noise_sd,
+      step_span = step_span,
+      group_levels = group_levels,
+      model = model,
+      step_facet = step_facet,
+      slope_facet = slope_facet,
+      facet_names = stats::setNames(facet_names, c("rater", "criterion")),
+      facet_levels = list(rater = rater_ids, criterion = criterion_ids),
+      assignment = assignment,
+      latent_distribution = latent_distribution,
+      threshold_table = threshold_table,
+      slope_table = slope_table,
+      design_skeleton = design_skeleton,
+      population = population_spec
+    )
+    dat
+  })
+}
+
+simulation_center_numeric <- function(x) {
+  x <- suppressWarnings(as.numeric(x))
+  x <- x[is.finite(x)]
+  if (length(x) == 0) return(numeric(0))
+  x - mean(x)
+}
+
+simulation_sample_empirical_support <- function(values, size) {
+  centered <- simulation_center_numeric(values)
+  if (length(centered) < 2L) {
+    stop("Empirical latent support must contain at least two finite values.", call. = FALSE)
+  }
+  sample(centered, size = size, replace = TRUE)
+}
+
+simulation_generate_population_person_data <- function(population_spec, person_ids) {
+  if (!isTRUE(population_spec$active)) {
+    return(NULL)
+  }
+
+  template <- as.data.frame(population_spec$covariate_template %||% data.frame(), stringsAsFactors = FALSE)
+  template_id <- as.character(population_spec$person_id[1] %||% "TemplatePerson")
+  if (!template_id %in% names(template)) {
+    stop("Stored population covariate template is missing its person-ID column.", call. = FALSE)
+  }
+  draw_idx <- sample.int(nrow(template), size = length(person_ids), replace = TRUE)
+  sampled <- template[draw_idx, , drop = FALSE]
+  sampled[[template_id]] <- person_ids
+  person_data <- sampled
+  names(person_data)[names(person_data) == template_id] <- "Person"
+
+  model_frame_args <- list(
+    formula = population_spec$formula,
+    data = person_data,
+    na.action = stats::na.pass
+  )
+  if (!is.null(population_spec$xlevels)) {
+    model_frame_args$xlev <- population_spec$xlevels
+  }
+  mf <- do.call(stats::model.frame, model_frame_args)
+  for (nm in intersect(names(mf), names(person_data))) {
+    person_data[[nm]] <- mf[[nm]]
+  }
+  terms_obj <- attr(mf, "terms") %||% stats::terms(population_spec$formula)
+  x_mat <- stats::model.matrix(
+    terms_obj,
+    data = mf,
+    contrasts.arg = population_spec$contrasts %||% NULL
+  )
+  coeff <- as.numeric(population_spec$coefficients[population_spec$design_columns])
+  mu <- drop(x_mat %*% coeff)
+  theta <- mu + stats::rnorm(length(person_ids), mean = 0, sd = sqrt(population_spec$sigma2))
+  names(theta) <- person_ids
+
+  list(
+    theta = theta,
+    linear_predictor = stats::setNames(as.numeric(mu), person_ids),
+    person_data = person_data
+  )
+}
+
+simulation_generate_resampled_assignment <- function(person_ids,
+                                                     criterion_ids,
+                                                     assignment_profiles,
+                                                     facet_names = simulation_default_output_facet_names()) {
+  if (!is.data.frame(assignment_profiles) || nrow(assignment_profiles) == 0) {
+    stop("Empirical assignment profiles are required for `assignment = \"resampled\"`.",
+         call. = FALSE)
+  }
+
+  assignment_facet <- facet_names[1]
+  criterion_facet <- facet_names[2]
+  profiles <- tibble::as_tibble(assignment_profiles) |>
+    dplyr::distinct(.data$TemplatePerson, .data$Rater) |>
+    dplyr::arrange(.data$TemplatePerson, .data$Rater)
+  group_map <- NULL
+  if ("Group" %in% names(assignment_profiles)) {
+    group_map <- tibble::as_tibble(assignment_profiles) |>
+      dplyr::filter(!is.na(.data$Group), nzchar(.data$Group)) |>
+      dplyr::distinct(.data$TemplatePerson, .data$Group)
+  }
+  template_people <- unique(profiles$TemplatePerson)
+  profile_lookup <- split(
+    profiles$Rater,
+    factor(profiles$TemplatePerson, levels = template_people)
+  )
+  group_lookup <- if (is.null(group_map)) {
+    NULL
+  } else {
+    split(
+      group_map$Group,
+      factor(group_map$TemplatePerson, levels = template_people)
+    )
+  }
+  sampled_templates <- sample(template_people, size = length(person_ids), replace = TRUE)
+
+  rows <- vector("list", length(person_ids))
+  for (i in seq_along(person_ids)) {
+    assigned <- profile_lookup[[sampled_templates[i]]]
+    rows[[i]] <- expand.grid(
+      setNames(
+        list(person_ids[i], assigned, criterion_ids),
+        c("Person", assignment_facet, criterion_facet)
+      ),
+      stringsAsFactors = FALSE
+    )
+    if (!is.null(group_lookup)) {
+      matched_group <- group_lookup[[sampled_templates[i]]][1]
+      if (is.character(matched_group) && nzchar(matched_group)) {
+        rows[[i]]$Group <- matched_group
+      }
+    }
+  }
+  dplyr::bind_rows(rows)
+}
+
+simulation_generate_skeleton_assignment <- function(person_ids,
+                                                   design_skeleton,
+                                                   facet_names = simulation_default_output_facet_names()) {
+  if (!is.data.frame(design_skeleton) || nrow(design_skeleton) == 0) {
+    stop("Observed design skeleton is required for `assignment = \"skeleton\"`.",
+         call. = FALSE)
+  }
+
+  assignment_facet <- facet_names[1]
+  criterion_facet <- facet_names[2]
+  skeleton <- tibble::as_tibble(design_skeleton) |>
+    dplyr::distinct()
+  template_people <- unique(skeleton$TemplatePerson)
+  template_lookup <- split(
+    skeleton,
+    factor(skeleton$TemplatePerson, levels = template_people)
+  )
+  sampled_templates <- sample(template_people, size = length(person_ids), replace = TRUE)
+  keep_group <- "Group" %in% names(skeleton)
+  keep_weight <- "Weight" %in% names(skeleton)
+  select_cols <- c("Rater", "Criterion")
+  if (keep_group) select_cols <- c(select_cols, "Group")
+  if (keep_weight) select_cols <- c(select_cols, "Weight")
+
+  rows <- vector("list", length(person_ids))
+  for (i in seq_along(person_ids)) {
+    template_rows <- tibble::as_tibble(template_lookup[[sampled_templates[i]]])
+    rows[[i]] <- dplyr::mutate(
+      template_rows[, select_cols, drop = FALSE],
+      Person = person_ids[i],
+      .before = 1
+    )
+    names(rows[[i]])[names(rows[[i]]) == "Rater"] <- assignment_facet
+    names(rows[[i]])[names(rows[[i]]) == "Criterion"] <- criterion_facet
+  }
+  dplyr::bind_rows(rows)
+}
+
+simulation_normalize_effects <- function(effects, arg_name, allowed_cols) {
+  if (is.null(effects)) return(tibble::tibble())
+  if (!is.data.frame(effects)) {
+    stop("`", arg_name, "` must be a data.frame with an `Effect` column.", call. = FALSE)
+  }
+  eff <- tibble::as_tibble(effects)
+  if (nrow(eff) == 0L && ncol(eff) == 0L) {
+    return(tibble::tibble())
+  }
+  if (!"Effect" %in% names(eff)) {
+    stop("`", arg_name, "` must include an `Effect` column.", call. = FALSE)
+  }
+  unknown <- setdiff(names(eff), c(allowed_cols, "Effect"))
+  if (length(unknown) > 0) {
+    stop("`", arg_name, "` includes unsupported columns: ", paste(unknown, collapse = ", "), call. = FALSE)
+  }
+  key_cols <- setdiff(names(eff), "Effect")
+  if (length(key_cols) == 0) {
+    stop("`", arg_name, "` must include at least one matching design column besides `Effect`.", call. = FALSE)
+  }
+  eff$Effect <- suppressWarnings(as.numeric(eff$Effect))
+  if (any(!is.finite(eff$Effect))) {
+    stop("`", arg_name, "` has non-finite values in `Effect`.", call. = FALSE)
+  }
+  eff
+}
+
+simulation_apply_effects <- function(dat, effects) {
+  if (is.null(effects) || !is.data.frame(effects) || nrow(effects) == 0) {
+    return(rep(0, nrow(dat)))
+  }
+  key_cols <- setdiff(names(effects), "Effect")
+  adj <- numeric(nrow(dat))
+  for (i in seq_len(nrow(effects))) {
+    mask <- rep(TRUE, nrow(dat))
+    for (col in key_cols) {
+      value <- effects[[col]][i]
+      if (is.na(value) || !nzchar(as.character(value))) next
+      mask <- mask & as.character(dat[[col]]) == as.character(value)
+    }
+    adj[mask] <- adj[mask] + as.numeric(effects$Effect[i])
+  }
+  adj
+}
+
+design_eval_extract_truth <- function(truth, facet) {
+  if (is.null(truth) || !is.list(truth)) return(NULL)
+  if (identical(facet, "Person")) return(truth$person)
+  if (is.null(truth$facets) || !facet %in% names(truth$facets)) return(NULL)
+  truth$facets[[facet]]
+}
+
+design_eval_safe_mean <- function(x) {
+  x <- suppressWarnings(as.numeric(x))
+  if (length(x) == 0 || all(is.na(x))) return(NA_real_)
+  mean(x, na.rm = TRUE)
+}
+
+design_eval_safe_sd <- function(x) {
+  x <- suppressWarnings(as.numeric(x))
+  x <- x[is.finite(x)]
+  if (length(x) <= 1L) return(NA_real_)
+  stats::sd(x)
+}
+
+simulation_mcse_mean <- function(x) {
+  x <- suppressWarnings(as.numeric(x))
+  x <- x[is.finite(x)]
+  n <- length(x)
+  if (n <= 1L) return(NA_real_)
+  stats::sd(x) / sqrt(n)
+}
+
+simulation_mcse_proportion <- function(x) {
+  x <- suppressWarnings(as.numeric(x))
+  x <- x[!is.na(x)]
+  n <- length(x)
+  if (n <= 1L) return(NA_real_)
+  p <- mean(x, na.rm = TRUE)
+  sqrt(p * (1 - p) / n)
+}
+
+simulation_threshold_summary <- function(sim_spec) {
+  if (is.null(sim_spec)) {
+    return(list(mode = "generated_common", step_facet = NA_character_))
+  }
+  list(
+    mode = simulation_spec_threshold_mode(sim_spec),
+    step_facet = as.character(sim_spec$step_facet %||% NA_character_)
+  )
+}
+
+simulation_resolve_fit_step_facet <- function(model, step_facet, generator_step_facet) {
+  if (!identical(model, "PCM")) {
+    return(NA_character_)
+  }
+  explicit <- as.character(step_facet[1] %||% NA_character_)
+  if (is.na(explicit) || !nzchar(explicit)) {
+    inherited <- as.character(generator_step_facet[1] %||% NA_character_)
+    if (!is.na(inherited) && nzchar(inherited)) {
+      return(inherited)
+    }
+    return("Criterion")
+  }
+  explicit
+}
+
+simulation_recovery_contract <- function(generator_model,
+                                         generator_step_facet,
+                                         fitted_model,
+                                         fitted_step_facet) {
+  same_model <- identical(as.character(generator_model), as.character(fitted_model))
+  if (!same_model) {
+    return(list(
+      comparable = FALSE,
+      basis = "generator_fit_model_mismatch"
+    ))
+  }
+  if (identical(as.character(fitted_model), "PCM")) {
+    same_step_facet <- identical(
+      as.character(generator_step_facet %||% NA_character_),
+      as.character(fitted_step_facet %||% NA_character_)
+    )
+    if (!same_step_facet) {
+      return(list(
+        comparable = FALSE,
+        basis = "generator_fit_step_facet_mismatch"
+      ))
+    }
+  }
+  list(
+    comparable = TRUE,
+    basis = "generator_fit_contract_aligned"
+  )
+}
+
+simulation_design_variable_slug <- function(label) {
+  value <- as.character(label[1] %||% "")
+  value <- gsub("([a-z0-9])([A-Z])", "\\1_\\2", value, perl = TRUE)
+  value <- gsub("[^A-Za-z0-9]+", "_", value)
+  value <- gsub("_+", "_", value)
+  value <- tolower(gsub("^_|_$", "", value))
+  if (!nzchar(value)) {
+    return("facet")
+  }
+  value
+}
+
+simulation_design_variable_aliases <- function(sim_spec = NULL) {
+  facet_names <- simulation_spec_output_facet_names(sim_spec)
+  rater_alias <- if (identical(facet_names[1], "Rater")) {
+    "n_rater"
+  } else {
+    paste0("n_", simulation_design_variable_slug(facet_names[1]))
+  }
+  criterion_alias <- if (identical(facet_names[2], "Criterion")) {
+    "n_criterion"
+  } else {
+    paste0("n_", simulation_design_variable_slug(facet_names[2]))
+  }
+  assignment_alias <- if (identical(facet_names[1], "Rater")) {
+    "raters_per_person"
+  } else {
+    paste0(simulation_design_variable_slug(facet_names[1]), "_per_person")
+  }
+  stats::setNames(
+    c("n_person", rater_alias, criterion_alias, assignment_alias),
+    c("n_person", "n_rater", "n_criterion", "raters_per_person")
+  )
+}
+
+simulation_design_descriptor <- function(sim_spec = NULL) {
+  facet_names <- simulation_spec_output_facet_names(sim_spec)
+  aliases <- simulation_design_variable_aliases(sim_spec)
+  tibble::tibble(
+    role = c("person", "rater", "criterion", "assignment"),
+    canonical = c("n_person", "n_rater", "n_criterion", "raters_per_person"),
+    alias = unname(aliases[c("n_person", "n_rater", "n_criterion", "raters_per_person")]),
+    facet = c("Person", facet_names[1], facet_names[2], facet_names[1]),
+    quantity = c("persons", "facet_levels", "facet_levels", "assignments_per_person"),
+    description = c(
+      "Number of persons in the design condition.",
+      paste0("Number of ", facet_names[1], " levels in the design condition."),
+      paste0("Number of ", facet_names[2], " levels in the design condition."),
+      paste0("Number of ", facet_names[1], " assignments per person in the design condition.")
+    )
+  )
+}
+
+simulation_facet_manifest <- function(sim_spec = NULL, facet_names = NULL) {
+  if (is.null(facet_names)) {
+    facet_names <- simulation_spec_output_facet_names(sim_spec)
+    n_person <- suppressWarnings(as.integer(sim_spec$n_person %||% NA_integer_))
+    n_rater <- suppressWarnings(as.integer(sim_spec$n_rater %||% NA_integer_))
+    n_criterion <- suppressWarnings(as.integer(sim_spec$n_criterion %||% NA_integer_))
+    rater_count <- if (is.finite(n_rater)) n_rater else NULL
+    criterion_count <- if (is.finite(n_criterion)) n_criterion else NULL
+    rater_levels <- simulation_spec_role_levels(sim_spec, role = "rater", count = rater_count)
+    criterion_levels <- simulation_spec_role_levels(sim_spec, role = "criterion", count = criterion_count)
+    if (length(rater_levels) > 0L) {
+      n_rater <- length(rater_levels)
+    }
+    if (length(criterion_levels) > 0L) {
+      n_criterion <- length(criterion_levels)
+    }
+    count_values <- c(
+      n_person = n_person,
+      n_rater = n_rater,
+      n_criterion = n_criterion
+    )
+    aliases <- simulation_design_variable_aliases(sim_spec)
+  } else {
+    facet_names <- simulation_validate_output_facet_names(facet_names)
+    count_values <- c(n_person = NA_integer_, n_rater = NA_integer_, n_criterion = NA_integer_)
+    aliases <- simulation_design_variable_aliases(list(facet_names = facet_names))
+  }
+  facet_names <- unname(as.character(facet_names))
+
+  tibble::tibble(
+    planner_role = c("person", "rater", "criterion"),
+    facet = c("Person", facet_names[1], facet_names[2]),
+    facet_kind = c("person", "non_person", "non_person"),
+    level_count = unname(count_values[c("n_person", "n_rater", "n_criterion")]),
+    planning_count_variable = c("n_person", "n_rater", "n_criterion"),
+    planning_count_alias = unname(aliases[c("n_person", "n_rater", "n_criterion")]),
+    current_planner_role_supported = TRUE,
+    arbitrary_facet_branch_candidate = TRUE
+  )
+}
+
+simulation_future_facet_table <- function(sim_spec = NULL, facet_names = NULL) {
+  facet_manifest <- if (is.null(facet_names)) {
+    simulation_facet_manifest(sim_spec)
+  } else {
+    simulation_facet_manifest(facet_names = facet_names)
+  }
+  facets <- unname(as.character(facet_manifest$facet))
+  facet_kinds <- unname(as.character(facet_manifest$facet_kind))
+
+  tibble::tibble(
+    facet = facets,
+    facet_kind = facet_kinds,
+    level_count = unname(facet_manifest$level_count),
+    future_facet_key = unname(vapply(facets, simulation_design_variable_slug, character(1))),
+    future_axis_class = ifelse(
+      facet_kinds == "person",
+      "person_count",
+      "facet_level_count"
+    ),
+    current_planning_count_variable = as.character(facet_manifest$planning_count_variable),
+    current_planning_count_alias = as.character(facet_manifest$planning_count_alias),
+    current_planner_role_supported = as.logical(facet_manifest$current_planner_role_supported),
+    arbitrary_facet_branch_candidate = as.logical(facet_manifest$arbitrary_facet_branch_candidate),
+    branch_stage = "schema_only"
+  )
+}
+
+simulation_future_design_template <- function(sim_spec = NULL, facet_names = NULL) {
+  future_facet_table <- if (is.null(facet_names)) {
+    simulation_future_facet_table(sim_spec)
+  } else {
+    simulation_future_facet_table(facet_names = facet_names)
+  }
+
+  facet_counts <- stats::setNames(
+    as.list(unname(future_facet_table$level_count %||% rep(NA_integer_, nrow(future_facet_table)))),
+    as.character(future_facet_table$future_facet_key)
+  )
+
+  assignment_value <- NA_integer_
+  if (!is.null(sim_spec)) {
+    assignment_value <- as.integer(sim_spec$raters_per_person %||% NA_integer_)
+  }
+
+  list(
+    facets = facet_counts,
+    assignment = assignment_value,
+    note = paste(
+      "Schema-only stub mirroring the current design through the future-branch",
+      "`design$facets(named counts)` contract while keeping the current",
+      "assignment axis at top level."
+    )
+  )
+}
+
+
+simulation_build_ademp <- function(purpose,
+                                   design_grid,
+                                   generator_model,
+                                   generator_step_facet,
+                                   generator_assignment,
+                                   sim_spec = NULL,
+                                   estimands,
+                                   analysis_methods,
+                                   performance_measures) {
+  threshold_info <- simulation_threshold_summary(sim_spec)
+  design_variable_aliases <- simulation_design_variable_aliases(sim_spec)
+  design_descriptor <- simulation_design_descriptor(sim_spec)
+  planning_scope <- simulation_planning_scope(sim_spec)
+  planning_constraints <- simulation_planning_constraints(sim_spec)
+  planning_schema <- simulation_planning_schema(sim_spec)
+  design_variables <- simulation_design_canonical_variables(design_descriptor)
+  list(
+    aims = purpose,
+    data_generating_mechanism = list(
+      source = if (is.null(sim_spec)) "scalar_arguments" else as.character(sim_spec$source %||% "mfrm_sim_spec"),
+      model = generator_model,
+      step_facet = generator_step_facet,
+      assignment = generator_assignment,
+      latent_distribution = if (is.null(sim_spec)) "normal" else as.character(sim_spec$latent_distribution %||% "normal"),
+      threshold_mode = threshold_info$mode,
+      threshold_step_facet = threshold_info$step_facet,
+      design_variables = design_variables,
+      design_variable_aliases = design_variable_aliases,
+      design_descriptor = design_descriptor,
+      planning_scope = planning_scope,
+      planning_constraints = planning_constraints,
+      planning_schema = planning_schema
+    ),
+    estimands = estimands,
+    methods = analysis_methods,
+    performance_measures = performance_measures
+  )
+}
+
+design_eval_recovery_metrics <- function(est_levels, est_values, truth_vec) {
+  idx <- match(as.character(est_levels), names(truth_vec))
+  ok <- is.finite(idx) & is.finite(est_values)
+  if (!any(ok)) {
+    return(list(
+      raw_rmse = NA_real_,
+      raw_bias = NA_real_,
+      aligned_rmse = NA_real_,
+      aligned_bias = NA_real_
+    ))
+  }
+
+  truth_vals <- as.numeric(truth_vec[idx[ok]])
+  est_vals <- as.numeric(est_values[ok])
+  diffs <- est_vals - truth_vals
+  shift <- mean(diffs, na.rm = TRUE)
+  aligned_diffs <- diffs - shift
+
+  list(
+    raw_rmse = sqrt(mean(diffs^2, na.rm = TRUE)),
+    raw_bias = mean(diffs, na.rm = TRUE),
+    aligned_rmse = sqrt(mean(aligned_diffs^2, na.rm = TRUE)),
+    aligned_bias = mean(aligned_diffs, na.rm = TRUE)
+  )
+}
+
+design_eval_match_metric <- function(metric) {
+  switch(
+    metric,
+    separation = "MeanSeparation",
+    reliability = "MeanReliability",
+    infit = "MeanInfit",
+    outfit = "MeanOutfit",
+    misfitrate = "MeanMisfitRate",
+    severityrmse = "MeanSeverityRMSE",
+    severitybias = "MeanSeverityBias",
+    convergencerate = "ConvergenceRate",
+    elapsedsec = "MeanElapsedSec",
+    mincategorycount = "MeanMinCategoryCount",
+    stop("Unknown metric: ", metric, call. = FALSE)
+  )
+}
+
+design_eval_build_notes <- function(summary_tbl) {
+  notes <- character(0)
+  if (!is.data.frame(summary_tbl) || nrow(summary_tbl) == 0) return(notes)
+  if (any(summary_tbl$ConvergenceRate < 1, na.rm = TRUE)) {
+    notes <- c(notes, "Some design conditions did not converge in every replication.")
+  }
+  if (any(summary_tbl$MeanMinCategoryCount < 10, na.rm = TRUE)) {
+    notes <- c(notes, "Some design conditions produced sparse score categories (< 10 observations).")
+  }
+  if (any(summary_tbl$MeanSeparation < 2, na.rm = TRUE)) {
+    notes <- c(notes, "Some design conditions yielded low facet separation (< 2.0).")
+  }
+  if (any(grepl("^Mcse", names(summary_tbl)))) {
+    notes <- c(notes, "MCSE columns summarize finite-replication uncertainty around the reported means and rates.")
+  }
+  if ("RecoveryComparableRate" %in% names(summary_tbl) &&
+      any(summary_tbl$RecoveryComparableRate < 1, na.rm = TRUE)) {
+    notes <- c(
+      notes,
+      "Recovery metrics are reported only for design rows where generator and fitted model contracts align; rows with generator-fit mismatches set recovery fields to NA."
+    )
+  }
+  notes
+}
+
+design_eval_summarize_results <- function(results, rep_overview, design_variable_aliases = NULL) {
+  results_tbl <- tibble::as_tibble(results)
+  rep_tbl <- tibble::as_tibble(rep_overview)
+  design_descriptor <- simulation_object_design_descriptor(list(results = results_tbl, rep_overview = rep_tbl, design_variable_aliases = design_variable_aliases))
+  design_vars <- simulation_design_canonical_variables(design_descriptor)
+  grouping_vars <- c("design_id", "Facet", design_vars)
+  arrange_vars <- c("Facet", design_vars)
+
+  design_summary <- tibble::tibble()
+  if (nrow(results_tbl) > 0) {
+    design_summary <- results_tbl |>
+      dplyr::group_by(dplyr::across(dplyr::all_of(grouping_vars))) |>
+      dplyr::summarize(
+        Reps = dplyr::n(),
+        ConvergenceRate = mean(.data$Converged, na.rm = TRUE),
+        McseConvergenceRate = simulation_mcse_proportion(.data$Converged),
+        MeanSeparation = mean(.data$Separation, na.rm = TRUE),
+        SdSeparation = design_eval_safe_sd(.data$Separation),
+        McseSeparation = simulation_mcse_mean(.data$Separation),
+        MeanReliability = mean(.data$Reliability, na.rm = TRUE),
+        McseReliability = simulation_mcse_mean(.data$Reliability),
+        MeanInfit = mean(.data$MeanInfit, na.rm = TRUE),
+        McseInfit = simulation_mcse_mean(.data$MeanInfit),
+        MeanOutfit = mean(.data$MeanOutfit, na.rm = TRUE),
+        McseOutfit = simulation_mcse_mean(.data$MeanOutfit),
+        MeanMisfitRate = mean(.data$MisfitRate, na.rm = TRUE),
+        McseMisfitRate = simulation_mcse_mean(.data$MisfitRate),
+        MeanSeverityRMSE = mean(.data$SeverityRMSE, na.rm = TRUE),
+        McseSeverityRMSE = simulation_mcse_mean(.data$SeverityRMSE),
+        MeanSeverityBias = mean(.data$SeverityBias, na.rm = TRUE),
+        McseSeverityBias = simulation_mcse_mean(.data$SeverityBias),
+        MeanSeverityRMSERaw = mean(.data$SeverityRMSERaw, na.rm = TRUE),
+        McseSeverityRMSERaw = simulation_mcse_mean(.data$SeverityRMSERaw),
+        MeanSeverityBiasRaw = mean(.data$SeverityBiasRaw, na.rm = TRUE),
+        McseSeverityBiasRaw = simulation_mcse_mean(.data$SeverityBiasRaw),
+        RecoveryComparableRate = mean(.data$RecoveryComparable, na.rm = TRUE),
+        RecoveryBasis = paste(sort(unique(as.character(.data$RecoveryBasis))), collapse = "; "),
+        MeanElapsedSec = mean(.data$ElapsedSec, na.rm = TRUE),
+        McseElapsedSec = simulation_mcse_mean(.data$ElapsedSec),
+        MeanMinCategoryCount = mean(.data$MinCategoryCount, na.rm = TRUE),
+        McseMinCategoryCount = simulation_mcse_mean(.data$MinCategoryCount),
+        .groups = "drop"
+      ) |>
+      dplyr::arrange(!!!rlang::syms(arrange_vars))
+    design_summary <- simulation_append_design_alias_columns(design_summary, design_variable_aliases)
+  }
+
+  overview <- tibble::tibble(
+    Designs = dplyr::n_distinct(rep_tbl$design_id),
+    Replications = nrow(rep_tbl),
+    SuccessfulRuns = sum(rep_tbl$RunOK, na.rm = TRUE),
+    ConvergedRuns = sum(rep_tbl$Converged, na.rm = TRUE),
+    MeanElapsedSec = design_eval_safe_mean(rep_tbl$ElapsedSec)
+  )
+
+  list(
+    overview = overview,
+    design_summary = design_summary,
+    notes = design_eval_build_notes(design_summary)
+  )
+}
+
+#' Evaluate MFRM design conditions by repeated simulation
+#'
+#' @param n_person Vector of person counts to evaluate.
+#' @param n_rater Vector of rater counts to evaluate.
+#' @param n_criterion Vector of criterion counts to evaluate.
+#' @param raters_per_person Vector of rater assignments per person.
+#' @param design Optional named design-grid override supplied as a named list,
+#'   named vector, or one-row data frame. Names may use canonical variables
+#'   (`n_person`, `n_rater`, `n_criterion`, `raters_per_person`), current
+#'   public aliases implied by `sim_spec` (for example `n_judge`, `n_task`,
+#'   `judge_per_person`), or role keywords (`person`, `rater`, `criterion`,
+#'   `assignment`). Values may be vectors. The schema-only future branch input
+#'   `design$facets = c(person = ..., judge = ..., task = ...)` is also
+#'   accepted for the currently exposed facet keys. Do not specify the same
+#'   variable through both `design` and the scalar design-grid arguments.
+#' @param reps Number of replications per design condition.
+#' @param score_levels Number of ordered score categories.
+#' @param theta_sd Standard deviation of simulated person measures.
+#' @param rater_sd Standard deviation of simulated rater severities.
+#' @param criterion_sd Standard deviation of simulated criterion difficulties.
+#' @param noise_sd Optional observation-level noise added to the linear predictor.
+#' @param step_span Spread of step thresholds on the logit scale.
+#' @param fit_method Estimation method passed to [fit_mfrm()].
+#' @param model Measurement model passed to [fit_mfrm()]. The current design
+#'   evaluator supports `RSM` and `PCM`; bounded `GPCM` is accepted only
+#'   to produce an explicit unsupported-path error.
+#' @param step_facet Step facet passed to [fit_mfrm()] when `model = "PCM"`.
+#'   When left `NULL`, the function inherits the generator step facet from
+#'   `sim_spec` when available and otherwise defaults to `"Criterion"`.
+#' @param maxit Maximum iterations passed to [fit_mfrm()].
+#' @param quad_points Quadrature points for `fit_method = "MML"`.
+#' @param residual_pca Residual PCA mode passed to [diagnose_mfrm()].
+#' @param sim_spec Optional output from [build_mfrm_sim_spec()] or
+#'   [extract_mfrm_sim_spec()] used as the base data-generating mechanism.
+#'   When supplied, the design grid still varies `n_person`, `n_rater`,
+#'   `n_criterion`, and `raters_per_person`, but latent-spread assumptions,
+#'   thresholds, and other generator settings come from `sim_spec`.
+#'   If `sim_spec` contains step-facet-specific thresholds, the design grid may
+#'   not vary the number of levels for that step facet away from the
+#'   specification. If `sim_spec` stores an active latent-regression population
+#'   generator, this helper currently requires `fit_method = "MML"` so each
+#'   replication can refit the population model.
+#' @param seed Optional seed for reproducible replications.
+#' @param parallel Parallelisation strategy for the rep loop within
+#'   each design row. `"no"` (default) runs serially; `"future"`
+#'   uses `future.apply::future_lapply` and respects whatever
+#'   `future::plan()` is currently active. The Suggests package
+#'   `future.apply` must be installed for the parallel path to
+#'   activate; otherwise the call falls back to serial execution
+#'   with a single message. Cross-design-row parallelism is planned
+#'   for a future release.
+#'
+#' @details
+#' This helper runs a compact Monte Carlo design study for common rater-by-item
+#' many-facet settings.
+#'
+#' For each design condition, the function:
+#' 1. generates synthetic data with [simulate_mfrm_data()]
+#' 2. fits the requested MFRM with [fit_mfrm()]
+#' 3. computes diagnostics with [diagnose_mfrm()]
+#' 4. stores recovery and precision summaries by facet
+#'
+#' The result is intended for planning questions such as:
+#' - how many raters are needed for stable rater separation?
+#' - how does `raters_per_person` affect severity recovery?
+#' - when do category counts become too sparse for comfortable interpretation?
+#'
+#' This is a **parametric simulation study**. It does not take one observed
+#' design (for example, 4 raters x 30 persons x 3 criteria) and analytically
+#' extrapolate what would happen under a different design (for example,
+#' 2 raters x 40 persons x 5 criteria). Instead, you specify a design grid and
+#' data-generating assumptions (latent spread, facet spread, thresholds, noise,
+#' and scoring structure), and the function repeatedly generates synthetic data
+#' under those assumptions.
+#'
+#' When you want the simulated conditions to resemble an existing study, use
+#' substantive knowledge or estimates from that study to choose
+#' `theta_sd`, `rater_sd`, `criterion_sd`, `score_levels`, and related
+#' settings before running the design evaluation.
+#'
+#' When `sim_spec` is supplied, the function uses it as the explicit
+#' data-generating mechanism. This is the recommended route when you want a
+#' design study to stay close to a previously fitted run while still varying the
+#' candidate sample sizes or rater-assignment counts.
+#'
+#' If that specification also stores a latent-regression population generator,
+#' each replication carries forward the simulated one-row-per-person background
+#' data and refits the MML population-model branch. This remains a scenario
+#' study under explicit assumptions; it is not a closed-form predictive
+#' distribution for one future administration.
+#'
+#' First-release `GPCM` is not yet available in this design-evaluation helper.
+#' The missing pieces are not just software wiring: the current package still
+#' needs a validated slope-generating simulation contract and downstream
+#' diagnostics compatible with the generalized ordered kernel. More broadly,
+#' the current planning layer is still role-based for exactly two non-person
+#' facets (`rater`-like and `criterion`-like), even though the estimation core
+#' supports arbitrary facet counts.
+#'
+#' Recovery metrics are reported only when the generator and fitted model target
+#' the same facet-parameter contract. In practice this means the same
+#' `model`, and for `PCM`, the same `step_facet`. When these do not align,
+#' recovery fields are set to `NA` and the output records the reason. Even when
+#' these contract checks pass, the recovery summaries still assume compatible
+#' orientation and anchoring conventions across the generator and fitted model.
+#'
+#' @section Reported metrics:
+#' Facet-level simulation results include:
+#' - `Separation` (\eqn{G = \mathrm{SD_{adj}} / \mathrm{RMSE}}):
+#'   how many statistically distinct strata the facet resolves.
+#' - `Reliability` (\eqn{G^2 / (1 + G^2)}): analogous to Cronbach's
+#'   \eqn{\alpha} for the reproducibility of element ordering.
+#' - `Strata` (\eqn{(4G + 1) / 3}): number of distinguishable groups.
+#' - Mean `Infit` and `Outfit`: average fit mean-squares across elements.
+#' - `MisfitRate`: share of elements with \eqn{|\mathrm{ZSTD}| > 2}.
+#' - `SeverityRMSE`: root-mean-square error of recovered parameters vs
+#'   the known truth **after facet-wise mean alignment**, so that the
+#'   usual Rasch/MFRM location indeterminacy does not inflate recovery
+#'   error. This quantity is reported only when the generator and fitted model
+#'   target the same facet-parameter contract.
+#' - `SeverityBias`: mean signed recovery error after the same alignment;
+#'   values near zero are expected. This is likewise omitted when the
+#'   generator/fitted-model contract does not align.
+#'
+#' @section Interpreting output:
+#' Start with `summary(x)$design_summary`, then plot one focal metric at a time
+#' (for example rater `Separation` or criterion `SeverityRMSE`).
+#'
+#' Higher separation/reliability is generally better, whereas lower
+#' `SeverityRMSE`, `MeanMisfitRate`, and `MeanElapsedSec` are preferable.
+#'
+#' When choosing among designs, look for the point where increasing
+#' `n_person` or `raters_per_person` yields diminishing returns in
+#' separation and RMSE---this identifies the cost-effective design
+#' frontier.  `ConvergedRuns / reps` should be near 1.0; low
+#' convergence rates indicate the design is too small for the chosen
+#' estimation method.
+#'
+#' This is a Monte Carlo design-evaluation helper. It can visualize how
+#' separation, reliability, strata, RMSE, and fit-screen rates change when
+#' you vary person, rater, criterion, or assignment counts. It is not a
+#' closed-form generalizability-theory D-study calculator; use
+#' [mfrm_generalizability()] for observed variance-component summaries and
+#' treat analytic G/Phi coefficient planning as outside the current scope.
+#'
+#' @section References:
+#' The simulation logic follows the general Monte Carlo / operating-characteristic
+#' framework described by Morris, White, and Crowther (2019) and the
+#' ADEMP-oriented planning/reporting guidance summarized for psychology by
+#' Siepe et al. (2024). In `mfrmr`, `evaluate_mfrm_design()` is a practical
+#' many-facet design-planning wrapper rather than a direct reproduction of one
+#' published simulation study.
+#'
+#' - Morris, T. P., White, I. R., & Crowther, M. J. (2019).
+#'   *Using simulation studies to evaluate statistical methods*.
+#'   Statistics in Medicine, 38(11), 2074-2102.
+#' - Siepe, B. S., Bartos, F., Morris, T. P., Boulesteix, A.-L., Heck, D. W.,
+#'   & Pawel, S. (2024). *Simulation studies for methodological research in
+#'   psychology: A standardized template for planning, preregistration, and
+#'   reporting*. Psychological Methods.
+#'
+#' @return An object of class `mfrm_design_evaluation` with components:
+#' - `design_grid`: evaluated design conditions. When `sim_spec` carries custom
+#'   public facet names, matching design-variable alias columns are included
+#'   alongside the canonical internal columns.
+#' - `results`: facet-level replicate results, with the same design-variable
+#'   alias columns when applicable.
+#' - `rep_overview`: run-level status and timing, with the same design-variable
+#'   alias columns when applicable.
+#' - `design_descriptor`: role-based design-variable metadata used by planning
+#'   summaries and plots
+#' - `planning_scope`: explicit record of the current planning contract
+#' - `planning_constraints`: explicit record of which design variables remain
+#'   mutable under the current simulation specification
+#' - `planning_schema`: combined planner-schema contract bundling the role
+#'   descriptor, scope boundary, and current mutability map
+#' - `settings`: simulation settings
+#' - `ademp`: simulation-study metadata (aims, DGM, estimands, methods, performance measures)
+#' @seealso [simulate_mfrm_data()], [summary.mfrm_design_evaluation], [plot.mfrm_design_evaluation]
+#' @examples
+#' \donttest{
+#' sim_eval <- suppressWarnings(evaluate_mfrm_design(
+#'   design = list(person = c(8, 12), rater = 2, criterion = 2, assignment = 1),
+#'   reps = 1,
+#'   maxit = 8,
+#'   seed = 123
+#' ))
+#' s_eval <- summary(sim_eval)
+#' s_eval$design_summary[, c("Facet", "n_person", "MeanSeparation", "MeanSeverityRMSE")]
+#' p_eval <- plot(sim_eval, facet = "Rater", metric = "separation", x_var = "n_person", draw = FALSE)
+#' names(p_eval)
+#' }
+#' @export
+evaluate_mfrm_design <- function(n_person = c(30, 50, 100),
+                                 n_rater = c(3, 5),
+                                 n_criterion = c(3, 5),
+                                 raters_per_person = n_rater,
+                                 design = NULL,
+                                 reps = 10,
+                                 score_levels = 4,
+                                 theta_sd = 1,
+                                 rater_sd = 0.35,
+                                 criterion_sd = 0.25,
+                                 noise_sd = 0,
+                                 step_span = 1.4,
+                                 fit_method = c("JML", "MML"),
+                                 model = c("RSM", "PCM", "GPCM"),
+                                 step_facet = NULL,
+                                 maxit = 25,
+                                 quad_points = 7,
+                                 residual_pca = c("none", "overall", "facet", "both"),
+                                 sim_spec = NULL,
+                                 seed = NULL,
+                                 parallel = c("no", "future")) {
+  fit_method <- match.arg(fit_method)
+  model <- match.arg(model)
+  parallel <- match.arg(parallel)
+  # `parallel = "future"` requires the `future.apply` Suggests to be
+  # installed AND a `future::plan()` to be active. We honour the
+  # request when both are satisfied; otherwise we fall back to the
+  # serial implementation with a single message so the run still
+  # completes.
+  if (identical(parallel, "future") &&
+      !requireNamespace("future.apply", quietly = TRUE)) {
+    message("`evaluate_mfrm_design(parallel = 'future')` requires the ",
+            "`future.apply` package (in Suggests). Falling back to ",
+            "serial execution.")
+    parallel <- "no"
+  }
+  if (identical(parallel, "future")) {
+    # The argument is exposed for forward compatibility. The current
+    # release threads the request through the rep loop via
+    # `future.apply::future_lapply` only when no per-rep state is
+    # accumulated upstream. Full parallelisation across design rows
+    # is planned for a future release; until then, set
+    # `future::plan(multisession, workers = N)` and rerun to use
+    # parallel rep execution within each design row.
+    message("`evaluate_mfrm_design(parallel = 'future')` currently ",
+            "parallelises the rep loop within each design row. ",
+            "Cross-design-row parallelism is planned for a future release.")
+  }
+  if (identical(model, "GPCM")) {
+    stop(
+      "`evaluate_mfrm_design()` does not yet support bounded `GPCM`. ",
+      "Design evaluation still depends on simulation and diagnostics layers that remain validated only for `RSM` / `PCM`. ",
+      gpcm_planning_scope_rationale(),
+      call. = FALSE
+    )
+  }
+  residual_pca <- match.arg(residual_pca)
+  if (!is.null(sim_spec) && !inherits(sim_spec, "mfrm_sim_spec")) {
+    stop("`sim_spec` must be output from build_mfrm_sim_spec() or extract_mfrm_sim_spec().", call. = FALSE)
+  }
+  if (!is.null(sim_spec) && identical(as.character(sim_spec$model %||% NA_character_), "GPCM")) {
+    stop(
+      "`evaluate_mfrm_design()` does not yet support bounded `GPCM` simulation specifications. ",
+      "Direct data generation is available, but design evaluation still depends on diagnostics and recovery layers validated only for `RSM` / `PCM`. ",
+      gpcm_planning_scope_rationale(),
+      call. = FALSE
+    )
+  }
+  if (!is.null(sim_spec) &&
+      isTRUE((sim_spec$population %||% simulation_empty_population_spec())$active) &&
+      !identical(fit_method, "MML")) {
+    stop(
+      "Simulation specifications with an active latent-regression population generator currently require `fit_method = \"MML\"`.",
+      call. = FALSE
+    )
+  }
+  reps <- as.integer(reps[1])
+  if (!is.finite(reps) || reps < 1L) stop("`reps` must be >= 1.", call. = FALSE)
+  supplied_counts <- intersect(
+    names(as.list(match.call(expand.dots = FALSE))[-1]),
+    c("n_person", "n_rater", "n_criterion", "raters_per_person")
+  )
+
+  design_meta <- simulation_build_design_grid(
+    n_person = n_person,
+    n_rater = n_rater,
+    n_criterion = n_criterion,
+    raters_per_person = raters_per_person,
+    design = design,
+    sim_spec = sim_spec,
+    id_prefix = "D",
+    explicit_scalar_names = supplied_counts
+  )
+  design_grid <- design_meta$canonical
+  design_grid_public <- design_meta$public
+
+  generator_model <- if (is.null(sim_spec)) model else sim_spec$model
+  base_facet_names <- if (is.null(sim_spec)) simulation_default_output_facet_names() else simulation_spec_output_facet_names(sim_spec)
+  generator_step_facet <- if (is.null(sim_spec)) if (identical(generator_model, "PCM")) base_facet_names[2] else NA_character_ else sim_spec$step_facet
+  generator_assignment <- if (is.null(sim_spec)) "design_dependent" else sim_spec$assignment
+  design_variable_aliases <- design_meta$aliases
+  design_descriptor <- design_meta$descriptor
+  planning_scope <- simulation_planning_scope(sim_spec)
+  planning_constraints <- simulation_planning_constraints(sim_spec)
+  planning_schema <- simulation_planning_schema(sim_spec)
+  fit_step_facet <- simulation_resolve_fit_step_facet(model, step_facet, generator_step_facet)
+  recovery_contract <- simulation_recovery_contract(
+    generator_model = generator_model,
+    generator_step_facet = generator_step_facet,
+    fitted_model = model,
+    fitted_step_facet = fit_step_facet
+  )
+
+  seeds <- with_preserved_rng_seed(
+    seed,
+    sample.int(.Machine$integer.max, size = nrow(design_grid) * reps, replace = FALSE)
+  )
+  seed_idx <- 0L
+
+  result_rows <- vector("list", nrow(design_grid) * reps * 3L)
+  rep_rows <- vector("list", nrow(design_grid) * reps)
+  result_idx <- 0L
+  rep_idx <- 0L
+
+  # Design-evaluation runs a full fit + diagnose per (design, rep)
+  # cell, so the wall-clock easily reaches tens of seconds. Surface a
+  # progress bar over the (design x reps) grid so users can see how
+  # far the search has advanced.
+  total_cells <- nrow(design_grid) * reps
+  design_progress_id <- NULL
+  if (total_cells > 1L) {
+    design_progress_id <- cli::cli_progress_bar(
+      name = "evaluate_mfrm_design",
+      total = total_cells,
+      format = paste(
+        "{cli::pb_spin} design-eval cells {cli::pb_current}/{cli::pb_total}",
+        "[{cli::pb_elapsed}  eta {cli::pb_eta}]"
+      ),
+      clear = TRUE,
+      .envir = parent.frame()
+    )
+    on.exit(cli::cli_progress_done(id = design_progress_id), add = TRUE)
+  }
+
+  for (i in seq_len(nrow(design_grid))) {
+    design <- design_grid[i, , drop = FALSE]
+    row_spec <- if (is.null(sim_spec)) {
+      NULL
+    } else {
+      simulation_override_spec_design(
+        sim_spec,
+        n_person = design$n_person,
+        n_rater = design$n_rater,
+        n_criterion = design$n_criterion,
+        raters_per_person = design$raters_per_person
+      )
+    }
+    row_score_levels <- if (is.null(row_spec)) score_levels else row_spec$score_levels
+    row_facet_names <- if (is.null(row_spec)) simulation_default_output_facet_names() else simulation_spec_output_facet_names(row_spec)
+    for (rep in seq_len(reps)) {
+      if (!is.null(design_progress_id)) {
+        cli::cli_progress_update(id = design_progress_id,
+                                  set = (i - 1L) * reps + rep - 1L)
+      }
+      seed_idx <- seed_idx + 1L
+      sim <- if (is.null(row_spec)) {
+        simulate_mfrm_data(
+          n_person = design$n_person,
+          n_rater = design$n_rater,
+          n_criterion = design$n_criterion,
+          raters_per_person = design$raters_per_person,
+          score_levels = score_levels,
+          theta_sd = theta_sd,
+          rater_sd = rater_sd,
+          criterion_sd = criterion_sd,
+          noise_sd = noise_sd,
+          step_span = step_span,
+          seed = seeds[seed_idx]
+        )
+      } else {
+        simulate_mfrm_data(sim_spec = row_spec, seed = seeds[seed_idx])
+      }
+
+      t0 <- proc.time()[["elapsed"]]
+      fit_args <- list(
+        data = sim,
+        person = "Person",
+        facets = row_facet_names,
+        score = "Score",
+        method = fit_method,
+        model = model,
+        maxit = maxit
+      )
+      if (identical(model, "PCM")) fit_args$step_facet <- fit_step_facet
+      if ("Weight" %in% names(sim)) fit_args$weight <- "Weight"
+      if (identical(fit_method, "MML")) fit_args$quad_points <- quad_points
+      sim_population <- attr(sim, "mfrm_population_data")
+      if (is.list(sim_population) && isTRUE(sim_population$active)) {
+        fit_args$population_formula <- sim_population$population_formula
+        fit_args$person_data <- sim_population$person_data
+        fit_args$person_id <- sim_population$person_id
+        fit_args$population_policy <- sim_population$population_policy
+      }
+
+      fit <- tryCatch(do.call(fit_mfrm, fit_args), error = function(e) e)
+      diag <- if (inherits(fit, "error")) fit else {
+        tryCatch(
+          diagnose_mfrm(fit, residual_pca = residual_pca),
+          error = function(e) e
+        )
+      }
+      elapsed <- proc.time()[["elapsed"]] - t0
+      truth <- attr(sim, "mfrm_truth")
+      min_category_count <- min(tabulate(sim$Score, nbins = row_score_levels))
+
+      rep_idx <- rep_idx + 1L
+      rep_row <- tibble::tibble(
+        design_id = design$design_id,
+        rep = rep,
+        n_person = design$n_person,
+        n_rater = design$n_rater,
+        n_criterion = design$n_criterion,
+        raters_per_person = design$raters_per_person,
+        Observations = nrow(sim),
+        MinCategoryCount = min_category_count,
+        ElapsedSec = elapsed,
+        RunOK = FALSE,
+        Converged = FALSE,
+        Error = NA_character_
+      )
+
+      if (inherits(fit, "error")) {
+        rep_row$Error <- conditionMessage(fit)
+        rep_rows[[rep_idx]] <- rep_row
+        next
+      }
+      if (inherits(diag, "error")) {
+        rep_row$Error <- conditionMessage(diag)
+        rep_rows[[rep_idx]] <- rep_row
+        next
+      }
+
+      converged <- isTRUE(as.logical(fit$summary$Converged[1]))
+      rep_row$RunOK <- TRUE
+      rep_row$Converged <- converged
+      rep_rows[[rep_idx]] <- rep_row
+
+      reliability_tbl <- tibble::as_tibble(diag$reliability)
+      fit_tbl <- tibble::as_tibble(diag$fit)
+      measure_tbl <- tibble::as_tibble(diag$measures)
+      reliability_split <- split(reliability_tbl, reliability_tbl$Facet)
+      fit_split <- split(fit_tbl, fit_tbl$Facet)
+      measure_split <- split(measure_tbl, measure_tbl$Facet)
+
+      for (facet in names(reliability_split)) {
+        rel_row <- tibble::as_tibble(reliability_split[[facet]])
+        facet_fit <- tibble::as_tibble(fit_split[[facet]] %||% tibble::tibble())
+        facet_meas <- tibble::as_tibble(measure_split[[facet]] %||% tibble::tibble())
+        truth_vec <- design_eval_extract_truth(truth, facet)
+
+        severity_rmse <- NA_real_
+        severity_bias <- NA_real_
+        severity_rmse_raw <- NA_real_
+        severity_bias_raw <- NA_real_
+        if (isTRUE(recovery_contract$comparable) &&
+            !is.null(truth_vec) && nrow(facet_meas) > 0 &&
+            "Level" %in% names(facet_meas) && "Estimate" %in% names(facet_meas)) {
+          recovery <- design_eval_recovery_metrics(
+            est_levels = facet_meas$Level,
+            est_values = suppressWarnings(as.numeric(facet_meas$Estimate)),
+            truth_vec = truth_vec
+          )
+          severity_rmse <- recovery$aligned_rmse
+          severity_bias <- recovery$aligned_bias
+          severity_rmse_raw <- recovery$raw_rmse
+          severity_bias_raw <- recovery$raw_bias
+        }
+
+        misfit_rate <- NA_real_
+        if (nrow(facet_fit) > 0) {
+          z_in <- suppressWarnings(as.numeric(facet_fit$InfitZSTD))
+          z_out <- suppressWarnings(as.numeric(facet_fit$OutfitZSTD))
+          misfit_rate <- mean(abs(z_in) > 2 | abs(z_out) > 2, na.rm = TRUE)
+        }
+
+        result_idx <- result_idx + 1L
+        result_rows[[result_idx]] <- tibble::tibble(
+          design_id = design$design_id,
+          rep = rep,
+          Facet = facet,
+          n_person = design$n_person,
+          n_rater = design$n_rater,
+          n_criterion = design$n_criterion,
+          raters_per_person = design$raters_per_person,
+          Observations = nrow(sim),
+          MinCategoryCount = min_category_count,
+          ElapsedSec = elapsed,
+          Converged = converged,
+          GeneratorModel = generator_model,
+          GeneratorStepFacet = generator_step_facet,
+          FitModel = model,
+          FitStepFacet = fit_step_facet,
+          RecoveryComparable = recovery_contract$comparable,
+          RecoveryBasis = recovery_contract$basis,
+          Levels = suppressWarnings(as.integer(rel_row$Levels[1])),
+          Separation = suppressWarnings(as.numeric(rel_row$Separation[1])),
+          Strata = suppressWarnings(as.numeric(rel_row$Strata[1])),
+          Reliability = suppressWarnings(as.numeric(rel_row$Reliability[1])),
+          MeanInfit = suppressWarnings(as.numeric(rel_row$MeanInfit[1])),
+          MeanOutfit = suppressWarnings(as.numeric(rel_row$MeanOutfit[1])),
+          MisfitRate = misfit_rate,
+          SeverityRMSE = severity_rmse,
+          SeverityBias = severity_bias,
+          SeverityRMSERaw = severity_rmse_raw,
+          SeverityBiasRaw = severity_bias_raw
+        )
+      }
+    }
+  }
+
+  results <- dplyr::bind_rows(result_rows[seq_len(result_idx)])
+  rep_overview <- dplyr::bind_rows(rep_rows[seq_len(rep_idx)])
+  results <- simulation_append_design_alias_columns(results, design_variable_aliases)
+  rep_overview <- simulation_append_design_alias_columns(rep_overview, design_variable_aliases)
+  ademp <- simulation_build_ademp(
+    purpose = "Assess many-facet design conditions via repeated parametric simulation under explicit data-generating assumptions.",
+    design_grid = design_grid,
+    generator_model = generator_model,
+    generator_step_facet = generator_step_facet,
+    generator_assignment = generator_assignment,
+    sim_spec = sim_spec,
+    estimands = c(
+      "Facet separation, reliability, and strata",
+      "Mean infit/outfit and misfit rate",
+      "Aligned facet-parameter recovery RMSE and bias",
+      "Convergence rate and elapsed time"
+    ),
+    analysis_methods = list(
+      fit_method = fit_method,
+      fitted_model = model,
+      maxit = maxit,
+      quad_points = if (identical(fit_method, "MML")) quad_points else NA_integer_,
+      residual_pca = residual_pca
+    ),
+    performance_measures = c(
+      "Mean performance across replications",
+      "MCSE for means and rates",
+      "Convergence rate",
+      "Sparse-category warning rate"
+    )
+  )
+
+  structure(
+    list(
+      design_grid = design_grid_public,
+      results = results,
+      rep_overview = rep_overview,
+      design_descriptor = design_descriptor,
+      planning_scope = planning_scope,
+      planning_constraints = planning_constraints,
+      planning_schema = planning_schema,
+      settings = list(
+        reps = reps,
+        score_levels = score_levels,
+        theta_sd = theta_sd,
+        rater_sd = rater_sd,
+        criterion_sd = criterion_sd,
+        noise_sd = noise_sd,
+        step_span = step_span,
+        fit_method = fit_method,
+        model = model,
+        step_facet = fit_step_facet,
+        maxit = maxit,
+        quad_points = quad_points,
+        residual_pca = residual_pca,
+        sim_spec = sim_spec,
+        facet_names = stats::setNames(base_facet_names, c("rater", "criterion")),
+        design_variable_aliases = design_variable_aliases,
+        design_descriptor = design_descriptor,
+        planning_scope = planning_scope,
+        planning_constraints = planning_constraints,
+        planning_schema = planning_schema,
+        generator_model = generator_model,
+        generator_step_facet = generator_step_facet,
+        generator_assignment = generator_assignment,
+        recovery_comparable = recovery_contract$comparable,
+        recovery_basis = recovery_contract$basis,
+        seed = seed
+      ),
+      ademp = ademp
+    ),
+    class = "mfrm_design_evaluation"
+  )
+}
+
+#' Summarize a design-simulation study
+#'
+#' @param object Output from [evaluate_mfrm_design()].
+#' @param digits Number of digits used in the returned numeric summaries.
+#' @param ... Reserved for generic compatibility.
+#'
+#' @details
+#' The summary emphasizes condition-level averages that are useful for practical
+#' design planning, especially:
+#' - convergence rate
+#' - separation and reliability by facet
+#' - severity recovery RMSE
+#' - mean misfit rate
+#'
+#' @return An object of class `summary.mfrm_design_evaluation` with components:
+#' - `overview`: run-level overview
+#' - `design_summary`: aggregated design-by-facet metrics, with design-variable
+#'   alias columns when applicable
+#' - `ademp`: simulation-study metadata carried forward from the original object
+#' - `facet_names`: public facet labels carried from the simulation specification
+#' - `design_variable_aliases`: accepted public aliases for design variables
+#' - `design_descriptor`: role-based design-variable metadata
+#' - `planning_scope`: explicit record of the current planning contract
+#' - `planning_constraints`: explicit record of mutable/locked design variables
+#' - `planning_schema`: combined planner-schema contract
+#' - `future_branch_active_summary`: compact deterministic summary of the
+#'   schema-only future arbitrary-facet planning branch embedded in the current
+#'   planning schema
+#' - `notes`: short interpretation notes
+#' @seealso [evaluate_mfrm_design()], [plot.mfrm_design_evaluation]
+#' @examples
+#' \donttest{
+#' sim_eval <- suppressWarnings(evaluate_mfrm_design(
+#'   n_person = c(8, 12),
+#'   n_rater = 2,
+#'   n_criterion = 2,
+#'   raters_per_person = 1,
+#'   reps = 1,
+#'   maxit = 8,
+#'   seed = 123
+#' ))
+#' s <- summary(sim_eval)
+#' s$overview
+#' head(s$design_summary)
+#' }
+#' @export
+summary.mfrm_design_evaluation <- function(object, digits = 3, ...) {
+  if (!is.list(object) || is.null(object$results) || is.null(object$rep_overview)) {
+    stop("`object` must be output from evaluate_mfrm_design().")
+  }
+  digits <- max(0L, as.integer(digits[1]))
+  out <- design_eval_summarize_results(
+    object$results,
+    object$rep_overview,
+    design_variable_aliases = simulation_object_design_variable_aliases(object)
+  )
+
+  round_df <- function(df) {
+    if (!is.data.frame(df) || nrow(df) == 0) return(df)
+    num_cols <- vapply(df, is.numeric, logical(1))
+    df[num_cols] <- lapply(df[num_cols], round, digits = digits)
+    df
+  }
+
+  out$overview <- round_df(out$overview)
+  out$design_summary <- round_df(out$design_summary)
+  out$ademp <- object$ademp %||% NULL
+  out$facet_names <- object$settings$facet_names %||% stats::setNames(simulation_default_output_facet_names(), c("rater", "criterion"))
+  out$design_variable_aliases <- simulation_object_design_variable_aliases(object)
+  out$design_descriptor <- simulation_object_design_descriptor(object)
+  out$planning_scope <- simulation_object_planning_scope(object)
+  out$planning_constraints <- simulation_object_planning_constraints(object)
+  out$planning_schema <- simulation_object_planning_schema(object)
+  out$future_branch_active_summary <- simulation_compact_future_branch_active_summary(
+    object,
+    digits = digits
+  )
+  out$digits <- digits
+  scope_note <- simulation_planning_scope_note(out$planning_scope)
+  if (length(scope_note) > 0L && !scope_note %in% out$notes) {
+    out$notes <- c(out$notes, scope_note)
+  }
+  constraint_note <- simulation_planning_constraints_note(out$planning_constraints)
+  if (length(constraint_note) > 0L && !constraint_note %in% out$notes) {
+    out$notes <- c(out$notes, constraint_note)
+  }
+  schema_note <- simulation_planning_schema_note(out$planning_schema)
+  if (length(schema_note) > 0L && !schema_note %in% out$notes) {
+    out$notes <- c(out$notes, schema_note)
+  }
+  if (inherits(out$future_branch_active_summary, "summary.mfrm_future_branch_active_branch")) {
+    out$notes <- c(
+      out$notes,
+      "A deterministic future arbitrary-facet planning scaffold is embedded in `future_branch_active_summary`; it reports structural bookkeeping and conservative recommendation logic, not Monte Carlo performance."
+    )
+  }
+  out$notes <- unique(out$notes)
+  class(out) <- "summary.mfrm_design_evaluation"
+  out
+}
+
+#' @export
+print.summary.mfrm_design_evaluation <- function(x, ...) {
+  digits <- max(0L, as.integer(x$digits %||% 3L))
+  round_df <- function(df) {
+    if (!is.data.frame(df) || nrow(df) == 0) return(df)
+    num_cols <- vapply(df, is.numeric, logical(1))
+    df[num_cols] <- lapply(df[num_cols], round, digits = digits)
+    df
+  }
+  preview_df <- function(df, n = 10L) {
+    if (!is.data.frame(df) || nrow(df) == 0) return(df)
+    utils::head(df, n = n)
+  }
+
+  cat("mfrmr Design Evaluation Summary\n")
+  if (!is.null(x$overview) && nrow(x$overview) > 0) {
+    cat("\nOverview\n")
+    print(round_df(as.data.frame(x$overview)), row.names = FALSE)
+  }
+  if (!is.null(x$design_summary) && nrow(x$design_summary) > 0) {
+    cat("\nDesign summary (preview)\n")
+    print(round_df(as.data.frame(preview_df(x$design_summary))), row.names = FALSE)
+  }
+  print_compact_future_branch_active_summary(
+    x$future_branch_active_summary %||% NULL,
+    digits = digits
+  )
+  if (is.list(x$ademp) && length(x$ademp) > 0L) {
+    cat("\nADEMP metadata\n")
+    cat(" - aims\n")
+    cat(" - data_generating_mechanism\n")
+    cat(" - estimands\n")
+    cat(" - methods\n")
+    cat(" - performance_measures\n")
+  }
+  if (length(x$notes %||% character(0)) > 0L) {
+    cat("\nNotes\n")
+    for (line in x$notes) cat(" - ", line, "\n", sep = "")
+  }
+  invisible(x)
+}
+
+#' Plot a design-simulation study
+#'
+#' @param x Output from [evaluate_mfrm_design()].
+#' @param facet Facet to visualize.
+#' @param metric Metric to plot.
+#' @param x_var Design variable used on the x-axis. When `x` was generated from
+#'   a `sim_spec` with custom public facet names, the corresponding aliases
+#'   (for example `n_judge`, `n_task`, `judge_per_person`) are also accepted.
+#'   Role keywords (`person`, `rater`, `criterion`, `assignment`) are accepted
+#'   as an abstraction over the current two-facet schema.
+#' @param group_var Optional design variable used for separate lines. The same
+#'   alias rules as `x_var` apply.
+#' @param draw If `TRUE`, draw with base graphics; otherwise return plotting data.
+#' @param ... Reserved for generic compatibility.
+#'
+#' @details
+#' This method is designed for quick design-planning scans rather than polished
+#' publication graphics.
+#'
+#' Useful first plots are:
+#' - rater `metric = "separation"` against `x_var = "n_person"`
+#' - criterion `metric = "severityrmse"` against `x_var = "n_person"`
+#'   when you want aligned recovery error rather than raw location shifts
+#' - rater `metric = "convergencerate"` against `x_var = "raters_per_person"`
+#'
+#' @return If `draw = TRUE`, invisibly returns a plotting-data list. If
+#'   `draw = FALSE`, returns that list directly. The returned list includes
+#'   resolved canonical variables (`x_var`, `group_var`) together with public
+#'   labels (`x_label`, `group_label`), `design_variable_aliases`, and
+#'   `design_descriptor`, plus `planning_scope`, `planning_constraints`, and
+#'   `planning_schema`.
+#' @seealso [evaluate_mfrm_design()], [summary.mfrm_design_evaluation]
+#' @examples
+#' \donttest{
+#' sim_eval <- suppressWarnings(evaluate_mfrm_design(
+#'   n_person = c(8, 12),
+#'   n_rater = 2,
+#'   n_criterion = 2,
+#'   raters_per_person = 1,
+#'   reps = 1,
+#'   maxit = 8,
+#'   seed = 123
+#' ))
+#' p <- plot(sim_eval, facet = "Rater", metric = "separation", x_var = "n_person", draw = FALSE)
+#' c(p$facet, p$x_var)
+#' }
+#' @export
+plot.mfrm_design_evaluation <- function(x,
+                                        facet = c("Rater", "Criterion", "Person"),
+                                        metric = c("separation", "reliability", "infit", "outfit",
+                                                   "misfitrate", "severityrmse", "severitybias",
+                                                   "convergencerate", "elapsedsec", "mincategorycount"),
+                                        x_var = c("n_person", "n_rater", "n_criterion", "raters_per_person"),
+                                        group_var = NULL,
+                                        draw = TRUE,
+                                        ...) {
+  if (!is.list(x) || is.null(x$results) || is.null(x$rep_overview)) {
+    stop("`x` must be output from evaluate_mfrm_design().")
+  }
+  available_facets <- unique(as.character(tibble::as_tibble(x$results)$Facet))
+  if (missing(facet)) {
+    ordered_facets <- c(setdiff(available_facets, "Person"), intersect("Person", available_facets))
+    facet <- ordered_facets[1]
+  } else {
+    facet <- as.character(facet[1])
+    if (!facet %in% available_facets) {
+      stop("`facet` must be one of: ", paste(available_facets, collapse = ", "), ".")
+    }
+  }
+  metric <- match.arg(metric)
+  design_variable_aliases <- simulation_object_design_variable_aliases(x)
+  design_descriptor <- simulation_object_design_descriptor(x)
+  x_var <- if (missing(x_var)) {
+    "n_person"
+  } else {
+    simulation_resolve_design_variable(x_var, design_variable_aliases, "x_var", descriptor = design_descriptor)
+  }
+  x_label <- simulation_design_variable_label(x_var, design_variable_aliases)
+
+  sum_obj <- design_eval_summarize_results(
+    x$results,
+    x$rep_overview,
+    design_variable_aliases = design_variable_aliases
+  )
+  plot_tbl <- tibble::as_tibble(sum_obj$design_summary)
+  if (nrow(plot_tbl) == 0) stop("No design-summary rows available for plotting.")
+  plot_tbl <- plot_tbl[plot_tbl$Facet == facet, , drop = FALSE]
+  if (nrow(plot_tbl) == 0) stop("No rows available for facet `", facet, "`.")
+
+  metric_col <- design_eval_match_metric(metric)
+  varying <- simulation_design_canonical_variables(design_descriptor)
+  varying <- varying[varying != x_var]
+  if (is.null(group_var)) {
+    cand <- varying[vapply(plot_tbl[varying], function(col) length(unique(col)) > 1L, logical(1))]
+    group_var <- if (length(cand) > 0) cand[1] else NULL
+  } else {
+    group_var <- simulation_resolve_design_variable(group_var, design_variable_aliases, "group_var", descriptor = design_descriptor)
+    if (identical(group_var, x_var)) {
+      stop("`group_var` must differ from `x_var`.")
+    }
+  }
+  group_label <- if (is.null(group_var)) NULL else simulation_design_variable_label(group_var, design_variable_aliases)
+
+  if (is.null(group_var)) {
+    agg_tbl <- plot_tbl |>
+      dplyr::group_by(.data[[x_var]]) |>
+      dplyr::summarize(y = mean(.data[[metric_col]], na.rm = TRUE), .groups = "drop") |>
+      dplyr::arrange(.data[[x_var]]) |>
+      dplyr::mutate(group = "All designs")
+  } else {
+    agg_tbl <- plot_tbl |>
+      dplyr::group_by(.data[[x_var]], .data[[group_var]]) |>
+      dplyr::summarize(y = mean(.data[[metric_col]], na.rm = TRUE), .groups = "drop") |>
+      dplyr::arrange(.data[[x_var]], .data[[group_var]]) |>
+      dplyr::rename(group = dplyr::all_of(group_var))
+  }
+
+  out <- list(
+    plot = "design_evaluation",
+    facet = facet,
+    metric = metric,
+    metric_col = metric_col,
+    x_var = x_var,
+    x_label = x_label,
+    group_var = group_var,
+    group_label = group_label,
+    design_variable_aliases = design_variable_aliases,
+    design_descriptor = design_descriptor,
+    planning_scope = simulation_object_planning_scope(x),
+    planning_constraints = simulation_object_planning_constraints(x),
+    planning_schema = simulation_object_planning_schema(x),
+    data = agg_tbl
+  )
+
+  if (!isTRUE(draw)) return(out)
+
+  groups <- unique(as.character(agg_tbl$group))
+  cols <- grDevices::hcl.colors(max(1L, length(groups)), "Set 2")
+  x_vals <- sort(unique(agg_tbl[[x_var]]))
+  y_range <- range(agg_tbl$y, na.rm = TRUE)
+  if (!all(is.finite(y_range))) stop("Selected metric has no finite values to plot.")
+
+  graphics::plot(
+    x = x_vals,
+    y = rep(NA_real_, length(x_vals)),
+    type = "n",
+    xlab = x_label,
+    ylab = metric_col,
+    main = paste("Design simulation:", facet, metric_col),
+    ylim = y_range
+  )
+  for (i in seq_along(groups)) {
+    sub <- agg_tbl[as.character(agg_tbl$group) == groups[i], , drop = FALSE]
+    sub <- sub[order(sub[[x_var]]), , drop = FALSE]
+    graphics::lines(sub[[x_var]], sub$y, type = "b", lwd = 2, pch = 16 + (i - 1L) %% 5L, col = cols[i])
+  }
+  if (length(groups) > 1L) {
+    graphics::legend("topleft", legend = groups, col = cols, lty = 1, lwd = 2, pch = 16 + (seq_along(groups) - 1L) %% 5L, bty = "n")
+  }
+
+  invisible(out)
+}
+
+#' Recommend a design condition from simulation results
+#'
+#' @param x Output from [evaluate_mfrm_design()] or [summary.mfrm_design_evaluation()].
+#' @param facets Facets that must satisfy the planning thresholds.
+#' @param min_separation Minimum acceptable mean separation.
+#' @param min_reliability Minimum acceptable mean reliability.
+#' @param max_severity_rmse Maximum acceptable severity recovery RMSE.
+#' @param max_misfit_rate Maximum acceptable mean misfit rate.
+#' @param min_convergence_rate Minimum acceptable convergence rate.
+#' @param prefer Ranking priority among design variables. Earlier entries are
+#'   optimized first when multiple designs pass. Custom public aliases from
+#'   `sim_spec` are also accepted, as are the role keywords `person`, `rater`,
+#'   `criterion`, and `assignment`.
+#'
+#' @details
+#' This helper converts a design-study summary into a simple planning table.
+#'
+#' A design is marked as recommended when all requested facets satisfy all
+#' selected thresholds simultaneously.
+#' If multiple designs pass, the helper returns the smallest one according to
+#' `prefer` (by default: fewer persons first, then fewer ratings per person,
+#' then fewer raters, then fewer criteria).
+#'
+#' @section Typical workflow:
+#' 1. Run [evaluate_mfrm_design()].
+#' 2. Review [summary.mfrm_design_evaluation()] and [plot.mfrm_design_evaluation()].
+#' 3. Use `recommend_mfrm_design(...)` to identify the smallest acceptable design.
+#'
+#' @return A list of class `mfrm_design_recommendation` with:
+#' - `facet_table`: facet-level threshold checks, including design-variable
+#'   alias columns when applicable
+#' - `design_table`: design-level aggregated checks, including design-variable
+#'   alias columns when applicable
+#' - `recommended`: the first passing design after ranking
+#' - `thresholds`: thresholds used in the recommendation
+#' - `design_variable_aliases`: accepted public aliases for design variables
+#' - `design_descriptor`: role-based design-variable metadata
+#' - `planning_scope`: explicit record of the current planning contract
+#' - `planning_constraints`: explicit record of mutable/locked design variables
+#' - `planning_schema`: combined planner-schema contract
+#' - `caveats`: structured warning rows for situations where the
+#'   recommendation rests on weak evidence (e.g., no design met every
+#'   threshold; the recommended design is at the boundary of the
+#'   evaluated grid; only one rep was simulated). Empty `tibble()`
+#'   when no caveats apply.
+#' @seealso [evaluate_mfrm_design()], [summary.mfrm_design_evaluation], [plot.mfrm_design_evaluation]
+#' @examples
+#' \donttest{
+#' sim_eval <- suppressWarnings(evaluate_mfrm_design(
+#'   n_person = c(8, 12),
+#'   n_rater = 2,
+#'   n_criterion = 2,
+#'   raters_per_person = 1,
+#'   reps = 1,
+#'   maxit = 8,
+#'   seed = 123
+#' ))
+#' rec <- recommend_mfrm_design(sim_eval)
+#' rec$recommended
+#' }
+#' @export
+recommend_mfrm_design <- function(x,
+                                  facets = c("Rater", "Criterion"),
+                                  min_separation = 2,
+                                  min_reliability = 0.8,
+                                  max_severity_rmse = 0.5,
+                                  max_misfit_rate = 0.10,
+                                  min_convergence_rate = 1,
+                                  prefer = c("n_person", "raters_per_person", "n_rater", "n_criterion")) {
+  if (inherits(x, "mfrm_design_evaluation")) {
+    design_summary <- summary.mfrm_design_evaluation(x, digits = 6)$design_summary
+  } else if (inherits(x, "summary.mfrm_design_evaluation")) {
+    design_summary <- x$design_summary
+  } else {
+    stop("`x` must be output from evaluate_mfrm_design() or summary.mfrm_design_evaluation().")
+  }
+
+  design_summary <- tibble::as_tibble(design_summary)
+  if (nrow(design_summary) == 0) stop("No design summary rows available.")
+
+  if (missing(facets)) {
+    facets <- setdiff(unique(as.character(design_summary$Facet)), "Person")
+  } else {
+    facets <- unique(as.character(facets))
+  }
+  missing_facets <- setdiff(facets, unique(design_summary$Facet))
+  if (length(missing_facets) > 0) {
+    stop("Requested facets not found in the design summary: ", paste(missing_facets, collapse = ", "))
+  }
+
+  design_variable_aliases <- simulation_object_design_variable_aliases(x)
+  design_descriptor <- simulation_object_design_descriptor(x)
+  prefer <- if (missing(prefer)) {
+    c("n_person", "raters_per_person", "n_rater", "n_criterion")
+  } else {
+    simulation_resolve_design_variable_vector(prefer, design_variable_aliases, descriptor = design_descriptor)
+  }
+  if (length(prefer) == 0) {
+    stop(
+      "`prefer` must contain at least one valid design variable. Valid names: ",
+      paste(simulation_design_variable_choices(design_variable_aliases, descriptor = design_descriptor), collapse = ", "),
+      ".",
+      call. = FALSE
+    )
+  }
+
+  facet_table <- design_summary |>
+    dplyr::filter(.data$Facet %in% facets) |>
+    dplyr::mutate(
+      SeparationPass = is.finite(.data$MeanSeparation) & .data$MeanSeparation >= min_separation,
+      ReliabilityPass = is.finite(.data$MeanReliability) & .data$MeanReliability >= min_reliability,
+      SeverityRMSEPass = is.finite(.data$MeanSeverityRMSE) & .data$MeanSeverityRMSE <= max_severity_rmse,
+      MisfitRatePass = is.finite(.data$MeanMisfitRate) & .data$MeanMisfitRate <= max_misfit_rate,
+      ConvergencePass = is.finite(.data$ConvergenceRate) & .data$ConvergenceRate >= min_convergence_rate,
+      Pass = .data$SeparationPass & .data$ReliabilityPass & .data$SeverityRMSEPass &
+        .data$MisfitRatePass & .data$ConvergencePass
+    ) |>
+    dplyr::arrange(.data$Facet, !!!rlang::syms(simulation_design_canonical_variables(design_descriptor)))
+
+  design_table <- facet_table |>
+    dplyr::group_by(dplyr::across(dplyr::all_of(simulation_design_group_variables(design_descriptor)))) |>
+    dplyr::summarize(
+      FacetsChecked = paste(.data$Facet, collapse = ", "),
+      MinSeparation = min(.data$MeanSeparation, na.rm = TRUE),
+      MinReliability = min(.data$MeanReliability, na.rm = TRUE),
+      MaxSeverityRMSE = max(.data$MeanSeverityRMSE, na.rm = TRUE),
+      MaxMisfitRate = max(.data$MeanMisfitRate, na.rm = TRUE),
+      MinConvergenceRate = min(.data$ConvergenceRate, na.rm = TRUE),
+      FacetsPassing = sum(.data$Pass, na.rm = TRUE),
+      FacetsRequired = dplyr::n(),
+      Pass = all(.data$Pass),
+      .groups = "drop"
+    )
+  design_table <- simulation_append_design_alias_columns(design_table, design_variable_aliases)
+
+  rank_vars <- c("Pass", prefer)
+  design_table <- design_table |>
+    dplyr::arrange(dplyr::desc(.data$Pass), !!!rlang::syms(prefer))
+
+  recommended <- design_table |>
+    dplyr::filter(.data$Pass) |>
+    dplyr::slice_head(n = 1)
+
+  # Publication-workflow caveats. mfrmr treats facets as fixed effects,
+  # so simulation-based recommendations should be complemented with a
+  # post-fit audit of observed level counts. See the "Fixed effects
+  # assumption" section of ?fit_mfrm and `facet_small_sample_audit()`.
+  fixed_effects_note <- paste0(
+    "mfrmr estimates all facets as fixed effects with sum-to-zero ",
+    "identification; simulation-based adequacy does not imply partial ",
+    "pooling for small-N levels in real data. After collecting data, ",
+    "inspect observed level counts with `facet_small_sample_audit(fit)` ",
+    "and `analyze_hierarchical_structure(data, facets)`."
+  )
+
+  structure(
+    list(
+      facet_table = facet_table,
+      design_table = design_table,
+      recommended = recommended,
+      thresholds = list(
+        facets = facets,
+        min_separation = min_separation,
+        min_reliability = min_reliability,
+        max_severity_rmse = max_severity_rmse,
+        max_misfit_rate = max_misfit_rate,
+        min_convergence_rate = min_convergence_rate,
+        prefer = prefer
+      ),
+      design_variable_aliases = design_variable_aliases,
+      design_descriptor = design_descriptor,
+      planning_scope = simulation_object_planning_scope(x),
+      planning_constraints = simulation_object_planning_constraints(x),
+      planning_schema = simulation_object_planning_schema(x),
+      caveats = list(
+        fixed_effects = fixed_effects_note,
+        post_fit_audit = c(
+          "facet_small_sample_audit(fit)",
+          "analyze_hierarchical_structure(data, facets)",
+          "compute_facet_icc(data, facets, score, person)"
+        )
+      )
+    ),
+    class = "mfrm_design_recommendation"
+  )
+}
+
+diagnostic_screening_resolve_dependence_facet <- function(local_dependence_facet, facet_names) {
+  facet_names <- as.character(facet_names %||% character(0))
+  if (length(facet_names) < 2L) {
+    stop("Local-dependence screening requires at least two non-person facets.", call. = FALSE)
+  }
+
+  if (is.null(local_dependence_facet)) {
+    return(facet_names[2])
+  }
+
+  key <- as.character(local_dependence_facet[1] %||% "")
+  role_lookup <- c(rater = facet_names[1], criterion = facet_names[2])
+
+  if (key %in% facet_names) {
+    return(key)
+  }
+  if (tolower(key) %in% names(role_lookup)) {
+    return(unname(role_lookup[[tolower(key)]]))
+  }
+
+  stop(
+    "`local_dependence_facet` must be one of `rater`, `criterion`, or the active facet names: ",
+    paste(facet_names, collapse = ", "),
+    ".",
+    call. = FALSE
+  )
+}
+
+diagnostic_screening_build_local_dependence_effects <- function(dat,
+                                                                dependence_facet,
+                                                                local_dependence_sd,
+                                                                seed = NULL) {
+  if (!is.data.frame(dat) || nrow(dat) == 0L) {
+    return(tibble::tibble(Person = character(0), Effect = numeric(0)))
+  }
+  if (!"Person" %in% names(dat) || !dependence_facet %in% names(dat)) {
+    stop("Local-dependence effect builder could not find `Person` and the requested dependence facet in the simulated data.", call. = FALSE)
+  }
+  if (!is.finite(local_dependence_sd) || local_dependence_sd < 0) {
+    stop("`local_dependence_sd` must be a single non-negative numeric value.", call. = FALSE)
+  }
+
+  cells <- unique(dat[, c("Person", dependence_facet), drop = FALSE])
+  if (identical(local_dependence_sd, 0)) {
+    cells$Effect <- 0
+    return(tibble::as_tibble(cells))
+  }
+
+  effects <- with_preserved_rng_seed(
+    seed,
+    stats::rnorm(nrow(cells), mean = 0, sd = local_dependence_sd)
+  )
+  effects <- effects - mean(effects, na.rm = TRUE)
+  effects <- effects - stats::ave(
+    effects,
+    as.character(cells[[dependence_facet]]),
+    FUN = function(x) mean(x, na.rm = TRUE)
+  )
+
+  cells$Effect <- as.numeric(effects)
+  tibble::as_tibble(cells)
+}
+
+diagnostic_screening_rescale_support <- function(values, target_sd) {
+  values <- suppressWarnings(as.numeric(values))
+  values <- values[is.finite(values)]
+  if (length(values) < 2L) {
+    stop("Empirical latent support generation requires at least two finite values.", call. = FALSE)
+  }
+
+  values <- values - mean(values, na.rm = TRUE)
+  target_sd <- as.numeric(target_sd[1] %||% 0)
+  if (!is.finite(target_sd) || target_sd <= 0) {
+    return(rep(0, length(values)))
+  }
+
+  current_sd <- stats::sd(values, na.rm = TRUE)
+  if (!is.finite(current_sd) || identical(current_sd, 0)) {
+    return(rep(0, length(values)))
+  }
+
+  values / current_sd * target_sd
+}
+
+diagnostic_screening_build_latent_empirical_support <- function(theta_sd,
+                                                                rater_sd,
+                                                                criterion_sd,
+                                                                support_n = 4000L,
+                                                                person_shift = 1.5,
+                                                                seed = NULL) {
+  support_n <- as.integer(support_n[1] %||% 4000L)
+  if (!is.finite(support_n) || support_n < 8L) {
+    stop("`support_n` must be >= 8 for latent-misspecification screening.", call. = FALSE)
+  }
+  person_shift <- as.numeric(person_shift[1] %||% 1.5)
+  if (!is.finite(person_shift) || person_shift <= 0) {
+    stop("`person_shift` must be a positive numeric value.", call. = FALSE)
+  }
+
+  with_preserved_rng_seed(
+    seed,
+    {
+      left_n <- support_n %/% 2L
+      right_n <- support_n - left_n
+      person_draws <- c(
+        stats::rnorm(left_n, mean = -person_shift, sd = 1),
+        stats::rnorm(right_n, mean = person_shift, sd = 1)
+      )
+      rater_draws <- stats::rnorm(support_n, mean = 0, sd = 1)
+      criterion_draws <- stats::rnorm(support_n, mean = 0, sd = 1)
+
+      list(
+        person = diagnostic_screening_rescale_support(person_draws, theta_sd),
+        rater = diagnostic_screening_rescale_support(rater_draws, rater_sd),
+        criterion = diagnostic_screening_rescale_support(criterion_draws, criterion_sd)
+      )
+    }
+  )
+}
+
+diagnostic_screening_build_latent_misspecification_spec <- function(row_spec_base,
+                                                                    design_row,
+                                                                    score_levels,
+                                                                    theta_sd,
+                                                                    rater_sd,
+                                                                    criterion_sd,
+                                                                    noise_sd,
+                                                                    step_span,
+                                                                    model,
+                                                                    fit_step_facet,
+                                                                    support_n = 4000L,
+                                                                    person_shift = 1.5,
+                                                                    seed = NULL) {
+  empirical_support <- diagnostic_screening_build_latent_empirical_support(
+    theta_sd = if (is.null(row_spec_base)) theta_sd else row_spec_base$theta_sd,
+    rater_sd = if (is.null(row_spec_base)) rater_sd else row_spec_base$rater_sd,
+    criterion_sd = if (is.null(row_spec_base)) criterion_sd else row_spec_base$criterion_sd,
+    support_n = support_n,
+    person_shift = person_shift,
+    seed = seed
+  )
+
+  if (is.null(row_spec_base)) {
+    spec_args <- list(
+      n_person = design_row$n_person,
+      n_rater = design_row$n_rater,
+      n_criterion = design_row$n_criterion,
+      raters_per_person = design_row$raters_per_person,
+      score_levels = score_levels,
+      theta_sd = theta_sd,
+      rater_sd = rater_sd,
+      criterion_sd = criterion_sd,
+      noise_sd = noise_sd,
+      step_span = step_span,
+      model = model,
+      assignment = if (identical(design_row$raters_per_person, design_row$n_rater)) "crossed" else "rotating",
+      latent_distribution = "empirical",
+      empirical_person = empirical_support$person,
+      empirical_rater = empirical_support$rater,
+      empirical_criterion = empirical_support$criterion
+    )
+    if (identical(model, "PCM")) {
+      spec_args$step_facet <- fit_step_facet
+    }
+    return(do.call(build_mfrm_sim_spec, spec_args))
+  }
+
+  if (isTRUE((row_spec_base$population %||% list(active = FALSE))$active)) {
+    stop(
+      "Latent-misspecification screening does not yet support `sim_spec` objects with an active latent-regression population generator.",
+      call. = FALSE
+    )
+  }
+
+  out <- row_spec_base
+  out$latent_distribution <- "empirical"
+  out$empirical_support <- empirical_support
+  out$planning_constraints <- simulation_planning_constraints(out)
+  out$planning_schema <- simulation_planning_schema(out)
+  out
+}
+
+diagnostic_screening_resolve_misspecified_step_facet <- function(fit_model,
+                                                                 fit_step_facet,
+                                                                 facet_names) {
+  facet_names <- as.character(facet_names %||% character(0))
+  if (length(facet_names) < 2L) {
+    stop("Step-structure screening requires at least two non-person facets.", call. = FALSE)
+  }
+  if (identical(fit_model, "RSM")) {
+    return(facet_names[2])
+  }
+
+  fit_step_facet <- as.character(fit_step_facet[1] %||% facet_names[2])
+  alternate <- setdiff(facet_names, fit_step_facet)
+  if (length(alternate) < 1L) {
+    stop("Step-structure screening could not resolve an alternate step facet.", call. = FALSE)
+  }
+  alternate[1]
+}
+
+diagnostic_screening_build_step_threshold_table <- function(step_levels,
+                                                            score_levels,
+                                                            step_span) {
+  step_levels <- as.character(step_levels)
+  step_levels <- step_levels[!is.na(step_levels) & nzchar(step_levels)]
+  if (length(step_levels) < 1L) {
+    stop("Step-structure screening requires at least one generator step level.", call. = FALSE)
+  }
+
+  score_levels <- as.integer(score_levels[1] %||% 4L)
+  if (!is.finite(score_levels) || score_levels < 2L) {
+    stop("`score_levels` must be >= 2 for step-structure screening.", call. = FALSE)
+  }
+
+  base_steps <- if (score_levels == 2L) {
+    0
+  } else {
+    seq(-abs(step_span), abs(step_span), length.out = score_levels - 1L)
+  }
+  offset_grid <- seq(-0.8, 0.8, length.out = length(step_levels))
+  scale_grid <- seq(0.7, 1.35, length.out = length(step_levels))
+
+  rows <- lapply(seq_along(step_levels), function(i) {
+    tibble::tibble(
+      StepFacet = step_levels[i],
+      StepIndex = seq_len(score_levels - 1L),
+      Step = paste0("Step_", seq_len(score_levels - 1L)),
+      Estimate = base_steps * scale_grid[i] + offset_grid[i]
+    )
+  })
+  dplyr::bind_rows(rows)
+}
+
+diagnostic_screening_build_step_misspecification_spec <- function(row_spec_base,
+                                                                  design_row,
+                                                                  score_levels,
+                                                                  theta_sd,
+                                                                  rater_sd,
+                                                                  criterion_sd,
+                                                                  noise_sd,
+                                                                  step_span,
+                                                                  fit_model,
+                                                                  fit_step_facet) {
+  if (!identical(fit_model, "RSM") && !identical(fit_model, "PCM")) {
+    stop("Step-structure screening is currently scoped to `RSM` and `PCM` fits.", call. = FALSE)
+  }
+  if (!is.null(row_spec_base) && isTRUE((row_spec_base$population %||% list(active = FALSE))$active)) {
+    stop(
+      "Step-structure screening does not yet support `sim_spec` objects with an active latent-regression population generator.",
+      call. = FALSE
+    )
+  }
+
+  facet_names <- if (is.null(row_spec_base)) simulation_default_output_facet_names() else simulation_spec_output_facet_names(row_spec_base)
+  generator_step_facet <- diagnostic_screening_resolve_misspecified_step_facet(
+    fit_model = fit_model,
+    fit_step_facet = fit_step_facet,
+    facet_names = facet_names
+  )
+  generator_step_role <- if (identical(generator_step_facet, facet_names[1])) "rater" else "criterion"
+  step_levels <- if (is.null(row_spec_base)) {
+    if (identical(generator_step_role, "rater")) {
+      simulation_generated_role_levels(facet_names[1], "R", design_row$n_rater)
+    } else {
+      simulation_generated_role_levels(facet_names[2], "C", design_row$n_criterion)
+    }
+  } else {
+    simulation_spec_role_levels(
+      row_spec_base,
+      role = generator_step_role,
+      count = if (identical(generator_step_role, "rater")) design_row$n_rater else design_row$n_criterion
+    )
+  }
+  threshold_table <- diagnostic_screening_build_step_threshold_table(
+    step_levels = step_levels,
+    score_levels = if (is.null(row_spec_base)) score_levels else row_spec_base$score_levels,
+    step_span = if (is.null(row_spec_base)) step_span else row_spec_base$step_span
+  )
+
+  if (is.null(row_spec_base)) {
+    return(build_mfrm_sim_spec(
+      n_person = design_row$n_person,
+      n_rater = design_row$n_rater,
+      n_criterion = design_row$n_criterion,
+      raters_per_person = design_row$raters_per_person,
+      score_levels = score_levels,
+      theta_sd = theta_sd,
+      rater_sd = rater_sd,
+      criterion_sd = criterion_sd,
+      noise_sd = noise_sd,
+      step_span = step_span,
+      thresholds = threshold_table,
+      model = "PCM",
+      step_facet = generator_step_facet,
+      assignment = if (identical(design_row$raters_per_person, design_row$n_rater)) "crossed" else "rotating",
+      facet_names = facet_names
+    ))
+  }
+
+  out <- row_spec_base
+  out$model <- "PCM"
+  out$step_facet <- generator_step_facet
+  out$threshold_table <- tibble::as_tibble(threshold_table)
+  out$planning_constraints <- simulation_planning_constraints(out)
+  out$planning_schema <- simulation_planning_schema(out)
+  out
+}
+
+diagnostic_screening_collect_metrics <- function(diag) {
+  fit_tbl <- tibble::as_tibble(diag$fit %||% tibble::tibble())
+  abs_z <- if (nrow(fit_tbl) > 0 && all(c("InfitZSTD", "OutfitZSTD") %in% names(fit_tbl))) {
+    pmax(
+      abs(suppressWarnings(as.numeric(fit_tbl$InfitZSTD))),
+      abs(suppressWarnings(as.numeric(fit_tbl$OutfitZSTD))),
+      na.rm = TRUE
+    )
+  } else {
+    numeric(0)
+  }
+  abs_z <- abs_z[is.finite(abs_z)]
+
+  marginal_summary <- tibble::as_tibble(diag$marginal_fit$summary %||% tibble::tibble())
+  marginal_available <- isTRUE(diag$marginal_fit$available) && nrow(marginal_summary) > 0
+
+  list(
+    LegacyMeanAbsZ = if (length(abs_z) == 0L) NA_real_ else mean(abs_z, na.rm = TRUE),
+    LegacyFlaggedLevels = if (length(abs_z) == 0L) NA_real_ else sum(abs_z >= 2, na.rm = TRUE),
+    MarginalAvailable = marginal_available,
+    MarginalOverallRMSD = if (marginal_available) suppressWarnings(as.numeric(marginal_summary$OverallRMSD[1])) else NA_real_,
+    MarginalMaxAbsStdResidual = if (marginal_available) suppressWarnings(as.numeric(marginal_summary$OverallMaxAbsStdResidual[1])) else NA_real_,
+    MarginalFlaggedGroups = if (marginal_available) {
+      sum(
+        suppressWarnings(as.numeric(marginal_summary$StepGroupsFlagged[1] %||% 0)),
+        suppressWarnings(as.numeric(marginal_summary$FacetLevelsFlagged[1] %||% 0)),
+        na.rm = TRUE
+      )
+    } else {
+      NA_real_
+    },
+    PairwiseAvailable = isTRUE(diag$marginal_fit$pairwise$available),
+    PairwiseFlaggedLevelPairs = if (marginal_available) suppressWarnings(as.numeric(marginal_summary$PairwiseFlaggedLevelPairs[1])) else NA_real_
+  )
+}
+
+diagnostic_screening_safe_agreement <- function(a, b) {
+  a <- as.logical(a)
+  b <- as.logical(b)
+  ok <- !is.na(a) & !is.na(b)
+  if (!any(ok)) {
+    return(NA_real_)
+  }
+  mean(a[ok] == b[ok], na.rm = TRUE)
+}
+
+diagnostic_screening_build_performance_summary <- function(results, design_variable_aliases = NULL) {
+  results_tbl <- tibble::as_tibble(results)
+  design_descriptor <- simulation_object_design_descriptor(
+    list(results = results_tbl, design_variable_aliases = design_variable_aliases)
+  )
+  design_vars <- simulation_design_canonical_variables(design_descriptor)
+  grouping_vars <- c("design_id", "Scenario", "ScenarioClass", "Model", "DependenceFacet", design_vars)
+
+  flags_tbl <- results_tbl |>
+    dplyr::mutate(
+      LegacyAnyFlag = suppressWarnings(as.numeric(.data$LegacyFlaggedLevels)) > 0,
+      MarginalAnyFlag = suppressWarnings(as.numeric(.data$MarginalFlaggedGroups)) > 0,
+      PairwiseAnyFlag = suppressWarnings(as.numeric(.data$PairwiseFlaggedLevelPairs)) > 0,
+      StrictAnyFlag = .data$MarginalAnyFlag | .data$PairwiseAnyFlag,
+      ElapsedSecPer100Obs = dplyr::if_else(
+        is.finite(.data$Observations) & .data$Observations > 0,
+        .data$ElapsedSec / .data$Observations * 100,
+        NA_real_
+      )
+    )
+
+  out <- flags_tbl |>
+    dplyr::group_by(dplyr::across(dplyr::all_of(grouping_vars))) |>
+    dplyr::summarize(
+      Reps = dplyr::n(),
+      MeanElapsedSec = design_eval_safe_mean(.data$ElapsedSec),
+      McseElapsedSec = simulation_mcse_mean(.data$ElapsedSec),
+      MeanElapsedSecPer100Obs = design_eval_safe_mean(.data$ElapsedSecPer100Obs),
+      LegacyAnyFlagRate = mean(.data$LegacyAnyFlag, na.rm = TRUE),
+      McseLegacyAnyFlagRate = simulation_mcse_proportion(.data$LegacyAnyFlag),
+      MarginalAnyFlagRate = mean(.data$MarginalAnyFlag, na.rm = TRUE),
+      McseMarginalAnyFlagRate = simulation_mcse_proportion(.data$MarginalAnyFlag),
+      PairwiseAnyFlagRate = mean(.data$PairwiseAnyFlag, na.rm = TRUE),
+      McsePairwiseAnyFlagRate = simulation_mcse_proportion(.data$PairwiseAnyFlag),
+      StrictAnyFlagRate = mean(.data$StrictAnyFlag, na.rm = TRUE),
+      McseStrictAnyFlagRate = simulation_mcse_proportion(.data$StrictAnyFlag),
+      LegacyVsMarginalAgreement = diagnostic_screening_safe_agreement(.data$LegacyAnyFlag, .data$MarginalAnyFlag),
+      LegacyVsPairwiseAgreement = diagnostic_screening_safe_agreement(.data$LegacyAnyFlag, .data$PairwiseAnyFlag),
+      LegacyVsStrictAgreement = diagnostic_screening_safe_agreement(.data$LegacyAnyFlag, .data$StrictAnyFlag),
+      MarginalVsPairwiseAgreement = diagnostic_screening_safe_agreement(.data$MarginalAnyFlag, .data$PairwiseAnyFlag),
+      .groups = "drop"
+    ) |>
+    dplyr::mutate(
+      EvaluationUse = dplyr::if_else(.data$Scenario == "well_specified", "type_I_proxy", "sensitivity_proxy"),
+      LegacyTypeIProxy = dplyr::if_else(.data$Scenario == "well_specified", .data$LegacyAnyFlagRate, NA_real_),
+      StrictTypeIProxy = dplyr::if_else(.data$Scenario == "well_specified", .data$StrictAnyFlagRate, NA_real_),
+      LegacySensitivityProxy = dplyr::if_else(.data$Scenario != "well_specified", .data$LegacyAnyFlagRate, NA_real_),
+      StrictSensitivityProxy = dplyr::if_else(.data$Scenario != "well_specified", .data$StrictAnyFlagRate, NA_real_),
+      DeltaStrictMinusLegacyFlagRate = .data$StrictAnyFlagRate - .data$LegacyAnyFlagRate
+    )
+  simulation_append_design_alias_columns(out, design_variable_aliases)
+}
+
+diagnostic_screening_summarize_results <- function(results, design_variable_aliases = NULL) {
+  results_tbl <- tibble::as_tibble(results)
+  design_descriptor <- simulation_object_design_descriptor(
+    list(results = results_tbl, design_variable_aliases = design_variable_aliases)
+  )
+  design_vars <- simulation_design_canonical_variables(design_descriptor)
+  grouping_vars <- c("design_id", "Scenario", "ScenarioClass", "Model", "DependenceFacet", design_vars)
+
+  scenario_summary <- results_tbl |>
+    dplyr::group_by(dplyr::across(dplyr::all_of(grouping_vars))) |>
+    dplyr::summarize(
+      Reps = dplyr::n(),
+      RunOKRate = mean(.data$RunOK, na.rm = TRUE),
+      ConvergenceRate = mean(.data$Converged, na.rm = TRUE),
+      MeanElapsedSec = design_eval_safe_mean(.data$ElapsedSec),
+      MeanLegacyMeanAbsZ = design_eval_safe_mean(.data$LegacyMeanAbsZ),
+      MeanLegacyFlaggedLevels = design_eval_safe_mean(.data$LegacyFlaggedLevels),
+      LegacyAnyFlagRate = mean(.data$LegacyFlaggedLevels > 0, na.rm = TRUE),
+      MeanMarginalOverallRMSD = design_eval_safe_mean(.data$MarginalOverallRMSD),
+      MeanMarginalMaxAbsStdResidual = design_eval_safe_mean(.data$MarginalMaxAbsStdResidual),
+      MeanMarginalFlaggedGroups = design_eval_safe_mean(.data$MarginalFlaggedGroups),
+      MarginalAnyFlagRate = mean(.data$MarginalFlaggedGroups > 0, na.rm = TRUE),
+      MeanPairwiseFlaggedLevelPairs = design_eval_safe_mean(.data$PairwiseFlaggedLevelPairs),
+      PairwiseAnyFlagRate = mean(.data$PairwiseFlaggedLevelPairs > 0, na.rm = TRUE),
+      PairwiseAvailabilityRate = mean(as.numeric(.data$PairwiseAvailable), na.rm = TRUE),
+      .groups = "drop"
+    )
+  scenario_summary <- simulation_append_design_alias_columns(scenario_summary, design_variable_aliases)
+  performance_summary <- diagnostic_screening_build_performance_summary(
+    results_tbl,
+    design_variable_aliases = design_variable_aliases
+  )
+
+  scenario_contrast <- tibble::tibble()
+  if ("well_specified" %in% scenario_summary$Scenario &&
+      any(scenario_summary$Scenario != "well_specified")) {
+    by_vars <- c("design_id", "Model", "DependenceFacet", design_vars)
+    contrast_cols <- c(
+      "MeanLegacyMeanAbsZ",
+      "MeanLegacyFlaggedLevels",
+      "MeanMarginalOverallRMSD",
+      "MeanMarginalMaxAbsStdResidual",
+      "MeanMarginalFlaggedGroups",
+      "MeanPairwiseFlaggedLevelPairs",
+      "PairwiseAnyFlagRate"
+    )
+    well_tbl <- scenario_summary |>
+      dplyr::filter(.data$Scenario == "well_specified") |>
+      dplyr::select(dplyr::all_of(c(by_vars, contrast_cols)))
+    alt_tbl <- scenario_summary |>
+      dplyr::filter(.data$Scenario != "well_specified") |>
+      dplyr::select(dplyr::all_of(c("Scenario", "ScenarioClass", by_vars, contrast_cols)))
+
+    scenario_contrast <- dplyr::inner_join(
+      alt_tbl,
+      well_tbl,
+      by = by_vars,
+      suffix = c("_Scenario", "_WellSpecified")
+    ) |>
+      dplyr::mutate(
+        DeltaLegacyMeanAbsZ = .data$MeanLegacyMeanAbsZ_Scenario - .data$MeanLegacyMeanAbsZ_WellSpecified,
+        DeltaLegacyFlaggedLevels = .data$MeanLegacyFlaggedLevels_Scenario - .data$MeanLegacyFlaggedLevels_WellSpecified,
+        DeltaMarginalOverallRMSD = .data$MeanMarginalOverallRMSD_Scenario - .data$MeanMarginalOverallRMSD_WellSpecified,
+        DeltaMarginalMaxAbsStdResidual = .data$MeanMarginalMaxAbsStdResidual_Scenario - .data$MeanMarginalMaxAbsStdResidual_WellSpecified,
+        DeltaMarginalFlaggedGroups = .data$MeanMarginalFlaggedGroups_Scenario - .data$MeanMarginalFlaggedGroups_WellSpecified,
+        DeltaPairwiseFlaggedLevelPairs = .data$MeanPairwiseFlaggedLevelPairs_Scenario - .data$MeanPairwiseFlaggedLevelPairs_WellSpecified,
+        DeltaPairwiseAnyFlagRate = .data$PairwiseAnyFlagRate_Scenario - .data$PairwiseAnyFlagRate_WellSpecified,
+        StrictSignalImproved = (.data$DeltaMarginalFlaggedGroups > 0) | (.data$DeltaPairwiseFlaggedLevelPairs > 0),
+        StrictSignalDominatesLegacy = (.data$DeltaMarginalFlaggedGroups > .data$DeltaLegacyFlaggedLevels) |
+          (.data$DeltaPairwiseFlaggedLevelPairs > .data$DeltaLegacyFlaggedLevels)
+      )
+    scenario_contrast <- simulation_append_design_alias_columns(scenario_contrast, design_variable_aliases)
+  }
+
+  notes <- character(0)
+  if (nrow(performance_summary) > 0 &&
+      any(performance_summary$Scenario == "well_specified", na.rm = TRUE)) {
+    notes <- c(
+      notes,
+      "Well-specified rows report screening-oriented Type I proxies from any-flag rates; they are not calibrated inferential alpha estimates."
+    )
+  }
+  if (nrow(performance_summary) > 0 &&
+      any(performance_summary$Scenario != "well_specified", na.rm = TRUE)) {
+    notes <- c(
+      notes,
+      "Misspecification rows report screening-oriented sensitivity proxies from any-flag rates; they summarize detection behavior rather than formal power."
+    )
+  }
+  if (nrow(scenario_contrast) > 0 && any(scenario_contrast$StrictSignalImproved, na.rm = TRUE)) {
+    notes <- c(notes, "At least one misspecification scenario increased a strict screening signal relative to the well-specified baseline for an evaluated design row.")
+  }
+  if (nrow(scenario_contrast) > 0 && any(scenario_contrast$DeltaPairwiseFlaggedLevelPairs > 0, na.rm = TRUE)) {
+    notes <- c(notes, "At least one misspecification scenario increased strict pairwise flagging relative to the well-specified baseline for an evaluated design row.")
+  }
+  if (nrow(scenario_contrast) > 0 && any(scenario_contrast$StrictSignalDominatesLegacy, na.rm = TRUE)) {
+    notes <- c(notes, "At least one strict screening signal reacted more strongly than the legacy |ZSTD| screen for an evaluated design row.")
+  }
+  if (length(notes) == 0L) {
+    notes <- "Compare `scenario_summary` and `scenario_contrast` to judge whether strict marginal diagnostics separate the misfit scenarios more clearly than legacy residual screens."
+  }
+
+  list(
+    scenario_summary = scenario_summary,
+    performance_summary = performance_summary,
+    scenario_contrast = scenario_contrast,
+    notes = unique(notes)
+  )
+}
+
+#' Evaluate legacy and strict marginal diagnostic screening under controlled misfit scenarios
+#'
+#' @param n_person Vector of person counts to evaluate.
+#' @param n_rater Vector of rater counts to evaluate.
+#' @param n_criterion Vector of criterion counts to evaluate.
+#' @param raters_per_person Vector of rater assignments per person.
+#' @param design Optional named design-grid override supplied as a named list,
+#'   named vector, or one-row data frame. Names may use canonical variables
+#'   (`n_person`, `n_rater`, `n_criterion`, `raters_per_person`), current
+#'   public aliases implied by `sim_spec`, or role keywords
+#'   (`person`, `rater`, `criterion`, `assignment`). Values may be vectors.
+#' @param reps Number of replications per design condition and scenario.
+#' @param scenarios Screening scenarios to evaluate. The current first release
+#'   supports `"well_specified"`, `"local_dependence"`, and
+#'   `"latent_misspecification"`, plus
+#'   `"step_structure_misspecification"`.
+#' @param local_dependence_sd Standard deviation of the shared context effect
+#'   injected in the `"local_dependence"` scenario.
+#' @param local_dependence_facet Facet that receives the shared
+#'   `Person x facet` dependence effect. Use `"criterion"`, `"rater"`, or an
+#'   active public facet name. Defaults to the criterion-like facet.
+#' @param score_levels Number of ordered score categories.
+#' @param theta_sd Standard deviation of simulated person measures.
+#' @param rater_sd Standard deviation of simulated rater severities.
+#' @param criterion_sd Standard deviation of simulated criterion difficulties.
+#' @param noise_sd Optional observation-level noise added to the linear predictor.
+#' @param step_span Spread of step thresholds on the logit scale.
+#' @param model Measurement model passed to [fit_mfrm()]. The current helper
+#'   supports `RSM` and `PCM`; bounded `GPCM` is accepted only to
+#'   produce an explicit unsupported-path error.
+#' @param step_facet Step facet passed to [fit_mfrm()] when `model = "PCM"`.
+#' @param maxit Maximum iterations passed to [fit_mfrm()].
+#' @param quad_points Quadrature points for the internal `MML` fit.
+#' @param residual_pca Residual PCA mode passed to [diagnose_mfrm()].
+#' @param sim_spec Optional output from [build_mfrm_sim_spec()] or
+#'   [extract_mfrm_sim_spec()] used as the base data-generating mechanism.
+#' @param seed Optional seed for reproducible replications.
+#'
+#' @details
+#' This helper performs a compact Monte Carlo validation study for the package's
+#' current diagnostic architecture.
+#'
+#' For each design condition and scenario, the function:
+#' 1. generates synthetic data with [simulate_mfrm_data()]
+#' 2. fits the model with `method = "MML"`
+#' 3. computes diagnostics with `diagnostic_mode = "both"`
+#' 4. stores legacy residual-screen metrics and strict marginal-fit metrics
+#' 5. aggregates the results into `scenario_summary` and `scenario_contrast`
+#'
+#' The `"well_specified"` scenario uses the ordinary generator with no injected
+#' extra structure. The `"local_dependence"` scenario adds a shared
+#' `Person x facet` random effect, centered within the selected facet levels, so
+#' responses in the same context become correlated without changing the
+#' facet-level mean effect contract. The `"latent_misspecification"` scenario
+#' keeps the same marginal spread targets but replaces the normal person
+#' distribution with a centered bimodal empirical support distribution, while
+#' leaving the non-person facets on the original scale contract. The
+#' `"step_structure_misspecification"` scenario uses a `PCM` generator with
+#' facet-specific threshold tables that intentionally mismatch the fitted step
+#' contract: `RSM` fits receive criterion-specific thresholds, and `PCM` fits
+#' receive thresholds indexed by the opposite non-person facet.
+#'
+#' This function is intentionally screening-oriented. The strict marginal branch
+#' remains exploratory in the current release, so the returned summaries should
+#' be used to compare relative sensitivity across scenarios rather than to claim
+#' calibrated inferential power.
+#'
+#' @return An object of class `mfrm_diagnostic_screening` with:
+#' - `design_grid`: evaluated design conditions, including public alias columns
+#'   when applicable
+#' - `results`: replicate-level screening metrics for each design and scenario
+#' - `scenario_summary`: aggregated scenario-by-design screening summaries
+#' - `performance_summary`: scenario-by-design screening-performance summary
+#'   including runtime, agreement, Type I proxy, and sensitivity proxy columns
+#' - `scenario_contrast`: each misspecification scenario minus the
+#'   well-specified baseline when the baseline scenario was evaluated
+#' - `design_descriptor`: role-based design-variable metadata
+#' - `planning_scope`: explicit record of the current planning contract
+#' - `planning_constraints`: explicit record of mutable/locked design variables
+#' - `planning_schema`: combined planner-schema contract
+#' - `settings`: simulation and fitting settings
+#' - `ademp`: simulation-study metadata
+#' - `notes`: short interpretation notes
+#'
+#' @seealso [simulate_mfrm_data()], [evaluate_mfrm_design()], [diagnose_mfrm()]
+#' @examples
+#' \donttest{
+#' diag_eval <- evaluate_mfrm_diagnostic_screening(
+#'   design = list(person = 10, rater = 2, criterion = 2, assignment = 2),
+#'   reps = 1,
+#'   maxit = 6,
+#'   seed = 123
+#' )
+#' diag_eval$scenario_summary
+#' diag_eval$scenario_contrast
+#' }
+#' @export
+evaluate_mfrm_diagnostic_screening <- function(n_person = c(30, 50, 100),
+                                               n_rater = c(4),
+                                               n_criterion = c(4),
+                                               raters_per_person = n_rater,
+                                               design = NULL,
+                                               reps = 10,
+                                               scenarios = c("well_specified", "local_dependence"),
+                                               local_dependence_sd = 0.8,
+                                               local_dependence_facet = NULL,
+                                               score_levels = 4,
+                                               theta_sd = 1,
+                                               rater_sd = 0.35,
+                                               criterion_sd = 0.25,
+                                               noise_sd = 0,
+                                               step_span = 1.4,
+                                               model = c("RSM", "PCM", "GPCM"),
+                                               step_facet = NULL,
+                                               maxit = 25,
+                                               quad_points = 7,
+                                               residual_pca = c("none", "overall", "facet", "both"),
+                                               sim_spec = NULL,
+                                               seed = NULL) {
+  model <- match.arg(model)
+  if (identical(model, "GPCM")) {
+    stop(
+      "`evaluate_mfrm_diagnostic_screening()` does not yet support bounded `GPCM`. ",
+      "Strict marginal validation is currently scoped to `RSM` / `PCM`.",
+      call. = FALSE
+    )
+  }
+  residual_pca <- match.arg(residual_pca)
+  if (!is.null(sim_spec) && !inherits(sim_spec, "mfrm_sim_spec")) {
+    stop("`sim_spec` must be output from build_mfrm_sim_spec() or extract_mfrm_sim_spec().", call. = FALSE)
+  }
+  if (!is.null(sim_spec) && identical(as.character(sim_spec$model %||% NA_character_), "GPCM")) {
+    stop(
+      "`evaluate_mfrm_diagnostic_screening()` does not yet support bounded `GPCM` simulation specifications. ",
+      "Strict marginal validation remains scoped to `RSM` / `PCM`.",
+      call. = FALSE
+    )
+  }
+
+  reps <- as.integer(reps[1])
+  if (!is.finite(reps) || reps < 1L) {
+    stop("`reps` must be >= 1.", call. = FALSE)
+  }
+
+  scenarios <- unique(as.character(scenarios))
+  valid_scenarios <- c(
+    "well_specified",
+    "local_dependence",
+    "latent_misspecification",
+    "step_structure_misspecification"
+  )
+  if (length(scenarios) == 0L || !all(scenarios %in% valid_scenarios)) {
+    stop(
+      "`scenarios` must be drawn from: ",
+      paste(valid_scenarios, collapse = ", "),
+      ".",
+      call. = FALSE
+    )
+  }
+
+  supplied_counts <- intersect(
+    names(as.list(match.call(expand.dots = FALSE))[-1]),
+    c("n_person", "n_rater", "n_criterion", "raters_per_person")
+  )
+  design_meta <- simulation_build_design_grid(
+    n_person = n_person,
+    n_rater = n_rater,
+    n_criterion = n_criterion,
+    raters_per_person = raters_per_person,
+    design = design,
+    sim_spec = sim_spec,
+    id_prefix = "V",
+    explicit_scalar_names = supplied_counts
+  )
+  design_grid <- design_meta$canonical
+  design_grid_public <- design_meta$public
+  design_variable_aliases <- design_meta$aliases
+  design_descriptor <- design_meta$descriptor
+  planning_scope <- simulation_planning_scope(sim_spec)
+  planning_constraints <- simulation_planning_constraints(sim_spec)
+  planning_schema <- simulation_planning_schema(sim_spec)
+
+  generator_model <- if (is.null(sim_spec)) model else sim_spec$model
+  base_facet_names <- if (is.null(sim_spec)) simulation_default_output_facet_names() else simulation_spec_output_facet_names(sim_spec)
+  generator_step_facet <- if (is.null(sim_spec)) {
+    if (identical(generator_model, "PCM")) base_facet_names[2] else NA_character_
+  } else {
+    sim_spec$step_facet
+  }
+  generator_assignment <- if (is.null(sim_spec)) "design_dependent" else sim_spec$assignment
+  fit_step_facet <- simulation_resolve_fit_step_facet(model, step_facet, generator_step_facet)
+
+  seeds <- with_preserved_rng_seed(
+    seed,
+    sample.int(.Machine$integer.max, size = nrow(design_grid) * reps * length(scenarios), replace = FALSE)
+  )
+  seed_idx <- 0L
+  out_idx <- 0L
+  result_rows <- vector("list", nrow(design_grid) * reps * length(scenarios))
+
+  for (i in seq_len(nrow(design_grid))) {
+    design_row <- design_grid[i, , drop = FALSE]
+    row_spec_base <- if (is.null(sim_spec)) {
+      NULL
+    } else {
+      simulation_override_spec_design(
+        sim_spec,
+        n_person = design_row$n_person,
+        n_rater = design_row$n_rater,
+        n_criterion = design_row$n_criterion,
+        raters_per_person = design_row$raters_per_person
+      )
+    }
+    row_score_levels <- if (is.null(row_spec_base)) score_levels else row_spec_base$score_levels
+    row_facet_names <- if (is.null(row_spec_base)) simulation_default_output_facet_names() else simulation_spec_output_facet_names(row_spec_base)
+    dependence_facet_name <- diagnostic_screening_resolve_dependence_facet(local_dependence_facet, row_facet_names)
+
+    for (scenario in scenarios) {
+      for (rep in seq_len(reps)) {
+        seed_idx <- seed_idx + 1L
+        sim_seed <- seeds[seed_idx]
+        scenario_class <- dplyr::case_when(
+          identical(scenario, "well_specified") ~ "null_reference",
+          identical(scenario, "local_dependence") ~ "context_shared_person_by_facet_effect",
+          identical(scenario, "latent_misspecification") ~ "bimodal_person_distribution_under_normal_fit",
+          identical(scenario, "step_structure_misspecification") ~ "facet_specific_thresholds_under_misspecified_step_contract",
+          TRUE ~ "other"
+        )
+
+        interaction_effects <- NULL
+        row_spec <- row_spec_base
+        if (identical(scenario, "local_dependence")) {
+          skeleton <- if (is.null(row_spec_base)) {
+            sim_args <- list(
+              n_person = design_row$n_person,
+              n_rater = design_row$n_rater,
+              n_criterion = design_row$n_criterion,
+              raters_per_person = design_row$raters_per_person,
+              score_levels = score_levels,
+              theta_sd = theta_sd,
+              rater_sd = rater_sd,
+              criterion_sd = criterion_sd,
+              noise_sd = noise_sd,
+              step_span = step_span,
+              model = model,
+              seed = sim_seed
+            )
+            if (identical(model, "PCM")) {
+              sim_args$step_facet <- fit_step_facet
+            }
+            do.call(simulate_mfrm_data, sim_args)
+          } else {
+            simulate_mfrm_data(sim_spec = row_spec_base, seed = sim_seed)
+          }
+          interaction_effects <- diagnostic_screening_build_local_dependence_effects(
+            dat = skeleton,
+            dependence_facet = dependence_facet_name,
+            local_dependence_sd = local_dependence_sd,
+            seed = sim_seed + 1L
+          )
+          if (!is.null(row_spec_base)) {
+            row_spec <- simulation_override_spec_design(
+              row_spec_base,
+              interaction_effects = interaction_effects
+            )
+          }
+        } else if (identical(scenario, "latent_misspecification")) {
+          row_spec <- diagnostic_screening_build_latent_misspecification_spec(
+            row_spec_base = row_spec_base,
+            design_row = design_row,
+            score_levels = score_levels,
+            theta_sd = theta_sd,
+            rater_sd = rater_sd,
+            criterion_sd = criterion_sd,
+            noise_sd = noise_sd,
+            step_span = step_span,
+            model = model,
+            fit_step_facet = fit_step_facet,
+            seed = sim_seed + 1L
+          )
+        } else if (identical(scenario, "step_structure_misspecification")) {
+          row_spec <- diagnostic_screening_build_step_misspecification_spec(
+            row_spec_base = row_spec_base,
+            design_row = design_row,
+            score_levels = score_levels,
+            theta_sd = theta_sd,
+            rater_sd = rater_sd,
+            criterion_sd = criterion_sd,
+            noise_sd = noise_sd,
+            step_span = step_span,
+            fit_model = model,
+            fit_step_facet = fit_step_facet
+          )
+        }
+
+        sim <- if (is.null(row_spec)) {
+          sim_args <- list(
+            n_person = design_row$n_person,
+            n_rater = design_row$n_rater,
+            n_criterion = design_row$n_criterion,
+            raters_per_person = design_row$raters_per_person,
+            score_levels = score_levels,
+            theta_sd = theta_sd,
+            rater_sd = rater_sd,
+            criterion_sd = criterion_sd,
+            noise_sd = noise_sd,
+            step_span = step_span,
+            interaction_effects = interaction_effects,
+            model = model,
+            seed = sim_seed
+          )
+          if (identical(model, "PCM")) {
+            sim_args$step_facet <- fit_step_facet
+          }
+          do.call(simulate_mfrm_data, sim_args)
+        } else {
+          simulate_mfrm_data(sim_spec = row_spec, seed = sim_seed)
+        }
+
+        t0 <- proc.time()[["elapsed"]]
+        fit_args <- list(
+          data = sim,
+          person = "Person",
+          facets = row_facet_names,
+          score = "Score",
+          method = "MML",
+          model = model,
+          maxit = maxit,
+          quad_points = quad_points
+        )
+        if (identical(model, "PCM")) {
+          fit_args$step_facet <- fit_step_facet
+        }
+        if ("Weight" %in% names(sim)) {
+          fit_args$weight <- "Weight"
+        }
+        sim_population <- attr(sim, "mfrm_population_data")
+        if (is.list(sim_population) && isTRUE(sim_population$active)) {
+          fit_args$population_formula <- sim_population$population_formula
+          fit_args$person_data <- sim_population$person_data
+          fit_args$person_id <- sim_population$person_id
+          fit_args$population_policy <- sim_population$population_policy
+        }
+
+        fit <- tryCatch(do.call(fit_mfrm, fit_args), error = function(e) e)
+        diag <- if (inherits(fit, "error")) fit else {
+          tryCatch(
+            diagnose_mfrm(
+              fit,
+              diagnostic_mode = "both",
+              residual_pca = residual_pca
+            ),
+            error = function(e) e
+          )
+        }
+        elapsed <- proc.time()[["elapsed"]] - t0
+
+        out_idx <- out_idx + 1L
+        result_row <- tibble::tibble(
+          design_id = design_row$design_id,
+          Scenario = scenario,
+          ScenarioClass = scenario_class,
+          DependenceFacet = dependence_facet_name,
+          Model = model,
+          rep = rep,
+          n_person = design_row$n_person,
+          n_rater = design_row$n_rater,
+          n_criterion = design_row$n_criterion,
+          raters_per_person = design_row$raters_per_person,
+          Observations = nrow(sim),
+          MinCategoryCount = min(tabulate(sim$Score, nbins = row_score_levels)),
+          ElapsedSec = elapsed,
+          RunOK = FALSE,
+          Converged = FALSE,
+          Error = NA_character_,
+          LegacyMeanAbsZ = NA_real_,
+          LegacyFlaggedLevels = NA_real_,
+          MarginalAvailable = FALSE,
+          MarginalOverallRMSD = NA_real_,
+          MarginalMaxAbsStdResidual = NA_real_,
+          MarginalFlaggedGroups = NA_real_,
+          PairwiseAvailable = FALSE,
+          PairwiseFlaggedLevelPairs = NA_real_
+        )
+
+        if (inherits(fit, "error")) {
+          result_row$Error <- conditionMessage(fit)
+          result_rows[[out_idx]] <- result_row
+          next
+        }
+        if (inherits(diag, "error")) {
+          result_row$Error <- conditionMessage(diag)
+          result_rows[[out_idx]] <- result_row
+          next
+        }
+
+        metrics <- diagnostic_screening_collect_metrics(diag)
+        result_row$RunOK <- TRUE
+        result_row$Converged <- isTRUE(as.logical(fit$summary$Converged[1]))
+        result_row$LegacyMeanAbsZ <- metrics$LegacyMeanAbsZ
+        result_row$LegacyFlaggedLevels <- metrics$LegacyFlaggedLevels
+        result_row$MarginalAvailable <- metrics$MarginalAvailable
+        result_row$MarginalOverallRMSD <- metrics$MarginalOverallRMSD
+        result_row$MarginalMaxAbsStdResidual <- metrics$MarginalMaxAbsStdResidual
+        result_row$MarginalFlaggedGroups <- metrics$MarginalFlaggedGroups
+        result_row$PairwiseAvailable <- metrics$PairwiseAvailable
+        result_row$PairwiseFlaggedLevelPairs <- metrics$PairwiseFlaggedLevelPairs
+        result_rows[[out_idx]] <- result_row
+      }
+    }
+  }
+
+  results <- dplyr::bind_rows(result_rows[seq_len(out_idx)])
+  results <- simulation_append_design_alias_columns(results, design_variable_aliases)
+  summary_bundle <- diagnostic_screening_summarize_results(
+    results,
+    design_variable_aliases = design_variable_aliases
+  )
+  ademp <- simulation_build_ademp(
+    purpose = "Compare legacy residual screens and strict marginal-fit screens under well-specified and local-dependence simulation scenarios.",
+    design_grid = design_grid,
+    generator_model = generator_model,
+    generator_step_facet = generator_step_facet,
+    generator_assignment = generator_assignment,
+    sim_spec = sim_spec,
+    estimands = c(
+      "Legacy residual-screen magnitude and flagged-level counts",
+      "Strict marginal overall RMSD and flagged-group counts",
+      "Strict pairwise local-dependence flagged-pair counts",
+      "Scenario contrasts between local dependence and well-specified runs"
+    ),
+    analysis_methods = list(
+      fit_method = "MML",
+      fitted_model = model,
+      maxit = maxit,
+      quad_points = quad_points,
+      diagnostic_mode = "both",
+      residual_pca = residual_pca,
+      scenarios = scenarios,
+      local_dependence_sd = local_dependence_sd,
+      local_dependence_facet = local_dependence_facet %||% "criterion"
+    ),
+    performance_measures = c(
+      "Scenario-specific mean screening metrics",
+      "Run and convergence rates",
+      "Scenario contrasts in strict versus legacy screens"
+    )
+  )
+
+  structure(
+    list(
+      design_grid = design_grid_public,
+      results = results,
+      scenario_summary = summary_bundle$scenario_summary,
+      performance_summary = summary_bundle$performance_summary,
+      scenario_contrast = summary_bundle$scenario_contrast,
+      design_descriptor = design_descriptor,
+      planning_scope = planning_scope,
+      planning_constraints = planning_constraints,
+      planning_schema = planning_schema,
+      settings = list(
+        reps = reps,
+        scenarios = scenarios,
+        local_dependence_sd = local_dependence_sd,
+        local_dependence_facet = local_dependence_facet %||% "criterion",
+        score_levels = score_levels,
+        theta_sd = theta_sd,
+        rater_sd = rater_sd,
+        criterion_sd = criterion_sd,
+        noise_sd = noise_sd,
+        step_span = step_span,
+        model = model,
+        step_facet = fit_step_facet,
+        maxit = maxit,
+        quad_points = quad_points,
+        residual_pca = residual_pca,
+        sim_spec = sim_spec,
+        facet_names = stats::setNames(base_facet_names, c("rater", "criterion")),
+        design_variable_aliases = design_variable_aliases,
+        design_descriptor = design_descriptor,
+        planning_scope = planning_scope,
+        planning_constraints = planning_constraints,
+        planning_schema = planning_schema,
+        generator_model = generator_model,
+        generator_step_facet = generator_step_facet,
+        generator_assignment = generator_assignment,
+        seed = seed
+      ),
+      ademp = ademp,
+      notes = summary_bundle$notes
+    ),
+    class = "mfrm_diagnostic_screening"
+  )
+}
+
+signal_eval_resolve_level <- function(value, prefix, n_levels, arg_name) {
+  if (is.null(value)) {
+    return(sprintf("%s%02d", prefix, n_levels))
+  }
+  if (is.numeric(value)) {
+    idx <- as.integer(value[1])
+    if (!is.finite(idx) || idx < 1L || idx > n_levels) {
+      stop("`", arg_name, "` must be between 1 and ", n_levels, ".")
+    }
+    return(sprintf("%s%02d", prefix, idx))
+  }
+  value <- as.character(value[1])
+  if (!nzchar(value) || is.na(value)) {
+    stop("`", arg_name, "` must be a non-empty label or index.")
+  }
+  value
+}
+
+signal_eval_resolve_level_from_choices <- function(value, available_levels, arg_name) {
+  available_levels <- as.character(available_levels)
+  available_levels <- available_levels[!is.na(available_levels) & nzchar(available_levels)]
+  if (length(available_levels) == 0L) {
+    stop("No candidate levels are available for `", arg_name, "`.", call. = FALSE)
+  }
+  if (is.null(value)) {
+    return(available_levels[length(available_levels)])
+  }
+  if (is.numeric(value)) {
+    idx <- as.integer(value[1])
+    if (!is.finite(idx) || idx < 1L || idx > length(available_levels)) {
+      stop("`", arg_name, "` must be between 1 and ", length(available_levels), ".", call. = FALSE)
+    }
+    return(available_levels[idx])
+  }
+  value <- as.character(value[1])
+  if (!nzchar(value) || is.na(value)) {
+    stop("`", arg_name, "` must be a non-empty label or index.", call. = FALSE)
+  }
+  if (!value %in% available_levels) {
+    stop(
+      "`", arg_name, "` must match one of: ",
+      paste(available_levels, collapse = ", "),
+      ".",
+      call. = FALSE
+    )
+  }
+  value
+}
+
+signal_eval_find_dif_row <- function(tbl, level, group1, group2) {
+  tbl <- tibble::as_tibble(tbl)
+  if (nrow(tbl) == 0) return(tbl)
+  out <- tbl |>
+    dplyr::filter(
+      .data$Level == level,
+      (.data$Group1 == group1 & .data$Group2 == group2) |
+        (.data$Group1 == group2 & .data$Group2 == group1)
+    ) |>
+    dplyr::slice_head(n = 1)
+  out
+}
+
+signal_eval_find_bias_row <- function(tbl, rater_level, criterion_level) {
+  tbl <- tibble::as_tibble(tbl)
+  if (nrow(tbl) == 0) return(tbl)
+  out <- tbl |>
+    dplyr::filter(
+      .data$FacetA_Level == rater_level,
+      .data$FacetB_Level == criterion_level
+    ) |>
+    dplyr::slice_head(n = 1)
+  out
+}
+
+signal_eval_get_p <- function(tbl, adjusted_col = "p_adjusted", raw_col = "p_value") {
+  tbl <- tibble::as_tibble(tbl)
+  if (nrow(tbl) == 0) return(NA_real_)
+  p_adj <- suppressWarnings(as.numeric(tbl[[adjusted_col]][1]))
+  if (is.finite(p_adj)) return(p_adj)
+  p_raw <- suppressWarnings(as.numeric(tbl[[raw_col]][1]))
+  if (is.finite(p_raw)) return(p_raw)
+  NA_real_
+}
+
+signal_eval_false_positive_rate <- function(flag_vec) {
+  if (length(flag_vec) == 0) return(NA_real_)
+  mean(flag_vec, na.rm = TRUE)
+}
+
+signal_eval_summary <- function(results, rep_overview, design_variable_aliases = NULL) {
+  results_tbl <- tibble::as_tibble(results)
+  rep_tbl <- tibble::as_tibble(rep_overview)
+  design_descriptor <- simulation_object_design_descriptor(list(
+    results = results_tbl,
+    rep_overview = rep_tbl,
+    design_variable_aliases = design_variable_aliases
+  ))
+  design_group_vars <- simulation_design_group_variables(design_descriptor)
+  design_arrange_vars <- simulation_design_canonical_variables(design_descriptor)
+
+  detection_summary <- tibble::tibble()
+  if (nrow(results_tbl) > 0) {
+    detection_summary <- results_tbl |>
+      dplyr::group_by(
+        dplyr::across(dplyr::all_of(design_group_vars)),
+        .data$DIFTargetLevel,
+        .data$BiasTargetRater,
+        .data$BiasTargetCriterion
+      ) |>
+      dplyr::summarize(
+        Reps = dplyr::n(),
+        ConvergenceRate = mean(.data$Converged, na.rm = TRUE),
+        McseConvergenceRate = simulation_mcse_proportion(.data$Converged),
+        DIFPower = mean(.data$DIFDetected, na.rm = TRUE),
+        McseDIFPower = simulation_mcse_proportion(.data$DIFDetected),
+        DIFClassificationPower = mean(.data$DIFClassDetected, na.rm = TRUE),
+        McseDIFClassificationPower = simulation_mcse_proportion(.data$DIFClassDetected),
+        MeanTargetContrast = mean(.data$DIFContrast, na.rm = TRUE),
+        McseTargetContrast = simulation_mcse_mean(.data$DIFContrast),
+        MeanTargetContrastAbs = mean(abs(.data$DIFContrast), na.rm = TRUE),
+        McseTargetContrastAbs = simulation_mcse_mean(abs(.data$DIFContrast)),
+        DIFFalsePositiveRate = mean(.data$DIFFalsePositiveRate, na.rm = TRUE),
+        McseDIFFalsePositiveRate = simulation_mcse_mean(.data$DIFFalsePositiveRate),
+        BiasScreenRate = mean(.data$BiasDetected, na.rm = TRUE),
+        McseBiasScreenRate = simulation_mcse_proportion(.data$BiasDetected),
+        MeanTargetBias = mean(.data$BiasSize, na.rm = TRUE),
+        McseTargetBias = simulation_mcse_mean(.data$BiasSize),
+        MeanAbsTargetBias = mean(abs(.data$BiasSize), na.rm = TRUE),
+        McseAbsTargetBias = simulation_mcse_mean(abs(.data$BiasSize)),
+        MeanTargetBiasT = mean(.data$BiasT, na.rm = TRUE),
+        McseTargetBiasT = simulation_mcse_mean(.data$BiasT),
+        BiasScreenMetricAvailabilityRate = mean(.data$BiasScreenMetricAvailable, na.rm = TRUE),
+        McseBiasScreenMetricAvailabilityRate = simulation_mcse_proportion(.data$BiasScreenMetricAvailable),
+        BiasScreenFalsePositiveRate = mean(.data$BiasScreenFalsePositiveRate, na.rm = TRUE),
+        McseBiasScreenFalsePositiveRate = simulation_mcse_mean(.data$BiasScreenFalsePositiveRate),
+        MeanElapsedSec = mean(.data$ElapsedSec, na.rm = TRUE),
+        McseElapsedSec = simulation_mcse_mean(.data$ElapsedSec),
+        .groups = "drop"
+      ) |>
+      dplyr::arrange(!!!rlang::syms(design_arrange_vars))
+    detection_summary <- simulation_append_design_alias_columns(detection_summary, design_variable_aliases)
+  }
+
+  overview <- tibble::tibble(
+    Designs = dplyr::n_distinct(rep_tbl$design_id),
+    Replications = nrow(rep_tbl),
+    SuccessfulRuns = sum(rep_tbl$RunOK, na.rm = TRUE),
+    ConvergedRuns = sum(rep_tbl$Converged, na.rm = TRUE),
+    MeanElapsedSec = design_eval_safe_mean(rep_tbl$ElapsedSec)
+  )
+
+  notes <- character(0)
+  if (nrow(detection_summary) > 0 && any(detection_summary$ConvergenceRate < 1, na.rm = TRUE)) {
+    notes <- c(notes, "Some design conditions did not converge in every replication.")
+  }
+  if (nrow(detection_summary) > 0 && any(detection_summary$DIFPower < 0.8, na.rm = TRUE)) {
+    notes <- c(notes, "Some design conditions showed DIF power below 0.80.")
+  }
+  if (nrow(detection_summary) > 0 && any(detection_summary$BiasScreenRate < 0.8, na.rm = TRUE)) {
+    notes <- c(notes, "Some design conditions showed bias-screen hit rates below 0.80.")
+  }
+  if (nrow(detection_summary) > 0 && any(detection_summary$BiasScreenMetricAvailabilityRate < 1, na.rm = TRUE)) {
+    notes <- c(notes, "Some design conditions did not yield usable bias-screening t/p metrics in every replication.")
+  }
+  notes <- c(
+    notes,
+    "Bias-side rates are screening summaries derived from `estimate_bias()` output and should not be interpreted as formal power or alpha-calibrated false-positive rates.",
+    "MCSE columns summarize finite-replication uncertainty around the reported means and rates."
+  )
+
+  list(
+    overview = overview,
+    detection_summary = detection_summary,
+    notes = notes
+  )
+}
+
+signal_eval_metric_col <- function(signal, metric) {
+  if (identical(signal, "dif")) {
+    switch(
+      metric,
+      power = "DIFPower",
+      false_positive = "DIFFalsePositiveRate",
+      estimate = "MeanTargetContrast"
+    )
+  } else {
+    switch(
+      metric,
+      power = "BiasScreenRate",
+      false_positive = "BiasScreenFalsePositiveRate",
+      estimate = "MeanTargetBias"
+    )
+  }
+}
+
+#' Evaluate DIF power and bias-screening behavior under known simulated signals
+#'
+#' @param n_person Vector of person counts to evaluate.
+#' @param n_rater Vector of rater counts to evaluate.
+#' @param n_criterion Vector of criterion counts to evaluate.
+#' @param raters_per_person Vector of rater assignments per person.
+#' @param design Optional named design-grid override supplied as a named list,
+#'   named vector, or one-row data frame. Names may use canonical variables
+#'   (`n_person`, `n_rater`, `n_criterion`, `raters_per_person`), current
+#'   public aliases implied by `sim_spec` (for example `n_judge`, `n_task`,
+#'   `judge_per_person`), or role keywords (`person`, `rater`, `criterion`,
+#'   `assignment`). Values may be vectors. The schema-only future branch input
+#'   `design$facets = c(person = ..., judge = ..., task = ...)` is also
+#'   accepted for the currently exposed facet keys. Do not specify the same
+#'   variable through both `design` and the scalar design-grid arguments.
+#' @param reps Number of replications per design condition.
+#' @param group_levels Group labels used for DIF simulation. The first two levels
+#'   define the default reference and focal groups.
+#' @param reference_group Optional reference group label used when extracting the
+#'   target DIF contrast.
+#' @param focal_group Optional focal group label used when extracting the target
+#'   DIF contrast.
+#' @param dif_level Target criterion level for the true DIF effect. Can be an
+#'   integer index or a criterion label such as `"C04"`. Defaults to the last
+#'   criterion level in each design.
+#' @param dif_effect True DIF effect size added to the focal group on the target
+#'   criterion.
+#' @param bias_rater Target rater level for the true interaction-bias effect.
+#'   Can be an integer index or a label such as `"R04"`. Defaults to the last
+#'   rater level in each design.
+#' @param bias_criterion Target criterion level for the true interaction-bias
+#'   effect. Can be an integer index or a criterion label. Defaults to the last
+#'   criterion level in each design.
+#' @param bias_effect True interaction-bias effect added to the target
+#'   `Rater x Criterion` cell.
+#' @param score_levels Number of ordered score categories.
+#' @param theta_sd Standard deviation of simulated person measures.
+#' @param rater_sd Standard deviation of simulated rater severities.
+#' @param criterion_sd Standard deviation of simulated criterion difficulties.
+#' @param noise_sd Optional observation-level noise added to the linear predictor.
+#' @param step_span Spread of step thresholds on the logit scale.
+#' @param fit_method Estimation method passed to [fit_mfrm()].
+#' @param model Measurement model passed to [fit_mfrm()]. The current
+#'   signal-detection evaluator supports `RSM` and `PCM`; bounded `GPCM`
+#'   is accepted only to produce an explicit unsupported-path error.
+#' @param step_facet Step facet passed to [fit_mfrm()] when `model = "PCM"`.
+#'   When left `NULL`, the function inherits the generator step facet from
+#'   `sim_spec` when available and otherwise defaults to `"Criterion"`.
+#' @param maxit Maximum iterations passed to [fit_mfrm()].
+#' @param quad_points Quadrature points for `fit_method = "MML"`.
+#' @param residual_pca Residual PCA mode passed to [diagnose_mfrm()].
+#' @param sim_spec Optional output from [build_mfrm_sim_spec()] or
+#'   [extract_mfrm_sim_spec()] used as the base data-generating mechanism.
+#'   When supplied, the design grid still varies `n_person`, `n_rater`,
+#'   `n_criterion`, and `raters_per_person`, but latent spread, thresholds,
+#'   and other generator settings come from `sim_spec`. The target DIF and
+#'   interaction-bias signals specified in this function override any signal
+#'   tables stored in `sim_spec`. If `sim_spec` stores an active
+#'   latent-regression population generator, this helper currently requires
+#'   `fit_method = "MML"` so each replication can refit the population model.
+#' @param dif_method Differential-functioning method passed to [analyze_dff()].
+#' @param dif_min_obs Minimum observations per group cell for [analyze_dff()].
+#' @param dif_p_adjust P-value adjustment method passed to [analyze_dff()].
+#' @param dif_p_cut P-value cutoff for counting a target DIF detection.
+#' @param dif_abs_cut Optional absolute contrast cutoff used when counting a
+#'   target DIF detection. When omitted, the effective default is `0.43` for
+#'   `dif_method = "refit"` and `0` (no additional magnitude cutoff) for
+#'   `dif_method = "residual"`.
+#' @param bias_max_iter Maximum iterations passed to [estimate_bias()].
+#' @param bias_p_cut P-value cutoff for counting a target bias screen-positive result.
+#' @param bias_abs_t Absolute t cutoff for counting a target bias screen-positive result.
+#' @param seed Optional seed for reproducible replications.
+#'
+#' @details
+#' This function performs Monte Carlo design screening for two related tasks:
+#' DIF detection via [analyze_dff()] and interaction-bias screening via
+#' [estimate_bias()].
+#'
+#' For each design condition (combination of `n_person`, `n_rater`,
+#' `n_criterion`, `raters_per_person`), the function:
+#' 1. Generates synthetic data with [simulate_mfrm_data()]
+#' 2. Injects one known Group \eqn{\times} Criterion DIF effect
+#'    (`dif_effect` logits added to the focal group on the target criterion)
+#' 3. Injects one known Rater \eqn{\times} Criterion interaction-bias
+#'    effect (`bias_effect` logits)
+#' 4. Fits and diagnoses the MFRM
+#' 5. Runs [analyze_dff()] and [estimate_bias()]
+#' 6. Records whether the injected signals were detected or screen-positive
+#'
+#' **Detection criteria**:
+#' A DIF signal is counted as "detected" when the target contrast has
+#' \eqn{p <} `dif_p_cut` **and**, when an absolute contrast cutoff is in
+#' force, \eqn{|\mathrm{Contrast}| \ge} `dif_abs_cut`. For
+#' `dif_method = "refit"`, `dif_abs_cut` is interpreted on the logit scale.
+#' For `dif_method = "residual"`, the residual-contrast screening result is
+#' used and the default is to rely on the significance test alone.
+#'
+#' Bias results are different: [estimate_bias()] reports `t` and `Prob.` as
+#' screening metrics rather than formal inferential quantities. Here, a bias
+#' cell is counted as **screen-positive** only when those screening metrics are
+#' available and satisfy
+#'
+#' First-release `GPCM` is not yet available in this helper because its signal-
+#' detection path still depends on simulation and diagnostics layers validated
+#' only for `RSM` / `PCM`. More broadly, the current planning layer is still
+#' role-based for exactly two non-person facets (`rater`-like and
+#' `criterion`-like), even though the estimation core supports arbitrary facet
+#' counts.
+#' \eqn{p <} `bias_p_cut` **and** \eqn{|t| \ge} `bias_abs_t`.
+#'
+#' **Power** is the proportion of replications in which the target signal
+#' was correctly detected. For DIF this is a conventional power summary.
+#' For bias, the primary summary is `BiasScreenRate`, a screening hit rate
+#' rather than formal inferential power.
+#'
+#' **False-positive rate** is the proportion of non-target cells that were
+#' incorrectly flagged. For DIF this is interpreted in the usual testing
+#' sense. For bias, `BiasScreenFalsePositiveRate` is a screening rate and
+#' should not be read as a calibrated inferential alpha level.
+#'
+#' **Default effect sizes**: `dif_effect = 0.6` logits corresponds to a
+#' moderate criterion-linked differential-functioning effect; `bias_effect = -0.8`
+#' logits represents a substantial rater-criterion interaction.  Adjust
+#' these to match the smallest effect size of practical concern for your
+#' application.
+#'
+#' This is again a **parametric simulation study**. The function does not
+#' estimate a new design directly from one observed dataset. Instead, it
+#' evaluates detection or screening behavior under user-specified design
+#' conditions and known injected signals.
+#'
+#' If you want to approximate a real study, choose the design grid and
+#' simulation settings so that they reflect the empirical context of interest.
+#' For example, you may set `n_person`, `n_rater`, `n_criterion`,
+#' `raters_per_person`, and the latent-spread arguments to values motivated by
+#' an existing assessment program, then study how operating characteristics
+#' change as those design settings vary.
+#'
+#' When `sim_spec` is supplied, the function uses it as the explicit
+#' data-generating mechanism for the latent spreads, thresholds, and assignment
+#' archetype, while still injecting the requested target DIF and bias effects
+#' for each design condition.
+#'
+#' If that specification also stores a latent-regression population generator,
+#' each replication carries simulated one-row-per-person background data into
+#' the MML fit. This remains a screening-oriented Monte Carlo study; it is not
+#' a person-level posterior prediction for one observed sample.
+#'
+#' @section References:
+#' The simulation logic follows the general Monte Carlo / operating-characteristic
+#' framework described by Morris, White, and Crowther (2019) and the
+#' ADEMP-oriented planning/reporting guidance summarized for psychology by
+#' Siepe et al. (2024). In `mfrmr`, `evaluate_mfrm_signal_detection()` is a
+#' many-facet screening helper specialized to DIF and interaction-bias use
+#' cases; it is not a direct implementation of one published many-facet Rasch
+#' simulation design.
+#'
+#' - Morris, T. P., White, I. R., & Crowther, M. J. (2019).
+#'   *Using simulation studies to evaluate statistical methods*.
+#'   Statistics in Medicine, 38(11), 2074-2102.
+#' - Siepe, B. S., Bartos, F., Morris, T. P., Boulesteix, A.-L., Heck, D. W.,
+#'   & Pawel, S. (2024). *Simulation studies for methodological research in
+#'   psychology: A standardized template for planning, preregistration, and
+#'   reporting*. Psychological Methods.
+#'
+#' @return An object of class `mfrm_signal_detection` with:
+#' - `design_grid`: evaluated design conditions. When `sim_spec` carries custom
+#'   public facet names, matching design-variable alias columns are included
+#'   alongside the canonical internal columns.
+#' - `results`: replicate-level detection results, with the same
+#'   design-variable alias columns when applicable.
+#' - `rep_overview`: run-level status and timing, with the same design-variable
+#'   alias columns when applicable.
+#' - `design_descriptor`: role-based design-variable metadata used by planning
+#'   summaries and plots
+#' - `planning_scope`: explicit record of the current planning contract
+#' - `planning_constraints`: explicit record of which design variables remain
+#'   mutable under the current simulation specification
+#' - `planning_schema`: combined planner-schema contract bundling the role
+#'   descriptor, scope boundary, and current mutability map
+#' - `settings`: signal-analysis settings
+#' - `ademp`: simulation-study metadata (aims, DGM, estimands, methods, performance measures)
+#' @seealso [simulate_mfrm_data()], [evaluate_mfrm_design()], [analyze_dff()], [analyze_dif()], [estimate_bias()]
+#' @examples
+#' \donttest{
+#' sig_eval <- suppressWarnings(evaluate_mfrm_signal_detection(
+#'   design = list(person = 8, rater = 2, criterion = 2, assignment = 1),
+#'   reps = 1,
+#'   maxit = 5,
+#'   bias_max_iter = 1,
+#'   seed = 123
+#' ))
+#' s_sig <- summary(sig_eval)
+#' s_sig$overview
+#' }
+#' @export
+evaluate_mfrm_signal_detection <- function(n_person = c(30, 50, 100),
+                                           n_rater = c(4),
+                                           n_criterion = c(4),
+                                           raters_per_person = n_rater,
+                                           design = NULL,
+                                           reps = 10,
+                                           group_levels = c("A", "B"),
+                                           reference_group = NULL,
+                                           focal_group = NULL,
+                                           dif_level = NULL,
+                                           dif_effect = 0.6,
+                                           bias_rater = NULL,
+                                           bias_criterion = NULL,
+                                           bias_effect = -0.8,
+                                           score_levels = 4,
+                                           theta_sd = 1,
+                                           rater_sd = 0.35,
+                                           criterion_sd = 0.25,
+                                           noise_sd = 0,
+                                           step_span = 1.4,
+                                           fit_method = c("JML", "MML"),
+                                           model = c("RSM", "PCM", "GPCM"),
+                                           step_facet = NULL,
+                                           maxit = 25,
+                                           quad_points = 7,
+                                           residual_pca = c("none", "overall", "facet", "both"),
+                                           sim_spec = NULL,
+                                           dif_method = c("residual", "refit"),
+                                           dif_min_obs = 10,
+                                           dif_p_adjust = "holm",
+                                           dif_p_cut = 0.05,
+                                           dif_abs_cut = 0.43,
+                                           bias_max_iter = 2,
+                                           bias_p_cut = 0.05,
+                                           bias_abs_t = 2,
+                                           seed = NULL) {
+  dif_abs_cut_missing <- missing(dif_abs_cut)
+  fit_method <- match.arg(fit_method)
+  model <- match.arg(model)
+  if (identical(model, "GPCM")) {
+    stop(
+      "`evaluate_mfrm_signal_detection()` does not yet support bounded `GPCM`. ",
+      "Signal-detection studies still rely on simulation and diagnostics layers that remain validated only for `RSM` / `PCM`. ",
+      gpcm_planning_scope_rationale(),
+      call. = FALSE
+    )
+  }
+  residual_pca <- match.arg(residual_pca)
+  dif_method <- match.arg(dif_method)
+  if (!is.null(sim_spec) && !inherits(sim_spec, "mfrm_sim_spec")) {
+    stop("`sim_spec` must be output from build_mfrm_sim_spec() or extract_mfrm_sim_spec().", call. = FALSE)
+  }
+  if (!is.null(sim_spec) && identical(as.character(sim_spec$model %||% NA_character_), "GPCM")) {
+    stop(
+      "`evaluate_mfrm_signal_detection()` does not yet support bounded `GPCM` simulation specifications. ",
+      "Direct data generation is available, but signal-detection studies still depend on diagnostics layers validated only for `RSM` / `PCM`. ",
+      gpcm_planning_scope_rationale(),
+      call. = FALSE
+    )
+  }
+  if (!is.null(sim_spec) &&
+      isTRUE((sim_spec$population %||% simulation_empty_population_spec())$active) &&
+      !identical(fit_method, "MML")) {
+    stop(
+      "Simulation specifications with an active latent-regression population generator currently require `fit_method = \"MML\"`.",
+      call. = FALSE
+    )
+  }
+  reps <- as.integer(reps[1])
+  if (!is.finite(reps) || reps < 1L) stop("`reps` must be >= 1.", call. = FALSE)
+  supplied_counts <- intersect(
+    names(as.list(match.call(expand.dots = FALSE))[-1]),
+    c("n_person", "n_rater", "n_criterion", "raters_per_person")
+  )
+  dif_abs_cut <- as.numeric(dif_abs_cut[1])
+  if (!is.finite(dif_abs_cut) || dif_abs_cut < 0) {
+    stop("`dif_abs_cut` must be a single non-negative numeric value.", call. = FALSE)
+  }
+  dif_abs_cut_effective <- if (dif_abs_cut_missing && identical(dif_method, "residual")) {
+    0
+  } else {
+    dif_abs_cut
+  }
+
+  group_levels <- unique(as.character(group_levels))
+  group_levels <- group_levels[!is.na(group_levels) & nzchar(group_levels)]
+  if (length(group_levels) < 2L) {
+    stop("`group_levels` must contain at least two non-empty labels.", call. = FALSE)
+  }
+  if (is.null(reference_group)) reference_group <- group_levels[1]
+  if (is.null(focal_group)) focal_group <- group_levels[2]
+  if (!reference_group %in% group_levels || !focal_group %in% group_levels) {
+    stop("`reference_group` and `focal_group` must be members of `group_levels`.", call. = FALSE)
+  }
+  if (identical(reference_group, focal_group)) {
+    stop("`reference_group` and `focal_group` must differ.", call. = FALSE)
+  }
+
+  design_meta <- simulation_build_design_grid(
+    n_person = n_person,
+    n_rater = n_rater,
+    n_criterion = n_criterion,
+    raters_per_person = raters_per_person,
+    design = design,
+    sim_spec = sim_spec,
+    id_prefix = "S",
+    explicit_scalar_names = supplied_counts
+  )
+  design_grid <- design_meta$canonical
+  design_grid_public <- design_meta$public
+
+  generator_model <- if (is.null(sim_spec)) model else sim_spec$model
+  base_facet_names <- if (is.null(sim_spec)) simulation_default_output_facet_names() else simulation_spec_output_facet_names(sim_spec)
+  generator_step_facet <- if (is.null(sim_spec)) if (identical(generator_model, "PCM")) base_facet_names[2] else NA_character_ else sim_spec$step_facet
+  generator_assignment <- if (is.null(sim_spec)) "design_dependent" else sim_spec$assignment
+  design_variable_aliases <- design_meta$aliases
+  design_descriptor <- design_meta$descriptor
+  planning_scope <- simulation_planning_scope(sim_spec)
+  planning_constraints <- simulation_planning_constraints(sim_spec)
+  planning_schema <- simulation_planning_schema(sim_spec)
+  fit_step_facet <- simulation_resolve_fit_step_facet(model, step_facet, generator_step_facet)
+
+  seeds <- with_preserved_rng_seed(
+    seed,
+    sample.int(.Machine$integer.max, size = nrow(design_grid) * reps, replace = FALSE)
+  )
+  seed_idx <- 0L
+
+  result_rows <- vector("list", nrow(design_grid) * reps)
+  rep_rows <- vector("list", nrow(design_grid) * reps)
+  out_idx <- 0L
+
+  for (i in seq_len(nrow(design_grid))) {
+    design <- design_grid[i, , drop = FALSE]
+    row_facet_names <- if (is.null(sim_spec)) simulation_default_output_facet_names() else simulation_spec_output_facet_names(sim_spec)
+    dif_levels <- simulation_spec_role_levels(sim_spec, "criterion", count = design$n_criterion)
+    bias_rater_levels <- simulation_spec_role_levels(sim_spec, "rater", count = design$n_rater)
+    bias_criterion_levels <- simulation_spec_role_levels(sim_spec, "criterion", count = design$n_criterion)
+    dif_target <- signal_eval_resolve_level_from_choices(dif_level, dif_levels, "dif_level")
+    bias_rater_target <- signal_eval_resolve_level_from_choices(bias_rater, bias_rater_levels, "bias_rater")
+    bias_criterion_target <- signal_eval_resolve_level_from_choices(bias_criterion, bias_criterion_levels, "bias_criterion")
+    dif_tbl <- tibble::tibble(
+      Group = focal_group,
+      Effect = as.numeric(dif_effect[1])
+    )
+    dif_tbl[[row_facet_names[2]]] <- dif_target
+    dif_tbl <- tibble::as_tibble(dif_tbl)
+    dif_tbl <- dif_tbl[, c("Group", row_facet_names[2], "Effect")]
+    bias_tbl <- tibble::tibble(Effect = as.numeric(bias_effect[1]))
+    bias_tbl[[row_facet_names[1]]] <- bias_rater_target
+    bias_tbl[[row_facet_names[2]]] <- bias_criterion_target
+    bias_tbl <- tibble::as_tibble(bias_tbl)
+    bias_tbl <- bias_tbl[, c(row_facet_names, "Effect")]
+    row_spec <- if (is.null(sim_spec)) {
+      NULL
+    } else {
+      simulation_override_spec_design(
+        sim_spec,
+        n_person = design$n_person,
+        n_rater = design$n_rater,
+        n_criterion = design$n_criterion,
+        raters_per_person = design$raters_per_person,
+        group_levels = group_levels,
+        dif_effects = if (isTRUE(abs(as.numeric(dif_effect[1])) > 0)) dif_tbl else NULL,
+        interaction_effects = if (isTRUE(abs(as.numeric(bias_effect[1])) > 0)) bias_tbl else NULL
+      )
+    }
+    row_score_levels <- if (is.null(row_spec)) score_levels else row_spec$score_levels
+    for (rep in seq_len(reps)) {
+      seed_idx <- seed_idx + 1L
+      sim <- if (is.null(row_spec)) {
+        simulate_mfrm_data(
+          n_person = design$n_person,
+          n_rater = design$n_rater,
+          n_criterion = design$n_criterion,
+          raters_per_person = design$raters_per_person,
+          score_levels = score_levels,
+          theta_sd = theta_sd,
+          rater_sd = rater_sd,
+          criterion_sd = criterion_sd,
+          noise_sd = noise_sd,
+          step_span = step_span,
+          group_levels = group_levels,
+          dif_effects = if (isTRUE(abs(as.numeric(dif_effect[1])) > 0)) dif_tbl else NULL,
+          interaction_effects = if (isTRUE(abs(as.numeric(bias_effect[1])) > 0)) bias_tbl else NULL,
+          seed = seeds[seed_idx]
+        )
+      } else {
+        simulate_mfrm_data(sim_spec = row_spec, seed = seeds[seed_idx])
+      }
+
+      t0 <- proc.time()[["elapsed"]]
+      fit_args <- list(
+        data = sim,
+        person = "Person",
+        facets = row_facet_names,
+        score = "Score",
+        method = fit_method,
+        model = model,
+        maxit = maxit
+      )
+      if (identical(model, "PCM")) fit_args$step_facet <- fit_step_facet
+      if ("Weight" %in% names(sim)) fit_args$weight <- "Weight"
+      if (identical(fit_method, "MML")) fit_args$quad_points <- quad_points
+      sim_population <- attr(sim, "mfrm_population_data")
+      if (is.list(sim_population) && isTRUE(sim_population$active)) {
+        fit_args$population_formula <- sim_population$population_formula
+        fit_args$person_data <- sim_population$person_data
+        fit_args$person_id <- sim_population$person_id
+        fit_args$population_policy <- sim_population$population_policy
+      }
+
+      fit <- tryCatch(do.call(fit_mfrm, fit_args), error = function(e) e)
+      diag <- if (inherits(fit, "error")) fit else {
+        tryCatch(diagnose_mfrm(fit, residual_pca = residual_pca), error = function(e) e)
+      }
+      dif <- if (inherits(diag, "error")) diag else {
+        tryCatch(
+          analyze_dff(
+            fit, diag,
+            facet = row_facet_names[2],
+            group = "Group",
+            data = sim,
+            method = dif_method,
+            min_obs = dif_min_obs,
+            p_adjust = dif_p_adjust
+          ),
+          error = function(e) e
+        )
+      }
+      bias <- if (inherits(diag, "error")) diag else {
+        tryCatch(
+          estimate_bias(fit, diag, facet_a = row_facet_names[1], facet_b = row_facet_names[2], max_iter = bias_max_iter),
+          error = function(e) e
+        )
+      }
+      elapsed <- proc.time()[["elapsed"]] - t0
+      converged <- !inherits(fit, "error") && isTRUE(as.logical(fit$summary$Converged[1]))
+
+      err_msg <- character(0)
+      if (inherits(fit, "error")) err_msg <- c(err_msg, conditionMessage(fit))
+      if (inherits(diag, "error")) err_msg <- c(err_msg, conditionMessage(diag))
+      if (inherits(dif, "error")) err_msg <- c(err_msg, conditionMessage(dif))
+      if (inherits(bias, "error")) err_msg <- c(err_msg, conditionMessage(bias))
+      run_ok <- length(err_msg) == 0L
+
+      out_idx <- out_idx + 1L
+      rep_rows[[out_idx]] <- tibble::tibble(
+        design_id = design$design_id,
+        rep = rep,
+        n_person = design$n_person,
+        n_rater = design$n_rater,
+        n_criterion = design$n_criterion,
+        raters_per_person = design$raters_per_person,
+        Observations = nrow(sim),
+        MinCategoryCount = min(tabulate(sim$Score, nbins = row_score_levels)),
+        ElapsedSec = elapsed,
+        RunOK = run_ok,
+        Converged = converged,
+        Error = if (length(err_msg) == 0L) NA_character_ else paste(unique(err_msg), collapse = " | ")
+      )
+
+      dif_target_row <- if (!inherits(dif, "error")) {
+        signal_eval_find_dif_row(dif[["dif_table"]], dif_target, reference_group, focal_group)
+      } else {
+        tibble::tibble()
+      }
+      dif_target_p <- signal_eval_get_p(dif_target_row)
+      dif_target_contrast <- if (nrow(dif_target_row) > 0) suppressWarnings(as.numeric(dif_target_row$Contrast[1])) else NA_real_
+      dif_target_ets <- if (nrow(dif_target_row) > 0) as.character(dif_target_row$ETS[1]) else NA_character_
+      dif_target_class <- if (nrow(dif_target_row) > 0) as.character(dif_target_row$Classification[1]) else NA_character_
+      dif_target_class_system <- if (nrow(dif_target_row) > 0) as.character(dif_target_row$ClassificationSystem[1]) else NA_character_
+      dif_detected <- is.finite(dif_target_p) && dif_target_p <= dif_p_cut &&
+        is.finite(dif_target_contrast) && abs(dif_target_contrast) >= dif_abs_cut_effective
+      dif_class_detected <- if (identical(dif_target_class_system, "ETS")) {
+        !is.na(dif_target_ets) && dif_target_ets %in% c("B", "C")
+      } else {
+        identical(dif_target_class, "Screen positive")
+      }
+
+      dif_fp_rate <- NA_real_
+      if (!inherits(dif, "error")) {
+        dif_non_target <- tibble::as_tibble(dif[["dif_table"]]) |>
+          dplyr::filter(
+            .data$Level != dif_target,
+            (.data$Group1 == reference_group & .data$Group2 == focal_group) |
+              (.data$Group1 == focal_group & .data$Group2 == reference_group)
+          ) |>
+          dplyr::mutate(
+            p_eval = dplyr::if_else(is.finite(.data$p_adjusted), .data$p_adjusted, .data$p_value),
+            Flag = is.finite(.data$p_eval) & .data$p_eval <= dif_p_cut &
+              is.finite(.data$Contrast) & abs(.data$Contrast) >= dif_abs_cut_effective
+          )
+        dif_fp_rate <- signal_eval_false_positive_rate(dif_non_target$Flag)
+      }
+
+      bias_target_row <- if (!inherits(bias, "error")) {
+        signal_eval_find_bias_row(bias[["table"]], bias_rater_target, bias_criterion_target)
+      } else {
+        tibble::tibble()
+      }
+      bias_target_p <- if (nrow(bias_target_row) > 0) suppressWarnings(as.numeric(bias_target_row$`Prob.`[1])) else NA_real_
+      bias_target_t <- if (nrow(bias_target_row) > 0) suppressWarnings(as.numeric(bias_target_row$t[1])) else NA_real_
+      bias_target_size <- if (nrow(bias_target_row) > 0) suppressWarnings(as.numeric(bias_target_row$`Bias Size`[1])) else NA_real_
+      bias_metric_available <- is.finite(bias_target_p) && is.finite(bias_target_t)
+      bias_detected <- is.finite(bias_target_p) && bias_target_p <= bias_p_cut &&
+        is.finite(bias_target_t) && abs(bias_target_t) >= bias_abs_t
+
+      bias_fp_rate <- NA_real_
+      if (!inherits(bias, "error")) {
+        bias_non_target <- tibble::as_tibble(bias[["table"]]) |>
+          dplyr::filter(!(.data$FacetA_Level == bias_rater_target & .data$FacetB_Level == bias_criterion_target)) |>
+          dplyr::mutate(
+            Flag = is.finite(.data$`Prob.`) & .data$`Prob.` <= bias_p_cut &
+              is.finite(.data$t) & abs(.data$t) >= bias_abs_t
+          )
+        bias_fp_rate <- signal_eval_false_positive_rate(bias_non_target$Flag)
+      }
+
+      result_rows[[out_idx]] <- tibble::tibble(
+        design_id = design$design_id,
+        rep = rep,
+        n_person = design$n_person,
+        n_rater = design$n_rater,
+        n_criterion = design$n_criterion,
+        raters_per_person = design$raters_per_person,
+        Observations = nrow(sim),
+        ElapsedSec = elapsed,
+        Converged = converged,
+        DIFTargetLevel = dif_target,
+        DIFContrast = dif_target_contrast,
+        DIFP = dif_target_p,
+        DIFClassificationSystem = dif_target_class_system,
+        DIFClassification = dif_target_class,
+        DIFETS = dif_target_ets,
+        DIFDetected = dif_detected,
+        DIFClassDetected = dif_class_detected,
+        DIFFalsePositiveRate = dif_fp_rate,
+        BiasTargetRater = bias_rater_target,
+        BiasTargetCriterion = bias_criterion_target,
+        BiasSize = bias_target_size,
+        BiasP = bias_target_p,
+        BiasT = bias_target_t,
+        BiasScreenMetricAvailable = bias_metric_available,
+        BiasDetected = bias_detected,
+        BiasScreenFalsePositiveRate = bias_fp_rate
+      )
+    }
+  }
+
+  structure(
+    list(
+      design_grid = design_grid_public,
+      results = simulation_append_design_alias_columns(dplyr::bind_rows(result_rows), design_variable_aliases),
+      rep_overview = simulation_append_design_alias_columns(dplyr::bind_rows(rep_rows), design_variable_aliases),
+      design_descriptor = design_descriptor,
+      planning_scope = planning_scope,
+      planning_constraints = planning_constraints,
+      planning_schema = planning_schema,
+      settings = list(
+        group_levels = group_levels,
+        reference_group = reference_group,
+        focal_group = focal_group,
+        dif_level = dif_level,
+        dif_effect = dif_effect,
+        bias_rater = bias_rater,
+        bias_criterion = bias_criterion,
+        bias_effect = bias_effect,
+        reps = reps,
+        score_levels = score_levels,
+        theta_sd = theta_sd,
+        rater_sd = rater_sd,
+        criterion_sd = criterion_sd,
+        noise_sd = noise_sd,
+        step_span = step_span,
+        fit_method = fit_method,
+        model = model,
+        step_facet = fit_step_facet,
+        maxit = maxit,
+        quad_points = quad_points,
+        residual_pca = residual_pca,
+        dif_method = dif_method,
+        dif_min_obs = dif_min_obs,
+        dif_p_adjust = dif_p_adjust,
+        dif_p_cut = dif_p_cut,
+        dif_abs_cut = dif_abs_cut_effective,
+        dif_abs_cut_input = dif_abs_cut,
+        bias_max_iter = bias_max_iter,
+        bias_p_cut = bias_p_cut,
+        bias_abs_t = bias_abs_t,
+        sim_spec = sim_spec,
+        facet_names = stats::setNames(base_facet_names, c("rater", "criterion")),
+        design_variable_aliases = design_variable_aliases,
+        design_descriptor = design_descriptor,
+        planning_scope = planning_scope,
+        planning_constraints = planning_constraints,
+        planning_schema = planning_schema,
+        generator_model = generator_model,
+        generator_step_facet = generator_step_facet,
+        generator_assignment = generator_assignment,
+        seed = seed
+      ),
+      ademp = simulation_build_ademp(
+        purpose = "Assess DIF detection and interaction-bias screening behavior under repeated parametric many-facet simulations with known injected targets.",
+        design_grid = design_grid,
+        generator_model = generator_model,
+        generator_step_facet = generator_step_facet,
+        generator_assignment = generator_assignment,
+        sim_spec = sim_spec,
+        estimands = c(
+          "DIF target-flag rate and non-target flag rate",
+          "Bias screening hit rate and screening false-positive rate",
+          "Target contrast and target bias summaries",
+          "Convergence rate and elapsed time"
+        ),
+        analysis_methods = list(
+          fit_method = fit_method,
+          fitted_model = model,
+          dif_method = dif_method,
+          bias_method = "estimate_bias_screening",
+          maxit = maxit,
+          quad_points = if (identical(fit_method, "MML")) quad_points else NA_integer_,
+          residual_pca = residual_pca
+        ),
+        performance_measures = c(
+          "Mean detection/screening summaries across replications",
+          "MCSE for means and rates",
+          "Convergence rate",
+          "Bias-screen metric availability rate"
+        )
+      )
+    ),
+    class = "mfrm_signal_detection"
+  )
+}
+
+#' Summarize a DIF/bias screening simulation
+#'
+#' @param object Output from [evaluate_mfrm_signal_detection()].
+#' @param digits Number of digits used in numeric summaries.
+#' @param ... Reserved for generic compatibility.
+#'
+#' @return An object of class `summary.mfrm_signal_detection` with:
+#' - `overview`: run-level overview
+#' - `detection_summary`: aggregated detection rates by design, with
+#'   design-variable alias columns when applicable
+#' - `ademp`: simulation-study metadata carried forward from the original object
+#' - `facet_names`: public facet labels carried from the simulation specification
+#' - `design_variable_aliases`: accepted public aliases for design variables
+#' - `design_descriptor`: role-based design-variable metadata
+#' - `planning_scope`: explicit record of the current planning contract
+#' - `planning_constraints`: explicit record of mutable/locked design variables
+#' - `planning_schema`: combined planner-schema contract
+#' - `future_branch_active_summary`: compact deterministic summary of the
+#'   schema-only future arbitrary-facet planning branch embedded in the current
+#'   planning schema
+#' - `notes`: short interpretation notes, including the bias-side screening caveat
+#' @seealso [evaluate_mfrm_signal_detection()], [plot.mfrm_signal_detection]
+#' @examples
+#' \donttest{
+#' sig_eval <- suppressWarnings(evaluate_mfrm_signal_detection(
+#'   n_person = 8,
+#'   n_rater = 2,
+#'   n_criterion = 2,
+#'   raters_per_person = 1,
+#'   reps = 1,
+#'   maxit = 5,
+#'   bias_max_iter = 1,
+#'   seed = 123
+#' ))
+#' summary(sig_eval)
+#' }
+#' @export
+summary.mfrm_signal_detection <- function(object, digits = 3, ...) {
+  if (!is.list(object) || is.null(object$results) || is.null(object$rep_overview)) {
+    stop("`object` must be output from evaluate_mfrm_signal_detection().")
+  }
+  digits <- max(0L, as.integer(digits[1]))
+  out <- signal_eval_summary(
+    object$results,
+    object$rep_overview,
+    design_variable_aliases = simulation_object_design_variable_aliases(object)
+  )
+
+  round_df <- function(df) {
+    if (!is.data.frame(df) || nrow(df) == 0) return(df)
+    num_cols <- vapply(df, is.numeric, logical(1))
+    df[num_cols] <- lapply(df[num_cols], round, digits = digits)
+    df
+  }
+
+  out$overview <- round_df(out$overview)
+  out$detection_summary <- round_df(out$detection_summary)
+  out$ademp <- object$ademp %||% NULL
+  out$facet_names <- object$settings$facet_names %||% stats::setNames(simulation_default_output_facet_names(), c("rater", "criterion"))
+  out$design_variable_aliases <- simulation_object_design_variable_aliases(object)
+  out$design_descriptor <- simulation_object_design_descriptor(object)
+  out$planning_scope <- simulation_object_planning_scope(object)
+  out$planning_constraints <- simulation_object_planning_constraints(object)
+  out$planning_schema <- simulation_object_planning_schema(object)
+  out$future_branch_active_summary <- simulation_compact_future_branch_active_summary(
+    object,
+    digits = digits
+  )
+  out$digits <- digits
+  scope_note <- simulation_planning_scope_note(out$planning_scope)
+  if (length(scope_note) > 0L && !scope_note %in% out$notes) {
+    out$notes <- c(out$notes, scope_note)
+  }
+  constraint_note <- simulation_planning_constraints_note(out$planning_constraints)
+  if (length(constraint_note) > 0L && !constraint_note %in% out$notes) {
+    out$notes <- c(out$notes, constraint_note)
+  }
+  schema_note <- simulation_planning_schema_note(out$planning_schema)
+  if (length(schema_note) > 0L && !schema_note %in% out$notes) {
+    out$notes <- c(out$notes, schema_note)
+  }
+  if (inherits(out$future_branch_active_summary, "summary.mfrm_future_branch_active_branch")) {
+    out$notes <- c(
+      out$notes,
+      "A deterministic future arbitrary-facet planning scaffold is embedded in `future_branch_active_summary`; it reports structural bookkeeping and conservative recommendation logic, not DIF/bias detection power."
+    )
+  }
+  out$notes <- unique(out$notes)
+  class(out) <- "summary.mfrm_signal_detection"
+  out
+}
+
+#' @export
+print.summary.mfrm_signal_detection <- function(x, ...) {
+  digits <- max(0L, as.integer(x$digits %||% 3L))
+  round_df <- function(df) {
+    if (!is.data.frame(df) || nrow(df) == 0) return(df)
+    num_cols <- vapply(df, is.numeric, logical(1))
+    df[num_cols] <- lapply(df[num_cols], round, digits = digits)
+    df
+  }
+  preview_df <- function(df, n = 10L) {
+    if (!is.data.frame(df) || nrow(df) == 0) return(df)
+    utils::head(df, n = n)
+  }
+
+  cat("mfrmr Signal Detection Summary\n")
+  if (!is.null(x$overview) && nrow(x$overview) > 0) {
+    cat("\nOverview\n")
+    print(round_df(as.data.frame(x$overview)), row.names = FALSE)
+  }
+  if (!is.null(x$detection_summary) && nrow(x$detection_summary) > 0) {
+    cat("\nDetection summary (preview)\n")
+    print(round_df(as.data.frame(preview_df(x$detection_summary))), row.names = FALSE)
+  }
+  print_compact_future_branch_active_summary(
+    x$future_branch_active_summary %||% NULL,
+    digits = digits
+  )
+  if (is.list(x$ademp) && length(x$ademp) > 0L) {
+    cat("\nADEMP metadata\n")
+    cat(" - aims\n")
+    cat(" - data_generating_mechanism\n")
+    cat(" - estimands\n")
+    cat(" - methods\n")
+    cat(" - performance_measures\n")
+  }
+  if (length(x$notes %||% character(0)) > 0L) {
+    cat("\nNotes\n")
+    for (line in x$notes) cat(" - ", line, "\n", sep = "")
+  }
+  invisible(x)
+}
+
+signal_detection_metric_label <- function(signal, metric_col) {
+  if (identical(signal, "dif")) {
+    return(switch(
+      metric_col,
+      DIFPower = "DIF target-flag rate",
+      DIFFalsePositiveRate = "DIF non-target flag rate",
+      MeanDIFEstimate = "Mean target contrast",
+      metric_col
+    ))
+  }
+  switch(
+    metric_col,
+    BiasScreenRate = "Bias screening hit rate",
+    BiasScreenFalsePositiveRate = "Bias screening false-positive rate",
+    MeanBiasEstimate = "Mean bias estimate",
+    metric_col
+  )
+}
+
+#' Plot DIF/bias screening simulation results
+#'
+#' @param x Output from [evaluate_mfrm_signal_detection()].
+#' @param signal Whether to plot DIF or bias screening results.
+#' @param metric Metric to plot. For `signal = "bias"`, prefer
+#'   `metric = "screen_rate"` for the screening hit rate. The older
+#'   `metric = "power"` spelling is retained as a backwards-compatible alias
+#'   that maps to `BiasScreenRate`.
+#' @param x_var Design variable used on the x-axis. When `x` was generated from
+#'   a `sim_spec` with custom public facet names, the corresponding aliases
+#'   (for example `n_judge`, `n_task`, `judge_per_person`) are also accepted.
+#'   Role keywords (`person`, `rater`, `criterion`, `assignment`) are accepted
+#'   as an abstraction over the current two-facet schema.
+#' @param group_var Optional design variable used for separate lines. The same
+#'   alias rules as `x_var` apply.
+#' @param draw If `TRUE`, draw with base graphics; otherwise return plotting data.
+#' @param ... Reserved for generic compatibility.
+#'
+#' @return If `draw = TRUE`, invisibly returns plotting data. If `draw = FALSE`,
+#'   returns that plotting-data list directly. The returned list includes
+#'   resolved canonical variables (`x_var`, `group_var`) together with public
+#'   labels (`x_label`, `group_label`), `design_variable_aliases`,
+#'   `design_descriptor`, `planning_scope`, `planning_constraints`,
+#'   `planning_schema`,
+#'   `display_metric`, and `interpretation_note` so
+#'   callers can label bias-side plots as screening summaries rather than
+#'   formal power/error-rate displays.
+#' @seealso [evaluate_mfrm_signal_detection()], [summary.mfrm_signal_detection]
+#' @examples
+#' \donttest{
+#' sig_eval <- suppressWarnings(evaluate_mfrm_signal_detection(
+#'   n_person = 8,
+#'   n_rater = 2,
+#'   n_criterion = 2,
+#'   raters_per_person = 1,
+#'   reps = 1,
+#'   maxit = 5,
+#'   bias_max_iter = 1,
+#'   seed = 123
+#' ))
+#' plot(sig_eval, signal = "dif", metric = "power", x_var = "n_person", draw = FALSE)
+#' }
+#' @export
+plot.mfrm_signal_detection <- function(x,
+                                       signal = c("dif", "bias"),
+                                       metric = c("power", "false_positive", "estimate",
+                                                  "screen_rate", "screen_false_positive"),
+                                       x_var = c("n_person", "n_rater", "n_criterion", "raters_per_person"),
+                                       group_var = NULL,
+                                       draw = TRUE,
+                                       ...) {
+  if (!is.list(x) || is.null(x$results) || is.null(x$rep_overview)) {
+    stop("`x` must be output from evaluate_mfrm_signal_detection().")
+  }
+  signal <- match.arg(signal)
+  metric <- match.arg(metric)
+  if (identical(signal, "bias")) {
+    metric <- switch(
+      metric,
+      screen_rate = "power",
+      screen_false_positive = "false_positive",
+      metric
+    )
+  }
+  design_variable_aliases <- simulation_object_design_variable_aliases(x)
+  design_descriptor <- simulation_object_design_descriptor(x)
+  x_var <- if (missing(x_var)) {
+    "n_person"
+  } else {
+    simulation_resolve_design_variable(x_var, design_variable_aliases, "x_var", descriptor = design_descriptor)
+  }
+  x_label <- simulation_design_variable_label(x_var, design_variable_aliases)
+
+  sum_obj <- signal_eval_summary(
+    x$results,
+    x$rep_overview,
+    design_variable_aliases = design_variable_aliases
+  )
+  plot_tbl <- tibble::as_tibble(sum_obj$detection_summary)
+  if (nrow(plot_tbl) == 0) stop("No detection-summary rows available for plotting.")
+
+  metric_col <- signal_eval_metric_col(signal, metric)
+  varying <- simulation_design_canonical_variables(design_descriptor)
+  varying <- varying[varying != x_var]
+  if (is.null(group_var)) {
+    cand <- varying[vapply(plot_tbl[varying], function(col) length(unique(col)) > 1L, logical(1))]
+    group_var <- if (length(cand) > 0) cand[1] else NULL
+  } else {
+    group_var <- simulation_resolve_design_variable(group_var, design_variable_aliases, "group_var", descriptor = design_descriptor)
+    if (identical(group_var, x_var)) {
+      stop("`group_var` must differ from `x_var`.")
+    }
+  }
+  group_label <- if (is.null(group_var)) NULL else simulation_design_variable_label(group_var, design_variable_aliases)
+
+  if (is.null(group_var)) {
+    agg_tbl <- plot_tbl |>
+      dplyr::group_by(.data[[x_var]]) |>
+      dplyr::summarize(y = mean(.data[[metric_col]], na.rm = TRUE), .groups = "drop") |>
+      dplyr::arrange(.data[[x_var]]) |>
+      dplyr::mutate(group = "All designs")
+  } else {
+    agg_tbl <- plot_tbl |>
+      dplyr::group_by(.data[[x_var]], .data[[group_var]]) |>
+      dplyr::summarize(y = mean(.data[[metric_col]], na.rm = TRUE), .groups = "drop") |>
+      dplyr::arrange(.data[[x_var]], .data[[group_var]]) |>
+      dplyr::rename(group = dplyr::all_of(group_var))
+  }
+
+  out <- list(
+    plot = "signal_detection",
+    signal = signal,
+    metric = metric,
+    metric_col = metric_col,
+    display_metric = signal_detection_metric_label(signal, metric_col),
+    interpretation_note = if (identical(signal, "bias")) {
+      "Bias-side rates summarize screening behavior from estimate_bias(); they are not formal inferential power or alpha estimates."
+    } else {
+      "DIF-side rates summarize target/non-target flagging behavior under the selected DFF method and threshold settings."
+    },
+    x_var = x_var,
+    x_label = x_label,
+    group_var = group_var,
+    group_label = group_label,
+    design_variable_aliases = design_variable_aliases,
+    design_descriptor = design_descriptor,
+    planning_scope = simulation_object_planning_scope(x),
+    planning_constraints = simulation_object_planning_constraints(x),
+    planning_schema = simulation_object_planning_schema(x),
+    data = agg_tbl
+  )
+  if (!isTRUE(draw)) return(out)
+
+  groups <- unique(as.character(agg_tbl$group))
+  cols <- grDevices::hcl.colors(max(1L, length(groups)), "Set 2")
+  x_vals <- sort(unique(agg_tbl[[x_var]]))
+  y_range <- range(agg_tbl$y, na.rm = TRUE)
+  if (!all(is.finite(y_range))) stop("Selected metric has no finite values to plot.")
+
+  graphics::plot(
+    x = x_vals,
+    y = rep(NA_real_, length(x_vals)),
+    type = "n",
+    xlab = x_label,
+    ylab = out$display_metric,
+    main = if (identical(signal, "bias")) {
+      paste("Bias screening simulation:", out$display_metric)
+    } else {
+      paste("DIF screening simulation:", out$display_metric)
+    },
+    ylim = y_range
+  )
+  for (i in seq_along(groups)) {
+    sub <- agg_tbl[as.character(agg_tbl$group) == groups[i], , drop = FALSE]
+    sub <- sub[order(sub[[x_var]]), , drop = FALSE]
+    graphics::lines(sub[[x_var]], sub$y, type = "b", lwd = 2, pch = 16 + (i - 1L) %% 5L, col = cols[i])
+  }
+  if (length(groups) > 1L) {
+    graphics::legend("topleft", legend = groups, col = cols, lty = 1, lwd = 2, pch = 16 + (seq_along(groups) - 1L) %% 5L, bty = "n")
+  }
+
+  invisible(out)
+}

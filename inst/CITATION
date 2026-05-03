@@ -1,0 +1,16 @@
+citHeader("To cite mfrmr in publications, use:")
+
+year <- sub("-.*", "", meta$Date %||% format(Sys.Date(), "%Y-%m-%d"))
+if (!nzchar(year)) year <- format(Sys.Date(), "%Y")
+
+# DESCRIPTION URL may hold multiple comma-separated URLs; pick the first.
+first_url <- sub(",.*", "", gsub("[[:space:]]+", "", meta$URL %||% ""))
+
+bibentry(
+  bibtype = "Manual",
+  title = paste0("{mfrmr}: ", meta$Title),
+  author = person("Ryuya", "Komuro"),
+  year = year,
+  note = paste("R package version", meta$Version),
+  url = first_url
+)
