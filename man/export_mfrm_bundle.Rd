@@ -151,8 +151,8 @@ from scenario-level population predictions are not flattened into
 specification files carry the replay-relevant settings instead.
 
 This exporter is intentionally unavailable for bounded \code{GPCM}, because the
-current bundle surface would otherwise depend on blocked narrative/QC/export
-semantics from the free-discrimination branch.
+current bundle surface would otherwise depend on blocked narrative,
+fit-based export, and replay semantics from the free-discrimination branch.
 }
 
 \section{Interpreting output}{

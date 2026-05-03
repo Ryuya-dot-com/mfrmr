@@ -1966,7 +1966,11 @@ stop_if_first_release_gpcm_downstream <- function(fit,
                                                   supported = c(
                                                     "fitting",
                                                     "core summary output",
-                                                    "fixed-calibration posterior scoring"
+                                                    "fixed-calibration posterior scoring",
+                                                    "diagnostics",
+                                                    "information and curve helpers",
+                                                    "direct simulation",
+                                                    "visual summaries and QC with caveats"
                                                   )) {
   model <- as.character(fit$config$model %||% NA_character_)
   if (!identical(model, "GPCM")) {
@@ -1992,7 +1996,7 @@ stop_if_first_release_gpcm_downstream <- function(fit,
     "`", helper, "` is not yet validated for bounded `GPCM` fits. ",
     "Current source-backed `GPCM` support is limited to ",
     supported_text,
-    ". Generalized diagnostics, information, simulation, and reporting remain outside the current validated boundary.",
+    ". The formal boundary is documented by `gpcm_capability_matrix()`.",
     call. = FALSE
   )
 }

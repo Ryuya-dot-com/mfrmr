@@ -7,10 +7,10 @@
 #
 # 1. The internal helper `expected_score_from_eta_gpcm()` reduces exactly
 #    to `expected_score_from_eta()` at `slope = 1` (machine precision).
-# 2. The helper agrees with the M12 design-memo worked example to better
-#    than 1e-5 absolute tolerance.
+# 2. The helper agrees with a hand-checked four-category worked example to
+#    better than 1e-5 absolute tolerance.
 # 3. The numerical derivative matches the analytical derivative
-#    `dE[X]/dtheta = a * Var(X | theta)` (M12 derivation #1).
+#    `dE[X]/dtheta = a * Var(X | theta)`.
 # 4. The kernel is invariant under the GPCM identification rescaling
 #    (slope*c, theta/c, delta/c).
 # 5. Degenerate slopes (zero, negative, NA) fall back to slope = 1.

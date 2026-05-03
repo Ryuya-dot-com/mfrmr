@@ -105,8 +105,9 @@
 #'   drafting-readiness flag, not as a substitute for methodological review.
 #' - Rebuild APA outputs after major model changes instead of editing old text
 #'   by hand.
-#' - For bounded `GPCM`, keep reporting on the direct table/plot side and do
-#'   not treat blocked narrative/QC helpers as temporary omissions.
+#' - For bounded `GPCM`, keep manuscript prose on the direct table/plot side;
+#'   visual-summary and QC bundles are available with caveats, while the APA
+#'   writer and export/replay bundle layer remain outside scope.
 #'
 #' @section Typical workflow:
 #' - Manuscript-first route:
@@ -117,8 +118,8 @@
 #'   For `RSM` / `PCM` final reports, prefer `method = "MML"` and
 #'   `diagnostic_mode = "both"` in the diagnostics step.
 #'   For bounded `GPCM`, stop before the fit-based export family and stay on
-#'   the direct table/plot route instead of calling
-#'   [build_apa_outputs()], [build_visual_summaries()], [run_qc_pipeline()],
+#'   [reporting_checklist()], [build_visual_summaries()], [run_qc_pipeline()],
+#'   and direct table/plot helpers instead of calling [build_apa_outputs()],
 #'   [build_mfrm_manifest()], [build_mfrm_replay_script()], or
 #'   [export_mfrm_bundle()].
 #' - Appendix-first route:
@@ -129,9 +130,10 @@
 #'   [reporting_checklist()] -> [build_apa_outputs()].
 #' - bounded `GPCM` route:
 #'   [diagnose_mfrm()] -> [precision_audit_report()] ->
-#'   [reporting_checklist()] -> direct residual/category/information helpers,
-#'   while [build_apa_outputs()], [build_visual_summaries()], and
-#'   [run_qc_pipeline()] remain outside the current validated boundary.
+#'   [reporting_checklist()] -> [build_visual_summaries()] /
+#'   [run_qc_pipeline()] -> direct residual/category/information helpers,
+#'   while [build_apa_outputs()] and the fit-based export/replay helpers remain
+#'   outside the current validated boundary.
 #'
 #' @section Companion guides:
 #' - For report/table selection, see [mfrmr_reports_and_tables].

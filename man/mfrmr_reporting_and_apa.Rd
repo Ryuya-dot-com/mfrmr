@@ -120,8 +120,9 @@ claims.
 drafting-readiness flag, not as a substitute for methodological review.
 \item Rebuild APA outputs after major model changes instead of editing old text
 by hand.
-\item For bounded \code{GPCM}, keep reporting on the direct table/plot side and do
-not treat blocked narrative/QC helpers as temporary omissions.
+\item For bounded \code{GPCM}, keep manuscript prose on the direct table/plot side;
+visual-summary and QC bundles are available with caveats, while the APA
+writer and export/replay bundle layer remain outside scope.
 }
 }
 
@@ -136,8 +137,8 @@ not treat blocked narrative/QC helpers as temporary omissions.
 For \code{RSM} / \code{PCM} final reports, prefer \code{method = "MML"} and
 \code{diagnostic_mode = "both"} in the diagnostics step.
 For bounded \code{GPCM}, stop before the fit-based export family and stay on
-the direct table/plot route instead of calling
-\code{\link[=build_apa_outputs]{build_apa_outputs()}}, \code{\link[=build_visual_summaries]{build_visual_summaries()}}, \code{\link[=run_qc_pipeline]{run_qc_pipeline()}},
+\code{\link[=reporting_checklist]{reporting_checklist()}}, \code{\link[=build_visual_summaries]{build_visual_summaries()}}, \code{\link[=run_qc_pipeline]{run_qc_pipeline()}},
+and direct table/plot helpers instead of calling \code{\link[=build_apa_outputs]{build_apa_outputs()}},
 \code{\link[=build_mfrm_manifest]{build_mfrm_manifest()}}, \code{\link[=build_mfrm_replay_script]{build_mfrm_replay_script()}}, or
 \code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}}.
 \item Appendix-first route:
@@ -148,9 +149,10 @@ the direct table/plot route instead of calling
 \code{\link[=reporting_checklist]{reporting_checklist()}} -> \code{\link[=build_apa_outputs]{build_apa_outputs()}}.
 \item bounded \code{GPCM} route:
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} -> \code{\link[=precision_audit_report]{precision_audit_report()}} ->
-\code{\link[=reporting_checklist]{reporting_checklist()}} -> direct residual/category/information helpers,
-while \code{\link[=build_apa_outputs]{build_apa_outputs()}}, \code{\link[=build_visual_summaries]{build_visual_summaries()}}, and
-\code{\link[=run_qc_pipeline]{run_qc_pipeline()}} remain outside the current validated boundary.
+\code{\link[=reporting_checklist]{reporting_checklist()}} -> \code{\link[=build_visual_summaries]{build_visual_summaries()}} /
+\code{\link[=run_qc_pipeline]{run_qc_pipeline()}} -> direct residual/category/information helpers,
+while \code{\link[=build_apa_outputs]{build_apa_outputs()}} and the fit-based export/replay helpers remain
+outside the current validated boundary.
 }
 }
 

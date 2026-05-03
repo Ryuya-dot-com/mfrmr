@@ -3744,8 +3744,8 @@ export_summary_appendix <- function(x,
 #' specification files carry the replay-relevant settings instead.
 #'
 #' This exporter is intentionally unavailable for bounded `GPCM`, because the
-#' current bundle surface would otherwise depend on blocked narrative/QC/export
-#' semantics from the free-discrimination branch.
+#' current bundle surface would otherwise depend on blocked narrative,
+#' fit-based export, and replay semantics from the free-discrimination branch.
 #'
 #' @section Interpreting output:
 #' The returned object reports both high-level bundle status and the exact files

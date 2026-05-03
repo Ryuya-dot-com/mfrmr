@@ -85,6 +85,38 @@ test_that("GPCM visual summaries and QC pipeline run with caveat", {
   expect_match(qc$caveat, "slope-aware", fixed = TRUE)
 })
 
+test_that("GPCM preserves retained zero-frequency intermediate categories", {
+  gap_data <- mfrmr:::sample_mfrm_data(seed = 42)
+  gap_data <- gap_data[gap_data$Score %in% c(1, 2, 4, 5), , drop = FALSE]
+  fit_gap <- suppressMessages(suppressWarnings(
+    fit_mfrm(
+      gap_data, "Person", c("Rater", "Task", "Criterion"), "Score",
+      method = "MML", model = "GPCM",
+      step_facet = "Criterion", slope_facet = "Criterion",
+      rating_min = 1, rating_max = 5, keep_original = TRUE,
+      quad_points = 5L, maxit = 20L
+    )
+  ))
+  expect_equal(fit_gap$config$n_cat, 5)
+  expect_identical(fit_gap$prep$unused_score_categories, 3L)
+
+  rs <- rating_scale_table(fit_gap, drop_unused = FALSE)
+  expect_true(3 %in% rs$category_table$Category)
+  expect_true(isTRUE(rs$category_table$ZeroCount[rs$category_table$Category == 3]))
+  expect_true(any(grepl("zero-count intermediate", rs$threshold_table$ThresholdCaveat, fixed = TRUE)))
+
+  diag_gap <- suppressMessages(suppressWarnings(
+    diagnose_mfrm(fit_gap, residual_pca = "none", diagnostic_mode = "legacy")
+  ))
+  expect_gt(nrow(diag_gap$fair_average$stacked), 0L)
+  expect_identical(diag_gap$fair_average$method, "GPCM-slope-aware")
+
+  vis <- build_visual_summaries(fit_gap, diag_gap)
+  expect_identical(vis$support_status$Status[1], "supported_with_caveat")
+  qc <- run_qc_pipeline(fit_gap, diag_gap, include_bias = FALSE)
+  expect_identical(qc$support_status$Status[1], "supported_with_caveat")
+})
+
 test_that("GPCM still blocks build_apa_outputs (blocked row)", {
   diag <- suppressMessages(suppressWarnings(
     diagnose_mfrm(.gpcm_fit, residual_pca = "none", diagnostic_mode = "legacy")
