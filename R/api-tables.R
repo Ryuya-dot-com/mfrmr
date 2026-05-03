@@ -978,6 +978,24 @@ measurable_summary_table <- function(fit, diagnostics = NULL) {
 #' summary(t8)$summary
 #' p_t8 <- plot(t8, draw = FALSE)
 #' p_t8$data$plot
+#'
+#' @section References:
+#' - Andrich, D. (1978). *A rating formulation for ordered response
+#'   categories*. Psychometrika, 43(4), 561-573.
+#'   \doi{10.1007/BF02293814}
+#' - Masters, G. N. (1982). *A Rasch model for partial credit scoring*.
+#'   Psychometrika, 47(2), 149-174. \doi{10.1007/BF02296272}
+#' - Linacre, J. M. (2002). What do Infit and Outfit, mean-square and
+#'   standardized mean? *Rasch Measurement Transactions, 16*(2), 878.
+#'   (Source for the 0.5-1.5 mean-square acceptance band and the
+#'   threshold-gap heuristics used in `summary(t8)$summary`.)
+#' - Wind, S. A. (2023). *Detecting rating scale malfunctioning with the
+#'   partial credit model and generalized partial credit model*.
+#'   Educational and Psychological Measurement, 83(5), 953-983.
+#'   \doi{10.1177/00131644221116292} (Recent simulation evidence on
+#'   PCM- and GPCM-based rating-scale diagnostics; useful for
+#'   interpreting the `summary(t8)$summary` flags in the bounded
+#'   `GPCM` route.)
 #' @export
 rating_scale_table <- function(fit,
                                diagnostics = NULL,

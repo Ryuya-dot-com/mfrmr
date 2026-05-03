@@ -132,6 +132,28 @@ zero-count categories are flagged for cautious interpretation.}
 }
 }
 
+\section{References}{
+
+\itemize{
+\item Andrich, D. (1978). \emph{A rating formulation for ordered response
+categories}. Psychometrika, 43(4), 561-573.
+\doi{10.1007/BF02293814}
+\item Masters, G. N. (1982). \emph{A Rasch model for partial credit scoring}.
+Psychometrika, 47(2), 149-174. \doi{10.1007/BF02296272}
+\item Linacre, J. M. (2002). What do Infit and Outfit, mean-square and
+standardized mean? \emph{Rasch Measurement Transactions, 16}(2), 878.
+(Source for the 0.5-1.5 mean-square acceptance band and the
+threshold-gap heuristics used in \code{summary(t8)$summary}.)
+\item Wind, S. A. (2023). \emph{Detecting rating scale malfunctioning with the
+partial credit model and generalized partial credit model}.
+Educational and Psychological Measurement, 83(5), 953-983.
+\doi{10.1177/00131644221116292} (Recent simulation evidence on
+PCM- and GPCM-based rating-scale diagnostics; useful for
+interpreting the \code{summary(t8)$summary} flags in the bounded
+\code{GPCM} route.)
+}
+}
+
 \examples{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
@@ -140,6 +162,7 @@ summary(t8)
 summary(t8)$summary
 p_t8 <- plot(t8, draw = FALSE)
 p_t8$data$plot
+
 }
 \seealso{
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=measurable_summary_table]{measurable_summary_table()}}, \code{\link[=plot.mfrm_fit]{plot.mfrm_fit()}},
