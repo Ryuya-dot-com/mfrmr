@@ -45,18 +45,24 @@ core R package:
 \item residual-based diagnostics and strict marginal follow-up are supported as
 exploratory screens,
 \item direct slope-aware simulation-spec generation is supported,
-\item APA writer, broader export bundles, fair-average semantics, and planning /
-forecasting helpers remain outside the validated \code{GPCM} boundary.
+\item fair-average, visual-summary, and QC routes are available with explicit
+GPCM caveats,
+\item APA writer, broader export bundles, FACETS score-side compatibility, and
+planning / forecasting helpers remain outside the validated \code{GPCM}
+boundary.
 }
 
 Why some helpers remain blocked:
 \itemize{
-\item fair-average, score-side export, and FACETS compatibility-contract outputs depend on
-Rasch-family measure-to-score semantics that are not yet generalized to
-the free-discrimination \code{GPCM} branch;
-\item APA writer, visual summaries, and QC pipelines remain blocked because they
-would turn those still-unvalidated score-side semantics into narrative or
-pass/fail outputs;
+\item FACETS compatibility-contract score exports depend on Rasch-family
+measure-to-score semantics that are not yet generalized to the
+free-discrimination \code{GPCM} branch;
+\item fair-average, visual-summary, and QC helpers are therefore exposed only as
+caveated GPCM screening routes, not as FACETS/Rasch fair-M invariance or
+manuscript-grade APA evidence;
+\item the APA writer and replay/export bundle layer remain blocked because they
+would turn those still-caveated score-side screens into publication prose
+or reproducibility claims;
 \item planning and forecasting remain deferred because the current design layer
 is still validated only for the role-based \code{RSM} / \code{PCM} planner.
 }

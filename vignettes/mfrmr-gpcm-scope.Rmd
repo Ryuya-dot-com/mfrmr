@@ -157,12 +157,26 @@ summary(diag_gpcm)
 
 info <- compute_information(fit_gpcm)
 plot_information(info)
+
+fair <- fair_average_table(fit_gpcm, diagnostics = diag_gpcm)
+fair$caveat
+plot_fair_average(fair, draw = FALSE)
+
+vis <- build_visual_summaries(fit_gpcm, diag_gpcm)
+vis$support_status
+
+qc <- run_qc_pipeline(fit_gpcm, diag_gpcm, include_bias = FALSE)
+qc$support_status
+
+tables <- build_summary_table_bundle(summary(fit_gpcm))
+apa_table(tables, which = "overview")
 ```
 
 The fit, summary, residual diagnostics, and information helpers all run
-under `GPCM`. `fair_average_table(fit_gpcm)`, `build_visual_summaries()`,
-and `run_qc_pipeline()` also run and return explicit caveats. Trying
-`build_apa_outputs(fit_gpcm)` raises a message pointing back at
+under `GPCM`. `fair_average_table(fit_gpcm)`, `plot_fair_average()`,
+`build_visual_summaries()`, `run_qc_pipeline()`, and summary-table handoff
+from supported summaries also run and return explicit caveats where needed.
+Trying `build_apa_outputs(fit_gpcm)` raises a message pointing back at
 `gpcm_capability_matrix()` rather than producing a partial manuscript draft.
 
 ## Roadmap

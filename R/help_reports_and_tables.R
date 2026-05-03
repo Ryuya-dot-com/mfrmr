@@ -114,7 +114,8 @@
 #'   or [export_summary_appendix()] /
 #'   [export_mfrm_bundle()](include = "summary_tables").
 #' - Bounded `GPCM` handoff:
-#'   [reporting_checklist()] -> direct summaries/plots ->
+#'   [reporting_checklist()] -> [build_visual_summaries()] /
+#'   [run_qc_pipeline()] -> direct summaries/plots ->
 #'   [build_summary_table_bundle()] -> [export_summary_appendix()].
 #'
 #' @section Companion guides:

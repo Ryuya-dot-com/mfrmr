@@ -358,11 +358,14 @@ stack_fair_raw_tables <- function(raw_by_facet) {
 .fair_average_delta_variance <- function(fit, fair_df) {
   n <- nrow(fair_df)
   if (n == 0L) return(numeric(0))
+  model <- toupper(as.character(fit$config$model[1]))
+  if (identical(model, "GPCM")) {
+    return(rep(NA_real_, n))
+  }
   spec <- tryCatch(build_step_curve_spec(fit), error = function(e) NULL)
   if (is.null(spec) || length(spec$groups) == 0L) {
     return(rep(NA_real_, n))
   }
-  model <- toupper(as.character(fit$config$model[1]))
   step_facet <- as.character(fit$config$step_facet %||% NA_character_)
   rating_min <- suppressWarnings(as.numeric(fit$prep$rating_min %||% 0))
   if (!is.finite(rating_min)) rating_min <- 0
@@ -1310,7 +1313,10 @@ plot_unexpected <- function(x,
 #'   whose measure sits near the rating boundary, so the delta-method
 #'   approximation becomes uninformative) are drawn with an open
 #'   circle and excluded from the whiskers; the excluded count is
-#'   reported in the subtitle.
+#'   reported in the subtitle. This CI route is available for `RSM` /
+#'   `PCM` fair-average plots only. For bounded `GPCM`, `show_ci = TRUE`
+#'   is ignored with a warning because `fair_average_table()` does not
+#'   yet expose a delta-method SE for the slope-aware fair-average value.
 #' @param ci_level Confidence level used when `show_ci = TRUE`;
 #'   default `0.95`. The returned plot-data object gains `CI_Lower`,
 #'   `CI_Upper`, and `CI_Level` columns for downstream reuse.
@@ -1414,6 +1420,17 @@ plot_fair_average <- function(x,
     fair_average_table(x, diagnostics = diagnostics, ...)
   } else {
     resolve_fair_bundle(x)
+  }
+  bundle_model <- toupper(as.character(bundle$settings$model %||% NA_character_)[1])
+  plot_caveat <- as.character(bundle$caveat %||% "")
+  if (identical(bundle_model, "GPCM") && isTRUE(show_ci)) {
+    warning(
+      "Fair-average CI whiskers are not available for bounded `GPCM`; ",
+      "`show_ci` was ignored. Use the returned `caveat` and ",
+      "`?fair_average_table` before reporting GPCM fair averages.",
+      call. = FALSE
+    )
+    show_ci <- FALSE
   }
 
   fair_df <- stack_fair_raw_tables(bundle$raw_by_facet)
@@ -1615,7 +1632,8 @@ plot_fair_average <- function(x,
       subtitle = plot_subtitle,
       legend = plot_legend,
       reference_lines = plot_reference,
-      preset = style$name
+      preset = style$name,
+      caveat = if (nzchar(plot_caveat)) plot_caveat else NULL
     )
   )
   invisible(out)
@@ -2482,6 +2500,25 @@ plot_qc_dashboard <- function(fit,
   } else {
     numeric(0)
   }
+  gpcm_support_status <- if (identical(fit_model, "GPCM")) {
+    data.frame(
+      Model = fit_model,
+      Status = "supported_with_caveat",
+      Detail = paste0(
+        "Bounded GPCM QC dashboard panels are exploratory screens. ",
+        "The fair-average panel uses the slope-aware element-conditional ",
+        "table and inherits its SE caveat."
+      ),
+      stringsAsFactors = FALSE
+    )
+  } else {
+    NULL
+  }
+  gpcm_caveat <- if (identical(fit_model, "GPCM")) {
+    as.character(fair$caveat %||% gpcm_fair_average_rationale())
+  } else {
+    NULL
+  }
   disp <- displacement_table(
     fit = fit,
     diagnostics = diagnostics,
@@ -2759,7 +2796,9 @@ plot_qc_dashboard <- function(fit,
       displacement = disp,
       interrater = interrater,
       facets_chisq = fchi,
-      reliability = rel_tbl
+      reliability = rel_tbl,
+      support_status = gpcm_support_status,
+      caveat = gpcm_caveat
     )
   )
   invisible(out)

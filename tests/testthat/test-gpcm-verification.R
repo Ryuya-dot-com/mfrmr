@@ -83,6 +83,34 @@ test_that("GPCM visual summaries and QC pipeline run with caveat", {
   expect_s3_class(qc, "mfrm_qc_pipeline")
   expect_identical(qc$support_status$Status[1], "supported_with_caveat")
   expect_match(qc$caveat, "slope-aware", fixed = TRUE)
+
+  dash <- plot_qc_dashboard(.gpcm_fit, diagnostics = diag, draw = FALSE)
+  expect_s3_class(dash, "mfrm_plot_data")
+  expect_true(isTRUE(dash$data$fair_average$available))
+  expect_identical(dash$data$support_status$Status[1], "supported_with_caveat")
+  expect_match(dash$data$caveat, "slope-aware", fixed = TRUE)
+
+  fair_plot <- plot_fair_average(.gpcm_fit, diagnostics = diag, draw = FALSE)
+  expect_s3_class(fair_plot, "mfrm_plot_data")
+  expect_match(fair_plot$data$caveat, "slope-aware", fixed = TRUE)
+  expect_warning(
+    ci_plot <- plot_fair_average(
+      .gpcm_fit, diagnostics = diag, show_ci = TRUE, draw = FALSE
+    ),
+    "CI whiskers are not available for bounded `GPCM`",
+    fixed = TRUE
+  )
+  expect_false("CI_Lower" %in% names(ci_plot$data$data))
+})
+
+test_that("GPCM supported summaries can be routed into table bundles", {
+  bundle <- build_summary_table_bundle(summary(.gpcm_fit))
+  expect_s3_class(bundle, "mfrm_summary_table_bundle")
+  expect_true("overview" %in% bundle$table_index$Table)
+  expect_true("slope_overview" %in% bundle$table_index$Table)
+  tbl <- apa_table(bundle, which = "overview")
+  expect_s3_class(tbl, "apa_table")
+  expect_true(nrow(tbl$table) > 0L)
 })
 
 test_that("GPCM preserves retained zero-frequency intermediate categories", {
@@ -124,11 +152,9 @@ test_that("GPCM still blocks build_apa_outputs (blocked row)", {
   # build_apa_outputs is `blocked` for GPCM in the capability matrix.
   # fair_average_table() and estimate_bias() were unblocked in 0.2.0
   # via the slope-aware kernel; build_apa_outputs() remains blocked.
-  apa_attempt <- tryCatch(
+  expect_error(
     suppressMessages(build_apa_outputs(.gpcm_fit, diag)),
-    error = function(e) e,
-    warning = function(w) w
+    "does not support `GPCM` fits",
+    fixed = TRUE
   )
-  expect_true(inherits(apa_attempt, "condition") ||
-                inherits(apa_attempt, "mfrm_apa_outputs"))
 })

@@ -133,7 +133,8 @@ still needs missing diagnostics or clearer caveats.
 or \code{\link[=export_summary_appendix]{export_summary_appendix()}} /
 \code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}}(include = "summary_tables").
 \item Bounded \code{GPCM} handoff:
-\code{\link[=reporting_checklist]{reporting_checklist()}} -> direct summaries/plots ->
+\code{\link[=reporting_checklist]{reporting_checklist()}} -> \code{\link[=build_visual_summaries]{build_visual_summaries()}} /
+\code{\link[=run_qc_pipeline]{run_qc_pipeline()}} -> direct summaries/plots ->
 \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}} -> \code{\link[=export_summary_appendix]{export_summary_appendix()}}.
 }
 }

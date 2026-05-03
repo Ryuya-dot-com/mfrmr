@@ -277,11 +277,11 @@ a follow-up release after a cycle of community testing.
 Scoped during 0.2.0 prep but not shipped in 0.2.0; carried over to a
 later release:
 
-- User-facing GPCM unblock for `build_apa_outputs()`,
+- Still-deferred GPCM support for `build_apa_outputs()`,
   `facets_parity_report()`, and `facets_output_file_bundle(include =
   "score")`. (`fair_average_table()`, `estimate_bias()`,
   `build_visual_summaries()`, and `run_qc_pipeline()` are unblocked
-  above.)
+  above with caveats.)
 - A classical-DIF helper (working title `analyze_dif_classical()`)
   covering Mantel-Haenszel, logistic regression, and SIBTEST.
 - Five additional Rasch / IRT classic plots (KIDMAP, TCC, expected

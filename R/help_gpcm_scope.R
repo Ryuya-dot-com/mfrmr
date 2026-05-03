@@ -25,17 +25,23 @@
 #' - residual-based diagnostics and strict marginal follow-up are supported as
 #'   exploratory screens,
 #' - direct slope-aware simulation-spec generation is supported,
-#' - APA writer, broader export bundles, fair-average semantics, and planning /
-#'   forecasting helpers remain outside the validated `GPCM` boundary.
+#' - fair-average, visual-summary, and QC routes are available with explicit
+#'   GPCM caveats,
+#' - APA writer, broader export bundles, FACETS score-side compatibility, and
+#'   planning / forecasting helpers remain outside the validated `GPCM`
+#'   boundary.
 #'
 #' Why some helpers remain blocked:
 #'
-#' - fair-average, score-side export, and FACETS compatibility-contract outputs depend on
-#'   Rasch-family measure-to-score semantics that are not yet generalized to
-#'   the free-discrimination `GPCM` branch;
-#' - APA writer, visual summaries, and QC pipelines remain blocked because they
-#'   would turn those still-unvalidated score-side semantics into narrative or
-#'   pass/fail outputs;
+#' - FACETS compatibility-contract score exports depend on Rasch-family
+#'   measure-to-score semantics that are not yet generalized to the
+#'   free-discrimination `GPCM` branch;
+#' - fair-average, visual-summary, and QC helpers are therefore exposed only as
+#'   caveated GPCM screening routes, not as FACETS/Rasch fair-M invariance or
+#'   manuscript-grade APA evidence;
+#' - the APA writer and replay/export bundle layer remain blocked because they
+#'   would turn those still-caveated score-side screens into publication prose
+#'   or reproducibility claims;
 #' - planning and forecasting remain deferred because the current design layer
 #'   is still validated only for the role-based `RSM` / `PCM` planner.
 #'
@@ -158,8 +164,8 @@ gpcm_capability_matrix <- function(status = c("all", "supported", "supported_wit
       paste(
         "Residual-based mean-square and strict-marginal outputs remain",
         "exploratory screening tools because discrimination is free.",
-        "The dashboard's fair-average panel reports an explicit",
-        "unavailability status when the underlying fit is GPCM."
+        "The dashboard's fair-average panel uses the same caveated",
+        "slope-aware element-conditional table carried by diagnose_mfrm()."
       ),
       paste(
         "Covers fixed-calibration posterior scoring and information only;",

@@ -99,6 +99,7 @@ test_that("GPCM summaries expose slope overview and diagnostics are now availabl
   chk <- reporting_checklist(fit, diagnostics = dx)
   dash <- facet_quality_dashboard(fit, diagnostics = dx, facet = "Rater")
   qc <- plot_qc_dashboard(fit, diagnostics = dx, draw = FALSE)
+  qc_pipeline <- run_qc_pipeline(fit, diagnostics = dx, include_bias = FALSE)
 
   expect_s3_class(dx, "mfrm_diagnostics")
   expect_identical(dx$diagnostic_mode, "both")
@@ -113,17 +114,14 @@ test_that("GPCM summaries expose slope overview and diagnostics are now availabl
   expect_s3_class(chk, "mfrm_reporting_checklist")
   expect_s3_class(dash, "mfrm_facet_dashboard")
   expect_s3_class(qc, "mfrm_plot_data")
-  expect_true(isFALSE(dx$fair_average$available))
-  expect_true(grepl("not yet validated", dx$fair_average$reason, fixed = TRUE))
-  expect_true(grepl("Rasch-family", dx$fair_average$reason, fixed = TRUE))
-  expect_true(isFALSE(qc$data$fair_average$available))
-  expect_true(grepl("Rasch-family", qc$data$fair_average$reason, fixed = TRUE))
-
-  expect_error(
-    run_qc_pipeline(fit),
-    "does not support `GPCM` fits",
-    fixed = TRUE
-  )
+  expect_s3_class(qc_pipeline, "mfrm_qc_pipeline")
+  expect_true(isTRUE(dx$fair_average$available))
+  expect_identical(dx$fair_average$method, "GPCM-slope-aware")
+  expect_true(grepl("slope-aware", dx$fair_average$caveat, fixed = TRUE))
+  expect_true(isTRUE(qc$data$fair_average$available))
+  expect_identical(qc$data$support_status$Status[1], "supported_with_caveat")
+  expect_true(grepl("slope-aware", qc$data$caveat, fixed = TRUE))
+  expect_identical(qc_pipeline$support_status$Status[1], "supported_with_caveat")
   # `fair_average_table()` and `estimate_bias()` are both unblocked for
   # GPCM fits in 0.2.0 under the slope-aware element-conditional GPCM
   # construction. Confirm they return populated bundles with the GPCM

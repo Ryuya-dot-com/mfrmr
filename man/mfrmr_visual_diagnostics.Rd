@@ -91,10 +91,11 @@ Use \code{\link[=plot_shrinkage_funnel]{plot_shrinkage_funnel()}} on a fit augme
 \code{\link[=apply_empirical_bayes_shrinkage]{apply_empirical_bayes_shrinkage()}}.
 \item "I need one compact triage screen first."
 Use \code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}} for \code{RSM} / \code{PCM}. The bounded \code{GPCM}
-branch can also call \code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}}, but its fair-average
-panel reports an explicit unavailability indicator because that
-panel's score-metric semantics have not yet been generalized
-beyond the Rasch-family branch.
+branch can also call \code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}}; its fair-average panel
+uses the slope-aware element-conditional table from \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}
+and should be read with the caveat documented in
+\code{\link[=fair_average_table]{fair_average_table()}}, not as Rasch-family fair-M invariance
+evidence.
 \item "Which figures are already supported by my current run?"
 Use \code{\link[=reporting_checklist]{reporting_checklist()}} and review the \code{"Visual Displays"} rows before
 choosing the next plot.

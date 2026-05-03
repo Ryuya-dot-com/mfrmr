@@ -85,10 +85,11 @@
 #'   [apply_empirical_bayes_shrinkage()].
 #' - "I need one compact triage screen first."
 #'   Use [plot_qc_dashboard()] for `RSM` / `PCM`. The bounded `GPCM`
-#'   branch can also call [plot_qc_dashboard()], but its fair-average
-#'   panel reports an explicit unavailability indicator because that
-#'   panel's score-metric semantics have not yet been generalized
-#'   beyond the Rasch-family branch.
+#'   branch can also call [plot_qc_dashboard()]; its fair-average panel
+#'   uses the slope-aware element-conditional table from [diagnose_mfrm()]
+#'   and should be read with the caveat documented in
+#'   [fair_average_table()], not as Rasch-family fair-M invariance
+#'   evidence.
 #' - "Which figures are already supported by my current run?"
 #'   Use [reporting_checklist()] and review the `"Visual Displays"` rows before
 #'   choosing the next plot.

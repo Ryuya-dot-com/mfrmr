@@ -43,7 +43,10 @@ range. Rows where the score variance is effectively zero (levels
 whose measure sits near the rating boundary, so the delta-method
 approximation becomes uninformative) are drawn with an open
 circle and excluded from the whiskers; the excluded count is
-reported in the subtitle.}
+reported in the subtitle. This CI route is available for \code{RSM} /
+\code{PCM} fair-average plots only. For bounded \code{GPCM}, \code{show_ci = TRUE}
+is ignored with a warning because \code{fair_average_table()} does not
+yet expose a delta-method SE for the slope-aware fair-average value.}
 
 \item{ci_level}{Confidence level used when \code{show_ci = TRUE};
 default \code{0.95}. The returned plot-data object gains \code{CI_Lower},
