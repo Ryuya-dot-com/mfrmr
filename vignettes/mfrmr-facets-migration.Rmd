@@ -27,7 +27,7 @@ systems.
 The two stacks share the same psychometric framework but differ in
 operating model.
 
-| Concept | Facets (Linacre 2023) | mfrmr |
+| Concept | Facets (Linacre 2026) | mfrmr |
 |---|---|---|
 | Input | Specification file plus data file | `data.frame` in long format |
 | Estimation | JMLE by default | `JML` (legacy default) or `MML` (recommended for new analyses) |

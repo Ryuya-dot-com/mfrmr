@@ -958,7 +958,7 @@ reporting_checklist <- function(fit,
         "Eckes (2005)",
         "Koizumi et al. (2019)",
         "Myford & Wolfe (2003, 2004)",
-        "Linacre (1989, 2004)",
+        "Linacre (1989, 2002)",
         "Wright & Masters (1982)"
       ),
       Topic = c(

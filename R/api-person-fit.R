@@ -98,9 +98,11 @@
 #'                       diagnostic_mode = "legacy")
 #' pf <- compute_person_fit_indices(diag, fit = fit)
 #' head(pf)
-#' # Look for: |lz| or |lz*| > 1.96 (5% level) flags a person whose
-#' #   response pattern is statistically inconsistent with the model;
-#' #   > 2.58 is a 1% flag.
+#' # Look for: |lz| > 1.96 (5% level) flags a person whose response
+#' #   pattern is statistically inconsistent with the model; > 2.58 is
+#' #   a 1% flag. The same thresholds applied to `lz_star` are
+#' #   approximate because mfrmr's `lz_star` is the placeholder
+#' #   `lz / sqrt(1 + 1/N)`, not the published Snijders (2001) lz*.
 #' @export
 compute_person_fit_indices <- function(diagnostics, fit = NULL) {
   if (is.null(diagnostics) || !is.list(diagnostics) ||

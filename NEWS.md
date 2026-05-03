@@ -1,3 +1,81 @@
+# mfrmr 0.2.0.9000 (development)
+
+Documentation accuracy pass. No public function contract changes and
+no behavior changes; documentation, citations, and band attributions
+are corrected against primary sources after a thorough audit. Test
+suite (PASS 6834 / FAIL 0) is unchanged.
+
+## Citation and attribution corrections
+
+- **Wright (1998) page**: `R/api-shrinkage.R` references corrected from
+  *Rasch Measurement Transactions*, 12(2), **638** to **632-633**
+  (page 638 in the same RMT issue is a different paper; verified at
+  <https://www.rasch.org/rmt/rmt122.htm>).
+- **Linacre (1989, "2004") in `reporting_checklist()`**: the bare
+  "Linacre (1989, 2004)" tag in `R/api-reporting-checklist.R` is now
+  **Linacre (1989, 2002)**. The 2002 paper is "Optimizing rating scale
+  category effectiveness," *JAM*, 3(1), 85-106 -- the canonical Linacre
+  reference for rating-scale guidance. (No bibliographic entry existed
+  for "Linacre (2004)".)
+- **Eckes (2011) full reference**: the inline `(cf. Eckes, 2011; ...)`
+  caveat in `dif_report()` now has a complete `@references` entry
+  pointing to *Introduction to Many-Facet Rasch Measurement* (1st ed.,
+  Peter Lang). McNamara & Knoch (2012) is also fully cited.
+- **Mean-square fit ranges** in `?mfrmr-package` previously attributed
+  the context-specific bands (high-stakes / clinical / survey) to
+  Linacre (2002). The actual source is **Wright & Linacre (1994)**,
+  *RMT* 8(3), 370. The band assignments were also swapped: high-stakes
+  MCQ is **0.8-1.2** (not 0.6-1.4), survey is 0.6-1.4, clinical
+  observation is 0.5-1.7. Corrected.
+- **Yen Q3 (`q3_statistic()`)**: previously stated mfrmr's Q3 uses
+  standardized residuals as if matching Yen (1984). Yen's eq. 7 (p. 127)
+  uses **raw** residuals; mfrmr's standardized-residual choice is now
+  documented as a deliberate departure. The `|Q3| > 0.20` cutoff was
+  attributed to Yen but is from **Chen & Thissen (1997)**, *JEBS*,
+  22(3), 265-289. Re-attributed.
+- **Christensen et al. (2017) in `q3_statistic()`**: the central
+  finding of Christensen et al. is that **no single critical value is
+  appropriate** across designs and that a parametric bootstrap should
+  be used. Documentation now states this clearly; the fixed
+  `relative_offset = 0.20` is described as a screening default rather
+  than as a re-implementation of `Q3_*`.
+- **Morris (1983) posterior-SE correction formula** in
+  `?apply_empirical_bayes_shrinkage` was dimensionally wrong:
+  previously written `2 B^2 (tau^2 + SE^2)^2 / (K - 3)`, which is
+  SE^4-units. The actual Morris (1983, eq. 4.1-4.2, p. 51) correction
+  is `(2 / (K - r - 2)) * B^2 * delta^2`. Corrected, with re-derived
+  magnitude examples (SE understated by ~73% at K=3, ~29% at K=5,
+  ~7% at K=15).
+- **Koo & Li (2016) ICC band boundary**: `compute_facet_icc()`
+  previously placed ICC = 0.9 in **Excellent** (`>= 0.9`). Koo & Li
+  (2016, p. 161) write "values **greater than 0.90** indicate excellent
+  reliability" -- strict `>`. Code at `R/api-hierarchical-audit.R`
+  now uses `> 0.9` for Excellent; ICC = 0.9 reads as Good.
+
+## Documentation refinements
+
+- **Linacre FACETS / Winsteps manuals**: cited years updated from 2023
+  / 2024 to **2026** (current FACETS 4.5.0 = April 2026, Winsteps 5.11.0
+  = March 2026 per <https://www.winsteps.com/>).
+- **Bock & Aitkin (1981) clarification**: `?mfrmr-package` now notes
+  that the default `mml_engine = "direct"` optimises the marginal
+  log-likelihood by gradient methods (BFGS / L-BFGS-B), not by Bock &
+  Aitkin's signature EM. The `"em"` and `"hybrid"` engines follow the
+  EM template but with a BFGS M-step (rather than B&A's probit IRLS),
+  because the target is the polytomous Rasch family rather than 2PL.
+- **Linacre (1994) sample-size bands**: `mfrm_core.R` and `reporting.R`
+  now describe the bands as "adapted from Linacre (1994)" rather than
+  "follow Linacre (1994)". Only the 30-examinee floor is Linacre's;
+  the `< 10 sparse` and `< 50 standard` watermarks are mfrmr-specific
+  screening choices.
+- **Snijders (2001) lz\\* placeholder**: the package-overview reference
+  entry now matches the in-function disclaimer -- mfrmr's `lz_star`
+  column is the placeholder `lz / sqrt(1 + 1/N)`, not the published
+  Snijders correction with modified weights `w_tilde_i = w_i - c_n * r_i`.
+- **Marais (2013) `|Q3| > 0.30`**: documented as a community convention
+  Marais cites, not as her own recommendation; her actual recommendation
+  is the relative-to-mean comparison.
+
 # mfrmr 0.2.0
 
 This is a small infrastructure and polish release. No public function

@@ -155,8 +155,9 @@ columns to avoid silent misinterpretation.
 \item Linacre, J. M. (1989). \emph{Many-Facet Rasch Measurement}. MESA Press.
 \item Linacre, J. M. (1994). \emph{Many-facet Rasch Measurement} (2nd ed.).
 MESA Press.
-\item Linacre, J. M. (2023). \emph{A user's guide to FACETS, version 4.5}.
-Winsteps.com. (FACETS Table 12 corresponds to the fair-average
+\item Linacre, J. M. (2026). \emph{A user's guide to FACETS, version 4.5.0}.
+Winsteps.com. \url{https://www.winsteps.com/facets.htm}
+(FACETS Table 12 corresponds to the fair-average
 construction implemented here for \code{RSM} / \code{PCM} fits; the
 slope-aware element-conditional construction for bounded \code{GPCM}
 is documented in this help page.)

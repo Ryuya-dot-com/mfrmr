@@ -325,7 +325,8 @@ nominal/multinomial response models are not yet implemented.
 \strong{Marginal Maximum Likelihood (MML)}
 
 MML integrates over the person ability distribution using Gauss-Hermite
-quadrature (Bock & Aitkin, 1981):
+quadrature, in the broader marginal-likelihood framework introduced by
+Bock & Aitkin (1981) for IRT:
 
 \deqn{L = \prod_{n} \int P(\mathbf{X}_n \mid \theta, \boldsymbol{\delta})
   \, \phi(\theta) \, d\theta
@@ -342,6 +343,15 @@ estimates are obtained post-hoc via Expected A Posteriori (EAP):
 
 MML avoids the incidental-parameter problem and is generally preferred
 for smaller samples.
+
+Note: Bock & Aitkin (1981) is the canonical citation for the
+Gauss-Hermite-quadrature MML \emph{framework}. The default mfrmr engine
+(\code{mml_engine = "direct"}) optimises this marginal log-likelihood by
+direct gradient methods (BFGS / L-BFGS-B), not by Bock & Aitkin's
+signature EM algorithm. The \code{"em"} and \code{"hybrid"} engines do follow
+the EM template but use a BFGS M-step rather than B&A's probit IRLS,
+because the target is the polytomous Rasch family rather than B&A's
+2PL probit model.
 
 \strong{Joint Maximum Likelihood (JML)}
 
@@ -391,10 +401,13 @@ Expected value is 1.0 under model fit.  Values below 0.5 suggest overfit
 misfit).  Infit is most sensitive to unexpected patterns among on-target
 observations (Wright & Masters, 1982).
 
-Note: The 0.5--1.5 range is a widely used rule of thumb (Bond & Fox,
-2015).  Acceptable ranges may differ by context: 0.6--1.4 for high-stakes
-testing; 0.7--1.3 for clinical instruments; up to 0.5--1.7 for surveys
-and exploratory work (Linacre, 2002).
+Note: The 0.5--1.5 range is the general "productive for measurement"
+band given by Linacre (2002, \emph{RMT} 16(2), 878). Context-specific bands
+come from Wright & Linacre (1994, \emph{RMT} 8(3), 370): 0.8--1.2 for
+high-stakes MCQ, 0.7--1.3 for run-of-the-mill MCQ, 0.6--1.4 for
+rating-scale surveys, 0.5--1.7 for clinical observation, and 0.4--1.2
+for judged performance. See also Bond & Fox (2015) for textbook
+summaries of these conventions.
 
 \strong{Outfit (Unweighted Mean Square)}
 
@@ -508,10 +521,14 @@ level in the multidimensional latent space. \emph{Psychometrika}, 39,
 1993 specializes to the GPCM.)
 \item Snijders, T. A. B. (2001). Asymptotic null distribution of person
 fit statistics with estimated person parameter. \emph{Psychometrika},
-66(3), 331--342. (Source for the \code{lz_star} finite-sample-adjusted
-person-fit statistic; the full ability-information bias correction
-is documented as a placeholder in \code{?compute_person_fit_indices}
-and scheduled for a follow-up release.)
+66(3), 331--342. (The published Snijders lz* correction is \strong{not}
+implemented in this release. mfrmr's \code{lz_star} column applies a
+placeholder \code{lz / sqrt(1 + 1/N)} inflation rather than the modified
+weights \code{w_tilde_i = w_i - c_n * r_i} of Snijders (2001, eqs. 7-8).
+Treat the column as a finite-N inflation of \code{lz}, not as the
+published Snijders statistic; the full correction is documented as
+a placeholder in \code{?compute_person_fit_indices} and scheduled for a
+follow-up release.)
 \item Linacre, J. M. (1989). \emph{Many-facet Rasch measurement}. MESA Press.
 \item Linacre, J. M. (2002). What do Infit and Outfit, mean-square and
 standardized mean? \emph{Rasch Measurement Transactions}, 16(2), 878.

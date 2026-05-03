@@ -4,7 +4,7 @@
 #
 # Background and literature:
 #
-# - Linacre (2023), A User's Guide to Facets, notes that rater estimates are
+# - Linacre (2026), A User's Guide to FACETS, notes that rater estimates are
 #   "more sensitive to link reductions" than examinee or task estimates.
 #   Rasch sample-size guidelines (Linacre, 1994, 2021) recommend:
 #     * >= 10 observations per category for stable scale reporting
@@ -368,8 +368,8 @@ detect_facet_nesting <- function(data, facets, person = NULL,
 #'   [reporting_checklist()].
 #'
 #' @references
-#' Linacre, J. M. (2023). *A User's Guide to Facets, Version 4.5*.
-#' Winsteps.com.
+#' Linacre, J. M. (2026). *A User's Guide to FACETS, Version 4.5.0*.
+#' Winsteps.com. <https://www.winsteps.com/facets.htm>
 #'
 #' Linacre, J. M. (1994). Sample size and item calibration stability.
 #' *Rasch Measurement Transactions, 7*(4), 328.
@@ -568,10 +568,11 @@ facet_small_sample_audit <- function(fit, diagnostics = NULL,
 #' The `Interpretation` column uses **two scales** so the same numeric
 #' ICC reads correctly for each facet role:
 #'
-#' - For the `person` facet, higher ICC = better. Koo & Li (2016) bands
-#'   are applied: `< 0.5` Poor, `[0.5, 0.75)` Moderate, `[0.75, 0.9)`
-#'   Good, `>= 0.9` Excellent. This matches the reliability
-#'   interpretation in the inter-rater reliability literature.
+#' - For the `person` facet, higher ICC = better. Koo & Li (2016, p. 161)
+#'   bands are applied: `< 0.5` Poor, `[0.5, 0.75]` Moderate,
+#'   `(0.75, 0.9]` Good, `> 0.9` Excellent. The strict `>` boundary at
+#'   0.9 follows Koo & Li's wording "values greater than 0.90 indicate
+#'   excellent reliability" (so an ICC of exactly 0.9 reads as Good).
 #' - For non-person facets (Rater, Criterion, Task, Region, ...) the
 #'   same numeric value is a **variance share**: how much of the total
 #'   observed score variance sits at that facet. The bands used here
@@ -582,7 +583,7 @@ facet_small_sample_audit <- function(fit, diagnostics = NULL,
 #'
 #' The `InterpretationScale` column explicitly records which scale
 #' applies to each row, so downstream reporting does not confuse the
-#' two. FACETS (Linacre, 2023) reports rater separation/reliability on
+#' two. FACETS (Linacre, 2026) reports rater separation/reliability on
 #' the Rasch metric instead of an ICC; mfrmr surfaces both, with the
 #' Rasch-metric version in `diagnostics$reliability` and this
 #' variance-share view here.
@@ -643,7 +644,7 @@ facet_small_sample_audit <- function(fit, diagnostics = NULL,
 #'   print(icc)
 #'   # Look for:
 #'   # - Person ICC reads as Koo & Li (2016) reliability: < 0.5 poor,
-#'   #   0.5-0.75 moderate, 0.75-0.9 good, >= 0.9 excellent.
+#'   #   0.5-0.75 moderate, 0.75-0.9 good, > 0.9 excellent.
 #'   # - Rater / Criterion ICC reads as variance share, NOT reliability;
 #'   #   here SMALL values are desirable (raters / items agree), and
 #'   #   shares > 0.10 hint at meaningful systematic facet differences.
@@ -761,9 +762,11 @@ compute_facet_icc <- function(data, facets, score,
   }
   koo_li_band <- function(i) {
     if (!is.finite(i)) return(NA_character_)
+    # Koo & Li (2016, p. 161): "values greater than 0.90 indicate excellent
+    # reliability." Strict > at 0.9 places ICC = 0.9 in Good, not Excellent.
     if (i < 0.5) "Poor"
     else if (i < 0.75) "Moderate"
-    else if (i < 0.9) "Good"
+    else if (i <= 0.9) "Good"
     else "Excellent"
   }
   interpret <- vapply(seq_along(icc_vec), function(k) {
@@ -1177,8 +1180,8 @@ compute_facet_design_effect <- function(data, facets, icc_table = NULL,
 #' results from many-facets-Rasch model analyses* (Doctoral thesis,
 #' Brigham Young University). <https://scholarsarchive.byu.edu/etd/6689/>
 #'
-#' Linacre, J. M. (2023). *A User's Guide to Facets, Version 4.5*.
-#' Winsteps.com.
+#' Linacre, J. M. (2026). *A User's Guide to FACETS, Version 4.5.0*.
+#' Winsteps.com. <https://www.winsteps.com/facets.htm>
 #'
 #' Kish, L. (1965). *Survey Sampling*. New York: Wiley.
 #'

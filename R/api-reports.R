@@ -6499,6 +6499,17 @@ collect_bias_screening_summary <- function(diagnostics = NULL, bias_results = NU
 #' @return Object of class `mfrm_dif_report` with `narrative`,
 #'   `counts`, `large_dif`, and `config`.
 #'
+#' @section References:
+#' The narrative caveat about distinguishing construct-relevant variation
+#' from unwanted measurement bias is grounded in:
+#'
+#' - Eckes, T. (2011). *Introduction to Many-Facet Rasch Measurement:
+#'   Analyzing and Evaluating Rater-Mediated Assessments*. Frankfurt am
+#'   Main: Peter Lang. ISBN 978-3-631-61350-4.
+#' - McNamara, T., & Knoch, U. (2012). The Rasch wars: The emergence of
+#'   Rasch measurement in language testing. *Language Testing*, 29(4),
+#'   555--576. \doi{10.1177/0265532211430367}
+#'
 #' @seealso [analyze_dff()], [analyze_dif()], [dif_interaction_table()],
 #'   [plot_dif_heatmap()], [build_apa_outputs()]
 #' @examples

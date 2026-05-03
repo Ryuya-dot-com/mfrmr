@@ -2,7 +2,7 @@
 % Please edit documentation in R/api-q3.R
 \name{q3_statistic}
 \alias{q3_statistic}
-\title{Yen Q3 local-dependence statistic between facet levels}
+\title{Yen-style Q3 local-dependence statistic between facet levels}
 \usage{
 q3_statistic(
   fit,
@@ -26,14 +26,28 @@ on demand when omitted.}
 required to retain a pair. Pairs below the threshold drop out
 of the table (mirrors \code{\link[=plot_local_dependence_heatmap]{plot_local_dependence_heatmap()}}).}
 
-\item{yen_threshold}{Yen (1984) flag threshold (default \code{0.20}).}
+\item{yen_threshold}{Community-convention flag threshold (default
+\code{0.20}). Often attributed to Yen (1984), but the 0.20 cutoff is
+actually from Chen & Thissen (1997, p. 284); Yen herself did not
+propose a fixed cutoff. The cutoff was derived for raw-residual Q3
+under the 3PL — applying it to standardized-residual Q3 under MFRM
+is approximate.}
 
-\item{marais_threshold}{Marais (2013) strict-flag threshold
-(default \code{0.30}).}
+\item{marais_threshold}{Stricter community-convention threshold
+(default \code{0.30}). Marais (2013, p. 121) reports this as a value
+"often considered" in the literature, not as her own
+recommendation; her actual recommendation is the relative
+comparison implemented by \code{relative_offset}.}
 
-\item{relative_offset}{Christensen et al. (2017) relative-flag
-offset (default \code{0.20}); a pair is flagged relatively when
-\verb{|Q3 - mean(Q3)| > relative_offset}.}
+\item{relative_offset}{Screening offset for the relative-flag rule
+\verb{|Q3 - mean(Q3)| > relative_offset} (default \code{0.20}). This is a
+simplified screening approximation of the relative comparison
+advocated by Marais (2013) and operationalized by Christensen
+et al. (2017) as \verb{Q3_* = Q3_max - mean(Q3)}. Christensen et al.
+(2017) demonstrate empirically that no single critical value is
+appropriate across designs and recommend a parametric bootstrap;
+the fixed \code{0.20} here is a screening default, not a substitute
+for that bootstrap.}
 }
 \value{
 An object of class \code{mfrm_q3} containing:
@@ -49,32 +63,44 @@ and the three flagged-pair counts.}
 }
 }
 \description{
-Computes a Q3-style index (Yen, 1984) -- the Pearson correlation of
-standardized residuals between every pair of levels of a chosen
-facet -- from a \code{diagnose_mfrm()} bundle. Under the
-conditional-independence assumption of the MFRM, |Q3| should be
+Computes a Q3-style index inspired by Yen (1984) -- the Pearson
+correlation of \strong{standardized} residuals between every pair of
+levels of a chosen facet -- from a \code{diagnose_mfrm()} bundle. Under
+the conditional-independence assumption of the MFRM, |Q3| should be
 small for every pair; large absolute values flag pairs of facet
 elements (e.g. two raters or two items) whose residuals co-move
 more than the main-effects model expects.
 }
-\section{Statistic definition (note on departures from Yen 1984)}{
+\section{Statistic definition (departures from Yen 1984)}{
 
 This implementation differs from Yen's (1984) original definition
-in one respect that affects threshold interpretation. When the
-facet being paired (e.g. \code{Rater}) has multiple residual rows per
-(Person, Level) cell because of additional facets in the design
-(e.g. multiple \code{Criterion} rows per Person-Rater cell), the
-standardized residuals are first \strong{mean-aggregated to one value
-per (Person, Level) cell}, and the Pearson correlation is taken
-over those mean-aggregated residuals. Yen's original formulation
-takes the correlation directly over per-(Person, Item) residuals,
-without aggregation. The mean-aggregation reduces noise but it
-also shrinks the effective sample size and can pull correlations
-toward the cell mean. The published Yen (1984) \verb{|Q3| > 0.20}
-threshold and the Christensen et al. (2017) critical values were
-derived for the original per-cell formulation; treat the values
-returned here as a screening summary rather than a direct
-substitute for those thresholds.
+in two respects that together affect threshold interpretation.
+
+\strong{(1) Standardized vs raw residuals.} Yen (1984, eqs. 7-8, p. 127)
+defines \code{Q3 = cor(d_i, d_j)} where \verb{d_\{ik\} = u_\{ik\} - P_hat_\{ik\}} is
+the \strong{raw} residual. mfrmr uses \strong{standardized} residuals
+\code{Z = (u - P_hat) / sqrt(Var(u))} because that is what
+\code{diagnose_mfrm()} stores. Standardization down-weights high-variance
+observations and changes the sampling distribution of the resulting
+correlation; the published critical values (Chen & Thissen, 1997;
+Christensen et al., 2017) were derived for raw-residual Q3.
+
+\strong{(2) Mean-aggregation.} When the facet being paired (e.g. \code{Rater})
+has multiple residual rows per (Person, Level) cell because of
+additional facets in the design (e.g. multiple \code{Criterion} rows per
+Person-Rater cell), the standardized residuals are first
+\strong{mean-aggregated to one value per (Person, Level) cell}, and the
+Pearson correlation is taken over those mean-aggregated residuals.
+Yen's original formulation takes the correlation directly over
+per-(Person, Item) residuals, without aggregation. Mean-aggregation
+reduces noise but also shrinks the effective sample size and can pull
+correlations toward the cell mean.
+
+For both reasons, treat the values returned here as a \strong{screening
+summary} rather than a direct substitute for the published Q3
+thresholds. For a formal local-dependence test under raw-residual Q3,
+use a parametric bootstrap as recommended by Christensen et al.
+(2017).
 }
 
 \section{References}{
@@ -83,12 +109,19 @@ substitute for those thresholds.
 \item Yen, W. M. (1984). Effects of local item dependence on the fit
 and equating performance of the three-parameter logistic model.
 \emph{Applied Psychological Measurement, 8}(2), 125-145.
-\item Marais, I. (2013). Local dependence. In \emph{Rasch models in health}
-(pp. 111-130). ISTE / Wiley.
+\doi{10.1177/014662168400800201}
+\item Chen, W.-H., & Thissen, D. (1997). Local dependence indexes for
+item pairs using item response theory. \emph{Journal of Educational
+and Behavioral Statistics, 22}(3), 265-289. (Origin of the
+commonly cited \verb{|Q3| > 0.20} cutoff.)
+\item Marais, I. (2013). Local dependence. In K. B. Christensen,
+S. Kreiner, & M. Mesbah (Eds.), \emph{Rasch models in health}
+(pp. 111-130). London: ISTE / Wiley.
 \item Christensen, K. B., Makransky, G., & Horton, M. (2017). Critical
 values for Yen's Q3: Identification of local dependence in the
 Rasch model using residual correlations.
 \emph{Applied Psychological Measurement, 41}(3), 178-194.
+\doi{10.1177/0146621616677520}
 }
 }
 
@@ -98,10 +131,12 @@ fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "JML", maxit = 25)
 q3 <- q3_statistic(fit)
 q3$summary
-# Look for: MaxAbsQ3 < 0.20 (Yen) is the comfortable regime; values
-#   above 0.30 (Marais) are strict-flag worthy. The summary's flag
-#   counts give a quick triage; inspect `q3$pairs` for the offending
-#   level pairs and follow up with content review.
+# Look for: MaxAbsQ3 < 0.20 (Chen & Thissen 1997 community cutoff) is
+#   the comfortable regime; values above 0.30 are commonly considered
+#   strict-flag worthy (Marais, 2013, summarising literature). For a
+#   formal test, use a parametric bootstrap (Christensen et al., 2017).
+#   The summary's flag counts give a quick triage; inspect `q3$pairs`
+#   for the offending level pairs and follow up with content review.
 head(q3$pairs)
 }
 \seealso{

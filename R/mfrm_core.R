@@ -2558,8 +2558,11 @@ build_estimation_summary <- function(model, method, prep, config, sizes, opt) {
   }, integer(1)))
 
   # Sample-size flag: worst Linacre band across all non-person facet levels.
-  # Bands follow Linacre (1994, RMT 7:4): < 10 sparse, < 30 marginal,
-  # < 50 standard, >= 50 strong. See facet_small_sample_audit().
+  # Bands are adapted from Linacre (1994, RMT 7:4): the 30-level band
+  # preserves Linacre's approximately +-1.0 logit at 95% CI line, while
+  # the `< 10 sparse` floor and the `< 50 standard` watermark are
+  # mfrmr-specific screening choices below Linacre's 30-examinee minimum.
+  # See facet_small_sample_audit() for per-level documentation.
   facet_sample_flag <- NA_character_
   facet_sample_min_n <- NA_integer_
   facet_sample_sparse_count <- 0L
@@ -3255,7 +3258,8 @@ compute_prob_matrix <- function(res) {
 }
 
 # Displacement threshold defaults follow the convention documented in
-# Linacre (2024), `A User's Guide to Winsteps`, where `Displacement > 0.5 logit`
+# Linacre (2026), `A User's Guide to Winsteps 5.11.0`, where
+# `Displacement > 0.5 logit`
 # together with `|t| > 2` is used to flag anchor instability. The combined
 # rule keeps the flag rate conservative for small-sample designs where a
 # 0.5-logit shift alone may still be within sampling error.

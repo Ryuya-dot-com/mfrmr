@@ -550,8 +550,9 @@ unexpected_response_table <- function(fit,
 #' - Linacre, J. M. (1989). *Many-Facet Rasch Measurement*. MESA Press.
 #' - Linacre, J. M. (1994). *Many-facet Rasch Measurement* (2nd ed.).
 #'   MESA Press.
-#' - Linacre, J. M. (2023). *A user's guide to FACETS, version 4.5*.
-#'   Winsteps.com. (FACETS Table 12 corresponds to the fair-average
+#' - Linacre, J. M. (2026). *A user's guide to FACETS, version 4.5.0*.
+#'   Winsteps.com. <https://www.winsteps.com/facets.htm>
+#'   (FACETS Table 12 corresponds to the fair-average
 #'   construction implemented here for `RSM` / `PCM` fits; the
 #'   slope-aware element-conditional construction for bounded `GPCM`
 #'   is documented in this help page.)
@@ -3984,7 +3985,7 @@ plot_residual_pca <- function(x,
       paste0("Facet-specific scree profile: ", facet)
     }
     # Rasch-conventional secondary-dimension reference bands on the residual
-    # eigenvalue scale (see Linacre, 2024, A User's Guide to Winsteps):
+    # eigenvalue scale (see Linacre, 2026, A User's Guide to Winsteps 5.11.0):
     # 1.4 critical minimum, 2.0 noticeable, 3.0 strong second dimension.
     rasch_refs <- c(1, 1.4, 2, 3)
     rasch_ref_labels <- c(

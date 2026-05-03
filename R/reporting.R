@@ -1406,15 +1406,17 @@ build_apa_reporting_contract <- function(res, diagnostics, bias_results = NULL, 
       marginal = paste0(
         "The smallest facet-level N was ",
         if (is.na(facet_min_n)) "NA" else facet_min_n,
-        ", below the Linacre (1994) marginal band of 30. Facet estimates remain ",
+        ", below the 30-examinee floor (Linacre, 1994) used as the marginal-band ",
+        "anchor in this package's adapted screening bands. Facet estimates remain ",
         "fixed-effect and unshrunk; see `facet_small_sample_audit()` for per-level detail."
       ),
       standard = paste0(
-        "Facet-level sample sizes met the Linacre (1994) standard band ",
+        "Facet-level sample sizes met the package's `standard` band ",
         "(smallest level N = ",
         if (is.na(facet_min_n)) "NA" else facet_min_n,
-        "); facets were nonetheless estimated as fixed effects with sum-to-zero ",
-        "identification (see `facet_small_sample_audit()`)."
+        "), an mfrmr-specific watermark adapted from Linacre's (1994) 30/100 ",
+        "guidance; facets were nonetheless estimated as fixed effects with ",
+        "sum-to-zero identification (see `facet_small_sample_audit()`)."
       ),
       strong = paste0(
         "Facet-level sample sizes were strong (smallest level N = ",

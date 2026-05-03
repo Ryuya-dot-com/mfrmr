@@ -33,7 +33,8 @@
 #   applications. Journal of the American Statistical Association, 78(381),
 #   47-55.
 # - Wright, B. D. (1998). Estimating Rasch measures for extreme scores.
-#   Rasch Measurement Transactions, 12(2), 638.
+#   Rasch Measurement Transactions, 12(2), 632-633.
+#   <https://www.rasch.org/rmt/rmt122h.htm>
 # - Jones, E., & Wind, S. A. (2018). Using repeated ratings to improve
 #   measurement precision in incomplete rating designs. Journal of Applied
 #   Measurement, 19(2), 148-161.
@@ -327,15 +328,21 @@
 #' \eqn{\hat{\delta}_j^{EB} = (1 - B_j)\hat{\delta}_j} and
 #' \eqn{\mathrm{SE}_j^{EB} = \sqrt{(1 - B_j)\mathrm{SE}_j^2}}.
 #' The posterior SE form treats \eqn{\hat{\tau}^2} as known; it omits
-#' the Morris (1983) correction
-#' \eqn{2 B^2 (\hat{\tau}^2 + \mathrm{SE}^2)^2 / (K - 3)} that accounts
-#' for uncertainty in \eqn{\hat{\tau}^2}. The omission underestimates
-#' posterior uncertainty in proportion to \eqn{1 / (K - 3)}: in
-#' practice the omitted term is on the order of 50-80\% of the
-#' reported `ShrunkSE` at \eqn{K = 3} elements, ~5\% at \eqn{K = 5},
-#' and ~1\% at \eqn{K = 15}. For a small-N facet with three or four
-#' elements, treat `ShrunkSE` as a lower bound rather than a
-#' calibrated posterior SE.
+#' the Morris (1983, eqs. 4.1-4.2, p. 51) confidence-interval correction
+#' \eqn{v \cdot \hat{\delta}_j^{2}} with
+#' \eqn{v = 2 B_j^2 / (K - r - 2)}, where \eqn{r} is the number of
+#' regression coefficients used to model the prior mean (under mfrmr's
+#' sum-to-zero pinning, \eqn{r = 0}, so the divisor is \eqn{K - 2}).
+#' This correction adds variance proportional to the squared deviation
+#' \eqn{\hat{\delta}_j^{2}}, accounting for uncertainty in
+#' \eqn{\hat{\tau}^2}. Under the equal-variance assumption
+#' \eqn{\hat{\delta}_j^{2} \approx \hat{\tau}^2}, the omitted variance is
+#' on the order of \eqn{2 / (K - 2)} times the reported posterior
+#' variance \eqn{V(1 - B_j)}, so the true SE is approximately
+#' \eqn{\sqrt{1 + 2/(K - 2)}} times the reported `ShrunkSE`. Magnitudes:
+#' SE understated by ~73\% at \eqn{K = 3}, ~29\% at \eqn{K = 5}, ~15\%
+#' at \eqn{K = 8}, ~7\% at \eqn{K = 15}. For a small-K facet, treat
+#' `ShrunkSE` as a lower bound rather than a calibrated posterior SE.
 #'
 #' `fit$facets$others` gains `ShrunkEstimate`, `ShrunkSE`, and
 #' `ShrinkageFactor` columns, and `fit$shrinkage_report` records the

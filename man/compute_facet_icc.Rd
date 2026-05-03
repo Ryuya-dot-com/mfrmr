@@ -97,10 +97,11 @@ separation/reliability reported elsewhere.
 The \code{Interpretation} column uses \strong{two scales} so the same numeric
 ICC reads correctly for each facet role:
 \itemize{
-\item For the \code{person} facet, higher ICC = better. Koo & Li (2016) bands
-are applied: \verb{< 0.5} Poor, \verb{[0.5, 0.75)} Moderate, \verb{[0.75, 0.9)}
-Good, \verb{>= 0.9} Excellent. This matches the reliability
-interpretation in the inter-rater reliability literature.
+\item For the \code{person} facet, higher ICC = better. Koo & Li (2016, p. 161)
+bands are applied: \verb{< 0.5} Poor, \verb{[0.5, 0.75]} Moderate,
+\verb{(0.75, 0.9]} Good, \verb{> 0.9} Excellent. The strict \code{>} boundary at
+0.9 follows Koo & Li's wording "values greater than 0.90 indicate
+excellent reliability" (so an ICC of exactly 0.9 reads as Good).
 \item For non-person facets (Rater, Criterion, Task, Region, ...) the
 same numeric value is a \strong{variance share}: how much of the total
 observed score variance sits at that facet. The bands used here
@@ -112,7 +113,7 @@ averages), not good news.
 
 The \code{InterpretationScale} column explicitly records which scale
 applies to each row, so downstream reporting does not confuse the
-two. FACETS (Linacre, 2023) reports rater separation/reliability on
+two. FACETS (Linacre, 2026) reports rater separation/reliability on
 the Rasch metric instead of an ICC; mfrmr surfaces both, with the
 Rasch-metric version in \code{diagnostics$reliability} and this
 variance-share view here.
@@ -151,7 +152,7 @@ if (requireNamespace("lme4", quietly = TRUE)) {
   print(icc)
   # Look for:
   # - Person ICC reads as Koo & Li (2016) reliability: < 0.5 poor,
-  #   0.5-0.75 moderate, 0.75-0.9 good, >= 0.9 excellent.
+  #   0.5-0.75 moderate, 0.75-0.9 good, > 0.9 excellent.
   # - Rater / Criterion ICC reads as variance share, NOT reliability;
   #   here SMALL values are desirable (raters / items agree), and
   #   shares > 0.10 hint at meaningful systematic facet differences.

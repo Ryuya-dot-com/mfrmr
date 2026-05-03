@@ -139,8 +139,8 @@ McEwen, M. R. (2018). \emph{The effects of incomplete rating designs on
 results from many-facets-Rasch model analyses} (Doctoral thesis,
 Brigham Young University). \url{https://scholarsarchive.byu.edu/etd/6689/}
 
-Linacre, J. M. (2023). \emph{A User's Guide to Facets, Version 4.5}.
-Winsteps.com.
+Linacre, J. M. (2026). \emph{A User's Guide to FACETS, Version 4.5.0}.
+Winsteps.com. \url{https://www.winsteps.com/facets.htm}
 
 Kish, L. (1965). \emph{Survey Sampling}. New York: Wiley.
 
