@@ -542,10 +542,9 @@
 #'   Measurement*, 5(2), 189-227.
 #' - Muraki, E. (1992). *A generalized partial credit model: Application of an
 #'   EM algorithm*. Applied Psychological Measurement, 16(2), 159-176.
-#' - Robitzsch, A., & Steinfeld, J. (2018). *Modeling rater effects in
-#'   achievements tests by item response models: Facets, generalized linear
-#'   mixed models, or signal detection models?* Journal of Educational and
-#'   Behavioral Statistics, 43(2), 218-244.
+#' - Robitzsch, A., & Steinfeld, J. (2018). *Item response models for human
+#'   ratings: Overview, estimation methods, and implementation in R*.
+#'   Psychological Test and Assessment Modeling, 60(1), 101-139.
 #'
 #' @return
 #' An object of class `mfrm_fit` (named list) with:

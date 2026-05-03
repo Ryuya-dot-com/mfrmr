@@ -31,6 +31,13 @@ Simulated for package validation, inspired by Eckes & Jin (2021):
 - Study 1 design target: 307 examinees, 18 raters, 3 criteria, 4-category scale
 - Study 2 design target: 206 examinees, 12 raters, 9 criteria, 4-category scale
 
+Reference
+---------
+
+Eckes, T., & Jin, K.-Y. (2021). Measuring rater centrality effects in
+writing assessment: A Bayesian facets modeling approach.
+Psychological Test and Assessment Modeling, 63(1), 65-94.
+
 Notes
 -----
 

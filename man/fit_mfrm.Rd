@@ -710,10 +710,9 @@ effects using many-facet Rasch measurement: Part II. \emph{Journal of Applied
 Measurement}, 5(2), 189-227.
 \item Muraki, E. (1992). \emph{A generalized partial credit model: Application of an
 EM algorithm}. Applied Psychological Measurement, 16(2), 159-176.
-\item Robitzsch, A., & Steinfeld, J. (2018). \emph{Modeling rater effects in
-achievements tests by item response models: Facets, generalized linear
-mixed models, or signal detection models?} Journal of Educational and
-Behavioral Statistics, 43(2), 218-244.
+\item Robitzsch, A., & Steinfeld, J. (2018). \emph{Item response models for human
+ratings: Overview, estimation methods, and implementation in R}.
+Psychological Test and Assessment Modeling, 60(1), 101-139.
 }
 }
 
