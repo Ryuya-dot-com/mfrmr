@@ -110,7 +110,7 @@ non-person facets rather than fully arbitrary-facet, with boundaries
 exposed through planner metadata such as \code{planning_scope},
 \code{planning_constraints}, and \code{planning_schema}
 \item latent-class mixture models and response-time / careless-rating
-adjustment are not estimated in 0.1.6; use residual, person-fit,
+adjustment are not estimated by mfrmr; use residual, person-fit,
 local-dependence, and rater-drift diagnostics as screening layers rather
 than as mixture-model substitutes
 }
@@ -475,12 +475,43 @@ ed.). Routledge.
 \item Bock, R. D., & Aitkin, M. (1981). Marginal maximum likelihood estimation
 of item parameters: Application of an EM algorithm. \emph{Psychometrika}, 46,
 443--459.
+\item Burnham, K. P., & Anderson, D. R. (2002). \emph{Model selection and
+multimodel inference: A practical information-theoretic approach}
+(2nd ed.). Springer. (AIC / BIC weights and Delta-IC bands used
+by \code{compare_mfrm()}.)
+\item Drasgow, F., Levine, M. V., & Williams, E. A. (1985).
+Appropriateness measurement with polychotomous item response
+models and standardized indices. \emph{British Journal of Mathematical
+and Statistical Psychology}, 38(1), 67--86. (Source for the \code{lz}
+person-fit statistic implemented in \code{compute_person_fit_indices()}.)
 \item Haberman, S. J., & Sinharay, S. (2013). Generalized residuals for general
 models for contingency tables with application to item response theory.
 \emph{Journal of the American Statistical Association}, 108, 1435--1444.
 \item Eckes, T. (2005). Examining rater effects in TestDaF writing and speaking
 performance assessments: A many-facet Rasch analysis. \emph{Language Assessment
 Quarterly}, 2, 197--221.
+\item Muraki, E. (1992). A generalized partial credit model: Application of
+an EM algorithm. \emph{Applied Psychological Measurement}, 16(2),
+159--176. (Source for the bounded \code{GPCM} extension used in
+\code{fit_mfrm(model = "GPCM")}, \code{fair_average_table()}, and
+\code{estimate_bias()}.)
+\item Muraki, E. (1993). Information functions of the generalized partial
+credit model. \emph{Applied Psychological Measurement}, 17(4),
+351--363. (Companion paper to Muraki 1992 that derives the GPCM
+item information identity \eqn{I_j(\theta) = D^2 a_j^2
+  \mathrm{Var}(T \mid \theta)} via Samejima's (1974) polytomous
+information formula. This is the canonical reference for
+\code{compute_information()} under bounded \code{GPCM}.)
+\item Samejima, F. (1974). Normal ogive model on the continuous response
+level in the multidimensional latent space. \emph{Psychometrika}, 39,
+111--121. (General polytomous information formula that Muraki
+1993 specializes to the GPCM.)
+\item Snijders, T. A. B. (2001). Asymptotic null distribution of person
+fit statistics with estimated person parameter. \emph{Psychometrika},
+66(3), 331--342. (Source for the \code{lz_star} finite-sample-adjusted
+person-fit statistic; the full ability-information bias correction
+is documented as a placeholder in \code{?compute_person_fit_indices}
+and scheduled for a follow-up release.)
 \item Linacre, J. M. (1989). \emph{Many-facet Rasch measurement}. MESA Press.
 \item Linacre, J. M. (2002). What do Infit and Outfit, mean-square and
 standardized mean? \emph{Rasch Measurement Transactions}, 16(2), 878.
@@ -559,7 +590,7 @@ approximation rather than as full ConQuest-style population modeling.
 
 The package now includes a first-version latent-regression \code{MML} branch, but
 the overlap with ConQuest should still be described conservatively. The
-defensible shared ground is:
+documented overlap is:
 ordered-response \code{RSM} / \code{PCM}, one latent dimension, a conditional-normal
 person population model, and person covariates supplied through an explicit
 one-row-per-person table and expanded through the package-built model
@@ -599,6 +630,6 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Ryuya Komuro \email{ryuya.komuro.c4@tohoku.ac.jp} (\href{https://orcid.org/0000-0001-9205-0926}{ORCID})
+\strong{Maintainer}: Ryuya Komuro \email{ryuya.komuro.c4@tohoku.ac.jp} (\href{https://orcid.org/0000-0001-9205-0926}{ORCID}) [copyright holder]
 
 }

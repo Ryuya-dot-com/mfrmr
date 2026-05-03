@@ -82,9 +82,11 @@ gpcm_capability_matrix <- function(status = c("all", "supported", "supported_wit
       "Operational linking synthesis",
       "Direct simulation-spec generation",
       "APA writer and bundle-style reporting",
-      "Fair-average, bias, and compatibility-contract layer",
+      "Fair-average semantics under bounded GPCM (slope-aware)",
       "Design planning and forecasting",
-      "MCMC and heavy-backend extensions"
+      "MCMC and heavy-backend extensions",
+      "Residual-bias screening under bounded GPCM",
+      "FACETS compatibility-contract score-side outputs"
     ),
     Helpers = c(
       "fit_mfrm(model = \"GPCM\"); summary(); print()",
@@ -107,9 +109,11 @@ gpcm_capability_matrix <- function(status = c("all", "supported", "supported_wit
       "build_linking_review()",
       "build_mfrm_sim_spec(); extract_mfrm_sim_spec(); simulate_mfrm_data()",
       "build_apa_outputs(); build_visual_summaries(); run_qc_pipeline(); build_mfrm_manifest(); build_mfrm_replay_script(); export_mfrm_bundle()",
-      "fair_average_table(); estimate_bias(); facets_parity_report(); facets_output_file_bundle(include = \"score\")",
+      "fair_average_table()",
       "evaluate_mfrm_design(); evaluate_mfrm_diagnostic_screening(); evaluate_mfrm_signal_detection(); predict_mfrm_population()",
-      "cpp11 backend promotion; posterior predictive computation; MCMC engine; Docker-based advanced runtime"
+      "cpp11 backend promotion; posterior predictive computation; MCMC engine; Docker-based advanced runtime",
+      "estimate_bias()",
+      "facets_parity_report(); facets_output_file_bundle(include = \"score\")"
     ),
     Status = c(
       "supported",
@@ -122,9 +126,11 @@ gpcm_capability_matrix <- function(status = c("all", "supported", "supported_wit
       "deferred",
       "supported_with_caveat",
       "blocked",
-      "blocked",
+      "supported_with_caveat",
       "deferred",
-      "deferred"
+      "deferred",
+      "supported_with_caveat",
+      "blocked"
     ),
     PrimaryUse = c(
       "Estimate bounded GPCM models and inspect convergence, steps, and slope summaries.",
@@ -137,9 +143,11 @@ gpcm_capability_matrix <- function(status = c("all", "supported", "supported_wit
       "Synthesize anchor, drift, and chain evidence into one operational review surface.",
       "Generate or extract slope-aware simulation specifications and sample responses directly from them.",
       "Produce manuscript-draft prose, bundled reporting payloads, or full export bundles.",
-      "Use Rasch-family score semantics, interaction-bias workflows, or compatibility-contract outputs.",
+      "Compute slope-aware element-conditional fair-average score adjustments for reporting tables.",
       "Evaluate designs, forecast future administrations, or run screening-design studies.",
-      "Move beyond the current core-package release boundary."
+      "Move beyond the current core-package release boundary.",
+      "Screen residual two-way interaction-bias cells under bounded GPCM at the screening tier.",
+      "Use FACETS-style compatibility-contract score-side outputs that depend on a validated free-discrimination score metric."
     ),
     Boundary = c(
       paste(
@@ -149,8 +157,9 @@ gpcm_capability_matrix <- function(status = c("all", "supported", "supported_wit
       ),
       paste(
         "Residual-based mean-square and strict-marginal outputs remain",
-        "exploratory screening tools because discrimination is free;",
-        "the dashboard's fair-average panel stays as an explicit unavailable placeholder."
+        "exploratory screening tools because discrimination is free.",
+        "The dashboard's fair-average panel reports an explicit",
+        "unavailability status when the underlying fit is GPCM."
       ),
       paste(
         "Covers fixed-calibration posterior scoring and information only;",
@@ -187,16 +196,38 @@ gpcm_capability_matrix <- function(status = c("all", "supported", "supported_wit
         "bundle, or QC claims."
       ),
       paste(
-        "Not yet generalized to free-discrimination score semantics or to the",
-        "current GPCM compatibility boundary."
+        "Slope-aware element-conditional construction: slope-facet element rows",
+        "use that level's own slope; non-slope-facet rows (Person, Rater, ...)",
+        "use the geometric-mean-one slope by identification convention.",
+        "SE columns in the output are scaled facet-measure SEs, NOT delta-method",
+        "standard errors of the fair-average value (see `?fair_average_table`).",
+        "A delta-method SE for fair-averages is planned for a future release."
       ),
       paste(
         "Still validated only for the role-based RSM/PCM planning layer, not",
         "for the bounded GPCM branch."
       ),
       paste(
-        "These are future extensions. They are not required to justify the",
-        "current GPCM release scope."
+        "Future extensions, listed for transparency. Out of scope for",
+        "the current bounded GPCM branch."
+      ),
+      paste(
+        "Bias point estimates use the slope-aware GPCM kernel: the bias",
+        "parameter is the additive shift on the linear predictor that",
+        "maximises the per-cell GPCM log-likelihood. SE / t / Prob columns",
+        "retain the screening-tier semantics documented in `?estimate_bias`",
+        "(conditional plug-in information at the bias point estimate,",
+        "holding theta and structural parameters fixed); they are NOT",
+        "delta-method standard errors that propagate joint parameter",
+        "uncertainty. A delta-method SE for the bias estimate is not",
+        "currently provided; it would require the joint-covariance",
+        "machinery noted on the FACETS-compatibility row below."
+      ),
+      paste(
+        "Not yet generalized to free-discrimination score semantics.",
+        "The underlying joint covariance machinery (a joint Hessian on",
+        "theta x slope x step) is the prerequisite for delta-method",
+        "score-side standard errors and has not yet been exposed."
       )
     ),
     Evidence = c(
@@ -210,9 +241,11 @@ gpcm_capability_matrix <- function(status = c("all", "supported", "supported_wit
       "not yet validated for the bounded GPCM route",
       "covered by slope-aware simulation checks",
       "not yet validated for the bounded GPCM route",
-      "not yet validated for free-discrimination score semantics",
+      "covered by reduction-to-PCM and worked-example numerical-agreement tests",
       "not yet validated for the bounded GPCM route",
-      "future extension"
+      "future extension",
+      "covered by an end-to-end test on a fitted GPCM example",
+      "not yet validated for free-discrimination score semantics"
     ),
     stringsAsFactors = FALSE
   )

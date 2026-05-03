@@ -278,6 +278,38 @@
 #' across non-person facet levels (`"sparse"` < 10, `"marginal"` < 30,
 #' `"standard"` < 50, `"strong"` >= 50).
 #'
+#' @section JML estimator caveat (use MML for final reporting):
+#' Joint maximum likelihood (`method = "JML"` / `"JMLE"`) estimates
+#' both the structural parameters (facets, thresholds, slopes) and
+#' every person measure as fixed parameters in one optimization. This
+#' is the **incidental-parameter problem** of Neyman & Scott (1948):
+#' the structural parameter estimates are inconsistent as the number
+#' of persons grows with the number of items per person held fixed,
+#' carrying a bias of order \eqn{1/L} (where \eqn{L} is the number of
+#' items per person) that does not vanish with sample size. Wright &
+#' Stone (1979) and Wright & Masters (1982, ch. 5) document an
+#' empirical \eqn{(L-1)/L} correction that approximately removes the
+#' bias for the dichotomous Rasch model; mfrmr does **not** apply
+#' that correction (no `bias_correction` argument exists). The JML
+#' branch also does not produce a profile-likelihood Hessian for the
+#' structural parameters: SEs reported under JML are observation-table
+#' approximations (\eqn{1/\sqrt{\sum \mathrm{Var}(X_{pi})}}) and are
+#' marked as exploratory in the diagnostics output.
+#'
+#' Practical recommendation:
+#'
+#' - Use **`method = "MML"`** for any value reported in a manuscript
+#'   or operational decision. MML integrates the person measures out
+#'   under a population prior and produces consistent structural
+#'   estimates with marginal observed-information SEs.
+#' - Use `method = "JML"` only for fast exploratory iteration, the
+#'   classical FACETS-style workflow, or contexts where the bias is
+#'   tolerable (large \eqn{L} per person, descriptive screening, or
+#'   teaching).
+#' - When a third-party CML estimator is needed (the only consistent
+#'   Rasch-family estimator under the incidental-parameter setting),
+#'   fit with `eRm` and import via [`import_erm_fit()`].
+#'
 #' @section Model-estimated facet interactions:
 #' `facet_interactions` adds confirmatory fixed-effect interaction terms to the
 #' linear predictor. For example, `facet_interactions = "Rater:Criterion"`
@@ -381,6 +413,27 @@
 #'    conditional-normal latent population model, not as a post hoc regression
 #'    on EAP or MLE scores.
 #'
+#' @section Latent-regression standard-error caveat:
+#' `summary(fit)$population_coefficients` reports point estimates of
+#' \eqn{\hat{\boldsymbol{\beta}}} and \eqn{\hat{\sigma}^2} only. mfrmr does
+#' **not** currently compute standard errors, confidence intervals, or
+#' asymptotic z / Wald statistics for the population-model parameters: no
+#' Hessian on \eqn{(\boldsymbol{\beta}, \log\sigma^2)} is extracted from the
+#' marginal log-likelihood, and no `vcov()` method is exposed for these
+#' coefficients. Treat the coefficient table as point estimates suitable
+#' for descriptive reporting; **do not** quote \eqn{\hat{\beta}_j \pm 1.96
+#' \cdot \mathrm{SE}} bounds because the SE column is not provided. A
+#' marginal-Hessian-based SE for \eqn{(\boldsymbol{\beta}, \sigma^2)} is
+#' planned for a future release.
+#'
+#' Identification: the latent-regression intercept is identifiable only
+#' under the default `noncenter_facet = "Person"` (which sum-to-zero-
+#' centers all non-Person facets). If you re-anchor identification on a
+#' non-Person facet, the intercept becomes confounded with the freed
+#' Person-facet mean and the coefficient table becomes unidentified;
+#' mfrmr does not currently warn about this failure mode in the
+#' design-matrix audit.
+#'
 #' Anchor inputs are optional:
 #' - `anchors` should contain facet/level/fixed-value information.
 #' - `group_anchors` should contain facet/level/group/group-value information.
@@ -419,6 +472,15 @@
 #' - Benchmark your own workload before using `mml_engine = "em"` or
 #'   `"hybrid"` for final reporting; `direct` remains the safer default when
 #'   you have not compared engines for your data.
+#' - For RSM and PCM fits only, an opt-in C++ MML backend can be
+#'   enabled with `options(mfrmr.use_cpp11_backend = TRUE)`. The
+#'   backend implements the same physicist Gauss-Hermite quadrature and
+#'   sum-to-zero identification as the pure-R engine, validated against
+#'   the pure-R reference at `tolerance = 1e-12` on a fixed regression
+#'   fixture. It is opt-in for this release; the default flip to ON is
+#'   planned for a follow-up release after a cycle of community
+#'   testing. GPCM fits stay on the pure-R engine regardless of the
+#'   option.
 #'
 #' Downstream diagnostics can also be staged:
 #' - use `diagnose_mfrm(fit, residual_pca = "none")` for a quick first pass
@@ -480,10 +542,9 @@
 #'   Measurement*, 5(2), 189-227.
 #' - Muraki, E. (1992). *A generalized partial credit model: Application of an
 #'   EM algorithm*. Applied Psychological Measurement, 16(2), 159-176.
-#' - Robitzsch, A., & Steinfeld, J. (2018). *Modeling rater effects in
-#'   achievements tests by item response models: Facets, generalized linear
-#'   mixed models, or signal detection models?* Journal of Educational and
-#'   Behavioral Statistics, 43(2), 218-244.
+#' - Robitzsch, A., & Steinfeld, J. (2018). *Item response models for human
+#'   ratings: Overview, estimation methods, and implementation in R*.
+#'   Psychological Test and Assessment Modeling, 60(1), 101-139.
 #'
 #' @return
 #' An object of class `mfrm_fit` (named list) with:
@@ -492,8 +553,19 @@
 #'   `MMLEngineRequested`, `MMLEngineUsed`, and `EMIterations` for MML fits
 #' - `facets$person`: person estimates (`Estimate`; plus `SD` for MML)
 #' - `facets$others`: facet-level estimates for each facet
-#' - `steps`: estimated threshold/step parameters
-#' - `slopes`: estimated discrimination parameters for `GPCM` fits
+#' - `steps`: estimated threshold/step parameters as a one-row-per-step
+#'   `tibble` with `Estimate` only. No `SE` column is currently
+#'   provided; standard errors for steps are not in the structural
+#'   Hessian block exposed by this release. Treat the values as
+#'   point estimates; for step-structure quality, use the
+#'   step-collapse and disordering warnings from [diagnose_mfrm()] and
+#'   [category_structure_report()].
+#' - `slopes`: estimated discrimination parameters for `GPCM` fits as
+#'   a one-row-per-slope-element `tibble` with `LogEstimate` and
+#'   `Estimate` only. No `SE` column is currently provided; the
+#'   identification convention pins the geometric mean of slopes at 1,
+#'   and the structural Hessian block exposed by this release does
+#'   not include slope SEs. Treat the values as point estimates.
 #' - `interactions`: model-estimated facet interaction effects and metadata
 #'   when `facet_interactions` is supplied
 #' - `population`: population-model metadata. Ordinary fits keep an inactive
@@ -514,9 +586,9 @@
 #'   [gpcm_capability_matrix], [mfrmr_workflow_methods],
 #'   [mfrmr_reporting_and_apa]
 #' @examples
-#' # Fast smoke run: confirm the package is installed and the fit returns
-#' # a populated overview. JML on `example_core` finishes in well under
-#' # a second, so we keep this block always-run rather than gated.
+#' # Fast smoke run: a JML fit on the bundled `example_core` toy
+#' # dataset finishes in well under a second and returns a populated
+#' # `summary` overview ready for inspection.
 #' toy <- load_mfrmr_data("example_core")
 #' fit_quick <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                       method = "JML", maxit = 15)
@@ -1611,6 +1683,8 @@ audit_compare_mfrm_nesting <- function(fits, labels) {
 #' @return A list of class `mfrm_data_description` with:
 #' - `overview`: one-row run-level summary
 #' - `missing_by_column`: missing counts in selected input columns
+#' - `missing_rate_summary`: per-column missingness rate summary
+#'   (one row per input column, with raw and proportion-of-N columns)
 #' - `score_descriptives`: output from [psych::describe()] for score
 #' - `weight_descriptives`: output from [psych::describe()] for weight
 #' - `score_distribution`: weighted and raw score frequencies over the prepared
@@ -1618,6 +1692,10 @@ audit_compare_mfrm_nesting <- function(fits, labels) {
 #'   range was supplied explicitly; unused intermediate categories require
 #'   `keep_original = TRUE`.
 #' - `facet_level_summary`: per-level usage and score summaries
+#' - `facet_crosstabs`: pairwise observation-count crosstabs between
+#'   non-person facets (named list keyed `"facetA__facetB"`); used by
+#'   `summary(ds)$design_links` to flag sparse / disconnected
+#'   facet-pair coverage
 #' - `linkage_summary`: person-facet connectivity diagnostics
 #' - `agreement`: observed-score inter-rater agreement bundle
 #' - `score_support`: minimal prepared score-support metadata used by
@@ -3005,6 +3083,27 @@ make_anchor_table <- function(fit,
 #' prec <- precision_audit_report(fit, diagnostics = diag)
 #' summary(prec)
 #' }
+#'
+#' @section References:
+#' - Wright, B. D., & Masters, G. N. (1982). *Rating scale analysis*.
+#'   MESA Press. (G/R/H separation, reliability, and strata
+#'   formulas summarized in `s_diag$reliability` follow this
+#'   convention.)
+#' - Wright, B. D., & Linacre, J. M. (1994). Reasonable mean-square
+#'   fit values. *Rasch Measurement Transactions, 8*(3), 370.
+#'   (Source for the 0.5-1.5 Infit / Outfit acceptance band that
+#'   `s_diag$key_warnings` and `misfit_thresholds` apply.)
+#' - Linacre, J. M. (1989). *Many-Facet Rasch Measurement*. MESA
+#'   Press. (FACETS Tables 6 + 7 correspond to the per-facet
+#'   element measures, fit, and chi-square heterogeneity screen
+#'   exposed via `s_diag$reliability` and `s_diag$facets_chisq`.)
+#' - Bond, T. G., & Fox, C. M. (2015). *Applying the Rasch model:
+#'   Fundamental measurement in the human sciences* (3rd ed.).
+#'   Routledge. (Reference text for the Rasch-family fit
+#'   conventions exposed by this helper.)
+#' - Linacre, J. M. (2002). What do Infit and Outfit, Mean-square
+#'   and Standardized mean? *Rasch Measurement Transactions,
+#'   16*(2), 878.
 #' @export
 diagnose_mfrm <- function(fit,
                           interaction_pairs = NULL,
@@ -3193,6 +3292,16 @@ diagnose_mfrm <- function(fit,
 #' comp$table
 #' comp$evidence_ratios
 #' }
+#'
+#' @section References:
+#' - Burnham, K. P., & Anderson, D. R. (2002). *Model selection and
+#'   multimodel inference: A practical information-theoretic
+#'   approach* (2nd ed.). Springer.
+#' - Akaike, H. (1974). A new look at the statistical model
+#'   identification. *IEEE Transactions on Automatic Control,
+#'   19*(6), 716-723.
+#' - Schwarz, G. (1978). Estimating the dimension of a model.
+#'   *Annals of Statistics, 6*(2), 461-464.
 #' @export
 compare_mfrm <- function(..., labels = NULL, warn_constraints = TRUE, nested = FALSE) {
   fits <- list(...)

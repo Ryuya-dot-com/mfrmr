@@ -144,7 +144,7 @@ Linking, fairness, and advanced review:
 - precision/targeting views via `compute_information()`, `plot_information()`, and `plot_wright_unified()`
 - equivalence and audit helpers such as `analyze_facet_equivalence()`, `describe_mfrm_data()`, and `audit_mfrm_anchors()`
 
-Design-adequacy audit and partial pooling (added in 0.1.6):
+Design-adequacy audit and partial pooling:
 
 - hierarchical-structure and sample-adequacy audit with `detect_facet_nesting()`, `facet_small_sample_audit()`, `compute_facet_icc()`, `compute_facet_design_effect()`, and the combined `analyze_hierarchical_structure()`
 - empirical-Bayes / James-Stein shrinkage for small-N facets via `fit_mfrm(..., facet_shrinkage = "empirical_bayes")` or post-hoc `apply_empirical_bayes_shrinkage()`, with `shrinkage_report()` as the accessor
@@ -274,10 +274,13 @@ boundary in one place.
   `compute_information()`, Wright/pathway/CCC plots, and category reports.
 - Supported with caveat: `diagnose_mfrm()` and direct slope-aware simulation
   are exploratory; `reporting_checklist()` routes only the direct table/plot
-  path.
-- Not supported in this release: fair-average reporting, score-side exports,
-  APA/report bundles, QC pass/fail pipelines, linking synthesis, planning /
-  forecasting, posterior predictive computation, and `MCMC`.
+  path; `fair_average_table()` and `estimate_bias()` use the slope-aware
+  element-conditional GPCM kernel and report a `caveat` field reminding
+  users that the SE columns are scaled facet-measure SEs, not delta-method
+  SEs of the fair-average / bias values.
+- Not supported in this release: score-side exports, APA/report bundles,
+  QC pass/fail pipelines, linking synthesis, planning / forecasting,
+  posterior predictive computation, and `MCMC`.
 
 The unsupported helpers depend on score-side or planning assumptions that are
 validated for the Rasch-family route but not yet generalized to bounded `GPCM`.
@@ -350,9 +353,7 @@ when you want a customised version.
 ```r
 # GitHub (development version)
 if (!requireNamespace("remotes", quietly = TRUE)) install.packages("remotes")
-remotes::install_github("Ryuya-dot-com/mfrmr",
-                        subdir = "mfrmr",
-                        build_vignettes = TRUE)
+remotes::install_github("Ryuya-dot-com/mfrmr", build_vignettes = TRUE)
 
 # CRAN (after release)
 # install.packages("mfrmr")
@@ -1203,7 +1204,7 @@ random-effects variance-share summary on the observed-score scale; for
 non-person facets such as raters, a large ICC is systematic facet variance,
 not better reliability.
 
-Scope note: version 0.1.6 does not estimate latent-class mixture models or
+Scope note: `mfrmr` does not estimate latent-class mixture models or
 response-time / careless-rating adjustments. Use person fit, residual
 matrices, Q3-style local-dependence screens, rater drift, and DFF diagnostics
 as screening evidence, not as substitutes for an explicit mixture or
@@ -1211,22 +1212,22 @@ response-time model.
 
 ## FACETS reference mapping
 
-See:
+A reference table mapping FACETS-program output tables (Table 1, Table 5,
+Table 7, ...) to the `mfrmr` helper functions that produce equivalent or
+adjacent reports ships with the installed package. Open it with:
 
-- `inst/references/FACETS_manual_mapping.md`
+```r
+file.show(system.file("references", "FACETS_manual_mapping.md", package = "mfrmr"))
+```
+
+The mapping is a package-output contract reference, not evidence that
+FACETS was executed or that numerical FACETS equivalence has been
+established for any given fit.
 
 ## Packaged synthetic datasets
 
-Installed at `system.file("extdata", package = "mfrmr")`:
-
-- `eckes_jin_2021_study1_sim.csv`
-- `eckes_jin_2021_study2_sim.csv`
-- `eckes_jin_2021_combined_sim.csv`
-- `eckes_jin_2021_study1_itercal_sim.csv`
-- `eckes_jin_2021_study2_itercal_sim.csv`
-- `eckes_jin_2021_combined_itercal_sim.csv`
-
-The same datasets are also packaged in `data/` and can be loaded with:
+Lazy-loaded under `data/` and accessed either by name or via the
+canonical loader:
 
 ```r
 data("ej2021_study1", package = "mfrmr")

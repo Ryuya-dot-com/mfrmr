@@ -49,14 +49,29 @@
 #'
 #' @section Interpretation:
 #' - `G` is appropriate for **relative** decisions (rank-ordering
-#'   persons): `G = sigma2(p) / (sigma2(p) + sigma2(error_rel))` where
-#'   the relative error term uses person x facet interactions but not
-#'   facet main effects.
+#'   persons): `G = sigma2(p) / (sigma2(p) + sigma2(Residual))`.
 #' - `Phi` is appropriate for **absolute** decisions (cut-score
-#'   classification): `Phi = sigma2(p) / (sigma2(p) + sigma2(error_abs))`
-#'   where the absolute error term also includes facet main effects.
+#'   classification): `Phi = sigma2(p) / (sigma2(p) + sigma2(facet
+#'   main effects) + sigma2(Residual))`.
 #' - Reporting bands follow Brennan (2001): G / Phi >= 0.8 for
 #'   high-stakes decisions, >= 0.7 for routine reporting.
+#'
+#' @section Limitations:
+#' This helper formulates the random-effects model with main effects
+#' only (`Score ~ 1 + (1|Person) + (1|Facet1) + ... + Residual`); no
+#' explicit `(1 | Person:Rater)`, `(1 | Person:Criterion)`, or
+#' `(1 | Rater:Criterion)` interaction terms are estimated. All
+#' two-way and higher interaction variance is therefore folded into
+#' the `Residual` term -- the standard one-observation-per-cell
+#' approximation -- which can bias `G` downward when person x facet
+#' interactions are substantively large. The reported `Phi` does
+#' **not** apply Brennan (2001) D-study scalings (`1/n_r`,
+#' `1/n_i`, `1/(n_r * n_i)`); it treats each random source as
+#' contributing one full observation, so it matches the canonical
+#' Phi only when the operational reporting design is also one rating
+#' per condition. For a full p x r x i decomposition with D-study
+#' scaling, treat this output as a screening summary and re-estimate
+#' externally.
 #'
 #' @section References:
 #' - Cronbach, L. J., Gleser, G. C., Nanda, H., & Rajaratnam, N.

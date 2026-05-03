@@ -93,10 +93,11 @@
 #'    [interrater_agreement_table()], [unexpected_response_table()],
 #'    [displacement_table()], [measurable_summary_table()],
 #'    [rating_scale_table()], [facet_quality_dashboard()],
-#'    [reporting_checklist()], and [plot_qc_dashboard()] with its
-#'    fair-average panel retained as an explicit unavailable placeholder.
-#'    Treat those residual-based summaries as
-#'    exploratory screens because the discrimination parameter is free.
+#'    [reporting_checklist()], and [plot_qc_dashboard()] -- the
+#'    fair-average panel of the dashboard reports an explicit
+#'    unavailability indicator under GPCM. Treat those residual-based
+#'    summaries as exploratory screens because the discrimination
+#'    parameter is free.
 #'    FACETS-style fair averages are Rasch-family measure-to-score
 #'    transformations, so the score-side fair-average semantics remain blocked
 #'    for bounded `GPCM`.

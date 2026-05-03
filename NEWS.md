@@ -1,21 +1,120 @@
-# mfrmr 0.2.0 (development version)
+# mfrmr 0.2.0
 
-This section accumulates entries between the 0.1.6 CRAN release and the
-0.2.0 release. The headings mirror the 0.1.6 layout (default changes,
-new features, bug fixes, documentation) so that release notes can be
-read in the same order as previous versions.
+This is a small infrastructure and polish release. No public function
+gains or removes its previous support contract, and no default value
+changes between 0.1.6 and 0.2.0. The headings mirror the 0.1.6 layout
+(default changes, new features, bug fixes, documentation) so that
+release notes can be read in the same order as previous versions.
 
 ## Default changes
 
-(none yet)
+No defaults change between 0.1.6 and 0.2.0. The 0.1.6 defaults
+(`quad_points = 31`, `diagnostic_mode = "both"`,
+`plot.mfrm_fit(type = "wright")`, `keep_original = FALSE`) are retained.
+
+Note for users upgrading directly from CRAN 0.1.5 to 0.2.0 (skipping
+the 0.1.6 development release): three defaults were flipped in 0.1.6
+and remain on those values in 0.2.0 -- `diagnose_mfrm(diagnostic_mode)`
+went from `"legacy"` to `"both"`, `plot(fit)` returns the Wright map
+alone instead of a three-plot overview (the overview is still
+available via `plot(fit, type = "bundle")`), and `fit_mfrm(quad_points)`
+went from `15` to `31`. See the "mfrmr 0.1.6" section below for the
+full description and revert paths.
 
 ## New features
 
-(none yet)
+### Continuous integration
+
+New GitHub Actions workflows added alongside the existing
+`pkgdown.yaml`: `R-CMD-check.yaml` runs the matrix on Ubuntu
+(release / devel / oldrel-1) plus macos-latest and windows-latest
+(release), and `test-coverage.yaml` runs `covr` with artifact
+upload (no external service contacted).
+
+### Differential-functioning display controls
+
+`plot_dif_heatmap()` gains display controls for cell labels
+(`show_values`, `value_digits`), absolute flag thresholds
+(`flag_threshold`, `flag_color`), and shared symmetric color limits
+(`scale_limit`) so several heatmaps can be drawn on a comparable scale.
+
+`plot_dif_summary()` gains optional normal-approximation confidence
+intervals, effect-threshold guide lines, method-aware axis labels, and
+an interpretation-guide payload that downstream code can render
+alongside the figure.
+
+### Plot payload printing
+
+`print.mfrm_plot_data()` is now defined, so the headline `draw = FALSE`
+return value renders as a compact summary (name, title, payload
+shapes, legend / reference-line counts) instead of a raw list dump.
+
+### Bounded GPCM fair-average and bias unblock (slope-aware)
+
+`fair_average_table()` and `estimate_bias()` no longer hard-stop on
+`GPCM` fits. Both helpers now use the slope-aware element-conditional
+GPCM construction:
+
+- **`fair_average_table()`**: for slope-facet element rows, the
+  fair-average uses that element's own discrimination `a_{j*}` and
+  threshold structure: `FA_{p,j*} = sum_k k * P_GPCM(X = k | theta_p,
+  a_{j*}, delta_{j*})`. For non-slope facets (Person, Rater, ...), the
+  fair-average uses the geometric-mean-one slope by GPCM
+  identification, so the construction is continuous with the PCM
+  Linacre fair-average and reduces to it exactly when all slopes
+  equal one (regression-tested at machine precision).
+
+- **`estimate_bias()`**: the per-cell bias parameter is the additive
+  shift on the linear predictor that maximises the per-cell GPCM
+  log-likelihood. The dispatch routes the inner `nll` and the
+  per-iteration `category_prob` calls through the GPCM kernel instead
+  of the PCM kernel; SE / t / Prob columns retain the screening-tier
+  semantics documented in `?estimate_bias`.
+
+Both helpers gain `method = "GPCM-slope-aware"` and a `caveat`
+field that names the slope convention and reminds the user that the
+SE columns are not delta-method standard errors of the
+fair-average / bias values. A delta-method SE for both is planned for
+a future release; it requires a `vcov()` method on the joint covariance
+of `(theta, a, delta)`, which is not yet exposed.
+See `?fair_average_table`, `?estimate_bias`, and
+`gpcm_capability_matrix()` for the full support contract.
+
+`build_apa_outputs()`, `facets_parity_report()`, and
+`facets_output_file_bundle(include = "score")` remain blocked under
+GPCM in 0.2.0; they require the same SE infrastructure to ship as
+publication-quality outputs.
 
 ## Bug fixes
 
-(none yet)
+- `compute_person_fit_indices()` now computes `lz` from the model
+  category probability of the observed category directly (true
+  Drasgow, Levine & Williams (1985) polytomous form), via three new
+  intermediate columns `PrObserved`, `ItemEntropy`, and `ItemVarLogP`
+  on `compute_obs_table()`. The previous Gaussian-residual
+  approximation overstated `Var[log P]` by roughly a factor of five
+  on a 4-category fixture and pulled `lz` toward zero.
+- The `ECI4` column is removed from `compute_person_fit_indices()`.
+  The previous implementation was the standardized chi-square
+  `(sum StdSq - n) / sqrt(2 * n)`, which is the linear (Smith)
+  approximation to `OutfitZSTD`, not the Tatsuoka & Tatsuoka (1983)
+  extended-caution index. Users who want the equivalent statistic
+  should use `OutfitZSTD` directly. The Snijders (2001) full
+  ability-information bias correction for `lz_star` is documented as
+  a placeholder finite-N adjustment in `?compute_person_fit_indices`
+  and scheduled for a follow-up release.
+- `displacement_table()$summary` now returns `NA_real_` for
+  `MaxAbsDisplacement` and `MaxAbsDisplacementT` when every flagged
+  level has zero information (so every `Displacement` is `NA`).
+  Previously the helper called `max(..., na.rm = TRUE)` on an
+  all-`NA` vector, which returned `-Inf` and emitted a "no
+  non-missing arguments to max; returning -Inf" warning. The
+  guarded version is regression-tested in `test-core-coverage-gaps.R`.
+- `analyze_dff()` and `dif_interaction_table()` now reject invalid
+  `p_adjust`, non-integer `min_obs`, invalid `focal` groups, and
+  all-missing group columns up front, instead of failing later inside
+  the contrast computation. Missing or empty group rows are dropped
+  with a `message()`.
 
 ## Documentation
 
@@ -24,14 +123,86 @@ read in the same order as previous versions.
   screening labels from refit-method ETS A/B/C classifications more
   explicitly and route users to both `plot_dif_heatmap()` and
   `plot_dif_summary()`.
-- `plot_dif_heatmap()` gains display controls for cell labels, absolute
-  flag thresholds, and shared symmetric color limits. `plot_dif_summary()`
-  gains optional normal-approximation confidence intervals, effect-threshold
-  guide lines, method-aware axis labels, and interpretation-guide payloads.
-- `analyze_dff()` and `dif_interaction_table()` now reject invalid
-  `p_adjust`, non-integer `min_obs`, invalid `focal` groups, and
-  all-missing group columns before computing contrasts. Missing or
-  empty group rows are dropped with a message.
+
+- `?compute_person_fit_indices` now describes the `lz_star` column
+  as a finite-sample-adjusted lz (placeholder `cn = 0`, `dn = 1/N`)
+  rather than the full Snijders (2001) bias correction. The full
+  Snijders ability-information correction is scheduled for a
+  follow-up release.
+
+- `?mfrm_generalizability` now discloses that the lme4 random-effects
+  model is main-effects only (`Score ~ 1 + (1|Person) + (1|Facet) +
+  ... + Residual`, no explicit `(1|Person:Facet)` interaction terms),
+  which folds two-way interaction variance into Residual and can
+  bias `G` downward. The reported `Phi` does not apply Brennan
+  (2001) D-study scalings (`1/n_r`, `1/n_i`, `1/(n_r * n_i)`). Users
+  who need a full p x r x i decomposition with D-study scaling
+  should treat this output as a screening summary.
+
+- `?q3_statistic` now discloses that, when the chosen facet has
+  multiple residual rows per (Person, Level) cell because of
+  additional facets in the design, the standardized residuals are
+  mean-aggregated to one value per cell before the Pearson
+  correlation. Yen's (1984) original definition takes the
+  correlation over per-(Person, Item) residuals without aggregation,
+  so the published `|Q3| > 0.20` threshold and the Christensen et
+  al. (2017) critical values were derived for the original
+  formulation; the values returned here should be treated as a
+  screening summary rather than a direct substitute for those
+  thresholds.
+
+- `?bias_pairwise_report` now discloses that the contrast SE uses
+  the independence approximation `sqrt(SE_i^2 + SE_j^2)`. For
+  same-facet bias values that share a sum-to-zero identification
+  the true `Cov(b_i, b_j) < 0`, so the reported SE is an
+  over-estimate and the t-statistic / p-value are conservative
+  (the true significance is higher than reported). For across-facet
+  contrasts the covariance term is approximately zero and the
+  approximation is appropriate.
+
+- Two new vignettes ship in the `Migration and Scope` section of the
+  pkgdown article navigation: `vignette("mfrmr-facets-migration")`
+  walks Facets users through the equivalent `mfrmr` workflow and
+  numeric-parity checks, and `vignette("mfrmr-gpcm-scope")` documents
+  which downstream helpers the bounded `GPCM` route currently
+  supports versus restricts and what to use as a substitute when a
+  helper is restricted.
+
+## Build hygiene
+
+`.Rbuildignore` tightened so a stale internal reading guide in
+`inst/references/` no longer ships into the source tarball. The two
+runtime / user-facing files in that directory --
+`facets_column_contract.csv` (read at runtime by
+`facets_parity_report()`) and `FACETS_manual_mapping.md` (the
+FACETS Table to `mfrmr` helper mapping cited in the README) -- are
+preserved.
+
+## Performance note
+
+The cpp11 MML backend (`src/mml_backend.cpp`, RSM and PCM only) is
+opt-in via `options(mfrmr.use_cpp11_backend = TRUE)` for this release.
+It is validated against the pure-R reference at `tolerance = 1e-12`
+on a fixed regression fixture. The default flip to ON is planned for
+a follow-up release after a cycle of community testing.
+
+## Deferred to a follow-up release
+
+Scoped during 0.2.0 prep but not shipped in 0.2.0; carried over to a
+later release:
+
+- User-facing GPCM unblock for `build_apa_outputs()`,
+  `facets_parity_report()`, and `facets_output_file_bundle(include =
+  "score")`. (`fair_average_table()` and `estimate_bias()` are
+  unblocked above.)
+- A classical-DIF helper (working title `analyze_dif_classical()`)
+  covering Mantel-Haenszel, logistic regression, and SIBTEST.
+- Five additional Rasch / IRT classic plots (KIDMAP, TCC, expected
+  score curve, cumulative ICC, information surface).
+- A native classical-DIF vignette (the migration and bounded-GPCM-scope
+  vignettes ship in this release; see the Documentation section above).
+
+These are scheduled for a follow-up release.
 
 # mfrmr 0.1.6
 
@@ -104,17 +275,15 @@ effective degrees of freedom.
 The estimator is the classical method-of-moments form (Efron & Morris,
 1973):
 
-- \eqn{\hat{\tau}^2 = \max(0, K^{-1}\sum_j \hat{\delta}_j^2 -
-  \overline{\mathrm{SE}^2})}, using the raw second moment under
-  mfrmr's sum-to-zero identification (the facet mean is exactly 0 by
-  construction, so no degree of freedom is consumed).
-- \eqn{B_j = \mathrm{SE}_j^2 / (\hat{\tau}^2 + \mathrm{SE}_j^2)}
-  (shrinkage factor).
-- \eqn{\hat{\delta}_j^{EB} = (1 - B_j)\hat{\delta}_j} and
-  \eqn{\mathrm{SE}_j^{EB} = \sqrt{(1 - B_j) \mathrm{SE}_j^2}}
-  (posterior mean / SE; the posterior SE treats \eqn{\hat{\tau}^2} as
-  known, omitting the Morris (1983) correction for \eqn{\hat{\tau}^2}
-  uncertainty).
+- `tau_hat^2 = max(0, mean(delta_hat_j^2) - mean(SE_j^2))`, using the
+  raw second moment under mfrmr's sum-to-zero identification (the
+  facet mean is exactly 0 by construction, so no degree of freedom is
+  consumed).
+- `B_j = SE_j^2 / (tau_hat^2 + SE_j^2)` (shrinkage factor).
+- `delta_hat_j^EB = (1 - B_j) * delta_hat_j` and
+  `SE_j^EB = sqrt((1 - B_j) * SE_j^2)` (posterior mean / SE; the
+  posterior SE treats `tau_hat^2` as known, omitting the Morris
+  (1983) correction for `tau_hat^2` uncertainty).
 
 Two post-hoc helpers make shrinkage available to existing fits:
 
@@ -127,7 +296,7 @@ and is reserved for a future penalised-MML implementation.
 
 Integration: `summary(fit)` exposes `FacetShrinkage` and
 `FacetShrinkageTau2Mean`; `build_apa_outputs()` adds a Method-section
-sentence naming the mode, mean \eqn{\hat{\tau}^2}, and mean shrinkage
+sentence naming the mode, mean `tau_hat^2`, and mean shrinkage
 with a Efron & Morris (1973) citation; `build_mfrm_manifest()` gains
 a `shrinkage_audit` table; `reporting_checklist()` gains an
 "Empirical-Bayes shrinkage" item.
@@ -664,7 +833,7 @@ The imported objects carry the `mfrm_imported_fit` class and
 populate measurement-side slots (`facets$person`,
 `facets$others`, `steps`, `summary`) only. Bias / DIF / anchor /
 replay slots are explicitly not populated; full bundle import is
-on the 0.2.0 roadmap.
+planned for a future release.
 
 ### Parallel parametric-bootstrap ICC
 
@@ -680,7 +849,7 @@ worker processes hold their own copy of the progress state.
 argument. When `"future"` is requested and the `future.apply`
 Suggests package is installed, the rep loop within each design
 row honours whatever `future::plan()` is currently active;
-cross-design-row parallelism is on the 0.2.0 roadmap. Without
+cross-design-row parallelism is planned for a future release. Without
 `future.apply` the call falls back to serial execution with an
 explicit message.
 

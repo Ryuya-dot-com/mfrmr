@@ -4073,7 +4073,21 @@ plot.mfrm_bundle <- function(x, y = NULL, type = NULL, ...) {
 #' - `next_actions`: recommended follow-up helpers
 #' - `diagnostic_basis`: guide to legacy versus strict diagnostic targets
 #' - `overall_fit`: global fit block
+#' - `precision_profile`: design-weighted precision summary across the
+#'   information curve at decile theta points
+#' - `precision_audit`: separation / reliability / strata audit for the
+#'   sample- and population-basis modes (paired with `precision_profile`)
 #' - `reliability`: facet-level separation/reliability summary
+#' - `facets_chisq`: facets-style fixed-effect chi-square heterogeneity
+#'   screen across non-person facets
+#' - `interrater`: inter-rater agreement / pairwise correlation / rater
+#'   separation overview when a Rater facet is present
+#' - `misfit_flagged`: rows flagged by the Infit / Outfit / ZSTD
+#'   misfit thresholds active for this fit
+#' - `misfit_thresholds`: named numeric vector with the misfit
+#'   `lower` / `upper` thresholds used to populate `misfit_flagged`
+#' - `category_usage`: per-category response-frequency summary used
+#'   to flag empty / collapsed categories
 #' - `top_fit`: top `|ZSTD|` rows
 #' - `marginal_fit`: optional strict marginal-fit overview when requested
 #' - `top_marginal_cells`: largest strict marginal residual cells when requested
@@ -4084,6 +4098,8 @@ plot.mfrm_bundle <- function(x, y = NULL, type = NULL, ...) {
 #'   which companion outputs should be consulted
 #' - `flags`: compact flag counts for major diagnostics
 #' - `notes`: short interpretation notes
+#' - `digits`: numeric-print precision threaded through to
+#'   `print.summary.mfrm_diagnostics()`
 #' @seealso [diagnose_mfrm()], [summary.mfrm_fit()]
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
@@ -4992,13 +5008,30 @@ print.summary.mfrm_bias <- function(x, ...) {
 #'   when a population model uses model-matrix coding
 #' - `facet_overview`: per-facet estimate distribution summary
 #' - `person_overview`: person-measure distribution summary
+#' - `targeting`: person-versus-non-person facet targeting overview
+#'   (Wright-map-style mean/SD comparison)
 #' - `step_overview`: threshold/step diagnostics
 #' - `slope_overview`: discrimination summary for `GPCM` fits
+#' - `interaction_overview`: model-estimated facet-interaction summary
+#'   when the fit was specified with `facet_interactions`
+#' - `settings_overview`: estimation-settings overview that pins the
+#'   configuration that affects identification/scoring
+#' - `attached_diagnostics`: logical flag indicating whether the
+#'   `mfrm_fit` was returned with diagnostics already attached
+#' - `attached_diagnostics_cols`: character vector of diagnostic
+#'   columns attached to `fit$facets$person` when
+#'   `attached_diagnostics = TRUE`
+#' - `reporting_map`: routing map showing which companion summaries
+#'   and tables should be used for the four manuscript-oriented
+#'   reporting sections (data description, diagnostics, category
+#'   checks, draft reporting)
 #' - `person_high` / `person_low`: highest and lowest person measures
 #' - `facet_extremes`: extreme facet-level estimates
 #' - `caveats`: structured warning/review rows for score-support and
 #'   latent-regression population-model issues
 #' - `notes`: short interpretation notes
+#' - `digits`: numeric-print precision threaded through to
+#'   `print.summary.mfrm_fit()`
 #' @seealso [fit_mfrm()], [diagnose_mfrm()]
 #' @examples
 #' toy <- load_mfrmr_data("example_core")

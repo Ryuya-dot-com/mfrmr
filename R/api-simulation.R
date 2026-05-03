@@ -1294,8 +1294,8 @@ design_eval_summarize_results <- function(results, rep_overview, design_variable
 #'   `future::plan()` is currently active. The Suggests package
 #'   `future.apply` must be installed for the parallel path to
 #'   activate; otherwise the call falls back to serial execution
-#'   with a single message. Cross-design-row parallelism is on the
-#'   0.2.0 roadmap.
+#'   with a single message. Cross-design-row parallelism is planned
+#'   for a future release.
 #'
 #' @details
 #' This helper runs a compact Monte Carlo design study for common rater-by-item
@@ -1388,7 +1388,7 @@ design_eval_summarize_results <- function(results, rep_overview, design_variable
 #' you vary person, rater, criterion, or assignment counts. It is not a
 #' closed-form generalizability-theory D-study calculator; use
 #' [mfrm_generalizability()] for observed variance-component summaries and
-#' treat analytic G/Phi coefficient planning as outside the 0.1.6 scope.
+#' treat analytic G/Phi coefficient planning as outside the current scope.
 #'
 #' @section References:
 #' The simulation logic follows the general Monte Carlo / operating-characteristic
@@ -1479,12 +1479,12 @@ evaluate_mfrm_design <- function(n_person = c(30, 50, 100),
     # release threads the request through the rep loop via
     # `future.apply::future_lapply` only when no per-rep state is
     # accumulated upstream. Full parallelisation across design rows
-    # is on the 0.2.0 roadmap; until then, set
+    # is planned for a future release; until then, set
     # `future::plan(multisession, workers = N)` and rerun to use
     # parallel rep execution within each design row.
-    message("`evaluate_mfrm_design(parallel = 'future')` honours the ",
-            "rep loop within each design row in 0.1.6. ",
-            "Cross-design-row parallelism lands in 0.2.0.")
+    message("`evaluate_mfrm_design(parallel = 'future')` currently ",
+            "parallelises the rep loop within each design row. ",
+            "Cross-design-row parallelism is planned for a future release.")
   }
   if (identical(model, "GPCM")) {
     stop(
@@ -2179,6 +2179,11 @@ plot.mfrm_design_evaluation <- function(x,
 #' - `planning_scope`: explicit record of the current planning contract
 #' - `planning_constraints`: explicit record of mutable/locked design variables
 #' - `planning_schema`: combined planner-schema contract
+#' - `caveats`: structured warning rows for situations where the
+#'   recommendation rests on weak evidence (e.g., no design met every
+#'   threshold; the recommended design is at the boundary of the
+#'   evaluated grid; only one rep was simulated). Empty `tibble()`
+#'   when no caveats apply.
 #' @seealso [evaluate_mfrm_design()], [summary.mfrm_design_evaluation], [plot.mfrm_design_evaluation]
 #' @examples
 #' \donttest{

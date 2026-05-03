@@ -71,7 +71,7 @@ identical(names(ej2021_study1), names(study1_alt))
 
 ## Minimal Runnable Example
 
-We start with the packaged `example_core` dataset. It is intentionally compact,
+Start with the packaged `example_core` dataset. It is intentionally compact,
 category-complete, and generated from a single latent trait plus facet main
 effects so that help-page examples stay fast without relying on undersized toy
 data. The same object is also available via
@@ -133,7 +133,7 @@ subset(
 
 ## Fit and Diagnose with Full Data
 
-For a realistic analysis, we use the packaged Study 1 dataset:
+For a realistic analysis, use the packaged Study 1 dataset:
 
 ```{r fit-full}
 fit <- fit_mfrm(

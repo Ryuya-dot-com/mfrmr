@@ -48,7 +48,7 @@ get_weights <- function(df) {
 
 stop_if_gpcm_out_of_scope <- function(fit,
                                       helper,
-                                      supported = "fitting, core summary output, fixed-calibration posterior scoring, compute_information(), direct simulation, residual-based diagnostics, and the curve/report helpers already documented for bounded GPCM") {
+                                      supported = "fitting, core summary output, fixed-calibration posterior scoring, compute_information(), direct simulation, residual-based diagnostics, the curve/report helpers, and the slope-aware element-conditional fair_average_table() and estimate_bias() (with the SE caveats documented in their help pages)") {
   if (!inherits(fit, "mfrm_fit")) return(invisible(NULL))
   model <- as.character(fit$config$model %||% fit$summary$Model[1] %||% NA_character_)
   if (identical(model, "GPCM")) {
@@ -2877,6 +2877,30 @@ compute_obs_table <- function(res) {
   resid_k <- idx$score_k - prob_bundle$expected_k
   std_sq <- resid_k^2 / prob_bundle$var_k
 
+  # Per-observation categorical-distribution moments needed by
+  # `compute_person_fit_indices()` to compute Drasgow et al. (1985) lz
+  # in its proper polytomous form. `pr_obs` is the model probability of
+  # the observed category; `item_entropy` and `item_var_logp` are the
+  # per-item expectation and variance of log P(X|theta) under the model
+  # categorical, which are the centering and per-item-variance terms in
+  # Drasgow's lz.
+  probs_mat <- prob_bundle$probs
+  n_rows <- nrow(probs_mat)
+  if (n_rows > 0L) {
+    score_k_int <- as.integer(idx$score_k)
+    obs_col <- pmin(pmax(score_k_int + 1L, 1L), ncol(probs_mat))
+    pr_obs <- probs_mat[cbind(seq_len(n_rows), obs_col)]
+    eps <- .Machine$double.eps
+    log_probs_mat <- log(pmax(probs_mat, eps))
+    item_entropy <- as.numeric(rowSums(probs_mat * log_probs_mat))
+    item_e_logp_sq <- as.numeric(rowSums(probs_mat * log_probs_mat^2))
+    item_var_logp <- pmax(item_e_logp_sq - item_entropy^2, 0)
+  } else {
+    pr_obs <- numeric(0)
+    item_entropy <- numeric(0)
+    item_var_logp <- numeric(0)
+  }
+
   prep$data |>
     mutate(
       PersonMeasure = person_measure_by_row,
@@ -2887,7 +2911,10 @@ compute_obs_table <- function(res) {
       ScoreSlope = prob_bundle$slope_obs,
       Residual = Observed - Expected,
       StdResidual = Residual / sqrt(Var),
-      StdSq = std_sq
+      StdSq = std_sq,
+      PrObserved = pr_obs,
+      ItemEntropy = item_entropy,
+      ItemVarLogP = item_var_logp
     )
 }
 
@@ -3363,13 +3390,15 @@ summarize_displacement_table <- function(displacement_tbl,
   } else {
     rep(FALSE, nrow(displacement_tbl))
   }
+  abs_disp <- abs(displacement_tbl$Displacement)
+  abs_t <- abs(displacement_tbl$DisplacementT)
   tibble(
     Levels = nrow(displacement_tbl),
     AnchoredLevels = sum(is_anchored, na.rm = TRUE),
     FlaggedLevels = sum(flagged, na.rm = TRUE),
     FlaggedAnchoredLevels = sum(flagged & is_anchored, na.rm = TRUE),
-    MaxAbsDisplacement = max(abs(displacement_tbl$Displacement), na.rm = TRUE),
-    MaxAbsDisplacementT = max(abs(displacement_tbl$DisplacementT), na.rm = TRUE),
+    MaxAbsDisplacement = if (any(is.finite(abs_disp))) max(abs_disp, na.rm = TRUE) else NA_real_,
+    MaxAbsDisplacementT = if (any(is.finite(abs_t))) max(abs_t, na.rm = TRUE) else NA_real_,
     AbsDisplacementThreshold = abs_displacement_warn,
     AbsTThreshold = abs_t_warn
   )
@@ -3888,11 +3917,36 @@ expected_score_from_eta <- function(eta, step_cum, rating_min) {
   rating_min + sum(probs * k_vals)
 }
 
-estimate_eta_from_target <- function(target, step_cum, rating_min, rating_max) {
+# Slope-aware element-conditional expected score for GPCM fair-averages.
+# Computes
+#     E[X | eta, a, step_cum] = sum_k k * exp(a * (k * eta - step_cum_k))
+#                                / sum_r exp(a * (r * eta - step_cum_r))
+# in the log-space-shifted form for numerical stability. Reduces exactly
+# to `expected_score_from_eta()` when `slope == 1` (the PCM/RSM special
+# case); a degenerate or non-finite slope falls back to slope = 1 with a
+# silent guard so partial fits do not error mid-report.
+expected_score_from_eta_gpcm <- function(eta, step_cum, slope, rating_min) {
+  if (!is.finite(eta) || length(step_cum) == 0) return(NA_real_)
+  if (!is.finite(slope) || slope <= 0) slope <- 1
+  k_vals <- 0:(length(step_cum) - 1)
+  log_num <- slope * (k_vals * eta - step_cum)
+  m <- max(log_num)
+  if (!is.finite(m)) return(NA_real_)
+  probs <- exp(log_num - m)
+  probs <- probs / sum(probs)
+  rating_min + sum(probs * k_vals)
+}
+
+estimate_eta_from_target <- function(target, step_cum, rating_min, rating_max,
+                                     slope = 1) {
   if (!is.finite(target) || length(step_cum) == 0) return(NA_real_)
   if (target <= rating_min) return(-Inf)
   if (target >= rating_max) return(Inf)
-  f <- function(eta) expected_score_from_eta(eta, step_cum, rating_min) - target
+  # Uses the slope-aware helper. At slope = 1 (the default and the
+  # RSM/PCM case) this is identical to `expected_score_from_eta()` to
+  # machine precision (verified in tests/testthat/test-gpcm-fair-
+  # average.R), so the existing PCM/RSM xtreme-eta path is unchanged.
+  f <- function(eta) expected_score_from_eta_gpcm(eta, step_cum, slope, rating_min) - target
   lower <- -10
   upper <- 10
   f_low <- f(lower)
@@ -4102,7 +4156,7 @@ calc_facets_report_tbls <- function(res,
       eta_z <- sign * tbl$Estimate
     }
 
-    if (config$model == "PCM" && !is.null(config$step_facet)) {
+    if (config$model %in% c("PCM", "GPCM") && !is.null(config$step_facet)) {
       step_levels <- prep$levels[[config$step_facet]]
       if (facet == config$step_facet && length(step_levels) > 0 && length(step_cum_common) > 0) {
         step_cum_list <- purrr::map(tbl$Level, function(lvl) {
@@ -4120,17 +4174,60 @@ calc_facets_report_tbls <- function(res,
       step_cum_list <- rep(list(step_cum_common), nrow(tbl))
     }
 
-    fair_m <- purrr::map2_dbl(eta_m, step_cum_list, ~ expected_score_from_eta(.x, .y, rating_min))
-    fair_z <- purrr::map2_dbl(eta_z, step_cum_list, ~ expected_score_from_eta(.x, .y, rating_min))
+    # Per-row slope vector for the slope-aware GPCM fair-average
+    # construction. For the slope-facet's own rows, use that level's
+    # own slope from `params$slopes`; for all other rows (Person,
+    # Rater, ..., and any non-GPCM fit) the slope is 1. Setting the
+    # non-slope-facet slope to 1 is the geometric-mean-one
+    # identification convention: it represents the "average slope"
+    # across slope-facet elements and makes
+    # `expected_score_from_eta_gpcm()` reduce exactly to the PCM/RSM
+    # Linacre fair-average. Net effect: only the slope-facet element
+    # rows carry visible slope heterogeneity in the fair-average
+    # column; non-slope rows remain continuous with the standard PCM
+    # Linacre construction.
+    slope_facet <- config$slope_facet %||% config$step_facet
+    if (config$model == "GPCM" && !is.null(slope_facet) &&
+        !is.null(params$slopes) && facet == slope_facet) {
+      slope_levels <- prep$levels[[slope_facet]] %||% character(0)
+      slopes_vec <- as.numeric(params$slopes)
+      slope_list <- purrr::map_dbl(tbl$Level, function(lvl) {
+        idx <- match(lvl, slope_levels)
+        if (is.na(idx) || idx < 1L || idx > length(slopes_vec)) {
+          1
+        } else {
+          slopes_vec[idx]
+        }
+      })
+    } else {
+      slope_list <- rep(1, nrow(tbl))
+    }
+
+    if (config$model == "GPCM") {
+      fair_m <- purrr::pmap_dbl(
+        list(eta_m, step_cum_list, slope_list),
+        function(e, s, a) expected_score_from_eta_gpcm(e, s, a, rating_min)
+      )
+      fair_z <- purrr::pmap_dbl(
+        list(eta_z, step_cum_list, slope_list),
+        function(e, s, a) expected_score_from_eta_gpcm(e, s, a, rating_min)
+      )
+    } else {
+      fair_m <- purrr::map2_dbl(eta_m, step_cum_list, ~ expected_score_from_eta(.x, .y, rating_min))
+      fair_z <- purrr::map2_dbl(eta_z, step_cum_list, ~ expected_score_from_eta(.x, .y, rating_min))
+    }
 
     xtreme_target <- ifelse(
       status == "Minimum", rating_min + xtreme,
       ifelse(status == "Maximum", rating_max - xtreme, NA_real_)
     )
-    xtreme_eta <- purrr::map2_dbl(xtreme_target, step_cum_list, ~ {
-      if (!is.finite(.x) || xtreme <= 0) return(NA_real_)
-      estimate_eta_from_target(.x, .y, rating_min, rating_max)
-    })
+    xtreme_eta <- purrr::pmap_dbl(
+      list(xtreme_target, step_cum_list, slope_list),
+      function(t, s, a) {
+        if (!is.finite(t) || xtreme <= 0) return(NA_real_)
+        estimate_eta_from_target(t, s, rating_min, rating_max, slope = a)
+      }
+    )
 
     # Convert any xtreme-adjusted eta back to facet-specific measure units.
     measure_logit <- tbl$Estimate
@@ -5328,6 +5425,18 @@ estimate_bias_interaction <- function(res,
   score_k <- idx$score_k
   weight <- idx$weight
   step_idx <- idx$step_idx
+  # Per-observation slope index for GPCM. For non-GPCM fits these stay
+  # NULL and the dispatch below falls through to the RSM/PCM branch.
+  slope_idx <- if (identical(config$model, "GPCM")) {
+    idx$slope_idx %||% idx$step_idx
+  } else {
+    NULL
+  }
+  slopes_full <- if (identical(config$model, "GPCM")) {
+    as.numeric(params$slopes)
+  } else {
+    NULL
+  }
 
   if (config$model == "RSM") {
     step_cum <- c(0, cumsum(params$steps))
@@ -5401,9 +5510,16 @@ estimate_bias_interaction <- function(res,
     score_k_sub <- score_k[idx_rows]
     weight_sub <- if (!is.null(weight)) weight[idx_rows] else NULL
     step_idx_sub <- if (!is.null(step_idx)) step_idx[idx_rows] else NULL
+    slope_idx_sub <- if (!is.null(slope_idx)) slope_idx[idx_rows] else NULL
 
     if (config$model == "RSM") {
       nll <- function(b) -loglik_rsm(eta_sub + b, score_k_sub, step_cum, weight = weight_sub)
+    } else if (identical(config$model, "GPCM")) {
+      nll <- function(b) -loglik_gpcm(eta_sub + b, score_k_sub, step_cum_mat,
+                                        criterion_idx = step_idx_sub,
+                                        slopes = slopes_full,
+                                        slope_idx = slope_idx_sub,
+                                        weight = weight_sub)
     } else {
       nll <- function(b) -loglik_pcm(eta_sub + b, score_k_sub, step_cum_mat, step_idx_sub, weight = weight_sub)
     }
@@ -5428,8 +5544,14 @@ estimate_bias_interaction <- function(res,
       eta_sub <- eta_base[idx_rows] + ifelse(is.finite(bias), bias, 0)
       score_k_sub <- score_k[idx_rows]
       step_idx_sub <- if (!is.null(step_idx)) step_idx[idx_rows] else NULL
+      slope_idx_sub <- if (!is.null(slope_idx)) slope_idx[idx_rows] else NULL
       probs <- if (config$model == "RSM") {
         category_prob_rsm(eta_sub, step_cum)
+      } else if (identical(config$model, "GPCM")) {
+        category_prob_gpcm(eta_sub, step_cum_mat,
+                            criterion_idx = step_idx_sub,
+                            slopes = slopes_full,
+                            slope_idx = slope_idx_sub)
       } else {
         category_prob_pcm(eta_sub, step_cum_mat, step_idx_sub)
       }
@@ -5512,10 +5634,16 @@ estimate_bias_interaction <- function(res,
     score_k_sub <- score_k[idx_rows]
     weight_sub <- if (!is.null(weight)) weight[idx_rows] else rep(1, length(idx_rows))
     step_idx_sub <- if (!is.null(step_idx)) step_idx[idx_rows] else NULL
+    slope_idx_sub <- if (!is.null(slope_idx)) slope_idx[idx_rows] else NULL
 
     if (bias_ok) {
       probs <- if (config$model == "RSM") {
         category_prob_rsm(eta_sub + bias_hat, step_cum)
+      } else if (identical(config$model, "GPCM")) {
+        category_prob_gpcm(eta_sub + bias_hat, step_cum_mat,
+                            criterion_idx = step_idx_sub,
+                            slopes = slopes_full,
+                            slope_idx = slope_idx_sub)
       } else {
         category_prob_pcm(eta_sub + bias_hat, step_cum_mat, step_idx_sub)
       }

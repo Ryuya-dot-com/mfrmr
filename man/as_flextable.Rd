@@ -11,6 +11,16 @@ as_flextable(x, ...)
 
 \item{...}{Passed to methods.}
 }
+\value{
+A \code{flextable} object (concrete return type from the
+underlying method, e.g. \verb{[as_flextable.apa_table()]} returns a
+\code{flextable} ready for \code{flextable::save_as_docx()}).
+}
 \description{
 Generic for converting objects to a \code{flextable}
+}
+\seealso{
+\code{\link[=as_flextable.apa_table]{as_flextable.apa_table()}} for the \code{apa_table} method;
+\code{\link[=as_kable]{as_kable()}} for a \code{knitr::kable}-targeted alternative;
+\code{\link[=apa_table]{apa_table()}} for constructing an \code{apa_table} in the first place.
 }

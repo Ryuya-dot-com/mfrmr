@@ -72,6 +72,9 @@ requested.
 \item \code{connectivity}: named list with bipartite-graph component summary
 when \code{igraph} is available.
 \item \code{summary}: one-row summary used by downstream reporting helpers.
+\item \code{facets}: character vector of facet names that were audited
+(echoed for downstream reporting helpers that need to label rows
+by audit scope).
 }
 }
 \description{

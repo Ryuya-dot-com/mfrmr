@@ -94,6 +94,58 @@ new_mfrm_plot_data <- function(name, data) {
   out
 }
 
+#' @export
+print.mfrm_plot_data <- function(x, ...) {
+  data <- x$data %||% list()
+  cat("<mfrm_plot_data>\n")
+  cat("  name     : ", x$name %||% "<unnamed>", "\n", sep = "")
+  if (!is.null(data$title) && nzchar(data$title)) {
+    cat("  title    : ", data$title, "\n", sep = "")
+  }
+  if (!is.null(data$subtitle) && nzchar(data$subtitle)) {
+    cat("  subtitle : ", data$subtitle, "\n", sep = "")
+  }
+  payload_slots <- setdiff(
+    names(data),
+    c("title", "subtitle", "legend", "reference_lines")
+  )
+  if (length(payload_slots) > 0L) {
+    cat("  payload  :\n", sep = "")
+    for (slot in payload_slots) {
+      val <- data[[slot]]
+      shape <- if (is.data.frame(val)) {
+        sprintf("data.frame [%d x %d]", nrow(val), ncol(val))
+      } else if (is.matrix(val)) {
+        sprintf("matrix [%d x %d]", nrow(val), ncol(val))
+      } else if (is.list(val)) {
+        sprintf("list (%d slots)", length(val))
+      } else if (is.atomic(val)) {
+        sprintf("%s [%d]", typeof(val), length(val))
+      } else {
+        class(val)[1]
+      }
+      cat("    $", slot, " : ", shape, "\n", sep = "")
+    }
+  }
+  legend <- data$legend
+  if (!is.null(legend) && length(legend) > 0L) {
+    n_items <- if (is.list(legend) && !is.null(legend$labels)) {
+      length(legend$labels)
+    } else {
+      length(legend)
+    }
+    cat("  legend   : ", n_items, " entries\n", sep = "")
+  }
+  ref_lines <- data$reference_lines
+  if (!is.null(ref_lines) && length(ref_lines) > 0L) {
+    n_ref <- if (is.data.frame(ref_lines)) nrow(ref_lines) else length(ref_lines)
+    cat("  ref lines: ", n_ref, "\n", sep = "")
+  }
+  cat("Re-render via ggplot2 / plotly using `x$data`; or pass the\n")
+  cat("originating `draw = FALSE` plot helper its inverse to draw it.\n")
+  invisible(x)
+}
+
 truncate_axis_label <- function(x, width = 28L) {
   x <- as.character(x)
   width <- max(8L, as.integer(width))
@@ -3176,8 +3228,8 @@ export_mfrm <- function(fit,
 #' @param ... Additional arguments (ignored).
 #'
 #' @details
-#' This method is intentionally lightweight: it returns just three columns
-#' (\code{Facet}, \code{Level}, \code{Estimate}) so that the result is easy to
+#' This method returns four columns (\code{Facet}, \code{Level},
+#' \code{Estimate}, \code{Extreme}) so that the result is easy to
 #' inspect, join, or write to disk.
 #'
 #' @section Interpreting output:
@@ -3192,7 +3244,10 @@ export_mfrm <- function(fit,
 #' }
 #'
 #' @return A data.frame with columns \code{Facet}, \code{Level},
-#'   \code{Estimate}.
+#'   \code{Estimate}, and \code{Extreme}. The \code{Extreme} column
+#'   is populated for person rows from the extreme-score flag added
+#'   in 0.1.6 (\code{"Min"} / \code{"Max"} / \code{NA}); non-person
+#'   facet rows carry \code{NA} in that column by design.
 #' @seealso \code{\link{fit_mfrm}}, \code{\link{export_mfrm}}
 #' @examples
 #' toy <- load_mfrmr_data("example_core")

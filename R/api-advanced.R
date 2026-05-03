@@ -2255,8 +2255,10 @@ information_build_step_structure <- function(fit, model) {
 #' evaluates each observed design cell using the threshold vector associated
 #' with that cell's realized `step_facet` level. For bounded `GPCM`, the
 #' same design-weighted score variance is scaled by the squared discrimination
-#' attached to the realized `slope_facet` level, matching the standard item-
-#' information identity for the generalized partial credit model (Muraki, 1993).
+#' attached to the realized `slope_facet` level, which is the
+#' \eqn{a_j^2 \cdot \mathrm{Var}(T \mid \theta)} item-information identity that
+#' Muraki (1993, Equation 10) derives by applying Samejima's (1974)
+#' polytomous information formula to the GPCM kernel of Muraki (1992).
 #'
 #' @section What `tif` and `iif` mean here:
 #' In `mfrmr`, this helper supports ordered-category `RSM`, `PCM`, and the
@@ -2298,18 +2300,40 @@ information_build_step_structure <- function(fit, model) {
 #'
 #' @section References:
 #' The ordered-category probability structures come from Andrich's `RSM`
-#' formulation and Masters' `PCM`. The general logic linking polytomous
-#' category probabilities to information functions is discussed by Muraki
-#' (1993). In `mfrmr`, those formulas are applied to the realized many-facet
-#' observation design, so the output should be read as a design-weighted
-#' precision summary rather than as a design-free abstract test function.
+#' formulation and Masters' `PCM`. The bounded `GPCM` information identity
+#' \eqn{a_j^2 \cdot \mathrm{Var}(T \mid \theta)} is derived in Muraki
+#' (1993, Equation 10) by applying Samejima's (1974) general polytomous
+#' information formula \eqn{I_j(\theta) = \sum_k P_{jk}(\theta)
+#' [-\partial^2 \ln P_{jk} / \partial \theta^2]} to the GPCM probability
+#' kernel of Muraki (1992). For the integer scoring function
+#' \eqn{T_k = k} used by `mfrmr`, this reduces to
+#' \eqn{a_j^2 \cdot \mathrm{Var}(K \mid \theta)}. In `mfrmr`, those formulas
+#' are applied to the realized many-facet observation design, so the output
+#' should be read as a design-weighted precision summary rather than as a
+#' design-free abstract test function.
 #'
 #' - Andrich, D. (1978). *A rating formulation for ordered response
 #'   categories*. Psychometrika, 43(4), 561-573.
 #' - Masters, G. N. (1982). *A Rasch model for partial credit scoring*.
 #'   Psychometrika, 47(2), 149-174.
-#' - Muraki, E. (1993). *Information functions of the generalized partial
-#'   credit model*. ETS Research Report Series, 1993(1), i-12.
+#' - Muraki, E. (1992). *A generalized partial credit model: Application
+#'   of an EM algorithm*. Applied Psychological Measurement, 16(2),
+#'   159-176. \doi{10.1177/014662169201600206} (See Equations 6, 10, and
+#'   13 for the probability kernel and the
+#'   \eqn{\partial P_k / \partial \theta = a_j P_k (k - E[K])}
+#'   derivative used by all GPCM helpers in `mfrmr`.)
+#' - Muraki, E. (1993). *Information functions of the generalized
+#'   partial credit model*. Applied Psychological Measurement, 17(4),
+#'   351-363. \doi{10.1177/014662169301700402} (Equation 10 derives the
+#'   item information function for the GPCM,
+#'   \eqn{I_j(\theta) = D^2 a_j^2 \mathrm{Var}(T \mid \theta)}, by
+#'   applying Samejima's (1974) polytomous information formula to the
+#'   GPCM kernel; this is the canonical reference for `compute_information()`
+#'   under bounded `GPCM`.)
+#' - Samejima, F. (1974). *Normal ogive model on the continuous
+#'   response level in the multidimensional latent space*.
+#'   Psychometrika, 39, 111-121. (Source for the general polytomous
+#'   information formula that Muraki 1993 specializes to the GPCM.)
 #'
 #' @section Interpreting output:
 #' - `$tif`: design-weighted precision curve data with theta, Information, and SE.
@@ -3322,6 +3346,12 @@ print.summary.mfrm_anchored_fit <- function(x, ...) {
 #'     \item{drift_table}{Tibble of element-level drift statistics.}
 #'     \item{summary}{Drift summary aggregated by facet and wave.}
 #'     \item{common_elements}{Tibble of pairwise common-element counts.}
+#'     \item{common_vs_reference}{Tibble of common-element counts
+#'       between each wave and the reference wave (i.e., which
+#'       elements remain comparable across the entire chain).}
+#'     \item{n_common_all_waves}{Integer count of elements that are
+#'       common across every wave; used by `summary()` to gauge how
+#'       robust the chain is to chained linking error.}
 #'     \item{common_by_facet}{Tibble of retained common-element counts by facet.}
 #'     \item{config}{List of analysis configuration.}
 #'   }

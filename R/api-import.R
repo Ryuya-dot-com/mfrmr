@@ -2,13 +2,13 @@
 # Import adapters: mirt / TAM / eRm fits to mfrmr-compatible bundles
 # ==============================================================================
 #
-# The 0.1.6 import path is **partial**: each helper extracts the
+# The current import path is **partial**: each helper extracts the
 # subset of measurement information that maps cleanly to the
 # `mfrm_fit` contract (item / step parameters, person scores, basic
 # fit statistics) and returns a thin object that the mfrmr plot and
 # reporting helpers can consume. Full bundle import (bias / DIF /
-# anchor audit / replay) is on the 0.2.0 roadmap because the source
-# packages do not always expose the underlying data.
+# anchor audit / replay) is deferred to a future release because the
+# source packages do not always expose the underlying data.
 #
 # All importers refuse to claim the `mfrm_fit` class outright; they
 # return an `mfrm_imported_fit` object that downstream helpers can
@@ -50,6 +50,9 @@
 #'     from `mirt::itemfit()`.}
 #'   \item{`steps`}{Per-item threshold parameters extracted from the
 #'     IRT parameterisation (`b1`, ..., `b(K-1)`).}
+#'   \item{`config`}{List with the resolved `model` and `item_facet`
+#'     used for the import; downstream plot and table helpers consult
+#'     this to dispatch correctly on the imported bundle.}
 #'   \item{`diagnostics`}{`mfrm_diagnostics`-shape bundle when
 #'     `compute_fit = TRUE`; `NULL` otherwise.}
 #'   \item{`source`}{Imported-from metadata.}
@@ -57,8 +60,8 @@
 #'
 #' @section Scope:
 #' Bundles bias / DIF / anchor / replay slots are explicitly not
-#' populated; full bidirectional import / export is on the 0.2.0
-#' roadmap.
+#' populated; full bidirectional import / export is planned for a
+#' future release.
 #' @seealso [import_tam_fit()], [import_erm_fit()]
 #' @export
 import_mirt_fit <- function(fit, model = c("RSM", "PCM", "GPCM"),

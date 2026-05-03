@@ -183,6 +183,20 @@ appropriate, an LRT.
 }
 }
 
+\section{References}{
+
+\itemize{
+\item Burnham, K. P., & Anderson, D. R. (2002). \emph{Model selection and
+multimodel inference: A practical information-theoretic
+approach} (2nd ed.). Springer.
+\item Akaike, H. (1974). A new look at the statistical model
+identification. \emph{IEEE Transactions on Automatic Control,
+19}(6), 716-723.
+\item Schwarz, G. (1978). Estimating the dimension of a model.
+\emph{Annals of Statistics, 6}(2), 461-464.
+}
+}
+
 \examples{
 \donttest{
 toy <- load_mfrmr_data("example_core")
@@ -196,6 +210,7 @@ comp <- compare_mfrm(fit_rsm, fit_pcm, labels = c("RSM", "PCM"))
 comp$table
 comp$evidence_ratios
 }
+
 }
 \seealso{
 \code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}

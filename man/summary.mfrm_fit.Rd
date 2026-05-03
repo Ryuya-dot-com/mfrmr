@@ -32,13 +32,30 @@ population model is active
 when a population model uses model-matrix coding
 \item \code{facet_overview}: per-facet estimate distribution summary
 \item \code{person_overview}: person-measure distribution summary
+\item \code{targeting}: person-versus-non-person facet targeting overview
+(Wright-map-style mean/SD comparison)
 \item \code{step_overview}: threshold/step diagnostics
 \item \code{slope_overview}: discrimination summary for \code{GPCM} fits
+\item \code{interaction_overview}: model-estimated facet-interaction summary
+when the fit was specified with \code{facet_interactions}
+\item \code{settings_overview}: estimation-settings overview that pins the
+configuration that affects identification/scoring
+\item \code{attached_diagnostics}: logical flag indicating whether the
+\code{mfrm_fit} was returned with diagnostics already attached
+\item \code{attached_diagnostics_cols}: character vector of diagnostic
+columns attached to \code{fit$facets$person} when
+\code{attached_diagnostics = TRUE}
+\item \code{reporting_map}: routing map showing which companion summaries
+and tables should be used for the four manuscript-oriented
+reporting sections (data description, diagnostics, category
+checks, draft reporting)
 \item \code{person_high} / \code{person_low}: highest and lowest person measures
 \item \code{facet_extremes}: extreme facet-level estimates
 \item \code{caveats}: structured warning/review rows for score-support and
 latent-regression population-model issues
 \item \code{notes}: short interpretation notes
+\item \code{digits}: numeric-print precision threaded through to
+\code{print.summary.mfrm_fit()}
 }
 }
 \description{

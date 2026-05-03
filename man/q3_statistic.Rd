@@ -49,7 +49,7 @@ and the three flagged-pair counts.}
 }
 }
 \description{
-Computes the Q3 index (Yen, 1984) -- the Pearson correlation of
+Computes a Q3-style index (Yen, 1984) -- the Pearson correlation of
 standardized residuals between every pair of levels of a chosen
 facet -- from a \code{diagnose_mfrm()} bundle. Under the
 conditional-independence assumption of the MFRM, |Q3| should be
@@ -57,6 +57,26 @@ small for every pair; large absolute values flag pairs of facet
 elements (e.g. two raters or two items) whose residuals co-move
 more than the main-effects model expects.
 }
+\section{Statistic definition (note on departures from Yen 1984)}{
+
+This implementation differs from Yen's (1984) original definition
+in one respect that affects threshold interpretation. When the
+facet being paired (e.g. \code{Rater}) has multiple residual rows per
+(Person, Level) cell because of additional facets in the design
+(e.g. multiple \code{Criterion} rows per Person-Rater cell), the
+standardized residuals are first \strong{mean-aggregated to one value
+per (Person, Level) cell}, and the Pearson correlation is taken
+over those mean-aggregated residuals. Yen's original formulation
+takes the correlation directly over per-(Person, Item) residuals,
+without aggregation. The mean-aggregation reduces noise but it
+also shrinks the effective sample size and can pull correlations
+toward the cell mean. The published Yen (1984) \verb{|Q3| > 0.20}
+threshold and the Christensen et al. (2017) critical values were
+derived for the original per-cell formulation; treat the values
+returned here as a screening summary rather than a direct
+substitute for those thresholds.
+}
+
 \section{References}{
 
 \itemize{

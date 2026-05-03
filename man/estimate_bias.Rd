@@ -52,6 +52,20 @@ reporting-use flags, and fit columns
 \item \code{interaction_facets}, \code{interaction_order}, \code{interaction_mode}: full
 interaction metadata
 \item \code{iteration}: iteration history/metadata
+\item \code{orientation_audit}: facet-orientation sign-consistency audit table
+\item \code{mixed_sign}: logical flag indicating whether bias-size signs flip
+across facets in a way that complicates direction interpretation
+\item \code{direction_note}: one-line interpretive note describing the
+dominant bias direction (empty when not applicable)
+\item \code{recommended_action}: one-line recommended-action label routing
+the user to the appropriate follow-up helper
+\item \code{inference_tier}: always \code{"screening"} in this release; surfaces
+the SE/t/Prob inference tier so downstream reporting helpers can
+route correctly (a future delta-method release will introduce a
+\code{"primary"} tier alongside)
+\item \code{optimization_failures}: per-cell record of any inner-loop
+optimizer failures encountered while estimating the bias
+parameters; empty when every cell converged cleanly
 }
 }
 \description{
@@ -157,6 +171,27 @@ integrate the result with DFF, linking, or substantive scoring review before
 making formal claims about fairness or invariance.
 }
 
+\section{References}{
+
+\itemize{
+\item Linacre, J. M. (1989). \emph{Many-Facet Rasch Measurement}. MESA Press.
+(FACETS Table 13 corresponds to the bias / interaction
+estimation that this helper implements.)
+\item Eckes, T. (2005). Examining rater effects in TestDaF writing
+and speaking performance assessments: A many-facet Rasch
+analysis. \emph{Language Assessment Quarterly, 2}(3), 197-221.
+\item Eckes, T. (2015). \emph{Introduction to many-facet Rasch
+measurement: Analyzing and evaluating rater-mediated
+assessments} (2nd ed.). Peter Lang.
+\item Myford, C. M., & Wolfe, E. W. (2003). Detecting and measuring
+rater effects using many-facet Rasch measurement: Part I.
+\emph{Journal of Applied Measurement, 4}(4), 386-422.
+\item Myford, C. M., & Wolfe, E. W. (2004). Detecting and measuring
+rater effects using many-facet Rasch measurement: Part II.
+\emph{Journal of Applied Measurement, 5}(2), 189-227.
+}
+}
+
 \examples{
 toy <- load_mfrmr_data("example_bias")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
@@ -175,6 +210,7 @@ s_bias$top_rows
 #   one of those triggered are usually small-cell artefacts.
 p_bias <- plot_bias_interaction(bias, draw = FALSE)
 p_bias$data$plot
+
 }
 \seealso{
 \code{\link[=build_fixed_reports]{build_fixed_reports()}}, \code{\link[=build_apa_outputs]{build_apa_outputs()}}

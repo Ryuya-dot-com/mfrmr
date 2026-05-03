@@ -64,14 +64,28 @@ package-native aliases such as \code{AdjustedAverage},
 \code{StandardizedAdjustedAverage}, \code{ModelBasedSE}, and \code{FitAdjustedSE} are
 appended to the formatted outputs.
 
-In the current release, these tables are source-backed only for the
-Rasch-family \code{RSM} / \code{PCM} branch. FACETS documents fair averages as
+For the Rasch-family \code{RSM} / \code{PCM} branch, these tables follow the
+standard FACETS Linacre construction: fair averages are
 Rasch-measure-to-score transformations evaluated in a standardized
-mean/zero-facet environment. The bounded \code{GPCM} branch already has a
-generalized ordered-category probability kernel, but this package has not
-yet validated a slope-aware analogue of that fair-average score contract.
-\code{fair_average_table()} therefore stops for \code{GPCM} fits instead of silently
-reusing the Rasch-only calculation.
+mean/zero-facet environment.
+
+Bounded \code{GPCM} fits are supported under a slope-aware
+element-conditional construction. For each slope-facet element
+\eqn{j^\star} the per-row fair-average is the GPCM expected score
+\deqn{\mathrm{FA}_{p, j^\star} = \sum_k k \cdot P_{GPCM}(X = k \mid \theta_p, a_{j^\star}, \boldsymbol{\delta}_{j^\star})}
+computed at that element's own discrimination \eqn{a_{j^\star}}
+and threshold structure. Rows for non-slope facets (Person, Rater,
+\ldots) use the geometric-mean-one slope by the GPCM
+identification convention, so those rows remain continuous with
+the standard PCM Linacre fair-average and reduce to it exactly
+when all slopes equal one.
+
+Standard errors on the fair-average value itself are not currently
+computed for \code{GPCM} fits. The SE columns retain the same meaning
+as for PCM (scaled facet-measure SEs); see the
+"Standard-error caveat" section below for why they should not be
+quoted as \eqn{\pm 1.96 \cdot \mathrm{SE}} bounds on the
+fair-average value.
 }
 \section{Interpreting output}{
 
@@ -112,6 +126,52 @@ The \code{stacked} data.frame contains:
 }
 }
 
+\section{Standard-error caveat (read before quoting CIs)}{
+
+The \code{SE}, \verb{Model S.E.}, \code{ModelBasedSE}, \verb{Real S.E.}, and \code{FitAdjustedSE}
+columns in this table are the \strong{measure-level} standard errors of the
+underlying facet element (the same SE that would appear in
+\code{summary(fit)$facets}), rescaled by the fair-average score scale factor
+so the units line up with the reported \verb{Fair(M) Average} / \verb{Fair(Z) Average}
+columns. They are \strong{not} delta-method standard errors of the
+fair-average values themselves: a proper SE on a fair-average requires
+propagating the joint covariance of the relevant facet element, the
+threshold parameters, and the person measure through the gradient of
+\eqn{\mathrm{E}[X \mid \theta_p, j^\star]} with respect to those
+parameters. mfrmr does not currently expose that joint covariance
+(under MML the person measure is integrated out of the structural
+Hessian; under JML no joint Hessian is built), so a true delta-method
+fair-average SE is not yet computed. \strong{Do not use these columns as
+\eqn{\pm 1.96 \cdot \mathrm{SE}} confidence-interval bounds on the
+fair-average value.} A delta-method fair-average SE is not
+provided in this release; if such an SE is added later it would be
+exposed under a distinct column name from the existing measure-SE
+columns to avoid silent misinterpretation.
+}
+
+\section{References}{
+
+\itemize{
+\item Linacre, J. M. (1989). \emph{Many-Facet Rasch Measurement}. MESA Press.
+\item Linacre, J. M. (1994). \emph{Many-facet Rasch Measurement} (2nd ed.).
+MESA Press.
+\item Linacre, J. M. (2023). \emph{A user's guide to FACETS, version 4.5}.
+Winsteps.com. (FACETS Table 12 corresponds to the fair-average
+construction implemented here for \code{RSM} / \code{PCM} fits; the
+slope-aware element-conditional construction for bounded \code{GPCM}
+is documented in this help page.)
+\item Andrich, D. (1978). A rating formulation for ordered response
+categories. \emph{Psychometrika, 43}(4), 561-573.
+\doi{10.1007/BF02293814}
+\item Masters, G. N. (1982). A Rasch model for partial credit scoring.
+\emph{Psychometrika, 47}(2), 149-174. \doi{10.1007/BF02296272}
+\item Muraki, E. (1992). A generalized partial credit model:
+Application of an EM algorithm. \emph{Applied Psychological
+Measurement, 16}(2), 159-176. (Cited for the bounded \code{GPCM}
+slope-aware extension.)
+}
+}
+
 \examples{
 \donttest{
 toy <- load_mfrmr_data("example_core")
@@ -122,6 +182,7 @@ summary(t12)
 p_t12 <- plot(t12, draw = FALSE)
 p_t12$data$plot
 }
+
 }
 \seealso{
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=unexpected_response_table]{unexpected_response_table()}}, \code{\link[=displacement_table]{displacement_table()}}

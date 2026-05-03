@@ -46,9 +46,15 @@ the shrunk point / standard error are
 \eqn{\hat{\delta}_j^{EB} = (1 - B_j)\hat{\delta}_j} and
 \eqn{\mathrm{SE}_j^{EB} = \sqrt{(1 - B_j)\mathrm{SE}_j^2}}.
 The posterior SE form treats \eqn{\hat{\tau}^2} as known; it omits
-the Morris (1983) correction that accounts for uncertainty in
-\eqn{\hat{\tau}^2}, and therefore may slightly underestimate
-posterior uncertainty when \eqn{K} is small.
+the Morris (1983) correction
+\eqn{2 B^2 (\hat{\tau}^2 + \mathrm{SE}^2)^2 / (K - 3)} that accounts
+for uncertainty in \eqn{\hat{\tau}^2}. The omission underestimates
+posterior uncertainty in proportion to \eqn{1 / (K - 3)}: in
+practice the omitted term is on the order of 50-80\\% of the
+reported \code{ShrunkSE} at \eqn{K = 3} elements, ~5\\% at \eqn{K = 5},
+and ~1\\% at \eqn{K = 15}. For a small-N facet with three or four
+elements, treat \code{ShrunkSE} as a lower bound rather than a
+calibrated posterior SE.
 }
 \details{
 \code{fit$facets$others} gains \code{ShrunkEstimate}, \code{ShrunkSE}, and

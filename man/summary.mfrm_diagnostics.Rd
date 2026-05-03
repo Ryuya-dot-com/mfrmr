@@ -24,7 +24,21 @@ An object of class \code{summary.mfrm_diagnostics} with:
 \item \code{next_actions}: recommended follow-up helpers
 \item \code{diagnostic_basis}: guide to legacy versus strict diagnostic targets
 \item \code{overall_fit}: global fit block
+\item \code{precision_profile}: design-weighted precision summary across the
+information curve at decile theta points
+\item \code{precision_audit}: separation / reliability / strata audit for the
+sample- and population-basis modes (paired with \code{precision_profile})
 \item \code{reliability}: facet-level separation/reliability summary
+\item \code{facets_chisq}: facets-style fixed-effect chi-square heterogeneity
+screen across non-person facets
+\item \code{interrater}: inter-rater agreement / pairwise correlation / rater
+separation overview when a Rater facet is present
+\item \code{misfit_flagged}: rows flagged by the Infit / Outfit / ZSTD
+misfit thresholds active for this fit
+\item \code{misfit_thresholds}: named numeric vector with the misfit
+\code{lower} / \code{upper} thresholds used to populate \code{misfit_flagged}
+\item \code{category_usage}: per-category response-frequency summary used
+to flag empty / collapsed categories
 \item \code{top_fit}: top \verb{|ZSTD|} rows
 \item \code{marginal_fit}: optional strict marginal-fit overview when requested
 \item \code{top_marginal_cells}: largest strict marginal residual cells when requested
@@ -35,6 +49,8 @@ An object of class \code{summary.mfrm_diagnostics} with:
 which companion outputs should be consulted
 \item \code{flags}: compact flag counts for major diagnostics
 \item \code{notes}: short interpretation notes
+\item \code{digits}: numeric-print precision threaded through to
+\code{print.summary.mfrm_diagnostics()}
 }
 }
 \description{

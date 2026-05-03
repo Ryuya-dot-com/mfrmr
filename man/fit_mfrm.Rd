@@ -251,8 +251,19 @@ including public \code{Method}, internal \code{MethodUsed}, and
 \code{MMLEngineRequested}, \code{MMLEngineUsed}, and \code{EMIterations} for MML fits
 \item \code{facets$person}: person estimates (\code{Estimate}; plus \code{SD} for MML)
 \item \code{facets$others}: facet-level estimates for each facet
-\item \code{steps}: estimated threshold/step parameters
-\item \code{slopes}: estimated discrimination parameters for \code{GPCM} fits
+\item \code{steps}: estimated threshold/step parameters as a one-row-per-step
+\code{tibble} with \code{Estimate} only. No \code{SE} column is currently
+provided; standard errors for steps are not in the structural
+Hessian block exposed by this release. Treat the values as
+point estimates; for step-structure quality, use the
+step-collapse and disordering warnings from \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} and
+\code{\link[=category_structure_report]{category_structure_report()}}.
+\item \code{slopes}: estimated discrimination parameters for \code{GPCM} fits as
+a one-row-per-slope-element \code{tibble} with \code{LogEstimate} and
+\code{Estimate} only. No \code{SE} column is currently provided; the
+identification convention pins the geometric mean of slopes at 1,
+and the structural Hessian block exposed by this release does
+not include slope SEs. Treat the values as point estimates.
 \item \code{interactions}: model-estimated facet interaction effects and metadata
 when \code{facet_interactions} is supplied
 \item \code{population}: population-model metadata. Ordinary fits keep an inactive
@@ -400,6 +411,41 @@ across non-person facet levels (\code{"sparse"} < 10, \code{"marginal"} < 30,
 \code{"standard"} < 50, \code{"strong"} >= 50).
 }
 
+\section{JML estimator caveat (use MML for final reporting)}{
+
+Joint maximum likelihood (\code{method = "JML"} / \code{"JMLE"}) estimates
+both the structural parameters (facets, thresholds, slopes) and
+every person measure as fixed parameters in one optimization. This
+is the \strong{incidental-parameter problem} of Neyman & Scott (1948):
+the structural parameter estimates are inconsistent as the number
+of persons grows with the number of items per person held fixed,
+carrying a bias of order \eqn{1/L} (where \eqn{L} is the number of
+items per person) that does not vanish with sample size. Wright &
+Stone (1979) and Wright & Masters (1982, ch. 5) document an
+empirical \eqn{(L-1)/L} correction that approximately removes the
+bias for the dichotomous Rasch model; mfrmr does \strong{not} apply
+that correction (no \code{bias_correction} argument exists). The JML
+branch also does not produce a profile-likelihood Hessian for the
+structural parameters: SEs reported under JML are observation-table
+approximations (\eqn{1/\sqrt{\sum \mathrm{Var}(X_{pi})}}) and are
+marked as exploratory in the diagnostics output.
+
+Practical recommendation:
+\itemize{
+\item Use \strong{\code{method = "MML"}} for any value reported in a manuscript
+or operational decision. MML integrates the person measures out
+under a population prior and produces consistent structural
+estimates with marginal observed-information SEs.
+\item Use \code{method = "JML"} only for fast exploratory iteration, the
+classical FACETS-style workflow, or contexts where the bias is
+tolerable (large \eqn{L} per person, descriptive screening, or
+teaching).
+\item When a third-party CML estimator is needed (the only consistent
+Rasch-family estimator under the incidental-parameter setting),
+fit with \code{eRm} and import via \code{\link[=import_erm_fit]{import_erm_fit()}}.
+}
+}
+
 \section{Model-estimated facet interactions}{
 
 \code{facet_interactions} adds confirmatory fixed-effect interaction terms to the
@@ -510,6 +556,29 @@ reporting results.
 conditional-normal latent population model, not as a post hoc regression
 on EAP or MLE scores.
 }
+}
+
+\section{Latent-regression standard-error caveat}{
+
+\code{summary(fit)$population_coefficients} reports point estimates of
+\eqn{\hat{\boldsymbol{\beta}}} and \eqn{\hat{\sigma}^2} only. mfrmr does
+\strong{not} currently compute standard errors, confidence intervals, or
+asymptotic z / Wald statistics for the population-model parameters: no
+Hessian on \eqn{(\boldsymbol{\beta}, \log\sigma^2)} is extracted from the
+marginal log-likelihood, and no \code{vcov()} method is exposed for these
+coefficients. Treat the coefficient table as point estimates suitable
+for descriptive reporting; \strong{do not} quote \eqn{\hat{\beta}_j \pm 1.96
+\cdot \mathrm{SE}} bounds because the SE column is not provided. A
+marginal-Hessian-based SE for \eqn{(\boldsymbol{\beta}, \sigma^2)} is
+planned for a future release.
+
+Identification: the latent-regression intercept is identifiable only
+under the default \code{noncenter_facet = "Person"} (which sum-to-zero-
+centers all non-Person facets). If you re-anchor identification on a
+non-Person facet, the intercept becomes confounded with the freed
+Person-facet mean and the coefficient table becomes unidentified;
+mfrmr does not currently warn about this failure mode in the
+design-matrix audit.
 
 Anchor inputs are optional:
 \itemize{
@@ -558,6 +627,15 @@ without a latent-regression population model.
 \item Benchmark your own workload before using \code{mml_engine = "em"} or
 \code{"hybrid"} for final reporting; \code{direct} remains the safer default when
 you have not compared engines for your data.
+\item For RSM and PCM fits only, an opt-in C++ MML backend can be
+enabled with \code{options(mfrmr.use_cpp11_backend = TRUE)}. The
+backend implements the same physicist Gauss-Hermite quadrature and
+sum-to-zero identification as the pure-R engine, validated against
+the pure-R reference at \code{tolerance = 1e-12} on a fixed regression
+fixture. It is opt-in for this release; the default flip to ON is
+planned for a follow-up release after a cycle of community
+testing. GPCM fits stay on the pure-R engine regardless of the
+option.
 }
 
 Downstream diagnostics can also be staged:
@@ -632,17 +710,16 @@ effects using many-facet Rasch measurement: Part II. \emph{Journal of Applied
 Measurement}, 5(2), 189-227.
 \item Muraki, E. (1992). \emph{A generalized partial credit model: Application of an
 EM algorithm}. Applied Psychological Measurement, 16(2), 159-176.
-\item Robitzsch, A., & Steinfeld, J. (2018). \emph{Modeling rater effects in
-achievements tests by item response models: Facets, generalized linear
-mixed models, or signal detection models?} Journal of Educational and
-Behavioral Statistics, 43(2), 218-244.
+\item Robitzsch, A., & Steinfeld, J. (2018). \emph{Item response models for human
+ratings: Overview, estimation methods, and implementation in R}.
+Psychological Test and Assessment Modeling, 60(1), 101-139.
 }
 }
 
 \examples{
-# Fast smoke run: confirm the package is installed and the fit returns
-# a populated overview. JML on `example_core` finishes in well under
-# a second, so we keep this block always-run rather than gated.
+# Fast smoke run: a JML fit on the bundled `example_core` toy
+# dataset finishes in well under a second and returns a populated
+# `summary` overview ready for inspection.
 toy <- load_mfrmr_data("example_core")
 fit_quick <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                       method = "JML", maxit = 15)

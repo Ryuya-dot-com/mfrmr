@@ -650,6 +650,12 @@ bias_interaction_report <- function(x,
 #' - `summary`: one-row convergence summary
 #' - `orientation_audit`: interaction-facet sign audit
 #' - `settings`: resolved reporting options
+#' - `direction_note`: one-line interpretive note describing which
+#'   direction the iteration moved (carried from the bias estimator;
+#'   empty string when the underlying estimator does not emit one)
+#' - `recommended_action`: one-line recommended action label
+#'   (e.g. `"converged"`, `"increase max_iter"`); empty string when
+#'   the underlying estimator does not emit one
 #'
 #' @seealso [estimate_bias()], [bias_interaction_report()], [build_fixed_reports()]
 #' @examples
@@ -715,10 +721,13 @@ bias_iteration_report <- function(x,
 
 #' Build a bias pairwise-contrast report (FACETS Table 14: pairwise contrasts)
 #'
-#' Use this when you want to compare two levels of the target facet
-#' while conditioning on the paired context facet. For the ranked
-#' flagged-cells view see [bias_interaction_report()]; for the
-#' iteration/convergence trace see [bias_iteration_report()].
+#' Build a pairwise contrast table that, for a chosen target facet
+#' (e.g. raters), compares each pair of target-facet levels while
+#' holding a context facet (e.g. items / criteria) constant. This is
+#' the FACETS Table 14 view: it answers "is rater A consistently
+#' more severe than rater B on the same items?" rather than "which
+#' (rater, item) cell has the largest local bias?" -- the latter is
+#' covered by [bias_interaction_report()].
 #'
 #' @inheritParams bias_interaction_report
 #' @param target_facet Facet whose local contrasts should be compared across
@@ -734,11 +743,71 @@ bias_iteration_report <- function(x,
 #' Welch/Satterthwaite approximation and is labeled as a Rasch-Welch
 #' comparison in the output metadata.
 #'
+#' @section Interpreting output:
+#' - `table`: one row per ordered (target_level_1, target_level_2)
+#'   pair, with `Bias_diff`, `SE_diff`, `t_diff`, `df_diff`,
+#'   `p_diff`, and the underlying per-level bias rows. Rows are
+#'   sorted so that the largest-magnitude `|t_diff|` rises to the
+#'   top.
+#' - `summary`: one-row screening summary with `MaxAbsBiasDiff`,
+#'   `MaxAbsT`, `Significant` (count of flagged pairs at `p_max`),
+#'   `BonferroniSignificant`, and `HolmSignificant`.
+#' - `orientation_audit` carries the same facet-orientation sign
+#'   audit as the parent `estimate_bias()` run.
+#' - The SE caveat below applies: read `Significant` /
+#'   `BonferroniSignificant` as a screening triage, not as formal
+#'   inferential tests.
+#'
+#' @section Typical workflow:
+#' 1. Fit and diagnose the model.
+#' 2. Run `estimate_bias()` to get the underlying interaction effects.
+#' 3. Pass that result to `bias_pairwise_report()` for the rater-pair
+#'    contrast table.
+#' 4. Use `summary(out)$MaxAbsT` and the top rows of `out$table` to
+#'    flag rater-pair systematic differences for follow-up review.
+#' 5. For the ranked flagged-cells view (which (rater, item) pairs
+#'    have the largest local bias), use `bias_interaction_report()`
+#'    on the same `estimate_bias()` output.
+#'
+#' @section Standard-error caveat:
+#' The contrast standard error is computed as
+#' `SE(b_i - b_j) = sqrt(SE_i^2 + SE_j^2)` -- the independence
+#' approximation. For same-facet bias values that share a sum-to-zero
+#' identification, `Cov(b_i, b_j) < 0`, so the true contrast variance
+#' is `SE_i^2 + SE_j^2 - 2 * Cov(b_i, b_j)`, which is **smaller**
+#' than the reported value. The reported t-statistics and p-values
+#' are therefore conservative for same-facet contrasts (the true
+#' significance is higher than reported). For across-facet contrasts
+#' the covariance term is approximately zero and the approximation
+#' is appropriate. Use the report as a screening / triage table; for
+#' inferential claims that hinge on a marginally-significant
+#' same-facet contrast, follow up with a contrast that uses the full
+#' parameter covariance.
+#'
 #' @return A named list with:
 #' - `table`: pairwise contrast rows
 #' - `summary`: one-row contrast summary
 #' - `orientation_audit`: interaction-facet sign audit
 #' - `settings`: resolved reporting options
+#' - `direction_note`: one-line interpretive note describing the
+#'   dominant pairwise-contrast direction (carried from the
+#'   underlying bias estimator; empty string when not applicable)
+#' - `recommended_action`: one-line recommended-action label
+#'   (e.g. routing the user to follow-up review of the largest
+#'   flagged pairs); empty string when the underlying estimator
+#'   does not emit one
+#'
+#' @section References:
+#' - Linacre, J. M. (1989). *Many-Facet Rasch Measurement*. MESA Press.
+#' - Eckes, T. (2005). Examining rater effects in TestDaF writing and
+#'   speaking performance assessments: A many-facet Rasch analysis.
+#'   *Language Assessment Quarterly, 2*(3), 197-221.
+#' - Myford, C. M., & Wolfe, E. W. (2003). Detecting and measuring
+#'   rater effects using many-facet Rasch measurement: Part I.
+#'   *Journal of Applied Measurement, 4*(4), 386-422.
+#' - Myford, C. M., & Wolfe, E. W. (2004). Detecting and measuring
+#'   rater effects using many-facet Rasch measurement: Part II.
+#'   *Journal of Applied Measurement, 5*(2), 189-227.
 #'
 #' @seealso [estimate_bias()], [bias_interaction_report()], [build_fixed_reports()]
 #' @examples
@@ -746,7 +815,18 @@ bias_iteration_report <- function(x,
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
 #' out <- bias_pairwise_report(fit, diagnostics = diag, facet_a = "Rater", facet_b = "Criterion")
-#' summary(out)
+#' s <- summary(out)
+#' s$summary
+#' # Look for: `MaxAbsBiasDiff` < ~0.5 logits and `Significant = 0` mean
+#' #   no rater pair contrasts above the screen. The `BonferroniSignificant`
+#' #   / `HolmSignificant` columns count pairs that survive multiple-
+#' #   testing correction; both being 0 is a stronger "no rater-pair
+#' #   inconsistency" signal than the raw screen-positive count alone.
+#' head(out$table)
+#' # Look for: top rows with `|t_diff|` > 2 and |Bias_diff| > 0.5 logits
+#' #   warrant content-review of the two raters' scoring conventions on
+#' #   the conditioning context facet (e.g. compare their item-level
+#' #   marks for systematic strictness/leniency patterns).
 #' @export
 bias_pairwise_report <- function(x,
                                  diagnostics = NULL,
@@ -4884,14 +4964,32 @@ as_flextable.apa_table <- function(x, ...) {
 }
 
 #' Generic for converting objects to a `knitr::kable`
+#'
 #' @param x Object to convert.
 #' @param ... Passed to methods.
+#'
+#' @return A `knitr::kable` object (concrete return type from the
+#'   underlying method, e.g. `[as_kable.apa_table()]` returns a
+#'   `kableExtra` object when the package is installed).
+#'
+#' @seealso [as_kable.apa_table()] for the `apa_table` method;
+#'   [as_flextable()] for a `flextable`-targeted alternative;
+#'   [apa_table()] for constructing an `apa_table` in the first place.
 #' @export
 as_kable <- function(x, ...) UseMethod("as_kable")
 
 #' Generic for converting objects to a `flextable`
+#'
 #' @param x Object to convert.
 #' @param ... Passed to methods.
+#'
+#' @return A `flextable` object (concrete return type from the
+#'   underlying method, e.g. `[as_flextable.apa_table()]` returns a
+#'   `flextable` ready for `flextable::save_as_docx()`).
+#'
+#' @seealso [as_flextable.apa_table()] for the `apa_table` method;
+#'   [as_kable()] for a `knitr::kable`-targeted alternative;
+#'   [apa_table()] for constructing an `apa_table` in the first place.
 #' @export
 as_flextable <- function(x, ...) UseMethod("as_flextable")
 

@@ -455,14 +455,28 @@ unexpected_response_table <- function(fit,
 #' `StandardizedAdjustedAverage`, `ModelBasedSE`, and `FitAdjustedSE` are
 #' appended to the formatted outputs.
 #'
-#' In the current release, these tables are source-backed only for the
-#' Rasch-family `RSM` / `PCM` branch. FACETS documents fair averages as
+#' For the Rasch-family `RSM` / `PCM` branch, these tables follow the
+#' standard FACETS Linacre construction: fair averages are
 #' Rasch-measure-to-score transformations evaluated in a standardized
-#' mean/zero-facet environment. The bounded `GPCM` branch already has a
-#' generalized ordered-category probability kernel, but this package has not
-#' yet validated a slope-aware analogue of that fair-average score contract.
-#' `fair_average_table()` therefore stops for `GPCM` fits instead of silently
-#' reusing the Rasch-only calculation.
+#' mean/zero-facet environment.
+#'
+#' Bounded `GPCM` fits are supported under a slope-aware
+#' element-conditional construction. For each slope-facet element
+#' \eqn{j^\star} the per-row fair-average is the GPCM expected score
+#' \deqn{\mathrm{FA}_{p, j^\star} = \sum_k k \cdot P_{GPCM}(X = k \mid \theta_p, a_{j^\star}, \boldsymbol{\delta}_{j^\star})}
+#' computed at that element's own discrimination \eqn{a_{j^\star}}
+#' and threshold structure. Rows for non-slope facets (Person, Rater,
+#' \ldots) use the geometric-mean-one slope by the GPCM
+#' identification convention, so those rows remain continuous with
+#' the standard PCM Linacre fair-average and reduce to it exactly
+#' when all slopes equal one.
+#'
+#' Standard errors on the fair-average value itself are not currently
+#' computed for `GPCM` fits. The SE columns retain the same meaning
+#' as for PCM (scaled facet-measure SEs); see the
+#' "Standard-error caveat" section below for why they should not be
+#' quoted as \eqn{\pm 1.96 \cdot \mathrm{SE}} bounds on the
+#' fair-average value.
 #'
 #' @section Interpreting output:
 #' - `stacked`: cross-facet table for global comparison.
@@ -493,6 +507,27 @@ unexpected_response_table <- function(fit,
 #'   \item{Infit MnSq, Outfit MnSq}{Fit statistics for this level.}
 #' }
 #'
+#' @section Standard-error caveat (read before quoting CIs):
+#' The `SE`, `Model S.E.`, `ModelBasedSE`, `Real S.E.`, and `FitAdjustedSE`
+#' columns in this table are the **measure-level** standard errors of the
+#' underlying facet element (the same SE that would appear in
+#' `summary(fit)$facets`), rescaled by the fair-average score scale factor
+#' so the units line up with the reported `Fair(M) Average` / `Fair(Z) Average`
+#' columns. They are **not** delta-method standard errors of the
+#' fair-average values themselves: a proper SE on a fair-average requires
+#' propagating the joint covariance of the relevant facet element, the
+#' threshold parameters, and the person measure through the gradient of
+#' \eqn{\mathrm{E}[X \mid \theta_p, j^\star]} with respect to those
+#' parameters. mfrmr does not currently expose that joint covariance
+#' (under MML the person measure is integrated out of the structural
+#' Hessian; under JML no joint Hessian is built), so a true delta-method
+#' fair-average SE is not yet computed. **Do not use these columns as
+#' \eqn{\pm 1.96 \cdot \mathrm{SE}} confidence-interval bounds on the
+#' fair-average value.** A delta-method fair-average SE is not
+#' provided in this release; if such an SE is added later it would be
+#' exposed under a distinct column name from the existing measure-SE
+#' columns to avoid silent misinterpretation.
+#'
 #' @return A named list with:
 #' - `by_facet`: named list of formatted data.frames
 #' - `stacked`: one stacked data.frame across facets
@@ -510,6 +545,25 @@ unexpected_response_table <- function(fit,
 #' p_t12 <- plot(t12, draw = FALSE)
 #' p_t12$data$plot
 #' }
+#'
+#' @section References:
+#' - Linacre, J. M. (1989). *Many-Facet Rasch Measurement*. MESA Press.
+#' - Linacre, J. M. (1994). *Many-facet Rasch Measurement* (2nd ed.).
+#'   MESA Press.
+#' - Linacre, J. M. (2023). *A user's guide to FACETS, version 4.5*.
+#'   Winsteps.com. (FACETS Table 12 corresponds to the fair-average
+#'   construction implemented here for `RSM` / `PCM` fits; the
+#'   slope-aware element-conditional construction for bounded `GPCM`
+#'   is documented in this help page.)
+#' - Andrich, D. (1978). A rating formulation for ordered response
+#'   categories. *Psychometrika, 43*(4), 561-573.
+#'   \doi{10.1007/BF02293814}
+#' - Masters, G. N. (1982). A Rasch model for partial credit scoring.
+#'   *Psychometrika, 47*(2), 149-174. \doi{10.1007/BF02296272}
+#' - Muraki, E. (1992). A generalized partial credit model:
+#'   Application of an EM algorithm. *Applied Psychological
+#'   Measurement, 16*(2), 159-176. (Cited for the bounded `GPCM`
+#'   slope-aware extension.)
 #' @export
 fair_average_table <- function(fit,
                                diagnostics = NULL,
@@ -528,13 +582,6 @@ fair_average_table <- function(fit,
     stop("`fit` must be an mfrm_fit object from fit_mfrm().")
   }
   fit_model <- as.character(fit$config$model %||% fit$summary$Model[1] %||% NA_character_)
-  if (identical(fit_model, "GPCM")) {
-    stop(
-      "`fair_average_table()` is not yet validated for `GPCM` fits. ",
-      gpcm_fair_average_rationale(),
-      call. = FALSE
-    )
-  }
   if (is.null(diagnostics)) {
     diagnostics <- diagnose_mfrm(fit, residual_pca = "none")
   }
@@ -564,8 +611,23 @@ fair_average_table <- function(fit,
     reference = reference,
     label_style = label_style,
     omit_unobserved = omit_unobserved,
-    xtreme = xtreme
+    xtreme = xtreme,
+    model = fit_model,
+    method = if (identical(fit_model, "GPCM")) "GPCM-slope-aware" else "PCM/RSM"
   )
+  if (identical(fit_model, "GPCM")) {
+    bundle$caveat <- paste0(
+      "GPCM fair-averages use the slope-aware element-conditional ",
+      "construction: each slope-facet element row uses that element's ",
+      "own discrimination, while non-slope-facet rows (persons, raters, ",
+      "...) use the geometric-mean-one slope from the GPCM identification ",
+      "convention. Standard errors on the fair-average value are not yet ",
+      "computed for GPCM fits; the SE / Model S.E. / Real S.E. columns ",
+      "are scaled facet-measure SEs (see `?fair_average_table`) and are ",
+      "not delta-method standard errors of the fair-average value. ",
+      "See `gpcm_capability_matrix()` for the current support contract."
+    )
+  }
   as_mfrm_bundle(bundle, "mfrm_fair_average")
 }
 
@@ -896,6 +958,15 @@ measurable_summary_table <- function(fit, diagnostics = NULL) {
 #' - `threshold_table`: model step/threshold estimates
 #' - `summary`: one-row summary (usage and threshold monotonicity)
 #' - `caveats`: structured score-support warning/review rows
+#' - `diagnostic_mode`: character scalar carried from
+#'   `diagnostics$diagnostic_mode` (`"legacy"`, `"both"`, or
+#'   `"marginal_fit"`); used by downstream reporting helpers to
+#'   pick the correct expected-count basis
+#' - `marginal_fit`: list bundle from `diagnostics$marginal_fit` when
+#'   strict marginal fit was computed, otherwise `NULL`. Carries
+#'   the raw OverallRMSD / OverallMaxAbsStdResidual / per-cell
+#'   tables that feed the `MarginalOverallRMSD` columns in
+#'   `summary`.
 #'
 #' @seealso [diagnose_mfrm()], [measurable_summary_table()], [plot.mfrm_fit()],
 #'   [mfrmr_visual_diagnostics]
@@ -907,6 +978,24 @@ measurable_summary_table <- function(fit, diagnostics = NULL) {
 #' summary(t8)$summary
 #' p_t8 <- plot(t8, draw = FALSE)
 #' p_t8$data$plot
+#'
+#' @section References:
+#' - Andrich, D. (1978). *A rating formulation for ordered response
+#'   categories*. Psychometrika, 43(4), 561-573.
+#'   \doi{10.1007/BF02293814}
+#' - Masters, G. N. (1982). *A Rasch model for partial credit scoring*.
+#'   Psychometrika, 47(2), 149-174. \doi{10.1007/BF02296272}
+#' - Linacre, J. M. (2002). What do Infit and Outfit, mean-square and
+#'   standardized mean? *Rasch Measurement Transactions, 16*(2), 878.
+#'   (Source for the 0.5-1.5 mean-square acceptance band and the
+#'   threshold-gap heuristics used in `summary(t8)$summary`.)
+#' - Wind, S. A. (2023). *Detecting rating scale malfunctioning with the
+#'   partial credit model and generalized partial credit model*.
+#'   Educational and Psychological Measurement, 83(5), 953-983.
+#'   \doi{10.1177/00131644221116292} (Recent simulation evidence on
+#'   PCM- and GPCM-based rating-scale diagnostics; useful for
+#'   interpreting the `summary(t8)$summary` flags in the bounded
+#'   `GPCM` route.)
 #' @export
 rating_scale_table <- function(fit,
                                diagnostics = NULL,
@@ -3620,6 +3709,10 @@ infer_facet_names <- function(diagnostics) {
 #' - `by_facet`: named list of facet PCA bundles
 #' - `overall_table`: variance table for overall PCA
 #' - `by_facet_table`: stacked variance table across facets
+#' - `errors`: named list of any per-facet PCA errors that were
+#'   caught and turned into `NA_real_` rows in the variance tables
+#'   (e.g., `psych::principal()` failure on a near-singular residual
+#'   matrix). The list is empty when every facet PCA succeeded.
 #'
 #' @seealso [diagnose_mfrm()], [plot_residual_pca()], [mfrmr_visual_diagnostics]
 #' @examples
@@ -4099,6 +4192,20 @@ plot_residual_pca <- function(x,
 #' - `interaction_facets`, `interaction_order`, `interaction_mode`: full
 #'   interaction metadata
 #' - `iteration`: iteration history/metadata
+#' - `orientation_audit`: facet-orientation sign-consistency audit table
+#' - `mixed_sign`: logical flag indicating whether bias-size signs flip
+#'   across facets in a way that complicates direction interpretation
+#' - `direction_note`: one-line interpretive note describing the
+#'   dominant bias direction (empty when not applicable)
+#' - `recommended_action`: one-line recommended-action label routing
+#'   the user to the appropriate follow-up helper
+#' - `inference_tier`: always `"screening"` in this release; surfaces
+#'   the SE/t/Prob inference tier so downstream reporting helpers can
+#'   route correctly (a future delta-method release will introduce a
+#'   `"primary"` tier alongside)
+#' - `optimization_failures`: per-cell record of any inner-loop
+#'   optimizer failures encountered while estimating the bias
+#'   parameters; empty when every cell converged cleanly
 #'
 #' @seealso [build_fixed_reports()], [build_apa_outputs()]
 #' @examples
@@ -4119,6 +4226,23 @@ plot_residual_pca <- function(x,
 #' #   one of those triggered are usually small-cell artefacts.
 #' p_bias <- plot_bias_interaction(bias, draw = FALSE)
 #' p_bias$data$plot
+#'
+#' @section References:
+#' - Linacre, J. M. (1989). *Many-Facet Rasch Measurement*. MESA Press.
+#'   (FACETS Table 13 corresponds to the bias / interaction
+#'   estimation that this helper implements.)
+#' - Eckes, T. (2005). Examining rater effects in TestDaF writing
+#'   and speaking performance assessments: A many-facet Rasch
+#'   analysis. *Language Assessment Quarterly, 2*(3), 197-221.
+#' - Eckes, T. (2015). *Introduction to many-facet Rasch
+#'   measurement: Analyzing and evaluating rater-mediated
+#'   assessments* (2nd ed.). Peter Lang.
+#' - Myford, C. M., & Wolfe, E. W. (2003). Detecting and measuring
+#'   rater effects using many-facet Rasch measurement: Part I.
+#'   *Journal of Applied Measurement, 4*(4), 386-422.
+#' - Myford, C. M., & Wolfe, E. W. (2004). Detecting and measuring
+#'   rater effects using many-facet Rasch measurement: Part II.
+#'   *Journal of Applied Measurement, 5*(2), 189-227.
 #' @export
 estimate_bias <- function(fit,
                           diagnostics,
@@ -4133,7 +4257,7 @@ estimate_bias <- function(fit,
     stop("`fit` must be an mfrm_fit object from fit_mfrm(). ",
          "Got: ", paste(class(fit), collapse = "/"), ".", call. = FALSE)
   }
-  stop_if_gpcm_out_of_scope(fit, "estimate_bias()")
+  fit_model <- as.character(fit$config$model %||% fit$summary$Model[1] %||% NA_character_)
   if (missing(diagnostics)) {
     stop("`diagnostics` is required. Call diagnose_mfrm(fit) first and ",
          "pass the result as the second argument: ",
@@ -4189,6 +4313,21 @@ estimate_bias <- function(fit,
   )
   if (is.list(out) && length(out) > 0) {
     class(out) <- c("mfrm_bias", class(out))
+    if (identical(fit_model, "GPCM")) {
+      out$method <- "GPCM-slope-aware"
+      out$caveat <- paste0(
+        "GPCM bias estimates use the slope-aware GPCM kernel: the bias ",
+        "parameter is the additive shift on the linear predictor that ",
+        "maximises the GPCM log-likelihood for the (facet_a, facet_b) cell. ",
+        "SE / t / Prob columns retain the screening-tier semantics ",
+        "documented in `?estimate_bias` (conditional plug-in information at ",
+        "the bias point estimate, holding theta and the structural ",
+        "parameters fixed); they are not delta-method standard errors that ",
+        "propagate joint-parameter uncertainty. A delta-method SE for the ",
+        "bias estimate is planned for a future release. See ",
+        "`gpcm_capability_matrix()` for the current support contract."
+      )
+    }
   }
   out
 }
@@ -4227,10 +4366,21 @@ estimate_bias <- function(fit,
 #' artifact is specifically required for a compatibility handoff.
 #'
 #' @return
-#' A named list with:
+#' A named list with class `mfrm_fixed_reports` (and a branch-specific
+#' subclass `mfrm_fixed_reports_<branch>`):
 #' - `bias_fixed`: fixed-width interaction table text
 #' - `pairwise_fixed`: fixed-width pairwise contrast text
 #' - `pairwise_table`: underlying pairwise data.frame
+#' - `branch`: character scalar `"original"` or `"facets"` echoing
+#'   which fixed-width style was rendered
+#' - `style`: character scalar carrying the resolved style preset
+#'   used when building the text artifact
+#' - `interaction_label`: human-readable label for the interaction
+#'   that drove the bias run (`"Rater x Criterion"`-style); `NA`
+#'   when no bias rows are available
+#' - `target_facet`: character scalar identifying which facet was
+#'   used as the target facet for pairwise contrasts; `NA` when no
+#'   pairwise contrasts were requested or available
 #'
 #' @seealso [estimate_bias()], [build_apa_outputs()], [bias_interaction_report()],
 #'   [mfrmr_reports_and_tables], [mfrmr_compatibility_layer]

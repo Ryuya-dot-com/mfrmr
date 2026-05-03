@@ -33,3 +33,6 @@
 ^inst/references/MAINTENANCE_AND_ROADMAP_CHECKLIST_.*[.]md$
 ^inst/references/PUBLIC_RELEASE_READINESS_AUDIT_.*[.]md$
 ^inst/references/README[.]md$
+^inst/references/CODE_READING_GUIDE[.]md$
+^revdep$
+^design-notes$

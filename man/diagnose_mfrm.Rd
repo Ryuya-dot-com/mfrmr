@@ -206,6 +206,31 @@ Wright & Masters (1982) conventions:
 }
 }
 
+\section{References}{
+
+\itemize{
+\item Wright, B. D., & Masters, G. N. (1982). \emph{Rating scale analysis}.
+MESA Press. (G/R/H separation, reliability, and strata
+formulas summarized in \code{s_diag$reliability} follow this
+convention.)
+\item Wright, B. D., & Linacre, J. M. (1994). Reasonable mean-square
+fit values. \emph{Rasch Measurement Transactions, 8}(3), 370.
+(Source for the 0.5-1.5 Infit / Outfit acceptance band that
+\code{s_diag$key_warnings} and \code{misfit_thresholds} apply.)
+\item Linacre, J. M. (1989). \emph{Many-Facet Rasch Measurement}. MESA
+Press. (FACETS Tables 6 + 7 correspond to the per-facet
+element measures, fit, and chi-square heterogeneity screen
+exposed via \code{s_diag$reliability} and \code{s_diag$facets_chisq}.)
+\item Bond, T. G., & Fox, C. M. (2015). \emph{Applying the Rasch model:
+Fundamental measurement in the human sciences} (3rd ed.).
+Routledge. (Reference text for the Rasch-family fit
+conventions exposed by this helper.)
+\item Linacre, J. M. (2002). What do Infit and Outfit, Mean-square
+and Standardized mean? \emph{Rasch Measurement Transactions,
+16}(2), 878.
+}
+}
+
 \examples{
 # Fast smoke run: legacy-only diagnostic mode is enough to confirm
 # the bundle has the expected slots. ~1 s on example_core.
@@ -249,6 +274,7 @@ head(pca$overall_table)
 prec <- precision_audit_report(fit, diagnostics = diag)
 summary(prec)
 }
+
 }
 \seealso{
 \code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=analyze_residual_pca]{analyze_residual_pca()}}, \code{\link[=build_visual_summaries]{build_visual_summaries()}},

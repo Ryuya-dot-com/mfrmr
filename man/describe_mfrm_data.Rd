@@ -71,6 +71,8 @@ A list of class \code{mfrm_data_description} with:
 \itemize{
 \item \code{overview}: one-row run-level summary
 \item \code{missing_by_column}: missing counts in selected input columns
+\item \code{missing_rate_summary}: per-column missingness rate summary
+(one row per input column, with raw and proportion-of-N columns)
 \item \code{score_descriptives}: output from \code{\link[psych:describe]{psych::describe()}} for score
 \item \code{weight_descriptives}: output from \code{\link[psych:describe]{psych::describe()}} for weight
 \item \code{score_distribution}: weighted and raw score frequencies over the prepared
@@ -78,6 +80,10 @@ score support. Unused boundary categories are retained when the rating
 range was supplied explicitly; unused intermediate categories require
 \code{keep_original = TRUE}.
 \item \code{facet_level_summary}: per-level usage and score summaries
+\item \code{facet_crosstabs}: pairwise observation-count crosstabs between
+non-person facets (named list keyed \code{"facetA__facetB"}); used by
+\code{summary(ds)$design_links} to flag sparse / disconnected
+facet-pair coverage
 \item \code{linkage_summary}: person-facet connectivity diagnostics
 \item \code{agreement}: observed-score inter-rater agreement bundle
 \item \code{score_support}: minimal prepared score-support metadata used by

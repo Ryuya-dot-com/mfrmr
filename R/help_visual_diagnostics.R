@@ -84,10 +84,11 @@
 #'   Use [plot_shrinkage_funnel()] on a fit augmented via
 #'   [apply_empirical_bayes_shrinkage()].
 #' - "I need one compact triage screen first."
-#'   Use [plot_qc_dashboard()] for `RSM` / `PCM`. First-release `GPCM`
-#'   can also use [plot_qc_dashboard()], but its fair-average panel remains an
-#'   explicit unavailable placeholder because that panel's score-metric
-#'   semantics have not yet been generalized beyond the Rasch-family branch.
+#'   Use [plot_qc_dashboard()] for `RSM` / `PCM`. The bounded `GPCM`
+#'   branch can also call [plot_qc_dashboard()], but its fair-average
+#'   panel reports an explicit unavailability indicator because that
+#'   panel's score-metric semantics have not yet been generalized
+#'   beyond the Rasch-family branch.
 #' - "Which figures are already supported by my current run?"
 #'   Use [reporting_checklist()] and review the `"Visual Displays"` rows before
 #'   choosing the next plot.
