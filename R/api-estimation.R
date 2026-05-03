@@ -3084,6 +3084,27 @@ make_anchor_table <- function(fit,
 #' prec <- precision_audit_report(fit, diagnostics = diag)
 #' summary(prec)
 #' }
+#'
+#' @section References:
+#' - Wright, B. D., & Masters, G. N. (1982). *Rating scale analysis*.
+#'   MESA Press. (G/R/H separation, reliability, and strata
+#'   formulas summarized in `s_diag$reliability` follow this
+#'   convention.)
+#' - Wright, B. D., & Linacre, J. M. (1994). Reasonable mean-square
+#'   fit values. *Rasch Measurement Transactions, 8*(3), 370.
+#'   (Source for the 0.5-1.5 Infit / Outfit acceptance band that
+#'   `s_diag$key_warnings` and `misfit_thresholds` apply.)
+#' - Linacre, J. M. (1989). *Many-Facet Rasch Measurement*. MESA
+#'   Press. (FACETS Tables 6 + 7 correspond to the per-facet
+#'   element measures, fit, and chi-square heterogeneity screen
+#'   exposed via `s_diag$reliability` and `s_diag$facets_chisq`.)
+#' - Bond, T. G., & Fox, C. M. (2015). *Applying the Rasch model:
+#'   Fundamental measurement in the human sciences* (3rd ed.).
+#'   Routledge. (Reference text for the Rasch-family fit
+#'   conventions exposed by this helper.)
+#' - Linacre, J. M. (2002). What do Infit and Outfit, Mean-square
+#'   and Standardized mean? *Rasch Measurement Transactions,
+#'   16*(2), 878.
 #' @export
 diagnose_mfrm <- function(fit,
                           interaction_pairs = NULL,
@@ -3272,6 +3293,16 @@ diagnose_mfrm <- function(fit,
 #' comp$table
 #' comp$evidence_ratios
 #' }
+#'
+#' @section References:
+#' - Burnham, K. P., & Anderson, D. R. (2002). *Model selection and
+#'   multimodel inference: A practical information-theoretic
+#'   approach* (2nd ed.). Springer.
+#' - Akaike, H. (1974). A new look at the statistical model
+#'   identification. *IEEE Transactions on Automatic Control,
+#'   19*(6), 716-723.
+#' - Schwarz, G. (1978). Estimating the dimension of a model.
+#'   *Annals of Statistics, 6*(2), 461-464.
 #' @export
 compare_mfrm <- function(..., labels = NULL, warn_constraints = TRUE, nested = FALSE) {
   fits <- list(...)

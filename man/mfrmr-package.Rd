@@ -475,12 +475,32 @@ ed.). Routledge.
 \item Bock, R. D., & Aitkin, M. (1981). Marginal maximum likelihood estimation
 of item parameters: Application of an EM algorithm. \emph{Psychometrika}, 46,
 443--459.
+\item Burnham, K. P., & Anderson, D. R. (2002). \emph{Model selection and
+multimodel inference: A practical information-theoretic approach}
+(2nd ed.). Springer. (AIC / BIC weights and Delta-IC bands used
+by \code{compare_mfrm()}.)
+\item Drasgow, F., Levine, M. V., & Williams, E. A. (1985).
+Appropriateness measurement with polychotomous item response
+models and standardized indices. \emph{British Journal of Mathematical
+and Statistical Psychology}, 38(1), 67--86. (Source for the \code{lz}
+person-fit statistic implemented in \code{compute_person_fit_indices()}.)
 \item Haberman, S. J., & Sinharay, S. (2013). Generalized residuals for general
 models for contingency tables with application to item response theory.
 \emph{Journal of the American Statistical Association}, 108, 1435--1444.
 \item Eckes, T. (2005). Examining rater effects in TestDaF writing and speaking
 performance assessments: A many-facet Rasch analysis. \emph{Language Assessment
 Quarterly}, 2, 197--221.
+\item Muraki, E. (1992). A generalized partial credit model: Application of
+an EM algorithm. \emph{Applied Psychological Measurement}, 16(2),
+159--176. (Source for the bounded \code{GPCM} extension used in
+\code{fit_mfrm(model = "GPCM")}, \code{fair_average_table()}, and
+\code{estimate_bias()}.)
+\item Snijders, T. A. B. (2001). Asymptotic null distribution of person
+fit statistics with estimated person parameter. \emph{Psychometrika},
+66(3), 331--342. (Source for the \code{lz_star} finite-sample-adjusted
+person-fit statistic; the full ability-information bias correction
+is documented as a placeholder in \code{?compute_person_fit_indices}
+and scheduled for a follow-up release.)
 \item Linacre, J. M. (1989). \emph{Many-facet Rasch measurement}. MESA Press.
 \item Linacre, J. M. (2002). What do Infit and Outfit, mean-square and
 standardized mean? \emph{Rasch Measurement Transactions}, 16(2), 878.

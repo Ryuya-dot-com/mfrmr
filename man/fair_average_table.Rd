@@ -149,6 +149,29 @@ exposed under a distinct column name from the existing measure-SE
 columns to avoid silent misinterpretation.
 }
 
+\section{References}{
+
+\itemize{
+\item Linacre, J. M. (1989). \emph{Many-Facet Rasch Measurement}. MESA Press.
+\item Linacre, J. M. (1994). \emph{Many-facet Rasch Measurement} (2nd ed.).
+MESA Press.
+\item Linacre, J. M. (2023). \emph{A user's guide to FACETS, version 4.5}.
+Winsteps.com. (FACETS Table 12 corresponds to the fair-average
+construction implemented here for \code{RSM} / \code{PCM} fits; the
+slope-aware element-conditional construction for bounded \code{GPCM}
+is documented in this help page.)
+\item Andrich, D. (1978). A rating formulation for ordered response
+categories. \emph{Psychometrika, 43}(4), 561-573.
+\doi{10.1007/BF02293814}
+\item Masters, G. N. (1982). A Rasch model for partial credit scoring.
+\emph{Psychometrika, 47}(2), 149-174. \doi{10.1007/BF02296272}
+\item Muraki, E. (1992). A generalized partial credit model:
+Application of an EM algorithm. \emph{Applied Psychological
+Measurement, 16}(2), 159-176. (Cited for the bounded \code{GPCM}
+slope-aware extension.)
+}
+}
+
 \examples{
 \donttest{
 toy <- load_mfrmr_data("example_core")
@@ -159,6 +182,7 @@ summary(t12)
 p_t12 <- plot(t12, draw = FALSE)
 p_t12$data$plot
 }
+
 }
 \seealso{
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=unexpected_response_table]{unexpected_response_table()}}, \code{\link[=displacement_table]{displacement_table()}}

@@ -545,6 +545,25 @@ unexpected_response_table <- function(fit,
 #' p_t12 <- plot(t12, draw = FALSE)
 #' p_t12$data$plot
 #' }
+#'
+#' @section References:
+#' - Linacre, J. M. (1989). *Many-Facet Rasch Measurement*. MESA Press.
+#' - Linacre, J. M. (1994). *Many-facet Rasch Measurement* (2nd ed.).
+#'   MESA Press.
+#' - Linacre, J. M. (2023). *A user's guide to FACETS, version 4.5*.
+#'   Winsteps.com. (FACETS Table 12 corresponds to the fair-average
+#'   construction implemented here for `RSM` / `PCM` fits; the
+#'   slope-aware element-conditional construction for bounded `GPCM`
+#'   is documented in this help page.)
+#' - Andrich, D. (1978). A rating formulation for ordered response
+#'   categories. *Psychometrika, 43*(4), 561-573.
+#'   \doi{10.1007/BF02293814}
+#' - Masters, G. N. (1982). A Rasch model for partial credit scoring.
+#'   *Psychometrika, 47*(2), 149-174. \doi{10.1007/BF02296272}
+#' - Muraki, E. (1992). A generalized partial credit model:
+#'   Application of an EM algorithm. *Applied Psychological
+#'   Measurement, 16*(2), 159-176. (Cited for the bounded `GPCM`
+#'   slope-aware extension.)
 #' @export
 fair_average_table <- function(fit,
                                diagnostics = NULL,
@@ -4189,6 +4208,23 @@ plot_residual_pca <- function(x,
 #' #   one of those triggered are usually small-cell artefacts.
 #' p_bias <- plot_bias_interaction(bias, draw = FALSE)
 #' p_bias$data$plot
+#'
+#' @section References:
+#' - Linacre, J. M. (1989). *Many-Facet Rasch Measurement*. MESA Press.
+#'   (FACETS Table 13 corresponds to the bias / interaction
+#'   estimation that this helper implements.)
+#' - Eckes, T. (2005). Examining rater effects in TestDaF writing
+#'   and speaking performance assessments: A many-facet Rasch
+#'   analysis. *Language Assessment Quarterly, 2*(3), 197-221.
+#' - Eckes, T. (2015). *Introduction to many-facet Rasch
+#'   measurement: Analyzing and evaluating rater-mediated
+#'   assessments* (2nd ed.). Peter Lang.
+#' - Myford, C. M., & Wolfe, E. W. (2003). Detecting and measuring
+#'   rater effects using many-facet Rasch measurement: Part I.
+#'   *Journal of Applied Measurement, 4*(4), 386-422.
+#' - Myford, C. M., & Wolfe, E. W. (2004). Detecting and measuring
+#'   rater effects using many-facet Rasch measurement: Part II.
+#'   *Journal of Applied Measurement, 5*(2), 189-227.
 #' @export
 estimate_bias <- function(fit,
                           diagnostics,
