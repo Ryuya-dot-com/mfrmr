@@ -53,8 +53,10 @@ the familiar \eqn{p(\theta)\{1 - p(\theta)\}} form. For \code{PCM}, the package
 evaluates each observed design cell using the threshold vector associated
 with that cell's realized \code{step_facet} level. For bounded \code{GPCM}, the
 same design-weighted score variance is scaled by the squared discrimination
-attached to the realized \code{slope_facet} level, matching the standard item-
-information identity for the generalized partial credit model (Muraki, 1993).
+attached to the realized \code{slope_facet} level, which is the
+\eqn{a_j^2 \cdot \mathrm{Var}(K \mid \theta)} item-information identity that
+follows from the GPCM derivative \eqn{\partial P_k / \partial \theta = a_j
+P_k (k - E[K])} (Muraki, 1992, Equations 13 and 35).
 }
 \section{What \code{tif} and \code{iif} mean here}{
 
@@ -109,18 +111,24 @@ for reporting or custom graphics.
 \section{References}{
 
 The ordered-category probability structures come from Andrich's \code{RSM}
-formulation and Masters' \code{PCM}. The general logic linking polytomous
-category probabilities to information functions is discussed by Muraki
-(1993). In \code{mfrmr}, those formulas are applied to the realized many-facet
-observation design, so the output should be read as a design-weighted
-precision summary rather than as a design-free abstract test function.
+formulation and Masters' \code{PCM}. The bounded \code{GPCM} information identity
+\eqn{a_j^2 \cdot \mathrm{Var}(K \mid \theta)} follows from the GPCM
+first-derivative \eqn{\partial P_k / \partial \theta = a_j P_k (k - E[K])}
+(Muraki, 1992, Equation 13), summed across categories to give the Fisher
+information element of Equation 35. In \code{mfrmr}, those formulas are
+applied to the realized many-facet observation design, so the output
+should be read as a design-weighted precision summary rather than as a
+design-free abstract test function.
 \itemize{
 \item Andrich, D. (1978). \emph{A rating formulation for ordered response
 categories}. Psychometrika, 43(4), 561-573.
 \item Masters, G. N. (1982). \emph{A Rasch model for partial credit scoring}.
 Psychometrika, 47(2), 149-174.
-\item Muraki, E. (1993). \emph{Information functions of the generalized partial
-credit model}. ETS Research Report Series, 1993(1), i-12.
+\item Muraki, E. (1992). \emph{A generalized partial credit model: Application
+of an EM algorithm}. Applied Psychological Measurement, 16(2),
+159-176. \doi{10.1177/014662169201600206} (See Equations 6, 10, 13,
+and 35 for the probability kernel, derivative, and Fisher
+information formulas implemented here.)
 }
 }
 
