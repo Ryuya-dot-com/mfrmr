@@ -1,9 +1,10 @@
-# mfrmr 0.2.0.9000 (development)
+# mfrmr 0.2.0
 
-Documentation accuracy pass. No public function contract changes and
-no behavior changes; documentation, citations, and band attributions
-are corrected against primary sources after a thorough audit. Test
-suite (PASS 6834 / FAIL 0) is unchanged.
+This release finalizes the 0.2.0 line with a broader bounded-GPCM route,
+documentation accuracy corrections, and public-source hygiene updates.
+The main GPCM addition is that slope-aware fair-average and residual-bias
+screens now flow into diagnostics, visual summaries, and the QC pipeline
+with explicit caveats.
 
 ## Citation and attribution corrections
 
@@ -76,10 +77,9 @@ suite (PASS 6834 / FAIL 0) is unchanged.
   Marais cites, not as her own recommendation; her actual recommendation
   is the relative-to-mean comparison.
 
-# mfrmr 0.2.0
+## Release overview
 
-This is a small infrastructure and polish release. No public function
-gains or removes its previous support contract, and no default value
+This is a small infrastructure and polish release. No default value
 changes between 0.1.6 and 0.2.0. The headings mirror the 0.1.6 layout
 (default changes, new features, bug fixes, documentation) so that
 release notes can be read in the same order as previous versions.
@@ -162,6 +162,15 @@ See `?fair_average_table`, `?estimate_bias`, and
 `facets_output_file_bundle(include = "score")` remain blocked under
 GPCM in 0.2.0; they require the same SE infrastructure to ship as
 publication-quality outputs.
+
+### Bounded GPCM visual summaries and QC pipeline
+
+`diagnose_mfrm()` now attaches the slope-aware GPCM fair-average table.
+`build_visual_summaries()` and
+`run_qc_pipeline()` now accept bounded `GPCM` fits and return
+`support_status = "supported_with_caveat"`. Their caveat states that
+fair-average and bias checks are GPCM-specific exploratory screens, not
+Rasch-family invariance evidence.
 
 ## Bug fixes
 
@@ -270,8 +279,9 @@ later release:
 
 - User-facing GPCM unblock for `build_apa_outputs()`,
   `facets_parity_report()`, and `facets_output_file_bundle(include =
-  "score")`. (`fair_average_table()` and `estimate_bias()` are
-  unblocked above.)
+  "score")`. (`fair_average_table()`, `estimate_bias()`,
+  `build_visual_summaries()`, and `run_qc_pipeline()` are unblocked
+  above.)
 - A classical-DIF helper (working title `analyze_dif_classical()`)
   covering Mantel-Haenszel, logistic regression, and SIBTEST.
 - Five additional Rasch / IRT classic plots (KIDMAP, TCC, expected

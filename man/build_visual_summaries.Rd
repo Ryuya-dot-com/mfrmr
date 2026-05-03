@@ -67,9 +67,10 @@ in UI code.
 \item \code{top_misfit_n}: number of top misfit entries included
 }
 
-For bounded \code{GPCM}, this helper is intentionally unavailable. Use
-\code{\link[=reporting_checklist]{reporting_checklist()}}, \code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}}, the residual/category table
-helpers, and \code{\link[=compute_information]{compute_information()}} / \code{\link[=plot_information]{plot_information()}} instead.
+For bounded \code{GPCM}, this helper is available as a caveated visual-routing
+layer. Fair-average and bias entries use slope-aware GPCM screens and should
+be read as exploratory score-side diagnostics rather than Rasch-family
+invariance evidence.
 }
 \section{Interpreting output}{
 
@@ -87,6 +88,8 @@ carries \code{category_support}, \code{interpretation_guide}, and \code{reportin
 tables for zero-frequency category and reporting-boundary checks.
 \item \code{public_plot_routes}: draw-free helper routes for the dedicated public plot
 functions behind each visual family.
+\item \code{support_status} / \code{caveat}: present for bounded \code{GPCM} fits to document
+the exploratory support boundary.
 }
 }
 

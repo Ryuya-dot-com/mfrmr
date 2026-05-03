@@ -110,14 +110,13 @@ For bounded \code{GPCM}, diagnostics are now available through
 \code{\link[=interrater_agreement_table]{interrater_agreement_table()}}, \code{\link[=unexpected_response_table]{unexpected_response_table()}},
 \code{\link[=displacement_table]{displacement_table()}}, \code{\link[=measurable_summary_table]{measurable_summary_table()}},
 \code{\link[=rating_scale_table]{rating_scale_table()}}, \code{\link[=facet_quality_dashboard]{facet_quality_dashboard()}},
-\code{\link[=reporting_checklist]{reporting_checklist()}}, and \code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}} -- the
-fair-average panel of the dashboard reports an explicit
-unavailability indicator under GPCM. Treat those residual-based
-summaries as exploratory screens because the discrimination
-parameter is free.
-FACETS-style fair averages are Rasch-family measure-to-score
-transformations, so the score-side fair-average semantics remain blocked
-for bounded \code{GPCM}.
+\code{\link[=reporting_checklist]{reporting_checklist()}}, \code{\link[=build_visual_summaries]{build_visual_summaries()}},
+\code{\link[=run_qc_pipeline]{run_qc_pipeline()}}, and \code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}}. Treat those
+residual-based summaries as exploratory screens because the
+discrimination parameter is free.
+Slope-aware \code{\link[=fair_average_table]{fair_average_table()}} and \code{\link[=estimate_bias]{estimate_bias()}} are available
+with explicit SE caveats; FACETS-compatibility score exports remain
+blocked for bounded \code{GPCM}.
 Posterior scoring with \code{\link[=predict_mfrm_units]{predict_mfrm_units()}} /
 \code{\link[=sample_mfrm_plausible_values]{sample_mfrm_plausible_values()}}, design-weighted information via
 \code{\link[=compute_information]{compute_information()}} / \code{\link[=plot_information]{plot_information()}}, Wright/pathway/CCC plots
@@ -125,16 +124,19 @@ via \code{\link[=plot.mfrm_fit]{plot.mfrm_fit()}}, direct category reports via
 \code{\link[=category_structure_report]{category_structure_report()}} / \code{\link[=category_curves_report]{category_curves_report()}}, and direct
 data generation through \code{\link[=build_mfrm_sim_spec]{build_mfrm_sim_spec()}}, \code{\link[=extract_mfrm_sim_spec]{extract_mfrm_sim_spec()}},
 and \code{\link[=simulate_mfrm_data]{simulate_mfrm_data()}} are also available when the simulation
-specification stores both thresholds and slopes. Fair-average,
-planning/forecasting, and APA/QC pipelines remain outside the validated
+specification stores both thresholds and slopes. Planning/forecasting,
+APA writer, FACETS score exports, and fit-based replay/export bundles
+remain outside the validated
 \code{GPCM} boundary. Use \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}} as the formal capability
 map before branching into less common helpers.
-\item (Optional, \code{RSM} / \code{PCM}) Estimate interaction bias with \code{\link[=estimate_bias]{estimate_bias()}}.
-\item (Optional, \code{RSM} / \code{PCM}) Choose a downstream branch:
+\item (Optional) Estimate interaction bias with \code{\link[=estimate_bias]{estimate_bias()}}. For bounded
+\code{GPCM}, read the returned caveat before using the SE / t / probability
+columns.
+\item (Optional) Choose a downstream branch:
 \code{\link[=reporting_checklist]{reporting_checklist()}} for manuscript/report preparation, or
 \code{\link[=build_weighting_audit]{build_weighting_audit()}} for Rasch-versus-bounded-\code{GPCM}
-weighting review, or \code{\link[=build_misfit_casebook]{build_misfit_casebook()}} / \code{\link[=build_linking_review]{build_linking_review()}}
-for operational case review.
+weighting review, or \code{\link[=build_misfit_casebook]{build_misfit_casebook()}} for operational case
+review. \code{\link[=build_linking_review]{build_linking_review()}} remains \code{RSM} / \code{PCM} only.
 \item (Optional, \code{RSM} / \code{PCM}) Generate reporting bundles:
 \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}}, \code{\link[=apa_table]{apa_table()}},
 \code{\link[=export_summary_appendix]{export_summary_appendix()}}, \code{\link[=build_fixed_reports]{build_fixed_reports()}},
@@ -185,8 +187,9 @@ bounded \code{GPCM}: \code{\link[=fit_mfrm]{fit_mfrm()}} -> \code{\link[=diagnos
 \code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}} / \code{\link[=unexpected_response_table]{unexpected_response_table()}} ->
 \code{\link[=rating_scale_table]{rating_scale_table()}} ->
 \code{\link[=compute_information]{compute_information()}} -> \code{\link[=plot_information]{plot_information()}} ->
-\code{\link[=plot.mfrm_fit]{plot.mfrm_fit()}} / \code{\link[=category_curves_report]{category_curves_report()}}. Keep bounded \code{GPCM}
-routes on the direct table/plot side; the fit-based export family
+\code{\link[=plot.mfrm_fit]{plot.mfrm_fit()}} / \code{\link[=category_curves_report]{category_curves_report()}} ->
+\code{\link[=build_visual_summaries]{build_visual_summaries()}} / \code{\link[=run_qc_pipeline]{run_qc_pipeline()}}. Keep bounded \code{GPCM}
+routes on the direct table/plot and caveated QC side; the fit-based export family
 (\code{\link[=build_mfrm_manifest]{build_mfrm_manifest()}}, \code{\link[=build_mfrm_replay_script]{build_mfrm_replay_script()}},
 \code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}}) remains outside the formal \code{GPCM} boundary.
 \item Linking and coverage review:
@@ -199,7 +202,8 @@ routes on the direct table/plot side; the fit-based export family
 \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}} -> \code{\link[=apa_table]{apa_table()}} or
 \code{\link[=export_summary_appendix]{export_summary_appendix()}}.
 First-release \code{GPCM}:
-\code{\link[=reporting_checklist]{reporting_checklist()}} -> direct table/plot helpers while the APA writer
+\code{\link[=reporting_checklist]{reporting_checklist()}} -> \code{\link[=build_visual_summaries]{build_visual_summaries()}} /
+\code{\link[=run_qc_pipeline]{run_qc_pipeline()}} -> direct table/plot helpers while the APA writer
 remains outside scope.
 \item Weighting-policy review:
 \code{\link[=compare_mfrm]{compare_mfrm()}} -> \code{\link[=build_weighting_audit]{build_weighting_audit()}} ->

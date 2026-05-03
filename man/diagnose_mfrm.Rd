@@ -168,9 +168,9 @@ uses model-based \code{ModelSE} values where available; \code{JML} keeps these
 quantities as exploratory approximations.
 \item \code{fit}: element-level misfit scan (\code{Infit}, \code{Outfit}, \code{ZSTD}).
 \item \code{unexpected}, \code{fair_average}, \code{displacement}: targeted QC bundles.
-For bounded \code{GPCM}, \code{fair_average} is retained as an unavailable
-placeholder because that compatibility calculation has not yet been
-validated for the generalized model.
+For bounded \code{GPCM}, \code{fair_average} uses a slope-aware expected-score
+construction and carries a caveat; treat it as a GPCM-specific screening
+view rather than Rasch-family fair-M invariance evidence.
 \item \code{approximation_notes}: method notes for SE/CI/reliability summaries.
 }
 }
@@ -179,8 +179,8 @@ validated for the generalized model.
 
 Start with \code{overall_fit} and \code{reliability}, then move to element-level
 diagnostics (\code{fit}) and targeted bundles (\code{unexpected}, \code{displacement},
-\code{interrater}, \code{facets_chisq}). Treat \code{fair_average} as available only for
-the \code{RSM} / \code{PCM} branch.
+\code{interrater}, \code{facets_chisq}, \code{fair_average}). For bounded \code{GPCM},
+interpret \code{fair_average} with the caveat stored on that component.
 
 Consistent signals across multiple components are typically more robust than
 a single isolated warning.  For example, an element flagged for both high

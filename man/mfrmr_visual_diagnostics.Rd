@@ -18,7 +18,8 @@ This guide is primarily written for diagnostics-based \code{RSM} / \code{PCM}
 workflows. \code{GPCM} fits also use the residual-based diagnostics stack
 through \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=plot_unexpected]{plot_unexpected()}}, \code{\link[=plot_displacement]{plot_displacement()}},
 \code{\link[=plot_interrater_agreement]{plot_interrater_agreement()}}, \code{\link[=plot_facets_chisq]{plot_facets_chisq()}},
-\code{\link[=plot_residual_pca]{plot_residual_pca()}}, and \code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}}, plus the
+\code{\link[=plot_residual_pca]{plot_residual_pca()}}, \code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}},
+\code{\link[=build_visual_summaries]{build_visual_summaries()}}, and \code{\link[=run_qc_pipeline]{run_qc_pipeline()}}, plus the
 posterior-scoring, design-weighted-information path via
 \code{\link[=compute_information]{compute_information()}} / \code{\link[=plot_information]{plot_information()}}, and the Wright /
 pathway / CCC fit plots. Two \code{GPCM}-specific caveats apply when
@@ -29,11 +30,10 @@ carry weaker invariance evidence than they do under \code{RSM} / \code{PCM}.
 Treat MnSq flags from \code{GPCM} as exploratory pointers to cells that
 merit closer inspection rather than as Rasch-style violations of
 strict invariance.
-\item FACETS-style fair averages are a Rasch-family measure-to-score
-transformation. Under \code{GPCM} the fair-average panel of
-\code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}} therefore renders as an explicit
-"unavailable" placeholder, and the broader compatibility-export
-helpers stay outside the validated \code{GPCM} boundary.
+\item Slope-aware \code{\link[=fair_average_table]{fair_average_table()}} and \code{\link[=estimate_bias]{estimate_bias()}} are available
+under \code{GPCM}, but their SE columns keep the caveats documented in those
+help pages. Broader compatibility-export helpers stay outside the
+validated \code{GPCM} boundary.
 }
 
 Use \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}} for the formal per-helper boundary

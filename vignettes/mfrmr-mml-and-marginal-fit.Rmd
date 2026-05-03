@@ -215,10 +215,12 @@ curves, direct curve/category reports, exploratory residual-based follow-up,
 and the slope-aware element-conditional `fair_average_table()` and
 `estimate_bias()` (with an explicit `caveat` field reminding users that the
 SE columns are scaled facet-measure SEs, not delta-method SEs of the
-fair-average / bias values). Broader APA/report bundles, score-side
-exports, QC pass/fail pipelines, linking synthesis, and planning /
-forecasting helpers remain out of scope for `GPCM` in this release. See
-`gpcm_capability_matrix()` for the full per-helper support contract.
+fair-average / bias values). `build_visual_summaries()` and
+`run_qc_pipeline()` route those caveated screens into review bundles.
+Broader APA/report bundles, FACETS-compatibility score-side exports,
+linking synthesis, and planning / forecasting helpers remain out of scope
+for `GPCM` in this release. See `gpcm_capability_matrix()` for the full
+per-helper support contract.
 
 ## Why GPCM Is The Current Upper Scope
 

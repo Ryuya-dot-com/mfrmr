@@ -75,10 +75,11 @@ The dashboard draws nine QC panels in a 3\eqn{\times}3 grid:\tabular{lll}{
 are available: \code{"strict"}, \code{"standard"} (default), and \code{"lenient"}.
 Use \code{thresholds} to override any profile value with named entries.
 
-For bounded \code{GPCM}, the dashboard now reuses the residual-based
-diagnostics stack and leaves the fair-average panel as an explicit
-unavailable placeholder rather than silently reusing the Rasch-only
-compatibility calculation.
+For bounded \code{GPCM}, the dashboard reuses the residual-based diagnostics
+stack and the slope-aware fair-average table carried by \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}.
+Interpret that panel as a GPCM-specific screening view with the caveats
+documented in \code{\link[=fair_average_table]{fair_average_table()}}, not as Rasch-family fair-M invariance
+evidence.
 }
 \section{Plot types}{
 

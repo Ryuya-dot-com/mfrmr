@@ -48,7 +48,7 @@ get_weights <- function(df) {
 
 stop_if_gpcm_out_of_scope <- function(fit,
                                       helper,
-                                      supported = "fitting, core summary output, fixed-calibration posterior scoring, compute_information(), direct simulation, residual-based diagnostics, the curve/report helpers, and the slope-aware element-conditional fair_average_table() and estimate_bias() (with the SE caveats documented in their help pages)") {
+                                      supported = "fitting, core summary output, fixed-calibration posterior scoring, compute_information(), direct simulation, residual-based diagnostics, the curve/report helpers, build_visual_summaries(), run_qc_pipeline(), and the slope-aware element-conditional fair_average_table() and estimate_bias() (with the SE caveats documented in their help pages)") {
   if (!inherits(fit, "mfrm_fit")) return(invisible(NULL))
   model <- as.character(fit$config$model %||% fit$summary$Model[1] %||% NA_character_)
   if (identical(model, "GPCM")) {
@@ -65,11 +65,13 @@ stop_if_gpcm_out_of_scope <- function(fit,
 
 gpcm_fair_average_rationale <- function() {
   paste0(
-    "FACETS-style fair averages are defined for Rasch-family models as ",
-    "measure-to-score transformations in a standardized mean/zero-facet ",
-    "environment. The current bounded `GPCM` branch supports ",
-    "Muraki-style generalized category probabilities, but this package has ",
-    "not yet validated a slope-aware fair-average score metric."
+    "Bounded `GPCM` fair averages use a slope-aware element-conditional ",
+    "expected-score construction: slope-facet rows use the row element's ",
+    "own discrimination, while non-slope-facet rows use the geometric-mean-one ",
+    "slope implied by the identification convention. Treat these values as ",
+    "a GPCM-specific score-side screen, not as Rasch-family fair-M invariance ",
+    "evidence. The displayed SE columns are scaled facet-measure SEs, not ",
+    "delta-method SEs for the fair-average value."
   )
 }
 
@@ -6970,25 +6972,20 @@ mfrm_diagnostics <- function(res,
     rule = unexpected_rule
   )
 
-  fair_average <- if (identical(res$config$model, "GPCM")) {
-    list(
-      raw_by_facet = list(),
-      by_facet = list(),
-      stacked = tibble(),
-      available = FALSE,
-      reason = gpcm_fair_average_rationale()
-    )
-  } else {
-    calc_fair_average_bundle(
-      res = res,
-      diagnostics = list(obs = obs_df, measures = measures),
-      totalscore = TRUE,
-      umean = 0,
-      uscale = 1,
-      udecimals = 2,
-      omit_unobserved = FALSE,
-      xtreme = 0
-    )
+  fair_average <- calc_fair_average_bundle(
+    res = res,
+    diagnostics = list(obs = obs_df, measures = measures),
+    totalscore = TRUE,
+    umean = 0,
+    uscale = 1,
+    udecimals = 2,
+    omit_unobserved = FALSE,
+    xtreme = 0
+  )
+  if (identical(res$config$model, "GPCM")) {
+    fair_average$available <- TRUE
+    fair_average$method <- "GPCM-slope-aware"
+    fair_average$caveat <- gpcm_fair_average_rationale()
   }
 
   displacement_abs_warn <- 0.5

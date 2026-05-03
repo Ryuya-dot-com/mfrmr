@@ -159,8 +159,8 @@ restricted to \code{RSM} / \code{PCM}; curve reports and graph-only exports are
 also available for bounded \code{GPCM})
 \item Reporting: \code{\link[=build_apa_outputs]{build_apa_outputs()}}, \code{\link[=build_visual_summaries]{build_visual_summaries()}},
 \code{\link[=reporting_checklist]{reporting_checklist()}}, \code{\link[=apa_table]{apa_table()}} for the full \code{RSM} / \code{PCM} route;
-bounded \code{GPCM} currently stays on the checklist / direct-table / direct-
-plot side instead of the narrative/QC layer
+bounded \code{GPCM} currently stays on the checklist / visual-summary / QC /
+direct-table / direct-plot side instead of the narrative layer
 \item Weighting review: \code{\link[=compare_mfrm]{compare_mfrm()}}, \code{\link[=build_weighting_audit]{build_weighting_audit()}},
 \code{\link[=compute_information]{compute_information()}}, \code{\link[=plot_information]{plot_information()}}
 \item Case review: \code{\link[=build_misfit_casebook]{build_misfit_casebook()}}, \code{\link[=plot_unexpected]{plot_unexpected()}},
@@ -260,12 +260,12 @@ acceptable; then score with
 \code{\link[=predict_mfrm_units]{predict_mfrm_units()}}, \code{\link[=sample_mfrm_plausible_values]{sample_mfrm_plausible_values()}},
 \code{\link[=compute_information]{compute_information()}}, \code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}}, \code{\link[=plot.mfrm_fit]{plot.mfrm_fit()}},
 \code{\link[=category_structure_report]{category_structure_report()}}, \code{\link[=category_curves_report]{category_curves_report()}},
+\code{\link[=fair_average_table]{fair_average_table()}}, \code{\link[=estimate_bias]{estimate_bias()}}, \code{\link[=build_visual_summaries]{build_visual_summaries()}},
+\code{\link[=run_qc_pipeline]{run_qc_pipeline()}},
 graph-only \code{\link[=facets_output_file_bundle]{facets_output_file_bundle()}}, direct simulation-spec
 generation/data generation, and the residual-based table helpers while
-fair-average, APA writer, fit-based export/replay, and planning semantics
-are still being generalized. In particular, FACETS-style fair averages
-are Rasch-family measure-to-score transformations, so \code{mfrmr} still keeps
-those score-side semantics blocked for bounded \code{GPCM}. Use
+APA writer, FACETS compatibility score exports, fit-based export/replay,
+and planning semantics are still being generalized. Use
 \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}} as the formal boundary statement.
 }
 }

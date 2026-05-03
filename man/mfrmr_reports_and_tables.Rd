@@ -29,8 +29,9 @@ Use \code{\link[=subset_connectivity_report]{subset_connectivity_report()}} and 
 For \code{RSM} / \code{PCM}, use \code{\link[=reporting_checklist]{reporting_checklist()}}, \code{\link[=build_apa_outputs]{build_apa_outputs()}},
 and \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}} or \code{\link[=export_summary_appendix]{export_summary_appendix()}}. For
 bounded \code{GPCM}, stay on \code{\link[=reporting_checklist]{reporting_checklist()}}, direct table/plot helpers,
-and summary-table appendix export; \code{\link[=build_apa_outputs]{build_apa_outputs()}} and
-\code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}} remain out of scope.
+\code{\link[=build_visual_summaries]{build_visual_summaries()}}, \code{\link[=run_qc_pipeline]{run_qc_pipeline()}}, and summary-table
+appendix export; \code{\link[=build_apa_outputs]{build_apa_outputs()}} and \code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}} remain
+out of scope.
 }
 }
 
@@ -50,8 +51,8 @@ describe spread, linkage, and measurability.
 \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}} for reusable handoff tables or
 \code{\link[=export_summary_appendix]{export_summary_appendix()}} for direct appendix export. For bounded
 \code{GPCM}, skip \code{\link[=build_apa_outputs]{build_apa_outputs()}} and \code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}}; use
-\code{\link[=reporting_checklist]{reporting_checklist()}}, direct summaries/plots, and the summary-table
-appendix route only.
+\code{\link[=reporting_checklist]{reporting_checklist()}}, \code{\link[=build_visual_summaries]{build_visual_summaries()}}, \code{\link[=run_qc_pipeline]{run_qc_pipeline()}},
+direct summaries/plots, and the summary-table appendix route only.
 }
 }
 

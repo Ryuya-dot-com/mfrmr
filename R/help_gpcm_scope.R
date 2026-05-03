@@ -76,12 +76,12 @@ gpcm_capability_matrix <- function(status = c("all", "supported", "supported_wit
       "Exploratory diagnostics and residual follow-up",
       "Fixed-calibration scoring and information",
       "Core curve and category views",
-      "Checklist and direct reporting route",
+      "Checklist, visual summary, and QC route",
       "Operational misfit casebook",
       "Weighting audit and model-choice review",
       "Operational linking synthesis",
       "Direct simulation-spec generation",
-      "APA writer and bundle-style reporting",
+      "APA writer and export/replay bundles",
       "Fair-average semantics under bounded GPCM (slope-aware)",
       "Design planning and forecasting",
       "MCMC and heavy-backend extensions",
@@ -103,12 +103,12 @@ gpcm_capability_matrix <- function(status = c("all", "supported", "supported_wit
         "category_structure_report(); category_curves_report();",
         "facets_output_file_bundle(include = \"graph\")"
       ),
-      "reporting_checklist(); precision_audit_report()",
+      "reporting_checklist(); precision_audit_report(); build_visual_summaries(); run_qc_pipeline()",
       "build_misfit_casebook()",
       "compare_mfrm(); build_weighting_audit(); compute_information(); plot_information(); build_summary_table_bundle(); export_summary_appendix()",
       "build_linking_review()",
       "build_mfrm_sim_spec(); extract_mfrm_sim_spec(); simulate_mfrm_data()",
-      "build_apa_outputs(); build_visual_summaries(); run_qc_pipeline(); build_mfrm_manifest(); build_mfrm_replay_script(); export_mfrm_bundle()",
+      "build_apa_outputs(); build_mfrm_manifest(); build_mfrm_replay_script(); export_mfrm_bundle()",
       "fair_average_table()",
       "evaluate_mfrm_design(); evaluate_mfrm_diagnostic_screening(); evaluate_mfrm_signal_detection(); predict_mfrm_population()",
       "cpp11 backend promotion; posterior predictive computation; MCMC engine; Docker-based advanced runtime",
@@ -137,12 +137,12 @@ gpcm_capability_matrix <- function(status = c("all", "supported", "supported_wit
       "Screen local misfit, residual structure, and agreement patterns after fitting.",
       "Score new units or review design-weighted precision under the fitted GPCM calibration.",
       "Inspect targeting, category progression, and category-probability behavior under the generalized kernel.",
-      "Check which direct tables and plots are draft-ready without invoking the broader APA writer.",
+      "Check which direct tables and plots are draft-ready and bundle visual/QC screening outputs without invoking the broader APA writer.",
       "Combine residual, strict marginal, unexpected-response, and displacement screens into one review queue.",
       "Review whether bounded GPCM is introducing substantively acceptable discrimination-based reweighting.",
       "Synthesize anchor, drift, and chain evidence into one operational review surface.",
       "Generate or extract slope-aware simulation specifications and sample responses directly from them.",
-      "Produce manuscript-draft prose, bundled reporting payloads, or full export bundles.",
+      "Produce manuscript-draft prose, replay scripts, or full export bundles.",
       "Compute slope-aware element-conditional fair-average score adjustments for reporting tables.",
       "Evaluate designs, forecast future administrations, or run screening-design studies.",
       "Move beyond the current core-package release boundary.",
@@ -170,8 +170,9 @@ gpcm_capability_matrix <- function(status = c("all", "supported", "supported_wit
         "generalized for the current bounded GPCM branch."
       ),
       paste(
-        "Routes users to supported direct tables and plots, but does not imply",
-        "that the manuscript-draft APA writer is available for GPCM."
+        "Routes users to supported direct tables, plots, visual summaries,",
+        "and QC screens, but does not imply that the manuscript-draft APA",
+        "writer is available for GPCM."
       ),
       paste(
         "Supported with caveat for bounded GPCM because the casebook inherits",
@@ -191,9 +192,9 @@ gpcm_capability_matrix <- function(status = c("all", "supported", "supported_wit
         "bounded branch's facet-role restrictions."
       ),
       paste(
-        "Not yet validated for GPCM because the broader reporting/export stack",
-        "would convert still-blocked score-side semantics into narrative,",
-        "bundle, or QC claims."
+        "Not yet validated for GPCM because the broader APA/export stack",
+        "would convert still-blocked score-side semantics into manuscript",
+        "narrative or replay/export claims."
       ),
       paste(
         "Slope-aware element-conditional construction: slope-facet element rows",
@@ -235,7 +236,7 @@ gpcm_capability_matrix <- function(status = c("all", "supported", "supported_wit
       "covered by diagnostic and marginal-plot checks",
       "covered by scoring and information checks",
       "covered by curve, plot, and information checks",
-      "covered by reporting-route checks",
+      "covered by reporting-route, visual-summary, and QC-pipeline checks",
       "covered by misfit-casebook and diagnostic checks",
       "covered by weighting-review and information checks",
       "not yet validated for the bounded GPCM route",

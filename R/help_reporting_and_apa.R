@@ -6,16 +6,17 @@
 #'
 #' This guide currently applies fully to diagnostics-based `RSM` / `PCM`
 #' workflows. First-release `GPCM` fits now support [reporting_checklist()],
-#' [precision_audit_report()], and the direct curve/graph and residual table
-#' helpers, but the narrative APA writer still requires the broader reporting
-#' stack used for `RSM` / `PCM`. Use [gpcm_capability_matrix()] when you need
-#' the formal boundary for the current `GPCM` reporting path.
+#' [precision_audit_report()], [build_visual_summaries()],
+#' [run_qc_pipeline()], and the direct curve/graph and residual table helpers,
+#' but the narrative APA writer still requires the broader reporting stack used
+#' for `RSM` / `PCM`. Use [gpcm_capability_matrix()] when you need the formal
+#' boundary for the current `GPCM` reporting path.
 #'
 #' In particular, bounded `GPCM` currently stops before
-#' [build_apa_outputs()], [build_visual_summaries()], and
-#' [run_qc_pipeline()]. For that branch, use [reporting_checklist()],
-#' [precision_audit_report()], and the direct table/plot helpers as the
-#' package-supported reporting route.
+#' [build_apa_outputs()] and the fit-based replay/export bundle layer. For
+#' that branch, use [reporting_checklist()], [precision_audit_report()],
+#' [build_visual_summaries()], [run_qc_pipeline()], and the direct table/plot
+#' helpers as the package-supported reporting route.
 #'
 #' @section Start with the reporting question:
 #' - "Which parts of this run are draft-complete, and with what caveats?"
@@ -48,8 +49,8 @@
 #'    the narrative around local misfit.
 #' 6. For `RSM` / `PCM`, create manuscript-draft prose and metadata with
 #'    [build_apa_outputs()]. For bounded `GPCM`, stop after the checklist /
-#'    precision / direct-table route while the broader narrative and QC stack
-#'    remains outside scope.
+#'    precision / visual-summary / QC / direct-table route while the broader
+#'    narrative stack remains outside scope.
 #' 7. Convert summary outputs to reusable table bundles with
 #'    [build_summary_table_bundle()], review the bundle with `summary()` /
 #'    `plot()`, then convert specific components to handoff tables with

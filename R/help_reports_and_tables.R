@@ -24,8 +24,9 @@
 #'   For `RSM` / `PCM`, use [reporting_checklist()], [build_apa_outputs()],
 #'   and [build_summary_table_bundle()] or [export_summary_appendix()]. For
 #'   bounded `GPCM`, stay on [reporting_checklist()], direct table/plot helpers,
-#'   and summary-table appendix export; [build_apa_outputs()] and
-#'   [export_mfrm_bundle()] remain out of scope.
+#'   [build_visual_summaries()], [run_qc_pipeline()], and summary-table
+#'   appendix export; [build_apa_outputs()] and [export_mfrm_bundle()] remain
+#'   out of scope.
 #'
 #' @section Recommended report route:
 #' 1. Start with [specifications_report()] and [data_quality_report()] to
@@ -41,8 +42,8 @@
 #'    [build_summary_table_bundle()] for reusable handoff tables or
 #'    [export_summary_appendix()] for direct appendix export. For bounded
 #'    `GPCM`, skip [build_apa_outputs()] and [export_mfrm_bundle()]; use
-#'    [reporting_checklist()], direct summaries/plots, and the summary-table
-#'    appendix route only.
+#'    [reporting_checklist()], [build_visual_summaries()], [run_qc_pipeline()],
+#'    direct summaries/plots, and the summary-table appendix route only.
 #'
 #' @section Which output answers which question:
 #' \describe{

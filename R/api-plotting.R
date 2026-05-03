@@ -2356,10 +2356,11 @@ plot_facets_chisq <- function(x,
 #' are available: `"strict"`, `"standard"` (default), and `"lenient"`.
 #' Use `thresholds` to override any profile value with named entries.
 #'
-#' For bounded `GPCM`, the dashboard now reuses the residual-based
-#' diagnostics stack and leaves the fair-average panel as an explicit
-#' unavailable placeholder rather than silently reusing the Rasch-only
-#' compatibility calculation.
+#' For bounded `GPCM`, the dashboard reuses the residual-based diagnostics
+#' stack and the slope-aware fair-average table carried by [diagnose_mfrm()].
+#' Interpret that panel as a GPCM-specific screening view with the caveats
+#' documented in [fair_average_table()], not as Rasch-family fair-M invariance
+#' evidence.
 #'
 #' @section Plot types:
 #' This function draws a fixed 3\eqn{\times}3 panel grid (no `plot_type`

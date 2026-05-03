@@ -15,7 +15,8 @@
 #' workflows. `GPCM` fits also use the residual-based diagnostics stack
 #' through [diagnose_mfrm()], [plot_unexpected()], [plot_displacement()],
 #' [plot_interrater_agreement()], [plot_facets_chisq()],
-#' [plot_residual_pca()], and [plot_qc_dashboard()], plus the
+#' [plot_residual_pca()], [plot_qc_dashboard()],
+#' [build_visual_summaries()], and [run_qc_pipeline()], plus the
 #' posterior-scoring, design-weighted-information path via
 #' [compute_information()] / [plot_information()], and the Wright /
 #' pathway / CCC fit plots. Two `GPCM`-specific caveats apply when
@@ -26,11 +27,10 @@
 #'   Treat MnSq flags from `GPCM` as exploratory pointers to cells that
 #'   merit closer inspection rather than as Rasch-style violations of
 #'   strict invariance.
-#' - FACETS-style fair averages are a Rasch-family measure-to-score
-#'   transformation. Under `GPCM` the fair-average panel of
-#'   [plot_qc_dashboard()] therefore renders as an explicit
-#'   "unavailable" placeholder, and the broader compatibility-export
-#'   helpers stay outside the validated `GPCM` boundary.
+#' - Slope-aware [fair_average_table()] and [estimate_bias()] are available
+#'   under `GPCM`, but their SE columns keep the caveats documented in those
+#'   help pages. Broader compatibility-export helpers stay outside the
+#'   validated `GPCM` boundary.
 #'
 #' Use [gpcm_capability_matrix()] for the formal per-helper boundary
 #' before choosing a `GPCM` follow-up plot route.

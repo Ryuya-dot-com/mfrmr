@@ -93,14 +93,13 @@
 #'    [interrater_agreement_table()], [unexpected_response_table()],
 #'    [displacement_table()], [measurable_summary_table()],
 #'    [rating_scale_table()], [facet_quality_dashboard()],
-#'    [reporting_checklist()], and [plot_qc_dashboard()] -- the
-#'    fair-average panel of the dashboard reports an explicit
-#'    unavailability indicator under GPCM. Treat those residual-based
-#'    summaries as exploratory screens because the discrimination
-#'    parameter is free.
-#'    FACETS-style fair averages are Rasch-family measure-to-score
-#'    transformations, so the score-side fair-average semantics remain blocked
-#'    for bounded `GPCM`.
+#'    [reporting_checklist()], [build_visual_summaries()],
+#'    [run_qc_pipeline()], and [plot_qc_dashboard()]. Treat those
+#'    residual-based summaries as exploratory screens because the
+#'    discrimination parameter is free.
+#'    Slope-aware [fair_average_table()] and [estimate_bias()] are available
+#'    with explicit SE caveats; FACETS-compatibility score exports remain
+#'    blocked for bounded `GPCM`.
 #'    Posterior scoring with [predict_mfrm_units()] /
 #'    [sample_mfrm_plausible_values()], design-weighted information via
 #'    [compute_information()] / [plot_information()], Wright/pathway/CCC plots
@@ -108,16 +107,19 @@
 #'    [category_structure_report()] / [category_curves_report()], and direct
 #'    data generation through [build_mfrm_sim_spec()], [extract_mfrm_sim_spec()],
 #'    and [simulate_mfrm_data()] are also available when the simulation
-#'    specification stores both thresholds and slopes. Fair-average,
-#'    planning/forecasting, and APA/QC pipelines remain outside the validated
+#'    specification stores both thresholds and slopes. Planning/forecasting,
+#'    APA writer, FACETS score exports, and fit-based replay/export bundles
+#'    remain outside the validated
 #'    `GPCM` boundary. Use [gpcm_capability_matrix()] as the formal capability
 #'    map before branching into less common helpers.
-#' 4. (Optional, `RSM` / `PCM`) Estimate interaction bias with [estimate_bias()].
-#' 5. (Optional, `RSM` / `PCM`) Choose a downstream branch:
+#' 4. (Optional) Estimate interaction bias with [estimate_bias()]. For bounded
+#'    `GPCM`, read the returned caveat before using the SE / t / probability
+#'    columns.
+#' 5. (Optional) Choose a downstream branch:
 #'    [reporting_checklist()] for manuscript/report preparation, or
 #'    [build_weighting_audit()] for Rasch-versus-bounded-`GPCM`
-#'    weighting review, or [build_misfit_casebook()] / [build_linking_review()]
-#'    for operational case review.
+#'    weighting review, or [build_misfit_casebook()] for operational case
+#'    review. [build_linking_review()] remains `RSM` / `PCM` only.
 #' 6. (Optional, `RSM` / `PCM`) Generate reporting bundles:
 #'    [build_summary_table_bundle()], [apa_table()],
 #'    [export_summary_appendix()], [build_fixed_reports()],
@@ -164,8 +166,9 @@
 #'   [plot_qc_dashboard()] / [unexpected_response_table()] ->
 #'   [rating_scale_table()] ->
 #'   [compute_information()] -> [plot_information()] ->
-#'   [plot.mfrm_fit()] / [category_curves_report()]. Keep bounded `GPCM`
-#'   routes on the direct table/plot side; the fit-based export family
+#'   [plot.mfrm_fit()] / [category_curves_report()] ->
+#'   [build_visual_summaries()] / [run_qc_pipeline()]. Keep bounded `GPCM`
+#'   routes on the direct table/plot and caveated QC side; the fit-based export family
 #'   ([build_mfrm_manifest()], [build_mfrm_replay_script()],
 #'   [export_mfrm_bundle()]) remains outside the formal `GPCM` boundary.
 #' - Linking and coverage review:
@@ -178,7 +181,8 @@
 #'   [build_summary_table_bundle()] -> [apa_table()] or
 #'   [export_summary_appendix()].
 #'   First-release `GPCM`:
-#'   [reporting_checklist()] -> direct table/plot helpers while the APA writer
+#'   [reporting_checklist()] -> [build_visual_summaries()] /
+#'   [run_qc_pipeline()] -> direct table/plot helpers while the APA writer
 #'   remains outside scope.
 #' - Weighting-policy review:
 #'   [compare_mfrm()] -> [build_weighting_audit()] ->

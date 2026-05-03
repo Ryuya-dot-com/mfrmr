@@ -40,14 +40,10 @@ test_that("GPCM diagnose_mfrm returns measures with caveat status", {
   ))
   expect_true(is.data.frame(diag$measures))
   expect_true(nrow(diag$measures) > 0L)
-  # Fair-average remains a placeholder under GPCM.
-  if (!is.null(diag$fair_average)) {
-    fa_msg <- as.character(diag$fair_average$status %||% "")
-    expect_true(any(grepl("placeholder|unavailable|GPCM", fa_msg,
-                           ignore.case = TRUE)) ||
-                  is.null(diag$fair_average$table) ||
-                  nrow(as.data.frame(diag$fair_average$table)) == 0L)
-  }
+  expect_true(is.data.frame(diag$fair_average$stacked))
+  expect_gt(nrow(diag$fair_average$stacked), 0L)
+  expect_identical(diag$fair_average$method, "GPCM-slope-aware")
+  expect_match(diag$fair_average$caveat, "slope-aware", fixed = TRUE)
 })
 
 test_that("GPCM compute_information + plot_information work", {
@@ -72,6 +68,21 @@ test_that("GPCM capability matrix is consistent with the helper", {
                   %in% names(m)))
   expect_true(all(m$Status %in%
                     c("supported", "supported_with_caveat", "blocked", "deferred")))
+})
+
+test_that("GPCM visual summaries and QC pipeline run with caveat", {
+  diag <- suppressMessages(suppressWarnings(
+    diagnose_mfrm(.gpcm_fit, residual_pca = "none", diagnostic_mode = "legacy")
+  ))
+  vis <- build_visual_summaries(.gpcm_fit, diag)
+  expect_s3_class(vis, "mfrm_visual_summaries")
+  expect_identical(vis$support_status$Status[1], "supported_with_caveat")
+  expect_match(vis$caveat, "slope-aware", fixed = TRUE)
+
+  qc <- run_qc_pipeline(.gpcm_fit, diag, include_bias = FALSE)
+  expect_s3_class(qc, "mfrm_qc_pipeline")
+  expect_identical(qc$support_status$Status[1], "supported_with_caveat")
+  expect_match(qc$caveat, "slope-aware", fixed = TRUE)
 })
 
 test_that("GPCM still blocks build_apa_outputs (blocked row)", {

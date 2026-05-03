@@ -141,8 +141,8 @@
 #'   also available for bounded `GPCM`)
 #' - Reporting: [build_apa_outputs()], [build_visual_summaries()],
 #'   [reporting_checklist()], [apa_table()] for the full `RSM` / `PCM` route;
-#'   bounded `GPCM` currently stays on the checklist / direct-table / direct-
-#'   plot side instead of the narrative/QC layer
+#'   bounded `GPCM` currently stays on the checklist / visual-summary / QC /
+#'   direct-table / direct-plot side instead of the narrative layer
 #' - Weighting review: [compare_mfrm()], [build_weighting_audit()],
 #'   [compute_information()], [plot_information()]
 #' - Case review: [build_misfit_casebook()], [plot_unexpected()],
@@ -232,12 +232,12 @@
 #'    [predict_mfrm_units()], [sample_mfrm_plausible_values()],
 #'    [compute_information()], [plot_qc_dashboard()], [plot.mfrm_fit()],
 #'    [category_structure_report()], [category_curves_report()],
+#'    [fair_average_table()], [estimate_bias()], [build_visual_summaries()],
+#'    [run_qc_pipeline()],
 #'    graph-only [facets_output_file_bundle()], direct simulation-spec
 #'    generation/data generation, and the residual-based table helpers while
-#'    fair-average, APA writer, fit-based export/replay, and planning semantics
-#'    are still being generalized. In particular, FACETS-style fair averages
-#'    are Rasch-family measure-to-score transformations, so `mfrmr` still keeps
-#'    those score-side semantics blocked for bounded `GPCM`. Use
+#'    APA writer, FACETS compatibility score exports, fit-based export/replay,
+#'    and planning semantics are still being generalized. Use
 #'    [gpcm_capability_matrix()] as the formal boundary statement.
 #'
 #' @section Model formulation:

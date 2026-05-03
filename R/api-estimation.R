@@ -2981,16 +2981,16 @@ make_anchor_table <- function(fit,
 #'   quantities as exploratory approximations.
 #' - `fit`: element-level misfit scan (`Infit`, `Outfit`, `ZSTD`).
 #' - `unexpected`, `fair_average`, `displacement`: targeted QC bundles.
-#'   For bounded `GPCM`, `fair_average` is retained as an unavailable
-#'   placeholder because that compatibility calculation has not yet been
-#'   validated for the generalized model.
+#'   For bounded `GPCM`, `fair_average` uses a slope-aware expected-score
+#'   construction and carries a caveat; treat it as a GPCM-specific screening
+#'   view rather than Rasch-family fair-M invariance evidence.
 #' - `approximation_notes`: method notes for SE/CI/reliability summaries.
 #'
 #' @section Interpreting output:
 #' Start with `overall_fit` and `reliability`, then move to element-level
 #' diagnostics (`fit`) and targeted bundles (`unexpected`, `displacement`,
-#' `interrater`, `facets_chisq`). Treat `fair_average` as available only for
-#' the `RSM` / `PCM` branch.
+#' `interrater`, `facets_chisq`, `fair_average`). For bounded `GPCM`,
+#' interpret `fair_average` with the caveat stored on that component.
 #'
 #' Consistent signals across multiple components are typically more robust than
 #' a single isolated warning.  For example, an element flagged for both high

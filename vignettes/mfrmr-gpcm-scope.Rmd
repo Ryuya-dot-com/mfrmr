@@ -80,30 +80,33 @@ screens rather than as Rasch-style invariance evidence:
   `plot_qc_dashboard()`, `plot_marginal_fit()`,
   `plot_marginal_pairwise()`.
 - `reporting_checklist()` and `precision_audit_report()` route to the
-  supported direct tables and plots only. They do not imply that the
-  broader APA writer is available.
+  supported direct tables and plots only. `build_visual_summaries()` and
+  `run_qc_pipeline()` bundle those screens and return a support caveat;
+  they do not imply that the broader APA writer is available.
 - `build_misfit_casebook()` inherits the exploratory screening framing of
   its underlying sources.
+- `fair_average_table()` and `estimate_bias()` use the slope-aware
+  element-conditional GPCM kernel. Read their `caveat` fields before
+  quoting SE, t, or probability columns.
 
-The dashboard's fair-average panel is preserved as an explicit unavailable
-placeholder under `GPCM`; treat it as a marker that the score-side
-substitute is needed (see below) rather than as an empty result.
+`diagnose_mfrm()` now carries the same slope-aware fair-average table used by
+`fair_average_table()`, so visual summaries and QC checks can route it without
+recomputing a substitute table.
 
 ## What is intentionally restricted
 
-The fair-average / score-side semantics, the APA writer, and the full
-reporting bundle are restricted under `GPCM` because the free
+The FACETS compatibility score-side exports, the APA writer, and the full
+replay/export bundle are restricted under `GPCM` because the free
 discrimination parameter changes the relationship between the latent
 measure and the expected category. Specifically:
 
-- `fair_average_table()`, `estimate_bias()`, `facets_parity_report()`, and
-  `facets_output_file_bundle(include = "score")` use Rasch-family
-  measure-to-score semantics that are not generalized to free
-  discrimination.
-- `build_apa_outputs()`, `build_visual_summaries()`, `run_qc_pipeline()`,
-  `build_mfrm_manifest()`, `build_mfrm_replay_script()`, and
-  `export_mfrm_bundle()` would convert those score-side outputs into
-  narrative or bundle claims, so they are also restricted.
+- `facets_parity_report()` and `facets_output_file_bundle(include =
+  "score")` still depend on a FACETS-style compatibility score contract
+  that is not generalized to free discrimination.
+- `build_apa_outputs()`, `build_mfrm_manifest()`,
+  `build_mfrm_replay_script()`, and `export_mfrm_bundle()` would convert
+  still-restricted score-side outputs into manuscript narrative or
+  replay/export claims, so they remain restricted.
 
 `build_linking_review()` is deferred under `GPCM` for the same reason. The
 underlying `audit_mfrm_anchors()` and `detect_anchor_drift()` helpers can
@@ -120,7 +123,8 @@ are:
 - Keep the report on the `GPCM` fit itself but draft the manuscript section
   manually around the supported tables: `summary(fit)` for parameters,
   `diagnose_mfrm()` for residual fit, `facet_quality_dashboard()` for the
-  per-facet quality summary, and `compute_information()` for precision
+  per-facet quality summary, `build_visual_summaries()` / `run_qc_pipeline()`
+  for caveated screening bundles, and `compute_information()` for precision
   evidence.
 - Generate the reproducibility manifest from a parallel `RSM` or `PCM`
   baseline fit. The two fits can be reported side by side in the same
@@ -156,13 +160,15 @@ plot_information(info)
 ```
 
 The fit, summary, residual diagnostics, and information helpers all run
-under `GPCM`. Trying `fair_average_table(fit_gpcm)` or
-`build_apa_outputs(fit_gpcm)` raises an explicit message pointing back at
-`gpcm_capability_matrix()` rather than producing a partial output.
+under `GPCM`. `fair_average_table(fit_gpcm)`, `build_visual_summaries()`,
+and `run_qc_pipeline()` also run and return explicit caveats. Trying
+`build_apa_outputs(fit_gpcm)` raises a message pointing back at
+`gpcm_capability_matrix()` rather than producing a partial manuscript draft.
 
 ## Roadmap
 
 The boundary above is a release-scope statement, not a permanent design
-choice. Score-side semantics for free-discrimination polytomous models are
-on the roadmap for a future release. Until then, the matrix returned by
-`gpcm_capability_matrix()` is the binding contract.
+choice. FACETS-compatibility score exports and APA/replay bundles for
+free-discrimination polytomous models are on the roadmap for a future
+release. Until then, the matrix returned by `gpcm_capability_matrix()` is
+the binding contract.

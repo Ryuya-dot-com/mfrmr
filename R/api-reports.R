@@ -5462,9 +5462,10 @@ print.summary.mfrm_threshold_profiles <- function(x, ...) {
 #' - `max_facet_ranges`: max facet-range snippets shown in visual summaries
 #' - `top_misfit_n`: number of top misfit entries included
 #'
-#' For bounded `GPCM`, this helper is intentionally unavailable. Use
-#' [reporting_checklist()], [plot_qc_dashboard()], the residual/category table
-#' helpers, and [compute_information()] / [plot_information()] instead.
+#' For bounded `GPCM`, this helper is available as a caveated visual-routing
+#' layer. Fair-average and bias entries use slope-aware GPCM screens and should
+#' be read as exploratory score-side diagnostics rather than Rasch-family
+#' invariance evidence.
 #'
 #' @section Interpreting output:
 #' - `warning_map`: rule-triggered warning text by visual key.
@@ -5480,6 +5481,8 @@ print.summary.mfrm_threshold_profiles <- function(x, ...) {
 #'   tables for zero-frequency category and reporting-boundary checks.
 #' - `public_plot_routes`: draw-free helper routes for the dedicated public plot
 #'   functions behind each visual family.
+#' - `support_status` / `caveat`: present for bounded `GPCM` fits to document
+#'   the exploratory support boundary.
 #'
 #' @section Typical workflow:
 #' 1. inspect defaults with [mfrm_threshold_profiles()]
@@ -5543,7 +5546,10 @@ build_visual_summaries <- function(fit,
                                    summary_options = NULL,
                                    whexact = FALSE,
                                    branch = c("original", "facets")) {
-  stop_if_gpcm_out_of_scope(fit, "build_visual_summaries()")
+  if (!inherits(fit, "mfrm_fit")) {
+    stop("`fit` must be an mfrm_fit object from fit_mfrm().", call. = FALSE)
+  }
+  gpcm_mode <- identical(as.character(fit$config$model %||% fit$summary$Model[1] %||% ""), "GPCM")
   branch <- match.arg(tolower(as.character(branch[1])), c("original", "facets"))
   style <- ifelse(branch == "facets", "facets_manual", "original")
 
@@ -5620,6 +5626,19 @@ build_visual_summaries <- function(fit,
     style = style,
     threshold_profile = as.character(threshold_profile[1])
   )
+  if (isTRUE(gpcm_mode)) {
+    out$support_status <- data.frame(
+      Model = as.character(fit$config$model %||% NA_character_),
+      Status = "supported_with_caveat",
+      Detail = paste0(
+        "Bounded GPCM visual summaries are available as exploratory ",
+        "diagnostic routing. Fair-average and bias layers use slope-aware ",
+        "GPCM screens with the documented SE caveats."
+      ),
+      stringsAsFactors = FALSE
+    )
+    out$caveat <- gpcm_fair_average_rationale()
+  }
   out$plot_payloads <- build_visual_plot_payloads(out, fit = fit)
   out$public_plot_routes <- build_visual_plot_route_table()
   out <- as_mfrm_bundle(out, "mfrm_visual_summaries")
@@ -6869,9 +6888,11 @@ print.summary.mfrm_dif_report <- function(x, ...) {
 #' Individual thresholds can be overridden via the `thresholds` argument
 #' (a named list keyed by the internal threshold names shown above).
 #'
-#' For bounded `GPCM`, this pipeline is intentionally unavailable because the
-#' current validated route stops before bundled pass/warn/fail synthesis for
-#' the free-discrimination branch.
+#' For bounded `GPCM`, this pipeline is available as an exploratory screening
+#' route. The returned object includes `support_status =
+#' "supported_with_caveat"` and a `caveat` field; interpret fair-average and
+#' bias checks as slope-aware GPCM screens, not as Rasch-family invariance
+#' evidence.
 #'
 #' @section QC checks:
 #' The 10 checks are:
@@ -6943,7 +6964,7 @@ run_qc_pipeline <- function(fit,
     stop("`fit` must be an mfrm_fit object from fit_mfrm(). ",
          "Got: ", paste(class(fit), collapse = "/"), ".", call. = FALSE)
   }
-  stop_if_gpcm_out_of_scope(fit, "run_qc_pipeline()")
+  gpcm_mode <- identical(as.character(fit$config$model %||% fit$summary$Model[1] %||% ""), "GPCM")
 
   # -- compute diagnostics if needed --
   if (is.null(diagnostics)) {
@@ -7475,6 +7496,19 @@ run_qc_pipeline <- function(fit,
     config   = list(threshold_profile = threshold_profile,
                     thresholds = effective_thresholds)
   )
+  if (isTRUE(gpcm_mode)) {
+    out$support_status <- data.frame(
+      Model = as.character(fit$config$model %||% NA_character_),
+      Status = "supported_with_caveat",
+      Detail = paste0(
+        "Bounded GPCM QC is an exploratory screening route. Interpret ",
+        "fair-average and bias checks as slope-aware GPCM screens; do not ",
+        "treat them as Rasch-family invariance evidence."
+      ),
+      stringsAsFactors = FALSE
+    )
+    out$caveat <- gpcm_fair_average_rationale()
+  }
   class(out) <- c("mfrm_qc_pipeline", "list")
   out
 }
@@ -7483,6 +7517,9 @@ run_qc_pipeline <- function(fit,
 print.mfrm_qc_pipeline <- function(x, ...) {
   cat("--- QC Pipeline ---\n")
   cat("Overall:", x$overall, "\n\n")
+  if (!is.null(x$caveat) && nzchar(as.character(x$caveat[1]))) {
+    cat("Caveat:", as.character(x$caveat[1]), "\n\n")
+  }
   vt <- x$verdicts
   markers <- ifelse(vt$Verdict == "Pass", "[PASS]",
                     ifelse(vt$Verdict == "Warn", "[WARN]",
@@ -7503,6 +7540,8 @@ summary.mfrm_qc_pipeline <- function(object, ...) {
     verdicts = object$verdicts,
     overall  = object$overall,
     recommendations = object$recommendations,
+    support_status = object$support_status,
+    caveat = object$caveat,
     pass_count = sum(object$verdicts$Verdict == "Pass"),
     warn_count = sum(object$verdicts$Verdict == "Warn"),
     fail_count = sum(object$verdicts$Verdict == "Fail"),
@@ -7516,6 +7555,9 @@ summary.mfrm_qc_pipeline <- function(object, ...) {
 print.summary.mfrm_qc_pipeline <- function(x, ...) {
   cat("--- QC Pipeline Summary ---\n")
   cat("Overall:", x$overall, "\n")
+  if (!is.null(x$caveat) && nzchar(as.character(x$caveat[1]))) {
+    cat("Caveat:", as.character(x$caveat[1]), "\n")
+  }
   cat(sprintf("Pass: %d | Warn: %d | Fail: %d | Skip: %d\n\n",
               x$pass_count, x$warn_count, x$fail_count, x$skip_count))
   print(as.data.frame(x$verdicts), row.names = FALSE)

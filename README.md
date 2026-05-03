@@ -1,9 +1,6 @@
 # mfrmr
 
 [![GitHub](https://img.shields.io/badge/GitHub-mfrmr-181717?logo=github)](https://github.com/Ryuya-dot-com/mfrmr)
-[![R-CMD-check](https://github.com/Ryuya-dot-com/mfrmr/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/Ryuya-dot-com/mfrmr/actions/workflows/R-CMD-check.yaml)
-[![pkgdown](https://github.com/Ryuya-dot-com/mfrmr/actions/workflows/pkgdown.yaml/badge.svg)](https://github.com/Ryuya-dot-com/mfrmr/actions/workflows/pkgdown.yaml)
-[![test-coverage](https://github.com/Ryuya-dot-com/mfrmr/actions/workflows/test-coverage.yaml/badge.svg)](https://github.com/Ryuya-dot-com/mfrmr/actions/workflows/test-coverage.yaml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 Native R package for many-facet Rasch model (MFRM) estimation, diagnostics,
@@ -274,13 +271,14 @@ boundary in one place.
   `compute_information()`, Wright/pathway/CCC plots, and category reports.
 - Supported with caveat: `diagnose_mfrm()` and direct slope-aware simulation
   are exploratory; `reporting_checklist()` routes only the direct table/plot
-  path; `fair_average_table()` and `estimate_bias()` use the slope-aware
-  element-conditional GPCM kernel and report a `caveat` field reminding
-  users that the SE columns are scaled facet-measure SEs, not delta-method
-  SEs of the fair-average / bias values.
+  path; `build_visual_summaries()` and `run_qc_pipeline()` bundle those
+  screens for review; `fair_average_table()` and `estimate_bias()` use the
+  slope-aware element-conditional GPCM kernel and report a `caveat` field
+  reminding users that the SE columns are scaled facet-measure SEs, not
+  delta-method SEs of the fair-average / bias values.
 - Not supported in this release: score-side exports, APA/report bundles,
-  QC pass/fail pipelines, linking synthesis, planning / forecasting,
-  posterior predictive computation, and `MCMC`.
+  linking synthesis, planning / forecasting, posterior predictive
+  computation, and `MCMC`.
 
 The unsupported helpers depend on score-side or planning assumptions that are
 validated for the Rasch-family route but not yet generalized to bounded `GPCM`.

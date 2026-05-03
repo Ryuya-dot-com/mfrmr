@@ -69,9 +69,10 @@ Three threshold presets are available via \code{threshold_profile}:\tabular{llll
 Individual thresholds can be overridden via the \code{thresholds} argument
 (a named list keyed by the internal threshold names shown above).
 
-For bounded \code{GPCM}, this pipeline is intentionally unavailable because the
-current validated route stops before bundled pass/warn/fail synthesis for
-the free-discrimination branch.
+For bounded \code{GPCM}, this pipeline is available as an exploratory screening
+route. The returned object includes \code{support_status = "supported_with_caveat"} and a \code{caveat} field; interpret fair-average and
+bias checks as slope-aware GPCM screens, not as Rasch-family invariance
+evidence.
 }
 \section{QC checks}{
 

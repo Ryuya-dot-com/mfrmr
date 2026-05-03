@@ -9,16 +9,17 @@ manuscript-draft text, tables, notes, and revision checklists in \code{mfrmr}.
 
 This guide currently applies fully to diagnostics-based \code{RSM} / \code{PCM}
 workflows. First-release \code{GPCM} fits now support \code{\link[=reporting_checklist]{reporting_checklist()}},
-\code{\link[=precision_audit_report]{precision_audit_report()}}, and the direct curve/graph and residual table
-helpers, but the narrative APA writer still requires the broader reporting
-stack used for \code{RSM} / \code{PCM}. Use \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}} when you need
-the formal boundary for the current \code{GPCM} reporting path.
+\code{\link[=precision_audit_report]{precision_audit_report()}}, \code{\link[=build_visual_summaries]{build_visual_summaries()}},
+\code{\link[=run_qc_pipeline]{run_qc_pipeline()}}, and the direct curve/graph and residual table helpers,
+but the narrative APA writer still requires the broader reporting stack used
+for \code{RSM} / \code{PCM}. Use \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}} when you need the formal
+boundary for the current \code{GPCM} reporting path.
 
 In particular, bounded \code{GPCM} currently stops before
-\code{\link[=build_apa_outputs]{build_apa_outputs()}}, \code{\link[=build_visual_summaries]{build_visual_summaries()}}, and
-\code{\link[=run_qc_pipeline]{run_qc_pipeline()}}. For that branch, use \code{\link[=reporting_checklist]{reporting_checklist()}},
-\code{\link[=precision_audit_report]{precision_audit_report()}}, and the direct table/plot helpers as the
-package-supported reporting route.
+\code{\link[=build_apa_outputs]{build_apa_outputs()}} and the fit-based replay/export bundle layer. For
+that branch, use \code{\link[=reporting_checklist]{reporting_checklist()}}, \code{\link[=precision_audit_report]{precision_audit_report()}},
+\code{\link[=build_visual_summaries]{build_visual_summaries()}}, \code{\link[=run_qc_pipeline]{run_qc_pipeline()}}, and the direct table/plot
+helpers as the package-supported reporting route.
 }
 \section{Start with the reporting question}{
 
@@ -57,8 +58,8 @@ layer for the current run.
 the narrative around local misfit.
 \item For \code{RSM} / \code{PCM}, create manuscript-draft prose and metadata with
 \code{\link[=build_apa_outputs]{build_apa_outputs()}}. For bounded \code{GPCM}, stop after the checklist /
-precision / direct-table route while the broader narrative and QC stack
-remains outside scope.
+precision / visual-summary / QC / direct-table route while the broader
+narrative stack remains outside scope.
 \item Convert summary outputs to reusable table bundles with
 \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}}, review the bundle with \code{summary()} /
 \code{plot()}, then convert specific components to handoff tables with
