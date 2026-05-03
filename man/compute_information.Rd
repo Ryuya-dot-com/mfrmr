@@ -54,9 +54,9 @@ evaluates each observed design cell using the threshold vector associated
 with that cell's realized \code{step_facet} level. For bounded \code{GPCM}, the
 same design-weighted score variance is scaled by the squared discrimination
 attached to the realized \code{slope_facet} level, which is the
-\eqn{a_j^2 \cdot \mathrm{Var}(K \mid \theta)} item-information identity that
-follows from the GPCM derivative \eqn{\partial P_k / \partial \theta = a_j
-P_k (k - E[K])} (Muraki, 1992, Equations 13 and 35).
+\eqn{a_j^2 \cdot \mathrm{Var}(T \mid \theta)} item-information identity that
+Muraki (1993, Equation 10) derives by applying Samejima's (1974)
+polytomous information formula to the GPCM kernel of Muraki (1992).
 }
 \section{What \code{tif} and \code{iif} mean here}{
 
@@ -112,11 +112,14 @@ for reporting or custom graphics.
 
 The ordered-category probability structures come from Andrich's \code{RSM}
 formulation and Masters' \code{PCM}. The bounded \code{GPCM} information identity
-\eqn{a_j^2 \cdot \mathrm{Var}(K \mid \theta)} follows from the GPCM
-first-derivative \eqn{\partial P_k / \partial \theta = a_j P_k (k - E[K])}
-(Muraki, 1992, Equation 13), summed across categories to give the Fisher
-information element of Equation 35. In \code{mfrmr}, those formulas are
-applied to the realized many-facet observation design, so the output
+\eqn{a_j^2 \cdot \mathrm{Var}(T \mid \theta)} is derived in Muraki
+(1993, Equation 10) by applying Samejima's (1974) general polytomous
+information formula \eqn{I_j(\theta) = \sum_k P_{jk}(\theta)
+[-\partial^2 \ln P_{jk} / \partial \theta^2]} to the GPCM probability
+kernel of Muraki (1992). For the integer scoring function
+\eqn{T_k = k} used by \code{mfrmr}, this reduces to
+\eqn{a_j^2 \cdot \mathrm{Var}(K \mid \theta)}. In \code{mfrmr}, those formulas
+are applied to the realized many-facet observation design, so the output
 should be read as a design-weighted precision summary rather than as a
 design-free abstract test function.
 \itemize{
@@ -126,9 +129,22 @@ categories}. Psychometrika, 43(4), 561-573.
 Psychometrika, 47(2), 149-174.
 \item Muraki, E. (1992). \emph{A generalized partial credit model: Application
 of an EM algorithm}. Applied Psychological Measurement, 16(2),
-159-176. \doi{10.1177/014662169201600206} (See Equations 6, 10, 13,
-and 35 for the probability kernel, derivative, and Fisher
-information formulas implemented here.)
+159-176. \doi{10.1177/014662169201600206} (See Equations 6, 10, and
+13 for the probability kernel and the
+\eqn{\partial P_k / \partial \theta = a_j P_k (k - E[K])}
+derivative used by all GPCM helpers in \code{mfrmr}.)
+\item Muraki, E. (1993). \emph{Information functions of the generalized
+partial credit model}. Applied Psychological Measurement, 17(4),
+351-363. \doi{10.1177/014662169301700402} (Equation 10 derives the
+item information function for the GPCM,
+\eqn{I_j(\theta) = D^2 a_j^2 \mathrm{Var}(T \mid \theta)}, by
+applying Samejima's (1974) polytomous information formula to the
+GPCM kernel; this is the canonical reference for \code{compute_information()}
+under bounded \code{GPCM}.)
+\item Samejima, F. (1974). \emph{Normal ogive model on the continuous
+response level in the multidimensional latent space}.
+Psychometrika, 39, 111-121. (Source for the general polytomous
+information formula that Muraki 1993 specializes to the GPCM.)
 }
 }
 

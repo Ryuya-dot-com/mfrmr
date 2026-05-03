@@ -495,6 +495,17 @@ an EM algorithm. \emph{Applied Psychological Measurement}, 16(2),
 159--176. (Source for the bounded \code{GPCM} extension used in
 \code{fit_mfrm(model = "GPCM")}, \code{fair_average_table()}, and
 \code{estimate_bias()}.)
+\item Muraki, E. (1993). Information functions of the generalized partial
+credit model. \emph{Applied Psychological Measurement}, 17(4),
+351--363. (Companion paper to Muraki 1992 that derives the GPCM
+item information identity \eqn{I_j(\theta) = D^2 a_j^2
+  \mathrm{Var}(T \mid \theta)} via Samejima's (1974) polytomous
+information formula. This is the canonical reference for
+\code{compute_information()} under bounded \code{GPCM}.)
+\item Samejima, F. (1974). Normal ogive model on the continuous response
+level in the multidimensional latent space. \emph{Psychometrika}, 39,
+111--121. (General polytomous information formula that Muraki
+1993 specializes to the GPCM.)
 \item Snijders, T. A. B. (2001). Asymptotic null distribution of person
 fit statistics with estimated person parameter. \emph{Psychometrika},
 66(3), 331--342. (Source for the \code{lz_star} finite-sample-adjusted

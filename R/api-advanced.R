@@ -2256,9 +2256,9 @@ information_build_step_structure <- function(fit, model) {
 #' with that cell's realized `step_facet` level. For bounded `GPCM`, the
 #' same design-weighted score variance is scaled by the squared discrimination
 #' attached to the realized `slope_facet` level, which is the
-#' \eqn{a_j^2 \cdot \mathrm{Var}(K \mid \theta)} item-information identity that
-#' follows from the GPCM derivative \eqn{\partial P_k / \partial \theta = a_j
-#' P_k (k - E[K])} (Muraki, 1992, Equations 13 and 35).
+#' \eqn{a_j^2 \cdot \mathrm{Var}(T \mid \theta)} item-information identity that
+#' Muraki (1993, Equation 10) derives by applying Samejima's (1974)
+#' polytomous information formula to the GPCM kernel of Muraki (1992).
 #'
 #' @section What `tif` and `iif` mean here:
 #' In `mfrmr`, this helper supports ordered-category `RSM`, `PCM`, and the
@@ -2301,11 +2301,14 @@ information_build_step_structure <- function(fit, model) {
 #' @section References:
 #' The ordered-category probability structures come from Andrich's `RSM`
 #' formulation and Masters' `PCM`. The bounded `GPCM` information identity
-#' \eqn{a_j^2 \cdot \mathrm{Var}(K \mid \theta)} follows from the GPCM
-#' first-derivative \eqn{\partial P_k / \partial \theta = a_j P_k (k - E[K])}
-#' (Muraki, 1992, Equation 13), summed across categories to give the Fisher
-#' information element of Equation 35. In `mfrmr`, those formulas are
-#' applied to the realized many-facet observation design, so the output
+#' \eqn{a_j^2 \cdot \mathrm{Var}(T \mid \theta)} is derived in Muraki
+#' (1993, Equation 10) by applying Samejima's (1974) general polytomous
+#' information formula \eqn{I_j(\theta) = \sum_k P_{jk}(\theta)
+#' [-\partial^2 \ln P_{jk} / \partial \theta^2]} to the GPCM probability
+#' kernel of Muraki (1992). For the integer scoring function
+#' \eqn{T_k = k} used by `mfrmr`, this reduces to
+#' \eqn{a_j^2 \cdot \mathrm{Var}(K \mid \theta)}. In `mfrmr`, those formulas
+#' are applied to the realized many-facet observation design, so the output
 #' should be read as a design-weighted precision summary rather than as a
 #' design-free abstract test function.
 #'
@@ -2315,9 +2318,22 @@ information_build_step_structure <- function(fit, model) {
 #'   Psychometrika, 47(2), 149-174.
 #' - Muraki, E. (1992). *A generalized partial credit model: Application
 #'   of an EM algorithm*. Applied Psychological Measurement, 16(2),
-#'   159-176. \doi{10.1177/014662169201600206} (See Equations 6, 10, 13,
-#'   and 35 for the probability kernel, derivative, and Fisher
-#'   information formulas implemented here.)
+#'   159-176. \doi{10.1177/014662169201600206} (See Equations 6, 10, and
+#'   13 for the probability kernel and the
+#'   \eqn{\partial P_k / \partial \theta = a_j P_k (k - E[K])}
+#'   derivative used by all GPCM helpers in `mfrmr`.)
+#' - Muraki, E. (1993). *Information functions of the generalized
+#'   partial credit model*. Applied Psychological Measurement, 17(4),
+#'   351-363. \doi{10.1177/014662169301700402} (Equation 10 derives the
+#'   item information function for the GPCM,
+#'   \eqn{I_j(\theta) = D^2 a_j^2 \mathrm{Var}(T \mid \theta)}, by
+#'   applying Samejima's (1974) polytomous information formula to the
+#'   GPCM kernel; this is the canonical reference for `compute_information()`
+#'   under bounded `GPCM`.)
+#' - Samejima, F. (1974). *Normal ogive model on the continuous
+#'   response level in the multidimensional latent space*.
+#'   Psychometrika, 39, 111-121. (Source for the general polytomous
+#'   information formula that Muraki 1993 specializes to the GPCM.)
 #'
 #' @section Interpreting output:
 #' - `$tif`: design-weighted precision curve data with theta, Information, and SE.

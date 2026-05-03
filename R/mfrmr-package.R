@@ -455,6 +455,17 @@
 #'   159--176. (Source for the bounded `GPCM` extension used in
 #'   `fit_mfrm(model = "GPCM")`, `fair_average_table()`, and
 #'   `estimate_bias()`.)
+#' - Muraki, E. (1993). Information functions of the generalized partial
+#'   credit model. *Applied Psychological Measurement*, 17(4),
+#'   351--363. (Companion paper to Muraki 1992 that derives the GPCM
+#'   item information identity \eqn{I_j(\theta) = D^2 a_j^2
+#'   \mathrm{Var}(T \mid \theta)} via Samejima's (1974) polytomous
+#'   information formula. This is the canonical reference for
+#'   `compute_information()` under bounded `GPCM`.)
+#' - Samejima, F. (1974). Normal ogive model on the continuous response
+#'   level in the multidimensional latent space. *Psychometrika*, 39,
+#'   111--121. (General polytomous information formula that Muraki
+#'   1993 specializes to the GPCM.)
 #' - Snijders, T. A. B. (2001). Asymptotic null distribution of person
 #'   fit statistics with estimated person parameter. *Psychometrika*,
 #'   66(3), 331--342. (Source for the `lz_star` finite-sample-adjusted
