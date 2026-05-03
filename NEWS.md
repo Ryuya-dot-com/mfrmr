@@ -160,6 +160,14 @@ publication-quality outputs.
   contrasts the covariance term is approximately zero and the
   approximation is appropriate.
 
+- Two new vignettes ship in the `Migration and Scope` section of the
+  pkgdown article navigation: `vignette("mfrmr-facets-migration")`
+  walks Facets users through the equivalent `mfrmr` workflow and
+  numeric-parity checks, and `vignette("mfrmr-gpcm-scope")` documents
+  which downstream helpers the bounded `GPCM` route currently
+  supports versus restricts and what to use as a substitute when a
+  helper is restricted.
+
 ## Build hygiene
 
 `.Rbuildignore` tightened so a stale internal reading guide in
@@ -191,7 +199,8 @@ later release:
   covering Mantel-Haenszel, logistic regression, and SIBTEST.
 - Five additional Rasch / IRT classic plots (KIDMAP, TCC, expected
   score curve, cumulative ICC, information surface).
-- Migration / GPCM-scope / classical-DIF vignettes.
+- A native classical-DIF vignette (the migration and bounded-GPCM-scope
+  vignettes ship in this release; see the Documentation section above).
 
 These are scheduled for a follow-up release.
 
