@@ -1,7 +1,7 @@
 test_that("plot APIs accept title/palette/label customization", {
   d <- mfrmr:::sample_mfrm_data(seed = 321)
 
-  fit <- mfrmr::fit_mfrm(
+  fit <- suppressWarnings(mfrmr::fit_mfrm(
     data = d,
     person = "Person",
     facets = c("Rater", "Task", "Criterion"),
@@ -10,8 +10,8 @@ test_that("plot APIs accept title/palette/label customization", {
     model = "RSM",
     maxit = 20,
     quad_points = 7
-  )
-  diag <- mfrmr::diagnose_mfrm(fit, residual_pca = "none")
+  ))
+  diag <- suppressWarnings(mfrmr::diagnose_mfrm(fit, residual_pca = "none"))
 
   expect_no_error(
     plot(

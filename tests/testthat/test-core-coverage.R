@@ -363,14 +363,20 @@ test_that("sanitize_noncenter_facet returns valid facet or Person", {
   snf <- mfrmr:::sanitize_noncenter_facet
   expect_equal(snf("Rater", c("Rater", "Task")), "Rater")
   expect_equal(snf("Person", c("Rater", "Task")), "Person")
-  expect_equal(snf("Missing", c("Rater", "Task")), "Person")
+  expect_warning(
+    expect_equal(snf("Missing", c("Rater", "Task")), "Person"),
+    "falling back"
+  )
   expect_equal(snf(NULL, c("Rater", "Task")), "Person")
 })
 
 test_that("sanitize_dummy_facets returns valid intersections", {
   sdf <- mfrmr:::sanitize_dummy_facets
   expect_equal(sdf(NULL, c("Rater", "Task")), character(0))
-  expect_equal(sdf(c("Rater", "Missing"), c("Rater", "Task")), "Rater")
+  expect_warning(
+    expect_equal(sdf(c("Rater", "Missing"), c("Rater", "Task")), "Rater"),
+    "Unknown entries"
+  )
   expect_equal(sdf(c("Person"), c("Rater", "Task")), "Person")
 })
 
@@ -656,11 +662,11 @@ test_that("fit_mfrm with noncenter_facet adjusts centering", {
 # ============================================================================
 
 test_that("calc_bias_pairwise produces pairwise comparisons", {
-  bias_tbl <- .diag$bias_interactions
-  if (!is.null(bias_tbl) && nrow(bias_tbl) > 0) {
-    result <- mfrmr:::calc_bias_pairwise(bias_tbl, "Rater", "Task")
-    expect_true(is.data.frame(result))
-  }
+  bias_results <- estimate_bias(.fit, .diag, facet_a = "Rater", facet_b = "Task")
+  result <- mfrmr:::calc_bias_pairwise(bias_results$table, "Rater", "Task")
+  expect_s3_class(result, "data.frame")
+  expect_true(all(c("Target", "Context1", "Context2", "Contrast", "SE") %in% names(result)))
+  expect_gt(nrow(result), 0L)
 })
 
 # ============================================================================

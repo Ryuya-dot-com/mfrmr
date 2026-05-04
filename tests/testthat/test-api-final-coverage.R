@@ -184,30 +184,30 @@ test_that("describe_mfrm_data agreement path and error guards", {
 
   # Error: rater_facet = "Person" (line 480)
   expect_error(
-    mfrmr::describe_mfrm_data(
+    suppressWarnings(mfrmr::describe_mfrm_data(
       data = d, person = "Person", facets = c("Rater", "Task"), score = "Score",
       include_agreement = TRUE, rater_facet = "Person"
-    ),
+    )),
     "Person"
   )
 
   # Error: unknown context_facets (line 490)
   expect_error(
-    mfrmr::describe_mfrm_data(
+    suppressWarnings(mfrmr::describe_mfrm_data(
       data = d, person = "Person", facets = c("Rater", "Task"), score = "Score",
       include_agreement = TRUE, rater_facet = "Rater",
       context_facets = c("Nonexistent")
-    ),
+    )),
     "Unknown"
   )
 
   # Error: context_facets same as rater_facet (line 494)
   expect_error(
-    mfrmr::describe_mfrm_data(
+    suppressWarnings(mfrmr::describe_mfrm_data(
       data = d, person = "Person", facets = c("Rater", "Task"), score = "Score",
       include_agreement = TRUE, rater_facet = "Rater",
       context_facets = c("Rater")
-    ),
+    )),
     "context_facets"
   )
 })

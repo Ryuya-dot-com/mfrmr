@@ -162,10 +162,40 @@ prepare_mfrm_data <- function(data, person_col, facet_cols, score_col,
   }
 
   rows_before_drop <- nrow(df)
+  person_missing <- is.na(df$Person)
+  facet_missing <- if (length(facet_cols) > 0L) {
+    Reduce(
+      `|`,
+      lapply(facet_cols, function(col) is.na(df[[col]])),
+      init = rep(FALSE, nrow(df))
+    )
+  } else {
+    rep(FALSE, nrow(df))
+  }
+  score_missing <- is.na(df$Score)
+  weight_invalid <- is.na(df$Weight) | df$Weight <= 0
+  row_status <- rep("valid", nrow(df))
+  row_status[person_missing] <- "missing_person"
+  row_status[!person_missing & facet_missing] <- "missing_facet"
+  row_status[!person_missing & !facet_missing & score_missing] <- "missing_score"
+  row_status[!person_missing & !facet_missing & !score_missing & weight_invalid] <- "invalid_weight"
+
   df <- df |>
     tidyr::drop_na() |>
     filter(Weight > 0)
   rows_dropped <- rows_before_drop - nrow(df)
+  row_audit <- tibble(Status = row_status) |>
+    count(.data$Status, name = "N") |>
+    arrange(desc(.data$N), .data$Status)
+  row_audit_summary <- tibble(
+    RowsInput = rows_before_drop,
+    RowsRetained = nrow(df),
+    RowsDropped = rows_dropped,
+    MissingPersonRows = sum(row_status == "missing_person", na.rm = TRUE),
+    MissingFacetRows = sum(row_status == "missing_facet", na.rm = TRUE),
+    MissingScoreRows = sum(row_status == "missing_score", na.rm = TRUE),
+    InvalidWeightRows = sum(row_status == "invalid_weight", na.rm = TRUE)
+  )
   if (rows_dropped > 0L) {
     message(
       "Dropped ", rows_dropped, " row(s) with missing values or non-positive ",
@@ -388,6 +418,8 @@ prepare_mfrm_data <- function(data, person_col, facet_cols, score_col,
     levels = c(list(Person = levels(df$Person)), facet_levels),
     weight_col = if (!is.null(weight_col)) weight_col else NULL,
     keep_original = isTRUE(keep_original),
+    row_audit = as.data.frame(row_audit, stringsAsFactors = FALSE),
+    row_audit_summary = as.data.frame(row_audit_summary, stringsAsFactors = FALSE),
     source_columns = list(
       person = person_col,
       facets = facet_cols,

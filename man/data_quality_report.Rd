@@ -17,7 +17,9 @@ data_quality_report(
 \arguments{
 \item{fit}{Output from \code{\link[=fit_mfrm]{fit_mfrm()}}.}
 
-\item{data}{Optional raw data frame used for row-level audit.}
+\item{data}{Optional raw data frame used for row-level audit. When omitted,
+the report uses the preprocessing row audit stored in \code{fit$prep}, which
+gives retained/dropped row counts but cannot check unknown raw levels.}
 
 \item{person}{Optional person column name in \code{data}.}
 

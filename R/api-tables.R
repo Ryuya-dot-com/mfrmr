@@ -1911,10 +1911,25 @@ table2_data_summary <- function(fit,
     arrange(.data$Score)
 
   if (is.null(data)) {
+    prep_row_summary <- as.data.frame(prep$row_audit_summary %||% data.frame(), stringsAsFactors = FALSE)
+    prep_row_audit <- as.data.frame(prep$row_audit %||% data.frame(), stringsAsFactors = FALSE)
+    audit_value <- function(name, default = NA_integer_) {
+      if (nrow(prep_row_summary) == 0L || !name %in% names(prep_row_summary)) return(default)
+      as.integer(prep_row_summary[[name]][1] %||% default)
+    }
+    total_input <- audit_value("RowsInput")
+    missing_score <- audit_value("MissingScoreRows", 0L)
+    missing_facet <- audit_value("MissingFacetRows", 0L)
+    missing_person <- audit_value("MissingPersonRows", 0L)
+    invalid_weight <- audit_value("InvalidWeightRows", 0L)
     summary_tbl <- data.frame(
-      TotalLinesInData = NA_integer_,
-      TotalDataLines = NA_integer_,
-      TotalNonBlankResponsesFound = NA_integer_,
+      TotalLinesInData = total_input,
+      TotalDataLines = total_input,
+      TotalNonBlankResponsesFound = if (is.na(total_input)) NA_integer_ else total_input - missing_score,
+      MissingScoreRows = missing_score,
+      MissingFacetRows = missing_facet,
+      MissingPersonRows = missing_person,
+      InvalidWeightRows = invalid_weight,
       ValidResponsesUsedForEstimation = valid_used,
       stringsAsFactors = FALSE
     )
@@ -1926,7 +1941,7 @@ table2_data_summary <- function(fit,
     out <- list(
       summary = summary_tbl,
       model_match = model_match,
-      row_audit = data.frame(),
+      row_audit = prep_row_audit,
       unknown_elements = data.frame(),
       category_counts = as.data.frame(category_counts, stringsAsFactors = FALSE)
     )
@@ -1936,7 +1951,7 @@ table2_data_summary <- function(fit,
         sections = list(
           list(title = "Summary", data = summary_tbl),
           list(title = "Model match", data = model_match),
-          list(title = "Row audit", data = data.frame()),
+          list(title = "Row audit", data = prep_row_audit),
           list(title = "Unknown elements", data = data.frame()),
           list(title = "Category counts", data = as.data.frame(category_counts, stringsAsFactors = FALSE))
         ),

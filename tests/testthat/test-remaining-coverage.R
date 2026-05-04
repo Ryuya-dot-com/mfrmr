@@ -54,10 +54,11 @@ test_that("interrater agreement draws all plot types", {
   )
   diag <- diagnose_mfrm(fit)
   ia <- interrater_agreement_table(fit, diagnostics = diag)
+  expect_s3_class(ia, "mfrm_interrater")
 
-  with_null_device(plot(ia, plot = "exact", draw = TRUE))
-  with_null_device(plot(ia, plot = "corr", draw = TRUE))
-  with_null_device(plot(ia, plot = "difference", draw = TRUE))
+  expect_no_error(with_null_device(plot(ia, plot = "exact", draw = TRUE)))
+  expect_no_error(with_null_device(plot(ia, plot = "corr", draw = TRUE)))
+  expect_no_error(with_null_device(plot(ia, plot = "difference", draw = TRUE)))
 })
 
 # ---- Unexpected response - severity bar plot ----
@@ -70,8 +71,9 @@ test_that("unexpected response draws severity type", {
   )
   diag <- diagnose_mfrm(fit)
   ut <- unexpected_response_table(fit, diagnostics = diag)
+  expect_s3_class(ut, "mfrm_unexpected")
 
-  with_null_device(plot(ut, plot = "severity", draw = TRUE))
+  expect_no_error(with_null_device(plot(ut, plot = "severity", draw = TRUE)))
 })
 
 # ---- Fair average - multiple facets ----
@@ -84,10 +86,12 @@ test_that("fair_average_table exercises per-facet paths", {
   )
   diag <- diagnose_mfrm(fit)
   fa <- fair_average_table(fit, diagnostics = diag)
+  expect_s3_class(fa, "mfrm_fair_average")
+  expect_gt(length(fa$by_facet), 0L)
 
   # Plot for each facet
   for (facet_name in names(fa$by_facet)) {
-    with_null_device(plot(fa, facet = facet_name, draw = TRUE))
+    expect_no_error(with_null_device(plot(fa, facet = facet_name, draw = TRUE)))
   }
 })
 
@@ -101,9 +105,10 @@ test_that("displacement table draws severity and histogram", {
   )
   diag <- diagnose_mfrm(fit)
   dt <- displacement_table(fit, diagnostics = diag)
+  expect_s3_class(dt, "mfrm_displacement")
 
-  with_null_device(plot(dt, plot = "lollipop", draw = TRUE))
-  with_null_device(plot(dt, plot = "hist", draw = TRUE))
+  expect_no_error(with_null_device(plot(dt, plot = "lollipop", draw = TRUE)))
+  expect_no_error(with_null_device(plot(dt, plot = "hist", draw = TRUE)))
 })
 
 # ---- Chi-square drawing sub-types ----
@@ -116,9 +121,10 @@ test_that("facets_chisq draws scatter and bar plots", {
   )
   diag <- diagnose_mfrm(fit)
   fc <- facets_chisq_table(fit, diagnostics = diag)
+  expect_s3_class(fc, "mfrm_facets_chisq")
 
-  with_null_device(plot(fc, plot = "fixed", draw = TRUE))
-  with_null_device(plot(fc, plot = "random", draw = TRUE))
+  expect_no_error(with_null_device(plot(fc, plot = "fixed", draw = TRUE)))
+  expect_no_error(with_null_device(plot(fc, plot = "random", draw = TRUE)))
 })
 
 # ---- Output bundle (graphfile/scorefile) plot sub-types ----
@@ -131,16 +137,11 @@ test_that("output bundle draws all graph types", {
   )
   diag <- diagnose_mfrm(fit)
 
-  # facets_output_file_bundle if it exists
-  bundle <- tryCatch(
-    mfrmr:::facets_output_file_bundle(fit, diagnostics = diag),
-    error = function(e) NULL
-  )
-  if (!is.null(bundle)) {
-    with_null_device(plot(bundle, type = "graph_expected", draw = TRUE))
-    with_null_device(plot(bundle, type = "score_residuals", draw = TRUE))
-    with_null_device(plot(bundle, type = "obs_probability", draw = TRUE))
-  }
+  expect_no_error(bundle <- mfrmr:::facets_output_file_bundle(fit, diagnostics = diag))
+  expect_s3_class(bundle, "mfrm_output_bundle")
+  expect_no_error(with_null_device(plot(bundle, type = "graph_expected", draw = TRUE)))
+  expect_no_error(with_null_device(plot(bundle, type = "score_residuals", draw = TRUE)))
+  expect_no_error(with_null_device(plot(bundle, type = "obs_probability", draw = TRUE)))
 })
 
 # ---- Anchor audit with actual anchors ----

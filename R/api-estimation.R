@@ -800,6 +800,11 @@ fit_mfrm <- function(data,
       is.na(shrink_person)) {
     stop("`shrink_person` must be a single logical value.", call. = FALSE)
   }
+  if (!is.logical(attach_diagnostics) || length(attach_diagnostics) != 1L ||
+      is.na(attach_diagnostics)) {
+    stop("`attach_diagnostics` must be a single logical value (TRUE or FALSE).",
+         call. = FALSE)
+  }
 
   population <- prepare_mfrm_population_scaffold(
     data = data,
@@ -972,11 +977,6 @@ fit_mfrm <- function(data,
     package_version = as.character(utils::packageVersion("mfrmr"))
   )
 
-  if (!is.logical(attach_diagnostics) || length(attach_diagnostics) != 1L ||
-      is.na(attach_diagnostics)) {
-    stop("`attach_diagnostics` must be a single logical value (TRUE or FALSE).",
-         call. = FALSE)
-  }
   if (isTRUE(attach_diagnostics)) {
     fit <- attach_diagnostics_to_fit(fit)
   } else {

@@ -32,10 +32,23 @@ test_that("fit_mfrm drops NA rows and still fits", {
               "R2", "R1", "R2", "R1", "R1", "R2"),
     Score = c(0, 1, NA, 2, 1, 0, 1, 2, 0, 1, 2, 1, 0)
   )
-  fit <- suppressWarnings(
+  fit <- suppressMessages(suppressWarnings(
     fit_mfrm(d, "Person", "Rater", "Score", method = "JML", maxit = 30)
-  )
+  ))
   expect_s3_class(fit, "mfrm_fit")
+  expect_true(is.data.frame(fit$prep$row_audit_summary))
+  expect_equal(fit$prep$row_audit_summary$RowsInput, nrow(d))
+  expect_equal(fit$prep$row_audit_summary$RowsDropped, 2L)
+  expect_equal(fit$prep$row_audit_summary$MissingPersonRows, 1L)
+  expect_equal(fit$prep$row_audit_summary$MissingScoreRows, 1L)
+  expect_true(any(fit$prep$row_audit$Status == "missing_person"))
+  expect_true(any(fit$prep$row_audit$Status == "missing_score"))
+  dq <- data_quality_report(fit)
+  expect_equal(dq$summary$TotalLinesInData, nrow(d))
+  expect_equal(dq$summary$MissingPersonRows, 1L)
+  expect_equal(dq$summary$MissingScoreRows, 1L)
+  expect_equal(dq$summary$ValidResponsesUsedForEstimation, nrow(fit$prep$data))
+  expect_true(any(dq$row_audit$Status == "missing_person"))
 })
 
 # ---- Weight column handling ----

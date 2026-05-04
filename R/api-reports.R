@@ -53,7 +53,9 @@ specifications_report <- function(fit,
 #' Build a data quality summary report (preferred alias)
 #'
 #' @param fit Output from [fit_mfrm()].
-#' @param data Optional raw data frame used for row-level audit.
+#' @param data Optional raw data frame used for row-level audit. When omitted,
+#'   the report uses the preprocessing row audit stored in `fit$prep`, which
+#'   gives retained/dropped row counts but cannot check unknown raw levels.
 #' @param person Optional person column name in `data`.
 #' @param facets Optional facet column names in `data`.
 #' @param score Optional score column name in `data`.
@@ -2123,6 +2125,7 @@ summary_table_bundle_spec <- function(summary_obj) {
         population_design = summary_table_bundle_df(summary_obj$population_design),
         population_coefficients = summary_table_bundle_df(summary_obj$population_coefficients),
         population_coding = summary_table_bundle_df(summary_obj$population_coding),
+        data_quality_overview = summary_table_bundle_df(summary_obj$data_quality_overview),
         facet_overview = summary_table_bundle_df(summary_obj$facet_overview),
         person_overview = summary_table_bundle_df(summary_obj$person_overview),
         step_overview = summary_table_bundle_df(summary_obj$step_overview),
@@ -2140,6 +2143,7 @@ summary_table_bundle_spec <- function(summary_obj) {
         population_design = "population_design",
         population_coefficients = "population_coefficients",
         population_coding = "population_coding",
+        data_quality_overview = "missingness",
         facet_overview = "facet_distribution",
         person_overview = "person_distribution",
         step_overview = "category_structure",
@@ -2157,6 +2161,7 @@ summary_table_bundle_spec <- function(summary_obj) {
         population_design = "Population-model design-matrix columns and numeric audit statistics.",
         population_coefficients = "Latent-regression coefficients when the population model is active.",
         population_coding = "Latent-regression categorical covariate levels, contrasts, and encoded model-matrix columns.",
+        data_quality_overview = "Input rows retained or dropped during model preprocessing.",
         facet_overview = "Per-facet spread, range, and level-count summary.",
         person_overview = "Distribution of person measures and posterior SD summaries.",
         step_overview = "Threshold range and monotonicity summary.",

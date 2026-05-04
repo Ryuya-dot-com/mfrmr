@@ -39,7 +39,7 @@ test_that("FACETS column contract file is available and valid", {
 
 test_that("FACETS column contract is satisfied by current outputs", {
   d <- mfrmr:::sample_mfrm_data(seed = 123)
-  fit <- mfrmr::fit_mfrm(
+  fit <- suppressWarnings(mfrmr::fit_mfrm(
     data = d,
     person = "Person",
     facets = c("Rater", "Task", "Criterion"),
@@ -47,8 +47,8 @@ test_that("FACETS column contract is satisfied by current outputs", {
     method = "JML",
     model = "RSM",
     maxit = 20
-  )
-  diag <- mfrmr::diagnose_mfrm(fit, residual_pca = "none")
+  ))
+  diag <- suppressWarnings(mfrmr::diagnose_mfrm(fit, residual_pca = "none"))
   bias <- mfrmr::estimate_bias(fit, diag, facet_a = "Rater", facet_b = "Task", max_iter = 2)
 
   outputs <- list(

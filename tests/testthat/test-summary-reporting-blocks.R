@@ -87,3 +87,24 @@ test_that("print(summary(fit)) shows the targeting block", {
   out <- utils::capture.output(print(s))
   expect_true(any(grepl("Targeting", out)))
 })
+
+test_that("summary(fit) surfaces preprocessing row audit when rows are dropped", {
+  d <- .toy
+  d$Score[1] <- NA
+  d$Rater[2] <- NA
+  fit <- suppressMessages(suppressWarnings(fit_mfrm(
+    d, "Person", c("Rater", "Criterion"), "Score",
+    method = "JML", maxit = 25
+  )))
+  s <- summary(fit)
+  expect_s3_class(s, "summary.mfrm_fit")
+  expect_true(is.data.frame(s$data_quality_overview))
+  expect_equal(s$data_quality_overview$RowsDropped[1], 2L)
+  expect_equal(s$data_quality_overview$MissingFacetRows[1], 1L)
+  expect_equal(s$data_quality_overview$MissingScoreRows[1], 1L)
+  dq_row <- s$reporting_map[s$reporting_map$Area == "Data structure / missingness", , drop = FALSE]
+  expect_equal(dq_row$CoveredHere, "partial")
+  expect_true(grepl("data_quality_report", dq_row$CompanionOutput, fixed = TRUE))
+  expect_true(any(grepl("Data preprocessing", utils::capture.output(print(s)), fixed = TRUE)))
+  expect_true(any(grepl("data_quality_report", s$next_actions, fixed = TRUE)))
+})

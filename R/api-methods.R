@@ -4957,6 +4957,7 @@ print.summary.mfrm_bias <- function(x, ...) {
 #' This method provides a compact, human-readable summary oriented to reporting.
 #' It returns a structured object and prints:
 #' - model fit overview (N, LogLik, AIC/BIC, convergence)
+#' - preprocessing row counts retained/dropped before estimation
 #' - estimation settings that affect identification/scoring interpretation
 #' - facet-level estimate distribution (mean/SD/range)
 #' - person measure distribution
@@ -4972,6 +4973,9 @@ print.summary.mfrm_bias <- function(x, ...) {
 #' - `person_overview`: distribution of person measures.
 #' - `step_overview`: threshold spread and monotonicity checks.
 #' - `settings_overview`: estimation settings that affect interpretation.
+#' - `data_quality_overview`: row counts retained or dropped before estimation;
+#'   use [data_quality_report()] with the original data for a full missingness,
+#'   unknown-element, and category-use audit.
 #' - `population_coding`: fitted categorical levels and contrasts that must be
 #'   reused when scoring new persons under the population-model posterior.
 #' - `key_warnings` / `notes`: short triage subset of retained zero-count score
@@ -5016,6 +5020,8 @@ print.summary.mfrm_bias <- function(x, ...) {
 #'   when the fit was specified with `facet_interactions`
 #' - `settings_overview`: estimation-settings overview that pins the
 #'   configuration that affects identification/scoring
+#' - `data_quality_overview`: retained/dropped row counts from model
+#'   preprocessing
 #' - `attached_diagnostics`: logical flag indicating whether the
 #'   `mfrm_fit` was returned with diagnostics already attached
 #' - `attached_diagnostics_cols`: character vector of diagnostic
@@ -5289,6 +5295,7 @@ summary.mfrm_fit <- function(object, digits = 3, top_n = 5, ...) {
     UnusedScoreCategoryCount = 0L,
     UnusedScoreCategoryType = "none"
   )
+  data_quality_overview <- tibble::as_tibble(prep$row_audit_summary %||% tibble::tibble())
 
   score_category_profile <- score_category_support_profile(prep = prep)
   score_category_caveats <- collect_mfrm_caveats(fit = object)
@@ -5327,10 +5334,17 @@ summary.mfrm_fit <- function(object, digits = 3, top_n = 5, ...) {
       "Bias / DIF / interaction checks",
       "Draft reporting / checklist"
     ),
-    CoveredHere = c("yes", "no", "no", "partial", "no", "no"),
+    CoveredHere = c(
+      "yes",
+      if (nrow(data_quality_overview) > 0L) "partial" else "no",
+      "no",
+      "partial",
+      "no",
+      "no"
+    ),
     CompanionOutput = c(
       "summary(fit)",
-      "summary(describe_mfrm_data(...))",
+      "summary(fit)$data_quality_overview / data_quality_report(..., data = original_data) / summary(describe_mfrm_data(...))",
       "summary(diagnose_mfrm(fit))",
       "rating_scale_table() / category_structure_report() / category_curves_report()",
       "summary(estimate_bias(...)) / analyze_dff() / related bundle summaries",
@@ -5400,6 +5414,21 @@ summary.mfrm_fit <- function(object, digits = 3, top_n = 5, ...) {
   }
   if (nrow(step_overview) > 0 && !isTRUE(step_overview$Monotonic[1])) {
     notes <- c(notes, "Step estimates are not monotonic; verify category functioning.")
+  }
+  rows_dropped <- if (nrow(data_quality_overview) > 0L &&
+                      "RowsDropped" %in% names(data_quality_overview)) {
+    as.integer(data_quality_overview$RowsDropped[1] %||% 0L)
+  } else {
+    0L
+  }
+  if (isTRUE(rows_dropped > 0L)) {
+    notes <- c(
+      notes,
+      paste0(
+        rows_dropped,
+        " input row(s) were dropped before estimation because of missing values or non-positive weights; report retained N and run `data_quality_report(..., data = original_data)` before manuscript reporting."
+      )
+    )
   }
   fit_caveat_messages <- if (nrow(fit_caveats) > 0 && "Message" %in% names(fit_caveats)) {
     as.character(fit_caveats$Message)
@@ -5509,6 +5538,12 @@ summary.mfrm_fit <- function(object, digits = 3, top_n = 5, ...) {
     "Use `plot(fit, type = \"wright\", preset = \"publication\")` for targeting and scale review.",
     "After diagnostics, use `reporting_checklist(fit, diagnostics = diagnostics)` for reporting readiness."
   )
+  if (isTRUE(rows_dropped > 0L)) {
+    next_actions <- c(
+      "Run `data_quality_report(fit, data = original_data, ...)` to document excluded rows and category support before reporting N.",
+      next_actions
+    )
+  }
   next_actions <- clean_summary_lines(next_actions, max_n = 6L)
 
   attached_diagnostics_flag <- isTRUE(config$attached_diagnostics)
@@ -5530,6 +5565,7 @@ summary.mfrm_fit <- function(object, digits = 3, top_n = 5, ...) {
     slope_overview = slope_overview,
     interaction_overview = interaction_overview,
     settings_overview = settings_overview,
+    data_quality_overview = data_quality_overview,
     attached_diagnostics = attached_diagnostics_flag,
     attached_diagnostics_cols = attached_diagnostics_cols,
     reporting_map = reporting_map,
@@ -5704,6 +5740,11 @@ print.summary.mfrm_fit <- function(x, ...) {
     if (!is.na(ov$ConvergenceDetail %||% NA_character_) && nzchar(ov$ConvergenceDetail %||% "")) {
       cat(sprintf("  Optimization note: %s\n", ov$ConvergenceDetail))
     }
+  }
+
+  if (nrow(x$data_quality_overview %||% data.frame()) > 0) {
+    cat("\nData preprocessing\n")
+    print(round_numeric_df(as.data.frame(x$data_quality_overview), digits = digits), row.names = FALSE)
   }
 
   if (nrow(x$population_overview) > 0) {

@@ -160,11 +160,15 @@ test_that("analyze_dif refit uses ETS only for linked model-based MML contrasts"
 test_that("analyze_dif refit demotes ETS when subgroup refits lack linking facets", {
   local_dif_fixtures()
 
-  fit_one <- fit_mfrm(toy, person = "Person", facets = "Criterion",
-                      score = "Score", method = "JML", maxit = 20)
-  diag_one <- diagnose_mfrm(fit_one, residual_pca = "none")
-  dif_one <- analyze_dif(fit_one, diag_one, facet = "Criterion", group = "Group",
-                         data = toy, method = "refit")
+  fit_one <- suppressWarnings(fit_mfrm(
+    toy, person = "Person", facets = "Criterion",
+    score = "Score", method = "JML", maxit = 20
+  ))
+  diag_one <- suppressWarnings(diagnose_mfrm(fit_one, residual_pca = "none"))
+  dif_one <- suppressWarnings(analyze_dif(
+    fit_one, diag_one, facet = "Criterion", group = "Group",
+    data = toy, method = "refit"
+  ))
 
   expect_true(all(dif_one$dif_table$ClassificationSystem == "descriptive"))
   expect_true(all(is.na(dif_one$dif_table$ETS)))

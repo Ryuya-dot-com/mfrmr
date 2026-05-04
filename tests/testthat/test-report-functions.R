@@ -426,10 +426,26 @@ test_that("build_apa_outputs produces structured APA text", {
   s <- summary(apa)
   expect_s3_class(s, "summary.mfrm_apa_outputs")
   expect_true(is.data.frame(s$sections))
+  expect_true(is.data.frame(s$content_checks))
   expect_true("DraftContractPass" %in% names(s$overview))
+  expect_identical(s$overview$ReadyForAPA[1], s$overview$DraftContractPass[1])
+  expect_true(all(c("report_text", "table_figure_notes", "table_figure_captions") %in%
+                    s$components$Component))
+  expect_true(all(s$components$NonEmpty))
+  expect_true(all(c(
+    "Method section heading",
+    "Results section heading",
+    "Core section coverage",
+    "Note coverage",
+    "Caption coverage"
+  ) %in% s$content_checks$Check))
+  expect_true(all(c("method_design", "method_estimation", "results_scale", "results_fit_precision") %in%
+                    s$sections$SectionId[s$sections$Available]))
   expect_true(any(grepl("contract completeness", s$notes, fixed = TRUE)))
+  expect_true(any(grepl("does not certify formal inferential adequacy", s$notes, fixed = TRUE)))
   out <- capture.output(print(s))
   expect_true(length(out) > 0)
+  expect_true(any(grepl("Content checks", out, fixed = TRUE)))
 })
 
 test_that("build_apa_outputs with bias produces extended text", {
