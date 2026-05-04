@@ -117,6 +117,8 @@ fit_eb2 <- apply_empirical_bayes_shrinkage(fit)
 | `plot(fit, type = "shrinkage")` | Shrinkage direction arrows |
 | `plot_threshold_ladder(fit)` | Category threshold ordering |
 | `plot_person_fit(fit, diagnostics = diag)` | Per-person Infit/Outfit bubble; inspect `p$data$data$MisfitDirection` for underfit vs overfit |
+| `fit_p_table(fit, diagnostics = diag)` | TAM-style Infit/Outfit p-value table with adjusted p values |
+| `plot_empirical_fit(fit, diagnostics = diag)` | mirt-style observed-vs-expected empirical fit bins |
 | `plot_rater_severity_profile(fit, diag)` | Rater ranking + CI bands |
 | `plot_bias_interaction(bias, plot="heatmap")` | Bias cell heatmap |
 | `plot_displacement(fit, show_ci=TRUE)` | Anchor displacement lollipop |

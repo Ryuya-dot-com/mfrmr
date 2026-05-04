@@ -206,6 +206,10 @@ marginal flags.}
 \item{\code{plot_marginal_pairwise()}}{Posterior-integrated exact/adjacent
 agreement residuals. Best for exploratory local-dependence follow-up after
 strict marginal flags.}
+\item{\code{plot_empirical_fit()}}{mirt-style observed-vs-expected empirical
+fit overlay for a selected facet level. Best after \code{\link[=fit_p_table]{fit_p_table()}},
+\code{\link[=plot_bubble]{plot_bubble()}}, or \code{summary(diagnose_mfrm(...))} identifies the level
+worth inspecting.}
 \item{\code{plot_interrater_agreement()}}{Exact agreement, expected agreement,
 pairwise correlation, and agreement gaps. Best for rater consistency.}
 \item{\code{plot_facets_chisq()}}{Facet variability and chi-square summaries.
@@ -274,7 +278,9 @@ curves.}
 characteristic curve, test information function").}
 \item{Misfit / Infit / Outfit}{\code{\link[=diagnose_mfrm]{diagnose_mfrm()}} and the Largest
 |ZSTD| / MnSq misfit blocks of \code{summary(diag)} correspond to
-Winsteps Table 10/13/14 (Misfit order) and FACETS Tables 7/8.}
+Winsteps Table 10/13/14 (Misfit order) and FACETS Tables 7/8.
+\code{\link[=fit_p_table]{fit_p_table()}} gives a TAM-style Infit/Outfit p-value table, and
+\code{\link[=plot_empirical_fit]{plot_empirical_fit()}} gives a mirt-style empirical follow-up plot.}
 \item{Bias / interaction}{\code{\link[=estimate_bias]{estimate_bias()}} +
 \code{\link[=plot_bias_interaction]{plot_bias_interaction()}} correspond to FACETS Table 14
 ("Bias / Interaction calibration report").}
@@ -310,6 +316,9 @@ by themselves.
 \item Strict marginal and pairwise local-dependence plots are exploratory
 follow-up layers for \code{diagnostic_mode = "both"}, not standalone
 inferential tests.
+\item Fit p-value tables from \code{\link[=fit_p_table]{fit_p_table()}} use the mfrmr ZSTD normal-tail
+approximation; read them with the active MnSq band and empirical plots
+rather than as a universal item-deletion rule.
 \item Inter-rater agreement and facet variability address different questions:
 agreement concerns scoring consistency, whereas variability concerns
 whether facet elements are statistically distinguishable.
@@ -333,6 +342,8 @@ inspect \code{"Visual Displays"} rows -> chosen public plot helper.
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} with \code{diagnostic_mode = "both"} ->
 \code{\link[=plot_marginal_fit]{plot_marginal_fit()}} ->
 \code{\link[=plot_marginal_pairwise]{plot_marginal_pairwise()}}.
+\item Fit follow-up:
+\code{\link[=fit_p_table]{fit_p_table()}} -> \code{\link[=plot_empirical_fit]{plot_empirical_fit()}} -> \code{\link[=build_misfit_casebook]{build_misfit_casebook()}}.
 \item Scale and targeting review:
 \code{plot(fit, type = "wright")} -> \code{plot(fit, type = "pathway")} ->
 \code{plot(fit, type = "ccc")}.
@@ -398,6 +409,7 @@ scree$data$preset
 \code{\link[=plot_unexpected]{plot_unexpected()}}, \code{\link[=plot_displacement]{plot_displacement()}}, \code{\link[=plot_marginal_fit]{plot_marginal_fit()}},
 \code{\link[=plot_marginal_pairwise]{plot_marginal_pairwise()}}, \code{\link[=plot_interrater_agreement]{plot_interrater_agreement()}},
 \code{\link[=plot_facets_chisq]{plot_facets_chisq()}}, \code{\link[=plot_residual_pca]{plot_residual_pca()}}, \code{\link[=plot_bias_interaction]{plot_bias_interaction()}},
+\code{\link[=fit_p_table]{fit_p_table()}}, \code{\link[=plot_empirical_fit]{plot_empirical_fit()}},
 \code{\link[=plot_dif_heatmap]{plot_dif_heatmap()}}, \code{\link[=plot_dif_summary]{plot_dif_summary()}}, \code{\link[=plot_anchor_drift]{plot_anchor_drift()}},
 \code{\link[=plot_guttman_scalogram]{plot_guttman_scalogram()}},
 \code{\link[=plot_residual_qq]{plot_residual_qq()}}, \code{\link[=plot_rater_trajectory]{plot_rater_trajectory()}},

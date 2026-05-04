@@ -187,6 +187,10 @@
 #'   \item{`plot_marginal_pairwise()`}{Posterior-integrated exact/adjacent
 #'   agreement residuals. Best for exploratory local-dependence follow-up after
 #'   strict marginal flags.}
+#'   \item{`plot_empirical_fit()`}{mirt-style observed-vs-expected empirical
+#'   fit overlay for a selected facet level. Best after [fit_p_table()],
+#'   [plot_bubble()], or `summary(diagnose_mfrm(...))` identifies the level
+#'   worth inspecting.}
 #'   \item{`plot_interrater_agreement()`}{Exact agreement, expected agreement,
 #'   pairwise correlation, and agreement gaps. Best for rater consistency.}
 #'   \item{`plot_facets_chisq()`}{Facet variability and chi-square summaries.
@@ -253,7 +257,9 @@
 #'   characteristic curve, test information function").}
 #'   \item{Misfit / Infit / Outfit}{[diagnose_mfrm()] and the Largest
 #'   |ZSTD| / MnSq misfit blocks of `summary(diag)` correspond to
-#'   Winsteps Table 10/13/14 (Misfit order) and FACETS Tables 7/8.}
+#'   Winsteps Table 10/13/14 (Misfit order) and FACETS Tables 7/8.
+#'   [fit_p_table()] gives a TAM-style Infit/Outfit p-value table, and
+#'   [plot_empirical_fit()] gives a mirt-style empirical follow-up plot.}
 #'   \item{Bias / interaction}{[estimate_bias()] +
 #'   [plot_bias_interaction()] correspond to FACETS Table 14
 #'   ("Bias / Interaction calibration report").}
@@ -286,6 +292,9 @@
 #' - Strict marginal and pairwise local-dependence plots are exploratory
 #'   follow-up layers for `diagnostic_mode = "both"`, not standalone
 #'   inferential tests.
+#' - Fit p-value tables from [fit_p_table()] use the mfrmr ZSTD normal-tail
+#'   approximation; read them with the active MnSq band and empirical plots
+#'   rather than as a universal item-deletion rule.
 #' - Inter-rater agreement and facet variability address different questions:
 #'   agreement concerns scoring consistency, whereas variability concerns
 #'   whether facet elements are statistically distinguishable.
@@ -305,6 +314,8 @@
 #'   [diagnose_mfrm()] with `diagnostic_mode = "both"` ->
 #'   [plot_marginal_fit()] ->
 #'   [plot_marginal_pairwise()].
+#' - Fit follow-up:
+#'   [fit_p_table()] -> [plot_empirical_fit()] -> [build_misfit_casebook()].
 #' - Scale and targeting review:
 #'   `plot(fit, type = "wright")` -> `plot(fit, type = "pathway")` ->
 #'   `plot(fit, type = "ccc")`.
@@ -330,6 +341,7 @@
 #'   [plot_unexpected()], [plot_displacement()], [plot_marginal_fit()],
 #'   [plot_marginal_pairwise()], [plot_interrater_agreement()],
 #'   [plot_facets_chisq()], [plot_residual_pca()], [plot_bias_interaction()],
+#'   [fit_p_table()], [plot_empirical_fit()],
 #'   [plot_dif_heatmap()], [plot_dif_summary()], [plot_anchor_drift()],
 #'   [plot_guttman_scalogram()],
 #'   [plot_residual_qq()], [plot_rater_trajectory()],

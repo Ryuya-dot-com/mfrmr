@@ -678,6 +678,15 @@ table(person_fit$data$data$MisfitDirection, useNA = "ifany")
 
 casebook <- build_misfit_casebook(fit, diagnostics = diag)
 casebook$top_cases[, c("CaseID", "SourceFamily", "Direction", "Signal")]
+
+# TAM-style fit p-value handoff and mirt-style empirical fit follow-up:
+fit_p <- fit_p_table(fit, diagnostics = diag)
+fit_p[, c("parameter", "Outfit", "Outfit_p_adj",
+          "Infit", "Infit_p_adj", "MisfitDirection")]
+
+emp <- plot_empirical_fit(fit, diagnostics = diag,
+                          facet = "Rater", bins = 6, draw = FALSE)
+emp$data$bin_table
 ```
 
 ## Reporting and APA route
