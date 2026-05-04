@@ -77,6 +77,48 @@ gpcm_fair_average_rationale <- function() {
   )
 }
 
+gpcm_bias_rationale <- function() {
+  paste0(
+    "GPCM bias estimates use the slope-aware GPCM kernel: the bias ",
+    "parameter is the additive shift on the linear predictor that maximises ",
+    "the GPCM log-likelihood for the screened cell. SE / t / Prob columns ",
+    "retain screening-tier semantics: conditional plug-in information at the ",
+    "bias point estimate, holding theta and structural parameters fixed. ",
+    "They are not delta-method standard errors that propagate joint ",
+    "uncertainty from theta, thresholds, slopes, or person-measure estimation."
+  )
+}
+
+gpcm_visual_rationale <- function() {
+  paste(
+    gpcm_fair_average_rationale(),
+    gpcm_bias_rationale(),
+    "Residual-based GPCM visual summaries and QC plots should be read as exploratory screening routes, not as Rasch-family invariance evidence.",
+    sep = " "
+  )
+}
+
+gpcm_qc_rationale <- function() {
+  paste0(
+    "Bounded `GPCM` QC output is supported with caveats. Residual-based ",
+    "dashboard, fit, agreement, displacement, and bias-screening checks are ",
+    "exploratory screening layers because the discrimination parameter is ",
+    "free. Fair-average components, when present, use the slope-aware ",
+    "element-conditional score-side construction and keep the documented SE ",
+    "limits."
+  )
+}
+
+gpcm_support_status <- function(model = "GPCM",
+                                detail = "Bounded GPCM route is supported with caveats.") {
+  data.frame(
+    Model = as.character(model %||% "GPCM"),
+    Status = "supported_with_caveat",
+    Detail = as.character(detail),
+    stringsAsFactors = FALSE
+  )
+}
+
 gpcm_planning_scope_rationale <- function() {
   paste0(
     "The current planning layer still targets the role-based person x ",

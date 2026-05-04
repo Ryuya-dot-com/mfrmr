@@ -23,10 +23,11 @@
 #' - "What should go into the manuscript text and tables?"
 #'   For `RSM` / `PCM`, use [reporting_checklist()], [build_apa_outputs()],
 #'   and [build_summary_table_bundle()] or [export_summary_appendix()]. For
-#'   bounded `GPCM`, stay on [reporting_checklist()], direct table/plot helpers,
-#'   [build_visual_summaries()], [run_qc_pipeline()], and summary-table
-#'   appendix export; [build_apa_outputs()] and [export_mfrm_bundle()] remain
-#'   out of scope.
+#'   bounded `GPCM`, use the package-native [reporting_checklist()],
+#'   [build_visual_summaries()], [run_qc_pipeline()], [build_apa_outputs()],
+#'   and [export_mfrm_bundle()] routes with their returned caveats retained;
+#'   FACETS score-side compatibility remains outside the validated `GPCM`
+#'   boundary.
 #'
 #' @section Recommended report route:
 #' 1. Start with [specifications_report()] and [data_quality_report()] to
@@ -114,7 +115,8 @@
 #'   [export_mfrm_bundle()](include = "summary_tables").
 #' - Bounded `GPCM` handoff:
 #'   [reporting_checklist()] -> [build_visual_summaries()] /
-#'   [run_qc_pipeline()] -> direct summaries/plots ->
+#'   [run_qc_pipeline()] -> [build_apa_outputs()] /
+#'   [export_mfrm_bundle()] with returned caveats retained ->
 #'   [build_summary_table_bundle()] -> [export_summary_appendix()].
 #'
 #' @section Companion guides:

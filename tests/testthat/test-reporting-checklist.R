@@ -26,6 +26,7 @@ test_that("reporting_checklist returns a bundle with checklist coverage tables",
   expect_true(is.data.frame(chk$software_scope))
   expect_true(is.data.frame(chk$visual_scope))
   expect_true("InterpretationCheck" %in% names(chk$visual_scope))
+  expect_true(all(c("SupportStatus", "ModelCaveat") %in% names(chk$visual_scope)))
   expect_true(all(c("mfrmr native", "FACETS", "ConQuest", "SPSS") %in% chk$software_scope$Software))
   expect_true("Category probability surface" %in% chk$visual_scope$Visualization)
   expect_match(

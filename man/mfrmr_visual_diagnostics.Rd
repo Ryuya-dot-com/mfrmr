@@ -32,8 +32,9 @@ merit closer inspection rather than as Rasch-style violations of
 strict invariance.
 \item Slope-aware \code{\link[=fair_average_table]{fair_average_table()}} and \code{\link[=estimate_bias]{estimate_bias()}} are available
 under \code{GPCM}, but their SE columns keep the caveats documented in those
-help pages. Broader compatibility-export helpers stay outside the
-validated \code{GPCM} boundary.
+help pages. Package-native \code{\link[=build_apa_outputs]{build_apa_outputs()}} and
+\code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}} can carry the caveats forward; FACETS score-side
+compatibility exports remain outside the validated \code{GPCM} boundary.
 }
 
 Use \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}} for the formal per-helper boundary
@@ -120,7 +121,8 @@ the \code{"Visual Displays"} rows as the plot-readiness layer.
 \code{\link[=plot_marginal_fit]{plot_marginal_fit()}}, \code{\link[=plot_marginal_pairwise]{plot_marginal_pairwise()}}, and
 \code{\link[=plot_interrater_agreement]{plot_interrater_agreement()}} for flagged local issues.
 \item Use \code{plot(fit, type = "wright")}, \code{plot(fit, type = "pathway")},
-and \code{plot_residual_pca()} for structural interpretation.
+\code{plot(fit, type = "ccc")}, and \code{plot_residual_pca()} for structural
+interpretation.
 \item Use \code{\link[=plot_bias_interaction]{plot_bias_interaction()}}, \code{\link[=plot_dif_heatmap]{plot_dif_heatmap()}},
 \code{\link[=plot_dif_summary]{plot_dif_summary()}}, \code{\link[=plot_anchor_drift]{plot_anchor_drift()}}, and
 \code{\link[=plot_information]{plot_information()}} when the checklist or dashboard points to

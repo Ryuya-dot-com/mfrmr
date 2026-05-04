@@ -5,7 +5,8 @@ test_that("visual_reporting_template returns beginner-oriented figure guidance",
   expect_true(all(c(
     "FigureFamily", "Scope", "PrimaryHelper", "DefaultPlacement",
     "WhatToReport", "CaptionSkeleton", "ResultsWording", "WhatNotToClaim",
-    "BeginnerCheck", "ThreeDPolicy"
+    "BeginnerCheck", "ReadFirst", "NextLook", "ReportDecision",
+    "GPCMBoundary", "ThreeDPolicy"
   ) %in% names(tbl)))
   expect_true(all(c(
     "manuscript", "appendix", "diagnostic", "surface"
@@ -37,13 +38,32 @@ test_that("visual_reporting_template returns beginner-oriented figure guidance",
     "exploratory support",
     fixed = TRUE
   )
+  expect_match(
+    tbl$NextLook[tbl$FigureFamily == "Wright map"][1],
+    "plot_qc_dashboard",
+    fixed = TRUE
+  )
+  expect_match(
+    tbl$ReportDecision[tbl$FigureFamily == "Category probability surface"][1],
+    "Exploratory appendix",
+    fixed = TRUE
+  )
+  expect_match(
+    tbl$GPCMBoundary[tbl$FigureFamily == "Category probability surface"][1],
+    "bounded-GPCM exploratory payload",
+    fixed = TRUE
+  )
 })
 
 test_that("visual_reporting_template covers second-wave plots", {
   tbl <- visual_reporting_template()
   for (fam in c("Guttman scalogram", "Residual Q-Q",
                 "Rater trajectory (linked waves)",
-                "Rater agreement heatmap")) {
+                "Rater agreement heatmap",
+                "Local-dependence heatmap",
+                "Reliability snapshot",
+                "Residual matrix",
+                "Shrinkage funnel")) {
     expect_true(fam %in% tbl$FigureFamily,
                 info = paste("missing row for", fam))
   }

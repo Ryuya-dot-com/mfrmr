@@ -59,5 +59,7 @@ names(p$data)
 \seealso{
 \code{\link[=plot.mfrm_fit]{plot.mfrm_fit()}} (\code{type = "wright"}),
 \code{\link[=plot_rater_severity_profile]{plot_rater_severity_profile()}}, \code{\link[=plot_threshold_ladder]{plot_threshold_ladder()}},
-\code{\link[=build_apa_outputs]{build_apa_outputs()}}.
+\code{\link[=build_apa_outputs]{build_apa_outputs()}}, \code{\link[=visual_reporting_template]{visual_reporting_template()}},
+\code{\link[=reporting_checklist]{reporting_checklist()}}, \link{mfrmr_reporting_and_apa},
+\link{mfrmr_visual_diagnostics}.
 }

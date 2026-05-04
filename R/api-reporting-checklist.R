@@ -60,8 +60,12 @@
 #'   FACETS, ConQuest, and SPSS-style tabular handoffs.
 #' - `visual_scope`: plotting-route summary that separates report-default
 #'   2D figures from exploratory surface/3D-ready payloads, including a short
-#'   `InterpretationCheck` for the main user-facing caveat.
+#'   `InterpretationCheck` for the main user-facing caveat. For bounded
+#'   `GPCM`, this table also exposes `SupportStatus` and `ModelCaveat` so the
+#'   run-specific plotting boundary can be retained in reports and handoffs.
 #' - `references`: core background references when requested.
+#' - `support_status`: bounded-`GPCM` support contract, when applicable.
+#' - `caveat`: bounded-`GPCM` visual/reporting caveat, when applicable.
 #'
 #' @section Recommended next step:
 #' Review the rows with `Available = FALSE` or `DraftReady = FALSE`, then add
@@ -69,7 +73,9 @@
 #' [build_apa_outputs()] for draft text generation. For `RSM` / `PCM`
 #' reporting runs, the preferred route is an `MML` fit plus
 #' `diagnose_mfrm(..., diagnostic_mode = "both")` so the checklist can see the
-#' legacy and strict marginal screens together.
+#' legacy and strict marginal screens together. For bounded `GPCM`, keep
+#' `support_status`, `caveat`, and `visual_scope$ModelCaveat` attached to any
+#' copied checklist, visual, or APA text.
 #'
 #' @section How this differs from operational review:
 #' `reporting_checklist()` is the manuscript/reporting branch of the package.
@@ -147,6 +153,8 @@ reporting_checklist <- function(fit,
   }
 
   config <- fit$config %||% list()
+  fit_model <- toupper(as.character(config$model %||% fit$summary$Model[1] %||% NA_character_))[1]
+  gpcm_mode <- identical(fit_model, "GPCM")
   prep <- fit$prep %||% list()
   measures <- as.data.frame(diagnostics$measures %||% data.frame(), stringsAsFactors = FALSE)
   obs_df <- as.data.frame(diagnostics$obs %||% data.frame(), stringsAsFactors = FALSE)
@@ -991,6 +999,17 @@ reporting_checklist <- function(fit,
     references = references,
     settings = settings
   )
+  if (isTRUE(gpcm_mode)) {
+    out$support_status <- gpcm_support_status(
+      fit_model,
+      paste0(
+        "Bounded GPCM reporting_checklist() is a supported-with-caveat ",
+        "readiness router. Visual, fair-average, bias, and QC rows are ",
+        "draftable only with the documented screening-tier GPCM caveats."
+      )
+    )
+    out$caveat <- gpcm_visual_rationale()
+  }
   as_mfrm_bundle(out, "mfrm_reporting_checklist")
 }
 
@@ -1162,6 +1181,25 @@ visual_scope_table <- function(fit, checklist) {
       "Confirm the tested pair, low-count cells, and screening threshold.",
       "Use scree/loadings as exploratory residual-structure evidence only."
     ),
+    SupportStatus = if (identical(model, "GPCM")) {
+      rep("supported_with_caveat", 8L)
+    } else {
+      rep("supported", 8L)
+    },
+    ModelCaveat = if (identical(model, "GPCM")) {
+      c(
+        "GPCM dashboard rows are exploratory residual and score-side screens, not Rasch invariance evidence.",
+        "GPCM Wright maps are supported shared-scale displays; interpret residual claims separately.",
+        "GPCM pathway/CCC curves are supported slope-aware category-probability displays.",
+        "GPCM surface payloads are exploratory slope-aware category-probability handoffs.",
+        "GPCM information curves are supported where compute_information() supports the fit.",
+        "Use strict marginal GPCM output only when returned with explicit caveats.",
+        "GPCM bias/DIF visuals remain screening-tier unless a stronger inferential route is documented.",
+        "GPCM residual PCA is exploratory residual-structure review."
+      )
+    } else {
+      rep("", 8L)
+    },
     stringsAsFactors = FALSE
   )
 }
@@ -1178,7 +1216,8 @@ visual_scope_table <- function(fit, checklist) {
 #' - `section_summary`: section-level checklist coverage
 #' - `software_scope`: external-software relationship summary
 #' - `visual_scope`: plotting-route and 3D-ready payload summary, including
-#'   the main `InterpretationCheck` caveat for each visual family
+#'   the main `InterpretationCheck` caveat for each visual family and any
+#'   model-specific `SupportStatus` / `ModelCaveat` columns
 #' - `priority_summary`: counts by priority/severity
 #' - `action_items`: highest-priority rows that still need draft work
 #' - `settings`: checklist settings rendered as a compact table

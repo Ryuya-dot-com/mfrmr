@@ -949,10 +949,11 @@ draw_facet_plot <- function(facet_tbl,
 #' Plot fitted MFRM results with base R
 #'
 #' @param x An `mfrm_fit` object from [fit_mfrm()].
-#' @param type Plot type. Use `NULL`, `"bundle"`, or `"all"` for the
-#'   three-part fit bundle; otherwise choose one of `"facet"`, `"person"`,
-#'   `"step"`, `"wright"`, `"pathway"`, `"ccc"`, `"ccc_surface"`, or
-#'   `"category_surface"`.
+#' @param type Plot type. Omit `type` or use `"wright"` for the default Wright
+#'   map. Use `"bundle"` / `"all"` / `"default"` for the three-part fit bundle;
+#'   otherwise choose one of `"facet"`, `"person"`, `"step"`, `"wright"`,
+#'   `"pathway"`, `"ccc"`, `"ccc_overlay"`, `"ccc_surface"`,
+#'   `"category_surface"`, or `"shrinkage"`.
 #' @param facet Optional facet name for `type = "facet"`.
 #' @param top_n Maximum number of facet/step locations retained for
 #'   compact displays.
@@ -1456,7 +1457,7 @@ plot.mfrm_fit <- function(x,
     ))
     if (isTRUE(draw)) {
       apply_plot_preset(style)
-      draw_ccc(ccc_payload, title = out$title %||% "Category curves",
+      draw_ccc(ccc_payload, title = out$data$title %||% "Category curves",
                palette = palette %||% c(
                  style$accent_primary, style$accent_secondary,
                  style$accent_tertiary, style$warn

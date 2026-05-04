@@ -25,10 +25,11 @@
 \arguments{
 \item{x}{An \code{mfrm_fit} object from \code{\link[=fit_mfrm]{fit_mfrm()}}.}
 
-\item{type}{Plot type. Use \code{NULL}, \code{"bundle"}, or \code{"all"} for the
-three-part fit bundle; otherwise choose one of \code{"facet"}, \code{"person"},
-\code{"step"}, \code{"wright"}, \code{"pathway"}, \code{"ccc"}, \code{"ccc_surface"}, or
-\code{"category_surface"}.}
+\item{type}{Plot type. Omit \code{type} or use \code{"wright"} for the default Wright
+map. Use \code{"bundle"} / \code{"all"} / \code{"default"} for the three-part fit bundle;
+otherwise choose one of \code{"facet"}, \code{"person"}, \code{"step"}, \code{"wright"},
+\code{"pathway"}, \code{"ccc"}, \code{"ccc_overlay"}, \code{"ccc_surface"},
+\code{"category_surface"}, or \code{"shrinkage"}.}
 
 \item{facet}{Optional facet name for \code{type = "facet"}.}
 

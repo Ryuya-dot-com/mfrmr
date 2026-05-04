@@ -623,6 +623,10 @@ fair_average_table <- function(fit,
   )
   if (identical(fit_model, "GPCM")) {
     bundle$caveat <- gpcm_fair_average_rationale()
+    bundle$support_status <- gpcm_support_status(
+      model = fit_model,
+      detail = "Slope-aware fair-average output is available as a bounded GPCM screening table with the documented conditional-SE caveat."
+    )
   }
   as_mfrm_bundle(bundle, "mfrm_fair_average")
 }
@@ -4312,16 +4316,8 @@ estimate_bias <- function(fit,
     if (identical(fit_model, "GPCM")) {
       out$method <- "GPCM-slope-aware"
       out$caveat <- paste0(
-        "GPCM bias estimates use the slope-aware GPCM kernel: the bias ",
-        "parameter is the additive shift on the linear predictor that ",
-        "maximises the GPCM log-likelihood for the (facet_a, facet_b) cell. ",
-        "SE / t / Prob columns retain the screening-tier semantics ",
-        "documented in `?estimate_bias` (conditional plug-in information at ",
-        "the bias point estimate, holding theta and the structural ",
-        "parameters fixed); they are not delta-method standard errors that ",
-        "propagate joint-parameter uncertainty. A delta-method SE for the ",
-        "bias estimate is planned for a future release. See ",
-        "`gpcm_capability_matrix()` for the current support contract."
+        gpcm_bias_rationale(),
+        " See `?estimate_bias` and `gpcm_capability_matrix()` for the current support contract."
       )
     }
   }

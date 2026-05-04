@@ -99,7 +99,11 @@ the exploratory support boundary.
 \item inspect defaults with \code{\link[=mfrm_threshold_profiles]{mfrm_threshold_profiles()}}
 \item choose \code{threshold_profile} (\code{strict} / \code{standard} / \code{lenient})
 \item optionally override selected fields via \code{thresholds}
-\item pass result maps to report/dashboard rendering logic
+\item inspect \code{vis$public_plot_routes} to choose the dedicated public helper
+and \code{vis$plot_payloads} for reusable draw-free payloads
+\item cross-check figure placement with
+\code{reporting_checklist(fit, diagnostics)$visual_scope} and
+\code{\link[=visual_reporting_template]{visual_reporting_template()}} before writing captions or results text
 }
 }
 

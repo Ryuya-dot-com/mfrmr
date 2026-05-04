@@ -710,12 +710,29 @@ plot(fit, type = "ccc", preset = "publication")
 plot_qc_dashboard(fit, diagnostics = diag, preset = "publication")
 ```
 
+After the first plot, use this short reading loop:
+
+1. Treat `plot_qc_dashboard()` as the router. If a panel flags a problem,
+   move to the matching component plot instead of citing the dashboard alone.
+2. For report figures, cross-check
+   `reporting_checklist(fit, diagnostics = diag)$visual_scope` and
+   `visual_reporting_template()` before writing the caption.
+3. Use `plot(..., draw = FALSE)` when you need a reproducible figure payload
+   for captions, notes, or downstream rendering.
+4. For bounded `GPCM`, keep returned `support_status` and `caveat` fields with
+   the figure payload. Residual, fair-average, and bias visuals are screening
+   evidence unless a stronger inferential route is documented.
+
 A second-wave teaching / drift / agreement layer ships for follow-up
 inspection; it is not a default reporting figure set:
 
 ```r
 plot_guttman_scalogram(fit, diagnostics = diag)       # teaching ordering view
 plot_residual_qq(fit, diagnostics = diag)             # residual tail follow-up
+plot_local_dependence_heatmap(fit, diagnostics = diag) # Q3-style local-dependence screen
+plot_reliability_snapshot(fit, diagnostics = diag)     # facet separation/reliability snapshot
+plot_residual_matrix(fit, diagnostics = diag)          # person x facet residual heatmap
+plot_shrinkage_funnel(fit_shrunk)                      # EB shrinkage review
 plot_rater_agreement_heatmap(fit, diagnostics = diag) # compact pairwise agreement
 plot_rater_trajectory(list(T1 = fit_a, T2 = fit_b))   # requires anchor-linked waves
 ```

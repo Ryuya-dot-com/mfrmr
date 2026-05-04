@@ -80,7 +80,12 @@ standardize_plot_payload <- function(name, data) {
   } else if (is.data.frame(data) || !is.list(data)) {
     data <- list(data = data)
   }
+  data_names <- names(data)
+  if (!is.null(data_names) && anyDuplicated(data_names)) {
+    data <- data[!duplicated(data_names, fromLast = TRUE)]
+  }
   data$plot_name <- data$plot_name %||% name
+  data$plot <- data$plot %||% data$plot_name
   data$title <- data$title %||% NULL
   data$subtitle <- data$subtitle %||% NULL
   data$legend <- normalize_plot_legend(data$legend %||% NULL)
@@ -1420,6 +1425,7 @@ plot_fair_average <- function(x,
   }
   bundle_model <- toupper(as.character(bundle$settings$model %||% NA_character_)[1])
   plot_caveat <- as.character(bundle$caveat %||% "")
+  plot_support_status <- bundle$support_status %||% NULL
 
   fair_df <- stack_fair_raw_tables(bundle$raw_by_facet)
   if (nrow(fair_df) == 0) stop("No fair-average data available.")
@@ -1642,6 +1648,7 @@ plot_fair_average <- function(x,
       legend = plot_legend,
       reference_lines = plot_reference,
       preset = style$name,
+      support_status = plot_support_status,
       caveat = if (nzchar(plot_caveat)) plot_caveat else NULL
     )
   )
@@ -2509,22 +2516,20 @@ plot_qc_dashboard <- function(fit,
   } else {
     numeric(0)
   }
-  gpcm_support_status <- if (identical(fit_model, "GPCM")) {
-    data.frame(
-      Model = fit_model,
-      Status = "supported_with_caveat",
-      Detail = paste0(
-        "Bounded GPCM QC dashboard panels are exploratory screens. ",
-        "The fair-average panel uses the slope-aware element-conditional ",
-        "table and inherits its SE caveat."
-      ),
-      stringsAsFactors = FALSE
+  gpcm_status <- if (identical(fit_model, "GPCM")) {
+    gpcm_support_status(
+      model = fit_model,
+      detail = paste0(
+        "Bounded GPCM QC dashboard panels are exploratory residual and ",
+        "screening views. The fair-average panel uses the slope-aware ",
+        "element-conditional table and inherits its SE caveat."
+      )
     )
   } else {
     NULL
   }
   gpcm_caveat <- if (identical(fit_model, "GPCM")) {
-    as.character(fair$caveat %||% gpcm_fair_average_rationale())
+    gpcm_qc_rationale()
   } else {
     NULL
   }
@@ -2806,7 +2811,7 @@ plot_qc_dashboard <- function(fit,
       interrater = interrater,
       facets_chisq = fchi,
       reliability = rel_tbl,
-      support_status = gpcm_support_status,
+      support_status = gpcm_status,
       caveat = gpcm_caveat
     )
   )

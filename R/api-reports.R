@@ -1197,19 +1197,17 @@ build_apa_outputs <- function(fit,
     contract = contract
   )
   if (identical(fit_model, "GPCM")) {
-    out$support_status <- data.frame(
-      Model = fit_model,
-      Status = "supported_with_caveat",
-      Detail = paste0(
+    out$support_status <- gpcm_support_status(
+      fit_model,
+      paste0(
         "APA scaffold generation is available for bounded GPCM with ",
         "GPCM-specific model wording. Fair-average and bias sections retain ",
         "screening-tier semantics; conditional fair-average SEs are ",
         "measure-only delta-method summaries, not full joint-uncertainty ",
         "intervals."
-      ),
-      stringsAsFactors = FALSE
+      )
     )
-    out$caveat <- gpcm_fair_average_rationale()
+    out$caveat <- gpcm_visual_rationale()
   }
   class(out) <- c("mfrm_apa_outputs", "list")
   out
@@ -5505,7 +5503,11 @@ print.summary.mfrm_threshold_profiles <- function(x, ...) {
 #' 1. inspect defaults with [mfrm_threshold_profiles()]
 #' 2. choose `threshold_profile` (`strict` / `standard` / `lenient`)
 #' 3. optionally override selected fields via `thresholds`
-#' 4. pass result maps to report/dashboard rendering logic
+#' 4. inspect `vis$public_plot_routes` to choose the dedicated public helper
+#'    and `vis$plot_payloads` for reusable draw-free payloads
+#' 5. cross-check figure placement with
+#'    `reporting_checklist(fit, diagnostics)$visual_scope` and
+#'    [visual_reporting_template()] before writing captions or results text
 #'
 #' @return
 #' An object of class `mfrm_visual_summaries` with:
@@ -5644,17 +5646,15 @@ build_visual_summaries <- function(fit,
     threshold_profile = as.character(threshold_profile[1])
   )
   if (isTRUE(gpcm_mode)) {
-    out$support_status <- data.frame(
-      Model = as.character(fit$config$model %||% NA_character_),
-      Status = "supported_with_caveat",
-      Detail = paste0(
+    out$support_status <- gpcm_support_status(
+      as.character(fit$config$model %||% NA_character_),
+      paste0(
         "Bounded GPCM visual summaries are available as exploratory ",
         "diagnostic routing. Fair-average and bias layers use slope-aware ",
         "GPCM screens with the documented SE caveats."
-      ),
-      stringsAsFactors = FALSE
+      )
     )
-    out$caveat <- gpcm_fair_average_rationale()
+    out$caveat <- gpcm_visual_rationale()
   }
   out$plot_payloads <- build_visual_plot_payloads(out, fit = fit)
   out$public_plot_routes <- build_visual_plot_route_table()
@@ -5679,6 +5679,21 @@ build_visual_plot_route_table <- function() {
       "residual_pca_overall",
       "residual_pca_by_facet",
       "category_probability_surface"
+    ),
+    Question = c(
+      "Which visual families have warning or summary text?",
+      "Which visual families triggered warning text?",
+      "Which visual families have narrative summary text?",
+      "Which observations are locally surprising?",
+      "Which facet levels have adjusted score-side averages?",
+      "Which levels move under residual displacement review?",
+      "How consistent are raters or scoring facets?",
+      "Which facets contribute meaningful variability?",
+      "Which facet/category cells drive strict marginal follow-up?",
+      "Which level pairs drive local-dependence follow-up?",
+      "Is there residual structure after the main dimension?",
+      "Which facet-level residual loadings drive that structure?",
+      "How do category probabilities vary across theta?"
     ),
     PlotHelper = c(
       "plot.mfrm_bundle()",
@@ -5725,6 +5740,66 @@ build_visual_plot_route_table <- function() {
       "overall residual-structure follow-up",
       "facet-level residual-structure follow-up",
       "exploratory category-probability surface handoff"
+    ),
+    FirstRead = c(
+      "Compare warning and summary counts before opening specific figures.",
+      "Start with the highest-count visual family.",
+      "Start with the families that have non-empty narrative summaries.",
+      "Sort by residual size and model probability.",
+      "Read caveat and score range before comparing adjusted averages.",
+      "Sort by absolute displacement and check anchoring status.",
+      "Compare observed agreement, expected agreement, and gaps.",
+      "Check reliability/separation/chi-square together, not in isolation.",
+      "Read sparse-cell caveats and largest standardized cells first.",
+      "Read exact/adjacent agreement residuals and low-count warnings first.",
+      "Read the scree plot before loading-level follow-up.",
+      "Read component and facet labels before interpreting loadings.",
+      "Read category_support and interpretation_guide before rendering."
+    ),
+    NextLook = c(
+      "Use reporting_checklist()$visual_scope for figure placement.",
+      "Open the corresponding dedicated public plot helper.",
+      "Use visual_reporting_template() for caption and wording guidance.",
+      "Use unexpected_response_table() or build_misfit_casebook() for row review.",
+      "Use rating_scale_table() and the returned caveat before reporting.",
+      "Use displacement_table() and anchor/drift review when anchors are involved.",
+      "Use plot_rater_agreement_heatmap() when there are many raters.",
+      "Use facet_quality_dashboard() for combined facet-level triage.",
+      "Use plot_marginal_pairwise() if first-order cells suggest local dependence.",
+      "Use content/design review before treating pairs as substantive dependence.",
+      "Use plot_residual_pca(..., plot_type = \"loadings\") for selected components.",
+      "Use plot_residual_matrix() or content review for clustered loadings.",
+      "Use plot(fit, type = \"ccc\") and plot(fit, type = \"pathway\") as the 2D report defaults."
+    ),
+    ReportUse = c(
+      "routing table, not a manuscript figure",
+      "QA/routing table, not a manuscript figure",
+      "QA/routing table, not a manuscript figure",
+      "appendix or case-review follow-up",
+      "main text only with documented score-side caveats",
+      "appendix or anchor-review follow-up",
+      "main text or appendix when rater agreement is a study question",
+      "main text or appendix for facet-quality reporting",
+      "diagnostic appendix after diagnostic_mode = \"both\"",
+      "diagnostic appendix or local-dependence follow-up",
+      "diagnostic appendix or sensitivity discussion",
+      "diagnostic appendix after scree review",
+      "exploratory appendix/downstream-renderer payload only"
+    ),
+    GPCMBoundary = c(
+      "available as visual-routing metadata",
+      "available as visual-routing metadata",
+      "available as visual-routing metadata",
+      "available as exploratory residual screen under GPCM",
+      "slope-aware GPCM screen with documented SE caveats",
+      "available as exploratory residual screen under GPCM",
+      "available as agreement summary; not Rasch invariance evidence",
+      "available as exploratory facet-quality screen under GPCM",
+      "use only where strict marginal output is returned with caveats",
+      "use only where pairwise output is returned with caveats",
+      "exploratory residual-structure review under GPCM",
+      "exploratory residual-structure review under GPCM",
+      "available as slope-aware exploratory category-probability payload"
     )
   )
 }
@@ -7514,17 +7589,15 @@ run_qc_pipeline <- function(fit,
                     thresholds = effective_thresholds)
   )
   if (isTRUE(gpcm_mode)) {
-    out$support_status <- data.frame(
-      Model = as.character(fit$config$model %||% NA_character_),
-      Status = "supported_with_caveat",
-      Detail = paste0(
+    out$support_status <- gpcm_support_status(
+      as.character(fit$config$model %||% NA_character_),
+      paste0(
         "Bounded GPCM QC is an exploratory screening route. Interpret ",
-        "fair-average and bias checks as slope-aware GPCM screens; do not ",
-        "treat them as Rasch-family invariance evidence."
-      ),
-      stringsAsFactors = FALSE
+        "residual, agreement, fair-average, and bias checks as GPCM ",
+        "screening layers; do not treat them as Rasch-family invariance evidence."
+      )
     )
-    out$caveat <- gpcm_fair_average_rationale()
+    out$caveat <- gpcm_qc_rationale()
   }
   class(out) <- c("mfrm_qc_pipeline", "list")
   out

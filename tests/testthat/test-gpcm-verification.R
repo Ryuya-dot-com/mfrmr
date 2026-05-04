@@ -59,6 +59,10 @@ test_that("GPCM CCC / pathway / Wright plots return mfrm_plot_data", {
     p <- plot(.gpcm_fit, type = type, draw = FALSE)
     expect_s3_class(p, "mfrm_plot_data")
   }
+  surface <- plot(.gpcm_fit, type = "ccc_surface", draw = FALSE)
+  expect_s3_class(surface, "mfrm_plot_data")
+  expect_true(all(c("surface", "category_support", "interpretation_guide") %in%
+                    names(surface$data)))
 })
 
 test_that("GPCM capability matrix is consistent with the helper", {
@@ -78,26 +82,45 @@ test_that("GPCM visual summaries and QC pipeline run with caveat", {
   expect_s3_class(vis, "mfrm_visual_summaries")
   expect_identical(vis$support_status$Status[1], "supported_with_caveat")
   expect_match(vis$caveat, "slope-aware", fixed = TRUE)
+  expect_match(vis$caveat, "bias", ignore.case = TRUE)
+  expect_true(is.data.frame(vis$public_plot_routes))
 
   qc <- run_qc_pipeline(.gpcm_fit, diag, include_bias = FALSE)
   expect_s3_class(qc, "mfrm_qc_pipeline")
   expect_identical(qc$support_status$Status[1], "supported_with_caveat")
   expect_match(qc$caveat, "slope-aware", fixed = TRUE)
+  expect_match(qc$caveat, "residual", ignore.case = TRUE)
+  expect_match(qc$caveat, "screen", ignore.case = TRUE)
 
   dash <- plot_qc_dashboard(.gpcm_fit, diagnostics = diag, draw = FALSE)
   expect_s3_class(dash, "mfrm_plot_data")
   expect_true(isTRUE(dash$data$fair_average$available))
   expect_identical(dash$data$support_status$Status[1], "supported_with_caveat")
   expect_match(dash$data$caveat, "slope-aware", fixed = TRUE)
+  expect_match(dash$data$caveat, "residual", ignore.case = TRUE)
 
   fair_plot <- plot_fair_average(.gpcm_fit, diagnostics = diag, draw = FALSE)
   expect_s3_class(fair_plot, "mfrm_plot_data")
+  expect_identical(fair_plot$data$support_status$Status[1], "supported_with_caveat")
   expect_match(fair_plot$data$caveat, "slope-aware", fixed = TRUE)
   ci_plot <- plot_fair_average(
     .gpcm_fit, diagnostics = diag, show_ci = TRUE, draw = FALSE
   )
   expect_true(all(c("CI_Lower", "CI_Upper", "CI_Level") %in% names(ci_plot$data$data)))
   expect_true("AdjustedAverageConditionalSE" %in% names(fair_average_table(.gpcm_fit, diag)$stacked))
+})
+
+test_that("GPCM reporting checklist carries visual caveats", {
+  diag <- suppressMessages(suppressWarnings(
+    diagnose_mfrm(.gpcm_fit, residual_pca = "none", diagnostic_mode = "legacy")
+  ))
+  chk <- reporting_checklist(.gpcm_fit, diagnostics = diag)
+
+  expect_s3_class(chk, "mfrm_reporting_checklist")
+  expect_identical(chk$support_status$Status[1], "supported_with_caveat")
+  expect_match(chk$caveat, "GPCM", fixed = TRUE)
+  expect_true(all(chk$visual_scope$SupportStatus == "supported_with_caveat"))
+  expect_true(any(grepl("screen", chk$visual_scope$ModelCaveat, ignore.case = TRUE)))
 })
 
 test_that("GPCM supported summaries can be routed into table bundles", {

@@ -156,7 +156,7 @@
 #'    scenario forecast helper, not the latent-regression estimator itself.
 #'    Prediction export still requires actual prediction objects in addition to
 #'    `include = "predictions"`.
-#' 10. Use `summary()` for compact text checks and `plot()` (or dedicated plot
+#' 11. Use `summary()` for compact text checks and `plot()` (or dedicated plot
 #'    helpers) for base-R visual diagnostics.
 #'
 #' @section Three practical routes:

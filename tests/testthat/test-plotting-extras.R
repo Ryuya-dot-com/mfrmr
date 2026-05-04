@@ -176,7 +176,9 @@ test_that("plot_dif_summary sort_by = 'effect' orders by signed contrast", {
 # --- plot_apa_figure_one ----------------------------------------------------
 
 test_that("plot_apa_figure_one bundles the four panels", {
-  p <- plot_apa_figure_one(.fit, diagnostics = .diag, draw = FALSE)
+  expect_no_warning(
+    p <- plot_apa_figure_one(.fit, diagnostics = .diag, draw = FALSE)
+  )
   expect_s3_class(p, "mfrm_plot_data")
   expect_true(all(c("wright", "severity", "threshold", "summary") %in%
                     names(p$data$data)))

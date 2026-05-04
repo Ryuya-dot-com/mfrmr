@@ -94,8 +94,12 @@ of the same flag; neither field certifies formal inferential adequacy.
 FACETS, ConQuest, and SPSS-style tabular handoffs.
 \item \code{visual_scope}: plotting-route summary that separates report-default
 2D figures from exploratory surface/3D-ready payloads, including a short
-\code{InterpretationCheck} for the main user-facing caveat.
+\code{InterpretationCheck} for the main user-facing caveat. For bounded
+\code{GPCM}, this table also exposes \code{SupportStatus} and \code{ModelCaveat} so the
+run-specific plotting boundary can be retained in reports and handoffs.
 \item \code{references}: core background references when requested.
+\item \code{support_status}: bounded-\code{GPCM} support contract, when applicable.
+\item \code{caveat}: bounded-\code{GPCM} visual/reporting caveat, when applicable.
 }
 }
 
@@ -106,7 +110,9 @@ the missing diagnostics, bias results, or narrative context before calling
 \code{\link[=build_apa_outputs]{build_apa_outputs()}} for draft text generation. For \code{RSM} / \code{PCM}
 reporting runs, the preferred route is an \code{MML} fit plus
 \code{diagnose_mfrm(..., diagnostic_mode = "both")} so the checklist can see the
-legacy and strict marginal screens together.
+legacy and strict marginal screens together. For bounded \code{GPCM}, keep
+\code{support_status}, \code{caveat}, and \code{visual_scope$ModelCaveat} attached to any
+copied checklist, visual, or APA text.
 }
 
 \section{How this differs from operational review}{

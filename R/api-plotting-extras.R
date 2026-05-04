@@ -718,7 +718,9 @@ plot_dif_summary <- function(x,
 #'
 #' @seealso [plot.mfrm_fit()] (`type = "wright"`),
 #'   [plot_rater_severity_profile()], [plot_threshold_ladder()],
-#'   [build_apa_outputs()].
+#'   [build_apa_outputs()], [visual_reporting_template()],
+#'   [reporting_checklist()], [mfrmr_reporting_and_apa],
+#'   [mfrmr_visual_diagnostics].
 #'
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
@@ -751,13 +753,23 @@ plot_apa_figure_one <- function(fit,
   summary_lines <- character(0)
   s <- fit$summary
   if (is.data.frame(s) && nrow(s) >= 1L) {
+    n_obs <- if ("N_Obs" %in% names(s)) {
+      s$N_Obs[1] %||% NA
+    } else {
+      nrow(fit$prep$data %||% data.frame())
+    }
+    n_person <- if ("N_Person" %in% names(s)) {
+      s$N_Person[1] %||% NA
+    } else {
+      nrow(fit$facets$person %||% data.frame())
+    }
     summary_lines <- c(
       sprintf("Model: %s | Method: %s",
               as.character(s$Model[1] %||% NA_character_),
               as.character(s$Method[1] %||% NA_character_)),
       sprintf("N obs = %s | Persons = %s",
-              format(s$N_Obs[1] %||% NA, big.mark = ","),
-              format(s$N_Person[1] %||% NA, big.mark = ",")),
+              format(n_obs, big.mark = ","),
+              format(n_person, big.mark = ",")),
       sprintf("LogLik = %.2f | AIC = %.2f | BIC = %.2f",
               s$LogLik[1] %||% NA_real_,
               s$AIC[1] %||% NA_real_,

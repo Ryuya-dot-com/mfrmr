@@ -70,6 +70,13 @@ Interpretation:
   drafting with the package's documented caveats.
 - `Priority` shows what to resolve first.
 - `NextAction` is the shortest package-native instruction for closing the gap.
+- `visual_scope` is the plot-readiness table. Pair it with
+  `visual_reporting_template()` before choosing report figures or captions.
+
+```{r visual-scope}
+chk$visual_scope[, c("Visualization", "CurrentSupport", "ReportUse", "InterpretationCheck")]
+visual_reporting_template()[, c("FigureFamily", "PrimaryHelper", "ReportDecision")]
+```
 
 ## 2. Check the precision layer before strong claims
 
@@ -151,7 +158,16 @@ vis <- build_visual_summaries(
 
 names(vis)
 names(vis$warning_map)
+vis$public_plot_routes
 ```
+
+Interpretation:
+
+- `public_plot_routes` gives the draw-free helper route for reproducible
+  captions and downstream rendering.
+- `warning_map` tells you which diagnostic family needs a local follow-up plot.
+- For bounded `GPCM`, retain `vis$support_status` and `vis$caveat` with the
+  visual payloads.
 
 ## 6. Reporting route when interaction screening matters
 
@@ -190,10 +206,13 @@ For a compact manuscript-oriented route:
 5. `build_apa_outputs()`
 6. `apa_table()`
 7. `build_visual_summaries()`
+8. `visual_reporting_template()` plus `chk$visual_scope` before final figure
+   selection
 
 ## Related help
 
 - `help("mfrmr_reporting_and_apa", package = "mfrmr")`
 - `help("mfrmr_reports_and_tables", package = "mfrmr")`
+- `help("mfrmr_visual_diagnostics", package = "mfrmr")`
 - `help("reporting_checklist", package = "mfrmr")`
 - `help("build_apa_outputs", package = "mfrmr")`

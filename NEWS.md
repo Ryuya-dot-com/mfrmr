@@ -55,6 +55,13 @@ with explicit caveats.
 
 ## Documentation refinements
 
+- **Visual/API reading guide**: `visual_reporting_template()` now includes
+  `ReadFirst`, `NextLook`, `ReportDecision`, and `GPCMBoundary` columns.
+  `reporting_checklist()$visual_scope`, `build_visual_summaries()`, the
+  README, and the reporting/visual vignettes now point users from first-pass
+  dashboard plots to the appropriate component helper and reporting caveat.
+  Bounded `GPCM` visual, fair-average, bias, APA, and QC routes now carry a
+  consistent `support_status` / `caveat` contract.
 - **Linacre FACETS / Winsteps manuals**: cited years updated from 2023
   / 2024 to **2026** (current FACETS 4.5.0 = April 2026, Winsteps 5.11.0
   = March 2026 per <https://www.winsteps.com/index.htm>).

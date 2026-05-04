@@ -29,8 +29,9 @@
 #'   strict invariance.
 #' - Slope-aware [fair_average_table()] and [estimate_bias()] are available
 #'   under `GPCM`, but their SE columns keep the caveats documented in those
-#'   help pages. Broader compatibility-export helpers stay outside the
-#'   validated `GPCM` boundary.
+#'   help pages. Package-native [build_apa_outputs()] and
+#'   [export_mfrm_bundle()] can carry the caveats forward; FACETS score-side
+#'   compatibility exports remain outside the validated `GPCM` boundary.
 #'
 #' Use [gpcm_capability_matrix()] for the formal per-helper boundary
 #' before choosing a `GPCM` follow-up plot route.
@@ -110,7 +111,8 @@
 #'    [plot_marginal_fit()], [plot_marginal_pairwise()], and
 #'    [plot_interrater_agreement()] for flagged local issues.
 #' 4. Use `plot(fit, type = "wright")`, `plot(fit, type = "pathway")`,
-#'    and `plot_residual_pca()` for structural interpretation.
+#'    `plot(fit, type = "ccc")`, and `plot_residual_pca()` for structural
+#'    interpretation.
 #' 5. Use [plot_bias_interaction()], [plot_dif_heatmap()],
 #'    [plot_dif_summary()], [plot_anchor_drift()], and
 #'    [plot_information()] when the checklist or dashboard points to
@@ -394,6 +396,12 @@ NULL
 #'   the fitted object and diagnostics.
 #' - `WhatNotToClaim`: common overclaim to avoid.
 #' - `BeginnerCheck`: first thing a new user should inspect.
+#' - `ReadFirst`: the first visual feature to inspect inside the figure.
+#' - `NextLook`: the next public helper, table, or checklist to consult.
+#' - `ReportDecision`: conservative rule for deciding main-text, appendix, or
+#'   exploratory-only placement.
+#' - `GPCMBoundary`: model-specific interpretation boundary for bounded
+#'   `GPCM` fits.
 #' - `ThreeDPolicy`: whether 3D is recommended, discouraged, or payload-only.
 #'
 #' @details
@@ -555,6 +563,70 @@ visual_reporting_template <- function(scope = c("all", "manuscript", "appendix",
       "Confirm that the waves share an anchor or were post-hoc linked before interpreting movement.",
       "Switch between metric = \"exact\" and metric = \"correlation\" and check that both tell a consistent story."
     ),
+    ReadFirst = c(
+      "Read the person distribution and threshold/facet locations before judging individual level labels.",
+      "Read the expected-score curve first, then the dominant-category strip.",
+      "Read peak order and peak height before discussing category usefulness.",
+      "Read category_support and interpretation_guide before rendering or describing the surface.",
+      "Read the theta region of interest against the information peak and low-information tails.",
+      "Read the flagged panels first, then open the component helper named by the flag.",
+      "Read the largest absolute residual or displacement rows and look for repeated persons or levels.",
+      "Read low-count caveats and the largest standardized cells before interpreting patterns.",
+      "Read the tested facet pair or group contrast, then inspect the largest screened cells.",
+      "Read the scree plot first; read loadings only for components that merit follow-up.",
+      "Read the sorted response matrix and then the unexpected-response overlay.",
+      "Read tail departures from the reference line before discussing residual shape.",
+      "Read wave labels and anchor/linking assumptions before interpreting movement.",
+      "Read the selected metric and off-diagonal structure before naming rater pairs."
+    ),
+    NextLook = c(
+      "Use plot_qc_dashboard() and summary(fit) to check whether targeting issues coincide with fit warnings.",
+      "Use rating_scale_table() or category_structure_report() to confirm category counts and threshold ordering.",
+      "Use category_curves_report() and rating_scale_table() to document category support before reporting.",
+      "Use plot(fit, type = \"ccc\") / plot(fit, type = \"pathway\") as the report-default 2D companion.",
+      "Use precision_audit_report() before writing precision or standard-error language.",
+      "Use reporting_checklist()$visual_scope and the flagged component plot for the next action.",
+      "Use unexpected_response_table(), displacement_table(), or build_misfit_casebook() for row-level review.",
+      "Use plot_marginal_pairwise() after first-order marginal flags point to possible local dependence.",
+      "Use bias_interaction_report(), dif_report(), and reporting_checklist() before drafting interpretation.",
+      "Use plot_residual_pca(..., plot_type = \"loadings\") or plot_residual_matrix() for targeted follow-up.",
+      "Use plot_unexpected() or plot_residual_matrix() when the overlay clusters in specific rows or columns.",
+      "Use plot_person_fit() or plot_unexpected() when tail departures point to a small set of persons.",
+      "Use plot_anchor_drift() or build_linking_review() to document the common-scale support.",
+      "Use plot_interrater_agreement() and facet_quality_dashboard() to connect pairwise agreement to facet quality."
+    ),
+    ReportDecision = c(
+      "Main text when targeting or shared-scale interpretation is central and caveats are addressed.",
+      "Main text or appendix when category progression is a reporting question.",
+      "Main text with counts/threshold support, otherwise appendix.",
+      "Exploratory appendix or downstream-renderer payload only.",
+      "Main text only when precision is a substantive claim and precision_audit_report() supports the wording.",
+      "Appendix/internal triage by default; main text only as a compact route into follow-up figures.",
+      "Appendix or case-review supplement unless the study question is operational QC.",
+      "Appendix follow-up after diagnostic_mode = \"both\"; not a standalone result.",
+      "Main text only for planned interaction/DFF questions; otherwise appendix screening.",
+      "Appendix or sensitivity discussion unless residual structure is central to the study.",
+      "Teaching or appendix figure; avoid as the primary model-fit evidence.",
+      "Appendix follow-up; pair with row-level diagnostics before drawing conclusions.",
+      "Appendix or training report after explicit linking support is documented.",
+      "Appendix or rater-feedback report when the rater count makes bar charts too dense."
+    ),
+    GPCMBoundary = c(
+      "Available for bounded GPCM as shared-scale display; do not treat residual flags as Rasch invariance evidence.",
+      "Available for bounded GPCM with slope-aware probabilities; interpret as model-specific category behavior.",
+      "Available for bounded GPCM; category peaks reflect the fitted discrimination convention.",
+      "Available as bounded-GPCM exploratory payload; keep slope and zero-count-category caveats visible.",
+      "Available where compute_information() supports the GPCM fit; interpret as design-weighted precision.",
+      "Available with caveat; fair-average and residual panels are exploratory score-side screens.",
+      "Available with caveat; repeated patterns are follow-up leads, not Rasch-family invariance violations.",
+      "Strict marginal plots are not the primary GPCM evidence route; use only where returned with caveats.",
+      "Bias/fair-average GPCM layers are slope-aware screening outputs with documented SE caveats.",
+      "Residual PCA under GPCM is exploratory residual-structure review.",
+      "Available as descriptive ordering view; discrimination differences can change expected ordering strength.",
+      "Available as exploratory residual-tail review, not formal GPCM fit proof.",
+      "Available only when supplied fits share a defensible anchored scale.",
+      "Available as agreement summary; GPCM discrimination does not turn agreement cells into reliability coefficients."
+    ),
     ThreeDPolicy = c(
       "2D recommended; 3D Wright maps are discouraged.",
       "2D report default.",
@@ -573,6 +645,90 @@ visual_reporting_template <- function(scope = c("all", "manuscript", "appendix",
     ),
     stringsAsFactors = FALSE
   )
+
+  secondary <- data.frame(
+    FigureFamily = c(
+      "Local-dependence heatmap",
+      "Reliability snapshot",
+      "Residual matrix",
+      "Shrinkage funnel"
+    ),
+    Scope = c("diagnostic", "appendix", "diagnostic", "appendix"),
+    PrimaryHelper = c(
+      "plot_local_dependence_heatmap(fit, diagnostics = diagnostics)",
+      "plot_reliability_snapshot(fit, diagnostics = diagnostics)",
+      "plot_residual_matrix(fit, diagnostics = diagnostics)",
+      "plot_shrinkage_funnel(fit_shrunk)"
+    ),
+    DefaultPlacement = c(
+      "Diagnostic appendix for Q3-style local-dependence screening.",
+      "Appendix or compact methods/results support when facet separation is central.",
+      "Diagnostic appendix after unexpected-response or residual-PCA screening.",
+      "Appendix or sensitivity review after empirical-Bayes shrinkage is applied."
+    ),
+    WhatToReport = c(
+      "Describe facet-level pairs whose residual correlations are unusually high.",
+      "Describe which facets show stronger or weaker separation, strata, and reliability.",
+      "Describe where large signed residual aggregates concentrate across persons and facet levels.",
+      "Describe how much raw facet estimates moved under empirical-Bayes shrinkage."
+    ),
+    CaptionSkeleton = c(
+      "Appendix Figure X. Local-dependence heatmap of residual correlations between facet levels.",
+      "Appendix Figure X. Facet reliability snapshot showing separation, strata, and reliability.",
+      "Appendix Figure X. Person x facet-level standardized residual heatmap.",
+      "Appendix Figure X. Empirical-Bayes shrinkage funnel comparing raw and shrunken facet estimates."
+    ),
+    ResultsWording = c(
+      "The local-dependence heatmap was inspected as exploratory follow-up for residual co-movement between facet levels.",
+      "The reliability snapshot was inspected to summarize which facets were more clearly separated.",
+      "The residual matrix was inspected to localize signed residual aggregates after the main fit screen.",
+      "The shrinkage funnel was inspected to evaluate the magnitude of empirical-Bayes movement for facet levels."
+    ),
+    WhatNotToClaim = c(
+      "Do not claim formal local independence failure from a heatmap cell alone.",
+      "Do not treat high reliability as proof of substantive validity.",
+      "Do not interpret residual concentration without checking counts and repeated patterns.",
+      "Do not describe shrinkage movement as a new observed-data estimate; it is prior-informed smoothing."
+    ),
+    BeginnerCheck = c(
+      "Check off-diagonal cells and verify that high correlations are not driven by sparse support.",
+      "Check the lowest facet reliability/separation rows before quoting the strongest rows.",
+      "Check whether residual blocks concentrate in a few persons or facet levels.",
+      "Check which levels moved most and whether movement is tied to weak information."
+    ),
+    ReadFirst = c(
+      "Read the largest off-diagonal residual correlations and their support.",
+      "Read the weakest facet row first, then compare separation and reliability together.",
+      "Read residual sign and magnitude clusters before naming individual cases.",
+      "Read raw-versus-shrunken displacement before interpreting the final shrunken estimate."
+    ),
+    NextLook = c(
+      "Use plot_marginal_pairwise() or the underlying table for targeted follow-up.",
+      "Use facet_statistics_report() and precision_audit_report() before manuscript wording.",
+      "Use plot_unexpected(), unexpected_response_table(), or build_misfit_casebook() for row-level review.",
+      "Use apply_empirical_bayes_shrinkage() output summaries and the original fit estimates side by side."
+    ),
+    ReportDecision = c(
+      "Appendix screening only unless local dependence is a planned study question.",
+      "Appendix or compact supporting figure when facet separability is part of the result.",
+      "Diagnostic appendix unless operational case review is the main deliverable.",
+      "Appendix or sensitivity note; not a replacement for the unshrunken calibration report."
+    ),
+    GPCMBoundary = c(
+      "GPCM local-dependence heatmaps are exploratory residual screens.",
+      "GPCM reliability snapshots inherit the bounded-GPCM precision and residual caveats.",
+      "GPCM residual matrices are exploratory and should not be read as Rasch invariance evidence.",
+      "Shrinkage review is available only for fits carrying the shrinkage augmentation, with model caveats retained."
+    ),
+    ThreeDPolicy = c(
+      "2D heatmap display; 3D not recommended.",
+      "2D compact display; 3D not recommended.",
+      "2D heatmap display; 3D not recommended.",
+      "2D funnel/caterpillar display; 3D not recommended."
+    ),
+    stringsAsFactors = FALSE
+  )
+  out <- rbind(out, secondary)
 
   if (identical(scope, "all")) {
     return(out)

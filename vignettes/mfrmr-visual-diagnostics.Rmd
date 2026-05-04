@@ -31,6 +31,11 @@ If you are selecting figures for a report, use `reporting_checklist()` before
 or alongside this vignette. Its `"Visual Displays"` rows now mirror the
 public plotting family shown here.
 
+The setup below uses `JML` for a fast visual walkthrough. For final
+manuscript reporting, re-run the same route with `method = "MML"` and
+`diagnose_mfrm(..., diagnostic_mode = "both")` so strict marginal follow-up
+and formal precision wording remain visible.
+
 ## Minimal setup
 
 ```{r setup}
@@ -55,6 +60,10 @@ subset(
   Section == "Visual Displays",
   c("Item", "Available", "NextAction")
 )
+
+visual_reporting_template()[, c(
+  "FigureFamily", "PrimaryHelper", "ReadFirst", "NextLook", "ReportDecision"
+)]
 ```
 
 ## 1. Targeting and scale structure
@@ -71,6 +80,9 @@ Interpretation:
 - Compare person density on the left to facet and step locations on the right.
 - Large gaps suggest weaker targeting in that logit region.
 - Wide overlap in confidence whiskers means neighboring levels are not cleanly separated.
+- First read: targeting and spread. Next look: category curves and fit
+  diagnostics. Report only the shared-scale description; do not treat the
+  Wright map as proof of model fit.
 
 Next, use the pathway map when you want to see how expected scores progress
 across theta.
@@ -84,6 +96,10 @@ Interpretation:
 - Steeper rises indicate stronger score progression.
 - Dominant-category strips show where each category is most likely to govern the score.
 - Flat or compressed regions suggest weaker category separation.
+- First read: whether categories progress in order. Next look: CCC or the
+  category-support table when a category is sparse or retained with zero
+  frequency. Report descriptive category functioning, not rating-scale
+  validity by itself.
 
 ## 2. Local response and level issues
 
@@ -104,6 +120,9 @@ Interpretation:
 
 - Upper corners combine large residual mismatch with low model probability.
 - Repeated appearances of the same persons or levels are more informative than a single extreme point.
+- First read: repeated patterns by person, rater, criterion, or score
+  category. Next look: displacement, residual matrix, and the underlying
+  table. Report this as case-review screening evidence.
 
 Displacement focuses on level movement rather than individual responses.
 
@@ -121,6 +140,9 @@ Interpretation:
 
 - Large absolute displacement indicates stronger tension between observed data and current calibration.
 - For anchored runs, this is especially useful as an anchor-robustness screen.
+- First read: which levels would move most if freed. Next look: anchor status,
+  connectivity, and fit diagnostics. Avoid claiming that displacement alone
+  proves anchor failure.
 
 ### Strict marginal follow-up
 
@@ -166,6 +188,9 @@ Interpretation:
 - Treat strict marginal plots as exploratory corroboration screens, not as standalone inferential tests.
 - Use the checklist rows to confirm that the current run actually supports the strict branch before routing figures into a report.
 - When pairwise follow-up is needed, continue with `plot_marginal_pairwise(diag_strict, preset = "publication")`.
+- Report decision: include strict marginal figures only when the fitted run
+  actually returned strict bundles; otherwise state that only the legacy
+  residual route was inspected.
 
 ## 3. Linking and coverage
 
@@ -181,6 +206,9 @@ Interpretation:
 
 - Sparse rows or columns indicate weak subset coverage.
 - Facets with low overlap are weaker anchors for cross-subset comparisons.
+- First read: whether forms, waves, or subsets are connected by enough common
+  elements. Next look: anchor drift and information curves before comparing
+  cross-subset estimates.
 
 If you are working across administrations, follow up with anchor-drift plots:
 
@@ -203,6 +231,8 @@ Interpretation:
 
 - Early components with noticeably larger eigenvalues deserve follow-up.
 - Scree review should usually be paired with loading review for the component of interest.
+- Report decision: residual PCA is follow-up evidence for residual structure,
+  not a standalone dimensionality test.
 
 For interaction screening, use the packaged bias example.
 
@@ -233,6 +263,9 @@ Interpretation:
 
 - Facet profiles are useful for seeing whether a small number of levels drives most flagged interaction cells.
 - Treat these plots as screening evidence; confirm with the corresponding tables and narrative reports.
+- First read: which facet level concentrates the flagged cells. Next look:
+  low-count cells, design support, and the `estimate_bias()` table before
+  wording a substantive interaction claim.
 
 ## 5. Secondary visual layer
 
@@ -246,6 +279,14 @@ use them after the main screens above.
 - `plot_residual_qq(fit, diagnostics)` plots a Normal Q-Q of
   person-level standardized residual aggregates as exploratory
   follow-up on residual tail behavior.
+- `plot_local_dependence_heatmap(fit, diagnostics)` renders a Q3-style
+  residual-correlation heatmap for exploratory local-dependence review.
+- `plot_reliability_snapshot(fit, diagnostics)` summarizes separation,
+  strata, and reliability by facet on one small page.
+- `plot_residual_matrix(fit, diagnostics)` shows person x facet-level
+  standardized residual aggregates for local sign/magnitude follow-up.
+- `plot_shrinkage_funnel(fit_shrunk)` compares raw and empirical-Bayes
+  shrunken facet estimates after `apply_empirical_bayes_shrinkage()`.
 - `plot_rater_trajectory(list(T1 = fit_a, T2 = fit_b))` tracks rater
   severity across named waves. The helper does not perform linking;
   supply waves that have already been placed on a common anchored
@@ -263,9 +304,11 @@ For a compact visual workflow:
 1. `reporting_checklist()` when you want the package to route which figures are already supported.
 2. `plot_qc_dashboard()` for one-page triage.
 3. `plot_unexpected()`, `plot_displacement()`, `plot_marginal_fit()`, and `plot_interrater_agreement()` for local follow-up.
-4. `plot(fit, type = "wright")` and `plot(fit, type = "pathway")` for targeting and scale interpretation.
+4. `plot(fit, type = "wright")`, `plot(fit, type = "pathway")`, and `plot(fit, type = "ccc")` for targeting and scale interpretation.
 5. `plot_residual_pca()`, `plot_bias_interaction()`, and `plot_information()` for deeper structural review.
 6. `plot_guttman_scalogram()`, `plot_residual_qq()`,
+   `plot_local_dependence_heatmap()`, `plot_reliability_snapshot()`,
+   `plot_residual_matrix()`, `plot_shrinkage_funnel()`,
    `plot_rater_trajectory()`, and `plot_rater_agreement_heatmap()` as
    the teaching / drift / agreement-heatmap follow-up layer.
 
