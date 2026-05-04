@@ -45,4 +45,39 @@ test_that("summary(diag) inherits the option-driven band", {
   on.exit(options(old), add = TRUE)
   s <- summary(diag)
   expect_equal(unname(s$misfit_thresholds), c(0.7, 1.3))
+  expect_match(s$misfit_threshold_label, "custom active screening band", fixed = TRUE)
+  expect_match(s$misfit_threshold_note, "custom/configured band", fixed = TRUE)
+  expect_match(s$misfit_threshold_note, "universal misfit definition", fixed = TRUE)
+  out <- capture.output(print(s))
+  expect_true(any(grepl("Misfit threshold policy", out, fixed = TRUE)))
+  expect_true(any(grepl("0.7-1.3", out, fixed = TRUE)))
+  expect_false(any(grepl("Linacre threshold", out, fixed = TRUE)))
+})
+
+test_that("build_apa_outputs states active misfit-band convention", {
+  toy <- load_mfrmr_data("example_core")
+  fit <- suppressMessages(suppressWarnings(
+    fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
+             method = "JML", maxit = 25)
+  ))
+  diag <- suppressMessages(diagnose_mfrm(fit, residual_pca = "none",
+                                          diagnostic_mode = "legacy"))
+
+  apa_default <- build_apa_outputs(fit, diag)
+  expect_match(apa_default$report_text, "active 0.5-1.5 MnSq screening band", fixed = TRUE)
+  expect_match(
+    apa_default$report_text,
+    "screening evidence rather than a\\s+universal misfit definition"
+  )
+  expect_true("Misfit threshold caveat alignment" %in%
+                summary(apa_default)$content_checks$Check)
+
+  old <- options(
+    mfrmr.misfit_lower = 0.7,
+    mfrmr.misfit_upper = 1.3
+  )
+  on.exit(options(old), add = TRUE)
+  apa_custom <- build_apa_outputs(fit, diag)
+  expect_match(apa_custom$report_text, "active 0.7-1.3 MnSq screening band", fixed = TRUE)
+  expect_match(apa_custom$report_text, "custom threshold settings", fixed = TRUE)
 })

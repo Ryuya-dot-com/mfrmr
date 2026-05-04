@@ -3059,7 +3059,8 @@ make_anchor_table <- function(fit,
 #' # Look for: "No immediate warnings ..." in `key_warnings` is the
 #' #   "all clear" signal. Lines starting with "MnSq misfit:" name the
 #' #   element + Infit / Outfit values that fell outside the
-#' #   0.5-1.5 acceptance band; review those first.
+#' #   active MnSq screening band; review those first. The default band is
+#' #   0.5-1.5, but published and operational misfit bands vary.
 #' s_diag$facets_chisq
 #' # Look for: `FixedProb` < 0.05 means that facet's elements differ
 #' #   reliably under the fixed-effect "all elements equal" null. A
@@ -3090,8 +3091,9 @@ make_anchor_table <- function(fit,
 #'   convention.)
 #' - Wright, B. D., & Linacre, J. M. (1994). Reasonable mean-square
 #'   fit values. *Rasch Measurement Transactions, 8*(3), 370.
-#'   (Source for the 0.5-1.5 Infit / Outfit acceptance band that
-#'   `s_diag$key_warnings` and `misfit_thresholds` apply.)
+#'   (Source for the broad 0.5-1.5 Infit / Outfit screening band used
+#'   as the package default; narrower reporting bands are also used in
+#'   applied literature.)
 #' - Linacre, J. M. (1989). *Many-Facet Rasch Measurement*. MESA
 #'   Press. (FACETS Tables 6 + 7 correspond to the per-facet
 #'   element measures, fit, and chi-square heterogeneity screen

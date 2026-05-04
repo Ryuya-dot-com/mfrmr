@@ -49,6 +49,13 @@ Frequently used fields include:
 Output text includes residual-PCA screening commentary if PCA diagnostics are
 available in \code{diagnostics}.
 
+\code{build_apa_outputs()} is the single front-door helper for concise
+manuscript-draft prose. It intentionally reuses the same facts exposed by
+\code{summary(fit)}, \code{summary(diagnostics)}, and companion reporting helpers, but
+the object returned here is the paper-facing bundle: printing it shows the
+compact Method / Results narrative, whereas \code{summary(apa)} is a QA checklist
+for completeness and wording alignment.
+
 For bounded \code{GPCM}, this helper returns a caveated APA scaffold. It uses
 the GPCM-specific model wording and carries a \code{support_status} table plus a
 \code{caveat} field. Keep fair-average and bias language at the screening tier,
@@ -94,6 +101,7 @@ are omitted from the narrative rather than producing placeholder text.
 reporting runs, prefer an \code{MML} fit and
 \code{diagnose_mfrm(..., diagnostic_mode = "both")}.
 \item Run \code{build_apa_outputs(...)}.
+\item Print the returned object to view the concise manuscript narrative.
 \item Check \code{summary(apa)} for completeness.
 \item Insert \code{apa$report_text} and note/caption fields into manuscript drafts
 after checking the listed cautions.

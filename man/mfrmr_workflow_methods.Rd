@@ -272,7 +272,8 @@ grouping views available through \code{review$group_view_index} and
 \code{review$plot_map}.
 \item \code{mfrm_facets_run}: \code{summary(run)} and \code{plot(run, type = c("fit", "qc"), ...)}.
 \item \code{apa_table}: \code{summary(tbl)} and \code{plot(tbl, ...)}.
-\item \code{mfrm_apa_outputs}: \code{summary(apa)} for compact diagnostics of report text.
+\item \code{mfrm_apa_outputs}: print \code{apa} for concise Method / Results draft text;
+use \code{summary(apa)} for compact diagnostics of report text.
 \item \code{mfrm_summary_table_bundle}: \code{print(bundle)} for manuscript-oriented table
 index plus named tables from supported \code{summary()} outputs,
 \code{summary(bundle)} for table-role/numeric coverage, and \code{plot(bundle, ...)}

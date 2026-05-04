@@ -243,7 +243,8 @@
 #'   `review$plot_map`.
 #' - `mfrm_facets_run`: `summary(run)` and `plot(run, type = c("fit", "qc"), ...)`.
 #' - `apa_table`: `summary(tbl)` and `plot(tbl, ...)`.
-#' - `mfrm_apa_outputs`: `summary(apa)` for compact diagnostics of report text.
+#' - `mfrm_apa_outputs`: print `apa` for concise Method / Results draft text;
+#'   use `summary(apa)` for compact diagnostics of report text.
 #' - `mfrm_summary_table_bundle`: `print(bundle)` for manuscript-oriented table
 #'   index plus named tables from supported `summary()` outputs,
 #'   `summary(bundle)` for table-role/numeric coverage, and `plot(bundle, ...)`

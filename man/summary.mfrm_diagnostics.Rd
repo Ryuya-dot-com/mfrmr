@@ -37,6 +37,9 @@ separation overview when a Rater facet is present
 misfit thresholds active for this fit
 \item \code{misfit_thresholds}: named numeric vector with the misfit
 \code{lower} / \code{upper} thresholds used to populate \code{misfit_flagged}
+\item \code{misfit_threshold_label} / \code{misfit_threshold_note}: wording that
+identifies whether the active band is the package default or a
+configured/custom screening convention
 \item \code{category_usage}: per-category response-frequency summary used
 to flag empty / collapsed categories
 \item \code{top_fit}: top \verb{|ZSTD|} rows

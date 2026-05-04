@@ -12,8 +12,19 @@
 # `unclass(x)` or direct subsetting.
 
 #' @export
-print.mfrm_apa_outputs <- function(x, ...) {
-  print(summary(x), ...)
+print.mfrm_apa_outputs <- function(x,
+                                   include_notes = FALSE,
+                                   include_captions = FALSE,
+                                   ...) {
+  cat(as.character(x$report_text %||% ""), "\n", sep = "")
+  if (isTRUE(include_notes) && length(x$table_figure_notes) > 0) {
+    cat("\nTable/Figure notes.\n\n")
+    cat(as.character(x$table_figure_notes), "\n", sep = "")
+  }
+  if (isTRUE(include_captions) && length(x$table_figure_captions) > 0) {
+    cat("\nTable/Figure captions.\n\n")
+    cat(as.character(x$table_figure_captions), "\n", sep = "")
+  }
   invisible(x)
 }
 

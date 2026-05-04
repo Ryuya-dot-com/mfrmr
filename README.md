@@ -487,8 +487,15 @@ chk <- reporting_checklist(fit, diagnostics = diag)
 apa <- build_apa_outputs(fit, diag)
 
 chk$checklist[, c("Section", "Item", "DraftReady", "NextAction")]
-cat(apa$report_text)
+apa
 ```
+
+`build_apa_outputs()` is the paper-facing front door: printing `apa` gives the
+concise Method / Results draft, while `summary(apa)` checks completeness and
+wording alignment. Infit / Outfit flags in that text use the active MnSq
+screening band; the package default is the broad 0.5-1.5 convention, but this
+band is configurable and should be treated as screening evidence rather than a
+universal misfit definition.
 
 ### 4. Hierarchical structure and sample-adequacy audit
 

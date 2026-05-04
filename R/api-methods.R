@@ -4086,6 +4086,9 @@ plot.mfrm_bundle <- function(x, y = NULL, type = NULL, ...) {
 #'   misfit thresholds active for this fit
 #' - `misfit_thresholds`: named numeric vector with the misfit
 #'   `lower` / `upper` thresholds used to populate `misfit_flagged`
+#' - `misfit_threshold_label` / `misfit_threshold_note`: wording that
+#'   identifies whether the active band is the package default or a
+#'   configured/custom screening convention
 #' - `category_usage`: per-category response-frequency summary used
 #'   to flag empty / collapsed categories
 #' - `top_fit`: top `|ZSTD|` rows
@@ -4196,12 +4199,15 @@ summary.mfrm_diagnostics <- function(object, digits = 3, top_n = 10, ...) {
       dplyr::select("Facet", "Level", "Infit", "Outfit", "InfitZSTD", "OutfitZSTD", "AbsZ")
   }
 
-  # MnSq misfit threshold (Linacre, 0.5-1.5 acceptance band).
-  # Tracked separately from `top_fit` so the auto-flag below can name the
-  # offending element in `key_warnings` without depending on |ZSTD| ranking.
+  # MnSq misfit threshold. Tracked separately from `top_fit` so the
+  # auto-flag below can name the offending element in `key_warnings`
+  # without depending on |ZSTD| ranking.
   misfit_thresholds <- mfrm_misfit_thresholds()
   misfit_lower <- as.numeric(misfit_thresholds["lower"])
   misfit_upper <- as.numeric(misfit_thresholds["upper"])
+  misfit_band_text <- mfrm_misfit_threshold_text(misfit_thresholds)
+  misfit_threshold_label <- mfrm_misfit_threshold_label(misfit_thresholds)
+  misfit_threshold_note <- mfrm_misfit_threshold_note(misfit_thresholds)
   misfit_flagged <- tibble::tibble()
   if (nrow(fit_tbl) > 0 && all(c("Facet", "Level", "Infit", "Outfit") %in% names(fit_tbl))) {
     misfit_flagged <- fit_tbl |>
@@ -4352,8 +4358,7 @@ summary.mfrm_diagnostics <- function(object, digits = 3, top_n = 10, ...) {
     key_warnings <- c(key_warnings, paste0("Flagged displacement levels: ", displacement_flagged, "."))
   }
   # Name the worst MnSq offenders explicitly so the user does not have to
-  # mentally apply the 0.5/1.5 acceptance band against the sorted top_fit
-  # table.
+  # mentally apply the active screening band against the sorted top_fit table.
   if (nrow(misfit_flagged) > 0) {
     worst <- misfit_flagged |>
       dplyr::mutate(
@@ -4367,17 +4372,17 @@ summary.mfrm_diagnostics <- function(object, digits = 3, top_n = 10, ...) {
       dplyr::slice_head(n = 3L)
     msgs <- vapply(seq_len(nrow(worst)), function(i) {
       sprintf(
-        "MnSq misfit: %s:%s (Infit=%.2f, Outfit=%.2f; outside %.1f-%.1f).",
+        "MnSq misfit: %s:%s (Infit=%.2f, Outfit=%.2f; outside active %s band).",
         worst$Facet[i], worst$Level[i],
         as.numeric(worst$Infit[i]), as.numeric(worst$Outfit[i]),
-        misfit_lower, misfit_upper
+        misfit_band_text
       )
     }, character(1))
     key_warnings <- c(
       key_warnings,
       sprintf(
-        "MnSq misfit flagged %d element(s) outside %.1f-%.1f (Linacre threshold).",
-        nrow(misfit_flagged), misfit_lower, misfit_upper
+        "MnSq misfit flagged %d element(s) outside %s (active %s).",
+        nrow(misfit_flagged), misfit_band_text, misfit_threshold_label
       ),
       msgs
     )
@@ -4503,6 +4508,9 @@ summary.mfrm_diagnostics <- function(object, digits = 3, top_n = 10, ...) {
       "SE/ModelSE, CI, and reliability conventions depend on the estimation path; see diagnostics$approximation_notes for MML-vs-JML details."
     )
   }
+  if (nrow(fit_tbl) > 0) {
+    notes <- c(notes, misfit_threshold_note)
+  }
   if (nrow(reliability_tbl) > 0) {
     notes <- c(
       notes,
@@ -4595,6 +4603,8 @@ summary.mfrm_diagnostics <- function(object, digits = 3, top_n = 10, ...) {
     interrater = interrater_overview,
     misfit_flagged = misfit_flagged,
     misfit_thresholds = c(lower = misfit_lower, upper = misfit_upper),
+    misfit_threshold_label = misfit_threshold_label,
+    misfit_threshold_note = misfit_threshold_note,
     category_usage = category_usage,
     top_fit = top_fit,
     marginal_fit = marginal_fit_tbl,
@@ -4686,11 +4696,17 @@ print.summary.mfrm_diagnostics <- function(x, ...) {
     cat("\nLargest |ZSTD| rows\n")
     print(round_numeric_df(as.data.frame(x$top_fit), digits = digits), row.names = FALSE)
   }
+  if (!is.null(x$misfit_threshold_note) && nzchar(as.character(x$misfit_threshold_note[1]))) {
+    cat("\nMisfit threshold policy\n")
+    cat(" - ", as.character(x$misfit_threshold_note[1]), "\n", sep = "")
+  }
   if (!is.null(x$misfit_flagged) && nrow(x$misfit_flagged) > 0) {
     thr <- x$misfit_thresholds %||% c(lower = 0.5, upper = 1.5)
+    label <- as.character(x$misfit_threshold_label %||% "active screening band")
     cat(sprintf(
-      "\nMnSq misfit (outside %.1f-%.1f Linacre band; %d element(s))\n",
+      "\nMnSq misfit (outside %.1f-%.1f; %s; %d element(s))\n",
       as.numeric(thr["lower"]), as.numeric(thr["upper"]),
+      label,
       nrow(x$misfit_flagged)
     ))
     keep_show <- intersect(

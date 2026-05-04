@@ -23,7 +23,8 @@ Summarize APA report-output bundles
 }
 \details{
 This summary is a diagnostics layer for APA text products, not a replacement
-for the full narrative.
+for the full narrative. Printing the \code{mfrm_apa_outputs} object itself shows
+the concise Method / Results draft produced by \code{build_apa_outputs()}.
 
 It reports component completeness, line/character volume, and a compact
 preview for quick QA before manuscript insertion.

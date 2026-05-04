@@ -20,7 +20,11 @@ A named numeric vector \code{c(lower = ..., upper = ...)} with
 Returns the lower / upper bounds that mfrmr screens treat as the
 acceptable mean-square (Infit / Outfit MnSq) band when flagging
 element-level misfit. Defaults follow Linacre's published 0.5-1.5
-acceptance band; both ends can be overridden via R options.
+broad screening band; both ends can be overridden via R options. The
+returned band is a configurable screening convention, not a universal
+definition of misfit. Applied MFRM studies sometimes use narrower bands
+(for example 0.7-1.3 or 0.75-1.3) when the reporting purpose, sample size,
+or stakes justify a stricter operational screen.
 }
 \details{
 Helpers that consume the band include

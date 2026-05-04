@@ -367,7 +367,11 @@ format_reporting_marginal_pair_label <- function(pair_row) {
 #' Returns the lower / upper bounds that mfrmr screens treat as the
 #' acceptable mean-square (Infit / Outfit MnSq) band when flagging
 #' element-level misfit. Defaults follow Linacre's published 0.5-1.5
-#' acceptance band; both ends can be overridden via R options.
+#' broad screening band; both ends can be overridden via R options. The
+#' returned band is a configurable screening convention, not a universal
+#' definition of misfit. Applied MFRM studies sometimes use narrower bands
+#' (for example 0.7-1.3 or 0.75-1.3) when the reporting purpose, sample size,
+#' or stakes justify a stricter operational screen.
 #'
 #' Helpers that consume the band include
 #' [summary.mfrm_diagnostics()] (`misfit_flagged` block and
@@ -419,6 +423,62 @@ mfrm_misfit_thresholds <- function(lower = NULL, upper = NULL) {
          call. = FALSE)
   }
   c(lower = lo, upper = up)
+}
+
+mfrm_misfit_threshold_text <- function(band = mfrm_misfit_thresholds(), digits = 1L) {
+  digits <- max(0L, as.integer(digits))
+  lo <- suppressWarnings(as.numeric(band["lower"]))
+  up <- suppressWarnings(as.numeric(band["upper"]))
+  sprintf(paste0("%.", digits, "f-%.", digits, "f"), lo, up)
+}
+
+mfrm_misfit_threshold_is_default <- function(band = mfrm_misfit_thresholds()) {
+  vals <- suppressWarnings(as.numeric(band[c("lower", "upper")]))
+  isTRUE(all.equal(vals, c(0.5, 1.5), tolerance = 1e-8, check.names = FALSE))
+}
+
+mfrm_misfit_threshold_label <- function(band = mfrm_misfit_thresholds()) {
+  if (mfrm_misfit_threshold_is_default(band)) {
+    "package default broad screening band"
+  } else {
+    "custom active screening band"
+  }
+}
+
+mfrm_misfit_threshold_note <- function(band = mfrm_misfit_thresholds()) {
+  band_text <- mfrm_misfit_threshold_text(band)
+  if (mfrm_misfit_threshold_is_default(band)) {
+    paste0(
+      "Active MnSq screening band: ", band_text,
+      ". The package default follows the broad Linacre/Wright-Linacre ",
+      "0.5-1.5 convention; published and operational misfit bands can be ",
+      "narrower or broader by purpose, sample size, and consequence, so ",
+      "flags are screening evidence rather than a universal misfit definition."
+    )
+  } else {
+    paste0(
+      "Active MnSq screening band: ", band_text,
+      ". This is a custom/configured band; published and operational misfit ",
+      "bands vary by purpose, sample size, and consequence, so flags are ",
+      "screening evidence rather than a universal misfit definition."
+    )
+  }
+}
+
+mfrm_misfit_threshold_apa_sentence <- function(band = mfrm_misfit_thresholds()) {
+  band_text <- mfrm_misfit_threshold_text(band)
+  source_text <- if (mfrm_misfit_threshold_is_default(band)) {
+    "the package default broad Linacre/Wright-Linacre convention"
+  } else {
+    "custom threshold settings"
+  }
+  paste0(
+    "Element-level Infit and Outfit flags used the active ", band_text,
+    " MnSq screening band (", source_text,
+    "); because published and operational bands differ by purpose and sample ",
+    "context, flags were interpreted as screening evidence rather than a ",
+    "universal misfit definition."
+  )
 }
 
 # Warning threshold profiles for MFRM quality control.
@@ -1613,7 +1673,8 @@ build_apa_reporting_contract <- function(res, diagnostics, bias_results = NULL, 
   band <- mfrm_misfit_thresholds()
   band_lower <- as.numeric(band["lower"])
   band_upper <- as.numeric(band["upper"])
-  band_text <- sprintf("%.1f-%.1f", band_lower, band_upper)
+  band_text <- mfrm_misfit_threshold_text(band)
+  misfit_band_sentence <- mfrm_misfit_threshold_apa_sentence(band)
 
   overall_fit <- if (!is.null(diagnostics$overall_fit) && nrow(diagnostics$overall_fit) > 0) diagnostics$overall_fit[1, , drop = FALSE] else NULL
   if (!is.null(overall_fit)) {
@@ -1628,6 +1689,10 @@ build_apa_reporting_contract <- function(res, diagnostics, bias_results = NULL, 
     )
     results_fit_precision_sentences <- c(results_fit_precision_sentences, fit_sentence)
     results_sentences <- c(results_sentences, fit_sentence)
+  }
+  if (!is.null(overall_fit) || (!is.null(diagnostics$fit) && nrow(diagnostics$fit) > 0)) {
+    results_fit_precision_sentences <- c(results_fit_precision_sentences, misfit_band_sentence)
+    results_sentences <- c(results_sentences, misfit_band_sentence)
   }
 
   fit_tbl <- diagnostics$fit
@@ -1887,6 +1952,11 @@ build_apa_reporting_contract <- function(res, diagnostics, bias_results = NULL, 
       person_stats = person_stats,
       overall_fit_infit = infit,
       overall_fit_outfit = outfit,
+      misfit_threshold_band = band,
+      misfit_threshold_text = band_text,
+      misfit_threshold_label = mfrm_misfit_threshold_label(band),
+      misfit_threshold_note = mfrm_misfit_threshold_note(band),
+      misfit_threshold_apa_sentence = misfit_band_sentence,
       misfit_n = misfit_n,
       misfit_total = misfit_total,
       top_misfit_sentence = top_misfit_sentence,

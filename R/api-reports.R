@@ -1055,6 +1055,13 @@ plot_bias_interaction <- function(x,
 #' Output text includes residual-PCA screening commentary if PCA diagnostics are
 #' available in `diagnostics`.
 #'
+#' `build_apa_outputs()` is the single front-door helper for concise
+#' manuscript-draft prose. It intentionally reuses the same facts exposed by
+#' `summary(fit)`, `summary(diagnostics)`, and companion reporting helpers, but
+#' the object returned here is the paper-facing bundle: printing it shows the
+#' compact Method / Results narrative, whereas `summary(apa)` is a QA checklist
+#' for completeness and wording alignment.
+#'
 #' For bounded `GPCM`, this helper returns a caveated APA scaffold. It uses
 #' the GPCM-specific model wording and carries a `support_status` table plus a
 #' `caveat` field. Keep fair-average and bias language at the screening tier,
@@ -1092,8 +1099,9 @@ plot_bias_interaction <- function(x,
 #'    reporting runs, prefer an `MML` fit and
 #'    `diagnose_mfrm(..., diagnostic_mode = "both")`.
 #' 2. Run `build_apa_outputs(...)`.
-#' 3. Check `summary(apa)` for completeness.
-#' 4. Insert `apa$report_text` and note/caption fields into manuscript drafts
+#' 3. Print the returned object to view the concise manuscript narrative.
+#' 4. Check `summary(apa)` for completeness.
+#' 5. Insert `apa$report_text` and note/caption fields into manuscript drafts
 #'    after checking the listed cautions.
 #'
 #' @section Context template:
@@ -1323,6 +1331,20 @@ resolve_apa_output_checks <- function(object) {
       } else {
         "No extra precision caution required for this run."
       }
+    ),
+    add_check(
+      "Misfit threshold caveat alignment",
+      {
+        required <- contract$summaries$misfit_threshold_apa_sentence %||% ""
+        has_fit_context <- isTRUE((contract$summaries$misfit_total %||% 0L) > 0L) ||
+          is.finite(suppressWarnings(as.numeric(contract$summaries$overall_fit_infit %||% NA_real_))) ||
+          is.finite(suppressWarnings(as.numeric(contract$summaries$overall_fit_outfit %||% NA_real_)))
+        !has_fit_context || (nzchar(required) &&
+          apa_text_has_fragment(report_text, required) &&
+          grepl("screening evidence", normalize_apa_component_text(report_text), fixed = TRUE) &&
+          grepl("universal misfit definition", normalize_apa_component_text(report_text), fixed = TRUE))
+      },
+      "APA fit prose should state the active MnSq screening band and avoid treating one band as a universal misfit definition."
     ),
     add_check(
       "Bias screening note alignment",
@@ -1624,7 +1646,7 @@ print.summary.mfrm_apa_outputs <- function(x, ...) {
   }
   if (length(x$notes) > 0) {
     cat("\nNotes\n")
-    cat(" - ", x$notes, "\n", sep = "")
+    for (line in x$notes) cat(" - ", line, "\n", sep = "")
   }
   invisible(x)
 }

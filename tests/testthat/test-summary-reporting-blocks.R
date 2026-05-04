@@ -36,6 +36,8 @@ test_that("summary(diag) carries the MnSq misfit threshold pair", {
   s <- summary(.diag)
   expect_named(s$misfit_thresholds, c("lower", "upper"))
   expect_equal(unname(s$misfit_thresholds), c(0.5, 1.5))
+  expect_match(s$misfit_threshold_label, "package default broad screening band", fixed = TRUE)
+  expect_match(s$misfit_threshold_note, "published and operational misfit bands", fixed = TRUE)
 })
 
 test_that("summary(diag) auto-flag names worst MnSq element", {
@@ -58,6 +60,7 @@ test_that("print(summary(diag)) emits the new blocks without error", {
   joined <- paste(out, collapse = "\n")
   expect_true(grepl("Facet variability", joined))
   expect_true(grepl("Inter-rater agreement summary", joined))
+  expect_true(grepl("Misfit threshold policy", joined))
 })
 
 # --- summary.mfrm_fit -----------------------------------------------------

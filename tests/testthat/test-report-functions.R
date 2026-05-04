@@ -435,6 +435,7 @@ test_that("build_apa_outputs produces structured APA text", {
   expect_true(all(c(
     "Method section heading",
     "Results section heading",
+    "Misfit threshold caveat alignment",
     "Core section coverage",
     "Note coverage",
     "Caption coverage"
@@ -446,6 +447,12 @@ test_that("build_apa_outputs produces structured APA text", {
   out <- capture.output(print(s))
   expect_true(length(out) > 0)
   expect_true(any(grepl("Content checks", out, fixed = TRUE)))
+  expect_true(any(grepl("^ - All standard APA text components are populated\\.", out)))
+  expect_true(any(grepl("^ - Contract-based content checks passed\\.", out)))
+  printed_apa <- capture.output(print(apa))
+  expect_true(any(grepl("^Method\\.$", printed_apa)))
+  expect_false(any(grepl("mfrmr APA Outputs Summary", printed_apa, fixed = TRUE)))
+  expect_true(any(grepl("active 0.5-1.5 MnSq screening band", printed_apa, fixed = TRUE)))
 })
 
 test_that("build_apa_outputs with bias produces extended text", {
