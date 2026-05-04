@@ -5,6 +5,10 @@
 #' Use this page when you know the reporting question but have not yet decided
 #' which bundle, table, or reporting helper to call.
 #'
+#' This page is a helper-selection map. For manuscript prose, caveat review,
+#' note/caption handoff, and `summary(apa)` QA, use
+#' [mfrmr_reporting_and_apa].
+#'
 #' @section Start with the question:
 #' - "How should I document the model setup and run settings?"
 #'   Use [specifications_report()].
@@ -112,7 +116,7 @@
 #'   [reporting_checklist()] -> [build_apa_outputs()] ->
 #'   [build_summary_table_bundle()] -> `summary()` / `plot()` -> [apa_table()]
 #'   or [export_summary_appendix()] /
-#'   [export_mfrm_bundle()](include = "summary_tables").
+#'   [export_mfrm_bundle()](include = c("apa", "summary_tables")).
 #' - Bounded `GPCM` handoff:
 #'   [reporting_checklist()] -> [build_visual_summaries()] /
 #'   [run_qc_pipeline()] -> [build_apa_outputs()] /
@@ -150,6 +154,8 @@
 #' subset(checklist$checklist, Section == "Visual Displays", c("Item", "NextAction"))
 #'
 #' apa <- build_apa_outputs(fit, diagnostics = diag)
+#' summary(apa)
+#' apa
 #' apa$section_map[, c("Heading", "Available")]
 #' bundle <- build_summary_table_bundle(checklist)
 #' bundle$table_index

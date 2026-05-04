@@ -81,3 +81,29 @@ test_that("build_apa_outputs states active misfit-band convention", {
   expect_match(apa_custom$report_text, "active 0.7-1.3 MnSq screening band", fixed = TRUE)
   expect_match(apa_custom$report_text, "custom threshold settings", fixed = TRUE)
 })
+
+test_that("casebook and facet dashboard inherit the active misfit band", {
+  toy <- load_mfrmr_data("example_core")
+  fit <- suppressMessages(suppressWarnings(
+    fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
+             method = "JML", maxit = 25)
+  ))
+  diag <- suppressMessages(diagnose_mfrm(fit, residual_pca = "none",
+                                          diagnostic_mode = "legacy"))
+  diag$fit$Infit[1] <- 1.4
+  diag$fit$Outfit[1] <- 1.4
+
+  old <- options(
+    mfrmr.misfit_lower = 0.7,
+    mfrmr.misfit_upper = 1.3
+  )
+  on.exit(options(old), add = TRUE)
+
+  casebook <- build_misfit_casebook(fit, diagnostics = diag, top_n = 500)
+  expect_true(any(grepl("MnSq misfit \\(band 0.7-1.3\\)", casebook$top_cases$Signal)))
+
+  dash <- facet_quality_dashboard(fit, diagnostics = diag, facet = "Rater")
+  settings <- as.data.frame(dash$settings, stringsAsFactors = FALSE)
+  expect_equal(as.numeric(settings$Value[settings$Setting == "misfit_lower"]), 0.7)
+  expect_equal(as.numeric(settings$Value[settings$Setting == "misfit_warn"]), 1.3)
+})

@@ -10,7 +10,7 @@ plot_facet_quality_dashboard(
   facet = NULL,
   bias_results = NULL,
   severity_warn = 1,
-  misfit_warn = 1.5,
+  misfit_warn = NULL,
   central_tendency_max = 0.25,
   bias_count_warn = 1L,
   bias_abs_t_warn = 2,
@@ -37,7 +37,11 @@ plot_facet_quality_dashboard(
 \item{severity_warn}{Absolute estimate cutoff used to flag severity
 outliers.}
 
-\item{misfit_warn}{Mean-square cutoff used to flag misfit.}
+\item{misfit_warn}{Mean-square cutoff used to flag misfit. \code{NULL}
+(default) inherits the active package band from
+\code{\link[=mfrm_misfit_thresholds]{mfrm_misfit_thresholds()}} through \code{\link[=facet_quality_dashboard]{facet_quality_dashboard()}}.
+Pass a numeric value such as \code{1.5} to request the legacy reciprocal
+lower bound.}
 
 \item{central_tendency_max}{Absolute estimate cutoff used to flag central
 tendency.}

@@ -7,6 +7,10 @@
 Quick guide to choosing the right report or table helper in \code{mfrmr}.
 Use this page when you know the reporting question but have not yet decided
 which bundle, table, or reporting helper to call.
+
+This page is a helper-selection map. For manuscript prose, caveat review,
+note/caption handoff, and \code{summary(apa)} QA, use
+\link{mfrmr_reporting_and_apa}.
 }
 \section{Start with the question}{
 
@@ -131,7 +135,7 @@ still needs missing diagnostics or clearer caveats.
 \code{\link[=reporting_checklist]{reporting_checklist()}} -> \code{\link[=build_apa_outputs]{build_apa_outputs()}} ->
 \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}} -> \code{summary()} / \code{plot()} -> \code{\link[=apa_table]{apa_table()}}
 or \code{\link[=export_summary_appendix]{export_summary_appendix()}} /
-\code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}}(include = "summary_tables").
+\code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}}(include = c("apa", "summary_tables")).
 \item Bounded \code{GPCM} handoff:
 \code{\link[=reporting_checklist]{reporting_checklist()}} -> \code{\link[=build_visual_summaries]{build_visual_summaries()}} /
 \code{\link[=run_qc_pipeline]{run_qc_pipeline()}} -> \code{\link[=build_apa_outputs]{build_apa_outputs()}} /
@@ -175,6 +179,8 @@ checklist <- reporting_checklist(fit, diagnostics = diag)
 subset(checklist$checklist, Section == "Visual Displays", c("Item", "NextAction"))
 
 apa <- build_apa_outputs(fit, diagnostics = diag)
+summary(apa)
+apa
 apa$section_map[, c("Heading", "Available")]
 bundle <- build_summary_table_bundle(checklist)
 bundle$table_index

@@ -428,6 +428,9 @@ test_that("build_apa_outputs produces structured APA text", {
   expect_true(is.data.frame(s$sections))
   expect_true(is.data.frame(s$content_checks))
   expect_true("DraftContractPass" %in% names(s$overview))
+  expect_true("AnalysisReady" %in% names(s$overview))
+  expect_true("Converged" %in% names(s$overview))
+  expect_true("FormalPrecision" %in% names(s$overview))
   expect_identical(s$overview$ReadyForAPA[1], s$overview$DraftContractPass[1])
   expect_true(all(c("report_text", "table_figure_notes", "table_figure_captions") %in%
                     s$components$Component))
@@ -444,6 +447,7 @@ test_that("build_apa_outputs produces structured APA text", {
                     s$sections$SectionId[s$sections$Available]))
   expect_true(any(grepl("contract completeness", s$notes, fixed = TRUE)))
   expect_true(any(grepl("does not certify formal inferential adequacy", s$notes, fixed = TRUE)))
+  expect_true(any(grepl("AnalysisReady additionally requires convergence", s$notes, fixed = TRUE)))
   out <- capture.output(print(s))
   expect_true(length(out) > 0)
   expect_true(any(grepl("Content checks", out, fixed = TRUE)))
@@ -453,6 +457,16 @@ test_that("build_apa_outputs produces structured APA text", {
   expect_true(any(grepl("^Method\\.$", printed_apa)))
   expect_false(any(grepl("mfrmr APA Outputs Summary", printed_apa, fixed = TRUE)))
   expect_true(any(grepl("active 0.5-1.5 MnSq screening band", printed_apa, fixed = TRUE)))
+  printed_full <- capture.output(print(apa, include_notes = TRUE, include_captions = TRUE))
+  expect_true(any(grepl("Table/Figure notes.", printed_full, fixed = TRUE)))
+  expect_true(any(grepl("Table/Figure captions.", printed_full, fixed = TRUE)))
+  qa_print <- capture.output(print(apa, qa = TRUE, top_n = 1))
+  expect_true(any(grepl("mfrmr APA Outputs Summary", qa_print, fixed = TRUE)))
+  expect_warning(
+    legacy_print <- capture.output(print(apa, top_n = 1)),
+    "Printing the APA QA summary"
+  )
+  expect_true(any(grepl("mfrmr APA Outputs Summary", legacy_print, fixed = TRUE)))
 })
 
 test_that("build_apa_outputs with bias produces extended text", {
@@ -495,6 +509,8 @@ test_that("build_visual_summaries produces warning and summary maps", {
 test_that("apa_table produces structured output", {
   at <- apa_table(.fit, diagnostics = .diag)
   expect_s3_class(at, "apa_table")
+  expect_match(at$caption, "Model Summary", fixed = TRUE)
+  expect_false(grepl("Facet Summary", at$caption, fixed = TRUE))
   s <- summary(at)
   expect_s3_class(s, "summary.apa_table")
   out <- capture.output(print(s))

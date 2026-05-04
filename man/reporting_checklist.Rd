@@ -166,10 +166,10 @@ summary(chk)
 #   (typically diagnostic_mode = "both" or a residual-PCA pass).
 apa <- build_apa_outputs(fit, diag)
 head(chk$checklist[, c("Section", "Item", "DraftReady", "NextAction")])
-# Look for: every row where `DraftReady = "yes"` is ready to paste
-#   into the manuscript. `"no"` rows include a concrete `NextAction`
-#   step (e.g. "run plot_qc_dashboard()") so the gap can be closed
-#   without re-reading the methodology guide.
+# Look for: every row where `DraftReady = "yes"` is ready to draft
+#   from under the documented caveats. `"no"` rows include a concrete
+#   `NextAction` step (e.g. "run plot_qc_dashboard()") so the gap can
+#   be closed without re-reading the methodology guide.
 nchar(apa$report_text)
 }
 }

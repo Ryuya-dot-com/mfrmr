@@ -7,8 +7,8 @@
 plot_person_fit(
   fit,
   diagnostics = NULL,
-  lower = 0.5,
-  upper = 1.5,
+  lower = NULL,
+  upper = NULL,
   top_n_label = 12L,
   preset = c("standard", "publication", "compact"),
   draw = TRUE
@@ -20,9 +20,11 @@ plot_person_fit(
 \item{diagnostics}{Optional \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} output. When omitted,
 \code{diagnose_mfrm(fit, residual_pca = "none")} is run internally.}
 
-\item{lower}{Lower fit threshold (default \code{0.5}, Linacre 2002).}
+\item{lower}{Lower fit threshold. \code{NULL} (default) uses the lower bound
+from \code{\link[=mfrm_misfit_thresholds]{mfrm_misfit_thresholds()}}; pass a scalar for a manual plot band.}
 
-\item{upper}{Upper fit threshold (default \code{1.5}).}
+\item{upper}{Upper fit threshold. \code{NULL} (default) uses the upper bound
+from \code{\link[=mfrm_misfit_thresholds]{mfrm_misfit_thresholds()}}.}
 
 \item{top_n_label}{Maximum number of persons whose label is drawn
 next to the bubble (largest |Infit-1| + |Outfit-1|). Default \code{12}.}
@@ -39,17 +41,19 @@ columns \code{Person}, \code{Infit}, \code{Outfit}, \code{N}, \code{Status}.
 Per-person diagnostic bubble plot inspired by FACETS Table 6 / KIDMAP
 summaries. Each bubble represents one person at the intersection of
 Infit (x) and Outfit (y), sized by total observations and coloured by
-the standard 0.5/1.5 fit envelope: green when both Infit and Outfit
-fall in \verb{[lower, upper]}, amber when one statistic is outside, red
-when both are outside.
+the active MnSq screening band: green when both Infit and Outfit fall
+in \verb{[lower, upper]}, amber when one statistic is outside, red when both
+are outside.
 }
 \section{Interpreting output}{
 
-The default 0.5-1.5 envelope follows Linacre (2002) Rasch
-Measurement Transactions. Persons in the green centre are
-fit-acceptable; amber and red corners are candidates for misfit
-review (overfit / underfit) using
-\code{\link[=unexpected_response_table]{unexpected_response_table()}} for follow-up.
+The default band is the active package MnSq screening band returned by
+\code{\link[=mfrm_misfit_thresholds]{mfrm_misfit_thresholds()}}. The package default is the broad 0.5-1.5
+convention, but applied studies may use narrower or broader bands by
+purpose and sample context. Persons in the green centre are inside the
+current screening band; amber and red corners are candidates for misfit
+review (overfit / underfit) using \code{\link[=unexpected_response_table]{unexpected_response_table()}} for
+follow-up.
 }
 
 \examples{

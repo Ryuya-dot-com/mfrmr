@@ -107,6 +107,14 @@ test_that("plot_bubble stores fit_range in output", {
   expect_equal(out$data$fit_range, custom_range)
 })
 
+test_that("plot_bubble inherits the active misfit band by default", {
+  fit <- local_fit()
+  old <- options(mfrmr.misfit_lower = 0.7, mfrmr.misfit_upper = 1.3)
+  on.exit(options(old), add = TRUE)
+  out <- suppressWarnings(plot_bubble(fit, draw = FALSE))
+  expect_equal(out$data$fit_range, c(0.7, 1.3))
+})
+
 # ---- 8. CI visualization in plot.mfrm_fit -------------------------------
 
 test_that("plot.mfrm_fit with show_ci=TRUE wright map runs without error", {

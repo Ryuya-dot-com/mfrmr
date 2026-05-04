@@ -101,7 +101,8 @@ Interpretation:
 
 `build_apa_outputs()` is the writing engine. It returns report text plus a
 section map, note map, and caption map that all share the same internal
-contract.
+contract. Use `summary(apa)` as the QA/completeness check, and print `apa`
+or call `cat(apa$report_text)` for the manuscript-draft prose.
 
 ```{r apa}
 apa <- build_apa_outputs(
@@ -115,6 +116,7 @@ apa <- build_apa_outputs(
   )
 )
 
+summary(apa)
 cat(apa$report_text)
 ```
 

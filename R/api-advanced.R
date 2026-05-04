@@ -5732,8 +5732,8 @@ print.summary.mfrm_linking_review <- function(x, ...) {
 #' existing evidence families into one case-level review surface:
 #'
 #' - element-level Infit / Outfit MnSq misfit from `diagnostics$fit`
-#'   (rows whose Infit or Outfit MnSq falls outside the 0.5-1.5 Linacre
-#'   acceptance band)
+#'   (rows whose Infit or Outfit MnSq falls outside the active MnSq
+#'   screening band returned by [mfrm_misfit_thresholds()])
 #' - strict marginal cell screens from `diagnostics$marginal_fit$top_cells`
 #' - strict pairwise screens from `diagnostics$marginal_fit$pairwise$top_pairs`
 #' - unexpected responses from [unexpected_response_table()]

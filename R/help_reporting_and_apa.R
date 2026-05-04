@@ -17,6 +17,10 @@
 #' returned caveats with any fair-average, bias, or conditional-SE language.
 #'
 #' @section Start with the reporting question:
+#' This page is for manuscript assembly: prose, caveats, notes/captions, and
+#' readiness review. Use [mfrmr_reports_and_tables] when the task is choosing
+#' a specific table/report helper or appendix export format.
+#'
 #' - "Which parts of this run are draft-complete, and with what caveats?"
 #'   Use [reporting_checklist()].
 #' - "How should I phrase the model, fit, and precision sections?"
@@ -87,6 +91,12 @@
 #' @section Practical reporting rules:
 #' - Treat [reporting_checklist()] as the gap finder and
 #'   [build_apa_outputs()] as the writing engine.
+#' - Copy `apa$report_text` (or print `apa` interactively) for draft
+#'   Method / Results prose; use `summary(apa)` only as a QA/completeness
+#'   check before handoff.
+#' - Use `apa$section_map` for section-level editing and
+#'   `apa$table_figure_notes` / `apa$table_figure_captions` for appendix
+#'   notes and captions.
 #' - Use the checklist's `"Visual Displays"` rows to decide whether the next
 #'   follow-up should be [plot_qc_dashboard()], [plot_marginal_fit()],
 #'   [plot_residual_pca()], [plot_bias_interaction()], or another public plot.
@@ -111,7 +121,7 @@
 #'   [fit_mfrm()] -> [diagnose_mfrm()] -> [reporting_checklist()] ->
 #'   [build_apa_outputs()] -> [build_summary_table_bundle()] -> `summary()` /
 #'   `plot()` -> [apa_table()], [export_summary_appendix()], or
-#'   [export_mfrm_bundle()](include = c("summary_tables", "html")).
+#'   [export_mfrm_bundle()](include = c("apa", "summary_tables", "html")).
 #'   For `RSM` / `PCM` final reports, prefer `method = "MML"` and
 #'   `diagnostic_mode = "both"` in the diagnostics step.
 #'   For bounded `GPCM`, retain the caveats from [build_apa_outputs()],
@@ -119,8 +129,9 @@
 #'   [export_mfrm_bundle()], and avoid FACETS/Rasch score-side invariance
 #'   language.
 #' - Appendix-first route:
-#'   [facet_statistics_report()] -> [apa_table()] ->
-#'   [build_visual_summaries()] -> [build_apa_outputs()].
+#'   [facet_statistics_report()] -> [apa_table()] plus
+#'   [build_visual_summaries()] and [build_apa_outputs()] as parallel
+#'   products from the same `fit` / `diagnostics` objects.
 #' - Precision-sensitive route:
 #'   [diagnose_mfrm()] -> [precision_audit_report()] ->
 #'   [reporting_checklist()] -> [build_apa_outputs()].
@@ -161,6 +172,8 @@
 #' )
 #'
 #' apa <- build_apa_outputs(fit, diagnostics = diag)
+#' summary(apa)
+#' apa
 #' apa$section_map[, c("SectionId", "Available")]
 #'
 #' tbl <- apa_table(fit, which = "summary")

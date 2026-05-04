@@ -32,8 +32,10 @@ of such outputs. Non-matching bundles are skipped quietly.}
 \item{severity_warn}{Absolute estimate cutoff used to flag severity
 outliers.}
 
-\item{misfit_warn}{Mean-square cutoff used to flag misfit. Values above
-this cutoff or below its reciprocal are flagged.}
+\item{misfit_warn}{Mean-square cutoff used to flag misfit. \code{NULL}
+(default) uses the active lower/upper pair from
+\code{\link[=mfrm_misfit_thresholds]{mfrm_misfit_thresholds()}}. A numeric value keeps the legacy symmetric
+wrapper form: values above the cutoff or below its reciprocal are flagged.}
 
 \item{central_tendency_max}{Absolute estimate cutoff used to flag central
 tendency. Levels near zero are marked.}
@@ -72,9 +74,9 @@ complementary criteria:
 \item \strong{Severity}: elements with \eqn{|\mathrm{Estimate}| >}
 \code{severity_warn} logits are flagged as unusually harsh or lenient.
 \item \strong{Misfit}: elements with Infit or Outfit MnSq outside the
-acceptance band are flagged. The band defaults to the package
-pair returned by \code{\link[=mfrm_misfit_thresholds]{mfrm_misfit_thresholds()}} (Linacre 0.5-1.5);
-pass \code{misfit_warn = 1.5} to keep the older symmetric
+active MnSq screening band are flagged. The band defaults to the package
+pair returned by \code{\link[=mfrm_misfit_thresholds]{mfrm_misfit_thresholds()}} (broad 0.5-1.5);
+pass \code{misfit_warn = 1.5} to request the older symmetric
 \eqn{[1/}\code{misfit_warn}\eqn{,\;}\code{misfit_warn}\eqn{]}
 form (0.67-1.5).
 \item \strong{Central tendency}: elements with

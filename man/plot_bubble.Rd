@@ -11,7 +11,7 @@ plot_bubble(
   view = c("measure", "infit_outfit"),
   bubble_size = NULL,
   facets = NULL,
-  fit_range = c(0.5, 1.5),
+  fit_range = NULL,
   top_n = 60,
   main = NULL,
   palette = NULL,
@@ -45,8 +45,9 @@ default for \code{view = "infit_outfit"}), or \code{"equal"}
 \item{facets}{Character vector of facets to include. \code{NULL} (default)
 includes all non-person facets.}
 
-\item{fit_range}{Numeric length-2 vector defining the heuristic fit-review band
-shown as a shaded region (default \code{c(0.5, 1.5)}).}
+\item{fit_range}{Numeric length-2 vector defining the heuristic fit-review
+band shown as a shaded region. \code{NULL} (default) uses the active package
+band returned by \code{\link[=mfrm_misfit_thresholds]{mfrm_misfit_thresholds()}}.}
 
 \item{top_n}{Maximum number of elements to plot (default 60).}
 
@@ -76,7 +77,7 @@ The x-axis shows element measure estimates on the \strong{logit} scale
 (one logit = one unit change in log-odds of responding in a higher
 category).  The y-axis shows the selected fit mean-square statistic.
 A shaded band between \code{fit_range[1]} and \code{fit_range[2]}
-highlights a common heuristic review range.
+highlights the active or manually supplied heuristic review range.
 
 Bubble radius options:
 \itemize{
@@ -96,9 +97,11 @@ outnumber facet elements and obscure the display.
 
 Points near the horizontal reference line at 1.0 are closer to model
 expectation on the selected MnSq scale.
-Points above 1.5 suggest underfit relative to common review heuristics;
+Points above the upper band suggest underfit relative to the current
+review heuristic;
 these elements may have inconsistent scoring.
-Points below 0.5 suggest overfit relative to common review heuristics;
+Points below the lower band suggest overfit relative to the current
+review heuristic;
 these may indicate redundancy or restricted range.
 Points are colored by facet for easy identification.
 }
@@ -120,17 +123,18 @@ diag <- diagnose_mfrm(fit, residual_pca = "none")
 p <- plot_bubble(fit, diagnostics = diag, draw = FALSE)
 head(p$data$table[, c("Facet", "Level", "Estimate", "Infit", "Outfit")])
 # Look for (default `view = "measure"`): bubbles inside the shaded
-#   0.5-1.5 fit-review band. Bubbles above the band are underfit
+#   active fit-review band. Bubbles above the band are underfit
 #   (noisy elements); below the band are overfit (overly predictable).
 #
 # For the Winsteps Table 30 layout pass `view = "infit_outfit"`:
 p_io <- plot_bubble(fit, diagnostics = diag, view = "infit_outfit",
                      draw = FALSE)
 p_io$data$view
-# Look for: bubbles clustered inside the central [0.5, 1.5] x [0.5, 1.5]
-#   square. Points outside the upper-right corner have both Infit
-#   AND Outfit > 1.5 (consistent underfit); points outside the
-#   lower-left have both < 0.5 (consistent overfit). Bubble size in
+# Look for: bubbles clustered inside the central active-band square.
+#   Points outside the upper-right corner have both Infit and Outfit
+#   above the upper band (consistent underfit); points outside the
+#   lower-left have both below the lower band (consistent overfit).
+#   Bubble size in
 #   this view defaults to N (observation count) so the visual
 #   weighting matches how seriously the misfit should be taken.
 }

@@ -2859,8 +2859,9 @@ resolve_bubble_measures <- function(x, diagnostics = NULL) {
 #'   (uniform size).
 #' @param facets Character vector of facets to include. \code{NULL} (default)
 #'   includes all non-person facets.
-#' @param fit_range Numeric length-2 vector defining the heuristic fit-review band
-#'   shown as a shaded region (default \code{c(0.5, 1.5)}).
+#' @param fit_range Numeric length-2 vector defining the heuristic fit-review
+#'   band shown as a shaded region. `NULL` (default) uses the active package
+#'   band returned by [mfrm_misfit_thresholds()].
 #' @param top_n Maximum number of elements to plot (default 60).
 #' @param main Optional custom plot title.
 #' @param palette Optional named colour vector keyed by facet name.
@@ -2877,7 +2878,7 @@ resolve_bubble_measures <- function(x, diagnostics = NULL) {
 #' (one logit = one unit change in log-odds of responding in a higher
 #' category).  The y-axis shows the selected fit mean-square statistic.
 #' A shaded band between \code{fit_range[1]} and \code{fit_range[2]}
-#' highlights a common heuristic review range.
+#' highlights the active or manually supplied heuristic review range.
 #'
 #' Bubble radius options:
 #' \itemize{
@@ -2896,9 +2897,11 @@ resolve_bubble_measures <- function(x, diagnostics = NULL) {
 #' @section Interpreting the plot:
 #' Points near the horizontal reference line at 1.0 are closer to model
 #' expectation on the selected MnSq scale.
-#' Points above 1.5 suggest underfit relative to common review heuristics;
+#' Points above the upper band suggest underfit relative to the current
+#' review heuristic;
 #' these elements may have inconsistent scoring.
-#' Points below 0.5 suggest overfit relative to common review heuristics;
+#' Points below the lower band suggest overfit relative to the current
+#' review heuristic;
 #' these may indicate redundancy or restricted range.
 #' Points are colored by facet for easy identification.
 #'
@@ -2920,17 +2923,18 @@ resolve_bubble_measures <- function(x, diagnostics = NULL) {
 #' p <- plot_bubble(fit, diagnostics = diag, draw = FALSE)
 #' head(p$data$table[, c("Facet", "Level", "Estimate", "Infit", "Outfit")])
 #' # Look for (default `view = "measure"`): bubbles inside the shaded
-#' #   0.5-1.5 fit-review band. Bubbles above the band are underfit
+#' #   active fit-review band. Bubbles above the band are underfit
 #' #   (noisy elements); below the band are overfit (overly predictable).
 #' #
 #' # For the Winsteps Table 30 layout pass `view = "infit_outfit"`:
 #' p_io <- plot_bubble(fit, diagnostics = diag, view = "infit_outfit",
 #'                      draw = FALSE)
 #' p_io$data$view
-#' # Look for: bubbles clustered inside the central [0.5, 1.5] x [0.5, 1.5]
-#' #   square. Points outside the upper-right corner have both Infit
-#' #   AND Outfit > 1.5 (consistent underfit); points outside the
-#' #   lower-left have both < 0.5 (consistent overfit). Bubble size in
+#' # Look for: bubbles clustered inside the central active-band square.
+#' #   Points outside the upper-right corner have both Infit and Outfit
+#' #   above the upper band (consistent underfit); points outside the
+#' #   lower-left have both below the lower band (consistent overfit).
+#' #   Bubble size in
 #' #   this view defaults to N (observation count) so the visual
 #' #   weighting matches how seriously the misfit should be taken.
 #' @export
@@ -2940,7 +2944,7 @@ plot_bubble <- function(x,
                         view = c("measure", "infit_outfit"),
                         bubble_size = NULL,
                         facets = NULL,
-                        fit_range = c(0.5, 1.5),
+                        fit_range = NULL,
                         top_n = 60,
                         main = NULL,
                         palette = NULL,
@@ -2954,6 +2958,18 @@ plot_bubble <- function(x,
   bubble_size <- match.arg(bubble_size, c("SE", "N", "equal"))
   top_n <- max(1L, as.integer(top_n))
   style <- resolve_plot_preset(preset)
+  if (is.null(fit_range)) {
+    fit_range <- as.numeric(mfrm_misfit_thresholds())
+  } else {
+    fit_range <- suppressWarnings(as.numeric(fit_range))
+    if (length(fit_range) != 2L ||
+        any(!is.finite(fit_range)) ||
+        fit_range[1] <= 0 ||
+        fit_range[1] >= fit_range[2]) {
+      stop("`fit_range` must be a numeric length-2 vector with 0 < lower < upper.",
+           call. = FALSE)
+    }
+  }
 
   measures <- resolve_bubble_measures(x, diagnostics)
   measures <- measures[measures$Facet != "Person", , drop = FALSE]

@@ -2,7 +2,7 @@
 % Please edit documentation in R/api-reports.R
 \name{build_apa_outputs}
 \alias{build_apa_outputs}
-\title{Build APA text outputs from model results}
+\title{Build an APA reporting bundle from model results}
 \usage{
 build_apa_outputs(
   fit,
@@ -21,7 +21,10 @@ build_apa_outputs(
 
 \item{context}{Optional named list for report context.}
 
-\item{whexact}{Use exact ZSTD transformation.}
+\item{whexact}{Logical. If \code{TRUE}, use the exact standardized-residual
+transformation in category/fit wording where available. The default
+\code{FALSE} follows the package's fast reporting path; set \code{TRUE} when the
+manuscript should mirror exact ZSTD terminology from the diagnostic pass.}
 }
 \value{
 An object of class \code{mfrm_apa_outputs} with:
@@ -34,7 +37,7 @@ An object of class \code{mfrm_apa_outputs} with:
 }
 }
 \description{
-Build APA text outputs from model results
+Build an APA reporting bundle from model results
 }
 \details{
 \code{context} is an optional named list for narrative customization.
@@ -50,11 +53,12 @@ Output text includes residual-PCA screening commentary if PCA diagnostics are
 available in \code{diagnostics}.
 
 \code{build_apa_outputs()} is the single front-door helper for concise
-manuscript-draft prose. It intentionally reuses the same facts exposed by
-\code{summary(fit)}, \code{summary(diagnostics)}, and companion reporting helpers, but
-the object returned here is the paper-facing bundle: printing it shows the
-compact Method / Results narrative, whereas \code{summary(apa)} is a QA checklist
-for completeness and wording alignment.
+manuscript reporting output. It intentionally reuses the same facts exposed
+by \code{summary(fit)}, \code{summary(diagnostics)}, and companion reporting helpers,
+but the object returned here is the paper-facing bundle: printing it shows
+the compact Method / Results narrative, whereas \code{summary(apa)} is a QA
+checklist for completeness, convergence/precision readiness, and wording
+alignment.
 
 For bounded \code{GPCM}, this helper returns a caveated APA scaffold. It uses
 the GPCM-specific model wording and carries a \code{support_status} table plus a
@@ -101,10 +105,11 @@ are omitted from the narrative rather than producing placeholder text.
 reporting runs, prefer an \code{MML} fit and
 \code{diagnose_mfrm(..., diagnostic_mode = "both")}.
 \item Run \code{build_apa_outputs(...)}.
-\item Print the returned object to view the concise manuscript narrative.
-\item Check \code{summary(apa)} for completeness.
-\item Insert \code{apa$report_text} and note/caption fields into manuscript drafts
-after checking the listed cautions.
+\item Check \code{summary(apa)} for completeness and analysis-readiness flags.
+\item Print the returned object to view the concise manuscript narrative
+(\code{cat(apa$report_text)} is equivalent for scripted output).
+\item Insert \code{apa$report_text}, \code{apa$section_map}, and note/caption fields
+into manuscript drafts after checking the listed cautions.
 }
 }
 
@@ -155,19 +160,19 @@ apa <- build_apa_outputs(
   )
 )
 s_apa <- summary(apa)
-s_apa$overview
-# Look for: `SentenceCount` non-zero in every section that the run
-#   should support (Method / Results / fit / reliability / bias).
-#   Zero counts mean that section's prose is empty and the
-#   manuscript will need to fill it manually.
+s_apa$overview[, c("DraftContractPass", "AnalysisReady")]
+apa$section_map[, c("SectionId", "Available", "SentenceCount")]
+# Look for: `DraftContractPass = TRUE` before using the generated prose.
+#   `AnalysisReady = FALSE` means convergence or formal precision still
+#   needs review before submission.
 chk <- reporting_checklist(fit, diagnostics = diag)
 head(chk$checklist[, c("Section", "Item", "DraftReady", "NextAction")])
-# Look for: rows with `DraftReady = "yes"` are ready to paste into
-#   the manuscript. `"no"` rows tell you which helper / setting
+# Look for: rows with `DraftReady = "yes"` are ready to draft from
+#   under the documented caveats. `"no"` rows tell you which helper / setting
 #   needs to run before that paragraph can be drafted, via
 #   `NextAction`. Aim for every Visual Displays / Reliability /
 #   Diagnostics row to be `"yes"` before submitting.
-cat(apa$report_text)
+apa
 apa$section_map[, c("SectionId", "Available")]
 }
 

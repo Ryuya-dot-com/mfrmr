@@ -321,12 +321,13 @@ test_that("plot.mfrm_facets_run draws qc type", {
   expect_s3_class(result, "mfrm_plot_data")
 })
 
-# ---- print.mfrm_apa_text ----
+# ---- print.mfrm_apa_outputs ----
 
-test_that("print.mfrm_apa_text works", {
+test_that("print.mfrm_apa_outputs works", {
   apa <- build_apa_outputs(.fit, diagnostics = .diag)
   out <- capture.output(print(apa))
   expect_true(length(out) > 0)
+  expect_true(any(grepl("^Method\\.$", out)))
 })
 
 # ---- plot.apa_table ----

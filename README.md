@@ -40,6 +40,10 @@ summary(fit)
 summary(diag)
 plot_qc_dashboard(fit, diagnostics = diag, preset = "publication")
 chk <- reporting_checklist(fit, diagnostics = diag)
+apa <- build_apa_outputs(fit, diagnostics = diag)
+summary(apa) # QA: completeness, convergence/precision readiness, sections
+apa          # manuscript-draft Method / Results prose
+tbl <- apa_table(fit, which = "summary", diagnostics = diag)
 ```
 
 If that route works, the next natural step is:
@@ -633,7 +637,8 @@ summary(diag)
 
 # APA outputs
 apa <- build_apa_outputs(fit, diag)
-cat(apa$report_text)
+summary(apa)
+apa
 
 # QC pipeline reuses the same diagnostics object
 qc <- run_qc_pipeline(fit, diagnostics = diag)
@@ -692,7 +697,8 @@ apa <- build_apa_outputs(
   )
 )
 
-cat(apa$report_text)
+summary(apa)
+apa # interactive; use `cat(apa$report_text)` inside scripted reports
 apa$section_map[, c("SectionId", "Available", "Heading")]
 
 tbl_fit <- apa_table(fit, which = "summary")

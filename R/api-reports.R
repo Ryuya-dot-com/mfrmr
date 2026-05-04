@@ -1036,13 +1036,16 @@ plot_bias_interaction <- function(x,
   )
 }
 
-#' Build APA text outputs from model results
+#' Build an APA reporting bundle from model results
 #'
 #' @param fit Output from [fit_mfrm()].
 #' @param diagnostics Output from [diagnose_mfrm()].
 #' @param bias_results Optional output from [estimate_bias()].
 #' @param context Optional named list for report context.
-#' @param whexact Use exact ZSTD transformation.
+#' @param whexact Logical. If `TRUE`, use the exact standardized-residual
+#'   transformation in category/fit wording where available. The default
+#'   `FALSE` follows the package's fast reporting path; set `TRUE` when the
+#'   manuscript should mirror exact ZSTD terminology from the diagnostic pass.
 #'
 #' @details
 #' `context` is an optional named list for narrative customization.
@@ -1056,11 +1059,12 @@ plot_bias_interaction <- function(x,
 #' available in `diagnostics`.
 #'
 #' `build_apa_outputs()` is the single front-door helper for concise
-#' manuscript-draft prose. It intentionally reuses the same facts exposed by
-#' `summary(fit)`, `summary(diagnostics)`, and companion reporting helpers, but
-#' the object returned here is the paper-facing bundle: printing it shows the
-#' compact Method / Results narrative, whereas `summary(apa)` is a QA checklist
-#' for completeness and wording alignment.
+#' manuscript reporting output. It intentionally reuses the same facts exposed
+#' by `summary(fit)`, `summary(diagnostics)`, and companion reporting helpers,
+#' but the object returned here is the paper-facing bundle: printing it shows
+#' the compact Method / Results narrative, whereas `summary(apa)` is a QA
+#' checklist for completeness, convergence/precision readiness, and wording
+#' alignment.
 #'
 #' For bounded `GPCM`, this helper returns a caveated APA scaffold. It uses
 #' the GPCM-specific model wording and carries a `support_status` table plus a
@@ -1099,10 +1103,11 @@ plot_bias_interaction <- function(x,
 #'    reporting runs, prefer an `MML` fit and
 #'    `diagnose_mfrm(..., diagnostic_mode = "both")`.
 #' 2. Run `build_apa_outputs(...)`.
-#' 3. Print the returned object to view the concise manuscript narrative.
-#' 4. Check `summary(apa)` for completeness.
-#' 5. Insert `apa$report_text` and note/caption fields into manuscript drafts
-#'    after checking the listed cautions.
+#' 3. Check `summary(apa)` for completeness and analysis-readiness flags.
+#' 4. Print the returned object to view the concise manuscript narrative
+#'    (`cat(apa$report_text)` is equivalent for scripted output).
+#' 5. Insert `apa$report_text`, `apa$section_map`, and note/caption fields
+#'    into manuscript drafts after checking the listed cautions.
 #'
 #' @section Context template:
 #' A minimal `context` list can include fields such as:
@@ -1148,19 +1153,19 @@ plot_bias_interaction <- function(x,
 #'   )
 #' )
 #' s_apa <- summary(apa)
-#' s_apa$overview
-#' # Look for: `SentenceCount` non-zero in every section that the run
-#' #   should support (Method / Results / fit / reliability / bias).
-#' #   Zero counts mean that section's prose is empty and the
-#' #   manuscript will need to fill it manually.
+#' s_apa$overview[, c("DraftContractPass", "AnalysisReady")]
+#' apa$section_map[, c("SectionId", "Available", "SentenceCount")]
+#' # Look for: `DraftContractPass = TRUE` before using the generated prose.
+#' #   `AnalysisReady = FALSE` means convergence or formal precision still
+#' #   needs review before submission.
 #' chk <- reporting_checklist(fit, diagnostics = diag)
 #' head(chk$checklist[, c("Section", "Item", "DraftReady", "NextAction")])
-#' # Look for: rows with `DraftReady = "yes"` are ready to paste into
-#' #   the manuscript. `"no"` rows tell you which helper / setting
+#' # Look for: rows with `DraftReady = "yes"` are ready to draft from
+#' #   under the documented caveats. `"no"` rows tell you which helper / setting
 #' #   needs to run before that paragraph can be drafted, via
 #' #   `NextAction`. Aim for every Visual Displays / Reliability /
 #' #   Diagnostics row to be `"yes"` before submitting.
-#' cat(apa$report_text)
+#' apa
 #' apa$section_map[, c("SectionId", "Available")]
 #' }
 #'
@@ -1488,6 +1493,8 @@ print.mfrm_apa_text <- function(x, ...) {
 #'   draft text components.
 #' - `overview$ReadyForAPA`: a backward-compatible alias of that contract flag,
 #'   not a certification of inferential adequacy.
+#' - `overview$AnalysisReady`: a stricter manuscript-readiness flag that also
+#'   requires model convergence and a formal precision tier.
 #' - `preview`: first non-empty lines for fast visual review.
 #'
 #' @section Typical workflow:
@@ -1573,6 +1580,13 @@ summary.mfrm_apa_outputs <- function(object, top_n = 3, preview_chars = 160, ...
   total_checks <- nrow(content_checks)
   passed_checks <- if (total_checks > 0) sum(content_checks$Passed, na.rm = TRUE) else 0L
   sections_tbl <- as.data.frame(object$section_map %||% data.frame(), stringsAsFactors = FALSE)
+  draft_contract_pass <- if (total_checks > 0) passed_checks == total_checks else TRUE
+  contract <- object$contract %||% list()
+  converged <- contract$metadata$converged %||% NA
+  supports_formal_inference <- contract$precision$supports_formal_inference %||% NA
+  analysis_ready <- isTRUE(draft_contract_pass) &&
+    isTRUE(converged) &&
+    isTRUE(supports_formal_inference)
 
   overview <- data.frame(
     Components = nrow(stats_tbl),
@@ -1583,8 +1597,11 @@ summary.mfrm_apa_outputs <- function(object, top_n = 3, preview_chars = 160, ...
     AvailableSections = if (nrow(sections_tbl) > 0) sum(sections_tbl$Available, na.rm = TRUE) else 0L,
     ContentChecks = total_checks,
     ContentChecksPassed = passed_checks,
-    DraftContractPass = if (total_checks > 0) passed_checks == total_checks else TRUE,
-    ReadyForAPA = if (total_checks > 0) passed_checks == total_checks else TRUE,
+    DraftContractPass = draft_contract_pass,
+    ReadyForAPA = draft_contract_pass,
+    Converged = converged,
+    FormalPrecision = supports_formal_inference,
+    AnalysisReady = analysis_ready,
     stringsAsFactors = FALSE
   )
 
@@ -1603,6 +1620,10 @@ summary.mfrm_apa_outputs <- function(object, top_n = 3, preview_chars = 160, ...
   notes <- c(
     notes,
     "In this summary, ReadyForAPA/DraftContractPass indicates contract completeness for draft text components; it does not certify formal inferential adequacy."
+  )
+  notes <- c(
+    notes,
+    "AnalysisReady additionally requires convergence and a formal precision tier; FALSE/NA values should be reviewed before manuscript submission."
   )
   notes <- c(notes, "Use object fields directly for full text; summary provides compact diagnostics.")
 
@@ -4673,11 +4694,16 @@ resolve_summary_bundle_table_selection <- function(bundle, which = NULL) {
 #' - `table`: plain data.frame ready for export or further formatting.
 #' - `which`: source component that produced the table.
 #' - `caption`/`note`: manuscript-oriented metadata stored with the table.
+#' - For fit-based `which = "summary"`, the automatic caption describes the
+#'   model overview table; use `which = "facets"` or `which = "person"` for
+#'   Table 1-style measurement summaries.
 #'
 #' @section Typical workflow:
 #' 1. Build table object with `apa_table(...)`.
 #' 2. Inspect quickly with `summary(tbl)`.
-#' 3. Render base preview via `plot(tbl, ...)` or export `tbl$table`.
+#' 3. Render with `as_kable(tbl)` for R Markdown / Quarto or
+#'    `as_flextable(tbl)` for Word when those packages are installed.
+#' 4. Render base preview via `plot(tbl, ...)` or export `tbl$table`.
 #'
 #' @return A list of class `apa_table` with fields:
 #' - `table` (`data.frame`)
@@ -4836,7 +4862,6 @@ apa_table <- function(x,
     which_value <- tolower(as.character(which_value %||% ""))
     switch(
       which_value,
-      summary = "table1",
       person = "table1",
       facets = "table1",
       measures = "table1",
@@ -4879,6 +4904,18 @@ apa_table <- function(x,
       context = context,
       whexact = whexact
     )
+    if (identical(tolower(as.character(resolved_which %||% "")), "summary")) {
+      if (is.null(caption)) {
+        caption <- "Model Summary (Fit, Convergence, and Information Criteria)"
+      }
+      if (is.null(note)) {
+        note <- paste(
+          "This table reports the fitted model overview returned by fit_mfrm().",
+          "Use facet, person, fit, reliability, and diagnostic tables for",
+          "substantive measurement interpretation."
+        )
+      }
+    }
     contract_key <- resolve_contract_key(resolved_which %||% which %||% source_type)
     if (is.null(caption) && !is.null(contract_key) && contract_key %in% names(contract$caption_map)) {
       caption <- contract$caption_map[[contract_key]]
@@ -7006,6 +7043,8 @@ print.summary.mfrm_dif_report <- function(x, ...) {
 #'
 #' Individual thresholds can be overridden via the `thresholds` argument
 #' (a named list keyed by the internal threshold names shown above).
+#' The element-misfit row uses `misfit_low` and `misfit_high` for the MnSq
+#' band and reports both the band and percentage criteria in `qc$verdicts`.
 #'
 #' For bounded `GPCM`, this pipeline is available as an exploratory screening
 #' route. The returned object includes `support_status =
@@ -7317,10 +7356,25 @@ run_qc_pipeline <- function(fit,
     verdicts[5] <- "Fail"
   }
   values[5]  <- sprintf("%d/%d (%.1f%%)", n_flagged, n_elements, misfit_pct)
-  thresh[5]  <- sprintf("Pass<=%.0f%%, Fail>%.0f%%", thr$misfit_warn_pct, thr$misfit_fail_pct)
-  details[5] <- sprintf("%d of %d elements misfitting (%.1f%%)", n_flagged, n_elements, misfit_pct)
+  thresh[5]  <- sprintf(
+    "MnSq [%.2f, %.2f]; Pass<=%.0f%%, Fail>%.0f%%",
+    thr$misfit_low,
+    thr$misfit_high,
+    thr$misfit_warn_pct,
+    thr$misfit_fail_pct
+  )
+  details[5] <- sprintf(
+    "%d of %d elements outside MnSq [%.2f, %.2f] (%.1f%%)",
+    n_flagged,
+    n_elements,
+    thr$misfit_low,
+    thr$misfit_high,
+    misfit_pct
+  )
   raw_details$element_misfit <- list(n_flagged = n_flagged, n_elements = n_elements,
-                                     misfit_pct = misfit_pct)
+                                     misfit_pct = misfit_pct,
+                                     misfit_low = thr$misfit_low,
+                                     misfit_high = thr$misfit_high)
   if (verdicts[5] != "Pass") {
     recommendations <- c(recommendations,
                          "Excessive element misfit detected. Review individual element fit statistics.")

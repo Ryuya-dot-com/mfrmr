@@ -31,9 +31,11 @@ Helpers that consume the band include
 \code{\link[=summary.mfrm_diagnostics]{summary.mfrm_diagnostics()}} (\code{misfit_flagged} block and
 \code{key_warnings} auto-flag), \code{\link[=build_misfit_casebook]{build_misfit_casebook()}} (the new
 \code{element_fit} source family), the bias / misfit narrative inside
-\code{\link[=build_apa_outputs]{build_apa_outputs()}}, and \code{\link[=facet_quality_dashboard]{facet_quality_dashboard()}} when
-\code{misfit_warn = NULL}. Setting the options once at the top of an
-analysis script therefore changes every downstream screen at once.
+\code{\link[=build_apa_outputs]{build_apa_outputs()}}, \code{\link[=facet_quality_dashboard]{facet_quality_dashboard()}} when
+\code{misfit_warn = NULL}, \code{\link[=plot_person_fit]{plot_person_fit()}} when \code{lower} / \code{upper}
+are \code{NULL}, and \code{\link[=plot_bubble]{plot_bubble()}} when \code{fit_range = NULL}. Setting the
+options once at the top of an analysis script therefore changes every
+downstream screen at once.
 }
 \section{Configuration}{
 

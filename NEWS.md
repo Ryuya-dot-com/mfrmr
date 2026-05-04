@@ -55,6 +55,12 @@ with explicit caveats.
 
 ## Documentation refinements
 
+- **Manuscript handoff UX**: `print(build_apa_outputs(...))` now prints the
+  concise Method / Results draft by default. Use `summary(apa)` or
+  `print(apa, qa = TRUE)` for the structured QA view; legacy
+  `print(apa, top_n = ..., preview_chars = ...)` calls route to that QA view
+  with a warning. The README, vignette, and help pages now separate manuscript
+  prose (`apa$report_text` / `apa`) from completeness checks (`summary(apa)`).
 - **Visual/API reading guide**: `visual_reporting_template()` now includes
   `ReadFirst`, `NextLook`, `ReportDecision`, and `GPCMBoundary` columns.
   `reporting_checklist()$visual_scope`, `build_visual_summaries()`, the
@@ -86,16 +92,21 @@ with explicit caveats.
 
 ## Release overview
 
-This is a small infrastructure and polish release. No default value
-changes between 0.1.6 and 0.2.0. The headings mirror the 0.1.6 layout
+This is a small infrastructure and polish release. The headings mirror the 0.1.6 layout
 (default changes, new features, bug fixes, documentation) so that
 release notes can be read in the same order as previous versions.
 
 ## Default changes
 
-No defaults change between 0.1.6 and 0.2.0. The 0.1.6 defaults
-(`quad_points = 31`, `diagnostic_mode = "both"`,
+Core estimation defaults do not change between 0.1.6 and 0.2.0. The
+0.1.6 defaults (`quad_points = 31`, `diagnostic_mode = "both"`,
 `plot.mfrm_fit(type = "wright")`, `keep_original = FALSE`) are retained.
+For reporting consistency, `plot_person_fit()`, `plot_bubble()`, and
+`plot_facet_quality_dashboard()` now inherit the active MnSq screening band
+from `mfrm_misfit_thresholds()` when no manual band is supplied. Pass
+explicit plot thresholds (for example `lower = 0.5, upper = 1.5`,
+`fit_range = c(0.5, 1.5)`, or `misfit_warn = 1.5`) to freeze a manual
+review band.
 
 Note for users upgrading directly from CRAN 0.1.5 to 0.2.0 (skipping
 the 0.1.6 development release): three defaults were flipped in 0.1.6
@@ -532,8 +543,8 @@ Fourteen additions across the plot surface, all base-R / additive
   measure overlaid on the model CCC curves, for an at-a-glance
   model-data fit visual.
 - **`plot_person_fit()`** (new) — FACETS Table 6 style per-person
-  Infit / Outfit bubble with the standard 0.5-1.5 acceptance band
-  (Linacre, 2002).
+  Infit / Outfit bubble using the active MnSq screening band (default
+  0.5-1.5; configurable via `mfrm_misfit_thresholds()`).
 - **`plot_bias_interaction(plot = "heatmap")`** (new mode) — diverging
   Rater x Criterion grid coloured by bias size, with flagged cells
   outlined for emphasis.
@@ -607,10 +618,10 @@ scheduled for a future release.
 
 ### Package-level MnSq misfit threshold
 
-`mfrm_misfit_thresholds()` returns the lower / upper Linacre acceptance
-band that mfrmr screens use when flagging element-level Infit / Outfit
-MnSq misfit. Defaults are `c(lower = 0.5, upper = 1.5)` and can be
-overridden globally via R options:
+`mfrm_misfit_thresholds()` returns the lower / upper active MnSq
+screening band that mfrmr screens use when flagging element-level Infit /
+Outfit MnSq misfit. Defaults are `c(lower = 0.5, upper = 1.5)` and can
+be overridden globally via R options:
 
 - `options(mfrmr.misfit_lower = 0.7)`
 - `options(mfrmr.misfit_upper = 1.3)`

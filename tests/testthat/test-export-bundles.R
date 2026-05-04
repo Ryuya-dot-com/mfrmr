@@ -538,7 +538,7 @@ test_that("build_mfrm_replay_script reproduces optional prediction artifacts", {
   expect_match(replay$script, "sample_mfrm_plausible_values\\(")
   expect_match(
     replay$script,
-    'include = c\\("core_tables", "checklist", "dashboard", "manifest", "html",\\s*"predictions"\\)'
+    'include = c\\("core_tables", "checklist", "dashboard", "apa", "manifest",\\s*"html", "predictions"\\)'
   )
   expect_true(replay$summary$PopulationPrediction[[1]])
   expect_true(replay$summary$UnitPrediction[[1]])

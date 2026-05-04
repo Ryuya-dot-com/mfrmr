@@ -23,8 +23,7 @@ Summarize APA report-output bundles
 }
 \details{
 This summary is a diagnostics layer for APA text products, not a replacement
-for the full narrative. Printing the \code{mfrm_apa_outputs} object itself shows
-the concise Method / Results draft produced by \code{build_apa_outputs()}.
+for the full narrative.
 
 It reports component completeness, line/character volume, and a compact
 preview for quick QA before manuscript insertion.
@@ -41,6 +40,8 @@ preview for quick QA before manuscript insertion.
 draft text components.
 \item \code{overview$ReadyForAPA}: a backward-compatible alias of that contract flag,
 not a certification of inferential adequacy.
+\item \code{overview$AnalysisReady}: a stricter manuscript-readiness flag that also
+requires model convergence and a formal precision tier.
 \item \code{preview}: first non-empty lines for fast visual review.
 }
 }

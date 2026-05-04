@@ -122,3 +122,23 @@ test_that("plot_facet_quality_dashboard returns mfrm_plot_data for severity and 
   expect_true(is.data.frame(severity_plot$data$table))
   expect_true(is.data.frame(flags_plot$data$table))
 })
+
+test_that("plot_facet_quality_dashboard inherits active misfit band through dashboard", {
+  old <- options(mfrmr.misfit_lower = 0.7, mfrmr.misfit_upper = 1.3)
+  on.exit(options(old), add = TRUE)
+
+  plot_obj <- plot_facet_quality_dashboard(
+    facet_dashboard_fixture$fit,
+    diagnostics = facet_dashboard_fixture$diagnostics,
+    plot_type = "severity",
+    draw = FALSE
+  )
+  settings <- as.data.frame(plot_obj$data$settings, stringsAsFactors = FALSE)
+  lower <- as.numeric(settings$Value[settings$Setting == "misfit_lower"])
+  upper <- as.numeric(settings$Value[settings$Setting == "misfit_warn"])
+
+  expect_equal(lower, 0.7)
+  expect_equal(upper, 1.3)
+  expect_equal(plot_obj$data$thresholds$misfit_lower, 0.7)
+  expect_equal(plot_obj$data$thresholds$misfit_upper, 1.3)
+})

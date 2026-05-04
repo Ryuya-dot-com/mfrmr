@@ -377,9 +377,11 @@ format_reporting_marginal_pair_label <- function(pair_row) {
 #' [summary.mfrm_diagnostics()] (`misfit_flagged` block and
 #' `key_warnings` auto-flag), [build_misfit_casebook()] (the new
 #' `element_fit` source family), the bias / misfit narrative inside
-#' [build_apa_outputs()], and [facet_quality_dashboard()] when
-#' `misfit_warn = NULL`. Setting the options once at the top of an
-#' analysis script therefore changes every downstream screen at once.
+#' [build_apa_outputs()], [facet_quality_dashboard()] when
+#' `misfit_warn = NULL`, [plot_person_fit()] when `lower` / `upper`
+#' are `NULL`, and [plot_bubble()] when `fit_range = NULL`. Setting the
+#' options once at the top of an analysis script therefore changes every
+#' downstream screen at once.
 #'
 #' @section Configuration:
 #' Two scalar R options drive the band:
@@ -485,7 +487,7 @@ mfrm_misfit_threshold_apa_sentence <- function(band = mfrm_misfit_thresholds()) 
 # Sources:
 #   - n_obs_min, n_person_min: Linacre (1994), sample size guidelines for stable estimates.
 #   - low_cat_min: Linacre (2002), minimum 10 observations per category for stable thresholds.
-#   - misfit_ratio_warn: Bond & Fox (2015), MnSq 0.5-1.5 acceptable range; >10% flagged.
+#   - misfit_ratio_warn: Bond & Fox (2015), MnSq 0.5-1.5 broad screening band; >10% flagged.
 #   - zstd thresholds: |ZSTD| > 2 at 5% significance; >3 at 1% (Wright & Linacre, 1994).
 #   - pca_first_eigen_warn: Linacre-style residual-PCA heuristic band; use only as exploratory screening, not direct proof of multidimensionality.
 #   - pca_first_prop_warn: Smith (2002), unexplained variance > 5-10% merits investigation.
@@ -1381,6 +1383,11 @@ build_apa_reporting_contract <- function(res, diagnostics, bias_results = NULL, 
   model <- as.character(config$model %||% NA_character_)
   method <- as.character(config$method %||% NA_character_)
   gpcm_mode <- identical(model, "GPCM")
+  converged <- if (!is.null(summary) && "Converged" %in% names(summary)) {
+    isTRUE(summary$Converged[1])
+  } else {
+    NA
+  }
   precision_tier <- trimws(as.character(precision_profile$PrecisionTier[1] %||% NA_character_))
   if (!nzchar(precision_tier)) {
     precision_tier <- if (identical(config$method, "MML")) "hybrid" else "exploratory"
@@ -1904,6 +1911,7 @@ build_apa_reporting_contract <- function(res, diagnostics, bias_results = NULL, 
       facet_names = facet_names,
       facet_counts = facet_counts,
       facets_text = facets_text,
+      converged = converged,
       line_width = line_width,
       # Reflow vs wrapped controls whether section text uses hard line
       # breaks (wrapped, the current 92-col default) or returns one

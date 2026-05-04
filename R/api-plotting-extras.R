@@ -153,15 +153,17 @@ plot_threshold_ladder <- function(fit,
 #' Per-person diagnostic bubble plot inspired by FACETS Table 6 / KIDMAP
 #' summaries. Each bubble represents one person at the intersection of
 #' Infit (x) and Outfit (y), sized by total observations and coloured by
-#' the standard 0.5/1.5 fit envelope: green when both Infit and Outfit
-#' fall in `[lower, upper]`, amber when one statistic is outside, red
-#' when both are outside.
+#' the active MnSq screening band: green when both Infit and Outfit fall
+#' in `[lower, upper]`, amber when one statistic is outside, red when both
+#' are outside.
 #'
 #' @param fit An `mfrm_fit` from [fit_mfrm()].
 #' @param diagnostics Optional [diagnose_mfrm()] output. When omitted,
 #'   `diagnose_mfrm(fit, residual_pca = "none")` is run internally.
-#' @param lower Lower fit threshold (default `0.5`, Linacre 2002).
-#' @param upper Upper fit threshold (default `1.5`).
+#' @param lower Lower fit threshold. `NULL` (default) uses the lower bound
+#'   from [mfrm_misfit_thresholds()]; pass a scalar for a manual plot band.
+#' @param upper Upper fit threshold. `NULL` (default) uses the upper bound
+#'   from [mfrm_misfit_thresholds()].
 #' @param top_n_label Maximum number of persons whose label is drawn
 #'   next to the bubble (largest |Infit-1| + |Outfit-1|). Default `12`.
 #' @param preset Visual preset.
@@ -171,11 +173,13 @@ plot_threshold_ladder <- function(fit,
 #'   columns `Person`, `Infit`, `Outfit`, `N`, `Status`.
 #'
 #' @section Interpreting output:
-#' The default 0.5-1.5 envelope follows Linacre (2002) Rasch
-#' Measurement Transactions. Persons in the green centre are
-#' fit-acceptable; amber and red corners are candidates for misfit
-#' review (overfit / underfit) using
-#' [unexpected_response_table()] for follow-up.
+#' The default band is the active package MnSq screening band returned by
+#' [mfrm_misfit_thresholds()]. The package default is the broad 0.5-1.5
+#' convention, but applied studies may use narrower or broader bands by
+#' purpose and sample context. Persons in the green centre are inside the
+#' current screening band; amber and red corners are candidates for misfit
+#' review (overfit / underfit) using [unexpected_response_table()] for
+#' follow-up.
 #'
 #' @seealso [diagnose_mfrm()], [unexpected_response_table()],
 #'   [build_misfit_casebook()].
@@ -189,14 +193,17 @@ plot_threshold_ladder <- function(fit,
 #' @export
 plot_person_fit <- function(fit,
                             diagnostics = NULL,
-                            lower = 0.5,
-                            upper = 1.5,
+                            lower = NULL,
+                            upper = NULL,
                             top_n_label = 12L,
                             preset = c("standard", "publication", "compact"),
                             draw = TRUE) {
   if (!inherits(fit, "mfrm_fit")) {
     stop("`fit` must be an mfrm_fit object from fit_mfrm().", call. = FALSE)
   }
+  band <- mfrm_misfit_thresholds(lower = lower, upper = upper)
+  lower <- as.numeric(band["lower"])
+  upper <- as.numeric(band["upper"])
   style <- resolve_plot_preset(preset)
   if (is.null(diagnostics)) {
     diagnostics <- suppressMessages(suppressWarnings(
@@ -228,7 +235,7 @@ plot_person_fit <- function(fit,
   m <- m[order(-m$Score), , drop = FALSE]
   plot_title <- "Person fit"
   plot_subtitle <- sprintf(
-    "Infit and Outfit per person (acceptance band [%g, %g], Linacre 2002)",
+    "Infit and Outfit per person (active MnSq screening band [%g, %g])",
     lower, upper
   )
 
@@ -287,7 +294,7 @@ plot_person_fit <- function(fit,
       reference_lines = new_reference_lines(
         axis = c("h", "v", "h", "v"),
         value = c(lower, lower, upper, upper),
-        label = rep(c("Fit envelope"), 4),
+        label = rep(c("Active MnSq screening band"), 4),
         linetype = rep("dashed", 4),
         role = rep("threshold", 4)
       ),

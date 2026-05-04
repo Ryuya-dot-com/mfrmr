@@ -62,6 +62,15 @@ test_that("plot_person_fit honours custom fit envelope", {
   expect_equal(p$data$upper, 1.3)
 })
 
+test_that("plot_person_fit inherits the active misfit band by default", {
+  old <- options(mfrmr.misfit_lower = 0.7, mfrmr.misfit_upper = 1.3)
+  on.exit(options(old), add = TRUE)
+  p <- plot_person_fit(.fit, diagnostics = .diag, draw = FALSE)
+  expect_equal(p$data$lower, 0.7)
+  expect_equal(p$data$upper, 1.3)
+  expect_match(p$data$subtitle, "active MnSq screening band", fixed = TRUE)
+})
+
 test_that("plot_person_fit draws without error", {
   pdf(NULL); on.exit(dev.off(), add = TRUE)
   expect_silent(plot_person_fit(.fit, diagnostics = .diag, draw = TRUE,

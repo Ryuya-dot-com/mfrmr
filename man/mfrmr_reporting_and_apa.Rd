@@ -21,6 +21,9 @@ returned caveats with any fair-average, bias, or conditional-SE language.
 }
 \section{Start with the reporting question}{
 
+This page is for manuscript assembly: prose, caveats, notes/captions, and
+readiness review. Use \link{mfrmr_reports_and_tables} when the task is choosing
+a specific table/report helper or appendix export format.
 \itemize{
 \item "Which parts of this run are draft-complete, and with what caveats?"
 Use \code{\link[=reporting_checklist]{reporting_checklist()}}.
@@ -102,6 +105,12 @@ guidance for public visual helpers.}
 \itemize{
 \item Treat \code{\link[=reporting_checklist]{reporting_checklist()}} as the gap finder and
 \code{\link[=build_apa_outputs]{build_apa_outputs()}} as the writing engine.
+\item Copy \code{apa$report_text} (or print \code{apa} interactively) for draft
+Method / Results prose; use \code{summary(apa)} only as a QA/completeness
+check before handoff.
+\item Use \code{apa$section_map} for section-level editing and
+\code{apa$table_figure_notes} / \code{apa$table_figure_captions} for appendix
+notes and captions.
 \item Use the checklist's \code{"Visual Displays"} rows to decide whether the next
 follow-up should be \code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}}, \code{\link[=plot_marginal_fit]{plot_marginal_fit()}},
 \code{\link[=plot_residual_pca]{plot_residual_pca()}}, \code{\link[=plot_bias_interaction]{plot_bias_interaction()}}, or another public plot.
@@ -130,7 +139,7 @@ routes are available with screening-tier limits.
 \code{\link[=fit_mfrm]{fit_mfrm()}} -> \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} -> \code{\link[=reporting_checklist]{reporting_checklist()}} ->
 \code{\link[=build_apa_outputs]{build_apa_outputs()}} -> \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}} -> \code{summary()} /
 \code{plot()} -> \code{\link[=apa_table]{apa_table()}}, \code{\link[=export_summary_appendix]{export_summary_appendix()}}, or
-\code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}}(include = c("summary_tables", "html")).
+\code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}}(include = c("apa", "summary_tables", "html")).
 For \code{RSM} / \code{PCM} final reports, prefer \code{method = "MML"} and
 \code{diagnostic_mode = "both"} in the diagnostics step.
 For bounded \code{GPCM}, retain the caveats from \code{\link[=build_apa_outputs]{build_apa_outputs()}},
@@ -138,8 +147,9 @@ For bounded \code{GPCM}, retain the caveats from \code{\link[=build_apa_outputs]
 \code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}}, and avoid FACETS/Rasch score-side invariance
 language.
 \item Appendix-first route:
-\code{\link[=facet_statistics_report]{facet_statistics_report()}} -> \code{\link[=apa_table]{apa_table()}} ->
-\code{\link[=build_visual_summaries]{build_visual_summaries()}} -> \code{\link[=build_apa_outputs]{build_apa_outputs()}}.
+\code{\link[=facet_statistics_report]{facet_statistics_report()}} -> \code{\link[=apa_table]{apa_table()}} plus
+\code{\link[=build_visual_summaries]{build_visual_summaries()}} and \code{\link[=build_apa_outputs]{build_apa_outputs()}} as parallel
+products from the same \code{fit} / \code{diagnostics} objects.
 \item Precision-sensitive route:
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} -> \code{\link[=precision_audit_report]{precision_audit_report()}} ->
 \code{\link[=reporting_checklist]{reporting_checklist()}} -> \code{\link[=build_apa_outputs]{build_apa_outputs()}}.
@@ -186,6 +196,8 @@ subset(
 )
 
 apa <- build_apa_outputs(fit, diagnostics = diag)
+summary(apa)
+apa
 apa$section_map[, c("SectionId", "Available")]
 
 tbl <- apa_table(fit, which = "summary")

@@ -106,6 +106,21 @@ test_that("thresholds override works", {
   expect_equal(qc$config$thresholds$reliability_pass, 0.99)
 })
 
+test_that("run_qc_pipeline surfaces the element MnSq band", {
+  fit <- qc_study1_fit()
+
+  qc <- run_qc_pipeline(
+    fit,
+    thresholds = list(misfit_low = 0.7, misfit_high = 1.3),
+    include_bias = FALSE
+  )
+  row <- qc$verdicts[qc$verdicts$Check == "Element Misfit", , drop = FALSE]
+
+  expect_match(row$Threshold[1], "MnSq \\[0.70, 1.30\\]")
+  expect_equal(qc$details$element_misfit$misfit_low, 0.7)
+  expect_equal(qc$details$element_misfit$misfit_high, 1.3)
+})
+
 test_that("run_qc_pipeline works with pre-computed diagnostics", {
   fit <- qc_study1_fit()
   diag <- suppressWarnings(diagnose_mfrm(fit))

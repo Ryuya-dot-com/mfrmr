@@ -53,6 +53,7 @@ summary(diag)
 ```{r report}
 chk  <- reporting_checklist(fit, diagnostics = diag)
 apa  <- build_apa_outputs(fit, diag)
+summary(apa)                 # QA / completeness check
 cat(apa$report_text)
 
 tbl  <- apa_table(fit, which = "facets", diagnostics = diag)

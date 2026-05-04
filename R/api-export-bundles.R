@@ -1446,7 +1446,7 @@ build_mfrm_replay_script <- function(fit,
   }
 
   if (isTRUE(include_bundle)) {
-    bundle_include <- c("core_tables", "checklist", "dashboard", "manifest", "html")
+    bundle_include <- c("core_tables", "checklist", "dashboard", "apa", "manifest", "html")
     if (!is.null(population_prediction) || !is.null(unit_prediction) || !is.null(plausible_values)) {
       bundle_include <- c(bundle_include, "predictions")
     }
@@ -3748,7 +3748,7 @@ export_summary_appendix <- function(x,
 #' Common starting points are:
 #' - minimal tables: `include = c("core_tables", "manifest")`
 #' - reporting bundle: `include = c("core_tables", "checklist", "dashboard",
-#'   "summary_tables", "html")`
+#'   "apa", "summary_tables", "html")`
 #' - archival bundle: `include = c("core_tables", "manifest", "script",
 #'   "visual_summaries", "html")`
 #'

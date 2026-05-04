@@ -114,7 +114,7 @@ to travel with the bundle.
 Common starting points are:
 \itemize{
 \item minimal tables: \code{include = c("core_tables", "manifest")}
-\item reporting bundle: \code{include = c("core_tables", "checklist", "dashboard", "summary_tables", "html")}
+\item reporting bundle: \code{include = c("core_tables", "checklist", "dashboard", "apa", "summary_tables", "html")}
 \item archival bundle: \code{include = c("core_tables", "manifest", "script", "visual_summaries", "html")}
 }
 }

@@ -987,8 +987,9 @@ measurable_summary_table <- function(fit, diagnostics = NULL) {
 #'   Psychometrika, 47(2), 149-174. \doi{10.1007/BF02296272}
 #' - Linacre, J. M. (2002). What do Infit and Outfit, mean-square and
 #'   standardized mean? *Rasch Measurement Transactions, 16*(2), 878.
-#'   (Source for the 0.5-1.5 mean-square acceptance band and the
-#'   threshold-gap heuristics used in `summary(t8)$summary`.)
+#'   (Source for the broad 0.5-1.5 mean-square screening convention and
+#'   the threshold-gap heuristics used in `summary(t8)$summary`; applied
+#'   misfit bands remain purpose- and sample-dependent.)
 #' - Wind, S. A. (2023). *Detecting rating scale malfunctioning with the
 #'   partial credit model and generalized partial credit model*.
 #'   Educational and Psychological Measurement, 83(5), 953-983.
