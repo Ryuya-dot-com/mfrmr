@@ -177,14 +177,6 @@ predict_mfrm_population <- function(fit = NULL,
     if (!is.character(default_model) || !nzchar(default_model)) {
       default_model <- as.character(fit$config$model)
     }
-    if (identical(default_model, "GPCM")) {
-      stop(
-        "`predict_mfrm_population()` is not yet validated for `GPCM` fits. ",
-        "Current bounded `GPCM` support is limited to fitting, core summary output, and fixed-calibration posterior scoring. ",
-        gpcm_planning_scope_rationale(),
-        call. = FALSE
-      )
-    }
     base_spec <- extract_mfrm_sim_spec(fit)
   } else {
     if (!inherits(sim_spec, "mfrm_sim_spec")) {
@@ -193,20 +185,12 @@ predict_mfrm_population <- function(fit = NULL,
     base_spec <- sim_spec
     default_fit_method <- "MML"
     default_model <- as.character(base_spec$model)
-    if (identical(default_model, "GPCM")) {
-      stop(
-        "`predict_mfrm_population()` is not yet validated for `GPCM` simulation specifications. ",
-        "Current bounded `GPCM` support is limited to fitting, core summary output, and fixed-calibration posterior scoring. ",
-        gpcm_planning_scope_rationale(),
-        call. = FALSE
-      )
-    }
   }
 
   fit_method <- toupper(as.character(fit_method[1] %||% default_fit_method))
   fit_method <- match.arg(fit_method, c("JML", "MML"))
   model <- toupper(as.character(model[1] %||% default_model))
-  model <- match.arg(model, c("RSM", "PCM"))
+  model <- match.arg(model, c("RSM", "PCM", "GPCM"))
 
   design <- simulation_resolve_design_counts(
     sim_spec = base_spec,
@@ -257,6 +241,17 @@ predict_mfrm_population <- function(fit = NULL,
     "MCSE columns quantify Monte Carlo uncertainty from using a finite number of replications.",
     "Do not interpret this output as deterministic future person/rater true values."
   )
+  if (identical(model, "GPCM")) {
+    notes <- c(
+      notes,
+      paste0(
+        "Bounded GPCM forecasts are simulation/refit planning summaries ",
+        "under the current slope_facet == step_facet contract; treat them ",
+        "as design-screening evidence rather than FACETS/Rasch score-side ",
+        "invariance evidence."
+      )
+    )
+  }
   scope_note <- simulation_planning_scope_note(planning_scope)
   if (length(scope_note) > 0L && !scope_note %in% notes) {
     notes <- c(notes, scope_note)

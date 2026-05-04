@@ -1053,10 +1053,12 @@ plot_bias_interaction <- function(x,
 #' Output text includes residual-PCA screening commentary if PCA diagnostics are
 #' available in `diagnostics`.
 #'
-#' For bounded `GPCM`, this helper is intentionally unavailable. Use
-#' [reporting_checklist()], [precision_audit_report()], and the direct
-#' table/plot helpers instead, and treat [gpcm_capability_matrix()] as the
-#' formal boundary statement for that branch.
+#' For bounded `GPCM`, this helper returns a caveated APA scaffold. It uses
+#' the GPCM-specific model wording and carries a `support_status` table plus a
+#' `caveat` field. Keep fair-average and bias language at the screening tier,
+#' and do not describe conditional fair-average SEs as full joint-uncertainty
+#' intervals. Use [gpcm_capability_matrix()] as the formal boundary statement
+#' for that branch.
 #'
 #' By default, `report_text` includes:
 #' - model/data design summary (N, facet counts, scale range)
@@ -1175,7 +1177,7 @@ build_apa_outputs <- function(fit,
   diagnostics <- validated$diagnostics
   bias_results <- validated$bias_results
   context <- validated$context
-  stop_if_gpcm_out_of_scope(fit, "build_apa_outputs()")
+  fit_model <- as.character(fit$config$model %||% fit$summary$Model[1] %||% NA_character_)
   contract <- build_apa_reporting_contract(
     res = fit,
     diagnostics = diagnostics,
@@ -1194,6 +1196,21 @@ build_apa_outputs <- function(fit,
     section_map = as.data.frame(contract$section_table %||% data.frame(), stringsAsFactors = FALSE),
     contract = contract
   )
+  if (identical(fit_model, "GPCM")) {
+    out$support_status <- data.frame(
+      Model = fit_model,
+      Status = "supported_with_caveat",
+      Detail = paste0(
+        "APA scaffold generation is available for bounded GPCM with ",
+        "GPCM-specific model wording. Fair-average and bias sections retain ",
+        "screening-tier semantics; conditional fair-average SEs are ",
+        "measure-only delta-method summaries, not full joint-uncertainty ",
+        "intervals."
+      ),
+      stringsAsFactors = FALSE
+    )
+    out$caveat <- gpcm_fair_average_rationale()
+  }
   class(out) <- c("mfrm_apa_outputs", "list")
   out
 }

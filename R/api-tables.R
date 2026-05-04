@@ -471,12 +471,13 @@ unexpected_response_table <- function(fit,
 #' the standard PCM Linacre fair-average and reduce to it exactly
 #' when all slopes equal one.
 #'
-#' Standard errors on the fair-average value itself are not currently
-#' computed for `GPCM` fits. The SE columns retain the same meaning
-#' as for PCM (scaled facet-measure SEs); see the
-#' "Standard-error caveat" section below for why they should not be
-#' quoted as \eqn{\pm 1.96 \cdot \mathrm{SE}} bounds on the
-#' fair-average value.
+#' Fair-average-specific conditional SE columns are computed with a
+#' measure-only delta method. For bounded `GPCM`, the derivative is
+#' \eqn{a_j Var(X \mid \eta, a_j, \delta_j)} for slope-facet rows and
+#' \eqn{Var(X \mid \eta)} for the geometric-mean-one non-slope rows.
+#' The standard `SE`, `Model S.E.`, and `Real S.E.` columns retain the
+#' same meaning as for PCM (scaled facet-measure SEs); see the
+#' "Standard-error caveat" section below before quoting intervals.
 #'
 #' @section Interpreting output:
 #' - `stacked`: cross-facet table for global comparison.
@@ -500,6 +501,10 @@ unexpected_response_table <- function(fit,
 #'   \item{Obsvd Average}{Observed raw-score average.}
 #'   \item{Fair(M) Average}{Model-adjusted reference average on the reported score scale.}
 #'   \item{Fair(Z) Average}{Standardized adjusted reference average.}
+#'   \item{Fair(M) Cond. S.E., Fair(Z) Cond. S.E.}{Conditional
+#'   measure-only delta-method SEs for the corresponding fair-average
+#'   values. Package-native aliases are `AdjustedAverageConditionalSE`
+#'   and `StandardizedAdjustedAverageConditionalSE`.}
 #'   \item{ObservedAverage, AdjustedAverage, StandardizedAdjustedAverage}{Package-native aliases for the three average columns above.}
 #'   \item{Measure}{Estimated logit measure for this level.}
 #'   \item{SE}{Compatibility alias for the model-based standard error.}
@@ -513,20 +518,18 @@ unexpected_response_table <- function(fit,
 #' underlying facet element (the same SE that would appear in
 #' `summary(fit)$facets`), rescaled by the fair-average score scale factor
 #' so the units line up with the reported `Fair(M) Average` / `Fair(Z) Average`
-#' columns. They are **not** delta-method standard errors of the
-#' fair-average values themselves: a proper SE on a fair-average requires
-#' propagating the joint covariance of the relevant facet element, the
-#' threshold parameters, and the person measure through the gradient of
-#' \eqn{\mathrm{E}[X \mid \theta_p, j^\star]} with respect to those
-#' parameters. mfrmr does not currently expose that joint covariance
-#' (under MML the person measure is integrated out of the structural
-#' Hessian; under JML no joint Hessian is built), so a true delta-method
-#' fair-average SE is not yet computed. **Do not use these columns as
-#' \eqn{\pm 1.96 \cdot \mathrm{SE}} confidence-interval bounds on the
-#' fair-average value.** A delta-method fair-average SE is not
-#' provided in this release; if such an SE is added later it would be
-#' exposed under a distinct column name from the existing measure-SE
-#' columns to avoid silent misinterpretation.
+#' columns. They are **not** fair-average SEs.
+#'
+#' The `Fair(M) Cond. S.E.` / `Fair(Z) Cond. S.E.` columns are
+#' fair-average-specific conditional delta-method SEs, but they propagate
+#' only the focal level's measure SE through the expected-score curve.
+#' They do **not** propagate the joint covariance of the relevant facet
+#' element, threshold parameters, slopes, and person-measure estimation
+#' through \eqn{\mathrm{E}[X \mid \theta_p, j^\star]}. mfrmr does not
+#' currently expose that full joint covariance (under MML the person
+#' measure is integrated out of the structural Hessian; under JML no
+#' joint Hessian is built). Treat these columns as conditional screening
+#' intervals, not full model-uncertainty intervals.
 #'
 #' @return A named list with:
 #' - `by_facet`: named list of formatted data.frames
@@ -617,17 +620,7 @@ fair_average_table <- function(fit,
     method = if (identical(fit_model, "GPCM")) "GPCM-slope-aware" else "PCM/RSM"
   )
   if (identical(fit_model, "GPCM")) {
-    bundle$caveat <- paste0(
-      "GPCM fair-averages use the slope-aware element-conditional ",
-      "construction: each slope-facet element row uses that element's ",
-      "own discrimination, while non-slope-facet rows (persons, raters, ",
-      "...) use the geometric-mean-one slope from the GPCM identification ",
-      "convention. Standard errors on the fair-average value are not yet ",
-      "computed for GPCM fits; the SE / Model S.E. / Real S.E. columns ",
-      "are scaled facet-measure SEs (see `?fair_average_table`) and are ",
-      "not delta-method standard errors of the fair-average value. ",
-      "See `gpcm_capability_matrix()` for the current support contract."
-    )
+    bundle$caveat <- gpcm_fair_average_rationale()
   }
   as_mfrm_bundle(bundle, "mfrm_fair_average")
 }

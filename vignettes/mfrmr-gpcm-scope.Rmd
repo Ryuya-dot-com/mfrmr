@@ -17,11 +17,11 @@ knitr::opts_chunk$set(
 ```
 
 `mfrmr` includes a bounded implementation of the Generalized Partial Credit
-Model (GPCM; Muraki 1992). The estimator is fully functional, but several
-downstream reporting helpers remain restricted because score-side semantics
-under free discrimination differ from the Rasch-family case. This vignette
-documents which helpers are available, which are not, and what to use as a
-substitute when a helper is restricted.
+Model (GPCM; Muraki 1992). The estimator and the main package-native
+reporting routes are available, but several outputs still carry caveats
+because score-side semantics under free discrimination differ from the
+Rasch-family case. This vignette documents which helpers are available,
+which are caveated, and what remains restricted.
 
 ## Checking the support boundary
 
@@ -82,7 +82,16 @@ screens rather than as Rasch-style invariance evidence:
 - `reporting_checklist()` and `precision_audit_report()` route to the
   supported direct tables and plots only. `build_visual_summaries()` and
   `run_qc_pipeline()` bundle those screens and return a support caveat;
-  they do not imply that the broader APA writer is available.
+  they do not imply FACETS score-side compatibility.
+- `build_apa_outputs()`, `build_mfrm_manifest()`,
+  `build_mfrm_replay_script()`, and `export_mfrm_bundle()` run as
+  package-native reproducibility/reporting routes and return an explicit
+  GPCM support caveat.
+- `evaluate_mfrm_design()`, `evaluate_mfrm_diagnostic_screening()`,
+  `evaluate_mfrm_signal_detection()`, and `predict_mfrm_population()` can
+  consume bounded GPCM simulation contracts. Treat the resulting planning
+  summaries as model-based forecasts rather than validation of
+  Rasch-family fair-score invariance.
 - `build_misfit_casebook()` inherits the exploratory screening framing of
   its underlying sources.
 - `fair_average_table()` and `estimate_bias()` use the slope-aware
@@ -95,18 +104,13 @@ recomputing a substitute table.
 
 ## What is intentionally restricted
 
-The FACETS compatibility score-side exports, the APA writer, and the full
-replay/export bundle are restricted under `GPCM` because the free
-discrimination parameter changes the relationship between the latent
-measure and the expected category. Specifically:
+The FACETS compatibility score-side exports remain restricted under `GPCM`
+because the free discrimination parameter changes the relationship between
+the latent measure and the expected category. Specifically:
 
 - `facets_parity_report()` and `facets_output_file_bundle(include =
   "score")` still depend on a FACETS-style compatibility score contract
   that is not generalized to free discrimination.
-- `build_apa_outputs()`, `build_mfrm_manifest()`,
-  `build_mfrm_replay_script()`, and `export_mfrm_bundle()` would convert
-  still-restricted score-side outputs into manuscript narrative or
-  replay/export claims, so they remain restricted.
 
 `build_linking_review()` is deferred under `GPCM` for the same reason. The
 underlying `audit_mfrm_anchors()` and `detect_anchor_drift()` helpers can
@@ -121,15 +125,14 @@ are:
   defensible for the data. The full APA / fair-average / parity stack
   becomes available, and `compare_mfrm()` quantifies the loss in fit.
 - Keep the report on the `GPCM` fit itself but draft the manuscript section
-  manually around the supported tables: `summary(fit)` for parameters,
+  around the package-native GPCM outputs: `summary(fit)` for parameters,
   `diagnose_mfrm()` for residual fit, `facet_quality_dashboard()` for the
-  per-facet quality summary, `build_visual_summaries()` / `run_qc_pipeline()`
-  for caveated screening bundles, and `compute_information()` for precision
-  evidence.
-- Generate the reproducibility manifest from a parallel `RSM` or `PCM`
-  baseline fit. The two fits can be reported side by side in the same
-  document, with the `GPCM` fit footnoted as the discrimination-aware
-  counterpart.
+  per-facet quality summary, `build_apa_outputs()` for caveated manuscript
+  text, `build_visual_summaries()` / `run_qc_pipeline()` for caveated
+  screening bundles, and `compute_information()` for precision evidence.
+- Generate the reproducibility manifest and replay script from the `GPCM`
+  fit with `build_mfrm_manifest()` and `build_mfrm_replay_script()`, then
+  keep the support caveat in the exported bundle.
 
 ## A worked example
 
@@ -168,6 +171,15 @@ vis$support_status
 qc <- run_qc_pipeline(fit_gpcm, diag_gpcm, include_bias = FALSE)
 qc$support_status
 
+apa <- build_apa_outputs(fit_gpcm, diag_gpcm)
+apa$support_status
+
+manifest <- build_mfrm_manifest(fit_gpcm, diagnostics = diag_gpcm)
+manifest$support_status
+
+replay <- build_mfrm_replay_script(fit_gpcm, diagnostics = diag_gpcm)
+replay$support_status
+
 tables <- build_summary_table_bundle(summary(fit_gpcm))
 apa_table(tables, which = "overview")
 ```
@@ -176,13 +188,14 @@ The fit, summary, residual diagnostics, and information helpers all run
 under `GPCM`. `fair_average_table(fit_gpcm)`, `plot_fair_average()`,
 `build_visual_summaries()`, `run_qc_pipeline()`, and summary-table handoff
 from supported summaries also run and return explicit caveats where needed.
-Trying `build_apa_outputs(fit_gpcm)` raises a message pointing back at
-`gpcm_capability_matrix()` rather than producing a partial manuscript draft.
+`build_apa_outputs(fit_gpcm)`, `build_mfrm_manifest(fit_gpcm)`, and
+`build_mfrm_replay_script(fit_gpcm)` run as package-native outputs and
+record `supported_with_caveat` status.
 
 ## Roadmap
 
 The boundary above is a release-scope statement, not a permanent design
-choice. FACETS-compatibility score exports and APA/replay bundles for
-free-discrimination polytomous models are on the roadmap for a future
-release. Until then, the matrix returned by `gpcm_capability_matrix()` is
-the binding contract.
+choice. FACETS-compatibility score exports, linking reviews, posterior
+predictive checks, and full joint-uncertainty fair-average intervals for
+free-discrimination polytomous models remain future work. Until then, the
+matrix returned by `gpcm_capability_matrix()` is the binding contract.

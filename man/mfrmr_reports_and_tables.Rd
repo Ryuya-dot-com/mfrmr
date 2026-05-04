@@ -46,13 +46,12 @@ document the run and confirm usable data.
 describe spread, linkage, and measurability.
 \item Add \code{\link[=rating_scale_table]{rating_scale_table()}}, \code{\link[=category_structure_report]{category_structure_report()}}, and
 \code{\link[=category_curves_report]{category_curves_report()}} to document scale functioning.
-\item For \code{RSM} / \code{PCM}, finish with \code{\link[=reporting_checklist]{reporting_checklist()}} and
-\code{\link[=build_apa_outputs]{build_apa_outputs()}} for manuscript-oriented output, then
-\code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}} for reusable handoff tables or
-\code{\link[=export_summary_appendix]{export_summary_appendix()}} for direct appendix export. For bounded
-\code{GPCM}, skip \code{\link[=build_apa_outputs]{build_apa_outputs()}} and \code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}}; use
-\code{\link[=reporting_checklist]{reporting_checklist()}}, \code{\link[=build_visual_summaries]{build_visual_summaries()}}, \code{\link[=run_qc_pipeline]{run_qc_pipeline()}},
-direct summaries/plots, and the summary-table appendix route only.
+\item Finish with \code{\link[=reporting_checklist]{reporting_checklist()}} and \code{\link[=build_apa_outputs]{build_apa_outputs()}} for
+manuscript-oriented output, then \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}} for
+reusable handoff tables or \code{\link[=export_summary_appendix]{export_summary_appendix()}} for direct
+appendix export. For bounded \code{GPCM}, retain the caveats returned by
+\code{\link[=build_apa_outputs]{build_apa_outputs()}} and \code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}}, and keep
+fair-average/bias language at the screening tier.
 }
 }
 

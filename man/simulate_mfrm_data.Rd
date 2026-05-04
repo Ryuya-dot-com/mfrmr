@@ -170,8 +170,8 @@ For bounded \code{GPCM}, the generator now requires an explicit slope
 contract in parallel with the threshold table. The current public branch
 keeps \code{slope_facet == step_facet} and uses the internal \code{category_prob_gpcm()}
 helper for
-response sampling. Broader design-planning helpers remain restricted until
-that slope-aware contract is generalized beyond direct data generation.
+response sampling. Design-planning and forecasting helpers reuse this
+slope-aware contract as caveated simulation/refit screening routes.
 
 Assignment handling is also explicit:
 \itemize{

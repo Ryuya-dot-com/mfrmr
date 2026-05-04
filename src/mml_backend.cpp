@@ -1,3 +1,4 @@
+#include "mfrmr_r_boolean_compat.h"
 #include <cpp11.hpp>
 
 #include <cmath>

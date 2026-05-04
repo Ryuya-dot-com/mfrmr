@@ -17,7 +17,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-# Quick reference: mfrmr 0.1.6
+# Quick reference: mfrmr 0.2.0
 
 A two-page reference for the fit / diagnose / report loop in mfrmr.
 Every snippet assumes `library(mfrmr)` and a long-format
@@ -147,8 +147,8 @@ fit$prep$missing_recoding
 
 ## Package links
 
-- Documentation: <https://ryuya-dot-com.github.io/mfrmr/>
+- Documentation: <https://github.com/Ryuya-dot-com/mfrmr>
 - Source:        <https://github.com/Ryuya-dot-com/mfrmr>
 - Citation:      `citation("mfrmr")`
 
-*mfrmr 0.1.6 cheatsheet*. Distributed under MIT License.
+*mfrmr 0.2.0 cheatsheet*. Distributed under MIT License.

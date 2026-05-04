@@ -389,9 +389,9 @@ build_mfrm_sim_spec <- function(n_person = 50,
 #'
 #' First-release `GPCM` fits are now supported here for direct data generation,
 #' provided that the returned simulation specification stores both a threshold
-#' table and a parallel slope table. The broader planning/reporting helpers
-#' still remain restricted until slope-aware downstream contracts are widened
-#' explicitly.
+#' table and a parallel slope table. Planning, forecasting, reporting, and
+#' package-native replay/export helpers now consume that slope-aware contract
+#' with explicit bounded-GPCM caveats.
 #'
 #' If you want to carry person-level group labels into a fit-derived observed
 #' response skeleton, provide the original `source_data` together with

@@ -84,15 +84,17 @@ test_that("evaluate_mfrm_diagnostic_screening supports step-structure misspecifi
   }
 })
 
-test_that("evaluate_mfrm_diagnostic_screening rejects unsupported GPCM paths", {
-  expect_error(
+test_that("evaluate_mfrm_diagnostic_screening runs bounded GPCM smoke path", {
+  diag_eval <- suppressWarnings(
     mfrmr::evaluate_mfrm_diagnostic_screening(
       design = list(person = 12, rater = 2, criterion = 2, assignment = 2),
       reps = 1,
       model = "GPCM",
+      maxit = 8,
+      quad_points = 3,
       seed = 1
-    ),
-    "does not yet support bounded `GPCM`",
-    fixed = TRUE
+    )
   )
+  expect_s3_class(diag_eval, "mfrm_diagnostic_screening")
+  expect_identical(diag_eval$settings$model, "GPCM")
 })

@@ -110,10 +110,10 @@ control over residual PCA.
 \code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}}.
 }
 
-This manifest/export layer currently depends on diagnostics-compatible
-workflow objects. For bounded \code{GPCM} fits, that means the layer is
-intentionally unavailable until the diagnostics/reporting contract has been
-generalized beyond the ordered Rasch-family branch.
+For bounded \code{GPCM} fits, the manifest records a \code{support_status} table and
+should be interpreted as a package-native reproducibility bundle for the
+caveated GPCM route. FACETS score-side compatibility exports remain outside
+scope; use \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}} for the current boundary.
 }
 
 \examples{

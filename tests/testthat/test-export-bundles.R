@@ -485,7 +485,7 @@ test_that("build_mfrm_manifest records latent-regression omit provenance", {
   expect_match(value_of(manifest$settings, "plausible_value_population_formula"), "~\\s*X")
 })
 
-test_that("build_mfrm_manifest rejects bounded GPCM fits outside the validated export boundary", {
+test_that("build_mfrm_manifest records caveated support for bounded GPCM fits", {
   dat <- load_mfrmr_data("example_core")
   keep_people <- unique(dat$Person)[1:14]
   dat <- dat[dat$Person %in% keep_people, , drop = FALSE]
@@ -503,9 +503,17 @@ test_that("build_mfrm_manifest rejects bounded GPCM fits outside the validated e
     )
   )
 
-  expect_error(
-    build_mfrm_manifest(fit_gpcm),
-    "export bundle helpers",
+  manifest <- build_mfrm_manifest(fit_gpcm)
+  expect_s3_class(manifest, "mfrm_manifest")
+  expect_identical(manifest$support_status$Status[1], "supported_with_caveat")
+  expect_match(
+    manifest$support_status$Detail[1],
+    "package-native reproducibility route",
+    fixed = TRUE
+  )
+  expect_match(
+    manifest$support_status$Detail[1],
+    "FACETS score-side compatibility exports remain out of scope",
     fixed = TRUE
   )
 })

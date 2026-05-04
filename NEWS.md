@@ -57,7 +57,7 @@ with explicit caveats.
 
 - **Linacre FACETS / Winsteps manuals**: cited years updated from 2023
   / 2024 to **2026** (current FACETS 4.5.0 = April 2026, Winsteps 5.11.0
-  = March 2026 per <https://www.winsteps.com/>).
+  = March 2026 per <https://www.winsteps.com/index.htm>).
 - **Bock & Aitkin (1981) clarification**: `?mfrmr-package` now notes
   that the default `mml_engine = "direct"` optimises the marginal
   log-likelihood by gradient methods (BFGS / L-BFGS-B), not by Bock &

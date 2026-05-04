@@ -27,8 +27,9 @@
 #' - direct slope-aware simulation-spec generation is supported,
 #' - fair-average, visual-summary, and QC routes are available with explicit
 #'   GPCM caveats,
-#' - APA writer, broader export bundles, FACETS score-side compatibility, and
-#'   planning / forecasting helpers remain outside the validated `GPCM`
+#' - APA writer, package-native export/replay bundles, and simulation/refit
+#'   planning / forecasting helpers are available with explicit caveats,
+#' - FACETS score-side compatibility remains outside the validated `GPCM`
 #'   boundary.
 #'
 #' Why some helpers remain blocked:
@@ -36,14 +37,12 @@
 #' - FACETS compatibility-contract score exports depend on Rasch-family
 #'   measure-to-score semantics that are not yet generalized to the
 #'   free-discrimination `GPCM` branch;
-#' - fair-average, visual-summary, and QC helpers are therefore exposed only as
-#'   caveated GPCM screening routes, not as FACETS/Rasch fair-M invariance or
-#'   manuscript-grade APA evidence;
-#' - the APA writer and replay/export bundle layer remain blocked because they
-#'   would turn those still-caveated score-side screens into publication prose
-#'   or reproducibility claims;
-#' - planning and forecasting remain deferred because the current design layer
-#'   is still validated only for the role-based `RSM` / `PCM` planner.
+#' - fair-average, visual-summary, QC, APA, and export helpers are therefore
+#'   exposed as caveated GPCM routes, not as FACETS/Rasch fair-M invariance or
+#'   full joint-uncertainty evidence;
+#' - planning and forecasting are simulation/refit screening routes under the
+#'   current role-based person x rater-like x criterion-like contract, not a
+#'   fully arbitrary-facet planner.
 #'
 #' This boundary is aligned with the package's current validation evidence,
 #' including the targeted `GPCM` recovery snapshot and the public-workflow
@@ -87,7 +86,7 @@ gpcm_capability_matrix <- function(status = c("all", "supported", "supported_wit
       "Weighting audit and model-choice review",
       "Operational linking synthesis",
       "Direct simulation-spec generation",
-      "APA writer and export/replay bundles",
+      "APA writer and package-native export/replay bundles",
       "Fair-average semantics under bounded GPCM (slope-aware)",
       "Design planning and forecasting",
       "MCMC and heavy-backend extensions",
@@ -131,9 +130,9 @@ gpcm_capability_matrix <- function(status = c("all", "supported", "supported_wit
       "supported_with_caveat",
       "deferred",
       "supported_with_caveat",
-      "blocked",
       "supported_with_caveat",
-      "deferred",
+      "supported_with_caveat",
+      "supported_with_caveat",
       "deferred",
       "supported_with_caveat",
       "blocked"
@@ -143,14 +142,14 @@ gpcm_capability_matrix <- function(status = c("all", "supported", "supported_wit
       "Screen local misfit, residual structure, and agreement patterns after fitting.",
       "Score new units or review design-weighted precision under the fitted GPCM calibration.",
       "Inspect targeting, category progression, and category-probability behavior under the generalized kernel.",
-      "Check which direct tables and plots are draft-ready and bundle visual/QC screening outputs without invoking the broader APA writer.",
+      "Check which direct tables and plots are draft-ready and bundle visual/QC screening outputs without claiming FACETS score-side parity.",
       "Combine residual, strict marginal, unexpected-response, and displacement screens into one review queue.",
       "Review whether bounded GPCM is introducing substantively acceptable discrimination-based reweighting.",
       "Synthesize anchor, drift, and chain evidence into one operational review surface.",
       "Generate or extract slope-aware simulation specifications and sample responses directly from them.",
-      "Produce manuscript-draft prose, replay scripts, or full export bundles.",
+      "Produce caveated manuscript-draft prose, replay scripts, manifests, or package-native export bundles.",
       "Compute slope-aware element-conditional fair-average score adjustments for reporting tables.",
-      "Evaluate designs, forecast future administrations, or run screening-design studies.",
+      "Evaluate role-based designs, forecast future administrations, or run screening-design studies by simulation/refit.",
       "Move beyond the current core-package release boundary.",
       "Screen residual two-way interaction-bias cells under bounded GPCM at the screening tier.",
       "Use FACETS-style compatibility-contract score-side outputs that depend on a validated free-discrimination score metric."
@@ -177,8 +176,8 @@ gpcm_capability_matrix <- function(status = c("all", "supported", "supported_wit
       ),
       paste(
         "Routes users to supported direct tables, plots, visual summaries,",
-        "and QC screens, but does not imply that the manuscript-draft APA",
-        "writer is available for GPCM."
+        "QC screens, and caveated APA/export outputs. APA prose must retain",
+        "the GPCM screening-tier caveats."
       ),
       paste(
         "Supported with caveat for bounded GPCM because the casebook inherits",
@@ -198,21 +197,27 @@ gpcm_capability_matrix <- function(status = c("all", "supported", "supported_wit
         "bounded branch's facet-role restrictions."
       ),
       paste(
-        "Not yet validated for GPCM because the broader APA/export stack",
-        "would convert still-blocked score-side semantics into manuscript",
-        "narrative or replay/export claims."
+        "Supported as a package-native reproducibility route with explicit",
+        "GPCM caveats. APA text uses GPCM model wording; fair-average and",
+        "bias sections remain screening-tier. FACETS score-side exports are",
+        "still blocked on the separate compatibility row."
       ),
       paste(
         "Slope-aware element-conditional construction: slope-facet element rows",
         "use that level's own slope; non-slope-facet rows (Person, Rater, ...)",
         "use the geometric-mean-one slope by identification convention.",
-        "SE columns in the output are scaled facet-measure SEs, NOT delta-method",
-        "standard errors of the fair-average value (see `?fair_average_table`).",
-        "A delta-method SE for fair-averages is planned for a future release."
+        "SE / Model S.E. / Real S.E. columns in the output are scaled",
+        "facet-measure SEs. AdjustedAverageConditionalSE and",
+        "StandardizedAdjustedAverageConditionalSE are measure-only",
+        "conditional delta-method SEs for the fair-average value; they do",
+        "not propagate joint threshold, slope, or person-measure uncertainty."
       ),
       paste(
-        "Still validated only for the role-based RSM/PCM planning layer, not",
-        "for the bounded GPCM branch."
+        "Supported for the current role-based person x rater-like x",
+        "criterion-like simulation/refit planner under the bounded",
+        "`slope_facet == step_facet` contract. Treat outputs as",
+        "design-screening summaries, not as FACETS/Rasch score-side",
+        "invariance evidence or arbitrary-facet planning."
       ),
       paste(
         "Future extensions, listed for transparency. Out of scope for",
@@ -245,9 +250,9 @@ gpcm_capability_matrix <- function(status = c("all", "supported", "supported_wit
       "covered by reporting-route, visual-summary, and QC-pipeline checks",
       "covered by misfit-casebook and diagnostic checks",
       "covered by weighting-review and information checks",
-      "not yet validated for the bounded GPCM route",
+      "covered by APA/export/replay GPCM smoke checks",
       "covered by slope-aware simulation checks",
-      "not yet validated for the bounded GPCM route",
+      "covered by GPCM planning and forecast smoke checks",
       "covered by reduction-to-PCM and worked-example numerical-agreement tests",
       "not yet validated for the bounded GPCM route",
       "future extension",

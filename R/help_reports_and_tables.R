@@ -37,13 +37,12 @@
 #'    describe spread, linkage, and measurability.
 #' 4. Add [rating_scale_table()], [category_structure_report()], and
 #'    [category_curves_report()] to document scale functioning.
-#' 5. For `RSM` / `PCM`, finish with [reporting_checklist()] and
-#'    [build_apa_outputs()] for manuscript-oriented output, then
-#'    [build_summary_table_bundle()] for reusable handoff tables or
-#'    [export_summary_appendix()] for direct appendix export. For bounded
-#'    `GPCM`, skip [build_apa_outputs()] and [export_mfrm_bundle()]; use
-#'    [reporting_checklist()], [build_visual_summaries()], [run_qc_pipeline()],
-#'    direct summaries/plots, and the summary-table appendix route only.
+#' 5. Finish with [reporting_checklist()] and [build_apa_outputs()] for
+#'    manuscript-oriented output, then [build_summary_table_bundle()] for
+#'    reusable handoff tables or [export_summary_appendix()] for direct
+#'    appendix export. For bounded `GPCM`, retain the caveats returned by
+#'    [build_apa_outputs()] and [export_mfrm_bundle()], and keep
+#'    fair-average/bias language at the screening tier.
 #'
 #' @section Which output answers which question:
 #' \describe{

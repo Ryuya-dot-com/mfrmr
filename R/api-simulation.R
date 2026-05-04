@@ -103,8 +103,8 @@
 #' contract in parallel with the threshold table. The current public branch
 #' keeps `slope_facet == step_facet` and uses the internal `category_prob_gpcm()`
 #' helper for
-#' response sampling. Broader design-planning helpers remain restricted until
-#' that slope-aware contract is generalized beyond direct data generation.
+#' response sampling. Design-planning and forecasting helpers reuse this
+#' slope-aware contract as caveated simulation/refit screening routes.
 #'
 #' Assignment handling is also explicit:
 #' - `"crossed"` uses the full person x rater x criterion design
@@ -883,7 +883,7 @@ simulation_threshold_summary <- function(sim_spec) {
 }
 
 simulation_resolve_fit_step_facet <- function(model, step_facet, generator_step_facet) {
-  if (!identical(model, "PCM")) {
+  if (!model %in% c("PCM", "GPCM")) {
     return(NA_character_)
   }
   explicit <- as.character(step_facet[1] %||% NA_character_)
@@ -908,7 +908,7 @@ simulation_recovery_contract <- function(generator_model,
       basis = "generator_fit_model_mismatch"
     ))
   }
-  if (identical(as.character(fitted_model), "PCM")) {
+  if (as.character(fitted_model) %in% c("PCM", "GPCM")) {
     same_step_facet <- identical(
       as.character(generator_step_facet %||% NA_character_),
       as.character(fitted_step_facet %||% NA_character_)
@@ -1459,6 +1459,8 @@ evaluate_mfrm_design <- function(n_person = c(30, 50, 100),
                                  sim_spec = NULL,
                                  seed = NULL,
                                  parallel = c("no", "future")) {
+  fit_method_missing <- missing(fit_method)
+  model_missing <- missing(model)
   fit_method <- match.arg(fit_method)
   model <- match.arg(model)
   parallel <- match.arg(parallel)
@@ -1486,25 +1488,15 @@ evaluate_mfrm_design <- function(n_person = c(30, 50, 100),
             "parallelises the rep loop within each design row. ",
             "Cross-design-row parallelism is planned for a future release.")
   }
-  if (identical(model, "GPCM")) {
-    stop(
-      "`evaluate_mfrm_design()` does not yet support bounded `GPCM`. ",
-      "Design evaluation still depends on simulation and diagnostics layers that remain validated only for `RSM` / `PCM`. ",
-      gpcm_planning_scope_rationale(),
-      call. = FALSE
-    )
-  }
   residual_pca <- match.arg(residual_pca)
   if (!is.null(sim_spec) && !inherits(sim_spec, "mfrm_sim_spec")) {
     stop("`sim_spec` must be output from build_mfrm_sim_spec() or extract_mfrm_sim_spec().", call. = FALSE)
   }
-  if (!is.null(sim_spec) && identical(as.character(sim_spec$model %||% NA_character_), "GPCM")) {
-    stop(
-      "`evaluate_mfrm_design()` does not yet support bounded `GPCM` simulation specifications. ",
-      "Direct data generation is available, but design evaluation still depends on diagnostics and recovery layers validated only for `RSM` / `PCM`. ",
-      gpcm_planning_scope_rationale(),
-      call. = FALSE
-    )
+  if (isTRUE(model_missing) && !is.null(sim_spec)) {
+    model <- match.arg(as.character(sim_spec$model %||% "RSM"), c("RSM", "PCM", "GPCM"))
+    if (isTRUE(fit_method_missing) && identical(model, "GPCM")) {
+      fit_method <- "MML"
+    }
   }
   if (!is.null(sim_spec) &&
       isTRUE((sim_spec$population %||% simulation_empty_population_spec())$active) &&
@@ -1604,7 +1596,7 @@ evaluate_mfrm_design <- function(n_person = c(30, 50, 100),
       }
       seed_idx <- seed_idx + 1L
       sim <- if (is.null(row_spec)) {
-        simulate_mfrm_data(
+        sim_args <- list(
           n_person = design$n_person,
           n_rater = design$n_rater,
           n_criterion = design$n_criterion,
@@ -1615,8 +1607,13 @@ evaluate_mfrm_design <- function(n_person = c(30, 50, 100),
           criterion_sd = criterion_sd,
           noise_sd = noise_sd,
           step_span = step_span,
+          model = model,
           seed = seeds[seed_idx]
         )
+        if (model %in% c("PCM", "GPCM")) {
+          sim_args$step_facet <- fit_step_facet
+        }
+        do.call(simulate_mfrm_data, sim_args)
       } else {
         simulate_mfrm_data(sim_spec = row_spec, seed = seeds[seed_idx])
       }
@@ -1631,7 +1628,7 @@ evaluate_mfrm_design <- function(n_person = c(30, 50, 100),
         model = model,
         maxit = maxit
       )
-      if (identical(model, "PCM")) fit_args$step_facet <- fit_step_facet
+      if (model %in% c("PCM", "GPCM")) fit_args$step_facet <- fit_step_facet
       if ("Weight" %in% names(sim)) fit_args$weight <- "Weight"
       if (identical(fit_method, "MML")) fit_args$quad_points <- quad_points
       sim_population <- attr(sim, "mfrm_population_data")
@@ -2487,7 +2484,7 @@ diagnostic_screening_build_latent_misspecification_spec <- function(row_spec_bas
       empirical_rater = empirical_support$rater,
       empirical_criterion = empirical_support$criterion
     )
-    if (identical(model, "PCM")) {
+    if (model %in% c("PCM", "GPCM")) {
       spec_args$step_facet <- fit_step_facet
     }
     return(do.call(build_mfrm_sim_spec, spec_args))
@@ -2963,24 +2960,14 @@ evaluate_mfrm_diagnostic_screening <- function(n_person = c(30, 50, 100),
                                                residual_pca = c("none", "overall", "facet", "both"),
                                                sim_spec = NULL,
                                                seed = NULL) {
+  model_missing <- missing(model)
   model <- match.arg(model)
-  if (identical(model, "GPCM")) {
-    stop(
-      "`evaluate_mfrm_diagnostic_screening()` does not yet support bounded `GPCM`. ",
-      "Strict marginal validation is currently scoped to `RSM` / `PCM`.",
-      call. = FALSE
-    )
-  }
   residual_pca <- match.arg(residual_pca)
   if (!is.null(sim_spec) && !inherits(sim_spec, "mfrm_sim_spec")) {
     stop("`sim_spec` must be output from build_mfrm_sim_spec() or extract_mfrm_sim_spec().", call. = FALSE)
   }
-  if (!is.null(sim_spec) && identical(as.character(sim_spec$model %||% NA_character_), "GPCM")) {
-    stop(
-      "`evaluate_mfrm_diagnostic_screening()` does not yet support bounded `GPCM` simulation specifications. ",
-      "Strict marginal validation remains scoped to `RSM` / `PCM`.",
-      call. = FALSE
-    )
+  if (isTRUE(model_missing) && !is.null(sim_spec)) {
+    model <- match.arg(as.character(sim_spec$model %||% "RSM"), c("RSM", "PCM", "GPCM"))
   }
 
   reps <- as.integer(reps[1])
@@ -3091,7 +3078,7 @@ evaluate_mfrm_diagnostic_screening <- function(n_person = c(30, 50, 100),
               model = model,
               seed = sim_seed
             )
-            if (identical(model, "PCM")) {
+            if (model %in% c("PCM", "GPCM")) {
               sim_args$step_facet <- fit_step_facet
             }
             do.call(simulate_mfrm_data, sim_args)
@@ -3155,7 +3142,7 @@ evaluate_mfrm_diagnostic_screening <- function(n_person = c(30, 50, 100),
             model = model,
             seed = sim_seed
           )
-          if (identical(model, "PCM")) {
+          if (model %in% c("PCM", "GPCM")) {
             sim_args$step_facet <- fit_step_facet
           }
           do.call(simulate_mfrm_data, sim_args)
@@ -3174,7 +3161,7 @@ evaluate_mfrm_diagnostic_screening <- function(n_person = c(30, 50, 100),
           maxit = maxit,
           quad_points = quad_points
         )
-        if (identical(model, "PCM")) {
+        if (model %in% c("PCM", "GPCM")) {
           fit_args$step_facet <- fit_step_facet
         }
         if ("Weight" %in% names(sim)) {
@@ -3767,28 +3754,20 @@ evaluate_mfrm_signal_detection <- function(n_person = c(30, 50, 100),
                                            bias_abs_t = 2,
                                            seed = NULL) {
   dif_abs_cut_missing <- missing(dif_abs_cut)
+  fit_method_missing <- missing(fit_method)
+  model_missing <- missing(model)
   fit_method <- match.arg(fit_method)
   model <- match.arg(model)
-  if (identical(model, "GPCM")) {
-    stop(
-      "`evaluate_mfrm_signal_detection()` does not yet support bounded `GPCM`. ",
-      "Signal-detection studies still rely on simulation and diagnostics layers that remain validated only for `RSM` / `PCM`. ",
-      gpcm_planning_scope_rationale(),
-      call. = FALSE
-    )
-  }
   residual_pca <- match.arg(residual_pca)
   dif_method <- match.arg(dif_method)
   if (!is.null(sim_spec) && !inherits(sim_spec, "mfrm_sim_spec")) {
     stop("`sim_spec` must be output from build_mfrm_sim_spec() or extract_mfrm_sim_spec().", call. = FALSE)
   }
-  if (!is.null(sim_spec) && identical(as.character(sim_spec$model %||% NA_character_), "GPCM")) {
-    stop(
-      "`evaluate_mfrm_signal_detection()` does not yet support bounded `GPCM` simulation specifications. ",
-      "Direct data generation is available, but signal-detection studies still depend on diagnostics layers validated only for `RSM` / `PCM`. ",
-      gpcm_planning_scope_rationale(),
-      call. = FALSE
-    )
+  if (isTRUE(model_missing) && !is.null(sim_spec)) {
+    model <- match.arg(as.character(sim_spec$model %||% "RSM"), c("RSM", "PCM", "GPCM"))
+    if (isTRUE(fit_method_missing) && identical(model, "GPCM")) {
+      fit_method <- "MML"
+    }
   }
   if (!is.null(sim_spec) &&
       isTRUE((sim_spec$population %||% simulation_empty_population_spec())$active) &&
@@ -3901,7 +3880,7 @@ evaluate_mfrm_signal_detection <- function(n_person = c(30, 50, 100),
     for (rep in seq_len(reps)) {
       seed_idx <- seed_idx + 1L
       sim <- if (is.null(row_spec)) {
-        simulate_mfrm_data(
+        sim_args <- list(
           n_person = design$n_person,
           n_rater = design$n_rater,
           n_criterion = design$n_criterion,
@@ -3915,8 +3894,13 @@ evaluate_mfrm_signal_detection <- function(n_person = c(30, 50, 100),
           group_levels = group_levels,
           dif_effects = if (isTRUE(abs(as.numeric(dif_effect[1])) > 0)) dif_tbl else NULL,
           interaction_effects = if (isTRUE(abs(as.numeric(bias_effect[1])) > 0)) bias_tbl else NULL,
+          model = model,
           seed = seeds[seed_idx]
         )
+        if (model %in% c("PCM", "GPCM")) {
+          sim_args$step_facet <- fit_step_facet
+        }
+        do.call(simulate_mfrm_data, sim_args)
       } else {
         simulate_mfrm_data(sim_spec = row_spec, seed = seeds[seed_idx])
       }
@@ -3931,7 +3915,7 @@ evaluate_mfrm_signal_detection <- function(n_person = c(30, 50, 100),
         model = model,
         maxit = maxit
       )
-      if (identical(model, "PCM")) fit_args$step_facet <- fit_step_facet
+      if (model %in% c("PCM", "GPCM")) fit_args$step_facet <- fit_step_facet
       if ("Weight" %in% names(sim)) fit_args$weight <- "Weight"
       if (identical(fit_method, "MML")) fit_args$quad_points <- quad_points
       sim_population <- attr(sim, "mfrm_population_data")

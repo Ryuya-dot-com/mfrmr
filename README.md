@@ -3,8 +3,8 @@
 [![GitHub](https://img.shields.io/badge/GitHub-mfrmr-181717?logo=github)](https://github.com/Ryuya-dot-com/mfrmr)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Native R package for many-facet Rasch model (MFRM) estimation, diagnostics,
-and reporting workflows.
+Native R package for many-facet Rasch-family and bounded generalized
+partial-credit model estimation, diagnostics, and reporting workflows.
 
 ## Start here first
 
@@ -269,19 +269,25 @@ boundary in one place.
 
 - Supported core: fitting, `summary()` / `print()`, posterior scoring,
   `compute_information()`, Wright/pathway/CCC plots, and category reports.
-- Supported with caveat: `diagnose_mfrm()` and direct slope-aware simulation
-  are exploratory; `reporting_checklist()` routes only the direct table/plot
-  path; `build_visual_summaries()` and `run_qc_pipeline()` bundle those
-  screens for review; `fair_average_table()` and `estimate_bias()` use the
-  slope-aware element-conditional GPCM kernel and report a `caveat` field
-  reminding users that the SE columns are scaled facet-measure SEs, not
-  delta-method SEs of the fair-average / bias values.
-- Not supported in this release: score-side exports, APA/report bundles,
-  linking synthesis, planning / forecasting, posterior predictive
-  computation, and `MCMC`.
+- Supported with caveat: `diagnose_mfrm()` and slope-aware simulation are
+  exploratory; `reporting_checklist()`, `build_visual_summaries()`,
+  `run_qc_pipeline()`, `build_apa_outputs()`, `build_mfrm_manifest()`,
+  `build_mfrm_replay_script()`, `export_mfrm_bundle()`,
+  `evaluate_mfrm_design()`, `evaluate_mfrm_diagnostic_screening()`,
+  `evaluate_mfrm_signal_detection()`, and `predict_mfrm_population()` run as
+  bounded-GPCM screening/reproducibility routes.
+- `fair_average_table()` now separates the usual facet-measure SE columns from
+  `AdjustedAverageConditionalSE` and
+  `StandardizedAdjustedAverageConditionalSE`. The latter are measure-only
+  conditional delta-method SEs for fair averages; they do not propagate joint
+  threshold, slope, or person-measure uncertainty.
+- Still not supported in this release: FACETS compatibility-contract
+  score-side exports, linking synthesis, posterior predictive computation, and
+  `MCMC`.
 
-The unsupported helpers depend on score-side or planning assumptions that are
-validated for the Rasch-family route but not yet generalized to bounded `GPCM`.
+The remaining unsupported helpers depend on FACETS score-side or heavy-backend
+assumptions that are validated for the Rasch-family route but not yet
+generalized to bounded `GPCM`.
 
 ## Equal weighting and when to prefer Rasch-MFRM
 
@@ -1179,9 +1185,8 @@ plot(run, type = "fit", draw = FALSE)
 The full exported function index (with categories such as *Model and
 diagnostics*, *Bias and DFF*, *Anchoring and linking*, *Reporting and
 APA*, *Plots and dashboards*, *Simulation and design*, and *Export
-utilities*) is generated from roxygen and published on the pkgdown
-site at <https://ryuya-dot-com.github.io/mfrmr/>. Within R
-the same grouping is available through the topic help pages
+utilities*) is generated from roxygen. Within R the same grouping is
+available through the topic help pages
 `?mfrmr_workflow_methods`, `?mfrmr_visual_diagnostics`,
 `?mfrmr_reports_and_tables`, `?mfrmr_reporting_and_apa`,
 `?mfrmr_linking_and_dff`, and `?mfrmr_compatibility_layer`.

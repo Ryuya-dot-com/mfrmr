@@ -93,14 +93,11 @@ test_that("GPCM visual summaries and QC pipeline run with caveat", {
   fair_plot <- plot_fair_average(.gpcm_fit, diagnostics = diag, draw = FALSE)
   expect_s3_class(fair_plot, "mfrm_plot_data")
   expect_match(fair_plot$data$caveat, "slope-aware", fixed = TRUE)
-  expect_warning(
-    ci_plot <- plot_fair_average(
-      .gpcm_fit, diagnostics = diag, show_ci = TRUE, draw = FALSE
-    ),
-    "CI whiskers are not available for bounded `GPCM`",
-    fixed = TRUE
+  ci_plot <- plot_fair_average(
+    .gpcm_fit, diagnostics = diag, show_ci = TRUE, draw = FALSE
   )
-  expect_false("CI_Lower" %in% names(ci_plot$data$data))
+  expect_true(all(c("CI_Lower", "CI_Upper", "CI_Level") %in% names(ci_plot$data$data)))
+  expect_true("AdjustedAverageConditionalSE" %in% names(fair_average_table(.gpcm_fit, diag)$stacked))
 })
 
 test_that("GPCM supported summaries can be routed into table bundles", {
@@ -145,16 +142,35 @@ test_that("GPCM preserves retained zero-frequency intermediate categories", {
   expect_identical(qc$support_status$Status[1], "supported_with_caveat")
 })
 
-test_that("GPCM still blocks build_apa_outputs (blocked row)", {
+test_that("GPCM APA/export/replay route runs with caveats", {
   diag <- suppressMessages(suppressWarnings(
     diagnose_mfrm(.gpcm_fit, residual_pca = "none", diagnostic_mode = "legacy")
   ))
-  # build_apa_outputs is `blocked` for GPCM in the capability matrix.
-  # fair_average_table() and estimate_bias() were unblocked in 0.2.0
-  # via the slope-aware kernel; build_apa_outputs() remains blocked.
-  expect_error(
-    suppressMessages(build_apa_outputs(.gpcm_fit, diag)),
-    "does not support `GPCM` fits",
-    fixed = TRUE
+  apa <- suppressMessages(build_apa_outputs(.gpcm_fit, diag))
+  expect_s3_class(apa, "mfrm_apa_outputs")
+  expect_identical(apa$support_status$Status[1], "supported_with_caveat")
+  expect_match(apa$report_text, "bounded many-facet generalized partial credit model", fixed = TRUE)
+  expect_false(grepl("A many-facet Rasch model", apa$report_text, fixed = TRUE))
+
+  manifest <- build_mfrm_manifest(.gpcm_fit, diagnostics = diag)
+  expect_s3_class(manifest, "mfrm_manifest")
+  expect_identical(manifest$support_status$Status[1], "supported_with_caveat")
+
+  replay <- build_mfrm_replay_script(.gpcm_fit, diagnostics = diag)
+  expect_s3_class(replay, "mfrm_replay_script")
+  expect_identical(replay$support_status$Status[1], "supported_with_caveat")
+  expect_match(replay$script, "model = \"GPCM\"", fixed = TRUE)
+
+  out_dir <- tempfile("gpcm_bundle_")
+  dir.create(out_dir)
+  bundle <- export_mfrm_bundle(
+    .gpcm_fit,
+    diagnostics = diag,
+    output_dir = out_dir,
+    prefix = "gpcm",
+    include = c("manifest", "apa", "script"),
+    overwrite = TRUE
   )
+  expect_s3_class(bundle, "mfrm_export_bundle")
+  expect_identical(bundle$support_status$Status[1], "supported_with_caveat")
 })

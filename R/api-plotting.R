@@ -359,9 +359,6 @@ stack_fair_raw_tables <- function(raw_by_facet) {
   n <- nrow(fair_df)
   if (n == 0L) return(numeric(0))
   model <- toupper(as.character(fit$config$model[1]))
-  if (identical(model, "GPCM")) {
-    return(rep(NA_real_, n))
-  }
   spec <- tryCatch(build_step_curve_spec(fit), error = function(e) NULL)
   if (is.null(spec) || length(spec$groups) == 0L) {
     return(rep(NA_real_, n))
@@ -377,10 +374,13 @@ stack_fair_raw_tables <- function(raw_by_facet) {
     n_cat <- length(step_cum)
     if (n_cat < 2L) return(NA_real_)
     k_vec <- rating_min + 0:(n_cat - 1L)
-    probs <- category_prob_rsm(eta_scalar, step_cum)
-    expected <- as.numeric(probs %*% k_vec)
-    second <- as.numeric(probs %*% (k_vec^2))
-    max(second - expected^2, 0)
+    expected_score_variance_from_eta(
+      eta = eta_scalar,
+      step_cum = step_cum,
+      slope = 1,
+      rating_min = rating_min,
+      model = model
+    )
   }
 
   vars <- rep(NA_real_, n)
@@ -1304,19 +1304,16 @@ plot_unexpected <- function(x,
 #' @param plot_type `"difference"` or `"scatter"`.
 #' @param top_n Maximum levels shown for `"difference"` plot.
 #' @param show_ci Logical. When `TRUE`, draw approximate
-#'   confidence-interval whiskers on the fair metric using a
-#'   delta-method propagation from the logit `Measure` standard error
-#'   to the observed-score scale. The derivative equals the implied
-#'   score variance `Var(X | Measure)`, so the fair-scale standard
-#'   error is `Var(X) * ModelSE`. CI bounds are clipped to the rating
-#'   range. Rows where the score variance is effectively zero (levels
-#'   whose measure sits near the rating boundary, so the delta-method
-#'   approximation becomes uninformative) are drawn with an open
-#'   circle and excluded from the whiskers; the excluded count is
-#'   reported in the subtitle. This CI route is available for `RSM` /
-#'   `PCM` fair-average plots only. For bounded `GPCM`, `show_ci = TRUE`
-#'   is ignored with a warning because `fair_average_table()` does not
-#'   yet expose a delta-method SE for the slope-aware fair-average value.
+#'   confidence-interval whiskers on the fair metric using the
+#'   conditional measure-only delta-method SE columns from
+#'   [fair_average_table()]. For `RSM` / `PCM` this is the familiar
+#'   `Var(X | Measure) * ModelSE` approximation. For bounded `GPCM`,
+#'   the slope-aware derivative is used for slope-facet rows. These are
+#'   conditional screening intervals; they do not propagate joint
+#'   threshold, slope, and person-measure uncertainty. CI bounds are
+#'   clipped to the rating range. Rows with non-finite or near-zero
+#'   conditional SEs are drawn without whiskers and counted in the
+#'   subtitle.
 #' @param ci_level Confidence level used when `show_ci = TRUE`;
 #'   default `0.95`. The returned plot-data object gains `CI_Lower`,
 #'   `CI_Upper`, and `CI_Level` columns for downstream reuse.
@@ -1423,15 +1420,6 @@ plot_fair_average <- function(x,
   }
   bundle_model <- toupper(as.character(bundle$settings$model %||% NA_character_)[1])
   plot_caveat <- as.character(bundle$caveat %||% "")
-  if (identical(bundle_model, "GPCM") && isTRUE(show_ci)) {
-    warning(
-      "Fair-average CI whiskers are not available for bounded `GPCM`; ",
-      "`show_ci` was ignored. Use the returned `caveat` and ",
-      "`?fair_average_table` before reporting GPCM fair averages.",
-      call. = FALSE
-    )
-    show_ci <- FALSE
-  }
 
   fair_df <- stack_fair_raw_tables(bundle$raw_by_facet)
   if (nrow(fair_df) == 0) stop("No fair-average data available.")
@@ -1458,12 +1446,19 @@ plot_fair_average <- function(x,
   # distribution). CI bounds are clipped to the rating range so we
   # never display values outside the observable scale.
   ci_excluded <- 0L
-  if (isTRUE(show_ci) && "ModelSE" %in% names(fair_df) &&
-      "Measure" %in% names(fair_df)) {
-    score_var <- .fair_average_delta_variance(x, fair_df)
-    se_logit <- suppressWarnings(as.numeric(fair_df$ModelSE))
-    se_fair <- score_var * se_logit
-    valid <- is.finite(score_var) & is.finite(se_logit) & score_var > 1e-6
+  if (isTRUE(show_ci)) {
+    se_col <- if (identical(metric, "FairM")) "FairMConditionalSE" else "FairZConditionalSE"
+    se_fair <- if (se_col %in% names(fair_df)) {
+      suppressWarnings(as.numeric(fair_df[[se_col]]))
+    } else if (inherits(x, "mfrm_fit") && "ModelSE" %in% names(fair_df) &&
+               "Measure" %in% names(fair_df)) {
+      score_var <- .fair_average_delta_variance(x, fair_df)
+      se_logit <- suppressWarnings(as.numeric(fair_df$ModelSE))
+      score_var * se_logit
+    } else {
+      rep(NA_real_, nrow(fair_df))
+    }
+    valid <- is.finite(se_fair) & se_fair > 1e-8
     ci_excluded <- sum(!valid)
     z_ci <- stats::qnorm(1 - (1 - ci_level) / 2)
     fair_df$CI_Lower <- NA_real_
@@ -1478,6 +1473,12 @@ plot_fair_average <- function(x,
       if (is.finite(rating_max)) hi <- pmin(hi, rating_max)
       fair_df$CI_Lower[valid] <- lo
       fair_df$CI_Upper[valid] <- hi
+    } else {
+      warning(
+        "No finite conditional fair-average SEs were available; ",
+        "`show_ci` added empty CI columns.",
+        call. = FALSE
+      )
     }
   }
 
@@ -1490,10 +1491,10 @@ plot_fair_average <- function(x,
     if (!is.null(facet)) paste0("Facet: ", as.character(facet[1]), "; ") else "",
     "Metric: ", metric,
     if (isTRUE(show_ci) && "CI_Lower" %in% names(fair_df)) {
-      paste0("; ", round(100 * ci_level), "% CI via delta-method",
+      paste0("; ", round(100 * ci_level), "% CI via conditional delta-method",
              if (ci_excluded > 0L) {
                paste0(" (", ci_excluded,
-                      " level(s) excluded: near-boundary score variance)")
+                      " level(s) excluded: unavailable or near-zero conditional SE)")
              } else "")
     } else ""
   )

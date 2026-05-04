@@ -132,7 +132,8 @@ test_that("GPCM summaries expose slope overview and diagnostics are now availabl
   expect_identical(fa$settings$method, "GPCM-slope-aware")
   expect_true(!is.null(fa$caveat))
   expect_true(grepl("slope-aware element-conditional", fa$caveat, fixed = TRUE))
-  expect_true(grepl("Standard errors", fa$caveat, fixed = TRUE))
+  expect_true(grepl("standard `SE` / `Model S.E.` / `Real S.E.`", fa$caveat, fixed = TRUE))
+  expect_true(grepl("measure-only delta method", fa$caveat, fixed = TRUE))
 
   bias <- estimate_bias(fit, dx, facet_a = "Rater", facet_b = "Criterion")
   expect_s3_class(bias, "mfrm_bias")

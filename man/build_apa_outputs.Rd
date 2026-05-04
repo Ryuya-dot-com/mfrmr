@@ -49,10 +49,12 @@ Frequently used fields include:
 Output text includes residual-PCA screening commentary if PCA diagnostics are
 available in \code{diagnostics}.
 
-For bounded \code{GPCM}, this helper is intentionally unavailable. Use
-\code{\link[=reporting_checklist]{reporting_checklist()}}, \code{\link[=precision_audit_report]{precision_audit_report()}}, and the direct
-table/plot helpers instead, and treat \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}} as the
-formal boundary statement for that branch.
+For bounded \code{GPCM}, this helper returns a caveated APA scaffold. It uses
+the GPCM-specific model wording and carries a \code{support_status} table plus a
+\code{caveat} field. Keep fair-average and bias language at the screening tier,
+and do not describe conditional fair-average SEs as full joint-uncertainty
+intervals. Use \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}} as the formal boundary statement
+for that branch.
 
 By default, \code{report_text} includes:
 \itemize{

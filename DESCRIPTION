@@ -6,17 +6,18 @@ Authors@R:
     person(given = "Ryuya", family = "Komuro", role = c("aut", "cre", "cph"),
            email = "ryuya.komuro.c4@tohoku.ac.jp",
            comment = c(ORCID = "0000-0001-9205-0926"))
-Description: Native R implementation of many-facet Rasch measurement
-    with arbitrary facet counts, rating-scale and partial-credit
-    parameterizations, and both marginal and joint maximum likelihood
+Description: Native R implementation of many-facet measurement models
+    with arbitrary facet counts, rating-scale, partial-credit, and
+    bounded generalized partial-credit parameterizations, and both marginal
+    and joint maximum likelihood
     estimation. The package provides a fit / diagnose / report pipeline
     covering anchoring, linking, bias and DFF screening, and
     publication-oriented APA summaries, with reproducibility manifests
-    for replay. See 'Andrich' (1978) <doi:10.1007/BF02293814> and
-    'Masters' (1982) <doi:10.1007/BF02296272> for the underlying
-    rating-scale and partial-credit models.
-URL: https://ryuya-dot-com.github.io/mfrmr/,
-    https://github.com/Ryuya-dot-com/mfrmr
+    for replay. See 'Andrich' (1978) <doi:10.1007/BF02293814>,
+    'Masters' (1982) <doi:10.1007/BF02296272>, and 'Muraki' (1992)
+    <doi:10.1177/014662169201600206> for the underlying rating-scale,
+    partial-credit, and generalized partial-credit models.
+URL: https://github.com/Ryuya-dot-com/mfrmr
 BugReports: https://github.com/Ryuya-dot-com/mfrmr/issues
 License: MIT + file LICENSE
 Language: en

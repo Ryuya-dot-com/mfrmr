@@ -47,8 +47,9 @@ exploratory screens,
 \item direct slope-aware simulation-spec generation is supported,
 \item fair-average, visual-summary, and QC routes are available with explicit
 GPCM caveats,
-\item APA writer, broader export bundles, FACETS score-side compatibility, and
-planning / forecasting helpers remain outside the validated \code{GPCM}
+\item APA writer, package-native export/replay bundles, and simulation/refit
+planning / forecasting helpers are available with explicit caveats,
+\item FACETS score-side compatibility remains outside the validated \code{GPCM}
 boundary.
 }
 
@@ -57,14 +58,12 @@ Why some helpers remain blocked:
 \item FACETS compatibility-contract score exports depend on Rasch-family
 measure-to-score semantics that are not yet generalized to the
 free-discrimination \code{GPCM} branch;
-\item fair-average, visual-summary, and QC helpers are therefore exposed only as
-caveated GPCM screening routes, not as FACETS/Rasch fair-M invariance or
-manuscript-grade APA evidence;
-\item the APA writer and replay/export bundle layer remain blocked because they
-would turn those still-caveated score-side screens into publication prose
-or reproducibility claims;
-\item planning and forecasting remain deferred because the current design layer
-is still validated only for the role-based \code{RSM} / \code{PCM} planner.
+\item fair-average, visual-summary, QC, APA, and export helpers are therefore
+exposed as caveated GPCM routes, not as FACETS/Rasch fair-M invariance or
+full joint-uncertainty evidence;
+\item planning and forecasting are simulation/refit screening routes under the
+current role-based person x rater-like x criterion-like contract, not a
+fully arbitrary-facet planner.
 }
 
 This boundary is aligned with the package's current validation evidence,

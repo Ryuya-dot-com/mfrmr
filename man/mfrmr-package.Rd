@@ -4,10 +4,11 @@
 \name{mfrmr-package}
 \alias{mfrmr}
 \alias{mfrmr-package}
-\title{mfrmr: Many-Facet Rasch Modeling in R}
+\title{mfrmr: Many-Facet Measurement Models in R}
 \description{
 \code{mfrmr} provides estimation, diagnostics, and reporting utilities for
-many-facet Rasch models (MFRM) using a native R implementation.
+many-facet Rasch-family models and bounded generalized partial-credit
+model workflows using a native R implementation.
 }
 \details{
 If you are new to the package, read the next four steps first and ignore the
@@ -101,8 +102,9 @@ current bounded \code{GPCM} route
 \item direct \code{GPCM} data generation through \code{\link[=build_mfrm_sim_spec]{build_mfrm_sim_spec()}},
 \code{\link[=extract_mfrm_sim_spec]{extract_mfrm_sim_spec()}}, and \code{\link[=simulate_mfrm_data]{simulate_mfrm_data()}} is available when
 the specification carries both thresholds and slopes
-\item fair-average, APA writer, and broader planning semantics remain
-generalized only for \code{RSM} / \code{PCM}
+\item fair-average, APA writer, package-native export/replay, and role-based
+planning/forecasting routes are available for bounded \code{GPCM} with
+explicit screening-tier caveats
 \item \code{predict_mfrm_population()} remains a scenario-level forecast helper and
 should not be described as the latent-regression estimator itself
 \item the current simulation/planning layer still remains role-based for two
@@ -263,9 +265,9 @@ acceptable; then score with
 \code{\link[=fair_average_table]{fair_average_table()}}, \code{\link[=estimate_bias]{estimate_bias()}}, \code{\link[=build_visual_summaries]{build_visual_summaries()}},
 \code{\link[=run_qc_pipeline]{run_qc_pipeline()}},
 graph-only \code{\link[=facets_output_file_bundle]{facets_output_file_bundle()}}, direct simulation-spec
-generation/data generation, and the residual-based table helpers while
-APA writer, FACETS compatibility score exports, fit-based export/replay,
-and planning semantics are still being generalized. Use
+generation/data generation, caveated APA/export/replay bundles,
+caveated role-based planning/forecasting, and the residual-based table
+helpers while FACETS compatibility score exports remain blocked. Use
 \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}} as the formal boundary statement.
 }
 }
@@ -640,7 +642,6 @@ summary(diag)
 \seealso{
 Useful links:
 \itemize{
-  \item \url{https://ryuya-dot-com.github.io/mfrmr/}
   \item \url{https://github.com/Ryuya-dot-com/mfrmr}
   \item Report bugs at \url{https://github.com/Ryuya-dot-com/mfrmr/issues}
 }

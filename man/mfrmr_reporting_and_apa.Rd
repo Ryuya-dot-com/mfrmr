@@ -7,19 +7,17 @@
 Package-native guide to moving from fitted model objects to
 manuscript-draft text, tables, notes, and revision checklists in \code{mfrmr}.
 
-This guide currently applies fully to diagnostics-based \code{RSM} / \code{PCM}
-workflows. First-release \code{GPCM} fits now support \code{\link[=reporting_checklist]{reporting_checklist()}},
+This guide applies fully to diagnostics-based \code{RSM} / \code{PCM} workflows.
+First-release \code{GPCM} fits support \code{\link[=reporting_checklist]{reporting_checklist()}},
 \code{\link[=precision_audit_report]{precision_audit_report()}}, \code{\link[=build_visual_summaries]{build_visual_summaries()}},
-\code{\link[=run_qc_pipeline]{run_qc_pipeline()}}, and the direct curve/graph and residual table helpers,
-but the narrative APA writer still requires the broader reporting stack used
-for \code{RSM} / \code{PCM}. Use \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}} when you need the formal
-boundary for the current \code{GPCM} reporting path.
+\code{\link[=run_qc_pipeline]{run_qc_pipeline()}}, direct curve/graph and residual table helpers, and
+caveated \code{\link[=build_apa_outputs]{build_apa_outputs()}} plus package-native export/replay bundles.
+Use \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}} when you need the formal boundary for the
+current \code{GPCM} reporting path.
 
-In particular, bounded \code{GPCM} currently stops before
-\code{\link[=build_apa_outputs]{build_apa_outputs()}} and the fit-based replay/export bundle layer. For
-that branch, use \code{\link[=reporting_checklist]{reporting_checklist()}}, \code{\link[=precision_audit_report]{precision_audit_report()}},
-\code{\link[=build_visual_summaries]{build_visual_summaries()}}, \code{\link[=run_qc_pipeline]{run_qc_pipeline()}}, and the direct table/plot
-helpers as the package-supported reporting route.
+Bounded \code{GPCM} APA/export outputs are manuscript and reproducibility
+scaffolds, not FACETS/Rasch score-side compatibility evidence. Keep the
+returned caveats with any fair-average, bias, or conditional-SE language.
 }
 \section{Start with the reporting question}{
 
@@ -56,10 +54,9 @@ layer for the current run.
 \item When strict marginal rows are available, follow up with
 \code{\link[=plot_marginal_fit]{plot_marginal_fit()}} and \code{\link[=plot_marginal_pairwise]{plot_marginal_pairwise()}} before finalizing
 the narrative around local misfit.
-\item For \code{RSM} / \code{PCM}, create manuscript-draft prose and metadata with
-\code{\link[=build_apa_outputs]{build_apa_outputs()}}. For bounded \code{GPCM}, stop after the checklist /
-precision / visual-summary / QC / direct-table route while the broader
-narrative stack remains outside scope.
+\item Create manuscript-draft prose and metadata with \code{\link[=build_apa_outputs]{build_apa_outputs()}}.
+For bounded \code{GPCM}, retain the returned \code{support_status} and caveat and
+keep fair-average/bias language at the screening tier.
 \item Convert summary outputs to reusable table bundles with
 \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}}, review the bundle with \code{summary()} /
 \code{plot()}, then convert specific components to handoff tables with
@@ -120,9 +117,9 @@ claims.
 drafting-readiness flag, not as a substitute for methodological review.
 \item Rebuild APA outputs after major model changes instead of editing old text
 by hand.
-\item For bounded \code{GPCM}, keep manuscript prose on the direct table/plot side;
-visual-summary and QC bundles are available with caveats, while the APA
-writer and export/replay bundle layer remain outside scope.
+\item For bounded \code{GPCM}, retain the helper caveats in manuscript prose and
+export bundles; APA, visual-summary, QC, and package-native export/replay
+routes are available with screening-tier limits.
 }
 }
 
@@ -136,11 +133,10 @@ writer and export/replay bundle layer remain outside scope.
 \code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}}(include = c("summary_tables", "html")).
 For \code{RSM} / \code{PCM} final reports, prefer \code{method = "MML"} and
 \code{diagnostic_mode = "both"} in the diagnostics step.
-For bounded \code{GPCM}, stop before the fit-based export family and stay on
-\code{\link[=reporting_checklist]{reporting_checklist()}}, \code{\link[=build_visual_summaries]{build_visual_summaries()}}, \code{\link[=run_qc_pipeline]{run_qc_pipeline()}},
-and direct table/plot helpers instead of calling \code{\link[=build_apa_outputs]{build_apa_outputs()}},
-\code{\link[=build_mfrm_manifest]{build_mfrm_manifest()}}, \code{\link[=build_mfrm_replay_script]{build_mfrm_replay_script()}}, or
-\code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}}.
+For bounded \code{GPCM}, retain the caveats from \code{\link[=build_apa_outputs]{build_apa_outputs()}},
+\code{\link[=build_mfrm_manifest]{build_mfrm_manifest()}}, \code{\link[=build_mfrm_replay_script]{build_mfrm_replay_script()}}, and
+\code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}}, and avoid FACETS/Rasch score-side invariance
+language.
 \item Appendix-first route:
 \code{\link[=facet_statistics_report]{facet_statistics_report()}} -> \code{\link[=apa_table]{apa_table()}} ->
 \code{\link[=build_visual_summaries]{build_visual_summaries()}} -> \code{\link[=build_apa_outputs]{build_apa_outputs()}}.
@@ -150,9 +146,8 @@ and direct table/plot helpers instead of calling \code{\link[=build_apa_outputs]
 \item bounded \code{GPCM} route:
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} -> \code{\link[=precision_audit_report]{precision_audit_report()}} ->
 \code{\link[=reporting_checklist]{reporting_checklist()}} -> \code{\link[=build_visual_summaries]{build_visual_summaries()}} /
-\code{\link[=run_qc_pipeline]{run_qc_pipeline()}} -> direct residual/category/information helpers,
-while \code{\link[=build_apa_outputs]{build_apa_outputs()}} and the fit-based export/replay helpers remain
-outside the current validated boundary.
+\code{\link[=run_qc_pipeline]{run_qc_pipeline()}} -> \code{\link[=build_apa_outputs]{build_apa_outputs()}} ->
+\code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}}, keeping all GPCM caveats in downstream prose.
 }
 }
 

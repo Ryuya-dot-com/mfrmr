@@ -1318,6 +1318,9 @@ build_apa_reporting_contract <- function(res, diagnostics, bias_results = NULL, 
   if (!is.finite(line_width) || line_width < 40L) line_width <- 92L
 
   precision_profile <- as.data.frame(diagnostics$precision_profile %||% data.frame(), stringsAsFactors = FALSE)
+  model <- as.character(config$model %||% NA_character_)
+  method <- as.character(config$method %||% NA_character_)
+  gpcm_mode <- identical(model, "GPCM")
   precision_tier <- trimws(as.character(precision_profile$PrecisionTier[1] %||% NA_character_))
   if (!nzchar(precision_tier)) {
     precision_tier <- if (identical(config$method, "MML")) "hybrid" else "exploratory"
@@ -1374,8 +1377,13 @@ build_apa_reporting_contract <- function(res, diagnostics, bias_results = NULL, 
     method_sentences <- c(method_sentences, assessment_sentence)
   }
 
+  model_family_label <- if (isTRUE(gpcm_mode)) {
+    "bounded many-facet generalized partial credit model (GPCM)"
+  } else {
+    "many-facet Rasch model (MFRM)"
+  }
   design_overview_sentence <- paste0(
-    "A many-facet Rasch model (MFRM) was fit to ", fmt_count(n_obs),
+    "A ", model_family_label, " was fit to ", fmt_count(n_obs),
     " observations from ", fmt_count(n_person),
     " persons scored on a ", fmt_count(n_cat),
     "-category scale (", fmt_count(rating_min), "-", fmt_count(rating_max), ")."
@@ -1497,11 +1505,17 @@ build_apa_reporting_contract <- function(res, diagnostics, bias_results = NULL, 
   }
 
   population_summary <- summarize_population_model_for_apa(res)
-  model <- config$model
-  method <- config$method
   model_sentence <- paste0("The ", model, " specification was estimated using ", method, " in the native R MFRM package.")
   if (identical(model, "PCM") && !is.null(config$step_facet) && nzchar(config$step_facet)) {
     model_sentence <- paste0(model_sentence, " The step structure varied by ", config$step_facet, ".")
+  }
+  if (isTRUE(gpcm_mode) && !is.null(config$step_facet) && nzchar(config$step_facet)) {
+    model_sentence <- paste0(
+      model_sentence,
+      " Thresholds and discriminations varied by ",
+      config$step_facet,
+      " under the bounded `slope_facet == step_facet` contract."
+    )
   }
   method_estimation_sentences <- c(method_estimation_sentences, model_sentence, precision_sentence)
   method_sentences <- c(method_sentences, model_sentence, precision_sentence)
@@ -1798,6 +1812,16 @@ build_apa_reporting_contract <- function(res, diagnostics, bias_results = NULL, 
   } else {
     ""
   }
+  gpcm_reporting_caution <- if (isTRUE(gpcm_mode)) {
+    paste0(
+      "GPCM reporting note: this APA draft is available as a caveated ",
+      "manuscript scaffold. Fair-average and bias language should be kept ",
+      "at the slope-aware screening tier; conditional fair-average SEs do ",
+      "not propagate joint threshold, slope, or person-measure uncertainty."
+    )
+  } else {
+    ""
+  }
 
   contract <- list(
     metadata = list(
@@ -1902,6 +1926,7 @@ build_apa_reporting_contract <- function(res, diagnostics, bias_results = NULL, 
     caution_sentences = Filter(nzchar, c(
       precision_caution,
       bias_caution,
+      gpcm_reporting_caution,
       population_summary$caution_sentence,
       population_summary$conquest_sentence
     )),

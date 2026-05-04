@@ -107,11 +107,12 @@
 #'    [category_structure_report()] / [category_curves_report()], and direct
 #'    data generation through [build_mfrm_sim_spec()], [extract_mfrm_sim_spec()],
 #'    and [simulate_mfrm_data()] are also available when the simulation
-#'    specification stores both thresholds and slopes. Planning/forecasting,
-#'    APA writer, FACETS score exports, and fit-based replay/export bundles
-#'    remain outside the validated
-#'    `GPCM` boundary. Use [gpcm_capability_matrix()] as the formal capability
-#'    map before branching into less common helpers.
+#'    specification stores both thresholds and slopes. Caveated
+#'    planning/forecasting, APA, and package-native replay/export bundles are
+#'    available under the role-based bounded `GPCM` contract; FACETS score
+#'    exports remain outside the validated `GPCM` boundary. Use
+#'    [gpcm_capability_matrix()] as the formal capability map before branching
+#'    into less common helpers.
 #' 4. (Optional) Estimate interaction bias with [estimate_bias()]. For bounded
 #'    `GPCM`, read the returned caveat before using the SE / t / probability
 #'    columns.
@@ -167,10 +168,11 @@
 #'   [rating_scale_table()] ->
 #'   [compute_information()] -> [plot_information()] ->
 #'   [plot.mfrm_fit()] / [category_curves_report()] ->
-#'   [build_visual_summaries()] / [run_qc_pipeline()]. Keep bounded `GPCM`
-#'   routes on the direct table/plot and caveated QC side; the fit-based export family
-#'   ([build_mfrm_manifest()], [build_mfrm_replay_script()],
-#'   [export_mfrm_bundle()]) remains outside the formal `GPCM` boundary.
+#'   [build_visual_summaries()] / [run_qc_pipeline()]. For bounded `GPCM`,
+#'   keep the caveats visible and use [build_apa_outputs()],
+#'   [build_mfrm_manifest()], [build_mfrm_replay_script()], and
+#'   [export_mfrm_bundle()] only as package-native bounded-GPCM routes, not as
+#'   FACETS score-side compatibility evidence.
 #' - Linking and coverage review:
 #'   [subset_connectivity_report()] -> `plot(..., type = "design_matrix")` ->
 #'   [plot_wright_unified()].
@@ -182,8 +184,8 @@
 #'   [export_summary_appendix()].
 #'   First-release `GPCM`:
 #'   [reporting_checklist()] -> [build_visual_summaries()] /
-#'   [run_qc_pipeline()] -> direct table/plot helpers while the APA writer
-#'   remains outside scope.
+#'   [run_qc_pipeline()] -> [build_apa_outputs()] /
+#'   [export_mfrm_bundle()] with the returned caveats retained.
 #' - Weighting-policy review:
 #'   [compare_mfrm()] -> [build_weighting_audit()] ->
 #'   [compute_information()] / [plot_information()] when you want to inspect

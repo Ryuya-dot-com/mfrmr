@@ -48,7 +48,7 @@ get_weights <- function(df) {
 
 stop_if_gpcm_out_of_scope <- function(fit,
                                       helper,
-                                      supported = "fitting, core summary output, fixed-calibration posterior scoring, compute_information(), direct simulation, residual-based diagnostics, the curve/report helpers, build_visual_summaries(), run_qc_pipeline(), and the slope-aware element-conditional fair_average_table() and estimate_bias() (with the SE caveats documented in their help pages)") {
+                                      supported = "fitting, core summary output, fixed-calibration posterior scoring, compute_information(), direct simulation, residual-based diagnostics, the curve/report helpers, build_visual_summaries(), run_qc_pipeline(), caveated APA/export/replay bundles, planning/forecasting simulations, and the slope-aware element-conditional fair_average_table() and estimate_bias() routes documented in their help pages") {
   if (!inherits(fit, "mfrm_fit")) return(invisible(NULL))
   model <- as.character(fit$config$model %||% fit$summary$Model[1] %||% NA_character_)
   if (identical(model, "GPCM")) {
@@ -70,8 +70,10 @@ gpcm_fair_average_rationale <- function() {
     "own discrimination, while non-slope-facet rows use the geometric-mean-one ",
     "slope implied by the identification convention. Treat these values as ",
     "a GPCM-specific score-side screen, not as Rasch-family fair-M invariance ",
-    "evidence. The displayed SE columns are scaled facet-measure SEs, not ",
-    "delta-method SEs for the fair-average value."
+    "evidence. The standard `SE` / `Model S.E.` / `Real S.E.` columns remain ",
+    "scaled facet-measure SEs. Fair-average-specific conditional SE columns, ",
+    "when present, use a measure-only delta method and do not propagate joint ",
+    "uncertainty from thresholds, slopes, or person-measure estimation."
   )
 }
 
@@ -3947,6 +3949,47 @@ expected_score_from_eta_gpcm <- function(eta, step_cum, slope, rating_min) {
   rating_min + sum(probs * k_vals)
 }
 
+expected_score_variance_from_eta <- function(eta, step_cum, slope = 1,
+                                             rating_min = 0,
+                                             model = "RSM") {
+  if (!is.finite(eta) || length(step_cum) == 0) return(NA_real_)
+  model <- toupper(as.character(model[1] %||% "RSM"))
+  if (!is.finite(slope) || slope <= 0) slope <- 1
+  k_vals <- 0:(length(step_cum) - 1)
+  log_num <- if (identical(model, "GPCM")) {
+    slope * (k_vals * eta - step_cum)
+  } else {
+    k_vals * eta - step_cum
+  }
+  m <- max(log_num)
+  if (!is.finite(m)) return(NA_real_)
+  probs <- exp(log_num - m)
+  probs <- probs / sum(probs)
+  score_vals <- rating_min + k_vals
+  expected <- sum(probs * score_vals)
+  second <- sum(probs * score_vals^2)
+  pmax(second - expected^2, 0)
+}
+
+expected_score_eta_derivative <- function(eta, step_cum, slope = 1,
+                                          rating_min = 0,
+                                          model = "RSM") {
+  variance <- expected_score_variance_from_eta(
+    eta = eta,
+    step_cum = step_cum,
+    slope = slope,
+    rating_min = rating_min,
+    model = model
+  )
+  if (!is.finite(variance)) return(NA_real_)
+  model <- toupper(as.character(model[1] %||% "RSM"))
+  if (identical(model, "GPCM")) {
+    if (!is.finite(slope) || slope <= 0) slope <- 1
+    return(slope * variance)
+  }
+  variance
+}
+
 estimate_eta_from_target <- function(target, step_cum, rating_min, rating_max,
                                      slope = 1) {
   if (!is.finite(target) || length(step_cum) == 0) return(NA_real_)
@@ -4226,6 +4269,37 @@ calc_facets_report_tbls <- function(res,
       fair_m <- purrr::map2_dbl(eta_m, step_cum_list, ~ expected_score_from_eta(.x, .y, rating_min))
       fair_z <- purrr::map2_dbl(eta_z, step_cum_list, ~ expected_score_from_eta(.x, .y, rating_min))
     }
+    model_se_logit <- suppressWarnings(as.numeric(dplyr::coalesce(tbl$ModelSE, tbl$SE)))
+    fair_m_deriv <- purrr::pmap_dbl(
+      list(eta_m, step_cum_list, slope_list),
+      function(e, s, a) expected_score_eta_derivative(
+        eta = e,
+        step_cum = s,
+        slope = a,
+        rating_min = rating_min,
+        model = config$model
+      )
+    )
+    fair_z_deriv <- purrr::pmap_dbl(
+      list(eta_z, step_cum_list, slope_list),
+      function(e, s, a) expected_score_eta_derivative(
+        eta = e,
+        step_cum = s,
+        slope = a,
+        rating_min = rating_min,
+        model = config$model
+      )
+    )
+    fair_m_cond_se <- ifelse(
+      is.finite(model_se_logit) & is.finite(fair_m_deriv),
+      abs(fair_m_deriv) * model_se_logit,
+      NA_real_
+    )
+    fair_z_cond_se <- ifelse(
+      is.finite(model_se_logit) & is.finite(fair_z_deriv),
+      abs(fair_z_deriv) * model_se_logit,
+      NA_real_
+    )
 
     xtreme_target <- ifelse(
       status == "Minimum", rating_min + xtreme,
@@ -4267,6 +4341,8 @@ calc_facets_report_tbls <- function(res,
         Status = status,
         FairM = fair_m,
         FairZ = fair_z,
+        FairMConditionalSE = fair_m_cond_se,
+        FairZConditionalSE = fair_z_cond_se,
         Measure = ifelse(is.finite(measure_logit), measure_logit * scale_factor + scale_origin, NA_real_),
         ModelSE = ifelse(
           is.finite(dplyr::coalesce(ModelSE, SE)),
@@ -4295,6 +4371,8 @@ calc_facets_report_tbls <- function(res,
         ObservedAverage,
         FairM,
         FairZ,
+        FairMConditionalSE,
+        FairZConditionalSE,
         Measure,
         ModelSE,
         RealSE,
@@ -4342,6 +4420,8 @@ format_facets_report_gt <- function(tbl,
     ObservedAverage = "Obsvd Average",
     FairM = "Fair(M) Average",
     FairZ = "Fair(Z) Average",
+    FairMConditionalSE = "Fair(M) Cond. S.E.",
+    FairZConditionalSE = "Fair(Z) Cond. S.E.",
     Measure = "Measure",
     ModelSE = "Model S.E.",
     RealSE = "Real S.E.",
@@ -4363,7 +4443,9 @@ format_facets_report_gt <- function(tbl,
   count_cols <- intersect(c("Total Score", "Total Count", "Weightd Score", "Weightd Count"), names(out))
   for (col in count_cols) out[[col]] <- round(as.numeric(out[[col]]), digits = 0)
   value_cols <- intersect(
-    c("Obsvd Average", "Fair(M) Average", "Fair(Z) Average", "Measure", "Model S.E.", "Real S.E.",
+    c("Obsvd Average", "Fair(M) Average", "Fair(Z) Average",
+      "Fair(M) Cond. S.E.", "Fair(Z) Cond. S.E.",
+      "Measure", "Model S.E.", "Real S.E.",
       "Infit MnSq", "Infit ZStd", "Outfit MnSq", "Outfit ZStd", "PtMea Corr"),
     names(out)
   )
@@ -4379,6 +4461,12 @@ format_facets_report_gt <- function(tbl,
   if ("Fair(Z) Average" %in% names(out) && !"StandardizedAdjustedAverage" %in% names(out)) {
     out$StandardizedAdjustedAverage <- out[["Fair(Z) Average"]]
   }
+  if ("Fair(M) Cond. S.E." %in% names(out) && !"AdjustedAverageConditionalSE" %in% names(out)) {
+    out$AdjustedAverageConditionalSE <- out[["Fair(M) Cond. S.E."]]
+  }
+  if ("Fair(Z) Cond. S.E." %in% names(out) && !"StandardizedAdjustedAverageConditionalSE" %in% names(out)) {
+    out$StandardizedAdjustedAverageConditionalSE <- out[["Fair(Z) Cond. S.E."]]
+  }
   if ("Model S.E." %in% names(out) && !"ModelBasedSE" %in% names(out)) {
     out$ModelBasedSE <- out[["Model S.E."]]
   }
@@ -4387,18 +4475,32 @@ format_facets_report_gt <- function(tbl,
   }
 
   if (identical(reference, "mean")) {
-    drop_cols <- intersect(c("Fair(Z) Average", "StandardizedAdjustedAverage"), names(out))
+    drop_cols <- intersect(c(
+      "Fair(Z) Average", "StandardizedAdjustedAverage",
+      "Fair(Z) Cond. S.E.", "StandardizedAdjustedAverageConditionalSE"
+    ), names(out))
     out <- out[, setdiff(names(out), drop_cols), drop = FALSE]
   } else if (identical(reference, "zero")) {
-    drop_cols <- intersect(c("Fair(M) Average", "AdjustedAverage"), names(out))
+    drop_cols <- intersect(c(
+      "Fair(M) Average", "AdjustedAverage",
+      "Fair(M) Cond. S.E.", "AdjustedAverageConditionalSE"
+    ), names(out))
     out <- out[, setdiff(names(out), drop_cols), drop = FALSE]
   }
 
   if (identical(label_style, "native")) {
-    drop_cols <- intersect(c("Obsvd Average", "Fair(M) Average", "Fair(Z) Average", "Model S.E.", "Real S.E."), names(out))
+    drop_cols <- intersect(c(
+      "Obsvd Average", "Fair(M) Average", "Fair(Z) Average",
+      "Fair(M) Cond. S.E.", "Fair(Z) Cond. S.E.",
+      "Model S.E.", "Real S.E."
+    ), names(out))
     out <- out[, setdiff(names(out), drop_cols), drop = FALSE]
   } else if (identical(label_style, "legacy")) {
-    drop_cols <- intersect(c("ObservedAverage", "AdjustedAverage", "StandardizedAdjustedAverage", "ModelBasedSE", "FitAdjustedSE"), names(out))
+    drop_cols <- intersect(c(
+      "ObservedAverage", "AdjustedAverage", "StandardizedAdjustedAverage",
+      "AdjustedAverageConditionalSE", "StandardizedAdjustedAverageConditionalSE",
+      "ModelBasedSE", "FitAdjustedSE"
+    ), names(out))
     out <- out[, setdiff(names(out), drop_cols), drop = FALSE]
   }
 

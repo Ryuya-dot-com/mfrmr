@@ -1,8 +1,9 @@
-#' mfrmr: Many-Facet Rasch Modeling in R
+#' mfrmr: Many-Facet Measurement Models in R
 #'
 #' @description
 #' `mfrmr` provides estimation, diagnostics, and reporting utilities for
-#' many-facet Rasch models (MFRM) using a native R implementation.
+#' many-facet Rasch-family models and bounded generalized partial-credit
+#' model workflows using a native R implementation.
 #'
 #' @useDynLib mfrmr, .registration = TRUE
 #'
@@ -87,8 +88,9 @@
 #' - direct `GPCM` data generation through [build_mfrm_sim_spec()],
 #'   [extract_mfrm_sim_spec()], and [simulate_mfrm_data()] is available when
 #'   the specification carries both thresholds and slopes
-#' - fair-average, APA writer, and broader planning semantics remain
-#'   generalized only for `RSM` / `PCM`
+#' - fair-average, APA writer, package-native export/replay, and role-based
+#'   planning/forecasting routes are available for bounded `GPCM` with
+#'   explicit screening-tier caveats
 #' - `predict_mfrm_population()` remains a scenario-level forecast helper and
 #'   should not be described as the latent-regression estimator itself
 #' - the current simulation/planning layer still remains role-based for two
@@ -235,9 +237,9 @@
 #'    [fair_average_table()], [estimate_bias()], [build_visual_summaries()],
 #'    [run_qc_pipeline()],
 #'    graph-only [facets_output_file_bundle()], direct simulation-spec
-#'    generation/data generation, and the residual-based table helpers while
-#'    APA writer, FACETS compatibility score exports, fit-based export/replay,
-#'    and planning semantics are still being generalized. Use
+#'    generation/data generation, caveated APA/export/replay bundles,
+#'    caveated role-based planning/forecasting, and the residual-based table
+#'    helpers while FACETS compatibility score exports remain blocked. Use
 #'    [gpcm_capability_matrix()] as the formal boundary statement.
 #'
 #' @section Model formulation:

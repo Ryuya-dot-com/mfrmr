@@ -4,19 +4,17 @@
 #' Package-native guide to moving from fitted model objects to
 #' manuscript-draft text, tables, notes, and revision checklists in `mfrmr`.
 #'
-#' This guide currently applies fully to diagnostics-based `RSM` / `PCM`
-#' workflows. First-release `GPCM` fits now support [reporting_checklist()],
+#' This guide applies fully to diagnostics-based `RSM` / `PCM` workflows.
+#' First-release `GPCM` fits support [reporting_checklist()],
 #' [precision_audit_report()], [build_visual_summaries()],
-#' [run_qc_pipeline()], and the direct curve/graph and residual table helpers,
-#' but the narrative APA writer still requires the broader reporting stack used
-#' for `RSM` / `PCM`. Use [gpcm_capability_matrix()] when you need the formal
-#' boundary for the current `GPCM` reporting path.
+#' [run_qc_pipeline()], direct curve/graph and residual table helpers, and
+#' caveated [build_apa_outputs()] plus package-native export/replay bundles.
+#' Use [gpcm_capability_matrix()] when you need the formal boundary for the
+#' current `GPCM` reporting path.
 #'
-#' In particular, bounded `GPCM` currently stops before
-#' [build_apa_outputs()] and the fit-based replay/export bundle layer. For
-#' that branch, use [reporting_checklist()], [precision_audit_report()],
-#' [build_visual_summaries()], [run_qc_pipeline()], and the direct table/plot
-#' helpers as the package-supported reporting route.
+#' Bounded `GPCM` APA/export outputs are manuscript and reproducibility
+#' scaffolds, not FACETS/Rasch score-side compatibility evidence. Keep the
+#' returned caveats with any fair-average, bias, or conditional-SE language.
 #'
 #' @section Start with the reporting question:
 #' - "Which parts of this run are draft-complete, and with what caveats?"
@@ -47,10 +45,9 @@
 #' 5. When strict marginal rows are available, follow up with
 #'    [plot_marginal_fit()] and [plot_marginal_pairwise()] before finalizing
 #'    the narrative around local misfit.
-#' 6. For `RSM` / `PCM`, create manuscript-draft prose and metadata with
-#'    [build_apa_outputs()]. For bounded `GPCM`, stop after the checklist /
-#'    precision / visual-summary / QC / direct-table route while the broader
-#'    narrative stack remains outside scope.
+#' 6. Create manuscript-draft prose and metadata with [build_apa_outputs()].
+#'    For bounded `GPCM`, retain the returned `support_status` and caveat and
+#'    keep fair-average/bias language at the screening tier.
 #' 7. Convert summary outputs to reusable table bundles with
 #'    [build_summary_table_bundle()], review the bundle with `summary()` /
 #'    `plot()`, then convert specific components to handoff tables with
@@ -105,9 +102,9 @@
 #'   drafting-readiness flag, not as a substitute for methodological review.
 #' - Rebuild APA outputs after major model changes instead of editing old text
 #'   by hand.
-#' - For bounded `GPCM`, keep manuscript prose on the direct table/plot side;
-#'   visual-summary and QC bundles are available with caveats, while the APA
-#'   writer and export/replay bundle layer remain outside scope.
+#' - For bounded `GPCM`, retain the helper caveats in manuscript prose and
+#'   export bundles; APA, visual-summary, QC, and package-native export/replay
+#'   routes are available with screening-tier limits.
 #'
 #' @section Typical workflow:
 #' - Manuscript-first route:
@@ -117,11 +114,10 @@
 #'   [export_mfrm_bundle()](include = c("summary_tables", "html")).
 #'   For `RSM` / `PCM` final reports, prefer `method = "MML"` and
 #'   `diagnostic_mode = "both"` in the diagnostics step.
-#'   For bounded `GPCM`, stop before the fit-based export family and stay on
-#'   [reporting_checklist()], [build_visual_summaries()], [run_qc_pipeline()],
-#'   and direct table/plot helpers instead of calling [build_apa_outputs()],
-#'   [build_mfrm_manifest()], [build_mfrm_replay_script()], or
-#'   [export_mfrm_bundle()].
+#'   For bounded `GPCM`, retain the caveats from [build_apa_outputs()],
+#'   [build_mfrm_manifest()], [build_mfrm_replay_script()], and
+#'   [export_mfrm_bundle()], and avoid FACETS/Rasch score-side invariance
+#'   language.
 #' - Appendix-first route:
 #'   [facet_statistics_report()] -> [apa_table()] ->
 #'   [build_visual_summaries()] -> [build_apa_outputs()].
@@ -131,9 +127,8 @@
 #' - bounded `GPCM` route:
 #'   [diagnose_mfrm()] -> [precision_audit_report()] ->
 #'   [reporting_checklist()] -> [build_visual_summaries()] /
-#'   [run_qc_pipeline()] -> direct residual/category/information helpers,
-#'   while [build_apa_outputs()] and the fit-based export/replay helpers remain
-#'   outside the current validated boundary.
+#'   [run_qc_pipeline()] -> [build_apa_outputs()] ->
+#'   [export_mfrm_bundle()], keeping all GPCM caveats in downstream prose.
 #'
 #' @section Companion guides:
 #' - For report/table selection, see [mfrmr_reports_and_tables].

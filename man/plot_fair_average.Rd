@@ -34,19 +34,16 @@ plot_fair_average(
 \item{top_n}{Maximum levels shown for \code{"difference"} plot.}
 
 \item{show_ci}{Logical. When \code{TRUE}, draw approximate
-confidence-interval whiskers on the fair metric using a
-delta-method propagation from the logit \code{Measure} standard error
-to the observed-score scale. The derivative equals the implied
-score variance \code{Var(X | Measure)}, so the fair-scale standard
-error is \code{Var(X) * ModelSE}. CI bounds are clipped to the rating
-range. Rows where the score variance is effectively zero (levels
-whose measure sits near the rating boundary, so the delta-method
-approximation becomes uninformative) are drawn with an open
-circle and excluded from the whiskers; the excluded count is
-reported in the subtitle. This CI route is available for \code{RSM} /
-\code{PCM} fair-average plots only. For bounded \code{GPCM}, \code{show_ci = TRUE}
-is ignored with a warning because \code{fair_average_table()} does not
-yet expose a delta-method SE for the slope-aware fair-average value.}
+confidence-interval whiskers on the fair metric using the
+conditional measure-only delta-method SE columns from
+\code{\link[=fair_average_table]{fair_average_table()}}. For \code{RSM} / \code{PCM} this is the familiar
+\code{Var(X | Measure) * ModelSE} approximation. For bounded \code{GPCM},
+the slope-aware derivative is used for slope-facet rows. These are
+conditional screening intervals; they do not propagate joint
+threshold, slope, and person-measure uncertainty. CI bounds are
+clipped to the rating range. Rows with non-finite or near-zero
+conditional SEs are drawn without whiskers and counted in the
+subtitle.}
 
 \item{ci_level}{Confidence level used when \code{show_ci = TRUE};
 default \code{0.95}. The returned plot-data object gains \code{CI_Lower},
