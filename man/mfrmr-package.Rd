@@ -111,12 +111,12 @@ should not be described as the latent-regression estimator itself
 \item the role-based simulation/planning layer remains the PCM/GPCM route for
 two non-person facets, while \code{\link[=build_mfrm_arbitrary_sim_spec]{build_mfrm_arbitrary_sim_spec()}},
 \code{\link[=extract_mfrm_arbitrary_sim_spec]{extract_mfrm_arbitrary_sim_spec()}}, \code{\link[=simulate_mfrm_arbitrary_data]{simulate_mfrm_arbitrary_data()}},
-\code{\link[=summarize_mfrm_sim_design]{summarize_mfrm_sim_design()}},
-\code{\link[=plot_mfrm_sim_design]{plot_mfrm_sim_design()}}, \code{\link[=summarize_mfrm_sim_grid]{summarize_mfrm_sim_grid()}},
-\code{\link[=plot_mfrm_sim_grid]{plot_mfrm_sim_grid()}}, \code{\link[=list_mfrm_sim_metrics]{list_mfrm_sim_metrics()}},
-\code{\link[=plot_mfrm_sim_dashboard]{plot_mfrm_sim_dashboard()}}, and \code{\link[=evaluate_mfrm_bias_detection]{evaluate_mfrm_bias_detection()}} provide a
-first RSM-based arbitrary-facet design, multi-metric dashboard, and
-bias-sensitivity branch
+\code{\link[=summarize_mfrm_sim_design]{summarize_mfrm_sim_design()}}, \code{\link[=plot_mfrm_sim_design]{plot_mfrm_sim_design()}},
+\code{\link[=summarize_mfrm_sim_grid]{summarize_mfrm_sim_grid()}}, \code{\link[=plot_mfrm_sim_grid]{plot_mfrm_sim_grid()}},
+\code{\link[=list_mfrm_sim_metrics]{list_mfrm_sim_metrics()}}, \code{\link[=plot_mfrm_sim_dashboard]{plot_mfrm_sim_dashboard()}}, and
+\code{\link[=evaluate_mfrm_bias_detection]{evaluate_mfrm_bias_detection()}} provide a first RSM-based
+arbitrary-facet design, multi-metric dashboard, and bias-sensitivity
+branch
 \item latent-class mixture models and response-time / careless-rating
 adjustment are not estimated by mfrmr; use residual, person-fit,
 local-dependence, and rater-drift diagnostics as screening layers rather
@@ -157,10 +157,10 @@ Function families:
 \code{\link[=simulate_mfrm_data]{simulate_mfrm_data()}}, \code{\link[=evaluate_mfrm_design]{evaluate_mfrm_design()}},
 \code{\link[=evaluate_mfrm_signal_detection]{evaluate_mfrm_signal_detection()}}, \code{\link[=build_mfrm_arbitrary_sim_spec]{build_mfrm_arbitrary_sim_spec()}},
 \code{\link[=extract_mfrm_arbitrary_sim_spec]{extract_mfrm_arbitrary_sim_spec()}}, \code{\link[=simulate_mfrm_arbitrary_data]{simulate_mfrm_arbitrary_data()}},
-\code{\link[=summarize_mfrm_sim_design]{summarize_mfrm_sim_design()}},
-\code{\link[=plot_mfrm_sim_design]{plot_mfrm_sim_design()}}, \code{\link[=summarize_mfrm_sim_grid]{summarize_mfrm_sim_grid()}},
-\code{\link[=plot_mfrm_sim_grid]{plot_mfrm_sim_grid()}}, \code{\link[=list_mfrm_sim_metrics]{list_mfrm_sim_metrics()}},
-\code{\link[=plot_mfrm_sim_dashboard]{plot_mfrm_sim_dashboard()}}, \code{\link[=evaluate_mfrm_bias_detection]{evaluate_mfrm_bias_detection()}},
+\code{\link[=summarize_mfrm_sim_design]{summarize_mfrm_sim_design()}}, \code{\link[=plot_mfrm_sim_design]{plot_mfrm_sim_design()}},
+\code{\link[=summarize_mfrm_sim_grid]{summarize_mfrm_sim_grid()}}, \code{\link[=plot_mfrm_sim_grid]{plot_mfrm_sim_grid()}},
+\code{\link[=list_mfrm_sim_metrics]{list_mfrm_sim_metrics()}}, \code{\link[=plot_mfrm_sim_dashboard]{plot_mfrm_sim_dashboard()}},
+\code{\link[=evaluate_mfrm_bias_detection]{evaluate_mfrm_bias_detection()}},
 \code{\link[=predict_mfrm_population]{predict_mfrm_population()}},
 \code{\link[=predict_mfrm_units]{predict_mfrm_units()}}, \code{\link[=sample_mfrm_plausible_values]{sample_mfrm_plausible_values()}} (including
 fit-derived empirical / resampled / skeleton-based simulation
@@ -539,14 +539,12 @@ level in the multidimensional latent space. \emph{Psychometrika}, 39,
 1993 specializes to the GPCM.)
 \item Snijders, T. A. B. (2001). Asymptotic null distribution of person
 fit statistics with estimated person parameter. \emph{Psychometrika},
-66(3), 331--342. (The published Snijders lz* correction is \strong{not}
-implemented in this release. mfrmr's \code{lz_star} column applies a
-placeholder \code{lz / sqrt(1 + 1/N)} inflation rather than the modified
-weights \code{w_tilde_i = w_i - c_n * r_i} of Snijders (2001, eqs. 7-8).
-Treat the column as a finite-N inflation of \code{lz}, not as the
-published Snijders statistic; the full correction is documented as
-a placeholder in \code{?compute_person_fit_indices} and scheduled for a
-follow-up release.)
+66(3), 331--342. (\code{compute_person_fit_indices()} reports a
+Snijders-style score-projection \code{lz_star} for JML fits, conditional
+on the fitted non-person parameters. For MML/EAP fits \code{lz_star} is
+unavailable because EAP posterior means do not satisfy the ML
+person-score estimating equation; the old finite-N screen is
+reported separately as \code{lz_finite_n}.)
 \item Linacre, J. M. (1989). \emph{Many-facet Rasch measurement}. MESA Press.
 \item Linacre, J. M. (2002). What do Infit and Outfit, mean-square and
 standardized mean? \emph{Rasch Measurement Transactions}, 16(2), 878.

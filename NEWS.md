@@ -82,10 +82,14 @@ with explicit caveats.
   "follow Linacre (1994)". Only the 30-examinee floor is Linacre's;
   the `< 10 sparse` and `< 50 standard` watermarks are mfrmr-specific
   screening choices.
-- **Snijders (2001) lz\\* placeholder**: the package-overview reference
-  entry now matches the in-function disclaimer -- mfrmr's `lz_star`
-  column is the placeholder `lz / sqrt(1 + 1/N)`, not the published
-  Snijders correction with modified weights `w_tilde_i = w_i - c_n * r_i`.
+- **Snijders (2001) lz\\***: `compute_person_fit_indices()` no longer
+  reports the old finite-N placeholder under the `lz_star` name. For
+  JML fits, `lz_star` now uses the Snijders-style score-projection
+  correction, conditional on the fitted non-person parameters. The old
+  `lz / sqrt(1 + 1/N)` screen is retained as `lz_finite_n`. For MML/EAP
+  fits, `lz_star` is deliberately `NA` with `lz_star_method =
+  "unavailable_for_eap_mml"` because EAP posterior means do not satisfy
+  the ML person-score estimating equation used by Snijders' correction.
 - **Marais (2013) `|Q3| > 0.30`**: documented as a community convention
   Marais cites, not as her own recommendation; her actual recommendation
   is the relative-to-mean comparison.
@@ -158,6 +162,21 @@ alongside the figure.
 return value renders as a compact summary (name, title, payload
 shapes, legend / reference-line counts) instead of a raw list dump.
 
+### Classical DIF and classic curve front doors
+
+`analyze_dif_classical()` adds a limited classical screening route for
+long-format many-facet data. It supports generalized Mantel-Haenszel /
+Cochran-Mantel-Haenszel screening over ordered score categories and
+binary logistic DIF screening when the dichotomization is explicit
+through `logistic_threshold`. It does not implement SIBTEST, does not
+estimate subgroup MFRM parameters, and does not claim ETS A/B/C labels.
+
+Four classic plot entry points are now exported:
+`plot_expected_score_curve()`, `plot_test_characteristic_curve()`,
+`plot_cumulative_category_curve()`, and `plot_kidmap()`. They reuse
+the package's existing category-curve, design-weighted expectation, and
+person-fit payloads while giving mirt/TAM/FACETS users familiar names.
+
 ### Bounded GPCM fair-average and bias unblock (slope-aware)
 
 `fair_average_table()` and `estimate_bias()` no longer hard-stop on
@@ -219,10 +238,10 @@ Rasch-family invariance evidence.
   `(sum StdSq - n) / sqrt(2 * n)`, which is the linear (Smith)
   approximation to `OutfitZSTD`, not the Tatsuoka & Tatsuoka (1983)
   extended-caution index. Users who want the equivalent statistic
-  should use `OutfitZSTD` directly. The Snijders (2001) full
-  ability-information bias correction for `lz_star` is documented as
-  a placeholder finite-N adjustment in `?compute_person_fit_indices`
-  and scheduled for a follow-up release.
+  should use `OutfitZSTD` directly. The old finite-N `lz_star`
+  placeholder is no longer reported as `lz_star`; it is now explicitly
+  named `lz_finite_n`, while JML fits receive the score-projection
+  corrected `lz_star`.
 - `displacement_table()$summary` now returns `NA_real_` for
   `MaxAbsDisplacement` and `MaxAbsDisplacementT` when every flagged
   level has zero information (so every `Displacement` is `NA`).
@@ -244,11 +263,10 @@ Rasch-family invariance evidence.
   explicitly and route users to both `plot_dif_heatmap()` and
   `plot_dif_summary()`.
 
-- `?compute_person_fit_indices` now describes the `lz_star` column
-  as a finite-sample-adjusted lz (placeholder `cn = 0`, `dn = 1/N`)
-  rather than the full Snijders (2001) bias correction. The full
-  Snijders ability-information correction is scheduled for a
-  follow-up release.
+- `?compute_person_fit_indices` now distinguishes `lz`, JML-only
+  Snijders-style `lz_star`, and the explicitly named `lz_finite_n`
+  heuristic. The help page states why `lz_star` is unavailable for
+  MML/EAP fits.
 
 - `?mfrm_generalizability` now discloses that the lme4 random-effects
   model is main-effects only (`Score ~ 1 + (1|Person) + (1|Facet) +
@@ -316,12 +334,13 @@ later release:
   `build_mfrm_replay_script()`, `export_mfrm_bundle()`,
   `build_visual_summaries()`, and `run_qc_pipeline()` are unblocked
   above with caveats.)
-- A classical-DIF helper (working title `analyze_dif_classical()`)
-  covering Mantel-Haenszel, logistic regression, and SIBTEST.
-- Five additional Rasch / IRT classic plots (KIDMAP, TCC, expected
-  score curve, cumulative ICC, information surface).
-- A native classical-DIF vignette (the migration and bounded-GPCM-scope
-  vignettes ship in this release; see the Documentation section above).
+- SIBTEST / POLYSIBTEST and a broader classical-DIF vignette.
+- Additional heavy or specialized classic plots not covered by the new
+  front doors, including cumulative ICC variants and 3D information
+  surface rendering.
+- Additional applied DIF examples beyond the limited screening example in
+  `?analyze_dif_classical` (the migration and bounded-GPCM-scope vignettes
+  ship in this release; see the Documentation section above).
 
 These are scheduled for a follow-up release.
 

@@ -10,9 +10,10 @@ compute_person_fit_indices(diagnostics, fit = NULL)
 \item{diagnostics}{Output from \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}.}
 
 \item{fit}{Optional \code{mfrm_fit} from \code{\link[=fit_mfrm]{fit_mfrm()}}. When supplied,
-the helper attaches the person measures and computes a
-finite-sample-adjusted variant of \code{lz} (column \code{lz_star});
-when \code{NULL}, only the uncorrected \code{lz} is returned.}
+the helper can compute the JML/ML-style Snijders correction
+(column \code{lz_star}) and returns a \code{lz_star_method} audit column.
+When \code{NULL}, only \code{lz} and \code{lz_finite_n} are returned, with
+\code{lz_star = NA}.}
 }
 \value{
 A data frame with one row per Person and columns:
@@ -25,21 +26,24 @@ model. Computed from the per-observation category probability
 not from a Gaussian residual approximation.}
 \item{\code{lz}}{Drasgow et al. (1985) standardized log-likelihood,
 in its proper polytomous form.}
-\item{\code{lz_star}}{Finite-sample-adjusted lz, returned only when
-\code{fit} was supplied (otherwise \code{NA}). The current implementation
-uses the placeholder \eqn{c_n = 0}, \eqn{d_n = 1/N} so that
-\eqn{lz^* = lz / \sqrt{1 + 1/N}}; the full Snijders (2001)
-correction that propagates ability-information uncertainty is
-scheduled for a follow-up release. Treat the \code{lz_star} column
-as a finite-N inflation of \code{lz}, not as the published Snijders
+\item{\code{lz_star}}{Snijders-style score-projection corrected statistic,
+computed for JML fits by projecting the log-likelihood weights away
+from the person-score estimating equation. For MML/EAP fits this
+column is \code{NA} because EAP posterior means do not satisfy the ML
+person-score equation used by the correction.}
+\item{\code{lz_finite_n}}{Finite-N heuristic retained for continuity:
+\eqn{lz / \sqrt{1 + 1/N}}. This is not the published Snijders
 statistic.}
+\item{\code{lz_star_method}}{Audit label describing whether \code{lz_star}
+was computed and why it may be unavailable.}
 }
 
 Under the conditional-independence assumption of the MFRM, \code{lz} is
 asymptotically standard normal. Practical reporting thresholds:
 |lz| > 1.96 flags a person at the 5\% level; |lz| > 2.58 at the
-1\% level. The placeholder \code{lz_star} is on the same scale as \code{lz}
-but does not yet carry the published Snijders null distribution.
+1\% level. \code{lz_star} should be read as a conditional person-fit
+statistic: it corrects for estimated JML person measures but still
+treats the fitted non-person parameters as fixed.
 
 Note: this implementation reads the model category probabilities
 directly from the diagnostics bundle. Earlier mfrmr releases used
@@ -56,8 +60,9 @@ approximation.
 \description{
 Computes person-level fit statistics for an MFRM bundle, extending
 the Infit / Outfit / ZSTD columns that \code{diagnose_mfrm()$measures}
-already exposes with the standardized log-likelihood \code{lz} and a
-finite-sample-adjusted variant \verb{lz*}.
+already exposes with the standardized log-likelihood \code{lz}, a
+Snijders-style \code{lz_star} for JML fits, and an explicitly named
+finite-N heuristic \code{lz_finite_n}.
 }
 \section{References}{
 
@@ -82,9 +87,8 @@ pf <- compute_person_fit_indices(diag, fit = fit)
 head(pf)
 # Look for: |lz| > 1.96 (5\% level) flags a person whose response
 #   pattern is statistically inconsistent with the model; > 2.58 is
-#   a 1\% flag. The same thresholds applied to `lz_star` are
-#   approximate because mfrmr's `lz_star` is the placeholder
-#   `lz / sqrt(1 + 1/N)`, not the published Snijders (2001) lz*.
+#   a 1\% flag. `lz_star_method` tells you whether the Snijders-style
+#   correction was computed or left unavailable for the active estimator.
 }
 \seealso{
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}

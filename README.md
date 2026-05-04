@@ -127,7 +127,7 @@ fit <- fit_mfrm(
 Core analysis:
 
 - estimation with `fit_mfrm()` under `MML` or `JML`
-- fit diagnostics with `diagnose_mfrm()`, `plot_qc_dashboard()`, residual PCA follow-up, and residual-dimensionality parallel analysis via `check_residual_dimensionality()`
+- fit diagnostics with `diagnose_mfrm()`, `plot_qc_dashboard()`, residual PCA follow-up, residual-dimensionality parallel analysis via `check_residual_dimensionality()`, and person-fit `lz` / JML `lz_star` via `compute_person_fit_indices()`
 - strict marginal follow-up for `RSM` / `PCM` via `diagnostic_mode = "both"`, `plot_marginal_fit()`, and `plot_marginal_pairwise()`
 - package-native tables and summaries via `summary()`, `reporting_checklist()`, and `facet_statistics_report()`
 
@@ -140,9 +140,10 @@ Reporting and QA:
 
 Linking, fairness, and advanced review:
 
-- bias and DFF workflows through `estimate_bias()`, `estimate_all_bias()`, `analyze_dff()`, and `dif_report()`
+- bias and DFF workflows through `estimate_bias()`, `estimate_all_bias()`, `analyze_dff()`, the limited classical screen `analyze_dif_classical()`, and `dif_report()`
 - anchoring and linking via `anchor_to_baseline()`, `detect_anchor_drift()`, and `build_equating_chain()`
 - precision/targeting views via `compute_information()`, `plot_information()`, and `plot_wright_unified()`
+- classic curve front doors via `plot_expected_score_curve()`, `plot_test_characteristic_curve()`, `plot_cumulative_category_curve()`, and `plot_kidmap()`
 - equivalence and audit helpers such as `analyze_facet_equivalence()`, `describe_mfrm_data()`, and `audit_mfrm_anchors()`
 
 Design-adequacy audit and partial pooling:
@@ -803,6 +804,17 @@ dff <- analyze_dff(
 dff$summary
 plot_dif_heatmap(dff)
 plot_dif_summary(dff)
+
+# Limited classical DIF screen for long-format data
+classical <- analyze_dif_classical(
+  df_bias,
+  facet = "Criterion",
+  group = "Group",
+  person = "Person",
+  score = "Score",
+  methods = "mantel_haenszel"
+)
+classical$summary
 ```
 
 For linking-specific guidance, see

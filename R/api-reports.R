@@ -6796,6 +6796,9 @@ dif_report <- function(dif_result, ...) {
       )
     }
   } else {
+    is_classical <- identical(method_label, "classical") ||
+      any(as.character(dt$ClassificationSystem %||% NA_character_) == "classical_screening",
+          na.rm = TRUE)
     class_col <- dt$Classification %||% rep(NA_character_, nrow(dt))
     n_positive <- sum(class_col == "Screen positive", na.rm = TRUE)
     n_negative <- sum(class_col == "Screen negative", na.rm = TRUE)
@@ -6811,17 +6814,33 @@ dif_report <- function(dif_result, ...) {
     large_dif <- dt[class_col == "Screen positive", , drop = FALSE]
 
     lines <- character()
-    lines <- c(lines, paste0(
-      functioning_label, " screening was conducted for the ",
-      facet_name, " facet across levels of ", group_name,
-      " using the ", method_label, " method. "
-    ))
+    if (is_classical) {
+      methods_used <- unique(as.character(dt$Method %||% method_label))
+      methods_used <- methods_used[!is.na(methods_used) & nzchar(methods_used)]
+      lines <- c(lines, paste0(
+        functioning_label, " screening was conducted for the ",
+        facet_name, " facet across levels of ", group_name,
+        " using classical DIF method(s): ",
+        paste(methods_used, collapse = ", "), ". "
+      ))
+    } else {
+      lines <- c(lines, paste0(
+        functioning_label, " screening was conducted for the ",
+        facet_name, " facet across levels of ", group_name,
+        " using the ", method_label, " method. "
+      ))
+    }
     lines <- c(lines, paste0(
       "A total of ", n_total, " pairwise facet-level comparisons were evaluated. "
     ))
     lines <- c(lines, paste0(
       n_positive, " comparison(s) were screening-positive and ",
-      n_negative, " were screening-negative based on the residual-contrast test. "
+      n_negative, " were screening-negative based on ",
+      if (is_classical) {
+        "classical screening p values. "
+      } else {
+        "the residual-contrast test. "
+      }
     ))
     if (n_na > 0) {
       lines <- c(lines, paste0(
@@ -6835,28 +6854,54 @@ dif_report <- function(dif_result, ...) {
         "\nThe following ", facet_name, " level(s) showed screening-positive residual contrasts: ",
         paste(flagged_levels, collapse = ", "), ". "
       ))
+      if (is_classical) {
+        lines[length(lines)] <- paste0(
+          "\nThe following ", facet_name,
+          " level(s) showed screening-positive classical DIF results: ",
+          paste(flagged_levels, collapse = ", "), ". "
+        )
+      }
       for (lev in flagged_levels) {
         lev_rows <- large_dif[large_dif$Level == lev, , drop = FALSE]
         for (r in seq_len(nrow(lev_rows))) {
-          direction <- if (is.finite(lev_rows$Contrast[r]) && lev_rows$Contrast[r] > 0) {
-            "higher"
-          } else if (is.finite(lev_rows$Contrast[r]) && lev_rows$Contrast[r] < 0) {
-            "lower"
+          if (is_classical) {
+            direction <- if (is.finite(lev_rows$Contrast[r]) && lev_rows$Contrast[r] > 0) {
+              paste0(lev_rows$Group2[r], " higher")
+            } else if (is.finite(lev_rows$Contrast[r]) && lev_rows$Contrast[r] < 0) {
+              paste0(lev_rows$Group1[r], " higher")
+            } else {
+              "direction unavailable"
+            }
+            lines <- c(lines, paste0(
+              "  - ", lev, ": ",
+              lev_rows$Group1[r], " vs ", lev_rows$Group2[r],
+              " (method = ", lev_rows$Method[r],
+              "; contrast = ", sprintf("%.3f", lev_rows$Contrast[r]),
+              "; ", direction, "). "
+            ))
           } else {
-            "different"
+            direction <- if (is.finite(lev_rows$Contrast[r]) && lev_rows$Contrast[r] > 0) {
+              "higher"
+            } else if (is.finite(lev_rows$Contrast[r]) && lev_rows$Contrast[r] < 0) {
+              "lower"
+            } else {
+              "different"
+            }
+            lines <- c(lines, paste0(
+              "  - ", lev, ": ",
+              lev_rows$Group1[r], " vs ", lev_rows$Group2[r],
+              " (contrast = ", sprintf("%.3f", lev_rows$Contrast[r]),
+              " on the residual scale; ", lev_rows$Group1[r], " was ", direction, "). "
+            ))
           }
-          lines <- c(lines, paste0(
-            "  - ", lev, ": ",
-            lev_rows$Group1[r], " vs ", lev_rows$Group2[r],
-            " (contrast = ", sprintf("%.3f", lev_rows$Contrast[r]),
-            " on the residual scale; ", lev_rows$Group1[r], " was ", direction, "). "
-          ))
         }
       }
     } else {
-      lines <- c(lines,
+      lines <- c(lines, if (is_classical) {
+        "\nNo pairwise contrasts were screening-positive under the classical screening method(s). This does not by itself establish invariance or absence of DIF. "
+      } else {
         "\nNo pairwise contrasts were screening-positive under the residual-screening method. This does not by itself establish invariance or consistent functioning across groups. "
-      )
+      })
     }
   }
 

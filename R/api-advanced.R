@@ -1451,8 +1451,12 @@ print.mfrm_dff <- function(x, ...) {
   tbl <- x$dif_table
   n_rows <- if (is.data.frame(tbl)) nrow(tbl) else 0L
   n_flag <- if (n_rows > 0L && "Classification" %in% names(tbl)) {
-    sum(!is.na(tbl$Classification) & tbl$Classification != "Negligible" &
-          tbl$Classification != "None")
+    cls <- as.character(tbl$Classification)
+    ets <- as.character(tbl$ETS %||% rep(NA_character_, n_rows))
+    sum(cls == "Screen positive" |
+          ets %in% c("B", "C") |
+          cls %in% c("B (Moderate)", "C (Large)"),
+        na.rm = TRUE)
   } else NA_integer_
   cat(sprintf("mfrm_%s (%s)\n", tolower(label), label))
   cat(sprintf("  Method: %s | Facet: %s | Group: %s\n",

@@ -42,7 +42,8 @@ test_that("q3_statistic rejects unknown facet", {
 test_that("compute_person_fit_indices returns one row per person", {
   pf <- compute_person_fit_indices(.diag, fit = .fit)
   expect_true(is.data.frame(pf))
-  expect_true(all(c("Person", "N", "LogLik", "lz", "lz_star")
+  expect_true(all(c("Person", "N", "LogLik", "lz", "lz_star",
+                    "lz_finite_n", "lz_star_method")
                   %in% names(pf)))
   # ECI4 was removed in 0.2.0 — it was a misnamed duplicate of the
   # Outfit ZSTD (linear Smith form), not Tatsuoka & Tatsuoka (1983).
@@ -53,6 +54,16 @@ test_that("compute_person_fit_indices returns one row per person", {
 test_that("compute_person_fit_indices works without fit (lz_star NA)", {
   pf <- compute_person_fit_indices(.diag, fit = NULL)
   expect_true(all(is.na(pf$lz_star)))
+  expect_true(all(pf$lz_star_method == "unavailable_no_fit"))
+  expect_true(any(is.finite(pf$lz_finite_n)))
+})
+
+test_that("compute_person_fit_indices computes Snijders-style JML correction", {
+  pf <- compute_person_fit_indices(.diag, fit = .fit)
+  expect_true(any(pf$lz_star_method == "snijders_score_projection_jml"))
+  expect_true(any(is.finite(pf$lz_star)))
+  expect_true(all(abs(pf$lz_finite_n[is.finite(pf$lz_finite_n)]) <=
+                    abs(pf$lz[is.finite(pf$lz_finite_n)]) + 1e-12))
 })
 
 test_that("lz uses true Drasgow polytomous form via PrObserved", {
@@ -89,6 +100,8 @@ test_that("lz uses true Drasgow polytomous form via PrObserved", {
 
   expect_equal(pf$LogLik, expected_loglik, tolerance = 1e-12)
   expect_equal(pf$lz, expected_lz, tolerance = 1e-12)
+  expect_true(is.na(pf$lz_star))
+  expect_equal(pf$lz_finite_n, expected_lz / sqrt(1 + 1 / 2), tolerance = 1e-12)
 })
 
 # --- mfrm_generalizability -----------------------------------------------

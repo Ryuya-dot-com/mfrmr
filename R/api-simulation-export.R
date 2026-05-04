@@ -46,6 +46,7 @@
 #' ))
 #' head(as.data.frame(eval, component = "estimates"))
 #' head(as.data.frame(eval, component = "reliability"))
+#' @noRd
 #' @export
 as.data.frame.mfrm_design_evaluation <- function(x,
                                                  row.names = NULL,

@@ -499,14 +499,12 @@
 #'   1993 specializes to the GPCM.)
 #' - Snijders, T. A. B. (2001). Asymptotic null distribution of person
 #'   fit statistics with estimated person parameter. *Psychometrika*,
-#'   66(3), 331--342. (The published Snijders lz* correction is **not**
-#'   implemented in this release. mfrmr's `lz_star` column applies a
-#'   placeholder `lz / sqrt(1 + 1/N)` inflation rather than the modified
-#'   weights `w_tilde_i = w_i - c_n * r_i` of Snijders (2001, eqs. 7-8).
-#'   Treat the column as a finite-N inflation of `lz`, not as the
-#'   published Snijders statistic; the full correction is documented as
-#'   a placeholder in `?compute_person_fit_indices` and scheduled for a
-#'   follow-up release.)
+#'   66(3), 331--342. (`compute_person_fit_indices()` reports a
+#'   Snijders-style score-projection `lz_star` for JML fits, conditional
+#'   on the fitted non-person parameters. For MML/EAP fits `lz_star` is
+#'   unavailable because EAP posterior means do not satisfy the ML
+#'   person-score estimating equation; the old finite-N screen is
+#'   reported separately as `lz_finite_n`.)
 #' - Linacre, J. M. (1989). *Many-facet Rasch measurement*. MESA Press.
 #' - Linacre, J. M. (2002). What do Infit and Outfit, mean-square and
 #'   standardized mean? *Rasch Measurement Transactions*, 16(2), 878.

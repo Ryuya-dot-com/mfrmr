@@ -9,6 +9,7 @@ test_that("NAMESPACE roxygen contract keeps expected exports and methods", {
   expected_exports <- c(
     "analyze_dff",
     "analyze_dif",
+    "analyze_dif_classical",
     "analyze_facet_equivalence",
     "analyze_residual_pca",
     "anchor_to_baseline",
@@ -75,14 +76,17 @@ test_that("NAMESPACE roxygen contract keeps expected exports and methods", {
     "plot_anchor_drift",
     "plot_bias_interaction",
     "plot_bubble",
+    "plot_cumulative_category_curve",
     "plot_dif_heatmap",
     "plot_displacement",
     "plot_facet_equivalence",
     "plot_facet_quality_dashboard",
     "plot_facets_chisq",
     "plot_fair_average",
+    "plot_expected_score_curve",
     "plot_information",
     "plot_interrater_agreement",
+    "plot_kidmap",
     "plot_marginal_fit",
     "plot_marginal_pairwise",
     "plot_qc_dashboard",
@@ -137,6 +141,7 @@ test_that("NAMESPACE roxygen contract keeps expected exports and methods", {
     "plot_reliability_snapshot",
     "plot_residual_matrix",
     "plot_shrinkage_funnel",
+    "plot_test_characteristic_curve",
     # 0.1.6 package-level MnSq misfit threshold getter / setter.
     "mfrm_misfit_thresholds",
     # 0.1.6 additions: Q3 + person fit + GT + interop importers.
