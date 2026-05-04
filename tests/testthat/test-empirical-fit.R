@@ -20,7 +20,8 @@ test_that("fit_p_table returns TAM-style adjusted p columns", {
   expect_true(all(c(
     "parameter", "Outfit", "Outfit_t", "Outfit_p", "Outfit_p_adj",
     "Outfit_pholm", "Infit", "Infit_t", "Infit_p", "Infit_p_adj",
-    "Infit_pholm", "MisfitDirection", "PAdjustMethod"
+    "Infit_pholm", "DF_Outfit", "DF_Infit", "DFMethod", "FitReference",
+    "ZSTDCap", "MisfitDirection", "PAdjustMethod"
   ) %in% names(tab)))
   expect_true(all(na.omit(tab$Outfit_p) >= 0 & na.omit(tab$Outfit_p) <= 1))
   expect_true(all(na.omit(tab$Infit_p_adj) >= 0 & na.omit(tab$Infit_p_adj) <= 1))
@@ -30,6 +31,92 @@ test_that("fit_p_table returns TAM-style adjusted p columns", {
   expect_true(all(na.omit(tab$MisfitDirection) %in%
                     c("in_band", "underfit", "overfit", "mixed")))
   expect_identical(unique(tab$PAdjustMethod), "holm")
+  expect_identical(unique(tab$FitReference), "mfrmr")
+  expect_identical(unique(tab$DFMethod), "mfrmr_information")
+})
+
+test_that("fit_p_table can use FACETS-style moment df for ZSTD and p values", {
+  fit <- empirical_fit_fixture$fit
+  diag <- empirical_fit_fixture$diag
+
+  tab <- fit_p_table(fit, diagnostics = diag, scope = "element",
+                     reference = "facets")
+
+  expect_s3_class(tab, "data.frame")
+  expect_true(nrow(tab) > 0)
+  expect_identical(unique(tab$FitReference), "facets")
+  expect_identical(unique(tab$DFMethod), "facets_moment")
+  expect_true(all(is.na(tab$ZSTDCap) | tab$ZSTDCap == 9))
+  expect_true(all(abs(na.omit(tab$Outfit_t)) <= 9))
+  expect_equal(tab$Outfit_p, 2 * stats::pnorm(-abs(tab$Outfit_t)))
+  expect_equal(tab$Infit_p, 2 * stats::pnorm(-abs(tab$Infit_t)))
+
+  target <- tab[is.finite(tab$DF_Outfit) & is.finite(tab$DF_Infit), , drop = FALSE][1, ]
+  obs <- as.data.frame(diag$obs, stringsAsFactors = FALSE)
+  probs <- mfrmr:::compute_prob_matrix(fit)
+  k_vals <- 0:(ncol(probs) - 1L)
+  expected <- as.vector(probs %*% k_vals)
+  diff <- sweep(
+    matrix(k_vals, nrow = nrow(probs), ncol = ncol(probs), byrow = TRUE),
+    1L,
+    expected,
+    "-"
+  )
+  obs$.FourthMoment <- rowSums(probs * diff^4)
+  sub <- obs[as.character(obs[[target$Facet]]) == as.character(target$Level), , drop = FALSE]
+  w <- mfrmr:::get_weights(sub)
+  var <- as.numeric(sub$Var)
+  fourth <- as.numeric(sub$.FourthMoment)
+  ok <- is.finite(w) & w > 0 & is.finite(var) & var > 0 & is.finite(fourth)
+  n_w <- sum(w[ok])
+  info <- sum(w[ok] * var[ok])
+  df_out <- 2 * n_w^2 / sum(w[ok] * (fourth[ok] / var[ok]^2 - 1))
+  df_in <- 2 * info^2 / sum(w[ok] * (fourth[ok] - var[ok]^2))
+
+  expect_equal(target$DF_Outfit, df_out, tolerance = 1e-8)
+  expect_equal(target$DF_Infit, df_in, tolerance = 1e-8)
+  expect_error(
+    fit_p_table(fit, diagnostics = diag, scope = "category", reference = "facets"),
+    "score-category"
+  )
+})
+
+test_that("fit_direction_summary separates underfit and overfit rates", {
+  fit <- empirical_fit_fixture$fit
+  diag <- empirical_fit_fixture$diag
+
+  dir_tab <- fit_direction_summary(fit, diagnostics = diag, scope = "element")
+
+  expect_s3_class(dir_tab, "mfrm_fit_direction_summary")
+  expect_true(all(c(
+    "Facet", "UnderfitN", "OverfitN", "MixedN", "InBandN",
+    "UnderfitRate", "OverfitRate", "MixedRate", "InBandRate",
+    "AnyMisfitRate", "PFlagRate"
+  ) %in% names(dir_tab)))
+  expect_true(all(na.omit(dir_tab$UnderfitRate) >= 0 & na.omit(dir_tab$UnderfitRate) <= 1))
+  expect_true(all(na.omit(dir_tab$OverfitRate) >= 0 & na.omit(dir_tab$OverfitRate) <= 1))
+  expect_equal(
+    dir_tab$AnyMisfitN,
+    dir_tab$UnderfitN + dir_tab$OverfitN + dir_tab$MixedN
+  )
+  expect_equal(
+    dir_tab$AnyMisfitRate,
+    dir_tab$AnyMisfitN / dir_tab$Classified
+  )
+
+  p <- plot_fit_direction_summary(dir_tab, draw = FALSE)
+  expect_s3_class(p, "mfrm_plot_data")
+  expect_identical(p$name, "fit_direction_summary")
+  expect_true(all(c("Direction", "Value") %in% names(p$data$data)))
+
+  facets_dir <- fit_direction_summary(
+    fit,
+    diagnostics = diag,
+    scope = "element",
+    reference = "facets"
+  )
+  expect_identical(unique(facets_dir$FitReference), "facets")
+  expect_identical(unique(facets_dir$DFMethod), "facets_moment")
 })
 
 test_that("fit_p_table cross-package orientation is high agreement but not identity", {

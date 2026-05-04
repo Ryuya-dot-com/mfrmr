@@ -24,7 +24,8 @@
 #' 2. For `RSM` / `PCM`, compute diagnostics with
 #'    [diagnose_mfrm()] and prefer `diagnostic_mode = "both"` when you want
 #'    legacy residual continuity plus the newer strict marginal-fit screen
-#' 3. For `RSM` / `PCM`, run residual PCA with [analyze_residual_pca()] if needed
+#' 3. For `RSM` / `PCM`, run residual PCA with [analyze_residual_pca()] and
+#'    parallel-analysis checks with [check_residual_dimensionality()] if needed
 #' 4. For `RSM` / `PCM`, estimate interactions with [estimate_bias()]
 #' 5. For `RSM` / `PCM`, choose a downstream branch:
 #'    [reporting_checklist()] for manuscript/report preparation, or
@@ -93,10 +94,15 @@
 #'   explicit screening-tier caveats
 #' - `predict_mfrm_population()` remains a scenario-level forecast helper and
 #'   should not be described as the latent-regression estimator itself
-#' - the current simulation/planning layer still remains role-based for two
-#'   non-person facets rather than fully arbitrary-facet, with boundaries
-#'   exposed through planner metadata such as `planning_scope`,
-#'   `planning_constraints`, and `planning_schema`
+#' - the role-based simulation/planning layer remains the PCM/GPCM route for
+#'   two non-person facets, while [build_mfrm_arbitrary_sim_spec()],
+#'   [extract_mfrm_arbitrary_sim_spec()], [simulate_mfrm_arbitrary_data()],
+#'   [summarize_mfrm_sim_design()], [plot_mfrm_sim_design()],
+#'   [summarize_mfrm_sim_grid()], [plot_mfrm_sim_grid()],
+#'   [list_mfrm_sim_metrics()], [plot_mfrm_sim_dashboard()], and
+#'   [evaluate_mfrm_bias_detection()] provide a first RSM-based
+#'   arbitrary-facet design, multi-metric dashboard, and bias-sensitivity
+#'   branch
 #' - latent-class mixture models and response-time / careless-rating
 #'   adjustment are not estimated by mfrmr; use residual, person-fit,
 #'   local-dependence, and rater-drift diagnostics as screening layers rather
@@ -123,14 +129,21 @@
 #' - Model fitting: [fit_mfrm()], [summary.mfrm_fit()], [plot.mfrm_fit()]
 #' - Legacy-compatible workflow wrapper: [run_mfrm_facets()], [mfrmRFacets()]
 #' - Diagnostics: [diagnose_mfrm()], `summary(diag)`,
-#'   [analyze_residual_pca()], [plot_residual_pca()]
+#'   [analyze_residual_pca()], [check_residual_dimensionality()],
+#'   [plot_residual_pca()], [plot_residual_dimensionality()]
 #' - Bias and interaction: [estimate_bias()], [estimate_all_bias()],
 #'   `summary(bias)`, [bias_interaction_report()], [plot_bias_interaction()]
 #' - Differential functioning: [analyze_dff()], [analyze_dif()],
 #'   [dif_interaction_table()], [plot_dif_heatmap()], [dif_report()]
 #' - Design simulation: [build_mfrm_sim_spec()], [extract_mfrm_sim_spec()],
 #'   [simulate_mfrm_data()], [evaluate_mfrm_design()],
-#'   [evaluate_mfrm_signal_detection()], [predict_mfrm_population()],
+#'   [evaluate_mfrm_signal_detection()], [build_mfrm_arbitrary_sim_spec()],
+#'   [extract_mfrm_arbitrary_sim_spec()], [simulate_mfrm_arbitrary_data()],
+#'   [summarize_mfrm_sim_design()], [plot_mfrm_sim_design()],
+#'   [summarize_mfrm_sim_grid()], [plot_mfrm_sim_grid()],
+#'   [list_mfrm_sim_metrics()], [plot_mfrm_sim_dashboard()],
+#'   [evaluate_mfrm_bias_detection()],
+#'   [predict_mfrm_population()],
 #'   [predict_mfrm_units()], [sample_mfrm_plausible_values()] (including
 #'   fit-derived empirical / resampled / skeleton-based simulation
 #'   specifications; fixed-calibration unit scoring supports `MML` fits
@@ -151,7 +164,10 @@
 #' - Linking and scale maintenance: [audit_mfrm_anchors()],
 #'   [detect_anchor_drift()], [build_equating_chain()],
 #'   [build_linking_review()], [plot_anchor_drift()]
-#' - Dashboards: [facet_quality_dashboard()], [plot_facet_quality_dashboard()]
+#' - Dashboards and fit-direction rates: [facet_quality_dashboard()],
+#'   [plot_facet_quality_dashboard()], [fit_direction_summary()],
+#'   [plot_fit_direction_summary()], [summarize_simulation_misfit()],
+#'   [plot_simulation_misfit_rates()]
 #' - Export / reproducibility: [build_mfrm_manifest()], [build_mfrm_replay_script()],
 #'   [build_conquest_overlap_bundle()], [normalize_conquest_overlap_files()],
 #'   [normalize_conquest_overlap_tables()],
@@ -230,6 +246,7 @@
 #'    [predict_mfrm_units()] or [sample_mfrm_plausible_values()].
 #' 8. For bounded `GPCM`, use [summary.mfrm_fit()],
 #'    [diagnose_mfrm()], [analyze_residual_pca()],
+#'    [check_residual_dimensionality()],
 #'    [predict_mfrm_units()], [sample_mfrm_plausible_values()],
 #'    [compute_information()], [plot_qc_dashboard()], [plot.mfrm_fit()],
 #'    [category_structure_report()], [category_curves_report()],

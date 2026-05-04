@@ -51,6 +51,7 @@ been established.
 - Fixed-width report generation: `build_fixed_reports()`
 - APA narrative/table helpers: `build_apa_outputs()`, `apa_table()`
 - Residual PCA checks (overall + by facet): `analyze_residual_pca()`, `plot_residual_pca()`
+- Residual-dimensionality parallel analysis: `check_residual_dimensionality()`, `plot_residual_dimensionality()`
 - QC dashboard (base graphics): `plot_qc_dashboard()`
 - Anchor workflow: `audit_mfrm_anchors()`, `make_anchor_table()`
 - Data packaging/loading helpers: `list_mfrmr_data()`, `load_mfrmr_data()`
@@ -101,8 +102,9 @@ been established.
   - observations per element: `>= 30`
   - observations per score category: `>= 10`
 
-## Pre-release Status (Current)
-- Core estimation and diagnostics: available in the current branch
-- New inter-rater and facet-chi-square APIs: implemented and tested
-- Remaining work for closer FACETS-format compatibility is mostly
-  report-format completeness, not model-estimation correctness
+## Release Status
+- Core estimation and diagnostics are available through the public package API.
+- Inter-rater, facet chi-square, residual PCA, and residual-dimensionality
+  helpers are implemented and covered by regression tests.
+- Remaining FACETS-format gaps are primarily report-format and option-surface
+  differences, not model-estimation blockers.

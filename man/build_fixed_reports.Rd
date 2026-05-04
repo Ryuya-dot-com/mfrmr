@@ -17,7 +17,7 @@ build_fixed_reports(
 
 \item{branch}{Output branch:
 \code{"facets"} keeps the legacy-compatible fixed-width layout;
-\code{"original"} returns compact sectioned fixed-width text for internal reporting.}
+\code{"original"} returns compact sectioned fixed-width text for local audit reports.}
 }
 \value{
 A named list with class \code{mfrm_fixed_reports} (and a branch-specific

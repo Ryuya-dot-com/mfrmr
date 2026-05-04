@@ -1149,6 +1149,11 @@ design_eval_match_metric <- function(metric) {
     infit = "MeanInfit",
     outfit = "MeanOutfit",
     misfitrate = "MeanMisfitRate",
+    mnsqmisfitrate = "MeanMnSqMisfitRate",
+    underfitrate = "MeanUnderfitRate",
+    overfitrate = "MeanOverfitRate",
+    mixedmisfitrate = "MeanMixedMisfitRate",
+    inbandrate = "MeanInBandRate",
     severityrmse = "MeanSeverityRMSE",
     severitybias = "MeanSeverityBias",
     convergencerate = "ConvergenceRate",
@@ -1173,6 +1178,12 @@ design_eval_build_notes <- function(summary_tbl) {
   if (any(grepl("^Mcse", names(summary_tbl)))) {
     notes <- c(notes, "MCSE columns summarize finite-replication uncertainty around the reported means and rates.")
   }
+  if (all(c("MeanUnderfitRate", "MeanOverfitRate") %in% names(summary_tbl))) {
+    notes <- c(
+      notes,
+      "Directional misfit rates split MnSq-band flags into underfit (above the upper band), overfit (below the lower band), and mixed patterns; `MeanMisfitRate` remains the legacy |ZSTD| > 2 screening rate."
+    )
+  }
   if ("RecoveryComparableRate" %in% names(summary_tbl) &&
       any(summary_tbl$RecoveryComparableRate < 1, na.rm = TRUE)) {
     notes <- c(
@@ -1186,6 +1197,10 @@ design_eval_build_notes <- function(summary_tbl) {
 design_eval_summarize_results <- function(results, rep_overview, design_variable_aliases = NULL) {
   results_tbl <- tibble::as_tibble(results)
   rep_tbl <- tibble::as_tibble(rep_overview)
+  for (nm in c("MnSqMisfitRate", "UnderfitRate", "OverfitRate",
+               "MixedMisfitRate", "InBandRate", "MisfitClassified")) {
+    if (!nm %in% names(results_tbl)) results_tbl[[nm]] <- NA_real_
+  }
   design_descriptor <- simulation_object_design_descriptor(list(results = results_tbl, rep_overview = rep_tbl, design_variable_aliases = design_variable_aliases))
   design_vars <- simulation_design_canonical_variables(design_descriptor)
   grouping_vars <- c("design_id", "Facet", design_vars)
@@ -1210,6 +1225,17 @@ design_eval_summarize_results <- function(results, rep_overview, design_variable
         McseOutfit = simulation_mcse_mean(.data$MeanOutfit),
         MeanMisfitRate = mean(.data$MisfitRate, na.rm = TRUE),
         McseMisfitRate = simulation_mcse_mean(.data$MisfitRate),
+        MeanMnSqMisfitRate = mean(.data$MnSqMisfitRate, na.rm = TRUE),
+        McseMnSqMisfitRate = simulation_mcse_mean(.data$MnSqMisfitRate),
+        MeanUnderfitRate = mean(.data$UnderfitRate, na.rm = TRUE),
+        McseUnderfitRate = simulation_mcse_mean(.data$UnderfitRate),
+        MeanOverfitRate = mean(.data$OverfitRate, na.rm = TRUE),
+        McseOverfitRate = simulation_mcse_mean(.data$OverfitRate),
+        MeanMixedMisfitRate = mean(.data$MixedMisfitRate, na.rm = TRUE),
+        McseMixedMisfitRate = simulation_mcse_mean(.data$MixedMisfitRate),
+        MeanInBandRate = mean(.data$InBandRate, na.rm = TRUE),
+        McseInBandRate = simulation_mcse_mean(.data$InBandRate),
+        MeanMisfitClassified = mean(.data$MisfitClassified, na.rm = TRUE),
         MeanSeverityRMSE = mean(.data$SeverityRMSE, na.rm = TRUE),
         McseSeverityRMSE = simulation_mcse_mean(.data$SeverityRMSE),
         MeanSeverityBias = mean(.data$SeverityBias, na.rm = TRUE),
@@ -1541,6 +1567,7 @@ evaluate_mfrm_design <- function(n_person = c(30, 50, 100),
     fitted_model = model,
     fitted_step_facet = fit_step_facet
   )
+  misfit_band <- mfrm_misfit_thresholds()
 
   seeds <- with_preserved_rng_seed(
     seed,
@@ -1720,6 +1747,12 @@ evaluate_mfrm_design <- function(n_person = c(30, 50, 100),
           z_out <- suppressWarnings(as.numeric(facet_fit$OutfitZSTD))
           misfit_rate <- mean(abs(z_in) > 2 | abs(z_out) > 2, na.rm = TRUE)
         }
+        direction_rates <- mfrm_misfit_direction_rate_row(
+          infit = if ("Infit" %in% names(facet_fit)) facet_fit$Infit else numeric(0),
+          outfit = if ("Outfit" %in% names(facet_fit)) facet_fit$Outfit else numeric(0),
+          lower = as.numeric(misfit_band["lower"]),
+          upper = as.numeric(misfit_band["upper"])
+        )
 
         result_idx <- result_idx + 1L
         result_rows[[result_idx]] <- tibble::tibble(
@@ -1747,6 +1780,19 @@ evaluate_mfrm_design <- function(n_person = c(30, 50, 100),
           MeanInfit = suppressWarnings(as.numeric(rel_row$MeanInfit[1])),
           MeanOutfit = suppressWarnings(as.numeric(rel_row$MeanOutfit[1])),
           MisfitRate = misfit_rate,
+          MnSqMisfitRate = direction_rates$MnSqMisfitRate[1],
+          UnderfitRate = direction_rates$UnderfitRate[1],
+          OverfitRate = direction_rates$OverfitRate[1],
+          MixedMisfitRate = direction_rates$MixedMisfitRate[1],
+          InBandRate = direction_rates$InBandRate[1],
+          MisfitClassified = direction_rates$MisfitClassified[1],
+          MnSqMisfitN = direction_rates$MnSqMisfitN[1],
+          UnderfitN = direction_rates$UnderfitN[1],
+          OverfitN = direction_rates$OverfitN[1],
+          MixedMisfitN = direction_rates$MixedMisfitN[1],
+          InBandN = direction_rates$InBandN[1],
+          MisfitBandLower = as.numeric(misfit_band["lower"]),
+          MisfitBandUpper = as.numeric(misfit_band["upper"]),
           SeverityRMSE = severity_rmse,
           SeverityBias = severity_bias,
           SeverityRMSERaw = severity_rmse_raw,
@@ -1843,7 +1889,7 @@ evaluate_mfrm_design <- function(n_person = c(30, 50, 100),
 #' - convergence rate
 #' - separation and reliability by facet
 #' - severity recovery RMSE
-#' - mean misfit rate
+#' - mean ZSTD misfit rate and directional MnSq underfit/overfit rates
 #'
 #' @return An object of class `summary.mfrm_design_evaluation` with components:
 #' - `overview`: run-level overview
@@ -1998,6 +2044,8 @@ print.summary.mfrm_design_evaluation <- function(x, ...) {
 #' - criterion `metric = "severityrmse"` against `x_var = "n_person"`
 #'   when you want aligned recovery error rather than raw location shifts
 #' - rater `metric = "convergencerate"` against `x_var = "raters_per_person"`
+#' - rater `metric = "underfitrate"` or `metric = "overfitrate"` when
+#'   directional MnSq-band misfit is the planning target
 #'
 #' @return If `draw = TRUE`, invisibly returns a plotting-data list. If
 #'   `draw = FALSE`, returns that list directly. The returned list includes
@@ -2024,7 +2072,9 @@ print.summary.mfrm_design_evaluation <- function(x, ...) {
 plot.mfrm_design_evaluation <- function(x,
                                         facet = c("Rater", "Criterion", "Person"),
                                         metric = c("separation", "reliability", "infit", "outfit",
-                                                   "misfitrate", "severityrmse", "severitybias",
+                                                   "misfitrate", "mnsqmisfitrate", "underfitrate",
+                                                   "overfitrate", "mixedmisfitrate", "inbandrate",
+                                                   "severityrmse", "severitybias",
                                                    "convergencerate", "elapsedsec", "mincategorycount"),
                                         x_var = c("n_person", "n_rater", "n_criterion", "raters_per_person"),
                                         group_var = NULL,

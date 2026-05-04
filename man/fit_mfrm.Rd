@@ -514,8 +514,8 @@ Latent-regression status:
 behavior.
 \item Supplying \code{population_formula} activates a first-version latent-regression
 branch for \code{method = "MML"} only.
-\item The current branch assumes a one-dimensional conditional-normal population
-model with person-specific quadrature nodes
+\item The current implementation assumes a one-dimensional conditional-normal
+population model with person-specific quadrature nodes
 \eqn{\theta_{nq} = x_n^\top \beta + \sigma z_q}.
 \item Background variables must be supplied in \code{person_data}; numeric/logical
 columns and categorical factor/character columns are expanded through

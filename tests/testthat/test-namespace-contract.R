@@ -33,6 +33,7 @@ test_that("NAMESPACE roxygen contract keeps expected exports and methods", {
     "build_visual_summaries",
     "category_curves_report",
     "category_structure_report",
+    "check_residual_dimensionality",
     "compare_mfrm",
     "compatibility_alias_table",
     "compute_information",
@@ -87,6 +88,7 @@ test_that("NAMESPACE roxygen contract keeps expected exports and methods", {
     "plot_qc_dashboard",
     "plot_qc_pipeline",
     "plot_residual_pca",
+    "plot_residual_dimensionality",
     "plot_unexpected",
     "plot_wright_unified",
     "predict_mfrm_population",
@@ -206,6 +208,13 @@ test_that("NAMESPACE roxygen contract keeps expected exports and methods", {
     "S3method(summary,mfrm_summary_table_bundle)",
     "S3method(summary,mfrm_threshold_profiles)",
     "S3method(as.data.frame,mfrm_fit)",
+    "S3method(as.data.frame,mfrm_residual_dimensionality)",
+    "S3method(as.data.frame,mfrm_design_evaluation)",
+    "S3method(as.data.frame,summary.mfrm_design_evaluation)",
+    "S3method(as.data.frame,mfrm_signal_detection)",
+    "S3method(as.data.frame,summary.mfrm_signal_detection)",
+    "S3method(as.data.frame,mfrm_bias_detection)",
+    "S3method(as.data.frame,summary.mfrm_bias_detection)",
     "S3method(print,mfrm_comparison)",
     "S3method(print,summary.mfrm_comparison)",
     "S3method(summary,mfrm_comparison)",
@@ -251,6 +260,7 @@ test_that("NAMESPACE roxygen contract keeps expected exports and methods", {
     "S3method(summary,mfrm_facet_dashboard)",
     "S3method(summary,mfrm_qc_pipeline)",
     "S3method(summary,mfrm_reporting_checklist)",
+    "S3method(summary,mfrm_residual_dimensionality)",
     "S3method(summary,mfrm_signal_detection)",
     "S3method(summary,mfrm_population_prediction)",
     "S3method(summary,mfrm_unit_prediction)",
@@ -268,6 +278,7 @@ test_that("NAMESPACE roxygen contract keeps expected exports and methods", {
     "S3method(print,mfrm_plausible_values)",
     "S3method(print,mfrm_population_prediction)",
     "S3method(print,mfrm_reporting_checklist)",
+    "S3method(print,mfrm_residual_dimensionality)",
     "S3method(print,mfrm_signal_detection)",
     "S3method(print,mfrm_threshold_profiles)",
     "S3method(print,mfrm_unit_prediction)",
@@ -299,7 +310,16 @@ test_that("NAMESPACE roxygen contract keeps expected exports and methods", {
     "S3method(print,mfrm_imported_fit)",
     # 0.2.0: print method for the `draw = FALSE` plot payload class
     # (added in commit f8409d4 so users don't see a raw list dump).
-    "S3method(print,mfrm_plot_data)"
+    "S3method(print,mfrm_plot_data)",
+    # 0.2.0: arbitrary-facet RSM simulation and bias-screening UX methods.
+    "S3method(print,mfrm_arbitrary_sim_spec)",
+    "S3method(print,mfrm_sim_design_summary)",
+    "S3method(print,mfrm_sim_grid_summary)",
+    "S3method(print,mfrm_bias_detection)",
+    "S3method(print,summary.mfrm_bias_detection)",
+    "S3method(summary,mfrm_bias_detection)",
+    "S3method(plot,mfrm_bias_detection)",
+    "S3method(print,summary.mfrm_residual_dimensionality)"
   )
   expect_setequal(s3, expected_s3)
 })

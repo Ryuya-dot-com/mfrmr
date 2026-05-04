@@ -15,7 +15,8 @@
 #' workflows. `GPCM` fits also use the residual-based diagnostics stack
 #' through [diagnose_mfrm()], [plot_unexpected()], [plot_displacement()],
 #' [plot_interrater_agreement()], [plot_facets_chisq()],
-#' [plot_residual_pca()], [plot_qc_dashboard()],
+#' [plot_residual_pca()], [check_residual_dimensionality()],
+#' [plot_residual_dimensionality()], [plot_qc_dashboard()],
 #' [build_visual_summaries()], and [run_qc_pipeline()], plus the
 #' posterior-scoring, design-weighted-information path via
 #' [compute_information()] / [plot_information()], and the Wright /
@@ -53,7 +54,9 @@
 #' - "Do raters agree and do facets separate meaningfully?"
 #'   Use [plot_interrater_agreement()] and [plot_facets_chisq()].
 #' - "Is there notable residual structure after the main Rasch dimension?"
-#'   Use [plot_residual_pca()].
+#'   Use [plot_residual_pca()] for scree/loadings; use
+#'   [check_residual_dimensionality()] and [plot_residual_dimensionality()]
+#'   when you need a Horn/Glorfeld-style parallel-analysis threshold.
 #' - "Which interaction cells or facet levels drive bias screening results?"
 #'   Use [plot_bias_interaction()].
 #' - "Which group-by-facet contrasts drive DFF / DIF screening results?"
@@ -111,8 +114,8 @@
 #'    [plot_marginal_fit()], [plot_marginal_pairwise()], and
 #'    [plot_interrater_agreement()] for flagged local issues.
 #' 4. Use `plot(fit, type = "wright")`, `plot(fit, type = "pathway")`,
-#'    `plot(fit, type = "ccc")`, and `plot_residual_pca()` for structural
-#'    interpretation.
+#'    `plot(fit, type = "ccc")`, [plot_residual_pca()], and
+#'    [plot_residual_dimensionality()] for structural interpretation.
 #' 5. Use [plot_bias_interaction()], [plot_dif_heatmap()],
 #'    [plot_dif_summary()], [plot_anchor_drift()], and
 #'    [plot_information()] when the checklist or dashboard points to
@@ -134,7 +137,8 @@
 #'   [reporting_checklist()].
 #' - Structural interpretation:
 #'   `plot(fit, type = "wright")`, `plot(fit, type = "pathway")`,
-#'   `plot(fit, type = "ccc")`, and [plot_residual_pca()].
+#'   `plot(fit, type = "ccc")`, [plot_residual_pca()], and
+#'   [plot_residual_dimensionality()].
 #' - Local issue follow-up:
 #'   [plot_unexpected()], [plot_displacement()],
 #'   [plot_interrater_agreement()], [plot_bias_interaction()],
@@ -191,6 +195,10 @@
 #'   fit overlay for a selected facet level. Best after [fit_p_table()],
 #'   [plot_bubble()], or `summary(diagnose_mfrm(...))` identifies the level
 #'   worth inspecting.}
+#'   \item{`plot_fit_direction_summary()`}{Compact underfit / overfit /
+#'   mixed / in-band rate chart built from [fit_direction_summary()]. Best
+#'   when the report needs to say whether fit problems are mostly high MnSq
+#'   underfit, low MnSq overfit, or mixed.}
 #'   \item{`plot_interrater_agreement()`}{Exact agreement, expected agreement,
 #'   pairwise correlation, and agreement gaps. Best for rater consistency.}
 #'   \item{`plot_facets_chisq()`}{Facet variability and chi-square summaries.
@@ -259,7 +267,9 @@
 #'   |ZSTD| / MnSq misfit blocks of `summary(diag)` correspond to
 #'   Winsteps Table 10/13/14 (Misfit order) and FACETS Tables 7/8.
 #'   [fit_p_table()] gives a TAM-style Infit/Outfit p-value table, and
-#'   [plot_empirical_fit()] gives a mirt-style empirical follow-up plot.}
+#'   [plot_empirical_fit()] gives a mirt-style empirical follow-up plot.
+#'   [fit_direction_summary()] and [plot_fit_direction_summary()] summarize
+#'   the same MnSq direction labels as rates.}
 #'   \item{Bias / interaction}{[estimate_bias()] +
 #'   [plot_bias_interaction()] correspond to FACETS Table 14
 #'   ("Bias / Interaction calibration report").}
@@ -293,8 +303,14 @@
 #'   follow-up layers for `diagnostic_mode = "both"`, not standalone
 #'   inferential tests.
 #' - Fit p-value tables from [fit_p_table()] use the mfrmr residual
-#'   mean-square and ZSTD normal-tail approximation. They use TAM-style column
-#'   names, but they are not `TAM::tam.fit()` simulation/posterior fit values.
+#'   mean-square and ZSTD normal-tail approximation by default. Use
+#'   `reference = "facets"` when a FACETS-migration table should use the
+#'   Wright-Masters/FACETS moment df and \eqn{\pm 9} ZSTD cap. The output uses
+#'   TAM-style column names, but it is not `TAM::tam.fit()`
+#'   simulation/posterior fit.
+#' - Underfit / overfit direction summaries from [fit_direction_summary()] are
+#'   MnSq-band summaries. ZSTD and p-value flags are reported separately so
+#'   changing the df/ZSTD reference does not silently redefine the direction.
 #' - [plot_empirical_fit()] is a descriptive observed-vs-expected bin overlay.
 #'   It is not `mirt::itemfit(..., fit_stats = "S_X2")`, does not condition on
 #'   the same sum-score tables, and does not report `S_X2`, `RMSEA.S_X2`, or
@@ -319,7 +335,12 @@
 #'   [plot_marginal_fit()] ->
 #'   [plot_marginal_pairwise()].
 #' - Fit follow-up:
-#'   [fit_p_table()] -> [plot_empirical_fit()] -> [build_misfit_casebook()].
+#'   [fit_p_table()] -> [fit_direction_summary()] ->
+#'   [plot_fit_direction_summary()] / [plot_empirical_fit()] ->
+#'   [build_misfit_casebook()].
+#' - Simulation fit-screening:
+#'   [evaluate_mfrm_design()] -> [summarize_simulation_misfit()] ->
+#'   [plot_simulation_misfit_rates()].
 #' - Scale and targeting review:
 #'   `plot(fit, type = "wright")` -> `plot(fit, type = "pathway")` ->
 #'   `plot(fit, type = "ccc")`.
@@ -383,6 +404,12 @@
 #' pca <- analyze_residual_pca(diag, mode = "overall")
 #' scree <- plot_residual_pca(pca, plot_type = "scree", draw = FALSE, preset = "publication")
 #' scree$data$preset
+#'
+#' dim_check <- check_residual_dimensionality(
+#'   pca, mode = "overall", method = "residual_normal", reps = 5, seed = 1
+#' )
+#' dim_plot <- plot_residual_dimensionality(dim_check, draw = FALSE, preset = "publication")
+#' dim_plot$data$preset
 #' }
 #'
 #' @name mfrmr_visual_diagnostics

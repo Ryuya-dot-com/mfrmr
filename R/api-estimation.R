@@ -375,8 +375,8 @@
 #'   behavior.
 #' - Supplying `population_formula` activates a first-version latent-regression
 #'   branch for `method = "MML"` only.
-#' - The current branch assumes a one-dimensional conditional-normal population
-#'   model with person-specific quadrature nodes
+#' - The current implementation assumes a one-dimensional conditional-normal
+#'   population model with person-specific quadrature nodes
 #'   \eqn{\theta_{nq} = x_n^\top \beta + \sigma z_q}.
 #' - Background variables must be supplied in `person_data`; numeric/logical
 #'   columns and categorical factor/character columns are expanded through

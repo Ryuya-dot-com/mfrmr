@@ -18,6 +18,190 @@ mfrm_adjust_p <- function(p, method) {
   out
 }
 
+mfrm_match_fit_reference <- function(reference) {
+  reference <- tolower(as.character(reference[1] %||% "mfrmr"))
+  aliases <- c(
+    mfrmr = "mfrmr",
+    package = "mfrmr",
+    native = "mfrmr",
+    facets = "facets",
+    facets_df = "facets",
+    facets_style = "facets",
+    facets_like = "facets"
+  )
+  out <- unname(aliases[[reference]])
+  if (is.null(out) || is.na(out)) {
+    stop("`reference` must be one of 'mfrmr' or 'facets'.", call. = FALSE)
+  }
+  out
+}
+
+mfrm_match_zstd_cap <- function(zstd_cap) {
+  zstd_cap <- tolower(as.character(zstd_cap[1] %||% "auto"))
+  aliases <- c(
+    auto = "auto",
+    none = "none",
+    no = "none",
+    false = "none",
+    facets = "facets",
+    facets_cap = "facets"
+  )
+  out <- unname(aliases[[zstd_cap]])
+  if (is.null(out) || is.na(out)) {
+    stop("`zstd_cap` must be one of 'auto', 'none', or 'facets'.", call. = FALSE)
+  }
+  out
+}
+
+mfrm_zstd_cap_limit <- function(zstd_cap, reference) {
+  zstd_cap <- mfrm_match_zstd_cap(zstd_cap)
+  if (identical(zstd_cap, "auto")) {
+    zstd_cap <- if (identical(reference, "facets")) "facets" else "none"
+  }
+  if (identical(zstd_cap, "facets")) 9 else Inf
+}
+
+mfrm_apply_zstd_cap <- function(z, cap = Inf) {
+  z <- suppressWarnings(as.numeric(z))
+  cap <- suppressWarnings(as.numeric(cap[1]))
+  if (!is.finite(cap) || cap <= 0) return(z)
+  pmin(pmax(z, -cap), cap)
+}
+
+mfrm_probability_fourth_moment <- function(probs) {
+  if (is.null(probs) || !is.matrix(probs) || nrow(probs) == 0L) {
+    return(numeric(0))
+  }
+  k_vals <- 0:(ncol(probs) - 1L)
+  expected <- as.vector(probs %*% k_vals)
+  diff <- sweep(
+    matrix(k_vals, nrow = nrow(probs), ncol = ncol(probs), byrow = TRUE),
+    1L,
+    expected,
+    "-"
+  )
+  as.numeric(rowSums(probs * diff^4))
+}
+
+mfrm_facets_df_one_group <- function(obs_df, cap = 9) {
+  if (is.null(obs_df) || nrow(obs_df) == 0L) {
+    return(data.frame(
+      N = numeric(0), Infit = numeric(0), Outfit = numeric(0),
+      DF_Infit = numeric(0), DF_Outfit = numeric(0),
+      InfitZSTD = numeric(0), OutfitZSTD = numeric(0)
+    ))
+  }
+  w <- get_weights(obs_df)
+  var <- suppressWarnings(as.numeric(obs_df$Var))
+  stdsq <- suppressWarnings(as.numeric(obs_df$StdSq))
+  fourth <- suppressWarnings(as.numeric(obs_df$.FourthMoment))
+
+  ok_mnsq <- is.finite(w) & w > 0 & is.finite(var) & var > 0 & is.finite(stdsq)
+  n_w <- sum(w[ok_mnsq], na.rm = TRUE)
+  info <- sum(var[ok_mnsq] * w[ok_mnsq], na.rm = TRUE)
+  infit <- if (is.finite(info) && info > 0) {
+    sum(stdsq[ok_mnsq] * var[ok_mnsq] * w[ok_mnsq], na.rm = TRUE) / info
+  } else {
+    NA_real_
+  }
+  outfit <- if (is.finite(n_w) && n_w > 0) {
+    sum(stdsq[ok_mnsq] * w[ok_mnsq], na.rm = TRUE) / n_w
+  } else {
+    NA_real_
+  }
+
+  ok_df <- ok_mnsq & is.finite(fourth)
+  df_out_denom <- sum(w[ok_df] * (fourth[ok_df] / (var[ok_df]^2) - 1), na.rm = TRUE)
+  df_in_denom <- sum(w[ok_df] * (fourth[ok_df] - var[ok_df]^2), na.rm = TRUE)
+  df_outfit <- if (is.finite(df_out_denom) && df_out_denom > 0 && n_w > 0) {
+    2 * n_w^2 / df_out_denom
+  } else {
+    NA_real_
+  }
+  df_infit <- if (is.finite(df_in_denom) && df_in_denom > 0 && info > 0) {
+    2 * info^2 / df_in_denom
+  } else {
+    NA_real_
+  }
+
+  data.frame(
+    N = n_w,
+    Infit = infit,
+    Outfit = outfit,
+    DF_Infit = df_infit,
+    DF_Outfit = df_outfit,
+    InfitZSTD = mfrm_apply_zstd_cap(zstd_from_mnsq(infit, df_infit), cap),
+    OutfitZSTD = mfrm_apply_zstd_cap(zstd_from_mnsq(outfit, df_outfit), cap),
+    stringsAsFactors = FALSE
+  )
+}
+
+mfrm_facets_df_fit_source <- function(fit, diagnostics, scope, cap = 9) {
+  if (identical(scope, "category")) {
+    stop(
+      "`reference = 'facets'` is available for element and person scopes, ",
+      "not for score-category rows.",
+      call. = FALSE
+    )
+  }
+  model <- as.character(fit$config$model %||% fit$summary$Model[1] %||% NA_character_)
+  if (!model %in% c("RSM", "PCM")) {
+    warning(
+      "`reference = 'facets'` is validated for RSM/PCM. For GPCM it is an ",
+      "exploratory score-moment generalization, not a FACETS-equivalent statistic.",
+      call. = FALSE
+    )
+  }
+
+  obs <- as.data.frame(diagnostics$obs %||% data.frame(), stringsAsFactors = FALSE)
+  if (nrow(obs) == 0L) {
+    obs <- as.data.frame(compute_obs_table(fit), stringsAsFactors = FALSE)
+  }
+  probs <- compute_prob_matrix(fit)
+  if (is.null(probs) || !is.matrix(probs) || nrow(probs) != nrow(obs)) {
+    stop(
+      "FACETS-style df requires observation-aligned category probabilities. ",
+      "Recompute diagnostics from the original `fit` object.",
+      call. = FALSE
+    )
+  }
+  obs$.FourthMoment <- mfrm_probability_fourth_moment(probs)
+
+  if (identical(scope, "person")) {
+    facet_cols <- "Person"
+  } else {
+    facet_cols <- as.character(fit$config$facet_names %||% character(0))
+    facet_cols <- setdiff(facet_cols, "Person")
+  }
+  facet_cols <- facet_cols[facet_cols %in% names(obs)]
+  if (length(facet_cols) == 0L) return(data.frame())
+
+  rows <- list()
+  row_i <- 0L
+  for (facet in facet_cols) {
+    lev <- unique(as.character(obs[[facet]]))
+    lev <- lev[!is.na(lev)]
+    for (level in lev) {
+      sub <- obs[as.character(obs[[facet]]) == level, , drop = FALSE]
+      agg <- mfrm_facets_df_one_group(sub, cap = cap)
+      if (nrow(agg) == 0L) next
+      row_i <- row_i + 1L
+      rows[[row_i]] <- cbind(
+        data.frame(
+          Scope = scope,
+          Facet = facet,
+          Level = level,
+          parameter = if (identical(scope, "person")) level else paste(facet, level, sep = ":"),
+          stringsAsFactors = FALSE
+        ),
+        agg
+      )
+    }
+  }
+  if (length(rows) == 0L) return(data.frame())
+  do.call(rbind, rows)
+}
+
 mfrm_fit_p_source <- function(fit, diagnostics, scope) {
   if (identical(scope, "element")) {
     tbl <- as.data.frame(diagnostics$fit %||% data.frame(), stringsAsFactors = FALSE)
@@ -77,6 +261,14 @@ mfrm_fit_p_source <- function(fit, diagnostics, scope) {
 #' @param alpha Significance level used for logical p-value flags.
 #' @param lower,upper Optional MnSq screening band. `NULL` uses the active
 #'   [mfrm_misfit_thresholds()] options.
+#' @param reference Fit-standardization reference. `"mfrmr"` (default) keeps
+#'   the package-native degrees of freedom (`DF_Outfit = sum(w)`,
+#'   `DF_Infit = sum(w * Var)`). `"facets"` keeps the same MnSq aggregation
+#'   but recomputes the Wilson-Hilferty degrees of freedom with the
+#'   Wright-Masters/FACETS moment convention.
+#' @param zstd_cap ZSTD cap policy. `"auto"` uses no cap for
+#'   `reference = "mfrmr"` and the FACETS \eqn{\pm 9} cap for
+#'   `reference = "facets"`. Use `"none"` or `"facets"` to override.
 #'
 #' @details
 #' `fit_p_table()` is intentionally a reporting and screening table, not a new
@@ -100,6 +292,19 @@ mfrm_fit_p_source <- function(fit, diagnostics, scope) {
 #' infit. The displayed p-values are two-sided normal-tail approximations,
 #' \deqn{p = 2\Phi(-|Z|),}
 #' followed by [stats::p.adjust()] for `*_p_adj`.
+#'
+#' With `reference = "facets"`, mfrmr recomputes only the df and ZSTD layer.
+#' Let \eqn{C_i = E[(Y_i - E_i)^4]} be the model fourth central moment. The
+#' FACETS-style df values are
+#' \deqn{df_{\mathrm{Outfit}} =
+#'   \frac{2(\sum_i w_i)^2}
+#'        {\sum_i w_i(C_i / v_i^2 - 1)}}
+#' and
+#' \deqn{df_{\mathrm{Infit}} =
+#'   \frac{2(\sum_i w_i v_i)^2}
+#'        {\sum_i w_i(C_i - v_i^2)}.}
+#' This branch is intended for FACETS migration and parity checks in RSM/PCM.
+#' It does not change the fitted estimates or the MnSq values.
 #'
 #' The column names intentionally resemble `TAM::tam.fit()` output, but the
 #' values are not guaranteed to equal TAM values. TAM's MML fit route is
@@ -125,6 +330,7 @@ mfrm_fit_p_source <- function(fit, diagnostics, scope) {
 #' @return A data frame with TAM-style fit columns plus mfrmr screening columns:
 #' `Scope`, `parameter`, `Facet`, `Level`, `N`, `Outfit`, `Outfit_t`,
 #' `Outfit_p`, `Outfit_p_adj`, `Infit`, `Infit_t`, `Infit_p`, `Infit_p_adj`,
+#' `DF_Outfit`, `DF_Infit`, `DFMethod`, `FitReference`, `ZSTDCap`,
 #' `MisfitDirection`, `MnSqFlag`, `PFlag`, and `PAdjustMethod`. When
 #' `p_adjust = "holm"`, compatibility aliases `Outfit_pholm` and
 #' `Infit_pholm` are also included.
@@ -138,6 +344,8 @@ mfrm_fit_p_source <- function(fit, diagnostics, scope) {
 #' tab <- fit_p_table(fit, diagnostics = diag)
 #' head(tab[, c("parameter", "Outfit", "Outfit_p", "Outfit_p_adj",
 #'              "Infit", "Infit_p", "Infit_p_adj", "MisfitDirection")])
+#' facets_tab <- fit_p_table(fit, diagnostics = diag, reference = "facets")
+#' head(facets_tab[, c("parameter", "DFMethod", "Outfit_t", "Outfit_p")])
 #' fit_p_table(fit, diagnostics = diag, scope = "person")[1:3, ]
 #'
 #' \dontrun{
@@ -169,11 +377,16 @@ fit_p_table <- function(fit,
                         p_adjust = "holm",
                         alpha = 0.05,
                         lower = NULL,
-                        upper = NULL) {
+                        upper = NULL,
+                        reference = c("mfrmr", "facets"),
+                        zstd_cap = c("auto", "none", "facets")) {
   if (!inherits(fit, "mfrm_fit")) {
     stop("`fit` must be an mfrm_fit object from fit_mfrm().", call. = FALSE)
   }
   scope <- match.arg(scope)
+  reference <- mfrm_match_fit_reference(reference)
+  zstd_cap <- mfrm_match_zstd_cap(zstd_cap)
+  zstd_cap_limit <- mfrm_zstd_cap_limit(zstd_cap, reference)
   p_adjust <- .validate_p_adjust_method(p_adjust)
   alpha <- suppressWarnings(as.numeric(alpha[1]))
   if (!is.finite(alpha) || alpha <= 0 || alpha >= 1) {
@@ -187,7 +400,11 @@ fit_p_table <- function(fit,
   lower <- as.numeric(band["lower"])
   upper <- as.numeric(band["upper"])
 
-  tbl <- mfrm_fit_p_source(fit, diagnostics, scope)
+  tbl <- if (identical(reference, "facets")) {
+    mfrm_facets_df_fit_source(fit, diagnostics, scope, cap = zstd_cap_limit)
+  } else {
+    mfrm_fit_p_source(fit, diagnostics, scope)
+  }
   if (nrow(tbl) == 0L) {
     return(data.frame())
   }
@@ -214,6 +431,8 @@ fit_p_table <- function(fit,
       tbl$DF_Outfit[missing_outfit_z]
     )
   }
+  tbl$InfitZSTD <- mfrm_apply_zstd_cap(tbl$InfitZSTD, zstd_cap_limit)
+  tbl$OutfitZSTD <- mfrm_apply_zstd_cap(tbl$OutfitZSTD, zstd_cap_limit)
 
   infit_p <- mfrm_two_sided_z_p(tbl$InfitZSTD)
   outfit_p <- mfrm_two_sided_z_p(tbl$OutfitZSTD)
@@ -235,6 +454,11 @@ fit_p_table <- function(fit,
     Facet = as.character(tbl$Facet),
     Level = as.character(tbl$Level),
     N = tbl$N,
+    DF_Outfit = tbl$DF_Outfit,
+    DF_Infit = tbl$DF_Infit,
+    DFMethod = if (identical(reference, "facets")) "facets_moment" else "mfrmr_information",
+    FitReference = reference,
+    ZSTDCap = if (is.finite(zstd_cap_limit)) zstd_cap_limit else NA_real_,
     Outfit = tbl$Outfit,
     Outfit_t = tbl$OutfitZSTD,
     Outfit_p = outfit_p,

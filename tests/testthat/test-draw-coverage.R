@@ -229,6 +229,21 @@ test_that("plot_residual_pca draws loadings", {
   )
 })
 
+test_that("plot_residual_dimensionality draws parallel-analysis display", {
+  pca <- analyze_residual_pca(.diag, mode = "overall")
+  dim_check <- check_residual_dimensionality(
+    pca,
+    mode = "overall",
+    method = "residual_normal",
+    reps = 3,
+    pca_max_factors = 2,
+    seed = 21
+  )
+  with_null_device(
+    plot_residual_dimensionality(dim_check, draw = TRUE)
+  )
+})
+
 # ---- describe_mfrm_data drawing ----
 
 test_that("describe_mfrm_data plot types draw", {

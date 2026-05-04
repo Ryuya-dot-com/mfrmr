@@ -85,6 +85,8 @@ Then inspect \code{by_facet_table}:
 
 Finally, inspect loadings via \code{\link[=plot_residual_pca]{plot_residual_pca()}} to identify which
 variables/elements drive each component.
+For a simulation-calibrated null threshold, use
+\code{\link[=check_residual_dimensionality]{check_residual_dimensionality()}} and \code{\link[=plot_residual_dimensionality]{plot_residual_dimensionality()}}.
 }
 
 \section{References}{
@@ -95,10 +97,17 @@ The current \code{mfrmr} implementation should be interpreted as an exploratory
 extension for many-facet workflows rather than as a direct reproduction of a
 single FACETS/Winsteps output table.
 \itemize{
+\item Horn, J. L. (1965). \emph{A rationale and test for the number of factors in
+factor analysis.} Psychometrika, 30, 179-185.
+\item Glorfeld, L. W. (1995). \emph{An improvement on Horn's parallel analysis
+methodology.} Educational and Psychological Measurement, 55, 377-393.
 \item Linacre, J. M. (1998). \emph{Structure in Rasch residuals: Why principal
 components analysis (PCA)?} Rasch Measurement Transactions, 12(2), 636.
 \item Linacre, J. M. (1998). \emph{Detecting multidimensionality: Which residual
 data-type works best?} Journal of Outcome Measurement, 2(3), 266-283.
+\item Chou, Y.-T., & Wang, W.-C. (2010). \emph{Checking dimensionality in item
+response models with principal component analysis on standardized
+residuals.} Educational and Psychological Measurement, 70, 717-731.
 }
 }
 
@@ -108,6 +117,8 @@ data-type works best?} Journal of Outcome Measurement, 2(3), 266-283.
 \item Fit model and run \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} with \code{residual_pca = "none"} or \code{"both"}.
 \item Call \code{analyze_residual_pca(..., mode = "both")}.
 \item Review \code{summary(pca)}, then plot scree/loadings.
+\item Optionally call \code{\link[=check_residual_dimensionality]{check_residual_dimensionality()}} for a parallel-analysis
+null threshold.
 \item Cross-check with fit/misfit diagnostics before conclusions.
 }
 }
@@ -127,5 +138,6 @@ head(pca$overall_table)
 }
 }
 \seealso{
-\code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=plot_residual_pca]{plot_residual_pca()}}, \link{mfrmr_visual_diagnostics}
+\code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=plot_residual_pca]{plot_residual_pca()}},
+\code{\link[=check_residual_dimensionality]{check_residual_dimensionality()}}, \link{mfrmr_visual_diagnostics}
 }

@@ -119,6 +119,19 @@ full description and revert paths.
 
 ## New features
 
+### Residual dimensionality checks
+
+`check_residual_dimensionality()` adds a parallel-analysis layer for
+residual PCA. It compares observed residual eigenvalues with null
+eigenvalues from independent residual matrices, column-wise residual
+permutations, or fitted-model parametric simulations. The companion
+`plot_residual_dimensionality()` returns the same `mfrm_plot_data`
+payload style as other visual helpers, and `as.data.frame()` exposes
+comparison, observed, and null-distribution tables for CSV export or
+custom plotting. The help page explicitly distinguishes this exploratory
+residual-structure diagnostic from FACETS ZSTD, TAM itemfit ZSTD, and
+mirt's S-X2 statistic.
+
 ### Continuous integration
 
 New GitHub Actions workflows added alongside the existing

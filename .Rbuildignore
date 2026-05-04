@@ -29,3 +29,11 @@
 ^man/.*DESKTOP-.*\.Rd$
 ^revdep$
 ^design-notes$
+^\.claude$
+^\.codex$
+^Reading$
+^Simulation$
+^inst/references/M[0-9]_.*[.]md$
+^inst/references/MFRMR_EXECUTION_PROTOCOL_.*[.]md$
+^inst/references/PUBLIC_RELEASE_READINESS_AUDIT_.*[.]md$
+^inst/references/MAINTENANCE_AND_ROADMAP_CHECKLIST_.*[.]md$

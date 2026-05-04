@@ -205,10 +205,15 @@
 #'   [build_mfrm_sim_spec()], [extract_mfrm_sim_spec()], and
 #'   [simulate_mfrm_data()], residual diagnostics, and direct curve/report
 #'   helpers, and the bounded planning/forecasting route with explicit caveats.
-#'   The current planning layer remains role-based for two non-person facets
-#'   even though estimation itself supports arbitrary facet counts; future
-#'   arbitrary-facet planning fields should be treated as design metadata rather
-#'   than finished public behavior.
+#'   The PCM/GPCM planning layer remains role-based for two non-person facets,
+#'   while the RSM branch now also exposes [build_mfrm_arbitrary_sim_spec()],
+#'   [extract_mfrm_arbitrary_sim_spec()], [simulate_mfrm_arbitrary_data()],
+#'   [summarize_mfrm_sim_design()], [plot_mfrm_sim_design()],
+#'   [summarize_mfrm_sim_grid()], [plot_mfrm_sim_grid()],
+#'   [list_mfrm_sim_metrics()], [plot_mfrm_sim_dashboard()], and
+#'   [evaluate_mfrm_bias_detection()] for arbitrary-facet design inspection,
+#'   design-grid tradeoff visualization, user-selected multi-metric dashboards,
+#'   and bias-screening sensitivity checks.
 #'
 #' @section Interpreting output:
 #' This help page is a map, not an estimator:

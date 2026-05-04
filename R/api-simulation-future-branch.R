@@ -1349,7 +1349,7 @@ simulation_future_branch_grid_plot_payload <- function(x,
       legend = legend,
       note = paste(
         "Draw-free plotting payload for the schema-only future branch. It",
-        "summarizes the current branch grid and the deterministic baseline",
+        "summarizes the active grid and the deterministic baseline",
         "pick without implying an active arbitrary-facet planner."
       )
     )

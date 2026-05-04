@@ -226,10 +226,13 @@ direct data generation via
 \code{\link[=build_mfrm_sim_spec]{build_mfrm_sim_spec()}}, \code{\link[=extract_mfrm_sim_spec]{extract_mfrm_sim_spec()}}, and
 \code{\link[=simulate_mfrm_data]{simulate_mfrm_data()}}, residual diagnostics, and direct curve/report
 helpers, and the bounded planning/forecasting route with explicit caveats.
-The current planning layer remains role-based for two non-person facets
-even though estimation itself supports arbitrary facet counts; future
-arbitrary-facet planning fields should be treated as design metadata rather
-than finished public behavior.
+The PCM/GPCM planning layer remains role-based for two non-person facets,
+while the RSM branch now also exposes \code{\link[=build_mfrm_arbitrary_sim_spec]{build_mfrm_arbitrary_sim_spec()}},
+\code{\link[=extract_mfrm_arbitrary_sim_spec]{extract_mfrm_arbitrary_sim_spec()}}, \code{\link[=simulate_mfrm_arbitrary_data]{simulate_mfrm_arbitrary_data()}},
+\code{\link[=summarize_mfrm_sim_design]{summarize_mfrm_sim_design()}}, \code{\link[=plot_mfrm_sim_design]{plot_mfrm_sim_design()}},
+\code{\link[=summarize_mfrm_sim_grid]{summarize_mfrm_sim_grid()}}, \code{\link[=plot_mfrm_sim_grid]{plot_mfrm_sim_grid()}}, and
+\code{\link[=list_mfrm_sim_metrics]{list_mfrm_sim_metrics()}}, \code{\link[=plot_mfrm_sim_dashboard]{plot_mfrm_sim_dashboard()}}, and
+\code{\link[=evaluate_mfrm_bias_detection]{evaluate_mfrm_bias_detection()}} for arbitrary-facet design inspection, design-grid tradeoff visualization, user-selected multi-metric dashboards, and bias-screening sensitivity checks.
 }
 }
 

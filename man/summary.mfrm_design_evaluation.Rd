@@ -42,7 +42,7 @@ design planning, especially:
 \item convergence rate
 \item separation and reliability by facet
 \item severity recovery RMSE
-\item mean misfit rate
+\item mean ZSTD misfit rate and directional MnSq underfit/overfit rates
 }
 }
 \examples{

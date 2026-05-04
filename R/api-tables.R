@@ -3698,6 +3698,8 @@ infer_facet_names <- function(diagnostics) {
 #'
 #' Finally, inspect loadings via [plot_residual_pca()] to identify which
 #' variables/elements drive each component.
+#' For a simulation-calibrated null threshold, use
+#' [check_residual_dimensionality()] and [plot_residual_dimensionality()].
 #'
 #' @section References:
 #' The residual-PCA idea follows the Rasch residual-structure literature,
@@ -3706,16 +3708,25 @@ infer_facet_names <- function(diagnostics) {
 #' extension for many-facet workflows rather than as a direct reproduction of a
 #' single FACETS/Winsteps output table.
 #'
+#' - Horn, J. L. (1965). *A rationale and test for the number of factors in
+#'   factor analysis.* Psychometrika, 30, 179-185.
+#' - Glorfeld, L. W. (1995). *An improvement on Horn's parallel analysis
+#'   methodology.* Educational and Psychological Measurement, 55, 377-393.
 #' - Linacre, J. M. (1998). *Structure in Rasch residuals: Why principal
 #'   components analysis (PCA)?* Rasch Measurement Transactions, 12(2), 636.
 #' - Linacre, J. M. (1998). *Detecting multidimensionality: Which residual
 #'   data-type works best?* Journal of Outcome Measurement, 2(3), 266-283.
+#' - Chou, Y.-T., & Wang, W.-C. (2010). *Checking dimensionality in item
+#'   response models with principal component analysis on standardized
+#'   residuals.* Educational and Psychological Measurement, 70, 717-731.
 #'
 #' @section Typical workflow:
 #' 1. Fit model and run [diagnose_mfrm()] with `residual_pca = "none"` or `"both"`.
 #' 2. Call `analyze_residual_pca(..., mode = "both")`.
 #' 3. Review `summary(pca)`, then plot scree/loadings.
-#' 4. Cross-check with fit/misfit diagnostics before conclusions.
+#' 4. Optionally call [check_residual_dimensionality()] for a parallel-analysis
+#'    null threshold.
+#' 5. Cross-check with fit/misfit diagnostics before conclusions.
 #'
 #' @return
 #' A named list with:
@@ -3730,7 +3741,8 @@ infer_facet_names <- function(diagnostics) {
 #'   (e.g., `psych::principal()` failure on a near-singular residual
 #'   matrix). The list is empty when every facet PCA succeeded.
 #'
-#' @seealso [diagnose_mfrm()], [plot_residual_pca()], [mfrmr_visual_diagnostics]
+#' @seealso [diagnose_mfrm()], [plot_residual_pca()],
+#'   [check_residual_dimensionality()], [mfrmr_visual_diagnostics]
 #' @examples
 #' \donttest{
 #' toy <- load_mfrmr_data("example_core")
@@ -3919,7 +3931,8 @@ extract_loading_table <- function(pca_bundle, component = 1L, top_n = 20L) {
 #' - `plot_type = "scree"`: look for dominant early components relative
 #'   to later components and the unit-eigenvalue reference line. Treat
 #'   this as exploratory residual-structure screening, not a standalone
-#'   unidimensionality test.
+#'   unidimensionality test. Use [plot_residual_dimensionality()] when
+#'   the plot should include a simulated parallel-analysis threshold.
 #' - `plot_type = "loadings"`: identifies variables/elements driving each
 #'   component; inspect both sign and absolute magnitude.
 #'
@@ -3939,7 +3952,8 @@ extract_loading_table <- function(pca_bundle, component = 1L, top_n = 20L) {
 #' - `title`: plot title text
 #' - `data`: underlying table used for plotting
 #'
-#' @seealso [analyze_residual_pca()], [diagnose_mfrm()]
+#' @seealso [analyze_residual_pca()], [diagnose_mfrm()],
+#'   [check_residual_dimensionality()], [plot_residual_dimensionality()]
 #' @examples
 #' toy_full <- load_mfrmr_data("example_core")
 #' toy_people <- unique(toy_full$Person)[1:24]
@@ -4346,7 +4360,7 @@ estimate_bias <- function(fit,
 #' @param target_facet Optional target facet for pairwise contrast table.
 #' @param branch Output branch:
 #'   `"facets"` keeps the legacy-compatible fixed-width layout;
-#'   `"original"` returns compact sectioned fixed-width text for internal reporting.
+#'   `"original"` returns compact sectioned fixed-width text for local audit reports.
 #'
 #' @details
 #' This function generates plain-text, fixed-width output intended to be read in

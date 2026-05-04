@@ -11,7 +11,9 @@ fit_p_table(
   p_adjust = "holm",
   alpha = 0.05,
   lower = NULL,
-  upper = NULL
+  upper = NULL,
+  reference = c("mfrmr", "facets"),
+  zstd_cap = c("auto", "none", "facets")
 )
 }
 \arguments{
@@ -32,11 +34,22 @@ Default \code{"holm"} mirrors the common TAM summary handoff.}
 
 \item{lower, upper}{Optional MnSq screening band. \code{NULL} uses the active
 \code{\link[=mfrm_misfit_thresholds]{mfrm_misfit_thresholds()}} options.}
+
+\item{reference}{Fit-standardization reference. \code{"mfrmr"} (default) keeps
+the package-native degrees of freedom (\code{DF_Outfit = sum(w)},
+\code{DF_Infit = sum(w * Var)}). \code{"facets"} keeps the same MnSq aggregation
+but recomputes the Wilson-Hilferty degrees of freedom with the
+Wright-Masters/FACETS moment convention.}
+
+\item{zstd_cap}{ZSTD cap policy. \code{"auto"} uses no cap for
+\code{reference = "mfrmr"} and the FACETS \eqn{\pm 9} cap for
+\code{reference = "facets"}. Use \code{"none"} or \code{"facets"} to override.}
 }
 \value{
 A data frame with TAM-style fit columns plus mfrmr screening columns:
 \code{Scope}, \code{parameter}, \code{Facet}, \code{Level}, \code{N}, \code{Outfit}, \code{Outfit_t},
 \code{Outfit_p}, \code{Outfit_p_adj}, \code{Infit}, \code{Infit_t}, \code{Infit_p}, \code{Infit_p_adj},
+\code{DF_Outfit}, \code{DF_Infit}, \code{DFMethod}, \code{FitReference}, \code{ZSTDCap},
 \code{MisfitDirection}, \code{MnSqFlag}, \code{PFlag}, and \code{PAdjustMethod}. When
 \code{p_adjust = "holm"}, compatibility aliases \code{Outfit_pholm} and
 \code{Infit_pholm} are also included.
@@ -72,6 +85,19 @@ infit. The displayed p-values are two-sided normal-tail approximations,
 \deqn{p = 2\Phi(-|Z|),}
 followed by \code{\link[stats:p.adjust]{stats::p.adjust()}} for \verb{*_p_adj}.
 
+With \code{reference = "facets"}, mfrmr recomputes only the df and ZSTD layer.
+Let \eqn{C_i = E[(Y_i - E_i)^4]} be the model fourth central moment. The
+FACETS-style df values are
+\deqn{df_{\mathrm{Outfit}} =
+  \frac{2(\sum_i w_i)^2}
+       {\sum_i w_i(C_i / v_i^2 - 1)}}
+and
+\deqn{df_{\mathrm{Infit}} =
+  \frac{2(\sum_i w_i v_i)^2}
+       {\sum_i w_i(C_i - v_i^2)}.}
+This branch is intended for FACETS migration and parity checks in RSM/PCM.
+It does not change the fitted estimates or the MnSq values.
+
 The column names intentionally resemble \code{TAM::tam.fit()} output, but the
 values are not guaranteed to equal TAM values. TAM's MML fit route is
 simulation/posterior based and can evaluate item, facet, or contrast
@@ -87,6 +113,8 @@ diag <- diagnose_mfrm(fit, residual_pca = "none")
 tab <- fit_p_table(fit, diagnostics = diag)
 head(tab[, c("parameter", "Outfit", "Outfit_p", "Outfit_p_adj",
              "Infit", "Infit_p", "Infit_p_adj", "MisfitDirection")])
+facets_tab <- fit_p_table(fit, diagnostics = diag, reference = "facets")
+head(facets_tab[, c("parameter", "DFMethod", "Outfit_t", "Outfit_p")])
 fit_p_table(fit, diagnostics = diag, scope = "person")[1:3, ]
 
 \dontrun{

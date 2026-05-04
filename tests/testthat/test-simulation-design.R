@@ -3375,8 +3375,13 @@ test_that("evaluate_mfrm_design returns usable summary and plot data", {
   expect_s3_class(sim_eval, "mfrm_design_evaluation")
   expect_true(is.data.frame(sim_eval$results))
   expect_true(is.data.frame(sim_eval$rep_overview))
+  expect_s3_class(as.data.frame(sim_eval), "data.frame")
+  expect_s3_class(as.data.frame(sim_eval, component = "rep_overview"), "data.frame")
   expect_true(all(c("Person", "Rater", "Criterion") %in% unique(sim_eval$results$Facet)))
   expect_true(all(c("SeverityRMSERaw", "SeverityBiasRaw") %in% names(sim_eval$results)))
+  expect_true(all(c("MnSqMisfitRate", "UnderfitRate", "OverfitRate",
+                    "MixedMisfitRate", "InBandRate", "MisfitClassified",
+                    "MisfitBandLower", "MisfitBandUpper") %in% names(sim_eval$results)))
   expect_true(all(c("GeneratorModel", "GeneratorStepFacet", "FitModel", "FitStepFacet",
                     "RecoveryComparable", "RecoveryBasis") %in% names(sim_eval$results)))
   expect_true(all(sim_eval$results$SeverityRMSE <= sim_eval$results$SeverityRMSERaw | is.na(sim_eval$results$SeverityRMSERaw)))
@@ -3385,8 +3390,11 @@ test_that("evaluate_mfrm_design returns usable summary and plot data", {
   expect_s3_class(s, "summary.mfrm_design_evaluation")
   expect_true(is.data.frame(s$overview))
   expect_true(is.data.frame(s$design_summary))
+  expect_s3_class(as.data.frame(s), "data.frame")
   expect_true(all(c("Facet", "MeanSeparation", "MeanSeverityRMSE", "ConvergenceRate",
                     "McseSeparation", "McseSeverityRMSE", "McseConvergenceRate") %in% names(s$design_summary)))
+  expect_true(all(c("MeanMnSqMisfitRate", "MeanUnderfitRate", "MeanOverfitRate",
+                    "MeanMixedMisfitRate", "MeanInBandRate") %in% names(s$design_summary)))
   expect_true(all(c("MeanSeverityRMSERaw", "MeanSeverityBiasRaw") %in% names(s$design_summary)))
   expect_true(all(c("RecoveryComparableRate", "RecoveryBasis") %in% names(s$design_summary)))
   expect_true(is.list(s$ademp))
@@ -3404,6 +3412,38 @@ test_that("evaluate_mfrm_design returns usable summary and plot data", {
   expect_true(is.data.frame(p$data))
   expect_equal(p$facet, "Rater")
   expect_equal(p$metric_col, "MeanSeparation")
+
+  p_underfit <- plot(sim_eval, facet = "Rater", metric = "underfitrate",
+                     x_var = "n_person", draw = FALSE)
+  expect_equal(p_underfit$metric_col, "MeanUnderfitRate")
+
+  metric_catalog <- list_mfrm_sim_metrics(sim_eval)
+  expect_true("MeanReliability" %in% metric_catalog$Metric)
+  dash <- plot_mfrm_sim_dashboard(
+    sim_eval,
+    metrics = c("MeanReliability", "MeanSeverityRMSE"),
+    x_var = "n_person",
+    facet = "Rater",
+    draw = FALSE
+  )
+  expect_s3_class(dash, "mfrm_plot_data")
+  expect_true(all(c(".metric", ".value") %in% names(dash$data$data)))
+
+  misfit_sum <- summarize_simulation_misfit(sim_eval)
+  expect_s3_class(misfit_sum, "mfrm_simulation_misfit_summary")
+  expect_true(all(c("MeanZSTDMisfitRate", "MeanUnderfitRate",
+                    "MeanOverfitRate", "MeanMixedMisfitRate") %in% names(misfit_sum)))
+  expect_true(all(na.omit(misfit_sum$MeanUnderfitRate) >= 0 &
+                    na.omit(misfit_sum$MeanUnderfitRate) <= 1))
+  expect_true(all(na.omit(misfit_sum$MeanOverfitRate) >= 0 &
+                    na.omit(misfit_sum$MeanOverfitRate) <= 1))
+  by_facet <- summarize_simulation_misfit(sim_eval, by = "facet")
+  expect_true(all(c("Facet", "Reps", "MeanMnSqMisfitRate") %in% names(by_facet)))
+
+  p_misfit <- plot_simulation_misfit_rates(misfit_sum, draw = FALSE)
+  expect_s3_class(p_misfit, "mfrm_plot_data")
+  expect_identical(p_misfit$name, "simulation_misfit_rates")
+  expect_true(all(c("Direction", "Rate") %in% names(p_misfit$data$data)))
 })
 
 test_that("recommend_mfrm_design returns threshold tables", {
@@ -3653,6 +3693,8 @@ test_that("evaluate_mfrm_signal_detection returns usable detection summaries", {
   expect_s3_class(sig_eval, "mfrm_signal_detection")
   expect_true(is.data.frame(sig_eval$results))
   expect_true(is.data.frame(sig_eval$rep_overview))
+  expect_s3_class(as.data.frame(sig_eval), "data.frame")
+  expect_s3_class(as.data.frame(sig_eval, component = "rep_overview"), "data.frame")
   expect_true(all(c("DIFDetected", "BiasDetected", "BiasScreenMetricAvailable",
                     "DIFFalsePositiveRate", "BiasScreenFalsePositiveRate") %in%
                     names(sig_eval$results)))
@@ -3661,6 +3703,7 @@ test_that("evaluate_mfrm_signal_detection returns usable detection summaries", {
   expect_s3_class(s_sig, "summary.mfrm_signal_detection")
   expect_true(is.data.frame(s_sig$overview))
   expect_true(is.data.frame(s_sig$detection_summary))
+  expect_s3_class(as.data.frame(s_sig), "data.frame")
   expect_true(all(c("DIFPower", "BiasScreenRate",
                     "BiasScreenFalsePositiveRate",
                     "BiasScreenMetricAvailabilityRate",

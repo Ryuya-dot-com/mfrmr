@@ -67,7 +67,8 @@ For \code{mode = "facet"} and \code{facet = NULL}, the first available facet is 
 \item \code{plot_type = "scree"}: look for dominant early components relative
 to later components and the unit-eigenvalue reference line. Treat
 this as exploratory residual-structure screening, not a standalone
-unidimensionality test.
+unidimensionality test. Use \code{\link[=plot_residual_dimensionality]{plot_residual_dimensionality()}} when
+the plot should include a simulated parallel-analysis threshold.
 \item \code{plot_type = "loadings"}: identifies variables/elements driving each
 component; inspect both sign and absolute magnitude.
 }
@@ -105,5 +106,6 @@ if (interactive()) {
 }
 }
 \seealso{
-\code{\link[=analyze_residual_pca]{analyze_residual_pca()}}, \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}
+\code{\link[=analyze_residual_pca]{analyze_residual_pca()}}, \code{\link[=diagnose_mfrm]{diagnose_mfrm()}},
+\code{\link[=check_residual_dimensionality]{check_residual_dimensionality()}}, \code{\link[=plot_residual_dimensionality]{plot_residual_dimensionality()}}
 }

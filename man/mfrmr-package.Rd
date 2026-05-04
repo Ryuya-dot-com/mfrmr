@@ -28,7 +28,8 @@ Recommended workflow:
 \item For \code{RSM} / \code{PCM}, compute diagnostics with
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} and prefer \code{diagnostic_mode = "both"} when you want
 legacy residual continuity plus the newer strict marginal-fit screen
-\item For \code{RSM} / \code{PCM}, run residual PCA with \code{\link[=analyze_residual_pca]{analyze_residual_pca()}} if needed
+\item For \code{RSM} / \code{PCM}, run residual PCA with \code{\link[=analyze_residual_pca]{analyze_residual_pca()}} and
+parallel-analysis checks with \code{\link[=check_residual_dimensionality]{check_residual_dimensionality()}} if needed
 \item For \code{RSM} / \code{PCM}, estimate interactions with \code{\link[=estimate_bias]{estimate_bias()}}
 \item For \code{RSM} / \code{PCM}, choose a downstream branch:
 \code{\link[=reporting_checklist]{reporting_checklist()}} for manuscript/report preparation, or
@@ -107,10 +108,15 @@ planning/forecasting routes are available for bounded \code{GPCM} with
 explicit screening-tier caveats
 \item \code{predict_mfrm_population()} remains a scenario-level forecast helper and
 should not be described as the latent-regression estimator itself
-\item the current simulation/planning layer still remains role-based for two
-non-person facets rather than fully arbitrary-facet, with boundaries
-exposed through planner metadata such as \code{planning_scope},
-\code{planning_constraints}, and \code{planning_schema}
+\item the role-based simulation/planning layer remains the PCM/GPCM route for
+two non-person facets, while \code{\link[=build_mfrm_arbitrary_sim_spec]{build_mfrm_arbitrary_sim_spec()}},
+\code{\link[=extract_mfrm_arbitrary_sim_spec]{extract_mfrm_arbitrary_sim_spec()}}, \code{\link[=simulate_mfrm_arbitrary_data]{simulate_mfrm_arbitrary_data()}},
+\code{\link[=summarize_mfrm_sim_design]{summarize_mfrm_sim_design()}},
+\code{\link[=plot_mfrm_sim_design]{plot_mfrm_sim_design()}}, \code{\link[=summarize_mfrm_sim_grid]{summarize_mfrm_sim_grid()}},
+\code{\link[=plot_mfrm_sim_grid]{plot_mfrm_sim_grid()}}, \code{\link[=list_mfrm_sim_metrics]{list_mfrm_sim_metrics()}},
+\code{\link[=plot_mfrm_sim_dashboard]{plot_mfrm_sim_dashboard()}}, and \code{\link[=evaluate_mfrm_bias_detection]{evaluate_mfrm_bias_detection()}} provide a
+first RSM-based arbitrary-facet design, multi-metric dashboard, and
+bias-sensitivity branch
 \item latent-class mixture models and response-time / careless-rating
 adjustment are not estimated by mfrmr; use residual, person-fit,
 local-dependence, and rater-drift diagnostics as screening layers rather
@@ -141,14 +147,21 @@ Function families:
 \item Model fitting: \code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=summary.mfrm_fit]{summary.mfrm_fit()}}, \code{\link[=plot.mfrm_fit]{plot.mfrm_fit()}}
 \item Legacy-compatible workflow wrapper: \code{\link[=run_mfrm_facets]{run_mfrm_facets()}}, \code{\link[=mfrmRFacets]{mfrmRFacets()}}
 \item Diagnostics: \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{summary(diag)},
-\code{\link[=analyze_residual_pca]{analyze_residual_pca()}}, \code{\link[=plot_residual_pca]{plot_residual_pca()}}
+\code{\link[=analyze_residual_pca]{analyze_residual_pca()}}, \code{\link[=check_residual_dimensionality]{check_residual_dimensionality()}},
+\code{\link[=plot_residual_pca]{plot_residual_pca()}}, \code{\link[=plot_residual_dimensionality]{plot_residual_dimensionality()}}
 \item Bias and interaction: \code{\link[=estimate_bias]{estimate_bias()}}, \code{\link[=estimate_all_bias]{estimate_all_bias()}},
 \code{summary(bias)}, \code{\link[=bias_interaction_report]{bias_interaction_report()}}, \code{\link[=plot_bias_interaction]{plot_bias_interaction()}}
 \item Differential functioning: \code{\link[=analyze_dff]{analyze_dff()}}, \code{\link[=analyze_dif]{analyze_dif()}},
 \code{\link[=dif_interaction_table]{dif_interaction_table()}}, \code{\link[=plot_dif_heatmap]{plot_dif_heatmap()}}, \code{\link[=dif_report]{dif_report()}}
 \item Design simulation: \code{\link[=build_mfrm_sim_spec]{build_mfrm_sim_spec()}}, \code{\link[=extract_mfrm_sim_spec]{extract_mfrm_sim_spec()}},
 \code{\link[=simulate_mfrm_data]{simulate_mfrm_data()}}, \code{\link[=evaluate_mfrm_design]{evaluate_mfrm_design()}},
-\code{\link[=evaluate_mfrm_signal_detection]{evaluate_mfrm_signal_detection()}}, \code{\link[=predict_mfrm_population]{predict_mfrm_population()}},
+\code{\link[=evaluate_mfrm_signal_detection]{evaluate_mfrm_signal_detection()}}, \code{\link[=build_mfrm_arbitrary_sim_spec]{build_mfrm_arbitrary_sim_spec()}},
+\code{\link[=extract_mfrm_arbitrary_sim_spec]{extract_mfrm_arbitrary_sim_spec()}}, \code{\link[=simulate_mfrm_arbitrary_data]{simulate_mfrm_arbitrary_data()}},
+\code{\link[=summarize_mfrm_sim_design]{summarize_mfrm_sim_design()}},
+\code{\link[=plot_mfrm_sim_design]{plot_mfrm_sim_design()}}, \code{\link[=summarize_mfrm_sim_grid]{summarize_mfrm_sim_grid()}},
+\code{\link[=plot_mfrm_sim_grid]{plot_mfrm_sim_grid()}}, \code{\link[=list_mfrm_sim_metrics]{list_mfrm_sim_metrics()}},
+\code{\link[=plot_mfrm_sim_dashboard]{plot_mfrm_sim_dashboard()}}, \code{\link[=evaluate_mfrm_bias_detection]{evaluate_mfrm_bias_detection()}},
+\code{\link[=predict_mfrm_population]{predict_mfrm_population()}},
 \code{\link[=predict_mfrm_units]{predict_mfrm_units()}}, \code{\link[=sample_mfrm_plausible_values]{sample_mfrm_plausible_values()}} (including
 fit-derived empirical / resampled / skeleton-based simulation
 specifications; fixed-calibration unit scoring supports \code{MML} fits
@@ -169,7 +182,10 @@ direct-table / direct-plot side instead of the narrative layer
 \item Linking and scale maintenance: \code{\link[=audit_mfrm_anchors]{audit_mfrm_anchors()}},
 \code{\link[=detect_anchor_drift]{detect_anchor_drift()}}, \code{\link[=build_equating_chain]{build_equating_chain()}},
 \code{\link[=build_linking_review]{build_linking_review()}}, \code{\link[=plot_anchor_drift]{plot_anchor_drift()}}
-\item Dashboards: \code{\link[=facet_quality_dashboard]{facet_quality_dashboard()}}, \code{\link[=plot_facet_quality_dashboard]{plot_facet_quality_dashboard()}}
+\item Dashboards and fit-direction rates: \code{\link[=facet_quality_dashboard]{facet_quality_dashboard()}},
+\code{\link[=plot_facet_quality_dashboard]{plot_facet_quality_dashboard()}}, \code{\link[=fit_direction_summary]{fit_direction_summary()}},
+\code{\link[=plot_fit_direction_summary]{plot_fit_direction_summary()}}, \code{\link[=summarize_simulation_misfit]{summarize_simulation_misfit()}},
+\code{\link[=plot_simulation_misfit_rates]{plot_simulation_misfit_rates()}}
 \item Export / reproducibility: \code{\link[=build_mfrm_manifest]{build_mfrm_manifest()}}, \code{\link[=build_mfrm_replay_script]{build_mfrm_replay_script()}},
 \code{\link[=build_conquest_overlap_bundle]{build_conquest_overlap_bundle()}}, \code{\link[=normalize_conquest_overlap_files]{normalize_conquest_overlap_files()}},
 \code{\link[=normalize_conquest_overlap_tables]{normalize_conquest_overlap_tables()}},
@@ -258,6 +274,7 @@ acceptable; then score with
 \code{\link[=predict_mfrm_units]{predict_mfrm_units()}} or \code{\link[=sample_mfrm_plausible_values]{sample_mfrm_plausible_values()}}.
 \item For bounded \code{GPCM}, use \code{\link[=summary.mfrm_fit]{summary.mfrm_fit()}},
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=analyze_residual_pca]{analyze_residual_pca()}},
+\code{\link[=check_residual_dimensionality]{check_residual_dimensionality()}},
 \code{\link[=predict_mfrm_units]{predict_mfrm_units()}}, \code{\link[=sample_mfrm_plausible_values]{sample_mfrm_plausible_values()}},
 \code{\link[=compute_information]{compute_information()}}, \code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}}, \code{\link[=plot.mfrm_fit]{plot.mfrm_fit()}},
 \code{\link[=category_structure_report]{category_structure_report()}}, \code{\link[=category_curves_report]{category_curves_report()}},

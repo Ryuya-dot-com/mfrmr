@@ -562,6 +562,53 @@ test_that("plot_residual_pca produces plot bundles", {
   expect_true(is.data.frame(p_scree$data$reference_lines))
 })
 
+# ---- check_residual_dimensionality ----
+
+test_that("check_residual_dimensionality returns comparison and plot data", {
+  dim <- check_residual_dimensionality(
+    .diag,
+    mode = "overall",
+    method = "residual_normal",
+    reps = 5,
+    pca_max_factors = 2,
+    seed = 11
+  )
+  expect_s3_class(dim, "mfrm_residual_dimensionality")
+  expect_true(all(c("ObservedEigenvalue", "NullQuantile", "ExceedsNull") %in% names(dim$comparison)))
+  expect_s3_class(as.data.frame(dim), "data.frame")
+  expect_s3_class(as.data.frame(dim, component = "null_distribution"), "data.frame")
+  expect_s3_class(summary(dim), "summary.mfrm_residual_dimensionality")
+
+  p <- plot_residual_dimensionality(dim, draw = FALSE)
+  expect_s3_class(p, "mfrm_plot_data")
+  expect_identical(p$data$plot, "parallel_analysis")
+})
+
+test_that("check_residual_dimensionality supports permutation and parametric nulls", {
+  perm <- check_residual_dimensionality(
+    .diag,
+    mode = "facet",
+    facets = "Rater",
+    method = "permutation",
+    reps = 3,
+    pca_max_factors = 2,
+    seed = 12
+  )
+  expect_s3_class(perm, "mfrm_residual_dimensionality")
+  expect_true(all(perm$comparison$Scope == "facet"))
+
+  par <- check_residual_dimensionality(
+    .fit,
+    mode = "overall",
+    method = "parametric",
+    reps = 3,
+    pca_max_factors = 2,
+    seed = 13
+  )
+  expect_s3_class(par, "mfrm_residual_dimensionality")
+  expect_true(nrow(par$null_distribution) > 0)
+})
+
 # ---- plot.mfrm_fit specific types ----
 
 test_that("plot.mfrm_fit supports all named types", {

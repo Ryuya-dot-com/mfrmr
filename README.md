@@ -127,7 +127,7 @@ fit <- fit_mfrm(
 Core analysis:
 
 - estimation with `fit_mfrm()` under `MML` or `JML`
-- fit diagnostics with `diagnose_mfrm()`, `plot_qc_dashboard()`, and residual PCA follow-up
+- fit diagnostics with `diagnose_mfrm()`, `plot_qc_dashboard()`, residual PCA follow-up, and residual-dimensionality parallel analysis via `check_residual_dimensionality()`
 - strict marginal follow-up for `RSM` / `PCM` via `diagnostic_mode = "both"`, `plot_marginal_fit()`, and `plot_marginal_pairwise()`
 - package-native tables and summaries via `summary()`, `reporting_checklist()`, and `facet_statistics_report()`
 
@@ -696,7 +696,7 @@ overlay; it is not mirt's `S_X2` chi-square test.
 
 ## Reporting and APA route
 
-If your endpoint is a manuscript or internal report, use the package-native
+If your endpoint is a manuscript, appendix, or local QA report, use the package-native
 reporting contract rather than composing text by hand.
 
 ```r
