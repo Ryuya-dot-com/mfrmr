@@ -1,10 +1,86 @@
 # mfrmr 0.2.0
 
-This release finalizes the 0.2.0 line with a broader bounded-GPCM route,
-documentation accuracy corrections, and public-source hygiene updates.
-The main GPCM addition is that slope-aware fair-average and residual-bias
-screens now flow into diagnostics, visual summaries, and the QC pipeline
-with explicit caveats.
+This is the first CRAN-facing release after 0.1.5. Version 0.1.6 was
+used as an unpublished development line, so most users will experience
+0.2.0 as a direct upgrade from CRAN 0.1.5 to CRAN 0.2.0. Read this
+section as the public change log relative to 0.1.5; the later
+"mfrmr 0.1.6 (development-only)" section is retained only as detailed
+development history.
+
+0.2.0 is a substantial analysis and reporting release. It expands the
+bounded-GPCM route, adds shrinkage and design-audit workflows, improves
+APA/reporting handoff, adds residual dimensionality and classical DIF
+screening helpers, broadens the visualization surface, and corrects
+several statistical documentation and output contracts.
+
+## Upgrade notes from CRAN 0.1.5
+
+Review these points before rerunning an existing 0.1.5 analysis script:
+
+- **Default changes**: `diagnose_mfrm()` now defaults to
+  `diagnostic_mode = "both"` rather than `"legacy"`; default MML
+  quadrature uses `quad_points = 31` rather than `15`; and `plot(fit)`
+  now returns the Wright map alone. Use
+  `diagnostic_mode = "legacy"`, `quad_points = 15`, and
+  `plot(fit, type = "bundle")` to recover the old first-pass workflow.
+- **Person-fit outputs**: `compute_person_fit_indices()` now computes
+  `lz` from the model category probability of the observed category.
+  Development snapshots briefly exposed an `ECI4` column; it is not
+  part of 0.2.0 because it duplicated the standardized chi-square /
+  Outfit-ZSTD approximation rather than Tatsuoka and Tatsuoka's
+  extended-caution index. `lz_star` is now a JML-only Snijders-style
+  score-projection statistic; the finite-N heuristic is explicitly
+  named `lz_finite_n`. MML/EAP fits return `lz_star = NA` with
+  `lz_star_method = "unavailable_for_eap_mml"`.
+- **Reporting and APA output**: `print(build_apa_outputs(...))` now
+  prints manuscript-style Method / Results prose by default. Use
+  `summary(apa)` or `print(apa, qa = TRUE)` for the QA/completeness
+  view. `as_kable()` and `as_flextable()` adapters are available for
+  table export.
+- **Missing values and ordered scores**: `fit_mfrm()` can recode common
+  missing-code sentinels through `missing_codes`, while still preserving
+  the default `NULL` behavior for scripts that already clean data
+  upstream. Ordered-score handling, score maps, binary ordered data,
+  and retained zero-count categories have more explicit messages and
+  documentation.
+- **GPCM scope**: bounded GPCM is broader than in 0.1.5, but still
+  intentionally scoped. Core fitting, diagnostics, plots, posterior
+  scoring, information checks, slope-aware fair averages, bias
+  screening, APA outputs, visual summaries, manifests, replay scripts,
+  exports, and QC pipeline outputs are supported or supported with
+  explicit caveats. FACETS score-side parity outputs
+  (`facets_parity_report()` and
+  `facets_output_file_bundle(include = "score")`) remain blocked for
+  GPCM.
+- **Fairness/DIF workflow**: residual and refit DFF outputs now make
+  screening labels versus ETS A/B/C labels clearer. `analyze_dif_classical()`
+  adds a limited classical screen using generalized CMH and explicit
+  thresholded binary logistic DIF; it is not SIBTEST and does not claim
+  ETS classifications.
+- **Visualization**: 0.2.0 adds or expands many plot helpers, including
+  shrinkage and audit plots, local-dependence and residual displays,
+  DIF summaries, rater agreement/severity views, empirical fit plots,
+  TAM-style fit p-value tables, residual-dimensionality plots, and
+  classic front doors for expected score curves, TCC, cumulative
+  category curves, and KIDMAP-style person fit.
+- **Simulation and planning**: design simulation now has richer design
+  summaries, arbitrary-facet simulation support, bias/signal detection
+  helpers, CSV-friendly `as.data.frame()` methods, and plot controls for
+  user-selected planning metrics.
+- **External-package bridges**: import adapters for `mirt`, `TAM`, and
+  `eRm` expose external fit objects through the same measurement-side
+  `mfrm_fit` interface. These are plotting/table bridges, not full
+  replay, bias, DIF, or anchor-bundle imports.
+- **Statistical documentation corrections**: several references,
+  thresholds, and formula notes were corrected or narrowed, including
+  Wright (1998), Wright and Linacre (1994) fit bands, Yen Q3,
+  Christensen et al. Q3 guidance, Morris posterior-SE correction, Koo
+  and Li ICC band boundaries, Bock and Aitkin MML-engine wording, and
+  Linacre/FACETS/Winsteps citation metadata.
+
+For package maintainers and users who installed GitHub snapshots during
+development: the 0.1.6 section below records what happened during that
+unpublished development line, but 0.2.0 is the public release boundary.
 
 ## Citation and attribution corrections
 
@@ -82,10 +158,10 @@ with explicit caveats.
   "follow Linacre (1994)". Only the 30-examinee floor is Linacre's;
   the `< 10 sparse` and `< 50 standard` watermarks are mfrmr-specific
   screening choices.
-- **Snijders (2001) lz\\***: `compute_person_fit_indices()` no longer
-  reports the old finite-N placeholder under the `lz_star` name. For
-  JML fits, `lz_star` now uses the Snijders-style score-projection
-  correction, conditional on the fitted non-person parameters. The old
+- **Snijders (2001) lz\\***: `compute_person_fit_indices()` does not
+  report the development finite-N placeholder under the `lz_star` name.
+  For JML fits, `lz_star` now uses the Snijders-style score-projection
+  correction, conditional on the fitted non-person parameters. The
   `lz / sqrt(1 + 1/N)` screen is retained as `lz_finite_n`. For MML/EAP
   fits, `lz_star` is deliberately `NA` with `lz_star_method =
   "unavailable_for_eap_mml"` because EAP posterior means do not satisfy
@@ -96,30 +172,30 @@ with explicit caveats.
 
 ## Release overview
 
-This is a small infrastructure and polish release. The headings mirror the 0.1.6 layout
-(default changes, new features, bug fixes, documentation) so that
-release notes can be read in the same order as previous versions.
+The subsections below give the detailed 0.2.0 release notes. They cover
+both the unpublished 0.1.6 development work and the final 0.2.0 changes
+because CRAN users are upgrading directly from 0.1.5.
 
 ## Default changes
 
-Core estimation defaults do not change between 0.1.6 and 0.2.0. The
-0.1.6 defaults (`quad_points = 31`, `diagnostic_mode = "both"`,
-`plot.mfrm_fit(type = "wright")`, `keep_original = FALSE`) are retained.
+Relative to CRAN 0.1.5, three user-visible defaults change:
+
+- `diagnose_mfrm(diagnostic_mode = ...)` defaults to `"both"`, so
+  strict marginal screens are produced automatically for `RSM` / `PCM`
+  fits. Pass `diagnostic_mode = "legacy"` to recover the earlier
+  diagnostics-only path.
+- `fit_mfrm(quad_points = ...)` defaults to `31` rather than `15`, so
+  default MML fits are more stable for direct reporting. Pass
+  `quad_points = 15` for the previous exploratory speed setting.
+- `plot(fit)` returns the Wright map alone. The earlier three-plot
+  overview remains available via `plot(fit, type = "bundle")`.
+
 For reporting consistency, `plot_person_fit()`, `plot_bubble()`, and
 `plot_facet_quality_dashboard()` now inherit the active MnSq screening band
 from `mfrm_misfit_thresholds()` when no manual band is supplied. Pass
 explicit plot thresholds (for example `lower = 0.5, upper = 1.5`,
 `fit_range = c(0.5, 1.5)`, or `misfit_warn = 1.5`) to freeze a manual
 review band.
-
-Note for users upgrading directly from CRAN 0.1.5 to 0.2.0 (skipping
-the 0.1.6 development release): three defaults were flipped in 0.1.6
-and remain on those values in 0.2.0 -- `diagnose_mfrm(diagnostic_mode)`
-went from `"legacy"` to `"both"`, `plot(fit)` returns the Wright map
-alone instead of a three-plot overview (the overview is still
-available via `plot(fit, type = "bundle")`), and `fit_mfrm(quad_points)`
-went from `15` to `31`. See the "mfrmr 0.1.6" section below for the
-full description and revert paths.
 
 ## New features
 
@@ -233,13 +309,14 @@ Rasch-family invariance evidence.
   on `compute_obs_table()`. The previous Gaussian-residual
   approximation overstated `Var[log P]` by roughly a factor of five
   on a 4-category fixture and pulled `lz` toward zero.
-- The `ECI4` column is removed from `compute_person_fit_indices()`.
-  The previous implementation was the standardized chi-square
+- The development-only `ECI4` column is not part of the 0.2.0 public
+  `compute_person_fit_indices()` contract. Its previous implementation
+  was the standardized chi-square
   `(sum StdSq - n) / sqrt(2 * n)`, which is the linear (Smith)
   approximation to `OutfitZSTD`, not the Tatsuoka & Tatsuoka (1983)
   extended-caution index. Users who want the equivalent statistic
-  should use `OutfitZSTD` directly. The old finite-N `lz_star`
-  placeholder is no longer reported as `lz_star`; it is now explicitly
+  should use `OutfitZSTD` directly. The development finite-N
+  `lz_star` placeholder is not reported as `lz_star`; it is explicitly
   named `lz_finite_n`, while JML fits receive the score-projection
   corrected `lz_star`.
 - `displacement_table()$summary` now returns `NA_real_` for
@@ -315,6 +392,17 @@ The two runtime / user-facing files in that directory --
 FACETS Table to `mfrmr` helper mapping cited in the README) -- are
 preserved.
 
+## Test and check coverage
+
+The 0.2.0 release line adds regression coverage for the public
+upgrade surface from 0.1.5: GPCM scope, empirical fit plots, adjusted
+fit p-value tables, classical DIF screens, classic curve front doors,
+JML `lz_star`, residual dimensionality, arbitrary-facet simulation,
+bias/signal detection simulation, APA/reporting output, namespace
+contracts, and exception datasets with missing values or sparse score
+categories. The release candidate was validated with the full local
+test suite, Rd parsing, `R CMD build`, and `R CMD check`.
+
 ## Performance note
 
 The cpp11 MML backend (`src/mml_backend.cpp`, RSM and PCM only) is
@@ -344,22 +432,23 @@ later release:
 
 These are scheduled for a follow-up release.
 
-# mfrmr 0.1.6
+# mfrmr 0.1.6 (development-only; not released to CRAN)
 
-This release adds empirical-Bayes shrinkage for small-N facets, a
-hierarchical-structure and sample-adequacy audit layer, integrated
-missing-code pre-processing, APA output adapters for Word / HTML,
-model-estimated two-way non-person facet interactions, confidence-interval
-propagation through the plot surface and the ICC
-reporting family, and expanded reproducibility manifests. Six bug
-fixes close issues that affected bias statistics, ZSTD sign, input
-validation, and graphical state hygiene.
+This unpublished development line added empirical-Bayes shrinkage for
+small-N facets, a hierarchical-structure and sample-adequacy audit
+layer, integrated missing-code pre-processing, APA output adapters
+for Word / HTML, model-estimated two-way non-person facet interactions,
+confidence-interval propagation through the plot surface and the ICC
+reporting family, and expanded reproducibility manifests. Its public
+changes ship as part of 0.2.0, not as a separate CRAN release. Some
+development-only entries below were later corrected before 0.2.0; the
+top 0.2.0 section is authoritative for current behavior.
 
-## Default changes (three breaking flips)
+## Development default flips included in 0.2.0
 
-Three default values change in this release. Scripts that explicitly
-pass the old value are unaffected; scripts that rely on the default
-should be reviewed.
+Three default values were flipped during this development line and ship
+publicly in 0.2.0. Scripts that explicitly pass the old value are
+unaffected; scripts that rely on the 0.1.5 defaults should be reviewed.
 
 - `diagnose_mfrm(diagnostic_mode = ...)` default flips from `"legacy"`
   to `"both"`. Strict marginal screens are produced automatically for
@@ -397,7 +486,7 @@ New supporting pieces:
   and the smaller model's interaction set is a subset of the larger model's
   set.
 
-The feature is intentionally narrow for the initial CRAN-facing release:
+The feature is intentionally narrow in its 0.2.0 public form:
 person-involving interactions, higher-order interactions, GPCM interactions,
 and random-effect facet interactions are deferred. Residual bias screening via
 `estimate_bias()` and `estimate_all_bias()` remains separate from these
@@ -616,7 +705,7 @@ back to the bar chart when `igraph` is not installed.
 
 ### Expanded test coverage
 
-Direct regression tests for the 0.1.6 additions:
+Direct regression tests for these development additions:
 
 - `test-attach-diagnostics.R` — 18 assertions covering the
   `attach_diagnostics = TRUE` merge, type validation, idempotence,
@@ -857,7 +946,7 @@ The most-visited help pages now embed concrete interpretation
 comments inside their `@examples` blocks. Each shipped example
 shows what value ranges or patterns indicate "good", what threshold
 or rule of thumb applies, and what follow-up to run if the value
-is off. Coverage in 0.1.6 includes:
+is off. Coverage in this development line includes:
 
 - `?fit_mfrm` (convergence, person SD, targeting bands).
 - `?diagnose_mfrm` (key_warnings, MnSq misfit lines, facets_chisq,
@@ -899,7 +988,7 @@ Affected pages: `?fit_mfrm`, `?diagnose_mfrm`, `?plot_qc_dashboard`,
   linking).
 - `?mfrmr_visual_diagnostics` and the visual reporting template now
   enumerate the 4 secondary plot helpers and the 4 screening
-  helpers added in 0.1.6.
+  helpers added during this development line.
 - `?diagnose_mfrm` cites Wright & Masters (1982) at the
   separation / strata / reliability section and reproduces the
   formulae (G = TrueSD / RMSE, R = G^2 / (1 + G^2),
@@ -931,21 +1020,25 @@ draws, so the table and the heatmap stay numerically consistent.
 
 ### Extended person-fit indices
 
-`compute_person_fit_indices(diagnostics, fit)` adds three new
-person-level fit indices on top of the Infit / Outfit / ZSTD
-columns that `diagnose_mfrm()` already exposes:
+`compute_person_fit_indices(diagnostics, fit)` was introduced during
+development as an extension to the Infit / Outfit / ZSTD columns that
+`diagnose_mfrm()` already exposes. Its final 0.2.0 public contract is:
 
 - **lz** (Drasgow, Levine & Williams, 1985): standardized
-  log-likelihood under the fitted model.
-- **lz\\*** (Snijders, 2001): bias-corrected version that
-  accounts for using the JML / EAP estimate in place of the true
-  ability.
-- **ECI4** (Tatsuoka & Tatsuoka, 1983): standardized squared-
-  residual index.
+  log-likelihood computed from the model category probability of the
+  observed response.
+- **lz\\*** (Snijders, 2001): JML-only score-projection correction,
+  conditional on the fitted non-person parameters. MML/EAP fits return
+  `NA` with an audit label because EAP posterior means do not satisfy
+  the ML person-score equation used by the correction.
+- **lz_finite_n**: the finite-N heuristic
+  `lz / sqrt(1 + 1/N)`, retained under an explicit non-Snijders name.
 
-All three are asymptotically standard normal under the
-conditional-independence assumption; |index| > 1.96 / 2.58 are
-the 5% / 1% reporting flags.
+The development-only `ECI4` column was removed before the 0.2.0 public
+release because it duplicated the standardized chi-square /
+Outfit-ZSTD approximation rather than implementing Tatsuoka and
+Tatsuoka's extended-caution index. Use `OutfitZSTD` for the equivalent
+screen.
 
 ### Generalizability-theory adapter
 
@@ -1265,8 +1358,11 @@ Reference citations corrected:
 
 ## Test suite
 
-6,380+ tests pass (up from 6,343 in 0.1.5), with 0 failures and
-0 errors. New test files:
+At this development checkpoint, 6,380+ tests passed (up from 6,343 in
+0.1.5), with 0 failures and 0 errors. Additional 0.2.0 release tests
+were added later for GPCM, empirical fit, classical DIF, residual
+dimensionality, arbitrary-facet simulation, and reporting routes. New
+test files at this checkpoint:
 
 - `test-shrinkage.R` (40 tests) covers the closed-form math, edge
   cases (`K < 3`, `tau^2 <= 0`, user-supplied prior), `fit_mfrm`
