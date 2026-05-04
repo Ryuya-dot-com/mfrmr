@@ -316,9 +316,13 @@ by themselves.
 \item Strict marginal and pairwise local-dependence plots are exploratory
 follow-up layers for \code{diagnostic_mode = "both"}, not standalone
 inferential tests.
-\item Fit p-value tables from \code{\link[=fit_p_table]{fit_p_table()}} use the mfrmr ZSTD normal-tail
-approximation; read them with the active MnSq band and empirical plots
-rather than as a universal item-deletion rule.
+\item Fit p-value tables from \code{\link[=fit_p_table]{fit_p_table()}} use the mfrmr residual
+mean-square and ZSTD normal-tail approximation. They use TAM-style column
+names, but they are not \code{TAM::tam.fit()} simulation/posterior fit values.
+\item \code{\link[=plot_empirical_fit]{plot_empirical_fit()}} is a descriptive observed-vs-expected bin overlay.
+It is not \code{mirt::itemfit(..., fit_stats = "S_X2")}, does not condition on
+the same sum-score tables, and does not report \code{S_X2}, \code{RMSEA.S_X2}, or
+\code{p.S_X2}.
 \item Inter-rater agreement and facet variability address different questions:
 agreement concerns scoring consistency, whereas variability concerns
 whether facet elements are statistically distinguishable.

@@ -20,8 +20,8 @@ fit_p_table(
 \item{diagnostics}{Optional output from \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}. When omitted,
 diagnostics are computed with \code{residual_pca = "none"}.}
 
-\item{scope}{Which fit surface to report: \code{"element"} (default; facet
-levels from \code{diagnostics$fit}), \code{"person"} (person rows from
+\item{scope}{Which fit surface to report: \code{"element"} (default; non-person
+facet levels from \code{diagnostics$fit}), \code{"person"} (person rows from
 \code{diagnostics$measures}), or \code{"category"} (score categories from
 \code{\link[=rating_scale_table]{rating_scale_table()}}).}
 
@@ -42,20 +42,42 @@ A data frame with TAM-style fit columns plus mfrmr screening columns:
 \code{Infit_pholm} are also included.
 }
 \description{
-Builds a compact fit table with TAM-style columns for mfrmr element,
-person, or score-category fit statistics. The output keeps the familiar
+Builds a compact fit table with TAM-style columns for mfrmr non-person
+element-level, person-level, or score-category fit statistics. The output
+keeps the familiar
 \code{Outfit}, \code{Outfit_t}, \code{Outfit_p}, \code{Infit}, \code{Infit_t}, and \code{Infit_p}
 layout, while also adding p-value adjustment columns and the active
 \code{MisfitDirection} label used elsewhere in mfrmr.
 }
 \details{
 \code{fit_p_table()} is intentionally a reporting and screening table, not a new
-model-fit estimator. \code{Infit_t} and \code{Outfit_t} are mfrmr's existing
-standardized fit transformations (\code{InfitZSTD}, \code{OutfitZSTD}), and p-values
-are two-sided normal-tail approximations,
-\eqn{2\Phi(-|ZSTD|)}. TAM's simulation-based MML item-fit route can use
-different null approximations; use this table as a transparent mfrmr-native
-handoff for manuscripts and appendices.
+model-fit estimator. For a reported set of rows \eqn{G}, let
+\eqn{r_i = y_i - \hat{\mu}_i}, \eqn{v_i = \widehat{\mathrm{Var}}(Y_i)},
+\eqn{z_i = r_i / \sqrt{v_i}}, and \eqn{w_i} be the case weight. mfrmr's
+mean-square summaries are
+\deqn{\mathrm{Outfit}_G =
+  \frac{\sum_{i \in G} w_i z_i^2}{\sum_{i \in G} w_i}}
+and
+\deqn{\mathrm{Infit}_G =
+  \frac{\sum_{i \in G} w_i v_i z_i^2}{\sum_{i \in G} w_i v_i}
+  = \frac{\sum_{i \in G} w_i r_i^2}{\sum_{i \in G} w_i v_i}.}
+The exported \code{Outfit_t} and \code{Infit_t} columns are mfrmr's existing
+standardized transformations (\code{OutfitZSTD}, \code{InfitZSTD}). With the default
+diagnostics these use the Wilson-Hilferty cube-root approximation
+\deqn{Z =
+  \frac{\mathrm{MnSq}^{1/3} - (1 - 2/(9\,df))}
+       {\sqrt{2/(9\,df)}} ,}
+where \eqn{df = \sum w_i} for outfit and \eqn{df = \sum w_i v_i} for
+infit. The displayed p-values are two-sided normal-tail approximations,
+\deqn{p = 2\Phi(-|Z|),}
+followed by \code{\link[stats:p.adjust]{stats::p.adjust()}} for \verb{*_p_adj}.
+
+The column names intentionally resemble \code{TAM::tam.fit()} output, but the
+values are not guaranteed to equal TAM values. TAM's MML fit route is
+simulation/posterior based and can evaluate item, facet, or contrast
+hypotheses through its fit matrix interface. Likewise, \code{mirt::itemfit()}
+treats \code{S_X2}, \code{X2}, \code{G2}, and \code{infit} as distinct item-fit families; the
+mfrmr p-values here are not \code{S_X2} chi-square p-values.
 }
 \examples{
 toy <- load_mfrmr_data("example_core")
@@ -66,6 +88,43 @@ tab <- fit_p_table(fit, diagnostics = diag)
 head(tab[, c("parameter", "Outfit", "Outfit_p", "Outfit_p_adj",
              "Infit", "Infit_p", "Infit_p_adj", "MisfitDirection")])
 fit_p_table(fit, diagnostics = diag, scope = "person")[1:3, ]
+
+\dontrun{
+# Optional orientation against mirt/TAM on the same wide item matrix.
+# Similar estimates can still yield different fit p values because each
+# package uses its own estimation, scoring, and fit-test conventions.
+toy$Score0 <- toy$Score - 1L
+toy$Item <- paste(toy$Rater, toy$Criterion, sep = "__")
+wide <- reshape(toy[, c("Person", "Item", "Score0")],
+                idvar = "Person", timevar = "Item", direction = "wide")
+rownames(wide) <- wide$Person
+resp <- wide[, setdiff(names(wide), "Person")]
+names(resp) <- sub("^Score0\\\\.", "", names(resp))
+
+if (requireNamespace("TAM", quietly = TRUE)) {
+  tam_fit <- TAM::tam.mml(resp = resp, irtmodel = "PCM2", verbose = FALSE)
+  summary(TAM::tam.fit(tam_fit, progress = FALSE))
+}
+if (requireNamespace("mirt", quietly = TRUE)) {
+  mirt_fit <- mirt::mirt(resp, 1, itemtype = "Rasch", verbose = FALSE)
+  mirt::itemfit(mirt_fit, fit_stats = "infit", method = "ML")
+  mirt::itemfit(mirt_fit, fit_stats = "S_X2")
+}
+}
+}
+\references{
+Chalmers, R. P. (2012). mirt: A Multidimensional Item Response Theory
+Package for the R Environment. \emph{Journal of Statistical Software},
+48(6), 1-29. \doi{10.18637/jss.v048.i06}
+
+mirt \code{itemfit()} reference:
+\url{https://philchalmers.github.io/mirt/docs/reference/itemfit.html}
+
+TAM \code{tam.fit()} reference:
+\url{https://alexanderrobitzsch.github.io/TAM/reference/tam.fit.html}
+
+TAM \code{msq.itemfit()} reference:
+\url{https://alexanderrobitzsch.github.io/TAM/reference/msq.itemfit.html}
 }
 \seealso{
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=plot_empirical_fit]{plot_empirical_fit()}}, \code{\link[=plot_person_fit]{plot_person_fit()}}

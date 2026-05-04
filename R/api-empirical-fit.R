@@ -22,6 +22,10 @@ mfrm_fit_p_source <- function(fit, diagnostics, scope) {
   if (identical(scope, "element")) {
     tbl <- as.data.frame(diagnostics$fit %||% data.frame(), stringsAsFactors = FALSE)
     if (nrow(tbl) == 0L) return(tbl)
+    if ("Facet" %in% names(tbl)) {
+      tbl <- tbl[as.character(tbl$Facet) != "Person", , drop = FALSE]
+      if (nrow(tbl) == 0L) return(tbl)
+    }
     tbl$Scope <- "element"
     tbl$parameter <- paste(as.character(tbl$Facet), as.character(tbl$Level), sep = ":")
     return(tbl)
@@ -54,8 +58,9 @@ mfrm_fit_p_source <- function(fit, diagnostics, scope) {
 
 #' TAM-style Infit / Outfit p-value table
 #'
-#' Builds a compact fit table with TAM-style columns for mfrmr element,
-#' person, or score-category fit statistics. The output keeps the familiar
+#' Builds a compact fit table with TAM-style columns for mfrmr non-person
+#' element-level, person-level, or score-category fit statistics. The output
+#' keeps the familiar
 #' `Outfit`, `Outfit_t`, `Outfit_p`, `Infit`, `Infit_t`, and `Infit_p`
 #' layout, while also adding p-value adjustment columns and the active
 #' `MisfitDirection` label used elsewhere in mfrmr.
@@ -63,8 +68,8 @@ mfrm_fit_p_source <- function(fit, diagnostics, scope) {
 #' @param fit Output from [fit_mfrm()].
 #' @param diagnostics Optional output from [diagnose_mfrm()]. When omitted,
 #'   diagnostics are computed with `residual_pca = "none"`.
-#' @param scope Which fit surface to report: `"element"` (default; facet
-#'   levels from `diagnostics$fit`), `"person"` (person rows from
+#' @param scope Which fit surface to report: `"element"` (default; non-person
+#'   facet levels from `diagnostics$fit`), `"person"` (person rows from
 #'   `diagnostics$measures`), or `"category"` (score categories from
 #'   [rating_scale_table()]).
 #' @param p_adjust P-value adjustment method passed to [stats::p.adjust()].
@@ -75,12 +80,47 @@ mfrm_fit_p_source <- function(fit, diagnostics, scope) {
 #'
 #' @details
 #' `fit_p_table()` is intentionally a reporting and screening table, not a new
-#' model-fit estimator. `Infit_t` and `Outfit_t` are mfrmr's existing
-#' standardized fit transformations (`InfitZSTD`, `OutfitZSTD`), and p-values
-#' are two-sided normal-tail approximations,
-#' \eqn{2\Phi(-|ZSTD|)}. TAM's simulation-based MML item-fit route can use
-#' different null approximations; use this table as a transparent mfrmr-native
-#' handoff for manuscripts and appendices.
+#' model-fit estimator. For a reported set of rows \eqn{G}, let
+#' \eqn{r_i = y_i - \hat{\mu}_i}, \eqn{v_i = \widehat{\mathrm{Var}}(Y_i)},
+#' \eqn{z_i = r_i / \sqrt{v_i}}, and \eqn{w_i} be the case weight. mfrmr's
+#' mean-square summaries are
+#' \deqn{\mathrm{Outfit}_G =
+#'   \frac{\sum_{i \in G} w_i z_i^2}{\sum_{i \in G} w_i}}
+#' and
+#' \deqn{\mathrm{Infit}_G =
+#'   \frac{\sum_{i \in G} w_i v_i z_i^2}{\sum_{i \in G} w_i v_i}
+#'   = \frac{\sum_{i \in G} w_i r_i^2}{\sum_{i \in G} w_i v_i}.}
+#' The exported `Outfit_t` and `Infit_t` columns are mfrmr's existing
+#' standardized transformations (`OutfitZSTD`, `InfitZSTD`). With the default
+#' diagnostics these use the Wilson-Hilferty cube-root approximation
+#' \deqn{Z =
+#'   \frac{\mathrm{MnSq}^{1/3} - (1 - 2/(9\,df))}
+#'        {\sqrt{2/(9\,df)}} ,}
+#' where \eqn{df = \sum w_i} for outfit and \eqn{df = \sum w_i v_i} for
+#' infit. The displayed p-values are two-sided normal-tail approximations,
+#' \deqn{p = 2\Phi(-|Z|),}
+#' followed by [stats::p.adjust()] for `*_p_adj`.
+#'
+#' The column names intentionally resemble `TAM::tam.fit()` output, but the
+#' values are not guaranteed to equal TAM values. TAM's MML fit route is
+#' simulation/posterior based and can evaluate item, facet, or contrast
+#' hypotheses through its fit matrix interface. Likewise, `mirt::itemfit()`
+#' treats `S_X2`, `X2`, `G2`, and `infit` as distinct item-fit families; the
+#' mfrmr p-values here are not `S_X2` chi-square p-values.
+#'
+#' @references
+#' Chalmers, R. P. (2012). mirt: A Multidimensional Item Response Theory
+#' Package for the R Environment. \emph{Journal of Statistical Software},
+#' 48(6), 1-29. \doi{10.18637/jss.v048.i06}
+#'
+#' mirt `itemfit()` reference:
+#' \url{https://philchalmers.github.io/mirt/docs/reference/itemfit.html}
+#'
+#' TAM `tam.fit()` reference:
+#' \url{https://alexanderrobitzsch.github.io/TAM/reference/tam.fit.html}
+#'
+#' TAM `msq.itemfit()` reference:
+#' \url{https://alexanderrobitzsch.github.io/TAM/reference/msq.itemfit.html}
 #'
 #' @return A data frame with TAM-style fit columns plus mfrmr screening columns:
 #' `Scope`, `parameter`, `Facet`, `Level`, `N`, `Outfit`, `Outfit_t`,
@@ -99,6 +139,29 @@ mfrm_fit_p_source <- function(fit, diagnostics, scope) {
 #' head(tab[, c("parameter", "Outfit", "Outfit_p", "Outfit_p_adj",
 #'              "Infit", "Infit_p", "Infit_p_adj", "MisfitDirection")])
 #' fit_p_table(fit, diagnostics = diag, scope = "person")[1:3, ]
+#'
+#' \dontrun{
+#' # Optional orientation against mirt/TAM on the same wide item matrix.
+#' # Similar estimates can still yield different fit p values because each
+#' # package uses its own estimation, scoring, and fit-test conventions.
+#' toy$Score0 <- toy$Score - 1L
+#' toy$Item <- paste(toy$Rater, toy$Criterion, sep = "__")
+#' wide <- reshape(toy[, c("Person", "Item", "Score0")],
+#'                 idvar = "Person", timevar = "Item", direction = "wide")
+#' rownames(wide) <- wide$Person
+#' resp <- wide[, setdiff(names(wide), "Person")]
+#' names(resp) <- sub("^Score0\\.", "", names(resp))
+#'
+#' if (requireNamespace("TAM", quietly = TRUE)) {
+#'   tam_fit <- TAM::tam.mml(resp = resp, irtmodel = "PCM2", verbose = FALSE)
+#'   summary(TAM::tam.fit(tam_fit, progress = FALSE))
+#' }
+#' if (requireNamespace("mirt", quietly = TRUE)) {
+#'   mirt_fit <- mirt::mirt(resp, 1, itemtype = "Rasch", verbose = FALSE)
+#'   mirt::itemfit(mirt_fit, fit_stats = "infit", method = "ML")
+#'   mirt::itemfit(mirt_fit, fit_stats = "S_X2")
+#' }
+#' }
 #' @export
 fit_p_table <- function(fit,
                         diagnostics = NULL,
@@ -343,6 +406,35 @@ mfrm_empirical_fit_bins <- function(df, bins, min_bin_n) {
 #' observed response curve departs from the fitted model across the person
 #' measure scale.
 #'
+#' The plot forms approximately equal-count bins \eqn{B_b} after sorting rows
+#' by `PersonMeasure`. For the mean-score view, each bin reports
+#' \deqn{\bar{y}_b = \frac{\sum_{i \in B_b} w_i y_i}{\sum_{i \in B_b} w_i},
+#' \qquad
+#' \bar{\mu}_b = \frac{\sum_{i \in B_b} w_i \hat{\mu}_i}
+#'                    {\sum_{i \in B_b} w_i}.}
+#' The displayed standard error is
+#' \deqn{SE_b =
+#'   \frac{\sqrt{\sum_{i \in B_b} w_i^2 v_i}}{\sum_{i \in B_b} w_i}.}
+#' For the category-probability view, \eqn{y_i} is replaced by
+#' \eqn{I(Y_i = k)}, \eqn{\hat{\mu}_i} by
+#' \eqn{\hat{p}_{ik} = P(Y_i = k)}, and \eqn{v_i} by
+#' \eqn{\hat{p}_{ik}(1 - \hat{p}_{ik})}.
+#'
+#' This resembles the empirical overlays in `mirt::itemfit(empirical.plot=...)`
+#' because both compare empirical bin behavior to expected model curves.
+#' However, mirt's `S_X2.plot` is constructed from conditional sum-score
+#' information used by the `S_X2` statistic, while this mfrmr plot bins by
+#' estimated person measure for a selected facet level and does not return a
+#' chi-square statistic, degrees of freedom, RMSEA, or `p.S_X2`.
+#'
+#' @references
+#' Chalmers, R. P. (2012). mirt: A Multidimensional Item Response Theory
+#' Package for the R Environment. \emph{Journal of Statistical Software},
+#' 48(6), 1-29. \doi{10.18637/jss.v048.i06}
+#'
+#' mirt `itemfit()` reference:
+#' \url{https://philchalmers.github.io/mirt/docs/reference/itemfit.html}
+#'
 #' @return An `mfrm_plot_data` object. The `bin_table` / `data` slot contains
 #' `Bin`, `N`, `MeanPersonMeasure`, `Observed`, `Expected`, `Residual`, `SE`,
 #' `StdResidual`, and `LowN`; `raw_table` contains the filtered row-level
@@ -363,6 +455,13 @@ mfrm_empirical_fit_bins <- function(df, bins, min_bin_n) {
 #'                             facet = "Rater", category = 4,
 #'                             bins = 5, draw = FALSE)
 #' p_cat$data$metric
+#'
+#' \dontrun{
+#' # mirt's empirical plot is item-based; this mfrmr plot is facet-level.
+#' # Use it as an observed-vs-expected diagnostic layer, not as S_X2.
+#' plot_empirical_fit(fit, diagnostics = diag,
+#'                    facet = "Rater", level = "R01", bins = 6)
+#' }
 #' @export
 plot_empirical_fit <- function(fit,
                                diagnostics = NULL,

@@ -292,9 +292,13 @@
 #' - Strict marginal and pairwise local-dependence plots are exploratory
 #'   follow-up layers for `diagnostic_mode = "both"`, not standalone
 #'   inferential tests.
-#' - Fit p-value tables from [fit_p_table()] use the mfrmr ZSTD normal-tail
-#'   approximation; read them with the active MnSq band and empirical plots
-#'   rather than as a universal item-deletion rule.
+#' - Fit p-value tables from [fit_p_table()] use the mfrmr residual
+#'   mean-square and ZSTD normal-tail approximation. They use TAM-style column
+#'   names, but they are not `TAM::tam.fit()` simulation/posterior fit values.
+#' - [plot_empirical_fit()] is a descriptive observed-vs-expected bin overlay.
+#'   It is not `mirt::itemfit(..., fit_stats = "S_X2")`, does not condition on
+#'   the same sum-score tables, and does not report `S_X2`, `RMSEA.S_X2`, or
+#'   `p.S_X2`.
 #' - Inter-rater agreement and facet variability address different questions:
 #'   agreement concerns scoring consistency, whereas variability concerns
 #'   whether facet elements are statistically distinguishable.

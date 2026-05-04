@@ -63,6 +63,27 @@ research workflow: identify a level with \code{\link[=fit_p_table]{fit_p_table()
 \code{\link[=plot_bubble]{plot_bubble()}}, or \code{summary(diagnose_mfrm(...))}, then inspect where the
 observed response curve departs from the fitted model across the person
 measure scale.
+
+The plot forms approximately equal-count bins \eqn{B_b} after sorting rows
+by \code{PersonMeasure}. For the mean-score view, each bin reports
+\deqn{\bar{y}_b = \frac{\sum_{i \in B_b} w_i y_i}{\sum_{i \in B_b} w_i},
+\qquad
+\bar{\mu}_b = \frac{\sum_{i \in B_b} w_i \hat{\mu}_i}
+                   {\sum_{i \in B_b} w_i}.}
+The displayed standard error is
+\deqn{SE_b =
+  \frac{\sqrt{\sum_{i \in B_b} w_i^2 v_i}}{\sum_{i \in B_b} w_i}.}
+For the category-probability view, \eqn{y_i} is replaced by
+\eqn{I(Y_i = k)}, \eqn{\hat{\mu}_i} by
+\eqn{\hat{p}_{ik} = P(Y_i = k)}, and \eqn{v_i} by
+\eqn{\hat{p}_{ik}(1 - \hat{p}_{ik})}.
+
+This resembles the empirical overlays in \code{mirt::itemfit(empirical.plot=...)}
+because both compare empirical bin behavior to expected model curves.
+However, mirt's \code{S_X2.plot} is constructed from conditional sum-score
+information used by the \code{S_X2} statistic, while this mfrmr plot bins by
+estimated person measure for a selected facet level and does not return a
+chi-square statistic, degrees of freedom, RMSEA, or \code{p.S_X2}.
 }
 \examples{
 toy <- load_mfrmr_data("example_core")
@@ -77,6 +98,21 @@ p_cat <- plot_empirical_fit(fit, diagnostics = diag,
                             facet = "Rater", category = 4,
                             bins = 5, draw = FALSE)
 p_cat$data$metric
+
+\dontrun{
+# mirt's empirical plot is item-based; this mfrmr plot is facet-level.
+# Use it as an observed-vs-expected diagnostic layer, not as S_X2.
+plot_empirical_fit(fit, diagnostics = diag,
+                   facet = "Rater", level = "R01", bins = 6)
+}
+}
+\references{
+Chalmers, R. P. (2012). mirt: A Multidimensional Item Response Theory
+Package for the R Environment. \emph{Journal of Statistical Software},
+48(6), 1-29. \doi{10.18637/jss.v048.i06}
+
+mirt \code{itemfit()} reference:
+\url{https://philchalmers.github.io/mirt/docs/reference/itemfit.html}
 }
 \seealso{
 \code{\link[=fit_p_table]{fit_p_table()}}, \code{\link[=plot_bubble]{plot_bubble()}}, \code{\link[=plot_person_fit]{plot_person_fit()}},

@@ -24,9 +24,111 @@ test_that("fit_p_table returns TAM-style adjusted p columns", {
   ) %in% names(tab)))
   expect_true(all(na.omit(tab$Outfit_p) >= 0 & na.omit(tab$Outfit_p) <= 1))
   expect_true(all(na.omit(tab$Infit_p_adj) >= 0 & na.omit(tab$Infit_p_adj) <= 1))
+  expect_equal(tab$Outfit_p, 2 * stats::pnorm(-abs(tab$Outfit_t)))
+  expect_equal(tab$Infit_p, 2 * stats::pnorm(-abs(tab$Infit_t)))
+  expect_false(any(tab$Facet == "Person"))
   expect_true(all(na.omit(tab$MisfitDirection) %in%
                     c("in_band", "underfit", "overfit", "mixed")))
   expect_identical(unique(tab$PAdjustMethod), "holm")
+})
+
+test_that("fit_p_table cross-package orientation is high agreement but not identity", {
+  skip_on_cran()
+  if (!requireNamespace("mirt", quietly = TRUE) ||
+      !requireNamespace("TAM", quietly = TRUE)) {
+    skip("mirt and TAM are needed for the cross-package orientation test.")
+  }
+
+  toy <- load_mfrmr_data("example_core")
+  toy$Score0 <- toy$Score - 1L
+  toy$Item <- paste(toy$Rater, toy$Criterion, sep = "__")
+  wide <- reshape(
+    toy[, c("Person", "Item", "Score0")],
+    idvar = "Person",
+    timevar = "Item",
+    direction = "wide"
+  )
+  rownames(wide) <- wide$Person
+  resp <- wide[, setdiff(names(wide), "Person"), drop = FALSE]
+  names(resp) <- sub("^Score0\\.", "", names(resp))
+
+  fit <- suppressMessages(suppressWarnings(
+    fit_mfrm(toy, "Person", "Item", "Score0",
+             method = "MML", model = "PCM", maxit = 60,
+             rating_min = 0, rating_max = 3)
+  ))
+  diag <- suppressMessages(suppressWarnings(
+    diagnose_mfrm(fit, residual_pca = "none")
+  ))
+  mfr_tab <- fit_p_table(fit, diagnostics = diag)
+  mfr_tab$item <- sub("^Item:", "", mfr_tab$parameter)
+
+  tam_fit <- suppressMessages(suppressWarnings(
+    TAM::tam.mml(resp = resp, irtmodel = "PCM2",
+                 control = list(maxiter = 60), verbose = FALSE)
+  ))
+  tam_item <- data.frame(
+    item = rownames(tam_fit$item),
+    TAM = tam_fit$item$xsi.item,
+    stringsAsFactors = FALSE
+  )
+  tam_tab <- as.data.frame(
+    suppressMessages(suppressWarnings(
+      TAM::tam.fit(tam_fit, progress = FALSE, seed = 1)
+    ))$itemfit,
+    stringsAsFactors = FALSE
+  )
+  tam_tab$item <- as.character(tam_tab$parameter)
+
+  mirt_fit <- suppressMessages(suppressWarnings(
+    mirt::mirt(as.data.frame(resp), 1,
+               itemtype = rep("Rasch", ncol(resp)),
+               verbose = FALSE,
+               technical = list(NCYCLES = 60))
+  ))
+  mirt_coef <- mirt::coef(mirt_fit, IRTpars = TRUE, simplify = TRUE)$items
+  mirt_item <- data.frame(
+    item = rownames(mirt_coef),
+    mirt = rowMeans(mirt_coef[, c("b1", "b2", "b3"), drop = FALSE]),
+    stringsAsFactors = FALSE
+  )
+  mirt_infit <- as.data.frame(
+    mirt::itemfit(mirt_fit, fit_stats = "infit", method = "ML"),
+    stringsAsFactors = FALSE
+  )
+  mirt_infit$item <- as.character(mirt_infit$item)
+  mirt_sx2 <- as.data.frame(
+    mirt::itemfit(mirt_fit, fit_stats = "S_X2"),
+    stringsAsFactors = FALSE
+  )
+
+  mfr_item <- data.frame(
+    item = fit$facets$others$Level,
+    mfrmr = fit$facets$others$Estimate,
+    stringsAsFactors = FALSE
+  )
+  estimate_join <- Reduce(function(x, y) merge(x, y, by = "item"),
+                          list(mfr_item, tam_item, mirt_item))
+  estimate_join$mfrmr <- as.numeric(scale(estimate_join$mfrmr, scale = FALSE))
+  estimate_join$TAM <- as.numeric(scale(estimate_join$TAM, scale = FALSE))
+  estimate_join$mirt <- as.numeric(scale(estimate_join$mirt, scale = FALSE))
+  expect_gt(stats::cor(estimate_join$mfrmr, estimate_join$TAM), 0.999)
+  expect_gt(stats::cor(estimate_join$mfrmr, estimate_join$mirt), 0.999)
+
+  fit_join <- Reduce(function(x, y) merge(x, y, by = "item"),
+                     list(
+                       mfr_tab[, c("item", "Outfit", "Infit")],
+                       tam_tab[, c("item", "Outfit", "Infit")],
+                       mirt_infit[, c("item", "outfit", "infit")]
+                     ))
+  names(fit_join) <- c("item", "mfr_Outfit", "mfr_Infit",
+                       "tam_Outfit", "tam_Infit",
+                       "mirt_Outfit", "mirt_Infit")
+  expect_gt(stats::cor(fit_join$mfr_Outfit, fit_join$tam_Outfit), 0.95)
+  expect_gt(stats::cor(fit_join$mfr_Infit, fit_join$mirt_Infit), 0.95)
+  expect_gt(mean(abs(fit_join$mfr_Outfit - fit_join$tam_Outfit)), 0.001)
+  expect_false(any(c("S_X2", "p.S_X2", "RMSEA.S_X2") %in% names(mfr_tab)))
+  expect_true(all(c("S_X2", "p.S_X2", "RMSEA.S_X2") %in% names(mirt_sx2)))
 })
 
 test_that("fit_p_table supports person and category scopes", {

@@ -689,6 +689,11 @@ emp <- plot_empirical_fit(fit, diagnostics = diag,
 emp$data$bin_table
 ```
 
+`fit_p_table()` deliberately uses TAM-style column names for easy reporting,
+but its p values are mfrmr ZSTD normal-tail approximations from residual
+mean-square fit. `plot_empirical_fit()` is an observed-vs-expected empirical
+overlay; it is not mirt's `S_X2` chi-square test.
+
 ## Reporting and APA route
 
 If your endpoint is a manuscript or internal report, use the package-native
