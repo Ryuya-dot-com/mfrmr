@@ -381,7 +381,9 @@ format_reporting_marginal_pair_label <- function(pair_row) {
 #' `misfit_warn = NULL`, [plot_person_fit()] when `lower` / `upper`
 #' are `NULL`, and [plot_bubble()] when `fit_range = NULL`. Setting the
 #' options once at the top of an analysis script therefore changes every
-#' downstream screen at once.
+#' downstream screen at once. Directional outputs use the same band: MnSq
+#' values above the upper bound are labelled `underfit`, and values below the
+#' lower bound are labelled `overfit`.
 #'
 #' @section Configuration:
 #' Two scalar R options drive the band:
@@ -455,16 +457,75 @@ mfrm_misfit_threshold_note <- function(band = mfrm_misfit_thresholds()) {
       ". The package default follows the broad Linacre/Wright-Linacre ",
       "0.5-1.5 convention; published and operational misfit bands can be ",
       "narrower or broader by purpose, sample size, and consequence, so ",
-      "flags are screening evidence rather than a universal misfit definition."
+      "flags are screening evidence rather than a universal misfit definition. ",
+      "Values above the upper band are labelled underfit; values below the ",
+      "lower band are labelled overfit."
     )
   } else {
     paste0(
       "Active MnSq screening band: ", band_text,
       ". This is a custom/configured band; published and operational misfit ",
       "bands vary by purpose, sample size, and consequence, so flags are ",
-      "screening evidence rather than a universal misfit definition."
+      "screening evidence rather than a universal misfit definition. Values ",
+      "above the upper band are labelled underfit; values below the lower ",
+      "band are labelled overfit."
     )
   }
+}
+
+mfrm_classify_mnsq_direction <- function(infit,
+                                         outfit,
+                                         lower = NULL,
+                                         upper = NULL,
+                                         inclusive = FALSE) {
+  band <- mfrm_misfit_thresholds(lower = lower, upper = upper)
+  lower <- as.numeric(band["lower"])
+  upper <- as.numeric(band["upper"])
+  inclusive <- isTRUE(inclusive)
+
+  infit <- suppressWarnings(as.numeric(infit))
+  outfit <- suppressWarnings(as.numeric(outfit))
+  n <- max(length(infit), length(outfit))
+  if (n == 0L) return(character(0))
+
+  infit <- if (length(infit) == 0L) rep(NA_real_, n) else rep_len(infit, n)
+  outfit <- if (length(outfit) == 0L) rep(NA_real_, n) else rep_len(outfit, n)
+
+  finite <- is.finite(infit) | is.finite(outfit)
+  high <- if (inclusive) {
+    (is.finite(infit) & infit >= upper) |
+      (is.finite(outfit) & outfit >= upper)
+  } else {
+    (is.finite(infit) & infit > upper) |
+      (is.finite(outfit) & outfit > upper)
+  }
+  low <- if (inclusive) {
+    (is.finite(infit) & infit <= lower) |
+      (is.finite(outfit) & outfit <= lower)
+  } else {
+    (is.finite(infit) & infit < lower) |
+      (is.finite(outfit) & outfit < lower)
+  }
+
+  out <- rep(NA_character_, n)
+  out[finite & !high & !low] <- "in_band"
+  out[finite & high & !low] <- "underfit"
+  out[finite & low & !high] <- "overfit"
+  out[finite & high & low] <- "mixed"
+  out
+}
+
+mfrm_misfit_direction_label <- function(direction) {
+  direction <- as.character(direction)
+  labels <- c(
+    in_band = "inside active band",
+    underfit = "underfit (above upper band)",
+    overfit = "overfit (below lower band)",
+    mixed = "mixed underfit/overfit"
+  )
+  out <- unname(labels[direction])
+  out[is.na(out) & !is.na(direction)] <- direction[is.na(out) & !is.na(direction)]
+  out
 }
 
 mfrm_misfit_threshold_apa_sentence <- function(band = mfrm_misfit_thresholds()) {
@@ -479,7 +540,9 @@ mfrm_misfit_threshold_apa_sentence <- function(band = mfrm_misfit_thresholds()) 
     " MnSq screening band (", source_text,
     "); because published and operational bands differ by purpose and sample ",
     "context, flags were interpreted as screening evidence rather than a ",
-    "universal misfit definition."
+    "universal misfit definition. MnSq values above the upper band were ",
+    "described as underfit, whereas values below the lower band were ",
+    "described as overfit."
   )
 }
 
@@ -858,8 +921,17 @@ summarize_top_misfit_levels <- function(fit_tbl, top_n = 3L) {
   labels <- vapply(seq_len(nrow(show)), function(i) {
     facet <- if ("Facet" %in% names(show)) as.character(show$Facet[i]) else "Facet"
     level <- if ("Level" %in% names(show)) as.character(show$Level[i]) else as.character(i)
+    infit_i <- if ("Infit" %in% names(show)) show$Infit[i] else NA_real_
+    outfit_i <- if ("Outfit" %in% names(show)) show$Outfit[i] else NA_real_
+    direction <- mfrm_classify_mnsq_direction(infit_i, outfit_i)[1] %||% NA_character_
+    direction_part <- if (!is.na(direction) && direction %in% c("underfit", "overfit", "mixed")) {
+      paste0("; ", mfrm_misfit_direction_label(direction))
+    } else {
+      ""
+    }
     paste0(facet, ":", level,
-           " (", metric_label, " = ", fmt_num(show$AbsMetric[i]), ")")
+           " (", metric_label, " = ", fmt_num(show$AbsMetric[i]),
+           direction_part, ")")
   }, character(1))
 
   paste0("Largest misfit signals: ", paste(labels, collapse = "; "), ".")
@@ -1124,7 +1196,7 @@ build_apa_note_map_from_contract <- function(contract) {
   note_map$step_thresholds <- "Step/threshold estimates\nNote. Step ordering should generally increase; disordered thresholds suggest category structure issues."
   note_map$category_curves <- "Category characteristic curves\nNote. Curves show category response probability across theta/logit levels; well-functioning categories show distinct peaks in order."
   note_map$observed_expected <- "Observed vs expected scores\nNote. Points summarize mean observed and expected scores by bin; deviations from the diagonal suggest local misfit."
-  note_map$fit_diagnostics <- "Fit diagnostics (Infit vs Outfit)\nNote. Each point represents an element within a facet. Values near 1.0 indicate expected fit; values substantially above 1.0 suggest misfit."
+  note_map$fit_diagnostics <- "Fit diagnostics (Infit vs Outfit)\nNote. Each point represents an element within a facet. Values near 1.0 indicate expected fit; values above the active upper MnSq band suggest underfit, while values below the active lower band suggest overfit."
   note_map$fit_zstd_distribution <- "Fit ZSTD distribution\nNote. Distributions of standardized fit help identify unusually large residuals across facets."
   note_map$misfit_levels <- "Misfit levels\nNote. Levels are ranked by maximum |ZSTD| to highlight potentially problematic elements."
   if (isTRUE(availability$has_strict_marginal)) {

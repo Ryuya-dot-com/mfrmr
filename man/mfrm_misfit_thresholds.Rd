@@ -35,7 +35,9 @@ Helpers that consume the band include
 \code{misfit_warn = NULL}, \code{\link[=plot_person_fit]{plot_person_fit()}} when \code{lower} / \code{upper}
 are \code{NULL}, and \code{\link[=plot_bubble]{plot_bubble()}} when \code{fit_range = NULL}. Setting the
 options once at the top of an analysis script therefore changes every
-downstream screen at once.
+downstream screen at once. Directional outputs use the same band: MnSq
+values above the upper bound are labelled \code{underfit}, and values below the
+lower bound are labelled \code{overfit}.
 }
 \section{Configuration}{
 

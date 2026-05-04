@@ -7337,14 +7337,25 @@ run_qc_pipeline <- function(fit,
   if (!is.null(fit_tbl) && nrow(fit_tbl) > 0 &&
       all(c("Infit", "Outfit") %in% names(fit_tbl))) {
     n_elements <- nrow(fit_tbl)
-    flagged <- (fit_tbl$Infit > thr$misfit_high | fit_tbl$Outfit > thr$misfit_high |
-                  fit_tbl$Infit < thr$misfit_low | fit_tbl$Outfit < thr$misfit_low)
+    misfit_direction <- mfrm_classify_mnsq_direction(
+      fit_tbl$Infit,
+      fit_tbl$Outfit,
+      lower = thr$misfit_low,
+      upper = thr$misfit_high
+    )
+    flagged <- misfit_direction %in% c("underfit", "overfit", "mixed")
     flagged[is.na(flagged)] <- FALSE
     n_flagged <- sum(flagged)
+    n_underfit <- sum(misfit_direction == "underfit", na.rm = TRUE)
+    n_overfit <- sum(misfit_direction == "overfit", na.rm = TRUE)
+    n_mixed <- sum(misfit_direction == "mixed", na.rm = TRUE)
     misfit_pct <- 100 * n_flagged / n_elements
   } else {
     n_elements <- 0
     n_flagged  <- 0
+    n_underfit <- 0
+    n_overfit <- 0
+    n_mixed <- 0
     misfit_pct <- 0
   }
 
@@ -7364,14 +7375,20 @@ run_qc_pipeline <- function(fit,
     thr$misfit_fail_pct
   )
   details[5] <- sprintf(
-    "%d of %d elements outside MnSq [%.2f, %.2f] (%.1f%%)",
+    "%d of %d elements outside MnSq [%.2f, %.2f] (%.1f%%; underfit=%d, overfit=%d, mixed=%d)",
     n_flagged,
     n_elements,
     thr$misfit_low,
     thr$misfit_high,
-    misfit_pct
+    misfit_pct,
+    n_underfit,
+    n_overfit,
+    n_mixed
   )
   raw_details$element_misfit <- list(n_flagged = n_flagged, n_elements = n_elements,
+                                     n_underfit = n_underfit,
+                                     n_overfit = n_overfit,
+                                     n_mixed = n_mixed,
                                      misfit_pct = misfit_pct,
                                      misfit_low = thr$misfit_low,
                                      misfit_high = thr$misfit_high)

@@ -170,7 +170,11 @@ plot_threshold_ladder <- function(fit,
 #' @param draw If `TRUE`, draw with base graphics.
 #'
 #' @return An `mfrm_plot_data` object whose `data` slot contains
-#'   columns `Person`, `Infit`, `Outfit`, `N`, `Status`.
+#'   columns `Person`, `Infit`, `Outfit`, `N`, `Status`, and
+#'   `MisfitDirection`. `Status` keeps the plot-colour contract
+#'   (`in_band`, `one_outside`, `both_outside`), while `MisfitDirection`
+#'   separates `underfit` (above the upper MnSq band), `overfit` (below the
+#'   lower band), `mixed`, and `in_band`.
 #'
 #' @section Interpreting output:
 #' The default band is the active package MnSq screening band returned by
@@ -178,8 +182,10 @@ plot_threshold_ladder <- function(fit,
 #' convention, but applied studies may use narrower or broader bands by
 #' purpose and sample context. Persons in the green centre are inside the
 #' current screening band; amber and red corners are candidates for misfit
-#' review (overfit / underfit) using [unexpected_response_table()] for
-#' follow-up.
+#' review. Read `p$data$data$MisfitDirection` to distinguish underfit
+#' (MnSq above the upper band), overfit (MnSq below the lower band), and
+#' mixed high/low patterns before moving to [unexpected_response_table()] for
+#' case-level follow-up.
 #'
 #' @seealso [diagnose_mfrm()], [unexpected_response_table()],
 #'   [build_misfit_casebook()].
@@ -190,6 +196,7 @@ plot_threshold_ladder <- function(fit,
 #'                 method = "JML", maxit = 25)
 #' p <- plot_person_fit(fit, draw = FALSE)
 #' head(p$data$data)
+#' table(p$data$data$MisfitDirection, useNA = "ifany")
 #' @export
 plot_person_fit <- function(fit,
                             diagnostics = NULL,
@@ -227,6 +234,12 @@ plot_person_fit <- function(fit,
   out_band <- m$Outfit >= lower & m$Outfit <= upper
   m$Status <- ifelse(in_band & out_band, "in_band",
                      ifelse(in_band | out_band, "one_outside", "both_outside"))
+  m$MisfitDirection <- mfrm_classify_mnsq_direction(
+    m$Infit,
+    m$Outfit,
+    lower = lower,
+    upper = upper
+  )
   status_color <- c(in_band = style$success,
                     one_outside = style$warn,
                     both_outside = style$fail)
@@ -275,6 +288,7 @@ plot_person_fit <- function(fit,
     Outfit = m$Outfit,
     N = m$N,
     Status = m$Status,
+    MisfitDirection = m$MisfitDirection,
     stringsAsFactors = FALSE
   )
   out <- new_mfrm_plot_data(

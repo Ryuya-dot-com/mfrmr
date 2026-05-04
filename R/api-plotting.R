@@ -2377,7 +2377,7 @@ plot_facets_chisq <- function(x,
 #' | Panel | What it shows | Key reference lines |
 #' | --- | --- | --- |
 #' | 1. Category counts | Observed (bars) vs model-expected counts (line) | -- |
-#' | 2. Infit vs Outfit | Scatter of element MnSq values | heuristic 0.5, 1.0, 1.5 bands |
+#' | 2. Infit vs Outfit | Scatter of element MnSq values | active lower, 1.0, upper MnSq bands |
 #' | 3. \|ZSTD\| histogram | Distribution of absolute standardised residuals | \|ZSTD\| = 2 |
 #' | 4. Unexpected responses | Standardised residual vs \eqn{-\log_{10} P_{\mathrm{obs}}} | `abs_z_min`, `prob_max` |
 #' | 5. Fair-average gaps | Boxplots of (Observed - FairM) per facet | zero line |
@@ -2406,7 +2406,8 @@ plot_facets_chisq <- function(x,
 #' Recommended panel order for fast review:
 #' 1. **Category counts + Infit/Outfit** (row 1): first-pass model screening.
 #'    Category bars should roughly track the expected line; Infit/Outfit points
-#'    are often reviewed against the heuristic 0.5--1.5 band.
+#'    are reviewed against the active MnSq band. Points above the upper band
+#'    indicate underfit; points below the lower band indicate overfit.
 #' 2. **Unexpected responses + Displacement** (row 2): element-level
 #'    outliers.  Sparse points and small displacements are desirable.
 #' 3. **Inter-rater + Chi-square** (row 3): facet-level comparability.
@@ -2477,8 +2478,23 @@ plot_qc_dashboard <- function(fit,
   }
 
   resolved <- resolve_warning_thresholds(thresholds = thresholds, threshold_profile = threshold_profile)
+  threshold_list <- if (is.null(thresholds)) list() else as.list(thresholds)
+  misfit_band <- mfrm_misfit_thresholds(
+    lower = threshold_list$misfit_low %||% threshold_list$misfit_lower,
+    upper = threshold_list$misfit_high %||% threshold_list$misfit_upper
+  )
+  misfit_lower <- as.numeric(misfit_band["lower"])
+  misfit_upper <- as.numeric(misfit_band["upper"])
   cat_tbl <- calc_category_stats(diagnostics$obs, res = fit, whexact = FALSE)
   fit_tbl <- as.data.frame(diagnostics$fit, stringsAsFactors = FALSE)
+  if (nrow(fit_tbl) > 0 && all(c("Infit", "Outfit") %in% names(fit_tbl))) {
+    fit_tbl$MisfitDirection <- mfrm_classify_mnsq_direction(
+      fit_tbl$Infit,
+      fit_tbl$Outfit,
+      lower = misfit_lower,
+      upper = misfit_upper
+    )
+  }
   # Keep signed InfitZSTD and OutfitZSTD so the histogram reveals over-fit
   # (MnSq < 1, ZSTD < 0) vs under-fit (MnSq > 1, ZSTD > 0) asymmetry. An
   # absolute-value collapse hid one tail under the other.
@@ -2594,16 +2610,34 @@ plot_qc_dashboard <- function(fit,
       infit <- suppressWarnings(as.numeric(fit_tbl$Infit))
       outfit <- suppressWarnings(as.numeric(fit_tbl$Outfit))
       ok <- is.finite(infit) & is.finite(outfit)
+      directions <- if ("MisfitDirection" %in% names(fit_tbl)) {
+        as.character(fit_tbl$MisfitDirection)
+      } else {
+        mfrm_classify_mnsq_direction(infit, outfit, lower = misfit_lower, upper = misfit_upper)
+      }
+      direction_cols <- c(
+        in_band = style$accent_primary,
+        underfit = style$fail,
+        overfit = style$warn,
+        mixed = style$accent_secondary
+      )
+      point_cols <- unname(direction_cols[directions])
+      point_cols[is.na(point_cols)] <- style$neutral
       graphics::plot(
         x = infit[ok],
         y = outfit[ok],
         pch = 16,
-        col = style$accent_primary,
+        col = point_cols[ok],
         xlab = "Infit MnSq",
         ylab = "Outfit MnSq",
         main = "QC: Infit vs Outfit"
       )
-      graphics::abline(v = c(0.5, 1, 1.5), h = c(0.5, 1, 1.5), lty = c(2, 1, 2), col = style$neutral)
+      graphics::abline(
+        v = c(misfit_lower, 1, misfit_upper),
+        h = c(misfit_lower, 1, misfit_upper),
+        lty = c(2, 1, 2),
+        col = style$neutral
+      )
     } else {
       graphics::plot.new()
       graphics::title(main = "QC: Infit vs Outfit")
@@ -2802,6 +2836,7 @@ plot_qc_dashboard <- function(fit,
       preset = style$name,
       threshold_profile = resolved$profile_name,
       thresholds = resolved$thresholds,
+      misfit_band = misfit_band,
       category_stats = cat_tbl,
       fit = fit_tbl,
       zstd = zstd,

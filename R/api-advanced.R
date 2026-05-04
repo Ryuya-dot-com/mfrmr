@@ -5619,12 +5619,24 @@ print.summary.mfrm_linking_review <- function(x, ...) {
     dplyr::mutate(
       SourceRowKey = paste(.data$Facet, .data$Level, sep = "::"),
       CaseID = paste0("element_fit:", .data$SourceRowKey),
-      Direction = dplyr::case_when(
+      MisfitDirection = mfrm_classify_mnsq_direction(
+        .data$Infit,
+        .data$Outfit,
+        lower = lower,
+        upper = upper
+      ),
+      PrimaryFitSignal = dplyr::case_when(
+        .data$MisfitDirection == "mixed" ~ "Infit/Outfit on opposite sides of band",
         is.finite(.data$Outfit) & .data$Outfit > upper ~ "Outfit MnSq above band",
         is.finite(.data$Infit) & .data$Infit > upper ~ "Infit MnSq above band",
         is.finite(.data$Outfit) & .data$Outfit < lower ~ "Outfit MnSq below band",
         is.finite(.data$Infit) & .data$Infit < lower ~ "Infit MnSq below band",
-        TRUE ~ "Mixed"
+        TRUE ~ "MnSq outside band"
+      ),
+      Direction = paste0(
+        mfrm_misfit_direction_label(.data$MisfitDirection),
+        "; ",
+        .data$PrimaryFitSignal
       )
     ) |>
     dplyr::transmute(
@@ -5770,7 +5782,7 @@ print.summary.mfrm_linking_review <- function(x, ...) {
 #' diag <- diagnose_mfrm(fit, diagnostic_mode = "both", residual_pca = "none")
 #' casebook <- build_misfit_casebook(fit, diagnostics = diag, top_n = 10)
 #' summary(casebook)
-#' casebook$top_cases
+#' casebook$top_cases[, c("CaseID", "SourceFamily", "Direction", "Signal")]
 #' }
 #' @export
 build_misfit_casebook <- function(fit,

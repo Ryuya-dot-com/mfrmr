@@ -597,9 +597,19 @@ test_that("plot_qc_dashboard returns a plot bundle", {
   expect_s3_class(p, "mfrm_plot_data")
   expect_identical(as.character(p$data$preset), "standard")
   expect_true(all(c("title", "subtitle", "legend", "reference_lines") %in% names(p$data)))
+  expect_equal(unname(p$data$misfit_band), c(0.5, 1.5))
+  expect_true("MisfitDirection" %in% names(p$data$fit))
 
   p_pub <- plot_qc_dashboard(.fit, diagnostics = .diag, draw = FALSE, preset = "publication")
   expect_identical(as.character(p_pub$data$preset), "publication")
+})
+
+test_that("plot_qc_dashboard inherits active misfit band", {
+  old <- options(mfrmr.misfit_lower = 0.7, mfrmr.misfit_upper = 1.3)
+  on.exit(options(old), add = TRUE)
+
+  p <- plot_qc_dashboard(.fit, diagnostics = .diag, draw = FALSE)
+  expect_equal(unname(p$data$misfit_band), c(0.7, 1.3))
 })
 
 # ---- make_anchor_table ----

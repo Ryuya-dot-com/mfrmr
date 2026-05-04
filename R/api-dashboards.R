@@ -72,7 +72,9 @@
 #'   explicitly
 #' - `overview`: one-row structural overview
 #' - `summary`: one-row screening summary
-#' - `detail`: level-level detail table
+#' - `detail`: level-level detail table. When fit statistics are available,
+#'   `MisfitDirection` separates `underfit` (above the upper MnSq band),
+#'   `overfit` (below the lower band), `mixed`, and `in_band`.
 #' - `ranked`: detail ordered by flag density / severity
 #' - `flagged`: flagged levels only
 #' - `bias_sources`: per-bundle bias aggregation metadata
@@ -92,6 +94,7 @@
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
 #' dash <- facet_quality_dashboard(fit, diagnostics = diag)
 #' summary(dash)
+#' dash$detail[, c("Level", "Infit", "Outfit", "MisfitDirection", "FlagLabel")]
 #' @export
 facet_quality_dashboard <- function(fit,
                                     diagnostics = NULL,
@@ -177,6 +180,13 @@ facet_quality_dashboard <- function(fit,
   detail$MisfitFlag <- is.finite(fit_hi) & (
     fit_hi >= abs(misfit_warn) | fit_lo <= misfit_lower_band
   )
+  detail$MisfitDirection <- mfrm_classify_mnsq_direction(
+    detail$Infit,
+    detail$Outfit,
+    lower = misfit_lower_band,
+    upper = abs(misfit_warn),
+    inclusive = TRUE
+  )
   detail$CentralTendencyFlag <- is.finite(detail$AbsEstimate) & detail$AbsEstimate <= abs(central_tendency_max)
   detail$BiasCount <- 0L
   detail$BiasSources <- 0L
@@ -205,7 +215,14 @@ facet_quality_dashboard <- function(fit,
   detail$FlagLabel <- vapply(seq_len(nrow(detail)), function(i) {
     labs <- character(0)
     if (isTRUE(detail$SeverityFlag[i])) labs <- c(labs, "severity")
-    if (isTRUE(detail$MisfitFlag[i])) labs <- c(labs, "misfit")
+    if (isTRUE(detail$MisfitFlag[i])) {
+      direction <- as.character(detail$MisfitDirection[i])
+      if (is.na(direction) || !nzchar(direction) || identical(direction, "in_band")) {
+        labs <- c(labs, "misfit")
+      } else {
+        labs <- c(labs, paste0("misfit_", direction))
+      }
+    }
     if (isTRUE(detail$CentralTendencyFlag[i])) labs <- c(labs, "central")
     if (isTRUE(detail$BiasFlag[i])) labs <- c(labs, "bias")
     if (length(labs) == 0) "" else paste(labs, collapse = ", ")
@@ -247,6 +264,9 @@ facet_quality_dashboard <- function(fit,
     MeanOutfit = mean(detail$Outfit, na.rm = TRUE),
     SeverityFlagged = sum(detail$SeverityFlag, na.rm = TRUE),
     MisfitFlagged = sum(detail$MisfitFlag, na.rm = TRUE),
+    MisfitUnderfit = sum(detail$MisfitDirection == "underfit", na.rm = TRUE),
+    MisfitOverfit = sum(detail$MisfitDirection == "overfit", na.rm = TRUE),
+    MisfitMixed = sum(detail$MisfitDirection == "mixed", na.rm = TRUE),
     CentralTendencyFlagged = sum(detail$CentralTendencyFlag, na.rm = TRUE),
     BiasFlagged = sum(detail$BiasFlag, na.rm = TRUE),
     AnyFlagged = sum(detail$AnyFlag, na.rm = TRUE),

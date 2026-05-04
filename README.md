@@ -671,6 +671,13 @@ diag <- diagnose_mfrm(fit, residual_pca = "none")
 chk <- reporting_checklist(fit, diagnostics = diag)
 apa <- build_apa_outputs(fit, diag)
 sc <- subset_connectivity_report(fit, diagnostics = diag)
+
+# Fit direction is explicit in review-oriented outputs:
+person_fit <- plot_person_fit(fit, diagnostics = diag, draw = FALSE)
+table(person_fit$data$data$MisfitDirection, useNA = "ifany")
+
+casebook <- build_misfit_casebook(fit, diagnostics = diag)
+casebook$top_cases[, c("CaseID", "SourceFamily", "Direction", "Signal")]
 ```
 
 ## Reporting and APA route
@@ -1158,6 +1165,7 @@ qc <- run_qc_pipeline(fit, threshold_profile = "standard")
 qc$overall      # "Pass", "Warn", or "Fail"
 qc$verdicts     # per-check verdicts
 qc$recommendations
+qc$details$element_misfit[c("n_underfit", "n_overfit", "n_mixed")]
 
 plot_qc_pipeline(qc, type = "traffic_light")
 plot_qc_pipeline(qc, type = "detail")

@@ -35,7 +35,11 @@ next to the bubble (largest |Infit-1| + |Outfit-1|). Default \code{12}.}
 }
 \value{
 An \code{mfrm_plot_data} object whose \code{data} slot contains
-columns \code{Person}, \code{Infit}, \code{Outfit}, \code{N}, \code{Status}.
+columns \code{Person}, \code{Infit}, \code{Outfit}, \code{N}, \code{Status}, and
+\code{MisfitDirection}. \code{Status} keeps the plot-colour contract
+(\code{in_band}, \code{one_outside}, \code{both_outside}), while \code{MisfitDirection}
+separates \code{underfit} (above the upper MnSq band), \code{overfit} (below the
+lower band), \code{mixed}, and \code{in_band}.
 }
 \description{
 Per-person diagnostic bubble plot inspired by FACETS Table 6 / KIDMAP
@@ -52,8 +56,10 @@ The default band is the active package MnSq screening band returned by
 convention, but applied studies may use narrower or broader bands by
 purpose and sample context. Persons in the green centre are inside the
 current screening band; amber and red corners are candidates for misfit
-review (overfit / underfit) using \code{\link[=unexpected_response_table]{unexpected_response_table()}} for
-follow-up.
+review. Read \code{p$data$data$MisfitDirection} to distinguish underfit
+(MnSq above the upper band), overfit (MnSq below the lower band), and
+mixed high/low patterns before moving to \code{\link[=unexpected_response_table]{unexpected_response_table()}} for
+case-level follow-up.
 }
 
 \examples{
@@ -62,6 +68,7 @@ fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "JML", maxit = 25)
 p <- plot_person_fit(fit, draw = FALSE)
 head(p$data$data)
+table(p$data$data$MisfitDirection, useNA = "ifany")
 }
 \seealso{
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=unexpected_response_table]{unexpected_response_table()}},

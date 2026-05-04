@@ -4211,9 +4211,16 @@ summary.mfrm_diagnostics <- function(object, digits = 3, top_n = 10, ...) {
   misfit_flagged <- tibble::tibble()
   if (nrow(fit_tbl) > 0 && all(c("Facet", "Level", "Infit", "Outfit") %in% names(fit_tbl))) {
     misfit_flagged <- fit_tbl |>
+      dplyr::mutate(
+        MisfitDirection = mfrm_classify_mnsq_direction(
+          .data$Infit,
+          .data$Outfit,
+          lower = misfit_lower,
+          upper = misfit_upper
+        )
+      ) |>
       dplyr::filter(
-        (is.finite(.data$Infit) & (.data$Infit < misfit_lower | .data$Infit > misfit_upper)) |
-          (is.finite(.data$Outfit) & (.data$Outfit < misfit_lower | .data$Outfit > misfit_upper))
+        .data$MisfitDirection %in% c("underfit", "overfit", "mixed")
       )
   }
 
@@ -4371,18 +4378,30 @@ summary.mfrm_diagnostics <- function(object, digits = 3, top_n = 10, ...) {
       dplyr::arrange(dplyr::desc(.data$WorstMnSq)) |>
       dplyr::slice_head(n = 3L)
     msgs <- vapply(seq_len(nrow(worst)), function(i) {
+      direction <- mfrm_misfit_direction_label(worst$MisfitDirection[i])
       sprintf(
-        "MnSq misfit: %s:%s (Infit=%.2f, Outfit=%.2f; outside active %s band).",
+        "MnSq misfit (%s): %s:%s (Infit=%.2f, Outfit=%.2f; outside active %s band).",
+        direction,
         worst$Facet[i], worst$Level[i],
         as.numeric(worst$Infit[i]), as.numeric(worst$Outfit[i]),
         misfit_band_text
       )
     }, character(1))
+    direction_counts <- table(
+      factor(
+        misfit_flagged$MisfitDirection,
+        levels = c("underfit", "overfit", "mixed")
+      ),
+      useNA = "no"
+    )
     key_warnings <- c(
       key_warnings,
       sprintf(
-        "MnSq misfit flagged %d element(s) outside %s (active %s).",
-        nrow(misfit_flagged), misfit_band_text, misfit_threshold_label
+        "MnSq misfit flagged %d element(s) outside %s (active %s; underfit=%d, overfit=%d, mixed=%d).",
+        nrow(misfit_flagged), misfit_band_text, misfit_threshold_label,
+        as.integer(direction_counts[["underfit"]]),
+        as.integer(direction_counts[["overfit"]]),
+        as.integer(direction_counts[["mixed"]])
       ),
       msgs
     )

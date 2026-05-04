@@ -85,7 +85,7 @@ fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 diag <- diagnose_mfrm(fit, diagnostic_mode = "both", residual_pca = "none")
 casebook <- build_misfit_casebook(fit, diagnostics = diag, top_n = 10)
 summary(casebook)
-casebook$top_cases
+casebook$top_cases[, c("CaseID", "SourceFamily", "Direction", "Signal")]
 }
 }
 \seealso{

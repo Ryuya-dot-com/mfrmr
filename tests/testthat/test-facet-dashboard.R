@@ -53,6 +53,11 @@ test_that("facet_quality_dashboard constructs a dashboard bundle with inferred f
   expect_true(all(c("summary", "detail", "flagged", "settings") %in% names(facet_dashboard_fixture$dashboard_single)))
   expect_true(is.data.frame(facet_dashboard_fixture$dashboard_single$overview))
   expect_true(is.data.frame(facet_dashboard_fixture$dashboard_single$summary))
+  expect_true("MisfitDirection" %in% names(facet_dashboard_fixture$dashboard_single$detail))
+  expect_true(all(na.omit(facet_dashboard_fixture$dashboard_single$detail$MisfitDirection) %in%
+                    c("in_band", "underfit", "overfit", "mixed")))
+  expect_true(all(c("MisfitUnderfit", "MisfitOverfit", "MisfitMixed") %in%
+                    names(facet_dashboard_fixture$dashboard_single$summary)))
 })
 
 test_that("facet_quality_dashboard handles single and named-list bias bundles", {

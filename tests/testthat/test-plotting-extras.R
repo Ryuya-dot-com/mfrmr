@@ -47,12 +47,14 @@ test_that("plot_threshold_ladder honours highlight_disorder = FALSE", {
 test_that("plot_person_fit returns one row per Person", {
   p <- plot_person_fit(.fit, diagnostics = .diag, draw = FALSE)
   expect_s3_class(p, "mfrm_plot_data")
-  expect_true(all(c("Person", "Infit", "Outfit", "N", "Status") %in%
+  expect_true(all(c("Person", "Infit", "Outfit", "N", "Status", "MisfitDirection") %in%
                     names(p$data$data)))
   person_n <- length(unique(.fit$facets$person$Person))
   expect_lte(nrow(p$data$data), person_n)
   expect_true(all(p$data$data$Status %in%
                     c("in_band", "one_outside", "both_outside")))
+  expect_true(all(p$data$data$MisfitDirection %in%
+                    c("in_band", "underfit", "overfit", "mixed")))
 })
 
 test_that("plot_person_fit honours custom fit envelope", {

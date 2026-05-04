@@ -119,6 +119,15 @@ test_that("run_qc_pipeline surfaces the element MnSq band", {
   expect_match(row$Threshold[1], "MnSq \\[0.70, 1.30\\]")
   expect_equal(qc$details$element_misfit$misfit_low, 0.7)
   expect_equal(qc$details$element_misfit$misfit_high, 1.3)
+  expect_true(all(c("n_underfit", "n_overfit", "n_mixed") %in%
+                    names(qc$details$element_misfit)))
+  expect_equal(
+    qc$details$element_misfit$n_flagged,
+    qc$details$element_misfit$n_underfit +
+      qc$details$element_misfit$n_overfit +
+      qc$details$element_misfit$n_mixed
+  )
+  expect_match(row$Detail[1], "underfit=.*overfit=.*mixed=")
 })
 
 test_that("run_qc_pipeline works with pre-computed diagnostics", {

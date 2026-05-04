@@ -106,7 +106,9 @@ facet was inferred from the fit configuration or supplied
 explicitly
 \item \code{overview}: one-row structural overview
 \item \code{summary}: one-row screening summary
-\item \code{detail}: level-level detail table
+\item \code{detail}: level-level detail table. When fit statistics are available,
+\code{MisfitDirection} separates \code{underfit} (above the upper MnSq band),
+\code{overfit} (below the lower band), \code{mixed}, and \code{in_band}.
 \item \code{ranked}: detail ordered by flag density / severity
 \item \code{flagged}: flagged levels only
 \item \code{bias_sources}: per-bundle bias aggregation metadata
@@ -127,6 +129,7 @@ fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML",
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 dash <- facet_quality_dashboard(fit, diagnostics = diag)
 summary(dash)
+dash$detail[, c("Level", "Infit", "Outfit", "MisfitDirection", "FlagLabel")]
 }
 \seealso{
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=estimate_bias]{estimate_bias()}}, \code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}}

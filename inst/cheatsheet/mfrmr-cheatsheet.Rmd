@@ -116,7 +116,7 @@ fit_eb2 <- apply_empirical_bayes_shrinkage(fit)
 | `plot(fit, type = "wright", group=..., group_data=...)` | DIF density overlay |
 | `plot(fit, type = "shrinkage")` | Shrinkage direction arrows |
 | `plot_threshold_ladder(fit)` | Category threshold ordering |
-| `plot_person_fit(fit, diag)` | Per-person Infit/Outfit bubble |
+| `plot_person_fit(fit, diagnostics = diag)` | Per-person Infit/Outfit bubble; inspect `p$data$data$MisfitDirection` for underfit vs overfit |
 | `plot_rater_severity_profile(fit, diag)` | Rater ranking + CI bands |
 | `plot_bias_interaction(bias, plot="heatmap")` | Bias cell heatmap |
 | `plot_displacement(fit, show_ci=TRUE)` | Anchor displacement lollipop |

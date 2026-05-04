@@ -30,6 +30,25 @@ test_that("mfrm_misfit_thresholds() rejects invalid bounds", {
                "0 < lower < upper")
 })
 
+test_that("MnSq direction classifier separates underfit and overfit", {
+  direction <- mfrmr:::mfrm_classify_mnsq_direction(
+    infit = c(1.0, 1.6, 0.4, 1.6),
+    outfit = c(1.0, 1.2, 0.8, 0.4),
+    lower = 0.5,
+    upper = 1.5
+  )
+  expect_equal(direction, c("in_band", "underfit", "overfit", "mixed"))
+  expect_equal(
+    mfrmr:::mfrm_misfit_direction_label(direction),
+    c(
+      "inside active band",
+      "underfit (above upper band)",
+      "overfit (below lower band)",
+      "mixed underfit/overfit"
+    )
+  )
+})
+
 test_that("summary(diag) inherits the option-driven band", {
   toy <- load_mfrmr_data("example_core")
   fit <- suppressMessages(suppressWarnings(
@@ -101,9 +120,11 @@ test_that("casebook and facet dashboard inherit the active misfit band", {
 
   casebook <- build_misfit_casebook(fit, diagnostics = diag, top_n = 500)
   expect_true(any(grepl("MnSq misfit \\(band 0.7-1.3\\)", casebook$top_cases$Signal)))
+  expect_true(any(grepl("underfit", casebook$top_cases$Direction, fixed = TRUE)))
 
   dash <- facet_quality_dashboard(fit, diagnostics = diag, facet = "Rater")
   settings <- as.data.frame(dash$settings, stringsAsFactors = FALSE)
   expect_equal(as.numeric(settings$Value[settings$Setting == "misfit_lower"]), 0.7)
   expect_equal(as.numeric(settings$Value[settings$Setting == "misfit_warn"]), 1.3)
+  expect_true("MisfitDirection" %in% names(dash$detail))
 })

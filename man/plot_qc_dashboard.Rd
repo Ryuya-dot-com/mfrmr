@@ -60,7 +60,7 @@ Plot a base-R QC dashboard
 The dashboard draws nine QC panels in a 3\eqn{\times}3 grid:\tabular{lll}{
    Panel \tab What it shows \tab Key reference lines \cr
    1. Category counts \tab Observed (bars) vs model-expected counts (line) \tab -- \cr
-   2. Infit vs Outfit \tab Scatter of element MnSq values \tab heuristic 0.5, 1.0, 1.5 bands \cr
+   2. Infit vs Outfit \tab Scatter of element MnSq values \tab active lower, 1.0, upper MnSq bands \cr
    3. |ZSTD| histogram \tab Distribution of absolute standardised residuals \tab |ZSTD| = 2 \cr
    4. Unexpected responses \tab Standardised residual vs \eqn{-\log_{10} P_{\mathrm{obs}}} \tab \code{abs_z_min}, \code{prob_max} \cr
    5. Fair-average gaps \tab Boxplots of (Observed - FairM) per facet \tab zero line \cr
@@ -95,7 +95,8 @@ Recommended panel order for fast review:
 \enumerate{
 \item \strong{Category counts + Infit/Outfit} (row 1): first-pass model screening.
 Category bars should roughly track the expected line; Infit/Outfit points
-are often reviewed against the heuristic 0.5--1.5 band.
+are reviewed against the active MnSq band. Points above the upper band
+indicate underfit; points below the lower band indicate overfit.
 \item \strong{Unexpected responses + Displacement} (row 2): element-level
 outliers.  Sparse points and small displacements are desirable.
 \item \strong{Inter-rater + Chi-square} (row 3): facet-level comparability.
