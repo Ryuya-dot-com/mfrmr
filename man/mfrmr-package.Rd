@@ -155,10 +155,9 @@ specifications; fixed-calibration unit scoring supports \code{MML} fits
 directly, latent-regression \code{MML} fits through the fitted population
 model when scored units also provide one-row-per-person background data,
 and \code{JML} fits through a post hoc reference-prior EAP layer;
-fit-derived simulation specifications also support direct bounded
-\code{GPCM} data generation, while planning/forecasting helpers remain
-restricted to \code{RSM} / \code{PCM}; curve reports and graph-only exports are
-also available for bounded \code{GPCM})
+fit-derived simulation specifications, planning/forecasting helpers,
+curve reports, and graph-only exports are also available for bounded
+\code{GPCM} with the caveats documented in \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}})
 \item Reporting: \code{\link[=build_apa_outputs]{build_apa_outputs()}}, \code{\link[=build_visual_summaries]{build_visual_summaries()}},
 \code{\link[=reporting_checklist]{reporting_checklist()}}, \code{\link[=apa_table]{apa_table()}} for the full \code{RSM} / \code{PCM} route;
 bounded \code{GPCM} currently stays on the checklist / visual-summary / QC /

@@ -142,6 +142,95 @@ test_that("estimate_bias() no longer hard-stops on GPCM fits", {
   expect_identical(unique(bias$table$InferenceTier), "screening")
 })
 
+test_that("expected_score_table() uses slope-aware GPCM probabilities", {
+  d <- mfrmr:::sample_mfrm_data(seed = 42)
+  fit <- suppressWarnings(suppressMessages(fit_mfrm(
+    d, "Person", c("Rater", "Task", "Criterion"), "Score",
+    model = "GPCM", step_facet = "Criterion",
+    method = "MML", quad_points = 5, maxit = 20
+  )))
+
+  idx <- mfrmr:::build_indices(
+    fit$prep,
+    step_facet = fit$config$step_facet,
+    slope_facet = fit$config$slope_facet,
+    interaction_specs = fit$config$interaction_specs
+  )
+  sizes <- mfrmr:::build_param_sizes(fit$config)
+  params <- mfrmr:::expand_params(fit$opt$par, sizes, fit$config)
+  eta <- mfrmr:::compute_eta(
+    idx,
+    params,
+    fit$config,
+    theta_override = fit$facets$person$Estimate
+  )
+  expected <- fit$prep$rating_min +
+    mfrmr:::compute_response_probability_bundle(fit$config, idx, params, eta)$expected_k
+
+  est <- mfrmr:::expected_score_table(fit)
+  expect_equal(est$Expected, expected, tolerance = 1e-10)
+})
+
+test_that("estimate_bias() GPCM SE uses slope-scaled score information", {
+  d <- mfrmr:::sample_mfrm_data(seed = 42)
+  fit <- suppressWarnings(suppressMessages(fit_mfrm(
+    d, "Person", c("Rater", "Task", "Criterion"), "Score",
+    model = "GPCM", step_facet = "Criterion",
+    method = "MML", quad_points = 5, maxit = 20
+  )))
+  dx <- diagnose_mfrm(fit, residual_pca = "none", diagnostic_mode = "legacy")
+  bias <- estimate_bias(fit, dx, facet_a = "Rater", facet_b = "Criterion")
+  row_idx <- which(is.finite(bias$table$`S.E.`) &
+                     is.finite(bias$table$`Bias Size`))[1]
+  expect_true(is.finite(row_idx))
+  row <- bias$table[row_idx, , drop = FALSE]
+
+  idx <- mfrmr:::build_indices(
+    fit$prep,
+    step_facet = fit$config$step_facet,
+    slope_facet = fit$config$slope_facet,
+    interaction_specs = fit$config$interaction_specs
+  )
+  sizes <- mfrmr:::build_param_sizes(fit$config)
+  params <- mfrmr:::expand_params(fit$opt$par, sizes, fit$config)
+  eta <- mfrmr:::compute_eta(
+    idx,
+    params,
+    fit$config,
+    theta_override = fit$facets$person$Estimate
+  )
+  obs <- fit$prep$data
+  keep <- rep(TRUE, nrow(obs))
+  for (j in 1:2) {
+    facet_col <- row[[paste0("Facet", j)]]
+    level_col <- row[[paste0("Facet", j, "_Level")]]
+    keep <- keep & as.character(obs[[facet_col]]) == as.character(level_col)
+  }
+  obs_rows <- which(keep)
+  expect_gt(length(obs_rows), 0)
+
+  step_cum_mat <- t(apply(params$steps_mat, 1, function(x) c(0, cumsum(x))))
+  slope_idx <- idx$slope_idx
+  if (is.null(slope_idx)) slope_idx <- idx$step_idx
+  probs <- mfrmr:::category_prob_gpcm(
+    eta = eta[obs_rows] + row[["Bias Size"]],
+    step_cum_mat = step_cum_mat,
+    criterion_idx = idx$step_idx[obs_rows],
+    slopes = params$slopes,
+    slope_idx = slope_idx[obs_rows]
+  )
+  k_vals <- 0:(ncol(probs) - 1L)
+  expected_k <- as.vector(probs %*% k_vals)
+  var_k <- as.vector(probs %*% (k_vals^2)) - expected_k^2
+  var_k <- ifelse(var_k <= 1e-10, NA_real_, var_k)
+  slope_obs <- as.numeric(params$slopes[slope_idx[obs_rows]])
+  weight_obs <- if (!is.null(idx$weight)) idx$weight[obs_rows] else rep(1, length(obs_rows))
+  info <- sum((slope_obs^2) * var_k * weight_obs, na.rm = TRUE)
+  expected_se <- 1 / sqrt(info)
+
+  expect_equal(row[["S.E."]], expected_se, tolerance = 1e-8)
+})
+
 test_that("estimate_bias() GPCM dispatch responds to slope clamping", {
   # The GPCM bias dispatch (loglik_gpcm + category_prob_gpcm in
   # `estimate_bias_interaction()`) must consume `params$slopes`. We

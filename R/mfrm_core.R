@@ -2846,17 +2846,8 @@ expected_score_table <- function(res) {
     res$facets$person$Estimate
   }
   eta <- compute_eta(idx, params, config, theta_override = theta_hat)
-
-  if (config$model == "RSM") {
-    step_cum <- c(0, cumsum(params$steps))
-    probs <- category_prob_rsm(eta, step_cum)
-  } else {
-    step_cum_mat <- t(apply(params$steps_mat, 1, function(x) c(0, cumsum(x))))
-    probs <- category_prob_pcm(eta, step_cum_mat, idx$step_idx,
-                                criterion_splits = idx$criterion_splits)
-  }
-  k_vals <- 0:(ncol(probs) - 1)
-  expected_k <- as.vector(probs %*% k_vals)
+  prob_bundle <- compute_response_probability_bundle(config, idx, params, eta)
+  expected_k <- prob_bundle$expected_k
   tibble(
     Observed = prep$data$Score,
     Expected = prep$rating_min + expected_k
@@ -5766,7 +5757,21 @@ estimate_bias_interaction <- function(res,
       resid_k <- score_k_sub - expected_k
       std_sq <- resid_k^2 / var_k
 
-      info <- sum(var_k * weight_sub, na.rm = TRUE)
+      slope_obs_sub <- if (identical(config$model, "GPCM")) {
+        if (!is.null(slope_idx_sub)) {
+          as.numeric(slopes_full[slope_idx_sub])
+        } else {
+          rep(NA_real_, length(idx_rows))
+        }
+      } else {
+        rep(1, length(idx_rows))
+      }
+      info_k <- ifelse(
+        is.finite(var_k) & is.finite(slope_obs_sub),
+        (slope_obs_sub^2) * var_k,
+        NA_real_
+      )
+      info <- sum(info_k * weight_sub, na.rm = TRUE)
       se <- ifelse(is.finite(info) && info > 0, 1 / sqrt(info), NA_real_)
       infit <- ifelse(sum(var_k * weight_sub, na.rm = TRUE) > 0,
                       sum(std_sq * var_k * weight_sub, na.rm = TRUE) / sum(var_k * weight_sub, na.rm = TRUE),

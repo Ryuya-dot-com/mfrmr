@@ -421,6 +421,8 @@ test_that("build_apa_outputs produces structured APA text", {
   expect_true("report_text" %in% names(apa))
   expect_true("section_map" %in% names(apa))
   expect_true(nchar(apa$report_text) > 50)
+  expect_false(grepl("package..", apa$report_text, fixed = TRUE))
+  expect_false(grepl("reporting..", apa$report_text, fixed = TRUE))
   s <- summary(apa)
   expect_s3_class(s, "summary.mfrm_apa_outputs")
   expect_true(is.data.frame(s$sections))

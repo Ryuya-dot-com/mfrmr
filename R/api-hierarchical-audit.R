@@ -498,7 +498,7 @@ facet_small_sample_audit <- function(fit, diagnostics = NULL,
       MedianN = stats::median(N, na.rm = TRUE),
       MaxN = max(N, na.rm = TRUE),
       WorstCategory = category_order[
-        max(match(SampleCategory, category_order), na.rm = TRUE)
+        min(match(SampleCategory, category_order), na.rm = TRUE)
       ],
       .groups = "drop"
     )

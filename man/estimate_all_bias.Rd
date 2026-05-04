@@ -94,7 +94,7 @@ The returned object is a bundle-like list with class
 \item Fit with \code{\link[=fit_mfrm]{fit_mfrm()}} and diagnose with \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}. For
 \code{RSM} / \code{PCM} reporting runs, prefer \code{method = "MML"} plus
 \code{diagnostic_mode = "both"} in the diagnostics call.
-\item Run \code{estimate_all_bias()} to compute app-style multi-pair interactions.
+\item Run \code{estimate_all_bias()} to compute multi-pair interactions.
 \item Pass the resulting \code{by_pair} list into \code{\link[=reporting_checklist]{reporting_checklist()}} or
 \code{\link[=facet_quality_dashboard]{facet_quality_dashboard()}}.
 }

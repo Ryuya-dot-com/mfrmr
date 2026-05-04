@@ -1949,9 +1949,8 @@ describe_mfrm_data <- function(data,
 #' Convenience helper that replaces the standard non-`NA` missing-code
 #' sentinels used in SPSS / SAS / FACETS exports (`99`, `999`, `-1`,
 #' `"N"`, `"NA"`, `"n/a"`, `"."`, `""`) with `NA` across the columns
-#' you select. This is the R counterpart of the preprocessing UI in
-#' the companion Streamlit app and is useful before calling
-#' [fit_mfrm()] on data exported with those conventions.
+#' you select. This is useful before calling [fit_mfrm()] on data exported
+#' with those conventions.
 #'
 #' @param data A data frame.
 #' @param columns Character vector of column names to recode. Defaults

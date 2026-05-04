@@ -617,7 +617,9 @@ fair_average_table <- function(fit,
     omit_unobserved = omit_unobserved,
     xtreme = xtreme,
     model = fit_model,
-    method = if (identical(fit_model, "GPCM")) "GPCM-slope-aware" else "PCM/RSM"
+    method = if (identical(fit_model, "GPCM")) "GPCM-slope-aware" else "PCM/RSM",
+    rating_min = fit$prep$rating_min,
+    rating_max = fit$prep$rating_max
   )
   if (identical(fit_model, "GPCM")) {
     bundle$caveat <- gpcm_fair_average_rationale()

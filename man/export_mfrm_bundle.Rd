@@ -87,8 +87,8 @@ A named list with class \code{mfrm_export_bundle}.
 Export an analysis bundle for sharing or archiving
 }
 \details{
-This function is the package-native counterpart to the app's download bundle.
-It reuses existing \code{mfrmr} helpers instead of reimplementing estimation or
+This function creates a package-native analysis download bundle. It reuses
+existing \code{mfrmr} helpers instead of reimplementing estimation or
 diagnostics.
 }
 \section{Choosing exports}{

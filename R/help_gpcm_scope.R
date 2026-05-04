@@ -168,7 +168,7 @@ gpcm_capability_matrix <- function(status = c("all", "supported", "supported_wit
       ),
       paste(
         "Covers fixed-calibration posterior scoring and information only;",
-        "population forecasting is a separate layer and remains out of scope."
+        "population forecasting is handled by the design-planning row below."
       ),
       paste(
         "Limited to the slope-aware probability kernel that is already",

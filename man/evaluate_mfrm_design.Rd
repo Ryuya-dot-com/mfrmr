@@ -63,11 +63,12 @@ variable through both \code{design} and the scalar design-grid arguments.}
 
 \item{fit_method}{Estimation method passed to \code{\link[=fit_mfrm]{fit_mfrm()}}.}
 
-\item{model}{Measurement model passed to \code{\link[=fit_mfrm]{fit_mfrm()}}. The current design
-evaluator supports \code{RSM} and \code{PCM}; bounded \code{GPCM} is accepted only
-to produce an explicit unsupported-path error.}
+\item{model}{Measurement model passed to \code{\link[=fit_mfrm]{fit_mfrm()}}. The design evaluator
+supports \code{RSM}, \code{PCM}, and bounded \code{GPCM}; \code{GPCM} results retain the
+caveats documented in \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}}.}
 
-\item{step_facet}{Step facet passed to \code{\link[=fit_mfrm]{fit_mfrm()}} when \code{model = "PCM"}.
+\item{step_facet}{Step facet passed to \code{\link[=fit_mfrm]{fit_mfrm()}} when \code{model = "PCM"} or
+bounded \code{GPCM}.
 When left \code{NULL}, the function inherits the generator step facet from
 \code{sim_spec} when available and otherwise defaults to \code{"Criterion"}.}
 
@@ -166,13 +167,11 @@ data and refits the MML population-model branch. This remains a scenario
 study under explicit assumptions; it is not a closed-form predictive
 distribution for one future administration.
 
-First-release \code{GPCM} is not yet available in this design-evaluation helper.
-The missing pieces are not just software wiring: the current package still
-needs a validated slope-generating simulation contract and downstream
-diagnostics compatible with the generalized ordered kernel. More broadly,
-the current planning layer is still role-based for exactly two non-person
-facets (\code{rater}-like and \code{criterion}-like), even though the estimation core
-supports arbitrary facet counts.
+Bounded \code{GPCM} is available in this design-evaluation helper through the
+package's slope-aware simulation contract and downstream exploratory
+diagnostics. The current planning layer is still role-based for exactly two
+non-person facets (\code{rater}-like and \code{criterion}-like), even though the
+estimation core supports arbitrary facet counts.
 
 Recovery metrics are reported only when the generator and fitted model target
 the same facet-parameter contract. In practice this means the same

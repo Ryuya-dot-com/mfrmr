@@ -121,13 +121,14 @@
 #'    [build_weighting_audit()] for Rasch-versus-bounded-`GPCM`
 #'    weighting review, or [build_misfit_casebook()] for operational case
 #'    review. [build_linking_review()] remains `RSM` / `PCM` only.
-#' 6. (Optional, `RSM` / `PCM`) Generate reporting bundles:
-#'    [build_summary_table_bundle()], [apa_table()],
-#'    [export_summary_appendix()], [build_fixed_reports()],
-#'    [build_visual_summaries()]. Weighting-review surfaces can also be routed
-#'    through [build_summary_table_bundle()] -> [apa_table()] /
-#'    [export_summary_appendix()]. Misfit-case review surfaces now use the same
-#'    bundle/export handoff after [build_misfit_casebook()].
+#' 6. (Optional) Generate reporting bundles. `RSM` / `PCM` can use the full
+#'    manuscript table route through [build_summary_table_bundle()],
+#'    [apa_table()], [export_summary_appendix()], [build_fixed_reports()], and
+#'    [build_visual_summaries()]. Bounded `GPCM` should use the package-native
+#'    [build_apa_outputs()], [build_visual_summaries()], [run_qc_pipeline()],
+#'    [build_mfrm_manifest()], [build_mfrm_replay_script()], and
+#'    [export_mfrm_bundle()] routes with the returned caveats retained.
+#'    FACETS score-side compatibility exports remain `RSM` / `PCM` only.
 #' 7. (Optional, `RSM` / `PCM`) Audit report completeness with
 #'    [reference_case_audit()]. Use `facets_parity_report()` only when you
 #'    explicitly need the compatibility layer.
@@ -142,10 +143,9 @@
 #'    [build_mfrm_sim_spec()] / [extract_mfrm_sim_spec()] ->
 #'    [evaluate_mfrm_design()] / [predict_mfrm_population()] ->
 #'    [predict_mfrm_units()] / [sample_mfrm_plausible_values()]. Current
-#'    fit-derived simulation specs include direct `GPCM` data generation, but
-#'    design-evaluation / forecasting helpers still remain `RSM` / `PCM` only
-#'    and still target the role-based person x rater-like x criterion-like
-#'    contract.
+#'    fit-derived simulation specs, design-evaluation helpers, and forecasting
+#'    helpers include the bounded `GPCM` route with explicit caveats and still
+#'    target the role-based person x rater-like x criterion-like contract.
 #'    Unit scoring can use an ordinary `MML` fit directly, a latent-regression
 #'    `MML` fit when you also supply one-row-per-person background data for the
 #'    scored units, or a `JML` fit when a post hoc reference-prior EAP layer is
@@ -204,11 +204,11 @@
 #'   direct data generation via
 #'   [build_mfrm_sim_spec()], [extract_mfrm_sim_spec()], and
 #'   [simulate_mfrm_data()], residual diagnostics, and direct curve/report
-#'   helpers, but still stops before planning/forecasting helpers. The current
-#'   planning layer remains role-based for two non-person facets even though
-#'   estimation itself supports arbitrary facet counts; future arbitrary-facet
-#'   planning fields should be treated as design metadata rather than finished
-#'   public behavior.
+#'   helpers, and the bounded planning/forecasting route with explicit caveats.
+#'   The current planning layer remains role-based for two non-person facets
+#'   even though estimation itself supports arbitrary facet counts; future
+#'   arbitrary-facet planning fields should be treated as design metadata rather
+#'   than finished public behavior.
 #'
 #' @section Interpreting output:
 #' This help page is a map, not an estimator:

@@ -1465,8 +1465,16 @@ plot_fair_average <- function(x,
     fair_df$CI_Upper <- NA_real_
     fair_df$CI_Level <- ci_level
     if (any(valid)) {
-      rating_min <- suppressWarnings(as.numeric(x$prep$rating_min %||% NA_real_))
-      rating_max <- suppressWarnings(as.numeric(x$prep$rating_max %||% NA_real_))
+      rating_min <- if (inherits(x, "mfrm_fit")) {
+        suppressWarnings(as.numeric(x$prep$rating_min %||% NA_real_))
+      } else {
+        suppressWarnings(as.numeric(bundle$settings$rating_min %||% NA_real_))
+      }
+      rating_max <- if (inherits(x, "mfrm_fit")) {
+        suppressWarnings(as.numeric(x$prep$rating_max %||% NA_real_))
+      } else {
+        suppressWarnings(as.numeric(bundle$settings$rating_max %||% NA_real_))
+      }
       lo <- fair_df[[metric]][valid] - z_ci * se_fair[valid]
       hi <- fair_df[[metric]][valid] + z_ci * se_fair[valid]
       if (is.finite(rating_min)) lo <- pmax(lo, rating_min)
@@ -3178,13 +3186,13 @@ export_mfrm <- function(fit,
                         diagnostics = NULL,
                         output_dir = ".",
                         prefix = "mfrm",
-                        tables = c("person", "facets", "summary", "steps", "measures"),
+                        tables = c("person", "facets", "summary", "steps", "slopes", "measures"),
                         overwrite = FALSE) {
   if (!inherits(fit, "mfrm_fit")) {
     stop("`fit` must be an mfrm_fit object from fit_mfrm().")
   }
   tables <- unique(tolower(as.character(tables)))
-  allowed <- c("person", "facets", "summary", "steps", "measures")
+  allowed <- c("person", "facets", "summary", "steps", "slopes", "measures")
   bad <- setdiff(tables, allowed)
   if (length(bad) > 0) {
     stop("Unknown table names: ", paste(bad, collapse = ", "),
@@ -3225,6 +3233,7 @@ export_mfrm <- function(fit,
     if (!is.null(diagnostics) && !is.null(diagnostics$measures)) {
       enrich_cols <- intersect(c("SE", "Infit", "Outfit", "PTMEA", "N"),
                                names(diagnostics$measures))
+      enrich_cols <- setdiff(enrich_cols, names(facet_df))
       if (length(enrich_cols) > 0) {
         enrich <- diagnostics$measures[diagnostics$measures$Facet != "Person",
                                        c("Facet", "Level", enrich_cols), drop = FALSE]
@@ -3246,6 +3255,13 @@ export_mfrm <- function(fit,
     step_df <- as.data.frame(fit$steps, stringsAsFactors = FALSE)
     if (nrow(step_df) > 0) {
       write_one(step_df, paste0(prefix, "_step_parameters.csv"), "steps")
+    }
+  }
+
+  if ("slopes" %in% tables) {
+    slope_df <- as.data.frame(fit$slopes %||% data.frame(), stringsAsFactors = FALSE)
+    if (nrow(slope_df) > 0) {
+      write_one(slope_df, paste0(prefix, "_slope_parameters.csv"), "slopes")
     }
   }
 

@@ -1532,7 +1532,11 @@ build_apa_reporting_contract <- function(res, diagnostics, bias_results = NULL, 
     )
   }
   if (nzchar(recommended_use)) {
-    recommended_use_sentence <- paste0("Recommended use for this precision profile: ", recommended_use, ".")
+    recommended_use_sentence <- paste0(
+      "Recommended use for this precision profile: ",
+      recommended_use,
+      if (grepl("[.!?]$", recommended_use)) "" else "."
+    )
     method_estimation_sentences <- c(method_estimation_sentences, recommended_use_sentence)
     method_sentences <- c(method_sentences, recommended_use_sentence)
   }

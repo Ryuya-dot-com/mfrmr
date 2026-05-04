@@ -387,8 +387,8 @@ validate_bias_results_input <- function(bias_results,
 #'   `read.csv()` will produce in a replay session.
 #'
 #' @details
-#' This helper captures the package-native equivalent of the Streamlit app's
-#' configuration export. It summarizes analysis settings, source columns,
+#' This helper captures a package-native configuration export. It summarizes
+#' analysis settings, source columns,
 #' anchoring information, and which downstream outputs are currently available.
 #'
 #' @section When to use this:
@@ -555,6 +555,7 @@ build_mfrm_manifest <- function(fit,
     facet_names = paste(as.character(cfg$facet_names %||% character(0)), collapse = ", "),
     noncenter_facet = as.character(cfg$noncenter_facet %||% ""),
     step_facet = as.character(cfg$step_facet %||% ""),
+    slope_facet = as.character(cfg$slope_facet %||% ""),
     dummy_facets = paste(as.character(cfg$dummy_facets %||% character(0)), collapse = ", "),
     n_categories = as.character(cfg$n_cat %||% NA_character_),
     population_active = isTRUE(fit_population$active),
@@ -943,8 +944,8 @@ build_mfrm_session_info_table <- function() {
 #' @param bundle_prefix Prefix used by the generated bundle exporter call.
 #'
 #' @details
-#' This helper mirrors the Streamlit app's reproducible-download idea, but uses
-#' `mfrmr`'s installed API rather than embedding a separate estimation engine.
+#' This helper creates a reproducible-download style script using `mfrmr`'s
+#' installed API rather than embedding a separate estimation engine.
 #' The generated script assumes the user has the package installed and provides
 #' a data file at `data_file`.
 #'
@@ -3725,8 +3726,8 @@ export_summary_appendix <- function(x,
 #'   `your_data.csv` placeholder path.
 #'
 #' @details
-#' This function is the package-native counterpart to the app's download bundle.
-#' It reuses existing `mfrmr` helpers instead of reimplementing estimation or
+#' This function creates a package-native analysis download bundle. It reuses
+#' existing `mfrmr` helpers instead of reimplementing estimation or
 #' diagnostics.
 #'
 #' @section Choosing exports:
@@ -3831,6 +3832,7 @@ export_mfrm_bundle <- function(fit,
                                zip_bundle = FALSE,
                                zip_name = NULL,
                                data = NULL) {
+  include_defaulted <- missing(include)
   include <- unique(tolower(as.character(include)))
   allowed <- c("core_tables", "checklist", "dashboard", "apa", "anchors", "manifest", "visual_summaries", "predictions", "summary_tables", "script", "html")
   bad <- setdiff(include, allowed)
@@ -3885,10 +3887,14 @@ export_mfrm_bundle <- function(fit,
   )
   if ("predictions" %in% include &&
       all(vapply(list(population_prediction, unit_prediction, plausible_values), is.null, logical(1)))) {
-    stop(
-      "`include = 'predictions'` requires at least one of `population_prediction`, `unit_prediction`, or `plausible_values`.",
-      call. = FALSE
-    )
+    if (isTRUE(include_defaulted)) {
+      include <- setdiff(include, "predictions")
+    } else {
+      stop(
+        "`include = 'predictions'` requires at least one of `population_prediction`, `unit_prediction`, or `plausible_values`.",
+        call. = FALSE
+      )
+    }
   }
   written_files <- data.frame(
     Component = character(0),
@@ -4133,13 +4139,17 @@ export_mfrm_bundle <- function(fit,
     if (nrow(as.data.frame(fit$steps, stringsAsFactors = FALSE)) > 0) {
       add_core$steps <- as.data.frame(fit$steps, stringsAsFactors = FALSE)
     }
+    if (nrow(as.data.frame(fit$slopes %||% data.frame(), stringsAsFactors = FALSE)) > 0) {
+      add_core$slopes <- as.data.frame(fit$slopes, stringsAsFactors = FALSE)
+    }
     html_tables <- utils::modifyList(html_tables, add_core)
     core_paths <- list(
       person = file.path(output_dir, paste0(prefix, "_person_estimates.csv")),
       facets = file.path(output_dir, paste0(prefix, "_facet_estimates.csv")),
       summary = file.path(output_dir, paste0(prefix, "_fit_summary.csv")),
       measures = file.path(output_dir, paste0(prefix, "_measures.csv")),
-      steps = file.path(output_dir, paste0(prefix, "_step_parameters.csv"))
+      steps = file.path(output_dir, paste0(prefix, "_step_parameters.csv")),
+      slopes = file.path(output_dir, paste0(prefix, "_slope_parameters.csv"))
     )
     for (nm in names(core_paths)) {
       if (file.exists(core_paths[[nm]])) add_written(paste0("core_", nm), "csv", core_paths[[nm]])
@@ -4386,6 +4396,11 @@ export_mfrm_bundle <- function(fit,
     write_csv(manifest$source_columns, paste0(prefix, "_manifest_source_columns.csv"), "manifest_source_columns")
     write_csv(manifest$estimation_control, paste0(prefix, "_manifest_estimation_control.csv"), "manifest_estimation_control")
     write_csv(manifest$settings, paste0(prefix, "_manifest_settings.csv"), "manifest_settings")
+    if (!is.null(manifest$support_status) &&
+        nrow(as.data.frame(manifest$support_status, stringsAsFactors = FALSE)) > 0) {
+      write_csv(manifest$support_status, paste0(prefix, "_manifest_support_status.csv"), "manifest_support_status")
+      html_tables$manifest_support_status <- manifest$support_status
+    }
     if (nrow(as.data.frame(manifest$anchor_summary, stringsAsFactors = FALSE)) > 0) {
       write_csv(manifest$anchor_summary, paste0(prefix, "_manifest_anchor_summary.csv"), "manifest_anchor_summary")
     }
@@ -5458,11 +5473,13 @@ render_mfrm_manifest_text <- function(manifest) {
     ModelSettings = manifest$model_settings,
     SourceColumns = manifest$source_columns,
     EstimationControl = manifest$estimation_control,
+    SupportStatus = manifest$support_status,
     AvailableOutputs = manifest$available_outputs
   )
   if (!is.null(manifest$anchor_summary) && nrow(as.data.frame(manifest$anchor_summary, stringsAsFactors = FALSE)) > 0) {
     sections$AnchorSummary <- manifest$anchor_summary
   }
+  sections <- sections[!vapply(sections, is.null, logical(1))]
   parts <- c("mfrmr Analysis Manifest")
   for (nm in names(sections)) {
     tbl <- as.data.frame(sections[[nm]], stringsAsFactors = FALSE)

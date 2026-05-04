@@ -137,10 +137,9 @@
 #'   directly, latent-regression `MML` fits through the fitted population
 #'   model when scored units also provide one-row-per-person background data,
 #'   and `JML` fits through a post hoc reference-prior EAP layer;
-#'   fit-derived simulation specifications also support direct bounded
-#'   `GPCM` data generation, while planning/forecasting helpers remain
-#'   restricted to `RSM` / `PCM`; curve reports and graph-only exports are
-#'   also available for bounded `GPCM`)
+#'   fit-derived simulation specifications, planning/forecasting helpers,
+#'   curve reports, and graph-only exports are also available for bounded
+#'   `GPCM` with the caveats documented in [gpcm_capability_matrix()])
 #' - Reporting: [build_apa_outputs()], [build_visual_summaries()],
 #'   [reporting_checklist()], [apa_table()] for the full `RSM` / `PCM` route;
 #'   bounded `GPCM` currently stays on the checklist / visual-summary / QC /

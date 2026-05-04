@@ -138,13 +138,14 @@ columns.
 \code{\link[=build_weighting_audit]{build_weighting_audit()}} for Rasch-versus-bounded-\code{GPCM}
 weighting review, or \code{\link[=build_misfit_casebook]{build_misfit_casebook()}} for operational case
 review. \code{\link[=build_linking_review]{build_linking_review()}} remains \code{RSM} / \code{PCM} only.
-\item (Optional, \code{RSM} / \code{PCM}) Generate reporting bundles:
-\code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}}, \code{\link[=apa_table]{apa_table()}},
-\code{\link[=export_summary_appendix]{export_summary_appendix()}}, \code{\link[=build_fixed_reports]{build_fixed_reports()}},
-\code{\link[=build_visual_summaries]{build_visual_summaries()}}. Weighting-review surfaces can also be routed
-through \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}} -> \code{\link[=apa_table]{apa_table()}} /
-\code{\link[=export_summary_appendix]{export_summary_appendix()}}. Misfit-case review surfaces now use the same
-bundle/export handoff after \code{\link[=build_misfit_casebook]{build_misfit_casebook()}}.
+\item (Optional) Generate reporting bundles. \code{RSM} / \code{PCM} can use the full
+manuscript table route through \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}},
+\code{\link[=apa_table]{apa_table()}}, \code{\link[=export_summary_appendix]{export_summary_appendix()}}, \code{\link[=build_fixed_reports]{build_fixed_reports()}}, and
+\code{\link[=build_visual_summaries]{build_visual_summaries()}}. Bounded \code{GPCM} should use the package-native
+\code{\link[=build_apa_outputs]{build_apa_outputs()}}, \code{\link[=build_visual_summaries]{build_visual_summaries()}}, \code{\link[=run_qc_pipeline]{run_qc_pipeline()}},
+\code{\link[=build_mfrm_manifest]{build_mfrm_manifest()}}, \code{\link[=build_mfrm_replay_script]{build_mfrm_replay_script()}}, and
+\code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}} routes with the returned caveats retained.
+FACETS score-side compatibility exports remain \code{RSM} / \code{PCM} only.
 \item (Optional, \code{RSM} / \code{PCM}) Audit report completeness with
 \code{\link[=reference_case_audit]{reference_case_audit()}}. Use \code{facets_parity_report()} only when you
 explicitly need the compatibility layer.
@@ -159,10 +160,9 @@ simulation/prediction layer:
 \code{\link[=build_mfrm_sim_spec]{build_mfrm_sim_spec()}} / \code{\link[=extract_mfrm_sim_spec]{extract_mfrm_sim_spec()}} ->
 \code{\link[=evaluate_mfrm_design]{evaluate_mfrm_design()}} / \code{\link[=predict_mfrm_population]{predict_mfrm_population()}} ->
 \code{\link[=predict_mfrm_units]{predict_mfrm_units()}} / \code{\link[=sample_mfrm_plausible_values]{sample_mfrm_plausible_values()}}. Current
-fit-derived simulation specs include direct \code{GPCM} data generation, but
-design-evaluation / forecasting helpers still remain \code{RSM} / \code{PCM} only
-and still target the role-based person x rater-like x criterion-like
-contract.
+fit-derived simulation specs, design-evaluation helpers, and forecasting
+helpers include the bounded \code{GPCM} route with explicit caveats and still
+target the role-based person x rater-like x criterion-like contract.
 Unit scoring can use an ordinary \code{MML} fit directly, a latent-regression
 \code{MML} fit when you also supply one-row-per-person background data for the
 scored units, or a \code{JML} fit when a post hoc reference-prior EAP layer is
@@ -225,11 +225,11 @@ requires actual prediction objects. First-release \code{GPCM} now supports
 direct data generation via
 \code{\link[=build_mfrm_sim_spec]{build_mfrm_sim_spec()}}, \code{\link[=extract_mfrm_sim_spec]{extract_mfrm_sim_spec()}}, and
 \code{\link[=simulate_mfrm_data]{simulate_mfrm_data()}}, residual diagnostics, and direct curve/report
-helpers, but still stops before planning/forecasting helpers. The current
-planning layer remains role-based for two non-person facets even though
-estimation itself supports arbitrary facet counts; future arbitrary-facet
-planning fields should be treated as design metadata rather than finished
-public behavior.
+helpers, and the bounded planning/forecasting route with explicit caveats.
+The current planning layer remains role-based for two non-person facets
+even though estimation itself supports arbitrary facet counts; future
+arbitrary-facet planning fields should be treated as design metadata rather
+than finished public behavior.
 }
 }
 

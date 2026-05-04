@@ -355,11 +355,11 @@ when you want a customised version.
 ## Installation
 
 ```r
-# GitHub (development version)
+# GitHub
 if (!requireNamespace("remotes", quietly = TRUE)) install.packages("remotes")
 remotes::install_github("Ryuya-dot-com/mfrmr", build_vignettes = TRUE)
 
-# CRAN (after release)
+# CRAN
 # install.packages("mfrmr")
 ```
 

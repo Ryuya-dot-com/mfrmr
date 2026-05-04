@@ -128,11 +128,17 @@ fit_eb2 <- apply_empirical_bayes_shrinkage(fit)
 ## 8. Reproducibility and export
 
 ```{r export}
-export_mfrm_bundle(fit, diagnostics = diag, path = "mfrmr_bundle/")
+export_mfrm_bundle(
+  fit,
+  diagnostics = diag,
+  output_dir = "mfrmr_bundle",
+  prefix = "analysis"
+)
 manifest <- build_mfrm_manifest(fit, diagnostics = diag)
 # manifest$environment, $dependencies, $input_hash, $session_info,
 # $hierarchical_audit, $missing_recoding, $shrinkage_audit
-replay_script <- build_mfrm_replay_script(fit, path = "replay_mfrmr.R")
+replay_script <- build_mfrm_replay_script(fit)
+writeLines(replay_script$script, "replay_mfrmr.R")
 ```
 
 ## 9. Missing-code pre-processing

@@ -70,11 +70,12 @@ active public facet name. Defaults to the criterion-like facet.}
 
 \item{step_span}{Spread of step thresholds on the logit scale.}
 
-\item{model}{Measurement model passed to \code{\link[=fit_mfrm]{fit_mfrm()}}. The current helper
-supports \code{RSM} and \code{PCM}; bounded \code{GPCM} is accepted only to
-produce an explicit unsupported-path error.}
+\item{model}{Measurement model passed to \code{\link[=fit_mfrm]{fit_mfrm()}}. The helper supports
+\code{RSM}, \code{PCM}, and bounded \code{GPCM}; \code{GPCM} results retain the caveats
+documented in \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}}.}
 
-\item{step_facet}{Step facet passed to \code{\link[=fit_mfrm]{fit_mfrm()}} when \code{model = "PCM"}.}
+\item{step_facet}{Step facet passed to \code{\link[=fit_mfrm]{fit_mfrm()}} when \code{model = "PCM"} or
+bounded \code{GPCM}.}
 
 \item{maxit}{Maximum iterations passed to \code{\link[=fit_mfrm]{fit_mfrm()}}.}
 

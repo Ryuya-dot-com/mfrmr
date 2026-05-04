@@ -158,10 +158,12 @@ of `(theta, a, delta)`, which is not yet exposed.
 See `?fair_average_table`, `?estimate_bias`, and
 `gpcm_capability_matrix()` for the full support contract.
 
-`build_apa_outputs()`, `facets_parity_report()`, and
-`facets_output_file_bundle(include = "score")` remain blocked under
-GPCM in 0.2.0; they require the same SE infrastructure to ship as
-publication-quality outputs.
+`build_apa_outputs()`, `build_mfrm_manifest()`,
+`build_mfrm_replay_script()`, and `export_mfrm_bundle()` now route bounded
+GPCM fits through package-native outputs with explicit caveats.
+`facets_parity_report()` and `facets_output_file_bundle(include = "score")`
+remain blocked under GPCM in 0.2.0 because those FACETS-compatibility outputs
+are Rasch-family score-side contracts.
 
 ### Bounded GPCM visual summaries and QC pipeline
 
@@ -277,9 +279,10 @@ a follow-up release after a cycle of community testing.
 Scoped during 0.2.0 prep but not shipped in 0.2.0; carried over to a
 later release:
 
-- Still-deferred GPCM support for `build_apa_outputs()`,
-  `facets_parity_report()`, and `facets_output_file_bundle(include =
-  "score")`. (`fair_average_table()`, `estimate_bias()`,
+- Still-deferred GPCM support for `facets_parity_report()` and
+  `facets_output_file_bundle(include = "score")`. (`fair_average_table()`,
+  `estimate_bias()`, `build_apa_outputs()`, `build_mfrm_manifest()`,
+  `build_mfrm_replay_script()`, `export_mfrm_bundle()`,
   `build_visual_summaries()`, and `run_qc_pipeline()` are unblocked
   above with caveats.)
 - A classical-DIF helper (working title `analyze_dif_classical()`)

@@ -1268,10 +1268,11 @@ design_eval_summarize_results <- function(results, rep_overview, design_variable
 #' @param noise_sd Optional observation-level noise added to the linear predictor.
 #' @param step_span Spread of step thresholds on the logit scale.
 #' @param fit_method Estimation method passed to [fit_mfrm()].
-#' @param model Measurement model passed to [fit_mfrm()]. The current design
-#'   evaluator supports `RSM` and `PCM`; bounded `GPCM` is accepted only
-#'   to produce an explicit unsupported-path error.
-#' @param step_facet Step facet passed to [fit_mfrm()] when `model = "PCM"`.
+#' @param model Measurement model passed to [fit_mfrm()]. The design evaluator
+#'   supports `RSM`, `PCM`, and bounded `GPCM`; `GPCM` results retain the
+#'   caveats documented in [gpcm_capability_matrix()].
+#' @param step_facet Step facet passed to [fit_mfrm()] when `model = "PCM"` or
+#'   bounded `GPCM`.
 #'   When left `NULL`, the function inherits the generator step facet from
 #'   `sim_spec` when available and otherwise defaults to `"Criterion"`.
 #' @param maxit Maximum iterations passed to [fit_mfrm()].
@@ -1336,13 +1337,11 @@ design_eval_summarize_results <- function(results, rep_overview, design_variable
 #' study under explicit assumptions; it is not a closed-form predictive
 #' distribution for one future administration.
 #'
-#' First-release `GPCM` is not yet available in this design-evaluation helper.
-#' The missing pieces are not just software wiring: the current package still
-#' needs a validated slope-generating simulation contract and downstream
-#' diagnostics compatible with the generalized ordered kernel. More broadly,
-#' the current planning layer is still role-based for exactly two non-person
-#' facets (`rater`-like and `criterion`-like), even though the estimation core
-#' supports arbitrary facet counts.
+#' Bounded `GPCM` is available in this design-evaluation helper through the
+#' package's slope-aware simulation contract and downstream exploratory
+#' diagnostics. The current planning layer is still role-based for exactly two
+#' non-person facets (`rater`-like and `criterion`-like), even though the
+#' estimation core supports arbitrary facet counts.
 #'
 #' Recovery metrics are reported only when the generator and fitted model target
 #' the same facet-parameter contract. In practice this means the same
@@ -1626,7 +1625,9 @@ evaluate_mfrm_design <- function(n_person = c(30, 50, 100),
         score = "Score",
         method = fit_method,
         model = model,
-        maxit = maxit
+        maxit = maxit,
+        rating_min = 1L,
+        rating_max = row_score_levels
       )
       if (model %in% c("PCM", "GPCM")) fit_args$step_facet <- fit_step_facet
       if ("Weight" %in% names(sim)) fit_args$weight <- "Weight"
@@ -2567,8 +2568,8 @@ diagnostic_screening_build_step_misspecification_spec <- function(row_spec_base,
                                                                   step_span,
                                                                   fit_model,
                                                                   fit_step_facet) {
-  if (!identical(fit_model, "RSM") && !identical(fit_model, "PCM")) {
-    stop("Step-structure screening is currently scoped to `RSM` and `PCM` fits.", call. = FALSE)
+  if (!fit_model %in% c("RSM", "PCM", "GPCM")) {
+    stop("Step-structure screening requires `model` to be `RSM`, `PCM`, or bounded `GPCM`.", call. = FALSE)
   }
   if (!is.null(row_spec_base) && isTRUE((row_spec_base$population %||% list(active = FALSE))$active)) {
     stop(
@@ -2604,6 +2605,7 @@ diagnostic_screening_build_step_misspecification_spec <- function(row_spec_base,
   )
 
   if (is.null(row_spec_base)) {
+    generator_model <- if (identical(fit_model, "GPCM")) "GPCM" else "PCM"
     return(build_mfrm_sim_spec(
       n_person = design_row$n_person,
       n_rater = design_row$n_rater,
@@ -2616,17 +2618,32 @@ diagnostic_screening_build_step_misspecification_spec <- function(row_spec_base,
       noise_sd = noise_sd,
       step_span = step_span,
       thresholds = threshold_table,
-      model = "PCM",
+      model = generator_model,
       step_facet = generator_step_facet,
+      slope_facet = if (identical(generator_model, "GPCM")) generator_step_facet else NULL,
       assignment = if (identical(design_row$raters_per_person, design_row$n_rater)) "crossed" else "rotating",
       facet_names = facet_names
     ))
   }
 
   out <- row_spec_base
-  out$model <- "PCM"
+  out$model <- if (identical(fit_model, "GPCM")) "GPCM" else "PCM"
   out$step_facet <- generator_step_facet
   out$threshold_table <- tibble::as_tibble(threshold_table)
+  if (identical(out$model, "GPCM")) {
+    out$slope_facet <- generator_step_facet
+    out$slope_table <- simulation_build_slope_table(
+      slopes = NULL,
+      model = "GPCM",
+      slope_facet = generator_step_facet,
+      facet_names = stats::setNames(facet_names, c("rater", "criterion")),
+      n_rater = design_row$n_rater,
+      n_criterion = design_row$n_criterion
+    )
+  } else {
+    out$slope_facet <- NULL
+    out$slope_table <- NULL
+  }
   out$planning_constraints <- simulation_planning_constraints(out)
   out$planning_schema <- simulation_planning_schema(out)
   out
@@ -2868,10 +2885,11 @@ diagnostic_screening_summarize_results <- function(results, design_variable_alia
 #' @param criterion_sd Standard deviation of simulated criterion difficulties.
 #' @param noise_sd Optional observation-level noise added to the linear predictor.
 #' @param step_span Spread of step thresholds on the logit scale.
-#' @param model Measurement model passed to [fit_mfrm()]. The current helper
-#'   supports `RSM` and `PCM`; bounded `GPCM` is accepted only to
-#'   produce an explicit unsupported-path error.
-#' @param step_facet Step facet passed to [fit_mfrm()] when `model = "PCM"`.
+#' @param model Measurement model passed to [fit_mfrm()]. The helper supports
+#'   `RSM`, `PCM`, and bounded `GPCM`; `GPCM` results retain the caveats
+#'   documented in [gpcm_capability_matrix()].
+#' @param step_facet Step facet passed to [fit_mfrm()] when `model = "PCM"` or
+#'   bounded `GPCM`.
 #' @param maxit Maximum iterations passed to [fit_mfrm()].
 #' @param quad_points Quadrature points for the internal `MML` fit.
 #' @param residual_pca Residual PCA mode passed to [diagnose_mfrm()].
@@ -3159,7 +3177,9 @@ evaluate_mfrm_diagnostic_screening <- function(n_person = c(30, 50, 100),
           method = "MML",
           model = model,
           maxit = maxit,
-          quad_points = quad_points
+          quad_points = quad_points,
+          rating_min = 1L,
+          rating_max = row_score_levels
         )
         if (model %in% c("PCM", "GPCM")) {
           fit_args$step_facet <- fit_step_facet
@@ -3563,10 +3583,11 @@ signal_eval_metric_col <- function(signal, metric) {
 #' @param noise_sd Optional observation-level noise added to the linear predictor.
 #' @param step_span Spread of step thresholds on the logit scale.
 #' @param fit_method Estimation method passed to [fit_mfrm()].
-#' @param model Measurement model passed to [fit_mfrm()]. The current
-#'   signal-detection evaluator supports `RSM` and `PCM`; bounded `GPCM`
-#'   is accepted only to produce an explicit unsupported-path error.
-#' @param step_facet Step facet passed to [fit_mfrm()] when `model = "PCM"`.
+#' @param model Measurement model passed to [fit_mfrm()]. The signal-detection
+#'   evaluator supports `RSM`, `PCM`, and bounded `GPCM`; `GPCM` results retain
+#'   the caveats documented in [gpcm_capability_matrix()].
+#' @param step_facet Step facet passed to [fit_mfrm()] when `model = "PCM"` or
+#'   bounded `GPCM`.
 #'   When left `NULL`, the function inherits the generator step facet from
 #'   `sim_spec` when available and otherwise defaults to `"Criterion"`.
 #' @param maxit Maximum iterations passed to [fit_mfrm()].
@@ -3913,7 +3934,9 @@ evaluate_mfrm_signal_detection <- function(n_person = c(30, 50, 100),
         score = "Score",
         method = fit_method,
         model = model,
-        maxit = maxit
+        maxit = maxit,
+        rating_min = 1L,
+        rating_max = row_score_levels
       )
       if (model %in% c("PCM", "GPCM")) fit_args$step_facet <- fit_step_facet
       if ("Weight" %in% names(sim)) fit_args$weight <- "Weight"

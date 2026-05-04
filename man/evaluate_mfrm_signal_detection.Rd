@@ -105,11 +105,12 @@ criterion level in each design.}
 
 \item{fit_method}{Estimation method passed to \code{\link[=fit_mfrm]{fit_mfrm()}}.}
 
-\item{model}{Measurement model passed to \code{\link[=fit_mfrm]{fit_mfrm()}}. The current
-signal-detection evaluator supports \code{RSM} and \code{PCM}; bounded \code{GPCM}
-is accepted only to produce an explicit unsupported-path error.}
+\item{model}{Measurement model passed to \code{\link[=fit_mfrm]{fit_mfrm()}}. The signal-detection
+evaluator supports \code{RSM}, \code{PCM}, and bounded \code{GPCM}; \code{GPCM} results retain
+the caveats documented in \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}}.}
 
-\item{step_facet}{Step facet passed to \code{\link[=fit_mfrm]{fit_mfrm()}} when \code{model = "PCM"}.
+\item{step_facet}{Step facet passed to \code{\link[=fit_mfrm]{fit_mfrm()}} when \code{model = "PCM"} or
+bounded \code{GPCM}.
 When left \code{NULL}, the function inherits the generator step facet from
 \code{sim_spec} when available and otherwise defaults to \code{"Criterion"}.}
 

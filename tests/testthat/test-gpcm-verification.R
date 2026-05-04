@@ -155,6 +155,8 @@ test_that("GPCM APA/export/replay route runs with caveats", {
   manifest <- build_mfrm_manifest(.gpcm_fit, diagnostics = diag)
   expect_s3_class(manifest, "mfrm_manifest")
   expect_identical(manifest$support_status$Status[1], "supported_with_caveat")
+  expect_true(any(manifest$model_settings$Setting == "slope_facet"))
+  expect_match(mfrmr:::render_mfrm_manifest_text(manifest), "SupportStatus", fixed = TRUE)
 
   replay <- build_mfrm_replay_script(.gpcm_fit, diagnostics = diag)
   expect_s3_class(replay, "mfrm_replay_script")
@@ -168,9 +170,11 @@ test_that("GPCM APA/export/replay route runs with caveats", {
     diagnostics = diag,
     output_dir = out_dir,
     prefix = "gpcm",
-    include = c("manifest", "apa", "script"),
+    include = c("core_tables", "manifest", "apa", "script"),
     overwrite = TRUE
   )
   expect_s3_class(bundle, "mfrm_export_bundle")
   expect_identical(bundle$support_status$Status[1], "supported_with_caveat")
+  expect_true(file.exists(file.path(out_dir, "gpcm_slope_parameters.csv")))
+  expect_true(file.exists(file.path(out_dir, "gpcm_manifest_support_status.csv")))
 })

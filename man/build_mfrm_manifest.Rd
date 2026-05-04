@@ -48,8 +48,8 @@ A named list with class \code{mfrm_manifest}.
 Build a reproducibility manifest for an MFRM analysis
 }
 \details{
-This helper captures the package-native equivalent of the Streamlit app's
-configuration export. It summarizes analysis settings, source columns,
+This helper captures a package-native configuration export. It summarizes
+analysis settings, source columns,
 anchoring information, and which downstream outputs are currently available.
 }
 \section{When to use this}{

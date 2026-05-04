@@ -209,18 +209,17 @@ The current simulation-based validation covers:
 - latent distribution misspecification
 - step-structure misspecification
 
-These checks target `RSM` and `PCM`. `GPCM` is now supported only within a
-bounded core route: fitting, slope summaries, posterior scoring, information
-curves, direct curve/category reports, exploratory residual-based follow-up,
-and the slope-aware element-conditional `fair_average_table()` and
-`estimate_bias()` (with an explicit `caveat` field reminding users that the
-SE columns are scaled facet-measure SEs, not delta-method SEs of the
-fair-average / bias values). `build_visual_summaries()` and
-`run_qc_pipeline()` route those caveated screens into review bundles.
-Broader APA/report bundles, FACETS-compatibility score-side exports,
-linking synthesis, and planning / forecasting helpers remain out of scope
-for `GPCM` in this release. See `gpcm_capability_matrix()` for the full
-per-helper support contract.
+These checks target `RSM`, `PCM`, and the bounded `GPCM` route with explicit
+caveats. For `GPCM`, mfrmr supports fitting, slope summaries, posterior
+scoring, information curves, direct curve/category reports, exploratory
+residual-based follow-up, planning / forecasting simulations, and the
+slope-aware element-conditional `fair_average_table()` and `estimate_bias()`.
+`build_apa_outputs()`, `build_mfrm_manifest()`, `build_mfrm_replay_script()`,
+`export_mfrm_bundle()`, `build_visual_summaries()`, and `run_qc_pipeline()`
+route those caveated screens into review bundles. FACETS-compatibility
+score-side exports and linking synthesis remain out of scope for `GPCM` in
+this release. See `gpcm_capability_matrix()` for the full per-helper support
+contract.
 
 ## Why GPCM Is The Current Upper Scope
 
@@ -254,15 +253,13 @@ equal-weighting reference models and bounded `GPCM` as a supported alternative
 for users who explicitly want to inspect or allow discrimination-based
 reweighting.
 
-This is also why score-side compatibility-contract outputs (FACETS parity,
-score-side `facets_output_file_bundle()`, manuscript-grade APA bundles)
-remain out of scope for bounded `GPCM` in this release: their published
-forms are Rasch-family score transformations, and the slope-aware analogue
-that would replace them in a free-discrimination context requires
-delta-method standard-error machinery that is not yet exposed.
-`fair_average_table()` and `estimate_bias()` themselves are now unblocked
-under bounded `GPCM` via the slope-aware element-conditional kernel, with
-the explicit SE caveat noted above.
+This is also why score-side compatibility-contract outputs (FACETS parity and
+score-side `facets_output_file_bundle()`) remain out of scope for bounded
+`GPCM` in this release: their published forms are Rasch-family score
+transformations. APA/export/replay bundles are available as package-native
+caveated outputs, while `fair_average_table()` and `estimate_bias()` use the
+slope-aware element-conditional kernel with the explicit SE caveat noted
+above.
 
 One additional distinction matters for implementation. The `weight` argument in
 `fit_mfrm()` is an observation-weight column. It changes how rating events

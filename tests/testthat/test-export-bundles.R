@@ -2133,6 +2133,54 @@ test_that("export_mfrm_bundle writes requested tables and html output", {
   expect_true(file.exists(file.path(out_dir, "bundle_test_visual_warning_map.txt")))
 })
 
+test_that("export_mfrm_bundle default include works without prediction objects", {
+  out_dir <- file.path(tempdir(), "mfrmr-export-bundle-default")
+  if (dir.exists(out_dir)) unlink(out_dir, recursive = TRUE, force = TRUE)
+  dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
+
+  expect_no_error(
+    bundle <- export_mfrm_bundle(
+      fit = export_core_fixture$fit,
+      diagnostics = export_core_fixture$diagnostics,
+      output_dir = out_dir,
+      prefix = "bundle_default",
+      overwrite = TRUE
+    )
+  )
+
+  expect_s3_class(bundle, "mfrm_export_bundle")
+  expect_true(any(bundle$written_files$Component == "core_person"))
+  expect_false(any(grepl("prediction", bundle$written_files$Component)))
+})
+
+test_that("export_mfrm_bundle keeps attached diagnostic columns stable", {
+  dat <- load_mfrmr_data("example_core")
+  fit <- suppressMessages(suppressWarnings(fit_mfrm(
+    dat, "Person", c("Rater", "Criterion"), "Score",
+    method = "JML", maxit = 10, attach_diagnostics = TRUE
+  )))
+  dx <- diagnose_mfrm(fit, residual_pca = "none", diagnostic_mode = "legacy")
+  out_dir <- file.path(tempdir(), "mfrmr-export-bundle-attached-diagnostics")
+  if (dir.exists(out_dir)) unlink(out_dir, recursive = TRUE, force = TRUE)
+  dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
+
+  export_mfrm_bundle(
+    fit = fit,
+    diagnostics = dx,
+    output_dir = out_dir,
+    prefix = "attached",
+    include = "core_tables",
+    overwrite = TRUE
+  )
+  facet_cols <- names(utils::read.csv(
+    file.path(out_dir, "attached_facet_estimates.csv"),
+    check.names = FALSE
+  ))
+
+  expect_true(all(c("SE", "Infit", "Outfit") %in% facet_cols))
+  expect_false(any(grepl("\\.(x|y)$", facet_cols)))
+})
+
 test_that("export_mfrm_bundle writes optional prediction artifacts", {
   out_dir <- file.path(tempdir(), "mfrmr-export-bundle-predictions")
   if (dir.exists(out_dir)) unlink(out_dir, recursive = TRUE, force = TRUE)

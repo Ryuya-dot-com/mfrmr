@@ -2508,6 +2508,32 @@ test_that("extract_mfrm_sim_spec captures bounded GPCM slope metadata", {
   expect_setequal(spec$slope_table$SlopeFacet, unique(toy$Criterion))
 })
 
+test_that("extract_mfrm_sim_spec aligns bounded GPCM slopes to a non-Criterion slope facet", {
+  toy <- load_mfrmr_data("example_core")
+  keep_people <- unique(toy$Person)[1:12]
+  toy <- toy[toy$Person %in% keep_people, , drop = FALSE]
+  fit_gpcm <- suppressWarnings(
+    fit_mfrm(
+      toy,
+      "Person", c("Rater", "Criterion"), "Score",
+      method = "MML",
+      model = "GPCM",
+      step_facet = "Rater",
+      slope_facet = "Rater",
+      quad_points = 3,
+      maxit = 10
+    )
+  )
+
+  spec <- extract_mfrm_sim_spec(fit_gpcm)
+
+  expect_s3_class(spec, "mfrm_sim_spec")
+  expect_equal(spec$model, "GPCM")
+  expect_equal(spec$step_facet, "Rater")
+  expect_equal(spec$slope_facet, "Rater")
+  expect_setequal(spec$slope_table$SlopeFacet, unique(toy$Rater))
+})
+
 test_that("fit-derived GPCM specs generate data and run caveated planning helpers", {
   toy <- load_mfrmr_data("example_core")
   keep_people <- unique(toy$Person)[1:14]
@@ -2578,6 +2604,57 @@ test_that("fit-derived GPCM specs generate data and run caveated planning helper
   expect_s3_class(pred, "mfrm_population_prediction")
   expect_identical(pred$settings$model, "GPCM")
   expect_true(any(grepl("Bounded GPCM forecasts", pred$notes, fixed = TRUE)))
+})
+
+test_that("GPCM planning refits retain declared score categories when a category is unobserved", {
+  spec <- build_mfrm_sim_spec(
+    n_person = 8,
+    n_rater = 2,
+    n_criterion = 2,
+    raters_per_person = 1,
+    assignment = "rotating",
+    model = "GPCM",
+    step_facet = "Criterion",
+    slope_facet = "Criterion",
+    slopes = c(C01 = 0.8, C02 = 1.2)
+  )
+
+  messages <- capture.output(
+    eval <- suppressWarnings(evaluate_mfrm_design(
+      n_person = spec$n_person,
+      n_rater = spec$n_rater,
+      n_criterion = spec$n_criterion,
+      raters_per_person = spec$raters_per_person,
+      reps = 3,
+      maxit = 3,
+      quad_points = 3,
+      sim_spec = spec,
+      seed = 5
+    )),
+    type = "message"
+  )
+
+  expect_s3_class(eval, "mfrm_design_evaluation")
+  expect_true(any(eval$rep_overview$MinCategoryCount == 0))
+  expect_false(any(grepl("Rating range inferred", messages, fixed = TRUE)))
+})
+
+test_that("GPCM diagnostic screening accepts step-structure misspecification", {
+  screen <- suppressWarnings(evaluate_mfrm_diagnostic_screening(
+    n_person = 8,
+    n_rater = 2,
+    n_criterion = 2,
+    raters_per_person = 1,
+    reps = 1,
+    scenarios = "step_structure_misspecification",
+    model = "GPCM",
+    maxit = 3,
+    quad_points = 3,
+    seed = 9
+  ))
+
+  expect_s3_class(screen, "mfrm_diagnostic_screening")
+  expect_identical(screen$settings$model, "GPCM")
 })
 
 test_that("extract_mfrm_sim_spec can activate empirical latent support and resampled assignment", {

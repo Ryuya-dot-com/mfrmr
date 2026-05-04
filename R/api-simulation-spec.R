@@ -517,7 +517,8 @@ extract_mfrm_sim_spec <- function(fit,
   if (assignment == "auto") assignment <- inferred_assignment
 
   score_values <- sort(unique(prep$data$Score))
-  score_levels <- length(score_values)
+  score_levels <- as.integer(fit$config$n_cat %||%
+                               (prep$rating_max - prep$rating_min + 1L))
 
   thresholds <- simulation_extract_thresholds_from_fit(
     step_tbl = step_tbl,
@@ -528,11 +529,15 @@ extract_mfrm_sim_spec <- function(fit,
     model = fit_model
   )
   slope_input <- if (identical(fit_model, "GPCM")) {
-    slope_match <- match(criterion_levels, slopes$SlopeFacet)
+    slope_facet <- as.character(fit$config$slope_facet %||%
+                                  fit$config$step_facet %||%
+                                  criterion_facet)
+    slope_levels <- as.character(prep$levels[[slope_facet]] %||% character(0))
+    slope_match <- match(slope_levels, slopes$SlopeFacet)
     if (anyNA(slope_match)) {
       stop(
         "`extract_mfrm_sim_spec()` could not align fitted `GPCM` slopes to the observed `",
-        criterion_facet,
+        slope_facet,
         "` levels.",
         call. = FALSE
       )

@@ -59,6 +59,25 @@ test_that("facet_small_sample_audit classifies Linacre bands correctly", {
                     c("sparse", "marginal", "standard", "strong", NA_character_)))
 })
 
+test_that("facet_small_sample_audit reports the sparsest band as WorstCategory", {
+  d <- data.frame(
+    Person = paste0("P", sprintf("%02d", 1:20)),
+    Rater = c(rep("R_sparse", 4), rep("R_big", 16)),
+    Score = c(1, 2, 1, 2, rep(c(1, 2), 8)),
+    stringsAsFactors = FALSE
+  )
+  fit <- suppressMessages(suppressWarnings(
+    fit_mfrm(d, "Person", "Rater", "Score", method = "JML", maxit = 40)
+  ))
+  audit <- facet_small_sample_audit(fit)
+  rater_rows <- audit$table[audit$table$Facet == "Rater", , drop = FALSE]
+  expect_true(any(rater_rows$SampleCategory == "sparse"))
+  expect_true(any(rater_rows$SampleCategory == "marginal"))
+  rater_summary <- audit$facet_summary[audit$facet_summary$Facet == "Rater", , drop = FALSE]
+  expect_equal(rater_summary$MinN, 4)
+  expect_equal(rater_summary$WorstCategory, "sparse")
+})
+
 test_that("fit$summary carries FacetSampleSizeFlag", {
   toy <- load_mfrmr_data("example_core")
   fit <- suppressMessages(suppressWarnings(

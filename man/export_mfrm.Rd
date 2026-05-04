@@ -9,7 +9,7 @@ export_mfrm(
   diagnostics = NULL,
   output_dir = ".",
   prefix = "mfrm",
-  tables = c("person", "facets", "summary", "steps", "measures"),
+  tables = c("person", "facets", "summary", "steps", "slopes", "measures"),
   overwrite = FALSE
 )
 }
