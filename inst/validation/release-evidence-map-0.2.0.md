@@ -102,13 +102,14 @@ The score is intentionally a review aid, not a statistical estimate.
 Current interpretation for 0.2.0: release engineering is locally clean after
 `R CMD check --no-manual --as-cran` completed with `Status: OK` on 2026-05-16
 against the v0.2.0 source tarball on local macOS Tahoe 26.4.1
-(aarch64-apple-darwin23), R 4.6.0. The largest residual risk is no longer the
-point-estimate kernel; it is cross-platform confirmation on win-builder and
-GitHub Actions. The CI workflow treats warnings as failures and uploads
-per-platform check artifacts so that platform-specific warnings, notes, and log
-differences can be reviewed explicitly. The remaining substantive risk is the
-clarity of uncertainty and coverage limitations across all user-facing
-summaries.
+(aarch64-apple-darwin23), R 4.6.0. Cross-platform confirmation is also clean:
+GitHub Actions passed on ubuntu-latest (release / devel / oldrel-1),
+macos-latest (release), and windows-latest (release), and win-builder passed
+on Windows Server 2022 x64 for R-devel, R-release, and R-oldrelease. The CI
+workflow treats warnings as failures and uploads per-platform check artifacts
+so that platform-specific warnings, notes, and log differences can be reviewed
+explicitly. The remaining substantive risk is the clarity of uncertainty and
+coverage limitations across all user-facing summaries.
 
 ## Release-readiness checklist
 

@@ -6,7 +6,9 @@ The local pre-submission check was run against the v0.2.0 source tarball in:
 
 Cross-platform confirmation is tracked separately through:
 
-- win-builder R-devel on Windows Server x64.
+- win-builder on Windows Server 2022 x64:
+  R-devel (R Under development, 2026-05-15 r90061 ucrt),
+  R-release (R 4.6.0 ucrt), and R-oldrelease (R 4.5.3 ucrt).
 - GitHub Actions matrix: ubuntu-latest (release / devel / oldrel-1),
   macos-latest (release), windows-latest (release), with warnings treated
   as CI failures, check logs uploaded as artifacts, and the non-exported
@@ -14,7 +16,7 @@ Cross-platform confirmation is tracked separately through:
 
 ## R CMD check results
 
-The current local outcome is:
+The current local, win-builder, and GitHub Actions outcomes are:
 
 - 0 errors.
 - 0 warnings.
