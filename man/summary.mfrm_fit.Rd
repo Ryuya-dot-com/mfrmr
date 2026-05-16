@@ -23,10 +23,10 @@ An object of class \code{summary.mfrm_fit} with:
 \item \code{key_warnings}: highest-priority warnings to review first
 \item \code{next_actions}: recommended follow-up helpers
 \item \code{population_overview}: current population-model basis, residual variance,
-and omission audit
+and omission review
 \item \code{population_coefficients}: fitted latent-regression coefficients when a
 population model is active
-\item \code{population_design}: latent-regression design-matrix column audit when a
+\item \code{population_design}: latent-regression design-matrix column check when a
 population model is active
 \item \code{population_coding}: categorical covariate levels and contrast provenance
 when a population model uses model-matrix coding
@@ -45,6 +45,9 @@ configuration that affects identification/scoring
 \item \code{attached_diagnostics_cols}: character vector of diagnostic
 columns attached to \code{fit$facets$person} when
 \code{attached_diagnostics = TRUE}
+\item \code{row_retention}: row counts before and after preparation filters
+\item \code{preparation_notes}: structured preparation notes retained from
+\code{fit$prep}
 \item \code{reporting_map}: routing map showing which companion summaries
 and tables should be used for the four manuscript-oriented
 reporting sections (data description, diagnostics, category
@@ -92,7 +95,7 @@ complete-case omissions, zero-variance design columns, missing
 coefficients, or unstable residual variance when present. Incomplete or
 non-finite covariates are normally handled before fitting as input errors
 or complete-case omissions; they appear here only if retained in a
-population-design audit row.
+population-design check row.
 \item \code{caveats}: structured rows behind those warnings for appendix/export use;
 \code{print(summary(fit))} shows a compact \code{Caveats} block when rows are present.
 \item \code{reporting_map}: where to get companion outputs for manuscript reporting.

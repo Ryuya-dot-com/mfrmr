@@ -2,7 +2,7 @@
 % Please edit documentation in R/api-shrinkage.R
 \name{apply_empirical_bayes_shrinkage}
 \alias{apply_empirical_bayes_shrinkage}
-\title{Apply empirical-Bayes shrinkage to a fitted many-facet Rasch model}
+\title{Apply empirical-Bayes shrinkage to fitted non-person facet estimates}
 \usage{
 apply_empirical_bayes_shrinkage(
   fit,
@@ -76,7 +76,7 @@ preserved.
 \enumerate{
 \item Fit the model as usual with \code{fit_mfrm()}.
 \item Call \code{apply_empirical_bayes_shrinkage(fit)} when small-N facets
-are present (see \code{\link[=facet_small_sample_audit]{facet_small_sample_audit()}}).
+are present (see \code{\link[=facet_small_sample_review]{facet_small_sample_review()}}).
 \item Report both the original and shrunk estimates in the manuscript,
 citing Efron & Morris (1973). \code{build_apa_outputs()} will add the
 sentence automatically when \code{fit$config$facet_shrinkage} is set.
@@ -119,5 +119,5 @@ and applications. \emph{Journal of the American Statistical Association,
 }
 \seealso{
 \code{\link[=fit_mfrm]{fit_mfrm()}} (which accepts \code{facet_shrinkage} directly),
-\code{\link[=facet_small_sample_audit]{facet_small_sample_audit()}}, \code{\link[=compute_facet_icc]{compute_facet_icc()}}.
+\code{\link[=facet_small_sample_review]{facet_small_sample_review()}}, \code{\link[=compute_facet_icc]{compute_facet_icc()}}.
 }

@@ -17,7 +17,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-# Quick reference: mfrmr 0.1.6
+# Quick reference: mfrmr 0.2.0
 
 A two-page reference for the fit / diagnose / report loop in mfrmr.
 Every snippet assumes `library(mfrmr)` and a long-format
@@ -75,11 +75,11 @@ eq <- analyze_facet_equivalence(fit, facet = "Rater", ci_level = 0.95)
 plot_facet_equivalence(eq, type = "forest")
 ```
 
-## 5. Hierarchical structure and small-N audit
+## 5. Hierarchical structure and small-N review
 
 ```{r hier}
-audit <- facet_small_sample_audit(fit)
-summary(audit)
+review <- facet_small_sample_review(fit)
+summary(review)
 
 icc <- compute_facet_icc(
   toy, facets = c("Rater", "Criterion"),
@@ -119,7 +119,7 @@ fit_eb2 <- apply_empirical_bayes_shrinkage(fit)
 | `plot_rater_severity_profile(fit, diag)` | Rater ranking + CI bands |
 | `plot_bias_interaction(bias, plot="heatmap")` | Bias cell heatmap |
 | `plot_displacement(fit, show_ci=TRUE)` | Anchor displacement lollipop |
-| `plot_fair_average(fit, show_ci=TRUE)` | Fair averages + delta-method CI |
+| `plot_fair_average(fit, show_ci=TRUE)` | Fair averages; CIs for Rasch-family fits |
 | `plot_anchor_drift(drift, type="forest")` | Wave-level anchor CI forest |
 | `plot.mfrm_equating_chain(chain, type="graph")` | Bipartite wave/anchor graph |
 | `plot_apa_figure_one(fit)` | Publication 2x2 composite |
@@ -131,7 +131,7 @@ fit_eb2 <- apply_empirical_bayes_shrinkage(fit)
 export_mfrm_bundle(fit, diagnostics = diag, path = "mfrmr_bundle/")
 manifest <- build_mfrm_manifest(fit, diagnostics = diag)
 # manifest$environment, $dependencies, $input_hash, $session_info,
-# $hierarchical_audit, $missing_recoding, $shrinkage_audit
+# $hierarchical_review, $missing_recoding, $shrinkage_review
 replay_script <- build_mfrm_replay_script(fit, path = "replay_mfrmr.R")
 ```
 
@@ -147,8 +147,7 @@ fit$prep$missing_recoding
 
 ## Package links
 
-- Documentation: <https://ryuya-dot-com.github.io/mfrmr/>
-- Source:        <https://github.com/Ryuya-dot-com/mfrmr>
+- Source and documentation: <https://github.com/Ryuya-dot-com/mfrmr>
 - Citation:      `citation("mfrmr")`
 
-*mfrmr 0.1.6 cheatsheet*. Distributed under MIT License.
+*mfrmr 0.2.0 cheatsheet*. Distributed under MIT License.

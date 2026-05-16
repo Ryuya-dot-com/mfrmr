@@ -32,7 +32,7 @@ An \code{mfrm_imported_fit} object. Slots mirror
 }
 \description{
 Extracts item / step / person parameters from a \code{\link[TAM:tam.mml]{TAM::tam.mml()}},
-\code{\link[TAM:tam.jml]{TAM::tam.jml()}}, or \code{\link[TAM:tam.mml]{TAM::tam.mml.mfr()}} fit. The multi-facet
+\code{\link[TAM:tam.jml]{TAM::tam.jml()}}, or \code{\link[TAM:tam.mml.mfr]{TAM::tam.mml.mfr()}} fit. The multi-facet
 \code{tam.mml.mfr()} path is detected automatically and each
 non-person facet is mapped onto a row of \code{fit$facets$others}
 so downstream MFRM helpers (e.g. \code{plot_qc_dashboard()}) work

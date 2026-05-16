@@ -7,7 +7,7 @@
 # trajectory across waves, and a pairwise rater-agreement heatmap. They
 # all follow the mfrmr plot contract: accept an `mfrm_fit` (or a related
 # class), resolve a preset via resolve_plot_preset() + apply_plot_preset(),
-# and return an `mfrm_plot_data` payload that downstream code can
+# and return an `mfrm_plot_data` object that downstream code can
 # re-render or export.
 # ==============================================================================
 

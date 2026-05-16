@@ -11,7 +11,7 @@ authors:
 
 home:
   title: mfrmr
-  description: Many-facet Rasch model estimation, diagnostics, and reporting workflows in R
+  description: Many-facet ordered-response model estimation, diagnostics, and reporting workflows in R
 
 articles:
   - title: Workflow Guides
@@ -35,6 +35,7 @@ reference:
       - mfrmr_reporting_and_apa
       - mfrmr_linking_and_dff
       - mfrmr_compatibility_layer
+      - mfrmr_output_guide
   - title: Estimation
     contents:
       - mfrmr-package
@@ -95,10 +96,11 @@ reference:
       - as_flextable
       - export_mfrm
       - export_mfrm_bundle
-      - precision_audit_report
+      - mfrmr_output_guide
+      - precision_review_report
       - reporting_checklist
       - run_qc_pipeline
-      - reference_case_audit
+      - reference_case_review
       - reference_case_benchmark
       - print.mfrm_apa_text
       - summary.mfrm_fit
@@ -106,7 +108,7 @@ reference:
       - summary.mfrm_bias
       - summary.apa_table
       - summary.mfrm_apa_outputs
-      - summary.mfrm_anchor_audit
+      - summary.mfrm_anchor_review
       - summary.mfrm_bundle
       - summary.mfrm_data_description
       - summary.mfrm_design_evaluation
@@ -120,7 +122,7 @@ reference:
   - title: Plotting
     contents:
       - plot.apa_table
-      - plot.mfrm_anchor_audit
+      - plot.mfrm_anchor_review
       - plot.mfrm_fit
       - plot.mfrm_bundle
       - plot.mfrm_data_description
@@ -158,20 +160,20 @@ reference:
       - ej2021_data
       - mfrmr_example_data
       - describe_mfrm_data
-      - audit_mfrm_anchors
+      - review_mfrm_anchors
       - make_anchor_table
       - list_mfrmr_data
       - load_mfrmr_data
       - recode_missing_codes
   - title: Hierarchical Structure and Sample Adequacy
     desc: >-
-      Descriptive audit of the observed design. All helpers leave
+      Descriptive review of the observed design. All helpers leave
       estimation unchanged; they classify nesting, surface small-N
       facet levels, and add ICC / Kish design-effect summaries on
       top of the fixed-effects MFRM fit.
     contents:
       - detect_facet_nesting
-      - facet_small_sample_audit
+      - facet_small_sample_review
       - compute_facet_icc
       - compute_facet_design_effect
       - mfrm_generalizability
@@ -204,8 +206,8 @@ reference:
       - build_fixed_reports
       - facets_output_file_bundle
       - facets_parity_report
-      - audit_conquest_overlap
       - build_conquest_overlap_bundle
+      - review_conquest_overlap
       - normalize_conquest_overlap_files
       - normalize_conquest_overlap_tables
       - compatibility_alias_table
@@ -233,12 +235,12 @@ reference:
       - as_flextable.apa_table
       - build_linking_review
       - build_misfit_casebook
-      - build_weighting_audit
+      - build_weighting_review
       - build_summary_table_bundle
       - export_summary_appendix
       - evaluate_mfrm_diagnostic_screening
       - visual_reporting_template
-      - plot.mfrm_facet_sample_audit
+      - plot.mfrm_facet_sample_review
       - plot.mfrm_facet_nesting
       - plot.mfrm_equating_chain
       - plot.mfrm_future_branch_active_branch
@@ -250,4 +252,4 @@ reference:
       - summary.mfrm_misfit_casebook
       - summary.mfrm_reporting_checklist
       - summary.mfrm_summary_table_bundle
-      - summary.mfrm_weighting_audit
+      - summary.mfrm_weighting_review

@@ -35,7 +35,8 @@ residual, with columns \code{Source}, \code{Variance}, and
 \code{ProportionVariance}.}
 \item{\code{coefficients}}{One-row data frame with \code{G}
 (generalizability coefficient, relative decision) and
-\code{Phi} (dependability coefficient, absolute decision).}
+\code{Phi} (dependability coefficient, absolute decision), using the
+single-observation-per-cell convention.}
 \item{\code{design}}{Description of the crossed-random model.}
 }
 }
@@ -54,8 +55,10 @@ already emits.
 \itemize{
 \item \code{G} is appropriate for \strong{relative} decisions (rank-ordering
 persons): \code{G = sigma2(p) / (sigma2(p) + sigma2(Residual))}.
-\item \code{Phi} is appropriate for \strong{absolute} decisions (cut-score
-classification): \verb{Phi = sigma2(p) / (sigma2(p) + sigma2(facet main effects) + sigma2(Residual))}.
+\item The reported \code{Phi} is appropriate for \strong{absolute} decisions (cut-score
+classification): \verb{Phi = sigma2(p) / (sigma2(p) + sigma2(facet main effects) + sigma2(Residual))}, before D-study scaling.
+\item Use \code{\link[=mfrm_d_study]{mfrm_d_study()}} to project \code{G} / \code{Phi} under planned numbers of
+raters, items, criteria, or other random measurement facets.
 \item Reporting bands follow Brennan (2001): G / Phi >= 0.8 for
 high-stakes decisions, >= 0.7 for routine reporting.
 }
@@ -70,14 +73,13 @@ explicit \code{(1 | Person:Rater)}, \code{(1 | Person:Criterion)}, or
 two-way and higher interaction variance is therefore folded into
 the \code{Residual} term -- the standard one-observation-per-cell
 approximation -- which can bias \code{G} downward when person x facet
-interactions are substantively large. The reported \code{Phi} does
-\strong{not} apply Brennan (2001) D-study scalings (\code{1/n_r},
-\code{1/n_i}, \code{1/(n_r * n_i)}); it treats each random source as
-contributing one full observation, so it matches the canonical
-Phi only when the operational reporting design is also one rating
-per condition. For a full p x r x i decomposition with D-study
-scaling, treat this output as a screening summary and re-estimate
-externally.
+interactions are substantively large. This function reports the
+one-observation-per-cell baseline. \code{\link[=mfrm_d_study]{mfrm_d_study()}} applies D-study
+scaling, including residual-scaling sensitivity checks, to the same
+simplified variance-component decomposition.
+Because person-by-facet interaction terms are not estimated separately,
+D-study projections remain practical planning evidence rather than a
+replacement for a fully specified G-theory design.
 }
 
 \section{References}{
@@ -110,5 +112,5 @@ if (requireNamespace("lme4", quietly = TRUE)) {
 }
 }
 \seealso{
-\code{\link[=compute_facet_icc]{compute_facet_icc()}}, \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}
+\code{\link[=mfrm_d_study]{mfrm_d_study()}}, \code{\link[=compute_facet_icc]{compute_facet_icc()}}, \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}
 }

@@ -40,7 +40,8 @@ test_that("GPCM diagnose_mfrm returns measures with caveat status", {
   ))
   expect_true(is.data.frame(diag$measures))
   expect_true(nrow(diag$measures) > 0L)
-  # Fair-average remains a placeholder under GPCM.
+  # The dashboard panel remains unavailable under GPCM; direct
+  # fair_average_table() is supported with its own caveat.
   if (!is.null(diag$fair_average)) {
     fa_msg <- as.character(diag$fair_average$status %||% "")
     expect_true(any(grepl("placeholder|unavailable|GPCM", fa_msg,

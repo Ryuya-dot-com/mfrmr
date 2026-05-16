@@ -1289,6 +1289,7 @@ build_apa_reporting_contract <- function(res, diagnostics, bias_results = NULL, 
   summary <- if (!is.null(res$summary) && nrow(res$summary) > 0) res$summary[1, , drop = FALSE] else NULL
   prep <- res$prep
   config <- res$config
+  model <- toupper(as.character(config$model %||% "RSM"))
 
   n_obs <- if (!is.null(summary)) to_float(summary$N) else NA_real_
   n_person <- if (!is.null(summary)) to_float(summary$Persons) else nrow(res$facets$person)
@@ -1374,8 +1375,15 @@ build_apa_reporting_contract <- function(res, diagnostics, bias_results = NULL, 
     method_sentences <- c(method_sentences, assessment_sentence)
   }
 
+  model_overview_label <- switch(
+    model,
+    RSM = "A many-facet rating-scale Rasch model",
+    PCM = "A many-facet partial-credit Rasch model",
+    GPCM = "A bounded generalized partial-credit many-facet model",
+    "A many-facet ordered-response model"
+  )
   design_overview_sentence <- paste0(
-    "A many-facet Rasch model (MFRM) was fit to ", fmt_count(n_obs),
+    model_overview_label, " was fit to ", fmt_count(n_obs),
     " observations from ", fmt_count(n_person),
     " persons scored on a ", fmt_count(n_cat),
     "-category scale (", fmt_count(rating_min), "-", fmt_count(rating_max), ")."
@@ -1401,14 +1409,14 @@ build_apa_reporting_contract <- function(res, diagnostics, bias_results = NULL, 
         if (is.na(facet_min_n)) "NA" else facet_min_n,
         "). mfrmr estimates facets as fixed effects without partial pooling, so ",
         "sparse levels retain wide standard errors; consider reviewing the output ",
-        "of `facet_small_sample_audit()` before generalising."
+        "of `facet_small_sample_review()` before generalising."
       ),
       marginal = paste0(
         "The smallest facet-level N was ",
         if (is.na(facet_min_n)) "NA" else facet_min_n,
         ", below the 30-examinee floor (Linacre, 1994) used as the marginal-band ",
         "anchor in this package's adapted screening bands. Facet estimates remain ",
-        "fixed-effect and unshrunk; see `facet_small_sample_audit()` for per-level detail."
+        "fixed-effect and unshrunk; see `facet_small_sample_review()` for per-level detail."
       ),
       standard = paste0(
         "Facet-level sample sizes met the package's `standard` band ",
@@ -1416,7 +1424,7 @@ build_apa_reporting_contract <- function(res, diagnostics, bias_results = NULL, 
         if (is.na(facet_min_n)) "NA" else facet_min_n,
         "), an mfrmr-specific watermark adapted from Linacre's (1994) 30/100 ",
         "guidance; facets were nonetheless estimated as fixed effects with ",
-        "sum-to-zero identification (see `facet_small_sample_audit()`)."
+        "sum-to-zero identification (see `facet_small_sample_review()`)."
       ),
       strong = paste0(
         "Facet-level sample sizes were strong (smallest level N = ",
@@ -1497,9 +1505,8 @@ build_apa_reporting_contract <- function(res, diagnostics, bias_results = NULL, 
   }
 
   population_summary <- summarize_population_model_for_apa(res)
-  model <- config$model
   method <- config$method
-  model_sentence <- paste0("The ", model, " specification was estimated using ", method, " in the native R MFRM package.")
+  model_sentence <- paste0("The ", model, " specification was estimated using ", method, " with mfrmr.")
   if (identical(model, "PCM") && !is.null(config$step_facet) && nzchar(config$step_facet)) {
     model_sentence <- paste0(model_sentence, " The step structure varied by ", config$step_facet, ".")
   }

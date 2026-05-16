@@ -3,7 +3,7 @@
 #  * `fit_mfrm(..., missing_codes = ...)` — opt-in pre-processing
 #  * `prepare_mfrm_data()` — stores `prep$missing_recoding`
 #  * `build_mfrm_manifest()$missing_recoding` — reads prep audit
-#  * `audit_mfrm_anchors(..., missing_codes = ...)` — pass-through
+#  * `review_mfrm_anchors(..., missing_codes = ...)` — pass-through
 #  * `describe_mfrm_data(..., missing_codes = ...)` — pass-through
 #  * `recode_missing_codes()` — standalone helper (existing)
 
@@ -114,13 +114,13 @@ test_that("describe_mfrm_data respects missing_codes", {
   expect_gt(raw_max, clean_max)
 })
 
-test_that("audit_mfrm_anchors respects missing_codes", {
+test_that("review_mfrm_anchors respects missing_codes", {
   d <- make_dirty_data(seed = 6L)
   aud_raw <- suppressMessages(suppressWarnings(
-    audit_mfrm_anchors(d, "Person", c("Rater", "Task"), "Score")
+    review_mfrm_anchors(d, "Person", c("Rater", "Task"), "Score")
   ))
   aud_clean <- suppressMessages(suppressWarnings(
-    audit_mfrm_anchors(d, "Person", c("Rater", "Task"), "Score",
+    review_mfrm_anchors(d, "Person", c("Rater", "Task"), "Score",
                        missing_codes = TRUE)
   ))
   # Facet summaries exist in both cases.

@@ -309,7 +309,7 @@
 }
 
 
-#' Apply empirical-Bayes shrinkage to a fitted many-facet Rasch model
+#' Apply empirical-Bayes shrinkage to fitted non-person facet estimates
 #'
 #' Post-hoc shrinkage helper that augments an `mfrm_fit` with James-Stein
 #' / empirical-Bayes shrunk estimates for each non-person facet. The
@@ -369,13 +369,13 @@
 #' @section Typical workflow:
 #' 1. Fit the model as usual with `fit_mfrm()`.
 #' 2. Call `apply_empirical_bayes_shrinkage(fit)` when small-N facets
-#'    are present (see [facet_small_sample_audit()]).
+#'    are present (see [facet_small_sample_review()]).
 #' 3. Report both the original and shrunk estimates in the manuscript,
 #'    citing Efron & Morris (1973). `build_apa_outputs()` will add the
 #'    sentence automatically when `fit$config$facet_shrinkage` is set.
 #'
 #' @seealso [fit_mfrm()] (which accepts `facet_shrinkage` directly),
-#'   [facet_small_sample_audit()], [compute_facet_icc()].
+#'   [facet_small_sample_review()], [compute_facet_icc()].
 #'
 #' @references
 #' Efron, B., & Morris, C. (1973). Combining possibly related

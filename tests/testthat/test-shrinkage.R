@@ -4,7 +4,7 @@
 #  * `apply_empirical_bayes_shrinkage()` — standalone post-hoc wrapper
 #  * `shrinkage_report()` — accessor
 #  * `fit_mfrm(..., facet_shrinkage = ...)` — integrated path
-#  * `build_mfrm_manifest()$shrinkage_audit` — reproducibility trail
+#  * `build_mfrm_manifest()$shrinkage_review` — reproducibility trail
 #  * `reporting_checklist()` — "Empirical-Bayes shrinkage" item
 
 # --- Closed-form math --------------------------------------------------------
@@ -130,7 +130,7 @@ test_that("shrinkage_report() returns a data.frame after shrinkage", {
 
 # --- Reporting integration ---------------------------------------------------
 
-test_that("build_mfrm_manifest records shrinkage_audit", {
+test_that("build_mfrm_manifest records shrinkage_review", {
   toy <- load_mfrmr_data("example_core")
   fit <- suppressMessages(suppressWarnings(
     fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
@@ -138,10 +138,10 @@ test_that("build_mfrm_manifest records shrinkage_audit", {
              facet_shrinkage = "empirical_bayes")
   ))
   m <- build_mfrm_manifest(fit)
-  expect_true("shrinkage_audit" %in% names(m))
-  expect_true(nrow(m$shrinkage_audit) >= 1L)
-  expect_true("Mode" %in% names(m$shrinkage_audit))
-  expect_identical(unique(m$shrinkage_audit$Mode), "empirical_bayes")
+  expect_true("shrinkage_review" %in% names(m))
+  expect_true(nrow(m$shrinkage_review) >= 1L)
+  expect_true("Mode" %in% names(m$shrinkage_review))
+  expect_identical(unique(m$shrinkage_review$Mode), "empirical_bayes")
 })
 
 test_that("reporting_checklist has a shrinkage item", {
@@ -214,13 +214,13 @@ test_that("plot.mfrm_fit(type = 'shrinkage') gracefully renders with no shrinkag
   expect_identical(out$data$mode, "none")
 })
 
-test_that("plot.mfrm_facet_sample_audit runs and returns a data.frame", {
+test_that("plot.mfrm_facet_sample_review runs and returns a data.frame", {
   toy <- load_mfrmr_data("example_core")
   fit <- suppressMessages(suppressWarnings(
     fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
              method = "JML", maxit = 15)
   ))
-  audit <- facet_small_sample_audit(fit)
+  audit <- facet_small_sample_review(fit)
   pdf(NULL)  # suppress device
   on.exit(dev.off(), add = TRUE)
   out <- plot(audit)

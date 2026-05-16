@@ -173,5 +173,5 @@ Software, 67}(1), 1-48.
 \seealso{
 \code{\link[=compute_facet_design_effect]{compute_facet_design_effect()}},
 \code{\link[=analyze_hierarchical_structure]{analyze_hierarchical_structure()}}, \code{\link[=detect_facet_nesting]{detect_facet_nesting()}},
-\code{\link[=facet_small_sample_audit]{facet_small_sample_audit()}}.
+\code{\link[=facet_small_sample_review]{facet_small_sample_review()}}.
 }

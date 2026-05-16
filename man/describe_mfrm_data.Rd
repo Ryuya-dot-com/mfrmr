@@ -86,6 +86,9 @@ non-person facets (named list keyed \code{"facetA__facetB"}); used by
 facet-pair coverage
 \item \code{linkage_summary}: person-facet connectivity diagnostics
 \item \code{agreement}: observed-score inter-rater agreement bundle
+\item \code{row_retention}: row counts before and after preparation filters
+\item \code{preparation_notes}: structured notes for row drops, ID trimming, and
+design conditions detected during preparation
 \item \code{score_support}: minimal prepared score-support metadata used by
 \code{summary(ds)$caveats}
 }
@@ -157,5 +160,5 @@ p_ds <- plot(ds, draw = FALSE)
 p_ds$data$plot
 }
 \seealso{
-\code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=audit_mfrm_anchors]{audit_mfrm_anchors()}}
+\code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=review_mfrm_anchors]{review_mfrm_anchors()}}
 }

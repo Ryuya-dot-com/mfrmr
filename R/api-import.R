@@ -7,7 +7,7 @@
 # `mfrm_fit` contract (item / step parameters, person scores, basic
 # fit statistics) and returns a thin object that the mfrmr plot and
 # reporting helpers can consume. Full bundle import (bias / DIF /
-# anchor audit / replay) is deferred to a future release because the
+# anchor review / replay) is deferred to a future release because the
 # source packages do not always expose the underlying data.
 #
 # All importers refuse to claim the `mfrm_fit` class outright; they
@@ -781,7 +781,7 @@ import_erm_fit <- function(fit, model = c("RSM", "PCM", "GPCM"),
       PrecisionTier = "imported",
       stringsAsFactors = FALSE
     ),
-    precision_audit = data.frame(),
+    precision_review = data.frame(),
     facet_names = facet_names,
     diagnostic_mode = "legacy",
     residual_pca_mode = "none",

@@ -50,7 +50,7 @@ Output text includes residual-PCA screening commentary if PCA diagnostics are
 available in \code{diagnostics}.
 
 For bounded \code{GPCM}, this helper is intentionally unavailable. Use
-\code{\link[=reporting_checklist]{reporting_checklist()}}, \code{\link[=precision_audit_report]{precision_audit_report()}}, and the direct
+\code{\link[=reporting_checklist]{reporting_checklist()}}, \code{\link[=precision_review_report]{precision_review_report()}}, and the direct
 table/plot helpers instead, and treat \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}} as the
 formal boundary statement for that branch.
 

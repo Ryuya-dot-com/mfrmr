@@ -31,7 +31,7 @@ per-column replacement counts.}
 \value{
 The input \code{data} with the specified missing sentinels
 replaced by \code{NA}. A \code{mfrm_missing_recoding} attribute records the
-per-column replacement counts for audit logs.
+per-column replacement counts for traceability logs.
 }
 \description{
 Convenience helper that replaces the standard non-\code{NA} missing-code

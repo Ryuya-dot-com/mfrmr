@@ -47,5 +47,25 @@ jobs:
       - uses: r-lib/actions/check-r-package@v2
         with:
           upload-snapshots: true
-          error-on: '"error"'
+          error-on: '"warning"'
           build_args: 'c("--no-manual","--compact-vignettes=gs+qpdf")'
+
+      - name: Upload check results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: r-cmd-check-${{ matrix.config.os }}-${{ matrix.config.r }}
+          path: |
+            check
+            *.Rcheck
+          if-no-files-found: ignore
+
+      - name: Release-readiness gate
+        run: |
+          source("inst/validation/release-readiness.R")
+          readiness <- mfrmr_release_readiness_review(pkg_dir = ".")
+          print(summary(readiness))
+          if (any(readiness$gate_summary$Status == "concern", na.rm = TRUE)) {
+            stop("Release-readiness gate has concern rows.", call. = FALSE)
+          }
+        shell: Rscript {0}

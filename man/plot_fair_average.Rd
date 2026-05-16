@@ -43,7 +43,11 @@ range. Rows where the score variance is effectively zero (levels
 whose measure sits near the rating boundary, so the delta-method
 approximation becomes uninformative) are drawn with an open
 circle and excluded from the whiskers; the excluded count is
-reported in the subtitle.}
+reported in the subtitle. For bounded \code{GPCM} fits, this option requests
+\code{fair_average_table(fair_se = TRUE)} when \code{x} is a fit object and uses the
+structural delta-method fair-average CI columns when they are available.
+If \code{x} is a precomputed fair-average bundle without those columns, the
+plot records an unavailable-CI note.}
 
 \item{ci_level}{Confidence level used when \code{show_ci = TRUE};
 default \code{0.95}. The returned plot-data object gains \code{CI_Lower},
@@ -57,7 +61,7 @@ default \code{0.95}. The returned plot-data object gains \code{CI_Lower},
 }
 \value{
 A plotting-data object of class \code{mfrm_plot_data}.
-With \code{draw = FALSE}, the payload includes \code{title}, \code{subtitle},
+With \code{draw = FALSE}, the returned plot data includes \code{title}, \code{subtitle},
 \code{legend}, \code{reference_lines}, and the stacked fair-average data.
 }
 \description{

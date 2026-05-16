@@ -129,7 +129,7 @@ test_that("build_apa_report_text produces Method and Results sections", {
   text <- mfrmr:::build_apa_report_text(.fit, .diag)
   expect_true(grepl("Method", text))
   expect_true(grepl("Results", text))
-  expect_true(grepl("many-facet Rasch", text, ignore.case = TRUE))
+  expect_true(grepl("many-facet .*Rasch", text, ignore.case = TRUE))
 })
 
 test_that("build_apa_report_text with context supplies assessment/setting text", {

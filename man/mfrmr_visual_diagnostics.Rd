@@ -31,9 +31,9 @@ merit closer inspection rather than as Rasch-style violations of
 strict invariance.
 \item FACETS-style fair averages are a Rasch-family measure-to-score
 transformation. Under \code{GPCM} the fair-average panel of
-\code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}} therefore renders as an explicit
-"unavailable" placeholder, and the broader compatibility-export
-helpers stay outside the validated \code{GPCM} boundary.
+\code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}} therefore renders with an explicit
+"unavailable" status, and the broader compatibility-export helpers
+stay outside the validated \code{GPCM} boundary.
 }
 
 Use \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}} for the formal per-helper boundary
@@ -47,7 +47,8 @@ Use \code{plot(fit, type = "wright")} or \code{\link[=plot_wright_unified]{plot_
 \item "Where do score categories transition across theta?"
 Use \code{plot(fit, type = "pathway")} and \code{plot(fit, type = "ccc")}.
 \item "Is the design linked well enough across subsets or administrations?"
-Use \code{plot(subset_connectivity_report(...), type = "design_matrix")} and
+Use \code{plot(subset_connectivity_report(...), type = "design_matrix")},
+\code{\link[=mfrm_network_analysis]{mfrm_network_analysis()}}, \code{plot(..., type = "network")}, and
 \code{\link[=plot_anchor_drift]{plot_anchor_drift()}}.
 \item "Which responses or levels look locally problematic?"
 Use \code{\link[=plot_unexpected]{plot_unexpected()}} and \code{\link[=plot_displacement]{plot_displacement()}}.
@@ -56,7 +57,11 @@ Use \code{\link[=plot_marginal_fit]{plot_marginal_fit()}}.
 \item "Which level pairs drive strict local-dependence follow-up?"
 Use \code{\link[=plot_marginal_pairwise]{plot_marginal_pairwise()}}.
 \item "Do raters agree and do facets separate meaningfully?"
-Use \code{\link[=plot_interrater_agreement]{plot_interrater_agreement()}} and \code{\link[=plot_facets_chisq]{plot_facets_chisq()}}.
+Use \code{\link[=plot_interrater_agreement]{plot_interrater_agreement()}}, \code{\link[=rater_network_analysis]{rater_network_analysis()}}, and
+\code{\link[=plot_facets_chisq]{plot_facets_chisq()}}.
+\item "Do criteria within the same rater move together in a halo-like way?"
+Use \code{\link[=rater_halo_network_analysis]{rater_halo_network_analysis()}} and
+\code{plot(..., type = "edge_distribution")}.
 \item "Is there notable residual structure after the main Rasch dimension?"
 Use \code{\link[=plot_residual_pca]{plot_residual_pca()}}.
 \item "Which interaction cells or facet levels drive bias screening results?"
@@ -102,8 +107,8 @@ choosing the next plot.
 Use \code{\link[=visual_reporting_template]{visual_reporting_template()}} for a static reporting-use table, then
 cross-check run-specific availability with \code{reporting_checklist()$visual_scope}.
 \item "Do I need a 3D-style category probability surface?"
-Use \code{plot(fit, type = "ccc_surface", draw = FALSE)} to get a
-theta-by-category-by-probability payload for exploratory teaching or
+Use \code{plot(fit, type = "ccc_surface", draw = FALSE)} to get
+theta-by-category-by-probability plot data for exploratory teaching or
 downstream interactive rendering. Keep 2D pathway/CCC plots as the
 default reporting figures.
 }
@@ -125,11 +130,11 @@ and \code{plot_residual_pca()} for structural interpretation.
 \code{\link[=plot_information]{plot_information()}} when the checklist or dashboard points to
 interaction, differential-functioning, linking, or precision
 follow-up.
-\item Use \code{plot(..., draw = FALSE)} when you want reusable plotting payloads
-instead of immediate graphics.
+\item Use \code{plot(..., draw = FALSE)} when you want reusable plot data instead
+of immediate graphics.
 \item Use \code{plot(fit, type = "ccc_surface", draw = FALSE)} only when you need
-a 3D-ready category-probability payload; \code{mfrmr} intentionally does not
-add a package-native plotly/rgl renderer for this route.
+3D-ready category-probability data; \code{mfrmr} intentionally does not add a
+package-native plotly/rgl renderer for this route.
 \item Use \code{preset = "publication"} when you want the package's cleaner
 manuscript-oriented styling.
 }
@@ -155,17 +160,17 @@ supports all of the following follow-up roles through public helpers:
 \code{diagnostic_mode = "both"}.
 \item Reporting/export handoff:
 \code{\link[=build_visual_summaries]{build_visual_summaries()}} and \code{draw = FALSE} routes that return reusable
-\code{mfrm_plot_data} payloads for downstream review and export. When step
+\code{mfrm_plot_data} objects for downstream review and export. When step
 estimates are available, \code{build_visual_summaries()} also exposes
 \verb{$plot_payloads$category_probability_surface}.
 \item 3D-ready exploratory handoff:
 \code{plot(fit, type = "ccc_surface", draw = FALSE)} returns a
-theta-by-category-by-probability \code{mfrm_plot_data} payload. This is not a
+theta-by-category-by-probability \code{mfrm_plot_data} object. This is not a
 default APA/reporting figure and does not load plotly/rgl.
 }
 }
 
-\section{3D and surface payloads}{
+\section{3D and surface data}{
 
 The package currently treats 3D as an exploratory data handoff, not as a
 default plotting layer. The supported route is
@@ -334,7 +339,8 @@ inspect \code{"Visual Displays"} rows -> chosen public plot helper.
 \code{plot(fit, type = "wright")} -> \code{plot(fit, type = "pathway")} ->
 \code{plot(fit, type = "ccc")}.
 \item Linking review:
-\code{\link[=subset_connectivity_report]{subset_connectivity_report()}} -> \code{plot(..., type = "design_matrix")} ->
+\code{\link[=subset_connectivity_report]{subset_connectivity_report()}} -> \code{plot(..., type = "design_matrix")} /
+\code{\link[=mfrm_network_analysis]{mfrm_network_analysis()}} / \code{plot(..., type = "network")} ->
 \code{\link[=plot_anchor_drift]{plot_anchor_drift()}}.
 \item Interaction review:
 \code{\link[=estimate_bias]{estimate_bias()}} -> \code{\link[=plot_bias_interaction]{plot_bias_interaction()}} ->

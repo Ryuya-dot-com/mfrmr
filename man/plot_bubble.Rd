@@ -16,7 +16,7 @@ plot_bubble(
   main = NULL,
   palette = NULL,
   draw = TRUE,
-  preset = c("standard", "publication", "compact")
+  preset = c("standard", "publication", "compact", "monochrome")
 )
 }
 \arguments{

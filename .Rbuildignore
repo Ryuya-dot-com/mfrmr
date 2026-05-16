@@ -18,7 +18,6 @@
 ^SECURITY\.md$
 ^cran-comments\.md$
 ^analysis$
-^\.claude$
 ^doc$
 ^docs$
 ^Meta$
@@ -27,12 +26,7 @@
 ^PACKAGES\.rds$
 ^Library$
 ^Outputs$
+^validation-results$
 ^man/.*DESKTOP-.*\.Rd$
-^inst/references/M[0-9]_.*[.]md$
-^inst/references/MFRMR_.*[.]md$
-^inst/references/MAINTENANCE_AND_ROADMAP_CHECKLIST_.*[.]md$
-^inst/references/PUBLIC_RELEASE_READINESS_AUDIT_.*[.]md$
-^inst/references/README[.]md$
-^inst/references/CODE_READING_GUIDE[.]md$
 ^revdep$
 ^design-notes$

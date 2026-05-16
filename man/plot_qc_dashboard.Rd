@@ -76,9 +76,8 @@ are available: \code{"strict"}, \code{"standard"} (default), and \code{"lenient"
 Use \code{thresholds} to override any profile value with named entries.
 
 For bounded \code{GPCM}, the dashboard now reuses the residual-based
-diagnostics stack and leaves the fair-average panel as an explicit
-unavailable placeholder rather than silently reusing the Rasch-only
-compatibility calculation.
+diagnostics stack and marks the fair-average panel unavailable rather
+than silently reusing the Rasch-only compatibility calculation.
 }
 \section{Plot types}{
 
@@ -121,7 +120,7 @@ Treat this dashboard as a screening layer; follow up with dedicated helpers
 }
 
 \examples{
-# Fast smoke run: build the payload only (no graphics device).
+# Fast smoke run: build the plot data only (no graphics device).
 toy <- load_mfrmr_data("example_core")
 fit_quick <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                       method = "JML", maxit = 15)

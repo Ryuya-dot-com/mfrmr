@@ -2,7 +2,7 @@
 % Please edit documentation in R/api-plotting-extras.R
 \name{plot_person_fit}
 \alias{plot_person_fit}
-\title{Plot per-person fit (Infit / Outfit) bubbles}
+\title{Plot per-person fit}
 \usage{
 plot_person_fit(
   fit,
@@ -10,8 +10,9 @@ plot_person_fit(
   lower = 0.5,
   upper = 1.5,
   top_n_label = 12L,
-  preset = c("standard", "publication", "compact"),
-  draw = TRUE
+  preset = c("standard", "publication", "compact", "monochrome"),
+  draw = TRUE,
+  fit_index = c("meansquare", "loglik")
 )
 }
 \arguments{
@@ -24,16 +25,24 @@ plot_person_fit(
 
 \item{upper}{Upper fit threshold (default \code{1.5}).}
 
-\item{top_n_label}{Maximum number of persons whose label is drawn
-next to the bubble (largest |Infit-1| + |Outfit-1|). Default \code{12}.}
+\item{top_n_label}{Maximum number of persons whose label is drawn.
+The default mean-square view uses largest \verb{|Infit - 1| + |Outfit - 1|};
+\code{fit_index = "loglik"} uses largest absolute report index. Default \code{12}.}
 
-\item{preset}{Visual preset.}
+\item{preset}{Visual preset, including \code{"monochrome"}.}
 
 \item{draw}{If \code{TRUE}, draw with base graphics.}
+
+\item{fit_index}{Plot focus. \code{"meansquare"} keeps the Infit/Outfit bubble
+plot. \code{"loglik"} draws the report index selected by
+\code{\link[=compute_person_fit_indices]{compute_person_fit_indices()}} (\code{lz_star} when available, otherwise
+\code{lz} with a caveat).}
 }
 \value{
-An \code{mfrm_plot_data} object whose \code{data} slot contains
-columns \code{Person}, \code{Infit}, \code{Outfit}, \code{N}, \code{Status}.
+An \code{mfrm_plot_data} object whose reusable plot data include
+\code{data} with one row per person, \code{plot_long} for custom R graphics,
+\code{person_fit_indices} from \code{\link[=compute_person_fit_indices]{compute_person_fit_indices()}}, and compact
+flag/status summaries.
 }
 \description{
 Per-person diagnostic bubble plot inspired by FACETS Table 6 / KIDMAP
@@ -41,7 +50,8 @@ summaries. Each bubble represents one person at the intersection of
 Infit (x) and Outfit (y), sized by total observations and coloured by
 the standard 0.5/1.5 fit envelope: green when both Infit and Outfit
 fall in \verb{[lower, upper]}, amber when one statistic is outside, red
-when both are outside.
+when both are outside. Set \code{fit_index = "loglik"} for a ranked view of
+the report-ready \code{lz_star} / \code{lz} index instead.
 }
 \section{Interpreting output}{
 

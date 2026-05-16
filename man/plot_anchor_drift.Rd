@@ -41,8 +41,8 @@ functions.}
 A plotting-data object of class \code{mfrm_plot_data}. With
 \code{draw = FALSE}, \code{result$data$table} contains the filtered drift or chain
 table, \code{result$data$matrix} contains the heatmap matrix when requested,
-and the payload includes package-native \code{title}, \code{subtitle}, \code{legend},
-and \code{reference_lines}.
+and the returned plot data includes package-native \code{title}, \code{subtitle},
+\code{legend}, and \code{reference_lines}.
 }
 \description{
 Creates base-R plots for inspecting anchor drift across calibration waves

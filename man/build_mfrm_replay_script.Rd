@@ -81,8 +81,10 @@ By default that replay-ready table is embedded inline; when
 sidecar CSV relative to the replay script location.
 
 This replay layer is intentionally unavailable for bounded \code{GPCM}, because
-the current bundle/export contract still depends on the diagnostics/reporting
-route that remains formalized only for the Rasch-family branch.
+the fit-based bundle/export contract depends on the full
+diagnostics/reporting route that is currently retained for the
+Rasch-family branch. Use the summary-table appendix route for documented
+direct \code{GPCM} outputs.
 }
 \section{When to use this}{
 

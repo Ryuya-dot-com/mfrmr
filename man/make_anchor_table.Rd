@@ -31,7 +31,7 @@ place new data on that same scale.
 Anchor values should be exported from a well-fitting reference run
 with adequate sample size.  If the reference model has convergence
 issues or large misfit, the exported anchors may propagate
-instability.  Re-run \code{\link[=audit_mfrm_anchors]{audit_mfrm_anchors()}} on the receiving data
+instability.  Re-run \code{\link[=review_mfrm_anchors]{review_mfrm_anchors()}} on the receiving data
 to verify compatibility before estimation.
 
 The \code{digits} parameter controls rounding precision.  Use at least 4
@@ -64,5 +64,5 @@ head(anchors_tbl)
 summary(anchors_tbl$Anchor)
 }
 \seealso{
-\code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=audit_mfrm_anchors]{audit_mfrm_anchors()}}
+\code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=review_mfrm_anchors]{review_mfrm_anchors()}}
 }

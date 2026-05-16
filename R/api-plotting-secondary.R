@@ -16,7 +16,7 @@
 #
 # Each helper follows the mfrmr plot contract: accept an `mfrm_fit`
 # (or related class), resolve a preset via resolve_plot_preset() +
-# apply_plot_preset(), and return an mfrm_plot_data payload that
+# apply_plot_preset(), and return an mfrm_plot_data object that
 # downstream code can re-render or export.
 # ==============================================================================
 

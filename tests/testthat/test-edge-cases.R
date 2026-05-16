@@ -153,24 +153,24 @@ test_that("describe_mfrm_data plot types work", {
   expect_s3_class(p3, "mfrm_plot_data")
 })
 
-# ---- audit_mfrm_anchors ----
+# ---- review_mfrm_anchors ----
 
-test_that("audit_mfrm_anchors works without anchors", {
+test_that("review_mfrm_anchors works without anchors", {
   d <- mfrmr:::sample_mfrm_data(seed = 1)
-  result <- audit_mfrm_anchors(
+  result <- review_mfrm_anchors(
     d, "Person", c("Rater", "Task", "Criterion"), "Score"
   )
-  expect_s3_class(result, "mfrm_anchor_audit")
+  expect_s3_class(result, "mfrm_anchor_review")
 })
 
-test_that("audit_mfrm_anchors detects issues with bad anchors", {
+test_that("review_mfrm_anchors detects issues with bad anchors", {
   d <- mfrmr:::sample_mfrm_data(seed = 1)
   bad_anchors <- data.frame(
     Facet = c("Rater", "NonExistent"),
     Level = c("R1", "X"),
     Anchor = c(0.5, -0.5)
   )
-  result <- audit_mfrm_anchors(
+  result <- review_mfrm_anchors(
     d, "Person", c("Rater", "Task", "Criterion"), "Score",
     anchors = bad_anchors
   )

@@ -150,9 +150,10 @@ from scenario-level population predictions are not flattened into
 \verb{*_population_prediction_settings.csv} or ADeMP CSVs; the compact simulation
 specification files carry the replay-relevant settings instead.
 
-This exporter is intentionally unavailable for bounded \code{GPCM}, because the
-current bundle surface would otherwise depend on blocked narrative/QC/export
-semantics from the free-discrimination branch.
+This fit-based exporter is intentionally unavailable for bounded \code{GPCM},
+because the current bundle surface would otherwise depend on blocked
+narrative/QC/export semantics from the free-discrimination branch. Use
+\code{\link[=export_summary_appendix]{export_summary_appendix()}} for documented direct \code{GPCM} outputs.
 }
 
 \section{Interpreting output}{

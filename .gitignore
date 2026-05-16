@@ -1,9 +1,6 @@
 # macOS
 .DS_Store
 
-# Claude Code
-.claude/
-
 # R build/check artifacts
 *.Rcheck/
 *.tar.gz
@@ -49,3 +46,4 @@ PACKAGES.rds
 # local scratch directories
 Library/
 Outputs/
+validation-results/

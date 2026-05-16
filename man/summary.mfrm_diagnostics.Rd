@@ -23,10 +23,11 @@ An object of class \code{summary.mfrm_diagnostics} with:
 \item \code{key_warnings}: highest-priority warnings to review first
 \item \code{next_actions}: recommended follow-up helpers
 \item \code{diagnostic_basis}: guide to legacy versus strict diagnostic targets
+\item \code{fit_standardization}: guide to the df convention used for fit ZSTD
 \item \code{overall_fit}: global fit block
 \item \code{precision_profile}: design-weighted precision summary across the
 information curve at decile theta points
-\item \code{precision_audit}: separation / reliability / strata audit for the
+\item \code{precision_review}: separation / reliability / strata review for the
 sample- and population-basis modes (paired with \code{precision_profile})
 \item \code{reliability}: facet-level separation/reliability summary
 \item \code{facets_chisq}: facets-style fixed-effect chi-square heterogeneity

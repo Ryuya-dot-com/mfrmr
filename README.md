@@ -6,8 +6,9 @@
 [![test-coverage](https://github.com/Ryuya-dot-com/mfrmr/actions/workflows/test-coverage.yaml/badge.svg)](https://github.com/Ryuya-dot-com/mfrmr/actions/workflows/test-coverage.yaml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Native R package for many-facet Rasch model (MFRM) estimation, diagnostics,
-and reporting workflows.
+Native R package for many-facet ordered-response measurement models: the
+Rasch-family `RSM` / `PCM` route, plus the package's bounded `GPCM` extension
+where explicitly documented.
 
 ## Start here first
 
@@ -15,7 +16,9 @@ If you are new to `mfrmr`, use this route first and ignore the longer feature
 lists below until it works end to end.
 
 - Fit with `method = "MML"`
-- Diagnose with `diagnostic_mode = "both"` for `RSM` / `PCM`
+- Diagnose with `diagnostic_mode = "both"` for `RSM` / `PCM`; for bounded
+  `GPCM`, use the direct diagnostic route and read the caveats in
+  `gpcm_capability_matrix()`
 - Read `summary(fit)` and `summary(diag)` before branching into plots/reports
 
 ```r
@@ -47,27 +50,33 @@ chk <- reporting_checklist(fit, diagnostics = diag)
 
 If that route works, the next natural step is:
 
-- reporting: `build_apa_outputs()` / `apa_table()`
+- reporting: `build_apa_outputs()` / `apa_table()` for the full `RSM` /
+  `PCM` manuscript route; `build_summary_table_bundle()` /
+  `export_summary_appendix()` for direct appendix handoff
 - misfit case review: `build_misfit_casebook()`
-- weighting review: fit both an `RSM`/`PCM` and a bounded `GPCM` model with `fit_mfrm()`, then pass the two fits to `build_weighting_audit(rsm_fit, gpcm_fit)`. `compare_mfrm()` is a complementary information-criterion summary over the same pair.
+- weighting review: fit both an `RSM`/`PCM` and a bounded `GPCM` model with `fit_mfrm()`, then pass the two fits to `build_weighting_review(rsm_fit, gpcm_fit)`. `compare_mfrm()` is a complementary information-criterion summary over the same pair.
 - confirmatory facet interaction review: fit an `RSM`/`PCM` model with
   explicit `facet_interactions = "FacetA:FacetB"`, inspect
   `interaction_effect_table(fit)`, and compare it to the additive fit on the
   same likelihood basis.
 - strict follow-up: `plot_marginal_fit()` / `plot_marginal_pairwise()`
-- operational linking review: `audit_mfrm_anchors()` -> `detect_anchor_drift()` -> `build_linking_review()`
+- operational linking review: `review_mfrm_anchors()` -> `detect_anchor_drift()` ->
+  `build_linking_review()` for `RSM` / `PCM`
 - linking/design: `subset_connectivity_report()`
 
 ## What this package is for
 
-`mfrmr` is designed around four package-native routes:
+`mfrmr` is designed around five package-native routes:
 
 - Estimation and diagnostics: `fit_mfrm()` -> `diagnose_mfrm()`
-- Reporting and manuscript preparation: `reporting_checklist()` -> `build_apa_outputs()`
+- Reporting and manuscript preparation: `reporting_checklist()` ->
+  `build_apa_outputs()` for the full `RSM` / `PCM` manuscript route, or
+  `build_summary_table_bundle()` -> `export_summary_appendix()` for direct
+  appendix handoff
 - Misfit case review: `build_misfit_casebook()` -> `casebook$group_view_index` /
   `casebook$group_views` -> source-specific follow-up plots
 - Linking, anchors, drift, and DFF:
-  `audit_mfrm_anchors()` / `detect_anchor_drift()` -> `build_linking_review()`
+  `review_mfrm_anchors()` / `detect_anchor_drift()` -> `build_linking_review()`
   or `subset_connectivity_report()` -> `anchor_to_baseline()` / `analyze_dff()`
 - Legacy-compatible export when required: `run_mfrm_facets()` and related compatibility helpers
 
@@ -80,8 +89,10 @@ If you want the shortest possible recommendation:
 - First reporting screen: `reporting_checklist()`
 - First case-review screen: `build_misfit_casebook()` and then inspect
   `casebook$group_view_index`
-- First weighting-policy screen: `build_weighting_audit()`
-- First operational linking screen: `build_linking_review()`
+- First weighting-policy screen: `build_weighting_review()`
+- First operational linking screen: `build_linking_review()` for `RSM` /
+  `PCM`; for bounded `GPCM`, keep anchor/drift helpers as direct exploratory
+  support
 
 ## Minimum input contract
 
@@ -93,7 +104,8 @@ If you want the shortest possible recommendation:
   - one or more non-person facet columns supplied in `facets = c(...)`
 - Score-column rules:
   - scores should be ordered integer category codes such as `0/1`, `1/2`, or `1:5`
-  - binary two-category scores are supported under the same `RSM` / `PCM` interface
+  - binary two-category scores are supported under the same ordered-response
+    interface
   - fractional scores are rejected; recode them explicitly before fitting
   - non-numeric score labels are dropped with a warning if coercion fails
   - when `keep_original = FALSE`, unused intermediate categories are collapsed to a contiguous internal scale and recorded in `fit$prep$score_map`
@@ -142,11 +154,11 @@ Linking, fairness, and advanced review:
 - bias and DFF workflows through `estimate_bias()`, `estimate_all_bias()`, `analyze_dff()`, and `dif_report()`
 - anchoring and linking via `anchor_to_baseline()`, `detect_anchor_drift()`, and `build_equating_chain()`
 - precision/targeting views via `compute_information()`, `plot_information()`, and `plot_wright_unified()`
-- equivalence and audit helpers such as `analyze_facet_equivalence()`, `describe_mfrm_data()`, and `audit_mfrm_anchors()`
+- equivalence and review helpers such as `analyze_facet_equivalence()`, `describe_mfrm_data()`, and `review_mfrm_anchors()`
 
-Design-adequacy audit and partial pooling:
+Design-adequacy review and partial pooling:
 
-- hierarchical-structure and sample-adequacy audit with `detect_facet_nesting()`, `facet_small_sample_audit()`, `compute_facet_icc()`, `compute_facet_design_effect()`, and the combined `analyze_hierarchical_structure()`
+- hierarchical-structure and sample-adequacy review with `detect_facet_nesting()`, `facet_small_sample_review()`, `compute_facet_icc()`, `compute_facet_design_effect()`, and the combined `analyze_hierarchical_structure()`
 - empirical-Bayes / James-Stein shrinkage for small-N facets via `fit_mfrm(..., facet_shrinkage = "empirical_bayes")` or post-hoc `apply_empirical_bayes_shrinkage()`, with `shrinkage_report()` as the accessor
 - missing-code pre-processing through `fit_mfrm(..., missing_codes = TRUE)` (FACETS / SPSS / SAS sentinels such as `99`, `999`, `-1`, `"N/A"`, `""` converted to `NA`) or the standalone `recode_missing_codes()` helper
 - APA output adapters `as_kable.apa_table()` and `as_flextable.apa_table()` for RMarkdown / Quarto / Word / PowerPoint handoffs
@@ -242,9 +254,9 @@ normalized <- normalize_conquest_overlap_files(
   item_file = "conquest_items.csv",
   case_file = "conquest_cases.csv"
 )
-audit <- audit_conquest_overlap(bundle, normalized)
-summary(audit)$summary
-audit$attention_items
+review <- review_conquest_overlap(bundle, normalized)
+summary(review)$summary
+review$attention_items
 ```
 
 Treat this as a scoped comparison, not as full ConQuest numerical equivalence.
@@ -273,26 +285,90 @@ boundary in one place.
 - Supported core: fitting, `summary()` / `print()`, posterior scoring,
   `compute_information()`, Wright/pathway/CCC plots, and category reports.
 - Supported with caveat: `diagnose_mfrm()` and direct slope-aware simulation
-  are exploratory; `reporting_checklist()` routes only the direct table/plot
-  path; `fair_average_table()` and `estimate_bias()` use the slope-aware
-  element-conditional GPCM kernel and report a `caveat` field reminding
-  users that the SE columns are scaled facet-measure SEs, not delta-method
-  SEs of the fair-average / bias values.
-- Not supported in this release: score-side exports, APA/report bundles,
-  QC pass/fail pipelines, linking synthesis, planning / forecasting,
-  posterior predictive computation, and `MCMC`.
+  are exploratory; `evaluate_mfrm_recovery()` checks direct parameter recovery
+  rather than design operating characteristics; `reporting_checklist()`,
+  `build_summary_table_bundle()`, and `export_summary_appendix()` route only
+  the direct table/plot path. `fair_average_table()` and `estimate_bias()` use
+  the slope-aware element-conditional GPCM kernel. For fair averages, the
+  historical SE columns remain scaled facet-measure SEs; use
+  `fair_average_table(fair_se = TRUE)` to request structural delta-method
+  fair-average SEs for non-person rows when the MML Hessian is available. For
+  bias screening, the SE / `t` / `Prob.` columns are
+  conditional plug-in screening quantities, and bounded-GPCM rows also carry
+  conditional profile-likelihood columns for follow-up review.
+- Not supported in this release: FACETS-style score-side exports, the APA
+  writer, fit-based report/export bundles, QC pass/fail pipelines, linking
+  synthesis, planning / forecasting, posterior predictive computation, and
+  `MCMC`.
 
-The unsupported helpers depend on score-side or planning assumptions that are
-validated for the Rasch-family route but not yet generalized to bounded `GPCM`.
+The unsupported helpers depend on FACETS-style score-side, narrative-export,
+or planning assumptions that are validated for the Rasch-family route but not
+yet for bounded `GPCM`.
 
-## Equal weighting and when to prefer Rasch-MFRM
+For release review, the optional script
+`system.file("validation", "recovery-validation.R", package = "mfrmr")`
+defines core `RSM` / `PCM` / bounded-`GPCM` recovery cases, an extended
+latent-regression case, structured release-review steps, and CSV/RDS/Markdown
+summaries. It is intentionally separate from routine tests because the useful
+settings are long-running Monte Carlo checks. The summary separates recovery
+metric status from uncertainty status so unavailable coverage columns do not
+look like failed parameter recovery. Printing the validation object or calling
+`summary(validation)` shows the release-level status first.
+
+For direct recovery checks, `plot(evaluate_mfrm_recovery(...), ...)` shows
+recovery summaries, row-level errors, truth-estimate scatter, and replication
+status. After `assess_mfrm_recovery()`, use
+`plot(recovery_review, type = "status")` for checklist status counts and
+`plot(recovery_review, type = "metrics", metric = "rmse")` for the
+parameter-group metric review. The recommended reading order is:
+`summary(recovery_review)`, then the status plot, then the metric plot, and
+only then the row-level recovery table for the parameter groups that need
+follow-up. The `draw = FALSE` plot data include `reading_order` and
+`guidance` fields for this handoff.
+
+Read the validation outputs in this order:
+
+- `topline_release_decision`: the release-level recovery conclusion. Its
+  `ReleaseRecoveryStatus` uses recovery metrics, convergence, and Monte Carlo
+  precision as the primary evidence.
+- `release_decision_table`: the same decision by validation case, with a short
+  interpretation and any uncertainty limitation.
+- `domain_decision_table`: the diagnostic split among recovery metrics,
+  uncertainty, Monte Carlo precision, and the broader overall status.
+
+In particular, do not treat `OverallStatus = "review"` as a release-level
+recovery failure by itself. In the validation bundle, `UncertaintyStatus =
+"review"` can mean that SE/coverage evidence is intentionally reported as a
+separate limitation while recovery metrics remain acceptable.
+
+For a source-grounded release review plan, read the packaged evidence map and
+its structured checklist:
+
+```r
+file.show(system.file(
+  "validation", "release-evidence-map-0.2.0.md",
+  package = "mfrmr"
+))
+
+read.csv(system.file(
+  "validation", "release-evidence-checklist-0.2.0.csv",
+  package = "mfrmr"
+))
+```
+
+It links the 0.2.0 release checks to the ordered-response model literature,
+FACETS/Winsteps fit conventions, and ADEMP-style simulation-study reporting.
+The checklist classifies each item as a release blocker, caveat-managed item,
+or post-release roadmap item.
+
+## Equal weighting and when to prefer the Rasch-family route
 
 `mfrmr` treats `RSM` / `PCM` as the package's equal-weighting reference
 models. In that Rasch-family route, category discrimination is fixed, so the
 operational scoring contract does not let the psychometric model reweight some
 item-facet combinations more heavily than others.
 
-bounded `GPCM` serves a different purpose. It allows estimated slopes, so some
+Bounded `GPCM` serves a different purpose. It allows estimated slopes, so some
 observed design cells become more influential than others through
 discrimination-based reweighting. This often improves fit, but a better-fitting
 `GPCM` does not automatically make it the preferred operational model.
@@ -313,6 +389,46 @@ discussed above. Observation weights adjust how rating events enter estimation
 and summaries; they do not turn a Rasch-family fit into a discrimination-based
 model.
 
+## Model selection guide and report wording
+
+Use the model argument to match the score interpretation first, then use fit
+statistics and diagnostics as checks on that interpretation.
+
+| Choose | When it is the right starting point | Report wording |
+|---|---|---|
+| `RSM` | The rubric is intended to share the same category thresholds across items, criteria, or other step-facet levels. | "We fit a many-facet rating-scale Rasch model, treating category thresholds as common across the step facet." |
+| `PCM` | Category thresholds may differ by item or criterion, but equal contribution of rating events remains part of the scoring argument. | "We fit a many-facet partial-credit Rasch model, allowing step thresholds to vary by the designated step facet." |
+| bounded `GPCM` | You explicitly want a slope-aware sensitivity model and can defend discrimination-based reweighting. | "We fit a bounded generalized partial-credit many-facet model as a slope-aware sensitivity analysis." |
+
+Avoid these shortcuts:
+
+- do not describe the whole package surface as "a Rasch-only MFRM" now that
+  bounded `GPCM` is implemented
+- do not write that bounded `GPCM` is better for operational scoring solely
+  because `AIC`, `BIC`, or log-likelihood improves
+- do not use FACETS-style score-side, APA writer, QC pass/fail, or linking-
+  synthesis language for bounded `GPCM` unless `gpcm_capability_matrix()`
+  marks that route as supported
+
+In a manuscript, a defensible model-choice sentence is:
+
+> We treated `RSM`/`PCM` as the equal-weighting operational reference and used
+> bounded `GPCM` to inspect whether allowing discrimination-based reweighting
+> changed the substantive conclusions.
+
+After fitting candidate models, use `build_model_choice_review()` to keep the
+same guidance attached to the actual fit objects:
+
+```r
+review <- build_model_choice_review(RSM = fit_rsm, GPCM = fit_gpcm)
+summary(review)
+
+# Add the detailed reweighting review when an RSM/PCM reference and bounded
+# GPCM sensitivity fit were estimated on the same response data.
+review <- build_model_choice_review(RSM = fit_rsm, GPCM = fit_gpcm,
+                                    run_weighting_review = TRUE)
+```
+
 ## Documentation map
 
 The README is only the shortest map. The package now has guide-style help pages
@@ -324,6 +440,8 @@ for the main workflows.
   `help("mfrmr_visual_diagnostics", package = "mfrmr")`
 - Reports and tables map:
   `help("mfrmr_reports_and_tables", package = "mfrmr")`
+- Output helper guide:
+  `mfrmr_output_guide()`
 - Reporting and APA map:
   `help("mfrmr_reporting_and_apa", package = "mfrmr")`
 - Linking and DFF map:
@@ -340,6 +458,8 @@ Companion vignettes:
 - `vignette("mfrmr-reporting-and-apa", package = "mfrmr")`
 - `vignette("mfrmr-linking-and-dff", package = "mfrmr")`
 - `vignette("mfrmr-mml-and-marginal-fit", package = "mfrmr")`
+- `vignette("mfrmr-gpcm-scope", package = "mfrmr")`
+- `vignette("mfrmr-facets-migration", package = "mfrmr")`
 
 A two-page landscape cheatsheet of the public API ships at
 `system.file("cheatsheet", "mfrmr-cheatsheet.pdf", package = "mfrmr")`
@@ -351,11 +471,11 @@ when you want a customised version.
 ## Installation
 
 ```r
-# GitHub (development version)
+# GitHub
 if (!requireNamespace("remotes", quietly = TRUE)) install.packages("remotes")
 remotes::install_github("Ryuya-dot-com/mfrmr", build_vignettes = TRUE)
 
-# CRAN (after release)
+# CRAN (when available)
 # install.packages("mfrmr")
 ```
 
@@ -388,7 +508,7 @@ fit_mfrm() --> diagnose_mfrm() --> reporting / advanced analysis
 
 1. Fit model: `fit_mfrm()`
 2. Diagnostics: `diagnose_mfrm()`
-3. Optional residual PCA: `analyze_residual_pca()`
+3. Optional residual-structure screen: `analyze_residual_pca()`
 4. Optional interaction bias: `estimate_bias()`
 5. Optional model-estimated facet interactions:
    `interaction_effect_table()`
@@ -397,10 +517,18 @@ fit_mfrm() --> diagnose_mfrm() --> reporting / advanced analysis
 8. Reporting: `apa_table()`, `build_apa_outputs()`, `build_visual_summaries()`
 9. Quality control: `run_qc_pipeline()`
 10. Anchoring & linking: `anchor_to_baseline()`, `detect_anchor_drift()`, `build_equating_chain()`
-11. Compatibility-contract audit when needed: `facets_parity_report()`;
-    this audits package output contracts, not external FACETS numerical
+11. FACETS output-contract review when needed: `facets_output_contract_review()`;
+    this checks package output contracts, not external FACETS numerical
     equivalence
 12. Reproducible inspection: `summary()` and `plot(..., draw = FALSE)`
+
+Dimensionality wording is deliberately conservative. Residual PCA and Q3-style
+local-dependence screens are exploratory follow-up evidence, not standalone
+proofs that unidimensionality has been established and not implementations of
+DIMTEST/UNIDIM. For MFRM manuscripts, combine global residual fit, element fit,
+residual PCA, and local-dependence checks, and use limited wording such as
+"evidence consistent with essential unidimensionality under the specified facet
+structure."
 
 ## Choose a route
 
@@ -409,7 +537,7 @@ Use the route that matches the question you are trying to answer.
 | Question | Recommended route |
 |---|---|
 | Can I fit the model and get a first-pass diagnosis quickly? | `fit_mfrm()` -> `diagnose_mfrm()` -> `plot_qc_dashboard()` |
-| Which reporting elements are draft-complete, and with what caveats? | `diagnose_mfrm()` -> `precision_audit_report()` -> `reporting_checklist()` |
+| Which reporting elements are draft-complete, and with what caveats? | `diagnose_mfrm()` -> `precision_review_report()` -> `reporting_checklist()` |
 | Which tables and prose should I adapt into a manuscript draft? | `reporting_checklist()` -> `build_apa_outputs()` -> `apa_table()` |
 | Is the design connected well enough for a common scale? | `subset_connectivity_report()` -> `plot(..., type = "design_matrix")` |
 | Do I need to place a new administration onto a baseline scale? | `make_anchor_table()` -> `anchor_to_baseline()` |
@@ -486,16 +614,16 @@ chk$checklist[, c("Section", "Item", "DraftReady", "NextAction")]
 cat(apa$report_text)
 ```
 
-### 4. Hierarchical structure and sample-adequacy audit
+### 4. Hierarchical structure and sample-adequacy review
 
 Use this when rater counts are small, raters may be nested in schools
 or regions, or a reviewer asks for ICC / design-effect evidence that
-the additive fixed-effects MFRM cannot partition out on its own.
+the additive fixed-effects many-facet model cannot partition out on its own.
 
 ```r
-audit <- facet_small_sample_audit(fit)
-audit$facet_summary          # worst level per facet + SampleCategory
-summary(audit)               # counts of sparse / marginal / standard / strong
+review <- facet_small_sample_review(fit)
+review$facet_summary         # worst level per facet + SampleCategory
+summary(review)              # counts of sparse / marginal / standard / strong
 
 nest <- detect_facet_nesting(toy, c("Rater", "Criterion"))
 plot(nest)                   # nesting index heatmap
@@ -507,11 +635,11 @@ summary(h)
 ```
 
 `reporting_checklist(fit, hierarchical_structure = h)` then marks the
-"Hierarchical structure audit" item ready.
+"Hierarchical structure review" item ready.
 
 ### 5. Empirical-Bayes shrinkage for small-N facets
 
-When a facet has 3-10 levels, the fixed-effects MFRM retains wide
+When a facet has 3-10 levels, the fixed-effects many-facet model retains wide
 per-level SEs. Empirical-Bayes partial pooling (Efron & Morris, 1973)
 dominates the MLE under squared-error loss whenever `K >= 3`.
 
@@ -557,7 +685,7 @@ The package treats `MML` and `JML` differently on purpose.
 - `MML` is the default and the preferred route for final estimation.
 - `JML` is supported as a fast exploratory route.
 - Downstream precision summaries distinguish `model_based`, `hybrid`, and `exploratory` tiers.
-- Use `precision_audit_report()` when you need to decide how strongly to phrase SE, CI, or reliability claims.
+- Use `precision_review_report()` when you need to decide how strongly to phrase SE, CI, or reliability claims.
 
 Typical pattern:
 
@@ -575,7 +703,7 @@ diag_final <- diagnose_mfrm(
   residual_pca = "none"
 )
 
-precision_audit_report(fit_final, diagnostics = diag_final)
+precision_review_report(fit_final, diagnostics = diag_final)
 ```
 
 ## Mathematical note for expert users
@@ -636,7 +764,7 @@ everything from scratch. The canonical list is kept up to date in
 `summary(fit)` under "Next actions"; the items below are a short
 orientation pointer.
 
-- `fit`: the fitted many-facet Rasch model returned by `fit_mfrm()`
+- `fit`: the fitted model object returned by `fit_mfrm()`
 - `diag`: diagnostic summaries returned by `diagnose_mfrm()`
 - `chk`: reporting and manuscript-draft checks returned by `reporting_checklist()`
 - `apa`: structured APA/report draft outputs returned by `build_apa_outputs()`
@@ -897,7 +1025,7 @@ Notes:
 - Use `extract_mfrm_sim_spec(fit, latent_distribution = "empirical", assignment = "resampled")` when you want a more semi-parametric design study that reuses empirical fitted spreads and observed rater-assignment profiles.
 - Use `extract_mfrm_sim_spec(fit, latent_distribution = "empirical", assignment = "skeleton")` when you want a more plasmode-style study that preserves the observed person-by-facet design skeleton and resimulates only the responses.
 - `summary(sim_eval)$ademp` records the simulation-study contract: aims, DGM, estimands, methods, and performance measures.
-- `evaluate_mfrm_design()` is a Monte Carlo design-evaluation helper, not a closed-form generalizability-theory D-study calculator. It can show how separation, reliability, strata, RMSE, and fit-screen rates change as facet counts vary; use `mfrm_generalizability()` for observed variance-component summaries.
+- `evaluate_mfrm_design()` is a Monte Carlo design-evaluation helper. It can show how separation, reliability, strata, RMSE, and fit-screen rates change as facet counts vary; use `mfrm_generalizability()` plus `mfrm_d_study()` for observed G-study components and analytic D-study projections.
 
 ## Population forecast
 
@@ -1150,14 +1278,16 @@ External-software wording should stay conservative:
 
 ```r
 chk <- reporting_checklist(fit, diagnostics = diag)
+chk$facets_positioning
 chk$software_scope
 summary(chk)$software_scope
 ```
 
 - `mfrmr native`: primary analysis surface.
-- `FACETS`: compatibility-style wrappers and exports for handoff; results
-  remain `mfrmr` estimates unless a separate external audit is performed.
-- `ConQuest`: narrow external-table audit path for the documented latent-
+- `FACETS`: FACETS-style reporting and handoff surfaces; results remain
+  `mfrmr` estimates unless external FACETS output is supplied for explicit
+  comparison.
+- `ConQuest`: narrow external-table review path for the documented latent-
   regression overlap; use scoped comparison wording.
 - `SPSS`: CSV/data-frame/reporting handoff only; no native SPSS integration.
 
@@ -1181,9 +1311,8 @@ plot(run, type = "fit", draw = FALSE)
 The full exported function index (with categories such as *Model and
 diagnostics*, *Bias and DFF*, *Anchoring and linking*, *Reporting and
 APA*, *Plots and dashboards*, *Simulation and design*, and *Export
-utilities*) is generated from roxygen and published on the pkgdown
-site at <https://ryuya-dot-com.github.io/mfrmr/>. Within R
-the same grouping is available through the topic help pages
+utilities*) is generated from roxygen. Within R the same grouping is
+available through the topic help pages
 `?mfrmr_workflow_methods`, `?mfrmr_visual_diagnostics`,
 `?mfrmr_reports_and_tables`, `?mfrmr_reporting_and_apa`,
 `?mfrmr_linking_and_dff`, and `?mfrmr_compatibility_layer`.
@@ -1213,8 +1342,9 @@ response-time model.
 ## FACETS reference mapping
 
 A reference table mapping FACETS-program output tables (Table 1, Table 5,
-Table 7, ...) to the `mfrmr` helper functions that produce equivalent or
-adjacent reports ships with the installed package. Open it with:
+Table 7, ...) to the `mfrmr` helper functions that produce substantively
+corresponding or adjacent package-native reports ships with the installed
+package. Open it with:
 
 ```r
 file.show(system.file("references", "FACETS_manual_mapping.md", package = "mfrmr"))
@@ -1222,7 +1352,9 @@ file.show(system.file("references", "FACETS_manual_mapping.md", package = "mfrmr
 
 The mapping is a package-output contract reference, not evidence that
 FACETS was executed or that numerical FACETS equivalence has been
-established for any given fit.
+established for any given fit. The intended workflow is to estimate and
+report from `mfrmr` objects, then use FACETS-style routes only for transition,
+handoff, or explicit external-table review.
 
 ## Packaged synthetic datasets
 

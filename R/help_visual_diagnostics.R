@@ -28,9 +28,9 @@
 #'   strict invariance.
 #' - FACETS-style fair averages are a Rasch-family measure-to-score
 #'   transformation. Under `GPCM` the fair-average panel of
-#'   [plot_qc_dashboard()] therefore renders as an explicit
-#'   "unavailable" placeholder, and the broader compatibility-export
-#'   helpers stay outside the validated `GPCM` boundary.
+#'   [plot_qc_dashboard()] therefore renders with an explicit
+#'   "unavailable" status, and the broader compatibility-export helpers
+#'   stay outside the validated `GPCM` boundary.
 #'
 #' Use [gpcm_capability_matrix()] for the formal per-helper boundary
 #' before choosing a `GPCM` follow-up plot route.
@@ -41,7 +41,8 @@
 #' - "Where do score categories transition across theta?"
 #'   Use `plot(fit, type = "pathway")` and `plot(fit, type = "ccc")`.
 #' - "Is the design linked well enough across subsets or administrations?"
-#'   Use `plot(subset_connectivity_report(...), type = "design_matrix")` and
+#'   Use `plot(subset_connectivity_report(...), type = "design_matrix")`,
+#'   [mfrm_network_analysis()], `plot(..., type = "network")`, and
 #'   [plot_anchor_drift()].
 #' - "Which responses or levels look locally problematic?"
 #'   Use [plot_unexpected()] and [plot_displacement()].
@@ -50,7 +51,11 @@
 #' - "Which level pairs drive strict local-dependence follow-up?"
 #'   Use [plot_marginal_pairwise()].
 #' - "Do raters agree and do facets separate meaningfully?"
-#'   Use [plot_interrater_agreement()] and [plot_facets_chisq()].
+#'   Use [plot_interrater_agreement()], [rater_network_analysis()], and
+#'   [plot_facets_chisq()].
+#' - "Do criteria within the same rater move together in a halo-like way?"
+#'   Use [rater_halo_network_analysis()] and
+#'   `plot(..., type = "edge_distribution")`.
 #' - "Is there notable residual structure after the main Rasch dimension?"
 #'   Use [plot_residual_pca()].
 #' - "Which interaction cells or facet levels drive bias screening results?"
@@ -96,8 +101,8 @@
 #'   Use [visual_reporting_template()] for a static reporting-use table, then
 #'   cross-check run-specific availability with `reporting_checklist()$visual_scope`.
 #' - "Do I need a 3D-style category probability surface?"
-#'   Use `plot(fit, type = "ccc_surface", draw = FALSE)` to get a
-#'   theta-by-category-by-probability payload for exploratory teaching or
+#'   Use `plot(fit, type = "ccc_surface", draw = FALSE)` to get
+#'   theta-by-category-by-probability plot data for exploratory teaching or
 #'   downstream interactive rendering. Keep 2D pathway/CCC plots as the
 #'   default reporting figures.
 #'
@@ -115,11 +120,11 @@
 #'    [plot_information()] when the checklist or dashboard points to
 #'    interaction, differential-functioning, linking, or precision
 #'    follow-up.
-#' 6. Use `plot(..., draw = FALSE)` when you want reusable plotting payloads
-#'    instead of immediate graphics.
+#' 6. Use `plot(..., draw = FALSE)` when you want reusable plot data instead
+#'    of immediate graphics.
 #' 7. Use `plot(fit, type = "ccc_surface", draw = FALSE)` only when you need
-#'    a 3D-ready category-probability payload; `mfrmr` intentionally does not
-#'    add a package-native plotly/rgl renderer for this route.
+#'    3D-ready category-probability data; `mfrmr` intentionally does not add a
+#'    package-native plotly/rgl renderer for this route.
 #' 8. Use `preset = "publication"` when you want the package's cleaner
 #'    manuscript-oriented styling.
 #'
@@ -141,15 +146,15 @@
 #'   `diagnostic_mode = "both"`.
 #' - Reporting/export handoff:
 #'   [build_visual_summaries()] and `draw = FALSE` routes that return reusable
-#'   `mfrm_plot_data` payloads for downstream review and export. When step
+#'   `mfrm_plot_data` objects for downstream review and export. When step
 #'   estimates are available, `build_visual_summaries()` also exposes
 #'   `$plot_payloads$category_probability_surface`.
 #' - 3D-ready exploratory handoff:
 #'   `plot(fit, type = "ccc_surface", draw = FALSE)` returns a
-#'   theta-by-category-by-probability `mfrm_plot_data` payload. This is not a
+#'   theta-by-category-by-probability `mfrm_plot_data` object. This is not a
 #'   default APA/reporting figure and does not load plotly/rgl.
 #'
-#' @section 3D and surface payloads:
+#' @section 3D and surface data:
 #' The package currently treats 3D as an exploratory data handoff, not as a
 #' default plotting layer. The supported route is
 #' `plot(fit, type = "ccc_surface", draw = FALSE)`, which returns
@@ -306,7 +311,8 @@
 #'   `plot(fit, type = "wright")` -> `plot(fit, type = "pathway")` ->
 #'   `plot(fit, type = "ccc")`.
 #' - Linking review:
-#'   [subset_connectivity_report()] -> `plot(..., type = "design_matrix")` ->
+#'   [subset_connectivity_report()] -> `plot(..., type = "design_matrix")` /
+#'   [mfrm_network_analysis()] / `plot(..., type = "network")` ->
 #'   [plot_anchor_drift()].
 #' - Interaction review:
 #'   [estimate_bias()] -> [plot_bias_interaction()] ->
@@ -393,7 +399,7 @@ NULL
 #'   the fitted object and diagnostics.
 #' - `WhatNotToClaim`: common overclaim to avoid.
 #' - `BeginnerCheck`: first thing a new user should inspect.
-#' - `ThreeDPolicy`: whether 3D is recommended, discouraged, or payload-only.
+#' - `ThreeDPolicy`: whether 3D is recommended, discouraged, or data-only.
 #'
 #' @details
 #' This helper is intentionally conservative. It does not inspect a fitted
@@ -462,7 +468,7 @@ visual_reporting_template <- function(scope = c("all", "manuscript", "appendix",
       "Main text when targeting, spread, or shared-logit interpretation is central.",
       "Main text or category-functioning subsection for ordered-category interpretation.",
       "Main text or appendix; pair with pathway when category behavior is central.",
-      "Appendix, teaching, audit, or downstream interactive rendering only.",
+      "Appendix, teaching, review, or downstream interactive rendering only.",
       "Main text when precision or targeting across theta is a substantive claim.",
       "Screening dashboard; usually methods appendix or internal triage rather than the final main figure.",
       "Case-review appendix or quality-control supplement.",

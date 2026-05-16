@@ -239,8 +239,8 @@
 #' @return A plotting-data object of class `mfrm_plot_data`. With
 #'   `draw = FALSE`, `result$data$table` contains the filtered drift or chain
 #'   table, `result$data$matrix` contains the heatmap matrix when requested,
-#'   and the payload includes package-native `title`, `subtitle`, `legend`,
-#'   and `reference_lines`.
+#'   and the returned plot data includes package-native `title`, `subtitle`,
+#'   `legend`, and `reference_lines`.
 #'
 #' @seealso [detect_anchor_drift()], [build_equating_chain()],
 #'   [plot_dif_heatmap()], [plot_bubble()], [mfrmr_visual_diagnostics]

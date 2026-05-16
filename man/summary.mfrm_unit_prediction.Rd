@@ -17,8 +17,8 @@
 An object of class \code{summary.mfrm_unit_prediction} with:
 \itemize{
 \item \code{estimates}: posterior summaries by person
-\item \code{audit}: row-preparation audit
-\item \code{population_audit}: optional person-level omission audit for
+\item \code{row_review}: row-preparation review
+\item \code{population_review}: optional person-level omission review for
 latent-regression scoring
 \item \code{settings}: scoring settings
 \item \code{notes}: interpretation notes
