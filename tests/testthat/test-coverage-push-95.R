@@ -106,7 +106,7 @@ test_that("summary.mfrm_data_description missing data note", {
   d$Score[1:2] <- NA
   ds <- describe_mfrm_data(d, "Person", c("Rater", "Task", "Criterion"), "Score")
   s <- summary(ds)
-  expect_true(grepl("Missing", s$notes))
+  expect_true(any(grepl("Missing", s$notes)))
 })
 
 test_that("print.summary.mfrm_data_description exercises all sections", {
