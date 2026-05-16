@@ -1,0 +1,255 @@
+template:
+  bootstrap: 5
+
+url: https://ryuya-dot-com.github.io/mfrmr/
+
+title: mfrmr
+
+authors:
+  footer:
+    roles: [cre]
+
+home:
+  title: mfrmr
+  description: Many-facet ordered-response model estimation, diagnostics, and reporting workflows in R
+
+articles:
+  - title: Workflow Guides
+    contents:
+      - mfrmr-workflow
+      - mfrmr-mml-and-marginal-fit
+      - mfrmr-visual-diagnostics
+      - mfrmr-reporting-and-apa
+      - mfrmr-linking-and-dff
+  - title: Migration and Scope
+    contents:
+      - mfrmr-facets-migration
+      - mfrmr-gpcm-scope
+
+reference:
+  - title: Guide Pages
+    contents:
+      - mfrmr_workflow_methods
+      - mfrmr_visual_diagnostics
+      - mfrmr_reports_and_tables
+      - mfrmr_reporting_and_apa
+      - mfrmr_linking_and_dff
+      - mfrmr_compatibility_layer
+      - mfrmr_output_guide
+  - title: Estimation
+    contents:
+      - mfrmr-package
+      - fit_mfrm
+      - analyze_residual_pca
+      - mfrm_threshold_profiles
+      - diagnose_mfrm
+      - mfrm_misfit_thresholds
+      - estimate_bias
+      - interaction_effect_table
+      - compare_mfrm
+      - compute_information
+      - q3_statistic
+      - compute_person_fit_indices
+      - as.data.frame.mfrm_fit
+  - title: Simulation and Prediction
+    contents:
+      - build_mfrm_sim_spec
+      - extract_mfrm_sim_spec
+      - simulate_mfrm_data
+      - evaluate_mfrm_design
+      - evaluate_mfrm_signal_detection
+      - recommend_mfrm_design
+      - predict_mfrm_population
+      - predict_mfrm_units
+      - sample_mfrm_plausible_values
+  - title: Reports and Tables
+    contents:
+      - specifications_report
+      - data_quality_report
+      - estimation_iteration_report
+      - bias_iteration_report
+      - bias_pairwise_report
+      - subset_connectivity_report
+      - facet_statistics_report
+      - facet_quality_dashboard
+      - measurable_summary_table
+      - rating_scale_table
+      - unexpected_response_table
+      - unexpected_after_bias_table
+      - fair_average_table
+      - displacement_table
+      - interrater_agreement_table
+      - facets_chisq_table
+      - bias_count_table
+      - bias_interaction_report
+      - category_structure_report
+      - category_curves_report
+  - title: Integrated Outputs
+    contents:
+      - build_mfrm_manifest
+      - build_mfrm_replay_script
+      - build_fixed_reports
+      - build_apa_outputs
+      - build_visual_summaries
+      - apa_table
+      - as_kable
+      - as_flextable
+      - export_mfrm
+      - export_mfrm_bundle
+      - mfrmr_output_guide
+      - precision_review_report
+      - reporting_checklist
+      - run_qc_pipeline
+      - reference_case_review
+      - reference_case_benchmark
+      - print.mfrm_apa_text
+      - summary.mfrm_fit
+      - summary.mfrm_diagnostics
+      - summary.mfrm_bias
+      - summary.apa_table
+      - summary.mfrm_apa_outputs
+      - summary.mfrm_anchor_review
+      - summary.mfrm_bundle
+      - summary.mfrm_data_description
+      - summary.mfrm_design_evaluation
+      - summary.mfrm_facet_dashboard
+      - summary.mfrm_facets_run
+      - summary.mfrm_signal_detection
+      - summary.mfrm_population_prediction
+      - summary.mfrm_unit_prediction
+      - summary.mfrm_plausible_values
+      - summary.mfrm_threshold_profiles
+  - title: Plotting
+    contents:
+      - plot.apa_table
+      - plot.mfrm_anchor_review
+      - plot.mfrm_fit
+      - plot.mfrm_bundle
+      - plot.mfrm_data_description
+      - plot.mfrm_design_evaluation
+      - plot.mfrm_facets_run
+      - plot.mfrm_signal_detection
+      - plot_bias_interaction
+      - plot_bubble
+      - plot_facet_quality_dashboard
+      - plot_information
+      - plot_qc_dashboard
+      - plot_qc_pipeline
+      - plot_unexpected
+      - plot_fair_average
+      - plot_displacement
+      - plot_interrater_agreement
+      - plot_facets_chisq
+      - plot_residual_pca
+      - plot_wright_unified
+  - title: Linking, DFF, and Anchors
+    contents:
+      - analyze_dff
+      - analyze_facet_equivalence
+      - dif_interaction_table
+      - dif_report
+      - plot_dif_heatmap
+      - plot_facet_equivalence
+      - anchor_to_baseline
+      - detect_anchor_drift
+      - build_equating_chain
+      - plot_anchor_drift
+      - estimate_all_bias
+  - title: Data and Anchors
+    contents:
+      - ej2021_data
+      - mfrmr_example_data
+      - describe_mfrm_data
+      - review_mfrm_anchors
+      - make_anchor_table
+      - list_mfrmr_data
+      - load_mfrmr_data
+      - recode_missing_codes
+  - title: Hierarchical Structure and Sample Adequacy
+    desc: >-
+      Descriptive review of the observed design. All helpers leave
+      estimation unchanged; they classify nesting, surface small-N
+      facet levels, and add ICC / Kish design-effect summaries on
+      top of the fixed-effects MFRM fit.
+    contents:
+      - detect_facet_nesting
+      - facet_small_sample_review
+      - compute_facet_icc
+      - compute_facet_design_effect
+      - mfrm_generalizability
+      - analyze_hierarchical_structure
+  - title: Additional Visualizations
+    desc: >-
+      Visualizations added in 0.1.6 that complement the core plot.mfrm_fit
+      surface: threshold ladder for category-structure diagnostics, person-fit
+      bubble for KIDMAP-style review, rater severity profile with CI bands,
+      DIF summary, APA Figure 1 publication composite, and a second wave
+      of Guttman-scalogram / Q-Q / trajectory / agreement-heatmap views.
+    contents:
+      - plot_threshold_ladder
+      - plot_person_fit
+      - plot_rater_severity_profile
+      - plot_dif_summary
+      - plot_apa_figure_one
+      - plot_guttman_scalogram
+      - plot_residual_qq
+      - plot_rater_trajectory
+      - plot_rater_agreement_heatmap
+      - plot_local_dependence_heatmap
+      - plot_reliability_snapshot
+      - plot_residual_matrix
+      - plot_shrinkage_funnel
+  - title: Compatibility Layer
+    contents:
+      - run_mfrm_facets
+      - mfrmRFacets
+      - build_fixed_reports
+      - facets_output_file_bundle
+      - facets_parity_report
+      - build_conquest_overlap_bundle
+      - review_conquest_overlap
+      - normalize_conquest_overlap_files
+      - normalize_conquest_overlap_tables
+      - compatibility_alias_table
+      - gpcm_capability_matrix
+  - title: External Model Imports
+    desc: >-
+      Lightweight adapters for comparing package-native mfrmr summaries with
+      common external IRT fits. These helpers keep external engines optional
+      through Suggests.
+    contents:
+      - import_mirt_fit
+      - import_tam_fit
+      - import_erm_fit
+  - title: Additional Exports
+    desc: >-
+      Topics surfaced by the package namespace that do not fit neatly into
+      any of the sections above. Kept as a catch-all so every documented
+      symbol appears somewhere in the reference index.
+    contents:
+      - apply_empirical_bayes_shrinkage
+      - shrinkage_report
+      - as_kable
+      - as_flextable
+      - as_kable.apa_table
+      - as_flextable.apa_table
+      - build_linking_review
+      - build_misfit_casebook
+      - build_weighting_review
+      - build_summary_table_bundle
+      - export_summary_appendix
+      - evaluate_mfrm_diagnostic_screening
+      - visual_reporting_template
+      - plot.mfrm_facet_sample_review
+      - plot.mfrm_facet_nesting
+      - plot.mfrm_equating_chain
+      - plot.mfrm_future_branch_active_branch
+      - plot.mfrm_summary_table_bundle
+      - plot_marginal_fit
+      - plot_marginal_pairwise
+      - summary.mfrm_future_branch_active_branch
+      - summary.mfrm_linking_review
+      - summary.mfrm_misfit_casebook
+      - summary.mfrm_reporting_checklist
+      - summary.mfrm_summary_table_bundle
+      - summary.mfrm_weighting_review

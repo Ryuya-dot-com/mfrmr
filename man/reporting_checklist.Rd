@@ -23,7 +23,7 @@ such outputs.}
 
 \item{hierarchical_structure}{Optional output from
 \code{\link[=analyze_hierarchical_structure]{analyze_hierarchical_structure()}}. When supplied, the
-"Hierarchical structure audit" checklist item is flipped to
+"Hierarchical structure review" checklist item is flipped to
 \code{DraftReady = TRUE} and its \code{Detail} column surfaces the number
 of nested / crossed facet pairs and whether the ICC table is
 available.}
@@ -60,7 +60,7 @@ also adds a \verb{Population Model} section covering coefficient reporting,
 categorical model-matrix coding, complete-case omissions, posterior-basis
 wording, and ConQuest scope wording.
 
-The output is designed for manuscript preparation, audit trails, and
+The output is designed for manuscript preparation, reproducibility records, and
 reproducible reporting workflows.
 }
 \section{What this checklist means}{
@@ -92,14 +92,13 @@ of the same flag; neither field certifies formal inferential adequacy.
 \item \code{section_summary}: available items by section.
 \item \code{software_scope}: external-software relationship summary for \code{mfrmr},
 FACETS, ConQuest, and SPSS-style tabular handoffs.
+\item \code{facets_positioning}: report-ready wording that states \code{mfrmr} is not a
+FACETS numerical clone and separates native estimation from FACETS-style
+handoff or external-table review.
 \item \code{visual_scope}: plotting-route summary that separates report-default
-2D figures from exploratory surface/3D-ready payloads, including a short
-\code{InterpretationCheck} for the main user-facing caveat. For bounded
-\code{GPCM}, this table also exposes \code{SupportStatus} and \code{ModelCaveat} so the
-run-specific plotting boundary can be retained in reports and handoffs.
+2D figures from exploratory surface/3D-ready data handoffs, including a
+short \code{InterpretationCheck} for the main user-facing caveat.
 \item \code{references}: core background references when requested.
-\item \code{support_status}: bounded-\code{GPCM} support contract, when applicable.
-\item \code{caveat}: bounded-\code{GPCM} visual/reporting caveat, when applicable.
 }
 }
 
@@ -110,9 +109,7 @@ the missing diagnostics, bias results, or narrative context before calling
 \code{\link[=build_apa_outputs]{build_apa_outputs()}} for draft text generation. For \code{RSM} / \code{PCM}
 reporting runs, the preferred route is an \code{MML} fit plus
 \code{diagnose_mfrm(..., diagnostic_mode = "both")} so the checklist can see the
-legacy and strict marginal screens together. For bounded \code{GPCM}, keep
-\code{support_status}, \code{caveat}, and \code{visual_scope$ModelCaveat} attached to any
-copied checklist, visual, or APA text.
+legacy and strict marginal screens together.
 }
 
 \section{How this differs from operational review}{
@@ -166,10 +163,10 @@ summary(chk)
 #   (typically diagnostic_mode = "both" or a residual-PCA pass).
 apa <- build_apa_outputs(fit, diag)
 head(chk$checklist[, c("Section", "Item", "DraftReady", "NextAction")])
-# Look for: every row where `DraftReady = "yes"` is ready to draft
-#   from under the documented caveats. `"no"` rows include a concrete
-#   `NextAction` step (e.g. "run plot_qc_dashboard()") so the gap can
-#   be closed without re-reading the methodology guide.
+# Look for: every row where `DraftReady = "yes"` is ready to paste
+#   into the manuscript. `"no"` rows include a concrete `NextAction`
+#   step (e.g. "run plot_qc_dashboard()") so the gap can be closed
+#   without re-reading the methodology guide.
 nchar(apa$report_text)
 }
 }

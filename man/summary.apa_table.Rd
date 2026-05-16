@@ -22,7 +22,7 @@ An object of class \code{summary.apa_table}.
 Summarize an APA/FACETS table object
 }
 \details{
-Compact summary helper for QA of table payloads before manuscript export.
+Compact summary helper for QA of table data before manuscript export.
 }
 \section{Interpreting output}{
 

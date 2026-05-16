@@ -1,5 +1,5 @@
 # ==============================================================================
-# Hierarchical structure and small-sample audit (added in 0.1.6)
+# Hierarchical structure and small-sample review (added in 0.1.6)
 # ==============================================================================
 #
 # Background and literature:
@@ -16,7 +16,7 @@
 #
 # - Myford & Wolfe (2004) Part II classified rater effects as
 #   severity/leniency, central tendency, randomness (inaccuracy), halo,
-#   and differential severity/leniency. 0.1.6 adds only the audit layer
+#   and differential severity/leniency. 0.1.6 adds only the review layer
 #   needed to screen adequacy; bias screening for central tendency / halo
 #   remains out of the current fit_mfrm() surface.
 #
@@ -120,7 +120,7 @@
 #' An index near 1 means that knowing the level of `A` essentially
 #' determines the level of `B` (A is nested in B).
 #'
-#' This is a pure descriptive audit of the observed design. It does not
+#' This is a pure descriptive review of the observed design. It does not
 #' affect estimation; fit_mfrm() continues to treat all facets as fixed
 #' effects.
 #'
@@ -168,9 +168,9 @@
 #'   and `Direction`.
 #' - `summary`: a one-line summary table with facet counts and whether
 #'   any non-crossed structure was detected.
-#' - `facets`: the facet vector that was audited.
+#' - `facets`: the facet vector that was reviewed.
 #'
-#' @seealso [facet_small_sample_audit()],
+#' @seealso [facet_small_sample_review()],
 #'   [analyze_hierarchical_structure()], [compute_facet_icc()],
 #'   [compute_facet_design_effect()], [fit_mfrm()] (see "Fixed effects
 #'   assumption" in its details).
@@ -219,7 +219,7 @@ detect_facet_nesting <- function(data, facets, person = NULL,
         summary = data.frame(
           NFacets = n_cols,
           AnyNested = FALSE,
-          Note = "At least two facets required for a nesting audit.",
+          Note = "At least two facets required for a nesting review.",
           stringsAsFactors = FALSE
         ),
         facets = all_cols
@@ -304,9 +304,9 @@ detect_facet_nesting <- function(data, facets, person = NULL,
 }
 
 
-# ---- 2. facet_small_sample_audit ------------------------------------------
+# ---- 2. facet_small_sample_review ------------------------------------------
 
-#' Audit per-facet-level sample adequacy
+#' Review per-facet-level sample adequacy
 #'
 #' Reports per-level observation counts, SE, and fit statistics for every
 #' level of every facet in a fitted MFRM model, and classifies each level
@@ -349,14 +349,14 @@ detect_facet_nesting <- function(data, facets, person = NULL,
 #' @section Typical workflow:
 #' 1. Fit with `fit_mfrm()`; optionally also produce `diagnostics`
 #'    with `diagnose_mfrm()` if you want per-level Infit/Outfit.
-#' 2. Call `facet_small_sample_audit(fit, diagnostics)`.
+#' 2. Call `facet_small_sample_review(fit, diagnostics)`.
 #' 3. Read the `facet_summary` first: it highlights the worst level
 #'    per facet. The `summary` table gives counts in each band.
 #' 4. If any facet is flagged as sparse or marginal, discuss it in the
 #'    Methods section; [build_apa_outputs()] already adds a sentence
 #'    about the band when `fit$summary$FacetSampleSizeFlag` is set.
 #'
-#' @return A list of class `mfrm_facet_sample_audit` with:
+#' @return A list of class `mfrm_facet_sample_review` with:
 #' - `table`: one row per `(Facet, Level)` with `N`, `Estimate`, `SE`,
 #'   `Infit`, `Outfit`, and `SampleCategory`.
 #' - `summary`: counts of levels in each sample-size category, by facet.
@@ -383,20 +383,21 @@ detect_facet_nesting <- function(data, facets, person = NULL,
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "JML", maxit = 25)
-#' audit <- facet_small_sample_audit(fit)
-#' summary(audit)
+#' review <- facet_small_sample_review(fit)
+#' summary(review)
 #'
 #' # Custom thresholds (e.g. a stricter protocol).
-#' strict <- facet_small_sample_audit(
+#' strict <- facet_small_sample_review(
 #'   fit,
 #'   thresholds = c(sparse = 15, marginal = 40, standard = 100)
 #' )
 #' strict$facet_summary
+#' @name facet_small_sample_review
 #' @export
-facet_small_sample_audit <- function(fit, diagnostics = NULL,
-                                     thresholds = c(sparse = 10,
-                                                    marginal = 30,
-                                                    standard = 50)) {
+facet_small_sample_review <- function(fit, diagnostics = NULL,
+                                      thresholds = c(sparse = 10,
+                                                     marginal = 30,
+                                                     standard = 50)) {
   if (!inherits(fit, "mfrm_fit")) {
     stop("`fit` must be an mfrm_fit object from fit_mfrm().", call. = FALSE)
   }
@@ -498,7 +499,7 @@ facet_small_sample_audit <- function(fit, diagnostics = NULL,
       MedianN = stats::median(N, na.rm = TRUE),
       MaxN = max(N, na.rm = TRUE),
       WorstCategory = category_order[
-        min(match(SampleCategory, category_order), na.rm = TRUE)
+        max(match(SampleCategory, category_order), na.rm = TRUE)
       ],
       .groups = "drop"
     )
@@ -510,10 +511,9 @@ facet_small_sample_audit <- function(fit, diagnostics = NULL,
       facet_summary = as.data.frame(facet_summary, stringsAsFactors = FALSE),
       thresholds = as.list(thresholds)
     ),
-    class = "mfrm_facet_sample_audit"
+    class = "mfrm_facet_sample_review"
   )
 }
-
 
 # ---- 3. compute_facet_icc / design effect ---------------------------------
 
@@ -624,7 +624,7 @@ facet_small_sample_audit <- function(fit, diagnostics = NULL,
 #'
 #' @seealso [compute_facet_design_effect()],
 #'   [analyze_hierarchical_structure()], [detect_facet_nesting()],
-#'   [facet_small_sample_audit()].
+#'   [facet_small_sample_review()].
 #'
 #' @references
 #' Koo, T. K., & Li, M. Y. (2016). A guideline of selecting and
@@ -1098,7 +1098,7 @@ compute_facet_design_effect <- function(data, facets, icc_table = NULL,
 
 #' Analyze the hierarchical structure of a rating design
 #'
-#' One-stop audit that combines the nesting, cross-tabulation, ICC, and
+#' One-stop review that combines the nesting, cross-tabulation, ICC, and
 #' design-effect reports into a single object. Designed to be reused by
 #' the publication-workflow surface: its summary feeds into
 #' `reporting_checklist()`, and its tables are picked up by
@@ -1153,7 +1153,7 @@ compute_facet_design_effect <- function(data, facets, icc_table = NULL,
 #' 2. Call `analyze_hierarchical_structure(fit)` (or on the raw data).
 #' 3. Read `summary(x)` for the condensed view.
 #' 4. Feed the object to [reporting_checklist()] and
-#'    [build_mfrm_manifest()] to record the audit in publication
+#'    [build_mfrm_manifest()] to record the review in publication
 #'    bundles. `build_apa_outputs()` uses the fit-level
 #'    `FacetSampleSizeFlag` to add a Methods sentence automatically.
 #'
@@ -1167,11 +1167,11 @@ compute_facet_design_effect <- function(data, facets, icc_table = NULL,
 #' - `connectivity`: named list with bipartite-graph component summary
 #'   when `igraph` is available.
 #' - `summary`: one-row summary used by downstream reporting helpers.
-#' - `facets`: character vector of facet names that were audited
+#' - `facets`: character vector of facet names that were reviewed
 #'   (echoed for downstream reporting helpers that need to label rows
-#'   by audit scope).
+#'   by review scope).
 #'
-#' @seealso [detect_facet_nesting()], [facet_small_sample_audit()],
+#' @seealso [detect_facet_nesting()], [facet_small_sample_review()],
 #'   [compute_facet_icc()], [compute_facet_design_effect()],
 #'   [reporting_checklist()], [build_mfrm_manifest()], [fit_mfrm()].
 #'
@@ -1198,7 +1198,7 @@ compute_facet_design_effect <- function(data, facets, icc_table = NULL,
 #' summary(hs)
 #'
 #' \donttest{
-#' # Full audit when lme4 and igraph are available.
+#' # Full review when lme4 and igraph are available.
 #' if (requireNamespace("lme4", quietly = TRUE) &&
 #'     requireNamespace("igraph", quietly = TRUE)) {
 #'   hs_full <- analyze_hierarchical_structure(toy,
@@ -1383,7 +1383,7 @@ analyze_hierarchical_structure <- function(data,
 #' @export
 print.mfrm_facet_nesting <- function(x, ...) {
   cat("mfrm_facet_nesting\n")
-  cat("  Facets audited:", paste(x$facets, collapse = ", "), "\n")
+  cat("  Facets reviewed:", paste(x$facets, collapse = ", "), "\n")
   if (nrow(x$pairwise_table) > 0) {
     cat("  Pairs:", nrow(x$pairwise_table), "\n")
     cat("  Any nested pair:",
@@ -1409,33 +1409,33 @@ summary.mfrm_facet_nesting <- function(object, ...) {
   invisible(object)
 }
 
-#' Plot a facet sample-size audit
+#' Plot a facet sample-size review
 #'
 #' Per-level observation counts rendered as a horizontal bar chart
 #' coloured by the Linacre sample-size band assigned in
-#' [facet_small_sample_audit()]. Vertical dashed lines mark the
+#' [facet_small_sample_review()]. Vertical dashed lines mark the
 #' sparse / marginal / standard thresholds so reviewers see where
 #' every facet level sits relative to the Linacre (1994) guidance.
 #'
-#' @param x An `mfrm_facet_sample_audit` object.
+#' @param x An `mfrm_facet_sample_review` object.
 #' @param top_n Optional integer; trim the y-axis to the `top_n`
 #'   smallest level counts per facet. `NULL` (default) keeps all.
 #' @param preset One of `"standard"`, `"publication"`, `"compact"`.
 #' @param ... Reserved.
 #' @return Invisibly, the data.frame used for the plot.
-#' @seealso [facet_small_sample_audit()].
+#' @seealso [facet_small_sample_review()].
 #' @export
-plot.mfrm_facet_sample_audit <- function(x, top_n = NULL,
-                                         preset = c("standard",
-                                                    "publication",
-                                                    "compact"),
-                                         ...) {
+plot.mfrm_facet_sample_review <- function(x, top_n = NULL,
+                                          preset = c("standard",
+                                                     "publication",
+                                                     "compact"),
+                                          ...) {
   style <- resolve_plot_preset(preset)
   tbl <- as.data.frame(x$table, stringsAsFactors = FALSE)
   if (is.null(tbl) || nrow(tbl) == 0L) {
     graphics::plot.new()
-    graphics::title(main = "Facet sample-size audit")
-    graphics::text(0.5, 0.5, "Audit table empty.")
+    graphics::title(main = "Facet sample-size review")
+    graphics::text(0.5, 0.5, "Review table empty.")
     return(invisible(tbl))
   }
   band_colors <- c(
@@ -1472,7 +1472,7 @@ plot.mfrm_facet_sample_audit <- function(x, top_n = NULL,
     col = tbl$BarColor,
     border = NA,
     xlab = "Observations per level",
-    main = "Facet sample-size audit (Linacre bands)",
+    main = "Facet sample-size review (Linacre bands)",
     cex.names = 0.8
   )
   graphics::abline(
@@ -1557,8 +1557,8 @@ plot.mfrm_facet_nesting <- function(x,
 }
 
 #' @export
-print.mfrm_facet_sample_audit <- function(x, ...) {
-  cat("mfrm_facet_sample_audit\n")
+print.mfrm_facet_sample_review <- function(x, ...) {
+  cat("mfrm_facet_sample_review\n")
   cat("  Thresholds (sparse / marginal / standard):",
       paste(unlist(x$thresholds), collapse = " / "), "\n")
   cat("  Facets:", nrow(x$facet_summary), "\n")
@@ -1569,8 +1569,8 @@ print.mfrm_facet_sample_audit <- function(x, ...) {
 }
 
 #' @export
-summary.mfrm_facet_sample_audit <- function(object, ...) {
-  cat("mfrm_facet_sample_audit\n\n")
+summary.mfrm_facet_sample_review <- function(object, ...) {
+  cat("mfrm_facet_sample_review\n\n")
   cat("Per-facet summary:\n")
   print(object$facet_summary, row.names = FALSE)
   cat("\nSample-size category counts by facet:\n")
@@ -1672,7 +1672,7 @@ summary.mfrm_hierarchical_structure <- function(object, ...) {
   cat("Summary:\n")
   print(object$summary, row.names = FALSE)
 
-  cat("\nNesting audit:\n")
+  cat("\nNesting review:\n")
   print(object$nesting$pairwise_table[,
     c("FacetA", "FacetB", "NestingIndex_AinB",
       "NestingIndex_BinA", "Direction"),

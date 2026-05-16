@@ -39,7 +39,7 @@ test_that("FACETS column contract file is available and valid", {
 
 test_that("FACETS column contract is satisfied by current outputs", {
   d <- mfrmr:::sample_mfrm_data(seed = 123)
-  fit <- suppressWarnings(mfrmr::fit_mfrm(
+  fit <- mfrmr::fit_mfrm(
     data = d,
     person = "Person",
     facets = c("Rater", "Task", "Criterion"),
@@ -47,8 +47,8 @@ test_that("FACETS column contract is satisfied by current outputs", {
     method = "JML",
     model = "RSM",
     maxit = 20
-  ))
-  diag <- suppressWarnings(mfrmr::diagnose_mfrm(fit, residual_pca = "none"))
+  )
+  diag <- mfrmr::diagnose_mfrm(fit, residual_pca = "none")
   bias <- mfrmr::estimate_bias(fit, diag, facet_a = "Rater", facet_b = "Task", max_iter = 2)
 
   outputs <- list(
@@ -114,14 +114,14 @@ test_that("FACETS column contract is satisfied by current outputs", {
     collapse = "\n"
   ))
 
-  parity_summary <- data.frame(
+  contract_summary <- data.frame(
     Components = nrow(audit),
     FullCoverage = sum(audit$coverage == 1),
     MeanCoverage = mean(audit$coverage),
     MinCoverage = min(audit$coverage),
     stringsAsFactors = FALSE
   )
-  expect_equal(parity_summary$FullCoverage, parity_summary$Components)
-  expect_equal(parity_summary$MeanCoverage, 1)
-  expect_equal(parity_summary$MinCoverage, 1)
+  expect_equal(contract_summary$FullCoverage, contract_summary$Components)
+  expect_equal(contract_summary$MeanCoverage, 1)
+  expect_equal(contract_summary$MinCoverage, 1)
 })

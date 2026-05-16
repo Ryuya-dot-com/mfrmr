@@ -105,12 +105,11 @@ criterion level in each design.}
 
 \item{fit_method}{Estimation method passed to \code{\link[=fit_mfrm]{fit_mfrm()}}.}
 
-\item{model}{Measurement model passed to \code{\link[=fit_mfrm]{fit_mfrm()}}. The signal-detection
-evaluator supports \code{RSM}, \code{PCM}, and bounded \code{GPCM}; \code{GPCM} results retain
-the caveats documented in \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}}.}
+\item{model}{Measurement model passed to \code{\link[=fit_mfrm]{fit_mfrm()}}. The current
+signal-detection evaluator supports \code{RSM} and \code{PCM}; bounded \code{GPCM}
+is accepted only to produce an explicit unsupported-path error.}
 
-\item{step_facet}{Step facet passed to \code{\link[=fit_mfrm]{fit_mfrm()}} when \code{model = "PCM"} or
-bounded \code{GPCM}.
+\item{step_facet}{Step facet passed to \code{\link[=fit_mfrm]{fit_mfrm()}} when \code{model = "PCM"}.
 When left \code{NULL}, the function inherits the generator step facet from
 \code{sim_spec} when available and otherwise defaults to \code{"Criterion"}.}
 
@@ -206,9 +205,12 @@ screening metrics rather than formal inferential quantities. Here, a bias
 cell is counted as \strong{screen-positive} only when those screening metrics are
 available and satisfy
 
-First-release \code{GPCM} is not yet available in this helper because its signal-
-detection path still depends on simulation and diagnostics layers validated
-only for \code{RSM} / \code{PCM}. More broadly, the current planning layer is still
+First-release \code{GPCM} is not yet available in this helper because the helper
+estimates design-grid operating characteristics for injected DIF and
+interaction-bias signals. Direct bounded-\code{GPCM} data generation,
+fitted-model bias screening via \code{\link[=estimate_bias]{estimate_bias()}}, and parameter-recovery
+checks are available elsewhere, but this design-grid detection layer remains
+validated only for \code{RSM} / \code{PCM}. More broadly, the current planning layer is
 role-based for exactly two non-person facets (\code{rater}-like and
 \code{criterion}-like), even though the estimation core supports arbitrary facet
 counts.

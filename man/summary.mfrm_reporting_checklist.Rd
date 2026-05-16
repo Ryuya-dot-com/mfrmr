@@ -20,9 +20,9 @@ An object of class \code{summary.mfrm_reporting_checklist} with:
 \item \code{overview}: run-level counts of available and draft-ready items
 \item \code{section_summary}: section-level checklist coverage
 \item \code{software_scope}: external-software relationship summary
-\item \code{visual_scope}: plotting-route and 3D-ready payload summary, including
-the main \code{InterpretationCheck} caveat for each visual family and any
-model-specific \code{SupportStatus} / \code{ModelCaveat} columns
+\item \code{facets_positioning}: report-ready FACETS relationship wording
+\item \code{visual_scope}: plotting-route and 3D-ready data-handoff summary, including
+the main \code{InterpretationCheck} caveat for each visual family
 \item \code{priority_summary}: counts by priority/severity
 \item \code{action_items}: highest-priority rows that still need draft work
 \item \code{settings}: checklist settings rendered as a compact table

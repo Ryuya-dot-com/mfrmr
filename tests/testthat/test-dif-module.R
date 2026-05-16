@@ -160,15 +160,11 @@ test_that("analyze_dif refit uses ETS only for linked model-based MML contrasts"
 test_that("analyze_dif refit demotes ETS when subgroup refits lack linking facets", {
   local_dif_fixtures()
 
-  fit_one <- suppressWarnings(fit_mfrm(
-    toy, person = "Person", facets = "Criterion",
-    score = "Score", method = "JML", maxit = 20
-  ))
-  diag_one <- suppressWarnings(diagnose_mfrm(fit_one, residual_pca = "none"))
-  dif_one <- suppressWarnings(analyze_dif(
-    fit_one, diag_one, facet = "Criterion", group = "Group",
-    data = toy, method = "refit"
-  ))
+  fit_one <- fit_mfrm(toy, person = "Person", facets = "Criterion",
+                      score = "Score", method = "JML", maxit = 20)
+  diag_one <- diagnose_mfrm(fit_one, residual_pca = "none")
+  dif_one <- analyze_dif(fit_one, diag_one, facet = "Criterion", group = "Group",
+                         data = toy, method = "refit")
 
   expect_true(all(dif_one$dif_table$ClassificationSystem == "descriptive"))
   expect_true(all(is.na(dif_one$dif_table$ETS)))
@@ -465,6 +461,10 @@ test_that("compare_mfrm reports comparable IC quantities on a common basis", {
   expect_true("Delta_BIC" %in% names(tbl))
   expect_true("AkaikeWeight" %in% names(tbl))
   expect_true("BICWeight" %in% names(tbl))
+  expect_true(all(c("WeightedN", "ICSampleSize", "ICSampleSizeBasis") %in% names(tbl)))
+  expect_equal(tbl$WeightedN, as.numeric(tbl$nobs))
+  expect_equal(tbl$ICSampleSize, as.numeric(tbl$nobs))
+  expect_equal(tbl$ICSampleSizeBasis, rep("row_count", nrow(tbl)))
 
   # Delta should have at least one zero (best model)
   expect_equal(min(tbl$Delta_AIC), 0)
@@ -475,6 +475,33 @@ test_that("compare_mfrm reports comparable IC quantities on a common basis", {
   expect_equal(sum(tbl$BICWeight), 1, tolerance = 1e-10)
   expect_true(isTRUE(comp$comparison_basis$ic_comparable))
   expect_true(isTRUE(comp$comparison_basis$same_data))
+
+  fit_rsm_w <- fit_rsm
+  fit_pcm_w <- fit_pcm
+  w <- rep(c(1, 2), length.out = nrow(fit_rsm_w$prep$data))
+  fit_rsm_w$config$weight_col <- "Weight"
+  fit_pcm_w$config$weight_col <- "Weight"
+  fit_rsm_w$prep$data$Weight <- w
+  fit_pcm_w$prep$data$Weight <- w
+  fit_rsm_w$summary$N[1] <- sum(w)
+  fit_pcm_w$summary$N[1] <- sum(w)
+  comp_w <- compare_mfrm(RSM = fit_rsm_w, PCM = fit_pcm_w)
+  expect_equal(comp_w$table$WeightedN, rep(sum(w), nrow(comp_w$table)))
+  expect_equal(comp_w$table$ICSampleSize, rep(sum(w), nrow(comp_w$table)))
+  expect_equal(comp_w$table$ICSampleSizeBasis, rep("sum_weights", nrow(comp_w$table)))
+
+  comp_lrt <- compare_mfrm(RSM = fit_rsm, PCM = fit_pcm, nested = TRUE)
+  n_steps <- fit_rsm$config$n_cat - 1L
+  step_levels <- length(fit_pcm$config$facet_levels[[fit_pcm$config$step_facet]])
+  expected_df <- (step_levels - 1L) * max(n_steps - 1L, 0L)
+  expect_s3_class(comp_lrt, "mfrm_comparison")
+  expect_true(isTRUE(comp_lrt$comparison_basis$nesting_review$eligible))
+  expect_identical(as.character(comp_lrt$comparison_basis$nesting_review$relation), "RSM_in_PCM")
+  expect_equal(comp_lrt$lrt$df, expected_df)
+  expect_equal(
+    diff(range(comp_lrt$table$npar)),
+    expected_df
+  )
 })
 
 test_that("compare_mfrm evidence_ratios are reciprocal", {
@@ -606,8 +633,10 @@ test_that("compare_mfrm suppresses IC ranking outside the formal MML path and re
   )
   expect_true(isTRUE(comp_lrt$comparison_basis$nested_requested))
   expect_null(comp_lrt$lrt)
-  expect_true(isTRUE(comp_lrt$comparison_basis$nesting_audit$eligible))
-  expect_identical(as.character(comp_lrt$comparison_basis$nesting_audit$relation), "RSM_in_PCM")
+  expect_identical(comp_lrt$comparison_basis$lrt_status, "not_computed")
+  expect_match(comp_lrt$comparison_basis$lrt_reason, "formal MML likelihood basis")
+  expect_true(isTRUE(comp_lrt$comparison_basis$nesting_review$eligible))
+  expect_identical(as.character(comp_lrt$comparison_basis$nesting_review$relation), "RSM_in_PCM")
 
   fit_rsm_2 <- suppressWarnings(fit_mfrm(
     toy_small,
@@ -625,9 +654,68 @@ test_that("compare_mfrm suppresses IC ranking outside the formal MML path and re
     "formal MML likelihood basis"
   )
   expect_null(comp_same$lrt)
+  expect_identical(comp_same$comparison_basis$lrt_status, "not_computed")
+  expect_match(comp_same$comparison_basis$lrt_reason, "formal MML likelihood basis")
   expect_false(isTRUE(comp_same$comparison_basis$ic_comparable))
-  expect_false(isTRUE(comp_same$comparison_basis$nesting_audit$eligible))
-  expect_identical(as.character(comp_same$comparison_basis$nesting_audit$relation), "same_model")
+  expect_false(isTRUE(comp_same$comparison_basis$nesting_review$eligible))
+  expect_identical(as.character(comp_same$comparison_basis$nesting_review$relation), "same_model")
+})
+
+test_that("compare_mfrm records why boundary LRTs are not reported", {
+  toy_small <- load_mfrmr_data("example_core")
+
+  fit_rsm <- suppressWarnings(fit_mfrm(
+    toy_small,
+    person = "Person",
+    facets = c("Rater", "Criterion"),
+    score = "Score",
+    method = "MML",
+    model = "RSM",
+    quad_points = 5,
+    maxit = 15
+  ))
+  fit_pcm <- suppressWarnings(fit_mfrm(
+    toy_small,
+    person = "Person",
+    facets = c("Rater", "Criterion"),
+    score = "Score",
+    method = "MML",
+    model = "PCM",
+    step_facet = "Criterion",
+    quad_points = 5,
+    maxit = 15
+  ))
+  fit_rsm$summary$Converged[1] <- TRUE
+  fit_pcm$summary$Converged[1] <- TRUE
+
+  fit_pcm_worse <- fit_pcm
+  fit_pcm_worse$summary$LogLik[1] <- fit_rsm$summary$LogLik[1] - 1
+  fit_pcm_worse$summary$AIC[1] <- 2 * length(fit_pcm_worse$opt$par) -
+    2 * fit_pcm_worse$summary$LogLik[1]
+  fit_pcm_worse$summary$BIC[1] <- log(nrow(fit_pcm_worse$prep$data)) *
+    length(fit_pcm_worse$opt$par) - 2 * fit_pcm_worse$summary$LogLik[1]
+
+  expect_warning(
+    comp_neg <- compare_mfrm(RSM = fit_rsm, PCM = fit_pcm_worse, nested = TRUE),
+    "not interpretable"
+  )
+  expect_null(comp_neg$lrt)
+  expect_identical(comp_neg$comparison_basis$lrt_status, "not_computed")
+  expect_match(comp_neg$comparison_basis$lrt_reason, "negative likelihood-ratio statistic")
+  expect_output(print(summary(comp_neg)), "LRT status")
+
+  fit_pcm_bad <- fit_pcm
+  fit_pcm_bad$summary$LogLik[1] <- NA_real_
+  fit_pcm_bad$summary$AIC[1] <- NA_real_
+  fit_pcm_bad$summary$BIC[1] <- NA_real_
+
+  expect_warning(
+    comp_na <- compare_mfrm(RSM = fit_rsm, PCM = fit_pcm_bad, nested = TRUE),
+    "non-finite"
+  )
+  expect_null(comp_na$lrt)
+  expect_identical(comp_na$comparison_basis$lrt_status, "not_computed")
+  expect_match(comp_na$comparison_basis$lrt_reason, "non-finite")
 })
 
 test_that("compare_mfrm suppresses IC ranking for JML-only comparisons", {

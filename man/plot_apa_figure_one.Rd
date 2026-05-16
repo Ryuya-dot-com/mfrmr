@@ -30,12 +30,13 @@ plot_apa_figure_one(
 }
 \value{
 Invisibly, an \code{mfrm_plot_data} object whose \code{data} slot
-bundles the four panel payloads under \code{wright}, \code{severity},
-\code{threshold}, \code{summary}.
+bundles the four panel data objects under \code{wright}, \code{severity},
+\code{threshold}, and \code{summary}.
 }
 \description{
 Builds a 2x2 publication composite for an \code{mfrm_fit}, suitable for a
-"Figure 1" of a Rasch-MFRM analysis. Panels: (1) Wright map, (2)
+"Figure 1" in the Rasch-family \code{RSM}/\code{PCM} manuscript route. Panels: (1)
+Wright map, (2)
 rater severity profile with CI whiskers, (3) threshold ladder, (4)
 a one-line reliability / separation summary block. Each panel reuses
 the standalone plot helper so the visual language is consistent
@@ -59,7 +60,5 @@ names(p$data)
 \seealso{
 \code{\link[=plot.mfrm_fit]{plot.mfrm_fit()}} (\code{type = "wright"}),
 \code{\link[=plot_rater_severity_profile]{plot_rater_severity_profile()}}, \code{\link[=plot_threshold_ladder]{plot_threshold_ladder()}},
-\code{\link[=build_apa_outputs]{build_apa_outputs()}}, \code{\link[=visual_reporting_template]{visual_reporting_template()}},
-\code{\link[=reporting_checklist]{reporting_checklist()}}, \link{mfrmr_reporting_and_apa},
-\link{mfrmr_visual_diagnostics}.
+\code{\link[=build_apa_outputs]{build_apa_outputs()}}.
 }

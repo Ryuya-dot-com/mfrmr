@@ -6,7 +6,7 @@
 #  * accepts an mfrm_fit (or related class) plus ergonomic options;
 #  * resolves a `preset = c("standard", "publication", "compact")` style via
 #    `resolve_plot_preset()` and `apply_plot_preset()`;
-#  * returns an `mfrm_plot_data` object with a stable payload contract so
+#  * returns an `mfrm_plot_data` object with a stable data contract so
 #    downstream pipelines can re-render or export the underlying tables.
 # ==============================================================================
 
@@ -148,44 +148,42 @@ plot_threshold_ladder <- function(fit,
 }
 
 
-#' Plot per-person fit (Infit / Outfit) bubbles
+#' Plot per-person fit
 #'
 #' Per-person diagnostic bubble plot inspired by FACETS Table 6 / KIDMAP
 #' summaries. Each bubble represents one person at the intersection of
 #' Infit (x) and Outfit (y), sized by total observations and coloured by
-#' the active MnSq screening band: green when both Infit and Outfit fall
-#' in `[lower, upper]`, amber when one statistic is outside, red when both
-#' are outside.
+#' the standard 0.5/1.5 fit envelope: green when both Infit and Outfit
+#' fall in `[lower, upper]`, amber when one statistic is outside, red
+#' when both are outside. Set `fit_index = "loglik"` for a ranked view of
+#' the report-ready `lz_star` / `lz` index instead.
 #'
 #' @param fit An `mfrm_fit` from [fit_mfrm()].
 #' @param diagnostics Optional [diagnose_mfrm()] output. When omitted,
 #'   `diagnose_mfrm(fit, residual_pca = "none")` is run internally.
-#' @param lower Lower fit threshold. `NULL` (default) uses the lower bound
-#'   from [mfrm_misfit_thresholds()]; pass a scalar for a manual plot band.
-#' @param upper Upper fit threshold. `NULL` (default) uses the upper bound
-#'   from [mfrm_misfit_thresholds()].
-#' @param top_n_label Maximum number of persons whose label is drawn
-#'   next to the bubble (largest |Infit-1| + |Outfit-1|). Default `12`.
-#' @param preset Visual preset.
+#' @param lower Lower fit threshold (default `0.5`, Linacre 2002).
+#' @param upper Upper fit threshold (default `1.5`).
+#' @param top_n_label Maximum number of persons whose label is drawn.
+#'   The default mean-square view uses largest `|Infit - 1| + |Outfit - 1|`;
+#'   `fit_index = "loglik"` uses largest absolute report index. Default `12`.
+#' @param fit_index Plot focus. `"meansquare"` keeps the Infit/Outfit bubble
+#'   plot. `"loglik"` draws the report index selected by
+#'   [compute_person_fit_indices()] (`lz_star` when available, otherwise
+#'   `lz` with a caveat).
+#' @param preset Visual preset, including `"monochrome"`.
 #' @param draw If `TRUE`, draw with base graphics.
 #'
-#' @return An `mfrm_plot_data` object whose `data` slot contains
-#'   columns `Person`, `Infit`, `Outfit`, `N`, `Status`, and
-#'   `MisfitDirection`. `Status` keeps the plot-colour contract
-#'   (`in_band`, `one_outside`, `both_outside`), while `MisfitDirection`
-#'   separates `underfit` (above the upper MnSq band), `overfit` (below the
-#'   lower band), `mixed`, and `in_band`.
+#' @return An `mfrm_plot_data` object whose reusable plot data include
+#'   `data` with one row per person, `plot_long` for custom R graphics,
+#'   `person_fit_indices` from [compute_person_fit_indices()], and compact
+#'   flag/status summaries.
 #'
 #' @section Interpreting output:
-#' The default band is the active package MnSq screening band returned by
-#' [mfrm_misfit_thresholds()]. The package default is the broad 0.5-1.5
-#' convention, but applied studies may use narrower or broader bands by
-#' purpose and sample context. Persons in the green centre are inside the
-#' current screening band; amber and red corners are candidates for misfit
-#' review. Read `p$data$data$MisfitDirection` to distinguish underfit
-#' (MnSq above the upper band), overfit (MnSq below the lower band), and
-#' mixed high/low patterns before moving to [unexpected_response_table()] for
-#' case-level follow-up.
+#' The default 0.5-1.5 envelope follows Linacre (2002) Rasch
+#' Measurement Transactions. Persons in the green centre are
+#' fit-acceptable; amber and red corners are candidates for misfit
+#' review (overfit / underfit) using
+#' [unexpected_response_table()] for follow-up.
 #'
 #' @seealso [diagnose_mfrm()], [unexpected_response_table()],
 #'   [build_misfit_casebook()].
@@ -196,21 +194,19 @@ plot_threshold_ladder <- function(fit,
 #'                 method = "JML", maxit = 25)
 #' p <- plot_person_fit(fit, draw = FALSE)
 #' head(p$data$data)
-#' table(p$data$data$MisfitDirection, useNA = "ifany")
 #' @export
 plot_person_fit <- function(fit,
                             diagnostics = NULL,
-                            lower = NULL,
-                            upper = NULL,
+                            lower = 0.5,
+                            upper = 1.5,
                             top_n_label = 12L,
-                            preset = c("standard", "publication", "compact"),
-                            draw = TRUE) {
+                            preset = c("standard", "publication", "compact", "monochrome"),
+                            draw = TRUE,
+                            fit_index = c("meansquare", "loglik")) {
   if (!inherits(fit, "mfrm_fit")) {
     stop("`fit` must be an mfrm_fit object from fit_mfrm().", call. = FALSE)
   }
-  band <- mfrm_misfit_thresholds(lower = lower, upper = upper)
-  lower <- as.numeric(band["lower"])
-  upper <- as.numeric(band["upper"])
+  fit_index <- match.arg(fit_index)
   style <- resolve_plot_preset(preset)
   if (is.null(diagnostics)) {
     diagnostics <- suppressMessages(suppressWarnings(
@@ -234,51 +230,151 @@ plot_person_fit <- function(fit,
   out_band <- m$Outfit >= lower & m$Outfit <= upper
   m$Status <- ifelse(in_band & out_band, "in_band",
                      ifelse(in_band | out_band, "one_outside", "both_outside"))
-  m$MisfitDirection <- mfrm_classify_mnsq_direction(
-    m$Infit,
-    m$Outfit,
-    lower = lower,
-    upper = upper
-  )
   status_color <- c(in_band = style$success,
                     one_outside = style$warn,
                     both_outside = style$fail)
   m$Color <- unname(status_color[m$Status])
   m$Score <- abs(m$Infit - 1) + abs(m$Outfit - 1)
   m <- m[order(-m$Score), , drop = FALSE]
-  plot_title <- "Person fit"
-  plot_subtitle <- sprintf(
-    "Infit and Outfit per person (active MnSq screening band [%g, %g])",
-    lower, upper
+
+  person_fit_indices <- tryCatch(
+    compute_person_fit_indices(diagnostics, fit = fit),
+    error = function(e) e
   )
+  person_fit_status <- data.frame(
+    Available = !inherits(person_fit_indices, "error"),
+    Status = if (inherits(person_fit_indices, "error")) "error" else "available",
+    Message = if (inherits(person_fit_indices, "error")) {
+      conditionMessage(person_fit_indices)
+    } else {
+      ""
+    },
+    stringsAsFactors = FALSE
+  )
+  if (inherits(person_fit_indices, "error")) {
+    person_fit_indices <- data.frame(Person = character(), stringsAsFactors = FALSE)
+  } else {
+    person_fit_indices <- as.data.frame(person_fit_indices, stringsAsFactors = FALSE)
+  }
+  if (nrow(person_fit_indices) > 0L) {
+    merge_tbl <- person_fit_indices[, setdiff(names(person_fit_indices), "N"), drop = FALSE]
+    m$.row_id <- seq_len(nrow(m))
+    m <- merge(m, merge_tbl,
+               by.x = "Level", by.y = "Person",
+               all.x = TRUE, sort = FALSE)
+    m <- m[order(m$.row_id), , drop = FALSE]
+    m$.row_id <- NULL
+  }
+  person_cols <- c(
+    "LogLik", "lz", "lz_star", "lz_star_status", "lz_star_c",
+    "lz_star_variance", "lz_flag_5pct", "lz_flag_1pct",
+    "lz_star_flag_5pct", "lz_star_flag_1pct", "ReportIndex",
+    "ReportValue", "ReportFlagLevel", "ReportFlag", "ReviewStatus",
+    "ReviewReason", "ReportCaveat"
+  )
+  for (nm in person_cols) {
+    if (!nm %in% names(m)) {
+      m[[nm]] <- if (nm %in% c("lz_flag_5pct", "lz_flag_1pct",
+                               "lz_star_flag_5pct", "lz_star_flag_1pct",
+                               "ReportFlag")) {
+        FALSE
+      } else if (nm %in% c("lz_star_status", "ReportIndex",
+                           "ReportFlagLevel", "ReviewStatus",
+                           "ReviewReason", "ReportCaveat")) {
+        NA_character_
+      } else {
+        NA_real_
+      }
+    }
+  }
+  review_color <- c(
+    not_flagged = style$success,
+    review_5pct = style$warn,
+    review_1pct = style$fail,
+    not_available = style$neutral
+  )
+  m$ReviewColor <- unname(review_color[as.character(m$ReviewStatus)])
+  m$ReviewColor[is.na(m$ReviewColor)] <- style$neutral
+
+  plot_title <- "Person fit"
+  plot_subtitle <- if (identical(fit_index, "meansquare")) {
+    sprintf(
+      "Infit and Outfit per person (acceptance band [%g, %g], Linacre 2002)",
+      lower, upper
+    )
+  } else {
+    "Report index per person: lz* when available, otherwise lz with caveat"
+  }
+
+  z_5pct <- stats::qnorm(0.975)
+  z_1pct <- stats::qnorm(0.995)
 
   if (isTRUE(draw)) {
     apply_plot_preset(style)
-    cex_size <- 0.6 + 1.6 * sqrt(m$N / max(m$N, na.rm = TRUE))
-    xlim <- range(c(m$Infit, lower, upper), finite = TRUE) +
-      c(-0.05, 0.05) * diff(range(c(m$Infit, lower, upper), finite = TRUE))
-    ylim <- range(c(m$Outfit, lower, upper), finite = TRUE) +
-      c(-0.05, 0.05) * diff(range(c(m$Outfit, lower, upper), finite = TRUE))
-    graphics::plot(
-      x = m$Infit, y = m$Outfit,
-      xlab = "Infit MnSq", ylab = "Outfit MnSq",
-      main = plot_title,
-      pch = 21, bg = m$Color, col = "white",
-      cex = cex_size,
-      xlim = xlim, ylim = ylim
-    )
-    graphics::title(sub = plot_subtitle, line = 2.2, cex.sub = 0.9)
-    graphics::abline(h = 1, v = 1, lty = 3, col = style$neutral)
-    graphics::abline(h = c(lower, upper), v = c(lower, upper),
-                     lty = 2, col = style$grid)
-    n_lbl <- min(top_n_label, nrow(m))
-    if (n_lbl > 0L) {
-      graphics::text(
-        x = m$Infit[seq_len(n_lbl)],
-        y = m$Outfit[seq_len(n_lbl)],
-        labels = as.character(m$Level[seq_len(n_lbl)]),
-        cex = 0.7, pos = 4, offset = 0.5
+    if (identical(fit_index, "meansquare")) {
+      cex_size <- 0.6 + 1.6 * sqrt(m$N / max(m$N, na.rm = TRUE))
+      x_rng <- range(c(m$Infit, lower, upper), finite = TRUE)
+      y_rng <- range(c(m$Outfit, lower, upper), finite = TRUE)
+      x_pad <- if (diff(x_rng) > 0) c(-0.05, 0.05) * diff(x_rng) else c(-0.1, 0.1)
+      y_pad <- if (diff(y_rng) > 0) c(-0.05, 0.05) * diff(y_rng) else c(-0.1, 0.1)
+      graphics::plot(
+        x = m$Infit, y = m$Outfit,
+        xlab = "Infit MnSq", ylab = "Outfit MnSq",
+        main = plot_title,
+        pch = 21, bg = m$Color, col = "white",
+        cex = cex_size,
+        xlim = x_rng + x_pad, ylim = y_rng + y_pad
       )
+      graphics::title(sub = plot_subtitle, line = 2.2, cex.sub = 0.9)
+      graphics::abline(h = 1, v = 1, lty = 3, col = style$neutral)
+      graphics::abline(h = c(lower, upper), v = c(lower, upper),
+                       lty = 2, col = style$grid)
+      n_lbl <- min(top_n_label, nrow(m))
+      if (n_lbl > 0L) {
+        graphics::text(
+          x = m$Infit[seq_len(n_lbl)],
+          y = m$Outfit[seq_len(n_lbl)],
+          labels = as.character(m$Level[seq_len(n_lbl)]),
+          cex = 0.7, pos = 4, offset = 0.5
+        )
+      }
+    } else {
+      ranked <- m[is.finite(m$ReportValue), , drop = FALSE]
+      ranked <- ranked[order(ranked$ReportValue), , drop = FALSE]
+      if (nrow(ranked) == 0L) {
+        graphics::plot.new()
+        graphics::title(main = plot_title, sub = "No finite lz/lz* report index available")
+      } else {
+        y <- seq_len(nrow(ranked))
+        x_rng <- range(c(ranked$ReportValue, -z_1pct, -z_5pct, z_5pct, z_1pct),
+                       finite = TRUE)
+        x_pad <- if (diff(x_rng) > 0) c(-0.08, 0.08) * diff(x_rng) else c(-0.5, 0.5)
+        graphics::plot(
+          x = ranked$ReportValue, y = y,
+          xlab = "Person-fit report index",
+          ylab = "Persons ordered by report index",
+          yaxt = "n",
+          main = plot_title,
+          pch = 21, bg = ranked$ReviewColor, col = "white",
+          cex = 0.85 + 1.2 * sqrt(ranked$N / max(ranked$N, na.rm = TRUE)),
+          xlim = x_rng + x_pad
+        )
+        graphics::title(sub = plot_subtitle, line = 2.2, cex.sub = 0.9)
+        graphics::abline(v = 0, lty = 3, col = style$neutral)
+        graphics::abline(v = c(-z_5pct, z_5pct), lty = 2, col = style$grid)
+        graphics::abline(v = c(-z_1pct, z_1pct), lty = 3, col = style$grid)
+        label_order <- order(abs(ranked$ReportValue), decreasing = TRUE)
+        n_lbl <- min(top_n_label, length(label_order))
+        if (n_lbl > 0L) {
+          idx <- label_order[seq_len(n_lbl)]
+          graphics::text(
+            x = ranked$ReportValue[idx],
+            y = y[idx],
+            labels = as.character(ranked$Level[idx]),
+            cex = 0.7, pos = 4, offset = 0.5
+          )
+        }
+      }
     }
   }
 
@@ -288,30 +384,106 @@ plot_person_fit <- function(fit,
     Outfit = m$Outfit,
     N = m$N,
     Status = m$Status,
-    MisfitDirection = m$MisfitDirection,
+    LogLik = suppressWarnings(as.numeric(m$LogLik)),
+    lz = suppressWarnings(as.numeric(m$lz)),
+    lz_star = suppressWarnings(as.numeric(m$lz_star)),
+    lz_star_status = as.character(m$lz_star_status),
+    ReportIndex = as.character(m$ReportIndex),
+    ReportValue = suppressWarnings(as.numeric(m$ReportValue)),
+    ReportFlagLevel = as.character(m$ReportFlagLevel),
+    ReportFlag = as.logical(m$ReportFlag),
+    ReviewStatus = as.character(m$ReviewStatus),
+    ReviewReason = as.character(m$ReviewReason),
+    ReportCaveat = as.character(m$ReportCaveat),
     stringsAsFactors = FALSE
   )
+  plot_long <- rbind(
+    data.frame(Person = payload$Person, Metric = "Infit", Value = payload$Infit,
+               MetricFamily = "mean_square", DisplayedByDefault = identical(fit_index, "meansquare"),
+               Status = payload$Status, ReviewStatus = payload$ReviewStatus,
+               stringsAsFactors = FALSE),
+    data.frame(Person = payload$Person, Metric = "Outfit", Value = payload$Outfit,
+               MetricFamily = "mean_square", DisplayedByDefault = identical(fit_index, "meansquare"),
+               Status = payload$Status, ReviewStatus = payload$ReviewStatus,
+               stringsAsFactors = FALSE),
+    data.frame(Person = payload$Person, Metric = "lz", Value = payload$lz,
+               MetricFamily = "log_likelihood", DisplayedByDefault = FALSE,
+               Status = payload$Status, ReviewStatus = payload$ReviewStatus,
+               stringsAsFactors = FALSE),
+    data.frame(Person = payload$Person, Metric = "lz_star", Value = payload$lz_star,
+               MetricFamily = "log_likelihood", DisplayedByDefault = FALSE,
+               Status = payload$Status, ReviewStatus = payload$ReviewStatus,
+               stringsAsFactors = FALSE),
+    data.frame(Person = payload$Person, Metric = "ReportValue", Value = payload$ReportValue,
+               MetricFamily = "log_likelihood", DisplayedByDefault = identical(fit_index, "loglik"),
+               Status = payload$Status, ReviewStatus = payload$ReviewStatus,
+               stringsAsFactors = FALSE)
+  )
+  flag_summary <- data.frame(
+    Area = c("mean_square", "report_index"),
+    Rows = c(nrow(payload), nrow(payload)),
+    FlaggedRows = c(
+      sum(payload$Status != "in_band", na.rm = TRUE),
+      sum(payload$ReportFlag %in% TRUE, na.rm = TRUE)
+    ),
+    Review1PctRows = c(
+      NA_integer_,
+      sum(payload$ReviewStatus == "review_1pct", na.rm = TRUE)
+    ),
+    Review5PctRows = c(
+      NA_integer_,
+      sum(payload$ReviewStatus == "review_5pct", na.rm = TRUE)
+    ),
+    stringsAsFactors = FALSE
+  )
+  reference_lines <- if (identical(fit_index, "meansquare")) {
+    new_reference_lines(
+      axis = c("h", "v", "h", "v"),
+      value = c(lower, lower, upper, upper),
+      label = rep("Fit envelope", 4),
+      linetype = rep("dashed", 4),
+      role = rep("threshold", 4)
+    )
+  } else {
+    new_reference_lines(
+      axis = rep("v", 4),
+      value = c(-z_1pct, -z_5pct, z_5pct, z_1pct),
+      label = c("-1% threshold", "-5% threshold", "5% threshold", "1% threshold"),
+      linetype = c("dotted", "dashed", "dashed", "dotted"),
+      role = rep("person-fit z threshold", 4)
+    )
+  }
   out <- new_mfrm_plot_data(
     "person_fit",
     list(
       data = payload,
+      plot_long = plot_long,
+      person_fit_indices = person_fit_indices,
+      person_fit_status = person_fit_status,
+      flag_summary = flag_summary,
+      plot_settings = data.frame(
+        FitIndex = fit_index,
+        Lower = lower,
+        Upper = upper,
+        Z5Pct = z_5pct,
+        Z1Pct = z_1pct,
+        Preset = style$name,
+        stringsAsFactors = FALSE
+      ),
       lower = lower,
       upper = upper,
+      fit_index = fit_index,
       title = plot_title,
       subtitle = plot_subtitle,
       legend = new_plot_legend(
-        label = c("In band", "One outside", "Both outside"),
-        role = c("status", "status", "status"),
-        aesthetic = c("point", "point", "point"),
-        value = unname(status_color)
+        label = c("In band", "One outside", "Both outside",
+                  "Not flagged", "Review 5%", "Review 1%"),
+        role = rep("status", 6),
+        aesthetic = rep("point", 6),
+        value = c(unname(status_color),
+                  unname(review_color[c("not_flagged", "review_5pct", "review_1pct")]))
       ),
-      reference_lines = new_reference_lines(
-        axis = c("h", "v", "h", "v"),
-        value = c(lower, lower, upper, upper),
-        label = rep(c("Active MnSq screening band"), 4),
-        linetype = rep("dashed", 4),
-        role = rep("threshold", 4)
-      ),
+      reference_lines = reference_lines,
       preset = style$name
     )
   )
@@ -712,7 +884,8 @@ plot_dif_summary <- function(x,
 #' Manuscript-ready four-panel composite (Wright + severity + threshold + summary)
 #'
 #' Builds a 2x2 publication composite for an `mfrm_fit`, suitable for a
-#' "Figure 1" of a Rasch-MFRM analysis. Panels: (1) Wright map, (2)
+#' "Figure 1" in the Rasch-family `RSM`/`PCM` manuscript route. Panels: (1)
+#' Wright map, (2)
 #' rater severity profile with CI whiskers, (3) threshold ladder, (4)
 #' a one-line reliability / separation summary block. Each panel reuses
 #' the standalone plot helper so the visual language is consistent
@@ -728,8 +901,8 @@ plot_dif_summary <- function(x,
 #'   `graphics::layout()`.
 #'
 #' @return Invisibly, an `mfrm_plot_data` object whose `data` slot
-#'   bundles the four panel payloads under `wright`, `severity`,
-#'   `threshold`, `summary`.
+#'   bundles the four panel data objects under `wright`, `severity`,
+#'   `threshold`, and `summary`.
 #'
 #' @section Interpreting output:
 #' Designed for a single-figure Methods or Results overview. The
@@ -739,9 +912,7 @@ plot_dif_summary <- function(x,
 #'
 #' @seealso [plot.mfrm_fit()] (`type = "wright"`),
 #'   [plot_rater_severity_profile()], [plot_threshold_ladder()],
-#'   [build_apa_outputs()], [visual_reporting_template()],
-#'   [reporting_checklist()], [mfrmr_reporting_and_apa],
-#'   [mfrmr_visual_diagnostics].
+#'   [build_apa_outputs()].
 #'
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
@@ -773,28 +944,46 @@ plot_apa_figure_one <- function(fit,
   threshold <- plot_threshold_ladder(fit, draw = FALSE)
   summary_lines <- character(0)
   s <- fit$summary
+  first_summary_value <- function(tbl, candidates, fallback = NA) {
+    if (!is.data.frame(tbl) || nrow(tbl) < 1L) {
+      return(fallback)
+    }
+    for (nm in candidates) {
+      if (nm %in% names(tbl)) {
+        val <- tbl[[nm]][1]
+        if (length(val) == 1L && !is.null(val)) {
+          return(val)
+        }
+      }
+    }
+    fallback
+  }
   if (is.data.frame(s) && nrow(s) >= 1L) {
-    n_obs <- if ("N_Obs" %in% names(s)) {
-      s$N_Obs[1] %||% NA
-    } else {
-      nrow(fit$prep$data %||% data.frame())
-    }
-    n_person <- if ("N_Person" %in% names(s)) {
-      s$N_Person[1] %||% NA
-    } else {
-      nrow(fit$facets$person %||% data.frame())
-    }
+    n_obs <- first_summary_value(
+      s,
+      c("N_Obs", "N", "Observations", "TotalObservations"),
+      fallback = fit$prep$n_obs %||% NA_integer_
+    )
+    n_person <- first_summary_value(
+      s,
+      c("N_Person", "Persons", "NPersons", "PersonN"),
+      fallback = fit$prep$n_person %||%
+        if (!is.null(fit$facets$person)) nrow(fit$facets$person) else NA_integer_
+    )
+    loglik <- suppressWarnings(as.numeric(first_summary_value(s, "LogLik", NA_real_)))
+    aic <- suppressWarnings(as.numeric(first_summary_value(s, "AIC", NA_real_)))
+    bic <- suppressWarnings(as.numeric(first_summary_value(s, "BIC", NA_real_)))
     summary_lines <- c(
       sprintf("Model: %s | Method: %s",
-              as.character(s$Model[1] %||% NA_character_),
-              as.character(s$Method[1] %||% NA_character_)),
+              as.character(first_summary_value(s, "Model", NA_character_)),
+              as.character(first_summary_value(s, "Method", NA_character_))),
       sprintf("N obs = %s | Persons = %s",
               format(n_obs, big.mark = ","),
               format(n_person, big.mark = ",")),
       sprintf("LogLik = %.2f | AIC = %.2f | BIC = %.2f",
-              s$LogLik[1] %||% NA_real_,
-              s$AIC[1] %||% NA_real_,
-              s$BIC[1] %||% NA_real_)
+              loglik,
+              aic,
+              bic)
     )
   }
   rel <- diagnostics$reliability

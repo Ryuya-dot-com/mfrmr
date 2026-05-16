@@ -25,7 +25,7 @@ A list of class \code{mfrm_facet_nesting} with:
 and \code{Direction}.
 \item \code{summary}: a one-line summary table with facet counts and whether
 any non-crossed structure was detected.
-\item \code{facets}: the facet vector that was audited.
+\item \code{facets}: the facet vector that was reviewed.
 }
 }
 \description{
@@ -37,7 +37,7 @@ An index near 1 means that knowing the level of \code{A} essentially
 determines the level of \code{B} (A is nested in B).
 }
 \details{
-This is a pure descriptive audit of the observed design. It does not
+This is a pure descriptive review of the observed design. It does not
 affect estimation; fit_mfrm() continues to treat all facets as fixed
 effects.
 }
@@ -108,7 +108,7 @@ Brigham Young University). \url{https://scholarsarchive.byu.edu/etd/6689/}
 Linacre, J. M. (1989). \emph{Many-facet Rasch measurement}. MESA Press.
 }
 \seealso{
-\code{\link[=facet_small_sample_audit]{facet_small_sample_audit()}},
+\code{\link[=facet_small_sample_review]{facet_small_sample_review()}},
 \code{\link[=analyze_hierarchical_structure]{analyze_hierarchical_structure()}}, \code{\link[=compute_facet_icc]{compute_facet_icc()}},
 \code{\link[=compute_facet_design_effect]{compute_facet_design_effect()}}, \code{\link[=fit_mfrm]{fit_mfrm()}} (see "Fixed effects
 assumption" in its details).

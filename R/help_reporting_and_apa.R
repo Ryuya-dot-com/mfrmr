@@ -4,23 +4,20 @@
 #' Package-native guide to moving from fitted model objects to
 #' manuscript-draft text, tables, notes, and revision checklists in `mfrmr`.
 #'
-#' This guide applies fully to diagnostics-based `RSM` / `PCM` workflows.
-#' First-release `GPCM` fits support [reporting_checklist()],
-#' [precision_audit_report()], [build_visual_summaries()],
-#' [run_qc_pipeline()], direct curve/graph and residual table helpers, and
-#' caveated [build_apa_outputs()] plus package-native export/replay bundles.
-#' Use [gpcm_capability_matrix()] when you need the formal boundary for the
-#' current `GPCM` reporting path.
+#' This guide currently applies fully to diagnostics-based `RSM` / `PCM`
+#' workflows. First-release `GPCM` fits now support [reporting_checklist()],
+#' [precision_review_report()], and the direct curve/graph and residual table
+#' helpers, but the narrative APA writer still requires the broader reporting
+#' stack used for `RSM` / `PCM`. Use [gpcm_capability_matrix()] when you need
+#' the formal boundary for the current `GPCM` reporting path.
 #'
-#' Bounded `GPCM` APA/export outputs are manuscript and reproducibility
-#' scaffolds, not FACETS/Rasch score-side compatibility evidence. Keep the
-#' returned caveats with any fair-average, bias, or conditional-SE language.
+#' In particular, bounded `GPCM` currently stops before
+#' [build_apa_outputs()], [build_visual_summaries()], and
+#' [run_qc_pipeline()]. For that branch, use [reporting_checklist()],
+#' [precision_review_report()], and the direct table/plot helpers as the
+#' package-supported reporting route.
 #'
 #' @section Start with the reporting question:
-#' This page is for manuscript assembly: prose, caveats, notes/captions, and
-#' readiness review. Use [mfrmr_reports_and_tables] when the task is choosing
-#' a specific table/report helper or appendix export format.
-#'
 #' - "Which parts of this run are draft-complete, and with what caveats?"
 #'   Use [reporting_checklist()].
 #' - "How should I phrase the model, fit, and precision sections?"
@@ -30,7 +27,7 @@
 #'   [apa_table()], and
 #'   [facet_statistics_report()].
 #' - "How do I explain model-based vs exploratory precision?"
-#'   Use [precision_audit_report()] and `summary(diagnose_mfrm(...))`.
+#'   Use [precision_review_report()] and `summary(diagnose_mfrm(...))`.
 #' - "Which caveats need to appear in the write-up?"
 #'   Use [reporting_checklist()] first, then [build_apa_outputs()].
 #' - "How should I start figure captions or visual-results wording?"
@@ -41,7 +38,7 @@
 #' @section Recommended reporting route:
 #' 1. Fit with [fit_mfrm()].
 #' 2. Build diagnostics with [diagnose_mfrm()].
-#' 3. Review precision strength with [precision_audit_report()] when
+#' 3. Review precision strength with [precision_review_report()] when
 #'    inferential language matters.
 #' 4. Run [reporting_checklist()] to identify missing sections, caveats, and
 #'    next actions. Use the `"Visual Displays"` rows as the figure-routing
@@ -49,9 +46,10 @@
 #' 5. When strict marginal rows are available, follow up with
 #'    [plot_marginal_fit()] and [plot_marginal_pairwise()] before finalizing
 #'    the narrative around local misfit.
-#' 6. Create manuscript-draft prose and metadata with [build_apa_outputs()].
-#'    For bounded `GPCM`, retain the returned `support_status` and caveat and
-#'    keep fair-average/bias language at the screening tier.
+#' 6. For `RSM` / `PCM`, create manuscript-draft prose and metadata with
+#'    [build_apa_outputs()]. For bounded `GPCM`, stop after the checklist /
+#'    precision / direct-table route while the broader narrative and QC stack
+#'    remains outside scope.
 #' 7. Convert summary outputs to reusable table bundles with
 #'    [build_summary_table_bundle()], review the bundle with `summary()` /
 #'    `plot()`, then convert specific components to handoff tables with
@@ -77,12 +75,12 @@
 #'   full fit-based export bundle.}
 #'   \item{[apa_table()]}{Produces reproducible base-R tables with APA-oriented
 #'   labels, notes, and captions.}
-#'   \item{[precision_audit_report()]}{Summarizes whether precision claims are
+#'   \item{[precision_review_report()]}{Summarizes whether precision claims are
 #'   model-based, hybrid, or exploratory.}
 #'   \item{[facet_statistics_report()]}{Provides facet-level summaries that
 #'   often feed result tables and appendix material.}
 #'   \item{[build_visual_summaries()]}{Prepares publication-oriented figure
-#'   payloads that can be cited from the report text.}
+#'   data that can be cited from the report text.}
 #'   \item{[visual_reporting_template()]}{Provides conservative figure
 #'   placement, caption-starter, results-wording, and overclaim-avoidance
 #'   guidance for public visual helpers.}
@@ -91,12 +89,6 @@
 #' @section Practical reporting rules:
 #' - Treat [reporting_checklist()] as the gap finder and
 #'   [build_apa_outputs()] as the writing engine.
-#' - Copy `apa$report_text` (or print `apa` interactively) for draft
-#'   Method / Results prose; use `summary(apa)` only as a QA/completeness
-#'   check before handoff.
-#' - Use `apa$section_map` for section-level editing and
-#'   `apa$table_figure_notes` / `apa$table_figure_captions` for appendix
-#'   notes and captions.
 #' - Use the checklist's `"Visual Displays"` rows to decide whether the next
 #'   follow-up should be [plot_qc_dashboard()], [plot_marginal_fit()],
 #'   [plot_residual_pca()], [plot_bias_interaction()], or another public plot.
@@ -112,34 +104,33 @@
 #'   drafting-readiness flag, not as a substitute for methodological review.
 #' - Rebuild APA outputs after major model changes instead of editing old text
 #'   by hand.
-#' - For bounded `GPCM`, retain the helper caveats in manuscript prose and
-#'   export bundles; APA, visual-summary, QC, and package-native export/replay
-#'   routes are available with screening-tier limits.
+#' - For bounded `GPCM`, keep reporting on the direct table/plot side and do
+#'   not treat blocked narrative/QC helpers as temporary omissions.
 #'
 #' @section Typical workflow:
 #' - Manuscript-first route:
 #'   [fit_mfrm()] -> [diagnose_mfrm()] -> [reporting_checklist()] ->
 #'   [build_apa_outputs()] -> [build_summary_table_bundle()] -> `summary()` /
 #'   `plot()` -> [apa_table()], [export_summary_appendix()], or
-#'   [export_mfrm_bundle()](include = c("apa", "summary_tables", "html")).
+#'   [export_mfrm_bundle()](include = c("summary_tables", "html")).
 #'   For `RSM` / `PCM` final reports, prefer `method = "MML"` and
 #'   `diagnostic_mode = "both"` in the diagnostics step.
-#'   For bounded `GPCM`, retain the caveats from [build_apa_outputs()],
-#'   [build_mfrm_manifest()], [build_mfrm_replay_script()], and
-#'   [export_mfrm_bundle()], and avoid FACETS/Rasch score-side invariance
-#'   language.
+#'   For bounded `GPCM`, stop before the fit-based export family and stay on
+#'   the direct table/plot route instead of calling
+#'   [build_apa_outputs()], [build_visual_summaries()], [run_qc_pipeline()],
+#'   [build_mfrm_manifest()], [build_mfrm_replay_script()], or
+#'   [export_mfrm_bundle()].
 #' - Appendix-first route:
-#'   [facet_statistics_report()] -> [apa_table()] plus
-#'   [build_visual_summaries()] and [build_apa_outputs()] as parallel
-#'   products from the same `fit` / `diagnostics` objects.
+#'   [facet_statistics_report()] -> [apa_table()] ->
+#'   [build_visual_summaries()] -> [build_apa_outputs()].
 #' - Precision-sensitive route:
-#'   [diagnose_mfrm()] -> [precision_audit_report()] ->
+#'   [diagnose_mfrm()] -> [precision_review_report()] ->
 #'   [reporting_checklist()] -> [build_apa_outputs()].
 #' - bounded `GPCM` route:
-#'   [diagnose_mfrm()] -> [precision_audit_report()] ->
-#'   [reporting_checklist()] -> [build_visual_summaries()] /
-#'   [run_qc_pipeline()] -> [build_apa_outputs()] ->
-#'   [export_mfrm_bundle()], keeping all GPCM caveats in downstream prose.
+#'   [diagnose_mfrm()] -> [precision_review_report()] ->
+#'   [reporting_checklist()] -> direct residual/category/information helpers,
+#'   while [build_apa_outputs()], [build_visual_summaries()], and
+#'   [run_qc_pipeline()] remain outside the current validated boundary.
 #'
 #' @section Companion guides:
 #' - For report/table selection, see [mfrmr_reports_and_tables].
@@ -172,8 +163,6 @@
 #' )
 #'
 #' apa <- build_apa_outputs(fit, diagnostics = diag)
-#' summary(apa)
-#' apa
 #' apa$section_map[, c("SectionId", "Available")]
 #'
 #' tbl <- apa_table(fit, which = "summary")

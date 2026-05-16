@@ -17,15 +17,25 @@ knitr::opts_chunk$set(
 ```
 
 This vignette walks Facets users through the equivalent `mfrmr` workflow:
-preparing data, fitting a many-facet Rasch model with Facets-compatible
-defaults, generating the diagnostic and reporting tables that the canonical
-Facets output stack provides, and verifying numeric parity between the two
-systems.
+preparing data, fitting an `RSM`/`PCM` many-facet Rasch-family model with
+Facets-compatible defaults, generating the diagnostic and reporting tables that
+the canonical Facets output stack provides, and reviewing the output-contract
+boundary between the two systems. Bounded `GPCM` can be fit in `mfrmr`, but its slope-aware
+score semantics are intentionally outside the score-side Facets output-contract
+route.
 
 ## Mental model
 
 The two stacks share the same psychometric framework but differ in
 operating model.
+
+Before treating a legacy workflow as covered, inspect the public coverage
+boundary:
+
+```r
+facets_feature_coverage()
+facets_feature_coverage("not_implemented")
+```
 
 | Concept | Facets (Linacre 2026) | mfrmr |
 |---|---|---|
@@ -35,6 +45,7 @@ operating model.
 | Output | Tables 0-30 plus graphic files | Returned R objects with `summary()` and `plot()` methods |
 | Anchoring | `D=`, `A=` fields in the specification | `anchors` and `group_anchors` arguments to `fit_mfrm()` |
 | Bias / interaction | Table 14 | `estimate_bias()` and `bias_interaction_report()` |
+| Wright map / variable map | Graphic variable-map output | `plot(fit, type = "wright")` and `plot_wright_unified()` |
 | Fair average | Table 7 fair-M average | `fair_average_table()` |
 | Reproducibility | Specification file is the manifest | `build_mfrm_manifest()` plus `build_mfrm_replay_script()` |
 
@@ -135,7 +146,7 @@ anchors <- data.frame(
 fit <- fit_mfrm(..., anchors = anchors)
 ```
 
-`audit_mfrm_anchors()` validates and reports on the anchor block before the
+`review_mfrm_anchors()` validates and reports on the anchor block before the
 fit runs, surfacing connectivity, overlap, and minimum-sample issues.
 
 ### Bias and interaction
@@ -151,6 +162,43 @@ summary(bias)
 ```
 
 `estimate_all_bias()` enumerates every non-person facet pair in one call.
+
+### Wright map / variable map
+
+For a shared-logit visual display of persons, facet levels, and step
+thresholds, use the Wright map route:
+
+```r
+plot(fit, type = "wright", preset = "publication", show_ci = TRUE)
+```
+
+`plot_wright_unified()` is the corresponding explicit helper when the Wright
+map is the main figure rather than one panel in a larger visual workflow.
+Use `draw = FALSE` or `plot_data(fit, type = "wright")` when you need the
+underlying coordinates for a custom `ggplot2`, base-R, or Quarto graphic.
+
+### Fit df and ZSTD review
+
+Facets users often compare Infit/Outfit MnSq together with ZStd columns.
+In `mfrmr`, treat MnSq as the primary fit statistic and use the df/ZSTD
+columns to explain how the same MnSq values were standardized. The direct
+review path is:
+
+```r
+diag <- diagnose_mfrm(fit, residual_pca = "none", fit_df_method = "both")
+fm <- fit_measures_table(fit, diagnostics = diag,
+                         facet = "Rater", fit_df_method = "both")
+
+fm$facets_table
+fm$df_sensitive
+plot(fm, type = "df_sensitivity")
+```
+
+`df_sensitivity` reports the engine-vs-FACETS-style df comparison row by row;
+`df_sensitive` keeps only rows where the df convention changes the |ZSTD| flag
+or materially changes the ZSTD interpretation. The same status taxonomy is
+used by `facets_fit_review()`, so a table-oriented review and an external
+FACETS comparison use the same language.
 
 ### Group anchoring and DFF
 
@@ -171,28 +219,61 @@ dff <- analyze_dff(fit_g, diag, facet = "Criterion",
                    group = "FirstLanguage", method = "refit")
 ```
 
-## Verifying numeric parity
+## Reviewing output contracts and fit tables
 
-When migrating an existing study, `facets_parity_report()` compares
-the parameter estimates and fit statistics produced by the two systems:
+When migrating an existing study, `facets_output_contract_review()` checks
+whether the package-generated report components satisfy the FACETS-style
+output contract encoded in the package:
 
 ```r
-parity <- facets_parity_report(
+contract_review <- facets_output_contract_review(
   fit,
-  facets_estimates = facets_table_csv,
-  tolerance = 0.05
+  diagnostics = diag,
+  branch = "facets"
 )
-summary(parity)
+summary(contract_review)
+contract_review$missing_preview
+contract_review$metric_checks
 ```
 
-The resulting report lists per-element differences and flags rows that
-exceed the supplied tolerance. Use it as the sign-off step in a migration:
-once `parity$flagged` is empty under a tolerance you accept, the two stacks
-agree on the substantive output.
+The resulting object reviews column coverage and package-native metric checks.
+It is not a claim that `mfrmr` has reproduced FACETS estimates numerically.
+For external numerical comparison, use an exported FACETS fit table and
+`facets_fit_review()`.
+
+If you already have a FACETS fit table on disk, read it first and then run
+the fit review. This does not run FACETS; it consumes an exported or otherwise
+harmonized table.
+
+```r
+facets_fit <- read_facets_fit_table(
+  "score.2.txt",
+  facet_map = c("1" = "Person", "2" = "Rater", "3" = "Criterion")
+)
+review <- facets_fit_review(
+  fit,
+  diagnostics = diag,
+  facets_fit = facets_fit,
+  external_zstd_tolerance = 0.05
+)
+
+review$df_sensitivity
+review$df_sensitive
+review$external_table_quality
+review$external_comparison
+plot(review, type = "df_sensitivity")
+```
+
+Use `external_comparison` for the supplied FACETS table and `df_sensitivity`
+for the engine-vs-FACETS-style df convention check. This separation keeps
+external numerical differences distinct from ZSTD differences caused by df
+standardization. `external_table_quality` is the first place to look if the
+FACETS export only contains ZStd and T.Count columns, or if duplicate
+`Facet` x `Level` rows were supplied.
 
 ## Producing Facets-style output files
 
-For audit trails or downstream tools that expect Facets output files,
+For traceability or downstream tools that expect Facets output files,
 `facets_output_file_bundle()` writes a parallel set of fixed-width or CSV
 exports:
 
@@ -215,8 +296,20 @@ binding contract.
 After a Facets-equivalent fit is in hand, the canonical mfrmr reporting
 route extends the analysis with:
 
+- `review_mfrm_anchors()` before anchored fitting, and
+  `detect_anchor_drift()` / `plot_anchor_drift()` when common elements define
+  a cross-form or cross-wave link.
 - `diagnose_mfrm(diagnostic_mode = "both")` for the strict marginal screen
   alongside the residual stack.
+- `rating_scale_table()`, `category_structure_report()`, and
+  `category_curves_report()` for category-functioning evidence.
+- `fair_average_table()` when FACETS Table 12-style fair-average review is
+  needed.
+- `plot(fit, type = "wright")` or `plot_wright_unified()` for a variable-map
+  view of targeting and threshold placement.
+- `estimate_bias()`, `bias_interaction_report()`, and
+  `bias_pairwise_report()` when FACETS Table 14-style local interaction
+  screening is substantively relevant.
 - `reporting_checklist()` for a manuscript-readiness summary.
 - `build_apa_outputs()` for Method and Results paragraphs and APA tables.
 - `build_mfrm_manifest()` and `build_mfrm_replay_script()` for the

@@ -53,11 +53,6 @@ test_that("facet_quality_dashboard constructs a dashboard bundle with inferred f
   expect_true(all(c("summary", "detail", "flagged", "settings") %in% names(facet_dashboard_fixture$dashboard_single)))
   expect_true(is.data.frame(facet_dashboard_fixture$dashboard_single$overview))
   expect_true(is.data.frame(facet_dashboard_fixture$dashboard_single$summary))
-  expect_true("MisfitDirection" %in% names(facet_dashboard_fixture$dashboard_single$detail))
-  expect_true(all(na.omit(facet_dashboard_fixture$dashboard_single$detail$MisfitDirection) %in%
-                    c("in_band", "underfit", "overfit", "mixed")))
-  expect_true(all(c("MisfitUnderfit", "MisfitOverfit", "MisfitMixed") %in%
-                    names(facet_dashboard_fixture$dashboard_single$summary)))
 })
 
 test_that("facet_quality_dashboard handles single and named-list bias bundles", {
@@ -126,24 +121,4 @@ test_that("plot_facet_quality_dashboard returns mfrm_plot_data for severity and 
   expect_identical(flags_plot$data$plot, "flags")
   expect_true(is.data.frame(severity_plot$data$table))
   expect_true(is.data.frame(flags_plot$data$table))
-})
-
-test_that("plot_facet_quality_dashboard inherits active misfit band through dashboard", {
-  old <- options(mfrmr.misfit_lower = 0.7, mfrmr.misfit_upper = 1.3)
-  on.exit(options(old), add = TRUE)
-
-  plot_obj <- plot_facet_quality_dashboard(
-    facet_dashboard_fixture$fit,
-    diagnostics = facet_dashboard_fixture$diagnostics,
-    plot_type = "severity",
-    draw = FALSE
-  )
-  settings <- as.data.frame(plot_obj$data$settings, stringsAsFactors = FALSE)
-  lower <- as.numeric(settings$Value[settings$Setting == "misfit_lower"])
-  upper <- as.numeric(settings$Value[settings$Setting == "misfit_warn"])
-
-  expect_equal(lower, 0.7)
-  expect_equal(upper, 1.3)
-  expect_equal(plot_obj$data$thresholds$misfit_lower, 0.7)
-  expect_equal(plot_obj$data$thresholds$misfit_upper, 1.3)
 })

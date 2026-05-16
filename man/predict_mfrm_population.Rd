@@ -121,11 +121,14 @@ person-level covariates and responses, refits the MML population-model
 branch, and summarizes the resulting facet-level behavior. This is distinct
 from the fitted-model posterior scoring provided by \code{\link[=predict_mfrm_units]{predict_mfrm_units()}}.
 
-The bounded \code{GPCM} branch is supported here with the same caveats as
-\code{\link[=evaluate_mfrm_design]{evaluate_mfrm_design()}}: forecasts are scenario-level operating
-characteristics under an explicit slope-aware generator, and the planning
-layer still targets the role-based person x rater-like x criterion-like
-design contract rather than a fully arbitrary-facet planner.
+This scenario-level forecast helper does not yet support bounded \code{GPCM}.
+Direct bounded-\code{GPCM} fitting, fixed-calibration scoring, information,
+diagnostics, direct curve/report helpers, simulation-spec generation, data
+generation, and parameter-recovery checks are available elsewhere. In the
+present package state, scenario-level simulation/planning remains validated
+only for the ordered Rasch-family \code{RSM} / \code{PCM} workflow. More broadly, the
+current planning layer targets the role-based person x rater-like x
+criterion-like design contract rather than a fully arbitrary-facet planner.
 }
 \section{Interpreting output}{
 

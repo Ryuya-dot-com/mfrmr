@@ -1,4 +1,4 @@
-#' Simulate long-format many-facet Rasch data for design studies
+#' Simulate long-format ordered many-facet data for design studies
 #'
 #' @param n_person Number of persons/respondents.
 #' @param n_rater Number of rater facet levels.
@@ -33,14 +33,18 @@
 #'   vary across levels. Currently `"Criterion"` and `"Rater"` are supported.
 #' @param slope_facet Slope facet used when `model = "GPCM"`. The current
 #'   bounded `GPCM` branch requires `slope_facet == step_facet`.
-#' @param thresholds Optional threshold specification. Use either a numeric
-#'   vector of common thresholds or a data frame with columns `StepFacet`,
-#'   `Step`/`StepIndex`, and `Estimate`.
+#' @param thresholds Optional threshold specification. Use a numeric vector of
+#'   common thresholds; a named list such as `list(C01 = c(-1, 0, 1))`; a
+#'   numeric matrix with one row per `StepFacet` and one column per step; or a
+#'   long data frame with columns `StepFacet`, `Step`/`StepIndex`, and
+#'   `Estimate`.
 #' @param slopes Optional slope specification used when `model = "GPCM"`.
 #'   Use either a numeric vector aligned to the generated slope-facet levels or
-#'   a data frame with columns `SlopeFacet` and `Estimate`. When omitted,
-#'   slopes default to 1 for every slope-facet level, giving an exact `PCM`
-#'   reduction.
+#'   a data frame with columns `SlopeFacet` and `Estimate`. Supplied slopes are
+#'   treated as relative discriminations and normalized to the package's
+#'   geometric-mean-one identification convention on the log scale. When
+#'   omitted, slopes default to 1 for every slope-facet level, giving an exact
+#'   `PCM` reduction.
 #' @param assignment Assignment design. `"crossed"` means every person sees
 #'   every rater; `"rotating"` uses a balanced rotating subset; `"resampled"`
 #'   reuses person-level rater-assignment profiles stored in `sim_spec`;
@@ -59,7 +63,8 @@
 #'   refit that population model later.
 #'
 #' @details
-#' This function generates synthetic MFRM data from the Rasch model.
+#' This function generates synthetic ordered many-facet data under `RSM`,
+#' `PCM`, or the package's bounded `GPCM` branch.
 #' The data-generating process is:
 #'
 #' 1. Draw person abilities: \eqn{\theta_n \sim N(0, \texttt{theta\_sd}^2)}
@@ -96,15 +101,16 @@
 #' - if `thresholds = NULL`, common equally spaced thresholds are generated
 #'   from `step_span`
 #' - if `thresholds` is a numeric vector, it is used as one common threshold set
-#' - if `thresholds` is a data frame, threshold values may vary by `StepFacet`
-#'   (currently `Criterion` or `Rater`)
+#' - if `thresholds` is a named list, numeric matrix, or data frame, threshold
+#'   values may vary by `StepFacet` (currently `Criterion` or `Rater`)
 #'
 #' For bounded `GPCM`, the generator now requires an explicit slope
 #' contract in parallel with the threshold table. The current public branch
-#' keeps `slope_facet == step_facet` and uses the internal `category_prob_gpcm()`
-#' helper for
-#' response sampling. Design-planning and forecasting helpers reuse this
-#' slope-aware contract as caveated simulation/refit screening routes.
+#' keeps `slope_facet == step_facet`, normalizes supplied slopes to the same
+#' geometric-mean-one log-slope identification used by [fit_mfrm()], and uses
+#' the internal `category_prob_gpcm()` helper for response sampling. Broader
+#' design-planning helpers remain restricted until that slope-aware contract is
+#' generalized beyond direct data generation.
 #'
 #' Assignment handling is also explicit:
 #' - `"crossed"` uses the full person x rater x criterion design
@@ -636,6 +642,29 @@ simulate_mfrm_data <- function(n_person = 50,
   })
 }
 
+simulation_fit_score_support <- function(sim, fallback_score_levels = NULL) {
+  cfg <- attr(sim, "mfrm_simulation_spec")
+  score_levels <- suppressWarnings(as.integer(
+    (cfg$score_levels %||% fallback_score_levels %||% NA_integer_)[1]
+  ))
+  if (!is.finite(score_levels) || score_levels < 2L) {
+    return(list())
+  }
+  list(rating_min = 1L, rating_max = score_levels)
+}
+
+simulation_add_fit_score_support <- function(fit_args, sim,
+                                             fallback_score_levels = NULL) {
+  support <- simulation_fit_score_support(
+    sim = sim,
+    fallback_score_levels = fallback_score_levels
+  )
+  if (length(support) > 0L) {
+    fit_args[names(support)] <- support
+  }
+  fit_args
+}
+
 simulation_center_numeric <- function(x) {
   x <- suppressWarnings(as.numeric(x))
   x <- x[is.finite(x)]
@@ -883,7 +912,7 @@ simulation_threshold_summary <- function(sim_spec) {
 }
 
 simulation_resolve_fit_step_facet <- function(model, step_facet, generator_step_facet) {
-  if (!model %in% c("PCM", "GPCM")) {
+  if (!identical(model, "PCM")) {
     return(NA_character_)
   }
   explicit <- as.character(step_facet[1] %||% NA_character_)
@@ -908,7 +937,7 @@ simulation_recovery_contract <- function(generator_model,
       basis = "generator_fit_model_mismatch"
     ))
   }
-  if (as.character(fitted_model) %in% c("PCM", "GPCM")) {
+  if (identical(as.character(fitted_model), "PCM")) {
     same_step_facet <- identical(
       as.character(generator_step_facet %||% NA_character_),
       as.character(fitted_step_facet %||% NA_character_)
@@ -1149,11 +1178,6 @@ design_eval_match_metric <- function(metric) {
     infit = "MeanInfit",
     outfit = "MeanOutfit",
     misfitrate = "MeanMisfitRate",
-    mnsqmisfitrate = "MeanMnSqMisfitRate",
-    underfitrate = "MeanUnderfitRate",
-    overfitrate = "MeanOverfitRate",
-    mixedmisfitrate = "MeanMixedMisfitRate",
-    inbandrate = "MeanInBandRate",
     severityrmse = "MeanSeverityRMSE",
     severitybias = "MeanSeverityBias",
     convergencerate = "ConvergenceRate",
@@ -1178,12 +1202,6 @@ design_eval_build_notes <- function(summary_tbl) {
   if (any(grepl("^Mcse", names(summary_tbl)))) {
     notes <- c(notes, "MCSE columns summarize finite-replication uncertainty around the reported means and rates.")
   }
-  if (all(c("MeanUnderfitRate", "MeanOverfitRate") %in% names(summary_tbl))) {
-    notes <- c(
-      notes,
-      "Directional misfit rates split MnSq-band flags into underfit (above the upper band), overfit (below the lower band), and mixed patterns; `MeanMisfitRate` remains the legacy |ZSTD| > 2 screening rate."
-    )
-  }
   if ("RecoveryComparableRate" %in% names(summary_tbl) &&
       any(summary_tbl$RecoveryComparableRate < 1, na.rm = TRUE)) {
     notes <- c(
@@ -1197,10 +1215,6 @@ design_eval_build_notes <- function(summary_tbl) {
 design_eval_summarize_results <- function(results, rep_overview, design_variable_aliases = NULL) {
   results_tbl <- tibble::as_tibble(results)
   rep_tbl <- tibble::as_tibble(rep_overview)
-  for (nm in c("MnSqMisfitRate", "UnderfitRate", "OverfitRate",
-               "MixedMisfitRate", "InBandRate", "MisfitClassified")) {
-    if (!nm %in% names(results_tbl)) results_tbl[[nm]] <- NA_real_
-  }
   design_descriptor <- simulation_object_design_descriptor(list(results = results_tbl, rep_overview = rep_tbl, design_variable_aliases = design_variable_aliases))
   design_vars <- simulation_design_canonical_variables(design_descriptor)
   grouping_vars <- c("design_id", "Facet", design_vars)
@@ -1225,17 +1239,6 @@ design_eval_summarize_results <- function(results, rep_overview, design_variable
         McseOutfit = simulation_mcse_mean(.data$MeanOutfit),
         MeanMisfitRate = mean(.data$MisfitRate, na.rm = TRUE),
         McseMisfitRate = simulation_mcse_mean(.data$MisfitRate),
-        MeanMnSqMisfitRate = mean(.data$MnSqMisfitRate, na.rm = TRUE),
-        McseMnSqMisfitRate = simulation_mcse_mean(.data$MnSqMisfitRate),
-        MeanUnderfitRate = mean(.data$UnderfitRate, na.rm = TRUE),
-        McseUnderfitRate = simulation_mcse_mean(.data$UnderfitRate),
-        MeanOverfitRate = mean(.data$OverfitRate, na.rm = TRUE),
-        McseOverfitRate = simulation_mcse_mean(.data$OverfitRate),
-        MeanMixedMisfitRate = mean(.data$MixedMisfitRate, na.rm = TRUE),
-        McseMixedMisfitRate = simulation_mcse_mean(.data$MixedMisfitRate),
-        MeanInBandRate = mean(.data$InBandRate, na.rm = TRUE),
-        McseInBandRate = simulation_mcse_mean(.data$InBandRate),
-        MeanMisfitClassified = mean(.data$MisfitClassified, na.rm = TRUE),
         MeanSeverityRMSE = mean(.data$SeverityRMSE, na.rm = TRUE),
         McseSeverityRMSE = simulation_mcse_mean(.data$SeverityRMSE),
         MeanSeverityBias = mean(.data$SeverityBias, na.rm = TRUE),
@@ -1271,6 +1274,1906 @@ design_eval_summarize_results <- function(results, rep_overview, design_variable
   )
 }
 
+recovery_safe_mean <- function(x) {
+  x <- suppressWarnings(as.numeric(x))
+  x <- x[is.finite(x)]
+  if (length(x) == 0L) return(NA_real_)
+  mean(x)
+}
+
+recovery_safe_sd <- function(x) {
+  x <- suppressWarnings(as.numeric(x))
+  x <- x[is.finite(x)]
+  if (length(x) <= 1L) return(NA_real_)
+  stats::sd(x)
+}
+
+recovery_safe_cor <- function(x, y) {
+  x <- suppressWarnings(as.numeric(x))
+  y <- suppressWarnings(as.numeric(y))
+  ok <- is.finite(x) & is.finite(y)
+  sdx <- recovery_safe_sd(x[ok])
+  sdy <- recovery_safe_sd(y[ok])
+  if (sum(ok) <= 1L || !is.finite(sdx) || !is.finite(sdy) || sdx == 0 || sdy == 0) {
+    return(NA_real_)
+  }
+  suppressWarnings(stats::cor(x[ok], y[ok]))
+}
+
+recovery_mcse_rmse <- function(x) {
+  x <- suppressWarnings(as.numeric(x))
+  x <- x[is.finite(x)]
+  n <- length(x)
+  if (n <= 1L) return(NA_real_)
+  rmse <- sqrt(mean(x^2))
+  if (!is.finite(rmse) || rmse <= 0) return(NA_real_)
+  stats::sd(x^2) / (2 * rmse * sqrt(n))
+}
+
+recovery_get_se <- function(tbl) {
+  tbl <- as.data.frame(tbl, stringsAsFactors = FALSE)
+  candidates <- c("SE", "S.E.", "ModelSE", "Std.Error", "StdError")
+  hit <- candidates[candidates %in% names(tbl)][1]
+  if (is.na(hit)) return(rep(NA_real_, nrow(tbl)))
+  suppressWarnings(as.numeric(tbl[[hit]]))
+}
+
+recovery_normalize_step_table <- function(x) {
+  if (is.null(x)) {
+    return(data.frame(StepFacet = character(0), Step = character(0), Estimate = numeric(0)))
+  }
+  if (is.numeric(x)) {
+    return(data.frame(
+      StepFacet = "Common",
+      Step = paste0("Step_", seq_along(x)),
+      Estimate = as.numeric(x),
+      stringsAsFactors = FALSE
+    ))
+  }
+  x <- as.data.frame(x, stringsAsFactors = FALSE)
+  if (!"StepFacet" %in% names(x)) x$StepFacet <- "Common"
+  if (!"Step" %in% names(x)) {
+    if ("StepIndex" %in% names(x)) {
+      x$Step <- paste0("Step_", as.integer(x$StepIndex))
+    } else {
+      x$Step <- paste0("Step_", seq_len(nrow(x)))
+    }
+  }
+  if (!"Estimate" %in% names(x)) {
+    stop("Step recovery requires an `Estimate` column.", call. = FALSE)
+  }
+  data.frame(
+    StepFacet = as.character(x$StepFacet),
+    Step = as.character(x$Step),
+    Estimate = suppressWarnings(as.numeric(x$Estimate)),
+    stringsAsFactors = FALSE
+  )
+}
+
+recovery_expand_common_steps <- function(truth_steps, fit_steps) {
+  if (nrow(truth_steps) == 0L || nrow(fit_steps) == 0L) return(truth_steps)
+  if (!all(unique(as.character(truth_steps$StepFacet)) == "Common")) return(truth_steps)
+  fit_facets <- unique(as.character(fit_steps$StepFacet))
+  fit_facets <- fit_facets[!is.na(fit_facets) & nzchar(fit_facets)]
+  if (length(fit_facets) == 0L || identical(fit_facets, "Common")) return(truth_steps)
+  expanded <- lapply(fit_facets, function(step_facet) {
+    out <- truth_steps
+    out$StepFacet <- step_facet
+    out
+  })
+  dplyr::bind_rows(expanded)
+}
+
+recovery_new_rows <- function(rep,
+                              parameter_type,
+                              facet,
+                              level,
+                              subparameter,
+                              truth,
+                              estimate,
+                              se = NA_real_,
+                              raw_truth = truth,
+                              raw_estimate = estimate,
+                              comparison_scale = "logit",
+                              alignment_group = facet,
+                              align = TRUE,
+                              recovery_comparable = TRUE,
+                              recovery_basis = "truth_estimate_matched") {
+  n <- length(level)
+  recycle_field <- function(x) {
+    x <- as.character(x)
+    if (length(x) == n) x else rep(x[1] %||% NA_character_, n)
+  }
+  tibble::tibble(
+    rep = rep,
+    ParameterType = recycle_field(parameter_type),
+    Facet = recycle_field(facet),
+    Level = as.character(level),
+    Subparameter = as.character(subparameter),
+    Truth = suppressWarnings(as.numeric(truth)),
+    Estimate = suppressWarnings(as.numeric(estimate)),
+    SE = suppressWarnings(as.numeric(se)),
+    RawTruth = suppressWarnings(as.numeric(raw_truth)),
+    RawEstimate = suppressWarnings(as.numeric(raw_estimate)),
+    ComparisonScale = recycle_field(comparison_scale),
+    AlignmentGroup = recycle_field(alignment_group),
+    AlignWithinGroup = rep(isTRUE(align), n),
+    RecoveryComparable = rep(isTRUE(recovery_comparable), n),
+    RecoveryBasis = rep(as.character(recovery_basis), n)
+  )
+}
+
+recovery_rows_from_fit <- function(fit, truth, rep, include_person = TRUE) {
+  if (is.null(truth) || !is.list(truth)) return(tibble::tibble())
+  rows <- list()
+  k <- 0L
+
+  if (isTRUE(include_person) && !is.null(truth$person) && !is.null(fit$facets$person)) {
+    person_tbl <- as.data.frame(fit$facets$person, stringsAsFactors = FALSE)
+    if (all(c("Person", "Estimate") %in% names(person_tbl))) {
+      idx <- match(as.character(person_tbl$Person), names(truth$person))
+      ok <- is.finite(idx)
+      if (any(ok)) {
+        k <- k + 1L
+        rows[[k]] <- recovery_new_rows(
+          rep = rep,
+          parameter_type = "person",
+          facet = "Person",
+          level = person_tbl$Person[ok],
+          subparameter = "measure",
+          truth = as.numeric(truth$person[idx[ok]]),
+          estimate = suppressWarnings(as.numeric(person_tbl$Estimate[ok])),
+          se = recovery_get_se(person_tbl)[ok],
+          comparison_scale = "logit",
+          alignment_group = "Person",
+          align = TRUE
+        )
+      }
+    }
+  }
+
+  if (!is.null(truth$facets) && length(truth$facets) > 0L && !is.null(fit$facets$others)) {
+    other_tbl <- as.data.frame(fit$facets$others, stringsAsFactors = FALSE)
+    if (all(c("Facet", "Level", "Estimate") %in% names(other_tbl))) {
+      for (facet_name in names(truth$facets)) {
+        truth_vec <- truth$facets[[facet_name]]
+        facet_tbl <- other_tbl[as.character(other_tbl$Facet) == facet_name, , drop = FALSE]
+        if (nrow(facet_tbl) == 0L || is.null(names(truth_vec))) next
+        idx <- match(as.character(facet_tbl$Level), names(truth_vec))
+        ok <- is.finite(idx)
+        if (!any(ok)) next
+        k <- k + 1L
+        rows[[k]] <- recovery_new_rows(
+          rep = rep,
+          parameter_type = "facet",
+          facet = facet_name,
+          level = facet_tbl$Level[ok],
+          subparameter = "measure",
+          truth = as.numeric(truth_vec[idx[ok]]),
+          estimate = suppressWarnings(as.numeric(facet_tbl$Estimate[ok])),
+          se = recovery_get_se(facet_tbl)[ok],
+          comparison_scale = "logit",
+          alignment_group = facet_name,
+          align = TRUE
+        )
+      }
+    }
+  }
+
+  if (!is.null(truth$step_table) && !is.null(fit$steps)) {
+    truth_steps <- recovery_normalize_step_table(truth$step_table)
+    fit_steps <- recovery_normalize_step_table(fit$steps)
+    truth_steps <- recovery_expand_common_steps(truth_steps, fit_steps)
+    step_tbl <- merge(
+      truth_steps,
+      fit_steps,
+      by = c("StepFacet", "Step"),
+      suffixes = c(".Truth", ".Estimate"),
+      sort = FALSE
+    )
+    if (nrow(step_tbl) > 0L) {
+      k <- k + 1L
+      rows[[k]] <- recovery_new_rows(
+        rep = rep,
+        parameter_type = "step",
+        facet = as.character(step_tbl$StepFacet),
+        level = as.character(step_tbl$StepFacet),
+        subparameter = as.character(step_tbl$Step),
+        truth = suppressWarnings(as.numeric(step_tbl$Estimate.Truth)),
+        estimate = suppressWarnings(as.numeric(step_tbl$Estimate.Estimate)),
+        comparison_scale = "logit",
+        alignment_group = paste0("step:", step_tbl$StepFacet),
+        align = TRUE
+      )
+    }
+  }
+
+  if (!is.null(truth$slope_table) && !is.null(fit$slopes)) {
+    truth_slopes <- as.data.frame(truth$slope_table, stringsAsFactors = FALSE)
+    fit_slopes <- as.data.frame(fit$slopes, stringsAsFactors = FALSE)
+    if (all(c("SlopeFacet", "Estimate") %in% names(truth_slopes)) &&
+        all(c("SlopeFacet", "Estimate") %in% names(fit_slopes))) {
+      slope_tbl <- merge(
+        truth_slopes[, c("SlopeFacet", "Estimate"), drop = FALSE],
+        fit_slopes[, c("SlopeFacet", "Estimate"), drop = FALSE],
+        by = "SlopeFacet",
+        suffixes = c(".Truth", ".Estimate"),
+        sort = FALSE
+      )
+      slope_truth <- suppressWarnings(as.numeric(slope_tbl$Estimate.Truth))
+      slope_est <- suppressWarnings(as.numeric(slope_tbl$Estimate.Estimate))
+      ok <- is.finite(slope_truth) & slope_truth > 0 & is.finite(slope_est) & slope_est > 0
+      if (any(ok)) {
+        k <- k + 1L
+        rows[[k]] <- recovery_new_rows(
+          rep = rep,
+          parameter_type = "slope",
+          facet = "SlopeFacet",
+          level = as.character(slope_tbl$SlopeFacet[ok]),
+          subparameter = "log_slope",
+          truth = log(slope_truth[ok]),
+          estimate = log(slope_est[ok]),
+          raw_truth = slope_truth[ok],
+          raw_estimate = slope_est[ok],
+          comparison_scale = "log_slope",
+          alignment_group = "slope_identified",
+          align = FALSE,
+          recovery_basis = "geometric_mean_one_log_slope"
+        )
+      }
+    }
+  }
+
+  truth_pop <- truth$population
+  fit_pop <- fit$population
+  if (is.list(truth_pop) && is.list(fit_pop) && !is.null(truth_pop$coefficients) &&
+      !is.null(fit_pop$coefficients)) {
+    truth_coef <- truth_pop$coefficients
+    fit_coef <- fit_pop$coefficients
+    common_terms <- intersect(names(truth_coef), names(fit_coef))
+    if (length(common_terms) > 0L) {
+      k <- k + 1L
+      rows[[k]] <- recovery_new_rows(
+        rep = rep,
+        parameter_type = "population",
+        facet = "population",
+        level = common_terms,
+        subparameter = "coefficient",
+        truth = as.numeric(truth_coef[common_terms]),
+        estimate = as.numeric(fit_coef[common_terms]),
+        comparison_scale = "coefficient",
+        alignment_group = "population_coefficients",
+        align = FALSE
+      )
+    }
+    if (!is.null(truth_pop$sigma2) && !is.null(fit_pop$sigma2)) {
+      k <- k + 1L
+      rows[[k]] <- recovery_new_rows(
+        rep = rep,
+        parameter_type = "population",
+        facet = "population",
+        level = "sigma2",
+        subparameter = "variance",
+        truth = as.numeric(truth_pop$sigma2),
+        estimate = as.numeric(fit_pop$sigma2),
+        comparison_scale = "variance",
+        alignment_group = "population_variance",
+        align = FALSE
+      )
+    }
+  }
+
+  out <- dplyr::bind_rows(rows)
+  if (nrow(out) == 0L) return(out)
+  out |>
+    dplyr::group_by(.data$rep, .data$ParameterType, .data$Facet,
+                    .data$AlignmentGroup, .data$ComparisonScale) |>
+    dplyr::mutate(
+      ErrorRaw = .data$Estimate - .data$Truth,
+      AlignmentShift = if (dplyr::first(.data$AlignWithinGroup)) {
+        recovery_safe_mean(.data$ErrorRaw)
+      } else {
+        0
+      },
+      EstimateAligned = .data$Estimate - .data$AlignmentShift,
+      ErrorAligned = .data$EstimateAligned - .data$Truth,
+      Covered95 = dplyr::if_else(
+        is.finite(.data$SE) & .data$SE > 0,
+        .data$Truth >= .data$EstimateAligned - stats::qnorm(0.975) * .data$SE &
+          .data$Truth <= .data$EstimateAligned + stats::qnorm(0.975) * .data$SE,
+        NA
+      )
+    ) |>
+    dplyr::ungroup()
+}
+
+recovery_summarize_rows <- function(rows) {
+  rows <- tibble::as_tibble(rows)
+  if (nrow(rows) == 0L) return(tibble::tibble())
+  rows |>
+    dplyr::group_by(.data$ParameterType, .data$Facet, .data$ComparisonScale) |>
+    dplyr::summarise(
+      Rows = dplyr::n(),
+      Reps = dplyr::n_distinct(.data$rep),
+      ComparableRate = mean(.data$RecoveryComparable, na.rm = TRUE),
+      MeanTruth = recovery_safe_mean(.data$Truth),
+      MeanEstimate = recovery_safe_mean(.data$EstimateAligned),
+      Bias = recovery_safe_mean(.data$ErrorAligned),
+      McseBias = simulation_mcse_mean(.data$ErrorAligned),
+      RMSE = sqrt(recovery_safe_mean(.data$ErrorAligned^2)),
+      McseRMSE = recovery_mcse_rmse(.data$ErrorAligned),
+      MAE = recovery_safe_mean(abs(.data$ErrorAligned)),
+      RawBias = recovery_safe_mean(.data$ErrorRaw),
+      RawRMSE = sqrt(recovery_safe_mean(.data$ErrorRaw^2)),
+      Correlation = recovery_safe_cor(.data$EstimateAligned, .data$Truth),
+      MeanSE = recovery_safe_mean(.data$SE),
+      SEAvailableRate = mean(is.finite(.data$SE) & .data$SE > 0, na.rm = TRUE),
+      Coverage95 = if (all(is.na(.data$Covered95))) NA_real_ else mean(.data$Covered95, na.rm = TRUE),
+      RecoveryBasis = paste(sort(unique(as.character(.data$RecoveryBasis))), collapse = "; "),
+      .groups = "drop"
+    ) |>
+    dplyr::arrange(.data$ParameterType, .data$Facet, .data$ComparisonScale)
+}
+
+recovery_build_notes <- function(rep_overview, recovery_summary, model) {
+  notes <- character(0)
+  if (is.data.frame(rep_overview) && nrow(rep_overview) > 0L) {
+    if (any(!rep_overview$RunOK, na.rm = TRUE)) {
+      notes <- c(notes, "Some recovery replications failed before recovery rows could be computed.")
+    }
+    if (any(!rep_overview$Converged, na.rm = TRUE)) {
+      notes <- c(notes, "Some fitted models did not report convergence; inspect `rep_overview` before interpreting recovery summaries.")
+    }
+  }
+  if (is.data.frame(recovery_summary) && nrow(recovery_summary) > 0L &&
+      any(recovery_summary$SEAvailableRate < 1, na.rm = TRUE)) {
+    notes <- c(notes, "Coverage95 is reported only for rows with available standard errors.")
+  }
+  if (identical(model, "GPCM")) {
+    notes <- c(
+      notes,
+      "Bounded GPCM recovery compares identified log slopes under the geometric-mean-one slope convention and keeps the current bounded GPCM support caveats."
+    )
+  }
+  if (length(notes) == 0L) notes <- "No immediate warnings from the recovery simulation summary."
+  notes
+}
+
+#' Evaluate parameter recovery by repeated simulation and refitting
+#'
+#' @description
+#' Runs a compact parameter-recovery simulation study: generate data from a
+#' known ordered many-facet data-generating setup, refit the requested model,
+#' align estimates to the known truth where location indeterminacy requires it,
+#' and summarize bias, RMSE, MAE, correlation, and standard-error coverage.
+#'
+#' @inheritParams simulate_mfrm_data
+#' @param reps Number of Monte Carlo replications.
+#' @param fit_method Estimation method passed to [fit_mfrm()].
+#' @param maxit Maximum optimizer iterations passed to [fit_mfrm()].
+#' @param quad_points Quadrature points used when `fit_method = "MML"`.
+#' @param include_person Logical. When `TRUE`, include person-measure recovery
+#'   rows when the fitted object exposes person estimates.
+#'
+#' @details
+#' This helper is deliberately narrower than [evaluate_mfrm_design()]. Design
+#' evaluation asks which design condition is operationally adequate; recovery
+#' simulation asks whether the fitted model recovers the known parameters under
+#' one explicit data-generating setup.
+#'
+#' Location-like parameters (`Person`, non-person facets, and steps) are
+#' summarized after mean alignment within each replication and parameter group.
+#' This follows the usual Rasch/MFRM identification convention: adding a common
+#' constant to one location block should not be counted as recovery failure.
+#' Raw, unaligned errors are retained in `recovery` and summarized as
+#' `RawBias` / `RawRMSE`.
+#'
+#' For bounded `GPCM`, supplied generator slopes are treated as relative
+#' discriminations and normalized to the same geometric-mean-one log-slope
+#' identification used by the fitter. Slope recovery is therefore summarized on
+#' the identified log-slope scale without an additional mean-alignment step.
+#' Direct data generation and refitting are supported, but broader GPCM design-
+#' planning claims remain outside the current package boundary.
+#'
+#' The returned `ademp` component follows the simulation-study framing of
+#' Morris, White, and Crowther (2019) and the ADEMP planning/reporting template
+#' used in later simulation-study guidance.
+#'
+#' @return An object of class `mfrm_recovery_simulation` with components:
+#' - `recovery`: row-level truth/estimate comparisons by replication.
+#' - `recovery_summary`: parameter-type summaries across replications.
+#' - `rep_overview`: replication-level convergence, timing, and error status.
+#' - `settings`: fitting and simulation settings.
+#' - `ademp`: simulation-study metadata.
+#'
+#' @section Typical workflow:
+#' 1. Build a simulation specification with [build_mfrm_sim_spec()] or pass scalar
+#'    generator arguments directly.
+#' 2. Run `evaluate_mfrm_recovery(...)` with a modest `reps` value for a smoke
+#'    check, then increase `reps` for stable Monte Carlo summaries.
+#' 3. Inspect `summary(x)$recovery_summary` and the row-level `x$recovery` table.
+#'
+#' @seealso [simulate_mfrm_data()], [evaluate_mfrm_design()], [fit_mfrm()]
+#' @examples
+#' \donttest{
+#' rec <- evaluate_mfrm_recovery(
+#'   n_person = 12,
+#'   n_rater = 2,
+#'   n_criterion = 2,
+#'   reps = 1,
+#'   maxit = 8,
+#'   seed = 123
+#' )
+#' summary(rec)$recovery_summary[, c("ParameterType", "Facet", "RMSE", "Bias")]
+#' }
+#' @export
+evaluate_mfrm_recovery <- function(n_person = 50,
+                                   n_rater = 4,
+                                   n_criterion = 4,
+                                   raters_per_person = n_rater,
+                                   design = NULL,
+                                   reps = 10,
+                                   score_levels = 4,
+                                   theta_sd = 1,
+                                   rater_sd = 0.35,
+                                   criterion_sd = 0.25,
+                                   noise_sd = 0,
+                                   step_span = 1.4,
+                                   model = c("RSM", "PCM", "GPCM"),
+                                   step_facet = NULL,
+                                   slope_facet = NULL,
+                                   thresholds = NULL,
+                                   slopes = NULL,
+                                   assignment = NULL,
+                                   sim_spec = NULL,
+                                   fit_method = c("JML", "MML"),
+                                   maxit = 25,
+                                   quad_points = 7,
+                                   include_person = TRUE,
+                                   seed = NULL) {
+  model <- match.arg(toupper(as.character(model[1])), c("RSM", "PCM", "GPCM"))
+  fit_method <- match.arg(fit_method)
+  reps <- as.integer(reps[1])
+  if (!is.finite(reps) || reps < 1L) stop("`reps` must be >= 1.", call. = FALSE)
+  if (!is.null(sim_spec) && !inherits(sim_spec, "mfrm_sim_spec")) {
+    stop("`sim_spec` must be output from build_mfrm_sim_spec() or extract_mfrm_sim_spec().", call. = FALSE)
+  }
+  if (!is.null(sim_spec)) {
+    model <- as.character(sim_spec$model %||% model)
+    step_facet <- sim_spec$step_facet %||% step_facet
+    slope_facet <- sim_spec$slope_facet %||% slope_facet
+  }
+  if (identical(model, "GPCM")) {
+    facet_names_for_resolution <- if (is.null(sim_spec)) {
+      simulation_default_output_facet_names()
+    } else {
+      simulation_spec_output_facet_names(sim_spec)
+    }
+    resolved_facets <- resolve_step_and_slope_facets(
+      model = model,
+      step_facet = step_facet[1] %||% facet_names_for_resolution[2],
+      slope_facet = slope_facet,
+      facet_names = unname(facet_names_for_resolution)
+    )
+    step_facet <- resolved_facets$step_facet
+    slope_facet <- resolved_facets$slope_facet
+  } else if (identical(model, "PCM")) {
+    step_facet <- step_facet[1] %||% if (is.null(sim_spec)) "Criterion" else sim_spec$step_facet
+  } else {
+    step_facet <- NULL
+    slope_facet <- NULL
+  }
+  if (!is.null(sim_spec) &&
+      isTRUE((sim_spec$population %||% simulation_empty_population_spec())$active) &&
+      !identical(fit_method, "MML")) {
+    stop(
+      "Recovery simulations with an active latent-regression population generator require `fit_method = \"MML\"`.",
+      call. = FALSE
+    )
+  }
+
+  seeds <- with_preserved_rng_seed(
+    seed,
+    sample.int(.Machine$integer.max, size = reps, replace = FALSE)
+  )
+  base_facet_names <- if (is.null(sim_spec)) simulation_default_output_facet_names() else simulation_spec_output_facet_names(sim_spec)
+  generator_model <- if (is.null(sim_spec)) model else as.character(sim_spec$model %||% model)
+  generator_step_facet <- if (is.null(sim_spec)) {
+    if (identical(generator_model, "RSM")) NA_character_ else step_facet
+  } else {
+    sim_spec$step_facet %||% NA_character_
+  }
+  generator_assignment <- if (is.null(sim_spec)) {
+    assignment %||% "design_dependent"
+  } else {
+    sim_spec$assignment
+  }
+
+  recovery_rows <- vector("list", reps)
+  rep_rows <- vector("list", reps)
+  for (rep in seq_len(reps)) {
+    t0 <- proc.time()[["elapsed"]]
+    sim <- tryCatch(
+      if (is.null(sim_spec)) {
+        simulate_mfrm_data(
+          n_person = n_person,
+          n_rater = n_rater,
+          n_criterion = n_criterion,
+          raters_per_person = raters_per_person,
+          design = design,
+          score_levels = score_levels,
+          theta_sd = theta_sd,
+          rater_sd = rater_sd,
+          criterion_sd = criterion_sd,
+          noise_sd = noise_sd,
+          step_span = step_span,
+          seed = seeds[rep],
+          model = model,
+          step_facet = step_facet %||% "Criterion",
+          slope_facet = slope_facet,
+          thresholds = thresholds,
+          slopes = slopes,
+          assignment = assignment
+        )
+      } else {
+        simulate_mfrm_data(sim_spec = sim_spec, seed = seeds[rep])
+      },
+      error = function(e) e
+    )
+    elapsed_sim <- proc.time()[["elapsed"]] - t0
+    rep_row <- tibble::tibble(
+      rep = rep,
+      Seed = seeds[rep],
+      Observations = if (is.data.frame(sim)) nrow(sim) else NA_integer_,
+      ElapsedSec = elapsed_sim,
+      RunOK = FALSE,
+      Converged = FALSE,
+      RecoveryRows = 0L,
+      Error = NA_character_
+    )
+    if (inherits(sim, "error")) {
+      rep_row$Error <- conditionMessage(sim)
+      rep_rows[[rep]] <- rep_row
+      recovery_rows[[rep]] <- tibble::tibble()
+      next
+    }
+
+    row_facet_names <- if (is.null(sim_spec)) base_facet_names else simulation_spec_output_facet_names(sim_spec)
+    fit_args <- list(
+      data = sim,
+      person = "Person",
+      facets = row_facet_names,
+      score = "Score",
+      method = fit_method,
+      model = model,
+      maxit = maxit
+    )
+    if (identical(model, "PCM")) fit_args$step_facet <- step_facet %||% row_facet_names[2]
+    if (identical(model, "GPCM")) {
+      fit_args$step_facet <- step_facet %||% row_facet_names[2]
+      fit_args$slope_facet <- slope_facet %||% fit_args$step_facet
+    }
+    if (identical(fit_method, "MML")) fit_args$quad_points <- quad_points
+    if ("Weight" %in% names(sim)) fit_args$weight <- "Weight"
+    sim_population <- attr(sim, "mfrm_population_data")
+    if (is.list(sim_population) && isTRUE(sim_population$active)) {
+      fit_args$population_formula <- sim_population$population_formula
+      fit_args$person_data <- sim_population$person_data
+      fit_args$person_id <- sim_population$person_id
+      fit_args$population_policy <- sim_population$population_policy
+    }
+    fit_args <- simulation_add_fit_score_support(
+      fit_args,
+      sim,
+      fallback_score_levels = if (is.null(sim_spec)) score_levels else sim_spec$score_levels
+    )
+
+    fit <- tryCatch(suppressWarnings(do.call(fit_mfrm, fit_args)), error = function(e) e)
+    elapsed <- proc.time()[["elapsed"]] - t0
+    rep_row$ElapsedSec <- elapsed
+    if (inherits(fit, "error")) {
+      rep_row$Error <- conditionMessage(fit)
+      rep_rows[[rep]] <- rep_row
+      recovery_rows[[rep]] <- tibble::tibble()
+      next
+    }
+    truth <- attr(sim, "mfrm_truth")
+    rows <- recovery_rows_from_fit(fit, truth, rep = rep, include_person = include_person)
+    rep_row$RunOK <- TRUE
+    rep_row$Converged <- isTRUE(as.logical(fit$summary$Converged[1]))
+    rep_row$RecoveryRows <- nrow(rows)
+    rep_rows[[rep]] <- rep_row
+    recovery_rows[[rep]] <- rows
+  }
+
+  recovery <- dplyr::bind_rows(recovery_rows)
+  rep_overview <- dplyr::bind_rows(rep_rows)
+  recovery_summary <- recovery_summarize_rows(recovery)
+  ademp <- simulation_build_ademp(
+    purpose = "Assess parameter recovery under one explicit many-facet data-generating setup by repeated simulation and refitting.",
+    design_grid = data.frame(
+      design_id = "R1",
+      n_person = n_person,
+      n_rater = n_rater,
+      n_criterion = n_criterion,
+      raters_per_person = raters_per_person
+    ),
+    generator_model = generator_model,
+    generator_step_facet = generator_step_facet,
+    generator_assignment = generator_assignment,
+    sim_spec = sim_spec,
+    estimands = c(
+      "Person and facet location recovery after identification alignment",
+      "Step-threshold recovery after identification alignment",
+      "Bounded GPCM log-slope recovery when slopes are fitted",
+      "Latent-regression coefficient and variance recovery when present"
+    ),
+    analysis_methods = list(
+      fit_method = fit_method,
+      fitted_model = model,
+      maxit = maxit,
+      quad_points = if (identical(fit_method, "MML")) quad_points else NA_integer_
+    ),
+    performance_measures = c(
+      "Bias",
+      "RMSE",
+      "MAE",
+      "Truth-estimate correlation",
+      "95% Wald coverage where standard errors are available",
+      "Monte Carlo standard errors for bias and RMSE"
+    )
+  )
+  structure(
+    list(
+      recovery = recovery,
+      recovery_summary = recovery_summary,
+      rep_overview = rep_overview,
+      settings = list(
+        reps = reps,
+        fit_method = fit_method,
+        model = model,
+        step_facet = step_facet,
+        slope_facet = slope_facet,
+        maxit = maxit,
+        quad_points = quad_points,
+        include_person = isTRUE(include_person),
+        sim_spec = sim_spec,
+        seed = seed
+      ),
+      notes = recovery_build_notes(rep_overview, recovery_summary, model),
+      ademp = ademp
+    ),
+    class = "mfrm_recovery_simulation"
+  )
+}
+
+#' @export
+summary.mfrm_recovery_simulation <- function(object, digits = 3, ...) {
+  if (!inherits(object, "mfrm_recovery_simulation")) {
+    stop("`object` must be output from evaluate_mfrm_recovery().", call. = FALSE)
+  }
+  rep_tbl <- tibble::as_tibble(object$rep_overview %||% tibble::tibble())
+  overview <- tibble::tibble(
+    Reps = nrow(rep_tbl),
+    SuccessfulRuns = if (nrow(rep_tbl) > 0L) sum(rep_tbl$RunOK, na.rm = TRUE) else 0L,
+    ConvergedRuns = if (nrow(rep_tbl) > 0L) sum(rep_tbl$Converged, na.rm = TRUE) else 0L,
+    MeanElapsedSec = if (nrow(rep_tbl) > 0L) recovery_safe_mean(rep_tbl$ElapsedSec) else NA_real_,
+    RecoveryRows = if (nrow(rep_tbl) > 0L) sum(rep_tbl$RecoveryRows, na.rm = TRUE) else 0L
+  )
+  out <- list(
+    overview = overview,
+    recovery_summary = tibble::as_tibble(object$recovery_summary %||% tibble::tibble()),
+    rep_overview = rep_tbl,
+    settings = object$settings %||% list(),
+    notes = object$notes %||% character(0),
+    ademp = object$ademp %||% NULL,
+    digits = max(0L, as.integer(digits[1]))
+  )
+  class(out) <- "summary.mfrm_recovery_simulation"
+  out
+}
+
+#' @export
+print.summary.mfrm_recovery_simulation <- function(x, ...) {
+  digits <- as.integer(x$digits %||% 3L)
+  if (!is.finite(digits)) digits <- 3L
+  cat("MFRM Parameter Recovery Simulation Summary\n")
+  if (!is.null(x$overview) && nrow(x$overview) > 0L) {
+    print(round_numeric_df(as.data.frame(x$overview), digits = digits), row.names = FALSE)
+  }
+  if (!is.null(x$recovery_summary) && nrow(x$recovery_summary) > 0L) {
+    cat("\nRecovery summary\n")
+    print(round_numeric_df(as.data.frame(x$recovery_summary), digits = digits), row.names = FALSE)
+  }
+  if (length(x$notes) > 0L) {
+    cat("\nNotes\n")
+    for (line in x$notes) cat(" - ", line, "\n", sep = "")
+  }
+  if (is.list(x$ademp) && length(x$ademp) > 0L) {
+    cat("\nADEMP\n")
+    cat(" - Aim: ", paste(x$ademp$aims, collapse = "; "), "\n", sep = "")
+    cat(" - DGM model: ", x$ademp$data_generating_mechanism$model, "\n", sep = "")
+  }
+  invisible(x)
+}
+
+#' @export
+print.mfrm_recovery_simulation <- function(x, ...) {
+  print(summary(x), ...)
+  invisible(x)
+}
+
+recovery_assessment_threshold <- function(thresholds,
+                                          parameter_type,
+                                          facet,
+                                          comparison_scale) {
+  if (is.null(thresholds) || length(thresholds) == 0L) return(NA_real_)
+  thresholds <- unlist(thresholds, use.names = TRUE)
+  thresholds <- suppressWarnings(as.numeric(thresholds))
+  if (length(thresholds) == 0L) return(NA_real_)
+  nm <- names(thresholds)
+  if (is.null(nm) || !any(nzchar(nm))) return(thresholds[1])
+  keys <- c(
+    paste(parameter_type, facet, comparison_scale, sep = ":"),
+    paste(parameter_type, facet, sep = ":"),
+    paste(parameter_type, comparison_scale, sep = ":"),
+    as.character(parameter_type),
+    as.character(facet),
+    "default"
+  )
+  hit <- keys[keys %in% nm][1]
+  if (is.na(hit)) return(NA_real_)
+  thresholds[[hit]]
+}
+
+recovery_assessment_overall_status <- function(status) {
+  status <- as.character(status)
+  status <- status[!is.na(status) & nzchar(status)]
+  if (length(status) == 0L) return("review")
+  if (any(status == "concern")) return("concern")
+  if (any(status == "review")) return("review")
+  if (any(status == "not_available")) return("review")
+  if (all(status %in% c("ok", "not_assessed"))) return("ok")
+  "review"
+}
+
+recovery_assessment_metric_status <- function(value,
+                                              limit,
+                                              lower_is_better = TRUE,
+                                              concern_multiplier = 2) {
+  value <- suppressWarnings(as.numeric(value))
+  limit <- suppressWarnings(as.numeric(limit))
+  if (!is.finite(value)) return("not_available")
+  if (!is.finite(limit)) return("not_assessed")
+  if (isTRUE(lower_is_better)) {
+    if (value <= limit) return("ok")
+    if (value <= limit * concern_multiplier) return("review")
+    return("concern")
+  }
+  if (value >= limit) return("ok")
+  if (value >= limit / concern_multiplier) return("review")
+  "concern"
+}
+
+recovery_assessment_rate_status <- function(value,
+                                            target,
+                                            tolerance = 0,
+                                            concern_gap = 0.15) {
+  value <- suppressWarnings(as.numeric(value))
+  target <- suppressWarnings(as.numeric(target))
+  tolerance <- suppressWarnings(as.numeric(tolerance))
+  concern_gap <- suppressWarnings(as.numeric(concern_gap))
+  if (!is.finite(value)) return("not_available")
+  if (!is.finite(target)) return("not_assessed")
+  if (value >= target - tolerance) return("ok")
+  if (value >= target - max(tolerance, concern_gap)) return("review")
+  "concern"
+}
+
+recovery_assessment_coverage_status <- function(value,
+                                                target = 0.95,
+                                                tolerance = 0.05) {
+  value <- suppressWarnings(as.numeric(value))
+  target <- suppressWarnings(as.numeric(target))
+  tolerance <- suppressWarnings(as.numeric(tolerance))
+  if (!is.finite(value)) return("not_available")
+  if (!is.finite(target) || !is.finite(tolerance)) return("not_assessed")
+  delta <- abs(value - target)
+  if (delta <= tolerance) return("ok")
+  if (delta <= 2 * tolerance) return("review")
+  "concern"
+}
+
+recovery_assessment_action <- function(status, topic = "metric") {
+  switch(
+    as.character(status)[1] %||% "review",
+    ok = "Use as supporting evidence under the stated simulation setup and thresholds.",
+    not_assessed = paste0("Set a practical threshold if ", topic, " must support a go/no-go decision."),
+    not_available = paste0("Treat ", topic, " as unavailable for this run; inspect row-level output before reporting it."),
+    review = paste0("Review ", topic, " with plots and row-level output before using it for a decision."),
+    concern = paste0("Do not use ", topic, " as adequacy evidence until the design, fit settings, or replication count are revisited."),
+    paste0("Review ", topic, " before interpretation.")
+  )
+}
+
+recovery_assessment_check_row <- function(section,
+                                          item,
+                                          status,
+                                          evidence,
+                                          next_action) {
+  tibble::tibble(
+    Section = as.character(section),
+    Item = as.character(item),
+    Status = as.character(status),
+    Evidence = as.character(evidence),
+    NextAction = as.character(next_action)
+  )
+}
+
+recovery_assessment_status_counts <- function(status) {
+  status <- as.character(status)
+  status <- status[!is.na(status) & nzchar(status)]
+  if (length(status) == 0L) return("none")
+  tbl <- sort(table(status), decreasing = TRUE)
+  paste(paste(names(tbl), as.integer(tbl), sep = "="), collapse = ", ")
+}
+
+recovery_assessment_next_actions <- function(checklist, metric_review, max_n = 6L) {
+  actions <- character(0)
+  if (is.data.frame(checklist) && nrow(checklist) > 0L) {
+    bad <- checklist[checklist$Status %in% c("concern", "review", "not_available"), , drop = FALSE]
+    if (nrow(bad) > 0L) actions <- c(actions, paste(bad$Item, bad$NextAction, sep = ": "))
+  }
+  if (is.data.frame(metric_review) && nrow(metric_review) > 0L) {
+    bad <- metric_review[metric_review$OverallStatus %in% c("concern", "review"), , drop = FALSE]
+    if (nrow(bad) > 0L) {
+      labels <- paste(bad$ParameterType, bad$Facet, bad$ComparisonScale, sep = " / ")
+      actions <- c(actions, paste(labels, bad$NextAction, sep = ": "))
+    }
+  }
+  actions <- unique(actions[nzchar(actions)])
+  if (length(actions) == 0L) {
+    actions <- "No immediate follow-up action from the selected recovery assessment thresholds."
+  }
+  utils::head(actions, n = max(1L, as.integer(max_n)))
+}
+
+#' Assess whether recovery-simulation results are ready to use
+#'
+#' @description
+#' Converts the numerical output from [evaluate_mfrm_recovery()] into a
+#' reviewer-facing adequacy checklist. The goal is not to impose one universal
+#' pass/fail rule; it is to make the main user questions explicit: Did the runs
+#' finish? Did the fitted models converge? Are uncertainty summaries available?
+#' Are coverage and Monte Carlo precision plausible? If practical RMSE or bias
+#' limits are supplied, which parameter groups need follow-up?
+#'
+#' @param x For `assess_mfrm_recovery()`, output from
+#'   [evaluate_mfrm_recovery()]. For `plot.mfrm_recovery_assessment()`, output
+#'   from `assess_mfrm_recovery()`.
+#' @param min_reps Minimum replication count expected before treating the
+#'   simulation as more than a smoke check.
+#' @param min_success_rate Minimum acceptable proportion of replications that
+#'   generated data and produced a fitted model.
+#' @param min_convergence_rate Minimum acceptable proportion of replications
+#'   whose fitted model reported convergence.
+#' @param min_se_available Minimum acceptable proportion of recovery rows with
+#'   standard errors in each parameter group. Set to `NULL` to skip this check.
+#' @param coverage_target Nominal coverage target, usually `0.95`.
+#' @param coverage_tolerance Absolute tolerance around `coverage_target`.
+#' @param max_mcse_rmse_ratio Maximum acceptable Monte Carlo SE of RMSE divided
+#'   by RMSE. Set to `NULL` to skip this precision check.
+#' @param max_rmse Optional practical RMSE limit. Use a scalar for all parameter
+#'   groups or a named vector/list with names such as `"facet"`, `"step"`,
+#'   `"slope"`, `"Rater"`, or `"facet:Rater:logit"`.
+#' @param max_abs_bias Optional practical absolute-bias limit. Naming follows
+#'   `max_rmse`.
+#' @param top_n Number of next-action lines retained in the compact output.
+#' @param digits Digits used by the print method.
+#' @param ... Reserved for future extensions.
+#'
+#' @details
+#' RMSE and bias adequacy depends on the substantive scale and the use case, so
+#' the function does not mark them as failed unless the user supplies
+#' `max_rmse` or `max_abs_bias`. Without those limits, the corresponding rows are
+#' marked `not_assessed` and the next action asks the user to set practical
+#' thresholds when a decision depends on the metric.
+#'
+#' `plot.mfrm_recovery_assessment()` is a user-facing review aid. Use
+#' `type = "status"` first to see where checklist attention is needed, then
+#' `type = "metrics"` to inspect the parameter groups behind RMSE, bias,
+#' coverage, standard-error availability, or Monte Carlo precision statuses.
+#' The intended reading order is `summary(recovery_review)`, then the status
+#' plot, then the metric plot, then the row-level recovery table for the
+#' parameter groups that need follow-up. When `draw = FALSE`, the plot data
+#' include `reading_order`, `guidance`, and user-facing handoff tables such as
+#' `section_status` for status plots and `metric_review` for metric plots.
+#'
+#' @return An object of class `mfrm_recovery_assessment` with:
+#' - `overview`: compact run-level status.
+#' - `checklist`: reviewer-facing adequacy checks.
+#' - `metric_review`: parameter-group metric checks.
+#' - `next_actions`: short action list sorted by severity.
+#' - `thresholds`: thresholds used for the assessment.
+#' @seealso [evaluate_mfrm_recovery()], [plot.mfrm_recovery_simulation()]
+#' @examples
+#' \donttest{
+#' rec <- evaluate_mfrm_recovery(
+#'   n_person = 12,
+#'   n_rater = 2,
+#'   n_criterion = 2,
+#'   reps = 1,
+#'   maxit = 8,
+#'   seed = 123
+#' )
+#' assess_mfrm_recovery(rec, min_reps = 1, max_rmse = 1)
+#' }
+#' @export
+assess_mfrm_recovery <- function(x,
+                                 min_reps = 30,
+                                 min_success_rate = 0.95,
+                                 min_convergence_rate = 0.95,
+                                 min_se_available = 0.80,
+                                 coverage_target = 0.95,
+                                 coverage_tolerance = 0.05,
+                                 max_mcse_rmse_ratio = 0.25,
+                                 max_rmse = NULL,
+                                 max_abs_bias = NULL,
+                                 top_n = 6,
+                                 digits = 3,
+                                 ...) {
+  if (!inherits(x, "mfrm_recovery_simulation")) {
+    stop("`x` must be output from evaluate_mfrm_recovery().", call. = FALSE)
+  }
+  rep_tbl <- tibble::as_tibble(x$rep_overview %||% tibble::tibble())
+  summary_tbl <- tibble::as_tibble(x$recovery_summary %||% tibble::tibble())
+  recovery_tbl <- tibble::as_tibble(x$recovery %||% tibble::tibble())
+
+  reps <- if (nrow(rep_tbl) > 0L) nrow(rep_tbl) else 0L
+  successful <- if (nrow(rep_tbl) > 0L) sum(rep_tbl$RunOK, na.rm = TRUE) else 0L
+  converged <- if (nrow(rep_tbl) > 0L) sum(rep_tbl$Converged, na.rm = TRUE) else 0L
+  success_rate <- if (reps > 0L) successful / reps else NA_real_
+  convergence_rate <- if (reps > 0L) converged / reps else NA_real_
+
+  metric_review <- summary_tbl
+  if (nrow(metric_review) > 0L) {
+    metric_review$RMSELimit <- mapply(
+      recovery_assessment_threshold,
+      parameter_type = metric_review$ParameterType,
+      facet = metric_review$Facet,
+      comparison_scale = metric_review$ComparisonScale,
+      MoreArgs = list(thresholds = max_rmse),
+      SIMPLIFY = TRUE
+    )
+    metric_review$AbsBiasLimit <- mapply(
+      recovery_assessment_threshold,
+      parameter_type = metric_review$ParameterType,
+      facet = metric_review$Facet,
+      comparison_scale = metric_review$ComparisonScale,
+      MoreArgs = list(thresholds = max_abs_bias),
+      SIMPLIFY = TRUE
+    )
+    metric_review$RMSEStatus <- mapply(
+      recovery_assessment_metric_status,
+      value = metric_review$RMSE,
+      limit = metric_review$RMSELimit,
+      SIMPLIFY = TRUE
+    )
+    metric_review$BiasStatus <- mapply(
+      recovery_assessment_metric_status,
+      value = abs(metric_review$Bias),
+      limit = metric_review$AbsBiasLimit,
+      SIMPLIFY = TRUE
+    )
+    metric_review$CoverageStatus <- vapply(
+      metric_review$Coverage95,
+      recovery_assessment_coverage_status,
+      character(1),
+      target = coverage_target,
+      tolerance = coverage_tolerance
+    )
+    metric_review$SEStatus <- if (is.null(min_se_available)) {
+      rep("not_assessed", nrow(metric_review))
+    } else {
+      vapply(
+        metric_review$SEAvailableRate,
+        recovery_assessment_rate_status,
+        character(1),
+        target = min_se_available,
+        tolerance = 0,
+        concern_gap = 0.25
+      )
+    }
+    rmse_ratio <- suppressWarnings(as.numeric(metric_review$McseRMSE) / as.numeric(metric_review$RMSE))
+    metric_review$McseRMSEToRMSE <- rmse_ratio
+    metric_review$MonteCarloStatus <- if (is.null(max_mcse_rmse_ratio)) {
+      rep("not_assessed", nrow(metric_review))
+    } else {
+      vapply(
+        rmse_ratio,
+        recovery_assessment_metric_status,
+        character(1),
+        limit = max_mcse_rmse_ratio,
+        concern_multiplier = 2
+      )
+    }
+    metric_review$OverallStatus <- apply(
+      metric_review[, c("RMSEStatus", "BiasStatus", "CoverageStatus",
+                        "SEStatus", "MonteCarloStatus"), drop = FALSE],
+      1,
+      recovery_assessment_overall_status
+    )
+    metric_review$NextAction <- vapply(
+      metric_review$OverallStatus,
+      recovery_assessment_action,
+      character(1),
+      topic = "this parameter group"
+    )
+  } else {
+    metric_review <- tibble::tibble()
+  }
+
+  run_status <- recovery_assessment_rate_status(reps, min_reps, tolerance = 0, concern_gap = min_reps)
+  if (reps > 0L && reps < min_reps) run_status <- "review"
+  success_status <- recovery_assessment_rate_status(success_rate, min_success_rate, tolerance = 0, concern_gap = 0.20)
+  convergence_status <- recovery_assessment_rate_status(convergence_rate, min_convergence_rate, tolerance = 0, concern_gap = 0.20)
+  row_status <- if (nrow(recovery_tbl) > 0L) "ok" else "concern"
+
+  se_status <- if (nrow(metric_review) == 0L || is.null(min_se_available)) {
+    "not_assessed"
+  } else {
+    recovery_assessment_overall_status(metric_review$SEStatus)
+  }
+  coverage_status <- if (nrow(metric_review) == 0L) {
+    "not_available"
+  } else {
+    recovery_assessment_overall_status(metric_review$CoverageStatus)
+  }
+  mc_status <- if (nrow(metric_review) == 0L || is.null(max_mcse_rmse_ratio)) {
+    "not_assessed"
+  } else {
+    recovery_assessment_overall_status(metric_review$MonteCarloStatus)
+  }
+  rmse_status <- if (nrow(metric_review) == 0L) {
+    "not_available"
+  } else if (is.null(max_rmse)) {
+    "not_assessed"
+  } else {
+    recovery_assessment_overall_status(metric_review$RMSEStatus)
+  }
+  bias_status <- if (nrow(metric_review) == 0L) {
+    "not_available"
+  } else if (is.null(max_abs_bias)) {
+    "not_assessed"
+  } else {
+    recovery_assessment_overall_status(metric_review$BiasStatus)
+  }
+
+  checklist <- dplyr::bind_rows(
+    recovery_assessment_check_row(
+      "Run completion",
+      "Replication count",
+      run_status,
+      sprintf("%d replication(s); requested minimum is %d.", reps, as.integer(min_reps)),
+      recovery_assessment_action(run_status, "the replication count")
+    ),
+    recovery_assessment_check_row(
+      "Run completion",
+      "Simulation and refit success",
+      success_status,
+      sprintf("%d/%d successful run(s); rate = %.3f.", successful, reps, success_rate),
+      recovery_assessment_action(success_status, "run completion")
+    ),
+    recovery_assessment_check_row(
+      "Run completion",
+      "Reported convergence",
+      convergence_status,
+      sprintf("%d/%d converged run(s); rate = %.3f.", converged, reps, convergence_rate),
+      recovery_assessment_action(convergence_status, "model convergence")
+    ),
+    recovery_assessment_check_row(
+      "Recovery content",
+      "Recoverable truth-estimate rows",
+      row_status,
+      sprintf("%d row-level recovery comparison(s).", nrow(recovery_tbl)),
+      recovery_assessment_action(row_status, "recovery rows")
+    ),
+    recovery_assessment_check_row(
+      "Uncertainty",
+      "Standard-error availability",
+      se_status,
+      if (nrow(metric_review) > 0L) {
+        sprintf("Group statuses: %s.", recovery_assessment_status_counts(metric_review$SEStatus))
+      } else {
+        "No parameter-group summaries were available."
+      },
+      recovery_assessment_action(se_status, "standard-error availability")
+    ),
+    recovery_assessment_check_row(
+      "Uncertainty",
+      "Coverage",
+      coverage_status,
+      if (nrow(metric_review) > 0L) {
+        sprintf("Group statuses: %s.", recovery_assessment_status_counts(metric_review$CoverageStatus))
+      } else {
+        "No parameter-group summaries were available."
+      },
+      recovery_assessment_action(coverage_status, "coverage")
+    ),
+    recovery_assessment_check_row(
+      "Monte Carlo precision",
+      "RMSE Monte Carlo error",
+      mc_status,
+      if (nrow(metric_review) > 0L) {
+        sprintf("Group statuses: %s.", recovery_assessment_status_counts(metric_review$MonteCarloStatus))
+      } else {
+        "No parameter-group summaries were available."
+      },
+      recovery_assessment_action(mc_status, "Monte Carlo precision")
+    ),
+    recovery_assessment_check_row(
+      "Practical thresholds",
+      "RMSE threshold",
+      rmse_status,
+      if (is.null(max_rmse)) {
+        "No practical RMSE threshold was supplied."
+      } else {
+        sprintf("Group statuses: %s.", recovery_assessment_status_counts(metric_review$RMSEStatus))
+      },
+      recovery_assessment_action(rmse_status, "RMSE")
+    ),
+    recovery_assessment_check_row(
+      "Practical thresholds",
+      "Bias threshold",
+      bias_status,
+      if (is.null(max_abs_bias)) {
+        "No practical absolute-bias threshold was supplied."
+      } else {
+        sprintf("Group statuses: %s.", recovery_assessment_status_counts(metric_review$BiasStatus))
+      },
+      recovery_assessment_action(bias_status, "bias")
+    )
+  )
+
+  overall_status <- recovery_assessment_overall_status(checklist$Status)
+  overview <- tibble::tibble(
+    Reps = reps,
+    SuccessfulRuns = successful,
+    SuccessRate = success_rate,
+    ConvergedRuns = converged,
+    ConvergenceRate = convergence_rate,
+    RecoveryRows = nrow(recovery_tbl),
+    RecoveryGroups = nrow(summary_tbl),
+    OverallStatus = overall_status
+  )
+  next_actions <- recovery_assessment_next_actions(checklist, metric_review, max_n = top_n)
+
+  structure(
+    list(
+      overview = overview,
+      checklist = checklist,
+      metric_review = metric_review,
+      next_actions = next_actions,
+      thresholds = list(
+        min_reps = min_reps,
+        min_success_rate = min_success_rate,
+        min_convergence_rate = min_convergence_rate,
+        min_se_available = min_se_available,
+        coverage_target = coverage_target,
+        coverage_tolerance = coverage_tolerance,
+        max_mcse_rmse_ratio = max_mcse_rmse_ratio,
+        max_rmse = max_rmse,
+        max_abs_bias = max_abs_bias
+      ),
+      notes = c(
+        "RMSE and bias statuses are decision-specific; supply practical thresholds when they matter.",
+        as.character(x$notes %||% character(0))
+      ),
+      source = x,
+      digits = max(0L, as.integer(digits[1]))
+    ),
+    class = "mfrm_recovery_assessment"
+  )
+}
+
+#' @export
+summary.mfrm_recovery_assessment <- function(object, digits = NULL, ...) {
+  if (!inherits(object, "mfrm_recovery_assessment")) {
+    stop("`object` must be output from assess_mfrm_recovery().", call. = FALSE)
+  }
+  if (is.null(digits)) digits <- object$digits %||% 3L
+  out <- list(
+    overview = tibble::as_tibble(object$overview %||% tibble::tibble()),
+    checklist = tibble::as_tibble(object$checklist %||% tibble::tibble()),
+    metric_review = tibble::as_tibble(object$metric_review %||% tibble::tibble()),
+    next_actions = as.character(object$next_actions %||% character(0)),
+    thresholds = object$thresholds %||% list(),
+    notes = as.character(object$notes %||% character(0)),
+    digits = max(0L, as.integer(digits[1]))
+  )
+  class(out) <- "summary.mfrm_recovery_assessment"
+  out
+}
+
+#' @export
+print.summary.mfrm_recovery_assessment <- function(x, ...) {
+  digits <- as.integer(x$digits %||% 3L)
+  if (!is.finite(digits)) digits <- 3L
+  cat("MFRM Recovery Adequacy Assessment\n")
+  if (!is.null(x$overview) && nrow(x$overview) > 0L) {
+    print(round_numeric_df(as.data.frame(x$overview), digits = digits), row.names = FALSE)
+  }
+  if (!is.null(x$checklist) && nrow(x$checklist) > 0L) {
+    cat("\nChecklist\n")
+    print(as.data.frame(x$checklist), row.names = FALSE)
+  }
+  if (!is.null(x$metric_review) && nrow(x$metric_review) > 0L) {
+    keep <- intersect(
+      c("ParameterType", "Facet", "ComparisonScale", "RMSE", "Bias",
+        "Coverage95", "SEAvailableRate", "McseRMSEToRMSE", "OverallStatus"),
+      names(x$metric_review)
+    )
+    cat("\nMetric review\n")
+    print(round_numeric_df(as.data.frame(x$metric_review[, keep, drop = FALSE]), digits = digits),
+          row.names = FALSE)
+  }
+  if (length(x$next_actions) > 0L) {
+    cat("\nNext actions\n")
+    for (line in x$next_actions) cat(" - ", line, "\n", sep = "")
+  }
+  invisible(x)
+}
+
+#' @export
+print.mfrm_recovery_assessment <- function(x, ...) {
+  print(summary(x), ...)
+  invisible(x)
+}
+
+recovery_assessment_status_rank <- function(status) {
+  ranks <- c(ok = 1L, not_assessed = 2L, not_available = 2L,
+             review = 3L, concern = 4L, fail = 4L)
+  out <- unname(ranks[as.character(status)])
+  out[is.na(out)] <- 0L
+  out
+}
+
+recovery_assessment_status_palette <- function(status) {
+  pal <- c(
+    ok = "#238b45",
+    review = "#b65e16",
+    concern = "#b11f24",
+    not_available = "#6b7280",
+    not_assessed = "#8c8c8c",
+    fail = "#b11f24"
+  )
+  out <- unname(pal[as.character(status)])
+  out[is.na(out)] <- "#6b7280"
+  out
+}
+
+recovery_assessment_reading_order <- function() {
+  data.frame(
+    Step = seq_len(4L),
+    Route = c(
+      "summary(recovery_review)",
+      "plot(recovery_review, type = \"status\")",
+      "plot(recovery_review, type = \"metrics\")",
+      "recovery_review$source$recovery"
+    ),
+    WhatToRead = c(
+      "Overall run status, next actions, and compact checklist.",
+      "Checklist domains ordered by attention status.",
+      "Parameter groups behind RMSE, bias, coverage, SE, or Monte Carlo statuses.",
+      "Row-level truth-estimate comparisons for the parameter groups that need follow-up."
+    ),
+    Purpose = c(
+      "Decide whether the assessment is ready to inspect.",
+      "Find the part of the assessment that needs attention first.",
+      "Identify the specific parameter group and metric driving the status.",
+      "Diagnose the underlying recovery pattern before changing design or fit settings."
+    ),
+    stringsAsFactors = FALSE
+  )
+}
+
+recovery_assessment_plot_guidance <- function(type, metric = NULL) {
+  if (identical(type, "status")) {
+    return(c(
+      "Read this plot before metric-level plots.",
+      "Start with concern/review rows; ok rows are supporting evidence.",
+      "Use section_status to identify the assessment section that needs follow-up."
+    ))
+  }
+  c(
+    paste0("This metric plot is sorted by status priority, then by ", metric %||% "value", "."),
+    "Inspect concern/review rows before ok rows.",
+    "Use the row-level recovery table only after identifying the parameter group that needs follow-up."
+  )
+}
+
+recovery_assessment_plot_metric_spec <- function(metric, thresholds) {
+  metric <- match.arg(
+    tolower(as.character(metric[1])),
+    c("rmse", "bias", "coverage", "se_available", "mcse_rmse")
+  )
+  thresholds <- thresholds %||% list()
+  switch(
+    metric,
+    rmse = list(
+      metric = "rmse",
+      value_col = "RMSE",
+      limit_col = "RMSELimit",
+      status_col = "RMSEStatus",
+      label = "RMSE",
+      transform = identity,
+      reference = NA_real_
+    ),
+    bias = list(
+      metric = "bias",
+      value_col = "Bias",
+      limit_col = "AbsBiasLimit",
+      status_col = "BiasStatus",
+      label = "Absolute bias",
+      transform = abs,
+      reference = NA_real_
+    ),
+    coverage = list(
+      metric = "coverage",
+      value_col = "Coverage95",
+      limit_col = NULL,
+      status_col = "CoverageStatus",
+      label = "95% coverage",
+      transform = identity,
+      reference = suppressWarnings(as.numeric(thresholds$coverage_target %||% 0.95))
+    ),
+    se_available = list(
+      metric = "se_available",
+      value_col = "SEAvailableRate",
+      limit_col = NULL,
+      status_col = "SEStatus",
+      label = "SE availability rate",
+      transform = identity,
+      reference = suppressWarnings(as.numeric(thresholds$min_se_available %||% NA_real_))
+    ),
+    mcse_rmse = list(
+      metric = "mcse_rmse",
+      value_col = "McseRMSEToRMSE",
+      limit_col = NULL,
+      status_col = "MonteCarloStatus",
+      label = "MCSE / RMSE",
+      transform = identity,
+      reference = suppressWarnings(as.numeric(thresholds$max_mcse_rmse_ratio %||% NA_real_))
+    )
+  )
+}
+
+#' @rdname assess_mfrm_recovery
+#' @param y Reserved for S3 generic compatibility.
+#' @param type Assessment plot route. `"status"` summarizes checklist status
+#'   counts; `"metrics"` plots a parameter-group assessment metric colored by
+#'   its status.
+#' @param metric Metric used when `type = "metrics"`. Supported values are
+#'   `"rmse"`, `"bias"`, `"coverage"`, `"se_available"`, and `"mcse_rmse"`.
+#' @param draw If `TRUE`, draw with base graphics. If `FALSE`, return an
+#'   `mfrm_plot_data` object with reusable plot tables and metadata.
+#' @export
+plot.mfrm_recovery_assessment <- function(x,
+                                          y = NULL,
+                                          type = c("status", "metrics"),
+                                          metric = c("rmse", "bias", "coverage",
+                                                     "se_available", "mcse_rmse"),
+                                          draw = TRUE,
+                                          ...) {
+  if (!inherits(x, "mfrm_recovery_assessment")) {
+    stop("`x` must be output from assess_mfrm_recovery().", call. = FALSE)
+  }
+  type <- match.arg(type)
+
+  if (identical(type, "status")) {
+    checklist <- as.data.frame(x$checklist %||% data.frame(), stringsAsFactors = FALSE)
+    if (nrow(checklist) == 0L || !"Status" %in% names(checklist)) {
+      stop("No recovery-assessment checklist statuses are available to plot.", call. = FALSE)
+    }
+    section_tbl <- as.data.frame(
+      stats::xtabs(~ Section + Status, data = checklist),
+      stringsAsFactors = FALSE
+    )
+    names(section_tbl)[names(section_tbl) == "Freq"] <- "Checks"
+    section_tbl <- section_tbl[section_tbl$Checks > 0, , drop = FALSE]
+    section_tbl$StatusRank <- recovery_assessment_status_rank(section_tbl$Status)
+    section_tbl <- section_tbl[order(-section_tbl$StatusRank, section_tbl$Section,
+                                     section_tbl$Status), , drop = FALSE]
+    section_tbl$AttentionOrder <- seq_len(nrow(section_tbl))
+    row.names(section_tbl) <- NULL
+    status_tbl <- stats::aggregate(Checks ~ Status, data = section_tbl, FUN = sum)
+    status_tbl$StatusRank <- recovery_assessment_status_rank(status_tbl$Status)
+    status_tbl <- status_tbl[order(-status_tbl$StatusRank, status_tbl$Status), , drop = FALSE]
+    status_tbl$AttentionOrder <- seq_len(nrow(status_tbl))
+    row.names(status_tbl) <- NULL
+    payload <- list(
+      type = type,
+      metric = "check_count",
+      metric_label = "Checklist checks",
+      plot_table = section_tbl,
+      section_status = section_tbl,
+      status_counts = status_tbl,
+      checklist = checklist,
+      reading_order = recovery_assessment_reading_order(),
+      guidance = recovery_assessment_plot_guidance("status"),
+      notes = as.character(x$notes %||% character(0)),
+      title = "Recovery assessment: checklist status",
+      subtitle = "Counts of checklist checks by status",
+      legend = new_plot_legend(
+        label = c("ok", "review", "concern", "not_available", "not_assessed"),
+        role = rep("status", 5L),
+        aesthetic = rep("fill", 5L),
+        value = recovery_assessment_status_palette(c("ok", "review", "concern", "not_available", "not_assessed"))
+      ),
+      reference_lines = new_reference_lines()
+    )
+    out <- new_mfrm_plot_data("recovery_assessment", payload)
+    if (!isTRUE(draw)) return(out)
+    graphics::barplot(
+      status_tbl$Checks,
+      names.arg = status_tbl$Status,
+      col = recovery_assessment_status_palette(status_tbl$Status),
+      border = NA,
+      ylab = "Checklist checks",
+      main = payload$title
+    )
+    return(invisible(out))
+  }
+
+  metric_review <- as.data.frame(x$metric_review %||% data.frame(), stringsAsFactors = FALSE)
+  if (nrow(metric_review) == 0L) {
+    stop("No recovery-assessment metric-review rows are available to plot.", call. = FALSE)
+  }
+  spec <- recovery_assessment_plot_metric_spec(metric, x$thresholds %||% list())
+  required <- c("ParameterType", "Facet", "ComparisonScale", spec$value_col, spec$status_col)
+  missing <- setdiff(required, names(metric_review))
+  if (length(missing) > 0L) {
+    stop("Metric-review table is missing required column(s): ",
+         paste(missing, collapse = ", "), call. = FALSE)
+  }
+  raw_value <- suppressWarnings(as.numeric(metric_review[[spec$value_col]]))
+  value <- spec$transform(raw_value)
+  limit <- if (!is.null(spec$limit_col) && spec$limit_col %in% names(metric_review)) {
+    suppressWarnings(as.numeric(metric_review[[spec$limit_col]]))
+  } else {
+    rep(spec$reference, nrow(metric_review))
+  }
+  plot_tbl <- data.frame(
+    ParameterType = as.character(metric_review$ParameterType),
+    Facet = as.character(metric_review$Facet),
+    ComparisonScale = as.character(metric_review$ComparisonScale),
+    PlotGroup = paste(
+      as.character(metric_review$ParameterType),
+      as.character(metric_review$Facet),
+      as.character(metric_review$ComparisonScale),
+      sep = " / "
+    ),
+    Metric = spec$metric,
+    Value = value,
+    Limit = limit,
+    Status = as.character(metric_review[[spec$status_col]]),
+    OverallStatus = as.character(metric_review$OverallStatus %||% NA_character_),
+    stringsAsFactors = FALSE
+  )
+  plot_tbl <- plot_tbl[is.finite(plot_tbl$Value), , drop = FALSE]
+  if (nrow(plot_tbl) == 0L) {
+    stop("Selected assessment metric has no finite values to plot.", call. = FALSE)
+  }
+  plot_tbl$StatusRank <- recovery_assessment_status_rank(plot_tbl$Status)
+  plot_tbl <- plot_tbl[order(-plot_tbl$StatusRank, -plot_tbl$Value, plot_tbl$PlotGroup), , drop = FALSE]
+  plot_tbl$AttentionOrder <- seq_len(nrow(plot_tbl))
+  row.names(plot_tbl) <- NULL
+  finite_limits <- unique(plot_tbl$Limit[is.finite(plot_tbl$Limit)])
+  reference_lines <- if (length(finite_limits) == 1L) {
+    new_reference_lines("h", finite_limits, "Assessment threshold", "dashed", "threshold")
+  } else {
+    new_reference_lines()
+  }
+  payload <- list(
+    type = type,
+    metric = spec$metric,
+    metric_label = spec$label,
+    status_column = spec$status_col,
+    plot_table = plot_tbl,
+    metric_review = plot_tbl,
+    reading_order = recovery_assessment_reading_order(),
+    guidance = recovery_assessment_plot_guidance("metrics", spec$label),
+    notes = as.character(x$notes %||% character(0)),
+    title = paste("Recovery assessment:", spec$label),
+    subtitle = "Parameter-group assessment metric colored by status",
+    legend = new_plot_legend(
+      label = c("ok", "review", "concern", "not_available", "not_assessed"),
+      role = rep("status", 5L),
+      aesthetic = rep("fill", 5L),
+      value = recovery_assessment_status_palette(c("ok", "review", "concern", "not_available", "not_assessed"))
+    ),
+    reference_lines = reference_lines
+  )
+  out <- new_mfrm_plot_data("recovery_assessment", payload)
+  if (!isTRUE(draw)) return(out)
+  op <- graphics::par(no.readonly = TRUE)
+  on.exit(graphics::par(op), add = TRUE)
+  graphics::par(mar = c(8, 4, 3, 1))
+  ylim <- range(c(0, plot_tbl$Value, reference_lines$value), na.rm = TRUE)
+  if (!all(is.finite(ylim)) || diff(ylim) == 0) {
+    ylim <- range(plot_tbl$Value + c(-0.1, 0.1), na.rm = TRUE)
+  }
+  graphics::barplot(
+    plot_tbl$Value,
+    names.arg = truncate_axis_label(plot_tbl$PlotGroup, width = 26L),
+    las = 2,
+    col = recovery_assessment_status_palette(plot_tbl$Status),
+    border = NA,
+    ylim = ylim,
+    ylab = spec$label,
+    main = payload$title
+  )
+  if (nrow(reference_lines) > 0L && is.finite(reference_lines$value[1])) {
+    graphics::abline(h = reference_lines$value[1], lty = 2, col = "grey35")
+  }
+  invisible(out)
+}
+
+recovery_plot_metric_col <- function(metric) {
+  metric <- match.arg(
+    tolower(as.character(metric[1])),
+    c("rmse", "bias", "mae", "correlation", "coverage", "mcse_bias",
+      "mcse_rmse", "raw_rmse", "raw_bias", "mean_se", "se_available")
+  )
+  switch(
+    metric,
+    rmse = "RMSE",
+    bias = "Bias",
+    mae = "MAE",
+    correlation = "Correlation",
+    coverage = "Coverage95",
+    mcse_bias = "McseBias",
+    mcse_rmse = "McseRMSE",
+    raw_rmse = "RawRMSE",
+    raw_bias = "RawBias",
+    mean_se = "MeanSE",
+    se_available = "SEAvailableRate"
+  )
+}
+
+recovery_plot_metric_label <- function(metric_col) {
+  switch(
+    metric_col,
+    RMSE = "RMSE",
+    Bias = "Bias",
+    MAE = "MAE",
+    Correlation = "Truth-estimate correlation",
+    Coverage95 = "95% coverage",
+    McseBias = "MCSE of bias",
+    McseRMSE = "MCSE of RMSE",
+    RawRMSE = "Unaligned RMSE",
+    RawBias = "Unaligned bias",
+    MeanSE = "Mean standard error",
+    SEAvailableRate = "SE availability rate",
+    metric_col
+  )
+}
+
+recovery_plot_filter <- function(tbl, parameter_type = NULL, facet = NULL) {
+  tbl <- tibble::as_tibble(tbl)
+  if (!is.null(parameter_type)) {
+    parameter_type <- as.character(parameter_type)
+    tbl <- tbl[as.character(tbl$ParameterType) %in% parameter_type, , drop = FALSE]
+  }
+  if (!is.null(facet)) {
+    facet <- as.character(facet)
+    tbl <- tbl[as.character(tbl$Facet) %in% facet, , drop = FALSE]
+  }
+  tbl
+}
+
+recovery_plot_status_table <- function(rep_tbl) {
+  rep_tbl <- tibble::as_tibble(rep_tbl)
+  if (nrow(rep_tbl) == 0L) return(tibble::tibble())
+  rep_tbl |>
+    dplyr::mutate(
+      Status = dplyr::case_when(
+        !.data$RunOK ~ "failed",
+        !.data$Converged ~ "not_converged",
+        TRUE ~ "converged"
+      )
+    ) |>
+    dplyr::group_by(.data$Status) |>
+    dplyr::summarise(
+      Reps = dplyr::n(),
+      MeanRecoveryRows = recovery_safe_mean(.data$RecoveryRows),
+      MeanElapsedSec = recovery_safe_mean(.data$ElapsedSec),
+      .groups = "drop"
+    ) |>
+    dplyr::arrange(.data$Status)
+}
+
+#' Plot parameter-recovery simulation results
+#'
+#' @param x Output from [evaluate_mfrm_recovery()].
+#' @param y Reserved for S3 generic compatibility.
+#' @param type Plot route: `"summary"` draws a metric from
+#'   `x$recovery_summary`, `"coverage"` draws 95% coverage by parameter group,
+#'   `"errors"` draws row-level recovery-error distributions, `"scatter"` draws
+#'   truth against estimated values, and `"replications"` summarizes run status.
+#' @param metric Summary metric used when `type = "summary"`. Supported values
+#'   are `"rmse"`, `"bias"`, `"mae"`, `"correlation"`, `"coverage"`,
+#'   `"mcse_bias"`, `"mcse_rmse"`, `"raw_rmse"`, `"raw_bias"`, `"mean_se"`, and
+#'   `"se_available"`.
+#' @param parameter_type Optional parameter type filter, such as `"person"`,
+#'   `"facet"`, `"step"`, `"slope"`, or `"population"`.
+#' @param facet Optional facet filter.
+#' @param comparison Error/estimate scale for row-level routes. `"aligned"`
+#'   uses `EstimateAligned` / `ErrorAligned`; `"unaligned"` uses `Estimate` /
+#'   `ErrorRaw` on the same comparison scale.
+#' @param draw If `TRUE`, draw with base graphics. If `FALSE`, return an
+#'   `mfrm_plot_data` object with reusable plot tables and metadata.
+#' @param ... Reserved for future extensions.
+#'
+#' @details
+#' These plots are intended as simulation-review graphics. They do not replace
+#' the row-level `x$recovery` table or the ADEMP metadata; they make the main
+#' recovery estimands easier to inspect during model-development and design
+#' checks. Coverage is displayed only for parameter groups with available
+#' standard errors.
+#'
+#' @return An `mfrm_plot_data` object. When `draw = TRUE`, the object is returned
+#'   invisibly after drawing.
+#' @seealso [evaluate_mfrm_recovery()], [summary()]
+#' @examples
+#' \donttest{
+#' rec <- evaluate_mfrm_recovery(
+#'   n_person = 12,
+#'   n_rater = 2,
+#'   n_criterion = 2,
+#'   reps = 1,
+#'   maxit = 8,
+#'   seed = 123
+#' )
+#' plot(rec, type = "summary", metric = "rmse", draw = FALSE)
+#' }
+#' @export
+plot.mfrm_recovery_simulation <- function(x,
+                                          y = NULL,
+                                          type = c("summary", "coverage", "errors",
+                                                   "scatter", "replications"),
+                                          metric = c("rmse", "bias", "mae",
+                                                     "correlation", "coverage",
+                                                     "mcse_bias", "mcse_rmse",
+                                                     "raw_rmse", "raw_bias",
+                                                     "mean_se", "se_available"),
+                                          parameter_type = NULL,
+                                          facet = NULL,
+                                          comparison = c("aligned", "unaligned"),
+                                          draw = TRUE,
+                                          ...) {
+  if (!inherits(x, "mfrm_recovery_simulation")) {
+    stop("`x` must be output from evaluate_mfrm_recovery().", call. = FALSE)
+  }
+  type <- match.arg(type)
+  comparison <- match.arg(comparison)
+  metric_col <- recovery_plot_metric_col(metric)
+  metric_label <- recovery_plot_metric_label(metric_col)
+  notes <- as.character(x$notes %||% character(0))
+  reference_lines <- new_reference_lines()
+
+  if (identical(type, "summary") || identical(type, "coverage")) {
+    summary_tbl <- recovery_plot_filter(x$recovery_summary, parameter_type, facet)
+    if (nrow(summary_tbl) == 0L) {
+      stop("No recovery-summary rows are available for the requested filters.", call. = FALSE)
+    }
+    if (identical(type, "coverage")) {
+      metric_col <- "Coverage95"
+      metric_label <- recovery_plot_metric_label(metric_col)
+      summary_tbl <- summary_tbl[is.finite(summary_tbl$Coverage95), , drop = FALSE]
+      reference_lines <- new_reference_lines(
+        axis = "y",
+        value = 0.95,
+        label = "0.95 nominal coverage",
+        linetype = "dashed",
+        role = "nominal_coverage"
+      )
+      if (nrow(summary_tbl) == 0L) {
+        stop("No finite coverage rows are available for the requested filters.", call. = FALSE)
+      }
+    }
+    plot_tbl <- summary_tbl |>
+      dplyr::mutate(
+        PlotGroup = paste(
+          as.character(.data$ParameterType),
+          as.character(.data$Facet),
+          as.character(.data$ComparisonScale),
+          sep = " / "
+        ),
+        Value = suppressWarnings(as.numeric(.data[[metric_col]]))
+      ) |>
+      dplyr::arrange(.data$ParameterType, .data$Facet, .data$ComparisonScale)
+    plot_tbl <- plot_tbl[is.finite(plot_tbl$Value), , drop = FALSE]
+    if (nrow(plot_tbl) == 0L) {
+      stop("Selected recovery metric has no finite values to plot.", call. = FALSE)
+    }
+    payload <- list(
+      type = type,
+      metric = metric_col,
+      metric_label = metric_label,
+      comparison = comparison,
+      parameter_type = parameter_type,
+      facet = facet,
+      plot_table = plot_tbl,
+      notes = notes,
+      title = if (identical(type, "coverage")) {
+        "Parameter recovery: coverage"
+      } else {
+        paste("Parameter recovery:", metric_label)
+      },
+      subtitle = "Summary by parameter type, facet, and comparison scale",
+      legend = new_plot_legend(),
+      reference_lines = reference_lines
+    )
+    out <- new_mfrm_plot_data("recovery_simulation", payload)
+    if (!isTRUE(draw)) return(out)
+    op <- graphics::par(no.readonly = TRUE)
+    on.exit(graphics::par(op), add = TRUE)
+    graphics::par(mar = c(8, 4, 3, 1))
+    cols <- grDevices::hcl.colors(nrow(plot_tbl), "Dark 3")
+    ylim <- range(c(0, plot_tbl$Value, reference_lines$value), na.rm = TRUE)
+    if (identical(metric_col, "Coverage95") || identical(metric_col, "SEAvailableRate")) {
+      ylim <- c(0, 1)
+    } else if (!all(is.finite(ylim)) || diff(ylim) == 0) {
+      ylim <- range(plot_tbl$Value + c(-0.1, 0.1), na.rm = TRUE)
+    }
+    graphics::barplot(
+      plot_tbl$Value,
+      names.arg = truncate_axis_label(plot_tbl$PlotGroup, width = 26L),
+      las = 2,
+      col = cols,
+      border = NA,
+      ylim = ylim,
+      ylab = metric_label,
+      main = payload$title
+    )
+    if (0 >= ylim[1] && 0 <= ylim[2]) graphics::abline(h = 0, col = "grey55")
+    if (nrow(reference_lines) > 0L) {
+      graphics::abline(h = reference_lines$value, lty = 2, col = "grey35")
+    }
+    return(invisible(out))
+  }
+
+  if (identical(type, "replications")) {
+    rep_tbl <- tibble::as_tibble(x$rep_overview %||% tibble::tibble())
+    status_tbl <- recovery_plot_status_table(rep_tbl)
+    if (nrow(status_tbl) == 0L) stop("No replication rows are available.", call. = FALSE)
+    payload <- list(
+      type = type,
+      metric = "Reps",
+      metric_label = "Replications",
+      comparison = NA_character_,
+      parameter_type = parameter_type,
+      facet = facet,
+      plot_table = status_tbl,
+      rep_overview = rep_tbl,
+      notes = notes,
+      title = "Parameter recovery: replication status",
+      subtitle = "Run, convergence, and timing summary",
+      legend = new_plot_legend(),
+      reference_lines = new_reference_lines()
+    )
+    out <- new_mfrm_plot_data("recovery_simulation", payload)
+    if (!isTRUE(draw)) return(out)
+    cols <- c(converged = "#238b45", not_converged = "#b65e16", failed = "#b11f24")
+    bar_cols <- unname(cols[status_tbl$Status])
+    bar_cols[is.na(bar_cols)] <- "#6b7280"
+    graphics::barplot(
+      status_tbl$Reps,
+      names.arg = status_tbl$Status,
+      col = bar_cols,
+      border = NA,
+      ylab = "Replications",
+      main = payload$title
+    )
+    return(invisible(out))
+  }
+
+  recovery_tbl <- recovery_plot_filter(x$recovery, parameter_type, facet)
+  if (nrow(recovery_tbl) == 0L) {
+    stop("No row-level recovery rows are available for the requested filters.", call. = FALSE)
+  }
+  estimate_col <- if (identical(comparison, "aligned")) "EstimateAligned" else "Estimate"
+  error_col <- if (identical(comparison, "aligned")) "ErrorAligned" else "ErrorRaw"
+  recovery_tbl <- recovery_tbl |>
+    dplyr::mutate(
+      PlotGroup = paste(
+        as.character(.data$ParameterType),
+        as.character(.data$Facet),
+        as.character(.data$ComparisonScale),
+        sep = " / "
+      ),
+      TruthForPlot = suppressWarnings(as.numeric(.data$Truth)),
+      EstimateForPlot = suppressWarnings(as.numeric(.data[[estimate_col]])),
+      ErrorForPlot = suppressWarnings(as.numeric(.data[[error_col]]))
+    )
+
+  if (identical(type, "errors")) {
+    plot_tbl <- recovery_tbl[is.finite(recovery_tbl$ErrorForPlot), , drop = FALSE]
+    if (nrow(plot_tbl) == 0L) stop("No finite recovery errors are available.", call. = FALSE)
+    payload <- list(
+      type = type,
+      metric = error_col,
+      metric_label = if (identical(comparison, "aligned")) "Aligned recovery error" else "Unaligned recovery error",
+      comparison = comparison,
+      parameter_type = parameter_type,
+      facet = facet,
+      plot_table = plot_tbl,
+      notes = notes,
+      title = "Parameter recovery: error distribution",
+      subtitle = paste("Comparison:", comparison),
+      legend = new_plot_legend(),
+      reference_lines = new_reference_lines("y", 0, "zero error", "solid", "zero_error")
+    )
+    out <- new_mfrm_plot_data("recovery_simulation", payload)
+    if (!isTRUE(draw)) return(out)
+    graphics::boxplot(
+      ErrorForPlot ~ PlotGroup,
+      data = plot_tbl,
+      las = 2,
+      col = "#dbeafe",
+      border = "#334e68",
+      ylab = payload$metric_label,
+      main = payload$title
+    )
+    graphics::abline(h = 0, col = "grey45", lty = 2)
+    return(invisible(out))
+  }
+
+  plot_tbl <- recovery_tbl[is.finite(recovery_tbl$TruthForPlot) &
+                             is.finite(recovery_tbl$EstimateForPlot), , drop = FALSE]
+  if (nrow(plot_tbl) == 0L) {
+    stop("No finite truth/estimate pairs are available.", call. = FALSE)
+  }
+  payload <- list(
+    type = type,
+    metric = estimate_col,
+    metric_label = if (identical(comparison, "aligned")) "Aligned estimate" else "Unaligned estimate",
+    comparison = comparison,
+    parameter_type = parameter_type,
+    facet = facet,
+    plot_table = plot_tbl,
+    notes = notes,
+    title = "Parameter recovery: truth versus estimate",
+    subtitle = paste("Comparison:", comparison),
+    legend = new_plot_legend(),
+    reference_lines = new_reference_lines("xy", NA_real_, "identity line", "solid", "perfect_recovery")
+  )
+  out <- new_mfrm_plot_data("recovery_simulation", payload)
+  if (!isTRUE(draw)) return(out)
+  groups <- unique(as.character(plot_tbl$PlotGroup))
+  cols <- grDevices::hcl.colors(max(1L, length(groups)), "Dark 3")
+  group_idx <- match(as.character(plot_tbl$PlotGroup), groups)
+  lim <- range(c(plot_tbl$TruthForPlot, plot_tbl$EstimateForPlot), na.rm = TRUE)
+  if (!all(is.finite(lim)) || diff(lim) == 0) lim <- lim + c(-0.1, 0.1)
+  graphics::plot(
+    plot_tbl$TruthForPlot,
+    plot_tbl$EstimateForPlot,
+    xlab = "Truth",
+    ylab = payload$metric_label,
+    main = payload$title,
+    xlim = lim,
+    ylim = lim,
+    pch = 16,
+    col = cols[group_idx]
+  )
+  graphics::abline(0, 1, col = "grey35", lty = 2)
+  if (length(groups) > 1L && length(groups) <= 8L) {
+    graphics::legend("topleft", legend = groups, col = cols, pch = 16, bty = "n", cex = 0.8)
+  }
+  invisible(out)
+}
+
 #' Evaluate MFRM design conditions by repeated simulation
 #'
 #' @param n_person Vector of person counts to evaluate.
@@ -1294,11 +3197,10 @@ design_eval_summarize_results <- function(results, rep_overview, design_variable
 #' @param noise_sd Optional observation-level noise added to the linear predictor.
 #' @param step_span Spread of step thresholds on the logit scale.
 #' @param fit_method Estimation method passed to [fit_mfrm()].
-#' @param model Measurement model passed to [fit_mfrm()]. The design evaluator
-#'   supports `RSM`, `PCM`, and bounded `GPCM`; `GPCM` results retain the
-#'   caveats documented in [gpcm_capability_matrix()].
-#' @param step_facet Step facet passed to [fit_mfrm()] when `model = "PCM"` or
-#'   bounded `GPCM`.
+#' @param model Measurement model passed to [fit_mfrm()]. The current design
+#'   evaluator supports `RSM` and `PCM`; bounded `GPCM` is accepted only
+#'   to produce an explicit unsupported-path error.
+#' @param step_facet Step facet passed to [fit_mfrm()] when `model = "PCM"`.
 #'   When left `NULL`, the function inherits the generator step facet from
 #'   `sim_spec` when available and otherwise defaults to `"Criterion"`.
 #' @param maxit Maximum iterations passed to [fit_mfrm()].
@@ -1315,6 +3217,10 @@ design_eval_summarize_results <- function(results, rep_overview, design_variable
 #'   generator, this helper currently requires `fit_method = "MML"` so each
 #'   replication can refit the population model.
 #' @param seed Optional seed for reproducible replications.
+#' @param progress Logical. Whether to show a progress bar across
+#'   design-by-replication cells. Defaults to [interactive()], so interactive
+#'   exploratory runs show progress while non-interactive tests, scripts, and
+#'   report rendering stay quiet. Set `TRUE` or `FALSE` explicitly to override.
 #' @param parallel Parallelisation strategy for the rep loop within
 #'   each design row. `"no"` (default) runs serially; `"future"`
 #'   uses `future.apply::future_lapply` and respects whatever
@@ -1363,11 +3269,16 @@ design_eval_summarize_results <- function(results, rep_overview, design_variable
 #' study under explicit assumptions; it is not a closed-form predictive
 #' distribution for one future administration.
 #'
-#' Bounded `GPCM` is available in this design-evaluation helper through the
-#' package's slope-aware simulation contract and downstream exploratory
-#' diagnostics. The current planning layer is still role-based for exactly two
-#' non-person facets (`rater`-like and `criterion`-like), even though the
-#' estimation core supports arbitrary facet counts.
+#' First-release `GPCM` is not yet available in this design-evaluation helper.
+#' Direct bounded-`GPCM` data generation and parameter-recovery checks are
+#' available through [simulate_mfrm_data()], [evaluate_mfrm_recovery()], and
+#' [assess_mfrm_recovery()], but this helper asks a broader design operating-
+#' characteristic question. The remaining gap is a validated slope-aware
+#' design-planning contract with downstream diagnostics compatible with the
+#' generalized ordered kernel. More broadly, the current planning layer is
+#' role-based for exactly two non-person facets (`rater`-like and
+#' `criterion`-like), even though the estimation core supports arbitrary facet
+#' counts.
 #'
 #' Recovery metrics are reported only when the generator and fitted model target
 #' the same facet-parameter contract. In practice this means the same
@@ -1410,10 +3321,10 @@ design_eval_summarize_results <- function(results, rep_overview, design_variable
 #'
 #' This is a Monte Carlo design-evaluation helper. It can visualize how
 #' separation, reliability, strata, RMSE, and fit-screen rates change when
-#' you vary person, rater, criterion, or assignment counts. It is not a
-#' closed-form generalizability-theory D-study calculator; use
-#' [mfrm_generalizability()] for observed variance-component summaries and
-#' treat analytic G/Phi coefficient planning as outside the current scope.
+#' you vary person, rater, criterion, or assignment counts. For analytic
+#' generalizability-theory planning, pair observed variance-component review
+#' from [mfrm_generalizability()] with D-study projections from
+#' [mfrm_d_study()].
 #'
 #' @section References:
 #' The simulation logic follows the general Monte Carlo / operating-characteristic
@@ -1483,12 +3394,14 @@ evaluate_mfrm_design <- function(n_person = c(30, 50, 100),
                                  residual_pca = c("none", "overall", "facet", "both"),
                                  sim_spec = NULL,
                                  seed = NULL,
+                                 progress = interactive(),
                                  parallel = c("no", "future")) {
-  fit_method_missing <- missing(fit_method)
-  model_missing <- missing(model)
   fit_method <- match.arg(fit_method)
   model <- match.arg(model)
   parallel <- match.arg(parallel)
+  if (!is.logical(progress) || length(progress) != 1L || is.na(progress)) {
+    stop("`progress` must be a single TRUE/FALSE value.", call. = FALSE)
+  }
   # `parallel = "future"` requires the `future.apply` Suggests to be
   # installed AND a `future::plan()` to be active. We honour the
   # request when both are satisfied; otherwise we fall back to the
@@ -1513,15 +3426,25 @@ evaluate_mfrm_design <- function(n_person = c(30, 50, 100),
             "parallelises the rep loop within each design row. ",
             "Cross-design-row parallelism is planned for a future release.")
   }
+  if (identical(model, "GPCM")) {
+    stop(
+      "`evaluate_mfrm_design()` does not yet support bounded `GPCM`. ",
+      "The design operating-characteristic layer remains validated only for `RSM` / `PCM`; use `evaluate_mfrm_recovery()` for direct bounded-`GPCM` parameter-recovery checks. ",
+      gpcm_planning_scope_rationale(),
+      call. = FALSE
+    )
+  }
   residual_pca <- match.arg(residual_pca)
   if (!is.null(sim_spec) && !inherits(sim_spec, "mfrm_sim_spec")) {
     stop("`sim_spec` must be output from build_mfrm_sim_spec() or extract_mfrm_sim_spec().", call. = FALSE)
   }
-  if (isTRUE(model_missing) && !is.null(sim_spec)) {
-    model <- match.arg(as.character(sim_spec$model %||% "RSM"), c("RSM", "PCM", "GPCM"))
-    if (isTRUE(fit_method_missing) && identical(model, "GPCM")) {
-      fit_method <- "MML"
-    }
+  if (!is.null(sim_spec) && identical(as.character(sim_spec$model %||% NA_character_), "GPCM")) {
+    stop(
+      "`evaluate_mfrm_design()` does not yet support bounded `GPCM` simulation specifications. ",
+      "Direct data generation and parameter-recovery checks are available, but design operating-characteristic evaluation remains validated only for `RSM` / `PCM`. ",
+      gpcm_planning_scope_rationale(),
+      call. = FALSE
+    )
   }
   if (!is.null(sim_spec) &&
       isTRUE((sim_spec$population %||% simulation_empty_population_spec())$active) &&
@@ -1567,7 +3490,6 @@ evaluate_mfrm_design <- function(n_person = c(30, 50, 100),
     fitted_model = model,
     fitted_step_facet = fit_step_facet
   )
-  misfit_band <- mfrm_misfit_thresholds()
 
   seeds <- with_preserved_rng_seed(
     seed,
@@ -1580,13 +3502,13 @@ evaluate_mfrm_design <- function(n_person = c(30, 50, 100),
   result_idx <- 0L
   rep_idx <- 0L
 
-  # Design-evaluation runs a full fit + diagnose per (design, rep)
-  # cell, so the wall-clock easily reaches tens of seconds. Surface a
-  # progress bar over the (design x reps) grid so users can see how
-  # far the search has advanced.
+  # Design-evaluation runs a full fit + diagnose per (design, rep) cell, so
+  # the wall-clock can reach tens of seconds. Show a progress bar only when
+  # requested (default: interactive sessions) so tests, Quarto rendering, and
+  # batch simulation logs remain readable.
   total_cells <- nrow(design_grid) * reps
   design_progress_id <- NULL
-  if (total_cells > 1L) {
+  if (isTRUE(progress) && total_cells > 1L) {
     design_progress_id <- cli::cli_progress_bar(
       name = "evaluate_mfrm_design",
       total = total_cells,
@@ -1622,7 +3544,7 @@ evaluate_mfrm_design <- function(n_person = c(30, 50, 100),
       }
       seed_idx <- seed_idx + 1L
       sim <- if (is.null(row_spec)) {
-        sim_args <- list(
+        simulate_mfrm_data(
           n_person = design$n_person,
           n_rater = design$n_rater,
           n_criterion = design$n_criterion,
@@ -1633,13 +3555,8 @@ evaluate_mfrm_design <- function(n_person = c(30, 50, 100),
           criterion_sd = criterion_sd,
           noise_sd = noise_sd,
           step_span = step_span,
-          model = model,
           seed = seeds[seed_idx]
         )
-        if (model %in% c("PCM", "GPCM")) {
-          sim_args$step_facet <- fit_step_facet
-        }
-        do.call(simulate_mfrm_data, sim_args)
       } else {
         simulate_mfrm_data(sim_spec = row_spec, seed = seeds[seed_idx])
       }
@@ -1652,11 +3569,9 @@ evaluate_mfrm_design <- function(n_person = c(30, 50, 100),
         score = "Score",
         method = fit_method,
         model = model,
-        maxit = maxit,
-        rating_min = 1L,
-        rating_max = row_score_levels
+        maxit = maxit
       )
-      if (model %in% c("PCM", "GPCM")) fit_args$step_facet <- fit_step_facet
+      if (identical(model, "PCM")) fit_args$step_facet <- fit_step_facet
       if ("Weight" %in% names(sim)) fit_args$weight <- "Weight"
       if (identical(fit_method, "MML")) fit_args$quad_points <- quad_points
       sim_population <- attr(sim, "mfrm_population_data")
@@ -1666,6 +3581,11 @@ evaluate_mfrm_design <- function(n_person = c(30, 50, 100),
         fit_args$person_id <- sim_population$person_id
         fit_args$population_policy <- sim_population$population_policy
       }
+      fit_args <- simulation_add_fit_score_support(
+        fit_args,
+        sim,
+        fallback_score_levels = row_score_levels
+      )
 
       fit <- tryCatch(do.call(fit_mfrm, fit_args), error = function(e) e)
       diag <- if (inherits(fit, "error")) fit else {
@@ -1747,12 +3667,6 @@ evaluate_mfrm_design <- function(n_person = c(30, 50, 100),
           z_out <- suppressWarnings(as.numeric(facet_fit$OutfitZSTD))
           misfit_rate <- mean(abs(z_in) > 2 | abs(z_out) > 2, na.rm = TRUE)
         }
-        direction_rates <- mfrm_misfit_direction_rate_row(
-          infit = if ("Infit" %in% names(facet_fit)) facet_fit$Infit else numeric(0),
-          outfit = if ("Outfit" %in% names(facet_fit)) facet_fit$Outfit else numeric(0),
-          lower = as.numeric(misfit_band["lower"]),
-          upper = as.numeric(misfit_band["upper"])
-        )
 
         result_idx <- result_idx + 1L
         result_rows[[result_idx]] <- tibble::tibble(
@@ -1780,19 +3694,6 @@ evaluate_mfrm_design <- function(n_person = c(30, 50, 100),
           MeanInfit = suppressWarnings(as.numeric(rel_row$MeanInfit[1])),
           MeanOutfit = suppressWarnings(as.numeric(rel_row$MeanOutfit[1])),
           MisfitRate = misfit_rate,
-          MnSqMisfitRate = direction_rates$MnSqMisfitRate[1],
-          UnderfitRate = direction_rates$UnderfitRate[1],
-          OverfitRate = direction_rates$OverfitRate[1],
-          MixedMisfitRate = direction_rates$MixedMisfitRate[1],
-          InBandRate = direction_rates$InBandRate[1],
-          MisfitClassified = direction_rates$MisfitClassified[1],
-          MnSqMisfitN = direction_rates$MnSqMisfitN[1],
-          UnderfitN = direction_rates$UnderfitN[1],
-          OverfitN = direction_rates$OverfitN[1],
-          MixedMisfitN = direction_rates$MixedMisfitN[1],
-          InBandN = direction_rates$InBandN[1],
-          MisfitBandLower = as.numeric(misfit_band["lower"]),
-          MisfitBandUpper = as.numeric(misfit_band["upper"]),
           SeverityRMSE = severity_rmse,
           SeverityBias = severity_bias,
           SeverityRMSERaw = severity_rmse_raw,
@@ -1858,6 +3759,7 @@ evaluate_mfrm_design <- function(n_person = c(30, 50, 100),
         quad_points = quad_points,
         residual_pca = residual_pca,
         sim_spec = sim_spec,
+        progress = isTRUE(progress),
         facet_names = stats::setNames(base_facet_names, c("rater", "criterion")),
         design_variable_aliases = design_variable_aliases,
         design_descriptor = design_descriptor,
@@ -1889,7 +3791,7 @@ evaluate_mfrm_design <- function(n_person = c(30, 50, 100),
 #' - convergence rate
 #' - separation and reliability by facet
 #' - severity recovery RMSE
-#' - mean ZSTD misfit rate and directional MnSq underfit/overfit rates
+#' - mean misfit rate
 #'
 #' @return An object of class `summary.mfrm_design_evaluation` with components:
 #' - `overview`: run-level overview
@@ -2044,8 +3946,6 @@ print.summary.mfrm_design_evaluation <- function(x, ...) {
 #' - criterion `metric = "severityrmse"` against `x_var = "n_person"`
 #'   when you want aligned recovery error rather than raw location shifts
 #' - rater `metric = "convergencerate"` against `x_var = "raters_per_person"`
-#' - rater `metric = "underfitrate"` or `metric = "overfitrate"` when
-#'   directional MnSq-band misfit is the planning target
 #'
 #' @return If `draw = TRUE`, invisibly returns a plotting-data list. If
 #'   `draw = FALSE`, returns that list directly. The returned list includes
@@ -2072,9 +3972,7 @@ print.summary.mfrm_design_evaluation <- function(x, ...) {
 plot.mfrm_design_evaluation <- function(x,
                                         facet = c("Rater", "Criterion", "Person"),
                                         metric = c("separation", "reliability", "infit", "outfit",
-                                                   "misfitrate", "mnsqmisfitrate", "underfitrate",
-                                                   "overfitrate", "mixedmisfitrate", "inbandrate",
-                                                   "severityrmse", "severitybias",
+                                                   "misfitrate", "severityrmse", "severitybias",
                                                    "convergencerate", "elapsedsec", "mincategorycount"),
                                         x_var = c("n_person", "n_rater", "n_criterion", "raters_per_person"),
                                         group_var = NULL,
@@ -2332,13 +4230,13 @@ recommend_mfrm_design <- function(x,
 
   # Publication-workflow caveats. mfrmr treats facets as fixed effects,
   # so simulation-based recommendations should be complemented with a
-  # post-fit audit of observed level counts. See the "Fixed effects
-  # assumption" section of ?fit_mfrm and `facet_small_sample_audit()`.
+  # post-fit review of observed level counts. See the "Fixed effects
+  # assumption" section of ?fit_mfrm and `facet_small_sample_review()`.
   fixed_effects_note <- paste0(
     "mfrmr estimates all facets as fixed effects with sum-to-zero ",
     "identification; simulation-based adequacy does not imply partial ",
     "pooling for small-N levels in real data. After collecting data, ",
-    "inspect observed level counts with `facet_small_sample_audit(fit)` ",
+    "inspect observed level counts with `facet_small_sample_review(fit)` ",
     "and `analyze_hierarchical_structure(data, facets)`."
   )
 
@@ -2363,8 +4261,8 @@ recommend_mfrm_design <- function(x,
       planning_schema = simulation_object_planning_schema(x),
       caveats = list(
         fixed_effects = fixed_effects_note,
-        post_fit_audit = c(
-          "facet_small_sample_audit(fit)",
+        post_fit_review = c(
+          "facet_small_sample_review(fit)",
           "analyze_hierarchical_structure(data, facets)",
           "compute_facet_icc(data, facets, score, person)"
         )
@@ -2535,7 +4433,7 @@ diagnostic_screening_build_latent_misspecification_spec <- function(row_spec_bas
       empirical_rater = empirical_support$rater,
       empirical_criterion = empirical_support$criterion
     )
-    if (model %in% c("PCM", "GPCM")) {
+    if (identical(model, "PCM")) {
       spec_args$step_facet <- fit_step_facet
     }
     return(do.call(build_mfrm_sim_spec, spec_args))
@@ -2618,8 +4516,8 @@ diagnostic_screening_build_step_misspecification_spec <- function(row_spec_base,
                                                                   step_span,
                                                                   fit_model,
                                                                   fit_step_facet) {
-  if (!fit_model %in% c("RSM", "PCM", "GPCM")) {
-    stop("Step-structure screening requires `model` to be `RSM`, `PCM`, or bounded `GPCM`.", call. = FALSE)
+  if (!identical(fit_model, "RSM") && !identical(fit_model, "PCM")) {
+    stop("Step-structure screening is currently scoped to `RSM` and `PCM` fits.", call. = FALSE)
   }
   if (!is.null(row_spec_base) && isTRUE((row_spec_base$population %||% list(active = FALSE))$active)) {
     stop(
@@ -2655,7 +4553,6 @@ diagnostic_screening_build_step_misspecification_spec <- function(row_spec_base,
   )
 
   if (is.null(row_spec_base)) {
-    generator_model <- if (identical(fit_model, "GPCM")) "GPCM" else "PCM"
     return(build_mfrm_sim_spec(
       n_person = design_row$n_person,
       n_rater = design_row$n_rater,
@@ -2668,32 +4565,17 @@ diagnostic_screening_build_step_misspecification_spec <- function(row_spec_base,
       noise_sd = noise_sd,
       step_span = step_span,
       thresholds = threshold_table,
-      model = generator_model,
+      model = "PCM",
       step_facet = generator_step_facet,
-      slope_facet = if (identical(generator_model, "GPCM")) generator_step_facet else NULL,
       assignment = if (identical(design_row$raters_per_person, design_row$n_rater)) "crossed" else "rotating",
       facet_names = facet_names
     ))
   }
 
   out <- row_spec_base
-  out$model <- if (identical(fit_model, "GPCM")) "GPCM" else "PCM"
+  out$model <- "PCM"
   out$step_facet <- generator_step_facet
   out$threshold_table <- tibble::as_tibble(threshold_table)
-  if (identical(out$model, "GPCM")) {
-    out$slope_facet <- generator_step_facet
-    out$slope_table <- simulation_build_slope_table(
-      slopes = NULL,
-      model = "GPCM",
-      slope_facet = generator_step_facet,
-      facet_names = stats::setNames(facet_names, c("rater", "criterion")),
-      n_rater = design_row$n_rater,
-      n_criterion = design_row$n_criterion
-    )
-  } else {
-    out$slope_facet <- NULL
-    out$slope_table <- NULL
-  }
   out$planning_constraints <- simulation_planning_constraints(out)
   out$planning_schema <- simulation_planning_schema(out)
   out
@@ -2935,11 +4817,10 @@ diagnostic_screening_summarize_results <- function(results, design_variable_alia
 #' @param criterion_sd Standard deviation of simulated criterion difficulties.
 #' @param noise_sd Optional observation-level noise added to the linear predictor.
 #' @param step_span Spread of step thresholds on the logit scale.
-#' @param model Measurement model passed to [fit_mfrm()]. The helper supports
-#'   `RSM`, `PCM`, and bounded `GPCM`; `GPCM` results retain the caveats
-#'   documented in [gpcm_capability_matrix()].
-#' @param step_facet Step facet passed to [fit_mfrm()] when `model = "PCM"` or
-#'   bounded `GPCM`.
+#' @param model Measurement model passed to [fit_mfrm()]. The current helper
+#'   supports `RSM` and `PCM`; bounded `GPCM` is accepted only to
+#'   produce an explicit unsupported-path error.
+#' @param step_facet Step facet passed to [fit_mfrm()] when `model = "PCM"`.
 #' @param maxit Maximum iterations passed to [fit_mfrm()].
 #' @param quad_points Quadrature points for the internal `MML` fit.
 #' @param residual_pca Residual PCA mode passed to [diagnose_mfrm()].
@@ -3028,14 +4909,24 @@ evaluate_mfrm_diagnostic_screening <- function(n_person = c(30, 50, 100),
                                                residual_pca = c("none", "overall", "facet", "both"),
                                                sim_spec = NULL,
                                                seed = NULL) {
-  model_missing <- missing(model)
   model <- match.arg(model)
+  if (identical(model, "GPCM")) {
+    stop(
+      "`evaluate_mfrm_diagnostic_screening()` does not yet support bounded `GPCM`. ",
+      "Strict marginal validation is currently scoped to `RSM` / `PCM`.",
+      call. = FALSE
+    )
+  }
   residual_pca <- match.arg(residual_pca)
   if (!is.null(sim_spec) && !inherits(sim_spec, "mfrm_sim_spec")) {
     stop("`sim_spec` must be output from build_mfrm_sim_spec() or extract_mfrm_sim_spec().", call. = FALSE)
   }
-  if (isTRUE(model_missing) && !is.null(sim_spec)) {
-    model <- match.arg(as.character(sim_spec$model %||% "RSM"), c("RSM", "PCM", "GPCM"))
+  if (!is.null(sim_spec) && identical(as.character(sim_spec$model %||% NA_character_), "GPCM")) {
+    stop(
+      "`evaluate_mfrm_diagnostic_screening()` does not yet support bounded `GPCM` simulation specifications. ",
+      "Strict marginal validation remains scoped to `RSM` / `PCM`.",
+      call. = FALSE
+    )
   }
 
   reps <- as.integer(reps[1])
@@ -3146,7 +5037,7 @@ evaluate_mfrm_diagnostic_screening <- function(n_person = c(30, 50, 100),
               model = model,
               seed = sim_seed
             )
-            if (model %in% c("PCM", "GPCM")) {
+            if (identical(model, "PCM")) {
               sim_args$step_facet <- fit_step_facet
             }
             do.call(simulate_mfrm_data, sim_args)
@@ -3210,7 +5101,7 @@ evaluate_mfrm_diagnostic_screening <- function(n_person = c(30, 50, 100),
             model = model,
             seed = sim_seed
           )
-          if (model %in% c("PCM", "GPCM")) {
+          if (identical(model, "PCM")) {
             sim_args$step_facet <- fit_step_facet
           }
           do.call(simulate_mfrm_data, sim_args)
@@ -3227,11 +5118,9 @@ evaluate_mfrm_diagnostic_screening <- function(n_person = c(30, 50, 100),
           method = "MML",
           model = model,
           maxit = maxit,
-          quad_points = quad_points,
-          rating_min = 1L,
-          rating_max = row_score_levels
+          quad_points = quad_points
         )
-        if (model %in% c("PCM", "GPCM")) {
+        if (identical(model, "PCM")) {
           fit_args$step_facet <- fit_step_facet
         }
         if ("Weight" %in% names(sim)) {
@@ -3244,6 +5133,11 @@ evaluate_mfrm_diagnostic_screening <- function(n_person = c(30, 50, 100),
           fit_args$person_id <- sim_population$person_id
           fit_args$population_policy <- sim_population$population_policy
         }
+        fit_args <- simulation_add_fit_score_support(
+          fit_args,
+          sim,
+          fallback_score_levels = row_score_levels
+        )
 
         fit <- tryCatch(do.call(fit_mfrm, fit_args), error = function(e) e)
         diag <- if (inherits(fit, "error")) fit else {
@@ -3633,11 +5527,10 @@ signal_eval_metric_col <- function(signal, metric) {
 #' @param noise_sd Optional observation-level noise added to the linear predictor.
 #' @param step_span Spread of step thresholds on the logit scale.
 #' @param fit_method Estimation method passed to [fit_mfrm()].
-#' @param model Measurement model passed to [fit_mfrm()]. The signal-detection
-#'   evaluator supports `RSM`, `PCM`, and bounded `GPCM`; `GPCM` results retain
-#'   the caveats documented in [gpcm_capability_matrix()].
-#' @param step_facet Step facet passed to [fit_mfrm()] when `model = "PCM"` or
-#'   bounded `GPCM`.
+#' @param model Measurement model passed to [fit_mfrm()]. The current
+#'   signal-detection evaluator supports `RSM` and `PCM`; bounded `GPCM`
+#'   is accepted only to produce an explicit unsupported-path error.
+#' @param step_facet Step facet passed to [fit_mfrm()] when `model = "PCM"`.
 #'   When left `NULL`, the function inherits the generator step facet from
 #'   `sim_spec` when available and otherwise defaults to `"Criterion"`.
 #' @param maxit Maximum iterations passed to [fit_mfrm()].
@@ -3694,9 +5587,12 @@ signal_eval_metric_col <- function(signal, metric) {
 #' cell is counted as **screen-positive** only when those screening metrics are
 #' available and satisfy
 #'
-#' First-release `GPCM` is not yet available in this helper because its signal-
-#' detection path still depends on simulation and diagnostics layers validated
-#' only for `RSM` / `PCM`. More broadly, the current planning layer is still
+#' First-release `GPCM` is not yet available in this helper because the helper
+#' estimates design-grid operating characteristics for injected DIF and
+#' interaction-bias signals. Direct bounded-`GPCM` data generation,
+#' fitted-model bias screening via [estimate_bias()], and parameter-recovery
+#' checks are available elsewhere, but this design-grid detection layer remains
+#' validated only for `RSM` / `PCM`. More broadly, the current planning layer is
 #' role-based for exactly two non-person facets (`rater`-like and
 #' `criterion`-like), even though the estimation core supports arbitrary facet
 #' counts.
@@ -3825,20 +5721,28 @@ evaluate_mfrm_signal_detection <- function(n_person = c(30, 50, 100),
                                            bias_abs_t = 2,
                                            seed = NULL) {
   dif_abs_cut_missing <- missing(dif_abs_cut)
-  fit_method_missing <- missing(fit_method)
-  model_missing <- missing(model)
   fit_method <- match.arg(fit_method)
   model <- match.arg(model)
+  if (identical(model, "GPCM")) {
+    stop(
+      "`evaluate_mfrm_signal_detection()` does not yet support bounded `GPCM`. ",
+      "The signal-detection operating-characteristic layer remains validated only for `RSM` / `PCM`; use `estimate_bias()` for bounded-`GPCM` conditional screening on a fitted model. ",
+      gpcm_planning_scope_rationale(),
+      call. = FALSE
+    )
+  }
   residual_pca <- match.arg(residual_pca)
   dif_method <- match.arg(dif_method)
   if (!is.null(sim_spec) && !inherits(sim_spec, "mfrm_sim_spec")) {
     stop("`sim_spec` must be output from build_mfrm_sim_spec() or extract_mfrm_sim_spec().", call. = FALSE)
   }
-  if (isTRUE(model_missing) && !is.null(sim_spec)) {
-    model <- match.arg(as.character(sim_spec$model %||% "RSM"), c("RSM", "PCM", "GPCM"))
-    if (isTRUE(fit_method_missing) && identical(model, "GPCM")) {
-      fit_method <- "MML"
-    }
+  if (!is.null(sim_spec) && identical(as.character(sim_spec$model %||% NA_character_), "GPCM")) {
+    stop(
+      "`evaluate_mfrm_signal_detection()` does not yet support bounded `GPCM` simulation specifications. ",
+      "Direct data generation and parameter-recovery checks are available, but signal-detection operating-characteristic studies remain validated only for `RSM` / `PCM`. ",
+      gpcm_planning_scope_rationale(),
+      call. = FALSE
+    )
   }
   if (!is.null(sim_spec) &&
       isTRUE((sim_spec$population %||% simulation_empty_population_spec())$active) &&
@@ -3951,7 +5855,7 @@ evaluate_mfrm_signal_detection <- function(n_person = c(30, 50, 100),
     for (rep in seq_len(reps)) {
       seed_idx <- seed_idx + 1L
       sim <- if (is.null(row_spec)) {
-        sim_args <- list(
+        simulate_mfrm_data(
           n_person = design$n_person,
           n_rater = design$n_rater,
           n_criterion = design$n_criterion,
@@ -3965,13 +5869,8 @@ evaluate_mfrm_signal_detection <- function(n_person = c(30, 50, 100),
           group_levels = group_levels,
           dif_effects = if (isTRUE(abs(as.numeric(dif_effect[1])) > 0)) dif_tbl else NULL,
           interaction_effects = if (isTRUE(abs(as.numeric(bias_effect[1])) > 0)) bias_tbl else NULL,
-          model = model,
           seed = seeds[seed_idx]
         )
-        if (model %in% c("PCM", "GPCM")) {
-          sim_args$step_facet <- fit_step_facet
-        }
-        do.call(simulate_mfrm_data, sim_args)
       } else {
         simulate_mfrm_data(sim_spec = row_spec, seed = seeds[seed_idx])
       }
@@ -3984,11 +5883,9 @@ evaluate_mfrm_signal_detection <- function(n_person = c(30, 50, 100),
         score = "Score",
         method = fit_method,
         model = model,
-        maxit = maxit,
-        rating_min = 1L,
-        rating_max = row_score_levels
+        maxit = maxit
       )
-      if (model %in% c("PCM", "GPCM")) fit_args$step_facet <- fit_step_facet
+      if (identical(model, "PCM")) fit_args$step_facet <- fit_step_facet
       if ("Weight" %in% names(sim)) fit_args$weight <- "Weight"
       if (identical(fit_method, "MML")) fit_args$quad_points <- quad_points
       sim_population <- attr(sim, "mfrm_population_data")
@@ -3998,6 +5895,11 @@ evaluate_mfrm_signal_detection <- function(n_person = c(30, 50, 100),
         fit_args$person_id <- sim_population$person_id
         fit_args$population_policy <- sim_population$population_policy
       }
+      fit_args <- simulation_add_fit_score_support(
+        fit_args,
+        sim,
+        fallback_score_levels = row_score_levels
+      )
 
       fit <- tryCatch(do.call(fit_mfrm, fit_args), error = function(e) e)
       diag <- if (inherits(fit, "error")) fit else {

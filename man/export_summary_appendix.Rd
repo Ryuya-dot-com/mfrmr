@@ -89,6 +89,12 @@ pre-fit score-support caveats are exported through the
 they remain available under \code{"recommended"} and \code{"diagnostics"} presets when
 the source summary contains caveat rows.
 
+Parameter-recovery studies can be exported by passing
+\code{\link[=evaluate_mfrm_recovery]{evaluate_mfrm_recovery()}} or \code{\link[=assess_mfrm_recovery]{assess_mfrm_recovery()}} output directly. The
+exported bundle keeps the ADEMP-style simulation basis, recovery metrics,
+replication status, adequacy checklist, thresholds, and next actions in
+separate appendix-ready tables.
+
 Unlike \code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}}, this helper does not require a fitted model.
 It is intended for the stage where compact reporting summaries already exist
 and the task is to hand off appendix-ready tables, catalogs, and reporting

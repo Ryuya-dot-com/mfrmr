@@ -11,10 +11,8 @@
 #'   of such outputs. Non-matching bundles are skipped quietly.
 #' @param severity_warn Absolute estimate cutoff used to flag severity
 #'   outliers.
-#' @param misfit_warn Mean-square cutoff used to flag misfit. `NULL`
-#'   (default) uses the active lower/upper pair from
-#'   [mfrm_misfit_thresholds()]. A numeric value keeps the legacy symmetric
-#'   wrapper form: values above the cutoff or below its reciprocal are flagged.
+#' @param misfit_warn Mean-square cutoff used to flag misfit. Values above
+#'   this cutoff or below its reciprocal are flagged.
 #' @param central_tendency_max Absolute estimate cutoff used to flag central
 #'   tendency. Levels near zero are marked.
 #' @param bias_count_warn Minimum flagged-bias row count required to flag a
@@ -33,9 +31,9 @@
 #' - **Severity**: elements with \eqn{|\mathrm{Estimate}| >}
 #'   `severity_warn` logits are flagged as unusually harsh or lenient.
 #' - **Misfit**: elements with Infit or Outfit MnSq outside the
-#'   active MnSq screening band are flagged. The band defaults to the package
-#'   pair returned by [mfrm_misfit_thresholds()] (broad 0.5-1.5);
-#'   pass `misfit_warn = 1.5` to request the older symmetric
+#'   acceptance band are flagged. The band defaults to the package
+#'   pair returned by [mfrm_misfit_thresholds()] (Linacre 0.5-1.5);
+#'   pass `misfit_warn = 1.5` to keep the older symmetric
 #'   \eqn{[1/}\code{misfit_warn}\eqn{,\;}\code{misfit_warn}\eqn{]}
 #'   form (0.67-1.5).
 #' - **Central tendency**: elements with
@@ -72,9 +70,7 @@
 #'   explicitly
 #' - `overview`: one-row structural overview
 #' - `summary`: one-row screening summary
-#' - `detail`: level-level detail table. When fit statistics are available,
-#'   `MisfitDirection` separates `underfit` (above the upper MnSq band),
-#'   `overfit` (below the lower band), `mixed`, and `in_band`.
+#' - `detail`: level-level detail table
 #' - `ranked`: detail ordered by flag density / severity
 #' - `flagged`: flagged levels only
 #' - `bias_sources`: per-bundle bias aggregation metadata
@@ -94,7 +90,6 @@
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
 #' dash <- facet_quality_dashboard(fit, diagnostics = diag)
 #' summary(dash)
-#' dash$detail[, c("Level", "Infit", "Outfit", "MisfitDirection", "FlagLabel")]
 #' @export
 facet_quality_dashboard <- function(fit,
                                     diagnostics = NULL,
@@ -180,13 +175,6 @@ facet_quality_dashboard <- function(fit,
   detail$MisfitFlag <- is.finite(fit_hi) & (
     fit_hi >= abs(misfit_warn) | fit_lo <= misfit_lower_band
   )
-  detail$MisfitDirection <- mfrm_classify_mnsq_direction(
-    detail$Infit,
-    detail$Outfit,
-    lower = misfit_lower_band,
-    upper = abs(misfit_warn),
-    inclusive = TRUE
-  )
   detail$CentralTendencyFlag <- is.finite(detail$AbsEstimate) & detail$AbsEstimate <= abs(central_tendency_max)
   detail$BiasCount <- 0L
   detail$BiasSources <- 0L
@@ -215,14 +203,7 @@ facet_quality_dashboard <- function(fit,
   detail$FlagLabel <- vapply(seq_len(nrow(detail)), function(i) {
     labs <- character(0)
     if (isTRUE(detail$SeverityFlag[i])) labs <- c(labs, "severity")
-    if (isTRUE(detail$MisfitFlag[i])) {
-      direction <- as.character(detail$MisfitDirection[i])
-      if (is.na(direction) || !nzchar(direction) || identical(direction, "in_band")) {
-        labs <- c(labs, "misfit")
-      } else {
-        labs <- c(labs, paste0("misfit_", direction))
-      }
-    }
+    if (isTRUE(detail$MisfitFlag[i])) labs <- c(labs, "misfit")
     if (isTRUE(detail$CentralTendencyFlag[i])) labs <- c(labs, "central")
     if (isTRUE(detail$BiasFlag[i])) labs <- c(labs, "bias")
     if (length(labs) == 0) "" else paste(labs, collapse = ", ")
@@ -264,9 +245,6 @@ facet_quality_dashboard <- function(fit,
     MeanOutfit = mean(detail$Outfit, na.rm = TRUE),
     SeverityFlagged = sum(detail$SeverityFlag, na.rm = TRUE),
     MisfitFlagged = sum(detail$MisfitFlag, na.rm = TRUE),
-    MisfitUnderfit = sum(detail$MisfitDirection == "underfit", na.rm = TRUE),
-    MisfitOverfit = sum(detail$MisfitDirection == "overfit", na.rm = TRUE),
-    MisfitMixed = sum(detail$MisfitDirection == "mixed", na.rm = TRUE),
     CentralTendencyFlagged = sum(detail$CentralTendencyFlag, na.rm = TRUE),
     BiasFlagged = sum(detail$BiasFlag, na.rm = TRUE),
     AnyFlagged = sum(detail$AnyFlag, na.rm = TRUE),
@@ -278,7 +256,6 @@ facet_quality_dashboard <- function(fit,
     facet = facet,
     facet_source = overview$FacetSource[1],
     severity_warn = abs(severity_warn),
-    misfit_lower = abs(misfit_lower_band),
     misfit_warn = abs(misfit_warn),
     central_tendency_max = abs(central_tendency_max),
     bias_count_warn = as.integer(bias_count_warn),
@@ -670,11 +647,7 @@ print.summary.mfrm_facet_dashboard <- function(x, ...) {
 #' @param bias_results Optional bias bundle or list of bundles.
 #' @param severity_warn Absolute estimate cutoff used to flag severity
 #'   outliers.
-#' @param misfit_warn Mean-square cutoff used to flag misfit. `NULL`
-#'   (default) inherits the active package band from
-#'   [mfrm_misfit_thresholds()] through [facet_quality_dashboard()].
-#'   Pass a numeric value such as `1.5` to request the legacy reciprocal
-#'   lower bound.
+#' @param misfit_warn Mean-square cutoff used to flag misfit.
 #' @param central_tendency_max Absolute estimate cutoff used to flag central
 #'   tendency.
 #' @param bias_count_warn Minimum flagged-bias row count required to flag a
@@ -707,7 +680,7 @@ plot_facet_quality_dashboard <- function(x,
                                          facet = NULL,
                                          bias_results = NULL,
                                          severity_warn = 1.0,
-                                         misfit_warn = NULL,
+                                         misfit_warn = 1.5,
                                          central_tendency_max = 0.25,
                                          bias_count_warn = 1L,
                                          bias_abs_t_warn = 2,
@@ -743,19 +716,6 @@ plot_facet_quality_dashboard <- function(x,
     stop("`x` must be an mfrm_fit object or a facet dashboard bundle.", call. = FALSE)
   }
 
-  setting_value <- function(settings, key, fallback = NA_real_) {
-    settings <- as.data.frame(settings %||% data.frame(), stringsAsFactors = FALSE)
-    if (nrow(settings) == 0L || !all(c("Setting", "Value") %in% names(settings))) {
-      return(fallback)
-    }
-    hit <- settings$Value[settings$Setting == key]
-    if (length(hit) == 0L) return(fallback)
-    out <- suppressWarnings(as.numeric(hit[1]))
-    if (is.finite(out)) out else fallback
-  }
-  resolved_misfit_lower <- setting_value(bundle$settings, "misfit_lower")
-  resolved_misfit_upper <- setting_value(bundle$settings, "misfit_warn", misfit_warn)
-
   tbl <- as.data.frame(bundle$detail, stringsAsFactors = FALSE)
   if (nrow(tbl) == 0) {
     stop("Facet dashboard does not contain any level rows.", call. = FALSE)
@@ -786,9 +746,7 @@ plot_facet_quality_dashboard <- function(x,
       facet = bundle$facet %||% bundle$overview$Facet[1],
       thresholds = list(
         severity_warn = severity_warn,
-        misfit_lower = resolved_misfit_lower,
         misfit_warn = misfit_warn,
-        misfit_upper = resolved_misfit_upper,
         central_tendency_max = central_tendency_max,
         bias_count_warn = bias_count_warn
       ),
@@ -811,9 +769,7 @@ plot_facet_quality_dashboard <- function(x,
       ranked = bundle$ranked,
       thresholds = list(
         severity_warn = severity_warn,
-        misfit_lower = resolved_misfit_lower,
         misfit_warn = misfit_warn,
-        misfit_upper = resolved_misfit_upper,
         central_tendency_max = central_tendency_max,
         bias_count_warn = bias_count_warn,
         bias_abs_t_warn = bias_abs_t_warn,

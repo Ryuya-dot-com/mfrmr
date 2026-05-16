@@ -46,7 +46,8 @@ This method returns a compact interaction-bias summary:
 \item \code{overview}: interaction order, analyzed cells, and effect-size profile.
 \item \code{chi_sq}: fixed-effect test block.
 \item \code{final_iteration}: end-of-loop status from the bias routine.
-\item \code{top_rows}: strongest bias contrasts by \verb{|t|}.
+\item \code{top_rows}: strongest bias contrasts by \verb{|t|}; bounded \code{GPCM}
+summaries also retain the profile-likelihood review columns when present.
 }
 }
 

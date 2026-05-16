@@ -1,10 +1,16 @@
 citHeader("To cite mfrmr in publications, use:")
 
-year <- sub("-.*", "", meta$Date %||% format(Sys.Date(), "%Y-%m-%d"))
+release_date <- if (is.null(meta$Date) || !nzchar(meta$Date)) {
+  format(Sys.Date(), "%Y-%m-%d")
+} else {
+  meta$Date
+}
+year <- sub("-.*", "", release_date)
 if (!nzchar(year)) year <- format(Sys.Date(), "%Y")
 
 # DESCRIPTION URL may hold multiple comma-separated URLs; pick the first.
-first_url <- sub(",.*", "", gsub("[[:space:]]+", "", meta$URL %||% ""))
+desc_url <- if (is.null(meta$URL)) "" else meta$URL
+first_url <- sub(",.*", "", gsub("[[:space:]]+", "", desc_url))
 
 bibentry(
   bibtype = "Manual",

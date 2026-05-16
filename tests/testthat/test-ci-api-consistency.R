@@ -76,19 +76,6 @@ test_that("plot_fair_average(show_ci = TRUE) adds clipped delta-method CI", {
   }
 })
 
-test_that("plot_fair_average clips CI when input is a fair_average_table bundle", {
-  fa <- fair_average_table(.fit, diagnostics = .diag)
-  p <- plot_fair_average(fa, plot_type = "scatter",
-                         show_ci = TRUE, ci_level = 0.95, draw = FALSE)
-  valid <- is.finite(p$data$data$CI_Lower) &
-    is.finite(p$data$data$CI_Upper)
-  expect_true(any(valid))
-  if (any(valid)) {
-    expect_true(all(p$data$data$CI_Lower[valid] >= .fit$prep$rating_min - 1e-8))
-    expect_true(all(p$data$data$CI_Upper[valid] <= .fit$prep$rating_max + 1e-8))
-  }
-})
-
 test_that("plot_fair_average validates ci_level", {
   expect_error(
     plot_fair_average(.fit, show_ci = TRUE, ci_level = 1.1, draw = FALSE),

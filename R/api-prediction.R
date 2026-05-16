@@ -57,11 +57,14 @@
 #' branch, and summarizes the resulting facet-level behavior. This is distinct
 #' from the fitted-model posterior scoring provided by [predict_mfrm_units()].
 #'
-#' The bounded `GPCM` branch is supported here with the same caveats as
-#' [evaluate_mfrm_design()]: forecasts are scenario-level operating
-#' characteristics under an explicit slope-aware generator, and the planning
-#' layer still targets the role-based person x rater-like x criterion-like
-#' design contract rather than a fully arbitrary-facet planner.
+#' This scenario-level forecast helper does not yet support bounded `GPCM`.
+#' Direct bounded-`GPCM` fitting, fixed-calibration scoring, information,
+#' diagnostics, direct curve/report helpers, simulation-spec generation, data
+#' generation, and parameter-recovery checks are available elsewhere. In the
+#' present package state, scenario-level simulation/planning remains validated
+#' only for the ordered Rasch-family `RSM` / `PCM` workflow. More broadly, the
+#' current planning layer targets the role-based person x rater-like x
+#' criterion-like design contract rather than a fully arbitrary-facet planner.
 #'
 #' @section Interpreting output:
 #' - `forecast` contains facet-level expected summaries for the requested
@@ -177,6 +180,14 @@ predict_mfrm_population <- function(fit = NULL,
     if (!is.character(default_model) || !nzchar(default_model)) {
       default_model <- as.character(fit$config$model)
     }
+    if (identical(default_model, "GPCM")) {
+      stop(
+        "`predict_mfrm_population()` is not yet validated for `GPCM` fits. ",
+        "Current bounded `GPCM` support includes fitting, core summaries, fixed-calibration posterior scoring, information, direct diagnostics, direct curve/report helpers, and parameter-recovery checks; it does not yet include scenario-level planning or forecasting. ",
+        gpcm_planning_scope_rationale(),
+        call. = FALSE
+      )
+    }
     base_spec <- extract_mfrm_sim_spec(fit)
   } else {
     if (!inherits(sim_spec, "mfrm_sim_spec")) {
@@ -185,12 +196,20 @@ predict_mfrm_population <- function(fit = NULL,
     base_spec <- sim_spec
     default_fit_method <- "MML"
     default_model <- as.character(base_spec$model)
+    if (identical(default_model, "GPCM")) {
+      stop(
+        "`predict_mfrm_population()` is not yet validated for `GPCM` simulation specifications. ",
+        "Current bounded `GPCM` support includes direct data generation and parameter-recovery checks, but not scenario-level planning or forecasting. ",
+        gpcm_planning_scope_rationale(),
+        call. = FALSE
+      )
+    }
   }
 
   fit_method <- toupper(as.character(fit_method[1] %||% default_fit_method))
   fit_method <- match.arg(fit_method, c("JML", "MML"))
   model <- toupper(as.character(model[1] %||% default_model))
-  model <- match.arg(model, c("RSM", "PCM", "GPCM"))
+  model <- match.arg(model, c("RSM", "PCM"))
 
   design <- simulation_resolve_design_counts(
     sim_spec = base_spec,
@@ -241,17 +260,6 @@ predict_mfrm_population <- function(fit = NULL,
     "MCSE columns quantify Monte Carlo uncertainty from using a finite number of replications.",
     "Do not interpret this output as deterministic future person/rater true values."
   )
-  if (identical(model, "GPCM")) {
-    notes <- c(
-      notes,
-      paste0(
-        "Bounded GPCM forecasts are simulation/refit planning summaries ",
-        "under the current slope_facet == step_facet contract; treat them ",
-        "as design-screening evidence rather than FACETS/Rasch score-side ",
-        "invariance evidence."
-      )
-    )
-  }
   scope_note <- simulation_planning_scope_note(planning_scope)
   if (length(scope_note) > 0L && !scope_note %in% notes) {
     notes <- c(notes, scope_note)
@@ -585,7 +593,7 @@ prepare_mfrm_prediction_data <- function(fit,
   nonpositive_weight <- is.na(weight_num) | weight_num <= 0
   drop_rows <- missing_required | bad_score | nonpositive_weight
 
-  audit <- tibble::tibble(
+  row_review <- tibble::tibble(
     InputRows = nrow(df),
     KeptRows = sum(!drop_rows),
     DroppedRows = sum(drop_rows),
@@ -672,7 +680,7 @@ prepare_mfrm_prediction_data <- function(fit,
     )
   )
 
-  list(prep = prep, audit = audit, input_data = input_data)
+  list(prep = prep, row_review = row_review, input_data = input_data)
 }
 
 filter_mfrm_prediction_persons <- function(prepared, keep_persons) {
@@ -730,7 +738,7 @@ prepare_mfrm_prediction_population <- function(fit,
       prepared = prepared,
       scaffold = NULL,
       spec = NULL,
-      audit = NULL,
+      population_review = NULL,
       input_data = NULL,
       auto_person_data = FALSE
     ))
@@ -787,7 +795,7 @@ prepare_mfrm_prediction_population <- function(fit,
     prepared <- filter_mfrm_prediction_persons(prepared, scaffold$included_persons)
   }
 
-  audit <- tibble::tibble(
+  population_review <- tibble::tibble(
     InputPersons = length(unique(as.character(prepared$input_data$Person))) + length(scaffold$omitted_persons),
     RetainedPersons = length(scaffold$included_persons),
     OmittedPersons = length(scaffold$omitted_persons),
@@ -807,7 +815,7 @@ prepare_mfrm_prediction_population <- function(fit,
     prepared = prepared,
     scaffold = scaffold,
     spec = spec,
-    audit = audit,
+    population_review = population_review,
     input_data = as.data.frame(person_data, stringsAsFactors = FALSE),
     auto_person_data = auto_person_data
   )
@@ -1017,7 +1025,7 @@ prediction_resolve_fit_method <- function(fit) {
 #'   `fit` uses the latent-regression branch. `"error"` (default) requires
 #'   complete person-level covariates for all scored persons; `"omit"` drops
 #'   scored persons lacking complete covariates and records that omission in
-#'   `population_audit`.
+#'   `population_review`.
 #' @param interval_level Posterior interval level returned in `Lower`/`Upper`.
 #' @param n_draws Optional number of quadrature-grid posterior draws to return
 #'   per scored person. Use 0 to skip draws.
@@ -1083,7 +1091,7 @@ prediction_resolve_fit_method <- function(fit) {
 #'   scoring.
 #' - `draws`, when requested, contains approximate plausible values on the
 #'   fitted quadrature grid.
-#' - `population_audit`, when present, records whether scored persons were
+#' - `population_review`, when present, records whether scored persons were
 #'   omitted because their background data were incomplete for a
 #'   latent-regression fit.
 #'
@@ -1118,8 +1126,8 @@ prediction_resolve_fit_method <- function(fit) {
 #' @return An object of class `mfrm_unit_prediction` with components:
 #' - `estimates`: posterior summaries by person
 #' - `draws`: optional quadrature-grid posterior draws
-#' - `audit`: row-level preparation audit for `new_data`
-#' - `population_audit`: optional person-level omission audit for
+#' - `row_review`: row-level preparation review for `new_data`
+#' - `population_review`: optional person-level omission review for
 #'   latent-regression scoring
 #' - `input_data`: cleaned canonical scoring rows retained from `new_data`
 #' - `person_data`: cleaned or supplied person-level background data used for
@@ -1248,17 +1256,17 @@ predict_mfrm_units <- function(fit,
         "For latent-regression fits with background covariates, supply one-row-per-person background data for the scored units so the fitted population model can be used during posterior scoring."
       )
     }
-    if (nrow(population_ready$audit %||% data.frame()) > 0 &&
-        isTRUE(population_ready$audit$OmittedPersons[1] > 0)) {
+    if (nrow(population_ready$population_review %||% data.frame()) > 0 &&
+        isTRUE(population_ready$population_review$OmittedPersons[1] > 0)) {
       notes <- c(
         notes,
         paste0(
           "Population-model scoring omitted ",
-          population_ready$audit$OmittedPersons[1],
+          population_ready$population_review$OmittedPersons[1],
           " person(s) and ",
-          population_ready$audit$OmittedRows[1],
+          population_ready$population_review$OmittedRows[1],
           " response row(s) under `population_policy = '",
-          population_ready$audit$Policy[1],
+          population_ready$population_review$Policy[1],
           "'`."
         )
       )
@@ -1275,8 +1283,8 @@ predict_mfrm_units <- function(fit,
     list(
       estimates = scored$estimates,
       draws = scored$draws,
-      audit = prepared$audit,
-      population_audit = population_ready$audit,
+      row_review = prepared$row_review,
+      population_review = population_ready$population_review,
       input_data = prepared$input_data,
       person_data = population_ready$input_data,
       settings = list(
@@ -1321,8 +1329,8 @@ predict_mfrm_units <- function(fit,
 #'
 #' @return An object of class `summary.mfrm_unit_prediction` with:
 #' - `estimates`: posterior summaries by person
-#' - `audit`: row-preparation audit
-#' - `population_audit`: optional person-level omission audit for
+#' - `row_review`: row-preparation review
+#' - `population_review`: optional person-level omission review for
 #'   latent-regression scoring
 #' - `settings`: scoring settings
 #' - `notes`: interpretation notes
@@ -1364,8 +1372,8 @@ summary.mfrm_unit_prediction <- function(object, digits = 3, ...) {
 
   out <- list(
     estimates = round_df(object$estimates),
-    audit = round_df(object$audit),
-    population_audit = round_df(object$population_audit),
+    row_review = round_df(object$row_review),
+    population_review = round_df(object$population_review),
     settings = object$settings,
     notes = object$notes %||% character(0),
     digits = digits
@@ -1393,13 +1401,13 @@ print.summary.mfrm_unit_prediction <- function(x, ...) {
     cat("\nPosterior estimates\n")
     print(round_df(as.data.frame(preview_df(x$estimates))), row.names = FALSE)
   }
-  if (!is.null(x$audit) && nrow(x$audit) > 0) {
-    cat("\nRow audit\n")
-    print(round_df(as.data.frame(x$audit)), row.names = FALSE)
+  if (!is.null(x$row_review) && nrow(x$row_review) > 0) {
+    cat("\nRow preparation review\n")
+    print(round_df(as.data.frame(x$row_review)), row.names = FALSE)
   }
-  if (!is.null(x$population_audit) && nrow(x$population_audit) > 0) {
-    cat("\nPopulation-model audit\n")
-    print(round_df(as.data.frame(x$population_audit)), row.names = FALSE)
+  if (!is.null(x$population_review) && nrow(x$population_review) > 0) {
+    cat("\nPopulation-model omission review\n")
+    print(round_df(as.data.frame(x$population_review)), row.names = FALSE)
   }
   if (!is.null(x$settings) && length(x$settings) > 0L) {
     cat("\nSettings\n")
@@ -1440,7 +1448,7 @@ print.summary.mfrm_unit_prediction <- function(x, ...) {
 #' @param population_policy How missing background data are handled when
 #'   `fit` uses the latent-regression branch. `"error"` (default) requires
 #'   complete person-level covariates; `"omit"` drops scored persons lacking
-#'   complete covariates and records that omission in `population_audit`.
+#'   complete covariates and records that omission in `population_review`.
 #' @param n_draws Number of posterior draws per person. Must be a positive
 #'   integer.
 #' @param interval_level Posterior interval level passed to
@@ -1500,8 +1508,8 @@ print.summary.mfrm_unit_prediction <- function(x, ...) {
 #' @return An object of class `mfrm_plausible_values` with components:
 #' - `values`: one row per person per draw
 #' - `estimates`: companion posterior EAP summaries
-#' - `audit`: row-preparation audit
-#' - `population_audit`: optional person-level omission audit for
+#' - `row_review`: row-preparation review
+#' - `population_review`: optional person-level omission review for
 #'   latent-regression scoring
 #' - `input_data`: cleaned canonical scoring rows retained from `new_data`
 #' - `person_data`: cleaned or supplied person-level background data used for
@@ -1577,8 +1585,8 @@ sample_mfrm_plausible_values <- function(fit,
     list(
       values = pred$draws,
       estimates = pred$estimates,
-      audit = pred$audit,
-      population_audit = pred$population_audit,
+      row_review = pred$row_review,
+      population_review = pred$population_review,
       input_data = pred$input_data,
       person_data = pred$person_data,
       settings = pred$settings,
@@ -1597,8 +1605,8 @@ sample_mfrm_plausible_values <- function(fit,
 #' @return An object of class `summary.mfrm_plausible_values` with:
 #' - `draw_summary`: empirical summaries of the sampled values by person
 #' - `estimates`: companion posterior EAP summaries
-#' - `audit`: row-preparation audit
-#' - `population_audit`: optional person-level omission audit for
+#' - `row_review`: row-preparation review
+#' - `population_review`: optional person-level omission review for
 #'   latent-regression scoring
 #' - `settings`: scoring settings
 #' - `notes`: interpretation notes
@@ -1652,8 +1660,8 @@ summary.mfrm_plausible_values <- function(object, digits = 3, ...) {
   out <- list(
     draw_summary = round_df(draw_summary),
     estimates = round_df(object$estimates),
-    audit = round_df(object$audit),
-    population_audit = round_df(object$population_audit),
+    row_review = round_df(object$row_review),
+    population_review = round_df(object$population_review),
     settings = object$settings,
     notes = object$notes %||% character(0),
     digits = digits
@@ -1685,13 +1693,13 @@ print.summary.mfrm_plausible_values <- function(x, ...) {
     cat("\nCompanion estimates\n")
     print(round_df(as.data.frame(preview_df(x$estimates))), row.names = FALSE)
   }
-  if (!is.null(x$audit) && nrow(x$audit) > 0) {
-    cat("\nRow audit\n")
-    print(round_df(as.data.frame(x$audit)), row.names = FALSE)
+  if (!is.null(x$row_review) && nrow(x$row_review) > 0) {
+    cat("\nRow preparation review\n")
+    print(round_df(as.data.frame(x$row_review)), row.names = FALSE)
   }
-  if (!is.null(x$population_audit) && nrow(x$population_audit) > 0) {
-    cat("\nPopulation-model audit\n")
-    print(round_df(as.data.frame(x$population_audit)), row.names = FALSE)
+  if (!is.null(x$population_review) && nrow(x$population_review) > 0) {
+    cat("\nPopulation-model omission review\n")
+    print(round_df(as.data.frame(x$population_review)), row.names = FALSE)
   }
   if (!is.null(x$settings) && length(x$settings) > 0L) {
     cat("\nSettings\n")

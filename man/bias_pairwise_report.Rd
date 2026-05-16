@@ -59,7 +59,7 @@ A named list with:
 \itemize{
 \item \code{table}: pairwise contrast rows
 \item \code{summary}: one-row contrast summary
-\item \code{orientation_audit}: interaction-facet sign audit
+\item \code{orientation_review}: interaction-facet sign review
 \item \code{settings}: resolved reporting options
 \item \code{direction_note}: one-line interpretive note describing the
 dominant pairwise-contrast direction (carried from the
@@ -97,8 +97,8 @@ top.
 \item \code{summary}: one-row screening summary with \code{MaxAbsBiasDiff},
 \code{MaxAbsT}, \code{Significant} (count of flagged pairs at \code{p_max}),
 \code{BonferroniSignificant}, and \code{HolmSignificant}.
-\item \code{orientation_audit} carries the same facet-orientation sign
-audit as the parent \code{estimate_bias()} run.
+\item \code{orientation_review} carries the same facet-orientation sign
+review as the parent \code{estimate_bias()} run.
 \item The SE caveat below applies: read \code{Significant} /
 \code{BonferroniSignificant} as a screening triage, not as formal
 inferential tests.

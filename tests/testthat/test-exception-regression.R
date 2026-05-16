@@ -151,16 +151,9 @@ test_that("anchor with non-existent level produces warning", {
     stringsAsFactors = FALSE
   )
   expect_warning(
-    withCallingHandlers(
-      fit_mfrm(d, "Person",
-        c("Rater", "Task", "Criterion"), "Score",
-        anchors = anchors, method = "JML", maxit = 30),
-      warning = function(w) {
-        if (grepl("Optimizer did not fully converge", conditionMessage(w), fixed = TRUE)) {
-          invokeRestart("muffleWarning")
-        }
-      }
-    ),
+    fit_mfrm(d, "Person",
+      c("Rater", "Task", "Criterion"), "Score",
+      anchors = anchors, method = "JML", maxit = 30),
     "anchor|Anchor"
   )
 })

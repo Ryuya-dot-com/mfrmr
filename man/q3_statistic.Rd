@@ -30,7 +30,7 @@ of the table (mirrors \code{\link[=plot_local_dependence_heatmap]{plot_local_dep
 \code{0.20}). Often attributed to Yen (1984), but the 0.20 cutoff is
 actually from Chen & Thissen (1997, p. 284); Yen herself did not
 propose a fixed cutoff. The cutoff was derived for raw-residual Q3
-under the 3PL — applying it to standardized-residual Q3 under MFRM
+under the 3PL - applying it to standardized-residual Q3 under MFRM
 is approximate.}
 
 \item{marais_threshold}{Stricter community-convention threshold

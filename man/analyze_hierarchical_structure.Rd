@@ -57,7 +57,7 @@ person x facet levels.}
 
 \item{icc_ci_method, icc_ci_level, icc_ci_boot_reps, icc_ci_boot_seed}{Deprecated spellings of the \verb{ci_*} arguments above, retained for
 one release. Supplying a non-\code{NULL} value routes through
-\code{\link[lifecycle:deprecate_soft]{lifecycle::deprecate_warn()}} and overrides the canonical
+\code{\link[lifecycle:deprecate_warn]{lifecycle::deprecate_warn()}} and overrides the canonical
 \verb{ci_*} argument.}
 }
 \value{
@@ -72,13 +72,13 @@ requested.
 \item \code{connectivity}: named list with bipartite-graph component summary
 when \code{igraph} is available.
 \item \code{summary}: one-row summary used by downstream reporting helpers.
-\item \code{facets}: character vector of facet names that were audited
+\item \code{facets}: character vector of facet names that were reviewed
 (echoed for downstream reporting helpers that need to label rows
-by audit scope).
+by review scope).
 }
 }
 \description{
-One-stop audit that combines the nesting, cross-tabulation, ICC, and
+One-stop review that combines the nesting, cross-tabulation, ICC, and
 design-effect reports into a single object. Designed to be reused by
 the publication-workflow surface: its summary feeds into
 \code{reporting_checklist()}, and its tables are picked up by
@@ -109,7 +109,7 @@ disconnected design.
 \item Call \code{analyze_hierarchical_structure(fit)} (or on the raw data).
 \item Read \code{summary(x)} for the condensed view.
 \item Feed the object to \code{\link[=reporting_checklist]{reporting_checklist()}} and
-\code{\link[=build_mfrm_manifest]{build_mfrm_manifest()}} to record the audit in publication
+\code{\link[=build_mfrm_manifest]{build_mfrm_manifest()}} to record the review in publication
 bundles. \code{build_apa_outputs()} uses the fit-level
 \code{FacetSampleSizeFlag} to add a Methods sentence automatically.
 }
@@ -124,7 +124,7 @@ hs <- analyze_hierarchical_structure(toy,
 summary(hs)
 
 \donttest{
-# Full audit when lme4 and igraph are available.
+# Full review when lme4 and igraph are available.
 if (requireNamespace("lme4", quietly = TRUE) &&
     requireNamespace("igraph", quietly = TRUE)) {
   hs_full <- analyze_hierarchical_structure(toy,
@@ -149,7 +149,7 @@ reporting intraclass correlation coefficients for reliability
 research. \emph{Journal of Chiropractic Medicine, 15}(2), 155-163.
 }
 \seealso{
-\code{\link[=detect_facet_nesting]{detect_facet_nesting()}}, \code{\link[=facet_small_sample_audit]{facet_small_sample_audit()}},
+\code{\link[=detect_facet_nesting]{detect_facet_nesting()}}, \code{\link[=facet_small_sample_review]{facet_small_sample_review()}},
 \code{\link[=compute_facet_icc]{compute_facet_icc()}}, \code{\link[=compute_facet_design_effect]{compute_facet_design_effect()}},
 \code{\link[=reporting_checklist]{reporting_checklist()}}, \code{\link[=build_mfrm_manifest]{build_mfrm_manifest()}}, \code{\link[=fit_mfrm]{fit_mfrm()}}.
 }

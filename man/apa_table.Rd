@@ -79,9 +79,6 @@ names listed in \code{build_summary_table_bundle(x)$table_index}
 \item \code{table}: plain data.frame ready for export or further formatting.
 \item \code{which}: source component that produced the table.
 \item \code{caption}/\code{note}: manuscript-oriented metadata stored with the table.
-\item For fit-based \code{which = "summary"}, the automatic caption describes the
-model overview table; use \code{which = "facets"} or \code{which = "person"} for
-Table 1-style measurement summaries.
 }
 }
 
@@ -90,8 +87,6 @@ Table 1-style measurement summaries.
 \enumerate{
 \item Build table object with \code{apa_table(...)}.
 \item Inspect quickly with \code{summary(tbl)}.
-\item Render with \code{as_kable(tbl)} for R Markdown / Quarto or
-\code{as_flextable(tbl)} for Word when those packages are installed.
 \item Render base preview via \code{plot(tbl, ...)} or export \code{tbl$table}.
 }
 }

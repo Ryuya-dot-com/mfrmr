@@ -47,7 +47,7 @@ test_that("plot.mfrm_fit returns 3D-ready CCC surface payload", {
     "SurfaceX", "SurfaceY", "SurfaceZ", "CurveGroup"
   ) %in% names(surface$data$surface)))
   expect_true(is.data.frame(surface$data$renderer_contract))
-  expect_match(surface$data$renderer_contract$Status[2], "payload only", fixed = TRUE)
+  expect_match(surface$data$renderer_contract$Status[2], "plot data only", fixed = TRUE)
   expect_true(is.data.frame(surface$data$category_support))
   expect_true(is.data.frame(surface$data$interpretation_guide))
   expect_true(is.data.frame(surface$data$reporting_policy))
@@ -229,21 +229,6 @@ test_that("plot_residual_pca draws loadings", {
   )
 })
 
-test_that("plot_residual_dimensionality draws parallel-analysis display", {
-  pca <- analyze_residual_pca(.diag, mode = "overall")
-  dim_check <- check_residual_dimensionality(
-    pca,
-    mode = "overall",
-    method = "residual_normal",
-    reps = 3,
-    pca_max_factors = 2,
-    seed = 21
-  )
-  with_null_device(
-    plot_residual_dimensionality(dim_check, draw = TRUE)
-  )
-})
-
 # ---- describe_mfrm_data drawing ----
 
 test_that("describe_mfrm_data plot types draw", {
@@ -254,11 +239,11 @@ test_that("describe_mfrm_data plot types draw", {
   with_null_device(plot(ds, type = "missing", draw = TRUE))
 })
 
-# ---- audit_mfrm_anchors plotting ----
+# ---- review_mfrm_anchors plotting ----
 
-test_that("plot.mfrm_anchor_audit draws", {
+test_that("plot.mfrm_anchor_review draws", {
   d <- mfrmr:::sample_mfrm_data(seed = 1)
-  audit <- audit_mfrm_anchors(d, "Person", c("Rater", "Task", "Criterion"), "Score")
+  audit <- review_mfrm_anchors(d, "Person", c("Rater", "Task", "Criterion"), "Score")
   with_null_device(plot(audit, type = "issue_counts", draw = TRUE))
   expect_no_error(with_null_device(
     tryCatch(plot(audit, type = "facet_constraints", draw = TRUE),
@@ -301,10 +286,10 @@ test_that("summary.mfrm_bundle prints for various bundle types", {
   }
 })
 
-# ---- FACETS compatibility-contract report ----
+# ---- FACETS output-contract review ----
 
-test_that("facets_parity_report produces output", {
-  pr <- facets_parity_report(.fit, diagnostics = .diag, bias_results = .bias)
+test_that("facets_output_contract_review produces output", {
+  pr <- facets_output_contract_review(.fit, diagnostics = .diag, bias_results = .bias)
   expect_s3_class(pr, "mfrm_bundle")
   s <- summary(pr)
   expect_s3_class(s, "summary.mfrm_bundle")
@@ -336,13 +321,12 @@ test_that("plot.mfrm_facets_run draws qc type", {
   expect_s3_class(result, "mfrm_plot_data")
 })
 
-# ---- print.mfrm_apa_outputs ----
+# ---- print.mfrm_apa_text ----
 
-test_that("print.mfrm_apa_outputs works", {
+test_that("print.mfrm_apa_text works", {
   apa <- build_apa_outputs(.fit, diagnostics = .diag)
   out <- capture.output(print(apa))
   expect_true(length(out) > 0)
-  expect_true(any(grepl("^Method\\.$", out)))
 })
 
 # ---- plot.apa_table ----

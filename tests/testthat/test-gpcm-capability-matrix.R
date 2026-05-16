@@ -19,18 +19,18 @@ test_that("gpcm_capability_matrix exposes the bounded GPCM support contract", {
   ))
   expect_true(any(
     grepl("build_apa_outputs\\(\\)", tbl$Helpers) &
-      tbl$Status == "supported_with_caveat"
+      tbl$Status == "blocked"
   ))
   expect_true(any(
     tbl$Area == "Design planning and forecasting" &
-      tbl$Status == "supported_with_caveat"
+      tbl$Status == "deferred"
   ))
   expect_true(any(
     grepl("build_misfit_casebook\\(\\)", tbl$Helpers) &
       tbl$Status == "supported_with_caveat"
   ))
   expect_true(any(
-    grepl("build_weighting_audit\\(\\)", tbl$Helpers) &
+    grepl("build_weighting_review\\(\\)", tbl$Helpers) &
       tbl$Status == "supported_with_caveat"
   ))
   expect_true(any(

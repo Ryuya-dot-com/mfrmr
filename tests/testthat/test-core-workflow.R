@@ -67,6 +67,10 @@ test_that("core fit/diagnostics workflow runs", {
   expect_s3_class(p_fit_person, "mfrm_plot_data")
   expect_s3_class(p_fit_step, "mfrm_plot_data")
   expect_identical(as.character(p_fit_wright$data$preset), "standard")
+  expect_true(all(c("pathway_long", "fit_measures", "curve_fit_status", "fit_measure_status") %in%
+    names(p_fit_pathway$data)))
+  expect_s3_class(p_fit_pathway$data$pathway_long, "data.frame")
+  expect_s3_class(p_fit_pathway$data$fit_measures, "data.frame")
 
   p_fit_pub <- plot(fit, type = "wright", draw = FALSE, preset = "publication")
   expect_identical(as.character(p_fit_pub$data$preset), "publication")
@@ -82,7 +86,8 @@ test_that("core fit/diagnostics workflow runs", {
   expect_true("interrater" %in% names(diag))
   expect_true("facets_chisq" %in% names(diag))
   expect_true("precision_profile" %in% names(diag))
-  expect_true("precision_audit" %in% names(diag))
+  expect_true("precision_review" %in% names(diag))
+  expect_false("precision_audit" %in% names(diag))
   expect_true("facet_precision" %in% names(diag))
   expect_true("approximation_notes" %in% names(diag))
   expect_true(is.data.frame(diag$unexpected$table))
@@ -91,14 +96,14 @@ test_that("core fit/diagnostics workflow runs", {
   expect_true(is.data.frame(diag$interrater$pairs))
   expect_true(is.data.frame(diag$facets_chisq))
   expect_true(is.data.frame(diag$precision_profile))
-  expect_true(is.data.frame(diag$precision_audit))
+  expect_true(is.data.frame(diag$precision_review))
   expect_true(is.data.frame(diag$facet_precision))
   expect_true(is.data.frame(diag$approximation_notes))
   expect_true(all(c("Method", "Converged", "PrecisionTier", "SupportsFormalInference", "HasFallbackSE", "RecommendedUse") %in% names(diag$precision_profile)))
-  expect_true(all(c("Check", "Status", "Detail") %in% names(diag$precision_audit)))
+  expect_true(all(c("Check", "Status", "Detail") %in% names(diag$precision_review)))
   expect_true(all(c("DistributionBasis", "SEMode", "Separation", "Reliability") %in%
     names(diag$facet_precision)))
-  expect_true(all(c("Converged", "PrecisionTier", "SupportsFormalInference", "SEUse", "CIBasis", "CIUse", "CIEligible", "CILabel") %in%
+  expect_true(all(c("Converged", "PrecisionTier", "SupportsFormalInference", "SEUse", "CIBasis", "CIUse", "CI_Level", "CI_Method", "CIEligible", "CILabel") %in%
     names(diag$measures)))
   expect_true(all(c("Converged", "PrecisionTier", "SupportsFormalInference", "ReliabilityUse") %in%
     names(diag$reliability)))
@@ -177,7 +182,7 @@ test_that("core fit/diagnostics workflow runs", {
     score = "Score"
   )
   expect_s3_class(t2, "mfrm_data_quality")
-  expect_true(all(c("summary", "model_match", "row_audit", "unknown_elements", "category_counts") %in% names(t2)))
+  expect_true(all(c("summary", "model_match", "row_review", "unknown_elements", "category_counts") %in% names(t2)))
   expect_true(is.data.frame(t2$summary))
   expect_true(is.data.frame(t2$model_match))
   t2_summary <- summary(t2)
@@ -497,6 +502,8 @@ test_that("core fit/diagnostics workflow runs", {
   pca_from_fit <- mfrmr::analyze_residual_pca(fit, mode = "both", pca_max_factors = 4)
   expect_true(is.data.frame(pca$overall_table))
   expect_true(is.data.frame(pca$by_facet_table))
+  expect_true("warnings" %in% names(pca))
+  expect_true(is.list(pca$warnings))
   expect_gt(nrow(pca$overall_table), 0)
   expect_true(is.data.frame(pca_from_fit$overall_table))
   expect_gt(nrow(pca_from_fit$overall_table), 0)
@@ -560,7 +567,7 @@ test_that("core fit/diagnostics workflow runs", {
   expect_match(apa$report_text, "Terminal gradient sup-norm", fixed = TRUE)
   expect_match(apa$report_text, "Constraint settings:", fixed = TRUE)
   expect_match(apa$report_text, "Step/threshold summary:", fixed = TRUE)
-  expect_match(apa$report_text, "Largest\\s+misfit")
+  expect_match(apa$report_text, "Largest misfit", fixed = TRUE)
   expect_match(apa$report_text, "Design and data\\.", perl = TRUE)
   expect_match(apa$report_text, "Fit and precision\\.", perl = TRUE)
   printed_apa_text <- capture.output(print(apa$report_text))
@@ -668,7 +675,7 @@ test_that("legacy numbered API names are internal (not exported)", {
   expect_equal(names(old_t8), names(new_t8))
 })
 
-test_that("descriptive and anchor-audit helpers run", {
+test_that("descriptive and anchor-review helpers run", {
   toy <- expand.grid(
     Person = paste0("P", 1:6),
     Rater = paste0("R", 1:3),
@@ -710,7 +717,7 @@ test_that("descriptive and anchor-audit helpers run", {
     stringsAsFactors = FALSE
   )
 
-  aud <- mfrmr::audit_mfrm_anchors(
+  aud <- mfrmr::review_mfrm_anchors(
     data = toy,
     person = "Person",
     facets = c("Rater", "Criterion"),
@@ -721,7 +728,7 @@ test_that("descriptive and anchor-audit helpers run", {
     min_obs_per_element = 20,
     min_obs_per_category = 8
   )
-  expect_s3_class(aud, "mfrm_anchor_audit")
+  expect_s3_class(aud, "mfrm_anchor_review")
   expect_true(is.data.frame(aud$anchors))
   expect_true(is.data.frame(aud$group_anchors))
   expect_true(is.list(aud$design_checks))
@@ -748,7 +755,7 @@ test_that("descriptive and anchor-audit helpers run", {
       min_common_anchors = 4,
       anchor_policy = "error"
     ),
-    "Anchor audit detected"
+    "Anchor review detected"
   )
 
   fit <- mfrmr::fit_mfrm(
@@ -764,7 +771,8 @@ test_that("descriptive and anchor-audit helpers run", {
     anchor_policy = "silent"
   )
   expect_s3_class(fit, "mfrm_fit")
-  expect_true("anchor_audit" %in% names(fit$config))
+  expect_true("anchor_review" %in% names(fit$config))
+  expect_false("anchor_audit" %in% names(fit$config))
 
   anchor_tbl <- mfrmr::make_anchor_table(fit)
   expect_true(is.data.frame(anchor_tbl))

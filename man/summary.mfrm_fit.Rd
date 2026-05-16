@@ -23,10 +23,10 @@ An object of class \code{summary.mfrm_fit} with:
 \item \code{key_warnings}: highest-priority warnings to review first
 \item \code{next_actions}: recommended follow-up helpers
 \item \code{population_overview}: current population-model basis, residual variance,
-and omission audit
+and omission review
 \item \code{population_coefficients}: fitted latent-regression coefficients when a
 population model is active
-\item \code{population_design}: latent-regression design-matrix column audit when a
+\item \code{population_design}: latent-regression design-matrix column check when a
 population model is active
 \item \code{population_coding}: categorical covariate levels and contrast provenance
 when a population model uses model-matrix coding
@@ -40,13 +40,14 @@ when a population model uses model-matrix coding
 when the fit was specified with \code{facet_interactions}
 \item \code{settings_overview}: estimation-settings overview that pins the
 configuration that affects identification/scoring
-\item \code{data_quality_overview}: retained/dropped row counts from model
-preprocessing
 \item \code{attached_diagnostics}: logical flag indicating whether the
 \code{mfrm_fit} was returned with diagnostics already attached
 \item \code{attached_diagnostics_cols}: character vector of diagnostic
 columns attached to \code{fit$facets$person} when
 \code{attached_diagnostics = TRUE}
+\item \code{row_retention}: row counts before and after preparation filters
+\item \code{preparation_notes}: structured preparation notes retained from
+\code{fit$prep}
 \item \code{reporting_map}: routing map showing which companion summaries
 and tables should be used for the four manuscript-oriented
 reporting sections (data description, diagnostics, category
@@ -68,7 +69,6 @@ This method provides a compact, human-readable summary oriented to reporting.
 It returns a structured object and prints:
 \itemize{
 \item model fit overview (N, LogLik, AIC/BIC, convergence)
-\item preprocessing row counts retained/dropped before estimation
 \item estimation settings that affect identification/scoring interpretation
 \item facet-level estimate distribution (mean/SD/range)
 \item person measure distribution
@@ -87,9 +87,6 @@ reporting
 \item \code{person_overview}: distribution of person measures.
 \item \code{step_overview}: threshold spread and monotonicity checks.
 \item \code{settings_overview}: estimation settings that affect interpretation.
-\item \code{data_quality_overview}: row counts retained or dropped before estimation;
-use \code{\link[=data_quality_report]{data_quality_report()}} with the original data for a full missingness,
-unknown-element, and category-use audit.
 \item \code{population_coding}: fitted categorical levels and contrasts that must be
 reused when scoring new persons under the population-model posterior.
 \item \code{key_warnings} / \code{notes}: short triage subset of retained zero-count score
@@ -98,7 +95,7 @@ complete-case omissions, zero-variance design columns, missing
 coefficients, or unstable residual variance when present. Incomplete or
 non-finite covariates are normally handled before fitting as input errors
 or complete-case omissions; they appear here only if retained in a
-population-design audit row.
+population-design check row.
 \item \code{caveats}: structured rows behind those warnings for appendix/export use;
 \code{print(summary(fit))} shows a compact \code{Caveats} block when rows are present.
 \item \code{reporting_map}: where to get companion outputs for manuscript reporting.

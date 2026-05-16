@@ -125,11 +125,8 @@ test_that("prepare_mfrm_data recodes non-contiguous scores (lines 328-330)", {
     Rater  = rep(paste0("R", 1:3), 4),
     Score  = rep(c(1, 3, 5), 4)  # non-contiguous
   )
-  expect_warning(
-    result <- prep_fn(df, person_col = "Person", facet_cols = "Rater",
-                      score_col = "Score", keep_original = FALSE),
-    "non-consecutive"
-  )
+  result <- prep_fn(df, person_col = "Person", facet_cols = "Rater",
+                    score_col = "Score", keep_original = FALSE)
   # After recoding, should be contiguous starting at rating_min
   expect_true(all(result$data$score_k %in% 0:2))
 })
@@ -156,14 +153,8 @@ test_that("sanitize_dummy_facets filters to valid facet names", {
   fn <- mfrmr:::sanitize_dummy_facets
   expect_equal(fn(NULL, c("Rater", "Task")), character(0))
   expect_equal(fn("Rater", c("Rater", "Task")), "Rater")
-  expect_warning(
-    expect_equal(fn("BadName", c("Rater", "Task")), character(0)),
-    "Unknown entries"
-  )
-  expect_warning(
-    expect_equal(fn(c("Rater", "BadName"), c("Rater", "Task")), "Rater"),
-    "Unknown entries"
-  )
+  expect_equal(fn("BadName", c("Rater", "Task")), character(0))
+  expect_equal(fn(c("Rater", "BadName"), c("Rater", "Task")), "Rater")
   expect_equal(fn("Person", c("Rater", "Task")), "Person")
 })
 

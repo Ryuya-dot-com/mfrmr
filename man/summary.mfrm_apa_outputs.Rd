@@ -40,8 +40,6 @@ preview for quick QA before manuscript insertion.
 draft text components.
 \item \code{overview$ReadyForAPA}: a backward-compatible alias of that contract flag,
 not a certification of inferential adequacy.
-\item \code{overview$AnalysisReady}: a stricter manuscript-readiness flag that also
-requires model convergence and a formal precision tier.
 \item \code{preview}: first non-empty lines for fast visual review.
 }
 }

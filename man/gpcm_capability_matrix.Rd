@@ -44,26 +44,28 @@ core R package:
 \item posterior-scoring and information helpers are supported,
 \item residual-based diagnostics and strict marginal follow-up are supported as
 exploratory screens,
-\item direct slope-aware simulation-spec generation is supported,
-\item fair-average, visual-summary, and QC routes are available with explicit
-GPCM caveats,
-\item APA writer, package-native export/replay bundles, and simulation/refit
-planning / forecasting helpers are available with explicit caveats,
-\item FACETS score-side compatibility remains outside the validated \code{GPCM}
-boundary.
+\item direct slope-aware simulation-spec generation and parameter-recovery
+simulation are supported with caveats,
+\item \code{fair_average_table()} is supported with an explicit slope-aware
+element-conditional caveat,
+\item \code{estimate_bias()} is supported as conditional screening evidence with
+slope-aware information and profile-likelihood follow-up columns,
+\item summary-table appendix export is available for supported direct outputs,
+\item APA writer, fit-based export bundles, FACETS output-contract
+score-side outputs, QC pass/fail pipelines, and planning / forecasting
+helpers remain outside the validated \code{GPCM} boundary.
 }
 
 Why some helpers remain blocked:
 \itemize{
-\item FACETS compatibility-contract score exports depend on Rasch-family
-measure-to-score semantics that are not yet generalized to the
-free-discrimination \code{GPCM} branch;
-\item fair-average, visual-summary, QC, APA, and export helpers are therefore
-exposed as caveated GPCM routes, not as FACETS/Rasch fair-M invariance or
-full joint-uncertainty evidence;
-\item planning and forecasting are simulation/refit screening routes under the
-current role-based person x rater-like x criterion-like contract, not a
-fully arbitrary-facet planner.
+\item score-side export and FACETS output-contract outputs depend on
+Rasch-family measure-to-score semantics plus delta-method SE machinery
+that are not yet generalized to the free-discrimination \code{GPCM} branch;
+\item APA writer, fit-based report/export bundles, visual summaries, and QC
+pipelines remain blocked because they would turn unsupported score-side
+semantics into narrative or pass/fail outputs;
+\item planning and forecasting remain deferred because the current design layer
+is validated only for the role-based \code{RSM} / \code{PCM} planner.
 }
 
 This boundary is aligned with the package's current validation evidence,

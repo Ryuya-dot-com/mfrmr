@@ -8,7 +8,6 @@
   x,
   facet = c("Rater", "Criterion", "Person"),
   metric = c("separation", "reliability", "infit", "outfit", "misfitrate",
-    "mnsqmisfitrate", "underfitrate", "overfitrate", "mixedmisfitrate", "inbandrate",
     "severityrmse", "severitybias", "convergencerate", "elapsedsec", "mincategorycount"),
   x_var = c("n_person", "n_rater", "n_criterion", "raters_per_person"),
   group_var = NULL,
@@ -57,8 +56,6 @@ Useful first plots are:
 \item criterion \code{metric = "severityrmse"} against \code{x_var = "n_person"}
 when you want aligned recovery error rather than raw location shifts
 \item rater \code{metric = "convergencerate"} against \code{x_var = "raters_per_person"}
-\item rater \code{metric = "underfitrate"} or \code{metric = "overfitrate"} when
-directional MnSq-band misfit is the planning target
 }
 }
 \examples{

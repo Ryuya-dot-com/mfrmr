@@ -78,7 +78,7 @@ CSV/fixed-width text files to disk.
 \item \code{graphfile}: legacy-compatible wide curve coordinates (human-readable labels).
 \item \code{graphfile_syntactic}: same curves with syntactic column names for programmatic use.
 \item \code{scorefile}: observation-level observed/expected/residual diagnostics.
-\item \code{written_files}: audit trail of files produced when \code{write_files = TRUE}.
+\item \code{written_files}: traceability record of files produced when \code{write_files = TRUE}.
 }
 
 For reproducible pipelines, prefer \code{graphfile_syntactic} and keep

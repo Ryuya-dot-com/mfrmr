@@ -155,7 +155,8 @@ compute_P_geq_r <- function(probs) {
 }
 
 compute_P_geq <- function(probs) {
-  if (mfrm_cpp11_backend_available() &&
+  if (isTRUE(getOption("mfrmr.use_cpp11_backend", FALSE)) &&
+      mfrm_cpp11_backend_available() &&
       is.matrix(probs) &&
       is.numeric(probs)) {
     return(mfrm_cpp_compute_p_geq(probs))
@@ -170,6 +171,7 @@ compute_response_probability_bundle <- function(config, idx, params, eta) {
       probs = matrix(0, nrow = 0L, ncol = max(config$n_cat %||% 0L, 0L)),
       expected_k = numeric(0),
       var_k = numeric(0),
+      fourth_central_moment = numeric(0),
       score_information = numeric(0),
       slope_obs = numeric(0)
     ))
@@ -207,6 +209,13 @@ compute_response_probability_bundle <- function(config, idx, params, eta) {
   k_vals <- 0:(ncol(probs) - 1L)
   expected_k <- as.vector(probs %*% k_vals)
   var_k <- as.vector(probs %*% (k_vals^2)) - expected_k^2
+  diff_k <- sweep(
+    matrix(k_vals, nrow = nrow(probs), ncol = length(k_vals), byrow = TRUE),
+    1L,
+    expected_k,
+    FUN = "-"
+  )
+  fourth_central_moment <- as.vector(rowSums(probs * diff_k^4))
   var_k <- ifelse(var_k <= 1e-10, NA_real_, var_k)
   # For bounded GPCM, the score information with respect to eta is
   # a^2 Var(X | eta); PCM/RSM are the a = 1 special case.
@@ -220,6 +229,7 @@ compute_response_probability_bundle <- function(config, idx, params, eta) {
     probs = probs,
     expected_k = expected_k,
     var_k = var_k,
+    fourth_central_moment = fourth_central_moment,
     score_information = score_information,
     slope_obs = slope_obs
   )
@@ -257,6 +267,39 @@ zstd_from_mnsq <- function(mnsq, df, whexact = FALSE) {
     out[ok] <- (m[ok] - 1) * sqrt(d[ok] / 2)
   } else {
     out[ok] <- (m[ok]^(1 / 3) - (1 - 2 / (9 * d[ok]))) / sqrt(2 / (9 * d[ok]))
+  }
+  out
+}
+
+# FACETS/Winsteps-style standardized fit values use the same mean-square
+# transform but a separate Wright-Masters df convention and a reported cap.
+zstd_from_mnsq_facets <- function(mnsq, df, whexact = FALSE, cap = 9) {
+  mnsq <- as.numeric(mnsq)
+  df <- as.numeric(df)
+
+  if (length(df) == 1L && length(mnsq) > 1L) {
+    df <- rep(df, length(mnsq))
+  } else if (length(mnsq) == 1L && length(df) > 1L) {
+    mnsq <- rep(mnsq, length(df))
+  }
+
+  n <- min(length(mnsq), length(df))
+  if (n == 0L) return(numeric(0))
+
+  out <- rep(NA_real_, n)
+  m <- mnsq[seq_len(n)]
+  d <- df[seq_len(n)]
+  ok <- is.finite(m) & is.finite(d) & (m > 0) & (d > 0)
+
+  if (isTRUE(whexact)) {
+    out[ok] <- (m[ok] - 1) * sqrt(d[ok] / 2)
+  } else {
+    out[ok] <- (m[ok]^(1 / 3) - (1 - 2 / (9 * d[ok]))) / sqrt(2 / (9 * d[ok]))
+  }
+
+  cap <- suppressWarnings(as.numeric(cap[1] %||% NA_real_))
+  if (is.finite(cap) && cap > 0) {
+    out <- pmin(pmax(out, -cap), cap)
   }
   out
 }

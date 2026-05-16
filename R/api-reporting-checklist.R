@@ -7,7 +7,7 @@
 #'   such outputs.
 #' @param hierarchical_structure Optional output from
 #'   [analyze_hierarchical_structure()]. When supplied, the
-#'   "Hierarchical structure audit" checklist item is flipped to
+#'   "Hierarchical structure review" checklist item is flipped to
 #'   `DraftReady = TRUE` and its `Detail` column surfaces the number
 #'   of nested / crossed facet pairs and whether the ICC table is
 #'   available.
@@ -34,7 +34,7 @@
 #' categorical model-matrix coding, complete-case omissions, posterior-basis
 #' wording, and ConQuest scope wording.
 #'
-#' The output is designed for manuscript preparation, audit trails, and
+#' The output is designed for manuscript preparation, reproducibility records, and
 #' reproducible reporting workflows.
 #'
 #' @section What this checklist means:
@@ -58,14 +58,13 @@
 #' - `section_summary`: available items by section.
 #' - `software_scope`: external-software relationship summary for `mfrmr`,
 #'   FACETS, ConQuest, and SPSS-style tabular handoffs.
+#' - `facets_positioning`: report-ready wording that states `mfrmr` is not a
+#'   FACETS numerical clone and separates native estimation from FACETS-style
+#'   handoff or external-table review.
 #' - `visual_scope`: plotting-route summary that separates report-default
-#'   2D figures from exploratory surface/3D-ready payloads, including a short
-#'   `InterpretationCheck` for the main user-facing caveat. For bounded
-#'   `GPCM`, this table also exposes `SupportStatus` and `ModelCaveat` so the
-#'   run-specific plotting boundary can be retained in reports and handoffs.
+#'   2D figures from exploratory surface/3D-ready data handoffs, including a
+#'   short `InterpretationCheck` for the main user-facing caveat.
 #' - `references`: core background references when requested.
-#' - `support_status`: bounded-`GPCM` support contract, when applicable.
-#' - `caveat`: bounded-`GPCM` visual/reporting caveat, when applicable.
 #'
 #' @section Recommended next step:
 #' Review the rows with `Available = FALSE` or `DraftReady = FALSE`, then add
@@ -73,9 +72,7 @@
 #' [build_apa_outputs()] for draft text generation. For `RSM` / `PCM`
 #' reporting runs, the preferred route is an `MML` fit plus
 #' `diagnose_mfrm(..., diagnostic_mode = "both")` so the checklist can see the
-#' legacy and strict marginal screens together. For bounded `GPCM`, keep
-#' `support_status`, `caveat`, and `visual_scope$ModelCaveat` attached to any
-#' copied checklist, visual, or APA text.
+#' legacy and strict marginal screens together.
 #'
 #' @section How this differs from operational review:
 #' `reporting_checklist()` is the manuscript/reporting branch of the package.
@@ -125,10 +122,10 @@
 #' #   (typically diagnostic_mode = "both" or a residual-PCA pass).
 #' apa <- build_apa_outputs(fit, diag)
 #' head(chk$checklist[, c("Section", "Item", "DraftReady", "NextAction")])
-#' # Look for: every row where `DraftReady = "yes"` is ready to draft
-#' #   from under the documented caveats. `"no"` rows include a concrete
-#' #   `NextAction` step (e.g. "run plot_qc_dashboard()") so the gap can
-#' #   be closed without re-reading the methodology guide.
+#' # Look for: every row where `DraftReady = "yes"` is ready to paste
+#' #   into the manuscript. `"no"` rows include a concrete `NextAction`
+#' #   step (e.g. "run plot_qc_dashboard()") so the gap can be closed
+#' #   without re-reading the methodology guide.
 #' nchar(apa$report_text)
 #' }
 #' @export
@@ -153,8 +150,6 @@ reporting_checklist <- function(fit,
   }
 
   config <- fit$config %||% list()
-  fit_model <- toupper(as.character(config$model %||% fit$summary$Model[1] %||% NA_character_))[1]
-  gpcm_mode <- identical(fit_model, "GPCM")
   prep <- fit$prep %||% list()
   measures <- as.data.frame(diagnostics$measures %||% data.frame(), stringsAsFactors = FALSE)
   obs_df <- as.data.frame(diagnostics$obs %||% data.frame(), stringsAsFactors = FALSE)
@@ -362,7 +357,7 @@ reporting_checklist <- function(fit,
       ),
       add_item(
         "Population Model",
-        "Complete-case omission audit",
+        "Complete-case omission review",
         TRUE,
         detail = omission_detail,
         source_component = "summary(fit)$population_overview + summary(fit)$caveats",
@@ -390,7 +385,7 @@ reporting_checklist <- function(fit,
         "ConQuest overlap wording",
         TRUE,
         detail = "Current overlap is narrow RSM/PCM unidimensional conditional-normal latent regression; ConQuest comparison is scoped to the documented external-table workflow.",
-        source_component = "README latent-regression status + audit_conquest_overlap()",
+        source_component = "README latent-regression status + review_conquest_overlap()",
         severity = "recommended",
         ready_for_apa = FALSE,
         available_action = "Use conservative wording: ConQuest overlap is limited to the documented latent-regression MML comparison scope."
@@ -534,10 +529,10 @@ reporting_checklist <- function(fit,
             )
           }
         },
-        source_component = "fit$summary$FacetSampleSizeFlag + facet_small_sample_audit()",
+        source_component = "fit$summary$FacetSampleSizeFlag + facet_small_sample_review()",
         severity = "recommended",
         missing_action = paste0(
-          "Run `facet_small_sample_audit(fit)` and report the bands. ",
+          "Run `facet_small_sample_review(fit)` and report the bands. ",
           "mfrmr treats facets as fixed effects with no shrinkage, so small-N ",
           "levels keep wide SEs."
         ),
@@ -548,7 +543,7 @@ reporting_checklist <- function(fit,
       ),
       add_item(
         "Method Section",
-        "Hierarchical structure audit",
+        "Hierarchical structure review",
         # Ready when the user actually ran analyze_hierarchical_structure()
         # and passed the result in. Previously this item was hard-coded to
         # FALSE so there was no way to mark it draft-ready; now callers can
@@ -557,7 +552,7 @@ reporting_checklist <- function(fit,
         detail = if (!is.null(hierarchical_structure)) {
           hs_sum <- hierarchical_structure$summary
           paste0(
-            "Hierarchical audit complete: ",
+            "Hierarchical review complete: ",
             hs_sum$NFacets %||% NA, " facets, ",
             hs_sum$NestedPairs %||% 0L, " nested pair(s), ",
             hs_sum$CrossedPairs %||% 0L, " crossed pair(s)",
@@ -566,7 +561,7 @@ reporting_checklist <- function(fit,
           )
         } else {
           paste0(
-            "Structural audit (nesting, ICC, design effect) is optional but ",
+            "Structural review (nesting, ICC, design effect) is optional but ",
             "recommended when raters, criteria, or persons span strata ",
             "(regions, schools, cohorts) that additive fixed-effects MFRM cannot ",
             "partition out."
@@ -995,21 +990,11 @@ reporting_checklist <- function(fit,
     summary = as.data.frame(section_summary, stringsAsFactors = FALSE),
     section_summary = as.data.frame(section_summary, stringsAsFactors = FALSE),
     software_scope = external_software_scope_table(fit),
+    facets_positioning = facets_positioning_guide(),
     visual_scope = visual_scope_table(fit, checklist),
     references = references,
     settings = settings
   )
-  if (isTRUE(gpcm_mode)) {
-    out$support_status <- gpcm_support_status(
-      fit_model,
-      paste0(
-        "Bounded GPCM reporting_checklist() is a supported-with-caveat ",
-        "readiness router. Visual, fair-average, bias, and QC rows are ",
-        "draftable only with the documented screening-tier GPCM caveats."
-      )
-    )
-    out$caveat <- gpcm_visual_rationale()
-  }
   as_mfrm_bundle(out, "mfrm_reporting_checklist")
 }
 
@@ -1027,7 +1012,7 @@ external_software_scope_table <- function(fit) {
     Software = c("mfrmr native", "FACETS", "ConQuest", "SPSS"),
     Relationship = c(
       "primary estimation/reporting surface",
-      "compatibility-style wrappers and exports for handoff",
+      "FACETS-style reporting and handoff surface",
       "scoped external-table comparison for latent-regression overlap",
       "downstream table/report handoff only"
     ),
@@ -1039,19 +1024,19 @@ external_software_scope_table <- function(fit) {
     ),
     PrimaryHelpers = c(
       "fit_mfrm() -> diagnose_mfrm() -> reporting_checklist() -> build_apa_outputs()",
-      "run_mfrm_facets(), mfrmRFacets(), facets_output_file_bundle(), facets_parity_report()",
-      "build_conquest_overlap_bundle() -> normalize_conquest_overlap_*() -> audit_conquest_overlap()",
+      "facets_positioning_guide(), facets_feature_coverage(), run_mfrm_facets(), facets_output_file_bundle(), facets_output_contract_review()",
+      "build_conquest_overlap_bundle() -> normalize_conquest_overlap_*() -> review_conquest_overlap()",
       "export_mfrm_bundle(), export_summary_appendix(), as.data.frame()"
     ),
     Boundary = c(
       "Package-native results are the authoritative analysis objects.",
-      "Results remain mfrmr estimates unless a separate external FACETS audit is performed.",
+      "Results remain mfrmr estimates; use an external FACETS run plus review helpers only when numerical comparison is needed.",
       "Requires an external ConQuest run and extracted output tables for the documented overlap case.",
       "CSV/data-frame outputs support reporting handoff; native SPSS integration is not implemented."
     ),
     RecommendedWording = c(
       "Estimated with mfrmr under the stated model/method settings.",
-      "FACETS-style handoff outputs were generated; estimates were produced by mfrmr.",
+      "Estimated with mfrmr; FACETS-style outputs were used for handoff or report organization unless external FACETS output is explicitly compared.",
       "ConQuest overlap is limited to the documented latent-regression MML comparison scope.",
       "Tables were exported for possible SPSS/reporting use; analysis was not performed in SPSS."
     ),
@@ -1073,7 +1058,7 @@ visual_scope_table <- function(fit, checklist) {
   }
 
   surface_status <- if (has_steps && model %in% c("RSM", "PCM", "GPCM")) {
-    "active payload route for current fit"
+    "active plot-data route for current fit"
   } else if (!(model %in% c("RSM", "PCM", "GPCM"))) {
     paste0("not active for current model: ", model)
   } else {
@@ -1154,9 +1139,9 @@ visual_scope_table <- function(fit, checklist) {
     ThreeDStatus = c(
       "2D dashboard only; 3D not recommended",
       "2D recommended; 3D Wright maps are discouraged",
-      "2D report default; surface payload available through the category route",
+      "2D report default; surface plot data available through the category route",
       "advanced surface data only; no package-native interactive renderer",
-      "2D curve route active; 3D information surface is a future payload candidate",
+      "2D curve route active; 3D information surface is a future data handoff candidate",
       "2D heatmap/bar style preferred; 3D not recommended",
       "2D heatmap/profile preferred; 3D not recommended",
       "2D scree/loadings preferred; 3D not recommended"
@@ -1181,25 +1166,6 @@ visual_scope_table <- function(fit, checklist) {
       "Confirm the tested pair, low-count cells, and screening threshold.",
       "Use scree/loadings as exploratory residual-structure evidence only."
     ),
-    SupportStatus = if (identical(model, "GPCM")) {
-      rep("supported_with_caveat", 8L)
-    } else {
-      rep("supported", 8L)
-    },
-    ModelCaveat = if (identical(model, "GPCM")) {
-      c(
-        "GPCM dashboard rows are exploratory residual and score-side screens, not Rasch invariance evidence.",
-        "GPCM Wright maps are supported shared-scale displays; interpret residual claims separately.",
-        "GPCM pathway/CCC curves are supported slope-aware category-probability displays.",
-        "GPCM surface payloads are exploratory slope-aware category-probability handoffs.",
-        "GPCM information curves are supported where compute_information() supports the fit.",
-        "Use strict marginal GPCM output only when returned with explicit caveats.",
-        "GPCM bias/DIF visuals remain screening-tier unless a stronger inferential route is documented.",
-        "GPCM residual PCA is exploratory residual-structure review."
-      )
-    } else {
-      rep("", 8L)
-    },
     stringsAsFactors = FALSE
   )
 }
@@ -1215,9 +1181,9 @@ visual_scope_table <- function(fit, checklist) {
 #' - `overview`: run-level counts of available and draft-ready items
 #' - `section_summary`: section-level checklist coverage
 #' - `software_scope`: external-software relationship summary
-#' - `visual_scope`: plotting-route and 3D-ready payload summary, including
-#'   the main `InterpretationCheck` caveat for each visual family and any
-#'   model-specific `SupportStatus` / `ModelCaveat` columns
+#' - `facets_positioning`: report-ready FACETS relationship wording
+#' - `visual_scope`: plotting-route and 3D-ready data-handoff summary, including
+#'   the main `InterpretationCheck` caveat for each visual family
 #' - `priority_summary`: counts by priority/severity
 #' - `action_items`: highest-priority rows that still need draft work
 #' - `settings`: checklist settings rendered as a compact table
@@ -1243,6 +1209,7 @@ summary.mfrm_reporting_checklist <- function(object, top_n = 10, ...) {
   checklist <- as.data.frame(object$checklist %||% data.frame(), stringsAsFactors = FALSE)
   section_summary <- as.data.frame(object$section_summary %||% object$summary %||% data.frame(), stringsAsFactors = FALSE)
   software_scope <- as.data.frame(object$software_scope %||% data.frame(), stringsAsFactors = FALSE)
+  facets_positioning <- as.data.frame(object$facets_positioning %||% facets_positioning_guide(), stringsAsFactors = FALSE)
   visual_scope <- as.data.frame(object$visual_scope %||% data.frame(), stringsAsFactors = FALSE)
 
   overview <- data.frame(
@@ -1287,7 +1254,7 @@ summary.mfrm_reporting_checklist <- function(object, top_n = 10, ...) {
   notes <- c(
     "This summary is a manuscript-preparation guide.",
     "DraftReady indicates that the corresponding reporting element can be drafted with the package's documented caveats; it does not certify inferential adequacy.",
-    "Detailed software and visual scope tables are available in `$software_scope` and `$visual_scope`."
+    "Detailed FACETS positioning, software scope, and visual scope tables are available in `$facets_positioning`, `$software_scope`, and `$visual_scope`."
   )
   if (nrow(action_items) == 0) {
     notes <- c(notes, "No remaining draft-action rows were detected in the current checklist.")
@@ -1297,6 +1264,7 @@ summary.mfrm_reporting_checklist <- function(object, top_n = 10, ...) {
     overview = overview,
     section_summary = section_summary,
     software_scope = software_scope,
+    facets_positioning = facets_positioning,
     visual_scope = visual_scope,
     priority_summary = priority_summary,
     action_items = action_items,
@@ -1327,6 +1295,11 @@ print.summary.mfrm_reporting_checklist <- function(x, ...) {
   if (!is.null(x$action_items) && nrow(x$action_items) > 0) {
     cat("\nAction items (preview)\n")
     print(as.data.frame(x$action_items), row.names = FALSE)
+  }
+  if (!is.null(x$facets_positioning) && nrow(x$facets_positioning) > 0) {
+    cat("\nFACETS positioning\n")
+    pos_cols <- intersect(c("Topic", "RecommendedWording"), names(x$facets_positioning))
+    print(as.data.frame(x$facets_positioning[, pos_cols, drop = FALSE]), row.names = FALSE)
   }
   if (!is.null(x$settings) && nrow(x$settings) > 0) {
     cat("\nSettings\n")

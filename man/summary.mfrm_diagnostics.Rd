@@ -23,10 +23,11 @@ An object of class \code{summary.mfrm_diagnostics} with:
 \item \code{key_warnings}: highest-priority warnings to review first
 \item \code{next_actions}: recommended follow-up helpers
 \item \code{diagnostic_basis}: guide to legacy versus strict diagnostic targets
+\item \code{fit_standardization}: guide to the df convention used for fit ZSTD
 \item \code{overall_fit}: global fit block
 \item \code{precision_profile}: design-weighted precision summary across the
 information curve at decile theta points
-\item \code{precision_audit}: separation / reliability / strata audit for the
+\item \code{precision_review}: separation / reliability / strata review for the
 sample- and population-basis modes (paired with \code{precision_profile})
 \item \code{reliability}: facet-level separation/reliability summary
 \item \code{facets_chisq}: facets-style fixed-effect chi-square heterogeneity
@@ -37,9 +38,6 @@ separation overview when a Rater facet is present
 misfit thresholds active for this fit
 \item \code{misfit_thresholds}: named numeric vector with the misfit
 \code{lower} / \code{upper} thresholds used to populate \code{misfit_flagged}
-\item \code{misfit_threshold_label} / \code{misfit_threshold_note}: wording that
-identifies whether the active band is the package default or a
-configured/custom screening convention
 \item \code{category_usage}: per-category response-frequency summary used
 to flag empty / collapsed categories
 \item \code{top_fit}: top \verb{|ZSTD|} rows

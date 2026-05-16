@@ -20,24 +20,16 @@ A named numeric vector \code{c(lower = ..., upper = ...)} with
 Returns the lower / upper bounds that mfrmr screens treat as the
 acceptable mean-square (Infit / Outfit MnSq) band when flagging
 element-level misfit. Defaults follow Linacre's published 0.5-1.5
-broad screening band; both ends can be overridden via R options. The
-returned band is a configurable screening convention, not a universal
-definition of misfit. Applied MFRM studies sometimes use narrower bands
-(for example 0.7-1.3 or 0.75-1.3) when the reporting purpose, sample size,
-or stakes justify a stricter operational screen.
+acceptance band; both ends can be overridden via R options.
 }
 \details{
 Helpers that consume the band include
 \code{\link[=summary.mfrm_diagnostics]{summary.mfrm_diagnostics()}} (\code{misfit_flagged} block and
 \code{key_warnings} auto-flag), \code{\link[=build_misfit_casebook]{build_misfit_casebook()}} (the new
 \code{element_fit} source family), the bias / misfit narrative inside
-\code{\link[=build_apa_outputs]{build_apa_outputs()}}, \code{\link[=facet_quality_dashboard]{facet_quality_dashboard()}} when
-\code{misfit_warn = NULL}, \code{\link[=plot_person_fit]{plot_person_fit()}} when \code{lower} / \code{upper}
-are \code{NULL}, and \code{\link[=plot_bubble]{plot_bubble()}} when \code{fit_range = NULL}. Setting the
-options once at the top of an analysis script therefore changes every
-downstream screen at once. Directional outputs use the same band: MnSq
-values above the upper bound are labelled \code{underfit}, and values below the
-lower bound are labelled \code{overfit}.
+\code{\link[=build_apa_outputs]{build_apa_outputs()}}, and \code{\link[=facet_quality_dashboard]{facet_quality_dashboard()}} when
+\code{misfit_warn = NULL}. Setting the options once at the top of an
+analysis script therefore changes every downstream screen at once.
 }
 \section{Configuration}{
 

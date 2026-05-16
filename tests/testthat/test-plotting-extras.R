@@ -47,14 +47,17 @@ test_that("plot_threshold_ladder honours highlight_disorder = FALSE", {
 test_that("plot_person_fit returns one row per Person", {
   p <- plot_person_fit(.fit, diagnostics = .diag, draw = FALSE)
   expect_s3_class(p, "mfrm_plot_data")
-  expect_true(all(c("Person", "Infit", "Outfit", "N", "Status", "MisfitDirection") %in%
+  expect_true(all(c("Person", "Infit", "Outfit", "N", "Status") %in%
                     names(p$data$data)))
+  expect_true(all(c("plot_long", "person_fit_indices", "flag_summary",
+                    "plot_settings") %in% names(p$data)))
+  expect_true(all(c("ReportIndex", "ReportValue", "ReviewStatus",
+                    "ReportCaveat") %in% names(p$data$data)))
   person_n <- length(unique(.fit$facets$person$Person))
   expect_lte(nrow(p$data$data), person_n)
   expect_true(all(p$data$data$Status %in%
                     c("in_band", "one_outside", "both_outside")))
-  expect_true(all(p$data$data$MisfitDirection %in%
-                    c("in_band", "underfit", "overfit", "mixed")))
+  expect_true(any(p$data$plot_long$Metric == "ReportValue"))
 })
 
 test_that("plot_person_fit honours custom fit envelope", {
@@ -64,19 +67,25 @@ test_that("plot_person_fit honours custom fit envelope", {
   expect_equal(p$data$upper, 1.3)
 })
 
-test_that("plot_person_fit inherits the active misfit band by default", {
-  old <- options(mfrmr.misfit_lower = 0.7, mfrmr.misfit_upper = 1.3)
-  on.exit(options(old), add = TRUE)
-  p <- plot_person_fit(.fit, diagnostics = .diag, draw = FALSE)
-  expect_equal(p$data$lower, 0.7)
-  expect_equal(p$data$upper, 1.3)
-  expect_match(p$data$subtitle, "active MnSq screening band", fixed = TRUE)
-})
-
 test_that("plot_person_fit draws without error", {
   pdf(NULL); on.exit(dev.off(), add = TRUE)
   expect_silent(plot_person_fit(.fit, diagnostics = .diag, draw = TRUE,
                                  top_n_label = 3))
+})
+
+test_that("plot_person_fit exposes log-likelihood report view and monochrome preset", {
+  p <- plot_person_fit(.fit, diagnostics = .diag,
+                       fit_index = "loglik", preset = "monochrome",
+                       draw = FALSE)
+  expect_s3_class(p, "mfrm_plot_data")
+  expect_identical(p$data$fit_index, "loglik")
+  expect_identical(p$data$preset, "monochrome")
+  expect_true(any(p$data$plot_long$Metric == "ReportValue" &
+                    p$data$plot_long$DisplayedByDefault))
+  expect_true(all(p$data$data$ReviewStatus %in% c(
+    "review_1pct", "review_5pct", "not_flagged", "not_available", NA
+  )))
+  expect_true(any(p$data$reference_lines$role == "person-fit z threshold"))
 })
 
 # --- plot_rater_severity_profile --------------------------------------------
@@ -187,8 +196,9 @@ test_that("plot_dif_summary sort_by = 'effect' orders by signed contrast", {
 # --- plot_apa_figure_one ----------------------------------------------------
 
 test_that("plot_apa_figure_one bundles the four panels", {
-  expect_no_warning(
-    p <- plot_apa_figure_one(.fit, diagnostics = .diag, draw = FALSE)
+  expect_warning(
+    p <- plot_apa_figure_one(.fit, diagnostics = .diag, draw = FALSE),
+    NA
   )
   expect_s3_class(p, "mfrm_plot_data")
   expect_true(all(c("wright", "severity", "threshold", "summary") %in%
@@ -197,6 +207,8 @@ test_that("plot_apa_figure_one bundles the four panels", {
   expect_s3_class(p$data$data$severity, "mfrm_plot_data")
   expect_s3_class(p$data$data$threshold, "mfrm_plot_data")
   expect_true(length(p$data$data$summary) >= 1L)
+  expect_true(any(grepl("N obs = 768", p$data$data$summary, fixed = TRUE)))
+  expect_true(any(grepl("Persons = 48", p$data$data$summary, fixed = TRUE)))
 })
 
 test_that("plot_apa_figure_one draws the 2x2 composite", {
@@ -244,11 +256,34 @@ test_that("plot_bias_interaction heatmap mode returns bundle", {
     estimate_bias(.fit, .diag, facet_a = "Rater",
                   facet_b = "Criterion", max_iter = 1)
   ))
-  pdf(NULL); on.exit(dev.off(), add = TRUE)
-  p <- plot_bias_interaction(bias, plot = "heatmap", draw = TRUE)
+  p <- plot_bias_interaction(bias, plot = "heatmap", draw = FALSE)
   expect_s3_class(p, "mfrm_plot_data")
   expect_identical(p$name, "table13_bias")
   expect_identical(p$data$plot, "heatmap")
+  expect_s3_class(p$data$heatmap_cells, "data.frame")
+  expect_true(is.matrix(p$data$heatmap_matrix))
+  expect_true(is.matrix(p$data$heatmap_flag_matrix))
+  expect_equal(dim(p$data$heatmap_matrix), dim(p$data$heatmap_flag_matrix))
+  expect_true(all(c("Facet1_Level", "Facet2_Level", "BiasSize",
+                    "CollapsedRows", "RepresentativeRule") %in%
+                    names(p$data$heatmap_cells)))
+  expect_true(all(c(
+    "plot_long", "plot_annotations", "flag_summary", "plot_settings"
+  ) %in% names(p$data)))
+  expect_true(all(c(
+    "Layer", "PlotType", "X", "Y", "Value", "ValueName", "Flag"
+  ) %in% names(p$data$plot_long)))
+  expect_true(any(p$data$plot_long$Layer == "heatmap_cell"))
+  expect_true(all(c("AnnotationType", "Axis", "Value", "Label") %in%
+                    names(p$data$plot_annotations)))
+  expect_true(all(c("Trigger", "Rows", "Percent") %in% names(p$data$flag_summary)))
+  expect_true(all(c("Plot", "AbsTWarn", "AbsBiasWarn", "CIRequested", "Preset") %in%
+                    names(p$data$plot_settings)))
+  expect_true(any(grepl("Table 13", p$data$reference_notes$Reference,
+                         fixed = TRUE)))
+
+  pdf(NULL); on.exit(dev.off(), add = TRUE)
+  expect_no_error(plot_bias_interaction(bias, plot = "heatmap", draw = TRUE))
 })
 
 # --- plot_anchor_drift(type = 'forest') -----------------------------------

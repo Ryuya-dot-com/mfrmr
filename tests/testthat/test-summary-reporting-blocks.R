@@ -36,8 +36,6 @@ test_that("summary(diag) carries the MnSq misfit threshold pair", {
   s <- summary(.diag)
   expect_named(s$misfit_thresholds, c("lower", "upper"))
   expect_equal(unname(s$misfit_thresholds), c(0.5, 1.5))
-  expect_match(s$misfit_threshold_label, "package default broad screening band", fixed = TRUE)
-  expect_match(s$misfit_threshold_note, "published and operational misfit bands", fixed = TRUE)
 })
 
 test_that("summary(diag) auto-flag names worst MnSq element", {
@@ -60,7 +58,6 @@ test_that("print(summary(diag)) emits the new blocks without error", {
   joined <- paste(out, collapse = "\n")
   expect_true(grepl("Facet variability", joined))
   expect_true(grepl("Inter-rater agreement summary", joined))
-  expect_true(grepl("Misfit threshold policy", joined))
 })
 
 # --- summary.mfrm_fit -----------------------------------------------------
@@ -89,25 +86,4 @@ test_that("print(summary(fit)) shows the targeting block", {
   s <- summary(.fit)
   out <- utils::capture.output(print(s))
   expect_true(any(grepl("Targeting", out)))
-})
-
-test_that("summary(fit) surfaces preprocessing row audit when rows are dropped", {
-  d <- .toy
-  d$Score[1] <- NA
-  d$Rater[2] <- NA
-  fit <- suppressMessages(suppressWarnings(fit_mfrm(
-    d, "Person", c("Rater", "Criterion"), "Score",
-    method = "JML", maxit = 25
-  )))
-  s <- summary(fit)
-  expect_s3_class(s, "summary.mfrm_fit")
-  expect_true(is.data.frame(s$data_quality_overview))
-  expect_equal(s$data_quality_overview$RowsDropped[1], 2L)
-  expect_equal(s$data_quality_overview$MissingFacetRows[1], 1L)
-  expect_equal(s$data_quality_overview$MissingScoreRows[1], 1L)
-  dq_row <- s$reporting_map[s$reporting_map$Area == "Data structure / missingness", , drop = FALSE]
-  expect_equal(dq_row$CoveredHere, "partial")
-  expect_true(grepl("data_quality_report", dq_row$CompanionOutput, fixed = TRUE))
-  expect_true(any(grepl("Data preprocessing", utils::capture.output(print(s)), fixed = TRUE)))
-  expect_true(any(grepl("data_quality_report", s$next_actions, fixed = TRUE)))
 })

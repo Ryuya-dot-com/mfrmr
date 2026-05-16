@@ -9,10 +9,69 @@
 # `mfrm_estimate()` and the surrounding orchestration helpers.
 
 # ---- data preparation ----
+mfrm_preparation_note <- function(stage,
+                                  condition,
+                                  severity = "info",
+                                  count = NA_integer_,
+                                  affected = "",
+                                  message = "",
+                                  action = "") {
+  data.frame(
+    Stage = as.character(stage %||% ""),
+    Condition = as.character(condition %||% ""),
+    Severity = as.character(severity %||% "info"),
+    Count = suppressWarnings(as.integer(count %||% NA_integer_)),
+    Affected = paste(as.character(affected %||% ""), collapse = ", "),
+    Message = as.character(message %||% ""),
+    RecommendedAction = as.character(action %||% ""),
+    stringsAsFactors = FALSE
+  )
+}
+
+bind_mfrm_preparation_notes <- function(notes) {
+  notes <- notes[!vapply(notes, is.null, logical(1))]
+  if (length(notes) == 0L) {
+    return(data.frame(
+      Stage = character(0),
+      Condition = character(0),
+      Severity = character(0),
+      Count = integer(0),
+      Affected = character(0),
+      Message = character(0),
+      RecommendedAction = character(0),
+      stringsAsFactors = FALSE
+    ))
+  }
+  do.call(rbind, notes)
+}
+
 prepare_mfrm_data <- function(data, person_col, facet_cols, score_col,
                               rating_min = NULL, rating_max = NULL,
                               weight_col = NULL, keep_original = FALSE,
                               missing_codes = NULL) {
+  preparation_notes <- list()
+  emit_preparation_messages <- isTRUE(getOption("mfrmr.show_preparation_messages", FALSE)) &&
+    !isTRUE(getOption("mfrmr._preparation_messages_announced", FALSE))
+  add_preparation_note <- function(stage,
+                                   condition,
+                                   severity = "info",
+                                   count = NA_integer_,
+                                   affected = "",
+                                   message = "",
+                                   action = "") {
+    preparation_notes[[length(preparation_notes) + 1L]] <<-
+      mfrm_preparation_note(
+        stage = stage,
+        condition = condition,
+        severity = severity,
+        count = count,
+        affected = affected,
+        message = message,
+        action = action
+      )
+    invisible(NULL)
+  }
+
   required <- c(person_col, facet_cols, score_col)
   if (!is.null(weight_col)) {
     required <- c(required, weight_col)
@@ -83,6 +142,7 @@ prepare_mfrm_data <- function(data, person_col, facet_cols, score_col,
 
   raw_score <- as.character(df$Score)
   raw_weight <- if ("Weight" %in% names(df)) as.character(df$Weight) else NULL
+  input_rows <- nrow(df)
 
   score_num <- suppressWarnings(as.numeric(raw_score))
   # Practical integer tolerance. sqrt(.Machine$double.eps) (~1.5e-8) was
@@ -111,8 +171,22 @@ prepare_mfrm_data <- function(data, person_col, facet_cols, score_col,
   }
 
   if (any(bad_score)) {
+    bad_score_n <- sum(bad_score)
+    bad_score_msg <- paste0(
+      "`Score` contained ", bad_score_n,
+      " non-numeric value(s); affected row(s) will be removed before estimation."
+    )
+    add_preparation_note(
+      stage = "score_coercion",
+      condition = "non_numeric_score",
+      severity = "warning",
+      count = bad_score_n,
+      affected = score_col,
+      message = bad_score_msg,
+      action = "Recode score values to ordered integer categories before fitting."
+    )
     warning(
-      "`Score` contained ", sum(bad_score), " non-numeric value(s); affected row(s) will be removed before estimation.",
+      bad_score_msg,
       call. = FALSE
     )
   }
@@ -129,6 +203,8 @@ prepare_mfrm_data <- function(data, person_col, facet_cols, score_col,
     )
   }
   raw_person_id <- as.character(df$Person)
+  raw_facet_id <- lapply(facet_cols, function(f) as.character(df[[f]]))
+  names(raw_facet_id) <- facet_cols
   df <- df |>
     mutate(
       Person = trimws(as.character(Person)),
@@ -140,12 +216,41 @@ prepare_mfrm_data <- function(data, person_col, facet_cols, score_col,
   # vs " P01 " split.
   trimmed_person_diff_n <- sum(raw_person_id != df$Person, na.rm = TRUE)
   if (trimmed_person_diff_n > 0L) {
-    message(
+    trim_msg <- paste0(
       "Trimmed leading/trailing whitespace from `", person_col, "` ",
       "in ", trimmed_person_diff_n, " row(s). Affected IDs were treated ",
       "as the trimmed value; pre-clean them upstream if you need the ",
       "original spelling."
     )
+    add_preparation_note(
+      stage = "id_normalization",
+      condition = "trimmed_person_ids",
+      severity = "info",
+      count = trimmed_person_diff_n,
+      affected = person_col,
+      message = trim_msg,
+      action = "Pre-clean ID whitespace upstream if the original spelling must be preserved."
+    )
+    if (isTRUE(emit_preparation_messages)) {
+      message(trim_msg)
+    }
+  }
+  for (facet in facet_cols) {
+    trimmed_facet_diff_n <- sum(raw_facet_id[[facet]] != df[[facet]], na.rm = TRUE)
+    if (trimmed_facet_diff_n > 0L) {
+      add_preparation_note(
+        stage = "id_normalization",
+        condition = "trimmed_facet_ids",
+        severity = "info",
+        count = trimmed_facet_diff_n,
+        affected = facet,
+        message = paste0(
+          "Trimmed leading/trailing whitespace from `", facet, "` in ",
+          trimmed_facet_diff_n, " row(s)."
+        ),
+        action = "Pre-clean facet labels upstream if whitespace is meaningful."
+      )
+    }
   }
   if (!"Weight" %in% names(df)) {
     df <- df |> mutate(Weight = 1)
@@ -153,8 +258,22 @@ prepare_mfrm_data <- function(data, person_col, facet_cols, score_col,
     weight_num <- suppressWarnings(as.numeric(raw_weight))
     bad_weight <- is.na(weight_num) & !is.na(raw_weight) & nzchar(trimws(raw_weight))
     if (any(bad_weight)) {
+      bad_weight_n <- sum(bad_weight)
+      bad_weight_msg <- paste0(
+        "`Weight` contained ", bad_weight_n,
+        " non-numeric value(s); affected row(s) will be removed before estimation."
+      )
+      add_preparation_note(
+        stage = "weight_coercion",
+        condition = "non_numeric_weight",
+        severity = "warning",
+        count = bad_weight_n,
+        affected = weight_col,
+        message = bad_weight_msg,
+        action = "Recode weights to positive numeric values or remove the weight column."
+      )
       warning(
-        "`Weight` contained ", sum(bad_weight), " non-numeric value(s); affected row(s) will be removed before estimation.",
+        bad_weight_msg,
         call. = FALSE
       )
     }
@@ -162,47 +281,36 @@ prepare_mfrm_data <- function(data, person_col, facet_cols, score_col,
   }
 
   rows_before_drop <- nrow(df)
-  person_missing <- is.na(df$Person)
-  facet_missing <- if (length(facet_cols) > 0L) {
-    Reduce(
-      `|`,
-      lapply(facet_cols, function(col) is.na(df[[col]])),
-      init = rep(FALSE, nrow(df))
-    )
-  } else {
-    rep(FALSE, nrow(df))
-  }
-  score_missing <- is.na(df$Score)
-  weight_invalid <- is.na(df$Weight) | df$Weight <= 0
-  row_status <- rep("valid", nrow(df))
-  row_status[person_missing] <- "missing_person"
-  row_status[!person_missing & facet_missing] <- "missing_facet"
-  row_status[!person_missing & !facet_missing & score_missing] <- "missing_score"
-  row_status[!person_missing & !facet_missing & !score_missing & weight_invalid] <- "invalid_weight"
-
   df <- df |>
     tidyr::drop_na() |>
     filter(Weight > 0)
   rows_dropped <- rows_before_drop - nrow(df)
-  row_audit <- tibble(Status = row_status) |>
-    count(.data$Status, name = "N") |>
-    arrange(desc(.data$N), .data$Status)
-  row_audit_summary <- tibble(
-    RowsInput = rows_before_drop,
-    RowsRetained = nrow(df),
-    RowsDropped = rows_dropped,
-    MissingPersonRows = sum(row_status == "missing_person", na.rm = TRUE),
-    MissingFacetRows = sum(row_status == "missing_facet", na.rm = TRUE),
-    MissingScoreRows = sum(row_status == "missing_score", na.rm = TRUE),
-    InvalidWeightRows = sum(row_status == "invalid_weight", na.rm = TRUE)
+  row_retention <- data.frame(
+    Stage = c("input_selected_columns", "after_missing_and_weight_filter"),
+    Rows = c(input_rows, nrow(df)),
+    DroppedRows = c(0L, rows_dropped),
+    DroppedReason = c("", "missing values or non-positive weights"),
+    stringsAsFactors = FALSE
   )
   if (rows_dropped > 0L) {
-    message(
+    drop_msg <- paste0(
       "Dropped ", rows_dropped, " row(s) with missing values or non-positive ",
       "weights before estimation. Pass `missing_codes = ...` to recode ",
       "user-specified missing markers, or pre-process upstream if you need ",
       "to keep the row."
     )
+    add_preparation_note(
+      stage = "row_filter",
+      condition = "missing_or_nonpositive_weight_rows_dropped",
+      severity = "review",
+      count = rows_dropped,
+      affected = paste(c(required), collapse = ", "),
+      message = drop_msg,
+      action = "Inspect `fit$prep$row_retention` and use `missing_codes = ...` or upstream cleaning if dropped rows were unintended."
+    )
+    if (isTRUE(emit_preparation_messages)) {
+      message(drop_msg)
+    }
   }
 
   if (nrow(df) == 0) {
@@ -220,12 +328,24 @@ prepare_mfrm_data <- function(data, person_col, facet_cols, score_col,
                 duplicated(df[, key_cols, drop = FALSE], fromLast = TRUE)
     n_dup <- sum(dup_mask)
     if (n_dup > 0L) {
-      warning(
+      duplicate_msg <- paste0(
         "Detected ", n_dup, " duplicate row(s) sharing the same Person x ",
         "(", paste(facet_cols, collapse = ", "), ") combination. MFRM ",
         "assumes one observation per cell; aggregate, deduplicate, or ",
         "introduce a distinguishing facet column before fitting. Continuing ",
-        "with the rows as supplied.",
+        "with the rows as supplied."
+      )
+      add_preparation_note(
+        stage = "design_check",
+        condition = "duplicate_person_facet_cells",
+        severity = "warning",
+        count = n_dup,
+        affected = paste(c("Person", facet_cols), collapse = ", "),
+        message = duplicate_msg,
+        action = "Aggregate, deduplicate, or add a distinguishing facet before interpreting the fit."
+      )
+      warning(
+        duplicate_msg,
         call. = FALSE
       )
     }
@@ -246,27 +366,42 @@ prepare_mfrm_data <- function(data, person_col, facet_cols, score_col,
   rating_max_supplied <- !is.null(rating_max)
   if (is.null(rating_min)) rating_min <- min(df$Score, na.rm = TRUE)
   if (is.null(rating_max)) rating_max <- max(df$Score, na.rm = TRUE)
-  # Surface silently-inferred bounds so users can distinguish declared vs
-  # data-derived rating ranges (relevant for publication reporting and the
-  # `score_map` audit trail). fit_mfrm() sets the session-scoped option
-  # `mfrmr._rating_range_announced` to FALSE on entry and clears it on
-  # exit, which suppresses the duplicate message when both
-  # audit_mfrm_anchors() and mfrm_estimate() call prepare_mfrm_data().
+  rating_min_source <- if (rating_min_supplied) "declared" else "observed"
+  rating_max_source <- if (rating_max_supplied) "declared" else "observed"
+  rating_range_source <- if (rating_min_supplied && rating_max_supplied) {
+    "declared"
+  } else if (!rating_min_supplied && !rating_max_supplied) {
+    "observed"
+  } else {
+    "partly_declared"
+  }
+  inferred_rating_message <- paste0(
+    "Rating range inferred from observed scores: ",
+    paste(
+      c(
+        if (!rating_min_supplied) paste0("rating_min = ", rating_min),
+        if (!rating_max_supplied) paste0("rating_max = ", rating_max)
+      ),
+      collapse = ", "
+    ),
+    ". Supply `rating_min`/`rating_max` explicitly if the declared scale ",
+    "differs from the observed range."
+  )
+  # Keep routine fits quiet by default: large simulation/recovery workflows can
+  # call this helper hundreds of times. The declared-vs-observed provenance is
+  # stored in the returned prep object and surfaced by summary/data-description
+  # outputs. Users who want the previous message stream can opt in with
+  # options(mfrmr.show_inferred_rating_range = TRUE). fit_mfrm() sets the
+  # session-scoped private option `mfrmr._rating_range_announced` so that an
+  # opt-in message still appears at most once per top-level fit.
   if (!rating_min_supplied || !rating_max_supplied) {
     already_announced <- isTRUE(getOption("mfrmr._rating_range_announced"))
-    if (!already_announced) {
-      inferred <- character(0)
-      if (!rating_min_supplied) inferred <- c(inferred, paste0("rating_min = ", rating_min))
-      if (!rating_max_supplied) inferred <- c(inferred, paste0("rating_max = ", rating_max))
-      message(
-        "Rating range inferred from observed scores: ",
-        paste(inferred, collapse = ", "),
-        ". Supply `rating_min`/`rating_max` explicitly if the declared scale ",
-        "differs from the observed range."
-      )
-      # Flip the flag if it exists (fit_mfrm set it to FALSE up front).
-      # When called outside fit_mfrm, the option is NULL and we leave it
-      # as-is so subsequent standalone calls still announce.
+    show_inferred_message <- isTRUE(getOption("mfrmr.show_inferred_rating_range", FALSE))
+    if (show_inferred_message && !already_announced) {
+      message(inferred_rating_message)
+      # Flip the flag if it exists (fit_mfrm set it to FALSE up front). When
+      # called outside fit_mfrm, the option is NULL and we leave it as-is so
+      # subsequent standalone calls still announce when the opt-in is active.
       if (!is.null(getOption("mfrmr._rating_range_announced"))) {
         options(mfrmr._rating_range_announced = TRUE)
       }
@@ -392,17 +527,34 @@ prepare_mfrm_data <- function(data, person_col, facet_cols, score_col,
     )
   }
 
-  # Surface facets that have only a single observed level. They are
-  # structurally identified at 0 by the sum-to-zero constraint and do not
-  # contribute measurement information; users often supply them by mistake.
+  # Record facets that have only a single observed level. They are structurally
+  # identified at 0 by the sum-to-zero constraint and do not contribute
+  # measurement information; users often supply them by mistake.
   single_level <- facet_names[vapply(facet_levels, length, integer(1)) <= 1L]
   if (length(single_level) > 0L) {
-    message(
+    single_level_msg <- paste0(
       "Facet(s) with only a single observed level: ",
       paste(shQuote(single_level), collapse = ", "),
       ". They will be fixed at 0 by the sum-to-zero constraint and cannot ",
       "inform the fit."
     )
+    add_preparation_note(
+      stage = "design_check",
+      condition = "single_level_facet",
+      severity = "review",
+      count = length(single_level),
+      affected = paste(single_level, collapse = ", "),
+      message = single_level_msg,
+      action = "Remove the facet from the model or collect at least two observed levels if the facet should be estimated."
+    )
+    if (isTRUE(emit_preparation_messages)) {
+      message(single_level_msg)
+    }
+  }
+  preparation_notes <- bind_mfrm_preparation_notes(preparation_notes)
+  if (isTRUE(emit_preparation_messages) &&
+      !is.null(getOption("mfrmr._preparation_messages_announced"))) {
+    options(mfrmr._preparation_messages_announced = TRUE)
   }
 
   list(
@@ -412,14 +564,22 @@ prepare_mfrm_data <- function(data, person_col, facet_cols, score_col,
     n_person = length(levels(df$Person)),
     rating_min = rating_min,
     rating_max = rating_max,
+    rating_range_source = rating_range_source,
+    rating_min_source = rating_min_source,
+    rating_max_source = rating_max_source,
+    rating_range_message = if (!rating_min_supplied || !rating_max_supplied) {
+      inferred_rating_message
+    } else {
+      ""
+    },
     score_map = score_map,
     unused_score_categories = unused_score_categories,
     facet_names = facet_names,
     levels = c(list(Person = levels(df$Person)), facet_levels),
     weight_col = if (!is.null(weight_col)) weight_col else NULL,
     keep_original = isTRUE(keep_original),
-    row_audit = as.data.frame(row_audit, stringsAsFactors = FALSE),
-    row_audit_summary = as.data.frame(row_audit_summary, stringsAsFactors = FALSE),
+    row_retention = row_retention,
+    preparation_notes = preparation_notes,
     source_columns = list(
       person = person_col,
       facets = facet_cols,

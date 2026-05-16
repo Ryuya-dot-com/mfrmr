@@ -53,7 +53,6 @@ summary(diag)
 ```{r report}
 chk  <- reporting_checklist(fit, diagnostics = diag)
 apa  <- build_apa_outputs(fit, diag)
-summary(apa)                 # QA / completeness check
 cat(apa$report_text)
 
 tbl  <- apa_table(fit, which = "facets", diagnostics = diag)
@@ -76,11 +75,11 @@ eq <- analyze_facet_equivalence(fit, facet = "Rater", ci_level = 0.95)
 plot_facet_equivalence(eq, type = "forest")
 ```
 
-## 5. Hierarchical structure and small-N audit
+## 5. Hierarchical structure and small-N review
 
 ```{r hier}
-audit <- facet_small_sample_audit(fit)
-summary(audit)
+review <- facet_small_sample_review(fit)
+summary(review)
 
 icc <- compute_facet_icc(
   toy, facets = c("Rater", "Criterion"),
@@ -116,13 +115,11 @@ fit_eb2 <- apply_empirical_bayes_shrinkage(fit)
 | `plot(fit, type = "wright", group=..., group_data=...)` | DIF density overlay |
 | `plot(fit, type = "shrinkage")` | Shrinkage direction arrows |
 | `plot_threshold_ladder(fit)` | Category threshold ordering |
-| `plot_person_fit(fit, diagnostics = diag)` | Per-person Infit/Outfit bubble; inspect `p$data$data$MisfitDirection` for underfit vs overfit |
-| `fit_p_table(fit, diagnostics = diag)` | TAM-style Infit/Outfit p-value table with adjusted p values |
-| `plot_empirical_fit(fit, diagnostics = diag)` | mirt-style observed-vs-expected empirical fit bins |
+| `plot_person_fit(fit, diag)` | Per-person Infit/Outfit bubble |
 | `plot_rater_severity_profile(fit, diag)` | Rater ranking + CI bands |
 | `plot_bias_interaction(bias, plot="heatmap")` | Bias cell heatmap |
 | `plot_displacement(fit, show_ci=TRUE)` | Anchor displacement lollipop |
-| `plot_fair_average(fit, show_ci=TRUE)` | Fair averages + delta-method CI |
+| `plot_fair_average(fit, show_ci=TRUE)` | Fair averages; CIs for Rasch-family fits |
 | `plot_anchor_drift(drift, type="forest")` | Wave-level anchor CI forest |
 | `plot.mfrm_equating_chain(chain, type="graph")` | Bipartite wave/anchor graph |
 | `plot_apa_figure_one(fit)` | Publication 2x2 composite |
@@ -131,17 +128,11 @@ fit_eb2 <- apply_empirical_bayes_shrinkage(fit)
 ## 8. Reproducibility and export
 
 ```{r export}
-export_mfrm_bundle(
-  fit,
-  diagnostics = diag,
-  output_dir = "mfrmr_bundle",
-  prefix = "analysis"
-)
+export_mfrm_bundle(fit, diagnostics = diag, path = "mfrmr_bundle/")
 manifest <- build_mfrm_manifest(fit, diagnostics = diag)
 # manifest$environment, $dependencies, $input_hash, $session_info,
-# $hierarchical_audit, $missing_recoding, $shrinkage_audit
-replay_script <- build_mfrm_replay_script(fit)
-writeLines(replay_script$script, "replay_mfrmr.R")
+# $hierarchical_review, $missing_recoding, $shrinkage_review
+replay_script <- build_mfrm_replay_script(fit, path = "replay_mfrmr.R")
 ```
 
 ## 9. Missing-code pre-processing
@@ -156,8 +147,7 @@ fit$prep$missing_recoding
 
 ## Package links
 
-- Documentation: <https://github.com/Ryuya-dot-com/mfrmr>
-- Source:        <https://github.com/Ryuya-dot-com/mfrmr>
+- Source and documentation: <https://github.com/Ryuya-dot-com/mfrmr>
 - Citation:      `citation("mfrmr")`
 
 *mfrmr 0.2.0 cheatsheet*. Distributed under MIT License.

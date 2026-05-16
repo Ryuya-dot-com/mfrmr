@@ -87,8 +87,8 @@ A named list with class \code{mfrm_export_bundle}.
 Export an analysis bundle for sharing or archiving
 }
 \details{
-This function creates a package-native analysis download bundle. It reuses
-existing \code{mfrmr} helpers instead of reimplementing estimation or
+This function is the package-native counterpart to the app's download bundle.
+It reuses existing \code{mfrmr} helpers instead of reimplementing estimation or
 diagnostics.
 }
 \section{Choosing exports}{
@@ -114,7 +114,7 @@ to travel with the bundle.
 Common starting points are:
 \itemize{
 \item minimal tables: \code{include = c("core_tables", "manifest")}
-\item reporting bundle: \code{include = c("core_tables", "checklist", "dashboard", "apa", "summary_tables", "html")}
+\item reporting bundle: \code{include = c("core_tables", "checklist", "dashboard", "summary_tables", "html")}
 \item archival bundle: \code{include = c("core_tables", "manifest", "script", "visual_summaries", "html")}
 }
 }
@@ -150,9 +150,10 @@ from scenario-level population predictions are not flattened into
 \verb{*_population_prediction_settings.csv} or ADeMP CSVs; the compact simulation
 specification files carry the replay-relevant settings instead.
 
-This exporter is intentionally unavailable for bounded \code{GPCM}, because the
-current bundle surface would otherwise depend on blocked narrative,
-fit-based export, and replay semantics from the free-discrimination branch.
+This fit-based exporter is intentionally unavailable for bounded \code{GPCM},
+because the current bundle surface would otherwise depend on blocked
+narrative/QC/export semantics from the free-discrimination branch. Use
+\code{\link[=export_summary_appendix]{export_summary_appendix()}} for documented direct \code{GPCM} outputs.
 }
 
 \section{Interpreting output}{

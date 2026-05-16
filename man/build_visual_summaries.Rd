@@ -37,8 +37,8 @@ An object of class \code{mfrm_visual_summaries} with:
 \item \code{warning_map}: visual-level warning text vectors
 \item \code{summary_map}: visual-level descriptive text vectors
 \item \code{warning_counts}, \code{summary_counts}: message counts by visual key
-\item \code{plot_payloads}: reusable draw-free payloads for \code{comparison},
-\code{warning_counts}, \code{summary_counts}, and optionally
+\item \code{plot_payloads}: reusable draw-free \code{mfrm_plot_data} objects for
+\code{comparison}, \code{warning_counts}, \code{summary_counts}, and optionally
 \code{category_probability_surface}
 \item \code{public_plot_routes}: public helper / draw-free route map for follow-up
 \item \code{crosswalk}: FACETS-reference mapping for main visual keys
@@ -67,10 +67,9 @@ in UI code.
 \item \code{top_misfit_n}: number of top misfit entries included
 }
 
-For bounded \code{GPCM}, this helper is available as a caveated visual-routing
-layer. Fair-average and bias entries use slope-aware GPCM screens and should
-be read as exploratory score-side diagnostics rather than Rasch-family
-invariance evidence.
+For bounded \code{GPCM}, this helper is intentionally unavailable. Use
+\code{\link[=reporting_checklist]{reporting_checklist()}}, \code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}}, the residual/category table
+helpers, and \code{\link[=compute_information]{compute_information()}} / \code{\link[=plot_information]{plot_information()}} instead.
 }
 \section{Interpreting output}{
 
@@ -80,16 +79,14 @@ invariance evidence.
 \item strict marginal keys appear when \code{diagnose_mfrm(..., diagnostic_mode = "both")}
 supplies latent-integrated first-order and pairwise screening summaries.
 \item \code{warning_counts} / \code{summary_counts}: message-count tables for QA checks.
-\item \code{plot_payloads}: ready-to-reuse \code{mfrm_plot_data} payloads for the bundle's
+\item \code{plot_payloads}: ready-to-reuse \code{mfrm_plot_data} objects for the bundle's
 own comparison/count plots and, when step estimates are available, the
-exploratory \code{category_probability_surface} payload from
-\code{plot(fit, type = "ccc_surface", draw = FALSE)}. The surface payload
-carries \code{category_support}, \code{interpretation_guide}, and \code{reporting_policy}
-tables for zero-frequency category and reporting-boundary checks.
+exploratory \code{category_probability_surface} data from
+\code{plot(fit, type = "ccc_surface", draw = FALSE)}. The surface data carry
+\code{category_support}, \code{interpretation_guide}, and \code{reporting_policy} tables
+for zero-frequency category and reporting-boundary checks.
 \item \code{public_plot_routes}: draw-free helper routes for the dedicated public plot
 functions behind each visual family.
-\item \code{support_status} / \code{caveat}: present for bounded \code{GPCM} fits to document
-the exploratory support boundary.
 }
 }
 
@@ -99,11 +96,7 @@ the exploratory support boundary.
 \item inspect defaults with \code{\link[=mfrm_threshold_profiles]{mfrm_threshold_profiles()}}
 \item choose \code{threshold_profile} (\code{strict} / \code{standard} / \code{lenient})
 \item optionally override selected fields via \code{thresholds}
-\item inspect \code{vis$public_plot_routes} to choose the dedicated public helper
-and \code{vis$plot_payloads} for reusable draw-free payloads
-\item cross-check figure placement with
-\code{reporting_checklist(fit, diagnostics)$visual_scope} and
-\code{\link[=visual_reporting_template]{visual_reporting_template()}} before writing captions or results text
+\item pass result maps to report/dashboard rendering logic
 }
 }
 

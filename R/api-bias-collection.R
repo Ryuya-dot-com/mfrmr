@@ -53,7 +53,7 @@
 #' 1. Fit with [fit_mfrm()] and diagnose with [diagnose_mfrm()]. For
 #'    `RSM` / `PCM` reporting runs, prefer `method = "MML"` plus
 #'    `diagnostic_mode = "both"` in the diagnostics call.
-#' 2. Run `estimate_all_bias()` to compute multi-pair interactions.
+#' 2. Run `estimate_all_bias()` to compute app-style multi-pair interactions.
 #' 3. Pass the resulting `by_pair` list into [reporting_checklist()] or
 #'    [facet_quality_dashboard()].
 #'

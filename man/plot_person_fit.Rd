@@ -2,16 +2,17 @@
 % Please edit documentation in R/api-plotting-extras.R
 \name{plot_person_fit}
 \alias{plot_person_fit}
-\title{Plot per-person fit (Infit / Outfit) bubbles}
+\title{Plot per-person fit}
 \usage{
 plot_person_fit(
   fit,
   diagnostics = NULL,
-  lower = NULL,
-  upper = NULL,
+  lower = 0.5,
+  upper = 1.5,
   top_n_label = 12L,
-  preset = c("standard", "publication", "compact"),
-  draw = TRUE
+  preset = c("standard", "publication", "compact", "monochrome"),
+  draw = TRUE,
+  fit_index = c("meansquare", "loglik")
 )
 }
 \arguments{
@@ -20,46 +21,45 @@ plot_person_fit(
 \item{diagnostics}{Optional \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} output. When omitted,
 \code{diagnose_mfrm(fit, residual_pca = "none")} is run internally.}
 
-\item{lower}{Lower fit threshold. \code{NULL} (default) uses the lower bound
-from \code{\link[=mfrm_misfit_thresholds]{mfrm_misfit_thresholds()}}; pass a scalar for a manual plot band.}
+\item{lower}{Lower fit threshold (default \code{0.5}, Linacre 2002).}
 
-\item{upper}{Upper fit threshold. \code{NULL} (default) uses the upper bound
-from \code{\link[=mfrm_misfit_thresholds]{mfrm_misfit_thresholds()}}.}
+\item{upper}{Upper fit threshold (default \code{1.5}).}
 
-\item{top_n_label}{Maximum number of persons whose label is drawn
-next to the bubble (largest |Infit-1| + |Outfit-1|). Default \code{12}.}
+\item{top_n_label}{Maximum number of persons whose label is drawn.
+The default mean-square view uses largest \verb{|Infit - 1| + |Outfit - 1|};
+\code{fit_index = "loglik"} uses largest absolute report index. Default \code{12}.}
 
-\item{preset}{Visual preset.}
+\item{preset}{Visual preset, including \code{"monochrome"}.}
 
 \item{draw}{If \code{TRUE}, draw with base graphics.}
+
+\item{fit_index}{Plot focus. \code{"meansquare"} keeps the Infit/Outfit bubble
+plot. \code{"loglik"} draws the report index selected by
+\code{\link[=compute_person_fit_indices]{compute_person_fit_indices()}} (\code{lz_star} when available, otherwise
+\code{lz} with a caveat).}
 }
 \value{
-An \code{mfrm_plot_data} object whose \code{data} slot contains
-columns \code{Person}, \code{Infit}, \code{Outfit}, \code{N}, \code{Status}, and
-\code{MisfitDirection}. \code{Status} keeps the plot-colour contract
-(\code{in_band}, \code{one_outside}, \code{both_outside}), while \code{MisfitDirection}
-separates \code{underfit} (above the upper MnSq band), \code{overfit} (below the
-lower band), \code{mixed}, and \code{in_band}.
+An \code{mfrm_plot_data} object whose reusable plot data include
+\code{data} with one row per person, \code{plot_long} for custom R graphics,
+\code{person_fit_indices} from \code{\link[=compute_person_fit_indices]{compute_person_fit_indices()}}, and compact
+flag/status summaries.
 }
 \description{
 Per-person diagnostic bubble plot inspired by FACETS Table 6 / KIDMAP
 summaries. Each bubble represents one person at the intersection of
 Infit (x) and Outfit (y), sized by total observations and coloured by
-the active MnSq screening band: green when both Infit and Outfit fall
-in \verb{[lower, upper]}, amber when one statistic is outside, red when both
-are outside.
+the standard 0.5/1.5 fit envelope: green when both Infit and Outfit
+fall in \verb{[lower, upper]}, amber when one statistic is outside, red
+when both are outside. Set \code{fit_index = "loglik"} for a ranked view of
+the report-ready \code{lz_star} / \code{lz} index instead.
 }
 \section{Interpreting output}{
 
-The default band is the active package MnSq screening band returned by
-\code{\link[=mfrm_misfit_thresholds]{mfrm_misfit_thresholds()}}. The package default is the broad 0.5-1.5
-convention, but applied studies may use narrower or broader bands by
-purpose and sample context. Persons in the green centre are inside the
-current screening band; amber and red corners are candidates for misfit
-review. Read \code{p$data$data$MisfitDirection} to distinguish underfit
-(MnSq above the upper band), overfit (MnSq below the lower band), and
-mixed high/low patterns before moving to \code{\link[=unexpected_response_table]{unexpected_response_table()}} for
-case-level follow-up.
+The default 0.5-1.5 envelope follows Linacre (2002) Rasch
+Measurement Transactions. Persons in the green centre are
+fit-acceptable; amber and red corners are candidates for misfit
+review (overfit / underfit) using
+\code{\link[=unexpected_response_table]{unexpected_response_table()}} for follow-up.
 }
 
 \examples{
@@ -68,7 +68,6 @@ fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "JML", maxit = 25)
 p <- plot_person_fit(fit, draw = FALSE)
 head(p$data$data)
-table(p$data$data$MisfitDirection, useNA = "ifany")
 }
 \seealso{
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=unexpected_response_table]{unexpected_response_table()}},
