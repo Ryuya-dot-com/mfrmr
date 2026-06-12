@@ -1416,7 +1416,13 @@ draw_facet_plot <- function(facet_tbl,
 #' shows the model expected-score curves with binned observed mean scores
 #' overlaid (the FACETS/Winsteps "Empirical ICC" view); the bins pool
 #' observations across non-person facets, so read it as a screening display
-#' for model-data agreement rather than a fit test. `type = "ccc_surface"` or
+#' for model-data agreement rather than a fit test.
+#' `type = "score_measure"` shows the score-to-measure curve in the
+#' Winsteps "Person-Test Measures for Scores" style: expected score against
+#' measure with a dashed `+/- 1 SEM` band (`1 / sqrt(information)`) on the
+#' measure axis. The expected score is on the single-response category
+#' metric of each step-structure curve, not a whole-test raw-score
+#' conversion table. `type = "ccc_surface"` or
 #' `type = "category_surface"` returns 3D-ready category-probability surface
 #' data for external rendering; it deliberately does not add a
 #' plotly/rgl dependency or replace the 2D CCC/pathway reporting figures. The
@@ -1629,8 +1635,8 @@ plot.mfrm_fit <- function(x,
   # Locale-independent validation (match.arg() would produce a
   # translated error string on non-English locales).
   type_choices <- c("facet", "person", "step", "wright", "pathway",
-                    "ccc", "ccc_overlay", "empirical_icc", "ccc_surface",
-                    "category_surface", "shrinkage")
+                    "ccc", "ccc_overlay", "empirical_icc", "score_measure",
+                    "ccc_surface", "category_surface", "shrinkage")
   type_in <- tolower(as.character(type[1]))
   if (!(type_in %in% type_choices)) {
     stop(sprintf(
@@ -2055,6 +2061,71 @@ plot.mfrm_fit <- function(x,
           col = "white",
           cex = 0.9 + 0.6 * sqrt(overlay$N / max(1, max_n))
         )
+      }
+    }
+    return(invisible(out))
+  }
+  if (type == "score_measure") {
+    # Score-to-measure curve in the Winsteps "Person-Test Measures for
+    # Scores" style: the model expected score against theta with a
+    # measure-side SEM band, SEM(theta) = 1 / sqrt(information). The
+    # expected score is on the single-response category metric of each
+    # step-structure curve, not a whole-test raw-score conversion table.
+    spec <- build_step_curve_spec(x)
+    theta_grid <- seq(theta_range[1], theta_range[2], length.out = theta_points)
+    score_tbl <- as.data.frame(
+      build_curve_tables(spec, theta_grid)$expected,
+      stringsAsFactors = FALSE
+    )
+    info <- suppressWarnings(as.numeric(score_tbl$Information))
+    sem <- ifelse(is.finite(info) & info > 0, 1 / sqrt(info), NA_real_)
+    score_tbl$SEM <- sem
+    score_tbl$ThetaLower <- score_tbl$Theta - sem
+    score_tbl$ThetaUpper <- score_tbl$Theta + sem
+    out <- as_plot_data("score_measure_curve", c(
+      list(
+        score_measure = score_tbl,
+        title = title %||% "Score-to-measure curve",
+        subtitle = paste0(
+          "Expected single-response score vs measure; dashed band = ",
+          "+/- 1 SEM (1 / sqrt(information)) on the measure axis"
+        ),
+        preset = style$name,
+        legend = new_plot_legend(
+          label = c("Expected score", "+/- 1 SEM band"),
+          role = c("expected_score", "uncertainty"),
+          aesthetic = c("line", "line"),
+          value = c(style$accent_primary, style$neutral)
+        ),
+        reference_lines = new_reference_lines("v", 0, "Centered theta reference",
+                                               "dashed", "reference")
+      )
+    ))
+    if (isTRUE(draw)) {
+      apply_plot_preset(style)
+      groups <- unique(as.character(score_tbl$CurveGroup))
+      group_cols <- if (identical(style$name, "monochrome")) {
+        stats::setNames(grDevices::gray.colors(max(3L, length(groups)), start = 0.15, end = 0.6)[seq_along(groups)], groups)
+      } else {
+        stats::setNames(grDevices::hcl.colors(max(3L, length(groups)), "Dark 3")[seq_along(groups)], groups)
+      }
+      graphics::plot(
+        x = range(c(score_tbl$Theta, score_tbl$ThetaLower, score_tbl$ThetaUpper), finite = TRUE),
+        y = range(score_tbl$ExpectedScore, finite = TRUE),
+        type = "n",
+        xlab = "Theta / Logit",
+        ylab = "Expected score",
+        main = title %||% "Score-to-measure curve"
+      )
+      graphics::grid(col = style$grid)
+      for (g in groups) {
+        sub <- score_tbl[score_tbl$CurveGroup == g, , drop = FALSE]
+        graphics::lines(sub$Theta, sub$ExpectedScore, col = group_cols[g], lwd = 1.8)
+        ok_band <- is.finite(sub$ThetaLower) & is.finite(sub$ThetaUpper)
+        graphics::lines(sub$ThetaLower[ok_band], sub$ExpectedScore[ok_band],
+                        col = group_cols[g], lwd = 1, lty = 2)
+        graphics::lines(sub$ThetaUpper[ok_band], sub$ExpectedScore[ok_band],
+                        col = group_cols[g], lwd = 1, lty = 2)
       }
     }
     return(invisible(out))

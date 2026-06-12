@@ -347,3 +347,26 @@ test_that("plot(fit, type = 'empirical_icc') overlays binned mean scores", {
   pm <- plot(fit, type = "empirical_icc", preset = "monochrome", draw = FALSE)
   expect_identical(pm$data$preset, "monochrome")
 })
+
+test_that("plot(fit, type = 'score_measure') carries the SEM band identity", {
+  toy <- load_mfrmr_data("example_core")
+  fit <- suppressWarnings(fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
+                                   method = "JML", model = "RSM", maxit = 60))
+  p <- plot(fit, type = "score_measure", draw = FALSE)
+  expect_s3_class(p, "mfrm_plot_data")
+  expect_identical(p$name, "score_measure_curve")
+  sm <- p$data$score_measure
+  expect_true(all(c("CurveGroup", "Theta", "ExpectedScore", "Information",
+                    "SEM", "ThetaLower", "ThetaUpper") %in% names(sm)))
+  ok <- is.finite(sm$Information) & sm$Information > 0
+  expect_gt(sum(ok), 0L)
+  # SEM identity on the measure axis.
+  expect_equal(sm$SEM[ok], 1 / sqrt(sm$Information[ok]))
+  expect_true(all(sm$ThetaLower[ok] < sm$Theta[ok] & sm$Theta[ok] < sm$ThetaUpper[ok]))
+  # Expected score is monotone in theta within each curve group.
+  for (g in unique(sm$CurveGroup)) {
+    expect_false(is.unsorted(sm$ExpectedScore[sm$CurveGroup == g]))
+  }
+  pm <- plot(fit, type = "score_measure", preset = "monochrome", draw = FALSE)
+  expect_identical(pm$data$preset, "monochrome")
+})

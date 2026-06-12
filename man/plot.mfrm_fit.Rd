@@ -128,7 +128,13 @@ observed category proportions to those curves. \code{type = "empirical_icc"}
 shows the model expected-score curves with binned observed mean scores
 overlaid (the FACETS/Winsteps "Empirical ICC" view); the bins pool
 observations across non-person facets, so read it as a screening display
-for model-data agreement rather than a fit test. \code{type = "ccc_surface"} or
+for model-data agreement rather than a fit test.
+\code{type = "score_measure"} shows the score-to-measure curve in the
+Winsteps "Person-Test Measures for Scores" style: expected score against
+measure with a dashed \verb{+/- 1 SEM} band (\code{1 / sqrt(information)}) on the
+measure axis. The expected score is on the single-response category
+metric of each step-structure curve, not a whole-test raw-score
+conversion table. \code{type = "ccc_surface"} or
 \code{type = "category_surface"} returns 3D-ready category-probability surface
 data for external rendering; it deliberately does not add a
 plotly/rgl dependency or replace the 2D CCC/pathway reporting figures. The
