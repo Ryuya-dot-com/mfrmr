@@ -9,7 +9,7 @@ plot_local_dependence_heatmap(
   diagnostics = NULL,
   facet = "Rater",
   min_pairs = 5L,
-  preset = c("standard", "publication", "compact"),
+  preset = c("standard", "publication", "compact", "monochrome"),
   draw = TRUE
 )
 }
@@ -52,7 +52,7 @@ scale so an analyst can scan for diagonal blocks or hotspots.
 \examples{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                 method = "JML", maxit = 25)
+                 method = "JML", maxit = 30)
 p <- plot_local_dependence_heatmap(fit, draw = FALSE)
 dim(p$data$matrix)
 # Look for: |off-diagonal correlation| < 0.2 is the typical

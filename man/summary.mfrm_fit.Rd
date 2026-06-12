@@ -118,7 +118,7 @@ checks. For bounded \code{GPCM}, continue with \code{\link[=compute_information]
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(
   toy, "Person", c("Rater", "Criterion"), "Score",
-  method = "MML", quad_points = 15
+  method = "MML", quad_points = 5
 )
 s <- summary(fit)
 s$overview[, c("Model", "Method", "Converged")]

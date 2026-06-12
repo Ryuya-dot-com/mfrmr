@@ -67,9 +67,10 @@ in UI code.
 \item \code{top_misfit_n}: number of top misfit entries included
 }
 
-For bounded \code{GPCM}, this helper is intentionally unavailable. Use
-\code{\link[=reporting_checklist]{reporting_checklist()}}, \code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}}, the residual/category table
-helpers, and \code{\link[=compute_information]{compute_information()}} / \code{\link[=plot_information]{plot_information()}} instead.
+For bounded \code{GPCM}, this helper returns caveated warning/summary maps over
+supported diagnostics, direct tables, and plots. The returned object includes
+\code{gpcm_boundary} so score-side, design-forecasting, DFF, and linking routes
+remain visibly separate capability rows.
 }
 \section{Interpreting output}{
 
@@ -105,7 +106,7 @@ functions behind each visual family.
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(
   toy, "Person", c("Rater", "Criterion"), "Score",
-  method = "MML", model = "RSM", maxit = 200
+  method = "MML", model = "RSM", quad_points = 7, maxit = 30
 )
 diag <- diagnose_mfrm(fit, residual_pca = "both", diagnostic_mode = "both")
 vis <- build_visual_summaries(fit, diag, threshold_profile = "strict")

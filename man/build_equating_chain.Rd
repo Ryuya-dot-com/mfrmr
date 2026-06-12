@@ -21,7 +21,7 @@ build_equating_chain(
   x,
   y = NULL,
   type = c("common_anchors", "graph", "chain"),
-  preset = c("standard", "publication", "compact"),
+  preset = c("standard", "publication", "compact", "monochrome"),
   draw = TRUE,
   ...
 )
@@ -156,9 +156,9 @@ people <- unique(toy$Person)
 d1 <- toy[toy$Person \%in\% people[1:12], , drop = FALSE]
 d2 <- toy[toy$Person \%in\% people[13:24], , drop = FALSE]
 fit1 <- fit_mfrm(d1, "Person", c("Rater", "Criterion"), "Score",
-                 method = "JML", maxit = 10)
+                 method = "JML", maxit = 30)
 fit2 <- fit_mfrm(d2, "Person", c("Rater", "Criterion"), "Score",
-                 method = "JML", maxit = 10)
+                 method = "JML", maxit = 30)
 chain <- build_equating_chain(list(Form1 = fit1, Form2 = fit2))
 summary(chain)
 chain$cumulative

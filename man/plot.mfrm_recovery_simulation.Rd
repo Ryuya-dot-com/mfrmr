@@ -67,7 +67,7 @@ rec <- evaluate_mfrm_recovery(
   n_rater = 2,
   n_criterion = 2,
   reps = 1,
-  maxit = 8,
+  maxit = 30,
   seed = 123
 )
 plot(rec, type = "summary", metric = "rmse", draw = FALSE)

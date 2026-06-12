@@ -9,7 +9,7 @@ plot_apa_figure_one(
   diagnostics = NULL,
   rater_facet = "Rater",
   ci_level = 0.95,
-  preset = c("standard", "publication", "compact"),
+  preset = c("standard", "publication", "compact", "monochrome"),
   draw = TRUE
 )
 }
@@ -53,7 +53,7 @@ reliability if available.
 \examples{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", maxit = 25)
+                method = "JML", maxit = 30)
 p <- plot_apa_figure_one(fit, draw = FALSE)
 names(p$data)
 }
@@ -62,3 +62,6 @@ names(p$data)
 \code{\link[=plot_rater_severity_profile]{plot_rater_severity_profile()}}, \code{\link[=plot_threshold_ladder]{plot_threshold_ladder()}},
 \code{\link[=build_apa_outputs]{build_apa_outputs()}}.
 }
+\concept{confidence intervals}
+\concept{reporting workflow}
+\concept{visual diagnostics}

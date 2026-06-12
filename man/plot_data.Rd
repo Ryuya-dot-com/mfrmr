@@ -33,7 +33,7 @@ one.
 \examples{
 \donttest{
 toy <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", maxit = 50)
+fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", maxit = 30)
 
 wright_plot_data <- plot_data(fit, type = "wright")
 names(wright_plot_data)

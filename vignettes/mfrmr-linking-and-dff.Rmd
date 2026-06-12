@@ -8,11 +8,13 @@ vignette: >
 ---
 
 ```{r, include = FALSE}
+is_cran_check <- !isTRUE(as.logical(Sys.getenv("NOT_CRAN", "false")))
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
   fig.width = 7,
-  fig.height = 5
+  fig.height = 5,
+  eval = !is_cran_check
 )
 ```
 
@@ -34,6 +36,9 @@ library(mfrmr)
 
 bias_df <- load_mfrmr_data("example_bias")
 
+# The vignette uses compact quadrature so optional local execution stays fast.
+# For final DFF or linking evidence, refit with the package default or a higher
+# quadrature setting and record that setting in the analysis log.
 fit <- fit_mfrm(
   bias_df,
   person = "Person",

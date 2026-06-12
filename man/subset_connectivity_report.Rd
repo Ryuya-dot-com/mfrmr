@@ -55,7 +55,7 @@ and edge tables with \code{draw = FALSE}; drawing uses \code{igraph} when availa
 
 \examples{
 toy <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
+fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 out <- subset_connectivity_report(fit)
 summary(out)
 p_sub <- plot(out, draw = FALSE)

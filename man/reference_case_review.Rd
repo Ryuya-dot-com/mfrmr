@@ -61,7 +61,7 @@ inspect the compatibility layer.
 \item \code{overall}: one-row review summary with schema coverage and metric
 pass rate.
 \item \code{component_summary}: per-component coverage summary.
-\item \code{attention_items}: quickest list of components needing review.
+\item \code{attention_items}: direct list of components needing review.
 \item \code{metric_summary} / \code{metric_checks}: numerical consistency status.
 }
 }
@@ -69,7 +69,7 @@ pass rate.
 \examples{
 \donttest{
 toy <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
+fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 review <- reference_case_review(fit, diagnostics = diag)
 summary(review)

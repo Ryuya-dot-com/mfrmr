@@ -8,7 +8,7 @@ plot_dif_summary(
   x,
   top_n = 30L,
   sort_by = c("abs_effect", "effect", "classification"),
-  preset = c("standard", "publication", "compact"),
+  preset = c("standard", "publication", "compact", "monochrome"),
   draw = TRUE,
   ci_level = NULL,
   effect_thresholds = NULL,
@@ -65,7 +65,7 @@ uses the preset's neutral.
 \examples{
 toy <- load_mfrmr_data("example_bias")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", maxit = 25)
+                method = "JML", maxit = 30)
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 dff <- analyze_dff(fit, diagnostics = diag,
                    facet = "Rater", group = "Group", data = toy)
@@ -76,3 +76,6 @@ head(p$data$data)
 \seealso{
 \code{\link[=analyze_dff]{analyze_dff()}}, \code{\link[=analyze_dif]{analyze_dif()}}, \code{\link[=plot_dif_heatmap]{plot_dif_heatmap()}}.
 }
+\concept{DFF DIF}
+\concept{confidence intervals}
+\concept{visual diagnostics}

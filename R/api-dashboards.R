@@ -86,7 +86,7 @@
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
 #' toy <- toy[toy$Person %in% unique(toy$Person)[1:8], ]
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 50)
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
 #' dash <- facet_quality_dashboard(fit, diagnostics = diag)
 #' summary(dash)
@@ -573,7 +573,7 @@ dashboard_draw_plot <- function(tbl,
 #' @seealso [facet_quality_dashboard()], [plot_facet_quality_dashboard()]
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
 #' summary(facet_quality_dashboard(fit, diagnostics = diag))
 #' @export
@@ -670,7 +670,7 @@ print.summary.mfrm_facet_dashboard <- function(x, ...) {
 #' @seealso [facet_quality_dashboard()], [summary.mfrm_facet_dashboard()]
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
 #' p <- plot_facet_quality_dashboard(fit, diagnostics = diag, draw = FALSE)
 #' p$data$plot

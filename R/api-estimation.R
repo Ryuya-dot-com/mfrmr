@@ -391,19 +391,22 @@
 #'   [displacement_table()], [measurable_summary_table()],
 #'   [rating_scale_table()], [facet_quality_dashboard()],
 #'   [reporting_checklist()], [category_structure_report()],
-#'   [category_curves_report()], and graph-only (not score-side)
-#'   [facets_output_file_bundle()] are available. Direct simulation
+#'   [category_curves_report()], and graph/scorefile
+#'   [facets_output_file_bundle()] routes are available with score-side
+#'   caveats. Direct simulation
 #'   specifications and data generation are also supported through
 #'   [build_mfrm_sim_spec()], [extract_mfrm_sim_spec()], and
 #'   [simulate_mfrm_data()] when the slope-aware generator contract is stored
 #'   explicitly; direct recovery checks are available through
 #'   [evaluate_mfrm_recovery()] and [assess_mfrm_recovery()]. Slope-aware
 #'   [fair_average_table()] and [estimate_bias()] are available with their
-#'   documented caveats. Planning/forecasting, FACETS-style scorefile exports,
-#'   the APA writer, QC pass/fail pipelines, and fit-based report/export
-#'   bundles should be treated as unsupported unless documented
-#'   otherwise. Use [gpcm_capability_matrix()] as the formal boundary statement
-#'   for the current `GPCM` scope.
+#'   documented caveats. Role-based design evaluation, population forecasting,
+#'   diagnostic-screening, and signal-detection helpers are available as
+#'   caveated sensitivity evidence. Full FACETS-style score-side contract
+#'   review, posterior predictive checks, and heavy backend routes should be
+#'   treated as unsupported unless documented otherwise. Use
+#'   [gpcm_capability_matrix()] as the formal boundary statement for the
+#'   current `GPCM` scope.
 #'
 #' Latent-regression status:
 #' - `population_formula = NULL` keeps the legacy unconditional `MML` / `JML`
@@ -428,8 +431,8 @@
 #'   fits (`population_formula = ~ 1`) can reconstruct that minimal person
 #'   table internally during scoring.
 #'
-#' @section Latent-regression quick start:
-#' For a first latent-regression run, keep the setup explicit:
+#' @section Latent-regression workflow:
+#' For an initial latent-regression run, keep the setup explicit:
 #' 1. Put response data in `data`, with one row per rating event.
 #' 2. Put background variables in `person_data`, with exactly one row per
 #'    person. The ID column must match `person`, or be supplied through
@@ -630,7 +633,7 @@
 #' # `summary` overview ready for inspection.
 #' toy <- load_mfrmr_data("example_core")
 #' fit_quick <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                       method = "JML", maxit = 15)
+#'                       method = "JML", maxit = 30)
 #' fit_quick$summary[, c("Model", "Method", "N", "Converged")]
 #'
 #' \donttest{
@@ -646,7 +649,7 @@
 #'   score = "Score",
 #'   model = "RSM",
 #'   quad_points = 7,
-#'   maxit = 25
+#'   maxit = 30
 #' )
 #' fit$summary
 #' s_fit <- summary(fit)
@@ -674,7 +677,7 @@
 #'   score = "Score",
 #'   method = "JML",
 #'   model = "RSM",
-#'   maxit = 25
+#'   maxit = 30
 #' )
 #' summary(fit_jml)$overview[, c("Model", "Method", "Converged")]
 #'
@@ -713,7 +716,7 @@
 #'   score = "Score",
 #'   model = "RSM",
 #'   method = "JML",
-#'   maxit = 50
+#'   maxit = 30
 #' )
 #' fit_binary$summary[, c("Model", "Categories", "Converged")]
 #'
@@ -2938,7 +2941,7 @@ plot.mfrm_anchor_review <- function(x,
 #' @seealso [fit_mfrm()], [review_mfrm_anchors()]
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' anchors_tbl <- make_anchor_table(fit)
 #' head(anchors_tbl)
 #' summary(anchors_tbl$Anchor)
@@ -3077,6 +3080,17 @@ make_anchor_table <- function(fit,
 #' side by side without changing the primary `InfitZSTD` / `OutfitZSTD`
 #' columns.
 #'
+#' **Residual basis under MML.** For `method = "MML"` fits, residuals,
+#' MnSq, and ZSTD are computed at the EAP person measures from the
+#' marginal model. EAP measures are shrunken toward the population mean,
+#' so expected scores -- and therefore fit statistics -- differ
+#' systematically from JMLE-based engines such as FACETS, especially for
+#' persons with extreme raw scores. The df conventions above do not remove
+#' this difference: it is a residual-basis difference, not a
+#' standardization difference. Refit with `method = "JML"` when an
+#' external FACETS fit comparison requires a JMLE-style residual basis
+#' (see [facets_fit_review()]).
+#'
 #' **Misfit flagging guidelines (Bond & Fox, 2015):**
 #' - MnSq < 0.5: overfit (too predictable; may inflate reliability)
 #' - MnSq 0.5--1.5: productive for measurement
@@ -3193,13 +3207,13 @@ make_anchor_table <- function(fit,
 #' # the bundle has the expected slots. ~1 s on example_core.
 #' toy <- load_mfrmr_data("example_core")
 #' fit_quick <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                       method = "JML", maxit = 15)
+#'                       method = "JML", maxit = 30)
 #' diag_quick <- diagnose_mfrm(fit_quick, diagnostic_mode = "legacy",
 #'                              residual_pca = "none")
 #' summary(diag_quick)$overview[, c("Observations", "Facets", "Categories")]
 #'
 #' \donttest{
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' diag <- diagnose_mfrm(fit, diagnostic_mode = "both", residual_pca = "none")
 #' s_diag <- summary(diag)
 #' s_diag$overview[, c("Observations", "Facets", "Categories")]
@@ -3442,10 +3456,10 @@ diagnose_mfrm <- function(fit,
 #' toy <- load_mfrmr_data("example_core")
 #'
 #' fit_rsm <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                      method = "MML", model = "RSM", maxit = 25)
+#'                      method = "MML", model = "RSM", quad_points = 7, maxit = 30)
 #' fit_pcm <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                      method = "MML", model = "PCM",
-#'                      step_facet = "Criterion", maxit = 25)
+#'                      step_facet = "Criterion", quad_points = 7, maxit = 30)
 #' comp <- compare_mfrm(fit_rsm, fit_pcm, labels = c("RSM", "PCM"))
 #' comp$table
 #' comp$evidence_ratios

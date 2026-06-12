@@ -13,7 +13,7 @@ plot_marginal_fit(
   main = NULL,
   palette = NULL,
   label_angle = 45,
-  preset = c("standard", "publication", "compact"),
+  preset = c("standard", "publication", "compact", "monochrome"),
   draw = TRUE
 )
 }
@@ -99,7 +99,8 @@ fit <- fit_mfrm(
   c("Rater", "Criterion"),
   "Score",
   method = "MML",
-  maxit = 200
+  quad_points = 7,
+  maxit = 30
 )
 diag <- diagnose_mfrm(fit, residual_pca = "none", diagnostic_mode = "both")
 p <- plot_marginal_fit(diag, draw = FALSE, preset = "publication")

@@ -116,7 +116,7 @@ rules.
 \examples{
 \donttest{
 toy <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 20)
+fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 fm <- fit_measures_table(fit, facet = "Rater")
 fm$facets_table
 fm$underfit
@@ -130,3 +130,5 @@ fm_facets$df_conversion_guide$decision_guide
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=facets_fit_review]{facets_fit_review()}}, \code{\link[=plot_bubble]{plot_bubble()}},
 \code{\link[=mfrm_misfit_thresholds]{mfrm_misfit_thresholds()}}
 }
+\concept{confidence intervals}
+\concept{fit statistics}

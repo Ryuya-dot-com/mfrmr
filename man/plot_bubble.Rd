@@ -56,7 +56,7 @@ shown as a shaded region (default \code{c(0.5, 1.5)}).}
 
 \item{draw}{If \code{TRUE} (default), render the plot using base graphics.}
 
-\item{preset}{Visual preset (\code{"standard"}, \code{"publication"}, or \code{"compact"}).}
+\item{preset}{Visual preset (\code{"standard"}, \code{"publication"}, \code{"compact"}, or \code{"monochrome"}).}
 }
 \value{
 Invisibly, an object of class \code{mfrm_plot_data}.
@@ -115,7 +115,7 @@ Points are colored by facet for easy identification.
 \examples{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", model = "RSM", maxit = 25)
+                method = "JML", model = "RSM", maxit = 30)
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 p <- plot_bubble(fit, diagnostics = diag, draw = FALSE)
 head(p$data$table[, c("Facet", "Level", "Estimate", "Infit", "Outfit")])

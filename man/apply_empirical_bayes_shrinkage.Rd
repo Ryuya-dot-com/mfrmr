@@ -86,7 +86,7 @@ sentence automatically when \code{fit$config$facet_shrinkage} is set.
 \examples{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", maxit = 25)
+                method = "JML", maxit = 30)
 fit_eb <- apply_empirical_bayes_shrinkage(fit)
 fit_eb$shrinkage_report
 # Look for:

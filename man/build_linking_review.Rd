@@ -78,9 +78,9 @@ support.
 d1 <- load_mfrmr_data("study1")
 d2 <- load_mfrmr_data("study2")
 fit1 <- fit_mfrm(d1, "Person", c("Rater", "Criterion"), "Score",
-                 method = "JML", maxit = 15)
+                 method = "JML", maxit = 30)
 fit2 <- fit_mfrm(d2, "Person", c("Rater", "Criterion"), "Score",
-                 method = "JML", maxit = 15)
+                 method = "JML", maxit = 30)
 anchor_review_obj <- review_mfrm_anchors(d1, "Person", c("Rater", "Criterion"), "Score")
 drift <- detect_anchor_drift(list(Wave1 = fit1, Wave2 = fit2))
 chain <- build_equating_chain(list(Wave1 = fit1, Wave2 = fit2))

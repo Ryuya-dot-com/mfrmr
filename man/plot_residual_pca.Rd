@@ -11,7 +11,7 @@ plot_residual_pca(
   plot_type = c("scree", "parallel_scree", "parallel_excess", "loadings"),
   component = 1L,
   top_n = 20L,
-  preset = c("standard", "publication", "compact"),
+  preset = c("standard", "publication", "compact", "monochrome"),
   draw = TRUE
 )
 }
@@ -29,7 +29,7 @@ plot_residual_pca(
 
 \item{top_n}{Maximum number of variables shown in loadings plot.}
 
-\item{preset}{Visual preset (\code{"standard"}, \code{"publication"}, or \code{"compact"}).}
+\item{preset}{Visual preset (\code{"standard"}, \code{"publication"}, \code{"compact"}, or \code{"monochrome"}).}
 
 \item{draw}{If \code{TRUE}, draws the plot using base graphics.}
 }
@@ -100,15 +100,17 @@ toy_full <- load_mfrmr_data("example_core")
 toy_people <- unique(toy_full$Person)[1:24]
 toy <- toy_full[match(toy_full$Person, toy_people, nomatch = 0L) > 0L, , drop = FALSE]
 fit <- suppressWarnings(
-  fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 15)
+  fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 )
 diag <- diagnose_mfrm(fit, residual_pca = "overall")
 pca <- analyze_residual_pca(diag, mode = "overall")
 plt <- plot_residual_pca(pca, mode = "overall", plot_type = "scree", draw = FALSE)
 head(plt$data)
+\donttest{
 pca_pa <- analyze_residual_pca(diag, mode = "overall", parallel = TRUE, parallel_reps = 10)
 pa <- plot_residual_pca(pca_pa, mode = "overall", plot_type = "parallel_scree", draw = FALSE)
 head(pa$data)
+}
 plt_load <- plot_residual_pca(
   pca, mode = "overall", plot_type = "loadings", component = 1, draw = FALSE
 )

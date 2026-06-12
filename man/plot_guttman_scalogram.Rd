@@ -10,7 +10,7 @@ plot_guttman_scalogram(
   column_facet = NULL,
   top_n_persons = 40L,
   highlight_unexpected = TRUE,
-  preset = c("standard", "publication", "compact"),
+  preset = c("standard", "publication", "compact", "monochrome"),
   draw = TRUE
 )
 }
@@ -51,7 +51,7 @@ Guttman scalogram.
 \examples{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", maxit = 25)
+                method = "JML", maxit = 30)
 p <- plot_guttman_scalogram(fit, draw = FALSE)
 dim(p$data$matrix)
 # Look for: a clean monotone "staircase" of higher scores in the

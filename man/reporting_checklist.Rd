@@ -90,6 +90,10 @@ inferential adequacy.
 package's documented caveats. \code{ReadyForAPA} is a backward-compatible alias
 of the same flag; neither field certifies formal inferential adequacy.
 \item \code{section_summary}: available items by section.
+\item The Global Fit section includes a "Fit/separation reporting boundary"
+row that points to \code{\link[=precision_review_report]{precision_review_report()}}, \code{\link[=fit_measures_table]{fit_measures_table()}},
+and \code{\link[=facets_fit_review]{facets_fit_review()}} before users phrase fit, ZSTD, separation, or
+reliability claims.
 \item \code{software_scope}: external-software relationship summary for \code{mfrmr},
 FACETS, ConQuest, and SPSS-style tabular handoffs.
 \item \code{facets_positioning}: report-ready wording that states \code{mfrmr} is not a
@@ -146,7 +150,7 @@ available from the current analysis objects.
 # populated checklist in well under a second.
 toy <- load_mfrmr_data("example_core")
 fit_quick <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                      method = "JML", maxit = 15)
+                      method = "JML", maxit = 30)
 diag_quick <- diagnose_mfrm(fit_quick, residual_pca = "none",
                              diagnostic_mode = "legacy")
 chk_quick <- reporting_checklist(fit_quick, diagnostics = diag_quick)
@@ -154,7 +158,7 @@ head(chk_quick$checklist[, c("Section", "Item", "DraftReady")])
 
 \donttest{
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                method = "MML", maxit = 200)
+                method = "MML", quad_points = 7, maxit = 30)
 diag <- diagnose_mfrm(fit, residual_pca = "both", diagnostic_mode = "both")
 chk <- reporting_checklist(fit, diagnostics = diag)
 summary(chk)

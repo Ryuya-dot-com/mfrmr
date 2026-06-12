@@ -1,128 +1,145 @@
 ## Test environments
 
-The local pre-submission check was run against the v0.2.0 source tarball in:
+This is the submission note for the 0.2.1 release candidate. The local
+pre-submission check was run against the generated `mfrmr_0.2.1.tar.gz`
+source tarball.
 
-- local macOS Tahoe 26.4.1 (aarch64-apple-darwin23), R 4.6.0
+The expected local pre-submission environment is:
 
-Cross-platform confirmation is tracked separately through:
+- local macOS Tahoe 26.5, aarch64-apple-darwin23, R 4.6.0
+  (2026-04-24).
 
-- win-builder on Windows Server 2022 x64:
-  R-devel (R Under development, 2026-05-15 r90061 ucrt),
-  R-release (R 4.6.0 ucrt), and R-oldrelease (R 4.5.3 ucrt).
-- GitHub Actions matrix: ubuntu-latest (release / devel / oldrel-1),
-  macos-latest (release), windows-latest (release), with warnings treated
-  as CI failures, check logs uploaded as artifacts, and the non-exported
-  release-readiness gate run after check.
+Cross-platform confirmation is configured separately through:
+
+- the package's GitHub Actions `R-CMD-check` matrix: macOS release, Windows
+  release, and Ubuntu devel / release / oldrel-1, with warnings treated as
+  failures.
+- retained uploaded check directories from each matrix job.
+- the separate coverage/full-regression route that runs with `NOT_CRAN=true`.
 
 ## R CMD check results
 
-The current local, win-builder, and GitHub Actions outcomes are:
+The current local pre-submission outcome is:
 
 - 0 errors.
 - 0 warnings.
 - 0 notes.
 
-Local check command:
+Local check command, run from the package root against the generated
+`mfrmr_0.2.1.tar.gz` source tarball:
 
 ```sh
 R CMD build .
-R CMD check --no-manual --as-cran mfrmr_0.2.0.tar.gz
+R CMD check --no-manual --as-cran mfrmr_0.2.1.tar.gz
 ```
+
+No system-clock override was needed in this local run. On machines where
+external time verification is unavailable, a local override may be used; the
+release-readiness review should still be run against the resulting
+`mfrmr.Rcheck/00check.log`, and the log must report package version 0.2.1.
+
+In the current local `--as-cran` check, standard examples completed with a
+reported `[47s/48s]` timing, `--run-donttest` examples completed with a
+reported `[227s/234s]` timing, and the CRAN-time testthat surface completed
+with no errors, warnings, or notes. The release-readiness review reports all
+gates as `ok`.
 
 ## Downstream dependencies
 
-No reverse dependencies. Verified via `revdepcheck::cran_revdeps("mfrmr")`
-returning an empty character vector. The `revdep/` subdirectory carries
-the `cran.md` note documenting this.
+No reverse dependencies are listed in the current CRAN package index for
+Depends, Imports, or LinkingTo. Checked on 2026-05-28 against
+`https://cloud.r-project.org` with `tools::package_dependencies(...,
+reverse = TRUE)`.
 
-## Test scope
+## CRAN-time test scope
 
-The CRAN-eligible test suite covers the exported estimation, diagnostic,
-reporting, FACETS-comparison, simulation, and plotting APIs. A separate set of
-long-running coverage-expansion and stress tests is guarded with
-`testthat::skip_on_cran()` because those tests intentionally repeat expensive
-fits or broaden branch coverage beyond the normal CRAN timing budget. They are
-run locally and in CI outside CRAN timing constraints.
+The CRAN-eligible test suite is intentionally limited to lightweight namespace,
+alias, citation/data, and package-contract checks so the package stays within
+the CRAN timing budget on slower Windows check hosts. This is a practical CRAN
+submission constraint, not the full regression boundary.
+
+Long integration, fit-backed guide, documentation-scan, coverage-expansion,
+MML, external-Suggests, plotting, simulation, recovery, and stress tests remain
+in the repository and are run outside CRAN timing constraints by setting
+`NOT_CRAN=true`.
+
+The package's release-readiness helper checks this distinction explicitly: the
+local CRAN-like check log must match the target package version, and separate
+non-CRAN regression evidence should be reviewed before submission.
+
+For this candidate, the local full testthat surface was also run with
+`NOT_CRAN=true` and completed with no test failures. The reported warnings come
+from warning-path regression tests for duplicate-cell guards, intentionally low
+iteration limits, and invalid facet/input guards.
 
 ## Submission comment
 
-This is an update to mfrmr. Headline changes for 0.2.0 (sourced from
-NEWS.md):
+This is an update to mfrmr. Headline changes for 0.2.1 are:
 
-- Bounded GPCM support is now explicitly scoped. Direct fitting,
-  summaries, posterior scoring, information, category plots, direct
-  simulation, parameter recovery, fair averages, bias screening,
-  summary-table bundles, and appendix export are available within
-  documented caveats. FACETS-style score-side exports, APA writer,
-  fit-based report bundles, QC pass/fail pipelines, linking synthesis,
-  planning / forecasting, posterior predictive computation, and MCMC
-  remain outside the validated GPCM boundary.
+- The main public route is now shorter and clearer:
+  `fit_mfrm()` -> `mfrm_results()` -> `mfrm_report()` ->
+  `export_mfrm_results()`, with `launch_mfrmr_viewer()` as an optional local
+  reader over an existing result object.
 
-- Mathematical corrections for 0.2.0 include identified
-  step/threshold parameterization with the correct `steps - 1`
-  degrees of freedom, a joint MML covariance layer for structural
-  parameters, GPCM expected-score consistency, geometric-mean-one
-  slope-scale consistency, and slope-aware GPCM bias SEs and
-  profile-likelihood follow-up columns.
+- `mfrm_results()` provides a comprehensive first-screen object with status,
+  triage, plot routes, table routes, next actions, and replay scaffolds over
+  existing fit, diagnostic, report, and review components. It is a navigation
+  and evidence-assembly layer, not a new estimator or validation rule.
 
-- `fair_average_table(fair_se = TRUE)` now adds opt-in structural
-  delta-method SE and CI columns for bounded-GPCM fair averages when
-  the MML observed-information covariance is available. The original
-  measure-level SE columns remain distinct.
+- `mfrm_report()` turns an existing `mfrm_results` object into report-readiness
+  tables, cautious wording routes, evidence-boundary tables, and HTML/Markdown
+  output. It keeps fit, ZSTD, separation/reliability, bias screens, local
+  misfit, and linking evidence in separate reporting lanes.
 
-- FACETS-style fit comparison is explicit. `diagnose_mfrm()` accepts
-  `fit_df_method = "engine"`, `"facets"`, or `"both"`, and
-  `facets_fit_review()` / `read_facets_fit_table()` support scoped
-  comparison against existing FACETS outputs without claiming that
-  mfrmr estimates are FACETS estimates.
+- `export_mfrm_results()` writes a lightweight object-first download folder
+  with summary CSVs, collected tables, HTML, RDS, replay code, and manifest
+  files. With `include = "report"` it also writes `mfrm_report()` artifacts.
 
-- `evaluate_mfrm_recovery()` and `assess_mfrm_recovery()` provide a
-  dedicated ADEMP-style parameter-recovery route. Optional release
-  validation helpers in `inst/validation/` generate top-line,
-  case-level, domain-level, CSV/RDS, and Markdown outputs for
-  release review.
+- Bounded-GPCM recovery review now separates recovery metrics from unavailable
+  SE/coverage evidence, generator-condition notes, sparse score-category
+  support, and diagnostic-only fit/separation operating characteristics.
 
-- Public review helpers have been consolidated on `*_review*` names.
-  Former public `*_audit*` function spellings, S3 compatibility
-  classes, and duplicate top-level fields were removed as an
-  intentional breaking cleanup.
+- Bounded-GPCM support now has a public support contract and runtime guard
+  traceability route: `gpcm_capability_matrix()`,
+  `gpcm_runtime_guard_coverage()`, and `mfrmr_output_guide("gpcm")` show which
+  routes are supported, caveated, blocked, or deferred. Blocked/deferred public
+  helper calls stop with structured `mfrmr_gpcm_scope_error` conditions rather
+  than silently emitting partial score-side, planning, or narrative outputs.
 
-- Documentation, citations, README guidance, vignettes, and NEWS have
-  been updated to reflect the 0.2.0 support boundary and source-grounded
-  release evidence map. `inst/validation/release-readiness.R` provides an
-  optional non-exported release-readiness review that parses the local check log,
-  checks version/terminology/evidence gates, and records any submission note
-  explanation.
+- Sparse linked simulation and peer-review design helpers expose planned
+  missingness, rater commonality, reviewer load, self-review exclusion, and
+  network-review evidence as design diagnostics rather than recovery or
+  validity gates.
+
+- `mfrmr_interval_guide()` maps public 95% CI and uncertainty-display routes
+  across fit-measure tables, Wright maps, fair averages, bias screens,
+  displacement, DFF/DIF summaries, anchor drift, rater severity profiles,
+  rater trajectories, manuscript Figure 1 composites, shrinkage, and ICC
+  review, with explicit interval bases and interpretation boundaries.
+
+- The release-readiness protocol now follows the target package version from
+  `DESCRIPTION`, selects versioned evidence files when present, and rejects
+  stale `R CMD check` logs whose package version does not match the target
+  release.
 
 ## Default changes
 
-No defaults change between 0.1.6 and 0.2.0. The 0.1.6 defaults
-(`quad_points = 31`, `diagnostic_mode = "both"`,
-`plot.mfrm_fit(type = "wright")`, `keep_original = FALSE`) are
-retained.
+No defaults change between 0.2.0 and 0.2.1.
 
-Because 0.1.6 was not published to CRAN, users upgrading directly
-from CRAN 0.1.5 to 0.2.0 will see three default flips that were
-introduced in 0.1.6: `diagnose_mfrm(diagnostic_mode)` from `"legacy"`
-to `"both"`, `plot(fit)` returning the Wright map alone instead of a
-three-plot overview (the overview remains available via `plot(fit,
-type = "bundle")`), and `fit_mfrm(quad_points)` from `15` to `31`.
-The 0.1.6 NEWS section in `NEWS.md` documents the rationale and
-revert paths.
+The 0.1.6 defaults (`quad_points = 31`, `diagnostic_mode = "both"`,
+`plot.mfrm_fit(type = "wright")`, `keep_original = FALSE`) are retained.
+The current CRAN release, 0.2.0, already carries these defaults, so users
+upgrading from CRAN 0.2.0 see no default changes.
 
 ## Deferred to a follow-up release
 
 - Posterior-predictive checks for bounded GPCM.
-- GPCM design operating-characteristic evaluation after the direct
-  recovery route is stable.
-- User-facing GPCM unblock for APA writer, QC pass/fail pipelines,
-  linking synthesis, and FACETS-style score-side outputs after their
-  score semantics and uncertainty propagation are validated.
-- A classical-DIF helper (working title `analyze_dif_classical()`)
-  covering Mantel-Haenszel, logistic regression, and SIBTEST.
-  Residual-method DIF (`analyze_dff()`, ETS A/B/C refit) remains the
-  supported route in 0.2.0.
-- Additional Rasch / IRT classic plots where they fit the validated
-  reporting boundary.
-
-These are scheduled for a follow-up release.
+- GPCM design operating-characteristic evaluation after the direct recovery
+  route is stable.
+- User-facing GPCM unblock for APA writer, QC pass/fail pipelines, linking
+  synthesis, and FACETS-style score-side outputs after their score semantics
+  and uncertainty propagation are validated.
+- A classical-DIF helper covering Mantel-Haenszel, logistic regression, and
+  SIBTEST. Residual-method DFF remains the supported route.
+- Additional Rasch / IRT classic plots where they fit the validated reporting
+  boundary.

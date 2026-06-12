@@ -81,7 +81,7 @@ marginal sources; it should not be read as a formal inferential case test.
 \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                method = "MML", model = "RSM", quad_points = 11)
+                method = "MML", model = "RSM", quad_points = 5)
 diag <- diagnose_mfrm(fit, diagnostic_mode = "both", residual_pca = "none")
 casebook <- build_misfit_casebook(fit, diagnostics = diag, top_n = 10)
 summary(casebook)

@@ -128,7 +128,7 @@ Rasch model using residual correlations.
 \examples{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", maxit = 25)
+                method = "JML", maxit = 30)
 q3 <- q3_statistic(fit)
 q3$summary
 # Look for: MaxAbsQ3 < 0.20 (Chen & Thissen 1997 community cutoff) is

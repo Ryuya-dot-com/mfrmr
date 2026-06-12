@@ -5,11 +5,17 @@ before treating mfrmr 0.2.0 as release-ready. It is a review guide, not a new
 user-facing analysis API. The focus is on mathematical/statistical adequacy,
 user workflow clarity, and help-file readability.
 
-Source check date: 2026-05-16.
+Source check date: 2026-05-17.
 
 Companion checklist:
-`inst/validation/release-evidence-checklist-0.2.0.csv`. Use the Markdown file
-for interpretation and the CSV file for structured release review.
+`inst/validation/release-evidence-checklist-0.2.0.csv`. External
+common-data recovery evidence is summarized in
+`inst/validation/external-parameter-recovery-simulation-0.2.0.md`; the
+sourceable helper `inst/validation/external-recovery-audit.R` re-reads a local
+`Parameter_Recovery_Simulation` output directory when that external workflow is
+refreshed. The helper reports file presence, MD5 fingerprints, expected-column
+schema status, and compact summary tables. Use the Markdown files for
+interpretation and the CSV file for structured release review.
 
 ## Reading order
 
@@ -33,11 +39,18 @@ for interpretation and the CSV file for structured release review.
 6. Check documentation:
    each caveat should name the supported route and the unavailable route
    without exposing implementation migration decisions.
-7. Check the release-readiness protocol:
+7. Check the external common-data recovery evidence:
+   the separate `Parameter_Recovery_Simulation` workflow should be read as
+   stress-pattern and cross-engine agreement evidence, not as a bundled CRAN
+   test or a final operating-characteristic study. If the external outputs
+   have changed, rerun the package-side helper before editing the summary.
+8. Check the release-readiness protocol:
    source `inst/validation/release-readiness.R`, run
    `mfrmr_release_readiness_review(pkg_dir = ".")`, and read
-   `release_decision` before the detailed gate tables.
-8. Check the CI contract:
+   `release_decision` before the detailed gate tables. When the external
+   workflow outputs are available locally, pass `external_recovery_dir` to
+   attach the package-side external evidence status to the same review object.
+9. Check the CI contract:
    the workflow should treat warnings as failures, retain check artifacts, and
    run the release-readiness gate after package check.
 
@@ -70,6 +83,43 @@ release. Each review question has an expected evidence artifact.
 | Simulation study design | Morris, White, and Crowther (2019), Statistics in Medicine, doi:10.1002/sim.8086 | Recovery validation should state its aim, data-generating mechanism, estimand, methods, and performance measures. Release claims should use recovery metrics, convergence, and Monte Carlo precision separately from uncertainty limitations. |
 | Visual and table handoff | Same simulation-reporting logic plus fit-diagnostic practice | Plots should help users triage first: status, metric, and attention-order displays should come before raw row-level inspection. `draw = FALSE` payloads should keep reusable `reading_order` and `guidance` fields. |
 
+## External common-data parameter-recovery evidence
+
+The separate `Parameter_Recovery_Simulation` workflow provides additional
+release-review evidence. It is intentionally not bundled with the package
+because it contains large generated datasets, engine outputs, reports, and
+optional FACETS batch files. The package stores a compact review summary in
+`inst/validation/external-parameter-recovery-simulation-0.2.0.md` and a
+sourceable review helper in `inst/validation/external-recovery-audit.R` so that
+future refreshes can be checked against the same file and column contract.
+
+The reviewed first-phase outputs are strongest for `RSM` / `PCM` `JMLE`
+common-data agreement and stress-pattern sensitivity. They do not validate
+bounded-`GPCM` score-side exports, posterior predictive checks, planning /
+forecasting helpers, or APA/QC pipelines.
+
+Release-relevant conclusions:
+
+- The smoke output produced all expected analysis files and 30
+  engine/model/design groups with no error runs and convergence rate 1.00.
+- R, Python, and Julia agree closely for centered level estimates, step
+  estimates, and most separation summaries. The largest reviewed agreement RMSEs
+  are small for recovery quantities, with larger review flags concentrated in
+  standardized fit quantities where degrees-of-freedom conventions matter.
+- Sparse one-rater classroom-writing stress designs can converge and agree
+  across engines while still showing recovery, coverage, precision, and
+  role-bias risks. This supports keeping `assess_mfrm_recovery()` focused on
+  explicit thresholds and next actions rather than treating convergence as
+  adequacy.
+- The sample-size D-study output is useful as a decision-support smoke check
+  but not as a final planning claim because the reviewed cells use one
+  replication. It should be read with uncertainty and replication caveats.
+
+This evidence strengthens the 0.2.0 boundary: direct recovery checks are
+supported, design endorsement requires a stated simulation design and practical
+thresholds, and broader GPCM planning/reporting routes remain deferred until
+their estimands and uncertainty behavior are validated.
+
 ## Decision rule
 
 Use three levels when reading the checklist.
@@ -100,16 +150,16 @@ The score is intentionally a review aid, not a statistical estimate.
 | Release engineering | 10 | Version labels, generated help, namespace, tests, and package checks are consistent. |
 
 Current interpretation for 0.2.0: release engineering is locally clean after
-`R CMD check --no-manual --as-cran` completed with `Status: OK` on 2026-05-16
-against the v0.2.0 source tarball on local macOS Tahoe 26.4.1
-(aarch64-apple-darwin23), R 4.6.0. Cross-platform confirmation is also clean:
-GitHub Actions passed on ubuntu-latest (release / devel / oldrel-1),
-macos-latest (release), and windows-latest (release), and win-builder passed
-on Windows Server 2022 x64 for R-devel, R-release, and R-oldrelease. The CI
-workflow treats warnings as failures and uploads per-platform check artifacts
-so that platform-specific warnings, notes, and log differences can be reviewed
-explicitly. The remaining substantive risk is the clarity of uncertainty and
-coverage limitations across all user-facing summaries.
+the rebuilt source tarball completed
+`_R_CHECK_SYSTEM_CLOCK_=FALSE R CMD check --no-manual --as-cran
+mfrmr_0.2.0.tar.gz` with `Status: OK` on 2026-05-17 on local macOS Tahoe 26.5
+(aarch64-apple-darwin20), R 4.5.2. Without the local system-clock override, the
+same tarball produced only the environment NOTE `unable to verify current
+time`; package checks were otherwise unchanged. The prior CRAN incoming pretest
+for 0.2.0 completed with no ERRORs or WARNINGs on Windows and Debian and
+reported only a Windows overall-checktime NOTE. The resubmission narrows
+CRAN-time tests, examples, and vignette execution while keeping long recovery
+and stress evidence available outside CRAN timing constraints.
 
 ## Release-readiness checklist
 
@@ -158,20 +208,30 @@ coverage limitations across all user-facing summaries.
 4. Run release validation:
    use the core tier for the release gate and the extended tier as sensitivity
    evidence when time allows.
-5. Run package checks:
+5. Review the external common-data simulation summary:
+   confirm that any claims drawn from `Parameter_Recovery_Simulation` remain
+   scoped to the reviewed `RSM` / `PCM` agreement and stress-pattern evidence;
+   if the external outputs changed, source `inst/validation/external-recovery-audit.R`
+   and regenerate the package-side review before updating the summary. Confirm
+   that sample-size outputs are not presented as final operating-characteristic
+   claims without replication.
+6. Run package checks:
    build the source tarball with vignettes, run
    `R CMD check --no-manual --as-cran mfrmr_0.2.0.tar.gz`, and require
    `Status: OK` locally. Then confirm that GitHub Actions matrix jobs pass
    with warnings treated as failures and retain their uploaded check artifacts
    as cross-platform evidence.
-6. Review the user entry points:
+7. Review the user entry points:
    README, `mfrmr_workflow_methods`, `gpcm_capability_matrix()`,
    `mfrmr_output_guide()`, and the workflow vignette should tell the same
    story.
-7. Run the release-readiness protocol:
+8. Run the release-readiness protocol:
    source `inst/validation/release-readiness.R`; confirm `gate_summary` has no
-   `concern` or `review` rows locally before cross-platform checks.
-8. Preserve CI evidence:
+   `concern` or `review` rows locally before cross-platform checks. If the
+   external simulation directory is available, pass it as `external_recovery_dir`
+   and preserve the reported external evidence status alongside the package
+   gates.
+9. Preserve CI evidence:
    confirm the GitHub Actions workflow treats warnings as failures, runs the
    release-readiness gate, and uploads check logs/artifacts for each matrix
    environment.

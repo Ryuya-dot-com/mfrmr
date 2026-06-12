@@ -156,7 +156,7 @@ interpreting the \code{summary(t8)$summary} flags in the bounded
 
 \examples{
 toy <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
+fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 t8 <- rating_scale_table(fit)
 summary(t8)
 summary(t8)$summary

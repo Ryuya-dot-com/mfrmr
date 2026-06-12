@@ -1,7 +1,7 @@
 Package: mfrmr
 Type: Package
 Title: Estimation and Diagnostics for Many-Facet Measurement Models
-Version: 0.2.0
+Version: 0.2.1
 Authors@R:
     person(given = "Ryuya", family = "Komuro", role = c("aut", "cre", "cph"),
            email = "ryuya.komuro.c4@tohoku.ac.jp",
@@ -25,7 +25,6 @@ Language: en
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.3
 Depends:
     R (>= 4.1)
 Imports:
@@ -56,9 +55,11 @@ Suggests:
     kableExtra,
     flextable,
     future.apply,
+    shiny,
     mirt,
     TAM,
     eRm
 VignetteBuilder: knitr
 Config/testthat/edition: 3
 Config/Needs/website: pkgdown
+Config/roxygen2/version: 8.0.0

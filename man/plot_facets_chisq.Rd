@@ -13,7 +13,7 @@ plot_facets_chisq(
   main = NULL,
   palette = NULL,
   label_angle = 45,
-  preset = c("standard", "publication", "compact"),
+  preset = c("standard", "publication", "compact", "monochrome"),
   draw = TRUE
 )
 }
@@ -35,7 +35,7 @@ plot_facets_chisq(
 
 \item{label_angle}{X-axis label angle for bar-style plots.}
 
-\item{preset}{Visual preset (\code{"standard"}, \code{"publication"}, or \code{"compact"}).}
+\item{preset}{Visual preset (\code{"standard"}, \code{"publication"}, \code{"compact"}, or \code{"monochrome"}).}
 
 \item{draw}{If \code{TRUE}, draw with base graphics.}
 }
@@ -100,7 +100,7 @@ non-trivial heterogeneity beyond measurement error.
 
 \examples{
 toy <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
+fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 p <- plot_facets_chisq(fit, draw = FALSE)
 if (interactive()) {
   plot_facets_chisq(

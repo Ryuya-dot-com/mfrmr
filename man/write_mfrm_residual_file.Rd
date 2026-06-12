@@ -51,7 +51,7 @@ direct analysis handoff rather than a legacy graph/score bundle.
 \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", maxit = 25)
+                method = "JML", maxit = 30)
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 path <- tempfile(fileext = ".csv")
 out <- write_mfrm_residual_file(fit, diag, path, overwrite = TRUE)

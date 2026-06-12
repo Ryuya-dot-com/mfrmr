@@ -13,7 +13,7 @@ plot_marginal_pairwise(
   main = NULL,
   palette = NULL,
   label_angle = 45,
-  preset = c("standard", "publication", "compact"),
+  preset = c("standard", "publication", "compact", "monochrome"),
   draw = TRUE
 )
 }
@@ -34,7 +34,7 @@ plot_marginal_pairwise(
 
 \item{label_angle}{X-axis label angle.}
 
-\item{preset}{Visual preset (\code{"standard"}, \code{"publication"}, or \code{"compact"}).}
+\item{preset}{Visual preset (\code{"standard"}, \code{"publication"}, \code{"compact"}, or \code{"monochrome"}).}
 
 \item{draw}{If \code{TRUE}, draw with base graphics.}
 }
@@ -92,7 +92,8 @@ fit <- fit_mfrm(
   c("Rater", "Criterion"),
   "Score",
   method = "MML",
-  maxit = 200
+  quad_points = 7,
+  maxit = 30
 )
 diag <- diagnose_mfrm(fit, residual_pca = "none", diagnostic_mode = "both")
 p <- plot_marginal_pairwise(diag, draw = FALSE, preset = "publication")

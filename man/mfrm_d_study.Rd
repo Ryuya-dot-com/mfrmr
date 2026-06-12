@@ -73,7 +73,7 @@ summaries may be displayed on a 0--1 scale in broader reporting dashboards.
 \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", maxit = 25)
+                method = "JML", maxit = 30)
 if (requireNamespace("lme4", quietly = TRUE)) {
   gt <- mfrm_generalizability(fit)
   mfrm_d_study(gt, data.frame(Rater = c(2, 3, 4), Criterion = 4))

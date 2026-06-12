@@ -150,7 +150,7 @@ toy_fit <- suppressWarnings(
     "Person", c("Rater", "Criterion"), "Score",
     method = "MML",
     quad_points = 5,
-    maxit = 15
+    maxit = 30
   )
 )
 new_units <- data.frame(

@@ -8,11 +8,13 @@ vignette: >
 ---
 
 ```{r, include = FALSE}
+is_cran_check <- !isTRUE(as.logical(Sys.getenv("NOT_CRAN", "false")))
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
   fig.width = 7,
-  fig.height = 5
+  fig.height = 5,
+  eval = !is_cran_check
 )
 ```
 
@@ -37,6 +39,9 @@ library(mfrmr)
 
 toy <- load_mfrmr_data("example_core")
 
+# The vignette uses compact quadrature so optional local execution stays fast.
+# For final manuscript reporting, refit with the package default or a higher
+# quadrature setting and record that setting in the analysis log.
 fit <- fit_mfrm(
   toy,
   person = "Person",
@@ -81,6 +86,7 @@ prec <- precision_review_report(fit, diagnostics = diag)
 
 prec$profile
 prec$checks
+prec$fit_separation_basis
 ```
 
 Interpretation:
@@ -89,11 +95,15 @@ Interpretation:
   `model_based`.
 - Treat `hybrid` and `exploratory` outputs more conservatively, especially for
   SE-, CI-, and reliability-heavy prose.
+- Read `fit_separation_basis` as a boundary table: MnSq fit, ZSTD
+  standardization, Rasch/FACETS-style separation, and package QC thresholds
+  have different source bases and should not be collapsed into a single
+  validation pass/fail claim.
 
 ## 3. Build structured manuscript outputs
 
 `build_apa_outputs()` is the writing engine. It returns report text plus a
-section map, note map, and caption map that all share the same internal
+section map, note map, and caption map that all share the same output
 contract.
 
 ```{r apa}

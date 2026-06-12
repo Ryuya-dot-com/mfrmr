@@ -218,7 +218,7 @@ list_mfrmr_data <- function() {
 #'   facets = c("Rater", "Criterion"),
 #'   score = "Score",
 #'   method = "JML",
-#'   maxit = 25
+#'   maxit = 30
 #' )
 #' summary(fit)
 #' @export

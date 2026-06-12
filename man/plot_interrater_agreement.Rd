@@ -16,7 +16,7 @@ plot_interrater_agreement(
   main = NULL,
   palette = NULL,
   label_angle = 45,
-  preset = c("standard", "publication", "compact"),
+  preset = c("standard", "publication", "compact", "monochrome"),
   draw = TRUE
 )
 }
@@ -43,7 +43,7 @@ plot_interrater_agreement(
 
 \item{label_angle}{X-axis label angle for bar-style plots.}
 
-\item{preset}{Visual preset (\code{"standard"}, \code{"publication"}, or \code{"compact"}).}
+\item{preset}{Visual preset (\code{"standard"}, \code{"publication"}, \code{"compact"}, or \code{"monochrome"}).}
 
 \item{draw}{If \code{TRUE}, draw with base graphics.}
 }
@@ -122,7 +122,7 @@ For a plot-selection guide and a longer walkthrough, see
 \examples{
 \donttest{
 toy <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
+fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 p <- plot_interrater_agreement(fit, rater_facet = "Rater", draw = FALSE)
 if (interactive()) {
   plot_interrater_agreement(

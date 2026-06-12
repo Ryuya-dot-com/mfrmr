@@ -98,7 +98,8 @@
 #'   facets = c("Rater", "Criterion"),
 #'   score = "Score",
 #'   method = "MML",
-#'   maxit = 200
+#'   quad_points = 7,
+#'   maxit = 30
 #' )
 #' diag <- diagnose_mfrm(fit, residual_pca = "none", diagnostic_mode = "both")
 #'

@@ -22,7 +22,7 @@ so callers can probe without error.
 \examples{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", maxit = 25,
+                method = "JML", maxit = 30,
                 facet_shrinkage = "empirical_bayes")
 shrinkage_report(fit)
 }

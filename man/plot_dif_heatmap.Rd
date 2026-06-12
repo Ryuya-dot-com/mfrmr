@@ -86,7 +86,7 @@ functioning contrasts with \code{\link[=analyze_dff]{analyze_dff()}}.
 toy <- load_mfrmr_data("example_bias")
 
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                 method = "JML", model = "RSM", maxit = 25)
+                 method = "JML", model = "RSM", maxit = 30)
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 int <- dif_interaction_table(fit, diag, facet = "Rater",
                              group = "Group", data = toy, min_obs = 2)

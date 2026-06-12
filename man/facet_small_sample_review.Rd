@@ -84,7 +84,7 @@ about the band when \code{fit$summary$FacetSampleSizeFlag} is set.
 \examples{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", maxit = 25)
+                method = "JML", maxit = 30)
 review <- facet_small_sample_review(fit)
 summary(review)
 

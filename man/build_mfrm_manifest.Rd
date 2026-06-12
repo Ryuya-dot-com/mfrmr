@@ -89,7 +89,7 @@ metadata tables
 
 \section{Interpreting output}{
 
-The \code{summary} table is the quickest place to confirm that you are looking at
+The \code{summary} table is the direct place to confirm that you are looking at
 the intended analysis. The \code{model_settings}, \code{source_columns}, and
 \code{estimation_control} tables are designed for reproducibility records and
 method write-up.
@@ -117,16 +117,16 @@ control over residual PCA.
 \code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}}.
 }
 
-This fit-based manifest/export layer currently depends on the full
-diagnostics/reporting workflow contract. For bounded \code{GPCM} fits, that means
-the layer is intentionally unavailable even though direct summary-table
-appendix export is supported for documented \code{GPCM} outputs.
+For bounded \code{GPCM} fits, the manifest is available with an explicit
+\code{gpcm_boundary} table. It records supported direct diagnostics/reporting
+surfaces while keeping full FACETS score-side contract review blocked and
+routing design forecasting through its separate caveated capability row.
 }
 
 \examples{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", maxit = 25)
+                method = "JML", maxit = 30)
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 manifest <- build_mfrm_manifest(fit, diagnostics = diag)
 manifest$summary[, c("Model", "Method", "Observations", "Facets")]

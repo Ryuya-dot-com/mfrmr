@@ -64,7 +64,7 @@
 #'   [write_mfrm_subset_file()] over reusing graph/score compatibility exports.
 #' - Instead of [facets_output_contract_review()] for routine QA, prefer:
 #'   [reference_case_review()] for package-native completeness review or
-#'   [reference_case_benchmark()] for internal benchmark cases.
+#'   [reference_case_benchmark()] for packaged benchmark cases.
 #'
 #' @section Practical migration rules:
 #' - Start FACETS-facing reports with [facets_positioning_guide()] when readers
@@ -125,7 +125,7 @@
 #'   person = "Person",
 #'   facets = c("Rater", "Criterion"),
 #'   score = "Score",
-#'   maxit = 10
+#'   maxit = 30
 #' )
 #' summary(run)
 #' compatibility_alias_table("functions")

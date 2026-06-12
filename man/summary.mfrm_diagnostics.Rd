@@ -96,7 +96,7 @@ before comparing legacy and strict outputs.
 \examples{
 toy <- load_mfrmr_data("example_core")
 toy <- toy[toy$Person \%in\% unique(toy$Person)[1:4], ]
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 50)
+fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 s <- summary(diag, top_n = 3)
 s$key_warnings

@@ -21,7 +21,7 @@ plot_bias_interaction(
   main = NULL,
   palette = NULL,
   label_angle = 45,
-  preset = c("standard", "publication", "compact"),
+  preset = c("standard", "publication", "compact", "monochrome"),
   draw = TRUE
 )
 }
@@ -70,7 +70,7 @@ elements for downstream reuse.}
 
 \item{label_angle}{Label angle hint for ranked/profile labels.}
 
-\item{preset}{Visual preset (\code{"standard"}, \code{"publication"}, or \code{"compact"}).}
+\item{preset}{Visual preset (\code{"standard"}, \code{"publication"}, \code{"compact"}, or \code{"monochrome"}).}
 
 \item{draw}{If \code{TRUE}, draw with base graphics.}
 }
@@ -132,7 +132,7 @@ themselves establish formal inferential evidence.
 
 \examples{
 toy <- load_mfrmr_data("example_bias")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
+fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 p <- plot_bias_interaction(
   fit,
   diagnostics = diagnose_mfrm(fit, residual_pca = "none"),
@@ -145,3 +145,6 @@ p <- plot_bias_interaction(
 \seealso{
 \code{\link[=bias_interaction_report]{bias_interaction_report()}}, \code{\link[=estimate_bias]{estimate_bias()}}, \code{\link[=plot_displacement]{plot_displacement()}}
 }
+\concept{bias screening}
+\concept{confidence intervals}
+\concept{visual diagnostics}

@@ -156,7 +156,7 @@ d1 <- load_mfrmr_data("study1")
 keep1 <- unique(d1$Person)[1:15]
 d1 <- d1[d1$Person \%in\% keep1, , drop = FALSE]
 fit1 <- fit_mfrm(d1, "Person", c("Rater", "Criterion"), "Score",
-                 method = "JML", maxit = 15)
+                 method = "JML", maxit = 30)
 d2 <- load_mfrmr_data("study2")
 keep2 <- unique(d2$Person)[1:15]
 d2 <- d2[d2$Person \%in\% keep2, , drop = FALSE]

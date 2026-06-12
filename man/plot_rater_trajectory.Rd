@@ -8,7 +8,7 @@ plot_rater_trajectory(
   fits,
   facet = "Rater",
   ci_level = 0.95,
-  preset = c("standard", "publication", "compact"),
+  preset = c("standard", "publication", "compact", "monochrome"),
   draw = TRUE
 )
 }
@@ -55,11 +55,12 @@ visualizes the supplied fits on their as-fit scales.
 }
 
 \examples{
+\donttest{
 toy <- load_mfrmr_data("example_core")
 fit_a <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                  method = "JML", maxit = 25)
+                  method = "JML", maxit = 30)
 fit_b <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                  method = "JML", maxit = 25)
+                  method = "JML", maxit = 30)
 p <- plot_rater_trajectory(list(T1 = fit_a, T2 = fit_b), draw = FALSE)
 head(p$data$data)
 # Look for: stable trajectories (small wave-to-wave shifts within
@@ -69,6 +70,10 @@ head(p$data$data)
 #   logits are on different scales and the picture cannot be read
 #   as drift; see the Anchor-linking caveat in the docstring.
 }
+}
 \seealso{
 \code{\link[=plot_anchor_drift]{plot_anchor_drift()}}, \link{mfrmr_linking_and_dff}
 }
+\concept{confidence intervals}
+\concept{linking}
+\concept{visual diagnostics}

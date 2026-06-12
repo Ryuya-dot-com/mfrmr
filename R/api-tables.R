@@ -67,7 +67,7 @@
 #'   [mfrmr_visual_diagnostics]
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' ir <- interrater_agreement_table(fit, rater_facet = "Rater")
 #' # One-row overview: ExactAgreement, ExpectedExactAgreement, MeanCorr,
 #' # RaterSeparation, and RaterReliability are the headline reportable
@@ -235,7 +235,7 @@ interrater_agreement_table <- function(fit,
 #' @seealso [diagnose_mfrm()], [interrater_agreement_table()], [plot_facets_chisq()]
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' chi <- facets_chisq_table(fit)
 #' summary(chi)
 #' p_chi <- plot(chi, draw = FALSE)
@@ -376,7 +376,7 @@ facets_chisq_table <- function(fit,
 #' toy_people <- unique(toy_full$Person)[1:12]
 #' toy <- toy_full[toy_full$Person %in% toy_people, , drop = FALSE]
 #' fit <- suppressWarnings(
-#'   fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 10)
+#'   fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' )
 #' t4 <- unexpected_response_table(fit, abs_z_min = 1.5, prob_max = 0.4, top_n = 5)
 #' summary(t4)
@@ -544,14 +544,14 @@ unexpected_response_table <- function(fit,
 #' @return A named list with:
 #' - `by_facet`: named list of formatted data.frames
 #' - `stacked`: one stacked data.frame across facets
-#' - `raw_by_facet`: unformatted internal tables
+#' - `raw_by_facet`: unformatted component tables
 #' - `settings`: resolved options
 #'
 #' @seealso [diagnose_mfrm()], [unexpected_response_table()], [displacement_table()]
 #' @examples
 #' \donttest{
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' t12 <- fair_average_table(fit, udecimals = 2)
 #' t12_native <- fair_average_table(fit, reference = "mean", label_style = "native")
 #' summary(t12)
@@ -707,7 +707,7 @@ fair_average_table <- function(fit,
 #' @seealso [diagnose_mfrm()], [unexpected_response_table()], [fair_average_table()]
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' disp <- displacement_table(fit, anchored_only = FALSE)
 #' summary(disp)
 #' p_disp <- plot(disp, draw = FALSE)
@@ -836,7 +836,7 @@ displacement_table <- function(fit,
 #'   [mfrmr_visual_diagnostics]
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' t5 <- measurable_summary_table(fit)
 #' summary(t5)
 #' p_t5 <- plot(t5, draw = FALSE)
@@ -999,7 +999,7 @@ measurable_summary_table <- function(fit, diagnostics = NULL) {
 #'   [mfrmr_visual_diagnostics]
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' t8 <- rating_scale_table(fit)
 #' summary(t8)
 #' summary(t8)$summary
@@ -1217,7 +1217,7 @@ rating_scale_table <- function(fit,
 #'   [mfrmr_visual_diagnostics]
 #' @examples
 #' toy <- load_mfrmr_data("example_bias")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
 #' bias <- estimate_bias(fit, diag, facet_a = "Rater", facet_b = "Criterion", max_iter = 2)
 #' t11 <- bias_count_table(bias)
@@ -1417,7 +1417,7 @@ bias_count_table <- function(bias_results,
 #'   [mfrmr_visual_diagnostics]
 #' @examples
 #' toy <- load_mfrmr_data("example_bias")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
 #' bias <- estimate_bias(fit, diag, facet_a = "Rater", facet_b = "Criterion", max_iter = 2)
 #' t10 <- unexpected_after_bias_table(fit, bias, diagnostics = diag, top_n = 20)
@@ -1726,7 +1726,7 @@ as_mfrm_bundle <- function(x, class_name) {
 #' @seealso [fit_mfrm()], [data_quality_report()], [estimation_iteration_report()]
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' t1 <- specifications_report(fit, title = "Toy run")
 #' @keywords internal
 #' @noRd
@@ -1916,7 +1916,7 @@ table1_specifications <- function(fit,
 #' @seealso [fit_mfrm()], [specifications_report()], [describe_mfrm_data()]
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' t2 <- data_quality_report(
 #'   fit, data = toy, person = "Person",
 #'   facets = c("Rater", "Criterion"),
@@ -2270,7 +2270,7 @@ table2_data_summary <- function(fit,
 #' @seealso [fit_mfrm()], [specifications_report()], [data_quality_report()]
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' t3 <- estimation_iteration_report(fit, max_iter = 5)
 #' @keywords internal
 #' @noRd
@@ -2457,7 +2457,7 @@ table3_iteration_report <- function(fit,
 #' @seealso [diagnose_mfrm()], [measurable_summary_table()], [data_quality_report()]
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' t6 <- subset_connectivity_report(fit)
 #' @keywords internal
 #' @noRd
@@ -2686,7 +2686,7 @@ table6_subsets_listing <- function(fit,
 #' @seealso [diagnose_mfrm()], [summary.mfrm_fit()], [plot_facets_chisq()]
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' t62 <- facet_statistics_report(fit)
 #' @keywords internal
 #' @noRd
@@ -4172,7 +4172,7 @@ augment_category_table_with_marginal_fit <- function(category_table, diagnostics
 #' @seealso [rating_scale_table()], [category_curves_report()], [plot.mfrm_fit()]
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' t8b <- category_structure_report(fit)
 #' @keywords internal
 #' @noRd
@@ -4365,7 +4365,7 @@ table8_barchart_export <- function(fit,
 #' @seealso [category_structure_report()], [rating_scale_table()], [plot.mfrm_fit()]
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' t8c <- category_curves_report(fit, theta_points = 101)
 #' @keywords internal
 #' @noRd
@@ -4669,6 +4669,12 @@ build_cumulative_boundary_table <- function(cumulative, categories_chr) {
 #' @param theta_range Theta/logit range for graph coordinates.
 #' @param theta_points Number of points on the theta grid for graph coordinates.
 #' @param digits Rounding digits for numeric fields.
+#' @param score_se_method For bounded `GPCM` scorefile exports, which
+#'   observation-level score uncertainty columns to compute. `"both"`
+#'   (default) includes native structural expected-score SEs and score-side
+#'   delta-method SEs; `"native"` includes only the structural expected-score
+#'   route; `"score_side"` includes only the score-side delta route; `"none"`
+#'   records explicit `not_requested` status columns.
 #' @param include_fixed If `TRUE`, include fixed-width text mirrors of output tables.
 #' @param fixed_max_rows Maximum rows shown in fixed-width text blocks.
 #' @param write_files If `TRUE`, write selected outputs to files in `output_dir`.
@@ -4687,7 +4693,7 @@ build_cumulative_boundary_table <- function(cumulative, categories_chr) {
 #' `summary(out)` is supported through `summary()`.
 #' `plot(out)` is dispatched through `plot()` for class
 #' `mfrm_output_bundle` (`type = "graph_expected"`, `"score_residuals"`,
-#' `"obs_probability"`).
+#' `"obs_probability"`, `"score_se"`).
 #'
 #' @section Interpreting output:
 #' - `graphfile`: legacy-compatible wide curve coordinates (human-readable labels).
@@ -4704,6 +4710,20 @@ build_cumulative_boundary_table <- function(cumulative, categories_chr) {
 #' [export_mfrm_bundle()] for file handoff. Use
 #' `facets_output_file_bundle()` only when a legacy-compatible graphfile or
 #' scorefile contract is required.
+#'
+#' @section Bounded GPCM boundary:
+#' For bounded `GPCM`, graph output and package-native scorefile output are
+#' available with caveats. `include = "score"` returns observation-level fitted
+#' expected score, residual, standardized residual, observed-category
+#' probability, GPCM slope fields, and native structural delta-method
+#' expected-score uncertainty and/or score-side delta-method SEs when the
+#' required MML diagnostics are available. Use `score_se_method` to choose
+#' `"both"` (default), `"native"`, `"score_side"`, or `"none"`.
+#' The scorefile also carries explicit score-side caveat columns. It is not a
+#' FACETS score-side equivalence file, does not export FACETS-equivalent
+#' score-side standard errors, and does not establish an operational
+#' score-scale decision. Use [gpcm_score_side_contract()] and
+#' [gpcm_capability_matrix()] for the current scope.
 #'
 #' @section Typical workflow:
 #' 1. Fit and diagnose model.
@@ -4723,7 +4743,7 @@ build_cumulative_boundary_table <- function(cumulative, categories_chr) {
 #'   [mfrmr_compatibility_layer]
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' out <- facets_output_file_bundle(fit, diagnostics = diagnose_mfrm(fit, residual_pca = "none"))
 #' summary(out)
 #' p_out <- plot(out, draw = FALSE)
@@ -4735,6 +4755,7 @@ facets_output_file_bundle <- function(fit,
                                       theta_range = c(-6, 6),
                                       theta_points = 241,
                                       digits = 4,
+                                      score_se_method = c("both", "native", "score_side", "none"),
                                       include_fixed = FALSE,
                                       fixed_max_rows = 400,
                                       write_files = FALSE,
@@ -4753,12 +4774,23 @@ facets_output_file_bundle <- function(fit,
   if (length(include) == 0) {
     stop("`include` must contain at least one of: graph, score.")
   }
+  if (is.null(score_se_method)) {
+    score_se_method <- "both"
+  }
+  score_se_method <- match.arg(
+    tolower(as.character(score_se_method[1])),
+    choices = c("both", "native", "score_side", "none")
+  )
   fit_model <- as.character(fit$config$model %||% fit$summary$Model[1] %||% NA_character_)
-  if (identical(fit_model, "GPCM") && "score" %in% include) {
+  gpcm_score_side <- identical(fit_model, "GPCM") && "score" %in% include
+  if (isTRUE(gpcm_score_side)) {
     stop_if_gpcm_out_of_scope(
       fit,
       "facets_output_file_bundle(include = \"score\")",
-      supported = "fitting, core summary output, fixed-calibration posterior scoring, compute_information(), pathway/CCC plotting, category curve/structure reports, and graph-only output bundles"
+      supported = paste(
+        "package-native bounded-GPCM scorefile export with explicit caveat",
+        "columns; full FACETS output-contract review remains blocked"
+      )
     )
   }
   digits <- max(0L, as.integer(digits))
@@ -4856,7 +4888,8 @@ facets_output_file_bundle <- function(fit,
     obs <- as.data.frame(diagnostics$obs, stringsAsFactors = FALSE)
     keep_cols <- c(
       "Person", fit$config$facet_names, "Observed", "Expected", "Residual",
-      "StdResidual", "Var", "Weight", "score_k", "PersonMeasure"
+      "StdResidual", "Var", "Weight", "score_k", "PersonMeasure",
+      "ScoreSlope", "ScoreInformation", "ObservedScoreDerivative", "PrObserved"
     )
     keep_cols <- keep_cols[keep_cols %in% names(obs)]
     scorefile <- obs[, keep_cols, drop = FALSE]
@@ -4872,8 +4905,42 @@ facets_output_file_bundle <- function(fit,
         NA_real_
       }, numeric(1))
       scorefile$ObsProb <- obs_prob
+    } else if ("PrObserved" %in% names(scorefile) && !"ObsProb" %in% names(scorefile)) {
+      scorefile$ObsProb <- scorefile$PrObserved
+    }
+    if (isTRUE(gpcm_score_side)) {
+      if (score_se_method %in% c("both", "native")) {
+        scorefile <- add_gpcm_scorefile_delta_se(scorefile, fit)
+      } else {
+        scorefile <- add_gpcm_scorefile_native_se_not_requested(scorefile)
+      }
+      if (score_se_method %in% c("both", "score_side")) {
+        scorefile <- add_gpcm_score_side_delta_se(scorefile, fit, diagnostics = diagnostics)
+      } else {
+        scorefile <- add_gpcm_score_side_se_not_requested(scorefile)
+      }
+      scorefile$ScoreSideModel <- "bounded_GPCM"
+      scorefile$ScoreSideStatus <- "supported_with_caveat"
+      scorefile$ScoreSideEstimand <- "fitted_bounded_gpcm_expected_score"
+      scorefile$ScoreSideCaveat <- paste(
+        "Package-native bounded-GPCM scorefile: slope-aware expected score,",
+        "residual, standardized residual, observed-category probability,",
+        "score slope, native expected-score uncertainty, and score-side",
+        "delta-method SEs are exported for sensitivity review when requested",
+        "and available. This is not FACETS score-side equivalence, does not",
+        "export FACETS-equivalent score-side standard errors, and is not an",
+        "operational scoring decision."
+      )
     }
     out$scorefile <- round_numeric_df(scorefile, digits = digits)
+    if (isTRUE(gpcm_score_side)) {
+      out$gpcm_score_side_contract <- gpcm_score_side_contract()
+      out$gpcm_boundary <- gpcm_capability_boundary_table(
+        fit,
+        helper = "facets_output_file_bundle(include = \"score\")",
+        extra_areas = c("FACETS output-contract score-side review")
+      )
+    }
     if (include_fixed) {
       out$scorefile_fixed <- build_sectioned_fixed_report(
         title = "Legacy-compatible SCORE Output",
@@ -4884,6 +4951,18 @@ facets_output_file_bundle <- function(fit,
       )
     }
     write_csv_if_needed(out$scorefile, paste0(file_prefix, "_scorefile.csv"), "scorefile")
+    if (isTRUE(gpcm_score_side)) {
+      write_csv_if_needed(
+        out$gpcm_score_side_contract,
+        paste0(file_prefix, "_gpcm_score_side_contract.csv"),
+        "gpcm_score_side_contract"
+      )
+      write_csv_if_needed(
+        out$gpcm_boundary,
+        paste0(file_prefix, "_gpcm_boundary.csv"),
+        "gpcm_boundary"
+      )
+    }
     if (include_fixed && !is.null(out$scorefile_fixed)) {
       write_txt_if_needed(out$scorefile_fixed, paste0(file_prefix, "_scorefile_fixed.txt"), "scorefile_fixed")
     }
@@ -4903,7 +4982,9 @@ facets_output_file_bundle <- function(fit,
     write_files = write_files,
     output_dir = output_dir,
     file_prefix = file_prefix,
-    overwrite = overwrite
+    overwrite = overwrite,
+    score_se_method = score_se_method,
+    score_side_status = if (isTRUE(gpcm_score_side)) "bounded_gpcm_supported_with_caveat" else "standard"
   )
   as_mfrm_bundle(out, "mfrm_output_bundle")
 }
@@ -5057,7 +5138,7 @@ mfrm_default_node_path <- function(path, format) {
 #' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                 method = "JML", maxit = 25)
+#'                 method = "JML", maxit = 30)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
 #' path <- tempfile(fileext = ".csv")
 #' out <- write_mfrm_residual_file(fit, diag, path, overwrite = TRUE)
@@ -5144,7 +5225,7 @@ write_mfrm_residual_file <- function(fit,
 #' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                 method = "JML", maxit = 25)
+#'                 method = "JML", maxit = 30)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
 #' path <- tempfile(fileext = ".csv")
 #' out <- write_mfrm_subset_file(fit, diag, path, overwrite = TRUE)
@@ -5746,7 +5827,7 @@ infer_facet_names <- function(diagnostics) {
 #' @examples
 #' \donttest{
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' diag <- diagnose_mfrm(fit, residual_pca = "both")
 #' pca <- analyze_residual_pca(diag, mode = "both")
 #' pca2 <- analyze_residual_pca(fit, mode = "both")
@@ -5990,7 +6071,7 @@ extract_loading_table <- function(pca_bundle, component = 1L, top_n = 20L) {
 #'   `"parallel_excess"`, or `"loadings"`.
 #' @param component Component index for loadings plot.
 #' @param top_n Maximum number of variables shown in loadings plot.
-#' @param preset Visual preset (`"standard"`, `"publication"`, or `"compact"`).
+#' @param preset Visual preset (`"standard"`, `"publication"`, `"compact"`, or `"monochrome"`).
 #' @param draw If `TRUE`, draws the plot using base graphics.
 #'
 #' @details
@@ -6044,15 +6125,17 @@ extract_loading_table <- function(pca_bundle, component = 1L, top_n = 20L) {
 #' toy_people <- unique(toy_full$Person)[1:24]
 #' toy <- toy_full[match(toy_full$Person, toy_people, nomatch = 0L) > 0L, , drop = FALSE]
 #' fit <- suppressWarnings(
-#'   fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 15)
+#'   fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' )
 #' diag <- diagnose_mfrm(fit, residual_pca = "overall")
 #' pca <- analyze_residual_pca(diag, mode = "overall")
 #' plt <- plot_residual_pca(pca, mode = "overall", plot_type = "scree", draw = FALSE)
 #' head(plt$data)
+#' \donttest{
 #' pca_pa <- analyze_residual_pca(diag, mode = "overall", parallel = TRUE, parallel_reps = 10)
 #' pa <- plot_residual_pca(pca_pa, mode = "overall", plot_type = "parallel_scree", draw = FALSE)
 #' head(pa$data)
+#' }
 #' plt_load <- plot_residual_pca(
 #'   pca, mode = "overall", plot_type = "loadings", component = 1, draw = FALSE
 #' )
@@ -6067,7 +6150,7 @@ plot_residual_pca <- function(x,
                               plot_type = c("scree", "parallel_scree", "parallel_excess", "loadings"),
                               component = 1L,
                               top_n = 20L,
-                              preset = c("standard", "publication", "compact"),
+                              preset = c("standard", "publication", "compact", "monochrome"),
                               draw = TRUE) {
   mode <- match.arg(tolower(mode), c("overall", "facet"))
   plot_type <- match.arg(tolower(plot_type), c("scree", "parallel_scree", "parallel_excess", "loadings"))
@@ -6446,7 +6529,7 @@ plot_residual_pca <- function(x,
 #' @seealso [build_fixed_reports()], [build_apa_outputs()]
 #' @examples
 #' toy <- load_mfrmr_data("example_bias")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
 #' bias <- estimate_bias(fit, diag, facet_a = "Rater", facet_b = "Criterion", max_iter = 2)
 #' s_bias <- summary(bias)
@@ -6621,7 +6704,7 @@ estimate_bias <- function(fit,
 #' @examples
 #' \donttest{
 #' toy <- load_mfrmr_data("example_bias")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
 #' bias <- estimate_bias(fit, diag, facet_a = "Rater", facet_b = "Criterion", max_iter = 2)
 #' fixed <- build_fixed_reports(bias)
@@ -7005,7 +7088,7 @@ normalize_bias_plot_input <- function(x,
 #' @seealso [estimate_bias()], [plot_bias_interaction()], [build_fixed_reports()]
 #' @examples
 #' toy <- load_mfrmr_data("example_bias")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
 #' bias <- estimate_bias(fit, diag, facet_a = "Rater", facet_b = "Criterion", max_iter = 2)
 #' t13 <- bias_interaction_report(bias, top_n = 10)
@@ -7229,7 +7312,7 @@ table13_bias_plot_export <- function(x,
 #' @param palette Optional named color overrides (`normal`, `flag`, `hist`,
 #'   `profile`).
 #' @param label_angle Label angle hint for ranked/profile labels.
-#' @param preset Visual preset (`"standard"`, `"publication"`, or `"compact"`).
+#' @param preset Visual preset (`"standard"`, `"publication"`, `"compact"`, or `"monochrome"`).
 #' @param draw If `TRUE`, draw with base graphics.
 #'
 #' @section Lifecycle:
@@ -7239,7 +7322,7 @@ table13_bias_plot_export <- function(x,
 #' @seealso [bias_interaction_report()], [estimate_bias()], [plot_displacement()]
 #' @examples
 #' toy <- load_mfrmr_data("example_bias")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' p13 <- plot_bias_interaction(
 #'   fit,
 #'   diagnostics = diagnose_mfrm(fit, residual_pca = "none"),
@@ -7619,7 +7702,7 @@ plot_table13_bias <- function(x,
                               main = NULL,
                               palette = NULL,
                               label_angle = 45,
-                              preset = c("standard", "publication", "compact"),
+                              preset = c("standard", "publication", "compact", "monochrome"),
                               draw = TRUE) {
   signal_legacy_name_deprecation(
     old_name = "plot_table13_bias",

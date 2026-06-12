@@ -207,10 +207,10 @@ identification. \emph{IEEE Transactions on Automatic Control,
 toy <- load_mfrmr_data("example_core")
 
 fit_rsm <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                     method = "MML", model = "RSM", maxit = 25)
+                     method = "MML", model = "RSM", quad_points = 7, maxit = 30)
 fit_pcm <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                      method = "MML", model = "PCM",
-                     step_facet = "Criterion", maxit = 25)
+                     step_facet = "Criterion", quad_points = 7, maxit = 30)
 comp <- compare_mfrm(fit_rsm, fit_pcm, labels = c("RSM", "PCM"))
 comp$table
 comp$evidence_ratios

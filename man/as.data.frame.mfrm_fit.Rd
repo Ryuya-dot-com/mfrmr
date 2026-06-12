@@ -50,7 +50,7 @@ All non-person facets are stacked underneath in the same schema.
 \examples{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", model = "RSM", maxit = 25)
+                method = "JML", model = "RSM", maxit = 30)
 head(as.data.frame(fit))
 }
 \seealso{

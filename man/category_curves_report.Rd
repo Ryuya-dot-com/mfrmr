@@ -117,7 +117,7 @@ ggplot2, plotly, or another R graphics system.
 
 \examples{
 toy <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
+fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 out <- category_curves_report(fit, theta_points = 101)
 summary(out)
 head(out$probabilities[, c("CurveGroup", "Theta", "Category", "Probability")])

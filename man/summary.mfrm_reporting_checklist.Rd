@@ -36,7 +36,7 @@ Summarize a reporting-checklist bundle for manuscript work
 \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                method = "MML", maxit = 200)
+                method = "MML", quad_points = 7, maxit = 30)
 diag <- diagnose_mfrm(fit, residual_pca = "both", diagnostic_mode = "both")
 chk <- reporting_checklist(fit, diagnostics = diag)
 summary(chk)

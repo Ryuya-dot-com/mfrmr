@@ -40,7 +40,8 @@ category-specific-information plots
 \item \code{mfrm_rating_scale} -> category-counts/threshold plots
 \item \code{mfrm_measurable} -> measurable-data coverage/count plots
 \item \code{mfrm_unexpected_after_bias} -> post-bias unexpected-response plots
-\item \code{mfrm_output_bundle} -> graph/score output-file diagnostics
+\item \code{mfrm_output_bundle} -> graph/score output-file diagnostics,
+including \code{type = "score_se"} when scorefile SE columns are available
 \item \code{mfrm_residual_pca} -> residual PCA scree, parallel-analysis, or
 loadings views via \code{\link[=plot_residual_pca]{plot_residual_pca()}}
 \item \code{mfrm_specifications} -> facet/anchor/convergence plots
@@ -93,7 +94,7 @@ toy_full <- load_mfrmr_data("example_core")
 toy_people <- unique(toy_full$Person)[1:12]
 toy <- toy_full[toy_full$Person \%in\% toy_people, , drop = FALSE]
 fit <- suppressWarnings(
-  fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 10)
+  fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 )
 t4 <- unexpected_response_table(fit, abs_z_min = 1.5, prob_max = 0.4, top_n = 5)
 p <- plot(t4, draw = FALSE)

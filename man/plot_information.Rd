@@ -98,7 +98,7 @@ or reporting helpers.
 \examples{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                 method = "JML", model = "RSM", maxit = 25)
+                 method = "JML", model = "RSM", maxit = 30)
 info <- compute_information(fit)
 tif_data <- plot_information(info, type = "tif", draw = FALSE)
 head(tif_data$data$plot)

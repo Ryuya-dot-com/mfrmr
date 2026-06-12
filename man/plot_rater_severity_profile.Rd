@@ -10,7 +10,7 @@ plot_rater_severity_profile(
   facet = "Rater",
   ci_level = 0.95,
   show_bands = TRUE,
-  preset = c("standard", "publication", "compact"),
+  preset = c("standard", "publication", "compact", "monochrome"),
   draw = TRUE
 )
 }
@@ -57,7 +57,7 @@ anchoring.
 \examples{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", maxit = 25)
+                method = "JML", maxit = 30)
 p <- plot_rater_severity_profile(fit, draw = FALSE)
 head(p$data$data)
 }
@@ -65,3 +65,6 @@ head(p$data$data)
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=analyze_facet_equivalence]{analyze_facet_equivalence()}},
 \code{\link[=plot_facet_equivalence]{plot_facet_equivalence()}}.
 }
+\concept{confidence intervals}
+\concept{rater severity}
+\concept{visual diagnostics}

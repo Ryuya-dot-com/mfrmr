@@ -181,7 +181,7 @@ The returned bundle has class \code{mfrm_facet_equivalence} and includes:
 \examples{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", maxit = 25)
+                method = "JML", maxit = 30)
 eq <- analyze_facet_equivalence(fit, facet = "Rater")
 eq$summary[, c("Facet", "Elements", "Decision", "MeanROPE")]
 head(eq$pairwise[, c("ElementA", "ElementB", "Equivalent")])
@@ -198,3 +198,6 @@ Biopharmaceutics, 15}(6), 657-680.
 \seealso{
 \code{\link[=facets_chisq_table]{facets_chisq_table()}}, \code{\link[=fair_average_table]{fair_average_table()}}, \code{\link[=plot_facet_equivalence]{plot_facet_equivalence()}}
 }
+\concept{confidence intervals}
+\concept{facet equivalence}
+\concept{reporting workflow}
