@@ -576,7 +576,7 @@ mfrmr_release_readiness_ci_workflow_status <- function(path) {
   )
 }
 
-# Example-runtime policy review. Since 0.2.2, long-running illustration
+# Example-runtime policy review. Since the 0.2.1 release cycle, long-running illustration
 # examples must use \dontrun (not \donttest): CRAN incoming pre-tests run
 # \donttest examples and count them toward the overall-checktime limit
 # (the 0.2.1 submission was auto-rejected at 12 min > 10 min on the

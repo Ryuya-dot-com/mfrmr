@@ -1,13 +1,17 @@
 # mfrmr (development version)
 
-- Executed example time is now actively tiered: example pages whose
-  standard examples measurably exceeded 0.25 seconds locally are gated
+- The example-execution policy now keeps `R CMD check` time within the
+  CRAN incoming budget (the 0.2.1 submission passed the content checks on
+  Windows and Debian but tripped the Windows overall-checktime limit
+  before being accepted on review). Long-running illustrations previously
+  wrapped in `\donttest` are now `\dontrun`, and example pages whose
+  executed examples measurably exceeded 0.25 seconds locally are gated
   with `@examplesIf interactive()`, keeping 129 lightweight pages plus the
   core `fit_mfrm()` example in the surface executed by `R CMD check`
   (about 4 seconds locally, versus the 39 seconds behind the 175-second
   Windows example phase in the CRAN incoming pre-test). Gated
   illustrations remain in the help pages and run in interactive sessions.
-- The example-runtime policy introduced in 0.2.2 is now enforced:
+- The example-runtime policy is now enforced:
   `\donttest` is prohibited in roxygen examples (long-running
   illustrations use `\dontrun`), a regression test guards the rule, and
   the release-readiness review gains an `example_policy` gate that scans
@@ -67,17 +71,6 @@
   person-reliability note now reports the empirical value alongside the
   conservative adjusted-true-variance summary. The default person
   separation/reliability formulas are unchanged.
-
-# mfrmr 0.2.2
-
-This release is identical to 0.2.1 except for the example-execution policy.
-The 0.2.1 submission passed the CRAN incoming content checks on Windows and
-Debian but exceeded the overall-checktime limit on the Windows incoming
-host. Long-running illustration examples previously wrapped in `\donttest`
-are now wrapped in `\dontrun` so the checked example surface stays within
-the CRAN timing budget. The illustrations remain executable as written and
-the underlying routes stay covered by the package's test suite and the
-cross-platform CI matrix.
 
 # mfrmr 0.2.1
 
