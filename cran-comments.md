@@ -47,7 +47,7 @@ gates as `ok`.
 ## Downstream dependencies
 
 No reverse dependencies are listed in the current CRAN package index for
-Depends, Imports, or LinkingTo. Checked on 2026-05-28 against
+Depends, Imports, or LinkingTo. Checked on 2026-06-12 against
 `https://cloud.r-project.org` with `tools::package_dependencies(...,
 reverse = TRUE)`.
 
