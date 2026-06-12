@@ -80,6 +80,11 @@ Detailed changes:
   from `DESCRIPTION`, selects versioned evidence-map/checklist files when
   available, and reports stale `R CMD check` logs as package-check review
   items when the check-log package version does not match the target release.
+- The release-readiness GPCM scope review now also works against an installed
+  package: when the `R/` capability-matrix source file is not present (for
+  example inside `R CMD check` runs or CI artifact reviews), it reads
+  `gpcm_capability_matrix()` and `gpcm_runtime_guard_coverage()` from the
+  installed namespace instead of reporting a missing-source concern.
 - `precision_review_report()` now includes a source-grounded fit/separation
   basis table. This keeps mean-square fit, ZSTD standardization,
   Rasch/FACETS-style separation, and package QC thresholds in separate
