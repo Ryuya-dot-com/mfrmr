@@ -272,7 +272,11 @@ test_that("0.2.1 NEWS keeps public changes separate from validation internals", 
 
   news_lines <- readLines(file.path(pkg_root, "NEWS.md"), warn = FALSE)
   starts <- grep("^# mfrmr ", news_lines)
-  current <- starts[1]
+  # Anchor on the exact 0.2.1 heading rather than the first section, so
+  # later development-version and release sections above it do not shift
+  # what this test inspects.
+  current <- grep("^# mfrmr 0\\.2\\.1$", news_lines)[1]
+  expect_false(is.na(current))
   next_heading <- starts[starts > current][1]
   if (is.na(next_heading)) next_heading <- length(news_lines) + 1L
   news_021 <- paste(news_lines[current:(next_heading - 1L)], collapse = "\n")

@@ -43,6 +43,7 @@ the residual structure directly: large positive cells show
 under-prediction, negative cells over-prediction.
 }
 \examples{
+\dontshow{if (interactive()) withAutoprint(\{ # examplesIf}
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                  method = "JML", maxit = 30)
@@ -52,6 +53,7 @@ dim(p$data$matrix)
 #   misfit at the 5\% level and |residual| > 3 at the 1\% level
 #   (Wright & Linacre 1994). Persons with multiple high-magnitude
 #   cells across the same facet level point at scoring drift.
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 \code{\link[=plot_guttman_scalogram]{plot_guttman_scalogram()}}, \code{\link[=plot_unexpected]{plot_unexpected()}},

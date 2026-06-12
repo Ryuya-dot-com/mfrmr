@@ -120,6 +120,7 @@ package-native bias helper that provides a table component.
 }
 
 \examples{
+\dontshow{if (interactive()) withAutoprint(\{ # examplesIf}
 # Fast smoke run: a JML fit and a legacy diagnostic let us build the
 # APA bundle and confirm `report_text` is non-empty in well under
 # a second.
@@ -161,7 +162,7 @@ head(chk$checklist[, c("Section", "Item", "DraftReady", "NextAction")])
 cat(apa$report_text)
 apa$section_map[, c("SectionId", "Available")]
 }
-
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 \code{\link[=build_visual_summaries]{build_visual_summaries()}}, \code{\link[=estimate_bias]{estimate_bias()}},

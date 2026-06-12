@@ -179,12 +179,14 @@ The returned bundle has class \code{mfrm_facet_equivalence} and includes:
 }
 
 \examples{
+\dontshow{if (interactive()) withAutoprint(\{ # examplesIf}
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "JML", maxit = 30)
 eq <- analyze_facet_equivalence(fit, facet = "Rater")
 eq$summary[, c("Facet", "Elements", "Decision", "MeanROPE")]
 head(eq$pairwise[, c("ElementA", "ElementB", "Equivalent")])
+\dontshow{\}) # examplesIf}
 }
 \references{
 Kass, R. E., & Raftery, A. E. (1995). Bayes factors. \emph{Journal of the

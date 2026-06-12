@@ -3202,7 +3202,7 @@ make_anchor_table <- function(fit,
 #'
 #' @seealso [fit_mfrm()], [analyze_residual_pca()], [build_visual_summaries()],
 #'   [mfrmr_visual_diagnostics], [mfrmr_reporting_and_apa]
-#' @examples
+#' @examplesIf interactive()
 #' # Fast smoke run: legacy-only diagnostic mode is enough to confirm
 #' # the bundle has the expected slots. ~1 s on example_core.
 #' toy <- load_mfrmr_data("example_core")

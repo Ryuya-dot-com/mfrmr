@@ -95,6 +95,7 @@ The \code{summary} data.frame contains:
 }
 
 \examples{
+\dontshow{if (interactive()) withAutoprint(\{ # examplesIf}
 toy <- load_mfrmr_data("example_bias")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 diag <- diagnose_mfrm(fit, residual_pca = "none")
@@ -103,6 +104,7 @@ t10 <- unexpected_after_bias_table(fit, bias, diagnostics = diag, top_n = 20)
 summary(t10)
 p_t10 <- plot(t10, draw = FALSE)
 p_t10$data$plot
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 \code{\link[=estimate_bias]{estimate_bias()}}, \code{\link[=unexpected_response_table]{unexpected_response_table()}}, \code{\link[=bias_count_table]{bias_count_table()}},

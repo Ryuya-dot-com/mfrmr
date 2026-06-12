@@ -146,6 +146,7 @@ available from the current analysis objects.
 }
 
 \examples{
+\dontshow{if (interactive()) withAutoprint(\{ # examplesIf}
 # Fast smoke run: a JML fit + legacy-only diagnostic produces a
 # populated checklist in well under a second.
 toy <- load_mfrmr_data("example_core")
@@ -173,6 +174,7 @@ head(chk$checklist[, c("Section", "Item", "DraftReady", "NextAction")])
 #   without re-reading the methodology guide.
 nchar(apa$report_text)
 }
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 \code{\link[=build_apa_outputs]{build_apa_outputs()}}, \code{\link[=build_visual_summaries]{build_visual_summaries()}},

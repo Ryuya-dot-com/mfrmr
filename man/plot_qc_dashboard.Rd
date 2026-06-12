@@ -120,6 +120,7 @@ Treat this dashboard as a screening layer; follow up with dedicated helpers
 }
 
 \examples{
+\dontshow{if (interactive()) withAutoprint(\{ # examplesIf}
 # Fast smoke run: build the plot data only (no graphics device).
 toy <- load_mfrmr_data("example_core")
 toy_small <- toy[toy$Person \%in\% unique(toy$Person)[1:3], ]
@@ -143,6 +144,7 @@ if (interactive()) {
   plot_qc_dashboard(fit, rater_facet = "Rater")
 }
 }
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 \code{\link[=plot_unexpected]{plot_unexpected()}}, \code{\link[=plot_fair_average]{plot_fair_average()}}, \code{\link[=plot_displacement]{plot_displacement()}}, \code{\link[=plot_interrater_agreement]{plot_interrater_agreement()}}, \code{\link[=plot_facets_chisq]{plot_facets_chisq()}}, \code{\link[=build_visual_summaries]{build_visual_summaries()}}

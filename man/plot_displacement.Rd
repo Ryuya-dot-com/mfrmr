@@ -113,6 +113,7 @@ For a plot-selection guide and a longer walkthrough, see
 }
 
 \examples{
+\dontshow{if (interactive()) withAutoprint(\{ # examplesIf}
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 p <- plot_displacement(fit, anchored_only = FALSE, draw = FALSE)
@@ -124,6 +125,7 @@ if (interactive()) {
     preset = "publication"
   )
 }
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 \code{\link[=displacement_table]{displacement_table()}}, \code{\link[=plot_unexpected]{plot_unexpected()}}, \code{\link[=plot_fair_average]{plot_fair_average()}},

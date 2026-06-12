@@ -278,6 +278,7 @@ programs}. Winsteps.com. (WHEXACT / FACETS standardized fit df notes.)
 }
 
 \examples{
+\dontshow{if (interactive()) withAutoprint(\{ # examplesIf}
 # Fast smoke run: legacy-only diagnostic mode is enough to confirm
 # the bundle has the expected slots. ~1 s on example_core.
 toy <- load_mfrmr_data("example_core")
@@ -320,7 +321,7 @@ head(pca$overall_table)
 prec <- precision_review_report(fit, diagnostics = diag)
 summary(prec)
 }
-
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 \code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=analyze_residual_pca]{analyze_residual_pca()}}, \code{\link[=build_visual_summaries]{build_visual_summaries()}},

@@ -179,6 +179,7 @@ replay script, and HTML summary.
 }
 
 \examples{
+\dontshow{if (interactive()) withAutoprint(\{ # examplesIf}
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "JML", maxit = 30)
@@ -193,6 +194,7 @@ bundle <- export_mfrm_bundle(
 )
 bundle$summary[, c("FilesWritten", "HtmlWritten", "ScriptWritten")]
 head(bundle$written_files)
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 \code{\link[=build_mfrm_manifest]{build_mfrm_manifest()}}, \code{\link[=build_mfrm_replay_script]{build_mfrm_replay_script()}},

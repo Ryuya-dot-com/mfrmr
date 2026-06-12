@@ -560,7 +560,7 @@ peer_review_build_design_skeleton <- function(n_submission,
 #'   a fixed peer-review design skeleton.
 #' @seealso [simulate_mfrm_data()], [build_mfrm_network_review()],
 #'   [build_mfrm_sim_spec()]
-#' @examples
+#' @examplesIf interactive()
 #' peer_spec <- build_peer_review_sim_spec(
 #'   n_submission = 12,
 #'   n_criterion = 3,

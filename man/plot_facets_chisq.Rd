@@ -99,6 +99,7 @@ non-trivial heterogeneity beyond measurement error.
 }
 
 \examples{
+\dontshow{if (interactive()) withAutoprint(\{ # examplesIf}
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 p <- plot_facets_chisq(fit, draw = FALSE)
@@ -113,6 +114,7 @@ if (interactive()) {
     label_angle = 45
   )
 }
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 \code{\link[=facets_chisq_table]{facets_chisq_table()}}, \code{\link[=plot_interrater_agreement]{plot_interrater_agreement()}}, \code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}}

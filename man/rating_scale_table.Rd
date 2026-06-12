@@ -155,6 +155,7 @@ interpreting the \code{summary(t8)$summary} flags in the bounded
 }
 
 \examples{
+\dontshow{if (interactive()) withAutoprint(\{ # examplesIf}
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 t8 <- rating_scale_table(fit)
@@ -162,7 +163,7 @@ summary(t8)
 summary(t8)$summary
 p_t8 <- plot(t8, draw = FALSE)
 p_t8$data$plot
-
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=measurable_summary_table]{measurable_summary_table()}}, \code{\link[=plot.mfrm_fit]{plot.mfrm_fit()}},

@@ -129,12 +129,14 @@ score-scale decision. Use \code{\link[=gpcm_score_side_contract]{gpcm_score_side
 }
 
 \examples{
+\dontshow{if (interactive()) withAutoprint(\{ # examplesIf}
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 out <- facets_output_file_bundle(fit, diagnostics = diagnose_mfrm(fit, residual_pca = "none"))
 summary(out)
 p_out <- plot(out, draw = FALSE)
 p_out$data$plot
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 \code{\link[=category_curves_report]{category_curves_report()}}, \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=unexpected_response_table]{unexpected_response_table()}},

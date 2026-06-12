@@ -124,6 +124,7 @@ routing design forecasting through its separate caveated capability row.
 }
 
 \examples{
+\dontshow{if (interactive()) withAutoprint(\{ # examplesIf}
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "JML", maxit = 30)
@@ -131,6 +132,7 @@ diag <- diagnose_mfrm(fit, residual_pca = "none")
 manifest <- build_mfrm_manifest(fit, diagnostics = diag)
 manifest$summary[, c("Model", "Method", "Observations", "Facets")]
 manifest$available_outputs[, c("Component", "Available")]
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 \code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}}, \code{\link[=build_mfrm_replay_script]{build_mfrm_replay_script()}},

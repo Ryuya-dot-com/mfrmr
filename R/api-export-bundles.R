@@ -453,7 +453,7 @@ validate_bias_results_input <- function(bias_results,
 #' @return A named list with class `mfrm_manifest`.
 #' @seealso [export_mfrm_bundle()], [build_mfrm_replay_script()],
 #'   [make_anchor_table()], [reporting_checklist()]
-#' @examples
+#' @examplesIf interactive()
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "JML", maxit = 30)
@@ -1007,7 +1007,7 @@ build_mfrm_session_info_table <- function() {
 #'
 #' @return A named list with class `mfrm_replay_script`.
 #' @seealso [build_mfrm_manifest()], [export_mfrm_bundle()], [run_mfrm_facets()]
-#' @examples
+#' @examplesIf interactive()
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "JML", maxit = 30)
@@ -3821,7 +3821,7 @@ export_summary_appendix <- function(x,
 #' @return A named list with class `mfrm_export_bundle`.
 #' @seealso [build_mfrm_manifest()], [build_mfrm_replay_script()],
 #'   [export_mfrm()], [reporting_checklist()], [export_summary_appendix()]
-#' @examples
+#' @examplesIf interactive()
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "JML", maxit = 30)

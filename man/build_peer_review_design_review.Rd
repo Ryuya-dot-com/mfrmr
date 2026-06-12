@@ -50,6 +50,7 @@ NCME presentation.
 }
 
 \examples{
+\dontshow{if (interactive()) withAutoprint(\{ # examplesIf}
 peer_spec <- build_peer_review_sim_spec(
   n_submission = 12,
   n_criterion = 3,
@@ -59,6 +60,7 @@ peer_spec <- build_peer_review_sim_spec(
 peer_sim <- simulate_mfrm_data(sim_spec = peer_spec, seed = 123)
 review <- build_peer_review_design_review(peer_sim)
 summary(review)$overview
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 \code{\link[=build_peer_review_sim_spec]{build_peer_review_sim_spec()}}, \code{\link[=simulate_mfrm_data]{simulate_mfrm_data()}},
