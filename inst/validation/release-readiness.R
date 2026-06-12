@@ -287,14 +287,24 @@ mfrmr_release_readiness_version_status <- function(paths, target_version = NULL)
   current_files <- c(paths$description, paths$news, paths$cran_comments, paths$evidence_map)
   current_lines <- unlist(lapply(current_files[file.exists(current_files)], mfrmr_release_readiness_read_lines), use.names = FALSE)
   dev_label_present <- any(grepl(paste0("\\b", gsub(".", "\\\\.", target_version, fixed = TRUE), "\\.9000\\b"), current_lines))
+  # Between releases the conventional pairing is a four-component
+  # development version in DESCRIPTION (x.y.z.9000) with a
+  # "# mfrmr (development version)" NEWS heading. Treat that pairing as a
+  # valid development-cycle state; release candidates still require the
+  # exact version heading.
+  is_dev_version <- grepl("\\.9[0-9]{3}$", desc_version %||% "")
+  dev_pairing_ok <- isTRUE(is_dev_version) &&
+    identical(first_heading, "# mfrmr (development version)")
   data.frame(
     TargetVersion = target_version,
     DescriptionVersion = desc_version,
     NewsHeading = first_heading,
     DevelopmentLabelPresent = dev_label_present,
-    VersionOK = identical(desc_version, target_version) &&
+    DevCycle = dev_pairing_ok,
+    VersionOK = (identical(desc_version, target_version) &&
       identical(first_heading, paste("# mfrmr", target_version)) &&
-      !isTRUE(dev_label_present),
+      !isTRUE(dev_label_present)) ||
+      (identical(desc_version, target_version) && dev_pairing_ok),
     stringsAsFactors = FALSE
   )
 }
@@ -566,13 +576,82 @@ mfrmr_release_readiness_ci_workflow_status <- function(path) {
   )
 }
 
+# Example-runtime policy review. Since 0.2.2, long-running illustration
+# examples must use \dontrun (not \donttest): CRAN incoming pre-tests run
+# \donttest examples and count them toward the overall-checktime limit
+# (the 0.2.1 submission was auto-rejected at 12 min > 10 min on the
+# Windows incoming host). This review checks the source tree for
+# remaining \donttest tags and, when a check run is available, reviews
+# the per-page and total example timings from `mfrmr-Ex.timings`.
+mfrmr_release_readiness_example_policy_status <- function(paths) {
+  r_dir <- file.path(paths$pkg_dir, "R")
+  r_files <- if (dir.exists(r_dir)) {
+    list.files(r_dir, pattern = "\\.R$", recursive = TRUE, full.names = TRUE)
+  } else {
+    character(0)
+  }
+  donttest_scan_available <- length(r_files) > 0L
+  donttest_count <- if (donttest_scan_available) {
+    sum(vapply(r_files, function(path) {
+      sum(grepl("\\\\donttest\\{", readLines(path, warn = FALSE), perl = TRUE))
+    }, numeric(1)))
+  } else {
+    NA_real_
+  }
+
+  timings_path <- file.path(dirname(paths$check_log), "mfrmr-Ex.timings")
+  timings_available <- file.exists(timings_path)
+  example_count <- NA_integer_
+  total_elapsed <- NA_real_
+  slow_examples <- character(0)
+  slow_threshold <- 4
+  total_budget <- 120
+  if (timings_available) {
+    timings <- tryCatch(
+      utils::read.delim(timings_path, header = FALSE,
+                        col.names = c("name", "user", "system", "elapsed"),
+                        stringsAsFactors = FALSE),
+      error = function(e) NULL
+    )
+    if (!is.null(timings) && nrow(timings) > 0L) {
+      elapsed <- suppressWarnings(as.numeric(timings$elapsed))
+      example_count <- nrow(timings)
+      total_elapsed <- sum(elapsed, na.rm = TRUE)
+      slow_examples <- as.character(
+        timings$name[is.finite(elapsed) & elapsed > slow_threshold]
+      )
+    } else {
+      timings_available <- FALSE
+    }
+  }
+
+  data.frame(
+    DonttestScanAvailable = donttest_scan_available,
+    DonttestCount = donttest_count,
+    TimingsAvailable = timings_available,
+    ExampleCount = example_count,
+    TotalExampleElapsed = total_elapsed,
+    SlowExampleThreshold = slow_threshold,
+    SlowExampleCount = length(slow_examples),
+    SlowExamples = paste(slow_examples, collapse = ", "),
+    TotalExampleBudget = total_budget,
+    ExamplePolicyOK =
+      (!donttest_scan_available || isTRUE(donttest_count == 0)) &&
+        (!timings_available ||
+           (length(slow_examples) == 0L &&
+              isTRUE(total_elapsed <= total_budget))),
+    stringsAsFactors = FALSE
+  )
+}
+
 mfrmr_release_readiness_gate_summary <- function(version_status,
                                                  check_status,
                                                  term_status,
                                                  checklist_status,
                                                  ci_workflow_status,
                                                  paths,
-                                                 gpcm_scope_status = NULL) {
+                                                 gpcm_scope_status = NULL,
+                                                 example_policy_status = NULL) {
   gpcm_scope_ok <- if (is.null(gpcm_scope_status)) {
     TRUE
   } else {
@@ -637,6 +716,38 @@ mfrmr_release_readiness_gate_summary <- function(version_status,
     ),
     stringsAsFactors = FALSE
   )
+  if (!is.null(example_policy_status)) {
+    example_gate <- if (isTRUE(example_policy_status$DonttestScanAvailable[1]) &&
+                        !isTRUE(example_policy_status$DonttestCount[1] == 0)) {
+      "concern"
+    } else if (isTRUE(example_policy_status$TimingsAvailable[1]) &&
+               (isTRUE(example_policy_status$SlowExampleCount[1] > 0) ||
+                isTRUE(example_policy_status$TotalExampleElapsed[1] >
+                         example_policy_status$TotalExampleBudget[1]))) {
+      "review"
+    } else {
+      "ok"
+    }
+    rows <- rbind(rows, data.frame(
+      Gate = "example_policy",
+      Status = example_gate,
+      Detail = paste0(
+        "donttest=", example_policy_status$DonttestCount[1],
+        "; slow_examples(>", example_policy_status$SlowExampleThreshold[1],
+        "s)=", example_policy_status$SlowExampleCount[1],
+        if (nzchar(example_policy_status$SlowExamples[1])) {
+          paste0(" [", example_policy_status$SlowExamples[1], "]")
+        } else {
+          ""
+        },
+        "; total_elapsed=",
+        round(example_policy_status$TotalExampleElapsed[1], 1),
+        "s (budget ", example_policy_status$TotalExampleBudget[1], "s)",
+        "; timings=", example_policy_status$TimingsAvailable[1]
+      ),
+      stringsAsFactors = FALSE
+    ))
+  }
   rows
 }
 
@@ -732,6 +843,7 @@ mfrmr_release_readiness_review <- function(pkg_dir = ".",
     paths = paths,
     checklist_status = checklist_status
   )
+  example_policy_status <- mfrmr_release_readiness_example_policy_status(paths)
   gate_summary <- mfrmr_release_readiness_gate_summary(
     version_status = version_status,
     check_status = check_status,
@@ -739,7 +851,8 @@ mfrmr_release_readiness_review <- function(pkg_dir = ".",
     checklist_status = checklist_status,
     ci_workflow_status = ci_workflow_status,
     paths = paths,
-    gpcm_scope_status = gpcm_scope_status
+    gpcm_scope_status = gpcm_scope_status,
+    example_policy_status = example_policy_status
   )
   external_recovery_status <- mfrmr_release_readiness_external_recovery_status(
     paths = paths,
@@ -759,6 +872,7 @@ mfrmr_release_readiness_review <- function(pkg_dir = ".",
     terminology_status = term_status,
     checklist_status = checklist_status,
     gpcm_scope_status = gpcm_scope_status,
+    example_policy_status = example_policy_status,
     external_recovery_status = external_recovery_status,
     paths = paths
   )

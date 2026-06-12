@@ -172,3 +172,30 @@ test_that("vignettes keep executable chunks off during CRAN checks", {
 
   expect_identical(missing_guard, character(0))
 })
+
+test_that("long-running demonstrations use dontrun, not donttest", {
+  pkg_root <- example_policy_source_root()
+  testthat::skip_if(is.na(pkg_root), "source files are not available")
+
+  files <- list.files(file.path(pkg_root, "R"), pattern = "\\.R$",
+                      recursive = TRUE, full.names = TRUE)
+  hits <- character(0)
+  for (path in files) {
+    lines <- readLines(path, warn = FALSE)
+    idx <- grep("\\\\donttest\\{", lines, perl = TRUE)
+    if (length(idx) > 0L) {
+      hits <- c(hits, paste0(basename(path), ":", idx))
+    }
+  }
+  expect_identical(
+    hits,
+    character(0),
+    info = paste(
+      "CRAN incoming pre-tests run \\donttest examples and count them",
+      "toward the overall-checktime limit (the 0.2.1 submission was",
+      "auto-rejected at 12 min > 10 min on the Windows incoming host).",
+      "Wrap long-running illustrations in \\dontrun instead; keep only",
+      "lightweight code in executed example paths."
+    )
+  )
+})

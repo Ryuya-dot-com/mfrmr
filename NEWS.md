@@ -1,5 +1,15 @@
 # mfrmr (development version)
 
+- The example-runtime policy introduced in 0.2.2 is now enforced:
+  `\donttest` is prohibited in roxygen examples (long-running
+  illustrations use `\dontrun`), a regression test guards the rule, and
+  the release-readiness review gains an `example_policy` gate that scans
+  for `\donttest` tags and reviews per-page (> 4s) and total (> 120s)
+  executed-example timings from the latest `R CMD check` run.
+- The release-readiness version contract now recognizes the conventional
+  development-cycle pairing (a four-component `x.y.z.9000` version in
+  `DESCRIPTION` with a `# mfrmr (development version)` NEWS heading) as a
+  valid state; release candidates still require the exact version heading.
 - New `plot(fit, type = "score_measure")` draws the score-to-measure curve
   in the Winsteps "Person-Test Measures for Scores" style: expected score
   against measure with a dashed `+/- 1 SEM` band

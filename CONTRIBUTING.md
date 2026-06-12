@@ -49,7 +49,13 @@ multi-step analyses to README/vignettes or non-CRAN tests.
   `diagnose_mfrm(..., residual_pca = "none")` in standard Rd examples.
 - Wrap multi-fit workflows, MML examples, recovery simulations, design
   simulations, external-Suggests examples, and long reporting pipelines in
-  `\donttest{}` unless the function cannot be demonstrated otherwise.
+  `\dontrun{}`. Do not use `\donttest{}`: CRAN incoming pre-tests run
+  donttest examples and count them toward the overall-checktime limit (the
+  0.2.1 submission was auto-rejected at 12 min > 10 min on the Windows
+  incoming host). This policy is enforced by `test-example-policy.R` and by
+  the `example_policy` gate in `inst/validation/release-readiness.R`, which
+  also reviews per-page (> 4s) and total (> 120s) executed-example timings
+  from `mfrmr-Ex.timings`.
 - When an MML example must run in standard examples, set a small
   `quad_points` value and explain that it is an exploratory speed setting.
 - Use `draw = FALSE` in examples that only need to demonstrate returned plot
