@@ -126,6 +126,7 @@ Rasch model using residual correlations.
 }
 
 \examples{
+\dontshow{if (interactive()) withAutoprint(\{ # examplesIf}
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "JML", maxit = 30)
@@ -138,6 +139,7 @@ q3$summary
 #   The summary's flag counts give a quick triage; inspect `q3$pairs`
 #   for the offending level pairs and follow up with content review.
 head(q3$pairs)
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 \code{\link[=plot_local_dependence_heatmap]{plot_local_dependence_heatmap()}}, \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}

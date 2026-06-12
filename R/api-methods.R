@@ -6575,7 +6575,7 @@ plot.mfrm_bundle <- function(x, y = NULL, type = NULL, ...) {
 #' - `digits`: numeric-print precision threaded through to
 #'   `print.summary.mfrm_diagnostics()`
 #' @seealso [diagnose_mfrm()], [summary.mfrm_fit()]
-#' @examples
+#' @examplesIf interactive()
 #' toy <- load_mfrmr_data("example_core")
 #' toy <- toy[toy$Person %in% unique(toy$Person)[1:4], ]
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
@@ -7269,7 +7269,7 @@ print.summary.mfrm_diagnostics <- function(x, ...) {
 #' - `top_rows`: highest-`|t|` interaction rows
 #' - `notes`: short interpretation notes
 #' @seealso [estimate_bias()], [bias_interaction_report()]
-#' @examples
+#' @examplesIf interactive()
 #' toy <- load_mfrmr_data("example_bias")
 #' toy <- toy[toy$Person %in% unique(toy$Person)[1:8], ]
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)

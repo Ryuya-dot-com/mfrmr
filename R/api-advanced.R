@@ -1596,7 +1596,7 @@ print.mfrm_dff <- function(x, ...) {
 #'
 #' @seealso [analyze_dff()], [analyze_dif()], [plot_dif_heatmap()], [dif_report()],
 #'   [estimate_bias()]
-#' @examples
+#' @examplesIf interactive()
 #' toy <- load_mfrmr_data("example_bias")
 #'
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
@@ -1870,7 +1870,7 @@ print.mfrm_dif_interaction <- function(x, ...) {
 #'   bare matrix; consume `$data$matrix` to keep code forward-compatible.
 #'
 #' @seealso [dif_interaction_table()], [analyze_dff()], [analyze_dif()], [dif_report()]
-#' @examples
+#' @examplesIf interactive()
 #' toy <- load_mfrmr_data("example_bias")
 #'
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",

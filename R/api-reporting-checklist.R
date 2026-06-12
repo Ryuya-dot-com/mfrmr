@@ -104,7 +104,7 @@
 #' @seealso [build_apa_outputs()], [build_visual_summaries()],
 #'   [specifications_report()], [data_quality_report()],
 #'   [build_misfit_casebook()], [build_linking_review()]
-#' @examples
+#' @examplesIf interactive()
 #' # Fast smoke run: a JML fit + legacy-only diagnostic produces a
 #' # populated checklist in well under a second.
 #' toy <- load_mfrmr_data("example_core")

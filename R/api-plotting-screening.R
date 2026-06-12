@@ -45,7 +45,7 @@
 #'   view of the same residual structure;
 #'   [diagnose_mfrm()] for the underlying diagnostics bundle.
 #'
-#' @examples
+#' @examplesIf interactive()
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "JML", maxit = 30)
@@ -220,7 +220,7 @@ plot_guttman_scalogram <- function(fit,
 #' @return An `mfrm_plot_data` object with a `data` slot containing
 #'   `Person`, `Theoretical`, `Sample` columns.
 #'
-#' @examples
+#' @examplesIf interactive()
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "JML", maxit = 30)
@@ -501,7 +501,7 @@ plot_rater_trajectory <- function(fits,
 #'   [diagnose_mfrm()] for the diagnostics bundle the heatmap
 #'   reads from.
 #'
-#' @examples
+#' @examplesIf interactive()
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "JML", maxit = 30)

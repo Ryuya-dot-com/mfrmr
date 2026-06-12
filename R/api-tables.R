@@ -65,7 +65,7 @@
 #'
 #' @seealso [diagnose_mfrm()], [facets_chisq_table()], [plot_interrater_agreement()],
 #'   [mfrmr_visual_diagnostics]
-#' @examples
+#' @examplesIf interactive()
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' ir <- interrater_agreement_table(fit, rater_facet = "Rater")
@@ -233,7 +233,7 @@ interrater_agreement_table <- function(fit,
 #' - `thresholds`: applied p-value thresholds
 #'
 #' @seealso [diagnose_mfrm()], [interrater_agreement_table()], [plot_facets_chisq()]
-#' @examples
+#' @examplesIf interactive()
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' chi <- facets_chisq_table(fit)
@@ -371,7 +371,7 @@ facets_chisq_table <- function(fit,
 #'
 #' @seealso [diagnose_mfrm()], [displacement_table()], [fair_average_table()],
 #'   [mfrmr_visual_diagnostics]
-#' @examples
+#' @examplesIf interactive()
 #' toy_full <- load_mfrmr_data("example_core")
 #' toy_people <- unique(toy_full$Person)[1:12]
 #' toy <- toy_full[toy_full$Person %in% toy_people, , drop = FALSE]
@@ -705,7 +705,7 @@ fair_average_table <- function(fit,
 #' - `thresholds`: applied thresholds
 #'
 #' @seealso [diagnose_mfrm()], [unexpected_response_table()], [fair_average_table()]
-#' @examples
+#' @examplesIf interactive()
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' disp <- displacement_table(fit, anchored_only = FALSE)
@@ -834,7 +834,7 @@ displacement_table <- function(fit,
 #'
 #' @seealso [diagnose_mfrm()], [rating_scale_table()], [describe_mfrm_data()],
 #'   [mfrmr_visual_diagnostics]
-#' @examples
+#' @examplesIf interactive()
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' t5 <- measurable_summary_table(fit)
@@ -997,7 +997,7 @@ measurable_summary_table <- function(fit, diagnostics = NULL) {
 #'
 #' @seealso [diagnose_mfrm()], [measurable_summary_table()], [plot.mfrm_fit()],
 #'   [mfrmr_visual_diagnostics]
-#' @examples
+#' @examplesIf interactive()
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' t8 <- rating_scale_table(fit)
@@ -1215,7 +1215,7 @@ rating_scale_table <- function(fit,
 #'
 #' @seealso [estimate_bias()], [unexpected_after_bias_table()], [build_fixed_reports()],
 #'   [mfrmr_visual_diagnostics]
-#' @examples
+#' @examplesIf interactive()
 #' toy <- load_mfrmr_data("example_bias")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
@@ -1415,7 +1415,7 @@ bias_count_table <- function(bias_results,
 #'
 #' @seealso [estimate_bias()], [unexpected_response_table()], [bias_count_table()],
 #'   [mfrmr_visual_diagnostics]
-#' @examples
+#' @examplesIf interactive()
 #' toy <- load_mfrmr_data("example_bias")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
@@ -4741,7 +4741,7 @@ build_cumulative_boundary_table <- function(cumulative, categories_chr) {
 #' @seealso [category_curves_report()], [diagnose_mfrm()], [unexpected_response_table()],
 #'   [export_mfrm_bundle()], [mfrmr_reports_and_tables],
 #'   [mfrmr_compatibility_layer]
-#' @examples
+#' @examplesIf interactive()
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' out <- facets_output_file_bundle(fit, diagnostics = diagnose_mfrm(fit, residual_pca = "none"))
@@ -6120,7 +6120,7 @@ extract_loading_table <- function(pca_bundle, component = 1L, top_n = 20L) {
 #' - `data`: underlying table used for plotting
 #'
 #' @seealso [analyze_residual_pca()], [diagnose_mfrm()]
-#' @examples
+#' @examplesIf interactive()
 #' toy_full <- load_mfrmr_data("example_core")
 #' toy_people <- unique(toy_full$Person)[1:24]
 #' toy <- toy_full[match(toy_full$Person, toy_people, nomatch = 0L) > 0L, , drop = FALSE]
@@ -6527,7 +6527,7 @@ plot_residual_pca <- function(x,
 #'   parameters; empty when every cell converged cleanly
 #'
 #' @seealso [build_fixed_reports()], [build_apa_outputs()]
-#' @examples
+#' @examplesIf interactive()
 #' toy <- load_mfrmr_data("example_bias")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")

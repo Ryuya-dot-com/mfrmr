@@ -1390,7 +1390,7 @@ draw_facet_plot <- function(facet_tbl,
 #' @concept confidence intervals
 #' @concept visual diagnostics
 #' @concept shrinkage
-#' @examples
+#' @examplesIf interactive()
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(
 #'   toy,

@@ -96,6 +96,7 @@ specific facet after global PCA review.
 }
 
 \examples{
+\dontshow{if (interactive()) withAutoprint(\{ # examplesIf}
 toy_full <- load_mfrmr_data("example_core")
 toy_people <- unique(toy_full$Person)[1:24]
 toy <- toy_full[match(toy_full$Person, toy_people, nomatch = 0L) > 0L, , drop = FALSE]
@@ -118,6 +119,7 @@ head(plt_load$data)
 if (interactive()) {
   plot_residual_pca(pca, mode = "overall", plot_type = "scree", preset = "publication")
 }
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 \code{\link[=analyze_residual_pca]{analyze_residual_pca()}}, \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}

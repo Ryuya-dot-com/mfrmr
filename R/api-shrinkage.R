@@ -390,7 +390,7 @@
 #' and applications. *Journal of the American Statistical Association,
 #' 78*(381), 47-55.
 #'
-#' @examples
+#' @examplesIf interactive()
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "JML", maxit = 30)
@@ -653,7 +653,7 @@ apply_empirical_bayes_shrinkage <- function(fit,
 #' @return A data.frame with one row per facet (and optionally
 #'   `"Person"`) or `NULL` when shrinkage has not been applied.
 #' @seealso [apply_empirical_bayes_shrinkage()], [fit_mfrm()].
-#' @examples
+#' @examplesIf interactive()
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "JML", maxit = 30,

@@ -674,7 +674,7 @@ mfrm_results_shiny_app <- function(x, top_n = 100L) {
 #' @return Invisibly returns the value from `shiny::runApp()`, or the Shiny app
 #'   object when `return_app = TRUE`.
 #'
-#' @examples
+#' @examplesIf interactive()
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(
 #'   toy,

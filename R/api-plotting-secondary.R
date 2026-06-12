@@ -51,7 +51,7 @@
 #'   used.
 #' @seealso [plot_marginal_pairwise()], [plot_qc_dashboard()],
 #'   [mfrmr_visual_diagnostics]
-#' @examples
+#' @examplesIf interactive()
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                  method = "JML", maxit = 30)
@@ -215,7 +215,7 @@ plot_local_dependence_heatmap <- function(fit,
 #' @return An `mfrm_plot_data` whose `data` slot bundles a tidy
 #'   `Facet`, `Metric`, `Value` data frame.
 #' @seealso [diagnose_mfrm()], [mfrmr_visual_diagnostics]
-#' @examples
+#' @examplesIf interactive()
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                  method = "JML", maxit = 30)
@@ -350,7 +350,7 @@ plot_reliability_snapshot <- function(fit,
 #'   `obs` table.
 #' @seealso [plot_guttman_scalogram()], [plot_unexpected()],
 #'   [mfrmr_visual_diagnostics]
-#' @examples
+#' @examplesIf interactive()
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                  method = "JML", maxit = 30)
@@ -490,7 +490,7 @@ plot_residual_matrix <- function(fit,
 #'   `RawCI_Upper`, `ShrunkCI_Lower`, `ShrunkCI_Upper`, and `CI_Level`.
 #' @seealso [apply_empirical_bayes_shrinkage()],
 #'   [mfrmr_visual_diagnostics]
-#' @examples
+#' @examplesIf interactive()
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                  method = "JML", maxit = 30)
