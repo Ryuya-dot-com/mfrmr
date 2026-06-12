@@ -120,6 +120,7 @@ For a plot-selection guide and a longer walkthrough, see
 }
 
 \examples{
+\dontshow{if (interactive()) withAutoprint(\{ # examplesIf}
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 p <- plot_unexpected(fit, abs_z_min = 1.5, prob_max = 0.4, top_n = 10, draw = FALSE)
@@ -136,6 +137,7 @@ if (interactive()) {
     label_angle = 45
   )
 }
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 \code{\link[=unexpected_response_table]{unexpected_response_table()}}, \code{\link[=plot_fair_average]{plot_fair_average()}}, \code{\link[=plot_displacement]{plot_displacement()}},

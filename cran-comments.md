@@ -5,13 +5,26 @@ content pre-tests on Windows and Debian (both `Status: OK`) but was
 auto-rejected for a single additional-issue check on the Windows incoming
 host: `Overall checktime 12 min > 10 min`.
 
-0.2.2 addresses only that timing issue. Long-running illustration examples
-previously wrapped in `\donttest` are now wrapped in `\dontrun`, which
-removes roughly two thirds of the example execution time from
-`--as-cran` checks. There are no other code, documentation, or behavior
-changes relative to 0.2.1. The affected illustrations remain executable as
-written; the underlying routes are exercised by the package's test suite
-(run in full with `NOT_CRAN=true` locally and on the CI matrix below).
+The Windows incoming check log shows that time was dominated by
+`checking R code for possible problems` (188s), the standard example run
+(175s), the PDF/HTML manuals (149s), and the CRAN-time tests (57s).
+0.2.2 reduces the controllable parts of that budget and changes nothing
+else:
+
+- Long-running illustration examples previously wrapped in `\donttest`
+  are now wrapped in `\dontrun`.
+- Example pages whose executed (standard) examples measurably exceeded
+  0.25 seconds locally are now gated with `@examplesIf interactive()`.
+  The executed example surface keeps 129 lightweight pages plus the core
+  `fit_mfrm()` example (about 4 seconds locally, versus the 39 seconds
+  that produced the 175-second Windows example phase).
+
+Apart from one internal test-infrastructure fix (a NEWS-section anchor in
+a documentation-consistency test), there are no other code,
+documentation, or behavior changes relative to 0.2.1. All illustrations
+remain in the help pages and remain executable as written; the underlying
+routes are exercised by the package's test suite (run in full with
+`NOT_CRAN=true` locally and on the CI matrix below).
 
 ## Test environments
 

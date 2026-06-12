@@ -94,11 +94,13 @@ sparse cell; such NA-vs-finite pairs are availability differences, not
 fit differences. Both notes are repeated in the returned \code{guidance} table.
 }
 \examples{
+\dontshow{if (interactive()) withAutoprint(\{ # examplesIf}
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "JML", maxit = 30)
 review <- facets_fit_review(fit)
 summary(review)
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=facets_output_contract_review]{facets_output_contract_review()}},

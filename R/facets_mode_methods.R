@@ -37,7 +37,7 @@ round_numeric_frame <- function(df, digits = 3L) {
 #' @seealso [run_mfrm_facets()], [summary.mfrm_fit()], [mfrmr_workflow_methods],
 #'   `summary()`
 #'
-#' @examples
+#' @examplesIf interactive()
 #' toy <- load_mfrmr_data("example_core")
 #' toy_small <- toy[toy$Person %in% unique(toy$Person)[1:8], , drop = FALSE]
 #' out <- run_mfrm_facets(

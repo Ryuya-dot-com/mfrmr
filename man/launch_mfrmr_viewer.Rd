@@ -62,6 +62,7 @@ still requires an explicit facet-pair decision outside the viewer.
 \code{install.packages("shiny")}.
 }
 \examples{
+\dontshow{if (interactive()) withAutoprint(\{ # examplesIf}
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(
   toy,
@@ -76,6 +77,7 @@ res <- mfrm_results(fit, include = c("fit", "diagnostics", "tables"))
 if (interactive() && requireNamespace("shiny", quietly = TRUE)) {
   launch_mfrmr_viewer(res)
 }
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 \code{\link[=mfrm_results]{mfrm_results()}}, \code{\link[=mfrm_results_interactive]{mfrm_results_interactive()}}

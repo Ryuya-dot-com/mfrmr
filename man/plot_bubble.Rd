@@ -113,6 +113,7 @@ Points are colored by facet for easy identification.
 }
 
 \examples{
+\dontshow{if (interactive()) withAutoprint(\{ # examplesIf}
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "JML", model = "RSM", maxit = 30)
@@ -133,6 +134,7 @@ p_io$data$view
 #   lower-left have both < 0.5 (consistent overfit). Bubble size in
 #   this view defaults to N (observation count) so the visual
 #   weighting matches how seriously the misfit should be taken.
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 \code{\link{diagnose_mfrm}}, \code{\link{plot_unexpected}},

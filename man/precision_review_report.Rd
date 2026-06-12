@@ -80,11 +80,13 @@ language or should remain in exploratory/screening mode.
 }
 
 \examples{
+\dontshow{if (interactive()) withAutoprint(\{ # examplesIf}
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 out <- precision_review_report(fit, diagnostics = diag)
 summary(out)
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=facet_statistics_report]{facet_statistics_report()}}, \code{\link[=reporting_checklist]{reporting_checklist()}}

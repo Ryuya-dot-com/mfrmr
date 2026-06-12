@@ -51,11 +51,13 @@ reliability if available.
 }
 
 \examples{
+\dontshow{if (interactive()) withAutoprint(\{ # examplesIf}
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "JML", maxit = 30)
 p <- plot_apa_figure_one(fit, draw = FALSE)
 names(p$data)
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 \code{\link[=plot.mfrm_fit]{plot.mfrm_fit()}} (\code{type = "wright"}),

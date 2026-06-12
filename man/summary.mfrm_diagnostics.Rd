@@ -94,6 +94,7 @@ before comparing legacy and strict outputs.
 }
 
 \examples{
+\dontshow{if (interactive()) withAutoprint(\{ # examplesIf}
 toy <- load_mfrmr_data("example_core")
 toy <- toy[toy$Person \%in\% unique(toy$Person)[1:4], ]
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
@@ -111,6 +112,7 @@ s$facets_chisq
 # Look for: FixedProb < 0.05 in each non-Person facet means the
 #   facet contributes meaningful spread; FixedProb >= 0.05 means
 #   that facet is statistically indistinguishable.
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=summary.mfrm_fit]{summary.mfrm_fit()}}

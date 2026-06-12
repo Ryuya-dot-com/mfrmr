@@ -164,6 +164,7 @@ For a plot-selection guide and extended examples, see
 }
 
 \examples{
+\dontshow{if (interactive()) withAutoprint(\{ # examplesIf}
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(
   toy,
@@ -214,6 +215,7 @@ if (interactive()) {
     palette = c("#1b9e77", "#d95f02", "#7570b3")
   )
 }
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 \code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=plot_wright_unified]{plot_wright_unified()}}, \code{\link[=plot_bubble]{plot_bubble()}},
