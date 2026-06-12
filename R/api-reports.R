@@ -4093,6 +4093,12 @@ category_structure_report <- function(fit,
 #' - Muraki, E. (1993). *Information functions of the generalized
 #'   partial credit model*. Applied Psychological Measurement, 17(4),
 #'   351-363. \doi{10.1177/014662169301700403}
+#' - Linacre, J. M. *Facets* manual: Graph window (category probability,
+#'   conditional probability, cumulative probability, and empirical ICC
+#'   displays). \url{https://www.winsteps.com/facetman64/graph_window.htm}
+#' - Linacre, J. M. *Winsteps* manual: Rating scale conceptualization --
+#'   Andrich thresholds, Rasch-Thurstonian thresholds, and half-point
+#'   thresholds. \url{https://www.winsteps.com/winman/ratingscale.htm}
 #'
 #' @section Typical workflow:
 #' 1. Fit model with [fit_mfrm()].

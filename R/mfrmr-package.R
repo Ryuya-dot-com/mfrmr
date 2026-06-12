@@ -503,7 +503,10 @@
 #' person rows carry `EmpiricalReliability`
 #' (\eqn{\mathrm{Var}(\mathrm{EAP}) / (\mathrm{Var}(\mathrm{EAP}) +
 #' \overline{\mathrm{PSD}^2})}), and every row carries `ReliabilityBasis`
-#' recording the SE source used for that facet.
+#' recording the SE source used for that facet. EAP estimation and the
+#' posterior-SD precision basis follow Bock and Mislevy (1982); the ratio
+#' form is the empirical (marginal) reliability convention commonly used
+#' for EAP scores in IRT software.
 #'
 #' This is a Rasch/FACETS-style separation reliability on the fitted logit
 #' scale, not an intra-class correlation. Use [compute_facet_icc()] only when
@@ -529,6 +532,11 @@
 #' - Bock, R. D., & Aitkin, M. (1981). Marginal maximum likelihood estimation
 #'   of item parameters: Application of an EM algorithm. *Psychometrika*, 46,
 #'   443--459.
+#' - Bock, R. D., & Mislevy, R. J. (1982). Adaptive EAP estimation of
+#'   ability in a microcomputer environment. *Applied Psychological
+#'   Measurement*, 6(4), 431--444. \doi{10.1177/014662168200600405}
+#'   (EAP scoring and posterior standard deviations underlying the MML
+#'   person columns and the empirical-reliability convention.)
 #' - Burnham, K. P., & Anderson, D. R. (2002). *Model selection and
 #'   multimodel inference: A practical information-theoretic approach*
 #'   (2nd ed.). Springer. (AIC / BIC weights and Delta-IC bands used

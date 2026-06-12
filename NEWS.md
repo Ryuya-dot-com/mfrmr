@@ -10,11 +10,12 @@
   development-cycle pairing (a four-component `x.y.z.9000` version in
   `DESCRIPTION` with a `# mfrmr (development version)` NEWS heading) as a
   valid state; release candidates still require the exact version heading.
-- New `plot(fit, type = "score_measure")` draws the score-to-measure curve
-  in the Winsteps "Person-Test Measures for Scores" style: expected score
-  against measure with a dashed `+/- 1 SEM` band
+- New `plot(fit, type = "score_measure")` draws the score-to-measure ogive
+  in the Winsteps test-characteristic-curve sense: expected score against
+  measure with a dashed `+/- 1 SEM` band
   (`1 / sqrt(information)`) on the measure axis. The expected score is on
-  the single-response category metric of each step-structure curve, and the
+  the single-response category metric of each step-structure curve (not a
+  whole-test raw-score conversion table such as Winsteps Table 20), and the
   draw-free `score_measure` table carries `SEM`, `ThetaLower`, and
   `ThetaUpper` for custom graphics.
 - New `plot(fit, type = "empirical_icc")` shows the model expected-score

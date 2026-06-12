@@ -100,6 +100,12 @@ of an EM algorithm}. Applied Psychological Measurement, 16(2),
 \item Muraki, E. (1993). \emph{Information functions of the generalized
 partial credit model}. Applied Psychological Measurement, 17(4),
 351-363. \doi{10.1177/014662169301700403}
+\item Linacre, J. M. \emph{Facets} manual: Graph window (category probability,
+conditional probability, cumulative probability, and empirical ICC
+displays). \url{https://www.winsteps.com/facetman64/graph_window.htm}
+\item Linacre, J. M. \emph{Winsteps} manual: Rating scale conceptualization --
+Andrich thresholds, Rasch-Thurstonian thresholds, and half-point
+thresholds. \url{https://www.winsteps.com/winman/ratingscale.htm}
 }
 }
 

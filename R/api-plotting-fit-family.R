@@ -1417,12 +1417,13 @@ draw_facet_plot <- function(facet_tbl,
 #' overlaid (the FACETS/Winsteps "Empirical ICC" view); the bins pool
 #' observations across non-person facets, so read it as a screening display
 #' for model-data agreement rather than a fit test.
-#' `type = "score_measure"` shows the score-to-measure curve in the
-#' Winsteps "Person-Test Measures for Scores" style: expected score against
-#' measure with a dashed `+/- 1 SEM` band (`1 / sqrt(information)`) on the
-#' measure axis. The expected score is on the single-response category
-#' metric of each step-structure curve, not a whole-test raw-score
-#' conversion table. `type = "ccc_surface"` or
+#' `type = "score_measure"` shows the score-to-measure ogive in the
+#' Winsteps test-characteristic-curve sense ("the TCC is the
+#' score-to-measure ogive"): expected score against measure with a dashed
+#' `+/- 1 SEM` band (`1 / sqrt(information)`) on the measure axis. The
+#' expected score is on the single-response category metric of each
+#' step-structure curve; it is not a whole-test raw-score conversion table
+#' such as Winsteps Table 20. `type = "ccc_surface"` or
 #' `type = "category_surface"` returns 3D-ready category-probability surface
 #' data for external rendering; it deliberately does not add a
 #' plotly/rgl dependency or replace the 2D CCC/pathway reporting figures. The
@@ -2066,11 +2067,12 @@ plot.mfrm_fit <- function(x,
     return(invisible(out))
   }
   if (type == "score_measure") {
-    # Score-to-measure curve in the Winsteps "Person-Test Measures for
-    # Scores" style: the model expected score against theta with a
-    # measure-side SEM band, SEM(theta) = 1 / sqrt(information). The
-    # expected score is on the single-response category metric of each
-    # step-structure curve, not a whole-test raw-score conversion table.
+    # Score-to-measure ogive in the Winsteps test-characteristic-curve
+    # sense ("the TCC is the score-to-measure ogive"): the model expected
+    # score against theta with a measure-side SEM band,
+    # SEM(theta) = 1 / sqrt(information). The expected score is on the
+    # single-response category metric of each step-structure curve, not a
+    # whole-test raw-score conversion table such as Winsteps Table 20.
     spec <- build_step_curve_spec(x)
     theta_grid <- seq(theta_range[1], theta_range[2], length.out = theta_points)
     score_tbl <- as.data.frame(
