@@ -1,5 +1,16 @@
 # mfrmr (development version)
 
+- The Wright map gains threshold-variant rulers matching the Winsteps
+  Enhanced Graph window person-item displays:
+  `plot(fit, type = "wright", threshold_type = ...)` shows the fitted
+  Rasch-Andrich step estimates (default), the Rasch-Thurstonian thresholds
+  (`P(X <= k) = .5`, always ordered), or the half-point thresholds
+  (expected score at adjacent category midpoints). The active ruler is
+  recorded in the plot data (`threshold_type`, `ThresholdType`) and the
+  subtitle.
+- `category_curves_report()` now includes a `half_point_thresholds` table
+  with the interpolated expected-score crossings at adjacent category
+  midpoints, alongside the existing Thurstonian `cumulative_boundaries`.
 - `category_curves_report()` now includes adjacent-category conditional
   probability curves in the Winsteps/FACETS "Conditional Probability Curves"
   sense: `conditional_probabilities` carries

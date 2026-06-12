@@ -1260,3 +1260,41 @@ test_that("conditional probability curves follow the adjacent-category identity"
   expect_identical(pm$data$preset, "monochrome")
   expect_equal(nrow(pm$data$crossing_lines), 0L)
 })
+
+test_that("threshold-variant rulers expose Thurstonian and half-point thresholds", {
+  toy <- load_mfrmr_data("example_core")
+  fit <- suppressWarnings(fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
+                                   method = "JML", model = "RSM", maxit = 60))
+  cc <- category_curves_report(fit, digits = 8)
+
+  hp <- cc$half_point_thresholds
+  expect_true(all(c("CurveGroup", "PairOrder", "TargetScore", "HalfPointThreshold",
+                    "CrossingStatus") %in% names(hp)))
+  expect_identical(unique(hp$CrossingStatus), "in_range")
+  expect_false(is.unsorted(hp$HalfPointThreshold))
+  # Identity: the expected score evaluated at each half-point threshold
+  # recovers the adjacent-category midpoint target.
+  og <- cc$expected_ogive
+  for (i in seq_len(nrow(hp))) {
+    e_at <- stats::approx(og$Theta, og$ExpectedScore, xout = hp$HalfPointThreshold[i])$y
+    expect_lt(abs(e_at - hp$TargetScore[i]), 1e-6)
+  }
+
+  # Thurstonian thresholds are ordered by construction, and the Wright
+  # ruler matches the report-side cumulative boundaries.
+  expect_false(is.unsorted(cc$cumulative_boundaries$ThurstonianThreshold))
+  pw <- plot(fit, type = "wright", threshold_type = "thurstonian", draw = FALSE)
+  steps_w <- pw$data$locations[pw$data$locations$PlotType == "Step threshold", , drop = FALSE]
+  expect_identical(unique(steps_w$ThresholdType), "thurstonian")
+  expect_identical(pw$data$threshold_type, "thurstonian")
+  expect_equal(unname(sort(steps_w$Estimate)), unname(sort(cc$cumulative_boundaries$ThurstonianThreshold)),
+               tolerance = 1e-6)
+  expect_match(pw$data$subtitle, "Thurstonian", fixed = TRUE)
+
+  pw_h <- plot(fit, type = "wright", threshold_type = "half_point", draw = FALSE)
+  steps_h <- pw_h$data$locations[pw_h$data$locations$PlotType == "Step threshold", , drop = FALSE]
+  expect_equal(unname(sort(steps_h$Estimate)), unname(sort(hp$HalfPointThreshold)), tolerance = 1e-6)
+
+  pw_a <- plot(fit, type = "wright", draw = FALSE)
+  expect_identical(pw_a$data$threshold_type, "andrich")
+})

@@ -4115,7 +4115,9 @@ category_structure_report <- function(fit,
 #' @return A named list with category-curve components, including
 #'   `probabilities`, `expected_ogive`, `cumulative_probabilities`,
 #'   `cumulative_boundaries`, `conditional_probabilities`,
-#'   `conditional_crossings`, `category_information`, and the FACETS-style
+#'   `conditional_crossings`, `half_point_thresholds` (theta values where
+#'   the expected score crosses adjacent category midpoints, the Winsteps
+#'   half-point thresholds), `category_information`, and the FACETS-style
 #'   graph-file tables. Class: `mfrm_category_curves`.
 #' @seealso [category_structure_report()], [rating_scale_table()], [plot.mfrm_fit()],
 #'   [mfrmr_reports_and_tables], [mfrmr_visual_diagnostics]

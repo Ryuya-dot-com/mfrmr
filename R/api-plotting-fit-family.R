@@ -489,7 +489,9 @@ compute_se_for_plot <- function(x, ci_level = 0.95) {
   }, error = function(e) NULL)
 }
 
-build_wright_map_data <- function(x, top_n = 30L, se_tbl = NULL, include_steps = TRUE) {
+build_wright_map_data <- function(x, top_n = 30L, se_tbl = NULL, include_steps = TRUE,
+                                  threshold_type = c("andrich", "thurstonian", "half_point")) {
+  threshold_type <- match.arg(threshold_type)
   person_tbl <- tibble::as_tibble(x$facets$person)
   person_tbl <- person_tbl[is.finite(person_tbl$Estimate), , drop = FALSE]
   if (nrow(person_tbl) == 0) stop("Person estimates are not available for Wright map.")
@@ -501,7 +503,45 @@ build_wright_map_data <- function(x, top_n = 30L, se_tbl = NULL, include_steps =
   facet_tbl <- facet_tbl[is.finite(facet_tbl$Estimate), , drop = FALSE]
 
   step_points <- if (isTRUE(include_steps)) {
-    tryCatch(build_step_curve_spec(x)$step_points, error = function(e) tibble::tibble())
+    tryCatch({
+      spec <- build_step_curve_spec(x)
+      if (identical(threshold_type, "andrich")) {
+        spec$step_points
+      } else {
+        # Thurstonian and half-point rulers are curve-derived: solve the
+        # cumulative-probability or expected-score crossings on a wide
+        # theta grid using the same machinery as category_curves_report().
+        ruler_grid <- seq(-8, 8, length.out = 321)
+        curve_tbl <- build_curve_tables(spec, ruler_grid)
+        if (identical(threshold_type, "thurstonian")) {
+          boundaries <- build_cumulative_category_tables(
+            as.data.frame(curve_tbl$probabilities, stringsAsFactors = FALSE),
+            spec$categories
+          )$boundaries
+          keep <- is.finite(suppressWarnings(as.numeric(boundaries$ThurstonianThreshold)))
+          boundaries <- boundaries[keep, , drop = FALSE]
+          tibble::tibble(
+            CurveGroup = as.character(boundaries$CurveGroup),
+            Step = paste0("T ", boundaries$LowerOrEqualCategory, "|", boundaries$AboveCategory),
+            StepIndex = as.integer(boundaries$BoundaryOrder),
+            Threshold = suppressWarnings(as.numeric(boundaries$ThurstonianThreshold))
+          )
+        } else {
+          half <- build_half_point_threshold_table(
+            as.data.frame(curve_tbl$expected, stringsAsFactors = FALSE),
+            spec$categories
+          )
+          keep <- is.finite(suppressWarnings(as.numeric(half$HalfPointThreshold)))
+          half <- half[keep, , drop = FALSE]
+          tibble::tibble(
+            CurveGroup = as.character(half$CurveGroup),
+            Step = paste0("H ", half$TargetScore),
+            StepIndex = as.integer(half$PairOrder),
+            Threshold = suppressWarnings(as.numeric(half$HalfPointThreshold))
+          )
+        }
+      }
+    }, error = function(e) tibble::tibble())
   } else {
     tibble::tibble()
   }
@@ -510,7 +550,8 @@ build_wright_map_data <- function(x, top_n = 30L, se_tbl = NULL, include_steps =
       PlotType = "Step threshold",
       Group = if ("CurveGroup" %in% names(step_points)) paste0("Step:", step_points$CurveGroup) else "Step",
       Label = step_points$Step,
-      Estimate = step_points$Threshold
+      Estimate = step_points$Threshold,
+      ThresholdType = threshold_type
     )
   } else {
     tibble::tibble()
@@ -600,6 +641,7 @@ build_wright_map_data <- function(x, top_n = 30L, se_tbl = NULL, include_steps =
     label_points = label_tbl,
     group_summary = group_summary,
     group_levels = group_levels,
+    threshold_type = threshold_type,
     y_range = y_range
   )
 }
@@ -1328,6 +1370,15 @@ draw_facet_plot <- function(facet_tbl,
 #' @param include_fit_measures If `TRUE` (default), pathway plot data include
 #'   tidy fit-measure and fit-status tables for custom R graphics. Set to
 #'   `FALSE` when only the curve coordinates are needed.
+#' @param threshold_type Step-threshold ruler shown on `type = "wright"`:
+#'   `"andrich"` (default) plots the fitted Rasch-Andrich step estimates,
+#'   `"thurstonian"` plots the Rasch-Thurstonian thresholds (theta where
+#'   `P(X <= k) = .5`, always ordered), and `"half_point"` plots the
+#'   half-point thresholds (theta where the expected score crosses the
+#'   midpoints between adjacent category values). The curve-derived rulers
+#'   match the Winsteps Enhanced Graph window person-item displays; the
+#'   active ruler is recorded in the plot data as `threshold_type` and in
+#'   the `ThresholdType` column of the step rows.
 #' @param draw If `TRUE`, draw the plot with base graphics.
 #' @param preset Visual preset (`"standard"`, `"publication"`, `"compact"`,
 #'   or `"monochrome"`).
@@ -1456,6 +1507,7 @@ plot.mfrm_fit <- function(x,
                           group = NULL,
                           diagnostics = NULL,
                           include_fit_measures = TRUE,
+                          threshold_type = c("andrich", "thurstonian", "half_point"),
                           draw = TRUE,
                           preset = c("standard", "publication", "compact", "monochrome"),
                           ...) {
@@ -1465,6 +1517,7 @@ plot.mfrm_fit <- function(x,
   top_n <- max(1L, as.integer(top_n))
   theta_points <- max(51L, as.integer(theta_points))
   theta_range <- as.numeric(theta_range)
+  threshold_type <- match.arg(threshold_type)
   style <- resolve_plot_preset(preset)
   if (length(theta_range) != 2 || !all(is.finite(theta_range)) || theta_range[1] >= theta_range[2]) {
     stop("`theta_range` must be a numeric length-2 vector with increasing values.")
@@ -1656,16 +1709,23 @@ plot.mfrm_fit <- function(x,
         }
       )
     }
+    ruler_label <- switch(
+      threshold_type,
+      andrich = "Rasch-Andrich thresholds",
+      thurstonian = "Rasch-Thurstonian thresholds (P(X <= k) = .5)",
+      half_point = "half-point thresholds (expected score at category midpoints)"
+    )
     out <- as_plot_data("wright_map", c(
-      build_wright_map_data(x, top_n = top_n, se_tbl = se_tbl_ci),
+      build_wright_map_data(x, top_n = top_n, se_tbl = se_tbl_ci,
+                            threshold_type = threshold_type),
       list(
         title = title %||% "Wright map",
         subtitle = if (is.null(group_payload)) {
-          "Shared logit scale for persons, facets, and thresholds"
+          paste0("Shared logit scale for persons, facets, and ", ruler_label)
         } else {
           sprintf(
-            "Shared logit scale; person density split by `%s` (%d level(s))",
-            group, length(unique(group_payload$Group))
+            "Shared logit scale; person density split by `%s` (%d level(s)); step rows show %s",
+            group, length(unique(group_payload$Group)), ruler_label
           )
         },
         group = group_payload,

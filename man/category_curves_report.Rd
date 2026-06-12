@@ -31,7 +31,9 @@ block.}
 A named list with category-curve components, including
 \code{probabilities}, \code{expected_ogive}, \code{cumulative_probabilities},
 \code{cumulative_boundaries}, \code{conditional_probabilities},
-\code{conditional_crossings}, \code{category_information}, and the FACETS-style
+\code{conditional_crossings}, \code{half_point_thresholds} (theta values where
+the expected score crosses adjacent category midpoints, the Winsteps
+half-point thresholds), \code{category_information}, and the FACETS-style
 graph-file tables. Class: \code{mfrm_category_curves}.
 }
 \description{

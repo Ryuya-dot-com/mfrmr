@@ -19,6 +19,7 @@
   group = NULL,
   diagnostics = NULL,
   include_fit_measures = TRUE,
+  threshold_type = c("andrich", "thurstonian", "half_point"),
   draw = TRUE,
   preset = c("standard", "publication", "compact", "monochrome"),
   ...
@@ -69,6 +70,16 @@ pathway plot data reuse it for \code{fit_measures}, \code{fit_status}, and
 \item{include_fit_measures}{If \code{TRUE} (default), pathway plot data include
 tidy fit-measure and fit-status tables for custom R graphics. Set to
 \code{FALSE} when only the curve coordinates are needed.}
+
+\item{threshold_type}{Step-threshold ruler shown on \code{type = "wright"}:
+\code{"andrich"} (default) plots the fitted Rasch-Andrich step estimates,
+\code{"thurstonian"} plots the Rasch-Thurstonian thresholds (theta where
+\code{P(X <= k) = .5}, always ordered), and \code{"half_point"} plots the
+half-point thresholds (theta where the expected score crosses the
+midpoints between adjacent category values). The curve-derived rulers
+match the Winsteps Enhanced Graph window person-item displays; the
+active ruler is recorded in the plot data as \code{threshold_type} and in
+the \code{ThresholdType} column of the step rows.}
 
 \item{draw}{If \code{TRUE}, draw the plot with base graphics.}
 

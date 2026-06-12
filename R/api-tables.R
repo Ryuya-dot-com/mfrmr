@@ -4397,6 +4397,7 @@ table8_curves_export <- function(fit,
   exp_df <- as.data.frame(curve_tbl$expected, stringsAsFactors = FALSE)
   cumulative_tbls <- build_cumulative_category_tables(prob_df, curve_spec$categories)
   conditional_tbls <- build_conditional_category_tables(prob_df, curve_spec$categories)
+  half_point_tbl <- build_half_point_threshold_table(exp_df, curve_spec$categories)
 
   groups <- unique(as.character(exp_df$CurveGroup))
   scale_map <- setNames(seq_along(groups), groups)
@@ -4460,6 +4461,7 @@ table8_curves_export <- function(fit,
     cumulative_boundaries = round_numeric(cumulative_tbls$boundaries),
     conditional_probabilities = round_numeric(conditional_tbls$probabilities),
     conditional_crossings = round_numeric(conditional_tbls$crossings),
+    half_point_thresholds = round_numeric(half_point_tbl),
     category_information = round_numeric(
       as.data.frame(
         prob_df |>
@@ -4807,6 +4809,90 @@ build_conditional_crossing_table <- function(conditional) {
           "P(", line$UpperCategory[1], " | {", line$LowerCategory[1], ",",
           line$UpperCategory[1], "}) = 0.5"
         ),
+        stringsAsFactors = FALSE
+      )
+      idx <- idx + 1L
+    }
+  }
+  if (length(rows) == 0L) {
+    return(data.frame())
+  }
+  dplyr::bind_rows(rows) |>
+    dplyr::arrange(.data$CurveGroup, .data$PairOrder)
+}
+
+# Half-point thresholds: theta values where the model expected score crosses
+# the midpoint between adjacent category values (the Winsteps "half-point
+# thresholds"). The expected score is strictly increasing in theta, so each
+# midpoint has at most one crossing inside the theta grid.
+build_half_point_threshold_table <- function(expected_df, categories) {
+  expected_df <- as.data.frame(expected_df %||% data.frame(), stringsAsFactors = FALSE)
+  cats_num <- suppressWarnings(as.numeric(as.character(categories)))
+  if (nrow(expected_df) == 0L || length(cats_num) < 2L || !all(is.finite(cats_num))) {
+    return(data.frame())
+  }
+  needed <- c("CurveGroup", "Theta", "ExpectedScore")
+  if (!all(needed %in% names(expected_df))) {
+    return(data.frame())
+  }
+  cats_num <- sort(cats_num)
+  rows <- list()
+  idx <- 1L
+  groups <- unique(as.character(expected_df$CurveGroup))
+  for (g in groups) {
+    line <- expected_df[as.character(expected_df$CurveGroup) == g, , drop = FALSE]
+    line <- line[order(suppressWarnings(as.numeric(line$Theta))), , drop = FALSE]
+    theta <- suppressWarnings(as.numeric(line$Theta))
+    y <- suppressWarnings(as.numeric(line$ExpectedScore))
+    ok <- is.finite(theta) & is.finite(y)
+    theta <- theta[ok]
+    y <- y[ok]
+    for (j in seq_len(length(cats_num) - 1L)) {
+      target <- (cats_num[j] + cats_num[j + 1L]) / 2
+      threshold <- NA_real_
+      in_range <- FALSE
+      crossing_count <- 0L
+      if (length(theta) > 1L) {
+        centered <- y - target
+        exact <- which(abs(centered) <= sqrt(.Machine$double.eps))
+        if (length(exact) > 0L) {
+          threshold <- theta[exact[1]]
+          in_range <- TRUE
+          crossing_count <- length(exact)
+        } else {
+          crossing <- which(centered[-length(centered)] * centered[-1] <= 0)
+          crossing_count <- length(crossing)
+          if (length(crossing) > 0L) {
+            i <- crossing[1]
+            y1 <- y[i]
+            y2 <- y[i + 1L]
+            x1 <- theta[i]
+            x2 <- theta[i + 1L]
+            threshold <- if (is.finite(y1) && is.finite(y2) && abs(y2 - y1) > sqrt(.Machine$double.eps)) {
+              x1 + (target - y1) * (x2 - x1) / (y2 - y1)
+            } else {
+              mean(c(x1, x2))
+            }
+            in_range <- TRUE
+          }
+        }
+      }
+      rows[[idx]] <- data.frame(
+        CurveGroup = g,
+        PairOrder = as.integer(j),
+        LowerCategory = as.character(cats_num[j]),
+        UpperCategory = as.character(cats_num[j + 1L]),
+        TargetScore = target,
+        HalfPointThreshold = threshold,
+        InThetaRange = in_range,
+        CrossingCount = as.integer(crossing_count),
+        CrossingStatus = dplyr::case_when(
+          !in_range ~ "outside_theta_range",
+          crossing_count == 1L ~ "in_range",
+          crossing_count > 1L ~ "multiple_crossings",
+          TRUE ~ "review"
+        ),
+        CrossingLabel = paste0("E[X] = ", format(target)),
         stringsAsFactors = FALSE
       )
       idx <- idx + 1L
