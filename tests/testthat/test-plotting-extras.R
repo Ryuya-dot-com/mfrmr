@@ -330,3 +330,20 @@ test_that("plot.mfrm_equating_chain common_anchors falls back cleanly", {
   expect_s3_class(p, "mfrm_plot_data")
   expect_identical(p$name, "equating_chain_common_anchors")
 })
+
+test_that("plot(fit, type = 'empirical_icc') overlays binned mean scores", {
+  toy <- load_mfrmr_data("example_core")
+  fit <- suppressWarnings(fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
+                                   method = "JML", model = "RSM", maxit = 60))
+  p <- plot(fit, type = "empirical_icc", draw = FALSE)
+  expect_s3_class(p, "mfrm_plot_data")
+  expect_identical(p$name, "empirical_icc")
+  expect_true(all(c("Bin", "Theta", "MeanScore", "ScoreSD", "N") %in% names(p$data$overlay)))
+  expect_gt(nrow(p$data$overlay), 0L)
+  expect_true(all(c("Theta", "ExpectedScore", "CurveGroup") %in% names(p$data$expected)))
+  # Observed bin means stay on the score scale spanned by the data.
+  expect_true(all(p$data$overlay$MeanScore >= min(fit$prep$data$Score, na.rm = TRUE)))
+  expect_true(all(p$data$overlay$MeanScore <= max(fit$prep$data$Score, na.rm = TRUE)))
+  pm <- plot(fit, type = "empirical_icc", preset = "monochrome", draw = FALSE)
+  expect_identical(pm$data$preset, "monochrome")
+})

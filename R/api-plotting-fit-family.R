@@ -1411,7 +1411,12 @@ draw_facet_plot <- function(facet_tbl,
 #' `fit_status`, and `curve_fit_status`, so R users can rebuild the pathway
 #' map in ggplot2, plotly, or a report pipeline while keeping the same
 #' underfit/overfit labels used by [fit_measures_table()]. `type = "ccc"` shows
-#' category response probabilities. `type = "ccc_surface"` or
+#' category response probabilities; `type = "ccc_overlay"` adds binned
+#' observed category proportions to those curves. `type = "empirical_icc"`
+#' shows the model expected-score curves with binned observed mean scores
+#' overlaid (the FACETS/Winsteps "Empirical ICC" view); the bins pool
+#' observations across non-person facets, so read it as a screening display
+#' for model-data agreement rather than a fit test. `type = "ccc_surface"` or
 #' `type = "category_surface"` returns 3D-ready category-probability surface
 #' data for external rendering; it deliberately does not add a
 #' plotly/rgl dependency or replace the 2D CCC/pathway reporting figures. The
@@ -1624,8 +1629,8 @@ plot.mfrm_fit <- function(x,
   # Locale-independent validation (match.arg() would produce a
   # translated error string on non-English locales).
   type_choices <- c("facet", "person", "step", "wright", "pathway",
-                    "ccc", "ccc_overlay", "ccc_surface", "category_surface",
-                    "shrinkage")
+                    "ccc", "ccc_overlay", "empirical_icc", "ccc_surface",
+                    "category_surface", "shrinkage")
   type_in <- tolower(as.character(type[1]))
   if (!(type_in %in% type_choices)) {
     stop(sprintf(
@@ -1937,6 +1942,119 @@ plot.mfrm_fit <- function(x,
                            bg = cat_palette[i], col = "white",
                            cex = 0.8 + 0.6 * sqrt(sub$N / max(1, max_n)))
         }
+      }
+    }
+    return(invisible(out))
+  }
+  if (type == "empirical_icc") {
+    # Binned observed mean scores overlaid on the model expected-score
+    # curves (the FACETS/Winsteps "Empirical ICC" view). Bins pool
+    # observations across non-person facets, so this is a screening
+    # display for model-data agreement, not a fit test.
+    spec <- build_step_curve_spec(x)
+    theta_grid <- seq(theta_range[1], theta_range[2], length.out = theta_points)
+    expected_tbl <- as.data.frame(
+      build_curve_tables(spec, theta_grid)$expected,
+      stringsAsFactors = FALSE
+    )
+    person_tbl <- as.data.frame(x$facets$person, stringsAsFactors = FALSE)
+    obs_df <- as.data.frame(x$prep$data %||% NULL, stringsAsFactors = FALSE)
+    empty_overlay <- data.frame(
+      Bin = integer(0), Theta = numeric(0), MeanScore = numeric(0),
+      ScoreSD = numeric(0), N = integer(0), stringsAsFactors = FALSE
+    )
+    overlay <- tryCatch({
+      if (nrow(person_tbl) == 0L || nrow(obs_df) == 0L) {
+        empty_overlay
+      } else {
+        merged <- merge(
+          obs_df[, c("Person", "Score")],
+          person_tbl[, c("Person", "Estimate")],
+          by = "Person", all.x = TRUE
+        )
+        merged <- merged[is.finite(merged$Estimate) &
+                           is.finite(merged$Score), , drop = FALSE]
+        if (nrow(merged) == 0L) {
+          empty_overlay
+        } else {
+          n_bins <- max(4L, min(12L, floor(nrow(merged) / 30)))
+          breaks <- stats::quantile(
+            merged$Estimate,
+            probs = seq(0, 1, length.out = n_bins + 1L),
+            na.rm = TRUE, names = FALSE
+          )
+          breaks <- unique(breaks)
+          if (length(breaks) < 2L) {
+            breaks <- range(merged$Estimate) + c(-0.05, 0.05)
+          }
+          merged$Bin <- as.integer(cut(merged$Estimate, breaks = breaks,
+                                       include.lowest = TRUE))
+          rows <- list()
+          for (b in sort(unique(merged$Bin))) {
+            sub <- merged[merged$Bin == b, , drop = FALSE]
+            if (nrow(sub) == 0L) next
+            rows[[length(rows) + 1L]] <- data.frame(
+              Bin = b,
+              Theta = mean(sub$Estimate, na.rm = TRUE),
+              MeanScore = mean(sub$Score, na.rm = TRUE),
+              ScoreSD = stats::sd(sub$Score, na.rm = TRUE),
+              N = nrow(sub),
+              stringsAsFactors = FALSE
+            )
+          }
+          do.call(rbind, rows) %||% empty_overlay
+        }
+      }
+    }, error = function(e) empty_overlay)
+    out <- as_plot_data("empirical_icc", c(
+      list(
+        expected = expected_tbl,
+        overlay = overlay,
+        title = title %||% "Expected score with empirical overlay",
+        subtitle = sprintf(
+          "Model expected-score curves vs observed bin means in %d theta bin(s); bins pool across non-person facets",
+          length(unique(overlay$Bin))
+        ),
+        preset = style$name,
+        legend = new_plot_legend(
+          label = c("Model expected score", "Observed bin mean"),
+          role = c("expected_score", "empirical"),
+          aesthetic = c("line", "point"),
+          value = c(style$accent_primary, style$fail)
+        ),
+        reference_lines = new_reference_lines("v", 0, "Centered theta reference",
+                                               "dashed", "reference")
+      )
+    ))
+    if (isTRUE(draw)) {
+      apply_plot_preset(style)
+      groups <- unique(as.character(expected_tbl$CurveGroup))
+      group_cols <- if (identical(style$name, "monochrome")) {
+        stats::setNames(grDevices::gray.colors(max(3L, length(groups)), start = 0.15, end = 0.6)[seq_along(groups)], groups)
+      } else {
+        stats::setNames(grDevices::hcl.colors(max(3L, length(groups)), "Dark 3")[seq_along(groups)], groups)
+      }
+      graphics::plot(
+        x = range(expected_tbl$Theta, finite = TRUE),
+        y = range(c(expected_tbl$ExpectedScore, overlay$MeanScore), finite = TRUE),
+        type = "n",
+        xlab = "Theta / Logit",
+        ylab = "Expected / observed score",
+        main = title %||% "Expected score with empirical overlay"
+      )
+      graphics::grid(col = style$grid)
+      for (g in groups) {
+        sub <- expected_tbl[expected_tbl$CurveGroup == g, , drop = FALSE]
+        graphics::lines(sub$Theta, sub$ExpectedScore, col = group_cols[g], lwd = 1.6)
+      }
+      if (nrow(overlay) > 0L) {
+        max_n <- max(overlay$N, na.rm = TRUE)
+        graphics::points(
+          overlay$Theta, overlay$MeanScore, pch = 21,
+          bg = if (identical(style$name, "monochrome")) "gray25" else style$fail,
+          col = "white",
+          cex = 0.9 + 0.6 * sqrt(overlay$N / max(1, max_n))
+        )
       }
     }
     return(invisible(out))

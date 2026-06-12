@@ -123,7 +123,12 @@ includes \code{pathway_long}, \code{pathway_annotations}, \code{fit_measures},
 \code{fit_status}, and \code{curve_fit_status}, so R users can rebuild the pathway
 map in ggplot2, plotly, or a report pipeline while keeping the same
 underfit/overfit labels used by \code{\link[=fit_measures_table]{fit_measures_table()}}. \code{type = "ccc"} shows
-category response probabilities. \code{type = "ccc_surface"} or
+category response probabilities; \code{type = "ccc_overlay"} adds binned
+observed category proportions to those curves. \code{type = "empirical_icc"}
+shows the model expected-score curves with binned observed mean scores
+overlaid (the FACETS/Winsteps "Empirical ICC" view); the bins pool
+observations across non-person facets, so read it as a screening display
+for model-data agreement rather than a fit test. \code{type = "ccc_surface"} or
 \code{type = "category_surface"} returns 3D-ready category-probability surface
 data for external rendering; it deliberately does not add a
 plotly/rgl dependency or replace the 2D CCC/pathway reporting figures. The

@@ -1,5 +1,12 @@
 # mfrmr (development version)
 
+- New `plot(fit, type = "empirical_icc")` shows the model expected-score
+  curves with binned observed mean scores overlaid (the FACETS/Winsteps
+  "Empirical ICC" view), complementing the category-level `ccc_overlay`.
+  The draw-free data carry the `expected` curve table and an `overlay`
+  table (`Bin`, `Theta`, `MeanScore`, `ScoreSD`, `N`); bins pool
+  observations across non-person facets, so the display is documented as a
+  screening view of model-data agreement rather than a fit test.
 - The Wright map gains threshold-variant rulers matching the Winsteps
   Enhanced Graph window person-item displays:
   `plot(fit, type = "wright", threshold_type = ...)` shows the fitted
