@@ -28,8 +28,11 @@ block.}
 \item{fixed_max_rows}{Maximum rows shown in fixed-width graph tables.}
 }
 \value{
-A named list with category-curve components. Class:
-\code{mfrm_category_curves}.
+A named list with category-curve components, including
+\code{probabilities}, \code{expected_ogive}, \code{cumulative_probabilities},
+\code{cumulative_boundaries}, \code{conditional_probabilities},
+\code{conditional_crossings}, \code{category_information}, and the FACETS-style
+graph-file tables. Class: \code{mfrm_category_curves}.
 }
 \description{
 Build a category curve export bundle (preferred alias)
@@ -106,10 +109,16 @@ partial credit model}. Applied Psychological Measurement, 17(4),
 \item Use \code{summary()} and \code{plot()}; export tables for manuscripts/dashboard use.
 \code{plot(out)} gives a four-panel overview. Use
 \code{preset = "monochrome"} for grayscale/line-type output and
-\code{boundary_status = "none"} when cumulative \code{.5} boundary lines should
-be suppressed. \code{plot(out, type = "category_probability")} and
-\code{plot(out, type = "conditional_probability")} are explicit aliases for
-the same category-probability curves as \code{type = "ccc"}. Use
+\code{boundary_status = "none"} when cumulative \code{.5} boundary lines and
+conditional \code{.5} crossing lines should be suppressed.
+\code{plot(out, type = "category_probability")} is an explicit alias for the
+category-probability curves shown by \code{type = "ccc"}.
+\code{plot(out, type = "conditional")} shows the adjacent-category
+conditional ogives \code{P(k) / (P(k-1) + P(k))} in the Winsteps/FACETS
+"Conditional Probability Curves" sense; their \code{.5} crossings estimate
+the Rasch-Andrich thresholds. \code{type = "conditional_probability"} now
+routes to this display (before 0.3.0 it was a \code{ccc} alias) and says so
+once per session. Use
 \code{plot_data(out, component = "plot_long")} when rebuilding the curves with
 ggplot2, plotly, or another R graphics system.
 }

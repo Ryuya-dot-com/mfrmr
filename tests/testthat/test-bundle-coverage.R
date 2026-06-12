@@ -307,12 +307,17 @@ test_that("plot.mfrm_bundle dispatches for mfrm_category_curves", {
   expect_s3_class(p, "mfrm_plot_data")
   p2 <- plot(cc, type = "ccc", draw = FALSE)
   expect_s3_class(p2, "mfrm_plot_data")
-  p2_alias <- plot(cc, type = "conditional_probability", draw = FALSE)
+  p2_cat_alias <- plot(cc, type = "category_probability", draw = FALSE)
+  expect_identical(p2_cat_alias$data$plot, "ccc")
+  expect_identical(p2_cat_alias$data$plot_settings$RequestedType[1], "category_probability")
+  # Since 0.3.0 the conditional_probability alias routes to the
+  # adjacent-category conditional ogives, not to the CCC display.
+  p2_alias <- suppressMessages(plot(cc, type = "conditional_probability", draw = FALSE))
   expect_s3_class(p2_alias, "mfrm_plot_data")
-  expect_identical(p2_alias$data$plot, "ccc")
+  expect_identical(p2_alias$data$plot, "conditional")
   expect_identical(p2_alias$data$plot_settings$RequestedType[1], "conditional_probability")
-  expect_identical(p2_alias$data$plot_settings$PlotType[1], "ccc")
-  expect_true(any(p2_alias$data$plot_long$PlotType == "ccc" &
+  expect_identical(p2_alias$data$plot_settings$PlotType[1], "conditional")
+  expect_true(any(p2_alias$data$plot_long$PlotType == "conditional" &
                     p2_alias$data$plot_long$DisplayedByDefault))
   p3 <- plot(cc, type = "cumulative", preset = "monochrome", boundary_status = "none", draw = FALSE)
   expect_s3_class(p3, "mfrm_plot_data")

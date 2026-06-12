@@ -35,8 +35,8 @@ Plot report/table bundles with base R defaults
 \item \code{mfrm_visual_summaries} -> warning/summary message count plots
 \item \code{mfrm_category_structure} -> default base-R category plots
 \item \code{mfrm_category_curves} -> overview (default), ogive, CCC / category
-probability / conditional probability, cumulative, total-information, and
-category-specific-information plots
+probability, adjacent-category conditional-probability, cumulative,
+total-information, and category-specific-information plots
 \item \code{mfrm_rating_scale} -> category-counts/threshold plots
 \item \code{mfrm_measurable} -> measurable-data coverage/count plots
 \item \code{mfrm_unexpected_after_bias} -> post-bias unexpected-response plots
@@ -69,7 +69,12 @@ grayscale/line-type output. Cumulative \code{.5} boundary lines are shown
 only for interpretable in-range boundaries by default; use
 \code{boundary_status = "all"} to show every finite boundary estimate or
 \code{boundary_status = "none"} / \code{show_cumulative_boundaries = FALSE} to
-suppress those vertical boundary lines. Use
+suppress those vertical boundary lines. \code{type = "conditional"} draws the
+adjacent-category conditional ogives (Winsteps/FACETS "Conditional
+Probability Curves"); the same \code{boundary_status} setting controls its
+\code{.5} crossing lines, which estimate the Rasch-Andrich thresholds.
+\code{type = "conditional_probability"} routes to this display (it was a \code{ccc}
+alias before 0.3.0). Use
 \code{plot_data(x, component = "plot_long")} on a category-curve bundle when
 you want one ggplot2/plotly-friendly table across all curve families.
 }

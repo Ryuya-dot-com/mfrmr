@@ -1,5 +1,21 @@
 # mfrmr (development version)
 
+- `category_curves_report()` now includes adjacent-category conditional
+  probability curves in the Winsteps/FACETS "Conditional Probability Curves"
+  sense: `conditional_probabilities` carries
+  `P(k) / (P(k-1) + P(k))` for each adjacent category pair, and
+  `conditional_crossings` reports the interpolated `.5` crossings, which
+  estimate the Rasch-Andrich thresholds. `plot(report, type = "conditional")`
+  draws the ogives with crossing lines under the existing `boundary_status`
+  control, supports `preset = "monochrome"`, and ships draw-free
+  `plot_long` / `crossing_lines` data.
+- Breaking alias change: `plot(category_curves_report(...),
+  type = "conditional_probability")` now routes to the new conditional
+  display instead of the category-probability curves. The 0.2.x alias did
+  not match the Winsteps/FACETS meaning of "conditional probability
+  curves"; the first use per session now explains the change. Use
+  `type = "ccc"` or `type = "category_probability"` for the previous
+  display.
 - The diagnostics reliability table now reports the EAP empirical-reliability
   convention directly: MML person rows carry `EmpiricalReliability`
   (`Var(EAP) / (Var(EAP) + mean(PSD^2))`), and every facet row carries

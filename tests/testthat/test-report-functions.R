@@ -1220,3 +1220,43 @@ test_that("fmt_pvalue formats p-values correctly", {
   expect_true(grepl("< .001", fp(0.0001)))
   expect_true(grepl("= ", fp(0.05)))
 })
+
+test_that("conditional probability curves follow the adjacent-category identity", {
+  toy <- load_mfrmr_data("example_core")
+  fit <- suppressWarnings(fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
+                                   method = "JML", model = "RSM", maxit = 60))
+  cc <- category_curves_report(fit, theta_points = 161, digits = 8)
+  cond <- cc$conditional_probabilities
+  expect_true(all(c("CurveGroup", "Theta", "PairOrder", "LowerCategory",
+                    "UpperCategory", "CategoryPair", "ConditionalProbability",
+                    "Model", "Slope") %in% names(cond)))
+  expect_gt(nrow(cond), 0L)
+
+  # Adjacent-category identity: C_k(theta) = plogis(theta - tau_k) for RSM,
+  # so the conditional curves are exact dichotomous ogives.
+  tau <- fit$steps$Estimate
+  for (k in sort(unique(cond$PairOrder))) {
+    sub <- cond[cond$PairOrder == k, , drop = FALSE]
+    expect_lt(
+      max(abs(sub$ConditionalProbability - stats::plogis(sub$Theta - tau[k])), na.rm = TRUE),
+      1e-6
+    )
+  }
+
+  # The .5 crossings recover the Rasch-Andrich thresholds.
+  cr <- cc$conditional_crossings
+  expect_true(all(c("CrossingTheta", "CrossingStatus", "PairOrder") %in% names(cr)))
+  expect_identical(unique(cr$CrossingStatus), "in_range")
+  expect_lt(max(abs(cr$CrossingTheta - tau[cr$PairOrder])), 1e-3)
+
+  p <- plot(cc, type = "conditional", draw = FALSE)
+  expect_identical(p$data$plot, "conditional")
+  expect_gt(nrow(p$data$conditional_probabilities), 0L)
+  expect_true(all(names(p$data$crossing_lines) %in% names(cc$conditional_crossings)))
+  expect_true("conditional" %in% p$data$plot_long$PlotType)
+  expect_true(any(p$data$plot_annotations$AnnotationType == "conditional_crossing"))
+  pm <- plot(cc, type = "conditional", preset = "monochrome",
+             boundary_status = "none", draw = FALSE)
+  expect_identical(pm$data$preset, "monochrome")
+  expect_equal(nrow(pm$data$crossing_lines), 0L)
+})

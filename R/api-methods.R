@@ -2593,6 +2593,7 @@ draw_category_curves_bundle <- function(x,
                                         type = c(
                                           "overview", "ogive", "ccc",
                                           "category_probability",
+                                          "conditional",
                                           "conditional_probability",
                                           "cumulative", "information",
                                           "category_information"
@@ -2608,13 +2609,25 @@ draw_category_curves_bundle <- function(x,
   type_aliases <- c(
     category_probability = "ccc",
     category_probabilities = "ccc",
-    conditional_probability = "ccc",
-    conditional_probabilities = "ccc",
+    conditional_probability = "conditional",
+    conditional_probabilities = "conditional",
     probability = "ccc",
     probabilities = "ccc"
   )
   type <- if (requested_type %in% names(type_aliases)) type_aliases[[requested_type]] else requested_type
-  type <- match.arg(type, c("overview", "ogive", "ccc", "cumulative", "information", "category_information"))
+  if (requested_type %in% c("conditional_probability", "conditional_probabilities")) {
+    rlang::inform(
+      paste(
+        "`type = \"conditional_probability\"` now shows adjacent-category",
+        "conditional ogives (the Winsteps/FACETS \"Conditional Probability",
+        "Curves\" display). Use `type = \"ccc\"` for the category probability",
+        "curves this alias returned before 0.3.0."
+      ),
+      .frequency = "once",
+      .frequency_id = "mfrmr_conditional_probability_alias"
+    )
+  }
+  type <- match.arg(type, c("overview", "ogive", "ccc", "conditional", "cumulative", "information", "category_information"))
   cumulative_direction <- match.arg(tolower(as.character(cumulative_direction[1] %||% "at_or_below")),
                                     c("at_or_below", "at_or_above"))
   style <- resolve_plot_preset(preset)
@@ -2625,6 +2638,8 @@ draw_category_curves_bundle <- function(x,
   probs <- as.data.frame(x$probabilities %||% data.frame(), stringsAsFactors = FALSE)
   cumulative <- as.data.frame(x$cumulative_probabilities %||% data.frame(), stringsAsFactors = FALSE)
   cumulative_boundaries <- as.data.frame(x$cumulative_boundaries %||% data.frame(), stringsAsFactors = FALSE)
+  conditional <- as.data.frame(x$conditional_probabilities %||% data.frame(), stringsAsFactors = FALSE)
+  conditional_crossings <- as.data.frame(x$conditional_crossings %||% data.frame(), stringsAsFactors = FALSE)
   cat_info <- as.data.frame(x$category_information %||% probs, stringsAsFactors = FALSE)
   overview_panels <- data.frame(
     Panel = c(
@@ -2698,6 +2713,27 @@ draw_category_curves_bundle <- function(x,
     out
   }
   boundary_line_tbl <- boundary_lines()
+  crossing_lines <- function() {
+    empty <- if (nrow(conditional_crossings) > 0L) conditional_crossings[0, , drop = FALSE] else data.frame()
+    if (identical(boundary_status, "none") || nrow(conditional_crossings) == 0L ||
+        !"CrossingTheta" %in% names(conditional_crossings)) {
+      return(empty)
+    }
+    out <- conditional_crossings
+    if (identical(boundary_status, "in_range")) {
+      if ("InThetaRange" %in% names(out)) {
+        out <- out[out$InThetaRange %in% TRUE, , drop = FALSE]
+      }
+      if ("CrossingStatus" %in% names(out)) {
+        out <- out[out$CrossingStatus %in% "in_range", , drop = FALSE]
+      }
+    }
+    crossing <- suppressWarnings(as.numeric(out$CrossingTheta))
+    out <- out[is.finite(crossing), , drop = FALSE]
+    if (nrow(out) == 0L) return(empty)
+    out
+  }
+  crossing_line_tbl <- crossing_lines()
   plot_settings <- data.frame(
     RequestedType = requested_type,
     PlotType = type,
@@ -2722,6 +2758,19 @@ draw_category_curves_bundle <- function(x,
         label = rep("Cumulative .5 boundary", length(boundary_values)),
         linetype = rep("dotted", length(boundary_values)),
         role = rep("cumulative_boundary", length(boundary_values))
+      )
+    )
+  }
+  if (nrow(crossing_line_tbl) > 0L) {
+    crossing_values <- suppressWarnings(as.numeric(crossing_line_tbl$CrossingTheta))
+    reference_line_tbl <- rbind(
+      reference_line_tbl,
+      new_reference_lines(
+        axis = rep("v", length(crossing_values)),
+        value = crossing_values,
+        label = rep("Conditional .5 crossing (Rasch-Andrich threshold)", length(crossing_values)),
+        linetype = rep("dotted", length(crossing_values)),
+        role = rep("conditional_crossing", length(crossing_values))
       )
     )
   }
@@ -2809,6 +2858,32 @@ draw_category_curves_bundle <- function(x,
         DisplayedByDefault = direction == cumulative_direction,
         Model = character_col(cumulative, "Model"),
         Slope = numeric_col(cumulative, "Slope"),
+        stringsAsFactors = FALSE
+      )
+    }
+    if (nrow(conditional) > 0L &&
+        all(c("Theta", "ConditionalProbability", "UpperCategory", "CurveGroup") %in% names(conditional))) {
+      pair_label <- character_col(conditional, "CategoryPair")
+      missing_pair <- is.na(pair_label) | !nzchar(pair_label)
+      if (any(missing_pair)) {
+        pair_label[missing_pair] <- character_col(conditional, "UpperCategory")[missing_pair]
+      }
+      rows[[length(rows) + 1L]] <- data.frame(
+        PlotType = "conditional",
+        Panel = "Conditional probability",
+        CurveGroup = character_col(conditional, "CurveGroup"),
+        Theta = numeric_col(conditional, "Theta"),
+        Series = paste(character_col(conditional, "CurveGroup"), pair_label, sep = " | "),
+        Category = character_col(conditional, "UpperCategory"),
+        BoundaryCategory = character_col(conditional, "LowerCategory"),
+        BoundaryOrder = numeric_col(conditional, "PairOrder"),
+        CategorySet = pair_label,
+        Direction = NA_character_,
+        ValueName = "ConditionalProbability",
+        Value = numeric_col(conditional, "ConditionalProbability"),
+        DisplayedByDefault = TRUE,
+        Model = character_col(conditional, "Model"),
+        Slope = numeric_col(conditional, "Slope"),
         stringsAsFactors = FALSE
       )
     }
@@ -2985,6 +3060,41 @@ draw_category_curves_bundle <- function(x,
       graphics::lines(sub$Theta, sub$CumulativeProbability, col = cols[traces[i]], lwd = 1.4, lty = ltys[traces[i]])
     }
   }
+  draw_conditional_panel <- function(main_title) {
+    if (nrow(conditional) == 0 ||
+        !all(c("Theta", "ConditionalProbability", "UpperCategory", "CurveGroup") %in% names(conditional))) {
+      stop("No conditional probability data available.")
+    }
+    conditional_plot <- conditional
+    if (!"CategoryPair" %in% names(conditional_plot)) {
+      conditional_plot$CategoryPair <- as.character(conditional_plot$UpperCategory)
+    }
+    conditional_plot$Trace <- paste(conditional_plot$CurveGroup, conditional_plot$CategoryPair, sep = " | ")
+    traces <- unique(conditional_plot$Trace)
+    cols <- line_palette(traces)
+    ltys <- line_types(traces)
+    graphics::plot(
+      x = finite_range(conditional_plot$Theta),
+      y = c(0, 1),
+      type = "n",
+      xlab = "Theta / Logit",
+      ylab = "Conditional probability",
+      main = main_title
+    )
+    graphics::grid(col = style$grid)
+    graphics::abline(h = 0.5, lty = 3, col = style$neutral)
+    if (nrow(crossing_line_tbl) > 0L) {
+      crossing_x <- unique(suppressWarnings(as.numeric(crossing_line_tbl$CrossingTheta)))
+      crossing_x <- crossing_x[is.finite(crossing_x)]
+      if (length(crossing_x) > 0L) {
+        graphics::abline(v = crossing_x, lty = 3, col = if (identical(style$name, "monochrome")) "gray55" else "gray75")
+      }
+    }
+    for (i in seq_along(traces)) {
+      sub <- conditional_plot[conditional_plot$Trace == traces[i], , drop = FALSE]
+      graphics::lines(sub$Theta, sub$ConditionalProbability, col = cols[traces[i]], lwd = 1.4, lty = ltys[traces[i]])
+    }
+  }
   draw_information_panel <- function(main_title) {
     if (nrow(ogive) == 0 || !all(c("Theta", "Information", "CurveGroup") %in% names(ogive))) {
       stop("No total information data available.")
@@ -3054,6 +3164,8 @@ draw_category_curves_bundle <- function(x,
       draw_ogive_panel(if (is.null(main)) "Expected-score ogive" else as.character(main[1]))
     } else if (type == "ccc") {
       draw_ccc_panel(if (is.null(main)) "Category characteristic curves" else as.character(main[1]))
+    } else if (type == "conditional") {
+      draw_conditional_panel(if (is.null(main)) "Adjacent-category conditional probability curves" else as.character(main[1]))
     } else if (type == "cumulative") {
       draw_cumulative_panel(if (is.null(main)) "Cumulative probability curves" else as.character(main[1]))
     } else if (type == "information") {
@@ -3072,6 +3184,8 @@ draw_category_curves_bundle <- function(x,
       cumulative_probabilities = cumulative,
       cumulative_boundaries = cumulative_boundaries,
       cumulative_direction = cumulative_direction,
+      conditional_probabilities = conditional,
+      conditional_crossings = conditional_crossings,
       category_information = cat_info,
       overview_panels = overview_panels,
       plot_long = curve_long,
@@ -3079,17 +3193,19 @@ draw_category_curves_bundle <- function(x,
       curve_summary = curve_summary,
       curve_style = curve_style,
       boundary_lines = boundary_line_tbl,
+      crossing_lines = crossing_line_tbl,
       plot_settings = plot_settings,
       preset = style$name,
       title = switch(
         type,
         overview = "Category curve overview",
         ogive = "Expected-score ogive",
-        ccc = if (requested_type %in% c("category_probability", "category_probabilities", "conditional_probability", "conditional_probabilities", "probability", "probabilities")) {
+        ccc = if (requested_type %in% c("category_probability", "category_probabilities", "probability", "probabilities")) {
           "Category probability curves"
         } else {
           "Category characteristic curves"
         },
+        conditional = "Adjacent-category conditional probability curves",
         cumulative = "Cumulative probability curves",
         information = "Total information curves",
         category_information = "Category-specific information curves"
@@ -3099,6 +3215,7 @@ draw_category_curves_bundle <- function(x,
         overview = "Category probabilities, cumulative probabilities, total information, and category-specific information",
         ogive = "Expected score across theta",
         ccc = "Category response probabilities conditional on theta",
+        conditional = "P(upper | {lower, upper}) for adjacent categories; .5 crossings estimate the Rasch-Andrich thresholds",
         cumulative = "Modeled probability accumulated across ordered categories",
         information = "Total per-curve information; GPCM uses a^2 times score variance",
         category_information = "Category contributions sum to the total information at each theta"
@@ -3109,6 +3226,7 @@ draw_category_curves_bundle <- function(x,
           overview = "Category curve overview",
           ogive = "Expected score",
           ccc = "Category probability",
+          conditional = "Conditional probability",
           cumulative = "Cumulative probability",
           information = "Information",
           category_information = "Category information contribution"
@@ -3118,6 +3236,7 @@ draw_category_curves_bundle <- function(x,
           overview = "overview",
           ogive = "expected_score",
           ccc = "probability",
+          conditional = "conditional_probability",
           cumulative = "cumulative_probability",
           information = "information",
           category_information = "category_information"
@@ -6037,8 +6156,8 @@ plot_visual_summaries_bundle <- function(x,
 #' - `mfrm_visual_summaries` -> warning/summary message count plots
 #' - `mfrm_category_structure` -> default base-R category plots
 #' - `mfrm_category_curves` -> overview (default), ogive, CCC / category
-#'   probability / conditional probability, cumulative, total-information, and
-#'   category-specific-information plots
+#'   probability, adjacent-category conditional-probability, cumulative,
+#'   total-information, and category-specific-information plots
 #' - `mfrm_rating_scale` -> category-counts/threshold plots
 #' - `mfrm_measurable` -> measurable-data coverage/count plots
 #' - `mfrm_unexpected_after_bias` -> post-bias unexpected-response plots
@@ -6070,7 +6189,12 @@ plot_visual_summaries_bundle <- function(x,
 #' only for interpretable in-range boundaries by default; use
 #' `boundary_status = "all"` to show every finite boundary estimate or
 #' `boundary_status = "none"` / `show_cumulative_boundaries = FALSE` to
-#' suppress those vertical boundary lines. Use
+#' suppress those vertical boundary lines. `type = "conditional"` draws the
+#' adjacent-category conditional ogives (Winsteps/FACETS "Conditional
+#' Probability Curves"); the same `boundary_status` setting controls its
+#' `.5` crossing lines, which estimate the Rasch-Andrich thresholds.
+#' `type = "conditional_probability"` routes to this display (it was a `ccc`
+#' alias before 0.3.0). Use
 #' `plot_data(x, component = "plot_long")` on a category-curve bundle when
 #' you want one ggplot2/plotly-friendly table across all curve families.
 #'

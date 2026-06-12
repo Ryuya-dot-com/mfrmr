@@ -4100,14 +4100,23 @@ category_structure_report <- function(fit,
 #' 3. Use `summary()` and `plot()`; export tables for manuscripts/dashboard use.
 #'    `plot(out)` gives a four-panel overview. Use
 #'    `preset = "monochrome"` for grayscale/line-type output and
-#'    `boundary_status = "none"` when cumulative `.5` boundary lines should
-#'    be suppressed. `plot(out, type = "category_probability")` and
-#'    `plot(out, type = "conditional_probability")` are explicit aliases for
-#'    the same category-probability curves as `type = "ccc"`. Use
+#'    `boundary_status = "none"` when cumulative `.5` boundary lines and
+#'    conditional `.5` crossing lines should be suppressed.
+#'    `plot(out, type = "category_probability")` is an explicit alias for the
+#'    category-probability curves shown by `type = "ccc"`.
+#'    `plot(out, type = "conditional")` shows the adjacent-category
+#'    conditional ogives `P(k) / (P(k-1) + P(k))` in the Winsteps/FACETS
+#'    "Conditional Probability Curves" sense; their `.5` crossings estimate
+#'    the Rasch-Andrich thresholds. `type = "conditional_probability"` now
+#'    routes to this display (before 0.3.0 it was a `ccc` alias) and says so
+#'    once per session. Use
 #'    `plot_data(out, component = "plot_long")` when rebuilding the curves with
 #'    ggplot2, plotly, or another R graphics system.
-#' @return A named list with category-curve components. Class:
-#'   `mfrm_category_curves`.
+#' @return A named list with category-curve components, including
+#'   `probabilities`, `expected_ogive`, `cumulative_probabilities`,
+#'   `cumulative_boundaries`, `conditional_probabilities`,
+#'   `conditional_crossings`, `category_information`, and the FACETS-style
+#'   graph-file tables. Class: `mfrm_category_curves`.
 #' @seealso [category_structure_report()], [rating_scale_table()], [plot.mfrm_fit()],
 #'   [mfrmr_reports_and_tables], [mfrmr_visual_diagnostics]
 #' @examples

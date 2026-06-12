@@ -4396,6 +4396,7 @@ table8_curves_export <- function(fit,
   prob_df <- as.data.frame(curve_tbl$probabilities, stringsAsFactors = FALSE)
   exp_df <- as.data.frame(curve_tbl$expected, stringsAsFactors = FALSE)
   cumulative_tbls <- build_cumulative_category_tables(prob_df, curve_spec$categories)
+  conditional_tbls <- build_conditional_category_tables(prob_df, curve_spec$categories)
 
   groups <- unique(as.character(exp_df$CurveGroup))
   scale_map <- setNames(seq_along(groups), groups)
@@ -4457,6 +4458,8 @@ table8_curves_export <- function(fit,
     probabilities = round_numeric(as.data.frame(prob_df, stringsAsFactors = FALSE)),
     cumulative_probabilities = round_numeric(cumulative_tbls$probabilities),
     cumulative_boundaries = round_numeric(cumulative_tbls$boundaries),
+    conditional_probabilities = round_numeric(conditional_tbls$probabilities),
+    conditional_crossings = round_numeric(conditional_tbls$crossings),
     category_information = round_numeric(
       as.data.frame(
         prob_df |>
@@ -4659,6 +4662,161 @@ build_cumulative_boundary_table <- function(cumulative, categories_chr) {
   }
   dplyr::bind_rows(rows) |>
     dplyr::arrange(.data$CurveGroup, .data$BoundaryOrder)
+}
+
+# Adjacent-category conditional probability curves in the Winsteps/FACETS
+# "Conditional Probability Curves" sense: for each adjacent category pair
+# (k-1, k), C_k(theta) = P_k / (P_{k-1} + P_k). For adjacent-category models
+# this is a dichotomous ogive that crosses 0.5 at the Rasch-Andrich
+# threshold for category k (with slope equal to the fitted discrimination
+# under bounded GPCM).
+build_conditional_category_tables <- function(prob_df, categories) {
+  prob_df <- as.data.frame(prob_df %||% data.frame(), stringsAsFactors = FALSE)
+  categories_chr <- as.character(categories)
+  if (nrow(prob_df) == 0L || length(categories_chr) < 2L) {
+    return(list(probabilities = data.frame(), crossings = data.frame()))
+  }
+  needed <- c("CurveGroup", "Theta", "Category", "Probability")
+  if (!all(needed %in% names(prob_df))) {
+    return(list(probabilities = data.frame(), crossings = data.frame()))
+  }
+
+  row_list <- list()
+  idx <- 1L
+  groups <- unique(as.character(prob_df$CurveGroup))
+  for (g in groups) {
+    group_df <- prob_df[as.character(prob_df$CurveGroup) == g, , drop = FALSE]
+    theta_vals <- sort(unique(suppressWarnings(as.numeric(group_df$Theta))))
+    theta_vals <- theta_vals[is.finite(theta_vals)]
+    for (theta in theta_vals) {
+      sub <- group_df[suppressWarnings(as.numeric(group_df$Theta)) == theta, , drop = FALSE]
+      ord <- match(as.character(sub$Category), categories_chr)
+      sub <- sub[order(ord), , drop = FALSE]
+      ord <- ord[order(ord)]
+      keep <- !is.na(ord)
+      sub <- sub[keep, , drop = FALSE]
+      ord <- ord[keep]
+      if (nrow(sub) < 2L) next
+      probs <- suppressWarnings(as.numeric(sub$Probability))
+      probs[!is.finite(probs)] <- NA_real_
+      for (j in 2:nrow(sub)) {
+        if (ord[j] != ord[j - 1L] + 1L) next
+        pair_total <- probs[j - 1L] + probs[j]
+        conditional_prob <- if (is.finite(pair_total) && pair_total > 0) {
+          probs[j] / pair_total
+        } else {
+          NA_real_
+        }
+        row_list[[idx]] <- data.frame(
+          CurveGroup = g,
+          Theta = theta,
+          PairOrder = as.integer(ord[j] - 1L),
+          LowerCategory = as.character(sub$Category[j - 1L]),
+          UpperCategory = as.character(sub$Category[j]),
+          CategoryPair = paste0(
+            sub$Category[j], " | {", sub$Category[j - 1L], ",", sub$Category[j], "}"
+          ),
+          ConditionalProbability = conditional_prob,
+          Model = as.character(sub$Model[j] %||% NA_character_),
+          Slope = suppressWarnings(as.numeric(sub$Slope[j] %||% NA_real_)),
+          stringsAsFactors = FALSE
+        )
+        idx <- idx + 1L
+      }
+    }
+  }
+
+  conditional <- if (length(row_list) == 0L) {
+    data.frame()
+  } else {
+    dplyr::bind_rows(row_list) |>
+      dplyr::arrange(.data$CurveGroup, .data$PairOrder, .data$Theta)
+  }
+  crossings <- build_conditional_crossing_table(conditional)
+  list(
+    probabilities = as.data.frame(conditional, stringsAsFactors = FALSE),
+    crossings = as.data.frame(crossings, stringsAsFactors = FALSE)
+  )
+}
+
+build_conditional_crossing_table <- function(conditional) {
+  conditional <- as.data.frame(conditional %||% data.frame(), stringsAsFactors = FALSE)
+  if (nrow(conditional) == 0L ||
+      !"ConditionalProbability" %in% names(conditional)) {
+    return(data.frame())
+  }
+  rows <- list()
+  idx <- 1L
+  groups <- unique(as.character(conditional$CurveGroup))
+  for (g in groups) {
+    group_df <- conditional[as.character(conditional$CurveGroup) == g, , drop = FALSE]
+    pair_orders <- sort(unique(suppressWarnings(as.integer(group_df$PairOrder))))
+    pair_orders <- pair_orders[is.finite(pair_orders)]
+    for (j in pair_orders) {
+      line <- group_df[suppressWarnings(as.integer(group_df$PairOrder)) == j, , drop = FALSE]
+      line <- line[order(suppressWarnings(as.numeric(line$Theta))), , drop = FALSE]
+      theta <- suppressWarnings(as.numeric(line$Theta))
+      y <- suppressWarnings(as.numeric(line$ConditionalProbability))
+      ok <- is.finite(theta) & is.finite(y)
+      theta <- theta[ok]
+      y <- y[ok]
+      threshold <- NA_real_
+      in_range <- FALSE
+      crossing_count <- 0L
+      if (length(theta) > 0L) {
+        centered <- y - 0.5
+        exact <- which(abs(centered) <= sqrt(.Machine$double.eps))
+        if (length(exact) > 0L) {
+          threshold <- theta[exact[1]]
+          in_range <- TRUE
+          crossing_count <- length(exact)
+        } else if (length(theta) > 1L) {
+          crossing <- which(centered[-length(centered)] * centered[-1] <= 0)
+          crossing_count <- length(crossing)
+          if (length(crossing) > 0L) {
+            i <- crossing[1]
+            y1 <- y[i]
+            y2 <- y[i + 1L]
+            x1 <- theta[i]
+            x2 <- theta[i + 1L]
+            threshold <- if (is.finite(y1) && is.finite(y2) && abs(y2 - y1) > sqrt(.Machine$double.eps)) {
+              x1 + (0.5 - y1) * (x2 - x1) / (y2 - y1)
+            } else {
+              mean(c(x1, x2))
+            }
+            in_range <- TRUE
+          }
+        }
+      }
+      rows[[idx]] <- data.frame(
+        CurveGroup = g,
+        PairOrder = as.integer(j),
+        LowerCategory = as.character(line$LowerCategory[1]),
+        UpperCategory = as.character(line$UpperCategory[1]),
+        TargetProbability = 0.5,
+        CrossingTheta = threshold,
+        InThetaRange = in_range,
+        CrossingCount = as.integer(crossing_count),
+        CrossingStatus = dplyr::case_when(
+          !in_range ~ "outside_theta_range",
+          crossing_count == 1L ~ "in_range",
+          crossing_count > 1L ~ "multiple_crossings",
+          TRUE ~ "review"
+        ),
+        CrossingLabel = paste0(
+          "P(", line$UpperCategory[1], " | {", line$LowerCategory[1], ",",
+          line$UpperCategory[1], "}) = 0.5"
+        ),
+        stringsAsFactors = FALSE
+      )
+      idx <- idx + 1L
+    }
+  }
+  if (length(rows) == 0L) {
+    return(data.frame())
+  }
+  dplyr::bind_rows(rows) |>
+    dplyr::arrange(.data$CurveGroup, .data$PairOrder)
 }
 
 #' Build a legacy-compatible output-file bundle (`GRAPH=` / `SCORE=`)
