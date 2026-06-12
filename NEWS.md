@@ -1,13 +1,15 @@
-# mfrmr 0.2.2
+# mfrmr (development version)
 
-This release is identical to 0.2.1 except for the example-execution policy.
-The 0.2.1 submission passed the CRAN incoming content checks on Windows and
-Debian but exceeded the overall-checktime limit on the Windows incoming
-host. Long-running illustration examples previously wrapped in `\donttest`
-are now wrapped in `\dontrun` so the checked example surface stays within
-the CRAN timing budget. The illustrations remain executable as written and
-the underlying routes stay covered by the package's test suite and the
-cross-platform CI matrix.
+- The example-execution policy now keeps `R CMD check` time within the
+  CRAN incoming budget (the 0.2.1 submission passed the content checks on
+  Windows and Debian but tripped the overall-checktime limit on the
+  Windows incoming host before being accepted on review): long-running
+  illustrations previously wrapped in `\donttest` are now `\dontrun`,
+  and example pages whose executed examples measurably exceeded 0.25
+  seconds are gated with `@examplesIf interactive()`, keeping 129
+  lightweight pages plus the core `fit_mfrm()` example in the executed
+  surface. All illustrations remain in the help pages and run in
+  interactive sessions.
 
 # mfrmr 0.2.1
 
