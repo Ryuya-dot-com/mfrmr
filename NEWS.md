@@ -1,5 +1,12 @@
 # mfrmr (development version)
 
+- Executed example time is now actively tiered: example pages whose
+  standard examples measurably exceeded 0.25 seconds locally are gated
+  with `@examplesIf interactive()`, keeping 129 lightweight pages plus the
+  core `fit_mfrm()` example in the surface executed by `R CMD check`
+  (about 4 seconds locally, versus the 39 seconds behind the 175-second
+  Windows example phase in the CRAN incoming pre-test). Gated
+  illustrations remain in the help pages and run in interactive sessions.
 - The example-runtime policy introduced in 0.2.2 is now enforced:
   `\donttest` is prohibited in roxygen examples (long-running
   illustrations use `\dontrun`), a regression test guards the rule, and
