@@ -399,15 +399,26 @@ mfrmr_release_readiness_gpcm_scope_status <- function(paths,
     )
   }
 
-  if (!file.exists(paths$gpcm_capability_source)) {
-    return(empty_status("concern", "GPCM capability source is missing"))
-  }
   if (!file.exists(paths$gpcm_roadmap)) {
     return(empty_status("concern", "GPCM roadmap is missing"))
   }
 
   env <- new.env(parent = globalenv())
-  source(paths$gpcm_capability_source, local = env)
+  if (file.exists(paths$gpcm_capability_source)) {
+    source(paths$gpcm_capability_source, local = env)
+  } else if (isNamespaceLoaded("mfrmr") ||
+             requireNamespace("mfrmr", quietly = TRUE)) {
+    # Installed-package review context (for example R CMD check runs or CI
+    # artifact reviews): installed packages do not retain `R/` source files,
+    # so read the capability matrix and guard coverage from the installed
+    # namespace instead of the source tree.
+    env$gpcm_capability_matrix <-
+      getExportedValue("mfrmr", "gpcm_capability_matrix")
+    env$gpcm_runtime_guard_coverage <-
+      getExportedValue("mfrmr", "gpcm_runtime_guard_coverage")
+  } else {
+    return(empty_status("concern", "GPCM capability source is missing"))
+  }
   if (!exists("gpcm_capability_matrix", envir = env, inherits = FALSE)) {
     return(empty_status("concern", "GPCM capability matrix function is missing"))
   }
