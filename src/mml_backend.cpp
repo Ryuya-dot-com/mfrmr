@@ -1,4 +1,8 @@
-#include "mfrmr_r_boolean_compat.h"
+// Keep this block before cpp11/R headers. With R 4.5 on Apple clang 21,
+// the fixed-enum Rboolean branch can emit a non-actionable CRAN-check warning.
+// The portable fallback keeps the compiled backend warning-clean.
+#include <Rconfig.h>
+#undef HAVE_ENUM_BASE_TYPE
 #include <cpp11.hpp>
 
 #include <cmath>
@@ -60,29 +64,11 @@ writable::list mfrm_cpp_rsm_logprob_bundle(integers score_k,
                                            bool include_probs) {
   const int n = base_eta.size();
   const int n_nodes = person_nodes.ncol();
-  const int n_person = person_nodes.nrow();
   const int k_cat = step_cum.size();
   const bool has_weight = !Rf_isNull(weight);
   doubles weight_vec;
   if (has_weight) {
     weight_vec = as_doubles(weight);
-  }
-  if (score_k.size() != n || person_int.size() != n) {
-    stop("`score_k`, `person_int`, and `base_eta` must have the same length.");
-  }
-  if (has_weight && weight_vec.size() != n) {
-    stop("`weight` must be NULL or have the same length as `base_eta`.");
-  }
-  if (n_nodes <= 0 || n_person <= 0 || k_cat <= 0) {
-    stop("Probability kernels require non-empty person-node and category inputs.");
-  }
-  for (int i = 0; i < n; ++i) {
-    if (person_int[i] < 1 || person_int[i] > n_person) {
-      stop("`person_int` contains an out-of-range row index.");
-    }
-    if (score_k[i] < 0 || score_k[i] >= k_cat) {
-      stop("`score_k` contains an out-of-range category index.");
-    }
   }
 
   writable::doubles_matrix<> log_prob_mat(n, n_nodes);
@@ -181,29 +167,11 @@ writable::list mfrm_cpp_pcm_logprob_bundle(integers score_k,
                                            bool include_probs) {
   const int n = base_eta.size();
   const int n_nodes = person_nodes.ncol();
-  const int n_person = person_nodes.nrow();
   const int k_cat = step_cum_obs.ncol();
   const bool has_weight = !Rf_isNull(weight);
   doubles weight_vec;
   if (has_weight) {
     weight_vec = as_doubles(weight);
-  }
-  if (score_k.size() != n || person_int.size() != n || step_cum_obs.nrow() != n) {
-    stop("`score_k`, `person_int`, `base_eta`, and `step_cum_obs` rows must align.");
-  }
-  if (has_weight && weight_vec.size() != n) {
-    stop("`weight` must be NULL or have the same length as `base_eta`.");
-  }
-  if (n_nodes <= 0 || n_person <= 0 || k_cat <= 0) {
-    stop("Probability kernels require non-empty person-node and category inputs.");
-  }
-  for (int i = 0; i < n; ++i) {
-    if (person_int[i] < 1 || person_int[i] > n_person) {
-      stop("`person_int` contains an out-of-range row index.");
-    }
-    if (score_k[i] < 0 || score_k[i] >= k_cat) {
-      stop("`score_k` contains an out-of-range category index.");
-    }
   }
 
   writable::doubles_matrix<> log_prob_mat(n, n_nodes);
@@ -304,12 +272,6 @@ writable::list mfrm_cpp_expected_category_bundle(list prob_list,
   doubles_matrix<> first_prob(prob_list[0]);
   const int n = first_prob.nrow();
   const int k_cat = first_prob.ncol();
-  if (obs_posterior.nrow() != n || obs_posterior.ncol() != n_nodes) {
-    stop("`obs_posterior` dimensions must match `prob_list`.");
-  }
-  if (k_cat <= 0) {
-    stop("Probability matrices must contain at least one category.");
-  }
   writable::doubles_matrix<> posterior_prob(n, k_cat);
   for (int i = 0; i < n; ++i) {
     for (int k = 0; k < k_cat; ++k) {
@@ -319,9 +281,6 @@ writable::list mfrm_cpp_expected_category_bundle(list prob_list,
 
   for (int q = 0; q < n_nodes; ++q) {
     doubles_matrix<> probs_q(prob_list[q]);
-    if (probs_q.nrow() != n || probs_q.ncol() != k_cat) {
-      stop("All probability matrices in `prob_list` must have the same dimensions.");
-    }
     for (int i = 0; i < n; ++i) {
       const double post_q = obs_posterior(i, q);
       for (int k = 0; k < k_cat; ++k) {

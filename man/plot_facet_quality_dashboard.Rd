@@ -10,7 +10,7 @@ plot_facet_quality_dashboard(
   facet = NULL,
   bias_results = NULL,
   severity_warn = 1,
-  misfit_warn = NULL,
+  misfit_warn = 1.5,
   central_tendency_max = 0.25,
   bias_count_warn = 1L,
   bias_abs_t_warn = 2,
@@ -37,11 +37,7 @@ plot_facet_quality_dashboard(
 \item{severity_warn}{Absolute estimate cutoff used to flag severity
 outliers.}
 
-\item{misfit_warn}{Mean-square cutoff used to flag misfit. \code{NULL}
-(default) inherits the active package band from
-\code{\link[=mfrm_misfit_thresholds]{mfrm_misfit_thresholds()}} through \code{\link[=facet_quality_dashboard]{facet_quality_dashboard()}}.
-Pass a numeric value such as \code{1.5} to request the legacy reciprocal
-lower bound.}
+\item{misfit_warn}{Mean-square cutoff used to flag misfit.}
 
 \item{central_tendency_max}{Absolute estimate cutoff used to flag central
 tendency.}
@@ -80,7 +76,7 @@ Plot a facet-quality dashboard
 }
 \examples{
 toy <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
+fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 p <- plot_facet_quality_dashboard(fit, diagnostics = diag, draw = FALSE)
 p$data$plot

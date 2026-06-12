@@ -83,7 +83,7 @@ grand-mean proximity.
 \examples{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", maxit = 25)
+                method = "JML", maxit = 30)
 eq <- analyze_facet_equivalence(fit, facet = "Rater")
 pdat <- plot_facet_equivalence(eq, type = "forest", draw = FALSE)
 c(pdat$facet, pdat$type)
@@ -91,3 +91,6 @@ c(pdat$facet, pdat$type)
 \seealso{
 \code{\link[=analyze_facet_equivalence]{analyze_facet_equivalence()}}
 }
+\concept{confidence intervals}
+\concept{facet equivalence}
+\concept{visual diagnostics}

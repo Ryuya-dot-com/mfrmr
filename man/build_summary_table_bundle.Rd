@@ -15,14 +15,18 @@ build_summary_table_bundle(
 )
 }
 \arguments{
-\item{x}{An \code{mfrm_fit}, \code{mfrm_diagnostics}, \code{mfrm_data_description},
+\item{x}{An \code{mfrm_fit}, \code{mfrm_diagnostics}, \code{mfrm_precision_review},
+\code{mfrm_fit_measures}, \code{mfrm_facets_fit_review},
+\code{mfrm_person_fit_indices}, \code{mfrm_data_description},
 \code{mfrm_reporting_checklist}, \code{mfrm_apa_outputs},
 \code{mfrm_design_evaluation}, \code{mfrm_signal_detection},
+\code{mfrm_recovery_simulation}, \code{mfrm_recovery_assessment},
 \code{mfrm_population_prediction}, \code{mfrm_future_branch_active_branch},
-\code{mfrm_facets_run}, \code{mfrm_bias}, \code{mfrm_anchor_audit},
-\code{mfrm_linking_review}, \code{mfrm_misfit_casebook}, \code{mfrm_weighting_audit},
-\code{mfrm_unit_prediction}, or \code{mfrm_plausible_values} object, or one of
-their \code{summary()} outputs.}
+\code{mfrm_facets_run}, \code{mfrm_bias}, \code{mfrm_anchor_review},
+\code{mfrm_linking_review}, \code{mfrm_misfit_casebook}, \code{mfrm_weighting_review},
+\code{mfrm_unit_prediction}, or \code{mfrm_plausible_values} object, one of their
+\code{summary()} outputs, or a \code{summary.mfrmr_recovery_validation} object from
+the packaged validation protocol.}
 
 \item{which}{Optional character vector selecting a subset of named tables.}
 
@@ -81,19 +85,26 @@ manuscript-facing subset before plotting or export.
 \itemize{
 \item \code{\link[=fit_mfrm]{fit_mfrm()}} or \code{summary(fit)}
 \item \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} or \code{summary(diag)}
+\item \code{\link[=precision_review_report]{precision_review_report()}} or \code{summary(precision_review)}
+\item \code{\link[=fit_measures_table]{fit_measures_table()}} or \code{summary(fit_measures)}
+\item \code{\link[=facets_fit_review]{facets_fit_review()}} or \code{summary(facets_fit_review)}
+\item \code{\link[=compute_person_fit_indices]{compute_person_fit_indices()}} or \code{summary(person_fit)}
 \item \code{\link[=describe_mfrm_data]{describe_mfrm_data()}} or \code{summary(ds)}
 \item \code{\link[=reporting_checklist]{reporting_checklist()}} or \code{summary(chk)}
 \item \code{\link[=build_apa_outputs]{build_apa_outputs()}} or \code{summary(apa)}
 \item \code{\link[=evaluate_mfrm_design]{evaluate_mfrm_design()}} or \code{summary(sim_eval)}
 \item \code{\link[=evaluate_mfrm_signal_detection]{evaluate_mfrm_signal_detection()}} or \code{summary(sig_eval)}
+\item \code{\link[=evaluate_mfrm_recovery]{evaluate_mfrm_recovery()}} or \code{summary(rec)}
+\item \code{\link[=assess_mfrm_recovery]{assess_mfrm_recovery()}} or \code{summary(rec_assessment)}
+\item \code{summary(validation)} from \code{recovery-validation.R}
 \item \code{\link[=predict_mfrm_population]{predict_mfrm_population()}} or \code{summary(pred)}
 \item \code{planning_schema$future_branch_active_branch} or \code{summary(...)}
 \item \code{\link[=run_mfrm_facets]{run_mfrm_facets()}} or \code{summary(out)}
 \item \code{\link[=estimate_bias]{estimate_bias()}} or \code{summary(bias)}
-\item \code{\link[=audit_mfrm_anchors]{audit_mfrm_anchors()}} or \code{summary(audit)}
+\item \code{\link[=review_mfrm_anchors]{review_mfrm_anchors()}} or \code{summary(review)}
 \item \code{\link[=build_linking_review]{build_linking_review()}} or \code{summary(review)}
 \item \code{\link[=build_misfit_casebook]{build_misfit_casebook()}} or \code{summary(casebook)}
-\item \code{\link[=build_weighting_audit]{build_weighting_audit()}} or \code{summary(audit)}
+\item \code{\link[=build_weighting_review]{build_weighting_review()}} or \code{summary(review)}
 \item \code{\link[=predict_mfrm_units]{predict_mfrm_units()}} or \code{summary(pred_units)}
 \item \code{\link[=sample_mfrm_plausible_values]{sample_mfrm_plausible_values()}} or \code{summary(pv)}
 }
@@ -113,6 +124,20 @@ bundle-level plot types can use them directly.
 \item fit-level caveats use the \code{analysis_caveats} role; pre-fit data
 score-support caveats use the \code{score_category_caveats} role. Both roles are
 classified as diagnostics and stay in \code{recommended} appendix subsets.
+\item recovery-assessment and recovery-validation summaries expose
+\code{diagnostic_reporting_notes} before \code{diagnostic_review} or
+\code{diagnostic_oc_summary} so fit/separation caveats can be reported without
+treating them as recovery or release gates.
+\item recovery-validation summaries expose \code{condition_reporting_notes} before
+\code{condition_summary} so GPCM generator stress and sparse score support are
+not mistaken for recovery-metric failures.
+\item precision-review summaries expose \code{fit_separation_basis} so fit,
+ZSTD, separation/reliability/strata, and QC thresholds remain separate
+reporting surfaces rather than implicit validation gates.
+\item fit-measure and FACETS fit-review summaries expose df/ZSTD sensitivity
+tables under precision-review roles, keeping MnSq status, ZSTD
+standardization, and external FACETS matching distinct in appendix
+handoffs.
 \item latent-regression fit summaries expose \code{population_coding} in the methods
 appendix role so categorical levels, contrasts, and encoded columns can be
 documented with the coefficient table.
@@ -128,6 +153,14 @@ documented with the coefficient table.
 \code{\link[=apa_table]{apa_table()}} for formatted manuscript output.
 \item If you want a manuscript appendix subset up front, use a preset such as
 \code{appendix_preset = "recommended"}, \code{"compact"}, or \code{"diagnostics"}.
+\item For recovery-assessment or recovery-validation summaries, inspect
+\code{bundle$tables$reading_order} first when it is available.
+\item For recovery-assessment or recovery-validation summaries with retained
+diagnostics, read \code{diagnostic_reporting_notes} before the raw
+\code{diagnostic_review} or \code{diagnostic_oc_summary}. Read
+\code{condition_reporting_notes} before \code{condition_review} or
+\code{condition_summary} when bounded \code{GPCM} generator stress is part of the
+plan.
 }
 }
 
@@ -135,10 +168,26 @@ documented with the coefficient table.
 \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", maxit = 25)
+                method = "JML", maxit = 30)
 bundle <- build_summary_table_bundle(fit)
 bundle$table_index
 summary(bundle)$role_summary
+}
+
+# Recovery-validation output can be converted to appendix-ready tables.
+\dontrun{
+source(system.file("validation", "recovery-validation.R", package = "mfrmr"))
+validation <- mfrmr_run_recovery_validation(
+  case_ids = c("gpcm_slope_profile", "gpcm_high_dispersion_sparse"),
+  quick = TRUE,
+  seed = 20260525
+)
+validation_bundle <- build_summary_table_bundle(summary(validation))
+validation_bundle$tables$reading_order
+validation_bundle$tables$topline_release_decision
+validation_bundle$tables$condition_reporting_notes
+validation_bundle$tables$condition_summary
+validation_bundle$tables$diagnostic_reporting_notes
 }
 }
 \seealso{

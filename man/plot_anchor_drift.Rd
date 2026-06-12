@@ -9,7 +9,7 @@ plot_anchor_drift(
   type = c("drift", "chain", "heatmap", "forest"),
   facet = NULL,
   ci_level = 0.95,
-  preset = c("standard", "publication", "compact"),
+  preset = c("standard", "publication", "compact", "monochrome"),
   draw = TRUE,
   ...
 )
@@ -30,7 +30,7 @@ facets.}
 anchor-estimate whiskers (default \code{0.95}). Ignored for other
 plot types.}
 
-\item{preset}{Visual preset (\code{"standard"}, \code{"publication"}, or \code{"compact"}).}
+\item{preset}{Visual preset (\code{"standard"}, \code{"publication"}, \code{"compact"}, or \code{"monochrome"}).}
 
 \item{draw}{If \code{FALSE}, return the plot data invisibly without drawing.}
 
@@ -41,8 +41,8 @@ functions.}
 A plotting-data object of class \code{mfrm_plot_data}. With
 \code{draw = FALSE}, \code{result$data$table} contains the filtered drift or chain
 table, \code{result$data$matrix} contains the heatmap matrix when requested,
-and the payload includes package-native \code{title}, \code{subtitle}, \code{legend},
-and \code{reference_lines}.
+and the returned plot data includes package-native \code{title}, \code{subtitle},
+\code{legend}, and \code{reference_lines}.
 }
 \description{
 Creates base-R plots for inspecting anchor drift across calibration waves
@@ -125,9 +125,9 @@ people <- unique(toy$Person)
 d1 <- toy[toy$Person \%in\% people[1:12], , drop = FALSE]
 d2 <- toy[toy$Person \%in\% people[13:24], , drop = FALSE]
 fit1 <- fit_mfrm(d1, "Person", c("Rater", "Criterion"), "Score",
-                 method = "JML", maxit = 10)
+                 method = "JML", maxit = 30)
 fit2 <- fit_mfrm(d2, "Person", c("Rater", "Criterion"), "Score",
-                 method = "JML", maxit = 10)
+                 method = "JML", maxit = 30)
 drift <- detect_anchor_drift(list(W1 = fit1, W2 = fit2))
 drift_plot <- plot_anchor_drift(drift, type = "drift", draw = FALSE)
 class(drift_plot)
@@ -144,3 +144,6 @@ if (interactive()) {
 \code{\link[=detect_anchor_drift]{detect_anchor_drift()}}, \code{\link[=build_equating_chain]{build_equating_chain()}},
 \code{\link[=plot_dif_heatmap]{plot_dif_heatmap()}}, \code{\link[=plot_bubble]{plot_bubble()}}, \link{mfrmr_visual_diagnostics}
 }
+\concept{confidence intervals}
+\concept{linking}
+\concept{visual diagnostics}

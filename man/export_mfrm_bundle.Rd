@@ -47,7 +47,8 @@ bias bundles.}
 \code{build_summary_table_bundle()}, or a named list of such objects. When
 \code{NULL} and \code{"summary_tables"} is requested in \code{include}, a default set is
 built from \code{fit}, \code{diagnostics}, \code{\link[=reporting_checklist]{reporting_checklist()}}, and
-\code{\link[=build_apa_outputs]{build_apa_outputs()}}.}
+\code{\link[=build_apa_outputs]{build_apa_outputs()}}. Recovery-validation summaries can be supplied here
+to co-locate release-review appendix tables with a fit-based export bundle.}
 
 \item{output_dir}{Directory where files will be written.}
 
@@ -87,8 +88,8 @@ A named list with class \code{mfrm_export_bundle}.
 Export an analysis bundle for sharing or archiving
 }
 \details{
-This function creates a package-native analysis download bundle. It reuses
-existing \code{mfrmr} helpers instead of reimplementing estimation or
+This function is the package-native counterpart to the app's download bundle.
+It reuses existing \code{mfrmr} helpers instead of reimplementing estimation or
 diagnostics.
 }
 \section{Choosing exports}{
@@ -114,7 +115,7 @@ to travel with the bundle.
 Common starting points are:
 \itemize{
 \item minimal tables: \code{include = c("core_tables", "manifest")}
-\item reporting bundle: \code{include = c("core_tables", "checklist", "dashboard", "apa", "summary_tables", "html")}
+\item reporting bundle: \code{include = c("core_tables", "checklist", "dashboard", "summary_tables", "html")}
 \item archival bundle: \code{include = c("core_tables", "manifest", "script", "visual_summaries", "html")}
 }
 }
@@ -150,15 +151,18 @@ from scenario-level population predictions are not flattened into
 \verb{*_population_prediction_settings.csv} or ADeMP CSVs; the compact simulation
 specification files carry the replay-relevant settings instead.
 
-This exporter is intentionally unavailable for bounded \code{GPCM}, because the
-current bundle surface would otherwise depend on blocked narrative,
-fit-based export, and replay semantics from the free-discrimination branch.
+For bounded \code{GPCM}, this exporter is available as a caveated partial bundle
+over supported diagnostics, report text, visual summaries, manifests, and
+replay scripts. The returned object and manifest include \code{gpcm_boundary}.
+Package-native bounded-\code{GPCM} scorefile export is available with caveats,
+while full FACETS-style score-side contract review and design forecasting
+remain outside this bundle contract.
 }
 
 \section{Interpreting output}{
 
 The returned object reports both high-level bundle status and the exact files
-written. In practice, \code{bundle$summary} is the quickest sanity check, while
+written. In practice, \code{bundle$summary} is the direct status check, while
 \code{bundle$written_files} is the file inventory to inspect or hand off to other
 tools.
 }
@@ -177,7 +181,7 @@ replay script, and HTML summary.
 \examples{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", maxit = 25)
+                method = "JML", maxit = 30)
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 bundle <- export_mfrm_bundle(
   fit,

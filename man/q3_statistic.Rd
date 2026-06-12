@@ -30,7 +30,7 @@ of the table (mirrors \code{\link[=plot_local_dependence_heatmap]{plot_local_dep
 \code{0.20}). Often attributed to Yen (1984), but the 0.20 cutoff is
 actually from Chen & Thissen (1997, p. 284); Yen herself did not
 propose a fixed cutoff. The cutoff was derived for raw-residual Q3
-under the 3PL — applying it to standardized-residual Q3 under MFRM
+under the 3PL - applying it to standardized-residual Q3 under MFRM
 is approximate.}
 
 \item{marais_threshold}{Stricter community-convention threshold
@@ -128,7 +128,7 @@ Rasch model using residual correlations.
 \examples{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", maxit = 25)
+                method = "JML", maxit = 30)
 q3 <- q3_statistic(fit)
 q3$summary
 # Look for: MaxAbsQ3 < 0.20 (Chen & Thissen 1997 community cutoff) is

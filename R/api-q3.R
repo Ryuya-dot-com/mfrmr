@@ -16,7 +16,7 @@
 #   from Chen, W.-H., & Thissen, D. (1997), "Local dependence indexes for
 #   item pairs using item response theory," JEBS, 22(3), 265-289 (p. 284).
 # - The |Q3| > 0.30 "strict" cutoff is a community convention summarized
-#   in Marais (2013, p. 121) as "often considered" — not Marais's own
+#   in Marais (2013, p. 121) as "often considered" - not Marais's own
 #   proposal. Marais's actual recommendation is to interpret Q3 *relative*
 #   to the average pairwise correlation in the same dataset.
 # - Christensen, Makransky, & Horton (2017) demonstrate empirically that
@@ -83,7 +83,7 @@
 #'   `0.20`). Often attributed to Yen (1984), but the 0.20 cutoff is
 #'   actually from Chen & Thissen (1997, p. 284); Yen herself did not
 #'   propose a fixed cutoff. The cutoff was derived for raw-residual Q3
-#'   under the 3PL — applying it to standardized-residual Q3 under MFRM
+#'   under the 3PL - applying it to standardized-residual Q3 under MFRM
 #'   is approximate.
 #' @param marais_threshold Stricter community-convention threshold
 #'   (default `0.30`). Marais (2013, p. 121) reports this as a value
@@ -134,7 +134,7 @@
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                 method = "JML", maxit = 25)
+#'                 method = "JML", maxit = 30)
 #' q3 <- q3_statistic(fit)
 #' q3$summary
 #' # Look for: MaxAbsQ3 < 0.20 (Chen & Thissen 1997 community cutoff) is
@@ -176,7 +176,7 @@ q3_statistic <- function(fit,
     )
   }
 
-  # Reuse the heatmap helper's payload; it already implements the
+  # Reuse the heatmap helper's plot data; it already implements the
   # standardized-residual pivot + pairwise Pearson correlation that
   # Q3 is defined as.
   h <- plot_local_dependence_heatmap(

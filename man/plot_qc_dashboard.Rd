@@ -18,7 +18,7 @@ plot_qc_dashboard(
   random_p_max = 0.05,
   top_n = 20,
   draw = TRUE,
-  preset = c("standard", "publication", "compact")
+  preset = c("standard", "publication", "compact", "monochrome")
 )
 }
 \arguments{
@@ -48,7 +48,7 @@ plot_qc_dashboard(
 
 \item{draw}{If \code{TRUE}, draw with base graphics.}
 
-\item{preset}{Visual preset (\code{"standard"}, \code{"publication"}, or \code{"compact"}).}
+\item{preset}{Visual preset (\code{"standard"}, \code{"publication"}, \code{"compact"}, or \code{"monochrome"}).}
 }
 \value{
 A plotting-data object of class \code{mfrm_plot_data}.
@@ -60,7 +60,7 @@ Plot a base-R QC dashboard
 The dashboard draws nine QC panels in a 3\eqn{\times}3 grid:\tabular{lll}{
    Panel \tab What it shows \tab Key reference lines \cr
    1. Category counts \tab Observed (bars) vs model-expected counts (line) \tab -- \cr
-   2. Infit vs Outfit \tab Scatter of element MnSq values \tab active lower, 1.0, upper MnSq bands \cr
+   2. Infit vs Outfit \tab Scatter of element MnSq values \tab heuristic 0.5, 1.0, 1.5 bands \cr
    3. |ZSTD| histogram \tab Distribution of absolute standardised residuals \tab |ZSTD| = 2 \cr
    4. Unexpected responses \tab Standardised residual vs \eqn{-\log_{10} P_{\mathrm{obs}}} \tab \code{abs_z_min}, \code{prob_max} \cr
    5. Fair-average gaps \tab Boxplots of (Observed - FairM) per facet \tab zero line \cr
@@ -75,11 +75,9 @@ The dashboard draws nine QC panels in a 3\eqn{\times}3 grid:\tabular{lll}{
 are available: \code{"strict"}, \code{"standard"} (default), and \code{"lenient"}.
 Use \code{thresholds} to override any profile value with named entries.
 
-For bounded \code{GPCM}, the dashboard reuses the residual-based diagnostics
-stack and the slope-aware fair-average table carried by \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}.
-Interpret that panel as a GPCM-specific screening view with the caveats
-documented in \code{\link[=fair_average_table]{fair_average_table()}}, not as Rasch-family fair-M invariance
-evidence.
+For bounded \code{GPCM}, the dashboard now reuses the residual-based
+diagnostics stack and marks the fair-average panel unavailable rather
+than silently reusing the Rasch-only compatibility calculation.
 }
 \section{Plot types}{
 
@@ -95,8 +93,7 @@ Recommended panel order for fast review:
 \enumerate{
 \item \strong{Category counts + Infit/Outfit} (row 1): first-pass model screening.
 Category bars should roughly track the expected line; Infit/Outfit points
-are reviewed against the active MnSq band. Points above the upper band
-indicate underfit; points below the lower band indicate overfit.
+are often reviewed against the heuristic 0.5--1.5 band.
 \item \strong{Unexpected responses + Displacement} (row 2): element-level
 outliers.  Sparse points and small displacements are desirable.
 \item \strong{Inter-rater + Chi-square} (row 3): facet-level comparability.
@@ -123,15 +120,18 @@ Treat this dashboard as a screening layer; follow up with dedicated helpers
 }
 
 \examples{
-# Fast smoke run: build the payload only (no graphics device).
+# Fast smoke run: build the plot data only (no graphics device).
 toy <- load_mfrmr_data("example_core")
-fit_quick <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                      method = "JML", maxit = 15)
+toy_small <- toy[toy$Person \%in\% unique(toy$Person)[1:3], ]
+fit_quick <- suppressWarnings(
+  fit_mfrm(toy_small, "Person", c("Rater", "Criterion"), "Score",
+           method = "JML", maxit = 3)
+)
 qc_quick <- plot_qc_dashboard(fit_quick, draw = FALSE)
-nrow(qc_quick$data$panels)
+names(qc_quick$data)
 
 \donttest{
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
+fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 qc <- plot_qc_dashboard(fit, draw = FALSE)
 qc$data$panels$Status
 # Look for: a row whose `Status` is "OK" for each panel that

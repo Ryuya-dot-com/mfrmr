@@ -40,8 +40,6 @@ preview for quick QA before manuscript insertion.
 draft text components.
 \item \code{overview$ReadyForAPA}: a backward-compatible alias of that contract flag,
 not a certification of inferential adequacy.
-\item \code{overview$AnalysisReady}: a stricter manuscript-readiness flag that also
-requires model convergence and a formal precision tier.
 \item \code{preview}: first non-empty lines for fast visual review.
 }
 }
@@ -58,8 +56,8 @@ and \code{apa$table_figure_captions} as draft components for final-text review.
 
 \examples{
 toy <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
-diag <- diagnose_mfrm(fit, residual_pca = "both")
+fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+diag <- diagnose_mfrm(fit, residual_pca = "none")
 apa <- build_apa_outputs(fit, diag)
 summary(apa)
 }

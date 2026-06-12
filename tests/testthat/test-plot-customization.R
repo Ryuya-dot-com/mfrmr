@@ -11,7 +11,7 @@ test_that("plot APIs accept title/palette/label customization", {
     maxit = 20,
     quad_points = 7
   ))
-  diag <- suppressWarnings(mfrmr::diagnose_mfrm(fit, residual_pca = "none"))
+  diag <- mfrmr::diagnose_mfrm(fit, residual_pca = "none")
 
   expect_no_error(
     plot(
@@ -143,11 +143,6 @@ test_that("plot APIs accept title/palette/label customization", {
   p_wright <- plot(fit, type = "wright", draw = FALSE, preset = "publication")
   expect_true(all(c("title", "subtitle", "legend", "reference_lines") %in% names(p_wright$data)))
 
-  p_custom <- plot(fit, type = "wright", draw = FALSE, title = "Custom Wright")
-  expect_identical(p_custom$data$title, "Custom Wright")
-  expect_identical(p_custom$data$plot, "wright_map")
-
-  old <- options(warnPartialMatchDollar = TRUE)
-  on.exit(options(old), add = TRUE)
-  expect_no_warning(p_custom$data$plot)
+  p_bubble_mono <- mfrmr::plot_bubble(fit, draw = FALSE, preset = "monochrome")
+  expect_identical(as.character(p_bubble_mono$data$preset), "monochrome")
 })

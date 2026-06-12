@@ -8,11 +8,13 @@ vignette: >
 ---
 
 ```{r, include = FALSE}
+is_cran_check <- !isTRUE(as.logical(Sys.getenv("NOT_CRAN", "false")))
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
   fig.width = 7,
-  fig.height = 5
+  fig.height = 5,
+  eval = !is_cran_check
 )
 ```
 
@@ -30,11 +32,6 @@ is suitable for manuscript-oriented graphics.
 If you are selecting figures for a report, use `reporting_checklist()` before
 or alongside this vignette. Its `"Visual Displays"` rows now mirror the
 public plotting family shown here.
-
-The setup below uses `JML` for a fast visual walkthrough. For final
-manuscript reporting, re-run the same route with `method = "MML"` and
-`diagnose_mfrm(..., diagnostic_mode = "both")` so strict marginal follow-up
-and formal precision wording remain visible.
 
 ## Minimal setup
 
@@ -60,10 +57,6 @@ subset(
   Section == "Visual Displays",
   c("Item", "Available", "NextAction")
 )
-
-visual_reporting_template()[, c(
-  "FigureFamily", "PrimaryHelper", "ReadFirst", "NextLook", "ReportDecision"
-)]
 ```
 
 ## 1. Targeting and scale structure
@@ -80,9 +73,6 @@ Interpretation:
 - Compare person density on the left to facet and step locations on the right.
 - Large gaps suggest weaker targeting in that logit region.
 - Wide overlap in confidence whiskers means neighboring levels are not cleanly separated.
-- First read: targeting and spread. Next look: category curves and fit
-  diagnostics. Report only the shared-scale description; do not treat the
-  Wright map as proof of model fit.
 
 Next, use the pathway map when you want to see how expected scores progress
 across theta.
@@ -96,10 +86,6 @@ Interpretation:
 - Steeper rises indicate stronger score progression.
 - Dominant-category strips show where each category is most likely to govern the score.
 - Flat or compressed regions suggest weaker category separation.
-- First read: whether categories progress in order. Next look: CCC or the
-  category-support table when a category is sparse or retained with zero
-  frequency. Report descriptive category functioning, not rating-scale
-  validity by itself.
 
 ## 2. Local response and level issues
 
@@ -120,9 +106,6 @@ Interpretation:
 
 - Upper corners combine large residual mismatch with low model probability.
 - Repeated appearances of the same persons or levels are more informative than a single extreme point.
-- First read: repeated patterns by person, rater, criterion, or score
-  category. Next look: displacement, residual matrix, and the underlying
-  table. Report this as case-review screening evidence.
 
 Displacement focuses on level movement rather than individual responses.
 
@@ -140,15 +123,14 @@ Interpretation:
 
 - Large absolute displacement indicates stronger tension between observed data and current calibration.
 - For anchored runs, this is especially useful as an anchor-robustness screen.
-- First read: which levels would move most if freed. Next look: anchor status,
-  connectivity, and fit diagnostics. Avoid claiming that displacement alone
-  proves anchor failure.
 
 ### Strict marginal follow-up
 
 When you need the package's latent-integrated follow-up path, switch to `MML`
 and request `diagnostic_mode = "both"` so the legacy and strict branches stay
-visible side by side.
+visible side by side. The chunk below uses compact quadrature for optional
+local execution; final reporting should be refit with the package default or a
+higher quadrature setting.
 
 ```{r strict-marginal}
 fit_strict <- fit_mfrm(
@@ -188,9 +170,6 @@ Interpretation:
 - Treat strict marginal plots as exploratory corroboration screens, not as standalone inferential tests.
 - Use the checklist rows to confirm that the current run actually supports the strict branch before routing figures into a report.
 - When pairwise follow-up is needed, continue with `plot_marginal_pairwise(diag_strict, preset = "publication")`.
-- Report decision: include strict marginal figures only when the fitted run
-  actually returned strict bundles; otherwise state that only the legacy
-  residual route was inspected.
 
 ## 3. Linking and coverage
 
@@ -206,9 +185,6 @@ Interpretation:
 
 - Sparse rows or columns indicate weak subset coverage.
 - Facets with low overlap are weaker anchors for cross-subset comparisons.
-- First read: whether forms, waves, or subsets are connected by enough common
-  elements. Next look: anchor drift and information curves before comparing
-  cross-subset estimates.
 
 If you are working across administrations, follow up with anchor-drift plots:
 
@@ -231,8 +207,6 @@ Interpretation:
 
 - Early components with noticeably larger eigenvalues deserve follow-up.
 - Scree review should usually be paired with loading review for the component of interest.
-- Report decision: residual PCA is follow-up evidence for residual structure,
-  not a standalone dimensionality test.
 
 For interaction screening, use the packaged bias example.
 
@@ -263,9 +237,6 @@ Interpretation:
 
 - Facet profiles are useful for seeing whether a small number of levels drives most flagged interaction cells.
 - Treat these plots as screening evidence; confirm with the corresponding tables and narrative reports.
-- First read: which facet level concentrates the flagged cells. Next look:
-  low-count cells, design support, and the `estimate_bias()` table before
-  wording a substantive interaction claim.
 
 ## 5. Secondary visual layer
 
@@ -279,14 +250,6 @@ use them after the main screens above.
 - `plot_residual_qq(fit, diagnostics)` plots a Normal Q-Q of
   person-level standardized residual aggregates as exploratory
   follow-up on residual tail behavior.
-- `plot_local_dependence_heatmap(fit, diagnostics)` renders a Q3-style
-  residual-correlation heatmap for exploratory local-dependence review.
-- `plot_reliability_snapshot(fit, diagnostics)` summarizes separation,
-  strata, and reliability by facet on one small page.
-- `plot_residual_matrix(fit, diagnostics)` shows person x facet-level
-  standardized residual aggregates for local sign/magnitude follow-up.
-- `plot_shrinkage_funnel(fit_shrunk)` compares raw and empirical-Bayes
-  shrunken facet estimates after `apply_empirical_bayes_shrinkage()`.
 - `plot_rater_trajectory(list(T1 = fit_a, T2 = fit_b))` tracks rater
   severity across named waves. The helper does not perform linking;
   supply waves that have already been placed on a common anchored
@@ -296,6 +259,88 @@ use them after the main screens above.
   compact pairwise rater x rater agreement matrix; pass
   `metric = "correlation"` to colour by the Pearson-style `Corr`
   column instead of exact agreement.
+- `response_time_review(data, person, facets, time)` summarizes
+  response-time metadata by person, facet, and score category. Pair it with
+  `plot_response_time_review()` for distribution and grouped timing plots.
+  This is a descriptive QC layer, not a joint speed-accuracy model.
+- `plot_shrinkage_funnel(fit_eb, show_ci = TRUE)` draws raw and
+  empirical-Bayes shrunken facet estimates on the same row, with
+  optional confidence whiskers for both estimates. Use this only after
+  `apply_empirical_bayes_shrinkage()` or `fit_mfrm(..., facet_shrinkage =
+  "empirical_bayes")`.
+
+### Response-time QC context
+
+If your rating-event data include response times, review them separately from
+the MFRM likelihood. Rapid and slow response-time flags are descriptive
+quality-control prompts; they do not change measures and should not be treated
+as proof of disengagement, cheating, or speededness.
+
+```{r response-time-review}
+toy_rt <- toy
+toy_rt$ResponseTime <- 12 + (seq_len(nrow(toy_rt)) %% 7) +
+  as.numeric(toy_rt$Score)
+toy_rt$ResponseTime[1] <- 2
+toy_rt$ResponseTime[2] <- 38
+
+rt <- response_time_review(
+  toy_rt,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  time = "ResponseTime",
+  rapid_quantile = 0.10,
+  slow_quantile = 0.90
+)
+
+summary(rt)
+plot_response_time_review(rt, type = "distribution", preset = "publication")
+plot_response_time_review(rt, type = "person", preset = "publication")
+```
+
+Interpretation:
+
+- Start with the distribution plot to see whether the rapid/slow thresholds are sensible for this administration.
+- Inspect person and facet summaries for concentrated rapid or slow rates rather than isolated events.
+- Keep timing flags separate from fit, bias, and validity claims unless the study design explicitly supports stronger speed-accuracy modeling.
+
+### Small-N shrinkage with uncertainty
+
+When a non-person facet has few levels or sparse observations, a large raw
+severity estimate can be a noisy estimate rather than a stable facet signal.
+The shrinkage funnel shows how far empirical-Bayes pooling moved each level
+toward the facet mean and whether the uncertainty remains wide after pooling.
+
+```{r shrinkage-funnel}
+fit_eb <- apply_empirical_bayes_shrinkage(fit)
+
+shrink <- plot_shrinkage_funnel(
+  fit_eb,
+  show_ci = TRUE,
+  ci_level = 0.95,
+  preset = "publication",
+  draw = FALSE
+)
+
+head(shrink$data$table[, c(
+  "Facet", "Level", "RawEstimate", "RawCI_Lower", "RawCI_Upper",
+  "ShrunkEstimate", "ShrunkCI_Lower", "ShrunkCI_Upper",
+  "ShrinkageFactor"
+)])
+
+plot_shrinkage_funnel(
+  fit_eb,
+  show_ci = TRUE,
+  ci_level = 0.95,
+  preset = "publication"
+)
+```
+
+Interpretation:
+
+- Long raw-to-shrunken segments identify levels most affected by the partial-pooling prior.
+- Wide raw whiskers that narrow after pooling indicate estimation instability, not automatic rater-quality failure.
+- Report the shrinkage method and keep this display separate from bias, fit, or validity claims.
 
 ## Recommended sequence
 
@@ -304,11 +349,11 @@ For a compact visual workflow:
 1. `reporting_checklist()` when you want the package to route which figures are already supported.
 2. `plot_qc_dashboard()` for one-page triage.
 3. `plot_unexpected()`, `plot_displacement()`, `plot_marginal_fit()`, and `plot_interrater_agreement()` for local follow-up.
-4. `plot(fit, type = "wright")`, `plot(fit, type = "pathway")`, and `plot(fit, type = "ccc")` for targeting and scale interpretation.
+4. `plot(fit, type = "wright")` and `plot(fit, type = "pathway")` for targeting and scale interpretation.
 5. `plot_residual_pca()`, `plot_bias_interaction()`, and `plot_information()` for deeper structural review.
-6. `plot_guttman_scalogram()`, `plot_residual_qq()`,
-   `plot_local_dependence_heatmap()`, `plot_reliability_snapshot()`,
-   `plot_residual_matrix()`, `plot_shrinkage_funnel()`,
+6. `response_time_review()` and `plot_response_time_review()` when response-time metadata are available.
+7. `plot_shrinkage_funnel(show_ci = TRUE)` when empirical-Bayes shrinkage was applied.
+8. `plot_guttman_scalogram()`, `plot_residual_qq()`,
    `plot_rater_trajectory()`, and `plot_rater_agreement_heatmap()` as
    the teaching / drift / agreement-heatmap follow-up layer.
 
@@ -316,3 +361,4 @@ For a compact visual workflow:
 
 - `help("mfrmr_visual_diagnostics", package = "mfrmr")`
 - `help("mfrmr_workflow_methods", package = "mfrmr")`
+- `mfrmr_interval_guide("shrinkage")`

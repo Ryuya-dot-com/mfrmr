@@ -2,21 +2,21 @@
 % Please edit documentation in R/api-person-fit.R
 \name{compute_person_fit_indices}
 \alias{compute_person_fit_indices}
-\title{Person fit indices: lz, lz*}
+\title{Person fit indices: lz and Snijders-corrected lz*}
 \usage{
 compute_person_fit_indices(diagnostics, fit = NULL)
 }
 \arguments{
 \item{diagnostics}{Output from \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}.}
 
-\item{fit}{Optional \code{mfrm_fit} from \code{\link[=fit_mfrm]{fit_mfrm()}}. When supplied,
-the helper can compute the JML/ML-style Snijders correction
-(column \code{lz_star}) and returns a \code{lz_star_method} audit column.
-When \code{NULL}, only \code{lz} and \code{lz_finite_n} are returned, with
-\code{lz_star = NA}.}
+\item{fit}{Optional \code{mfrm_fit} from \code{\link[=fit_mfrm]{fit_mfrm()}}. Required to decide
+whether the person estimates are JML/fixed-effect estimates for which
+the Snijders (2001) correction is computed. MML/EAP person scores
+return \code{NA} for \code{lz_star} with an explanatory status.}
 }
 \value{
-A data frame with one row per Person and columns:
+A data frame of class \code{mfrm_person_fit_indices} with one row per
+Person and columns:
 \describe{
 \item{\code{Person}}{Person ID.}
 \item{\code{N}}{Number of contributing response opportunities.}
@@ -26,24 +26,38 @@ model. Computed from the per-observation category probability
 not from a Gaussian residual approximation.}
 \item{\code{lz}}{Drasgow et al. (1985) standardized log-likelihood,
 in its proper polytomous form.}
-\item{\code{lz_star}}{Snijders-style score-projection corrected statistic,
-computed for JML fits by projecting the log-likelihood weights away
-from the person-score estimating equation. For MML/EAP fits this
-column is \code{NA} because EAP posterior means do not satisfy the ML
-person-score equation used by the correction.}
-\item{\code{lz_finite_n}}{Finite-N heuristic retained for continuity:
-\eqn{lz / \sqrt{1 + 1/N}}. This is not the published Snijders
-statistic.}
-\item{\code{lz_star_method}}{Audit label describing whether \code{lz_star}
-was computed and why it may be unavailable.}
+\item{\code{lz_star}}{Snijders-corrected \verb{lz*} when the source fit used
+JML/fixed-effect person estimates, conditioning on the fitted
+non-person calibration, and the diagnostics include the required
+derivative terms; otherwise \code{NA}.}
+\item{\code{lz_star_status}}{Status string for \code{lz_star}, such as
+\code{"computed_jml_conditional_calibration"}, \code{"fit_required"},
+\code{"not_applicable_eap"}, or \code{"insufficient_information"}.}
+\item{\code{lz_star_c}}{Estimated Snijders projection coefficient \code{c_n}
+for each person, when available.}
+\item{\code{lz_star_variance}}{Corrected variance denominator used for
+\code{lz_star}, when available.}
+\item{\code{lz_flag_5pct}, \code{lz_flag_1pct}}{Logical flags for practical
+two-sided \code{lz} thresholds of \verb{|z| > 1.96} and \verb{|z| > 2.58}.}
+\item{\code{lz_star_flag_5pct}, \code{lz_star_flag_1pct}}{The same flags for
+\code{lz_star}, returned as \code{FALSE} when \code{lz_star} is unavailable.}
+\item{\code{ReportIndex}, \code{ReportValue}, \code{ReportFlagLevel},
+\code{ReportFlag}, \code{ReviewStatus}, \code{ReviewReason}, \code{ReportCaveat}}{Compact
+reporting columns. \code{ReportIndex} prefers \code{lz_star} when the Snijders
+correction was computed; otherwise it falls back to \code{lz} with an
+explicit caveat.}
 }
 
 Under the conditional-independence assumption of the MFRM, \code{lz} is
 asymptotically standard normal. Practical reporting thresholds:
 |lz| > 1.96 flags a person at the 5\% level; |lz| > 2.58 at the
-1\% level. \code{lz_star} should be read as a conditional person-fit
-statistic: it corrects for estimated JML person measures but still
-treats the fitted non-person parameters as fixed.
+1\% level. When
+\code{lz_star_status == "computed_jml_conditional_calibration"}, \code{lz_star}
+applies Snijders' estimated-ability correction for JML person estimates,
+conditional on the fitted non-person parameters. This does not propagate
+non-person calibration uncertainty. For MML/EAP person scores, use \code{lz}
+with its documented caveat rather than treating EAP scores as if they
+satisfied the Snijders estimating equation.
 
 Note: this implementation reads the model category probabilities
 directly from the diagnostics bundle. Earlier mfrmr releases used
@@ -60,9 +74,8 @@ approximation.
 \description{
 Computes person-level fit statistics for an MFRM bundle, extending
 the Infit / Outfit / ZSTD columns that \code{diagnose_mfrm()$measures}
-already exposes with the standardized log-likelihood \code{lz}, a
-Snijders-style \code{lz_star} for JML fits, and an explicitly named
-finite-N heuristic \code{lz_finite_n}.
+already exposes with the standardized log-likelihood \code{lz} and, when
+justified by the person-estimation method, Snijders' \verb{lz*}.
 }
 \section{References}{
 
@@ -74,21 +87,30 @@ models and standardized indices.
 \item Snijders, T. A. B. (2001). Asymptotic null distribution of
 person fit statistics with estimated person parameter.
 \emph{Psychometrika, 66}(3), 331-342.
+\item Magis, D., Raiche, G., & Beland, S. (2012). A didactic
+presentation of Snijders's lz* index of person fit with emphasis
+on response model selection and ability estimation.
+\emph{Journal of Educational and Behavioral Statistics, 37}(1), 57-81.
+\item Sinharay, S. (2016). Asymptotically correct standardization of
+person-fit statistics beyond dichotomous items.
+\emph{Psychometrika, 81}(4), 992-1013.
 }
 }
 
 \examples{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", maxit = 25)
+                method = "JML", maxit = 30)
 diag <- diagnose_mfrm(fit, residual_pca = "none",
                       diagnostic_mode = "legacy")
 pf <- compute_person_fit_indices(diag, fit = fit)
 head(pf)
+summary(pf)
 # Look for: |lz| > 1.96 (5\% level) flags a person whose response
 #   pattern is statistically inconsistent with the model; > 2.58 is
-#   a 1\% flag. `lz_star_method` tells you whether the Snijders-style
-#   correction was computed or left unavailable for the active estimator.
+#   a 1\% flag. lz_star is populated for JML/fixed-effect person
+#   estimates and left NA for MML/EAP estimates. Use ReportIndex /
+#   ReviewStatus for a compact report-ready reading.
 }
 \seealso{
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}

@@ -37,6 +37,29 @@ devtools::check(args = c("--no-manual"), document = FALSE)
 - Run `devtools::document()` before committing.
 - If workflow changes, update README and/or vignette accordingly.
 
+## Examples and timing policy
+
+CRAN examples are smoke checks, not the full validation suite. Keep Rd
+examples short enough to run on slower Windows check hosts, and move realistic
+multi-step analyses to README/vignettes or non-CRAN tests.
+
+- Use `example_core` for ordinary fitting, plotting, and reporting examples.
+  Use `example_bias` only when a non-null DFF/bias signal is needed.
+- Prefer `method = "JML"`, `maxit = 30`, and
+  `diagnose_mfrm(..., residual_pca = "none")` in standard Rd examples.
+- Wrap multi-fit workflows, MML examples, recovery simulations, design
+  simulations, external-Suggests examples, and long reporting pipelines in
+  `\donttest{}` unless the function cannot be demonstrated otherwise.
+- When an MML example must run in standard examples, set a small
+  `quad_points` value and explain that it is an exploratory speed setting.
+- Use `draw = FALSE` in examples that only need to demonstrate returned plot
+  payloads.
+- Do not shrink example data below a meaningful many-facet structure just to
+  satisfy CRAN timing. Reduce what CRAN executes; keep realistic examples in
+  vignettes and in the full `NOT_CRAN=true` test run.
+- CRAN-time `testthat` is intentionally limited by `tests/testthat.R`; run the
+  complete suite locally/CI with `NOT_CRAN=true`.
+
 ## Pull request checklist
 
 - [ ] Code and docs updated together

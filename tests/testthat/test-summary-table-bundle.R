@@ -27,7 +27,7 @@ summary_table_bundle_workflow_fixture <- local({
     facet_b = "Criterion",
     max_iter = 2
   ))
-  audit <- audit_mfrm_anchors(
+  row_review <- review_mfrm_anchors(
     toy,
     person = "Person",
     facets = c("Rater", "Criterion"),
@@ -53,12 +53,12 @@ summary_table_bundle_workflow_fixture <- local({
   ))
   drift <- suppressWarnings(detect_anchor_drift(list(W1 = fit_wave_a, W2 = fit_wave_b)))
   chain <- suppressWarnings(build_equating_chain(list(W1 = fit_wave_a, W2 = fit_wave_b)))
-  linking_review <- build_linking_review(anchor_audit = audit, drift = drift, chain = chain)
+  linking_review <- build_linking_review(anchor_review = row_review, drift = drift, chain = chain)
 
   list(
     run = run,
     bias = bias,
-    audit = audit,
+    row_review = row_review,
     linking_review = linking_review
   )
 })
@@ -129,7 +129,7 @@ summary_table_bundle_weighting_fixture <- local({
     maxit = 25
   ))
 
-  build_weighting_audit(rasch_fit, gpcm_fit, theta_points = 21, top_n = 5)
+  build_weighting_review(rasch_fit, gpcm_fit, theta_points = 21, top_n = 5)
 })
 
 summary_table_bundle_casebook_fixture <- local({
@@ -172,6 +172,111 @@ expect_summary_bundle_roles_registered <- function(...) {
   expect_length(missing_registry_roles, 0L)
 }
 
+diagnostic_screening_bundle_fixture <- function() {
+  scenario_summary <- tibble::tibble(
+    design_id = "D1",
+    Scenario = c("well_specified", "local_dependence"),
+    n_person = 12L,
+    n_rater = 2L,
+    n_criterion = 2L,
+    raters_per_person = 2L,
+    Reps = 1L,
+    LegacyAnyFlagRate = c(0, 1),
+    MarginalAnyFlagRate = c(0, 1),
+    PairwiseAnyFlagRate = c(0, 1),
+    MeanLegacyFlaggedLevels = c(0, 2),
+    MeanMarginalFlaggedGroups = c(0, 1),
+    MeanPairwiseFlaggedLevelPairs = c(0, 1),
+    MeanLegacyMeanAbsZ = c(0.8, 1.4),
+    MeanMarginalOverallRMSD = c(0.03, 0.11),
+    MeanMarginalMaxAbsStdResidual = c(1.1, 2.3)
+  )
+  performance_summary <- tibble::tibble(
+    design_id = "D1",
+    Scenario = c("well_specified", "local_dependence"),
+    n_person = 12L,
+    n_rater = 2L,
+    n_criterion = 2L,
+    raters_per_person = 2L,
+    EvaluationUse = c("type_I_proxy", "sensitivity_proxy"),
+    StrictAnyFlagRate = c(0, 1),
+    LegacyAnyFlagRate = c(0, 1),
+    MeanElapsedSec = c(0.10, 0.12),
+    MeanElapsedSecPer100Obs = c(0.40, 0.45)
+  )
+  report_signal_summary <- tibble::tibble(
+    design_id = "D1",
+    Scenario = c("well_specified", "local_dependence"),
+    n_person = 12L,
+    n_rater = 2L,
+    n_criterion = 2L,
+    raters_per_person = 2L,
+    ReportIndexAvailabilityRate = c(1, 1),
+    FitReportReviewRate = c(0, 1),
+    PrecisionReportReviewRate = c(0, 1),
+    MisfitReportReviewRate = c(0, 1),
+    MeanReportReviewAreas = c(0, 2),
+    MeanFitReportSignals = c(0, 1),
+    MeanPrecisionReportSignals = c(0, 1),
+    MeanMisfitReportSignals = c(0, 1)
+  )
+  scenario_contrast <- tibble::tibble(
+    design_id = "D1",
+    Scenario = "local_dependence",
+    n_person = 12L,
+    n_rater = 2L,
+    n_criterion = 2L,
+    raters_per_person = 2L,
+    DeltaLegacyFlaggedLevels = 2,
+    DeltaMarginalFlaggedGroups = 1,
+    DeltaPairwiseFlaggedLevelPairs = 1,
+    DeltaPairwiseAnyFlagRate = 1,
+    DeltaLegacyMeanAbsZ = 0.6,
+    DeltaMarginalOverallRMSD = 0.08,
+    DeltaMarginalMaxAbsStdResidual = 1.2
+  )
+  structure(
+    list(
+      design_grid = tibble::tibble(
+        design_id = "D1",
+        n_person = 12L,
+        n_rater = 2L,
+        n_criterion = 2L,
+        raters_per_person = 2L
+      ),
+      results = tibble::tibble(
+        design_id = "D1",
+        Scenario = c("well_specified", "local_dependence"),
+        Model = "RSM",
+        rep = 1L,
+        n_person = 12L,
+        RunOK = TRUE,
+        Converged = TRUE
+      ),
+      scenario_summary = scenario_summary,
+      performance_summary = performance_summary,
+      report_signal_summary = report_signal_summary,
+      scenario_contrast = scenario_contrast,
+      settings = list(
+        reps = 1L,
+        scenarios = c("well_specified", "local_dependence"),
+        model = "RSM",
+        include_report = TRUE,
+        facet_names = c(rater = "Rater", criterion = "Criterion")
+      ),
+      ademp = list(
+        aims = "Screen diagnostic operating characteristics",
+        data_generating_mechanism = list(model = "RSM", assignment = "complete", step_facet = NA_character_),
+        methods = list(fit_method = "MML", fitted_model = "RSM"),
+        estimands = "Screening signal rates",
+        performance_measures = "Type I and sensitivity proxies"
+      ),
+      notes = "Fixture diagnostic-screening summary."
+    ),
+    class = "mfrm_diagnostic_screening"
+  )
+}
+
 test_that("summary table bundle role registry covers every supported spec role", {
   df <- data.frame(stringsAsFactors = FALSE)
   minimal_summaries <- list(
@@ -196,11 +301,67 @@ test_that("summary table bundle role registry covers every supported spec role",
       overview = df,
       overall_fit = df,
       precision_profile = df,
-      precision_audit = df,
+      precision_review = df,
       flags = df,
       reliability = df,
       top_fit = df,
       reporting_map = df
+    ),
+    summary.mfrm_precision_review = list(
+      overview = df,
+      summary = df,
+      profile = df,
+      checks = df,
+      fit_separation_basis = df,
+      approximation_notes = df,
+      settings = df,
+      caveats = df,
+      notes = character()
+    ),
+    summary.mfrm_fit_measures = list(
+      overview = df,
+      summary = df,
+      table = df,
+      facets_table = df,
+      status_summary = df,
+      threshold_profiles = df,
+      profile_summary = df,
+      profile_summary_by_facet = df,
+      profile_summary_overall = df,
+      df_sensitivity = df,
+      df_sensitive = df,
+      df_sensitivity_summary = df,
+      underfit = df,
+      overfit = df,
+      mixed = df,
+      settings = df,
+      caveats = df,
+      notes = character()
+    ),
+    summary.mfrm_facets_fit_review = list(
+      overview = df,
+      summary = df,
+      standardization = df,
+      df_sensitivity = df,
+      df_sensitive = df,
+      df_sensitivity_summary = df,
+      external_table_quality = df,
+      external_comparison = df,
+      guidance = df,
+      settings = df,
+      caveats = df,
+      notes = character()
+    ),
+    summary.mfrm_person_fit_indices = list(
+      overview = df,
+      status_summary = df,
+      report_index_summary = df,
+      lz_star_status_summary = df,
+      top_review = df,
+      caveats = df,
+      thresholds = df,
+      reporting_map = df,
+      notes = character()
     ),
     summary.mfrm_data_description = list(
       overview = df,
@@ -214,6 +375,7 @@ test_that("summary table bundle role registry covers every supported spec role",
     summary.mfrm_reporting_checklist = list(
       overview = df,
       section_summary = df,
+      facets_positioning = df,
       action_items = df,
       settings = list()
     ),
@@ -231,6 +393,60 @@ test_that("summary table bundle role registry covers every supported spec role",
     summary.mfrm_signal_detection = list(
       overview = df,
       detection_summary = df
+    ),
+    summary.mfrm_diagnostic_screening = list(
+      overview = df,
+      reading_order = df,
+      next_actions = df,
+      reporting_notes = df,
+      figure_recipes = df,
+      scenario_summary = df,
+      performance_summary = df,
+      report_signal_summary = df,
+      scenario_contrast = df,
+      plot_overview_rate = df,
+      plot_overview_count = df,
+      plot_report_rate = df,
+      plot_contrast_count = df,
+      plot_runtime = df,
+      ademp = list(),
+      settings = list(),
+      notes = character()
+    ),
+    summary.mfrm_recovery_simulation = list(
+      overview = df,
+      recovery_summary = df,
+      rep_overview = df,
+      diagnostic_oc = df,
+      diagnostic_oc_summary = df,
+      ademp = list(),
+      settings = list(),
+      notes = character()
+    ),
+    summary.mfrm_recovery_assessment = list(
+      overview = df,
+      reading_order = df,
+      checklist = df,
+      condition_review = df,
+      condition_reporting_notes = df,
+      diagnostic_reporting_notes = df,
+      diagnostic_review = df,
+      metric_review = df,
+      uncertainty_review = df,
+      next_actions = character(),
+      thresholds = list(),
+      notes = character()
+    ),
+    summary.mfrmr_recovery_validation = list(
+      topline_release_decision = df,
+      reading_order = df,
+      release_decision_table = df,
+      case_summary = df,
+      condition_reporting_notes = df,
+      condition_summary = df,
+      diagnostic_reporting_notes = df,
+      diagnostic_oc_summary = df,
+      domain_decision_table = df
     ),
     summary.mfrm_population_prediction = list(
       design = df,
@@ -269,6 +485,18 @@ test_that("summary table bundle role registry covers every supported spec role",
       fit = list(overview = df, reporting_map = df),
       diagnostics = list(overview = df, flags = df, reporting_map = df)
     ),
+    summary.mfrm_results = list(
+      overview = df,
+      triage = df,
+      status = df,
+      component_index = df,
+      table_index = df,
+      plot_map = df,
+      next_actions = df,
+      mapping = df,
+      reproducible_code = df,
+      notes = character()
+    ),
     summary.mfrm_bias = list(
       overview = df,
       chi_sq = df,
@@ -276,13 +504,40 @@ test_that("summary table bundle role registry covers every supported spec role",
       top_rows = df,
       notes = character()
     ),
-    summary.mfrm_anchor_audit = list(
+    summary.mfrm_anchor_review = list(
       issue_counts = df,
       facet_summary = df,
       level_observation_summary = df,
       category_counts = df,
       recommendations = character(),
       notes = character()
+    ),
+    summary.mfrm_peer_review_design_review = list(
+      overview = df,
+      load_summary = df,
+      submission_load = df,
+      reviewer_load = df,
+      reviewer_pair_common_submissions = df,
+      low_common_pairs = df,
+      reciprocal_pairs = df,
+      reporting_map = df,
+      caveats = df,
+      notes = character(),
+      settings = list()
+    ),
+    summary.mfrm_network_review = list(
+      overview = df,
+      network_summary = df,
+      facet_summary = df,
+      top_central_nodes = df,
+      top_cut_nodes = df,
+      top_bridge_edges = df,
+      sparse_review = df,
+      peer_review = df,
+      reporting_map = df,
+      caveats = df,
+      notes = character(),
+      settings = list()
     ),
     summary.mfrm_linking_review = list(
       overview = df,
@@ -314,7 +569,7 @@ test_that("summary table bundle role registry covers every supported spec role",
       notes = character(),
       settings = list()
     ),
-    summary.mfrm_weighting_audit = list(
+    summary.mfrm_weighting_review = list(
       overview = df,
       status = df,
       top_measure_shifts = df,
@@ -329,16 +584,16 @@ test_that("summary table bundle role registry covers every supported spec role",
     ),
     summary.mfrm_unit_prediction = list(
       estimates = df,
-      audit = df,
-      population_audit = df,
+      row_review = df,
+      population_review = df,
       settings = list(),
       notes = character()
     ),
     summary.mfrm_plausible_values = list(
       draw_summary = df,
       estimates = df,
-      audit = df,
-      population_audit = df,
+      row_review = df,
+      population_review = df,
       settings = list(),
       notes = character()
     )
@@ -417,17 +672,103 @@ test_that("build_summary_table_bundle converts supported reporting summaries int
   diag_bundle <- build_summary_table_bundle(diag, which = c("overview", "flags"))
   expect_identical(names(diag_bundle$tables), c("overview", "flags"))
   expect_identical(diag_bundle$source_class, "mfrm_diagnostics")
+  diag_full_bundle <- build_summary_table_bundle(diag)
+  expect_true("precision_review" %in% names(diag_full_bundle$tables))
+  expect_false("precision_audit" %in% names(diag_full_bundle$tables))
+  expect_false(any(as.character(diag_full_bundle$table_index$Role) == "precision_audit"))
+
+  precision <- precision_review_report(fit, diagnostics = diag)
+  precision_summary <- summary(precision)
+  expect_s3_class(precision_summary, "summary.mfrm_precision_review")
+  expect_s3_class(precision_summary, "summary.mfrm_bundle")
+  precision_bundle <- build_summary_table_bundle(precision)
+  expect_s3_class(precision_bundle, "mfrm_summary_table_bundle")
+  expect_identical(precision_bundle$source_class, "mfrm_precision_review")
+  expect_identical(precision_bundle$summary_class, "summary.mfrm_precision_review")
+  precision_summary_bundle <- build_summary_table_bundle(precision_summary)
+  expect_identical(precision_summary_bundle$source_class, "summary.mfrm_precision_review")
+  expect_identical(precision_summary_bundle$summary_class, "summary.mfrm_precision_review")
+  expect_true(all(c("profile", "checks", "fit_separation_basis") %in%
+                    names(precision_bundle$tables)))
+  expect_identical(
+    as.character(precision_bundle$table_index$Role[
+      precision_bundle$table_index$Table == "fit_separation_basis"
+    ]),
+    "precision_review"
+  )
+
+  fm <- fit_measures_table(fit, diagnostics = diag, fit_df_method = "both", top_n = 5)
+  fm_summary <- summary(fm)
+  expect_s3_class(fm_summary, "summary.mfrm_fit_measures")
+  expect_s3_class(fm_summary, "summary.mfrm_bundle")
+  fm_bundle <- build_summary_table_bundle(fm)
+  expect_s3_class(fm_bundle, "mfrm_summary_table_bundle")
+  expect_identical(fm_bundle$source_class, "mfrm_fit_measures")
+  expect_identical(fm_bundle$summary_class, "summary.mfrm_fit_measures")
+  expect_true(all(c("summary", "table", "status_summary", "df_sensitivity") %in%
+                    names(fm_bundle$tables)))
+  expect_identical(
+    as.character(fm_bundle$table_index$Role[
+      fm_bundle$table_index$Table == "df_sensitivity"
+    ]),
+    "precision_review"
+  )
+
+  facets_review <- facets_fit_review(fit, diagnostics = diag)
+  facets_review_summary <- summary(facets_review)
+  expect_s3_class(facets_review_summary, "summary.mfrm_facets_fit_review")
+  expect_s3_class(facets_review_summary, "summary.mfrm_bundle")
+  facets_review_bundle <- build_summary_table_bundle(facets_review_summary)
+  expect_s3_class(facets_review_bundle, "mfrm_summary_table_bundle")
+  expect_identical(facets_review_bundle$source_class, "summary.mfrm_facets_fit_review")
+  expect_identical(facets_review_bundle$summary_class, "summary.mfrm_facets_fit_review")
+  expect_true(all(c("summary", "df_sensitivity", "guidance") %in%
+                    names(facets_review_bundle$tables)))
+  expect_identical(
+    as.character(facets_review_bundle$table_index$Role[
+      facets_review_bundle$table_index$Table == "df_sensitivity"
+    ]),
+    "precision_review"
+  )
+
+  pf <- compute_person_fit_indices(diag, fit = fit)
+  pf_summary <- summary(pf, top_n = 5)
+  expect_s3_class(pf_summary, "summary.mfrm_person_fit_indices")
+  pf_bundle <- build_summary_table_bundle(pf)
+  expect_s3_class(pf_bundle, "mfrm_summary_table_bundle")
+  expect_identical(pf_bundle$source_class, "mfrm_person_fit_indices")
+  expect_identical(pf_bundle$summary_class, "summary.mfrm_person_fit_indices")
+  expect_true(all(c("overview", "status_summary", "top_review", "thresholds") %in%
+                    names(pf_bundle$tables)))
+  expect_true(any(as.character(pf_bundle$table_index$Role) == "extreme_fit_rows"))
 
   ds_bundle <- build_summary_table_bundle(summary(ds))
   expect_identical(ds_bundle$source_class, "summary.mfrm_data_description")
   expect_true(all(c("overview", "missing", "score_distribution") %in% names(ds_bundle$tables)))
 
   chk_bundle <- build_summary_table_bundle(chk)
-  expect_true(all(c("overview", "section_summary", "action_items") %in% names(chk_bundle$tables)))
+  expect_true(all(c("overview", "section_summary", "facets_positioning", "action_items") %in%
+                    names(chk_bundle$tables)))
+  expect_identical(
+    as.character(chk_bundle$table_index$Role[chk_bundle$table_index$Table == "facets_positioning"]),
+    "facets_relationship_wording"
+  )
+  chk_bundle_summary <- summary(chk_bundle)
+  chk_facets_row <- chk_bundle_summary$table_catalog[
+    chk_bundle_summary$table_catalog$Table == "facets_positioning",
+    ,
+    drop = FALSE
+  ]
+  expect_identical(as.character(chk_facets_row$AppendixSection[1]), "methods")
+  expect_true(isTRUE(chk_facets_row$RecommendedAppendix[1]))
+  expect_true(isTRUE(chk_facets_row$CompactAppendix[1]))
 
   apa_bundle <- build_summary_table_bundle(apa, which = c("overview", "components", "preview"))
   expect_identical(names(apa_bundle$tables), c("overview", "components", "preview"))
-  expect_summary_bundle_roles_registered(fit_bundle, diag_bundle, ds_bundle, chk_bundle, apa_bundle)
+  expect_summary_bundle_roles_registered(
+    fit_bundle, diag_bundle, precision_bundle, fm_bundle, facets_review_bundle,
+    pf_bundle, ds_bundle, chk_bundle, apa_bundle
+  )
 })
 
 test_that("build_summary_table_bundle carries fit and score-support caveats", {
@@ -535,9 +876,9 @@ test_that("build_summary_table_bundle supports workflow, bias, anchor, linking, 
   expect_identical(bias_bundle$summary_class, "summary.mfrm_bias")
   expect_true(all(c("overview", "chi_sq", "top_rows", "notes") %in% names(bias_bundle$tables)))
 
-  audit_bundle <- build_summary_table_bundle(summary_table_bundle_workflow_fixture$audit)
-  expect_identical(audit_bundle$source_class, "mfrm_anchor_audit")
-  expect_identical(audit_bundle$summary_class, "summary.mfrm_anchor_audit")
+  audit_bundle <- build_summary_table_bundle(summary_table_bundle_workflow_fixture$row_review)
+  expect_identical(audit_bundle$source_class, "mfrm_anchor_review")
+  expect_identical(audit_bundle$summary_class, "summary.mfrm_anchor_review")
   expect_true(all(c(
     "overview",
     "issue_counts",
@@ -574,8 +915,8 @@ test_that("build_summary_table_bundle supports workflow, bias, anchor, linking, 
   ) %in% names(pv_bundle$tables)))
 
   weighting_bundle <- build_summary_table_bundle(summary_table_bundle_weighting_fixture)
-  expect_identical(weighting_bundle$source_class, "mfrm_weighting_audit")
-  expect_identical(weighting_bundle$summary_class, "summary.mfrm_weighting_audit")
+  expect_identical(weighting_bundle$source_class, "mfrm_weighting_review")
+  expect_identical(weighting_bundle$summary_class, "summary.mfrm_weighting_review")
   expect_true(all(c(
     "overview",
     "status",
@@ -767,6 +1108,380 @@ test_that("build_summary_table_bundle supports planning and forecast summaries w
                     "future_branch_load_balance", "future_branch_coverage") %in%
                     names(pred_bundle$tables)))
   expect_summary_bundle_roles_registered(design_bundle, signal_bundle, pred_bundle)
+})
+
+test_that("build_summary_table_bundle supports diagnostic-screening summaries", {
+  diag_eval <- diagnostic_screening_bundle_fixture()
+  diag_summary <- summary(diag_eval)
+
+  expect_s3_class(diag_summary, "summary.mfrm_diagnostic_screening")
+  expect_true(any(diag_summary$plot_overview_rate$Signal == "Strict combined any-flag rate"))
+
+  diag_bundle <- build_summary_table_bundle(diag_eval)
+  expect_identical(diag_bundle$source_class, "mfrm_diagnostic_screening")
+  expect_true(all(c(
+    "overview", "reading_order", "next_actions", "reporting_notes", "figure_recipes",
+    "scenario_summary", "performance_summary",
+    "report_signal_summary", "scenario_contrast",
+    "plot_overview_rate", "plot_runtime"
+  ) %in% names(diag_bundle$tables)))
+  expect_true(any(diag_bundle$tables$reading_order$Table == "scenario_summary"))
+  expect_true(any(diag_bundle$tables$next_actions$Area == "Appendix and plot-data handoff"))
+  expect_true(any(diag_bundle$tables$figure_recipes$FigureID == "overview_rates"))
+  expect_true(any(grepl("plot_data", diag_bundle$tables$figure_recipes$PlotDataCall, fixed = TRUE)))
+  expect_true(any(grepl("build_summary_table_bundle", diag_bundle$tables$next_actions$Route, fixed = TRUE)))
+  expect_true(any(grepl("release gates", diag_bundle$tables$reporting_notes$ReportingBoundary, fixed = TRUE)))
+  expect_true(any(diag_bundle$tables$plot_overview_rate$Signal == "Strict combined any-flag rate"))
+  expect_true("diagnostic_screening_plot_data" %in% diag_bundle$table_index$Role)
+
+  recommended_bundle <- build_summary_table_bundle(
+    diag_summary,
+    appendix_preset = "recommended"
+  )
+  expect_true("reading_order" %in% names(recommended_bundle$tables))
+  expect_true("next_actions" %in% names(recommended_bundle$tables))
+  expect_true("reporting_notes" %in% names(recommended_bundle$tables))
+  expect_true("figure_recipes" %in% names(recommended_bundle$tables))
+  expect_true("plot_overview_rate" %in% names(recommended_bundle$tables))
+  expect_true(any(recommended_bundle$table_index$Role == "diagnostic_screening_figure_recipes"))
+  expect_true(any(recommended_bundle$table_index$Role == "diagnostic_screening_performance"))
+  expect_summary_bundle_roles_registered(diag_bundle, recommended_bundle)
+})
+
+test_that("build_summary_table_bundle supports recovery simulation and assessment summaries", {
+  rec <- structure(
+    list(
+      recovery = tibble::tibble(
+        rep = 1L,
+        ParameterType = "facet",
+        Facet = "Rater",
+        Level = "R1",
+        Truth = 0.1,
+        Estimate = 0.12,
+        EstimateAligned = 0.11,
+        ErrorAligned = 0.01
+      ),
+      recovery_summary = tibble::tibble(
+        ParameterType = "facet",
+        Facet = "Rater",
+        ComparisonScale = "logit",
+        Rows = 1L,
+        Reps = 1L,
+        Bias = 0.01,
+        RMSE = 0.01,
+        MAE = 0.01,
+        Coverage95 = 1,
+        McseBias = NA_real_,
+        McseRMSE = NA_real_
+      ),
+      rep_overview = tibble::tibble(
+        rep = 1L,
+        RunOK = TRUE,
+        Converged = TRUE,
+        RecoveryRows = 1L,
+        ElapsedSec = 0.2
+      ),
+      diagnostic_oc = tibble::tibble(
+        rep = 1L,
+        Facet = "Rater",
+        DiagnosticOK = TRUE,
+        Separation = 2.1,
+        Reliability = 0.82,
+        MeanInfit = 1.00,
+        MeanOutfit = 1.02,
+        ValidationUse = "diagnostic_only_not_release_gate"
+      ),
+      diagnostic_oc_summary = tibble::tibble(
+        Facet = "Rater",
+        Replications = 1L,
+        MeanSeparation = 2.1,
+        MeanReliability = 0.82,
+        MeanInfit = 1.00,
+        MeanOutfit = 1.02,
+        ValidationUse = "diagnostic_only_not_release_gate"
+      ),
+      settings = list(reps = 1L, fit_method = "MML", model = "RSM"),
+      notes = "Use more replications before treating this as a final recovery study.",
+      ademp = list(
+        aims = "Assess parameter recovery under a fixed MFRM design.",
+        data_generating_mechanism = list(
+          model = "RSM",
+          assignment = "rotating",
+          step_facet = "Criterion"
+        ),
+        methods = list(fit_method = "MML", fitted_model = "RSM"),
+        estimands = "Facet location recovery",
+        performance_measures = c("Bias", "RMSE")
+      )
+    ),
+    class = "mfrm_recovery_simulation"
+  )
+
+  recovery_bundle <- build_summary_table_bundle(rec)
+  expect_identical(recovery_bundle$source_class, "mfrm_recovery_simulation")
+  expect_true(all(c("overview", "recovery_summary", "rep_overview",
+                    "diagnostic_oc", "diagnostic_oc_summary", "ademp",
+                    "settings", "notes") %in% names(recovery_bundle$tables)))
+  expect_true("recovery_performance" %in% recovery_bundle$table_index$Role)
+
+  recovery_compact <- build_summary_table_bundle(rec, appendix_preset = "compact")
+  expect_true("recovery_summary" %in% names(recovery_compact$tables))
+  expect_false("settings" %in% names(recovery_compact$tables))
+
+  assessment <- structure(
+    list(
+      overview = tibble::tibble(
+        Reps = 1L,
+        SuccessfulRuns = 1L,
+        SuccessRate = 1,
+        ConvergedRuns = 1L,
+        ConvergenceRate = 1,
+        RecoveryRows = 1L,
+        RecoveryGroups = 1L,
+        OverallStatus = "review"
+      ),
+      checklist = tibble::tibble(
+        Section = "Run completion",
+        Item = "Replication count",
+        Status = "review",
+        Evidence = "1 replication; requested minimum is 30.",
+        NextAction = "Increase the replication count."
+      ),
+      condition_review = tibble::tibble(
+        Model = "GPCM",
+        GPCMSlopeRegime = "moderate",
+        StressLevel = "moderate",
+        SlopeLevels = 2L,
+        MaxAbsCenteredLogSlope = 0.15,
+        Replications = 1L,
+        ScoreSupportReplications = 1L,
+        MinScoreCount = 4L,
+        MinScoreProportion = 0.10,
+        MaxZeroScoreLevels = 0L,
+        ScoreSupportStatus = "ok",
+        Status = "ok",
+        Interpretation = "The GPCM generator has moderate relative discrimination spread for slope-recovery review.",
+        ScoreSupportInterpretation = "Generated score categories were all represented with at least minimal support in the retained replications.",
+        ScoreSupportNextAction = "Use score-category support as supporting DGM evidence for this recovery run.",
+        NextAction = "Report this generator condition alongside recovery and uncertainty summaries."
+      ),
+      condition_reporting_notes = tibble::tibble(
+        Model = "GPCM",
+        GPCMSlopeRegime = "moderate",
+        StressLevel = "moderate",
+        ConditionArea = "slope_regime",
+        ReportingAttention = "context",
+        ConditionFinding = "moderate_slope_regime",
+        Evidence = "model=GPCM; slope_regime=moderate",
+        ReportingImplication = "The slope-regime label describes generator context.",
+        NextAction = "Report the generator condition.",
+        ValidationUse = "generator_condition_not_release_gate"
+      ),
+      diagnostic_reporting_notes = tibble::tibble(
+        Facet = "Rater",
+        ReportingAttention = "context",
+        DiagnosticFinding = "diagnostic_context_available",
+        Evidence = "replications=1; mean_separation=2.10; mean_reliability=0.82",
+        ReportingImplication = "Fit/separation diagnostics are available for context.",
+        NextAction = "Keep this row separate from recovery gates.",
+        ValidationUse = "diagnostic_only_not_release_gate"
+      ),
+      diagnostic_review = tibble::tibble(
+        Facet = "Rater",
+        Replications = 1L,
+        MeanSeparation = 2.1,
+        MeanReliability = 0.82,
+        MeanInfit = 1.00,
+        MeanOutfit = 1.02,
+        DiagnosticAvailability = "available",
+        Status = "not_assessed",
+        ValidationUse = "diagnostic_only_not_release_gate",
+        Interpretation = "Diagnostic context only.",
+        NextAction = "Keep separate from recovery gates."
+      ),
+      metric_review = tibble::tibble(
+        ParameterType = "facet",
+        Facet = "Rater",
+        ComparisonScale = "logit",
+        RMSE = 0.01,
+        Bias = 0.01,
+        RMSEStatus = "ok",
+        BiasStatus = "ok",
+        CoverageStatus = "ok",
+        OverallStatus = "ok",
+        NextAction = "No immediate action."
+      ),
+      uncertainty_review = tibble::tibble(
+        ParameterType = "facet",
+        Facet = "Rater",
+        ComparisonScale = "logit",
+        Coverage95 = 1,
+        CoverageStatus = "ok",
+        SEAvailableRate = 1,
+        SEStatus = "ok",
+        Interpretation = "Coverage is within the requested target tolerance.",
+        NextAction = "Use as supporting uncertainty evidence under the stated simulation setup."
+      ),
+      reading_order = tibble::tibble(
+        Step = 1L,
+        Route = "summary(recovery_review)",
+        WhatToRead = "Overall run status.",
+        Purpose = "Start with the summary."
+      ),
+      next_actions = "Increase the replication count.",
+      thresholds = list(min_reps = 30L, max_rmse = c(default = 0.5)),
+      notes = "RMSE and bias statuses depend on supplied practical thresholds.",
+      source = rec,
+      digits = 3L
+    ),
+    class = "mfrm_recovery_assessment"
+  )
+
+  assessment_bundle <- build_summary_table_bundle(assessment)
+  expect_identical(assessment_bundle$source_class, "mfrm_recovery_assessment")
+  expect_true(all(c("overview", "checklist", "condition_reporting_notes",
+                    "condition_review", "diagnostic_reporting_notes",
+                    "diagnostic_review", "metric_review", "uncertainty_review",
+                    "reading_order", "next_actions",
+                    "thresholds", "notes") %in% names(assessment_bundle$tables)))
+
+  assessment_diag <- build_summary_table_bundle(summary(assessment),
+                                                appendix_preset = "diagnostics")
+  expect_true(all(c("overview", "reading_order", "checklist",
+                    "condition_reporting_notes", "condition_review",
+                    "diagnostic_reporting_notes", "diagnostic_review",
+                    "metric_review", "uncertainty_review") %in%
+                    names(assessment_diag$tables)))
+  validation_summary <- list(
+    topline_release_decision = tibble::tibble(
+      Cases = 1L,
+      ReleaseRecoveryStatus = "review",
+      PrimaryDecisionBasis = "recovery metrics, convergence, and Monte Carlo precision"
+    ),
+    reading_order = tibble::tibble(
+      Step = 1L,
+      Route = "summary(validation)$topline_release_decision",
+      WhatToRead = "Release status.",
+      Purpose = "Start with the top-line decision."
+    ),
+    release_decision_table = tibble::tibble(
+      CaseID = "gpcm_high_dispersion_sparse",
+      ReleaseRecoveryStatus = "review",
+      RecoveryMetricStatus = "ok",
+      UncertaintyStatus = "review",
+      ScoreSupportStatus = "review"
+    ),
+    case_summary = tibble::tibble(
+      CaseID = "gpcm_high_dispersion_sparse",
+      GPCMSlopeRegime = "high_dispersion",
+      ScoreSupportStatus = "review",
+      MinScoreCount = 0L,
+      MaxZeroScoreLevels = 1L
+    ),
+    condition_summary = tibble::tibble(
+      CaseID = "gpcm_high_dispersion_sparse",
+      GPCMSlopeRegime = "high_dispersion",
+      ScoreSupportStatus = "review",
+      MinScoreCount = 0L,
+      MaxZeroScoreLevels = 1L
+    ),
+    condition_reporting_notes = tibble::tibble(
+      CaseID = "gpcm_high_dispersion_sparse",
+      ConditionArea = "score_support",
+      ReportingAttention = "reporting_review",
+      ConditionFinding = "omitted_generated_score_categories",
+      Evidence = "max_zero_score_levels=1",
+      ReportingImplication = "Report sparse generated score support as condition stress.",
+      NextAction = "Inspect category-level recovery before generalizing.",
+      ValidationUse = "generator_condition_not_release_gate"
+    ),
+    diagnostic_oc_summary = tibble::tibble(
+      CaseID = "gpcm_high_dispersion_sparse",
+      Facet = "Rater",
+      MeanSeparation = 0,
+      MeanReliability = 0,
+      DiagnosticAvailability = "available",
+      Status = "not_assessed",
+      ValidationUse = "diagnostic_only_not_release_gate"
+    ),
+    diagnostic_reporting_notes = tibble::tibble(
+      CaseID = "gpcm_high_dispersion_sparse",
+      Facet = "Rater",
+      ReportingAttention = "reporting_review",
+      DiagnosticFinding = "zero_separation_or_reliability",
+      Evidence = "mean_separation=0; mean_reliability=0",
+      ReportingImplication = "Report zero separation as diagnostic context, not release failure.",
+      NextAction = "Inspect the generated condition before using reliability language.",
+      ValidationUse = "diagnostic_only_not_release_gate"
+    ),
+    domain_decision_table = tibble::tibble(
+      CaseID = "gpcm_high_dispersion_sparse",
+      StatusDomain = "score_support",
+      Status = "review"
+    )
+  )
+  class(validation_summary) <- "summary.mfrmr_recovery_validation"
+  validation_bundle <- build_summary_table_bundle(validation_summary)
+  expect_identical(validation_bundle$source_class, "summary.mfrmr_recovery_validation")
+  expect_true(all(c("topline_release_decision", "reading_order", "release_decision_table",
+                    "case_summary", "condition_summary", "condition_reporting_notes",
+                    "diagnostic_reporting_notes",
+                    "diagnostic_oc_summary",
+                    "domain_decision_table") %in%
+                    names(validation_bundle$tables)))
+  expect_identical(
+    as.character(validation_bundle$table_index$Role[
+      validation_bundle$table_index$Table == "condition_reporting_notes"
+    ]),
+    "recovery_validation_condition_reporting_notes"
+  )
+  expect_identical(
+    as.character(validation_bundle$table_index$Role[
+      validation_bundle$table_index$Table == "diagnostic_reporting_notes"
+    ]),
+    "recovery_validation_diagnostic_reporting_notes"
+  )
+  expect_identical(
+    as.character(validation_bundle$table_index$Role[
+      validation_bundle$table_index$Table == "diagnostic_oc_summary"
+    ]),
+    "recovery_validation_diagnostic_oc_summary"
+  )
+  validation_diag <- build_summary_table_bundle(validation_summary,
+                                                appendix_preset = "diagnostics")
+  expect_true("condition_reporting_notes" %in% names(validation_diag$tables))
+  expect_true("diagnostic_reporting_notes" %in% names(validation_diag$tables))
+  expect_true("diagnostic_oc_summary" %in% names(validation_diag$tables))
+  validation_recommended <- build_summary_table_bundle(validation_summary,
+                                                       appendix_preset = "recommended")
+  validation_compact <- build_summary_table_bundle(validation_summary,
+                                                   appendix_preset = "compact")
+  expect_true("diagnostic_reporting_notes" %in% names(validation_recommended$tables))
+  expect_true("diagnostic_reporting_notes" %in% names(validation_compact$tables))
+  expect_true("condition_reporting_notes" %in% names(validation_recommended$tables))
+  expect_true("condition_reporting_notes" %in% names(validation_compact$tables))
+  expect_true("diagnostic_oc_summary" %in% names(validation_recommended$tables))
+  expect_true("diagnostic_oc_summary" %in% names(validation_compact$tables))
+  expect_identical(validation_recommended$appendix_preset, "recommended")
+  expect_identical(validation_compact$appendix_preset, "compact")
+  expect_true("recovery_validation_reading_order" %in%
+                validation_bundle$table_index$Role)
+  expect_true("recovery_validation_condition_summary" %in%
+                validation_bundle$table_index$Role)
+  validation_diag <- build_summary_table_bundle(validation_summary,
+                                                appendix_preset = "diagnostics")
+  expect_true(all(c("case_summary", "condition_summary", "condition_reporting_notes",
+                    "diagnostic_reporting_notes",
+                    "diagnostic_oc_summary",
+                    "domain_decision_table") %in%
+                    names(validation_diag$tables)))
+  expect_false("reading_order" %in% names(validation_diag$tables))
+  expect_false("topline_release_decision" %in% names(validation_diag$tables))
+  expect_summary_bundle_roles_registered(recovery_bundle, recovery_compact,
+                                         assessment_bundle, assessment_diag,
+                                         validation_bundle, validation_diag,
+                                         validation_recommended,
+                                         validation_compact)
 })
 
 test_that("build_summary_table_bundle supports future arbitrary-facet active-branch inputs", {
@@ -983,7 +1698,7 @@ test_that("apa_table consumes workflow, bias, anchor, and prediction summaries d
   expect_identical(bias_tbl$which, "top_rows")
   expect_true(nrow(bias_tbl$table) > 0L)
 
-  anchor_tbl <- apa_table(summary(summary_table_bundle_workflow_fixture$audit), which = "facet_summary")
+  anchor_tbl <- apa_table(summary(summary_table_bundle_workflow_fixture$row_review), which = "facet_summary")
   expect_s3_class(anchor_tbl, "apa_table")
   expect_identical(anchor_tbl$which, "facet_summary")
   expect_true(nrow(anchor_tbl$table) > 0L)

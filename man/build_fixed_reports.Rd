@@ -17,7 +17,7 @@ build_fixed_reports(
 
 \item{branch}{Output branch:
 \code{"facets"} keeps the legacy-compatible fixed-width layout;
-\code{"original"} returns compact sectioned fixed-width text for local audit reports.}
+\code{"original"} returns compact sectioned fixed-width text for report drafts.}
 }
 \value{
 A named list with class \code{mfrm_fixed_reports} (and a branch-specific
@@ -55,7 +55,7 @@ skipped.
 \itemize{
 \item \code{bias_fixed}: fixed-width table of interaction effects.
 \item \code{pairwise_fixed}: pairwise contrast text (2-way only).
-\item \code{pairwise_table}: machine-readable contrast table.
+\item \code{pairwise_table}: structured contrast table.
 \item \code{interaction_label}: facets used for the bias run.
 }
 }
@@ -79,7 +79,7 @@ artifact is specifically required for a compatibility handoff.
 \examples{
 \donttest{
 toy <- load_mfrmr_data("example_bias")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
+fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 bias <- estimate_bias(fit, diag, facet_a = "Rater", facet_b = "Criterion", max_iter = 2)
 fixed <- build_fixed_reports(bias)

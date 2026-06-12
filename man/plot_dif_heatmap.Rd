@@ -48,7 +48,7 @@ visually comparable.}
 \item{...}{Additional graphical parameters passed to \code{\link[graphics:image]{graphics::image()}}.}
 }
 \value{
-Invisibly, an \code{mfrm_plot_data} payload whose \code{data} slot bundles
+Invisibly, an \code{mfrm_plot_data} object whose \code{data} slot bundles
 the row x column metric matrix (\verb{$matrix}), the source long table
 (\verb{$pairs}), and the metric label. Earlier 0.1.x releases returned the
 bare matrix; consume \verb{$data$matrix} to keep code forward-compatible.
@@ -86,7 +86,7 @@ functioning contrasts with \code{\link[=analyze_dff]{analyze_dff()}}.
 toy <- load_mfrmr_data("example_bias")
 
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                 method = "JML", model = "RSM", maxit = 25)
+                 method = "JML", model = "RSM", maxit = 30)
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 int <- dif_interaction_table(fit, diag, facet = "Rater",
                              group = "Group", data = toy, min_obs = 2)

@@ -15,7 +15,9 @@ fair_average_table(
   reference = c("both", "mean", "zero"),
   label_style = c("both", "native", "legacy"),
   omit_unobserved = FALSE,
-  xtreme = 0
+  xtreme = 0,
+  fair_se = FALSE,
+  ci_level = 0.95
 )
 }
 \arguments{
@@ -43,13 +45,24 @@ legacy extreme-row exclusion (\code{FALSE}).}
 \item{omit_unobserved}{If \code{TRUE}, remove unobserved levels.}
 
 \item{xtreme}{Extreme-score adjustment amount.}
+
+\item{fair_se}{Logical. When \code{TRUE} and \code{fit} is an MML bounded-\code{GPCM}
+fit, add structural delta-method standard errors and confidence limits
+for \code{Fair(M)} / \code{AdjustedAverage} and \code{Fair(Z)} /
+\code{StandardizedAdjustedAverage}. Person rows remain \code{NA} because MML
+person EAP estimates are not part of the structural Hessian. For
+\code{RSM}, \code{PCM}, and \code{JML} fits this option leaves fair-average SE columns
+unavailable.}
+
+\item{ci_level}{Confidence level used when \code{fair_se = TRUE}; default
+\code{0.95}.}
 }
 \value{
 A named list with:
 \itemize{
 \item \code{by_facet}: named list of formatted data.frames
 \item \code{stacked}: one stacked data.frame across facets
-\item \code{raw_by_facet}: unformatted internal tables
+\item \code{raw_by_facet}: unformatted component tables
 \item \code{settings}: resolved options
 }
 }
@@ -79,14 +92,18 @@ and threshold structure. Rows for non-slope facets (Person, Rater,
 identification convention, so those rows remain continuous with
 the standard PCM Linacre fair-average and reduce to it exactly
 when all slopes equal one.
+This is an identification-based reporting convention for the package's
+bounded \code{GPCM} route, not a unique free-discrimination score-side analogue
+to FACETS fair averages. Do not report it as FACETS score-side equivalence
+or as an operational scoring rule unless that convention is substantively
+justified.
 
-Fair-average-specific conditional SE columns are computed with a
-measure-only delta method. For bounded \code{GPCM}, the derivative is
-\eqn{a_j Var(X \mid \eta, a_j, \delta_j)} for slope-facet rows and
-\eqn{Var(X \mid \eta)} for the geometric-mean-one non-slope rows.
-The standard \code{SE}, \verb{Model S.E.}, and \verb{Real S.E.} columns retain the
-same meaning as for PCM (scaled facet-measure SEs); see the
-"Standard-error caveat" section below before quoting intervals.
+Standard errors on the fair-average value itself are opt-in for MML
+bounded \code{GPCM} fits via \code{fair_se = TRUE}. The original \code{SE},
+\verb{Model S.E.}, \code{ModelBasedSE}, \verb{Real S.E.}, and \code{FitAdjustedSE} columns
+retain the same meaning as for PCM (scaled facet-measure SEs); fair-average
+uncertainty is reported under distinct columns such as \verb{Fair(M) S.E.},
+\verb{Fair(M) CI Lower}, and \code{AdjustedAverageSE}.
 }
 \section{Interpreting output}{
 
@@ -119,11 +136,9 @@ The \code{stacked} data.frame contains:
 \item{Obsvd Average}{Observed raw-score average.}
 \item{Fair(M) Average}{Model-adjusted reference average on the reported score scale.}
 \item{Fair(Z) Average}{Standardized adjusted reference average.}
-\item{Fair(M) Cond. S.E., Fair(Z) Cond. S.E.}{Conditional
-measure-only delta-method SEs for the corresponding fair-average
-values. Package-native aliases are \code{AdjustedAverageConditionalSE}
-and \code{StandardizedAdjustedAverageConditionalSE}.}
 \item{ObservedAverage, AdjustedAverage, StandardizedAdjustedAverage}{Package-native aliases for the three average columns above.}
+\item{AdjustedAverageSE, AdjustedAverageCI_Lower, AdjustedAverageCI_Upper}{Optional structural delta-method uncertainty for \code{AdjustedAverage} when \code{fair_se = TRUE} and available.}
+\item{StandardizedAdjustedAverageSE, StandardizedAdjustedAverageCI_Lower, StandardizedAdjustedAverageCI_Upper}{Optional structural delta-method uncertainty for \code{StandardizedAdjustedAverage} when \code{fair_se = TRUE} and available.}
 \item{Measure}{Estimated logit measure for this level.}
 \item{SE}{Compatibility alias for the model-based standard error.}
 \item{ModelBasedSE, FitAdjustedSE}{Package-native aliases for \verb{Model S.E.} and \verb{Real S.E.}.}
@@ -138,18 +153,17 @@ columns in this table are the \strong{measure-level} standard errors of the
 underlying facet element (the same SE that would appear in
 \code{summary(fit)$facets}), rescaled by the fair-average score scale factor
 so the units line up with the reported \verb{Fair(M) Average} / \verb{Fair(Z) Average}
-columns. They are \strong{not} fair-average SEs.
-
-The \verb{Fair(M) Cond. S.E.} / \verb{Fair(Z) Cond. S.E.} columns are
-fair-average-specific conditional delta-method SEs, but they propagate
-only the focal level's measure SE through the expected-score curve.
-They do \strong{not} propagate the joint covariance of the relevant facet
-element, threshold parameters, slopes, and person-measure estimation
-through \eqn{\mathrm{E}[X \mid \theta_p, j^\star]}. mfrmr does not
-currently expose that full joint covariance (under MML the person
-measure is integrated out of the structural Hessian; under JML no
-joint Hessian is built). Treat these columns as conditional screening
-intervals, not full model-uncertainty intervals.
+columns. They are \strong{not} delta-method standard errors of the fair-average
+values themselves. When \code{fair_se = TRUE}, the distinct \verb{Fair(M) S.E.} /
+\verb{Fair(Z) S.E.} columns are computed by
+propagating the joint covariance of the relevant facet element, the
+threshold parameters, and the slope parameters through the gradient of
+\eqn{\mathrm{E}[X \mid \theta_p, j^\star]}. This is a structural
+covariance calculation: MML person EAP estimates are conditioned on rather
+than included in the Hessian, so person rows receive unavailable fair-average
+SEs. \strong{Do not use the measure-level \code{SE} / \verb{Model S.E.} columns as
+\eqn{\pm 1.96 \cdot \mathrm{SE}} confidence-interval bounds on the
+fair-average value.}
 }
 
 \section{References}{
@@ -179,7 +193,7 @@ slope-aware extension.)
 \examples{
 \donttest{
 toy <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
+fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 t12 <- fair_average_table(fit, udecimals = 2)
 t12_native <- fair_average_table(fit, reference = "mean", label_style = "native")
 summary(t12)

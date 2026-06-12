@@ -1,89 +1,1073 @@
+# mfrmr 0.2.1
+
+This release focuses on a clearer public workflow, a more readable reporting
+surface, and source-aware review outputs. The main user-facing entry points are
+`mfrm_results()`, `mfrm_report()`, `export_mfrm_results()`,
+`launch_mfrmr_viewer()`, and `mfrmr_output_guide("public")`.
+
+Highlights:
+
+- A shorter public workflow now starts from `fit_mfrm()` -> `mfrm_results()` ->
+  `mfrm_report()` -> `export_mfrm_results()`.
+- `mfrm_report()` and `summary(mfrm_report(...))` provide first-screen report
+  readiness tables, report routes, and cautious interpretation boundaries.
+- Simulation and recovery summaries expose operating-characteristic,
+  sparse-design, peer-review, and recovery-review tables for appendix and
+  export workflows.
+- Linking, anchor, bias, misfit/pathway, and network review outputs are routed
+  through explicit result components and scoped follow-up helpers.
+- Release-review artifacts now distinguish CRAN-time lightweight checks from
+  full non-CRAN regression evidence, and the readiness gate checks that the
+  local `R CMD check` log matches the target package version.
+
+Detailed changes:
+
+- The generated APA narrative no longer labels overall fit as
+  "acceptable"/"elevated". It now reports whether mean-square fit fell
+  within or outside the active screening band, names the band, and states
+  that band position is screening evidence rather than a model-validity
+  decision. Element-level wording uses the same screening-band language.
+- The APA narrative now separates separation reliability from observed
+  inter-rater agreement explicitly: reliability sentences state that
+  separation indices are not inter-rater agreement, and agreement sentences
+  are introduced as a separate quantity.
+- APA Methods text for `MML` fits now states the estimation basis: person
+  measures are EAP estimates, and residual-based fit statistics are
+  evaluated at those EAP measures rather than at JMLE estimates. A matching
+  fit-basis caution routes external FACETS comparisons to
+  `method = "JML"`.
+- The APA narrative and Table 1 note now report measure-level confidence
+  intervals when available: the Results fit/precision section states the CI
+  level, method, and `CIEligible` counts, and the facet-summary table note
+  instructs reporting `CI_Lower` / `CI_Upper` for eligible rows.
+- APA Wright-map and facet-summary notes now state the fitted sign
+  convention explicitly (higher person values = higher ability; higher
+  non-person facet values = greater severity/difficulty under the default
+  negative orientation), including any `positive_facets` exceptions, instead
+  of the previous "depending on facet orientation" wording. The pathway-map
+  note and `plot.mfrm_fit()` help now state that the expected-score pathway
+  display is distinct from the Bond-and-Fox-style measure-versus-fit bubble
+  chart available via `plot_bubble()`.
+- The MML-vs-FACETS residual basis is now documented across the fit
+  surfaces: `diagnose_mfrm()`, `facets_fit_df_guide()`,
+  `facets_fit_review()` (including a new residual-basis guidance row and
+  interpretation-guide rows), the package statistical-background help, and
+  the FACETS migration vignette all state that MML fit statistics are
+  computed at shrunken EAP person measures and route JMLE-style comparisons
+  to `method = "JML"`.
+- Small-df ZSTD availability is now documented as an explicit boundary:
+  mfrmr withholds ZSTD as `NA` when the applicable df falls below 1
+  (Wilson-Hilferty instability), while FACETS/Winsteps under `WHEXACT` can
+  report a value on the same sparse cell. The fit guides and
+  `facets_fit_review()` now describe NA-vs-finite ZSTD pairs as availability
+  differences rather than fit differences.
+- The MML person-row separation/reliability convention is now documented:
+  person rows apply the separation formulas to EAP measures with posterior
+  SDs, which yields a conservative summary that is lower than the IRT
+  empirical-reliability convention and is not numerically comparable to
+  JMLE-based FACETS person reliability. The APA reliability sentence carries
+  the same note when a Person row is present under `MML`.
+- `preset = "monochrome"` is now accepted by all preset-based plot helpers,
+  including `plot_fair_average()`, `plot_displacement()`,
+  `plot_unexpected()`, `plot_interrater_agreement()`, `plot_marginal_fit()`,
+  `plot_marginal_pairwise()`, `plot_facets_chisq()`, `plot_qc_dashboard()`,
+  `plot_threshold_ladder()`, and the network/secondary plot methods, not
+  only the fit-family plots.
+- `assess_mfrm_recovery()` now reports uncertainty evidence separately from
+  recovery metrics. This makes unavailable SE/coverage evidence visible without
+  turning it into an implied RMSE or bias failure.
+- `inst/validation/release-readiness.R` now follows the target package version
+  from `DESCRIPTION`, selects versioned evidence-map/checklist files when
+  available, and reports stale `R CMD check` logs as package-check review
+  items when the check-log package version does not match the target release.
+- `precision_review_report()` now includes a source-grounded fit/separation
+  basis table. This keeps mean-square fit, ZSTD standardization,
+  Rasch/FACETS-style separation, and package QC thresholds in separate
+  reporting lanes.
+- New `mfrm_results()` gives users a FACETS-style first-screen entry point:
+  it accepts an existing fit, a `run_mfrm_facets()` object, or a standard
+  long-format data frame, runs diagnostics automatically, gathers available
+  tables/reviews/plot routes, and can emit a lightweight temporary HTML
+  report. Its summary includes next-action routes and a replay-code scaffold.
+  Existing table, report, analysis, and review helpers remain supported as
+  detailed components. `mfrm_results_interactive()` adds an explicit opt-in
+  column-selection wizard for interactive sessions only.
+- `summary(mfrm_results(...))` now includes a `triage` table that orders
+  unavailable, review, information, and OK signals across diagnostics, plots,
+  tables, precision/reliability, reporting, model scope, and network review
+  surfaces. `next_actions` uses that triage layer for first-screen routing.
+- `mfrmr_output_guide("public")` now gives the shortest top-level public API
+  map: explicit fit, comprehensive results, report readiness, optional viewer,
+  download export, scoped guide, and opt-in interactive routes. The guide also
+  carries `APILayer`, `ObjectRole`, and `DecisionBoundary` columns so
+  top-level public surfaces, specialist follow-ups, advanced design-review
+  rows, and migration/integration routes are separated before users scan the
+  broader namespace, and so users can see whether a route estimates,
+  summarizes, displays, exports, or only points to the next helper.
+- `mfrmr_output_guide("entry")` still gives the first-screen creation routes,
+  including explicit-fit, comprehensive-results, purpose-specific guide, and
+  opt-in interactive routes. The guide labels lifecycle, user level,
+  recommended-entry status, and includes advanced simulation/network route
+  rows.
+- The README now starts from a shorter public-surface workflow:
+  `fit_mfrm()` -> `mfrm_results()` -> `mfrm_report()` ->
+  `export_mfrm_results()`. Detailed table, report, review, and export helpers
+  are presented as scoped follow-ups rather than as functions to memorize
+  before the first analysis.
+- `mfrmr_output_guide("viewer")` now maps local Shiny viewer workflows back
+  to the `mfrm_results(include = ...)` object that should be created first,
+  including publication, validation, bias-screen, pathway/misfit, and combined
+  review routes.
+- `plot.mfrm_diagnostic_screening()` now gives diagnostic-screening simulation
+  output an integrated visualization route. The default overview combines
+  legacy ZSTD, strict marginal, strict pairwise, strict combined, and optional
+  report-review rates; focused views cover report signals, scenario contrasts,
+  and runtime summaries. The draw-free return is an `mfrm_plot_data` object,
+  so `plot_data(diag_eval, type = "overview", component = "plot_long")` can be
+  used directly for ggplot2, plotly, Quarto, or custom export workflows.
+  Draw-free diagnostic-screening plot objects also carry `overview`,
+  `reading_order`, `next_actions`, `reporting_notes`, and `figure_recipes`,
+  keeping custom figure/report handoffs aligned with the same interpretation
+  boundaries used by `summary(diag_eval)`.
+- `summary(evaluate_mfrm_diagnostic_screening(...))` now provides an explicit
+  diagnostic-screening report surface, and `build_summary_table_bundle()` /
+  `export_summary_appendix()` can export its scenario, performance,
+  report-signal, contrast, and draw-free plot-data tables.
+- Diagnostic-screening summaries now include `reading_order`, `next_actions`,
+  `reporting_notes`, and `figure_recipes` tables so users can separate
+  first-read tables, follow-up actions, figure/caption planning,
+  appendix-only tables, operating-characteristic claims, and validation-gate
+  boundaries before writing report text.
+- `mfrmr_output_guide("simulation")` now routes users to diagnostic-screening
+  evaluation and appendix export alongside data generation, design/recovery
+  evaluation, network review, and peer-review design review.
+- `mfrm_results(include = ...)` now accepts purpose presets:
+  `"publication"`, `"validation"`, `"facets"`, `"bias"`, `"misfit_review"`,
+  `"network"`, and `"gpcm_review"` in addition to `"standard"` and `"all"`.
+  The bias preset surfaces facet-level bias-screen guidance while leaving
+  interaction-bias facet-pair selection explicit; the misfit preset bundles
+  unexpected responses, displacement review, and pathway-map fit annotations.
+- `mfrmr_output_guide("binary")` and the README now make the ordinary
+  person-item dichotomous route explicit: pass the item column as the single
+  non-person facet and use `model = "RSM"`; with exactly two ordered
+  categories this is the usual binary Rasch logit up to centering and
+  threshold-identification conventions.
+- New `launch_mfrmr_viewer()` provides an optional local Shiny reader for
+  existing `mfrm_results` objects. It does not estimate models, read external
+  web applications, or change diagnostics; it displays the already-built
+  overview, triage, status, QC evidence, APA-style report text when available,
+  bias screens, pathway/misfit review, tables, plots, and replay code. The QC,
+  Report, Bias, and Pathway/Misfit tabs now include local section-status
+  tables so unavailable or not-requested sections are visible at the point of
+  inspection.
+- New `export_mfrm_results()` writes a lightweight download folder from an
+  existing `mfrm_results` object: summary CSVs, collected tables, HTML, RDS,
+  replay code, and a written-files manifest, with optional PNG plot export and
+  best-effort zip creation. This is the compact result-object handoff route;
+  `export_mfrm_bundle()` remains the broader fit-centered analysis archive.
+- `export_mfrm_results()` now accepts `include = "report"` to write
+  `mfrm_report()` artifacts into the same download folder: report-table CSVs
+  such as `report_index`, evidence summaries, and reporting templates, plus
+  report Markdown and report HTML.
+- New `mfrm_report()` turns an existing `mfrm_results` object into
+  report-ready QC, APA, validation, reviewer, or technical section plans with
+  claim-readiness, report-gap, evidence-boundary, and next-action tables. It
+  is a reporting layer over existing results, not a new estimator, diagnostic,
+  or acceptance rule.
+- `mfrm_report()` now includes `first_screen`, a FACETS-like entry table with
+  an overall row and one row per major evidence area. It reports status,
+  readiness, the main issue, next action, and primary route before users open
+  the detailed evidence and template tables.
+- `print(mfrm_report(...))`, the help-page examples, and the README now follow
+  the same short reading order: read `summary(report)` and `report$first_screen`
+  first, use `report$report_index` and `report$template_index` as table
+  indexes, and open detailed evidence tables only when those indexes point to
+  them.
+- `summary(mfrm_report(...))` now provides a shorter reader-facing report
+  summary: overview status, first-screen rows, immediate actions, optional
+  not-requested sections, claim-readiness counts, report gaps, boundary rows,
+  and standard routes. This keeps the comprehensive report object easier to
+  read without creating a new diagnostic decision rule.
+- `mfrm_report(output = "html")` now starts from the same reader-facing
+  guidance and report-summary tables before the full Markdown report. This
+  keeps browser output aligned with the `summary(report)` and `first_screen`
+  workflow.
+- `mfrm_report()` now includes a compact `report_index` table that lists
+  the major evidence areas, evidence status, readiness label, review-signal
+  count, and the primary/template tables to inspect next. This keeps the
+  expanded report surface navigable without hiding the detailed tables.
+- `mfrm_report()` `report_index` now also includes explicit evidence,
+  template, plot, export, and `mfrm_results(include = ...)` routes. These
+  columns keep report drafting, figure review, and download handoff connected
+  to the same evidence surface without adding a new diagnostic decision rule.
+- `mfrm_report()` now also exposes fit-specific `fit_criteria`,
+  `zstd_conventions`, and `fit_decision_policy` tables. These make the
+  selected MnSq threshold band, alternative published fit bands, and
+  engine-vs-FACETS-style df/ZSTD conventions visible before users write fit,
+  separation, or reliability claims.
+- `mfrm_report()` now adds result-specific fit evidence tables from the stored
+  `mfrm_results()` fit-measures component: observed fit-status counts,
+  threshold-profile sensitivity, df/ZSTD sensitivity counts, and row-level
+  df-sensitive prompts. This keeps FACETS-style ZSTD differences visible
+  without turning them into a new acceptance rule or a different MnSq signal.
+- `mfrm_report()` now includes `fit_reporting_templates`, a cautious wording
+  scaffold for APA, QC, validation, reviewer, and technical reports. The
+  templates summarize observed fit counts, threshold-profile sensitivity,
+  ZSTD convention, and df sensitivity in separate sentences so fit,
+  separation, and reliability are not collapsed into one pass/fail claim.
+- All `mfrm_report()` reporting-template tables now share evidence and claim
+  boundary columns: `EvidenceTable`, `EvidenceRoute`, `BoundaryType`,
+  `ClaimStrength`, and `RecommendedUse`. This makes template wording easier to
+  trace back to its source table and helps keep descriptive, caveated, and
+  follow-up-only claims separate.
+- `mfrm_report()` now includes `template_index`, a stacked template index
+  over all fit, precision, bias, misfit/pathway, and linking/anchor reporting
+  templates. It lets users review boundary type, claim strength, recommended
+  use, and evidence route before opening full template text.
+- `mfrm_report()` now also includes precision-specific reporting surfaces:
+  `precision_evidence_summary`, `precision_basis`, and
+  `precision_reporting_templates`. These summarize separation, reliability,
+  strata, precision tier, and review/warn checks while keeping
+  Rasch/FACETS-style separation reliability distinct from inter-rater
+  agreement, model fit, and standalone validity evidence.
+- `mfrm_report()` now includes bias-specific reporting surfaces when the
+  source result was built with `include = "bias"`: `bias_evidence_summary`
+  and `bias_reporting_templates`. These keep facet-level bias screens,
+  interaction-bias contrasts, DFF follow-up, and fairness conclusions
+  separated so screen-positive rows are not reported as final fairness or
+  invariance decisions.
+- `mfrm_report()` now includes misfit/pathway reporting surfaces when the
+  source result was built with `include = "misfit_review"`:
+  `misfit_evidence_summary` and `misfit_reporting_templates`. These keep
+  unexpected-response rows, displacement review, pathway-map evidence, and
+  case-review wording separate so local misfit prompts are not reported as
+  automatic exclusion, fairness, or validity decisions.
+- `mfrm_report()` now includes linking/anchor reporting surfaces when the
+  source result was built with `include = "linking"`:
+  `linking_evidence_summary` and `linking_reporting_templates`. These keep
+  anchor readiness, drift review, screened equating-chain review, and GPCM
+  support boundaries separate so anchor evidence is not reported as automatic
+  drift absence, completed equating, DFF support, or validity proof.
+- `mfrm_results(include = "linking")` now adds the fitted object's stored
+  anchor-review evidence and an operational linking-readiness surface to the
+  comprehensive results object. It exposes `plot(res, type = "anchors")` for
+  anchor-readiness visualization and routes drift/equating follow-up to
+  explicit multi-fit calls such as `detect_anchor_drift()` and
+  `build_equating_chain()`.
+- Recovery review can now retain fit/separation operating characteristics as
+  diagnostic context. These summaries help users inspect MnSq, ZSTD,
+  separation, and reliability behavior without making them top-line recovery
+  gates. Recovery assessment and validation summaries also expose
+  `diagnostic_reporting_notes` so zero separation/reliability and ZSTD
+  sensitivity are routed into report caveats rather than recovery or release
+  decisions.
+- `assess_mfrm_recovery()` now includes `condition_review` and
+  `condition_reporting_notes` for recovery simulations. For bounded `GPCM`,
+  these tables separate slope-regime context and generated score-category
+  support from recovery metrics before users interpret stress cases.
+- Bounded-`GPCM` simulation specifications now carry `slope_regime` metadata.
+  These labels are documented as package recovery-review labels, not
+  literature-derived fit or adequacy cut points.
+- The optional recovery-validation summary now separates the core release
+  recovery decision from extended sensitivity evidence. This keeps stress
+  cases visible without treating them as top-line release failures by default.
+- `build_summary_table_bundle()` can now convert recovery-validation summaries
+  into appendix-ready tables, including top-line decision, case, condition, and
+  diagnostic reporting tables. `export_summary_appendix()` accepts the same
+  recovery-validation summaries for CSV/HTML appendix handoff, and
+  `export_mfrm_bundle(summary_tables = ...)` can co-locate those tables with a
+  fit-based export bundle.
+- `export_summary_appendix()` and `export_mfrm_bundle(summary_tables = ...)`
+  now accept person-fit summary objects consistently with
+  `build_summary_table_bundle()`.
+- `precision_review_report()` can now be sent through
+  `build_summary_table_bundle()` and appendix/export helpers. Its
+  `fit_separation_basis` table remains a precision-review surface so fit,
+  ZSTD, separation/reliability/strata, and QC thresholds are not mistaken for
+  release or recovery success gates.
+- `fit_measures_table()` and `facets_fit_review()` summaries can now be sent
+  through the same appendix/export helpers. Their df/ZSTD sensitivity and
+  optional external FACETS matching tables stay separate from MnSq fit status
+  and top-line validation decisions.
+- `reporting_checklist()` now includes a Global Fit row for the
+  fit/separation reporting boundary, pointing users to
+  `precision_review_report()`, `fit_measures_table()`, and
+  `facets_fit_review()` before drafting fit, ZSTD, separation, or reliability
+  claims.
+- New observed-data resampling helpers, `build_mfrm_resampling_spec()` and
+  `draw_mfrm_resamples()`, create person-clustered stratified subsample or
+  bootstrap inputs with manifest tables for stratum representation and
+  rater/facet coverage. These helpers are explicitly framed as stability or
+  reproducibility inputs against a full-data reference, not true-parameter
+  recovery evidence.
+- `build_mfrm_sim_spec()` and `simulate_mfrm_data()` now support
+  `assignment = "sparse_linked"` for planned-missing sparse rating designs.
+  The generated data retain sparse-design metadata for design density,
+  planned missingness, rater coverage, and rater-pair common-person links.
+- `evaluate_mfrm_design()` and `evaluate_mfrm_recovery()` now carry sparse
+  linked generators directly, including run-level and summary columns for
+  planned missingness and rater-pair linking diagnostics.
+- `build_summary_table_bundle()` now separates those sparse linked diagnostics
+  into appendix-ready `sparse_design` tables for design-evaluation and
+  recovery-simulation outputs, so planned missingness and rater linkage are
+  not buried inside performance or recovery metrics. The table also labels
+  zero common-person rater pairs and requested-link target shortfalls as
+  design-review issues, not recovery failures.
+- `summary(evaluate_mfrm_design(...))`, `summary(evaluate_mfrm_recovery(...))`,
+  and `build_summary_table_bundle()` now include a compact `sparse_review`
+  table when sparse linked designs are active. `plot.mfrm_design_evaluation()`
+  also accepts sparse-design metrics such as `plannedmissingrate`,
+  `mincommonpersons`, `zerocommonpairs`, and `pairsshorttarget`.
+- New `build_mfrm_network_review()` synthesizes the existing design-network
+  analysis into a reportable review surface: connectedness, articulation
+  points, bridge edges, facet-level vulnerability, optional sparse-linking
+  diagnostics, and a reporting map that keeps network evidence separate from
+  MFRM estimates, fit, separation, and recovery gates.
+- New `build_peer_review_sim_spec()` creates peer-review / peer-assessment
+  simulation specifications where submissions and reviewers share the same ID
+  universe, self-review can be structurally excluded, and common-link anchor
+  submissions can be assigned many reviewers. Generated data carry
+  peer-review design metadata for assignment density, reviewer load,
+  reciprocal review pairs, and common submissions per reviewer pair.
+  `build_peer_review_design_review()` turns the same metadata into
+  appendix-ready assignment diagnostics, and `build_mfrm_network_review()` can
+  include the metadata alongside graph connectedness review.
+- README, help pages, and vignettes now show the recommended reading order for
+  recovery review: `summary(recovery_review)`, condition notes/review,
+  diagnostic notes/review, status plot, metric plot, then row-level recovery
+  rows that need follow-up. Recovery assessment and validation summaries now
+  expose this as a `reading_order` table so users can find the next table to
+  inspect without opening plot data.
+
 # mfrmr 0.2.0
 
-This is the first CRAN-facing release after 0.1.5. Version 0.1.6 was
-used as an unpublished development line, so most users will experience
-0.2.0 as a direct upgrade from CRAN 0.1.5 to CRAN 0.2.0. Read this
-section as the public change log relative to 0.1.5; the later
-"mfrmr 0.1.6 (development-only)" section is retained only as detailed
-development history.
+Documentation accuracy pass plus research-grounded visualization and
+GPCM bias-inference refinements. Documentation, citations, and band
+attributions are corrected against primary sources, with mathematical
+screening-SE corrections, Snijders-corrected person-fit reporting where
+the assumptions are met, and clearer plot data for review.
 
-0.2.0 is a substantial analysis and reporting release. It expands the
-bounded-GPCM route, adds shrinkage and design-audit workflows, improves
-APA/reporting handoff, adds residual dimensionality and classical DIF
-screening helpers, broadens the visualization surface, and corrects
-several statistical documentation and output contracts.
+This release keeps the 0.1.6 defaults, but it is not only an
+infrastructure polish release. Public review helpers have been
+consolidated on the `*_review*` names documented below, and the former
+`*_audit*` public spellings, S3 compatibility classes, and duplicate
+top-level fields have been removed as a deliberate breaking cleanup.
 
-## Upgrade notes from CRAN 0.1.5
+## Release overview
 
-Review these points before rerunning an existing 0.1.5 analysis script:
+For most users, the main changes in 0.2.0 are:
 
-- **Default changes**: `diagnose_mfrm()` now defaults to
-  `diagnostic_mode = "both"` rather than `"legacy"`; default MML
-  quadrature uses `quad_points = 31` rather than `15`; and `plot(fit)`
-  now returns the Wright map alone. Use
-  `diagnostic_mode = "legacy"`, `quad_points = 15`, and
-  `plot(fit, type = "bundle")` to recover the old first-pass workflow.
-- **Person-fit outputs**: `compute_person_fit_indices()` now computes
-  `lz` from the model category probability of the observed category.
-  Development snapshots briefly exposed an `ECI4` column; it is not
-  part of 0.2.0 because it duplicated the standardized chi-square /
-  Outfit-ZSTD approximation rather than Tatsuoka and Tatsuoka's
-  extended-caution index. `lz_star` is now a JML-only Snijders-style
-  score-projection statistic; the finite-N heuristic is explicitly
-  named `lz_finite_n`. MML/EAP fits return `lz_star = NA` with
-  `lz_star_method = "unavailable_for_eap_mml"`.
-- **Reporting and APA output**: `print(build_apa_outputs(...))` now
-  prints manuscript-style Method / Results prose by default. Use
-  `summary(apa)` or `print(apa, qa = TRUE)` for the QA/completeness
-  view. `as_kable()` and `as_flextable()` adapters are available for
-  table export.
-- **Missing values and ordered scores**: `fit_mfrm()` can recode common
-  missing-code sentinels through `missing_codes`, while still preserving
-  the default `NULL` behavior for scripts that already clean data
-  upstream. Ordered-score handling, score maps, binary ordered data,
-  and retained zero-count categories have more explicit messages and
-  documentation.
-- **GPCM scope**: bounded GPCM is broader than in 0.1.5, but still
-  intentionally scoped. Core fitting, diagnostics, plots, posterior
-  scoring, information checks, slope-aware fair averages, bias
-  screening, APA outputs, visual summaries, manifests, replay scripts,
-  exports, and QC pipeline outputs are supported or supported with
-  explicit caveats. FACETS score-side parity outputs
-  (`facets_parity_report()` and
-  `facets_output_file_bundle(include = "score")`) remain blocked for
-  GPCM.
-- **Fairness/DIF workflow**: residual and refit DFF outputs now make
-  screening labels versus ETS A/B/C labels clearer. `analyze_dif_classical()`
-  adds a limited classical screen using generalized CMH and explicit
-  thresholded binary logistic DIF; it is not SIBTEST and does not claim
-  ETS classifications.
-- **Visualization**: 0.2.0 adds or expands many plot helpers, including
-  shrinkage and audit plots, local-dependence and residual displays,
-  DIF summaries, rater agreement/severity views, empirical fit plots,
-  TAM-style fit p-value tables, residual-dimensionality plots, and
-  classic front doors for expected score curves, TCC, cumulative
-  category curves, and KIDMAP-style person fit.
-- **Simulation and planning**: design simulation now has richer design
-  summaries, arbitrary-facet simulation support, bias/signal detection
-  helpers, CSV-friendly `as.data.frame()` methods, and plot controls for
-  user-selected planning metrics.
-- **External-package bridges**: import adapters for `mirt`, `TAM`, and
-  `eRm` expose external fit objects through the same measurement-side
-  `mfrm_fit` interface. These are plotting/table bridges, not full
-  replay, bias, DIF, or anchor-bundle imports.
-- **Statistical documentation corrections**: several references,
-  thresholds, and formula notes were corrected or narrowed, including
-  Wright (1998), Wright and Linacre (1994) fit bands, Yen Q3,
-  Christensen et al. Q3 guidance, Morris posterior-SE correction, Koo
-  and Li ICC band boundaries, Bock and Aitkin MML-engine wording, and
-  Linacre/FACETS/Winsteps citation metadata.
+- **More defensible mathematics and inference**: RSM/PCM/GPCM reductions,
+  GPCM slope handling, fit df/ZSTD conventions, Snijders-corrected person fit,
+  information curves, recovery simulations, and score-support edge cases are
+  now covered by explicit regression tests.
+- **Clearer FACETS relationship**: `mfrmr` is positioned as a package-native
+  MFRM workflow with FACETS-style tables, review helpers, and migration routes,
+  not as a promise to numerically reproduce every FACETS estimate.
+- **Better user-facing diagnostics**: fit-measure tables, data-quality reports,
+  category curves, residual-PCA follow-up, person-fit summaries, recovery
+  checks, and reporting bundles now expose structured tables before asking
+  users to interpret plots or console output.
+- **R-first visualization access**: plot helpers increasingly return reusable
+  `draw = FALSE` data, long-form plot tables, annotations, and style metadata
+  so users can rebuild figures in ggplot2, plotly, Quarto, or other reporting
+  workflows.
+- **Quieter, more reproducible workflows**: routine preparation and
+  rating-range messages are stored in fit/data objects and are opt-in at the
+  console; long-running design evaluation shows progress only in interactive
+  runs by default.
 
-For package maintainers and users who installed GitHub snapshots during
-development: the 0.1.6 section below records what happened during that
-unpublished development line, but 0.2.0 is the public release boundary.
+Breaking changes in 0.2.0 are intentional and concentrated around public naming
+clarity: former exported `*_audit*` helper names and their compatibility S3
+classes were removed in favour of the canonical `*_review*` surface. Model
+defaults from 0.1.6 are retained.
+
+The detailed notes below are organized as follows:
+
+- user pathways, output contracts, visualization, and naming changes;
+- mathematical/statistical corrections and regression-test coverage;
+- recovery simulation and validation workflow;
+- citation/documentation corrections;
+- smaller feature additions, bug fixes, build hygiene, and deferred work.
+
+## User pathways, output contracts, and terminology
+
+- **FACETS positioning guide**: new `facets_positioning_guide()` makes the
+  package boundary explicit for reports and migration notes. `mfrmr` is not
+  presented as a FACETS numerical clone: estimates remain package-native
+  unless external FACETS output is supplied for comparison, while FACETS-style
+  wrappers, coverage tables, and output files serve transition, handoff, and
+  report-organization purposes.
+- **Report-ready FACETS relationship wording**: `reporting_checklist()` and
+  `summary(reporting_checklist(...))` now carry a `facets_positioning` table
+  so Quarto, appendix, and handoff workflows can quote the same boundary
+  language used by `facets_positioning_guide()`. `build_summary_table_bundle()`
+  includes this table as `facets_relationship_wording`.
+- **FACETS output-contract review naming**:
+  `facets_output_contract_review()` is now the sole public helper for
+  FACETS-style output-contract review. The returned bundle class is
+  `mfrm_facets_contract_review`; the helper checks package output columns and
+  derived metric consistency against the FACETS-style contract, and does not
+  claim numerical FACETS equivalence. Public result components use
+  `column_review` and `metric_checks`, not older bookkeeping labels.
+- **FACETS pathway for bias and Wright maps**: `mfrmr_output_guide("facets")`
+  now explicitly routes FACETS users to Table 14-style bias/interactions via
+  `estimate_bias()`, `bias_interaction_report()`, `bias_pairwise_report()`,
+  and `plot_bias_interaction()`, and to variable-map review via
+  `plot(fit, type = "wright")`, `plot_wright_unified()`, and
+  `plot_data(type = "wright")`.
+- **FACETS pathway for anchors and category outputs**:
+  `mfrmr_output_guide("facets")` now also exposes direct/group anchor routes
+  through `review_mfrm_anchors()`, `make_anchor_table()`, and
+  `fit_mfrm(anchors = ..., group_anchors = ...)`, drift/linking review through
+  `detect_anchor_drift()` and `plot_anchor_drift()`, and FACETS-style category
+  and fair-average routes through `rating_scale_table()`,
+  `category_structure_report()`, `category_curves_report()`, and
+  `fair_average_table()`.
+- **Standalone residual and subset file writers**: new
+  `write_mfrm_residual_file()` writes observation-level observed, expected,
+  residual, standardized residual, score-information, and optional category
+  probability columns to CSV/TSV. New `write_mfrm_subset_file()` writes
+  connected-subset summaries plus node-membership files for external linking
+  review, without forcing users through the legacy graph/score output bundle.
+- **Category-specific information curves**: `category_curves_report()` now
+  includes a `category_information` table and
+  `plot(..., type = "category_information")`. Category contributions use
+  `a^2 P_k(theta) (k - E[X | theta])^2` and sum to the total curve
+  information at each theta value; for PCM/RSM this reduces to the unit-slope
+  form.
+- **Cumulative probability curves**: `category_curves_report()` now also
+  includes `cumulative_probabilities` and `cumulative_boundaries`, with
+  `plot(..., type = "cumulative")` for the FACETS/Winsteps-style
+  accumulated category-probability view. Both `P(X <= k)` and flipped
+  `P(X >= k)` directions are returned; boundary rows report approximate
+  theta values where `P(X <= k) = .5`, with crossing status columns so
+  out-of-range or multiple-crossing boundaries are not over-interpreted.
+- **Category-curve overview plot**: `plot(category_curves_report(...))`
+  now defaults to an overview panel that shows category probabilities,
+  cumulative probabilities, total information, and category-specific
+  information together. Existing focused views remain available through
+  `type = "ogive"`, `"ccc"`, `"cumulative"`, `"information"`, and
+  `"category_information"`. The plot now also supports
+  `preset = "monochrome"` with line-type separation and explicit cumulative
+  `.5` boundary-line control through `boundary_status = "in_range"`,
+  `"all"`, or `"none"`. `plot_data(..., component = "plot_long")` returns a
+  ggplot2/plotly-friendly long table spanning ogive, category-probability,
+  cumulative-probability, total-information, and category-specific-information
+  series, with `curve_style` carrying the resolved color/line-type mapping.
+- **Quieter rating-range provenance**: `fit_mfrm()` no longer emits an
+  informational message for routine observed-score range inference by
+  default. The same provenance is retained in `fit$prep`,
+  `summary(fit)$settings_overview`, and `describe_mfrm_data()` so users can
+  still tell whether `rating_min` / `rating_max` were declared or inferred.
+  Set `options(mfrmr.show_inferred_rating_range = TRUE)` to restore the
+  one-time message during interactive checks.
+- **Structured data-preparation notes**: `prepare_mfrm_data()` now stores
+  row retention and preparation notes in `fit$prep$row_retention` and
+  `fit$prep$preparation_notes`. Row drops, whitespace trimming, duplicate
+  person-by-facet cells, and single-level facets are therefore available to
+  `summary(fit)` and `summary(describe_mfrm_data(...))` instead of existing
+  only as transient console messages. Routine row-drop, trim, and
+  single-level-facet messages are quiet by default; set
+  `options(mfrmr.show_preparation_messages = TRUE)` to show them during
+  interactive checks.
+- **Fit-annotated pathway plot data**: `plot(fit, type = "pathway",
+  draw = FALSE)` now returns R-friendly `pathway_long` and
+  `pathway_annotations` tables alongside `fit_measures`, `fit_status`,
+  `curve_fit_status`, and `fit_measure_status`. This lets users rebuild
+  FACETS-style pathway maps in ggplot2, plotly, or Quarto while retaining the
+  same underfit/overfit labels used by `fit_measures_table()`.
+- **R-first plot-data contracts for bias and information plots**:
+  `plot_bias_interaction(..., draw = FALSE)` now exposes `plot_long`,
+  `plot_annotations`, `flag_summary`, and `plot_settings` across scatter,
+  ranked, heatmap, and facet-profile views. `compute_information()` now stores
+  `conditional_sem`, `information_long`, and a precision/SEM summary, and
+  `plot_information(type = "sem")` / `"csem"` are supported aliases for the
+  conditional standard-error-of-measurement curve.
+- **Category-probability plot aliases and annotations**:
+  `plot(category_curves_report(...), type = "category_probability")` and
+  `type = "conditional_probability"` now route to the same category-probability
+  curves as `type = "ccc"`, matching FACETS/Winsteps terminology without
+  changing the underlying probability data. Draw-free plot data now include
+  `plot_annotations` and `curve_summary` alongside `plot_long`,
+  `curve_style`, `boundary_lines`, and `plot_settings`.
+- **FACETS feature coverage matrix**: new `facets_feature_coverage()` gives a
+  public, release-scoped map from the FACETS 64-bit output index to current
+  `mfrmr` routes, separating `implemented`, `partial`, `not_implemented`, and
+  `not_targeted` surfaces. This makes unsupported FACETS-specific outputs such
+  as Winsteps control-file export, raw FACETS report parsing, and arbitrary
+  Web/Excel menu plots explicit rather than implicit.
+- **G-study / D-study planning route**: new `mfrm_d_study()` extends
+  `mfrm_generalizability()` from observed variance-component review to planned
+  design comparison. It reports projected `G` and `Phi` under alternative
+  numbers of raters, criteria, or other random measurement facets, and exposes
+  residual-scaling sensitivity assumptions so simplified G-study residuals are
+  not silently over-interpreted. `plot(mfrm_d_study(...), draw = FALSE)` and
+  `plot_data()` expose reusable coefficient/error-variance series for custom
+  design-planning visuals. `plot.mfrm_d_study()` now supports line plots with
+  `group_var`, ggplot2-like `panel_by` / `panel_grid` small multiples, and
+  two-axis `heatmap` / `contour` views for rater-by-task design grids. An
+  optional `surface3d` view is available for exploration, while heatmap/contour
+  remain the recommended reporting displays. Plot data labels these
+  coefficients as `MetricFamily = "G-theory"` so they are not confused with
+  IRT or classical-test-theory reliability coefficients.
+- **Connectivity network visualization**: `subset_connectivity_report()` now
+  includes reusable node/edge tables, and `plot(..., type = "network")`
+  provides an igraph-based co-observation graph when `igraph` is installed.
+  With `draw = FALSE`, the returned plot data supports custom R visualization
+  without depending on the base plotting default.
+- **MFRM design-network analysis**: new `mfrm_network_analysis()` treats the
+  person/facet-level observation design as an undirected weighted
+  co-observation graph and returns graph-level connectedness, node degree and
+  strength, betweenness/closeness, articulation points, bridge edges, and
+  facet-level vulnerability summaries. These are explicitly framed as design
+  linking diagnostics, not as person ability, rater quality, or model-fit
+  statistics. `plot(..., type = "centrality")`, `plot(..., type =
+  "facet_summary")`, and `plot(..., type = "network")` provide immediate
+  visual checks with draw-free plot data.
+- **Rater-effect network analysis**: new `rater_network_analysis()` adds a
+  Lamprianou-style pairwise rater network route separate from design
+  connectedness. It supports agreement, disagreement, and directed
+  severity-direction networks, returns rater-level in/out strength,
+  betweenness/closeness, a finite network severity index, retained edge
+  tables, and all pairwise metrics used before thresholding. The help page
+  states that these indices are descriptive network diagnostics rather than
+  Rasch logit estimates or formal fit statistics. `plot(..., type =
+  "network")`, `"severity"`, `"centrality"`, and `"matrix"` provide immediate
+  visual checks and reusable plot data.
+- **Halo-effect network screening**: new `rater_halo_network_analysis()`
+  reshapes observed ratings into rater-by-criterion nodes, computes
+  Spearman/Pearson/Kendall node-pair correlations, labels same-rater
+  cross-criterion edges as `halo`, and contrasts halo-edge weights with
+  non-halo edges. The default Bonferroni-adjusted edge filter follows the
+  conservative network-screening strategy used in Lamprianou's halo example.
+  The returned bundle includes `summary`, `node_metrics`, `edge_metrics`,
+  `pair_metrics`, `halo_summary_by_rater`, and caveats that the Welch
+  halo/non-halo comparison is descriptive because network edges are dependent.
+  `halo_summary_by_rater` now includes `ReviewStatus` and `ReviewReason`
+  based on same-rater cross-criterion mean weight, incident non-halo
+  comparison weight, and retained halo-edge count, with labels framed as
+  screening priorities rather than causal halo diagnoses.
+  `plot(..., type = "edge_distribution")`, `"halo_summary"`, `"matrix"`, and
+  `"network"` provide immediate visual review and draw-free plot data.
+- **Fit-measures review table**: new `fit_measures_table()` gives a direct
+  FACETS-style fit-measure view for raters, criteria, or other facet elements.
+  It returns both R-friendly columns and a `facets_table` with labels such as
+  `Infit MnSq`, `Outfit ZStd`, `Fit Status`, and `Review Reason`; `underfit`,
+  `overfit`, and `mixed` subsets are included for immediate review.
+- **Fit-threshold sensitivity summaries**: `fit_measures_table()` now returns
+  `profile_summary_by_facet` and `profile_summary_overall`, reporting
+  underfit, overfit, mixed, and any-flag rates under multiple literature-based
+  MnSq bands from Linacre, Bond & Fox, and Wright & Linacre. The main table
+  still uses the active review band, while `threshold_profiles` controls
+  whether literature, active, all, or no profile summaries are returned.
+- **Fit-measure CI display**: `fit_measures_table(ci_level = ...)` now adds
+  approximate measure confidence intervals to both the R-friendly table and
+  `facets_table`. `plot(fit_measures, type = "measure_ci",
+  ci_level = ..., preset = "monochrome")` draws an interval plot with the
+  requested confidence level.
+- **FACETS df/ZSTD guide**: new `facets_fit_df_guide()` documents the
+  engine-vs-FACETS-style degrees-of-freedom distinction and the MnSq-to-ZSTD
+  transformation workflow. `fit_measures_table(fit_df_method = "both")` now
+  exposes primary df plus FACETS-style companion df/ZSTD columns, and
+  adds `df_sensitivity`, `df_sensitive`, and `df_sensitivity_summary` so users
+  can identify rows whose |ZSTD| flag status or interpretation is
+  convention-sensitive. The df-sensitivity screen exposes explicit
+  `df_zstd_tolerance`, `df_zstd_large_shift`, and `df_ratio_tolerance`
+  settings so FACETS-style reviews can be reproduced under stricter or more
+  permissive rules. `plot(fit_measures, type = "df_sensitivity")` visualizes
+  the largest engine-vs-FACETS-style ZSTD shifts. `facets_fit_review()` now
+  uses the same row-level df-sensitivity engine and returns
+  `df_sensitivity`, `df_sensitive`, and `df_sensitivity_summary`; the former
+  `internal_comparison` component has been removed to keep the public output
+  vocabulary consistent. External FACETS ZSTD tolerance is now named
+  `external_zstd_tolerance`, separating external-table comparison from
+  engine-vs-FACETS-style df sensitivity. The same
+  `plot(..., type = "df_sensitivity")` route is available for
+  `facets_fit_review()` bundles.
+- **Data quality score-support review**: `data_quality_report()` now keeps the
+  full fitted score support in `category_counts`, adds
+  `score_support_review`, and surfaces `caveats` for zero-frequency categories.
+  Intermediate gaps such as a declared 1-5 scale with observed `1, 2, 4, 5`
+  are flagged either as retained zero-count categories (`keep_original = TRUE`)
+  or as original-label gaps hidden by internal recoding (`keep_original =
+  FALSE`). `plot(data_quality_report(...), type = "score_support")` highlights
+  those categories, with `preset = "monochrome"` available.
+- **Facet-level category-usage QC**: `data_quality_report()` now adds
+  `category_usage_by_facet` and `category_usage_summary`, covering every fitted
+  facet level crossed with the retained score support. This flags local zero
+  and sparse category use, such as a rater who never uses the middle category
+  even when the category appears elsewhere in the data.
+  `plot(data_quality_report(...), type = "facet_category_usage")` provides a
+  quick view of affected facet levels.
+- **Data quality dashboard**: `plot(data_quality_report(...), type =
+  "dashboard")` now combines row review, score-support category use,
+  facet-level category-use issues, and missing/invalid row counts in one
+  base-R view. With `draw = FALSE`, the returned plot data contains all four
+  panel tables for report handoff.
+- **Data quality flags**: `data_quality_report()` now includes
+  `quality_flags`, a prioritized QC table that summarizes row exclusions,
+  unknown design levels, score-support gaps, facet-level category-use cautions,
+  and restricted facet response patterns with counts and next actions.
+  `summary(data_quality_report(...))` previews this table when any priority
+  flag is present.
+- **Facet response-pattern QC**: `data_quality_report()` now adds
+  `facet_response_patterns`, which flags facet levels that use only one score
+  category, assign one category to at least the configured dominant-category
+  cutoff, or use only boundary categories. This catches cases such as a rater
+  assigning score 1 to all responses on a 1-5 scale.
+- **Data quality overview and score map plots**: `data_quality_report()` now
+  adds `quality_overview`, a compact area-level status table for rows,
+  score support, facet-level category use, facet response patterns, and design
+  matching. `plot(..., type = "quality_flags")` summarizes priority QC flags by
+  area, `plot(..., type = "facet_response_patterns")` shows dominant local
+  category use by facet level, and
+  `plot(..., type = "score_map")` shows original-to-internal score mappings
+  when labels have been recoded.
+- **User-pathway and plot-data access**: `mfrmr_output_guide("facets")`,
+  `mfrmr_output_guide("conquest")`, and `mfrmr_output_guide("r")` now give
+  focused starting points for users arriving from FACETS, ConQuest, or
+  R-first visualization workflows. New `plot_data()` extracts the full
+  reusable plot-data list, or one named component, from any `mfrm_plot_data` object or
+  mfrmr plot helper that supports `draw = FALSE`. New
+  `plot_data_components()` lists each reusable plot-data component, its shape,
+  role, accessor call, and custom-graphics notes so users can discover
+  `plot_long`, annotation, settings, style, and review tables without reading
+  the underlying list structure.
+- **Monochrome plot preset**: plot helpers that use the package visual preset
+  system now accept `preset = "monochrome"`. Color remains the default
+  (`"standard"`), while monochrome supports print-oriented figures and
+  color-independent review.
+- **Interval-aware visualization guide**: new `mfrmr_interval_guide()` maps
+  public 95% CI / uncertainty routes across fit-measure tables, Wright maps,
+  fair averages, bias screens, displacement, DFF/DIF summaries, anchor drift,
+  rater severity profiles, rater trajectories, manuscript Figure 1 composites,
+  shrinkage, and ICC review. The guide records the interval basis and
+  interpretation boundary so CI displays remain precision or screening
+  evidence rather than automatic fit, fairness, or validity decisions.
+- **Searchable help concepts**: high-level route guides and CI-capable plot /
+  table helpers now carry Rd concept tags such as `confidence intervals`,
+  `visual diagnostics`, `reporting workflow`, `route selection`, and
+  `GPCM boundaries`. This makes `help.search()` useful for finding the right
+  help page before users know the function name.
+- **Shrinkage CI plot data**: `plot_shrinkage_funnel(show_ci = TRUE,
+  ci_level = ...)` now draws approximate raw and shrunken estimate whiskers and
+  returns `RawCI_Lower`, `RawCI_Upper`, `ShrunkCI_Lower`, `ShrunkCI_Upper`,
+  and `CI_Level` for downstream graphics. `plot(fit, type = "shrinkage")` now
+  uses the requested `ci_level` for CI whiskers instead of a fixed 95% level.
+- **Shrinkage figure guidance**: `visual_reporting_template()` and the visual
+  diagnostics vignette now include an empirical-Bayes shrinkage funnel route,
+  caption skeleton, beginner check, and interpretation guardrails so users can
+  report shrinkage movement without treating it as automatic rater-quality,
+  bias, or validity evidence.
+- **Response-time diagnostic layer**: new `response_time_review()` and
+  `plot_response_time_review()` summarize response-time metadata outside the
+  fitted MFRM likelihood. The review returns rapid/slow thresholds,
+  event-level flags, person/facet/score summaries, and grouped plot data so
+  timing patterns can be reviewed as descriptive QC rather than joint
+  speed-accuracy parameters or automatic exclusion rules.
+  `mfrmr_output_guide("response_time")` and the R-user pathway now expose this
+  route alongside other review and reusable plot-data helpers.
+  `mfrm_results(include = "response_time", response_time = ...,
+  response_time_data = ...)` can now carry the same descriptive review into
+  the first-screen result object, `summary(res)$next_actions`,
+  `plot(res, type = "response_time")`, the local viewer payload, and
+  `export_mfrm_results()` table exports without changing fitted MFRM
+  estimates.
+- **Bounded GPCM boundary text**: README, vignettes, help pages, and
+  unsupported-path messages now state the current `GPCM` scope consistently:
+  direct data generation, parameter recovery, fair averages, bias screening,
+  summary-table bundles, appendix export, caveated APA/QC/export bundles, and
+  exploratory linking review are available within documented caveats. Role-based
+  design evaluation and population forecasting are also available as caveated
+  bounded-`GPCM` sensitivity evidence when the requested design preserves the
+  simulation specification's slope structure. Role-based diagnostic and
+  signal-detection design screening is available as caveated slope-aware
+  operating-characteristic evidence with `gpcm_boundary` output. Full
+  FACETS-style score-side contract review or score-side equivalence, posterior
+  predictive checks, and heavy backend routes remain outside the validated
+  route. The validation artifacts now include a bounded-`GPCM` roadmap so
+  those `supported_with_caveat`, `blocked`, and `deferred` rows are tracked as
+  explicit release-scope decisions instead of implicit support gaps.
+- **GPCM score-side boundary checks**: blocked bounded-`GPCM` score-side
+  helpers now stop before producing partial outputs. The
+  `facets_output_file_bundle()` and
+  `facets_output_contract_review()` help pages also state that graph and
+  package-native scorefile output are caveated bounded-`GPCM` routes while
+  full FACETS output-contract review remains outside the bounded-`GPCM`
+  boundary. `gpcm_score_side_contract()` records
+  the estimand, uncertainty, reduction-test, schema, guard, and release-wording
+  requirements that separate caveated scorefile output from full FACETS-style
+  score-side review.
+- **GPCM route guidance**: `gpcm_capability_matrix()` now includes
+  `RecommendedRoute` and `NextValidationStep` columns, so each supported,
+  caveated, blocked, or deferred helper family states both the current
+  substitute workflow and the validation evidence needed before the boundary
+  can move.
+- **GPCM out-of-scope route guidance**: blocked and deferred bounded-`GPCM`
+  routes now report the matching capability-matrix row, recommended substitute
+  route, and next validation step before returning an error. The errors carry
+  class `mfrmr_gpcm_scope_error` with helper, area, status, recommended-route,
+  and next-validation-step fields for programmatic handling.
+- **GPCM route-boundary coverage**: the capability-matrix tests and validation
+  review now verify that every blocked or deferred bounded-`GPCM` row is
+  represented by a structured stop condition or an explicit future-scope entry,
+  and that those messages stay synchronized with the matrix's area, status,
+  route, and next-validation-step fields. `gpcm_runtime_guard_coverage()` is
+  exported as the public table for this route-boundary check.
+  `mfrmr_output_guide("gpcm")` now points users to both
+  `gpcm_capability_matrix()` and this coverage table.
+- **GPCM release-readiness alignment**: `inst/validation/release-readiness.R`
+  now checks that blocked and deferred `gpcm_capability_matrix()` rows have
+  non-empty route guidance, are represented in the installed bounded-`GPCM`
+  scope notes, and are covered by future-scope rows in the release-evidence
+  checklist.
+- **User-facing wording**: public visualization and reporting documentation now
+  uses "plot data", "surface data", or "data handoff" instead of implementation
+  terminology where possible, while retaining actual field names such as
+  `plot_payloads` only where users need to access them.
+- **RSM/PCM wording review**: package-level, fitting, information, bias, and
+  export docs now distinguish the equal-weighting `RSM` / `PCM` reference route
+  from the broader ordered-response model surface. Stale "Rasch-only" and
+  "legacy-compatible" labels were narrowed where they described helpers that
+  now also serve bounded `GPCM` or direct summary-table workflows.
+- **Model-choice user guide**: README and the GPCM/MML vignettes now give
+  user-facing guidance for choosing `RSM`, `PCM`, or bounded `GPCM`, including
+  report wording templates and a warning that better `GPCM` fit is sensitivity
+  evidence rather than an automatic operational-scoring decision. A
+  documentation terminology regression test now guards against reintroducing the
+  stale Rasch-only phrasing removed in this pass.
+- **Fit-level model-choice review**: new `build_model_choice_review()` bundles
+  `compare_mfrm()`, model-role guidance, downstream route availability, report
+  wording templates, the bounded-`GPCM` support matrix, and an optional
+  `build_weighting_review()` run so users can review `RSM` / `PCM` /
+  bounded-`GPCM` candidates from the actual fitted objects.
+- **Review-name migration completed as a breaking cleanup**:
+  `review_mfrm_anchors()`, `precision_review_report()`,
+  `review_conquest_overlap()`, `facet_small_sample_review()`, and
+  `build_weighting_review()` are now the only exported review-name
+  implementations. The former public `*_audit*` function spellings, their S3
+  compatibility classes, and old public component names such as
+  `orientation_audit`, `nesting_audit`, `hierarchical_audit`, and
+  `shrinkage_audit` have been removed or renamed rather than shown as
+  user-facing migration artifacts.
+- **Compatibility registry narrowed**:
+  `compatibility_alias_table()` now lists only retained compatibility names that
+  remain part of the public package surface, such as `mfrmRFacets`,
+  `analyze_dif`, `JMLE`, and long-standing output column aliases. It no longer
+  advertises removed review-name migration artifacts.
+- **Public output review wording**: linking-review tables and plot routes now
+  use `anchor_review` labels in user-facing source metadata, model-choice
+  raw objects and summaries expose only `weighting_review_status` /
+  `weighting_review`, and diagnostics summary-table bundles export
+  `precision_review` without the old duplicate table. Bias reports now expose
+  `orientation_review`; model-comparison output uses `nesting_review`; and
+  reproducibility manifests use `hierarchical_review` and `shrinkage_review`.
+  DFF subgroup refit rows now record anchor-review notes in `LinkingReview`.
+- **Review component accessors**: new `anchor_review()` and
+  `precision_review()` helpers provide a stable route to package-native
+  review components. They intentionally read only canonical `*_review` fields.
+- **Reference review naming**: `reference_case_review()` is now the canonical
+  package-native report-completeness helper, and reporting-checklist /
+  cheatsheet wording now uses review labels for hierarchical and complete-case
+  follow-up items.
+- **Review-wording guardrail**: current public guides and generated help now
+  avoid exposing `audit` as a user-facing package concept. Data-quality
+  row-status output uses `row_review`; prediction provenance uses
+  `row_review` / `population_review`; bias, model-comparison, and manifest
+  components use `*_review` names; and ordinary user-facing guidance uses
+  review/check/traceability terminology.
+- **Output helper guide**: new `mfrmr_output_guide()` gives users a compact
+  purpose-to-helper map for choosing among `*_table`, `*_report`,
+  `*_review`, `*_bundle`, `export_*`, and compatibility routes. The
+  compatibility guide now also states that old `*_audit` helper and component
+  names are not part of the 0.2.0 public surface.
+
+## Mathematical and inferential corrections
+
+- **Identified step/threshold parameterization**: `RSM`, `PCM`, and
+  bounded `GPCM` now optimize step/threshold profiles with the correct
+  sum-to-zero degrees of freedom (`steps - 1` per profile). Earlier
+  pre-release implementations centered the step vector after optimization
+  but still left the centered-away null direction in the optimizer,
+  AIC/BIC parameter count, and Hessian. The point-estimate scale is
+  unchanged; the likelihood parameter count and observed-information
+  basis are now aligned with the stated identification constraint.
+- **MML joint covariance layer for structural parameters**:
+  `diagnose_mfrm()` now reuses one observed-information covariance for
+  non-person facet SEs and exposes the same covariance basis for
+  step/threshold and bounded-`GPCM` slope uncertainty in
+  `diagnostics$parameter_uncertainty`. Step rows get `SE`, normal
+  `CI_Lower` / `CI_Upper`, and covariance status metadata. GPCM slope
+  rows get log-slope SEs plus positive-scale delta-method SEs and
+  log-normal confidence limits. `fit_mfrm(..., attach_diagnostics = TRUE)`
+  attaches those structural SE columns to `fit$steps` and `fit$slopes`
+  when the MML Hessian is available.
+- **Measure-level CI contract**: `diagnose_mfrm()$measures` now records
+  `CI_Level = 0.95` and `CI_Method = "Normal approximation"` alongside
+  `CI_Lower` / `CI_Upper`. The interval calculation uses
+  `qnorm(0.975)` rather than a rounded multiplier, while row-level
+  `CIEligible`, `CIBasis`, and `CIUse` continue to distinguish primary
+  reporting intervals from review or screening approximations.
+- **Weighted BIC transparency**: `compare_mfrm()` now reports `WeightedN`,
+  `ICSampleSize`, and `ICSampleSizeBasis` in its comparison table. This makes
+  the BIC penalty basis explicit: ordinary fits use row count, while weighted
+  fits use the sum of weights already used by the fitted model summary.
+- **Residual-PCA boundary handling**: exploratory residual-PCA helpers now
+  capture non-fatal PCA-engine warnings inside the returned PCA bundle instead
+  of emitting them as loose warnings during diagnostics or plotting. Degenerate
+  residual-correlation conditions therefore remain visible for review without
+  looking like confirmatory test failures.
+- **Residual-PCA parallel analysis**: `analyze_residual_pca()` now supports
+  `parallel = TRUE` for residual-permutation parallel analysis. The null
+  comparison permutes standardized residuals within residual columns, preserving
+  column distributions and missingness while breaking residual association.
+  PCA tables gain `ParallelMean`, `ParallelCutoff`,
+  `ExcessOverParallelCutoff`, and `ExceedsParallelCutoff`, and
+  `parallel_status` records availability and successful permutation counts.
+  `plot_residual_pca()` adds `parallel_scree` and `parallel_excess` views.
+  This is reported as exploratory follow-up evidence for dimensionality review,
+  not as a standalone proof of unidimensionality or multidimensionality.
+- **GPCM fair-average structural SEs**: `fair_average_table(fair_se = TRUE)`
+  now adds opt-in structural delta-method SE and CI columns for bounded
+  `GPCM` fair averages when the MML observed-information covariance is
+  available. The original `SE` / `Model S.E.` / `Real S.E.` columns keep their
+  measure-SE meaning; fair-average uncertainty is exposed in distinct columns
+  such as `Fair(M) S.E.`, `AdjustedAverageSE`, and
+  `AdjustedAverageCI_Lower` / `AdjustedAverageCI_Upper`. Person rows remain
+  unavailable because MML person EAP estimates are conditioned on rather than
+  included in the structural Hessian. `summary(fair_average_table(...))` and
+  its print method now surface whether fair-average SEs were requested, how many
+  rows are available, and the resulting status mix. `plot_fair_average(show_ci =
+  TRUE)` uses these columns automatically for bounded-`GPCM` fit objects.
+- **GPCM expected-score consistency**: the internal `expected_score_table()`
+  route now uses the same response-probability bundle as diagnostics and
+  category-count calculations, so bounded `GPCM` expected scores respect the
+  fitted slope parameters instead of falling through to the PCM kernel.
+  Fair-average documentation now also states that non-slope-facet rows use an
+  identification-based reporting convention, not a FACETS score-side
+  equivalence claim.
+- **GPCM invalid-slope guard**: the low-level GPCM expected-score helper no
+  longer treats non-finite, zero, or negative slopes as slope = 1. It returns
+  unavailable expected scores instead, so a malformed bounded-`GPCM` object
+  cannot silently become a PCM-style calculation in fair-average internals.
+  The internal iteration-state replay helper also now has an explicit GPCM
+  probability-kernel branch, avoiding a latent PCM fallback if that route is
+  later moved inside the supported GPCM boundary.
+- **RSM-to-PCM reduction checks**: the test suite now pins the `RSM` special
+  case as common-threshold `PCM`. Under identical common thresholds, `RSM` and
+  `PCM` must agree for category probabilities, unweighted and weighted
+  log-likelihoods, response-bundle diagnostics, generated simulation data, and
+  reconstructed simulation probabilities. The public `compare_mfrm(...,
+  nested = TRUE)` path now also has a regression check that the reported LRT
+  degrees of freedom equal the identified RSM-to-PCM step-structure difference.
+- **Boundary-safe LRT reporting**: `compare_mfrm(..., nested = TRUE)` now
+  records `comparison_basis$lrt_status` and `comparison_basis$lrt_reason`.
+  Non-finite log-likelihoods, equal parameter counts, unsupported nesting, or
+  negative likelihood-ratio statistics no longer fail silently or imply a
+  model-choice conclusion; the LRT is withheld and the print/summary path states
+  why it was not reported.
+- **GPCM slope-scale consistency**: GPCM simulation specifications now treat
+  supplied slopes as relative discriminations and normalize them to the same
+  geometric-mean-one log-slope identification used by `fit_mfrm()`. Recovery
+  summaries compare identified log slopes without an additional mean-alignment
+  step, so absolute slope-scale bias is not hidden by the recovery table.
+- **PCM reduction check for GPCM simulation**: the simulation tests now pin the
+  special case in which bounded `GPCM` has unit slopes. With the same
+  simulation specification, seed, and step-facet thresholds, the generated
+  visible data and reconstructed category-probability matrix must match `PCM`
+  to numerical tolerance. This guards the intended mathematical reduction
+  without implying that a freely estimated `GPCM` fit should equal a `PCM` fit.
+- **PCM reduction check for downstream diagnostics**: the unit-slope `GPCM`
+  reduction is now also tested at the response-probability bundle layer. The
+  bundle used by expected scores, variance-based fit diagnostics, and
+  information calculations must match the `PCM` bundle for probabilities,
+  expected category scores, score variances, fourth central moments, and score
+  information. A companion sensitivity check verifies that non-unit slopes move
+  the same quantities away from the `PCM` values, so the GPCM path is neither a
+  hidden PCM fallback nor an unconstrained divergence.
+- **Mathematical consistency regression tests**: the test suite now pins
+  probability, expectation, variance, fourth-moment, information, and
+  conditional-SEM identities across the low-level bounded-`GPCM` response
+  bundle, `RSM` / `PCM` / bounded-`GPCM` category-curve reports, draw-free
+  CCC/pathway plot data, and `compute_information()`. The checks also require
+  facet-level information-contribution curves to aggregate back to the total
+  information curve. This guards user-visible visualization and reporting
+  tables against drifting away from the probability kernels.
+- **Fit-measure consistency regression tests**: the test suite now verifies
+  that `fit_measures_table()` preserves the documented df/ZSTD formulas,
+  confidence-interval formulas, active fit-status labels, threshold-profile
+  counts and rates, df-sensitivity status taxonomy, and draw-free
+  `measure_ci` / `df_sensitivity` plot data. This pins the FACETS-style
+  reporting surface to the same row-level calculations users see in the
+  returned tables.
+- **Data-quality consistency regression tests**: the test suite now verifies
+  that `data_quality_report()` summary counts are recomputable from returned
+  detail tables, that `quality_flags` and `quality_overview` summarize the
+  same QC evidence, and that draw-free `quality_flags`,
+  `facet_category_usage`, `facet_response_patterns`, and `score_map` plot data
+  preserve score-support gaps, facet-level category-use issues, restricted
+  rater response patterns, and original-label gaps hidden by score recoding.
+- **GPCM bias SE (`estimate_bias()`)**: the conditional plug-in SE for
+  the additive bias shift now uses the correct GPCM information
+  \(\sum_i a_i^2 \mathrm{Var}(X_i)\). The previous pre-release
+  implementation optimized the point estimate with the slope-aware GPCM kernel
+  but used the PCM information \(\sum_i \mathrm{Var}(X_i)\) for
+  `S.E.` / `t` / `Prob.`. The review label remains `"screening"`.
+- **FACETS-style fit ZSTD df layer**: `diagnose_mfrm()` now accepts
+  `fit_df_method = "engine"`, `"facets"`, or `"both"`. The default keeps the
+  existing package-native df convention
+  (`DF_Infit = sum(Var * Weight)`, `DF_Outfit = sum(Weight)`). The FACETS path
+  adds the Wright-Masters/FACETS fourth-moment df approximation
+  (`df = 2 / q^2`) and caps FACETS-style ZSTD values at +/-9. Use
+  `fit_df_method = "both"` when comparing mfrmr fit flags with FACETS output:
+  it preserves the engine ZSTD columns and adds `DF_Infit_FACETS`,
+  `DF_Outfit_FACETS`, `InfitZSTD_FACETS`, and `OutfitZSTD_FACETS`.
+- **FACETS fit review helper**: new `facets_fit_review()` separates
+  engine-level fit-standardization differences from optional external
+  FACETS table comparisons. The engine-vs-FACETS review compares engine and
+  FACETS-style df/ZSTD values row-by-row and flags cases where the df
+  convention changes the usual `|ZSTD| >= 2` screen. When a FACETS-like table
+  is supplied, the external review matches rows by `Facet` / `Level` (or
+  person labels for person-only
+  tables) and classifies differences as `same`, `rounding`,
+  `df_or_whexact_difference`, `mnsq_or_measure_difference`, or
+  `needs_review`. This makes FACETS comparisons reproducible without treating
+  mfrmr's package-native df convention as an error.
+- **FACETS fit table import**: new `read_facets_fit_table()` /
+  `import_facets_fit_table()` reads existing FACETS output into the
+  `Facet` / `Level` / `Infit` / `Outfit` / `ZSTD` / df schema expected by
+  `facets_fit_review()`. It supports already harmonized CSV/TSV-style tables,
+  partial FACETS extracts with ZSTD and `TCount` but no MnSq/df columns, and
+  FACETS `score.N.txt` files, including fixed-field score files using the
+  FACETS manual column positions, with an optional `facet_map` for assigning
+  score-file numbers to user-facing facet names. `facets_fit_review()` now
+  returns `external_table_quality` so users can see duplicate
+  `Facet` x `Level` rows and whether MnSq, ZSTD, df, and count columns were
+  available in the supplied external table.
+- **GPCM fair-average CI display**: `plot_fair_average(show_ci = TRUE)`
+  no longer fabricates CIs from measure-level SEs for bounded `GPCM` fits.
+  It now uses the opt-in structural fair-average SE columns when a fit object
+  is supplied and records an unavailable-CI note for precomputed fair-average
+  bundles that lack those columns.
+- **GPCM bias likelihood checks**: `estimate_bias()` now adds
+  conditional profile-likelihood columns for bounded `GPCM` rows:
+  `LR ChiSq`, `LR d.f.`, `LR Prob.`, `Profile CI Lower`,
+  `Profile CI Upper`, `Profile CI Level`, and `Profile CI Status`.
+  These compare the fitted additive bias shift with zero while holding
+  theta, steps, slopes, and other facet estimates fixed. They strengthen
+  the GPCM screening evidence without turning it into standalone
+  confirmatory fairness inference. `summary(estimate_bias(...))` now
+  surfaces the profile-LR screen-positive count and carries these columns
+  through the top-row review table when they are available.
+
+## Research-grounded visualization refinements
+
+- **Category-curve information output**: `category_curves_report()`
+  now carries per-curve `ScoreVariance`, `Slope`, and `Information`
+  columns. For `GPCM`, `Information` is computed as
+  \(a^2 \mathrm{Var}(X \mid \theta)\), matching the Muraki/Samejima
+  polytomous information identity; for `RSM` / `PCM`, this reduces to
+  the usual score variance. `plot(category_curves_report(fit),
+  type = "information")` returns the corresponding curve-level
+  information plot data.
+- **Bias heatmap review data**: `plot_bias_interaction(plot =
+  "heatmap", draw = FALSE)` now returns `heatmap_cells`,
+  `heatmap_matrix`, flag/count matrices, interpretation guidance, and
+  reference notes. The display is documented as a FACETS Table 13-style
+  screening follow-up, not confirmatory evidence.
+
+## Recovery simulation workflow
+
+- **`evaluate_mfrm_recovery()`** adds a dedicated parameter-recovery
+  simulation route. It repeatedly simulates from a known MFRM generating
+  setup, refits the requested model, and returns row-level truth/estimate
+  comparisons plus summaries by parameter type. Location-like parameters
+  are mean-aligned within replication before reporting recovery `Bias`,
+  `RMSE`, `MAE`, correlation, and 95% coverage where standard errors are
+  available; bounded-`GPCM` slopes are compared on the identified log-slope
+  scale after the generator and fitter have both imposed the geometric-mean-one
+  slope convention. The output also carries ADEMP-style simulation-study
+  metadata so recovery checks are separated from broader design-evaluation
+  claims.
+- **`plot(evaluate_mfrm_recovery(...))`** adds review plots for recovery
+  summaries, coverage, row-level error distributions, truth-estimate scatter,
+  and replication status. `draw = FALSE` returns an `mfrm_plot_data` object
+  with reusable plot tables and notes.
+- **`assess_mfrm_recovery()`** adds a user-facing adequacy checklist for
+  recovery simulations. It separates run completion, convergence, uncertainty
+  availability, coverage, Monte Carlo precision, and optional practical
+  RMSE/Bias thresholds into `ok` / `review` / `concern` style statuses with
+  next-action text. `plot(assess_mfrm_recovery(...))` now provides checklist
+  status-count and parameter-metric review plots so users can see which part of
+  the assessment needs attention before reading the full tables. The
+  `draw = FALSE` plot data include `reading_order`, `guidance`, and
+  user-facing handoff tables such as `section_status` so follow-up starts with
+  review/concern rows rather than raw row-level output.
+- **Simulation refit score support**: simulation-based refit helpers now pass
+  the generator's declared `1:score_levels` score support into `fit_mfrm()`.
+  This keeps zero-count boundary categories in the fitted support during
+  recovery, design-evaluation, diagnostic-screening, and bias-screening runs,
+  and avoids repeated rating-range inference messages in release-validation
+  logs.
+- **Compact step-threshold specifications**: `build_mfrm_sim_spec()` and
+  `simulate_mfrm_data()` now accept step-facet-specific thresholds as a named
+  list or row-named numeric matrix, in addition to the existing long
+  `StepFacet` / `StepIndex` / `Estimate` table.
+- **Design-evaluation progress control**:
+  `evaluate_mfrm_design(progress = interactive())` now shows the progress bar
+  only in interactive sessions by default. Non-interactive tests, Quarto
+  rendering, and batch scripts stay quiet unless users set `progress = TRUE`;
+  users can also set `progress = FALSE` for fully silent exploratory runs.
+- **Release recovery-validation protocol**: `inst/validation/recovery-validation.R`
+  provides an optional long-run validation script for release review. It defines
+  structured review steps, core `RSM` / `PCM` / bounded-`GPCM` recovery cases,
+  an extended latent-regression case, practical thresholds, and a summary
+  writer that produces top-line release-decision, case-level release-decision,
+  review-step, case-plan, case-summary, metric-summary, overall decision-table,
+  domain decision-table, run-note, RDS, and Markdown outputs without adding
+  heavy Monte Carlo runs to routine package tests. The release decision uses
+  recovery metrics, convergence, and Monte Carlo precision as the primary
+  evidence; the domain decision table separately reports uncertainty status so
+  missing JML coverage columns are not mistaken for recovery failure. Printing
+  the validation object or calling `summary(validation)` now shows the
+  release-level decision and case-level statuses before the full tables.
+- **Recovery reporting handoff**: `build_summary_table_bundle()` now accepts
+  `evaluate_mfrm_recovery()` and `assess_mfrm_recovery()` outputs directly,
+  including ADEMP-style methods metadata, replication status, checklist rows,
+  metric review rows, thresholds, notes, and appendix-preset roles.
+- **Recovery appendix export**: `export_summary_appendix()` now recognizes
+  recovery simulation and recovery assessment objects as direct inputs. The
+  workflow vignette shows the full sequence from simulation specification to
+  recovery plots, adequacy assessment, summary-table bundle, and appendix
+  export.
+- **Research-grounded release evidence map**:
+  `inst/validation/release-evidence-map-0.2.0.md` gives a source-based
+  review plan for 0.2.0. It links the release checks to Andrich's `RSM`,
+  Masters' `PCM`, Muraki's `GPCM` and information-function work,
+  FACETS/Winsteps fit conventions, and ADEMP-style simulation-study reporting,
+  then separates release-gate checks from future-scope items. The
+  companion `release-evidence-checklist-0.2.0.csv` provides a structured
+  required / caveat / future-scope checklist for release review.
+  `external-parameter-recovery-simulation-0.2.0.md` summarizes the separate
+  common-data recovery and cross-engine agreement workflow and its limits without bundling the
+  generated simulation datasets; the validation bundle also includes a sourceable
+  helper for re-reading a local external-output directory when that workflow is refreshed.
+- **Release-readiness protocol**:
+  `inst/validation/release-readiness.R` turns the evidence map into a
+  reproducible review object. It records eight review steps, parses an
+  `R CMD check` log, checks the 0.2.0 version contract, verifies the CI
+  workflow contract for warning failures and retained check artifacts, scans
+  public docs for disallowed removed-helper wording, confirms evidence
+  artifacts, and reports a top-line `ok` / `review` / `concern` gate summary
+  without adding exported user-facing API.
 
 ## Citation and attribution corrections
 
+- **Muraki DOI consistency**: `DESCRIPTION` now cites Muraki (1992) using
+  the GPCM article DOI, `10.1177/014662169201600206`. The Muraki (1993)
+  Applied Psychological Measurement reference in GPCM information help pages
+  now uses `10.1177/014662169301700403`.
 - **Wright (1998) page**: `R/api-shrinkage.R` references corrected from
   *Rasch Measurement Transactions*, 12(2), **638** to **632-633**
   (page 638 in the same RMT issue is a different paper; verified at
@@ -131,19 +1115,6 @@ unpublished development line, but 0.2.0 is the public release boundary.
 
 ## Documentation refinements
 
-- **Manuscript handoff UX**: `print(build_apa_outputs(...))` now prints the
-  concise Method / Results draft by default. Use `summary(apa)` or
-  `print(apa, qa = TRUE)` for the structured QA view; legacy
-  `print(apa, top_n = ..., preview_chars = ...)` calls route to that QA view
-  with a warning. The README, vignette, and help pages now separate manuscript
-  prose (`apa$report_text` / `apa`) from completeness checks (`summary(apa)`).
-- **Visual/API reading guide**: `visual_reporting_template()` now includes
-  `ReadFirst`, `NextLook`, `ReportDecision`, and `GPCMBoundary` columns.
-  `reporting_checklist()$visual_scope`, `build_visual_summaries()`, the
-  README, and the reporting/visual vignettes now point users from first-pass
-  dashboard plots to the appropriate component helper and reporting caveat.
-  Bounded `GPCM` visual, fair-average, bias, APA, and QC routes now carry a
-  consistent `support_status` / `caveat` contract.
 - **Linacre FACETS / Winsteps manuals**: cited years updated from 2023
   / 2024 to **2026** (current FACETS 4.5.0 = April 2026, Winsteps 5.11.0
   = March 2026 per <https://www.winsteps.com/index.htm>).
@@ -158,59 +1129,51 @@ unpublished development line, but 0.2.0 is the public release boundary.
   "follow Linacre (1994)". Only the 30-examinee floor is Linacre's;
   the `< 10 sparse` and `< 50 standard` watermarks are mfrmr-specific
   screening choices.
-- **Snijders (2001) lz\\***: `compute_person_fit_indices()` does not
-  report the development finite-N placeholder under the `lz_star` name.
-  For JML fits, `lz_star` now uses the Snijders-style score-projection
-  correction, conditional on the fitted non-person parameters. The
-  `lz / sqrt(1 + 1/N)` screen is retained as `lz_finite_n`. For MML/EAP
-  fits, `lz_star` is deliberately `NA` with `lz_star_method =
-  "unavailable_for_eap_mml"` because EAP posterior means do not satisfy
-  the ML person-score estimating equation used by Snijders' correction.
+- **Snijders (2001) lz\\* correction**: `compute_person_fit_indices()`
+  now computes the Snijders weight-projection correction for
+  JML/fixed-effect person estimates, conditional on the fitted
+  non-person calibration. The implementation uses the polytomous form
+  `w_tilde_k = log(P_k) - c_n d log(P_k) / d theta`, with
+  `c_n = Cov(log P, score) / I(theta)`. MML/EAP person scores keep
+  `lz_star = NA` with `lz_star_status = "not_applicable_eap"` because
+  EAP does not satisfy the ML/MAP/WLE estimating-equation setup.
+- **Report-ready person-fit output**: `compute_person_fit_indices()` now
+  adds practical 5% / 1% flag columns and compact `ReportIndex`,
+  `ReportValue`, `ReviewStatus`, `ReviewReason`, and `ReportCaveat`
+  columns. `ReportIndex` uses `lz_star` only when the Snijders correction
+  was actually computed; otherwise it falls back to uncorrected `lz` with
+  the status caveat left visible. `plot_person_fit()` now carries these
+  person-fit indices in its draw-free plot data, adds reusable `plot_long`
+  and `flag_summary` tables, and supports `fit_index = "loglik"` plus
+  `preset = "monochrome"` for report-focused person-fit displays.
+- **Person-fit summary and table-bundle handoff**:
+  `compute_person_fit_indices()` now returns an `mfrm_person_fit_indices`
+  data-frame subclass. `summary(person_fit)` gives overview counts,
+  `ReviewStatus` / `ReportIndex` / `lz_star_status` summaries, top review
+  rows, thresholds, caveats, and a reporting map. The same summary is now
+  accepted by `build_summary_table_bundle()`, so person-fit review rows and
+  Snijders-availability caveats can move into appendix/report workflows
+  without custom table wrangling.
 - **Marais (2013) `|Q3| > 0.30`**: documented as a community convention
   Marais cites, not as her own recommendation; her actual recommendation
   is the relative-to-mean comparison.
 
-## Release overview
-
-The subsections below give the detailed 0.2.0 release notes. They cover
-both the unpublished 0.1.6 development work and the final 0.2.0 changes
-because CRAN users are upgrading directly from 0.1.5.
-
 ## Default changes
 
-Relative to CRAN 0.1.5, three user-visible defaults change:
+No defaults change between 0.1.6 and 0.2.0. The 0.1.6 defaults
+(`quad_points = 31`, `diagnostic_mode = "both"`,
+`plot.mfrm_fit(type = "wright")`, `keep_original = FALSE`) are retained.
 
-- `diagnose_mfrm(diagnostic_mode = ...)` defaults to `"both"`, so
-  strict marginal screens are produced automatically for `RSM` / `PCM`
-  fits. Pass `diagnostic_mode = "legacy"` to recover the earlier
-  diagnostics-only path.
-- `fit_mfrm(quad_points = ...)` defaults to `31` rather than `15`, so
-  default MML fits are more stable for direct reporting. Pass
-  `quad_points = 15` for the previous exploratory speed setting.
-- `plot(fit)` returns the Wright map alone. The earlier three-plot
-  overview remains available via `plot(fit, type = "bundle")`.
-
-For reporting consistency, `plot_person_fit()`, `plot_bubble()`, and
-`plot_facet_quality_dashboard()` now inherit the active MnSq screening band
-from `mfrm_misfit_thresholds()` when no manual band is supplied. Pass
-explicit plot thresholds (for example `lower = 0.5, upper = 1.5`,
-`fit_range = c(0.5, 1.5)`, or `misfit_warn = 1.5`) to freeze a manual
-review band.
+Note for users upgrading directly from CRAN 0.1.5 to 0.2.0 (skipping
+intermediate 0.1.6 builds): three defaults were flipped in 0.1.6
+and remain on those values in 0.2.0 -- `diagnose_mfrm(diagnostic_mode)`
+went from `"legacy"` to `"both"`, `plot(fit)` returns the Wright map
+alone instead of a three-plot overview (the overview is still
+available via `plot(fit, type = "bundle")`), and `fit_mfrm(quad_points)`
+went from `15` to `31`. See the "mfrmr 0.1.6" section below for the
+full description and revert paths.
 
 ## New features
-
-### Residual dimensionality checks
-
-`check_residual_dimensionality()` adds a parallel-analysis layer for
-residual PCA. It compares observed residual eigenvalues with null
-eigenvalues from independent residual matrices, column-wise residual
-permutations, or fitted-model parametric simulations. The companion
-`plot_residual_dimensionality()` returns the same `mfrm_plot_data`
-payload style as other visual helpers, and `as.data.frame()` exposes
-comparison, observed, and null-distribution tables for CSV export or
-custom plotting. The help page explicitly distinguishes this exploratory
-residual-structure diagnostic from FACETS ZSTD, TAM itemfit ZSTD, and
-mirt's S-X2 statistic.
 
 ### Continuous integration
 
@@ -229,29 +1192,14 @@ upload (no external service contacted).
 
 `plot_dif_summary()` gains optional normal-approximation confidence
 intervals, effect-threshold guide lines, method-aware axis labels, and
-an interpretation-guide payload that downstream code can render
+interpretation-guide data that downstream code can render
 alongside the figure.
 
-### Plot payload printing
+### Plot data printing
 
 `print.mfrm_plot_data()` is now defined, so the headline `draw = FALSE`
-return value renders as a compact summary (name, title, payload
+return value renders as a compact summary (name, title, reusable data
 shapes, legend / reference-line counts) instead of a raw list dump.
-
-### Classical DIF and classic curve front doors
-
-`analyze_dif_classical()` adds a limited classical screening route for
-long-format many-facet data. It supports generalized Mantel-Haenszel /
-Cochran-Mantel-Haenszel screening over ordered score categories and
-binary logistic DIF screening when the dichotomization is explicit
-through `logistic_threshold`. It does not implement SIBTEST, does not
-estimate subgroup MFRM parameters, and does not claim ETS A/B/C labels.
-
-Four classic plot entry points are now exported:
-`plot_expected_score_curve()`, `plot_test_characteristic_curve()`,
-`plot_cumulative_category_curve()`, and `plot_kidmap()`. They reuse
-the package's existing category-curve, design-weighted expectation, and
-person-fit payloads while giving mirt/TAM/FACETS users familiar names.
 
 ### Bounded GPCM fair-average and bias unblock (slope-aware)
 
@@ -276,29 +1224,18 @@ GPCM construction:
   semantics documented in `?estimate_bias`.
 
 Both helpers gain `method = "GPCM-slope-aware"` and a `caveat`
-field that names the slope convention and reminds the user that the
-SE columns are not delta-method standard errors of the
-fair-average / bias values. A delta-method SE for both is planned for
-a future release; it requires a `vcov()` method on the joint covariance
-of `(theta, a, delta)`, which is not yet exposed.
+field that names the slope convention. For fair averages, the original
+SE columns remain measure-level SEs, while `fair_se = TRUE` adds
+structural delta-method fair-average SEs for non-person rows when the
+MML Hessian is available. For bias values, the SE / t / Prob columns
+retain their conditional screening interpretation.
 See `?fair_average_table`, `?estimate_bias`, and
 `gpcm_capability_matrix()` for the full support contract.
 
-`build_apa_outputs()`, `build_mfrm_manifest()`,
-`build_mfrm_replay_script()`, and `export_mfrm_bundle()` now route bounded
-GPCM fits through package-native outputs with explicit caveats.
-`facets_parity_report()` and `facets_output_file_bundle(include = "score")`
-remain blocked under GPCM in 0.2.0 because those FACETS-compatibility outputs
-are Rasch-family score-side contracts.
-
-### Bounded GPCM visual summaries and QC pipeline
-
-`diagnose_mfrm()` now attaches the slope-aware GPCM fair-average table.
-`build_visual_summaries()` and
-`run_qc_pipeline()` now accept bounded `GPCM` fits and return
-`support_status = "supported_with_caveat"`. Their caveat states that
-fair-average and bias checks are GPCM-specific exploratory screens, not
-Rasch-family invariance evidence.
+`build_apa_outputs()`, `facets_output_contract_review()`, and
+`facets_output_file_bundle(include = "score")` remain blocked under
+GPCM in 0.2.0; they require the same SE infrastructure to ship as
+publication-quality outputs.
 
 ## Bug fixes
 
@@ -309,16 +1246,14 @@ Rasch-family invariance evidence.
   on `compute_obs_table()`. The previous Gaussian-residual
   approximation overstated `Var[log P]` by roughly a factor of five
   on a 4-category fixture and pulled `lz` toward zero.
-- The development-only `ECI4` column is not part of the 0.2.0 public
-  `compute_person_fit_indices()` contract. Its previous implementation
-  was the standardized chi-square
+- The `ECI4` column is removed from `compute_person_fit_indices()`.
+  The previous implementation was the standardized chi-square
   `(sum StdSq - n) / sqrt(2 * n)`, which is the linear (Smith)
   approximation to `OutfitZSTD`, not the Tatsuoka & Tatsuoka (1983)
   extended-caution index. Users who want the equivalent statistic
-  should use `OutfitZSTD` directly. The development finite-N
-  `lz_star` placeholder is not reported as `lz_star`; it is explicitly
-  named `lz_finite_n`, while JML fits receive the score-projection
-  corrected `lz_star`.
+  should use `OutfitZSTD` directly. `lz_star` now uses the Snijders
+  (2001) weight-projection correction where its estimating-equation
+  assumptions are met, and otherwise stays `NA` with an explicit status.
 - `displacement_table()$summary` now returns `NA_real_` for
   `MaxAbsDisplacement` and `MaxAbsDisplacementT` when every flagged
   level has zero information (so every `Displacement` is `NA`).
@@ -340,19 +1275,21 @@ Rasch-family invariance evidence.
   explicitly and route users to both `plot_dif_heatmap()` and
   `plot_dif_summary()`.
 
-- `?compute_person_fit_indices` now distinguishes `lz`, JML-only
-  Snijders-style `lz_star`, and the explicitly named `lz_finite_n`
-  heuristic. The help page states why `lz_star` is unavailable for
-  MML/EAP fits.
+- `?compute_person_fit_indices` now describes when `lz_star` is computed
+  and when it is intentionally left `NA`: JML/fixed-effect person scores
+  receive the Snijders (2001) correction, whereas MML/EAP scores remain
+  uncorrected because EAP is outside the Snijders estimating-equation
+  setup.
 
 - `?mfrm_generalizability` now discloses that the lme4 random-effects
   model is main-effects only (`Score ~ 1 + (1|Person) + (1|Facet) +
   ... + Residual`, no explicit `(1|Person:Facet)` interaction terms),
   which folds two-way interaction variance into Residual and can
-  bias `G` downward. The reported `Phi` does not apply Brennan
-  (2001) D-study scalings (`1/n_r`, `1/n_i`, `1/(n_r * n_i)`). Users
-  who need a full p x r x i decomposition with D-study scaling
-  should treat this output as a screening summary.
+  bias `G` downward. The companion `mfrm_d_study()` projects `G` and
+  `Phi` under planned facet counts, but reports the residual-scaling
+  assumption explicitly; users who need a full p x r x i decomposition
+  should treat these projections as planning evidence, not as a
+  substitute for separately estimated interaction components.
 
 - `?q3_statistic` now discloses that, when the chosen facet has
   multiple residual rows per (Person, Level) cell because of
@@ -377,8 +1314,8 @@ Rasch-family invariance evidence.
 
 - Two new vignettes ship in the `Migration and Scope` section of the
   pkgdown article navigation: `vignette("mfrmr-facets-migration")`
-  walks Facets users through the equivalent `mfrmr` workflow and
-  numeric-parity checks, and `vignette("mfrmr-gpcm-scope")` documents
+  walks Facets users through the corresponding `mfrmr` workflow and
+  numeric contract checks, and `vignette("mfrmr-gpcm-scope")` documents
   which downstream helpers the bounded `GPCM` route currently
   supports versus restricts and what to use as a substitute when a
   helper is restricted.
@@ -388,20 +1325,9 @@ Rasch-family invariance evidence.
 `.Rbuildignore` tightened the `inst/references/` source-package boundary.
 The two runtime / user-facing files in that directory --
 `facets_column_contract.csv` (read at runtime by
-`facets_parity_report()`) and `FACETS_manual_mapping.md` (the
+`facets_output_contract_review()`) and `FACETS_manual_mapping.md` (the
 FACETS Table to `mfrmr` helper mapping cited in the README) -- are
 preserved.
-
-## Test and check coverage
-
-The 0.2.0 release line adds regression coverage for the public
-upgrade surface from 0.1.5: GPCM scope, empirical fit plots, adjusted
-fit p-value tables, classical DIF screens, classic curve front doors,
-JML `lz_star`, residual dimensionality, arbitrary-facet simulation,
-bias/signal detection simulation, APA/reporting output, namespace
-contracts, and exception datasets with missing values or sparse score
-categories. The release candidate was validated with the full local
-test suite, Rd parsing, `R CMD build`, and `R CMD check`.
 
 ## Performance note
 
@@ -413,42 +1339,38 @@ a follow-up release after a cycle of community testing.
 
 ## Deferred to a follow-up release
 
-Scoped during 0.2.0 prep but not shipped in 0.2.0; carried over to a
+Considered for 0.2.0 but not shipped in 0.2.0; carried over to a
 later release:
 
-- Still-deferred GPCM support for `facets_parity_report()` and
-  `facets_output_file_bundle(include = "score")`. (`fair_average_table()`,
-  `estimate_bias()`, `build_apa_outputs()`, `build_mfrm_manifest()`,
-  `build_mfrm_replay_script()`, `export_mfrm_bundle()`,
-  `build_visual_summaries()`, and `run_qc_pipeline()` are unblocked
-  above with caveats.)
-- SIBTEST / POLYSIBTEST and a broader classical-DIF vignette.
-- Additional heavy or specialized classic plots not covered by the new
-  front doors, including cumulative ICC variants and 3D information
-  surface rendering.
-- Additional applied DIF examples beyond the limited screening example in
-  `?analyze_dif_classical` (the migration and bounded-GPCM-scope vignettes
-  ship in this release; see the Documentation section above).
+- User-facing GPCM unblock for `build_apa_outputs()`,
+  `facets_output_contract_review()`, and `facets_output_file_bundle(include =
+  "score")`. (`fair_average_table()` and `estimate_bias()` are
+  unblocked above.)
+- A classical-DIF helper (working title `analyze_dif_classical()`)
+  covering Mantel-Haenszel, logistic regression, and SIBTEST.
+- Five additional Rasch / IRT classic plots (KIDMAP, TCC, expected
+  score curve, cumulative ICC, information surface).
+- A native classical-DIF vignette (the migration and bounded-GPCM-scope
+  vignettes ship in this release; see the Documentation section above).
 
 These are scheduled for a follow-up release.
 
-# mfrmr 0.1.6 (development-only; not released to CRAN)
+# mfrmr 0.1.6
 
-This unpublished development line added empirical-Bayes shrinkage for
-small-N facets, a hierarchical-structure and sample-adequacy audit
-layer, integrated missing-code pre-processing, APA output adapters
-for Word / HTML, model-estimated two-way non-person facet interactions,
-confidence-interval propagation through the plot surface and the ICC
-reporting family, and expanded reproducibility manifests. Its public
-changes ship as part of 0.2.0, not as a separate CRAN release. Some
-development-only entries below were later corrected before 0.2.0; the
-top 0.2.0 section is authoritative for current behavior.
+This release adds empirical-Bayes shrinkage for small-N facets, a
+hierarchical-structure and sample-adequacy review layer, integrated
+missing-code pre-processing, APA output adapters for Word / HTML,
+model-estimated two-way non-person facet interactions, confidence-interval
+propagation through the plot surface and the ICC
+reporting family, and expanded reproducibility manifests. Six bug
+fixes close issues that affected bias statistics, ZSTD sign, input
+validation, and graphical state hygiene.
 
-## Development default flips included in 0.2.0
+## Default changes (three breaking flips)
 
-Three default values were flipped during this development line and ship
-publicly in 0.2.0. Scripts that explicitly pass the old value are
-unaffected; scripts that rely on the 0.1.5 defaults should be reviewed.
+Three default values change in this release. Scripts that explicitly
+pass the old value are unaffected; scripts that rely on the default
+should be reviewed.
 
 - `diagnose_mfrm(diagnostic_mode = ...)` default flips from `"legacy"`
   to `"both"`. Strict marginal screens are produced automatically for
@@ -486,7 +1408,7 @@ New supporting pieces:
   and the smaller model's interaction set is a subset of the larger model's
   set.
 
-The feature is intentionally narrow in its 0.2.0 public form:
+The feature is intentionally narrow for the initial CRAN-facing release:
 person-involving interactions, higher-order interactions, GPCM interactions,
 and random-effect facet interactions are deferred. Residual bias screening via
 `estimate_bias()` and `estimate_all_bias()` remains separate from these
@@ -530,7 +1452,7 @@ with a Efron & Morris (1973) citation; `build_mfrm_manifest()` gains
 a `shrinkage_audit` table; `reporting_checklist()` gains an
 "Empirical-Bayes shrinkage" item.
 
-### Hierarchical structure and sample-adequacy audit
+### Hierarchical structure and sample-adequacy review
 
 Five new exported functions describe the observed design, flag
 small-N facet levels, and quantify ICC / design effect. Estimation
@@ -541,7 +1463,7 @@ do not alter the fit.
   ordered pair of facets (plus Person, optionally) as *Fully nested*,
   *Near-perfectly nested*, *Partially nested*, or *Crossed* using the
   conditional-entropy index `1 - H(B|A)/H(B)`.
-- `facet_small_sample_audit(fit)` returns per-level
+- `facet_small_sample_review(fit)` returns per-level
   `N / Estimate / SE / Infit / Outfit / SampleCategory` for every
   facet. `SampleCategory` is one of `"sparse"` (< 10), `"marginal"`
   (< 30), `"standard"` (< 50), `"strong"` (>= 50). Thresholds follow
@@ -563,10 +1485,10 @@ Fit- and reporting-stack integration:
   `FacetSparseCount`.
 - `reporting_checklist()` gains two items: "Facet sample-size
   adequacy" (auto-ready when the flag is `"standard"` / `"strong"`)
-  and "Hierarchical structure audit" (ready when the user passes
+  and "Hierarchical structure review" (ready when the user passes
   `hierarchical_structure = analyze_hierarchical_structure(...)`).
 - `build_apa_outputs()` adds a Method sentence naming the
-  sample-adequacy band and linking to `facet_small_sample_audit()`.
+  sample-adequacy band and linking to `facet_small_sample_review()`.
 - `build_mfrm_manifest()` gains a `hierarchical_audit` table.
 - `recommend_mfrm_design()$caveats` now points users at the three
   post-fit audit functions.
@@ -579,7 +1501,7 @@ either is absent the relevant report is omitted with a clear
 
 `fit_mfrm()` now accepts `missing_codes = NULL | TRUE | "default" |
 <character vector>`, forwarded to `prepare_mfrm_data()`,
-`audit_mfrm_anchors()`, and `describe_mfrm_data()`. When active, the
+`review_mfrm_anchors()`, and `describe_mfrm_data()`. When active, the
 standard FACETS / SPSS / SAS sentinels (`"99"`, `"999"`, `"-1"`,
 `"N"`, `"NA"`, `"n/a"`, `"."`, `""` by default, or any caller-
 supplied set) are converted to `NA` on the `person`, `facets`, and
@@ -611,15 +1533,15 @@ users who prefer to recode before calling `fit_mfrm()`.
 
 `kableExtra` and `flextable` join `Suggests`.
 
-### Shrinkage and audit visualisations
+### Shrinkage and review visualisations
 
 - `plot(fit, type = "shrinkage")` renders a horizontal forest-style
   dotplot of original and shrunk facet-level estimates, with arrows
   indicating shrinkage direction, optional 95 % CI error bars
   (`show_ci = TRUE`), and a reference line at zero. When shrinkage
-  is not applied the plot becomes a placeholder inviting the user to
-  re-fit with `facet_shrinkage = "empirical_bayes"`.
-- `plot.mfrm_facet_sample_audit()` draws a horizontal bar chart of
+  is not applied the plot shows an unavailable-state message inviting
+  the user to re-fit with `facet_shrinkage = "empirical_bayes"`.
+- `plot.mfrm_facet_sample_review()` draws a horizontal bar chart of
   per-level observation counts coloured by Linacre band, with dashed
   vertical lines at the thresholds.
 - `plot.mfrm_facet_nesting()` renders the pairwise nesting index as
@@ -657,15 +1579,15 @@ Fourteen additions across the plot surface, all base-R / additive
 - **`plot_threshold_ladder()`** (new) — vertical ladder of
   Rasch-Andrich thresholds for RSM and PCM, with disordered-step
   crossings highlighted in the preset's `fail` colour. The returned
-  payload exposes per-step `Group / Step / Threshold / Disordered`
+  object includes per-step `Group / Step / Threshold / Disordered`
   rows.
 - **`plot(fit, type = "ccc_overlay")`** (new branch on
   `plot.mfrm_fit`) — observed category proportions binned by person
   measure overlaid on the model CCC curves, for an at-a-glance
   model-data fit visual.
 - **`plot_person_fit()`** (new) — FACETS Table 6 style per-person
-  Infit / Outfit bubble using the active MnSq screening band (default
-  0.5-1.5; configurable via `mfrm_misfit_thresholds()`).
+  Infit / Outfit bubble with the standard 0.5-1.5 acceptance band
+  (Linacre, 2002).
 - **`plot_bias_interaction(plot = "heatmap")`** (new mode) — diverging
   Rater x Criterion grid coloured by bias size, with flagged cells
   outlined for emphasis.
@@ -705,11 +1627,11 @@ back to the bar chart when `igraph` is not installed.
 
 ### Expanded test coverage
 
-Direct regression tests for these development additions:
+Direct regression tests for the 0.1.6 additions:
 
 - `test-attach-diagnostics.R` — 18 assertions covering the
   `attach_diagnostics = TRUE` merge, type validation, idempotence,
-  and MML / JML parity.
+  and MML / JML agreement checks.
 - `test-icc-ci-method.R` — 25 assertions covering
   `compute_facet_icc(ci_method = "profile" / "boot")`, bootstrap
   seed reproducibility, range validation, deprecated
@@ -719,9 +1641,10 @@ Direct regression tests for these development additions:
   `lifecycle::deprecate_warn()` path for `conf_level`, `show_ci` /
   `ci_level` on `plot_fair_average` / `plot_displacement` /
   `plot_bias_interaction`, and CI column schema.
-- `test-messaging-and-guards.R` — 8 assertions covering the single
-  "Rating range inferred" message, `analyze_dff(method = "refit")`
-  `missing(diagnostics)` guard, and `missing_codes` integration.
+- `test-messaging-and-guards.R` — assertions covering the quiet-by-default
+  inferred rating-range message, the opt-in one-time message,
+  `analyze_dff(method = "refit")` `missing(diagnostics)` guard, and
+  `missing_codes` integration.
 - `test-lme4-confint-helper.R` — 17 assertions covering
   `.lme4_confint_components()` across terse and verbose lme4
   row-name conventions.
@@ -739,10 +1662,10 @@ scheduled for a future release.
 
 ### Package-level MnSq misfit threshold
 
-`mfrm_misfit_thresholds()` returns the lower / upper active MnSq
-screening band that mfrmr screens use when flagging element-level Infit /
-Outfit MnSq misfit. Defaults are `c(lower = 0.5, upper = 1.5)` and can
-be overridden globally via R options:
+`mfrm_misfit_thresholds()` returns the lower / upper Linacre acceptance
+band that mfrmr screens use when flagging element-level Infit / Outfit
+MnSq misfit. Defaults are `c(lower = 0.5, upper = 1.5)` and can be
+overridden globally via R options:
 
 - `options(mfrmr.misfit_lower = 0.7)`
 - `options(mfrmr.misfit_upper = 1.3)`
@@ -781,11 +1704,11 @@ Winsteps Table 30 layout (Infit MnSq on x, Outfit MnSq on y, bubble
 size defaults to `N`). Both views return the same `mfrm_plot_data`
 contract.
 
-`plot_dif_heatmap(draw = FALSE)` now returns an `mfrm_plot_data` payload
+`plot_dif_heatmap(draw = FALSE)` now returns an `mfrm_plot_data` object
 whose `data$matrix` is the metric matrix (was previously the bare
 matrix only).
 
-`plot_information(..., draw = FALSE)` payloads now include a
+`plot_information(..., draw = FALSE)` outputs now include a
 `series` field listing which curves the legend describes
 (`"Information"`, `"SE"`, or both for `type = "both"`), so downstream
 ggplot2 re-renderers can map the right column without inspecting
@@ -843,7 +1766,7 @@ unchanged.
   cumulative response-probability helpers.
 - `R/core-data-prep.R` -- data validation, indexing, and small
   formatting utilities.
-- `R/core-anchor-audit.R` -- anchor-table reading, normalization,
+- `R/core-anchor-review.R` -- anchor-table reading, normalization,
   and connectivity / overlap audit.
 - `R/core-optimizer.R` -- optim() / EM dispatch and MML-EM
   scaffolding.
@@ -854,6 +1777,14 @@ future-branch design-schema layer. Public simulation entry points
 (`simulate_mfrm_data`, `evaluate_mfrm_design`,
 `evaluate_mfrm_diagnostic_screening`,
 `evaluate_mfrm_signal_detection`) remain in `R/api-simulation.R`.
+- `evaluate_mfrm_diagnostic_screening(include_report = TRUE)` can now retain
+  `mfrm_results()` / `mfrm_report()` `report_index` signals at the replicate
+  level and summarize them in `report_signal_summary`, keeping report-layer
+  readiness separate from diagnostic-screening Type I and sensitivity proxies.
+- `plot.mfrm_diagnostic_screening()` can now turn diagnostic-screening
+  summaries into integrated plot-data bundles for overview rates, report
+  signals, scenario contrasts, and runtime checks. The draw-free return follows
+  the `mfrm_plot_data` / `plot_data()` contract.
 
 `R/api-plotting-extras2.R` was renamed to
 `R/api-plotting-screening.R` to drop the numerical suffix in favour
@@ -904,7 +1835,7 @@ gave near-quadratic scaling: 6,400 observations took ~2 s, but
 `environment` (hash-backed for character keys) and `exp_vals` is
 preallocated and filled by index, so the helper now scales linearly
 in the number of observations. On the 72,000-observation benchmark
-in the audit, `diagnose_mfrm()` drops from ~141 s to ~15 s.
+in the review, `diagnose_mfrm()` drops from ~141 s to ~15 s.
 
 The `make_union_find()` helper used by the connectivity audit was
 also rewritten with an iterative `find_root` (with path
@@ -916,12 +1847,11 @@ no longer error out with "evaluation is too deeply nested".
 
 `prepare_mfrm_data()` now:
 
-- emits a `message()` summarising how many rows it dropped due to
-  missing values or non-positive weights, instead of dropping them
-  silently;
+- records how many rows it dropped due to missing values or non-positive
+  weights, instead of dropping them silently;
 - trims leading/trailing whitespace from `Person` and facet IDs
-  (with a `message()` reporting the row count) so " P01 " and
-  "P01" do not silently become two persons;
+  and records the row count so " P01 " and "P01" do not silently become
+  two persons;
 - `warning()`s when the input contains duplicate Person x facet
   rows (which violate MFRM's conditional-independence assumption)
   but lets the fit continue rather than refusing it outright.
@@ -946,7 +1876,7 @@ The most-visited help pages now embed concrete interpretation
 comments inside their `@examples` blocks. Each shipped example
 shows what value ranges or patterns indicate "good", what threshold
 or rule of thumb applies, and what follow-up to run if the value
-is off. Coverage in this development line includes:
+is off. Coverage in 0.1.6 includes:
 
 - `?fit_mfrm` (convergence, person SD, targeting bands).
 - `?diagnose_mfrm` (key_warnings, MnSq misfit lines, facets_chisq,
@@ -975,6 +1905,9 @@ before the heavier `\donttest{}` block. The fast path is below
 R CMD check's example-time budget and provides a regression net
 that runs every check, while the full `\donttest{}` block
 continues to showcase the larger MML / publication-route examples.
+A final CRAN-timing pass keeps the active examples at lightweight
+`maxit = 30` smoke fits so the printed examples demonstrate converged
+objects without returning to the original long-running example surface.
 Affected pages: `?fit_mfrm`, `?diagnose_mfrm`, `?plot_qc_dashboard`,
 `?reporting_checklist`, `?build_apa_outputs`.
 
@@ -988,7 +1921,7 @@ Affected pages: `?fit_mfrm`, `?diagnose_mfrm`, `?plot_qc_dashboard`,
   linking).
 - `?mfrmr_visual_diagnostics` and the visual reporting template now
   enumerate the 4 secondary plot helpers and the 4 screening
-  helpers added during this development line.
+  helpers added in 0.1.6.
 - `?diagnose_mfrm` cites Wright & Masters (1982) at the
   separation / strata / reliability section and reproduces the
   formulae (G = TrueSD / RMSE, R = G^2 / (1 + G^2),
@@ -1001,7 +1934,7 @@ Affected pages: `?fit_mfrm`, `?diagnose_mfrm`, `?plot_qc_dashboard`,
   package = "mfrmr")`).
 - The bias / misfit APA narrative now spells out `|ZSTD|` (or
   `|MnSq - 1|` when ZSTD is unavailable) instead of the generic
-  `|metric|` placeholder.
+  `|metric|` label.
 - `build_misfit_casebook()` now also draws element-level Infit /
   Outfit MnSq misfit cases from `diagnostics$fit` (in addition to
   marginal cells, pairwise screens, unexpected responses, and
@@ -1020,25 +1953,20 @@ draws, so the table and the heatmap stay numerically consistent.
 
 ### Extended person-fit indices
 
-`compute_person_fit_indices(diagnostics, fit)` was introduced during
-development as an extension to the Infit / Outfit / ZSTD columns that
-`diagnose_mfrm()` already exposes. Its final 0.2.0 public contract is:
+`compute_person_fit_indices(diagnostics, fit)` adds person-level
+fit detail on top of the Infit / Outfit / ZSTD
+columns that `diagnose_mfrm()` already exposes:
 
 - **lz** (Drasgow, Levine & Williams, 1985): standardized
-  log-likelihood computed from the model category probability of the
-  observed response.
-- **lz\\*** (Snijders, 2001): JML-only score-projection correction,
-  conditional on the fitted non-person parameters. MML/EAP fits return
-  `NA` with an audit label because EAP posterior means do not satisfy
-  the ML person-score equation used by the correction.
-- **lz_finite_n**: the finite-N heuristic
-  `lz / sqrt(1 + 1/N)`, retained under an explicit non-Snijders name.
+  log-likelihood under the fitted model.
+- **lz\\*** (Snijders, 2001): estimated-ability correction computed for
+  JML/fixed-effect person estimates conditional on the fitted non-person
+  calibration; returned as `NA` for MML/EAP scores with an explanatory
+  status.
 
-The development-only `ECI4` column was removed before the 0.2.0 public
-release because it duplicated the standardized chi-square /
-Outfit-ZSTD approximation rather than implementing Tatsuoka and
-Tatsuoka's extended-caution index. Use `OutfitZSTD` for the equivalent
-screen.
+The reported `lz` statistic is asymptotically standard normal under
+the conditional-independence assumption; |lz| > 1.96 / 2.58 are the
+5% / 1% reporting flags.
 
 ### Generalizability-theory adapter
 
@@ -1188,7 +2116,7 @@ carry everything a deterministic re-run needs:
   returned HTML when `kableExtra` was installed and the `apa_table`
   carried a non-empty `note`. `"pipe"` now consistently returns the
   Markdown table with an appended `Note.` line.
-- **`audit_mfrm_anchors()` false positives.** Overlap-adequacy risk
+- **`review_mfrm_anchors()` false positives.** Overlap-adequacy risk
   flags are skipped when no anchors or group anchors were supplied,
   so single-wave analyses no longer emit "high severity" warnings
   because `OverlapLevels == 0` everywhere.
@@ -1197,19 +2125,18 @@ carry everything a deterministic re-run needs:
   codes like `1.0000001` that round-trip through CSV floats are now
   accepted. Genuinely fractional scores (`1.5`, `2.75`) are still
   caught.
-- **Duplicate "Rating range inferred" message.** When
-  `rating_min` / `rating_max` were inferred from the observed scores,
-  the informational message was emitted twice per `fit_mfrm()` call
-  (once from `audit_mfrm_anchors()` and once from `mfrm_estimate()`).
-  `fit_mfrm()` now uses a session-scoped option to suppress the
-  duplicate; standalone calls to `prepare_mfrm_data()` continue to
-  announce normally.
+- **Rating-range inference output.** When `rating_min` / `rating_max`
+  are inferred from the observed scores, the provenance is now retained
+  in fit summaries and data-description output rather than emitted as a
+  routine message. Users who prefer the interactive reminder can set
+  `options(mfrmr.show_inferred_rating_range = TRUE)`; `fit_mfrm()` still
+  limits that opt-in message to one per fit.
 - **Locale-independent error for `plot(fit, type = ...)`.** Passing an
   unknown `type` previously raised R's locale-dependent
   `match.arg()` error. It now raises an English mfrmr-style error
   listing the valid choices.
-- **`plot_dif_heatmap(draw = FALSE)` payload contract.** The helper
-  documented an `mfrm_plot_data` payload but invisibly returned the
+- **`plot_dif_heatmap(draw = FALSE)` return contract.** The helper
+  documented an `mfrm_plot_data` object but invisibly returned the
   bare `matrix`, breaking the documented contract used by sibling
   `plot_*` helpers. It now returns an `mfrm_plot_data` whose `data`
   slot bundles `matrix`, `pairs`, `metric`, and `value_column`. Code
@@ -1232,11 +2159,15 @@ carry everything a deterministic re-run needs:
 ## Messaging improvements
 
 - `fit_mfrm()` emits a one-time `message()` when called with
-  `anchor_policy = "silent"` while the anchor audit flags issues.
-- `prepare_mfrm_data()` announces when `rating_min` / `rating_max`
-  have been inferred from the observed scores rather than supplied
-  explicitly, and flags facets with only one observed level
-  (structurally fixed at 0 by the sum-to-zero constraint).
+  `anchor_policy = "silent"` while the anchor review flags issues.
+- `prepare_mfrm_data()` records whether `rating_min` / `rating_max`
+  were inferred from the observed scores or supplied explicitly, and
+  fit/data summaries surface that provenance. The former informational
+  message is opt-in through `options(mfrmr.show_inferred_rating_range =
+  TRUE)`. Row drops, ID trimming, and facets with only one observed
+  level are recorded in `preparation_notes`; routine preparation
+  messages are opt-in through `options(mfrmr.show_preparation_messages =
+  TRUE)`.
 - Non-numeric score labels (`"low"`, `"medium"`, `"high"`) now raise
   a targeted error up front instead of surfacing as the opaque
   "No valid observations remain" message.
@@ -1334,7 +2265,7 @@ Reference citations corrected:
   `SE = NA_real_` and note that per-person SEs should be pulled
   from `diagnose_mfrm()$measures`.
 - `analyze_dff(method = "refit")` subgroup fits return a
-  `LinkingAudit` column that captures the anchor-audit messages
+  `LinkingReview` column that captures the anchor-review messages
   emitted during the refit, replacing the previous
   hard-coded `anchor_policy = "silent"` silence.
 - `detect_anchor_drift()` returns `common_vs_reference` and
@@ -1358,18 +2289,15 @@ Reference citations corrected:
 
 ## Test suite
 
-At this development checkpoint, 6,380+ tests passed (up from 6,343 in
-0.1.5), with 0 failures and 0 errors. Additional 0.2.0 release tests
-were added later for GPCM, empirical fit, classical DIF, residual
-dimensionality, arbitrary-facet simulation, and reporting routes. New
-test files at this checkpoint:
+6,380+ tests pass (up from 6,343 in 0.1.5), with 0 failures and
+0 errors. New test files:
 
 - `test-shrinkage.R` (40 tests) covers the closed-form math, edge
   cases (`K < 3`, `tau^2 <= 0`, user-supplied prior), `fit_mfrm`
   integration, reporting and manifest trails, and the three new
   plot methods.
 - `test-missing-codes-integration.R` (17 tests) covers `fit_mfrm`,
-  `describe_mfrm_data`, `audit_mfrm_anchors`, and manifest paths.
+  `describe_mfrm_data`, `review_mfrm_anchors`, and manifest paths.
 - `test-hierarchical-audit.R` (10 tests) covers the five new
   hierarchical-audit helpers and their integration points.
 

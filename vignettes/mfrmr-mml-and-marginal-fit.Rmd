@@ -8,9 +8,11 @@ vignette: >
 ---
 
 ```{r, include = FALSE}
+is_cran_check <- !isTRUE(as.logical(Sys.getenv("NOT_CRAN", "false")))
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>"
+  comment = "#>",
+  eval = !is_cran_check
 )
 ```
 
@@ -69,16 +71,17 @@ strict marginal expected values.
 
 ## Current MML scope
 
-For the current public `RSM` / `PCM` release:
+For the `RSM` / `PCM` MML branch:
 
 - the person distribution is integrated with Gauss-Hermite quadrature
 - `mml_engine = "direct"` uses gradient-based direct optimization of the
   marginal log-likelihood
 - `mml_engine = "em"` and `mml_engine = "hybrid"` are also available for
-  `RSM` / `PCM`, while unsupported branches fall back to `direct`
+  `RSM` / `PCM`; bounded `GPCM` uses the direct engine regardless of that
+  option
 - person summaries are reported post-hoc from the integrated posterior
 
-This is the implemented scope for the current release.
+This is the implemented MML-engine scope for this release.
 
 ## Strict Marginal Diagnostic Target
 
@@ -209,17 +212,25 @@ The current simulation-based validation covers:
 - latent distribution misspecification
 - step-structure misspecification
 
-These checks target `RSM`, `PCM`, and the bounded `GPCM` route with explicit
-caveats. For `GPCM`, mfrmr supports fitting, slope summaries, posterior
-scoring, information curves, direct curve/category reports, exploratory
-residual-based follow-up, planning / forecasting simulations, and the
-slope-aware element-conditional `fair_average_table()` and `estimate_bias()`.
-`build_apa_outputs()`, `build_mfrm_manifest()`, `build_mfrm_replay_script()`,
-`export_mfrm_bundle()`, `build_visual_summaries()`, and `run_qc_pipeline()`
-route those caveated screens into review bundles. FACETS-compatibility
-score-side exports and linking synthesis remain out of scope for `GPCM` in
-this release. See `gpcm_capability_matrix()` for the full per-helper support
-contract.
+These checks target `RSM` and `PCM`. `GPCM` is now supported only within a
+bounded core route: fitting, slope summaries, posterior scoring, information
+curves, direct curve/category reports, exploratory residual-based follow-up,
+direct recovery checks, and the slope-aware element-conditional
+`fair_average_table()` and `estimate_bias()`. Historical fair-average SE
+columns remain scaled facet-measure SEs rather than delta-method SEs of the
+fair-average value; `fair_average_table(fair_se = TRUE)` adds distinct
+structural delta-method fair-average SEs for non-person rows when the MML
+observed-information Hessian is available. Bias SE / `t` / `Prob.` columns are
+conditional plug-in screening quantities, and bounded-GPCM rows also carry
+profile-likelihood follow-up columns. Summary-table appendix export is
+available for supported direct outputs. The APA writer, fit-based
+report/export bundles, package-native scorefile export, QC pass/fail
+pipelines, linking synthesis, role-based design forecasting, and
+diagnostic/signal-detection design screening are available only as caveated
+bounded-`GPCM` surfaces with explicit boundary output. Full FACETS-style
+score-side contract review, posterior predictive checks, and heavy backends
+remain out of scope for `GPCM` in this release. See
+`gpcm_capability_matrix()` for the full per-helper support contract.
 
 ## Why GPCM Is The Current Upper Scope
 
@@ -229,9 +240,10 @@ contract.
    generalize to the bounded `GPCM` branch without changing the main package
    architecture.
 2. The package has direct checks for that bounded route.
-3. The helpers that still depend on Rasch-family score semantics or on the
-   role-based planning layer are already blocked explicitly, so formal support
-   does not require pretending that every downstream helper has full coverage.
+3. The helpers that still depend on Rasch-family score semantics are blocked
+   explicitly, and role-based planning helpers carry explicit caveats, so
+   formal support does not require pretending that every downstream helper has
+   full coverage.
 
 This is a narrower but more defensible claim than saying the whole package is
 uniformly generalized to free-discrimination many-facet work.
@@ -242,7 +254,7 @@ Robitzsch and Steinfeld (2018) are helpful because they separate two arguments
 that are often conflated in applied many-facet work.
 
 1. A generalized many-facet model with discrimination parameters will often fit
-   empirical data better than a Rasch-MFRM.
+   empirical data better than an equal-weighting `RSM`/`PCM` fit.
 2. That fit advantage does not, by itself, settle the operational scoring
    question.
 
@@ -253,18 +265,44 @@ equal-weighting reference models and bounded `GPCM` as a supported alternative
 for users who explicitly want to inspect or allow discrimination-based
 reweighting.
 
-This is also why score-side compatibility-contract outputs (FACETS parity and
-score-side `facets_output_file_bundle()`) remain out of scope for bounded
-`GPCM` in this release: their published forms are Rasch-family score
-transformations. APA/export/replay bundles are available as package-native
-caveated outputs, while `fair_average_table()` and `estimate_bias()` use the
-slope-aware element-conditional kernel with the explicit SE caveat noted
-above.
+This is also why full FACETS output-contract score-side review remains out of
+scope for bounded `GPCM` in this release: its published form is a Rasch-family
+score transformation, and the slope-aware analogue that would replace it in a
+free-discrimination context requires careful score-side uncertainty handling.
+Package-native scorefile export, manuscript-draft APA text, and fit-based
+report/export bundles are available only as caveated sensitivity-reporting
+surfaces, not as FACETS-equivalent or operational score transformations.
+`fair_average_table()` and `estimate_bias()` themselves are now available under
+bounded `GPCM` via the slope-aware element-conditional kernel. For fair averages,
+`fair_average_table(fair_se = TRUE)` adds structural delta-method SEs for
+non-person rows when the MML Hessian is available; the historical `SE` columns
+remain measure-level SEs.
 
 One additional distinction matters for implementation. The `weight` argument in
 `fit_mfrm()` is an observation-weight column. It changes how rating events
 enter estimation and summaries, but it is not the same thing as the
 equal-weighting versus discrimination-weighting question discussed above.
+
+## Practical Reading Order
+
+For users deciding among `RSM`, `PCM`, and bounded `GPCM`, use this reading
+order:
+
+1. Start with the score claim. If category thresholds should be common, begin
+   with `RSM`; if thresholds may vary by a designated step facet, begin with
+   `PCM`.
+2. Fit the Rasch-family reference model with `method = "MML"` and read
+   `summary(fit)` plus `summary(diagnose_mfrm(fit, diagnostic_mode = "both"))`.
+3. Fit bounded `GPCM` only when discrimination-based reweighting is a meaningful
+   sensitivity question, not as a routine replacement for the equal-weighting
+   model.
+4. If bounded `GPCM` fits better, report what changed: slopes, information
+   redistribution, bias-screening rows, fair averages, or conclusions. Do not
+   let fit improvement alone decide the operational model.
+
+This sequence keeps the interpretation aligned with the validation boundary:
+`RSM`/`PCM` support the full manuscript/reporting route, while bounded `GPCM`
+supports the documented direct and caveated routes.
 
 ## Future extensions
 

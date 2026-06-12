@@ -7,7 +7,7 @@
 # trajectory across waves, and a pairwise rater-agreement heatmap. They
 # all follow the mfrmr plot contract: accept an `mfrm_fit` (or a related
 # class), resolve a preset via resolve_plot_preset() + apply_plot_preset(),
-# and return an `mfrm_plot_data` payload that downstream code can
+# and return an `mfrm_plot_data` object that downstream code can
 # re-render or export.
 # ==============================================================================
 
@@ -48,7 +48,7 @@
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                 method = "JML", maxit = 25)
+#'                 method = "JML", maxit = 30)
 #' p <- plot_guttman_scalogram(fit, draw = FALSE)
 #' dim(p$data$matrix)
 #' # Look for: a clean monotone "staircase" of higher scores in the
@@ -62,7 +62,7 @@ plot_guttman_scalogram <- function(fit,
                                    column_facet = NULL,
                                    top_n_persons = 40L,
                                    highlight_unexpected = TRUE,
-                                   preset = c("standard", "publication", "compact"),
+                                   preset = c("standard", "publication", "compact", "monochrome"),
                                    draw = TRUE) {
   if (!inherits(fit, "mfrm_fit")) {
     stop("`fit` must be an mfrm_fit object from fit_mfrm().", call. = FALSE)
@@ -223,7 +223,7 @@ plot_guttman_scalogram <- function(fit,
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                 method = "JML", maxit = 25)
+#'                 method = "JML", maxit = 30)
 #' p <- plot_residual_qq(fit, draw = FALSE)
 #' head(p$data$data)
 #' # Look for: points hugging the y = x reference line. Heavy upper-
@@ -234,7 +234,7 @@ plot_guttman_scalogram <- function(fit,
 #' @export
 plot_residual_qq <- function(fit,
                              diagnostics = NULL,
-                             preset = c("standard", "publication", "compact"),
+                             preset = c("standard", "publication", "compact", "monochrome"),
                              draw = TRUE) {
   if (!inherits(fit, "mfrm_fit")) {
     stop("`fit` must be an mfrm_fit object from fit_mfrm().", call. = FALSE)
@@ -334,12 +334,17 @@ plot_residual_qq <- function(fit,
 #'
 #' @seealso [plot_anchor_drift()], [mfrmr_linking_and_dff]
 #'
+#' @concept confidence intervals
+#' @concept visual diagnostics
+#' @concept linking
+#'
 #' @examples
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit_a <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                   method = "JML", maxit = 25)
+#'                   method = "JML", maxit = 30)
 #' fit_b <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                   method = "JML", maxit = 25)
+#'                   method = "JML", maxit = 30)
 #' p <- plot_rater_trajectory(list(T1 = fit_a, T2 = fit_b), draw = FALSE)
 #' head(p$data$data)
 #' # Look for: stable trajectories (small wave-to-wave shifts within
@@ -348,11 +353,12 @@ plot_residual_qq <- function(fit,
 #' #   "calibration drift" signal. Without anchor linking the per-wave
 #' #   logits are on different scales and the picture cannot be read
 #' #   as drift; see the Anchor-linking caveat in the docstring.
+#' }
 #' @export
 plot_rater_trajectory <- function(fits,
                                   facet = "Rater",
                                   ci_level = 0.95,
-                                  preset = c("standard", "publication", "compact"),
+                                  preset = c("standard", "publication", "compact", "monochrome"),
                                   draw = TRUE) {
   if (!is.list(fits) || length(fits) < 2L) {
     stop("`fits` must be a named list of at least two mfrm_fit objects.",
@@ -498,7 +504,7 @@ plot_rater_trajectory <- function(fits,
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                 method = "JML", maxit = 25)
+#'                 method = "JML", maxit = 30)
 #' p <- plot_rater_agreement_heatmap(fit, draw = FALSE)
 #' dim(p$data$matrix)
 #' # Look for (default `metric = "exact"`):
@@ -515,7 +521,7 @@ plot_rater_agreement_heatmap <- function(fit,
                                          diagnostics = NULL,
                                          rater_facet = "Rater",
                                          metric = c("exact", "correlation"),
-                                         preset = c("standard", "publication", "compact"),
+                                         preset = c("standard", "publication", "compact", "monochrome"),
                                          draw = TRUE) {
   if (!inherits(fit, "mfrm_fit")) {
     stop("`fit` must be an mfrm_fit object from fit_mfrm().", call. = FALSE)

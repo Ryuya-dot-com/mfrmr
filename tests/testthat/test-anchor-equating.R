@@ -7,7 +7,7 @@ fit1 <- fit_mfrm(d1, person = "Person", facets = c("Rater", "Criterion"),
                  score = "Score", method = "JML")
 fit2 <- fit_mfrm(d2, person = "Person", facets = c("Rater", "Criterion"),
                  score = "Score", method = "JML")
-audit1 <- audit_mfrm_anchors(d1, "Person", c("Rater", "Criterion"), "Score")
+audit1 <- review_mfrm_anchors(d1, "Person", c("Rater", "Criterion"), "Score")
 
 # ================================================================
 # anchor_to_baseline
@@ -366,7 +366,7 @@ test_that("build_equating_chain S3 methods produce output", {
 test_that("build_linking_review returns a synthesis bundle with expected structure", {
   drift <- detect_anchor_drift(list(W1 = fit1, W2 = fit2))
   chain <- build_equating_chain(list(F1 = fit1, F2 = fit2))
-  review <- build_linking_review(anchor_audit = audit1, drift = drift, chain = chain)
+  review <- build_linking_review(anchor_review = audit1, drift = drift, chain = chain)
 
   expect_s3_class(review, "mfrm_linking_review")
   expect_true(all(c(
@@ -383,6 +383,7 @@ test_that("build_linking_review returns a synthesis bundle with expected structu
     "plot_map",
     "reporting_map",
     "support_status",
+    "gpcm_boundary",
     "notes",
     "settings"
   ) %in% names(review)))
@@ -394,13 +395,23 @@ test_that("build_linking_review returns a synthesis bundle with expected structu
   expect_true(all(c("RiskID", "SourceTable", "SourceRowKey", "WaveID", "LinkKey") %in% names(review$top_linking_risks)))
   expect_true(is.data.frame(review$plot_map))
   expect_true(is.data.frame(review$reporting_map))
+  expect_true(is.data.frame(review$gpcm_boundary))
   expect_true(is.list(review$settings))
+  review_public_text <- c(
+    names(review$overview),
+    as.character(review$top_linking_risks$SourceTable %||% character(0)),
+    as.character(review$top_linking_risks$PrimaryPlotRoute %||% character(0)),
+    as.character(review$plot_map$PlotHelper %||% character(0)),
+    as.character(review$settings$source_profile$Source %||% character(0))
+  )
+  expect_false(any(grepl("AnchorAudit|anchor_audit|plot\\(anchor_audit", review_public_text)))
+  expect_true(any(grepl("AnchorReview|anchor_review|plot\\(anchor_review", review_public_text)))
 })
 
 test_that("build_linking_review summary methods produce front-door output", {
   drift <- detect_anchor_drift(list(W1 = fit1, W2 = fit2))
   chain <- build_equating_chain(list(F1 = fit1, F2 = fit2))
-  review <- build_linking_review(anchor_audit = audit1, drift = drift, chain = chain)
+  review <- build_linking_review(anchor_review = audit1, drift = drift, chain = chain)
   s <- summary(review)
 
   expect_s3_class(s, "summary.mfrm_linking_review")
@@ -414,7 +425,8 @@ test_that("build_linking_review summary methods produce front-door output", {
     "group_views",
     "plot_routes",
     "reporting_map",
-    "support_status"
+    "support_status",
+    "gpcm_boundary"
   ) %in% names(s)))
   expect_output(print(review), "Linking Review Summary")
   expect_output(print(s), "Linking Review Summary")
@@ -427,12 +439,12 @@ test_that("build_linking_review rejects malformed inputs", {
     "requires at least one"
   )
   expect_error(
-    build_linking_review(anchor_audit = list(x = 1)),
-    "mfrm_anchor_audit"
+    build_linking_review(anchor_review = list(x = 1)),
+    "mfrm_anchor_review"
   )
 })
 
-test_that("build_linking_review blocks bounded GPCM source objects", {
+test_that("build_linking_review returns exploratory bounded GPCM source reviews", {
   toy <- load_mfrmr_data("example_core")
   gpcm_fit1 <- suppressWarnings(fit_mfrm(
     toy,
@@ -462,10 +474,12 @@ test_that("build_linking_review blocks bounded GPCM source objects", {
     detect_anchor_drift(list(W1 = gpcm_fit1, W2 = gpcm_fit2))
   )
 
-  expect_error(
-    build_linking_review(drift = drift_gpcm),
-    "not yet validated for bounded `GPCM`"
-  )
+  review <- build_linking_review(drift = drift_gpcm)
+  expect_s3_class(review, "mfrm_linking_review")
+  expect_identical(review$settings$intended_use, "exploratory_gpcm_linking_review")
+  expect_true(any(review$support_status$Scope == "bounded GPCM" &
+                    review$support_status$Status == "supported_with_caveat"))
+  expect_true(any(grepl("exploratory", review$notes, ignore.case = TRUE)))
 })
 
 # ================================================================

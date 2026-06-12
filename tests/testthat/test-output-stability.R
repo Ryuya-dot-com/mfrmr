@@ -99,7 +99,6 @@ test_that("GPCM summaries expose slope overview and diagnostics are now availabl
   chk <- reporting_checklist(fit, diagnostics = dx)
   dash <- facet_quality_dashboard(fit, diagnostics = dx, facet = "Rater")
   qc <- plot_qc_dashboard(fit, diagnostics = dx, draw = FALSE)
-  qc_pipeline <- run_qc_pipeline(fit, diagnostics = dx, include_bias = FALSE)
 
   expect_s3_class(dx, "mfrm_diagnostics")
   expect_identical(dx$diagnostic_mode, "both")
@@ -114,14 +113,16 @@ test_that("GPCM summaries expose slope overview and diagnostics are now availabl
   expect_s3_class(chk, "mfrm_reporting_checklist")
   expect_s3_class(dash, "mfrm_facet_dashboard")
   expect_s3_class(qc, "mfrm_plot_data")
-  expect_s3_class(qc_pipeline, "mfrm_qc_pipeline")
-  expect_true(isTRUE(dx$fair_average$available))
-  expect_identical(dx$fair_average$method, "GPCM-slope-aware")
-  expect_true(grepl("slope-aware", dx$fair_average$caveat, fixed = TRUE))
-  expect_true(isTRUE(qc$data$fair_average$available))
-  expect_identical(qc$data$support_status$Status[1], "supported_with_caveat")
-  expect_true(grepl("slope-aware", qc$data$caveat, fixed = TRUE))
-  expect_identical(qc_pipeline$support_status$Status[1], "supported_with_caveat")
+  expect_true(isFALSE(dx$fair_average$available))
+  expect_true(grepl("disabled for bounded `GPCM`", dx$fair_average$reason, fixed = TRUE))
+  expect_true(grepl("slope-aware", dx$fair_average$reason, fixed = TRUE))
+  expect_true(isFALSE(qc$data$fair_average$available))
+  expect_true(grepl("slope-aware", qc$data$fair_average$reason, fixed = TRUE))
+
+  qc_pipe <- run_qc_pipeline(fit)
+  expect_s3_class(qc_pipe, "mfrm_qc_pipeline")
+  expect_equal(nrow(qc_pipe$verdicts), 10)
+  expect_true(any(qc_pipe$gpcm_boundary$Area == "APA writer and fit-based export bundles"))
   # `fair_average_table()` and `estimate_bias()` are both unblocked for
   # GPCM fits in 0.2.0 under the slope-aware element-conditional GPCM
   # construction. Confirm they return populated bundles with the GPCM
@@ -132,8 +133,7 @@ test_that("GPCM summaries expose slope overview and diagnostics are now availabl
   expect_identical(fa$settings$method, "GPCM-slope-aware")
   expect_true(!is.null(fa$caveat))
   expect_true(grepl("slope-aware element-conditional", fa$caveat, fixed = TRUE))
-  expect_true(grepl("standard `SE` / `Model S.E.` / `Real S.E.`", fa$caveat, fixed = TRUE))
-  expect_true(grepl("measure-only delta method", fa$caveat, fixed = TRUE))
+  expect_true(grepl("Standard errors", fa$caveat, fixed = TRUE))
 
   bias <- estimate_bias(fit, dx, facet_a = "Rater", facet_b = "Criterion")
   expect_s3_class(bias, "mfrm_bias")
@@ -143,7 +143,7 @@ test_that("GPCM summaries expose slope overview and diagnostics are now availabl
   expect_true(grepl("slope-aware GPCM kernel", bias$caveat, fixed = TRUE))
 
   expect_error(
-    facets_parity_report(fit),
+    facets_output_contract_review(fit),
     "does not support `GPCM` fits",
     fixed = TRUE
   )
@@ -176,11 +176,29 @@ test_that("curve/report GPCM workflows open where the probability kernel is alre
     "does not support `GPCM` fits",
     fixed = TRUE
   )
-  expect_error(
-    facets_output_file_bundle(fit, include = "score", write_files = FALSE),
-    "does not support `GPCM` fits",
-    fixed = TRUE
-  )
+  out_score <- facets_output_file_bundle(fit, include = "score", write_files = FALSE)
+  expect_s3_class(out_score, "mfrm_output_bundle")
+  expect_true(all(c("scorefile", "gpcm_score_side_contract", "gpcm_boundary") %in% names(out_score)))
+  expect_true(all(c(
+    "ScoreSlope", "ObsProb", "ScoreSideStatus", "ScoreUncertaintyStatus",
+    "ScoreUncertaintyMethod", "ExpectedScoreSE", "ExpectedScoreCI_Lower",
+    "ExpectedScoreCI_Upper", "ResidualSE", "ScoreSideSE",
+    "ScoreSideCI_Lower", "ScoreSideCI_Upper", "ScoreSideSE_Status",
+    "ScoreSideSE_Method", "ScoreSideCaveat"
+  ) %in% names(out_score$scorefile)))
+  expect_identical(out_score$settings$score_se_method, "both")
+  expect_true(any(out_score$scorefile$ScoreSideStatus == "supported_with_caveat"))
+  expect_false(any(out_score$scorefile$ScoreUncertaintyStatus == "score_side_se_not_exported"))
+  expect_true(any(is.finite(out_score$scorefile$ExpectedScoreSE)))
+  expect_true(any(is.finite(out_score$scorefile$ScoreSideSE)))
+
+  score_se_plot <- plot(out_score, type = "score_se", draw = FALSE)
+  expect_s3_class(score_se_plot, "mfrm_plot_data")
+  expect_identical(score_se_plot$data$se_column, "ScoreSideSE")
+
+  out_summary <- summary(out_score)
+  expect_true("ScoreSEMethod" %in% names(out_summary$summary))
+  expect_identical(as.character(out_summary$summary$ScoreSEMethod[1]), "both")
 })
 
 # === 5.2 MML output has SD column =========================================
@@ -205,7 +223,7 @@ test_that("MML diagnostics expose model and real precision columns", {
   expect_true(all(c(
     "SE", "ModelSE", "RealSE", "SE_Method", "PrecisionTier",
     "Converged", "SupportsFormalInference", "SEUse", "CIBasis", "CIUse",
-    "CIEligible", "CILabel"
+    "CI_Level", "CI_Method", "CIEligible", "CILabel"
   ) %in% names(dx$measures)))
   expect_true(all(dx$measures$SE[se_mask] == dx$measures$ModelSE[se_mask]))
   expect_true(all(dx$measures$RealSE[real_mask] >= dx$measures$ModelSE[real_mask]))
@@ -215,6 +233,8 @@ test_that("MML diagnostics expose model and real precision columns", {
   ) %in% names(dx$reliability)))
   expect_true(all(dx$reliability$RealReliability[rel_mask] <= dx$reliability$Reliability[rel_mask]))
   expect_true(all(dx$measures$CIEligible == dx$measures$SupportsFormalInference))
+  expect_equal(unique(dx$measures$CI_Level), 0.95)
+  expect_true(all(dx$measures$CI_Method == "Normal approximation"))
   expect_true(all(dx$measures$Converged == fit$summary$Converged[1]))
 })
 
@@ -227,13 +247,15 @@ test_that("diagnose_mfrm returns all required components", {
   dx <- diagnose_mfrm(fit, residual_pca = "none")
   expect_s3_class(dx, "mfrm_diagnostics")
   # Required components
-  required <- c("obs", "measures", "overall_fit", "reliability", "precision_profile", "precision_audit", "facet_precision")
+  required <- c("obs", "measures", "overall_fit", "reliability", "precision_profile", "precision_review", "facet_precision")
   expect_true(all(required %in% names(dx)))
+  expect_false("precision_audit" %in% names(dx))
   # measures columns
   expect_true(all(c(
     "Facet", "Level", "Estimate", "SE", "ModelSE", "RealSE",
     "Converged", "PrecisionTier", "SupportsFormalInference", "SEUse",
-    "CIBasis", "CIUse", "CIEligible", "CILabel", "Infit", "Outfit"
+    "CIBasis", "CIUse", "CI_Level", "CI_Method", "CIEligible", "CILabel",
+    "Infit", "Outfit"
   ) %in%
     names(dx$measures)))
   # reliability columns
@@ -245,7 +267,7 @@ test_that("diagnose_mfrm returns all required components", {
   expect_true(all(c("Method", "Converged", "PrecisionTier", "SupportsFormalInference", "HasFallbackSE", "RecommendedUse") %in%
     names(dx$precision_profile)))
   expect_true(all(c("Check", "Status", "Detail") %in%
-    names(dx$precision_audit)))
+    names(dx$precision_review)))
   expect_true(all(c("Facet", "DistributionBasis", "SEMode", "SEColumn", "Separation", "Reliability") %in%
     names(dx$facet_precision)))
   # obs should be data.frame

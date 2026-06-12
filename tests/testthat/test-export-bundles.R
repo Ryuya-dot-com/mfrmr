@@ -109,7 +109,7 @@ weighting_appendix_fixture <- delayed_export_fixture(function() {
     maxit = 25
   ))
 
-  build_weighting_audit(rasch_fit, gpcm_fit, theta_points = 21, top_n = 5)
+  build_weighting_review(rasch_fit, gpcm_fit, theta_points = 21, top_n = 5)
 })
 
 misfit_appendix_fixture <- delayed_export_fixture(function() {
@@ -135,6 +135,320 @@ misfit_appendix_fixture <- delayed_export_fixture(function() {
 
   build_misfit_casebook(fit, diagnostics = diagnostics, top_n = 5)
 })
+
+recovery_appendix_fixture <- delayed_export_fixture(function() {
+  recovery <- structure(
+    list(
+      recovery = data.frame(
+        rep = 1L,
+        ParameterType = "facet",
+        Facet = "Rater",
+        Level = "R1",
+        Truth = 0.1,
+        Estimate = 0.12,
+        EstimateAligned = 0.11,
+        ErrorAligned = 0.01,
+        stringsAsFactors = FALSE
+      ),
+      recovery_summary = data.frame(
+        ParameterType = "facet",
+        Facet = "Rater",
+        ComparisonScale = "logit",
+        Rows = 1L,
+        Reps = 1L,
+        Bias = 0.01,
+        RMSE = 0.01,
+        MAE = 0.01,
+        Coverage95 = 1,
+        McseBias = NA_real_,
+        McseRMSE = NA_real_,
+        stringsAsFactors = FALSE
+      ),
+      rep_overview = data.frame(
+        rep = 1L,
+        RunOK = TRUE,
+        Converged = TRUE,
+        RecoveryRows = 1L,
+        ElapsedSec = 0.2,
+        stringsAsFactors = FALSE
+      ),
+      settings = list(reps = 1L, fit_method = "MML", model = "RSM"),
+      notes = "Use more replications before treating this as a final recovery study.",
+      ademp = list(
+        aims = "Assess parameter recovery under a fixed MFRM design.",
+        data_generating_mechanism = list(
+          model = "RSM",
+          assignment = "rotating",
+          step_facet = "Criterion"
+        ),
+        methods = list(fit_method = "MML", fitted_model = "RSM"),
+        estimands = "Facet location recovery",
+        performance_measures = c("Bias", "RMSE")
+      )
+    ),
+    class = "mfrm_recovery_simulation"
+  )
+
+  assessment <- structure(
+    list(
+      overview = data.frame(
+        Reps = 1L,
+        SuccessfulRuns = 1L,
+        SuccessRate = 1,
+        ConvergedRuns = 1L,
+        ConvergenceRate = 1,
+        RecoveryRows = 1L,
+        RecoveryGroups = 1L,
+        OverallStatus = "review",
+        stringsAsFactors = FALSE
+      ),
+      checklist = data.frame(
+        Section = "Run completion",
+        Item = "Replication count",
+        Status = "review",
+        Evidence = "1 replication; requested minimum is 30.",
+        NextAction = "Increase the replication count.",
+        stringsAsFactors = FALSE
+      ),
+      metric_review = data.frame(
+        ParameterType = "facet",
+        Facet = "Rater",
+        ComparisonScale = "logit",
+        RMSE = 0.01,
+        Bias = 0.01,
+        RMSEStatus = "ok",
+        BiasStatus = "ok",
+        CoverageStatus = "ok",
+        OverallStatus = "ok",
+        NextAction = "No immediate action.",
+        stringsAsFactors = FALSE
+      ),
+      next_actions = "Increase the replication count.",
+      thresholds = list(min_reps = 30L, max_rmse = c(default = 0.5)),
+      notes = "RMSE and bias statuses depend on supplied practical thresholds.",
+      source = recovery,
+      digits = 3L
+    ),
+    class = "mfrm_recovery_assessment"
+  )
+
+  list(recovery = recovery, assessment = assessment)
+})
+
+export_recovery_validation_summary_fixture <- function() {
+  validation_summary <- list(
+    topline_release_decision = data.frame(
+      Cases = 1L,
+      ReleaseRecoveryStatus = "review",
+      PrimaryDecisionBasis = "recovery metrics, convergence, and Monte Carlo precision",
+      stringsAsFactors = FALSE
+    ),
+    reading_order = data.frame(
+      Step = 1L,
+      Route = "summary(validation)$topline_release_decision",
+      WhatToRead = "Release status.",
+      Purpose = "Start with the top-line decision.",
+      stringsAsFactors = FALSE
+    ),
+    release_decision_table = data.frame(
+      CaseID = "gpcm_high_dispersion_sparse",
+      ReleaseRecoveryStatus = "review",
+      RecoveryMetricStatus = "ok",
+      UncertaintyStatus = "review",
+      ScoreSupportStatus = "review",
+      stringsAsFactors = FALSE
+    ),
+    case_summary = data.frame(
+      CaseID = "gpcm_high_dispersion_sparse",
+      GPCMSlopeRegime = "high_dispersion",
+      ScoreSupportStatus = "review",
+      stringsAsFactors = FALSE
+    ),
+    condition_reporting_notes = data.frame(
+      CaseID = "gpcm_high_dispersion_sparse",
+      ConditionArea = "score_support",
+      ReportingAttention = "reporting_review",
+      ConditionFinding = "omitted_generated_score_categories",
+      Evidence = "max_zero_score_levels=1",
+      ReportingImplication = "Report sparse generated score support as condition stress.",
+      NextAction = "Inspect category-level recovery before generalizing.",
+      ValidationUse = "generator_condition_not_release_gate",
+      stringsAsFactors = FALSE
+    ),
+    condition_summary = data.frame(
+      CaseID = "gpcm_high_dispersion_sparse",
+      GPCMSlopeRegime = "high_dispersion",
+      ScoreSupportStatus = "review",
+      stringsAsFactors = FALSE
+    ),
+    diagnostic_reporting_notes = data.frame(
+      CaseID = "gpcm_high_dispersion_sparse",
+      Facet = "Rater",
+      ReportingAttention = "reporting_review",
+      DiagnosticFinding = "zero_separation_or_reliability",
+      Evidence = "mean_separation=0; mean_reliability=0",
+      ReportingImplication = "Report zero separation as diagnostic context.",
+      NextAction = "Inspect the generated condition before using reliability language.",
+      ValidationUse = "diagnostic_only_not_release_gate",
+      stringsAsFactors = FALSE
+    ),
+    diagnostic_oc_summary = data.frame(
+      CaseID = "gpcm_high_dispersion_sparse",
+      Facet = "Rater",
+      MeanSeparation = 0,
+      MeanReliability = 0,
+      DiagnosticAvailability = "available",
+      ValidationUse = "diagnostic_only_not_release_gate",
+      stringsAsFactors = FALSE
+    ),
+    domain_decision_table = data.frame(
+      CaseID = "gpcm_high_dispersion_sparse",
+      StatusDomain = "score_support",
+      Status = "review",
+      stringsAsFactors = FALSE
+    ),
+    started_at = Sys.time(),
+    completed_at = Sys.time()
+  )
+  class(validation_summary) <- "summary.mfrmr_recovery_validation"
+  validation_summary
+}
+
+diagnostic_screening_appendix_summary_fixture <- function() {
+  out <- list(
+    overview = data.frame(
+      Designs = 1L,
+      Reps = 1L,
+      Scenarios = "well_specified, local_dependence",
+      Models = "RSM",
+      ReplicateRows = 2L,
+      ScenarioRows = 2L,
+      PerformanceRows = 2L,
+      ReportSignalRows = 2L,
+      ContrastRows = 1L,
+      RunOKRate = 1,
+      ConvergenceRate = 1,
+      IncludeReport = TRUE,
+      PlotDataContract = "mfrm_plot_data",
+      stringsAsFactors = FALSE
+    ),
+    reading_order = data.frame(
+      Step = 1L,
+      Table = "scenario_summary",
+      WhatToRead = "Scenario-by-design screening summaries.",
+      Purpose = "Compare screening surfaces across scenarios.",
+      InterpretationBoundary = "Scenario means and flag rates are operating-characteristic readouts.",
+      stringsAsFactors = FALSE
+    ),
+    next_actions = data.frame(
+      Priority = 1L,
+      Area = "Appendix and plot-data handoff",
+      Status = "ok",
+      Evidence = "Summary tables and draw-free plot-data tables are available.",
+      Action = "Use build_summary_table_bundle() or export_summary_appendix().",
+      Route = "build_summary_table_bundle(diag_eval); export_summary_appendix(diag_eval)",
+      ReportingBoundary = "Exports and plot data are presentation handoffs over the same summary evidence.",
+      stringsAsFactors = FALSE
+    ),
+    reporting_notes = data.frame(
+      Area = "Diagnostic-screening scope",
+      Evidence = "Repeated simulation, fitting, diagnosis, and aggregation.",
+      ReportingBoundary = "Describe as an operating-characteristic study, not a calibrated hypothesis test.",
+      RecommendedAction = "Report scenarios, design grid, replication count, and fitting method.",
+      stringsAsFactors = FALSE
+    ),
+    figure_recipes = data.frame(
+      FigureID = "overview_rates",
+      RecommendedUse = "main_text_or_primary_supplement",
+      PrimaryQuestion = "How often do screening signals fire across scenarios?",
+      PlotCall = "plot(diag_eval, type = \"overview\", metric = \"rate\", draw = FALSE)",
+      PlotDataCall = "plot_data(diag_eval, type = \"overview\", metric = \"rate\", component = \"plot_long\")",
+      SummaryTable = "plot_overview_rate",
+      DisplaySuggestion = "Line or point plot by design variable.",
+      CaptionFocus = "Describe operating-characteristic signal rates.",
+      InterpretationBoundary = "Rates are simulation summaries, not calibrated inferential tests.",
+      Availability = "available_when_plot_rows_exist",
+      stringsAsFactors = FALSE
+    ),
+    scenario_summary = data.frame(
+      design_id = "D1",
+      Scenario = c("well_specified", "local_dependence"),
+      n_person = 12L,
+      LegacyAnyFlagRate = c(0, 1),
+      MarginalAnyFlagRate = c(0, 1),
+      PairwiseAnyFlagRate = c(0, 1),
+      stringsAsFactors = FALSE
+    ),
+    performance_summary = data.frame(
+      design_id = "D1",
+      Scenario = c("well_specified", "local_dependence"),
+      n_person = 12L,
+      EvaluationUse = c("type_I_proxy", "sensitivity_proxy"),
+      StrictAnyFlagRate = c(0, 1),
+      MeanElapsedSec = c(0.10, 0.12),
+      stringsAsFactors = FALSE
+    ),
+    report_signal_summary = data.frame(
+      design_id = "D1",
+      Scenario = c("well_specified", "local_dependence"),
+      n_person = 12L,
+      ReportIndexAvailabilityRate = c(1, 1),
+      FitReportReviewRate = c(0, 1),
+      stringsAsFactors = FALSE
+    ),
+    scenario_contrast = data.frame(
+      design_id = "D1",
+      Scenario = "local_dependence",
+      n_person = 12L,
+      DeltaLegacyFlaggedLevels = 2,
+      DeltaMarginalFlaggedGroups = 1,
+      stringsAsFactors = FALSE
+    ),
+    plot_overview_rate = data.frame(
+      design_id = "D1",
+      Scenario = c("well_specified", "local_dependence"),
+      n_person = 12L,
+      Signal = "Strict combined any-flag rate",
+      Value = c(0, 1),
+      SourceTable = "performance_summary",
+      Metric = "StrictAnyFlagRate",
+      stringsAsFactors = FALSE
+    ),
+    plot_overview_count = data.frame(),
+    plot_report_rate = data.frame(
+      design_id = "D1",
+      Scenario = "local_dependence",
+      n_person = 12L,
+      Signal = "Fit review rate",
+      Value = 1,
+      SourceTable = "report_signal_summary",
+      Metric = "FitReportReviewRate",
+      stringsAsFactors = FALSE
+    ),
+    plot_contrast_count = data.frame(),
+    plot_runtime = data.frame(
+      design_id = "D1",
+      Scenario = c("well_specified", "local_dependence"),
+      n_person = 12L,
+      Signal = "Mean elapsed seconds",
+      Value = c(0.10, 0.12),
+      SourceTable = "performance_summary",
+      Metric = "MeanElapsedSec",
+      stringsAsFactors = FALSE
+    ),
+    ademp = list(
+      aims = "Screen diagnostic operating characteristics",
+      data_generating_mechanism = list(model = "RSM", assignment = "complete", step_facet = NA_character_),
+      methods = list(fit_method = "MML", fitted_model = "RSM"),
+      estimands = "Screening signal rates",
+      performance_measures = "Type I and sensitivity proxies"
+    ),
+    settings = list(reps = 1L, model = "RSM", include_report = TRUE),
+    notes = "Draw-free diagnostic-screening plot tables are exported as operating-characteristic readouts."
+  )
+  class(out) <- "summary.mfrm_diagnostic_screening"
+  out
+}
 
 prediction_bundle_fixture <- delayed_export_fixture(function() {
   dat <- load_mfrmr_data("example_core")
@@ -485,7 +799,7 @@ test_that("build_mfrm_manifest records latent-regression omit provenance", {
   expect_match(value_of(manifest$settings, "plausible_value_population_formula"), "~\\s*X")
 })
 
-test_that("build_mfrm_manifest records caveated support for bounded GPCM fits", {
+test_that("build_mfrm_manifest returns bounded GPCM caveat boundary", {
   dat <- load_mfrmr_data("example_core")
   keep_people <- unique(dat$Person)[1:14]
   dat <- dat[dat$Person %in% keep_people, , drop = FALSE]
@@ -504,18 +818,11 @@ test_that("build_mfrm_manifest records caveated support for bounded GPCM fits", 
   )
 
   manifest <- build_mfrm_manifest(fit_gpcm)
+
   expect_s3_class(manifest, "mfrm_manifest")
-  expect_identical(manifest$support_status$Status[1], "supported_with_caveat")
-  expect_match(
-    manifest$support_status$Detail[1],
-    "package-native reproducibility route",
-    fixed = TRUE
-  )
-  expect_match(
-    manifest$support_status$Detail[1],
-    "FACETS score-side compatibility exports remain out of scope",
-    fixed = TRUE
-  )
+  expect_true(is.data.frame(manifest$gpcm_boundary))
+  expect_true(any(manifest$gpcm_boundary$Area == "APA writer and fit-based export bundles"))
+  expect_true(any(manifest$gpcm_boundary$Status == "supported_with_caveat"))
 })
 
 test_that("build_mfrm_replay_script reproduces optional prediction artifacts", {
@@ -538,7 +845,7 @@ test_that("build_mfrm_replay_script reproduces optional prediction artifacts", {
   expect_match(replay$script, "sample_mfrm_plausible_values\\(")
   expect_match(
     replay$script,
-    'include = c\\("core_tables", "checklist", "dashboard", "apa", "manifest",\\s*"html", "predictions"\\)'
+    'include = c\\("core_tables", "checklist", "dashboard", "manifest", "html",\\s*"predictions"\\)'
   )
   expect_true(replay$summary$PopulationPrediction[[1]])
   expect_true(replay$summary$UnitPrediction[[1]])
@@ -723,10 +1030,10 @@ test_that("build_conquest_overlap_bundle returns a minimal exact-overlap bundle"
   expect_true(all(c(
     "ExternalFile",
     "ConQuestCommand",
-    "AuditHandoff",
-    "RequiredForAudit"
+    "ReviewHandoff",
+    "RequiredForReview"
   ) %in% names(bundle$conquest_output_contract)))
-  expect_equal(sum(bundle$conquest_output_contract$RequiredForAudit %in% TRUE), 4)
+  expect_equal(sum(bundle$conquest_output_contract$RequiredForReview %in% TRUE), 4)
   expect_true(any(grepl("_conquest_parameters_review.txt", bundle$conquest_output_contract$ExternalFile, fixed = TRUE)))
   expect_true(all(sort(unique(unlist(bundle$response_wide[sprintf("I%03d", 1:6)]))) %in% c(0, 1)))
   expect_identical(names(bundle$person_data), c("Person", "X"))
@@ -1023,7 +1330,7 @@ test_that("build_conquest_overlap_bundle accepts the documented PCM overlap surf
   expect_equal(nrow(bundle$response_wide), fixture$n_person)
   expect_equal(nrow(bundle$person_data), fixture$n_person)
 
-  audit <- audit_conquest_overlap(
+  audit <- review_conquest_overlap(
     bundle = bundle,
     conquest_population = data.frame(
       Term = bundle$mfrmr_population$Parameter,
@@ -1048,12 +1355,12 @@ test_that("build_conquest_overlap_bundle accepts the documented PCM overlap surf
     conquest_case_estimate = "EAP"
   )
 
-  expect_s3_class(audit, "mfrm_conquest_overlap_audit")
+  expect_s3_class(audit, "mfrm_conquest_overlap_review")
   expect_equal(audit$overall$AttentionItems[[1]], 0)
   expect_true(all(abs(audit$item_comparison$CenteredDifference[audit$item_comparison$Status == "Compared"]) < 1e-10))
 })
 
-test_that("audit_conquest_overlap compares normalized ConQuest tables", {
+test_that("review_conquest_overlap compares normalized ConQuest tables", {
   bundle <- build_conquest_overlap_bundle()
 
   cq_pop <- data.frame(
@@ -1072,7 +1379,7 @@ test_that("audit_conquest_overlap compares normalized ConQuest tables", {
     stringsAsFactors = FALSE
   )
 
-  audit <- audit_conquest_overlap(
+  audit <- review_conquest_overlap(
     bundle = bundle,
     conquest_population = cq_pop,
     conquest_item_estimates = cq_item,
@@ -1085,7 +1392,7 @@ test_that("audit_conquest_overlap compares normalized ConQuest tables", {
     conquest_case_estimate = "EAP"
   )
 
-  expect_s3_class(audit, "mfrm_conquest_overlap_audit")
+  expect_s3_class(audit, "mfrm_conquest_overlap_review")
   expect_true(is.data.frame(audit$overall))
   expect_true(is.data.frame(audit$population_comparison))
   expect_true(is.data.frame(audit$item_comparison))
@@ -1108,28 +1415,29 @@ test_that("audit_conquest_overlap compares normalized ConQuest tables", {
 
   s <- summary(audit)
   expect_s3_class(s, "summary.mfrm_bundle")
-  expect_identical(as.character(s$overview$Class[1]), "mfrm_conquest_overlap_audit")
-  expect_true(is.data.frame(s$audit_scope))
+  expect_identical(as.character(s$overview$Class[1]), "mfrm_conquest_overlap_review")
+  expect_true(is.data.frame(s$review_scope))
+  expect_true(is.data.frame(s$review_scope))
   expect_true(all(c(
-    "User-supplied table audit",
+    "User-supplied table review",
     "Raw ConQuest text parsing",
     "External comparison scope",
     "Attention items"
-  ) %in% s$audit_scope$Area))
+  ) %in% s$review_scope$Area))
   expect_true(any(grepl("normalized ConQuest tables", s$notes, fixed = TRUE)))
-  attention_row <- s$audit_scope[
-    s$audit_scope$Area == "Attention items",
+  attention_row <- s$review_scope[
+    s$review_scope$Area == "Attention items",
     ,
     drop = FALSE
   ]
   expect_identical(as.character(attention_row$Status[1]), "none detected")
   printed <- paste(capture.output(print(s)), collapse = "\n")
-  expect_match(printed, "Audit scope", fixed = TRUE)
+  expect_match(printed, "Review scope", fixed = TRUE)
   expect_match(printed, "External comparison scope", fixed = TRUE)
   expect_match(printed, "not claimed", fixed = TRUE)
 })
 
-test_that("audit_conquest_overlap separates constraint shifts from direct differences", {
+test_that("review_conquest_overlap separates constraint shifts from direct differences", {
   bundle <- build_conquest_overlap_bundle()
 
   pop_delta <- ifelse(
@@ -1153,7 +1461,7 @@ test_that("audit_conquest_overlap separates constraint shifts from direct differ
     stringsAsFactors = FALSE
   )
 
-  audit <- audit_conquest_overlap(
+  audit <- review_conquest_overlap(
     bundle = bundle,
     conquest_population = cq_pop,
     conquest_item_estimates = cq_item,
@@ -1166,7 +1474,7 @@ test_that("audit_conquest_overlap separates constraint shifts from direct differ
     conquest_case_estimate = "EAP"
   )
 
-  expect_s3_class(audit, "mfrm_conquest_overlap_audit")
+  expect_s3_class(audit, "mfrm_conquest_overlap_review")
   expect_equal(audit$overall$AttentionItems[[1]], 0)
   expect_equal(audit$overall$AttentionMissing[[1]], 0)
   expect_equal(audit$overall$AttentionDuplicate[[1]], 0)
@@ -1188,7 +1496,7 @@ test_that("audit_conquest_overlap separates constraint shifts from direct differ
   expect_equal(audit$overall$CaseMaxAbsDifference[[1]], 0.125, tolerance = 1e-10)
 })
 
-test_that("audit_conquest_overlap records worst compared rows in overall", {
+test_that("review_conquest_overlap records worst compared rows in overall", {
   bundle <- build_conquest_overlap_bundle()
   skip_if(!("sigma2" %in% bundle$mfrmr_population$Parameter))
   skip_if(nrow(bundle$mfrmr_item_estimates) <= 2L)
@@ -1216,7 +1524,7 @@ test_that("audit_conquest_overlap records worst compared rows in overall", {
   )
   cq_case$EAP[cq_case$PID == worst_person] <- cq_case$EAP[cq_case$PID == worst_person] - 0.5
 
-  audit <- audit_conquest_overlap(
+  audit <- review_conquest_overlap(
     bundle = bundle,
     conquest_population = cq_pop,
     conquest_item_estimates = cq_item,
@@ -1237,7 +1545,7 @@ test_that("audit_conquest_overlap records worst compared rows in overall", {
   expect_gt(audit$overall$CaseMaxAbsDifference[[1]], audit$overall$CaseMae[[1]])
 })
 
-test_that("audit_conquest_overlap records non-numeric extracted estimates", {
+test_that("review_conquest_overlap records non-numeric extracted estimates", {
   bundle <- build_conquest_overlap_bundle()
 
   nonnumeric_parameter <- bundle$mfrmr_population$Parameter[bundle$mfrmr_population$Parameter != "(Intercept)"][1]
@@ -1263,7 +1571,7 @@ test_that("audit_conquest_overlap records non-numeric extracted estimates", {
   )
   cq_case$EAP[cq_case$PID == nonnumeric_person] <- "omitted"
 
-  raw_audit <- audit_conquest_overlap(
+  raw_audit <- review_conquest_overlap(
     bundle = bundle,
     conquest_population = cq_pop,
     conquest_item_estimates = cq_item,
@@ -1308,16 +1616,16 @@ test_that("audit_conquest_overlap records non-numeric extracted estimates", {
   expect_s3_class(ns, "summary.mfrm_bundle")
   expect_true(is.data.frame(ns$normalization_scope))
   review_row <- ns$normalization_scope[
-    ns$normalization_scope$Area == "Pre-audit table review",
+    ns$normalization_scope$Area == "Pre-review table check",
     ,
     drop = FALSE
   ]
   expect_identical(as.character(review_row$Status[1]), "review required")
   expect_match(as.character(review_row$Evidence[1]), "3 non-numeric estimate cell", fixed = TRUE)
 
-  audit <- audit_conquest_overlap(bundle, normalized)
+  audit <- review_conquest_overlap(bundle, normalized)
 
-  expect_s3_class(audit, "mfrm_conquest_overlap_audit")
+  expect_s3_class(audit, "mfrm_conquest_overlap_review")
   expect_equal(audit$overall$AttentionItems[[1]], 3)
   expect_equal(audit$overall$AttentionMissing[[1]], 0)
   expect_equal(audit$overall$AttentionDuplicate[[1]], 0)
@@ -1405,10 +1713,10 @@ test_that("normalize_conquest_overlap_tables standardizes extracted tables", {
     "Extracted table normalization",
     "Raw ConQuest text parsing",
     "Bundle matching",
-    "Pre-audit table review"
+    "Pre-review table check"
   ) %in% s$normalization_scope$Area))
   review_row <- s$normalization_scope[
-    s$normalization_scope$Area == "Pre-audit table review",
+    s$normalization_scope$Area == "Pre-review table check",
     ,
     drop = FALSE
   ]
@@ -1416,7 +1724,7 @@ test_that("normalize_conquest_overlap_tables standardizes extracted tables", {
   printed <- paste(capture.output(print(s)), collapse = "\n")
   expect_match(printed, "Normalization scope", fixed = TRUE)
   expect_match(printed, "Raw ConQuest text parsing", fixed = TRUE)
-  expect_match(printed, "deferred to audit", fixed = TRUE)
+  expect_match(printed, "deferred to review", fixed = TRUE)
 })
 
 test_that("normalize_conquest_overlap_tables rejects unresolved automatic aliases", {
@@ -1493,7 +1801,7 @@ test_that("normalize_conquest_overlap_tables rejects missing explicit columns", 
   )
 })
 
-test_that("audit_conquest_overlap accepts normalized contract objects", {
+test_that("review_conquest_overlap accepts normalized contract objects", {
   bundle <- build_conquest_overlap_bundle()
 
   normalized <- normalize_conquest_overlap_tables(
@@ -1520,9 +1828,9 @@ test_that("audit_conquest_overlap accepts normalized contract objects", {
     conquest_case_estimate = "EAP"
   )
 
-  audit <- audit_conquest_overlap(bundle, normalized)
+  audit <- review_conquest_overlap(bundle, normalized)
 
-  expect_s3_class(audit, "mfrm_conquest_overlap_audit")
+  expect_s3_class(audit, "mfrm_conquest_overlap_review")
   expect_equal(audit$overall$AttentionItems[[1]], 0)
   expect_true(all(abs(audit$population_comparison$Difference[audit$population_comparison$Status == "Compared"]) < 1e-10))
   expect_true(all(abs(audit$item_comparison$CenteredDifference[audit$item_comparison$Status == "Compared"]) < 1e-10))
@@ -1530,7 +1838,7 @@ test_that("audit_conquest_overlap accepts normalized contract objects", {
   expect_identical(as.character(audit$settings$Value[audit$settings$Setting == "conquest_item_id"][1]), "ItemID")
 })
 
-test_that("audit_conquest_overlap rejects mixed normalized and raw external tables", {
+test_that("review_conquest_overlap rejects mixed normalized and raw external tables", {
   bundle <- build_conquest_overlap_bundle()
 
   normalized <- normalize_conquest_overlap_tables(
@@ -1558,7 +1866,7 @@ test_that("audit_conquest_overlap rejects mixed normalized and raw external tabl
   )
 
   expect_error(
-    audit_conquest_overlap(
+    review_conquest_overlap(
       bundle,
       normalized,
       conquest_item_estimates = data.frame(ItemID = character(0), Estimate = numeric(0))
@@ -1568,11 +1876,11 @@ test_that("audit_conquest_overlap rejects mixed normalized and raw external tabl
   )
 })
 
-test_that("audit_conquest_overlap requires either a normalized object or all three raw tables", {
+test_that("review_conquest_overlap requires either a normalized object or all three raw tables", {
   bundle <- build_conquest_overlap_bundle()
 
   expect_error(
-    audit_conquest_overlap(
+    review_conquest_overlap(
       bundle,
       conquest_population = data.frame(
         Term = bundle$mfrmr_population$Parameter,
@@ -1590,7 +1898,7 @@ test_that("audit_conquest_overlap requires either a normalized object or all thr
   )
 })
 
-test_that("audit_conquest_overlap records duplicate external rows as attention items", {
+test_that("review_conquest_overlap records duplicate external rows as attention items", {
   bundle <- build_conquest_overlap_bundle()
 
   dup_pop <- rbind(
@@ -1630,7 +1938,7 @@ test_that("audit_conquest_overlap records duplicate external rows as attention i
     )
   )
 
-  audit <- audit_conquest_overlap(
+  audit <- review_conquest_overlap(
     bundle = bundle,
     conquest_population = dup_pop,
     conquest_item_estimates = dup_item,
@@ -1643,7 +1951,7 @@ test_that("audit_conquest_overlap records duplicate external rows as attention i
     conquest_case_estimate = "EAP"
   )
 
-  expect_s3_class(audit, "mfrm_conquest_overlap_audit")
+  expect_s3_class(audit, "mfrm_conquest_overlap_review")
   expect_equal(audit$overall$AttentionItems[[1]], 3)
   expect_equal(audit$overall$AttentionMissing[[1]], 0)
   expect_equal(audit$overall$AttentionDuplicate[[1]], 3)
@@ -1658,14 +1966,14 @@ test_that("audit_conquest_overlap records duplicate external rows as attention i
   expect_true(all(abs(audit$case_comparison$Difference[audit$case_comparison$Status == "Compared"]) < 1e-10))
 })
 
-test_that("audit_conquest_overlap records missing external rows as attention items", {
+test_that("review_conquest_overlap records missing external rows as attention items", {
   bundle <- build_conquest_overlap_bundle()
 
   missing_parameter <- bundle$mfrmr_population$Parameter[bundle$mfrmr_population$Parameter != "(Intercept)"][1]
   missing_item <- bundle$mfrmr_item_estimates$ResponseVar[1]
   missing_person <- bundle$mfrmr_case_eap$Person[1]
 
-  audit <- audit_conquest_overlap(
+  audit <- review_conquest_overlap(
     bundle = bundle,
     conquest_population = data.frame(
       Term = bundle$mfrmr_population$Parameter[bundle$mfrmr_population$Parameter != missing_parameter],
@@ -1690,7 +1998,7 @@ test_that("audit_conquest_overlap records missing external rows as attention ite
     conquest_case_estimate = "EAP"
   )
 
-  expect_s3_class(audit, "mfrm_conquest_overlap_audit")
+  expect_s3_class(audit, "mfrm_conquest_overlap_review")
   expect_equal(audit$overall$AttentionItems[[1]], 3)
   expect_equal(audit$overall$AttentionMissing[[1]], 3)
   expect_equal(audit$overall$AttentionDuplicate[[1]], 0)
@@ -1714,8 +2022,8 @@ test_that("audit_conquest_overlap records missing external rows as attention ite
   )
 
   s <- summary(audit)
-  attention_row <- s$audit_scope[
-    s$audit_scope$Area == "Attention items",
+  attention_row <- s$review_scope[
+    s$review_scope$Area == "Attention items",
     ,
     drop = FALSE
   ]
@@ -1726,10 +2034,10 @@ test_that("audit_conquest_overlap records missing external rows as attention ite
   expect_match(printed, "missing_conquest_parameter", fixed = TRUE)
 })
 
-test_that("audit_conquest_overlap matches item IDs by response variable when requested", {
+test_that("review_conquest_overlap matches item IDs by response variable when requested", {
   bundle <- build_conquest_overlap_bundle()
 
-  audit <- audit_conquest_overlap(
+  audit <- review_conquest_overlap(
     bundle = bundle,
     conquest_population = data.frame(
       Term = bundle$mfrmr_population$Parameter,
@@ -1755,16 +2063,16 @@ test_that("audit_conquest_overlap matches item IDs by response variable when req
     conquest_case_estimate = "EAP"
   )
 
-  expect_s3_class(audit, "mfrm_conquest_overlap_audit")
+  expect_s3_class(audit, "mfrm_conquest_overlap_review")
   expect_equal(audit$overall$AttentionItems[[1]], 0)
   expect_true(all(abs(audit$item_comparison$CenteredDifference[audit$item_comparison$Status == "Compared"]) < 1e-10))
   expect_identical(as.character(audit$settings$Value[audit$settings$Setting == "item_id_source"][1]), "response_var")
 })
 
-test_that("audit_conquest_overlap auto-detects response-variable item IDs", {
+test_that("review_conquest_overlap auto-detects response-variable item IDs", {
   bundle <- build_conquest_overlap_bundle()
 
-  audit <- audit_conquest_overlap(
+  audit <- review_conquest_overlap(
     bundle = bundle,
     conquest_population = data.frame(
       Term = bundle$mfrmr_population$Parameter,
@@ -1790,16 +2098,16 @@ test_that("audit_conquest_overlap auto-detects response-variable item IDs", {
     conquest_case_estimate = "EAP"
   )
 
-  expect_s3_class(audit, "mfrm_conquest_overlap_audit")
+  expect_s3_class(audit, "mfrm_conquest_overlap_review")
   expect_equal(audit$overall$AttentionItems[[1]], 0)
   expect_true(all(abs(audit$item_comparison$CenteredDifference[audit$item_comparison$Status == "Compared"]) < 1e-10))
   expect_identical(as.character(audit$settings$Value[audit$settings$Setting == "item_id_source"][1]), "response_var")
 })
 
-test_that("audit_conquest_overlap matches item IDs by original level when requested", {
+test_that("review_conquest_overlap matches item IDs by original level when requested", {
   bundle <- build_conquest_overlap_bundle()
 
-  audit <- audit_conquest_overlap(
+  audit <- review_conquest_overlap(
     bundle = bundle,
     conquest_population = data.frame(
       Term = bundle$mfrmr_population$Parameter,
@@ -1825,16 +2133,16 @@ test_that("audit_conquest_overlap matches item IDs by original level when reques
     conquest_case_estimate = "EAP"
   )
 
-  expect_s3_class(audit, "mfrm_conquest_overlap_audit")
+  expect_s3_class(audit, "mfrm_conquest_overlap_review")
   expect_equal(audit$overall$AttentionItems[[1]], 0)
   expect_true(all(abs(audit$item_comparison$CenteredDifference[audit$item_comparison$Status == "Compared"]) < 1e-10))
   expect_identical(as.character(audit$settings$Value[audit$settings$Setting == "item_id_source"][1]), "level")
 })
 
-test_that("audit_conquest_overlap auto-detects original-level item IDs", {
+test_that("review_conquest_overlap auto-detects original-level item IDs", {
   bundle <- build_conquest_overlap_bundle()
 
-  audit <- audit_conquest_overlap(
+  audit <- review_conquest_overlap(
     bundle = bundle,
     conquest_population = data.frame(
       Term = bundle$mfrmr_population$Parameter,
@@ -1860,19 +2168,19 @@ test_that("audit_conquest_overlap auto-detects original-level item IDs", {
     conquest_case_estimate = "EAP"
   )
 
-  expect_s3_class(audit, "mfrm_conquest_overlap_audit")
+  expect_s3_class(audit, "mfrm_conquest_overlap_review")
   expect_equal(audit$overall$AttentionItems[[1]], 0)
   expect_true(all(abs(audit$item_comparison$CenteredDifference[audit$item_comparison$Status == "Compared"]) < 1e-10))
   expect_identical(as.character(audit$settings$Value[audit$settings$Setting == "item_id_source"][1]), "level")
 })
 
-test_that("audit_conquest_overlap auto item matching breaks ties toward response variables", {
+test_that("review_conquest_overlap auto item matching breaks ties toward response variables", {
   bundle <- build_conquest_overlap_bundle()
   item_ids <- as.character(bundle$mfrmr_item_estimates$ResponseVar)
   item_ids[(floor(length(item_ids) / 2) + 1):length(item_ids)] <-
     as.character(bundle$mfrmr_item_estimates$Level[(floor(length(item_ids) / 2) + 1):length(item_ids)])
 
-  audit <- audit_conquest_overlap(
+  audit <- review_conquest_overlap(
     bundle = bundle,
     conquest_population = data.frame(
       Term = bundle$mfrmr_population$Parameter,
@@ -1898,16 +2206,16 @@ test_that("audit_conquest_overlap auto item matching breaks ties toward response
     conquest_case_estimate = "EAP"
   )
 
-  expect_s3_class(audit, "mfrm_conquest_overlap_audit")
+  expect_s3_class(audit, "mfrm_conquest_overlap_review")
   expect_identical(as.character(audit$settings$Value[audit$settings$Setting == "item_id_source"][1]), "response_var")
   expect_true(any(audit$item_comparison$Status == "MissingInConQuest"))
   expect_true(any(audit$attention_items$Issue == "missing_conquest_item"))
 })
 
-test_that("audit_conquest_overlap treats explicit item-source mismatches as audit attention", {
+test_that("review_conquest_overlap treats explicit item-source mismatches as review attention", {
   bundle <- build_conquest_overlap_bundle()
   audit_with_items <- function(item_ids, item_id_source) {
-    audit_conquest_overlap(
+    review_conquest_overlap(
       bundle = bundle,
       conquest_population = data.frame(
         Term = bundle$mfrmr_population$Parameter,
@@ -1937,14 +2245,14 @@ test_that("audit_conquest_overlap treats explicit item-source mismatches as audi
   response_mismatch <- audit_with_items(bundle$mfrmr_item_estimates$Level, "response_var")
   level_mismatch <- audit_with_items(bundle$mfrmr_item_estimates$ResponseVar, "level")
 
-  expect_s3_class(response_mismatch, "mfrm_conquest_overlap_audit")
+  expect_s3_class(response_mismatch, "mfrm_conquest_overlap_review")
   expect_identical(
     as.character(response_mismatch$settings$Value[response_mismatch$settings$Setting == "item_id_source"][1]),
     "response_var"
   )
   expect_true(any(response_mismatch$item_comparison$Status == "MissingInConQuest"))
   expect_true(any(response_mismatch$attention_items$Issue == "missing_conquest_item"))
-  expect_s3_class(level_mismatch, "mfrm_conquest_overlap_audit")
+  expect_s3_class(level_mismatch, "mfrm_conquest_overlap_review")
   expect_identical(
     as.character(level_mismatch$settings$Value[level_mismatch$settings$Setting == "item_id_source"][1]),
     "level"
@@ -2016,8 +2324,8 @@ test_that("normalize_conquest_overlap_files reads extracted csv/tsv tables", {
   expect_equal(normalized$summary$CaseNonNumeric[[1]], 1)
   expect_true(any(normalized$conquest_case_eap$EstimateNonNumeric))
 
-  audit <- audit_conquest_overlap(bundle, normalized)
-  expect_s3_class(audit, "mfrm_conquest_overlap_audit")
+  audit <- review_conquest_overlap(bundle, normalized)
+  expect_s3_class(audit, "mfrm_conquest_overlap_review")
   expect_equal(audit$overall$AttentionItems[[1]], 1)
   expect_equal(audit$overall$AttentionMissing[[1]], 0)
   expect_equal(audit$overall$AttentionDuplicate[[1]], 0)
@@ -2054,7 +2362,7 @@ test_that("ConQuest overlap helpers auto-resolve conservative alias columns", {
   expect_equal(names(normalized$conquest_item_estimates)[1:2], c("ItemID", "Estimate"))
   expect_equal(names(normalized$conquest_case_eap)[1:2], c("Person", "Estimate"))
 
-  audit <- audit_conquest_overlap(
+  audit <- review_conquest_overlap(
     bundle,
     conquest_population = data.frame(
       Term = bundle$mfrmr_population$Parameter,
@@ -2073,7 +2381,7 @@ test_that("ConQuest overlap helpers auto-resolve conservative alias columns", {
     )
   )
 
-  expect_s3_class(audit, "mfrm_conquest_overlap_audit")
+  expect_s3_class(audit, "mfrm_conquest_overlap_review")
   expect_equal(audit$overall$AttentionItems[[1]], 0)
 })
 
@@ -2131,54 +2439,6 @@ test_that("export_mfrm_bundle writes requested tables and html output", {
   expect_true(file.exists(file.path(out_dir, "bundle_test_manifest.txt")))
   expect_true(file.exists(file.path(out_dir, "bundle_test_replay.R")))
   expect_true(file.exists(file.path(out_dir, "bundle_test_visual_warning_map.txt")))
-})
-
-test_that("export_mfrm_bundle default include works without prediction objects", {
-  out_dir <- file.path(tempdir(), "mfrmr-export-bundle-default")
-  if (dir.exists(out_dir)) unlink(out_dir, recursive = TRUE, force = TRUE)
-  dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
-
-  expect_no_error(
-    bundle <- export_mfrm_bundle(
-      fit = export_core_fixture$fit,
-      diagnostics = export_core_fixture$diagnostics,
-      output_dir = out_dir,
-      prefix = "bundle_default",
-      overwrite = TRUE
-    )
-  )
-
-  expect_s3_class(bundle, "mfrm_export_bundle")
-  expect_true(any(bundle$written_files$Component == "core_person"))
-  expect_false(any(grepl("prediction", bundle$written_files$Component)))
-})
-
-test_that("export_mfrm_bundle keeps attached diagnostic columns stable", {
-  dat <- load_mfrmr_data("example_core")
-  fit <- suppressMessages(suppressWarnings(fit_mfrm(
-    dat, "Person", c("Rater", "Criterion"), "Score",
-    method = "JML", maxit = 10, attach_diagnostics = TRUE
-  )))
-  dx <- diagnose_mfrm(fit, residual_pca = "none", diagnostic_mode = "legacy")
-  out_dir <- file.path(tempdir(), "mfrmr-export-bundle-attached-diagnostics")
-  if (dir.exists(out_dir)) unlink(out_dir, recursive = TRUE, force = TRUE)
-  dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
-
-  export_mfrm_bundle(
-    fit = fit,
-    diagnostics = dx,
-    output_dir = out_dir,
-    prefix = "attached",
-    include = "core_tables",
-    overwrite = TRUE
-  )
-  facet_cols <- names(utils::read.csv(
-    file.path(out_dir, "attached_facet_estimates.csv"),
-    check.names = FALSE
-  ))
-
-  expect_true(all(c("SE", "Infit", "Outfit") %in% facet_cols))
-  expect_false(any(grepl("\\.(x|y)$", facet_cols)))
 })
 
 test_that("export_mfrm_bundle writes optional prediction artifacts", {
@@ -2260,17 +2520,17 @@ test_that("export_mfrm_bundle writes latent-regression scoring provenance artifa
   expect_s3_class(bundle, "mfrm_export_bundle")
   expect_true(any(bundle$written_files$Component == "manifest_settings"))
   expect_true(any(bundle$written_files$Component == "replay_fit_person_data"))
-  expect_true(any(bundle$written_files$Component == "unit_prediction_population_audit"))
+  expect_true(any(bundle$written_files$Component == "unit_prediction_population_review"))
   expect_true(any(bundle$written_files$Component == "unit_prediction_person_data"))
-  expect_true(any(bundle$written_files$Component == "plausible_value_population_audit"))
+  expect_true(any(bundle$written_files$Component == "plausible_value_population_review"))
   expect_true(any(bundle$written_files$Component == "plausible_value_person_data"))
   expect_true(file.exists(file.path(out_dir, "bundle_latent_pred_test_replay_fit_person_data.csv")))
   expect_true(file.exists(file.path(out_dir, "bundle_latent_pred_test_manifest_settings.csv")))
   expect_true(file.exists(file.path(out_dir, "bundle_latent_pred_test_replay.R")))
   expect_true(file.exists(file.path(out_dir, "bundle_latent_pred_test_bundle.html")))
-  expect_true(file.exists(file.path(out_dir, "bundle_latent_pred_test_unit_prediction_population_audit.csv")))
+  expect_true(file.exists(file.path(out_dir, "bundle_latent_pred_test_unit_prediction_population_review.csv")))
   expect_true(file.exists(file.path(out_dir, "bundle_latent_pred_test_unit_prediction_person_data.csv")))
-  expect_true(file.exists(file.path(out_dir, "bundle_latent_pred_test_plausible_value_population_audit.csv")))
+  expect_true(file.exists(file.path(out_dir, "bundle_latent_pred_test_plausible_value_population_review.csv")))
   expect_true(file.exists(file.path(out_dir, "bundle_latent_pred_test_plausible_value_person_data.csv")))
 
   fit_person_data <- utils::read.csv(
@@ -2288,7 +2548,7 @@ test_that("export_mfrm_bundle writes latent-regression scoring provenance artifa
   )
   html_text <- paste(html_lines, collapse = "\n")
   pop_audit <- utils::read.csv(
-    file.path(out_dir, "bundle_latent_pred_test_unit_prediction_population_audit.csv"),
+    file.path(out_dir, "bundle_latent_pred_test_unit_prediction_population_review.csv"),
     stringsAsFactors = FALSE
   )
   person_data <- utils::read.csv(
@@ -2568,7 +2828,7 @@ test_that("export_summary_appendix preset trims bridge-only and preview-only tab
   expect_true(any(appendix$selection_section_summary$AppendixSection %in% c("methods", "results", "diagnostics", "reporting")))
 })
 
-test_that("export_summary_appendix supports weighting-audit review inputs", {
+test_that("export_summary_appendix supports weighting-review inputs", {
   out_dir <- file.path(tempdir(), "mfrmr-summary-appendix-weighting")
   if (dir.exists(out_dir)) unlink(out_dir, recursive = TRUE, force = TRUE)
   dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
@@ -2612,6 +2872,309 @@ test_that("export_summary_appendix supports misfit-casebook review inputs", {
   expect_true(any(appendix$selection_catalog$Table == "group_view_index" & appendix$selection_catalog$Selected %in% TRUE))
   expect_true(any(grepl("casebook", appendix$written_files$Component, fixed = TRUE)))
   expect_true(any(grepl("top_cases", appendix$written_files$Component, fixed = TRUE)))
+})
+
+test_that("export_summary_appendix supports recovery simulation and assessment inputs", {
+  out_dir <- file.path(tempdir(), "mfrmr-summary-appendix-recovery")
+  if (dir.exists(out_dir)) unlink(out_dir, recursive = TRUE, force = TRUE)
+  dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
+
+  recovery_inputs <- force_export_fixture(recovery_appendix_fixture)
+
+  direct_appendix <- export_summary_appendix(
+    recovery_inputs$recovery,
+    output_dir = out_dir,
+    prefix = "appendix_recovery_direct",
+    preset = "recommended",
+    include_html = FALSE,
+    overwrite = TRUE
+  )
+  expect_s3_class(direct_appendix, "mfrm_summary_appendix_export")
+  expect_true(any(direct_appendix$written_files$Component ==
+                    "summary_mfrm_recovery_simulation_recovery_summary"))
+  expect_true(any(direct_appendix$selection_catalog$Role == "recovery_performance" &
+                    direct_appendix$selection_catalog$Selected %in% TRUE))
+
+  appendix <- export_summary_appendix(
+    list(
+      recovery = recovery_inputs$recovery,
+      assessment = recovery_inputs$assessment
+    ),
+    output_dir = out_dir,
+    prefix = "appendix_recovery",
+    preset = "recommended",
+    include_html = FALSE,
+    overwrite = TRUE
+  )
+
+  expect_s3_class(appendix, "mfrm_summary_appendix_export")
+  expect_true(all(appendix$selection_summary$Preset == "recommended"))
+  expect_true(any(appendix$written_files$Component == "summary_recovery_recovery_summary"))
+  expect_true(any(appendix$written_files$Component == "summary_recovery_rep_overview"))
+  expect_true(any(appendix$written_files$Component == "summary_recovery_ademp"))
+  expect_true(any(appendix$written_files$Component == "summary_assessment_checklist"))
+  expect_true(any(appendix$written_files$Component == "summary_assessment_metric_review"))
+  expect_true(any(appendix$written_files$Component == "summary_assessment_thresholds"))
+  expect_true(any(appendix$selection_catalog$Role == "recovery_design_basis" &
+                    appendix$selection_catalog$Selected %in% TRUE))
+  expect_true(any(appendix$selection_catalog$Role == "recovery_assessment_checklist" &
+                    appendix$selection_catalog$Selected %in% TRUE))
+  expect_true(file.exists(file.path(
+    out_dir,
+    "appendix_recovery_summary_assessment_metric_review.csv"
+  )))
+})
+
+test_that("export_summary_appendix supports recovery-validation summaries", {
+  out_dir <- file.path(tempdir(), "mfrmr-summary-appendix-recovery-validation")
+  if (dir.exists(out_dir)) unlink(out_dir, recursive = TRUE, force = TRUE)
+  dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
+
+  validation_summary <- export_recovery_validation_summary_fixture()
+
+  appendix <- export_summary_appendix(
+    list(validation = validation_summary),
+    output_dir = out_dir,
+    prefix = "appendix_recovery_validation",
+    preset = "recommended",
+    include_html = FALSE,
+    overwrite = TRUE
+  )
+
+  expect_s3_class(appendix, "mfrm_summary_appendix_export")
+  expect_true(any(appendix$written_files$Component ==
+                    "summary_validation_topline_release_decision"))
+  expect_true(any(appendix$written_files$Component ==
+                    "summary_validation_condition_reporting_notes"))
+  expect_true(any(appendix$written_files$Component ==
+                    "summary_validation_diagnostic_reporting_notes"))
+  expect_true(any(appendix$selection_catalog$Role ==
+                    "recovery_validation_diagnostic_reporting_notes" &
+                    appendix$selection_catalog$Selected %in% TRUE))
+  expect_true(file.exists(file.path(
+    out_dir,
+    "appendix_recovery_validation_summary_validation_diagnostic_reporting_notes.csv"
+  )))
+})
+
+test_that("export_summary_appendix supports diagnostic-screening summaries", {
+  out_dir <- file.path(tempdir(), "mfrmr-summary-appendix-diagnostic-screening")
+  if (dir.exists(out_dir)) unlink(out_dir, recursive = TRUE, force = TRUE)
+  dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
+
+  diag_summary <- diagnostic_screening_appendix_summary_fixture()
+
+  appendix <- export_summary_appendix(
+    list(diag = diag_summary),
+    output_dir = out_dir,
+    prefix = "appendix_diagnostic",
+    preset = "recommended",
+    include_html = FALSE,
+    overwrite = TRUE
+  )
+
+  expect_s3_class(appendix, "mfrm_summary_appendix_export")
+  expect_true(any(appendix$written_files$Component ==
+                    "summary_diag_scenario_summary"))
+  expect_true(any(appendix$written_files$Component ==
+                    "summary_diag_reading_order"))
+  expect_true(any(appendix$written_files$Component ==
+                    "summary_diag_next_actions"))
+  expect_true(any(appendix$written_files$Component ==
+                    "summary_diag_reporting_notes"))
+  expect_true(any(appendix$written_files$Component ==
+                    "summary_diag_figure_recipes"))
+  expect_true(any(appendix$selection_catalog$Role ==
+                    "diagnostic_screening_next_actions" &
+                    appendix$selection_catalog$Selected %in% TRUE))
+  expect_true(any(appendix$written_files$Component ==
+                    "summary_diag_plot_overview_rate"))
+  expect_true(any(appendix$selection_catalog$Role ==
+                    "diagnostic_screening_reporting_notes" &
+                    appendix$selection_catalog$Selected %in% TRUE))
+  expect_true(any(appendix$selection_catalog$Role ==
+                    "diagnostic_screening_figure_recipes" &
+                    appendix$selection_catalog$Selected %in% TRUE))
+  expect_true(any(appendix$selection_catalog$Role ==
+                    "diagnostic_screening_plot_data" &
+                    appendix$selection_catalog$Selected %in% TRUE))
+  expect_true(file.exists(file.path(
+    out_dir,
+    "appendix_diagnostic_summary_diag_plot_overview_rate.csv"
+  )))
+})
+
+test_that("export_summary_appendix supports person-fit summary inputs", {
+  out_dir <- file.path(tempdir(), "mfrmr-summary-appendix-person-fit")
+  if (dir.exists(out_dir)) unlink(out_dir, recursive = TRUE, force = TRUE)
+  dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
+
+  person_fit_summary <- list(
+    overview = data.frame(
+      Persons = 2L,
+      ReportableRows = 1L,
+      FlaggedRows = 1L,
+      stringsAsFactors = FALSE
+    ),
+    status_summary = data.frame(
+      Status = "review",
+      Rows = 1L,
+      stringsAsFactors = FALSE
+    ),
+    report_index_summary = data.frame(
+      ReportIndex = "lz_star",
+      Rows = 1L,
+      stringsAsFactors = FALSE
+    ),
+    lz_star_status_summary = data.frame(
+      Status = "available",
+      Rows = 1L,
+      stringsAsFactors = FALSE
+    ),
+    top_review = data.frame(
+      Person = "P1",
+      ReportIndex = "lz_star",
+      ReportValue = -2.5,
+      Status = "review",
+      stringsAsFactors = FALSE
+    ),
+    caveats = data.frame(),
+    thresholds = data.frame(
+      Threshold = "z",
+      Value = 2,
+      stringsAsFactors = FALSE
+    ),
+    reporting_map = data.frame(
+      Output = "top_review",
+      Use = "response-level follow-up",
+      stringsAsFactors = FALSE
+    ),
+    notes = "Person-fit rows are diagnostic follow-up, not automatic exclusions."
+  )
+  class(person_fit_summary) <- "summary.mfrm_person_fit_indices"
+
+  appendix <- export_summary_appendix(
+    person_fit_summary,
+    output_dir = out_dir,
+    prefix = "appendix_person_fit",
+    preset = "recommended",
+    include_html = FALSE,
+    overwrite = TRUE
+  )
+
+  expect_s3_class(appendix, "mfrm_summary_appendix_export")
+  expect_true(any(appendix$written_files$Component ==
+                    "summary_summary_mfrm_person_fit_indices_status_summary"))
+  expect_true(any(appendix$selection_catalog$Role == "review_status" &
+                    appendix$selection_catalog$Selected %in% TRUE))
+  expect_true(file.exists(file.path(
+    out_dir,
+    "appendix_person_fit_summary_summary_mfrm_person_fit_indices_status_summary.csv"
+  )))
+})
+
+test_that("export_summary_appendix supports precision-review summaries", {
+  out_dir <- file.path(tempdir(), "mfrmr-summary-appendix-precision-review")
+  if (dir.exists(out_dir)) unlink(out_dir, recursive = TRUE, force = TRUE)
+  dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
+
+  precision <- precision_review_report(
+    export_core_fixture$fit,
+    diagnostics = export_core_fixture$diagnostics
+  )
+
+  appendix <- export_summary_appendix(
+    list(precision = summary(precision)),
+    output_dir = out_dir,
+    prefix = "appendix_precision",
+    preset = "recommended",
+    include_html = FALSE,
+    overwrite = TRUE
+  )
+
+  expect_s3_class(appendix, "mfrm_summary_appendix_export")
+  expect_true(any(appendix$written_files$Component ==
+                    "summary_precision_fit_separation_basis"))
+  expect_true(any(appendix$selection_catalog$Role == "precision_review" &
+                    appendix$selection_catalog$Selected %in% TRUE))
+  expect_true(file.exists(file.path(
+    out_dir,
+    "appendix_precision_summary_precision_fit_separation_basis.csv"
+  )))
+})
+
+test_that("export_summary_appendix supports fit-measure and FACETS fit-review summaries", {
+  out_dir <- file.path(tempdir(), "mfrmr-summary-appendix-fit-review")
+  if (dir.exists(out_dir)) unlink(out_dir, recursive = TRUE, force = TRUE)
+  dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
+
+  fm <- fit_measures_table(
+    export_core_fixture$fit,
+    diagnostics = export_core_fixture$diagnostics,
+    fit_df_method = "both",
+    top_n = 5
+  )
+  facets_review <- facets_fit_review(
+    export_core_fixture$fit,
+    diagnostics = export_core_fixture$diagnostics
+  )
+
+  appendix <- export_summary_appendix(
+    list(
+      fit_measures = summary(fm),
+      facets_fit = facets_review
+    ),
+    output_dir = out_dir,
+    prefix = "appendix_fit_review",
+    preset = "recommended",
+    include_html = FALSE,
+    overwrite = TRUE
+  )
+
+  expect_s3_class(appendix, "mfrm_summary_appendix_export")
+  expect_true(any(appendix$written_files$Component ==
+                    "summary_fit_measures_df_sensitivity"))
+  expect_true(any(appendix$written_files$Component ==
+                    "summary_facets_fit_df_sensitivity"))
+  expect_true(any(appendix$selection_catalog$Role == "precision_review" &
+                    appendix$selection_catalog$Selected %in% TRUE))
+  expect_true(file.exists(file.path(
+    out_dir,
+    "appendix_fit_review_summary_fit_measures_df_sensitivity.csv"
+  )))
+  expect_true(file.exists(file.path(
+    out_dir,
+    "appendix_fit_review_summary_facets_fit_df_sensitivity.csv"
+  )))
+})
+
+test_that("export_mfrm_bundle supports recovery-validation summary tables", {
+  out_dir <- file.path(tempdir(), "mfrmr-export-bundle-recovery-validation")
+  if (dir.exists(out_dir)) unlink(out_dir, recursive = TRUE, force = TRUE)
+  dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
+
+  validation_summary <- export_recovery_validation_summary_fixture()
+  bundle <- export_mfrm_bundle(
+    fit = export_core_fixture$fit,
+    diagnostics = export_core_fixture$diagnostics,
+    summary_tables = list(validation = validation_summary),
+    output_dir = out_dir,
+    prefix = "bundle_recovery_validation",
+    include = "summary_tables",
+    overwrite = TRUE
+  )
+
+  expect_s3_class(bundle, "mfrm_export_bundle")
+  expect_true(any(bundle$written_files$Component ==
+                    "summary_validation_topline_release_decision"))
+  expect_true(any(bundle$written_files$Component ==
+                    "summary_validation_condition_reporting_notes"))
+  expect_true(any(bundle$written_files$Component ==
+                    "summary_validation_diagnostic_reporting_notes"))
+  expect_true(file.exists(file.path(
+    out_dir,
+    "bundle_recovery_validation_summary_validation_diagnostic_reporting_notes.csv"
+  )))
 })
 
 test_that("export_summary_appendix supports section-aware appendix presets", {

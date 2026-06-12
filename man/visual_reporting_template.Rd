@@ -25,13 +25,7 @@ A data.frame with columns:
 the fitted object and diagnostics.
 \item \code{WhatNotToClaim}: common overclaim to avoid.
 \item \code{BeginnerCheck}: first thing a new user should inspect.
-\item \code{ReadFirst}: the first visual feature to inspect inside the figure.
-\item \code{NextLook}: the next public helper, table, or checklist to consult.
-\item \code{ReportDecision}: conservative rule for deciding main-text, appendix, or
-exploratory-only placement.
-\item \code{GPCMBoundary}: model-specific interpretation boundary for bounded
-\code{GPCM} fits.
-\item \code{ThreeDPolicy}: whether 3D is recommended, discouraged, or payload-only.
+\item \code{ThreeDPolicy}: whether 3D is recommended, discouraged, or data-only.
 }
 }
 \description{
@@ -52,4 +46,8 @@ decide how to describe the resulting figure.
 visual_reporting_template()
 visual_reporting_template("manuscript")
 visual_reporting_template("surface")
+mfrmr_interval_guide("visual")[, c("Route", "PrimaryHelper", "DefaultLevel")]
 }
+\concept{figure captions}
+\concept{reporting workflow}
+\concept{visual diagnostics}

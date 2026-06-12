@@ -8,7 +8,7 @@ plot_reliability_snapshot(
   fit,
   diagnostics = NULL,
   metric = c("reliability", "separation", "strata"),
-  preset = c("standard", "publication", "compact"),
+  preset = c("standard", "publication", "compact", "monochrome"),
   draw = TRUE
 )
 }
@@ -41,7 +41,7 @@ observed-score variance-share view.
 \examples{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                 method = "JML", maxit = 25)
+                 method = "JML", maxit = 30)
 p <- plot_reliability_snapshot(fit, draw = FALSE)
 p$data$table
 # Look for (default `metric = "reliability"`):

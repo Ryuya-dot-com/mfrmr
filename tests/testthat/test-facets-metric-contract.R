@@ -4,7 +4,7 @@ safe_num <- function(x) suppressWarnings(as.numeric(x))
 
 test_that("FACETS-style metric contracts hold for key summary tables", {
   d <- mfrmr:::sample_mfrm_data(seed = 123)
-  fit <- suppressWarnings(mfrmr::fit_mfrm(
+  fit <- mfrmr::fit_mfrm(
     data = d,
     person = "Person",
     facets = c("Rater", "Task", "Criterion"),
@@ -12,8 +12,8 @@ test_that("FACETS-style metric contracts hold for key summary tables", {
     method = "JML",
     model = "RSM",
     maxit = 20
-  ))
-  diag <- suppressWarnings(mfrmr::diagnose_mfrm(fit, residual_pca = "none"))
+  )
+  diag <- mfrmr::diagnose_mfrm(fit, residual_pca = "none")
   bias <- mfrmr::estimate_bias(fit, diag, facet_a = "Rater", facet_b = "Task", max_iter = 2)
 
   t4 <- mfrmr::unexpected_response_table(fit, diagnostics = diag, top_n = 20)
@@ -56,7 +56,7 @@ test_that("FACETS-style metric contracts hold for key summary tables", {
 
 test_that("FACETS-style range contracts hold for agreement, fit, displacement, and rating scale", {
   d <- mfrmr:::sample_mfrm_data(seed = 123)
-  fit <- suppressWarnings(mfrmr::fit_mfrm(
+  fit <- mfrmr::fit_mfrm(
     data = d,
     person = "Person",
     facets = c("Rater", "Task", "Criterion"),
@@ -64,8 +64,8 @@ test_that("FACETS-style range contracts hold for agreement, fit, displacement, a
     method = "JML",
     model = "RSM",
     maxit = 20
-  ))
-  diag <- suppressWarnings(mfrmr::diagnose_mfrm(fit, residual_pca = "none"))
+  )
+  diag <- mfrmr::diagnose_mfrm(fit, residual_pca = "none")
 
   t7agree <- mfrmr::interrater_agreement_table(fit, diagnostics = diag)
   if (nrow(t7agree$summary) > 0) {

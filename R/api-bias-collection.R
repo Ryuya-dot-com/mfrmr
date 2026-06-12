@@ -53,7 +53,7 @@
 #' 1. Fit with [fit_mfrm()] and diagnose with [diagnose_mfrm()]. For
 #'    `RSM` / `PCM` reporting runs, prefer `method = "MML"` plus
 #'    `diagnostic_mode = "both"` in the diagnostics call.
-#' 2. Run `estimate_all_bias()` to compute multi-pair interactions.
+#' 2. Run `estimate_all_bias()` to compute app-style multi-pair interactions.
 #' 3. Pass the resulting `by_pair` list into [reporting_checklist()] or
 #'    [facet_quality_dashboard()].
 #'
@@ -63,7 +63,7 @@
 #' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                 method = "MML", maxit = 200)
+#'                 method = "MML", quad_points = 7, maxit = 30)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none", diagnostic_mode = "both")
 #' bias_all <- estimate_all_bias(fit, diagnostics = diag)
 #' bias_all$summary[, c("Interaction", "Rows", "Significant")]

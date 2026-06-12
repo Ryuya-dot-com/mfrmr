@@ -1248,7 +1248,7 @@ simulation_future_branch_grid_plot_payload <- function(x,
         grid_summary = grid_summary,
         grid_recommendation = recommendation,
         note = paste(
-          "Draw-free plotting payload for the schema-only future branch is",
+          "Draw-free plot data for the schema-only future branch are",
           "unavailable until the branch grid can be materialized."
         )
       )
@@ -1348,8 +1348,8 @@ simulation_future_branch_grid_plot_payload <- function(x,
       grid_recommendation = recommendation,
       legend = legend,
       note = paste(
-        "Draw-free plotting payload for the schema-only future branch. It",
-        "summarizes the active grid and the deterministic baseline",
+        "Draw-free plot data for the schema-only future branch. They",
+        "summarizes the current branch grid and the deterministic baseline",
         "pick without implying an active arbitrary-facet planner."
       )
     )
@@ -1512,7 +1512,7 @@ simulation_future_branch_report_bundle <- function(x,
         "Schema-only future-branch report bundle is unavailable until the",
         "underlying branch grid is materialized. The contract still bundles",
         "summary metadata, branch-side table contracts, and draw-free plot",
-        "payloads in one internal object."
+        "data views in one shared object."
       )
     ))
   }
@@ -1535,9 +1535,9 @@ simulation_future_branch_report_bundle <- function(x,
     tables = tables,
     plots = plots,
     note = paste(
-      "Schema-only future-branch report bundle combining the internal",
+      "Schema-only future-branch report bundle combining the shared",
       "summary, deterministic baseline recommendation, canonical/public/",
-      "branch table views, and draw-free plot payloads without implying an",
+      "branch table views, and draw-free plot data without implying an",
       "active arbitrary-facet planner."
     )
   )
@@ -2066,7 +2066,7 @@ simulation_future_branch_report_digest <- function(x,
     note = paste(
       "Schema-only future-branch report digest exposing headline report",
       "availability, baseline design metadata, and compact surface/axis",
-      "summaries from one internal contract without implying an active",
+      "summaries from one shared contract without implying an active",
       "arbitrary-facet planner."
     )
   )
@@ -2292,7 +2292,7 @@ simulation_future_branch_report_surface_registry <- function(x,
     surfaces = surfaces,
     note = paste(
       "Schema-only future-branch report surface registry exposing digest,",
-      "catalog, and compact overview surfaces from one internal contract",
+      "catalog, and compact overview surfaces from one shared contract",
       "without implying an active arbitrary-facet planner."
     )
   )
@@ -2368,7 +2368,7 @@ simulation_future_branch_report_panel <- function(x,
     note = paste(
       "Schema-only future-branch report panel exposing one selected compact",
       "surface together with headline digest metadata and the surface index",
-      "from one internal contract without implying an active arbitrary-",
+      "from one shared contract without implying an active arbitrary-",
       "facet planner."
     )
   )
@@ -2485,7 +2485,7 @@ simulation_future_branch_report_operation <- function(x,
     note = paste(
       "Schema-only future-branch report operation exposing digest, compact",
       "overview tables, the current surface registry, and one selected",
-      "surface from one internal contract without implying an active",
+      "surface from one shared contract without implying an active",
       "arbitrary-facet planner."
     )
   )
@@ -2770,7 +2770,7 @@ simulation_future_branch_report_consume <- function(x,
     report_available = isTRUE(payload$report_available),
     reason = as.character(
       payload$reason %||%
-        "No schema-only future-branch report payload is currently available."
+        "No schema-only future-branch report data are currently available."
     ),
     recommended_design_id = recommended_design_id,
     n_designs = n_designs,
@@ -2780,7 +2780,7 @@ simulation_future_branch_report_consume <- function(x,
     note = paste(
       "Schema-only future-branch report consumer dispatching to the selected",
       mode,
-      "contract so branch-side code can switch report payload weight without",
+      "contract so branch-side code can switch report-data weight without",
       "re-implementing the dispatch logic."
     )
   )
@@ -2919,7 +2919,7 @@ simulation_future_branch_pilot <- function(x,
     grid_recommendation = grid_recommendation,
     note = paste(
       "Internal schema-only future-branch pilot bundling one materialized grid",
-      "view, one draw-free plot payload, and one mode-selected report consumer.",
+      "view, one draw-free plot-data object, and one mode-selected report consumer.",
       "This is the first active branch-side object, but it remains a",
       "deterministic scaffold rather than a performance-based arbitrary-facet planner."
     )
@@ -3128,7 +3128,7 @@ simulation_future_branch_pilot_plot <- function(x,
     plot = pilot$plot_payload,
     pilot = pilot,
     note = paste(
-      "Draw-free plotting payload from the schema-only future-branch pilot.",
+      "Draw-free plot data from the schema-only future-branch pilot.",
       "This preserves the existing plot contract while routing access through",
       "the pilot scaffold."
     )
@@ -3254,7 +3254,7 @@ simulation_future_branch_active_branch <- function(x,
     canonical_grid = canonical_grid,
     note = paste(
       "Minimal active future-branch object bundling pilot-level summary, one",
-      "selected table component, and one draw-free plot payload from the",
+      "selected table component, and one draw-free plot-data object from the",
       "current arbitrary-facet scaffold."
     )
   ), class = c("mfrm_future_branch_active_branch", "list"))
@@ -6259,7 +6259,7 @@ simulation_planning_schema <- function(sim_spec = NULL, facet_names = NULL) {
       "plus a report-surface registry and compact report panel when default",
       "counts are available, alongside one combined report operation object",
       "plus one lightweight report snapshot, one selected-surface report brief,",
-      "one mode-based report consumer, one internal active pilot object,",
+      "one mode-based report consumer, one active pilot object,",
       "compact pilot-level summary/table/plot consumers, and one bundled",
       "active-branch object plus deterministic active-branch profile,",
       "load/balance diagnostics, coverage/connectivity diagnostics,",

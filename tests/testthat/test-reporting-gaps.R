@@ -1,5 +1,5 @@
 # test-reporting-gaps.R
-# Targeted tests for uncovered branches in reporting.R and facets_mode files.
+# Regression tests for less-traveled branches in reporting.R and facets_mode files.
 
 # ---- py_style_format fallback (line 20) ----
 
@@ -130,7 +130,7 @@ test_that("build_apa_text respects context parameters", {
     fit_mfrm(d, "Person", c("Rater", "Task", "Criterion"), "Score",
              method = "JML", maxit = 20)
   )
-  diag <- suppressWarnings(diagnose_mfrm(fit))
+  diag <- diagnose_mfrm(fit)
 
   # With context options that trigger the assessment/setting branches
   apa <- build_apa_outputs(fit, diagnostics = diag, context = list(
@@ -308,8 +308,8 @@ test_that("build_apa_text includes PCM step structure text", {
     fit_mfrm(d, "Person", c("Rater", "Task", "Criterion"), "Score",
              model = "PCM", method = "JML", step_facet = "Criterion", maxit = 20)
   )
-  diag <- suppressWarnings(diagnose_mfrm(fit))
-  apa <- suppressWarnings(build_apa_outputs(fit, diagnostics = diag))
+  diag <- diagnose_mfrm(fit)
+  apa <- build_apa_outputs(fit, diagnostics = diag)
   # Should mention PCM and step structure
   expect_true(grepl("PCM", apa$report_text))
 })

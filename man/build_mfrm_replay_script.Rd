@@ -63,8 +63,8 @@ A named list with class \code{mfrm_replay_script}.
 Build a package-native replay script for an MFRM analysis
 }
 \details{
-This helper creates a reproducible-download style script using \code{mfrmr}'s
-installed API rather than embedding a separate estimation engine.
+This helper mirrors the Streamlit app's reproducible-download idea, but uses
+\code{mfrmr}'s installed API rather than embedding a separate estimation engine.
 The generated script assumes the user has the package installed and provides
 a data file at \code{data_file}.
 
@@ -80,9 +80,11 @@ By default that replay-ready table is embedded inline; when
 \code{fit_person_data_file} is supplied, the generated script reads it from that
 sidecar CSV relative to the replay script location.
 
-This replay layer is intentionally unavailable for bounded \code{GPCM}, because
-the current bundle/export contract still depends on the diagnostics/reporting
-route that remains formalized only for the Rasch-family branch.
+For bounded \code{GPCM}, replay scripts are available with an explicit
+\code{gpcm_boundary} table. The generated script records \code{step_facet} and
+\code{slope_facet} settings, but full FACETS score-side contract review remains
+outside this replay contract. Role-based design forecasting is available
+through \code{\link[=predict_mfrm_population]{predict_mfrm_population()}} as a separate caveated helper route.
 }
 \section{When to use this}{
 
@@ -137,7 +139,7 @@ you.
 \examples{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", maxit = 25)
+                method = "JML", maxit = 30)
 replay <- build_mfrm_replay_script(fit, data_file = "your_data.csv")
 replay$summary[, c("ScriptMode", "ResidualPCA", "BiasPairs")]
 cat(substr(replay$script, 1, 120))

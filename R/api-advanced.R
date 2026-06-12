@@ -235,7 +235,8 @@ build_dff_linking_setup <- function(fit, facet, facet_names) {
   } else {
     tibble::tibble(Facet = character(0), Level = character(0), Anchor = numeric(0))
   }
-  min_common_anchors <- fit$config$anchor_audit$thresholds$min_common_anchors %||% 5L
+  anchor_review_obj <- anchor_review(fit, required = FALSE) %||% list()
+  min_common_anchors <- anchor_review_obj$thresholds$min_common_anchors %||% 5L
   list(
     linking_facets = linking_facets,
     anchor_tbl = tibble::as_tibble(anchor_tbl),
@@ -253,14 +254,14 @@ summarize_dff_group_linkage <- function(sub_fit, linking_setup) {
     ))
   }
 
-  audit <- sub_fit$config$anchor_audit %||% list()
-  facet_summary <- as.data.frame(audit$facet_summary %||% data.frame(), stringsAsFactors = FALSE)
+  review <- anchor_review(sub_fit, required = FALSE) %||% list()
+  facet_summary <- as.data.frame(review$facet_summary %||% data.frame(), stringsAsFactors = FALSE)
   if (nrow(facet_summary) == 0 || !"Facet" %in% names(facet_summary)) {
     return(list(
       status = "weak_link",
       ets_eligible = FALSE,
       anchored_levels = NA_integer_,
-      detail = "Linking anchors were requested, but subgroup anchor coverage could not be audited."
+      detail = "Linking anchors were requested, but subgroup anchor coverage could not be reviewed."
     ))
   }
 
@@ -310,7 +311,7 @@ summarize_dff_group_linkage <- function(sub_fit, linking_setup) {
 
 extract_dff_group_estimates <- function(sub_fit, sub_diag, facet, fallback_levels, n_obs,
                                         linking_setup, linkage, diagnostics_error = NULL,
-                                        linking_audit = NA_character_) {
+                                        linking_review_note = NA_character_) {
   precision_meta <- resolve_dff_subgroup_precision(
     sub_fit,
     sub_diag = sub_diag,
@@ -356,7 +357,7 @@ extract_dff_group_estimates <- function(sub_fit, sub_diag, facet, fallback_level
       LinkingStatus = linkage$status,
       LinkingAnchoredLevels = linkage$anchored_levels,
       LinkingDetail = link_detail,
-      LinkingAudit = linking_audit,
+      LinkingReview = linking_review_note,
       LinkComparable = isTRUE(linkage$ets_eligible),
       Converged = isTRUE(precision_meta$converged),
       PrecisionTier = precision_meta$precision_tier,
@@ -476,6 +477,15 @@ extract_dff_group_estimates <- function(sub_fit, sub_diag, facet, fallback_level
 #'   (`method = "refit"`).
 #' - `$group_fits`: (refit method only) list of per-group facet estimates and
 #'   subgroup linking diagnostics.
+#' - `$gpcm_boundary`: for bounded `GPCM` fits, a capability-boundary table
+#'   marking the DFF/DIF output as caveated screening evidence.
+#'
+#' @section GPCM boundary:
+#' For bounded `GPCM`, DFF/DIF rows are available as slope-aware screening
+#' evidence over the fitted expected-score and residual scale. Keep
+#' residual-method contrasts and interaction cells in screening language.
+#' Refit contrasts require explicit subgroup linking and precision support
+#' before stronger subgroup-comparison language is used.
 #'
 #' @section Typical workflow:
 #' 1. Fit a model with [fit_mfrm()]. For `RSM` / `PCM` fairness review, prefer
@@ -494,6 +504,7 @@ extract_dff_group_estimates <- function(sub_fit, sub_diag, facet, fallback_level
 #' - `cell_table`: (residual method) per-cell detail table.
 #' - `summary`: counts by screening or ETS classification.
 #' - `group_fits`: (refit method) per-group facet estimates.
+#' - `gpcm_boundary`: for bounded `GPCM` fits, a capability-boundary table.
 #' - `config`: list with facet, group, method, min_obs, p_adjust settings.
 #'
 #' @seealso [fit_mfrm()], [estimate_bias()], [compare_mfrm()],
@@ -504,7 +515,7 @@ extract_dff_group_estimates <- function(sub_fit, sub_diag, facet, fallback_level
 #' toy <- load_mfrmr_data("example_bias")
 #'
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                  method = "MML", model = "RSM", maxit = 200)
+#'                  method = "MML", model = "RSM", quad_points = 7, maxit = 30)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none", diagnostic_mode = "both")
 #' dff <- analyze_dff(fit, diag, facet = "Rater", group = "Group", data = toy)
 #' dff$summary
@@ -824,7 +835,7 @@ analyze_dif <- function(...) {
     rows[[length(rows) + 1L]] <- data.frame(
       Item = "Flag threshold",
       Meaning = paste0("Cells with absolute value >= ", flag_threshold,
-                       " are marked in the plotting payload and outlined when drawn."),
+                       " are marked in the plot data and outlined when drawn."),
       ReportingNote = "The threshold is user-specified plotting guidance unless it comes from a documented analysis rule.",
       stringsAsFactors = FALSE
     )
@@ -1050,6 +1061,11 @@ analyze_dif <- function(...) {
     cell_table = cell_table,
     summary = dif_summary,
     group_fits = NULL,
+    gpcm_boundary = gpcm_capability_boundary_table(
+      fit,
+      helper = "analyze_dff()",
+      area = "Differential facet functioning screening under bounded GPCM"
+    ),
     config = list(facet = facet, group = group, method = "residual",
                   min_obs = min_obs, p_adjust = p_adjust,
                   focal = focal, group_levels = group_levels,
@@ -1119,20 +1135,20 @@ analyze_dif <- function(...) {
       maxit = refit_controls$maxit,
       reltol = refit_controls$reltol
     )
-    # Capture the anchor-audit issue messages emitted while refitting
+    # Capture the anchor-review issue messages emitted while refitting
     # the subgroup so a silent anchor_policy no longer hides
     # unknown-level / invalid-anchor issues. The outer tryCatch /
     # suppressWarnings is retained so a fit failure is still handled
     # gracefully.
-    linking_audit_msgs <- character(0)
+    linking_review_msgs <- character(0)
     sub_fit <- tryCatch(
       withCallingHandlers(
         do.call(fit_mfrm, fit_args),
         message = function(m) {
           msg <- conditionMessage(m)
-          if (grepl("Anchor audit", msg, fixed = TRUE) ||
+          if (grepl("Anchor review", msg, fixed = TRUE) ||
               grepl("anchor_policy", msg, fixed = TRUE)) {
-            linking_audit_msgs <<- c(linking_audit_msgs, msg)
+            linking_review_msgs <<- c(linking_review_msgs, msg)
           }
           invokeRestart("muffleMessage")
         },
@@ -1142,8 +1158,8 @@ analyze_dif <- function(...) {
       ),
       error = function(e) structure(list(message = conditionMessage(e)), class = "mfrm_dff_fit_error")
     )
-    linking_audit_text <- if (length(linking_audit_msgs) > 0L) {
-      paste(unique(linking_audit_msgs), collapse = " | ")
+    linking_review_text <- if (length(linking_review_msgs) > 0L) {
+      paste(unique(linking_review_msgs), collapse = " | ")
     } else {
       NA_character_
     }
@@ -1160,7 +1176,7 @@ analyze_dif <- function(...) {
           LinkingStatus = if (nrow(linking_setup$anchor_tbl) > 0) "failed" else "unlinked",
           LinkingAnchoredLevels = NA_integer_,
           LinkingDetail = sub_fit$message %||% "Anchored subgroup refit failed.",
-          LinkingAudit = linking_audit_text,
+          LinkingReview = linking_review_text,
           LinkComparable = FALSE,
           Converged = FALSE,
           PrecisionTier = NA_character_,
@@ -1187,7 +1203,7 @@ analyze_dif <- function(...) {
         linking_setup = linking_setup,
         linkage = linkage,
         diagnostics_error = sub_diag_error,
-        linking_audit = linking_audit_text
+        linking_review_note = linking_review_text
       )
     }
   }
@@ -1345,6 +1361,11 @@ analyze_dif <- function(...) {
     cell_table = NULL,
     summary = dif_summary,
     group_fits = group_fits,
+    gpcm_boundary = gpcm_capability_boundary_table(
+      fit,
+      helper = "analyze_dff()",
+      area = "Differential facet functioning screening under bounded GPCM"
+    ),
     config = list(facet = facet, group = group, method = "refit",
                   min_obs = min_obs, p_adjust = p_adjust,
                   focal = focal, group_levels = group_levels,
@@ -1362,6 +1383,7 @@ summary.mfrm_dif <- function(object, ...) {
     dif_table = object$dif_table,
     cell_table = object$cell_table,
     summary = object$summary,
+    gpcm_boundary = object$gpcm_boundary %||% data.frame(),
     config = object$config
   )
   class(out) <- "summary.mfrm_dif"
@@ -1417,6 +1439,7 @@ print.summary.mfrm_dif <- function(x, ...) {
     cat("\nScreening Summary:\n")
   }
   print(as.data.frame(x$summary), row.names = FALSE)
+  .print_dff_gpcm_boundary(x$gpcm_boundary)
   invisible(x)
 }
 
@@ -1451,12 +1474,8 @@ print.mfrm_dff <- function(x, ...) {
   tbl <- x$dif_table
   n_rows <- if (is.data.frame(tbl)) nrow(tbl) else 0L
   n_flag <- if (n_rows > 0L && "Classification" %in% names(tbl)) {
-    cls <- as.character(tbl$Classification)
-    ets <- as.character(tbl$ETS %||% rep(NA_character_, n_rows))
-    sum(cls == "Screen positive" |
-          ets %in% c("B", "C") |
-          cls %in% c("B (Moderate)", "C (Large)"),
-        na.rm = TRUE)
+    sum(!is.na(tbl$Classification) & tbl$Classification != "Negligible" &
+          tbl$Classification != "None")
   } else NA_integer_
   cat(sprintf("mfrm_%s (%s)\n", tolower(label), label))
   cat(sprintf("  Method: %s | Facet: %s | Group: %s\n",
@@ -1472,7 +1491,25 @@ print.mfrm_dff <- function(x, ...) {
   } else {
     cat("  Contrasts: 0 row(s)\n")
   }
+  boundary <- x$gpcm_boundary %||% data.frame()
+  if (is.data.frame(boundary) && nrow(boundary) > 0L) {
+    status <- as.character(boundary$Status[1] %||% "supported_with_caveat")
+    cat(sprintf("  GPCM boundary: %s\n", status))
+  }
   cat("  Use `summary()` for the contrast table and classification breakdown.\n")
+  invisible(NULL)
+}
+
+.print_dff_gpcm_boundary <- function(boundary) {
+  if (is.null(boundary) || !is.data.frame(boundary) || nrow(boundary) == 0L) {
+    return(invisible(NULL))
+  }
+  keep <- intersect(c("Area", "Status"), names(boundary))
+  if (length(keep) == 0L) {
+    return(invisible(NULL))
+  }
+  cat("\nGPCM Boundary:\n")
+  print(as.data.frame(boundary[, keep, drop = FALSE]), row.names = FALSE)
   invisible(NULL)
 }
 
@@ -1534,9 +1571,16 @@ print.mfrm_dff <- function(x, ...) {
 #' - `$table`: the full interaction table with one row per cell.
 #' - `$summary`: overview counts of flagged and sparse cells.
 #' - `$config`: analysis configuration parameters.
+#' - `$gpcm_boundary`: for bounded `GPCM` fits, a capability-boundary table
+#'   marking the table as caveated DFF screening evidence.
 #' - Cells with `|t| > abs_t_warn` or `|ObsExpAvg| > abs_bias_warn`
 #'   are flagged in the `flag_t` and `flag_bias` columns.
 #' - Sparse cells (N < min_obs) have `sparse = TRUE` and NA statistics.
+#'
+#' @section GPCM boundary:
+#' For bounded `GPCM`, the interaction table uses the fitted slope-aware
+#' expected-score/residual scale and should be reported as screening evidence,
+#' not as a standalone fairness, invariance, or operational subgroup decision.
 #'
 #' @section Typical workflow:
 #' 1. Fit a model with [fit_mfrm()].
@@ -1547,6 +1591,7 @@ print.mfrm_dff <- function(x, ...) {
 #' @return Object of class `mfrm_dif_interaction` with:
 #' - `table`: tibble with per-cell statistics and flags.
 #' - `summary`: tibble summarizing flagged and sparse cell counts.
+#' - `gpcm_boundary`: for bounded `GPCM` fits, a capability-boundary table.
 #' - `config`: list of analysis parameters.
 #'
 #' @seealso [analyze_dff()], [analyze_dif()], [plot_dif_heatmap()], [dif_report()],
@@ -1555,7 +1600,7 @@ print.mfrm_dff <- function(x, ...) {
 #' toy <- load_mfrmr_data("example_bias")
 #'
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                  method = "JML", model = "RSM", maxit = 25)
+#'                  method = "JML", model = "RSM", maxit = 30)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
 #' int <- dif_interaction_table(fit, diag, facet = "Rater",
 #'                              group = "Group", data = toy, min_obs = 2)
@@ -1712,6 +1757,11 @@ dif_interaction_table <- function(fit, diagnostics, facet, group, data = NULL,
   out <- list(
     table = int_table,
     summary = int_summary,
+    gpcm_boundary = gpcm_capability_boundary_table(
+      fit,
+      helper = "dif_interaction_table()",
+      area = "Differential facet functioning screening under bounded GPCM"
+    ),
     config = list(facet = facet, group = group, min_obs = min_obs,
                   p_adjust = p_adjust, abs_t_warn = abs_t_warn,
                   abs_bias_warn = abs_bias_warn,
@@ -1727,6 +1777,7 @@ summary.mfrm_dif_interaction <- function(object, ...) {
   out <- list(
     table = object$table,
     summary = object$summary,
+    gpcm_boundary = object$gpcm_boundary %||% data.frame(),
     config = object$config
   )
   class(out) <- "summary.mfrm_dif_interaction"
@@ -1755,6 +1806,7 @@ print.summary.mfrm_dif_interaction <- function(x, ...) {
     print(as.data.frame(x$table |> select(all_of(show_cols))),
           row.names = FALSE, digits = 3)
   }
+  .print_dff_gpcm_boundary(x$gpcm_boundary)
   invisible(x)
 }
 
@@ -1812,7 +1864,7 @@ print.mfrm_dif_interaction <- function(x, ...) {
 #' 2. Plot with `plot_dif_heatmap(...)`.
 #' 3. Identify extreme cells or contrasts for follow-up.
 #'
-#' @return Invisibly, an `mfrm_plot_data` payload whose `data` slot bundles
+#' @return Invisibly, an `mfrm_plot_data` object whose `data` slot bundles
 #'   the row x column metric matrix (`$matrix`), the source long table
 #'   (`$pairs`), and the metric label. Earlier 0.1.x releases returned the
 #'   bare matrix; consume `$data$matrix` to keep code forward-compatible.
@@ -1822,7 +1874,7 @@ print.mfrm_dif_interaction <- function(x, ...) {
 #' toy <- load_mfrmr_data("example_bias")
 #'
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                  method = "JML", model = "RSM", maxit = 25)
+#'                  method = "JML", model = "RSM", maxit = 30)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
 #' int <- dif_interaction_table(fit, diag, facet = "Rater",
 #'                              group = "Group", data = toy, min_obs = 2)
@@ -2025,6 +2077,7 @@ plot_dif_heatmap <- function(x, metric = c("obs_exp", "t", "contrast"),
         classification_system = classification_system,
         flag_threshold = flag_threshold
       ),
+      gpcm_boundary = x$gpcm_boundary %||% data.frame(),
       settings = list(
         show_values = show_values,
         value_digits = value_digits,
@@ -2225,12 +2278,13 @@ information_build_step_structure <- function(fit, model) {
   )
 }
 
-#' Compute design-weighted precision curves for ordered Rasch-family fits
+#' Compute design-weighted precision curves for ordered many-facet fits
 #'
 #' Calculates design-weighted score-variance curves across the latent
-#' trait (theta) for a fitted ordered-category many-facet Rasch model. Returns both
-#' an overall precision curve (`$tif`) and per-facet-level contribution
-#' curves (`$iif`) based on the realized observation pattern.
+#' trait (theta) for a fitted ordered-category `RSM`, `PCM`, or bounded
+#' `GPCM` model. Returns both an overall precision curve (`$tif`) and
+#' per-facet-level contribution curves (`$iif`) based on the realized
+#' observation pattern.
 #'
 #' @param fit Output from [fit_mfrm()].
 #' @param theta_range Numeric vector of length 2 giving the range of theta
@@ -2239,8 +2293,8 @@ information_build_step_structure <- function(fit, model) {
 #'   information. Default `201`.
 #'
 #' @details
-#' For a polytomous Rasch model with K+1 categories, the score variance at
-#' theta for one observed design cell is:
+#' For `RSM` / `PCM`, the score variance at theta for one observed design cell
+#' is:
 #' \deqn{I(\theta) = \sum_{k=0}^{K} P_k(\theta) \left(k - E(\theta)\right)^2}
 #' where \eqn{P_k} is the category probability and \eqn{E(\theta)} is the
 #' expected score at theta. In `mfrmr`, these cell-level variances are then
@@ -2328,7 +2382,7 @@ information_build_step_structure <- function(fit, model) {
 #'   derivative used by all GPCM helpers in `mfrmr`.)
 #' - Muraki, E. (1993). *Information functions of the generalized
 #'   partial credit model*. Applied Psychological Measurement, 17(4),
-#'   351-363. \doi{10.1177/014662169301700402} (Equation 10 derives the
+#'   351-363. \doi{10.1177/014662169301700403} (Equation 10 derives the
 #'   item information function for the GPCM,
 #'   \eqn{I_j(\theta) = D^2 a_j^2 \mathrm{Var}(T \mid \theta)}, by
 #'   applying Samejima's (1974) polytomous information formula to the
@@ -2361,7 +2415,7 @@ information_build_step_structure <- function(fit, model) {
 #' @section Recommended next step:
 #' Compare the precision peak with person/facet locations from a Wright map or
 #' related diagnostics. If you need to decide how strongly SE/CI language can
-#' be used in reporting, follow with [precision_audit_report()].
+#' be used in reporting, follow with [precision_review_report()].
 #'
 #' @section Typical workflow:
 #' 1. Fit a model with [fit_mfrm()].
@@ -2383,7 +2437,7 @@ information_build_step_structure <- function(fit, model) {
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                  method = "JML", model = "RSM", maxit = 25)
+#'                  method = "JML", model = "RSM", maxit = 30)
 #' info <- compute_information(fit)
 #' head(info$tif)
 #' info$tif$Theta[which.max(info$tif$Information)]
@@ -2545,8 +2599,51 @@ compute_information <- function(fit,
     Information = total_info,
     SE = ifelse(total_info > 0, 1 / sqrt(total_info), NA_real_)
   )
+  conditional_sem <- tibble(
+    Theta = theta_grid,
+    ConditionalSEM = tif$SE,
+    Information = tif$Information
+  )
+  information_long <- dplyr::bind_rows(
+    tibble(
+      PlotType = "tif",
+      Metric = "Information",
+      Series = "Information",
+      Theta = theta_grid,
+      Value = tif$Information,
+      ValueName = "Information",
+      DisplayedByDefault = TRUE
+    ),
+    tibble(
+      PlotType = "conditional_sem",
+      Metric = "Conditional SEM",
+      Series = "Conditional SEM",
+      Theta = theta_grid,
+      Value = tif$SE,
+      ValueName = "ConditionalSEM",
+      DisplayedByDefault = TRUE
+    )
+  )
+  finite_info <- is.finite(tif$Information)
+  finite_sem <- is.finite(tif$SE)
+  summary_tbl <- tibble(
+    ThetaAtMaxInformation = if (any(finite_info)) tif$Theta[which.max(ifelse(finite_info, tif$Information, -Inf))] else NA_real_,
+    MaxInformation = if (any(finite_info)) max(tif$Information[finite_info], na.rm = TRUE) else NA_real_,
+    ThetaAtMinConditionalSEM = if (any(finite_sem)) tif$Theta[which.min(ifelse(finite_sem, tif$SE, Inf))] else NA_real_,
+    MinConditionalSEM = if (any(finite_sem)) min(tif$SE[finite_sem], na.rm = TRUE) else NA_real_,
+    ThetaPoints = length(theta_grid),
+    ThetaMin = min(theta_grid, na.rm = TRUE),
+    ThetaMax = max(theta_grid, na.rm = TRUE)
+  )
 
-  out <- list(tif = tif, iif = iif, theta_range = theta_range)
+  out <- list(
+    tif = tif,
+    conditional_sem = conditional_sem,
+    information_long = information_long,
+    iif = iif,
+    summary = summary_tbl,
+    theta_range = theta_range
+  )
   class(out) <- c("mfrm_information", class(out))
   out
 }
@@ -2558,9 +2655,9 @@ compute_information <- function(fit,
 #'
 #' @param x Output from [compute_information()].
 #' @param type `"tif"` for the overall precision curve (default), `"iif"` for
-#'   facet-level contribution curves, `"se"` for the approximate standard error
-#'   implied by that curve, or `"both"` for precision with approximate SE on a
-#'   secondary axis.
+#'   facet-level contribution curves, `"se"` / `"sem"` / `"csem"` for the
+#'   conditional standard error of measurement implied by that curve, or
+#'   `"both"` for precision with conditional SEM on a secondary axis.
 #' @param facet For `type = "iif"`, which facet to plot. If `NULL`,
 #'   the first facet is used.
 #' @param draw If `TRUE` (default), draw the plot. If `FALSE`, return
@@ -2569,22 +2666,22 @@ compute_information <- function(fit,
 #'
 #' @section Plot types:
 #' - `"tif"`: overall design-weighted precision across theta.
-#' - `"se"`: approximate standard error across theta.
-#' - `"both"`: precision and approximate SE together, useful for presentations.
+#' - `"se"` / `"sem"` / `"csem"`: conditional SEM across theta.
+#' - `"both"`: precision and conditional SEM together, useful for presentations.
 #' - `"iif"`: facet-level contribution curves for one selected facet in a
 #'   supported `RSM`, `PCM`, or bounded `GPCM` fit.
 #'
 #' @section Which type should I use?:
 #' - Use `"tif"` for a quick overall read on precision.
-#' - Use `"se"` when standard-error language is easier to communicate than
-#'   precision.
+#' - Use `"sem"` or `"csem"` when standard-error language is easier to
+#'   communicate than precision.
 #' - Use `"both"` when you want both views in one figure.
 #' - Use `"iif"` when you want to see which facet levels are shaping the total
 #'   precision curve.
 #'
 #' @section Interpreting output:
 #' - The total curve peaks where the realized design is most precise.
-#' - SE is derived as `1 / sqrt(precision)`; lower is better.
+#' - Conditional SEM is derived as `1 / sqrt(precision)`; lower is better.
 #' - Facet-level curves show which facet levels contribute most to that
 #'   realized precision at each theta.
 #' - For bounded `GPCM`, those contributions include the squared
@@ -2596,15 +2693,18 @@ compute_information <- function(fit,
 #' `draw = FALSE` returns an `mfrm_plot_data` object. The underlying plotting
 #' data are stored in `$data$plot`. For `type = "tif"`, `"se"`, or `"both"`,
 #' those rows come from `x$tif`. For `type = "iif"`, the returned rows come
-#' from `x$iif` filtered to the requested facet.
+#' from `x$iif` filtered to the requested facet. The plot data also include
+#' `plot_long`, `information_long`, `conditional_sem`, `summary`, and
+#' `settings` so ggplot2, plotly, Quarto, and table workflows can reuse the
+#' information and conditional-SEM series without parsing the drawn figure.
 #'
 #' @section Typical workflow:
 #' 1. Compute information with [compute_information()].
 #' 2. Plot with `plot_information(info)` for the total precision curve.
 #' 3. Use `plot_information(info, type = "iif", facet = "Rater")` for
 #'    facet-level contributions.
-#' 4. Use `draw = FALSE` when you want reusable plotting payloads for custom
-#'    graphics or reporting helpers.
+#' 4. Use `draw = FALSE` when you want reusable plot data for custom graphics
+#'    or reporting helpers.
 #'
 #' @return Invisibly, an `mfrm_plot_data` object.
 #'
@@ -2612,7 +2712,7 @@ compute_information <- function(fit,
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                  method = "JML", model = "RSM", maxit = 25)
+#'                  method = "JML", model = "RSM", maxit = 30)
 #' info <- compute_information(fit)
 #' tif_data <- plot_information(info, type = "tif", draw = FALSE)
 #' head(tif_data$data$plot)
@@ -2620,15 +2720,16 @@ compute_information <- function(fit,
 #' head(iif_data$data$plot)
 #' @export
 plot_information <- function(x,
-                             type = c("tif", "iif", "se", "both"),
+                             type = c("tif", "iif", "se", "sem", "csem", "both"),
                              facet = NULL,
                              draw = TRUE,
                              ...) {
   if (!inherits(x, "mfrm_information")) {
     stop("`x` must be an `mfrm_information` object.", call. = FALSE)
   }
-  type <- match.arg(type)
-  plot_name <- switch(type,
+  requested_type <- match.arg(type)
+  type <- if (requested_type %in% c("sem", "csem")) "se" else requested_type
+  plot_name <- if (requested_type %in% c("sem", "csem")) "information_sem" else switch(type,
     tif = "information_tif",
     se = "information_se",
     both = "information_tif_se",
@@ -2636,22 +2737,22 @@ plot_information <- function(x,
   )
   title <- switch(type,
     tif = "Design-weighted precision curve",
-    se = "Approximate standard error curve",
-    both = "Design-weighted precision and approximate standard error",
+    se = "Conditional SEM curve",
+    both = "Design-weighted precision and conditional SEM",
     iif = paste("Facet-level precision contributions:", facet %||% unique(x$iif$Facet)[1])
   )
   subtitle <- switch(type,
     tif = "Overall precision across the latent continuum",
-    se = "Approximate standard error implied by the design-weighted precision curve",
-    both = "Precision and approximate standard error on a shared theta grid",
+    se = "Conditional standard error of measurement implied by the design-weighted precision curve",
+    both = "Precision and conditional SEM on a shared theta grid",
     iif = "Contribution curves for the selected facet"
   )
   legend <- switch(type,
     tif = new_plot_legend("Information (precision)", "precision", "line", "steelblue"),
-    se = new_plot_legend("Approx. SE", "standard_error", "line", "coral"),
+    se = new_plot_legend("Conditional SEM", "conditional_sem", "line", "coral"),
     both = new_plot_legend(
-      label = c("Information (precision)", "Approx. SE"),
-      role = c("precision", "standard_error"),
+      label = c("Information (precision)", "Conditional SEM"),
+      role = c("precision", "conditional_sem"),
       aesthetic = c("line", "line"),
       value = c("steelblue", "coral")
     ),
@@ -2659,15 +2760,85 @@ plot_information <- function(x,
   )
   series <- switch(type,
     tif = "Information",
-    se = "SE",
-    both = c("Information", "SE"),
+    se = "ConditionalSEM",
+    both = c("Information", "ConditionalSEM"),
     iif = "Information"
   )
   payload <- function(data, title_override = title, subtitle_override = subtitle) {
+    full_long <- as.data.frame(x$information_long %||% data.frame(), stringsAsFactors = FALSE)
+    if (nrow(full_long) == 0L && !is.null(x$tif)) {
+      full_long <- dplyr::bind_rows(
+        tibble(
+          PlotType = "tif",
+          Metric = "Information",
+          Series = "Information",
+          Theta = x$tif$Theta,
+          Value = x$tif$Information,
+          ValueName = "Information",
+          DisplayedByDefault = TRUE
+        ),
+        tibble(
+          PlotType = "conditional_sem",
+          Metric = "Conditional SEM",
+          Series = "Conditional SEM",
+          Theta = x$tif$Theta,
+          Value = x$tif$SE,
+          ValueName = "ConditionalSEM",
+          DisplayedByDefault = TRUE
+        )
+      )
+    }
+    if (nrow(full_long) > 0L) {
+      full_long$DisplayedByDefault <- switch(
+        type,
+        tif = full_long$ValueName == "Information",
+        se = full_long$ValueName == "ConditionalSEM",
+        both = full_long$ValueName %in% c("Information", "ConditionalSEM"),
+        iif = FALSE
+      )
+    }
+    iif_long <- if (identical(type, "iif")) {
+      data.frame(
+        PlotType = "iif",
+        Metric = "Facet-level information contribution",
+        Series = as.character(data$Level),
+        Theta = suppressWarnings(as.numeric(data$Theta)),
+        Value = suppressWarnings(as.numeric(data$Information)),
+        ValueName = "InformationContribution",
+        Facet = as.character(data$Facet),
+        Level = as.character(data$Level),
+        Exposure = suppressWarnings(as.numeric(data$Exposure)),
+        DisplayedByDefault = TRUE,
+        stringsAsFactors = FALSE
+      )
+    } else {
+      data.frame()
+    }
+    plot_long <- if (identical(type, "iif")) iif_long else full_long
+    conditional_sem <- as.data.frame(x$conditional_sem %||% data.frame(), stringsAsFactors = FALSE)
+    if (nrow(conditional_sem) == 0L && !is.null(x$tif)) {
+      conditional_sem <- data.frame(
+        Theta = x$tif$Theta,
+        ConditionalSEM = x$tif$SE,
+        Information = x$tif$Information,
+        stringsAsFactors = FALSE
+      )
+    }
     new_mfrm_plot_data(
       plot_name,
       list(
         plot = data,
+        plot_long = plot_long,
+        information_long = full_long,
+        conditional_sem = conditional_sem,
+        summary = as.data.frame(x$summary %||% data.frame(), stringsAsFactors = FALSE),
+        settings = data.frame(
+          RequestedType = requested_type,
+          CanonicalType = type,
+          Facet = as.character(facet %||% NA_character_),
+          Draw = isTRUE(draw),
+          stringsAsFactors = FALSE
+        ),
         series = series,
         title = title_override,
         subtitle = subtitle_override,
@@ -2695,9 +2866,9 @@ plot_information <- function(x,
              type = "l", lwd = 2, col = "coral", lty = 2,
              axes = FALSE, xlab = "", ylab = "")
         graphics::axis(4, col = "coral", col.axis = "coral")
-        graphics::mtext("Approx. SE", side = 4, line = 2.5, col = "coral")
+        graphics::mtext("Conditional SEM", side = 4, line = 2.5, col = "coral")
         graphics::legend("topright",
-                         legend = c("Information (precision)", "Approx. SE"),
+                         legend = c("Information (precision)", "Conditional SEM"),
                          col = c("steelblue", "coral"),
                          lty = c(1, 2), lwd = 2, bty = "n")
       }
@@ -2708,8 +2879,8 @@ plot_information <- function(x,
     if (draw) {
       plot(plot_data$Theta, plot_data$SE,
            type = "l", lwd = 2, col = "coral",
-           xlab = expression(theta), ylab = "Approx. SE",
-           main = "Approx. SE from Design-Weighted Precision", ...)
+           xlab = expression(theta), ylab = "Conditional SEM",
+           main = "Conditional SEM from Design-Weighted Precision", ...)
       graphics::grid()
     }
     invisible(payload(plot_data))
@@ -2767,7 +2938,7 @@ plot_information <- function(x,
 #' @param ci_level Confidence level used when `show_ci = TRUE`.
 #' @param draw If `TRUE` (default), draw the plot. If `FALSE`, return
 #'   plot data invisibly.
-#' @param preset Visual preset (`"standard"`, `"publication"`, `"compact"`).
+#' @param preset Visual preset (`"standard"`, `"publication"`, `"compact"`, or `"monochrome"`).
 #' @param palette Optional named color overrides passed to the shared Wright-map
 #'   drawer.
 #' @param label_angle Rotation angle for group labels on the facet panel.
@@ -2816,11 +2987,14 @@ plot_information <- function(x,
 #'   data used for the plot.
 #'
 #' @seealso [fit_mfrm()], [plot.mfrm_fit()], [mfrmr_visual_diagnostics]
+#' @concept confidence intervals
+#' @concept visual diagnostics
+#' @concept Wright maps
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
 #' toy_small <- toy[toy$Person %in% unique(toy$Person)[1:12], , drop = FALSE]
 #' fit <- fit_mfrm(toy_small, "Person", c("Rater", "Criterion"), "Score",
-#'                  method = "JML", model = "RSM", maxit = 10)
+#'                  method = "JML", model = "RSM", maxit = 30)
 #' map_data <- plot_wright_unified(fit, draw = FALSE)
 #' names(map_data)
 #' @export
@@ -2832,7 +3006,7 @@ plot_wright_unified <- function(fit,
                                 show_ci = FALSE,
                                 ci_level = 0.95,
                                 draw = TRUE,
-                                preset = c("standard", "publication", "compact"),
+                                preset = c("standard", "publication", "compact", "monochrome"),
                                 palette = NULL,
                                 label_angle = 45,
                                 ...) {
@@ -3055,11 +3229,13 @@ compute_equating_offset <- function(diffs, se_from = NULL, se_to = NULL,
 
 #' Fit new data anchored to a baseline calibration
 #'
-#' Re-estimates a many-facet Rasch model on new data while holding selected
+#' Re-estimates a fitted many-facet model on new data while holding selected
 #' facet parameters fixed at the values from a previous (baseline) calibration.
 #' This is the standard workflow for placing new data onto an existing scale,
 #' linking test forms, or carrying a baseline calibration across
 #' administration windows.
+#' For bounded `GPCM`, treat this as direct exploratory anchor/drift support
+#' rather than as the package's formal linking-synthesis route.
 #'
 #' @param new_data Data frame in long format (one row per rating).
 #' @param baseline_fit An `mfrm_fit` object from a previous calibration.
@@ -3125,7 +3301,7 @@ compute_equating_offset <- function(diffs, se_from = NULL, se_to = NULL,
 #'   [diagnose_mfrm()], [measurable_summary_table()], etc.
 #' - `$diagnostics`: pre-computed diagnostics for the anchored calibration.
 #' - `$baseline_anchors`: the anchor table fed to [fit_mfrm()], useful for
-#'   auditing which elements were constrained.
+#'   reviewing which elements were constrained.
 #'
 #' @section Typical workflow:
 #' 1. Fit the baseline model: `fit1 <- fit_mfrm(...)`.
@@ -3153,7 +3329,7 @@ compute_equating_offset <- function(diffs, se_from = NULL, se_to = NULL,
 #' keep1 <- unique(d1$Person)[1:15]
 #' d1 <- d1[d1$Person %in% keep1, , drop = FALSE]
 #' fit1 <- fit_mfrm(d1, "Person", c("Rater", "Criterion"), "Score",
-#'                  method = "JML", maxit = 15)
+#'                  method = "JML", maxit = 30)
 #' d2 <- load_mfrmr_data("study2")
 #' keep2 <- unique(d2$Person)[1:15]
 #' d2 <- d2[d2$Person %in% keep2, , drop = FALSE]
@@ -3368,9 +3544,9 @@ print.summary.mfrm_anchored_fit <- function(x, ...) {
 #' d1 <- load_mfrmr_data("study1")
 #' d2 <- load_mfrmr_data("study2")
 #' fit1 <- fit_mfrm(d1, "Person", c("Rater", "Criterion"), "Score",
-#'                  method = "JML", maxit = 15)
+#'                  method = "JML", maxit = 30)
 #' fit2 <- fit_mfrm(d2, "Person", c("Rater", "Criterion"), "Score",
-#'                  method = "JML", maxit = 15)
+#'                  method = "JML", maxit = 30)
 #' drift <- detect_anchor_drift(list(Wave1 = fit1, Wave2 = fit2))
 #' summary(drift)
 #' head(drift$drift_table[, c("Facet", "Level", "Wave", "Drift", "Flag")])
@@ -3746,9 +3922,9 @@ print.summary.mfrm_anchor_drift <- function(x, ...) {
 #' d1 <- toy[toy$Person %in% people[1:12], , drop = FALSE]
 #' d2 <- toy[toy$Person %in% people[13:24], , drop = FALSE]
 #' fit1 <- fit_mfrm(d1, "Person", c("Rater", "Criterion"), "Score",
-#'                  method = "JML", maxit = 10)
+#'                  method = "JML", maxit = 30)
 #' fit2 <- fit_mfrm(d2, "Person", c("Rater", "Criterion"), "Score",
-#'                  method = "JML", maxit = 10)
+#'                  method = "JML", maxit = 30)
 #' chain <- build_equating_chain(list(Form1 = fit1, Form2 = fit2))
 #' summary(chain)
 #' chain$cumulative
@@ -3938,7 +4114,7 @@ print.mfrm_equating_chain <- function(x, ...) {
 #' @export
 plot.mfrm_equating_chain <- function(x, y = NULL,
                                      type = c("common_anchors", "graph", "chain"),
-                                     preset = c("standard", "publication", "compact"),
+                                     preset = c("standard", "publication", "compact", "monochrome"),
                                      draw = TRUE, ...) {
   if (!inherits(x, "mfrm_equating_chain")) {
     stop("`x` must be an mfrm_equating_chain object.", call. = FALSE)
@@ -4115,13 +4291,13 @@ print.summary.mfrm_equating_chain <- function(x, ...) {
   gpcm_detected <- any(identical(source_models, "GPCM") | source_models == "GPCM")
   tibble::tibble(
     Scope = c("RSM / PCM", "bounded GPCM"),
-    Status = c("supported", if (gpcm_detected) "blocked" else "deferred"),
+    Status = c("supported", "supported_with_caveat"),
     Note = c(
-      "Supported as a synthesis layer over validated anchor-audit, drift, and equating-chain objects.",
+      "Supported as a synthesis layer over validated anchor-review, drift, and equating-chain objects.",
       if (gpcm_detected) {
-        "Blocked: build_linking_review() is not yet validated for bounded GPCM source objects."
+        "Supported with caveat: bounded GPCM source objects are summarized as exploratory anchor/drift/chain evidence, not an operational linking decision."
       } else {
-        "Deferred: the helper family exists, but bounded GPCM support is not yet validated."
+        "Supported with caveat when bounded GPCM source objects are supplied; not active for this RSM/PCM review."
       }
     )
   )
@@ -4310,13 +4486,13 @@ print.summary.mfrm_equating_chain <- function(x, ...) {
     dplyr::filter(.data$Available %in% TRUE)
 }
 
-.linking_review_anchor_risks <- function(anchor_audit) {
-  if (is.null(anchor_audit)) {
+.linking_review_anchor_risks <- function(anchor_review) {
+  if (is.null(anchor_review)) {
     return(tibble::tibble())
   }
 
   issue_rows <- tibble::tibble()
-  issue_tbl <- tibble::as_tibble(anchor_audit$issue_counts %||% tibble::tibble())
+  issue_tbl <- tibble::as_tibble(anchor_review$issue_counts %||% tibble::tibble())
   if (nrow(issue_tbl) > 0 && all(c("Issue", "N") %in% names(issue_tbl))) {
     issue_rows <- issue_tbl |>
       dplyr::filter(.data$N > 0) |>
@@ -4324,7 +4500,7 @@ print.summary.mfrm_equating_chain <- function(x, ...) {
         RiskID = paste0("anchor_issue:", .data$Issue),
         Area = "pre_fit_anchor_adequacy",
         SourceFamily = "anchor_issue_count",
-        SourceTable = "anchor_audit$issue_counts",
+        SourceTable = "anchor_review$issue_counts",
         SourceRowKey = as.character(.data$Issue),
         AdministrationID = NA_character_,
         WaveID = NA_character_,
@@ -4337,15 +4513,15 @@ print.summary.mfrm_equating_chain <- function(x, ...) {
         Magnitude = as.numeric(.data$N),
         SeverityGroup = "review",
         ReviewPriority = as.numeric(.data$N),
-        Guidance = "Revise anchor/group-anchor tables and rerun audit_mfrm_anchors().",
-        PrimaryPlotRoute = "plot(anchor_audit, type = \"issue_counts\")",
+        Guidance = "Revise anchor/group-anchor tables and rerun review_mfrm_anchors().",
+        PrimaryPlotRoute = "plot(anchor_review, type = \"issue_counts\")",
         SupportStatus = "supported"
       )
   }
 
   overlap_rows <- tibble::tibble()
-  facet_tbl <- tibble::as_tibble(anchor_audit$facet_summary %||% tibble::tibble())
-  min_common <- suppressWarnings(as.integer(anchor_audit$thresholds$min_common_anchors %||% NA_integer_))
+  facet_tbl <- tibble::as_tibble(anchor_review$facet_summary %||% tibble::tibble())
+  min_common <- suppressWarnings(as.integer(anchor_review$thresholds$min_common_anchors %||% NA_integer_))
   # Only flag overlap inadequacy when the user actually supplied anchor
   # or group-anchor constraints. A single-wave fit with no linking
   # design would otherwise show all facets as "high severity" risks
@@ -4368,7 +4544,7 @@ print.summary.mfrm_equating_chain <- function(x, ...) {
         RiskID = paste0("anchor_overlap:", .data$Facet),
         Area = "pre_fit_anchor_adequacy",
         SourceFamily = "anchor_overlap_support",
-        SourceTable = "anchor_audit$facet_summary",
+        SourceTable = "anchor_review$facet_summary",
         SourceRowKey = as.character(.data$Facet),
         AdministrationID = NA_character_,
         WaveID = NA_character_,
@@ -4382,7 +4558,7 @@ print.summary.mfrm_equating_chain <- function(x, ...) {
         SeverityGroup = "high",
         ReviewPriority = as.numeric(min_common - .data$OverlapLevels),
         Guidance = "Increase common anchor coverage before relying on drift or chain review.",
-        PrimaryPlotRoute = "plot(anchor_audit, type = \"facet_constraints\")",
+        PrimaryPlotRoute = "plot(anchor_review, type = \"facet_constraints\")",
         SupportStatus = "supported"
       )
   }
@@ -4508,7 +4684,7 @@ print.summary.mfrm_equating_chain <- function(x, ...) {
 
 #' Build a linking-review synthesis object
 #'
-#' @param anchor_audit Optional output from [audit_mfrm_anchors()].
+#' @param anchor_review Optional output from [review_mfrm_anchors()].
 #' @param drift Optional output from [detect_anchor_drift()].
 #' @param chain Optional output from [build_equating_chain()].
 #' @param top_n Maximum number of linking-risk rows to highlight in summary
@@ -4531,7 +4707,7 @@ print.summary.mfrm_equating_chain <- function(x, ...) {
 #'
 #' @section Recommended input route:
 #' Use existing package-native outputs in this order:
-#' 1. [audit_mfrm_anchors()] for pre-fit anchor adequacy.
+#' 1. [review_mfrm_anchors()] for pre-fit anchor adequacy.
 #' 2. [detect_anchor_drift()] for direct wave-to-reference drift screening.
 #' 3. [build_equating_chain()] for adjacent screened-link review across waves.
 #'
@@ -4550,37 +4726,41 @@ print.summary.mfrm_equating_chain <- function(x, ...) {
 #' support.
 #'
 #' @return An object of class `mfrm_linking_review`.
-#' @seealso [audit_mfrm_anchors()], [detect_anchor_drift()],
+#' @seealso [review_mfrm_anchors()], [detect_anchor_drift()],
 #'   [build_equating_chain()], [plot_anchor_drift()], [mfrmr_linking_and_dff]
 #' @examples
 #' \donttest{
 #' d1 <- load_mfrmr_data("study1")
 #' d2 <- load_mfrmr_data("study2")
 #' fit1 <- fit_mfrm(d1, "Person", c("Rater", "Criterion"), "Score",
-#'                  method = "JML", maxit = 15)
+#'                  method = "JML", maxit = 30)
 #' fit2 <- fit_mfrm(d2, "Person", c("Rater", "Criterion"), "Score",
-#'                  method = "JML", maxit = 15)
-#' audit <- audit_mfrm_anchors(d1, "Person", c("Rater", "Criterion"), "Score")
+#'                  method = "JML", maxit = 30)
+#' anchor_review_obj <- review_mfrm_anchors(d1, "Person", c("Rater", "Criterion"), "Score")
 #' drift <- detect_anchor_drift(list(Wave1 = fit1, Wave2 = fit2))
 #' chain <- build_equating_chain(list(Wave1 = fit1, Wave2 = fit2))
-#' review <- build_linking_review(anchor_audit = audit, drift = drift, chain = chain)
+#' review <- build_linking_review(anchor_review = anchor_review_obj, drift = drift, chain = chain)
 #' summary(review)
 #' review$top_linking_risks
 #' review$group_view_index
 #' }
 #' @export
-build_linking_review <- function(anchor_audit = NULL,
+build_linking_review <- function(anchor_review = NULL,
                                  drift = NULL,
                                  chain = NULL,
                                  top_n = 10) {
-  anchor_audit <- .validate_linking_review_input(anchor_audit, "anchor_audit", "mfrm_anchor_audit")
+  anchor_review <- .validate_linking_review_input(
+    anchor_review,
+    "anchor_review",
+    "mfrm_anchor_review"
+  )
   drift <- .validate_linking_review_input(drift, "drift", "mfrm_anchor_drift")
   chain <- .validate_linking_review_input(chain, "chain", "mfrm_equating_chain")
   top_n <- max(1L, as.integer(top_n %||% 10L))
 
-  if (is.null(anchor_audit) && is.null(drift) && is.null(chain)) {
+  if (is.null(anchor_review) && is.null(drift) && is.null(chain)) {
     stop(
-      "build_linking_review() requires at least one of `anchor_audit`, `drift`, or `chain`.",
+      "build_linking_review() requires at least one of `anchor_review`, `drift`, or `chain`.",
       call. = FALSE
     )
   }
@@ -4589,15 +4769,9 @@ build_linking_review <- function(anchor_audit = NULL,
     as.character(drift$config$models %||% character(0)),
     as.character(chain$config$models %||% character(0))
   )))
-  if (any(source_models == "GPCM")) {
-    stop(
-      "build_linking_review() is not yet validated for bounded `GPCM`. ",
-      "Use the underlying anchor/drift/chain helpers directly and consult gpcm_capability_matrix().",
-      call. = FALSE
-    )
-  }
+  gpcm_detected <- any(source_models == "GPCM")
 
-  anchor_risks <- .linking_review_anchor_risks(anchor_audit)
+  anchor_risks <- .linking_review_anchor_risks(anchor_review)
   drift_risks <- .linking_review_drift_risks(drift)
   chain_risks <- .linking_review_chain_risks(chain)
   all_risks <- .linking_review_standardize(dplyr::bind_rows(anchor_risks, drift_risks, chain_risks))
@@ -4628,12 +4802,13 @@ build_linking_review <- function(anchor_audit = NULL,
   review_status <- dplyr::case_when(
     insufficient_support ~ "insufficient_anchor_evidence",
     has_review_risks ~ "review_required",
+    gpcm_detected ~ "exploratory_gpcm_review",
     TRUE ~ "stable_for_linking_review"
   )
 
   support_status <- .linking_review_support_status(source_models)
   overview <- tibble::tibble(
-    AnchorAuditAvailable = !is.null(anchor_audit),
+    AnchorReviewAvailable = !is.null(anchor_review),
     DriftAvailable = !is.null(drift),
     ChainAvailable = !is.null(chain),
     ReviewStatus = review_status,
@@ -4671,7 +4846,7 @@ build_linking_review <- function(anchor_audit = NULL,
   if (nrow(anchor_risks) > 0) {
     next_actions <- c(
       next_actions,
-      "Revise anchors with make_anchor_table() / audit_mfrm_anchors() before relying on drift or chain review."
+      "Revise anchors with make_anchor_table() / review_mfrm_anchors() before relying on drift or chain review."
     )
   }
   if (nrow(drift_risks) > 0) {
@@ -4697,7 +4872,7 @@ build_linking_review <- function(anchor_audit = NULL,
   status <- make_summary_block(
     "Overall status" = review_status,
     "Evidence sources" = paste(c(
-      if (!is.null(anchor_audit)) "anchor_audit",
+      if (!is.null(anchor_review)) "anchor_review",
       if (!is.null(drift)) "drift",
       if (!is.null(chain)) "chain"
     ), collapse = ", "),
@@ -4706,9 +4881,9 @@ build_linking_review <- function(anchor_audit = NULL,
 
   plot_map <- tibble::tibble(
     ReviewArea = c("Anchor adequacy", "Wave-level drift", "Screened chain"),
-    Available = c(!is.null(anchor_audit), !is.null(drift), !is.null(chain)),
+    Available = c(!is.null(anchor_review), !is.null(drift), !is.null(chain)),
     PlotHelper = c(
-      "plot(anchor_audit, type = \"issue_counts\")",
+      "plot(anchor_review, type = \"issue_counts\")",
       "plot_anchor_drift(drift, type = \"drift\")",
       "plot_anchor_drift(chain, type = \"chain\")"
     ),
@@ -4730,7 +4905,7 @@ build_linking_review <- function(anchor_audit = NULL,
     CoveredHere = c("yes", "partial", "partial", "partial", "partial"),
     CompanionOutput = c(
       "summary(build_linking_review(...))",
-      "audit_mfrm_anchors() / make_anchor_table()",
+      "review_mfrm_anchors() / make_anchor_table()",
       "detect_anchor_drift() / plot_anchor_drift()",
       "build_equating_chain() / plot_anchor_drift(type = \"chain\")",
       "build_summary_table_bundle(summary(linking_review)) / reporting_checklist()"
@@ -4738,9 +4913,22 @@ build_linking_review <- function(anchor_audit = NULL,
   )
 
   notes <- clean_summary_lines(c(
-    "Linking review is an operational synthesis layer over existing package-native anchor, drift, and chain evidence.",
+    if (gpcm_detected) {
+      "Linking review is an exploratory synthesis layer over existing package-native bounded GPCM anchor, drift, and chain evidence."
+    } else {
+      "Linking review is an operational synthesis layer over existing package-native anchor, drift, and chain evidence."
+    },
     "Drift or thin-support warnings do not prove scale breakdown by themselves; they indicate where review is needed.",
-    "Repeated signals across anchor, drift, and chain evidence deserve priority, but this helper does not collapse them into one opaque composite score."
+    "Repeated signals across anchor, drift, and chain evidence deserve priority, but this helper does not collapse them into one opaque composite score.",
+    if (gpcm_detected) {
+      paste(
+        "Bounded GPCM linking review is exploratory: it indexes direct",
+        "anchor/drift/chain evidence and should not be reported as an",
+        "operational GPCM linking decision or as evidence that drift is absent."
+      )
+    } else {
+      ""
+    }
   ))
 
   out <- list(
@@ -4757,16 +4945,31 @@ build_linking_review <- function(anchor_audit = NULL,
     plot_map = plot_map,
     reporting_map = reporting_map,
     support_status = support_status,
+    gpcm_boundary = gpcm_capability_boundary_table(
+      fit = if (gpcm_detected) {
+        structure(
+          list(config = list(model = "GPCM"), summary = data.frame(Model = "GPCM")),
+          class = "mfrm_fit"
+        )
+      } else {
+        NULL
+      },
+      helper = "build_linking_review()",
+      extra_areas = c(
+        "Score-side scorefile export under bounded GPCM",
+        "FACETS output-contract score-side review"
+      )
+    ),
     notes = notes,
     settings = list(
       top_n = top_n,
-      intended_use = "operational_linking_review",
+      intended_use = if (gpcm_detected) "exploratory_gpcm_linking_review" else "operational_linking_review",
       source_models = source_models,
       source_profile = data.frame(
-        Source = c("anchor_audit", "drift", "chain"),
-        Available = c(!is.null(anchor_audit), !is.null(drift), !is.null(chain)),
+        Source = c("anchor_review", "drift", "chain"),
+        Available = c(!is.null(anchor_review), !is.null(drift), !is.null(chain)),
         Class = c(
-          class(anchor_audit)[1] %||% NA_character_,
+          class(anchor_review)[1] %||% NA_character_,
           class(drift)[1] %||% NA_character_,
           class(chain)[1] %||% NA_character_
         ),
@@ -4822,6 +5025,7 @@ summary.mfrm_linking_review <- function(object, digits = 3, top_n = 10, ...) {
     plot_map = tibble::as_tibble(object$plot_map %||% tibble::tibble()),
     reporting_map = tibble::as_tibble(object$reporting_map %||% tibble::tibble()),
     support_status = tibble::as_tibble(object$support_status %||% tibble::tibble()),
+    gpcm_boundary = tibble::as_tibble(object$gpcm_boundary %||% tibble::tibble()),
     notes = clean_summary_lines(object$notes %||% character(0)),
     settings = object$settings %||% list(),
     digits = digits
@@ -4861,6 +5065,10 @@ print.summary.mfrm_linking_review <- function(x, ...) {
   if (nrow(x$support_status) > 0) {
     cat("\nSupport Status\n")
     print(as.data.frame(x$support_status), row.names = FALSE)
+  }
+  if (nrow(x$gpcm_boundary) > 0) {
+    cat("\nGPCM Boundary\n")
+    print(as.data.frame(x$gpcm_boundary)[, c("Area", "Status"), drop = FALSE], row.names = FALSE)
   }
   print_bullet_section("Notes", x$notes)
   invisible(x)
@@ -5623,24 +5831,12 @@ print.summary.mfrm_linking_review <- function(x, ...) {
     dplyr::mutate(
       SourceRowKey = paste(.data$Facet, .data$Level, sep = "::"),
       CaseID = paste0("element_fit:", .data$SourceRowKey),
-      MisfitDirection = mfrm_classify_mnsq_direction(
-        .data$Infit,
-        .data$Outfit,
-        lower = lower,
-        upper = upper
-      ),
-      PrimaryFitSignal = dplyr::case_when(
-        .data$MisfitDirection == "mixed" ~ "Infit/Outfit on opposite sides of band",
+      Direction = dplyr::case_when(
         is.finite(.data$Outfit) & .data$Outfit > upper ~ "Outfit MnSq above band",
         is.finite(.data$Infit) & .data$Infit > upper ~ "Infit MnSq above band",
         is.finite(.data$Outfit) & .data$Outfit < lower ~ "Outfit MnSq below band",
         is.finite(.data$Infit) & .data$Infit < lower ~ "Infit MnSq below band",
-        TRUE ~ "MnSq outside band"
-      ),
-      Direction = paste0(
-        mfrm_misfit_direction_label(.data$MisfitDirection),
-        "; ",
-        .data$PrimaryFitSignal
+        TRUE ~ "Mixed"
       )
     ) |>
     dplyr::transmute(
@@ -5748,8 +5944,8 @@ print.summary.mfrm_linking_review <- function(x, ...) {
 #' existing evidence families into one case-level review surface:
 #'
 #' - element-level Infit / Outfit MnSq misfit from `diagnostics$fit`
-#'   (rows whose Infit or Outfit MnSq falls outside the active MnSq
-#'   screening band returned by [mfrm_misfit_thresholds()])
+#'   (rows whose Infit or Outfit MnSq falls outside the 0.5-1.5 Linacre
+#'   acceptance band)
 #' - strict marginal cell screens from `diagnostics$marginal_fit$top_cells`
 #' - strict pairwise screens from `diagnostics$marginal_fit$pairwise$top_pairs`
 #' - unexpected responses from [unexpected_response_table()]
@@ -5782,11 +5978,11 @@ print.summary.mfrm_linking_review <- function(x, ...) {
 #' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                 method = "MML", model = "RSM", quad_points = 11)
+#'                 method = "MML", model = "RSM", quad_points = 5)
 #' diag <- diagnose_mfrm(fit, diagnostic_mode = "both", residual_pca = "none")
 #' casebook <- build_misfit_casebook(fit, diagnostics = diag, top_n = 10)
 #' summary(casebook)
-#' casebook$top_cases[, c("CaseID", "SourceFamily", "Direction", "Signal")]
+#' casebook$top_cases
 #' }
 #' @export
 build_misfit_casebook <- function(fit,
@@ -6131,9 +6327,9 @@ print.summary.mfrm_misfit_casebook <- function(x, ...) {
   invisible(x)
 }
 
-# --- build_weighting_audit ---------------------------------------------------
+# --- build_weighting_review --------------------------------------------------
 
-.validate_weighting_audit_fit <- function(x, arg, models) {
+.validate_weighting_review_fit <- function(x, arg, models) {
   if (!inherits(x, "mfrm_fit")) {
     stop("`", arg, "` must be an `mfrm_fit` object from fit_mfrm().", call. = FALSE)
   }
@@ -6148,12 +6344,12 @@ print.summary.mfrm_misfit_casebook <- function(x, ...) {
   x
 }
 
-.weighting_audit_support_status <- function() {
+.weighting_review_support_status <- function() {
   tibble::tibble(
     Scope = c("RSM / PCM reference", "bounded GPCM comparison"),
     Status = c("supported", "supported_with_caveat"),
     Note = c(
-      "Supported as the equal-weighting reference side of the audit.",
+      "Supported as the equal-weighting reference side of the review.",
       paste(
         "Supported with caveat as a slope-aware comparison model.",
         "Use it to inspect discrimination-based reweighting, not as an automatic replacement",
@@ -6163,7 +6359,7 @@ print.summary.mfrm_misfit_casebook <- function(x, ...) {
   )
 }
 
-.weighting_audit_facet_shift <- function(rasch_fit, gpcm_fit) {
+.weighting_review_facet_shift <- function(rasch_fit, gpcm_fit) {
   ref_tbl <- tibble::as_tibble(rasch_fit$facets$others %||% tibble::tibble())
   gpcm_tbl <- tibble::as_tibble(gpcm_fit$facets$others %||% tibble::tibble())
   if (nrow(ref_tbl) == 0L || nrow(gpcm_tbl) == 0L) {
@@ -6207,7 +6403,7 @@ print.summary.mfrm_misfit_casebook <- function(x, ...) {
     dplyr::arrange(dplyr::desc(.data$AbsDeltaEstimate), dplyr::desc(abs(.data$RankShift)), .data$Facet, .data$Level)
 }
 
-.weighting_audit_slope_profile <- function(gpcm_fit) {
+.weighting_review_slope_profile <- function(gpcm_fit) {
   slope_tbl <- tibble::as_tibble(gpcm_fit$slopes %||% tibble::tibble())
   if (nrow(slope_tbl) == 0L) {
     return(tibble::tibble())
@@ -6246,7 +6442,7 @@ print.summary.mfrm_misfit_casebook <- function(x, ...) {
     dplyr::arrange(dplyr::desc(.data$AbsLogDeviation), dplyr::desc(dplyr::coalesce(.data$Exposure, 0)))
 }
 
-.weighting_audit_information_profile <- function(fit,
+.weighting_review_information_profile <- function(fit,
                                                  theta_range,
                                                  theta_points) {
   info <- compute_information(fit, theta_range = theta_range, theta_points = theta_points)
@@ -6268,7 +6464,7 @@ print.summary.mfrm_misfit_casebook <- function(x, ...) {
     dplyr::ungroup()
 }
 
-#' Build a weighting-policy audit between Rasch-family and bounded GPCM fits
+#' Build a weighting-policy review between Rasch-family and bounded GPCM fits
 #'
 #' @param rasch_fit Output from [fit_mfrm()] using `model = "RSM"` or `"PCM"`.
 #' @param gpcm_fit Output from [fit_mfrm()] using bounded `model = "GPCM"`.
@@ -6279,7 +6475,7 @@ print.summary.mfrm_misfit_casebook <- function(x, ...) {
 #' @param top_n Maximum number of rows to keep in compact summary outputs.
 #'
 #' @details
-#' `build_weighting_audit()` is an operational model-choice review helper. It
+#' `build_weighting_review()` is an operational model-choice review helper. It
 #' is designed for the common question:
 #'
 #' - what changes when a Rasch-family equal-weighting model is replaced with a
@@ -6300,8 +6496,8 @@ print.summary.mfrm_misfit_casebook <- function(x, ...) {
 #' @section Recommended input route:
 #' 1. Fit an equal-weighting reference model with `model = "RSM"` or `"PCM"`.
 #' 2. Fit a bounded `GPCM` on the same prepared response data.
-#' 3. Run `build_weighting_audit(rasch_fit, gpcm_fit)`.
-#' 4. Read `summary(audit)` before deciding whether the discrimination-based
+#' 3. Run `build_weighting_review(rasch_fit, gpcm_fit)`.
+#' 4. Read `summary(review)` before deciding whether the discrimination-based
 #'    reweighting is substantively acceptable.
 #'
 #' @section What the returned tables mean:
@@ -6319,7 +6515,7 @@ print.summary.mfrm_misfit_casebook <- function(x, ...) {
 #' should be read as an operational weighting-policy review, not as a formal
 #' validity adjudication.
 #'
-#' @return An object of class `mfrm_weighting_audit`.
+#' @return An object of class `mfrm_weighting_review`.
 #' @seealso [compare_mfrm()], [compute_information()], [gpcm_capability_matrix()]
 #' @examples
 #' \donttest{
@@ -6344,18 +6540,19 @@ print.summary.mfrm_misfit_casebook <- function(x, ...) {
 #'   slope_facet = "Criterion",
 #'   quad_points = 9
 #' )
-#' audit <- build_weighting_audit(rasch_fit, gpcm_fit, theta_points = 41)
-#' summary(audit)
-#' audit$top_reweighted_levels
+#' review <- build_weighting_review(rasch_fit, gpcm_fit, theta_points = 41)
+#' summary(review)
+#' review$top_reweighted_levels
 #' }
+#' @name build_weighting_review
 #' @export
-build_weighting_audit <- function(rasch_fit,
-                                  gpcm_fit,
-                                  theta_range = c(-6, 6),
-                                  theta_points = 101L,
-                                  top_n = 10L) {
-  rasch_fit <- .validate_weighting_audit_fit(rasch_fit, "rasch_fit", c("RSM", "PCM"))
-  gpcm_fit <- .validate_weighting_audit_fit(gpcm_fit, "gpcm_fit", "GPCM")
+build_weighting_review <- function(rasch_fit,
+                                   gpcm_fit,
+                                   theta_range = c(-6, 6),
+                                   theta_points = 101L,
+                                   top_n = 10L) {
+  rasch_fit <- .validate_weighting_review_fit(rasch_fit, "rasch_fit", c("RSM", "PCM"))
+  gpcm_fit <- .validate_weighting_review_fit(gpcm_fit, "gpcm_fit", "GPCM")
   top_n <- max(1L, as.integer(top_n %||% 10L))
   theta_points <- max(11L, as.integer(theta_points %||% 101L))
 
@@ -6363,7 +6560,7 @@ build_weighting_audit <- function(rasch_fit,
   step_facet <- as.character(gpcm_fit$config$step_facet %||% NA_character_)[1]
   if (!identical(slope_facet, step_facet)) {
     stop(
-      "build_weighting_audit() currently requires the bounded `GPCM` branch with `slope_facet == step_facet`.",
+      "build_weighting_review() currently requires the bounded `GPCM` branch with `slope_facet == step_facet`.",
       call. = FALSE
     )
   }
@@ -6382,7 +6579,7 @@ build_weighting_audit <- function(rasch_fit,
   basis <- comparison$comparison_basis %||% list()
   if (!isTRUE(basis$same_data)) {
     stop(
-      "build_weighting_audit() requires the two fits to share the same prepared response data.",
+      "build_weighting_review() requires the two fits to share the same prepared response data.",
       call. = FALSE
     )
   }
@@ -6394,10 +6591,10 @@ build_weighting_audit <- function(rasch_fit,
     )
   }
 
-  facet_shift <- .weighting_audit_facet_shift(rasch_fit, gpcm_fit)
-  slope_profile <- .weighting_audit_slope_profile(gpcm_fit)
-  rasch_info <- .weighting_audit_information_profile(rasch_fit, theta_range = theta_range, theta_points = theta_points)
-  gpcm_info <- .weighting_audit_information_profile(gpcm_fit, theta_range = theta_range, theta_points = theta_points)
+  facet_shift <- .weighting_review_facet_shift(rasch_fit, gpcm_fit)
+  slope_profile <- .weighting_review_slope_profile(gpcm_fit)
+  rasch_info <- .weighting_review_information_profile(rasch_fit, theta_range = theta_range, theta_points = theta_points)
+  gpcm_info <- .weighting_review_information_profile(gpcm_fit, theta_range = theta_range, theta_points = theta_points)
 
   information_redistribution <- rasch_info |>
     dplyr::rename(
@@ -6458,7 +6655,7 @@ build_weighting_audit <- function(rasch_fit,
     TRUE ~ "reweighting_review_required"
   )
 
-  support_status <- .weighting_audit_support_status()
+  support_status <- .weighting_review_support_status()
   comparison_mode <- if (isTRUE(basis$ic_comparable)) "same_basis_fit_comparison" else "descriptive_model_contrast_only"
   overview <- tibble::tibble(
     ReferenceModel = as.character(rasch_fit$config$model %||% NA_character_)[1],
@@ -6550,7 +6747,7 @@ build_weighting_audit <- function(rasch_fit,
     ),
     CoveredHere = c("yes", "partial", "partial"),
     CompanionOutput = c(
-      "summary(build_weighting_audit(...))",
+      "summary(build_weighting_review(...))",
       "compare_mfrm() / summary(compare_mfrm(...))",
       "fair_average_table() for the Rasch-family route; keep bounded GPCM score semantics separate"
     )
@@ -6558,7 +6755,7 @@ build_weighting_audit <- function(rasch_fit,
 
   notes <- clean_summary_lines(c(
     "Observation weights and discrimination-based reweighting are separate concepts in this package.",
-    "The audit is intended to make reweighting visible; it does not decide by itself whether bounded GPCM should replace the Rasch-family operational model.",
+    "The review is intended to make reweighting visible; it does not decide by itself whether bounded GPCM should replace the Rasch-family operational model.",
     "Information-share changes are computed within each facet because the same total information is partitioned separately by facet."
   ))
 
@@ -6585,28 +6782,28 @@ build_weighting_audit <- function(rasch_fit,
       intended_use = "weighting_policy_review"
     )
   )
-  as_mfrm_bundle(out, "mfrm_weighting_audit")
+  as_mfrm_bundle(out, "mfrm_weighting_review")
 }
 
 #' @export
-print.mfrm_weighting_audit <- function(x, ...) {
+print.mfrm_weighting_review <- function(x, ...) {
   print(summary(x), ...)
   invisible(x)
 }
 
-#' Summarize a weighting-audit object
+#' Summarize a weighting-review object
 #'
-#' @param object Output from [build_weighting_audit()].
+#' @param object Output from [build_weighting_review()].
 #' @param digits Number of digits for printed numeric values.
 #' @param top_n Number of top rows to retain in compact summary tables.
 #' @param ... Reserved for generic compatibility.
 #'
-#' @return An object of class `summary.mfrm_weighting_audit`.
-#' @seealso [build_weighting_audit()]
+#' @return An object of class `summary.mfrm_weighting_review`.
+#' @seealso [build_weighting_review()]
 #' @export
-summary.mfrm_weighting_audit <- function(object, digits = 3, top_n = 10, ...) {
-  if (!inherits(object, "mfrm_weighting_audit")) {
-    stop("`object` must be output from build_weighting_audit().", call. = FALSE)
+summary.mfrm_weighting_review <- function(object, digits = 3, top_n = 10, ...) {
+  if (!inherits(object, "mfrm_weighting_review")) {
+    stop("`object` must be output from build_weighting_review().", call. = FALSE)
   }
 
   digits <- max(0L, as.integer(digits))
@@ -6628,16 +6825,16 @@ summary.mfrm_weighting_audit <- function(object, digits = 3, top_n = 10, ...) {
     settings = object$settings %||% list(),
     digits = digits
   )
-  class(out) <- "summary.mfrm_weighting_audit"
+  class(out) <- "summary.mfrm_weighting_review"
   out
 }
 
 #' @export
-print.summary.mfrm_weighting_audit <- function(x, ...) {
+print.summary.mfrm_weighting_review <- function(x, ...) {
   digits <- as.integer(x$digits %||% 3L)
   if (!is.finite(digits)) digits <- 3L
 
-  cat("mfrm Weighting Audit Summary\n")
+  cat("mfrm Weighting Review Summary\n")
   if (nrow(x$overview) > 0) {
     cat("\nOverview\n")
     print(round_numeric_df(as.data.frame(x$overview), digits = digits), row.names = FALSE)
@@ -6659,6 +6856,496 @@ print.summary.mfrm_weighting_audit <- function(x, ...) {
   if (nrow(x$support_status) > 0) {
     cat("\nSupport Status\n")
     print(as.data.frame(x$support_status), row.names = FALSE)
+  }
+  print_bullet_section("Notes", x$notes)
+  invisible(x)
+}
+
+# --- build_model_choice_review ----------------------------------------------
+
+.model_choice_fit_labels <- function(fits, labels = NULL) {
+  if (!is.null(labels)) {
+    labels <- as.character(labels)
+    if (length(labels) != length(fits)) {
+      stop("`labels` must have the same length as the number of fits.",
+           call. = FALSE)
+    }
+    return(labels)
+  }
+  labels <- names(fits)
+  if (is.null(labels) || any(!nzchar(labels))) {
+    labels <- vapply(fits, function(fit) {
+      model <- as.character(fit$config$model %||% "?")[1]
+      method <- public_mfrm_method_label(as.character(fit$config$method %||% "?")[1])
+      paste0(model, "/", method)
+    }, character(1))
+  }
+  if (anyDuplicated(labels)) labels <- paste0(labels, " (", seq_along(labels), ")")
+  labels
+}
+
+.model_choice_role <- function(model) {
+  model <- toupper(as.character(model %||% NA_character_)[1])
+  switch(
+    model,
+    RSM = "equal_weighting_reference",
+    PCM = "equal_weighting_reference",
+    GPCM = "slope_aware_sensitivity",
+    "ordered_response_candidate"
+  )
+}
+
+.model_choice_score_contract <- function(model) {
+  model <- toupper(as.character(model %||% NA_character_)[1])
+  switch(
+    model,
+    RSM = "Common threshold structure; equal discrimination fixed at 1.",
+    PCM = "Step thresholds vary by the designated step facet; equal discrimination fixed at 1.",
+    GPCM = paste(
+      "Positive slopes are estimated for the designated slope facet;",
+      "the current bounded route requires slope_facet == step_facet and",
+      "identifies slopes with geometric mean 1."
+    ),
+    "Ordered-response model; inspect the fitted configuration before reporting."
+  )
+}
+
+.model_choice_report_template <- function(model) {
+  model <- toupper(as.character(model %||% NA_character_)[1])
+  switch(
+    model,
+    RSM = "We fit a many-facet rating-scale Rasch model, treating category thresholds as common across the step facet.",
+    PCM = "We fit a many-facet partial-credit Rasch model, allowing step thresholds to vary by the designated step facet while retaining equal discrimination.",
+    GPCM = "We fit a bounded generalized partial-credit many-facet model as a slope-aware sensitivity analysis; interpretation focused on whether discrimination-based reweighting changed the substantive conclusions.",
+    "We fit a many-facet ordered-response model; report the fitted response-model contract explicitly."
+  )
+}
+
+.model_choice_downstream_route <- function(model) {
+  model <- toupper(as.character(model %||% NA_character_)[1])
+  if (model %in% c("RSM", "PCM")) {
+    return(tibble::tibble(
+      FullAPARoute = "supported",
+      ScoreSideExport = "supported",
+      LinkingSynthesis = "supported",
+      RecoveryChecks = "supported",
+      FairAverage = "supported",
+      BiasScreening = "supported",
+      SummaryAppendix = "supported",
+      PrimaryHelpers = paste(
+        "diagnose_mfrm(..., diagnostic_mode = \"both\");",
+        "compare_mfrm(); build_apa_outputs(); build_linking_review();",
+        "fair_average_table(); estimate_bias()"
+      )
+    ))
+  }
+  if (identical(model, "GPCM")) {
+    return(tibble::tibble(
+      FullAPARoute = "blocked",
+      ScoreSideExport = "blocked",
+      LinkingSynthesis = "deferred",
+      RecoveryChecks = "supported_with_caveat",
+      FairAverage = "supported_with_caveat",
+      BiasScreening = "supported_with_caveat",
+      SummaryAppendix = "supported_with_caveat",
+      PrimaryHelpers = paste(
+        "gpcm_capability_matrix(); compare_mfrm(); build_weighting_review();",
+        "compute_information(); evaluate_mfrm_recovery(); fair_average_table();",
+        "estimate_bias(); export_summary_appendix()"
+      )
+    ))
+  }
+  tibble::tibble(
+    FullAPARoute = "review_required",
+    ScoreSideExport = "review_required",
+    LinkingSynthesis = "review_required",
+    RecoveryChecks = "review_required",
+    FairAverage = "review_required",
+    BiasScreening = "review_required",
+    SummaryAppendix = "review_required",
+    PrimaryHelpers = "summary(); diagnose_mfrm(); inspect the fitted configuration"
+  )
+}
+
+.model_choice_role_table <- function(fits, labels) {
+  rows <- lapply(seq_along(fits), function(i) {
+    fit <- fits[[i]]
+    model <- toupper(as.character(fit$config$model %||% NA_character_)[1])
+    method <- public_mfrm_method_label(as.character(fit$config$method %||% NA_character_)[1])
+    step_facet <- as.character(fit$config$step_facet %||% NA_character_)[1]
+    slope_facet <- as.character(fit$config$slope_facet %||% NA_character_)[1]
+    tibble::tibble(
+      Label = labels[[i]],
+      Model = model,
+      Method = method,
+      StepFacet = step_facet,
+      SlopeFacet = slope_facet,
+      RecommendedRole = .model_choice_role(model),
+      ScoreContract = .model_choice_score_contract(model),
+      ReportTemplate = .model_choice_report_template(model)
+    )
+  })
+  dplyr::bind_rows(rows)
+}
+
+.model_choice_downstream_table <- function(role_table) {
+  rows <- lapply(seq_len(nrow(role_table)), function(i) {
+    dplyr::bind_cols(
+      role_table[i, c("Label", "Model", "RecommendedRole"), drop = FALSE],
+      .model_choice_downstream_route(role_table$Model[[i]])
+    )
+  })
+  dplyr::bind_rows(rows)
+}
+
+.model_choice_report_templates <- function(role_table) {
+  role_table |>
+    dplyr::transmute(
+      Label = .data$Label,
+      Model = .data$Model,
+      UseFor = dplyr::case_when(
+        .data$Model %in% c("RSM", "PCM") ~ "Operational equal-weighting report route",
+        .data$Model == "GPCM" ~ "Slope-aware sensitivity report route",
+        TRUE ~ "Model-specific report route"
+      ),
+      Template = .data$ReportTemplate,
+      Avoid = dplyr::case_when(
+        .data$Model == "GPCM" ~ "Do not write that better fit alone makes bounded GPCM the operational scoring model.",
+        .data$Model %in% c("RSM", "PCM") ~ "Do not describe the fit as free-discrimination or slope-weighted.",
+        TRUE ~ "Do not omit the model's response-kernel and score-contract assumptions."
+      )
+    )
+}
+
+.model_choice_route_map <- function(has_gpcm) {
+  base <- tibble::tibble(
+    Question = c(
+      "Which model fits better on the same likelihood basis?",
+      "Does bounded GPCM change the score interpretation?",
+      "Where did precision move under bounded GPCM?",
+      "Can I use manuscript APA/report bundles?",
+      "Can I use fair averages?",
+      "Can I screen bias/interactions?",
+      "Can I export a summary appendix?"
+    ),
+    PrimaryHelper = c(
+      "compare_mfrm()",
+      "build_weighting_review()",
+      "compute_information(); plot_information()",
+      "build_apa_outputs(); build_visual_summaries()",
+      "fair_average_table()",
+      "estimate_bias()",
+      "build_summary_table_bundle(); export_summary_appendix()"
+    ),
+    Interpretation = c(
+      "Use AIC/BIC/logLik as fit evidence, not as a standalone scoring decision.",
+      "Use only when comparing an RSM/PCM reference to bounded GPCM.",
+      "Review item/rater/criterion information redistribution before changing the operational model.",
+      "Supported for RSM/PCM; blocked for bounded GPCM in this release.",
+      "Supported for RSM/PCM; supported with explicit SE caveat for bounded GPCM.",
+      "Supported for RSM/PCM; conditional screening with profile-likelihood follow-up for bounded GPCM.",
+      "Available for direct supported outputs; fit-based bundles remain RSM/PCM only."
+    )
+  )
+  if (isTRUE(has_gpcm)) {
+    base <- dplyr::bind_rows(
+      tibble::tibble(
+        Question = "What is the exact bounded GPCM support boundary?",
+        PrimaryHelper = "gpcm_capability_matrix()",
+        Interpretation = "Treat supported_with_caveat rows as review outputs and blocked/deferred rows as out of scope."
+      ),
+      base
+    )
+  }
+  base
+}
+
+.model_choice_reference_labels <- function(role_table) {
+  refs <- role_table$Label[role_table$Model %in% c("RSM", "PCM")]
+  gpcm <- role_table$Label[role_table$Model == "GPCM"]
+  list(
+    reference = if (length(refs) > 0L) refs[[1]] else NA_character_,
+    sensitivity = if (length(gpcm) > 0L) gpcm[[1]] else NA_character_
+  )
+}
+
+.model_choice_find_weighting_pair <- function(fits, role_table) {
+  ref_idx <- which(role_table$Model %in% c("RSM", "PCM"))[1]
+  gpcm_idx <- which(role_table$Model == "GPCM")[1]
+  if (is.na(ref_idx) || is.na(gpcm_idx)) return(NULL)
+  list(reference = fits[[ref_idx]], gpcm = fits[[gpcm_idx]])
+}
+
+#' Build a model-choice review across RSM, PCM, and bounded GPCM fits
+#'
+#' @param ... Two or more fitted `mfrm_fit` objects from [fit_mfrm()].
+#' @param labels Optional labels for the supplied fits. If omitted, names from
+#'   `...` are used when available; otherwise labels are generated from
+#'   model/method combinations.
+#' @param run_weighting_review Logical. If `TRUE` and the supplied fits include
+#'   at least one `RSM`/`PCM` reference plus one bounded `GPCM` fit, also run
+#'   [build_weighting_review()] for the first such pair.
+#' @param theta_range,theta_points,top_n Passed to [build_weighting_review()] when
+#'   `run_weighting_review = TRUE`.
+#' @param warn_constraints Passed to [compare_mfrm()].
+#'
+#' @details
+#' `build_model_choice_review()` is a user-facing synthesis helper. It does not
+#' estimate new models. It bundles:
+#'
+#' - [compare_mfrm()] for AIC/BIC/log-likelihood comparison;
+#' - model-role guidance for `RSM`, `PCM`, and bounded `GPCM`;
+#' - downstream-route availability for APA output, score-side export, linking,
+#'   recovery, fair averages, bias screening, and summary-appendix handoff;
+#' - report wording templates that avoid treating better bounded-`GPCM` fit as
+#'   an automatic operational-scoring decision;
+#' - [gpcm_capability_matrix()] when bounded `GPCM` is present;
+#' - optionally, [build_weighting_review()] for the first Rasch-family reference
+#'   versus bounded-`GPCM` pair.
+#'
+#' The word "bounded" is intentional: the package implements a bounded GPCM
+#' route, not every possible generalized partial-credit many-facet extension.
+#' The current route uses positive slopes, requires `slope_facet == step_facet`,
+#' identifies slopes on the log scale with geometric mean 1, and keeps several
+#' downstream score-side/reporting helpers outside the validated boundary.
+#'
+#' @return An object of class `mfrm_model_choice_review`.
+#' @seealso [compare_mfrm()], [build_weighting_review()],
+#'   [gpcm_capability_matrix()], [compute_information()]
+#' @examples
+#' \donttest{
+#' toy <- load_mfrmr_data("example_core")
+#' fit_rsm <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
+#'                     method = "MML", model = "RSM", quad_points = 7)
+#' fit_pcm <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
+#'                     method = "MML", model = "PCM", step_facet = "Criterion",
+#'                     quad_points = 7)
+#' review <- build_model_choice_review(RSM = fit_rsm, PCM = fit_pcm)
+#' summary(review)
+#' }
+#' @export
+build_model_choice_review <- function(...,
+                                      labels = NULL,
+                                      run_weighting_review = NULL,
+                                      theta_range = c(-6, 6),
+                                      theta_points = 61L,
+                                      top_n = 10L,
+                                      warn_constraints = TRUE) {
+  run_weighting_review <- isTRUE(run_weighting_review)
+
+  fits <- list(...)
+  if (length(fits) < 2L) {
+    stop("`build_model_choice_review()` requires at least two `mfrm_fit` objects.",
+         call. = FALSE)
+  }
+  for (i in seq_along(fits)) {
+    if (!inherits(fits[[i]], "mfrm_fit")) {
+      stop("Argument ", i, " is not an `mfrm_fit` object. Got: ",
+           paste(class(fits[[i]]), collapse = "/"), ".", call. = FALSE)
+    }
+  }
+
+  labels <- .model_choice_fit_labels(fits, labels = labels)
+  comparison <- suppressWarnings(do.call(
+    compare_mfrm,
+    c(fits, list(labels = labels, warn_constraints = warn_constraints, nested = FALSE))
+  ))
+  role_table <- .model_choice_role_table(fits, labels)
+  downstream_routes <- .model_choice_downstream_table(role_table)
+  report_templates <- .model_choice_report_templates(role_table)
+  has_gpcm <- any(role_table$Model == "GPCM")
+  ref_labels <- .model_choice_reference_labels(role_table)
+  basis <- comparison$comparison_basis %||% list()
+
+  overview <- tibble::tibble(
+    FitCount = length(fits),
+    Models = paste(role_table$Model, collapse = ", "),
+    HasBoundedGPCM = has_gpcm,
+    OperationalReference = ref_labels$reference,
+    SensitivityModel = ref_labels$sensitivity,
+    ICComparable = isTRUE(basis$ic_comparable),
+    ReviewStatus = dplyr::case_when(
+      has_gpcm && !is.na(ref_labels$reference) ~ "reference_plus_sensitivity_review",
+      has_gpcm ~ "gpcm_without_rasch_family_reference",
+      TRUE ~ "rasch_family_model_choice_review"
+    )
+  )
+
+  key_warnings <- character(0)
+  if (isTRUE(has_gpcm)) {
+    key_warnings <- c(
+      key_warnings,
+      "Bounded GPCM is slope-aware: better fit is sensitivity evidence, not an automatic operational-scoring decision.",
+      "Bounded means the current route is constrained to positive slopes, slope_facet == step_facet, and documented downstream support."
+    )
+  }
+  if (!isTRUE(basis$ic_comparable)) {
+    key_warnings <- c(
+      key_warnings,
+      "Information-criterion ranking is descriptive because the compared fits do not all share a comparable formal MML basis, observation set, and convergence status."
+    )
+  }
+  if (isTRUE(has_gpcm) && is.na(ref_labels$reference)) {
+    key_warnings <- c(
+      key_warnings,
+      "No RSM/PCM equal-weighting reference was supplied; add one before making an operational model-choice argument."
+    )
+  }
+  key_warnings <- clean_summary_lines(key_warnings, max_n = 5L)
+
+  next_actions <- clean_summary_lines(c(
+    "Read comparison_table for fit evidence, but decide operational use from the score interpretation.",
+    if (isTRUE(has_gpcm) && !is.na(ref_labels$reference)) {
+      "Run with `run_weighting_review = TRUE` or call `build_weighting_review()` to inspect discrimination-based reweighting."
+    },
+    "Use downstream_routes before calling APA, score-side export, linking, recovery, fair-average, or bias-screening helpers.",
+    "Use report_templates when drafting methods text so the fitted model and score contract are described accurately."
+  ), max_n = 5L)
+
+  support_status <- if (isTRUE(has_gpcm)) {
+    gpcm_capability_matrix()
+  } else {
+    tibble::tibble()
+  }
+
+  weighting_review <- NULL
+  weighting_review_error <- NA_character_
+  if (isTRUE(run_weighting_review)) {
+    pair <- .model_choice_find_weighting_pair(fits, role_table)
+    if (is.null(pair)) {
+      weighting_review_error <- "No RSM/PCM reference plus bounded GPCM pair was available."
+    } else {
+      weighting_review <- tryCatch(
+        build_weighting_review(
+          pair$reference,
+          pair$gpcm,
+          theta_range = theta_range,
+          theta_points = theta_points,
+          top_n = top_n
+        ),
+        error = function(e) {
+          weighting_review_error <<- conditionMessage(e)
+          NULL
+        }
+      )
+    }
+  }
+
+  weighting_review_status <- tibble::tibble(
+    Requested = isTRUE(run_weighting_review),
+    Available = inherits(weighting_review, "mfrm_weighting_review"),
+    Message = if (inherits(weighting_review, "mfrm_weighting_review")) {
+      "Available in `weighting_review`."
+    } else if (isTRUE(run_weighting_review)) {
+      weighting_review_error
+    } else {
+      "Not requested; set `run_weighting_review = TRUE` for the first RSM/PCM versus bounded GPCM pair."
+    }
+  )
+
+  notes <- clean_summary_lines(c(
+    "This review is a decision aid; it does not refit models or choose an operational model automatically.",
+    "Observation weights and GPCM discrimination-based reweighting are separate concepts.",
+    "Use bounded GPCM wording only for the current constrained implementation, not for an unrestricted GPCM family claim."
+  ))
+
+  out <- list(
+    overview = overview,
+    key_warnings = key_warnings,
+    next_actions = next_actions,
+    comparison = comparison,
+    comparison_table = comparison$table,
+    model_roles = role_table,
+    downstream_routes = downstream_routes,
+    report_templates = report_templates,
+    route_map = .model_choice_route_map(has_gpcm),
+    support_status = support_status,
+    weighting_review_status = weighting_review_status,
+    weighting_review = weighting_review,
+    notes = notes,
+    settings = list(
+      run_weighting_review = isTRUE(run_weighting_review),
+      theta_range = theta_range,
+      theta_points = theta_points,
+      top_n = top_n,
+      intended_use = "model_choice_review"
+    )
+  )
+  as_mfrm_bundle(out, "mfrm_model_choice_review")
+}
+
+#' @export
+print.mfrm_model_choice_review <- function(x, ...) {
+  print(summary(x), ...)
+  invisible(x)
+}
+
+#' Summarize a model-choice review
+#'
+#' @param object Output from [build_model_choice_review()].
+#' @param digits Number of digits for printed numeric values.
+#' @param ... Reserved for generic compatibility.
+#'
+#' @return An object of class `summary.mfrm_model_choice_review`.
+#' @seealso [build_model_choice_review()]
+#' @export
+summary.mfrm_model_choice_review <- function(object, digits = 3, ...) {
+  if (!inherits(object, "mfrm_model_choice_review")) {
+    stop("`object` must be output from build_model_choice_review().",
+         call. = FALSE)
+  }
+  digits <- max(0L, as.integer(digits %||% 3L))
+  out <- list(
+    overview = tibble::as_tibble(object$overview %||% tibble::tibble()),
+    key_warnings = clean_summary_lines(object$key_warnings %||% character(0)),
+    next_actions = clean_summary_lines(object$next_actions %||% character(0)),
+    comparison_table = tibble::as_tibble(object$comparison_table %||% tibble::tibble()),
+    model_roles = tibble::as_tibble(object$model_roles %||% tibble::tibble()),
+    downstream_routes = tibble::as_tibble(object$downstream_routes %||% tibble::tibble()),
+    report_templates = tibble::as_tibble(object$report_templates %||% tibble::tibble()),
+    route_map = tibble::as_tibble(object$route_map %||% tibble::tibble()),
+    weighting_review_status = tibble::as_tibble(object$weighting_review_status %||% tibble::tibble()),
+    support_status = tibble::as_tibble(object$support_status %||% tibble::tibble()),
+    notes = clean_summary_lines(object$notes %||% character(0)),
+    settings = object$settings %||% list(),
+    digits = digits
+  )
+  class(out) <- "summary.mfrm_model_choice_review"
+  out
+}
+
+#' @export
+print.summary.mfrm_model_choice_review <- function(x, ...) {
+  digits <- as.integer(x$digits %||% 3L)
+  if (!is.finite(digits)) digits <- 3L
+  cat("mfrm Model Choice Review\n")
+  if (nrow(x$overview) > 0L) {
+    cat("\nOverview\n")
+    print(round_numeric_df(as.data.frame(x$overview), digits = digits), row.names = FALSE)
+  }
+  print_bullet_section("Key Warnings", x$key_warnings)
+  print_bullet_section("Next Actions", x$next_actions)
+  if (nrow(x$comparison_table) > 0L) {
+    cat("\nComparison Table\n")
+    print(round_numeric_df(as.data.frame(x$comparison_table), digits = digits), row.names = FALSE)
+  }
+  if (nrow(x$model_roles) > 0L) {
+    cat("\nModel Roles\n")
+    print(as.data.frame(x$model_roles[, c("Label", "Model", "RecommendedRole", "ScoreContract"), drop = FALSE]),
+          row.names = FALSE)
+  }
+  if (nrow(x$downstream_routes) > 0L) {
+    cat("\nDownstream Routes\n")
+    keep <- intersect(
+      c("Label", "Model", "FullAPARoute", "ScoreSideExport", "LinkingSynthesis",
+        "RecoveryChecks", "FairAverage", "BiasScreening", "SummaryAppendix"),
+      names(x$downstream_routes)
+    )
+    print(as.data.frame(x$downstream_routes[, keep, drop = FALSE]), row.names = FALSE)
+  }
+  if (nrow(x$weighting_review_status) > 0L) {
+    cat("\nWeighting Review Status\n")
+    print(as.data.frame(x$weighting_review_status), row.names = FALSE)
   }
   print_bullet_section("Notes", x$notes)
   invisible(x)

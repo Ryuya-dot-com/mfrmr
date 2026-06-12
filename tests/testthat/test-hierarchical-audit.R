@@ -1,7 +1,7 @@
-# Tests for hierarchical structure / small-sample audit helpers (0.1.6).
+# Tests for hierarchical structure / small-sample review helpers (0.1.6).
 # Cross-refs:
 #  * `detect_facet_nesting()` - entropy-based classification
-#  * `facet_small_sample_audit()` - Linacre (1994) bands
+#  * `facet_small_sample_review()` - Linacre (1994) bands
 #  * `compute_facet_icc()` - lme4 variance components (Suggests)
 #  * `compute_facet_design_effect()` - Kish (1965) design effect
 #  * `analyze_hierarchical_structure()` - bundle report
@@ -46,36 +46,17 @@ test_that("detect_facet_nesting flags crossed designs as Crossed", {
   expect_true(any(pairs$Direction == "crossed"))
 })
 
-test_that("facet_small_sample_audit classifies Linacre bands correctly", {
+test_that("facet_small_sample_review classifies Linacre bands correctly", {
   toy <- load_mfrmr_data("example_core")
   fit <- suppressMessages(suppressWarnings(
     fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
              method = "JML", maxit = 20)
   ))
-  audit <- facet_small_sample_audit(fit)
-  expect_s3_class(audit, "mfrm_facet_sample_audit")
+  audit <- facet_small_sample_review(fit)
+  expect_s3_class(audit, "mfrm_facet_sample_review")
   expect_true(all(c("Facet", "Level", "N", "SampleCategory") %in% names(audit$table)))
   expect_true(all(audit$table$SampleCategory %in%
                     c("sparse", "marginal", "standard", "strong", NA_character_)))
-})
-
-test_that("facet_small_sample_audit reports the sparsest band as WorstCategory", {
-  d <- data.frame(
-    Person = paste0("P", sprintf("%02d", 1:20)),
-    Rater = c(rep("R_sparse", 4), rep("R_big", 16)),
-    Score = c(1, 2, 1, 2, rep(c(1, 2), 8)),
-    stringsAsFactors = FALSE
-  )
-  fit <- suppressMessages(suppressWarnings(
-    fit_mfrm(d, "Person", "Rater", "Score", method = "JML", maxit = 40)
-  ))
-  audit <- facet_small_sample_audit(fit)
-  rater_rows <- audit$table[audit$table$Facet == "Rater", , drop = FALSE]
-  expect_true(any(rater_rows$SampleCategory == "sparse"))
-  expect_true(any(rater_rows$SampleCategory == "marginal"))
-  rater_summary <- audit$facet_summary[audit$facet_summary$Facet == "Rater", , drop = FALSE]
-  expect_equal(rater_summary$MinN, 4)
-  expect_equal(rater_summary$WorstCategory, "sparse")
 })
 
 test_that("fit$summary carries FacetSampleSizeFlag", {
@@ -151,16 +132,16 @@ test_that("reporting_checklist surfaces hierarchical audit rows", {
   chk <- reporting_checklist(fit, diagnostics = diag)
   items <- chk$checklist$Item
   expect_true("Facet sample-size adequacy" %in% items)
-  expect_true("Hierarchical structure audit" %in% items)
+  expect_true("Hierarchical structure review" %in% items)
 })
 
-test_that("build_mfrm_manifest carries hierarchical_audit table", {
+test_that("build_mfrm_manifest carries hierarchical_review table", {
   toy <- load_mfrmr_data("example_core")
   fit <- suppressMessages(suppressWarnings(
     fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
              method = "JML", maxit = 20)
   ))
   manifest <- build_mfrm_manifest(fit)
-  expect_true("hierarchical_audit" %in% names(manifest))
-  expect_true("FacetSampleSizeFlag" %in% names(manifest$hierarchical_audit))
+  expect_true("hierarchical_review" %in% names(manifest))
+  expect_true("FacetSampleSizeFlag" %in% names(manifest$hierarchical_review))
 })

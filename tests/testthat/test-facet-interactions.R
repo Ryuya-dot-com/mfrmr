@@ -127,11 +127,11 @@ test_that("compare_mfrm recognizes additive-to-interaction nesting", {
     nested = TRUE
   ))
 
-  audit <- comp$comparison_basis$nesting_audit
-  expect_true(isTRUE(audit$eligible))
-  expect_identical(as.character(audit$relation), "facet_interaction_extension")
-  expect_identical(audit$simpler, "Additive")
-  expect_identical(audit$complex, "Interaction")
+  review <- comp$comparison_basis$nesting_review
+  expect_true(isTRUE(review$eligible))
+  expect_identical(as.character(review$relation), "facet_interaction_extension")
+  expect_identical(review$simpler, "Additive")
+  expect_identical(review$complex, "Interaction")
   expect_null(comp$lrt)
 
   fit_rev <- fit_int
@@ -142,9 +142,9 @@ test_that("compare_mfrm recognizes additive-to-interaction nesting", {
     labels = c("Forward", "Reverse"),
     nested = TRUE
   ))
-  expect_false(isTRUE(comp_same$comparison_basis$nesting_audit$eligible))
+  expect_false(isTRUE(comp_same$comparison_basis$nesting_review$eligible))
   expect_identical(
-    as.character(comp_same$comparison_basis$nesting_audit$relation),
+    as.character(comp_same$comparison_basis$nesting_review$relation),
     "same_model"
   )
 })

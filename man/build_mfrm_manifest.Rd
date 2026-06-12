@@ -48,8 +48,8 @@ A named list with class \code{mfrm_manifest}.
 Build a reproducibility manifest for an MFRM analysis
 }
 \details{
-This helper captures a package-native configuration export. It summarizes
-analysis settings, source columns,
+This helper captures the package-native equivalent of the Streamlit app's
+configuration export. It summarizes analysis settings, source columns,
 anchoring information, and which downstream outputs are currently available.
 }
 \section{When to use this}{
@@ -75,17 +75,24 @@ The returned bundle has class \code{mfrm_manifest} and includes:
 \item \code{estimation_control}: key-value optimizer settings table
 \item \code{anchor_summary}: facet-level anchor summary
 \item \code{anchors}: machine-readable anchor table
+\item \code{hierarchical_review}: retained traceability table for hierarchical /
+small-sample design flags
+\item \code{missing_recoding}: retained traceability table for missing-code recoding
+\item \code{shrinkage_review}: retained traceability table for shrinkage settings
 \item \code{available_outputs}: availability table for diagnostics/bias/PCA/prediction
 outputs
+\item \code{dependencies}, \code{input_hash}, and \code{session_info}: reproducibility
+metadata tables
 \item \code{settings}: manifest build settings
 }
 }
 
 \section{Interpreting output}{
 
-The \code{summary} table is the quickest place to confirm that you are looking at
+The \code{summary} table is the direct place to confirm that you are looking at
 the intended analysis. The \code{model_settings}, \code{source_columns}, and
-\code{estimation_control} tables are designed for audit trails and method write-up.
+\code{estimation_control} tables are designed for reproducibility records and
+method write-up.
 Active latent-regression fits also record their population-model provenance
 there, including the fitted scoring basis, stored \code{population_formula}, and
 person-level contract used by the fitted population model. When categorical
@@ -110,16 +117,16 @@ control over residual PCA.
 \code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}}.
 }
 
-For bounded \code{GPCM} fits, the manifest records a \code{support_status} table and
-should be interpreted as a package-native reproducibility bundle for the
-caveated GPCM route. FACETS score-side compatibility exports remain outside
-scope; use \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}} for the current boundary.
+For bounded \code{GPCM} fits, the manifest is available with an explicit
+\code{gpcm_boundary} table. It records supported direct diagnostics/reporting
+surfaces while keeping full FACETS score-side contract review blocked and
+routing design forecasting through its separate caveated capability row.
 }
 
 \examples{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", maxit = 25)
+                method = "JML", maxit = 30)
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 manifest <- build_mfrm_manifest(fit, diagnostics = diag)
 manifest$summary[, c("Model", "Method", "Observations", "Facets")]

@@ -21,7 +21,7 @@ A \code{knitr_kable} object ready to be printed inline in a
 report, or a message when \code{knitr} is unavailable.
 }
 \description{
-Renders the table payload for direct inclusion in RMarkdown,
+Renders the table data for direct inclusion in RMarkdown,
 Quarto, or HTML reports, wiring the \code{caption} and \code{note} slots
 into the standard APA placement (caption above, note below).
 When \code{kableExtra} is installed the note is attached as a footer;

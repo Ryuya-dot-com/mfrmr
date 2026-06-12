@@ -178,11 +178,232 @@ build_step_curve_spec <- function(x) {
 
   list(
     model = model,
+    step_facet = if (model == "RSM") NA_character_ else as.character(x$config$step_facet[1]),
     categories = categories,
     rating_min = rating_min,
     n_cat = n_cat,
     groups = groups,
     step_points = step_points
+  )
+}
+
+empty_pathway_fit_payload <- function(status = "not_available", message = "") {
+  fit_measures <- data.frame(
+    Facet = character(),
+    Level = character(),
+    Measure = numeric(),
+    SE = numeric(),
+    Infit = numeric(),
+    Outfit = numeric(),
+    InfitZSTD = numeric(),
+    OutfitZSTD = numeric(),
+    FitStatus = character(),
+    Underfit = logical(),
+    Overfit = logical(),
+    ReviewReason = character(),
+    stringsAsFactors = FALSE
+  )
+  curve_fit_status <- data.frame(
+    CurveGroup = character(),
+    Facet = character(),
+    Level = character(),
+    Measure = numeric(),
+    SE = numeric(),
+    Infit = numeric(),
+    Outfit = numeric(),
+    InfitZSTD = numeric(),
+    OutfitZSTD = numeric(),
+    FitStatus = character(),
+    Underfit = logical(),
+    Overfit = logical(),
+    ReviewReason = character(),
+    MatchedFitRow = logical(),
+    stringsAsFactors = FALSE
+  )
+  curve_fit_annotations <- data.frame(
+    AnnotationType = character(),
+    CurveGroup = character(),
+    Facet = character(),
+    Level = character(),
+    X = numeric(),
+    Y = numeric(),
+    Label = character(),
+    Measure = numeric(),
+    SE = numeric(),
+    FitStatus = character(),
+    Underfit = logical(),
+    Overfit = logical(),
+    ReviewReason = character(),
+    stringsAsFactors = FALSE
+  )
+  list(
+    fit_measures = fit_measures,
+    fit_status = data.frame(Facet = character(), FitStatus = character(), Rows = integer(), stringsAsFactors = FALSE),
+    curve_fit_status = curve_fit_status,
+    curve_fit_annotations = curve_fit_annotations,
+    fit_measure_status = data.frame(
+      Available = identical(status, "available"),
+      Status = status,
+      Message = as.character(message %||% ""),
+      stringsAsFactors = FALSE
+    )
+  )
+}
+
+pathway_fit_payload <- function(x,
+                                diagnostics = NULL,
+                                include_fit_measures = TRUE,
+                                curve_groups = character(),
+                                step_facet = NA_character_,
+                                endpoint_labels = data.frame()) {
+  curve_groups <- unique(as.character(curve_groups %||% character(0)))
+  curve_groups <- curve_groups[nzchar(curve_groups)]
+  if (!isTRUE(include_fit_measures)) {
+    out <- empty_pathway_fit_payload("not_requested", "`include_fit_measures = FALSE`.")
+    out$curve_fit_status <- data.frame(
+      CurveGroup = curve_groups,
+      Facet = NA_character_,
+      Level = NA_character_,
+      Measure = NA_real_,
+      SE = NA_real_,
+      Infit = NA_real_,
+      Outfit = NA_real_,
+      InfitZSTD = NA_real_,
+      OutfitZSTD = NA_real_,
+      FitStatus = "not_requested",
+      Underfit = FALSE,
+      Overfit = FALSE,
+      ReviewReason = "Fit measures not requested",
+      MatchedFitRow = FALSE,
+      stringsAsFactors = FALSE
+    )
+    return(out)
+  }
+
+  fm <- tryCatch(
+    fit_measures_table(
+      x,
+      diagnostics = diagnostics,
+      include_person = FALSE,
+      sort_by = "facet",
+      top_n = Inf
+    ),
+    error = function(e) e
+  )
+  if (inherits(fm, "error")) {
+    out <- empty_pathway_fit_payload("error", conditionMessage(fm))
+    out$curve_fit_status <- data.frame(
+      CurveGroup = curve_groups,
+      Facet = NA_character_,
+      Level = NA_character_,
+      Measure = NA_real_,
+      SE = NA_real_,
+      Infit = NA_real_,
+      Outfit = NA_real_,
+      InfitZSTD = NA_real_,
+      OutfitZSTD = NA_real_,
+      FitStatus = "not_available",
+      Underfit = FALSE,
+      Overfit = FALSE,
+      ReviewReason = conditionMessage(fm),
+      MatchedFitRow = FALSE,
+      stringsAsFactors = FALSE
+    )
+    return(out)
+  }
+
+  fit_tbl <- as.data.frame(fm$table %||% data.frame(), stringsAsFactors = FALSE)
+  status_tbl <- as.data.frame(fm$status_summary %||% data.frame(), stringsAsFactors = FALSE)
+  keep_cols <- c(
+    "Facet", "Level", "Measure", "SE", "Infit", "Outfit", "InfitZSTD",
+    "OutfitZSTD", "FitStatus", "Underfit", "Overfit", "ReviewReason"
+  )
+  for (nm in keep_cols) {
+    if (!nm %in% names(fit_tbl)) {
+      fit_tbl[[nm]] <- if (nm %in% c("Facet", "Level", "FitStatus", "ReviewReason")) {
+        NA_character_
+      } else if (nm %in% c("Underfit", "Overfit")) {
+        NA
+      } else {
+        NA_real_
+      }
+    }
+  }
+  fit_tbl <- fit_tbl[, keep_cols, drop = FALSE]
+
+  candidate_tbl <- fit_tbl
+  step_facet <- as.character(step_facet %||% NA_character_)
+  if (!is.na(step_facet) && nzchar(step_facet) && "Facet" %in% names(candidate_tbl)) {
+    narrowed <- candidate_tbl[as.character(candidate_tbl$Facet) == step_facet, , drop = FALSE]
+    if (nrow(narrowed) > 0L) candidate_tbl <- narrowed
+  }
+  match_idx <- match(curve_groups, as.character(candidate_tbl$Level))
+  curve_fit_status <- data.frame(
+    CurveGroup = curve_groups,
+    Facet = as.character(candidate_tbl$Facet[match_idx]),
+    Level = as.character(candidate_tbl$Level[match_idx]),
+    Measure = suppressWarnings(as.numeric(candidate_tbl$Measure[match_idx])),
+    SE = suppressWarnings(as.numeric(candidate_tbl$SE[match_idx])),
+    Infit = suppressWarnings(as.numeric(candidate_tbl$Infit[match_idx])),
+    Outfit = suppressWarnings(as.numeric(candidate_tbl$Outfit[match_idx])),
+    InfitZSTD = suppressWarnings(as.numeric(candidate_tbl$InfitZSTD[match_idx])),
+    OutfitZSTD = suppressWarnings(as.numeric(candidate_tbl$OutfitZSTD[match_idx])),
+    FitStatus = as.character(candidate_tbl$FitStatus[match_idx]),
+    Underfit = as.logical(candidate_tbl$Underfit[match_idx]),
+    Overfit = as.logical(candidate_tbl$Overfit[match_idx]),
+    ReviewReason = as.character(candidate_tbl$ReviewReason[match_idx]),
+    MatchedFitRow = !is.na(match_idx),
+    stringsAsFactors = FALSE
+  )
+  curve_fit_status$FitStatus[!curve_fit_status$MatchedFitRow] <- "not_matched"
+  curve_fit_status$Underfit[is.na(curve_fit_status$Underfit)] <- FALSE
+  curve_fit_status$Overfit[is.na(curve_fit_status$Overfit)] <- FALSE
+  curve_fit_status$ReviewReason[!curve_fit_status$MatchedFitRow] <- "No fit-measure row matched this pathway curve group."
+
+  endpoints <- as.data.frame(endpoint_labels %||% data.frame(), stringsAsFactors = FALSE)
+  fit_annotations <- curve_fit_status[
+    curve_fit_status$FitStatus %in% c("underfit", "overfit", "mixed"),
+    ,
+    drop = FALSE
+  ]
+  curve_fit_annotations <- empty_pathway_fit_payload()$curve_fit_annotations
+  if (nrow(fit_annotations) > 0L && nrow(endpoints) > 0L &&
+      all(c("CurveGroup", "Theta", "ExpectedScore") %in% names(endpoints))) {
+    endpoint_idx <- match(fit_annotations$CurveGroup, as.character(endpoints$CurveGroup))
+    ok <- !is.na(endpoint_idx)
+    if (any(ok)) {
+      fit_annotations <- fit_annotations[ok, , drop = FALSE]
+      endpoint_idx <- endpoint_idx[ok]
+      curve_fit_annotations <- data.frame(
+        AnnotationType = "fit_status",
+        CurveGroup = fit_annotations$CurveGroup,
+        Facet = fit_annotations$Facet,
+        Level = fit_annotations$Level,
+        X = suppressWarnings(as.numeric(endpoints$Theta[endpoint_idx])),
+        Y = suppressWarnings(as.numeric(endpoints$ExpectedScore[endpoint_idx])),
+        Label = paste0(fit_annotations$CurveGroup, ": ", fit_annotations$FitStatus),
+        Measure = fit_annotations$Measure,
+        SE = fit_annotations$SE,
+        FitStatus = fit_annotations$FitStatus,
+        Underfit = fit_annotations$Underfit,
+        Overfit = fit_annotations$Overfit,
+        ReviewReason = fit_annotations$ReviewReason,
+        stringsAsFactors = FALSE
+      )
+    }
+  }
+
+  list(
+    fit_measures = fit_tbl,
+    fit_status = status_tbl,
+    curve_fit_status = curve_fit_status,
+    curve_fit_annotations = curve_fit_annotations,
+    fit_measure_status = data.frame(
+      Available = TRUE,
+      Status = "available",
+      Message = "Fit measures are available for pathway annotation and custom plotting.",
+      stringsAsFactors = FALSE
+    )
   )
 }
 
@@ -193,12 +414,20 @@ build_curve_tables <- function(curve_spec, theta_grid) {
   idx_exp <- 1L
   for (g in names(curve_spec$groups)) {
     grp <- curve_spec$groups[[g]]
+    slope_val <- if (identical(curve_spec$model, "GPCM")) {
+      as.numeric(grp$slope %||% NA_real_)
+    } else {
+      1
+    }
+    if (!is.finite(slope_val) || slope_val <= 0) {
+      stop("Category-curve information requires finite positive slopes.")
+    }
     probs <- if (identical(curve_spec$model, "GPCM")) {
       category_prob_gpcm(
         eta = theta_grid,
         step_cum_mat = matrix(grp$step_cum, nrow = 1L),
         criterion_idx = rep(1L, length(theta_grid)),
-        slopes = grp$slope,
+        slopes = slope_val,
         slope_idx = rep(1L, length(theta_grid))
       )
     } else {
@@ -206,16 +435,32 @@ build_curve_tables <- function(curve_spec, theta_grid) {
     }
     k_vals <- as.numeric(curve_spec$categories)
     expected <- as.numeric(probs %*% matrix(k_vals, ncol = 1))
+    second <- as.numeric(probs %*% matrix(k_vals^2, ncol = 1))
+    score_variance <- pmax(second - expected^2, 0)
+    information <- (slope_val^2) * score_variance
     exp_tables[[idx_exp]] <- tibble::tibble(
       Theta = theta_grid,
       ExpectedScore = expected,
+      ScoreVariance = score_variance,
+      Information = information,
+      Slope = slope_val,
+      Model = curve_spec$model,
       CurveGroup = grp$name
     )
     idx_exp <- idx_exp + 1L
     for (k in seq_len(ncol(probs))) {
+      category_value <- as.numeric(curve_spec$categories[k])
+      category_information <- (slope_val^2) * probs[, k] * (category_value - expected)^2
       prob_tables[[idx_prob]] <- tibble::tibble(
         Theta = theta_grid,
         Probability = probs[, k],
+        ExpectedScore = expected,
+        ScoreVariance = score_variance,
+        Information = information,
+        CategoryInformation = category_information,
+        CategoryInformationShare = ifelse(information > 0, category_information / information, NA_real_),
+        Slope = slope_val,
+        Model = curve_spec$model,
         Category = as.character(curve_spec$categories[k]),
         CurveGroup = grp$name
       )
@@ -555,7 +800,11 @@ draw_wright_map <- function(plot_data,
   )
 }
 
-build_pathway_map_data <- function(x, theta_range = c(-6, 6), theta_points = 241L) {
+build_pathway_map_data <- function(x,
+                                   theta_range = c(-6, 6),
+                                   theta_points = 241L,
+                                   diagnostics = NULL,
+                                   include_fit_measures = TRUE) {
   curve_spec <- build_step_curve_spec(x)
   theta_grid <- seq(theta_range[1], theta_range[2], length.out = theta_points)
   curve_tbl <- build_curve_tables(curve_spec, theta_grid)
@@ -589,12 +838,112 @@ build_pathway_map_data <- function(x, theta_range = c(-6, 6), theta_points = 241
       ThetaMid = mean(range(.data$Theta, na.rm = TRUE)),
       .groups = "drop"
     )
+  pathway_long_expected <- data.frame(
+    Layer = "expected_score",
+    CurveGroup = as.character(curve_tbl$expected$CurveGroup),
+    Theta = suppressWarnings(as.numeric(curve_tbl$expected$Theta)),
+    Value = suppressWarnings(as.numeric(curve_tbl$expected$ExpectedScore)),
+    ValueName = "ExpectedScore",
+    Category = NA_character_,
+    Step = NA_character_,
+    StepIndex = NA_integer_,
+    Label = as.character(curve_tbl$expected$CurveGroup),
+    DisplayedByDefault = TRUE,
+    Model = as.character(curve_tbl$expected$Model),
+    Slope = suppressWarnings(as.numeric(curve_tbl$expected$Slope)),
+    stringsAsFactors = FALSE
+  )
+  pathway_long_steps <- data.frame(
+    Layer = "step_threshold",
+    CurveGroup = as.character(step_df$CurveGroup),
+    Theta = suppressWarnings(as.numeric(step_df$Threshold)),
+    Value = suppressWarnings(as.numeric(step_df$PathY)),
+    ValueName = "ThresholdPathY",
+    Category = as.character(step_df$ThresholdLabel),
+    Step = as.character(step_df$Step),
+    StepIndex = suppressWarnings(as.integer(step_df$StepIndex)),
+    Label = as.character(step_df$ThresholdLabel),
+    DisplayedByDefault = TRUE,
+    Model = curve_spec$model,
+    Slope = if ("Slope" %in% names(step_df)) suppressWarnings(as.numeric(step_df$Slope)) else 1,
+    stringsAsFactors = FALSE
+  )
+  pathway_long_endpoints <- data.frame(
+    Layer = "endpoint_label",
+    CurveGroup = as.character(endpoint_labels$CurveGroup),
+    Theta = suppressWarnings(as.numeric(endpoint_labels$Theta)),
+    Value = suppressWarnings(as.numeric(endpoint_labels$ExpectedScore)),
+    ValueName = "ExpectedScore",
+    Category = NA_character_,
+    Step = NA_character_,
+    StepIndex = NA_integer_,
+    Label = as.character(endpoint_labels$CurveGroup),
+    DisplayedByDefault = TRUE,
+    Model = as.character(endpoint_labels$Model),
+    Slope = suppressWarnings(as.numeric(endpoint_labels$Slope)),
+    stringsAsFactors = FALSE
+  )
+  pathway_long <- rbind(pathway_long_expected, pathway_long_steps, pathway_long_endpoints)
+  rownames(pathway_long) <- NULL
+
+  step_annotations <- data.frame(
+    AnnotationType = "step_threshold",
+    CurveGroup = as.character(step_df$CurveGroup),
+    Facet = if (!is.na(curve_spec$step_facet) && nzchar(curve_spec$step_facet)) curve_spec$step_facet else NA_character_,
+    Level = ifelse(as.character(step_df$CurveGroup) == "Common", NA_character_, as.character(step_df$CurveGroup)),
+    X = suppressWarnings(as.numeric(step_df$Threshold)),
+    Y = suppressWarnings(as.numeric(step_df$PathY)),
+    Label = as.character(step_df$ThresholdLabel),
+    Measure = suppressWarnings(as.numeric(step_df$Threshold)),
+    SE = NA_real_,
+    FitStatus = NA_character_,
+    Underfit = FALSE,
+    Overfit = FALSE,
+    ReviewReason = "Step threshold location",
+    stringsAsFactors = FALSE
+  )
+  endpoint_annotations <- data.frame(
+    AnnotationType = "endpoint_label",
+    CurveGroup = as.character(endpoint_labels$CurveGroup),
+    Facet = NA_character_,
+    Level = as.character(endpoint_labels$CurveGroup),
+    X = suppressWarnings(as.numeric(endpoint_labels$Theta)),
+    Y = suppressWarnings(as.numeric(endpoint_labels$ExpectedScore)),
+    Label = as.character(endpoint_labels$CurveGroup),
+    Measure = NA_real_,
+    SE = NA_real_,
+    FitStatus = NA_character_,
+    Underfit = FALSE,
+    Overfit = FALSE,
+    ReviewReason = "Curve endpoint label",
+    stringsAsFactors = FALSE
+  )
+  fit_payload <- pathway_fit_payload(
+    x,
+    diagnostics = diagnostics,
+    include_fit_measures = include_fit_measures,
+    curve_groups = unique(as.character(curve_tbl$expected$CurveGroup)),
+    step_facet = curve_spec$step_facet,
+    endpoint_labels = endpoint_labels
+  )
+  pathway_annotations <- rbind(
+    step_annotations,
+    endpoint_annotations,
+    fit_payload$curve_fit_annotations
+  )
+  rownames(pathway_annotations) <- NULL
   list(
     title = "Pathway Map (Expected Score by Theta)",
     expected = curve_tbl$expected,
     steps = step_df,
     endpoint_labels = endpoint_labels,
     dominance_regions = dominance_regions,
+    pathway_long = pathway_long,
+    pathway_annotations = pathway_annotations,
+    fit_measures = fit_payload$fit_measures,
+    fit_status = fit_payload$fit_status,
+    curve_fit_status = fit_payload$curve_fit_status,
+    fit_measure_status = fit_payload$fit_measure_status,
     score_range = range(curve_tbl$expected$ExpectedScore, finite = TRUE)
   )
 }
@@ -768,10 +1117,10 @@ build_ccc_surface_data <- function(x, theta_range = c(-6, 6), theta_points = 121
   )
   renderer_contract <- data.frame(
     Renderer = c("base", "external 3D renderer"),
-    Status = c("not rendered as 3D in base graphics", "payload only; no plotly/rgl dependency"),
+    Status = c("not rendered as 3D in base graphics", "plot data only; no plotly/rgl dependency"),
     RecommendedUse = c(
       "Use the 2D CCC/pathway views for default reports.",
-      "Use the surface payload for exploratory teaching, audit, or downstream interactive rendering."
+      "Use the surface plot data for exploratory teaching, audit, or downstream interactive rendering."
     ),
     stringsAsFactors = FALSE
   )
@@ -827,7 +1176,7 @@ build_ccc_surface_data <- function(x, theta_range = c(-6, 6), theta_points = 121
     interpretation_guide = interpretation_guide,
     reporting_policy = reporting_policy,
     surface_role = "theta_by_category_by_probability",
-    recommended_use = "Exploratory surface payload only; keep 2D pathway/CCC views as the default reporting figures."
+    recommended_use = "Exploratory surface data only; keep 2D pathway/CCC views as the default reporting figures."
   )
 }
 
@@ -949,18 +1298,17 @@ draw_facet_plot <- function(facet_tbl,
 #' Plot fitted MFRM results with base R
 #'
 #' @param x An `mfrm_fit` object from [fit_mfrm()].
-#' @param type Plot type. Omit `type` or use `"wright"` for the default Wright
-#'   map. Use `"bundle"` / `"all"` / `"default"` for the three-part fit bundle;
-#'   otherwise choose one of `"facet"`, `"person"`, `"step"`, `"wright"`,
-#'   `"pathway"`, `"ccc"`, `"ccc_overlay"`, `"ccc_surface"`,
-#'   `"category_surface"`, or `"shrinkage"`.
+#' @param type Plot type. Use `NULL`, `"bundle"`, or `"all"` for the
+#'   three-part fit bundle; otherwise choose one of `"facet"`, `"person"`,
+#'   `"step"`, `"wright"`, `"pathway"`, `"ccc"`, `"ccc_surface"`, or
+#'   `"category_surface"`.
 #' @param facet Optional facet name for `type = "facet"`.
 #' @param top_n Maximum number of facet/step locations retained for
 #'   compact displays.
 #' @param theta_range Numeric length-2 range for pathway, CCC, and
-#'   category-surface payloads.
+#'   category-surface plot data.
 #' @param theta_points Number of theta grid points used for pathway, CCC, and
-#'   category-surface payloads.
+#'   category-surface plot data.
 #' @param title Optional custom title.
 #' @param palette Optional color overrides.
 #' @param label_angle Rotation angle for x-axis labels where applicable.
@@ -974,9 +1322,15 @@ draw_facet_plot <- function(facet_tbl,
 #'   aligned with `fit$facets$person`. Ignored for other `type`
 #'   values. To pass the source data alongside, use
 #'   `plot(fit, type = "wright", group = "MyCol", group_data = <df>)`.
+#' @param diagnostics Optional output from [diagnose_mfrm()]. When supplied,
+#'   pathway plot data reuse it for `fit_measures`, `fit_status`, and
+#'   `curve_fit_status` instead of recomputing diagnostics.
+#' @param include_fit_measures If `TRUE` (default), pathway plot data include
+#'   tidy fit-measure and fit-status tables for custom R graphics. Set to
+#'   `FALSE` when only the curve coordinates are needed.
 #' @param draw If `TRUE`, draw the plot with base graphics.
-#' @param preset Visual preset (`"standard"`, `"publication"`, or
-#'   `"compact"`).
+#' @param preset Visual preset (`"standard"`, `"publication"`, `"compact"`,
+#'   or `"monochrome"`).
 #' @param ... Additional arguments ignored for S3 compatibility.
 #'
 #' @details
@@ -991,13 +1345,26 @@ draw_facet_plot <- function(facet_tbl,
 #' immediately.
 #'
 #' `type = "wright"` shows persons, facet levels, and step thresholds on
-#' a shared logit scale. `type = "pathway"` shows expected score traces
-#' and dominant-category regions across theta. `type = "ccc"` shows
+#' a shared logit scale. Estimates are plotted as fitted, so the sign
+#' convention follows the fit: higher person values indicate higher
+#' ability, and higher non-person facet values indicate greater
+#' severity/difficulty under the default negative facet orientation.
+#' Facets listed in `fit_mfrm(positive_facets = ...)` are reversed
+#' (higher values raise expected scores); state the active orientation in
+#' figure captions when reporting. `type = "pathway"` shows expected score
+#' traces and dominant-category regions across theta. This expected-score
+#' display is distinct from the Bond-and-Fox-style measure-versus-fit
+#' "pathway" bubble chart used around FACETS/Winsteps output; for that
+#' display, use [plot_bubble()]. Its draw-free plot data also
+#' includes `pathway_long`, `pathway_annotations`, `fit_measures`,
+#' `fit_status`, and `curve_fit_status`, so R users can rebuild the pathway
+#' map in ggplot2, plotly, or a report pipeline while keeping the same
+#' underfit/overfit labels used by [fit_measures_table()]. `type = "ccc"` shows
 #' category response probabilities. `type = "ccc_surface"` or
-#' `type = "category_surface"` returns a 3D-ready category-probability
-#' surface payload for external rendering; it deliberately does not add a
+#' `type = "category_surface"` returns 3D-ready category-probability surface
+#' data for external rendering; it deliberately does not add a
 #' plotly/rgl dependency or replace the 2D CCC/pathway reporting figures. The
-#' payload includes `category_support`, `interpretation_guide`, and
+#' returned object includes `category_support`, `interpretation_guide`, and
 #' `reporting_policy` tables so retained zero-frequency categories and
 #' manuscript-use boundaries remain visible to beginners. The remaining
 #' types (`"facet"`, `"person"`, `"step"`, `"shrinkage"`) provide
@@ -1020,6 +1387,9 @@ draw_facet_plot <- function(facet_tbl,
 #'   `type = "bundle"` / `"all"` / `"default"`.
 #' @seealso [fit_mfrm()], [plot_wright_unified()], [plot_bubble()],
 #'   [mfrmr_visual_diagnostics]
+#' @concept confidence intervals
+#' @concept visual diagnostics
+#' @concept shrinkage
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(
@@ -1029,7 +1399,7 @@ draw_facet_plot <- function(facet_tbl,
 #'   "Score",
 #'   method = "JML",
 #'   model = "RSM",
-#'   maxit = 25
+#'   maxit = 30
 #' )
 #' wright <- plot(fit, draw = FALSE)
 #' wright$data$plot
@@ -1046,7 +1416,7 @@ draw_facet_plot <- function(facet_tbl,
 #' head(surface$data$surface)
 #' surface$data$category_support
 #' # Look for: every retained category having `Observed > 0`; categories
-#' #   with zero observations are returned as a placeholder slice and
+#' #   with zero observations are returned as a zero-observation slice and
 #' #   should not be interpreted as a real score region.
 #' surface$data$interpretation_guide
 #' if (interactive()) {
@@ -1084,8 +1454,10 @@ plot.mfrm_fit <- function(x,
                           show_ci = FALSE,
                           ci_level = 0.95,
                           group = NULL,
+                          diagnostics = NULL,
+                          include_fit_measures = TRUE,
                           draw = TRUE,
-                          preset = c("standard", "publication", "compact"),
+                          preset = c("standard", "publication", "compact", "monochrome"),
                           ...) {
   if (!inherits(x, "mfrm_fit")) {
     stop("`x` must be an mfrm_fit object from fit_mfrm().")
@@ -1127,7 +1499,13 @@ plot.mfrm_fit <- function(x,
         )
       )),
       pathway_map = as_plot_data("pathway_map", c(
-        build_pathway_map_data(x, theta_range = theta_range, theta_points = theta_points),
+        build_pathway_map_data(
+          x,
+          theta_range = theta_range,
+          theta_points = theta_points,
+          diagnostics = diagnostics,
+          include_fit_measures = include_fit_measures
+        ),
         list(
           title = title %||% "Pathway map",
           subtitle = "Dominant score categories across the latent continuum",
@@ -1207,10 +1585,32 @@ plot.mfrm_fit <- function(x,
 
   if (type == "shrinkage") {
     data_list <- .build_shrinkage_plot_data(x)
+    if (isTRUE(show_ci)) {
+      ci_level <- .validate_shrinkage_ci_level(ci_level)
+      data_list$table <- .add_shrinkage_ci_columns(
+        data_list$table,
+        ci_level = ci_level
+      )
+    }
+    legend_label <- c("Original estimate", "Shrunk estimate",
+                      "Shrinkage direction", "Sum-to-zero (reference)")
+    legend_role <- c("location", "location", "arrow", "reference")
+    legend_aesthetic <- c("point", "point", "arrow", "line")
+    legend_value <- c(style$accent_primary, style$accent_tertiary,
+                      style$neutral, style$neutral)
+    if (isTRUE(show_ci)) {
+      legend_label <- c(legend_label, sprintf("%g%% CI whisker",
+                                              round(100 * ci_level)))
+      legend_role <- c(legend_role, "interval")
+      legend_aesthetic <- c(legend_aesthetic, "line")
+      legend_value <- c(legend_value, style$accent_primary)
+    }
     out <- as_plot_data("shrinkage", list(
       data = data_list$table,
       shrinkage_report = data_list$report,
       mode = data_list$mode,
+      show_ci = isTRUE(show_ci),
+      ci_level = if (isTRUE(show_ci)) ci_level else NA_real_,
       title = title %||% "Empirical-Bayes shrinkage",
       subtitle = sprintf(
         "Original (filled) vs shrunk (open) estimates; mode = %s",
@@ -1218,12 +1618,10 @@ plot.mfrm_fit <- function(x,
       ),
       preset = style$name,
       legend = new_plot_legend(
-        label = c("Original estimate", "Shrunk estimate",
-                  "Shrinkage direction", "Sum-to-zero (reference)"),
-        role = c("location", "location", "arrow", "reference"),
-        aesthetic = c("point", "point", "arrow", "line"),
-        value = c(style$accent_primary, style$accent_tertiary,
-                  style$neutral, style$neutral)
+        label = legend_label,
+        role = legend_role,
+        aesthetic = legend_aesthetic,
+        value = legend_value
       ),
       reference_lines = new_reference_lines(
         "v", 0, "Sum-to-zero reference", "dashed", "reference"
@@ -1233,13 +1631,14 @@ plot.mfrm_fit <- function(x,
       apply_plot_preset(style)
       .draw_shrinkage_plot(data_list, style = style,
                            title = title %||% "Empirical-Bayes shrinkage",
-                           show_ci = isTRUE(show_ci))
+                           show_ci = isTRUE(show_ci),
+                           ci_level = ci_level)
     }
     return(invisible(out))
   }
 
   if (type == "wright") {
-    # Build optional subgroup density payload when `group` names a
+    # Build optional subgroup density data when `group` names a
     # column on the prepared data. Each subgroup gets its own per-bin
     # density profile so DIF screening reads the same axis as the
     # main Wright map.
@@ -1323,7 +1722,13 @@ plot.mfrm_fit <- function(x,
   }
   if (type == "pathway") {
     out <- as_plot_data("pathway_map", c(
-      build_pathway_map_data(x, theta_range = theta_range, theta_points = theta_points),
+      build_pathway_map_data(
+        x,
+        theta_range = theta_range,
+        theta_points = theta_points,
+        diagnostics = diagnostics,
+        include_fit_measures = include_fit_measures
+      ),
       list(
         title = title %||% "Pathway map",
         subtitle = "Dominant score categories across the latent continuum",
@@ -1457,7 +1862,7 @@ plot.mfrm_fit <- function(x,
     ))
     if (isTRUE(draw)) {
       apply_plot_preset(style)
-      draw_ccc(ccc_payload, title = out$data$title %||% "Category curves",
+      draw_ccc(ccc_payload, title = out$title %||% "Category curves",
                palette = palette %||% c(
                  style$accent_primary, style$accent_secondary,
                  style$accent_tertiary, style$warn
@@ -1481,7 +1886,7 @@ plot.mfrm_fit <- function(x,
       build_ccc_surface_data(x, theta_range = theta_range, theta_points = theta_points),
       list(
         title = title %||% "Category probability surface",
-        subtitle = "3D-ready theta x category x probability payload; no package-native 3D renderer",
+        subtitle = "3D-ready theta x category x probability data; no package-native 3D renderer",
         preset = style$name,
         legend = new_plot_legend(
           label = "Category probability surface",
@@ -1494,7 +1899,7 @@ plot.mfrm_fit <- function(x,
     ))
     if (isTRUE(draw)) {
       warning(
-        "`type = \"ccc_surface\"` currently returns a 3D-ready `mfrm_plot_data` payload; ",
+        "`type = \"ccc_surface\"` currently returns 3D-ready `mfrm_plot_data`; ",
         "use `draw = FALSE` and pass `x$data$surface` to an external renderer if needed.",
         call. = FALSE
       )

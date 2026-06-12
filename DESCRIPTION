@@ -1,22 +1,23 @@
 Package: mfrmr
 Type: Package
 Title: Estimation and Diagnostics for Many-Facet Measurement Models
-Version: 0.2.0
+Version: 0.2.1
 Authors@R:
     person(given = "Ryuya", family = "Komuro", role = c("aut", "cre", "cph"),
            email = "ryuya.komuro.c4@tohoku.ac.jp",
            comment = c(ORCID = "0000-0001-9205-0926"))
-Description: Native R implementation of many-facet measurement models
-    with arbitrary facet counts, rating-scale, partial-credit, and
-    bounded generalized partial-credit parameterizations, and both marginal
-    and joint maximum likelihood
-    estimation. The package provides a fit / diagnose / report pipeline
-    covering anchoring, linking, bias and DFF screening, and
-    publication-oriented APA summaries, with reproducibility manifests
-    for replay. See 'Andrich' (1978) <doi:10.1007/BF02293814>,
-    'Masters' (1982) <doi:10.1007/BF02296272>, and 'Muraki' (1992)
-    <doi:10.1177/014662169201600206> for the underlying rating-scale,
-    partial-credit, and generalized partial-credit models.
+Description: Native R implementation of many-facet ordered-response
+    measurement models with arbitrary facet counts, rating-scale and
+    partial-credit parameterizations, a bounded generalized partial-credit
+    extension, and both marginal and joint maximum likelihood estimation.
+    The package provides a fit / diagnose / report pipeline covering
+    anchoring, linking, bias and differential-functioning screening, and
+    publication-oriented reporting summaries, with reproducibility manifests
+    for replay. See 'Andrich'
+    (1978) <doi:10.1007/BF02293814>, 'Masters' (1982)
+    <doi:10.1007/BF02296272>, and 'Muraki' (1992)
+    <doi:10.1177/014662169201600206> for the underlying ordered-response
+    models.
 URL: https://github.com/Ryuya-dot-com/mfrmr
 BugReports: https://github.com/Ryuya-dot-com/mfrmr/issues
 License: MIT + file LICENSE
@@ -24,12 +25,13 @@ Language: en
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.3
 Depends:
     R (>= 4.1)
 Imports:
     cli,
     dplyr,
+    grDevices,
+    graphics,
     tidyr,
     tibble,
     purrr,
@@ -53,9 +55,11 @@ Suggests:
     kableExtra,
     flextable,
     future.apply,
+    shiny,
     mirt,
     TAM,
     eRm
 VignetteBuilder: knitr
 Config/testthat/edition: 3
 Config/Needs/website: pkgdown
+Config/roxygen2/version: 8.0.0

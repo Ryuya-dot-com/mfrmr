@@ -7,7 +7,7 @@
 plot_threshold_ladder(
   fit,
   highlight_disorder = TRUE,
-  preset = c("standard", "publication", "compact"),
+  preset = c("standard", "publication", "compact", "monochrome"),
   draw = TRUE
 )
 }
@@ -18,8 +18,8 @@ plot_threshold_ladder(
 disordered segments with the preset's \code{fail} colour and add a
 subtitle counting the disordered groups.}
 
-\item{preset}{Visual preset (\code{"standard"}, \code{"publication"}, or
-\code{"compact"}).}
+\item{preset}{Visual preset (\code{"standard"}, \code{"publication"}, \code{"compact"},
+or \code{"monochrome"}).}
 
 \item{draw}{If \code{TRUE}, draw with base graphics.}
 }
@@ -46,7 +46,7 @@ decisions.
 \examples{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", maxit = 25)
+                method = "JML", maxit = 30)
 p <- plot_threshold_ladder(fit, draw = FALSE)
 head(p$data$data)
 }

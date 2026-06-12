@@ -85,7 +85,7 @@ sim_eval <- suppressWarnings(evaluate_mfrm_design(
   n_criterion = 2,
   raters_per_person = 1,
   reps = 1,
-  maxit = 8,
+  maxit = 30,
   seed = 123
 ))
 rec <- recommend_mfrm_design(sim_eval)

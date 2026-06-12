@@ -9,7 +9,7 @@ plot_residual_matrix(
   diagnostics = NULL,
   facet = "Rater",
   top_n_persons = 40L,
-  preset = c("standard", "publication", "compact"),
+  preset = c("standard", "publication", "compact", "monochrome"),
   draw = TRUE
 )
 }
@@ -45,7 +45,7 @@ under-prediction, negative cells over-prediction.
 \examples{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                 method = "JML", maxit = 25)
+                 method = "JML", maxit = 30)
 p <- plot_residual_matrix(fit, top_n_persons = 12, draw = FALSE)
 dim(p$data$matrix)
 # Look for: cell values within ~|2| are routine; |residual| > 2 is

@@ -57,7 +57,7 @@ fit <- fit_mfrm(
   facets = c("Rater", "Criterion"),
   score = "Score",
   method = "JML",
-  maxit = 25
+  maxit = 30
 )
 summary(fit)
 }

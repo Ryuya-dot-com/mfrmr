@@ -175,7 +175,7 @@
 #' @param ci_level Confidence level used by `type = "forest"` for the
 #'   anchor-estimate whiskers (default `0.95`). Ignored for other
 #'   plot types.
-#' @param preset Visual preset (`"standard"`, `"publication"`, or `"compact"`).
+#' @param preset Visual preset (`"standard"`, `"publication"`, `"compact"`, or `"monochrome"`).
 #' @param draw If `FALSE`, return the plot data invisibly without drawing.
 #' @param ... Additional graphical parameters passed to base plotting
 #'   functions.
@@ -239,11 +239,14 @@
 #' @return A plotting-data object of class `mfrm_plot_data`. With
 #'   `draw = FALSE`, `result$data$table` contains the filtered drift or chain
 #'   table, `result$data$matrix` contains the heatmap matrix when requested,
-#'   and the payload includes package-native `title`, `subtitle`, `legend`,
-#'   and `reference_lines`.
+#'   and the returned plot data includes package-native `title`, `subtitle`,
+#'   `legend`, and `reference_lines`.
 #'
 #' @seealso [detect_anchor_drift()], [build_equating_chain()],
 #'   [plot_dif_heatmap()], [plot_bubble()], [mfrmr_visual_diagnostics]
+#' @concept confidence intervals
+#' @concept visual diagnostics
+#' @concept linking
 #' @export
 #' @examples
 #' \donttest{
@@ -252,9 +255,9 @@
 #' d1 <- toy[toy$Person %in% people[1:12], , drop = FALSE]
 #' d2 <- toy[toy$Person %in% people[13:24], , drop = FALSE]
 #' fit1 <- fit_mfrm(d1, "Person", c("Rater", "Criterion"), "Score",
-#'                  method = "JML", maxit = 10)
+#'                  method = "JML", maxit = 30)
 #' fit2 <- fit_mfrm(d2, "Person", c("Rater", "Criterion"), "Score",
-#'                  method = "JML", maxit = 10)
+#'                  method = "JML", maxit = 30)
 #' drift <- detect_anchor_drift(list(W1 = fit1, W2 = fit2))
 #' drift_plot <- plot_anchor_drift(drift, type = "drift", draw = FALSE)
 #' class(drift_plot)
@@ -269,7 +272,7 @@
 plot_anchor_drift <- function(x, type = c("drift", "chain", "heatmap", "forest"),
                               facet = NULL,
                               ci_level = 0.95,
-                              preset = c("standard", "publication", "compact"),
+                              preset = c("standard", "publication", "compact", "monochrome"),
                               draw = TRUE, ...) {
   type <- match.arg(type)
   style <- resolve_plot_preset(preset)
@@ -435,7 +438,7 @@ plot_anchor_drift <- function(x, type = c("drift", "chain", "heatmap", "forest")
 #' \donttest{
 #' toy <- load_mfrmr_data("study1")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                 method = "JML", maxit = 25)
+#'                 method = "JML", maxit = 30)
 #' qc <- run_qc_pipeline(fit)
 #' plot_qc_pipeline(qc, draw = FALSE)
 #' }

@@ -14,12 +14,12 @@ monitoring drift, and screening differential facet functioning (DFF) in
 \item "Is the design connected enough to support a common scale?"
 Use \code{\link[=subset_connectivity_report]{subset_connectivity_report()}} and \code{plot(..., type = "design_matrix")}.
 \item "Which elements can I export as anchors from an existing fit?"
-Use \code{\link[=make_anchor_table]{make_anchor_table()}} and \code{\link[=audit_mfrm_anchors]{audit_mfrm_anchors()}}.
+Use \code{\link[=make_anchor_table]{make_anchor_table()}} and \code{\link[=review_mfrm_anchors]{review_mfrm_anchors()}}.
 \item "How do I anchor a new administration to a baseline?"
 Use \code{\link[=anchor_to_baseline]{anchor_to_baseline()}}.
 \item "Have common elements drifted across separately fitted waves?"
 Use \code{\link[=detect_anchor_drift]{detect_anchor_drift()}} and \code{\link[=plot_anchor_drift]{plot_anchor_drift()}}.
-\item "Can I synthesize anchor audit, drift, and chain evidence into one review?"
+\item "Can I synthesize anchor review, drift, and chain evidence into one review?"
 Use \code{\link[=build_linking_review]{build_linking_review()}}.
 \item "Do specific facet levels function differently across groups?"
 Use \code{\link[=analyze_dff]{analyze_dff()}}, \code{\link[=plot_dif_heatmap]{plot_dif_heatmap()}}, and \code{\link[=plot_dif_summary]{plot_dif_summary()}}.
@@ -31,8 +31,8 @@ Use \code{\link[=analyze_dff]{analyze_dff()}}, \code{\link[=plot_dif_heatmap]{pl
 \enumerate{
 \item Fit with \code{\link[=fit_mfrm]{fit_mfrm()}} and diagnose with \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}.
 \item Check connectedness with \code{\link[=subset_connectivity_report]{subset_connectivity_report()}}.
-\item Build or audit anchors with \code{\link[=make_anchor_table]{make_anchor_table()}} and
-\code{\link[=audit_mfrm_anchors]{audit_mfrm_anchors()}}.
+\item Build or review anchors with \code{\link[=make_anchor_table]{make_anchor_table()}} and
+\code{\link[=review_mfrm_anchors]{review_mfrm_anchors()}}.
 \item Use \code{\link[=anchor_to_baseline]{anchor_to_baseline()}} when you need to place raw new data onto a
 baseline scale.
 \item Use \code{\link[=build_equating_chain]{build_equating_chain()}} only as a screened linking aid across
@@ -59,7 +59,7 @@ scale.}
 unstable anchor elements.}
 \item{\code{\link[=build_equating_chain]{build_equating_chain()}}}{Accumulates screened pairwise links across
 a series of administrations or forms.}
-\item{\code{\link[=build_linking_review]{build_linking_review()}}}{Synthesizes anchor-audit, drift, and
+\item{\code{\link[=build_linking_review]{build_linking_review()}}}{Synthesizes anchor review, drift, and
 screened-chain evidence into one operational review surface.}
 \item{\code{\link[=analyze_dff]{analyze_dff()}}}{Screens differential facet functioning with residual
 or refit methods, using screening-only language unless linking and
@@ -123,7 +123,8 @@ fit <- fit_mfrm(
   facets = c("Rater", "Criterion"),
   score = "Score",
   method = "MML",
-  maxit = 200
+  quad_points = 7,
+  maxit = 30
 )
 diag <- diagnose_mfrm(fit, residual_pca = "none", diagnostic_mode = "both")
 

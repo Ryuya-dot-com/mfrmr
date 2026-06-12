@@ -7,10 +7,6 @@
 Quick guide to choosing the right report or table helper in \code{mfrmr}.
 Use this page when you know the reporting question but have not yet decided
 which bundle, table, or reporting helper to call.
-
-This page is a helper-selection map. For manuscript prose, caveat review,
-note/caption handoff, and \code{summary(apa)} QA, use
-\link{mfrmr_reporting_and_apa}.
 }
 \section{Start with the question}{
 
@@ -20,7 +16,7 @@ Use \code{\link[=specifications_report]{specifications_report()}}.
 \item "Was data filtered, dropped, or mapped in unexpected ways?"
 Use \code{\link[=data_quality_report]{data_quality_report()}} and \code{\link[=describe_mfrm_data]{describe_mfrm_data()}}.
 \item "Did estimation converge cleanly and how formal is the precision layer?"
-Use \code{\link[=estimation_iteration_report]{estimation_iteration_report()}} and \code{\link[=precision_audit_report]{precision_audit_report()}}.
+Use \code{\link[=estimation_iteration_report]{estimation_iteration_report()}} and \code{\link[=precision_review_report]{precision_review_report()}}.
 \item "Which facets are measurable, variable, or weakly separated?"
 Use \code{\link[=facet_statistics_report]{facet_statistics_report()}}, \code{\link[=measurable_summary_table]{measurable_summary_table()}}, and
 \code{\link[=facets_chisq_table]{facets_chisq_table()}}.
@@ -32,11 +28,17 @@ Use \code{\link[=subset_connectivity_report]{subset_connectivity_report()}} and 
 \item "What should go into the manuscript text and tables?"
 For \code{RSM} / \code{PCM}, use \code{\link[=reporting_checklist]{reporting_checklist()}}, \code{\link[=build_apa_outputs]{build_apa_outputs()}},
 and \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}} or \code{\link[=export_summary_appendix]{export_summary_appendix()}}. For
-bounded \code{GPCM}, use the package-native \code{\link[=reporting_checklist]{reporting_checklist()}},
-\code{\link[=build_visual_summaries]{build_visual_summaries()}}, \code{\link[=run_qc_pipeline]{run_qc_pipeline()}}, \code{\link[=build_apa_outputs]{build_apa_outputs()}},
-and \code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}} routes with their returned caveats retained;
-FACETS score-side compatibility remains outside the validated \code{GPCM}
-boundary.
+bounded \code{GPCM}, use the same route only where
+\code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}} marks it as \code{supported_with_caveat}: direct
+table/plot helpers, summary-table appendix export, caveated
+\code{\link[=build_apa_outputs]{build_apa_outputs()}}, and caveated \code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}} are available
+with a \code{gpcm_boundary}; score-side exports and design-forecasting evidence
+use their own caveated or blocked \code{GPCM} routes.
+\item "Did a simulation recover the known generating parameters well enough?"
+Use \code{\link[=evaluate_mfrm_recovery]{evaluate_mfrm_recovery()}} for the recovery study,
+\code{\link[=assess_mfrm_recovery]{assess_mfrm_recovery()}} for the adequacy checklist, and then
+\code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}} or \code{\link[=export_summary_appendix]{export_summary_appendix()}} for the
+appendix handoff.
 }
 }
 
@@ -46,30 +48,38 @@ boundary.
 \item Start with \code{\link[=specifications_report]{specifications_report()}} and \code{\link[=data_quality_report]{data_quality_report()}} to
 document the run and confirm usable data.
 \item Continue with \code{\link[=estimation_iteration_report]{estimation_iteration_report()}} and
-\code{\link[=precision_audit_report]{precision_audit_report()}} to judge convergence and inferential strength.
+\code{\link[=precision_review_report]{precision_review_report()}} to judge convergence and inferential strength.
 \item Use \code{\link[=facet_statistics_report]{facet_statistics_report()}} and \code{\link[=subset_connectivity_report]{subset_connectivity_report()}} to
 describe spread, linkage, and measurability.
 \item Add \code{\link[=rating_scale_table]{rating_scale_table()}}, \code{\link[=category_structure_report]{category_structure_report()}}, and
 \code{\link[=category_curves_report]{category_curves_report()}} to document scale functioning.
-\item Finish with \code{\link[=reporting_checklist]{reporting_checklist()}} and \code{\link[=build_apa_outputs]{build_apa_outputs()}} for
-manuscript-oriented output, then \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}} for
-reusable handoff tables or \code{\link[=export_summary_appendix]{export_summary_appendix()}} for direct
-appendix export. For bounded \code{GPCM}, retain the caveats returned by
-\code{\link[=build_apa_outputs]{build_apa_outputs()}} and \code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}}, and keep
-fair-average/bias language at the screening tier.
+\item For \code{RSM} / \code{PCM}, finish with \code{\link[=reporting_checklist]{reporting_checklist()}} and
+\code{\link[=build_apa_outputs]{build_apa_outputs()}} for manuscript-oriented output, then
+\code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}} for reusable handoff tables or
+\code{\link[=export_summary_appendix]{export_summary_appendix()}} for direct appendix export. For bounded
+\code{GPCM}, the same report/export route is available only as a caveated
+sensitivity-reporting layer with \code{gpcm_boundary}; keep FACETS-style
+score-side review and design forecasting on their separate capability
+rows.
 }
+
+If you are unsure which helper to call, start with
+\code{\link[=mfrmr_output_guide]{mfrmr_output_guide()}}. It returns a compact purpose-to-helper table that
+separates \verb{*_table}, \verb{*_report}, \verb{*_review}, \verb{*_bundle}, \verb{export_*}, and
+compatibility routes.
 }
 
 \section{Which output answers which question}{
 
 \describe{
 \item{\code{\link[=specifications_report]{specifications_report()}}}{Documents model type, estimation method,
-anchors, and core run settings. Best for method sections and audit trails.}
+anchors, and core run settings. Best for method sections and
+reproducibility records.}
 \item{\code{\link[=data_quality_report]{data_quality_report()}}}{Summarizes retained and dropped rows,
 missingness, and unknown elements. Best for data cleaning narratives.}
 \item{\code{\link[=estimation_iteration_report]{estimation_iteration_report()}}}{Shows replayed convergence
 trajectories. Best for diagnosing slow or unstable estimation.}
-\item{\code{\link[=precision_audit_report]{precision_audit_report()}}}{Summarizes whether \code{SE}, \code{CI}, and
+\item{\code{\link[=precision_review_report]{precision_review_report()}}}{Summarizes whether \code{SE}, \code{CI}, and
 reliability indices are model-based, hybrid, or exploratory. Best for
 deciding how strongly to phrase inferential claims.}
 \item{\code{\link[=facet_statistics_report]{facet_statistics_report()}}}{Bundles facet summaries, precision
@@ -80,19 +90,28 @@ coverage bottlenecks. Best for linking and anchor strategy review.}
 threshold diagnostics. Best for first-pass category evaluation.}
 \item{\code{\link[=category_structure_report]{category_structure_report()}}}{Adds transition points and compact
 category warnings. Best for category-order interpretation.}
-\item{\code{\link[=category_curves_report]{category_curves_report()}}}{Returns category-probability curve
-coordinates and summaries. Best for downstream graphics and report drafts.}
+\item{\code{\link[=category_curves_report]{category_curves_report()}}}{Returns category-probability,
+cumulative-probability, expected-ogive, total-information, and
+category-specific information coordinates. Best for downstream graphics
+and report drafts.}
+\item{\code{\link[=write_mfrm_residual_file]{write_mfrm_residual_file()}}}{Writes an observation-level residual
+file, optionally with modeled category probabilities. Best for external
+case review or reproducible handoff.}
+\item{\code{\link[=write_mfrm_subset_file]{write_mfrm_subset_file()}}}{Writes connected-subset summary and
+node-membership files. Best for scale-linking review outside R.}
 \item{\code{\link[=reporting_checklist]{reporting_checklist()}}}{Turns analysis status into an action list
 with priorities and next steps. Best for closing reporting gaps.}
 \item{\code{\link[=build_apa_outputs]{build_apa_outputs()}}}{Creates manuscript-draft text, notes,
 captions, and section maps from a shared reporting contract.}
 \item{\code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}}}{Converts supported \code{summary()}
 outputs into named \code{data.frame} tables with a compact index for appendix
-or manuscript handoff, and now supports bundle-level \code{summary()} /
-\code{plot()} for QC before export.}
+or manuscript handoff, including recovery simulation and recovery
+assessment outputs. It also supports bundle-level \code{summary()} / \code{plot()}
+for QC before export.}
 \item{\code{\link[=export_summary_appendix]{export_summary_appendix()}}}{Exports those validated summary-table
 bundles as CSV and optional HTML appendix artifacts without requiring the
-broader fit-based export bundle.}
+broader fit-based export bundle. This is the preferred export route for
+recovery simulation evidence.}
 \item{\code{\link[=apa_table]{apa_table()}}}{Can now take those summary-table bundles directly,
 so a selected component can move from \code{summary()} to a formatted handoff
 table without rebuilding the analysis object path.}
@@ -103,7 +122,7 @@ table without rebuilding the analysis object path.}
 
 \itemize{
 \item Use bundle summaries first, then drill down into component tables.
-\item Treat \code{\link[=precision_audit_report]{precision_audit_report()}} as the gatekeeper for formal inference.
+\item Treat \code{\link[=precision_review_report]{precision_review_report()}} as the gatekeeper for formal inference.
 \item Treat category and bias outputs as complementary layers rather than
 substitutes for overall fit review.
 \item Treat zero-count score categories as scale-functioning caveats. Boundary
@@ -126,7 +145,7 @@ still needs missing diagnostics or clearer caveats.
 \item Run documentation:
 \code{\link[=fit_mfrm]{fit_mfrm()}} -> \code{\link[=specifications_report]{specifications_report()}} -> \code{\link[=data_quality_report]{data_quality_report()}}.
 \item Precision and facet review:
-\code{\link[=diagnose_mfrm]{diagnose_mfrm()}} -> \code{\link[=precision_audit_report]{precision_audit_report()}} ->
+\code{\link[=diagnose_mfrm]{diagnose_mfrm()}} -> \code{\link[=precision_review_report]{precision_review_report()}} ->
 \code{\link[=facet_statistics_report]{facet_statistics_report()}}.
 \item Scale review:
 \code{\link[=rating_scale_table]{rating_scale_table()}} -> \code{\link[=category_structure_report]{category_structure_report()}} ->
@@ -135,11 +154,14 @@ still needs missing diagnostics or clearer caveats.
 \code{\link[=reporting_checklist]{reporting_checklist()}} -> \code{\link[=build_apa_outputs]{build_apa_outputs()}} ->
 \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}} -> \code{summary()} / \code{plot()} -> \code{\link[=apa_table]{apa_table()}}
 or \code{\link[=export_summary_appendix]{export_summary_appendix()}} /
-\code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}}(include = c("apa", "summary_tables")).
+\code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}}(include = "summary_tables").
 \item Bounded \code{GPCM} handoff:
-\code{\link[=reporting_checklist]{reporting_checklist()}} -> \code{\link[=build_visual_summaries]{build_visual_summaries()}} /
-\code{\link[=run_qc_pipeline]{run_qc_pipeline()}} -> \code{\link[=build_apa_outputs]{build_apa_outputs()}} /
-\code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}} with returned caveats retained ->
+\code{\link[=reporting_checklist]{reporting_checklist()}} -> direct summaries/plots ->
+\code{\link[=build_apa_outputs]{build_apa_outputs()}} or \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}} ->
+\code{\link[=export_summary_appendix]{export_summary_appendix()}} or caveated \code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}}, with
+\code{gpcm_boundary} retained in report/export objects.
+\item Recovery simulation handoff:
+\code{\link[=evaluate_mfrm_recovery]{evaluate_mfrm_recovery()}} -> \code{\link[=plot]{plot()}} / \code{\link[=assess_mfrm_recovery]{assess_mfrm_recovery()}} ->
 \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}} -> \code{\link[=export_summary_appendix]{export_summary_appendix()}}.
 }
 }
@@ -165,22 +187,21 @@ fit <- fit_mfrm(
   facets = c("Rater", "Criterion"),
   score = "Score",
   method = "MML",
-  maxit = 200
+  quad_points = 7,
+  maxit = 30
 )
 diag <- diagnose_mfrm(fit, residual_pca = "none", diagnostic_mode = "both")
 
 spec <- specifications_report(fit)
 summary(spec)$overview
 
-prec <- precision_audit_report(fit, diagnostics = diag)
+prec <- precision_review_report(fit, diagnostics = diag)
 summary(prec)$checks
 
 checklist <- reporting_checklist(fit, diagnostics = diag)
 subset(checklist$checklist, Section == "Visual Displays", c("Item", "NextAction"))
 
 apa <- build_apa_outputs(fit, diagnostics = diag)
-summary(apa)
-apa
 apa$section_map[, c("Heading", "Available")]
 bundle <- build_summary_table_bundle(checklist)
 bundle$table_index

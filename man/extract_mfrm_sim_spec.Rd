@@ -64,11 +64,15 @@ claim that the fitted object perfectly recovers the true data-generating
 mechanism. Users should review and, if necessary, edit the returned
 specification before using it for design planning.
 
-First-release \code{GPCM} fits are now supported here for direct data generation,
-provided that the returned simulation specification stores both a threshold
-table and a parallel slope table. Planning, forecasting, reporting, and
-package-native replay/export helpers now consume that slope-aware contract
-with explicit bounded-GPCM caveats.
+First-release \code{GPCM} fits are now supported here for direct data generation
+and parameter-recovery checks, provided that the returned simulation
+specification stores both a threshold table and a parallel slope table.
+The same fit-derived specification can feed caveated role-based design
+evaluation, population forecasting, and fit-based report/export bundles.
+Diagnostic/signal-detection design screening, full FACETS score-side
+contract review, posterior predictive checks, and heavy backend extensions
+remain outside the bounded-\code{GPCM} boundary until those downstream contracts
+are widened explicitly.
 
 If you want to carry person-level group labels into a fit-derived observed
 response skeleton, provide the original \code{source_data} together with
@@ -90,7 +94,7 @@ toy <- simulate_mfrm_data(
   n_criterion = 2,
   seed = 123
 )
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 5)
+fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 spec <- extract_mfrm_sim_spec(fit, latent_distribution = "empirical")
 spec$assignment
 spec$model

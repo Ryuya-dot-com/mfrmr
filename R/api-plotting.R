@@ -80,12 +80,7 @@ standardize_plot_payload <- function(name, data) {
   } else if (is.data.frame(data) || !is.list(data)) {
     data <- list(data = data)
   }
-  data_names <- names(data)
-  if (!is.null(data_names) && anyDuplicated(data_names)) {
-    data <- data[!duplicated(data_names, fromLast = TRUE)]
-  }
   data$plot_name <- data$plot_name %||% name
-  data$plot <- data$plot %||% data$plot_name
   data$title <- data$title %||% NULL
   data$subtitle <- data$subtitle %||% NULL
   data$legend <- normalize_plot_legend(data$legend %||% NULL)
@@ -110,13 +105,13 @@ print.mfrm_plot_data <- function(x, ...) {
   if (!is.null(data$subtitle) && nzchar(data$subtitle)) {
     cat("  subtitle : ", data$subtitle, "\n", sep = "")
   }
-  payload_slots <- setdiff(
+  data_slots <- setdiff(
     names(data),
     c("title", "subtitle", "legend", "reference_lines")
   )
-  if (length(payload_slots) > 0L) {
-    cat("  payload  :\n", sep = "")
-    for (slot in payload_slots) {
+  if (length(data_slots) > 0L) {
+    cat("  data     :\n", sep = "")
+    for (slot in data_slots) {
       val <- data[[slot]]
       shape <- if (is.data.frame(val)) {
         sprintf("data.frame [%d x %d]", nrow(val), ncol(val))
@@ -149,6 +144,283 @@ print.mfrm_plot_data <- function(x, ...) {
   cat("Re-render via ggplot2 / plotly using `x$data`; or pass the\n")
   cat("originating `draw = FALSE` plot helper its inverse to draw it.\n")
   invisible(x)
+}
+
+as_mfrm_plot_data_object <- function(x, type = NULL, ...) {
+  if (inherits(x, "mfrm_plot_data")) {
+    return(x)
+  }
+  dots <- list(...)
+  if (!is.null(type)) {
+    dots$type <- type
+  }
+  plot_args <- c(list(x = x, draw = FALSE), dots)
+  out <- tryCatch(
+    do.call(plot, plot_args),
+    error = function(e) {
+      stop(
+        "`x` must be an `mfrm_plot_data` object or an object whose ",
+        "`plot()` method supports `draw = FALSE`. Plotting failed: ",
+        conditionMessage(e),
+        call. = FALSE
+      )
+    }
+  )
+  if (!inherits(out, "mfrm_plot_data")) {
+    stop(
+      "`plot(..., draw = FALSE)` must return an `mfrm_plot_data` object.",
+      call. = FALSE
+    )
+  }
+  out
+}
+
+plot_component_role <- function(name, value) {
+  name <- as.character(name)
+  if (name %in% c("plot", "plot_long", "pathway_long", "information_long",
+                  "surface", "data", "table", "matrix")) {
+    return("primary_data")
+  }
+  if (grepl("annotation|reference_lines|boundary_lines", name)) {
+    return("annotation")
+  }
+  if (grepl("setting|threshold|range|level|direction|preset|top_n", name)) {
+    return("settings")
+  }
+  if (grepl("legend|style|palette", name)) {
+    return("style")
+  }
+  if (grepl("summary|status|flag|overview|guide|policy|caveat|note", name)) {
+    return("summary_or_guidance")
+  }
+  if (grepl("fit|misfit|infit|outfit|df_sensitivity", name)) {
+    return("fit_review")
+  }
+  if (grepl("probabilit|curve|ogive|information|sem|theta|category", name)) {
+    return("curve_data")
+  }
+  if (is.matrix(value)) {
+    return("matrix_data")
+  }
+  if (is.data.frame(value)) {
+    return("table_data")
+  }
+  if (is.list(value)) {
+    return("metadata")
+  }
+  "scalar_or_vector"
+}
+
+plot_component_shape <- function(value) {
+  if (is.data.frame(value)) {
+    return(list(
+      object_type = "data.frame",
+      rows = nrow(value),
+      columns = ncol(value),
+      length = length(value),
+      column_names = paste(names(value), collapse = ", ")
+    ))
+  }
+  if (is.matrix(value)) {
+    return(list(
+      object_type = "matrix",
+      rows = nrow(value),
+      columns = ncol(value),
+      length = length(value),
+      column_names = paste(colnames(value) %||% character(0), collapse = ", ")
+    ))
+  }
+  if (is.list(value)) {
+    return(list(
+      object_type = paste0("list:", class(value)[1]),
+      rows = NA_integer_,
+      columns = length(value),
+      length = length(value),
+      column_names = paste(names(value) %||% character(0), collapse = ", ")
+    ))
+  }
+  list(
+    object_type = typeof(value),
+    rows = NA_integer_,
+    columns = NA_integer_,
+    length = length(value),
+    column_names = ""
+  )
+}
+
+plot_component_note <- function(name, role) {
+  if (name %in% c("plot_long", "pathway_long", "information_long")) {
+    return("Best starting point for ggplot2, plotly, or Quarto re-rendering.")
+  }
+  if (name %in% c("plot_annotations", "pathway_annotations", "reference_lines", "boundary_lines")) {
+    return("Use with primary data to draw thresholds, labels, and reference lines.")
+  }
+  if (name %in% c("plot_settings", "settings")) {
+    return("Records resolved plotting options and aliases after normalization.")
+  }
+  if (name %in% c("curve_style", "legend")) {
+    return("Use to reproduce color, line-type, or legend mappings.")
+  }
+  if (name %in% c("fit_measures", "fit_status", "curve_fit_status", "flag_summary")) {
+    return("Use to label or filter review-relevant plotted rows.")
+  }
+  if (role == "summary_or_guidance") {
+    return("Use for captions, QA checks, or report text.")
+  }
+  ""
+}
+
+#' Extract reusable data from an mfrmr plot object
+#'
+#' @description
+#' `plot_data()` is a small accessor for users who want to build custom
+#' base-R, ggplot2, plotly, or table-based displays from mfrmr plot helpers.
+#' It accepts an existing `mfrm_plot_data` object, or any mfrmr object whose
+#' `plot()` method supports `draw = FALSE`. Use [plot_data_components()] first
+#' when you want to inspect which components are available before extracting
+#' one.
+#'
+#' @param x An `mfrm_plot_data` object, or a fitted/report/review object with a
+#'   `plot(..., draw = FALSE)` method.
+#' @param component Optional single component name inside the reusable plot
+#'   data. When `NULL`, the full plot-data list is returned.
+#' @param type Optional plot type passed to `plot()` when `x` is not already an
+#'   `mfrm_plot_data` object.
+#' @param ... Additional arguments passed to `plot(..., draw = FALSE)` when
+#'   `x` is not already an `mfrm_plot_data` object.
+#'
+#' @return The full reusable plot-data list, or the selected component.
+#' @examples
+#' \donttest{
+#' toy <- load_mfrmr_data("example_core")
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", maxit = 30)
+#'
+#' wright_plot_data <- plot_data(fit, type = "wright")
+#' names(wright_plot_data)
+#'
+#' wright_table <- plot_data(fit, type = "wright", component = "locations")
+#' head(wright_table)
+#'
+#' curves <- category_curves_report(fit, theta_points = 51)
+#' curve_long <- plot_data(curves, component = "plot_long")
+#' head(curve_long[, c("PlotType", "Theta", "Series", "Value")])
+#'
+#' pathway_long <- plot_data(fit, type = "pathway", component = "pathway_long")
+#' head(pathway_long[, c("Layer", "CurveGroup", "Theta", "Value")])
+#' pathway_fit <- plot_data(fit, type = "pathway", component = "fit_measures")
+#' head(pathway_fit[, c("Facet", "Level", "Infit", "Outfit", "FitStatus")])
+#'
+#' info <- compute_information(fit, theta_points = 51)
+#' sem_long <- plot_data(
+#'   plot_information(info, type = "sem", draw = FALSE),
+#'   component = "plot_long"
+#' )
+#' head(sem_long[, c("Metric", "Theta", "Value", "DisplayedByDefault")])
+#' }
+#' @export
+plot_data <- function(x, component = NULL, type = NULL, ...) {
+  x <- as_mfrm_plot_data_object(x, type = type, ...)
+  payload <- x$data %||% list()
+  if (is.null(component)) {
+    return(payload)
+  }
+
+  if (length(component) != 1L || is.na(component) || !nzchar(component)) {
+    stop("`component` must be a single non-empty component name.", call. = FALSE)
+  }
+  component <- as.character(component)
+  if (!component %in% names(payload)) {
+    choices <- names(payload)
+    choices <- choices[nzchar(choices)]
+    stop(
+      "`component` must be one of: ",
+      paste(choices, collapse = ", "),
+      call. = FALSE
+    )
+  }
+
+  payload[[component]]
+}
+
+#' List reusable components in mfrmr plot data
+#'
+#' @description
+#' `plot_data_components()` is a companion to [plot_data()]. It returns a
+#' compact table that tells users which plot-data components are available,
+#' what shape they have, and which ones are most useful for custom graphics,
+#' dashboards, or report assembly.
+#'
+#' @param x An `mfrm_plot_data` object, or a fitted/report/review object with a
+#'   `plot(..., draw = FALSE)` method.
+#' @param type Optional plot type passed to `plot()` when `x` is not already an
+#'   `mfrm_plot_data` object.
+#' @param ... Additional arguments passed to `plot(..., draw = FALSE)` when
+#'   `x` is not already an `mfrm_plot_data` object.
+#'
+#' @return A data frame with one row per reusable plot-data component.
+#' @examples
+#' \donttest{
+#' toy <- load_mfrmr_data("example_core")
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", maxit = 30)
+#' plot_data_components(fit, type = "pathway")
+#'
+#' curves <- category_curves_report(fit, theta_points = 51)
+#' plot_data_components(curves, type = "category_probability")
+#'
+#' toy$ResponseTime <- 10 + seq_len(nrow(toy)) %% 6 + as.numeric(toy$Score)
+#' rt <- response_time_review(
+#'   toy,
+#'   person = "Person",
+#'   facets = c("Rater", "Criterion"),
+#'   score = "Score",
+#'   time = "ResponseTime"
+#' )
+#' plot_data_components(plot_response_time_review(rt, draw = FALSE))
+#' }
+#' @export
+plot_data_components <- function(x, type = NULL, ...) {
+  plot_obj <- as_mfrm_plot_data_object(x, type = type, ...)
+  payload <- plot_obj$data %||% list()
+  component_names <- names(payload)
+  component_names <- component_names[!is.na(component_names) & nzchar(component_names)]
+  if (length(component_names) == 0L) {
+    return(data.frame(
+      PlotName = as.character(plot_obj$name %||% NA_character_),
+      Component = character(),
+      Role = character(),
+      ObjectType = character(),
+      Rows = integer(),
+      Columns = integer(),
+      Length = integer(),
+      IsTabular = logical(),
+      Accessor = character(),
+      Notes = character(),
+      ColumnNames = character(),
+      stringsAsFactors = FALSE
+    ))
+  }
+  rows <- lapply(component_names, function(nm) {
+    val <- payload[[nm]]
+    shape <- plot_component_shape(val)
+    role <- plot_component_role(nm, val)
+    data.frame(
+      PlotName = as.character(plot_obj$name %||% NA_character_),
+      Component = nm,
+      Role = role,
+      ObjectType = shape$object_type,
+      Rows = suppressWarnings(as.integer(shape$rows)),
+      Columns = suppressWarnings(as.integer(shape$columns)),
+      Length = suppressWarnings(as.integer(shape$length)),
+      IsTabular = is.data.frame(val) || is.matrix(val),
+      Accessor = paste0("plot_data(x, component = \"", nm, "\")"),
+      Notes = plot_component_note(nm, role),
+      ColumnNames = shape$column_names,
+      stringsAsFactors = FALSE
+    )
+  })
+  out <- do.call(rbind, rows)
+  rownames(out) <- NULL
+  out
 }
 
 truncate_axis_label <- function(x, width = 28L) {
@@ -202,8 +474,9 @@ resolve_palette <- function(palette = NULL, defaults = character(0)) {
   defaults
 }
 
-resolve_plot_preset <- function(preset = c("standard", "publication", "compact")) {
-  preset <- match.arg(preset)
+resolve_plot_preset <- function(preset = c("standard", "publication", "compact", "monochrome")) {
+  if (length(preset) > 1L) preset <- preset[1L]
+  preset <- match.arg(preset, c("standard", "publication", "compact", "monochrome"))
   switch(
     preset,
     standard = list(
@@ -265,6 +538,26 @@ resolve_plot_preset <- function(preset = c("standard", "publication", "compact")
       axis_cex = 0.82,
       label_cex = 0.9,
       title_cex = 0.95
+    ),
+    monochrome = list(
+      name = "monochrome",
+      background = "white",
+      foreground = "gray10",
+      axis = "gray20",
+      grid = "gray85",
+      fill_soft = "gray88",
+      fill_muted = "gray78",
+      fill_warm = "gray70",
+      accent_primary = "gray15",
+      accent_secondary = "gray45",
+      accent_tertiary = "gray65",
+      success = "gray30",
+      warn = "gray45",
+      fail = "gray10",
+      neutral = "gray55",
+      axis_cex = 0.88,
+      label_cex = 0.96,
+      title_cex = 1
     )
   )
 }
@@ -357,15 +650,19 @@ stack_fair_raw_tables <- function(raw_by_facet) {
 # Returns Var(X | eta = sign * Measure) at each row of `fair_df`, so the
 # caller can form delta-method standard errors on the observed-score
 # scale via |dE[X]/d_delta| * SE(delta) = Var(X) * SE(delta) (a known
-# Rasch-family identity). Rows that cannot be resolved (non-finite
-# Measure, missing thresholds, model branch without a clean mapping)
-# return NA_real_ so callers can suppress CI whiskers for those rows.
+# Rasch-family identity). This helper is intentionally RSM/PCM only. Bounded
+# GPCM plot CIs use the opt-in structural fair-average SE columns produced by
+# fair_average_table(fair_se = TRUE). Rows that cannot be resolved return
+# NA_real_ so callers can suppress CI whiskers.
 .fair_average_delta_variance <- function(fit, fair_df) {
   n <- nrow(fair_df)
   if (n == 0L) return(numeric(0))
-  model <- toupper(as.character(fit$config$model[1]))
   spec <- tryCatch(build_step_curve_spec(fit), error = function(e) NULL)
   if (is.null(spec) || length(spec$groups) == 0L) {
+    return(rep(NA_real_, n))
+  }
+  model <- toupper(as.character(fit$config$model[1]))
+  if (identical(model, "GPCM")) {
     return(rep(NA_real_, n))
   }
   step_facet <- as.character(fit$config$step_facet %||% NA_character_)
@@ -379,13 +676,10 @@ stack_fair_raw_tables <- function(raw_by_facet) {
     n_cat <- length(step_cum)
     if (n_cat < 2L) return(NA_real_)
     k_vec <- rating_min + 0:(n_cat - 1L)
-    expected_score_variance_from_eta(
-      eta = eta_scalar,
-      step_cum = step_cum,
-      slope = 1,
-      rating_min = rating_min,
-      model = model
-    )
+    probs <- category_prob_rsm(eta_scalar, step_cum)
+    expected <- as.numeric(probs %*% k_vec)
+    second <- as.numeric(probs %*% (k_vec^2))
+    max(second - expected^2, 0)
   }
 
   vars <- rep(NA_real_, n)
@@ -633,7 +927,8 @@ format_marginal_pair_label <- function(facet, level1, level2) {
 #' @param palette Optional named color overrides. Recognized names:
 #'   `positive`, `negative`, `flag`.
 #' @param label_angle X-axis label angle.
-#' @param preset Visual preset (`"standard"`, `"publication"`, or `"compact"`).
+#' @param preset Visual preset (`"standard"`, `"publication"`, `"compact"`,
+#'   or `"monochrome"`).
 #' @param draw If `TRUE`, draw with base graphics.
 #'
 #' @details
@@ -680,7 +975,8 @@ format_marginal_pair_label <- function(facet, level1, level2) {
 #'   c("Rater", "Criterion"),
 #'   "Score",
 #'   method = "MML",
-#'   maxit = 200
+#'   quad_points = 7,
+#'   maxit = 30
 #' )
 #' diag <- diagnose_mfrm(fit, residual_pca = "none", diagnostic_mode = "both")
 #' p <- plot_marginal_fit(diag, draw = FALSE, preset = "publication")
@@ -703,7 +999,7 @@ plot_marginal_fit <- function(x,
                               main = NULL,
                               palette = NULL,
                               label_angle = 45,
-                              preset = c("standard", "publication", "compact"),
+                              preset = c("standard", "publication", "compact", "monochrome"),
                               draw = TRUE) {
   plot_type <- match.arg(tolower(plot_type), c("std_residual", "prop_diff"))
   top_n <- max(1L, as.integer(top_n))
@@ -873,7 +1169,7 @@ plot_marginal_fit <- function(x,
 #' @param main Optional custom plot title.
 #' @param palette Optional named color overrides. Recognized names: `ok`, `flag`.
 #' @param label_angle X-axis label angle.
-#' @param preset Visual preset (`"standard"`, `"publication"`, or `"compact"`).
+#' @param preset Visual preset (`"standard"`, `"publication"`, `"compact"`, or `"monochrome"`).
 #' @param draw If `TRUE`, draw with base graphics.
 #'
 #' @details
@@ -916,7 +1212,8 @@ plot_marginal_fit <- function(x,
 #'   c("Rater", "Criterion"),
 #'   "Score",
 #'   method = "MML",
-#'   maxit = 200
+#'   quad_points = 7,
+#'   maxit = 30
 #' )
 #' diag <- diagnose_mfrm(fit, residual_pca = "none", diagnostic_mode = "both")
 #' p <- plot_marginal_pairwise(diag, draw = FALSE, preset = "publication")
@@ -939,7 +1236,7 @@ plot_marginal_pairwise <- function(x,
                                    main = NULL,
                                    palette = NULL,
                                    label_angle = 45,
-                                   preset = c("standard", "publication", "compact"),
+                                   preset = c("standard", "publication", "compact", "monochrome"),
                                    draw = TRUE) {
   metric <- match.arg(tolower(metric), c("exact", "adjacent"))
   top_n <- max(1L, as.integer(top_n))
@@ -1080,7 +1377,7 @@ plot_marginal_pairwise <- function(x,
 #' @param main Optional custom plot title.
 #' @param palette Optional named color overrides (`higher`, `lower`, `bar`).
 #' @param label_angle X-axis label angle for `"severity"` bar plot.
-#' @param preset Visual preset (`"standard"`, `"publication"`, or `"compact"`).
+#' @param preset Visual preset (`"standard"`, `"publication"`, `"compact"`, or `"monochrome"`).
 #' @param draw If `TRUE`, draw with base graphics.
 #'
 #' @details
@@ -1145,7 +1442,7 @@ plot_marginal_pairwise <- function(x,
 #'   [plot_qc_dashboard()], [mfrmr_visual_diagnostics]
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' p <- plot_unexpected(fit, abs_z_min = 1.5, prob_max = 0.4, top_n = 10, draw = FALSE)
 #' if (interactive()) {
 #'   plot_unexpected(
@@ -1171,7 +1468,7 @@ plot_unexpected <- function(x,
                             main = NULL,
                             palette = NULL,
                             label_angle = 45,
-                            preset = c("standard", "publication", "compact"),
+                            preset = c("standard", "publication", "compact", "monochrome"),
                             draw = TRUE) {
   rule <- match.arg(tolower(rule), c("either", "both"))
   plot_type <- match.arg(tolower(plot_type), c("scatter", "severity"))
@@ -1309,21 +1606,25 @@ plot_unexpected <- function(x,
 #' @param plot_type `"difference"` or `"scatter"`.
 #' @param top_n Maximum levels shown for `"difference"` plot.
 #' @param show_ci Logical. When `TRUE`, draw approximate
-#'   confidence-interval whiskers on the fair metric using the
-#'   conditional measure-only delta-method SE columns from
-#'   [fair_average_table()]. For `RSM` / `PCM` this is the familiar
-#'   `Var(X | Measure) * ModelSE` approximation. For bounded `GPCM`,
-#'   the slope-aware derivative is used for slope-facet rows. These are
-#'   conditional screening intervals; they do not propagate joint
-#'   threshold, slope, and person-measure uncertainty. CI bounds are
-#'   clipped to the rating range. Rows with non-finite or near-zero
-#'   conditional SEs are drawn without whiskers and counted in the
-#'   subtitle.
+#'   confidence-interval whiskers on the fair metric using a
+#'   delta-method propagation from the logit `Measure` standard error
+#'   to the observed-score scale. The derivative equals the implied
+#'   score variance `Var(X | Measure)`, so the fair-scale standard
+#'   error is `Var(X) * ModelSE`. CI bounds are clipped to the rating
+#'   range. Rows where the score variance is effectively zero (levels
+#'   whose measure sits near the rating boundary, so the delta-method
+#'   approximation becomes uninformative) are drawn with an open
+#'   circle and excluded from the whiskers; the excluded count is
+#'   reported in the subtitle. For bounded `GPCM` fits, this option requests
+#'   `fair_average_table(fair_se = TRUE)` when `x` is a fit object and uses the
+#'   structural delta-method fair-average CI columns when they are available.
+#'   If `x` is a precomputed fair-average bundle without those columns, the
+#'   plot records an unavailable-CI note.
 #' @param ci_level Confidence level used when `show_ci = TRUE`;
 #'   default `0.95`. The returned plot-data object gains `CI_Lower`,
 #'   `CI_Upper`, and `CI_Level` columns for downstream reuse.
 #' @param draw If `TRUE`, draw with base graphics.
-#' @param preset Visual preset (`"standard"`, `"publication"`, or `"compact"`).
+#' @param preset Visual preset (`"standard"`, `"publication"`, `"compact"`, or `"monochrome"`).
 #' @param ... Additional arguments passed to [fair_average_table()] when `x` is `mfrm_fit`.
 #'
 #' @details
@@ -1376,16 +1677,19 @@ plot_unexpected <- function(x,
 #' `vignette("mfrmr-visual-diagnostics", package = "mfrmr")`.
 #'
 #' @return A plotting-data object of class `mfrm_plot_data`.
-#' With `draw = FALSE`, the payload includes `title`, `subtitle`,
+#' With `draw = FALSE`, the returned plot data includes `title`, `subtitle`,
 #' `legend`, `reference_lines`, and the stacked fair-average data.
 #' @seealso [fair_average_table()], [plot_unexpected()], [plot_displacement()],
 #'   [plot_qc_dashboard()], [mfrmr_visual_diagnostics]
+#' @concept confidence intervals
+#' @concept visual diagnostics
+#' @concept fair averages
 #' @examples
 #' toy_full <- load_mfrmr_data("example_core")
 #' toy_people <- unique(toy_full$Person)[1:12]
 #' toy <- toy_full[toy_full$Person %in% toy_people, , drop = FALSE]
 #' fit <- suppressWarnings(
-#'   fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 10)
+#'   fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' )
 #' p <- plot_fair_average(fit, metric = "AdjustedAverage", draw = FALSE)
 #' if (interactive()) {
@@ -1401,7 +1705,7 @@ plot_fair_average <- function(x,
                               show_ci = FALSE,
                               ci_level = 0.95,
                               draw = TRUE,
-                              preset = c("standard", "publication", "compact"),
+                              preset = c("standard", "publication", "compact", "monochrome"),
                               ...) {
   metric <- match.arg(metric, c("AdjustedAverage", "StandardizedAdjustedAverage", "FairM", "FairZ"))
   metric <- switch(
@@ -1419,13 +1723,23 @@ plot_fair_average <- function(x,
   style <- resolve_plot_preset(preset)
 
   bundle <- if (inherits(x, "mfrm_fit")) {
-    fair_average_table(x, diagnostics = diagnostics, ...)
+    fair_args <- list(...)
+    x_model <- toupper(as.character(x$config$model[1] %||% NA_character_))
+    if (isTRUE(show_ci) && identical(x_model, "GPCM") &&
+        is.null(fair_args$fair_se)) {
+      fair_args$fair_se <- TRUE
+    }
+    if (isTRUE(show_ci) && identical(x_model, "GPCM") &&
+        isTRUE(fair_args$fair_se) && is.null(fair_args$ci_level)) {
+      fair_args$ci_level <- ci_level
+    }
+    do.call(
+      fair_average_table,
+      c(list(fit = x, diagnostics = diagnostics), fair_args)
+    )
   } else {
     resolve_fair_bundle(x)
   }
-  bundle_model <- toupper(as.character(bundle$settings$model %||% NA_character_)[1])
-  plot_caveat <- as.character(bundle$caveat %||% "")
-  plot_support_status <- bundle$support_status %||% NULL
 
   fair_df <- stack_fair_raw_tables(bundle$raw_by_facet)
   if (nrow(fair_df) == 0) stop("No fair-average data available.")
@@ -1442,6 +1756,11 @@ plot_fair_average <- function(x,
   }
   fair_df$Gap <- fair_df$ObservedAverage - fair_df[[metric]]
 
+  fair_model <- toupper(as.character(
+    bundle$settings$model %||%
+      if (inherits(x, "mfrm_fit")) x$config$model[1] else NA_character_
+  ))
+
   # Delta-method CI for the fair-average metric on the observed-score
   # scale. We use the Rasch identity |dE[X]/d_delta| = Var(X | delta)
   # evaluated at the facet-level measure, so the SE of the expected
@@ -1452,48 +1771,66 @@ plot_fair_average <- function(x,
   # distribution). CI bounds are clipped to the rating range so we
   # never display values outside the observable scale.
   ci_excluded <- 0L
-  if (isTRUE(show_ci)) {
-    se_col <- if (identical(metric, "FairM")) "FairMConditionalSE" else "FairZConditionalSE"
-    se_fair <- if (se_col %in% names(fair_df)) {
-      suppressWarnings(as.numeric(fair_df[[se_col]]))
-    } else if (inherits(x, "mfrm_fit") && "ModelSE" %in% names(fair_df) &&
-               "Measure" %in% names(fair_df)) {
-      score_var <- .fair_average_delta_variance(x, fair_df)
-      se_logit <- suppressWarnings(as.numeric(fair_df$ModelSE))
-      score_var * se_logit
+  ci_note <- NULL
+  ci_enabled <- isTRUE(show_ci)
+  ci_from_fair_table <- FALSE
+  if (ci_enabled && identical(fair_model, "GPCM")) {
+    prefix <- if (identical(metric, "FairM")) "FairM" else "FairZ"
+    ci_cols <- paste0(prefix, c("_CI_Lower", "_CI_Upper", "_CI_Level"))
+    se_col <- paste0(prefix, "SE")
+    status_col <- paste0(prefix, "_SE_Status")
+    if (all(ci_cols %in% names(fair_df))) {
+      fair_df$CI_Lower <- suppressWarnings(as.numeric(fair_df[[ci_cols[1]]]))
+      fair_df$CI_Upper <- suppressWarnings(as.numeric(fair_df[[ci_cols[2]]]))
+      fair_df$CI_Level <- suppressWarnings(as.numeric(fair_df[[ci_cols[3]]]))
+      if (se_col %in% names(fair_df)) {
+        fair_df$CI_SE <- suppressWarnings(as.numeric(fair_df[[se_col]]))
+      }
+      if (status_col %in% names(fair_df)) {
+        fair_df$CI_Status <- as.character(fair_df[[status_col]])
+      }
+      fair_df$CI_Method <- "structural delta method"
+      ci_from_fair_table <- TRUE
+      ci_enabled <- FALSE
+      ci_excluded <- sum(!is.finite(fair_df$CI_Lower) | !is.finite(fair_df$CI_Upper))
+      ci_note <- paste0(
+        round(100 * ci_level),
+        "% CI via structural delta method",
+        if (ci_excluded > 0L) {
+          paste0(" (", ci_excluded,
+                 " row(s) unavailable: person rows or Hessian/gradient limits)")
+        } else ""
+      )
     } else {
-      rep(NA_real_, nrow(fair_df))
+      ci_enabled <- FALSE
+      ci_note <- paste(
+        "CI unavailable for GPCM fair averages:",
+        "call fair_average_table(..., fair_se = TRUE) or pass a fit object."
+      )
     }
-    valid <- is.finite(se_fair) & se_fair > 1e-8
+  }
+  if (ci_enabled && "ModelSE" %in% names(fair_df) &&
+      "Measure" %in% names(fair_df)) {
+    score_var <- .fair_average_delta_variance(x, fair_df)
+    se_logit <- suppressWarnings(as.numeric(fair_df$ModelSE))
+    se_fair <- score_var * se_logit
+    valid <- is.finite(score_var) & is.finite(se_logit) & score_var > 1e-6
     ci_excluded <- sum(!valid)
     z_ci <- stats::qnorm(1 - (1 - ci_level) / 2)
     fair_df$CI_Lower <- NA_real_
     fair_df$CI_Upper <- NA_real_
     fair_df$CI_Level <- ci_level
     if (any(valid)) {
-      rating_min <- if (inherits(x, "mfrm_fit")) {
-        suppressWarnings(as.numeric(x$prep$rating_min %||% NA_real_))
-      } else {
-        suppressWarnings(as.numeric(bundle$settings$rating_min %||% NA_real_))
-      }
-      rating_max <- if (inherits(x, "mfrm_fit")) {
-        suppressWarnings(as.numeric(x$prep$rating_max %||% NA_real_))
-      } else {
-        suppressWarnings(as.numeric(bundle$settings$rating_max %||% NA_real_))
-      }
+      rating_min <- suppressWarnings(as.numeric(x$prep$rating_min %||% NA_real_))
+      rating_max <- suppressWarnings(as.numeric(x$prep$rating_max %||% NA_real_))
       lo <- fair_df[[metric]][valid] - z_ci * se_fair[valid]
       hi <- fair_df[[metric]][valid] + z_ci * se_fair[valid]
       if (is.finite(rating_min)) lo <- pmax(lo, rating_min)
       if (is.finite(rating_max)) hi <- pmin(hi, rating_max)
       fair_df$CI_Lower[valid] <- lo
       fair_df$CI_Upper[valid] <- hi
-    } else {
-      warning(
-        "No finite conditional fair-average SEs were available; ",
-        "`show_ci` added empty CI columns.",
-        call. = FALSE
-      )
     }
+    fair_df$CI_Method <- "Rasch-family delta method"
   }
 
   plot_title <- if (plot_type == "difference") {
@@ -1504,12 +1841,18 @@ plot_fair_average <- function(x,
   plot_subtitle <- paste0(
     if (!is.null(facet)) paste0("Facet: ", as.character(facet[1]), "; ") else "",
     "Metric: ", metric,
-    if (isTRUE(show_ci) && "CI_Lower" %in% names(fair_df)) {
-      paste0("; ", round(100 * ci_level), "% CI via conditional delta-method",
-             if (ci_excluded > 0L) {
-               paste0(" (", ci_excluded,
-                      " level(s) excluded: unavailable or near-zero conditional SE)")
-             } else "")
+    if (!is.null(ci_note)) {
+      paste0("; ", ci_note)
+    } else if (isTRUE(show_ci) && "CI_Lower" %in% names(fair_df)) {
+      paste0("; ", if (isTRUE(ci_from_fair_table)) {
+        ci_note
+      } else {
+        paste0(round(100 * ci_level), "% CI via delta-method",
+               if (ci_excluded > 0L) {
+                 paste0(" (", ci_excluded,
+                        " level(s) excluded: near-boundary score variance)")
+               } else "")
+      })
     } else ""
   )
   plot_legend <- if (plot_type == "difference") {
@@ -1643,13 +1986,12 @@ plot_fair_average <- function(x,
       metric = metric,
       data = fair_df,
       settings = bundle$settings,
+      ci_note = ci_note,
       title = plot_title,
       subtitle = plot_subtitle,
       legend = plot_legend,
       reference_lines = plot_reference,
-      preset = style$name,
-      support_status = plot_support_status,
-      caveat = if (nzchar(plot_caveat)) plot_caveat else NULL
+      preset = style$name
     )
   )
   invisible(out)
@@ -1669,7 +2011,7 @@ plot_fair_average <- function(x,
 #' @param ci_level Confidence level used when `show_ci = TRUE`; default
 #'   `0.95`. The returned plot-data object gains `CI_Lower` / `CI_Upper`
 #'   / `CI_Level` columns on the `table` element for downstream reuse.
-#' @param preset Visual preset (`"standard"`, `"publication"`, or `"compact"`).
+#' @param preset Visual preset (`"standard"`, `"publication"`, `"compact"`, or `"monochrome"`).
 #' @param draw If `TRUE`, draw with base graphics.
 #' @param ... Additional arguments passed to [displacement_table()] when `x` is `mfrm_fit`.
 #'
@@ -1727,9 +2069,12 @@ plot_fair_average <- function(x,
 #' @return A plotting-data object of class `mfrm_plot_data`.
 #' @seealso [displacement_table()], [plot_unexpected()], [plot_fair_average()],
 #'   [plot_qc_dashboard()], [mfrmr_visual_diagnostics]
+#' @concept confidence intervals
+#' @concept visual diagnostics
+#' @concept displacement
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' p <- plot_displacement(fit, anchored_only = FALSE, draw = FALSE)
 #' if (interactive()) {
 #'   plot_displacement(
@@ -1748,7 +2093,7 @@ plot_displacement <- function(x,
                               top_n = 40,
                               show_ci = FALSE,
                               ci_level = 0.95,
-                              preset = c("standard", "publication", "compact"),
+                              preset = c("standard", "publication", "compact", "monochrome"),
                               draw = TRUE,
                               ...) {
   plot_type <- match.arg(tolower(plot_type), c("lollipop", "hist"))
@@ -1909,7 +2254,7 @@ plot_displacement <- function(x,
 #' @param main Optional custom plot title.
 #' @param palette Optional named color overrides (`ok`, `flag`, `expected`).
 #' @param label_angle X-axis label angle for bar-style plots.
-#' @param preset Visual preset (`"standard"`, `"publication"`, or `"compact"`).
+#' @param preset Visual preset (`"standard"`, `"publication"`, `"compact"`, or `"monochrome"`).
 #' @param draw If `TRUE`, draw with base graphics.
 #'
 #' @details
@@ -1974,7 +2319,7 @@ plot_displacement <- function(x,
 #' @examples
 #' \donttest{
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' p <- plot_interrater_agreement(fit, rater_facet = "Rater", draw = FALSE)
 #' if (interactive()) {
 #'   plot_interrater_agreement(
@@ -2001,7 +2346,7 @@ plot_interrater_agreement <- function(x,
                                       main = NULL,
                                       palette = NULL,
                                       label_angle = 45,
-                                      preset = c("standard", "publication", "compact"),
+                                      preset = c("standard", "publication", "compact", "monochrome"),
                                       draw = TRUE) {
   plot_type <- match.arg(tolower(plot_type), c("exact", "corr", "difference"))
   top_n <- max(1L, as.integer(top_n))
@@ -2149,7 +2494,7 @@ plot_interrater_agreement <- function(x,
 #' @param palette Optional named color overrides (`fixed_ok`, `fixed_flag`,
 #' `random_ok`, `random_flag`, `variance`).
 #' @param label_angle X-axis label angle for bar-style plots.
-#' @param preset Visual preset (`"standard"`, `"publication"`, or `"compact"`).
+#' @param preset Visual preset (`"standard"`, `"publication"`, `"compact"`, or `"monochrome"`).
 #' @param draw If `TRUE`, draw with base graphics.
 #'
 #' @details
@@ -2201,7 +2546,7 @@ plot_interrater_agreement <- function(x,
 #' @seealso [facets_chisq_table()], [plot_interrater_agreement()], [plot_qc_dashboard()]
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' p <- plot_facets_chisq(fit, draw = FALSE)
 #' if (interactive()) {
 #'   plot_facets_chisq(
@@ -2223,7 +2568,7 @@ plot_facets_chisq <- function(x,
                               main = NULL,
                               palette = NULL,
                               label_angle = 45,
-                              preset = c("standard", "publication", "compact"),
+                              preset = c("standard", "publication", "compact", "monochrome"),
                               draw = TRUE) {
   plot_type <- match.arg(tolower(plot_type), c("fixed", "random", "variance"))
   style <- resolve_plot_preset(preset)
@@ -2368,7 +2713,7 @@ plot_facets_chisq <- function(x,
 #' @param fixed_p_max Warning cutoff for fixed-effect facet chi-square p-values.
 #' @param random_p_max Warning cutoff for random-effect facet chi-square p-values.
 #' @param top_n Maximum elements displayed in displacement panel.
-#' @param preset Visual preset (`"standard"`, `"publication"`, or `"compact"`).
+#' @param preset Visual preset (`"standard"`, `"publication"`, `"compact"`, or `"monochrome"`).
 #' @param draw If `TRUE`, draw with base graphics.
 #'
 #' @details
@@ -2377,7 +2722,7 @@ plot_facets_chisq <- function(x,
 #' | Panel | What it shows | Key reference lines |
 #' | --- | --- | --- |
 #' | 1. Category counts | Observed (bars) vs model-expected counts (line) | -- |
-#' | 2. Infit vs Outfit | Scatter of element MnSq values | active lower, 1.0, upper MnSq bands |
+#' | 2. Infit vs Outfit | Scatter of element MnSq values | heuristic 0.5, 1.0, 1.5 bands |
 #' | 3. \|ZSTD\| histogram | Distribution of absolute standardised residuals | \|ZSTD\| = 2 |
 #' | 4. Unexpected responses | Standardised residual vs \eqn{-\log_{10} P_{\mathrm{obs}}} | `abs_z_min`, `prob_max` |
 #' | 5. Fair-average gaps | Boxplots of (Observed - FairM) per facet | zero line |
@@ -2390,11 +2735,9 @@ plot_facets_chisq <- function(x,
 #' are available: `"strict"`, `"standard"` (default), and `"lenient"`.
 #' Use `thresholds` to override any profile value with named entries.
 #'
-#' For bounded `GPCM`, the dashboard reuses the residual-based diagnostics
-#' stack and the slope-aware fair-average table carried by [diagnose_mfrm()].
-#' Interpret that panel as a GPCM-specific screening view with the caveats
-#' documented in [fair_average_table()], not as Rasch-family fair-M invariance
-#' evidence.
+#' For bounded `GPCM`, the dashboard now reuses the residual-based
+#' diagnostics stack and marks the fair-average panel unavailable rather
+#' than silently reusing the Rasch-only compatibility calculation.
 #'
 #' @section Plot types:
 #' This function draws a fixed 3\eqn{\times}3 panel grid (no `plot_type`
@@ -2406,8 +2749,7 @@ plot_facets_chisq <- function(x,
 #' Recommended panel order for fast review:
 #' 1. **Category counts + Infit/Outfit** (row 1): first-pass model screening.
 #'    Category bars should roughly track the expected line; Infit/Outfit points
-#'    are reviewed against the active MnSq band. Points above the upper band
-#'    indicate underfit; points below the lower band indicate overfit.
+#'    are often reviewed against the heuristic 0.5--1.5 band.
 #' 2. **Unexpected responses + Displacement** (row 2): element-level
 #'    outliers.  Sparse points and small displacements are desirable.
 #' 3. **Inter-rater + Chi-square** (row 3): facet-level comparability.
@@ -2430,15 +2772,18 @@ plot_facets_chisq <- function(x,
 #' @return A plotting-data object of class `mfrm_plot_data`.
 #' @seealso [plot_unexpected()], [plot_fair_average()], [plot_displacement()], [plot_interrater_agreement()], [plot_facets_chisq()], [build_visual_summaries()]
 #' @examples
-#' # Fast smoke run: build the payload only (no graphics device).
+#' # Fast smoke run: build the plot data only (no graphics device).
 #' toy <- load_mfrmr_data("example_core")
-#' fit_quick <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                       method = "JML", maxit = 15)
+#' toy_small <- toy[toy$Person %in% unique(toy$Person)[1:3], ]
+#' fit_quick <- suppressWarnings(
+#'   fit_mfrm(toy_small, "Person", c("Rater", "Criterion"), "Score",
+#'            method = "JML", maxit = 3)
+#' )
 #' qc_quick <- plot_qc_dashboard(fit_quick, draw = FALSE)
-#' nrow(qc_quick$data$panels)
+#' names(qc_quick$data)
 #'
 #' \donttest{
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' qc <- plot_qc_dashboard(fit, draw = FALSE)
 #' qc$data$panels$Status
 #' # Look for: a row whose `Status` is "OK" for each panel that
@@ -2464,7 +2809,7 @@ plot_qc_dashboard <- function(fit,
                               random_p_max = 0.05,
                               top_n = 20,
                               draw = TRUE,
-                              preset = c("standard", "publication", "compact")) {
+                              preset = c("standard", "publication", "compact", "monochrome")) {
   if (!inherits(fit, "mfrm_fit")) {
     stop("`fit` must be an mfrm_fit object from fit_mfrm().")
   }
@@ -2478,23 +2823,8 @@ plot_qc_dashboard <- function(fit,
   }
 
   resolved <- resolve_warning_thresholds(thresholds = thresholds, threshold_profile = threshold_profile)
-  threshold_list <- if (is.null(thresholds)) list() else as.list(thresholds)
-  misfit_band <- mfrm_misfit_thresholds(
-    lower = threshold_list$misfit_low %||% threshold_list$misfit_lower,
-    upper = threshold_list$misfit_high %||% threshold_list$misfit_upper
-  )
-  misfit_lower <- as.numeric(misfit_band["lower"])
-  misfit_upper <- as.numeric(misfit_band["upper"])
   cat_tbl <- calc_category_stats(diagnostics$obs, res = fit, whexact = FALSE)
   fit_tbl <- as.data.frame(diagnostics$fit, stringsAsFactors = FALSE)
-  if (nrow(fit_tbl) > 0 && all(c("Infit", "Outfit") %in% names(fit_tbl))) {
-    fit_tbl$MisfitDirection <- mfrm_classify_mnsq_direction(
-      fit_tbl$Infit,
-      fit_tbl$Outfit,
-      lower = misfit_lower,
-      upper = misfit_upper
-    )
-  }
   # Keep signed InfitZSTD and OutfitZSTD so the histogram reveals over-fit
   # (MnSq < 1, ZSTD < 0) vs under-fit (MnSq > 1, ZSTD > 0) asymmetry. An
   # absolute-value collapse hid one tail under the other.
@@ -2531,23 +2861,6 @@ plot_qc_dashboard <- function(fit,
     fair_df$ObservedAverage - fair_df$FairM
   } else {
     numeric(0)
-  }
-  gpcm_status <- if (identical(fit_model, "GPCM")) {
-    gpcm_support_status(
-      model = fit_model,
-      detail = paste0(
-        "Bounded GPCM QC dashboard panels are exploratory residual and ",
-        "screening views. The fair-average panel uses the slope-aware ",
-        "element-conditional table and inherits its SE caveat."
-      )
-    )
-  } else {
-    NULL
-  }
-  gpcm_caveat <- if (identical(fit_model, "GPCM")) {
-    gpcm_qc_rationale()
-  } else {
-    NULL
   }
   disp <- displacement_table(
     fit = fit,
@@ -2610,34 +2923,16 @@ plot_qc_dashboard <- function(fit,
       infit <- suppressWarnings(as.numeric(fit_tbl$Infit))
       outfit <- suppressWarnings(as.numeric(fit_tbl$Outfit))
       ok <- is.finite(infit) & is.finite(outfit)
-      directions <- if ("MisfitDirection" %in% names(fit_tbl)) {
-        as.character(fit_tbl$MisfitDirection)
-      } else {
-        mfrm_classify_mnsq_direction(infit, outfit, lower = misfit_lower, upper = misfit_upper)
-      }
-      direction_cols <- c(
-        in_band = style$accent_primary,
-        underfit = style$fail,
-        overfit = style$warn,
-        mixed = style$accent_secondary
-      )
-      point_cols <- unname(direction_cols[directions])
-      point_cols[is.na(point_cols)] <- style$neutral
       graphics::plot(
         x = infit[ok],
         y = outfit[ok],
         pch = 16,
-        col = point_cols[ok],
+        col = style$accent_primary,
         xlab = "Infit MnSq",
         ylab = "Outfit MnSq",
         main = "QC: Infit vs Outfit"
       )
-      graphics::abline(
-        v = c(misfit_lower, 1, misfit_upper),
-        h = c(misfit_lower, 1, misfit_upper),
-        lty = c(2, 1, 2),
-        col = style$neutral
-      )
+      graphics::abline(v = c(0.5, 1, 1.5), h = c(0.5, 1, 1.5), lty = c(2, 1, 2), col = style$neutral)
     } else {
       graphics::plot.new()
       graphics::title(main = "QC: Infit vs Outfit")
@@ -2836,7 +3131,6 @@ plot_qc_dashboard <- function(fit,
       preset = style$name,
       threshold_profile = resolved$profile_name,
       thresholds = resolved$thresholds,
-      misfit_band = misfit_band,
       category_stats = cat_tbl,
       fit = fit_tbl,
       zstd = zstd,
@@ -2845,9 +3139,7 @@ plot_qc_dashboard <- function(fit,
       displacement = disp,
       interrater = interrater,
       facets_chisq = fchi,
-      reliability = rel_tbl,
-      support_status = gpcm_status,
-      caveat = gpcm_caveat
+      reliability = rel_tbl
     )
   )
   invisible(out)
@@ -2894,13 +3186,12 @@ resolve_bubble_measures <- function(x, diagnostics = NULL) {
 #'   (uniform size).
 #' @param facets Character vector of facets to include. \code{NULL} (default)
 #'   includes all non-person facets.
-#' @param fit_range Numeric length-2 vector defining the heuristic fit-review
-#'   band shown as a shaded region. `NULL` (default) uses the active package
-#'   band returned by [mfrm_misfit_thresholds()].
+#' @param fit_range Numeric length-2 vector defining the heuristic fit-review band
+#'   shown as a shaded region (default \code{c(0.5, 1.5)}).
 #' @param top_n Maximum number of elements to plot (default 60).
 #' @param main Optional custom plot title.
 #' @param palette Optional named colour vector keyed by facet name.
-#' @param preset Visual preset (`"standard"`, `"publication"`, or `"compact"`).
+#' @param preset Visual preset (`"standard"`, `"publication"`, `"compact"`, or `"monochrome"`).
 #' @param draw If \code{TRUE} (default), render the plot using base graphics.
 #'
 #' @details
@@ -2913,7 +3204,7 @@ resolve_bubble_measures <- function(x, diagnostics = NULL) {
 #' (one logit = one unit change in log-odds of responding in a higher
 #' category).  The y-axis shows the selected fit mean-square statistic.
 #' A shaded band between \code{fit_range[1]} and \code{fit_range[2]}
-#' highlights the active or manually supplied heuristic review range.
+#' highlights a common heuristic review range.
 #'
 #' Bubble radius options:
 #' \itemize{
@@ -2932,11 +3223,9 @@ resolve_bubble_measures <- function(x, diagnostics = NULL) {
 #' @section Interpreting the plot:
 #' Points near the horizontal reference line at 1.0 are closer to model
 #' expectation on the selected MnSq scale.
-#' Points above the upper band suggest underfit relative to the current
-#' review heuristic;
+#' Points above 1.5 suggest underfit relative to common review heuristics;
 #' these elements may have inconsistent scoring.
-#' Points below the lower band suggest overfit relative to the current
-#' review heuristic;
+#' Points below 0.5 suggest overfit relative to common review heuristics;
 #' these may indicate redundancy or restricted range.
 #' Points are colored by facet for easy identification.
 #'
@@ -2953,23 +3242,22 @@ resolve_bubble_measures <- function(x, diagnostics = NULL) {
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                 method = "JML", model = "RSM", maxit = 25)
+#'                 method = "JML", model = "RSM", maxit = 30)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
 #' p <- plot_bubble(fit, diagnostics = diag, draw = FALSE)
 #' head(p$data$table[, c("Facet", "Level", "Estimate", "Infit", "Outfit")])
 #' # Look for (default `view = "measure"`): bubbles inside the shaded
-#' #   active fit-review band. Bubbles above the band are underfit
+#' #   0.5-1.5 fit-review band. Bubbles above the band are underfit
 #' #   (noisy elements); below the band are overfit (overly predictable).
 #' #
 #' # For the Winsteps Table 30 layout pass `view = "infit_outfit"`:
 #' p_io <- plot_bubble(fit, diagnostics = diag, view = "infit_outfit",
 #'                      draw = FALSE)
 #' p_io$data$view
-#' # Look for: bubbles clustered inside the central active-band square.
-#' #   Points outside the upper-right corner have both Infit and Outfit
-#' #   above the upper band (consistent underfit); points outside the
-#' #   lower-left have both below the lower band (consistent overfit).
-#' #   Bubble size in
+#' # Look for: bubbles clustered inside the central [0.5, 1.5] x [0.5, 1.5]
+#' #   square. Points outside the upper-right corner have both Infit
+#' #   AND Outfit > 1.5 (consistent underfit); points outside the
+#' #   lower-left have both < 0.5 (consistent overfit). Bubble size in
 #' #   this view defaults to N (observation count) so the visual
 #' #   weighting matches how seriously the misfit should be taken.
 #' @export
@@ -2979,12 +3267,12 @@ plot_bubble <- function(x,
                         view = c("measure", "infit_outfit"),
                         bubble_size = NULL,
                         facets = NULL,
-                        fit_range = NULL,
+                        fit_range = c(0.5, 1.5),
                         top_n = 60,
                         main = NULL,
                         palette = NULL,
                         draw = TRUE,
-                        preset = c("standard", "publication", "compact")) {
+                        preset = c("standard", "publication", "compact", "monochrome")) {
   fit_stat <- match.arg(fit_stat)
   view <- match.arg(view)
   if (is.null(bubble_size)) {
@@ -2993,18 +3281,6 @@ plot_bubble <- function(x,
   bubble_size <- match.arg(bubble_size, c("SE", "N", "equal"))
   top_n <- max(1L, as.integer(top_n))
   style <- resolve_plot_preset(preset)
-  if (is.null(fit_range)) {
-    fit_range <- as.numeric(mfrm_misfit_thresholds())
-  } else {
-    fit_range <- suppressWarnings(as.numeric(fit_range))
-    if (length(fit_range) != 2L ||
-        any(!is.finite(fit_range)) ||
-        fit_range[1] <= 0 ||
-        fit_range[1] >= fit_range[2]) {
-      stop("`fit_range` must be a numeric length-2 vector with 0 < lower < upper.",
-           call. = FALSE)
-    }
-  }
 
   measures <- resolve_bubble_measures(x, diagnostics)
   measures <- measures[measures$Facet != "Person", , drop = FALSE]
@@ -3227,7 +3503,7 @@ plot_bubble <- function(x,
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                 method = "JML", model = "RSM", maxit = 25)
+#'                 method = "JML", model = "RSM", maxit = 30)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
 #' out <- export_mfrm(
 #'   fit,
@@ -3242,13 +3518,13 @@ export_mfrm <- function(fit,
                         diagnostics = NULL,
                         output_dir = ".",
                         prefix = "mfrm",
-                        tables = c("person", "facets", "summary", "steps", "slopes", "measures"),
+                        tables = c("person", "facets", "summary", "steps", "measures"),
                         overwrite = FALSE) {
   if (!inherits(fit, "mfrm_fit")) {
     stop("`fit` must be an mfrm_fit object from fit_mfrm().")
   }
   tables <- unique(tolower(as.character(tables)))
-  allowed <- c("person", "facets", "summary", "steps", "slopes", "measures")
+  allowed <- c("person", "facets", "summary", "steps", "measures")
   bad <- setdiff(tables, allowed)
   if (length(bad) > 0) {
     stop("Unknown table names: ", paste(bad, collapse = ", "),
@@ -3289,7 +3565,6 @@ export_mfrm <- function(fit,
     if (!is.null(diagnostics) && !is.null(diagnostics$measures)) {
       enrich_cols <- intersect(c("SE", "Infit", "Outfit", "PTMEA", "N"),
                                names(diagnostics$measures))
-      enrich_cols <- setdiff(enrich_cols, names(facet_df))
       if (length(enrich_cols) > 0) {
         enrich <- diagnostics$measures[diagnostics$measures$Facet != "Person",
                                        c("Facet", "Level", enrich_cols), drop = FALSE]
@@ -3311,13 +3586,6 @@ export_mfrm <- function(fit,
     step_df <- as.data.frame(fit$steps, stringsAsFactors = FALSE)
     if (nrow(step_df) > 0) {
       write_one(step_df, paste0(prefix, "_step_parameters.csv"), "steps")
-    }
-  }
-
-  if ("slopes" %in% tables) {
-    slope_df <- as.data.frame(fit$slopes %||% data.frame(), stringsAsFactors = FALSE)
-    if (nrow(slope_df) > 0) {
-      write_one(slope_df, paste0(prefix, "_slope_parameters.csv"), "slopes")
     }
   }
 
@@ -3365,7 +3633,7 @@ export_mfrm <- function(fit,
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                 method = "JML", model = "RSM", maxit = 25)
+#'                 method = "JML", model = "RSM", maxit = 30)
 #' head(as.data.frame(fit))
 #' @export
 as.data.frame.mfrm_fit <- function(x, row.names = NULL, optional = FALSE, ...) {

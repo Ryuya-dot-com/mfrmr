@@ -8,8 +8,9 @@
   x,
   facet = c("Rater", "Criterion", "Person"),
   metric = c("separation", "reliability", "infit", "outfit", "misfitrate",
-    "mnsqmisfitrate", "underfitrate", "overfitrate", "mixedmisfitrate", "inbandrate",
-    "severityrmse", "severitybias", "convergencerate", "elapsedsec", "mincategorycount"),
+    "severityrmse", "severitybias", "convergencerate", "elapsedsec", "mincategorycount",
+    "designdensity", "plannedmissingrate", "linkpersons", "linkfraction", "linkraters",
+    "mincommonpersons", "zerocommonpairs", "pairsshorttarget"),
   x_var = c("n_person", "n_rater", "n_criterion", "raters_per_person"),
   group_var = NULL,
   draw = TRUE,
@@ -57,8 +58,9 @@ Useful first plots are:
 \item criterion \code{metric = "severityrmse"} against \code{x_var = "n_person"}
 when you want aligned recovery error rather than raw location shifts
 \item rater \code{metric = "convergencerate"} against \code{x_var = "raters_per_person"}
-\item rater \code{metric = "underfitrate"} or \code{metric = "overfitrate"} when
-directional MnSq-band misfit is the planning target
+\item sparse linked \code{metric = "plannedmissingrate"}, \code{"mincommonpersons"},
+\code{"zerocommonpairs"}, or \code{"pairsshorttarget"} to review planned
+missingness and rater-pair linkage separately from recovery metrics
 }
 }
 \examples{
@@ -69,7 +71,7 @@ sim_eval <- suppressWarnings(evaluate_mfrm_design(
   n_criterion = 2,
   raters_per_person = 1,
   reps = 1,
-  maxit = 8,
+  maxit = 30,
   seed = 123
 ))
 p <- plot(sim_eval, facet = "Rater", metric = "separation", x_var = "n_person", draw = FALSE)

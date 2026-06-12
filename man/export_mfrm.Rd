@@ -9,7 +9,7 @@ export_mfrm(
   diagnostics = NULL,
   output_dir = ".",
   prefix = "mfrm",
-  tables = c("person", "facets", "summary", "steps", "slopes", "measures"),
+  tables = c("person", "facets", "summary", "steps", "measures"),
   overwrite = FALSE
 )
 }
@@ -71,7 +71,7 @@ on the fly.
 \examples{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", model = "RSM", maxit = 25)
+                method = "JML", model = "RSM", maxit = 30)
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 out <- export_mfrm(
   fit,

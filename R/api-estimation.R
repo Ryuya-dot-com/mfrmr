@@ -1,7 +1,10 @@
-#' Fit a many-facet Rasch model with a flexible number of facets
+#' Fit many-facet ordered-response models with a flexible number of facets
 #'
 #' This is the package entry point. It wraps `mfrm_estimate()` and defaults to
 #' `method = "MML"`. Any number of facet columns can be supplied via `facets`.
+#' The `RSM` / `PCM` branches are the package's many-facet Rasch-family
+#' reference route; the bounded `GPCM` branch is available where explicitly
+#' documented.
 #'
 #' @param data A data.frame in long format with one row per observed rating
 #'   event.
@@ -70,14 +73,14 @@
 #' @param noncenter_facet One facet to leave non-centered.
 #' @param dummy_facets Facets to fix at zero.
 #' @param positive_facets Facets with positive orientation.
-#' @param anchor_policy How to handle anchor-audit issues: `"warn"` (default),
+#' @param anchor_policy How to handle anchor-review issues: `"warn"` (default),
 #'   `"error"`, or `"silent"`.
 #' @param min_common_anchors Minimum anchored levels per linking facet used in
-#'   anchor-audit recommendations.
+#'   anchor-review recommendations.
 #' @param min_obs_per_element Minimum weighted observations per facet level used
-#'   in anchor-audit recommendations.
+#'   in anchor-review recommendations.
 #' @param min_obs_per_category Minimum weighted observations per score category
-#'   used in anchor-audit recommendations.
+#'   used in anchor-review recommendations.
 #' @param quad_points Integer number of Gauss-Hermite quadrature points
 #'   used for MML integration over the person distribution. Default is
 #'   `31`, chosen so that marginal log-likelihood values are stable
@@ -167,8 +170,12 @@
 #' Data must be in **long format** (one row per observed rating event).
 #'
 #' @section Model:
-#' `fit_mfrm()` estimates the many-facet Rasch model (Linacre, 1989).
-#' For a two-facet design (rater \eqn{j}, criterion \eqn{i}) the model is:
+#' `fit_mfrm()` estimates many-facet ordered-response models. The `RSM` and
+#' `PCM` branches follow the many-facet Rasch-family tradition (Linacre, 1989);
+#' the bounded `GPCM` branch extends the partial-credit kernel with estimated
+#' positive slopes under the package's documented identification constraints.
+#' For the equal-slope `RSM`/`PCM` branch, a two-facet design
+#' (rater \eqn{j}, criterion \eqn{i}) is:
 #'
 #' \deqn{\ln\frac{P(X_{nij} = k)}{P(X_{nij} = k-1)} =
 #'   \theta_n - \delta_j - \beta_i - \tau_k}
@@ -185,11 +192,24 @@
 #' threshold vector \eqn{\tau_{i,k}} on the package's shared observed
 #' score scale.
 #'
-#' With only two ordered categories (\eqn{K = 1}), the same adjacent-category
-#' formulation reduces to the usual binary Rasch logit for the single category
+#' With bounded `model = "GPCM"`, the adjacent-category kernel is multiplied by
+#' a positive slope for the designated slope-facet level:
+#'
+#' \deqn{\ln\frac{P(X_{nij} = k)}{P(X_{nij} = k-1)} =
+#'   \alpha_g(\eta - \tau_{g,k}),\quad \alpha_g > 0.}
+#'
+#' The current implementation requires `slope_facet == step_facet` and
+#' identifies slopes by a sum-to-zero constraint on log slopes, so their
+#' geometric mean is 1.
+#'
+#' With only two ordered categories (\eqn{K = 1}), the `RSM`/`PCM`
+#' branch reduces to the usual binary Rasch logit for the single category
 #' boundary:
 #'
 #' \deqn{\ln\frac{P(X_{n\cdot} = 1)}{P(X_{n\cdot} = 0)} = \eta - \tau_1}
+#'
+#' Bounded `GPCM` uses the slope-scaled counterpart
+#' \eqn{\alpha_g(\eta - \tau_{g,1})}.
 #'
 #' With `method = "MML"`, person parameters are integrated out using
 #' Gauss-Hermite quadrature and EAP estimates are computed post-hoc.
@@ -204,7 +224,7 @@
 #' discrimination is fixed, so the scoring model does not differentially
 #' reweight item-facet combinations through estimated slopes.
 #'
-#' bounded `GPCM` is supported as an alternative when users explicitly accept
+#' Bounded `GPCM` is supported as an alternative when users explicitly accept
 #' discrimination-based reweighting. This often improves model fit, but the
 #' package does not treat better fit alone as a sufficient reason to replace an
 #' equal-weighting Rasch-family model.
@@ -225,8 +245,9 @@
 #' fractional numeric scores are rejected with an error instead of being
 #' silently truncated.
 #'
-#' MFRM assumes conditional independence of observations given the person
-#' and facet parameters (Linacre, 1989). Repeated ratings of the same
+#' The fitted many-facet ordered-response model assumes conditional
+#' independence of observations given the person and facet parameters
+#' (Linacre, 1989). Repeated ratings of the same
 #' person-criterion combination by the same rater violate this assumption.
 #' When such structures may be present, follow fitting with
 #' `diagnose_mfrm(fit, diagnostic_mode = "both")`; its
@@ -234,12 +255,22 @@
 #' residual dependence beyond what the additive linear predictor absorbs.
 #'
 #' Binary responses are therefore supported as ordered two-category scores
-#' (for example `0/1` or `1/2`) under the same `RSM` / `PCM` interface.
+#' (for example `0/1` or `1/2`) under the same ordered-response interface.
 #' If your observed categories do not start at 0, set `rating_min`/`rating_max`
 #' explicitly to avoid unintended recoding assumptions. For example, if the
 #' intended instrument is a 1-5 scale but the current sample only uses 2-5,
 #' set `rating_min = 1, rating_max = 5` to retain the zero-count category 1
 #' in the score support.
+#' If these bounds are omitted, the observed score range is used and the
+#' provenance is stored in `fit$prep` and `summary(fit)$settings_overview`.
+#' Set `options(mfrmr.show_inferred_rating_range = TRUE)` when you want an
+#' interactive reminder whenever a bound is inferred.
+#' Data-preparation events such as row drops, ID trimming, duplicate
+#' person-by-facet cells, and single-level facets are stored in
+#' `fit$prep$row_retention` and `fit$prep$preparation_notes`. Routine
+#' row-drop/trim/single-level messages are quiet by default; set
+#' `options(mfrmr.show_preparation_messages = TRUE)` to show them during
+#' interactive checks.
 #'
 #' When `keep_original = FALSE`, observed gaps such as `1, 3, 5` are recoded
 #' internally to a contiguous scale (`1, 2, 3`) and the mapping is stored in
@@ -262,9 +293,9 @@
 #' wide SEs, and extreme estimates are not pulled toward the facet
 #' mean. Jones and Wind (2018) note that rater estimates in particular
 #' are "more sensitive to link reductions" than examinee or task
-#' estimates. For a publication-workflow audit of this, use:
+#' estimates. For a publication-workflow review of this, use:
 #'
-#' - [`facet_small_sample_audit()`] for per-level N and SE bands against
+#' - [`facet_small_sample_review()`] for per-level N and SE bands against
 #'   Linacre (1994) sample-size guidelines.
 #' - [`detect_facet_nesting()`] and
 #'   [`analyze_hierarchical_structure()`] when raters are nested in
@@ -360,23 +391,30 @@
 #'   [displacement_table()], [measurable_summary_table()],
 #'   [rating_scale_table()], [facet_quality_dashboard()],
 #'   [reporting_checklist()], [category_structure_report()],
-#'   [category_curves_report()], and graph-only
-#'   [facets_output_file_bundle()] are available. Direct simulation
+#'   [category_curves_report()], and graph/scorefile
+#'   [facets_output_file_bundle()] routes are available with score-side
+#'   caveats. Direct simulation
 #'   specifications and data generation are also supported through
 #'   [build_mfrm_sim_spec()], [extract_mfrm_sim_spec()], and
 #'   [simulate_mfrm_data()] when the slope-aware generator contract is stored
-#'   explicitly. Fair-average reporting, planning/forecasting, scorefile
-#'   exports, and broader APA/QC pipelines should still be treated as
-#'   unsupported unless documented otherwise. Use [gpcm_capability_matrix()] as
-#'   the formal boundary statement for the current `GPCM` scope.
+#'   explicitly; direct recovery checks are available through
+#'   [evaluate_mfrm_recovery()] and [assess_mfrm_recovery()]. Slope-aware
+#'   [fair_average_table()] and [estimate_bias()] are available with their
+#'   documented caveats. Role-based design evaluation, population forecasting,
+#'   diagnostic-screening, and signal-detection helpers are available as
+#'   caveated sensitivity evidence. Full FACETS-style score-side contract
+#'   review, posterior predictive checks, and heavy backend routes should be
+#'   treated as unsupported unless documented otherwise. Use
+#'   [gpcm_capability_matrix()] as the formal boundary statement for the
+#'   current `GPCM` scope.
 #'
 #' Latent-regression status:
 #' - `population_formula = NULL` keeps the legacy unconditional `MML` / `JML`
 #'   behavior.
 #' - Supplying `population_formula` activates a first-version latent-regression
 #'   branch for `method = "MML"` only.
-#' - The current implementation assumes a one-dimensional conditional-normal
-#'   population model with person-specific quadrature nodes
+#' - The current branch assumes a one-dimensional conditional-normal population
+#'   model with person-specific quadrature nodes
 #'   \eqn{\theta_{nq} = x_n^\top \beta + \sigma z_q}.
 #' - Background variables must be supplied in `person_data`; numeric/logical
 #'   columns and categorical factor/character columns are expanded through
@@ -384,7 +422,7 @@
 #' - Current overlap with the ConQuest latent-regression documentation is
 #'   limited to direct estimation from response data under a unidimensional
 #'   `MML` population model with package-built model-matrix covariates. It
-#'   should not be described as parity for arbitrary imported design matrices,
+#'   should not be described as numerical equivalence for arbitrary imported design matrices,
 #'   multidimensional models, or the full ConQuest plausible-values workflow.
 #' - `predict_mfrm_units()` and `sample_mfrm_plausible_values()` can score
 #'   latent-regression fits under the fitted population model, but they require
@@ -393,8 +431,8 @@
 #'   fits (`population_formula = ~ 1`) can reconstruct that minimal person
 #'   table internally during scoring.
 #'
-#' @section Latent-regression quick start:
-#' For a first latent-regression run, keep the setup explicit:
+#' @section Latent-regression workflow:
+#' For an initial latent-regression run, keep the setup explicit:
 #' 1. Put response data in `data`, with one row per rating event.
 #' 2. Put background variables in `person_data`, with exactly one row per
 #'    person. The ID column must match `person`, or be supplied through
@@ -432,7 +470,7 @@
 #' non-Person facet, the intercept becomes confounded with the freed
 #' Person-facet mean and the coefficient table becomes unidentified;
 #' mfrmr does not currently warn about this failure mode in the
-#' design-matrix audit.
+#' design-matrix check.
 #'
 #' Anchor inputs are optional:
 #' - `anchors` should contain facet/level/fixed-value information.
@@ -440,8 +478,8 @@
 #' Both are normalized internally, so column names can be flexible
 #' (`facet`, `level`, `anchor`, `group`, `groupvalue`, etc.).
 #'
-#' Anchor audit behavior:
-#' - `fit_mfrm()` runs an internal anchor audit.
+#' Anchor review behavior:
+#' - `fit_mfrm()` runs an internal anchor review.
 #' - invalid rows are removed before estimation.
 #' - duplicate rows keep the last occurrence for each key.
 #' - `anchor_policy` controls whether detected issues are warned, treated as
@@ -513,10 +551,10 @@
 #'    [build_apa_outputs()].
 #' 4. For bounded `GPCM`, use the fitted object, slope summary,
 #'    [diagnose_mfrm()], residual-based table helpers, posterior scoring
-#'    helpers, and [compute_information()] while broader downstream
-#'    validation is still being completed. Use [gpcm_capability_matrix()] to
-#'    confirm which helper families are currently supported, caveated, blocked,
-#'    or deferred.
+#'    helpers, [compute_information()], direct simulation/recovery helpers,
+#'    [fair_average_table()], and [estimate_bias()] with their documented
+#'    caveats. Use [gpcm_capability_matrix()] to confirm which helper families
+#'    are currently supported, caveated, blocked, or deferred.
 #'
 #' @section References:
 #' The ordered-category many-facet formulation follows Linacre (1989), with
@@ -554,31 +592,35 @@
 #' - `facets$person`: person estimates (`Estimate`; plus `SD` for MML)
 #' - `facets$others`: facet-level estimates for each facet
 #' - `steps`: estimated threshold/step parameters as a one-row-per-step
-#'   `tibble` with `Estimate` only. No `SE` column is currently
-#'   provided; standard errors for steps are not in the structural
-#'   Hessian block exposed by this release. Treat the values as
-#'   point estimates; for step-structure quality, use the
-#'   step-collapse and disordering warnings from [diagnose_mfrm()] and
-#'   [category_structure_report()].
+#'   `tibble` with `Estimate`. Bare fits keep this table as point estimates.
+#'   `diagnose_mfrm()` exposes MML observed-information step uncertainty in
+#'   `diagnostics$parameter_uncertainty$steps`; when
+#'   `attach_diagnostics = TRUE`, those `SE`, confidence-limit, and status
+#'   columns are attached to `fit$steps` when the Hessian is available.
+#'   For step-structure quality, also use the step-collapse and disordering
+#'   warnings from [diagnose_mfrm()] and [category_structure_report()].
 #' - `slopes`: estimated discrimination parameters for `GPCM` fits as
 #'   a one-row-per-slope-element `tibble` with `LogEstimate` and
-#'   `Estimate` only. No `SE` column is currently provided; the
-#'   identification convention pins the geometric mean of slopes at 1,
-#'   and the structural Hessian block exposed by this release does
-#'   not include slope SEs. Treat the values as point estimates.
+#'   `Estimate`. Bare fits keep this table as point estimates. For MML
+#'   bounded-`GPCM` fits, `diagnose_mfrm()` exposes log-slope SEs plus
+#'   positive-scale delta-method SEs and confidence limits in
+#'   `diagnostics$parameter_uncertainty$slopes`; when
+#'   `attach_diagnostics = TRUE`, those columns are attached to
+#'   `fit$slopes` when the Hessian is available. The identification
+#'   convention pins the geometric mean of slopes at 1.
 #' - `interactions`: model-estimated facet interaction effects and metadata
 #'   when `facet_interactions` is supplied
 #' - `population`: population-model metadata. Ordinary fits keep an inactive
 #'   scaffold (`active = FALSE`, `posterior_basis = "legacy_mml"`). Active
 #'   latent-regression fits store the fitted design matrix, regression
-#'   coefficients, residual variance, omission audit, the complete-case
+#'   coefficients, residual variance, omission review, the complete-case
 #'   estimation table (`person_table`), and the observed-person-aligned
 #'   replay/export provenance table retained before complete-case omission
 #'   (`person_table_replay`), plus stored categorical `xlevels` / `contrasts`
 #'   for model-matrix replay and scoring, together with
 #'   `posterior_basis = "population_model"`.
-#' - `config`: resolved model configuration used for estimation
-#'   (includes `config$anchor_audit`)
+#' - `config`: resolved model configuration used for estimation, including
+#'   `config$anchor_review`
 #' - `prep`: preprocessed data/level metadata
 #' - `opt`: raw optimizer result from [stats::optim()]
 #'
@@ -591,7 +633,7 @@
 #' # `summary` overview ready for inspection.
 #' toy <- load_mfrmr_data("example_core")
 #' fit_quick <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                       method = "JML", maxit = 15)
+#'                       method = "JML", maxit = 30)
 #' fit_quick$summary[, c("Model", "Method", "N", "Converged")]
 #'
 #' \donttest{
@@ -607,7 +649,7 @@
 #'   score = "Score",
 #'   model = "RSM",
 #'   quad_points = 7,
-#'   maxit = 25
+#'   maxit = 30
 #' )
 #' fit$summary
 #' s_fit <- summary(fit)
@@ -635,7 +677,7 @@
 #'   score = "Score",
 #'   method = "JML",
 #'   model = "RSM",
-#'   maxit = 25
+#'   maxit = 30
 #' )
 #' summary(fit_jml)$overview[, c("Model", "Method", "Converged")]
 #'
@@ -674,7 +716,7 @@
 #'   score = "Score",
 #'   model = "RSM",
 #'   method = "JML",
-#'   maxit = 50
+#'   maxit = 30
 #' )
 #' fit_binary$summary[, c("Model", "Categories", "Converged")]
 #'
@@ -722,15 +764,18 @@ fit_mfrm <- function(data,
                      shrink_person = FALSE,
                      attach_diagnostics = FALSE,
                      checkpoint = NULL) {
-  # Suppress the duplicate `Rating range inferred...` message that
-  # would otherwise fire once in audit_mfrm_anchors() and again in
-  # mfrm_estimate()-> prepare_mfrm_data(). The first call flips the
-  # option to TRUE; the second call sees TRUE and skips the message.
-  # The option is cleared on fit_mfrm() exit so subsequent standalone
-  # calls to prepare_mfrm_data() continue to announce.
+  # If users opt in to preparation messages, suppress duplicates that would
+  # otherwise fire once in review_mfrm_anchors() and again in mfrm_estimate()
+  # -> prepare_mfrm_data(). By default, preparation provenance is stored in the
+  # returned object and displayed by summary/data-description helpers instead
+  # of being emitted as routine messages.
   prior_announce_opt <- getOption("mfrmr._rating_range_announced")
   options(mfrmr._rating_range_announced = FALSE)
   on.exit(options(mfrmr._rating_range_announced = prior_announce_opt),
+          add = TRUE)
+  prior_prep_message_opt <- getOption("mfrmr._preparation_messages_announced")
+  options(mfrmr._preparation_messages_announced = FALSE)
+  on.exit(options(mfrmr._preparation_messages_announced = prior_prep_message_opt),
           add = TRUE)
   # -- input validation --
   if (!is.data.frame(data)) {
@@ -800,11 +845,6 @@ fit_mfrm <- function(data,
       is.na(shrink_person)) {
     stop("`shrink_person` must be a single logical value.", call. = FALSE)
   }
-  if (!is.logical(attach_diagnostics) || length(attach_diagnostics) != 1L ||
-      is.na(attach_diagnostics)) {
-    stop("`attach_diagnostics` must be a single logical value (TRUE or FALSE).",
-         call. = FALSE)
-  }
 
   population <- prepare_mfrm_population_scaffold(
     data = data,
@@ -827,7 +867,7 @@ fit_mfrm <- function(data,
     estimation_data <- data[estimation_mask, , drop = FALSE]
   }
 
-  anchor_audit <- audit_mfrm_anchors(
+  anchor_review <- review_mfrm_anchors(
     data = estimation_data,
     person = person,
     facets = facets,
@@ -846,25 +886,25 @@ fit_mfrm <- function(data,
     dummy_facets = dummy_facets
   )
 
-  anchors <- anchor_audit$anchors
-  group_anchors <- anchor_audit$group_anchors
+  anchors <- anchor_review$anchors
+  group_anchors <- anchor_review$group_anchors
 
-  issue_counts <- anchor_audit$issue_counts
+  issue_counts <- anchor_review$issue_counts
   issue_total <- if (is.null(issue_counts) || nrow(issue_counts) == 0) 0L else sum(issue_counts$N, na.rm = TRUE)
   if (issue_total > 0) {
-    msg <- format_anchor_audit_message(anchor_audit)
+    msg <- format_anchor_review_message(anchor_review)
     if (anchor_policy == "error") {
       stop(msg, call. = FALSE)
     } else if (anchor_policy == "warn") {
       warning(msg, call. = FALSE)
     } else if (anchor_policy == "silent") {
-      # Do not warn, but still surface a one-time message so the audit is not
+      # Do not warn, but still surface a one-time message so the review is not
       # completely invisible. Callers who truly want zero output can wrap in
       # suppressMessages().
       message(
-        "Anchor audit flagged ", issue_total,
+        "Anchor review flagged ", issue_total,
         " issue row(s); `anchor_policy = 'silent'` suppressed the warning. ",
-        "Inspect `fit$config$anchor_audit$issue_counts` for details."
+        "Inspect `fit$config$anchor_review$issue_counts` for details."
       )
     }
   }
@@ -899,7 +939,7 @@ fit_mfrm <- function(data,
     checkpoint = checkpoint
   )
 
-  fit$config$anchor_audit <- anchor_audit
+  fit$config$anchor_review <- anchor_review
   fit$config$method_input <- method_input
   fit$population <- finalize_mfrm_population_fit(fit, population)
   fit$config$population_spec <- compact_population_spec(fit$population, fit$prep$levels$Person)
@@ -977,6 +1017,11 @@ fit_mfrm <- function(data,
     package_version = as.character(utils::packageVersion("mfrmr"))
   )
 
+  if (!is.logical(attach_diagnostics) || length(attach_diagnostics) != 1L ||
+      is.na(attach_diagnostics)) {
+    stop("`attach_diagnostics` must be a single logical value (TRUE or FALSE).",
+         call. = FALSE)
+  }
   if (isTRUE(attach_diagnostics)) {
     fit <- attach_diagnostics_to_fit(fit)
   } else {
@@ -1049,6 +1094,7 @@ attach_diagnostics_to_fit <- function(fit) {
       "diagnose_mfrm() did not return a measures table; attach skipped."
     return(fit)
   }
+  structural_uncertainty <- diag$parameter_uncertainty %||% list()
   m <- as.data.frame(diag$measures, stringsAsFactors = FALSE)
   # diagnose_mfrm() exposes the point-measure correlation under the key
   # `PTMEA` (FACETS fixed-width label); the attach layer renames it to
@@ -1110,6 +1156,45 @@ attach_diagnostics_to_fit <- function(fit) {
       person_df <- merge(person_df, person_m, by = "Person",
                          all.x = TRUE, sort = FALSE)
       fit$facets$person <- tibble::as_tibble(person_df)
+    }
+  }
+
+  step_unc <- as.data.frame(structural_uncertainty$steps %||% data.frame(), stringsAsFactors = FALSE)
+  if (!is.null(fit$steps) && nrow(fit$steps) > 0L && nrow(step_unc) > 0L) {
+    step_keys <- intersect(c("StepFacet", "Step"), names(fit$steps))
+    if (!"StepFacet" %in% names(fit$steps) && "Step" %in% names(fit$steps)) {
+      step_keys <- "Step"
+    }
+    if (length(step_keys) > 0L && all(step_keys %in% names(step_unc))) {
+      attach_step_cols <- setdiff(names(step_unc), c(step_keys, "Estimate"))
+      if (length(attach_step_cols) > 0L) {
+        step_df <- as.data.frame(fit$steps, stringsAsFactors = FALSE)
+        step_df[, intersect(attach_step_cols, names(step_df))] <- NULL
+        fit$steps <- merge(
+          step_df,
+          step_unc[, c(step_keys, attach_step_cols), drop = FALSE],
+          by = step_keys,
+          all.x = TRUE,
+          sort = FALSE
+        )
+      }
+    }
+  }
+
+  slope_unc <- as.data.frame(structural_uncertainty$slopes %||% data.frame(), stringsAsFactors = FALSE)
+  if (!is.null(fit$slopes) && nrow(fit$slopes) > 0L && nrow(slope_unc) > 0L &&
+      "SlopeFacet" %in% names(fit$slopes) && "SlopeFacet" %in% names(slope_unc)) {
+    attach_slope_cols <- setdiff(names(slope_unc), c("SlopeFacet", "LogEstimate", "Estimate"))
+    if (length(attach_slope_cols) > 0L) {
+      slope_df <- as.data.frame(fit$slopes, stringsAsFactors = FALSE)
+      slope_df[, intersect(attach_slope_cols, names(slope_df))] <- NULL
+      fit$slopes <- merge(
+        slope_df,
+        slope_unc[, c("SlopeFacet", attach_slope_cols), drop = FALSE],
+        by = "SlopeFacet",
+        all.x = TRUE,
+        sort = FALSE
+      )
     }
   }
 
@@ -1358,18 +1443,18 @@ prepare_mfrm_population_scaffold <- function(data,
   )
 }
 
-format_anchor_audit_message <- function(anchor_audit) {
-  if (is.null(anchor_audit$issue_counts) || nrow(anchor_audit$issue_counts) == 0) {
-    return("Anchor audit detected no issues.")
+format_anchor_review_message <- function(anchor_review) {
+  if (is.null(anchor_review$issue_counts) || nrow(anchor_review$issue_counts) == 0) {
+    return("Anchor review detected no issues.")
   }
-  nonzero <- anchor_audit$issue_counts |>
+  nonzero <- anchor_review$issue_counts |>
     dplyr::filter(.data$N > 0)
   if (nrow(nonzero) == 0) {
-    return("Anchor audit detected no issues.")
+    return("Anchor review detected no issues.")
   }
   labels <- paste0(nonzero$Issue, "=", nonzero$N)
   paste0(
-    "Anchor audit detected ", sum(nonzero$N), " issue row(s): ",
+    "Anchor review detected ", sum(nonzero$N), " issue row(s): ",
     paste(labels, collapse = "; "),
     ". Invalid rows were removed; duplicate keys keep the last row."
   )
@@ -1461,7 +1546,7 @@ audit_compare_mfrm_nesting <- function(fits, labels) {
   if (length(fits) != 2L) {
     return(list(
       eligible = FALSE,
-      reason = "Likelihood-ratio tests are only audited for two-model comparisons.",
+      reason = "Likelihood-ratio tests are only reviewed for two-model comparisons.",
       simpler = NA_character_,
       complex = NA_character_,
       relation = "unsupported"
@@ -1531,7 +1616,7 @@ audit_compare_mfrm_nesting <- function(fits, labels) {
       return(list(
         eligible = TRUE,
         reason = paste0(
-          "Supported nesting audit passed: shared model family and constraints; ",
+          "Supported nesting review passed: shared model family and constraints; ",
           "the complex fit adds fixed facet interaction term(s): ",
           paste(added, collapse = ", "),
           "."
@@ -1546,7 +1631,7 @@ audit_compare_mfrm_nesting <- function(fits, labels) {
       return(list(
         eligible = TRUE,
         reason = paste0(
-          "Supported nesting audit passed: shared model family and constraints; ",
+          "Supported nesting review passed: shared model family and constraints; ",
           "the complex fit adds fixed facet interaction term(s): ",
           paste(added, collapse = ", "),
           "."
@@ -1583,7 +1668,7 @@ audit_compare_mfrm_nesting <- function(fits, labels) {
       return(list(
         eligible = TRUE,
         reason = paste0(
-          "Supported nesting audit passed: shared design/constraints with RSM nested inside PCM on step facet '",
+          "Supported nesting review passed: shared design/constraints with RSM nested inside PCM on step facet '",
           step_facet,
           "'."
         ),
@@ -1597,7 +1682,7 @@ audit_compare_mfrm_nesting <- function(fits, labels) {
   list(
     eligible = FALSE,
     reason = paste0(
-      "Automatic nesting audit currently supports only RSM nested inside PCM ",
+      "Automatic nesting review currently supports only RSM nested inside PCM ",
       "or same-family fixed facet-interaction extensions under shared design ",
       "and constraints."
     ),
@@ -1698,10 +1783,13 @@ audit_compare_mfrm_nesting <- function(fits, labels) {
 #'   facet-pair coverage
 #' - `linkage_summary`: person-facet connectivity diagnostics
 #' - `agreement`: observed-score inter-rater agreement bundle
+#' - `row_retention`: row counts before and after preparation filters
+#' - `preparation_notes`: structured notes for row drops, ID trimming, and
+#'   design conditions detected during preparation
 #' - `score_support`: minimal prepared score-support metadata used by
 #'   `summary(ds)$caveats`
 #'
-#' @seealso [fit_mfrm()], [audit_mfrm_anchors()]
+#' @seealso [fit_mfrm()], [review_mfrm_anchors()]
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
 #' ds <- describe_mfrm_data(
@@ -1883,7 +1971,10 @@ describe_mfrm_data <- function(data,
     Facets = length(prep$facet_names),
     Categories = prep$rating_max - prep$rating_min + 1,
     RatingMin = prep$rating_min,
-    RatingMax = prep$rating_max
+    RatingMax = prep$rating_max,
+    RatingRangeSource = prep$rating_range_source %||% "unknown",
+    RatingMinSource = prep$rating_min_source %||% "unknown",
+    RatingMaxSource = prep$rating_max_source %||% "unknown"
   )
 
   # Cross-tabulations between facet pairs (0.1.6 polish). Gives the
@@ -1932,10 +2023,15 @@ describe_mfrm_data <- function(data,
     facet_crosstabs = facet_crosstabs,
     linkage_summary = linkage_summary,
     agreement = agreement_bundle,
+    row_retention = as.data.frame(prep$row_retention %||% data.frame(), stringsAsFactors = FALSE),
+    preparation_notes = as.data.frame(prep$preparation_notes %||% data.frame(), stringsAsFactors = FALSE),
     score_support = list(
       data = data.frame(Score = sort(unique(df$Score))),
       rating_min = prep$rating_min,
       rating_max = prep$rating_max,
+      rating_range_source = prep$rating_range_source %||% "unknown",
+      rating_min_source = prep$rating_min_source %||% "unknown",
+      rating_max_source = prep$rating_max_source %||% "unknown",
       unused_score_categories = prep$unused_score_categories,
       score_map = prep$score_map
     )
@@ -1949,8 +2045,9 @@ describe_mfrm_data <- function(data,
 #' Convenience helper that replaces the standard non-`NA` missing-code
 #' sentinels used in SPSS / SAS / FACETS exports (`99`, `999`, `-1`,
 #' `"N"`, `"NA"`, `"n/a"`, `"."`, `""`) with `NA` across the columns
-#' you select. This is useful before calling [fit_mfrm()] on data exported
-#' with those conventions.
+#' you select. This is the R counterpart of the preprocessing UI in
+#' the companion Streamlit app and is useful before calling
+#' [fit_mfrm()] on data exported with those conventions.
 #'
 #' @param data A data frame.
 #' @param columns Character vector of column names to recode. Defaults
@@ -1965,7 +2062,7 @@ describe_mfrm_data <- function(data,
 #'
 #' @return The input `data` with the specified missing sentinels
 #'   replaced by `NA`. A `mfrm_missing_recoding` attribute records the
-#'   per-column replacement counts for audit logs.
+#'   per-column replacement counts for traceability logs.
 #'
 #' @seealso [describe_mfrm_data()], [fit_mfrm()].
 #'
@@ -2086,6 +2183,9 @@ print.mfrm_data_description <- function(x, ...) {
 #'   categories retained by the prepared score support
 #' - `facet_overview`: facet-level coverage summary
 #' - `agreement`: inter-rater agreement summary when available
+#' - `row_retention`: row counts before and after preparation filters
+#' - `preparation_notes`: structured preparation notes retained from
+#'   [describe_mfrm_data()]
 #' - `reporting_map`: manuscript-oriented guide to what is covered here versus
 #'   which companion outputs should be consulted
 #' - `caveats`: structured warning/review rows for score-support issues;
@@ -2132,10 +2232,12 @@ summary.mfrm_data_description <- function(object, digits = 3, top_n = 10, ...) {
   }
 
   agreement_tbl <- as.data.frame(object$agreement$summary %||% data.frame(), stringsAsFactors = FALSE)
+  row_retention <- as.data.frame(object$row_retention %||% data.frame(), stringsAsFactors = FALSE)
+  preparation_notes <- as.data.frame(object$preparation_notes %||% data.frame(), stringsAsFactors = FALSE)
   reporting_map <- data.frame(
     Area = c(
       "Sample / design counts",
-      "Missingness audit",
+      "Missingness review",
       "Score usage / category distribution",
       "Facet coverage",
       "Inter-rater agreement",
@@ -2168,6 +2270,15 @@ summary.mfrm_data_description <- function(object, digits = 3, top_n = 10, ...) {
   if (nrow(caveats) > 0 && "Message" %in% names(caveats)) {
     notes <- c(notes, as.character(caveats$Message))
   }
+  prep_review_messages <- if (nrow(preparation_notes) > 0L &&
+                              all(c("Severity", "Message") %in% names(preparation_notes))) {
+    preparation_notes$Message[
+      tolower(as.character(preparation_notes$Severity)) %in% c("review", "warning", "error")
+    ]
+  } else {
+    character(0)
+  }
+  notes <- c(notes, prep_review_messages)
 
   out <- list(
     overview = overview,
@@ -2175,6 +2286,8 @@ summary.mfrm_data_description <- function(object, digits = 3, top_n = 10, ...) {
     score_distribution = score_dist,
     facet_overview = facet_overview,
     agreement = agreement_tbl,
+    row_retention = row_retention,
+    preparation_notes = preparation_notes,
     reporting_map = reporting_map,
     caveats = caveats,
     notes = notes,
@@ -2205,6 +2318,13 @@ print.summary.mfrm_data_description <- function(x, ...) {
     cat("\nFacet coverage\n")
     print(round_numeric_df(as.data.frame(x$facet_overview), digits = digits), row.names = FALSE)
   }
+  if (!is.null(x$row_retention) && nrow(x$row_retention) > 0 &&
+      "DroppedRows" %in% names(x$row_retention) &&
+      any(suppressWarnings(as.numeric(x$row_retention$DroppedRows)) > 0, na.rm = TRUE)) {
+    cat("\nRow retention\n")
+    print(round_numeric_df(as.data.frame(x$row_retention), digits = digits), row.names = FALSE)
+  }
+  print_preparation_section(x$preparation_notes)
   if (!is.null(x$agreement) && nrow(x$agreement) > 0) {
     cat("\nInter-rater agreement\n")
     print(round_numeric_df(as.data.frame(x$agreement), digits = digits), row.names = FALSE)
@@ -2357,7 +2477,7 @@ plot.mfrm_data_description <- function(x,
   ))
 }
 
-#' Audit and normalize anchor/group-anchor tables
+#' Review and normalize anchor/group-anchor tables
 #'
 #' @param data A data.frame in long format (one row per rating event).
 #' @param person Column name for person IDs.
@@ -2373,7 +2493,7 @@ plot.mfrm_data_description <- function(x,
 #' @param missing_codes Optional. `NULL` (default) is a no-op;
 #'   `TRUE` or `"default"` converts the FACETS / SPSS / SAS sentinel
 #'   set to `NA` on the person, facets, and score columns before
-#'   auditing. Supply a character vector for a custom code set.
+#'   review. Supply a character vector for a custom code set.
 #' @param min_common_anchors Minimum anchored levels per linking facet used in
 #'   recommendations (default `5`).
 #' @param min_obs_per_element Minimum weighted observations per facet level used
@@ -2391,8 +2511,8 @@ plot.mfrm_data_description <- function(x,
 #' monitoring rater drift over time.
 #'
 #' This function applies the same preprocessing and key-resolution rules
-#' as `fit_mfrm()`, but returns an audit object so constraints can be
-#' checked *before* estimation.  Running the audit first helps avoid
+#' as `fit_mfrm()`, but returns a review object so constraints can be
+#' checked *before* estimation.  Running the review first helps avoid
 #' estimation failures caused by misspecified or data-incompatible
 #' anchors.
 #'
@@ -2419,10 +2539,10 @@ plot.mfrm_data_description <- function(x,
 #'
 #' @section Typical workflow:
 #' 1. Build candidate anchors (e.g., with [make_anchor_table()]).
-#' 2. Run `audit_mfrm_anchors(...)`.
+#' 2. Run `review_mfrm_anchors(...)`.
 #' 3. Resolve issues, then fit with [fit_mfrm()].
 #'
-#' @return A list of class `mfrm_anchor_audit` with:
+#' @return A list of class `mfrm_anchor_review` with:
 #' - `anchors`: cleaned anchor table used by estimation
 #' - `group_anchors`: cleaned group-anchor table used by estimation
 #' - `facet_summary`: counts of levels, constrained levels, and free levels
@@ -2442,34 +2562,35 @@ plot.mfrm_data_description <- function(x,
 #'   Anchor = c(0, 0.1),
 #'   stringsAsFactors = FALSE
 #' )
-#' aud <- audit_mfrm_anchors(
+#' review <- review_mfrm_anchors(
 #'   data = toy,
 #'   person = "Person",
 #'   facets = c("Rater", "Criterion"),
 #'   score = "Score",
 #'   anchors = anchors
 #' )
-#' aud$issue_counts
-#' summary(aud)
-#' p_aud <- plot(aud, draw = FALSE)
-#' p_aud$data$plot
+#' review$issue_counts
+#' summary(review)
+#' p_review <- plot(review, draw = FALSE)
+#' p_review$data$plot
+#' @name review_mfrm_anchors
 #' @export
-audit_mfrm_anchors <- function(data,
-                               person,
-                               facets,
-                               score,
-                               anchors = NULL,
-                               group_anchors = NULL,
-                               weight = NULL,
-                               rating_min = NULL,
-                               rating_max = NULL,
-                               keep_original = FALSE,
-                               missing_codes = NULL,
-                               min_common_anchors = 5L,
-                               min_obs_per_element = 30,
-                               min_obs_per_category = 10,
-                               noncenter_facet = "Person",
-                               dummy_facets = NULL) {
+review_mfrm_anchors <- function(data,
+                                person,
+                                facets,
+                                score,
+                                anchors = NULL,
+                                group_anchors = NULL,
+                                weight = NULL,
+                                rating_min = NULL,
+                                rating_max = NULL,
+                                keep_original = FALSE,
+                                missing_codes = NULL,
+                                min_common_anchors = 5L,
+                                min_obs_per_element = 30,
+                                min_obs_per_category = 10,
+                                noncenter_facet = "Person",
+                                dummy_facets = NULL) {
   prep <- prepare_mfrm_data(
     data = data,
     person_col = person,
@@ -2485,7 +2606,7 @@ audit_mfrm_anchors <- function(data,
   noncenter_facet <- sanitize_noncenter_facet(noncenter_facet, prep$facet_names)
   dummy_facets <- sanitize_dummy_facets(dummy_facets, prep$facet_names)
 
-  audit <- audit_anchor_tables(
+  review <- audit_anchor_tables(
     prep = prep,
     anchor_df = anchors,
     group_anchor_df = group_anchors,
@@ -2495,14 +2616,14 @@ audit_mfrm_anchors <- function(data,
     noncenter_facet = noncenter_facet,
     dummy_facets = dummy_facets
   )
-  class(audit) <- c("mfrm_anchor_audit", class(audit))
-  audit
+  class(review) <- unique(c("mfrm_anchor_review", class(review)))
+  review
 }
 
 #' @export
-print.mfrm_anchor_audit <- function(x, ...) {
+print.mfrm_anchor_review <- function(x, ...) {
   issue_total <- if (!is.null(x$issue_counts) && nrow(x$issue_counts) > 0) sum(x$issue_counts$N) else 0
-  cat("mfrm anchor audit\n")
+  cat("mfrm anchor review\n")
   cat("  issue rows: ", issue_total, "\n", sep = "")
 
   if (!is.null(x$issue_counts) && nrow(x$issue_counts) > 0) {
@@ -2529,15 +2650,15 @@ print.mfrm_anchor_audit <- function(x, ...) {
   invisible(x)
 }
 
-#' Summarize an anchor-audit object
+#' Summarize an anchor-review object
 #'
-#' @param object Output from [audit_mfrm_anchors()].
+#' @param object Output from [review_mfrm_anchors()].
 #' @param digits Number of digits for numeric rounding.
 #' @param top_n Maximum rows shown in issue previews.
 #' @param ... Reserved for generic compatibility.
 #'
 #' @details
-#' This summary provides a compact pre-estimation audit of anchor and
+#' This summary provides a compact pre-estimation review of anchor and
 #' group-anchor specifications.
 #'
 #' @section Interpreting output:
@@ -2551,18 +2672,18 @@ print.mfrm_anchor_audit <- function(x, ...) {
 #' resolve issues before final estimation.
 #'
 #' @section Typical workflow:
-#' 1. Run [audit_mfrm_anchors()] with intended anchors/group anchors.
-#' 2. Review `summary(aud)` and recommendations.
+#' 1. Run [review_mfrm_anchors()] with intended anchors/group anchors.
+#' 2. Review `summary(review)` and recommendations.
 #' 3. Revise anchor tables, then call [fit_mfrm()].
 #'
-#' @return An object of class `summary.mfrm_anchor_audit`.
-#' @seealso [audit_mfrm_anchors()], [fit_mfrm()]
+#' @return An object of class `summary.mfrm_anchor_review`.
+#' @seealso [review_mfrm_anchors()], [fit_mfrm()]
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
-#' aud <- audit_mfrm_anchors(toy, "Person", c("Rater", "Criterion"), "Score")
-#' summary(aud)
+#' review <- review_mfrm_anchors(toy, "Person", c("Rater", "Criterion"), "Score")
+#' summary(review)
 #' @export
-summary.mfrm_anchor_audit <- function(object, digits = 3, top_n = 10, ...) {
+summary.mfrm_anchor_review <- function(object, digits = 3, top_n = 10, ...) {
   digits <- max(0L, as.integer(digits))
   top_n <- max(1L, as.integer(top_n))
 
@@ -2584,7 +2705,7 @@ summary.mfrm_anchor_audit <- function(object, digits = 3, top_n = 10, ...) {
   }
 
   notes <- if (nrow(issue_counts) > 0) {
-    "Anchor-audit issues were detected. Review issue counts and recommendations."
+    "Anchor-review issues were detected. Review issue counts and recommendations."
   } else {
     "No anchor-table issue rows were detected."
   }
@@ -2598,16 +2719,16 @@ summary.mfrm_anchor_audit <- function(object, digits = 3, top_n = 10, ...) {
     notes = notes,
     digits = digits
   )
-  class(out) <- "summary.mfrm_anchor_audit"
+  class(out) <- "summary.mfrm_anchor_review"
   out
 }
 
 #' @export
-print.summary.mfrm_anchor_audit <- function(x, ...) {
+print.summary.mfrm_anchor_review <- function(x, ...) {
   digits <- as.integer(x$digits %||% 3L)
   if (!is.finite(digits)) digits <- 3L
 
-  cat("mfrm Anchor Audit Summary\n")
+  cat("mfrm Anchor Review Summary\n")
   if (!is.null(x$issue_counts) && nrow(x$issue_counts) > 0) {
     cat("\nIssue counts\n")
     print(round_numeric_df(as.data.frame(x$issue_counts), digits = digits), row.names = FALSE)
@@ -2635,9 +2756,9 @@ print.summary.mfrm_anchor_audit <- function(x, ...) {
   invisible(x)
 }
 
-#' Plot an anchor-audit object
+#' Plot an anchor-review object
 #'
-#' @param x Output from [audit_mfrm_anchors()].
+#' @param x Output from [review_mfrm_anchors()].
 #' @param y Reserved for generic compatibility.
 #' @param type Plot type: `"issue_counts"`, `"facet_constraints"`,
 #'   or `"level_observations"`.
@@ -2648,7 +2769,7 @@ print.summary.mfrm_anchor_audit <- function(x, ...) {
 #' @param ... Reserved for generic compatibility.
 #'
 #' @details
-#' Base-R visualization helper for anchor audit outputs.
+#' Base-R visualization helper for anchor-review outputs.
 #'
 #' @section Interpreting output:
 #' - `"issue_counts"`: volume of each issue class.
@@ -2656,25 +2777,25 @@ print.summary.mfrm_anchor_audit <- function(x, ...) {
 #' - `"level_observations"`: observation support across levels.
 #'
 #' @section Typical workflow:
-#' 1. Run [audit_mfrm_anchors()].
-#' 2. Start with `plot(aud, type = "issue_counts")`.
+#' 1. Run [review_mfrm_anchors()].
+#' 2. Start with `plot(review, type = "issue_counts")`.
 #' 3. Inspect constraint and support plots before fitting.
 #'
 #' @return A plotting-data object of class `mfrm_plot_data`.
-#' @seealso [audit_mfrm_anchors()], [make_anchor_table()]
+#' @seealso [review_mfrm_anchors()], [make_anchor_table()]
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
-#' aud <- audit_mfrm_anchors(toy, "Person", c("Rater", "Criterion"), "Score")
-#' p <- plot(aud, draw = FALSE)
+#' review <- review_mfrm_anchors(toy, "Person", c("Rater", "Criterion"), "Score")
+#' p <- plot(review, draw = FALSE)
 #' @export
-plot.mfrm_anchor_audit <- function(x,
-                                   y = NULL,
-                                   type = c("issue_counts", "facet_constraints", "level_observations"),
-                                   main = NULL,
-                                   palette = NULL,
-                                   label_angle = 45,
-                                   draw = TRUE,
-                                   ...) {
+plot.mfrm_anchor_review <- function(x,
+                                    y = NULL,
+                                    type = c("issue_counts", "facet_constraints", "level_observations"),
+                                    main = NULL,
+                                    palette = NULL,
+                                    label_angle = 45,
+                                    draw = TRUE,
+                                    ...) {
   type <- match.arg(tolower(as.character(type[1])), c("issue_counts", "facet_constraints", "level_observations"))
   pal <- resolve_palette(
     palette = palette,
@@ -2689,7 +2810,7 @@ plot.mfrm_anchor_audit <- function(x,
   if (type == "issue_counts") {
     tbl <- as.data.frame(x$issue_counts %||% data.frame(), stringsAsFactors = FALSE)
     if (nrow(tbl) == 0 || !all(c("Issue", "N") %in% names(tbl))) {
-      stop("Issue-count table is not available. Ensure audit_mfrm_anchors() was run with valid anchor inputs.", call. = FALSE)
+      stop("Issue-count table is not available. Ensure review_mfrm_anchors() was run with valid anchor inputs.", call. = FALSE)
     }
     tbl <- tbl |>
       dplyr::arrange(dplyr::desc(.data$N), .data$Issue)
@@ -2698,14 +2819,14 @@ plot.mfrm_anchor_audit <- function(x,
         height = suppressWarnings(as.numeric(tbl$N)),
         labels = as.character(tbl$Issue),
         col = pal["issues"],
-        main = if (is.null(main)) "Anchor-audit issue counts" else as.character(main[1]),
+        main = if (is.null(main)) "Anchor-review issue counts" else as.character(main[1]),
         ylab = "Rows",
         label_angle = label_angle,
         mar_bottom = 9.2
       )
     }
     return(invisible(new_mfrm_plot_data(
-      "anchor_audit",
+      "anchor_review",
       list(plot = "issue_counts", table = tbl)
     )))
   }
@@ -2713,7 +2834,7 @@ plot.mfrm_anchor_audit <- function(x,
   if (type == "facet_constraints") {
     tbl <- as.data.frame(x$facet_summary %||% data.frame(), stringsAsFactors = FALSE)
     if (nrow(tbl) == 0 || !all(c("Facet", "AnchoredLevels", "GroupedLevels", "FreeLevels") %in% names(tbl))) {
-      stop("Facet summary with constraint columns is not available. Ensure audit_mfrm_anchors() was run with valid anchor inputs.", call. = FALSE)
+      stop("Facet summary with constraint columns is not available. Ensure review_mfrm_anchors() was run with valid anchor inputs.", call. = FALSE)
     }
     if (isTRUE(draw)) {
       old_mar <- graphics::par("mar")
@@ -2751,14 +2872,14 @@ plot.mfrm_anchor_audit <- function(x,
       )
     }
     return(invisible(new_mfrm_plot_data(
-      "anchor_audit",
+      "anchor_review",
       list(plot = "facet_constraints", table = tbl)
     )))
   }
 
   tbl <- as.data.frame(x$design_checks$level_observation_summary %||% data.frame(), stringsAsFactors = FALSE)
   if (nrow(tbl) == 0 || !all(c("Facet", "MinObsPerLevel") %in% names(tbl))) {
-    stop("Level observation summary is not available. Ensure audit_mfrm_anchors() was run with valid anchor inputs.", call. = FALSE)
+    stop("Level observation summary is not available. Ensure review_mfrm_anchors() was run with valid anchor inputs.", call. = FALSE)
   }
   if (isTRUE(draw)) {
     barplot_rot45(
@@ -2777,7 +2898,7 @@ plot.mfrm_anchor_audit <- function(x,
     }
   }
   invisible(new_mfrm_plot_data(
-    "anchor_audit",
+    "anchor_review",
     list(plot = "level_observations", table = tbl)
   ))
 }
@@ -2799,7 +2920,7 @@ plot.mfrm_anchor_audit <- function(x,
 #' Anchor values should be exported from a well-fitting reference run
 #' with adequate sample size.  If the reference model has convergence
 #' issues or large misfit, the exported anchors may propagate
-#' instability.  Re-run [audit_mfrm_anchors()] on the receiving data
+#' instability.  Re-run [review_mfrm_anchors()] on the receiving data
 #' to verify compatibility before estimation.
 #'
 #' The `digits` parameter controls rounding precision.  Use at least 4
@@ -2817,10 +2938,10 @@ plot.mfrm_anchor_audit <- function(x,
 #' 3. Pass selected rows back into `fit_mfrm(..., anchors = ...)`.
 #'
 #' @return A data.frame with `Facet`, `Level`, and `Anchor`.
-#' @seealso [fit_mfrm()], [audit_mfrm_anchors()]
+#' @seealso [fit_mfrm()], [review_mfrm_anchors()]
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' anchors_tbl <- make_anchor_table(fit)
 #' head(anchors_tbl)
 #' summary(anchors_tbl$Anchor)
@@ -2888,6 +3009,13 @@ make_anchor_table <- function(fit,
 #'   \eqn{(\mathrm{MnSq} - 1)\sqrt{\mathit{df}/2}}, which is kept for
 #'   backward compatibility with earlier mfrmr summaries and with
 #'   FACETS' `WHEXACT=N` mode.
+#' @param fit_df_method Degrees-of-freedom convention used for fit ZSTD.
+#'   `"engine"` (default) keeps the package-native convention
+#'   `DF_Infit = sum(Var * Weight)` and `DF_Outfit = sum(Weight)`.
+#'   `"facets"` uses the FACETS/Wright-Masters fourth-moment approximation
+#'   `df = 2 / q^2` as the primary `InfitZSTD` / `OutfitZSTD` basis and caps
+#'   reported ZSTD values at +/-9. `"both"` keeps the engine convention as the
+#'   primary columns and adds `*_FACETS` companion columns for comparison.
 #' @param diagnostic_mode Diagnostic basis to compute: `"both"` (the
 #'   current default) computes both the residual/EAP-based stack and
 #'   the strict latent-integrated first-order marginal-fit companion;
@@ -2943,6 +3071,26 @@ make_anchor_table <- function(fit,
 #' - **PTMEA**: point-measure correlation (item-rest correlation in MFRM
 #'   context); positive values confirm alignment with the latent trait.
 #'
+#' The MnSq values and the ZSTD values should be read separately. `mfrmr` keeps
+#' the package-native engine df convention by default because it is the basis
+#' used by the R/Python/Julia validation engines. FACETS reports closely related
+#' MnSq values but standardizes them with a Wright-Masters fourth-moment df
+#' approximation (`df = 2 / q^2`) and caps reported ZSTD values. Use
+#' `fit_df_method = "both"` to review these two standardization conventions
+#' side by side without changing the primary `InfitZSTD` / `OutfitZSTD`
+#' columns.
+#'
+#' **Residual basis under MML.** For `method = "MML"` fits, residuals,
+#' MnSq, and ZSTD are computed at the EAP person measures from the
+#' marginal model. EAP measures are shrunken toward the population mean,
+#' so expected scores -- and therefore fit statistics -- differ
+#' systematically from JMLE-based engines such as FACETS, especially for
+#' persons with extreme raw scores. The df conventions above do not remove
+#' this difference: it is a residual-basis difference, not a
+#' standardization difference. Refit with `method = "JML"` when an
+#' external FACETS fit comparison requires a JMLE-style residual basis
+#' (see [facets_fit_review()]).
+#'
 #' **Misfit flagging guidelines (Bond & Fox, 2015):**
 #' - MnSq < 0.5: overfit (too predictable; may inflate reliability)
 #' - MnSq 0.5--1.5: productive for measurement
@@ -2972,6 +3120,15 @@ make_anchor_table <- function(fit,
 #' Facet-specific PCA can help localise where a stronger residual signal
 #' is concentrated.
 #'
+#' These residual-PCA summaries are not a DIMTEST/UNIDIM implementation.
+#' DIMTEST-style essential-unidimensionality tests work at an item-response
+#' layer and require an explicit decision about how many-facet rating data are
+#' collapsed, conditioned, or adjusted for rater/task/facet effects. For
+#' manuscripts, combine global/element fit, residual PCA, and local-dependence
+#' screens, and use limited wording such as "evidence consistent with essential
+#' unidimensionality under the specified facet structure" rather than
+#' "unidimensionality was established."
+#'
 #' @section Reading key components:
 #' Practical interpretation often starts with:
 #' - `overall_fit`: global infit/outfit and degrees of freedom.
@@ -2980,16 +3137,16 @@ make_anchor_table <- function(fit,
 #'   quantities as exploratory approximations.
 #' - `fit`: element-level misfit scan (`Infit`, `Outfit`, `ZSTD`).
 #' - `unexpected`, `fair_average`, `displacement`: targeted QC bundles.
-#'   For bounded `GPCM`, `fair_average` uses a slope-aware expected-score
-#'   construction and carries a caveat; treat it as a GPCM-specific screening
-#'   view rather than Rasch-family fair-M invariance evidence.
+#'   For bounded `GPCM`, `fair_average` is retained with an unavailable
+#'   status because that compatibility calculation has not yet been
+#'   validated for the generalized model.
 #' - `approximation_notes`: method notes for SE/CI/reliability summaries.
 #'
 #' @section Interpreting output:
 #' Start with `overall_fit` and `reliability`, then move to element-level
 #' diagnostics (`fit`) and targeted bundles (`unexpected`, `displacement`,
-#' `interrater`, `facets_chisq`, `fair_average`). For bounded `GPCM`,
-#' interpret `fair_average` with the caveat stored on that component.
+#' `interrater`, `facets_chisq`). Treat `fair_average` as available only for
+#' the `RSM` / `PCM` branch.
 #'
 #' Consistent signals across multiple components are typically more robust than
 #' a single isolated warning.  For example, an element flagged for both high
@@ -3013,13 +3170,18 @@ make_anchor_table <- function(fit,
 #' @return
 #' An object of class `mfrm_diagnostics` including:
 #' - `obs`: observed/expected/residual-level table
-#' - `measures`: facet/person fit table (`Infit`, `Outfit`, `ZSTD`, `PTMEA`)
+#' - `measures`: facet/person fit table (`Infit`, `Outfit`, `ZSTD`,
+#'   `PTMEA`, `ModelSE`, `RealSE`, `CI_Lower`, `CI_Upper`, `CI_Level`,
+#'   `CI_Method`)
 #' - `overall_fit`: overall fit summary
 #' - `fit`: element-level fit diagnostics
 #' - `reliability`: facet-level model/real separation and reliability
 #' - `precision_profile`: one-row summary of the active precision tier and its
 #'   recommended use
-#' - `precision_audit`: package-native checks for SE, CI, and reliability
+#' - `precision_review`: package-native checks for SE, CI, and reliability
+#' - `parameter_uncertainty`: MML observed-information uncertainty for
+#'   structural parameters when available (`steps`, and bounded-`GPCM`
+#'   `slopes` on both log and positive scales), plus covariance status metadata
 #' - `facet_precision`: facet-level precision summary by distribution basis and
 #'   SE mode
 #' - `facets_chisq`: fixed/random facet variability summary
@@ -3027,11 +3189,12 @@ make_anchor_table <- function(fit,
 #' - `interrater`: inter-rater agreement bundle (`summary`, `pairs`) including
 #'   agreement and rater-severity spread indices
 #' - `unexpected`: unexpected-response bundle
-#' - `fair_average`: adjusted-score reference bundle (placeholder only for
-#'   bounded `GPCM`)
+#' - `fair_average`: adjusted-score reference bundle (reported as unavailable
+#'   for bounded `GPCM`)
 #' - `displacement`: displacement diagnostics bundle
 #' - `approximation_notes`: method notes for SE/CI/reliability summaries
 #' - `diagnostic_basis`: guide to the statistical target of each diagnostic path
+#' - `fit_standardization`: guide to the df convention behind fit ZSTD values
 #' - `marginal_fit`: optional strict marginal-fit companion based on
 #'   posterior-expected first-order category counts
 #' - `residual_pca_overall`: optional overall PCA object
@@ -3044,13 +3207,13 @@ make_anchor_table <- function(fit,
 #' # the bundle has the expected slots. ~1 s on example_core.
 #' toy <- load_mfrmr_data("example_core")
 #' fit_quick <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                       method = "JML", maxit = 15)
+#'                       method = "JML", maxit = 30)
 #' diag_quick <- diagnose_mfrm(fit_quick, diagnostic_mode = "legacy",
 #'                              residual_pca = "none")
 #' summary(diag_quick)$overview[, c("Observations", "Facets", "Categories")]
 #'
 #' \donttest{
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' diag <- diagnose_mfrm(fit, diagnostic_mode = "both", residual_pca = "none")
 #' s_diag <- summary(diag)
 #' s_diag$overview[, c("Observations", "Facets", "Categories")]
@@ -3059,8 +3222,7 @@ make_anchor_table <- function(fit,
 #' # Look for: "No immediate warnings ..." in `key_warnings` is the
 #' #   "all clear" signal. Lines starting with "MnSq misfit:" name the
 #' #   element + Infit / Outfit values that fell outside the
-#' #   active MnSq screening band; review those first. The default band is
-#' #   0.5-1.5, but published and operational misfit bands vary.
+#' #   0.5-1.5 acceptance band; review those first.
 #' s_diag$facets_chisq
 #' # Look for: `FixedProb` < 0.05 means that facet's elements differ
 #' #   reliably under the fixed-effect "all elements equal" null. A
@@ -3080,7 +3242,7 @@ make_anchor_table <- function(fit,
 #' head(pca$overall_table)
 #'
 #' # Reporting route:
-#' prec <- precision_audit_report(fit, diagnostics = diag)
+#' prec <- precision_review_report(fit, diagnostics = diag)
 #' summary(prec)
 #' }
 #'
@@ -3091,9 +3253,8 @@ make_anchor_table <- function(fit,
 #'   convention.)
 #' - Wright, B. D., & Linacre, J. M. (1994). Reasonable mean-square
 #'   fit values. *Rasch Measurement Transactions, 8*(3), 370.
-#'   (Source for the broad 0.5-1.5 Infit / Outfit screening band used
-#'   as the package default; narrower reporting bands are also used in
-#'   applied literature.)
+#'   (Source for the 0.5-1.5 Infit / Outfit acceptance band that
+#'   `s_diag$key_warnings` and `misfit_thresholds` apply.)
 #' - Linacre, J. M. (1989). *Many-Facet Rasch Measurement*. MESA
 #'   Press. (FACETS Tables 6 + 7 correspond to the per-facet
 #'   element measures, fit, and chi-square heterogeneity screen
@@ -3105,11 +3266,14 @@ make_anchor_table <- function(fit,
 #' - Linacre, J. M. (2002). What do Infit and Outfit, Mean-square
 #'   and Standardized mean? *Rasch Measurement Transactions,
 #'   16*(2), 878.
+#' - Linacre, J. M. (2026). *A user's guide to Facets Rasch-model computer
+#'   programs*. Winsteps.com. (WHEXACT / FACETS standardized fit df notes.)
 #' @export
 diagnose_mfrm <- function(fit,
                           interaction_pairs = NULL,
                           top_n_interactions = 20,
                           whexact = FALSE,
+                          fit_df_method = c("engine", "facets", "both"),
                           diagnostic_mode = c("both", "legacy", "marginal_fit"),
                           residual_pca = c("none", "overall", "facet", "both"),
                           pca_max_factors = 10L) {
@@ -3117,6 +3281,7 @@ diagnose_mfrm <- function(fit,
     stop("`fit` must be an mfrm_fit object from fit_mfrm(). ",
          "Got: ", paste(class(fit), collapse = "/"), ".", call. = FALSE)
   }
+  fit_df_method <- match_fit_df_method(fit_df_method)
   diagnostic_mode <- match.arg(diagnostic_mode)
   residual_pca <- match.arg(tolower(residual_pca), c("none", "overall", "facet", "both"))
 
@@ -3125,6 +3290,7 @@ diagnose_mfrm <- function(fit,
     interaction_pairs = interaction_pairs,
     top_n_interactions = top_n_interactions,
     whexact = whexact,
+    fit_df_method = fit_df_method,
     diagnostic_mode = diagnostic_mode,
     residual_pca = residual_pca,
     pca_max_factors = pca_max_factors
@@ -3137,7 +3303,7 @@ diagnose_mfrm <- function(fit,
 #'
 #' Produce a side-by-side comparison of multiple [fit_mfrm()] results using
 #' information criteria, log-likelihood, and parameter counts. When exactly
-#' two models are supplied and the current conservative nesting audit passes,
+#' two models are supplied and the current conservative nesting review passes,
 #' a likelihood-ratio test is included.
 #'
 #' @param ... Two or more `mfrm_fit` objects to compare.
@@ -3151,7 +3317,7 @@ diagnose_mfrm <- function(fit,
 #'   known to be nested and fitted with the same likelihood basis on the same
 #'   observations. The default is `FALSE`, in which case no likelihood-ratio
 #'   test is reported. When `TRUE`, the function still runs a conservative
-#'   structural audit and computes the LRT only for supported nesting patterns.
+#'   structural nesting review and computes the LRT only for supported nesting patterns.
 #'
 #' @details
 #' Models should be fit to the **same data** (same rows, same person/facet
@@ -3163,6 +3329,9 @@ diagnose_mfrm <- function(fit,
 #' converge successfully. Raw `AIC` and `BIC` values are still shown for each
 #' model, but `Delta_*`, weights, and preferred-model summaries are suppressed
 #' when the likelihood basis is not comparable enough for primary reporting.
+#' The comparison table records both row count (`nobs`) and the sample-size
+#' basis used for the BIC penalty (`ICSampleSize`, `ICSampleSizeBasis`); for
+#' weighted fits this is the sum of weights rather than the number of rows.
 #'
 #' **Nesting**: Two models are *nested* when one is a special case of the
 #' other obtained by imposing equality constraints.  The most common
@@ -3172,7 +3341,7 @@ diagnose_mfrm <- function(fit,
 #' usual sense---use information criteria rather than LRT for that
 #' comparison.
 #'
-#' In the **current `mfrmr` model space**, the automatic nesting audit is
+#' In the **current `mfrmr` model space**, the automatic nesting review is
 #' intentionally conservative. It currently supports two fixed-effect
 #' restrictions under shared data and shared constraints:
 #' - `RSM` nested inside `PCM` when the `PCM` fit has an explicit
@@ -3185,7 +3354,7 @@ diagnose_mfrm <- function(fit,
 #' automatically promoted to LRT claims.
 #'
 #' The **likelihood-ratio test (LRT)** is reported only when exactly two
-#' models are supplied, `nested = TRUE`, the structural audit passes, and the
+#' models are supplied, `nested = TRUE`, the structural nesting review passes, and the
 #' difference in the number of parameters is positive:
 #'
 #' \deqn{\Lambda = -2 (\ell_{\mathrm{restricted}} - \ell_{\mathrm{full}})
@@ -3222,8 +3391,8 @@ diagnose_mfrm <- function(fit,
 #' @section What this comparison does not justify:
 #' - Do not treat AIC/BIC differences as primary evidence when
 #'   `table$ICComparable` is `FALSE`.
-#' - Do not interpret the LRT unless `nested = TRUE` and the structural audit
-#'   in `comparison_basis$nesting_audit` passes.
+#' - Do not interpret the LRT unless `nested = TRUE` and the structural nesting review
+#'   in `comparison_basis$nesting_review` passes.
 #' - Same-family additive-vs-interaction fits are considered nested only when
 #'   all other structural settings match and the smaller model's
 #'   `facet_interactions` set is a subset of the larger model's set.
@@ -3247,10 +3416,10 @@ diagnose_mfrm <- function(fit,
 #' - `table`: first-pass comparison table; start with `ICComparable`,
 #'   `Model`, `Method`, `AIC`, and `BIC`.
 #' - `comparison_basis`: records whether IC and LRT claims are defensible for
-#'   the supplied models. Inspect `comparison_basis$nesting_audit$relation`
+#'   the supplied models. Inspect `comparison_basis$nesting_review$relation`
 #'   and `reason` before reading any LRT output.
 #' - `lrt`: nested-model test summary, present only when the requested and
-#'   audited conditions are met.
+#'   reviewed conditions are met.
 #' - `preferred`: candidate preferred by each criterion when those summaries
 #'   are available.
 #'
@@ -3269,15 +3438,17 @@ diagnose_mfrm <- function(fit,
 #' @return
 #' An object of class `mfrm_comparison` (named list) with:
 #' - `table`: data.frame of model-level statistics (LogLik, AIC, BIC,
-#'   Delta_AIC, AkaikeWeight, Delta_BIC, BICWeight, npar, nobs, Model,
-#'   Method, Converged, ICComparable).
+#'   Delta_AIC, AkaikeWeight, Delta_BIC, BICWeight, npar, nobs, WeightedN,
+#'   ICSampleSize, ICSampleSizeBasis, Model, Method, Converged, ICComparable).
 #' - `lrt`: data.frame with likelihood-ratio test result (only when two models
 #'   are supplied and `nested = TRUE`). Contains `ChiSq`, `df`, `p_value`.
 #' - `evidence_ratios`: data.frame of pairwise Akaike-weight ratios (Model1,
 #'   Model2, EvidenceRatio). `NULL` when weights cannot be computed.
 #' - `preferred`: named list with the preferred model label by each criterion.
 #' - `comparison_basis`: list describing whether IC and LRT comparisons were
-#'   considered comparable. Includes a conservative `nesting_audit`.
+#'   considered comparable. Includes a conservative `nesting_review` plus
+#'   `lrt_status` / `lrt_reason` so withheld LRTs are explicit rather than
+#'   silently absent.
 #'
 #' @seealso [fit_mfrm()], [diagnose_mfrm()]
 #' @examples
@@ -3285,10 +3456,10 @@ diagnose_mfrm <- function(fit,
 #' toy <- load_mfrmr_data("example_core")
 #'
 #' fit_rsm <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                      method = "MML", model = "RSM", maxit = 25)
+#'                      method = "MML", model = "RSM", quad_points = 7, maxit = 30)
 #' fit_pcm <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                      method = "MML", model = "PCM",
-#'                      step_facet = "Criterion", maxit = 25)
+#'                      step_facet = "Criterion", quad_points = 7, maxit = 30)
 #' comp <- compare_mfrm(fit_rsm, fit_pcm, labels = c("RSM", "PCM"))
 #' comp$table
 #' comp$evidence_ratios
@@ -3390,6 +3561,26 @@ compare_mfrm <- function(..., labels = NULL, warn_constraints = TRUE, nested = F
     f <- fits[[i]]
     s <- f$summary
     nobs <- if (!is.null(f$prep$data)) nrow(f$prep$data) else NA_integer_
+    weighted_n <- if (!is.null(f$config$weight_col) &&
+        !is.null(f$prep$data) && "Weight" %in% names(f$prep$data)) {
+      sum(f$prep$data$Weight, na.rm = TRUE)
+    } else if (is.finite(nobs)) {
+      as.numeric(nobs)
+    } else {
+      NA_real_
+    }
+    summary_n <- if ("N" %in% names(s)) {
+      suppressWarnings(as.numeric(s$N[1]))
+    } else {
+      NA_real_
+    }
+    ic_sample_size <- if (is.finite(summary_n)) summary_n else weighted_n
+    ic_sample_size_basis <- if (!is.null(f$config$weight_col) &&
+        !is.null(f$prep$data) && "Weight" %in% names(f$prep$data)) {
+      "sum_weights"
+    } else {
+      "row_count"
+    }
     npar <- if (!is.null(f$opt$par)) length(f$opt$par) else NA_integer_
     method <- if (!is.null(f$config$method)) toupper(f$config$method[1]) else NA_character_
     method <- ifelse(identical(method, "JMLE"), "JML", method)
@@ -3398,6 +3589,9 @@ compare_mfrm <- function(..., labels = NULL, warn_constraints = TRUE, nested = F
       Model     = if (!is.null(f$config$model)) toupper(f$config$model[1]) else NA_character_,
       Method    = method,
       nobs      = nobs,
+      WeightedN = weighted_n,
+      ICSampleSize = ic_sample_size,
+      ICSampleSizeBasis = ic_sample_size_basis,
       npar      = npar,
       LogLik    = if ("LogLik" %in% names(s)) s$LogLik[1] else NA_real_,
       AIC       = if ("AIC" %in% names(s)) s$AIC[1] else NA_real_,
@@ -3496,25 +3690,57 @@ compare_mfrm <- function(..., labels = NULL, warn_constraints = TRUE, nested = F
 
   # -- likelihood-ratio test (two models only) --
   lrt <- NULL
-  nesting_audit <- audit_compare_mfrm_nesting(fits, labels = labels)
-  if (isTRUE(nested) && length(fits) == 2) {
-    if (!same_method || !same_nobs || !same_data || !all_converged || !all_mml) {
+  lrt_status <- if (isTRUE(nested)) "requested" else "not_requested"
+  lrt_reason <- if (isTRUE(nested)) {
+    "Likelihood-ratio test was requested but not yet evaluated."
+  } else {
+    "Likelihood-ratio test was not requested; set `nested = TRUE` only for supported nested comparisons."
+  }
+  nesting_review <- audit_compare_mfrm_nesting(fits, labels = labels)
+  if (isTRUE(nested)) {
+    if (length(fits) != 2L) {
+      lrt_status <- "not_computed"
+      lrt_reason <- "Likelihood-ratio testing requires exactly two fitted models."
+      warning("`nested = TRUE` was requested, but LRT requires exactly two fitted models. LRT was not computed.",
+              call. = FALSE)
+    } else if (!same_method || !same_nobs || !same_data || !all_converged || !all_mml) {
+      lrt_status <- "not_computed"
+      lrt_reason <- paste(
+        "Models do not share the same formal MML likelihood basis,",
+        "observation set, and convergence status."
+      )
       warning(
         "`nested = TRUE` was requested, but the models do not share the same ",
         "formal MML likelihood basis, observation set, and convergence status. LRT was not computed.",
         call. = FALSE
       )
-    } else if (!isTRUE(nesting_audit$eligible)) {
+    } else if (!isTRUE(nesting_review$eligible)) {
+      lrt_status <- "not_computed"
+      lrt_reason <- paste0("Structural nesting review did not pass: ", nesting_review$reason)
       warning(
-        "`nested = TRUE` was requested, but the structural nesting audit did not pass. ",
-        nesting_audit$reason,
+        "`nested = TRUE` was requested, but the structural nesting review did not pass. ",
+        nesting_review$reason,
         " LRT was not computed.",
         call. = FALSE
       )
     } else {
       ll <- tbl$LogLik
       np <- tbl$npar
-      if (all(is.finite(ll)) && all(is.finite(np)) && np[1] != np[2]) {
+      if (!all(is.finite(ll)) || !all(is.finite(np))) {
+        lrt_status <- "not_computed"
+        lrt_reason <- "Log-likelihoods or parameter counts were non-finite."
+        warning(
+          "`nested = TRUE` was requested, but at least one log-likelihood or parameter count was non-finite. LRT was not computed.",
+          call. = FALSE
+        )
+      } else if (np[1] == np[2]) {
+        lrt_status <- "not_computed"
+        lrt_reason <- "Compared models have the same number of free parameters."
+        warning(
+          "`nested = TRUE` was requested, but the compared models have the same number of free parameters. LRT was not computed.",
+          call. = FALSE
+        )
+      } else {
         idx_simple <- which.min(np)
         idx_complex <- which.max(np)
         chi_sq <- 2 * (ll[idx_complex] - ll[idx_simple])
@@ -3529,6 +3755,23 @@ compare_mfrm <- function(..., labels = NULL, warn_constraints = TRUE, nested = F
             p_value  = p_val
           )
           preferred$LRT <- if (p_val < 0.05) tbl$Label[idx_complex] else tbl$Label[idx_simple]
+          lrt_status <- "computed"
+          lrt_reason <- "Likelihood-ratio test computed after the structural nesting review passed."
+        } else {
+          lrt_status <- "not_computed"
+          lrt_reason <- if (!is.finite(chi_sq) || !is.finite(df_diff)) {
+            "Likelihood-ratio statistic or parameter-count difference was non-finite."
+          } else if (df_diff <= 0) {
+            "Parameter-count difference was not positive."
+          } else {
+            "The more complex model had a lower log-likelihood, producing a negative likelihood-ratio statistic."
+          }
+          warning(
+            "`nested = TRUE` was requested, but the LRT statistic was not interpretable. ",
+            lrt_reason,
+            " LRT was not computed.",
+            call. = FALSE
+          )
         }
       }
     }
@@ -3565,7 +3808,9 @@ compare_mfrm <- function(..., labels = NULL, warn_constraints = TRUE, nested = F
     all_converged = all_converged,
     ic_comparable = ic_comparable,
     nested_requested = isTRUE(nested),
-    nesting_audit = nesting_audit
+    nesting_review = nesting_review,
+    lrt_status = lrt_status,
+    lrt_reason = lrt_reason
   )
 
   out <- list(
@@ -3624,9 +3869,14 @@ print.summary.mfrm_comparison <- function(x, ...) {
     cat(sprintf("  %s vs %s\n", x$lrt$Simple[1], x$lrt$Complex[1]))
   } else if (isTRUE(x$comparison_basis$nested_requested)) {
     cat("\nLikelihood-ratio test was not reported.\n")
-    audit <- x$comparison_basis$nesting_audit %||% list()
-    if (!is.null(audit$reason) && nzchar(audit$reason)) {
-      cat("  Nesting audit:", audit$reason, "\n")
+    if (!is.null(x$comparison_basis$lrt_status) &&
+        !is.null(x$comparison_basis$lrt_reason)) {
+      cat("  LRT status:", x$comparison_basis$lrt_status, "\n")
+      cat("  Reason:", x$comparison_basis$lrt_reason, "\n")
+    }
+    review <- x$comparison_basis$nesting_review %||% list()
+    if (!is.null(review$reason) && nzchar(review$reason)) {
+      cat("  Nesting review:", review$reason, "\n")
     }
   }
 

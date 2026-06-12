@@ -2,7 +2,7 @@
 % Please edit documentation in R/api-advanced.R
 \name{compute_information}
 \alias{compute_information}
-\title{Compute design-weighted precision curves for ordered Rasch-family fits}
+\title{Compute design-weighted precision curves for ordered many-facet fits}
 \usage{
 compute_information(fit, theta_range = c(-6, 6), theta_points = 201L)
 }
@@ -28,13 +28,14 @@ contribution value retained under that column name for compatibility.
 }
 \description{
 Calculates design-weighted score-variance curves across the latent
-trait (theta) for a fitted ordered-category many-facet Rasch model. Returns both
-an overall precision curve (\verb{$tif}) and per-facet-level contribution
-curves (\verb{$iif}) based on the realized observation pattern.
+trait (theta) for a fitted ordered-category \code{RSM}, \code{PCM}, or bounded
+\code{GPCM} model. Returns both an overall precision curve (\verb{$tif}) and
+per-facet-level contribution curves (\verb{$iif}) based on the realized
+observation pattern.
 }
 \details{
-For a polytomous Rasch model with K+1 categories, the score variance at
-theta for one observed design cell is:
+For \code{RSM} / \code{PCM}, the score variance at theta for one observed design cell
+is:
 \deqn{I(\theta) = \sum_{k=0}^{K} P_k(\theta) \left(k - E(\theta)\right)^2}
 where \eqn{P_k} is the category probability and \eqn{E(\theta)} is the
 expected score at theta. In \code{mfrmr}, these cell-level variances are then
@@ -135,7 +136,7 @@ of an EM algorithm}. Applied Psychological Measurement, 16(2),
 derivative used by all GPCM helpers in \code{mfrmr}.)
 \item Muraki, E. (1993). \emph{Information functions of the generalized
 partial credit model}. Applied Psychological Measurement, 17(4),
-351-363. \doi{10.1177/014662169301700402} (Equation 10 derives the
+351-363. \doi{10.1177/014662169301700403} (Equation 10 derives the
 item information function for the GPCM,
 \eqn{I_j(\theta) = D^2 a_j^2 \mathrm{Var}(T \mid \theta)}, by
 applying Samejima's (1974) polytomous information formula to the
@@ -179,7 +180,7 @@ curve in \verb{$iif}.
 
 Compare the precision peak with person/facet locations from a Wright map or
 related diagnostics. If you need to decide how strongly SE/CI language can
-be used in reporting, follow with \code{\link[=precision_audit_report]{precision_audit_report()}}.
+be used in reporting, follow with \code{\link[=precision_review_report]{precision_review_report()}}.
 }
 
 \section{Typical workflow}{
@@ -196,7 +197,7 @@ be used in reporting, follow with \code{\link[=precision_audit_report]{precision
 \examples{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                 method = "JML", model = "RSM", maxit = 25)
+                 method = "JML", model = "RSM", maxit = 30)
 info <- compute_information(fit)
 head(info$tif)
 info$tif$Theta[which.max(info$tif$Information)]

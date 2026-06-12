@@ -46,7 +46,7 @@ A named list with:
 \itemize{
 \item \code{table}: iteration history
 \item \code{summary}: one-row convergence summary
-\item \code{orientation_audit}: interaction-facet sign audit
+\item \code{orientation_review}: interaction-facet sign review
 \item \code{settings}: resolved reporting options
 \item \code{direction_note}: one-line interpretive note describing which
 direction the iteration moved (carried from the bias estimator;
@@ -59,7 +59,7 @@ the underlying estimator does not emit one
 \description{
 This report is NOT an alias of \code{\link[=bias_interaction_report]{bias_interaction_report()}} despite the
 similar name. It focuses on the \strong{recalibration path} of a bias run:
-iteration table, convergence summary, and orientation audit. Use this
+iteration table, convergence summary, and orientation review. Use this
 to confirm that the bias recalibration itself converged; use
 \code{\link[=bias_interaction_report]{bias_interaction_report()}} to review the ranked flagged cells from
 the converged run.
@@ -67,12 +67,12 @@ the converged run.
 \details{
 This report focuses on the recalibration path used by \code{\link[=estimate_bias]{estimate_bias()}}.
 It provides a package-native counterpart to legacy iteration printouts by
-exposing the iteration table, convergence summary, and orientation audit in
+exposing the iteration table, convergence summary, and orientation review in
 one bundle.
 }
 \examples{
 toy <- load_mfrmr_data("example_bias")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
+fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 out <- bias_iteration_report(fit, diagnostics = diag, facet_a = "Rater", facet_b = "Criterion")
 summary(out)

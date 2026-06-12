@@ -8,10 +8,10 @@ plot_residual_pca(
   x,
   mode = c("overall", "facet"),
   facet = NULL,
-  plot_type = c("scree", "loadings"),
+  plot_type = c("scree", "parallel_scree", "parallel_excess", "loadings"),
   component = 1L,
   top_n = 20L,
-  preset = c("standard", "publication", "compact"),
+  preset = c("standard", "publication", "compact", "monochrome"),
   draw = TRUE
 )
 }
@@ -22,20 +22,22 @@ plot_residual_pca(
 
 \item{facet}{Facet name for \code{mode = "facet"}.}
 
-\item{plot_type}{\code{"scree"} or \code{"loadings"}.}
+\item{plot_type}{\code{"scree"}, \code{"parallel_scree"},
+\code{"parallel_excess"}, or \code{"loadings"}.}
 
 \item{component}{Component index for loadings plot.}
 
 \item{top_n}{Maximum number of variables shown in loadings plot.}
 
-\item{preset}{Visual preset (\code{"standard"}, \code{"publication"}, or \code{"compact"}).}
+\item{preset}{Visual preset (\code{"standard"}, \code{"publication"}, \code{"compact"}, or \code{"monochrome"}).}
 
 \item{draw}{If \code{TRUE}, draws the plot using base graphics.}
 }
 \value{
 A named list of plotting data (class \code{mfrm_plot_data}) with:
 \itemize{
-\item \code{plot}: \code{"scree"} or \code{"loadings"}
+\item \code{plot}: \code{"scree"}, \code{"parallel_scree"}, \code{"parallel_excess"}, or
+\code{"loadings"}
 \item \code{mode}: \code{"overall"} or \code{"facet"}
 \item \code{facet}: facet name (or \code{NULL})
 \item \code{title}: plot title text
@@ -56,6 +58,10 @@ Visualize residual PCA results
 Plot types:
 \itemize{
 \item \code{"scree"}: component vs eigenvalue line plot
+\item \code{"parallel_scree"}: observed eigenvalues with residual-permutation
+parallel-analysis mean and upper cutoff
+\item \code{"parallel_excess"}: observed eigenvalue minus the parallel-analysis
+cutoff by component
 \item \code{"loadings"}: horizontal bar chart of top absolute loadings
 }
 
@@ -67,8 +73,11 @@ For \code{mode = "facet"} and \code{facet = NULL}, the first available facet is 
 \item \code{plot_type = "scree"}: look for dominant early components relative
 to later components and the unit-eigenvalue reference line. Treat
 this as exploratory residual-structure screening, not a standalone
-unidimensionality test. Use \code{\link[=plot_residual_dimensionality]{plot_residual_dimensionality()}} when
-the plot should include a simulated parallel-analysis threshold.
+unidimensionality test or a DIMTEST/UNIDIM substitute.
+\item \code{plot_type = "parallel_scree"} or \code{"parallel_excess"}: use only after
+running \code{\link[=analyze_residual_pca]{analyze_residual_pca()}} with \code{parallel = TRUE}. Components
+above the residual-permutation cutoff are candidates for follow-up,
+not proof of multidimensionality.
 \item \code{plot_type = "loadings"}: identifies variables/elements driving each
 component; inspect both sign and absolute magnitude.
 }
@@ -91,12 +100,17 @@ toy_full <- load_mfrmr_data("example_core")
 toy_people <- unique(toy_full$Person)[1:24]
 toy <- toy_full[match(toy_full$Person, toy_people, nomatch = 0L) > 0L, , drop = FALSE]
 fit <- suppressWarnings(
-  fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 15)
+  fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 )
 diag <- diagnose_mfrm(fit, residual_pca = "overall")
 pca <- analyze_residual_pca(diag, mode = "overall")
 plt <- plot_residual_pca(pca, mode = "overall", plot_type = "scree", draw = FALSE)
 head(plt$data)
+\donttest{
+pca_pa <- analyze_residual_pca(diag, mode = "overall", parallel = TRUE, parallel_reps = 10)
+pa <- plot_residual_pca(pca_pa, mode = "overall", plot_type = "parallel_scree", draw = FALSE)
+head(pa$data)
+}
 plt_load <- plot_residual_pca(
   pca, mode = "overall", plot_type = "loadings", component = 1, draw = FALSE
 )
@@ -106,6 +120,5 @@ if (interactive()) {
 }
 }
 \seealso{
-\code{\link[=analyze_residual_pca]{analyze_residual_pca()}}, \code{\link[=diagnose_mfrm]{diagnose_mfrm()}},
-\code{\link[=check_residual_dimensionality]{check_residual_dimensionality()}}, \code{\link[=plot_residual_dimensionality]{plot_residual_dimensionality()}}
+\code{\link[=analyze_residual_pca]{analyze_residual_pca()}}, \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}
 }

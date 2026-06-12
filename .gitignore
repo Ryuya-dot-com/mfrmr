@@ -37,20 +37,6 @@ analysis/
 
 # R history
 .Rhistory
-.RData
-
-# local agent / assistant state
-.claude/
-.codex/
-
-# local research and planning scratch
-Reading/
-Simulation/
-design-notes/
-inst/references/M[0-9]_*.md
-inst/references/MFRMR_EXECUTION_PROTOCOL_*.md
-inst/references/PUBLIC_RELEASE_READINESS_AUDIT_*.md
-inst/references/MAINTENANCE_AND_ROADMAP_CHECKLIST_*.md
 
 # local package repository artifacts
 PACKAGES
@@ -60,3 +46,4 @@ PACKAGES.rds
 # local scratch directories
 Library/
 Outputs/
+validation-results/

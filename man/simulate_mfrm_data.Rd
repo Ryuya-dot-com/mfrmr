@@ -2,7 +2,7 @@
 % Please edit documentation in R/api-simulation.R
 \name{simulate_mfrm_data}
 \alias{simulate_mfrm_data}
-\title{Simulate long-format many-facet Rasch data for design studies}
+\title{Simulate long-format ordered many-facet data for design studies}
 \usage{
 simulate_mfrm_data(
   n_person = 50,
@@ -26,6 +26,7 @@ simulate_mfrm_data(
   thresholds = NULL,
   slopes = NULL,
   assignment = NULL,
+  sparse_controls = NULL,
   sim_spec = NULL
 )
 }
@@ -80,23 +81,34 @@ vary across levels. Currently \code{"Criterion"} and \code{"Rater"} are supporte
 \item{slope_facet}{Slope facet used when \code{model = "GPCM"}. The current
 bounded \code{GPCM} branch requires \code{slope_facet == step_facet}.}
 
-\item{thresholds}{Optional threshold specification. Use either a numeric
-vector of common thresholds or a data frame with columns \code{StepFacet},
-\code{Step}/\code{StepIndex}, and \code{Estimate}.}
+\item{thresholds}{Optional threshold specification. Use a numeric vector of
+common thresholds; a named list such as \code{list(C01 = c(-1, 0, 1))}; a
+numeric matrix with one row per \code{StepFacet} and one column per step; or a
+long data frame with columns \code{StepFacet}, \code{Step}/\code{StepIndex}, and
+\code{Estimate}.}
 
 \item{slopes}{Optional slope specification used when \code{model = "GPCM"}.
 Use either a numeric vector aligned to the generated slope-facet levels or
-a data frame with columns \code{SlopeFacet} and \code{Estimate}. When omitted,
-slopes default to 1 for every slope-facet level, giving an exact \code{PCM}
-reduction.}
+a data frame with columns \code{SlopeFacet} and \code{Estimate}. Supplied slopes are
+treated as relative discriminations and normalized to the package's
+geometric-mean-one identification convention on the log scale. When
+omitted, slopes default to 1 for every slope-facet level, giving an exact
+\code{PCM} reduction.}
 
 \item{assignment}{Assignment design. \code{"crossed"} means every person sees
 every rater; \code{"rotating"} uses a balanced rotating subset; \code{"resampled"}
 reuses person-level rater-assignment profiles stored in \code{sim_spec};
-\code{"skeleton"} reuses an observed response skeleton stored in \code{sim_spec},
-including optional \code{Group}/\code{Weight} columns when available. When omitted,
-the function chooses \code{"crossed"} if
+\code{"sparse_linked"} uses an incomplete rating design with optional linking
+persons; \code{"skeleton"} reuses an observed response skeleton stored in
+\code{sim_spec}, including optional \code{Group}/\code{Weight} columns when available.
+When omitted, the function chooses \code{"crossed"} if
 \code{raters_per_person == n_rater}, otherwise \code{"rotating"}.}
+
+\item{sparse_controls}{Optional named list used when
+\code{assignment = "sparse_linked"}. Supported entries are \code{link_fraction},
+\code{link_persons}, \code{link_raters_per_person}, \code{assignment_mode}, and
+\code{min_common_persons_per_rater_pair}. See \code{\link[=build_mfrm_sim_spec]{build_mfrm_sim_spec()}} for the
+same contract.}
 
 \item{sim_spec}{Optional output from \code{\link[=build_mfrm_sim_spec]{build_mfrm_sim_spec()}} or
 \code{\link[=extract_mfrm_sim_spec]{extract_mfrm_sim_spec()}}. When supplied, it defines the generator setup;
@@ -118,10 +130,11 @@ included. If a weighted response skeleton is reused, a \code{Weight} column is
 also included.
 }
 \description{
-Simulate long-format many-facet Rasch data for design studies
+Simulate long-format ordered many-facet data for design studies
 }
 \details{
-This function generates synthetic MFRM data from the Rasch model.
+This function generates synthetic ordered many-facet data under \code{RSM},
+\code{PCM}, or the package's bounded \code{GPCM} branch.
 The data-generating process is:
 \enumerate{
 \item Draw person abilities: \eqn{\theta_n \sim N(0, \texttt{theta\_sd}^2)}
@@ -162,21 +175,25 @@ Threshold handling is intentionally explicit:
 \item if \code{thresholds = NULL}, common equally spaced thresholds are generated
 from \code{step_span}
 \item if \code{thresholds} is a numeric vector, it is used as one common threshold set
-\item if \code{thresholds} is a data frame, threshold values may vary by \code{StepFacet}
-(currently \code{Criterion} or \code{Rater})
+\item if \code{thresholds} is a named list, numeric matrix, or data frame, threshold
+values may vary by \code{StepFacet} (currently \code{Criterion} or \code{Rater})
 }
 
 For bounded \code{GPCM}, the generator now requires an explicit slope
 contract in parallel with the threshold table. The current public branch
-keeps \code{slope_facet == step_facet} and uses the internal \code{category_prob_gpcm()}
-helper for
-response sampling. Design-planning and forecasting helpers reuse this
-slope-aware contract as caveated simulation/refit screening routes.
+keeps \code{slope_facet == step_facet}, normalizes supplied slopes to the same
+geometric-mean-one log-slope identification used by \code{\link[=fit_mfrm]{fit_mfrm()}}, and uses
+the internal \code{category_prob_gpcm()} helper for response sampling. Broader
+arbitrary-facet planning remains restricted until that slope-aware contract
+is generalized beyond the current role-based design, population-forecasting,
+diagnostic-screening, and signal-detection helpers.
 
 Assignment handling is also explicit:
 \itemize{
 \item \code{"crossed"} uses the full person x rater x criterion design
 \item \code{"rotating"} assigns a deterministic rotating subset of raters per person
+\item \code{"sparse_linked"} assigns most persons to an incomplete rater subset and
+assigns a configurable set of linking persons to a larger rater set
 \item \code{"resampled"} reuses empirical person-level rater profiles stored in
 \code{sim_spec$assignment_profiles}, optionally carrying over person-level
 \code{Group}
@@ -184,6 +201,17 @@ Assignment handling is also explicit:
 skeleton stored in \code{sim_spec$design_skeleton}, optionally carrying over
 \code{Group} and \code{Weight}
 }
+
+Sparse linked simulation is intended for planned-missing rating designs in
+which connectivity is maintained through common linking persons. The
+returned \code{mfrm_sparse_design} attribute summarizes design density, planned
+missingness, rater coverage, and rater-pair common-person counts. These
+summaries are design diagnostics, not model-fit statistics or universal
+adequacy thresholds. This branch follows sparse rater-mediated assessment
+design work by Wind, Jones, and Grajeda (2023,
+doi:10.1177/01466216231182148), Wind and Jones (2018,
+doi:10.1177/0013164417703733), and DeMars, Shapovalov, and Hathcoat
+(2023).
 
 For more controlled workflows, build a reusable simulation specification
 first via \code{\link[=build_mfrm_sim_spec]{build_mfrm_sim_spec()}} or derive one from an observed fit with
@@ -200,6 +228,9 @@ the simulation specification stores an active latent-regression generator,
 including model-matrix xlevel and contrast provenance for categorical
 covariates
 \item \code{mfrm_simulation_spec}: generation settings (for reproducibility)
+\item \code{mfrm_sparse_design}: sparse-design diagnostics when
+\code{assignment = "sparse_linked"}, including design density, planned missing
+rate, rater coverage, and rater-pair common-person counts
 }
 }
 \section{Interpreting output}{

@@ -168,7 +168,7 @@ infer_facets_mode_mapping <- function(dat, person = NULL, facets = NULL, score =
 #'   person = "Person",
 #'   facets = c("Rater", "Criterion"),
 #'   score = "Score",
-#'   maxit = 6
+#'   maxit = 30
 #' )
 #' out$fit$summary[, c("Model", "Method", "MethodUsed")]
 #' s <- summary(out)
@@ -185,7 +185,7 @@ infer_facets_mode_mapping <- function(dat, person = NULL, facets = NULL, score =
 #'     score = "Score",
 #'     method = "MML",
 #'     quad_points = 5,
-#'     maxit = 6
+#'     maxit = 30
 #'   )
 #'   out_mml$fit$summary[, c("Model", "Method", "MethodUsed")]
 #' }

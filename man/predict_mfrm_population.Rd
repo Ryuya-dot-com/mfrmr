@@ -87,6 +87,8 @@ including a \code{facet_manifest} and future-planner scaffold marker
 \item \code{planning_schema}: combined planner-schema contract carrying the role
 table, current boundary, mutability map, facet manifest, and a
 schema-only future facet-count table
+\item \code{gpcm_boundary}: bounded-\code{GPCM} caveat row when a \code{GPCM} forecast route is
+used
 \item \code{settings}: forecasting settings
 \item \code{ademp}: simulation-study metadata
 \item \code{notes}: interpretation notes
@@ -121,11 +123,12 @@ person-level covariates and responses, refits the MML population-model
 branch, and summarizes the resulting facet-level behavior. This is distinct
 from the fitted-model posterior scoring provided by \code{\link[=predict_mfrm_units]{predict_mfrm_units()}}.
 
-The bounded \code{GPCM} branch is supported here with the same caveats as
-\code{\link[=evaluate_mfrm_design]{evaluate_mfrm_design()}}: forecasts are scenario-level operating
-characteristics under an explicit slope-aware generator, and the planning
-layer still targets the role-based person x rater-like x criterion-like
-design contract rather than a fully arbitrary-facet planner.
+Bounded \code{GPCM} forecasts are available with caveats through the same
+repeated simulation/refit design route used by \code{\link[=evaluate_mfrm_design]{evaluate_mfrm_design()}}.
+They summarize design-level operating characteristics under the supplied or
+fit-derived slope-aware specification; they do not validate operational
+scoring, diagnostic-screening or signal-detection rules, slope-recovery
+adequacy, or arbitrary-facet planning.
 }
 \section{Interpreting output}{
 
@@ -186,7 +189,7 @@ pred <- predict_mfrm_population(
   sim_spec = spec,
   design = list(person = 18),
   reps = 1,
-  maxit = 5,
+  maxit = 30,
   seed = 123
 )
 s_pred <- summary(pred)

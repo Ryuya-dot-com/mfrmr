@@ -24,9 +24,13 @@ test_that("reporting_checklist returns a bundle with checklist coverage tables",
   expect_true(is.data.frame(chk$summary))
   expect_true(is.data.frame(chk$section_summary))
   expect_true(is.data.frame(chk$software_scope))
+  expect_true(is.data.frame(chk$facets_positioning))
   expect_true(is.data.frame(chk$visual_scope))
+  expect_true(all(c("Topic", "Position", "RecommendedWording", "PrimaryRoute") %in%
+                    names(chk$facets_positioning)))
+  expect_true(any(chk$facets_positioning$Topic == "Reporting source of truth"))
+  expect_true(any(grepl("mfrmr objects", chk$facets_positioning$RecommendedWording, fixed = TRUE)))
   expect_true("InterpretationCheck" %in% names(chk$visual_scope))
-  expect_true(all(c("SupportStatus", "ModelCaveat") %in% names(chk$visual_scope)))
   expect_true(all(c("mfrmr native", "FACETS", "ConQuest", "SPSS") %in% chk$software_scope$Software))
   expect_true("Category probability surface" %in% chk$visual_scope$Visualization)
   expect_match(
@@ -51,6 +55,17 @@ test_that("reporting_checklist returns a bundle with checklist coverage tables",
     "Results remain mfrmr estimates",
     fixed = TRUE
   )
+  expect_match(
+    chk$software_scope$Relationship[chk$software_scope$Software == "FACETS"][1],
+    "FACETS-style reporting and handoff surface",
+    fixed = TRUE
+  )
+  expect_match(
+    chk$software_scope$RecommendedWording[chk$software_scope$Software == "FACETS"][1],
+    "Estimated with mfrmr",
+    fixed = TRUE
+  )
+  expect_false(any(grepl("\\baudit\\b", chk$software_scope$Boundary, ignore.case = TRUE)))
   expect_true(all(c(
     "Section", "Item", "Available", "DraftReady", "ReadyForAPA", "Severity",
     "Priority", "SourceComponent", "Detail", "PlotHelper",
@@ -60,6 +75,7 @@ test_that("reporting_checklist returns a bundle with checklist coverage tables",
   expect_true(any(chk$checklist$Item == "PCA of residuals"))
   expect_true(any(chk$checklist$Item == "Facet pairs tested"))
   expect_true(any(chk$checklist$Item == "QC / facet dashboard"))
+  expect_true(any(chk$checklist$Item == "Fit/separation reporting boundary"))
   expect_true(any(chk$checklist$Item == "Residual PCA visuals"))
   expect_true(any(chk$checklist$Item == "Connectivity / design-matrix visual"))
   expect_true(any(chk$checklist$Item == "Inter-rater / displacement visuals"))
@@ -73,6 +89,11 @@ test_that("reporting_checklist returns a bundle with checklist coverage tables",
   expect_false(chk$checklist$ReadyForAPA[chk$checklist$Item == "95% confidence intervals"][1])
   expect_false(chk$checklist$ReadyForAPA[chk$checklist$Item == "Separation / strata / reliability"][1])
   expect_false(chk$checklist$ReadyForAPA[chk$checklist$Item == "Strict marginal visuals"][1])
+  boundary_row <- chk$checklist[chk$checklist$Item == "Fit/separation reporting boundary", , drop = FALSE]
+  expect_true(boundary_row$Available[1])
+  expect_true(boundary_row$DraftReady[1])
+  expect_match(boundary_row$SourceComponent[1], "precision_review_report", fixed = TRUE)
+  expect_match(boundary_row$NextAction[1], "fit_separation_basis", fixed = TRUE)
   expect_true(any(nzchar(chk$checklist$NextAction)))
   visual_rows <- chk$checklist[chk$checklist$Section == "Visual Displays", , drop = FALSE]
   expect_true(all(nzchar(visual_rows$PlotHelper)))
@@ -85,6 +106,7 @@ test_that("reporting_checklist returns a bundle with checklist coverage tables",
   expect_true(is.data.frame(s_chk$overview))
   expect_true(is.data.frame(s_chk$section_summary))
   expect_true(is.data.frame(s_chk$software_scope))
+  expect_true(is.data.frame(s_chk$facets_positioning))
   expect_true(is.data.frame(s_chk$visual_scope))
   expect_true(is.data.frame(s_chk$priority_summary))
   expect_true(is.data.frame(s_chk$action_items))
@@ -92,9 +114,11 @@ test_that("reporting_checklist returns a bundle with checklist coverage tables",
   expect_gt(nrow(s_chk$section_summary), 0)
   printed <- capture.output(print(s_chk))
   expect_true(any(grepl("mfrmr Reporting Checklist Summary", printed, fixed = TRUE)))
+  expect_true(any(grepl("FACETS positioning", printed, fixed = TRUE)))
+  expect_true(any(grepl("FACETS-style output names are used only to organize the report", printed, fixed = TRUE)))
   expect_false(any(grepl("External software scope", printed, fixed = TRUE)))
   expect_false(any(grepl("Visual scope", printed, fixed = TRUE)))
-  expect_true(any(grepl("Detailed software and visual scope tables", printed, fixed = TRUE)))
+  expect_true(any(grepl("Detailed FACETS positioning, software scope, and visual scope tables", printed, fixed = TRUE)))
 })
 
 test_that("reporting_checklist surfaces latent-regression reporting tasks", {
@@ -137,7 +161,7 @@ test_that("reporting_checklist surfaces latent-regression reporting tasks", {
     "Latent-regression basis",
     "Population coefficients and residual variance",
     "Model-matrix covariate coding",
-    "Complete-case omission audit",
+    "Complete-case omission review",
     "Population-model posterior scoring wording",
     "ConQuest overlap wording"
   ) %in% pop_rows$Item))

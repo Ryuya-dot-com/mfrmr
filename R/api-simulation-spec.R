@@ -20,9 +20,11 @@
 #' @param noise_sd Optional observation-level noise added to the linear predictor.
 #' @param step_span Spread used to generate equally spaced thresholds when
 #'   `thresholds = NULL`.
-#' @param thresholds Optional threshold specification. Use either a numeric
-#'   vector of common thresholds or a data frame with columns `StepFacet`,
-#'   `Step`/`StepIndex`, and `Estimate`.
+#' @param thresholds Optional threshold specification. Use a numeric vector of
+#'   common thresholds; a named list such as `list(C01 = c(-1, 0, 1))`; a
+#'   numeric matrix with one row per `StepFacet` and one column per step; or a
+#'   long data frame with columns `StepFacet`, `Step`/`StepIndex`, and
+#'   `Estimate`.
 #' @param model Measurement model recorded in the simulation specification.
 #' @param step_facet Step facet used when `model = "PCM"` and threshold values
 #'   vary across levels.
@@ -30,17 +32,22 @@
 #'   bounded `GPCM` branch requires `slope_facet == step_facet`.
 #' @param slopes Optional slope specification for `model = "GPCM"`. Use either
 #'   a numeric vector aligned to the generated slope-facet levels or a data
-#'   frame with columns `SlopeFacet` and `Estimate`. When omitted, slopes
+#'   frame with columns `SlopeFacet` and `Estimate`. Supplied slopes are treated
+#'   as relative discriminations and normalized to the package's geometric-mean-
+#'   one identification convention on the log scale. When omitted, slopes
 #'   default to 1 for every slope-facet level, giving an exact `PCM`
-#'   reduction.
+#'   reduction. The `GPCM` model form follows Muraki's generalized partial
+#'   credit model; the package's slope-regime labels are validation stress
+#'   labels, not published psychometric cut points.
 #' @param facet_names Optional public names for the two simulated non-person
 #'   facet columns. Supply either an unnamed character vector of length 2
 #'   in rater-like / criterion-like order, or a named vector with names
 #'   `c("rater", "criterion")`.
 #' @param assignment Assignment design. `"crossed"` means every person sees
-#'   every rater; `"rotating"` uses a balanced rotating subset; `"resampled"`
-#'   reuses empirical person-level rater-assignment profiles; `"skeleton"`
-#'   reuses an observed person-by-facet design skeleton.
+#'   every rater; `"rotating"` uses a balanced rotating subset;
+#'   `"sparse_linked"` uses an incomplete rating design with optional linking
+#'   persons; `"resampled"` reuses empirical person-level rater-assignment
+#'   profiles; `"skeleton"` reuses an observed person-by-facet design skeleton.
 #' @param latent_distribution Latent-value generator. `"normal"` samples from
 #'   centered normal distributions using the supplied standard deviations.
 #'   `"empirical"` resamples centered support values from
@@ -58,9 +65,18 @@
 #'   accepted.
 #' @param design_skeleton Optional data frame with columns `TemplatePerson`,
 #'   the public rater-like facet column, and the public criterion-like facet
-#'   column (optionally `Group` and `Weight`) describing an observed response
-#'   skeleton used when `assignment = "skeleton"`. The canonical names
-#'   `Rater` and `Criterion` are also accepted.
+#'   column (optionally `Group`, `Weight`, and `TemplatePersonReuse`)
+#'   describing an observed response skeleton used when
+#'   `assignment = "skeleton"`. The canonical names `Rater` and `Criterion`
+#'   are also accepted. `TemplatePersonReuse = TRUE` asks
+#'   [simulate_mfrm_data()] to keep the template-person order instead of
+#'   resampling templates, which is used by [build_peer_review_sim_spec()].
+#' @param sparse_controls Optional named list used when
+#'   `assignment = "sparse_linked"`. Supported entries are `link_fraction`
+#'   (default `0.1`), `link_persons` (overrides `link_fraction`),
+#'   `link_raters_per_person` (default `n_rater`), `assignment_mode`
+#'   (`"balanced"` or `"random"`), and
+#'   `min_common_persons_per_rater_pair` (diagnostic target, default `1`).
 #' @param group_levels Optional character vector of group labels.
 #' @param dif_effects Optional data frame of true group-linked DIF effects.
 #' @param interaction_effects Optional data frame of true interaction effects.
@@ -91,9 +107,11 @@
 #' - latent spread assumptions (`theta_sd`, `rater_sd`, `criterion_sd`)
 #' - optional empirical latent support values for semi-parametric simulation
 #' - threshold structure (`threshold_table`)
-#' - optional discrimination structure for bounded `GPCM`
-#'   (`slope_table`)
+#' - optional discrimination structure for bounded `GPCM` (`slope_table`) and
+#'   its identified log-slope spread label (`slope_regime`)
 #' - assignment design (`assignment`)
+#' - optional sparse linked-design controls (`sparse_controls`) when
+#'   `assignment = "sparse_linked"`
 #' - optional empirical assignment profiles (`assignment_profiles`) with
 #'   optional person-level `Group` labels
 #' - optional observed response skeleton (`design_skeleton`)
@@ -104,7 +122,7 @@
 #'   a reusable template of person-level covariates, including model-matrix
 #'   xlevel/contrast provenance for categorical covariates
 #' - `planning_scope`, an explicit record that the current planning/forecasting
-#'   helpers still target the role-based person x rater-like x criterion-like
+#'   helpers target the role-based person x rater-like x criterion-like
 #'   design contract rather than a fully arbitrary-facet planner
 #' - `planning_constraints`, an explicit record of which design variables can
 #'   currently be changed from that specification without rebuilding it
@@ -118,18 +136,43 @@
 #'   `design_schema` is now the authoritative schema-only branch object
 #' - optional signal tables for DIF and interaction bias
 #'
-#' The current generator still targets the package's standard person x rater x
+#' The current generator targets the package's standard person x rater x
 #' criterion workflow, but the public output names for those two facet roles
 #' can now be customized with `facet_names`. This naming layer improves public
 #' ergonomics; it does not yet turn the generator into a fully arbitrary-facet
-#' simulator. Internally, helper objects still keep canonical role mappings so
-#' that planning functions can treat the first non-person facet as rater-like
-#' and the second as criterion-like. When threshold values are provided by
+#' simulator. Internally, helper objects keep canonical role mappings so that
+#' planning functions can treat the first non-person facet as rater-like and
+#' the second as criterion-like. When threshold values are provided by
 #' `StepFacet`, the supported step facets are the generated levels of the
-#' chosen public rater-like or criterion-like column.
+#' chosen public rater-like or criterion-like column. For convenience,
+#' step-facet-specific thresholds can be supplied as a named list or as a
+#' numeric matrix whose row names are `StepFacet` labels.
 #' When `model = "GPCM"`, the same public facet naming rules apply to the
 #' slope table; the current bounded branch keeps `slope_facet` equal to
 #' `step_facet`.
+#' The `slope_regime` field summarizes the centered log-slope spread so
+#' recovery simulations can be read against the intended generator stress
+#' level. Its labels (`unit_slopes`, `near_flat`, `moderate`, and
+#' `high_dispersion`) are package validation labels; they are not model-fit
+#' decisions and should not be interpreted as literature-derived adequacy
+#' thresholds. The GPCM data-generating form follows Muraki (1992,
+#' doi:10.1177/014662169201600206), while information-function interpretation
+#' follows Muraki (1993, doi:10.1177/014662169301700403). The explicit
+#' simulation-specification metadata is intended to support ADEMP-style
+#' simulation reporting as described by Morris, White, and Crowther (2019,
+#' doi:10.1002/sim.8086).
+#'
+#' The `assignment = "sparse_linked"` branch follows sparse
+#' rater-mediated assessment work in treating incomplete rater assignment as
+#' planned missingness rather than incidental nonresponse. Its `link_persons`
+#' and `link_raters_per_person` controls emulate a common linking set so users
+#' can inspect rater-pair common-person counts before using the generated data
+#' in recovery or design studies. This is a design generator and diagnostic
+#' metadata layer; it does not impose a universal minimum-linking cutoff.
+#' Sparse-design motivation follows Wind, Jones, and Grajeda (2023,
+#' doi:10.1177/01466216231182148), Wind and Jones (2018,
+#' doi:10.1177/0013164417703733), and DeMars, Shapovalov, and Hathcoat
+#' (2023).
 #'
 #' If `population_formula` is supplied, the simulation specification carries a
 #' first-version person-level latent-regression generator. This affects only the
@@ -173,13 +216,14 @@ build_mfrm_sim_spec <- function(n_person = 50,
                                 slope_facet = NULL,
                                 slopes = NULL,
                                 facet_names = NULL,
-                                assignment = c("crossed", "rotating", "resampled", "skeleton"),
+                                assignment = c("crossed", "rotating", "sparse_linked", "resampled", "skeleton"),
                                 latent_distribution = c("normal", "empirical"),
                                 empirical_person = NULL,
                                 empirical_rater = NULL,
                                 empirical_criterion = NULL,
                                 assignment_profiles = NULL,
                                 design_skeleton = NULL,
+                                sparse_controls = NULL,
                                 group_levels = NULL,
                                 dif_effects = NULL,
                                 interaction_effects = NULL,
@@ -188,7 +232,7 @@ build_mfrm_sim_spec <- function(n_person = 50,
                                 population_sigma2 = NULL,
                                 population_covariates = NULL) {
   model <- match.arg(toupper(as.character(model[1])), c("RSM", "PCM", "GPCM"))
-  assignment <- match.arg(tolower(as.character(assignment[1])), c("crossed", "rotating", "resampled", "skeleton"))
+  assignment <- match.arg(tolower(as.character(assignment[1])), c("crossed", "rotating", "sparse_linked", "resampled", "skeleton"))
   latent_distribution <- match.arg(tolower(as.character(latent_distribution[1])), c("normal", "empirical"))
 
   facet_names <- simulation_validate_output_facet_names(facet_names)
@@ -286,6 +330,13 @@ build_mfrm_sim_spec <- function(n_person = 50,
     n_criterion = n_criterion,
     facet_names = facet_names
   )
+  sparse_controls <- simulation_normalize_sparse_controls(
+    sparse_controls = sparse_controls,
+    assignment = assignment,
+    n_person = n_person,
+    n_rater = n_rater,
+    raters_per_person = raters_per_person
+  )
 
   dif_effects <- simulation_normalize_effects(
     effects = dif_effects,
@@ -323,8 +374,10 @@ build_mfrm_sim_spec <- function(n_person = 50,
       empirical_support = empirical_support,
       assignment_profiles = assignment_profiles,
       design_skeleton = design_skeleton,
+      sparse_controls = sparse_controls,
       threshold_table = threshold_table,
       slope_table = slope_table,
+      slope_regime = simulation_gpcm_slope_regime(slope_table),
       facet_names = facet_names,
       facet_levels = list(
         rater = simulation_generated_role_levels(facet_names[["rater"]], "R", n_rater),
@@ -346,6 +399,324 @@ build_mfrm_sim_spec <- function(n_person = 50,
     spec,
     class = "mfrm_sim_spec"
   )
+}
+
+peer_review_validate_scalar_logical <- function(x, arg_name) {
+  if (!is.logical(x) || length(x) != 1L || is.na(x)) {
+    stop("`", arg_name, "` must be either `TRUE` or `FALSE`.", call. = FALSE)
+  }
+  x
+}
+
+peer_review_resolve_anchor_submissions <- function(n_submission,
+                                                   anchor_fraction,
+                                                   anchor_submissions) {
+  if (is.null(anchor_submissions)) {
+    anchor_fraction <- suppressWarnings(as.numeric(anchor_fraction[1]))
+    if (!is.finite(anchor_fraction) || anchor_fraction < 0 || anchor_fraction > 1) {
+      stop("`anchor_fraction` must be a finite number in [0, 1].", call. = FALSE)
+    }
+    return(as.integer(ceiling(n_submission * anchor_fraction)))
+  }
+  value <- suppressWarnings(as.integer(anchor_submissions[1]))
+  if (!is.finite(value) || value < 0L || value > n_submission) {
+    stop("`anchor_submissions` must be an integer between 0 and `n_submission`.", call. = FALSE)
+  }
+  value
+}
+
+peer_review_rotate_candidates <- function(candidates, offset) {
+  if (length(candidates) <= 1L) return(candidates)
+  idx <- ((seq_along(candidates) + offset - 2L) %% length(candidates)) + 1L
+  candidates[idx]
+}
+
+peer_review_choose_reviewers <- function(candidates,
+                                         k,
+                                         reviewer_load,
+                                         offset,
+                                         assignment_mode) {
+  if (identical(assignment_mode, "random")) {
+    return(sample(candidates, size = k, replace = FALSE))
+  }
+  rotated <- peer_review_rotate_candidates(candidates, offset)
+  load <- reviewer_load[rotated]
+  rotated[order(load, seq_along(rotated), na.last = TRUE)][seq_len(k)]
+}
+
+peer_review_build_design_skeleton <- function(n_submission,
+                                              n_criterion,
+                                              reviewers_per_submission,
+                                              anchor_submissions,
+                                              anchor_reviewers_per_submission,
+                                              avoid_self_review,
+                                              assignment_mode,
+                                              seed = NULL) {
+  submission_ids <- sprintf("P%03d", seq_len(n_submission))
+  reviewer_ids <- submission_ids
+  criterion_ids <- simulation_generated_levels("C", n_criterion)
+  reviewer_load <- stats::setNames(rep(0L, length(reviewer_ids)), reviewer_ids)
+  anchor_ids <- if (anchor_submissions > 0L) {
+    submission_ids[seq_len(anchor_submissions)]
+  } else {
+    character(0)
+  }
+
+  assignment_rows <- with_preserved_rng_seed(seed, {
+    rows <- vector("list", length(submission_ids))
+    for (i in seq_along(submission_ids)) {
+      submission <- submission_ids[i]
+      candidates <- reviewer_ids
+      if (isTRUE(avoid_self_review)) {
+        candidates <- setdiff(candidates, submission)
+      }
+      k <- if (submission %in% anchor_ids) {
+        anchor_reviewers_per_submission
+      } else {
+        reviewers_per_submission
+      }
+      chosen <- peer_review_choose_reviewers(
+        candidates = candidates,
+        k = k,
+        reviewer_load = reviewer_load,
+        offset = i,
+        assignment_mode = assignment_mode
+      )
+      reviewer_load[chosen] <- reviewer_load[chosen] + 1L
+      rows[[i]] <- expand.grid(
+        TemplatePerson = submission,
+        Reviewer = chosen,
+        Criterion = criterion_ids,
+        stringsAsFactors = FALSE
+      )
+    }
+    dplyr::bind_rows(rows)
+  })
+  assignment_rows$TemplatePersonReuse <- TRUE
+  assignment_rows
+}
+
+#' Build a peer-review simulation specification
+#'
+#' @param n_submission Number of submissions/authors to generate.
+#' @param n_criterion Number of rubric criteria.
+#' @param reviewers_per_submission Number of peer reviewers assigned to each
+#'   ordinary submission.
+#' @param anchor_fraction Fraction of submissions treated as common-link
+#'   anchor submissions when `anchor_submissions` is not supplied.
+#' @param anchor_submissions Optional number of common-link anchor
+#'   submissions. Anchor submissions receive
+#'   `anchor_reviewers_per_submission` reviewers.
+#' @param anchor_reviewers_per_submission Number of reviewers assigned to each
+#'   anchor submission. Defaults to all eligible peers when anchors are used
+#'   and self-review is disallowed; recorded as 0 when no anchor submissions
+#'   are requested.
+#' @param avoid_self_review Logical; if `TRUE`, a reviewer is never assigned to
+#'   review their own submission.
+#' @param assignment_mode Assignment algorithm. `"balanced"` assigns reviewers
+#'   with the lowest current load using deterministic rotating tie-breaks.
+#'   `"random"` samples eligible reviewers without replacement.
+#' @param seed Optional seed used only for random peer-review assignment when
+#'   `assignment_mode = "random"`.
+#' @param score_levels,theta_sd,reviewer_sd,criterion_sd,noise_sd,step_span
+#'   Generator settings passed to [build_mfrm_sim_spec()]. `reviewer_sd` maps
+#'   to the standard MFRM rater-severity spread.
+#' @param model,step_facet,thresholds Measurement-model settings passed to
+#'   [build_mfrm_sim_spec()]. The first public facet is `Reviewer`; the second
+#'   is `Criterion`.
+#' @param group_levels,dif_effects,interaction_effects Optional signal settings
+#'   passed to [build_mfrm_sim_spec()].
+#'
+#' @details
+#' `build_peer_review_sim_spec()` creates a fixed person-by-reviewer-by-rubric
+#' skeleton for peer-assessment or peer-review studies. Submissions and peer
+#' reviewers share the same ID universe (`P001`, `P002`, ...), so
+#' self-review can be structurally excluded and checked in the generated data.
+#' The specification uses the existing `assignment = "skeleton"` generator and
+#' records peer-review metadata; it does not introduce a new measurement
+#' model. MFRM still estimates person/submission measures, reviewer severity,
+#' and criterion difficulty, while design-network review can inspect whether
+#' the peer-review graph is sufficiently linked.
+#'
+#' The common-link anchor controls follow the same logic used in sparse
+#' rater-mediated designs: when most submissions receive only a few peer
+#' reviews, assigning all or many reviewers to a small anchor set can strengthen
+#' links among reviewers. The helper labels these rows as design diagnostics,
+#' not universal adequacy thresholds for fit, separation, or recovery.
+#'
+#' @section References:
+#' - Farrokhi, F., Esfandiari, R., & Schaefer, E. (2012). A many-facet Rasch
+#'   measurement of differential rater severity/leniency in three types of
+#'   assessment. *JALT Journal*, 34(1), 79-102.
+#'   doi:10.37546/JALTJJ34.1-3.
+#' - Uto, M., & Ueno, M. (2020). A generalized many-facet Rasch model and its
+#'   Bayesian estimation using Hamiltonian Monte Carlo. *Behaviormetrika*,
+#'   47, 469-496. doi:10.1007/s41237-020-00115-7.
+#' - DeMars, C. E., Shapovalov, Y. A., & Hathcoat, J. D. (2023).
+#'   *Many-Facet Rasch Designs: How Should Raters be Assigned to Examinees?*
+#'   NCME presentation.
+#'
+#' @return An object of class `mfrm_sim_spec` with `peer_review` metadata and
+#'   a fixed peer-review design skeleton.
+#' @seealso [simulate_mfrm_data()], [build_mfrm_network_review()],
+#'   [build_mfrm_sim_spec()]
+#' @examples
+#' peer_spec <- build_peer_review_sim_spec(
+#'   n_submission = 12,
+#'   n_criterion = 3,
+#'   reviewers_per_submission = 2,
+#'   anchor_submissions = 2
+#' )
+#' peer_spec$peer_review$overview
+#' @export
+build_peer_review_sim_spec <- function(n_submission = 50,
+                                       n_criterion = 4,
+                                       reviewers_per_submission = 3,
+                                       anchor_fraction = 0.1,
+                                       anchor_submissions = NULL,
+                                       anchor_reviewers_per_submission = NULL,
+                                       avoid_self_review = TRUE,
+                                       assignment_mode = c("balanced", "random"),
+                                       seed = NULL,
+                                       score_levels = 4,
+                                       theta_sd = 1,
+                                       reviewer_sd = 0.45,
+                                       criterion_sd = 0.25,
+                                       noise_sd = 0,
+                                       step_span = 1.4,
+                                       model = c("RSM", "PCM", "GPCM"),
+                                       step_facet = "Criterion",
+                                       thresholds = NULL,
+                                       group_levels = NULL,
+                                       dif_effects = NULL,
+                                       interaction_effects = NULL) {
+  n_submission <- simulation_validate_count(n_submission, "n_submission", min_value = 3L)
+  n_criterion <- simulation_validate_count(n_criterion, "n_criterion", min_value = 2L)
+  reviewers_per_submission <- simulation_validate_count(
+    reviewers_per_submission,
+    "reviewers_per_submission",
+    min_value = 1L
+  )
+  avoid_self_review <- peer_review_validate_scalar_logical(
+    avoid_self_review,
+    "avoid_self_review"
+  )
+  assignment_mode <- match.arg(tolower(as.character(assignment_mode[1])), c("balanced", "random"))
+  max_eligible <- if (isTRUE(avoid_self_review)) n_submission - 1L else n_submission
+  if (reviewers_per_submission > max_eligible) {
+    stop(
+      "`reviewers_per_submission` cannot exceed the number of eligible reviewers per submission.",
+      call. = FALSE
+    )
+  }
+  anchor_submissions <- peer_review_resolve_anchor_submissions(
+    n_submission = n_submission,
+    anchor_fraction = anchor_fraction,
+    anchor_submissions = anchor_submissions
+  )
+  if (is.null(anchor_reviewers_per_submission)) {
+    anchor_reviewers_per_submission <- if (anchor_submissions > 0L) max_eligible else 0L
+  }
+  anchor_reviewers_per_submission <- simulation_validate_count(
+    anchor_reviewers_per_submission,
+    "anchor_reviewers_per_submission",
+    min_value = if (anchor_submissions > 0L) 1L else 0L
+  )
+  if (anchor_reviewers_per_submission > max_eligible) {
+    stop(
+      "`anchor_reviewers_per_submission` cannot exceed the number of eligible reviewers per submission.",
+      call. = FALSE
+    )
+  }
+  if (anchor_submissions > 0L && anchor_reviewers_per_submission < reviewers_per_submission) {
+    stop(
+      "`anchor_reviewers_per_submission` must be >= `reviewers_per_submission` when anchor submissions are used.",
+      call. = FALSE
+    )
+  }
+
+  skeleton <- peer_review_build_design_skeleton(
+    n_submission = n_submission,
+    n_criterion = n_criterion,
+    reviewers_per_submission = reviewers_per_submission,
+    anchor_submissions = anchor_submissions,
+    anchor_reviewers_per_submission = anchor_reviewers_per_submission,
+    avoid_self_review = avoid_self_review,
+    assignment_mode = assignment_mode,
+    seed = seed
+  )
+  reviewer_levels <- sprintf("P%03d", seq_len(n_submission))
+  criterion_levels <- simulation_generated_levels("C", n_criterion)
+
+  spec <- build_mfrm_sim_spec(
+    n_person = n_submission,
+    n_rater = n_submission,
+    n_criterion = n_criterion,
+    raters_per_person = reviewers_per_submission,
+    score_levels = score_levels,
+    theta_sd = theta_sd,
+    rater_sd = reviewer_sd,
+    criterion_sd = criterion_sd,
+    noise_sd = noise_sd,
+    step_span = step_span,
+    thresholds = thresholds,
+    model = model,
+    step_facet = step_facet,
+    facet_names = c(reviewer = "Reviewer", criterion = "Criterion"),
+    assignment = "skeleton",
+    design_skeleton = skeleton,
+    group_levels = group_levels,
+    dif_effects = dif_effects,
+    interaction_effects = interaction_effects
+  )
+  spec$facet_levels <- list(
+    rater = reviewer_levels,
+    criterion = criterion_levels
+  )
+  ordinary_rows <- skeleton[!skeleton$TemplatePerson %in%
+                              sprintf("P%03d", seq_len(anchor_submissions)), , drop = FALSE]
+  anchor_rows <- skeleton[skeleton$TemplatePerson %in%
+                            sprintf("P%03d", seq_len(anchor_submissions)), , drop = FALSE]
+  spec$peer_review <- list(
+    active = TRUE,
+    scenario = "peer_review",
+    avoid_self_review = avoid_self_review,
+    assignment_mode = assignment_mode,
+    reviewers_per_submission = reviewers_per_submission,
+    anchor_submissions = anchor_submissions,
+    anchor_reviewers_per_submission = anchor_reviewers_per_submission,
+    reviewer_ids = reviewer_levels,
+    criterion_ids = criterion_levels,
+    overview = data.frame(
+      Scenario = "peer_review",
+      Submissions = n_submission,
+      Reviewers = n_submission,
+      Criteria = n_criterion,
+      OrdinaryReviewersPerSubmission = reviewers_per_submission,
+      AnchorSubmissions = anchor_submissions,
+      AnchorReviewersPerSubmission = anchor_reviewers_per_submission,
+      AvoidSelfReview = avoid_self_review,
+      AssignmentMode = assignment_mode,
+      SkeletonRows = nrow(skeleton),
+      OrdinaryRows = nrow(ordinary_rows),
+      AnchorRows = nrow(anchor_rows),
+      ReviewUse = "design_diagnostic_not_measurement_gate",
+      stringsAsFactors = FALSE
+    ),
+    notes = c(
+      "Peer-review simulation uses a fixed skeleton so submissions and reviewers can share the same ID universe.",
+      "Common-link anchor submissions are a design device for reviewer linkage, not a fit or recovery adequacy threshold."
+    )
+  )
+  spec$source <- "peer_review"
+  spec$source_summary <- c(
+    spec$source_summary %||% list(),
+    list(peer_review = spec$peer_review$overview)
+  )
+  spec$planning_scope <- simulation_planning_scope(structure(spec, class = "mfrm_sim_spec"))
+  spec$planning_constraints <- simulation_planning_constraints(structure(spec, class = "mfrm_sim_spec"))
+  spec$planning_schema <- simulation_planning_schema(structure(spec, class = "mfrm_sim_spec"))
+  structure(spec, class = "mfrm_sim_spec")
 }
 
 #' Derive a simulation specification from a fitted MFRM object
@@ -387,11 +758,15 @@ build_mfrm_sim_spec <- function(n_person = 50,
 #' mechanism. Users should review and, if necessary, edit the returned
 #' specification before using it for design planning.
 #'
-#' First-release `GPCM` fits are now supported here for direct data generation,
-#' provided that the returned simulation specification stores both a threshold
-#' table and a parallel slope table. Planning, forecasting, reporting, and
-#' package-native replay/export helpers now consume that slope-aware contract
-#' with explicit bounded-GPCM caveats.
+#' First-release `GPCM` fits are now supported here for direct data generation
+#' and parameter-recovery checks, provided that the returned simulation
+#' specification stores both a threshold table and a parallel slope table.
+#' The same fit-derived specification can feed caveated role-based design
+#' evaluation, population forecasting, and fit-based report/export bundles.
+#' Diagnostic/signal-detection design screening, full FACETS score-side
+#' contract review, posterior predictive checks, and heavy backend extensions
+#' remain outside the bounded-`GPCM` boundary until those downstream contracts
+#' are widened explicitly.
 #'
 #' If you want to carry person-level group labels into a fit-derived observed
 #' response skeleton, provide the original `source_data` together with
@@ -413,7 +788,7 @@ build_mfrm_sim_spec <- function(n_person = 50,
 #'   n_criterion = 2,
 #'   seed = 123
 #' )
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 5)
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' spec <- extract_mfrm_sim_spec(fit, latent_distribution = "empirical")
 #' spec$assignment
 #' spec$model
@@ -517,8 +892,7 @@ extract_mfrm_sim_spec <- function(fit,
   if (assignment == "auto") assignment <- inferred_assignment
 
   score_values <- sort(unique(prep$data$Score))
-  score_levels <- as.integer(fit$config$n_cat %||%
-                               (prep$rating_max - prep$rating_min + 1L))
+  score_levels <- length(score_values)
 
   thresholds <- simulation_extract_thresholds_from_fit(
     step_tbl = step_tbl,
@@ -529,15 +903,11 @@ extract_mfrm_sim_spec <- function(fit,
     model = fit_model
   )
   slope_input <- if (identical(fit_model, "GPCM")) {
-    slope_facet <- as.character(fit$config$slope_facet %||%
-                                  fit$config$step_facet %||%
-                                  criterion_facet)
-    slope_levels <- as.character(prep$levels[[slope_facet]] %||% character(0))
-    slope_match <- match(slope_levels, slopes$SlopeFacet)
+    slope_match <- match(criterion_levels, slopes$SlopeFacet)
     if (anyNA(slope_match)) {
       stop(
         "`extract_mfrm_sim_spec()` could not align fitted `GPCM` slopes to the observed `",
-        slope_facet,
+        criterion_facet,
         "` levels.",
         call. = FALSE
       )
@@ -581,6 +951,7 @@ extract_mfrm_sim_spec <- function(fit,
   )
   if (identical(fit_model, "GPCM")) {
     spec$slope_table <- tibble::as_tibble(slopes)
+    spec$slope_regime <- simulation_gpcm_slope_regime(spec$slope_table)
   }
   fit_population <- fit$population %||% list()
   if (isTRUE(fit_population$active)) {
@@ -1019,16 +1390,19 @@ simulation_normalize_design_skeleton <- function(design_skeleton,
 
   keep_group <- "Group" %in% names(tbl)
   keep_weight <- "Weight" %in% names(tbl)
+  keep_reuse <- "TemplatePersonReuse" %in% names(tbl)
   tbl <- tbl |>
     dplyr::transmute(
       TemplatePerson = as.character(.data$TemplatePerson),
       Rater = as.character(.data[[rater_col]]),
       Criterion = as.character(.data[[criterion_col]]),
       Group = if (keep_group) as.character(.data$Group) else NA_character_,
-      Weight = if (keep_weight) .data$Weight else NA_real_
+      Weight = if (keep_weight) .data$Weight else NA_real_,
+      TemplatePersonReuse = if (keep_reuse) .data$TemplatePersonReuse else FALSE
     ) |>
     dplyr::mutate(
-      Weight = suppressWarnings(as.numeric(.data$Weight))
+      Weight = suppressWarnings(as.numeric(.data$Weight)),
+      TemplatePersonReuse = simulation_sparse_design_active(.data$TemplatePersonReuse)
     ) |>
     dplyr::filter(!is.na(.data$TemplatePerson), nzchar(.data$TemplatePerson),
                   !is.na(.data$Rater), nzchar(.data$Rater),
@@ -1039,6 +1413,9 @@ simulation_normalize_design_skeleton <- function(design_skeleton,
   }
   if (!keep_weight) {
     tbl <- dplyr::select(tbl, -dplyr::all_of("Weight"))
+  }
+  if (!keep_reuse) {
+    tbl <- dplyr::select(tbl, -dplyr::all_of("TemplatePersonReuse"))
   }
 
   if (nrow(tbl) == 0) {
@@ -1067,6 +1444,160 @@ simulation_normalize_design_skeleton <- function(design_skeleton,
   tbl
 }
 
+simulation_normalize_sparse_controls <- function(sparse_controls,
+                                                 assignment,
+                                                 n_person,
+                                                 n_rater,
+                                                 raters_per_person) {
+  if (!identical(assignment, "sparse_linked")) {
+    return(list(active = FALSE))
+  }
+  if (is.null(sparse_controls)) {
+    sparse_controls <- list()
+  }
+  if (!is.list(sparse_controls)) {
+    stop("`sparse_controls` must be a named list when `assignment = \"sparse_linked\"`.",
+         call. = FALSE)
+  }
+
+  link_fraction <- suppressWarnings(as.numeric((sparse_controls$link_fraction %||% 0.1)[1]))
+  if (!is.finite(link_fraction) || link_fraction < 0 || link_fraction > 1) {
+    stop("`sparse_controls$link_fraction` must be a finite number in [0, 1].",
+         call. = FALSE)
+  }
+  link_persons_source <- as.character(sparse_controls$link_persons_source %||% NA_character_)[1]
+  use_link_fraction <- is.null(sparse_controls$link_persons) ||
+    identical(link_persons_source, "link_fraction")
+  link_persons <- if (use_link_fraction) {
+    as.integer(ceiling(n_person * link_fraction))
+  } else {
+    suppressWarnings(as.integer(sparse_controls$link_persons[1]))
+  }
+  if (!is.finite(link_persons) || link_persons < 0L || link_persons > n_person) {
+    stop("`sparse_controls$link_persons` must be an integer between 0 and `n_person`.",
+         call. = FALSE)
+  }
+
+  link_raters_source <- as.character(sparse_controls$link_raters_per_person_source %||% NA_character_)[1]
+  use_all_raters_link <- is.null(sparse_controls$link_raters_per_person) ||
+    identical(link_raters_source, "n_rater")
+  link_raters_per_person <- if (use_all_raters_link) {
+    as.integer(n_rater)
+  } else {
+    suppressWarnings(as.integer(sparse_controls$link_raters_per_person[1]))
+  }
+  if (!is.finite(link_raters_per_person) || link_raters_per_person < 1L ||
+      link_raters_per_person > n_rater) {
+    stop("`sparse_controls$link_raters_per_person` must be an integer between 1 and `n_rater`.",
+         call. = FALSE)
+  }
+  if (link_persons > 0L && link_raters_per_person < raters_per_person) {
+    stop("`sparse_controls$link_raters_per_person` must be >= `raters_per_person` when linking persons are used.",
+         call. = FALSE)
+  }
+
+  assignment_mode <- tolower(as.character(sparse_controls$assignment_mode %||% "balanced")[1])
+  assignment_mode <- match.arg(assignment_mode, c("balanced", "random"))
+  min_common <- suppressWarnings(as.integer(
+    (sparse_controls$min_common_persons_per_rater_pair %||% 1L)[1]
+  ))
+  if (!is.finite(min_common) || min_common < 0L) {
+    stop("`sparse_controls$min_common_persons_per_rater_pair` must be an integer >= 0.",
+         call. = FALSE)
+  }
+
+  list(
+    active = TRUE,
+    link_fraction = as.numeric(link_fraction),
+    link_persons = as.integer(link_persons),
+    link_persons_source = if (use_link_fraction) "link_fraction" else "link_persons",
+    link_raters_per_person = as.integer(link_raters_per_person),
+    link_raters_per_person_source = if (use_all_raters_link) "n_rater" else "link_raters_per_person",
+    assignment_mode = assignment_mode,
+    min_common_persons_per_rater_pair = as.integer(min_common),
+    notes = c(
+      "Sparse linked simulation creates planned missingness through incomplete rater assignment.",
+      "Linking persons are a design device for preserving common rater links, not a separate population."
+    )
+  )
+}
+
+simulation_threshold_list_to_table <- function(thresholds) {
+  if (length(thresholds) == 0L) {
+    stop("`thresholds` list must contain at least one threshold set.", call. = FALSE)
+  }
+
+  step_facets <- names(thresholds)
+  if (is.null(step_facets)) {
+    if (length(thresholds) == 1L) {
+      step_facets <- "Common"
+    } else {
+      stop("`thresholds` lists with multiple entries must name each `StepFacet`.", call. = FALSE)
+    }
+  } else {
+    step_facets <- as.character(step_facets)
+    missing_names <- !nzchar(step_facets)
+    if (length(thresholds) == 1L && all(missing_names)) {
+      step_facets <- "Common"
+    } else if (any(missing_names)) {
+      stop("Every entry in a `thresholds` list must have a non-empty `StepFacet` name.", call. = FALSE)
+    }
+  }
+  if (anyDuplicated(step_facets)) {
+    stop("`thresholds` list names must be unique `StepFacet` labels.", call. = FALSE)
+  }
+
+  pieces <- vector("list", length(thresholds))
+  for (i in seq_along(thresholds)) {
+    est <- thresholds[[i]]
+    if (!is.numeric(est) || is.matrix(est) || length(dim(est)) > 0L) {
+      stop("Each entry in a `thresholds` list must be a numeric vector.", call. = FALSE)
+    }
+    pieces[[i]] <- tibble::tibble(
+      StepFacet = step_facets[[i]],
+      StepIndex = seq_along(est),
+      Step = paste0("Step_", seq_along(est)),
+      Estimate = as.numeric(est)
+    )
+  }
+
+  dplyr::bind_rows(pieces)
+}
+
+simulation_threshold_matrix_to_table <- function(thresholds) {
+  if (!is.numeric(thresholds)) {
+    stop("`thresholds` matrices must be numeric.", call. = FALSE)
+  }
+  if (nrow(thresholds) == 0L || ncol(thresholds) == 0L) {
+    stop("`thresholds` matrices must have at least one row and one column.", call. = FALSE)
+  }
+
+  step_facets <- rownames(thresholds)
+  if (is.null(step_facets)) {
+    if (nrow(thresholds) == 1L) {
+      step_facets <- "Common"
+    } else {
+      stop("`thresholds` matrices with multiple rows must have row names for `StepFacet` labels.", call. = FALSE)
+    }
+  } else {
+    step_facets <- as.character(step_facets)
+    if (any(!nzchar(step_facets))) {
+      stop("Every row in a `thresholds` matrix must have a non-empty `StepFacet` name.", call. = FALSE)
+    }
+  }
+  if (anyDuplicated(step_facets)) {
+    stop("`thresholds` matrix row names must be unique `StepFacet` labels.", call. = FALSE)
+  }
+
+  step_index <- rep(seq_len(ncol(thresholds)), times = nrow(thresholds))
+  tibble::tibble(
+    StepFacet = rep(step_facets, each = ncol(thresholds)),
+    StepIndex = step_index,
+    Step = paste0("Step_", step_index),
+    Estimate = as.numeric(t(thresholds))
+  )
+}
+
 simulation_build_threshold_table <- function(thresholds, score_levels, step_span, model) {
   if (is.null(thresholds)) {
     est <- if (score_levels == 2L) 0 else seq(-abs(step_span), abs(step_span), length.out = score_levels - 1L)
@@ -1078,7 +1609,11 @@ simulation_build_threshold_table <- function(thresholds, score_levels, step_span
     ))
   }
 
-  if (is.numeric(thresholds)) {
+  if (is.matrix(thresholds)) {
+    thresholds <- simulation_threshold_matrix_to_table(thresholds)
+  } else if (is.list(thresholds) && !is.data.frame(thresholds)) {
+    thresholds <- simulation_threshold_list_to_table(thresholds)
+  } else if (is.numeric(thresholds)) {
     est <- as.numeric(thresholds)
     if (length(est) != score_levels - 1L) {
       stop("Numeric `thresholds` must have length `score_levels - 1`.", call. = FALSE)
@@ -1092,7 +1627,7 @@ simulation_build_threshold_table <- function(thresholds, score_levels, step_span
   }
 
   if (!is.data.frame(thresholds)) {
-    stop("`thresholds` must be NULL, a numeric vector, or a data.frame.", call. = FALSE)
+    stop("`thresholds` must be NULL, a numeric vector, a named list, a numeric matrix, or a data.frame.", call. = FALSE)
   }
 
   tbl <- tibble::as_tibble(thresholds)
@@ -1177,6 +1712,14 @@ simulation_build_slope_table <- function(slopes,
     stop("Could not resolve expected slope-facet levels for bounded `GPCM`.", call. = FALSE)
   }
 
+  normalize_slopes <- function(x) {
+    x <- as.numeric(x)
+    if (any(!is.finite(x)) || any(x <= 0)) {
+      stop("`GPCM` slopes must contain strictly positive finite values.", call. = FALSE)
+    }
+    exp(log(x) - mean(log(x)))
+  }
+
   if (is.null(slopes)) {
     return(tibble::tibble(
       SlopeFacet = expected_levels,
@@ -1196,9 +1739,7 @@ simulation_build_slope_table <- function(slopes,
         call. = FALSE
       )
     }
-    if (any(!is.finite(slope_vals)) || any(slope_vals <= 0)) {
-      stop("Numeric `slopes` must contain strictly positive finite values.", call. = FALSE)
-    }
+    slope_vals <- normalize_slopes(slope_vals)
     return(tibble::tibble(
       SlopeFacet = expected_levels,
       Estimate = slope_vals
@@ -1224,9 +1765,7 @@ simulation_build_slope_table <- function(slopes,
   if (nrow(tbl) == 0L) {
     stop("`slopes` did not contain any valid slope rows.", call. = FALSE)
   }
-  if (any(!is.finite(tbl$Estimate)) || any(tbl$Estimate <= 0)) {
-    stop("`slopes$Estimate` must contain strictly positive finite values.", call. = FALSE)
-  }
+  tbl$Estimate <- normalize_slopes(tbl$Estimate)
   if (!setequal(tbl$SlopeFacet, expected_levels)) {
     stop(
       "`slopes` must cover exactly the generated `", slope_facet, "` levels: ",
@@ -1236,6 +1775,26 @@ simulation_build_slope_table <- function(slopes,
     )
   }
   tbl[match(expected_levels, tbl$SlopeFacet), , drop = FALSE]
+}
+
+simulation_gpcm_slope_regime <- function(slope_table,
+                                         near_flat_log = log(1.05),
+                                         high_dispersion_log = log(1.50)) {
+  # Operational simulation stress bins, not literature-derived model-fit cutoffs.
+  if (!is.data.frame(slope_table) || nrow(slope_table) == 0L ||
+      !"Estimate" %in% names(slope_table)) {
+    return(NA_character_)
+  }
+  slopes <- suppressWarnings(as.numeric(slope_table$Estimate))
+  slopes <- slopes[is.finite(slopes) & slopes > 0]
+  if (length(slopes) == 0L) return(NA_character_)
+  log_slopes <- log(slopes) - mean(log(slopes))
+  max_abs_log <- max(abs(log_slopes), na.rm = TRUE)
+  if (!is.finite(max_abs_log)) return(NA_character_)
+  if (max_abs_log <= sqrt(.Machine$double.eps)) return("unit_slopes")
+  if (max_abs_log <= near_flat_log) return("near_flat")
+  if (max_abs_log <= high_dispersion_log) return("moderate")
+  "high_dispersion"
 }
 
 simulation_extract_thresholds_from_fit <- function(step_tbl, model) {
@@ -1312,6 +1871,9 @@ simulation_resolve_assignment <- function(base_assignment, n_rater, raters_per_p
   if (identical(base_assignment, "resampled")) {
     return("resampled")
   }
+  if (identical(base_assignment, "sparse_linked")) {
+    return("sparse_linked")
+  }
   if (isTRUE(raters_per_person >= n_rater) && identical(base_assignment, "crossed")) {
     return("crossed")
   }
@@ -1360,6 +1922,13 @@ simulation_override_spec_design <- function(sim_spec,
   out$group_levels <- group_levels
   out$dif_effects <- dif_effects
   out$interaction_effects <- interaction_effects
+  out$sparse_controls <- simulation_normalize_sparse_controls(
+    sparse_controls = sim_spec$sparse_controls %||% NULL,
+    assignment = out$assignment,
+    n_person = n_person,
+    n_rater = n_rater,
+    raters_per_person = raters_per_person
+  )
   out$planning_constraints <- simulation_planning_constraints(out)
   out$planning_schema <- simulation_planning_schema(out)
 

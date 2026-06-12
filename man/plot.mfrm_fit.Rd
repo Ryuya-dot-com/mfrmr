@@ -17,19 +17,20 @@
   show_ci = FALSE,
   ci_level = 0.95,
   group = NULL,
+  diagnostics = NULL,
+  include_fit_measures = TRUE,
   draw = TRUE,
-  preset = c("standard", "publication", "compact"),
+  preset = c("standard", "publication", "compact", "monochrome"),
   ...
 )
 }
 \arguments{
 \item{x}{An \code{mfrm_fit} object from \code{\link[=fit_mfrm]{fit_mfrm()}}.}
 
-\item{type}{Plot type. Omit \code{type} or use \code{"wright"} for the default Wright
-map. Use \code{"bundle"} / \code{"all"} / \code{"default"} for the three-part fit bundle;
-otherwise choose one of \code{"facet"}, \code{"person"}, \code{"step"}, \code{"wright"},
-\code{"pathway"}, \code{"ccc"}, \code{"ccc_overlay"}, \code{"ccc_surface"},
-\code{"category_surface"}, or \code{"shrinkage"}.}
+\item{type}{Plot type. Use \code{NULL}, \code{"bundle"}, or \code{"all"} for the
+three-part fit bundle; otherwise choose one of \code{"facet"}, \code{"person"},
+\code{"step"}, \code{"wright"}, \code{"pathway"}, \code{"ccc"}, \code{"ccc_surface"}, or
+\code{"category_surface"}.}
 
 \item{facet}{Optional facet name for \code{type = "facet"}.}
 
@@ -37,10 +38,10 @@ otherwise choose one of \code{"facet"}, \code{"person"}, \code{"step"}, \code{"w
 compact displays.}
 
 \item{theta_range}{Numeric length-2 range for pathway, CCC, and
-category-surface payloads.}
+category-surface plot data.}
 
 \item{theta_points}{Number of theta grid points used for pathway, CCC, and
-category-surface payloads.}
+category-surface plot data.}
 
 \item{title}{Optional custom title.}
 
@@ -61,10 +62,18 @@ aligned with \code{fit$facets$person}. Ignored for other \code{type}
 values. To pass the source data alongside, use
 \verb{plot(fit, type = "wright", group = "MyCol", group_data = <df>)}.}
 
+\item{diagnostics}{Optional output from \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}. When supplied,
+pathway plot data reuse it for \code{fit_measures}, \code{fit_status}, and
+\code{curve_fit_status} instead of recomputing diagnostics.}
+
+\item{include_fit_measures}{If \code{TRUE} (default), pathway plot data include
+tidy fit-measure and fit-status tables for custom R graphics. Set to
+\code{FALSE} when only the curve coordinates are needed.}
+
 \item{draw}{If \code{TRUE}, draw the plot with base graphics.}
 
-\item{preset}{Visual preset (\code{"standard"}, \code{"publication"}, or
-\code{"compact"}).}
+\item{preset}{Visual preset (\code{"standard"}, \code{"publication"}, \code{"compact"},
+or \code{"monochrome"}).}
 
 \item{...}{Additional arguments ignored for S3 compatibility.}
 }
@@ -88,13 +97,26 @@ the \code{mfrm_plot_data} contract, even when the plot is drawn
 immediately.
 
 \code{type = "wright"} shows persons, facet levels, and step thresholds on
-a shared logit scale. \code{type = "pathway"} shows expected score traces
-and dominant-category regions across theta. \code{type = "ccc"} shows
+a shared logit scale. Estimates are plotted as fitted, so the sign
+convention follows the fit: higher person values indicate higher
+ability, and higher non-person facet values indicate greater
+severity/difficulty under the default negative facet orientation.
+Facets listed in \code{fit_mfrm(positive_facets = ...)} are reversed
+(higher values raise expected scores); state the active orientation in
+figure captions when reporting. \code{type = "pathway"} shows expected score
+traces and dominant-category regions across theta. This expected-score
+display is distinct from the Bond-and-Fox-style measure-versus-fit
+"pathway" bubble chart used around FACETS/Winsteps output; for that
+display, use \code{\link[=plot_bubble]{plot_bubble()}}. Its draw-free plot data also
+includes \code{pathway_long}, \code{pathway_annotations}, \code{fit_measures},
+\code{fit_status}, and \code{curve_fit_status}, so R users can rebuild the pathway
+map in ggplot2, plotly, or a report pipeline while keeping the same
+underfit/overfit labels used by \code{\link[=fit_measures_table]{fit_measures_table()}}. \code{type = "ccc"} shows
 category response probabilities. \code{type = "ccc_surface"} or
-\code{type = "category_surface"} returns a 3D-ready category-probability
-surface payload for external rendering; it deliberately does not add a
+\code{type = "category_surface"} returns 3D-ready category-probability surface
+data for external rendering; it deliberately does not add a
 plotly/rgl dependency or replace the 2D CCC/pathway reporting figures. The
-payload includes \code{category_support}, \code{interpretation_guide}, and
+returned object includes \code{category_support}, \code{interpretation_guide}, and
 \code{reporting_policy} tables so retained zero-frequency categories and
 manuscript-use boundaries remain visible to beginners. The remaining
 types (\code{"facet"}, \code{"person"}, \code{"step"}, \code{"shrinkage"}) provide
@@ -127,7 +149,7 @@ fit <- fit_mfrm(
   "Score",
   method = "JML",
   model = "RSM",
-  maxit = 25
+  maxit = 30
 )
 wright <- plot(fit, draw = FALSE)
 wright$data$plot
@@ -144,7 +166,7 @@ surface <- plot(fit, type = "ccc_surface", draw = FALSE)
 head(surface$data$surface)
 surface$data$category_support
 # Look for: every retained category having `Observed > 0`; categories
-#   with zero observations are returned as a placeholder slice and
+#   with zero observations are returned as a zero-observation slice and
 #   should not be interpreted as a real score region.
 surface$data$interpretation_guide
 if (interactive()) {
@@ -174,3 +196,6 @@ if (interactive()) {
 \code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=plot_wright_unified]{plot_wright_unified()}}, \code{\link[=plot_bubble]{plot_bubble()}},
 \link{mfrmr_visual_diagnostics}
 }
+\concept{confidence intervals}
+\concept{shrinkage}
+\concept{visual diagnostics}

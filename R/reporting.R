@@ -367,23 +367,15 @@ format_reporting_marginal_pair_label <- function(pair_row) {
 #' Returns the lower / upper bounds that mfrmr screens treat as the
 #' acceptable mean-square (Infit / Outfit MnSq) band when flagging
 #' element-level misfit. Defaults follow Linacre's published 0.5-1.5
-#' broad screening band; both ends can be overridden via R options. The
-#' returned band is a configurable screening convention, not a universal
-#' definition of misfit. Applied MFRM studies sometimes use narrower bands
-#' (for example 0.7-1.3 or 0.75-1.3) when the reporting purpose, sample size,
-#' or stakes justify a stricter operational screen.
+#' acceptance band; both ends can be overridden via R options.
 #'
 #' Helpers that consume the band include
 #' [summary.mfrm_diagnostics()] (`misfit_flagged` block and
 #' `key_warnings` auto-flag), [build_misfit_casebook()] (the new
 #' `element_fit` source family), the bias / misfit narrative inside
-#' [build_apa_outputs()], [facet_quality_dashboard()] when
-#' `misfit_warn = NULL`, [plot_person_fit()] when `lower` / `upper`
-#' are `NULL`, and [plot_bubble()] when `fit_range = NULL`. Setting the
-#' options once at the top of an analysis script therefore changes every
-#' downstream screen at once. Directional outputs use the same band: MnSq
-#' values above the upper bound are labelled `underfit`, and values below the
-#' lower bound are labelled `overfit`.
+#' [build_apa_outputs()], and [facet_quality_dashboard()] when
+#' `misfit_warn = NULL`. Setting the options once at the top of an
+#' analysis script therefore changes every downstream screen at once.
 #'
 #' @section Configuration:
 #' Two scalar R options drive the band:
@@ -429,128 +421,11 @@ mfrm_misfit_thresholds <- function(lower = NULL, upper = NULL) {
   c(lower = lo, upper = up)
 }
 
-mfrm_misfit_threshold_text <- function(band = mfrm_misfit_thresholds(), digits = 1L) {
-  digits <- max(0L, as.integer(digits))
-  lo <- suppressWarnings(as.numeric(band["lower"]))
-  up <- suppressWarnings(as.numeric(band["upper"]))
-  sprintf(paste0("%.", digits, "f-%.", digits, "f"), lo, up)
-}
-
-mfrm_misfit_threshold_is_default <- function(band = mfrm_misfit_thresholds()) {
-  vals <- suppressWarnings(as.numeric(band[c("lower", "upper")]))
-  isTRUE(all.equal(vals, c(0.5, 1.5), tolerance = 1e-8, check.names = FALSE))
-}
-
-mfrm_misfit_threshold_label <- function(band = mfrm_misfit_thresholds()) {
-  if (mfrm_misfit_threshold_is_default(band)) {
-    "package default broad screening band"
-  } else {
-    "custom active screening band"
-  }
-}
-
-mfrm_misfit_threshold_note <- function(band = mfrm_misfit_thresholds()) {
-  band_text <- mfrm_misfit_threshold_text(band)
-  if (mfrm_misfit_threshold_is_default(band)) {
-    paste0(
-      "Active MnSq screening band: ", band_text,
-      ". The package default follows the broad Linacre/Wright-Linacre ",
-      "0.5-1.5 convention; published and operational misfit bands can be ",
-      "narrower or broader by purpose, sample size, and consequence, so ",
-      "flags are screening evidence rather than a universal misfit definition. ",
-      "Values above the upper band are labelled underfit; values below the ",
-      "lower band are labelled overfit."
-    )
-  } else {
-    paste0(
-      "Active MnSq screening band: ", band_text,
-      ". This is a custom/configured band; published and operational misfit ",
-      "bands vary by purpose, sample size, and consequence, so flags are ",
-      "screening evidence rather than a universal misfit definition. Values ",
-      "above the upper band are labelled underfit; values below the lower ",
-      "band are labelled overfit."
-    )
-  }
-}
-
-mfrm_classify_mnsq_direction <- function(infit,
-                                         outfit,
-                                         lower = NULL,
-                                         upper = NULL,
-                                         inclusive = FALSE) {
-  band <- mfrm_misfit_thresholds(lower = lower, upper = upper)
-  lower <- as.numeric(band["lower"])
-  upper <- as.numeric(band["upper"])
-  inclusive <- isTRUE(inclusive)
-
-  infit <- suppressWarnings(as.numeric(infit))
-  outfit <- suppressWarnings(as.numeric(outfit))
-  n <- max(length(infit), length(outfit))
-  if (n == 0L) return(character(0))
-
-  infit <- if (length(infit) == 0L) rep(NA_real_, n) else rep_len(infit, n)
-  outfit <- if (length(outfit) == 0L) rep(NA_real_, n) else rep_len(outfit, n)
-
-  finite <- is.finite(infit) | is.finite(outfit)
-  high <- if (inclusive) {
-    (is.finite(infit) & infit >= upper) |
-      (is.finite(outfit) & outfit >= upper)
-  } else {
-    (is.finite(infit) & infit > upper) |
-      (is.finite(outfit) & outfit > upper)
-  }
-  low <- if (inclusive) {
-    (is.finite(infit) & infit <= lower) |
-      (is.finite(outfit) & outfit <= lower)
-  } else {
-    (is.finite(infit) & infit < lower) |
-      (is.finite(outfit) & outfit < lower)
-  }
-
-  out <- rep(NA_character_, n)
-  out[finite & !high & !low] <- "in_band"
-  out[finite & high & !low] <- "underfit"
-  out[finite & low & !high] <- "overfit"
-  out[finite & high & low] <- "mixed"
-  out
-}
-
-mfrm_misfit_direction_label <- function(direction) {
-  direction <- as.character(direction)
-  labels <- c(
-    in_band = "inside active band",
-    underfit = "underfit (above upper band)",
-    overfit = "overfit (below lower band)",
-    mixed = "mixed underfit/overfit"
-  )
-  out <- unname(labels[direction])
-  out[is.na(out) & !is.na(direction)] <- direction[is.na(out) & !is.na(direction)]
-  out
-}
-
-mfrm_misfit_threshold_apa_sentence <- function(band = mfrm_misfit_thresholds()) {
-  band_text <- mfrm_misfit_threshold_text(band)
-  source_text <- if (mfrm_misfit_threshold_is_default(band)) {
-    "the package default broad Linacre/Wright-Linacre convention"
-  } else {
-    "custom threshold settings"
-  }
-  paste0(
-    "Element-level Infit and Outfit flags used the active ", band_text,
-    " MnSq screening band (", source_text,
-    "); because published and operational bands differ by purpose and sample ",
-    "context, flags were interpreted as screening evidence rather than a ",
-    "universal misfit definition. MnSq values above the upper band were ",
-    "described as underfit, whereas values below the lower band were ",
-    "described as overfit."
-  )
-}
-
 # Warning threshold profiles for MFRM quality control.
 # Sources:
 #   - n_obs_min, n_person_min: Linacre (1994), sample size guidelines for stable estimates.
 #   - low_cat_min: Linacre (2002), minimum 10 observations per category for stable thresholds.
-#   - misfit_ratio_warn: Bond & Fox (2015), MnSq 0.5-1.5 broad screening band; >10% flagged.
+#   - misfit_ratio_warn: Bond & Fox (2015), MnSq 0.5-1.5 acceptable range; >10% flagged.
 #   - zstd thresholds: |ZSTD| > 2 at 5% significance; >3 at 1% (Wright & Linacre, 1994).
 #   - pca_first_eigen_warn: Linacre-style residual-PCA heuristic band; use only as exploratory screening, not direct proof of multidimensionality.
 #   - pca_first_prop_warn: Smith (2002), unexplained variance > 5-10% merits investigation.
@@ -921,17 +796,8 @@ summarize_top_misfit_levels <- function(fit_tbl, top_n = 3L) {
   labels <- vapply(seq_len(nrow(show)), function(i) {
     facet <- if ("Facet" %in% names(show)) as.character(show$Facet[i]) else "Facet"
     level <- if ("Level" %in% names(show)) as.character(show$Level[i]) else as.character(i)
-    infit_i <- if ("Infit" %in% names(show)) show$Infit[i] else NA_real_
-    outfit_i <- if ("Outfit" %in% names(show)) show$Outfit[i] else NA_real_
-    direction <- mfrm_classify_mnsq_direction(infit_i, outfit_i)[1] %||% NA_character_
-    direction_part <- if (!is.na(direction) && direction %in% c("underfit", "overfit", "mixed")) {
-      paste0("; ", mfrm_misfit_direction_label(direction))
-    } else {
-      ""
-    }
     paste0(facet, ":", level,
-           " (", metric_label, " = ", fmt_num(show$AbsMetric[i]),
-           direction_part, ")")
+           " (", metric_label, " = ", fmt_num(show$AbsMetric[i]), ")")
   }, character(1))
 
   paste0("Largest misfit signals: ", paste(labels, collapse = "; "), ".")
@@ -1107,11 +973,23 @@ build_apa_note_map_from_contract <- function(contract) {
     threshold_note_label <- sub("^thresholds were\\s+", "", threshold_note_label, ignore.case = TRUE)
   }
 
+  positive_facets <- as.character(meta$positive_facets %||% character(0))
+  orientation_clause <- if (length(positive_facets) > 0) {
+    paste0(
+      "higher person values indicate higher ability; for non-person facets, higher values indicate greater severity/difficulty under the default negative orientation, except ",
+      paste(positive_facets, collapse = ", "),
+      ", which were fit with positive orientation (higher values raise expected scores)."
+    )
+  } else {
+    "higher person values indicate higher ability, and higher non-person facet values indicate greater severity/difficulty (all non-person facets used the default negative orientation in this fit)."
+  }
+
   note_map <- list()
   note_map$table1 <- paste0(
     "Table 1. Facet summary\n",
-    "Note. Measures are reported in logits; higher values indicate more of the modeled trait for that facet. ",
+    "Note. Measures are reported in logits; ", orientation_clause, " ",
     precision$se_note,
+    summaries$ci_table_note %||% "",
     "Model = ", meta$model, "; estimation = ", meta$method,
     "; N = ", fmt_count(meta$n_obs), " observations from ", fmt_count(meta$n_person),
     " persons on a ", fmt_count(meta$n_cat), "-category scale (",
@@ -1190,13 +1068,16 @@ build_apa_note_map_from_contract <- function(contract) {
     )
   }
 
-  note_map$wright_map <- "Wright map\nNote. Persons and facet elements are located on a common logit scale; higher values indicate higher ability or greater severity/difficulty depending on facet orientation."
-  note_map$pathway_map <- "Pathway map\nNote. Curves show expected score across theta/logit levels from estimated thresholds."
+  note_map$wright_map <- paste0(
+    "Wright map\nNote. Persons and facet elements are located on a common logit scale; ",
+    orientation_clause
+  )
+  note_map$pathway_map <- "Pathway map\nNote. Curves show expected score across theta/logit levels from estimated thresholds. This expected-score display is distinct from the Bond-and-Fox-style measure-versus-fit pathway bubble chart, which is available via plot_bubble()."
   note_map$facet_distribution <- "Facet estimate distribution\nNote. Distributions summarize severity/difficulty spread within each facet."
   note_map$step_thresholds <- "Step/threshold estimates\nNote. Step ordering should generally increase; disordered thresholds suggest category structure issues."
   note_map$category_curves <- "Category characteristic curves\nNote. Curves show category response probability across theta/logit levels; well-functioning categories show distinct peaks in order."
   note_map$observed_expected <- "Observed vs expected scores\nNote. Points summarize mean observed and expected scores by bin; deviations from the diagonal suggest local misfit."
-  note_map$fit_diagnostics <- "Fit diagnostics (Infit vs Outfit)\nNote. Each point represents an element within a facet. Values near 1.0 indicate expected fit; values above the active upper MnSq band suggest underfit, while values below the active lower band suggest overfit."
+  note_map$fit_diagnostics <- "Fit diagnostics (Infit vs Outfit)\nNote. Each point represents an element within a facet. Values near 1.0 indicate expected fit; values substantially above 1.0 suggest misfit."
   note_map$fit_zstd_distribution <- "Fit ZSTD distribution\nNote. Distributions of standardized fit help identify unusually large residuals across facets."
   note_map$misfit_levels <- "Misfit levels\nNote. Levels are ranked by maximum |ZSTD| to highlight potentially problematic elements."
   if (isTRUE(availability$has_strict_marginal)) {
@@ -1423,6 +1304,7 @@ build_apa_reporting_contract <- function(res, diagnostics, bias_results = NULL, 
   summary <- if (!is.null(res$summary) && nrow(res$summary) > 0) res$summary[1, , drop = FALSE] else NULL
   prep <- res$prep
   config <- res$config
+  model <- toupper(as.character(config$model %||% "RSM"))
 
   n_obs <- if (!is.null(summary)) to_float(summary$N) else NA_real_
   n_person <- if (!is.null(summary)) to_float(summary$Persons) else nrow(res$facets$person)
@@ -1452,14 +1334,6 @@ build_apa_reporting_contract <- function(res, diagnostics, bias_results = NULL, 
   if (!is.finite(line_width) || line_width < 40L) line_width <- 92L
 
   precision_profile <- as.data.frame(diagnostics$precision_profile %||% data.frame(), stringsAsFactors = FALSE)
-  model <- as.character(config$model %||% NA_character_)
-  method <- as.character(config$method %||% NA_character_)
-  gpcm_mode <- identical(model, "GPCM")
-  converged <- if (!is.null(summary) && "Converged" %in% names(summary)) {
-    isTRUE(summary$Converged[1])
-  } else {
-    NA
-  }
   precision_tier <- trimws(as.character(precision_profile$PrecisionTier[1] %||% NA_character_))
   if (!nzchar(precision_tier)) {
     precision_tier <- if (identical(config$method, "MML")) "hybrid" else "exploratory"
@@ -1516,13 +1390,15 @@ build_apa_reporting_contract <- function(res, diagnostics, bias_results = NULL, 
     method_sentences <- c(method_sentences, assessment_sentence)
   }
 
-  model_family_label <- if (isTRUE(gpcm_mode)) {
-    "bounded many-facet generalized partial credit model (GPCM)"
-  } else {
-    "many-facet Rasch model (MFRM)"
-  }
+  model_overview_label <- switch(
+    model,
+    RSM = "A many-facet rating-scale Rasch model",
+    PCM = "A many-facet partial-credit Rasch model",
+    GPCM = "A bounded generalized partial-credit many-facet model",
+    "A many-facet ordered-response model"
+  )
   design_overview_sentence <- paste0(
-    "A ", model_family_label, " was fit to ", fmt_count(n_obs),
+    model_overview_label, " was fit to ", fmt_count(n_obs),
     " observations from ", fmt_count(n_person),
     " persons scored on a ", fmt_count(n_cat),
     "-category scale (", fmt_count(rating_min), "-", fmt_count(rating_max), ")."
@@ -1548,14 +1424,14 @@ build_apa_reporting_contract <- function(res, diagnostics, bias_results = NULL, 
         if (is.na(facet_min_n)) "NA" else facet_min_n,
         "). mfrmr estimates facets as fixed effects without partial pooling, so ",
         "sparse levels retain wide standard errors; consider reviewing the output ",
-        "of `facet_small_sample_audit()` before generalising."
+        "of `facet_small_sample_review()` before generalising."
       ),
       marginal = paste0(
         "The smallest facet-level N was ",
         if (is.na(facet_min_n)) "NA" else facet_min_n,
         ", below the 30-examinee floor (Linacre, 1994) used as the marginal-band ",
         "anchor in this package's adapted screening bands. Facet estimates remain ",
-        "fixed-effect and unshrunk; see `facet_small_sample_audit()` for per-level detail."
+        "fixed-effect and unshrunk; see `facet_small_sample_review()` for per-level detail."
       ),
       standard = paste0(
         "Facet-level sample sizes met the package's `standard` band ",
@@ -1563,7 +1439,7 @@ build_apa_reporting_contract <- function(res, diagnostics, bias_results = NULL, 
         if (is.na(facet_min_n)) "NA" else facet_min_n,
         "), an mfrmr-specific watermark adapted from Linacre's (1994) 30/100 ",
         "guidance; facets were nonetheless estimated as fixed effects with ",
-        "sum-to-zero identification (see `facet_small_sample_audit()`)."
+        "sum-to-zero identification (see `facet_small_sample_review()`)."
       ),
       strong = paste0(
         "Facet-level sample sizes were strong (smallest level N = ",
@@ -1644,20 +1520,27 @@ build_apa_reporting_contract <- function(res, diagnostics, bias_results = NULL, 
   }
 
   population_summary <- summarize_population_model_for_apa(res)
-  model_sentence <- paste0("The ", model, " specification was estimated using ", method, " in the native R MFRM package.")
+  method <- config$method
+  model_sentence <- paste0("The ", model, " specification was estimated using ", method, " with mfrmr.")
   if (identical(model, "PCM") && !is.null(config$step_facet) && nzchar(config$step_facet)) {
     model_sentence <- paste0(model_sentence, " The step structure varied by ", config$step_facet, ".")
   }
-  if (isTRUE(gpcm_mode) && !is.null(config$step_facet) && nzchar(config$step_facet)) {
-    model_sentence <- paste0(
-      model_sentence,
-      " Thresholds and discriminations varied by ",
-      config$step_facet,
-      " under the bounded `slope_facet == step_facet` contract."
+  estimation_basis_sentence <- if (identical(method, "MML")) {
+    paste0(
+      "Person measures are expected a posteriori (EAP) estimates under the ",
+      "marginal person distribution, and residual-based fit statistics are ",
+      "evaluated at these EAP measures rather than at joint maximum ",
+      "likelihood (JMLE) estimates."
     )
+  } else {
+    ""
   }
   method_estimation_sentences <- c(method_estimation_sentences, model_sentence, precision_sentence)
   method_sentences <- c(method_sentences, model_sentence, precision_sentence)
+  if (nzchar(estimation_basis_sentence)) {
+    method_estimation_sentences <- c(method_estimation_sentences, estimation_basis_sentence)
+    method_sentences <- c(method_sentences, estimation_basis_sentence)
+  }
   if (isTRUE(population_summary$active)) {
     method_estimation_sentences <- c(
       method_estimation_sentences,
@@ -1671,11 +1554,7 @@ build_apa_reporting_contract <- function(res, diagnostics, bias_results = NULL, 
     )
   }
   if (nzchar(recommended_use)) {
-    recommended_use_sentence <- paste0(
-      "Recommended use for this precision profile: ",
-      recommended_use,
-      if (grepl("[.!?]$", recommended_use)) "" else "."
-    )
+    recommended_use_sentence <- paste0("Recommended use for this precision profile: ", recommended_use, ".")
     method_estimation_sentences <- c(method_estimation_sentences, recommended_use_sentence)
     method_sentences <- c(method_sentences, recommended_use_sentence)
   }
@@ -1752,8 +1631,7 @@ build_apa_reporting_contract <- function(res, diagnostics, bias_results = NULL, 
   band <- mfrm_misfit_thresholds()
   band_lower <- as.numeric(band["lower"])
   band_upper <- as.numeric(band["upper"])
-  band_text <- mfrm_misfit_threshold_text(band)
-  misfit_band_sentence <- mfrm_misfit_threshold_apa_sentence(band)
+  band_text <- sprintf("%.1f-%.1f", band_lower, band_upper)
 
   overall_fit <- if (!is.null(diagnostics$overall_fit) && nrow(diagnostics$overall_fit) > 0) diagnostics$overall_fit[1, , drop = FALSE] else NULL
   if (!is.null(overall_fit)) {
@@ -1761,17 +1639,17 @@ build_apa_reporting_contract <- function(res, diagnostics, bias_results = NULL, 
     outfit <- to_float(overall_fit$Outfit)
     fit_label <- if (is.finite(infit) && is.finite(outfit) &&
                      infit >= band_lower && infit <= band_upper &&
-                     outfit >= band_lower && outfit <= band_upper) "acceptable" else "elevated"
+                     outfit >= band_lower && outfit <= band_upper) "within" else "outside"
     fit_sentence <- paste0(
-      "Overall fit was ", fit_label, " (infit MnSq = ", fmt_num(infit),
-      ", outfit MnSq = ", fmt_num(outfit), ")."
+      "Overall mean-square fit was ", fit_label, " the ", band_text,
+      " screening band (infit MnSq = ", fmt_num(infit),
+      ", outfit MnSq = ", fmt_num(outfit), "). ",
+      "This band is the package's review convention; published mean-square ",
+      "guidelines differ, and band position is screening evidence rather ",
+      "than a model-validity decision."
     )
     results_fit_precision_sentences <- c(results_fit_precision_sentences, fit_sentence)
     results_sentences <- c(results_sentences, fit_sentence)
-  }
-  if (!is.null(overall_fit) || (!is.null(diagnostics$fit) && nrow(diagnostics$fit) > 0)) {
-    results_fit_precision_sentences <- c(results_fit_precision_sentences, misfit_band_sentence)
-    results_sentences <- c(results_sentences, misfit_band_sentence)
   }
 
   fit_tbl <- diagnostics$fit
@@ -1783,7 +1661,8 @@ build_apa_reporting_contract <- function(res, diagnostics, bias_results = NULL, 
                             (Outfit < band_lower) | (Outfit > band_upper))
     misfit_n <- sum(misfit, na.rm = TRUE)
     misfit_sentence <- paste0(fmt_count(misfit_n), " of ", fmt_count(nrow(fit_tbl)),
-                               " elements exceeded the ", band_text, " fit range.")
+                               " elements fell outside the ", band_text,
+                               " mean-square screening band.")
     results_fit_precision_sentences <- c(results_fit_precision_sentences, misfit_sentence)
     results_sentences <- c(results_sentences, misfit_sentence)
     top_misfit_sentence <- summarize_top_misfit_levels(fit_tbl, top_n = 3L)
@@ -1807,7 +1686,24 @@ build_apa_reporting_contract <- function(res, diagnostics, bias_results = NULL, 
       row <- rel_tbl[i, , drop = FALSE]
       paste0(row$Facet, " ", reliability_label, " = ", fmt_num(row$Reliability), " (separation = ", fmt_num(row$Separation), ").")
     }, character(1))
-    reliability_sentence <- paste(rel_lines, collapse = " ")
+    reliability_basis_sentence <- paste0(
+      "These are Rasch/FACETS-style separation indices (measure spread ",
+      "relative to measurement error), not inter-rater agreement."
+    )
+    person_reliability_note <- if (identical(method, "MML") &&
+                                   any(rel_tbl$Facet == "Person", na.rm = TRUE)) {
+      paste0(
+        "The Person row uses EAP measures with posterior SDs, which yields ",
+        "a conservative summary that is not numerically comparable to ",
+        "JMLE-based person reliability from FACETS."
+      )
+    } else {
+      ""
+    }
+    reliability_sentence <- paste(
+      Filter(nzchar, c(rel_lines, reliability_basis_sentence, person_reliability_note)),
+      collapse = " "
+    )
     results_fit_precision_sentences <- c(results_fit_precision_sentences, reliability_sentence)
     results_sentences <- c(results_sentences, reliability_sentence)
   }
@@ -1822,9 +1718,50 @@ build_apa_reporting_contract <- function(res, diagnostics, bias_results = NULL, 
       if (is.finite(exact)) parts <- c(parts, paste0("exact agreement = ", fmt_num(exact)))
       if (is.finite(expected_exact)) parts <- c(parts, paste0("expected exact agreement = ", fmt_num(expected_exact)))
       if (is.finite(adjacent)) parts <- c(parts, paste0("adjacent agreement = ", fmt_num(adjacent)))
-      interrater_sentence <- paste0("For ", facet_label, ", ", paste(parts, collapse = ", "), ".")
+      interrater_sentence <- paste0(
+        "Observed inter-rater agreement is reported separately from separation reliability: for ",
+        facet_label, ", ", paste(parts, collapse = ", "), "."
+      )
       results_fit_precision_sentences <- c(results_fit_precision_sentences, interrater_sentence)
       results_sentences <- c(results_sentences, interrater_sentence)
+    }
+  }
+
+  measures_ci_tbl <- as.data.frame(diagnostics$measures %||% data.frame(), stringsAsFactors = FALSE)
+  ci_available_n <- 0L
+  ci_sentence <- ""
+  ci_table_note <- ""
+  if (nrow(measures_ci_tbl) > 0 && all(c("CI_Lower", "CI_Upper") %in% names(measures_ci_tbl))) {
+    ci_lower <- suppressWarnings(as.numeric(measures_ci_tbl$CI_Lower))
+    ci_upper <- suppressWarnings(as.numeric(measures_ci_tbl$CI_Upper))
+    ci_available_n <- sum(is.finite(ci_lower) & is.finite(ci_upper))
+    if (ci_available_n > 0) {
+      ci_level <- suppressWarnings(as.numeric(measures_ci_tbl$CI_Level[1] %||% NA_real_))
+      ci_level_text <- if (is.finite(ci_level)) paste0(format(round(100 * ci_level)), "%") else "95%"
+      ci_method_text <- trimws(as.character(measures_ci_tbl$CI_Method[1] %||% ""))
+      if (!nzchar(ci_method_text)) ci_method_text <- "normal approximation"
+      ci_eligible_n <- if ("CIEligible" %in% names(measures_ci_tbl)) {
+        sum(vapply(measures_ci_tbl$CIEligible, isTRUE, logical(1)))
+      } else {
+        NA_integer_
+      }
+      ci_sentence <- paste0(
+        "Element-level ", ci_level_text, " confidence intervals (",
+        ci_method_text, ") accompany the measures (CI_Lower / CI_Upper)",
+        if (is.finite(ci_eligible_n)) {
+          paste0("; ", fmt_count(ci_eligible_n), " of ", fmt_count(nrow(measures_ci_tbl)),
+                 " rows are flagged CIEligible for primary reporting")
+        } else {
+          ""
+        },
+        "."
+      )
+      ci_table_note <- paste0(
+        "Report CI_Lower / CI_Upper (", ci_level_text, ", ", ci_method_text,
+        ") alongside measures for rows flagged CIEligible. "
+      )
+      results_fit_precision_sentences <- c(results_fit_precision_sentences, ci_sentence)
+      results_sentences <- c(results_sentences, ci_sentence)
     }
   }
 
@@ -1960,12 +1897,23 @@ build_apa_reporting_contract <- function(res, diagnostics, bias_results = NULL, 
   } else {
     ""
   }
-  gpcm_reporting_caution <- if (isTRUE(gpcm_mode)) {
-    paste0(
-      "GPCM reporting note: this APA draft is available as a caveated ",
-      "manuscript scaffold. Fair-average and bias language should be kept ",
-      "at the slope-aware screening tier; conditional fair-average SEs do ",
-      "not propagate joint threshold, slope, or person-measure uncertainty."
+  gpcm_caution <- if (identical(model, "GPCM")) {
+    paste(
+      "Bounded GPCM note: this APA/reporting bundle is a slope-aware",
+      "sensitivity-reporting surface over supported diagnostics, direct",
+      "tables, and plots. It is not FACETS score-side equivalence, an",
+      "automatic operational-scoring decision, or design-forecasting evidence."
+    )
+  } else {
+    ""
+  }
+  eap_fit_caution <- if (identical(method, "MML")) {
+    paste(
+      "Fit-basis note: MnSq/ZSTD fit statistics in this run were computed at",
+      "EAP person measures, which are shrunken toward the population mean;",
+      "they are therefore not numerically interchangeable with JMLE-based",
+      "engines such as FACETS. Refit with method = \"JML\" when a JMLE-style",
+      "residual basis is required for external comparison."
     )
   } else {
     ""
@@ -1983,7 +1931,7 @@ build_apa_reporting_contract <- function(res, diagnostics, bias_results = NULL, 
       facet_names = facet_names,
       facet_counts = facet_counts,
       facets_text = facets_text,
-      converged = converged,
+      positive_facets = as.character(config$positive_facets %||% character(0)),
       line_width = line_width,
       # Reflow vs wrapped controls whether section text uses hard line
       # breaks (wrapped, the current 92-col default) or returns one
@@ -2020,6 +1968,7 @@ build_apa_reporting_contract <- function(res, diagnostics, bias_results = NULL, 
       has_strict_pairwise = isTRUE(marginal_state$pairwise_available),
       has_rater_reliability = !is.null(rater_rel),
       has_interrater = nrow(interrater_summary) > 0,
+      has_measure_ci = ci_available_n > 0,
       has_population_model = isTRUE(population_summary$active),
       has_population_coding = isTRUE(population_summary$active) &&
         nrow(population_summary$coding) > 0L
@@ -2032,11 +1981,6 @@ build_apa_reporting_contract <- function(res, diagnostics, bias_results = NULL, 
       person_stats = person_stats,
       overall_fit_infit = infit,
       overall_fit_outfit = outfit,
-      misfit_threshold_band = band,
-      misfit_threshold_text = band_text,
-      misfit_threshold_label = mfrm_misfit_threshold_label(band),
-      misfit_threshold_note = mfrm_misfit_threshold_note(band),
-      misfit_threshold_apa_sentence = misfit_band_sentence,
       misfit_n = misfit_n,
       misfit_total = misfit_total,
       top_misfit_sentence = top_misfit_sentence,
@@ -2062,6 +2006,9 @@ build_apa_reporting_contract <- function(res, diagnostics, bias_results = NULL, 
       pca_overall_2 = pca_overall_2,
       pca_by_facet_first = pca_facet_1,
       pca_reference_text = pca_reference_text,
+      ci_availability_sentence = ci_sentence,
+      ci_table_note = ci_table_note,
+      ci_available_n = ci_available_n,
       bias_summary = summarize_bias_counts(bias_results),
       bias_sig_n = bias_sig_n,
       bias_facet_pair = bias_facet_pair,
@@ -2079,8 +2026,9 @@ build_apa_reporting_contract <- function(res, diagnostics, bias_results = NULL, 
     results_sentences = results_sentences,
     caution_sentences = Filter(nzchar, c(
       precision_caution,
+      eap_fit_caution,
       bias_caution,
-      gpcm_reporting_caution,
+      gpcm_caution,
       population_summary$caution_sentence,
       population_summary$conquest_sentence
     )),

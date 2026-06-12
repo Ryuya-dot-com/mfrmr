@@ -11,6 +11,7 @@ facets_output_file_bundle(
   theta_range = c(-6, 6),
   theta_points = 241,
   digits = 4,
+  score_se_method = c("both", "native", "score_side", "none"),
   include_fixed = FALSE,
   fixed_max_rows = 400,
   write_files = FALSE,
@@ -31,6 +32,13 @@ facets_output_file_bundle(
 \item{theta_points}{Number of points on the theta grid for graph coordinates.}
 
 \item{digits}{Rounding digits for numeric fields.}
+
+\item{score_se_method}{For bounded \code{GPCM} scorefile exports, which
+observation-level score uncertainty columns to compute. \code{"both"}
+(default) includes native structural expected-score SEs and score-side
+delta-method SEs; \code{"native"} includes only the structural expected-score
+route; \code{"score_side"} includes only the score-side delta route; \code{"none"}
+records explicit \code{not_requested} status columns.}
 
 \item{include_fixed}{If \code{TRUE}, include fixed-width text mirrors of output tables.}
 
@@ -70,7 +78,7 @@ CSV/fixed-width text files to disk.
 \code{summary(out)} is supported through \code{summary()}.
 \code{plot(out)} is dispatched through \code{plot()} for class
 \code{mfrm_output_bundle} (\code{type = "graph_expected"}, \code{"score_residuals"},
-\code{"obs_probability"}).
+\code{"obs_probability"}, \code{"score_se"}).
 }
 \section{Interpreting output}{
 
@@ -78,7 +86,7 @@ CSV/fixed-width text files to disk.
 \item \code{graphfile}: legacy-compatible wide curve coordinates (human-readable labels).
 \item \code{graphfile_syntactic}: same curves with syntactic column names for programmatic use.
 \item \code{scorefile}: observation-level observed/expected/residual diagnostics.
-\item \code{written_files}: audit trail of files produced when \code{write_files = TRUE}.
+\item \code{written_files}: traceability record of files produced when \code{write_files = TRUE}.
 }
 
 For reproducible pipelines, prefer \code{graphfile_syntactic} and keep
@@ -94,6 +102,22 @@ For new scripts, prefer \code{\link[=category_curves_report]{category_curves_rep
 scorefile contract is required.
 }
 
+\section{Bounded GPCM boundary}{
+
+For bounded \code{GPCM}, graph output and package-native scorefile output are
+available with caveats. \code{include = "score"} returns observation-level fitted
+expected score, residual, standardized residual, observed-category
+probability, GPCM slope fields, and native structural delta-method
+expected-score uncertainty and/or score-side delta-method SEs when the
+required MML diagnostics are available. Use \code{score_se_method} to choose
+\code{"both"} (default), \code{"native"}, \code{"score_side"}, or \code{"none"}.
+The scorefile also carries explicit score-side caveat columns. It is not a
+FACETS score-side equivalence file, does not export FACETS-equivalent
+score-side standard errors, and does not establish an operational
+score-scale decision. Use \code{\link[=gpcm_score_side_contract]{gpcm_score_side_contract()}} and
+\code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}} for the current scope.
+}
+
 \section{Typical workflow}{
 
 \enumerate{
@@ -106,7 +130,7 @@ scorefile contract is required.
 
 \examples{
 toy <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
+fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 out <- facets_output_file_bundle(fit, diagnostics = diagnose_mfrm(fit, residual_pca = "none"))
 summary(out)
 p_out <- plot(out, draw = FALSE)

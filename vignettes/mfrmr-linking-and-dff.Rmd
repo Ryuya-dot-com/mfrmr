@@ -8,11 +8,13 @@ vignette: >
 ---
 
 ```{r, include = FALSE}
+is_cran_check <- !isTRUE(as.logical(Sys.getenv("NOT_CRAN", "false")))
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
   fig.width = 7,
-  fig.height = 5
+  fig.height = 5,
+  eval = !is_cran_check
 )
 ```
 
@@ -34,6 +36,9 @@ library(mfrmr)
 
 bias_df <- load_mfrmr_data("example_bias")
 
+# The vignette uses compact quadrature so optional local execution stays fast.
+# For final DFF or linking evidence, refit with the package default or a higher
+# quadrature setting and record that setting in the analysis log.
 fit <- fit_mfrm(
   bias_df,
   person = "Person",
@@ -74,7 +79,7 @@ anchors <- make_anchor_table(fit, facets = "Criterion")
 head(anchors)
 ```
 
-Use `audit_mfrm_anchors()` when you want a stricter review of anchor quality.
+Use `review_mfrm_anchors()` when you want a stricter review of anchor quality.
 
 ## 3. Residual DFF as a screening layer
 
@@ -221,7 +226,7 @@ For a compact linking route:
 1. `fit_mfrm()`
 2. `diagnose_mfrm()`
 3. `subset_connectivity_report()`
-4. `make_anchor_table()` or `audit_mfrm_anchors()`
+4. `make_anchor_table()` or `review_mfrm_anchors()`
 5. `analyze_dff()`
 6. `dif_report()` and `plot_dif_heatmap()`
 7. `interaction_effect_table()` after a confirmatory `facet_interactions` fit

@@ -104,7 +104,7 @@ rater facet, reported separately from agreement.}
 
 \examples{
 toy <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 25)
+fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 ir <- interrater_agreement_table(fit, rater_facet = "Rater")
 # One-row overview: ExactAgreement, ExpectedExactAgreement, MeanCorr,
 # RaterSeparation, and RaterReliability are the headline reportable
