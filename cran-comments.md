@@ -9,13 +9,15 @@ The expected local pre-submission environment is:
 - local macOS Tahoe 26.5, aarch64-apple-darwin23, R 4.6.0
   (2026-04-24).
 
-Cross-platform confirmation is configured separately through:
+Cross-platform confirmation for this candidate:
 
-- the package's GitHub Actions `R-CMD-check` matrix: macOS release, Windows
-  release, and Ubuntu devel / release / oldrel-1, with warnings treated as
-  failures.
-- retained uploaded check directories from each matrix job.
-- the separate coverage/full-regression route that runs with `NOT_CRAN=true`.
+- the package's GitHub Actions `R-CMD-check` matrix completed successfully on
+  the release-candidate commit: macOS release, Windows release, and Ubuntu
+  devel / release / oldrel-1, with warnings treated as failures and the full
+  `NOT_CRAN=true` test surface enabled.
+- check directories from each matrix job are retained as uploaded artifacts.
+- win-builder reported `Status: OK` for R-devel (2026-06-11 r90134 ucrt),
+  R 4.6.0 (release), and R 4.5.3 (oldrelease).
 
 ## R CMD check results
 
