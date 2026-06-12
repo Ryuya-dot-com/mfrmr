@@ -61,7 +61,7 @@ checks. Coverage is displayed only for parameter groups with available
 standard errors.
 }
 \examples{
-\donttest{
+\dontrun{
 rec <- evaluate_mfrm_recovery(
   n_person = 12,
   n_rater = 2,

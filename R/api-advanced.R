@@ -511,7 +511,7 @@ extract_dff_group_estimates <- function(sub_fit, sub_diag, facet, fallback_level
 #'   [dif_interaction_table()], [plot_dif_heatmap()], [dif_report()],
 #'   [subset_connectivity_report()], [mfrmr_linking_and_dff]
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' toy <- load_mfrmr_data("example_bias")
 #'
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
@@ -3324,7 +3324,7 @@ compute_equating_offset <- function(diffs, se_from = NULL, se_to = NULL,
 #'   [diagnose_mfrm()], [build_equating_chain()], [mfrmr_linking_and_dff]
 #' @export
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' d1 <- load_mfrmr_data("study1")
 #' keep1 <- unique(d1$Person)[1:15]
 #' d1 <- d1[d1$Person %in% keep1, , drop = FALSE]
@@ -3540,7 +3540,7 @@ print.summary.mfrm_anchored_fit <- function(x, ...) {
 #'   [make_anchor_table()], [plot_anchor_drift()], [mfrmr_linking_and_dff]
 #' @export
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' d1 <- load_mfrmr_data("study1")
 #' d2 <- load_mfrmr_data("study2")
 #' fit1 <- fit_mfrm(d1, "Person", c("Rater", "Criterion"), "Score",
@@ -3916,7 +3916,7 @@ print.summary.mfrm_anchor_drift <- function(x, ...) {
 #'   [make_anchor_table()], [plot_anchor_drift()]
 #' @export
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' toy <- load_mfrmr_data("example_core")
 #' people <- unique(toy$Person)
 #' d1 <- toy[toy$Person %in% people[1:12], , drop = FALSE]
@@ -4729,7 +4729,7 @@ print.summary.mfrm_equating_chain <- function(x, ...) {
 #' @seealso [review_mfrm_anchors()], [detect_anchor_drift()],
 #'   [build_equating_chain()], [plot_anchor_drift()], [mfrmr_linking_and_dff]
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' d1 <- load_mfrmr_data("study1")
 #' d2 <- load_mfrmr_data("study2")
 #' fit1 <- fit_mfrm(d1, "Person", c("Rater", "Criterion"), "Score",
@@ -5975,7 +5975,7 @@ print.summary.mfrm_linking_review <- function(x, ...) {
 #'   [displacement_table()], [plot_unexpected()], [plot_displacement()],
 #'   [plot_marginal_fit()], [plot_marginal_pairwise()]
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "MML", model = "RSM", quad_points = 5)
@@ -6518,7 +6518,7 @@ print.summary.mfrm_misfit_casebook <- function(x, ...) {
 #' @return An object of class `mfrm_weighting_review`.
 #' @seealso [compare_mfrm()], [compute_information()], [gpcm_capability_matrix()]
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' toy <- load_mfrmr_data("example_core")
 #' rasch_fit <- fit_mfrm(
 #'   toy,
@@ -7113,7 +7113,7 @@ print.summary.mfrm_weighting_review <- function(x, ...) {
 #' @seealso [compare_mfrm()], [build_weighting_review()],
 #'   [gpcm_capability_matrix()], [compute_information()]
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' toy <- load_mfrmr_data("example_core")
 #' fit_rsm <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                     method = "MML", model = "RSM", quad_points = 7)

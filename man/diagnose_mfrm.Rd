@@ -287,7 +287,7 @@ diag_quick <- diagnose_mfrm(fit_quick, diagnostic_mode = "legacy",
                              residual_pca = "none")
 summary(diag_quick)$overview[, c("Observations", "Facets", "Categories")]
 
-\donttest{
+\dontrun{
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 diag <- diagnose_mfrm(fit, diagnostic_mode = "both", residual_pca = "none")
 s_diag <- summary(diag)

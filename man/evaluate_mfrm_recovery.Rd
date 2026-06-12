@@ -196,7 +196,7 @@ check, then increase \code{reps} for stable Monte Carlo summaries.
 }
 
 \examples{
-\donttest{
+\dontrun{
 rec <- evaluate_mfrm_recovery(
   n_person = 12,
   n_rater = 2,

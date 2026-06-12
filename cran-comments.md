@@ -1,7 +1,22 @@
+## Resubmission
+
+This is a resubmission. The 0.2.1 submission passed the CRAN incoming
+content pre-tests on Windows and Debian (both `Status: OK`) but was
+auto-rejected for a single additional-issue check on the Windows incoming
+host: `Overall checktime 12 min > 10 min`.
+
+0.2.2 addresses only that timing issue. Long-running illustration examples
+previously wrapped in `\donttest` are now wrapped in `\dontrun`, which
+removes roughly two thirds of the example execution time from
+`--as-cran` checks. There are no other code, documentation, or behavior
+changes relative to 0.2.1. The affected illustrations remain executable as
+written; the underlying routes are exercised by the package's test suite
+(run in full with `NOT_CRAN=true` locally and on the CI matrix below).
+
 ## Test environments
 
-This is the submission note for the 0.2.1 release candidate. The local
-pre-submission check was run against the generated `mfrmr_0.2.1.tar.gz`
+This is the submission note for the 0.2.2 release candidate. The local
+pre-submission check was run against the generated `mfrmr_0.2.2.tar.gz`
 source tarball.
 
 The expected local pre-submission environment is:
@@ -9,15 +24,18 @@ The expected local pre-submission environment is:
 - local macOS Tahoe 26.5, aarch64-apple-darwin23, R 4.6.0
   (2026-04-24).
 
-Cross-platform confirmation for this candidate:
+Cross-platform confirmation (obtained for 0.2.1, whose checked content is
+identical to 0.2.2 apart from the example-execution policy):
 
-- the package's GitHub Actions `R-CMD-check` matrix completed successfully on
-  the release-candidate commit: macOS release, Windows release, and Ubuntu
-  devel / release / oldrel-1, with warnings treated as failures and the full
-  `NOT_CRAN=true` test surface enabled.
+- the package's GitHub Actions `R-CMD-check` matrix completed successfully:
+  macOS release, Windows release, and Ubuntu devel / release / oldrel-1,
+  with warnings treated as failures and the full `NOT_CRAN=true` test
+  surface enabled.
 - check directories from each matrix job are retained as uploaded artifacts.
 - win-builder reported `Status: OK` for R-devel (2026-06-11 r90134 ucrt),
   R 4.6.0 (release), and R 4.5.3 (oldrelease).
+- the 0.2.1 CRAN incoming pre-tests reported `Status: OK` on both Windows
+  and Debian; only the Windows overall-checktime limit was exceeded.
 
 ## R CMD check results
 
@@ -32,19 +50,21 @@ Local check command, run from the package root against the generated
 
 ```sh
 R CMD build .
-R CMD check --no-manual --as-cran mfrmr_0.2.1.tar.gz
+R CMD check --no-manual --as-cran mfrmr_0.2.2.tar.gz
 ```
 
 No system-clock override was needed in this local run. On machines where
 external time verification is unavailable, a local override may be used; the
 release-readiness review should still be run against the resulting
-`mfrmr.Rcheck/00check.log`, and the log must report package version 0.2.1.
+`mfrmr.Rcheck/00check.log`, and the log must report package version 0.2.2.
 
 In the current local `--as-cran` check, standard examples completed with a
-reported `[47s/48s]` timing, `--run-donttest` examples completed with a
-reported `[227s/234s]` timing, and the CRAN-time testthat surface completed
-with no errors, warnings, or notes. The release-readiness review reports all
-gates as `ok`.
+reported `[48s/49s]` timing, the `--run-donttest` pass had no additional
+examples to execute (all long-running illustrations are now `\dontrun`),
+and the CRAN-time testthat surface completed with no errors, warnings, or
+notes. Relative to the 0.2.1 check on the same machine, this removes about
+three minutes of example execution from the check. The release-readiness
+review reports all gates as `ok`.
 
 ## Downstream dependencies
 
@@ -76,7 +96,9 @@ iteration limits, and invalid facet/input guards.
 
 ## Submission comment
 
-This is an update to mfrmr. Headline changes for 0.2.1 are:
+This is an update to mfrmr (and a resubmission of the 0.2.1 candidate; see
+the Resubmission section above). Headline changes relative to CRAN 0.2.0
+are:
 
 - The main public route is now shorter and clearer:
   `fit_mfrm()` -> `mfrm_results()` -> `mfrm_report()` ->

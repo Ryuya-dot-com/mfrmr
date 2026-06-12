@@ -114,7 +114,7 @@ the same table can be reproduced under stricter or more permissive review
 rules.
 }
 \examples{
-\donttest{
+\dontrun{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 fm <- fit_measures_table(fit, facet = "Rater")

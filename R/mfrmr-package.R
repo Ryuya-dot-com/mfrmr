@@ -654,7 +654,7 @@
 #' mfrm_threshold_profiles()
 #' list_mfrmr_data()
 #'
-#' \donttest{
+#' \dontrun{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(
 #'   toy,

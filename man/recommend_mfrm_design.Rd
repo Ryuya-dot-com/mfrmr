@@ -78,7 +78,7 @@ then fewer raters, then fewer criteria).
 }
 
 \examples{
-\donttest{
+\dontrun{
 sim_eval <- suppressWarnings(evaluate_mfrm_design(
   n_person = c(8, 12),
   n_rater = 2,

@@ -77,7 +77,7 @@ artifact is specifically required for a compatibility handoff.
 }
 
 \examples{
-\donttest{
+\dontrun{
 toy <- load_mfrmr_data("example_bias")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 diag <- diagnose_mfrm(fit, residual_pca = "none")

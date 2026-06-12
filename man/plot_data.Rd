@@ -31,7 +31,7 @@ when you want to inspect which components are available before extracting
 one.
 }
 \examples{
-\donttest{
+\dontrun{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", maxit = 30)
 

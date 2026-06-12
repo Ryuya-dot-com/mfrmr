@@ -46,7 +46,7 @@ Returns the plotting object produced by the delegated route:
 }
 
 \examples{
-\donttest{
+\dontrun{
 toy <- load_mfrmr_data("example_core")
 toy_small <- toy[toy$Person \%in\% unique(toy$Person)[1:12], , drop = FALSE]
 out <- run_mfrm_facets(

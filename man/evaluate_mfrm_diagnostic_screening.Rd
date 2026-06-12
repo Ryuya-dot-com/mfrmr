@@ -175,7 +175,7 @@ calibrated inferential power. Bounded-\code{GPCM} rows add explicit
 characteristics under the evaluated role-based design.
 }
 \examples{
-\donttest{
+\dontrun{
 diag_eval <- evaluate_mfrm_diagnostic_screening(
   design = list(person = 10, rater = 2, criterion = 2, assignment = 2),
   reps = 1,

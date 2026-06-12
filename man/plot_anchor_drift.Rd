@@ -119,7 +119,7 @@ For a plot-selection guide and a longer walkthrough, see
 }
 
 \examples{
-\donttest{
+\dontrun{
 toy <- load_mfrmr_data("example_core")
 people <- unique(toy$Person)
 d1 <- toy[toy$Person \%in\% people[1:12], , drop = FALSE]

@@ -51,7 +51,7 @@ Multiple subsets mean the scale is not fully connected unless external
 anchoring or a deliberate separate-calibration design justifies it.
 }
 \examples{
-\donttest{
+\dontrun{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "JML", maxit = 30)

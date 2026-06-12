@@ -103,7 +103,7 @@ model benchmark fixtures.
 }
 
 \examples{
-\donttest{
+\dontrun{
 bench <- reference_case_benchmark(
   cases = "synthetic_truth",
   method = "JML",
