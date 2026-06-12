@@ -170,3 +170,40 @@ test_that("FACETS-style fit df uses fourth-moment Wright-Masters formula", {
   expect_equal(r1$DF_Infit_FACETS, 2 * r1_sum_var_w^2 / r1_denom_infit)
   expect_equal(r1$DF_Outfit_FACETS, 2 * r1_sum_w^2 / r1_denom_outfit)
 })
+
+test_that("EmpiricalReliability follows the EAP empirical-reliability formula for MML person rows", {
+  measures <- tibble::tibble(
+    Facet = c(rep("Person", 4), rep("Rater", 2)),
+    Level = c(paste0("P", 1:4), paste0("R", 1:2)),
+    Estimate = c(-1.2, -0.2, 0.4, 1.0, -0.5, 0.5),
+    ModelSE = c(0.5, 0.4, 0.45, 0.55, 0.2, 0.25),
+    PrecisionTier = "model_based",
+    Converged = TRUE
+  )
+
+  out_mml <- mfrmr:::calc_reliability(measures, method = "MML")
+  person <- out_mml[out_mml$Facet == "Person", , drop = FALSE]
+  rater <- out_mml[out_mml$Facet == "Rater", , drop = FALSE]
+
+  p <- measures[measures$Facet == "Person", ]
+  v <- stats::var(p$Estimate)
+  e <- mean(p$ModelSE^2)
+  expect_equal(person$EmpiricalReliability, v / (v + e))
+  expect_identical(person$ReliabilityBasis, "eap_posterior_sd")
+  expect_true(is.na(rater$EmpiricalReliability))
+  expect_identical(rater$ReliabilityBasis, "observed_information")
+  # For shrunken inputs the empirical convention always sits above the
+  # adjusted-true-variance value: 1 / (1 + x) > 1 - x for x > 0.
+  expect_gt(person$EmpiricalReliability, person$Reliability)
+
+  out_jml <- mfrmr:::calc_reliability(measures, method = "JML")
+  expect_true(all(is.na(out_jml$EmpiricalReliability)))
+  expect_identical(
+    out_jml$ReliabilityBasis[out_jml$Facet == "Person"],
+    "jml_point_estimates"
+  )
+
+  out_default <- mfrmr:::calc_reliability(measures)
+  expect_true(all(is.na(out_default$EmpiricalReliability)))
+  expect_true(all(is.na(out_default$ReliabilityBasis)))
+})

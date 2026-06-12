@@ -8106,7 +8106,8 @@ audit_precision_outputs <- function(res, measure_df, reliability_tbl, facet_prec
   )
 }
 
-calc_reliability <- function(measure_df) {
+calc_reliability <- function(measure_df, method = NULL) {
+  method <- if (is.null(method)) NA_character_ else toupper(as.character(method[1]))
   measure_df |>
     dplyr::group_by(Facet) |>
     dplyr::group_modify(function(.x, .y) {
@@ -8164,7 +8165,36 @@ calc_reliability <- function(measure_df) {
         RealStrata = real_stats$Strata,
         RealReliability = real_stats$Reliability,
         MeanInfit = if ("Infit" %in% names(.x)) mean(.x$Infit, na.rm = TRUE) else NA_real_,
-        MeanOutfit = if ("Outfit" %in% names(.x)) mean(.x$Outfit, na.rm = TRUE) else NA_real_
+        MeanOutfit = if ("Outfit" %in% names(.x)) mean(.x$Outfit, na.rm = TRUE) else NA_real_,
+        # EAP empirical reliability, Var(EAP) / (Var(EAP) + mean(PSD^2)).
+        # Defined only for the Person facet under MML, where estimates are
+        # shrunken EAP measures and SE columns carry posterior SDs; for
+        # unshrunken estimates the adjusted-true-variance formula above is
+        # the appropriate convention and this column stays NA.
+        EmpiricalReliability = {
+          obs_var <- model_stats$ObservedVariance
+          err_var <- model_stats$ErrorVariance
+          if (identical(.y$Facet[1], "Person") && identical(method, "MML") &&
+              is.finite(obs_var) && is.finite(err_var) &&
+              (obs_var + err_var) > 0) {
+            obs_var / (obs_var + err_var)
+          } else {
+            NA_real_
+          }
+        },
+        ReliabilityBasis = if (identical(.y$Facet[1], "Person")) {
+          dplyr::case_when(
+            identical(method, "MML") ~ "eap_posterior_sd",
+            identical(method, "JML") ~ "jml_point_estimates",
+            TRUE ~ NA_character_
+          )
+        } else {
+          dplyr::case_when(
+            identical(method, "MML") ~ "observed_information",
+            identical(method, "JML") ~ "jml_point_estimates",
+            TRUE ~ NA_character_
+          )
+        }
       )
     }) |>
     dplyr::ungroup()
@@ -8436,7 +8466,7 @@ mfrm_diagnostics <- function(res,
     }
   }
 
-  reliability_tbl <- calc_reliability(measures)
+  reliability_tbl <- calc_reliability(measures, method = res$config$method)
   facets_chisq_tbl <- calc_facets_chisq(measures)
   facet_precision_tbl <- build_facet_precision_summary(measures, facets_chisq_tbl)
   default_rater_facet <- infer_default_rater_facet(res$config$facet_names)

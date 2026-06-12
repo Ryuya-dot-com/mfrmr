@@ -1,5 +1,14 @@
 # mfrmr (development version)
 
+- The diagnostics reliability table now reports the EAP empirical-reliability
+  convention directly: MML person rows carry `EmpiricalReliability`
+  (`Var(EAP) / (Var(EAP) + mean(PSD^2))`), and every facet row carries
+  `ReliabilityBasis` recording the SE source (`eap_posterior_sd`,
+  `observed_information`, or `jml_point_estimates`). The APA narrative's MML
+  person-reliability note now reports the empirical value alongside the
+  conservative adjusted-true-variance summary. The default person
+  separation/reliability formulas are unchanged.
+
 # mfrmr 0.2.1
 
 This release focuses on a clearer public workflow, a more readable reporting

@@ -1692,10 +1692,22 @@ build_apa_reporting_contract <- function(res, diagnostics, bias_results = NULL, 
     )
     person_reliability_note <- if (identical(method, "MML") &&
                                    any(rel_tbl$Facet == "Person", na.rm = TRUE)) {
+      person_rel_row <- rel_tbl[rel_tbl$Facet == "Person", , drop = FALSE]
+      empirical_rel <- suppressWarnings(as.numeric(
+        person_rel_row$EmpiricalReliability[1] %||% NA_real_
+      ))
       paste0(
         "The Person row uses EAP measures with posterior SDs, which yields ",
         "a conservative summary that is not numerically comparable to ",
-        "JMLE-based person reliability from FACETS."
+        "JMLE-based person reliability from FACETS.",
+        if (is.finite(empirical_rel)) {
+          paste0(
+            " Under the EAP empirical-reliability convention, person ",
+            "empirical reliability = ", fmt_num(empirical_rel), "."
+          )
+        } else {
+          ""
+        }
       )
     } else {
       ""

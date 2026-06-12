@@ -499,6 +499,11 @@
 #' model-based quantities; that tier describes the SE source, not FACETS
 #' comparability. Use `method = "JML"` when a FACETS-style person separation
 #' table is required, and treat MML person rows as conservative summaries.
+#' The reliability table reports the empirical convention directly: MML
+#' person rows carry `EmpiricalReliability`
+#' (\eqn{\mathrm{Var}(\mathrm{EAP}) / (\mathrm{Var}(\mathrm{EAP}) +
+#' \overline{\mathrm{PSD}^2})}), and every row carries `ReliabilityBasis`
+#' recording the SE source used for that facet.
 #'
 #' This is a Rasch/FACETS-style separation reliability on the fitted logit
 #' scale, not an intra-class correlation. Use [compute_facet_icc()] only when

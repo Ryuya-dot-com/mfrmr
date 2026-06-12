@@ -538,6 +538,11 @@ still carry the model-based precision tier because posterior SDs are
 model-based quantities; that tier describes the SE source, not FACETS
 comparability. Use \code{method = "JML"} when a FACETS-style person separation
 table is required, and treat MML person rows as conservative summaries.
+The reliability table reports the empirical convention directly: MML
+person rows carry \code{EmpiricalReliability}
+(\eqn{\mathrm{Var}(\mathrm{EAP}) / (\mathrm{Var}(\mathrm{EAP}) +
+\overline{\mathrm{PSD}^2})}), and every row carries \code{ReliabilityBasis}
+recording the SE source used for that facet.
 
 This is a Rasch/FACETS-style separation reliability on the fitted logit
 scale, not an intra-class correlation. Use \code{\link[=compute_facet_icc]{compute_facet_icc()}} only when
