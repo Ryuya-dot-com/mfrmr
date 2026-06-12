@@ -57,6 +57,11 @@ score-side contract is validated:
 
 Required evidence before unblocking:
 
+- Estimand and uncertainty design: see
+  `gpcm-score-side-estimand-0.3.0.md`, which names the observation-level
+  estimand, records the raw-score non-sufficiency argument, and specifies
+  the corrected score-scale delta factor (`dE/dtheta = a * Var`) for the
+  score-side SE route.
 - Keep `gpcm_score_side_contract()` synchronized with this roadmap and
   `gpcm_runtime_guard_coverage()`.
 - Define the bounded-`GPCM` score-side estimand separately from Rasch-family
