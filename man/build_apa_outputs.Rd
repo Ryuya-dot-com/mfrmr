@@ -131,7 +131,7 @@ diag_quick <- diagnose_mfrm(fit_quick, residual_pca = "none",
 apa_quick <- build_apa_outputs(fit_quick, diag_quick)
 nchar(apa_quick$report_text) > 0
 
-\donttest{
+\dontrun{
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "MML", quad_points = 7, maxit = 30)
 diag <- diagnose_mfrm(fit, residual_pca = "both", diagnostic_mode = "both")

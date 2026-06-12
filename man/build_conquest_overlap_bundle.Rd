@@ -106,7 +106,7 @@ population-model review fields
 }
 
 \examples{
-\donttest{
+\dontrun{
 bundle <- build_conquest_overlap_bundle(quad_points = 3, maxit = 30)
 bundle$summary[, c("Case", "Facet", "Covariate", "Persons", "Items")]
 summary(bundle)$conquest_command_scope

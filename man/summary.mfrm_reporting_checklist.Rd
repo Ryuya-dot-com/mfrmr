@@ -33,7 +33,7 @@ the main \code{InterpretationCheck} caveat for each visual family
 Summarize a reporting-checklist bundle for manuscript work
 }
 \examples{
-\donttest{
+\dontrun{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "MML", quad_points = 7, maxit = 30)

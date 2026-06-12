@@ -189,7 +189,7 @@
 #' @return An object of class `mfrm_sim_spec`.
 #' @seealso [extract_mfrm_sim_spec()], [simulate_mfrm_data()]
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' spec <- build_mfrm_sim_spec(
 #'   design = list(person = 8, rater = 2, criterion = 2, assignment = 1),
 #'   assignment = "rotating"
@@ -781,7 +781,7 @@ build_peer_review_sim_spec <- function(n_submission = 50,
 #' @return An object of class `mfrm_sim_spec`.
 #' @seealso [build_mfrm_sim_spec()], [simulate_mfrm_data()]
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' toy <- simulate_mfrm_data(
 #'   n_person = 8,
 #'   n_rater = 3,

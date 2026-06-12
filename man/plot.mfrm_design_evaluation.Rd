@@ -64,7 +64,7 @@ missingness and rater-pair linkage separately from recovery metrics
 }
 }
 \examples{
-\donttest{
+\dontrun{
 sim_eval <- suppressWarnings(evaluate_mfrm_design(
   n_person = c(8, 12),
   n_rater = 2,

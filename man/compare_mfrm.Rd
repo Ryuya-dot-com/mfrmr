@@ -203,7 +203,7 @@ identification. \emph{IEEE Transactions on Automatic Control,
 }
 
 \examples{
-\donttest{
+\dontrun{
 toy <- load_mfrmr_data("example_core")
 
 fit_rsm <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",

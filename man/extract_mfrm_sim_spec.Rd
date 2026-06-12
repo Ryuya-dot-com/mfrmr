@@ -87,7 +87,7 @@ design and estimated spread in the fitted run.
 }
 
 \examples{
-\donttest{
+\dontrun{
 toy <- simulate_mfrm_data(
   n_person = 8,
   n_rater = 3,

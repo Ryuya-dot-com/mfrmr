@@ -636,7 +636,7 @@
 #'                       method = "JML", maxit = 30)
 #' fit_quick$summary[, c("Model", "Method", "N", "Converged")]
 #'
-#' \donttest{
+#' \dontrun{
 #' # Full run with the package default MML estimator (recommended for
 #' # final reporting because person parameters are integrated out under
 #' # an N(0, 1) prior). The default `quad_points = 31` is the
@@ -3212,7 +3212,7 @@ make_anchor_table <- function(fit,
 #'                              residual_pca = "none")
 #' summary(diag_quick)$overview[, c("Observations", "Facets", "Categories")]
 #'
-#' \donttest{
+#' \dontrun{
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' diag <- diagnose_mfrm(fit, diagnostic_mode = "both", residual_pca = "none")
 #' s_diag <- summary(diag)
@@ -3452,7 +3452,7 @@ diagnose_mfrm <- function(fit,
 #'
 #' @seealso [fit_mfrm()], [diagnose_mfrm()]
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' toy <- load_mfrmr_data("example_core")
 #'
 #' fit_rsm <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",

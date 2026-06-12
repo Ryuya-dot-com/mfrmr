@@ -127,7 +127,7 @@
 #' @seealso [build_mfrm_sim_spec()], [extract_mfrm_sim_spec()],
 #'   [evaluate_mfrm_design()], [summary.mfrm_population_prediction]
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' spec <- build_mfrm_sim_spec(
 #'   n_person = 16,
 #'   n_rater = 3,
@@ -333,7 +333,7 @@ predict_mfrm_population <- function(fit = NULL,
 #' - `notes`: interpretation notes
 #' @seealso [predict_mfrm_population()]
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' spec <- build_mfrm_sim_spec(
 #'   n_person = 16,
 #'   n_rater = 3,

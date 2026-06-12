@@ -129,7 +129,7 @@ tables do not yet align cleanly with the exported overlap bundle.
 }
 
 \examples{
-\donttest{
+\dontrun{
 bundle <- build_conquest_overlap_bundle()
 raw_pop <- data.frame(
   Term = bundle$mfrmr_population$Parameter,

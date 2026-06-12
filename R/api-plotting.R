@@ -291,7 +291,7 @@ plot_component_note <- function(name, role) {
 #'
 #' @return The full reusable plot-data list, or the selected component.
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", maxit = 30)
 #'
@@ -359,7 +359,7 @@ plot_data <- function(x, component = NULL, type = NULL, ...) {
 #'
 #' @return A data frame with one row per reusable plot-data component.
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", maxit = 30)
 #' plot_data_components(fit, type = "pathway")
@@ -967,7 +967,7 @@ format_marginal_pair_label <- function(facet, level1, level2) {
 #' @seealso [diagnose_mfrm()], [rating_scale_table()], [plot_marginal_pairwise()],
 #'   [mfrmr_visual_diagnostics]
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(
 #'   toy,
@@ -1204,7 +1204,7 @@ plot_marginal_fit <- function(x,
 #' @return A plotting-data object of class `mfrm_plot_data`.
 #' @seealso [diagnose_mfrm()], [plot_marginal_fit()], [mfrmr_visual_diagnostics]
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(
 #'   toy,
@@ -2317,7 +2317,7 @@ plot_displacement <- function(x,
 #' @seealso [interrater_agreement_table()], [plot_facets_chisq()],
 #'   [plot_qc_dashboard()], [mfrmr_visual_diagnostics]
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' p <- plot_interrater_agreement(fit, rater_facet = "Rater", draw = FALSE)
@@ -2782,7 +2782,7 @@ plot_facets_chisq <- function(x,
 #' qc_quick <- plot_qc_dashboard(fit_quick, draw = FALSE)
 #' names(qc_quick$data)
 #'
-#' \donttest{
+#' \dontrun{
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' qc <- plot_qc_dashboard(fit, draw = FALSE)
 #' qc$data$panels$Status

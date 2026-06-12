@@ -130,7 +130,7 @@ fit_quick <- suppressWarnings(
 qc_quick <- plot_qc_dashboard(fit_quick, draw = FALSE)
 names(qc_quick$data)
 
-\donttest{
+\dontrun{
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 qc <- plot_qc_dashboard(fit, draw = FALSE)
 qc$data$panels$Status

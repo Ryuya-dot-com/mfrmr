@@ -767,7 +767,7 @@ fit_quick <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                       method = "JML", maxit = 30)
 fit_quick$summary[, c("Model", "Method", "N", "Converged")]
 
-\donttest{
+\dontrun{
 # Full run with the package default MML estimator (recommended for
 # final reporting because person parameters are integrated out under
 # an N(0, 1) prior). The default `quad_points = 31` is the

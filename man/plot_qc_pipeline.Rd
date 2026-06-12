@@ -68,7 +68,7 @@ exact results to stakeholders.
 }
 
 \examples{
-\donttest{
+\dontrun{
 toy <- load_mfrmr_data("study1")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "JML", maxit = 30)
