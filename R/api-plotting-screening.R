@@ -339,7 +339,7 @@ plot_residual_qq <- function(fit,
 #' @concept linking
 #'
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' toy <- load_mfrmr_data("example_core")
 #' fit_a <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                   method = "JML", maxit = 30)

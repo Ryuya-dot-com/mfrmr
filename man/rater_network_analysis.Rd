@@ -98,7 +98,7 @@ negative for relatively lenient raters, but it is on a network-analysis scale
 and should not be read as an MFRM severity logit.
 }
 \examples{
-\donttest{
+\dontrun{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "JML", maxit = 30)

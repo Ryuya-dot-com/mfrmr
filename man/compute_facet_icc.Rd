@@ -144,7 +144,7 @@ average cluster sizes into Kish (1965) design effects.
 }
 
 \examples{
-\donttest{
+\dontrun{
 toy <- load_mfrmr_data("example_core")
 if (requireNamespace("lme4", quietly = TRUE)) {
   icc <- compute_facet_icc(toy, facets = c("Rater", "Criterion"),

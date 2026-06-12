@@ -4427,7 +4427,7 @@ mfrm_report_html <- function(report) {
 #'   [build_apa_outputs()], [reporting_checklist()],
 #'   [mfrmr_output_guide()]
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' toy <- load_mfrmr_data("example_core")
 #' toy_small <- toy[toy$Person %in% unique(toy$Person)[1:6], , drop = FALSE]
 #' fit <- fit_mfrm(toy_small, "Person", c("Rater", "Criterion"), "Score",
@@ -4603,7 +4603,7 @@ mfrm_results_export_add_written <- function(written_files, component, format, pa
 #' @seealso [mfrm_results()], [launch_mfrmr_viewer()],
 #'   [export_mfrm_bundle()], [export_summary_appendix()]
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' toy <- load_mfrmr_data("example_core")
 #' toy_small <- toy[toy$Person %in% unique(toy$Person)[1:6], , drop = FALSE]
 #' fit <- fit_mfrm(toy_small, "Person", c("Rater", "Criterion"), "Score",
@@ -5031,7 +5031,7 @@ export_mfrm_results <- function(x,
 #'   [export_mfrm_results()],
 #'   [launch_mfrmr_viewer()], [mfrmr_output_guide()]
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' toy <- load_mfrmr_data("example_core")
 #' toy_small <- toy[toy$Person %in% unique(toy$Person)[1:8], , drop = FALSE]
 #'

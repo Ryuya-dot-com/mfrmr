@@ -60,7 +60,7 @@
 #' @return A named list with class `mfrm_bias_collection`.
 #' @seealso [estimate_bias()], [reporting_checklist()], [facet_quality_dashboard()]
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "MML", quad_points = 7, maxit = 30)

@@ -83,7 +83,7 @@
 #'
 #' @seealso [mfrm_d_study()], [compute_facet_icc()], [diagnose_mfrm()]
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "JML", maxit = 30)
@@ -290,7 +290,7 @@ mfrm_generalizability <- function(fit,
 #' @seealso [mfrm_generalizability()], [evaluate_mfrm_design()],
 #'   [recommend_mfrm_design()], [plot_data()]
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "JML", maxit = 30)

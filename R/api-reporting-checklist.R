@@ -115,7 +115,7 @@
 #' chk_quick <- reporting_checklist(fit_quick, diagnostics = diag_quick)
 #' head(chk_quick$checklist[, c("Section", "Item", "DraftReady")])
 #'
-#' \donttest{
+#' \dontrun{
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "MML", quad_points = 7, maxit = 30)
 #' diag <- diagnose_mfrm(fit, residual_pca = "both", diagnostic_mode = "both")
@@ -1223,7 +1223,7 @@ visual_scope_table <- function(fit, checklist) {
 #' - `notes`: interpretation notes
 #' @seealso [reporting_checklist()], [summary.mfrm_apa_outputs]
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "MML", quad_points = 7, maxit = 30)

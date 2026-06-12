@@ -150,7 +150,7 @@ cumulative offsets less trustworthy.
 }
 
 \examples{
-\donttest{
+\dontrun{
 toy <- load_mfrmr_data("example_core")
 people <- unique(toy$Person)
 d1 <- toy[toy$Person \%in\% people[1:12], , drop = FALSE]

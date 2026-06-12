@@ -1697,7 +1697,7 @@ summarize_category_curves_bundle <- function(object, digits = 3, top_n = 10) {
 #' @return An object of class `summary.mfrm_bundle`.
 #' @seealso [unexpected_response_table()], [fair_average_table()], `plot()`
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' toy_full <- load_mfrmr_data("example_core")
 #' toy_people <- unique(toy_full$Person)[1:12]
 #' toy <- toy_full[toy_full$Person %in% toy_people, , drop = FALSE]
@@ -6086,7 +6086,7 @@ plot_visual_summaries_bundle <- function(x,
 #' @return A plotting-data object of class `mfrm_plot_data`.
 #' @seealso `summary()`, [plot_unexpected()], [plot_fair_average()], [plot_displacement()]
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' toy_full <- load_mfrmr_data("example_core")
 #' toy_people <- unique(toy_full$Person)[1:12]
 #' toy <- toy_full[toy_full$Person %in% toy_people, , drop = FALSE]

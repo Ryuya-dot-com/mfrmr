@@ -89,7 +89,7 @@ that the files were treated as extracted tables, not raw ConQuest report
 text, and to check duplicate-ID / non-numeric-estimate pre-review flags.
 }
 \examples{
-\donttest{
+\dontrun{
 bundle <- build_conquest_overlap_bundle()
 tmp_dir <- tempdir()
 pop_path <- file.path(tmp_dir, "cq_pop.csv")

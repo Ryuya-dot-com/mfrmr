@@ -58,7 +58,7 @@ identifies slopes on the log scale with geometric mean 1, and keeps several
 downstream score-side/reporting helpers outside the validated boundary.
 }
 \examples{
-\donttest{
+\dontrun{
 toy <- load_mfrmr_data("example_core")
 fit_rsm <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                     method = "MML", model = "RSM", quad_points = 7)

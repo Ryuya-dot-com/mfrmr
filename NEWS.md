@@ -1,3 +1,14 @@
+# mfrmr 0.2.2
+
+This release is identical to 0.2.1 except for the example-execution policy.
+The 0.2.1 submission passed the CRAN incoming content checks on Windows and
+Debian but exceeded the overall-checktime limit on the Windows incoming
+host. Long-running illustration examples previously wrapped in `\donttest`
+are now wrapped in `\dontrun` so the checked example surface stays within
+the CRAN timing budget. The illustrations remain executable as written and
+the underlying routes stay covered by the package's test suite and the
+cross-platform CI matrix.
+
 # mfrmr 0.2.1
 
 This release focuses on a clearer public workflow, a more readable reporting

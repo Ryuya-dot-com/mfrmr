@@ -52,7 +52,7 @@ optional report-index review rates so simulation results can be inspected in
 one operating-characteristic surface.
 }
 \examples{
-\donttest{
+\dontrun{
 diag_eval <- evaluate_mfrm_diagnostic_screening(
   design = list(person = 10, rater = 2, criterion = 2, assignment = 2),
   reps = 1,

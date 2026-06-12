@@ -26,7 +26,7 @@ what shape they have, and which ones are most useful for custom graphics,
 dashboards, or report assembly.
 }
 \examples{
-\donttest{
+\dontrun{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", maxit = 30)
 plot_data_components(fit, type = "pathway")

@@ -137,7 +137,7 @@ investigated for substantive causes (e.g., rater re-training).
 }
 
 \examples{
-\donttest{
+\dontrun{
 d1 <- load_mfrmr_data("study1")
 d2 <- load_mfrmr_data("study2")
 fit1 <- fit_mfrm(d1, "Person", c("Rater", "Criterion"), "Score",

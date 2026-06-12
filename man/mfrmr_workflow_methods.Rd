@@ -332,7 +332,7 @@ plots from component tables.
 }
 
 \examples{
-\donttest{
+\dontrun{
 toy_full <- load_mfrmr_data("example_core")
 keep_people <- unique(toy_full$Person)[1:12]
 toy <- toy_full[toy_full$Person \%in\% keep_people, , drop = FALSE]

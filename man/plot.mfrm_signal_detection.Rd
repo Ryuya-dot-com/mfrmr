@@ -53,7 +53,7 @@ formal power/error-rate displays.
 Plot DIF/bias screening simulation results
 }
 \examples{
-\donttest{
+\dontrun{
 sig_eval <- suppressWarnings(evaluate_mfrm_signal_detection(
   n_person = 8,
   n_rater = 2,

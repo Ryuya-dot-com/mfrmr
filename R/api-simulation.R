@@ -2508,7 +2508,7 @@ recovery_build_notes <- function(rep_overview, recovery_summary, model) {
 #'
 #' @seealso [simulate_mfrm_data()], [evaluate_mfrm_design()], [fit_mfrm()]
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' rec <- evaluate_mfrm_recovery(
 #'   n_person = 12,
 #'   n_rater = 2,
@@ -3694,7 +3694,7 @@ recovery_assessment_next_actions <- function(checklist, metric_review, max_n = 6
 #' - `thresholds`: thresholds used for the assessment.
 #' @seealso [evaluate_mfrm_recovery()], [plot.mfrm_recovery_simulation()]
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' rec <- evaluate_mfrm_recovery(
 #'   n_person = 12,
 #'   n_rater = 2,
@@ -4635,7 +4635,7 @@ recovery_plot_status_table <- function(rep_tbl) {
 #'   invisibly after drawing.
 #' @seealso [evaluate_mfrm_recovery()], [summary()]
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' rec <- evaluate_mfrm_recovery(
 #'   n_person = 12,
 #'   n_rater = 2,
@@ -5093,7 +5093,7 @@ plot.mfrm_recovery_simulation <- function(x,
 #' - `ademp`: simulation-study metadata (aims, DGM, estimands, methods, performance measures)
 #' @seealso [simulate_mfrm_data()], [summary.mfrm_design_evaluation], [plot.mfrm_design_evaluation]
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' sim_eval <- suppressWarnings(evaluate_mfrm_design(
 #'   design = list(person = c(8, 12), rater = 2, criterion = 2, assignment = 1),
 #'   reps = 1,
@@ -5602,7 +5602,7 @@ evaluate_mfrm_design <- function(n_person = c(30, 50, 100),
 #' - `notes`: short interpretation notes
 #' @seealso [evaluate_mfrm_design()], [plot.mfrm_design_evaluation]
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' sim_eval <- suppressWarnings(evaluate_mfrm_design(
 #'   n_person = c(8, 12),
 #'   n_rater = 2,
@@ -5757,7 +5757,7 @@ print.summary.mfrm_design_evaluation <- function(x, ...) {
 #'   `planning_schema`.
 #' @seealso [evaluate_mfrm_design()], [summary.mfrm_design_evaluation]
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' sim_eval <- suppressWarnings(evaluate_mfrm_design(
 #'   n_person = c(8, 12),
 #'   n_rater = 2,
@@ -5938,7 +5938,7 @@ plot.mfrm_design_evaluation <- function(x,
 #'   when no caveats apply.
 #' @seealso [evaluate_mfrm_design()], [summary.mfrm_design_evaluation], [plot.mfrm_design_evaluation]
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' sim_eval <- suppressWarnings(evaluate_mfrm_design(
 #'   n_person = c(8, 12),
 #'   n_rater = 2,
@@ -6858,7 +6858,7 @@ diagnostic_screening_summarize_results <- function(results, design_variable_alia
 #'
 #' @seealso [simulate_mfrm_data()], [evaluate_mfrm_design()], [diagnose_mfrm()]
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' diag_eval <- evaluate_mfrm_diagnostic_screening(
 #'   design = list(person = 10, rater = 2, criterion = 2, assignment = 2),
 #'   reps = 1,
@@ -7717,7 +7717,7 @@ diagnostic_screening_interpretation_payload <- function(object, overview = NULL)
 #'
 #' @seealso [evaluate_mfrm_diagnostic_screening()], [plot.mfrm_diagnostic_screening], [plot_data()]
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' diag_eval <- evaluate_mfrm_diagnostic_screening(
 #'   design = list(person = 10, rater = 2, criterion = 2, assignment = 2),
 #'   reps = 1,
@@ -8151,7 +8151,7 @@ diagnostic_screening_plot_group_labels <- function(plot_tbl, group_var = NULL) {
 #'   after drawing.
 #'
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' diag_eval <- evaluate_mfrm_diagnostic_screening(
 #'   design = list(person = 10, rater = 2, criterion = 2, assignment = 2),
 #'   reps = 1,
@@ -8683,7 +8683,7 @@ signal_eval_metric_col <- function(signal, metric) {
 #' - `notes`: short interpretation notes
 #' @seealso [simulate_mfrm_data()], [evaluate_mfrm_design()], [analyze_dff()], [analyze_dif()], [estimate_bias()]
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' sig_eval <- suppressWarnings(evaluate_mfrm_signal_detection(
 #'   design = list(person = 8, rater = 2, criterion = 2, assignment = 1),
 #'   reps = 1,
@@ -9178,7 +9178,7 @@ evaluate_mfrm_signal_detection <- function(n_person = c(30, 50, 100),
 #' - `notes`: short interpretation notes, including the bias-side screening caveat
 #' @seealso [evaluate_mfrm_signal_detection()], [plot.mfrm_signal_detection]
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' sig_eval <- suppressWarnings(evaluate_mfrm_signal_detection(
 #'   n_person = 8,
 #'   n_rater = 2,
@@ -9347,7 +9347,7 @@ signal_detection_metric_label <- function(signal, metric_col) {
 #'   formal power/error-rate displays.
 #' @seealso [evaluate_mfrm_signal_detection()], [summary.mfrm_signal_detection]
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' sig_eval <- suppressWarnings(evaluate_mfrm_signal_detection(
 #'   n_person = 8,
 #'   n_rater = 2,

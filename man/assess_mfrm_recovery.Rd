@@ -148,7 +148,7 @@ user-facing plot tables such as \code{section_status} for status plots and
 \code{metric_review} for metric plots.
 }
 \examples{
-\donttest{
+\dontrun{
 rec <- evaluate_mfrm_recovery(
   n_person = 12,
   n_rater = 2,

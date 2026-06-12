@@ -37,7 +37,7 @@ planning schema
 Summarize a population-level design forecast
 }
 \examples{
-\donttest{
+\dontrun{
 spec <- build_mfrm_sim_spec(
   n_person = 16,
   n_rater = 3,

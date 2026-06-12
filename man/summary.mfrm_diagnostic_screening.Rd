@@ -42,7 +42,7 @@ marginal, pairwise, and report-review signals are screening readouts rather
 than pass/fail evidence.
 }
 \examples{
-\donttest{
+\dontrun{
 diag_eval <- evaluate_mfrm_diagnostic_screening(
   design = list(person = 10, rater = 2, criterion = 2, assignment = 2),
   reps = 1,

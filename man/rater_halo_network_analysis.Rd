@@ -100,7 +100,7 @@ screening diagnostic. The included Welch test is descriptive only because
 edge weights are clustered by rater and node.
 }
 \examples{
-\donttest{
+\dontrun{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "JML", maxit = 30)

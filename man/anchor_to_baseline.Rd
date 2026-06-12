@@ -151,7 +151,7 @@ baseline scale.
 }
 
 \examples{
-\donttest{
+\dontrun{
 d1 <- load_mfrmr_data("study1")
 keep1 <- unique(d1$Person)[1:15]
 d1 <- d1[d1$Person \%in\% keep1, , drop = FALSE]

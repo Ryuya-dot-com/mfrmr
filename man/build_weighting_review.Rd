@@ -85,7 +85,7 @@ validity adjudication.
 }
 
 \examples{
-\donttest{
+\dontrun{
 toy <- load_mfrmr_data("example_core")
 rasch_fit <- fit_mfrm(
   toy,

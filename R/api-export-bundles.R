@@ -1921,7 +1921,7 @@ build_conquest_overlap_readme <- function(summary_tbl,
 #'   [reference_case_benchmark()], [build_mfrm_replay_script()],
 #'   [export_mfrm_bundle()]
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' bundle <- build_conquest_overlap_bundle(quad_points = 3, maxit = 30)
 #' bundle$summary[, c("Case", "Facet", "Covariate", "Persons", "Items")]
 #' summary(bundle)$conquest_command_scope
@@ -2644,7 +2644,7 @@ normalize_conquest_overlap_tables <- function(conquest_population,
 #' @return A named list with class `mfrm_conquest_overlap_tables`.
 #' @seealso [normalize_conquest_overlap_tables()], [review_conquest_overlap()]
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' bundle <- build_conquest_overlap_bundle()
 #' tmp_dir <- tempdir()
 #' pop_path <- file.path(tmp_dir, "cq_pop.csv")
@@ -2839,7 +2839,7 @@ normalize_conquest_overlap_files <- function(population_file,
 #'   [normalize_conquest_overlap_files()], [normalize_conquest_overlap_tables()],
 #'   [reference_case_benchmark()]
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' bundle <- build_conquest_overlap_bundle()
 #' raw_pop <- data.frame(
 #'   Term = bundle$mfrmr_population$Parameter,
@@ -3268,7 +3268,7 @@ review_conquest_overlap <- function(bundle,
 #' @seealso [build_summary_table_bundle()], [export_mfrm_bundle()],
 #'   [apa_table()]
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "JML", maxit = 30)

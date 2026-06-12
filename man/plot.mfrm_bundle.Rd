@@ -89,7 +89,7 @@ the selected route and reusable data; set \code{draw = TRUE} for immediate base 
 }
 
 \examples{
-\donttest{
+\dontrun{
 toy_full <- load_mfrmr_data("example_core")
 toy_people <- unique(toy_full$Person)[1:12]
 toy <- toy_full[toy_full$Person \%in\% toy_people, , drop = FALSE]

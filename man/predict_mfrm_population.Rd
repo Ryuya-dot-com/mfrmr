@@ -177,7 +177,7 @@ reporting}. Psychological Methods.
 }
 
 \examples{
-\donttest{
+\dontrun{
 spec <- build_mfrm_sim_spec(
   n_person = 16,
   n_rater = 3,
