@@ -23,7 +23,8 @@ build_summary_table_bundle(
 \code{mfrm_recovery_simulation}, \code{mfrm_recovery_assessment},
 \code{mfrm_population_prediction}, \code{mfrm_future_branch_active_branch},
 \code{mfrm_facets_run}, \code{mfrm_bias}, \code{mfrm_anchor_review},
-\code{mfrm_linking_review}, \code{mfrm_misfit_casebook}, \code{mfrm_weighting_review},
+\code{mfrm_linking_review}, \code{mfrm_misfit_casebook},
+\code{mfrm_model_choice_review}, \code{mfrm_weighting_review},
 \code{mfrm_unit_prediction}, or \code{mfrm_plausible_values} object, one of their
 \code{summary()} outputs, or a \code{summary.mfrmr_recovery_validation} object from
 the packaged validation protocol.}
@@ -104,6 +105,7 @@ manuscript-facing subset before plotting or export.
 \item \code{\link[=review_mfrm_anchors]{review_mfrm_anchors()}} or \code{summary(review)}
 \item \code{\link[=build_linking_review]{build_linking_review()}} or \code{summary(review)}
 \item \code{\link[=build_misfit_casebook]{build_misfit_casebook()}} or \code{summary(casebook)}
+\item \code{\link[=build_model_choice_review]{build_model_choice_review()}} or \code{summary(review)}
 \item \code{\link[=build_weighting_review]{build_weighting_review()}} or \code{summary(review)}
 \item \code{\link[=predict_mfrm_units]{predict_mfrm_units()}} or \code{summary(pred_units)}
 \item \code{\link[=sample_mfrm_plausible_values]{sample_mfrm_plausible_values()}} or \code{summary(pv)}
@@ -141,6 +143,10 @@ handoffs.
 \item latent-regression fit summaries expose \code{population_coding} in the methods
 appendix role so categorical levels, contrasts, and encoded columns can be
 documented with the coefficient table.
+\item model-choice-review summaries expose \code{comparison_table}, \code{model_roles},
+\code{downstream_routes}, and \code{report_templates} so RSM/PCM versus bounded
+\code{GPCM} comparisons remain tied to their equal-weighting, sensitivity, and
+reporting-boundary roles.
 }
 }
 
@@ -168,7 +174,8 @@ plan.
 \dontrun{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", maxit = 30)
+  method = "JML", maxit = 30
+)
 bundle <- build_summary_table_bundle(fit)
 bundle$table_index
 summary(bundle)$role_summary
@@ -192,5 +199,6 @@ validation_bundle$tables$diagnostic_reporting_notes
 }
 \seealso{
 \code{\link[=summary]{summary()}}, \code{\link[=apa_table]{apa_table()}}, \code{\link[=reporting_checklist]{reporting_checklist()}},
-\code{\link[=build_apa_outputs]{build_apa_outputs()}}
+\code{\link[=build_apa_outputs]{build_apa_outputs()}}, \code{\link[=compare_mfrm]{compare_mfrm()}}, \code{\link[=build_model_choice_review]{build_model_choice_review()}},
+\code{\link[=build_weighting_review]{build_weighting_review()}}
 }

@@ -190,8 +190,9 @@ test_that("facets_feature_coverage separates implemented and unsupported FACETS 
   expect_true(any(grepl("Wright map", coverage$FACETSFeature, fixed = TRUE) &
                     coverage$Status == "implemented"))
   expect_true(any(grepl("Generalizability Theory", coverage$FACETSFeature, fixed = TRUE) &
-                    coverage$Status == "implemented" &
-                    grepl("mfrm_d_study", coverage$mfrmrRoute, fixed = TRUE)))
+                    coverage$Status == "supported_with_caveat" &
+                    grepl("mfrm_d_study", coverage$mfrmrRoute, fixed = TRUE) &
+                    grepl("IdentificationStatus", coverage$Scope, fixed = TRUE)))
   expect_true(any(grepl("Connectivity network graph", coverage$FACETSFeature, fixed = TRUE) &
                     coverage$Status == "implemented" &
                     grepl("mfrm_network_analysis", coverage$mfrmrRoute, fixed = TRUE) &
@@ -213,6 +214,11 @@ test_that("facets_feature_coverage separates implemented and unsupported FACETS 
   partial <- facets_feature_coverage("partial")
   expect_true(nrow(partial) > 0L)
   expect_true(all(partial$Status == "partial"))
+
+  caveated <- facets_feature_coverage("supported_with_caveat")
+  expect_true(nrow(caveated) > 0L)
+  expect_true(all(caveated$Status == "supported_with_caveat"))
+  expect_true(any(grepl("Generalizability Theory", caveated$FACETSFeature, fixed = TRUE)))
 
   missing <- facets_feature_coverage("not_implemented")
   expect_true(nrow(missing) > 0L)

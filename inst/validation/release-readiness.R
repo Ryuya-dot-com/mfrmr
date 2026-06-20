@@ -52,7 +52,7 @@ mfrmr_release_readiness_prompt_steps <- function(target_version = NULL) {
     Evidence = c(
       "DESCRIPTION Version; first NEWS heading; check-log package version; absence of development labels in current release files",
       "release-evidence-checklist blocker rows; targeted mathematical tests; recovery-validation summary",
-      "gpcm_capability_matrix(); README; vignettes; NEWS deferred-work section; post-0.2.1 GPCM roadmap",
+      "gpcm_capability_matrix(); README; vignettes; NEWS deferred-work section; post-0.2.2 GPCM roadmap",
       "facets_positioning_guide(); facets_fit_review(); read_facets_fit_table(); output guide",
       "summary methods; plot(..., draw = FALSE); plot_data(); summary-table bundles",
       "README/vignettes/man/cheatsheet terminology scan",
@@ -150,7 +150,13 @@ mfrmr_release_readiness_paths <- function(pkg_dir = ".",
       target_version = target_version,
       ext = ".csv"
     ),
-    gpcm_roadmap = file.path(validation_dir, "gpcm-post-0.2.1-roadmap.md"),
+    gpcm_roadmap = mfrmr_release_readiness_versioned_file(
+      validation_dir,
+      prefix = "gpcm-post-",
+      target_version = target_version,
+      fallback_version = "0.2.2",
+      ext = "-roadmap.md"
+    ),
     gpcm_capability_source = file.path(pkg_dir, "R", "help_gpcm_scope.R"),
     external_recovery_evidence = mfrmr_release_readiness_versioned_file(
       validation_dir,

@@ -37,6 +37,16 @@ table-level handoff crosswalk, plus direct \code{role_summary} / \code{table_pro
 surfaces for table-shape review.
 It does not report psychometric recovery or Monte Carlo performance.
 }
+\examples{
+\dontrun{
+spec <- build_mfrm_sim_spec(
+  design = list(person = 16, rater = 3, criterion = 2, assignment = 2),
+  assignment = "rotating"
+)
+active <- spec$planning_schema$future_branch_active_branch
+summary(active)
+}
+}
 \seealso{
 \code{\link[=summary.mfrm_design_evaluation]{summary.mfrm_design_evaluation()}}, \code{\link[=plot.mfrm_future_branch_active_branch]{plot.mfrm_future_branch_active_branch()}}
 }

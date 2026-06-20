@@ -1,4 +1,4 @@
-# mfrmr (development version)
+# mfrmr 0.2.2
 
 - The example-execution policy now keeps `R CMD check` time within the
   CRAN incoming budget (the 0.2.1 submission passed the content checks on
@@ -10,6 +10,40 @@
   lightweight pages plus the core `fit_mfrm()` example in the executed
   surface. All illustrations remain in the help pages and run in
   interactive sessions.
+- Release metadata and reviewer-facing documentation now consistently use the
+  0.2.2 maintenance-candidate boundary: `CITATION.cff`, README routing,
+  validation evidence-map references, and the bounded-GPCM roadmap all point
+  to the current 0.2.2 surface rather than the previous CRAN 0.2.1 baseline.
+- The README now starts with the public user workflow before the R Journal
+  reviewer note, keeping `fit_mfrm()` -> `mfrm_results()` -> `mfrm_report()` ->
+  `export_mfrm_results()` as the first-contact route.
+- Reporting and visualization documentation now makes the publication boundary
+  explicit: APA/report helpers provide conservative drafting scaffolds,
+  claim-readiness and caveat-routing tables, and reproducible handoff files,
+  while high-stakes journal claims still require study-specific design,
+  literature, sensitivity, and substantive interpretation decisions.
+- The visual diagnostics vignette and `plot_data()` help now show how to use
+  `draw = FALSE`, `plot_data_components()`, and `plot_data()` to build custom
+  figures while retaining reference lines, guidance, and interpretation
+  metadata from the package-native plot.
+- Reporting and visual help now make the fit-level HTML bundle route explicit:
+  `export_mfrm_bundle(fit, include = c(..., "html"))` writes a local
+  HTML/CSV/replay bundle without requiring a prior `mfrm_results()` object,
+  while `preset = "monochrome"` is documented as the grayscale /
+  print-friendly plot route.
+- Model-comparison reporting is now routed through the same appendix/export
+  contract: `build_summary_table_bundle()` accepts
+  `build_model_choice_review()` objects and their summaries, and README /
+  reporting-vignette guidance now separates same-data fit comparison,
+  equal-weighting versus bounded-`GPCM` model roles, cautious wording, and
+  latent-regression reporting boundaries.
+- The pkgdown configuration now groups reference topics by primary workflow,
+  bounded-GPCM boundary, diagnostics, reporting/export, simulation/recovery,
+  linking/bias/DFF, FACETS migration, and advanced review surfaces.
+- `cran-comments.md` has been rewritten as a CRAN maintenance-release note
+  rather than a journal-preparation note; any remaining pkgdown URL NOTE must
+  be resolved before release by publishing the prepared pkgdown route or by
+  revising release URLs.
 
 # mfrmr 0.2.1
 

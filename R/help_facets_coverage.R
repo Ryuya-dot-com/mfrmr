@@ -91,6 +91,8 @@ facets_positioning_guide <- function() {
 #' Status meanings:
 #'
 #' - `implemented`: a package-native route covers the substantive output.
+#' - `supported_with_caveat`: a package-native route exists, but the output
+#'   must be read with explicit identification, validation, or scope caveats.
 #' - `partial`: the concept is covered, but not the full FACETS formatting,
 #'   option surface, file type, or external integration.
 #' - `not_implemented`: a FACETS feature has no direct package-native route in
@@ -119,10 +121,13 @@ facets_positioning_guide <- function() {
 #' @examples
 #' facets_feature_coverage()
 #' facets_feature_coverage("partial")
+#' facets_feature_coverage("supported_with_caveat")
 #' facets_feature_coverage("not_implemented")
 #' @export
-facets_feature_coverage <- function(status = c("all", "implemented", "partial",
-                                               "not_implemented", "not_targeted")) {
+facets_feature_coverage <- function(status = c("all", "implemented",
+                                               "supported_with_caveat",
+                                               "partial", "not_implemented",
+                                               "not_targeted")) {
   status <- match.arg(status)
 
   row <- function(area, feature, reference, route, status, scope, gap, priority) {
@@ -252,9 +257,9 @@ facets_feature_coverage <- function(status = c("all", "implemented", "partial",
         "Several package outputs include histogram-like summaries.",
         "No general FACETS histogram menu clone.", "low"),
     row("R/Web plots", "Generalizability Theory via R package gtheory", "gtheory.htm",
-        "mfrm_generalizability(); mfrm_d_study(); compute_facet_icc()", "implemented",
-        "Observed G-study variance components plus D-study projections with residual-scaling sensitivity.",
-        "Package-native G/D-study route; not a FACETS/gtheory UI clone.", "release_core"),
+        "mfrm_generalizability(); mfrm_d_study(); compute_facet_icc()", "supported_with_caveat",
+        "Observed univariate G-study variance components plus D-study projections with residual-scaling sensitivity and `IdentificationStatus` columns.",
+        "Package-native caveated G/D-study route; not a FACETS/gtheory UI clone, not multivariate/profile G-theory, and not high-stakes-ready when boundary or singular fits are reported.", "release_core"),
     row("R/Web plots", "Connectivity network graph via igraph", "networkgraph.htm",
         "subset_connectivity_report(); mfrm_network_analysis(); rater_network_analysis(); rater_halo_network_analysis(); plot(..., type = \"network\")", "implemented",
         "Facet-level co-observation network plus rater agreement/disagreement/severity-direction and halo networks with reusable node/edge tables.",

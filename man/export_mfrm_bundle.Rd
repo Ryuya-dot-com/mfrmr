@@ -91,6 +91,12 @@ Export an analysis bundle for sharing or archiving
 This function is the package-native counterpart to the app's download bundle.
 It reuses existing \code{mfrmr} helpers instead of reimplementing estimation or
 diagnostics.
+It is also the one-call fit-level HTML route: when \code{diagnostics = NULL},
+the exporter computes the diagnostics it needs, then writes the requested
+CSV/text/replay artifacts and a lightweight HTML page from the fitted object.
+Use \code{\link[=mfrm_results]{mfrm_results()}} and \code{\link[=mfrm_report]{mfrm_report()}} first when you want to inspect a
+results object before writing files; use \code{export_mfrm_bundle()} when the
+goal is a project-folder bundle from \code{fit}.
 }
 \section{Choosing exports}{
 
@@ -197,6 +203,8 @@ head(bundle$written_files)
 \dontshow{\}) # examplesIf}
 }
 \seealso{
-\code{\link[=build_mfrm_manifest]{build_mfrm_manifest()}}, \code{\link[=build_mfrm_replay_script]{build_mfrm_replay_script()}},
-\code{\link[=export_mfrm]{export_mfrm()}}, \code{\link[=reporting_checklist]{reporting_checklist()}}, \code{\link[=export_summary_appendix]{export_summary_appendix()}}
+\code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=mfrm_results]{mfrm_results()}}, \code{\link[=mfrm_report]{mfrm_report()}},
+\code{\link[=export_mfrm_results]{export_mfrm_results()}}, \code{\link[=build_mfrm_manifest]{build_mfrm_manifest()}},
+\code{\link[=build_mfrm_replay_script]{build_mfrm_replay_script()}}, \code{\link[=export_mfrm]{export_mfrm()}},
+\code{\link[=reporting_checklist]{reporting_checklist()}}, \code{\link[=export_summary_appendix]{export_summary_appendix()}}
 }

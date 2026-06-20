@@ -5004,10 +5004,13 @@ export_mfrm_results <- function(x,
 #' 2. Call `res <- mfrm_results(fit)`.
 #' 3. Read `summary(res)$triage`, `summary(res)$status`,
 #'    `summary(res)$plot_map`, and `summary(res)$next_actions`.
-#' 4. Use `plot(res, type = "qc")` for the first visual screen.
-#' 5. Optionally inspect the same result with [launch_mfrmr_viewer()] in an
+#' 4. Call `report <- mfrm_report(res)` when a report-ready surface is needed.
+#' 5. Use [export_mfrm_results()] to write CSV, report, RDS, replay, and
+#'    manifest files for handoff or review.
+#' 6. Use `plot(res, type = "qc")` for the first visual screen.
+#' 7. Optionally inspect the same result with [launch_mfrmr_viewer()] in an
 #'    interactive session.
-#' 6. Use [build_summary_table_bundle()] or the helper named in
+#' 8. Use [build_summary_table_bundle()] or the helper named in
 #'    `summary(res)$next_actions` for report-specific follow-up.
 #'
 #' @param response_time Optional response-time column name. When `NULL` and

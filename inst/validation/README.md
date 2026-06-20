@@ -19,14 +19,18 @@ long-run validation details belong here.
 - `release-evidence-map-0.2.0.md`: narrative review map linking release
   claims to mathematical, statistical, UX, documentation, and engineering
   evidence.
-- `release-evidence-map-0.2.1.md`: source-grounded evidence map for the
-  0.2.1 bounded-`GPCM` recovery-review refinements, including the boundary
+- `release-evidence-map-0.2.2.md`: source-grounded evidence map for the
+  0.2.2 bounded-`GPCM` recovery-review refinements, including the boundary
   between cited model literature and package-specific validation labels.
-- `release-evidence-checklist-0.2.1.csv`: structured checklist used by the
-  readiness helper and by manual release review for the current release. The
-  0.2.0 checklist is retained as historical release evidence.
-- `gpcm-post-0.2.1-roadmap.md`: maintenance roadmap for bounded-`GPCM`
-  surfaces that remain caveated, `blocked`, or `deferred` after 0.2.1,
+- `release-evidence-checklist-0.2.2.csv`: structured checklist used by the
+  readiness helper and by manual release review for the current release. Older
+  checklists are retained as historical release evidence.
+- `mfrmr-development-roadmap.md`: broad development roadmap separating the
+  0.2.2 bounded-`GPCM`/The R Journal release path from post-0.2.2 work such as
+  special-case multivariate G-theory, bounded-`GPCM` evidence strengthening,
+  and later heavy-backend or multidimensional branches.
+- `gpcm-post-0.2.2-roadmap.md`: maintenance roadmap for bounded-`GPCM`
+  surfaces that remain caveated, `blocked`, or `deferred` after 0.2.2,
   including score-side review, report/QC bundles, design and screening
   operating characteristics, linking synthesis, posterior predictive checks,
   and heavy-backend extensions.
@@ -46,7 +50,7 @@ compiled-code change:
 
 ```sh
 R CMD build .
-R CMD check --no-manual --as-cran mfrmr_0.2.1.tar.gz
+R CMD check --no-manual --as-cran mfrmr_0.2.2.tar.gz
 ```
 
 Then run:

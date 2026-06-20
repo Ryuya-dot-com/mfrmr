@@ -238,7 +238,46 @@ Interpretation:
 - Facet profiles are useful for seeing whether a small number of levels drives most flagged interaction cells.
 - Treat these plots as screening evidence; confirm with the corresponding tables and narrative reports.
 
-## 5. Secondary visual layer
+## 5. Custom figures without losing the evidence boundary
+
+The built-in plots are intended as safe defaults. Use
+`preset = "monochrome"` when a journal, accessibility review, or print workflow
+needs grayscale output. For journal figures, teaching material, dashboards, or
+lab-specific styles, use `draw = FALSE` and the plot-data accessors instead of
+editing screenshots.
+
+```{r custom-plot-data}
+plot(fit, type = "wright", preset = "monochrome")
+
+wright_payload <- plot(fit, type = "wright", draw = FALSE, preset = "publication")
+plot_data_components(wright_payload)
+
+locations <- plot_data(wright_payload, component = "locations")
+head(locations)
+
+pathway_long <- plot_data(
+  fit,
+  type = "pathway",
+  component = "pathway_long",
+  preset = "publication"
+)
+head(pathway_long[, c("Layer", "CurveGroup", "Theta", "Value")])
+```
+
+When you build a custom figure, keep the helper's guidance tables with the
+plot data:
+
+```{r custom-guidance}
+names(wright_payload$data)
+wright_payload$data$reference_lines
+```
+
+Those metadata are the guardrails for captions and interpretation. They let
+you change colors, labels, panels, or rendering technology while preserving the
+same measurement scale, reference lines, caveats, and reporting role used by
+the package-native plot.
+
+## 6. Secondary visual layer
 
 The package ships a second-wave visual layer for teaching and
 diagnostic follow-up. These helpers are not default reporting figures;

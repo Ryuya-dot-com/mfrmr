@@ -263,7 +263,10 @@ separation, reliability, strata, RMSE, and fit-screen rates change when
 you vary person, rater, criterion, or assignment counts. For analytic
 generalizability-theory planning, pair observed variance-component review
 from \code{\link[=mfrm_generalizability]{mfrm_generalizability()}} with D-study projections from
-\code{\link[=mfrm_d_study]{mfrm_d_study()}}.
+\code{\link[=mfrm_d_study]{mfrm_d_study()}}. Read \code{IdentificationStatus}, \code{GStatus}, and \code{PhiStatus}
+before using the projected coefficients: boundary or singular mixed-model
+fits are design-identification warnings rather than high-stakes-ready
+reliability evidence.
 }
 
 \section{References}{

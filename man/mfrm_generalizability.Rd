@@ -35,8 +35,9 @@ residual, with columns \code{Source}, \code{Variance}, and
 \code{ProportionVariance}.}
 \item{\code{coefficients}}{One-row data frame with \code{G}
 (generalizability coefficient, relative decision) and
-\code{Phi} (dependability coefficient, absolute decision), using the
-single-observation-per-cell convention.}
+\code{Phi} (dependability coefficient, absolute decision), coefficient
+status labels, and the identification status of the fitted
+random-effects model.}
 \item{\code{design}}{Description of the crossed-random model.}
 }
 }
@@ -80,6 +81,8 @@ simplified variance-component decomposition.
 Because person-by-facet interaction terms are not estimated separately,
 D-study projections remain practical planning evidence rather than a
 replacement for a fully specified G-theory design.
+Boundary or singular \code{lme4} fits are retained as diagnostic evidence but are
+not treated as high-stakes-ready G/D-study evidence.
 }
 
 \section{References}{
@@ -108,6 +111,12 @@ if (requireNamespace("lme4", quietly = TRUE)) {
   # Look for: G >= 0.7 for routine reporting, >= 0.8 for high-stakes.
   #   G < Phi means absolute decisions are noisier than relative
   #   decisions; review whether facet main effects need anchoring.
+  # Always check IdentificationStatus before using the bands:
+  gt$coefficients[, c("G", "Phi", "GStatus", "PhiStatus",
+                      "IdentificationStatus")]
+  gt$design$identification_note
+  # If IdentificationStatus is not "identified", treat G/Phi as
+  # design-review evidence rather than high-stakes-ready reliability.
 }
 }
 }

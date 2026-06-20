@@ -99,6 +99,25 @@ summary(diag_toy)$overview
 names(plot(fit_toy, draw = FALSE))
 ```
 
+The same fit can then move through the public first-contact route:
+
+```{r primary-route}
+res_toy <- mfrm_results(fit_toy)
+report_toy <- mfrm_report(res_toy, style = "qc")
+
+summary(res_toy)$next_actions
+summary(report_toy)$overview
+
+export_dir <- file.path(tempdir(), "mfrmr-workflow-export")
+export_toy <- export_mfrm_results(
+  res_toy,
+  output_dir = export_dir,
+  include = c("default", "report"),
+  overwrite = TRUE
+)
+head(export_toy$written_files)
+```
+
 ## Diagnostics and Reporting
 
 ```{r diagnostics-reporting}
@@ -322,8 +341,30 @@ distinction is:
 - `evaluate_mfrm_design()` and `predict_mfrm_population()` are
   design-level helpers that summarize expected operating characteristics under
   an explicit simulation specification.
+- `mfrm_generalizability()` and `mfrm_d_study()` summarize observed
+  univariate G-study components and analytic D-study projections. Read
+  `IdentificationStatus`, `GStatus`, and `PhiStatus` before reporting
+  projected coefficients; boundary or singular mixed-model fits are
+  design-identification warnings rather than high-stakes-ready reliability
+  evidence.
 - `predict_mfrm_units()` and `sample_mfrm_plausible_values()` score future or
   partially observed persons under a fixed `MML` calibration.
+
+```{r gd-study-reading-order, eval=FALSE}
+if (requireNamespace("lme4", quietly = TRUE)) {
+  gt <- mfrm_generalizability(fit)
+  gt$coefficients[, c("G", "Phi", "GStatus", "PhiStatus",
+                      "IdentificationStatus")]
+
+  ds <- mfrm_d_study(
+    gt,
+    data.frame(Rater = c(2, 3, 4), Criterion = 4),
+    residual_scaling = "sensitivity"
+  )
+  ds[, c("n_Rater", "n_Criterion", "ResidualScaling",
+         "G", "Phi", "GStatus", "PhiStatus", "IdentificationStatus")]
+}
+```
 
 ```{r design-prediction}
 sim_spec <- build_mfrm_sim_spec(

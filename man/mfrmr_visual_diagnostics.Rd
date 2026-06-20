@@ -140,8 +140,28 @@ of immediate graphics.
 3D-ready category-probability data; \code{mfrmr} intentionally does not add a
 package-native plotly/rgl renderer for this route.
 \item Use \code{preset = "publication"} when you want the package's cleaner
-manuscript-oriented styling.
+manuscript-oriented styling, or \code{preset = "monochrome"} when journals,
+accessibility requirements, or print workflows require grayscale output.
 }
+}
+
+\section{Customizing figures}{
+
+The package's plotting defaults are intended to be safe starting points,
+not a closed graphics system. Use \code{preset = "publication"} for clean
+manuscript defaults, or \code{preset = "monochrome"} for grayscale output that
+relies more on line type, point shape, and reference lines than on color.
+Use \code{plot(..., draw = FALSE)} when you want the reusable \code{mfrm_plot_data}
+object instead of immediate base graphics. Then call
+\code{\link[=plot_data_components]{plot_data_components()}} to see available components and \code{\link[=plot_data]{plot_data()}} to
+extract the long tables used by the plot.
+
+Custom renderers should keep the returned metadata close to the figure:
+\code{reference_lines}, \code{legend}, \code{guidance}, \code{category_support},
+\code{interpretation_guide}, and any reporting-template rows are part of the
+interpretation contract. They let users change colors, labels, panels,
+or rendering technology without losing the measurement scale, caveats, and
+caption boundary attached to the package-native plot.
 }
 
 \section{Visual coverage for this release}{

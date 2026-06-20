@@ -42,9 +42,9 @@ test_that("build_model_choice_review bundles comparison and user guidance", {
   expect_true(any(review$model_roles$RecommendedRole == "slope_aware_sensitivity"))
   expect_true(any(grepl("slope_facet == step_facet", review$model_roles$ScoreContract, fixed = TRUE)))
   expect_true(any(review$downstream_routes$FullAPARoute == "blocked" &
-                    review$downstream_routes$Model == "GPCM"))
+    review$downstream_routes$Model == "GPCM"))
   expect_true(any(review$downstream_routes$FairAverage == "supported_with_caveat" &
-                    review$downstream_routes$Model == "GPCM"))
+    review$downstream_routes$Model == "GPCM"))
   expect_true(any(grepl("automatic operational-scoring decision", review$key_warnings, fixed = TRUE)))
   expect_true(nrow(review$support_status) > 0)
   expect_false(isTRUE(review$weighting_review_status$Requested[1]))
@@ -59,6 +59,32 @@ test_that("build_model_choice_review bundles comparison and user guidance", {
     "report_templates", "route_map", "weighting_review_status"
   ) %in% names(sx)))
   expect_false("weighting_audit_status" %in% names(sx))
+
+  bundle <- build_summary_table_bundle(review)
+  expect_s3_class(bundle, "mfrm_summary_table_bundle")
+  expect_identical(bundle$source_class, "mfrm_model_choice_review")
+  expect_identical(bundle$summary_class, "summary.mfrm_model_choice_review")
+  expect_true(all(c(
+    "overview",
+    "comparison_table",
+    "model_roles",
+    "downstream_routes",
+    "report_templates",
+    "route_map",
+    "weighting_review_status",
+    "support_status"
+  ) %in% names(bundle$tables)))
+
+  compact_bundle <- build_summary_table_bundle(sx, appendix_preset = "compact")
+  expect_identical(compact_bundle$source_class, "summary.mfrm_model_choice_review")
+  expect_true(all(c(
+    "overview",
+    "comparison_table",
+    "model_roles",
+    "report_templates",
+    "weighting_review_status"
+  ) %in% names(compact_bundle$tables)))
+  expect_false("downstream_routes" %in% names(compact_bundle$tables))
 })
 
 test_that("build_model_choice_review can attach the detailed weighting review", {

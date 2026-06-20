@@ -27,6 +27,19 @@ into the standard APA placement (caption above, note below).
 When \code{kableExtra} is installed the note is attached as a footer;
 otherwise the note is appended as a \code{knitr::asis_output()} block.
 }
+\examples{
+tbl <- structure(
+  list(
+    table = data.frame(Term = c("Rater A", "Rater B"), Estimate = c(-0.12, 0.18)),
+    caption = "Facet estimates",
+    note = "Toy values for formatting only."
+  ),
+  class = "apa_table"
+)
+if (requireNamespace("knitr", quietly = TRUE)) {
+  invisible(as_kable(tbl))
+}
+}
 \seealso{
 \code{\link[=as_flextable.apa_table]{as_flextable.apa_table()}}, \code{\link[=apa_table]{apa_table()}}.
 }

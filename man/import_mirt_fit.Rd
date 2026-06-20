@@ -66,6 +66,17 @@ populated; full bidirectional import / export is planned for a
 future release.
 }
 
+\examples{
+\dontrun{
+if (requireNamespace("mirt", quietly = TRUE)) {
+  response_matrix <- matrix(sample(0:3, 60, replace = TRUE), nrow = 20)
+  colnames(response_matrix) <- paste0("Item", seq_len(ncol(response_matrix)))
+  fit <- mirt::mirt(response_matrix, 1, itemtype = "gpcm", verbose = FALSE)
+  imported <- import_mirt_fit(fit, model = "GPCM")
+  imported$summary
+}
+}
+}
 \seealso{
 \code{\link[=import_tam_fit]{import_tam_fit()}}, \code{\link[=import_erm_fit]{import_erm_fit()}}
 }

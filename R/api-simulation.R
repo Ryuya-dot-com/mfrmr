@@ -5053,7 +5053,10 @@ plot.mfrm_recovery_simulation <- function(x,
 #' you vary person, rater, criterion, or assignment counts. For analytic
 #' generalizability-theory planning, pair observed variance-component review
 #' from [mfrm_generalizability()] with D-study projections from
-#' [mfrm_d_study()].
+#' [mfrm_d_study()]. Read `IdentificationStatus`, `GStatus`, and `PhiStatus`
+#' before using the projected coefficients: boundary or singular mixed-model
+#' fits are design-identification warnings rather than high-stakes-ready
+#' reliability evidence.
 #'
 #' @section References:
 #' The simulation logic follows the general Monte Carlo / operating-characteristic

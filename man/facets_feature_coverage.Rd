@@ -5,7 +5,8 @@
 \title{FACETS Feature Coverage Matrix}
 \usage{
 facets_feature_coverage(
-  status = c("all", "implemented", "partial", "not_implemented", "not_targeted")
+  status = c("all", "implemented", "supported_with_caveat", "partial", "not_implemented",
+    "not_targeted")
 )
 }
 \arguments{
@@ -48,6 +49,8 @@ plot data over exact FACETS line-printer output.
 Status meanings:
 \itemize{
 \item \code{implemented}: a package-native route covers the substantive output.
+\item \code{supported_with_caveat}: a package-native route exists, but the output
+must be read with explicit identification, validation, or scope caveats.
 \item \code{partial}: the concept is covered, but not the full FACETS formatting,
 option surface, file type, or external integration.
 \item \code{not_implemented}: a FACETS feature has no direct package-native route in
@@ -59,6 +62,7 @@ another external program format and is not a release goal.
 \examples{
 facets_feature_coverage()
 facets_feature_coverage("partial")
+facets_feature_coverage("supported_with_caveat")
 facets_feature_coverage("not_implemented")
 }
 \references{

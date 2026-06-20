@@ -214,9 +214,9 @@ test_that("gpcm_score_side_contract records unblock requirements without enablin
 test_that("blocked and deferred GPCM rows are tracked in future-scope notes", {
   tbl <- gpcm_capability_matrix()
   roadmap_path <- testthat::test_path("..", "..", "inst", "validation",
-                                      "gpcm-post-0.2.1-roadmap.md")
+                                      "gpcm-post-0.2.2-roadmap.md")
   if (!file.exists(roadmap_path)) {
-    roadmap_path <- system.file("validation", "gpcm-post-0.2.1-roadmap.md",
+    roadmap_path <- system.file("validation", "gpcm-post-0.2.2-roadmap.md",
                                 package = "mfrmr")
   }
 

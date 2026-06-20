@@ -1055,6 +1055,13 @@ fit_mfrm <- function(data,
 #' @return A tibble with one row per interaction cell. Returns an empty tibble
 #'   when the fit has no model-estimated facet interactions.
 #' @seealso [fit_mfrm()], [estimate_bias()], [compare_mfrm()]
+#' @examples
+#' toy <- load_mfrmr_data("example_core")
+#' fit <- fit_mfrm(
+#'   toy, person = "Person", facets = c("Rater", "Criterion"),
+#'   score = "Score", method = "JML", model = "RSM", maxit = 30
+#' )
+#' interaction_effect_table(fit)
 #' @export
 interaction_effect_table <- function(fit) {
   if (!inherits(fit, "mfrm_fit")) {

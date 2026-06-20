@@ -71,6 +71,16 @@ A plotting-data object of class \code{mfrm_plot_data}.
 \description{
 Plot a future arbitrary-facet planning active branch
 }
+\examples{
+\dontrun{
+spec <- build_mfrm_sim_spec(
+  design = list(person = 16, rater = 3, criterion = 2, assignment = 2),
+  assignment = "rotating"
+)
+active <- spec$planning_schema$future_branch_active_branch
+plot(active, type = "readiness_tiers", draw = FALSE)
+}
+}
 \seealso{
 \code{\link[=summary.mfrm_future_branch_active_branch]{summary.mfrm_future_branch_active_branch()}}
 }

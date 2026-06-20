@@ -126,15 +126,19 @@ package-native bias helper that provides a table component.
 # a second.
 toy <- load_mfrmr_data("example_core")
 fit_quick <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                      method = "JML", maxit = 30)
-diag_quick <- diagnose_mfrm(fit_quick, residual_pca = "none",
-                             diagnostic_mode = "legacy")
+  method = "JML", maxit = 30
+)
+diag_quick <- diagnose_mfrm(fit_quick,
+  residual_pca = "none",
+  diagnostic_mode = "legacy"
+)
 apa_quick <- build_apa_outputs(fit_quick, diag_quick)
 nchar(apa_quick$report_text) > 0
 
 \dontrun{
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                method = "MML", quad_points = 7, maxit = 30)
+  method = "MML", quad_points = 7, maxit = 30
+)
 diag <- diagnose_mfrm(fit, residual_pca = "both", diagnostic_mode = "both")
 apa <- build_apa_outputs(
   fit,

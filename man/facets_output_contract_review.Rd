@@ -66,7 +66,7 @@ schema/metric contract encoded in the contract file.
 }
 \section{Bounded GPCM boundary}{
 
-This helper remains blocked for bounded \code{GPCM} fits in 0.2.1. The FACETS
+This helper remains blocked for bounded \code{GPCM} fits in this release. The FACETS
 output contract includes score-side rows whose measure-to-score and
 uncertainty semantics are validated for the current Rasch-family route, not
 for free-discrimination bounded \code{GPCM}. Use \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}} before

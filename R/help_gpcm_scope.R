@@ -664,7 +664,7 @@ gpcm_runtime_guard_coverage <- function() {
     ),
     TestRoute = c(
       "minimal mfrm_fit",
-      "no public runtime helper in 0.2.1"
+      "no public runtime helper in this release"
     ),
     Notes = c(
       "Full FACETS score-side contract review is intentionally unavailable for bounded GPCM; see gpcm_score_side_contract().",

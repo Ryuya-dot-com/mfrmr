@@ -149,6 +149,9 @@ analysis archive is needed.
 \item Call \code{res <- mfrm_results(fit)}.
 \item Read \code{summary(res)$triage}, \code{summary(res)$status},
 \code{summary(res)$plot_map}, and \code{summary(res)$next_actions}.
+\item Call \code{report <- mfrm_report(res)} when a report-ready surface is needed.
+\item Use \code{\link[=export_mfrm_results]{export_mfrm_results()}} to write CSV, report, RDS, replay, and
+manifest files for handoff or review.
 \item Use \code{plot(res, type = "qc")} for the first visual screen.
 \item Optionally inspect the same result with \code{\link[=launch_mfrmr_viewer]{launch_mfrmr_viewer()}} in an
 interactive session.

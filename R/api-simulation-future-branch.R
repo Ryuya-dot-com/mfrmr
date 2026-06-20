@@ -5220,6 +5220,15 @@ future_branch_active_plot_index_from_bundle <- function(plot_index) {
 #'
 #' @return An object of class `summary.mfrm_future_branch_active_branch`.
 #' @seealso [summary.mfrm_design_evaluation()], [plot.mfrm_future_branch_active_branch()]
+#' @examples
+#' \dontrun{
+#' spec <- build_mfrm_sim_spec(
+#'   design = list(person = 16, rater = 3, criterion = 2, assignment = 2),
+#'   assignment = "rotating"
+#' )
+#' active <- spec$planning_schema$future_branch_active_branch
+#' summary(active)
+#' }
 #' @export
 summary.mfrm_future_branch_active_branch <- function(object, digits = 3, top_n = 8, ...) {
   active <- simulation_future_branch_active_branch(object)
@@ -5571,6 +5580,15 @@ print_compact_future_branch_active_summary <- function(x,
 #'
 #' @return A plotting-data object of class `mfrm_plot_data`.
 #' @seealso [summary.mfrm_future_branch_active_branch()]
+#' @examples
+#' \dontrun{
+#' spec <- build_mfrm_sim_spec(
+#'   design = list(person = 16, rater = 3, criterion = 2, assignment = 2),
+#'   assignment = "rotating"
+#' )
+#' active <- spec$planning_schema$future_branch_active_branch
+#' plot(active, type = "readiness_tiers", draw = FALSE)
+#' }
 #' @export
 plot.mfrm_future_branch_active_branch <- function(x,
                                                   y = NULL,

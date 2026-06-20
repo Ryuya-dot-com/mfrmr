@@ -177,7 +177,7 @@ test_that("release-readiness protocol checks GPCM scope alignment", {
   if (!file.exists(file.path(pkg_root, "DESCRIPTION"))) {
     pkg_root <- system.file(package = "mfrmr")
   }
-  paths <- env$mfrmr_release_readiness_paths(pkg_root, target_version = "0.2.1")
+  paths <- env$mfrmr_release_readiness_paths(pkg_root, target_version = "0.2.2")
   checklist_status <- env$mfrmr_release_readiness_checklist_status(paths$evidence_checklist)
   status <- env$mfrmr_release_readiness_gpcm_scope_status(
     paths = paths,

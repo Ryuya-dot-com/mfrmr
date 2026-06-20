@@ -97,7 +97,8 @@ fit differences. Both notes are repeated in the returned \code{guidance} table.
 \dontshow{if (interactive()) withAutoprint(\{ # examplesIf}
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", maxit = 30)
+  method = "JML", maxit = 30
+)
 review <- facets_fit_review(fit)
 summary(review)
 \dontshow{\}) # examplesIf}

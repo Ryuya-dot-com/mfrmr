@@ -130,7 +130,25 @@
 #'    3D-ready category-probability data; `mfrmr` intentionally does not add a
 #'    package-native plotly/rgl renderer for this route.
 #' 8. Use `preset = "publication"` when you want the package's cleaner
-#'    manuscript-oriented styling.
+#'    manuscript-oriented styling, or `preset = "monochrome"` when journals,
+#'    accessibility requirements, or print workflows require grayscale output.
+#'
+#' @section Customizing figures:
+#' The package's plotting defaults are intended to be safe starting points,
+#' not a closed graphics system. Use `preset = "publication"` for clean
+#' manuscript defaults, or `preset = "monochrome"` for grayscale output that
+#' relies more on line type, point shape, and reference lines than on color.
+#' Use `plot(..., draw = FALSE)` when you want the reusable `mfrm_plot_data`
+#' object instead of immediate base graphics. Then call
+#' [plot_data_components()] to see available components and [plot_data()] to
+#' extract the long tables used by the plot.
+#'
+#' Custom renderers should keep the returned metadata close to the figure:
+#' `reference_lines`, `legend`, `guidance`, `category_support`,
+#' `interpretation_guide`, and any reporting-template rows are part of the
+#' interpretation contract. They let users change colors, labels, panels,
+#' or rendering technology without losing the measurement scale, caveats, and
+#' caption boundary attached to the package-native plot.
 #'
 #' @section Visual coverage for this release:
 #' This release treats the plotting layer as sufficient when the current run

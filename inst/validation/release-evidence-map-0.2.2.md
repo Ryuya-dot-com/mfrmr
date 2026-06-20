@@ -1,6 +1,6 @@
-# mfrmr 0.2.1 evidence map
+# mfrmr 0.2.2 evidence map
 
-This note tracks the 0.2.1 development focus after the 0.2.0 release:
+This note tracks the 0.2.2 development focus after the 0.2.1 release:
 bounded `GPCM` refinement, slope-aware recovery review, and uncertainty
 interpretation.
 
@@ -51,7 +51,7 @@ interpretation.
 - Uto and Ueno (2020), "A generalized many-facet Rasch model and its Bayesian
   estimation using Hamiltonian Monte Carlo", Behaviormetrika, 47, 469-496,
   doi:10.1007/s41237-020-00115-7. This supports the broader peer-assessment
-  and generalized-MFRM context. The 0.2.1 helper does not implement the
+  and generalized-MFRM context. The 0.2.2 helper does not implement the
   Bayesian Uto/Ueno model; it only supplies a fixed peer-review design
   generator for the package's current ordered-response simulation route.
 - Wright and Linacre (1994), "Reasonable mean-square fit values", Rasch
@@ -69,7 +69,7 @@ interpretation.
 
 Zotero was checked locally for these sources. The local library contains
 Muraki (1992), Muraki (1993), and Morris et al. (2019). Muraki (1993) cites
-Samejima (1974), but the current 0.2.1 bounded-`GPCM` changes do not add a
+Samejima (1974), but the current 0.2.2 bounded-`GPCM` changes do not add a
 Samejima normal-ogive or graded-response-model implementation.
 
 ## Fit and separation reporting boundary
@@ -102,7 +102,7 @@ single-number validation gates.
   separation/reliability, abs-ZSTD flags, and df-sensitive ZSTD flags. These
   notes are caveat prompts, not psychometric adequacy decisions.
 
-0.2.1 therefore adds `precision_review_report()$fit_separation_basis`, a
+0.2.2 therefore adds `precision_review_report()$fit_separation_basis`, a
 compact table that states each topic's source basis, package surface,
 interpretation, validation use, and availability in the current run.
 
@@ -110,7 +110,7 @@ interpretation, validation use, and availability in the current run.
 
 Peer-review or peer-assessment simulations have a stronger design constraint
 than ordinary sparse rater-mediated designs: the submission pool and reviewer
-pool can be the same people. The 0.2.1 helper therefore uses a fixed
+pool can be the same people. The 0.2.2 helper therefore uses a fixed
 person-by-reviewer-by-criterion skeleton with shared IDs and optional
 structural self-review exclusion.
 
@@ -269,7 +269,35 @@ checks that this coverage table stays synchronized with
 helpers; it is navigation metadata and does not broaden the bounded-`GPCM`
 support contract.
 
-## 0.2.1 checks added
+## G/D-study identification boundary
+
+The 0.2.2 G/D-study route remains a univariate planned-count helper.
+`mfrm_generalizability()` re-expresses observed scores through a simplified
+main-effects random model and `mfrm_d_study()` applies D-study projections to
+that same variance-component surface. This is useful planning evidence, but it
+is not multivariate/profile G-theory and it does not estimate separate
+person-by-rater, person-by-criterion, or rater-by-criterion interaction
+components.
+
+The release now treats mixed-model boundary behavior as an identification
+signal rather than as successful high-stakes evidence. `mfrm_generalizability()`
+records `IdentificationStatus`, `GStatus`, `PhiStatus`, `boundary_fit`, and
+`singular_fit`; `mfrm_d_study()` carries `IdentificationStatus`, `BoundaryFit`,
+and `IdentificationNote` into every projected row. If `lme4::isSingular()`
+reports a singular fit, or if the fitted model emits a boundary/singularity
+message, finite `G` or `Phi` values are labelled `identification_warning`
+instead of `high_stakes_candidate`.
+
+This boundary follows the source-grounded G-theory policy recorded in
+`mfrmr-development-roadmap.md`: coefficients are design-specific consequences
+of identifiable variance components, not generic reliability summaries.
+Boundary or singular mixed-model fits can be diagnostically informative, but
+they do not justify D-study projections as high-stakes-ready reliability
+evidence. The public examples in the generated help, README, and workflow
+vignette now show `IdentificationStatus` alongside `G`, `Phi`, `GStatus`, and
+`PhiStatus` so users see the caveat before reporting the coefficients.
+
+## 0.2.2 checks added
 
 - Recovery assessment now separates unavailable SE/coverage evidence from
   intentionally unassessed coverage thresholds in `uncertainty_review`.
@@ -324,6 +352,11 @@ support contract.
   matrix exactly. `mfrmr_output_guide("gpcm")` also has regression coverage so
   users can find both the capability matrix and guard coverage table from the
   public route guide.
+- G/D-study regression tests now cover both object-shape continuity and the
+  singular/boundary downgrade. A targeted fixture produces a boundary fit with
+  perfect-looking `G`/`Phi`; the expected public status is
+  `identification_warning`, and D-study projections must not surface
+  `high_stakes_candidate` when the source G-study is not identified.
 - `mfrmr_interval_guide()` now maps public 95% CI and interval-like
   uncertainty routes across fit-measure tables, Wright maps, fair averages,
   bias screens, displacement, DFF/DIF summaries, anchor drift, rater
@@ -447,7 +480,7 @@ support contract.
   route so users coming from binary Rasch examples can find the correct
   `fit_mfrm()` call, score-support check, and first-screen `mfrm_results()`
   workflow without adding another exported estimation function.
-- `release-evidence-checklist-0.2.1.csv` now records the 0.2.1 release
+- `release-evidence-checklist-0.2.2.csv` now records the 0.2.2 release
   blocker, caveat, and roadmap checks separately from the historical 0.2.0
   checklist, including the CRAN-time lightweight-test boundary and the
   non-CRAN regression-evidence route.

@@ -1,7 +1,7 @@
 Package: mfrmr
 Type: Package
 Title: Estimation and Diagnostics for Many-Facet Measurement Models
-Version: 0.2.1.9000
+Version: 0.2.2
 Authors@R:
     person(given = "Ryuya", family = "Komuro", role = c("aut", "cre", "cph"),
            email = "ryuya.komuro.c4@tohoku.ac.jp",
@@ -18,7 +18,8 @@ Description: Native R implementation of many-facet ordered-response
     <doi:10.1007/BF02296272>, and 'Muraki' (1992)
     <doi:10.1177/014662169201600206> for the underlying ordered-response
     models.
-URL: https://github.com/Ryuya-dot-com/mfrmr
+URL: https://ryuya-dot-com.github.io/mfrmr/,
+    https://github.com/Ryuya-dot-com/mfrmr
 BugReports: https://github.com/Ryuya-dot-com/mfrmr/issues
 License: MIT + file LICENSE
 Language: en

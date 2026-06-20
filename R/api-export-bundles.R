@@ -3747,6 +3747,12 @@ export_summary_appendix <- function(x,
 #' This function is the package-native counterpart to the app's download bundle.
 #' It reuses existing `mfrmr` helpers instead of reimplementing estimation or
 #' diagnostics.
+#' It is also the one-call fit-level HTML route: when `diagnostics = NULL`,
+#' the exporter computes the diagnostics it needs, then writes the requested
+#' CSV/text/replay artifacts and a lightweight HTML page from the fitted object.
+#' Use [mfrm_results()] and [mfrm_report()] first when you want to inspect a
+#' results object before writing files; use `export_mfrm_bundle()` when the
+#' goal is a project-folder bundle from `fit`.
 #'
 #' @section Choosing exports:
 #' The `include` argument lets you assemble a bundle for different audiences:
@@ -3819,8 +3825,10 @@ export_summary_appendix <- function(x,
 #' 4. Inspect `bundle$written_files` or open the generated HTML file.
 #'
 #' @return A named list with class `mfrm_export_bundle`.
-#' @seealso [build_mfrm_manifest()], [build_mfrm_replay_script()],
-#'   [export_mfrm()], [reporting_checklist()], [export_summary_appendix()]
+#' @seealso [fit_mfrm()], [mfrm_results()], [mfrm_report()],
+#'   [export_mfrm_results()], [build_mfrm_manifest()],
+#'   [build_mfrm_replay_script()], [export_mfrm()],
+#'   [reporting_checklist()], [export_summary_appendix()]
 #' @examplesIf interactive()
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",

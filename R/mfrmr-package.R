@@ -9,17 +9,17 @@
 #' @useDynLib mfrmr, .registration = TRUE
 #'
 #' @details
-#' Start with the following core workflow before branching into the longer
-#' `GPCM`, simulation, and planning notes:
+#' Start with the following core workflow before branching into diagnostics,
+#' bounded `GPCM`, simulation, and planning notes:
 #'
 #' 1. Fit with [fit_mfrm()] using `method = "MML"`
-#' 2. For `RSM` / `PCM`, run [diagnose_mfrm()] with
-#'    `diagnostic_mode = "both"`; for bounded `GPCM`, use the direct
-#'    diagnostic route and read [gpcm_capability_matrix()]
-#' 3. Build a comprehensive first screen with [mfrm_results()]
-#' 4. Read `summary(fit)`, `summary(diag)`, and `summary(res)` before branching
-#' 5. Use [plot_qc_dashboard()] and [reporting_checklist()] as the first visual
-#'    and reporting screens
+#' 2. Build a comprehensive first screen with [mfrm_results()]
+#' 3. Build report-ready output with [mfrm_report()]
+#' 4. Export a reproducible result folder with [export_mfrm_results()]
+#' 5. Add [diagnose_mfrm()], [plot_qc_dashboard()], and
+#'    [reporting_checklist()] when the review needs deeper diagnostics; for
+#'    bounded `GPCM`, read [gpcm_capability_matrix()] before interpreting
+#'    specialist helpers
 #'
 #' Recommended workflow:
 #'
@@ -68,11 +68,12 @@
 #' @section First 5-minute route:
 #' Use this order before exploring the broader feature surface:
 #' 1. [fit_mfrm()] with `method = "MML"`
-#' 2. [diagnose_mfrm()] with `diagnostic_mode = "both"` for `RSM` / `PCM`;
-#'    for bounded `GPCM`, keep diagnostics on the direct exploratory route
-#' 3. [mfrm_results()] for a FACETS-style first screen
-#' 4. `summary(fit)`, `summary(diag)`, and `summary(res)`
-#' 5. [plot_qc_dashboard()] for first-pass triage
+#' 2. [mfrm_results()] for a comprehensive first screen
+#' 3. [mfrm_report()] for report-ready wording, tables, and route labels
+#' 4. [export_mfrm_results()] for a reproducible result folder
+#' 5. Add [diagnose_mfrm()] with `diagnostic_mode = "both"` for deeper
+#'    `RSM` / `PCM` diagnostics; for bounded `GPCM`, keep diagnostics on the
+#'    direct exploratory route and read [gpcm_capability_matrix()]
 #' 6. Choose the next branch:
 #'    [reporting_checklist()] for reporting,
 #'    [build_weighting_review()] for Rasch-versus-`GPCM` weighting review,
@@ -245,7 +246,11 @@
 #'    planning helpers. Those helpers assume two non-person facet roles
 #'    even though the estimation core supports arbitrary facet counts. Treat
 #'    [evaluate_mfrm_design()] as Monte Carlo design evaluation, and use
-#'    [mfrm_d_study()] for analytic G/Phi design projections.
+#'    [mfrm_d_study()] for analytic G/Phi design projections. Always read
+#'    the `IdentificationStatus`, `GStatus`, and `PhiStatus` columns before
+#'    reporting those projections; boundary or singular mixed-model fits are
+#'    design-identification warnings, not high-stakes-ready reliability
+#'    evidence.
 #'    `predict_mfrm_population()` remains the scenario-level forecast helper,
 #'    not the latent-regression estimator.
 #' 7. For future-unit scoring, retain an `MML` calibration when you want the

@@ -19,6 +19,19 @@ unavailable.
 Produces a Word / PowerPoint-friendly \code{flextable} with the
 caption and note wired in. Requires \code{flextable} (in Suggests).
 }
+\examples{
+tbl <- structure(
+  list(
+    table = data.frame(Term = c("Rater A", "Rater B"), Estimate = c(-0.12, 0.18)),
+    caption = "Facet estimates",
+    note = "Toy values for formatting only."
+  ),
+  class = "apa_table"
+)
+if (requireNamespace("flextable", quietly = TRUE)) {
+  invisible(as_flextable(tbl))
+}
+}
 \seealso{
 \code{\link[=as_kable.apa_table]{as_kable.apa_table()}}, \code{\link[=apa_table]{apa_table()}}.
 }

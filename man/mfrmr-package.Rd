@@ -12,17 +12,17 @@ many-facet ordered-response measurement models: the Rasch-family \code{RSM} /
 documented.
 }
 \details{
-Start with the following core workflow before branching into the longer
-\code{GPCM}, simulation, and planning notes:
+Start with the following core workflow before branching into diagnostics,
+bounded \code{GPCM}, simulation, and planning notes:
 \enumerate{
 \item Fit with \code{\link[=fit_mfrm]{fit_mfrm()}} using \code{method = "MML"}
-\item For \code{RSM} / \code{PCM}, run \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} with
-\code{diagnostic_mode = "both"}; for bounded \code{GPCM}, use the direct
-diagnostic route and read \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}}
 \item Build a comprehensive first screen with \code{\link[=mfrm_results]{mfrm_results()}}
-\item Read \code{summary(fit)}, \code{summary(diag)}, and \code{summary(res)} before branching
-\item Use \code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}} and \code{\link[=reporting_checklist]{reporting_checklist()}} as the first visual
-and reporting screens
+\item Build report-ready output with \code{\link[=mfrm_report]{mfrm_report()}}
+\item Export a reproducible result folder with \code{\link[=export_mfrm_results]{export_mfrm_results()}}
+\item Add \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}}, and
+\code{\link[=reporting_checklist]{reporting_checklist()}} when the review needs deeper diagnostics; for
+bounded \code{GPCM}, read \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}} before interpreting
+specialist helpers
 }
 
 Recommended workflow:
@@ -78,11 +78,12 @@ you want a customised version.
 Use this order before exploring the broader feature surface:
 \enumerate{
 \item \code{\link[=fit_mfrm]{fit_mfrm()}} with \code{method = "MML"}
-\item \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} with \code{diagnostic_mode = "both"} for \code{RSM} / \code{PCM};
-for bounded \code{GPCM}, keep diagnostics on the direct exploratory route
-\item \code{\link[=mfrm_results]{mfrm_results()}} for a FACETS-style first screen
-\item \code{summary(fit)}, \code{summary(diag)}, and \code{summary(res)}
-\item \code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}} for first-pass triage
+\item \code{\link[=mfrm_results]{mfrm_results()}} for a comprehensive first screen
+\item \code{\link[=mfrm_report]{mfrm_report()}} for report-ready wording, tables, and route labels
+\item \code{\link[=export_mfrm_results]{export_mfrm_results()}} for a reproducible result folder
+\item Add \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} with \code{diagnostic_mode = "both"} for deeper
+\code{RSM} / \code{PCM} diagnostics; for bounded \code{GPCM}, keep diagnostics on the
+direct exploratory route and read \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}}
 \item Choose the next branch:
 \code{\link[=reporting_checklist]{reporting_checklist()}} for reporting,
 \code{\link[=build_weighting_review]{build_weighting_review()}} for Rasch-versus-\code{GPCM} weighting review,
@@ -275,7 +276,11 @@ and \code{\link[=predict_mfrm_population]{predict_mfrm_population()}}. Bounded
 planning helpers. Those helpers assume two non-person facet roles
 even though the estimation core supports arbitrary facet counts. Treat
 \code{\link[=evaluate_mfrm_design]{evaluate_mfrm_design()}} as Monte Carlo design evaluation, and use
-\code{\link[=mfrm_d_study]{mfrm_d_study()}} for analytic G/Phi design projections.
+\code{\link[=mfrm_d_study]{mfrm_d_study()}} for analytic G/Phi design projections. Always read
+the \code{IdentificationStatus}, \code{GStatus}, and \code{PhiStatus} columns before
+reporting those projections; boundary or singular mixed-model fits are
+design-identification warnings, not high-stakes-ready reliability
+evidence.
 \code{predict_mfrm_population()} remains the scenario-level forecast helper,
 not the latent-regression estimator.
 \item For future-unit scoring, retain an \code{MML} calibration when you want the
@@ -714,6 +719,7 @@ summary(diag)
 \seealso{
 Useful links:
 \itemize{
+  \item \url{https://ryuya-dot-com.github.io/mfrmr/}
   \item \url{https://github.com/Ryuya-dot-com/mfrmr}
   \item Report bugs at \url{https://github.com/Ryuya-dot-com/mfrmr/issues}
 }
