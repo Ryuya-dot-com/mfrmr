@@ -26,9 +26,10 @@ long-run validation details belong here.
   readiness helper and by manual release review for the current release. Older
   checklists are retained as historical release evidence.
 - `mfrmr-development-roadmap.md`: broad development roadmap separating the
-  0.2.2 bounded-`GPCM`/The R Journal release path from post-0.2.2 work such as
-  special-case multivariate G-theory, bounded-`GPCM` evidence strengthening,
-  and later heavy-backend or multidimensional branches.
+  0.2.2 bounded-`GPCM` release path from post-0.2.2 work such as special-case
+  multivariate G-theory, bounded-`GPCM` evidence strengthening, possible
+  package/software article preparation, and later heavy-backend or
+  multidimensional branches.
 - `gpcm-post-0.2.2-roadmap.md`: maintenance roadmap for bounded-`GPCM`
   surfaces that remain caveated, `blocked`, or `deferred` after 0.2.2,
   including score-side review, report/QC bundles, design and screening
@@ -42,6 +43,10 @@ long-run validation details belong here.
   `Parameter_Recovery_Simulation/` output directory, checks expected CSV
   schemas, records file fingerprints, and regenerates the compact evidence
   summary tables used for release review.
+- `generate-vignette-artifacts.R`: regenerates the small CSV files under
+  `inst/extdata/vignette-artifacts/` that let CRAN-style vignette builds show
+  representative workflow output without rerunning fitting and simulation
+  chunks.
 
 ## Recommended local sequence
 
@@ -68,6 +73,14 @@ reported as a package-check concern. If the local environment cannot verify
 external clock time, record that environment-only NOTE in `cran-comments.md`
 and rerun the package check with the clock check disabled to confirm that
 package checks are otherwise clean.
+
+When public workflow output changes, refresh the vignette artifacts before
+building:
+
+```r
+source("inst/validation/generate-vignette-artifacts.R")
+mfrmr_generate_vignette_artifacts(".")
+```
 
 CRAN-time tests are intentionally lightweight because CRAN check hosts have
 strict timing constraints. Run the full non-CRAN regression surface separately

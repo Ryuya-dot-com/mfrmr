@@ -9,6 +9,20 @@ vignette: >
 
 ```{r, include = FALSE}
 is_cran_check <- !isTRUE(as.logical(Sys.getenv("NOT_CRAN", "false")))
+vignette_artifact <- function(name) {
+  path <- system.file(
+    "extdata", "vignette-artifacts", name,
+    package = "mfrmr",
+    mustWork = TRUE
+  )
+  read.csv(
+    path,
+    stringsAsFactors = FALSE,
+    check.names = FALSE,
+    na.strings = character(),
+    colClasses = "character"
+  )
+}
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
@@ -99,6 +113,12 @@ summary(diag_toy)$overview
 names(plot(fit_toy, draw = FALSE))
 ```
 
+```{r toy-setup-artifacts, echo = FALSE, eval = is_cran_check}
+vignette_artifact("workflow_fit_overview.csv")
+vignette_artifact("workflow_diagnostic_overview.csv")
+vignette_artifact("workflow_plot_components.csv")
+```
+
 The same fit can then move through the public first-contact route:
 
 ```{r primary-route}
@@ -116,6 +136,12 @@ export_toy <- export_mfrm_results(
   overwrite = TRUE
 )
 head(export_toy$written_files)
+```
+
+```{r primary-route-artifacts, echo = FALSE, eval = is_cran_check}
+vignette_artifact("workflow_next_actions.csv")
+vignette_artifact("workflow_report_overview.csv")
+vignette_artifact("workflow_export_files.csv")
 ```
 
 ## Diagnostics and Reporting
@@ -150,6 +176,12 @@ subset(
   Section == "Visual Displays",
   c("Item", "DraftReady", "NextAction")
 )
+```
+
+```{r diagnostics-reporting-artifacts, echo = FALSE, eval = is_cran_check}
+vignette_artifact("workflow_summary_classes.csv")
+vignette_artifact("workflow_plot_object_components.csv")
+vignette_artifact("workflow_visual_checklist.csv")
 ```
 
 ## Fit and Diagnose with Full Data

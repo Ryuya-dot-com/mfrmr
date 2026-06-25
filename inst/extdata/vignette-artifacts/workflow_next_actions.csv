@@ -1,0 +1,8 @@
+"Priority","Area","Action","Route","Reason"
+1,"Overview","Read the compact results summary.","summary(res)","Confirms input mode, model, method, section status, table coverage, and plot routes."
+2,"Triage","Read the first-screen triage before branching.","summary(res)$triage","Triage orders unavailable, review, information, and OK signals across diagnostics, tables, plots, and reporting surfaces."
+3,"Diagnostics","Review diagnostic key warnings before report drafting.","summary(res$diagnostics)$key_warnings","Diagnostic warnings identify the highest-priority fit, precision, residual, or category follow-up surfaces."
+4,"Visual diagnostics","Open the QC dashboard before drilling into individual tables.","plot(res, type = ""qc"", preset = ""publication"")","The QC route gives a first visual check of fit, residual, and category surfaces."
+5,"Precision","Inspect fit, separation, reliability, and ZSTD wording boundaries.","summary(res$components$precision_review)","Precision review keeps fit-size, standardized fit, and separation evidence in separate reporting lanes."
+6,"Reporting","Use the reporting checklist as the manuscript-routing surface.","summary(res$components$reporting_checklist)","Checklist rows identify report-ready, missing, and caveated sections."
+11,"Tables","Create an appendix-ready summary-table bundle.","build_summary_table_bundle(res)","The bundle exposes table roles, plot readiness, and conservative appendix presets."

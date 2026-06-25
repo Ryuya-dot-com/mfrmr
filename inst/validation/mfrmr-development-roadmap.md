@@ -8,13 +8,14 @@ promise. Public support boundaries remain the package help pages,
 
 ## Guiding priorities
 
-- Keep 0.2.2 focused on a CRAN-ready, bounded-`GPCM`-safe package release for
-  a later The R Journal submission.
+- Keep 0.2.2 focused on a CRAN-ready, bounded-`GPCM`-safe package release that
+  can support later software-article or program-exchange materials.
 - Do not move complete `GPCM`, multidimensional estimation, posterior
   predictive checks, MCMC, or broad multivariate G-theory into the 0.2.2
   release boundary.
 - Prefer workflow clarity, examples, diagnostics, and caveat-preserving report
-  surfaces over large new estimators before the R Journal submission.
+  surfaces over large new estimators before any external software-article
+  submission.
 - Treat `Criterion` carefully: it can be a measurement facet, a rubric
   dimension, a profile dimension, or a planned-count design axis depending on
   the workflow. The documentation must state which role is active.
@@ -87,8 +88,8 @@ Purpose:
 
 - Publish a CRAN maintenance release that makes bounded `GPCM` usable with
   explicit scope boundaries.
-- Prepare the package surface for a The R Journal package article after CRAN
-  publication.
+- Prepare the package surface for possible software-article or program-exchange
+  materials after CRAN publication.
 - Keep examples, vignettes, checks, pkgdown, and validation evidence
   consistent with the 0.2.2 contract.
 
@@ -129,11 +130,12 @@ Release gates:
   evidence is refreshed.
 - [ ] `Rscript inst/validation/release-readiness.R`
 - [ ] `pkgdown::build_site(preview = FALSE)`
-- [ ] Local pkgdown-link preflight from the R Journal manuscript repository.
+- [ ] Local pkgdown-link preflight from any external manuscript or review
+  workspace.
 - [ ] No submission, push, release, or pkgdown publication without explicit
   manual approval.
 
-### Post-0.2.2: The R Journal package article
+### Post-0.2.2: software article or program-exchange materials
 
 Purpose:
 

@@ -153,7 +153,7 @@ test_that("roxygen examples keep expensive demonstrations conditional", {
   )
 })
 
-test_that("vignettes keep executable chunks off during CRAN checks", {
+test_that("vignettes keep heavy executable chunks off during CRAN checks", {
   pkg_root <- example_policy_source_root()
   testthat::skip_if(is.na(pkg_root), "source files are not available")
 
@@ -162,13 +162,19 @@ test_that("vignettes keep executable chunks off during CRAN checks", {
   testthat::skip_if(length(files) == 0L, "vignettes are not available")
 
   missing_guard <- character(0)
+  unsafe_cache_chunk <- character(0)
   for (path in files) {
     text <- paste(readLines(path, warn = FALSE), collapse = "\n")
     if (!grepl("is_cran_check", text, fixed = TRUE) ||
         !grepl("eval = !is_cran_check", text, fixed = TRUE)) {
       missing_guard <- c(missing_guard, basename(path))
     }
+    if (grepl("eval = is_cran_check", text, fixed = TRUE) &&
+        !grepl("vignette_artifact", text, fixed = TRUE)) {
+      unsafe_cache_chunk <- c(unsafe_cache_chunk, basename(path))
+    }
   }
 
   expect_identical(missing_guard, character(0))
+  expect_identical(unsafe_cache_chunk, character(0))
 })

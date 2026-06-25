@@ -14,9 +14,13 @@
   0.2.2 maintenance-candidate boundary: `CITATION.cff`, README routing,
   validation evidence-map references, and the bounded-GPCM roadmap all point
   to the current 0.2.2 surface rather than the previous CRAN 0.2.1 baseline.
-- The README now starts with the public user workflow before the R Journal
-  reviewer note, keeping `fit_mfrm()` -> `mfrm_results()` -> `mfrm_report()` ->
-  `export_mfrm_results()` as the first-contact route.
+- The README now starts with the public user workflow and keeps reproducibility
+  notes journal-neutral, with `fit_mfrm()` -> `mfrm_results()` ->
+  `mfrm_report()` -> `export_mfrm_results()` as the first-contact route.
+- The workflow vignette now uses small generated CSV artifacts for representative
+  output during CRAN-style builds. Heavy fitting and simulation chunks remain
+  disabled unless `NOT_CRAN=true`, while the default vignette still shows
+  result tables for the first-contact route.
 - Reporting and visualization documentation now makes the publication boundary
   explicit: APA/report helpers provide conservative drafting scaffolds,
   claim-readiness and caveat-routing tables, and reproducible handoff files,
