@@ -1,0 +1,368 @@
+# MML estimation and marginal-fit diagnostics
+
+This vignette explains how `mfrmr` fits `MML` models and how to
+interpret the newer strict marginal diagnostics.
+
+## Why the MML calculations are shared
+
+Earlier versions computed closely related quantities multiple times in
+separate paths:
+
+- marginal log-likelihood evaluation
+- optimization-time gradient calculation
+- posterior weights for EAP summaries
+- strict marginal expected counts used in diagnostics
+
+The current implementation reuses the same latent-integrated quantities
+across estimation and diagnostics. This keeps EAP summaries, gradients,
+and strict marginal expected counts aligned.
+
+## Mathematical Core
+
+For a response vector $`\mathbf{x}_n`$ and parameter vector $`\beta`$,
+the current `MML` path targets the marginal likelihood
+
+``` math
+L(\beta) = \prod_{n=1}^{N} \int p(\mathbf{x}_n \mid \theta, \beta) g(\theta) \, d\theta
+\approx
+\prod_{n=1}^{N} \sum_{q=1}^{Q} w_q \, p(\mathbf{x}_n \mid \theta_q, \beta),
+```
+
+where $`(\theta_q, w_q)`$ are Gauss-Hermite nodes and weights. In
+`mfrmr`, the integral is approximated with Gauss-Hermite quadrature, the
+marginal log-likelihood is optimized from the same shared kernel, and
+person summaries are computed post hoc from the posterior bundle. When a
+latent-regression population model is active, the package uses
+person-specific transformed nodes derived from the same quadrature basis
+rather than one unconditional fixed grid.
+
+The posterior weight for person $`n`$ at node $`q`$ is
+
+``` math
+\omega_{nq} =
+\frac{w_q \, p(\mathbf{x}_n \mid \theta_q, \hat{\beta})}
+{\sum_{r=1}^{Q} w_r \, p(\mathbf{x}_n \mid \theta_r, \hat{\beta})}.
+```
+
+Expected a posteriori (EAP) scoring then uses
+
+``` math
+\hat{\theta}_n^{\mathrm{EAP}} = \sum_{q=1}^{Q} \theta_q \, \omega_{nq}.
+```
+
+This is the kernel that now feeds `logLik`, the gradient, EAP summaries,
+and strict marginal expected values.
+
+## Current MML scope
+
+For the `RSM` / `PCM` MML branch:
+
+- the person distribution is integrated with Gauss-Hermite quadrature
+- `mml_engine = "direct"` uses gradient-based direct optimization of the
+  marginal log-likelihood
+- `mml_engine = "em"` and `mml_engine = "hybrid"` are also available for
+  `RSM` / `PCM`; bounded `GPCM` uses the direct engine regardless of
+  that option
+- person summaries are reported post-hoc from the integrated posterior
+
+This is the implemented MML-engine scope for this release.
+
+## Strict Marginal Diagnostic Target
+
+The strict marginal branch is not based on plugging
+$`\hat{\theta}_n^{EAP}`$ back into the response model. Instead, it works
+with posterior-integrated expectations. For a grouped summary $`g`$ and
+category $`c`$,
+
+``` math
+\mathbb{E}_{\hat{\beta}}(N_{gc}) =
+\sum_{n=1}^{N} \sum_{q=1}^{Q}
+\omega_{nq} \, I(n \in g) \, P(X_n = c \mid \theta_q, \hat{\beta}).
+```
+
+The corresponding residual compares the observed count to that
+latent-integrated expectation rather than to an `EAP` plug-in
+prediction.
+
+For pairwise local-dependence follow-up, the package keeps the same
+posterior weights but replaces the one-category event with agreement or
+adjacency events for the relevant pair of facet levels. That is why
+`top_marginal_cells` and `top_marginal_pairs` are conceptually related
+but not numerically comparable.
+
+## Diagnostic Basis In The Package
+
+[`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md)
+now keeps two evidence paths explicit:
+
+- `legacy`: residual/EAP-oriented diagnostics inherited from the earlier
+  stack
+- `marginal_fit`: strict latent-integrated first-order and pairwise
+  screens
+- `both`: returns both without collapsing them into one decision rule
+
+The object returned by `summary(diag)` exposes `diagnostic_basis` so the
+two paths can be interpreted separately.
+
+## Literature Positioning
+
+The current design is deliberately aligned with five strands of the IRT
+fit literature.
+
+1.  Limited-information item-fit logic. Orlando and Thissen (2000, 2003)
+    show why grouped or score-conditioned comparisons can be more stable
+    than full-information contingency-table statistics in realistic IRT
+    settings. The current package borrows that limited-information
+    logic, but it does not implement `S-X2` or `S-G2` literally.
+    Instead, it applies posterior-integrated grouped residual screens to
+    many-facet cells and levels.
+
+2.  Generalized residual logic. Haberman and Sinharay (2013) define a
+    generalized residual for a summary statistic $`T`$ as
+
+``` math
+r = \frac{T - \hat{\mathbb{E}}(T)}{\hat{s}_D},
+```
+
+where $`\hat{\mathbb{E}}(T)`$ and $`\hat{s}_D`$ are computed under the
+fitted model. This is the clearest template for thinking about the
+current `marginal_fit` outputs. The current pairwise local-dependence
+summaries are informed by the same observed-versus-expected logic, but
+they should still be read as exploratory agreement screens rather than
+as formal Haberman- Sinharay generalized residual tests.
+
+3.  Multi-method fit assessment and practical significance. Sinharay and
+    Monroe (2025) review limited-information statistics, generalized
+    residuals, posterior predictive checking, and practical
+    significance, and recommend prioritizing fit procedures by intended
+    use rather than treating one index as universally decisive.
+
+4.  Posterior predictive follow-up. Sinharay et al. (2006) treat
+    posterior predictive checking as a separate model-checking family
+    built around replicated datasets and discrepancy measures. That is
+    the intended follow-up role of the package’s
+    `posterior_predictive_follow_up` path, which is reserved for a
+    future release.
+
+5.  Many-facet reporting context. Linacre’s FACETS framework and applied
+    MFRM studies such as Eckes (2005) remain the primary references for
+    severity/leniency, mean-square fit, separation, and inter-rater
+    agreement. The current strict marginal branch is designed to sit
+    alongside that many-facet toolkit, not to replace it.
+
+## Interpretation Boundaries
+
+The strict marginal branch is currently a screening layer, not a fully
+calibrated inferential test battery.
+
+- well-specified simulation rows are interpreted as Type I proxies
+- misspecified rows are interpreted as sensitivity proxies
+- posterior-predictive checks remain a follow-up path rather than a
+  completed default computation
+
+This package therefore treats strict marginal diagnostics as structured
+evidence about possible misfit, not as a single definitive accept/reject
+rule. That design choice follows the broader review logic in Sinharay
+and Monroe (2025): use several complementary diagnostics, match them to
+the intended use of the scores, and examine practical significance
+before making strong claims.
+
+### Assumption: independent-Bernoulli variance for grouped counts
+
+The `marginal_fit` grid sums per-observation posterior-integrated
+variances as `VarianceCount = sum_i w_i^2 * p_i * (1 - p_i)`, which
+treats observations within a cell as independent Bernoulli draws given
+the fitted parameters. This is the same independence assumption that
+underlies conditional independence in the MFRM specification (Linacre,
+1989). When the rating design violates it - e.g. multiple ratings by the
+same rater on the same person-criterion combination - cell-level
+posterior variances can be underestimated, which in turn makes the
+reported standard errors and screening t-statistics slightly optimistic.
+The documented follow-up is
+`diagnose_mfrm(..., diagnostic_mode = "both")` combined with
+`strict_pairwise_local_dependence`, which surfaces evidence of
+dependence at the pair level. See Haberman and Sinharay (2013) for a
+generalized-residual framework that models such dependence explicitly;
+that path is not yet included in the current release scope.
+
+For many-facet reporting, one additional boundary matters. Facet-level
+separation/reliability and inter-rater agreement answer different
+questions. High rater separation reliability can coexist with weak
+observed agreement, and strong observed agreement does not imply that
+raters are interchangeable on the latent severity scale. That is why
+`mfrmr` reports `diagnostics$reliability` and `diagnostics$interrater`
+as separate objects.
+
+## Validation Scope In The Current Release
+
+The current simulation-based validation covers:
+
+- well-specified baselines
+- local dependence misspecification
+- latent distribution misspecification
+- step-structure misspecification
+
+These checks target `RSM` and `PCM`. `GPCM` is now supported only within
+a bounded core route: fitting, slope summaries, posterior scoring,
+information curves, direct curve/category reports, exploratory
+residual-based follow-up, direct recovery checks, and the slope-aware
+element-conditional
+[`fair_average_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/fair_average_table.md)
+and
+[`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md).
+Historical fair-average SE columns remain scaled facet-measure SEs
+rather than delta-method SEs of the fair-average value;
+`fair_average_table(fair_se = TRUE)` adds distinct structural
+delta-method fair-average SEs for non-person rows when the MML
+observed-information Hessian is available. Bias SE / `t` / `Prob.`
+columns are conditional plug-in screening quantities, and bounded-GPCM
+rows also carry profile-likelihood follow-up columns. Summary-table
+appendix export is available for supported direct outputs. The APA
+writer, fit-based report/export bundles, package-native scorefile
+export, QC pass/fail pipelines, linking synthesis, role-based design
+forecasting, and diagnostic/signal-detection design screening are
+available only as caveated bounded-`GPCM` surfaces with explicit
+boundary output. Full FACETS-style score-side contract review, posterior
+predictive checks, and heavy backends remain out of scope for `GPCM` in
+this release. See
+[`gpcm_capability_matrix()`](https://ryuya-dot-com.github.io/mfrmr/reference/gpcm_capability_matrix.md)
+for the full per-helper support contract.
+
+## Why GPCM Is The Current Upper Scope
+
+`GPCM` is the current upper supported scope for three reasons.
+
+1.  The shared `MML` kernel and the response-probability core already
+    generalize to the bounded `GPCM` branch without changing the main
+    package architecture.
+2.  The package has direct checks for that bounded route.
+3.  The helpers that still depend on Rasch-family score semantics are
+    blocked explicitly, and role-based planning helpers carry explicit
+    caveats, so formal support does not require pretending that every
+    downstream helper has full coverage.
+
+This is a narrower but more defensible claim than saying the whole
+package is uniformly generalized to free-discrimination many-facet work.
+
+## Equal weighting as a model-choice principle
+
+Robitzsch and Steinfeld (2018) are helpful because they separate two
+arguments that are often conflated in applied many-facet work.
+
+1.  A generalized many-facet model with discrimination parameters will
+    often fit empirical data better than an equal-weighting `RSM`/`PCM`
+    fit.
+2.  That fit advantage does not, by itself, settle the operational
+    scoring question.
+
+If the intended score interpretation requires equal contributions of
+items and raters, then the Rasch-family route remains substantively
+attractive even when a slope-aware model fits better. `mfrmr` therefore
+treats `RSM` / `PCM` as the equal-weighting reference models and bounded
+`GPCM` as a supported alternative for users who explicitly want to
+inspect or allow discrimination-based reweighting.
+
+This is also why full FACETS output-contract score-side review remains
+out of scope for bounded `GPCM` in this release: its published form is a
+Rasch-family score transformation, and the slope-aware analogue that
+would replace it in a free-discrimination context requires careful
+score-side uncertainty handling. Package-native scorefile export,
+manuscript-draft APA text, and fit-based report/export bundles are
+available only as caveated sensitivity-reporting surfaces, not as
+FACETS-equivalent or operational score transformations.
+[`fair_average_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/fair_average_table.md)
+and
+[`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md)
+themselves are now available under bounded `GPCM` via the slope-aware
+element-conditional kernel. For fair averages,
+`fair_average_table(fair_se = TRUE)` adds structural delta-method SEs
+for non-person rows when the MML Hessian is available; the historical
+`SE` columns remain measure-level SEs.
+
+One additional distinction matters for implementation. The `weight`
+argument in
+[`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
+is an observation-weight column. It changes how rating events enter
+estimation and summaries, but it is not the same thing as the
+equal-weighting versus discrimination-weighting question discussed
+above.
+
+## Practical Reading Order
+
+For users deciding among `RSM`, `PCM`, and bounded `GPCM`, use this
+reading order:
+
+1.  Start with the score claim. If category thresholds should be common,
+    begin with `RSM`; if thresholds may vary by a designated step facet,
+    begin with `PCM`.
+2.  Fit the Rasch-family reference model with `method = "MML"` and read
+    `summary(fit)` plus
+    `summary(diagnose_mfrm(fit, diagnostic_mode = "both"))`.
+3.  Fit bounded `GPCM` only when discrimination-based reweighting is a
+    meaningful sensitivity question, not as a routine replacement for
+    the equal-weighting model.
+4.  If bounded `GPCM` fits better, report what changed: slopes,
+    information redistribution, bias-screening rows, fair averages, or
+    conclusions. Do not let fit improvement alone decide the operational
+    model.
+
+This sequence keeps the interpretation aligned with the validation
+boundary: `RSM`/`PCM` support the full manuscript/reporting route, while
+bounded `GPCM` supports the documented direct and caveated routes.
+
+## Future extensions
+
+Posterior-predictive checking, `MCMC` engines, and heavier runtime
+infrastructure remain future extensions. They are not required for the
+current quadrature-based `MML` route or for the bounded `GPCM` support
+described here.
+
+## Recommended Expert Reading Of Package Output
+
+For the current release, the most defensible interpretation sequence is:
+
+1.  Read `summary(fit)` for estimation status and precision basis.
+2.  Read `summary(diag)` with `diagnostic_mode = "both"` to keep legacy
+    and strict evidence separate.
+3.  Treat `marginal_fit` and `marginal_pairwise` as screening layers for
+    first-order and local-dependence follow-up.
+4.  Use plots and tables to judge magnitude and practical importance,
+    not only presence/absence of a flag.
+5.  If a use case demands stronger confirmation, treat posterior
+    predictive checking as the next methodological step rather than
+    over-reading the current screening statistics.
+
+## Key References
+
+- Andrich, D. (1978). *A rating formulation for ordered response
+  categories*. Psychometrika, 43, 561-573.
+- Bock, R. D., & Aitkin, M. (1981). *Marginal maximum likelihood
+  estimation of item parameters: Application of an EM algorithm*.
+  Psychometrika, 46, 443-459.
+- Haberman, S. J., & Sinharay, S. (2013). *Generalized residuals for
+  general models for contingency tables with application to item
+  response theory*. Journal of the American Statistical Association,
+  108, 1435-1444.
+- Eckes, T. (2005). *Examining rater effects in TestDaF writing and
+  speaking performance assessments: A many-facet Rasch analysis*.
+  Language Assessment Quarterly, 2, 197-221.
+- Linacre, J. M. (1989). *Many-facet Rasch measurement*. MESA Press.
+- Masters, G. N. (1982). *A Rasch model for partial credit scoring*.
+  Psychometrika, 47, 149-174.
+- Orlando, M., & Thissen, D. (2000). *Likelihood-based item-fit indices
+  for dichotomous item response theory models*. Applied Psychological
+  Measurement, 24, 50-64.
+- Orlando, M., & Thissen, D. (2003). *Further investigation of the
+  performance of S-X2: An item fit index for use with dichotomous item
+  response theory models*. Applied Psychological Measurement, 27,
+  289-298.
+- Robitzsch, A., & Steinfeld, J. (2018). *Item response models for human
+  ratings: Overview, estimation methods, and implementation in R*.
+  Psychological Test and Assessment Modeling, 60(1), 101-139.
+- Sinharay, S., & Monroe, S. (2025). *Assessment of fit of item response
+  theory models: A critical review of the status quo and some future
+  directions*. British Journal of Mathematical and Statistical
+  Psychology, 78, 711-733.
+- Sinharay, S., Johnson, M. S., & Stern, H. S. (2006). *Posterior
+  predictive assessment of item response theory models*. Applied
+  Psychological Measurement, 30, 298-321.

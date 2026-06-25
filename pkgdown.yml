@@ -1,0 +1,15 @@
+pandoc: 3.8.3
+pkgdown: 2.2.0
+pkgdown_sha: ~
+articles:
+  mfrmr-facets-migration: mfrmr-facets-migration.html
+  mfrmr-gpcm-scope: mfrmr-gpcm-scope.html
+  mfrmr-linking-and-dff: mfrmr-linking-and-dff.html
+  mfrmr-mml-and-marginal-fit: mfrmr-mml-and-marginal-fit.html
+  mfrmr-reporting-and-apa: mfrmr-reporting-and-apa.html
+  mfrmr-visual-diagnostics: mfrmr-visual-diagnostics.html
+  mfrmr-workflow: mfrmr-workflow.html
+last_built: 2026-06-25T06:14Z
+urls:
+  reference: https://ryuya-dot-com.github.io/mfrmr/reference
+  article: https://ryuya-dot-com.github.io/mfrmr/articles
