@@ -44,10 +44,9 @@
 - The pkgdown configuration now groups reference topics by primary workflow,
   bounded-GPCM boundary, diagnostics, reporting/export, simulation/recovery,
   linking/bias/DFF, FACETS migration, and advanced review surfaces.
-- `cran-comments.md` has been rewritten as a CRAN maintenance-release note
-  rather than a journal-preparation note; any remaining pkgdown URL NOTE must
-  be resolved before release by publishing the prepared pkgdown route or by
-  revising release URLs.
+- `cran-comments.md` has been updated for the 0.2.2 CRAN maintenance release,
+  and the pkgdown URL is now aligned across the release metadata and generated
+  documentation.
 
 # mfrmr 0.2.1
 

@@ -1,14 +1,15 @@
 ## Release type
 
-Maintenance release for the next CRAN upload candidate. This local draft is
-not ready for submission until the latest GitHub Actions matrix completes
-successfully.
+Maintenance release for the next CRAN upload candidate. The local submission
+gate is complete; the GitHub Actions matrix should be checked after the final
+push and before upload.
 
 ## Test environments
 
-* Local macOS Tahoe 26.5.1, R 4.5.2: R CMD check --as-cran for 0.2.2
-  with Homebrew `tidy-html5` 5.8.0 on PATH and the pkgdown URL reachable
-* GitHub Actions matrix: pending for the latest commit/push
+* Local macOS Tahoe 26.5.1, R 4.6.0: R CMD check
+  --no-manual --no-build-vignettes --as-cran for 0.2.2
+* Release-readiness helper: all local gates OK for 0.2.2
+* GitHub Actions matrix: to be checked after the final commit/push
 * CRAN checks for previous release 0.2.1: all current CRAN check flavors OK in
   the local release-readiness snapshot
 
@@ -24,8 +25,8 @@ Current local notes:
 
 * None
 
-The final submission will be refreshed after CI checks complete. This draft
-should not be submitted if CI reports any failures.
+The final submission should not be uploaded if the post-push CI matrix reports
+any failures.
 
 ## Release scope
 
