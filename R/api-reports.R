@@ -12889,13 +12889,55 @@ run_qc_pipeline <- function(fit,
 
   # ---- Check 1: Convergence ----
   converged <- isTRUE(fit$summary$Converged)
-  verdicts[1] <- if (converged) "Pass" else "Fail"
-  values[1]   <- if (converged) "TRUE" else "FALSE"
-  thresh[1]   <- "Converged = TRUE"
-  details[1]  <- if (converged) "Model converged" else "Model did NOT converge"
+  conv_status <- trimws(tolower(as.character(
+    fit$summary$ConvergenceStatus %||% NA_character_
+  )[1]))
+  conv_severity <- trimws(tolower(as.character(
+    fit$summary$ConvergenceSeverity %||% NA_character_
+  )[1]))
+  if (is.na(conv_status) || !nzchar(conv_status)) conv_status <- NA_character_
+  if (is.na(conv_severity) || !nzchar(conv_severity)) conv_severity <- NA_character_
+  conv_review <- identical(conv_severity, "review") ||
+    conv_status %in% c("reviewable_warning", "converged_plateau_large_gradient")
+  conv_pass <- converged &&
+    !conv_review &&
+    (is.na(conv_severity) || identical(conv_severity, "pass"))
+  verdicts[1] <- if (isTRUE(conv_review)) {
+    "Warn"
+  } else if (isTRUE(conv_pass)) {
+    "Pass"
+  } else {
+    "Fail"
+  }
+  values[1]   <- paste0(
+    "Converged=", if (converged) "TRUE" else "FALSE",
+    "; Status=", conv_status,
+    "; Severity=", conv_severity
+  )
+  thresh[1]   <- "Pass: Converged = TRUE and ConvergenceSeverity = pass; review statuses warn"
+  details[1]  <- if (isTRUE(conv_pass)) {
+    "Model converged with pass-level optimizer diagnostics"
+  } else if (isTRUE(conv_review) &&
+             identical(conv_status, "reviewable_warning")) {
+    "Optimizer returned a reviewable warning; inspect convergence diagnostics before reporting"
+  } else if (isTRUE(conv_review) &&
+             identical(conv_status, "converged_plateau_large_gradient")) {
+    "Optimizer returned code 0, but the terminal gradient exceeded the review tolerance"
+  } else if (isTRUE(conv_review)) {
+    "Optimizer convergence diagnostics require review before reporting"
+  } else {
+    "Model did NOT converge"
+  }
   raw_details$convergence <- list(converged = converged,
-                                  iterations = fit$summary$Iterations)
-  if (!converged) {
+                                  status = conv_status,
+                                  severity = conv_severity,
+                                  iterations = fit$summary$Iterations,
+                                  bfgs_iterations = fit$summary$BFGSIterations %||% NA,
+                                  terminal_gradient_sup_norm = fit$summary$TerminalGradientSupNorm %||% NA_real_)
+  if (isTRUE(conv_review)) {
+    recommendations <- c(recommendations,
+                         "Optimizer convergence diagnostics require review. Inspect TerminalGradientSupNorm and rerun with enough maxit plus a tighter reltol when publication precision is required.")
+  } else if (!isTRUE(conv_pass)) {
     recommendations <- c(recommendations,
                          "Model did not converge. Consider increasing maxit, simplifying the model, or checking data quality.")
   }

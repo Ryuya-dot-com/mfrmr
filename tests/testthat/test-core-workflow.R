@@ -31,9 +31,11 @@ test_that("core fit/diagnostics workflow runs", {
     "ConvergenceBasis",
     "ConvergenceStatus",
     "ConvergenceSeverity",
+    "BFGSIterations",
     "FunctionEvaluations",
     "GradientEvaluations",
-    "TerminalGradientSupNorm"
+    "TerminalGradientSupNorm",
+    "LargeGradientWarning"
   ) %in% names(fit_summary$overview)))
   printed_summary <- capture.output(summary(fit))
   expect_true(any(grepl("Many-Facet Rasch Model Summary", printed_summary, fixed = TRUE)))
@@ -634,6 +636,64 @@ test_that("packaged simulation datasets are accessible via load_mfrmr_data()", {
   ext <- system.file("extdata", package = "mfrmr")
   expect_true(nzchar(ext))
   expect_true(any(grepl("README", list.files(ext), ignore.case = TRUE)))
+})
+
+test_that("reporting helpers classify reviewable convergence as warning/review", {
+  d <- mfrmr:::sample_mfrm_data(seed = 321)
+  fit <- suppressWarnings(
+    mfrmr::fit_mfrm(
+      data = d,
+      person = "Person",
+      facets = c("Rater", "Task", "Criterion"),
+      score = "Score",
+      method = "JML",
+      model = "RSM",
+      maxit = 30,
+      quad_points = 7
+    )
+  )
+  diag <- suppressWarnings(mfrmr::diagnose_mfrm(fit, residual_pca = "none"))
+
+  fit_large_gradient <- fit
+  fit_large_gradient$summary$Converged[1] <- TRUE
+  fit_large_gradient$summary$ConvergenceStatus[1] <- "converged_plateau_large_gradient"
+  fit_large_gradient$summary$ConvergenceSeverity[1] <- "review"
+  fit_large_gradient$summary$TerminalGradientSupNorm[1] <- 0.05
+  chk <- mfrmr::reporting_checklist(fit_large_gradient, diagnostics = diag)
+  conv_row <- chk$checklist[
+    chk$checklist$Section == "Method Section" &
+      chk$checklist$Item == "Convergence",
+    ,
+    drop = FALSE
+  ]
+  expect_equal(nrow(conv_row), 1L)
+  expect_true(isTRUE(conv_row$Available[1]))
+  expect_false(isTRUE(conv_row$DraftReady[1]))
+  expect_match(conv_row$NextAction[1], "warning|review", ignore.case = TRUE)
+
+  chk_summary <- summary(chk, top_n = nrow(chk$checklist))
+  expect_true(any(chk_summary$action_items$Item == "Convergence"))
+
+  fit_reviewable <- fit
+  fit_reviewable$summary$Converged[1] <- FALSE
+  fit_reviewable$summary$ConvergenceStatus[1] <- "reviewable_warning"
+  fit_reviewable$summary$ConvergenceSeverity[1] <- "review"
+  qc_review <- mfrmr::run_qc_pipeline(fit_reviewable, diagnostics = diag)
+  expect_identical(
+    qc_review$verdicts$Verdict[qc_review$verdicts$Check == "Convergence"],
+    "Warn"
+  )
+  expect_identical(qc_review$details$convergence$status, "reviewable_warning")
+
+  fit_hard_fail <- fit
+  fit_hard_fail$summary$Converged[1] <- FALSE
+  fit_hard_fail$summary$ConvergenceStatus[1] <- "iteration_limit"
+  fit_hard_fail$summary$ConvergenceSeverity[1] <- "fail"
+  qc_fail <- mfrmr::run_qc_pipeline(fit_hard_fail, diagnostics = diag)
+  expect_identical(
+    qc_fail$verdicts$Verdict[qc_fail$verdicts$Check == "Convergence"],
+    "Fail"
+  )
 })
 
 test_that("legacy numbered API names are internal (not exported)", {

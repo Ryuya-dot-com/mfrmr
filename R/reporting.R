@@ -666,7 +666,13 @@ summarize_convergence_metrics <- function(summary_row) {
   converged <- if ("Converged" %in% names(summary_row)) isTRUE(summary_row$Converged[1]) else NA
   iter <- if ("Iterations" %in% names(summary_row)) to_float(summary_row$Iterations[1]) else NA_real_
   fn_eval <- if ("FunctionEvaluations" %in% names(summary_row)) to_float(summary_row$FunctionEvaluations[1]) else iter
-  gr_eval <- if ("GradientEvaluations" %in% names(summary_row)) to_float(summary_row$GradientEvaluations[1]) else NA_real_
+  gr_eval <- if ("BFGSIterations" %in% names(summary_row)) {
+    to_float(summary_row$BFGSIterations[1])
+  } else if ("GradientEvaluations" %in% names(summary_row)) {
+    to_float(summary_row$GradientEvaluations[1])
+  } else {
+    NA_real_
+  }
   loglik <- if ("LogLik" %in% names(summary_row)) to_float(summary_row$LogLik[1]) else NA_real_
   aic <- if ("AIC" %in% names(summary_row)) to_float(summary_row$AIC[1]) else NA_real_
   bic <- if ("BIC" %in% names(summary_row)) to_float(summary_row$BIC[1]) else NA_real_
@@ -675,7 +681,9 @@ summarize_convergence_metrics <- function(summary_row) {
   grad_sup <- if ("TerminalGradientSupNorm" %in% names(summary_row)) to_float(summary_row$TerminalGradientSupNorm[1]) else NA_real_
   grad_tol <- if ("GradientReviewTolerance" %in% names(summary_row)) to_float(summary_row$GradientReviewTolerance[1]) else NA_real_
 
-  conv_txt <- if (identical(status, "reviewable_warning")) {
+  conv_txt <- if (identical(status, "converged_plateau_large_gradient")) {
+    "met the relative-tolerance stopping rule but needs terminal-gradient review"
+  } else if (identical(status, "reviewable_warning")) {
     "ended with a reviewable optimizer warning"
   } else if (isTRUE(converged)) {
     "converged"
@@ -692,7 +700,7 @@ summarize_convergence_metrics <- function(summary_row) {
   out <- paste0(
     "Optimization ", conv_txt, " after ", iter_txt,
     " function evaluations",
-    if (is.finite(gr_eval)) paste0(" and ", gr_txt, " gradient evaluations") else "",
+    if (is.finite(gr_eval)) paste0(" and ", gr_txt, " BFGS iterations/gradient evaluations") else "",
     " (LogLik = ", ll_txt,
     ", AIC = ", aic_txt, ", BIC = ", bic_txt, ")."
   )

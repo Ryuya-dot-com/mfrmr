@@ -168,13 +168,80 @@ reporting_checklist <- function(fit,
   bias_error_tbl <- attr(bias_tbls, "errors", exact = TRUE)
   n_bias_errors <- if (is.data.frame(bias_error_tbl)) nrow(bias_error_tbl) else 0L
 
-  converged <- isTRUE(fit$summary$Converged %||% FALSE)
+  summary_scalar <- function(name, default = NA) {
+    if (!is.data.frame(fit$summary) || !name %in% names(fit$summary)) {
+      return(default)
+    }
+    value <- fit$summary[[name]][1]
+    if (length(value) == 0L || is.null(value)) {
+      return(default)
+    }
+    value
+  }
+  normalize_summary_label <- function(value) {
+    value <- as.character(value %||% NA_character_)[1]
+    if (is.na(value)) {
+      return(NA_character_)
+    }
+    out <- trimws(tolower(value))
+    if (!nzchar(out)) NA_character_ else out
+  }
+
+  converged <- isTRUE(summary_scalar("Converged", FALSE))
+  convergence_status <- normalize_summary_label(
+    summary_scalar("ConvergenceStatus", NA_character_)
+  )
+  convergence_severity <- normalize_summary_label(
+    summary_scalar("ConvergenceSeverity", NA_character_)
+  )
+  convergence_review_status <- convergence_status %in% c(
+    "reviewable_warning",
+    "converged_plateau_large_gradient"
+  )
+  convergence_review <- convergence_review_status ||
+    identical(convergence_severity, "review")
+  convergence_pass <- converged &&
+    !convergence_review &&
+    (is.na(convergence_severity) || identical(convergence_severity, "pass"))
+  convergence_usable <- convergence_pass || convergence_review
+  terminal_gradient_sup_norm <- suppressWarnings(as.numeric(
+    summary_scalar("TerminalGradientSupNorm", NA_real_)
+  ))
   summary_msg <- if (is.data.frame(fit$summary) && "Message" %in% names(fit$summary)) {
     as.character(fit$summary$Message[1] %||% "")
   } else {
     ""
   }
   conv_msg <- as.character(fit$opt$message %||% summary_msg %||% "")
+  convergence_detail <- paste0(
+    "Converged=", if (converged) "TRUE" else "FALSE",
+    "; status=", if (is.na(convergence_status)) "unknown" else convergence_status,
+    "; severity=", if (is.na(convergence_severity)) "unknown" else convergence_severity,
+    if (is.finite(terminal_gradient_sup_norm)) {
+      paste0("; terminal gradient sup-norm=", signif(terminal_gradient_sup_norm, 4))
+    } else {
+      ""
+    },
+    if (nzchar(conv_msg)) paste0("; message=", conv_msg) else ""
+  )
+  convergence_review_action <- if (identical(convergence_status, "reviewable_warning")) {
+    paste0(
+      "Treat this as a reviewable optimizer warning rather than an immediate ",
+      "hard failure; inspect terminal gradient, iteration limits, and sensitivity ",
+      "runs before drafting inferential language."
+    )
+  } else if (identical(convergence_status, "converged_plateau_large_gradient")) {
+    paste0(
+      "Treat the code-0 plateau as a convergence warning; inspect ",
+      "TerminalGradientSupNorm and rerun with stricter optimizer settings when ",
+      "publication precision is required."
+    )
+  } else {
+    paste0(
+      "Review optimizer diagnostics before drafting inferential language; ",
+      "ConvergenceSeverity indicates review is required."
+    )
+  }
   n_bias_pairs <- length(bias_tbls)
   has_bias_sig <- FALSE
   bias_stat_parse_issue <- FALSE
@@ -197,14 +264,17 @@ reporting_checklist <- function(fit,
   has_ci <- has_meas && "SE" %in% names(measures)
   has_rel <- nrow(rel_df) > 0
   precision_tier <- as.character(precision_profile_df$PrecisionTier[1] %||% NA_character_)
-  formal_precision <- isTRUE(precision_profile_df$SupportsFormalInference[1] %||% FALSE) && converged
+  formal_precision <- isTRUE(precision_profile_df$SupportsFormalInference[1] %||% FALSE) &&
+    convergence_pass
   measure_formal <- if (has_meas && "SupportsFormalInference" %in% names(measures)) {
-    any(as.logical(measures$SupportsFormalInference), na.rm = TRUE)
+    any(as.logical(measures$SupportsFormalInference), na.rm = TRUE) &&
+      convergence_pass
   } else {
     formal_precision
   }
   ci_ready <- if (has_meas && "CIEligible" %in% names(measures)) {
-    any(as.logical(measures$CIEligible), na.rm = TRUE)
+    any(as.logical(measures$CIEligible), na.rm = TRUE) &&
+      convergence_pass
   } else {
     has_ci && formal_precision
   }
@@ -461,10 +531,16 @@ reporting_checklist <- function(fit,
       add_item(
         "Method Section",
         "Convergence",
-        converged,
-        detail = if (nzchar(conv_msg)) conv_msg else if (converged) "Converged" else "Convergence status unavailable",
+        convergence_usable,
+        detail = convergence_detail,
         source_component = "fit$summary + fit$opt",
-        missing_action = "Resolve convergence before reporting model results."
+        ready_for_apa = convergence_pass,
+        missing_action = "Resolve hard convergence failures before reporting model results.",
+        available_action = if (convergence_pass) {
+          "Report convergence status together with optimizer settings and iteration counts."
+        } else {
+          convergence_review_action
+        }
       ),
       add_item(
         "Method Section",
@@ -938,21 +1014,25 @@ reporting_checklist <- function(fit,
       add_item(
         "Visual Displays",
         "Precision / information curves",
-        converged,
-        detail = if (converged) {
+        convergence_usable,
+        detail = if (convergence_pass) {
           "compute_information() / plot_information() are available for the current fitted model"
+        } else if (convergence_review) {
+          "Information curves are available only as review diagnostics until convergence warnings are resolved"
         } else {
-          "Information curves are not recommended until convergence is resolved"
+          "Information curves are not recommended until hard convergence failures are resolved"
         },
         source_component = "fit + compute_information()",
         severity = "recommended",
-        ready_for_apa = converged && formal_precision,
+        ready_for_apa = convergence_pass && formal_precision,
         plot_helper = "plot_information()",
         draw_free_route = "plot_information(compute_information(fit), draw = FALSE)",
         plot_return_class = "mfrm_plot_data",
-        missing_action = "Resolve convergence before using information or precision curves in reporting.",
+        missing_action = "Resolve hard convergence failures before using information or precision curves in reporting.",
         available_action = if (formal_precision) {
           "Use information curves to describe precision across theta when that is the reporting question."
+        } else if (convergence_review) {
+          "Use information curves only as diagnostic review context until optimizer warnings are cleared."
         } else {
           "Use information curves descriptively and keep the current precision-tier caveat in the narrative."
         }
