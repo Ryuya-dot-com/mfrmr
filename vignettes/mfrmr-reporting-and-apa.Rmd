@@ -28,6 +28,12 @@ The reporting stack in `mfrmr` is organized around four objects:
 - `chk`: the revision guide from `reporting_checklist()`
 - `apa`: structured manuscript outputs from `build_apa_outputs()`
 
+Before those fit-specific objects exist, use
+`mfrmr_minimum_report_checklist()` to outline the method, design, estimation,
+fit, precision, category, rater/facet, fairness, linking, visual,
+FACETS/external-software, validity-boundary, and limitation topics that a
+critical psychometric reader may expect.
+
 For a broader workflow view, see `vignette("mfrmr-workflow", package = "mfrmr")`.
 For a plot-first route, see
 `vignette("mfrmr-visual-diagnostics", package = "mfrmr")`.
@@ -55,7 +61,18 @@ fit <- fit_mfrm(
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 ```
 
-## 1. Start with the revision guide
+## 1. Start with the minimum report checklist
+
+Use `mfrmr_minimum_report_checklist()` first when the question is "what must
+the report cover?" This checklist is fit-independent and should be read as a
+planning or reviewer-facing map.
+
+```{r minimum-checklist}
+minimum <- mfrmr_minimum_report_checklist()
+minimum[, c("Section", "ReportItem", "Required")]
+```
+
+## 2. Move to the fit-specific revision guide
 
 Use `reporting_checklist()` first when the question is "what is still missing?"
 rather than "how do I phrase the results?"
@@ -76,7 +93,7 @@ Interpretation:
 - `Priority` shows what to resolve first.
 - `NextAction` is the shortest package-native instruction for closing the gap.
 
-## 2. Check the precision layer before strong claims
+## 3. Check the precision layer before strong claims
 
 `mfrmr` intentionally distinguishes `model_based`, `hybrid`, and
 `exploratory` precision tiers.
@@ -100,7 +117,7 @@ Interpretation:
   have different source bases and should not be collapsed into a single
   validation pass/fail claim.
 
-## 3. Build structured manuscript outputs
+## 4. Build structured manuscript outputs
 
 `build_apa_outputs()` is the writing engine. It returns report text plus a
 section map, note map, and caption map that all share the same output
@@ -131,7 +148,71 @@ Interpretation:
 - `section_map` is the machine-readable map of what text blocks are available.
 - The same contract also feeds captions and notes, which reduces wording drift.
 
-## 4. Build tables from the same contract
+## 5. Make the MML population metric explicit
+
+For ordinary MML fits without latent regression, the default person metric fixes
+the normal marginal population SD at the configured `population_prior_sd`.
+When `estimate_population_sd = TRUE`, that SD is estimated by the EM variance
+M-step. This is a metric-calibration choice, not a fit-status decision or a
+bounded-`GPCM` slope effect, so it should be visible in Method wording, result
+notes, and any first-screen report.
+
+```{r population-sd-apa}
+fit_free_sd <- fit_mfrm(
+  toy,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  method = "MML",
+  model = "RSM",
+  quad_points = 7,
+  maxit = 40,
+  estimate_population_sd = TRUE
+)
+
+diag_free_sd <- diagnose_mfrm(
+  fit_free_sd,
+  residual_pca = "none",
+  diagnostic_mode = "legacy"
+)
+
+summary(fit_free_sd)$population_overview[
+  , c("PopulationSDMode", "EstimatedPopulationSD",
+      "PopulationSDSE", "PopulationSDSEStatus")
+]
+
+apa_free_sd <- build_apa_outputs(fit_free_sd, diagnostics = diag_free_sd)
+summary(apa_free_sd)$content_checks[
+  summary(apa_free_sd)$content_checks$Check == "MML population SD wording alignment",
+  c("Check", "Passed", "Detail")
+]
+```
+
+The same information is also carried by the result/report wrapper.
+
+```{r population-sd-results}
+res_free_sd <- mfrm_results(
+  fit_free_sd,
+  include = c("fit", "diagnostics", "reporting", "apa")
+)
+
+summary(res_free_sd)$overview[
+  , c("PopulationSDMode", "EstimatedPopulationSD", "PopulationMetric")
+]
+
+report_free_sd <- mfrm_report(res_free_sd, style = "apa")
+report_free_sd$sections[
+  report_free_sd$sections$Section == "Model and data setup",
+  c("Section", "Evidence", "Boundary")
+]
+```
+
+For APA-style reporting, use the generated wording as a draft. Estimated-SD
+runs should report the estimated SD and profile SE/CI when available, and keep
+the profile-SE caveat: the profile uncertainty currently holds other structural
+parameters fixed.
+
+## 6. Build tables from the same contract
 
 Use `apa_table()` when you want reproducible handoff tables without rebuilding
 captions or notes by hand.
@@ -147,7 +228,7 @@ tbl_reliability$note
 The actual table data are stored in `tbl_summary$table` and
 `tbl_reliability$table`.
 
-## 5. Add figure-ready visual data
+## 7. Add figure-ready visual data
 
 For reporting workflows, `build_visual_summaries()` is the bridge between
 statistical results and figure-ready plot data.
@@ -163,7 +244,7 @@ names(vis)
 names(vis$warning_map)
 ```
 
-## 6. Reporting route when interaction screening matters
+## 8. Reporting route when interaction screening matters
 
 When bias or local interaction screens matter, keep the wording conservative.
 The package treats these outputs as screening-oriented unless the current
@@ -198,8 +279,10 @@ For a compact manuscript-oriented route:
 3. `precision_review_report()`
 4. `reporting_checklist()`
 5. `build_apa_outputs()`
-6. `apa_table()`
-7. `build_visual_summaries()`
+6. Check `summary(fit)$population_overview` and `summary(apa)$content_checks`
+   when MML population-SD mode affects the report.
+7. `apa_table()`
+8. `build_visual_summaries()`
 
 ## Related help
 

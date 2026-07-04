@@ -18,7 +18,8 @@ predict_mfrm_population(
   maxit = 25,
   quad_points = 7,
   residual_pca = c("none", "overall", "facet", "both"),
-  seed = NULL
+  seed = NULL,
+  progress = interactive()
 )
 }
 \arguments{
@@ -66,6 +67,10 @@ Defaults to the model recorded in the base simulation specification.}
 \item{residual_pca}{Residual PCA mode passed to \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}.}
 
 \item{seed}{Optional seed for reproducible replications.}
+
+\item{progress}{Logical; if \code{TRUE}, show CLI progress while the underlying
+design-evaluation simulation/refit cells are running. Defaults to
+\code{\link[=interactive]{interactive()}}.}
 }
 \value{
 An object of class \code{mfrm_population_prediction} with components:
@@ -73,6 +78,8 @@ An object of class \code{mfrm_population_prediction} with components:
 \item \code{design}: requested future design
 \item \code{forecast}: facet-level forecast table
 \item \code{overview}: run-level overview
+\item \code{runtime}: elapsed-time and completion metadata retained from the
+underlying design-evaluation run
 \item \code{simulation}: underlying \code{\link[=evaluate_mfrm_design]{evaluate_mfrm_design()}} result
 \item \code{sim_spec}: simulation specification used for the forecast
 \item \code{facet_names}: public non-person facet names carried by the simulation

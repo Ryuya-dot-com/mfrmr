@@ -14,7 +14,8 @@ export_mfrm_results(
   zip_name = NULL,
   plot_width = 1200,
   plot_height = 900,
-  plot_res = 144
+  plot_res = 144,
+  preset = "archive"
 )
 }
 \arguments{
@@ -33,13 +34,21 @@ underscores.}
 \item{overwrite}{Logical; if \code{FALSE}, existing files stop the export.}
 
 \item{zip_bundle}{Logical; if \code{TRUE}, create a best-effort zip archive of
-the written files.}
+the written files. \code{preset = "starter"} preserves the reader-first folder
+layout inside the zip; archive-style exports keep the legacy flattened zip
+layout.}
 
 \item{zip_name}{Optional zip file name. When omitted,
 \verb{\{prefix\}_mfrm_results.zip} is used.}
 
 \item{plot_width, plot_height, plot_res}{PNG device settings used when
 \code{include} contains \code{"plots"}.}
+
+\item{preset}{Export preset. \code{"archive"} preserves the complete
+component-oriented export. \code{"starter"} writes a reader-first folder with
+\code{index.html}, \code{README.md}, compact summary CSVs, report-readiness CSVs,
+primary evidence summaries, replay code, and a manifest. \code{"reviewer"}
+keeps the broader archive content while recording the same preset label.}
 }
 \value{
 An \code{mfrm_results_export} object with \code{summary}, \code{written_files},
@@ -55,7 +64,8 @@ validation step.
 The helper writes:
 \itemize{
 \item summary CSVs from \code{summary(x)} such as overview, status, triage, plot
-routes, next actions, mapping, and replay-code lines;
+routes, next actions, mapping, and replay-code lines; the overview CSV
+carries MML population-SD mode/estimate fields when relevant;
 \item collected \code{x$tables} as CSV files;
 \item optional report artifacts from \code{mfrm_report(x)}, including report-index,
 evidence-summary, and reporting-template CSVs plus Markdown and HTML;
@@ -66,6 +76,16 @@ for the already-created object;
 \item a written-files manifest and compact export summary.
 }
 
+With \code{preset = "starter"}, the default \code{include} is narrowed to summary,
+report, HTML, replay, and manifest outputs, and files are grouped into
+\verb{00_summary/}, \verb{01_report/}, \verb{02_evidence/}, and
+\verb{03_reproducibility/} with root \code{index.html} and \code{README.md} entry points.
+The manifest carries \code{Audience}, \code{UseCase}, \code{OpenFirst}, and
+\code{ClaimBoundary} columns so users can distinguish reader-facing files,
+evidence summaries, and reproducibility artifacts. When \code{zip_bundle = TRUE},
+the starter zip preserves the same folder structure so shared archives keep
+the intended read order.
+
 Plot export is intentionally optional because some plot routes can be
 comparatively slow or require richer graphics devices. Plot failures are
 recorded in the returned \code{plot_errors} table rather than stopping the export.
@@ -74,14 +94,18 @@ recorded in the returned \code{plot_errors} table rather than stopping the expor
 \dontrun{
 toy <- load_mfrmr_data("example_core")
 toy_small <- toy[toy$Person \%in\% unique(toy$Person)[1:6], , drop = FALSE]
+# example_core is a compact smoke fixture; use Study 1/2 or your own data
+# for substantive handoffs.
 fit <- fit_mfrm(toy_small, "Person", c("Rater", "Criterion"), "Score",
                 method = "JML", maxit = 30)
 res <- mfrm_results(fit, include = c("fit", "diagnostics", "tables"))
 
+out_dir <- tempfile("mfrmr_results_example_")
 exported <- export_mfrm_results(
   res,
-  output_dir = tempdir(),
+  output_dir = out_dir,
   prefix = "mfrmr_results_example",
+  preset = "starter",
   overwrite = TRUE
 )
 exported$summary[, c("FilesWritten", "CsvWritten", "HtmlWritten")]

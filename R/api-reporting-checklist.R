@@ -1,3 +1,222 @@
+#' Minimum psychometric report checklist
+#'
+#' @description
+#' `mfrmr_minimum_report_checklist()` returns a fit-independent checklist of
+#' reporting elements that a critical psychometric reader is likely to expect
+#' in an MFRM report. Use it before fitting, while drafting a protocol, or when
+#' reviewing whether a manuscript has enough design, estimation, diagnostic,
+#' fairness, linking, and validity-boundary information.
+#'
+#' @param scope Which rows to return. `"all"` returns the full table. Other
+#'   values filter the `Scope` column.
+#'
+#' @details
+#' This helper complements [reporting_checklist()]. The minimum checklist asks
+#' what a report should cover in principle; [reporting_checklist()] then checks
+#' which of those evidence components are available from a fitted model,
+#' diagnostics, and optional bias/linking/generalizability objects.
+#'
+#' The checklist deliberately separates package output from the larger validity
+#' argument. `mfrmr` can organize model, fit, precision, visual, fairness, and
+#' design evidence, but it cannot by itself establish content evidence,
+#' consequences of use, or the appropriateness of an intended score
+#' interpretation.
+#'
+#' @return A data.frame with columns:
+#' - `Scope`
+#' - `Section`
+#' - `ReportItem`
+#' - `Required`
+#' - `PrimaryQuestion`
+#' - `mfrmrRoute`
+#' - `ReportUse`
+#' - `ReviewerRisk`
+#' - `Boundary`
+#'
+#' @references
+#' American Educational Research Association, American Psychological
+#' Association, & National Council on Measurement in Education. (2014).
+#' *Standards for Educational and Psychological Testing*.
+#' Appelbaum, M., Cooper, H., Kline, R. B., Mayo-Wilson, E., Nezu, A. M.,
+#' & Rao, S. M. (2018). Journal article reporting standards for quantitative
+#' research in psychology.
+#'
+#' @seealso [reporting_checklist()], [mfrmr_reporting_and_apa],
+#'   [mfrm_analysis_audit()], [mfrmr_output_guide()],
+#'   [facets_term_crosswalk()], [facets_positioning_guide()]
+#' @examples
+#' mfrmr_minimum_report_checklist()
+#' mfrmr_minimum_report_checklist("generalizability")
+#' mfrmr_minimum_report_checklist("fairness")
+#' mfrmr_minimum_report_checklist("validity")
+#' @concept reporting workflow
+#' @concept psychometric reporting
+#' @export
+mfrmr_minimum_report_checklist <- function(scope = c("all", "method", "data",
+                                                     "estimation", "fit",
+                                                     "categories",
+                                                     "rater_facet",
+                                                     "generalizability",
+                                                     "fairness", "linking",
+                                                     "visuals", "external",
+                                                     "validity",
+                                                     "limitations")) {
+  scope <- match.arg(scope)
+
+  row <- function(scope, section, item, required, question, route, use,
+                  risk, boundary) {
+    data.frame(
+      Scope = scope,
+      Section = section,
+      ReportItem = item,
+      Required = isTRUE(required),
+      PrimaryQuestion = question,
+      mfrmrRoute = route,
+      ReportUse = use,
+      ReviewerRisk = risk,
+      Boundary = boundary,
+      stringsAsFactors = FALSE
+    )
+  }
+
+  out <- do.call(rbind, list(
+    row("method", "Purpose and score interpretation",
+        "Intended use, score interpretation, and model family rationale",
+        TRUE,
+        "What is the score meant to support, and why is an additive Rasch-family MFRM the operational reference?",
+        "mfrmr_model_family_scope(); build_model_choice_review(); build_weighting_review()",
+        "Use before selecting RSM, PCM, or bounded GPCM and before writing model-choice language.",
+        "A reviewer may reject fit-improvement language if it is not tied to the intended score interpretation.",
+        "Statistical fit evidence does not replace a validity argument for the intended use."),
+    row("data", "Data and rating design",
+        "Sample, rating plan, facets, score scale, missingness, and exclusions",
+        TRUE,
+        "Who/what was rated, by whom, under which design, and which rows or scores were excluded or remapped?",
+        "describe_mfrm_data(); data_quality_report(); specifications_report(); fit$prep$score_map",
+        "Use as the methods-section backbone and as the first reproducibility check.",
+        "Readers cannot interpret severity, fit, or fairness without knowing the design and retained data.",
+        "Data QC documents what was analyzed; it does not justify exclusion rules by itself."),
+    row("data", "Connectivity and support",
+        "Connectedness, sparse cells, score support, and category use by facet",
+        TRUE,
+        "Are the measures on a common scale, and are categories/facet levels sufficiently observed?",
+        "subset_connectivity_report(); data_quality_report(); rating_scale_table(); facet_small_sample_review()",
+        "Use before interpreting common-scale locations, rater severity, or category thresholds.",
+        "Disconnected subsets or zero/sparse categories can make polished summaries misleading.",
+        "Connectivity and support are design conditions, not proof of model adequacy."),
+    row("estimation", "Model specification and constraints",
+        "Model family, person/facet roles, step structure, constraints, anchors, and weights",
+        TRUE,
+        "Exactly which model was estimated and which parameters were constrained or anchored?",
+        "fit_mfrm(); specifications_report(); summary(fit); review_mfrm_anchors(); anchor_linking_contract()",
+        "Use to make the estimation target auditable and to prevent hidden design changes between analyses.",
+        "Ambiguous constraints or anchor choices make external comparison and replication fragile.",
+        "FACETS-style names are not evidence that FACETS estimated the model."),
+    row("estimation", "Estimation method and convergence",
+        "JML/MML route, optimizer settings, iterations, convergence, and warnings",
+        TRUE,
+        "Did the model converge under a reportable estimation route, and what warnings remain?",
+        "summary(fit); estimation_iteration_report(); mfrmr_estimation_scope(); precision_review_report()",
+        "Use before writing any fit, precision, or fairness claim.",
+        "A technically rich report is still weak if convergence and estimation route are unclear.",
+        "Convergence permits interpretation; it is not a pass/fail validity decision."),
+    row("fit", "Fit and residual diagnostics",
+        "Global/local fit, infit/outfit, residual screens, local dependence, and misfit case review",
+        TRUE,
+        "Which evidence supports model-data fit, and which residual patterns need follow-up?",
+        "diagnose_mfrm(); fit_measures_table(); mfrm_misfit_thresholds(); build_misfit_casebook(); q3_statistic()",
+        "Use as fit evidence and as a route to local case review.",
+        "Fit flags can be overread as exclusion, fairness, or validity decisions.",
+        "Misfit and residual rows are screening evidence unless supported by design and substantive review."),
+    row("fit", "Precision, separation, and reliability",
+        "SEs, confidence/uncertainty language, separation, strata, reliability, and precision tier",
+        TRUE,
+        "How precise are the measures, and how strong may the inferential wording be?",
+        "precision_review_report(); facets_chisq_table(); fit_measures_table(); mfrmr_interval_guide()",
+        "Use to decide whether wording is model-based, hybrid, or exploratory.",
+        "Separation reliability is often mistaken for observed rater agreement or validity.",
+        "Precision evidence supports claims inside a validity argument; it is not the validity argument itself."),
+    row("categories", "Rating-scale/category functioning",
+        "Category counts, average measures, threshold ordering, curves, and category-support caveats",
+        TRUE,
+        "Do the score categories function in a way that supports the intended interpretation?",
+        "rating_scale_table(); category_structure_report(); category_curves_report(); plot(fit, type = \"ccc\")",
+        "Use for rating-scale diagnostics and figure selection.",
+        "Ordered-looking category plots can be overclaimed as proof of scale validity.",
+        "Category evidence is descriptive/model-based support, not standalone content or construct evidence."),
+    row("rater_facet", "Facet and rater behavior",
+        "Rater/facet severity, agreement, displacement, halo/network patterns, and small-sample warnings",
+        TRUE,
+        "Do raters or other facets show patterns that affect interpretation or operational use?",
+        "facet_statistics_report(); interrater_agreement_table(); displacement_table(); rater_network_analysis(); rater_halo_network_analysis()",
+        "Use to separate severity, agreement, and local pattern evidence.",
+        "Rater severity is often confused with rater reliability or fairness.",
+        "Facet estimates describe fitted locations; they do not by themselves adjudicate rater quality."),
+    row("generalizability", "Generalizability and D-study evidence",
+        "Observed-score G-study/D-study, interaction support, bootstrap intervals, and planned facet counts",
+        FALSE,
+        "If scores are generalized beyond observed raters, items, tasks, or occasions, what design evidence supports that generalization?",
+        "mfrm_generalizability(); mfrm_d_study(); check_mfrm_generalizability_design(); compare_mfrm_generalizability(); bootstrap_mfrm_generalizability()",
+        "Use when a report interprets design generalizability, planned facet counts, or interaction-sensitive G/Phi values.",
+        "G/Phi can be mistaken for fitted-logit MFRM separation reliability, rater agreement, or validity evidence.",
+        "Generalizability helpers are observed-score G-theory complements; sparse or singular interaction fits are sensitivity evidence."),
+    row("fairness", "DFF/DIF and bias screening",
+        "Bias interactions, DFF/DIF screens, group definitions, low-count cells, and reporting style",
+        TRUE,
+        "Which fairness-related screens were run, and what follow-up is justified?",
+        "estimate_bias(); analyze_dff(); analyze_dif_mh(); analyze_dff_moderation(); dif_report(style = \"apa\")",
+        "Use for conservative fairness-related reporting and screening follow-up.",
+        "Positive or null screens can be overclaimed without design, precision, and substantive review.",
+        "DFF/DIF outputs are screening layers, not final fairness conclusions."),
+    row("linking", "Anchoring, drift, and linking",
+        "Anchor construction, anchor review, drift checks, equating chain, and linked-scale support",
+        FALSE,
+        "If forms, waves, raters, or administrations are compared, what supports the common scale?",
+        "make_anchor_table(); review_mfrm_anchors(); detect_anchor_drift(); build_equating_chain(); build_linking_review()",
+        "Use whenever scale maintenance, longitudinal comparison, or anchored calibration is reported.",
+        "Single-fit summaries are sometimes mistaken for drift or equating evidence.",
+        "Linking claims require explicit multi-fit wave/form designs and anchor support."),
+    row("visuals", "Figures and visual reporting",
+        "Wright maps, category curves, dashboards, residual visuals, bias plots, captions, and plot-data routes",
+        FALSE,
+        "Which figures are reportable, and what caveat belongs in each caption?",
+        "reporting_checklist()$visual_scope; visual_reporting_template(); build_visual_summaries(); facets_visual_contract()",
+        "Use to choose figures and avoid visual overclaiming.",
+        "Attractive plots can hide whether the underlying evidence is exploratory or model-based.",
+        "Figure captions must state the diagnostic role and avoid validity or fairness conclusions by themselves."),
+    row("external", "FACETS and external-software relationship",
+        "FACETS terminology, output-table crosswalk, external comparisons, and handoff files",
+        FALSE,
+        "Are FACETS-style names being used for transition, or is external FACETS output actually compared?",
+        "facets_positioning_guide(); facets_term_crosswalk(); facets_feature_coverage(); facets_visual_contract(); facets_fit_review()",
+        "Use for reports read by FACETS users or reviewers expecting FACETS table names.",
+        "FACETS-style wording can be read as a numerical-equivalence claim.",
+        "External comparison requires supplied external output; compatibility routes are presentation contracts."),
+    row("validity", "Validity-argument boundary",
+        "Intended use, content evidence, response process, consequences, and study-specific support",
+        TRUE,
+        "What evidence outside the software output supports the interpretation and use of scores?",
+        "mfrm_analysis_audit(); reporting_checklist(); mfrmr_reporting_and_apa",
+        "Use to place package outputs inside a broader validity argument.",
+        "A critical reviewer may reject software-output completeness as insufficient for validity.",
+        "mfrmr supports evidence organization; it cannot establish content, response-process, or consequential evidence alone."),
+    row("limitations", "Sensitivity and limitations",
+        "Alternative model routes, GPCM caveats, resampling, and unresolved warnings",
+        TRUE,
+        "Which plausible alternatives or limitations could change the interpretation?",
+        "compare_mfrm(); gpcm_capability_matrix(); draw_mfrm_resamples(); mfrm_analysis_audit()",
+        "Use near the end of the report to disclose scope and sensitivity.",
+        "Without limitations, the report can look more certain than the evidence supports.",
+        "Sensitivity and design-planning evidence inform interpretation; they are not automatic observed-data decisions.")
+  ))
+
+  row.names(out) <- NULL
+  if (identical(scope, "all")) {
+    return(out)
+  }
+  out[out$Scope == scope, , drop = FALSE]
+}
+
 #' Build an auto-filled MFRM reporting checklist
 #'
 #' @param fit Output from [fit_mfrm()].
@@ -19,6 +238,9 @@
 #' bundle. It does not try to judge substantive reporting quality; instead, it
 #' checks whether the fitted object and related diagnostics contain the evidence
 #' typically reported in MFRM write-ups.
+#' For fit-independent planning, protocol writing, or reviewer-style checks
+#' before an analysis object exists, start with
+#' [mfrmr_minimum_report_checklist()].
 #'
 #' Checklist items are grouped into seven core sections:
 #' - Method section
@@ -101,7 +323,8 @@
 #'
 #' @return A named list with checklist tables. Class:
 #'   `mfrm_reporting_checklist`.
-#' @seealso [build_apa_outputs()], [build_visual_summaries()],
+#' @seealso [mfrmr_minimum_report_checklist()], [build_apa_outputs()],
+#'   [build_visual_summaries()],
 #'   [specifications_report()], [data_quality_report()],
 #'   [build_misfit_casebook()], [build_linking_review()]
 #' @examplesIf interactive()

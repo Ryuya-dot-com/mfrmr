@@ -48,7 +48,8 @@ uses \code{EstimateAligned} / \code{ErrorAligned}; \code{"unaligned"} uses \code
 }
 \value{
 An \code{mfrm_plot_data} object. When \code{draw = TRUE}, the object is returned
-invisibly after drawing.
+invisibly after drawing. Use \code{\link[=plot_data_components]{plot_data_components()}} or \code{\link[=plot_data]{plot_data()}} to
+inspect reusable tables, figure recipes, and guidance.
 }
 \description{
 Plot parameter-recovery simulation results
@@ -58,7 +59,11 @@ These plots are intended as simulation-review graphics. They do not replace
 the row-level \code{x$recovery} table or the ADEMP metadata; they make the main
 recovery estimands easier to inspect during model-development and design
 checks. Coverage is displayed only for parameter groups with available
-standard errors.
+standard errors. The draw-free \code{mfrm_plot_data} payload includes
+\code{reading_order}, \code{guidance}, \code{figure_recipes}, and \code{interpretation_note}
+components so custom figures can preserve the same review order and
+adequacy-decision boundaries used by \code{summary()} and
+\code{\link[=assess_mfrm_recovery]{assess_mfrm_recovery()}}.
 }
 \examples{
 \dontrun{

@@ -8,6 +8,12 @@ Quick guide to choosing the right base-R diagnostic plot in \code{mfrmr}.
 Use this page when you know the analysis question but do not yet know
 which plotting helper or \code{plot()} method to call.
 
+If you are translating a FACETS visual workflow, call
+\code{\link[=facets_visual_contract]{facets_visual_contract()}} first. It separates FACETS Table 6 / Table 8
+displays, Graphs-menu curves, DIF/bias Excel plots, Graphfile output, and
+R/Web plot menus from the \code{mfrmr} plot or plot-data route that serves the
+same review purpose.
+
 If you are preparing figures for a report, start with
 \code{\link[=reporting_checklist]{reporting_checklist()}} and inspect the \code{"Visual Displays"} rows first.
 Those rows now map directly onto the public plotting family covered on this
@@ -44,8 +50,11 @@ before choosing a \code{GPCM} follow-up plot route.
 \itemize{
 \item "Do persons and facet levels overlap on the same logit scale?"
 Use \code{plot(fit, type = "wright")} or \code{\link[=plot_wright_unified]{plot_wright_unified()}}.
-\item "Where do score categories transition across theta?"
+\item "Where do expected scores and score categories transition across theta?"
 Use \code{plot(fit, type = "pathway")} and \code{plot(fit, type = "ccc")}.
+\item "Where do Infit or Outfit values sit along the logit scale?"
+Use \code{plot(fit, type = "fit_pathway", fit_stat = "Infit")} or
+\code{plot(fit, type = "fit_pathway", fit_stat = "Outfit")}.
 \item "Is the design linked well enough across subsets or administrations?"
 Use \code{plot(subset_connectivity_report(...), type = "design_matrix")},
 \code{\link[=mfrm_network_analysis]{mfrm_network_analysis()}}, \code{\link[=build_mfrm_network_review]{build_mfrm_network_review()}},
@@ -128,7 +137,9 @@ the \code{"Visual Displays"} rows as the plot-readiness layer.
 \code{\link[=plot_marginal_fit]{plot_marginal_fit()}}, \code{\link[=plot_marginal_pairwise]{plot_marginal_pairwise()}}, and
 \code{\link[=plot_interrater_agreement]{plot_interrater_agreement()}} for flagged local issues.
 \item Use \code{plot(fit, type = "wright")}, \code{plot(fit, type = "pathway")},
-and \code{plot_residual_pca()} for structural interpretation.
+\code{plot(fit, type = "ccc")}, \code{plot(fit, type = "fit_pathway")},
+and \code{plot_residual_pca()} for structural and fit-location
+interpretation.
 \item Use \code{\link[=plot_bias_interaction]{plot_bias_interaction()}}, \code{\link[=plot_dif_heatmap]{plot_dif_heatmap()}},
 \code{\link[=plot_dif_summary]{plot_dif_summary()}}, \code{\link[=plot_anchor_drift]{plot_anchor_drift()}}, and
 \code{\link[=plot_information]{plot_information()}} when the checklist or dashboard points to
@@ -154,7 +165,8 @@ supports all of the following follow-up roles through public helpers:
 \code{\link[=reporting_checklist]{reporting_checklist()}}.
 \item Structural interpretation:
 \code{plot(fit, type = "wright")}, \code{plot(fit, type = "pathway")},
-\code{plot(fit, type = "ccc")}, and \code{\link[=plot_residual_pca]{plot_residual_pca()}}.
+\code{plot(fit, type = "ccc")}, \code{plot(fit, type = "fit_pathway")},
+and \code{\link[=plot_residual_pca]{plot_residual_pca()}}.
 \item Local issue follow-up:
 \code{\link[=plot_unexpected]{plot_unexpected()}}, \code{\link[=plot_displacement]{plot_displacement()}},
 \code{\link[=plot_interrater_agreement]{plot_interrater_agreement()}}, \code{\link[=plot_bias_interaction]{plot_bias_interaction()}},
@@ -167,6 +179,17 @@ supports all of the following follow-up roles through public helpers:
 \code{mfrm_plot_data} objects for downstream review and export. When step
 estimates are available, \code{build_visual_summaries()} also exposes
 \verb{$plot_payloads$category_probability_surface}.
+\item Optional \code{ggplot2} handoff:
+\code{\link[=as_ggplot]{as_ggplot()}} converts common \code{mfrm_plot_data} shapes, including Wright
+maps, pathway maps, fit-pathway displays, DIF/DFF summaries and heatmaps,
+category/information curves, threshold ladders, and estimate/profile rows,
+into editable
+\code{ggplot} objects. Wright maps retain the person-distribution band and
+facet/step rails; pathway maps retain dominant-category strips,
+thresholds, endpoint labels, and fit annotations. CCC converters also
+retain empirical overlay points when available and can map a \code{GPCM}
+slope/discrimination column to line width, alpha, or colour. This does
+not replace the base-R default renderer.
 \item 3D-ready exploratory handoff:
 \code{plot(fit, type = "ccc_surface", draw = FALSE)} returns a
 theta-by-category-by-probability \code{mfrm_plot_data} object. This is not a
@@ -200,6 +223,9 @@ Wright map is meant to support.
 levels, and step thresholds. Best for targeting and spread.}
 \item{\code{plot(fit, type = "pathway")}}{Expected score by theta, with
 dominant-category strips. Best for scale progression.}
+\item{\code{plot(fit, type = "fit_pathway")}}{Selected Infit or Outfit
+mean square on x and measure/logit location on y. Best for seeing where
+misfit sits along the scale.}
 \item{\code{plot(fit, type = "ccc")}}{Category probability curves. Best for
 checking whether categories peak in sequence.}
 \item{\code{plot_unexpected()}}{Observation-level surprises. Best for case
@@ -271,14 +297,26 @@ For users coming from the standard Rasch-measurement software packages,
 the closest mfrmr helper for each table or figure family is summarised
 below. The mapping is approximate; mfrmr is designed for many-facet
 workflows, so column subsets and column names differ.
+For the machine-readable FACETS visual surface contract, use
+\code{\link[=facets_visual_contract]{facets_visual_contract()}}.
 \describe{
 \item{Wright (variable) map}{\code{plot(fit, type = "wright")} and
 \code{\link[=plot_wright_unified]{plot_wright_unified()}} correspond to FACETS Table 6 / Winsteps
 "Person-Item map".}
-\item{Pathway / probability curves}{\code{plot(fit, type = "pathway")}
-and \code{plot(fit, type = "ccc")} correspond to Winsteps Table 21
-("Probability category curves") and FACETS category-probability
-curves.}
+\item{Expected-score pathway and probability curves}{\code{plot(fit, type = "pathway")} shows the expected-score pathway, while \code{plot(fit, type = "ccc")} shows fitted category probability curves. These separate
+the expected-score ogive from the category-curve displays used around
+FACETS Table 8 and Graphs-menu category-probability curves.}
+\item{FACETS Graphs menu}{\code{\link[=category_curves_report]{category_curves_report()}},
+\code{\link[=compute_information]{compute_information()}}, \code{\link[=plot_information]{plot_information()}}, and the
+\code{plot(fit, type = "pathway")} / \code{"ccc"} routes cover category
+probability, expected-score ICC/IRF, cumulative probability, category
+information, and declared design-weighted information displays. Conditional
+probability curves are available as plot data but not as a FACETS
+graph-window clone.}
+\item{Fit-by-measure display}{\code{plot(fit, type = "fit_pathway")}
+and \code{plot_bubble(view = "fit_measure")} put Infit or Outfit against
+measure/logit location, matching the fit-versus-measure diagnostic
+family rather than the category-probability family.}
 \item{Test / item information}{\code{\link[=compute_information]{compute_information()}} +
 \code{\link[=plot_information]{plot_information()}} correspond to Winsteps Table 17 ("Test
 characteristic curve, test information function").}
@@ -286,8 +324,9 @@ characteristic curve, test information function").}
 |ZSTD| / MnSq misfit blocks of \code{summary(diag)} correspond to
 Winsteps Table 10/13/14 (Misfit order) and FACETS Tables 7/8.}
 \item{Bias / interaction}{\code{\link[=estimate_bias]{estimate_bias()}} +
-\code{\link[=plot_bias_interaction]{plot_bias_interaction()}} correspond to FACETS Table 14
-("Bias / Interaction calibration report").}
+\code{\link[=plot_bias_interaction]{plot_bias_interaction()}} correspond to FACETS Table 13/14 visual review
+and DIF/bias Excel-plot use cases, without generating Excel workbook
+plots.}
 \item{Differential rater / item functioning}{\code{\link[=analyze_dff]{analyze_dff()}} /
 \code{\link[=analyze_dif]{analyze_dif()}} + \code{\link[=plot_dif_heatmap]{plot_dif_heatmap()}} / \code{\link[=plot_dif_summary]{plot_dif_summary()}}
 cover the FACETS DIF / bias-by-group route and the Winsteps DIF
@@ -298,7 +337,8 @@ correspond to FACETS Table 7-style observed-vs-expected agreement
 reports.}
 \item{Anchoring / linking}{\code{\link[=plot_anchor_drift]{plot_anchor_drift()}} and
 \code{\link[=plot_information]{plot_information()}} cover the FACETS / Winsteps anchored-run
-review route; full equating-chain helpers are exposed via
+review route; \code{\link[=anchor_linking_contract]{anchor_linking_contract()}} documents the anchor handoff
+boundary, and full equating-chain helpers are exposed via
 \code{\link[=build_equating_chain]{build_equating_chain()}}.}
 }
 }
@@ -403,7 +443,7 @@ scree$data$preset
 
 }
 \seealso{
-\link{mfrmr_workflow_methods}, \link{mfrmr_reports_and_tables},
+\code{\link[=facets_visual_contract]{facets_visual_contract()}}, \link{mfrmr_workflow_methods}, \link{mfrmr_reports_and_tables},
 \link{mfrmr_reporting_and_apa}, \link{mfrmr_linking_and_dff},
 \link{gpcm_capability_matrix}, \code{\link[=visual_reporting_template]{visual_reporting_template()}},
 \code{\link[=mfrmr_interval_guide]{mfrmr_interval_guide()}},

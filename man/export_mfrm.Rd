@@ -74,10 +74,11 @@ toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "JML", model = "RSM", maxit = 30)
 diag <- diagnose_mfrm(fit, residual_pca = "none")
+out_dir <- tempfile("mfrmr_export_example_")
 out <- export_mfrm(
   fit,
   diagnostics = diag,
-  output_dir = tempdir(),
+  output_dir = out_dir,
   prefix = "mfrmr_example",
   overwrite = TRUE
 )

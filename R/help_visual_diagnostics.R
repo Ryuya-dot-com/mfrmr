@@ -5,6 +5,12 @@
 #' Use this page when you know the analysis question but do not yet know
 #' which plotting helper or `plot()` method to call.
 #'
+#' If you are translating a FACETS visual workflow, call
+#' [facets_visual_contract()] first. It separates FACETS Table 6 / Table 8
+#' displays, Graphs-menu curves, DIF/bias Excel plots, Graphfile output, and
+#' R/Web plot menus from the `mfrmr` plot or plot-data route that serves the
+#' same review purpose.
+#'
 #' If you are preparing figures for a report, start with
 #' [reporting_checklist()] and inspect the `"Visual Displays"` rows first.
 #' Those rows now map directly onto the public plotting family covered on this
@@ -38,8 +44,11 @@
 #' @section Start with the question:
 #' - "Do persons and facet levels overlap on the same logit scale?"
 #'   Use `plot(fit, type = "wright")` or [plot_wright_unified()].
-#' - "Where do score categories transition across theta?"
+#' - "Where do expected scores and score categories transition across theta?"
 #'   Use `plot(fit, type = "pathway")` and `plot(fit, type = "ccc")`.
+#' - "Where do Infit or Outfit values sit along the logit scale?"
+#'   Use `plot(fit, type = "fit_pathway", fit_stat = "Infit")` or
+#'   `plot(fit, type = "fit_pathway", fit_stat = "Outfit")`.
 #' - "Is the design linked well enough across subsets or administrations?"
 #'   Use `plot(subset_connectivity_report(...), type = "design_matrix")`,
 #'   [mfrm_network_analysis()], [build_mfrm_network_review()],
@@ -118,7 +127,9 @@
 #'    [plot_marginal_fit()], [plot_marginal_pairwise()], and
 #'    [plot_interrater_agreement()] for flagged local issues.
 #' 4. Use `plot(fit, type = "wright")`, `plot(fit, type = "pathway")`,
-#'    and `plot_residual_pca()` for structural interpretation.
+#'    `plot(fit, type = "ccc")`, `plot(fit, type = "fit_pathway")`,
+#'    and `plot_residual_pca()` for structural and fit-location
+#'    interpretation.
 #' 5. Use [plot_bias_interaction()], [plot_dif_heatmap()],
 #'    [plot_dif_summary()], [plot_anchor_drift()], and
 #'    [plot_information()] when the checklist or dashboard points to
@@ -140,7 +151,8 @@
 #'   [reporting_checklist()].
 #' - Structural interpretation:
 #'   `plot(fit, type = "wright")`, `plot(fit, type = "pathway")`,
-#'   `plot(fit, type = "ccc")`, and [plot_residual_pca()].
+#'   `plot(fit, type = "ccc")`, `plot(fit, type = "fit_pathway")`,
+#'   and [plot_residual_pca()].
 #' - Local issue follow-up:
 #'   [plot_unexpected()], [plot_displacement()],
 #'   [plot_interrater_agreement()], [plot_bias_interaction()],
@@ -153,6 +165,17 @@
 #'   `mfrm_plot_data` objects for downstream review and export. When step
 #'   estimates are available, `build_visual_summaries()` also exposes
 #'   `$plot_payloads$category_probability_surface`.
+#' - Optional `ggplot2` handoff:
+#'   [as_ggplot()] converts common `mfrm_plot_data` shapes, including Wright
+#'   maps, pathway maps, fit-pathway displays, DIF/DFF summaries and heatmaps,
+#'   category/information curves, threshold ladders, and estimate/profile rows,
+#'   into editable
+#'   `ggplot` objects. Wright maps retain the person-distribution band and
+#'   facet/step rails; pathway maps retain dominant-category strips,
+#'   thresholds, endpoint labels, and fit annotations. CCC converters also
+#'   retain empirical overlay points when available and can map a `GPCM`
+#'   slope/discrimination column to line width, alpha, or colour. This does
+#'   not replace the base-R default renderer.
 #' - 3D-ready exploratory handoff:
 #'   `plot(fit, type = "ccc_surface", draw = FALSE)` returns a
 #'   theta-by-category-by-probability `mfrm_plot_data` object. This is not a
@@ -181,6 +204,9 @@
 #'   levels, and step thresholds. Best for targeting and spread.}
 #'   \item{`plot(fit, type = "pathway")`}{Expected score by theta, with
 #'   dominant-category strips. Best for scale progression.}
+#'   \item{`plot(fit, type = "fit_pathway")`}{Selected Infit or Outfit
+#'   mean square on x and measure/logit location on y. Best for seeing where
+#'   misfit sits along the scale.}
 #'   \item{`plot(fit, type = "ccc")`}{Category probability curves. Best for
 #'   checking whether categories peak in sequence.}
 #'   \item{`plot_unexpected()`}{Observation-level surprises. Best for case
@@ -250,14 +276,28 @@
 #' the closest mfrmr helper for each table or figure family is summarised
 #' below. The mapping is approximate; mfrmr is designed for many-facet
 #' workflows, so column subsets and column names differ.
+#' For the machine-readable FACETS visual surface contract, use
+#' [facets_visual_contract()].
 #' \describe{
 #'   \item{Wright (variable) map}{`plot(fit, type = "wright")` and
 #'   [plot_wright_unified()] correspond to FACETS Table 6 / Winsteps
 #'   "Person-Item map".}
-#'   \item{Pathway / probability curves}{`plot(fit, type = "pathway")`
-#'   and `plot(fit, type = "ccc")` correspond to Winsteps Table 21
-#'   ("Probability category curves") and FACETS category-probability
-#'   curves.}
+#'   \item{Expected-score pathway and probability curves}{`plot(fit,
+#'   type = "pathway")` shows the expected-score pathway, while `plot(fit,
+#'   type = "ccc")` shows fitted category probability curves. These separate
+#'   the expected-score ogive from the category-curve displays used around
+#'   FACETS Table 8 and Graphs-menu category-probability curves.}
+#'   \item{FACETS Graphs menu}{[category_curves_report()],
+#'   [compute_information()], [plot_information()], and the
+#'   `plot(fit, type = "pathway")` / `"ccc"` routes cover category
+#'   probability, expected-score ICC/IRF, cumulative probability, category
+#'   information, and declared design-weighted information displays. Conditional
+#'   probability curves are available as plot data but not as a FACETS
+#'   graph-window clone.}
+#'   \item{Fit-by-measure display}{`plot(fit, type = "fit_pathway")`
+#'   and `plot_bubble(view = "fit_measure")` put Infit or Outfit against
+#'   measure/logit location, matching the fit-versus-measure diagnostic
+#'   family rather than the category-probability family.}
 #'   \item{Test / item information}{[compute_information()] +
 #'   [plot_information()] correspond to Winsteps Table 17 ("Test
 #'   characteristic curve, test information function").}
@@ -265,8 +305,9 @@
 #'   |ZSTD| / MnSq misfit blocks of `summary(diag)` correspond to
 #'   Winsteps Table 10/13/14 (Misfit order) and FACETS Tables 7/8.}
 #'   \item{Bias / interaction}{[estimate_bias()] +
-#'   [plot_bias_interaction()] correspond to FACETS Table 14
-#'   ("Bias / Interaction calibration report").}
+#'   [plot_bias_interaction()] correspond to FACETS Table 13/14 visual review
+#'   and DIF/bias Excel-plot use cases, without generating Excel workbook
+#'   plots.}
 #'   \item{Differential rater / item functioning}{[analyze_dff()] /
 #'   [analyze_dif()] + [plot_dif_heatmap()] / [plot_dif_summary()]
 #'   cover the FACETS DIF / bias-by-group route and the Winsteps DIF
@@ -277,7 +318,8 @@
 #'   reports.}
 #'   \item{Anchoring / linking}{[plot_anchor_drift()] and
 #'   [plot_information()] cover the FACETS / Winsteps anchored-run
-#'   review route; full equating-chain helpers are exposed via
+#'   review route; [anchor_linking_contract()] documents the anchor handoff
+#'   boundary, and full equating-chain helpers are exposed via
 #'   [build_equating_chain()].}
 #' }
 #'
@@ -334,7 +376,7 @@
 #' For a longer, plot-first walkthrough, run
 #' `vignette("mfrmr-visual-diagnostics", package = "mfrmr")`.
 #'
-#' @seealso [mfrmr_workflow_methods], [mfrmr_reports_and_tables],
+#' @seealso [facets_visual_contract()], [mfrmr_workflow_methods], [mfrmr_reports_and_tables],
 #'   [mfrmr_reporting_and_apa], [mfrmr_linking_and_dff],
 #'   [gpcm_capability_matrix], [visual_reporting_template()],
 #'   [mfrmr_interval_guide()],
@@ -440,6 +482,7 @@ visual_reporting_template <- function(scope = c("all", "manuscript", "appendix",
     FigureFamily = c(
       "Wright map",
       "Pathway map",
+      "Fit pathway / fit-by-measure",
       "Category characteristic curves",
       "Category probability surface",
       "Information curves",
@@ -458,6 +501,7 @@ visual_reporting_template <- function(scope = c("all", "manuscript", "appendix",
     Scope = c(
       "manuscript",
       "manuscript",
+      "diagnostic",
       "manuscript",
       "surface",
       "manuscript",
@@ -476,13 +520,14 @@ visual_reporting_template <- function(scope = c("all", "manuscript", "appendix",
     PrimaryHelper = c(
       "plot(fit, type = \"wright\", preset = \"publication\")",
       "plot(fit, type = \"pathway\", preset = \"publication\")",
+      "plot(fit, type = \"fit_pathway\", fit_stat = \"Infit\", preset = \"publication\")",
       "plot(fit, type = \"ccc\", preset = \"publication\")",
       "plot(fit, type = \"ccc_surface\", draw = FALSE)",
       "compute_information(fit) -> plot_information(..., preset = \"publication\")",
       "plot_qc_dashboard(fit, diagnostics = diagnostics, preset = \"publication\")",
       "plot_unexpected(); plot_displacement()",
       "plot_marginal_fit(); plot_marginal_pairwise()",
-      "plot_bias_interaction(); plot_dif_heatmap(); plot_dif_summary()",
+      "plot_bias_interaction(); plot_dif_heatmap(); plot_dif_summary(); plot(fit, type = \"dif_icc\", group = ...)",
       "analyze_residual_pca() -> plot_residual_pca()",
       "plot_guttman_scalogram(fit, diagnostics = diagnostics)",
       "plot_residual_qq(fit, diagnostics = diagnostics)",
@@ -494,6 +539,7 @@ visual_reporting_template <- function(scope = c("all", "manuscript", "appendix",
     DefaultPlacement = c(
       "Main text when targeting, spread, or shared-logit interpretation is central.",
       "Main text or category-functioning subsection for ordered-category interpretation.",
+      "Diagnostic appendix when locating misfit along the measure scale is central.",
       "Main text or appendix; pair with pathway when category behavior is central.",
       "Appendix, teaching, review, or downstream interactive rendering only.",
       "Main text when precision or targeting across theta is a substantive claim.",
@@ -512,13 +558,14 @@ visual_reporting_template <- function(scope = c("all", "manuscript", "appendix",
     WhatToReport = c(
       "Describe whether persons, facet levels, and thresholds overlap on the same logit scale.",
       "Describe expected-score progression and the theta regions where categories dominate.",
+      "Describe where Infit or Outfit mean squares are concentrated along the logit scale.",
       "Describe whether categories peak in the intended order and whether adjacent curves separate.",
       "Describe it as exploratory category-probability support, not as a default manuscript figure.",
       "Describe where measurement information is highest or weakest across theta.",
       "Describe which components triggered follow-up, not a single pass/fail publication verdict.",
       "Describe which responses or levels need local review.",
       "Describe which facet/category cells or pairwise structures need follow-up.",
-      "Describe screened interaction or group-by-facet DFF patterns with low-count and threshold caveats.",
+      "Describe screened interaction, group-by-facet DFF patterns, or group-wise empirical ICC overlays with low-count and threshold caveats.",
       "Describe residual structure as exploratory follow-up after the main fit screen.",
       "Describe the Guttman-style ordering as a teaching screen and call out where the overlay marks unexpected responses.",
       "Describe tail behavior of person-level residuals as exploratory follow-up, not as a formal normality test.",
@@ -530,6 +577,7 @@ visual_reporting_template <- function(scope = c("all", "manuscript", "appendix",
     CaptionSkeleton = c(
       "Figure X. Wright map showing person measures, facet-level locations, and step thresholds on the shared logit scale.",
       "Figure X. Expected score pathway across theta, with dominant-category regions for the fitted rating scale.",
+      "Appendix Figure X. Fit-pathway display showing selected Infit or Outfit mean square against measure/logit location.",
       "Figure X. Category characteristic curves showing fitted category probabilities across theta.",
       "Appendix Figure X. Exploratory category-probability surface showing theta, retained category index, and fitted probability.",
       "Figure X. Test information curve showing where the fitted model provides relatively stronger or weaker measurement precision.",
@@ -548,6 +596,7 @@ visual_reporting_template <- function(scope = c("all", "manuscript", "appendix",
     ResultsWording = c(
       "The Wright map was inspected to evaluate targeting and shared-scale overlap among persons, facet levels, and thresholds.",
       "The pathway plot was inspected to evaluate whether expected scores and dominant-category regions progressed in the intended order.",
+      "The fit-pathway display was inspected to locate elevated or suppressed fit mean squares along the measure scale.",
       "The category characteristic curves were inspected to evaluate the ordering and separation of fitted response categories.",
       "The category-probability surface was used as exploratory support for understanding the fitted category-probability structure.",
       "The information curve was inspected to identify theta regions with relatively stronger or weaker measurement precision.",
@@ -566,6 +615,7 @@ visual_reporting_template <- function(scope = c("all", "manuscript", "appendix",
     WhatNotToClaim = c(
       "Do not present targeting as proof of global model fit.",
       "Do not treat smooth category progression as proof that the rating scale is valid.",
+      "Do not treat Infit or Outfit cutoffs as automatic exclusion rules or as category-functioning evidence by themselves.",
       "Do not overstate overlapping curves as definitive category failure without category counts and context.",
       "Use the surface as exploratory mfrmr output or downstream renderer input; prefer 2D CCC/pathway plots for reports.",
       "Do not ignore the precision tier or approximation caveats used to compute the curve.",
@@ -584,6 +634,7 @@ visual_reporting_template <- function(scope = c("all", "manuscript", "appendix",
     BeginnerCheck = c(
       "Check gaps between person density and thresholds/facet levels.",
       "Check whether the dominant-category bands progress in the expected order.",
+      "Check whether flagged bubbles cluster in specific facets or scale regions before writing a substantive explanation.",
       "Check whether every retained category has a visible peak or clear role.",
       "Read surface$data$category_support and surface$data$interpretation_guide before rendering.",
       "Check whether the information peak covers the theta region of interest.",
@@ -602,6 +653,7 @@ visual_reporting_template <- function(scope = c("all", "manuscript", "appendix",
     ThreeDPolicy = c(
       "2D recommended; 3D Wright maps are discouraged.",
       "2D report default.",
+      "2D diagnostic display; 3D not recommended.",
       "2D report default.",
       "advanced surface data only; no package-native interactive renderer.",
       "2D curve route active; 3D information surface is deferred.",
@@ -845,7 +897,7 @@ mfrmr_interval_guide <- function(scope = c(
       "The standard plot route also accepts show_ci and ci_level.",
       "This explicit helper is useful for publication-style maps.",
       "Use facet = ... for non-Rater severity facets.",
-      "Designed for RSM/PCM manuscript routes; inspect returned panel data before publication.",
+      "Designed for RSM/PCM manuscript routes and caveated bounded-GPCM sensitivity figures; inspect returned panel data and gpcm_boundary before publication.",
       "Under bounded GPCM this is slope-aware direct output with caveats.",
       "Heatmaps remain pattern displays and do not draw intervals.",
       "Best used after reviewing the underlying displacement table.",

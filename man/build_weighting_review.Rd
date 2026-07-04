@@ -51,6 +51,10 @@ package-native evidence sources:
 The result is intended for substantive review, not for automatic model
 selection. In particular, a better-fitting \code{GPCM} should not by itself be
 interpreted as a reason to discard an equal-weighting Rasch-family route.
+For MML fits, the review also records whether each candidate used the fixed
+normal population SD or the opt-in estimated population SD. Mixed fixed/free
+population-SD comparisons are flagged because they change the latent metric
+as well as the response-model weighting policy.
 }
 \section{Recommended input route}{
 
@@ -66,6 +70,8 @@ reweighting is substantively acceptable.
 \section{What the returned tables mean}{
 
 \itemize{
+\item \code{overview} / \code{status}: front-door review status, including population-SD
+mode alignment when both fits are MML.
 \item \code{model_comparison}: same-data model-comparison bundle from \code{\link[=compare_mfrm]{compare_mfrm()}}.
 \item \code{facet_shift}: how non-person facet estimates move under bounded \code{GPCM}.
 \item \code{slope_profile}: which \code{slope_facet} levels are upweighted or downweighted.

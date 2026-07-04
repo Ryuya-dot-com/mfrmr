@@ -44,6 +44,22 @@ test_that("plot_bubble works with Infit and Outfit", {
   expect_equal(out_out$data$fit_stat, "Outfit")
 })
 
+test_that("plot_bubble supports fit-measure pathway view", {
+  fit <- local_fit()
+  out <- suppressWarnings(plot_bubble(
+    fit,
+    fit_stat = "Outfit",
+    view = "fit_measure",
+    draw = FALSE
+  ))
+  expect_s3_class(out, "mfrm_plot_data")
+  expect_equal(out$name, "bubble")
+  expect_equal(out$data$view, "fit_measure")
+  expect_equal(out$data$fit_stat, "Outfit")
+  expect_true(all(out$data$reference_lines$axis == "v"))
+  expect_true(all(c("Estimate", "Outfit") %in% names(out$data$table)))
+})
+
 # ---- 3. bubble_size parameter -------------------------------------------
 
 test_that("plot_bubble works with all bubble_size options", {

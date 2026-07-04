@@ -1936,6 +1936,523 @@ design_eval_summarize_results <- function(results, rep_overview, design_variable
   )
 }
 
+simulation_summary_reading_order <- function(kind) {
+  make <- function(section, route, what, purpose, boundary) {
+    data.frame(
+      Step = seq_along(section),
+      Section = section,
+      Route = route,
+      WhatToRead = what,
+      Purpose = purpose,
+      InterpretationBoundary = boundary,
+      stringsAsFactors = FALSE
+    )
+  }
+  switch(
+    kind,
+    design = make(
+      section = c("overview", "reading_order", "next_actions", "design_summary", "sparse_review", "plots_or_recommendations", "notes_and_ademp"),
+      route = c(
+        "summary(sim_eval)$overview",
+        "summary(sim_eval)$reading_order",
+        "summary(sim_eval)$next_actions",
+        "summary(sim_eval)$design_summary",
+        "summary(sim_eval)$sparse_review",
+        "plot(sim_eval, ...) or recommend_mfrm_design(sim_eval, ...)",
+        "summary(sim_eval)$reporting_notes, summary(sim_eval)$notes, summary(sim_eval)$ademp"
+      ),
+      what = c(
+        "Number of design conditions, replications, successful runs, convergence, and elapsed time.",
+        "Recommended sequence for reviewing design-simulation evidence.",
+        "Action-oriented checks for replication count, run completion, convergence, recovery comparability, sparse links, and display handoff.",
+        "Facet-by-design operating characteristics such as separation, reliability, severity RMSE, misfit rate, MCSE, and recovery comparability.",
+        "Planned-missingness and rater-link summaries when sparse linked designs are active.",
+        "Focused plot data or threshold-based design recommendations for candidate conditions.",
+        "Reporting boundaries, simulation-study metadata, and caveats that should travel with exported tables."
+      ),
+      purpose = c(
+        "Confirm that the simulation ran as intended before comparing design cells.",
+        "Avoid treating all returned tables as equal-priority evidence.",
+        "Decide whether to increase replications, inspect failed runs, avoid non-comparable RMSE, or move to plotting/recommendation.",
+        "Compare candidate designs on the metrics that matter for the planned use case.",
+        "Check whether sparse designs have enough linking structure for the intended comparison.",
+        "Turn the table into a specific design decision or figure without reinterpreting the raw rows.",
+        "Keep Monte Carlo design evidence separate from observed-data reliability, D-study, and release claims."
+      ),
+      boundary = c(
+        "Run completion and convergence are prerequisites, not evidence that a design is adequate.",
+        "Reading order is workflow guidance, not a statistical decision rule.",
+        "Next actions are triage prompts, not pass/fail standards.",
+        "Condition means and MCSE summarize the simulated DGM and fitted model only.",
+        "Sparse-link review is structural context, not proof of measurement quality.",
+        "Plots and recommendations inherit the thresholds and simulation assumptions supplied by the user.",
+        "ADEMP and notes document assumptions; they do not add evidence beyond the simulated operating characteristics."
+      )
+    ),
+    recovery = make(
+      section = c("overview", "reading_order", "next_actions", "recovery_summary", "diagnostic_oc_summary", "assess_mfrm_recovery", "row_level_tables"),
+      route = c(
+        "summary(rec)$overview",
+        "summary(rec)$reading_order",
+        "summary(rec)$next_actions",
+        "summary(rec)$recovery_summary",
+        "summary(rec)$diagnostic_oc_summary",
+        "assess_mfrm_recovery(rec, ...)",
+        "rec$recovery and rec$rep_overview"
+      ),
+      what = c(
+        "Replication count, successful runs, convergence, diagnostic availability, elapsed time, and retained recovery rows.",
+        "Recommended sequence for reading recovery-simulation output.",
+        "Action-oriented checks for replication count, run completion, recovery rows, optional diagnostics, and assessment handoff.",
+        "Parameter-group recovery metrics such as bias, RMSE, MAE, correlation, coverage, and MCSE.",
+        "Optional fit/separation operating characteristics retained when include_diagnostics = TRUE.",
+        "Reviewer-facing adequacy checklist with practical thresholds and reading order.",
+        "Truth-estimate comparisons and replication-level status for diagnosis."
+      ),
+      purpose = c(
+        "Confirm that enough usable simulation output exists before interpreting recovery.",
+        "Separate numerical recovery tables from reviewer-facing adequacy assessment.",
+        "Decide whether to re-run, add diagnostics, or move to thresholded assessment.",
+        "Identify which parameter groups recovered well or need follow-up.",
+        "Use diagnostics as context without treating them as recovery gates.",
+        "Translate numeric recovery results into a reportable checklist.",
+        "Diagnose the rows behind any concerning aggregate metric."
+      ),
+      boundary = c(
+        "Successful simulation runs are necessary but do not establish practical adequacy.",
+        "Reading order is workflow guidance, not a pass/fail rule.",
+        "Next actions are prompts; practical thresholds remain user supplied.",
+        "Recovery metrics need design-specific thresholds before adequacy language is warranted.",
+        "Fit/separation summaries are diagnostic context, not release-recovery evidence.",
+        "Assessment status depends on supplied thresholds and should be reported with them.",
+        "Row-level tables are diagnostic detail and may be large."
+      )
+    ),
+    signal_detection = make(
+      section = c("overview", "reading_order", "next_actions", "detection_summary", "bias_screening_boundary", "plots", "notes_and_ademp"),
+      route = c(
+        "summary(sig_eval)$overview",
+        "summary(sig_eval)$reading_order",
+        "summary(sig_eval)$next_actions",
+        "summary(sig_eval)$detection_summary",
+        "summary(sig_eval)$reporting_notes",
+        "plot(sig_eval, signal = \"bias\", metric = \"screen_rate\", draw = FALSE)",
+        "summary(sig_eval)$notes and summary(sig_eval)$ademp"
+      ),
+      what = c(
+        "Design count, replications, successful runs, convergence, and elapsed time.",
+        "Recommended sequence for DIF/bias screening simulation output.",
+        "Action-oriented checks for replication count, convergence, metric availability, and display handoff.",
+        "DIF target-flag rates, non-target rates, bias-screen hit rates, metric availability, target contrast/bias, and MCSE.",
+        "Boundary language separating DIF power-style rates from bias-side screening summaries.",
+        "Draw-free DIF and bias plot data for targeted reporting.",
+        "Simulation-study metadata and caveats that should accompany exported tables."
+      ),
+      purpose = c(
+        "Confirm that screening results are based on usable simulation runs.",
+        "Avoid reading bias screening rates as formal power or alpha estimates.",
+        "Decide whether to increase replications, inspect failed runs, or focus on metric availability.",
+        "Compare detection and screening behavior across design conditions.",
+        "Keep user-facing language aligned with what the simulation actually estimates.",
+        "Build figures without changing the underlying interpretation.",
+        "Document signal injection, DGM, method, and finite-replication uncertainty."
+      ),
+      boundary = c(
+        "Run completion and convergence are prerequisites, not calibration evidence.",
+        "Reading order is workflow guidance, not a statistical decision rule.",
+        "Next actions are triage prompts, not inferential conclusions.",
+        "Rates are operating-characteristic summaries for the simulated scenarios.",
+        "BiasScreenRate is a screening hit rate, not formal inferential power.",
+        "Plot data are presentation handoff, not a separate analysis.",
+        "ADEMP and notes document assumptions; they do not validate operational use by themselves."
+      )
+    ),
+    population_prediction = make(
+      section = c("overview", "reading_order", "next_actions", "design", "forecast", "candidate_designs", "notes_and_ademp"),
+      route = c(
+        "summary(pred)$overview",
+        "summary(pred)$reading_order",
+        "summary(pred)$next_actions",
+        "summary(pred)$design",
+        "summary(pred)$forecast",
+        "evaluate_mfrm_design(...) for a design grid",
+        "summary(pred)$reporting_notes, summary(pred)$notes, summary(pred)$ademp"
+      ),
+      what = c(
+        "Replication count, successful runs, convergence, and elapsed time for the forecast scenario.",
+        "Recommended sequence for reading scenario-level forecast output.",
+        "Action-oriented checks for replication count, convergence, forecast availability, and scenario boundaries.",
+        "The requested future design after public aliases have been applied.",
+        "Facet-level expected operating characteristics and MCSE for the single scenario.",
+        "A grid-based simulation when multiple candidate designs need comparison.",
+        "Boundary language explaining that this is a scenario forecast, not deterministic unit prediction."
+      ),
+      purpose = c(
+        "Confirm that the forecast simulation ran as intended.",
+        "Keep the single-scenario forecast distinct from design-grid evaluation.",
+        "Decide whether to increase replications, inspect failed runs, or run a broader design evaluation.",
+        "Verify that the scenario being forecast is the one the user intended.",
+        "Read expected separation, reliability, RMSE, misfit, and uncertainty under the specified DGM.",
+        "Move from one forecasted design to a comparative planning surface.",
+        "Keep forecast claims tied to the supplied or fit-derived simulation specification."
+      ),
+      boundary = c(
+        "Run completion and convergence are prerequisites, not guarantees of future operating quality.",
+        "Reading order is workflow guidance, not a statistical decision rule.",
+        "Next actions are triage prompts, not pass/fail standards.",
+        "The design table records inputs; it is not evidence.",
+        "Forecasts summarize simulated aggregate behavior, not future person/rater true values.",
+        "Design-grid evaluation is needed for comparative recommendations.",
+        "Notes and ADEMP document assumptions; they do not make the forecast operationally validated."
+      )
+    ),
+    data.frame(
+      Step = integer(),
+      Section = character(),
+      Route = character(),
+      WhatToRead = character(),
+      Purpose = character(),
+      InterpretationBoundary = character(),
+      stringsAsFactors = FALSE
+    )
+  )
+}
+
+simulation_summary_reporting_notes <- function(kind) {
+  make <- function(area, boundary, wording) {
+    data.frame(
+      Priority = seq_along(area),
+      Area = area,
+      ReportingBoundary = boundary,
+      RecommendedWording = wording,
+      stringsAsFactors = FALSE
+    )
+  }
+  switch(
+    kind,
+    design = make(
+      area = c("Design evidence", "Recovery comparability", "Monte Carlo uncertainty", "Observed-data follow-up"),
+      boundary = c(
+        "evaluate_mfrm_design() is Monte Carlo design evaluation under a declared DGM and fitted model.",
+        "Severity RMSE and bias should be read only for rows where generator and fitted recovery contracts are comparable.",
+        "Small replication counts make MCSE and rate estimates descriptive rather than stable planning evidence.",
+        "Design simulation does not replace observed G-study or analytic D-study summaries."
+      ),
+      wording = c(
+        "Report as simulated operating characteristics for the specified design conditions.",
+        "Report RecoveryComparableRate and RecoveryBasis with RMSE/Bias columns.",
+        "Report replication count and MCSE with condition means/rates.",
+        "Use mfrm_generalizability() and mfrm_d_study() for observed-data design projections."
+      )
+    ),
+    recovery = make(
+      area = c("Adequacy language", "Diagnostic context", "Practical thresholds", "Row-level diagnosis"),
+      boundary = c(
+        "evaluate_mfrm_recovery() reports numeric recovery; it does not impose a universal pass/fail rule.",
+        "include_diagnostics = TRUE adds fit/separation operating characteristics as context.",
+        "RMSE, bias, coverage, and MCSE need use-case-specific thresholds for adequacy claims.",
+        "Aggregate recovery summaries can hide parameter groups or replications that need follow-up."
+      ),
+      wording = c(
+        "Use assess_mfrm_recovery() before writing readiness or adequacy claims.",
+        "Describe diagnostics as context and keep them separate from recovery gates.",
+        "State the thresholds supplied to assess_mfrm_recovery().",
+        "Inspect rec$recovery and rec$rep_overview for concerning aggregate rows."
+      )
+    ),
+    signal_detection = make(
+      area = c("DIF rates", "Bias screening", "False positives", "Monte Carlo uncertainty"),
+      boundary = c(
+        "DIFPower is a target-flag rate under the injected DIF scenario.",
+        "BiasScreenRate is a screening hit rate from estimate_bias() output, not formal inferential power.",
+        "DIF and bias false-positive summaries are scenario-specific operating-characteristic readouts.",
+        "Low replication counts make target/non-target rates and MCSE descriptive."
+      ),
+      wording = c(
+        "Use DIF target-flag rate language unless the simulation design supports stronger power wording.",
+        "Prefer bias screening hit rate or screen_rate language for bias-side output.",
+        "Report the scenario and target/non-target definitions with false-positive summaries.",
+        "Report reps and MCSE with detection/screening rates."
+      )
+    ),
+    population_prediction = make(
+      area = c("Forecast scope", "Source specification", "Single-scenario limits", "Uncertainty"),
+      boundary = c(
+        "predict_mfrm_population() forecasts aggregate design behavior for one scenario.",
+        "The forecast inherits assumptions from a supplied sim_spec or fit-derived simulation specification.",
+        "A single forecast does not compare candidate designs.",
+        "MCSE reflects finite Monte Carlo replications, not all sources of future uncertainty."
+      ),
+      wording = c(
+        "Call it a scenario-level forecast, not prediction of actual future person/rater values.",
+        "Report whether the source was build_mfrm_sim_spec(), extract_mfrm_sim_spec(), or a fitted model.",
+        "Use evaluate_mfrm_design() for a candidate design grid.",
+        "Report reps and MCSE with forecasted means/rates."
+      )
+    ),
+    data.frame(
+      Priority = integer(),
+      Area = character(),
+      ReportingBoundary = character(),
+      RecommendedWording = character(),
+      stringsAsFactors = FALSE
+    )
+  )
+}
+
+simulation_summary_first_num <- function(df, col) {
+  df <- as.data.frame(df %||% data.frame(), stringsAsFactors = FALSE)
+  if (nrow(df) == 0L || !col %in% names(df)) return(NA_real_)
+  suppressWarnings(as.numeric(df[[col]][1]))
+}
+
+simulation_summary_rate <- function(num, den) {
+  if (!is.finite(num) || !is.finite(den) || den <= 0) return(NA_real_)
+  num / den
+}
+
+simulation_summary_min_num <- function(df, col) {
+  df <- as.data.frame(df %||% data.frame(), stringsAsFactors = FALSE)
+  if (nrow(df) == 0L || !col %in% names(df)) return(NA_real_)
+  vals <- suppressWarnings(as.numeric(df[[col]]))
+  vals <- vals[is.finite(vals)]
+  if (length(vals) == 0L) return(NA_real_)
+  min(vals)
+}
+
+simulation_summary_any_true <- function(df, col) {
+  df <- as.data.frame(df %||% data.frame(), stringsAsFactors = FALSE)
+  if (nrow(df) == 0L || !col %in% names(df)) return(FALSE)
+  any(df[[col]] %in% TRUE, na.rm = TRUE)
+}
+
+simulation_summary_status_rate <- function(rate, target = 1, missing = "not_available") {
+  if (!is.finite(rate)) return(missing)
+  if (rate >= target) "ok" else "review"
+}
+
+simulation_summary_status_reps <- function(reps, target = 30L) {
+  if (!is.finite(reps)) return("not_available")
+  if (reps >= target) "ok" else "review"
+}
+
+simulation_summary_fmt <- function(x, digits = 3L) {
+  if (!is.finite(x)) return("NA")
+  formatC(x, digits = digits, format = "fg", flag = "#")
+}
+
+simulation_summary_action_table <- function(area, status, evidence, next_action) {
+  data.frame(
+    Priority = seq_along(area),
+    Area = area,
+    Status = status,
+    Evidence = evidence,
+    NextAction = next_action,
+    stringsAsFactors = FALSE
+  )
+}
+
+simulation_design_next_actions <- function(overview, design_summary, sparse_review = NULL) {
+  reps <- simulation_summary_first_num(overview, "Replications")
+  ok_rate <- simulation_summary_rate(
+    simulation_summary_first_num(overview, "SuccessfulRuns"),
+    reps
+  )
+  converged_rate <- simulation_summary_rate(
+    simulation_summary_first_num(overview, "ConvergedRuns"),
+    reps
+  )
+  min_condition_convergence <- simulation_summary_min_num(design_summary, "ConvergenceRate")
+  min_recovery_comparable <- simulation_summary_min_num(design_summary, "RecoveryComparableRate")
+  sparse_active <- simulation_summary_any_true(design_summary, "SparseDesignActive") ||
+    (is.data.frame(sparse_review) && nrow(sparse_review) > 0L)
+  simulation_summary_action_table(
+    area = c(
+      "Replication count",
+      "Run completion",
+      "Condition convergence",
+      "Recovery comparability",
+      "Sparse linked design",
+      "Decision handoff"
+    ),
+    status = c(
+      simulation_summary_status_reps(reps),
+      simulation_summary_status_rate(ok_rate),
+      simulation_summary_status_rate(min_condition_convergence),
+      simulation_summary_status_rate(min_recovery_comparable),
+      if (isTRUE(sparse_active)) "review" else "not_requested",
+      "review"
+    ),
+    evidence = c(
+      paste0("Replications = ", simulation_summary_fmt(reps, digits = 0L)),
+      paste0("SuccessfulRuns / Replications = ", simulation_summary_fmt(ok_rate)),
+      paste0("Minimum ConvergenceRate across design rows = ", simulation_summary_fmt(min_condition_convergence)),
+      paste0("Minimum RecoveryComparableRate across design rows = ", simulation_summary_fmt(min_recovery_comparable)),
+      if (isTRUE(sparse_active)) "SparseDesignActive rows or sparse_review table present." else "No sparse linked design review rows were retained.",
+      "Use plot() or recommend_mfrm_design() after selecting practical thresholds."
+    ),
+    next_action = c(
+      "Use more replications before treating condition means/rates as stable planning evidence.",
+      "Inspect rep_overview and simulation notes before comparing design cells with failed runs.",
+      "Inspect non-converged design cells before interpreting separation, reliability, RMSE, or fit rates.",
+      "For rows below 1, report RecoveryBasis and avoid treating severity RMSE/Bias as direct recovery evidence.",
+      "Read sparse_review before making claims about rater linking, common persons, or planned-missingness adequacy.",
+      "Use plot(sim_eval, draw = FALSE) for figures and recommend_mfrm_design() when explicit thresholds are available."
+    )
+  )
+}
+
+simulation_recovery_next_actions <- function(overview, diagnostic_oc_summary = NULL) {
+  reps <- simulation_summary_first_num(overview, "Reps")
+  ok_rate <- simulation_summary_rate(
+    simulation_summary_first_num(overview, "SuccessfulRuns"),
+    reps
+  )
+  converged_rate <- simulation_summary_rate(
+    simulation_summary_first_num(overview, "ConvergedRuns"),
+    reps
+  )
+  recovery_rows <- simulation_summary_first_num(overview, "RecoveryRows")
+  diagnostic_runs <- simulation_summary_first_num(overview, "DiagnosticRuns")
+  diagnostic_success <- simulation_summary_first_num(overview, "DiagnosticSuccessRate")
+  has_diag_summary <- is.data.frame(diagnostic_oc_summary) && nrow(diagnostic_oc_summary) > 0L
+  simulation_summary_action_table(
+    area = c(
+      "Replication count",
+      "Run completion",
+      "Convergence",
+      "Recovery rows",
+      "Diagnostic context",
+      "Assessment handoff"
+    ),
+    status = c(
+      simulation_summary_status_reps(reps),
+      simulation_summary_status_rate(ok_rate),
+      simulation_summary_status_rate(converged_rate),
+      if (is.finite(recovery_rows) && recovery_rows > 0) "ok" else "not_available",
+      if (is.finite(diagnostic_runs) && diagnostic_runs > 0 && has_diag_summary) simulation_summary_status_rate(diagnostic_success) else "not_requested",
+      "review"
+    ),
+    evidence = c(
+      paste0("Reps = ", simulation_summary_fmt(reps, digits = 0L)),
+      paste0("SuccessfulRuns / Reps = ", simulation_summary_fmt(ok_rate)),
+      paste0("ConvergedRuns / Reps = ", simulation_summary_fmt(converged_rate)),
+      paste0("RecoveryRows = ", simulation_summary_fmt(recovery_rows, digits = 0L)),
+      if (is.finite(diagnostic_runs) && diagnostic_runs > 0) {
+        paste0("DiagnosticRuns = ", simulation_summary_fmt(diagnostic_runs, digits = 0L), "; DiagnosticSuccessRate = ", simulation_summary_fmt(diagnostic_success))
+      } else {
+        "Diagnostics were not requested or no diagnostic operating-characteristic rows were retained."
+      },
+      "assess_mfrm_recovery() supplies the reviewer-facing checklist and threshold-aware statuses."
+    ),
+    next_action = c(
+      "Use more replications before making stable recovery or coverage claims.",
+      "Inspect rep_overview and errors before interpreting aggregate recovery rows.",
+      "Treat non-converged replications as a design or fitting issue before adequacy language.",
+      "If no recovery rows are retained, inspect generator/fitted-model compatibility and score support.",
+      "Use diagnostic summaries only as context; re-run with include_diagnostics = TRUE if fit/separation behavior is needed.",
+      "Run assess_mfrm_recovery(rec, ...) with practical RMSE, bias, coverage, and MCSE thresholds before reporting readiness."
+    )
+  )
+}
+
+simulation_signal_next_actions <- function(overview, detection_summary) {
+  reps <- simulation_summary_first_num(overview, "Replications")
+  ok_rate <- simulation_summary_rate(
+    simulation_summary_first_num(overview, "SuccessfulRuns"),
+    reps
+  )
+  converged_rate <- simulation_summary_rate(
+    simulation_summary_first_num(overview, "ConvergedRuns"),
+    reps
+  )
+  min_condition_convergence <- simulation_summary_min_num(detection_summary, "ConvergenceRate")
+  min_bias_availability <- simulation_summary_min_num(detection_summary, "BiasScreenMetricAvailabilityRate")
+  has_detection <- is.data.frame(detection_summary) && nrow(detection_summary) > 0L
+  simulation_summary_action_table(
+    area = c(
+      "Replication count",
+      "Run completion",
+      "Condition convergence",
+      "Detection table",
+      "Bias screening metric availability",
+      "Bias-side wording"
+    ),
+    status = c(
+      simulation_summary_status_reps(reps),
+      simulation_summary_status_rate(ok_rate),
+      simulation_summary_status_rate(min_condition_convergence),
+      if (isTRUE(has_detection)) "ok" else "not_available",
+      simulation_summary_status_rate(min_bias_availability),
+      "review"
+    ),
+    evidence = c(
+      paste0("Replications = ", simulation_summary_fmt(reps, digits = 0L)),
+      paste0("SuccessfulRuns / Replications = ", simulation_summary_fmt(ok_rate)),
+      paste0("Minimum ConvergenceRate across detection rows = ", simulation_summary_fmt(min_condition_convergence)),
+      if (isTRUE(has_detection)) paste0("Detection summary rows = ", nrow(detection_summary)) else "No detection_summary rows were retained.",
+      paste0("Minimum BiasScreenMetricAvailabilityRate = ", simulation_summary_fmt(min_bias_availability)),
+      "BiasScreenRate is the primary bias-side screening hit-rate column."
+    ),
+    next_action = c(
+      "Use more replications before treating DIF/bias rates as stable operating characteristics.",
+      "Inspect rep_overview and simulation notes before reading target/non-target rates.",
+      "Inspect non-converged design cells before comparing DIFPower or BiasScreenRate.",
+      "If no rows are retained, inspect signal targets, group coding, and model convergence.",
+      "When availability is below 1, report it with bias-screen rates and inspect missing t/p metrics.",
+      "Use `screen_rate` or `BiasScreenRate` language for bias; avoid formal power/alpha wording."
+    )
+  )
+}
+
+simulation_population_next_actions <- function(overview, forecast) {
+  reps <- simulation_summary_first_num(overview, "Replications")
+  ok_rate <- simulation_summary_rate(
+    simulation_summary_first_num(overview, "SuccessfulRuns"),
+    reps
+  )
+  converged_rate <- simulation_summary_rate(
+    simulation_summary_first_num(overview, "ConvergedRuns"),
+    reps
+  )
+  has_forecast <- is.data.frame(forecast) && nrow(forecast) > 0L
+  min_condition_convergence <- simulation_summary_min_num(forecast, "ConvergenceRate")
+  simulation_summary_action_table(
+    area = c(
+      "Replication count",
+      "Run completion",
+      "Forecast convergence",
+      "Forecast table",
+      "Scenario scope",
+      "Candidate design comparison"
+    ),
+    status = c(
+      simulation_summary_status_reps(reps),
+      simulation_summary_status_rate(ok_rate),
+      simulation_summary_status_rate(min_condition_convergence),
+      if (isTRUE(has_forecast)) "ok" else "not_available",
+      "review",
+      "review"
+    ),
+    evidence = c(
+      paste0("Replications = ", simulation_summary_fmt(reps, digits = 0L)),
+      paste0("SuccessfulRuns / Replications = ", simulation_summary_fmt(ok_rate)),
+      paste0("Minimum ConvergenceRate in forecast rows = ", simulation_summary_fmt(min_condition_convergence)),
+      if (isTRUE(has_forecast)) paste0("Forecast rows = ", nrow(forecast)) else "No forecast rows were retained.",
+      "predict_mfrm_population() reports one scenario-level aggregate forecast.",
+      "evaluate_mfrm_design() is the grid-based route for comparing candidate designs."
+    ),
+    next_action = c(
+      "Use more replications before treating forecast means/rates as stable.",
+      "Inspect the embedded simulation object if failed runs are present.",
+      "Inspect non-converged forecast rows before reporting expected operating characteristics.",
+      "If no forecast rows are retained, inspect the source sim_spec or fit-derived simulation specification.",
+      "Describe this output as a scenario-level forecast, not prediction of actual future person/rater values.",
+      "Use evaluate_mfrm_design() when the user needs a design recommendation rather than one scenario forecast."
+    )
+  )
+}
+
 recovery_safe_mean <- function(x) {
   x <- suppressWarnings(as.numeric(x))
   x <- x[is.finite(x)]
@@ -2434,6 +2951,99 @@ recovery_build_notes <- function(rep_overview, recovery_summary, model) {
   notes
 }
 
+recovery_runtime_summary <- function(started_at, finished_at, rep_overview, progress) {
+  rep_tbl <- as.data.frame(rep_overview %||% data.frame(), stringsAsFactors = FALSE)
+  total_elapsed <- as.numeric(difftime(finished_at, started_at, units = "secs"))
+  elapsed <- if ("ElapsedSec" %in% names(rep_tbl)) {
+    suppressWarnings(as.numeric(rep_tbl$ElapsedSec))
+  } else {
+    numeric(0)
+  }
+  elapsed_finite <- elapsed[is.finite(elapsed)]
+  run_ok <- if ("RunOK" %in% names(rep_tbl)) {
+    rep_tbl$RunOK %in% TRUE
+  } else {
+    rep(FALSE, nrow(rep_tbl))
+  }
+  converged <- if ("Converged" %in% names(rep_tbl)) {
+    rep_tbl$Converged %in% TRUE
+  } else {
+    rep(FALSE, nrow(rep_tbl))
+  }
+  reps_completed <- if ("rep" %in% names(rep_tbl)) {
+    length(unique(rep_tbl$rep))
+  } else {
+    nrow(rep_tbl)
+  }
+  data.frame(
+    StartedAt = format(started_at, "%Y-%m-%d %H:%M:%S %Z"),
+    FinishedAt = format(finished_at, "%Y-%m-%d %H:%M:%S %Z"),
+    TotalElapsedSec = if (is.finite(total_elapsed)) total_elapsed else NA_real_,
+    Reps = nrow(rep_tbl),
+    CompletedReps = reps_completed,
+    SuccessfulRuns = sum(run_ok, na.rm = TRUE),
+    FailedRuns = sum(!run_ok, na.rm = TRUE),
+    NonconvergedRuns = sum(run_ok & !converged, na.rm = TRUE),
+    MeanRepElapsedSec = if (length(elapsed_finite) > 0L) mean(elapsed_finite) else NA_real_,
+    MedianRepElapsedSec = if (length(elapsed_finite) > 0L) stats::median(elapsed_finite) else NA_real_,
+    MaxRepElapsedSec = if (length(elapsed_finite) > 0L) max(elapsed_finite) else NA_real_,
+    RepsPerMinute = if (is.finite(total_elapsed) && total_elapsed > 0) {
+      nrow(rep_tbl) / total_elapsed * 60
+    } else {
+      NA_real_
+    },
+    ProgressShown = isTRUE(progress),
+    stringsAsFactors = FALSE
+  )
+}
+
+design_runtime_summary <- function(started_at, finished_at, rep_overview,
+                                   design_grid, planned_cells, progress) {
+  rep_tbl <- as.data.frame(rep_overview %||% data.frame(), stringsAsFactors = FALSE)
+  design_tbl <- as.data.frame(design_grid %||% data.frame(), stringsAsFactors = FALSE)
+  total_elapsed <- as.numeric(difftime(finished_at, started_at, units = "secs"))
+  elapsed <- if ("ElapsedSec" %in% names(rep_tbl)) {
+    suppressWarnings(as.numeric(rep_tbl$ElapsedSec))
+  } else {
+    numeric(0)
+  }
+  elapsed_finite <- elapsed[is.finite(elapsed)]
+  run_ok <- if ("RunOK" %in% names(rep_tbl)) {
+    rep_tbl$RunOK %in% TRUE
+  } else {
+    rep(FALSE, nrow(rep_tbl))
+  }
+  converged <- if ("Converged" %in% names(rep_tbl)) {
+    rep_tbl$Converged %in% TRUE
+  } else {
+    rep(FALSE, nrow(rep_tbl))
+  }
+  planned_cells <- suppressWarnings(as.integer(planned_cells[1] %||% nrow(rep_tbl)))
+  if (!is.finite(planned_cells) || planned_cells < 0L) planned_cells <- nrow(rep_tbl)
+  data.frame(
+    StartedAt = format(started_at, "%Y-%m-%d %H:%M:%S %Z"),
+    FinishedAt = format(finished_at, "%Y-%m-%d %H:%M:%S %Z"),
+    TotalElapsedSec = if (is.finite(total_elapsed)) total_elapsed else NA_real_,
+    DesignConditions = nrow(design_tbl),
+    PlannedCells = planned_cells,
+    CompletedCells = nrow(rep_tbl),
+    SuccessfulRuns = sum(run_ok, na.rm = TRUE),
+    FailedRuns = sum(!run_ok, na.rm = TRUE),
+    ConvergedRuns = sum(run_ok & converged, na.rm = TRUE),
+    NonconvergedRuns = sum(run_ok & !converged, na.rm = TRUE),
+    MeanCellElapsedSec = if (length(elapsed_finite) > 0L) mean(elapsed_finite) else NA_real_,
+    MedianCellElapsedSec = if (length(elapsed_finite) > 0L) stats::median(elapsed_finite) else NA_real_,
+    MaxCellElapsedSec = if (length(elapsed_finite) > 0L) max(elapsed_finite) else NA_real_,
+    CellsPerMinute = if (is.finite(total_elapsed) && total_elapsed > 0) {
+      nrow(rep_tbl) / total_elapsed * 60
+    } else {
+      NA_real_
+    },
+    ProgressShown = isTRUE(progress),
+    stringsAsFactors = FALSE
+  )
+}
+
 #' Evaluate parameter recovery by repeated simulation and refitting
 #'
 #' @description
@@ -2447,6 +3057,14 @@ recovery_build_notes <- function(rep_overview, recovery_summary, model) {
 #' @param fit_method Estimation method passed to [fit_mfrm()].
 #' @param maxit Maximum optimizer iterations passed to [fit_mfrm()].
 #' @param quad_points Quadrature points used when `fit_method = "MML"`.
+#' @param population_prior_sd Positive numeric. Fixed normal latent prior SD
+#'   passed to [fit_mfrm()] for ordinary `MML` recovery refits.
+#' @param estimate_population_sd Logical. If `TRUE`, additive `RSM`/`PCM` and
+#'   bounded-`GPCM` `MML` recovery refits estimate the normal latent population
+#'   SD under the EM engine. This is not supported for active latent-regression
+#'   simulation specifications.
+#' @param population_sd_bounds Length-two positive numeric vector giving lower
+#'   and upper bounds for `estimate_population_sd`.
 #' @param include_person Logical. When `TRUE`, include person-measure recovery
 #'   rows when the fitted object exposes person estimates.
 #' @param include_diagnostics Logical. When `TRUE`, run [diagnose_mfrm()] after
@@ -2456,6 +3074,11 @@ recovery_build_notes <- function(rep_overview, recovery_summary, model) {
 #' @param diagnostic_fit_df_method Fit-ZSTD degrees-of-freedom convention used
 #'   for optional diagnostic operating-characteristic summaries. Use `"both"`
 #'   when reviewing FACETS-style df sensitivity.
+#' @param progress Logical. Whether to show a CLI progress bar across recovery
+#'   replications, with status text for generation, refitting, diagnostics, and
+#'   failed replications. Defaults to [interactive()], so interactive
+#'   exploratory runs show progress while non-interactive tests, scripts, and
+#'   report rendering stay quiet. Set `TRUE` or `FALSE` explicitly to override.
 #'
 #' @details
 #' This helper is deliberately narrower than [evaluate_mfrm_design()]. Design
@@ -2496,7 +3119,12 @@ recovery_build_notes <- function(rep_overview, recovery_summary, model) {
 #'   characteristics when `include_diagnostics = TRUE`.
 #' - `diagnostic_oc_summary`: optional facet-level diagnostic operating-
 #'   characteristic summary.
+#' - `runtime`: run-level elapsed-time metadata for auditing long recovery
+#'   simulations after completion.
 #' - `settings`: fitting and simulation settings.
+#' - `notes`: interpretation notes. `summary(x)` adds `overview`,
+#'   `reading_order`, `next_actions`, and `reporting_notes` tables for
+#'   reader-facing triage.
 #' - `ademp`: simulation-study metadata.
 #'
 #' @section Typical workflow:
@@ -2504,7 +3132,11 @@ recovery_build_notes <- function(rep_overview, recovery_summary, model) {
 #'    generator arguments directly.
 #' 2. Run `evaluate_mfrm_recovery(...)` with a modest `reps` value for a smoke
 #'    check, then increase `reps` for stable Monte Carlo summaries.
-#' 3. Inspect `summary(x)$recovery_summary` and the row-level `x$recovery` table.
+#' 3. Start with `summary(x)$reading_order` and `summary(x)$next_actions`, then
+#'    inspect `summary(x)$recovery_summary` and the row-level `x$recovery`
+#'    table.
+#' 4. Use [assess_mfrm_recovery()] with practical thresholds before writing
+#'    readiness or adequacy language.
 #'
 #' @seealso [simulate_mfrm_data()], [evaluate_mfrm_design()], [fit_mfrm()]
 #' @examples
@@ -2543,14 +3175,39 @@ evaluate_mfrm_recovery <- function(n_person = 50,
                                    fit_method = c("JML", "MML"),
                                    maxit = 25,
                                    quad_points = 7,
+                                   population_prior_sd = 1,
+                                   estimate_population_sd = FALSE,
+                                   population_sd_bounds = c(0.05, 10),
                                    include_person = TRUE,
                                    include_diagnostics = FALSE,
                                    diagnostic_fit_df_method = c("both", "engine", "facets"),
-                                   seed = NULL) {
+                                   seed = NULL,
+                                   progress = interactive()) {
   model <- match.arg(toupper(as.character(model[1])), c("RSM", "PCM", "GPCM"))
   fit_method <- match.arg(fit_method)
   diagnostic_fit_df_method <- match.arg(diagnostic_fit_df_method)
   include_diagnostics <- isTRUE(include_diagnostics)
+  if (!is.logical(progress) || length(progress) != 1L || is.na(progress)) {
+    stop("`progress` must be a single TRUE/FALSE value.", call. = FALSE)
+  }
+  recovery_started_at <- Sys.time()
+  if (!is.numeric(population_prior_sd) || length(population_prior_sd) != 1L ||
+      !is.finite(population_prior_sd) || population_prior_sd <= 0) {
+    stop("`population_prior_sd` must be a single positive finite number.",
+         call. = FALSE)
+  }
+  if (!is.logical(estimate_population_sd) || length(estimate_population_sd) != 1L ||
+      is.na(estimate_population_sd)) {
+    stop("`estimate_population_sd` must be a single logical value.",
+         call. = FALSE)
+  }
+  population_sd_bounds <- normalize_population_sd_bounds(population_sd_bounds)
+  if (isTRUE(estimate_population_sd)) {
+    if (!identical(fit_method, "MML")) {
+      stop("`estimate_population_sd = TRUE` requires `fit_method = \"MML\"`.",
+           call. = FALSE)
+    }
+  }
   reps <- as.integer(reps[1])
   if (!is.finite(reps) || reps < 1L) stop("`reps` must be >= 1.", call. = FALSE)
   if (!is.null(sim_spec) && !inherits(sim_spec, "mfrm_sim_spec")) {
@@ -2586,6 +3243,14 @@ evaluate_mfrm_recovery <- function(n_person = 50,
       !identical(fit_method, "MML")) {
     stop(
       "Recovery simulations with an active latent-regression population generator require `fit_method = \"MML\"`.",
+      call. = FALSE
+    )
+  }
+  if (!is.null(sim_spec) &&
+      isTRUE((sim_spec$population %||% simulation_empty_population_spec())$active) &&
+      isTRUE(estimate_population_sd)) {
+    stop(
+      "`estimate_population_sd = TRUE` cannot be combined with an active latent-regression simulation specification.",
       call. = FALSE
     )
   }
@@ -2640,8 +3305,32 @@ evaluate_mfrm_recovery <- function(n_person = 50,
   recovery_rows <- vector("list", reps)
   rep_rows <- vector("list", reps)
   diagnostic_rows <- vector("list", reps)
+  recovery_progress_id <- NULL
+  if (isTRUE(progress)) {
+    recovery_progress_id <- cli::cli_progress_bar(
+      name = "evaluate_mfrm_recovery",
+      total = reps,
+      format = paste(
+        "{cli::pb_spin} recovery reps {cli::pb_current}/{cli::pb_total}",
+        "[{cli::pb_elapsed}  eta {cli::pb_eta}] {cli::pb_status}"
+      ),
+      clear = TRUE,
+      .envir = parent.frame()
+    )
+    on.exit(cli::cli_progress_done(id = recovery_progress_id), add = TRUE)
+  }
+  update_recovery_progress <- function(set, status) {
+    if (is.null(recovery_progress_id)) return(invisible(NULL))
+    cli::cli_progress_update(
+      id = recovery_progress_id,
+      set = as.integer(set),
+      status = as.character(status)
+    )
+    invisible(NULL)
+  }
   for (rep in seq_len(reps)) {
     t0 <- proc.time()[["elapsed"]]
+    update_recovery_progress(rep - 1L, sprintf("rep %d/%d: generating data", rep, reps))
     sim <- tryCatch(
       if (is.null(sim_spec)) {
         simulate_mfrm_data(
@@ -2699,6 +3388,11 @@ evaluate_mfrm_recovery <- function(n_person = 50,
       DiagnosticOK = if (include_diagnostics) FALSE else NA,
       DiagnosticRows = if (include_diagnostics) 0L else NA_integer_,
       DiagnosticError = NA_character_,
+      PopulationSDMode = NA_character_,
+      PopulationPriorSD = NA_real_,
+      EstimatedPopulationSD = NA_real_,
+      PopulationSDSE = NA_real_,
+      PopulationSDSEStatus = NA_character_,
       Error = NA_character_
     )
     if (inherits(sim, "error")) {
@@ -2706,6 +3400,10 @@ evaluate_mfrm_recovery <- function(n_person = 50,
       rep_rows[[rep]] <- rep_row
       recovery_rows[[rep]] <- tibble::tibble()
       diagnostic_rows[[rep]] <- tibble::tibble()
+      update_recovery_progress(rep, sprintf(
+        "rep %d/%d: generation failed (%.1fs)",
+        rep, reps, rep_row$ElapsedSec
+      ))
       next
     }
     score_support <- simulation_score_support_summary(
@@ -2729,7 +3427,12 @@ evaluate_mfrm_recovery <- function(n_person = 50,
       fit_args$step_facet <- step_facet %||% row_facet_names[2]
       fit_args$slope_facet <- slope_facet %||% fit_args$step_facet
     }
-    if (identical(fit_method, "MML")) fit_args$quad_points <- quad_points
+    if (identical(fit_method, "MML")) {
+      fit_args$quad_points <- quad_points
+      fit_args$population_prior_sd <- population_prior_sd
+      fit_args$estimate_population_sd <- estimate_population_sd
+      fit_args$population_sd_bounds <- population_sd_bounds
+    }
     if ("Weight" %in% names(sim)) fit_args$weight <- "Weight"
     sim_population <- attr(sim, "mfrm_population_data")
     if (is.list(sim_population) && isTRUE(sim_population$active)) {
@@ -2744,6 +3447,7 @@ evaluate_mfrm_recovery <- function(n_person = 50,
       fallback_score_levels = if (is.null(sim_spec)) score_levels else sim_spec$score_levels
     )
 
+    update_recovery_progress(rep - 1L, sprintf("rep %d/%d: refitting %s", rep, reps, model))
     fit <- tryCatch(suppressWarnings(do.call(fit_mfrm, fit_args)), error = function(e) e)
     elapsed <- proc.time()[["elapsed"]] - t0
     rep_row$ElapsedSec <- elapsed
@@ -2752,12 +3456,22 @@ evaluate_mfrm_recovery <- function(n_person = 50,
       rep_rows[[rep]] <- rep_row
       recovery_rows[[rep]] <- tibble::tibble()
       diagnostic_rows[[rep]] <- tibble::tibble()
+      update_recovery_progress(rep, sprintf(
+        "rep %d/%d: refit failed (%.1fs)",
+        rep, reps, rep_row$ElapsedSec
+      ))
       next
     }
+    rep_row$PopulationSDMode <- as.character(fit$summary$PopulationSDMode[1] %||% NA_character_)
+    rep_row$PopulationPriorSD <- as.numeric(fit$summary$PopulationPriorSD[1] %||% NA_real_)
+    rep_row$EstimatedPopulationSD <- as.numeric(fit$summary$EstimatedPopulationSD[1] %||% NA_real_)
+    rep_row$PopulationSDSE <- as.numeric(fit$summary$PopulationSDSE[1] %||% NA_real_)
+    rep_row$PopulationSDSEStatus <- as.character(fit$summary$PopulationSDSEStatus[1] %||% NA_character_)
     truth <- attr(sim, "mfrm_truth")
     rows <- recovery_rows_from_fit(fit, truth, rep = rep, include_person = include_person)
     diag_rows <- tibble::tibble()
     if (include_diagnostics) {
+      update_recovery_progress(rep - 1L, sprintf("rep %d/%d: diagnostics", rep, reps))
       diagnostic <- tryCatch(
         diagnose_mfrm(
           fit,
@@ -2783,11 +3497,25 @@ evaluate_mfrm_recovery <- function(n_person = 50,
     rep_rows[[rep]] <- rep_row
     recovery_rows[[rep]] <- rows
     diagnostic_rows[[rep]] <- diag_rows
+    update_recovery_progress(rep, sprintf(
+      "rep %d/%d: %s (%.1fs)",
+      rep,
+      reps,
+      if (isTRUE(rep_row$Converged)) "converged" else "finished without convergence",
+      rep_row$ElapsedSec
+    ))
   }
 
   recovery <- dplyr::bind_rows(recovery_rows)
   rep_overview <- dplyr::bind_rows(rep_rows)
   diagnostic_oc <- dplyr::bind_rows(diagnostic_rows)
+  recovery_finished_at <- Sys.time()
+  runtime <- recovery_runtime_summary(
+    started_at = recovery_started_at,
+    finished_at = recovery_finished_at,
+    rep_overview = rep_overview,
+    progress = progress
+  )
   recovery_summary <- recovery_summarize_rows(recovery)
   diagnostic_oc_summary <- recovery_summarize_diagnostic_oc(diagnostic_oc)
   ademp <- simulation_build_ademp(
@@ -2815,7 +3543,10 @@ evaluate_mfrm_recovery <- function(n_person = 50,
       fitted_model = model,
       gpcm_slope_regime = generator_slope_regime,
       maxit = maxit,
-      quad_points = if (identical(fit_method, "MML")) quad_points else NA_integer_
+      quad_points = if (identical(fit_method, "MML")) quad_points else NA_integer_,
+      population_prior_sd = if (identical(fit_method, "MML")) population_prior_sd else NA_real_,
+      estimate_population_sd = if (identical(fit_method, "MML")) isTRUE(estimate_population_sd) else FALSE,
+      population_sd_bounds = if (identical(fit_method, "MML")) population_sd_bounds else c(NA_real_, NA_real_)
     ),
     performance_measures = c(
       "Bias",
@@ -2834,6 +3565,7 @@ evaluate_mfrm_recovery <- function(n_person = 50,
       rep_overview = rep_overview,
       diagnostic_oc = diagnostic_oc,
       diagnostic_oc_summary = diagnostic_oc_summary,
+      runtime = runtime,
       settings = list(
         reps = reps,
         fit_method = fit_method,
@@ -2845,11 +3577,15 @@ evaluate_mfrm_recovery <- function(n_person = 50,
         gpcm_slope_regime = generator_slope_regime,
         maxit = maxit,
         quad_points = quad_points,
+        population_prior_sd = if (identical(fit_method, "MML")) population_prior_sd else NA_real_,
+        estimate_population_sd = if (identical(fit_method, "MML")) isTRUE(estimate_population_sd) else FALSE,
+        population_sd_bounds = if (identical(fit_method, "MML")) population_sd_bounds else c(NA_real_, NA_real_),
         include_person = isTRUE(include_person),
         include_diagnostics = include_diagnostics,
         diagnostic_fit_df_method = if (include_diagnostics) diagnostic_fit_df_method else NA_character_,
         sim_spec = sim_spec,
-        seed = seed
+        seed = seed,
+        progress = isTRUE(progress)
       ),
       notes = recovery_build_notes(rep_overview, recovery_summary, model),
       ademp = ademp
@@ -2886,8 +3622,15 @@ summary.mfrm_recovery_simulation <- function(object, digits = 3, ...) {
   )
   out <- list(
     overview = overview,
+    reading_order = simulation_summary_reading_order("recovery"),
+    next_actions = simulation_recovery_next_actions(
+      overview,
+      tibble::as_tibble(object$diagnostic_oc_summary %||% tibble::tibble())
+    ),
+    reporting_notes = simulation_summary_reporting_notes("recovery"),
     recovery_summary = tibble::as_tibble(object$recovery_summary %||% tibble::tibble()),
     rep_overview = rep_tbl,
+    runtime = tibble::as_tibble(object$runtime %||% tibble::tibble()),
     sparse_review = simulation_sparse_design_review_summary(rep_tbl),
     diagnostic_oc = tibble::as_tibble(object$diagnostic_oc %||% tibble::tibble()),
     diagnostic_oc_summary = tibble::as_tibble(object$diagnostic_oc_summary %||% tibble::tibble()),
@@ -2907,6 +3650,24 @@ print.summary.mfrm_recovery_simulation <- function(x, ...) {
   cat("MFRM Parameter Recovery Simulation Summary\n")
   if (!is.null(x$overview) && nrow(x$overview) > 0L) {
     print(round_numeric_df(as.data.frame(x$overview), digits = digits), row.names = FALSE)
+  }
+  if (!is.null(x$runtime) && nrow(x$runtime) > 0L) {
+    cat("\nRuntime\n")
+    print(round_numeric_df(as.data.frame(x$runtime), digits = digits), row.names = FALSE)
+  }
+  if (!is.null(x$reading_order) && nrow(x$reading_order) > 0L) {
+    keep <- intersect(c("Step", "Route", "WhatToRead"), names(x$reading_order))
+    cat("\nRecommended reading order\n")
+    print(as.data.frame(x$reading_order[, keep, drop = FALSE]), row.names = FALSE)
+  }
+  if (!is.null(x$next_actions) && nrow(x$next_actions) > 0L) {
+    cat("\nNext actions\n")
+    print(as.data.frame(utils::head(x$next_actions, n = 8L)), row.names = FALSE)
+  }
+  if (!is.null(x$reporting_notes) && nrow(x$reporting_notes) > 0L) {
+    keep <- intersect(c("Priority", "Area", "ReportingBoundary", "RecommendedWording"), names(x$reporting_notes))
+    cat("\nReporting notes\n")
+    print(as.data.frame(utils::head(x$reporting_notes[, keep, drop = FALSE], n = 8L)), row.names = FALSE)
   }
   if (!is.null(x$recovery_summary) && nrow(x$recovery_summary) > 0L) {
     cat("\nRecovery summary\n")
@@ -4602,6 +5363,189 @@ recovery_plot_status_table <- function(rep_tbl) {
     dplyr::arrange(.data$Status)
 }
 
+simulation_plot_arg <- function(x) {
+  if (is.null(x)) return("NULL")
+  x <- as.character(x[1])
+  if (is.na(x) || !nzchar(x)) return("NULL")
+  paste0("\"", x, "\"")
+}
+
+simulation_plot_call <- function(args) {
+  paste0(
+    "plot(x, ",
+    paste(args, collapse = ", "),
+    ", draw = FALSE)"
+  )
+}
+
+design_evaluation_plot_guidance <- function(facet, metric_col, x_var, group_var) {
+  c(
+    paste0("Use this plot as a design-planning scan for ", facet, " / ", metric_col, "."),
+    paste0("Read changes along ", x_var, if (is.null(group_var)) "." else paste0(" within each ", group_var, " line.")),
+    "Confirm any design choice with summary(x) and recommend_mfrm_design(); a single visual trend is not a release gate."
+  )
+}
+
+design_evaluation_figure_recipes <- function(facet, metric, metric_col, x_var,
+                                             group_var, x_label, group_label) {
+  selected_group <- if (is.null(group_var)) "none" else group_var
+  selected_group_label <- if (is.null(group_label)) "none" else group_label
+  data.frame(
+    FigureID = c(
+      "selected_design_metric",
+      "rater_precision_scan",
+      "criterion_recovery_scan",
+      "sparse_linkage_scan"
+    ),
+    RecommendedUse = c(
+      "Current plot request; use when the selected facet and metric match the planning question.",
+      "First scan for whether adding persons improves rater separation.",
+      "Recovery-oriented scan for criterion severity error when criterion estimates matter.",
+      "Sparse-linked-design scan; use only when planned missingness or rater-linking is active."
+    ),
+    PlotCall = c(
+      simulation_plot_call(
+        c(
+          paste0("facet = ", simulation_plot_arg(facet)),
+          paste0("metric = ", simulation_plot_arg(metric)),
+          paste0("x_var = ", simulation_plot_arg(x_var)),
+          paste0("group_var = ", simulation_plot_arg(group_var))
+        )
+      ),
+      "plot(x, facet = \"Rater\", metric = \"separation\", x_var = \"n_person\", draw = FALSE)",
+      "plot(x, facet = \"Criterion\", metric = \"severityrmse\", x_var = \"n_person\", draw = FALSE)",
+      "plot(x, facet = \"Rater\", metric = \"mincommonpersons\", x_var = \"raters_per_person\", draw = FALSE)"
+    ),
+    Facet = c(facet, "Rater", "Criterion", "Rater"),
+    Metric = c(metric, "separation", "severityrmse", "mincommonpersons"),
+    MetricColumn = c(metric_col, "MeanSeparation", "MeanSeverityRMSE",
+                     "MeanMinCommonPersonsPerRaterPair"),
+    XVariable = c(x_var, "n_person", "n_person", "raters_per_person"),
+    GroupVariable = c(selected_group, "auto", "auto", "auto"),
+    XLabel = c(x_label, "n_person", "n_person", "raters_per_person"),
+    GroupLabel = c(selected_group_label, "auto", "auto", "auto"),
+    CaptionBoundary = c(
+      "Report as simulated design operating characteristics under the declared DGM and fitted model.",
+      "Do not treat separation gains as evidence that observed raters are interchangeable.",
+      "Use aligned recovery summaries when location shifts are expected; do not compare raw severity shifts alone.",
+      "Interpret linkage metrics as design-connectivity evidence, not estimator recovery."
+    ),
+    PlotDataContract = rep("list_with_data_frame_component", 4L),
+    stringsAsFactors = FALSE
+  )
+}
+
+recovery_simulation_reading_order <- function() {
+  data.frame(
+    Step = seq_len(5L),
+    Route = c("replications", "summary", "coverage", "errors", "scatter"),
+    WhatToPlot = c(
+      "plot(x, type = \"replications\", draw = FALSE)",
+      "plot(x, type = \"summary\", metric = \"rmse\", draw = FALSE)",
+      "plot(x, type = \"coverage\", draw = FALSE)",
+      "plot(x, type = \"errors\", comparison = \"aligned\", draw = FALSE)",
+      "plot(x, type = \"scatter\", comparison = \"aligned\", draw = FALSE)"
+    ),
+    Purpose = c(
+      "Check run failures and convergence before interpreting recovery metrics.",
+      "Identify parameter groups with large aggregate recovery error.",
+      "Check interval behavior only where standard errors are available.",
+      "Diagnose distributional error patterns after a group has been identified.",
+      "Inspect truth-estimate shape and scale behavior for the selected group."
+    ),
+    stringsAsFactors = FALSE
+  )
+}
+
+recovery_simulation_plot_guidance <- function(type, metric_label = NULL,
+                                              comparison = NULL) {
+  switch(
+    type,
+    replications = c(
+      "Read this plot before recovery metrics.",
+      "Low convergence or failed runs make downstream recovery summaries conditional on successful fits.",
+      "Use rep_overview to inspect the failing rows before changing thresholds."
+    ),
+    summary = c(
+      paste0("Use this as the first metric-level scan for ", metric_label %||% "the selected recovery metric", "."),
+      "Follow up large values in assess_mfrm_recovery(); the bar plot alone is not a pass/fail decision.",
+      "Compare parameter types on the same comparison scale before mixing raw and aligned evidence."
+    ),
+    coverage = c(
+      "Use coverage only for parameter groups with available standard errors.",
+      "Read coverage with SE availability and Monte Carlo uncertainty; a single coverage bar is not enough.",
+      "The 0.95 reference line is nominal, not an automatically calibrated acceptance band."
+    ),
+    errors = c(
+      paste0("Use this distribution plot after selecting a parameter group; comparison = ", comparison %||% "aligned", "."),
+      "Look for skew, outliers, and sign patterns that a single RMSE value can hide.",
+      "Use aligned errors when the estimand is location-invariant recovery."
+    ),
+    scatter = c(
+      paste0("Use this truth-estimate plot after the summary scan; comparison = ", comparison %||% "aligned", "."),
+      "Departures from the identity line suggest scale, shrinkage, or location problems to inspect in the row-level table.",
+      "Do not use the scatter alone as an ADEMP adequacy claim."
+    )
+  )
+}
+
+recovery_simulation_figure_recipes <- function(type, metric_arg, metric_label,
+                                               parameter_type, facet, comparison) {
+  selected_filter <- paste(
+    c(
+      if (is.null(parameter_type)) character(0) else paste0("parameter_type = ", simulation_plot_arg(parameter_type)),
+      if (is.null(facet)) character(0) else paste0("facet = ", simulation_plot_arg(facet))
+    ),
+    collapse = ", "
+  )
+  selected_filter <- if (nzchar(selected_filter)) paste0(", ", selected_filter) else ""
+  data.frame(
+    FigureID = c(
+      "recovery_replication_status",
+      "recovery_metric_summary",
+      "recovery_coverage_check",
+      "recovery_error_distribution",
+      "recovery_truth_estimate_scatter"
+    ),
+    RecommendedUse = c(
+      "First figure in a recovery appendix; establishes run/convergence context.",
+      "Main operating-characteristic figure for aggregate recovery error.",
+      "Interval-behavior figure when standard errors are available.",
+      "Diagnostic figure for distributional recovery errors.",
+      "Diagnostic figure for truth-estimate alignment and scale behavior."
+    ),
+    PlotCall = c(
+      "plot(x, type = \"replications\", draw = FALSE)",
+      paste0("plot(x, type = \"summary\", metric = ", simulation_plot_arg(metric_arg), selected_filter, ", draw = FALSE)"),
+      paste0("plot(x, type = \"coverage\"", selected_filter, ", draw = FALSE)"),
+      paste0("plot(x, type = \"errors\", comparison = ", simulation_plot_arg(comparison), selected_filter, ", draw = FALSE)"),
+      paste0("plot(x, type = \"scatter\", comparison = ", simulation_plot_arg(comparison), selected_filter, ", draw = FALSE)")
+    ),
+    Type = c("replications", "summary", "coverage", "errors", "scatter"),
+    Metric = c("Reps", metric_arg, "coverage", "recovery_error", "estimate"),
+    MetricLabel = c("Replications", metric_label, "95% coverage",
+                    "Recovery error", "Estimate"),
+    Comparison = c(NA_character_, NA_character_, NA_character_, comparison, comparison),
+    SelectedRoute = c("replications", "summary", "coverage", "errors", "scatter") == type,
+    CaptionBoundary = c(
+      "Describe run status before interpreting recovery accuracy.",
+      "Report as simulation recovery under known generating values and the declared estimator.",
+      "Do not report coverage rows without noting standard-error availability.",
+      "Use as a diagnostic display, not as a replacement for summary thresholds.",
+      "Use as a diagnostic display, not as a stand-alone validation claim."
+    ),
+    PlotDataContract = rep("mfrm_plot_data", 5L),
+    stringsAsFactors = FALSE
+  )
+}
+
+recovery_simulation_interpretation_note <- function() {
+  paste(
+    "Recovery plots summarize simulation behavior under known generating values.",
+    "Use assess_mfrm_recovery() and ADEMP metadata for adequacy decisions; do not turn a single plot into a release gate."
+  )
+}
+
 #' Plot parameter-recovery simulation results
 #'
 #' @param x Output from [evaluate_mfrm_recovery()].
@@ -4629,10 +5573,15 @@ recovery_plot_status_table <- function(rep_tbl) {
 #' the row-level `x$recovery` table or the ADEMP metadata; they make the main
 #' recovery estimands easier to inspect during model-development and design
 #' checks. Coverage is displayed only for parameter groups with available
-#' standard errors.
+#' standard errors. The draw-free `mfrm_plot_data` payload includes
+#' `reading_order`, `guidance`, `figure_recipes`, and `interpretation_note`
+#' components so custom figures can preserve the same review order and
+#' adequacy-decision boundaries used by `summary()` and
+#' [assess_mfrm_recovery()].
 #'
 #' @return An `mfrm_plot_data` object. When `draw = TRUE`, the object is returned
-#'   invisibly after drawing.
+#'   invisibly after drawing. Use [plot_data_components()] or [plot_data()] to
+#'   inspect reusable tables, figure recipes, and guidance.
 #' @seealso [evaluate_mfrm_recovery()], [summary()]
 #' @examples
 #' \dontrun{
@@ -4666,10 +5615,13 @@ plot.mfrm_recovery_simulation <- function(x,
   }
   type <- match.arg(type)
   comparison <- match.arg(comparison)
-  metric_col <- recovery_plot_metric_col(metric)
+  metric_arg <- match.arg(metric)
+  metric_col <- recovery_plot_metric_col(metric_arg)
   metric_label <- recovery_plot_metric_label(metric_col)
   notes <- as.character(x$notes %||% character(0))
   reference_lines <- new_reference_lines()
+  reading_order <- recovery_simulation_reading_order()
+  interpretation_note <- recovery_simulation_interpretation_note()
 
   if (identical(type, "summary") || identical(type, "coverage")) {
     summary_tbl <- recovery_plot_filter(x$recovery_summary, parameter_type, facet)
@@ -4709,11 +5661,23 @@ plot.mfrm_recovery_simulation <- function(x,
     payload <- list(
       type = type,
       metric = metric_col,
+      metric_argument = metric_arg,
       metric_label = metric_label,
       comparison = comparison,
       parameter_type = parameter_type,
       facet = facet,
       plot_table = plot_tbl,
+      reading_order = reading_order,
+      guidance = recovery_simulation_plot_guidance(type, metric_label, comparison),
+      figure_recipes = recovery_simulation_figure_recipes(
+        type = type,
+        metric_arg = metric_arg,
+        metric_label = metric_label,
+        parameter_type = parameter_type,
+        facet = facet,
+        comparison = comparison
+      ),
+      interpretation_note = interpretation_note,
       notes = notes,
       title = if (identical(type, "coverage")) {
         "Parameter recovery: coverage"
@@ -4760,12 +5724,24 @@ plot.mfrm_recovery_simulation <- function(x,
     payload <- list(
       type = type,
       metric = "Reps",
+      metric_argument = NA_character_,
       metric_label = "Replications",
       comparison = NA_character_,
       parameter_type = parameter_type,
       facet = facet,
       plot_table = status_tbl,
       rep_overview = rep_tbl,
+      reading_order = reading_order,
+      guidance = recovery_simulation_plot_guidance("replications"),
+      figure_recipes = recovery_simulation_figure_recipes(
+        type = type,
+        metric_arg = metric_arg,
+        metric_label = metric_label,
+        parameter_type = parameter_type,
+        facet = facet,
+        comparison = comparison
+      ),
+      interpretation_note = interpretation_note,
       notes = notes,
       title = "Parameter recovery: replication status",
       subtitle = "Run, convergence, and timing summary",
@@ -4813,11 +5789,23 @@ plot.mfrm_recovery_simulation <- function(x,
     payload <- list(
       type = type,
       metric = error_col,
+      metric_argument = NA_character_,
       metric_label = if (identical(comparison, "aligned")) "Aligned recovery error" else "Unaligned recovery error",
       comparison = comparison,
       parameter_type = parameter_type,
       facet = facet,
       plot_table = plot_tbl,
+      reading_order = reading_order,
+      guidance = recovery_simulation_plot_guidance("errors", comparison = comparison),
+      figure_recipes = recovery_simulation_figure_recipes(
+        type = type,
+        metric_arg = metric_arg,
+        metric_label = metric_label,
+        parameter_type = parameter_type,
+        facet = facet,
+        comparison = comparison
+      ),
+      interpretation_note = interpretation_note,
       notes = notes,
       title = "Parameter recovery: error distribution",
       subtitle = paste("Comparison:", comparison),
@@ -4847,11 +5835,23 @@ plot.mfrm_recovery_simulation <- function(x,
   payload <- list(
     type = type,
     metric = estimate_col,
+    metric_argument = NA_character_,
     metric_label = if (identical(comparison, "aligned")) "Aligned estimate" else "Unaligned estimate",
     comparison = comparison,
     parameter_type = parameter_type,
     facet = facet,
     plot_table = plot_tbl,
+    reading_order = reading_order,
+    guidance = recovery_simulation_plot_guidance("scatter", comparison = comparison),
+    figure_recipes = recovery_simulation_figure_recipes(
+      type = type,
+      metric_arg = metric_arg,
+      metric_label = metric_label,
+      parameter_type = parameter_type,
+      facet = facet,
+      comparison = comparison
+    ),
+    interpretation_note = interpretation_note,
     notes = notes,
     title = "Parameter recovery: truth versus estimate",
     subtitle = paste("Comparison:", comparison),
@@ -5079,6 +6079,8 @@ plot.mfrm_recovery_simulation <- function(x,
 #'   alias columns when applicable.
 #' - `rep_overview`: run-level status and timing, with the same design-variable
 #'   alias columns when applicable.
+#' - `runtime`: run-level elapsed-time metadata for auditing long design
+#'   evaluations after completion.
 #' - `design_descriptor`: role-based design-variable metadata used by planning
 #'   summaries and plots
 #' - `planning_scope`: explicit record of the current planning contract
@@ -5145,6 +6147,7 @@ evaluate_mfrm_design <- function(n_person = c(30, 50, 100),
   if (!is.logical(progress) || length(progress) != 1L || is.na(progress)) {
     stop("`progress` must be a single TRUE/FALSE value.", call. = FALSE)
   }
+  design_started_at <- Sys.time()
   # `parallel = "future"` requires the `future.apply` Suggests to be
   # installed AND a `future::plan()` to be active. We honour the
   # request when both are satisfied; otherwise we fall back to the
@@ -5262,18 +6265,27 @@ evaluate_mfrm_design <- function(n_person = c(30, 50, 100),
   # batch simulation logs remain readable.
   total_cells <- nrow(design_grid) * reps
   design_progress_id <- NULL
-  if (isTRUE(progress) && total_cells > 1L) {
+  if (isTRUE(progress)) {
     design_progress_id <- cli::cli_progress_bar(
       name = "evaluate_mfrm_design",
       total = total_cells,
       format = paste(
         "{cli::pb_spin} design-eval cells {cli::pb_current}/{cli::pb_total}",
-        "[{cli::pb_elapsed}  eta {cli::pb_eta}]"
+        "[{cli::pb_elapsed}  eta {cli::pb_eta}] {cli::pb_status}"
       ),
       clear = TRUE,
       .envir = parent.frame()
     )
     on.exit(cli::cli_progress_done(id = design_progress_id), add = TRUE)
+  }
+  update_design_progress <- function(set, status) {
+    if (is.null(design_progress_id)) return(invisible(NULL))
+    cli::cli_progress_update(
+      id = design_progress_id,
+      set = as.integer(set),
+      status = as.character(status)
+    )
+    invisible(NULL)
   }
 
   for (i in seq_len(nrow(design_grid))) {
@@ -5292,10 +6304,11 @@ evaluate_mfrm_design <- function(n_person = c(30, 50, 100),
     row_score_levels <- if (is.null(row_spec)) score_levels else row_spec$score_levels
     row_facet_names <- if (is.null(row_spec)) simulation_default_output_facet_names() else simulation_spec_output_facet_names(row_spec)
     for (rep in seq_len(reps)) {
-      if (!is.null(design_progress_id)) {
-        cli::cli_progress_update(id = design_progress_id,
-                                  set = (i - 1L) * reps + rep - 1L)
-      }
+      cell_index <- (i - 1L) * reps + rep
+      update_design_progress(
+        cell_index - 1L,
+        sprintf("design %s rep %d/%d: generating data", design$design_id, rep, reps)
+      )
       seed_idx <- seed_idx + 1L
       sim <- if (is.null(row_spec)) {
         simulate_mfrm_data(
@@ -5348,8 +6361,16 @@ evaluate_mfrm_design <- function(n_person = c(30, 50, 100),
         fallback_score_levels = row_score_levels
       )
 
+      update_design_progress(
+        cell_index - 1L,
+        sprintf("design %s rep %d/%d: refitting %s", design$design_id, rep, reps, model)
+      )
       fit <- tryCatch(do.call(fit_mfrm, fit_args), error = function(e) e)
       diag <- if (inherits(fit, "error")) fit else {
+        update_design_progress(
+          cell_index - 1L,
+          sprintf("design %s rep %d/%d: diagnostics", design$design_id, rep, reps)
+        )
         tryCatch(
           diagnose_mfrm(fit, residual_pca = residual_pca),
           error = function(e) e
@@ -5389,11 +6410,19 @@ evaluate_mfrm_design <- function(n_person = c(30, 50, 100),
       if (inherits(fit, "error")) {
         rep_row$Error <- conditionMessage(fit)
         rep_rows[[rep_idx]] <- rep_row
+        update_design_progress(cell_index, sprintf(
+          "design %s rep %d/%d: refit failed (%.1fs)",
+          design$design_id, rep, reps, rep_row$ElapsedSec
+        ))
         next
       }
       if (inherits(diag, "error")) {
         rep_row$Error <- conditionMessage(diag)
         rep_rows[[rep_idx]] <- rep_row
+        update_design_progress(cell_index, sprintf(
+          "design %s rep %d/%d: diagnostics failed (%.1fs)",
+          design$design_id, rep, reps, rep_row$ElapsedSec
+        ))
         next
       }
 
@@ -5401,6 +6430,14 @@ evaluate_mfrm_design <- function(n_person = c(30, 50, 100),
       rep_row$RunOK <- TRUE
       rep_row$Converged <- converged
       rep_rows[[rep_idx]] <- rep_row
+      update_design_progress(cell_index, sprintf(
+        "design %s rep %d/%d: %s (%.1fs)",
+        design$design_id,
+        rep,
+        reps,
+        if (isTRUE(converged)) "converged" else "finished without convergence",
+        rep_row$ElapsedSec
+      ))
 
       reliability_tbl <- tibble::as_tibble(diag$reliability)
       fit_tbl <- tibble::as_tibble(diag$fit)
@@ -5489,6 +6526,15 @@ evaluate_mfrm_design <- function(n_person = c(30, 50, 100),
   rep_overview <- dplyr::bind_rows(rep_rows[seq_len(rep_idx)])
   results <- simulation_append_design_alias_columns(results, design_variable_aliases)
   rep_overview <- simulation_append_design_alias_columns(rep_overview, design_variable_aliases)
+  design_finished_at <- Sys.time()
+  runtime <- design_runtime_summary(
+    started_at = design_started_at,
+    finished_at = design_finished_at,
+    rep_overview = rep_overview,
+    design_grid = design_grid_public,
+    planned_cells = total_cells,
+    progress = progress
+  )
   ademp <- simulation_build_ademp(
     purpose = "Assess many-facet design conditions via repeated parametric simulation under explicit data-generating assumptions.",
     design_grid = design_grid,
@@ -5523,6 +6569,7 @@ evaluate_mfrm_design <- function(n_person = c(30, 50, 100),
       design_grid = design_grid_public,
       results = results,
       rep_overview = rep_overview,
+      runtime = runtime,
       design_descriptor = design_descriptor,
       planning_scope = planning_scope,
       planning_constraints = planning_constraints,
@@ -5585,8 +6632,14 @@ evaluate_mfrm_design <- function(n_person = c(30, 50, 100),
 #'
 #' @return An object of class `summary.mfrm_design_evaluation` with components:
 #' - `overview`: run-level overview
+#' - `reading_order`: recommended order for reading the summary tables
+#' - `next_actions`: action-oriented triage for interpreting and exporting the
+#'   summary
+#' - `reporting_notes`: report-facing boundaries and recommended wording
+#'   safeguards
 #' - `design_summary`: aggregated design-by-facet metrics, with design-variable
 #'   alias columns when applicable
+#' - `runtime`: run-level elapsed-time metadata for the design-evaluation run
 #' - `sparse_review`: compact planned-missingness and rater-link review counts
 #'   when sparse linked designs are active
 #' - `ademp`: simulation-study metadata carried forward from the original object
@@ -5637,7 +6690,15 @@ summary.mfrm_design_evaluation <- function(object, digits = 3, ...) {
 
   out$overview <- round_df(out$overview)
   out$design_summary <- round_df(out$design_summary)
+  out$runtime <- round_df(as.data.frame(object$runtime %||% data.frame(), stringsAsFactors = FALSE))
   out$sparse_review <- round_df(simulation_sparse_design_review_summary(out$design_summary))
+  out$reading_order <- simulation_summary_reading_order("design")
+  out$next_actions <- simulation_design_next_actions(
+    out$overview,
+    out$design_summary,
+    out$sparse_review
+  )
+  out$reporting_notes <- simulation_summary_reporting_notes("design")
   out$ademp <- object$ademp %||% NULL
   out$facet_names <- object$settings$facet_names %||% stats::setNames(simulation_default_output_facet_names(), c("rater", "criterion"))
   out$design_variable_aliases <- simulation_object_design_variable_aliases(object)
@@ -5694,6 +6755,24 @@ print.summary.mfrm_design_evaluation <- function(x, ...) {
     cat("\nOverview\n")
     print(round_df(as.data.frame(x$overview)), row.names = FALSE)
   }
+  if (!is.null(x$runtime) && nrow(x$runtime) > 0) {
+    cat("\nRuntime\n")
+    print(round_df(as.data.frame(x$runtime)), row.names = FALSE)
+  }
+  if (!is.null(x$reading_order) && nrow(x$reading_order) > 0L) {
+    keep <- intersect(c("Step", "Route", "WhatToRead"), names(x$reading_order))
+    cat("\nRecommended reading order\n")
+    print(as.data.frame(x$reading_order[, keep, drop = FALSE]), row.names = FALSE)
+  }
+  if (!is.null(x$next_actions) && nrow(x$next_actions) > 0L) {
+    cat("\nNext actions\n")
+    print(as.data.frame(preview_df(x$next_actions)), row.names = FALSE)
+  }
+  if (!is.null(x$reporting_notes) && nrow(x$reporting_notes) > 0L) {
+    keep <- intersect(c("Priority", "Area", "ReportingBoundary", "RecommendedWording"), names(x$reporting_notes))
+    cat("\nReporting notes\n")
+    print(as.data.frame(preview_df(x$reporting_notes[, keep, drop = FALSE])), row.names = FALSE)
+  }
   if (!is.null(x$design_summary) && nrow(x$design_summary) > 0) {
     cat("\nDesign summary (preview)\n")
     print(round_df(as.data.frame(preview_df(x$design_summary))), row.names = FALSE)
@@ -5749,12 +6828,19 @@ print.summary.mfrm_design_evaluation <- function(x, ...) {
 #'   `"zerocommonpairs"`, or `"pairsshorttarget"` to review planned
 #'   missingness and rater-pair linkage separately from recovery metrics
 #'
+#' With `draw = FALSE`, the returned object also carries `guidance`,
+#' `figure_recipes`, and `interpretation_note` fields. These are intended for
+#' report assembly and custom ggplot2/plotly/Shiny handoffs: they describe which
+#' plot to make first, what caption boundary to keep, and which downstream
+#' summary or recommendation helper should confirm the visual impression.
+#'
 #' @return If `draw = TRUE`, invisibly returns a plotting-data list. If
 #'   `draw = FALSE`, returns that list directly. The returned list includes
 #'   resolved canonical variables (`x_var`, `group_var`) together with public
 #'   labels (`x_label`, `group_label`), `design_variable_aliases`, and
 #'   `design_descriptor`, plus `planning_scope`, `planning_constraints`, and
-#'   `planning_schema`.
+#'   `planning_schema`, `guidance`, `figure_recipes`, and
+#'   `interpretation_note`.
 #' @seealso [evaluate_mfrm_design()], [summary.mfrm_design_evaluation]
 #' @examples
 #' \dontrun{
@@ -5854,6 +6940,22 @@ plot.mfrm_design_evaluation <- function(x,
     x_label = x_label,
     group_var = group_var,
     group_label = group_label,
+    display_metric = metric_col,
+    guidance = design_evaluation_plot_guidance(facet, metric_col, x_var, group_var),
+    figure_recipes = design_evaluation_figure_recipes(
+      facet = facet,
+      metric = metric,
+      metric_col = metric_col,
+      x_var = x_var,
+      group_var = group_var,
+      x_label = x_label,
+      group_label = group_label
+    ),
+    interpretation_note = paste(
+      "Design-evaluation plots summarize simulated operating characteristics",
+      "under the declared generator and fitted model; use summary(x) and",
+      "recommend_mfrm_design() before turning visual trends into design decisions."
+    ),
     design_variable_aliases = design_variable_aliases,
     design_descriptor = design_descriptor,
     planning_scope = simulation_object_planning_scope(x),
@@ -5861,6 +6963,7 @@ plot.mfrm_design_evaluation <- function(x,
     planning_schema = simulation_object_planning_schema(x),
     data = agg_tbl
   )
+  class(out) <- c("mfrm_design_evaluation_plot_data", class(out))
 
   if (!isTRUE(draw)) return(out)
 
@@ -8568,6 +9671,12 @@ signal_eval_metric_col <- function(signal, metric) {
 #' @param bias_p_cut P-value cutoff for counting a target bias screen-positive result.
 #' @param bias_abs_t Absolute t cutoff for counting a target bias screen-positive result.
 #' @param seed Optional seed for reproducible replications.
+#' @param progress Logical. Whether to show a progress bar across
+#'   design-by-replication screening cells, with status text for data
+#'   generation, refitting, diagnostics, DIF analysis, and bias screening.
+#'   Defaults to [interactive()], so interactive exploratory runs show progress
+#'   while non-interactive tests, scripts, and report rendering stay quiet. Set
+#'   `TRUE` or `FALSE` explicitly to override.
 #'
 #' @details
 #' This function performs Monte Carlo design screening for two related tasks:
@@ -8669,6 +9778,8 @@ signal_eval_metric_col <- function(signal, metric) {
 #'   design-variable alias columns when applicable.
 #' - `rep_overview`: run-level status and timing, with the same design-variable
 #'   alias columns when applicable.
+#' - `runtime`: run-level elapsed-time metadata for auditing long signal-
+#'   detection simulations after completion.
 #' - `design_descriptor`: role-based design-variable metadata used by planning
 #'   summaries and plots
 #' - `planning_scope`: explicit record of the current planning contract
@@ -8732,7 +9843,8 @@ evaluate_mfrm_signal_detection <- function(n_person = c(30, 50, 100),
                                            bias_max_iter = 2,
                                            bias_p_cut = 0.05,
                                            bias_abs_t = 2,
-                                           seed = NULL) {
+                                           seed = NULL,
+                                           progress = interactive()) {
   dif_abs_cut_missing <- missing(dif_abs_cut)
   fit_method <- match.arg(fit_method)
   call_args <- names(as.list(match.call(expand.dots = FALSE))[-1])
@@ -8745,6 +9857,10 @@ evaluate_mfrm_signal_detection <- function(n_person = c(30, 50, 100),
   }
   residual_pca <- match.arg(residual_pca)
   dif_method <- match.arg(dif_method)
+  if (!is.logical(progress) || length(progress) != 1L || is.na(progress)) {
+    stop("`progress` must be a single TRUE/FALSE value.", call. = FALSE)
+  }
+  signal_started_at <- Sys.time()
   if (!is.null(sim_spec) && !inherits(sim_spec, "mfrm_sim_spec")) {
     stop("`sim_spec` must be output from build_mfrm_sim_spec() or extract_mfrm_sim_spec().", call. = FALSE)
   }
@@ -8834,6 +9950,30 @@ evaluate_mfrm_signal_detection <- function(n_person = c(30, 50, 100),
   result_rows <- vector("list", nrow(design_grid) * reps)
   rep_rows <- vector("list", nrow(design_grid) * reps)
   out_idx <- 0L
+  total_cells <- nrow(design_grid) * reps
+  signal_progress_id <- NULL
+  if (isTRUE(progress)) {
+    signal_progress_id <- cli::cli_progress_bar(
+      name = "evaluate_mfrm_signal_detection",
+      total = total_cells,
+      format = paste(
+        "{cli::pb_spin} signal-detection cells {cli::pb_current}/{cli::pb_total}",
+        "[{cli::pb_elapsed}  eta {cli::pb_eta}] {cli::pb_status}"
+      ),
+      clear = TRUE,
+      .envir = parent.frame()
+    )
+    on.exit(cli::cli_progress_done(id = signal_progress_id), add = TRUE)
+  }
+  update_signal_progress <- function(set, status) {
+    if (is.null(signal_progress_id)) return(invisible(NULL))
+    cli::cli_progress_update(
+      id = signal_progress_id,
+      set = as.integer(set),
+      status = as.character(status)
+    )
+    invisible(NULL)
+  }
 
   for (i in seq_len(nrow(design_grid))) {
     design <- design_grid[i, , drop = FALSE]
@@ -8872,6 +10012,11 @@ evaluate_mfrm_signal_detection <- function(n_person = c(30, 50, 100),
     }
     row_score_levels <- if (is.null(row_spec)) score_levels else row_spec$score_levels
     for (rep in seq_len(reps)) {
+      cell_index <- (i - 1L) * reps + rep
+      update_signal_progress(
+        cell_index - 1L,
+        sprintf("design %s rep %d/%d: generating data", design$design_id, rep, reps)
+      )
       seed_idx <- seed_idx + 1L
       sim <- if (is.null(row_spec)) {
         simulate_mfrm_data(
@@ -8925,11 +10070,23 @@ evaluate_mfrm_signal_detection <- function(n_person = c(30, 50, 100),
         fallback_score_levels = row_score_levels
       )
 
+      update_signal_progress(
+        cell_index - 1L,
+        sprintf("design %s rep %d/%d: refitting %s", design$design_id, rep, reps, model)
+      )
       fit <- tryCatch(do.call(fit_mfrm, fit_args), error = function(e) e)
       diag <- if (inherits(fit, "error")) fit else {
+        update_signal_progress(
+          cell_index - 1L,
+          sprintf("design %s rep %d/%d: diagnostics", design$design_id, rep, reps)
+        )
         tryCatch(diagnose_mfrm(fit, residual_pca = residual_pca), error = function(e) e)
       }
       dif <- if (inherits(diag, "error")) diag else {
+        update_signal_progress(
+          cell_index - 1L,
+          sprintf("design %s rep %d/%d: DIF analysis", design$design_id, rep, reps)
+        )
         tryCatch(
           analyze_dff(
             fit, diag,
@@ -8944,6 +10101,10 @@ evaluate_mfrm_signal_detection <- function(n_person = c(30, 50, 100),
         )
       }
       bias <- if (inherits(diag, "error")) diag else {
+        update_signal_progress(
+          cell_index - 1L,
+          sprintf("design %s rep %d/%d: bias screening", design$design_id, rep, reps)
+        )
         tryCatch(
           estimate_bias(fit, diag, facet_a = row_facet_names[1], facet_b = row_facet_names[2], max_iter = bias_max_iter),
           error = function(e) e
@@ -8974,6 +10135,18 @@ evaluate_mfrm_signal_detection <- function(n_person = c(30, 50, 100),
         Converged = converged,
         Error = if (length(err_msg) == 0L) NA_character_ else paste(unique(err_msg), collapse = " | ")
       )
+      update_signal_progress(cell_index, sprintf(
+        "design %s rep %d/%d: %s (%.1fs)",
+        design$design_id,
+        rep,
+        reps,
+        if (isTRUE(run_ok)) {
+          if (isTRUE(converged)) "complete" else "complete without convergence"
+        } else {
+          "screening failed"
+        },
+        elapsed
+      ))
 
       dif_target_row <- if (!inherits(dif, "error")) {
         signal_eval_find_dif_row(dif[["dif_table"]], dif_target, reference_group, focal_group)
@@ -9063,11 +10236,24 @@ evaluate_mfrm_signal_detection <- function(n_person = c(30, 50, 100),
     }
   }
 
+  results <- simulation_append_design_alias_columns(dplyr::bind_rows(result_rows), design_variable_aliases)
+  rep_overview <- simulation_append_design_alias_columns(dplyr::bind_rows(rep_rows), design_variable_aliases)
+  signal_finished_at <- Sys.time()
+  runtime <- design_runtime_summary(
+    started_at = signal_started_at,
+    finished_at = signal_finished_at,
+    rep_overview = rep_overview,
+    design_grid = design_grid_public,
+    planned_cells = total_cells,
+    progress = progress
+  )
+
   structure(
     list(
       design_grid = design_grid_public,
-      results = simulation_append_design_alias_columns(dplyr::bind_rows(result_rows), design_variable_aliases),
-      rep_overview = simulation_append_design_alias_columns(dplyr::bind_rows(rep_rows), design_variable_aliases),
+      results = results,
+      rep_overview = rep_overview,
+      runtime = runtime,
       design_descriptor = design_descriptor,
       planning_scope = planning_scope,
       planning_constraints = planning_constraints,
@@ -9107,6 +10293,7 @@ evaluate_mfrm_signal_detection <- function(n_person = c(30, 50, 100),
         bias_p_cut = bias_p_cut,
         bias_abs_t = bias_abs_t,
         sim_spec = sim_spec,
+        progress = isTRUE(progress),
         facet_names = stats::setNames(base_facet_names, c("rater", "criterion")),
         design_variable_aliases = design_variable_aliases,
         design_descriptor = design_descriptor,
@@ -9162,8 +10349,14 @@ evaluate_mfrm_signal_detection <- function(n_person = c(30, 50, 100),
 #'
 #' @return An object of class `summary.mfrm_signal_detection` with:
 #' - `overview`: run-level overview
+#' - `reading_order`: recommended order for reading the summary tables
+#' - `next_actions`: action-oriented triage for interpreting and exporting the
+#'   summary
+#' - `reporting_notes`: report-facing boundaries and recommended wording
+#'   safeguards
 #' - `detection_summary`: aggregated detection rates by design, with
 #'   design-variable alias columns when applicable
+#' - `runtime`: run-level elapsed-time metadata for the signal-detection run
 #' - `ademp`: simulation-study metadata carried forward from the original object
 #' - `facet_names`: public facet labels carried from the simulation specification
 #' - `design_variable_aliases`: accepted public aliases for design variables
@@ -9212,6 +10405,13 @@ summary.mfrm_signal_detection <- function(object, digits = 3, ...) {
 
   out$overview <- round_df(out$overview)
   out$detection_summary <- round_df(out$detection_summary)
+  out$runtime <- round_df(as.data.frame(object$runtime %||% data.frame(), stringsAsFactors = FALSE))
+  out$reading_order <- simulation_summary_reading_order("signal_detection")
+  out$next_actions <- simulation_signal_next_actions(
+    out$overview,
+    out$detection_summary
+  )
+  out$reporting_notes <- simulation_summary_reporting_notes("signal_detection")
   out$ademp <- object$ademp %||% NULL
   out$facet_names <- object$settings$facet_names %||% stats::setNames(simulation_default_output_facet_names(), c("rater", "criterion"))
   out$design_variable_aliases <- simulation_object_design_variable_aliases(object)
@@ -9268,6 +10468,24 @@ print.summary.mfrm_signal_detection <- function(x, ...) {
     cat("\nOverview\n")
     print(round_df(as.data.frame(x$overview)), row.names = FALSE)
   }
+  if (!is.null(x$runtime) && nrow(x$runtime) > 0) {
+    cat("\nRuntime\n")
+    print(round_df(as.data.frame(x$runtime)), row.names = FALSE)
+  }
+  if (!is.null(x$reading_order) && nrow(x$reading_order) > 0L) {
+    keep <- intersect(c("Step", "Route", "WhatToRead"), names(x$reading_order))
+    cat("\nRecommended reading order\n")
+    print(as.data.frame(x$reading_order[, keep, drop = FALSE]), row.names = FALSE)
+  }
+  if (!is.null(x$next_actions) && nrow(x$next_actions) > 0L) {
+    cat("\nNext actions\n")
+    print(as.data.frame(preview_df(x$next_actions)), row.names = FALSE)
+  }
+  if (!is.null(x$reporting_notes) && nrow(x$reporting_notes) > 0L) {
+    keep <- intersect(c("Priority", "Area", "ReportingBoundary", "RecommendedWording"), names(x$reporting_notes))
+    cat("\nReporting notes\n")
+    print(as.data.frame(preview_df(x$reporting_notes[, keep, drop = FALSE])), row.names = FALSE)
+  }
   if (!is.null(x$detection_summary) && nrow(x$detection_summary) > 0) {
     cat("\nDetection summary (preview)\n")
     print(round_df(as.data.frame(preview_df(x$detection_summary))), row.names = FALSE)
@@ -9318,6 +10536,76 @@ signal_detection_metric_label <- function(signal, metric_col) {
   )
 }
 
+signal_detection_plot_guidance <- function(signal, display_metric) {
+  if (identical(signal, "bias")) {
+    return(c(
+      paste0("Label this plot as ", display_metric, ", not formal power."),
+      "Prefer metric = \"screen_rate\" in new code; metric = \"power\" is a compatibility alias.",
+      "Read hit-rate and false-positive screening plots together before making a design claim."
+    ))
+  }
+  c(
+    paste0("Use this plot as the DIF-side scan for ", display_metric, "."),
+    "Read target-flag and non-target flag rates together; a high target rate alone is not sufficient.",
+    "State the DFF method, threshold settings, and simulated target contrast in the caption."
+  )
+}
+
+signal_detection_figure_recipes <- function(signal, metric, metric_col,
+                                            x_var, group_var, x_label,
+                                            group_label) {
+  selected_group <- if (is.null(group_var)) "none" else group_var
+  selected_group_label <- if (is.null(group_label)) "none" else group_label
+  data.frame(
+    FigureID = c(
+      "selected_signal_metric",
+      "dif_target_flag_rate",
+      "dif_non_target_flag_rate",
+      "bias_screen_hit_rate",
+      "bias_screen_false_positive_rate"
+    ),
+    RecommendedUse = c(
+      "Current plot request; use when the selected signal and metric match the reporting question.",
+      "Main DIF detection sensitivity display for the simulated target level.",
+      "Companion DIF display for non-target flagging behavior.",
+      "Main bias-side screening display; report as screening hit rate.",
+      "Companion bias-side screening display for non-target facet-pair flags."
+    ),
+    PlotCall = c(
+      simulation_plot_call(
+        c(
+          paste0("signal = ", simulation_plot_arg(signal)),
+          paste0("metric = ", simulation_plot_arg(metric)),
+          paste0("x_var = ", simulation_plot_arg(x_var)),
+          paste0("group_var = ", simulation_plot_arg(group_var))
+        )
+      ),
+      "plot(x, signal = \"dif\", metric = \"power\", x_var = \"n_person\", draw = FALSE)",
+      "plot(x, signal = \"dif\", metric = \"false_positive\", x_var = \"n_person\", draw = FALSE)",
+      "plot(x, signal = \"bias\", metric = \"screen_rate\", x_var = \"n_person\", draw = FALSE)",
+      "plot(x, signal = \"bias\", metric = \"screen_false_positive\", x_var = \"n_person\", draw = FALSE)"
+    ),
+    Signal = c(signal, "dif", "dif", "bias", "bias"),
+    Metric = c(metric, "power", "false_positive", "screen_rate", "screen_false_positive"),
+    MetricColumn = c(metric_col, "DIFPower", "DIFFalsePositiveRate",
+                     "BiasScreenRate", "BiasScreenFalsePositiveRate"),
+    XVariable = c(x_var, "n_person", "n_person", "n_person", "n_person"),
+    GroupVariable = c(selected_group, "auto", "auto", "auto", "auto"),
+    XLabel = c(x_label, "n_person", "n_person", "n_person", "n_person"),
+    GroupLabel = c(selected_group_label, "auto", "auto", "auto", "auto"),
+    CaptionBoundary = c(
+      "Use the selected signal-specific interpretation note before writing a caption.",
+      "DIF target-flag rate depends on the DFF method, thresholds, and simulated target contrast.",
+      "Non-target flagging is a screening false-positive summary, not a universal type-I error estimate.",
+      "Bias-side rates come from estimate_bias() screening output and are not formal inferential power.",
+      "Bias-side false-positive rates are screening summaries and are not alpha-calibrated error rates."
+    ),
+    PlotDataContract = rep("list_with_data_frame_component", 5L),
+    SelectedRoute = c(TRUE, FALSE, FALSE, FALSE, FALSE),
+    stringsAsFactors = FALSE
+  )
+}
+
 #' Plot DIF/bias screening simulation results
 #'
 #' @param x Output from [evaluate_mfrm_signal_detection()].
@@ -9342,7 +10630,8 @@ signal_detection_metric_label <- function(signal, metric_col) {
 #'   labels (`x_label`, `group_label`), `design_variable_aliases`,
 #'   `design_descriptor`, `planning_scope`, `planning_constraints`,
 #'   `planning_schema`,
-#'   `display_metric`, and `interpretation_note` so
+#'   `display_metric`, `guidance`, `figure_recipes`, and
+#'   `interpretation_note` so
 #'   callers can label bias-side plots as screening summaries rather than
 #'   formal power/error-rate displays.
 #' @seealso [evaluate_mfrm_signal_detection()], [summary.mfrm_signal_detection]
@@ -9374,6 +10663,7 @@ plot.mfrm_signal_detection <- function(x,
   }
   signal <- match.arg(signal)
   metric <- match.arg(metric)
+  metric_requested <- metric
   if (identical(signal, "bias")) {
     metric <- switch(
       metric,
@@ -9431,6 +10721,7 @@ plot.mfrm_signal_detection <- function(x,
     plot = "signal_detection",
     signal = signal,
     metric = metric,
+    metric_requested = metric_requested,
     metric_col = metric_col,
     display_metric = signal_detection_metric_label(signal, metric_col),
     interpretation_note = if (identical(signal, "bias")) {
@@ -9438,6 +10729,19 @@ plot.mfrm_signal_detection <- function(x,
     } else {
       "DIF-side rates summarize target/non-target flagging behavior under the selected DFF method and threshold settings."
     },
+    guidance = signal_detection_plot_guidance(
+      signal,
+      signal_detection_metric_label(signal, metric_col)
+    ),
+    figure_recipes = signal_detection_figure_recipes(
+      signal = signal,
+      metric = metric_requested,
+      metric_col = metric_col,
+      x_var = x_var,
+      group_var = group_var,
+      x_label = x_label,
+      group_label = group_label
+    ),
     x_var = x_var,
     x_label = x_label,
     group_var = group_var,
@@ -9451,6 +10755,7 @@ plot.mfrm_signal_detection <- function(x,
     notes = x$notes %||% character(0),
     data = agg_tbl
   )
+  class(out) <- c("mfrm_signal_detection_plot_data", class(out))
   if (!isTRUE(draw)) return(out)
 
   groups <- unique(as.character(agg_tbl$group))

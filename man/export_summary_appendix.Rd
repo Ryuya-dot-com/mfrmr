@@ -106,6 +106,21 @@ Recovery-validation summaries from the packaged validation protocol can be
 exported by passing \code{summary(validation)}, including top-line release
 decisions, condition notes, diagnostic notes, and domain decisions.
 
+Model-choice reviews from \code{\link[=build_model_choice_review]{build_model_choice_review()}} can be exported
+directly. Their appendix bundle keeps \code{comparison_guidance} and
+\code{comparison_reporting_templates} beside the fit-comparison table so readers
+see the supported claim scope before using AIC/BIC or bounded-GPCM
+sensitivity evidence in text.
+
+G-study outputs from \code{\link[=mfrm_generalizability]{mfrm_generalizability()}},
+\code{\link[=check_mfrm_generalizability_design]{check_mfrm_generalizability_design()}},
+\code{\link[=bootstrap_mfrm_generalizability]{bootstrap_mfrm_generalizability()}}, \code{\link[=compare_mfrm_generalizability]{compare_mfrm_generalizability()}}, and
+\code{\link[=mfrm_analysis_audit]{mfrm_analysis_audit()}} can also be exported directly. For
+\code{\link[=compare_mfrm_generalizability]{compare_mfrm_generalizability()}}, the appendix keeps \code{comparison_review}
+beside coefficient, variance-movement, D-study, design-check, and warning
+tables so readers see design support and fit-stability evidence before
+interpreting expanded interaction models.
+
 Unlike \code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}}, this helper does not require a fitted model.
 It is intended for the stage where compact reporting summaries already exist
 and the task is to hand off appendix-ready tables, catalogs, and reporting
@@ -115,7 +130,7 @@ maps.
 
 \enumerate{
 \item Build \code{summary(...)} objects from fit, diagnostics, data description,
-reporting checklist, or APA outputs.
+reporting checklist, APA outputs, or model-choice review outputs.
 \item Call \code{export_summary_appendix(...)} on one object or a named list.
 \item Hand off the written CSV/HTML appendix artifacts to manuscript or QA
 workflows.
@@ -128,9 +143,10 @@ toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "JML", maxit = 30)
 diag <- diagnose_mfrm(fit, residual_pca = "none")
+out_dir <- tempfile("mfrmr_appendix_example_")
 appendix <- export_summary_appendix(
   list(fit = fit, diagnostics = diag),
-  output_dir = tempdir(),
+  output_dir = out_dir,
   prefix = "mfrmr_appendix_example",
   include_html = TRUE,
   overwrite = TRUE

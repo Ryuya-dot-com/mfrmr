@@ -22,11 +22,17 @@ build_summary_table_bundle(
 \code{mfrm_design_evaluation}, \code{mfrm_signal_detection},
 \code{mfrm_recovery_simulation}, \code{mfrm_recovery_assessment},
 \code{mfrm_population_prediction}, \code{mfrm_future_branch_active_branch},
-\code{mfrm_facets_run}, \code{mfrm_bias}, \code{mfrm_anchor_review},
+\code{mfrm_facets_run}, \code{mfrm_results}, \code{mfrm_report}, \code{mfrm_bias},
+\code{mfrm_anchor_review},
 \code{mfrm_linking_review}, \code{mfrm_misfit_casebook}, \code{mfrm_weighting_review},
-\code{mfrm_unit_prediction}, or \code{mfrm_plausible_values} object, one of their
-\code{summary()} outputs, or a \code{summary.mfrmr_recovery_validation} object from
-the packaged validation protocol.}
+\code{mfrm_model_choice_review}, \code{mfrm_unit_prediction},
+\code{mfrm_plausible_values}, \code{mfrm_generalizability},
+\code{mfrm_generalizability_design_check},
+\code{mfrm_generalizability_bootstrap},
+\code{mfrm_generalizability_comparison}, or \code{mfrm_analysis_audit} object, one
+of their \code{summary()} outputs, or a
+\code{summary.mfrmr_recovery_validation} object from the packaged validation
+protocol.}
 
 \item{which}{Optional character vector selecting a subset of named tables.}
 
@@ -100,13 +106,20 @@ manuscript-facing subset before plotting or export.
 \item \code{\link[=predict_mfrm_population]{predict_mfrm_population()}} or \code{summary(pred)}
 \item \code{planning_schema$future_branch_active_branch} or \code{summary(...)}
 \item \code{\link[=run_mfrm_facets]{run_mfrm_facets()}} or \code{summary(out)}
+\item \code{\link[=mfrm_results]{mfrm_results()}} or \code{summary(res)}
+\item \code{\link[=mfrm_report]{mfrm_report()}} or \code{summary(report)}
 \item \code{\link[=estimate_bias]{estimate_bias()}} or \code{summary(bias)}
 \item \code{\link[=review_mfrm_anchors]{review_mfrm_anchors()}} or \code{summary(review)}
 \item \code{\link[=build_linking_review]{build_linking_review()}} or \code{summary(review)}
 \item \code{\link[=build_misfit_casebook]{build_misfit_casebook()}} or \code{summary(casebook)}
 \item \code{\link[=build_weighting_review]{build_weighting_review()}} or \code{summary(review)}
+\item \code{\link[=build_model_choice_review]{build_model_choice_review()}} or \code{summary(review)}
 \item \code{\link[=predict_mfrm_units]{predict_mfrm_units()}} or \code{summary(pred_units)}
 \item \code{\link[=sample_mfrm_plausible_values]{sample_mfrm_plausible_values()}} or \code{summary(pv)}
+\item \code{\link[=mfrm_generalizability]{mfrm_generalizability()}}, \code{\link[=check_mfrm_generalizability_design]{check_mfrm_generalizability_design()}},
+\code{\link[=bootstrap_mfrm_generalizability]{bootstrap_mfrm_generalizability()}},
+\code{\link[=compare_mfrm_generalizability]{compare_mfrm_generalizability()}}, \code{\link[=mfrm_analysis_audit]{mfrm_analysis_audit()}}, or their
+\code{summary()} outputs
 }
 }
 
@@ -124,6 +137,11 @@ bundle-level plot types can use them directly.
 \item fit-level caveats use the \code{analysis_caveats} role; pre-fit data
 score-support caveats use the \code{score_category_caveats} role. Both roles are
 classified as diagnostics and stay in \code{recommended} appendix subsets.
+\item simulation summaries from \code{\link[=evaluate_mfrm_design]{evaluate_mfrm_design()}},
+\code{\link[=evaluate_mfrm_recovery]{evaluate_mfrm_recovery()}}, \code{\link[=evaluate_mfrm_signal_detection]{evaluate_mfrm_signal_detection()}}, and
+\code{\link[=predict_mfrm_population]{predict_mfrm_population()}} retain their \code{runtime}, \code{reading_order},
+\code{next_actions}, and \code{reporting_notes} tables so the appendix handoff
+preserves the same reader-first route shown by \code{summary()}.
 \item recovery-assessment and recovery-validation summaries expose
 \code{diagnostic_reporting_notes} before \code{diagnostic_review} or
 \code{diagnostic_oc_summary} so fit/separation caveats can be reported without
@@ -141,6 +159,12 @@ handoffs.
 \item latent-regression fit summaries expose \code{population_coding} in the methods
 appendix role so categorical levels, contrasts, and encoded columns can be
 documented with the coefficient table.
+\item fit summaries expose \code{design_spec} in a methods appendix role so the
+RSM/PCM/GPCM threshold structure, FACETS analogue, and external
+design-matrix vocabulary are carried into table bundles.
+\item model-choice review summaries expose \code{comparison_guidance} and
+\code{comparison_reporting_templates} so model-comparison claims can be checked
+before text is copied into a manuscript or reviewer response.
 }
 }
 
@@ -149,12 +173,18 @@ documented with the coefficient table.
 \enumerate{
 \item Build a compact object with \code{summary(...)}.
 \item Convert it with \code{build_summary_table_bundle(...)}.
+\item For model comparisons, inspect \code{comparison_guidance} before
+\code{comparison_table}; the former states the claim boundary for the latter.
 \item Use \code{bundle$tables[[...]]} directly, or hand a selected table to
 \code{\link[=apa_table]{apa_table()}} for formatted manuscript output.
 \item If you want a manuscript appendix subset up front, use a preset such as
 \code{appendix_preset = "recommended"}, \code{"compact"}, or \code{"diagnostics"}.
 \item For recovery-assessment or recovery-validation summaries, inspect
 \code{bundle$tables$reading_order} first when it is available.
+\item For design-evaluation, recovery-simulation, signal-detection, population-
+forecast, and diagnostic-screening summaries, inspect the exported
+\code{reading_order}, \code{next_actions}, and \code{reporting_notes} tables before using
+dense metric tables in an appendix.
 \item For recovery-assessment or recovery-validation summaries with retained
 diagnostics, read \code{diagnostic_reporting_notes} before the raw
 \code{diagnostic_review} or \code{diagnostic_oc_summary}. Read

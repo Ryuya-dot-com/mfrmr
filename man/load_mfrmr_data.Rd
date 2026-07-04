@@ -30,6 +30,13 @@ All returned datasets include the core long-format columns
 \code{Study}, \code{Person}, \code{Rater}, \code{Criterion}, and \code{Score}.
 Some datasets, such as the packaged documentation examples, also include
 auxiliary variables like \code{Group} for DIF/bias demonstrations.
+
+The \verb{example_*} datasets are compact smoke-test fixtures for help pages and
+automated checks. They are not intended to carry substantive conclusions.
+They are not tied to a source paper. The \verb{study*} datasets are larger
+Eckes-and-Jin-inspired synthetic datasets; they borrow design dimensions
+from the paper but do not contain original TestDaF rows. Use \code{study1},
+\code{study2}, or user data for realistic end-to-end interpretation.
 }
 \section{Interpreting output}{
 

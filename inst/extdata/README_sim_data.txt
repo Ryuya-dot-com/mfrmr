@@ -31,6 +31,15 @@ Simulated for package validation, inspired by Eckes & Jin (2021):
 - Study 1 design target: 307 examinees, 18 raters, 3 criteria, 4-category scale
 - Study 2 design target: 206 examinees, 12 raters, 9 criteria, 4-category scale
 
+Source boundary:
+- The paper informs the design dimensions and rating-scale context.
+- The package does not include the original TestDaF operational response rows.
+- The generated scores, baseline variants, and iterative-calibration variants
+  are package-authored synthetic artifacts for examples, validation, and
+  workflow rehearsal.
+- These data should not be cited as reproductions of the Eckes & Jin empirical
+  analyses or of their Bayesian FM-SC estimates.
+
 Reference
 ---------
 

@@ -10,6 +10,62 @@ fit2 <- fit_mfrm(d2, person = "Person", facets = c("Rater", "Criterion"),
 audit1 <- review_mfrm_anchors(d1, "Person", c("Rater", "Criterion"), "Score")
 
 # ================================================================
+# anchor_linking_contract
+# ================================================================
+
+test_that("anchor_linking_contract separates mfrmr anchors from FACETS Anchorfile", {
+  contract <- anchor_linking_contract(fit1)
+
+  expect_s3_class(contract, "mfrm_anchor_contract")
+  expect_true(all(c(
+    "summary", "contract", "candidate_anchors", "input_anchors",
+    "input_group_anchors", "constraint_summary", "displacement_summary"
+  ) %in% names(contract)))
+  expect_true(is.data.frame(contract$summary))
+  expect_true(is.data.frame(contract$contract))
+  expect_true(is.data.frame(contract$candidate_anchors))
+  expect_equal(contract$summary$CandidateAnchorRows[1], nrow(contract$candidate_anchors))
+  expect_false(isTRUE(contract$summary$FACETSAnchorfileRewriteSupported[1]))
+  expect_true(any(grepl("Anchorfile=", contract$contract$Surface, fixed = TRUE) &
+                    contract$contract$Status == "not_implemented"))
+  expect_true(any(grepl("make_anchor_table", contract$contract$mfrmrRoute, fixed = TRUE) &
+                    contract$contract$Status == "implemented"))
+  expect_false(any(contract$candidate_anchors$Facet == "Person"))
+
+  contract_person <- anchor_linking_contract(fit1, include_person_anchors = TRUE)
+  expect_true(any(contract_person$candidate_anchors$Facet == "Person"))
+  expect_true(isTRUE(contract_person$summary$IncludesPersonAnchors[1]))
+
+  s <- summary(contract)
+  expect_s3_class(s, "summary.mfrm_bundle")
+  expect_identical(s$preview_name, "contract")
+})
+
+test_that("anchor_linking_contract reports direct anchors used by a fit", {
+  anchors <- make_anchor_table(fit1, facets = "Rater")
+  anchored_fit <- suppressWarnings(
+    fit_mfrm(
+      d1,
+      person = "Person",
+      facets = c("Rater", "Criterion"),
+      score = "Score",
+      method = "JML",
+      maxit = 10,
+      anchors = anchors,
+      anchor_policy = "silent"
+    )
+  )
+  contract <- anchor_linking_contract(anchored_fit)
+
+  expect_equal(contract$summary$InputDirectAnchorRows[1], nrow(anchors))
+  expect_true(nrow(contract$input_anchors) >= nrow(anchors))
+  expect_true(any(contract$contract$Surface == "Direct anchors used by the current fit" &
+                    contract$contract$Status == "implemented"))
+  expect_true(any(contract$constraint_summary$Facet == "Rater" &
+                    contract$constraint_summary$AnchoredLevels >= nrow(anchors)))
+})
+
+# ================================================================
 # anchor_to_baseline
 # ================================================================
 

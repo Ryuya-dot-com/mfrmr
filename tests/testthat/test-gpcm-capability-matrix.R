@@ -105,6 +105,9 @@ test_that("gpcm_capability_matrix exposes the bounded GPCM support contract", {
     tbl$Area == "Core fitting and summaries" &
       tbl$Status == "supported"
   ))
+  core <- tbl[tbl$Area == "Core fitting and summaries", , drop = FALSE]
+  expect_true(grepl("not a complete unrestricted GPCM implementation",
+                    core$Boundary[1], fixed = TRUE))
   expect_true(any(
     tbl$Area == "Exploratory diagnostics and residual follow-up" &
       tbl$Status == "supported_with_caveat"
@@ -125,6 +128,14 @@ test_that("gpcm_capability_matrix exposes the bounded GPCM support contract", {
     tbl$Area == "Differential facet functioning screening under bounded GPCM" &
       tbl$Status == "supported_with_caveat"
   ))
+  expect_equal(
+    mfrmr:::gpcm_scope_helper_area("analyze_dff_moderation()"),
+    "Differential facet functioning screening under bounded GPCM"
+  )
+  expect_equal(
+    mfrmr:::gpcm_scope_helper_area("analyze_dif_moderation()"),
+    "Differential facet functioning screening under bounded GPCM"
+  )
   expect_true(any(
     grepl("build_misfit_casebook\\(\\)", tbl$Helpers) &
       tbl$Status == "supported_with_caveat"
@@ -172,6 +183,144 @@ test_that("gpcm_capability_matrix filters by status", {
   expect_equal(nrow(supported_tbl), sum(full_tbl$Status == "supported"))
 })
 
+test_that("model-family scope separates GPCM completion from adjacent models", {
+  scope <- mfrmr_model_family_scope()
+  gpcm <- mfrmr_model_family_scope("gpcm")
+  polytomous <- mfrmr_model_family_scope("polytomous_irt")
+  rater <- mfrmr_model_family_scope("rater_dependence")
+  rasch_design <- mfrmr_model_family_scope("rasch_design")
+  mixture <- mfrmr_model_family_scope("mixture")
+
+  expect_s3_class(scope, "data.frame")
+  expect_true(all(c(
+    "Lane", "ModelFamily", "CurrentStatus", "RelationshipToGPCM",
+    "CurrentSurface", "ReleaseTier", "RequiredWork", "SourceBasis",
+    "RecommendedPositioning"
+  ) %in% names(scope)))
+  expect_true(any(scope$ModelFamily == "RSM / PCM / bounded GPCM"))
+  expect_true(any(scope$ModelFamily == "Complete unrestricted GPCM"))
+  expect_true(any(scope$ModelFamily == "Graded Response Model"))
+  expect_true(any(scope$ModelFamily == "Nominal Response Model"))
+  expect_true(any(scope$ModelFamily == "Sequential / continuation-ratio model"))
+  expect_true(any(scope$ModelFamily == "Hierarchical Rater Model"))
+  expect_true(any(scope$ModelFamily == "Rater latent-class / signal-detection model"))
+  expect_true(any(scope$ModelFamily == "Rater Bundle Model"))
+  expect_true(any(scope$ModelFamily == "Generalized Graded Unfolding Model"))
+  expect_true(any(scope$ModelFamily == "MRCMLM"))
+  expect_true(any(scope$ModelFamily == "LLTM"))
+  expect_true(any(scope$ModelFamily == "LPCM"))
+  expect_true(any(scope$ModelFamily == "Mixture / Mixed Rasch model"))
+
+  expect_equal(nrow(gpcm), 1L)
+  expect_identical(gpcm$ModelFamily[1], "Complete unrestricted GPCM")
+  expect_identical(gpcm$CurrentStatus[1], "deferred")
+  expect_true(grepl("same adjacent-category family",
+                    tolower(gpcm$RelationshipToGPCM[1]), fixed = TRUE))
+
+  expect_true(nrow(polytomous) >= 3L)
+  expect_true(all(polytomous$CurrentStatus == "not_implemented"))
+  expect_true(any(grepl("not a GPCM completion task",
+                        polytomous$RelationshipToGPCM, fixed = TRUE)))
+  expect_true(any(grepl("Unordered nominal", polytomous$RelationshipToGPCM,
+                        fixed = TRUE)))
+
+  expect_true(nrow(rater) >= 4L)
+  expect_true(any(rater$CurrentStatus == "partially_implemented_for_RSM_PCM"))
+  expect_true(any(grepl("RSM/PCM-only", rater$RequiredWork, fixed = TRUE)))
+
+  expect_true(all(rasch_design$CurrentStatus == "not_implemented"))
+  expect_true(any(rasch_design$ModelFamily == "LLTM"))
+  expect_true(any(rasch_design$ModelFamily == "LPCM"))
+  expect_true(any(grepl("design-matrix", rasch_design$RequiredWork,
+                        fixed = TRUE)))
+
+  expect_equal(nrow(mixture), 1L)
+  expect_identical(mixture$CurrentStatus[1], "not_implemented")
+  expect_true(grepl("not mixture substitutes",
+                    mixture$RecommendedPositioning[1], fixed = TRUE))
+})
+
+test_that("estimation scope keeps Stan and nonparametric routes separate", {
+  scope <- mfrmr_estimation_scope()
+  conditional <- mfrmr_estimation_scope("conditional")
+  bayesian <- mfrmr_estimation_scope("bayesian")
+  scoring <- mfrmr_estimation_scope("scoring")
+  uncertainty <- mfrmr_estimation_scope("uncertainty")
+  latent_distribution <- mfrmr_estimation_scope("latent_distribution")
+  nonparametric <- mfrmr_estimation_scope("nonparametric")
+  mixture <- mfrmr_estimation_scope("mixture")
+
+  expect_s3_class(scope, "data.frame")
+  expect_true(all(c(
+    "Lane", "Method", "CurrentStatus", "ModelScope",
+    "RelationshipToCurrent", "ReleaseTier", "RequiredWork", "SourceBasis",
+    "Benefit", "Risk", "RecommendedPositioning"
+  ) %in% names(scope)))
+  expect_true(any(scope$Method == "JMLE"))
+  expect_true(any(scope$Method == "MMLE"))
+  expect_true(any(scope$Method == "CMLE"))
+  expect_true(any(scope$Method == "Stan / cmdstanr backend"))
+  expect_true(any(scope$Method == "Configurable EAP / reference prior"))
+  expect_true(any(scope$Method == "EAP prior/likelihood power sensitivity"))
+  expect_true(any(scope$Method == "Free normal population SD for additive MML"))
+  expect_true(any(scope$Method == "Unified structural and integrated person SE contract"))
+  expect_true(any(scope$Method == "NPML or discrete latent distribution under parametric IRFs"))
+  expect_true(any(scope$Method == "Kernel-smoothed empirical IRFs"))
+
+  expect_equal(nrow(conditional), 1L)
+  expect_identical(conditional$Method[1], "CMLE")
+  expect_true(grepl("RSM/PCM", conditional$RecommendedPositioning[1], fixed = TRUE))
+
+  mmle <- scope[scope$Method == "MMLE", , drop = FALSE]
+  expect_equal(nrow(mmle), 1L)
+  expect_true(grepl("fixed to standard normal scale",
+                    mmle$RelationshipToCurrent[1], fixed = TRUE))
+  expect_true(grepl("conditional residual variance `sigma2` is estimated",
+                    mmle$RelationshipToCurrent[1], fixed = TRUE))
+
+  free_sd <- scope[scope$Method == "Free normal population SD for additive MML", , drop = FALSE]
+  expect_equal(nrow(free_sd), 1L)
+  expect_identical(free_sd$CurrentStatus[1], "implemented_for_RSM_PCM_GPCM_EM")
+  expect_true(grepl("RSM/PCM and bounded GPCM", free_sd$ModelScope[1], fixed = TRUE))
+  expect_true(grepl("opt-in additive MML", free_sd$RecommendedPositioning[1], fixed = TRUE))
+  expect_equal(nrow(latent_distribution), 1L)
+  expect_identical(latent_distribution$Method[1], "Free normal population SD for additive MML")
+
+  expect_true(nrow(scoring) >= 3L)
+  prior_row <- scoring[scoring$Method == "Configurable EAP / reference prior", , drop = FALSE]
+  expect_equal(nrow(prior_row), 1L)
+  expect_identical(prior_row$CurrentStatus[1], "not_implemented")
+  expect_true(grepl("prior-sensitive", prior_row$Risk[1], fixed = TRUE))
+  expect_true(grepl("scoring-only sensitivity option",
+                    prior_row$RecommendedPositioning[1], fixed = TRUE))
+  power_row <- scoring[scoring$Method == "EAP prior/likelihood power sensitivity", , drop = FALSE]
+  expect_equal(nrow(power_row), 1L)
+  expect_identical(power_row$CurrentStatus[1], "implemented_scoring_diagnostic")
+  expect_true(grepl("quadrature-grid", power_row$RecommendedPositioning[1], fixed = TRUE))
+
+  expect_equal(nrow(uncertainty), 1L)
+  expect_identical(uncertainty$Method[1], "Unified structural and integrated person SE contract")
+  expect_true(grepl("single unified SE column would be misleading",
+                    uncertainty$Risk[1], fixed = TRUE))
+  expect_true(grepl("estimand, conditioning basis",
+                    uncertainty$RecommendedPositioning[1], fixed = TRUE))
+
+  expect_equal(nrow(bayesian), 1L)
+  expect_identical(bayesian$CurrentStatus[1], "not_implemented")
+  expect_true(grepl("cmdstanr", bayesian$Method[1], fixed = TRUE))
+  expect_true(grepl("optional heavy-backend bridge",
+                    bayesian$RecommendedPositioning[1], fixed = TRUE))
+
+  expect_equal(nrow(nonparametric), 2L)
+  expect_true(any(grepl("parametric response model",
+                        nonparametric$RelationshipToCurrent, fixed = TRUE)))
+  expect_true(any(grepl("visual/model-check evidence",
+                        nonparametric$RelationshipToCurrent, fixed = TRUE)))
+
+  expect_equal(nrow(mixture), 1L)
+  expect_identical(mixture$CurrentStatus[1], "not_implemented")
+})
+
 test_that("gpcm_score_side_contract records unblock requirements without enabling exports", {
   contract <- gpcm_score_side_contract()
   implemented <- gpcm_score_side_contract("implemented_with_caveat")
@@ -195,28 +344,75 @@ test_that("gpcm_score_side_contract records unblock requirements without enablin
   expect_true(all(dependency$CurrentStatus == "validated_dependency"))
   expect_true(any(contract$ContractArea == "score_estimand"))
   expect_true(any(contract$ContractArea == "score_uncertainty"))
+  expect_true(any(contract$ContractArea == "external_probability_kernel"))
   expect_true(any(contract$ContractArea == "facets_score_uncertainty_contract"))
   expect_true(any(contract$ContractArea == "export_schema"))
   expect_true(any(contract$ContractArea == "runtime_guard"))
   expect_true(any(contract$ContractArea == "score_uncertainty" &
                     contract$CurrentStatus == "implemented_with_caveat"))
+  expect_true(any(contract$ContractArea == "external_probability_kernel" &
+                    contract$CurrentStatus == "implemented_with_caveat"))
   expect_true(any(contract$ContractArea == "facets_score_uncertainty_contract" &
                     contract$CurrentStatus == "required_for_full_facets_review"))
   expect_true(any(grepl("PCM", contract$Requirement, fixed = TRUE)))
+  expect_true(any(grepl("mirt::probtrace()", contract$ValidationTarget, fixed = TRUE)))
+  expect_true(any(grepl("tam.mml.2pl", contract$ValidationTarget, fixed = TRUE)))
+  expect_true(any(grepl("eRm", contract$ValidationTarget, fixed = TRUE)))
+  expect_true(any(grepl("not treated as many-facet MFRM comparators",
+                        contract$ValidationTarget, fixed = TRUE)))
+  expect_true(any(grepl("without claiming many-facet MFRM",
+                        contract$ExitCriterion, fixed = TRUE)))
   expect_true(any(grepl("mfrmr_gpcm_scope_error", contract$ValidationTarget, fixed = TRUE)))
   expect_identical(score_row$Status[1], "supported_with_caveat")
   expect_identical(review_row$Status[1], "blocked")
   expect_true(grepl("gpcm_score_side_contract", score_row$RecommendedRoute[1], fixed = TRUE))
   expect_true(grepl("unit-slope PCM reduction", score_row$NextValidationStep[1], fixed = TRUE))
+  expect_true(grepl("mirt/TAM external-kernel comparison", score_row$NextValidationStep[1], fixed = TRUE))
   expect_true(grepl("gpcm_score_side_contract", review_row$NextValidationStep[1], fixed = TRUE))
+})
+
+test_that("GPCM score-side delta SE stays on expected-score scale", {
+  fn <- getFromNamespace("add_gpcm_score_side_delta_se", "mfrmr")
+  scorefile <- data.frame(
+    Person = "P1",
+    Rater = "R1",
+    Criterion = "C1",
+    Observed = 3,
+    Expected = 2,
+    Residual = 1,
+    ScoreSlope = 1.25,
+    Var = 0.40,
+    stringsAsFactors = FALSE
+  )
+  res <- list(
+    config = list(model = "GPCM", facet_names = c("Rater", "Criterion")),
+    prep = list(rating_min = 1, rating_max = 4)
+  )
+  diagnostics <- list(
+    measures = data.frame(
+      Facet = c("Person", "Rater", "Criterion"),
+      Level = c("P1", "R1", "C1"),
+      ModelSE = c(0.30, 0.40, 0.50),
+      stringsAsFactors = FALSE
+    )
+  )
+
+  out <- fn(scorefile, res = res, diagnostics = diagnostics)
+  eta_se <- sqrt(0.30^2 + 0.40^2 + 0.50^2)
+  expected_score_se <- 1.25 * 0.40 * eta_se
+
+  expect_equal(out$ScoreSideLogitSE, eta_se, tolerance = 1e-12)
+  expect_equal(out$ScoreSideSE, expected_score_se, tolerance = 1e-12)
+  expect_equal(out$ScoreSideResidualSE, expected_score_se, tolerance = 1e-12)
+  expect_true(grepl("ScoreSlope x Var", out$ScoreSideSE_Method, fixed = TRUE))
 })
 
 test_that("blocked and deferred GPCM rows are tracked in future-scope notes", {
   tbl <- gpcm_capability_matrix()
   roadmap_path <- testthat::test_path("..", "..", "inst", "validation",
-                                      "gpcm-post-0.2.1-roadmap.md")
+                                      "gpcm-post-0.2.2-roadmap.md")
   if (!file.exists(roadmap_path)) {
-    roadmap_path <- system.file("validation", "gpcm-post-0.2.1-roadmap.md",
+    roadmap_path <- system.file("validation", "gpcm-post-0.2.2-roadmap.md",
                                 package = "mfrmr")
   }
 
@@ -366,10 +562,23 @@ test_that("GPCM partial report, QC, export, and linking helpers return caveated 
   expect_true(any(is.finite(score$scorefile$ExpectedScoreSE)))
   expect_true(any(score$scorefile$ScoreSideSE_Status == "ok"))
   expect_true(any(is.finite(score$scorefile$ScoreSideSE)))
+  ok_score_side <- score$scorefile$ScoreSideSE_Status == "ok"
+  expected_score_side_se <-
+    abs(as.numeric(score$scorefile$ScoreSlope[ok_score_side])) *
+    as.numeric(score$scorefile$Var[ok_score_side]) *
+    as.numeric(score$scorefile$ScoreSideLogitSE[ok_score_side])
+  expect_equal(
+    as.numeric(score$scorefile$ScoreSideSE[ok_score_side]),
+    expected_score_side_se,
+    tolerance = 1e-3
+  )
   expect_true(any(grepl("Native structural delta method",
                         score$scorefile$ScoreUncertaintyMethod,
                         fixed = TRUE)))
   expect_true(any(grepl("Score-side delta method",
+                        score$scorefile$ScoreSideSE_Method,
+                        fixed = TRUE)))
+  expect_true(any(grepl("ScoreSlope x Var",
                         score$scorefile$ScoreSideSE_Method,
                         fixed = TRUE)))
   score_side_only <- facets_output_file_bundle(
@@ -419,6 +628,10 @@ test_that("GPCM partial report, QC, export, and linking helpers return caveated 
     min_obs = 1
   )
   expect_s3_class(dff, "mfrm_dff")
+  expect_true(isTRUE(dff$config$mfrm_fit_used))
+  expect_equal(dff$config$fit_model, "GPCM")
+  expect_equal(dff$config$model_scope,
+               "fitted_mfrm_bounded_gpcm_screening_with_caveat")
   expect_true(any(dff$gpcm_boundary$Area == "Differential facet functioning screening under bounded GPCM"))
   dff_summary <- summary(dff)
   expect_true(nrow(dff_summary$gpcm_boundary) > 0)

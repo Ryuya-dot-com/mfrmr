@@ -27,8 +27,11 @@ analyze_dif(...)
 \item{facet}{Character scalar naming the facet whose elements are tested
 for differential functioning (for example, \code{"Criterion"} or \code{"Rater"}).}
 
-\item{group}{Character scalar naming the column in the data that
-defines the grouping variable (e.g., \code{"Gender"}, \code{"Site"}).}
+\item{group}{Character scalar naming the categorical column in the data
+that defines the grouping variable (e.g., \code{"Gender"}, \code{"Site"}).
+Numeric columns are treated as category labels, not as continuous
+covariates; high-cardinality numeric columns are rejected so
+continuous-covariate moderation is not mistaken for MH DIF/DFF.}
 
 \item{data}{Optional data frame containing at least the group column
 and the same person/facet/score columns used to fit the model. If
@@ -64,7 +67,8 @@ An object of class \code{mfrm_dff} (with compatibility class \code{mfrm_dif}) wi
 \item \code{summary}: counts by screening or ETS classification.
 \item \code{group_fits}: (refit method) per-group facet estimates.
 \item \code{gpcm_boundary}: for bounded \code{GPCM} fits, a capability-boundary table.
-\item \code{config}: list with facet, group, method, min_obs, p_adjust settings.
+\item \code{config}: list with facet, group, method, fitted-model scope, min_obs,
+and p_adjust settings.
 }
 }
 \description{
@@ -79,8 +83,15 @@ In many-facet workflows, prefer \code{\link[=analyze_dff]{analyze_dff()}} as the
 \strong{Differential facet functioning (DFF)} occurs when the
 difficulty or severity of a facet element differs across subgroups
 of the population, after controlling for overall ability.  In an
-MFRM context this generalises classical DIF (which applies to
+MFRM context this generalises item-focused DIF (which applies to
 items) to any facet: raters, criteria, tasks, etc.
+
+This is the fitted-model MFRM route. It uses the \code{fit_mfrm()} response
+model supplied in \code{fit}: \code{RSM} and \code{PCM} are Rasch-family equal-weighting
+routes, while bounded \code{GPCM} is available only as slope-aware screening /
+reporting evidence with an explicit \code{gpcm_boundary}. By contrast,
+\code{\link[=analyze_dif_mh]{analyze_dif_mh()}} is an observed-score Mantel-Haenszel screen and
+does not use a fitted MFRM, \code{RSM}, \code{PCM}, or \code{GPCM} model.
 
 Differential functioning is a threat to measurement fairness: if Criterion 1 is harder
 for Group A than Group B at the same ability level, the measurement
@@ -130,6 +141,13 @@ Multiple comparisons are adjusted using Holm's step-down procedure by
 default, which controls the family-wise error rate without assuming
 independence.  Alternative methods (e.g., \code{"BH"} for false discovery
 rate) can be specified via \code{p_adjust}.
+
+The grouping variable is categorical. With three or more levels,
+\code{analyze_dff()} performs all pairwise group comparisons by default, or
+reference-versus-focal comparisons when \code{focal} is supplied. Continuous
+covariates should be handled by a separate moderation/regression design;
+binning a continuous covariate before calling this helper is acceptable
+only as an explicitly labelled exploratory screen.
 }
 \section{Choosing a method}{
 

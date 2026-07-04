@@ -4114,7 +4114,7 @@ category_structure_report <- function(fit,
 #'    conditional ogives `P(k) / (P(k-1) + P(k))` in the Winsteps/FACETS
 #'    "Conditional Probability Curves" sense; their `.5` crossings estimate
 #'    the Rasch-Andrich thresholds. `type = "conditional_probability"` now
-#'    routes to this display (before 0.3.0 it was a `ccc` alias) and says so
+#'    routes to this display (before 0.2.2 it was a `ccc` alias) and says so
 #'    once per session. Use
 #'    `plot_data(out, component = "plot_long")` when rebuilding the curves with
 #'    ggplot2, plotly, or another R graphics system.
@@ -4688,6 +4688,17 @@ plot_bias_interaction <- function(x,
 #' @param bias_results Optional output from [estimate_bias()].
 #' @param context Optional named list for report context.
 #' @param whexact Use exact ZSTD transformation.
+#' @param dif_results Optional package-native differential-functioning result
+#'   from [analyze_dff()], [analyze_dif()], [analyze_dif_mh()],
+#'   [analyze_dff_moderation()], or [dif_interaction_table()]. When supplied,
+#'   `build_apa_outputs()` appends the conservative `dif_report(...,
+#'   style = "apa")` paragraph, table note, caption, and section-map row.
+#' @param model_comparison Optional output from [compare_mfrm()] or
+#'   [build_model_choice_review()] (or their `summary()` output). When supplied,
+#'   `build_apa_outputs()` appends a model-comparison reporting section and
+#'   exposes the comparison guidance/templates so APA wording keeps response
+#'   model evidence, population-metric sensitivity, and bounded-GPCM sensitivity
+#'   claims separate.
 #'
 #' @details
 #' `context` is an optional named list for narrative customization.
@@ -4712,9 +4723,14 @@ plot_bias_interaction <- function(x,
 #' - anchor/constraint summary (`noncenter_facet`, anchored levels, group anchors, dummy facets)
 #' - latent-regression population-model wording when `fit` has an active
 #'   `population_formula`
+#' - ordinary MML population-SD wording when no latent-regression model is
+#'   active, distinguishing the default fixed prior SD from opt-in
+#'   `estimate_population_sd = TRUE` runs
 #' - category/threshold diagnostics (including disordered-step details when present)
 #' - overall fit, misfit count, and top misfit levels
 #' - facet reliability/separation, residual PCA summary, and bias-screen counts
+#' - optional model-comparison reporting guidance when `model_comparison` is
+#'   supplied
 #'
 #' @section Interpreting output:
 #' - `report_text`: manuscript-draft narrative covering Method (model
@@ -4727,6 +4743,11 @@ plot_bias_interaction <- function(x,
 #' - active latent-regression fits add a population-model section and Table 5
 #'   notes/captions that distinguish conditional-normal coefficient reporting
 #'   from post hoc regression on EAP/MLE scores.
+#' - ordinary MML fits add population-SD mode wording. Free-SD runs report the
+#'   estimated SD and profile SE/CI when available; the profile-SE/CI note
+#'   should be kept because other structural parameters are held fixed.
+#' - model-comparison inputs add a separate reporting section, guidance table,
+#'   and wording templates so model-choice evidence is not overstated.
 #'
 #' When bias results or PCA diagnostics are not supplied, those sections
 #' are omitted from the narrative rather than producing placeholder text.
@@ -4735,9 +4756,14 @@ plot_bias_interaction <- function(x,
 #' 1. Build diagnostics (and optional bias results). For `RSM` / `PCM`
 #'    reporting runs, prefer an `MML` fit and
 #'    `diagnose_mfrm(..., diagnostic_mode = "both")`.
-#' 2. Run `build_apa_outputs(...)`.
-#' 3. Check `summary(apa)` for completeness.
-#' 4. Insert `apa$report_text` and note/caption fields into manuscript drafts
+#' 2. If candidate fits were compared, build
+#'    `review <- build_model_choice_review(...)` and pass it as
+#'    `model_comparison = review`.
+#' 3. Run `build_apa_outputs(...)`.
+#' 4. Check `summary(apa)` for completeness, including
+#'    `summary(apa)$model_comparison_guidance` when `model_comparison` was
+#'    supplied.
+#' 5. Insert `apa$report_text` and note/caption fields into manuscript drafts
 #'    after checking the listed cautions.
 #'
 #' @section Context template:
@@ -4754,6 +4780,9 @@ plot_bias_interaction <- function(x,
 #' - `table_figure_captions`: draft caption candidates without figure numbering
 #' - `section_map`: package-native section table for manuscript assembly
 #' - `contract`: structured APA reporting contract used for downstream checks
+#' - `model_comparison_guidance`, `model_comparison_reporting_templates`, and
+#'   `model_comparison_table`: optional reporting surfaces supplied when
+#'   `model_comparison` is provided
 #'
 #' @seealso [build_visual_summaries()], [estimate_bias()],
 #'   [reporting_checklist()], [mfrmr_reporting_and_apa]
@@ -4798,6 +4827,31 @@ plot_bias_interaction <- function(x,
 #' #   Diagnostics row to be `"yes"` before submitting.
 #' cat(apa$report_text)
 #' apa$section_map[, c("SectionId", "Available")]
+#'
+#' fit_free_sd <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
+#'                         method = "MML", quad_points = 7, maxit = 40,
+#'                         estimate_population_sd = TRUE)
+#' diag_free_sd <- diagnose_mfrm(fit_free_sd, residual_pca = "none",
+#'                               diagnostic_mode = "legacy")
+#' apa_free_sd <- build_apa_outputs(fit_free_sd, diag_free_sd)
+#' summary(fit_free_sd)$population_overview[
+#'   , c("PopulationSDMode", "EstimatedPopulationSD", "PopulationSDSEStatus")
+#' ]
+#' subset(
+#'   summary(apa_free_sd)$content_checks,
+#'   Check == "MML population SD wording alignment",
+#'   c("Check", "Passed", "Detail")
+#' )
+#'
+#' review <- build_model_choice_review(fixed_sd = fit, free_sd = fit_free_sd)
+#' apa_with_review <- build_apa_outputs(
+#'   fit_free_sd,
+#'   diag_free_sd,
+#'   model_comparison = review
+#' )
+#' summary(apa_with_review)$model_comparison_guidance[
+#'   , c("ComparisonFamily", "ComparisonStrength", "InterpretationGuard")
+#' ]
 #' }
 #'
 #' @section Input validation:
@@ -4806,23 +4860,33 @@ plot_bias_interaction <- function(x,
 #' `context` must be a list (use `NULL` or `list()` for no extra context).
 #' If supplied, `bias_results` must come from [estimate_bias()] or another
 #' package-native bias helper that provides a table component.
+#' If supplied, `dif_results` must be a package-native differential-functioning
+#' object accepted by [dif_report()].
+#' If supplied, `model_comparison` must come from [compare_mfrm()],
+#' [build_model_choice_review()], or the corresponding `summary()` method.
 #' @export
 build_apa_outputs <- function(fit,
                               diagnostics,
                               bias_results = NULL,
                               context = list(),
-                              whexact = FALSE) {
+                              whexact = FALSE,
+                              dif_results = NULL,
+                              model_comparison = NULL) {
   validated <- validate_apa_builder_inputs(
     fit = fit,
     diagnostics = diagnostics,
     bias_results = bias_results,
     context = context,
+    dif_results = dif_results,
+    model_comparison = model_comparison,
     helper = "build_apa_outputs()"
   )
   fit <- validated$fit
   diagnostics <- validated$diagnostics
   bias_results <- validated$bias_results
   context <- validated$context
+  dif_results <- validated$dif_results
+  model_comparison <- validated$model_comparison
   stop_if_gpcm_out_of_scope(fit, "build_apa_outputs()")
   contract <- build_apa_reporting_contract(
     res = fit,
@@ -4831,15 +4895,71 @@ build_apa_outputs <- function(fit,
     context = context,
     whexact = whexact
   )
+  dif_apa <- if (!is.null(dif_results) && inherits(dif_results, "mfrm_dif_report")) {
+    dif_results
+  } else if (!is.null(dif_results)) {
+    dif_report(dif_results, style = "apa")
+  } else {
+    NULL
+  }
+  report_text <- as.character(contract$report_text)
+  note_text <- as.character(contract$note_text)
+  caption_text <- as.character(contract$caption_text)
+  section_table <- as.data.frame(contract$section_table %||% data.frame(),
+                                 stringsAsFactors = FALSE)
+  if (!is.null(dif_apa)) {
+    report_text <- paste(Filter(nzchar, c(report_text, dif_apa$apa_text)),
+                         collapse = "\n\n")
+    note_text <- paste(Filter(nzchar, c(
+      note_text,
+      paste0("Differential-functioning note. ", dif_apa$apa_note %||% "")
+    )), collapse = "\n\n")
+    caption_text <- paste(Filter(nzchar, c(
+      caption_text,
+      dif_apa$apa_caption %||% ""
+    )), collapse = "\n\n")
+    dif_section <- data.frame(
+      SectionId = "results_differential_functioning",
+      Parent = "Results",
+      Heading = dif_apa$apa_section %||% "Differential functioning",
+      Available = TRUE,
+      SentenceCount = .dif_report_sentence_count(dif_apa$apa_section_text),
+      Text = dif_apa$apa_section_text %||% "",
+      stringsAsFactors = FALSE
+    )
+    section_table <- rbind(section_table, dif_section)
+  }
+  comparison_block <- build_model_comparison_reporting_block(model_comparison)
+  if (nzchar(comparison_block$report_text %||% "")) {
+    report_text <- paste(
+      Filter(nzchar, c(
+        report_text,
+        paste0("Model Comparison Reporting.\n", comparison_block$report_text)
+      )),
+      collapse = "\n\n"
+    )
+    note_text <- paste(Filter(nzchar, c(
+      note_text,
+      comparison_block$note_text %||% ""
+    )), collapse = "\n\n")
+    caption_text <- paste(Filter(nzchar, c(
+      caption_text,
+      comparison_block$caption_text %||% ""
+    )), collapse = "\n\n")
+    section_table <- rbind(section_table, comparison_block$section)
+  }
 
   out <- list(
     report_text = structure(
-      as.character(contract$report_text),
+      report_text,
       class = c("mfrm_apa_text", "character")
     ),
-    table_figure_notes = as.character(contract$note_text),
-    table_figure_captions = as.character(contract$caption_text),
-    section_map = as.data.frame(contract$section_table %||% data.frame(), stringsAsFactors = FALSE),
+    table_figure_notes = note_text,
+    table_figure_captions = caption_text,
+    section_map = section_table,
+    model_comparison_guidance = comparison_block$guidance,
+    model_comparison_reporting_templates = comparison_block$reporting_templates,
+    model_comparison_table = comparison_block$comparison_table,
     gpcm_boundary = gpcm_capability_boundary_table(
       fit,
       helper = "build_apa_outputs()",
@@ -4849,7 +4969,8 @@ build_apa_outputs <- function(fit,
         "Design planning and forecasting"
       )
     ),
-    contract = contract
+    contract = contract,
+    dif_report = dif_apa
   )
   class(out) <- c("mfrm_apa_outputs", "list")
   out
@@ -4861,6 +4982,8 @@ validate_apa_builder_inputs <- function(fit,
                                         diagnostics,
                                         bias_results = NULL,
                                         context = list(),
+                                        dif_results = NULL,
+                                        model_comparison = NULL,
                                         helper = "build_apa_outputs()") {
   if (!inherits(fit, "mfrm_fit")) {
     stop(
@@ -4898,12 +5021,170 @@ validate_apa_builder_inputs <- function(fit,
     }
   }
 
+  if (!is.null(dif_results)) {
+    dif_classes <- c(
+      "mfrm_dff", "mfrm_dif", "mfrm_dff_moderation",
+      "mfrm_dif_moderation", "mfrm_mh_dif", "mfrm_classical_dif",
+      "mfrm_dif_interaction", "mfrm_dif_report"
+    )
+    if (!inherits(dif_results, dif_classes)) {
+      stop(
+        "`", helper, "` requires `dif_results` to be `NULL` or a package-native differential-functioning result accepted by `dif_report()`.",
+        call. = FALSE
+      )
+    }
+  }
+
+  model_comparison <- validate_model_comparison_reporting_input(
+    model_comparison,
+    helper = helper
+  )
+
   list(
     fit = fit,
     diagnostics = diagnostics,
     bias_results = bias_results,
-    context = context
+    context = context,
+    dif_results = dif_results,
+    model_comparison = model_comparison
   )
+}
+
+validate_model_comparison_reporting_input <- function(model_comparison,
+                                                      helper = "build_apa_outputs()") {
+  if (is.null(model_comparison)) {
+    return(NULL)
+  }
+  allowed <- c(
+    "mfrm_comparison", "summary.mfrm_comparison",
+    "mfrm_model_choice_review", "summary.mfrm_model_choice_review"
+  )
+  if (!inherits(model_comparison, allowed)) {
+    stop(
+      "`", helper, "` requires `model_comparison` to be `NULL`, ",
+      "a compare_mfrm() object, a build_model_choice_review() object, ",
+      "or the corresponding summary() output.",
+      call. = FALSE
+    )
+  }
+  model_comparison
+}
+
+extract_model_comparison_reporting <- function(model_comparison) {
+  empty <- list(
+    guidance = data.frame(),
+    reporting_templates = data.frame(),
+    comparison_table = data.frame(),
+    overview = data.frame()
+  )
+  if (is.null(model_comparison)) {
+    return(empty)
+  }
+
+  obj <- model_comparison
+  guidance <- obj$comparison_guidance %||% data.frame()
+  templates <- obj$comparison_reporting_templates %||% guidance
+  comparison_table <- obj$comparison_table %||% obj$table %||% data.frame()
+  overview <- obj$overview %||% data.frame()
+
+  guidance <- as.data.frame(guidance, stringsAsFactors = FALSE)
+  templates <- as.data.frame(templates, stringsAsFactors = FALSE)
+  comparison_table <- as.data.frame(comparison_table, stringsAsFactors = FALSE)
+  overview <- as.data.frame(overview, stringsAsFactors = FALSE)
+
+  if (nrow(guidance) == 0L && nrow(overview) > 0L) {
+    guidance <- overview
+  }
+
+  list(
+    guidance = guidance,
+    reporting_templates = templates,
+    comparison_table = comparison_table,
+    overview = overview
+  )
+}
+
+model_comparison_reporting_value <- function(tbl, name, default = "") {
+  tbl <- as.data.frame(tbl %||% data.frame(), stringsAsFactors = FALSE)
+  if (nrow(tbl) == 0L || !name %in% names(tbl)) {
+    return(default)
+  }
+  value <- as.character(tbl[[name]][1] %||% default)
+  if (length(value) == 0L || is.na(value) || !nzchar(trimws(value))) {
+    default
+  } else {
+    trimws(value[1])
+  }
+}
+
+build_model_comparison_reporting_block <- function(model_comparison) {
+  extracted <- extract_model_comparison_reporting(model_comparison)
+  guide <- extracted$guidance
+  if (nrow(guide) == 0L) {
+    return(c(extracted, list(
+      report_text = "",
+      note_text = "",
+      caption_text = "",
+      section = data.frame()
+    )))
+  }
+
+  family <- model_comparison_reporting_value(guide, "ComparisonFamily")
+  strength <- model_comparison_reporting_value(guide, "ComparisonStrength")
+  scope <- model_comparison_reporting_value(guide, "ClaimScope")
+  guard <- model_comparison_reporting_value(guide, "InterpretationGuard")
+  apa_template <- model_comparison_reporting_value(guide, "APAStyleTemplate")
+  technical_template <- model_comparison_reporting_value(guide, "TechnicalAppendixTemplate")
+  next_action <- model_comparison_reporting_value(guide, "NextAction")
+
+  family_sentence <- paste0(
+    "The model-comparison output was classified as ",
+    if (nzchar(family)) family else "a model-comparison review",
+    if (nzchar(strength)) paste0(" with comparison strength ", strength) else "",
+    "."
+  )
+  scope_sentence <- if (nzchar(scope)) paste0("Claim scope: ", scope) else ""
+  guard_sentence <- if (nzchar(guard)) paste0("Interpretation guard: ", guard) else ""
+  action_sentence <- if (nzchar(next_action)) paste0("Reporting follow-up: ", next_action) else ""
+
+  section_text <- paste(
+    Filter(nzchar, c(family_sentence, apa_template, scope_sentence, guard_sentence, action_sentence)),
+    collapse = " "
+  )
+  note_text <- paste(
+    Filter(nzchar, c(
+      paste0(
+        "Model comparison reporting note. ",
+        "Comparison family = ", if (nzchar(family)) family else "not recorded",
+        "; strength = ", if (nzchar(strength)) strength else "not recorded", "."
+      ),
+      scope_sentence,
+      guard_sentence,
+      if (nzchar(technical_template)) paste0("Technical appendix template: ", technical_template) else ""
+    )),
+    collapse = " "
+  )
+  caption_text <- paste(
+    "Model Comparison Guidance",
+    "Caption. Table summarizes comparison family, claim scope, interpretation guard, APA-style wording, and next action.",
+    sep = "\n"
+  )
+  section <- data.frame(
+    SectionId = "results_model_comparison",
+    Parent = "Results",
+    Heading = "Model Comparison Reporting",
+    Available = nzchar(section_text),
+    SentenceCount = .dif_report_sentence_count(section_text),
+    Text = section_text,
+    stringsAsFactors = FALSE
+  )
+
+  c(extracted, list(
+    report_text = section_text,
+    note_text = note_text,
+    caption_text = caption_text,
+    section = section
+  ))
 }
 
 normalize_apa_component_text <- function(text) {
@@ -5042,6 +5323,49 @@ resolve_apa_output_checks <- function(object) {
             grepl("Latent-regression population model", note_text, fixed = TRUE) &&
             grepl("documented latent-regression MML comparison scope", normalize_apa_component_text(report_text), fixed = TRUE),
           "Active latent-regression runs should state conditional-normal population-model interpretation, avoid post hoc score-regression wording, and keep ConQuest scope wording explicit."
+        )
+      )
+    )
+  }
+
+  if (isTRUE(contract$availability$has_mml_population_sd)) {
+    population_sd_summary <- contract$summaries$mml_population_sd %||% list()
+    checks <- c(
+      checks,
+      list(
+        add_check(
+          "MML population SD wording alignment",
+          apa_text_has_fragment(report_text, population_sd_summary$method_sentence %||% "") &&
+            (
+              !nzchar(population_sd_summary$result_sentence %||% "") ||
+                apa_text_has_fragment(report_text, population_sd_summary$result_sentence %||% "")
+            ) &&
+            apa_text_has_fragment(note_text, population_sd_summary$table_note %||% ""),
+          "MML population-SD mode should appear in Method prose and table notes; estimated-SD runs should also report sigma-hat and profile SE/CI in Results."
+        )
+      )
+    )
+  }
+
+  comparison_guidance <- as.data.frame(
+    object$model_comparison_guidance %||% data.frame(),
+    stringsAsFactors = FALSE
+  )
+  if (nrow(comparison_guidance) > 0L) {
+    apa_template <- model_comparison_reporting_value(comparison_guidance, "APAStyleTemplate")
+    guard <- model_comparison_reporting_value(comparison_guidance, "InterpretationGuard")
+    checks <- c(
+      checks,
+      list(
+        add_check(
+          "Model-comparison reporting guard",
+          apa_text_has_fragment(report_text, apa_template) &&
+            (
+              !nzchar(guard) ||
+                apa_text_has_fragment(report_text, guard) ||
+                apa_text_has_fragment(note_text, guard)
+            ),
+          "Model-comparison APA output should include the comparison-family wording and interpretation guard when a comparison object is supplied."
         )
       )
     )
@@ -5229,6 +5553,14 @@ summary.mfrm_apa_outputs <- function(object, top_n = 3, preview_chars = 160, ...
     components = stats_tbl,
     sections = sections_tbl,
     content_checks = content_checks,
+    model_comparison_guidance = as.data.frame(
+      object$model_comparison_guidance %||% data.frame(),
+      stringsAsFactors = FALSE
+    ),
+    model_comparison_reporting_templates = as.data.frame(
+      object$model_comparison_reporting_templates %||% data.frame(),
+      stringsAsFactors = FALSE
+    ),
     gpcm_boundary = object$gpcm_boundary %||% data.frame(),
     preview = preview_tbl,
     notes = notes,
@@ -5258,6 +5590,15 @@ print.summary.mfrm_apa_outputs <- function(x, ...) {
   if (!is.null(x$content_checks) && nrow(x$content_checks) > 0) {
     cat("\nContent checks\n")
     print(as.data.frame(x$content_checks), row.names = FALSE)
+  }
+  if (!is.null(x$model_comparison_guidance) &&
+      nrow(as.data.frame(x$model_comparison_guidance)) > 0) {
+    cat("\nModel Comparison Guidance\n")
+    keep <- intersect(
+      c("ComparisonFamily", "ComparisonStrength", "ClaimScope", "InterpretationGuard", "NextAction"),
+      names(x$model_comparison_guidance)
+    )
+    print(as.data.frame(x$model_comparison_guidance)[, keep, drop = FALSE], row.names = FALSE)
   }
   if (!is.null(x$gpcm_boundary) && nrow(as.data.frame(x$gpcm_boundary)) > 0) {
     cat("\nGPCM Boundary\n")
@@ -5431,9 +5772,15 @@ summary_table_bundle_supported_summary_classes <- function() {
     "summary.mfrm_network_review",
     "summary.mfrm_linking_review",
     "summary.mfrm_misfit_casebook",
+    "summary.mfrm_model_choice_review",
     "summary.mfrm_weighting_review",
     "summary.mfrm_unit_prediction",
-    "summary.mfrm_plausible_values"
+    "summary.mfrm_plausible_values",
+    "summary.mfrm_generalizability",
+    "summary.mfrm_generalizability_design_check",
+    "summary.mfrm_generalizability_bootstrap",
+    "summary.mfrm_generalizability_comparison",
+    "summary.mfrm_analysis_audit"
   )
 }
 
@@ -5630,6 +5977,13 @@ resolve_summary_table_bundle_input <- function(x,
       summary_class = "summary.mfrm_misfit_casebook"
     ))
   }
+  if (inherits(x, "mfrm_model_choice_review")) {
+    return(list(
+      summary = summary(x, digits = digits),
+      source_class = "mfrm_model_choice_review",
+      summary_class = "summary.mfrm_model_choice_review"
+    ))
+  }
   if (inherits(x, "mfrm_weighting_review")) {
     return(list(
       summary = summary(x, digits = digits, top_n = top_n),
@@ -5651,6 +6005,41 @@ resolve_summary_table_bundle_input <- function(x,
       summary_class = "summary.mfrm_plausible_values"
     ))
   }
+  if (inherits(x, "mfrm_generalizability")) {
+    return(list(
+      summary = summary(x, digits = digits),
+      source_class = "mfrm_generalizability",
+      summary_class = "summary.mfrm_generalizability"
+    ))
+  }
+  if (inherits(x, "mfrm_generalizability_design_check")) {
+    return(list(
+      summary = summary(x, digits = digits),
+      source_class = "mfrm_generalizability_design_check",
+      summary_class = "summary.mfrm_generalizability_design_check"
+    ))
+  }
+  if (inherits(x, "mfrm_generalizability_bootstrap")) {
+    return(list(
+      summary = summary(x, digits = digits),
+      source_class = "mfrm_generalizability_bootstrap",
+      summary_class = "summary.mfrm_generalizability_bootstrap"
+    ))
+  }
+  if (inherits(x, "mfrm_generalizability_comparison")) {
+    return(list(
+      summary = summary(x, digits = digits),
+      source_class = "mfrm_generalizability_comparison",
+      summary_class = "summary.mfrm_generalizability_comparison"
+    ))
+  }
+  if (inherits(x, "mfrm_analysis_audit")) {
+    return(list(
+      summary = summary(x),
+      source_class = "mfrm_analysis_audit",
+      summary_class = "summary.mfrm_analysis_audit"
+    ))
+  }
 
   stop(
     "`x` must be an mfrm_fit, mfrm_diagnostics, mfrm_precision_review, ",
@@ -5662,9 +6051,11 @@ resolve_summary_table_bundle_input <- function(x,
     "mfrm_population_prediction, mfrm_future_branch_active_branch, ",
     "mfrm_facets_run, mfrm_results, mfrm_report, mfrm_bias, mfrm_anchor_review, ",
     "mfrm_peer_review_design_review, mfrm_network_review, ",
-    "mfrm_linking_review, mfrm_misfit_casebook, ",
-    "mfrm_weighting_review, mfrm_unit_prediction, or ",
-    "mfrm_plausible_values object, or one of their summary() outputs.",
+    "mfrm_linking_review, mfrm_misfit_casebook, mfrm_model_choice_review, ",
+    "mfrm_weighting_review, mfrm_unit_prediction, mfrm_plausible_values, ",
+    "mfrm_generalizability, mfrm_generalizability_design_check, ",
+    "mfrm_generalizability_bootstrap, mfrm_generalizability_comparison, ",
+    "or mfrm_analysis_audit object, or one of their summary() outputs.",
     call. = FALSE
   )
 }
@@ -5681,13 +6072,13 @@ summary_table_bundle_required_components <- function(summary_class) {
     "summary.mfrm_data_description" = c("overview", "score_distribution"),
     "summary.mfrm_reporting_checklist" = c("overview", "action_items"),
     "summary.mfrm_apa_outputs" = c("overview", "components", "preview"),
-    "summary.mfrm_design_evaluation" = c("overview", "design_summary"),
-    "summary.mfrm_signal_detection" = c("overview", "detection_summary"),
+    "summary.mfrm_design_evaluation" = c("overview", "runtime", "reading_order", "next_actions", "reporting_notes", "design_summary"),
+    "summary.mfrm_signal_detection" = c("overview", "runtime", "reading_order", "next_actions", "reporting_notes", "detection_summary"),
     "summary.mfrm_diagnostic_screening" = c("overview", "reading_order", "next_actions", "reporting_notes", "figure_recipes", "scenario_summary", "performance_summary", "plot_overview_rate"),
-    "summary.mfrm_recovery_simulation" = c("overview", "recovery_summary", "rep_overview"),
+    "summary.mfrm_recovery_simulation" = c("overview", "runtime", "reading_order", "next_actions", "reporting_notes", "recovery_summary", "rep_overview"),
     "summary.mfrm_recovery_assessment" = c("overview", "reading_order", "checklist", "condition_reporting_notes", "condition_review", "diagnostic_reporting_notes", "diagnostic_review", "metric_review", "uncertainty_review"),
     "summary.mfrmr_recovery_validation" = c("topline_release_decision", "reading_order", "release_decision_table", "case_summary", "condition_reporting_notes", "condition_summary", "diagnostic_reporting_notes", "diagnostic_oc_summary", "domain_decision_table"),
-    "summary.mfrm_population_prediction" = c("overview", "design", "forecast"),
+    "summary.mfrm_population_prediction" = c("overview", "runtime", "reading_order", "next_actions", "reporting_notes", "design", "forecast"),
     "summary.mfrm_future_branch_active_branch" = c("overview", "profile_summary", "recommendation_table"),
     "summary.mfrm_facets_run" = c("overview", "mapping", "run_info", "fit", "diagnostics"),
     "summary.mfrm_results" = c("overview", "triage", "status", "component_index", "table_index", "plot_map", "next_actions"),
@@ -5698,9 +6089,15 @@ summary_table_bundle_required_components <- function(summary_class) {
     "summary.mfrm_network_review" = c("overview", "network_summary", "reporting_map"),
     "summary.mfrm_linking_review" = c("overview", "top_linking_risks", "group_view_index", "reporting_map"),
     "summary.mfrm_misfit_casebook" = c("overview", "top_cases", "case_rollup", "group_view_index", "reporting_map"),
+    "summary.mfrm_model_choice_review" = c("overview", "comparison_guidance", "comparison_table", "model_roles"),
     "summary.mfrm_weighting_review" = c("overview", "top_reweighted_levels", "reporting_map"),
     "summary.mfrm_unit_prediction" = c("estimates", "settings"),
     "summary.mfrm_plausible_values" = c("draw_summary", "settings"),
+    "summary.mfrm_generalizability" = c("overview", "variance_components", "coefficients"),
+    "summary.mfrm_generalizability_design_check" = c("overview", "interaction_overview", "highest_order_review"),
+    "summary.mfrm_generalizability_bootstrap" = c("overview", "key_metrics", "intervals"),
+    "summary.mfrm_generalizability_comparison" = c("overview", "comparison_review", "coefficients", "variance_delta", "d_study"),
+    "summary.mfrm_analysis_audit" = c("overview", "checkpoints", "next_actions"),
     character(0)
   )
 }
@@ -5977,6 +6374,7 @@ summary_table_bundle_spec <- function(summary_obj) {
       tables = list(
         overview = summary_table_bundle_df(summary_obj$overview),
         population_overview = summary_table_bundle_df(summary_obj$population_overview),
+        design_spec = summary_table_bundle_df(summary_obj$design_spec),
         population_design = summary_table_bundle_df(summary_obj$population_design),
         population_coefficients = summary_table_bundle_df(summary_obj$population_coefficients),
         population_coding = summary_table_bundle_df(summary_obj$population_coding),
@@ -5994,6 +6392,7 @@ summary_table_bundle_spec <- function(summary_obj) {
       roles = c(
         overview = "run_overview",
         population_overview = "population_basis",
+        design_spec = "model_design_specification",
         population_design = "population_design",
         population_coefficients = "population_coefficients",
         population_coding = "population_coding",
@@ -6011,6 +6410,7 @@ summary_table_bundle_spec <- function(summary_obj) {
       descriptions = c(
         overview = "One-row model fit, convergence, and information-criteria overview.",
         population_overview = "Population-model basis, posterior basis, and omission review.",
+        design_spec = "Compact model-design specification for threshold structure, constraints, and external comparison analogues.",
         population_design = "Population-model design-matrix columns and numeric check statistics.",
         population_coefficients = "Latent-regression coefficients when the population model is active.",
         population_coding = "Latent-regression categorical covariate levels, contrasts, and encoded model-matrix columns.",
@@ -6303,6 +6703,8 @@ summary_table_bundle_spec <- function(summary_obj) {
         components = summary_table_bundle_df(summary_obj$components),
         sections = summary_table_bundle_df(summary_obj$sections),
         content_checks = summary_table_bundle_df(summary_obj$content_checks),
+        model_comparison_guidance = summary_table_bundle_df(summary_obj$model_comparison_guidance),
+        model_comparison_reporting_templates = summary_table_bundle_df(summary_obj$model_comparison_reporting_templates),
         preview = summary_table_bundle_df(summary_obj$preview)
       ),
       roles = c(
@@ -6310,6 +6712,8 @@ summary_table_bundle_spec <- function(summary_obj) {
         components = "component_stats",
         sections = "section_coverage",
         content_checks = "draft_checks",
+        model_comparison_guidance = "reporting_map",
+        model_comparison_reporting_templates = "draft_checks",
         preview = "text_preview"
       ),
       descriptions = c(
@@ -6317,6 +6721,8 @@ summary_table_bundle_spec <- function(summary_obj) {
         components = "Per-component line, character, and mention counts.",
         sections = "Availability of the package-native section map.",
         content_checks = "Contract-based checks for APA drafting completeness.",
+        model_comparison_guidance = "Comparison-family, claim-scope, interpretation-guard, and next-action wording supplied by compare_mfrm() or build_model_choice_review().",
+        model_comparison_reporting_templates = "APA-style and technical-appendix comparison wording templates retained for manuscript and appendix handoff.",
         preview = "Compact preview of the first non-empty lines in each draft component."
       )
     ),
@@ -6327,6 +6733,10 @@ summary_table_bundle_spec <- function(summary_obj) {
         tables = c(
           list(
             overview = summary_table_bundle_df(summary_obj$overview),
+            runtime = summary_table_bundle_df(summary_obj$runtime),
+            reading_order = summary_table_bundle_df(summary_obj$reading_order),
+            next_actions = summary_table_bundle_df(summary_obj$next_actions),
+            reporting_notes = summary_table_bundle_df(summary_obj$reporting_notes),
             design_summary = summary_table_bundle_df(summary_obj$design_summary),
             sparse_review = summary_table_bundle_df(summary_obj$sparse_review),
             sparse_design = summary_table_bundle_sparse_design_df(summary_obj$design_summary)
@@ -6335,6 +6745,10 @@ summary_table_bundle_spec <- function(summary_obj) {
         ),
         roles = c(
           overview = "run_overview",
+          runtime = "design_runtime",
+          reading_order = "design_evaluation_reading_order",
+          next_actions = "design_evaluation_next_actions",
+          reporting_notes = "design_evaluation_reporting_notes",
           design_summary = "design_performance",
           sparse_review = "sparse_design_diagnostics",
           sparse_design = "sparse_design_diagnostics",
@@ -6342,6 +6756,10 @@ summary_table_bundle_spec <- function(summary_obj) {
         ),
         descriptions = c(
           overview = "Run-level overview for the current design-evaluation study.",
+          runtime = "Run-level elapsed-time metadata for auditing long design evaluations after completion.",
+          reading_order = "Recommended reading order for design-evaluation summaries and appendix tables.",
+          next_actions = "Action-oriented triage for replication count, run completion, convergence, recovery comparability, sparse links, and display handoff.",
+          reporting_notes = "Report-facing boundaries and recommended wording safeguards for design-evaluation output.",
           design_summary = "Aggregated Monte Carlo design summaries for the active two-role planner.",
           sparse_review = "Compact sparse linked design-review counts for planned missingness and rater-pair linkage.",
           sparse_design = "Sparse linked planned-missingness and rater-link diagnostics for design-evaluation rows.",
@@ -6356,17 +6774,29 @@ summary_table_bundle_spec <- function(summary_obj) {
         tables = c(
           list(
             overview = summary_table_bundle_df(summary_obj$overview),
+            runtime = summary_table_bundle_df(summary_obj$runtime),
+            reading_order = summary_table_bundle_df(summary_obj$reading_order),
+            next_actions = summary_table_bundle_df(summary_obj$next_actions),
+            reporting_notes = summary_table_bundle_df(summary_obj$reporting_notes),
             detection_summary = summary_table_bundle_df(summary_obj$detection_summary)
           ),
           future_spec$tables
         ),
         roles = c(
           overview = "run_overview",
+          runtime = "signal_detection_runtime",
+          reading_order = "signal_detection_reading_order",
+          next_actions = "signal_detection_next_actions",
+          reporting_notes = "signal_detection_reporting_notes",
           detection_summary = "signal_detection",
           future_spec$roles
         ),
         descriptions = c(
           overview = "Run-level overview for the current signal-detection study.",
+          runtime = "Run-level elapsed-time metadata for auditing long signal-detection simulations after completion.",
+          reading_order = "Recommended reading order for DIF/bias signal-detection summaries and appendix tables.",
+          next_actions = "Action-oriented triage for replication count, convergence, metric availability, and display handoff.",
+          reporting_notes = "Report-facing boundaries and recommended wording safeguards for DIF/bias signal-detection output.",
           detection_summary = "Aggregated DIF/bias screening summaries for the active two-role planner.",
           future_spec$descriptions
         )
@@ -6436,8 +6866,12 @@ summary_table_bundle_spec <- function(summary_obj) {
       title = "Recovery Simulation Tables",
       tables = list(
         overview = summary_table_bundle_df(summary_obj$overview),
+        reading_order = summary_table_bundle_df(summary_obj$reading_order),
+        next_actions = summary_table_bundle_df(summary_obj$next_actions),
+        reporting_notes = summary_table_bundle_df(summary_obj$reporting_notes),
         recovery_summary = summary_table_bundle_df(summary_obj$recovery_summary),
         rep_overview = summary_table_bundle_df(summary_obj$rep_overview),
+        runtime = summary_table_bundle_df(summary_obj$runtime),
         sparse_review = summary_table_bundle_df(summary_obj$sparse_review),
         sparse_design = summary_table_bundle_sparse_design_df(summary_obj$rep_overview),
         diagnostic_oc = summary_table_bundle_df(summary_obj$diagnostic_oc),
@@ -6448,8 +6882,12 @@ summary_table_bundle_spec <- function(summary_obj) {
       ),
       roles = c(
         overview = "recovery_overview",
+        reading_order = "recovery_simulation_reading_order",
+        next_actions = "recovery_simulation_next_actions",
+        reporting_notes = "recovery_simulation_reporting_notes",
         recovery_summary = "recovery_performance",
         rep_overview = "recovery_replications",
+        runtime = "recovery_runtime",
         sparse_review = "recovery_sparse_design_diagnostics",
         sparse_design = "recovery_sparse_design_diagnostics",
         diagnostic_oc = "recovery_diagnostic_operating_characteristics",
@@ -6460,8 +6898,12 @@ summary_table_bundle_spec <- function(summary_obj) {
       ),
       descriptions = c(
         overview = "Run-level overview for the current parameter-recovery simulation.",
+        reading_order = "Recommended reading order for recovery-simulation summaries and appendix tables.",
+        next_actions = "Action-oriented triage for replication count, run completion, convergence, recovery rows, optional diagnostics, and assessment handoff.",
+        reporting_notes = "Report-facing boundaries and recommended wording safeguards for recovery-simulation output.",
         recovery_summary = "Parameter-group recovery metrics, including bias, RMSE, coverage, and Monte Carlo SE.",
         rep_overview = "Replication-level fit status, convergence status, recovery-row counts, and elapsed time.",
+        runtime = "Run-level elapsed-time metadata for auditing long recovery simulations after completion.",
         sparse_review = "Compact replication-level sparse linked design-review counts kept separate from recovery metrics.",
         sparse_design = "Replication-level sparse linked planned-missingness and rater-link diagnostics retained separately from recovery metrics.",
         diagnostic_oc = "Optional replication-by-facet fit/separation operating characteristics retained when include_diagnostics = TRUE.",
@@ -6560,6 +7002,10 @@ summary_table_bundle_spec <- function(summary_obj) {
           list(
             design = summary_table_bundle_df(summary_obj$design),
             overview = summary_table_bundle_df(summary_obj$overview),
+            runtime = summary_table_bundle_df(summary_obj$runtime),
+            reading_order = summary_table_bundle_df(summary_obj$reading_order),
+            next_actions = summary_table_bundle_df(summary_obj$next_actions),
+            reporting_notes = summary_table_bundle_df(summary_obj$reporting_notes),
             forecast = summary_table_bundle_df(summary_obj$forecast)
           ),
           future_spec$tables
@@ -6567,12 +7013,20 @@ summary_table_bundle_spec <- function(summary_obj) {
         roles = c(
           design = "design_grid",
           overview = "run_overview",
+          runtime = "population_prediction_runtime",
+          reading_order = "population_prediction_reading_order",
+          next_actions = "population_prediction_next_actions",
+          reporting_notes = "population_prediction_reporting_notes",
           forecast = "forecast_summary",
           future_spec$roles
         ),
         descriptions = c(
           design = "Requested future design grid used for the current forecast run.",
           overview = "Run-level overview for the current population forecast.",
+          runtime = "Run-level elapsed-time metadata retained from the underlying design-evaluation forecast run.",
+          reading_order = "Recommended reading order for population-forecast summaries and appendix tables.",
+          next_actions = "Action-oriented triage for replication count, convergence, forecast availability, scenario boundaries, and design-comparison follow-up.",
+          reporting_notes = "Report-facing boundaries and recommended wording safeguards for scenario-level population forecasts.",
           forecast = "Facet-level forecast summary for the active two-role planner.",
           future_spec$descriptions
         )
@@ -6671,8 +7125,11 @@ summary_table_bundle_spec <- function(summary_obj) {
         immediate_actions = summary_table_bundle_df(summary_obj$immediate_actions),
         optional_sections = summary_table_bundle_df(summary_obj$optional_sections),
         claim_readiness = summary_table_bundle_df(summary_obj$claim_readiness),
+        reader_claims = summary_table_bundle_df(summary_obj$reader_claims),
         report_gaps = summary_table_bundle_df(summary_obj$report_gaps),
         boundary_index = summary_table_bundle_df(summary_obj$boundary_index),
+        model_comparison_guidance = summary_table_bundle_df(summary_obj$model_comparison_guidance),
+        model_comparison_reporting_templates = summary_table_bundle_df(summary_obj$model_comparison_reporting_templates),
         routes = summary_table_bundle_df(summary_obj$routes)
       ),
       roles = c(
@@ -6682,8 +7139,11 @@ summary_table_bundle_spec <- function(summary_obj) {
         immediate_actions = "draft_actions",
         optional_sections = "requested_followup",
         claim_readiness = "claim_readiness",
+        reader_claims = "claim_readiness",
         report_gaps = "draft_actions",
         boundary_index = "claim_boundary",
+        model_comparison_guidance = "reporting_map",
+        model_comparison_reporting_templates = "draft_checks",
         routes = "reporting_map"
       ),
       descriptions = c(
@@ -6693,8 +7153,11 @@ summary_table_bundle_spec <- function(summary_obj) {
         immediate_actions = "Unavailable, review, and caveated areas to inspect before drafting.",
         optional_sections = "Not-requested evidence areas to request only when the claim is needed.",
         claim_readiness = "Claim-readiness counts summarized from the report object.",
+        reader_claims = "Reader-facing claim-use table showing what can be reported, what needs caveats, and what needs more evidence.",
         report_gaps = "Highest-priority report gaps and recommended actions.",
         boundary_index = "Template-boundary rows to review before using report wording.",
+        model_comparison_guidance = "Comparison-family, claim-scope, interpretation-guard, and next-action wording when model_comparison was supplied to mfrm_report().",
+        model_comparison_reporting_templates = "Model-comparison wording templates transformed for the report template boundary index.",
         routes = "Standard report-reading and export routes."
       )
     ),
@@ -7008,6 +7471,65 @@ summary_table_bundle_spec <- function(summary_obj) {
         )
       )
     },
+    "summary.mfrm_model_choice_review" = {
+      overview_tbl <- summary_table_bundle_df(summary_obj$overview)
+      comparison_tbl <- summary_table_bundle_df(summary_obj$comparison_table)
+      guidance_tbl <- summary_table_bundle_df(summary_obj$comparison_guidance)
+      templates_tbl <- summary_table_bundle_df(summary_obj$comparison_reporting_templates)
+      roles_tbl <- summary_table_bundle_df(summary_obj$model_roles)
+      routes_tbl <- summary_table_bundle_df(summary_obj$downstream_routes)
+      report_templates_tbl <- summary_table_bundle_df(summary_obj$report_templates)
+      support_tbl <- summary_table_bundle_df(summary_obj$support_status)
+      warning_tbl <- summary_table_bundle_text_df(summary_obj$key_warnings, column = "Warning")
+      actions_tbl <- summary_table_bundle_text_df(summary_obj$next_actions, column = "Action")
+      notes_tbl <- summary_table_bundle_text_df(summary_obj$notes, column = "Note")
+      settings_tbl <- summary_table_bundle_settings_df(summary_obj$settings)
+      list(
+        title = "Model Choice Review Tables",
+        tables = list(
+          overview = overview_tbl,
+          comparison_table = comparison_tbl,
+          comparison_guidance = guidance_tbl,
+          comparison_reporting_templates = templates_tbl,
+          model_roles = roles_tbl,
+          downstream_routes = routes_tbl,
+          report_templates = report_templates_tbl,
+          support_status = support_tbl,
+          key_warnings = warning_tbl,
+          next_actions = actions_tbl,
+          notes = notes_tbl,
+          settings = settings_tbl
+        ),
+        roles = c(
+          overview = "review_status",
+          comparison_table = "overall_fit",
+          comparison_guidance = "reporting_map",
+          comparison_reporting_templates = "draft_checks",
+          model_roles = "estimation_settings",
+          downstream_routes = "reporting_map",
+          report_templates = "draft_checks",
+          support_status = "capability_boundary",
+          key_warnings = "review_status",
+          next_actions = "repair_recommendations",
+          notes = "interpretation_notes",
+          settings = "review_settings"
+        ),
+        descriptions = c(
+          overview = "Front-door model-choice review status, comparison family, and population-SD mode summary.",
+          comparison_table = "Same-data comparison table from compare_mfrm(), including fit evidence, population-SD mode, and interpretation guard columns.",
+          comparison_guidance = "Claim scope, comparison strength, interpretation guard, and next action for reporting model-comparison evidence.",
+          comparison_reporting_templates = "APA-style and technical-appendix wording templates for the model-comparison claim boundary.",
+          model_roles = "Per-model role, response-model contract, and population-metric settings.",
+          downstream_routes = "Supported and caveated downstream routes for APA, export, linking, recovery, fair averages, and bias screening.",
+          report_templates = "Per-model report wording templates and wording to avoid.",
+          support_status = "Capability boundary table, especially for bounded GPCM routes.",
+          key_warnings = "Top warning lines for the current model-choice review.",
+          next_actions = "Top next-step actions before making a model-choice or sensitivity-analysis claim.",
+          notes = "Compact interpretation notes for the model-choice review.",
+          settings = "Model-choice review settings and route provenance."
+        )
+      )
+    },
     "summary.mfrm_weighting_review" = {
       overview_tbl <- summary_table_bundle_df(summary_obj$overview)
       status_tbl <- summary_table_bundle_df(summary_obj$status)
@@ -7154,6 +7676,171 @@ summary_table_bundle_spec <- function(summary_obj) {
         )
       )
     },
+    "summary.mfrm_generalizability" = {
+      notes_tbl <- summary_table_bundle_text_df(summary_obj$notes, column = "Note")
+      list(
+        title = "G-study Summary Tables",
+        tables = list(
+          overview = summary_table_bundle_df(summary_obj$overview),
+          variance_components = summary_table_bundle_df(summary_obj$variance_components),
+          coefficients = summary_table_bundle_df(summary_obj$coefficients),
+          design_check_overview = summary_table_bundle_df(summary_obj$design_check_overview),
+          design_check_facets = summary_table_bundle_df(summary_obj$design_check_facets),
+          design_check_interactions = summary_table_bundle_df(summary_obj$design_check_interactions),
+          design_check_highest_order = summary_table_bundle_df(summary_obj$design_check_highest_order),
+          runtime = summary_table_bundle_df(summary_obj$runtime),
+          notes = notes_tbl
+        ),
+        roles = c(
+          overview = "gstudy_overview",
+          variance_components = "gstudy_variance_components",
+          coefficients = "gstudy_coefficients",
+          design_check_overview = "gstudy_design_check",
+          design_check_facets = "gstudy_design_check",
+          design_check_interactions = "gstudy_design_check",
+          design_check_highest_order = "gstudy_design_check",
+          runtime = "gstudy_runtime",
+          notes = "interpretation_notes"
+        ),
+        descriptions = c(
+          overview = "Run-level observed-score G-study overview with model scope, G/Phi, design-review counts, and singular-fit status.",
+          variance_components = "Observed-score G-study variance components under the declared random-effects scope.",
+          coefficients = "G/Phi and error-variance coefficients for the current G-study decomposition.",
+          design_check_overview = "G-study design-check overview for observed crossing, review, and sensitivity-only signals.",
+          design_check_facets = "Facet-level coverage rows used by the G-study design check.",
+          design_check_interactions = "Requested interaction-cell replication and support rows used by the G-study design check.",
+          design_check_highest_order = "Highest-order cell review for residual and unmodeled interaction separation.",
+          runtime = "Elapsed-time metadata for the G-study refit.",
+          notes = "Compact interpretation notes separating G-theory G/Phi from MFRM separation reliability."
+        )
+      )
+    },
+    "summary.mfrm_generalizability_design_check" = list(
+      title = "G-study Design-Check Tables",
+      tables = list(
+        overview = summary_table_bundle_df(summary_obj$overview),
+        facet_overview = summary_table_bundle_df(summary_obj$facet_overview),
+        interaction_overview = summary_table_bundle_df(summary_obj$interaction_overview),
+        highest_order_review = summary_table_bundle_df(summary_obj$highest_order_review),
+        settings = summary_table_bundle_settings_df(summary_obj$settings),
+        notes = summary_table_bundle_text_df(summary_obj$notes, column = "Note")
+      ),
+      roles = c(
+        overview = "gstudy_design_check",
+        facet_overview = "gstudy_design_check",
+        interaction_overview = "gstudy_design_check",
+        highest_order_review = "gstudy_design_check",
+        settings = "gstudy_settings",
+        notes = "interpretation_notes"
+      ),
+      descriptions = c(
+        overview = "G-study design-check overview for observed crossing, review, and sensitivity-only signals.",
+        facet_overview = "Facet-level coverage rows used to review sparse or weakly represented levels.",
+        interaction_overview = "Requested interaction-cell replication and design-support rows.",
+        highest_order_review = "Highest-order cell review for residual and unmodeled interaction separation.",
+        settings = "Settings used to construct the G-study design check.",
+        notes = "Compact interpretation notes for design-check reporting."
+      )
+    ),
+    "summary.mfrm_generalizability_bootstrap" = list(
+      title = "G-study Bootstrap Tables",
+      tables = list(
+        overview = summary_table_bundle_df(summary_obj$overview),
+        key_metrics = summary_table_bundle_df(summary_obj$key_metrics),
+        intervals = summary_table_bundle_df(summary_obj$intervals),
+        failures = summary_table_bundle_df(summary_obj$failures),
+        settings = summary_table_bundle_settings_df(summary_obj$settings),
+        terminology = summary_table_bundle_text_df(summary_obj$terminology, column = "Note")
+      ),
+      roles = c(
+        overview = "gstudy_uncertainty",
+        key_metrics = "gstudy_uncertainty",
+        intervals = "gstudy_uncertainty",
+        failures = "gstudy_warnings",
+        settings = "gstudy_settings",
+        terminology = "interpretation_notes"
+      ),
+      descriptions = c(
+        overview = "Observed-data person-cluster bootstrap overview for the G-study decomposition.",
+        key_metrics = "Bootstrap intervals for G/Phi coefficient rows.",
+        intervals = "Bootstrap intervals for all retained G-study coefficient and variance-component targets.",
+        failures = "Failed bootstrap replicate messages retained for uncertainty review.",
+        settings = "Bootstrap settings, including resampling scope and requested replicate count.",
+        terminology = "Terminology notes for interpreting G-study bootstrap intervals."
+      )
+    ),
+    "summary.mfrm_generalizability_comparison" = {
+      notes_tbl <- summary_table_bundle_text_df(summary_obj$notes, column = "Note")
+      list(
+        title = "G-study Comparison Tables",
+        tables = list(
+          overview = summary_table_bundle_df(summary_obj$overview),
+          comparison_review = summary_table_bundle_df(summary_obj$comparison_review),
+          coefficients = summary_table_bundle_df(summary_obj$coefficients),
+          variance_components = summary_table_bundle_df(summary_obj$variance_components),
+          variance_delta = summary_table_bundle_df(summary_obj$variance_delta),
+          d_study = summary_table_bundle_df(summary_obj$d_study),
+          design_check_overview = summary_table_bundle_df(summary_obj$design_check_overview),
+          design_check_raw_overview = summary_table_bundle_df(summary_obj$design_check_raw_overview),
+          design_check_facets = summary_table_bundle_df(summary_obj$design_check_facets),
+          design_check_interactions = summary_table_bundle_df(summary_obj$design_check_interactions),
+          design_check_highest_order = summary_table_bundle_df(summary_obj$design_check_highest_order),
+          warnings = summary_table_bundle_df(summary_obj$warnings),
+          notes = notes_tbl
+        ),
+        roles = c(
+          overview = "gstudy_comparison_overview",
+          comparison_review = "gstudy_comparison_review",
+          coefficients = "gstudy_coefficients",
+          variance_components = "gstudy_variance_components",
+          variance_delta = "gstudy_variance_movement",
+          d_study = "gstudy_dstudy_projection",
+          design_check_overview = "gstudy_design_check",
+          design_check_raw_overview = "gstudy_design_check",
+          design_check_facets = "gstudy_design_check",
+          design_check_interactions = "gstudy_design_check",
+          design_check_highest_order = "gstudy_design_check",
+          warnings = "gstudy_warnings",
+          notes = "interpretation_notes"
+        ),
+        descriptions = c(
+          overview = "One-row main-effects versus interaction-expanded G-study comparison overview.",
+          comparison_review = "Checkpoint table for design support, fit stability, coefficient movement, variance movement, D-study movement, and reporting boundaries.",
+          coefficients = "Baseline, interaction-expanded, and expanded-minus-baseline coefficient rows.",
+          variance_components = "Stacked variance-component rows from both G-study decompositions.",
+          variance_delta = "Source-level variance movement between the baseline and expanded decompositions.",
+          d_study = "Stacked D-study projection rows for both decompositions.",
+          design_check_overview = "Model-labeled design-check signals used before interpreting coefficient or variance movement.",
+          design_check_raw_overview = "Raw model-labeled design-check overview rows from each G-study fit.",
+          design_check_facets = "Model-labeled facet-coverage design-check rows.",
+          design_check_interactions = "Model-labeled requested-interaction design-check rows.",
+          design_check_highest_order = "Model-labeled highest-order cell review rows.",
+          warnings = "Singular-fit, lme4 warning/message, and design-warning rows captured during the comparison.",
+          notes = "Compact interpretation notes for G-study comparison reporting."
+        )
+      )
+    },
+    "summary.mfrm_analysis_audit" = list(
+      title = "Analysis Review Tables",
+      tables = list(
+        overview = summary_table_bundle_df(summary_obj$overview),
+        checkpoints = summary_table_bundle_df(summary_obj$checkpoints),
+        next_actions = summary_table_bundle_df(summary_obj$next_actions),
+        terminology = summary_table_bundle_text_df(summary_obj$terminology, column = "Note")
+      ),
+      roles = c(
+        overview = "analysis_review_overview",
+        checkpoints = "analysis_review_checkpoints",
+        next_actions = "analysis_review_next_actions",
+        terminology = "interpretation_notes"
+      ),
+      descriptions = c(
+        overview = "Cross-analysis review overview with counts of OK, review, missing, not-run, and information checkpoints.",
+        checkpoints = "Workflow coverage and caution checkpoints across fit diagnostics, G-study/D-study, uncertainty, DIF/bias, resampling, and design structure.",
+        next_actions = "Prioritized review/missing/not-run actions before drafting analysis claims.",
+        terminology = "Compact interpretation notes for the cross-analysis review."
+      )
+    ),
     stop("Unsupported summary class for table-bundle conversion: ", cls, call. = FALSE)
   )
 }
@@ -7184,11 +7871,17 @@ build_summary_table_index <- function(tables, roles, descriptions) {
 #'   `mfrm_design_evaluation`, `mfrm_signal_detection`,
 #'   `mfrm_recovery_simulation`, `mfrm_recovery_assessment`,
 #'   `mfrm_population_prediction`, `mfrm_future_branch_active_branch`,
-#'   `mfrm_facets_run`, `mfrm_bias`, `mfrm_anchor_review`,
+#'   `mfrm_facets_run`, `mfrm_results`, `mfrm_report`, `mfrm_bias`,
+#'   `mfrm_anchor_review`,
 #'   `mfrm_linking_review`, `mfrm_misfit_casebook`, `mfrm_weighting_review`,
-#'   `mfrm_unit_prediction`, or `mfrm_plausible_values` object, one of their
-#'   `summary()` outputs, or a `summary.mfrmr_recovery_validation` object from
-#'   the packaged validation protocol.
+#'   `mfrm_model_choice_review`, `mfrm_unit_prediction`,
+#'   `mfrm_plausible_values`, `mfrm_generalizability`,
+#'   `mfrm_generalizability_design_check`,
+#'   `mfrm_generalizability_bootstrap`,
+#'   `mfrm_generalizability_comparison`, or `mfrm_analysis_audit` object, one
+#'   of their `summary()` outputs, or a
+#'   `summary.mfrmr_recovery_validation` object from the packaged validation
+#'   protocol.
 #' @param which Optional character vector selecting a subset of named tables.
 #' @param appendix_preset Optional appendix-oriented table preset:
 #'   `"all"`, `"recommended"`, `"compact"`, `"methods"`, `"results"`,
@@ -7238,13 +7931,20 @@ build_summary_table_index <- function(tables, roles, descriptions) {
 #' - [predict_mfrm_population()] or `summary(pred)`
 #' - `planning_schema$future_branch_active_branch` or `summary(...)`
 #' - [run_mfrm_facets()] or `summary(out)`
+#' - [mfrm_results()] or `summary(res)`
+#' - [mfrm_report()] or `summary(report)`
 #' - [estimate_bias()] or `summary(bias)`
 #' - [review_mfrm_anchors()] or `summary(review)`
 #' - [build_linking_review()] or `summary(review)`
 #' - [build_misfit_casebook()] or `summary(casebook)`
 #' - [build_weighting_review()] or `summary(review)`
+#' - [build_model_choice_review()] or `summary(review)`
 #' - [predict_mfrm_units()] or `summary(pred_units)`
 #' - [sample_mfrm_plausible_values()] or `summary(pv)`
+#' - [mfrm_generalizability()], [check_mfrm_generalizability_design()],
+#'   [bootstrap_mfrm_generalizability()],
+#'   [compare_mfrm_generalizability()], [mfrm_analysis_audit()], or their
+#'   `summary()` outputs
 #'
 #' @section Interpreting output:
 #' - `overview`: one-row metadata about the source summary and table counts.
@@ -7258,6 +7958,11 @@ build_summary_table_index <- function(tables, roles, descriptions) {
 #' - fit-level caveats use the `analysis_caveats` role; pre-fit data
 #'   score-support caveats use the `score_category_caveats` role. Both roles are
 #'   classified as diagnostics and stay in `recommended` appendix subsets.
+#' - simulation summaries from [evaluate_mfrm_design()],
+#'   [evaluate_mfrm_recovery()], [evaluate_mfrm_signal_detection()], and
+#'   [predict_mfrm_population()] retain their `runtime`, `reading_order`,
+#'   `next_actions`, and `reporting_notes` tables so the appendix handoff
+#'   preserves the same reader-first route shown by `summary()`.
 #' - recovery-assessment and recovery-validation summaries expose
 #'   `diagnostic_reporting_notes` before `diagnostic_review` or
 #'   `diagnostic_oc_summary` so fit/separation caveats can be reported without
@@ -7275,17 +7980,29 @@ build_summary_table_index <- function(tables, roles, descriptions) {
 #' - latent-regression fit summaries expose `population_coding` in the methods
 #'   appendix role so categorical levels, contrasts, and encoded columns can be
 #'   documented with the coefficient table.
+#' - fit summaries expose `design_spec` in a methods appendix role so the
+#'   RSM/PCM/GPCM threshold structure, FACETS analogue, and external
+#'   design-matrix vocabulary are carried into table bundles.
+#' - model-choice review summaries expose `comparison_guidance` and
+#'   `comparison_reporting_templates` so model-comparison claims can be checked
+#'   before text is copied into a manuscript or reviewer response.
 #'
 #' @section Typical workflow:
 #' 1. Build a compact object with `summary(...)`.
 #' 2. Convert it with `build_summary_table_bundle(...)`.
-#' 3. Use `bundle$tables[[...]]` directly, or hand a selected table to
+#' 3. For model comparisons, inspect `comparison_guidance` before
+#'    `comparison_table`; the former states the claim boundary for the latter.
+#' 4. Use `bundle$tables[[...]]` directly, or hand a selected table to
 #'    [apa_table()] for formatted manuscript output.
-#' 4. If you want a manuscript appendix subset up front, use a preset such as
+#' 5. If you want a manuscript appendix subset up front, use a preset such as
 #'    `appendix_preset = "recommended"`, `"compact"`, or `"diagnostics"`.
-#' 5. For recovery-assessment or recovery-validation summaries, inspect
+#' 6. For recovery-assessment or recovery-validation summaries, inspect
 #'    `bundle$tables$reading_order` first when it is available.
-#' 6. For recovery-assessment or recovery-validation summaries with retained
+#' 7. For design-evaluation, recovery-simulation, signal-detection, population-
+#'    forecast, and diagnostic-screening summaries, inspect the exported
+#'    `reading_order`, `next_actions`, and `reporting_notes` tables before using
+#'    dense metric tables in an appendix.
+#' 8. For recovery-assessment or recovery-validation summaries with retained
 #'    diagnostics, read `diagnostic_reporting_notes` before the raw
 #'    `diagnostic_review` or `diagnostic_oc_summary`. Read
 #'    `condition_reporting_notes` before `condition_review` or
@@ -7534,6 +8251,7 @@ summary_table_bundle_appendix_role_registry <- function() {
   out <- data.frame(
     Role = c(
       "run_overview",
+      "model_design_specification",
       "population_basis",
       "population_coefficients",
       "population_design",
@@ -7639,6 +8357,7 @@ summary_table_bundle_appendix_role_registry <- function() {
       "methods",
       "methods",
       "methods",
+      "methods",
       "results",
       "results",
       "results",
@@ -7735,6 +8454,7 @@ summary_table_bundle_appendix_role_registry <- function() {
       "methods"
     ),
     RecommendedAppendix = c(
+      TRUE,
       TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE,
       TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE,
       TRUE, TRUE, TRUE, TRUE, TRUE, TRUE,
@@ -7748,6 +8468,7 @@ summary_table_bundle_appendix_role_registry <- function() {
       TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE
     ),
     CompactAppendix = c(
+      TRUE,
       TRUE, TRUE, FALSE, FALSE, FALSE, TRUE, FALSE, TRUE, FALSE, FALSE,
       TRUE, TRUE, FALSE, TRUE, FALSE, TRUE, TRUE, TRUE, FALSE,
       TRUE, TRUE, TRUE, TRUE, TRUE, TRUE,
@@ -7761,7 +8482,7 @@ summary_table_bundle_appendix_role_registry <- function() {
       TRUE, TRUE, FALSE, FALSE, TRUE, TRUE, TRUE, FALSE
     ),
     PreferredAppendixOrder = c(
-      10L, 20L, 30L, 35L, 36L, 40L, 50L, 60L, 70L, 80L,
+      10L, 15L, 20L, 30L, 35L, 36L, 40L, 50L, 60L, 70L, 80L,
       90L, 100L, 110L, 120L, 130L, 140L, 150L, 160L, 170L,
       180L, 190L, 195L, 200L, 210L, 220L,
       990L, 991L, 900L,
@@ -7775,6 +8496,7 @@ summary_table_bundle_appendix_role_registry <- function() {
     ),
     AppendixRationale = c(
       "Always include the main run-identification table.",
+      "Core methods table documenting threshold structure, constraints, and external comparison analogues.",
       "Include whenever population-model interpretation is part of the report.",
       "Include when latent-regression coefficients were estimated.",
       "Include to review latent-regression design-matrix columns and variance screening.",
@@ -7876,11 +8598,48 @@ summary_table_bundle_appendix_role_registry <- function() {
     ),
     stringsAsFactors = FALSE
   )
+  design_roles <- data.frame(
+    Role = c("design_runtime", "signal_detection_runtime", "population_prediction_runtime"),
+    AppendixSection = c("methods", "methods", "methods"),
+    RecommendedAppendix = c(TRUE, TRUE, TRUE),
+    CompactAppendix = c(FALSE, FALSE, FALSE),
+    PreferredAppendixOrder = c(240.55, 241.5, 244.5),
+    AppendixRationale = c(
+      "Runtime metadata for auditing elapsed time and completion status after long design evaluations.",
+      "Runtime metadata for auditing elapsed time and completion status after long signal-detection simulations.",
+      "Runtime metadata for auditing elapsed time and completion status after population-forecast simulations."
+    ),
+    stringsAsFactors = FALSE
+  )
+  out <- rbind(out, design_roles)
+  report_roles <- data.frame(
+    Role = c(
+      "report_overview",
+      "first_screen",
+      "requested_followup",
+      "claim_readiness",
+      "claim_boundary"
+    ),
+    AppendixSection = c("reporting", "reporting", "workflow", "reporting", "reporting"),
+    RecommendedAppendix = c(TRUE, TRUE, FALSE, TRUE, TRUE),
+    CompactAppendix = c(TRUE, TRUE, FALSE, TRUE, TRUE),
+    PreferredAppendixOrder = 331:335,
+    AppendixRationale = c(
+      "Reader-facing report-status overview for mfrm_report() appendix handoff.",
+      "Compact first-screen status table for reviewer-facing report triage.",
+      "Optional follow-up section list; retain for full workflow exports but omit from manuscript presets.",
+      "Claim-readiness table separating reportable, caveated, and unsupported claims.",
+      "Template-boundary table for checking report wording before manuscript use."
+    ),
+    stringsAsFactors = FALSE
+  )
+  out <- rbind(out, report_roles)
   recovery_roles <- data.frame(
     Role = c(
       "recovery_overview",
       "recovery_design_basis",
       "recovery_settings",
+      "recovery_runtime",
       "recovery_performance",
       "recovery_replications",
       "recovery_diagnostic_operating_characteristics",
@@ -7899,6 +8658,7 @@ summary_table_bundle_appendix_role_registry <- function() {
       "methods",
       "methods",
       "methods",
+      "methods",
       "results",
       "diagnostics",
       "diagnostics",
@@ -7913,13 +8673,14 @@ summary_table_bundle_appendix_role_registry <- function() {
       "diagnostics",
       "diagnostics"
     ),
-    RecommendedAppendix = rep(TRUE, 16),
-    CompactAppendix = c(TRUE, FALSE, FALSE, TRUE, FALSE, FALSE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE),
-    PreferredAppendixOrder = 260:275,
+    RecommendedAppendix = rep(TRUE, 17),
+    CompactAppendix = c(TRUE, FALSE, FALSE, FALSE, TRUE, FALSE, FALSE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE),
+    PreferredAppendixOrder = 260:276,
     AppendixRationale = c(
       "Recommended overview table for parameter-recovery simulation appendix handoff.",
       "Recommended ADEMP-style methods table documenting the recovery simulation basis.",
       "Methods/settings table for recovery simulation provenance; recommended but not compact.",
+      "Runtime metadata for auditing elapsed time and completion status after long recovery simulations.",
       "Recommended parameter-group recovery-performance table for simulation appendices.",
       "Recommended replication-status table for recovery simulation diagnostics.",
       "Replication-by-facet fit/separation operating characteristics; retain for diagnostics exports.",
@@ -7962,7 +8723,7 @@ summary_table_bundle_appendix_role_registry <- function() {
     ),
     RecommendedAppendix = rep(TRUE, 9),
     CompactAppendix = rep(TRUE, 9),
-    PreferredAppendixOrder = 276:284,
+    PreferredAppendixOrder = seq(276.1, 276.9, by = 0.1),
     AppendixRationale = c(
       "Recommended top-line recovery-validation decision table for release-review appendices.",
       "Recommended reading-order table for recovery-validation handoff.",
@@ -8069,6 +8830,60 @@ summary_table_bundle_appendix_role_registry <- function() {
     stringsAsFactors = FALSE
   )
   out <- rbind(out, diagnostic_screening_roles)
+  simulation_handoff_roles <- data.frame(
+    Role = c(
+      "design_evaluation_reading_order",
+      "design_evaluation_next_actions",
+      "design_evaluation_reporting_notes",
+      "signal_detection_reading_order",
+      "signal_detection_next_actions",
+      "signal_detection_reporting_notes",
+      "recovery_simulation_reading_order",
+      "recovery_simulation_next_actions",
+      "recovery_simulation_reporting_notes",
+      "population_prediction_reading_order",
+      "population_prediction_next_actions",
+      "population_prediction_reporting_notes"
+    ),
+    AppendixSection = c(
+      "reporting",
+      "workflow",
+      "reporting",
+      "reporting",
+      "workflow",
+      "reporting",
+      "reporting",
+      "workflow",
+      "reporting",
+      "reporting",
+      "workflow",
+      "reporting"
+    ),
+    RecommendedAppendix = rep(TRUE, 12L),
+    CompactAppendix = rep(TRUE, 12L),
+    PreferredAppendixOrder = c(
+      304L, 305L, 306L,
+      307L, 308L, 309L,
+      310L, 311L, 312L,
+      313L, 314L, 315L
+    ),
+    AppendixRationale = c(
+      "Recommended reading-order table for design-evaluation appendix handoff.",
+      "Recommended action table for design-evaluation follow-up and export routing.",
+      "Recommended reporting-boundary table for cautious design-evaluation interpretation.",
+      "Recommended reading-order table for DIF/bias signal-detection appendix handoff.",
+      "Recommended action table for signal-detection follow-up and plot routing.",
+      "Recommended reporting-boundary table separating DIF target-flag rates from bias screening summaries.",
+      "Recommended reading-order table for parameter-recovery simulation appendix handoff.",
+      "Recommended action table for recovery-simulation follow-up and assessment routing.",
+      "Recommended reporting-boundary table for cautious recovery-simulation interpretation.",
+      "Recommended reading-order table for one-scenario population-forecast appendix handoff.",
+      "Recommended action table for population-forecast follow-up and design-grid routing.",
+      "Recommended reporting-boundary table separating scenario-level forecasts from deterministic future unit predictions."
+    ),
+    stringsAsFactors = FALSE
+  )
+  out <- rbind(out, simulation_handoff_roles)
   network_review_roles <- data.frame(
     Role = c(
       "network_review_overview",
@@ -8093,6 +8908,96 @@ summary_table_bundle_appendix_role_registry <- function() {
     stringsAsFactors = FALSE
   )
   out <- rbind(out, network_review_roles)
+  gstudy_roles <- data.frame(
+    Role = c(
+      "gstudy_settings",
+      "gstudy_overview",
+      "gstudy_coefficients",
+      "gstudy_variance_components",
+      "gstudy_design_check",
+      "gstudy_runtime",
+      "gstudy_uncertainty",
+      "gstudy_comparison_overview",
+      "gstudy_comparison_review",
+      "gstudy_variance_movement",
+      "gstudy_dstudy_projection",
+      "gstudy_warnings",
+      "analysis_review_overview",
+      "analysis_review_checkpoints",
+      "analysis_review_next_actions"
+    ),
+    AppendixSection = c(
+      "methods",
+      "results",
+      "results",
+      "results",
+      "diagnostics",
+      "methods",
+      "diagnostics",
+      "results",
+      "reporting",
+      "results",
+      "results",
+      "diagnostics",
+      "workflow",
+      "workflow",
+      "workflow"
+    ),
+    RecommendedAppendix = rep(TRUE, 15L),
+    CompactAppendix = c(
+      FALSE,
+      TRUE,
+      TRUE,
+      TRUE,
+      TRUE,
+      FALSE,
+      TRUE,
+      TRUE,
+      TRUE,
+      TRUE,
+      TRUE,
+      TRUE,
+      TRUE,
+      TRUE,
+      TRUE
+    ),
+    PreferredAppendixOrder = c(
+      316.0,
+      317.0,
+      318.0,
+      319.0,
+      320.0,
+      321.0,
+      322.0,
+      323.0,
+      324.0,
+      325.0,
+      326.0,
+      327.0,
+      328.0,
+      329.0,
+      330.0
+    ),
+    AppendixRationale = c(
+      "Methods/settings rows for observed-score G-study, D-study, and bootstrap provenance.",
+      "Recommended overview table for observed-score G-study scope, G/Phi, design-review counts, and singular-fit status.",
+      "Recommended coefficient table for G/Phi and error-variance reporting.",
+      "Recommended variance-component table for the declared G-study decomposition.",
+      "Recommended design-support table before interpreting interaction-expanded G-study components.",
+      "Runtime table for G-study refits; recommended for full methods exports but omitted from compact appendices.",
+      "Recommended uncertainty table for observed-data bootstrap stability around G/Phi and variance components.",
+      "Recommended overview table for main-effects versus interaction-expanded G-study comparisons.",
+      "Recommended reader-facing checkpoint table for interpreting G-study comparison evidence without turning it into automatic model selection.",
+      "Recommended table showing source-level variance movement between G-study decompositions.",
+      "Recommended D-study projection table for comparing design-planning consequences across decompositions.",
+      "Recommended warning table for singular-fit, lme4, and design-support evidence.",
+      "Recommended cross-analysis overview table for workflow coverage and review counts.",
+      "Recommended checkpoint table for fit, diagnostics, G-study, uncertainty, DIF/bias, resampling, and design-structure coverage.",
+      "Recommended next-action table for unresolved review, missing, or not-run analysis layers."
+    ),
+    stringsAsFactors = FALSE
+  )
+  out <- rbind(out, gstudy_roles)
   capability_boundary <- out$Role %in% "capability_boundary"
   out$CompactAppendix[capability_boundary] <- TRUE
   out$PreferredAppendixOrder[capability_boundary] <- 240.5
@@ -9297,8 +10202,9 @@ resolve_summary_bundle_table_selection <- function(bundle, which = NULL) {
 #' Build APA-style table output using base R structures
 #'
 #' @param x A data.frame, `mfrm_fit`, `summary()` output supported by
-#'   [build_summary_table_bundle()], an `mfrm_summary_table_bundle`, diagnostics
-#'   list, or bias-result list.
+#'   [build_summary_table_bundle()], an `mfrm_summary_table_bundle`,
+#'   package-native differential-functioning object or `mfrm_dif_report`,
+#'   diagnostics list, or bias-result list.
 #' @param which Optional table selector when `x` has multiple tables.
 #' @param diagnostics Optional diagnostics from [diagnose_mfrm()] (used when
 #'   `x` is `mfrm_fit` and `which` targets diagnostics tables).
@@ -9316,6 +10222,9 @@ resolve_summary_bundle_table_selection <- function(bundle, which = NULL) {
 #' @details
 #' This helper avoids styling dependencies and returns a reproducible base
 #' `data.frame` plus metadata.
+#' For differential-functioning objects, the default display precision is three
+#' digits when `digits` is omitted so p-value columns retain APA-style detail;
+#' explicit `digits` values are still honored.
 #'
 #' Supported `which` values:
 #' - For `mfrm_fit`: `"summary"`, `"person"`, `"facets"`, `"steps"`
@@ -9325,6 +10234,10 @@ resolve_summary_bundle_table_selection <- function(bundle, which = NULL) {
 #'   `"reliability"`, `"facets_chisq"`, `"bias"`, `"interactions"`,
 #'   `"interrater_summary"`, `"interrater_pairs"`, `"obs"`
 #' - For bias-result list: `"table"`, `"summary"`, `"chi_sq"`
+#' - For [dif_report()], [analyze_dff()], [analyze_dif_mh()],
+#'   [analyze_dff_moderation()], or [dif_interaction_table()] output:
+#'   the APA differential-functioning table generated by `dif_report(...,
+#'   style = "apa")`
 #'
 #' @section Interpreting output:
 #' - `table`: plain data.frame ready for export or further formatting.
@@ -9380,14 +10293,35 @@ apa_table <- function(x,
                       branch = c("apa", "facets")) {
   branch <- match.arg(tolower(as.character(branch[1])), c("apa", "facets"))
   style <- ifelse(branch == "facets", "facets_manual", "apa")
+  digits_missing <- missing(digits)
   digits <- max(0L, as.integer(digits))
   table_out <- NULL
   source_type <- "data.frame"
   resolved_which <- NULL
 
   summary_bundle_classes <- summary_table_bundle_supported_summary_classes()
+  dif_table_classes <- c(
+    "mfrm_dif_report", "mfrm_dff", "mfrm_dif",
+    "mfrm_dff_moderation", "mfrm_dif_moderation",
+    "mfrm_mh_dif", "mfrm_classical_dif", "mfrm_dif_interaction"
+  )
 
-  if (inherits(x, "mfrm_summary_table_bundle")) {
+  if (inherits(x, "mfrm_dif_report")) {
+    if (isTRUE(digits_missing)) digits <- 3L
+    source_type <- "mfrm_dif_report"
+    resolved_which <- "apa_dif"
+    table_out <- x$apa_table %||% x$large_dif %||% data.frame()
+    if (is.null(caption)) caption <- x$apa_caption %||% ""
+    if (is.null(note)) note <- x$apa_note %||% ""
+  } else if (inherits(x, dif_table_classes)) {
+    if (isTRUE(digits_missing)) digits <- 3L
+    source_type <- class(x)[1]
+    resolved_which <- "apa_dif"
+    rpt <- dif_report(x, style = "apa", digits = digits)
+    table_out <- rpt$apa_table %||% data.frame()
+    if (is.null(caption)) caption <- rpt$apa_caption %||% ""
+    if (is.null(note)) note <- rpt$apa_note %||% ""
+  } else if (inherits(x, "mfrm_summary_table_bundle")) {
     source_type <- "mfrm_summary_table_bundle"
     selected <- resolve_summary_bundle_table_selection(x, which = which)
     resolved_which <- selected$which
@@ -9477,7 +10411,7 @@ apa_table <- function(x,
     }
     table_out <- x[[which]]
   } else {
-    stop("`x` must be a data.frame, mfrm_fit, supported summary/table-bundle object, or named list.")
+    stop("`x` must be a data.frame, mfrm_fit, supported summary/table-bundle object, package-native differential-functioning object, or named list.")
   }
 
   if (is.null(table_out)) {
@@ -11728,7 +12662,7 @@ facets_fit_review <- function(fit,
 #' schema/metric contract encoded in the contract file.
 #'
 #' @section Bounded GPCM boundary:
-#' This helper remains blocked for bounded `GPCM` fits in 0.2.1. The FACETS
+#' This helper remains blocked for bounded `GPCM` fits in 0.2.2. The FACETS
 #' output contract includes score-side rows whose measure-to-score and
 #' uncertainty semantics are validated for the current Rasch-family route, not
 #' for free-discrimination bounded `GPCM`. Use [gpcm_capability_matrix()] before
@@ -12318,8 +13252,28 @@ collect_bias_screening_summary <- function(diagnostics = NULL, bias_results = NU
 #' 3. Print the report or extract `$narrative` for inclusion in a
 #'    manuscript.
 #'
+#' @param style Reporting style. `"narrative"` preserves the package's
+#'   interpretive default. `"apa"` returns a manuscript-oriented paragraph as
+#'   `narrative` and populates APA table/caption/note fields.
+#' @param digits Digits used for APA text fragments and table display guidance.
+#' @param ... Reserved for future extensions.
+#'
 #' @return Object of class `mfrm_dif_report` with `narrative`,
-#'   `counts`, `large_dif`, `gpcm_boundary`, and `config`.
+#'   `counts`, `large_dif`, `apa_text`, `apa_table`, `apa_caption`,
+#'   `apa_note`, `apa_section`, `apa_section_text`, `gpcm_boundary`, and
+#'   `config`.
+#'
+#' @details
+#' The APA style is intentionally conservative. It reports the screening
+#' method, number of contrasts or item/facet levels, strongest finite signal,
+#' effect metric, test statistic and exact tail-area value when available, and
+#' adjusted tail-area value when that value drives the package classification.
+#' It does not turn screening labels into fairness, invariance, or bias
+#' conclusions. For fitted-model [analyze_dff()] / [analyze_dif()] results, the
+#' output is a many-facet Rasch differential-functioning screen. For
+#' [analyze_dif_mh()] results, the output is an observed-score
+#' Mantel-Haenszel DIF screen and is not a fitted-MFRM `RSM`, `PCM`, or bounded
+#' `GPCM` result.
 #'
 #' @section References:
 #' The narrative caveat about distinguishing construct-relevant variation
@@ -12328,9 +13282,17 @@ collect_bias_screening_summary <- function(diagnostics = NULL, bias_results = NU
 #' - Eckes, T. (2011). *Introduction to Many-Facet Rasch Measurement:
 #'   Analyzing and Evaluating Rater-Mediated Assessments*. Frankfurt am
 #'   Main: Peter Lang. ISBN 978-3-631-61350-4.
+#' - Holland, P. W., & Thayer, D. T. (1988). Differential item performance and
+#'   the Mantel-Haenszel procedure. In H. Wainer & H. I. Braun (Eds.),
+#'   *Test Validity*.
+#' - Dorans, N. J., & Holland, P. W. (1993). DIF detection and description:
+#'   Mantel-Haenszel and standardization. In P. W. Holland & H. Wainer (Eds.),
+#'   *Differential Item Functioning*.
 #' - McNamara, T., & Knoch, U. (2012). The Rasch wars: The emergence of
 #'   Rasch measurement in language testing. *Language Testing*, 29(4),
 #'   555--576. \doi{10.1177/0265532211430367}
+#' - American Psychological Association. (2024). *7th edition numbers and
+#'   statistics guide*.
 #'
 #' @seealso [analyze_dff()], [analyze_dif()], [dif_interaction_table()],
 #'   [plot_dif_heatmap()], [build_apa_outputs()]
@@ -12343,21 +13305,31 @@ collect_bias_screening_summary <- function(diagnostics = NULL, bias_results = NU
 #' dif <- analyze_dff(fit, diag, facet = "Rater", group = "Group", data = toy)
 #' rpt <- dif_report(dif)
 #' cat(rpt$narrative)
+#' rpt_apa <- dif_report(dif, style = "apa")
+#' apa_table(rpt_apa)
 #' @export
-dif_report <- function(dif_result, ...) {
-  if (inherits(dif_result, "mfrm_dff") || inherits(dif_result, "mfrm_dif")) {
-    .dif_report_from_dif(dif_result)
+dif_report <- function(dif_result, style = c("narrative", "apa"), digits = 3, ...) {
+  style <- match.arg(tolower(as.character(style[1])), c("narrative", "apa"))
+  digits <- max(0L, as.integer(digits))
+  if (inherits(dif_result, "mfrm_mh_dif") ||
+      inherits(dif_result, "mfrm_classical_dif")) {
+    .dif_report_from_mh(dif_result, style = style, digits = digits)
+  } else if (inherits(dif_result, "mfrm_dff_moderation") ||
+             inherits(dif_result, "mfrm_dif_moderation")) {
+    .dif_report_from_moderation(dif_result, style = style, digits = digits)
+  } else if (inherits(dif_result, "mfrm_dff") || inherits(dif_result, "mfrm_dif")) {
+    .dif_report_from_dif(dif_result, style = style, digits = digits)
   } else if (inherits(dif_result, "mfrm_dif_interaction")) {
-    .dif_report_from_interaction(dif_result)
+    .dif_report_from_interaction(dif_result, style = style, digits = digits)
   } else {
     stop(
-      "`dif_result` must be an `mfrm_dff`, `mfrm_dif`, or `mfrm_dif_interaction` object.",
+      "`dif_result` must be an `mfrm_dff`, `mfrm_dif`, `mfrm_dif_moderation`, `mfrm_mh_dif`, or `mfrm_dif_interaction` object.",
          call. = FALSE)
   }
 }
 
 # Internal: generate report from mfrm_dff / mfrm_dif
-.dif_report_from_dif <- function(dif_result) {
+.dif_report_from_dif <- function(dif_result, style = "narrative", digits = 3) {
   cfg <- dif_result$config
   dt <- dif_result$dif_table
 
@@ -12525,21 +13497,220 @@ dif_report <- function(dif_result, ...) {
     ))
   }
 
-  narrative <- paste(lines, collapse = "")
+  narrative_default <- paste(lines, collapse = "")
+  apa <- .dif_apa_components_from_dif(
+    dt = dt,
+    cfg = cfg,
+    counts = counts,
+    method_label = method_label,
+    functioning_label = functioning_label,
+    digits = digits
+  )
 
   out <- list(
-    narrative = narrative,
+    narrative = if (identical(style, "apa")) apa$text else narrative_default,
     counts = counts,
     large_dif = tibble::as_tibble(large_dif),
+    apa_text = apa$text,
+    apa_table = apa$table,
+    apa_caption = apa$caption,
+    apa_note = apa$note,
+    apa_section = apa$section,
+    apa_section_text = apa$section_text,
     gpcm_boundary = gpcm_boundary,
-    config = cfg
+    config = cfg,
+    style = style
+  )
+  class(out) <- c("mfrm_dif_report", class(out))
+  out
+}
+
+# Internal: generate report from continuous-covariate moderation screens
+.dif_report_from_moderation <- function(dif_result, style = "narrative", digits = 3) {
+  cfg <- dif_result$config
+  mt <- dif_result$moderation_table
+
+  facet_name <- cfg$facet
+  covariate_name <- cfg$covariate
+  functioning_label <- cfg$functioning_label %||% "DFF"
+  class_col <- mt$Classification %||% rep(NA_character_, nrow(mt))
+  n_positive <- sum(class_col == "Screen positive", na.rm = TRUE)
+  n_negative <- sum(class_col == "Screen negative", na.rm = TRUE)
+  n_na <- sum(is.na(class_col))
+  n_total <- nrow(mt)
+
+  counts <- c(
+    Screen_positive = n_positive,
+    Screen_negative = n_negative,
+    Unclassified = n_na,
+    Total = n_total
+  )
+  flagged_rows <- mt[class_col == "Screen positive", , drop = FALSE]
+
+  lines <- character()
+  lines <- c(lines, paste0(
+    functioning_label, " continuous-covariate moderation screening was conducted for the ",
+    facet_name, " facet across values of ", covariate_name,
+    " using fitted observed-minus-expected residuals. "
+  ))
+  lines <- c(lines, paste0(
+    "A total of ", n_total, " facet level(s) were evaluated; ",
+    n_positive, " were screening-positive and ", n_negative,
+    " were screening-negative. "
+  ))
+  if (n_na > 0L) {
+    lines <- c(lines, paste0(
+      n_na, " level(s) were unclassified because of sparse data, insufficient ",
+      "covariate spread, or unavailable statistics. "
+    ))
+  }
+  if (nrow(flagged_rows) > 0L) {
+    lines <- c(lines, "\nFlagged levels:")
+    for (r in seq_len(nrow(flagged_rows))) {
+      lines <- c(lines, paste0(
+        "  - ", flagged_rows$Level[r],
+        ": slope = ", sprintf(paste0("%.", digits, "f"), flagged_rows$Slope[r]),
+        ", z = ", sprintf(paste0("%.", digits, "f"), flagged_rows$z[r]),
+        " (N = ", flagged_rows$N[r], "). "
+      ))
+    }
+  } else {
+    lines <- c(lines,
+      "\nNo facet levels were screening-positive under the continuous-covariate residual-moderation screen. "
+    )
+  }
+  lines <- c(lines, paste0(
+    "\nNote: The presence of differential functioning does not necessarily ",
+    "indicate measurement bias. Continuous-covariate moderation rows are ",
+    "screening evidence and require substantive review before being treated ",
+    "as bias, invariance, or fairness evidence."
+  ))
+
+  gpcm_boundary <- dif_result$gpcm_boundary %||% data.frame()
+  if (is.data.frame(gpcm_boundary) && nrow(gpcm_boundary) > 0L) {
+    lines <- c(lines, paste0(
+      "\nBounded GPCM note: Treat these continuous-covariate rows as ",
+      "slope-aware screening evidence under the current bounded-GPCM fit. ",
+      "They do not by themselves establish fairness, invariance, or an ",
+      "operational subgroup decision."
+    ))
+  }
+
+  narrative_default <- paste(lines, collapse = "")
+  apa <- .dif_apa_components_from_moderation(
+    mt = mt,
+    cfg = cfg,
+    counts = counts,
+    functioning_label = functioning_label,
+    digits = digits
+  )
+
+  out <- list(
+    narrative = if (identical(style, "apa")) apa$text else narrative_default,
+    counts = counts,
+    large_dif = tibble::as_tibble(flagged_rows),
+    apa_text = apa$text,
+    apa_table = apa$table,
+    apa_caption = apa$caption,
+    apa_note = apa$note,
+    apa_section = apa$section,
+    apa_section_text = apa$section_text,
+    gpcm_boundary = gpcm_boundary,
+    config = cfg,
+    style = style
+  )
+  class(out) <- c("mfrm_dif_report", class(out))
+  out
+}
+
+# Internal: generate report from observed-score MH DIF screens
+.dif_report_from_mh <- function(dif_result, style = "narrative", digits = 3) {
+  cfg <- dif_result$config
+  mt <- dif_result$mh_table %||% dif_result$classical_table
+  mt <- as.data.frame(mt %||% data.frame(), stringsAsFactors = FALSE)
+
+  class_col <- mt$Classification %||% rep(NA_character_, nrow(mt))
+  n_positive <- sum(class_col == "Screen positive", na.rm = TRUE)
+  n_negative <- sum(class_col == "Screen negative", na.rm = TRUE)
+  n_na <- sum(is.na(class_col))
+  n_total <- nrow(mt)
+  counts <- c(
+    Screen_positive = n_positive,
+    Screen_negative = n_negative,
+    Unclassified = n_na,
+    Total = n_total
+  )
+  flagged_rows <- mt[class_col == "Screen positive", , drop = FALSE]
+
+  lines <- character()
+  lines <- c(lines, paste0(
+    "Observed-score Mantel-Haenszel DIF screening was conducted for ",
+    n_total, " item/facet level(s), comparing focal group ",
+    cfg$focal %||% "NA", " with reference group ", cfg$reference %||% "NA",
+    " and matching on ", cfg$matching %||% "NA", ". "
+  ))
+  lines <- c(lines, paste0(
+    n_positive, " item/facet level(s) were screening-positive and ",
+    n_negative, " were screening-negative using the adjusted p-value and ",
+    "MH D-DIF delta magnitude gate. "
+  ))
+  if (n_na > 0L) {
+    lines <- c(lines, paste0(
+      n_na, " item/facet level(s) were unclassified because usable strata or ",
+      "finite MH statistics were unavailable. "
+    ))
+  }
+  if (nrow(flagged_rows) > 0L) {
+    lines <- c(lines, "\nFlagged item/facet levels:")
+    for (r in seq_len(nrow(flagged_rows))) {
+      lines <- c(lines, paste0(
+        "  - ", flagged_rows$Item[r],
+        ": MH D-DIF delta = ", sprintf(paste0("%.", digits, "f"), flagged_rows$MHDDelta[r]),
+        ", alpha_MH = ", sprintf(paste0("%.", digits, "f"), flagged_rows$AlphaMH[r]),
+        ", chi-square(", flagged_rows$df[r], ") = ",
+        sprintf(paste0("%.", digits, "f"), flagged_rows$MHChiSq[r]),
+        ". "
+      ))
+    }
+  } else {
+    lines <- c(lines,
+      "\nNo item/facet levels were screening-positive under the observed-score MH rule. "
+    )
+  }
+  lines <- c(lines, paste0(
+    "\nNote: This helper is an observed-score MH DIF screen. It does not use ",
+    "a fitted MFRM object or the RSM, PCM, or bounded GPCM likelihood, and it ",
+    "does not by itself establish measurement bias or fairness."
+  ))
+
+  narrative_default <- paste(lines, collapse = "")
+  apa <- .dif_apa_components_from_mh(
+    mt = mt,
+    cfg = cfg,
+    counts = counts,
+    digits = digits
+  )
+
+  out <- list(
+    narrative = if (identical(style, "apa")) apa$text else narrative_default,
+    counts = counts,
+    large_dif = tibble::as_tibble(flagged_rows),
+    apa_text = apa$text,
+    apa_table = apa$table,
+    apa_caption = apa$caption,
+    apa_note = apa$note,
+    apa_section = apa$section,
+    apa_section_text = apa$section_text,
+    gpcm_boundary = data.frame(),
+    config = cfg,
+    style = style
   )
   class(out) <- c("mfrm_dif_report", class(out))
   out
 }
 
 # Internal: generate report from mfrm_dif_interaction
-.dif_report_from_interaction <- function(dif_result) {
+.dif_report_from_interaction <- function(dif_result, style = "narrative", digits = 3) {
   cfg <- dif_result$config
   int_tbl <- dif_result$table
 
@@ -12616,17 +13787,380 @@ dif_report <- function(dif_result, ...) {
     ))
   }
 
-  narrative <- paste(lines, collapse = "")
+  narrative_default <- paste(lines, collapse = "")
+  apa <- .dif_apa_components_from_interaction(
+    it = int_tbl,
+    cfg = cfg,
+    counts = counts,
+    digits = digits
+  )
 
   out <- list(
-    narrative = narrative,
+    narrative = if (identical(style, "apa")) apa$text else narrative_default,
     counts = counts,
     large_dif = tibble::as_tibble(flagged_rows),
+    apa_text = apa$text,
+    apa_table = apa$table,
+    apa_caption = apa$caption,
+    apa_note = apa$note,
+    apa_section = apa$section,
+    apa_section_text = apa$section_text,
     gpcm_boundary = gpcm_boundary,
-    config = cfg
+    config = cfg,
+    style = style
   )
   class(out) <- c("mfrm_dif_report", class(out))
   out
+}
+
+.dif_report_select_columns <- function(tbl, cols) {
+  tbl <- as.data.frame(tbl %||% data.frame(), stringsAsFactors = FALSE)
+  keep <- intersect(cols, names(tbl))
+  if (length(keep) == 0L) {
+    return(tibble::as_tibble(data.frame()))
+  }
+  tibble::as_tibble(tbl[, keep, drop = FALSE])
+}
+
+.dif_report_top_row <- function(tbl, metric) {
+  tbl <- as.data.frame(tbl %||% data.frame(), stringsAsFactors = FALSE)
+  if (nrow(tbl) == 0L || !metric %in% names(tbl)) {
+    return(NULL)
+  }
+  val <- suppressWarnings(abs(as.numeric(tbl[[metric]])))
+  if (!any(is.finite(val))) {
+    return(NULL)
+  }
+  tbl[which.max(ifelse(is.finite(val), val, -Inf)), , drop = FALSE]
+}
+
+.dif_report_p_text <- function(p) {
+  val <- suppressWarnings(as.numeric(p))
+  if (length(val) == 0L || !is.finite(val[1])) return("p = NA")
+  p_txt <- fmt_pvalue(val[1])
+  p_txt <- sub("= 0\\.", "= .", p_txt)
+  paste0("p ", p_txt)
+}
+
+.dif_report_p_pair_text <- function(row) {
+  if (is.null(row) || nrow(row) == 0L) return("p = NA")
+  raw <- .dif_report_p_text(row$p_value[1] %||% NA_real_)
+  adj <- if ("p_adjusted" %in% names(row) &&
+             is.finite(suppressWarnings(as.numeric(row$p_adjusted[1])))) {
+    paste0(", adjusted ", .dif_report_p_text(row$p_adjusted[1]))
+  } else {
+    ""
+  }
+  paste0(raw, adj)
+}
+
+.dif_report_sentence_count <- function(text) {
+  text <- paste(as.character(text %||% ""), collapse = " ")
+  if (!nzchar(trimws(text))) return(0L)
+  hits <- gregexpr("[.!?]+", text, perl = TRUE)[[1]]
+  if (identical(hits, -1L)) 1L else length(hits)
+}
+
+.dif_report_count_value <- function(counts, names, default = 0) {
+  if (is.null(counts) || length(counts) == 0L) return(default)
+  for (nm in names) {
+    if (nm %in% names(counts)) return(counts[[nm]])
+  }
+  default
+}
+
+.dif_report_apa_note <- function(scope = c("fitted", "mh", "moderation", "interaction"),
+                                 cfg = list()) {
+  scope <- match.arg(scope)
+  common <- paste(
+    "Values are package-native screening outputs. Exact tail-area values are",
+    "reported as p values and rounded for display; adjusted p values are used",
+    "when the package classification applies a multiple-comparison gate.",
+    "Classification, ReportingUse, and PrimaryReportingEligible document the",
+    "intended reporting status. Screening evidence does not by itself",
+    "establish measurement bias, fairness, or invariance; substantive review",
+    "and design evidence remain required."
+  )
+  note <- if (identical(scope, "mh")) {
+    paste(
+      common,
+      "The Mantel-Haenszel rows are observed-score DIF screens and do not use",
+      "a fitted MFRM RSM, PCM, or bounded GPCM likelihood."
+    )
+  } else if (identical(scope, "moderation")) {
+    paste(
+      common,
+      "Continuous-covariate rows are residual-moderation screens and are not",
+      "Mantel-Haenszel categorical DIF contrasts."
+    )
+  } else if (identical(scope, "interaction")) {
+    paste(
+      common,
+      "Interaction rows are cell-level residual screens, not confirmatory",
+      "operational subgroup decisions."
+    )
+  } else {
+    paste(
+      common,
+      "Fitted-model DFF/DIF rows should be interpreted within the current",
+      "MFRM model scope and linking status."
+    )
+  }
+  fit_model <- toupper(as.character(cfg$fit_model %||% cfg$model %||% ""))
+  model_scope <- as.character(cfg$model_scope %||% "")
+  is_gpcm <- identical(fit_model, "GPCM") ||
+    grepl("gpcm", model_scope, ignore.case = TRUE)
+  if (isTRUE(is_gpcm) && !identical(scope, "mh")) {
+    note <- paste(
+      note,
+      "Bounded GPCM note: treat these rows as slope-aware sensitivity",
+      "screening over the current bounded-GPCM fit, not FACETS score-side",
+      "equivalence, automatic invariance evidence, or an operational",
+      "subgroup-decision rule."
+    )
+  }
+  note
+}
+
+.dif_apa_pack <- function(section, paragraph, table, caption, note) {
+  list(
+    section = section,
+    section_text = paragraph,
+    text = paste0(section, ".\n", paragraph),
+    table = table,
+    caption = caption,
+    note = note
+  )
+}
+
+.dif_apa_components_from_dif <- function(dt, cfg, counts, method_label,
+                                         functioning_label, digits = 3) {
+  table <- .dif_report_select_columns(
+    dt,
+    c(
+      "Level", "Group1", "Group2", "Contrast", "ContrastDirection", "SE",
+      "t", "df", "p_value", "p_adjusted", "Classification", "ETS",
+      "ClassificationSystem", "ReportingUse", "PrimaryReportingEligible",
+      "Method", "ContrastComparable", "ScaleLinkStatus",
+      "FormalInferenceEligible", "InferenceTier", "EffectMetric",
+      "ContrastBasis", "SEBasis", "StatisticLabel", "ProbabilityMetric",
+      "DFBasis"
+    )
+  )
+  n_total <- nrow(as.data.frame(dt %||% data.frame()))
+  n_positive <- .dif_report_count_value(counts, c("Screen_positive", "C"))
+  n_unclassified <- .dif_report_count_value(
+    counts,
+    c("Unclassified", "NA_count")
+  )
+  top <- .dif_report_top_row(dt, "Contrast")
+  if (is.null(top)) {
+    top_sentence <- "No finite contrast was available for a strongest-signal summary."
+  } else {
+    stat_sentence <- if ("t" %in% names(top) && is.finite(suppressWarnings(as.numeric(top$t[1])))) {
+      df_text <- if ("df" %in% names(top) && is.finite(suppressWarnings(as.numeric(top$df[1])))) {
+        fmt_num(top$df[1], digits)
+      } else {
+        "NA"
+      }
+      paste0(
+        "t(", df_text, ") = ", fmt_num(top$t[1], digits),
+        ", ", .dif_report_p_pair_text(top)
+      )
+    } else {
+      .dif_report_p_pair_text(top)
+    }
+    top_sentence <- paste0(
+      "The strongest absolute contrast involved ", top$Level[1],
+      " (", top$Group1[1], " vs. ", top$Group2[1],
+      "), contrast = ", fmt_num(top$Contrast[1], digits),
+      " logits/residual units, ", stat_sentence,
+      ", classification = ", top$Classification[1] %||% "NA", "."
+    )
+  }
+  paragraph <- paste(
+    paste0(
+      functioning_label, " screening for the ", cfg$facet %||% "facet",
+      " facet across ", cfg$group %||% "group", " evaluated ",
+      fmt_count(n_total), " contrast(s) using the ", method_label, " route."
+    ),
+    paste0(
+      fmt_count(n_positive), " contrast(s) met the package's primary ",
+      "screen-positive or large-magnitude label, and ",
+      fmt_count(n_unclassified), " contrast(s) were unclassified."
+    ),
+    top_sentence,
+    "The result should be reported as differential-functioning screening evidence, not as a standalone bias or fairness conclusion."
+  )
+  caption <- paste0(
+    functioning_label, " screening results for ", cfg$facet %||% "facet",
+    " by ", cfg$group %||% "group"
+  )
+  .dif_apa_pack(
+    section = "Differential functioning",
+    paragraph = paragraph,
+    table = table,
+    caption = caption,
+    note = .dif_report_apa_note("fitted", cfg = cfg)
+  )
+}
+
+.dif_apa_components_from_moderation <- function(mt, cfg, counts,
+                                                functioning_label, digits = 3) {
+  table <- .dif_report_select_columns(
+    mt,
+    c(
+      "Level", "Slope", "SE", "z", "p_value", "p_adjusted",
+      "RawSlope", "RawSE", "ModerationDirection", "N", "Persons",
+      "CovariateDistinct", "Classification", "ClassificationSystem",
+      "ReportingUse", "PrimaryReportingEligible", "CovariateScale",
+      "Method", "EffectMetric", "ContrastBasis", "SEBasis",
+      "StatisticLabel", "ProbabilityMetric", "DFBasis"
+    )
+  )
+  n_total <- nrow(as.data.frame(mt %||% data.frame()))
+  top <- .dif_report_top_row(mt, "z")
+  if (is.null(top)) {
+    top_sentence <- "No finite residual-moderation statistic was available for a strongest-signal summary."
+  } else {
+    top_sentence <- paste0(
+      "The strongest absolute moderation statistic involved ", top$Level[1],
+      ", slope = ", fmt_num(top$Slope[1], digits),
+      ", z = ", fmt_num(top$z[1], digits),
+      ", ", .dif_report_p_pair_text(top),
+      ", classification = ", top$Classification[1] %||% "NA", "."
+    )
+  }
+  paragraph <- paste(
+    paste0(
+      functioning_label, " continuous-covariate screening for the ",
+      cfg$facet %||% "facet", " facet evaluated ", fmt_count(n_total),
+      " level(s) against ", cfg$covariate %||% "the covariate",
+      " using observed-minus-expected residual slopes."
+    ),
+    paste0(
+      fmt_count(.dif_report_count_value(counts, "Screen_positive")),
+      " level(s) were screening-positive and ",
+      fmt_count(.dif_report_count_value(counts, "Unclassified")),
+      " were unclassified."
+    ),
+    top_sentence,
+    "The result should be reported as a continuous-covariate residual screen, not as a categorical MH DIF test or a standalone bias conclusion."
+  )
+  caption <- paste0(
+    functioning_label, " continuous-covariate screening results for ",
+    cfg$facet %||% "facet", " by ", cfg$covariate %||% "covariate"
+  )
+  .dif_apa_pack(
+    section = "Differential functioning",
+    paragraph = paragraph,
+    table = table,
+    caption = caption,
+    note = .dif_report_apa_note("moderation", cfg = cfg)
+  )
+}
+
+.dif_apa_components_from_mh <- function(mt, cfg, counts, digits = 3) {
+  table <- .dif_report_select_columns(
+    mt,
+    c(
+      "Item", "ReferenceGroup", "FocalGroup", "N", "Persons", "Strata",
+      "UsableStrata", "SparseStrata", "AlphaMH", "MHDDelta", "MHChiSq",
+      "df", "p_value", "p_adjusted", "Direction", "EffectBand",
+      "Classification", "ClassificationSystem", "ReportingUse",
+      "PrimaryReportingEligible", "Method", "ModelScope", "MFRMFitUsed",
+      "MFRMModel", "Matching", "ScoreTransform", "ZeroCorrection",
+      "EffectMetric", "ContrastBasis", "StatisticLabel", "ProbabilityMetric"
+    )
+  )
+  n_total <- nrow(as.data.frame(mt %||% data.frame()))
+  top <- .dif_report_top_row(mt, "MHDDelta")
+  if (is.null(top)) {
+    top_sentence <- "No finite MH D-DIF delta was available for a strongest-signal summary."
+  } else {
+    top_sentence <- paste0(
+      "The largest absolute MH D-DIF delta involved ", top$Item[1],
+      ", alpha_MH = ", fmt_num(top$AlphaMH[1], digits),
+      ", Delta_MH = ", fmt_num(top$MHDDelta[1], digits),
+      ", chi-square(", top$df[1] %||% 1, ") = ",
+      fmt_num(top$MHChiSq[1], digits),
+      ", ", .dif_report_p_pair_text(top),
+      ", direction = ", top$Direction[1] %||% "NA", "."
+    )
+  }
+  paragraph <- paste(
+    paste0(
+      "An observed-score Mantel-Haenszel DIF screen evaluated ",
+      fmt_count(n_total), " item/facet level(s), comparing focal group ",
+      cfg$focal %||% "NA", " with reference group ", cfg$reference %||% "NA",
+      " and matching on ", cfg$matching %||% "NA", "."
+    ),
+    paste0(
+      fmt_count(.dif_report_count_value(counts, "Screen_positive")),
+      " item/facet level(s) were screening-positive and ",
+      fmt_count(.dif_report_count_value(counts, "Unclassified")),
+      " were unclassified."
+    ),
+    top_sentence,
+    "This result should be reported as observed-score MH DIF screening, not as fitted-MFRM RSM, PCM, or bounded-GPCM differential functioning."
+  )
+  caption <- "Observed-score Mantel-Haenszel DIF screening results"
+  .dif_apa_pack(
+    section = "Observed-score DIF screening",
+    paragraph = paragraph,
+    table = table,
+    caption = caption,
+    note = .dif_report_apa_note("mh", cfg = cfg)
+  )
+}
+
+.dif_apa_components_from_interaction <- function(it, cfg, counts, digits = 3) {
+  table <- .dif_report_select_columns(
+    it,
+    c(
+      "Level", "GroupValue", "N", "ObsExpAvg", "t", "flag_t",
+      "flag_bias", "sparse", "ExpectedAvg", "ObservedAvg",
+      "Classification", "Method", "StatisticLabel", "ProbabilityMetric"
+    )
+  )
+  n_total <- nrow(as.data.frame(it %||% data.frame()))
+  top <- .dif_report_top_row(it, "t")
+  if (is.null(top)) {
+    top_sentence <- "No finite residual-interaction statistic was available for a strongest-signal summary."
+  } else {
+    top_sentence <- paste0(
+      "The strongest absolute residual-interaction statistic involved ",
+      top$Level[1], " by ", top$GroupValue[1],
+      ", Obs-Exp average = ", fmt_num(top$ObsExpAvg[1], digits),
+      ", t = ", fmt_num(top$t[1], digits), "."
+    )
+  }
+  paragraph <- paste(
+    paste0(
+      "Cell-level differential-functioning interaction screening for the ",
+      cfg$facet %||% "facet", " facet across ", cfg$group %||% "group",
+      " examined ", fmt_count(n_total), " facet-by-group cell(s)."
+    ),
+    paste0(
+      fmt_count(.dif_report_count_value(counts, "Flag_t")),
+      " cell(s) exceeded the t-statistic warning rule and ",
+      fmt_count(.dif_report_count_value(counts, "Flag_bias")),
+      " exceeded the observed-minus-expected average rule."
+    ),
+    top_sentence,
+    "The result should be reported as cell-level residual screening evidence, not as a standalone bias or fairness conclusion."
+  )
+  caption <- paste0(
+    "Cell-level differential-functioning interaction screening for ",
+    cfg$facet %||% "facet", " by ", cfg$group %||% "group"
+  )
+  .dif_apa_pack(
+    section = "Differential functioning",
+    paragraph = paragraph,
+    table = table,
+    caption = caption,
+    note = .dif_report_apa_note("interaction", cfg = cfg)
+  )
 }
 
 #' @export
@@ -12643,8 +14177,15 @@ summary.mfrm_dif_report <- function(object, ...) {
     narrative = object$narrative,
     counts = object$counts,
     large_dif = object$large_dif,
+    apa_text = object$apa_text %||% "",
+    apa_table = object$apa_table %||% data.frame(),
+    apa_caption = object$apa_caption %||% "",
+    apa_note = object$apa_note %||% "",
+    apa_section = object$apa_section %||% "",
+    apa_section_text = object$apa_section_text %||% "",
     gpcm_boundary = object$gpcm_boundary %||% data.frame(),
-    config = object$config
+    config = object$config,
+    style = object$style %||% "narrative"
   )
   class(out) <- "summary.mfrm_dif_report"
   out

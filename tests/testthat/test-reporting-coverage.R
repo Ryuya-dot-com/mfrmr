@@ -210,6 +210,65 @@ test_that("build_apa_outputs surfaces latent-regression population-model wording
   expect_true(row$Passed[1])
 })
 
+test_that("build_apa_outputs reports free MML population SD and GPCM caveats", {
+  toy <- load_mfrmr_data("example_core")
+
+  fit <- suppressWarnings(fit_mfrm(
+    toy,
+    "Person", c("Rater", "Criterion"), "Score",
+    method = "MML",
+    model = "RSM",
+    quad_points = 5,
+    maxit = 25,
+    estimate_population_sd = TRUE
+  ))
+  diag <- suppressWarnings(diagnose_mfrm(
+    fit,
+    residual_pca = "none",
+    diagnostic_mode = "legacy"
+  ))
+  apa <- build_apa_outputs(fit, diag)
+  text <- as.character(apa$report_text)
+  text_flat <- gsub("[[:space:]]+", " ", text)
+
+  expect_true(isTRUE(apa$contract$availability$has_mml_population_sd))
+  expect_true(grepl("normal marginal person-distribution SD was estimated", text_flat, fixed = TRUE))
+  expect_true(grepl("estimated marginal person-distribution SD", text_flat, fixed = TRUE))
+  expect_true(grepl("profile SE", text_flat, fixed = TRUE))
+  expect_true(grepl("Population-SD uncertainty note", text_flat, fixed = TRUE))
+  expect_match(apa$table_figure_notes, "Population SD mode = estimated", fixed = TRUE)
+  sd_check <- summary(apa)$content_checks
+  sd_check <- sd_check[sd_check$Check == "MML population SD wording alignment", , drop = FALSE]
+  expect_equal(nrow(sd_check), 1L)
+  expect_true(sd_check$Passed[1])
+
+  gpcm <- suppressWarnings(fit_mfrm(
+    toy,
+    "Person", c("Rater", "Criterion"), "Score",
+    method = "MML",
+    model = "GPCM",
+    step_facet = "Criterion",
+    slope_facet = "Criterion",
+    quad_points = 5,
+    maxit = 30,
+    mml_engine = "direct",
+    estimate_population_sd = TRUE
+  ))
+  gpcm_diag <- suppressWarnings(diagnose_mfrm(
+    gpcm,
+    residual_pca = "none",
+    diagnostic_mode = "legacy"
+  ))
+  gpcm_apa <- build_apa_outputs(gpcm, gpcm_diag)
+  gpcm_text_flat <- gsub("[[:space:]]+", " ", as.character(gpcm_apa$report_text))
+
+  expect_s3_class(gpcm_apa, "mfrm_apa_outputs")
+  expect_true(nrow(gpcm_apa$gpcm_boundary) > 0L)
+  expect_true(grepl("Bounded GPCM note", gpcm_text_flat, fixed = TRUE))
+  expect_true(grepl("normal marginal person-distribution SD was estimated", gpcm_text_flat, fixed = TRUE))
+  expect_match(gpcm_apa$table_figure_notes, "Population SD mode = estimated", fixed = TRUE)
+})
+
 test_that("build_apa_outputs validates fit, diagnostics, context, and bias inputs at the front door", {
   expect_error(
     mfrmr::build_apa_outputs(list(), .diag),
@@ -229,6 +288,16 @@ test_that("build_apa_outputs validates fit, diagnostics, context, and bias input
   expect_error(
     mfrmr::build_apa_outputs(.fit, .diag, bias_results = 1),
     "requires `bias_results` to be `NULL` or a package-native bias result",
+    fixed = TRUE
+  )
+  expect_error(
+    mfrmr::build_apa_outputs(.fit, .diag, model_comparison = list()),
+    "requires `model_comparison` to be `NULL`",
+    fixed = TRUE
+  )
+  expect_error(
+    mfrmr::mfrm_report(mfrm_results(.fit), model_comparison = list()),
+    "requires `model_comparison` to be `NULL`",
     fixed = TRUE
   )
 })

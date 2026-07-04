@@ -20,6 +20,41 @@ local_dif_fixtures <- function(env = parent.frame()) {
   assign("diag", diag, envir = env)
 }
 
+mh_dif_fixture <- function() {
+  persons <- sprintf("P%03d", seq_len(120))
+  ability <- rep(0:3, each = 30)
+  group <- rep(rep(c("Reference", "Focal"), each = 15), 4)
+  person_tbl <- data.frame(
+    Person = persons,
+    AbilityBand = ability,
+    Group = group,
+    stringsAsFactors = FALSE
+  )
+  dat <- merge(
+    expand.grid(
+      Person = persons,
+      Item = c("Anchor1", "Anchor2", "Anchor3", "Target"),
+      KEEP.OUT.ATTRS = FALSE,
+      stringsAsFactors = FALSE
+    ),
+    person_tbl,
+    by = "Person",
+    all.x = TRUE
+  )
+  dat$Score <- with(dat, ifelse(
+    Item == "Anchor1", AbilityBand >= 1,
+    ifelse(
+      Item == "Anchor2", AbilityBand >= 2,
+      ifelse(
+        Item == "Anchor3", AbilityBand >= 3,
+        ifelse(Group == "Reference", AbilityBand >= 2, AbilityBand >= 3)
+      )
+    )
+  ))
+  dat$Score <- as.integer(dat$Score)
+  dat[, c("Person", "Item", "Score", "Group")]
+}
+
 # ================================================================
 # DIF diagnostic module
 # ================================================================
@@ -54,6 +89,9 @@ test_that("analyze_dff residual method returns expected structure", {
   expect_true(all(dif$dif_table$ReportingUse == "screening_only"))
   expect_true(all(!dif$dif_table$PrimaryReportingEligible))
   expect_equal(dif$config$method, "residual")
+  expect_true(isTRUE(dif$config$mfrm_fit_used))
+  expect_equal(dif$config$fit_model, "RSM")
+  expect_equal(dif$config$model_scope, "fitted_mfrm_rasch_family_screening")
 })
 
 test_that("analyze_dff alias is backward compatible with analyze_dif", {
@@ -67,6 +105,89 @@ test_that("analyze_dff alias is backward compatible with analyze_dif", {
   expect_equal(dff$dif_table, dif$dif_table)
   expect_equal(dff$summary, dif$summary)
   expect_equal(dff$config$functioning_label, "DIF")
+})
+
+test_that("analyze_dif_mh returns MH screening output", {
+  dat <- mh_dif_fixture()
+
+  mh <- analyze_dif_mh(
+    dat,
+    person = "Person",
+    item = "Item",
+    score = "Score",
+    group = "Group",
+    reference = "Reference",
+    focal = "Focal"
+  )
+
+  expect_s3_class(mh, "mfrm_mh_dif")
+  expect_true(is.data.frame(mh$mh_table))
+  expect_false("classical_table" %in% names(mh))
+  expect_true(is.data.frame(mh$strata_table))
+  expect_true(is.data.frame(mh$summary))
+  expect_true(nrow(mh$mh_table) > 0)
+  expect_true(all(c("Item", "ReferenceGroup", "FocalGroup", "AlphaMH",
+                    "MHDDelta", "MHChiSq", "p_value", "p_adjusted",
+                    "Direction", "EffectBand", "Classification",
+                    "ClassificationSystem", "ReportingUse",
+                    "PrimaryReportingEligible") %in%
+                    names(mh$mh_table)))
+  expect_true(all(mh$mh_table$Method == "mantel_haenszel"))
+  expect_true(all(mh$mh_table$ClassificationSystem ==
+                    "mh_observed_score_screening"))
+  expect_true(all(mh$mh_table$ReportingUse == "screening_only"))
+  expect_true(all(!mh$mh_table$PrimaryReportingEligible))
+  expect_true(all(!mh$mh_table$MFRMFitUsed))
+  expect_true(all(mh$mh_table$MFRMModel == "not_applicable"))
+  expect_equal(mh$config$model_scope,
+               "observed_score_mh_screen_no_mfrm_fit")
+  expect_false(isTRUE(mh$config$mfrm_fit_used))
+
+  target <- subset(mh$mh_table, Item == "Target")
+  expect_equal(target$Direction, "harder_for_focal")
+  expect_lt(target$MHDDelta, 0)
+  expect_gt(target$AlphaMH, 1)
+  expect_output(print(mh))
+  expect_output(print(summary(mh)))
+})
+
+test_that("analyze_dif_mh validates person-by-item assumptions and wrapper", {
+  dat <- mh_dif_fixture()
+
+  dat_dup <- rbind(dat, dat[1, , drop = FALSE])
+  expect_error(
+    analyze_dif_mh(dat_dup, "Person", "Item", "Score", "Group"),
+    "one response per person x item"
+  )
+
+  dat_three <- dat
+  dat_three$Group[dat_three$Person %in% unique(dat_three$Person)[1:4]] <- "Other"
+  expect_error(
+    analyze_dif_mh(dat_three, "Person", "Item", "Score", "Group"),
+    "exactly two group levels"
+  )
+
+  dat_poly <- dat
+  dat_poly$Score <- ifelse(dat_poly$Score == 1, 2, 0)
+  dat_poly$Score[dat_poly$Item == "Anchor1" & dat_poly$Score == 2] <- 1
+  expect_error(
+    analyze_dif_mh(dat_poly, "Person", "Item", "Score", "Group"),
+    "exactly two numeric levels"
+  )
+  mh_poly <- analyze_dif_mh(
+    dat_poly, "Person", "Item", "Score", "Group", dichotomize = 1
+  )
+  mh_wrapper <- analyze_dif_classical(
+    dat_poly, "Person", "Item", "Score", "Group", dichotomize = 1
+  )
+  expect_s3_class(mh_poly, "mfrm_mh_dif")
+  expect_false(inherits(mh_poly, "mfrm_classical_dif"))
+  expect_false("classical_table" %in% names(mh_poly))
+  expect_s3_class(mh_wrapper, "mfrm_classical_dif")
+  expect_s3_class(mh_wrapper, "mfrm_mh_dif")
+  expect_equal(mh_wrapper$classical_table, mh_poly$mh_table)
+  expect_equal(mh_wrapper$mh_table, mh_poly$mh_table)
+  expect_match(mh_poly$config$score_transform, "dichotomized")
 })
 
 test_that("analyze_dif refit keeps JML contrasts descriptive even when linked", {
@@ -215,6 +336,154 @@ test_that("analyze_dif validates DFF control arguments", {
                 data = toy, method = "residual", focal = unique(toy$Group)),
     "reference group"
   )
+
+  toy_numeric <- toy
+  toy_numeric$AgeLike <- seq_len(nrow(toy_numeric))
+  expect_error(
+    analyze_dif(fit, diag, facet = "Criterion", group = "AgeLike",
+                data = toy_numeric, method = "residual"),
+    "continuous-covariate"
+  )
+})
+
+test_that("analyze_dff_moderation screens continuous person covariates", {
+  local_dif_fixtures()
+  person_age <- data.frame(
+    Person = unique(toy$Person),
+    AgeLike = seq_along(unique(toy$Person)),
+    stringsAsFactors = FALSE
+  )
+  toy_age <- merge(toy, person_age, by = "Person", all.x = TRUE)
+
+  mod <- analyze_dff_moderation(
+    fit,
+    facet = "Criterion",
+    covariate = "AgeLike",
+    data = toy_age,
+    min_obs = 2
+  )
+
+  expect_s3_class(mod, "mfrm_dff_moderation")
+  expect_s3_class(mod, "mfrm_dif_moderation")
+  expect_true(is.data.frame(mod$moderation_table))
+  expect_true(is.data.frame(mod$summary))
+  expect_true(nrow(mod$moderation_table) > 0)
+  expect_true(all(c("Level", "Slope", "SE", "z", "p_value", "p_adjusted",
+                    "RawSlope", "RawSE", "ModerationDirection", "N",
+                    "Persons", "CovariateDistinct", "Classification",
+                    "ClassificationSystem", "ReportingUse",
+                    "PrimaryReportingEligible") %in%
+                    names(mod$moderation_table)))
+  expect_true(all(mod$moderation_table$Method == "residual_moderation"))
+  expect_true(all(mod$moderation_table$ClassificationSystem == "screening"))
+  expect_true(all(mod$moderation_table$ReportingUse == "screening_only"))
+  expect_true(all(!mod$moderation_table$PrimaryReportingEligible))
+  expect_true(isTRUE(mod$config$mfrm_fit_used))
+  expect_equal(mod$config$fit_model, "RSM")
+  expect_equal(mod$config$model_scope, "fitted_mfrm_rasch_family_screening")
+  expect_equal(mod$config$covariate, "AgeLike")
+  expect_equal(mod$config$covariate_scale, "standardized_1_sd")
+  rpt_mod <- dif_report(mod, style = "apa")
+  expect_s3_class(rpt_mod, "mfrm_dif_report")
+  expect_match(rpt_mod$narrative, "continuous-covariate")
+  expect_match(rpt_mod$narrative, "not as a categorical MH DIF test")
+  expect_true(is.data.frame(rpt_mod$apa_table))
+  expect_true(all(c("Level", "Slope", "z", "p_value", "p_adjusted",
+                    "Classification") %in% names(rpt_mod$apa_table)))
+  tbl_mod <- apa_table(mod)
+  expect_s3_class(tbl_mod, "apa_table")
+  expect_equal(nrow(tbl_mod$table), nrow(mod$moderation_table))
+
+  mod_raw <- analyze_dif_moderation(
+    fit,
+    facet = "Criterion",
+    covariate = "AgeLike",
+    data = toy_age,
+    min_obs = 2,
+    standardize = FALSE
+  )
+  expect_s3_class(mod_raw, "mfrm_dff_moderation")
+  expect_equal(mod_raw$config$covariate_scale, "raw_unit")
+  expect_output(print(mod))
+  expect_output(print(summary(mod)))
+})
+
+test_that("analyze_dff_moderation validates continuous-covariate contract", {
+  local_dif_fixtures()
+  toy_bad <- toy
+  toy_bad$AgeLike <- as.character(seq_len(nrow(toy_bad)))
+  expect_error(
+    analyze_dff_moderation(fit, facet = "Criterion",
+                           covariate = "AgeLike", data = toy_bad),
+    "must be numeric"
+  )
+
+  toy_conflict <- toy
+  toy_conflict$AgeLike <- ave(seq_len(nrow(toy_conflict)), toy_conflict$Person,
+                              FUN = seq_along)
+  expect_error(
+    analyze_dff_moderation(fit, facet = "Criterion",
+                           covariate = "AgeLike", data = toy_conflict),
+    "person-level"
+  )
+
+  person_two <- data.frame(
+    Person = unique(toy$Person),
+    AgeLike = rep(1:2, length.out = length(unique(toy$Person))),
+    stringsAsFactors = FALSE
+  )
+  toy_two <- merge(toy, person_two, by = "Person", all.x = TRUE)
+  expect_error(
+    analyze_dff_moderation(fit, facet = "Criterion",
+                           covariate = "AgeLike", data = toy_two),
+    "at least three distinct"
+  )
+})
+
+test_that("analyze_dff_moderation carries bounded GPCM caveat boundary", {
+  dat <- simulate_mfrm_data(
+    n_person = 30,
+    n_rater = 3,
+    n_criterion = 3,
+    model = "GPCM",
+    step_facet = "Criterion",
+    slope_facet = "Criterion",
+    slopes = data.frame(
+      SlopeFacet = paste0("C0", 1:3),
+      Estimate = c(0.80, 1.00, 1.25),
+      stringsAsFactors = FALSE
+    ),
+    seed = 303
+  )
+  persons <- sort(unique(as.character(dat$Person)))
+  dat$AgeLike <- match(as.character(dat$Person), persons)
+  fit_gpcm <- suppressWarnings(fit_mfrm(
+    dat,
+    person = "Person",
+    facets = c("Rater", "Criterion"),
+    score = "Score",
+    model = "GPCM",
+    step_facet = "Criterion",
+    slope_facet = "Criterion",
+    method = "MML",
+    quad_points = 5,
+    maxit = 20
+  ))
+
+  mod <- analyze_dff_moderation(
+    fit_gpcm,
+    facet = "Criterion",
+    covariate = "AgeLike",
+    data = dat,
+    min_obs = 3
+  )
+
+  expect_equal(mod$config$model_scope,
+               "fitted_mfrm_bounded_gpcm_screening_with_caveat")
+  expect_true(is.data.frame(mod$gpcm_boundary))
+  expect_gt(nrow(mod$gpcm_boundary), 0L)
+  expect_true(any(mod$gpcm_boundary$Status == "supported_with_caveat"))
+  expect_match(mod$gpcm_boundary$Area[1], "Differential facet functioning")
 })
 
 test_that("analyze_dif handles missing and empty group values explicitly", {
@@ -346,6 +615,10 @@ test_that("plot_dif_heatmap returns mfrm_plot_data with matrix payload (draw = F
     expect_s3_class(p, "mfrm_plot_data")
     expect_true(is.matrix(p$data$matrix))
     expect_identical(p$data$metric, m)
+    if (identical(m, "contrast")) {
+      expect_false(isTRUE(p$data$ets_display_eligible))
+      expect_equal(p$data$classification_system, "screening")
+    }
   }
 })
 
@@ -397,6 +670,67 @@ test_that("dif_report produces interpretable output", {
   expect_true(is.character(rpt$narrative))
   expect_true(nchar(rpt$narrative) > 0)
   expect_match(rpt$narrative, "screening", ignore.case = TRUE)
+
+  rpt_apa <- dif_report(dif, style = "apa")
+  expect_s3_class(rpt_apa, "mfrm_dif_report")
+  expect_match(rpt_apa$narrative, "Differential functioning")
+  expect_match(rpt_apa$narrative, "adjusted p")
+  expect_true(is.data.frame(rpt_apa$apa_table))
+  expect_gt(nrow(rpt_apa$apa_table), 0)
+  expect_true(all(c("Level", "Group1", "Group2", "Contrast",
+                    "p_value", "p_adjusted", "Classification",
+                    "ReportingUse", "PrimaryReportingEligible") %in%
+                    names(rpt_apa$apa_table)))
+  expect_match(rpt_apa$apa_note, "Screening evidence")
+  expect_match(rpt_apa$apa_note, "measurement bias")
+
+  tbl_from_report <- apa_table(rpt_apa)
+  expect_s3_class(tbl_from_report, "apa_table")
+  expect_equal(nrow(tbl_from_report$table), nrow(rpt_apa$apa_table))
+  expect_match(tbl_from_report$note, "Screening evidence")
+
+  tbl_from_result <- apa_table(dif)
+  expect_s3_class(tbl_from_result, "apa_table")
+  expect_equal(nrow(tbl_from_result$table), nrow(dif$dif_table))
+  expect_equal(tbl_from_result$digits, 3)
+
+  apa <- build_apa_outputs(fit, diag, dif_results = dif)
+  expect_s3_class(apa, "mfrm_apa_outputs")
+  expect_s3_class(apa$dif_report, "mfrm_dif_report")
+  expect_true("results_differential_functioning" %in% apa$section_map$SectionId)
+  expect_match(as.character(apa$report_text), "Differential functioning")
+  expect_match(apa$table_figure_notes, "Differential-functioning note")
+})
+
+test_that("dif_report provides APA boundaries for observed-score MH DIF", {
+  dat <- mh_dif_fixture()
+  mh <- analyze_dif_mh(
+    dat,
+    person = "Person",
+    item = "Item",
+    score = "Score",
+    group = "Group",
+    reference = "Reference",
+    focal = "Focal"
+  )
+
+  rpt <- dif_report(mh, style = "apa")
+  expect_s3_class(rpt, "mfrm_dif_report")
+  expect_match(rpt$narrative, "observed-score Mantel-Haenszel DIF",
+               ignore.case = TRUE)
+  expect_match(rpt$narrative, "not as fitted-MFRM")
+  expect_true(is.data.frame(rpt$apa_table))
+  expect_true(all(c("Item", "AlphaMH", "MHDDelta", "MHChiSq",
+                    "p_value", "p_adjusted", "MFRMFitUsed") %in%
+                    names(rpt$apa_table)))
+  expect_true(all(!rpt$apa_table$MFRMFitUsed))
+  expect_match(rpt$apa_note, "do not use a fitted MFRM")
+
+  tbl <- apa_table(mh)
+  expect_s3_class(tbl, "apa_table")
+  expect_match(tbl$caption, "Mantel-Haenszel")
+  expect_equal(nrow(tbl$table), nrow(mh$mh_table))
+  expect_equal(tbl$digits, 3)
 })
 
 test_that("print and summary S3 methods work for DIF objects", {
@@ -462,6 +796,9 @@ test_that("compare_mfrm reports comparable IC quantities on a common basis", {
   expect_true("AkaikeWeight" %in% names(tbl))
   expect_true("BICWeight" %in% names(tbl))
   expect_true(all(c("WeightedN", "ICSampleSize", "ICSampleSizeBasis") %in% names(tbl)))
+  expect_true(all(c(
+    "ComparisonFamily", "ComparisonStrength", "InterpretationGuard"
+  ) %in% names(tbl)))
   expect_equal(tbl$WeightedN, as.numeric(tbl$nobs))
   expect_equal(tbl$ICSampleSize, as.numeric(tbl$nobs))
   expect_equal(tbl$ICSampleSizeBasis, rep("row_count", nrow(tbl)))
@@ -475,6 +812,10 @@ test_that("compare_mfrm reports comparable IC quantities on a common basis", {
   expect_equal(sum(tbl$BICWeight), 1, tolerance = 1e-10)
   expect_true(isTRUE(comp$comparison_basis$ic_comparable))
   expect_true(isTRUE(comp$comparison_basis$same_data))
+  expect_identical(comp$comparison_basis$comparison_family, "response_model_choice")
+  expect_identical(comp$comparison_basis$comparison_strength, "formal_mml_ic_available")
+  expect_s3_class(comp$comparison_guidance, "data.frame")
+  expect_identical(as.character(comp$comparison_guidance$ComparisonFamily[1]), "response_model_choice")
 
   fit_rsm_w <- fit_rsm
   fit_pcm_w <- fit_pcm
@@ -571,6 +912,8 @@ test_that("compare_mfrm print and summary work with new fields", {
 
   expect_output(print(comp))
   s <- summary(comp)
+  expect_true("comparison_guidance" %in% names(s))
+  expect_identical(as.character(s$comparison_guidance$ComparisonFamily[1]), "response_model_choice")
   expect_output(print(s))
 })
 

@@ -22,7 +22,7 @@
 #'   \item{Score}{Observed category score.}
 #' }
 #' @source Simulated for this package with design settings informed by Eckes
-#' and Jin (2021). The Eckes & Jin (2021) Method section reports the
+#' and Jin (2021). The Eckes and Jin (2021) Method section reports the
 #' following design parameters that motivated the synthetic versions
 #' shipped here: Study 1 had 307 examinees (149 males, 158 females), 18
 #' raters (4 males, 14 females), and 3 criteria (global impression, task
@@ -37,6 +37,7 @@
 #' Eckes, T., & Jin, K.-Y. (2021). Measuring rater centrality effects in
 #' writing assessment: A Bayesian facets modeling approach.
 #' \emph{Psychological Test and Assessment Modeling, 63}(1), 65--94.
+#' \url{https://www.gast.de/fileadmin/gast.de/GAST/4_PDF/2-Forschung-Entwicklung/Publikationen/Eckes-u-Jin-PTAM-2021-1.pdf}
 #' @details
 #' Naming convention:
 #' - `study1` / `study2`: separate simulation studies
@@ -44,6 +45,14 @@
 #' - `_itercal`: iterative-calibration variant
 #'
 #' Use [load_mfrmr_data()] for programmatic selection by key.
+#'
+#' @section Source boundary:
+#' These are Eckes-and-Jin-inspired synthetic datasets, not redistributed
+#' TestDaF operational records. The paper informs the design shape and
+#' rating-scale context. The response rows, generated scores, baseline /
+#' iterative-calibration variants, and any fitted `mfrmr` estimates are
+#' package-generated artifacts. Do not cite these objects as reproductions of
+#' the Eckes and Jin empirical analyses or of their Bayesian FM-SC estimates.
 #'
 #' @section Data dimensions:
 #' \tabular{lrrrr}{
@@ -88,6 +97,9 @@ NULL
 #' Compact synthetic many-facet datasets designed for documentation examples.
 #' Both datasets are large enough to avoid tiny-sample toy behavior while
 #' remaining fast in `R CMD check` examples.
+#' Use them for smoke checks and route demonstrations. For interpretation,
+#' report writing, or user-facing examples, prefer the larger Study 1 / Study 2
+#' datasets or the user's own data.
 #'
 #' Available data objects:
 #' - `mfrmr_example_core`
@@ -103,7 +115,8 @@ NULL
 #'   \item{Group}{Balanced grouping variable used in DFF/DIF examples (`"A"` / `"B"`).}
 #' }
 #' @source Synthetic documentation data generated from rating-scale Rasch facet
-#'   designs with fixed seeds in `data-raw/make-example-data.R`.
+#'   designs with fixed seeds in `data-raw/make-example-data.R`. These compact
+#'   examples are not derived from a paper dataset.
 #' @details
 #' `mfrmr_example_core` is generated from a single latent trait plus rater and
 #' criterion main effects, making it suitable for general fitting, plotting, and
@@ -114,6 +127,12 @@ NULL
 #' - a known `Rater x Criterion` interaction (`R04 x Accuracy`)
 #'
 #' This lets differential-functioning and bias-analysis help pages demonstrate non-null findings.
+#'
+#' @section Source boundary:
+#' `mfrmr_example_core` and `mfrmr_example_bias` are package-authored fixtures.
+#' They are useful for smoke checks, examples, and route demonstrations, but
+#' they are not empirical study data and should not be used as evidence for a
+#' substantive rater, criterion, or group claim.
 #'
 #' @section Data dimensions:
 #' \tabular{lrrrrr}{
@@ -196,6 +215,13 @@ list_mfrmr_data <- function() {
 #' `Study`, `Person`, `Rater`, `Criterion`, and `Score`.
 #' Some datasets, such as the packaged documentation examples, also include
 #' auxiliary variables like `Group` for DIF/bias demonstrations.
+#'
+#' The `example_*` datasets are compact smoke-test fixtures for help pages and
+#' automated checks. They are not intended to carry substantive conclusions.
+#' They are not tied to a source paper. The `study*` datasets are larger
+#' Eckes-and-Jin-inspired synthetic datasets; they borrow design dimensions
+#' from the paper but do not contain original TestDaF rows. Use `study1`,
+#' `study2`, or user data for realistic end-to-end interpretation.
 #'
 #' @section Interpreting output:
 #' The return value is a plain long-format `data.frame`, ready for direct use

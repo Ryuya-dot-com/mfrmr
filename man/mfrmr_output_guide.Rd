@@ -5,17 +5,24 @@
 \title{Choose an mfrmr output helper by user goal}
 \usage{
 mfrmr_output_guide(
-  scope = c("all", "public", "entry", "viewer", "binary", "tables", "reports", "reviews",
-    "bundles", "exports", "compatibility", "gpcm", "simulation", "linking", "network",
-    "response_time", "facets", "conquest", "r")
+  scope = c("all", "public", "beginner", "entry", "viewer", "binary", "tables",
+    "reports", "reviews", "bundles", "exports", "compatibility", "gpcm", "simulation",
+    "linking", "network", "response_time", "psychometric", "facets", "conquest", "r")
 )
 }
 \arguments{
 \item{scope}{Which rows to return. \code{"all"} returns the full guide.
 \code{"public"} returns the small top-level public surface for most users.
 \code{"entry"} returns the recommended first-screen routes. \code{"viewer"} returns
+\code{"beginner"} returns a short first-analysis path for users who should not
+start with FACETS, GPCM, or advanced simulation vocabulary. \code{"entry"}
+returns the recommended first-screen routes. \code{"viewer"} returns
 local-viewer routes built around \code{mfrm_results(include = ...)}. \code{"binary"}
-returns the two-category person-item Rasch route and checks. Other values
+returns the two-category person-item Rasch route and checks.
+\code{"psychometric"} returns reviewer-facing report and validity-boundary
+routes, including \code{\link[=mfrmr_minimum_report_checklist]{mfrmr_minimum_report_checklist()}},
+\code{\link[=mfrm_analysis_audit]{mfrm_analysis_audit()}}, and the observed-score G-theory route through
+\code{\link[=mfrm_generalizability]{mfrm_generalizability()}} / \code{\link[=mfrm_d_study]{mfrm_d_study()}}. Other values
 filter to one output family or to bounded-\code{GPCM}-relevant routes.
 \code{"linking"} returns anchor, drift, and equating route rows.
 \code{"simulation"} and \code{"network"} return advanced design-review rows.
@@ -66,10 +73,15 @@ first-screen creation routes. The entry guide points new scripts to
 \code{\link[=fit_mfrm]{fit_mfrm()}} -> \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} -> \code{\link[=mfrm_results]{mfrm_results()}}, existing fits to
 \code{\link[=mfrm_results]{mfrm_results()}}, and exploratory console
 work to \code{\link[=mfrm_results_interactive]{mfrm_results_interactive()}}. After creating \code{res}, use
+\code{summary(res, view = "brief")} for the short first screen and
 \code{summary(res)$next_actions} to choose the next purpose-specific helper.
 Use \code{mfrmr_output_guide("viewer")} when the next step is the optional local
 Shiny reader; it shows which \code{include} preset to use before calling
 \code{\link[=launch_mfrmr_viewer]{launch_mfrmr_viewer()}}.
+For file handoff, the public and export guides route first to
+\code{export_mfrm_results(res, preset = "starter")} so users get a reader-first
+\code{index.html}, compact summaries, primary evidence tables, and replay code
+before opening full archive exports.
 }
 
 \section{How to use this guide}{
@@ -92,7 +104,9 @@ reviews <- mfrmr_output_guide("reviews")
 reviews[, c("Question", "MainFunction", "UseWhen")]
 
 mfrmr_output_guide("gpcm")[, c("Question", "MainFunction", "GPCMStatus")]
-mfrmr_output_guide("simulation")[, c("Question", "Lifecycle")]
+mfrmr_output_guide("beginner")[, c("Question", "MainFunction", "NextStep")]
+mfrmr_output_guide("psychometric")[, c("Question", "MainFunction")]
+mfrmr_output_guide("simulation")[, c("Question", "MainFunction", "NextStep")]
 mfrmr_output_guide("linking")[, c("Question", "MainFunction")]
 mfrmr_output_guide("facets")[, c("Question", "MainFunction")]
 mfrmr_output_guide("binary")[, c("Question", "MainFunction")]

@@ -31,7 +31,13 @@ at least one \code{RSM}/\code{PCM} reference plus one bounded \code{GPCM} fit, a
 \item{warn_constraints}{Passed to \code{\link[=compare_mfrm]{compare_mfrm()}}.}
 }
 \value{
-An object of class \code{mfrm_model_choice_review}.
+An object of class \code{mfrm_model_choice_review} with \code{overview},
+\code{comparison_table}, \code{comparison_guidance},
+\code{comparison_reporting_templates}, \code{model_roles}, \code{downstream_routes},
+\code{report_templates}, optional \code{weighting_review}, and review notes. The
+comparison-guidance tables expose the same APA-style and technical wording
+templates as \code{\link[=compare_mfrm]{compare_mfrm()}} so model-choice reports can separate response
+model evidence from population-metric and bounded-GPCM sensitivity claims.
 }
 \description{
 Build a model-choice review across RSM, PCM, and bounded GPCM fits
@@ -41,7 +47,11 @@ Build a model-choice review across RSM, PCM, and bounded GPCM fits
 estimate new models. It bundles:
 \itemize{
 \item \code{\link[=compare_mfrm]{compare_mfrm()}} for AIC/BIC/log-likelihood comparison;
+\item comparison-family guidance from \code{\link[=compare_mfrm]{compare_mfrm()}}, including claim scope,
+interpretation guards, APA-style wording, and technical-appendix wording;
 \item model-role guidance for \code{RSM}, \code{PCM}, and bounded \code{GPCM};
+\item population-SD mode summaries for MML fits, so fixed-prior versus
+free-SD metric changes are not mistaken for response-model differences;
 \item downstream-route availability for APA output, score-side export, linking,
 recovery, fair averages, bias screening, and summary-appendix handoff;
 \item report wording templates that avoid treating better bounded-\code{GPCM} fit as
@@ -54,8 +64,8 @@ versus bounded-\code{GPCM} pair.
 The word "bounded" is intentional: the package implements a bounded GPCM
 route, not every possible generalized partial-credit many-facet extension.
 The current route uses positive slopes, requires \code{slope_facet == step_facet},
-identifies slopes on the log scale with geometric mean 1, and keeps several
-downstream score-side/reporting helpers outside the validated boundary.
+identifies slopes on the log scale with geometric mean 1, and requires
+caveated downstream wording rather than unrestricted GPCM claims.
 }
 \examples{
 \dontrun{
@@ -67,6 +77,7 @@ fit_pcm <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                     quad_points = 7)
 review <- build_model_choice_review(RSM = fit_rsm, PCM = fit_pcm)
 summary(review)
+review$comparison_guidance[, c("ComparisonFamily", "InterpretationGuard")]
 }
 }
 \seealso{

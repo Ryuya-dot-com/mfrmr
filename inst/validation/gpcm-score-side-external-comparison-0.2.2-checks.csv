@@ -1,0 +1,6 @@
+"Check","Value","Threshold","Passed","Detail"
+"mirt_available",1,1,TRUE,"version=1.46.1"
+"TAM_available",1,1,TRUE,"version=4.3.25"
+"eRm_pcm_boundary_available",1,1,TRUE,"version=1.0.10; eRm is used as PCM/CML boundary evidence, not free-slope GPCM evidence"
+"external_probability_trace_rows",32,1,TRUE,"mirt/TAM mapped-kernel comparison rows"
+"external_probability_trace_max_diff",5.34512896921413e-06,5e-04,TRUE,"all external mapped-kernel comparisons pass their row thresholds"

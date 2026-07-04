@@ -42,7 +42,16 @@ exist.
 }
 \details{
 The current release treats \code{GPCM} as a bounded supported scope inside the
-core R package:
+core R package. "Bounded" means a constrained package-native branch, not a
+complete unrestricted GPCM implementation; the current \code{GPCM} route is
+therefore not a complete unrestricted GPCM implementation. The current
+branch keeps the role-based many-facet design contract, requires an
+explicit step-facet
+structure, keeps \code{slope_facet == step_facet}, uses positive
+geometric-mean-one slopes, and validates helper families one row at a time
+through this matrix.
+
+Within that boundary:
 \itemize{
 \item fitting and core summaries are supported,
 \item posterior-scoring and information helpers are supported,
@@ -106,7 +115,8 @@ gpcm_capability_matrix("blocked")
 \seealso{
 \code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=compute_information]{compute_information()}},
 \code{\link[=predict_mfrm_units]{predict_mfrm_units()}}, \code{\link[=sample_mfrm_plausible_values]{sample_mfrm_plausible_values()}},
-\code{\link[=reporting_checklist]{reporting_checklist()}}, \link{mfrmr_workflow_methods}, \link{mfrmr-package}
+\code{\link[=reporting_checklist]{reporting_checklist()}}, \code{\link[=mfrmr_model_family_scope]{mfrmr_model_family_scope()}},
+\link{mfrmr_workflow_methods}, \link{mfrmr-package}
 }
 \concept{GPCM boundaries}
 \concept{route selection}

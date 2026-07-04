@@ -28,12 +28,19 @@ An object of class \code{mfrm_comparison} (named list) with:
 \itemize{
 \item \code{table}: data.frame of model-level statistics (LogLik, AIC, BIC,
 Delta_AIC, AkaikeWeight, Delta_BIC, BICWeight, npar, nobs, WeightedN,
-ICSampleSize, ICSampleSizeBasis, Model, Method, Converged, ICComparable).
+ICSampleSize, ICSampleSizeBasis, Model, Method, \code{MMLEngineRequested},
+\code{MMLEngineUsed}, \code{PopulationSDMode}, \code{PopulationPriorSD},
+\code{EstimatedPopulationSD}, population-SD profile SE/CI fields, Converged,
+ICComparable, \code{ComparisonFamily}, \code{ComparisonStrength},
+\code{InterpretationGuard}).
 \item \code{lrt}: data.frame with likelihood-ratio test result (only when two models
 are supplied and \code{nested = TRUE}). Contains \code{ChiSq}, \code{df}, \code{p_value}.
 \item \code{evidence_ratios}: data.frame of pairwise Akaike-weight ratios (Model1,
 Model2, EvidenceRatio). \code{NULL} when weights cannot be computed.
 \item \code{preferred}: named list with the preferred model label by each criterion.
+\item \code{comparison_guidance}: one-row data.frame with claim scope, APA-style
+reporting template, technical-appendix template, interpretation guard, and
+next action.
 \item \code{comparison_basis}: list describing whether IC and LRT comparisons were
 considered comparable. Includes a conservative \code{nesting_review} plus
 \code{lrt_status} / \code{lrt_reason} so withheld LRTs are explicit rather than
@@ -60,10 +67,19 @@ The comparison table records both row count (\code{nobs}) and the sample-size
 basis used for the BIC penalty (\code{ICSampleSize}, \code{ICSampleSizeBasis}); for
 weighted fits this is the sum of weights rather than the number of rows.
 
+The output also classifies the \emph{kind} of comparison before it asks users to
+interpret fit evidence. \code{ComparisonFamily} and \code{comparison_guidance} separate
+ordinary response-model choice from fixed-SD versus free-SD population-metric
+sensitivity, bounded-GPCM slope sensitivity, facet-interaction sensitivity,
+and same-family refit/settings checks. The guidance rows include APA-style and
+technical-appendix wording templates, plus an interpretation guard for cases
+where a single model-choice claim would overstate the evidence.
+
 \strong{Nesting}: Two models are \emph{nested} when one is a special case of the
 other obtained by imposing equality constraints.  The most common
 nesting in MFRM is RSM (shared thresholds) inside PCM
-(item-specific thresholds).  Models that differ only in estimation
+(step-facet-specific thresholds, such as rater-specific category-use
+thresholds when \code{step_facet = "Rater"}). Models that differ only in estimation
 method (MML vs JML) on the same specification are not nested in the
 usual sense---use information criteria rather than LRT for that
 comparison.
@@ -133,6 +149,11 @@ in \code{comparison_basis$nesting_review} passes.
 \item Same-family additive-vs-interaction fits are considered nested only when
 all other structural settings match and the smaller model's
 \code{facet_interactions} set is a subset of the larger model's set.
+\item Fixed-SD vs free-SD \code{MML} fits are considered a one-parameter
+population-SD extension only when the model family, data, constraints,
+steps, slopes, and interaction terms match and the fixed SD is inside the
+free-SD bounds. Do not combine this LRT with a simultaneous
+item/facet-structure change.
 \item Do not assume that \code{nested = TRUE} overrides the package's conservative
 nesting boundary; unsupported relations remain unsupported.
 \item Do not compare models fit to different datasets, different score codings,
@@ -143,10 +164,17 @@ or materially different constraint systems as if they were commensurate.
 \section{Interpreting output}{
 
 \itemize{
+\item Start with \code{ComparisonFamily}, \code{ComparisonStrength}, and
+\code{InterpretationGuard}; these fields state whether the table is primarily a
+response-model comparison, a population-SD sensitivity check, bounded-GPCM
+sensitivity evidence, or a descriptive settings/refit comparison.
 \item Lower AIC/BIC values indicate better parsimony-accuracy trade-off only
 when \code{table$ICComparable} is \code{TRUE}.
 \item A significant LRT p-value suggests the more complex model provides a
 meaningfully better fit only when the nesting assumption truly holds.
+\item \code{comparison_guidance$APAStyleTemplate} and
+\code{TechnicalAppendixTemplate} provide short reporting text that keeps fit
+evidence, population metric, and score-contract claims separated.
 \item \code{preferred} indicates the model preferred by each criterion.
 \item \code{evidence_ratios} gives pairwise Akaike-weight ratios (returned only
 when Akaike weights can be computed for at least two models).
@@ -159,10 +187,13 @@ cautiously---they do not adjust for multiple comparisons.
 
 \itemize{
 \item \code{table}: first-pass comparison table; start with \code{ICComparable},
-\code{Model}, \code{Method}, \code{AIC}, and \code{BIC}.
+\code{ComparisonFamily}, \code{ComparisonStrength}, \code{InterpretationGuard}, \code{Model},
+\code{Method}, \code{AIC}, and \code{BIC}.
 \item \code{comparison_basis}: records whether IC and LRT claims are defensible for
 the supplied models. Inspect \code{comparison_basis$nesting_review$relation}
 and \code{reason} before reading any LRT output.
+\item \code{comparison_guidance}: one-row reporting guide with \code{ClaimScope},
+\code{APAStyleTemplate}, \code{TechnicalAppendixTemplate}, and \code{NextAction}.
 \item \code{lrt}: nested-model test summary, present only when the requested and
 reviewed conditions are met.
 \item \code{preferred}: candidate preferred by each criterion when those summaries
@@ -214,6 +245,24 @@ fit_pcm <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 comp <- compare_mfrm(fit_rsm, fit_pcm, labels = c("RSM", "PCM"))
 comp$table
 comp$evidence_ratios
+
+# Compare a fixed normal MML metric with the opt-in free-SD metric.
+# Keep the response data and structural model identical; this isolates
+# the extra population-SD parameter.
+fit_fixed_sd <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
+                         method = "MML", model = "RSM",
+                         quad_points = 7, maxit = 30)
+fit_free_sd <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
+                        method = "MML", model = "RSM",
+                        quad_points = 7, maxit = 80,
+                        estimate_population_sd = TRUE)
+comp_sd <- compare_mfrm(fit_fixed_sd, fit_free_sd,
+                        labels = c("fixed_SD", "free_SD"),
+                        nested = TRUE)
+comp_sd$table[, c("Label", "npar", "AIC", "PopulationSDMode",
+                  "EstimatedPopulationSD")]
+comp_sd$comparison_basis$nesting_review
+comp_sd$comparison_guidance[, c("ComparisonFamily", "InterpretationGuard")]
 }
 
 }

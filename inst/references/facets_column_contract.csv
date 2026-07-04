@@ -14,6 +14,8 @@ Table 3,estimation_iteration_report,t3,summary,FinalConverged|FinalIterations|Re
 Table 4,unexpected_response_table,t4,table,Row|Person|Rater|Task|Criterion|Weight|Score|Observed|Expected|Residual|StdResidual|ObsProb|MostLikely|MostLikelyProb|CategoryGap|Surprise|Direction|FlagLowProbability|FlagLargeResidual|Severity
 Table 4,unexpected_response_table,t4,summary,TotalObservations|UnexpectedN|UnexpectedPercent|LowProbabilityN|LargeResidualN|Rule|AbsZThreshold|ProbThreshold
 Table 5,measurable_summary_table,t5,summary,Observations|TotalWeight|Persons|Facets|Categories|ConnectedSubsets|LargestSubsetObs|LargestSubsetPct
+Table 5,measurable_summary_table,t5,residual_summary,Statistic|N|TotalWeight|Category|Score|Expected|Residual|StdResidual
+Table 5,measurable_summary_table,t5,variance_summary,N|TotalWeight|RawScoreVariancePopulation|ResidualVariancePopulation|RawScoreErrorVariancePct|ExplainedVarianceApprox|ExplainedVariancePctApprox|GlobalPearsonChiSq|GlobalPearsonDFApprox|GlobalPearsonRatioApprox
 Table 5,measurable_summary_table,t5,facet_coverage,Facet|Levels|MeanSE|MeanInfit|MeanOutfit|MinEstimate|MaxEstimate
 Table 5,measurable_summary_table,t5,category_stats,Category|Count|AvgPersonMeasure|ExpectedAverage|Infit|Outfit|MeanResidual|DF_Infit|DF_Outfit|Percent|InfitZSTD|OutfitZSTD|ExpectedCount|ExpectedPercent|DiffCount|DiffPercent|LowCount|InfitFlag|OutfitFlag|ZSTDFlag
 Table 5,measurable_summary_table,t5,subsets,Subset|Criterion|Person|Rater|Task|Observations

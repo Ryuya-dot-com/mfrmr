@@ -25,6 +25,11 @@ treated as automatic operational-scoring evidence.
 \section{Start with the reporting question}{
 
 \itemize{
+\item "What would a critical psychometric reviewer expect before seeing any
+fitted object?"
+Use \code{\link[=mfrmr_minimum_report_checklist]{mfrmr_minimum_report_checklist()}}. It lists the minimum report
+topics that should be planned before treating software output as a
+manuscript-ready validity argument.
 \item "Which parts of this run are draft-complete, and with what caveats?"
 Use \code{\link[=reporting_checklist]{reporting_checklist()}}.
 \item "How should I phrase the model, fit, and precision sections?"
@@ -37,6 +42,16 @@ Use \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}}, \co
 Use \code{\link[=precision_review_report]{precision_review_report()}} and \code{summary(diagnose_mfrm(...))}.
 \item "Which caveats need to appear in the write-up?"
 Use \code{\link[=reporting_checklist]{reporting_checklist()}} first, then \code{\link[=build_apa_outputs]{build_apa_outputs()}}.
+\item "How should I report DFF/DIF results in the manuscript?"
+Use \code{\link[=dif_report]{dif_report()}} with \code{style = "apa"} for the conservative paragraph,
+\code{\link[=apa_table]{apa_table()}} for the aligned table/note/caption, and
+\code{build_apa_outputs(..., dif_results = ...)} when the DFF/DIF paragraph
+should be appended to the main APA draft.
+\item "How should I report the MML population metric?"
+Inspect \code{summary(fit)$population_overview}, run \code{\link[=build_apa_outputs]{build_apa_outputs()}},
+and check \code{summary(apa)$content_checks} for the
+\code{"MML population SD wording alignment"} row. Free-SD runs should keep the
+estimated SD and profile SE/CI caveat visible.
 \item "How should I start figure captions or visual-results wording?"
 Use \code{\link[=visual_reporting_template]{visual_reporting_template()}} for conservative caption and results
 sentence starters, then verify availability with
@@ -47,6 +62,8 @@ sentence starters, then verify availability with
 \section{Recommended reporting route}{
 
 \enumerate{
+\item Before fitting or drafting, run \code{\link[=mfrmr_minimum_report_checklist]{mfrmr_minimum_report_checklist()}} and
+decide which rows are required for the intended use of the scores.
 \item Fit with \code{\link[=fit_mfrm]{fit_mfrm()}}.
 \item Build diagnostics with \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}.
 \item Review precision strength with \code{\link[=precision_review_report]{precision_review_report()}} when
@@ -60,6 +77,8 @@ the narrative around local misfit.
 \item Create manuscript-draft prose and metadata with \code{\link[=build_apa_outputs]{build_apa_outputs()}}.
 For bounded \code{GPCM}, treat the APA/QC/export stack as caveated
 sensitivity-reporting output and keep its \code{gpcm_boundary} visible.
+For ordinary MML, keep fixed-prior versus estimated population-SD mode
+visible in Method wording and table notes.
 \item Convert summary outputs to reusable table bundles with
 \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}}, review the bundle with \code{summary()} /
 \code{plot()}, then convert specific components to handoff tables with
@@ -70,6 +89,12 @@ sensitivity-reporting output and keep its \code{gpcm_boundary} visible.
 \section{Which helper answers which task}{
 
 \describe{
+\item{\code{\link[=mfrmr_minimum_report_checklist]{mfrmr_minimum_report_checklist()}}}{Lists the fit-independent
+method, design, estimation, fit, precision, category, rater/facet,
+fairness, linking, visual, FACETS/external-software, validity-boundary,
+and limitation topics that should be planned before writing. It is the
+best first page for a critical reviewer or a graduate student building a
+reporting outline.}
 \item{\code{\link[=reporting_checklist]{reporting_checklist()}}}{Turns current analysis objects into a
 prioritized revision guide with \code{DraftReady}, \code{Priority}, and
 \code{NextAction}. \code{DraftReady} means "ready to draft with the documented
@@ -103,6 +128,8 @@ guidance for public visual helpers.}
 \section{Practical reporting rules}{
 
 \itemize{
+\item Use \code{\link[=mfrmr_minimum_report_checklist]{mfrmr_minimum_report_checklist()}} before the analysis when the
+question is "what must the report cover?"
 \item Treat \code{\link[=reporting_checklist]{reporting_checklist()}} as the gap finder and
 \code{\link[=build_apa_outputs]{build_apa_outputs()}} as the writing engine.
 \item Use the checklist's \code{"Visual Displays"} rows to decide whether the next
@@ -116,6 +143,13 @@ model-based.
 \item Keep bias and differential-functioning outputs in screening language
 unless the current precision layer and linking evidence justify stronger
 claims.
+\item Keep observed-score Mantel-Haenszel DIF from \code{\link[=analyze_dif_mh]{analyze_dif_mh()}} separate
+from fitted-MFRM \code{RSM}, \code{PCM}, and bounded-\code{GPCM} DFF/DIF. It can be
+reported through \code{\link[=dif_report]{dif_report()}} with \code{style = "apa"} and \code{\link[=apa_table]{apa_table()}}, but
+its note states that no fitted MFRM likelihood was used.
+\item Keep MML population-SD mode separate from model fit and GPCM slope
+interpretation. The fixed-prior and free-SD routes put person measures on
+different latent metrics, so mixed comparisons need sensitivity wording.
 \item Treat \code{DraftReady} (and the legacy alias \code{ReadyForAPA}) as a
 drafting-readiness flag, not as a substitute for methodological review.
 \item Rebuild APA outputs after major model changes instead of editing old text
@@ -130,15 +164,24 @@ review outside this route.
 
 \itemize{
 \item Manuscript-first route:
-\code{\link[=fit_mfrm]{fit_mfrm()}} -> \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} -> \code{\link[=reporting_checklist]{reporting_checklist()}} ->
+\code{\link[=mfrmr_minimum_report_checklist]{mfrmr_minimum_report_checklist()}} -> \code{\link[=fit_mfrm]{fit_mfrm()}} ->
+\code{\link[=diagnose_mfrm]{diagnose_mfrm()}} -> \code{\link[=reporting_checklist]{reporting_checklist()}} ->
 \code{\link[=build_apa_outputs]{build_apa_outputs()}} -> \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}} -> \code{summary()} /
 \code{plot()} -> \code{\link[=apa_table]{apa_table()}}, \code{\link[=export_summary_appendix]{export_summary_appendix()}}, or
 \code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}}(include = c("summary_tables", "html")).
 For \code{RSM} / \code{PCM} final reports, prefer \code{method = "MML"} and
 \code{diagnostic_mode = "both"} in the diagnostics step.
+If \code{estimate_population_sd = TRUE}, add
+\code{summary(fit)$population_overview} and the
+\code{"MML population SD wording alignment"} content check to the read order.
 For bounded \code{GPCM}, use the same fit-based reporting/export family only
 as caveated sensitivity-reporting output and inspect its \code{gpcm_boundary}
 rows before writing claims.
+\item DFF/DIF route:
+\code{\link[=analyze_dff]{analyze_dff()}} / \code{\link[=analyze_dif]{analyze_dif()}} / \code{\link[=analyze_dif_mh]{analyze_dif_mh()}} /
+\code{\link[=analyze_dff_moderation]{analyze_dff_moderation()}} / \code{\link[=dif_interaction_table]{dif_interaction_table()}} ->
+\code{\link[=dif_report]{dif_report()}} with \code{style = "apa"} -> \code{\link[=apa_table]{apa_table()}} and, when desired,
+\code{\link[=build_apa_outputs]{build_apa_outputs()}} with \code{dif_results = ...}.
 \item Appendix-first route:
 \code{\link[=facet_statistics_report]{facet_statistics_report()}} -> \code{\link[=apa_table]{apa_table()}} ->
 \code{\link[=build_visual_summaries]{build_visual_summaries()}} -> \code{\link[=build_apa_outputs]{build_apa_outputs()}}.
@@ -167,6 +210,9 @@ caveated \code{\link[=build_apa_outputs]{build_apa_outputs()}}, \code{\link[=bui
 
 \examples{
 \dontrun{
+mfrmr_minimum_report_checklist()[, c("Section", "ReportItem", "Required")]
+mfrmr_minimum_report_checklist("fairness")[, c("ReportItem", "mfrmrRoute")]
+
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(
   toy,

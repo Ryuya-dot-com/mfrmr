@@ -75,6 +75,8 @@ The returned bundle has class \code{mfrm_manifest} and includes:
 \item \code{estimation_control}: key-value optimizer settings table
 \item \code{anchor_summary}: facet-level anchor summary
 \item \code{anchors}: machine-readable anchor table
+\item \code{anchor_contract_summary} and \code{anchor_contract}: package-native
+anchor/linking guarantees and FACETS \verb{Anchorfile=} boundaries
 \item \code{hierarchical_review}: retained traceability table for hierarchical /
 small-sample design flags
 \item \code{missing_recoding}: retained traceability table for missing-code recoding
@@ -85,6 +87,10 @@ outputs
 metadata tables
 \item \code{settings}: manifest build settings
 }
+
+For \code{MML} fits, \code{summary}, \code{model_settings}, and \code{settings} also record the
+marginal population-SD mode (\code{fixed} vs \code{estimated}), the fixed prior SD or
+estimated SD, and the profile-SE status when a free SD was estimated.
 }
 
 \section{Interpreting output}{
@@ -127,10 +133,16 @@ routing design forecasting through its separate caveated capability row.
 \dontshow{if (interactive()) withAutoprint(\{ # examplesIf}
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", maxit = 30)
+                method = "MML", quad_points = 7, maxit = 30,
+                estimate_population_sd = TRUE)
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 manifest <- build_mfrm_manifest(fit, diagnostics = diag)
-manifest$summary[, c("Model", "Method", "Observations", "Facets")]
+manifest$summary[, c("Model", "Method", "Observations",
+                     "PopulationSDMode", "EstimatedPopulationSD")]
+manifest$model_settings[
+  manifest$model_settings$Setting \%in\% c("population_sd_mode",
+                                         "estimated_population_sd"),
+]
 manifest$available_outputs[, c("Component", "Available")]
 \dontshow{\}) # examplesIf}
 }

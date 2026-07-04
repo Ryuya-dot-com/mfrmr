@@ -4,18 +4,26 @@
 \alias{dif_report}
 \title{Generate a differential-functioning interpretation report}
 \usage{
-dif_report(dif_result, ...)
+dif_report(dif_result, style = c("narrative", "apa"), digits = 3, ...)
 }
 \arguments{
 \item{dif_result}{Output from \code{\link[=analyze_dff]{analyze_dff()}} / \code{\link[=analyze_dif]{analyze_dif()}}
 (class \code{mfrm_dff} with compatibility class \code{mfrm_dif}) or
 \code{\link[=dif_interaction_table]{dif_interaction_table()}} (class \code{mfrm_dif_interaction}).}
 
-\item{...}{Currently unused; reserved for future extensions.}
+\item{style}{Reporting style. \code{"narrative"} preserves the package's
+interpretive default. \code{"apa"} returns a manuscript-oriented paragraph as
+\code{narrative} and populates APA table/caption/note fields.}
+
+\item{digits}{Digits used for APA text fragments and table display guidance.}
+
+\item{...}{Reserved for future extensions.}
 }
 \value{
 Object of class \code{mfrm_dif_report} with \code{narrative},
-\code{counts}, \code{large_dif}, \code{gpcm_boundary}, and \code{config}.
+\code{counts}, \code{large_dif}, \code{apa_text}, \code{apa_table}, \code{apa_caption},
+\code{apa_note}, \code{apa_section}, \code{apa_section_text}, \code{gpcm_boundary}, and
+\code{config}.
 }
 \description{
 Produces APA-style narrative text interpreting the results of a differential-
@@ -39,6 +47,17 @@ the refit difference is descriptive rather than comparable on a linked
 logit scale. For \code{method = "residual"}, the report describes
 screening-positive versus screening-negative contrasts instead of applying
 ETS labels.
+
+The APA style is intentionally conservative. It reports the screening
+method, number of contrasts or item/facet levels, strongest finite signal,
+effect metric, test statistic and exact tail-area value when available, and
+adjusted tail-area value when that value drives the package classification.
+It does not turn screening labels into fairness, invariance, or bias
+conclusions. For fitted-model \code{\link[=analyze_dff]{analyze_dff()}} / \code{\link[=analyze_dif]{analyze_dif()}} results, the
+output is a many-facet Rasch differential-functioning screen. For
+\code{\link[=analyze_dif_mh]{analyze_dif_mh()}} results, the output is an observed-score
+Mantel-Haenszel DIF screen and is not a fitted-MFRM \code{RSM}, \code{PCM}, or bounded
+\code{GPCM} result.
 }
 \section{Interpreting output}{
 
@@ -79,9 +98,17 @@ from unwanted measurement bias is grounded in:
 \item Eckes, T. (2011). \emph{Introduction to Many-Facet Rasch Measurement:
 Analyzing and Evaluating Rater-Mediated Assessments}. Frankfurt am
 Main: Peter Lang. ISBN 978-3-631-61350-4.
+\item Holland, P. W., & Thayer, D. T. (1988). Differential item performance and
+the Mantel-Haenszel procedure. In H. Wainer & H. I. Braun (Eds.),
+\emph{Test Validity}.
+\item Dorans, N. J., & Holland, P. W. (1993). DIF detection and description:
+Mantel-Haenszel and standardization. In P. W. Holland & H. Wainer (Eds.),
+\emph{Differential Item Functioning}.
 \item McNamara, T., & Knoch, U. (2012). The Rasch wars: The emergence of
 Rasch measurement in language testing. \emph{Language Testing}, 29(4),
 555--576. \doi{10.1177/0265532211430367}
+\item American Psychological Association. (2024). \emph{7th edition numbers and
+statistics guide}.
 }
 }
 
@@ -95,6 +122,8 @@ diag <- diagnose_mfrm(fit, residual_pca = "none")
 dif <- analyze_dff(fit, diag, facet = "Rater", group = "Group", data = toy)
 rpt <- dif_report(dif)
 cat(rpt$narrative)
+rpt_apa <- dif_report(dif, style = "apa")
+apa_table(rpt_apa)
 \dontshow{\}) # examplesIf}
 }
 \seealso{

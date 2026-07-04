@@ -80,6 +80,10 @@ By default that replay-ready table is embedded inline; when
 \code{fit_person_data_file} is supplied, the generated script reads it from that
 sidecar CSV relative to the replay script location.
 
+Fit-mode scripts explicitly replay \code{population_prior_sd},
+\code{estimate_population_sd}, and \code{population_sd_bounds}, so fixed-SD and
+free-SD \code{MML} runs do not silently collapse to the default metric.
+
 For bounded \code{GPCM}, replay scripts are available with an explicit
 \code{gpcm_boundary} table. The generated script records \code{step_facet} and
 \code{slope_facet} settings, but full FACETS score-side contract review remains
@@ -102,7 +106,8 @@ another analyst can rerun later. Compared with related helpers:
 The returned object contains:
 \itemize{
 \item \code{summary}: a one-row overview of the chosen replay mode and whether bundle
-export was included
+export was included; for \code{MML} fits it also records the marginal
+population-SD mode and estimated-SD profile-SE status
 \item \code{script}: the generated R code as a single string
 \item \code{anchors} and \code{group_anchors}: the exact stored constraints that were
 embedded into the script
@@ -140,10 +145,13 @@ you.
 \dontshow{if (interactive()) withAutoprint(\{ # examplesIf}
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", maxit = 30)
+                method = "MML", quad_points = 7, maxit = 30,
+                estimate_population_sd = TRUE)
 replay <- build_mfrm_replay_script(fit, data_file = "your_data.csv")
-replay$summary[, c("ScriptMode", "ResidualPCA", "BiasPairs")]
-cat(substr(replay$script, 1, 120))
+replay$summary[, c("ScriptMode", "PopulationSDMode",
+                   "EstimatedPopulationSD")]
+grepl("estimate_population_sd = TRUE", replay$script, fixed = TRUE)
+cat(substr(replay$script, 1, 240))
 \dontshow{\}) # examplesIf}
 }
 \seealso{

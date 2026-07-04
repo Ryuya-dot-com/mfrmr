@@ -179,6 +179,27 @@ specification that can be passed to \code{\link[=simulate_mfrm_data]{simulate_mf
 make the data-generating mechanism inspectable and reusable rather than
 relying only on ad hoc scalar arguments.
 
+\strong{Which simulation helper should I use?}
+\itemize{
+\item Use \code{build_mfrm_sim_spec()} when you need one reusable and inspectable
+data-generating mechanism (DGM) for examples, recovery checks, design
+evaluation, signal-screening simulations, or one-scenario forecasts.
+\item Use \code{\link[=simulate_mfrm_data]{simulate_mfrm_data()}} when you need one synthetic long-format response
+table. One generated table is a fixture or smoke example, not a Monte Carlo
+validation result.
+\item Use \code{\link[=evaluate_mfrm_recovery]{evaluate_mfrm_recovery()}} when the user question is whether known
+generating parameters are recovered under the declared DGM. Follow with
+\code{\link[=assess_mfrm_recovery]{assess_mfrm_recovery()}} before writing adequacy or readiness language.
+\item Use \code{\link[=evaluate_mfrm_design]{evaluate_mfrm_design()}} when the user question is which candidate
+design has better simulated operating characteristics across a grid.
+\item Use \code{\link[=predict_mfrm_population]{predict_mfrm_population()}} when the user question is a single
+scenario-level aggregate forecast for one future design. Use
+\code{\link[=evaluate_mfrm_design]{evaluate_mfrm_design()}} instead when comparing alternatives.
+\item Use \code{\link[=evaluate_mfrm_diagnostic_screening]{evaluate_mfrm_diagnostic_screening()}} or
+\code{\link[=evaluate_mfrm_signal_detection]{evaluate_mfrm_signal_detection()}} when the user question is diagnostic,
+DIF, or bias-screen operating behavior under repeated simulated scenarios.
+}
+
 The resulting object records:
 \itemize{
 \item design counts (\code{n_person}, \code{n_rater}, \code{n_criterion}, \code{raters_per_person})

@@ -9,8 +9,11 @@ test_that("NAMESPACE roxygen contract keeps expected exports and methods", {
   expected_exports <- c(
     "analyze_dff",
     "analyze_dif",
+    "analyze_dif_mh",
+    "analyze_eap_power_sensitivity",
     "analyze_facet_equivalence",
     "analyze_residual_pca",
+    "anchor_linking_contract",
     "anchor_review",
     "anchor_to_baseline",
     "assess_mfrm_recovery",
@@ -31,11 +34,14 @@ test_that("NAMESPACE roxygen contract keeps expected exports and methods", {
     "build_mfrm_replay_script",
     "build_mfrm_sim_spec",
     "build_model_choice_review",
+    "bootstrap_mfrm_generalizability",
     "build_summary_table_bundle",
     "build_visual_summaries",
     "category_curves_report",
     "category_structure_report",
+    "check_mfrm_generalizability_design",
     "compare_mfrm",
+    "compare_mfrm_generalizability",
     "compatibility_alias_table",
     "compute_information",
     "data_quality_report",
@@ -60,6 +66,8 @@ test_that("NAMESPACE roxygen contract keeps expected exports and methods", {
     "facet_statistics_report",
     "facets_chisq_table",
     "facets_feature_coverage",
+    "facets_term_crosswalk",
+    "facets_visual_contract",
     "facets_output_file_bundle",
     "facets_output_contract_review",
     "fair_average_table",
@@ -81,6 +89,7 @@ test_that("NAMESPACE roxygen contract keeps expected exports and methods", {
     "rater_network_analysis",
     "rater_halo_network_analysis",
     "mfrmr_interval_guide",
+    "mfrmr_minimum_report_checklist",
     "mfrmr_output_guide",
     "mfrm_threshold_profiles",
     "normalize_conquest_overlap_files",
@@ -135,6 +144,7 @@ test_that("NAMESPACE roxygen contract keeps expected exports and methods", {
     "recode_missing_codes",
     "as_kable",
     "as_flextable",
+    "as_ggplot",
     # 0.1.6: empirical-Bayes shrinkage exports.
     "apply_empirical_bayes_shrinkage",
     "shrinkage_report",
@@ -160,6 +170,7 @@ test_that("NAMESPACE roxygen contract keeps expected exports and methods", {
     "q3_statistic",
     "compute_person_fit_indices",
     "mfrm_generalizability",
+    "mfrm_analysis_audit",
     "import_mirt_fit",
     "import_tam_fit",
     "import_erm_fit"
@@ -167,7 +178,7 @@ test_that("NAMESPACE roxygen contract keeps expected exports and methods", {
   # Subset assertion rather than exact-set equality. The hard-coded
   # `expected_exports` list above is the 0.1.6 baseline contract: every entry
   # must remain exported, but additional exports introduced by later cycles
-  # (Phase 7c plots, Phase 7d classical DIF, Phase 7g GPCM helpers, Phase 8
+  # (Phase 7c plots, Phase 7d MH DIF, Phase 7g GPCM helpers, Phase 8
   # visualisation round 2, etc.) are allowed to grow the namespace without
   # tripping this regression guard.
   missing_exports <- setdiff(expected_exports, exports)
@@ -235,14 +246,32 @@ test_that("NAMESPACE roxygen contract keeps expected exports and methods", {
     "S3method(summary,mfrm_summary_table_bundle)",
     "S3method(summary,mfrm_threshold_profiles)",
     "S3method(as.data.frame,mfrm_fit)",
+    "S3method(as_ggplot,default)",
+    "S3method(as_ggplot,mfrm_design_evaluation)",
+    "S3method(as_ggplot,mfrm_design_evaluation_plot_data)",
+    "S3method(as_ggplot,mfrm_plot_data)",
+    "S3method(as_ggplot,mfrm_signal_detection)",
+    "S3method(as_ggplot,mfrm_signal_detection_plot_data)",
     "S3method(print,mfrm_comparison)",
     "S3method(print,summary.mfrm_comparison)",
     "S3method(summary,mfrm_comparison)",
+    "S3method(print,mfrm_mh_dif)",
+    "S3method(print,summary.mfrm_mh_dif)",
+    "S3method(summary,mfrm_mh_dif)",
+    "S3method(print,mfrm_classical_dif)",
+    "S3method(print,summary.mfrm_classical_dif)",
+    "S3method(summary,mfrm_classical_dif)",
     "S3method(print,mfrm_dff)",
+    "S3method(print,mfrm_dff_moderation)",
     "S3method(print,summary.mfrm_dff)",
+    "S3method(print,summary.mfrm_dff_moderation)",
     "S3method(print,mfrm_dif)",
+    "S3method(print,mfrm_dif_moderation)",
     "S3method(print,summary.mfrm_dif)",
+    "S3method(print,summary.mfrm_dif_moderation)",
     "S3method(summary,mfrm_dif)",
+    "S3method(summary,mfrm_dff_moderation)",
+    "S3method(summary,mfrm_dif_moderation)",
     "S3method(print,mfrm_dif_interaction)",
     "S3method(print,summary.mfrm_dif_interaction)",
     "S3method(summary,mfrm_dif_interaction)",
@@ -295,6 +324,9 @@ test_that("NAMESPACE roxygen contract keeps expected exports and methods", {
     "S3method(summary,mfrm_future_branch_active_branch)",
     "S3method(plot,mfrm_d_study)",
     "S3method(plot,mfrm_future_branch_active_branch)",
+    "S3method(plot,mfrm_generalizability)",
+    "S3method(plot,mfrm_generalizability_comparison)",
+    "S3method(plot,mfrm_generalizability_design_check)",
     # print delegates added in 0.1.6 for classes that only had summary methods.
     "S3method(print,mfrm_apa_outputs)",
     "S3method(print,mfrm_bias)",
@@ -335,6 +367,10 @@ test_that("NAMESPACE roxygen contract keeps expected exports and methods", {
     # 0.1.6 second-pass: print methods for the new public classes.
     "S3method(print,mfrm_q3)",
     "S3method(print,mfrm_generalizability)",
+    "S3method(print,mfrm_generalizability_bootstrap)",
+    "S3method(print,mfrm_generalizability_comparison)",
+    "S3method(print,mfrm_generalizability_design_check)",
+    "S3method(print,mfrm_analysis_audit)",
     "S3method(print,mfrm_imported_fit)",
     # 0.2.0: print method for the `draw = FALSE` plot payload class
     # (added so users don't see a raw list dump).
@@ -348,6 +384,17 @@ test_that("NAMESPACE roxygen contract keeps expected exports and methods", {
     "S3method(print,summary.mfrm_recovery_simulation)",
     "S3method(summary,mfrm_recovery_assessment)",
     "S3method(summary,mfrm_recovery_simulation)",
+    # 0.2.2: G-theory summary now includes runtime metadata.
+    "S3method(print,summary.mfrm_generalizability)",
+    "S3method(print,summary.mfrm_generalizability_bootstrap)",
+    "S3method(print,summary.mfrm_generalizability_comparison)",
+    "S3method(print,summary.mfrm_generalizability_design_check)",
+    "S3method(print,summary.mfrm_analysis_audit)",
+    "S3method(summary,mfrm_generalizability)",
+    "S3method(summary,mfrm_generalizability_bootstrap)",
+    "S3method(summary,mfrm_generalizability_comparison)",
+    "S3method(summary,mfrm_generalizability_design_check)",
+    "S3method(summary,mfrm_analysis_audit)",
     # 0.2.0: fit-level model-choice review helper.
     "S3method(print,mfrm_model_choice_review)",
     "S3method(print,summary.mfrm_model_choice_review)",
@@ -368,7 +415,12 @@ test_that("NAMESPACE roxygen contract keeps expected exports and methods", {
     "S3method(plot,mfrm_response_time_review)",
     "S3method(print,mfrm_response_time_review)",
     "S3method(print,summary.mfrm_response_time_review)",
-    "S3method(summary,mfrm_response_time_review)"
+    "S3method(summary,mfrm_response_time_review)",
+    # 0.2.2: fixed-calibration EAP power-sensitivity diagnostics.
+    "S3method(print,mfrm_eap_power_sensitivity)",
+    "S3method(print,summary.mfrm_eap_power_sensitivity)",
+    "S3method(summary,mfrm_eap_power_sensitivity)",
+    "S3method(plot,mfrm_eap_power_sensitivity)"
   )
   expect_setequal(s3, expected_s3)
 })

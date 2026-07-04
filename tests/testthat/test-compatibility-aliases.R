@@ -14,6 +14,10 @@ test_that("compatibility_alias_table exposes retained aliases and preferred name
     "analyze_dff"
   )
   expect_identical(
+    alias_tbl$PreferredName[match("analyze_dif_moderation", alias_tbl$Alias)],
+    "analyze_dff_moderation"
+  )
+  expect_identical(
     alias_tbl$PreferredName[match("JMLE", alias_tbl$Alias)],
     "JML"
   )
@@ -46,7 +50,8 @@ test_that("compatibility_alias_table supports surface filters", {
   expect_true(all(function_aliases$Surface == "function"))
   expect_true(all(c(
     "mfrmRFacets",
-    "analyze_dif"
+    "analyze_dif",
+    "analyze_dif_moderation"
   ) %in% function_aliases$Alias))
 
   column_aliases <- compatibility_alias_table("columns")

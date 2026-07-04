@@ -28,10 +28,14 @@ evaluate_mfrm_recovery(
   fit_method = c("JML", "MML"),
   maxit = 25,
   quad_points = 7,
+  population_prior_sd = 1,
+  estimate_population_sd = FALSE,
+  population_sd_bounds = c(0.05, 10),
   include_person = TRUE,
   include_diagnostics = FALSE,
   diagnostic_fit_df_method = c("both", "engine", "facets"),
-  seed = NULL
+  seed = NULL,
+  progress = interactive()
 )
 }
 \arguments{
@@ -119,6 +123,17 @@ refit that population model later.}
 
 \item{quad_points}{Quadrature points used when \code{fit_method = "MML"}.}
 
+\item{population_prior_sd}{Positive numeric. Fixed normal latent prior SD
+passed to \code{\link[=fit_mfrm]{fit_mfrm()}} for ordinary \code{MML} recovery refits.}
+
+\item{estimate_population_sd}{Logical. If \code{TRUE}, additive \code{RSM}/\code{PCM} and
+bounded-\code{GPCM} \code{MML} recovery refits estimate the normal latent population
+SD under the EM engine. This is not supported for active latent-regression
+simulation specifications.}
+
+\item{population_sd_bounds}{Length-two positive numeric vector giving lower
+and upper bounds for \code{estimate_population_sd}.}
+
 \item{include_person}{Logical. When \code{TRUE}, include person-measure recovery
 rows when the fitted object exposes person estimates.}
 
@@ -132,6 +147,12 @@ for optional diagnostic operating-characteristic summaries. Use \code{"both"}
 when reviewing FACETS-style df sensitivity.}
 
 \item{seed}{Optional random seed.}
+
+\item{progress}{Logical. Whether to show a CLI progress bar across recovery
+replications, with status text for generation, refitting, diagnostics, and
+failed replications. Defaults to \code{\link[=interactive]{interactive()}}, so interactive
+exploratory runs show progress while non-interactive tests, scripts, and
+report rendering stay quiet. Set \code{TRUE} or \code{FALSE} explicitly to override.}
 }
 \value{
 An object of class \code{mfrm_recovery_simulation} with components:
@@ -144,7 +165,12 @@ sparse-design diagnostics when applicable.
 characteristics when \code{include_diagnostics = TRUE}.
 \item \code{diagnostic_oc_summary}: optional facet-level diagnostic operating-
 characteristic summary.
+\item \code{runtime}: run-level elapsed-time metadata for auditing long recovery
+simulations after completion.
 \item \code{settings}: fitting and simulation settings.
+\item \code{notes}: interpretation notes. \code{summary(x)} adds \code{overview},
+\code{reading_order}, \code{next_actions}, and \code{reporting_notes} tables for
+reader-facing triage.
 \item \code{ademp}: simulation-study metadata.
 }
 }
@@ -191,7 +217,11 @@ used in later simulation-study guidance.
 generator arguments directly.
 \item Run \code{evaluate_mfrm_recovery(...)} with a modest \code{reps} value for a smoke
 check, then increase \code{reps} for stable Monte Carlo summaries.
-\item Inspect \code{summary(x)$recovery_summary} and the row-level \code{x$recovery} table.
+\item Start with \code{summary(x)$reading_order} and \code{summary(x)$next_actions}, then
+inspect \code{summary(x)$recovery_summary} and the row-level \code{x$recovery}
+table.
+\item Use \code{\link[=assess_mfrm_recovery]{assess_mfrm_recovery()}} with practical thresholds before writing
+readiness or adequacy language.
 }
 }
 

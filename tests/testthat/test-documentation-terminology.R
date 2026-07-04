@@ -22,6 +22,7 @@ test_that("high-level help pages expose searchable concepts", {
     "mfrmr_visual_diagnostics.Rd" = c("visual diagnostics", "confidence intervals"),
     "visual_reporting_template.Rd" = c("visual diagnostics", "figure captions"),
     "mfrmr_output_guide.Rd" = c("reporting workflow", "route selection"),
+    "mfrmr_minimum_report_checklist.Rd" = c("reporting workflow", "psychometric reporting"),
     "gpcm_capability_matrix.Rd" = c("GPCM boundaries", "route selection"),
     "fit_measures_table.Rd" = c("confidence intervals"),
     "plot_fair_average.Rd" = c("confidence intervals"),
@@ -103,20 +104,83 @@ test_that("user-facing model choice guide is present", {
   expect_true(grepl("fit improvement alone decide the operational model", mml_vignette, fixed = TRUE))
 })
 
+test_that("reporting docs expose the MML population-SD APA route", {
+  pkg_root <- documentation_source_root()
+  testthat::skip_if(is.na(pkg_root), "source documentation files are not available")
+  read_file <- function(path) paste(readLines(file.path(pkg_root, path), warn = FALSE), collapse = "\n")
+
+  apa_vignette <- read_file("vignettes/mfrmr-reporting-and-apa.Rmd")
+  reporting_help <- read_file(file.path("R", "help_reporting_and_apa.R"))
+  minimum_help <- read_file("man/mfrmr_minimum_report_checklist.Rd")
+  apa_help <- read_file("man/build_apa_outputs.Rd")
+  combined <- paste(apa_vignette, reporting_help, minimum_help, apa_help, sep = "\n")
+
+  expect_true(grepl("mfrmr_minimum_report_checklist()", combined, fixed = TRUE))
+  expect_true(grepl("validity-boundary", combined, fixed = TRUE))
+  expect_true(grepl("fit-independent checklist", minimum_help, fixed = TRUE))
+  expect_true(grepl("Make the MML population metric explicit", apa_vignette, fixed = TRUE))
+  expect_true(grepl("summary(fit_free_sd)$population_overview", apa_vignette, fixed = TRUE))
+  expect_true(grepl("MML population SD wording alignment", combined, fixed = TRUE))
+  expect_true(grepl("estimated SD and profile SE/CI", reporting_help, fixed = TRUE))
+  expect_true(grepl("profile-SE/CI note", apa_help, fixed = TRUE))
+})
+
+test_that("model-comparison docs expose reporting guards", {
+  pkg_root <- documentation_source_root()
+  testthat::skip_if(is.na(pkg_root), "source documentation files are not available")
+  read_file <- function(path) paste(readLines(file.path(pkg_root, path), warn = FALSE), collapse = "\n")
+
+  compare_help <- read_file(file.path("man", "compare_mfrm.Rd"))
+  model_choice_help <- read_file(file.path("man", "build_model_choice_review.Rd"))
+  apa_help <- read_file(file.path("man", "build_apa_outputs.Rd"))
+  report_help <- read_file(file.path("man", "mfrm_report.Rd"))
+  bundle_help <- read_file(file.path("man", "build_summary_table_bundle.Rd"))
+  appendix_help <- read_file(file.path("man", "export_summary_appendix.Rd"))
+  source_docs <- paste(
+    read_file(file.path("R", "api-estimation.R")),
+    read_file(file.path("R", "api-advanced.R")),
+    read_file(file.path("R", "api-reports.R")),
+    read_file(file.path("R", "api-results.R")),
+    sep = "\n"
+  )
+  combined <- paste(
+    compare_help, model_choice_help, apa_help, report_help, bundle_help,
+    appendix_help, source_docs,
+    sep = "\n"
+  )
+
+  expect_true(grepl("ComparisonFamily", compare_help, fixed = TRUE))
+  expect_true(grepl("comparison_guidance", model_choice_help, fixed = TRUE))
+  expect_true(grepl("model_comparison", apa_help, fixed = TRUE))
+  expect_true(grepl("model_comparison", report_help, fixed = TRUE))
+  expect_true(grepl("build_model_choice_review", bundle_help, fixed = TRUE))
+  expect_true(grepl("comparison_guidance", appendix_help, fixed = TRUE))
+  expect_true(grepl("APAStyleTemplate", combined, fixed = TRUE))
+  expect_true(grepl("InterpretationGuard", combined, fixed = TRUE))
+  expect_true(grepl("single model-choice claim would overstate the evidence", combined, fixed = TRUE))
+})
+
 test_that("FACETS positioning docs avoid complete-reproduction claims", {
   pkg_root <- documentation_source_root()
   testthat::skip_if(is.na(pkg_root), "source documentation files are not available")
   read_file <- function(path) paste(readLines(file.path(pkg_root, path), warn = FALSE), collapse = "\n")
 
   readme <- read_file("README.md")
+  migration <- read_file(file.path("vignettes", "mfrmr-facets-migration.Rmd"))
   mapping <- read_file(file.path("inst", "references", "FACETS_manual_mapping.md"))
   positioning <- read_file(file.path("man", "facets_positioning_guide.Rd"))
-  combined <- paste(readme, mapping, positioning, sep = "\n")
+  source <- read_file(file.path("R", "help_facets_coverage.R"))
+  combined <- paste(readme, migration, mapping, positioning, source, sep = "\n")
 
   expect_true(grepl("results remain\n  `mfrmr` estimates", readme, fixed = TRUE))
   expect_true(grepl("source of truth unless external FACETS output is\nexplicitly supplied for comparison", mapping, fixed = TRUE))
   expect_true(grepl("not a FACETS numerical\nclone", positioning, fixed = TRUE))
   expect_true(grepl("not evidence that FACETS was executed", combined, fixed = TRUE))
+  expect_true(grepl("facets_term_crosswalk()", combined, fixed = TRUE))
+  expect_true(grepl("facets_visual_contract()", combined, fixed = TRUE))
+  expect_true(grepl("FACETS graph-window", combined, fixed = TRUE))
+  expect_true(grepl("Excel workbook plots", combined, fixed = TRUE) ||
+                grepl("Excel workbook plot generation", combined, fixed = TRUE))
   stale_claims <- c(
     "complete FACETS reproduction",
     "fully reproduce FACETS",
@@ -124,6 +188,30 @@ test_that("FACETS positioning docs avoid complete-reproduction claims", {
   )
   hits <- stale_claims[vapply(stale_claims, grepl, logical(1), x = combined, fixed = TRUE)]
   expect_identical(hits, character(0))
+})
+
+test_that("partial-credit step-facet docs keep FACETS-facing vocabulary primary", {
+  pkg_root <- documentation_source_root()
+  testthat::skip_if(is.na(pkg_root), "source documentation files are not available")
+  read_file <- function(path) paste(readLines(file.path(pkg_root, path), warn = FALSE), collapse = "\n")
+
+  readme <- read_file("README.md")
+  migration <- read_file(file.path("vignettes", "mfrmr-facets-migration.Rmd"))
+  mapping <- read_file(file.path("inst", "references", "FACETS_manual_mapping.md"))
+  fit_help <- read_file(file.path("man", "fit_mfrm.Rd"))
+  source <- read_file(file.path("R", "api-estimation.R"))
+  combined <- paste(readme, migration, mapping, fit_help, source, sep = "\n")
+
+  expect_true(grepl("FACETS-facing rater", combined, fixed = TRUE) ||
+                grepl("FACETS-facing rater analyses", combined, fixed = TRUE))
+  expect_true(grepl("rater-specific category-use", combined, fixed = TRUE))
+  expect_true(grepl("Specific", combined, fixed = TRUE))
+  expect_true(grepl("rating-scale structures", combined, fixed = TRUE))
+  expect_true(grepl("model = \"PCM\", step_facet = \"Rater\"", readme, fixed = TRUE))
+  expect_true(grepl("step_facet = \"Item\"", combined, fixed = TRUE))
+  expect_true(grepl("step_facet = \"Criterion\"", combined, fixed = TRUE))
+  expect_true(grepl("fit$config$design_spec", combined, fixed = TRUE))
+  expect_true(grepl("external comparison metadata", combined, fixed = TRUE))
 })
 
 test_that("FACETS output-contract route avoids old equivalence terminology", {
@@ -222,23 +310,88 @@ test_that("GPCM source-grounding docs keep operational labels separate from lite
 
   readme <- read_file("README.md")
   gpcm_vignette <- read_file("vignettes/mfrmr-gpcm-scope.Rmd")
+  gpcm_help_source <- read_file(file.path("R", "help_gpcm_scope.R"))
   sim_spec_help <- read_file("man/build_mfrm_sim_spec.Rd")
-  evidence_021 <- read_file("inst/validation/release-evidence-map-0.2.1.md")
+  evidence_022 <- read_file("inst/validation/release-evidence-map-0.2.2.md")
+  gpcm_roadmap <- read_file("inst/validation/gpcm-post-0.2.2-roadmap.md")
+  gpcm_score_side_evidence <- read_file("inst/validation/gpcm-score-side-simulation-0.2.2.md")
+  gpcm_score_side_external <- read_file("inst/validation/gpcm-score-side-external-comparison-0.2.2.md")
+  release_scope <- read_file("inst/validation/release-scope-review-0.2.2.md")
+  readme_flat <- gsub("\\s+", " ", readme)
+  gpcm_vignette_flat <- gsub("\\s+", " ", gpcm_vignette)
+  gpcm_help_source_flat <- gsub("\\s+", " ", gpcm_help_source)
+  gpcm_help_text_flat <- gsub("\\s+", " ", gsub("#'\\s*", "", gpcm_help_source))
 
-  combined <- paste(readme, gpcm_vignette, sim_spec_help, evidence_021, sep = "\n")
+  combined <- paste(readme, gpcm_vignette, gpcm_help_source, sim_spec_help,
+                    evidence_022, gpcm_roadmap, gpcm_score_side_evidence,
+                    gpcm_score_side_external,
+                    release_scope,
+                    sep = "\n")
   expect_true(grepl("Muraki (1992", combined, fixed = TRUE))
   expect_true(grepl("Muraki (1993", combined, fixed = TRUE))
   expect_true(grepl("Morris, White, and Crowther (2019", combined, fixed = TRUE))
+  expect_true(grepl("Which simulation helper should I use?",
+                    sim_spec_help, fixed = TRUE))
+  expect_true(grepl("One generated table is a fixture or smoke example",
+                    sim_spec_help, fixed = TRUE))
+  expect_true(grepl("scenario-level aggregate forecast",
+                    sim_spec_help, fixed = TRUE))
   expect_true(grepl("slope_regime", combined, fixed = TRUE))
+  expect_true(grepl("not a complete unrestricted GPCM implementation",
+                    readme_flat, fixed = TRUE))
+  expect_true(grepl("not a complete unrestricted GPCM implementation",
+                    gpcm_vignette_flat, fixed = TRUE))
+  expect_true(grepl("not a complete unrestricted GPCM implementation",
+                    gpcm_help_text_flat, fixed = TRUE))
+  expect_true(grepl("slope_facet == step_facet", combined, fixed = TRUE))
+  expect_true(grepl("What would count as a complete package-native GPCM route?",
+                    gpcm_roadmap, fixed = TRUE))
+  expect_true(grepl("slope_facet != step_facet", gpcm_roadmap, fixed = TRUE))
+  expect_true(grepl("raw-score sufficiency does not carry\nover",
+                    gpcm_roadmap, fixed = TRUE) ||
+                grepl("raw-score sufficiency does not carry over",
+                      gsub("\\s+", " ", gpcm_roadmap), fixed = TRUE) ||
+                grepl("breaks raw-score sufficiency",
+                      gsub("\\s+", " ", gpcm_roadmap), fixed = TRUE))
+  expect_true(grepl("raw-score sufficiency does not carry\nover",
+                    readme, fixed = TRUE) ||
+                grepl("raw-score sufficiency does not carry over",
+                      readme_flat, fixed = TRUE))
+  expect_true(grepl("GPCMScoreSideSimulationStatus = \"ok\"",
+                    gpcm_score_side_evidence, fixed = TRUE))
+  expect_true(grepl("MaxSERatioDiff = 4.441e-16",
+                    gpcm_score_side_evidence, fixed = TRUE))
+  expect_true(grepl("GPCMScoreSideExternalComparisonStatus = \"ok\"",
+                    gpcm_score_side_external, fixed = TRUE))
+  expect_true(grepl("does not claim full many-facet parameter",
+                    gpcm_score_side_external, fixed = TRUE))
+  expect_true(grepl("not treated as many-facet MFRM comparators",
+                    gpcm_score_side_external, fixed = TRUE))
+  expect_true(grepl("mirt::probtrace()", gpcm_score_side_external, fixed = TRUE))
+  expect_true(grepl("tam.mml.2pl", gpcm_score_side_external, fixed = TRUE))
+  expect_true(grepl("eRm", gpcm_score_side_external, fixed = TRUE))
+  expect_true(grepl("tau_k = b_k", gpcm_score_side_external, fixed = TRUE))
+  expect_true(grepl("tau_k = beta + tau.Cat_k",
+                    gpcm_score_side_external, fixed = TRUE))
+  expect_true(grepl("does not validate FACETS",
+                    gpcm_score_side_external, fixed = TRUE))
+  expect_true(grepl("ReleaseScopeReviewStatus = \"ok\"",
+                    release_scope, fixed = TRUE))
+  expect_true(grepl("geometric mean\none", readme, fixed = TRUE) ||
+                grepl("geometric mean one", gsub("\\s+", " ", readme),
+                      fixed = TRUE))
+  expect_true(grepl("MCMC or\nposterior-predictive", readme, fixed = TRUE) ||
+                grepl("MCMC or posterior-predictive",
+                      gsub("\\s+", " ", readme), fixed = TRUE))
   expect_true(grepl("not psychometric fit or\nadequacy cut points", readme, fixed = TRUE) ||
                 grepl("not psychometric fit or adequacy cut points", gsub("\\s+", " ", readme), fixed = TRUE))
   expect_true(grepl("not model-fit tests and\nthey are not literature-derived adequacy cut points", gpcm_vignette, fixed = TRUE) ||
                 grepl("not model-fit tests and they are not literature-derived adequacy cut points",
                       gsub("\\s+", " ", gpcm_vignette), fixed = TRUE))
-  expect_true(grepl("Samejima (1974)", evidence_021, fixed = TRUE))
-  expect_true(grepl("do not add a\nSamejima normal-ogive or graded-response-model implementation", evidence_021, fixed = TRUE) ||
+  expect_true(grepl("Samejima (1974)", evidence_022, fixed = TRUE))
+  expect_true(grepl("do not add a\nSamejima normal-ogive or graded-response-model implementation", evidence_022, fixed = TRUE) ||
                 grepl("do not add a Samejima normal-ogive or graded-response-model implementation",
-                      gsub("\\s+", " ", evidence_021), fixed = TRUE))
+                      gsub("\\s+", " ", evidence_022), fixed = TRUE))
 })
 
 test_that("fit and separation reporting docs keep diagnostics separate from validation gates", {
@@ -249,15 +402,15 @@ test_that("fit and separation reporting docs keep diagnostics separate from vali
   readme <- read_file("README.md")
   reporting_vignette <- read_file("vignettes/mfrmr-reporting-and-apa.Rmd")
   precision_help <- read_file("man/precision_review_report.Rd")
-  evidence_021 <- read_file("inst/validation/release-evidence-map-0.2.1.md")
-  combined <- paste(readme, reporting_vignette, precision_help, evidence_021, sep = "\n")
+  evidence_022 <- read_file("inst/validation/release-evidence-map-0.2.2.md")
+  combined <- paste(readme, reporting_vignette, precision_help, evidence_022, sep = "\n")
 
   expect_true(grepl("fit_separation_basis", combined, fixed = TRUE))
   expect_true(grepl("diagnostic operating characteristics", combined, fixed = TRUE))
   expect_true(grepl("diagnostic_only_not_release_gate", combined, fixed = TRUE))
-  expect_true(grepl("Wright and Linacre (1994)", evidence_021, fixed = TRUE))
-  expect_true(grepl("Linacre (2002)", evidence_021, fixed = TRUE))
-  expect_true(grepl("Wright and Masters (1982)", evidence_021, fixed = TRUE))
+  expect_true(grepl("Wright and Linacre (1994)", evidence_022, fixed = TRUE))
+  expect_true(grepl("Linacre (2002)", evidence_022, fixed = TRUE))
+  expect_true(grepl("Wright and Masters (1982)", evidence_022, fixed = TRUE))
   expect_true(grepl("not inter-rater agreement", combined, fixed = TRUE))
   expect_true(grepl("should not be treated as automatic\nvalidation success criteria", readme, fixed = TRUE) ||
                 grepl("should not be treated as automatic validation success criteria",
@@ -313,35 +466,92 @@ test_that("release evidence map is source-grounded and user-facing", {
   pkg_root <- documentation_source_root()
   testthat::skip_if(is.na(pkg_root), "source documentation files are not available")
 
-  path <- file.path(pkg_root, "inst", "validation", "release-evidence-map-0.2.1.md")
-  checklist_path <- file.path(pkg_root, "inst", "validation", "release-evidence-checklist-0.2.1.csv")
+  path <- file.path(pkg_root, "inst", "validation", "release-evidence-map-0.2.2.md")
+  checklist_path <- file.path(pkg_root, "inst", "validation", "release-evidence-checklist-0.2.2.csv")
   historical_path <- file.path(pkg_root, "inst", "validation", "release-evidence-map-0.2.0.md")
   external_path <- file.path(pkg_root, "inst", "validation", "external-parameter-recovery-simulation-0.2.0.md")
   external_helper_path <- file.path(pkg_root, "inst", "validation", "external-recovery-audit.R")
+  dif_apa_evidence_path <- file.path(pkg_root, "inst", "validation",
+                                     "dif-apa-reporting-0.2.2.md")
+  dif_apa_helper_path <- file.path(pkg_root, "inst", "validation",
+                                   "dif-apa-reporting-0.2.2.R")
+  dif_sim_evidence_path <- file.path(pkg_root, "inst", "validation",
+                                     "dif-dff-simulation-matrix-0.2.2.md")
+  dif_sim_helper_path <- file.path(pkg_root, "inst", "validation",
+                                   "dif-dff-simulation-matrix-0.2.2.R")
+  gpcm_external_evidence_path <- file.path(pkg_root, "inst", "validation",
+                                           "gpcm-score-side-external-comparison-0.2.2.md")
+  gpcm_external_helper_path <- file.path(pkg_root, "inst", "validation",
+                                         "gpcm-score-side-external-comparison-0.2.2.R")
+  gpcm_external_results_path <- file.path(pkg_root, "inst", "validation",
+                                          "gpcm-score-side-external-comparison-0.2.2-results.csv")
+  gpcm_external_checks_path <- file.path(pkg_root, "inst", "validation",
+                                         "gpcm-score-side-external-comparison-0.2.2-checks.csv")
   expect_true(file.exists(path))
   expect_true(file.exists(checklist_path))
   expect_true(file.exists(historical_path))
   expect_true(file.exists(external_path))
   expect_true(file.exists(external_helper_path))
+  expect_true(file.exists(dif_apa_evidence_path))
+  expect_true(file.exists(dif_apa_helper_path))
+  expect_true(file.exists(dif_sim_evidence_path))
+  expect_true(file.exists(dif_sim_helper_path))
+  expect_true(file.exists(gpcm_external_evidence_path))
+  expect_true(file.exists(gpcm_external_helper_path))
+  expect_true(file.exists(gpcm_external_results_path))
+  expect_true(file.exists(gpcm_external_checks_path))
   doc <- paste(readLines(path, warn = FALSE), collapse = "\n")
   historical_doc <- paste(readLines(historical_path, warn = FALSE), collapse = "\n")
   external_doc <- paste(readLines(external_path, warn = FALSE), collapse = "\n")
   external_helper <- paste(readLines(external_helper_path, warn = FALSE), collapse = "\n")
+  dif_apa_doc <- paste(readLines(dif_apa_evidence_path, warn = FALSE),
+                       collapse = "\n")
+  dif_apa_helper <- paste(readLines(dif_apa_helper_path, warn = FALSE),
+                          collapse = "\n")
+  dif_sim_doc <- paste(readLines(dif_sim_evidence_path, warn = FALSE),
+                       collapse = "\n")
+  dif_sim_helper <- paste(readLines(dif_sim_helper_path, warn = FALSE),
+                          collapse = "\n")
+  gpcm_external_doc <- paste(readLines(gpcm_external_evidence_path, warn = FALSE),
+                             collapse = "\n")
+  gpcm_external_helper <- paste(readLines(gpcm_external_helper_path, warn = FALSE),
+                                collapse = "\n")
   readme <- paste(readLines(file.path(pkg_root, "README.md"), warn = FALSE), collapse = "\n")
   checklist <- utils::read.csv(checklist_path, stringsAsFactors = FALSE)
 
-  expect_true(grepl("release-evidence-map-0.2.1.md", readme, fixed = TRUE))
-  expect_true(grepl("release-evidence-checklist-0.2.1.csv", readme, fixed = TRUE))
+  expect_true(grepl("release-evidence-map-0.2.2.md", readme, fixed = TRUE))
+  expect_true(grepl("release-evidence-checklist-0.2.2.csv", readme, fixed = TRUE))
   expect_true(grepl("external-parameter-recovery-simulation-0.2.0.md", readme, fixed = TRUE))
   expect_true(grepl("Andrich (1978)", doc, fixed = TRUE))
   expect_true(grepl("Wright and Masters (1982)", doc, fixed = TRUE))
   expect_true(grepl("Muraki (1992)", doc, fixed = TRUE))
   expect_true(grepl("Morris, White, and Crowther (2019)", doc, fixed = TRUE))
   expect_true(grepl("Implementation boundary", doc, fixed = TRUE))
-  expect_true(grepl("0.2.1 checks added", doc, fixed = TRUE))
+  expect_true(grepl("0.2.2 checks added", doc, fixed = TRUE))
   expect_true(grepl("Parameter_Recovery_Simulation", external_doc, fixed = TRUE))
   expect_true(grepl("mfrmr_review_external_recovery_simulation", external_helper, fixed = TRUE))
   expect_true(grepl("Review limits", external_doc, fixed = TRUE))
+  expect_true(grepl("DIF/DFF APA reporting validation", dif_apa_doc, fixed = TRUE))
+  expect_true(grepl("mfrmr_review_dif_apa_reporting", dif_apa_helper, fixed = TRUE))
+  expect_true(grepl("observed-score Mantel-Haenszel DIF", dif_apa_doc, fixed = TRUE))
+  expect_true(grepl("bounded-GPCM caveat", dif_apa_doc, fixed = TRUE))
+  expect_true(grepl("DIF/DFF simulation matrix evidence", dif_sim_doc, fixed = TRUE))
+  expect_true(grepl("DIFDFFSimulationStatus = \"ok\"", dif_sim_doc, fixed = TRUE))
+  expect_true(grepl("mfrmr_review_dif_dff_simulation_matrix", dif_sim_helper, fixed = TRUE))
+  expect_true(grepl("bounded GPCM", dif_sim_doc, fixed = TRUE))
+  expect_true(grepl("gpcm-score-side-external-comparison-0.2.2.R",
+                    doc, fixed = TRUE))
+  expect_true(grepl("GPCMScoreSideExternalComparisonStatus = \"ok\"",
+                    gpcm_external_doc, fixed = TRUE))
+  expect_true(grepl("not treated as many-facet MFRM comparators",
+                    gpcm_external_doc, fixed = TRUE))
+  expect_true(grepl("mirt::probtrace()", gpcm_external_doc, fixed = TRUE))
+  expect_true(grepl("tam.mml.2pl", gpcm_external_doc, fixed = TRUE))
+  expect_true(grepl("eRm", gpcm_external_doc, fixed = TRUE))
+  expect_true(grepl("gpcm-score-side-external-comparison-0.2.2-results.csv",
+                    gpcm_external_doc, fixed = TRUE))
+  expect_true(grepl("mirt::probtrace", gpcm_external_helper, fixed = TRUE) ||
+                grepl("probtrace", gpcm_external_helper, fixed = TRUE))
   expect_true(grepl("Decision rule", historical_doc, fixed = TRUE))
   expect_true(grepl("Scorecard template", historical_doc, fixed = TRUE))
   expect_true(grepl("Pre-release action plan for 0.2.0", historical_doc, fixed = TRUE))
@@ -351,12 +561,66 @@ test_that("release evidence map is source-grounded and user-facing", {
                     "FollowUp") %in% names(checklist)))
   expect_true(nrow(checklist) >= 10)
   expect_true(any(checklist$ReleaseDecision == "blocker_if_failed"))
+  expect_true("dif_apa_reporting_boundary" %in% checklist$Item)
+  expect_true("mh_dif_observed_score_boundary" %in% checklist$Item)
+  expect_true("dif_dff_simulation_matrix" %in% checklist$Item)
+  expect_true("gpcm_score_side_external_comparison" %in% checklist$Item)
   expect_true(any(checklist$ReleaseDecision == "caveat_if_incomplete"))
   expect_true(any(checklist$ReleaseDecision == "roadmap_if_missing"))
   expect_true(all(checklist$ReleaseDecision %in% c(
     "blocker_if_failed", "caveat_if_incomplete", "roadmap_if_missing"
   )))
   expect_false(grepl("delete alias|can remove|removal decision", doc, ignore.case = TRUE))
+})
+
+test_that("MH DIF alignment note records external package boundaries", {
+  pkg_root <- documentation_source_root()
+  testthat::skip_if(is.na(pkg_root), "source documentation files are not available")
+  path <- file.path(pkg_root, "inst", "references",
+                    "mh-dif-r-package-alignment.md")
+  comparison_path <- file.path(pkg_root, "inst", "validation",
+                               "mh-dif-package-comparison-0.2.2.R")
+  simulation_path <- file.path(pkg_root, "inst", "validation",
+                               "mh-dif-simulation-0.2.2.R")
+  expect_true(file.exists(path))
+  expect_true(file.exists(comparison_path))
+  expect_true(file.exists(simulation_path))
+
+  doc <- paste(readLines(path, warn = FALSE), collapse = "\n")
+  comparison_script <- paste(readLines(comparison_path, warn = FALSE),
+                             collapse = "\n")
+  simulation_script <- paste(readLines(simulation_path, warn = FALSE),
+                             collapse = "\n")
+  doc_flat <- gsub("[[:space:]]+", " ", doc)
+  expect_true(grepl("difR::difMH()", doc, fixed = TRUE))
+  expect_true(grepl("difR::mantelHaenszel()", doc, fixed = TRUE))
+  expect_true(grepl("difR::difGMH()", doc, fixed = TRUE))
+  expect_true(grepl("lordif::lordif()", doc, fixed = TRUE))
+  expect_true(grepl("mirt::DIF()", doc, fixed = TRUE))
+  expect_true(grepl("two-group Mantel-Haenszel observed-score screen",
+                    doc_flat, fixed = TRUE))
+  expect_true(grepl("Scope: exact tests, item purification, external matching variables",
+                    doc, fixed = TRUE))
+  expect_true(grepl("is not the fitted-MFRM route", doc_flat, fixed = TRUE))
+  expect_true(grepl("analyze_dif_mh()", doc, fixed = TRUE))
+  expect_true(grepl("compatibility wrapper", doc, fixed = TRUE))
+  expect_true(grepl("RSM", doc, fixed = TRUE))
+  expect_true(grepl("PCM", doc, fixed = TRUE))
+  expect_true(grepl("bounded `GPCM`", doc, fixed = TRUE))
+  expect_true(grepl("mfrmr_review_mh_dif_package_comparison",
+                    comparison_script, fixed = TRUE))
+  expect_true(grepl("difR::difMH", comparison_script, fixed = TRUE))
+  expect_true(grepl("zero_correction = 0", comparison_script, fixed = TRUE))
+  expect_true(grepl("finite_ok", comparison_script, fixed = TRUE))
+  expect_true(grepl("max_abs_diff", comparison_script, fixed = TRUE))
+  expect_true(grepl("seed = 202603", doc, fixed = TRUE))
+  expect_true(grepl("`difR` 6.1.0", doc, fixed = TRUE))
+  expect_true(grepl("mfrmr_review_mh_dif_simulation",
+                    simulation_script, fixed = TRUE))
+  expect_true(grepl("seed = 73031", doc, fixed = TRUE))
+  expect_true(grepl("null false-positive behavior", doc, fixed = TRUE))
+  expect_true(grepl("explicit dichotomization for 3-level scores",
+                    doc, fixed = TRUE))
 })
 
 test_that("current user guides use review spellings for migrated helpers", {
@@ -480,10 +744,20 @@ test_that("remaining audit wording in public docs is limited to source-path head
 
   allowlist <- data.frame(
     reason = c(
-      "roxygen source path header"
+      "roxygen source path header",
+      "current cross-analysis audit helper",
+      "current cross-analysis audit class",
+      "current cross-analysis audit print method",
+      "current cross-analysis audit title",
+      "current cross-analysis audit print text"
     ),
     pattern = c(
-      "^% Please edit documentation in R/.*audit.*\\.R$"
+      "^% Please edit documentation in R/.*audit.*\\.R$",
+      "mfrm_analysis_audit",
+      "summary\\.mfrm_analysis_audit",
+      "print\\.mfrm_analysis_audit",
+      "Cross-analysis audit",
+      "analysis audit summary"
     ),
     stringsAsFactors = FALSE
   )

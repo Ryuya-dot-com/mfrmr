@@ -74,7 +74,7 @@ adjacent-category conditional ogives (Winsteps/FACETS "Conditional
 Probability Curves"); the same \code{boundary_status} setting controls its
 \code{.5} crossing lines, which estimate the Rasch-Andrich thresholds.
 \code{type = "conditional_probability"} routes to this display (it was a \code{ccc}
-alias before 0.3.0). Use
+alias before 0.2.2). Use
 \code{plot_data(x, component = "plot_long")} on a category-curve bundle when
 you want one ggplot2/plotly-friendly table across all curve families.
 }

@@ -135,6 +135,8 @@ alongside the canonical internal columns.
 alias columns when applicable.
 \item \code{rep_overview}: run-level status and timing, with the same design-variable
 alias columns when applicable.
+\item \code{runtime}: run-level elapsed-time metadata for auditing long design
+evaluations after completion.
 \item \code{design_descriptor}: role-based design-variable metadata used by planning
 summaries and plots
 \item \code{planning_scope}: explicit record of the current planning contract

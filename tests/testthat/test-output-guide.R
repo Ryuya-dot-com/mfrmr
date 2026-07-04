@@ -44,8 +44,22 @@ test_that("mfrmr_output_guide supports focused scopes", {
   expect_true(any(public$ObjectRole == "report-readiness surface"))
   expect_true(any(grepl("does not recompute diagnostics", public$DecisionBoundary, fixed = TRUE)))
   expect_true(any(grepl("mfrm_report", public$MainFunction, fixed = TRUE)))
+  expect_true(any(grepl("view = \"brief\"", public$MainFunction, fixed = TRUE)))
+  expect_true(any(grepl("view = \"reader\"", public$MainFunction, fixed = TRUE)))
   expect_true(any(grepl("export_mfrm_results", public$MainFunction, fixed = TRUE)))
+  expect_true(any(grepl("preset = \"starter\"", public$MainFunction, fixed = TRUE)))
   expect_true(any(grepl("launch_mfrmr_viewer", public$MainFunction, fixed = TRUE)))
+  expect_true(any(grepl("mfrmr_minimum_report_checklist", public$MainFunction, fixed = TRUE)))
+
+  beginner <- mfrmr_output_guide("beginner")
+  expect_true(nrow(beginner) > 0L)
+  expect_true(all(beginner$Scope == "beginner"))
+  expect_true(all(beginner$RecommendedEntry))
+  expect_true(all(beginner$UserLevel == "beginner"))
+  expect_true(all(beginner$APILayer == "recommended_entry_route"))
+  expect_true(any(grepl("mfrmr_minimum_report_checklist", beginner$MainFunction, fixed = TRUE)))
+  expect_true(any(grepl("RSM/PCM route first", beginner$NextStep, fixed = TRUE)))
+  expect_true(any(grepl("deliberately narrow", beginner$Notes, fixed = TRUE)))
 
   entry <- mfrmr_output_guide("entry")
   expect_true(nrow(entry) > 0L)
@@ -86,14 +100,21 @@ test_that("mfrmr_output_guide supports focused scopes", {
   expect_true(all(simulation$Lifecycle == "advanced"))
   expect_true(any(grepl("simulate_mfrm_data", simulation$MainFunction, fixed = TRUE)))
   expect_true(any(grepl("evaluate_mfrm_diagnostic_screening", simulation$MainFunction, fixed = TRUE)))
+  expect_true(any(grepl("evaluate_mfrm_signal_detection", simulation$MainFunction, fixed = TRUE)))
+  expect_true(any(grepl("predict_mfrm_population", simulation$MainFunction, fixed = TRUE)))
+  expect_true(any(grepl("summary(sim_eval)$reading_order", simulation$MainFunction, fixed = TRUE)))
+  expect_true(any(grepl("summary(pred)$reading_order", simulation$MainFunction, fixed = TRUE)))
   expect_true(any(grepl("export_summary_appendix", simulation$MainFunction, fixed = TRUE)))
   expect_true(any(grepl("plot_overview_rate", simulation$NextStep, fixed = TRUE)))
+  expect_true(any(grepl("BiasScreenRate", simulation$NextStep, fixed = TRUE)))
+  expect_true(any(grepl("scenario-level aggregate forecast", simulation$Notes, fixed = TRUE)))
   expect_true(any(grepl("operating-characteristic", simulation$Notes, fixed = TRUE)))
 
   linking <- mfrmr_output_guide("linking")
   expect_true(nrow(linking) > 0L)
   expect_true(all(linking$Scope == "linking"))
   expect_true(any(grepl("mfrm_results(fit, include = \"linking\")", linking$MainFunction, fixed = TRUE)))
+  expect_true(any(grepl("anchor_linking_contract", linking$MainFunction, fixed = TRUE)))
   expect_true(any(grepl("review_mfrm_anchors", linking$MainFunction, fixed = TRUE)))
   expect_true(any(grepl("detect_anchor_drift", linking$MainFunction, fixed = TRUE)))
   expect_true(any(grepl("build_equating_chain", linking$MainFunction, fixed = TRUE)))
@@ -110,7 +131,12 @@ test_that("mfrmr_output_guide supports focused scopes", {
   expect_true(all(reviews$Scope == "reviews"))
   expect_true(all(reviews$OutputFamily == "review"))
   expect_true(any(grepl("response_time_review", reviews$MainFunction, fixed = TRUE)))
+  expect_true(any(grepl("analyze_dif_mh", reviews$MainFunction,
+                        fixed = TRUE)))
   expect_true(any(grepl("descriptive QC context",
+                        reviews$DecisionBoundary,
+                        fixed = TRUE)))
+  expect_true(any(grepl("Bias, DFF, and DIF rows are screening prompts",
                         reviews$DecisionBoundary,
                         fixed = TRUE)))
 
@@ -143,6 +169,8 @@ test_that("mfrmr_output_guide supports focused scopes", {
   expect_true(nrow(exports) > 0L)
   expect_true(all(exports$Scope == "exports"))
   expect_true(any(grepl("export_mfrm_results", exports$MainFunction, fixed = TRUE)))
+  expect_true(any(grepl("preset = \"starter\"", exports$MainFunction, fixed = TRUE)))
+  expect_true(any(grepl("preset = \"archive\"", exports$MainFunction, fixed = TRUE)))
   expect_true(any(grepl("export_summary_appendix", exports$MainFunction, fixed = TRUE)))
 
   gpcm <- mfrmr_output_guide("gpcm")
@@ -168,6 +196,61 @@ test_that("mfrmr_output_guide supports focused scopes", {
   expect_true(any(grepl("does not broaden any route beyond its current capability row",
                         gpcm$DecisionBoundary,
                         fixed = TRUE)))
+
+  psychometric <- mfrmr_output_guide("psychometric")
+  expect_true(nrow(psychometric) > 0L)
+  expect_true(all(psychometric$Scope == "psychometric"))
+  expect_true(all(psychometric$UserLevel == "advanced"))
+  expect_true(all(psychometric$APILayer == "specialist_followup"))
+  expect_false(any(psychometric$RecommendedEntry))
+  expect_true(any(grepl("mfrmr_minimum_report_checklist", psychometric$MainFunction, fixed = TRUE)))
+  expect_true(any(grepl("mfrm_analysis_audit", psychometric$MainFunction, fixed = TRUE)))
+  expect_true(any(grepl("mfrm_generalizability", psychometric$MainFunction, fixed = TRUE)))
+  expect_true(any(grepl("mfrm_d_study", psychometric$MainFunction, fixed = TRUE)))
+  expect_true(any(grepl("facets_term_crosswalk", psychometric$MainFunction, fixed = TRUE)))
+  expect_true(any(grepl("do not certify validity", psychometric$DecisionBoundary, fixed = TRUE)))
+})
+
+test_that("mfrmr_minimum_report_checklist exposes reviewer-facing report gaps", {
+  checklist <- mfrmr_minimum_report_checklist()
+
+  expect_s3_class(checklist, "data.frame")
+  expect_true(all(c(
+    "Scope",
+    "Section",
+    "ReportItem",
+    "Required",
+    "PrimaryQuestion",
+    "mfrmrRoute",
+    "ReportUse",
+    "ReviewerRisk",
+    "Boundary"
+  ) %in% names(checklist)))
+  expect_true(nrow(checklist) >= 15L)
+  expect_true(any(checklist$Scope == "validity" &
+                    grepl("content", checklist$Boundary, fixed = TRUE)))
+  expect_true(any(checklist$Scope == "generalizability" &
+                    grepl("mfrm_generalizability", checklist$mfrmrRoute, fixed = TRUE)))
+  expect_true(any(checklist$Scope == "generalizability" &
+                    grepl("fitted-logit", checklist$ReviewerRisk, fixed = TRUE)))
+  expect_true(any(checklist$Scope == "fairness" &
+                    grepl("DFF/DIF", checklist$ReportItem, fixed = TRUE)))
+  expect_true(any(checklist$Scope == "external" &
+                    grepl("facets_term_crosswalk", checklist$mfrmrRoute, fixed = TRUE)))
+  expect_true(any(checklist$Scope == "visuals" &
+                    grepl("visual_reporting_template", checklist$mfrmrRoute, fixed = TRUE)))
+
+  fairness <- mfrmr_minimum_report_checklist("fairness")
+  expect_true(nrow(fairness) > 0L)
+  expect_true(all(fairness$Scope == "fairness"))
+
+  generalizability <- mfrmr_minimum_report_checklist("generalizability")
+  expect_true(nrow(generalizability) > 0L)
+  expect_true(all(generalizability$Scope == "generalizability"))
+
+  validity <- mfrmr_minimum_report_checklist("validity")
+  expect_true(nrow(validity) > 0L)
+  expect_true(all(validity$Scope == "validity"))
 })
 
 test_that("facets_feature_coverage separates implemented and unsupported FACETS surfaces", {
@@ -184,7 +267,7 @@ test_that("facets_feature_coverage separates implemented and unsupported FACETS 
     "GapOrBoundary",
     "Priority"
   ) %in% names(coverage)))
-  expect_true(nrow(coverage) >= 40L)
+  expect_true(nrow(coverage) >= 60L)
   expect_true(any(grepl("Table 14", coverage$FACETSFeature, fixed = TRUE) &
                     coverage$Status == "implemented"))
   expect_true(any(grepl("Wright map", coverage$FACETSFeature, fixed = TRUE) &
@@ -209,6 +292,27 @@ test_that("facets_feature_coverage separates implemented and unsupported FACETS 
                     coverage$Status == "not_implemented"))
   expect_true(any(grepl("command-file parser", coverage$FACETSFeature, fixed = TRUE) &
                     coverage$Status == "not_targeted"))
+  expect_true(any(grepl("Multiple simultaneous Model=", coverage$FACETSFeature, fixed = TRUE) &
+                    coverage$Status == "not_implemented"))
+  expect_true(any(grepl("Binomial/Bernoulli and Poisson", coverage$FACETSFeature, fixed = TRUE) &
+                    coverage$Status == "not_implemented"))
+  expect_true(any(grepl("Model-statement weights", coverage$FACETSFeature, fixed = TRUE) &
+                    coverage$Status == "partial" &
+                    grepl("weight_col", coverage$mfrmrRoute, fixed = TRUE)))
+  expect_true(any(grepl("Named rating-scale blocks", coverage$FACETSFeature, fixed = TRUE) &
+                    coverage$Status == "partial" &
+                    grepl("step_facet = \"Rater\"", coverage$mfrmrRoute, fixed = TRUE)))
+  expect_true(any(grepl("category recoding", coverage$FACETSFeature, fixed = TRUE) &
+                    coverage$Status == "partial" &
+                    grepl("score_map", coverage$mfrmrRoute, fixed = TRUE)))
+  expect_true(any(grepl("Anchorfile=", coverage$FACETSFeature, fixed = TRUE) &
+                    coverage$Status == "partial" &
+                    grepl("complete FACETS specification", coverage$GapOrBoundary, fixed = TRUE)))
+  expect_true(any(grepl("output-dialog", coverage$FACETSFeature, fixed = TRUE) &
+                    coverage$Status == "not_targeted"))
+  expect_true(any(grepl("Table 5", coverage$FACETSFeature, fixed = TRUE) &
+                    coverage$Status == "partial" &
+                    grepl("package-native approximations", coverage$GapOrBoundary, fixed = TRUE)))
 
   partial <- facets_feature_coverage("partial")
   expect_true(nrow(partial) > 0L)
@@ -217,6 +321,72 @@ test_that("facets_feature_coverage separates implemented and unsupported FACETS 
   missing <- facets_feature_coverage("not_implemented")
   expect_true(nrow(missing) > 0L)
   expect_true(all(missing$Status == "not_implemented"))
+})
+
+test_that("facets_visual_contract maps FACETS graph surfaces to mfrmr routes", {
+  visual <- facets_visual_contract()
+
+  expect_s3_class(visual, "data.frame")
+  expect_true(all(c(
+    "Scope",
+    "FACETSVisualSurface",
+    "FACETSReference",
+    "mfrmrRoute",
+    "Status",
+    "ReaderUse",
+    "PlotDataRoute",
+    "Boundary",
+    "FACETSExpectation",
+    "FirstMfrmrRoute",
+    "EditableDataRoute",
+    "GgplotRoute",
+    "ReportUse",
+    "MigrationNote",
+    "ClaimBoundary"
+  ) %in% names(visual)))
+  expect_true(nrow(visual) >= 14L)
+  expect_true(all(c("output_table", "graph_menu", "output_file", "rweb") %in%
+                    unique(visual$Scope)))
+  expect_true(any(visual$Scope == "output_table" &
+                    grepl("line-printer", visual$FACETSExpectation, fixed = TRUE)))
+  expect_true(any(visual$Status == "implemented" &
+                    grepl("FirstMfrmrRoute", visual$MigrationNote, fixed = TRUE)))
+  expect_true(any(grepl("as_ggplot", visual$GgplotRoute, fixed = TRUE)))
+  expect_true(any(grepl("Table 6.0", visual$FACETSVisualSurface, fixed = TRUE) &
+                    visual$Status == "implemented" &
+                    grepl("plot_wright_unified", visual$mfrmrRoute, fixed = TRUE) &
+                    visual$FirstMfrmrRoute == "plot(fit, type = \"wright\")"))
+  expect_true(any(grepl("Table 8 scale-structure probability curves",
+                        visual$FACETSVisualSurface, fixed = TRUE) &
+                    visual$Status == "implemented" &
+                    grepl("category_curves_report", visual$mfrmrRoute, fixed = TRUE) &
+                    grepl("plot_data", visual$EditableDataRoute, fixed = TRUE)))
+  expect_true(any(grepl("Category probability curves",
+                        visual$FACETSVisualSurface, fixed = TRUE) &
+                    visual$Status == "implemented" &
+                    grepl("type = \"ccc\"", visual$mfrmrRoute, fixed = TRUE)))
+  expect_true(any(grepl("Graph plotting file", visual$FACETSVisualSurface, fixed = TRUE) &
+                    visual$Status == "implemented" &
+                    grepl("facets_output_file_bundle", visual$mfrmrRoute, fixed = TRUE)))
+  expect_true(any(grepl("DIF/bias Excel plot", visual$FACETSVisualSurface, fixed = TRUE) &
+                    visual$Status == "partial" &
+                    grepl("Excel workbook", visual$ClaimBoundary, fixed = TRUE) &
+                    grepl("caption", visual$MigrationNote, fixed = TRUE)))
+  expect_true(any(grepl("Conditional probability curves",
+                        visual$FACETSVisualSurface, fixed = TRUE) &
+                    visual$Status == "partial" &
+                    grepl("conditional", visual$PlotDataRoute, fixed = TRUE)))
+  expect_true(any(grepl("clickable Webpage", visual$FACETSVisualSurface, fixed = TRUE) &
+                    visual$Status == "not_targeted" &
+                    visual$GgplotRoute == "not_available"))
+
+  graphs <- facets_visual_contract("graph_menu")
+  expect_true(nrow(graphs) > 0L)
+  expect_true(all(graphs$Scope == "graph_menu"))
+
+  partial <- facets_visual_contract("partial")
+  expect_true(nrow(partial) > 0L)
+  expect_true(all(partial$Status == "partial"))
 })
 
 test_that("facets_positioning_guide prevents FACETS numerical-clone wording", {
@@ -239,15 +409,55 @@ test_that("facets_positioning_guide prevents FACETS numerical-clone wording", {
   expect_false(any(grepl("\\baudit\\b", unlist(guide), ignore.case = TRUE)))
 })
 
+test_that("facets_term_crosswalk maps FACETS vocabulary without equivalence claims", {
+  crosswalk <- facets_term_crosswalk()
+
+  expect_s3_class(crosswalk, "data.frame")
+  expect_true(all(c(
+    "Scope",
+    "FACETSTerm",
+    "FACETSSurface",
+    "mfrmrTerm",
+    "mfrmrRoute",
+    "Relationship",
+    "ReviewerNote",
+    "Boundary"
+  ) %in% names(crosswalk)))
+  expect_true(nrow(crosswalk) >= 20L)
+  expect_true(any(crosswalk$FACETSTerm == "Measure" &
+                    crosswalk$Relationship == "same_concept"))
+  expect_true(any(crosswalk$FACETSTerm == "ZStd / ZSTD" &
+                    grepl("facets_fit_df_guide", crosswalk$mfrmrRoute, fixed = TRUE)))
+  expect_true(any(grepl("Rating Scale= Specific", crosswalk$FACETSTerm, fixed = TRUE) &
+                    grepl("step_facet = \"Rater\"", crosswalk$mfrmrRoute, fixed = TRUE)))
+  expect_true(any(crosswalk$FACETSTerm == "Graphfile" &
+                    grepl("not the FACETS graph window", crosswalk$Boundary, fixed = TRUE)))
+  expect_true(any(crosswalk$FACETSTerm == "Full FACETS command file" &
+                    crosswalk$Relationship == "scope_boundary"))
+  expect_false(any(grepl("numerical equivalence", crosswalk$Boundary, fixed = TRUE)))
+
+  fit_terms <- facets_term_crosswalk("fit")
+  expect_true(nrow(fit_terms) > 0L)
+  expect_true(all(fit_terms$Scope == "fit"))
+
+  visuals <- facets_term_crosswalk("visuals")
+  expect_true(nrow(visuals) > 0L)
+  expect_true(all(visuals$Scope == "visuals"))
+})
+
 test_that("mfrmr_output_guide gives FACETS, ConQuest, and R user pathways", {
   facets <- mfrmr_output_guide("facets")
   expect_true(nrow(facets) >= 10L)
   expect_true(all(facets$Scope == "facets"))
   expect_true(any(grepl("facets_positioning_guide", facets$MainFunction, fixed = TRUE)))
   expect_true(any(grepl("not a FACETS numerical clone", facets$Notes, fixed = TRUE)))
+  expect_true(any(grepl("facets_term_crosswalk", facets$MainFunction, fixed = TRUE)))
+  expect_true(any(grepl("terminology guide", facets$Notes, fixed = TRUE)))
   expect_true(any(grepl("facets_feature_coverage", facets$MainFunction, fixed = TRUE)))
+  expect_true(any(grepl("facets_visual_contract", facets$MainFunction, fixed = TRUE)))
   expect_true(any(grepl("review_mfrm_anchors", facets$MainFunction, fixed = TRUE)))
   expect_true(any(grepl("make_anchor_table", facets$MainFunction, fixed = TRUE)))
+  expect_true(any(grepl("anchor_linking_contract", facets$MainFunction, fixed = TRUE)))
   expect_true(any(grepl("group_anchors", facets$MainFunction, fixed = TRUE)))
   expect_true(any(grepl("detect_anchor_drift", facets$MainFunction, fixed = TRUE)))
   expect_true(any(grepl("plot_anchor_drift", facets$MainFunction, fixed = TRUE)))

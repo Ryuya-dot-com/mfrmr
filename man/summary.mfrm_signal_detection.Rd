@@ -17,8 +17,14 @@
 An object of class \code{summary.mfrm_signal_detection} with:
 \itemize{
 \item \code{overview}: run-level overview
+\item \code{reading_order}: recommended order for reading the summary tables
+\item \code{next_actions}: action-oriented triage for interpreting and exporting the
+summary
+\item \code{reporting_notes}: report-facing boundaries and recommended wording
+safeguards
 \item \code{detection_summary}: aggregated detection rates by design, with
 design-variable alias columns when applicable
+\item \code{runtime}: run-level elapsed-time metadata for the signal-detection run
 \item \code{ademp}: simulation-study metadata carried forward from the original object
 \item \code{facet_names}: public facet labels carried from the simulation specification
 \item \code{design_variable_aliases}: accepted public aliases for design variables

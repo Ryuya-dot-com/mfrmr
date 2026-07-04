@@ -43,6 +43,9 @@
 #'
 #' Guide pages:
 #' - [mfrmr_output_guide()] for the compact purpose-to-helper map
+#' - `mfrmr_output_guide("beginner")` for a narrow first-analysis route
+#' - `mfrmr_output_guide("psychometric")` for reviewer-facing reporting and
+#'   validity-boundary routes
 #' - [mfrmr_workflow_methods]
 #' - [mfrmr_visual_diagnostics]
 #' - [mfrmr_reports_and_tables]
@@ -67,13 +70,16 @@
 #'
 #' @section First 5-minute route:
 #' Use this order before exploring the broader feature surface:
-#' 1. [fit_mfrm()] with `method = "MML"`
-#' 2. [diagnose_mfrm()] with `diagnostic_mode = "both"` for `RSM` / `PCM`;
+#' 1. For a beginner route, read `mfrmr_output_guide("beginner")`.
+#' 2. For a report or thesis route, read [mfrmr_minimum_report_checklist()]
+#'    before treating fit output as a complete report plan.
+#' 3. [fit_mfrm()] with `method = "MML"`
+#' 4. [diagnose_mfrm()] with `diagnostic_mode = "both"` for `RSM` / `PCM`;
 #'    for bounded `GPCM`, keep diagnostics on the direct exploratory route
-#' 3. [mfrm_results()] for a FACETS-style first screen
-#' 4. `summary(fit)`, `summary(diag)`, and `summary(res)`
-#' 5. [plot_qc_dashboard()] for first-pass triage
-#' 6. Choose the next branch:
+#' 5. [mfrm_results()] for a FACETS-style first screen
+#' 6. `summary(fit)`, `summary(diag)`, and `summary(res)`
+#' 7. [plot_qc_dashboard()] for first-pass triage
+#' 8. Choose the next branch:
 #'    [reporting_checklist()] for reporting,
 #'    [build_weighting_review()] for Rasch-versus-`GPCM` weighting review,
 #'    [build_misfit_casebook()] for operational case review, or
@@ -87,6 +93,10 @@
 #'   conditional-normal population model and explicit one-row-per-person
 #'   covariates expanded through `stats::model.matrix()`
 #' - bounded `GPCM` support is summarized by [gpcm_capability_matrix()]
+#' - bounded `GPCM` means a constrained package-native branch, not a complete
+#'   unrestricted GPCM implementation: the current route keeps the role-based
+#'   design contract, `slope_facet == step_facet`, and positive
+#'   geometric-mean-one slopes
 #' - bounded `GPCM` supports the core fit/summary/scoring/information
 #'   path, direct Wright/pathway/CCC plots, residual-PCA follow-up, and the
 #'   residual-based diagnostics tables/plots as exploratory tools
@@ -112,7 +122,12 @@
 #' - latent-class mixture models and response-time / careless-rating
 #'   adjustment are not estimated by mfrmr; use residual, person-fit,
 #'   local-dependence, and rater-drift diagnostics as screening layers rather
-#'   than as mixture-model substitutes
+#'   than as mixture-model substitutes; use [mfrmr_model_family_scope()] for
+#'   the broader post-GPCM boundary across GRM, NRM, sequential, rater-process,
+#'   unfolding, design-matrix, and mixture-family scope items, and
+#'   [mfrmr_estimation_scope()] for CMLE, pairwise/composite likelihood,
+#'   free normal population SD for ordinary MML, optional Stan/backend,
+#'   nonparametric, and mixture-estimation scope
 #'
 #' @section Equal weighting versus bounded GPCM:
 #' The package's operational reference route is the Rasch-family
@@ -134,6 +149,11 @@
 #' Public entry map:
 #' - First-screen results: [mfrm_results()], `summary(res)$next_actions`,
 #'   and `mfrmr_output_guide("entry")`
+#' - Beginner route: `mfrmr_output_guide("beginner")`
+#' - Psychometric review route: [mfrmr_minimum_report_checklist()] and
+#'   `mfrmr_output_guide("psychometric")`
+#' - FACETS terminology route: [facets_term_crosswalk()],
+#'   [facets_feature_coverage()], and [facets_visual_contract()]
 #' - Interactive exploration: [mfrm_results_interactive()] only when prompts
 #'   are explicitly wanted at the console
 #'
@@ -145,13 +165,16 @@
 #' - Bias and interaction: [estimate_bias()], [estimate_all_bias()],
 #'   `summary(bias)`, [bias_interaction_report()], [plot_bias_interaction()]
 #' - Differential functioning: [analyze_dff()], [analyze_dif()],
-#'   [dif_interaction_table()], [plot_dif_heatmap()], [dif_report()]
+#'   [analyze_dff_moderation()], [analyze_dif_moderation()],
+#'   [analyze_dif_mh()], [analyze_dif_classical()], [dif_interaction_table()],
+#'   [plot_dif_heatmap()], [dif_report()]
 #' - Design simulation: [build_mfrm_sim_spec()], [extract_mfrm_sim_spec()],
 #'   [simulate_mfrm_data()], [evaluate_mfrm_recovery()],
 #'   [assess_mfrm_recovery()], [evaluate_mfrm_design()],
 #'   [evaluate_mfrm_signal_detection()], [predict_mfrm_population()],
-#'   [predict_mfrm_units()], [sample_mfrm_plausible_values()] (including
-#'   fit-derived empirical / resampled / skeleton-based simulation
+#'   [predict_mfrm_units()], [sample_mfrm_plausible_values()],
+#'   [analyze_eap_power_sensitivity()] (including fit-derived empirical /
+#'   resampled / skeleton-based simulation
 #'   specifications; fixed-calibration unit scoring supports `MML` fits
 #'   directly, latent-regression `MML` fits through the fitted population
 #'   model when scored units also provide one-row-per-person background data,
@@ -234,7 +257,8 @@
 #'    `diagnostic_mode = "both"` for final `MML` runs.
 #' 4. For `RSM` / `PCM`, run [analyze_dff()] or [estimate_bias()] when
 #'    fairness or interaction questions matter; bounded `GPCM` also supports
-#'    [estimate_bias()] as a conditional screening review.
+#'    [estimate_bias()] as a conditional screening review. For one-response
+#'    person-by-item observed-score MH screens, use [analyze_dif_mh()].
 #' 5. For `RSM` / `PCM`, report with [build_apa_outputs()] and
 #'    [build_visual_summaries()].
 #' 6. For design planning, move to [build_mfrm_sim_spec()],
@@ -330,7 +354,13 @@
 #' `mfrmr` supports ordered binary and ordered polytomous data under `RSM` and
 #' `PCM`, plus a narrow bounded `GPCM` branch with one designated
 #' `slope_facet` that currently must equal `step_facet`. Unordered
-#' nominal/multinomial response models are not yet implemented.
+#' nominal/multinomial response models are not yet implemented. Use
+#' [mfrmr_model_family_scope()] to inspect the broader boundary for GRM, NRM,
+#' sequential, rater-dependence, unfolding, design-matrix, and mixture-family
+#' scope items. Use [mfrmr_estimation_scope()] to inspect separate
+#' estimator/backend boundaries, including CMLE, pairwise/composite likelihood,
+#' free normal population SD for ordinary MML, optional Stan integration,
+#' nonparametric latent distributions, and mixture estimation.
 #'
 #' @section Estimation methods:
 #' **Marginal Maximum Likelihood (MML)**
@@ -351,6 +381,13 @@
 #' \deqn{\hat{\theta}_n^{\mathrm{EAP}} =
 #'   \frac{\sum_q \theta_q \, w_q \, L(\mathbf{X}_n \mid \theta_q)}
 #'        {\sum_q w_q \, L(\mathbf{X}_n \mid \theta_q)}}
+#'
+#' In the default `population_formula = NULL` route, this prior is fixed to
+#' the standard normal scale. The latent population SD is therefore not
+#' estimated in ordinary `MML` fits. Supplying `population_formula` activates
+#' the separate latent-regression `MML` branch; there the conditional residual
+#' variance `sigma2` is estimated and the quadrature nodes become
+#' \eqn{\theta_{nq} = x_n^\top\beta + \sigma z_q}.
 #'
 #' MML avoids the incidental-parameter problem and is generally preferred
 #' for smaller samples.
@@ -618,7 +655,9 @@
 #' Marginal Maximum Likelihood (MML) integrates over the person ability
 #' distribution using Gauss-Hermite quadrature and does not directly estimate
 #' person parameters; person estimates are computed post-hoc via Expected A
-#' Posteriori (EAP).  Joint Maximum Likelihood (JML) estimates all person
+#' Posteriori (EAP). In ordinary `MML` fits the latent prior is fixed to
+#' standard normal scale; an estimated `sigma2` is available only in the
+#' active latent-regression branch. Joint Maximum Likelihood (JML) estimates all person
 #' and facet parameters simultaneously as fixed effects; `"JMLE"` remains a
 #' backward-compatible alias.
 #'
@@ -644,6 +683,10 @@
 #' only for the post hoc scoring layer. This is useful for practical
 #' fixed-scale scoring, but it should still be described as a limited
 #' approximation rather than as full ConQuest-style population modeling.
+#' [analyze_eap_power_sensitivity()] adds a fixed-calibration robustness
+#' diagnostic for this same scoring layer by power-scaling the quadrature-grid
+#' prior and likelihood and reporting EAP deltas from the unscaled reference;
+#' it does not refit the model or make the MML fitting prior configurable.
 #'
 #' **Current ConQuest overlap**
 #'

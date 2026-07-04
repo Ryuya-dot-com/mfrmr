@@ -102,6 +102,25 @@
 #' make the data-generating mechanism inspectable and reusable rather than
 #' relying only on ad hoc scalar arguments.
 #'
+#' **Which simulation helper should I use?**
+#' - Use `build_mfrm_sim_spec()` when you need one reusable and inspectable
+#'   data-generating mechanism (DGM) for examples, recovery checks, design
+#'   evaluation, signal-screening simulations, or one-scenario forecasts.
+#' - Use [simulate_mfrm_data()] when you need one synthetic long-format response
+#'   table. One generated table is a fixture or smoke example, not a Monte Carlo
+#'   validation result.
+#' - Use [evaluate_mfrm_recovery()] when the user question is whether known
+#'   generating parameters are recovered under the declared DGM. Follow with
+#'   [assess_mfrm_recovery()] before writing adequacy or readiness language.
+#' - Use [evaluate_mfrm_design()] when the user question is which candidate
+#'   design has better simulated operating characteristics across a grid.
+#' - Use [predict_mfrm_population()] when the user question is a single
+#'   scenario-level aggregate forecast for one future design. Use
+#'   [evaluate_mfrm_design()] instead when comparing alternatives.
+#' - Use [evaluate_mfrm_diagnostic_screening()] or
+#'   [evaluate_mfrm_signal_detection()] when the user question is diagnostic,
+#'   DIF, or bias-screen operating behavior under repeated simulated scenarios.
+#'
 #' The resulting object records:
 #' - design counts (`n_person`, `n_rater`, `n_criterion`, `raters_per_person`)
 #' - latent spread assumptions (`theta_sd`, `rater_sd`, `criterion_sd`)

@@ -672,7 +672,8 @@ plot_rater_severity_profile <- function(fit,
 #'   label is chosen from the DFF method.
 #'
 #' @return An `mfrm_plot_data` object whose `data` slot contains
-#'   columns `Pair`, `Effect`, `SE`, `Classification`, `Color`.
+#'   columns `Pair`, `Effect`, `SE`, `Classification`,
+#'   `ClassificationSystem`, `ETSDisplayEligible`, and `Color`.
 #'
 #' @section Interpreting output:
 #' Bars are anchored at zero. Width corresponds to effect size on the
@@ -682,7 +683,8 @@ plot_rater_severity_profile <- function(fit,
 #' fitted logit scale when linking support allows a comparable contrast.
 #' The ETS classification (A negligible, B moderate, C large) drives bar
 #' colour only when `ClassificationSystem == "ETS"`; otherwise the bar
-#' uses the preset's neutral.
+#' uses the preset's neutral. `ETSDisplayEligible` in the draw-free payload
+#' records this decision row by row.
 #'
 #' @seealso [analyze_dff()], [analyze_dif()], [plot_dif_heatmap()].
 #'
@@ -758,16 +760,24 @@ plot_dif_summary <- function(x,
   } else {
     NA_character_
   }
+  tbl$ClassificationSystem <- if ("ClassificationSystem" %in% names(tbl)) {
+    as.character(tbl$ClassificationSystem)
+  } else {
+    NA_character_
+  }
+  tbl$ETSDisplayEligible <- tbl$ClassificationSystem == "ETS" &
+    tbl$Classification %in% c("A", "B", "C")
   classification_color <- c(
     A = style$success, B = style$warn, C = style$fail,
     Negligible = style$success, Moderate = style$warn, Large = style$fail
   )
-  tbl$Color <- ifelse(
-    is.na(tbl$Classification),
-    style$neutral,
-    unname(classification_color[as.character(tbl$Classification)])
+  tbl$Color <- style$neutral
+  eligible_color <- tbl$ETSDisplayEligible &
+    !is.na(tbl$Classification) &
+    tbl$Classification %in% names(classification_color)
+  tbl$Color[eligible_color] <- unname(
+    classification_color[tbl$Classification[eligible_color]]
   )
-  tbl$Color[is.na(tbl$Color)] <- style$neutral
   ord <- switch(
     sort_by,
     abs_effect = order(-abs(tbl$Effect), na.last = TRUE),
@@ -831,11 +841,8 @@ plot_dif_summary <- function(x,
     CI_Lower = tbl$CI_Lower,
     CI_Upper = tbl$CI_Upper,
     Classification = tbl$Classification,
-    ClassificationSystem = if ("ClassificationSystem" %in% names(tbl)) {
-      as.character(tbl$ClassificationSystem)
-    } else {
-      NA_character_
-    },
+    ClassificationSystem = tbl$ClassificationSystem,
+    ETSDisplayEligible = tbl$ETSDisplayEligible,
     Color = tbl$Color,
     stringsAsFactors = FALSE
   )

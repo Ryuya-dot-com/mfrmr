@@ -52,7 +52,7 @@ mfrmr_release_readiness_prompt_steps <- function(target_version = NULL) {
     Evidence = c(
       "DESCRIPTION Version; first NEWS heading; check-log package version; absence of development labels in current release files",
       "release-evidence-checklist blocker rows; targeted mathematical tests; recovery-validation summary",
-      "gpcm_capability_matrix(); README; vignettes; NEWS deferred-work section; post-0.2.1 GPCM roadmap",
+      "gpcm_capability_matrix(); README; vignettes; NEWS deferred-work section; post-0.2.2 GPCM roadmap",
       "facets_positioning_guide(); facets_fit_review(); read_facets_fit_table(); output guide",
       "summary methods; plot(..., draw = FALSE); plot_data(); summary-table bundles",
       "README/vignettes/man/cheatsheet terminology scan",
@@ -101,12 +101,23 @@ mfrmr_release_readiness_versioned_file <- function(validation_dir,
                                                    ext) {
   candidates <- character(0)
   if (mfrmr_release_readiness_has_value(target_version)) {
-    candidates <- c(candidates, file.path(validation_dir, paste0(prefix, target_version, ext)))
+    candidates <- c(
+      candidates,
+      file.path(validation_dir, paste0(prefix, target_version, ext))
+    )
+    development_base <- sub("\\.9000$", "", target_version[1])
+    if (!identical(development_base, target_version[1])) {
+      candidates <- c(
+        candidates,
+        file.path(validation_dir, paste0(prefix, development_base, ext))
+      )
+    }
   }
   candidates <- c(
     candidates,
     file.path(validation_dir, paste0(prefix, fallback_version, ext))
   )
+  candidates <- unique(candidates)
   hits <- candidates[file.exists(candidates)]
   if (length(hits) > 0L) {
     hits[1]
@@ -150,7 +161,7 @@ mfrmr_release_readiness_paths <- function(pkg_dir = ".",
       target_version = target_version,
       ext = ".csv"
     ),
-    gpcm_roadmap = file.path(validation_dir, "gpcm-post-0.2.1-roadmap.md"),
+    gpcm_roadmap = file.path(validation_dir, "gpcm-post-0.2.2-roadmap.md"),
     gpcm_capability_source = file.path(pkg_dir, "R", "help_gpcm_scope.R"),
     external_recovery_evidence = mfrmr_release_readiness_versioned_file(
       validation_dir,
@@ -159,6 +170,92 @@ mfrmr_release_readiness_paths <- function(pkg_dir = ".",
       ext = ".md"
     ),
     external_recovery_helper = file.path(validation_dir, "external-recovery-audit.R"),
+    mh_dif_alignment_note = file.path(
+      dirname(validation_dir),
+      "references",
+      "mh-dif-r-package-alignment.md"
+    ),
+    mh_dif_comparison_helper = file.path(
+      validation_dir,
+      "mh-dif-package-comparison-0.2.2.R"
+    ),
+    mh_dif_simulation_helper = file.path(
+      validation_dir,
+      "mh-dif-simulation-0.2.2.R"
+    ),
+    dif_apa_reporting_note = file.path(
+      dirname(validation_dir),
+      "references",
+      "dif-apa-reporting-0.2.2.md"
+    ),
+    dif_apa_reporting_helper = file.path(
+      validation_dir,
+      "dif-apa-reporting-0.2.2.R"
+    ),
+    dif_apa_reporting_evidence = file.path(
+      validation_dir,
+      "dif-apa-reporting-0.2.2.md"
+    ),
+    dif_dff_simulation_helper = file.path(
+      validation_dir,
+      "dif-dff-simulation-matrix-0.2.2.R"
+    ),
+    dif_dff_simulation_evidence = file.path(
+      validation_dir,
+      "dif-dff-simulation-matrix-0.2.2.md"
+    ),
+    convergence_reporting_stress_helper = file.path(
+      validation_dir,
+      "convergence-reporting-stress-0.2.2.R"
+    ),
+    convergence_reporting_stress_evidence = file.path(
+      validation_dir,
+      "convergence-reporting-stress-0.2.2.md"
+    ),
+    gpcm_score_side_simulation_helper = file.path(
+      validation_dir,
+      "gpcm-score-side-simulation-0.2.2.R"
+    ),
+    gpcm_score_side_simulation_evidence = file.path(
+      validation_dir,
+      "gpcm-score-side-simulation-0.2.2.md"
+    ),
+    gpcm_score_side_simulation_summary = file.path(
+      validation_dir,
+      "gpcm-score-side-sim-summary-0.2.2.csv"
+    ),
+    gpcm_score_side_simulation_checks = file.path(
+      validation_dir,
+      "gpcm-score-side-sim-checks-0.2.2.csv"
+    ),
+    gpcm_score_side_external_helper = file.path(
+      validation_dir,
+      "gpcm-score-side-external-comparison-0.2.2.R"
+    ),
+    gpcm_score_side_external_evidence = file.path(
+      validation_dir,
+      "gpcm-score-side-external-comparison-0.2.2.md"
+    ),
+    gpcm_score_side_external_results = file.path(
+      validation_dir,
+      "gpcm-score-side-external-comparison-0.2.2-results.csv"
+    ),
+    gpcm_score_side_external_checks = file.path(
+      validation_dir,
+      "gpcm-score-side-external-comparison-0.2.2-checks.csv"
+    ),
+    release_scope_helper = file.path(
+      validation_dir,
+      "release-scope-review-0.2.2.R"
+    ),
+    release_scope_evidence = file.path(
+      validation_dir,
+      "release-scope-review-0.2.2.md"
+    ),
+    release_scope_checks = file.path(
+      validation_dir,
+      "release-scope-review-0.2.2-checks.csv"
+    ),
     check_log = file.path(pkg_dir, "mfrmr.Rcheck", "00check.log")
   )
 }
@@ -333,7 +430,18 @@ mfrmr_release_readiness_public_doc_files <- function(pkg_dir) {
 
 mfrmr_release_readiness_term_status <- function(pkg_dir) {
   files <- mfrmr_release_readiness_public_doc_files(pkg_dir)
-  allow_source_header <- "^% Please edit documentation in R/.*audit.*\\.R$"
+  allow_patterns <- c(
+    "^% Please edit documentation in R/.*audit.*\\.R$",
+    "mfrm_analysis_audit",
+    "summary\\.mfrm_analysis_audit",
+    "print\\.mfrm_analysis_audit",
+    "Cross-analysis audit",
+    "analysis audit summary"
+  )
+  is_allowed <- function(line) {
+    any(vapply(allow_patterns, grepl, logical(1),
+               x = line, perl = TRUE, ignore.case = TRUE))
+  }
   hits <- character(0)
   for (path in files) {
     lines <- mfrmr_release_readiness_read_lines(path)
@@ -344,7 +452,7 @@ mfrmr_release_readiness_term_status <- function(pkg_dir) {
     rel <- sub(paste0("^", gsub("([\\^$.|?*+(){}\\[\\]\\\\])", "\\\\\\1", pkg_dir), "/?"), "", path)
     for (i in idx) {
       line <- lines[[i]]
-      if (!grepl(allow_source_header, line, perl = TRUE)) {
+      if (!is_allowed(line)) {
         hits <- c(hits, paste0(rel, ":", i, ": ", line))
       }
     }
@@ -651,18 +759,105 @@ mfrmr_release_readiness_gate_summary <- function(version_status,
                                                  ci_workflow_status,
                                                  paths,
                                                  gpcm_scope_status = NULL,
+                                                 mh_dif_comparison_status = NULL,
+                                                 dif_apa_reporting_status = NULL,
+                                                 dif_dff_simulation_status = NULL,
+                                                 convergence_reporting_status = NULL,
+                                                 gpcm_score_side_status = NULL,
+                                                 gpcm_score_side_external_status = NULL,
+                                                 release_scope_status = NULL,
                                                  example_policy_status = NULL) {
+  path_exists <- function(path) {
+    is.character(path) && length(path) > 0L && file.exists(path[1])
+  }
   gpcm_scope_ok <- if (is.null(gpcm_scope_status)) {
     TRUE
   } else {
     identical(gpcm_scope_status$GPCMScopeStatus[1], "ok")
   }
-  evidence_available <- file.exists(paths$evidence_map) &&
-    file.exists(paths$gpcm_roadmap) &&
-    file.exists(paths$external_recovery_evidence) &&
-    file.exists(paths$external_recovery_helper) &&
+  mh_dif_status <- if (is.null(mh_dif_comparison_status)) {
+    "not_checked"
+  } else {
+    mh_dif_comparison_status$MHDIFComparisonStatus[1]
+  }
+  mh_dif_gate_ok <- is.null(mh_dif_comparison_status) ||
+    isTRUE(mh_dif_comparison_status$ComparisonGateOK[1])
+  dif_apa_status <- if (is.null(dif_apa_reporting_status)) {
+    "not_checked"
+  } else {
+    dif_apa_reporting_status$DIFAPAReportingStatus[1]
+  }
+  dif_apa_gate_ok <- is.null(dif_apa_reporting_status) ||
+    isTRUE(dif_apa_reporting_status$ReportingGateOK[1])
+  dif_dff_sim_status <- if (is.null(dif_dff_simulation_status)) {
+    "not_checked"
+  } else {
+    dif_dff_simulation_status$DIFDFFSimulationStatus[1]
+  }
+  dif_dff_sim_gate_ok <- is.null(dif_dff_simulation_status) ||
+    isTRUE(dif_dff_simulation_status$SimulationGateOK[1])
+  convergence_reporting_value <- if (is.null(convergence_reporting_status)) {
+    "not_checked"
+  } else {
+    convergence_reporting_status$ConvergenceReportingStressStatus[1]
+  }
+  convergence_reporting_gate_ok <- is.null(convergence_reporting_status) ||
+    isTRUE(convergence_reporting_status$StressGateOK[1])
+  gpcm_score_side_sim_status <- if (is.null(gpcm_score_side_status)) {
+    "not_checked"
+  } else {
+    gpcm_score_side_status$GPCMScoreSideSimulationStatus[1]
+  }
+  gpcm_score_side_gate_ok <- is.null(gpcm_score_side_status) ||
+    isTRUE(gpcm_score_side_status$SimulationGateOK[1])
+  gpcm_score_side_external_value <- if (is.null(gpcm_score_side_external_status)) {
+    "not_checked"
+  } else {
+    gpcm_score_side_external_status$GPCMScoreSideExternalComparisonStatus[1]
+  }
+  gpcm_score_side_external_gate_ok <- is.null(gpcm_score_side_external_status) ||
+    isTRUE(gpcm_score_side_external_status$ExternalComparisonGateOK[1])
+  release_scope_value <- if (is.null(release_scope_status)) {
+    "not_checked"
+  } else {
+    release_scope_status$ReleaseScopeReviewStatus[1]
+  }
+  release_scope_gate_ok <- is.null(release_scope_status) ||
+    isTRUE(release_scope_status$ScopeGateOK[1])
+  evidence_available <- path_exists(paths$evidence_map) &&
+    path_exists(paths$gpcm_roadmap) &&
+    path_exists(paths$external_recovery_evidence) &&
+    path_exists(paths$external_recovery_helper) &&
+    path_exists(paths$mh_dif_alignment_note) &&
+    path_exists(paths$mh_dif_comparison_helper) &&
+    path_exists(paths$mh_dif_simulation_helper) &&
+    path_exists(paths$dif_apa_reporting_note) &&
+    path_exists(paths$dif_apa_reporting_helper) &&
+    path_exists(paths$dif_apa_reporting_evidence) &&
+    path_exists(paths$dif_dff_simulation_helper) &&
+    path_exists(paths$dif_dff_simulation_evidence) &&
+    path_exists(paths$convergence_reporting_stress_helper) &&
+    path_exists(paths$convergence_reporting_stress_evidence) &&
+    path_exists(paths$gpcm_score_side_simulation_helper) &&
+    path_exists(paths$gpcm_score_side_simulation_evidence) &&
+    path_exists(paths$gpcm_score_side_simulation_summary) &&
+    path_exists(paths$gpcm_score_side_simulation_checks) &&
+    path_exists(paths$gpcm_score_side_external_helper) &&
+    path_exists(paths$gpcm_score_side_external_evidence) &&
+    path_exists(paths$gpcm_score_side_external_results) &&
+    path_exists(paths$gpcm_score_side_external_checks) &&
+    path_exists(paths$release_scope_helper) &&
+    path_exists(paths$release_scope_evidence) &&
+    path_exists(paths$release_scope_checks) &&
     isTRUE(checklist_status$ChecklistAvailable[1]) &&
-    isTRUE(gpcm_scope_ok)
+    isTRUE(gpcm_scope_ok) &&
+    isTRUE(mh_dif_gate_ok) &&
+    isTRUE(dif_apa_gate_ok) &&
+    isTRUE(dif_dff_sim_gate_ok) &&
+    isTRUE(convergence_reporting_gate_ok) &&
+    isTRUE(gpcm_score_side_gate_ok) &&
+    isTRUE(gpcm_score_side_external_gate_ok) &&
+    isTRUE(release_scope_gate_ok)
   rows <- data.frame(
     Gate = c("version_contract", "package_check", "ci_workflow", "terminology", "evidence_artifacts"),
     Status = c(
@@ -697,10 +892,38 @@ mfrmr_release_readiness_gate_summary <- function(version_status,
       ),
       paste0(term_status$DisallowedRemovedTerms[1], " disallowed removed-name hit(s)"),
       paste0(
-        "evidence_map=", file.exists(paths$evidence_map),
-        "; gpcm_roadmap=", file.exists(paths$gpcm_roadmap),
-        "; external_recovery=", file.exists(paths$external_recovery_evidence),
-        "; external_helper=", file.exists(paths$external_recovery_helper),
+        "evidence_map=", path_exists(paths$evidence_map),
+        "; gpcm_roadmap=", path_exists(paths$gpcm_roadmap),
+        "; external_recovery=", path_exists(paths$external_recovery_evidence),
+        "; external_helper=", path_exists(paths$external_recovery_helper),
+        "; mh_dif_alignment=", path_exists(paths$mh_dif_alignment_note),
+        "; mh_dif_helper=", path_exists(paths$mh_dif_comparison_helper),
+        "; mh_dif_simulation=", path_exists(paths$mh_dif_simulation_helper),
+        "; dif_apa_reporting=", path_exists(paths$dif_apa_reporting_note),
+        "; dif_apa_helper=", path_exists(paths$dif_apa_reporting_helper),
+        "; dif_apa_evidence=", path_exists(paths$dif_apa_reporting_evidence),
+        "; dif_apa_status=", dif_apa_status,
+        "; dif_dff_sim_helper=", path_exists(paths$dif_dff_simulation_helper),
+        "; dif_dff_sim_evidence=", path_exists(paths$dif_dff_simulation_evidence),
+        "; dif_dff_sim_status=", dif_dff_sim_status,
+        "; convergence_reporting_helper=", path_exists(paths$convergence_reporting_stress_helper),
+        "; convergence_reporting_evidence=", path_exists(paths$convergence_reporting_stress_evidence),
+        "; convergence_reporting_status=", convergence_reporting_value,
+        "; gpcm_score_side_helper=", path_exists(paths$gpcm_score_side_simulation_helper),
+        "; gpcm_score_side_evidence=", path_exists(paths$gpcm_score_side_simulation_evidence),
+        "; gpcm_score_side_summary=", path_exists(paths$gpcm_score_side_simulation_summary),
+        "; gpcm_score_side_checks=", path_exists(paths$gpcm_score_side_simulation_checks),
+        "; gpcm_score_side_status=", gpcm_score_side_sim_status,
+        "; gpcm_score_side_external_helper=", path_exists(paths$gpcm_score_side_external_helper),
+        "; gpcm_score_side_external_evidence=", path_exists(paths$gpcm_score_side_external_evidence),
+        "; gpcm_score_side_external_results=", path_exists(paths$gpcm_score_side_external_results),
+        "; gpcm_score_side_external_checks=", path_exists(paths$gpcm_score_side_external_checks),
+        "; gpcm_score_side_external_status=", gpcm_score_side_external_value,
+        "; release_scope_helper=", path_exists(paths$release_scope_helper),
+        "; release_scope_evidence=", path_exists(paths$release_scope_evidence),
+        "; release_scope_checks=", path_exists(paths$release_scope_checks),
+        "; release_scope_status=", release_scope_value,
+        "; mh_dif_status=", mh_dif_status,
         "; checklist_rows=", checklist_status$Rows[1],
         "; gpcm_scope=", if (is.null(gpcm_scope_status)) {
           "not_checked"
@@ -813,6 +1036,794 @@ mfrmr_release_readiness_external_recovery_status <- function(paths, external_rec
   )
 }
 
+mfrmr_release_readiness_mh_dif_comparison_status <- function(paths) {
+  helper <- paths$mh_dif_comparison_helper %||% NA_character_
+  if (!is.character(helper) || length(helper) == 0L || !file.exists(helper[1])) {
+    return(data.frame(
+      MHDIFComparisonStatus = "missing",
+      ComparisonGateOK = FALSE,
+      DifRVersion = NA_character_,
+      FixtureSeed = NA_integer_,
+      FixtureN = NA_integer_,
+      ZeroCorrection = NA_real_,
+      MaxAbsDiff = NA_real_,
+      Detail = "MH DIF comparison helper is missing",
+      stringsAsFactors = FALSE
+    ))
+  }
+  env <- new.env(parent = globalenv())
+  source(helper[1], local = env)
+  if (!exists("mfrmr_review_mh_dif_package_comparison",
+              envir = env, inherits = FALSE)) {
+    return(data.frame(
+      MHDIFComparisonStatus = "error",
+      ComparisonGateOK = FALSE,
+      DifRVersion = NA_character_,
+      FixtureSeed = NA_integer_,
+      FixtureN = NA_integer_,
+      ZeroCorrection = NA_real_,
+      MaxAbsDiff = NA_real_,
+      Detail = "helper did not define mfrmr_review_mh_dif_package_comparison()",
+      stringsAsFactors = FALSE
+    ))
+  }
+  if (!exists("analyze_dif_mh", mode = "function", inherits = TRUE) &&
+      requireNamespace("pkgload", quietly = TRUE) &&
+      file.exists(file.path(paths$pkg_dir, "DESCRIPTION"))) {
+    try(pkgload::load_all(paths$pkg_dir, quiet = TRUE), silent = TRUE)
+  }
+  review <- tryCatch(
+    env$mfrmr_review_mh_dif_package_comparison(),
+    error = function(e) e
+  )
+  if (inherits(review, "error")) {
+    return(data.frame(
+      MHDIFComparisonStatus = "error",
+      ComparisonGateOK = FALSE,
+      DifRVersion = NA_character_,
+      FixtureSeed = NA_integer_,
+      FixtureN = NA_integer_,
+      ZeroCorrection = NA_real_,
+      MaxAbsDiff = NA_real_,
+      Detail = conditionMessage(review),
+      stringsAsFactors = FALSE
+    ))
+  }
+  status <- as.character(review$status %||% "unknown")
+  max_abs <- review$max_abs_diff %||% NA_real_
+  max_abs <- suppressWarnings(max(as.numeric(max_abs), na.rm = TRUE))
+  if (!is.finite(max_abs)) {
+    max_abs <- NA_real_
+  }
+  data.frame(
+    MHDIFComparisonStatus = status[1],
+    ComparisonGateOK = status[1] %in% c("ok", "skipped"),
+    DifRVersion = as.character(review$difr_version %||% NA_character_)[1],
+    FixtureSeed = as.integer(review$fixture_seed %||% NA_integer_)[1],
+    FixtureN = as.integer(review$fixture_n_person %||% NA_integer_)[1],
+    ZeroCorrection = as.numeric(review$zero_correction %||% NA_real_)[1],
+    MaxAbsDiff = max_abs,
+    Detail = if (!is.null(review$reason)) {
+      as.character(review$reason)[1]
+    } else {
+      paste0("status=", status[1], "; tolerance=", review$tolerance %||% NA)
+    },
+    stringsAsFactors = FALSE
+  )
+}
+
+mfrmr_release_readiness_dif_apa_reporting_status <- function(paths) {
+  helper <- paths$dif_apa_reporting_helper %||% NA_character_
+  if (!is.character(helper) || length(helper) == 0L || !file.exists(helper[1])) {
+    return(data.frame(
+      DIFAPAReportingStatus = "missing",
+      ReportingGateOK = FALSE,
+      Cases = NA_integer_,
+      Checks = NA_integer_,
+      FailedChecks = NA_integer_,
+      Detail = "DIF/DFF APA reporting helper is missing",
+      stringsAsFactors = FALSE
+    ))
+  }
+  env <- new.env(parent = globalenv())
+  source(helper[1], local = env)
+  if (!exists("mfrmr_review_dif_apa_reporting",
+              envir = env, inherits = FALSE)) {
+    return(data.frame(
+      DIFAPAReportingStatus = "error",
+      ReportingGateOK = FALSE,
+      Cases = NA_integer_,
+      Checks = NA_integer_,
+      FailedChecks = NA_integer_,
+      Detail = "helper did not define mfrmr_review_dif_apa_reporting()",
+      stringsAsFactors = FALSE
+    ))
+  }
+  if (!exists("fit_mfrm", mode = "function", inherits = TRUE) &&
+      requireNamespace("pkgload", quietly = TRUE) &&
+      file.exists(file.path(paths$pkg_dir, "DESCRIPTION"))) {
+    try(pkgload::load_all(paths$pkg_dir, quiet = TRUE), silent = TRUE)
+  }
+  review <- tryCatch(
+    env$mfrmr_review_dif_apa_reporting(
+      include_refit = TRUE,
+      include_gpcm = TRUE
+    ),
+    error = function(e) e
+  )
+  if (inherits(review, "error")) {
+    return(data.frame(
+      DIFAPAReportingStatus = "error",
+      ReportingGateOK = FALSE,
+      Cases = NA_integer_,
+      Checks = NA_integer_,
+      FailedChecks = NA_integer_,
+      Detail = conditionMessage(review),
+      stringsAsFactors = FALSE
+    ))
+  }
+  checks <- as.data.frame(review$checks %||% data.frame(),
+                          stringsAsFactors = FALSE)
+  failed <- if (nrow(checks) > 0L && "Passed" %in% names(checks)) {
+    sum(!isTRUE(checks$Passed) & !checks$Passed, na.rm = TRUE)
+  } else {
+    NA_integer_
+  }
+  status <- as.character(review$status %||% "unknown")[1]
+  data.frame(
+    DIFAPAReportingStatus = status,
+    ReportingGateOK = identical(status, "ok") && identical(failed, 0L),
+    Cases = nrow(as.data.frame(review$case_table %||% data.frame())),
+    Checks = nrow(checks),
+    FailedChecks = failed,
+    Detail = paste0(
+      "include_refit=", isTRUE(review$include_refit),
+      "; include_gpcm=", isTRUE(review$include_gpcm)
+    ),
+    stringsAsFactors = FALSE
+  )
+}
+
+mfrmr_release_readiness_dif_dff_simulation_status <- function(paths) {
+  helper <- paths$dif_dff_simulation_helper %||% NA_character_
+  evidence <- paths$dif_dff_simulation_evidence %||% NA_character_
+  missing <- character(0)
+  if (!is.character(helper) || length(helper) == 0L || !file.exists(helper[1])) {
+    missing <- c(missing, "helper")
+  }
+  if (!is.character(evidence) || length(evidence) == 0L ||
+      !file.exists(evidence[1])) {
+    missing <- c(missing, "evidence")
+  }
+  if (length(missing) > 0L) {
+    return(data.frame(
+      DIFDFFSimulationStatus = "missing",
+      SimulationGateOK = FALSE,
+      Cases = NA_integer_,
+      Checks = NA_integer_,
+      FailedChecks = NA_integer_,
+      Detail = paste("DIF/DFF simulation matrix", paste(missing, collapse = "+"),
+                     "missing"),
+      stringsAsFactors = FALSE
+    ))
+  }
+
+  env <- new.env(parent = globalenv())
+  source(helper[1], local = env)
+  if (!exists("mfrmr_dif_dff_simulation_matrix_expected_cases",
+              envir = env, inherits = FALSE)) {
+    return(data.frame(
+      DIFDFFSimulationStatus = "error",
+      SimulationGateOK = FALSE,
+      Cases = NA_integer_,
+      Checks = NA_integer_,
+      FailedChecks = NA_integer_,
+      Detail = "helper did not define expected simulation matrix cases",
+      stringsAsFactors = FALSE
+    ))
+  }
+  expected <- env$mfrmr_dif_dff_simulation_matrix_expected_cases()
+  expected_models <- sort(unique(as.character(expected$Model)))
+  expected_scenarios <- sort(unique(as.character(expected$Scenario)))
+  lines <- readLines(evidence[1], warn = FALSE)
+  extract_scalar <- function(pattern, default = NA_character_) {
+    hit <- grep(pattern, lines, value = TRUE)
+    if (length(hit) == 0L) {
+      return(default)
+    }
+    sub(pattern, "\\1", hit[1])
+  }
+  status <- extract_scalar(".*DIFDFFSimulationStatus = \"([^\"]+)\".*")
+  cases <- suppressWarnings(as.integer(
+    extract_scalar(".*Cases = ([0-9]+).*", NA_character_)
+  ))
+  checks <- suppressWarnings(as.integer(
+    extract_scalar(".*Checks = ([0-9]+).*", NA_character_)
+  ))
+  failed <- suppressWarnings(as.integer(
+    extract_scalar(".*FailedChecks = ([0-9]+).*", NA_character_)
+  ))
+  models_line <- extract_scalar(".*Models = ([^`;]+).*", "")
+  scenarios_line <- extract_scalar(".*Scenarios = ([^`;]+).*", "")
+  models <- sort(trimws(strsplit(models_line, ",", fixed = TRUE)[[1]]))
+  scenarios <- sort(trimws(strsplit(scenarios_line, ",", fixed = TRUE)[[1]]))
+  models_ok <- identical(models, expected_models)
+  scenarios_ok <- identical(scenarios, expected_scenarios)
+  gate_ok <- identical(status, "ok") &&
+    identical(failed, 0L) &&
+    isTRUE(cases >= nrow(expected)) &&
+    isTRUE(checks > 0L) &&
+    models_ok &&
+    scenarios_ok
+  data.frame(
+    DIFDFFSimulationStatus = status,
+    SimulationGateOK = gate_ok,
+    Cases = cases,
+    Checks = checks,
+    FailedChecks = failed,
+    Detail = paste0(
+      "models_ok=", models_ok,
+      "; scenarios_ok=", scenarios_ok,
+      "; expected_cases=", nrow(expected)
+    ),
+    stringsAsFactors = FALSE
+  )
+}
+
+mfrmr_release_readiness_convergence_reporting_status <- function(paths) {
+  helper <- paths$convergence_reporting_stress_helper %||% NA_character_
+  evidence <- paths$convergence_reporting_stress_evidence %||% NA_character_
+  path_ok <- function(path) {
+    is.character(path) && length(path) > 0L && file.exists(path[1])
+  }
+  missing <- character(0)
+  if (!path_ok(helper)) {
+    missing <- c(missing, "helper")
+  }
+  if (!path_ok(evidence)) {
+    missing <- c(missing, "evidence")
+  }
+  if (length(missing) > 0L) {
+    return(data.frame(
+      ConvergenceReportingStressStatus = "missing",
+      StressGateOK = FALSE,
+      CRANTimeSimulation = NA,
+      RequiredChecks = NA_integer_,
+      OutputFiles = NA_integer_,
+      Detail = paste("convergence-reporting stress",
+                     paste(missing, collapse = "+"), "missing"),
+      stringsAsFactors = FALSE
+    ))
+  }
+
+  evidence_lines <- readLines(evidence[1], warn = FALSE)
+  script_lines <- readLines(helper[1], warn = FALSE)
+  evidence_text <- paste(evidence_lines, collapse = "\n")
+  script_text <- paste(script_lines, collapse = "\n")
+  extract_scalar <- function(pattern, default = NA_character_) {
+    hit <- grep(pattern, evidence_lines, value = TRUE)
+    if (length(hit) == 0L) {
+      return(default)
+    }
+    sub(pattern, "\\1", hit[1])
+  }
+  status <- extract_scalar(".*ConvergenceReportingStressStatus = \"([^\"]+)\".*")
+  cran_time_simulation <- grepl("`CRANTimeSimulation = FALSE`",
+                                evidence_text,
+                                fixed = TRUE)
+  default_output_ok <- grepl(
+    "validation-results/convergence-reporting-stress-0.2.2",
+    evidence_text,
+    fixed = TRUE
+  ) &&
+    grepl("validation-results", script_text, fixed = TRUE)
+  cran_boundary_ok <- grepl("outside the CRAN-time test suite",
+                            script_text,
+                            fixed = TRUE) &&
+    grepl("does not source the script or run[[:space:]]+fits",
+          evidence_text)
+  required_checks <- c(
+    "all_runs_completed",
+    "direct_iterations_are_function_evaluations",
+    "bfgs_iterations_mirror_gradient_evaluations",
+    "bfgs_iterations_do_not_exceed_maxit",
+    "function_evaluations_can_exceed_maxit_observed",
+    "large_gradient_plateau_mapping",
+    "large_gradient_status_is_well_formed",
+    "pass_direct_rows_have_small_terminal_gradient",
+    "iteration_limit_stress_observed",
+    "em_basis_rows_remain_distinct"
+  )
+  checks_in_evidence <- vapply(required_checks, grepl, logical(1),
+                               x = evidence_text, fixed = TRUE)
+  checks_in_script <- vapply(required_checks, grepl, logical(1),
+                             x = script_text, fixed = TRUE)
+  output_files <- c(
+    "convergence-reporting-stress-0.2.2-runs.csv",
+    "convergence-reporting-stress-0.2.2-checks.csv",
+    "convergence-reporting-stress-0.2.2-summary.csv",
+    "convergence-reporting-stress-0.2.2.md"
+  )
+  outputs_in_evidence <- vapply(output_files, grepl, logical(1),
+                                x = evidence_text, fixed = TRUE)
+  outputs_in_script <- vapply(output_files, grepl, logical(1),
+                              x = script_text, fixed = TRUE)
+  gate_ok <- identical(status, "available") &&
+    isTRUE(cran_time_simulation) &&
+    isTRUE(default_output_ok) &&
+    isTRUE(cran_boundary_ok) &&
+    all(checks_in_evidence) &&
+    all(checks_in_script) &&
+    all(outputs_in_evidence) &&
+    all(outputs_in_script)
+
+  data.frame(
+    ConvergenceReportingStressStatus = status,
+    StressGateOK = gate_ok,
+    CRANTimeSimulation = FALSE,
+    RequiredChecks = sum(checks_in_evidence & checks_in_script),
+    OutputFiles = sum(outputs_in_evidence & outputs_in_script),
+    Detail = paste0(
+      "cran_boundary_ok=", cran_boundary_ok,
+      "; default_output_ok=", default_output_ok,
+      "; checks_ok=", all(checks_in_evidence) && all(checks_in_script),
+      "; outputs_ok=", all(outputs_in_evidence) && all(outputs_in_script)
+    ),
+    stringsAsFactors = FALSE
+  )
+}
+
+mfrmr_release_readiness_gpcm_score_side_status <- function(paths) {
+  helper <- paths$gpcm_score_side_simulation_helper %||% NA_character_
+  evidence <- paths$gpcm_score_side_simulation_evidence %||% NA_character_
+  summary_csv <- paths$gpcm_score_side_simulation_summary %||% NA_character_
+  checks_csv <- paths$gpcm_score_side_simulation_checks %||% NA_character_
+  missing <- character(0)
+  path_ok <- function(path) {
+    is.character(path) && length(path) > 0L && file.exists(path[1])
+  }
+  if (!path_ok(helper)) {
+    missing <- c(missing, "helper")
+  }
+  if (!path_ok(evidence)) {
+    missing <- c(missing, "evidence")
+  }
+  if (!path_ok(summary_csv)) {
+    missing <- c(missing, "summary")
+  }
+  if (!path_ok(checks_csv)) {
+    missing <- c(missing, "checks")
+  }
+  if (length(missing) > 0L) {
+    return(data.frame(
+      GPCMScoreSideSimulationStatus = "missing",
+      SimulationGateOK = FALSE,
+      Replications = NA_integer_,
+      Conditions = NA_integer_,
+      SummaryRows = NA_integer_,
+      FailedChecks = NA_integer_,
+      ErroredReplications = NA_integer_,
+      MaxSERatioDiff = NA_real_,
+      MinConvergedRate = NA_real_,
+      Detail = paste("GPCM score-side simulation", paste(missing, collapse = "+"),
+                     "missing"),
+      stringsAsFactors = FALSE
+    ))
+  }
+
+  lines <- readLines(evidence[1], warn = FALSE)
+  extract_scalar <- function(pattern, default = NA_character_) {
+    hit <- grep(pattern, lines, value = TRUE)
+    if (length(hit) == 0L) {
+      return(default)
+    }
+    sub(pattern, "\\1", hit[1])
+  }
+  status <- extract_scalar(".*GPCMScoreSideSimulationStatus = \"([^\"]+)\".*")
+  reps <- suppressWarnings(as.integer(
+    extract_scalar(".*Replications = ([0-9]+).*", NA_character_)
+  ))
+  conditions <- suppressWarnings(as.integer(
+    extract_scalar(".*Conditions = ([0-9]+).*", NA_character_)
+  ))
+  summary_rows <- suppressWarnings(as.integer(
+    extract_scalar(".*SummaryRows = ([0-9]+).*", NA_character_)
+  ))
+  errored <- suppressWarnings(as.integer(
+    extract_scalar(".*ErroredReplications = ([0-9]+).*", NA_character_)
+  ))
+  max_se_ratio_diff <- suppressWarnings(as.numeric(
+    extract_scalar(".*MaxSERatioDiff = ([0-9.eE+-]+).*", NA_character_)
+  ))
+  min_converged_rate <- suppressWarnings(as.numeric(
+    extract_scalar(".*MinConvergedRate = ([0-9.eE+-]+).*", NA_character_)
+  ))
+  failed <- suppressWarnings(as.integer(
+    extract_scalar(".*FailedChecks = ([0-9]+).*", NA_character_)
+  ))
+
+  summary <- tryCatch(
+    utils::read.csv(summary_csv[1], stringsAsFactors = FALSE, check.names = FALSE),
+    error = function(e) NULL
+  )
+  checks <- tryCatch(
+    utils::read.csv(checks_csv[1], stringsAsFactors = FALSE, check.names = FALSE),
+    error = function(e) NULL
+  )
+  summary_schema_ok <- !is.null(summary) &&
+    all(c("regime", "n_person", "band", "reps", "se_ratio_mean",
+          "inv_var_mean", "converged_rate") %in% names(summary))
+  checks_schema_ok <- !is.null(checks) &&
+    all(c("Check", "Value", "Threshold", "Passed") %in% names(checks))
+  if (summary_schema_ok) {
+    expected_summary_rows <- length(unique(summary$regime)) *
+      length(unique(summary$n_person)) * length(unique(summary$band))
+    summary_rows_match <- identical(nrow(summary), summary_rows) &&
+      isTRUE(summary_rows >= expected_summary_rows)
+    all_rows <- summary[summary$band == "all", , drop = FALSE]
+    summary_min_converged <- suppressWarnings(min(all_rows$converged_rate, na.rm = TRUE))
+    summary_max_ratio_diff <- suppressWarnings(max(abs(
+      summary$se_ratio_mean - summary$inv_var_mean
+    ), na.rm = TRUE))
+  } else {
+    expected_summary_rows <- NA_integer_
+    summary_rows_match <- FALSE
+    summary_min_converged <- NA_real_
+    summary_max_ratio_diff <- NA_real_
+  }
+  if (checks_schema_ok) {
+    checks_passed <- if (is.logical(checks$Passed)) {
+      checks$Passed
+    } else {
+      tolower(as.character(checks$Passed)) %in% c("true", "t", "1", "yes")
+    }
+    checks_pass <- all(checks_passed, na.rm = FALSE)
+  } else {
+    checks_pass <- FALSE
+  }
+
+  gate_ok <- identical(status, "ok") &&
+    identical(failed, 0L) &&
+    identical(errored, 0L) &&
+    isTRUE(conditions >= 6L) &&
+    isTRUE(summary_rows_match) &&
+    isTRUE(checks_schema_ok) &&
+    isTRUE(checks_pass) &&
+    isTRUE(is.finite(max_se_ratio_diff) && max_se_ratio_diff <= 1e-10) &&
+    isTRUE(is.finite(summary_max_ratio_diff) && summary_max_ratio_diff <= 1e-10) &&
+    isTRUE(is.finite(min_converged_rate) && min_converged_rate >= 0.95) &&
+    isTRUE(is.finite(summary_min_converged) && summary_min_converged >= 0.95)
+
+  data.frame(
+    GPCMScoreSideSimulationStatus = status,
+    SimulationGateOK = gate_ok,
+    Replications = reps,
+    Conditions = conditions,
+    SummaryRows = summary_rows,
+    FailedChecks = failed,
+    ErroredReplications = errored,
+    MaxSERatioDiff = max_se_ratio_diff,
+    MinConvergedRate = min_converged_rate,
+    Detail = paste0(
+      "summary_schema_ok=", summary_schema_ok,
+      "; checks_schema_ok=", checks_schema_ok,
+      "; checks_pass=", checks_pass,
+      "; summary_rows_match=", summary_rows_match,
+      "; expected_summary_rows=", expected_summary_rows,
+      "; summary_max_ratio_diff=", summary_max_ratio_diff,
+      "; summary_min_converged=", summary_min_converged
+    ),
+    stringsAsFactors = FALSE
+  )
+}
+
+mfrmr_release_readiness_gpcm_score_side_external_status <- function(paths) {
+  helper <- paths$gpcm_score_side_external_helper %||% NA_character_
+  evidence <- paths$gpcm_score_side_external_evidence %||% NA_character_
+  results_csv <- paths$gpcm_score_side_external_results %||% NA_character_
+  checks_csv <- paths$gpcm_score_side_external_checks %||% NA_character_
+  missing <- character(0)
+  path_ok <- function(path) {
+    is.character(path) && length(path) > 0L && file.exists(path[1])
+  }
+  if (!path_ok(helper)) {
+    missing <- c(missing, "helper")
+  }
+  if (!path_ok(evidence)) {
+    missing <- c(missing, "evidence")
+  }
+  if (!path_ok(results_csv)) {
+    missing <- c(missing, "results")
+  }
+  if (!path_ok(checks_csv)) {
+    missing <- c(missing, "checks")
+  }
+  if (length(missing) > 0L) {
+    return(data.frame(
+      GPCMScoreSideExternalComparisonStatus = "missing",
+      ExternalComparisonGateOK = FALSE,
+      ExternalComparisonRows = NA_integer_,
+      FailedChecks = NA_integer_,
+      PackagesCovered = NA_character_,
+      HasMirt = FALSE,
+      HasTAM = FALSE,
+      ERmBoundaryOK = FALSE,
+      MaxProbabilityTraceDiff = NA_real_,
+      Detail = paste("GPCM score-side external comparison",
+                     paste(missing, collapse = "+"), "missing"),
+      stringsAsFactors = FALSE
+    ))
+  }
+
+  lines <- readLines(evidence[1], warn = FALSE)
+  evidence_text <- paste(lines, collapse = "\n")
+  extract_scalar <- function(pattern, default = NA_character_) {
+    hit <- grep(pattern, lines, value = TRUE)
+    if (length(hit) == 0L) {
+      return(default)
+    }
+    sub(pattern, "\\1", hit[1])
+  }
+  status <- extract_scalar(".*GPCMScoreSideExternalComparisonStatus = \"([^\"]+)\".*")
+  rows <- suppressWarnings(as.integer(
+    extract_scalar(".*ExternalComparisonRows = ([0-9]+).*", NA_character_)
+  ))
+  failed <- suppressWarnings(as.integer(
+    extract_scalar(".*FailedChecks = ([0-9]+).*", NA_character_)
+  ))
+  results <- tryCatch(
+    utils::read.csv(results_csv[1], stringsAsFactors = FALSE, check.names = FALSE),
+    error = function(e) NULL
+  )
+  checks <- tryCatch(
+    utils::read.csv(checks_csv[1], stringsAsFactors = FALSE, check.names = FALSE),
+    error = function(e) NULL
+  )
+  results_schema_ok <- !is.null(results) &&
+    all(c("Package", "Item", "Comparison", "MaxAbsDiff", "Threshold",
+          "Passed", "Detail") %in% names(results))
+  checks_schema_ok <- !is.null(checks) &&
+    all(c("Check", "Value", "Threshold", "Passed", "Detail") %in% names(checks))
+  passed_values <- function(x) {
+    if (is.logical(x)) {
+      x
+    } else {
+      tolower(as.character(x)) %in% c("true", "t", "1", "yes")
+    }
+  }
+  if (results_schema_ok) {
+    result_passed <- passed_values(results$Passed)
+    results_pass <- all(result_passed, na.rm = FALSE)
+    results_rows_match <- identical(nrow(results), rows)
+    packages <- sort(unique(as.character(results$Package)))
+    has_mirt <- "mirt" %in% packages
+    has_tam <- "TAM" %in% packages
+    expected_mirt <- expand.grid(
+      Package = "mirt",
+      Item = paste0("I", 1:4),
+      Comparison = c(
+        "probtrace_vs_local_kernel",
+        "expected_score_vs_local_kernel",
+        "variance_vs_local_kernel",
+        "derivative_identity_local"
+      ),
+      stringsAsFactors = FALSE
+    )
+    expected_tam <- expand.grid(
+      Package = "TAM",
+      Item = paste0("I", 1:4),
+      Comparison = c(
+        "rprobs_vs_local_kernel",
+        "expected_score_vs_local_kernel",
+        "variance_vs_local_kernel",
+        "derivative_identity_local"
+      ),
+      stringsAsFactors = FALSE
+    )
+    expected_grid <- rbind(expected_mirt, expected_tam)
+    result_keys <- paste(results$Package, results$Item, results$Comparison,
+                         sep = "\r")
+    expected_keys <- paste(expected_grid$Package, expected_grid$Item,
+                           expected_grid$Comparison, sep = "\r")
+    expected_grid_ok <- identical(sort(result_keys), sort(expected_keys))
+    trace_rows <- grepl("probtrace|rprobs", results$Comparison)
+    max_probability_diff <- suppressWarnings(max(
+      as.numeric(results$MaxAbsDiff[trace_rows]),
+      na.rm = TRUE
+    ))
+    if (!is.finite(max_probability_diff)) {
+      max_probability_diff <- NA_real_
+    }
+  } else {
+    results_pass <- FALSE
+    results_rows_match <- FALSE
+    packages <- character(0)
+    has_mirt <- FALSE
+    has_tam <- FALSE
+    expected_grid_ok <- FALSE
+    max_probability_diff <- NA_real_
+  }
+  if (checks_schema_ok) {
+    checks_passed <- passed_values(checks$Passed)
+    checks_pass <- all(checks_passed, na.rm = FALSE)
+    erm_boundary_ok <- any(
+      checks$Check == "eRm_pcm_boundary_available" & checks_passed
+    )
+  } else {
+    checks_pass <- FALSE
+    erm_boundary_ok <- FALSE
+  }
+  evidence_mapping_ok <- grepl("mirt::probtrace()", evidence_text, fixed = TRUE) &&
+    grepl("does not claim full many-facet parameter", evidence_text, fixed = TRUE) &&
+    grepl("not treated as many-facet MFRM comparators",
+          evidence_text, fixed = TRUE) &&
+    grepl("tau_k = b_k", evidence_text, fixed = TRUE) &&
+    grepl("tam.mml.2pl", evidence_text, fixed = TRUE) &&
+    grepl("tau_k = beta + tau.Cat_k", evidence_text, fixed = TRUE) &&
+    grepl("eRm", evidence_text, fixed = TRUE) &&
+    grepl("not treated as a free-slope GPCM score-side comparator",
+          evidence_text, fixed = TRUE) &&
+    grepl("does not validate FACETS", evidence_text, fixed = TRUE)
+  gate_ok <- identical(status, "ok") &&
+    identical(failed, 0L) &&
+    isTRUE(rows >= 16L) &&
+    isTRUE(results_schema_ok) &&
+    isTRUE(checks_schema_ok) &&
+    isTRUE(results_rows_match) &&
+    isTRUE(expected_grid_ok) &&
+    isTRUE(results_pass) &&
+    isTRUE(checks_pass) &&
+    isTRUE(has_mirt) &&
+    isTRUE(has_tam) &&
+    isTRUE(erm_boundary_ok) &&
+    isTRUE(evidence_mapping_ok) &&
+    isTRUE(is.finite(max_probability_diff) && max_probability_diff <= 5e-4)
+
+  data.frame(
+    GPCMScoreSideExternalComparisonStatus = status,
+    ExternalComparisonGateOK = gate_ok,
+    ExternalComparisonRows = rows,
+    FailedChecks = failed,
+    PackagesCovered = paste(packages, collapse = ";"),
+    ResultsRowsMatch = results_rows_match,
+    ExpectedGridOK = expected_grid_ok,
+    HasMirt = has_mirt,
+    HasTAM = has_tam,
+    ERmBoundaryOK = erm_boundary_ok,
+    MaxProbabilityTraceDiff = max_probability_diff,
+    Detail = paste0(
+      "results_schema_ok=", results_schema_ok,
+      "; checks_schema_ok=", checks_schema_ok,
+      "; results_rows_match=", results_rows_match,
+      "; expected_grid_ok=", expected_grid_ok,
+      "; results_pass=", results_pass,
+      "; checks_pass=", checks_pass,
+      "; evidence_mapping_ok=", evidence_mapping_ok
+    ),
+    stringsAsFactors = FALSE
+  )
+}
+
+mfrmr_release_readiness_release_scope_status <- function(paths) {
+  helper <- paths$release_scope_helper %||% NA_character_
+  evidence <- paths$release_scope_evidence %||% NA_character_
+  checks_csv <- paths$release_scope_checks %||% NA_character_
+  path_ok <- function(path) {
+    is.character(path) && length(path) > 0L && file.exists(path[1])
+  }
+  missing <- character(0)
+  if (!path_ok(helper)) {
+    missing <- c(missing, "helper")
+  }
+  if (!path_ok(evidence)) {
+    missing <- c(missing, "evidence")
+  }
+  if (!path_ok(checks_csv)) {
+    missing <- c(missing, "checks")
+  }
+  if (length(missing) > 0L) {
+    return(data.frame(
+      ReleaseScopeReviewStatus = "missing",
+      ScopeGateOK = FALSE,
+      Checks = NA_integer_,
+      FailedChecks = NA_integer_,
+      LiveStatus = NA_character_,
+      Detail = paste("release-scope review",
+                     paste(missing, collapse = "+"), "missing"),
+      stringsAsFactors = FALSE
+    ))
+  }
+
+  env <- new.env(parent = globalenv())
+  source(helper[1], local = env)
+  if (!exists("mfrmr_review_release_scope",
+              envir = env, inherits = FALSE)) {
+    return(data.frame(
+      ReleaseScopeReviewStatus = "error",
+      ScopeGateOK = FALSE,
+      Checks = NA_integer_,
+      FailedChecks = NA_integer_,
+      LiveStatus = NA_character_,
+      Detail = "helper did not define mfrmr_review_release_scope()",
+      stringsAsFactors = FALSE
+    ))
+  }
+
+  review <- tryCatch(
+    env$mfrmr_review_release_scope(pkg_dir = paths$pkg_dir),
+    error = function(e) e
+  )
+  if (inherits(review, "error")) {
+    return(data.frame(
+      ReleaseScopeReviewStatus = "error",
+      ScopeGateOK = FALSE,
+      Checks = NA_integer_,
+      FailedChecks = NA_integer_,
+      LiveStatus = "error",
+      Detail = conditionMessage(review),
+      stringsAsFactors = FALSE
+    ))
+  }
+
+  lines <- readLines(evidence[1], warn = FALSE)
+  extract_scalar <- function(pattern, default = NA_character_) {
+    hit <- grep(pattern, lines, value = TRUE)
+    if (length(hit) == 0L) {
+      return(default)
+    }
+    sub(pattern, "\\1", hit[1])
+  }
+  status <- extract_scalar(".*ReleaseScopeReviewStatus = \"([^\"]+)\".*")
+  checks_n <- suppressWarnings(as.integer(
+    extract_scalar(".*`Checks = ([0-9]+)`.*", NA_character_)
+  ))
+  failed <- suppressWarnings(as.integer(
+    extract_scalar(".*`FailedChecks = ([0-9]+)`.*", NA_character_)
+  ))
+  checks <- tryCatch(
+    utils::read.csv(checks_csv[1], stringsAsFactors = FALSE, check.names = FALSE),
+    error = function(e) NULL
+  )
+  checks_schema_ok <- !is.null(checks) &&
+    all(c("Area", "Check", "Passed", "Detail") %in% names(checks))
+  checks_pass <- if (checks_schema_ok) {
+    passed <- if (is.logical(checks$Passed)) {
+      checks$Passed
+    } else {
+      tolower(as.character(checks$Passed)) %in% c("true", "t", "1", "yes")
+    }
+    all(passed, na.rm = FALSE)
+  } else {
+    FALSE
+  }
+  live_status <- as.character(review$status %||% "unknown")[1]
+  live_failed <- as.integer(review$failed_checks %||% NA_integer_)[1]
+  live_checks <- nrow(as.data.frame(review$checks %||% data.frame()))
+  gate_ok <- identical(status, "ok") &&
+    identical(failed, 0L) &&
+    identical(live_status, "ok") &&
+    identical(live_failed, 0L) &&
+    isTRUE(checks_schema_ok) &&
+    isTRUE(checks_pass) &&
+    identical(nrow(checks), checks_n) &&
+    identical(live_checks, checks_n)
+
+  data.frame(
+    ReleaseScopeReviewStatus = status,
+    ScopeGateOK = gate_ok,
+    Checks = checks_n,
+    FailedChecks = failed,
+    LiveStatus = live_status,
+    Detail = paste0(
+      "checks_schema_ok=", checks_schema_ok,
+      "; checks_pass=", checks_pass,
+      "; live_checks=", live_checks,
+      "; live_failed=", live_failed
+    ),
+    stringsAsFactors = FALSE
+  )
+}
+
 mfrmr_release_readiness_review <- function(pkg_dir = ".",
                                            check_log = NULL,
                                            checklist = NULL,
@@ -843,6 +1854,27 @@ mfrmr_release_readiness_review <- function(pkg_dir = ".",
     paths = paths,
     checklist_status = checklist_status
   )
+  mh_dif_comparison_status <- mfrmr_release_readiness_mh_dif_comparison_status(
+    paths = paths
+  )
+  dif_apa_reporting_status <- mfrmr_release_readiness_dif_apa_reporting_status(
+    paths = paths
+  )
+  dif_dff_simulation_status <- mfrmr_release_readiness_dif_dff_simulation_status(
+    paths = paths
+  )
+  convergence_reporting_status <- mfrmr_release_readiness_convergence_reporting_status(
+    paths = paths
+  )
+  gpcm_score_side_status <- mfrmr_release_readiness_gpcm_score_side_status(
+    paths = paths
+  )
+  gpcm_score_side_external_status <- mfrmr_release_readiness_gpcm_score_side_external_status(
+    paths = paths
+  )
+  release_scope_status <- mfrmr_release_readiness_release_scope_status(
+    paths = paths
+  )
   example_policy_status <- mfrmr_release_readiness_example_policy_status(paths)
   gate_summary <- mfrmr_release_readiness_gate_summary(
     version_status = version_status,
@@ -852,6 +1884,13 @@ mfrmr_release_readiness_review <- function(pkg_dir = ".",
     ci_workflow_status = ci_workflow_status,
     paths = paths,
     gpcm_scope_status = gpcm_scope_status,
+    mh_dif_comparison_status = mh_dif_comparison_status,
+    dif_apa_reporting_status = dif_apa_reporting_status,
+    dif_dff_simulation_status = dif_dff_simulation_status,
+    convergence_reporting_status = convergence_reporting_status,
+    gpcm_score_side_status = gpcm_score_side_status,
+    gpcm_score_side_external_status = gpcm_score_side_external_status,
+    release_scope_status = release_scope_status,
     example_policy_status = example_policy_status
   )
   external_recovery_status <- mfrmr_release_readiness_external_recovery_status(
@@ -872,6 +1911,13 @@ mfrmr_release_readiness_review <- function(pkg_dir = ".",
     terminology_status = term_status,
     checklist_status = checklist_status,
     gpcm_scope_status = gpcm_scope_status,
+    mh_dif_comparison_status = mh_dif_comparison_status,
+    dif_apa_reporting_status = dif_apa_reporting_status,
+    dif_dff_simulation_status = dif_dff_simulation_status,
+    convergence_reporting_status = convergence_reporting_status,
+    gpcm_score_side_status = gpcm_score_side_status,
+    gpcm_score_side_external_status = gpcm_score_side_external_status,
+    release_scope_status = release_scope_status,
     example_policy_status = example_policy_status,
     external_recovery_status = external_recovery_status,
     paths = paths
@@ -891,6 +1937,13 @@ summary.mfrmr_release_readiness_review <- function(object, ...) {
     check_status = object$check_status,
     ci_workflow_status = object$ci_workflow_status,
     gpcm_scope_status = object$gpcm_scope_status,
+    mh_dif_comparison_status = object$mh_dif_comparison_status,
+    dif_apa_reporting_status = object$dif_apa_reporting_status,
+    dif_dff_simulation_status = object$dif_dff_simulation_status,
+    convergence_reporting_status = object$convergence_reporting_status,
+    gpcm_score_side_status = object$gpcm_score_side_status,
+    gpcm_score_side_external_status = object$gpcm_score_side_external_status,
+    release_scope_status = object$release_scope_status,
     external_recovery_status = object$external_recovery_status
   )
   class(out) <- "summary.mfrmr_release_readiness_review"
@@ -912,6 +1965,14 @@ print.summary.mfrmr_release_readiness_review <- function(x, ...) {
   if (!is.null(x$gpcm_scope_status)) {
     cat("\nGPCM scope status:\n")
     print(x$gpcm_scope_status, row.names = FALSE)
+  }
+  if (!is.null(x$dif_dff_simulation_status)) {
+    cat("\nDIF/DFF simulation matrix status:\n")
+    print(x$dif_dff_simulation_status, row.names = FALSE)
+  }
+  if (!is.null(x$convergence_reporting_status)) {
+    cat("\nConvergence-reporting stress status:\n")
+    print(x$convergence_reporting_status, row.names = FALSE)
   }
   if (isTRUE(x$external_recovery_status$ExternalRecoveryRequested[1])) {
     cat("\nExternal recovery status:\n")

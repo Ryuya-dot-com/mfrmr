@@ -8,8 +8,10 @@
 #' @section Start with the linking question:
 #' - "Is the design connected enough to support a common scale?"
 #'   Use [subset_connectivity_report()] and `plot(..., type = "design_matrix")`.
-#' - "Which elements can I export as anchors from an existing fit?"
-#'   Use [make_anchor_table()] and [review_mfrm_anchors()].
+#' - "Which elements can I export as anchors from an existing fit, and what is
+#'   the FACETS `Anchorfile=` boundary?"
+#'   Use [make_anchor_table()], [anchor_linking_contract()], and
+#'   [review_mfrm_anchors()].
 #' - "How do I anchor a new administration to a baseline?"
 #'   Use [anchor_to_baseline()].
 #' - "Have common elements drifted across separately fitted waves?"
@@ -22,8 +24,8 @@
 #' @section Recommended linking route:
 #' 1. Fit with [fit_mfrm()] and diagnose with [diagnose_mfrm()].
 #' 2. Check connectedness with [subset_connectivity_report()].
-#' 3. Build or review anchors with [make_anchor_table()] and
-#'    [review_mfrm_anchors()].
+#' 3. Build or review anchors with [make_anchor_table()],
+#'    [anchor_linking_contract()], and [review_mfrm_anchors()].
 #' 4. Use [anchor_to_baseline()] when you need to place raw new data onto a
 #'    baseline scale.
 #' 5. Use [build_equating_chain()] only as a screened linking aid across
@@ -40,6 +42,10 @@
 #'   \item{[subset_connectivity_report()]}{Summarizes connected subsets,
 #'   bottleneck facets, and design-matrix coverage.}
 #'   \item{[make_anchor_table()]}{Extracts reusable anchor candidates from a fit.}
+#'   \item{[anchor_linking_contract()]}{Documents the R-native anchor replay
+#'   route, anchor/group-anchor rows used by the current fit, optional
+#'   displacement evidence, and unsupported FACETS `Anchorfile=` rewrite
+#'   surfaces.}
 #'   \item{[anchor_to_baseline()]}{Anchors new raw data to a baseline fit and
 #'   returns anchored diagnostics plus a consistency check against the baseline
 #'   scale.}
@@ -66,6 +72,9 @@
 #'   anchor must be removed.
 #' - Treat `LinkSupportAdequate = FALSE` as a weak-link warning: at least one
 #'   linking facet retained fewer than 5 common elements after screening.
+#' - Treat [make_anchor_table()] output as an mfrmr `Facet` / `Level` /
+#'   `Anchor` table for later [fit_mfrm()] calls, not as a complete FACETS
+#'   `Anchorfile=` specification rewrite.
 #' - Rebuild anchors from a defensible baseline rather than chaining unstable
 #'   links by hand.
 #'
@@ -74,7 +83,8 @@
 #'   [fit_mfrm()] -> [diagnose_mfrm()] -> [subset_connectivity_report()] ->
 #'   `plot(..., type = "design_matrix")`.
 #' - Baseline placement review:
-#'   [make_anchor_table()] -> [anchor_to_baseline()] -> [diagnose_mfrm()].
+#'   [make_anchor_table()] -> [anchor_linking_contract()] ->
+#'   [anchor_to_baseline()] -> [diagnose_mfrm()].
 #' - Multi-wave drift review:
 #'   fit each wave separately -> [detect_anchor_drift()] ->
 #'   [build_linking_review()] -> [plot_anchor_drift()].

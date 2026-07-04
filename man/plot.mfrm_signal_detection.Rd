@@ -45,7 +45,8 @@ resolved canonical variables (\code{x_var}, \code{group_var}) together with publ
 labels (\code{x_label}, \code{group_label}), \code{design_variable_aliases},
 \code{design_descriptor}, \code{planning_scope}, \code{planning_constraints},
 \code{planning_schema},
-\code{display_metric}, and \code{interpretation_note} so
+\code{display_metric}, \code{guidance}, \code{figure_recipes}, and
+\code{interpretation_note} so
 callers can label bias-side plots as screening summaries rather than
 formal power/error-rate displays.
 }

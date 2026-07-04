@@ -775,8 +775,9 @@ displacement_table <- function(fit,
 #'
 #' @details
 #' This helper consolidates measurable-data diagnostics into a dedicated
-#' report bundle: run-level summary, facet coverage, category usage, and
-#' subset (connected-component) information.
+#' report bundle: run-level summary, FACETS Table 5-style residual/variance
+#' checks, facet coverage, category usage, and subset (connected-component)
+#' information.
 #'
 #' `summary(t5)` is supported through `summary()`.
 #' `plot(t5)` is dispatched through `plot()` for class
@@ -785,6 +786,11 @@ displacement_table <- function(fit,
 #'
 #' @section Interpreting output:
 #' - `summary`: overall measurable design status.
+#' - `residual_summary`: weighted mean and standard-deviation rows for
+#'   category, recounted score, expected score, residual, and standardized
+#'   residual columns.
+#' - `variance_summary`: raw-score error variance, explained-variance
+#'   approximation, and approximate global Pearson chi-square review.
 #' - `facet_coverage`: spread/precision by facet.
 #' - `category_stats`: category usage and fit context.
 #' - `subsets`: connectivity diagnostics (fragmented subsets reduce comparability).
@@ -806,6 +812,39 @@ displacement_table <- function(fit,
 #'   \item{Persons, Facets, Categories}{Design dimensions.}
 #'   \item{ConnectedSubsets}{Number of connected subsets.}
 #'   \item{LargestSubsetObs, LargestSubsetPct}{Largest subset coverage.}
+#'   \item{RawScoreErrorVariancePct}{Approximate residual error variance as a
+#'     percentage of raw-score population variance.}
+#'   \item{ExplainedVariancePctApprox}{Approximate explained variance percent
+#'     using raw-score and residual population variances.}
+#'   \item{GlobalPearsonChiSq, GlobalPearsonDFApprox,
+#'     GlobalPearsonRatioApprox, GlobalPearsonPApprox}{Approximate global
+#'     Pearson residual chi-square screen.}
+#' }
+#'
+#' The `residual_summary` data.frame contains:
+#' \describe{
+#'   \item{Statistic}{`"Mean"`, `"SDPopulation"`, or `"SDSample"`.}
+#'   \item{N, TotalWeight}{Rows and summed weight contributing to the row.}
+#'   \item{Category}{Observed category value on the fitted score scale.}
+#'   \item{Score}{Recounted cardinal score (`score_k`, starting at 0).}
+#'   \item{Expected}{Expected recounted score.}
+#'   \item{Residual}{Observed-minus-expected score residual.}
+#'   \item{StdResidual}{Standardized residual.}
+#' }
+#'
+#' The `variance_summary` data.frame contains:
+#' \describe{
+#'   \item{RawScoreVariancePopulation, ResidualVariancePopulation}{Population
+#'     variances for the recounted score and residual columns.}
+#'   \item{RawScoreErrorVariancePct}{`100 * residual variance / raw-score
+#'     variance`, matching the FACETS Table 5 raw-score error-variance idea.}
+#'   \item{ExplainedVarianceApprox, ExplainedVariancePctApprox}{Approximate
+#'     raw-score variance explained after residual variance is removed.}
+#'   \item{GlobalPearsonChiSq, GlobalPearsonDFApprox,
+#'     GlobalPearsonRatioApprox, GlobalPearsonPApprox}{Approximate global
+#'     Pearson chi-square, degrees of freedom, ratio, and upper-tail
+#'     probability.}
+#'   \item{Basis}{Short caveat describing the approximation.}
 #' }
 #'
 #' The `facet_coverage` data.frame contains:
@@ -828,6 +867,8 @@ displacement_table <- function(fit,
 #'
 #' @return A named list with:
 #' - `summary`: one-row measurable-data summary
+#' - `residual_summary`: FACETS Table 5-style residual moment rows
+#' - `variance_summary`: FACETS Table 5-style variance/Pearson review
 #' - `facet_coverage`: per-facet coverage summary
 #' - `category_stats`: category-level usage/fit summary
 #' - `subsets`: subset summary table (when available)
@@ -858,6 +899,12 @@ measurable_summary_table <- function(fit, diagnostics = NULL) {
   subset_tbl <- if (!is.null(diagnostics$subsets$summary)) as.data.frame(diagnostics$subsets$summary) else data.frame()
   subset_n <- if (nrow(subset_tbl) > 0 && "Subset" %in% names(subset_tbl)) nrow(subset_tbl) else NA_integer_
   largest_subset_obs <- if (nrow(subset_tbl) > 0 && "Observations" %in% names(subset_tbl)) max(subset_tbl$Observations, na.rm = TRUE) else NA_real_
+  residual_summary <- table5_residual_summary(obs_df, fit = fit)
+  variance_summary <- table5_variance_summary(
+    residual_summary = residual_summary,
+    obs_df = obs_df,
+    fit = fit
+  )
 
   summary_tbl <- data.frame(
     Observations = nrow(obs_df),
@@ -868,6 +915,12 @@ measurable_summary_table <- function(fit, diagnostics = NULL) {
     ConnectedSubsets = subset_n,
     LargestSubsetObs = largest_subset_obs,
     LargestSubsetPct = ifelse(is.finite(largest_subset_obs) && nrow(obs_df) > 0, 100 * largest_subset_obs / nrow(obs_df), NA_real_),
+    RawScoreErrorVariancePct = variance_summary$RawScoreErrorVariancePct[1],
+    ExplainedVariancePctApprox = variance_summary$ExplainedVariancePctApprox[1],
+    GlobalPearsonChiSq = variance_summary$GlobalPearsonChiSq[1],
+    GlobalPearsonDFApprox = variance_summary$GlobalPearsonDFApprox[1],
+    GlobalPearsonRatioApprox = variance_summary$GlobalPearsonRatioApprox[1],
+    GlobalPearsonPApprox = variance_summary$GlobalPearsonPApprox[1],
     stringsAsFactors = FALSE
   )
 
@@ -891,11 +944,219 @@ measurable_summary_table <- function(fit, diagnostics = NULL) {
 
   out <- list(
     summary = summary_tbl,
+    residual_summary = residual_summary,
+    variance_summary = variance_summary,
     facet_coverage = facet_coverage,
     category_stats = category_stats,
     subsets = subset_tbl
   )
   as_mfrm_bundle(out, "mfrm_measurable")
+}
+
+table5_residual_summary <- function(obs_df, fit) {
+  weights <- table5_weights(obs_df)
+  rating_min <- suppressWarnings(as.numeric(fit$prep$rating_min %||% 0))
+  observed <- table5_numeric_column(obs_df, "Observed", fallback = "Score")
+  score <- table5_numeric_column(obs_df, "score_k")
+  if (all(!is.finite(score))) {
+    score <- observed - rating_min
+  }
+  expected <- table5_numeric_column(obs_df, "Expected")
+  if (any(is.finite(expected))) {
+    expected <- expected - rating_min
+  }
+  residual <- table5_numeric_column(obs_df, "Residual")
+  if (all(!is.finite(residual))) {
+    residual <- score - expected
+  }
+  std_residual <- table5_numeric_column(obs_df, "StdResidual")
+
+  rows <- list(
+    Mean = table5_weighted_moment_row("Mean", table5_weighted_mean, weights,
+                                      observed, score, expected, residual,
+                                      std_residual),
+    SDPopulation = table5_weighted_moment_row("SDPopulation",
+                                              table5_weighted_sd_population,
+                                              weights, observed, score,
+                                              expected, residual,
+                                              std_residual),
+    SDSample = table5_weighted_moment_row("SDSample",
+                                          table5_weighted_sd_sample,
+                                          weights, observed, score, expected,
+                                          residual, std_residual)
+  )
+  out <- do.call(rbind, rows)
+  row.names(out) <- NULL
+  out
+}
+
+table5_variance_summary <- function(residual_summary, obs_df, fit) {
+  weights <- table5_weights(obs_df)
+  rating_min <- suppressWarnings(as.numeric(fit$prep$rating_min %||% 0))
+  observed <- table5_numeric_column(obs_df, "Observed", fallback = "Score")
+  score <- table5_numeric_column(obs_df, "score_k")
+  if (all(!is.finite(score))) {
+    score <- observed - rating_min
+  }
+  residual <- table5_numeric_column(obs_df, "Residual")
+  expected <- table5_numeric_column(obs_df, "Expected")
+  if (all(!is.finite(residual)) && any(is.finite(expected))) {
+    residual <- score - (expected - rating_min)
+  }
+  std_residual <- table5_numeric_column(obs_df, "StdResidual")
+
+  category_var <- table5_weighted_var_population(observed, weights)
+  score_var <- table5_weighted_var_population(score, weights)
+  expected_var <- table5_weighted_var_population(expected - rating_min, weights)
+  residual_var <- table5_weighted_var_population(residual, weights)
+  std_residual_var <- table5_weighted_var_population(std_residual, weights)
+  raw_error_pct <- table5_safe_ratio_pct(residual_var, score_var)
+  category_error_pct <- table5_safe_ratio_pct(residual_var, category_var)
+  explained <- if (is.finite(score_var) && is.finite(residual_var)) score_var - residual_var else NA_real_
+  explained_pct <- table5_safe_ratio_pct(explained, score_var)
+
+  pearson_chisq <- table5_weighted_sum_sq(std_residual, weights)
+  parameter_count <- suppressWarnings(as.numeric(fit$summary$Parameters[1] %||% NA_real_))
+  total_weight <- sum(weights[is.finite(weights) & weights > 0], na.rm = TRUE)
+  pearson_df <- if (is.finite(total_weight) && is.finite(parameter_count) &&
+                    total_weight > parameter_count) {
+    total_weight - parameter_count
+  } else {
+    NA_real_
+  }
+  pearson_ratio <- if (is.finite(pearson_chisq) && is.finite(pearson_df) &&
+                       pearson_df > 0) {
+    pearson_chisq / pearson_df
+  } else {
+    NA_real_
+  }
+  pearson_p <- if (is.finite(pearson_chisq) && is.finite(pearson_df) &&
+                   pearson_df > 0) {
+    stats::pchisq(pearson_chisq, df = pearson_df, lower.tail = FALSE)
+  } else {
+    NA_real_
+  }
+
+  data.frame(
+    N = nrow(obs_df),
+    TotalWeight = total_weight,
+    CategoryVariancePopulation = category_var,
+    RawScoreVariancePopulation = score_var,
+    ExpectedVariancePopulation = expected_var,
+    ResidualVariancePopulation = residual_var,
+    StdResidualVariancePopulation = std_residual_var,
+    CategoryErrorVariancePct = category_error_pct,
+    RawScoreErrorVariancePct = raw_error_pct,
+    ExplainedVarianceApprox = explained,
+    ExplainedVariancePctApprox = explained_pct,
+    GlobalPearsonChiSq = pearson_chisq,
+    GlobalPearsonDFApprox = pearson_df,
+    GlobalPearsonRatioApprox = pearson_ratio,
+    GlobalPearsonPApprox = pearson_p,
+    ParameterCount = parameter_count,
+    ResidualMean = residual_summary$Residual[match("Mean", residual_summary$Statistic)],
+    StdResidualMean = residual_summary$StdResidual[match("Mean", residual_summary$Statistic)],
+    Basis = "Package-native weighted residual moments; Pearson df uses TotalWeight - fitted parameter count.",
+    stringsAsFactors = FALSE
+  )
+}
+
+table5_weights <- function(obs_df) {
+  if ("Weight" %in% names(obs_df)) {
+    w <- suppressWarnings(as.numeric(obs_df$Weight))
+  } else {
+    w <- rep(1, nrow(obs_df))
+  }
+  w[!is.finite(w) | w < 0] <- NA_real_
+  w
+}
+
+table5_numeric_column <- function(obs_df, column, fallback = NULL) {
+  if (column %in% names(obs_df)) {
+    return(suppressWarnings(as.numeric(obs_df[[column]])))
+  }
+  if (!is.null(fallback) && fallback %in% names(obs_df)) {
+    return(suppressWarnings(as.numeric(obs_df[[fallback]])))
+  }
+  rep(NA_real_, nrow(obs_df))
+}
+
+table5_weighted_moment_row <- function(statistic, fn, weights, category, score,
+                                       expected, residual, std_residual) {
+  data.frame(
+    Statistic = statistic,
+    N = table5_complete_n(weights, category, score, expected, residual,
+                          std_residual),
+    TotalWeight = table5_complete_weight(weights, category, score, expected,
+                                         residual, std_residual),
+    Category = fn(category, weights),
+    Score = fn(score, weights),
+    Expected = fn(expected, weights),
+    Residual = fn(residual, weights),
+    StdResidual = fn(std_residual, weights),
+    stringsAsFactors = FALSE
+  )
+}
+
+table5_complete_mask <- function(weights, ...) {
+  vals <- list(...)
+  mask <- is.finite(weights) & weights > 0
+  for (x in vals) {
+    mask <- mask & is.finite(x)
+  }
+  mask
+}
+
+table5_complete_n <- function(weights, ...) {
+  sum(table5_complete_mask(weights, ...), na.rm = TRUE)
+}
+
+table5_complete_weight <- function(weights, ...) {
+  mask <- table5_complete_mask(weights, ...)
+  sum(weights[mask], na.rm = TRUE)
+}
+
+table5_weighted_mean <- function(x, weights) {
+  ok <- is.finite(x) & is.finite(weights) & weights > 0
+  if (!any(ok)) return(NA_real_)
+  sum(x[ok] * weights[ok], na.rm = TRUE) / sum(weights[ok], na.rm = TRUE)
+}
+
+table5_weighted_var_population <- function(x, weights) {
+  ok <- is.finite(x) & is.finite(weights) & weights > 0
+  if (!any(ok)) return(NA_real_)
+  w_sum <- sum(weights[ok], na.rm = TRUE)
+  if (!is.finite(w_sum) || w_sum <= 0) return(NA_real_)
+  mu <- sum(x[ok] * weights[ok], na.rm = TRUE) / w_sum
+  sum(weights[ok] * (x[ok] - mu)^2, na.rm = TRUE) / w_sum
+}
+
+table5_weighted_sd_population <- function(x, weights) {
+  v <- table5_weighted_var_population(x, weights)
+  if (is.finite(v)) sqrt(v) else NA_real_
+}
+
+table5_weighted_sd_sample <- function(x, weights) {
+  ok <- is.finite(x) & is.finite(weights) & weights > 0
+  if (!any(ok)) return(NA_real_)
+  w_sum <- sum(weights[ok], na.rm = TRUE)
+  if (!is.finite(w_sum) || w_sum <= 1) return(NA_real_)
+  mu <- sum(x[ok] * weights[ok], na.rm = TRUE) / w_sum
+  sqrt(sum(weights[ok] * (x[ok] - mu)^2, na.rm = TRUE) / (w_sum - 1))
+}
+
+table5_weighted_sum_sq <- function(x, weights) {
+  ok <- is.finite(x) & is.finite(weights) & weights > 0
+  if (!any(ok)) return(NA_real_)
+  sum(weights[ok] * x[ok]^2, na.rm = TRUE)
+}
+
+table5_safe_ratio_pct <- function(num, den) {
+  if (is.finite(num) && is.finite(den) && abs(den) > .Machine$double.eps) {
+    100 * num / den
+  } else {
+    NA_real_
+  }
 }
 
 #' Build a rating-scale diagnostics report
@@ -1532,7 +1793,7 @@ resolve_table2_source_columns <- function(fit,
 compute_iteration_state <- function(par, idx, prep, config, sizes, quad_points = 15L) {
   params <- expand_params(par, sizes, config)
   if (config$method == "MML") {
-    quad <- gauss_hermite_normal(quad_points)
+    quad <- make_mml_quadrature(quad_points, config = config)
     theta_tbl <- compute_person_eap(idx, config, params, quad)
     theta_diag <- suppressWarnings(as.numeric(theta_tbl$Estimate))
     if (length(theta_diag) != config$n_person || any(!is.finite(theta_diag))) {
@@ -4961,7 +5222,10 @@ build_half_point_threshold_table <- function(expected_df, categories) {
 #' expected score, residual, standardized residual, observed-category
 #' probability, GPCM slope fields, and native structural delta-method
 #' expected-score uncertainty and/or score-side delta-method SEs when the
-#' required MML diagnostics are available. Use `score_se_method` to choose
+#' required MML diagnostics are available. The score-side route retains
+#' `ScoreSideLogitSE` on the logit-side component scale and computes
+#' `ScoreSideSE` on the expected-score scale as `ScoreSlope * Var * eta_se`.
+#' Use `score_se_method` to choose
 #' `"both"` (default), `"native"`, `"score_side"`, or `"none"`.
 #' The scorefile also carries explicit score-side caveat columns. It is not a
 #' FACETS score-side equivalence file, does not export FACETS-equivalent
@@ -5170,8 +5434,9 @@ facets_output_file_bundle <- function(fit,
         "Package-native bounded-GPCM scorefile: slope-aware expected score,",
         "residual, standardized residual, observed-category probability,",
         "score slope, native expected-score uncertainty, and score-side",
-        "delta-method SEs are exported for sensitivity review when requested",
-        "and available. This is not FACETS score-side equivalence, does not",
+        "delta-method SEs on the expected-score scale are exported for",
+        "sensitivity review when requested and available. This is not",
+        "FACETS score-side equivalence, does not",
         "export FACETS-equivalent score-side standard errors, and is not an",
         "operational scoring decision."
       )

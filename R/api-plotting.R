@@ -423,6 +423,2481 @@ plot_data_components <- function(x, type = NULL, ...) {
   out
 }
 
+.require_ggplot2 <- function() {
+  if (!requireNamespace("ggplot2", quietly = TRUE)) {
+    stop(
+      "`as_ggplot()` requires the `ggplot2` package. ",
+      "Install ggplot2 or use the base-R plot route.",
+      call. = FALSE
+    )
+  }
+  invisible(TRUE)
+}
+
+.mfrm_plot_title <- function(payload, fallback = NULL) {
+  title <- as.character(payload$title %||% fallback %||% "")
+  title <- title[!is.na(title) & nzchar(title)]
+  title[1] %||% NULL
+}
+
+.mfrm_plot_subtitle <- function(payload) {
+  subtitle <- as.character(payload$subtitle %||% "")
+  subtitle <- subtitle[!is.na(subtitle) & nzchar(subtitle)]
+  subtitle[1] %||% NULL
+}
+
+.mfrm_ggplot_theme <- function() {
+  ggplot2::theme_minimal(base_size = 11) +
+    ggplot2::theme(
+      panel.grid.minor = ggplot2::element_blank(),
+      plot.title.position = "plot"
+    )
+}
+
+.mfrm_ggplot_labs <- function(p, payload, x = NULL, y = NULL,
+                              fallback = NULL) {
+  p + ggplot2::labs(
+    title = .mfrm_plot_title(payload, fallback = fallback),
+    subtitle = .mfrm_plot_subtitle(payload),
+    x = x,
+    y = y
+  )
+}
+
+.mfrm_ggplot_add_reference_lines <- function(p, reference_lines) {
+  refs <- normalize_reference_lines(reference_lines)
+  if (!is.data.frame(refs) || nrow(refs) == 0L) return(p)
+  for (i in seq_len(nrow(refs))) {
+    value <- suppressWarnings(as.numeric(refs$value[i]))
+    if (!is.finite(value)) next
+    lty <- as.character(refs$linetype[i] %||% "dashed")
+    if (!nzchar(lty)) lty <- "dashed"
+    axis <- tolower(as.character(refs$axis[i] %||% ""))
+    if (axis %in% c("v", "x", "vertical")) {
+      p <- p + ggplot2::geom_vline(
+        xintercept = value,
+        linetype = lty,
+        colour = "grey45",
+        linewidth = 0.35
+      )
+    } else if (axis %in% c("h", "y", "horizontal")) {
+      p <- p + ggplot2::geom_hline(
+        yintercept = value,
+        linetype = lty,
+        colour = "grey45",
+        linewidth = 0.35
+      )
+    }
+  }
+  p
+}
+
+.mfrm_select_ggplot_component <- function(payload, component = NULL) {
+  if (!is.null(component)) {
+    if (length(component) != 1L || is.na(component) || !nzchar(component)) {
+      stop("`component` must be a single non-empty component name.",
+           call. = FALSE)
+    }
+    if (!component %in% names(payload)) {
+      stop(
+        "`component` must be one of: ",
+        paste(names(payload), collapse = ", "),
+        call. = FALSE
+      )
+    }
+    return(list(name = component, value = payload[[component]]))
+  }
+
+  priority <- c(
+    "plot_long", "pathway_long", "information_long", "probabilities",
+    "expected", "data", "locations", "person", "steps", "table", "matrix"
+  )
+  for (nm in priority) {
+    val <- payload[[nm]]
+    if ((is.data.frame(val) && nrow(val) > 0L) ||
+        (is.matrix(val) && length(val) > 0L)) {
+      return(list(name = nm, value = val))
+    }
+  }
+  metadata_names <- c("legend", "reference_lines")
+  for (nm in names(payload)) {
+    if (nm %in% metadata_names) next
+    val <- payload[[nm]]
+    if ((is.data.frame(val) && nrow(val) > 0L) ||
+        (is.matrix(val) && length(val) > 0L)) {
+      return(list(name = nm, value = val))
+    }
+  }
+  stop(
+    "No tabular plot component could be converted to ggplot2. ",
+    "Use `plot_data_components()` to inspect available components.",
+    call. = FALSE
+  )
+}
+
+.mfrm_matrix_to_tile_data <- function(mat, flag_matrix = NULL) {
+  if (!is.matrix(mat)) {
+    stop("Matrix heatmap conversion requires a matrix component.",
+         call. = FALSE)
+  }
+  long <- as.data.frame(as.table(mat), stringsAsFactors = FALSE)
+  names(long) <- c("Row", "Column", "Value")
+  long$Row <- as.character(long$Row)
+  long$Column <- as.character(long$Column)
+  long$Flag <- FALSE
+  if (is.matrix(flag_matrix) && all(dim(flag_matrix) == dim(mat))) {
+    flag_long <- as.data.frame(as.table(flag_matrix), stringsAsFactors = FALSE)
+    long$Flag <- as.logical(flag_long$Freq)
+    long$Flag[is.na(long$Flag)] <- FALSE
+  }
+  long
+}
+
+.mfrm_ggplot_matrix_heatmap <- function(mat,
+                                        payload,
+                                        flag_matrix = NULL,
+                                        value_digits = 2L,
+                                        show_values = FALSE,
+                                        flag_color = "black") {
+  long <- .mfrm_matrix_to_tile_data(mat, flag_matrix = flag_matrix)
+  p <- ggplot2::ggplot(long, ggplot2::aes(x = Column, y = Row, fill = Value)) +
+    ggplot2::geom_tile(colour = "white", linewidth = 0.25) +
+    ggplot2::scale_fill_gradient2(
+      low = "steelblue",
+      mid = "white",
+      high = "firebrick",
+      na.value = "grey90"
+    ) +
+    ggplot2::coord_equal() +
+    .mfrm_ggplot_theme() +
+    ggplot2::theme(
+      axis.text.x = ggplot2::element_text(angle = 45, hjust = 1),
+      panel.grid.major = ggplot2::element_blank()
+    )
+  if (isTRUE(show_values)) {
+    long$Label <- ifelse(
+      is.finite(long$Value),
+      formatC(long$Value, format = "f", digits = value_digits),
+      ""
+    )
+    p <- p + ggplot2::geom_text(
+      data = long,
+      ggplot2::aes(label = Label),
+      size = 3,
+      colour = "grey15"
+    )
+  }
+  flagged <- long[long$Flag, , drop = FALSE]
+  if (nrow(flagged) > 0L) {
+    p <- p + ggplot2::geom_tile(
+      data = flagged,
+      fill = NA,
+      colour = flag_color,
+      linewidth = 0.8
+    )
+  }
+  .mfrm_ggplot_labs(
+    p,
+    payload,
+    x = "Group or contrast",
+    y = "Facet level",
+    fallback = "DIF/DFF heatmap"
+  )
+}
+
+.mfrm_ggplot_effect_summary <- function(df, payload) {
+  required <- c("Pair", "Effect")
+  if (!all(required %in% names(df))) {
+    stop("Effect-summary conversion requires `Pair` and `Effect` columns.",
+         call. = FALSE)
+  }
+  df <- as.data.frame(df, stringsAsFactors = FALSE)
+  df$Effect <- suppressWarnings(as.numeric(df$Effect))
+  df <- df[is.finite(df$Effect), , drop = FALSE]
+  if (nrow(df) == 0L) {
+    stop("No finite `Effect` values are available for ggplot conversion.",
+         call. = FALSE)
+  }
+  df$Pair <- as.character(df$Pair)
+  df$PairFactor <- factor(df$Pair, levels = rev(unique(df$Pair)))
+  if (!"Color" %in% names(df)) df$Color <- "#4D4D4D"
+  df$Color <- as.character(df$Color)
+
+  p <- ggplot2::ggplot(df, ggplot2::aes(y = PairFactor)) +
+    ggplot2::geom_segment(
+      ggplot2::aes(x = 0, xend = Effect, yend = PairFactor, colour = Color),
+      linewidth = 1.1,
+      lineend = "round"
+    ) +
+    ggplot2::geom_point(
+      ggplot2::aes(x = Effect, colour = Color),
+      size = 2.2
+    ) +
+    ggplot2::scale_colour_identity() +
+    .mfrm_ggplot_theme()
+
+  if (all(c("CI_Lower", "CI_Upper") %in% names(df))) {
+    ci <- df[
+      is.finite(suppressWarnings(as.numeric(df$CI_Lower))) &
+        is.finite(suppressWarnings(as.numeric(df$CI_Upper))),
+      ,
+      drop = FALSE
+    ]
+    if (nrow(ci) > 0L) {
+      ci$CI_Lower <- suppressWarnings(as.numeric(ci$CI_Lower))
+      ci$CI_Upper <- suppressWarnings(as.numeric(ci$CI_Upper))
+      p <- p + ggplot2::geom_segment(
+        data = ci,
+        ggplot2::aes(
+          x = CI_Lower,
+          xend = CI_Upper,
+          y = PairFactor,
+          yend = PairFactor
+        ),
+        inherit.aes = FALSE,
+        colour = "grey35",
+        linewidth = 0.45
+      )
+    }
+  }
+
+  p <- .mfrm_ggplot_add_reference_lines(p, payload$reference_lines)
+  xlab <- payload$settings$effect_axis_label %||% "Effect"
+  .mfrm_ggplot_labs(
+    p,
+    payload,
+    x = xlab,
+    y = NULL,
+    fallback = "Differential functioning summary"
+  )
+}
+
+.mfrm_ggplot_eap_power_sensitivity <- function(payload) {
+  df <- as.data.frame(payload$data, stringsAsFactors = FALSE)
+  if (nrow(df) == 0L) {
+    stop("No EAP power-sensitivity rows are available for ggplot conversion.",
+         call. = FALSE)
+  }
+  settings <- payload$settings %||% list()
+  plot_type <- as.character(payload$type %||% settings$type %||% "")
+  metric <- as.character(payload$metric %||% settings$metric %||% "")
+  if (!nzchar(metric) || !metric %in% names(df)) {
+    stop("The requested EAP power-sensitivity metric is not available in the plot payload.",
+         call. = FALSE)
+  }
+  if (plot_type %in% c("person_heatmap", "facet_heatmap")) {
+    y_col <- if (identical(plot_type, "person_heatmap")) "Person" else "DisplayLabel"
+    if (!all(c("Condition", y_col) %in% names(df))) {
+      stop("EAP power-sensitivity heatmap payload is missing required columns.",
+           call. = FALSE)
+    }
+    df$Condition <- factor(
+      df[["Condition"]],
+      levels = unique(df[["Condition"]][order(df[["ConditionOrder"]])])
+    )
+    df[[y_col]] <- factor(df[[y_col]], levels = rev(unique(df[[y_col]])))
+    p <- ggplot2::ggplot(
+      df,
+      ggplot2::aes(x = .data$Condition, y = .data[[y_col]], fill = .data[[metric]])
+    ) +
+      ggplot2::geom_tile(colour = "white", linewidth = 0.25) +
+      ggplot2::scale_fill_gradient2(
+        low = "#2b6cb0",
+        mid = "white",
+        high = "#b83227",
+        na.value = "grey90"
+      ) +
+      .mfrm_ggplot_theme() +
+      ggplot2::theme(
+        axis.text.x = ggplot2::element_text(angle = 45, hjust = 1),
+        panel.grid.major = ggplot2::element_blank()
+      )
+    return(.mfrm_ggplot_labs(
+      p,
+      payload,
+      x = "Power condition",
+      y = if (identical(plot_type, "person_heatmap")) "Person" else "Facet level",
+      fallback = "EAP power sensitivity"
+    ))
+  }
+  if (identical(plot_type, "person_curve")) {
+    if (!all(c("ConditionOrder", "Condition", "Person") %in% names(df))) {
+      stop("EAP power-sensitivity curve payload is missing required columns.",
+           call. = FALSE)
+    }
+    cond <- unique(df[order(df[["ConditionOrder"]]), c("ConditionOrder", "Condition")])
+    p <- ggplot2::ggplot(
+      df,
+      ggplot2::aes(
+        x = .data$ConditionOrder,
+        y = .data[[metric]],
+        colour = .data$Person,
+        group = .data$Person
+      )
+    ) +
+      ggplot2::geom_hline(yintercept = 0, linetype = "dashed", colour = "grey65") +
+      ggplot2::geom_line(linewidth = 0.65) +
+      ggplot2::geom_point(size = 1.8) +
+      ggplot2::scale_x_continuous(
+        breaks = cond[["ConditionOrder"]],
+        labels = cond[["Condition"]]
+      ) +
+      .mfrm_ggplot_theme() +
+      ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
+    return(.mfrm_ggplot_labs(
+      p,
+      payload,
+      x = "Power condition",
+      y = metric,
+      fallback = "EAP power sensitivity curves"
+    ))
+  }
+  if (identical(plot_type, "facet_stability")) {
+    if (!all(c("DisplayLabel", "StabilityFlag") %in% names(df))) {
+      stop("EAP facet-stability payload is missing required columns.",
+           call. = FALSE)
+    }
+    df$DisplayLabel <- factor(df$DisplayLabel, levels = df$DisplayLabel)
+    p <- ggplot2::ggplot(
+      df,
+      ggplot2::aes(x = .data$DisplayLabel, y = .data[[metric]], fill = .data$StabilityFlag)
+    ) +
+      ggplot2::geom_col(width = 0.72) +
+      ggplot2::coord_flip() +
+      ggplot2::scale_fill_manual(
+        values = c(stable = "#238b45", review = "#d95f02", unstable = "#b11f24", unknown = "#6b7280"),
+        drop = FALSE
+      ) +
+      .mfrm_ggplot_theme()
+    return(.mfrm_ggplot_labs(
+      p,
+      payload,
+      x = NULL,
+      y = metric,
+      fallback = "Facet-level EAP sensitivity stability"
+    ))
+  }
+  stop("Unsupported EAP power-sensitivity plot type: ", plot_type, call. = FALSE)
+}
+
+.mfrm_ggplot_simulation_caption <- function(payload) {
+  note <- as.character(payload$interpretation_note %||% "")
+  note <- note[!is.na(note) & nzchar(note)]
+  note[1] %||% NULL
+}
+
+.mfrm_ggplot_add_simulation_caption <- function(p, payload) {
+  caption <- .mfrm_ggplot_simulation_caption(payload)
+  if (is.null(caption)) return(p)
+  p + ggplot2::labs(caption = caption) +
+    ggplot2::theme(
+      plot.caption = ggplot2::element_text(hjust = 0, colour = "grey35")
+    )
+}
+
+.mfrm_ggplot_simulation_scan <- function(payload) {
+  df <- as.data.frame(payload$data %||% data.frame(), stringsAsFactors = FALSE)
+  x_col <- as.character(payload$x_var %||% "")
+  if (!nzchar(x_col) || !x_col %in% names(df) || !"y" %in% names(df)) {
+    stop("Simulation scan conversion requires `data` with the resolved `x_var` and `y` columns.",
+         call. = FALSE)
+  }
+  df[[x_col]] <- suppressWarnings(as.numeric(df[[x_col]]))
+  df$y <- suppressWarnings(as.numeric(df$y))
+  if (!"group" %in% names(df)) df$group <- "All designs"
+  df$group <- as.character(df$group)
+  df <- df[is.finite(df[[x_col]]) & is.finite(df$y), , drop = FALSE]
+  if (nrow(df) == 0L) {
+    stop("No finite simulation scan rows are available for ggplot conversion.",
+         call. = FALSE)
+  }
+  title <- if (identical(as.character(payload$plot %||% ""), "signal_detection")) {
+    if (identical(as.character(payload$signal %||% ""), "bias")) {
+      "Bias screening simulation"
+    } else {
+      "DIF screening simulation"
+    }
+  } else {
+    paste("Design simulation:", as.character(payload$facet %||% "facet"))
+  }
+  payload$title <- payload$title %||% title
+  payload$subtitle <- payload$subtitle %||%
+    paste("Metric:", as.character(payload$display_metric %||% payload$metric_col %||% payload$metric %||% "value"))
+  p <- ggplot2::ggplot(
+    df,
+    ggplot2::aes(
+      x = .data[[x_col]],
+      y = .data$y,
+      colour = .data$group,
+      group = .data$group
+    )
+  ) +
+    ggplot2::geom_line(linewidth = 0.75) +
+    ggplot2::geom_point(size = 2) +
+    .mfrm_ggplot_theme() +
+    ggplot2::theme(legend.position = "bottom")
+  p <- .mfrm_ggplot_labs(
+    p,
+    payload,
+    x = as.character(payload$x_label %||% x_col),
+    y = as.character(payload$display_metric %||% payload$metric_col %||% "Value"),
+    fallback = title
+  )
+  .mfrm_ggplot_add_simulation_caption(p, payload)
+}
+
+.mfrm_ggplot_recovery_simulation <- function(payload) {
+  df <- as.data.frame(payload$plot_table %||% data.frame(),
+                      stringsAsFactors = FALSE)
+  if (nrow(df) == 0L) {
+    stop("Recovery-simulation conversion requires a non-empty `plot_table`.",
+         call. = FALSE)
+  }
+  plot_type <- as.character(payload$type %||% "")
+  if (plot_type %in% c("summary", "coverage")) {
+    if (!all(c("PlotGroup", "Value") %in% names(df))) {
+      stop("Recovery summary conversion requires PlotGroup and Value columns.",
+           call. = FALSE)
+    }
+    df$Value <- suppressWarnings(as.numeric(df$Value))
+    df <- df[is.finite(df$Value), , drop = FALSE]
+    if (nrow(df) == 0L) {
+      stop("No finite recovery summary values are available for ggplot conversion.",
+           call. = FALSE)
+    }
+    df$PlotGroup <- factor(as.character(df$PlotGroup), levels = rev(unique(as.character(df$PlotGroup))))
+    if (!"ParameterType" %in% names(df)) df$ParameterType <- "parameter"
+    p <- ggplot2::ggplot(
+      df,
+      ggplot2::aes(x = .data$PlotGroup, y = .data$Value, fill = .data$ParameterType)
+    ) +
+      ggplot2::geom_col(width = 0.72) +
+      ggplot2::coord_flip() +
+      .mfrm_ggplot_theme() +
+      ggplot2::theme(legend.position = "bottom")
+    p <- .mfrm_ggplot_add_reference_lines(p, payload$reference_lines)
+    p <- .mfrm_ggplot_labs(
+      p,
+      payload,
+      x = NULL,
+      y = as.character(payload$metric_label %||% payload$metric %||% "Value"),
+      fallback = "Parameter recovery"
+    )
+    return(.mfrm_ggplot_add_simulation_caption(p, payload))
+  }
+  if (identical(plot_type, "replications")) {
+    if (!all(c("Status", "Reps") %in% names(df))) {
+      stop("Recovery replication-status conversion requires Status and Reps columns.",
+           call. = FALSE)
+    }
+    df$Reps <- suppressWarnings(as.numeric(df$Reps))
+    df <- df[is.finite(df$Reps), , drop = FALSE]
+    df$Status <- factor(
+      as.character(df$Status),
+      levels = intersect(c("failed", "not_converged", "converged"),
+                         unique(as.character(df$Status)))
+    )
+    status_cols <- c(
+      converged = "#238b45",
+      not_converged = "#b65e16",
+      failed = "#b11f24"
+    )
+    p <- ggplot2::ggplot(df, ggplot2::aes(x = .data$Status, y = .data$Reps, fill = .data$Status)) +
+      ggplot2::geom_col(width = 0.72) +
+      ggplot2::scale_fill_manual(values = status_cols, drop = FALSE, na.value = "#6b7280") +
+      .mfrm_ggplot_theme() +
+      ggplot2::theme(legend.position = "none")
+    p <- .mfrm_ggplot_labs(
+      p,
+      payload,
+      x = NULL,
+      y = "Replications",
+      fallback = "Parameter recovery: replication status"
+    )
+    return(.mfrm_ggplot_add_simulation_caption(p, payload))
+  }
+  if (identical(plot_type, "errors")) {
+    if (!all(c("PlotGroup", "ErrorForPlot") %in% names(df))) {
+      stop("Recovery error conversion requires PlotGroup and ErrorForPlot columns.",
+           call. = FALSE)
+    }
+    df$ErrorForPlot <- suppressWarnings(as.numeric(df$ErrorForPlot))
+    df <- df[is.finite(df$ErrorForPlot), , drop = FALSE]
+    df$PlotGroup <- factor(as.character(df$PlotGroup), levels = rev(unique(as.character(df$PlotGroup))))
+    p <- ggplot2::ggplot(df, ggplot2::aes(x = .data$PlotGroup, y = .data$ErrorForPlot)) +
+      ggplot2::geom_boxplot(fill = "#dbeafe", colour = "#334e68", width = 0.65, outlier.alpha = 0.55) +
+      ggplot2::coord_flip() +
+      .mfrm_ggplot_theme()
+    p <- .mfrm_ggplot_add_reference_lines(p, payload$reference_lines)
+    p <- .mfrm_ggplot_labs(
+      p,
+      payload,
+      x = NULL,
+      y = as.character(payload$metric_label %||% "Recovery error"),
+      fallback = "Parameter recovery: error distribution"
+    )
+    return(.mfrm_ggplot_add_simulation_caption(p, payload))
+  }
+  if (identical(plot_type, "scatter")) {
+    if (!all(c("TruthForPlot", "EstimateForPlot") %in% names(df))) {
+      stop("Recovery scatter conversion requires TruthForPlot and EstimateForPlot columns.",
+           call. = FALSE)
+    }
+    df$TruthForPlot <- suppressWarnings(as.numeric(df$TruthForPlot))
+    df$EstimateForPlot <- suppressWarnings(as.numeric(df$EstimateForPlot))
+    df <- df[is.finite(df$TruthForPlot) & is.finite(df$EstimateForPlot), , drop = FALSE]
+    if (!"PlotGroup" %in% names(df)) df$PlotGroup <- "parameter"
+    p <- ggplot2::ggplot(
+      df,
+      ggplot2::aes(
+        x = .data$TruthForPlot,
+        y = .data$EstimateForPlot,
+        colour = .data$PlotGroup
+      )
+    ) +
+      ggplot2::geom_abline(slope = 1, intercept = 0, linetype = "dashed", colour = "grey45") +
+      ggplot2::geom_point(alpha = 0.78, size = 1.8) +
+      ggplot2::coord_equal() +
+      .mfrm_ggplot_theme() +
+      ggplot2::theme(legend.position = "bottom")
+    p <- .mfrm_ggplot_labs(
+      p,
+      payload,
+      x = "Truth",
+      y = as.character(payload$metric_label %||% "Estimate"),
+      fallback = "Parameter recovery: truth versus estimate"
+    )
+    return(.mfrm_ggplot_add_simulation_caption(p, payload))
+  }
+  stop("Unsupported recovery-simulation plot type: ", plot_type, call. = FALSE)
+}
+
+.mfrm_ggplot_recovery_assessment <- function(payload) {
+  plot_type <- as.character(payload$type %||% "")
+  if (identical(plot_type, "status")) {
+    df <- as.data.frame(payload$status_counts %||% payload$plot_table %||% data.frame(),
+                        stringsAsFactors = FALSE)
+    if (!all(c("Status", "Checks") %in% names(df))) {
+      stop("Recovery-assessment status conversion requires Status and Checks columns.",
+           call. = FALSE)
+    }
+    df$Checks <- suppressWarnings(as.numeric(df$Checks))
+    status_cols <- c(ok = "#238b45", review = "#b65e16", concern = "#b11f24",
+                     not_available = "#6b7280", not_assessed = "#9ca3af")
+    p <- ggplot2::ggplot(df, ggplot2::aes(x = .data$Status, y = .data$Checks, fill = .data$Status)) +
+      ggplot2::geom_col(width = 0.72) +
+      ggplot2::scale_fill_manual(values = status_cols, drop = FALSE, na.value = "#6b7280") +
+      .mfrm_ggplot_theme() +
+      ggplot2::theme(legend.position = "none")
+    return(.mfrm_ggplot_labs(
+      p,
+      payload,
+      x = NULL,
+      y = "Checklist checks",
+      fallback = "Recovery assessment: checklist status"
+    ))
+  }
+  if (identical(plot_type, "metrics")) {
+    df <- as.data.frame(payload$plot_table %||% data.frame(),
+                        stringsAsFactors = FALSE)
+    if (!all(c("PlotGroup", "Value", "Status") %in% names(df))) {
+      stop("Recovery-assessment metric conversion requires PlotGroup, Value, and Status columns.",
+           call. = FALSE)
+    }
+    df$Value <- suppressWarnings(as.numeric(df$Value))
+    df <- df[is.finite(df$Value), , drop = FALSE]
+    df$PlotGroup <- factor(as.character(df$PlotGroup), levels = rev(unique(as.character(df$PlotGroup))))
+    status_cols <- c(ok = "#238b45", review = "#b65e16", concern = "#b11f24",
+                     not_available = "#6b7280", not_assessed = "#9ca3af")
+    p <- ggplot2::ggplot(df, ggplot2::aes(x = .data$PlotGroup, y = .data$Value, fill = .data$Status)) +
+      ggplot2::geom_col(width = 0.72) +
+      ggplot2::coord_flip() +
+      ggplot2::scale_fill_manual(values = status_cols, drop = FALSE, na.value = "#6b7280") +
+      .mfrm_ggplot_theme() +
+      ggplot2::theme(legend.position = "bottom")
+    p <- .mfrm_ggplot_add_reference_lines(p, payload$reference_lines)
+    return(.mfrm_ggplot_labs(
+      p,
+      payload,
+      x = NULL,
+      y = as.character(payload$metric_label %||% payload$metric %||% "Value"),
+      fallback = "Recovery assessment"
+    ))
+  }
+  stop("Unsupported recovery-assessment plot type: ", plot_type, call. = FALSE)
+}
+
+.mfrm_ggplot_generalizability <- function(payload) {
+  plot_type <- as.character(payload$plot %||% "")
+  df <- as.data.frame(payload$plot_table %||% data.frame(),
+                      stringsAsFactors = FALSE)
+  if (nrow(df) == 0L) {
+    stop("G-study conversion requires a non-empty `plot_table`.",
+         call. = FALSE)
+  }
+  if (identical(plot_type, "variance_components")) {
+    if (!all(c("Source", "Value") %in% names(df))) {
+      stop("G-study variance-component conversion requires Source and Value columns.",
+           call. = FALSE)
+    }
+    df$Source <- as.character(df$Source)
+    df$Value <- suppressWarnings(as.numeric(df$Value))
+    df <- df[is.finite(df$Value), , drop = FALSE]
+    if (nrow(df) == 0L) {
+      stop("No finite G-study variance components are available for ggplot conversion.",
+           call. = FALSE)
+    }
+    df$Source <- factor(df$Source, levels = df$Source[order(df$Value)])
+    p <- ggplot2::ggplot(df, ggplot2::aes(x = .data$Source, y = .data$Value, fill = .data$Source)) +
+      ggplot2::geom_col(width = 0.72) +
+      ggplot2::coord_flip() +
+      .mfrm_ggplot_theme() +
+      ggplot2::theme(legend.position = "none")
+    p <- .mfrm_ggplot_labs(
+      p,
+      payload,
+      x = NULL,
+      y = if (identical(as.character(payload$metric %||% ""), "ProportionVariance")) {
+        "Proportion of variance"
+      } else {
+        "Variance"
+      },
+      fallback = "G-study variance components"
+    )
+    return(.mfrm_ggplot_add_simulation_caption(p, payload))
+  }
+  if (identical(plot_type, "coefficients")) {
+    if (!all(c("Metric", "Value") %in% names(df))) {
+      stop("G-study coefficient conversion requires Metric and Value columns.",
+           call. = FALSE)
+    }
+    df$Metric <- factor(as.character(df$Metric), levels = intersect(c("G", "Phi"), as.character(df$Metric)))
+    df$Value <- suppressWarnings(as.numeric(df$Value))
+    if (!"Status" %in% names(df)) df$Status <- "review"
+    df <- df[is.finite(df$Value), , drop = FALSE]
+    if (nrow(df) == 0L) {
+      stop("No finite G-study coefficients are available for ggplot conversion.",
+           call. = FALSE)
+    }
+    status_cols <- c(
+      high_stakes_candidate = "#238b45",
+      routine_candidate = "#d99f0b",
+      review = "#b11f24",
+      unavailable = "#6b7280"
+    )
+    p <- ggplot2::ggplot(df, ggplot2::aes(x = .data$Metric, y = .data$Value, fill = .data$Status)) +
+      ggplot2::geom_col(width = 0.62) +
+      ggplot2::scale_fill_manual(values = status_cols, drop = FALSE, na.value = "#6b7280") +
+      ggplot2::coord_cartesian(ylim = c(0, 1)) +
+      .mfrm_ggplot_theme() +
+      ggplot2::theme(legend.position = "bottom")
+    p <- .mfrm_ggplot_add_reference_lines(p, payload$reference_lines)
+    p <- .mfrm_ggplot_labs(
+      p,
+      payload,
+      x = NULL,
+      y = "Coefficient",
+      fallback = "G-study G/Phi coefficients"
+    )
+    return(.mfrm_ggplot_add_simulation_caption(p, payload))
+  }
+  stop("Unsupported G-study plot type: ", plot_type, call. = FALSE)
+}
+
+.mfrm_ggplot_generalizability_design_check <- function(payload) {
+  df <- as.data.frame(payload$plot_table %||% data.frame(),
+                      stringsAsFactors = FALSE)
+  if (!all(c("PlotGroup", "Value", "Status") %in% names(df))) {
+    stop("G-study design-check conversion requires PlotGroup, Value, and Status columns.",
+         call. = FALSE)
+  }
+  df$PlotGroup <- as.character(df$PlotGroup)
+  df$Value <- suppressWarnings(as.numeric(df$Value))
+  df$Status <- as.character(df$Status)
+  df <- df[is.finite(df$Value) & nzchar(df$PlotGroup), , drop = FALSE]
+  if (nrow(df) == 0L) {
+    stop("No finite G-study design-check rows are available for ggplot conversion.",
+         call. = FALSE)
+  }
+  df$PlotGroup <- factor(df$PlotGroup, levels = rev(df$PlotGroup))
+  status_cols <- c(
+    ok = "#238b45",
+    sensitivity_only = "#b65e16",
+    review = "#b11f24",
+    not_requested = "#6b7280"
+  )
+  p <- ggplot2::ggplot(
+    df,
+    ggplot2::aes(x = .data$PlotGroup, y = .data$Value, fill = .data$Status)
+  ) +
+    ggplot2::geom_col(width = 0.72) +
+    ggplot2::scale_fill_manual(values = status_cols, drop = FALSE, na.value = "#6b7280") +
+    .mfrm_ggplot_theme() +
+    ggplot2::theme(legend.position = "bottom")
+  if (identical(as.character(payload$value_scale %||% ""), "proportion")) {
+    p <- p + ggplot2::coord_flip(ylim = c(0, 1))
+  } else {
+    p <- p + ggplot2::coord_flip()
+  }
+  p <- .mfrm_ggplot_add_reference_lines(p, payload$reference_lines)
+  p <- .mfrm_ggplot_labs(
+    p,
+    payload,
+    x = NULL,
+    y = as.character(payload$metric_label %||% payload$metric %||% "Value"),
+    fallback = "G-study design check"
+  )
+  .mfrm_ggplot_add_simulation_caption(p, payload)
+}
+
+.mfrm_ggplot_generalizability_comparison <- function(payload) {
+  plot_type <- as.character(payload$plot %||% "")
+  df <- as.data.frame(payload$plot_table %||% data.frame(),
+                      stringsAsFactors = FALSE)
+  if (nrow(df) == 0L) {
+    stop("G-study comparison conversion requires a non-empty `plot_table`.",
+         call. = FALSE)
+  }
+  if (identical(plot_type, "design_check")) {
+    if (!all(c("ModelLabel", "PlotGroup", "Value", "Status") %in% names(df))) {
+      stop("G-study comparison design-check conversion requires ModelLabel, PlotGroup, Value, and Status columns.",
+           call. = FALSE)
+    }
+    df$ModelLabel <- as.character(df$ModelLabel)
+    df$PlotGroup <- as.character(df$PlotGroup)
+    df$Status <- as.character(df$Status)
+    df$Value <- suppressWarnings(as.numeric(df$Value))
+    df <- df[is.finite(df$Value) & nzchar(df$PlotGroup), , drop = FALSE]
+    if (nrow(df) == 0L) {
+      stop("No finite G-study comparison design-check rows are available for ggplot conversion.",
+           call. = FALSE)
+    }
+    df$PlotGroup <- factor(df$PlotGroup, levels = rev(unique(df$PlotGroup)))
+    status_cols <- c(
+      ok = "#238b45",
+      sensitivity_only = "#b65e16",
+      review = "#b11f24",
+      not_requested = "#6b7280"
+    )
+    p <- ggplot2::ggplot(
+      df,
+      ggplot2::aes(x = .data$PlotGroup, y = .data$Value, fill = .data$Status)
+    ) +
+      ggplot2::geom_col(width = 0.72) +
+      ggplot2::scale_fill_manual(values = status_cols, drop = FALSE, na.value = "#6b7280") +
+      ggplot2::facet_wrap(stats::as.formula("~ ModelLabel"), scales = "free_y") +
+      .mfrm_ggplot_theme() +
+      ggplot2::theme(legend.position = "bottom")
+    if (identical(as.character(payload$value_scale %||% ""), "proportion")) {
+      p <- p + ggplot2::coord_flip(ylim = c(0, 1))
+    } else {
+      p <- p + ggplot2::coord_flip()
+    }
+    p <- .mfrm_ggplot_add_reference_lines(p, payload$reference_lines)
+    p <- .mfrm_ggplot_labs(
+      p,
+      payload,
+      x = NULL,
+      y = as.character(payload$metric_label %||% payload$metric %||% "Value"),
+      fallback = "G-study design-check sensitivity comparison"
+    )
+    return(.mfrm_ggplot_add_simulation_caption(p, payload))
+  }
+  if (plot_type %in% c("coefficients", "coefficient_delta")) {
+    if (!all(c("ModelLabel", "Metric", "Value") %in% names(df))) {
+      stop("G-study comparison coefficient conversion requires ModelLabel, Metric, and Value columns.",
+           call. = FALSE)
+    }
+    df$ModelLabel <- as.character(df$ModelLabel)
+    df$Metric <- as.character(df$Metric)
+    df$Value <- suppressWarnings(as.numeric(df$Value))
+    df <- df[is.finite(df$Value), , drop = FALSE]
+    if (nrow(df) == 0L) {
+      stop("No finite G-study comparison coefficient rows are available for ggplot conversion.",
+           call. = FALSE)
+    }
+    if (identical(plot_type, "coefficients")) {
+      p <- ggplot2::ggplot(
+        df,
+        ggplot2::aes(x = .data$Metric, y = .data$Value, fill = .data$ModelLabel)
+      ) +
+        ggplot2::geom_col(position = ggplot2::position_dodge(width = 0.72), width = 0.62) +
+        ggplot2::coord_cartesian(ylim = c(0, 1)) +
+        .mfrm_ggplot_theme() +
+        ggplot2::theme(legend.position = "bottom")
+      p <- .mfrm_ggplot_add_reference_lines(p, payload$reference_lines)
+      p <- .mfrm_ggplot_labs(
+        p,
+        payload,
+        x = NULL,
+        y = "Coefficient",
+        fallback = "G-study coefficient sensitivity comparison"
+      )
+      return(.mfrm_ggplot_add_simulation_caption(p, payload))
+    }
+    p <- ggplot2::ggplot(
+      df,
+      ggplot2::aes(x = .data$Metric, y = .data$Value, fill = .data$Value >= 0)
+    ) +
+      ggplot2::geom_col(width = 0.62, show.legend = FALSE) +
+      ggplot2::coord_flip() +
+      ggplot2::scale_fill_manual(values = c(`TRUE` = "#1b9e77", `FALSE` = "#d95f02")) +
+      .mfrm_ggplot_theme()
+    p <- .mfrm_ggplot_add_reference_lines(p, payload$reference_lines)
+    p <- .mfrm_ggplot_labs(
+      p,
+      payload,
+      x = NULL,
+      y = "Expanded minus baseline",
+      fallback = "G-study coefficient delta"
+    )
+    return(.mfrm_ggplot_add_simulation_caption(p, payload))
+  }
+  if (identical(plot_type, "variance_delta")) {
+    if (!all(c("Source", "Value") %in% names(df))) {
+      stop("G-study variance-delta conversion requires Source and Value columns.",
+           call. = FALSE)
+    }
+    df$Source <- as.character(df$Source)
+    df$Value <- suppressWarnings(as.numeric(df$Value))
+    df <- df[is.finite(df$Value), , drop = FALSE]
+    if (nrow(df) == 0L) {
+      stop("No finite variance-delta rows are available for ggplot conversion.",
+           call. = FALSE)
+    }
+    df$Source <- factor(df$Source, levels = rev(df$Source))
+    p <- ggplot2::ggplot(
+      df,
+      ggplot2::aes(x = .data$Source, y = .data$Value, fill = .data$Value >= 0)
+    ) +
+      ggplot2::geom_col(width = 0.72, show.legend = FALSE) +
+      ggplot2::coord_flip() +
+      ggplot2::scale_fill_manual(values = c(`TRUE` = "#1b9e77", `FALSE` = "#d95f02")) +
+      .mfrm_ggplot_theme()
+    p <- .mfrm_ggplot_add_reference_lines(p, payload$reference_lines)
+    p <- .mfrm_ggplot_labs(
+      p,
+      payload,
+      x = NULL,
+      y = as.character(payload$metric %||% "DeltaVariance"),
+      fallback = "G-study variance movement"
+    )
+    return(.mfrm_ggplot_add_simulation_caption(p, payload))
+  }
+  if (identical(plot_type, "d_study_overlay")) {
+    if (!all(c("X", "Value", "Series") %in% names(df))) {
+      stop("G-study comparison D-study overlay conversion requires X, Value, and Series columns.",
+           call. = FALSE)
+    }
+    df$X <- suppressWarnings(as.numeric(df$X))
+    df$Value <- suppressWarnings(as.numeric(df$Value))
+    df$Series <- as.character(df$Series)
+    if (!"Panel" %in% names(df)) df$Panel <- "All designs"
+    df <- df[is.finite(df$X) & is.finite(df$Value), , drop = FALSE]
+    if (nrow(df) == 0L) {
+      stop("No finite D-study overlay rows are available for ggplot conversion.",
+           call. = FALSE)
+    }
+    p <- ggplot2::ggplot(
+      df,
+      ggplot2::aes(
+        x = .data$X,
+        y = .data$Value,
+        colour = .data$Series,
+        linetype = .data$Series,
+        group = .data$Series
+      )
+    ) +
+      ggplot2::geom_line(linewidth = 0.75) +
+      ggplot2::geom_point(size = 2) +
+      .mfrm_ggplot_theme() +
+      ggplot2::theme(legend.position = "bottom")
+    metrics <- unique(as.character(df$Metric %||% ""))
+    if (length(metrics) > 0L && all(metrics %in% c("G", "Phi"))) {
+      p <- p + ggplot2::coord_cartesian(ylim = c(0, 1))
+    }
+    if ("Panel" %in% names(df) && length(unique(as.character(df$Panel))) > 1L) {
+      p <- p + ggplot2::facet_wrap(stats::as.formula("~ Panel"))
+    }
+    p <- .mfrm_ggplot_add_reference_lines(p, payload$reference_lines)
+    p <- .mfrm_ggplot_labs(
+      p,
+      payload,
+      x = as.character(payload$x_var %||% "Planned count"),
+      y = if (length(metrics) > 0L && all(metrics %in% c("G", "Phi"))) {
+        "Coefficient"
+      } else {
+        "Error variance"
+      },
+      fallback = "D-study sensitivity overlay"
+    )
+    return(.mfrm_ggplot_add_simulation_caption(p, payload))
+  }
+  stop("Unsupported G-study comparison plot type: ", plot_type, call. = FALSE)
+}
+
+.mfrm_ggplot_d_study <- function(payload) {
+  plot_type <- as.character(payload$plot %||% "")
+  if (plot_type %in% c("coefficients", "error_variance")) {
+    df <- as.data.frame(payload$series %||% data.frame(),
+                        stringsAsFactors = FALSE)
+    if (!all(c("X", "Value") %in% names(df))) {
+      stop("D-study line conversion requires X and Value columns.",
+           call. = FALSE)
+    }
+    df$X <- suppressWarnings(as.numeric(df$X))
+    df$Value <- suppressWarnings(as.numeric(df$Value))
+    if (!"Series" %in% names(df)) df$Series <- as.character(df$Metric %||% "Projection")
+    df$Series <- as.character(df$Series)
+    if (!"Panel" %in% names(df)) df$Panel <- "All designs"
+    df <- df[is.finite(df$X) & is.finite(df$Value), , drop = FALSE]
+    if (nrow(df) == 0L) {
+      stop("No finite D-study line rows are available for ggplot conversion.",
+           call. = FALSE)
+    }
+    p <- ggplot2::ggplot(
+      df,
+      ggplot2::aes(
+        x = .data$X,
+        y = .data$Value,
+        colour = .data$Series,
+        linetype = .data$Series,
+        group = .data$Series
+      )
+    ) +
+      ggplot2::geom_line(linewidth = 0.75) +
+      ggplot2::geom_point(size = 2) +
+      .mfrm_ggplot_theme() +
+      ggplot2::theme(legend.position = "bottom")
+    if (identical(plot_type, "coefficients")) {
+      p <- p + ggplot2::coord_cartesian(ylim = c(0, 1))
+    }
+    if (all(c("PanelRow", "PanelCol") %in% names(df)) &&
+        length(payload$panel_grid %||% character(0)) == 2L) {
+      p <- p + ggplot2::facet_grid(stats::as.formula("PanelRow ~ PanelCol"))
+    } else if ("Panel" %in% names(df) && length(unique(as.character(df$Panel))) > 1L) {
+      p <- p + ggplot2::facet_wrap(stats::as.formula("~ Panel"))
+    }
+    p <- .mfrm_ggplot_add_reference_lines(p, payload$reference_lines)
+    p <- .mfrm_ggplot_labs(
+      p,
+      payload,
+      x = as.character(payload$x_var %||% "Planned count"),
+      y = if (identical(plot_type, "coefficients")) "Coefficient" else "Error variance",
+      fallback = if (identical(plot_type, "coefficients")) {
+        "D-study G/Phi projection"
+      } else {
+        "D-study error variance projection"
+      }
+    )
+    return(.mfrm_ggplot_add_simulation_caption(p, payload))
+  }
+  if (plot_type %in% c("heatmap", "contour", "surface3d")) {
+    df <- as.data.frame(payload$surface %||% payload$series %||% data.frame(),
+                        stringsAsFactors = FALSE)
+    if (!all(c("X", "Y", "Value") %in% names(df))) {
+      stop("D-study surface conversion requires X, Y, and Value columns.",
+           call. = FALSE)
+    }
+    df$X <- suppressWarnings(as.numeric(df$X))
+    df$Y <- suppressWarnings(as.numeric(df$Y))
+    df$Value <- suppressWarnings(as.numeric(df$Value))
+    if (!"Panel" %in% names(df)) df$Panel <- "All designs"
+    df <- df[is.finite(df$X) & is.finite(df$Y) & is.finite(df$Value), , drop = FALSE]
+    if (nrow(df) == 0L) {
+      stop("No finite D-study surface rows are available for ggplot conversion.",
+           call. = FALSE)
+    }
+    if (identical(plot_type, "surface3d")) {
+      base_subtitle <- as.character(payload$subtitle %||% "")
+      extra <- "as_ggplot() renders the 3D route as an editable 2D surface projection"
+      payload$subtitle <- if (nzchar(base_subtitle)) paste(base_subtitle, extra, sep = "; ") else extra
+    }
+    p <- ggplot2::ggplot(df, ggplot2::aes(x = .data$X, y = .data$Y, fill = .data$Value)) +
+      ggplot2::geom_tile(colour = "white", linewidth = 0.25) +
+      ggplot2::scale_fill_gradientn(
+        colours = grDevices::hcl.colors(9L, palette = "YlGnBu", rev = TRUE),
+        na.value = "grey90"
+      ) +
+      .mfrm_ggplot_theme() +
+      ggplot2::theme(
+        legend.position = "bottom",
+        panel.grid.major = ggplot2::element_blank()
+      )
+    if (plot_type %in% c("contour", "surface3d")) {
+      p <- p + ggplot2::geom_contour(
+        data = df,
+        ggplot2::aes(x = .data$X, y = .data$Y, z = .data$Value),
+        inherit.aes = FALSE,
+        colour = "grey25",
+        linewidth = 0.35,
+        bins = 8L
+      )
+    }
+    if ("Panel" %in% names(df) && length(unique(as.character(df$Panel))) > 1L) {
+      p <- p + ggplot2::facet_wrap(stats::as.formula("~ Panel"))
+    }
+    p <- .mfrm_ggplot_labs(
+      p,
+      payload,
+      x = as.character(payload$x_var %||% "Planned count"),
+      y = as.character(payload$y_var %||% "Planned count"),
+      fallback = "D-study design grid"
+    )
+    return(.mfrm_ggplot_add_simulation_caption(p, payload))
+  }
+  stop("Unsupported D-study plot type: ", plot_type, call. = FALSE)
+}
+
+.mfrm_ggplot_curve_data <- function(df, payload) {
+  if (!all(c("Theta", "Value") %in% names(df))) {
+    stop("Curve conversion requires `Theta` and `Value` columns.",
+         call. = FALSE)
+  }
+  df <- as.data.frame(df, stringsAsFactors = FALSE)
+  if ("DisplayedByDefault" %in% names(df)) {
+    keep <- is.na(df$DisplayedByDefault) | as.logical(df$DisplayedByDefault)
+    df <- df[keep, , drop = FALSE]
+  }
+  df$Theta <- suppressWarnings(as.numeric(df$Theta))
+  df$Value <- suppressWarnings(as.numeric(df$Value))
+  df <- df[is.finite(df$Theta) & is.finite(df$Value), , drop = FALSE]
+  if (nrow(df) == 0L) {
+    stop("No finite curve rows are available for ggplot conversion.",
+         call. = FALSE)
+  }
+  colour_col <- intersect(
+    c("Series", "Metric", "CurveGroup", "Category", "ValueName", "Layer"),
+    names(df)
+  )[1]
+  if (!is.na(colour_col)) {
+    df$.mfrmr_colour <- as.character(df[[colour_col]])
+  } else {
+    df$.mfrmr_colour <- "series"
+  }
+  group_cols <- intersect(
+    c("Series", "Metric", "CurveGroup", "Category", "ValueName", "Layer"),
+    names(df)
+  )
+  if (length(group_cols) > 0L) {
+    df$.mfrmr_group <- do.call(paste, c(df[group_cols], sep = " | "))
+  } else {
+    df$.mfrmr_group <- "series"
+  }
+
+  p <- ggplot2::ggplot(
+    df,
+    ggplot2::aes(
+      x = Theta,
+      y = Value,
+      colour = .mfrmr_colour,
+      group = .mfrmr_group
+    )
+  ) +
+    ggplot2::geom_line(linewidth = 0.7) +
+    .mfrm_ggplot_theme()
+  p <- .mfrm_ggplot_add_reference_lines(p, payload$reference_lines)
+  .mfrm_ggplot_labs(
+    p,
+    payload,
+    x = "Theta / logit",
+    y = "Value",
+    fallback = "mfrmr curve"
+  )
+}
+
+.mfrm_ggplot_threshold_ladder <- function(df, payload) {
+  if (!all(c("Group", "Threshold") %in% names(df))) {
+    stop("Threshold-ladder conversion requires `Group` and `Threshold` columns.",
+         call. = FALSE)
+  }
+  df <- as.data.frame(df, stringsAsFactors = FALSE)
+  df$Threshold <- suppressWarnings(as.numeric(df$Threshold))
+  df <- df[is.finite(df$Threshold), , drop = FALSE]
+  if (!"Step" %in% names(df)) df$Step <- seq_len(nrow(df))
+  if (!"Disordered" %in% names(df)) df$Disordered <- FALSE
+  df$Disordered <- as.logical(df$Disordered)
+  df$Group <- as.character(df$Group)
+
+  p <- ggplot2::ggplot(
+    df,
+    ggplot2::aes(x = Group, y = Threshold, group = Group)
+  ) +
+    ggplot2::geom_line(colour = "grey45", linewidth = 0.5) +
+    ggplot2::geom_point(ggplot2::aes(colour = Disordered), size = 2.1) +
+    ggplot2::scale_colour_manual(
+      values = c(`FALSE` = "#2B6CB0", `TRUE` = "#C53030")
+    ) +
+    .mfrm_ggplot_theme() +
+    ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
+  p <- .mfrm_ggplot_add_reference_lines(p, payload$reference_lines)
+  .mfrm_ggplot_labs(
+    p,
+    payload,
+    x = NULL,
+    y = "Threshold (logit)",
+    fallback = "Threshold ladder"
+  )
+}
+
+.mfrm_ggplot_estimate_rows <- function(df, payload) {
+  label_col <- intersect(c("Level", "Person", "Step", "Label", "Group"), names(df))[1]
+  if (is.na(label_col) || !"Estimate" %in% names(df)) {
+    stop("Estimate-row conversion requires `Estimate` and a label column.",
+         call. = FALSE)
+  }
+  df <- as.data.frame(df, stringsAsFactors = FALSE)
+  df$Estimate <- suppressWarnings(as.numeric(df$Estimate))
+  df$.mfrmr_label <- as.character(df[[label_col]])
+  df <- df[is.finite(df$Estimate) & nzchar(df$.mfrmr_label), , drop = FALSE]
+  if (nrow(df) == 0L) {
+    stop("No finite estimate rows are available for ggplot conversion.",
+         call. = FALSE)
+  }
+  df$.mfrmr_label <- factor(df$.mfrmr_label, levels = rev(unique(df$.mfrmr_label)))
+  p <- ggplot2::ggplot(df, ggplot2::aes(x = Estimate, y = .mfrmr_label)) +
+    ggplot2::geom_point(size = 2) +
+    .mfrm_ggplot_theme()
+  if (all(c("CI_Lower", "CI_Upper") %in% names(df))) {
+    ci <- df[is.finite(df$CI_Lower) & is.finite(df$CI_Upper), , drop = FALSE]
+    if (nrow(ci) > 0L) {
+      p <- p + ggplot2::geom_segment(
+        data = ci,
+        ggplot2::aes(
+          x = CI_Lower,
+          xend = CI_Upper,
+          y = .mfrmr_label,
+          yend = .mfrmr_label
+        ),
+        inherit.aes = FALSE,
+        colour = "grey45"
+      )
+    }
+  } else if ("SE" %in% names(df)) {
+    se <- suppressWarnings(as.numeric(df$SE))
+    ci <- df[is.finite(se), , drop = FALSE]
+    if (nrow(ci) > 0L) {
+      ci$CI_Lower <- ci$Estimate - 1.96 * suppressWarnings(as.numeric(ci$SE))
+      ci$CI_Upper <- ci$Estimate + 1.96 * suppressWarnings(as.numeric(ci$SE))
+      p <- p + ggplot2::geom_segment(
+        data = ci,
+        ggplot2::aes(
+          x = CI_Lower,
+          xend = CI_Upper,
+          y = .mfrmr_label,
+          yend = .mfrmr_label
+        ),
+        inherit.aes = FALSE,
+        colour = "grey45"
+      )
+    }
+  }
+  p <- .mfrm_ggplot_add_reference_lines(p, payload$reference_lines)
+  .mfrm_ggplot_labs(
+    p,
+    payload,
+    x = "Estimate",
+    y = NULL,
+    fallback = "mfrmr estimates"
+  )
+}
+
+.mfrm_ggplot_numeric_fallback <- function(df, payload) {
+  df <- as.data.frame(df, stringsAsFactors = FALSE)
+  numeric_cols <- names(df)[vapply(df, is.numeric, logical(1))]
+  if (length(numeric_cols) == 0L) {
+    stop(
+      "The selected component has no numeric columns for ggplot conversion.",
+      call. = FALSE
+    )
+  }
+  character_cols <- names(df)[
+    vapply(df, function(z) is.character(z) || is.factor(z), logical(1))
+  ]
+  if (length(character_cols) > 0L) {
+    x_col <- numeric_cols[1]
+    y_col <- character_cols[1]
+    dat <- data.frame(
+      x = suppressWarnings(as.numeric(df[[x_col]])),
+      y = as.character(df[[y_col]]),
+      stringsAsFactors = FALSE
+    )
+    dat <- dat[is.finite(dat$x) & nzchar(dat$y), , drop = FALSE]
+    dat$y <- factor(dat$y, levels = rev(unique(dat$y)))
+    p <- ggplot2::ggplot(dat, ggplot2::aes(x = x, y = y)) +
+      ggplot2::geom_col(fill = "#2B6CB0", width = 0.7) +
+      .mfrm_ggplot_theme()
+    return(.mfrm_ggplot_labs(
+      p, payload, x = x_col, y = y_col, fallback = "mfrmr plot data"
+    ))
+  }
+  if (length(numeric_cols) >= 2L) {
+    dat <- data.frame(
+      x = suppressWarnings(as.numeric(df[[numeric_cols[1]]])),
+      y = suppressWarnings(as.numeric(df[[numeric_cols[2]]])),
+      stringsAsFactors = FALSE
+    )
+    dat <- dat[is.finite(dat$x) & is.finite(dat$y), , drop = FALSE]
+    p <- ggplot2::ggplot(dat, ggplot2::aes(x = x, y = y)) +
+      ggplot2::geom_point(colour = "#2B6CB0", size = 2) +
+      .mfrm_ggplot_theme()
+    return(.mfrm_ggplot_labs(
+      p,
+      payload,
+      x = numeric_cols[1],
+      y = numeric_cols[2],
+      fallback = "mfrmr plot data"
+    ))
+  }
+  stop("The selected component is not suitable for automatic ggplot conversion.",
+       call. = FALSE)
+}
+
+.mfrm_category_curve_probabilities <- function(payload) {
+  prob <- as.data.frame(payload$probabilities %||% data.frame(),
+                        stringsAsFactors = FALSE)
+  if (nrow(prob) > 0L &&
+      all(c("Theta", "Probability", "Category", "CurveGroup") %in%
+            names(prob))) {
+    return(prob)
+  }
+  long <- as.data.frame(payload$plot_long %||% data.frame(),
+                        stringsAsFactors = FALSE)
+  if (nrow(long) > 0L &&
+      all(c("PlotType", "Theta", "Value", "Category", "CurveGroup") %in%
+            names(long))) {
+    long <- long[as.character(long$PlotType) == "ccc", , drop = FALSE]
+    if (nrow(long) > 0L) {
+      long$Probability <- suppressWarnings(as.numeric(long$Value))
+      return(long)
+    }
+  }
+  data.frame()
+}
+
+.mfrm_category_curve_dominance <- function(prob) {
+  if (nrow(prob) == 0L ||
+      !all(c("CurveGroup", "Theta", "Category", "Probability") %in%
+            names(prob))) {
+    return(data.frame())
+  }
+  prob <- prob[is.finite(prob$Theta) & is.finite(prob$Probability), ,
+               drop = FALSE]
+  if (nrow(prob) == 0L) return(data.frame())
+  groups <- unique(as.character(prob$CurveGroup))
+  rows <- list()
+  for (g in groups) {
+    sub_g <- prob[as.character(prob$CurveGroup) == g, , drop = FALSE]
+    theta_vals <- sort(unique(sub_g$Theta))
+    if (length(theta_vals) == 0L) next
+    dominant <- vapply(theta_vals, function(th) {
+      sub_t <- sub_g[sub_g$Theta == th, , drop = FALSE]
+      if (nrow(sub_t) == 0L) return(NA_character_)
+      as.character(sub_t$Category[which.max(sub_t$Probability)][1])
+    }, character(1))
+    ok <- !is.na(dominant) & nzchar(dominant)
+    theta_vals <- theta_vals[ok]
+    dominant <- dominant[ok]
+    if (length(theta_vals) == 0L) next
+    starts <- which(c(TRUE, dominant[-1L] != dominant[-length(dominant)]))
+    ends <- c(starts[-1L] - 1L, length(dominant))
+    theta_step <- if (length(theta_vals) > 1L) {
+      stats::median(diff(theta_vals), na.rm = TRUE)
+    } else {
+      0.1
+    }
+    if (!is.finite(theta_step) || theta_step <= 0) theta_step <- 0.1
+    for (i in seq_along(starts)) {
+      rows[[length(rows) + 1L]] <- data.frame(
+        CurveGroup = g,
+        DominantCategory = dominant[starts[i]],
+        ThetaStart = theta_vals[starts[i]] - theta_step / 2,
+        ThetaEnd = theta_vals[ends[i]] + theta_step / 2,
+        YMin = 0,
+        YMax = 1,
+        stringsAsFactors = FALSE
+      )
+    }
+  }
+  if (length(rows) == 0L) return(data.frame())
+  out <- do.call(rbind, rows)
+  rownames(out) <- NULL
+  out
+}
+
+.mfrm_ggplot_category_curves <- function(payload,
+                                         slope_aes = c("none", "linewidth", "alpha", "colour"),
+                                         facet_by = c("auto", "none", "curve_group"),
+                                         show_overlay = TRUE,
+                                         show_dominance = FALSE) {
+  slope_aes <- match.arg(slope_aes)
+  facet_by <- match.arg(facet_by)
+  prob <- .mfrm_category_curve_probabilities(payload)
+  required <- c("Theta", "Probability", "Category", "CurveGroup")
+  if (!all(required %in% names(prob))) {
+    stop("CCC conversion requires category-curve probabilities with Theta, Probability, Category, and CurveGroup columns.",
+         call. = FALSE)
+  }
+  prob <- as.data.frame(prob, stringsAsFactors = FALSE)
+  prob$Theta <- suppressWarnings(as.numeric(prob$Theta))
+  prob$Probability <- suppressWarnings(as.numeric(prob$Probability))
+  prob$Category <- as.character(prob$Category)
+  prob$CurveGroup <- as.character(prob$CurveGroup)
+  if (!"Slope" %in% names(prob)) prob$Slope <- 1
+  prob$Slope <- suppressWarnings(as.numeric(prob$Slope))
+  finite_slope <- prob$Slope[is.finite(prob$Slope) & prob$Slope > 0]
+  slope_fallback <- if (length(finite_slope) > 0L) {
+    stats::median(finite_slope)
+  } else {
+    1
+  }
+  prob$Slope[!is.finite(prob$Slope) | prob$Slope <= 0] <- slope_fallback
+  prob <- prob[
+    is.finite(prob$Theta) & is.finite(prob$Probability) &
+      nzchar(prob$Category) & nzchar(prob$CurveGroup),
+    ,
+    drop = FALSE
+  ]
+  if (nrow(prob) == 0L) {
+    stop("No finite CCC probability rows are available for ggplot conversion.",
+         call. = FALSE)
+  }
+  prob$Trace <- paste(prob$CurveGroup, prob$Category, sep = " | Cat ")
+  category_levels <- unique(as.character(prob$Category))
+  numeric_categories <- suppressWarnings(as.numeric(category_levels))
+  if (all(is.finite(numeric_categories))) {
+    category_levels <- category_levels[order(numeric_categories)]
+  }
+  prob$Category <- factor(prob$Category, levels = category_levels)
+  group_count <- length(unique(as.character(prob$CurveGroup)))
+  if (identical(facet_by, "auto")) {
+    facet_by <- if (group_count > 1L) "curve_group" else "none"
+  }
+
+  dominance <- if (isTRUE(show_dominance)) {
+    .mfrm_category_curve_dominance(prob)
+  } else {
+    data.frame()
+  }
+  add_dominance <- function(p) {
+    if (nrow(dominance) == 0L) return(p)
+    p + ggplot2::geom_rect(
+      data = dominance,
+      ggplot2::aes(
+        xmin = ThetaStart,
+        xmax = ThetaEnd,
+        ymin = YMin,
+        ymax = YMax,
+        fill = DominantCategory
+      ),
+      inherit.aes = FALSE,
+      colour = NA,
+      alpha = 0.08,
+      show.legend = FALSE
+    )
+  }
+  if (nrow(dominance) > 0L) {
+    dominance$DominantCategory <- factor(
+      dominance$DominantCategory,
+      levels = category_levels
+    )
+  }
+  p <- add_dominance(ggplot2::ggplot())
+
+  if (identical(slope_aes, "colour")) {
+    p <- p +
+      ggplot2::geom_line(
+        data = prob,
+        ggplot2::aes(
+          x = Theta,
+          y = Probability,
+          group = Trace,
+          colour = Slope,
+          linetype = Category
+        ),
+        linewidth = 0.85,
+        alpha = 0.95
+      ) +
+      ggplot2::scale_colour_gradient(
+        low = "#2B6CB0",
+        high = "#C53030",
+        name = "Slope"
+      )
+  } else if (identical(slope_aes, "linewidth")) {
+    line_mapping <- ggplot2::aes(
+      x = Theta,
+      y = Probability,
+      group = Trace,
+      colour = Category,
+      linewidth = Slope
+    )
+    if (identical(facet_by, "none") && group_count > 1L) {
+      line_mapping <- ggplot2::aes(
+        x = Theta,
+        y = Probability,
+        group = Trace,
+        colour = Category,
+        linewidth = Slope,
+        linetype = CurveGroup
+      )
+    }
+    p <- p + ggplot2::geom_line(
+      data = prob,
+      line_mapping,
+      alpha = 0.95
+    ) +
+      ggplot2::scale_linewidth_continuous(
+        range = c(0.45, 1.35),
+        name = "Slope"
+      )
+  } else if (identical(slope_aes, "alpha")) {
+    line_mapping <- ggplot2::aes(
+      x = Theta,
+      y = Probability,
+      group = Trace,
+      colour = Category,
+      alpha = Slope
+    )
+    if (identical(facet_by, "none") && group_count > 1L) {
+      line_mapping <- ggplot2::aes(
+        x = Theta,
+        y = Probability,
+        group = Trace,
+        colour = Category,
+        alpha = Slope,
+        linetype = CurveGroup
+      )
+    }
+    p <- p + ggplot2::geom_line(
+      data = prob,
+      line_mapping,
+      linewidth = 0.9
+    ) +
+      ggplot2::scale_alpha_continuous(
+        range = c(0.45, 1),
+        name = "Slope"
+      )
+  } else {
+    p <- p + ggplot2::geom_line(
+      data = prob,
+      ggplot2::aes(
+        x = Theta,
+        y = Probability,
+        group = Trace,
+        colour = Category
+      ),
+      linewidth = 0.85,
+      alpha = 0.95
+    )
+    if (identical(facet_by, "none") && group_count > 1L) {
+      p <- p + ggplot2::aes(linetype = CurveGroup)
+    }
+  }
+
+  overlay <- as.data.frame(payload$overlay %||% data.frame(),
+                           stringsAsFactors = FALSE)
+  if (isTRUE(show_overlay) && nrow(overlay) > 0L &&
+      all(c("Theta", "Category", "Proportion") %in% names(overlay))) {
+    overlay$Theta <- suppressWarnings(as.numeric(overlay$Theta))
+    overlay$Proportion <- suppressWarnings(as.numeric(overlay$Proportion))
+    overlay$Category <- factor(as.character(overlay$Category),
+                               levels = category_levels)
+    if (!"N" %in% names(overlay)) overlay$N <- 1
+    overlay$N <- suppressWarnings(as.numeric(overlay$N))
+    overlay$N[!is.finite(overlay$N) | overlay$N <= 0] <- 1
+    overlay <- overlay[
+      is.finite(overlay$Theta) & is.finite(overlay$Proportion) &
+        !is.na(overlay$Category),
+      ,
+      drop = FALSE
+    ]
+    if (nrow(overlay) > 0L) {
+      p <- p +
+        ggplot2::geom_point(
+          data = overlay,
+          ggplot2::aes(
+            x = Theta,
+            y = Proportion,
+            fill = Category,
+            size = N
+          ),
+          inherit.aes = FALSE,
+          shape = 21,
+          colour = "grey20",
+          stroke = 0.25,
+          alpha = 0.78
+        ) +
+        ggplot2::scale_size_continuous(range = c(1.3, 4), name = "Bin N")
+    }
+  }
+
+  if (identical(facet_by, "curve_group") && group_count > 1L) {
+    p <- p + ggplot2::facet_wrap(ggplot2::vars(CurveGroup))
+  }
+  p <- p +
+    ggplot2::coord_cartesian(ylim = c(0, 1)) +
+    .mfrm_ggplot_theme() +
+    ggplot2::theme(
+      legend.position = "bottom",
+      panel.grid.minor = ggplot2::element_blank()
+    )
+  p <- .mfrm_ggplot_add_reference_lines(p, payload$reference_lines)
+  .mfrm_ggplot_labs(
+    p,
+    payload,
+    x = "Theta / logit",
+    y = "Category probability",
+    fallback = "Category characteristic curves"
+  )
+}
+
+.mfrm_ggplot_bubble <- function(payload) {
+  tbl <- as.data.frame(payload$table %||% data.frame(),
+                       stringsAsFactors = FALSE)
+  if (!all(c("Facet", "Level", "Infit", "Outfit") %in% names(tbl))) {
+    stop("Bubble conversion requires `table` with Facet, Level, Infit, and Outfit columns.",
+         call. = FALSE)
+  }
+  view <- as.character(payload$view %||% "measure")
+  fit_stat <- as.character(payload$fit_stat %||% "Infit")
+  if (!fit_stat %in% c("Infit", "Outfit")) fit_stat <- "Infit"
+  if (!view %in% c("measure", "fit_measure", "infit_outfit")) {
+    view <- "measure"
+  }
+  if (identical(view, "infit_outfit")) {
+    tbl$FitX <- suppressWarnings(as.numeric(tbl$Infit))
+    tbl$FitY <- suppressWarnings(as.numeric(tbl$Outfit))
+    x_lab <- "Infit MnSq"
+    y_lab <- "Outfit MnSq"
+  } else if (identical(view, "fit_measure")) {
+    if (!"Estimate" %in% names(tbl)) {
+      stop("Fit-pathway conversion requires an `Estimate` column.",
+           call. = FALSE)
+    }
+    tbl$FitX <- suppressWarnings(as.numeric(tbl[[fit_stat]]))
+    tbl$FitY <- suppressWarnings(as.numeric(tbl$Estimate))
+    x_lab <- paste0(fit_stat, " Mean Square")
+    y_lab <- "Measure (logits)"
+  } else {
+    if (!"Estimate" %in% names(tbl)) {
+      stop("Measure-fit conversion requires an `Estimate` column.",
+           call. = FALSE)
+    }
+    tbl$FitX <- suppressWarnings(as.numeric(tbl$Estimate))
+    tbl$FitY <- suppressWarnings(as.numeric(tbl[[fit_stat]]))
+    x_lab <- "Measure (logits)"
+    y_lab <- paste0(fit_stat, " Mean Square")
+  }
+  tbl <- tbl[is.finite(tbl$FitX) & is.finite(tbl$FitY), , drop = FALSE]
+  if (nrow(tbl) == 0L) {
+    stop("No finite bubble rows are available for ggplot conversion.",
+         call. = FALSE)
+  }
+  radius <- suppressWarnings(as.numeric(payload$radius %||% NA_real_))
+  if (length(radius) != nrow(tbl) || all(!is.finite(radius))) {
+    tbl$Radius <- 3
+  } else {
+    radius[!is.finite(radius)] <- stats::median(radius[is.finite(radius)])
+    radius_max <- max(radius, na.rm = TRUE)
+    if (!is.finite(radius_max) || radius_max <= 0) radius_max <- 1
+    tbl$Radius <- 2 + 5 * radius / radius_max
+  }
+  tbl$Facet <- as.character(tbl$Facet)
+
+  fit_range <- suppressWarnings(as.numeric(payload$fit_range %||% c(0.5, 1.5)))
+  if (length(fit_range) != 2L || !all(is.finite(fit_range)) ||
+      fit_range[1] >= fit_range[2]) {
+    fit_range <- c(0.5, 1.5)
+  }
+  if (identical(view, "infit_outfit")) {
+    band <- data.frame(
+      XMin = fit_range[1],
+      XMax = fit_range[2],
+      YMin = fit_range[1],
+      YMax = fit_range[2],
+      stringsAsFactors = FALSE
+    )
+  } else if (identical(view, "fit_measure")) {
+    y_rng <- range(tbl$FitY, finite = TRUE)
+    y_pad <- if (diff(y_rng) > 0) 0.08 * diff(y_rng) else 0.5
+    band <- data.frame(
+      XMin = fit_range[1],
+      XMax = fit_range[2],
+      YMin = y_rng[1] - y_pad,
+      YMax = y_rng[2] + y_pad,
+      stringsAsFactors = FALSE
+    )
+  } else {
+    x_rng <- range(tbl$FitX, finite = TRUE)
+    x_pad <- if (diff(x_rng) > 0) 0.08 * diff(x_rng) else 0.5
+    band <- data.frame(
+      XMin = x_rng[1] - x_pad,
+      XMax = x_rng[2] + x_pad,
+      YMin = fit_range[1],
+      YMax = fit_range[2],
+      stringsAsFactors = FALSE
+    )
+  }
+
+  p <- ggplot2::ggplot() +
+    ggplot2::geom_rect(
+      data = band,
+      ggplot2::aes(xmin = XMin, xmax = XMax, ymin = YMin, ymax = YMax),
+      inherit.aes = FALSE,
+      fill = "#E8F0FE",
+      colour = NA,
+      alpha = 0.55
+    ) +
+    ggplot2::geom_point(
+      data = tbl,
+      ggplot2::aes(x = FitX, y = FitY, colour = Facet, size = Radius),
+      alpha = 0.72
+    ) +
+    ggplot2::scale_size_identity() +
+    .mfrm_ggplot_theme() +
+    ggplot2::theme(legend.position = "right")
+  p <- .mfrm_ggplot_add_reference_lines(p, payload$reference_lines)
+  .mfrm_ggplot_labs(
+    p,
+    payload,
+    x = x_lab,
+    y = y_lab,
+    fallback = "Fit pathway"
+  )
+}
+
+.mfrm_ggplot_wright_map <- function(payload) {
+  loc <- as.data.frame(payload$locations %||% data.frame(),
+                       stringsAsFactors = FALSE)
+  if (!all(c("PlotType", "Group", "Label", "Estimate", "X") %in% names(loc))) {
+    stop("Wright-map conversion requires `locations` with PlotType, Group, Label, Estimate, and X columns.",
+         call. = FALSE)
+  }
+  loc$Estimate <- suppressWarnings(as.numeric(loc$Estimate))
+  loc$X <- suppressWarnings(as.numeric(loc$X))
+  loc <- loc[is.finite(loc$Estimate) & is.finite(loc$X), , drop = FALSE]
+  if (nrow(loc) == 0L) {
+    stop("No finite Wright-map locations are available for ggplot conversion.",
+         call. = FALSE)
+  }
+
+  group_levels <- as.character(payload$group_levels %||% unique(loc$Group))
+  group_levels <- group_levels[nzchar(group_levels)]
+  n_groups <- length(group_levels)
+  y_range <- suppressWarnings(as.numeric(payload$y_range %||%
+                                           range(loc$Estimate, finite = TRUE)))
+  if (length(y_range) != 2L || !all(is.finite(y_range)) ||
+      diff(y_range) <= sqrt(.Machine$double.eps)) {
+    y_center <- mean(loc$Estimate, na.rm = TRUE)
+    y_range <- y_center + c(-0.5, 0.5)
+  }
+  y_pad <- 0.04 * diff(y_range)
+  y_limits <- y_range + c(-y_pad, y_pad)
+  pretty_y <- pretty(y_range, n = 6)
+
+  hist_data <- payload$person_hist
+  hist_df <- data.frame()
+  hist_band <- 0.85
+  if (is.list(hist_data) &&
+      length(hist_data$counts) > 0L &&
+      length(hist_data$breaks) == length(hist_data$counts) + 1L) {
+    hist_counts <- suppressWarnings(as.numeric(hist_data$counts))
+    hist_max <- max(hist_counts, na.rm = TRUE)
+    if (!is.finite(hist_max) || hist_max <= 0) hist_max <- 1
+    hist_df <- data.frame(
+      XLeft = -hist_band * hist_counts / hist_max,
+      XRight = 0,
+      YBottom = suppressWarnings(as.numeric(utils::head(hist_data$breaks, -1L))),
+      YTop = suppressWarnings(as.numeric(utils::tail(hist_data$breaks, -1L))),
+      Count = hist_counts,
+      stringsAsFactors = FALSE
+    )
+    hist_df <- hist_df[
+      is.finite(hist_df$YBottom) & is.finite(hist_df$YTop),
+      ,
+      drop = FALSE
+    ]
+  }
+
+  p <- ggplot2::ggplot()
+  if (nrow(hist_df) > 0L) {
+    p <- p + ggplot2::geom_rect(
+      data = hist_df,
+      ggplot2::aes(
+        xmin = XLeft,
+        xmax = XRight,
+        ymin = YBottom,
+        ymax = YTop
+      ),
+      inherit.aes = FALSE,
+      fill = "#94A3B8",
+      colour = "white",
+      linewidth = 0.2,
+      alpha = 0.65
+    )
+  }
+
+  group_shade <- data.frame()
+  if (n_groups > 0L) {
+    odd <- seq_len(n_groups)[seq_len(n_groups) %% 2L == 1L]
+    group_shade <- data.frame(
+      XLeft = odd - 0.5,
+      XRight = odd + 0.5,
+      YBottom = y_limits[1],
+      YTop = y_limits[2],
+      stringsAsFactors = FALSE
+    )
+  }
+  if (nrow(group_shade) > 0L) {
+    p <- p + ggplot2::geom_rect(
+      data = group_shade,
+      ggplot2::aes(
+        xmin = XLeft,
+        xmax = XRight,
+        ymin = YBottom,
+        ymax = YTop
+      ),
+      inherit.aes = FALSE,
+      fill = "#EEF2F7",
+      colour = NA,
+      alpha = 0.55
+    )
+  }
+
+  density_df <- as.data.frame(payload$group %||% data.frame(),
+                              stringsAsFactors = FALSE)
+  density_groups <- character()
+  if (nrow(density_df) > 0L &&
+      all(c("Group", "Theta", "Density") %in% names(density_df))) {
+    density_df$Theta <- suppressWarnings(as.numeric(density_df$Theta))
+    density_df$Density <- suppressWarnings(as.numeric(density_df$Density))
+    density_df <- density_df[
+      is.finite(density_df$Theta) & is.finite(density_df$Density),
+      ,
+      drop = FALSE
+    ]
+    density_max <- max(density_df$Density, na.rm = TRUE)
+    if (is.finite(density_max) && density_max > 0 && nrow(density_df) > 1L) {
+      density_df$DensityX <- -hist_band * density_df$Density / density_max
+      density_groups <- unique(as.character(density_df$Group))
+      p <- p + ggplot2::geom_path(
+        data = density_df,
+        ggplot2::aes(x = DensityX, y = Theta, colour = Group, group = Group),
+        inherit.aes = FALSE,
+        linewidth = 0.75,
+        alpha = 0.95
+      )
+    }
+  }
+
+  summary_df <- as.data.frame(payload$group_summary %||% data.frame(),
+                              stringsAsFactors = FALSE)
+  if (nrow(summary_df) > 0L &&
+      all(c("XBase", "Min", "Max", "Q1", "Q3", "Median", "PlotType") %in% names(summary_df))) {
+    numeric_cols <- c("XBase", "Min", "Max", "Q1", "Q3", "Median")
+    summary_df[numeric_cols] <- lapply(summary_df[numeric_cols], function(z) {
+      suppressWarnings(as.numeric(z))
+    })
+    summary_df <- summary_df[
+      is.finite(summary_df$XBase) & is.finite(summary_df$Min) &
+        is.finite(summary_df$Max),
+      ,
+      drop = FALSE
+    ]
+    if (nrow(summary_df) > 0L) {
+      p <- p +
+        ggplot2::geom_segment(
+          data = summary_df,
+          ggplot2::aes(
+            x = XBase,
+            xend = XBase,
+            y = Min,
+            yend = Max,
+            colour = PlotType
+          ),
+          inherit.aes = FALSE,
+          linewidth = 0.6,
+          alpha = 0.45
+        ) +
+        ggplot2::geom_segment(
+          data = summary_df,
+          ggplot2::aes(
+            x = XBase,
+            xend = XBase,
+            y = Q1,
+            yend = Q3,
+            colour = PlotType
+          ),
+          inherit.aes = FALSE,
+          linewidth = 2.2,
+          alpha = 0.85
+        ) +
+        ggplot2::geom_segment(
+          data = summary_df,
+          ggplot2::aes(
+            x = XBase - 0.12,
+            xend = XBase + 0.12,
+            y = Median,
+            yend = Median
+          ),
+          inherit.aes = FALSE,
+          colour = "grey15",
+          linewidth = 0.45
+        )
+    }
+  }
+
+  stats_df <- as.data.frame(payload$person_stats %||% data.frame(),
+                            stringsAsFactors = FALSE)
+  if (nrow(stats_df) > 0L) {
+    stats_lines <- data.frame(
+      Statistic = c("Person median", "Person mean"),
+      Value = suppressWarnings(as.numeric(c(stats_df$Median[1], stats_df$Mean[1]))),
+      LineType = c("dashed", "dotted"),
+      stringsAsFactors = FALSE
+    )
+    stats_lines <- stats_lines[is.finite(stats_lines$Value), , drop = FALSE]
+    if (nrow(stats_lines) > 0L) {
+      p <- p + ggplot2::geom_segment(
+        data = stats_lines,
+        ggplot2::aes(
+          x = -hist_band,
+          xend = 0,
+          y = Value,
+          yend = Value,
+          linetype = Statistic
+        ),
+        inherit.aes = FALSE,
+        colour = "grey25",
+        linewidth = 0.45
+      )
+    }
+  }
+
+  ci_df <- data.frame()
+  if (all(c("CI_Lower", "CI_Upper") %in% names(loc))) {
+    ci_df <- loc[
+      is.finite(suppressWarnings(as.numeric(loc$CI_Lower))) &
+        is.finite(suppressWarnings(as.numeric(loc$CI_Upper))),
+      ,
+      drop = FALSE
+    ]
+    if (nrow(ci_df) > 0L) {
+      ci_df$CI_Lower <- suppressWarnings(as.numeric(ci_df$CI_Lower))
+      ci_df$CI_Upper <- suppressWarnings(as.numeric(ci_df$CI_Upper))
+    }
+  } else if ("SE" %in% names(loc)) {
+    ci_df <- loc[is.finite(suppressWarnings(as.numeric(loc$SE))), , drop = FALSE]
+    if (nrow(ci_df) > 0L) {
+      ci_df$CI_Lower <- ci_df$Estimate - 1.96 * suppressWarnings(as.numeric(ci_df$SE))
+      ci_df$CI_Upper <- ci_df$Estimate + 1.96 * suppressWarnings(as.numeric(ci_df$SE))
+    }
+  }
+  if (nrow(ci_df) > 0L) {
+    p <- p + ggplot2::geom_segment(
+      data = ci_df,
+      ggplot2::aes(
+        x = X,
+        xend = X,
+        y = CI_Lower,
+        yend = CI_Upper,
+        colour = PlotType
+      ),
+      inherit.aes = FALSE,
+      linewidth = 0.45,
+      alpha = 0.65
+    )
+  }
+
+  colour_values <- c(
+    `Facet level` = "#1B9E77",
+    `Step threshold` = "#D95F02"
+  )
+  if (length(density_groups) > 0L) {
+    density_colours <- grDevices::hcl.colors(
+      max(3L, length(density_groups)),
+      "Dark 3"
+    )[seq_along(density_groups)]
+    colour_values <- c(
+      colour_values,
+      stats::setNames(density_colours, density_groups)
+    )
+  }
+
+  p <- p +
+    ggplot2::geom_point(
+      data = loc,
+      ggplot2::aes(x = X, y = Estimate, colour = PlotType, shape = PlotType),
+      inherit.aes = FALSE,
+      size = 2.1,
+      alpha = 0.9
+    )
+
+  label_df <- as.data.frame(payload$label_points %||% data.frame(),
+                            stringsAsFactors = FALSE)
+  if (nrow(label_df) > 0L && all(c("X", "Estimate", "Label") %in% names(label_df))) {
+    label_df$X <- suppressWarnings(as.numeric(label_df$X))
+    label_df$Estimate <- suppressWarnings(as.numeric(label_df$Estimate))
+    label_df <- label_df[
+      is.finite(label_df$X) & is.finite(label_df$Estimate) &
+        nzchar(as.character(label_df$Label)),
+      ,
+      drop = FALSE
+    ]
+    if (nrow(label_df) > 0L) {
+      label_df$Label <- truncate_axis_label(label_df$Label, width = 14L)
+      p <- p + ggplot2::geom_text(
+        data = label_df,
+        ggplot2::aes(x = X + 0.06, y = Estimate, label = Label),
+        inherit.aes = FALSE,
+        hjust = 0,
+        size = 2.6,
+        colour = "grey20",
+        check_overlap = TRUE
+      )
+    }
+  }
+
+  p <- p +
+    ggplot2::geom_hline(
+      yintercept = pretty_y,
+      colour = "#D9DDE3",
+      linewidth = 0.25
+    ) +
+    ggplot2::geom_hline(
+      yintercept = 0,
+      colour = "grey35",
+      linetype = "dashed",
+      linewidth = 0.35
+    ) +
+    ggplot2::scale_colour_manual(values = colour_values, na.value = "#2B6CB0") +
+    ggplot2::scale_shape_manual(
+      values = c(`Facet level` = 16, `Step threshold` = 17),
+      na.value = 16
+    ) +
+    ggplot2::scale_x_continuous(
+      breaks = c(-hist_band / 2, seq_len(n_groups)),
+      labels = c("Persons", truncate_axis_label(group_levels, width = 16L)),
+      limits = c(-hist_band - 0.08, max(1, n_groups) + 0.85),
+      expand = ggplot2::expansion(mult = c(0.01, 0.04))
+    ) +
+    ggplot2::coord_cartesian(ylim = y_limits, clip = "on") +
+    .mfrm_ggplot_theme() +
+    ggplot2::guides(
+      fill = "none",
+      shape = "none",
+      linetype = "none",
+      colour = ggplot2::guide_legend(title = NULL)
+    ) +
+    ggplot2::theme(
+      axis.text.x = ggplot2::element_text(angle = 45, hjust = 1),
+      panel.grid.major.x = ggplot2::element_blank(),
+      legend.position = "right",
+      legend.title = ggplot2::element_blank()
+    )
+  .mfrm_ggplot_labs(
+    p,
+    payload,
+    x = NULL,
+    y = "Logit scale",
+    fallback = "Wright map"
+  )
+}
+
+.mfrm_ggplot_pathway_map <- function(payload) {
+  exp_df <- as.data.frame(payload$expected %||% data.frame(),
+                          stringsAsFactors = FALSE)
+  if (!all(c("Theta", "ExpectedScore", "CurveGroup") %in% names(exp_df))) {
+    stop("Pathway-map conversion requires `expected` with Theta, ExpectedScore, and CurveGroup columns.",
+         call. = FALSE)
+  }
+  exp_df$Theta <- suppressWarnings(as.numeric(exp_df$Theta))
+  exp_df$ExpectedScore <- suppressWarnings(as.numeric(exp_df$ExpectedScore))
+  exp_df <- exp_df[
+    is.finite(exp_df$Theta) & is.finite(exp_df$ExpectedScore),
+    ,
+    drop = FALSE
+  ]
+  if (nrow(exp_df) == 0L) {
+    stop("No finite pathway expected-score rows are available for ggplot conversion.",
+         call. = FALSE)
+  }
+  groups <- unique(as.character(exp_df$CurveGroup))
+  y_range <- range(exp_df$ExpectedScore, finite = TRUE)
+  if (!all(is.finite(y_range)) || diff(y_range) <= sqrt(.Machine$double.eps)) {
+    y_range <- y_range[1] + c(-0.5, 0.5)
+  }
+
+  dominance <- as.data.frame(payload$dominance_regions %||% data.frame(),
+                             stringsAsFactors = FALSE)
+  use_strips <- nrow(dominance) > 0L &&
+    all(c("CurveGroup", "Category", "ThetaStart", "ThetaEnd", "ThetaMid") %in%
+          names(dominance)) &&
+    length(groups) <= 8L
+  band_h <- max(diff(y_range) * 0.035, 0.08)
+  band_gap <- band_h * 0.35
+  band_top <- y_range[1] - band_h * 0.45
+  band_pad <- if (isTRUE(use_strips)) {
+    (band_h + band_gap) * length(groups) + band_h
+  } else {
+    0
+  }
+  y_limits <- c(y_range[1] - band_pad, y_range[2])
+
+  p <- ggplot2::ggplot()
+  if (isTRUE(use_strips)) {
+    group_index <- stats::setNames(seq_along(groups), groups)
+    dominance$ThetaStart <- suppressWarnings(as.numeric(dominance$ThetaStart))
+    dominance$ThetaEnd <- suppressWarnings(as.numeric(dominance$ThetaEnd))
+    dominance$ThetaMid <- suppressWarnings(as.numeric(dominance$ThetaMid))
+    dominance$BandRow <- unname(group_index[as.character(dominance$CurveGroup)])
+    dominance$YTop <- band_top - (dominance$BandRow - 1L) * (band_h + band_gap)
+    dominance$YBottom <- dominance$YTop - band_h
+    dominance$YMid <- (dominance$YTop + dominance$YBottom) / 2
+    dominance <- dominance[
+      is.finite(dominance$ThetaStart) & is.finite(dominance$ThetaEnd) &
+        is.finite(dominance$YTop) & is.finite(dominance$YBottom),
+      ,
+      drop = FALSE
+    ]
+    if (nrow(dominance) > 0L) {
+      p <- p +
+        ggplot2::geom_rect(
+          data = dominance,
+          ggplot2::aes(
+            xmin = ThetaStart,
+            xmax = ThetaEnd,
+            ymin = YBottom,
+            ymax = YTop,
+            fill = CurveGroup
+          ),
+          inherit.aes = FALSE,
+          colour = "white",
+          linewidth = 0.2,
+          alpha = 0.16
+        ) +
+        ggplot2::geom_text(
+          data = dominance,
+          ggplot2::aes(x = ThetaMid, y = YMid, label = Category, colour = CurveGroup),
+          inherit.aes = FALSE,
+          size = 2.4,
+          show.legend = FALSE,
+          check_overlap = TRUE
+        )
+    }
+    band_labels <- data.frame(
+      CurveGroup = groups,
+      X = min(exp_df$Theta, na.rm = TRUE),
+      Y = band_top - (seq_along(groups) - 1L) * (band_h + band_gap) - band_h / 2,
+      Label = truncate_axis_label(groups, width = 14L),
+      stringsAsFactors = FALSE
+    )
+    p <- p + ggplot2::geom_text(
+      data = band_labels,
+      ggplot2::aes(x = X, y = Y, label = Label, colour = CurveGroup),
+      inherit.aes = FALSE,
+      hjust = 1,
+      size = 2.5,
+      show.legend = FALSE
+    )
+  }
+
+  steps <- as.data.frame(payload$steps %||% data.frame(),
+                         stringsAsFactors = FALSE)
+  if (nrow(steps) > 0L &&
+      all(c("Threshold", "PathY", "CurveGroup", "ThresholdLabel") %in% names(steps))) {
+    steps$Threshold <- suppressWarnings(as.numeric(steps$Threshold))
+    steps$PathY <- suppressWarnings(as.numeric(steps$PathY))
+    steps$ThresholdLabelShort <- truncate_axis_label(steps$ThresholdLabel,
+                                                     width = 6L)
+    steps <- steps[is.finite(steps$Threshold) & is.finite(steps$PathY), ,
+                   drop = FALSE]
+    if (nrow(steps) > 0L) {
+      p <- p +
+        ggplot2::geom_vline(
+          data = steps,
+          ggplot2::aes(xintercept = Threshold, colour = CurveGroup),
+          inherit.aes = FALSE,
+          linetype = "dotted",
+          linewidth = 0.35,
+          alpha = 0.22,
+          show.legend = FALSE
+        )
+    }
+  }
+
+  p <- p +
+    ggplot2::geom_line(
+      data = exp_df,
+      ggplot2::aes(
+        x = Theta,
+        y = ExpectedScore,
+        colour = CurveGroup,
+        group = CurveGroup
+      ),
+      inherit.aes = FALSE,
+      linewidth = 0.85
+    )
+
+  if (nrow(steps) > 0L) {
+    p <- p +
+      ggplot2::geom_point(
+        data = steps,
+        ggplot2::aes(x = Threshold, y = PathY, colour = CurveGroup),
+        inherit.aes = FALSE,
+        shape = 18,
+        size = 2.2,
+        show.legend = FALSE
+      ) +
+      ggplot2::geom_text(
+        data = steps,
+        ggplot2::aes(
+          x = Threshold,
+          y = PathY,
+          label = ThresholdLabelShort,
+          colour = CurveGroup
+        ),
+        inherit.aes = FALSE,
+        vjust = -0.7,
+        size = 2.4,
+        show.legend = FALSE,
+        check_overlap = TRUE
+      )
+  }
+
+  endpoints <- as.data.frame(payload$endpoint_labels %||% data.frame(),
+                             stringsAsFactors = FALSE)
+  if (nrow(endpoints) > 0L &&
+      all(c("Theta", "ExpectedScore", "CurveGroup") %in% names(endpoints)) &&
+      length(groups) <= 6L) {
+    endpoints$Theta <- suppressWarnings(as.numeric(endpoints$Theta))
+    endpoints$ExpectedScore <- suppressWarnings(as.numeric(endpoints$ExpectedScore))
+    endpoints <- endpoints[
+      is.finite(endpoints$Theta) & is.finite(endpoints$ExpectedScore),
+      ,
+      drop = FALSE
+    ]
+    if (nrow(endpoints) > 0L) {
+      endpoints$CurveGroupLabel <- truncate_axis_label(endpoints$CurveGroup,
+                                                       width = 14L)
+      p <- p + ggplot2::geom_text(
+        data = endpoints,
+        ggplot2::aes(
+          x = Theta,
+          y = ExpectedScore,
+          label = CurveGroupLabel,
+          colour = CurveGroup
+        ),
+        inherit.aes = FALSE,
+        hjust = -0.05,
+        size = 2.6,
+        show.legend = FALSE,
+        check_overlap = TRUE
+      )
+    }
+  }
+
+  fit_annotations <- as.data.frame(payload$pathway_annotations %||% data.frame(),
+                                   stringsAsFactors = FALSE)
+  if (nrow(fit_annotations) > 0L &&
+      all(c("AnnotationType", "X", "Y", "FitStatus", "Underfit", "Overfit") %in%
+            names(fit_annotations))) {
+    fit_annotations$X <- suppressWarnings(as.numeric(fit_annotations$X))
+    fit_annotations$Y <- suppressWarnings(as.numeric(fit_annotations$Y))
+    fit_annotations$Underfit <- as.logical(fit_annotations$Underfit)
+    fit_annotations$Overfit <- as.logical(fit_annotations$Overfit)
+    fit_annotations <- fit_annotations[
+      is.finite(fit_annotations$X) & is.finite(fit_annotations$Y) &
+        fit_annotations$AnnotationType == "curve_fit" &
+        (fit_annotations$Underfit | fit_annotations$Overfit),
+      ,
+      drop = FALSE
+    ]
+    if (nrow(fit_annotations) > 0L) {
+      fit_annotations$FitStatus <- as.character(fit_annotations$FitStatus)
+      p <- p + ggplot2::geom_point(
+        data = fit_annotations,
+        ggplot2::aes(x = X, y = Y, shape = FitStatus),
+        inherit.aes = FALSE,
+        size = 3,
+        colour = "#C53030",
+        stroke = 1
+      )
+    }
+  }
+
+  p <- p +
+    ggplot2::geom_hline(
+      yintercept = pretty(y_range, n = 6),
+      colour = "#D9DDE3",
+      linewidth = 0.25
+    )
+  p <- .mfrm_ggplot_add_reference_lines(p, payload$reference_lines)
+  p <- p +
+    ggplot2::coord_cartesian(ylim = y_limits, clip = "off") +
+    .mfrm_ggplot_theme() +
+    ggplot2::theme(
+      legend.position = "bottom",
+      panel.grid.minor = ggplot2::element_blank()
+    )
+  .mfrm_ggplot_labs(
+    p,
+    payload,
+    x = "Theta / logit",
+    y = "Expected score",
+    fallback = "Pathway map"
+  )
+}
+
+.mfrm_ggplot_from_tabular <- function(component, payload) {
+  value <- component$value
+  if (is.matrix(value)) {
+    return(.mfrm_ggplot_matrix_heatmap(value, payload = payload))
+  }
+  df <- as.data.frame(value, stringsAsFactors = FALSE)
+  if (all(c("Pair", "Effect") %in% names(df))) {
+    return(.mfrm_ggplot_effect_summary(df, payload))
+  }
+  if (all(c("Theta", "Value") %in% names(df))) {
+    return(.mfrm_ggplot_curve_data(df, payload))
+  }
+  if (all(c("Group", "Threshold") %in% names(df))) {
+    return(.mfrm_ggplot_threshold_ladder(df, payload))
+  }
+  if ("Estimate" %in% names(df) &&
+      length(intersect(c("Level", "Person", "Step", "Label", "Group"), names(df))) > 0L) {
+    return(.mfrm_ggplot_estimate_rows(df, payload))
+  }
+  .mfrm_ggplot_numeric_fallback(df, payload)
+}
+
+#' Convert mfrmr plot data to a ggplot object
+#'
+#' @description
+#' `as_ggplot()` converts an existing `mfrm_plot_data` object, supported
+#' draw-free simulation plot lists, or any `mfrmr` object whose `plot()` method
+#' supports `draw = FALSE`, into a `ggplot2` object. It is an optional rendering
+#' layer: base-R plotting remains the default package renderer, while
+#' `as_ggplot()` gives users a modifiable object for themes, scales, facets,
+#' Quarto reports, and downstream export.
+#'
+#' The converter is intentionally conservative. It supports common
+#' `mfrm_plot_data` shapes used by Wright maps, pathway maps, fit-pathway
+#' displays, EAP power-sensitivity diagnostics, DIF/DFF summaries and heatmaps,
+#' G-study/D-study planning plots, G-study design checks, simulation
+#' design/recovery/signal handoff plots, category and information curves,
+#' threshold ladders, and
+#' estimate/profile rows. When a payload cannot be inferred safely, use
+#' [plot_data_components()] and [plot_data()] to build a custom figure directly.
+#'
+#' @param x An `mfrm_plot_data` object, a supported draw-free simulation plot
+#'   list, or a fitted/report/review/simulation object with a
+#'   `plot(..., draw = FALSE)` method.
+#' @param type Optional plot type passed to `plot()` when `x` is not already an
+#'   `mfrm_plot_data` object.
+#' @param component Optional component inside the plot payload. When `NULL`,
+#'   a suitable tabular component is selected automatically.
+#' @param ... Additional arguments passed to `plot(..., draw = FALSE)` when
+#'   `x` is not already an `mfrm_plot_data` object. For CCC payloads, the
+#'   converter also accepts `slope_aes` (`"none"`, `"linewidth"`, `"alpha"`,
+#'   or `"colour"`/`"color"`), `facet_by` (`"auto"`, `"none"`, or
+#'   `"curve_group"`), `show_overlay`, and `show_dominance`.
+#'
+#' @details
+#' Category characteristic curve payloads receive a dedicated converter.
+#' Categories are colour-coded by default; for `GPCM`-style payloads with a
+#' nonconstant `Slope` column, `slope_aes` can map the slope/discrimination
+#' parameter to line width, alpha, or a continuous colour scale. For RSM and
+#' PCM payloads the slope is constant, so the same arguments remain valid but
+#' intentionally add little or no visual differentiation.
+#'
+#' @return A `ggplot` object.
+#'
+#' @examples
+#' \dontrun{
+#' toy <- load_mfrmr_data("example_core")
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", maxit = 30)
+#'
+#' as_ggplot(fit, type = "wright")
+#' as_ggplot(fit, type = "pathway")
+#' as_ggplot(fit, type = "fit_pathway", fit_stat = "Outfit")
+#' as_ggplot(plot(fit, type = "ccc", draw = FALSE))
+#' as_ggplot(fit, type = "ccc", slope_aes = "linewidth")
+#' as_ggplot(plot(fit, type = "ccc_overlay", draw = FALSE), show_overlay = TRUE)
+#'
+#' dff <- analyze_dff(
+#'   fit,
+#'   facet = "Rater",
+#'   group = "Group",
+#'   data = toy,
+#'   method = "residual"
+#' )
+#' as_ggplot(plot_dif_summary(dff, draw = FALSE))
+#' as_ggplot(plot_dif_heatmap(dff, metric = "obs_exp", draw = FALSE))
+#'
+#' rec <- evaluate_mfrm_recovery(reps = 1, maxit = 30)
+#' as_ggplot(plot(rec, type = "summary", metric = "rmse", draw = FALSE))
+#'
+#' if (requireNamespace("lme4", quietly = TRUE)) {
+#'   gt <- mfrm_generalizability(fit)
+#'   as_ggplot(plot(gt, draw = FALSE))
+#'   design_check <- check_mfrm_generalizability_design(
+#'     fit,
+#'     random_interactions = c("Person:Rater", "Rater:Criterion")
+#'   )
+#'   as_ggplot(plot(design_check, draw = FALSE))
+#'   ds <- mfrm_d_study(gt, data.frame(Rater = c(2, 3, 4), Criterion = 4))
+#'   as_ggplot(plot(ds, draw = FALSE))
+#' }
+#' }
+#' @export
+as_ggplot <- function(x, type = NULL, component = NULL, ...) {
+  UseMethod("as_ggplot")
+}
+
+#' @rdname as_ggplot
+#' @export
+as_ggplot.default <- function(x, type = NULL, component = NULL, ...) {
+  dots <- list(...)
+  ggplot_arg_names <- c(
+    "slope_aes", "facet_by", "show_overlay", "show_dominance"
+  )
+  dot_names <- names(dots) %||% rep("", length(dots))
+  ggplot_args <- nzchar(dot_names) & dot_names %in% ggplot_arg_names
+  plot_dots <- dots[!ggplot_args]
+  conversion_dots <- dots[ggplot_args]
+  plot_obj <- do.call(
+    as_mfrm_plot_data_object,
+    c(list(x = x, type = type), plot_dots)
+  )
+  do.call(
+    as_ggplot,
+    c(list(x = plot_obj, component = component), conversion_dots)
+  )
+}
+
+#' @rdname as_ggplot
+#' @export
+as_ggplot.mfrm_design_evaluation <- function(x, type = NULL, component = NULL, ...) {
+  plot_obj <- plot(x, draw = FALSE, ...)
+  as_ggplot(plot_obj, component = component)
+}
+
+#' @rdname as_ggplot
+#' @export
+as_ggplot.mfrm_design_evaluation_plot_data <- function(x, type = NULL, component = NULL, ...) {
+  .require_ggplot2()
+  payload <- as.list(x)
+  if (!is.null(component)) {
+    selected <- .mfrm_select_ggplot_component(payload, component = component)
+    return(.mfrm_ggplot_from_tabular(selected, payload))
+  }
+  .mfrm_ggplot_simulation_scan(payload)
+}
+
+#' @rdname as_ggplot
+#' @export
+as_ggplot.mfrm_signal_detection <- function(x, type = NULL, component = NULL, ...) {
+  plot_obj <- plot(x, draw = FALSE, ...)
+  as_ggplot(plot_obj, component = component)
+}
+
+#' @rdname as_ggplot
+#' @export
+as_ggplot.mfrm_signal_detection_plot_data <- function(x, type = NULL, component = NULL, ...) {
+  .require_ggplot2()
+  payload <- as.list(x)
+  if (!is.null(component)) {
+    selected <- .mfrm_select_ggplot_component(payload, component = component)
+    return(.mfrm_ggplot_from_tabular(selected, payload))
+  }
+  .mfrm_ggplot_simulation_scan(payload)
+}
+
+#' @rdname as_ggplot
+#' @export
+as_ggplot.mfrm_plot_data <- function(x, type = NULL, component = NULL, ...) {
+  .require_ggplot2()
+  payload <- x$data %||% list()
+  dots <- list(...)
+  slope_aes <- as.character(dots$slope_aes %||% "none")
+  slope_aes <- match.arg(slope_aes, c("none", "linewidth", "alpha", "colour", "color"))
+  if (identical(slope_aes, "color")) slope_aes <- "colour"
+  facet_by <- as.character(dots$facet_by %||% "auto")
+  facet_by <- match.arg(facet_by, c("auto", "none", "curve_group"))
+  show_overlay <- isTRUE(dots$show_overlay %||% TRUE)
+  show_dominance <- isTRUE(dots$show_dominance %||% FALSE)
+  if (identical(x$name, "wright_map") && is.null(component)) {
+    return(.mfrm_ggplot_wright_map(payload))
+  }
+  if (identical(x$name, "pathway_map") && is.null(component)) {
+    return(.mfrm_ggplot_pathway_map(payload))
+  }
+  if (x$name %in% c("bubble", "fit_pathway") && is.null(component)) {
+    return(.mfrm_ggplot_bubble(payload))
+  }
+  if (x$name %in% c(
+    "category_characteristic_curves",
+    "category_characteristic_curves_overlay"
+  ) && is.null(component)) {
+    return(.mfrm_ggplot_category_curves(
+      payload,
+      slope_aes = slope_aes,
+      facet_by = facet_by,
+      show_overlay = show_overlay,
+      show_dominance = show_dominance
+    ))
+  }
+  if (identical(x$name, "category_curves") &&
+      identical(as.character(payload$plot %||% ""), "ccc") &&
+      is.null(component)) {
+    return(.mfrm_ggplot_category_curves(
+      payload,
+      slope_aes = slope_aes,
+      facet_by = facet_by,
+      show_overlay = show_overlay,
+      show_dominance = show_dominance
+    ))
+  }
+  if (identical(x$name, "dif_heatmap") && is.matrix(payload$matrix)) {
+    settings <- payload$settings %||% list()
+    return(.mfrm_ggplot_matrix_heatmap(
+      payload$matrix,
+      payload = payload,
+      flag_matrix = payload$flag_matrix,
+      value_digits = settings$value_digits %||% 2L,
+      show_values = isTRUE(settings$show_values),
+      flag_color = settings$flag_color %||% "black"
+    ))
+  }
+  if (identical(x$name, "dif_summary") && is.data.frame(payload$data)) {
+    return(.mfrm_ggplot_effect_summary(payload$data, payload))
+  }
+  if (identical(x$name, "eap_power_sensitivity") && is.data.frame(payload$data)) {
+    return(.mfrm_ggplot_eap_power_sensitivity(payload))
+  }
+  if (identical(x$name, "recovery_simulation") && is.null(component)) {
+    return(.mfrm_ggplot_recovery_simulation(payload))
+  }
+  if (identical(x$name, "recovery_assessment") && is.null(component)) {
+    return(.mfrm_ggplot_recovery_assessment(payload))
+  }
+  if (identical(x$name, "generalizability") && is.null(component)) {
+    return(.mfrm_ggplot_generalizability(payload))
+  }
+  if (identical(x$name, "generalizability_design_check") && is.null(component)) {
+    return(.mfrm_ggplot_generalizability_design_check(payload))
+  }
+  if (identical(x$name, "generalizability_comparison") && is.null(component)) {
+    return(.mfrm_ggplot_generalizability_comparison(payload))
+  }
+  if (identical(x$name, "d_study") && is.null(component)) {
+    return(.mfrm_ggplot_d_study(payload))
+  }
+  component <- .mfrm_select_ggplot_component(payload, component = component)
+  .mfrm_ggplot_from_tabular(component, payload)
+}
+
 truncate_axis_label <- function(x, width = 28L) {
   x <- as.character(x)
   width <- max(8L, as.integer(width))
@@ -3164,19 +5639,22 @@ resolve_bubble_measures <- function(x, diagnostics = NULL) {
 #' Bubble chart of measure estimates and fit statistics
 #'
 #' Produces a Rasch-convention bubble chart where each element is a circle
-#' positioned at its measure estimate (x) and fit mean-square (y).
+#' positioned by its measure estimate and fit mean-square statistic.
 #' Bubble radius reflects approximate measurement precision or sample size.
 #'
 #' @param x Output from \code{\link{fit_mfrm}} or \code{\link{diagnose_mfrm}}.
 #' @param diagnostics Optional output from \code{\link{diagnose_mfrm}} when
 #'   \code{x} is an \code{mfrm_fit} object. If omitted, diagnostics are
 #'   computed automatically.
-#' @param fit_stat Fit statistic for the y-axis: \code{"Infit"} (default) or
+#' @param fit_stat Fit statistic for the fit axis: \code{"Infit"} (default) or
 #'   \code{"Outfit"}. Ignored when \code{view = "infit_outfit"} because
 #'   that view always plots Infit on x and Outfit on y.
 #' @param view Layout. \code{"measure"} (default, the historical
 #'   mfrmr layout) plots Measure (logit) on x and the chosen
-#'   \code{fit_stat} MnSq on y. \code{"infit_outfit"} plots Infit MnSq
+#'   \code{fit_stat} MnSq on y. \code{"fit_measure"} reverses that layout:
+#'   the selected Infit/Outfit MnSq is on x and Measure (logit) is on y,
+#'   which is the preferred fit-pathway display when scale location is the
+#'   organizing axis. \code{"infit_outfit"} plots Infit MnSq
 #'   on x and Outfit MnSq on y, matching the Winsteps Table 30.2
 #'   "Most-misfitting Persons / Items" scatter that many MFRM and
 #'   Rasch users expect, and defaults \code{bubble_size = "N"}.
@@ -3200,11 +5678,13 @@ resolve_bubble_measures <- function(x, diagnostics = NULL) {
 #' For repeated plotting in the same workflow, passing a precomputed diagnostics
 #' object avoids that extra work.
 #'
-#' The x-axis shows element measure estimates on the **logit** scale
-#' (one logit = one unit change in log-odds of responding in a higher
-#' category).  The y-axis shows the selected fit mean-square statistic.
-#' A shaded band between \code{fit_range[1]} and \code{fit_range[2]}
-#' highlights a common heuristic review range.
+#' In \code{view = "measure"}, the x-axis shows element measure estimates on
+#' the **logit** scale (one logit = one unit change in log-odds of responding
+#' in a higher category) and the y-axis shows the selected fit mean-square
+#' statistic. In \code{view = "fit_measure"}, those axes are reversed so scale
+#' location is read vertically and the selected fit statistic is read
+#' horizontally. A shaded band between \code{fit_range[1]} and
+#' \code{fit_range[2]} highlights a common heuristic review range.
 #'
 #' Bubble radius options:
 #' \itemize{
@@ -3249,6 +5729,11 @@ resolve_bubble_measures <- function(x, diagnostics = NULL) {
 #' # Look for (default `view = "measure"`): bubbles inside the shaded
 #' #   0.5-1.5 fit-review band. Bubbles above the band are underfit
 #' #   (noisy elements); below the band are overfit (overly predictable).
+#' p_fit <- plot_bubble(fit, diagnostics = diag, view = "fit_measure",
+#'                      fit_stat = "Outfit", draw = FALSE)
+#' p_fit$data$view
+#' # Look for: where elevated or suppressed Outfit values sit along the
+#' #   vertical logit/measure scale.
 #' #
 #' # For the Winsteps Table 30 layout pass `view = "infit_outfit"`:
 #' p_io <- plot_bubble(fit, diagnostics = diag, view = "infit_outfit",
@@ -3264,7 +5749,7 @@ resolve_bubble_measures <- function(x, diagnostics = NULL) {
 plot_bubble <- function(x,
                         diagnostics = NULL,
                         fit_stat = c("Infit", "Outfit"),
-                        view = c("measure", "infit_outfit"),
+                        view = c("measure", "fit_measure", "infit_outfit"),
                         bubble_size = NULL,
                         facets = NULL,
                         fit_range = c(0.5, 1.5),
@@ -3354,6 +5839,16 @@ plot_bubble <- function(x,
       xr <- xr + diff(xr) * c(-0.1, 0.1)
       yr <- yr + diff(yr) * c(-0.1, 0.1)
       title_default <- "Infit-Outfit MnSq scatter (Winsteps Table 30 layout)"
+    } else if (identical(view, "fit_measure")) {
+      xv <- measures[[fit_stat]]
+      yv <- measures$Estimate
+      xlab_use <- paste0(fit_stat, " Mean Square")
+      ylab_use <- "Measure (logits)"
+      xr <- range(c(xv, fit_range), na.rm = TRUE)
+      xr <- xr + diff(xr) * c(-0.1, 0.1)
+      yr <- range(yv, na.rm = TRUE)
+      yr <- yr + diff(yr) * c(-0.15, 0.15)
+      title_default <- paste0("Fit pathway: ", fit_stat, " by measure")
     } else {
       xv <- measures$Estimate
       yv <- measures[[fit_stat]]
@@ -3383,6 +5878,16 @@ plot_bubble <- function(x,
       graphics::abline(h = 1, lty = 2, col = style$neutral, lwd = 1.5)
       graphics::abline(v = fit_range, lty = 3, col = style$grid)
       graphics::abline(h = fit_range, lty = 3, col = style$grid)
+    } else if (identical(view, "fit_measure")) {
+      graphics::rect(
+        xleft = fit_range[1], ybottom = yr[1] - 1,
+        xright = fit_range[2], ytop = yr[2] + 1,
+        col = grDevices::adjustcolor(style$fill_soft, alpha.f = 0.45),
+        border = NA
+      )
+      graphics::abline(v = 1, lty = 2, col = style$neutral, lwd = 1.5)
+      graphics::abline(v = fit_range, lty = 3, col = style$grid)
+      graphics::abline(h = pretty(yr, n = 5), col = style$grid, lty = 1)
     } else {
       graphics::rect(
         xleft = xr[1] - 1, ybottom = fit_range[1],
@@ -3407,6 +5912,8 @@ plot_bubble <- function(x,
   title_payload <- if (is.null(main)) {
     if (identical(view, "infit_outfit")) {
       "Infit-Outfit MnSq scatter (Winsteps Table 30 layout)"
+    } else if (identical(view, "fit_measure")) {
+      paste0("Fit pathway: ", fit_stat, " by measure")
     } else {
       paste0("Bubble Chart: ", fit_stat)
     }
@@ -3420,6 +5927,14 @@ plot_bubble <- function(x,
       linetype = c("dashed", "dashed", "dashed", "dashed", "dashed", "dashed"),
       role = c("threshold", "reference", "threshold",
                 "threshold", "reference", "threshold")
+    )
+  } else if (identical(view, "fit_measure")) {
+    new_reference_lines(
+      axis = c("v", "v", "v"),
+      value = c(fit_range[1], 1, fit_range[2]),
+      label = c("Lower fit review band", "Ideal fit", "Upper fit review band"),
+      linetype = c("dashed", "dashed", "dashed"),
+      role = c("threshold", "reference", "threshold")
     )
   } else {
     new_reference_lines(
@@ -3505,10 +6020,11 @@ plot_bubble <- function(x,
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "JML", model = "RSM", maxit = 30)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
+#' out_dir <- tempfile("mfrmr_export_example_")
 #' out <- export_mfrm(
 #'   fit,
 #'   diagnostics = diag,
-#'   output_dir = tempdir(),
+#'   output_dir = out_dir,
 #'   prefix = "mfrmr_example",
 #'   overwrite = TRUE
 #' )

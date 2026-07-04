@@ -1,4 +1,4 @@
-# Bounded-GPCM score-side estimand and uncertainty design (0.3.0 program)
+# Bounded-GPCM score-side estimand and uncertainty design (0.2.2 program)
 
 Status: design artifact for the `gpcm_score_side_contract()` validation
 program. This document is the named definition required by the
@@ -100,18 +100,19 @@ uncertainty is reported separately as posterior SDs.
 
 ### 4b. Score-side companion route (`ScoreSideSE`) — corrected specification
 
-Current implementation (`mfrm_core.R`, `add_gpcm_score_side_delta_se()`)
-computes `eta_se = sqrt(sum of component ModelSE^2)` over the person and
-facet measures and sets `se = |ScoreSlope| * eta_se`, then forms confidence
-bounds as `Expected +/- z * se`.
+The pre-0.2.2 working implementation (`mfrm_core.R`,
+`add_gpcm_score_side_delta_se()`) computed
+`eta_se = sqrt(sum of component ModelSE^2)` over the person and facet
+measures and set `se = |ScoreSlope| * eta_se`, then formed confidence bounds
+as `Expected +/- z * se`.
 
-**Finding (2026-06-13): this mixes scales.** `|a| * eta_se` is the
+**Finding (2026-06-13): this mixed scales.** `|a| * eta_se` is the
 delta-method SE of the slope-scaled linear predictor `a * eta`, not of
 `Expected`. Applying it around `Expected` overstates the score-scale
 uncertainty by the factor `1 / Var(X given theta)` (typically about 2x at
 moderate `Var ~ 0.5`, more in the tails).
 
-Corrected specification: the score-scale transform must use the response
+Implemented specification: the score-scale transform uses the response
 function derivative,
 
 ```
@@ -171,6 +172,12 @@ corrected `ScoreSideSE` (= `Var * eta_se`).
   criterion).
 
 ## 8. Exit-criteria mapping
+
+Executable companion: `gpcm-score-side-simulation-0.2.2.R` checks the
+independent adjacent-category identities used here and runs the Monte Carlo
+score-side SE comparison. By default it writes generated CSVs under
+`validation-results/`; only adequately replicated release-evidence runs
+should be written back to `inst/validation`.
 
 | Contract row | Satisfied by |
 |---|---|

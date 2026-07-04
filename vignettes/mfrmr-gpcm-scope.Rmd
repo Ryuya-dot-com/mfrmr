@@ -19,11 +19,15 @@ knitr::opts_chunk$set(
 ```
 
 `mfrmr` includes a bounded implementation of the Generalized Partial Credit
-Model (GPCM; Muraki 1992). The estimator is fully functional, but several
-downstream reporting helpers remain restricted because score-side semantics
-under free discrimination differ from the Rasch-family case. This vignette
-documents which helpers are available, which are not, and what to use as a
-substitute when a helper is restricted.
+Model (GPCM; Muraki 1992). "Bounded" means a constrained package-native
+many-facet GPCM branch, not a complete unrestricted GPCM implementation. The
+current branch keeps the role-based design contract, requires an explicit
+step-facet structure, keeps `slope_facet == step_facet`, and identifies
+positive slopes with geometric mean one. Several downstream reporting helpers
+remain restricted because score-side semantics under free discrimination
+differ from the Rasch-family case. This vignette documents which helpers are
+available, which are not, and what to use as a substitute when a helper is
+restricted.
 
 ## Before fitting: model-choice triage
 
@@ -35,6 +39,14 @@ Start with the score interpretation.
 | `RSM` | The rating scale is intended to share one category-threshold structure across the step facet. | Real threshold differences can be hidden in residual diagnostics. |
 | `PCM` | Thresholds may differ by item, criterion, task, or another designated step facet, but rating events should still contribute equally after conditioning on the modeled facets. | It can absorb threshold heterogeneity without asking whether some levels are more discriminating. |
 | bounded `GPCM` | The analysis explicitly allows discrimination-based reweighting and treats slopes as part of the substantive sensitivity question. | Better statistical fit can be mistaken for a better operational scoring rule. |
+
+In FACETS-facing rater analyses, `model = "PCM", step_facet = "Rater"`
+represents rater-specific category-use thresholds under a partial-credit /
+`Specific` rating-scale structure. The same mfrmr mechanism can be pointed at
+`"Item"` or `"Criterion"` when those facets carry the threshold variation.
+External design-matrix software may call the corresponding threshold blocks
+`rater:step`, `item:step`, or `criterion:step`; mfrmr keeps the public API in
+`step_facet` terms so the FACETS migration path remains stable.
 
 This ordering matters for reporting. `RSM` and `PCM` are the package's
 equal-weighting reference route; bounded `GPCM` is a slope-aware extension.
@@ -168,10 +180,11 @@ screens rather than as Rasch-style invariance evidence:
   slope-aware information and profile-likelihood columns. Treat these rows as
   screening evidence for follow-up, not as standalone confirmatory fairness
   tests.
-- `analyze_dff()`, `analyze_dif()`, `dif_interaction_table()`,
-  `dif_report()`, `plot_dif_heatmap()`, and `plot_dif_summary()` provide
-  bounded-GPCM DFF/DIF screening and reporting surfaces with explicit
-  `gpcm_boundary` rows.
+- `analyze_dff()`, `analyze_dif()`, `analyze_dff_moderation()`,
+  `analyze_dif_moderation()`, `dif_interaction_table()`, `dif_report()`,
+  `plot_dif_heatmap()`, and `plot_dif_summary()` provide bounded-GPCM
+  DFF/DIF screening and reporting surfaces with explicit `gpcm_boundary`
+  rows.
 - `build_apa_outputs()`, `build_visual_summaries()`, `run_qc_pipeline()`,
   `build_mfrm_manifest()`, `build_mfrm_replay_script()`,
   `export_mfrm_bundle()`, package-native scorefile export, and
@@ -197,8 +210,10 @@ fair-average SEs for non-person rows.
 
 The slope-aware `fair_average_table()` route and package-native scorefile route
 are available under `GPCM`, including native expected-score uncertainty and
-score-side delta SEs where the required MML diagnostics support them. Full
-FACETS-style score-side compatibility remains restricted because free
+score-side delta SEs where the required MML diagnostics support them.
+The scorefile keeps `ScoreSideLogitSE` on the logit-side component scale and
+uses `ScoreSideSE = ScoreSlope * Var * eta_se` for the expected-score scale.
+Full FACETS-style score-side compatibility remains restricted because free
 discrimination changes the relationship between the latent measure and
 operational score-side summaries. Specifically:
 
@@ -217,8 +232,9 @@ When a restricted helper is needed for a `GPCM` report, the practical paths
 are:
 
 - Refit with `model = "PCM"` if the discrimination-free assumption is
-  defensible for the data. The full APA / output-contract / fit-based export stack
-  becomes available, and `compare_mfrm()` quantifies the loss in fit.
+  defensible for the data. The Rasch-family score-side contract and
+  non-caveated operational reporting route become available, and
+  `compare_mfrm()` quantifies the loss in fit.
 - Keep the report on the `GPCM` fit itself but draft the manuscript section
   manually around the supported tables: `summary(fit)` for parameters,
   `diagnose_mfrm()` for residual fit, `facet_quality_dashboard()` for the
@@ -331,10 +347,12 @@ plot(review_gpcm, type = "metrics", metric = "rmse")
 # build_summary_table_bundle(validation_summary)$tables$domain_decision_table
 ```
 
-The fit, summary, residual diagnostics, information, recovery, fair-average, and
-conditional bias-screening helpers all run under `GPCM` with the caveats listed
-above. Trying `build_apa_outputs(fit_gpcm)` raises an explicit message pointing
-back at `gpcm_capability_matrix()` rather than producing a partial output.
+The fit, summary, residual diagnostics, information, recovery, fair-average,
+conditional bias-screening, and APA/reporting helpers all run under `GPCM` with
+the caveats listed above. `build_apa_outputs(fit_gpcm, diag_gpcm)` returns a
+caveated sensitivity-reporting bundle with a `gpcm_boundary` table; it should
+not be read as FACETS score-side equivalence, an automatic operational-scoring
+decision, or design-forecasting evidence.
 
 ## Roadmap
 

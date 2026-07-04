@@ -109,7 +109,10 @@ available with caveats. \code{include = "score"} returns observation-level fitte
 expected score, residual, standardized residual, observed-category
 probability, GPCM slope fields, and native structural delta-method
 expected-score uncertainty and/or score-side delta-method SEs when the
-required MML diagnostics are available. Use \code{score_se_method} to choose
+required MML diagnostics are available. The score-side route retains
+\code{ScoreSideLogitSE} on the logit-side component scale and computes
+\code{ScoreSideSE} on the expected-score scale as \code{ScoreSlope * Var * eta_se}.
+Use \code{score_se_method} to choose
 \code{"both"} (default), \code{"native"}, \code{"score_side"}, or \code{"none"}.
 The scorefile also carries explicit score-side caveat columns. It is not a
 FACETS score-side equivalence file, does not export FACETS-equivalent

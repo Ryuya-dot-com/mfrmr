@@ -1,0 +1,10 @@
+"Check","Value","Threshold","Passed"
+"package_expected_anchor",1.33226762955019e-15,1e-06,TRUE
+"package_variance_anchor",3.44169137633799e-15,1e-06,TRUE
+"expected_score_derivative",6.09710060217594e-11,1e-06,TRUE
+"rescaling_invariance",0,1e-10,TRUE
+"unit_slope_pcm_reduction",0,1e-12,TRUE
+"errored_replications",0,0,TRUE
+"summary_rows",24,24,TRUE
+"se_ratio_identity",4.44089209850063e-16,1e-10,TRUE
+"minimum_convergence_rate",1,0.95,TRUE

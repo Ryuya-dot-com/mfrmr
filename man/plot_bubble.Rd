@@ -8,7 +8,7 @@ plot_bubble(
   x,
   diagnostics = NULL,
   fit_stat = c("Infit", "Outfit"),
-  view = c("measure", "infit_outfit"),
+  view = c("measure", "fit_measure", "infit_outfit"),
   bubble_size = NULL,
   facets = NULL,
   fit_range = c(0.5, 1.5),
@@ -26,13 +26,16 @@ plot_bubble(
 \code{x} is an \code{mfrm_fit} object. If omitted, diagnostics are
 computed automatically.}
 
-\item{fit_stat}{Fit statistic for the y-axis: \code{"Infit"} (default) or
+\item{fit_stat}{Fit statistic for the fit axis: \code{"Infit"} (default) or
 \code{"Outfit"}. Ignored when \code{view = "infit_outfit"} because
 that view always plots Infit on x and Outfit on y.}
 
 \item{view}{Layout. \code{"measure"} (default, the historical
 mfrmr layout) plots Measure (logit) on x and the chosen
-\code{fit_stat} MnSq on y. \code{"infit_outfit"} plots Infit MnSq
+\code{fit_stat} MnSq on y. \code{"fit_measure"} reverses that layout:
+the selected Infit/Outfit MnSq is on x and Measure (logit) is on y,
+which is the preferred fit-pathway display when scale location is the
+organizing axis. \code{"infit_outfit"} plots Infit MnSq
 on x and Outfit MnSq on y, matching the Winsteps Table 30.2
 "Most-misfitting Persons / Items" scatter that many MFRM and
 Rasch users expect, and defaults \code{bubble_size = "N"}.}
@@ -63,7 +66,7 @@ Invisibly, an object of class \code{mfrm_plot_data}.
 }
 \description{
 Produces a Rasch-convention bubble chart where each element is a circle
-positioned at its measure estimate (x) and fit mean-square (y).
+positioned by its measure estimate and fit mean-square statistic.
 Bubble radius reflects approximate measurement precision or sample size.
 }
 \details{
@@ -72,11 +75,13 @@ the function computes diagnostics internally via \code{\link{diagnose_mfrm}()}.
 For repeated plotting in the same workflow, passing a precomputed diagnostics
 object avoids that extra work.
 
-The x-axis shows element measure estimates on the \strong{logit} scale
-(one logit = one unit change in log-odds of responding in a higher
-category).  The y-axis shows the selected fit mean-square statistic.
-A shaded band between \code{fit_range[1]} and \code{fit_range[2]}
-highlights a common heuristic review range.
+In \code{view = "measure"}, the x-axis shows element measure estimates on
+the \strong{logit} scale (one logit = one unit change in log-odds of responding
+in a higher category) and the y-axis shows the selected fit mean-square
+statistic. In \code{view = "fit_measure"}, those axes are reversed so scale
+location is read vertically and the selected fit statistic is read
+horizontally. A shaded band between \code{fit_range[1]} and
+\code{fit_range[2]} highlights a common heuristic review range.
 
 Bubble radius options:
 \itemize{
@@ -123,6 +128,11 @@ head(p$data$table[, c("Facet", "Level", "Estimate", "Infit", "Outfit")])
 # Look for (default `view = "measure"`): bubbles inside the shaded
 #   0.5-1.5 fit-review band. Bubbles above the band are underfit
 #   (noisy elements); below the band are overfit (overly predictable).
+p_fit <- plot_bubble(fit, diagnostics = diag, view = "fit_measure",
+                     fit_stat = "Outfit", draw = FALSE)
+p_fit$data$view
+# Look for: where elevated or suppressed Outfit values sit along the
+#   vertical logit/measure scale.
 #
 # For the Winsteps Table 30 layout pass `view = "infit_outfit"`:
 p_io <- plot_bubble(fit, diagnostics = diag, view = "infit_outfit",

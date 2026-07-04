@@ -9,7 +9,9 @@ build_apa_outputs(
   diagnostics,
   bias_results = NULL,
   context = list(),
-  whexact = FALSE
+  whexact = FALSE,
+  dif_results = NULL,
+  model_comparison = NULL
 )
 }
 \arguments{
@@ -22,6 +24,18 @@ build_apa_outputs(
 \item{context}{Optional named list for report context.}
 
 \item{whexact}{Use exact ZSTD transformation.}
+
+\item{dif_results}{Optional package-native differential-functioning result
+from \code{\link[=analyze_dff]{analyze_dff()}}, \code{\link[=analyze_dif]{analyze_dif()}}, \code{\link[=analyze_dif_mh]{analyze_dif_mh()}},
+\code{\link[=analyze_dff_moderation]{analyze_dff_moderation()}}, or \code{\link[=dif_interaction_table]{dif_interaction_table()}}. When supplied,
+\code{build_apa_outputs()} appends the conservative \code{dif_report(..., style = "apa")} paragraph, table note, caption, and section-map row.}
+
+\item{model_comparison}{Optional output from \code{\link[=compare_mfrm]{compare_mfrm()}} or
+\code{\link[=build_model_choice_review]{build_model_choice_review()}} (or their \code{summary()} output). When supplied,
+\code{build_apa_outputs()} appends a model-comparison reporting section and
+exposes the comparison guidance/templates so APA wording keeps response
+model evidence, population-metric sensitivity, and bounded-GPCM sensitivity
+claims separate.}
 }
 \value{
 An object of class \code{mfrm_apa_outputs} with:
@@ -31,6 +45,9 @@ An object of class \code{mfrm_apa_outputs} with:
 \item \code{table_figure_captions}: draft caption candidates without figure numbering
 \item \code{section_map}: package-native section table for manuscript assembly
 \item \code{contract}: structured APA reporting contract used for downstream checks
+\item \code{model_comparison_guidance}, \code{model_comparison_reporting_templates}, and
+\code{model_comparison_table}: optional reporting surfaces supplied when
+\code{model_comparison} is provided
 }
 }
 \description{
@@ -62,9 +79,14 @@ By default, \code{report_text} includes:
 \item anchor/constraint summary (\code{noncenter_facet}, anchored levels, group anchors, dummy facets)
 \item latent-regression population-model wording when \code{fit} has an active
 \code{population_formula}
+\item ordinary MML population-SD wording when no latent-regression model is
+active, distinguishing the default fixed prior SD from opt-in
+\code{estimate_population_sd = TRUE} runs
 \item category/threshold diagnostics (including disordered-step details when present)
 \item overall fit, misfit count, and top misfit levels
 \item facet reliability/separation, residual PCA summary, and bias-screen counts
+\item optional model-comparison reporting guidance when \code{model_comparison} is
+supplied
 }
 }
 \section{Interpreting output}{
@@ -80,6 +102,11 @@ following APA 7th edition conventions, but still intended for human review.
 \item active latent-regression fits add a population-model section and Table 5
 notes/captions that distinguish conditional-normal coefficient reporting
 from post hoc regression on EAP/MLE scores.
+\item ordinary MML fits add population-SD mode wording. Free-SD runs report the
+estimated SD and profile SE/CI when available; the profile-SE/CI note
+should be kept because other structural parameters are held fixed.
+\item model-comparison inputs add a separate reporting section, guidance table,
+and wording templates so model-choice evidence is not overstated.
 }
 
 When bias results or PCA diagnostics are not supplied, those sections
@@ -92,8 +119,13 @@ are omitted from the narrative rather than producing placeholder text.
 \item Build diagnostics (and optional bias results). For \code{RSM} / \code{PCM}
 reporting runs, prefer an \code{MML} fit and
 \code{diagnose_mfrm(..., diagnostic_mode = "both")}.
+\item If candidate fits were compared, build
+\code{review <- build_model_choice_review(...)} and pass it as
+\code{model_comparison = review}.
 \item Run \code{build_apa_outputs(...)}.
-\item Check \code{summary(apa)} for completeness.
+\item Check \code{summary(apa)} for completeness, including
+\code{summary(apa)$model_comparison_guidance} when \code{model_comparison} was
+supplied.
 \item Insert \code{apa$report_text} and note/caption fields into manuscript drafts
 after checking the listed cautions.
 }
@@ -117,6 +149,10 @@ A minimal \code{context} list can include fields such as:
 \code{context} must be a list (use \code{NULL} or \code{list()} for no extra context).
 If supplied, \code{bias_results} must come from \code{\link[=estimate_bias]{estimate_bias()}} or another
 package-native bias helper that provides a table component.
+If supplied, \code{dif_results} must be a package-native differential-functioning
+object accepted by \code{\link[=dif_report]{dif_report()}}.
+If supplied, \code{model_comparison} must come from \code{\link[=compare_mfrm]{compare_mfrm()}},
+\code{\link[=build_model_choice_review]{build_model_choice_review()}}, or the corresponding \code{summary()} method.
 }
 
 \examples{
@@ -161,6 +197,31 @@ head(chk$checklist[, c("Section", "Item", "DraftReady", "NextAction")])
 #   Diagnostics row to be `"yes"` before submitting.
 cat(apa$report_text)
 apa$section_map[, c("SectionId", "Available")]
+
+fit_free_sd <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
+                        method = "MML", quad_points = 7, maxit = 40,
+                        estimate_population_sd = TRUE)
+diag_free_sd <- diagnose_mfrm(fit_free_sd, residual_pca = "none",
+                              diagnostic_mode = "legacy")
+apa_free_sd <- build_apa_outputs(fit_free_sd, diag_free_sd)
+summary(fit_free_sd)$population_overview[
+  , c("PopulationSDMode", "EstimatedPopulationSD", "PopulationSDSEStatus")
+]
+subset(
+  summary(apa_free_sd)$content_checks,
+  Check == "MML population SD wording alignment",
+  c("Check", "Passed", "Detail")
+)
+
+review <- build_model_choice_review(fixed_sd = fit, free_sd = fit_free_sd)
+apa_with_review <- build_apa_outputs(
+  fit_free_sd,
+  diag_free_sd,
+  model_comparison = review
+)
+summary(apa_with_review)$model_comparison_guidance[
+  , c("ComparisonFamily", "ComparisonStrength", "InterpretationGuard")
+]
 }
 \dontshow{\}) # examplesIf}
 }

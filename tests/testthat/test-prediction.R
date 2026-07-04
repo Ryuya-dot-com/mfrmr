@@ -183,6 +183,105 @@ test_that("prediction draws are reproducible for a fixed seed", {
   expect_identical(pv_a$values, pv_b$values)
 })
 
+test_that("analyze_eap_power_sensitivity reports fixed-calibration EAP sensitivity", {
+  fixture <- make_prediction_fixture()
+  reference <- predict_mfrm_units(fixture$fit, fixture$new_units, n_draws = 0)
+  sens <- analyze_eap_power_sensitivity(
+    fixture$fit,
+    fixture$new_units,
+    prior_power = c(0.75, 1.25),
+    likelihood_power = c(0.8, 1.2),
+    interval_level = 0.8
+  )
+
+  expect_s3_class(sens, "mfrm_eap_power_sensitivity")
+  expect_true(is.data.frame(sens$sensitivity))
+  expect_true(is.data.frame(sens$summary))
+  expect_true(is.data.frame(sens$facet_overview))
+  expect_true(is.data.frame(sens$facet_level_overview))
+  expect_true(is.data.frame(sens$facet_stability))
+  expect_true(all(c(
+    "PriorPower", "LikelihoodPower", "Reference", "Person",
+    "Estimate", "SD", "Lower", "Upper", "BaseEstimate", "BaseSD",
+    "DeltaEstimate", "AbsDeltaEstimate", "DeltaSD", "AbsDeltaSD"
+  ) %in% names(sens$sensitivity)))
+  expect_equal(
+    sort(unique(sens$sensitivity$PriorPower)),
+    c(0.75, 1, 1.25)
+  )
+  expect_equal(
+    sort(unique(sens$sensitivity$LikelihoodPower)),
+    c(0.8, 1, 1.2)
+  )
+  expect_equal(nrow(sens$sensitivity), 18)
+
+  reference_rows <- sens$sensitivity[sens$sensitivity$Reference, , drop = FALSE]
+  expect_equal(nrow(reference_rows), 2)
+  expect_equal(
+    reference_rows$Estimate[match(reference$estimates$Person, reference_rows$Person)],
+    reference$estimates$Estimate,
+    tolerance = 1e-10
+  )
+  expect_equal(unname(reference_rows$DeltaEstimate), rep(0, nrow(reference_rows)), tolerance = 1e-10)
+  expect_equal(unname(reference_rows$DeltaSD), rep(0, nrow(reference_rows)), tolerance = 1e-10)
+  expect_true(all(is.finite(sens$sensitivity$Estimate)))
+  expect_true(any(sens$sensitivity$AbsDeltaEstimate[!sens$sensitivity$Reference] > 0))
+  expect_true(all(c("Facet", "MaxAbsDeltaEstimate", "MostUnstableLevel", "StabilityFlag") %in%
+                    names(sens$facet_overview)))
+  expect_true(all(sens$facet_overview$StabilityFlag %in%
+                    c("stable", "review", "unstable", "unknown")))
+
+  s <- summary(sens)
+  expect_s3_class(s, "summary.mfrm_eap_power_sensitivity")
+  expect_true(any(s$summary$Reference))
+  expect_true(is.data.frame(s$facet_overview))
+  printed <- capture.output(print(s))
+  expect_true(any(grepl("mfrmr EAP Power Sensitivity Summary", printed, fixed = TRUE)))
+
+  person_heatmap <- plot(sens, type = "person_heatmap", draw = FALSE)
+  person_curve <- plot(sens, type = "person_curve", draw = FALSE)
+  facet_plot <- plot(sens, type = "facet_stability", draw = FALSE)
+  facet_heatmap <- plot(sens, type = "facet_heatmap", facet = "Rater", draw = FALSE)
+  expect_s3_class(person_heatmap, "mfrm_plot_data")
+  expect_s3_class(person_curve, "mfrm_plot_data")
+  expect_s3_class(facet_plot, "mfrm_plot_data")
+  expect_s3_class(facet_heatmap, "mfrm_plot_data")
+  expect_identical(person_heatmap$name, "eap_power_sensitivity")
+  expect_identical(facet_plot$data$type, "facet_stability")
+  expect_true(all(c("data", "facet_overview", "facet_level_overview") %in%
+                    names(facet_plot$data)))
+})
+
+test_that("analyze_eap_power_sensitivity validates power inputs", {
+  fixture <- make_prediction_fixture()
+
+  expect_error(
+    analyze_eap_power_sensitivity(fixture$fit, fixture$new_units, prior_power = c(1, 0)),
+    "`prior_power` must contain only positive finite values.",
+    fixed = TRUE
+  )
+  expect_error(
+    analyze_eap_power_sensitivity(fixture$fit, fixture$new_units, likelihood_power = Inf),
+    "`likelihood_power` must contain only positive finite values.",
+    fixed = TRUE
+  )
+  expect_error(
+    analyze_eap_power_sensitivity(fixture$fit, fixture$new_units, include_reference = NA),
+    "`include_reference` must be a single TRUE or FALSE value.",
+    fixed = TRUE
+  )
+  expect_error(
+    analyze_eap_power_sensitivity(fixture$fit, fixture$new_units, stable_delta = -0.01),
+    "`stable_delta` must be a single non-negative finite value.",
+    fixed = TRUE
+  )
+  expect_error(
+    analyze_eap_power_sensitivity(fixture$fit, fixture$new_units, stable_delta = 0.2, unstable_delta = 0.1),
+    "`unstable_delta` must be a single finite value larger than `stable_delta`.",
+    fixed = TRUE
+  )
+})
+
 test_that("predict_mfrm_units rejects unseen facet levels", {
   fixture <- make_prediction_fixture()
   bad_new <- fixture$new_units

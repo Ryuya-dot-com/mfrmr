@@ -11,25 +11,19 @@ step_index_from_label <- function(step_labels) {
   idx
 }
 
-.build_wright_group_density <- function(x, group, group_data = NULL) {
-  # Returns a long-format data.frame with columns Group, Theta, Density
-  # for each subgroup of persons. The group label can come from:
-  #  * a column in `group_data` (data.frame with a Person column;
-  #    typical use for DIF screening when fit_mfrm was called without
-  #    the Group column);
-  #  * a column in `x$prep$data` (when the user passed it through the
-  #    fit), or
-  #  * a vector aligned with `x$facets$person$Person` (length match).
-  # NA / extreme rows are dropped before density estimation.
+.build_person_group_lookup <- function(x, group, group_data = NULL,
+                                       context = "group overlay") {
   person_tbl <- as.data.frame(x$facets$person, stringsAsFactors = FALSE)
   if (nrow(person_tbl) == 0L) {
-    stop("No person estimates available for group overlay.", call. = FALSE)
+    stop("No person estimates available for ", context, ".", call. = FALSE)
   }
   joined <- NULL
+  numeric_group <- FALSE
   if (is.character(group) && length(group) == 1L) {
     if (!is.null(group_data) && is.data.frame(group_data) &&
         "Person" %in% names(group_data) &&
         group %in% names(group_data)) {
+      numeric_group <- is.numeric(group_data[[group]]) && !is.factor(group_data[[group]])
       lookup <- unique(group_data[, c("Person", group), drop = FALSE])
       names(lookup)[2] <- "Group"
       joined <- merge(person_tbl[, c("Person", "Estimate")], lookup,
@@ -37,6 +31,7 @@ step_index_from_label <- function(step_labels) {
     } else {
       obs_df <- as.data.frame(x$prep$data %||% NULL, stringsAsFactors = FALSE)
       if (group %in% names(obs_df) && "Person" %in% names(obs_df)) {
+        numeric_group <- is.numeric(obs_df[[group]]) && !is.factor(obs_df[[group]])
         lookup <- unique(obs_df[, c("Person", group), drop = FALSE])
         names(lookup)[2] <- "Group"
         joined <- merge(person_tbl[, c("Person", "Estimate")], lookup,
@@ -62,13 +57,47 @@ step_index_from_label <- function(step_labels) {
     stop("`group` must be a column name (string) or a vector aligned ",
          "with fit$facets$person rows.", call. = FALSE)
   }
-  joined <- joined[is.finite(joined$Estimate) & !is.na(joined$Group), ,
-                    drop = FALSE]
+  joined$Group <- as.character(joined$Group)
+  joined <- joined[
+    is.finite(joined$Estimate) & !is.na(joined$Group) & nzchar(joined$Group),
+    ,
+    drop = FALSE
+  ]
   groups <- unique(as.character(joined$Group))
   if (length(groups) < 2L) {
     stop("Group overlay requires at least two distinct group levels.",
          call. = FALSE)
   }
+  if (isTRUE(numeric_group) && length(groups) > 8L) {
+    stop(
+      "`group` column '", group, "' is numeric with ", length(groups),
+      " distinct values. Plot group overlays treat it as categorical labels, ",
+      "not as a continuous-covariate DIF/DFF model. Bin the covariate ",
+      "deliberately for an exploratory screen, or use a separate ",
+      "moderation/regression design.",
+      call. = FALSE
+    )
+  }
+  joined
+}
+
+.build_wright_group_density <- function(x, group, group_data = NULL) {
+  # Returns a long-format data.frame with columns Group, Theta, Density
+  # for each subgroup of persons. The group label can come from:
+  #  * a column in `group_data` (data.frame with a Person column;
+  #    typical use for DIF screening when fit_mfrm was called without
+  #    the Group column);
+  #  * a column in `x$prep$data` (when the user passed it through the
+  #    fit), or
+  #  * a vector aligned with `x$facets$person$Person` (length match).
+  # NA / extreme rows are dropped before density estimation.
+  joined <- .build_person_group_lookup(
+    x,
+    group = group,
+    group_data = group_data,
+    context = "group overlay"
+  )
+  groups <- unique(as.character(joined$Group))
   out <- do.call(rbind, lapply(groups, function(g) {
     sub <- joined$Estimate[as.character(joined$Group) == g]
     if (length(sub) < 5L) {
@@ -1162,7 +1191,7 @@ build_ccc_surface_data <- function(x, theta_range = c(-6, 6), theta_points = 121
     Status = c("not rendered as 3D in base graphics", "plot data only; no plotly/rgl dependency"),
     RecommendedUse = c(
       "Use the 2D CCC/pathway views for default reports.",
-      "Use the surface plot data for exploratory teaching, audit, or downstream interactive rendering."
+      "Use the surface plot data for exploratory teaching, review, or downstream interactive rendering."
     ),
     stringsAsFactors = FALSE
   )
@@ -1342,7 +1371,8 @@ draw_facet_plot <- function(facet_tbl,
 #' @param x An `mfrm_fit` object from [fit_mfrm()].
 #' @param type Plot type. Use `NULL`, `"bundle"`, or `"all"` for the
 #'   three-part fit bundle; otherwise choose one of `"facet"`, `"person"`,
-#'   `"step"`, `"wright"`, `"pathway"`, `"ccc"`, `"ccc_surface"`, or
+#'   `"step"`, `"wright"`, `"pathway"`, `"fit_pathway"`, `"ccc"`,
+#'   `"empirical_icc"`, `"dif_icc"`, `"score_measure"`, `"ccc_surface"`, or
 #'   `"category_surface"`.
 #' @param facet Optional facet name for `type = "facet"`.
 #' @param top_n Maximum number of facet/step locations retained for
@@ -1358,18 +1388,21 @@ draw_facet_plot <- function(facet_tbl,
 #'   available.
 #' @param ci_level Confidence level used when `show_ci = TRUE`.
 #' @param group Optional grouping for `type = "wright"` to overlay
-#'   per-group person-density curves (DIF / DFF screening view).
+#'   per-group person-density curves, and required for `type = "dif_icc"`
+#'   to overlay group-wise empirical ICC bin means (DIF / DFF screening view).
 #'   Either a column name (looked up first in `group_data` when
 #'   supplied through `...`, then in `fit$prep$data`) or a vector
 #'   aligned with `fit$facets$person`. Ignored for other `type`
 #'   values. To pass the source data alongside, use
-#'   `plot(fit, type = "wright", group = "MyCol", group_data = <df>)`.
+#'   `plot(fit, type = "dif_icc", group = "MyCol", group_data = <df>)`.
 #' @param diagnostics Optional output from [diagnose_mfrm()]. When supplied,
 #'   pathway plot data reuse it for `fit_measures`, `fit_status`, and
 #'   `curve_fit_status` instead of recomputing diagnostics.
 #' @param include_fit_measures If `TRUE` (default), pathway plot data include
 #'   tidy fit-measure and fit-status tables for custom R graphics. Set to
 #'   `FALSE` when only the curve coordinates are needed.
+#' @param fit_stat Fit statistic used by `type = "fit_pathway"`:
+#'   `"Infit"` (default) or `"Outfit"`.
 #' @param threshold_type Step-threshold ruler shown on `type = "wright"`:
 #'   `"andrich"` (default) plots the fitted Rasch-Andrich step estimates,
 #'   `"thurstonian"` plots the Rasch-Thurstonian thresholds (theta where
@@ -1404,19 +1437,25 @@ draw_facet_plot <- function(facet_tbl,
 #' (higher values raise expected scores); state the active orientation in
 #' figure captions when reporting. `type = "pathway"` shows expected score
 #' traces and dominant-category regions across theta. This expected-score
-#' display is distinct from the Bond-and-Fox-style measure-versus-fit
-#' "pathway" bubble chart used around FACETS/Winsteps output; for that
-#' display, use [plot_bubble()]. Its draw-free plot data also
+#' display is distinct from fit-versus-measure diagnostic plots that place
+#' Infit or Outfit against scale location; use `type = "fit_pathway"` for
+#' that display, or [plot_bubble()] for the lower-level wrapper. Its
+#' draw-free plot data also
 #' includes `pathway_long`, `pathway_annotations`, `fit_measures`,
 #' `fit_status`, and `curve_fit_status`, so R users can rebuild the pathway
 #' map in ggplot2, plotly, or a report pipeline while keeping the same
 #' underfit/overfit labels used by [fit_measures_table()]. `type = "ccc"` shows
-#' category response probabilities; `type = "ccc_overlay"` adds binned
+#' fitted category response probabilities, so it remains the category
+#' characteristic/probability-curve route rather than a pathway-map synonym;
+#' `type = "ccc_overlay"` adds binned
 #' observed category proportions to those curves. `type = "empirical_icc"`
 #' shows the model expected-score curves with binned observed mean scores
 #' overlaid (the FACETS/Winsteps "Empirical ICC" view); the bins pool
 #' observations across non-person facets, so read it as a screening display
-#' for model-data agreement rather than a fit test.
+#' for model-data agreement rather than a fit test. `type = "dif_icc"` adds
+#' the same binned expected-score overlay separately by a supplied group
+#' variable; it is a non-uniform DIF / DFF screening visual, not a formal
+#' invariance test or ETS classification.
 #' `type = "score_measure"` shows the score-to-measure ogive in the
 #' Winsteps test-characteristic-curve sense ("the TCC is the
 #' score-to-measure ogive"): expected score against measure with a dashed
@@ -1499,6 +1538,12 @@ draw_facet_plot <- function(facet_tbl,
 #'   )
 #'   plot(
 #'     fit,
+#'     type = "fit_pathway",
+#'     fit_stat = "Outfit",
+#'     title = "Customized Fit Pathway"
+#'   )
+#'   plot(
+#'     fit,
 #'     type = "ccc",
 #'     title = "Customized Category Characteristic Curves",
 #'     palette = c("#1b9e77", "#d95f02", "#7570b3")
@@ -1519,6 +1564,7 @@ plot.mfrm_fit <- function(x,
                           group = NULL,
                           diagnostics = NULL,
                           include_fit_measures = TRUE,
+                          fit_stat = c("Infit", "Outfit"),
                           threshold_type = c("andrich", "thurstonian", "half_point"),
                           draw = TRUE,
                           preset = c("standard", "publication", "compact", "monochrome"),
@@ -1530,7 +1576,9 @@ plot.mfrm_fit <- function(x,
   theta_points <- max(51L, as.integer(theta_points))
   theta_range <- as.numeric(theta_range)
   threshold_type <- match.arg(threshold_type)
+  fit_stat <- match.arg(fit_stat)
   style <- resolve_plot_preset(preset)
+  dots <- list(...)
   if (length(theta_range) != 2 || !all(is.finite(theta_range)) || theta_range[1] >= theta_range[2]) {
     stop("`theta_range` must be a numeric length-2 vector with increasing values.")
   }
@@ -1635,8 +1683,9 @@ plot.mfrm_fit <- function(x,
 
   # Locale-independent validation (match.arg() would produce a
   # translated error string on non-English locales).
-  type_choices <- c("facet", "person", "step", "wright", "pathway",
-                    "ccc", "ccc_overlay", "empirical_icc", "score_measure",
+  type_choices <- c("facet", "person", "step", "wright", "pathway", "fit_pathway",
+                    "ccc", "ccc_overlay", "empirical_icc", "dif_icc",
+                    "group_icc", "score_measure",
                     "ccc_surface", "category_surface", "shrinkage")
   type_in <- tolower(as.character(type[1]))
   if (!(type_in %in% type_choices)) {
@@ -1647,6 +1696,7 @@ plot.mfrm_fit <- function(x,
   }
   type <- type_in
   if (identical(type, "category_surface")) type <- "ccc_surface"
+  if (identical(type, "group_icc")) type <- "dif_icc"
 
   if (type == "shrinkage") {
     data_list <- .build_shrinkage_plot_data(x)
@@ -1821,6 +1871,31 @@ plot.mfrm_fit <- function(x,
       ))
     }
     return(invisible(out))
+  }
+  if (type == "fit_pathway") {
+    fit_pathway_facets <- dots$facets %||% facet
+    out <- plot_bubble(
+      x,
+      diagnostics = diagnostics,
+      fit_stat = fit_stat,
+      view = "fit_measure",
+      bubble_size = dots$bubble_size %||% NULL,
+      facets = fit_pathway_facets,
+      fit_range = dots$fit_range %||% c(0.5, 1.5),
+      top_n = top_n,
+      main = title %||% paste0("Fit pathway: ", fit_stat, " by measure"),
+      palette = palette,
+      draw = draw,
+      preset = style$name
+    )
+    payload <- out$data
+    payload$plot_name <- "fit_pathway"
+    payload$title <- title %||% paste0("Fit pathway: ", fit_stat, " by measure")
+    payload$subtitle <- paste0(
+      "Selected fit statistic on x; measure/logit location on y; bubble size = ",
+      payload$bubble_size
+    )
+    return(invisible(as_plot_data("fit_pathway", payload)))
   }
   if (type == "ccc") {
     out <- as_plot_data("category_characteristic_curves", c(
@@ -2063,6 +2138,204 @@ plot.mfrm_fit <- function(x,
           cex = 0.9 + 0.6 * sqrt(overlay$N / max(1, max_n))
         )
       }
+    }
+    return(invisible(out))
+  }
+  if (type == "dif_icc") {
+    # Group-wise empirical ICC overlay. This is a screening display for
+    # non-uniform DIF/DFF patterns; it does not estimate group-specific
+    # item/facet response functions or produce an invariance test.
+    if (is.null(group)) {
+      stop("`group` is required for `type = \"dif_icc\"`.", call. = FALSE)
+    }
+    spec <- build_step_curve_spec(x)
+    theta_grid <- seq(theta_range[1], theta_range[2], length.out = theta_points)
+    expected_tbl <- as.data.frame(
+      build_curve_tables(spec, theta_grid)$expected,
+      stringsAsFactors = FALSE
+    )
+    group_lookup <- .build_person_group_lookup(
+      x,
+      group = group,
+      group_data = list(...)$group_data,
+      context = "DIF ICC overlay"
+    )
+    obs_df <- as.data.frame(x$prep$data %||% NULL, stringsAsFactors = FALSE)
+    if (nrow(obs_df) == 0L || !all(c("Person", "Score") %in% names(obs_df))) {
+      stop("`type = \"dif_icc\"` requires fitted source data with Person and Score columns.",
+           call. = FALSE)
+    }
+    merged <- merge(
+      obs_df[, c("Person", "Score"), drop = FALSE],
+      group_lookup[, c("Person", "Estimate", "Group"), drop = FALSE],
+      by = "Person",
+      all.x = TRUE
+    )
+    merged <- merged[
+      is.finite(merged$Estimate) & is.finite(merged$Score) &
+        !is.na(merged$Group) & nzchar(as.character(merged$Group)),
+      ,
+      drop = FALSE
+    ]
+    if (nrow(merged) == 0L) {
+      stop("No finite grouped observations available for `type = \"dif_icc\"`.",
+           call. = FALSE)
+    }
+    overlay_rows <- list()
+    group_levels <- sort(unique(as.character(merged$Group)))
+    for (g in group_levels) {
+      sub_g <- merged[as.character(merged$Group) == g, , drop = FALSE]
+      if (nrow(sub_g) == 0L) next
+      n_bins <- max(3L, min(12L, floor(nrow(sub_g) / 25)))
+      breaks <- stats::quantile(
+        sub_g$Estimate,
+        probs = seq(0, 1, length.out = n_bins + 1L),
+        na.rm = TRUE,
+        names = FALSE
+      )
+      breaks <- unique(breaks)
+      if (length(breaks) < 2L) {
+        breaks <- range(sub_g$Estimate) + c(-0.05, 0.05)
+      }
+      sub_g$Bin <- as.integer(cut(sub_g$Estimate, breaks = breaks,
+                                  include.lowest = TRUE))
+      for (b in sort(unique(sub_g$Bin))) {
+        sub_b <- sub_g[sub_g$Bin == b, , drop = FALSE]
+        if (nrow(sub_b) == 0L) next
+        overlay_rows[[length(overlay_rows) + 1L]] <- data.frame(
+          Group = g,
+          Bin = b,
+          Theta = mean(sub_b$Estimate, na.rm = TRUE),
+          MeanScore = mean(sub_b$Score, na.rm = TRUE),
+          ScoreSD = stats::sd(sub_b$Score, na.rm = TRUE),
+          N = nrow(sub_b),
+          Persons = length(unique(sub_b$Person)),
+          stringsAsFactors = FALSE
+        )
+      }
+    }
+    overlay <- if (length(overlay_rows) > 0L) {
+      do.call(rbind, overlay_rows)
+    } else {
+      data.frame(
+        Group = character(), Bin = integer(), Theta = numeric(),
+        MeanScore = numeric(), ScoreSD = numeric(), N = integer(),
+        Persons = integer(), stringsAsFactors = FALSE
+      )
+    }
+    group_summary <- do.call(rbind, lapply(group_levels, function(g) {
+      sub_g <- merged[as.character(merged$Group) == g, , drop = FALSE]
+      sub_o <- overlay[as.character(overlay$Group) == g, , drop = FALSE]
+      data.frame(
+        Group = g,
+        Observations = nrow(sub_g),
+        Persons = length(unique(sub_g$Person)),
+        Bins = nrow(sub_o),
+        MeanScore = mean(sub_g$Score, na.rm = TRUE),
+        MinTheta = min(sub_g$Estimate, na.rm = TRUE),
+        MaxTheta = max(sub_g$Estimate, na.rm = TRUE),
+        stringsAsFactors = FALSE
+      )
+    }))
+    interpretation_guide <- data.frame(
+      Topic = c("Display", "Use", "Do not claim"),
+      Guidance = c(
+        "Observed group-specific bin means are overlaid on the common fitted expected-score curve.",
+        "Use separated or crossing group profiles as screening prompts for targeted DFF/DIF follow-up.",
+        "Do not report this plot as a formal non-uniform DIF test, fairness conclusion, or ETS classification."
+      ),
+      stringsAsFactors = FALSE
+    )
+    group_label <- if (is.character(group) && length(group) == 1L) {
+      as.character(group)
+    } else {
+      "supplied_group_vector"
+    }
+    out <- as_plot_data("dif_icc", c(
+      list(
+        expected = expected_tbl,
+        overlay = overlay,
+        group_summary = group_summary,
+        interpretation_guide = interpretation_guide,
+        group = group_label,
+        title = title %||% "Group-wise empirical ICC overlay",
+        subtitle = sprintf(
+          "Observed mean-score bins by `%s` over common model expected-score curves; screening visual only",
+          group_label
+        ),
+        preset = style$name,
+        legend = new_plot_legend(
+          label = c("Model expected score", "Observed group bin mean"),
+          role = c("expected_score", "group_empirical"),
+          aesthetic = c("line", "point"),
+          value = c(style$accent_primary, "group_palette")
+        ),
+        reference_lines = new_reference_lines("v", 0, "Centered theta reference",
+                                               "dashed", "reference")
+      )
+    ))
+    if (isTRUE(draw)) {
+      apply_plot_preset(style)
+      expected_groups <- unique(as.character(expected_tbl$CurveGroup))
+      expected_cols <- if (identical(style$name, "monochrome")) {
+        stats::setNames(
+          grDevices::gray.colors(max(3L, length(expected_groups)), start = 0.18, end = 0.68)[seq_along(expected_groups)],
+          expected_groups
+        )
+      } else {
+        stats::setNames(
+          grDevices::hcl.colors(max(3L, length(expected_groups)), "Dark 3")[seq_along(expected_groups)],
+          expected_groups
+        )
+      }
+      group_cols <- if (identical(style$name, "monochrome")) {
+        stats::setNames(
+          rep(c("gray10", "gray45", "gray70", "black"), length.out = length(group_levels)),
+          group_levels
+        )
+      } else {
+        stats::setNames(
+          grDevices::hcl.colors(max(3L, length(group_levels)), "Set 2")[seq_along(group_levels)],
+          group_levels
+        )
+      }
+      graphics::plot(
+        x = range(c(expected_tbl$Theta, overlay$Theta), finite = TRUE),
+        y = range(c(expected_tbl$ExpectedScore, overlay$MeanScore), finite = TRUE),
+        type = "n",
+        xlab = "Theta / Logit",
+        ylab = "Expected / observed score",
+        main = title %||% "Group-wise empirical ICC overlay"
+      )
+      graphics::grid(col = style$grid)
+      for (g in expected_groups) {
+        sub <- expected_tbl[expected_tbl$CurveGroup == g, , drop = FALSE]
+        graphics::lines(sub$Theta, sub$ExpectedScore, col = expected_cols[g], lwd = 1.4)
+      }
+      max_n <- max(overlay$N, na.rm = TRUE)
+      for (g in group_levels) {
+        sub <- overlay[as.character(overlay$Group) == g, , drop = FALSE]
+        sub <- sub[order(sub$Theta), , drop = FALSE]
+        if (nrow(sub) == 0L) next
+        graphics::lines(sub$Theta, sub$MeanScore, col = group_cols[g], lwd = 1.3, lty = 2)
+        graphics::points(
+          sub$Theta, sub$MeanScore,
+          pch = 21,
+          bg = group_cols[g],
+          col = "white",
+          cex = 0.85 + 0.55 * sqrt(sub$N / max(1, max_n))
+        )
+      }
+      graphics::legend(
+        "topleft",
+        legend = group_levels,
+        col = group_cols[group_levels],
+        pt.bg = group_cols[group_levels],
+        pch = 21,
+        lty = 2,
+        bty = "n",
+        cex = 0.82
+      )
     }
     return(invisible(out))
   }

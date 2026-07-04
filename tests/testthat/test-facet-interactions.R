@@ -73,18 +73,21 @@ test_that("interaction_effect_table is empty for additive fits", {
 test_that("facet_interactions validates the current modeling boundary", {
   d <- mfrmr:::sample_mfrm_data(seed = 42)
   base_call <- function(facet_interactions, model = "RSM") {
-    suppressMessages(fit_mfrm(
-      d,
+    args <- list(
+      data = d,
       person = "Person",
       facets = c("Rater", "Task", "Criterion"),
       score = "Score",
       method = "JML",
       model = model,
-      step_facet = "Criterion",
       facet_interactions = facet_interactions,
       min_obs_per_interaction = 0,
       maxit = 5
-    ))
+    )
+    if (!identical(model, "RSM")) {
+      args$step_facet <- "Criterion"
+    }
+    suppressMessages(do.call(fit_mfrm, args))
   }
 
   expect_error(base_call("Person:Rater"), "non-person")

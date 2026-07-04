@@ -22,22 +22,67 @@ long-run validation details belong here.
 - `release-evidence-map-0.2.1.md`: source-grounded evidence map for the
   0.2.1 bounded-`GPCM` recovery-review refinements, including the boundary
   between cited model literature and package-specific validation labels.
-- `release-evidence-checklist-0.2.1.csv`: structured checklist used by the
-  readiness helper and by manual release review for the current release. The
-  0.2.0 checklist is retained as historical release evidence.
-- `gpcm-post-0.2.1-roadmap.md`: maintenance roadmap for bounded-`GPCM`
-  surfaces that remain caveated, `blocked`, or `deferred` after 0.2.1,
+- `release-evidence-map-0.2.2.md`: source-grounded evidence map for the
+  0.2.2 release candidate, including reader-first workflow refinements,
+  generalizability sensitivity, bounded-`GPCM` scope control, DIF/DFF
+  reporting, and release-engineering gates.
+- `release-evidence-checklist-0.2.2.csv`: structured checklist used by the
+  readiness helper and by manual release review for the current release
+  candidate. The 0.2.0 and 0.2.1 checklists are retained as historical
+  release evidence.
+- `gpcm-post-0.2.2-roadmap.md`: maintenance roadmap for bounded-`GPCM`
+  surfaces that remain caveated, `blocked`, or `deferred` after 0.2.2,
   including score-side review, report/QC bundles, design and screening
   operating characteristics, linking synthesis, posterior predictive checks,
   and heavy-backend extensions.
+- `release-scope-review-0.2.2.R`: lightweight 0.2.2 scope review.
+  It reads fixed evidence artifacts and public documentation to check that
+  bounded-`GPCM`, DIF/DFF reporting, APA wording, ETS display eligibility,
+  and release-evidence claims remain synchronized without rerunning Monte
+  Carlo simulations.
+- `convergence-reporting-stress-0.2.2.R`: seeded stress review for
+  `fit_mfrm()` convergence reporting. It checks the direct-BFGS
+  `Iterations` / `BFGSIterations` contract, code-0 large-gradient review
+  status, low-`maxit` failure path, and MML EM iteration-basis rows without
+  adding these simulations to CRAN-time tests.
+- `convergence-reporting-stress-0.2.2.md`: curated status artifact read by
+  the readiness gate. It records the stress helper's availability,
+  CRAN-time boundary, expected output names, and convergence-reporting
+  contract checks without running the stress review.
+- `gpcm-score-side-external-comparison-0.2.2.R`: fixed external
+  probability-kernel comparison for the bounded-`GPCM` score-side contract.
+  It maps `mirt::probtrace()` and TAM `rprobs` onto the local
+  adjacent-category kernel, treats `eRm::PCM()` as unit-slope/CML boundary
+  evidence, and writes the Markdown plus result/check CSVs used by the
+  readiness gate.
 - `external-parameter-recovery-simulation-0.2.0.md`: compact review of the
   separate common-data parameter-recovery simulation workflow. The large
   generated datasets and engine outputs are not bundled with the package; this
   file records the release-relevant evidence and its limits.
-- `external-recovery-audit.R`: optional audit helper that reads a local
+- `external-recovery-audit.R`: optional review helper that reads a local
   `Parameter_Recovery_Simulation/` output directory, checks expected CSV
   schemas, records file fingerprints, and regenerates the compact evidence
   summary tables used for release review.
+
+## 0.2.2 fixed/status evidence index
+
+The 0.2.2 readiness gate indexes these bundled evidence artifacts without
+rerunning long simulations:
+
+- DIF/DFF reporting: `dif-apa-reporting-0.2.2.md` and
+  `dif-dff-simulation-matrix-0.2.2.md`.
+- Bounded-`GPCM` score-side evidence:
+  `gpcm-score-side-simulation-0.2.2.md`,
+  `gpcm-score-side-sim-summary-0.2.2.csv`,
+  `gpcm-score-side-sim-checks-0.2.2.csv`,
+  `gpcm-score-side-external-comparison-0.2.2.md`,
+  `gpcm-score-side-external-comparison-0.2.2-results.csv`, and
+  `gpcm-score-side-external-comparison-0.2.2-checks.csv`.
+- Release scope: `release-scope-review-0.2.2.md` and
+  `release-scope-review-0.2.2-checks.csv`.
+- Convergence reporting: `convergence-reporting-stress-0.2.2.md` records the
+  optional stress helper status while generated run CSVs stay under
+  `validation-results/` unless intentionally preserved for a future review.
 
 ## Recommended local sequence
 
@@ -46,7 +91,7 @@ compiled-code change:
 
 ```sh
 R CMD build .
-R CMD check --no-manual --as-cran mfrmr_0.2.1.tar.gz
+R CMD check --no-manual --as-cran mfrmr_0.2.2.tar.gz
 ```
 
 Then run:
@@ -73,7 +118,7 @@ when release evidence is needed:
 NOT_CRAN=true Rscript -e 'testthat::test_local(".")'
 ```
 
-If the external common-data simulation workflow has been refreshed, audit it
+If the external common-data simulation workflow has been refreshed, review it
 from the package side before updating the evidence summary:
 
 ```r

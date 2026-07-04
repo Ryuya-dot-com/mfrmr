@@ -18,6 +18,13 @@ An object of class \code{summary.mfrm_population_prediction} with:
 \itemize{
 \item \code{design}: requested future design
 \item \code{overview}: run-level overview
+\item \code{runtime}: elapsed-time and completion metadata from the underlying
+simulation/refit run
+\item \code{reading_order}: recommended order for reading the summary tables
+\item \code{next_actions}: action-oriented triage for interpreting and exporting the
+summary
+\item \code{reporting_notes}: report-facing boundaries and recommended wording
+safeguards
 \item \code{forecast}: facet-level forecast table
 \item \code{facet_names}: public non-person facet names used in the forecast
 \item \code{design_variable_aliases}: public aliases for design variables

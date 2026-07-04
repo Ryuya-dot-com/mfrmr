@@ -19,6 +19,7 @@
   group = NULL,
   diagnostics = NULL,
   include_fit_measures = TRUE,
+  fit_stat = c("Infit", "Outfit"),
   threshold_type = c("andrich", "thurstonian", "half_point"),
   draw = TRUE,
   preset = c("standard", "publication", "compact", "monochrome"),
@@ -30,7 +31,8 @@
 
 \item{type}{Plot type. Use \code{NULL}, \code{"bundle"}, or \code{"all"} for the
 three-part fit bundle; otherwise choose one of \code{"facet"}, \code{"person"},
-\code{"step"}, \code{"wright"}, \code{"pathway"}, \code{"ccc"}, \code{"ccc_surface"}, or
+\code{"step"}, \code{"wright"}, \code{"pathway"}, \code{"fit_pathway"}, \code{"ccc"},
+\code{"empirical_icc"}, \code{"dif_icc"}, \code{"score_measure"}, \code{"ccc_surface"}, or
 \code{"category_surface"}.}
 
 \item{facet}{Optional facet name for \code{type = "facet"}.}
@@ -56,12 +58,13 @@ available.}
 \item{ci_level}{Confidence level used when \code{show_ci = TRUE}.}
 
 \item{group}{Optional grouping for \code{type = "wright"} to overlay
-per-group person-density curves (DIF / DFF screening view).
+per-group person-density curves, and required for \code{type = "dif_icc"}
+to overlay group-wise empirical ICC bin means (DIF / DFF screening view).
 Either a column name (looked up first in \code{group_data} when
 supplied through \code{...}, then in \code{fit$prep$data}) or a vector
 aligned with \code{fit$facets$person}. Ignored for other \code{type}
 values. To pass the source data alongside, use
-\verb{plot(fit, type = "wright", group = "MyCol", group_data = <df>)}.}
+\verb{plot(fit, type = "dif_icc", group = "MyCol", group_data = <df>)}.}
 
 \item{diagnostics}{Optional output from \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}. When supplied,
 pathway plot data reuse it for \code{fit_measures}, \code{fit_status}, and
@@ -70,6 +73,9 @@ pathway plot data reuse it for \code{fit_measures}, \code{fit_status}, and
 \item{include_fit_measures}{If \code{TRUE} (default), pathway plot data include
 tidy fit-measure and fit-status tables for custom R graphics. Set to
 \code{FALSE} when only the curve coordinates are needed.}
+
+\item{fit_stat}{Fit statistic used by \code{type = "fit_pathway"}:
+\code{"Infit"} (default) or \code{"Outfit"}.}
 
 \item{threshold_type}{Step-threshold ruler shown on \code{type = "wright"}:
 \code{"andrich"} (default) plots the fitted Rasch-Andrich step estimates,
@@ -116,19 +122,25 @@ Facets listed in \code{fit_mfrm(positive_facets = ...)} are reversed
 (higher values raise expected scores); state the active orientation in
 figure captions when reporting. \code{type = "pathway"} shows expected score
 traces and dominant-category regions across theta. This expected-score
-display is distinct from the Bond-and-Fox-style measure-versus-fit
-"pathway" bubble chart used around FACETS/Winsteps output; for that
-display, use \code{\link[=plot_bubble]{plot_bubble()}}. Its draw-free plot data also
+display is distinct from fit-versus-measure diagnostic plots that place
+Infit or Outfit against scale location; use \code{type = "fit_pathway"} for
+that display, or \code{\link[=plot_bubble]{plot_bubble()}} for the lower-level wrapper. Its
+draw-free plot data also
 includes \code{pathway_long}, \code{pathway_annotations}, \code{fit_measures},
 \code{fit_status}, and \code{curve_fit_status}, so R users can rebuild the pathway
 map in ggplot2, plotly, or a report pipeline while keeping the same
 underfit/overfit labels used by \code{\link[=fit_measures_table]{fit_measures_table()}}. \code{type = "ccc"} shows
-category response probabilities; \code{type = "ccc_overlay"} adds binned
+fitted category response probabilities, so it remains the category
+characteristic/probability-curve route rather than a pathway-map synonym;
+\code{type = "ccc_overlay"} adds binned
 observed category proportions to those curves. \code{type = "empirical_icc"}
 shows the model expected-score curves with binned observed mean scores
 overlaid (the FACETS/Winsteps "Empirical ICC" view); the bins pool
 observations across non-person facets, so read it as a screening display
-for model-data agreement rather than a fit test.
+for model-data agreement rather than a fit test. \code{type = "dif_icc"} adds
+the same binned expected-score overlay separately by a supplied group
+variable; it is a non-uniform DIF / DFF screening visual, not a formal
+invariance test or ETS classification.
 \code{type = "score_measure"} shows the score-to-measure ogive in the
 Winsteps test-characteristic-curve sense ("the TCC is the
 score-to-measure ogive"): expected score against measure with a dashed
@@ -207,6 +219,12 @@ if (interactive()) {
     type = "pathway",
     title = "Customized Pathway Map",
     palette = c("#1f78b4")
+  )
+  plot(
+    fit,
+    type = "fit_pathway",
+    fit_stat = "Outfit",
+    title = "Customized Fit Pathway"
   )
   plot(
     fit,

@@ -43,7 +43,8 @@ If \code{draw = TRUE}, invisibly returns a plotting-data list. If
 resolved canonical variables (\code{x_var}, \code{group_var}) together with public
 labels (\code{x_label}, \code{group_label}), \code{design_variable_aliases}, and
 \code{design_descriptor}, plus \code{planning_scope}, \code{planning_constraints}, and
-\code{planning_schema}.
+\code{planning_schema}, \code{guidance}, \code{figure_recipes}, and
+\code{interpretation_note}.
 }
 \description{
 Plot a design-simulation study
@@ -62,6 +63,12 @@ when you want aligned recovery error rather than raw location shifts
 \code{"zerocommonpairs"}, or \code{"pairsshorttarget"} to review planned
 missingness and rater-pair linkage separately from recovery metrics
 }
+
+With \code{draw = FALSE}, the returned object also carries \code{guidance},
+\code{figure_recipes}, and \code{interpretation_note} fields. These are intended for
+report assembly and custom ggplot2/plotly/Shiny handoffs: they describe which
+plot to make first, what caption boundary to keep, and which downstream
+summary or recommendation helper should confirm the visual impression.
 }
 \examples{
 \dontrun{

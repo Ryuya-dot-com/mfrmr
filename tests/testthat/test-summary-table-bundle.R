@@ -283,6 +283,7 @@ test_that("summary table bundle role registry covers every supported spec role",
     summary.mfrm_fit = list(
       overview = df,
       population_overview = df,
+      design_spec = df,
       population_design = df,
       population_coefficients = df,
       population_coding = df,
@@ -388,10 +389,18 @@ test_that("summary table bundle role registry covers every supported spec role",
     ),
     summary.mfrm_design_evaluation = list(
       overview = df,
+      runtime = df,
+      reading_order = df,
+      next_actions = df,
+      reporting_notes = df,
       design_summary = df
     ),
     summary.mfrm_signal_detection = list(
       overview = df,
+      runtime = df,
+      reading_order = df,
+      next_actions = df,
+      reporting_notes = df,
       detection_summary = df
     ),
     summary.mfrm_diagnostic_screening = list(
@@ -415,6 +424,9 @@ test_that("summary table bundle role registry covers every supported spec role",
     ),
     summary.mfrm_recovery_simulation = list(
       overview = df,
+      reading_order = df,
+      next_actions = df,
+      reporting_notes = df,
       recovery_summary = df,
       rep_overview = df,
       diagnostic_oc = df,
@@ -451,6 +463,10 @@ test_that("summary table bundle role registry covers every supported spec role",
     summary.mfrm_population_prediction = list(
       design = df,
       overview = df,
+      runtime = df,
+      reading_order = df,
+      next_actions = df,
+      reporting_notes = df,
       forecast = df
     ),
     summary.mfrm_future_branch_active_branch = list(
@@ -496,6 +512,20 @@ test_that("summary table bundle role registry covers every supported spec role",
       mapping = df,
       reproducible_code = df,
       notes = character()
+    ),
+    summary.mfrm_report = list(
+      overview = df,
+      first_screen = df,
+      status_counts = df,
+      immediate_actions = df,
+      optional_sections = df,
+      claim_readiness = df,
+      reader_claims = df,
+      report_gaps = df,
+      boundary_index = df,
+      model_comparison_guidance = df,
+      model_comparison_reporting_templates = df,
+      routes = df
     ),
     summary.mfrm_bias = list(
       overview = df,
@@ -569,6 +599,20 @@ test_that("summary table bundle role registry covers every supported spec role",
       notes = character(),
       settings = list()
     ),
+    summary.mfrm_model_choice_review = list(
+      overview = df,
+      comparison_table = df,
+      comparison_guidance = df,
+      comparison_reporting_templates = df,
+      model_roles = df,
+      downstream_routes = df,
+      report_templates = df,
+      support_status = df,
+      key_warnings = character(),
+      next_actions = character(),
+      notes = character(),
+      settings = list()
+    ),
     summary.mfrm_weighting_review = list(
       overview = df,
       status = df,
@@ -596,6 +640,54 @@ test_that("summary table bundle role registry covers every supported spec role",
       population_review = df,
       settings = list(),
       notes = character()
+    ),
+    summary.mfrm_generalizability = list(
+      overview = df,
+      variance_components = df,
+      coefficients = df,
+      design_check_overview = df,
+      design_check_facets = df,
+      design_check_interactions = df,
+      design_check_highest_order = df,
+      runtime = df,
+      notes = character()
+    ),
+    summary.mfrm_generalizability_design_check = list(
+      overview = df,
+      facet_overview = df,
+      interaction_overview = df,
+      highest_order_review = df,
+      settings = list(),
+      notes = character()
+    ),
+    summary.mfrm_generalizability_bootstrap = list(
+      overview = df,
+      key_metrics = df,
+      intervals = df,
+      failures = df,
+      settings = list(),
+      terminology = character()
+    ),
+    summary.mfrm_generalizability_comparison = list(
+      overview = df,
+      comparison_review = df,
+      coefficients = df,
+      variance_components = df,
+      variance_delta = df,
+      d_study = df,
+      design_check_overview = df,
+      design_check_raw_overview = df,
+      design_check_facets = df,
+      design_check_interactions = df,
+      design_check_highest_order = df,
+      warnings = df,
+      notes = character()
+    ),
+    summary.mfrm_analysis_audit = list(
+      overview = df,
+      checkpoints = df,
+      next_actions = df,
+      terminology = character()
     )
   )
 
@@ -635,7 +727,11 @@ test_that("build_summary_table_bundle converts supported reporting summaries int
   expect_s3_class(fit_bundle, "mfrm_summary_table_bundle")
   expect_identical(fit_bundle$source_class, "mfrm_fit")
   expect_identical(fit_bundle$summary_class, "summary.mfrm_fit")
-  expect_true(all(c("overview", "facet_overview", "reporting_map") %in% names(fit_bundle$tables)))
+  expect_true(all(c("overview", "design_spec", "facet_overview", "reporting_map") %in% names(fit_bundle$tables)))
+  expect_identical(
+    as.character(fit_bundle$table_index$Role[fit_bundle$table_index$Table == "design_spec"]),
+    "model_design_specification"
+  )
   expect_true(all(c("Table", "Rows", "Cols", "Role", "Description") %in% names(fit_bundle$table_index)))
   expect_true(all(c("Table", "PlotReady", "NumericColumns", "DefaultPlotTypes") %in% names(fit_bundle$plot_index)))
   printed <- capture.output(print(fit_bundle))
@@ -979,6 +1075,16 @@ test_that("build_summary_table_bundle keeps explicitly requested empty tables an
   expect_true(isTRUE(empty_design_summary$table_catalog$RecommendedAppendix[1]))
   expect_false(isTRUE(empty_design_summary$table_catalog$CompactAppendix[1]))
 
+  design_spec_bundle <- build_summary_table_bundle(fit, which = "design_spec")
+  expect_identical(names(design_spec_bundle$tables), "design_spec")
+  expect_true(is.data.frame(design_spec_bundle$tables$design_spec))
+  expect_equal(nrow(design_spec_bundle$table_index), 1L)
+  expect_identical(as.character(design_spec_bundle$table_index$Role[1]), "model_design_specification")
+  design_spec_summary <- summary(design_spec_bundle)
+  expect_identical(as.character(design_spec_summary$table_catalog$AppendixSection[1]), "methods")
+  expect_true(isTRUE(design_spec_summary$table_catalog$RecommendedAppendix[1]))
+  expect_true(isTRUE(design_spec_summary$table_catalog$CompactAppendix[1]))
+
   empty_coding_bundle <- build_summary_table_bundle(fit, which = "population_coding")
   expect_identical(names(empty_coding_bundle$tables), "population_coding")
   expect_true(is.data.frame(empty_coding_bundle$tables$population_coding))
@@ -1094,17 +1200,20 @@ test_that("build_summary_table_bundle supports planning and forecast summaries w
 
   design_bundle <- build_summary_table_bundle(sim_eval)
   expect_identical(design_bundle$source_class, "mfrm_design_evaluation")
-  expect_true(all(c("overview", "design_summary", "future_branch_overview",
+  expect_true(all(c("overview", "reading_order", "next_actions",
+                    "runtime", "reporting_notes", "design_summary", "future_branch_overview",
                     "future_branch_recommendation") %in% names(design_bundle$tables)))
 
   signal_bundle <- build_summary_table_bundle(summary(sig_eval))
   expect_identical(signal_bundle$source_class, "summary.mfrm_signal_detection")
-  expect_true(all(c("overview", "detection_summary", "future_branch_readiness") %in%
+  expect_true(all(c("overview", "reading_order", "next_actions",
+                    "runtime", "reporting_notes", "detection_summary", "future_branch_readiness") %in%
                     names(signal_bundle$tables)))
 
   pred_bundle <- build_summary_table_bundle(pred)
   expect_identical(pred_bundle$source_class, "mfrm_population_prediction")
-  expect_true(all(c("design", "forecast", "future_branch_profile",
+  expect_true(all(c("design", "overview", "reading_order", "next_actions",
+                    "runtime", "reporting_notes", "forecast", "future_branch_profile",
                     "future_branch_load_balance", "future_branch_coverage") %in%
                     names(pred_bundle$tables)))
   expect_summary_bundle_roles_registered(design_bundle, signal_bundle, pred_bundle)

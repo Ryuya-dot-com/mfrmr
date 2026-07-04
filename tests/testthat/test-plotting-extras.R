@@ -140,6 +140,41 @@ test_that("plot_dif_summary accepts mfrm_dff output", {
   expect_gte(nrow(p$data$data), 1L)
 })
 
+test_that("plot_dif_summary colors ETS labels only for ETS-classified rows", {
+  dff <- suppressWarnings(suppressMessages(
+    analyze_dff(.fit, diagnostics = .diag,
+                facet = "Rater", group = "Group",
+                data = .toy, method = "residual")
+  ))
+  p <- plot_dif_summary(dff, draw = FALSE)
+  expect_true("ETSDisplayEligible" %in% names(p$data$data))
+  expect_false(any(p$data$data$ETSDisplayEligible, na.rm = TRUE))
+  expect_true(length(unique(p$data$data$Color)) == 1L)
+
+  dff_ets <- dff
+  dff_ets$dif_table$ClassificationSystem <- "ETS"
+  dff_ets$dif_table$Classification <- rep(
+    c("A", "B", "C"),
+    length.out = nrow(dff_ets$dif_table)
+  )
+  dff_ets$config$method <- "refit"
+  p_ets <- plot_dif_summary(dff_ets, draw = FALSE,
+                            sort_by = "classification")
+  expect_true(any(p_ets$data$data$ETSDisplayEligible, na.rm = TRUE))
+  expect_true(length(unique(p_ets$data$data$Color)) > 1L)
+
+  dff_mixed <- dff_ets
+  dff_mixed$dif_table$ClassificationSystem[1] <- "screening"
+  p_mixed <- plot_dif_summary(dff_mixed, draw = FALSE,
+                              sort_by = "classification")
+  expect_false(p_mixed$data$data$ETSDisplayEligible[
+    p_mixed$data$data$ClassificationSystem == "screening"
+  ][1])
+  expect_true(any(p_mixed$data$data$ETSDisplayEligible[
+    p_mixed$data$data$ClassificationSystem == "ETS"
+  ], na.rm = TRUE))
+})
+
 test_that("plot_dif_summary rejects non-DIF inputs", {
   expect_error(plot_dif_summary(list(dif_table = data.frame()), draw = FALSE),
                "analyze_dff|analyze_dif")
@@ -346,6 +381,50 @@ test_that("plot(fit, type = 'empirical_icc') overlays binned mean scores", {
   expect_true(all(p$data$overlay$MeanScore <= max(fit$prep$data$Score, na.rm = TRUE)))
   pm <- plot(fit, type = "empirical_icc", preset = "monochrome", draw = FALSE)
   expect_identical(pm$data$preset, "monochrome")
+})
+
+test_that("plot(fit, type = 'dif_icc') overlays group-wise empirical ICC bins", {
+  toy <- load_mfrmr_data("example_core")
+  fit <- suppressWarnings(fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
+                                   method = "JML", model = "RSM", maxit = 60))
+
+  expect_error(
+    plot(fit, type = "dif_icc", draw = FALSE),
+    "`group` is required"
+  )
+  p <- plot(fit, type = "dif_icc", group = "Group", group_data = toy,
+            draw = FALSE)
+  expect_s3_class(p, "mfrm_plot_data")
+  expect_identical(p$name, "dif_icc")
+  expect_identical(p$data$group, "Group")
+  expect_true(all(c("Group", "Bin", "Theta", "MeanScore", "ScoreSD",
+                    "N", "Persons") %in% names(p$data$overlay)))
+  expect_true(all(c("Group", "Observations", "Persons", "Bins") %in%
+                    names(p$data$group_summary)))
+  expect_true(all(c("Theta", "ExpectedScore", "CurveGroup") %in%
+                    names(p$data$expected)))
+  expect_true(all(c("Topic", "Guidance") %in%
+                    names(p$data$interpretation_guide)))
+  expect_gte(length(unique(p$data$overlay$Group)), 2L)
+  expect_true(any(grepl("screening", p$data$interpretation_guide$Guidance,
+                         ignore.case = TRUE)))
+
+  pm <- plot(fit, type = "group_icc", group = "Group", group_data = toy,
+             preset = "monochrome", draw = FALSE)
+  expect_identical(pm$name, "dif_icc")
+  expect_identical(pm$data$preset, "monochrome")
+
+  pdf(NULL); on.exit(dev.off(), add = TRUE)
+  expect_no_error(plot(fit, type = "dif_icc", group = "Group",
+                       group_data = toy, draw = TRUE))
+
+  toy_numeric <- toy
+  toy_numeric$AgeLike <- seq_len(nrow(toy_numeric))
+  expect_error(
+    plot(fit, type = "dif_icc", group = "AgeLike",
+         group_data = toy_numeric, draw = FALSE),
+    "continuous-covariate"
+  )
 })
 
 test_that("plot(fit, type = 'score_measure') carries the SEM band identity", {

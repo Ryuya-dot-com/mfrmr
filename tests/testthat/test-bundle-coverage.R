@@ -310,7 +310,7 @@ test_that("plot.mfrm_bundle dispatches for mfrm_category_curves", {
   p2_cat_alias <- plot(cc, type = "category_probability", draw = FALSE)
   expect_identical(p2_cat_alias$data$plot, "ccc")
   expect_identical(p2_cat_alias$data$plot_settings$RequestedType[1], "category_probability")
-  # Since 0.3.0 the conditional_probability alias routes to the
+  # Since 0.2.2 the conditional_probability alias routes to the
   # adjacent-category conditional ogives, not to the CCC display.
   p2_alias <- suppressMessages(plot(cc, type = "conditional_probability", draw = FALSE))
   expect_s3_class(p2_alias, "mfrm_plot_data")

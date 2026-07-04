@@ -31,10 +31,11 @@ route.
 The two stacks share the same psychometric framework but differ in
 operating model.
 
-Before treating a legacy workflow as covered, inspect the public coverage
-boundary:
+Before treating a legacy workflow as covered, translate the FACETS-facing
+vocabulary and then inspect the public coverage boundary:
 
 ```r
+facets_term_crosswalk()[, c("FACETSTerm", "mfrmrRoute", "Relationship")]
 facets_feature_coverage()
 facets_feature_coverage("not_implemented")
 ```
@@ -44,7 +45,7 @@ facets_feature_coverage("not_implemented")
 | Input | Specification file plus data file | `data.frame` in long format |
 | Estimation | JMLE by default | `JML` (legacy default) or `MML` (recommended for new analyses) |
 | Fit-statistic basis | Residuals at JMLE estimates | Residuals at EAP person measures under `MML` (shrunken toward the mean); refit with `method = "JML"` for a JMLE-style residual basis |
-| Models | Rating-scale, partial-credit, polytomous step models | `RSM`, `PCM`, bounded `GPCM` |
+| Models | Rating-scale, partial-credit, polytomous step models, multiple `Model=` statements, and additional scale codes | `RSM`, `PCM`, bounded `GPCM`; one response-model family per `fit_mfrm()` call |
 | Output | Tables 0-30 plus graphic files | Returned R objects with `summary()` and `plot()` methods |
 | Anchoring | `D=`, `A=` fields in the specification | `anchors` and `group_anchors` arguments to `fit_mfrm()` |
 | Bias / interaction | Table 14 | `estimate_bias()` and `bias_interaction_report()` |
@@ -125,7 +126,22 @@ fit_mfrm(
 declaration becomes `rating_min = 1, rating_max = 5`. For a partial-credit
 specification, pass `model = "PCM"` and identify the facet that carries the
 step thresholds with `step_facet = "Rater"` (or the appropriate facet
-name).
+name). In rater-mediated scoring, `step_facet = "Rater"` means each rater
+receives their own category-use thresholds, matching the FACETS partial-credit
+or `Specific` rating-scale idea. Use `step_facet = "Item"` when items carry
+the distinct partial-credit structures, and `step_facet = "Criterion"` when
+rubric criteria do. If a design-matrix package labels the same blocks
+`rater:step`, `item:step`, or `criterion:step`, treat those as external
+comparison vocabulary rather than new mfrmr arguments.
+
+FACETS command files can go beyond this direct translation. Multiple
+`Model=` statements in one analysis, `Dn` dichotomization, `M` missing-data
+row matching, `Bn`/`B100` binomial trials, `P` Poisson counts, named
+`Rating Scale=` blocks with command-level recoding, and `R` data replication
+are not parsed by `mfrmr`. Use `facets_feature_coverage()` and
+`system.file("references", "FACETS_manual_mapping.md", package = "mfrmr")`
+to distinguish package-native equivalents from unsupported FACETS command
+surfaces.
 
 ### Anchoring
 
@@ -151,6 +167,21 @@ fit <- fit_mfrm(..., anchors = anchors)
 
 `review_mfrm_anchors()` validates and reports on the anchor block before the
 fit runs, surfacing connectivity, overlap, and minimum-sample issues.
+
+For handoff documentation, add an explicit anchor contract:
+
+```r
+anchor_contract <- anchor_linking_contract(fit)
+anchor_contract$contract[, c("Surface", "Status", "Boundary")]
+```
+
+This contract is deliberately narrower than FACETS `Anchorfile=` output.
+`make_anchor_table()` produces R-native `Facet` / `Level` / `Anchor` rows for
+later `fit_mfrm(anchors = ...)` calls. It does not write a complete FACETS
+specification file with final measures, rating-scale calibrations, current
+settings, embedded data, and `,A` flags. `export_mfrm_bundle(include =
+"anchors")` writes both the anchor CSV and the anchor-contract CSV so those
+boundaries travel together.
 
 ### Bias and interaction
 
@@ -179,6 +210,25 @@ plot(fit, type = "wright", preset = "publication", show_ci = TRUE)
 map is the main figure rather than one panel in a larger visual workflow.
 Use `draw = FALSE` or `plot_data(fit, type = "wright")` when you need the
 underlying coordinates for a custom `ggplot2`, base-R, or Quarto graphic.
+
+For the broader FACETS visual surface, use the contract table:
+
+```r
+facets_term_crosswalk("visuals")[, c("FACETSTerm", "mfrmrRoute", "Boundary")]
+facets_visual_contract()[, c(
+  "FACETSVisualSurface",
+  "Status",
+  "FirstMfrmrRoute",
+  "EditableDataRoute",
+  "ClaimBoundary"
+)]
+```
+
+This table maps FACETS Table 6/8 displays, Graphs-menu curves, DIF/bias Excel
+plots, Graphfile output, and R/Web plot menus to the closest `mfrmr` visual,
+plot-data, or `as_ggplot()` route. It is deliberately not a pixel-identical
+FACETS graph-window, clickable Webpage, Excel workbook, or line-printer
+reproduction claim.
 
 ### Fit df and ZSTD review
 

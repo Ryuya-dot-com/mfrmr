@@ -20,6 +20,11 @@
 #' treated as automatic operational-scoring evidence.
 #'
 #' @section Start with the reporting question:
+#' - "What would a critical psychometric reviewer expect before seeing any
+#'   fitted object?"
+#'   Use [mfrmr_minimum_report_checklist()]. It lists the minimum report
+#'   topics that should be planned before treating software output as a
+#'   manuscript-ready validity argument.
 #' - "Which parts of this run are draft-complete, and with what caveats?"
 #'   Use [reporting_checklist()].
 #' - "How should I phrase the model, fit, and precision sections?"
@@ -32,32 +37,52 @@
 #'   Use [precision_review_report()] and `summary(diagnose_mfrm(...))`.
 #' - "Which caveats need to appear in the write-up?"
 #'   Use [reporting_checklist()] first, then [build_apa_outputs()].
+#' - "How should I report DFF/DIF results in the manuscript?"
+#'   Use [dif_report()] with `style = "apa"` for the conservative paragraph,
+#'   [apa_table()] for the aligned table/note/caption, and
+#'   `build_apa_outputs(..., dif_results = ...)` when the DFF/DIF paragraph
+#'   should be appended to the main APA draft.
+#' - "How should I report the MML population metric?"
+#'   Inspect `summary(fit)$population_overview`, run [build_apa_outputs()],
+#'   and check `summary(apa)$content_checks` for the
+#'   `"MML population SD wording alignment"` row. Free-SD runs should keep the
+#'   estimated SD and profile SE/CI caveat visible.
 #' - "How should I start figure captions or visual-results wording?"
 #'   Use [visual_reporting_template()] for conservative caption and results
 #'   sentence starters, then verify availability with
 #'   `reporting_checklist()$visual_scope`.
 #'
 #' @section Recommended reporting route:
-#' 1. Fit with [fit_mfrm()].
-#' 2. Build diagnostics with [diagnose_mfrm()].
-#' 3. Review precision strength with [precision_review_report()] when
+#' 1. Before fitting or drafting, run [mfrmr_minimum_report_checklist()] and
+#'    decide which rows are required for the intended use of the scores.
+#' 2. Fit with [fit_mfrm()].
+#' 3. Build diagnostics with [diagnose_mfrm()].
+#' 4. Review precision strength with [precision_review_report()] when
 #'    inferential language matters.
-#' 4. Run [reporting_checklist()] to identify missing sections, caveats, and
+#' 5. Run [reporting_checklist()] to identify missing sections, caveats, and
 #'    next actions. Use the `"Visual Displays"` rows as the figure-routing
 #'    layer for the current run.
-#' 5. When strict marginal rows are available, follow up with
+#' 6. When strict marginal rows are available, follow up with
 #'    [plot_marginal_fit()] and [plot_marginal_pairwise()] before finalizing
 #'    the narrative around local misfit.
-#' 6. Create manuscript-draft prose and metadata with [build_apa_outputs()].
+#' 7. Create manuscript-draft prose and metadata with [build_apa_outputs()].
 #'    For bounded `GPCM`, treat the APA/QC/export stack as caveated
 #'    sensitivity-reporting output and keep its `gpcm_boundary` visible.
-#' 7. Convert summary outputs to reusable table bundles with
+#'    For ordinary MML, keep fixed-prior versus estimated population-SD mode
+#'    visible in Method wording and table notes.
+#' 8. Convert summary outputs to reusable table bundles with
 #'    [build_summary_table_bundle()], review the bundle with `summary()` /
 #'    `plot()`, then convert specific components to handoff tables with
 #'    [apa_table()] or export them directly with [export_summary_appendix()].
 #'
 #' @section Which helper answers which task:
 #' \describe{
+#'   \item{[mfrmr_minimum_report_checklist()]}{Lists the fit-independent
+#'   method, design, estimation, fit, precision, category, rater/facet,
+#'   fairness, linking, visual, FACETS/external-software, validity-boundary,
+#'   and limitation topics that should be planned before writing. It is the
+#'   best first page for a critical reviewer or a graduate student building a
+#'   reporting outline.}
 #'   \item{[reporting_checklist()]}{Turns current analysis objects into a
 #'   prioritized revision guide with `DraftReady`, `Priority`, and
 #'   `NextAction`. `DraftReady` means "ready to draft with the documented
@@ -88,6 +113,8 @@
 #' }
 #'
 #' @section Practical reporting rules:
+#' - Use [mfrmr_minimum_report_checklist()] before the analysis when the
+#'   question is "what must the report cover?"
 #' - Treat [reporting_checklist()] as the gap finder and
 #'   [build_apa_outputs()] as the writing engine.
 #' - Use the checklist's `"Visual Displays"` rows to decide whether the next
@@ -101,6 +128,13 @@
 #' - Keep bias and differential-functioning outputs in screening language
 #'   unless the current precision layer and linking evidence justify stronger
 #'   claims.
+#' - Keep observed-score Mantel-Haenszel DIF from [analyze_dif_mh()] separate
+#'   from fitted-MFRM `RSM`, `PCM`, and bounded-`GPCM` DFF/DIF. It can be
+#'   reported through [dif_report()] with `style = "apa"` and [apa_table()], but
+#'   its note states that no fitted MFRM likelihood was used.
+#' - Keep MML population-SD mode separate from model fit and GPCM slope
+#'   interpretation. The fixed-prior and free-SD routes put person measures on
+#'   different latent metrics, so mixed comparisons need sensitivity wording.
 #' - Treat `DraftReady` (and the legacy alias `ReadyForAPA`) as a
 #'   drafting-readiness flag, not as a substitute for methodological review.
 #' - Rebuild APA outputs after major model changes instead of editing old text
@@ -111,15 +145,24 @@
 #'
 #' @section Typical workflow:
 #' - Manuscript-first route:
-#'   [fit_mfrm()] -> [diagnose_mfrm()] -> [reporting_checklist()] ->
+#'   [mfrmr_minimum_report_checklist()] -> [fit_mfrm()] ->
+#'   [diagnose_mfrm()] -> [reporting_checklist()] ->
 #'   [build_apa_outputs()] -> [build_summary_table_bundle()] -> `summary()` /
 #'   `plot()` -> [apa_table()], [export_summary_appendix()], or
 #'   [export_mfrm_bundle()](include = c("summary_tables", "html")).
 #'   For `RSM` / `PCM` final reports, prefer `method = "MML"` and
 #'   `diagnostic_mode = "both"` in the diagnostics step.
+#'   If `estimate_population_sd = TRUE`, add
+#'   `summary(fit)$population_overview` and the
+#'   `"MML population SD wording alignment"` content check to the read order.
 #'   For bounded `GPCM`, use the same fit-based reporting/export family only
 #'   as caveated sensitivity-reporting output and inspect its `gpcm_boundary`
 #'   rows before writing claims.
+#' - DFF/DIF route:
+#'   [analyze_dff()] / [analyze_dif()] / [analyze_dif_mh()] /
+#'   [analyze_dff_moderation()] / [dif_interaction_table()] ->
+#'   [dif_report()] with `style = "apa"` -> [apa_table()] and, when desired,
+#'   [build_apa_outputs()] with `dif_results = ...`.
 #' - Appendix-first route:
 #'   [facet_statistics_report()] -> [apa_table()] ->
 #'   [build_visual_summaries()] -> [build_apa_outputs()].
@@ -142,6 +185,9 @@
 #'
 #' @examples
 #' \dontrun{
+#' mfrmr_minimum_report_checklist()[, c("Section", "ReportItem", "Required")]
+#' mfrmr_minimum_report_checklist("fairness")[, c("ReportItem", "mfrmrRoute")]
+#'
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(
 #'   toy,

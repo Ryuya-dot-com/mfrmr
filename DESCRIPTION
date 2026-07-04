@@ -1,7 +1,7 @@
 Package: mfrmr
 Type: Package
 Title: Estimation and Diagnostics for Many-Facet Measurement Models
-Version: 0.2.1.9000
+Version: 0.2.2
 Authors@R:
     person(given = "Ryuya", family = "Komuro", role = c("aut", "cre", "cph"),
            email = "ryuya.komuro.c4@tohoku.ac.jp",
@@ -56,6 +56,7 @@ Suggests:
     flextable,
     future.apply,
     shiny,
+    ggplot2 (>= 3.4.0),
     mirt,
     TAM,
     eRm

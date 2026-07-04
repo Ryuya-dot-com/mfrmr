@@ -18,12 +18,16 @@ A data.frame with 6 columns:
 }
 \source{
 Synthetic documentation data generated from rating-scale Rasch facet
-designs with fixed seeds in \code{data-raw/make-example-data.R}.
+designs with fixed seeds in \code{data-raw/make-example-data.R}. These compact
+examples are not derived from a paper dataset.
 }
 \description{
 Compact synthetic many-facet datasets designed for documentation examples.
 Both datasets are large enough to avoid tiny-sample toy behavior while
 remaining fast in \verb{R CMD check} examples.
+Use them for smoke checks and route demonstrations. For interpretation,
+report writing, or user-facing examples, prefer the larger Study 1 / Study 2
+datasets or the user's own data.
 }
 \details{
 Available data objects:
@@ -44,6 +48,14 @@ reporting examples.
 
 This lets differential-functioning and bias-analysis help pages demonstrate non-null findings.
 }
+\section{Source boundary}{
+
+\code{mfrmr_example_core} and \code{mfrmr_example_bias} are package-authored fixtures.
+They are useful for smoke checks, examples, and route demonstrations, but
+they are not empirical study data and should not be used as evidence for a
+substantive rater, criterion, or group claim.
+}
+
 \section{Data dimensions}{
 
 \tabular{lrrrrr}{

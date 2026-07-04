@@ -2,6 +2,7 @@
 % Please edit documentation in R/api-generalizability.R
 \name{mfrm_d_study}
 \alias{mfrm_d_study}
+\alias{plot.mfrm_d_study}
 \title{Project G-theory coefficients under alternative D-study designs}
 \usage{
 mfrm_d_study(
@@ -9,13 +10,34 @@ mfrm_d_study(
   design_grid = NULL,
   object_facet = "Person",
   random_facets = NULL,
+  random_interactions = NULL,
   residual_scaling = c("highest_order", "single_condition", "none", "sensitivity"),
+  progress = interactive(),
+  ...
+)
+
+\method{plot}{mfrm_d_study}(
+  x,
+  y = NULL,
+  type = c("coefficients", "error_variance", "heatmap", "contour", "surface3d"),
+  x_var = NULL,
+  y_var = NULL,
+  group_var = NULL,
+  panel_by = NULL,
+  panel_grid = NULL,
+  metric = NULL,
+  draw = TRUE,
+  main = NULL,
+  palette = NULL,
+  preset = c("standard", "publication", "compact", "monochrome"),
   ...
 )
 }
 \arguments{
-\item{x}{Output from \code{\link[=mfrm_generalizability]{mfrm_generalizability()}} or an \code{mfrm_fit}. If an
-\code{mfrm_fit} is supplied, \code{\link[=mfrm_generalizability]{mfrm_generalizability()}} is called first.}
+\item{x}{Output from \code{\link[=mfrm_generalizability]{mfrm_generalizability()}} or an \code{mfrm_fit} for
+\code{mfrm_d_study()}. For \code{plot.mfrm_d_study()}, an \code{mfrm_d_study} object.
+If an \code{mfrm_fit} is supplied to \code{mfrm_d_study()},
+\code{\link[=mfrm_generalizability]{mfrm_generalizability()}} is called first.}
 
 \item{design_grid}{Data frame or named list giving planned counts for each
 random measurement facet. Column names may be the facet names themselves
@@ -23,8 +45,8 @@ random measurement facet. Column names may be the facet names themselves
 \code{n_Rater}). When \code{NULL}, one row using the observed number of levels is
 returned.}
 
-\item{object_facet, random_facets}{Passed to \code{\link[=mfrm_generalizability]{mfrm_generalizability()}} when
-\code{x} is an \code{mfrm_fit}.}
+\item{object_facet, random_facets, random_interactions}{Passed to
+\code{\link[=mfrm_generalizability]{mfrm_generalizability()}} when \code{x} is an \code{mfrm_fit}.}
 
 \item{residual_scaling}{How the collapsed residual variance should be scaled
 when planned facet counts increase. \code{"highest_order"} treats the residual
@@ -35,13 +57,55 @@ person-by-one-facet interactions may dominate. \code{"none"} leaves the residual
 unscaled. \code{"sensitivity"} returns all three assumptions for each design
 row.}
 
+\item{progress}{Logical. When \code{x} is an \code{mfrm_fit}, passed to
+\code{\link[=mfrm_generalizability]{mfrm_generalizability()}} so the G-study refit can show a short
+progress/status display. Defaults to \code{\link[=interactive]{interactive()}}. D-study projection
+from an already-computed \code{mfrm_generalizability} object is analytic and
+usually completes too quickly to need progress output.}
+
 \item{...}{Additional arguments passed to \code{\link[=mfrm_generalizability]{mfrm_generalizability()}} when \code{x}
 is an \code{mfrm_fit}.}
+
+\item{y}{Reserved for S3 generic compatibility.}
+
+\item{type}{Plot route: \code{"coefficients"} for projected \code{G}/\code{Phi},
+\code{"error_variance"} for relative/absolute error variance, \code{"heatmap"} or
+\code{"contour"} for two-planned-facet design grids, and \code{"surface3d"} for
+exploratory base-R perspective plots.}
+
+\item{x_var}{Planned-count column for the x axis. Defaults to the first
+\verb{n_<facet>} column.}
+
+\item{y_var}{Planned-count column for heatmap, contour, and surface routes.}
+
+\item{group_var}{Optional series grouping column for line routes.}
+
+\item{panel_by}{Optional single column for small multiples.}
+
+\item{panel_grid}{Optional two-column small-multiple grid.}
+
+\item{metric}{Metric to display. Line routes default to both \code{G}/\code{Phi} or
+both error-variance metrics; surface routes require exactly one metric.}
+
+\item{draw}{If \code{TRUE}, draw with base graphics. If \code{FALSE}, return an
+\code{mfrm_plot_data} object with reusable plot tables and guidance metadata.}
+
+\item{main}{Optional plot title.}
+
+\item{palette}{Optional colors.}
+
+\item{preset}{Plot style preset used by the base-graphics renderer.}
 }
 \value{
-An object of class \code{mfrm_d_study}, a data.frame with one row per
-design scenario and columns for planned facet counts, variance terms,
-projected \code{G}, projected \code{Phi}, and interpretation bands.
+\code{mfrm_d_study()} returns an object of class \code{mfrm_d_study}, a
+data.frame with one row per design scenario and columns for planned facet
+counts, variance terms, projected \code{G}, projected \code{Phi}, and interpretation
+bands. The object carries a \code{runtime} attribute with projection elapsed
+time and, when applicable, the upstream G-study refit elapsed time.
+\code{plot.mfrm_d_study(draw = FALSE)} returns an \code{mfrm_plot_data}
+object with reusable \code{table}, \code{series}, optional \code{surface},
+\code{reading_order}, \code{guidance}, \code{figure_recipes}, and \code{interpretation_note}
+components.
 }
 \description{
 \code{mfrm_d_study()} applies a practical D-study projection to the
@@ -53,21 +117,24 @@ re-fitting the Rasch/MFRM model.
 The projection uses the variance decomposition already estimated by
 \code{\link[=mfrm_generalizability]{mfrm_generalizability()}}. For a random measurement facet \code{j}, main-effect
 variance contributes \code{sigma2_j / n_j} to the absolute-error denominator.
-The residual term contains unmodeled person-by-facet and higher-order
-interaction variance in the current simplified G-study, so the selected
-\code{residual_scaling} assumption is reported explicitly. The relative-decision
-denominator uses only this scaled residual term.
+An object-by-facet interaction such as \code{Person:Rater} contributes
+\code{sigma2_pr / n_rater} to both relative and absolute error; a non-object
+interaction such as \code{Rater:Token} contributes \code{sigma2_rt / (n_rater * n_token)} to absolute error only. The residual term contains any unmodeled
+interactions and highest-order error, so the selected \code{residual_scaling}
+assumption is reported explicitly.
 
-This is a pragmatic D-study planning layer, not a full p x r x i ANOVA
-decomposition. If person-by-rater or person-by-item interactions are a
-primary estimand, use \code{residual_scaling = "sensitivity"} and treat the output
-as planning evidence; fit a fully crossed G-theory model externally when
-those interaction components must be estimated separately.
+This is a pragmatic D-study planning layer. If person-by-rater or
+person-by-item interactions are a primary estimand, supply those terms via
+\code{random_interactions} and use \code{residual_scaling = "sensitivity"} to show how
+conclusions change under residual-scaling assumptions. Sparse or singular
+expanded models should be reported as sensitivity evidence.
 
 The \code{G} and \code{Phi} values returned here belong to the generalizability-theory
-metric family. They should not be interpreted as coefficient alpha, omega,
-KR-20, or IRT marginal/separation reliability, even though all of those
-summaries may be displayed on a 0--1 scale in broader reporting dashboards.
+metric family and stay on the observed-score variance decomposition from the
+upstream G-study. They should not be interpreted as coefficient alpha, omega,
+KR-20, MFRM separation reliability, or IRT marginal reliability, even though
+all of those summaries may be displayed on a 0--1 scale in broader reporting
+dashboards.
 }
 \examples{
 \dontrun{
@@ -76,7 +143,18 @@ fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "JML", maxit = 30)
 if (requireNamespace("lme4", quietly = TRUE)) {
   gt <- mfrm_generalizability(fit)
-  mfrm_d_study(gt, data.frame(Rater = c(2, 3, 4), Criterion = 4))
+  ds <- mfrm_d_study(gt, data.frame(Rater = c(2, 3, 4), Criterion = 4))
+  plot(ds, draw = FALSE)
+
+  gt_expanded <- mfrm_generalizability(
+    fit,
+    random_interactions = c("Person:Rater", "Rater:Criterion")
+  )
+  mfrm_d_study(
+    gt_expanded,
+    expand.grid(Rater = 2:4, Criterion = c(2, 4)),
+    residual_scaling = "sensitivity"
+  )
 }
 }
 }
@@ -88,6 +166,6 @@ generalizability for scores and profiles}. Wiley.
 Brennan, R. L. (2001). \emph{Generalizability theory}. Springer.
 }
 \seealso{
-\code{\link[=mfrm_generalizability]{mfrm_generalizability()}}, \code{\link[=evaluate_mfrm_design]{evaluate_mfrm_design()}},
-\code{\link[=recommend_mfrm_design]{recommend_mfrm_design()}}, \code{\link[=plot_data]{plot_data()}}
+\code{\link[=mfrm_generalizability]{mfrm_generalizability()}}, \code{\link[=compare_mfrm_generalizability]{compare_mfrm_generalizability()}},
+\code{\link[=evaluate_mfrm_design]{evaluate_mfrm_design()}}, \code{\link[=recommend_mfrm_design]{recommend_mfrm_design()}}, \code{\link[=plot_data]{plot_data()}}
 }

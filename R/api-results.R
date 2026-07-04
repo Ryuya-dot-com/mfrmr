@@ -909,6 +909,27 @@ mfrm_results_triage <- function(status, plot_map, components, table_index,
     )
   }
 
+  method <- toupper(as.character(fit$summary$Method[1] %||% fit$config$method %||% ""))
+  population_sd_mode <- .review_population_sd_mode(fit)
+  population_metric <- .review_population_metric_label(fit)
+  if (identical(method, "MML") && !is.na(population_sd_mode) && nzchar(population_sd_mode)) {
+    estimated_metric <- identical(tolower(population_sd_mode), "estimated")
+    add(
+      "Population metric",
+      if (estimated_metric) "info" else "ok",
+      if (estimated_metric) "population_sd_estimated" else "population_sd_fixed",
+      "summary(res)$overview; summary(res$fit)$population_overview",
+      paste0(
+        "MML person measures use ", population_metric,
+        if (estimated_metric) {
+          "; profile SE/CI for SD should be read as conditional on fixed item/facet parameters."
+        } else {
+          "; this preserves the fixed-prior metric unless a free-SD sensitivity fit is requested."
+        }
+      )
+    )
+  }
+
   model <- as.character(fit$config$model %||% "")
   if (identical(toupper(model), "GPCM")) {
     add(
@@ -951,8 +972,8 @@ mfrm_results_next_actions <- function(status, plot_map, components, table_index,
     1L,
     "Overview",
     "Read the compact results summary.",
-    "summary(res)",
-    "Confirms input mode, model, method, section status, table coverage, and plot routes."
+    "summary(res, view = \"brief\")",
+    "Confirms input mode, model, method, population-SD mode when relevant, highest-priority triage, next actions, and available plot routes."
   )
   if (nrow(triage) > 0L &&
       "Severity" %in% names(triage) &&
@@ -1363,6 +1384,12 @@ mfrm_report_section_plan <- function(x, sx, style) {
   method <- as.character(overview$Method[1] %||% x$fit$config$method %||% "")
   n_obs <- as.character(overview$N[1] %||% "")
   categories <- as.character(overview$Categories[1] %||% "")
+  population_metric <- as.character(overview$PopulationMetric[1] %||% "")
+  population_metric_phrase <- if (!is.na(population_metric) && nzchar(population_metric)) {
+    paste0("; population metric = ", population_metric)
+  } else {
+    ""
+  }
   table_count <- length(x$tables %||% list())
   plot_count <- sum(as.data.frame(x$plot_map %||% data.frame())$Available %in% TRUE, na.rm = TRUE)
   rows <- list()
@@ -1382,10 +1409,10 @@ mfrm_report_section_plan <- function(x, sx, style) {
     "Model and data setup",
     "available",
     paste0("Model = ", model, "; method = ", method, "; N = ", n_obs,
-           "; categories = ", categories, "."),
+           "; categories = ", categories, population_metric_phrase, "."),
     "summary(res)$overview; specifications_report(fit)",
     "Use for method and analysis-setup wording.",
-    "Confirm scoring, column roles, missing-data handling, anchoring, and estimation settings in the analysis script."
+    "Confirm scoring, column roles, missing-data handling, anchoring, population-SD mode, and estimation settings in the analysis script."
   )
   diag_status <- if (inherits(x$diagnostics, "mfrm_diagnostics")) "available" else "not_available"
   add(
@@ -1455,7 +1482,7 @@ mfrm_report_section_plan <- function(x, sx, style) {
   add(
     "APA and manuscript wording",
     mfrm_report_component_status(x, "apa_outputs", available = "available"),
-    "APA output assembly is available for supported RSM/PCM manuscript routes.",
+    "APA output assembly is available for supported RSM/PCM routes and caveated bounded-GPCM sensitivity reporting.",
     "mfrm_results(fit, include = \"publication\"); build_apa_outputs()",
     "Use as a draft wording template and table/caption scaffold.",
     "APA text must be edited against the actual study design, model choice, and validation argument."
@@ -1464,7 +1491,7 @@ mfrm_report_section_plan <- function(x, sx, style) {
     "Tables, plots, and handoff",
     if (table_count > 0L || plot_count > 0L) "available" else "review",
     paste0(table_count, " table(s) and ", plot_count, " plot route(s) were indexed."),
-    "build_summary_table_bundle(res); export_mfrm_results(res)",
+    "build_summary_table_bundle(res); export_mfrm_results(res, preset = \"starter\")",
     "Use for appendix, reviewer supplement, or reproducible handoff.",
     "Exported tables preserve evidence surfaces; they do not add new analyses."
   )
@@ -3316,7 +3343,7 @@ mfrm_report_claim_readiness <- function(x, sections, style) {
     "Tables, plots, and handoff",
     "Collected result tables, plot routes, replay code, and a written-files manifest if exported.",
     "Provide tables and replay routes so readers can inspect the evidence surface.",
-    "Use build_summary_table_bundle(res), export_mfrm_results(res), or mfrm_report(res, output = \"html\").",
+    "Use build_summary_table_bundle(res), export_mfrm_results(res, preset = \"starter\"), or mfrm_report(res, output = \"html\").",
     "Appendix files preserve evidence; they do not add new analyses."
   )
   if (identical(toupper(model), "GPCM")) {
@@ -3428,10 +3455,13 @@ mfrm_report_narrative <- function(x, sx, style, sections) {
     "No triage rows were available."
   }
   overview_text <- if (nrow(overview) > 0L) {
+    population_metric <- as.character(overview$PopulationMetric[1] %||% "")
     paste0(
       "The source result uses model ", as.character(overview$Model[1] %||% ""),
       " with method ", as.character(overview$Method[1] %||% ""),
-      " and ", as.character(overview$N[1] %||% ""), " observations."
+      " and ", as.character(overview$N[1] %||% ""), " observations",
+      if (!is.na(population_metric) && nzchar(population_metric)) paste0("; population metric: ", population_metric) else "",
+      "."
     )
   } else {
     "The source result did not expose a compact overview table."
@@ -3527,7 +3557,7 @@ mfrm_report_index <- function(sections,
   rows <- list()
   add <- function(area, section, evidence_status, review_signals, evidence_detail,
                   primary_table, template_table, route, boundary,
-                  include_preset, plot_route = "", export_route = "export_mfrm_results(res, include = \"report\")") {
+                  include_preset, plot_route = "", export_route = "export_mfrm_results(res, preset = \"starter\")") {
     primary_table <- as.character(primary_table)
     template_table <- as.character(template_table)
     rows[[length(rows) + 1L]] <<- data.frame(
@@ -3676,13 +3706,15 @@ mfrm_report_template_index <- function(fit_reporting_templates,
                                        precision_reporting_templates,
                                        bias_reporting_templates,
                                        misfit_reporting_templates,
-                                       linking_reporting_templates) {
+                                       linking_reporting_templates,
+                                       model_comparison_reporting_templates = NULL) {
   specs <- list(
     list(area = "Fit", table = "fit_reporting_templates", data = fit_reporting_templates),
     list(area = "Precision", table = "precision_reporting_templates", data = precision_reporting_templates),
     list(area = "Bias / DFF", table = "bias_reporting_templates", data = bias_reporting_templates),
     list(area = "Misfit / pathway", table = "misfit_reporting_templates", data = misfit_reporting_templates),
-    list(area = "Linking / anchors", table = "linking_reporting_templates", data = linking_reporting_templates)
+    list(area = "Linking / anchors", table = "linking_reporting_templates", data = linking_reporting_templates),
+    list(area = "Model comparison", table = "model_comparison_reporting_templates", data = model_comparison_reporting_templates)
   )
   rows <- list()
   keep <- c(
@@ -3731,6 +3763,43 @@ mfrm_report_template_index <- function(fit_reporting_templates,
   out <- out[order(ord, out$Area, out$TemplateRow), , drop = FALSE]
   rownames(out) <- NULL
   out
+}
+
+mfrm_report_model_comparison_template_table <- function(comparison_guidance) {
+  guide <- as.data.frame(comparison_guidance %||% data.frame(), stringsAsFactors = FALSE)
+  empty <- data.frame(
+    Topic = character(),
+    BoundaryType = character(),
+    ClaimStrength = character(),
+    RecommendedUse = character(),
+    EvidenceTable = character(),
+    EvidenceRoute = character(),
+    Route = character(),
+    Caveat = character(),
+    stringsAsFactors = FALSE
+  )
+  if (nrow(guide) == 0L) {
+    return(empty)
+  }
+  family <- model_comparison_reporting_value(guide, "ComparisonFamily")
+  strength <- model_comparison_reporting_value(guide, "ComparisonStrength")
+  claim_strength <- dplyr::case_when(
+    identical(family, "mixed_metric_and_response_model") ~ "not_supported_without_followup",
+    identical(strength, "descriptive_only") ~ "descriptive_only",
+    family %in% c("population_sd_sensitivity", "bounded_gpcm_sensitivity", "facet_interaction_sensitivity") ~ "write_with_caveat",
+    TRUE ~ "ready_when_supported"
+  )
+  data.frame(
+    Topic = "Model-comparison reporting guard",
+    BoundaryType = if (nzchar(family)) family else "model_comparison",
+    ClaimStrength = claim_strength,
+    RecommendedUse = model_comparison_reporting_value(guide, "APAStyleTemplate"),
+    EvidenceTable = "model_comparison_guidance",
+    EvidenceRoute = "compare_mfrm(); build_model_choice_review(); comparison_guidance",
+    Route = model_comparison_reporting_value(guide, "NextAction"),
+    Caveat = model_comparison_reporting_value(guide, "InterpretationGuard"),
+    stringsAsFactors = FALSE
+  )
 }
 
 mfrm_report_first_screen_status <- function(readiness) {
@@ -3902,6 +3971,12 @@ mfrm_report_markdown <- function(report) {
       "## Template Index",
       mfrm_report_markdown_table(report$template_index, max_rows = 30L),
       "",
+      "## Model Comparison Guidance",
+      mfrm_report_markdown_table(report$model_comparison_guidance, max_rows = 10L),
+      "",
+      "## Model Comparison Reporting Templates",
+      mfrm_report_markdown_table(report$model_comparison_reporting_templates, max_rows = 10L),
+      "",
       "## Section Plan",
       mfrm_report_markdown_table(report$sections, max_rows = 30L),
       "",
@@ -3972,10 +4047,14 @@ mfrm_report_markdown <- function(report) {
   )
 }
 
-mfrm_report_build <- function(x, style) {
+mfrm_report_build <- function(x, style, model_comparison = NULL) {
   sx <- summary(
     x,
     top_n = max(10L, nrow(as.data.frame(x$table_index %||% data.frame())) + 1L)
+  )
+  comparison_block <- build_model_comparison_reporting_block(model_comparison)
+  model_comparison_reporting_templates <- mfrm_report_model_comparison_template_table(
+    comparison_block$guidance
   )
   sections <- mfrm_report_section_plan(x, sx, style)
   evidence <- mfrm_report_evidence_boundary()
@@ -4030,7 +4109,8 @@ mfrm_report_build <- function(x, style) {
     precision_reporting_templates = precision_reporting_templates,
     bias_reporting_templates = bias_reporting_templates,
     misfit_reporting_templates = misfit_reporting_templates,
-    linking_reporting_templates = linking_reporting_templates
+    linking_reporting_templates = linking_reporting_templates,
+    model_comparison_reporting_templates = model_comparison_reporting_templates
   )
   first_screen <- mfrm_report_first_screen(
     report_index = report_index,
@@ -4043,6 +4123,9 @@ mfrm_report_build <- function(x, style) {
     first_screen = first_screen,
     report_index = report_index,
     template_index = template_index,
+    model_comparison_guidance = comparison_block$guidance,
+    model_comparison_reporting_templates = model_comparison_reporting_templates,
+    model_comparison_table = comparison_block$comparison_table,
     section_plan = sections,
     claim_readiness = claim_readiness,
     report_gaps = report_gaps,
@@ -4082,6 +4165,9 @@ mfrm_report_build <- function(x, style) {
     first_screen = first_screen,
     report_index = report_index,
     template_index = template_index,
+    model_comparison_guidance = comparison_block$guidance,
+    model_comparison_reporting_templates = model_comparison_reporting_templates,
+    model_comparison_table = comparison_block$comparison_table,
     sections = sections,
     claim_readiness = claim_readiness,
     report_gaps = report_gaps,
@@ -4165,24 +4251,83 @@ mfrm_report_route_table <- function() {
       "report$report_index",
       "report$template_index",
       "mfrm_report(res, output = \"markdown\")",
-      "export_mfrm_results(res, include = \"report\")"
+      "export_mfrm_results(res, preset = \"starter\")"
     ),
     Use = c(
       "Start here; read the overall row and next-action route.",
       "Open when the first screen points to a specific evidence area.",
       "Open before using APA/QC/validation wording.",
       "Use after the evidence status and caveats have been reviewed.",
-      "Use when report tables, Markdown, and HTML need to be handed off."
+      "Use when a reader-first HTML index, report tables, and replay code need to be handed off."
     ),
     stringsAsFactors = FALSE
   )
 }
 
+mfrm_report_reader_claim_table <- function(claim_readiness) {
+  claim_readiness <- as.data.frame(claim_readiness %||% data.frame(), stringsAsFactors = FALSE)
+  if (nrow(claim_readiness) == 0L || !"Readiness" %in% names(claim_readiness)) {
+    return(data.frame())
+  }
+  label_for <- function(readiness) {
+    switch(
+      as.character(readiness),
+      ready = "Can report",
+      write_with_caveat = "Write with caveat",
+      needs_requested_section = "Need more evidence",
+      unavailable = "Unavailable",
+      request_if_needed = "Request if needed",
+      caveat = "Write with caveat",
+      review = "Review first",
+      as.character(readiness)
+    )
+  }
+  meaning_for <- function(readiness) {
+    switch(
+      as.character(readiness),
+      ready = "The report object has enough package evidence to draft this claim within the documented boundary.",
+      write_with_caveat = "The claim can be drafted only with an explicit caveat and source-table review.",
+      needs_requested_section = "The claim needs an additional mfrm_results(include = ...) section or route-specific helper.",
+      unavailable = "The current result object does not contain enough evidence for this claim.",
+      request_if_needed = "Only request this evidence if the report needs the claim.",
+      caveat = "The claim requires caveated wording.",
+      review = "Review the route-specific evidence before drafting.",
+      "Review the report index and route-specific table before drafting."
+    )
+  }
+  next_for <- function(readiness) {
+    switch(
+      as.character(readiness),
+      ready = "Draft from the matching reporting template and keep the evidence route attached.",
+      write_with_caveat = "Open report$template_index and the relevant evidence summary before writing.",
+      needs_requested_section = "Rebuild mfrm_results() with the requested include preset or call the route-specific helper.",
+      unavailable = "Do not write this claim from the current result object.",
+      request_if_needed = "Add the section only if the manuscript or review question requires it.",
+      caveat = "Use the caveated template and inspect the source evidence.",
+      review = "Start from report$report_index and follow the PrimaryTable route.",
+      "Use report$report_index to choose the next table."
+    )
+  }
+  data.frame(
+    ReportUse = vapply(claim_readiness$Readiness, label_for, character(1)),
+    Readiness = as.character(claim_readiness$Readiness),
+    Claims = suppressWarnings(as.integer(claim_readiness$Claims %||% NA_integer_)),
+    ExampleClaim = as.character(claim_readiness$ExampleClaim %||% ""),
+    Meaning = vapply(claim_readiness$Readiness, meaning_for, character(1)),
+    NextStep = vapply(claim_readiness$Readiness, next_for, character(1)),
+    stringsAsFactors = FALSE
+  )
+}
+
 #' @export
-summary.mfrm_report <- function(object, top_n = 8, ...) {
+summary.mfrm_report <- function(object,
+                                top_n = 8,
+                                view = c("full", "reader"),
+                                ...) {
   if (!inherits(object, "mfrm_report")) {
     stop("`object` must be an mfrm_report object.", call. = FALSE)
   }
+  view <- match.arg(tolower(as.character(view[1])), c("full", "reader"))
   top_n <- max(1L, as.integer(top_n))
   first_screen <- as.data.frame(object$first_screen %||% data.frame(), stringsAsFactors = FALSE)
   first_rows <- first_screen
@@ -4238,6 +4383,7 @@ summary.mfrm_report <- function(object, top_n = 8, ...) {
     data.frame()
   }
   claim_readiness <- mfrm_report_claim_count_table(object$claim_readiness)
+  reader_claims <- mfrm_report_reader_claim_table(claim_readiness)
   report_gaps <- as.data.frame(object$report_gaps %||% data.frame(), stringsAsFactors = FALSE)
   if (nrow(report_gaps) > 0L) {
     report_gaps <- utils::head(report_gaps[, intersect(c(
@@ -4272,11 +4418,27 @@ summary.mfrm_report <- function(object, top_n = 8, ...) {
     immediate_actions = immediate_actions,
     optional_sections = optional_sections,
     claim_readiness = claim_readiness,
+    reader_claims = reader_claims,
     report_gaps = report_gaps,
     boundary_index = boundary_index,
+    model_comparison_guidance = as.data.frame(
+      object$model_comparison_guidance %||% data.frame(),
+      stringsAsFactors = FALSE
+    ),
+    model_comparison_reporting_templates = as.data.frame(
+      object$model_comparison_reporting_templates %||% data.frame(),
+      stringsAsFactors = FALSE
+    ),
     routes = mfrm_report_route_table(),
-    top_n = top_n
+    top_n = top_n,
+    view = view
   )
+  if (identical(view, "reader")) {
+    out$first_screen <- utils::head(out$first_screen, n = min(top_n, 6L))
+    out$immediate_actions <- utils::head(out$immediate_actions, n = min(top_n, 4L))
+    out$report_gaps <- utils::head(out$report_gaps, n = min(top_n, 4L))
+    out$boundary_index <- utils::head(out$boundary_index, n = min(top_n, 4L))
+  }
   class(out) <- "summary.mfrm_report"
   out
 }
@@ -4288,16 +4450,17 @@ mfrm_report_html_guidance <- function(summary_obj) {
   c(
     paste0("Overall status: ", if (nzchar(status)) status else "not available"),
     paste0("First action: ", if (nzchar(action)) action else "Inspect report$first_screen."),
-    "Read order: Report Summary Overview -> Report Summary First Screen -> Immediate Actions -> Optional Sections -> Detailed report tables.",
+    "Read order: Report Summary Overview -> Report Summary First Screen -> Reader Claims -> Immediate Actions -> Report Gaps -> Detailed report tables.",
     "Interpretation boundary: this HTML report summarizes existing mfrm_results() evidence; it does not refit the model or create a new pass/fail decision."
   )
 }
 
 mfrm_report_html_tables <- function(report) {
-  sx <- summary(report)
+  sx <- summary(report, view = "reader")
   summary_tables <- list(
     report_summary_overview = sx$overview,
     report_summary_first_screen = sx$first_screen,
+    report_summary_reader_claims = sx$reader_claims,
     report_summary_status_counts = sx$status_counts,
     report_summary_immediate_actions = sx$immediate_actions,
     report_summary_optional_sections = sx$optional_sections,
@@ -4313,7 +4476,7 @@ mfrm_report_html <- function(report) {
   if (!inherits(report, "mfrm_report")) {
     stop("`report` must be an mfrm_report object.", call. = FALSE)
   }
-  sx <- summary(report)
+  sx <- summary(report, view = "reader")
   html <- build_mfrm_bundle_html(
     title = report$title,
     tables = mfrm_report_html_tables(report),
@@ -4354,18 +4517,25 @@ mfrm_report_html <- function(report) {
 #' @param output Return format: `"object"` for an `mfrm_report` object,
 #'   `"markdown"` for a character scalar, `"html"` for a temporary HTML file,
 #'   or `"tables"` for the report's named data-frame list.
+#' @param model_comparison Optional output from [compare_mfrm()] or
+#'   [build_model_choice_review()] (or their `summary()` output). When supplied,
+#'   model-comparison guidance and reporting templates are added to
+#'   `report$tables`, Markdown output, and the template boundary index.
 #'
 #' @details
 #' The intended workflow is:
 #' 1. Create `res <- mfrm_results(fit, include = ...)`.
-#' 2. Inspect `summary(res)$triage` and `summary(res)$next_actions`.
+#' 2. Inspect `summary(res, view = "brief")`, `summary(res)$triage`, and
+#'    `summary(res)$next_actions`.
 #' 3. Create `report <- mfrm_report(res, style = "qc")`.
-#' 4. Read `summary(report)` and `report$first_screen` before opening detailed
-#'    report tables.
+#' 4. Read `summary(report, view = "reader")` and `report$first_screen` before
+#'    opening detailed report tables.
 #' 5. Use `report$report_index` to choose the next `PrimaryTable`,
 #'    `TemplateTable`, plot route, or export route.
 #' 6. Use `report$template_index` before copying APA/QC/validation wording.
-#' 7. Use `style = "apa"`, `"validation"`, `"reviewer"`, or `"technical"` only
+#' 7. If candidate fits were compared, pass `model_comparison = review`
+#'    so the report carries comparison-family and interpretation-guard wording.
+#' 8. Use `style = "apa"`, `"validation"`, `"reviewer"`, or `"technical"` only
 #'    when that reporting question is needed.
 #'
 #' Report rows deliberately distinguish evidence from claims. The
@@ -4375,16 +4545,29 @@ mfrm_report_html <- function(report) {
 #' `summary.mfrm_report` method summarizes that first screen into immediate
 #' actions, optional not-requested sections, claim-readiness counts, report
 #' gaps, and template-boundary rows without introducing a new pass/fail
-#' decision. The default print method follows the same short reading order and
+#' decision. Use `summary(report, view = "reader")` when the output should
+#' start from a short reader-facing claim-use table: what can be reported, what
+#' needs caveats, and what needs more evidence. The default print method
+#' follows the same short reading order and
 #' does not print every detailed evidence table. HTML output places the same
-#' reader guidance and report-summary tables before the full Markdown text so
-#' the browser view starts from the first-screen route. The
+#' reader guidance, first-screen table, reader-claims table, and report gaps
+#' before the full Markdown text so the browser view starts from the
+#' first-screen route. The
 #' `report_index` table is the detailed evidence-route index: it lists the
 #' major report areas, evidence status, readiness label, review-signal count,
 #' and the primary/template tables, evidence routes, template routes, plot
 #' routes, export route, and `mfrm_results(include = ...)` preset to inspect
 #' next. In ordinary use, open detailed tables through the `PrimaryTable` and
 #' `TemplateTable` columns rather than scanning every element of `report$tables`.
+#' The model-and-data setup rows preserve MML population-SD mode from
+#' `summary(res)$overview`, so APA/QC wording can distinguish fixed-prior
+#' metrics from opt-in free-SD metrics without treating that choice as a fit
+#' result or GPCM slope effect. The
+#' optional `model_comparison` route carries comparison-family and
+#' interpretation-guard wording from [compare_mfrm()] or
+#' [build_model_choice_review()] into the report tables, so model-choice
+#' wording does not collapse population-SD sensitivity, bounded-GPCM
+#' sensitivity, and response-model evidence into one unqualified conclusion.
 #' The
 #' `template_index` table then stacks all fit, precision, bias, misfit, and
 #' linking wording templates into a single boundary/claim-strength index before
@@ -4430,12 +4613,14 @@ mfrm_report_html <- function(report) {
 #' \dontrun{
 #' toy <- load_mfrmr_data("example_core")
 #' toy_small <- toy[toy$Person %in% unique(toy$Person)[1:6], , drop = FALSE]
+#' # example_core is a compact smoke fixture; use Study 1/2 or your own data
+#' # for substantive report wording.
 #' fit <- fit_mfrm(toy_small, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "JML", maxit = 30)
 #' res <- mfrm_results(fit, include = c("fit", "diagnostics", "tables"))
 #'
 #' report <- mfrm_report(res, style = "qc")
-#' summary(report)
+#' summary(report, view = "reader")
 #' report$first_screen
 #' report$report_index[, c("Area", "Readiness", "PrimaryTable",
 #'                         "TemplateTable", "PlotRoute")]
@@ -4450,17 +4635,31 @@ mfrm_report_html <- function(report) {
 #'
 #' mfrm_report(res, output = "markdown")
 #' mfrm_report(res, output = "html")
+#'
+#' # If you compared candidate fits, keep the comparison guardrails with the
+#' # report instead of copying the fit table alone.
+#' fit_pcm <- fit_mfrm(toy_small, "Person", c("Rater", "Criterion"), "Score",
+#'                     method = "JML", model = "PCM", step_facet = "Criterion",
+#'                     maxit = 30)
+#' review <- build_model_choice_review(RSM = fit, PCM = fit_pcm)
+#' report_with_review <- mfrm_report(res, style = "apa", model_comparison = review)
+#' report_with_review$tables$model_comparison_guidance
 #' }
 #' @export
 mfrm_report <- function(x,
                         style = c("qc", "apa", "validation", "reviewer", "technical"),
-                        output = c("object", "markdown", "html", "tables")) {
+                        output = c("object", "markdown", "html", "tables"),
+                        model_comparison = NULL) {
   if (!inherits(x, "mfrm_results")) {
     stop("`x` must be an mfrm_results object. Call `mfrm_results()` first.", call. = FALSE)
   }
   style <- match.arg(tolower(as.character(style[1])), c("qc", "apa", "validation", "reviewer", "technical"))
   output <- match.arg(tolower(as.character(output[1])), c("object", "markdown", "html", "tables"))
-  report <- mfrm_report_build(x, style = style)
+  model_comparison <- validate_model_comparison_reporting_input(
+    model_comparison,
+    helper = "mfrm_report()"
+  )
+  report <- mfrm_report_build(x, style = style, model_comparison = model_comparison)
   switch(
     output,
     object = report,
@@ -4491,6 +4690,155 @@ mfrm_results_export_include <- function(include) {
     stop("`include` must contain at least one export component.", call. = FALSE)
   }
   include
+}
+
+mfrm_results_export_preset <- function(preset) {
+  preset <- tolower(as.character(preset[1] %||% "archive"))
+  if (identical(preset, "full")) {
+    preset <- "archive"
+  }
+  match.arg(preset, c("archive", "starter", "reviewer"))
+}
+
+mfrm_results_export_summary_tables_for_preset <- function(x, preset = "archive") {
+  tables <- mfrm_results_export_summary_tables(x)
+  if (identical(preset, "starter")) {
+    keep <- c("overview", "triage", "next_actions", "plot_map", "reproducible_code")
+    tables <- tables[intersect(keep, names(tables))]
+  }
+  tables
+}
+
+mfrm_results_export_report_tables_for_preset <- function(report, preset = "archive") {
+  tables <- report$tables %||% list()
+  if (identical(preset, "starter")) {
+    keep <- c(
+      "overview",
+      "first_screen",
+      "report_index",
+      "template_index",
+      "claim_readiness",
+      "report_gaps",
+      "fit_evidence_summary",
+      "precision_evidence_summary",
+      "bias_evidence_summary",
+      "misfit_evidence_summary",
+      "linking_evidence_summary",
+      "evidence_boundary",
+      "action_items",
+      "triage",
+      "status",
+      "plot_map",
+      "reproducible_code"
+    )
+    tables <- tables[intersect(keep, names(tables))]
+  }
+  tables
+}
+
+mfrm_results_export_component_kind <- function(component) {
+  component <- as.character(component %||% "")
+  if (grepl("^summary_", component)) {
+    return("summary")
+  }
+  if (component %in% c("report_markdown", "report_html", "results_html")) {
+    return("report")
+  }
+  if (component %in% c("index_html", "readme")) {
+    return("summary")
+  }
+  if (component %in% c("replay_code", "export_summary", "written_files", "plot_errors")) {
+    return("reproducibility")
+  }
+  if (grepl("^report_(fit_|precision_|bias_|misfit_|linking_)?evidence", component) ||
+      grepl("^report_(fit_criteria|precision_basis|zstd_|fit_decision|fit_df_|evidence_boundary)", component)) {
+    return("evidence")
+  }
+  if (grepl("^report_", component)) {
+    return("report")
+  }
+  if (grepl("^table_", component)) {
+    return("archive")
+  }
+  if (grepl("^plot_", component)) {
+    return("figure")
+  }
+  "archive"
+}
+
+mfrm_results_export_file_metadata <- function(component, format, note = "") {
+  component <- as.character(component %||% "")
+  format <- as.character(format %||% "")
+  kind <- mfrm_results_export_component_kind(component)
+  open_first <- component %in% c(
+    "index_html",
+    "readme",
+    "summary_overview",
+    "summary_triage",
+    "summary_next_actions",
+    "report_first_screen",
+    "report_report_index"
+  )
+  audience <- switch(
+    kind,
+    summary = "reader",
+    report = "report_writer",
+    evidence = "reviewer",
+    reproducibility = "reproducibility",
+    figure = "reader",
+    archive = "archive",
+    "archive"
+  )
+  use_case <- switch(
+    kind,
+    summary = "First-screen reading and next-action routing.",
+    report = "Report drafting, claim readiness, and reader-facing handoff.",
+    evidence = "Evidence review before writing claims or reviewer responses.",
+    reproducibility = "Replay, manifest review, and audit trail.",
+    figure = "Visual inspection and figure handoff.",
+    archive = "Complete table archive or machine-readable handoff.",
+    "Exported result artifact."
+  )
+  claim_boundary <- switch(
+    kind,
+    summary = "Navigation evidence only; inspect route-specific tables before claims.",
+    report = "Report wording scaffold; it does not create a new pass/fail decision.",
+    evidence = "Use with the table's caveats; screening evidence is not a standalone validity or fairness conclusion.",
+    reproducibility = "Reproducibility artifact; not substantive evidence by itself.",
+    figure = "Visual screen; confirm with source tables before reporting.",
+    archive = "Raw archive table; use the report index to decide whether it is primary or supporting evidence.",
+    "Review the source object before making claims."
+  )
+  data.frame(
+    Audience = audience,
+    UseCase = use_case,
+    OpenFirst = isTRUE(open_first),
+    ClaimBoundary = claim_boundary,
+    stringsAsFactors = FALSE
+  )
+}
+
+mfrm_results_export_relative_paths <- function(paths, base_dir) {
+  paths <- normalizePath(paths, winslash = "/", mustWork = TRUE)
+  base_dir <- normalizePath(base_dir, winslash = "/", mustWork = TRUE)
+  base_prefix <- paste0(sub("/+$", "", base_dir), "/")
+  inside <- startsWith(paths, base_prefix)
+  rel <- paths
+  rel[inside] <- substring(paths[inside], nchar(base_prefix) + 1L)
+  rel[nzchar(rel)]
+}
+
+mfrm_results_export_zip <- function(zip_path, files, output_dir, preserve_paths = FALSE) {
+  if (!isTRUE(preserve_paths)) {
+    utils::zip(zipfile = zip_path, files = files, flags = "-q", extras = "-j")
+    return(invisible(TRUE))
+  }
+  rel_files <- mfrm_results_export_relative_paths(files, output_dir)
+  old_wd <- getwd()
+  on.exit(setwd(old_wd), add = TRUE)
+  setwd(output_dir)
+  utils::zip(zipfile = zip_path, files = rel_files, flags = "-q")
+  invisible(TRUE)
 }
 
 mfrm_results_export_table <- function(x) {
@@ -4545,6 +4893,7 @@ mfrm_results_export_write_csv <- function(df, path) {
 }
 
 mfrm_results_export_add_written <- function(written_files, component, format, path, note = "") {
+  meta <- mfrm_results_export_file_metadata(component, format, note)
   rbind(
     written_files,
     data.frame(
@@ -4552,8 +4901,96 @@ mfrm_results_export_add_written <- function(written_files, component, format, pa
       Format = as.character(format),
       Path = normalizePath(path, winslash = "/", mustWork = FALSE),
       Note = as.character(note %||% ""),
+      Audience = meta$Audience[1],
+      UseCase = meta$UseCase[1],
+      OpenFirst = meta$OpenFirst[1],
+      ClaimBoundary = meta$ClaimBoundary[1],
       stringsAsFactors = FALSE
     )
+  )
+}
+
+mfrm_results_export_reader_markdown <- function(x, report = NULL, preset = "starter") {
+  sx <- summary(x, view = "brief")
+  overview <- as.data.frame(sx$overview %||% data.frame(), stringsAsFactors = FALSE)
+  model <- as.character(overview$Model[1] %||% "")
+  method <- as.character(overview$Method[1] %||% "")
+  metric <- as.character(overview$PopulationMetric[1] %||% "")
+  triage <- as.data.frame(sx$triage %||% data.frame(), stringsAsFactors = FALSE)
+  actions <- as.data.frame(sx$next_actions %||% data.frame(), stringsAsFactors = FALSE)
+  action_lines <- if (nrow(actions) > 0L && "Action" %in% names(actions)) {
+    paste0(seq_len(nrow(actions)), ". ", actions$Action)
+  } else {
+    "1. Read 00_summary/triage.csv before opening detailed evidence tables."
+  }
+  review_line <- if (!is.null(report) && inherits(report, "mfrm_report")) {
+    "Open 01_report/first_screen.csv and 01_report/report_index.csv before drafting report text."
+  } else {
+    "Create mfrm_report(res) before drafting report text."
+  }
+  c(
+    "# mfrmr results export",
+    "",
+    paste0("Preset: ", preset),
+    paste0("Model/method: ", model, " / ", method),
+    if (!is.na(metric) && nzchar(metric)) paste0("Population metric: ", metric) else character(0),
+    "",
+    "## Read first",
+    "",
+    "- index.html",
+    "- 00_summary/overview.csv",
+    "- 00_summary/triage.csv",
+    "- 00_summary/next_actions.csv",
+    paste0("- ", review_line),
+    "",
+    "## Immediate next actions",
+    "",
+    action_lines,
+    "",
+    "## Interpretation boundary",
+    "",
+    paste(
+      "This folder summarizes an existing mfrm_results object.",
+      "It does not refit the model, recompute diagnostics, or turn screening",
+      "signals into fit, fairness, invariance, or validity decisions."
+    ),
+    "",
+    "## Folder roles",
+    "",
+    "- 00_summary: human-readable first screen and next actions.",
+    "- 01_report: report-readiness tables and HTML/Markdown report artifacts.",
+    "- 02_evidence: primary evidence summaries for fit, precision, bias, misfit, and linking.",
+    "- 03_reproducibility: replay code, manifest, and export summary.",
+    if (nrow(triage) > 0L) "" else character(0),
+    if (nrow(triage) > 0L) "## Highest-priority triage rows" else character(0),
+    if (nrow(triage) > 0L) "" else character(0),
+    if (nrow(triage) > 0L && all(c("Area", "Severity", "Detail") %in% names(triage))) {
+      paste0("- ", triage$Area, " [", triage$Severity, "]: ", triage$Detail)
+    } else {
+      character(0)
+    }
+  )
+}
+
+mfrm_results_export_reader_html <- function(x, report = NULL, preset = "starter") {
+  sx <- summary(x, view = "brief")
+  tables <- list(
+    overview = sx$overview,
+    triage = sx$triage,
+    next_actions = sx$next_actions
+  )
+  if (!is.null(report) && inherits(report, "mfrm_report")) {
+    rs <- summary(report, view = "reader")
+    tables$report_first_screen <- rs$first_screen
+    tables$reader_claims <- rs$reader_claims
+    tables$report_gaps <- rs$report_gaps
+  }
+  build_mfrm_bundle_html(
+    title = paste0("mfrmr Results Export (", preset, ")"),
+    text_sections = list(
+      "Read first" = paste(mfrm_results_export_reader_markdown(x, report, preset), collapse = "\n")
+    ),
+    tables = tables
   )
 }
 
@@ -4575,16 +5012,24 @@ mfrm_results_export_add_written <- function(written_files, component, format, pa
 #'   `"plots"` to write available plot routes as PNG files, or use `"all"`.
 #' @param overwrite Logical; if `FALSE`, existing files stop the export.
 #' @param zip_bundle Logical; if `TRUE`, create a best-effort zip archive of
-#'   the written files.
+#'   the written files. `preset = "starter"` preserves the reader-first folder
+#'   layout inside the zip; archive-style exports keep the legacy flattened zip
+#'   layout.
 #' @param zip_name Optional zip file name. When omitted,
 #'   `{prefix}_mfrm_results.zip` is used.
 #' @param plot_width,plot_height,plot_res PNG device settings used when
 #'   `include` contains `"plots"`.
+#' @param preset Export preset. `"archive"` preserves the complete
+#'   component-oriented export. `"starter"` writes a reader-first folder with
+#'   `index.html`, `README.md`, compact summary CSVs, report-readiness CSVs,
+#'   primary evidence summaries, replay code, and a manifest. `"reviewer"`
+#'   keeps the broader archive content while recording the same preset label.
 #'
 #' @details
 #' The helper writes:
 #' - summary CSVs from `summary(x)` such as overview, status, triage, plot
-#'   routes, next actions, mapping, and replay-code lines;
+#'   routes, next actions, mapping, and replay-code lines; the overview CSV
+#'   carries MML population-SD mode/estimate fields when relevant;
 #' - collected `x$tables` as CSV files;
 #' - optional report artifacts from `mfrm_report(x)`, including report-index,
 #'   evidence-summary, and reporting-template CSVs plus Markdown and HTML;
@@ -4593,6 +5038,16 @@ mfrm_results_export_add_written <- function(written_files, component, format, pa
 #' - an `.rds` copy of the `mfrm_results` object;
 #' - a replay `.R` scaffold from `x$input$reproducible_code`;
 #' - a written-files manifest and compact export summary.
+#'
+#' With `preset = "starter"`, the default `include` is narrowed to summary,
+#' report, HTML, replay, and manifest outputs, and files are grouped into
+#' `00_summary/`, `01_report/`, `02_evidence/`, and
+#' `03_reproducibility/` with root `index.html` and `README.md` entry points.
+#' The manifest carries `Audience`, `UseCase`, `OpenFirst`, and
+#' `ClaimBoundary` columns so users can distinguish reader-facing files,
+#' evidence summaries, and reproducibility artifacts. When `zip_bundle = TRUE`,
+#' the starter zip preserves the same folder structure so shared archives keep
+#' the intended read order.
 #'
 #' Plot export is intentionally optional because some plot routes can be
 #' comparatively slow or require richer graphics devices. Plot failures are
@@ -4606,14 +5061,18 @@ mfrm_results_export_add_written <- function(written_files, component, format, pa
 #' \dontrun{
 #' toy <- load_mfrmr_data("example_core")
 #' toy_small <- toy[toy$Person %in% unique(toy$Person)[1:6], , drop = FALSE]
+#' # example_core is a compact smoke fixture; use Study 1/2 or your own data
+#' # for substantive handoffs.
 #' fit <- fit_mfrm(toy_small, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "JML", maxit = 30)
 #' res <- mfrm_results(fit, include = c("fit", "diagnostics", "tables"))
 #'
+#' out_dir <- tempfile("mfrmr_results_example_")
 #' exported <- export_mfrm_results(
 #'   res,
-#'   output_dir = tempdir(),
+#'   output_dir = out_dir,
 #'   prefix = "mfrmr_results_example",
+#'   preset = "starter",
 #'   overwrite = TRUE
 #' )
 #' exported$summary[, c("FilesWritten", "CsvWritten", "HtmlWritten")]
@@ -4628,9 +5087,17 @@ export_mfrm_results <- function(x,
                                 zip_name = NULL,
                                 plot_width = 1200,
                                 plot_height = 900,
-                                plot_res = 144) {
+                                plot_res = 144,
+                                preset = "archive") {
   if (!inherits(x, "mfrm_results")) {
     stop("`x` must be an mfrm_results object. Call `mfrm_results()` first.", call. = FALSE)
+  }
+  include_was_missing <- missing(include)
+  preset <- mfrm_results_export_preset(preset)
+  if (include_was_missing && identical(preset, "starter")) {
+    include <- c("summary", "report", "html", "replay", "manifest")
+  } else if (include_was_missing && identical(preset, "reviewer")) {
+    include <- c("summary", "tables", "report", "html", "rds", "replay", "manifest")
   }
   include <- mfrm_results_export_include(include)
   overwrite <- isTRUE(overwrite)
@@ -4650,6 +5117,10 @@ export_mfrm_results <- function(x,
     Format = character(0),
     Path = character(0),
     Note = character(0),
+    Audience = character(0),
+    UseCase = character(0),
+    OpenFirst = logical(0),
+    ClaimBoundary = character(0),
     stringsAsFactors = FALSE
   )
   plot_errors <- data.frame(
@@ -4660,28 +5131,56 @@ export_mfrm_results <- function(x,
 
   ensure_path <- function(filename) {
     path <- file.path(output_dir, filename)
+    dir.create(dirname(path), recursive = TRUE, showWarnings = FALSE)
     if (file.exists(path) && !overwrite) {
       stop("File already exists: ", path, ". Set `overwrite = TRUE` to replace.", call. = FALSE)
     }
     path
   }
+  preset_file <- function(kind, filename) {
+    if (!identical(preset, "starter")) {
+      return(filename)
+    }
+    dir <- switch(
+      kind,
+      summary = "00_summary",
+      report = "01_report",
+      evidence = "02_evidence",
+      figure = "02_evidence",
+      reproducibility = "03_reproducibility",
+      NULL
+    )
+    if (is.null(dir)) {
+      return(filename)
+    }
+    file.path(dir, filename)
+  }
+  prefixed_name <- function(stem, ext, starter_stem = stem) {
+    if (identical(preset, "starter")) {
+      paste0(starter_stem, ext)
+    } else {
+      paste0(prefix, "_", stem, ext)
+    }
+  }
   add_written <- function(component, format, path, note = "") {
     written_files <<- mfrm_results_export_add_written(written_files, component, format, path, note)
     invisible(path)
   }
-  write_csv <- function(df, filename, component, note = "") {
-    path <- ensure_path(filename)
+  write_csv <- function(df, filename, component, note = "", kind = "archive") {
+    path <- ensure_path(preset_file(kind, filename))
     mfrm_results_export_write_csv(df, path)
     add_written(component, "csv", path, note)
   }
-  write_text <- function(text, filename, component, format = "txt", note = "") {
-    path <- ensure_path(filename)
+  write_text <- function(text, filename, component, format = "txt", note = "", kind = "archive") {
+    path <- ensure_path(preset_file(kind, filename))
     writeLines(enc2utf8(as.character(text %||% "")), con = path, useBytes = TRUE)
     add_written(component, format, path, note)
   }
 
+  report <- NULL
+
   if ("summary" %in% include) {
-    summary_tables <- mfrm_results_export_summary_tables(x)
+    summary_tables <- mfrm_results_export_summary_tables_for_preset(x, preset = preset)
     tags <- make.unique(
       vapply(names(summary_tables), export_sanitize_component_tag, character(1), fallback = "summary"),
       sep = "_"
@@ -4689,8 +5188,9 @@ export_mfrm_results <- function(x,
     for (i in seq_along(summary_tables)) {
       write_csv(
         summary_tables[[i]],
-        paste0(prefix, "_summary_", tags[[i]], ".csv"),
-        paste0("summary_", tags[[i]])
+        prefixed_name(paste0("summary_", tags[[i]]), ".csv", starter_stem = tags[[i]]),
+        paste0("summary_", tags[[i]]),
+        kind = "summary"
       )
     }
   }
@@ -4705,14 +5205,15 @@ export_mfrm_results <- function(x,
       write_csv(
         table_list[[i]],
         paste0(prefix, "_table_", tags[[i]], ".csv"),
-        paste0("table_", tags[[i]])
+        paste0("table_", tags[[i]]),
+        kind = "archive"
       )
     }
   }
 
   if ("report" %in% include) {
     report <- mfrm_report(x, style = "qc")
-    report_tables <- report$tables %||% list()
+    report_tables <- mfrm_results_export_report_tables_for_preset(report, preset = preset)
     tags <- make.unique(
       vapply(names(report_tables), export_sanitize_component_tag, character(1), fallback = "report_table"),
       sep = "_"
@@ -4720,20 +5221,22 @@ export_mfrm_results <- function(x,
     for (i in seq_along(report_tables)) {
       write_csv(
         report_tables[[i]],
-        paste0(prefix, "_report_", tags[[i]], ".csv"),
+        prefixed_name(paste0("report_", tags[[i]]), ".csv", starter_stem = tags[[i]]),
         paste0("report_", tags[[i]]),
-        note = "Table from mfrm_report(x, style = \"qc\")."
+        note = "Table from mfrm_report(x, style = \"qc\").",
+        kind = mfrm_results_export_component_kind(paste0("report_", tags[[i]]))
       )
     }
     write_text(
       report$markdown,
-      paste0(prefix, "_report.md"),
+      prefixed_name("report", ".md"),
       "report_markdown",
       format = "md",
-      note = "Markdown from mfrm_report(x, style = \"qc\", output = \"markdown\")."
+      note = "Markdown from mfrm_report(x, style = \"qc\", output = \"markdown\").",
+      kind = "report"
     )
     report_html <- mfrm_report_html(report)
-    html_path <- ensure_path(paste0(prefix, "_report.html"))
+    html_path <- ensure_path(preset_file("report", prefixed_name("report", ".html")))
     writeLines(enc2utf8(as.character(report_html$html %||% "")), con = html_path, useBytes = TRUE)
     add_written(
       "report_html",
@@ -4745,7 +5248,7 @@ export_mfrm_results <- function(x,
 
   if ("html" %in% include) {
     html_obj <- mfrm_results_html(x)
-    html_path <- ensure_path(paste0(prefix, "_results.html"))
+    html_path <- ensure_path(preset_file("report", prefixed_name("results", ".html")))
     ok <- file.copy(html_obj$path, html_path, overwrite = overwrite)
     if (!isTRUE(ok)) {
       stop("Could not write HTML export: ", html_path, call. = FALSE)
@@ -4754,7 +5257,7 @@ export_mfrm_results <- function(x,
   }
 
   if ("rds" %in% include) {
-    rds_path <- ensure_path(paste0(prefix, "_results.rds"))
+    rds_path <- ensure_path(preset_file("archive", prefixed_name("results", ".rds")))
     saveRDS(x, rds_path)
     add_written("results_rds", "rds", rds_path)
   }
@@ -4771,9 +5274,10 @@ export_mfrm_results <- function(x,
         "",
         replay_code
       ),
-      paste0(prefix, "_replay.R"),
+      prefixed_name("replay", ".R"),
       "replay_code",
-      format = "R"
+      format = "R",
+      kind = "reproducibility"
     )
   }
 
@@ -4786,7 +5290,7 @@ export_mfrm_results <- function(x,
     }
     for (type in plot_types) {
       tag <- export_sanitize_component_tag(type, fallback = "plot")
-      plot_path <- ensure_path(paste0(prefix, "_plot_", tag, ".png"))
+      plot_path <- ensure_path(preset_file("figure", prefixed_name(paste0("plot_", tag), ".png", starter_stem = paste0("plot_", tag))))
       dev_before <- grDevices::dev.cur()
       result <- tryCatch(
         {
@@ -4817,12 +5321,32 @@ export_mfrm_results <- function(x,
     }
   }
 
+  if (identical(preset, "starter")) {
+    write_text(
+      mfrm_results_export_reader_markdown(x, report = report, preset = preset),
+      "README.md",
+      "readme",
+      format = "md",
+      note = "Reader-first guide for this starter export."
+    )
+    index_html <- mfrm_results_export_reader_html(x, report = report, preset = preset)
+    index_path <- ensure_path("index.html")
+    writeLines(enc2utf8(as.character(index_html %||% "")), con = index_path, useBytes = TRUE)
+    add_written(
+      "index_html",
+      "html",
+      index_path,
+      "Reader-first HTML index for this starter export."
+    )
+  }
+
   if ("manifest" %in% include) {
-    export_summary_path <- ensure_path(paste0(prefix, "_export_summary.csv"))
+    export_summary_path <- ensure_path(preset_file("reproducibility", prefixed_name("export_summary", ".csv")))
     export_summary <- data.frame(
       Created = format(Sys.time(), "%Y-%m-%d %H:%M:%S %Z"),
       PackageVersion = as.character(utils::packageVersion("mfrmr")),
       Prefix = prefix,
+      Preset = preset,
       Include = paste(include, collapse = ","),
       FilesWritten = nrow(written_files) + 2L,
       CsvWritten = sum(written_files$Format %in% "csv") + 2L,
@@ -4836,7 +5360,7 @@ export_mfrm_results <- function(x,
     mfrm_results_export_write_csv(export_summary, export_summary_path)
     add_written("export_summary", "csv", export_summary_path)
 
-    manifest_path <- ensure_path(paste0(prefix, "_written_files.csv"))
+    manifest_path <- ensure_path(preset_file("reproducibility", prefixed_name("written_files", ".csv", starter_stem = "manifest")))
     manifest_rows <- mfrm_results_export_add_written(
       written_files,
       "written_files",
@@ -4848,7 +5372,7 @@ export_mfrm_results <- function(x,
     written_files <- manifest_rows
 
     if (nrow(plot_errors) > 0L) {
-      plot_error_path <- ensure_path(paste0(prefix, "_plot_errors.csv"))
+      plot_error_path <- ensure_path(preset_file("reproducibility", prefixed_name("plot_errors", ".csv")))
       mfrm_results_export_write_csv(plot_errors, plot_error_path)
       add_written("plot_errors", "csv", plot_error_path)
     }
@@ -4867,7 +5391,12 @@ export_mfrm_results <- function(x,
     zip_inputs <- unique(normalizePath(written_files$Path, winslash = "/", mustWork = TRUE))
     zip_result <- tryCatch(
       {
-        utils::zip(zipfile = zip_path, files = zip_inputs, extras = "-j")
+        mfrm_results_export_zip(
+          zip_path = zip_path,
+          files = zip_inputs,
+          output_dir = output_dir,
+          preserve_paths = identical(preset, "starter")
+        )
         TRUE
       },
       error = function(e) e
@@ -4885,6 +5414,7 @@ export_mfrm_results <- function(x,
   summary_out <- data.frame(
     OutputDir = output_dir,
     Prefix = prefix,
+    Preset = preset,
     FilesWritten = nrow(written_files),
     CsvWritten = sum(written_files$Format %in% "csv"),
     HtmlWritten = sum(written_files$Format %in% "html"),
@@ -4899,6 +5429,7 @@ export_mfrm_results <- function(x,
   out <- list(
     output_dir = output_dir,
     prefix = prefix,
+    preset = preset,
     include = include,
     summary = summary_out,
     written_files = written_files,
@@ -4939,6 +5470,10 @@ export_mfrm_results <- function(x,
 #' the whole results workflow. The returned object also carries
 #' `next_actions` and `input$reproducible_code` so users can move from the
 #' comprehensive first screen to explicit reporting or replay code.
+#' Use `summary(res, view = "brief")` for a reader-first printout that keeps
+#' only the overview, highest-priority triage rows, first next actions, and
+#' available plot routes. The default `summary(res)` remains the full
+#' first-screen table set.
 #'
 #' @section Include presets:
 #' - `"standard"`: fit, diagnostics, tables, precision, reporting, categories,
@@ -4972,8 +5507,10 @@ export_mfrm_results <- function(x,
 #' only the measurement columns needed for estimation.
 #'
 #' @section What to inspect first:
-#' Start with `summary(res)`. The most useful fields are:
-#' - `overview`: input mode, model, method, table count, and plot-route count
+#' Start with `summary(res, view = "brief")` for a short reader-first screen,
+#' or `summary(res)` when you need every indexed table. The most useful fields are:
+#' - `overview`: input mode, model, method, population-SD mode when relevant,
+#'   table count, and plot-route count
 #' - `triage`: first-screen signals ordered by unavailable/review/info/ok
 #' - `status`: which sections were available, skipped, or unsupported
 #' - `plot_map`: the supported `plot(res, type = ...)` routes for this object
@@ -5002,8 +5539,9 @@ export_mfrm_results <- function(x,
 #' @section Typical workflow:
 #' 1. Fit explicitly with [fit_mfrm()] in scripts and manuscripts.
 #' 2. Call `res <- mfrm_results(fit)`.
-#' 3. Read `summary(res)$triage`, `summary(res)$status`,
-#'    `summary(res)$plot_map`, and `summary(res)$next_actions`.
+#' 3. Read `summary(res, view = "brief")`, then inspect `summary(res)$overview`,
+#'    `summary(res)$triage`, `summary(res)$status`, `summary(res)$plot_map`, and
+#'    `summary(res)$next_actions` when detailed routing is needed.
 #' 4. Use `plot(res, type = "qc")` for the first visual screen.
 #' 5. Optionally inspect the same result with [launch_mfrmr_viewer()] in an
 #'    interactive session.
@@ -5034,6 +5572,8 @@ export_mfrm_results <- function(x,
 #' \dontrun{
 #' toy <- load_mfrmr_data("example_core")
 #' toy_small <- toy[toy$Person %in% unique(toy$Person)[1:8], , drop = FALSE]
+#' # example_core is a compact smoke fixture; use Study 1/2 or your own data
+#' # for substantive interpretation.
 #'
 #' # JML keeps the help example fast; use the recommended workflow settings
 #' # for final analyses.
@@ -5041,8 +5581,9 @@ export_mfrm_results <- function(x,
 #'                 method = "JML", maxit = 30)
 #' res <- mfrm_results(fit)
 #'
-#' sx <- summary(res)
+#' sx <- summary(res, view = "brief")
 #' sx$overview
+#' # For MML fits, overview also records fixed/estimated population-SD mode.
 #' sx$triage
 #' sx$plot_map
 #' sx$next_actions
@@ -5227,15 +5768,34 @@ mfrm_results_interactive <- function(data,
 }
 
 #' @export
-summary.mfrm_results <- function(object, digits = 3, top_n = 10, ...) {
+summary.mfrm_results <- function(object,
+                                 digits = 3,
+                                 top_n = 10,
+                                 view = c("full", "brief"),
+                                 ...) {
   if (!inherits(object, "mfrm_results")) {
     stop("`object` must be an mfrm_results object.", call. = FALSE)
   }
+  view <- match.arg(tolower(as.character(view[1])), c("full", "brief"))
   digits <- max(0L, as.integer(digits))
   top_n <- max(1L, as.integer(top_n))
   fit <- object$fit
   fit_summary <- as.data.frame(fit$summary %||% data.frame(), stringsAsFactors = FALSE)
   ov <- if (nrow(fit_summary) > 0L) fit_summary[1, , drop = FALSE] else data.frame()
+  population_sd_mode <- .review_population_sd_mode(fit)
+  population_prior_sd <- .review_population_prior_sd(fit)
+  estimated_population_sd <- .review_estimated_population_sd(fit)
+  population_sd_se_status <- .review_population_sd_se_status(fit)
+  if (is.na(population_sd_mode) || !nzchar(population_sd_mode)) {
+    population_prior_sd <- NA_real_
+    estimated_population_sd <- NA_real_
+    population_sd_se_status <- NA_character_
+  }
+  population_metric <- if (!is.na(population_sd_mode) && nzchar(population_sd_mode)) {
+    .review_population_metric_label(fit)
+  } else {
+    NA_character_
+  }
   overview <- data.frame(
     InputMode = as.character(object$input$mode %||% ""),
     Model = as.character(ov$Model[1] %||% fit$config$model %||% ""),
@@ -5248,6 +5808,11 @@ summary.mfrm_results <- function(object, digits = 3, top_n = 10, ...) {
     Tables = length(object$tables %||% list()),
     PlotRoutes = sum(object$plot_map$Available %in% TRUE, na.rm = TRUE),
     NotAvailable = sum(object$status$Status %in% "not_available", na.rm = TRUE),
+    PopulationSDMode = population_sd_mode,
+    PopulationPriorSD = population_prior_sd,
+    EstimatedPopulationSD = estimated_population_sd,
+    PopulationSDSEStatus = population_sd_se_status,
+    PopulationMetric = population_metric,
     stringsAsFactors = FALSE
   )
 
@@ -5269,6 +5834,18 @@ summary.mfrm_results <- function(object, digits = 3, top_n = 10, ...) {
   plot_map <- as.data.frame(object$plot_map %||% data.frame(), stringsAsFactors = FALSE)
   triage <- as.data.frame(object$triage %||% data.frame(), stringsAsFactors = FALSE)
   next_actions <- as.data.frame(object$next_actions %||% data.frame(), stringsAsFactors = FALSE)
+  if (identical(view, "brief")) {
+    if (nrow(triage) > 0L) {
+      triage <- utils::head(triage, n = min(top_n, 5L))
+    }
+    if (nrow(next_actions) > 0L) {
+      next_actions <- utils::head(next_actions, n = min(top_n, 3L))
+    }
+    if (nrow(plot_map) > 0L && "Available" %in% names(plot_map)) {
+      plot_map <- plot_map[plot_map$Available %in% TRUE, , drop = FALSE]
+      plot_map <- utils::head(plot_map, n = min(top_n, 5L))
+    }
+  }
   mapping <- mfrm_results_mapping_table(object$input$mapping %||% NULL)
   reproducible_code <- mfrm_results_code_table(object$input$reproducible_code %||% "")
 
@@ -5283,7 +5860,8 @@ summary.mfrm_results <- function(object, digits = 3, top_n = 10, ...) {
     mapping = mapping,
     reproducible_code = reproducible_code,
     notes = object$notes %||% character(0),
-    digits = digits
+    digits = digits,
+    view = view
   )
   class(out) <- "summary.mfrm_results"
   out
@@ -5291,7 +5869,40 @@ summary.mfrm_results <- function(object, digits = 3, top_n = 10, ...) {
 
 #' @export
 print.summary.mfrm_results <- function(x, ...) {
-  cat("mfrmr Results Summary\n")
+  view <- as.character(x$view %||% "full")
+  if (identical(view, "brief")) {
+    cat("mfrmr Results Brief\n")
+    if (!is.null(x$overview) && nrow(x$overview) > 0L) {
+      cat("\nOverview\n")
+      keep <- intersect(c(
+        "InputMode", "Model", "Method", "N", "Persons", "Facets",
+        "Categories", "Components", "Tables", "PopulationMetric"
+      ), names(x$overview))
+      print(as.data.frame(x$overview)[, keep, drop = FALSE], row.names = FALSE)
+    }
+    if (!is.null(x$triage) && nrow(x$triage) > 0L) {
+      cat("\nHighest-priority triage\n")
+      keep <- intersect(c("Area", "Severity", "Signal", "Route", "Detail"), names(x$triage))
+      print(as.data.frame(x$triage)[, keep, drop = FALSE], row.names = FALSE)
+    }
+    if (!is.null(x$next_actions) && nrow(x$next_actions) > 0L) {
+      cat("\nNext actions\n")
+      keep <- intersect(c("Priority", "Area", "Action", "Route", "Reason"), names(x$next_actions))
+      print(as.data.frame(x$next_actions)[, keep, drop = FALSE], row.names = FALSE)
+    }
+    if (!is.null(x$plot_map) && nrow(x$plot_map) > 0L) {
+      cat("\nAvailable plot routes\n")
+      keep <- intersect(c("Type", "Route", "Detail"), names(x$plot_map))
+      print(as.data.frame(x$plot_map)[, keep, drop = FALSE], row.names = FALSE)
+    }
+    if (!is.null(x$notes) && length(x$notes) > 0L) {
+      cat("\nNotes\n")
+      for (line in x$notes) cat(" - ", line, "\n", sep = "")
+    }
+    return(invisible(x))
+  } else {
+    cat("mfrmr Results Summary\n")
+  }
   if (!is.null(x$overview) && nrow(x$overview) > 0L) {
     cat("\nOverview\n")
     print(as.data.frame(x$overview), row.names = FALSE)
@@ -5351,7 +5962,7 @@ print.mfrm_report <- function(x, ...) {
   if (length(x$source_include %||% character(0)) > 0L) {
     cat("  Source include: ", paste(x$source_include, collapse = ", "), "\n", sep = "")
   }
-  cat("  Read order: summary(report) -> report$first_screen -> report$report_index -> report$template_index\n", sep = "")
+  cat("  Read order: summary(report, view = \"reader\") -> report$first_screen -> report$report_index -> report$template_index\n", sep = "")
   first_screen <- as.data.frame(x$first_screen %||% data.frame(), stringsAsFactors = FALSE)
   if (nrow(first_screen) > 0L) {
     cat("\nFirst screen\n")
@@ -5389,6 +6000,35 @@ print.mfrm_report <- function(x, ...) {
 
 #' @export
 print.summary.mfrm_report <- function(x, ...) {
+  view <- as.character(x$view %||% "full")
+  if (identical(view, "reader")) {
+    cat("mfrmr Report Reader Summary\n")
+    if (!is.null(x$overview) && nrow(x$overview) > 0L) {
+      cat("\nOverview\n")
+      print(as.data.frame(x$overview), row.names = FALSE)
+    }
+    if (!is.null(x$first_screen) && nrow(x$first_screen) > 0L) {
+      cat("\nFirst screen\n")
+      keep <- intersect(c("Area", "Status", "Readiness", "MainIssue", "NextAction", "PrimaryRoute"), names(x$first_screen))
+      print(as.data.frame(x$first_screen)[, keep, drop = FALSE], row.names = FALSE)
+    }
+    if (!is.null(x$reader_claims) && nrow(x$reader_claims) > 0L) {
+      cat("\nCan report / Need follow-up\n")
+      keep <- intersect(c("ReportUse", "Claims", "ExampleClaim", "NextStep"), names(x$reader_claims))
+      print(as.data.frame(x$reader_claims)[, keep, drop = FALSE], row.names = FALSE)
+    }
+    if (!is.null(x$immediate_actions) && nrow(x$immediate_actions) > 0L) {
+      cat("\nImmediate actions\n")
+      keep <- intersect(c("Area", "Status", "MainIssue", "NextAction", "PrimaryRoute"), names(x$immediate_actions))
+      print(as.data.frame(x$immediate_actions)[, keep, drop = FALSE], row.names = FALSE)
+    }
+    if (!is.null(x$report_gaps) && nrow(x$report_gaps) > 0L) {
+      cat("\nReport gaps\n")
+      print(as.data.frame(x$report_gaps), row.names = FALSE)
+    }
+    return(invisible(x))
+  }
+
   cat("mfrmr Report Summary\n")
   if (!is.null(x$overview) && nrow(x$overview) > 0L) {
     cat("\nOverview\n")
@@ -5417,6 +6057,15 @@ print.summary.mfrm_report <- function(x, ...) {
   if (!is.null(x$boundary_index) && nrow(x$boundary_index) > 0L) {
     cat("\nBoundary index\n")
     print(as.data.frame(x$boundary_index), row.names = FALSE)
+  }
+  if (!is.null(x$model_comparison_guidance) &&
+      nrow(as.data.frame(x$model_comparison_guidance)) > 0L) {
+    cat("\nModel comparison guidance\n")
+    keep <- intersect(
+      c("ComparisonFamily", "ComparisonStrength", "ClaimScope", "InterpretationGuard", "NextAction"),
+      names(x$model_comparison_guidance)
+    )
+    print(as.data.frame(x$model_comparison_guidance)[, keep, drop = FALSE], row.names = FALSE)
   }
   invisible(x)
 }

@@ -125,7 +125,7 @@ category-probability curves shown by \code{type = "ccc"}.
 conditional ogives \code{P(k) / (P(k-1) + P(k))} in the Winsteps/FACETS
 "Conditional Probability Curves" sense; their \code{.5} crossings estimate
 the Rasch-Andrich thresholds. \code{type = "conditional_probability"} now
-routes to this display (before 0.3.0 it was a \code{ccc} alias) and says so
+routes to this display (before 0.2.2 it was a \code{ccc} alias) and says so
 once per session. Use
 \code{plot_data(out, component = "plot_long")} when rebuilding the curves with
 ggplot2, plotly, or another R graphics system.

@@ -40,7 +40,8 @@ label is chosen from the DFF method.}
 }
 \value{
 An \code{mfrm_plot_data} object whose \code{data} slot contains
-columns \code{Pair}, \code{Effect}, \code{SE}, \code{Classification}, \code{Color}.
+columns \code{Pair}, \code{Effect}, \code{SE}, \code{Classification},
+\code{ClassificationSystem}, \code{ETSDisplayEligible}, and \code{Color}.
 }
 \description{
 Compact effect-size summary for a \code{\link[=analyze_dff]{analyze_dff()}} / \code{\link[=analyze_dif]{analyze_dif()}}
@@ -59,7 +60,8 @@ observed-minus-expected average screening contrast between groups. For
 fitted logit scale when linking support allows a comparable contrast.
 The ETS classification (A negligible, B moderate, C large) drives bar
 colour only when \code{ClassificationSystem == "ETS"}; otherwise the bar
-uses the preset's neutral.
+uses the preset's neutral. \code{ETSDisplayEligible} in the draw-free payload
+records this decision row by row.
 }
 
 \examples{

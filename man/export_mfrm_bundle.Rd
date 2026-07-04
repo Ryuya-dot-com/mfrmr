@@ -133,7 +133,8 @@ Depending on \code{include}, the exporter can write:
 \item manifest CSV/TXT via \code{\link[=build_mfrm_manifest]{build_mfrm_manifest()}}
 \item visual warning/summary artifacts via \code{\link[=build_visual_summaries]{build_visual_summaries()}}
 \item prediction/forecast CSVs via \code{\link[=predict_mfrm_population]{predict_mfrm_population()}},
-\code{\link[=predict_mfrm_units]{predict_mfrm_units()}}, and \code{\link[=sample_mfrm_plausible_values]{sample_mfrm_plausible_values()}}
+\code{\link[=predict_mfrm_units]{predict_mfrm_units()}}, and \code{\link[=sample_mfrm_plausible_values]{sample_mfrm_plausible_values()}}, including
+population-forecast runtime metadata when available
 \item a package-native replay script via \code{\link[=build_mfrm_replay_script]{build_mfrm_replay_script()}}
 \item for latent-regression fits, a replay-side person-data CSV paired with the
 replay script
@@ -184,10 +185,11 @@ toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "JML", maxit = 30)
 diag <- diagnose_mfrm(fit, residual_pca = "none")
+out_dir <- tempfile("mfrmr_bundle_example_")
 bundle <- export_mfrm_bundle(
   fit,
   diagnostics = diag,
-  output_dir = tempdir(),
+  output_dir = out_dir,
   prefix = "mfrmr_bundle_example",
   include = c("core_tables", "manifest", "script", "html"),
   overwrite = TRUE

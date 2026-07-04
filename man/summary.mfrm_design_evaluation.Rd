@@ -17,8 +17,14 @@
 An object of class \code{summary.mfrm_design_evaluation} with components:
 \itemize{
 \item \code{overview}: run-level overview
+\item \code{reading_order}: recommended order for reading the summary tables
+\item \code{next_actions}: action-oriented triage for interpreting and exporting the
+summary
+\item \code{reporting_notes}: report-facing boundaries and recommended wording
+safeguards
 \item \code{design_summary}: aggregated design-by-facet metrics, with design-variable
 alias columns when applicable
+\item \code{runtime}: run-level elapsed-time metadata for the design-evaluation run
 \item \code{sparse_review}: compact planned-missingness and rater-link review counts
 when sparse linked designs are active
 \item \code{ademp}: simulation-study metadata carried forward from the original object

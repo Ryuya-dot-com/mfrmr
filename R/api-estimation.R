@@ -3339,7 +3339,7 @@ plot.mfrm_anchor_review <- function(x,
 #' 3. Pass selected rows back into `fit_mfrm(..., anchors = ...)`.
 #'
 #' @return A data.frame with `Facet`, `Level`, and `Anchor`.
-#' @seealso [fit_mfrm()], [review_mfrm_anchors()]
+#' @seealso [fit_mfrm()], [review_mfrm_anchors()], [anchor_linking_contract()]
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
@@ -3394,6 +3394,266 @@ make_anchor_table <- function(fit,
 
   out |>
     dplyr::arrange(.data$Facet, .data$Level)
+}
+
+#' Build the anchor and linking contract for a fitted model
+#'
+#' @param fit Output from [fit_mfrm()].
+#' @param diagnostics Optional output from [diagnose_mfrm()]. If supplied, the
+#'   returned bundle includes a displacement-review summary.
+#' @param include_person_anchors If `TRUE`, candidate anchors include person
+#'   estimates. The default keeps person rows out of anchor handoff files.
+#' @param digits Rounding digits used for candidate anchor values.
+#'
+#' @details
+#' `anchor_linking_contract()` is a boundary table for FACETS-facing anchor
+#' work. It makes four surfaces explicit:
+#'
+#' - candidate anchor rows exported by [make_anchor_table()];
+#' - direct anchors and group anchors actually used by the current fit;
+#' - package-native review surfaces such as [review_mfrm_anchors()] and
+#'   [displacement_table()];
+#' - FACETS command-file surfaces that are not implemented, especially full
+#'   `Anchorfile=` specification rewrites with final measures, scale blocks,
+#'   current settings, data, and `,A` flags.
+#'
+#' The returned `candidate_anchors` table is usable by `fit_mfrm(anchors = ...)`
+#' in later package-native fits. It is not a FACETS specification file and is
+#' not a proof that the chosen anchors are appropriate for a receiving dataset.
+#' Always review candidate anchors against the receiving data with
+#' [review_mfrm_anchors()] before final estimation.
+#'
+#' @return A bundle of class `mfrm_anchor_contract` with:
+#' - `summary`: one-row overview of anchor rows and support status
+#' - `contract`: status table for implemented, partial, and unsupported
+#'   anchor/linking surfaces
+#' - `candidate_anchors`: output from [make_anchor_table()]
+#' - `input_anchors`: direct anchors used by the current fit, when any
+#' - `input_group_anchors`: group anchors used by the current fit, when any
+#' - `constraint_summary`: facet-level anchor/group/dummy summary
+#' - `displacement_summary`: optional [displacement_table()] summary
+#' - `settings`: build settings
+#'
+#' @seealso [make_anchor_table()], [review_mfrm_anchors()],
+#'   [displacement_table()], [export_mfrm_bundle()], [build_mfrm_manifest()]
+#' @examplesIf interactive()
+#' toy <- load_mfrmr_data("example_core")
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
+#'                 method = "JML", maxit = 30)
+#' contract <- anchor_linking_contract(fit)
+#' contract$contract[, c("Surface", "Status", "Boundary")]
+#' @export
+anchor_linking_contract <- function(fit,
+                                    diagnostics = NULL,
+                                    include_person_anchors = FALSE,
+                                    digits = 6) {
+  if (!inherits(fit, "mfrm_fit")) {
+    stop("`fit` must be an mfrm_fit object from fit_mfrm().", call. = FALSE)
+  }
+  digits <- max(0L, as.integer(digits))
+  include_person_anchors <- isTRUE(include_person_anchors)
+
+  candidate_anchors <- make_anchor_table(
+    fit = fit,
+    include_person = include_person_anchors,
+    digits = digits
+  )
+  anchor_tables <- extract_anchor_tables(fit$config)
+  input_anchors <- as.data.frame(anchor_tables$anchors %||% data.frame(), stringsAsFactors = FALSE)
+  input_group_anchors <- as.data.frame(anchor_tables$groups %||% data.frame(), stringsAsFactors = FALSE)
+  constraint_summary <- as.data.frame(fit$config$anchor_summary %||% data.frame(), stringsAsFactors = FALSE)
+  displacement_summary <- anchor_contract_displacement_summary(fit, diagnostics = diagnostics)
+
+  direct_anchor_rows <- nrow(input_anchors)
+  group_anchor_rows <- nrow(input_group_anchors)
+  candidate_rows <- nrow(candidate_anchors)
+  constrained_facets <- anchor_contract_constrained_facet_count(constraint_summary)
+  dummy_facets <- anchor_contract_dummy_facet_count(constraint_summary)
+  displacement_rows <- nrow(displacement_summary)
+
+  summary_tbl <- data.frame(
+    CandidateAnchorRows = candidate_rows,
+    InputDirectAnchorRows = direct_anchor_rows,
+    InputGroupAnchorRows = group_anchor_rows,
+    ConstrainedFacets = constrained_facets,
+    DummyFacets = dummy_facets,
+    IncludesPersonAnchors = include_person_anchors,
+    DisplacementSummaryAvailable = displacement_rows > 0L,
+    FACETSAnchorfileRewriteSupported = FALSE,
+    RNativeReplaySupported = TRUE,
+    PrimaryAnchorRoute = "make_anchor_table() -> review_mfrm_anchors() -> fit_mfrm(anchors = ...)",
+    Boundary = "mfrmr exports R-native anchor tables and replay metadata, not a FACETS Anchorfile= specification rewrite.",
+    stringsAsFactors = FALSE
+  )
+
+  contract_tbl <- anchor_linking_contract_rows(
+    candidate_rows = candidate_rows,
+    direct_anchor_rows = direct_anchor_rows,
+    group_anchor_rows = group_anchor_rows,
+    displacement_rows = displacement_rows,
+    include_person_anchors = include_person_anchors
+  )
+
+  settings <- list(
+    include_person_anchors = include_person_anchors,
+    digits = digits,
+    diagnostics_supplied = !is.null(diagnostics)
+  )
+
+  out <- list(
+    summary = summary_tbl,
+    contract = contract_tbl,
+    candidate_anchors = as.data.frame(candidate_anchors, stringsAsFactors = FALSE),
+    input_anchors = input_anchors,
+    input_group_anchors = input_group_anchors,
+    constraint_summary = constraint_summary,
+    displacement_summary = displacement_summary,
+    settings = settings
+  )
+  as_mfrm_bundle(out, "mfrm_anchor_contract")
+}
+
+anchor_contract_displacement_summary <- function(fit, diagnostics = NULL) {
+  if (is.null(diagnostics)) {
+    return(data.frame(
+      Rows = integer(0),
+      AnchoredRows = integer(0),
+      FlaggedAnchoredLevels = integer(0),
+      stringsAsFactors = FALSE
+    ))
+  }
+  out <- tryCatch(
+    displacement_table(fit, diagnostics = diagnostics, anchored_only = FALSE),
+    error = function(e) NULL
+  )
+  if (is.null(out) || is.null(out$summary) || !is.data.frame(out$summary)) {
+    return(data.frame(
+      Rows = integer(0),
+      AnchoredRows = integer(0),
+      FlaggedAnchoredLevels = integer(0),
+      stringsAsFactors = FALSE
+    ))
+  }
+  as.data.frame(out$summary, stringsAsFactors = FALSE)
+}
+
+anchor_contract_constrained_facet_count <- function(constraint_summary) {
+  if (!is.data.frame(constraint_summary) || nrow(constraint_summary) == 0L) {
+    return(0L)
+  }
+  anchored <- if ("AnchoredLevels" %in% names(constraint_summary)) {
+    suppressWarnings(as.numeric(constraint_summary$AnchoredLevels))
+  } else {
+    rep(0, nrow(constraint_summary))
+  }
+  grouped <- if ("GroupAnchors" %in% names(constraint_summary)) {
+    suppressWarnings(as.numeric(constraint_summary$GroupAnchors))
+  } else {
+    rep(0, nrow(constraint_summary))
+  }
+  dummy <- if ("DummyFacet" %in% names(constraint_summary)) {
+    constraint_summary$DummyFacet %in% TRUE
+  } else {
+    rep(FALSE, nrow(constraint_summary))
+  }
+  as.integer(sum((anchored > 0 | grouped > 0 | dummy) %in% TRUE, na.rm = TRUE))
+}
+
+anchor_contract_dummy_facet_count <- function(constraint_summary) {
+  if (!is.data.frame(constraint_summary) || nrow(constraint_summary) == 0L ||
+      !"DummyFacet" %in% names(constraint_summary)) {
+    return(0L)
+  }
+  as.integer(sum(constraint_summary$DummyFacet %in% TRUE, na.rm = TRUE))
+}
+
+anchor_linking_contract_rows <- function(candidate_rows,
+                                         direct_anchor_rows,
+                                         group_anchor_rows,
+                                         displacement_rows,
+                                         include_person_anchors) {
+  row <- function(surface, route, status, guarantee, boundary, follow_up) {
+    data.frame(
+      Surface = surface,
+      mfrmrRoute = route,
+      Status = status,
+      Guarantee = guarantee,
+      Boundary = boundary,
+      FollowUp = follow_up,
+      stringsAsFactors = FALSE
+    )
+  }
+
+  do.call(rbind, list(
+    row(
+      "Candidate anchor table from fitted estimates",
+      "make_anchor_table(); anchor_linking_contract()$candidate_anchors",
+      if (candidate_rows > 0L) "implemented" else "available_empty",
+      "Returns Facet, Level, and rounded logit Anchor values from the fitted mfrmr estimates.",
+      if (isTRUE(include_person_anchors)) {
+        "Person rows were explicitly requested; they are usually inappropriate for cross-form operational anchoring."
+      } else {
+        "Person rows are excluded by default; the table is not a FACETS Anchorfile= specification."
+      },
+      "Review the receiving data with review_mfrm_anchors() before using these rows in fit_mfrm(anchors = ...)."
+    ),
+    row(
+      "Direct anchors used by the current fit",
+      "fit_mfrm(anchors = ...); fit$config$anchor_summary",
+      if (direct_anchor_rows > 0L) "implemented" else "not_used_in_current_fit",
+      "Direct anchors fix individual facet-element measures to supplied logit values.",
+      "The route uses R data frames, not FACETS Labels= or ,A command-file syntax.",
+      "Inspect anchor_linking_contract()$input_anchors and displacement_table(anchored_only = TRUE)."
+    ),
+    row(
+      "Group anchors used by the current fit",
+      "fit_mfrm(group_anchors = ...); review_mfrm_anchors()",
+      if (group_anchor_rows > 0L) "implemented" else "not_used_in_current_fit",
+      "Group anchors constrain group means while allowing element estimates to vary within group.",
+      "FACETS label-file group flags and target-element syntax are not parsed.",
+      "Inspect anchor_linking_contract()$input_group_anchors and review group coverage."
+    ),
+    row(
+      "Anchor schema and support review",
+      "review_mfrm_anchors()",
+      "implemented",
+      "Checks schema, duplicate rows, direct-vs-group overlap, observation support, and category support.",
+      "This is a design and data-support review; it does not prove external linking validity.",
+      "Resolve nonzero issue_counts before final anchored estimation."
+    ),
+    row(
+      "Displacement and anchor-sensitivity review",
+      "displacement_table(); plot_displacement()",
+      if (displacement_rows > 0L) "implemented" else "available_when_diagnostics_supplied",
+      "Reviews released-minus-anchored estimates and flags large displacement / t-ratio rows.",
+      "This is package-native displacement evidence, not a FACETS Anchorfile= or Table layout clone.",
+      "Call anchor_linking_contract(fit, diagnostics = diagnose_mfrm(fit)) to attach the displacement summary."
+    ),
+    row(
+      "R-native replay of anchors and group anchors",
+      "build_mfrm_manifest(); build_mfrm_replay_script(); export_mfrm_bundle()",
+      "implemented",
+      "Stores anchor tables and replay code for mfrmr analyses.",
+      "Replay is for mfrmr, not for direct FACETS command-file execution.",
+      "Archive manifest, replay script, anchor CSV, and anchor contract CSV together."
+    ),
+    row(
+      "FACETS Labels= parser and element-number management",
+      "none",
+      "not_implemented",
+      "No guarantee: mfrmr does not parse FACETS Labels= blocks.",
+      "Use explicit R columns and R anchor tables instead of FACETS element numbers.",
+      "Convert FACETS label files upstream before calling fit_mfrm()."
+    ),
+    row(
+      "FACETS Anchorfile= complete specification rewrite",
+      "none",
+      "not_implemented",
+      "No guarantee: mfrmr does not write a complete FACETS specification file.",
+      "Final measures, rating-scale calibrations, current settings, embedded data, and ,A flags are not emitted as FACETS syntax.",
+      "Use export_mfrm_bundle() for R-native handoff; use FACETS itself if a FACETS Anchorfile= is required."
+    )
+  ))
 }
 
 #' Compute diagnostics for an `mfrm_fit` object

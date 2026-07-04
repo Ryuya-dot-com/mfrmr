@@ -50,6 +50,7 @@ test_that("summary.mfrm_fit reports legacy population basis for ordinary fits", 
   s <- summary(fit)
 
   expect_true("population_overview" %in% names(s))
+  expect_true("design_spec" %in% names(s))
   expect_true("population_design" %in% names(s))
   expect_true("population_coding" %in% names(s))
   expect_true("status" %in% names(s))
@@ -58,6 +59,7 @@ test_that("summary.mfrm_fit reports legacy population basis for ordinary fits", 
   expect_true("settings_overview" %in% names(s))
   expect_true("reporting_map" %in% names(s))
   expect_true(is.data.frame(s$population_overview))
+  expect_true(is.data.frame(s$design_spec))
   expect_true(is.data.frame(s$population_design))
   expect_true(is.data.frame(s$population_coding))
   expect_true(is.data.frame(s$status))
@@ -66,12 +68,16 @@ test_that("summary.mfrm_fit reports legacy population basis for ordinary fits", 
   expect_true(is.data.frame(s$settings_overview))
   expect_true(is.data.frame(s$reporting_map))
   expect_false(isTRUE(s$population_overview$PopulationModel[1]))
+  expect_identical(as.character(s$design_spec$ThresholdStructure[1]), "common")
   expect_equal(nrow(s$population_design), 0L)
   expect_equal(nrow(s$population_coding), 0L)
   expect_identical(as.character(s$population_overview$PosteriorBasis[1]), "legacy_mml")
+  expect_identical(as.character(s$population_overview$PopulationSDMode[1]), "fixed")
+  expect_equal(s$population_overview$PopulationPriorSD[1], 1, tolerance = 1e-12)
+  expect_true(any(s$status$Item == "Population metric"))
   expect_true(all(c("StepFacet", "SlopeFacet", "NoncenterFacet", "QuadPoints") %in% names(s$settings_overview)))
   expect_true(all(c("Area", "CoveredHere", "CompanionOutput") %in% names(s$reporting_map)))
-  expect_true(any(grepl("legacy unconditional prior", s$notes, fixed = TRUE)))
+  expect_true(any(grepl("fixed normal marginal prior scale", s$notes, fixed = TRUE)))
 })
 
 test_that("GPCM summaries expose slope overview and diagnostics are now available", {
@@ -191,6 +197,14 @@ test_that("curve/report GPCM workflows open where the probability kernel is alre
   expect_false(any(out_score$scorefile$ScoreUncertaintyStatus == "score_side_se_not_exported"))
   expect_true(any(is.finite(out_score$scorefile$ExpectedScoreSE)))
   expect_true(any(is.finite(out_score$scorefile$ScoreSideSE)))
+  ok_score_side <- out_score$scorefile$ScoreSideSE_Status == "ok"
+  expect_equal(
+    as.numeric(out_score$scorefile$ScoreSideSE[ok_score_side]),
+    abs(as.numeric(out_score$scorefile$ScoreSlope[ok_score_side])) *
+      as.numeric(out_score$scorefile$Var[ok_score_side]) *
+      as.numeric(out_score$scorefile$ScoreSideLogitSE[ok_score_side]),
+    tolerance = 1e-3
+  )
 
   score_se_plot <- plot(out_score, type = "score_se", draw = FALSE)
   expect_s3_class(score_se_plot, "mfrm_plot_data")
@@ -355,9 +369,40 @@ test_that("rating_scale_table returns category_table + threshold_table", {
 
 test_that("measurable_summary_table returns summary + facet_coverage", {
   res <- measurable_summary_table(.stab_fit, diagnostics = .stab_dx)
-  expect_true(all(c("summary", "facet_coverage") %in% names(res)))
+  expect_true(all(c("summary", "residual_summary", "variance_summary", "facet_coverage") %in% names(res)))
   expect_true(is.data.frame(res$summary))
+  expect_true(is.data.frame(res$residual_summary))
+  expect_true(is.data.frame(res$variance_summary))
   expect_true(is.data.frame(res$facet_coverage))
+  expect_true(all(c(
+    "Statistic", "N", "TotalWeight", "Category", "Score",
+    "Expected", "Residual", "StdResidual"
+  ) %in% names(res$residual_summary)))
+  expect_true(all(c(
+    "RawScoreVariancePopulation", "ResidualVariancePopulation",
+    "RawScoreErrorVariancePct", "ExplainedVarianceApprox",
+    "ExplainedVariancePctApprox", "GlobalPearsonChiSq",
+    "GlobalPearsonDFApprox", "GlobalPearsonRatioApprox"
+  ) %in% names(res$variance_summary)))
+
+  obs <- .stab_dx$obs
+  w <- if ("Weight" %in% names(obs)) as.numeric(obs$Weight) else rep(1, nrow(obs))
+  score <- as.numeric(obs$score_k)
+  residual <- as.numeric(obs$Residual)
+  weighted_var <- function(x) {
+    ok <- is.finite(x) & is.finite(w) & w > 0
+    mu <- sum(w[ok] * x[ok]) / sum(w[ok])
+    sum(w[ok] * (x[ok] - mu)^2) / sum(w[ok])
+  }
+  expected_error_pct <- 100 * weighted_var(residual) / weighted_var(score)
+  expect_equal(res$variance_summary$RawScoreErrorVariancePct[1],
+               expected_error_pct,
+               tolerance = 1e-10)
+  expect_equal(res$summary$RawScoreErrorVariancePct[1],
+               res$variance_summary$RawScoreErrorVariancePct[1],
+               tolerance = 1e-12)
+  s <- summary(res)
+  expect_identical(s$preview_name, "variance_summary")
 })
 
 test_that("interrater_agreement_table returns pairs + summary", {

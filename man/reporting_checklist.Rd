@@ -43,6 +43,9 @@ This helper ports the app-level reporting checklist into a package-native
 bundle. It does not try to judge substantive reporting quality; instead, it
 checks whether the fitted object and related diagnostics contain the evidence
 typically reported in MFRM write-ups.
+For fit-independent planning, protocol writing, or reviewer-style checks
+before an analysis object exists, start with
+\code{\link[=mfrmr_minimum_report_checklist]{mfrmr_minimum_report_checklist()}}.
 
 Checklist items are grouped into seven core sections:
 \itemize{
@@ -177,7 +180,8 @@ nchar(apa$report_text)
 \dontshow{\}) # examplesIf}
 }
 \seealso{
-\code{\link[=build_apa_outputs]{build_apa_outputs()}}, \code{\link[=build_visual_summaries]{build_visual_summaries()}},
+\code{\link[=mfrmr_minimum_report_checklist]{mfrmr_minimum_report_checklist()}}, \code{\link[=build_apa_outputs]{build_apa_outputs()}},
+\code{\link[=build_visual_summaries]{build_visual_summaries()}},
 \code{\link[=specifications_report]{specifications_report()}}, \code{\link[=data_quality_report]{data_quality_report()}},
 \code{\link[=build_misfit_casebook]{build_misfit_casebook()}}, \code{\link[=build_linking_review]{build_linking_review()}}
 }

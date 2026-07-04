@@ -27,8 +27,8 @@ A data.frame with columns:
 }
 \description{
 \code{facets_feature_coverage()} summarizes how the current \code{mfrmr} release maps
-the main FACETS output-table, output-file, and graph-menu surface to package
-functions.
+the main FACETS model-control, rating-scale, output-table, output-file, and
+graph-menu surface to package functions.
 
 Use this helper before migration work when you need a public, user-facing
 answer to three questions:
@@ -42,8 +42,12 @@ the current package scope.
 \details{
 The matrix is based on the FACETS 64-bit output index, which lists output
 Tables 1--14, DIF/bias plots, R/Web plots, output files, and graph-menu
-curves. \code{mfrmr} intentionally prioritizes structured R tables and reusable
-plot data over exact FACETS line-printer output.
+curves, plus the FACETS model and rating-scale help pages. The command and
+model rows matter because FACETS can use multiple \verb{Model=} statements,
+response-family scale codes, named rating-scale blocks, and output-dialog
+file integrations that are broader than the current \code{fit_mfrm()} API.
+\code{mfrmr} intentionally prioritizes structured R tables and reusable plot data
+over exact FACETS command-language, UI, or line-printer reproduction.
 
 Status meanings:
 \itemize{
@@ -65,9 +69,14 @@ facets_feature_coverage("not_implemented")
 Linacre, J. M. (2026). \emph{A user's guide to FACETS, version 4.5.0}.
 Output tables - files - plots - graphs:
 \url{https://www.winsteps.com/facetman64/outputtableindex.htm}.
+Model statement help:
+\url{https://www.winsteps.com/facetman64/models.htm}.
+Rating-scale help:
+\url{https://www.winsteps.com/facetman64/ratingscale.htm}.
 }
 \seealso{
-\code{\link[=facets_positioning_guide]{facets_positioning_guide()}}, \code{\link[=mfrmr_output_guide]{mfrmr_output_guide()}},
+\code{\link[=facets_positioning_guide]{facets_positioning_guide()}}, \code{\link[=facets_term_crosswalk]{facets_term_crosswalk()}},
+\code{\link[=facets_visual_contract]{facets_visual_contract()}}, \code{\link[=mfrmr_output_guide]{mfrmr_output_guide()}},
 \code{\link[=facets_fit_df_guide]{facets_fit_df_guide()}}, \code{\link[=read_facets_fit_table]{read_facets_fit_table()}}, \code{\link[=facets_fit_review]{facets_fit_review()}},
 \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}}
 }

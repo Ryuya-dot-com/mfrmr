@@ -379,8 +379,11 @@ extract_dff_group_estimates <- function(sub_fit, sub_diag, facet, fallback_level
 #' @param diagnostics Output from [diagnose_mfrm()].
 #' @param facet Character scalar naming the facet whose elements are tested
 #'   for differential functioning (for example, `"Criterion"` or `"Rater"`).
-#' @param group Character scalar naming the column in the data that
-#'   defines the grouping variable (e.g., `"Gender"`, `"Site"`).
+#' @param group Character scalar naming the categorical column in the data
+#'   that defines the grouping variable (e.g., `"Gender"`, `"Site"`).
+#'   Numeric columns are treated as category labels, not as continuous
+#'   covariates; high-cardinality numeric columns are rejected so
+#'   continuous-covariate moderation is not mistaken for MH DIF/DFF.
 #' @param data Optional data frame containing at least the group column
 #'   and the same person/facet/score columns used to fit the model. If
 #'   `NULL` (default), mfrmr tries to recover the data from
@@ -405,8 +408,15 @@ extract_dff_group_estimates <- function(sub_fit, sub_diag, facet, fallback_level
 #' **Differential facet functioning (DFF)** occurs when the
 #' difficulty or severity of a facet element differs across subgroups
 #' of the population, after controlling for overall ability.  In an
-#' MFRM context this generalises classical DIF (which applies to
+#' MFRM context this generalises item-focused DIF (which applies to
 #' items) to any facet: raters, criteria, tasks, etc.
+#'
+#' This is the fitted-model MFRM route. It uses the `fit_mfrm()` response
+#' model supplied in `fit`: `RSM` and `PCM` are Rasch-family equal-weighting
+#' routes, while bounded `GPCM` is available only as slope-aware screening /
+#' reporting evidence with an explicit `gpcm_boundary`. By contrast,
+#' [analyze_dif_mh()] is an observed-score Mantel-Haenszel screen and
+#' does not use a fitted MFRM, `RSM`, `PCM`, or `GPCM` model.
 #'
 #' Differential functioning is a threat to measurement fairness: if Criterion 1 is harder
 #' for Group A than Group B at the same ability level, the measurement
@@ -454,6 +464,13 @@ extract_dff_group_estimates <- function(sub_fit, sub_diag, facet, fallback_level
 #' default, which controls the family-wise error rate without assuming
 #' independence.  Alternative methods (e.g., `"BH"` for false discovery
 #' rate) can be specified via `p_adjust`.
+#'
+#' The grouping variable is categorical. With three or more levels,
+#' `analyze_dff()` performs all pairwise group comparisons by default, or
+#' reference-versus-focal comparisons when `focal` is supplied. Continuous
+#' covariates should be handled by a separate moderation/regression design;
+#' binning a continuous covariate before calling this helper is acceptable
+#' only as an explicitly labelled exploratory screen.
 #'
 #' @section Choosing a method:
 #' In most first-pass DFF screening, start with `method = "residual"`. It is
@@ -505,7 +522,8 @@ extract_dff_group_estimates <- function(sub_fit, sub_diag, facet, fallback_level
 #' - `summary`: counts by screening or ETS classification.
 #' - `group_fits`: (refit method) per-group facet estimates.
 #' - `gpcm_boundary`: for bounded `GPCM` fits, a capability-boundary table.
-#' - `config`: list with facet, group, method, min_obs, p_adjust settings.
+#' - `config`: list with facet, group, method, fitted-model scope, min_obs,
+#'   and p_adjust settings.
 #'
 #' @seealso [fit_mfrm()], [estimate_bias()], [compare_mfrm()],
 #'   [dif_interaction_table()], [plot_dif_heatmap()], [dif_report()],
@@ -596,7 +614,6 @@ analyze_dff <- function(fit,
     stop("`facet` '", facet, "' is not one of the model facets: ",
          paste(facet_names, collapse = ", "), ".", call. = FALSE)
   }
-
   # Group levels
   group_info <- .sanitize_dff_group_data(orig_data, group, "DFF analysis")
   orig_data <- group_info$data
@@ -640,6 +657,983 @@ analyze_dif <- function(...) {
   analyze_dff(...)
 }
 
+#' Mantel-Haenszel observed-score DIF screen for person-by-item data
+#'
+#' Runs an observed-score Mantel-Haenszel DIF screen for a two-group,
+#' person-by-item response table. This helper is intentionally stricter than
+#' [analyze_dff()]: the input must contain exactly one score per person and
+#' item/facet level, because MH DIF matching assumes a person-by-item
+#' response matrix rather than rater-mediated repeated rows.
+#'
+#' This helper is not a fitted-MFRM procedure. It does not consume an
+#' `mfrm_fit` object, does not use `RSM`, `PCM`, or bounded `GPCM` likelihoods,
+#' and should not be reported as an MFRM fairness or invariance test. Use
+#' [analyze_dff()] / [analyze_dff_moderation()] for fitted-model MFRM
+#' differential-functioning screens.
+#'
+#' @param data Data frame containing person, item/facet, score, and group
+#'   columns.
+#' @param person,item,score,group Character scalars naming the person ID,
+#'   item/facet level, observed score, and grouping columns.
+#' @param focal Optional scalar naming the focal group. When omitted and exactly
+#'   two group levels are present, the second sorted level is treated as focal.
+#' @param reference Optional scalar naming the reference group. When omitted and
+#'   `focal` is supplied, the remaining group level is used as reference.
+#' @param matching Matching score used to form strata. `"restscore"` (default)
+#'   uses the total binary score excluding the target item; `"total"` includes
+#'   the target item.
+#' @param dichotomize Optional numeric threshold for polytomous scores. If
+#'   supplied, scores greater than or equal to the threshold are coded 1 and
+#'   lower scores are coded 0. If omitted, the score column must contain exactly
+#'   two observed numeric values, which are recoded low = 0, high = 1.
+#' @param min_stratum Minimum observations required for a matching stratum to
+#'   contribute to an item-level MH statistic. Default `2`.
+#' @param min_cell Cell-count threshold for sparse-cell flags. Default `1`.
+#' @param p_adjust Multiple-comparison adjustment method passed to
+#'   [stats::p.adjust()]. Default `"holm"`.
+#' @param alpha Significance level for the screening classification. Default
+#'   `.05`.
+#' @param delta_threshold Absolute Mantel-Haenszel delta threshold required, in
+#'   addition to adjusted significance, for a `"Screen positive"` label.
+#'   Default `1`.
+#' @param zero_correction Non-negative continuity correction added to all four
+#'   cells of a stratum only when that stratum has at least one zero cell for
+#'   the common odds-ratio estimate. Default `.5`. The MH chi-square statistic
+#'   uses the uncorrected observed and expected counts.
+#'
+#' @details
+#' The reported common odds ratio is oriented as reference odds divided by focal
+#' odds. Consequently, `MHDDelta = -2.35 * log(AlphaMH)` is negative when the
+#' focal group has lower conditional odds of the keyed/high response than the
+#' reference group. That direction is reported as `"harder_for_focal"`.
+#'
+#' This first MH DIF surface is a screening helper. It does not implement
+#' generalized Mantel-Haenszel for native polytomous scores, logistic-regression
+#' DIF, SIBTEST, purification, or operational ETS classification. Use
+#' `dichotomize = ...` only when an explicitly dichotomized observed-score
+#' screen is defensible for the study design.
+#'
+#' @return Object of class `mfrm_mh_dif` with:
+#' - `mh_table`: one row per item/facet level.
+#' - `strata_table`: one row per item/facet level by matching stratum.
+#' - `summary`: screening classification counts.
+#' - `config`: analysis settings, including `mfrm_fit_used = FALSE`.
+#'
+#' @references
+#' Holland, P. W., & Thayer, D. T. (1988). Differential item performance and
+#' the Mantel-Haenszel procedure. In H. Wainer & H. I. Braun (Eds.),
+#' *Test Validity*.
+#'
+#' @seealso [analyze_dff()], [analyze_dif()], [analyze_dff_moderation()]
+#' @examplesIf interactive()
+#' dat <- expand.grid(
+#'   Person = sprintf("P%02d", 1:40),
+#'   Item = paste0("I", 1:4),
+#'   KEEP.OUT.ATTRS = FALSE
+#' )
+#' dat$Group <- ifelse(as.integer(sub("P", "", dat$Person)) <= 20, "R", "F")
+#' dat$Score <- rbinom(nrow(dat), 1, .6)
+#' mh <- analyze_dif_mh(dat, person = "Person", item = "Item",
+#'                      score = "Score", group = "Group")
+#' mh$mh_table
+#' @rdname analyze_dif_mh
+#' @export
+analyze_dif_mh <- function(data,
+                           person,
+                           item,
+                           score,
+                           group,
+                           focal = NULL,
+                           reference = NULL,
+                           matching = c("restscore", "total"),
+                           dichotomize = NULL,
+                           min_stratum = 2,
+                           min_cell = 1,
+                           p_adjust = "holm",
+                           alpha = 0.05,
+                           delta_threshold = 1,
+                           zero_correction = 0.5) {
+  matching <- match.arg(matching)
+  if (!is.data.frame(data)) {
+    stop("`data` must be a data frame.", call. = FALSE)
+  }
+  for (arg in c("person", "item", "score", "group")) {
+    val <- get(arg, inherits = FALSE)
+    if (!is.character(val) || length(val) != 1L || is.na(val) || !nzchar(val)) {
+      stop("`", arg, "` must be a single non-empty character string.",
+           call. = FALSE)
+    }
+    if (!val %in% names(data)) {
+      stop("Column '", val, "' named by `", arg, "` was not found in `data`.",
+           call. = FALSE)
+    }
+  }
+  min_stratum <- .validate_dff_count_arg(min_stratum, "min_stratum")
+  min_cell <- .validate_dff_count_arg(min_cell, "min_cell")
+  p_adjust <- .validate_p_adjust_method(p_adjust)
+  alpha <- .validate_dff_probability(alpha, "alpha", allow_null = FALSE)
+  delta_threshold <- .validate_dff_nonnegative_scalar(
+    delta_threshold, "delta_threshold", allow_null = FALSE
+  )
+  zero_correction <- .validate_dff_nonnegative_scalar(
+    zero_correction, "zero_correction", allow_null = FALSE
+  )
+  if (!is.null(dichotomize)) {
+    if (!is.numeric(dichotomize) || length(dichotomize) != 1L ||
+        is.na(dichotomize) || !is.finite(dichotomize)) {
+      stop("`dichotomize` must be `NULL` or a single finite numeric threshold.",
+           call. = FALSE)
+    }
+    dichotomize <- as.numeric(dichotomize)
+  }
+
+  work <- data.frame(
+    Person = as.character(data[[person]]),
+    Item = as.character(data[[item]]),
+    ScoreRaw = suppressWarnings(as.numeric(data[[score]])),
+    Group = trimws(as.character(data[[group]])),
+    stringsAsFactors = FALSE
+  )
+  valid <- !is.na(work$Person) & nzchar(work$Person) &
+    !is.na(work$Item) & nzchar(work$Item) &
+    !is.na(work$Group) & nzchar(work$Group) &
+    is.finite(work$ScoreRaw)
+  if (!any(valid)) {
+    stop("No complete person/item/group rows with finite scores are available.",
+         call. = FALSE)
+  }
+  if (any(!valid)) {
+    message("Dropped ", sum(!valid),
+            " incomplete row(s) before MH DIF screening.")
+    work <- work[valid, , drop = FALSE]
+  }
+
+  dup <- duplicated(work[, c("Person", "Item")])
+  if (any(dup)) {
+    dup_key <- paste(work$Person[dup], work$Item[dup], sep = " x ")
+    stop(
+      "`analyze_dif_mh()` requires exactly one response per person x ",
+      "item/facet level. Duplicate key(s): ",
+      paste(utils::head(unique(dup_key), 5L), collapse = ", "),
+      if (length(unique(dup_key)) > 5L) ", ..." else "",
+      ". Aggregate repeated ratings or add a distinguishing facet before ",
+      "using this MH DIF screen.",
+      call. = FALSE
+    )
+  }
+
+  score_levels <- sort(unique(work$ScoreRaw))
+  if (is.null(dichotomize)) {
+    if (length(score_levels) != 2L) {
+      stop(
+        "`score` must have exactly two numeric levels for the default MH ",
+        "screen. Supply `dichotomize = <threshold>` for an explicitly ",
+        "dichotomized exploratory screen.",
+        call. = FALSE
+      )
+    }
+    work$ScoreBinary <- as.integer(work$ScoreRaw == max(score_levels))
+    score_transform <- paste0(
+      "binary_observed_low_", score_levels[1], "_high_", score_levels[2]
+    )
+  } else {
+    work$ScoreBinary <- as.integer(work$ScoreRaw >= dichotomize)
+    score_transform <- paste0("dichotomized_score_ge_", dichotomize)
+  }
+  if (length(unique(work$ScoreBinary)) < 2L) {
+    stop("Dichotomized scores must contain both 0 and 1.", call. = FALSE)
+  }
+
+  group_setup <- .resolve_mh_dif_groups(work, focal, reference)
+  work <- work[work$Group %in% c(group_setup$reference, group_setup$focal), ,
+               drop = FALSE]
+
+  totals <- stats::aggregate(ScoreBinary ~ Person, data = work, FUN = sum)
+  names(totals)[2] <- "TotalScore"
+  work <- merge(work, totals, by = "Person", all.x = TRUE, all.y = FALSE)
+  work$MatchScore <- if (identical(matching, "restscore")) {
+    work$TotalScore - work$ScoreBinary
+  } else {
+    work$TotalScore
+  }
+
+  item_levels <- sort(unique(work$Item))
+  strata_rows <- list()
+  item_rows <- list()
+  model_scope <- "observed_score_mh_screen_no_mfrm_fit"
+  for (lev in item_levels) {
+    sub <- work[work$Item == lev, , drop = FALSE]
+    strata <- sort(unique(sub$MatchScore))
+    sum_a_minus_e <- 0
+    sum_var <- 0
+    alpha_num <- 0
+    alpha_den <- 0
+    sparse_strata <- 0L
+    usable_strata <- 0L
+    for (s in strata) {
+      ss <- sub[sub$MatchScore == s, , drop = FALSE]
+      a <- sum(ss$Group == group_setup$reference & ss$ScoreBinary == 1L)
+      b <- sum(ss$Group == group_setup$reference & ss$ScoreBinary == 0L)
+      c <- sum(ss$Group == group_setup$focal & ss$ScoreBinary == 1L)
+      d <- sum(ss$Group == group_setup$focal & ss$ScoreBinary == 0L)
+      n_ref <- a + b
+      n_foc <- c + d
+      n_yes <- a + c
+      n_no <- b + d
+      n_total <- n_ref + n_foc
+      sparse <- any(c(a, b, c, d) < min_cell)
+      if (sparse) sparse_strata <- sparse_strata + 1L
+      usable <- n_total >= min_stratum && n_ref > 0L && n_foc > 0L
+      expected_a <- variance_a <- NA_real_
+      if (usable && n_total > 1L) {
+        expected_a <- n_ref * n_yes / n_total
+        variance_a <- (n_ref * n_foc * n_yes * n_no) /
+          (n_total^2 * (n_total - 1))
+        if (is.finite(variance_a) && variance_a > 0) {
+          sum_a_minus_e <- sum_a_minus_e + (a - expected_a)
+          sum_var <- sum_var + variance_a
+        }
+        cc <- if (zero_correction > 0 && any(c(a, b, c, d) == 0L)) {
+          zero_correction
+        } else {
+          0
+        }
+        a_or <- a + cc
+        b_or <- b + cc
+        c_or <- c + cc
+        d_or <- d + cc
+        n_or <- a_or + b_or + c_or + d_or
+        alpha_num <- alpha_num + (a_or * d_or / n_or)
+        alpha_den <- alpha_den + (b_or * c_or / n_or)
+        usable_strata <- usable_strata + 1L
+      }
+      strata_rows[[length(strata_rows) + 1L]] <- tibble(
+        Item = lev,
+        MatchScore = s,
+        ReferenceCorrect = as.integer(a),
+        ReferenceIncorrect = as.integer(b),
+        FocalCorrect = as.integer(c),
+        FocalIncorrect = as.integer(d),
+        N = as.integer(n_total),
+        ReferenceN = as.integer(n_ref),
+        FocalN = as.integer(n_foc),
+        ExpectedReferenceCorrect = expected_a,
+        VarReferenceCorrect = variance_a,
+        usable = usable,
+        sparse = sparse
+      )
+    }
+    alpha_mh <- if (is.finite(alpha_num) && is.finite(alpha_den) &&
+                    alpha_num > 0 && alpha_den > 0) {
+      alpha_num / alpha_den
+    } else {
+      NA_real_
+    }
+    log_alpha <- if (is.finite(alpha_mh) && alpha_mh > 0) {
+      log(alpha_mh)
+    } else {
+      NA_real_
+    }
+    mh_delta <- if (is.finite(log_alpha)) -2.35 * log_alpha else NA_real_
+    correction <- if (isTRUE(sum_var > 0)) min(0.5, abs(sum_a_minus_e)) else 0
+    mh_chisq <- if (isTRUE(sum_var > 0)) {
+      (max(0, abs(sum_a_minus_e) - correction)^2) / sum_var
+    } else {
+      NA_real_
+    }
+    p_val <- if (is.finite(mh_chisq)) {
+      stats::pchisq(mh_chisq, df = 1, lower.tail = FALSE)
+    } else {
+      NA_real_
+    }
+    direction <- if (is.finite(mh_delta)) {
+      if (mh_delta < 0) "harder_for_focal" else "easier_for_focal"
+    } else {
+      NA_character_
+    }
+    band <- if (is.finite(mh_delta)) {
+      if (abs(mh_delta) < 1) {
+        "negligible_delta"
+      } else if (abs(mh_delta) < 1.5) {
+        "moderate_delta"
+      } else {
+        "large_delta"
+      }
+    } else {
+      NA_character_
+    }
+    item_rows[[length(item_rows) + 1L]] <- tibble(
+      Item = lev,
+      ReferenceGroup = group_setup$reference,
+      FocalGroup = group_setup$focal,
+      N = as.integer(nrow(sub)),
+      Persons = as.integer(length(unique(sub$Person))),
+      Strata = as.integer(length(strata)),
+      UsableStrata = as.integer(usable_strata),
+      SparseStrata = as.integer(sparse_strata),
+      AlphaMH = alpha_mh,
+      LogAlphaMH = log_alpha,
+      MHDDelta = mh_delta,
+      MHChiSq = mh_chisq,
+      df = 1,
+      p_value = p_val,
+      Direction = direction,
+      EffectBand = band,
+      Method = "mantel_haenszel",
+      ModelScope = model_scope,
+      MFRMFitUsed = FALSE,
+      MFRMModel = "not_applicable",
+      Matching = matching,
+      ScoreTransform = score_transform,
+      ZeroCorrection = zero_correction,
+      EffectMetric = "MH_D_DIF_delta",
+      ContrastBasis = "Mantel-Haenszel reference-versus-focal common odds ratio",
+      StatisticLabel = "Mantel-Haenszel chi-square",
+      ProbabilityMetric = "chi-square tail area",
+      ClassificationSystem = "mh_observed_score_screening",
+      ReportingUse = "screening_only",
+      PrimaryReportingEligible = FALSE
+    )
+  }
+
+  mh_table <- bind_rows(item_rows)
+  strata_table <- bind_rows(strata_rows)
+  if (nrow(mh_table) > 0L && any(is.finite(mh_table$p_value))) {
+    mh_table$p_adjusted <- stats::p.adjust(mh_table$p_value,
+                                           method = p_adjust)
+  } else {
+    mh_table$p_adjusted <- NA_real_
+  }
+  mh_table$Classification <- ifelse(
+    is.finite(mh_table$p_adjusted) &
+      mh_table$p_adjusted <= alpha &
+      is.finite(mh_table$MHDDelta) &
+      abs(mh_table$MHDDelta) >= delta_threshold,
+    "Screen positive",
+    ifelse(is.finite(mh_table$MHDDelta), "Screen negative", NA_character_)
+  )
+
+  summary_tbl <- tibble(
+    Classification = c("Screen positive", "Screen negative", "Unclassified"),
+    Count = c(
+      sum(mh_table$Classification == "Screen positive", na.rm = TRUE),
+      sum(mh_table$Classification == "Screen negative", na.rm = TRUE),
+      sum(is.na(mh_table$Classification), na.rm = TRUE)
+    )
+  )
+
+  out <- list(
+    mh_table = mh_table,
+    strata_table = strata_table,
+    summary = summary_tbl,
+    config = list(
+      person = person,
+      item = item,
+      score = score,
+      group = group,
+      reference = group_setup$reference,
+      focal = group_setup$focal,
+      matching = matching,
+      dichotomize = dichotomize,
+      score_transform = score_transform,
+      min_stratum = min_stratum,
+      min_cell = min_cell,
+      p_adjust = p_adjust,
+      alpha = alpha,
+      delta_threshold = delta_threshold,
+      zero_correction = zero_correction,
+      model_scope = model_scope,
+      mfrm_fit_used = FALSE,
+      mfrm_models = "not_applicable",
+      method = "mantel_haenszel"
+    )
+  )
+  class(out) <- c("mfrm_mh_dif", class(out))
+  out
+}
+
+#' Backward-compatible wrapper for [analyze_dif_mh()]
+#'
+#' `analyze_dif_classical()` is retained as a compatibility wrapper. New code
+#' should call [analyze_dif_mh()], which names the method directly and avoids
+#' implying that the helper is a fitted-MFRM `RSM`, `PCM`, or bounded-`GPCM`
+#' route. The wrapper adds the legacy `mfrm_classical_dif` class and
+#' `classical_table` alias for older code.
+#' @param ... Passed directly to [analyze_dif_mh()].
+#' @rdname analyze_dif_mh
+#' @export
+analyze_dif_classical <- function(...) {
+  out <- analyze_dif_mh(...)
+  out$classical_table <- out$mh_table
+  class(out) <- unique(c("mfrm_classical_dif", class(out)))
+  out
+}
+
+.resolve_mh_dif_groups <- function(work, focal, reference) {
+  group_person <- unique(work[, c("Person", "Group"), drop = FALSE])
+  conflict <- stats::aggregate(Group ~ Person, data = group_person,
+                               FUN = function(z) length(unique(z)))
+  if (any(conflict$Group > 1L)) {
+    bad <- conflict$Person[conflict$Group > 1L]
+    stop("`group` must be person-level for MH DIF. Multiple group ",
+         "values were found for person(s): ",
+         paste(utils::head(bad, 5L), collapse = ", "),
+         if (length(bad) > 5L) ", ..." else "",
+         ".", call. = FALSE)
+  }
+  groups <- sort(unique(work$Group))
+  if (!is.null(focal)) {
+    if (!is.character(focal) || length(focal) != 1L || is.na(focal) ||
+        !nzchar(focal)) {
+      stop("`focal` must be `NULL` or a single observed group level.",
+           call. = FALSE)
+    }
+    focal <- as.character(focal)
+    if (!focal %in% groups) {
+      stop("`focal` level '", focal, "' was not found in `group`.",
+           call. = FALSE)
+    }
+  }
+  if (!is.null(reference)) {
+    if (!is.character(reference) || length(reference) != 1L ||
+        is.na(reference) || !nzchar(reference)) {
+      stop("`reference` must be `NULL` or a single observed group level.",
+           call. = FALSE)
+    }
+    reference <- as.character(reference)
+    if (!reference %in% groups) {
+      stop("`reference` level '", reference, "' was not found in `group`.",
+           call. = FALSE)
+    }
+  }
+  if (is.null(focal) && is.null(reference)) {
+    if (length(groups) != 2L) {
+      stop("MH DIF currently requires exactly two group levels. ",
+           "Subset the data or supply one two-group comparison at a time.",
+           call. = FALSE)
+    }
+    reference <- groups[1]
+    focal <- groups[2]
+  } else if (is.null(reference)) {
+    candidates <- setdiff(groups, focal)
+    if (length(candidates) != 1L) {
+      stop("When `focal` is supplied, exactly one remaining reference group ",
+           "must be present.", call. = FALSE)
+    }
+    reference <- candidates[1]
+  } else if (is.null(focal)) {
+    candidates <- setdiff(groups, reference)
+    if (length(candidates) != 1L) {
+      stop("When `reference` is supplied, exactly one remaining focal group ",
+           "must be present.", call. = FALSE)
+    }
+    focal <- candidates[1]
+  }
+  if (identical(reference, focal)) {
+    stop("`reference` and `focal` must name different group levels.",
+         call. = FALSE)
+  }
+  list(reference = reference, focal = focal)
+}
+
+#' @export
+summary.mfrm_mh_dif <- function(object, ...) {
+  mh_table <- object$mh_table %||% object$classical_table %||% data.frame()
+  out <- list(
+    mh_table = mh_table,
+    strata_table = object$strata_table,
+    summary = object$summary,
+    config = object$config
+  )
+  class(out) <- "summary.mfrm_mh_dif"
+  out
+}
+
+#' @export
+summary.mfrm_classical_dif <- function(object, ...) {
+  out <- summary.mfrm_mh_dif(object, ...)
+  out$classical_table <- out$mh_table
+  class(out) <- unique(c("summary.mfrm_classical_dif", class(out)))
+  out
+}
+
+#' @export
+print.summary.mfrm_mh_dif <- function(x, ...) {
+  mh_table <- x$mh_table %||% x$classical_table %||% data.frame()
+  cat("--- Mantel-Haenszel Observed-Score DIF Screen ---\n")
+  cat("Method:", x$config$method %||% "mantel_haenszel", "\n")
+  cat("Item:", x$config$item, " | Group:", x$config$group, "\n")
+  cat("Reference:", x$config$reference, " | Focal:", x$config$focal, "\n")
+  cat("Matching:", x$config$matching,
+      " | Score:", x$config$score_transform, "\n\n")
+
+  if (nrow(mh_table) > 0L) {
+    show_cols <- intersect(
+      c("Item", "MHDDelta", "AlphaMH", "MHChiSq", "p_adjusted",
+        "Direction", "EffectBand", "Classification", "N", "UsableStrata",
+        "SparseStrata"),
+      names(mh_table)
+    )
+    print(as.data.frame(mh_table |> select(all_of(show_cols))),
+          row.names = FALSE, digits = 3)
+  } else {
+    cat("No MH DIF rows computed.\n")
+  }
+
+  cat("\nScreening Summary:\n")
+  print(as.data.frame(x$summary), row.names = FALSE)
+  invisible(x)
+}
+
+#' @export
+print.summary.mfrm_classical_dif <- function(x, ...) {
+  print.summary.mfrm_mh_dif(x, ...)
+}
+
+#' @export
+print.mfrm_mh_dif <- function(x, ...) {
+  cfg <- x$config %||% list()
+  tbl <- x$mh_table %||% x$classical_table
+  n_rows <- if (is.data.frame(tbl)) nrow(tbl) else 0L
+  n_flag <- if (n_rows > 0L && "Classification" %in% names(tbl)) {
+    sum(tbl$Classification == "Screen positive", na.rm = TRUE)
+  } else {
+    NA_integer_
+  }
+  cat("mfrm_mh_dif\n")
+  cat(sprintf("  Method: %s | Item: %s | Group: %s\n",
+              cfg$method %||% "mantel_haenszel",
+              cfg$item %||% NA_character_,
+              cfg$group %||% NA_character_))
+  cat(sprintf("  Reference: %s | Focal: %s | Matching: %s\n",
+              cfg$reference %||% NA_character_,
+              cfg$focal %||% NA_character_,
+              cfg$matching %||% NA_character_))
+  cat(sprintf("  Items: %d", n_rows))
+  if (is.finite(n_flag)) cat(sprintf(", %d screen-positive", n_flag))
+  cat("\n")
+  cat("  Use `summary()` for MH delta, strata, and classification details.\n")
+  invisible(x)
+}
+
+#' @export
+print.mfrm_classical_dif <- function(x, ...) {
+  print.mfrm_mh_dif(x, ...)
+}
+
+#' Continuous-covariate differential-functioning moderation screen
+#'
+#' Screens whether fitted observation-level residuals for each facet level vary
+#' systematically along a numeric person-level covariate. This is the
+#' continuous-covariate counterpart to residual [analyze_dff()] screening: it is
+#' not a Mantel-Haenszel categorical DIF/DFF group contrast and it does not produce
+#' ETS A/B/C classifications.
+#'
+#' @param fit Output from [fit_mfrm()].
+#' @param facet Character scalar naming the facet whose elements are screened.
+#' @param covariate Character scalar naming a numeric person-level covariate in
+#'   `data` or `fit$prep$data`. The value must be stable within person; if a
+#'   person has multiple finite covariate values, the function stops rather
+#'   than silently averaging them.
+#' @param data Optional original data frame. Use this when the covariate was
+#'   not included in the columns retained by `fit_mfrm()`.
+#' @param min_obs Minimum number of usable observations per facet level.
+#'   Default `10`.
+#' @param p_adjust Method for multiple-comparison adjustment, passed to
+#'   [stats::p.adjust()]. Default `"holm"`.
+#' @param standardize Logical. If `TRUE` (default), the reported `Slope` and
+#'   `SE` are per one sample SD of the covariate. `RawSlope` and `RawSE` are
+#'   always reported on the covariate's original unit.
+#'
+#' @details
+#' The helper computes the fitted observation table, forms the residual
+#' \eqn{X - E(X)}, and fits a model-variance weighted residual slope separately
+#' for each facet level:
+#' \deqn{X_{obs} - E(X) = \alpha_l + \beta_l z + e.}
+#' Weights are the inverse fitted response variance from the model. The
+#' resulting z statistic uses the model-variance weighted covariate dispersion
+#' as a large-sample screening approximation. Rows remain screening evidence:
+#' use them to target follow-up, not as a standalone fairness, invariance, or
+#' operational subgroup-decision claim.
+#'
+#' A positive slope means people with higher covariate values scored higher
+#' than the fitted model expected for that facet level; in DIF/DFF wording, the
+#' level screened as relatively easier for higher covariate values. A negative
+#' slope means relatively harder for higher covariate values.
+#'
+#' @return Object of class `mfrm_dff_moderation` with:
+#' - `moderation_table`: one row per facet level, with slope, SE, z statistic,
+#'   adjusted p-value, screening classification, and sample-size diagnostics.
+#' - `summary`: screening classification counts.
+#' - `gpcm_boundary`: bounded-`GPCM` scope table when relevant.
+#' - `config`: analysis configuration.
+#'
+#' @seealso [analyze_dff()], [analyze_dif()], [dif_interaction_table()]
+#' @examplesIf interactive()
+#' toy <- load_mfrmr_data("example_bias")
+#' person_age <- data.frame(
+#'   Person = unique(toy$Person),
+#'   Age = seq_along(unique(toy$Person))
+#' )
+#' toy <- merge(toy, person_age, by = "Person", all.x = TRUE)
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
+#'                 method = "JML", model = "RSM", maxit = 30)
+#' mod <- analyze_dff_moderation(fit, facet = "Criterion",
+#'                               covariate = "Age", data = toy)
+#' mod$moderation_table
+#' @export
+analyze_dff_moderation <- function(fit,
+                                   facet,
+                                   covariate,
+                                   data = NULL,
+                                   min_obs = 10,
+                                   p_adjust = "holm",
+                                   standardize = TRUE) {
+  if (!inherits(fit, "mfrm_fit")) {
+    stop("`fit` must be an `mfrm_fit` object.", call. = FALSE)
+  }
+  if (!is.character(facet) || length(facet) != 1L || is.na(facet) ||
+      !nzchar(facet)) {
+    stop("`facet` must be a single non-empty character string.",
+         call. = FALSE)
+  }
+  if (!is.character(covariate) || length(covariate) != 1L ||
+      is.na(covariate) || !nzchar(covariate)) {
+    stop("`covariate` must be a single non-empty character string.",
+         call. = FALSE)
+  }
+  min_obs <- .validate_dff_count_arg(min_obs, "min_obs")
+  p_adjust <- .validate_p_adjust_method(p_adjust)
+  standardize <- .validate_dff_logical_scalar(standardize, "standardize")
+
+  orig_data <- if (!is.null(data)) data else fit$prep$data
+  if (is.null(orig_data) || !is.data.frame(orig_data)) {
+    stop("No data available. Pass the original data via the `data` argument.",
+         call. = FALSE)
+  }
+  if (!covariate %in% names(orig_data)) {
+    stop("`covariate` column '", covariate, "' not found in the data. ",
+         "Available columns: ", paste(names(orig_data), collapse = ", "),
+         call. = FALSE)
+  }
+
+  facet_names <- fit$config$facet_cols
+  if (is.null(facet_names)) facet_names <- fit$prep$facet_names
+  if (!facet %in% facet_names) {
+    stop("`facet` '", facet, "' is not one of the model facets: ",
+         paste(facet_names, collapse = ", "), ".", call. = FALSE)
+  }
+
+  person_col <- fit$config$person_col %||% "Person"
+  cov_lookup <- .prepare_dff_covariate_lookup(
+    orig_data = orig_data,
+    person_col = person_col,
+    covariate = covariate,
+    context = "DFF moderation analysis"
+  )
+
+  cov_center <- mean(cov_lookup$CovariateRaw, na.rm = TRUE)
+  cov_sd <- stats::sd(cov_lookup$CovariateRaw, na.rm = TRUE)
+  if (!is.finite(cov_sd) || cov_sd <= 0) {
+    stop("`covariate` column '", covariate,
+         "' must have non-zero finite person-level variation.",
+         call. = FALSE)
+  }
+  cov_lookup$CovariateModel <- if (standardize) {
+    (cov_lookup$CovariateRaw - cov_center) / cov_sd
+  } else {
+    cov_lookup$CovariateRaw
+  }
+  covariate_scale <- if (standardize) "standardized_1_sd" else "raw_unit"
+
+  obs_tbl <- compute_obs_table(fit)
+  obs_work <- as.data.frame(obs_tbl, stringsAsFactors = FALSE)
+  if (!all(c("Person", facet, "Observed", "Expected", "Var") %in% names(obs_work))) {
+    stop("Fitted observation table does not contain the columns required for ",
+         "DFF moderation screening.", call. = FALSE)
+  }
+  obs_work$Person <- as.character(obs_work$Person)
+  obs_work[[facet]] <- as.character(obs_work[[facet]])
+  obs_work <- merge(obs_work, cov_lookup, by = "Person", all.x = FALSE,
+                    all.y = FALSE)
+  obs_work$ResidualScore <- obs_work$Observed - obs_work$Expected
+  obs_work <- obs_work[
+    is.finite(obs_work$ResidualScore) &
+      is.finite(obs_work$CovariateModel) &
+      is.finite(obs_work$CovariateRaw),
+    ,
+    drop = FALSE
+  ]
+  if (nrow(obs_work) == 0L) {
+    stop("No fitted observations could be matched to finite `", covariate,
+         "` values.", call. = FALSE)
+  }
+
+  facet_levels <- sort(unique(as.character(obs_work[[facet]])))
+  mod_rows <- lapply(facet_levels, function(lev) {
+    sub <- obs_work[as.character(obs_work[[facet]]) == lev, , drop = FALSE]
+    ok <- is.finite(sub$CovariateModel) &
+      is.finite(sub$ResidualScore) &
+      is.finite(sub$Var) & sub$Var > sqrt(.Machine$double.eps)
+    sub_ok <- sub[ok, , drop = FALSE]
+    n_used <- nrow(sub_ok)
+    n_persons <- length(unique(sub_ok$Person))
+    cov_distinct <- length(unique(sub_ok$CovariateRaw))
+    sparse <- n_used < min_obs
+    insufficient_covariate <- cov_distinct < 3L
+
+    slope <- se <- z_val <- p_val <- raw_slope <- raw_se <- NA_real_
+    weighted_mean_resid <- weighted_covariate_mean <- NA_real_
+    if (!sparse && !insufficient_covariate) {
+      w <- 1 / pmax(sub_ok$Var, sqrt(.Machine$double.eps))
+      x <- sub_ok$CovariateModel
+      y <- sub_ok$ResidualScore
+      w_sum <- sum(w)
+      x_bar <- sum(w * x) / w_sum
+      y_bar <- sum(w * y) / w_sum
+      x_dev <- x - x_bar
+      sxx <- sum(w * x_dev^2)
+      if (is.finite(sxx) && sxx > 0) {
+        slope <- sum(w * x_dev * (y - y_bar)) / sxx
+        se <- sqrt(1 / sxx)
+        z_val <- slope / se
+        p_val <- 2 * stats::pnorm(abs(z_val), lower.tail = FALSE)
+        raw_slope <- if (standardize) slope / cov_sd else slope
+        raw_se <- if (standardize) se / cov_sd else se
+        weighted_mean_resid <- y_bar
+        weighted_covariate_mean <- x_bar
+      }
+    }
+    direction <- if (is.finite(slope)) {
+      if (slope > 0) "higher_covariate_easier" else "higher_covariate_harder"
+    } else {
+      NA_character_
+    }
+    tibble(
+      Level = lev,
+      Slope = slope,
+      SE = se,
+      z = z_val,
+      p_value = p_val,
+      RawSlope = raw_slope,
+      RawSE = raw_se,
+      ModerationDirection = direction,
+      N = as.integer(n_used),
+      Persons = as.integer(n_persons),
+      CovariateDistinct = as.integer(cov_distinct),
+      sparse = sparse,
+      InsufficientCovariateSpread = insufficient_covariate,
+      WeightedMeanResidual = weighted_mean_resid,
+      WeightedCovariateMean = weighted_covariate_mean,
+      CovariateScale = covariate_scale,
+      CovariateCenter = cov_center,
+      CovariateSD = cov_sd,
+      Method = "residual_moderation",
+      EffectMetric = "observed_minus_expected_residual_slope",
+      ContrastBasis = "continuous covariate slope in observed-minus-expected residuals",
+      SEBasis = "inverse model-variance weighted covariate dispersion",
+      StatisticLabel = "model-variance weighted residual slope z",
+      ProbabilityMetric = "normal tail area",
+      DFBasis = "large-sample screening approximation",
+      ClassificationSystem = "screening",
+      ReportingUse = "screening_only",
+      PrimaryReportingEligible = FALSE
+    )
+  })
+  moderation_table <- bind_rows(mod_rows)
+  if (nrow(moderation_table) > 0L && any(is.finite(moderation_table$p_value))) {
+    moderation_table$p_adjusted <- stats::p.adjust(moderation_table$p_value,
+                                                   method = p_adjust)
+  } else {
+    moderation_table$p_adjusted <- NA_real_
+  }
+  sig <- is.finite(moderation_table$p_adjusted) &
+    moderation_table$p_adjusted <= 0.05
+  moderation_table$Classification <- dplyr::case_when(
+    !is.finite(moderation_table$Slope) ~ NA_character_,
+    sig ~ "Screen positive",
+    TRUE ~ "Screen negative"
+  )
+
+  mod_summary <- tibble(
+    Classification = c("Screen positive", "Screen negative", "Unclassified"),
+    Count = c(
+      sum(moderation_table$Classification == "Screen positive", na.rm = TRUE),
+      sum(moderation_table$Classification == "Screen negative", na.rm = TRUE),
+      sum(is.na(moderation_table$Classification), na.rm = TRUE)
+    )
+  )
+
+  functioning_label <- functioning_label_for_facet(facet)
+  out <- list(
+    moderation_table = moderation_table,
+    summary = mod_summary,
+    gpcm_boundary = gpcm_capability_boundary_table(
+      fit,
+      helper = "analyze_dff_moderation()",
+      area = "Differential facet functioning screening under bounded GPCM"
+    ),
+    config = list(
+      facet = facet,
+      covariate = covariate,
+      min_obs = min_obs,
+      p_adjust = p_adjust,
+      standardize = standardize,
+      covariate_scale = covariate_scale,
+      covariate_center = cov_center,
+      covariate_sd = cov_sd,
+      fit_model = .dff_fit_model(fit),
+      model_scope = .dff_model_scope(fit),
+      mfrm_fit_used = TRUE,
+      method = "residual_moderation",
+      functioning_label = functioning_label
+    )
+  )
+  class(out) <- c("mfrm_dff_moderation", "mfrm_dif_moderation", class(out))
+  out
+}
+
+#' Backward-compatible DIF-named alias for the moderation screen
+#'
+#' @param ... Passed directly to `analyze_dff_moderation()`.
+#' @rdname analyze_dff_moderation
+#' @export
+analyze_dif_moderation <- function(...) {
+  analyze_dff_moderation(...)
+}
+
+.prepare_dff_covariate_lookup <- function(orig_data, person_col, covariate,
+                                          context) {
+  if (!person_col %in% names(orig_data)) {
+    stop("Person column '", person_col, "' not found in the data.",
+         call. = FALSE)
+  }
+  raw_cov <- orig_data[[covariate]]
+  if (!is.numeric(raw_cov) || is.factor(raw_cov)) {
+    stop("`covariate` column '", covariate,
+         "' must be numeric for continuous-covariate DFF moderation.",
+         call. = FALSE)
+  }
+  person_vals <- as.character(orig_data[[person_col]])
+  cov_vals <- suppressWarnings(as.numeric(raw_cov))
+  valid <- !is.na(person_vals) & nzchar(person_vals) & is.finite(cov_vals)
+  if (!any(valid)) {
+    stop("`covariate` column '", covariate,
+         "' has no finite values with non-missing person IDs.",
+         call. = FALSE)
+  }
+  if (any(!valid)) {
+    message("Dropped ", sum(!valid), " row(s) with missing person IDs or ",
+            "non-finite `", covariate, "` values before ", context, ".")
+  }
+  lookup <- unique(data.frame(
+    Person = person_vals[valid],
+    CovariateRaw = cov_vals[valid],
+    stringsAsFactors = FALSE
+  ))
+  conflict <- stats::aggregate(
+    CovariateRaw ~ Person,
+    data = lookup,
+    FUN = function(z) length(unique(z))
+  )
+  conflict_persons <- conflict$Person[conflict$CovariateRaw > 1L]
+  if (length(conflict_persons) > 0L) {
+    stop(
+      "`covariate` column '", covariate, "' must be person-level for ",
+      "continuous-covariate DFF moderation. Multiple finite values were ",
+      "found for person(s): ",
+      paste(utils::head(conflict_persons, 5L), collapse = ", "),
+      if (length(conflict_persons) > 5L) ", ..." else "",
+      ".",
+      call. = FALSE
+    )
+  }
+  lookup <- lookup[!duplicated(lookup$Person), , drop = FALSE]
+  if (length(unique(lookup$CovariateRaw)) < 3L) {
+    stop("`covariate` column '", covariate,
+         "' must have at least three distinct finite person-level values.",
+         call. = FALSE)
+  }
+  lookup
+}
+
+#' @export
+summary.mfrm_dff_moderation <- function(object, ...) {
+  out <- list(
+    moderation_table = object$moderation_table,
+    summary = object$summary,
+    gpcm_boundary = object$gpcm_boundary %||% data.frame(),
+    config = object$config
+  )
+  class(out) <- "summary.mfrm_dff_moderation"
+  out
+}
+
+#' @export
+summary.mfrm_dif_moderation <- function(object, ...) {
+  summary.mfrm_dff_moderation(object, ...)
+}
+
+#' @export
+print.summary.mfrm_dff_moderation <- function(x, ...) {
+  label <- x$config$functioning_label %||% "DFF"
+  cat("--- ", label, " Continuous-Covariate Moderation Screen ---\n", sep = "")
+  cat("Method:", x$config$method %||% "residual_moderation", "\n")
+  cat("Facet:", x$config$facet, " | Covariate:", x$config$covariate, "\n")
+  cat("Covariate scale:", x$config$covariate_scale,
+      " | Min observations:", x$config$min_obs, "\n\n")
+
+  if (nrow(x$moderation_table) > 0L) {
+    show_cols <- intersect(
+      c("Level", "Slope", "SE", "z", "p_adjusted", "Classification",
+        "N", "Persons", "CovariateDistinct", "sparse",
+        "InsufficientCovariateSpread"),
+      names(x$moderation_table)
+    )
+    print(as.data.frame(x$moderation_table |> select(all_of(show_cols))),
+          row.names = FALSE, digits = 3)
+  } else {
+    cat("No moderation rows computed.\n")
+  }
+
+  cat("\nScreening Summary:\n")
+  print(as.data.frame(x$summary), row.names = FALSE)
+  .print_dff_gpcm_boundary(x$gpcm_boundary)
+  invisible(x)
+}
+
+#' @export
+print.summary.mfrm_dif_moderation <- function(x, ...) {
+  print.summary.mfrm_dff_moderation(x, ...)
+}
+
+#' @export
+print.mfrm_dff_moderation <- function(x, ...) {
+  cfg <- x$config %||% list()
+  tbl <- x$moderation_table
+  n_rows <- if (is.data.frame(tbl)) nrow(tbl) else 0L
+  n_flag <- if (n_rows > 0L && "Classification" %in% names(tbl)) {
+    sum(tbl$Classification == "Screen positive", na.rm = TRUE)
+  } else {
+    NA_integer_
+  }
+  cat("mfrm_dff_moderation\n")
+  cat(sprintf("  Method: %s | Facet: %s | Covariate: %s\n",
+              cfg$method %||% "residual_moderation",
+              cfg$facet %||% NA_character_,
+              cfg$covariate %||% NA_character_))
+  cat(sprintf("  Rows: %d", n_rows))
+  if (is.finite(n_flag)) cat(sprintf(", %d screen-positive", n_flag))
+  cat("\n")
+  cat("  Use `summary()` for slope, uncertainty, and classification details.\n")
+  invisible(x)
+}
+
+#' @export
+print.mfrm_dif_moderation <- function(x, ...) {
+  print.mfrm_dff_moderation(x, ...)
+}
+
 .validate_dff_count_arg <- function(x, arg) {
   if (!is.numeric(x) || length(x) != 1L || is.na(x) ||
       !is.finite(x) || x < 1 ||
@@ -665,6 +1659,8 @@ analyze_dif <- function(...) {
 }
 
 .sanitize_dff_group_data <- function(orig_data, group, context) {
+  raw_group <- orig_data[[group]]
+  numeric_group <- is.numeric(raw_group) && !is.factor(raw_group)
   group_vals <- trimws(as.character(orig_data[[group]]))
   valid_group <- !is.na(group_vals) & nzchar(group_vals)
   if (!any(valid_group)) {
@@ -679,10 +1675,21 @@ analyze_dif <- function(...) {
     group_vals <- group_vals[valid_group]
   }
   orig_data[[group]] <- group_vals
+  group_levels <- sort(unique(group_vals))
+  if (isTRUE(numeric_group) && length(group_levels) > 8L) {
+    stop(
+      "`group` column '", group, "' is numeric with ", length(group_levels),
+      " distinct values. `analyze_dff()` treats it as categorical group ",
+      "labels, not as a continuous-covariate DIF/DFF model. Bin the ",
+      "covariate deliberately for an exploratory screen, or use a separate ",
+      "moderation/regression design.",
+      call. = FALSE
+    )
+  }
   list(
     data = orig_data,
     values = group_vals,
-    levels = sort(unique(group_vals))
+    levels = group_levels
   )
 }
 
@@ -1069,6 +2076,9 @@ analyze_dif <- function(...) {
     config = list(facet = facet, group = group, method = "residual",
                   min_obs = min_obs, p_adjust = p_adjust,
                   focal = focal, group_levels = group_levels,
+                  fit_model = .dff_fit_model(fit),
+                  model_scope = .dff_model_scope(fit),
+                  mfrm_fit_used = TRUE,
                   functioning_label = functioning_label)
   )
   class(out) <- c("mfrm_dff", "mfrm_dif", class(out))
@@ -1369,6 +2379,9 @@ analyze_dif <- function(...) {
     config = list(facet = facet, group = group, method = "refit",
                   min_obs = min_obs, p_adjust = p_adjust,
                   focal = focal, group_levels = group_levels,
+                  fit_model = .dff_fit_model(fit),
+                  model_scope = .dff_model_scope(fit),
+                  mfrm_fit_used = TRUE,
                   linking_facets = linking_setup$linking_facets,
                   linking_threshold = linking_setup$min_common_anchors,
                   functioning_label = functioning_label)
@@ -1511,6 +2524,23 @@ print.mfrm_dff <- function(x, ...) {
   cat("\nGPCM Boundary:\n")
   print(as.data.frame(boundary[, keep, drop = FALSE]), row.names = FALSE)
   invisible(NULL)
+}
+
+.dff_fit_model <- function(fit) {
+  model <- fit$config$model %||% fit$summary$Model[1] %||% "RSM"
+  model <- toupper(as.character(model[1]))
+  if (!is.na(model) && nzchar(model)) model else "RSM"
+}
+
+.dff_model_scope <- function(fit) {
+  model <- .dff_fit_model(fit)
+  if (identical(model, "GPCM")) {
+    "fitted_mfrm_bounded_gpcm_screening_with_caveat"
+  } else if (model %in% c("RSM", "PCM")) {
+    "fitted_mfrm_rasch_family_screening"
+  } else {
+    "fitted_mfrm_screening"
+  }
 }
 
 # ============================================================================
@@ -1866,8 +2896,9 @@ print.mfrm_dif_interaction <- function(x, ...) {
 #'
 #' @return Invisibly, an `mfrm_plot_data` object whose `data` slot bundles
 #'   the row x column metric matrix (`$matrix`), the source long table
-#'   (`$pairs`), and the metric label. Earlier 0.1.x releases returned the
-#'   bare matrix; consume `$data$matrix` to keep code forward-compatible.
+#'   (`$pairs`), the metric label, `classification_system`, and
+#'   `ets_display_eligible`. Earlier 0.1.x releases returned the bare matrix;
+#'   consume `$data$matrix` to keep code forward-compatible.
 #'
 #' @seealso [dif_interaction_table()], [analyze_dff()], [analyze_dif()], [dif_report()]
 #' @examplesIf interactive()
@@ -1959,6 +2990,9 @@ plot_dif_heatmap <- function(x, metric = c("obs_exp", "t", "contrast"),
     cs <- cs[!is.na(cs)]
     classification_system <- cs[1] %||% NA_character_
   }
+  ets_display_eligible <- inherits(x, "mfrm_dif") &&
+    identical(metric, "contrast") &&
+    identical(classification_system, "ETS")
 
   # Build matrix
   rows <- sort(unique(as.character(tbl[[row_var]])))
@@ -2077,6 +3111,8 @@ plot_dif_heatmap <- function(x, metric = c("obs_exp", "t", "contrast"),
         classification_system = classification_system,
         flag_threshold = flag_threshold
       ),
+      classification_system = classification_system,
+      ets_display_eligible = ets_display_eligible,
       gpcm_boundary = x$gpcm_boundary %||% data.frame(),
       settings = list(
         show_values = show_values,
@@ -6492,6 +7528,10 @@ print.summary.mfrm_misfit_casebook <- function(x, ...) {
 #' The result is intended for substantive review, not for automatic model
 #' selection. In particular, a better-fitting `GPCM` should not by itself be
 #' interpreted as a reason to discard an equal-weighting Rasch-family route.
+#' For MML fits, the review also records whether each candidate used the fixed
+#' normal population SD or the opt-in estimated population SD. Mixed fixed/free
+#' population-SD comparisons are flagged because they change the latent metric
+#' as well as the response-model weighting policy.
 #'
 #' @section Recommended input route:
 #' 1. Fit an equal-weighting reference model with `model = "RSM"` or `"PCM"`.
@@ -6501,6 +7541,8 @@ print.summary.mfrm_misfit_casebook <- function(x, ...) {
 #'    reweighting is substantively acceptable.
 #'
 #' @section What the returned tables mean:
+#' - `overview` / `status`: front-door review status, including population-SD
+#'   mode alignment when both fits are MML.
 #' - `model_comparison`: same-data model-comparison bundle from [compare_mfrm()].
 #' - `facet_shift`: how non-person facet estimates move under bounded `GPCM`.
 #' - `slope_profile`: which `slope_facet` levels are upweighted or downweighted.
@@ -6657,11 +7699,27 @@ build_weighting_review <- function(rasch_fit,
 
   support_status <- .weighting_review_support_status()
   comparison_mode <- if (isTRUE(basis$ic_comparable)) "same_basis_fit_comparison" else "descriptive_model_contrast_only"
+  reference_population_sd_mode <- .review_population_sd_mode(rasch_fit)
+  comparison_population_sd_mode <- .review_population_sd_mode(gpcm_fit)
+  population_sd_mode_aligned <- identical(
+    as.character(reference_population_sd_mode %||% NA_character_),
+    as.character(comparison_population_sd_mode %||% NA_character_)
+  )
+  population_metric_line <- paste(
+    paste0("reference ", .review_population_metric_label(rasch_fit)),
+    paste0("bounded GPCM ", .review_population_metric_label(gpcm_fit)),
+    sep = " vs "
+  )
   overview <- tibble::tibble(
     ReferenceModel = as.character(rasch_fit$config$model %||% NA_character_)[1],
     ComparisonModel = as.character(gpcm_fit$config$model %||% NA_character_)[1],
     ReferenceMethod = public_mfrm_method_label(as.character(rasch_fit$config$method %||% NA_character_)[1]),
     ComparisonMethod = public_mfrm_method_label(as.character(gpcm_fit$config$method %||% NA_character_)[1]),
+    ReferencePopulationSDMode = reference_population_sd_mode,
+    ComparisonPopulationSDMode = comparison_population_sd_mode,
+    ReferenceEstimatedPopulationSD = .review_estimated_population_sd(rasch_fit),
+    ComparisonEstimatedPopulationSD = .review_estimated_population_sd(gpcm_fit),
+    PopulationSDModeAligned = population_sd_mode_aligned,
     SlopeFacet = slope_facet,
     ReviewStatus = review_status,
     ComparisonMode = comparison_mode,
@@ -6672,7 +7730,8 @@ build_weighting_review <- function(rasch_fit,
   status <- make_summary_block(
     "Overall status" = review_status,
     "Weighting principle" = "Rasch-family equal weighting vs bounded GPCM discrimination-based reweighting",
-    "Comparison basis" = comparison_mode
+    "Comparison basis" = comparison_mode,
+    "Population metric" = population_metric_line
   )
 
   key_warnings <- character(0)
@@ -6680,6 +7739,12 @@ build_weighting_review <- function(rasch_fit,
     key_warnings <- c(
       key_warnings,
       "Model-comparison weights are descriptive only because the two fits do not share a fully comparable formal MML basis."
+    )
+  }
+  if (!isTRUE(population_sd_mode_aligned)) {
+    key_warnings <- c(
+      key_warnings,
+      "The candidate pair changes both response-model weighting and MML population-SD mode; isolate fixed-SD versus free-SD sensitivity before attributing differences to bounded GPCM slopes."
     )
   }
   if (nrow(slope_profile) > 0L) {
@@ -6719,6 +7784,9 @@ build_weighting_review <- function(rasch_fit,
 
   next_actions <- clean_summary_lines(c(
     "Read summary(model_comparison) before interpreting any fit advantage as a scoring recommendation.",
+    if (!isTRUE(population_sd_mode_aligned)) {
+      "First compare fixed-SD and free-SD fits within the same response model before interpreting the weighting review."
+    },
     paste0("Use slope_profile and top_reweighted_levels to inspect whether ", slope_facet, " levels are being upweighted or downweighted in substantively acceptable ways."),
     paste0("Use plot_information(compute_information(rasch_fit), type = \"iif\", facet = \"", slope_facet, "\", draw = FALSE) and the bounded GPCM analogue to inspect precision redistribution visually."),
     "If equal contributions of items and raters are part of the score interpretation, retain the Rasch-family fit as the operational reference even when bounded GPCM fits better."
@@ -6755,6 +7823,7 @@ build_weighting_review <- function(rasch_fit,
 
   notes <- clean_summary_lines(c(
     "Observation weights and discrimination-based reweighting are separate concepts in this package.",
+    "Population-SD mode is a metric-calibration choice, not a GPCM discrimination effect.",
     "The review is intended to make reweighting visible; it does not decide by itself whether bounded GPCM should replace the Rasch-family operational model.",
     "Information-share changes are computed within each facet because the same total information is partitioned separately by facet."
   ))
@@ -6863,6 +7932,65 @@ print.summary.mfrm_weighting_review <- function(x, ...) {
 
 # --- build_model_choice_review ----------------------------------------------
 
+.review_population_sd_mode <- function(fit) {
+  summary_tbl <- fit$summary %||% data.frame()
+  mode <- as.character(summary_tbl$PopulationSDMode[1] %||% fit$config$population_sd_mode %||% NA_character_)
+  if (length(mode) == 0L || is.na(mode) || !nzchar(trimws(mode))) {
+    return(NA_character_)
+  }
+  mode[[1]]
+}
+
+.review_population_prior_sd <- function(fit) {
+  summary_tbl <- fit$summary %||% data.frame()
+  suppressWarnings(as.numeric(
+    summary_tbl$PopulationPriorSD[1] %||%
+      fit$config$population_prior_sd_input %||%
+      fit$config$population_prior_sd %||%
+      NA_real_
+  ))
+}
+
+.review_estimated_population_sd <- function(fit) {
+  summary_tbl <- fit$summary %||% data.frame()
+  suppressWarnings(as.numeric(
+    summary_tbl$EstimatedPopulationSD[1] %||%
+      fit$config$estimated_population_sd %||%
+      NA_real_
+  ))
+}
+
+.review_population_sd_se_status <- function(fit) {
+  summary_tbl <- fit$summary %||% data.frame()
+  status <- as.character(
+    summary_tbl$PopulationSDSEStatus[1] %||%
+      fit$config$population_sd_se_status %||%
+      NA_character_
+  )
+  if (length(status) == 0L || is.na(status) || !nzchar(trimws(status))) {
+    return(NA_character_)
+  }
+  status[[1]]
+}
+
+.review_population_metric_label <- function(fit, digits = 3) {
+  mode <- tolower(trimws(as.character(.review_population_sd_mode(fit) %||% "")))
+  fmt <- function(x) {
+    x <- suppressWarnings(as.numeric(x))
+    if (length(x) == 0L || !is.finite(x[1])) return("NA")
+    format(round(x[1], digits), nsmall = digits, trim = TRUE)
+  }
+  if (identical(mode, "estimated")) {
+    status <- .review_population_sd_se_status(fit)
+    suffix <- if (!is.na(status) && nzchar(status)) paste0(", SE status: ", status) else ""
+    return(paste0("estimated SD = ", fmt(.review_estimated_population_sd(fit)), suffix))
+  }
+  if (identical(mode, "fixed")) {
+    return(paste0("fixed SD = ", fmt(.review_population_prior_sd(fit))))
+  }
+  "not recorded"
+}
+
 .model_choice_fit_labels <- function(fits, labels = NULL) {
   if (!is.null(labels)) {
     labels <- as.character(labels)
@@ -6941,17 +8069,18 @@ print.summary.mfrm_weighting_review <- function(x, ...) {
   }
   if (identical(model, "GPCM")) {
     return(tibble::tibble(
-      FullAPARoute = "blocked",
-      ScoreSideExport = "blocked",
-      LinkingSynthesis = "deferred",
+      FullAPARoute = "supported_with_caveat",
+      ScoreSideExport = "supported_with_caveat",
+      LinkingSynthesis = "supported_with_caveat",
       RecoveryChecks = "supported_with_caveat",
       FairAverage = "supported_with_caveat",
       BiasScreening = "supported_with_caveat",
       SummaryAppendix = "supported_with_caveat",
       PrimaryHelpers = paste(
         "gpcm_capability_matrix(); compare_mfrm(); build_weighting_review();",
-        "compute_information(); evaluate_mfrm_recovery(); fair_average_table();",
-        "estimate_bias(); export_summary_appendix()"
+        "build_apa_outputs(); compute_information(); evaluate_mfrm_recovery();",
+        "fair_average_table(); estimate_bias(); facets_output_file_bundle(include = \"score\");",
+        "build_linking_review(); export_summary_appendix()"
       )
     ))
   }
@@ -6978,6 +8107,12 @@ print.summary.mfrm_weighting_review <- function(x, ...) {
       Label = labels[[i]],
       Model = model,
       Method = method,
+      MMLEngineUsed = as.character(fit$summary$MMLEngineUsed[1] %||% NA_character_),
+      PopulationSDMode = .review_population_sd_mode(fit),
+      PopulationPriorSD = .review_population_prior_sd(fit),
+      EstimatedPopulationSD = .review_estimated_population_sd(fit),
+      PopulationSDSEStatus = .review_population_sd_se_status(fit),
+      PopulationMetric = .review_population_metric_label(fit),
       StepFacet = step_facet,
       SlopeFacet = slope_facet,
       RecommendedRole = .model_choice_role(model),
@@ -7041,10 +8176,10 @@ print.summary.mfrm_weighting_review <- function(x, ...) {
       "Use AIC/BIC/logLik as fit evidence, not as a standalone scoring decision.",
       "Use only when comparing an RSM/PCM reference to bounded GPCM.",
       "Review item/rater/criterion information redistribution before changing the operational model.",
-      "Supported for RSM/PCM; blocked for bounded GPCM in this release.",
+      "Supported for RSM/PCM; supported with explicit GPCM sensitivity-reporting caveats.",
       "Supported for RSM/PCM; supported with explicit SE caveat for bounded GPCM.",
       "Supported for RSM/PCM; conditional screening with profile-likelihood follow-up for bounded GPCM.",
-      "Available for direct supported outputs; fit-based bundles remain RSM/PCM only."
+      "Available for direct supported outputs; bounded GPCM fit-based bundles must retain gpcm_boundary caveats."
     )
   )
   if (isTRUE(has_gpcm)) {
@@ -7094,7 +8229,11 @@ print.summary.mfrm_weighting_review <- function(x, ...) {
 #' estimate new models. It bundles:
 #'
 #' - [compare_mfrm()] for AIC/BIC/log-likelihood comparison;
+#' - comparison-family guidance from [compare_mfrm()], including claim scope,
+#'   interpretation guards, APA-style wording, and technical-appendix wording;
 #' - model-role guidance for `RSM`, `PCM`, and bounded `GPCM`;
+#' - population-SD mode summaries for MML fits, so fixed-prior versus
+#'   free-SD metric changes are not mistaken for response-model differences;
 #' - downstream-route availability for APA output, score-side export, linking,
 #'   recovery, fair averages, bias screening, and summary-appendix handoff;
 #' - report wording templates that avoid treating better bounded-`GPCM` fit as
@@ -7106,10 +8245,16 @@ print.summary.mfrm_weighting_review <- function(x, ...) {
 #' The word "bounded" is intentional: the package implements a bounded GPCM
 #' route, not every possible generalized partial-credit many-facet extension.
 #' The current route uses positive slopes, requires `slope_facet == step_facet`,
-#' identifies slopes on the log scale with geometric mean 1, and keeps several
-#' downstream score-side/reporting helpers outside the validated boundary.
+#' identifies slopes on the log scale with geometric mean 1, and requires
+#' caveated downstream wording rather than unrestricted GPCM claims.
 #'
-#' @return An object of class `mfrm_model_choice_review`.
+#' @return An object of class `mfrm_model_choice_review` with `overview`,
+#'   `comparison_table`, `comparison_guidance`,
+#'   `comparison_reporting_templates`, `model_roles`, `downstream_routes`,
+#'   `report_templates`, optional `weighting_review`, and review notes. The
+#'   comparison-guidance tables expose the same APA-style and technical wording
+#'   templates as [compare_mfrm()] so model-choice reports can separate response
+#'   model evidence from population-metric and bounded-GPCM sensitivity claims.
 #' @seealso [compare_mfrm()], [build_weighting_review()],
 #'   [gpcm_capability_matrix()], [compute_information()]
 #' @examples
@@ -7122,6 +8267,7 @@ print.summary.mfrm_weighting_review <- function(x, ...) {
 #'                     quad_points = 7)
 #' review <- build_model_choice_review(RSM = fit_rsm, PCM = fit_pcm)
 #' summary(review)
+#' review$comparison_guidance[, c("ComparisonFamily", "InterpretationGuard")]
 #' }
 #' @export
 build_model_choice_review <- function(...,
@@ -7156,6 +8302,30 @@ build_model_choice_review <- function(...,
   has_gpcm <- any(role_table$Model == "GPCM")
   ref_labels <- .model_choice_reference_labels(role_table)
   basis <- comparison$comparison_basis %||% list()
+  comparison_guidance <- tibble::as_tibble(comparison$comparison_guidance %||% tibble::tibble())
+  comparison_family <- as.character(
+    comparison_guidance$ComparisonFamily[1] %||%
+      basis$comparison_family %||%
+      NA_character_
+  )
+  comparison_strength <- as.character(
+    comparison_guidance$ComparisonStrength[1] %||%
+      basis$comparison_strength %||%
+      NA_character_
+  )
+  comparison_guard <- as.character(
+    comparison_guidance$InterpretationGuard[1] %||%
+      basis$interpretation_guard %||%
+      NA_character_
+  )
+  population_sd_modes <- unique(as.character(role_table$PopulationSDMode %||% NA_character_))
+  population_sd_modes <- population_sd_modes[!is.na(population_sd_modes) & nzchar(trimws(population_sd_modes))]
+  population_sd_mode_summary <- if (length(population_sd_modes) > 0L) {
+    paste(population_sd_modes, collapse = ", ")
+  } else {
+    NA_character_
+  }
+  mixed_population_sd_modes <- length(population_sd_modes) > 1L
 
   overview <- tibble::tibble(
     FitCount = length(fits),
@@ -7163,6 +8333,10 @@ build_model_choice_review <- function(...,
     HasBoundedGPCM = has_gpcm,
     OperationalReference = ref_labels$reference,
     SensitivityModel = ref_labels$sensitivity,
+    ComparisonFamily = comparison_family,
+    ComparisonStrength = comparison_strength,
+    PopulationSDModes = population_sd_mode_summary,
+    MixedPopulationSDModes = mixed_population_sd_modes,
     ICComparable = isTRUE(basis$ic_comparable),
     ReviewStatus = dplyr::case_when(
       has_gpcm && !is.na(ref_labels$reference) ~ "reference_plus_sensitivity_review",
@@ -7185,6 +8359,18 @@ build_model_choice_review <- function(...,
       "Information-criterion ranking is descriptive because the compared fits do not all share a comparable formal MML basis, observation set, and convergence status."
     )
   }
+  if (isTRUE(mixed_population_sd_modes)) {
+    key_warnings <- c(
+      key_warnings,
+      "Candidate fits use mixed MML population-SD modes; isolate fixed-SD versus free-SD sensitivity before making a response-model choice claim."
+    )
+  }
+  if (identical(comparison_family, "mixed_metric_and_response_model")) {
+    key_warnings <- c(
+      key_warnings,
+      "The comparison changes both response-model family and MML population-SD mode; do not report one combined model-selection conclusion."
+    )
+  }
   if (isTRUE(has_gpcm) && is.na(ref_labels$reference)) {
     key_warnings <- c(
       key_warnings,
@@ -7195,6 +8381,15 @@ build_model_choice_review <- function(...,
 
   next_actions <- clean_summary_lines(c(
     "Read comparison_table for fit evidence, but decide operational use from the score interpretation.",
+    if (!is.na(comparison_guard) && nzchar(comparison_guard)) {
+      comparison_guard
+    },
+    if (isTRUE(mixed_population_sd_modes)) {
+      "Compare fixed-SD and free-SD variants within the same response model before interpreting cross-model IC differences."
+    },
+    if (nrow(comparison_guidance) > 0L && "NextAction" %in% names(comparison_guidance)) {
+      as.character(comparison_guidance$NextAction[1])
+    },
     if (isTRUE(has_gpcm) && !is.na(ref_labels$reference)) {
       "Run with `run_weighting_review = TRUE` or call `build_weighting_review()` to inspect discrimination-based reweighting."
     },
@@ -7245,6 +8440,7 @@ build_model_choice_review <- function(...,
 
   notes <- clean_summary_lines(c(
     "This review is a decision aid; it does not refit models or choose an operational model automatically.",
+    "Population-SD mode is a metric-calibration setting; mixed fixed/free-SD candidate sets need separate sensitivity wording.",
     "Observation weights and GPCM discrimination-based reweighting are separate concepts.",
     "Use bounded GPCM wording only for the current constrained implementation, not for an unrestricted GPCM family claim."
   ))
@@ -7255,6 +8451,8 @@ build_model_choice_review <- function(...,
     next_actions = next_actions,
     comparison = comparison,
     comparison_table = comparison$table,
+    comparison_guidance = comparison_guidance,
+    comparison_reporting_templates = comparison_guidance,
     model_roles = role_table,
     downstream_routes = downstream_routes,
     report_templates = report_templates,
@@ -7300,6 +8498,8 @@ summary.mfrm_model_choice_review <- function(object, digits = 3, ...) {
     key_warnings = clean_summary_lines(object$key_warnings %||% character(0)),
     next_actions = clean_summary_lines(object$next_actions %||% character(0)),
     comparison_table = tibble::as_tibble(object$comparison_table %||% tibble::tibble()),
+    comparison_guidance = tibble::as_tibble(object$comparison_guidance %||% tibble::tibble()),
+    comparison_reporting_templates = tibble::as_tibble(object$comparison_reporting_templates %||% tibble::tibble()),
     model_roles = tibble::as_tibble(object$model_roles %||% tibble::tibble()),
     downstream_routes = tibble::as_tibble(object$downstream_routes %||% tibble::tibble()),
     report_templates = tibble::as_tibble(object$report_templates %||% tibble::tibble()),
@@ -7329,9 +8529,21 @@ print.summary.mfrm_model_choice_review <- function(x, ...) {
     cat("\nComparison Table\n")
     print(round_numeric_df(as.data.frame(x$comparison_table), digits = digits), row.names = FALSE)
   }
+  if (nrow(x$comparison_guidance) > 0L) {
+    cat("\nComparison Guidance\n")
+    keep <- intersect(
+      c("ComparisonFamily", "ComparisonStrength", "ClaimScope", "InterpretationGuard", "NextAction"),
+      names(x$comparison_guidance)
+    )
+    print(as.data.frame(x$comparison_guidance[, keep, drop = FALSE]), row.names = FALSE)
+  }
   if (nrow(x$model_roles) > 0L) {
     cat("\nModel Roles\n")
-    print(as.data.frame(x$model_roles[, c("Label", "Model", "RecommendedRole", "ScoreContract"), drop = FALSE]),
+    keep_roles <- intersect(
+      c("Label", "Model", "RecommendedRole", "PopulationMetric", "ScoreContract"),
+      names(x$model_roles)
+    )
+    print(as.data.frame(x$model_roles[, keep_roles, drop = FALSE]),
           row.names = FALSE)
   }
   if (nrow(x$downstream_routes) > 0L) {

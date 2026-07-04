@@ -39,6 +39,8 @@ of FACETS menu-level reproduction.
 facets_positioning_guide()
 }
 \seealso{
-\code{\link[=facets_feature_coverage]{facets_feature_coverage()}}, \code{\link[=mfrmr_output_guide]{mfrmr_output_guide()}},
+\code{\link[=facets_term_crosswalk]{facets_term_crosswalk()}}, \code{\link[=facets_feature_coverage]{facets_feature_coverage()}},
+\code{\link[=facets_visual_contract]{facets_visual_contract()}},
+\code{\link[=mfrmr_output_guide]{mfrmr_output_guide()}},
 \code{\link[=read_facets_fit_table]{read_facets_fit_table()}}, \code{\link[=facets_fit_review]{facets_fit_review()}}
 }

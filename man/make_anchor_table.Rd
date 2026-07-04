@@ -64,5 +64,5 @@ head(anchors_tbl)
 summary(anchors_tbl$Anchor)
 }
 \seealso{
-\code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=review_mfrm_anchors]{review_mfrm_anchors()}}
+\code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=review_mfrm_anchors]{review_mfrm_anchors()}}, \code{\link[=anchor_linking_contract]{anchor_linking_contract()}}
 }

@@ -2,6 +2,7 @@
 % Please edit documentation in R/api-generalizability.R
 \name{mfrm_generalizability}
 \alias{mfrm_generalizability}
+\alias{plot.mfrm_generalizability}
 \title{Generalizability-theory variance decomposition for an MFRM design}
 \usage{
 mfrm_generalizability(
@@ -9,7 +10,31 @@ mfrm_generalizability(
   data = NULL,
   object_facet = "Person",
   random_facets = NULL,
-  reml = TRUE
+  random_interactions = NULL,
+  reml = TRUE,
+  progress = interactive()
+)
+
+\method{plot}{mfrm_generalizability}(
+  x,
+  y = NULL,
+  type = c("variance_components", "coefficients", "design_check"),
+  design_check_type = c("interaction_cells", "highest_order", "facet_levels", "overview"),
+  design_check_metric = NULL,
+  design_check_status = NULL,
+  design_check_sort_by = c("status", "value", "name"),
+  design_check_decreasing = NULL,
+  component_type = NULL,
+  decision_role = NULL,
+  sort_by = c("value", "source", "none"),
+  decreasing = TRUE,
+  top_n = NULL,
+  show_proportion = TRUE,
+  draw = TRUE,
+  main = NULL,
+  palette = NULL,
+  preset = c("standard", "publication", "compact", "monochrome"),
+  ...
 )
 }
 \arguments{
@@ -25,7 +50,70 @@ measurement" -- typically \code{"Person"} (default).}
 treat as random conditions of measurement. Default uses every
 facet other than \code{object_facet}.}
 
+\item{random_interactions}{Optional explicitly requested two-way random
+interactions, such as \code{"Person:Token"} or \code{"Rater:Token"}. The default
+\code{NULL} preserves the main-effects baseline and folds interaction variance
+into \code{Residual}.}
+
 \item{reml}{Logical, passed to \code{\link[lme4:lmer]{lme4::lmer()}} (default \code{TRUE}).}
+
+\item{progress}{Logical. Whether to show a short CLI progress/status display
+while preparing the G-study model and fitting the crossed random-effects
+decomposition. Defaults to \code{\link[=interactive]{interactive()}}, so interactive exploratory
+runs can show progress while tests, scripts, and report rendering stay
+quiet. Set \code{TRUE} or \code{FALSE} explicitly to override.}
+
+\item{x}{Output from \code{\link[=mfrm_generalizability]{mfrm_generalizability()}}.}
+
+\item{y}{Reserved for S3 generic compatibility.}
+
+\item{type}{Plot route. \code{"design_check"} displays the observed design
+review stored in \code{x$design$design_check}, \code{"variance_components"} displays
+the observed G-study decomposition, and \code{"coefficients"} displays \code{G} and
+\code{Phi} with 0.70/0.80 decision-reference bands.}
+
+\item{design_check_type}{Route passed to
+\code{plot.mfrm_generalizability_design_check()} when \code{type = "design_check"}.}
+
+\item{design_check_metric}{Optional design-check metric passed to the
+design-check plot route.}
+
+\item{design_check_status}{Optional design-check status filter.}
+
+\item{design_check_sort_by}{Ordering rule passed to the design-check plot
+route.}
+
+\item{design_check_decreasing}{Optional design-check ordering direction.}
+
+\item{component_type}{Optional component-type filter for variance-component
+plots, for example \code{"object_interaction"}, \code{"facet_interaction"},
+\code{"facet_main"}, or \code{"residual"}.}
+
+\item{decision_role}{Optional decision-role filter for variance-component
+plots, for example \code{"relative_and_absolute_error"} or \code{"absolute_error"}.}
+
+\item{sort_by}{Variance-component ordering rule: \code{"value"} (default),
+\code{"source"}, or \code{"none"}.}
+
+\item{decreasing}{Logical. Whether \code{sort_by} uses decreasing order.}
+
+\item{top_n}{Optional positive integer limiting the displayed variance
+components after filtering and sorting.}
+
+\item{show_proportion}{Logical. For variance-component plots, use
+\code{ProportionVariance} when available (\code{TRUE}, default) or raw \code{Variance}
+(\code{FALSE}).}
+
+\item{draw}{If \code{TRUE}, draw with base graphics. If \code{FALSE}, return an
+\code{mfrm_plot_data} object with reusable plot tables and guidance metadata.}
+
+\item{main}{Optional plot title.}
+
+\item{palette}{Optional vector of colors for base graphics.}
+
+\item{preset}{Plot style preset used by the base-graphics renderer.}
+
+\item{...}{Reserved for future extensions.}
 }
 \value{
 An object of class \code{mfrm_generalizability} with:
@@ -34,29 +122,41 @@ An object of class \code{mfrm_generalizability} with:
 residual, with columns \code{Source}, \code{Variance}, and
 \code{ProportionVariance}.}
 \item{\code{coefficients}}{One-row data frame with \code{G}
-(generalizability coefficient, relative decision) and
-\code{Phi} (dependability coefficient, absolute decision), using the
-single-observation-per-cell convention.}
-\item{\code{design}}{Description of the crossed-random model.}
+(generalizability coefficient, relative decision), \code{Phi}
+(dependability coefficient, absolute decision), and the single-cell
+relative / absolute error variance denominators.}
+\item{\code{design}}{Description of the crossed-random model, including
+\code{design_check} from \code{\link[=check_mfrm_generalizability_design]{check_mfrm_generalizability_design()}}.}
+\item{\code{runtime}}{Elapsed-time metadata for the G-study refit.}
 }
+\code{plot.mfrm_generalizability(draw = FALSE)} returns an \code{mfrm_plot_data}
+object with reusable \code{plot_table}, \code{variance_components}, \code{coefficients},
+\code{reading_order}, \code{guidance}, \code{figure_recipes}, and \code{interpretation_note}
+components.
 }
 \description{
 Re-fits the rating data underlying an \code{mfrm_fit} as a crossed
-random-effects model
-\code{Score ~ 1 + (1 | Person) + (1 | Facet1) + ... + Residual}
-via \code{lme4::lmer}, and returns the canonical G-theory variance
-components plus G / Phi coefficients. Useful when reviewers ask
-for a generalizability-theory complement to the Rasch-style
-separation / reliability statistics that \code{diagnose_mfrm()}
-already emits.
+random-effects model on the observed \code{Score} column,
+\code{Score ~ 1 + (1 | Person) + (1 | Facet1) + ... + Residual},
+via \code{lme4::lmer}, and returns G-theory variance components plus
+G / Phi coefficients. This is an observed-score G-theory complement to
+the Rasch-style separation / reliability statistics that \code{diagnose_mfrm()}
+emits; it does not re-estimate the MFRM, replace MFRM fit diagnostics, or
+place G / Phi on the fitted logit scale.
 }
 \section{Interpretation}{
 
 \itemize{
+\item This helper answers a G-theory design question on the observed-score
+scale: how much observed score variation is associated with the object
+of measurement, measurement facets, selected interactions, and residual
+error. It is complementary to MFRM separation reliability, not a
+competing estimate of the same quantity.
 \item \code{G} is appropriate for \strong{relative} decisions (rank-ordering
-persons): \code{G = sigma2(p) / (sigma2(p) + sigma2(Residual))}.
+persons): \verb{G = sigma2(p) / (sigma2(p) + sigma2(object-by-condition interactions) + sigma2(Residual))}.
 \item The reported \code{Phi} is appropriate for \strong{absolute} decisions (cut-score
-classification): \verb{Phi = sigma2(p) / (sigma2(p) + sigma2(facet main effects) + sigma2(Residual))}, before D-study scaling.
+classification): \verb{Phi = sigma2(p) / (sigma2(p) + sigma2(facet main effects) + sigma2(non-object interactions) + sigma2(object-by-condition interactions) + sigma2(Residual))}, before
+D-study scaling.
 \item Use \code{\link[=mfrm_d_study]{mfrm_d_study()}} to project \code{G} / \code{Phi} under planned numbers of
 raters, items, criteria, or other random measurement facets.
 \item Reporting bands follow Brennan (2001): G / Phi >= 0.8 for
@@ -66,20 +166,32 @@ high-stakes decisions, >= 0.7 for routine reporting.
 
 \section{Limitations}{
 
-This helper formulates the random-effects model with main effects
-only (\code{Score ~ 1 + (1|Person) + (1|Facet1) + ... + Residual}); no
-explicit \code{(1 | Person:Rater)}, \code{(1 | Person:Criterion)}, or
-\code{(1 | Rater:Criterion)} interaction terms are estimated. All
-two-way and higher interaction variance is therefore folded into
-the \code{Residual} term -- the standard one-observation-per-cell
-approximation -- which can bias \code{G} downward when person x facet
-interactions are substantively large. This function reports the
-one-observation-per-cell baseline. \code{\link[=mfrm_d_study]{mfrm_d_study()}} applies D-study
-scaling, including residual-scaling sensitivity checks, to the same
-simplified variance-component decomposition.
-Because person-by-facet interaction terms are not estimated separately,
-D-study projections remain practical planning evidence rather than a
-replacement for a fully specified G-theory design.
+The default \code{random_interactions = NULL} is the historical main-effects
+baseline (\code{Score ~ 1 + (1|Person) + (1|Facet1) + ... + Residual}); all
+two-way and higher interaction variance is then folded into \code{Residual}.
+Supplying \code{random_interactions} estimates the named two-way components as
+random effects. Components that are not specified still remain in
+\code{Residual}, and the highest-order interaction / pure error term may remain
+unidentified in one-observation-per-cell designs. Treat expanded models as
+sensitivity evidence when designs are sparse, singular, or weakly connected.
+Use \code{\link[=check_mfrm_generalizability_design]{check_mfrm_generalizability_design()}} before fitting interaction-
+expanded models when crossing and exact-cell replication are unclear.
+}
+
+\section{Interaction-expanded G-studies}{
+
+\code{random_interactions} currently accepts \strong{two-way} terms only. This is
+intentional: in many MFRM rating designs there is one observation for each
+person-by-rater-by-token (or analogous) cell, so the highest-order
+interaction is confounded with residual error. Attempting to estimate
+three-way terms such as \code{Person:Rater:Token} is usually not identified
+without replicated observations within those exact cells and is rejected by
+this helper. When expanded models are fitted, review
+\code{gt$design$singular_fit}, \code{gt$design$lmer_warnings}, and
+\code{gt$design$lmer_messages}; a singular fit means one or more variance
+directions are estimated on the boundary and the expanded decomposition
+should be reported as sensitivity evidence rather than a definitive
+variance partition.
 }
 
 \section{References}{
@@ -108,9 +220,29 @@ if (requireNamespace("lme4", quietly = TRUE)) {
   # Look for: G >= 0.7 for routine reporting, >= 0.8 for high-stakes.
   #   G < Phi means absolute decisions are noisier than relative
   #   decisions; review whether facet main effects need anchoring.
+  plot(gt, draw = FALSE)
+  plot(gt, type = "coefficients", draw = FALSE)
+  plot(gt, type = "design_check", draw = FALSE)
+
+  design_check <- check_mfrm_generalizability_design(
+    fit,
+    random_interactions = c("Person:Rater", "Rater:Criterion")
+  )
+  design_check$interaction_overview
+
+  gt_expanded <- mfrm_generalizability(
+    fit,
+    random_interactions = c("Person:Rater", "Rater:Criterion")
+  )
+  gt_expanded$variance_components[, c("Source", "Variance",
+                                      "ComponentType", "DecisionRole")]
+  gt_expanded$design$singular_fit
 }
 }
 }
 \seealso{
-\code{\link[=mfrm_d_study]{mfrm_d_study()}}, \code{\link[=compute_facet_icc]{compute_facet_icc()}}, \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}
+\code{\link[=check_mfrm_generalizability_design]{check_mfrm_generalizability_design()}}, \code{\link[=mfrm_d_study]{mfrm_d_study()}},
+\code{\link[=compare_mfrm_generalizability]{compare_mfrm_generalizability()}},
+\code{\link[=compute_facet_icc]{compute_facet_icc()}}, \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=as_ggplot]{as_ggplot()}},
+\code{\link[=plot_data_components]{plot_data_components()}}
 }

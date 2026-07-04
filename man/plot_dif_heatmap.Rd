@@ -50,8 +50,9 @@ visually comparable.}
 \value{
 Invisibly, an \code{mfrm_plot_data} object whose \code{data} slot bundles
 the row x column metric matrix (\verb{$matrix}), the source long table
-(\verb{$pairs}), and the metric label. Earlier 0.1.x releases returned the
-bare matrix; consume \verb{$data$matrix} to keep code forward-compatible.
+(\verb{$pairs}), the metric label, \code{classification_system}, and
+\code{ets_display_eligible}. Earlier 0.1.x releases returned the bare matrix;
+consume \verb{$data$matrix} to keep code forward-compatible.
 }
 \description{
 Visualizes the interaction between a facet and a grouping variable

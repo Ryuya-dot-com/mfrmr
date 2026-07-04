@@ -7,7 +7,8 @@
 mfrm_report(
   x,
   style = c("qc", "apa", "validation", "reviewer", "technical"),
-  output = c("object", "markdown", "html", "tables")
+  output = c("object", "markdown", "html", "tables"),
+  model_comparison = NULL
 )
 }
 \arguments{
@@ -21,6 +22,11 @@ preparation, and \code{"technical"} emphasizes appendix/reproducibility routes.}
 \item{output}{Return format: \code{"object"} for an \code{mfrm_report} object,
 \code{"markdown"} for a character scalar, \code{"html"} for a temporary HTML file,
 or \code{"tables"} for the report's named data-frame list.}
+
+\item{model_comparison}{Optional output from \code{\link[=compare_mfrm]{compare_mfrm()}} or
+\code{\link[=build_model_choice_review]{build_model_choice_review()}} (or their \code{summary()} output). When supplied,
+model-comparison guidance and reporting templates are added to
+\code{report$tables}, Markdown output, and the template boundary index.}
 }
 \value{
 Depending on \code{output}, an \code{mfrm_report} object, a Markdown character
@@ -43,13 +49,16 @@ report.
 The intended workflow is:
 \enumerate{
 \item Create \code{res <- mfrm_results(fit, include = ...)}.
-\item Inspect \code{summary(res)$triage} and \code{summary(res)$next_actions}.
+\item Inspect \code{summary(res, view = "brief")}, \code{summary(res)$triage}, and
+\code{summary(res)$next_actions}.
 \item Create \code{report <- mfrm_report(res, style = "qc")}.
-\item Read \code{summary(report)} and \code{report$first_screen} before opening detailed
-report tables.
+\item Read \code{summary(report, view = "reader")} and \code{report$first_screen} before
+opening detailed report tables.
 \item Use \code{report$report_index} to choose the next \code{PrimaryTable},
 \code{TemplateTable}, plot route, or export route.
 \item Use \code{report$template_index} before copying APA/QC/validation wording.
+\item If candidate fits were compared, pass \code{model_comparison = review}
+so the report carries comparison-family and interpretation-guard wording.
 \item Use \code{style = "apa"}, \code{"validation"}, \code{"reviewer"}, or \code{"technical"} only
 when that reporting question is needed.
 }
@@ -61,16 +70,29 @@ action, and primary route. The
 \code{summary.mfrm_report} method summarizes that first screen into immediate
 actions, optional not-requested sections, claim-readiness counts, report
 gaps, and template-boundary rows without introducing a new pass/fail
-decision. The default print method follows the same short reading order and
+decision. Use \code{summary(report, view = "reader")} when the output should
+start from a short reader-facing claim-use table: what can be reported, what
+needs caveats, and what needs more evidence. The default print method
+follows the same short reading order and
 does not print every detailed evidence table. HTML output places the same
-reader guidance and report-summary tables before the full Markdown text so
-the browser view starts from the first-screen route. The
+reader guidance, first-screen table, reader-claims table, and report gaps
+before the full Markdown text so the browser view starts from the
+first-screen route. The
 \code{report_index} table is the detailed evidence-route index: it lists the
 major report areas, evidence status, readiness label, review-signal count,
 and the primary/template tables, evidence routes, template routes, plot
 routes, export route, and \code{mfrm_results(include = ...)} preset to inspect
 next. In ordinary use, open detailed tables through the \code{PrimaryTable} and
 \code{TemplateTable} columns rather than scanning every element of \code{report$tables}.
+The model-and-data setup rows preserve MML population-SD mode from
+\code{summary(res)$overview}, so APA/QC wording can distinguish fixed-prior
+metrics from opt-in free-SD metrics without treating that choice as a fit
+result or GPCM slope effect. The
+optional \code{model_comparison} route carries comparison-family and
+interpretation-guard wording from \code{\link[=compare_mfrm]{compare_mfrm()}} or
+\code{\link[=build_model_choice_review]{build_model_choice_review()}} into the report tables, so model-choice
+wording does not collapse population-SD sensitivity, bounded-GPCM
+sensitivity, and response-model evidence into one unqualified conclusion.
 The
 \code{template_index} table then stacks all fit, precision, bias, misfit, and
 linking wording templates into a single boundary/claim-strength index before
@@ -111,12 +133,14 @@ and drift/equating claims require multiple fitted forms or waves.
 \dontrun{
 toy <- load_mfrmr_data("example_core")
 toy_small <- toy[toy$Person \%in\% unique(toy$Person)[1:6], , drop = FALSE]
+# example_core is a compact smoke fixture; use Study 1/2 or your own data
+# for substantive report wording.
 fit <- fit_mfrm(toy_small, "Person", c("Rater", "Criterion"), "Score",
                 method = "JML", maxit = 30)
 res <- mfrm_results(fit, include = c("fit", "diagnostics", "tables"))
 
 report <- mfrm_report(res, style = "qc")
-summary(report)
+summary(report, view = "reader")
 report$first_screen
 report$report_index[, c("Area", "Readiness", "PrimaryTable",
                         "TemplateTable", "PlotRoute")]
@@ -131,6 +155,15 @@ report$tables[[fit_primary]]
 
 mfrm_report(res, output = "markdown")
 mfrm_report(res, output = "html")
+
+# If you compared candidate fits, keep the comparison guardrails with the
+# report instead of copying the fit table alone.
+fit_pcm <- fit_mfrm(toy_small, "Person", c("Rater", "Criterion"), "Score",
+                    method = "JML", model = "PCM", step_facet = "Criterion",
+                    maxit = 30)
+review <- build_model_choice_review(RSM = fit, PCM = fit_pcm)
+report_with_review <- mfrm_report(res, style = "apa", model_comparison = review)
+report_with_review$tables$model_comparison_guidance
 }
 }
 \seealso{

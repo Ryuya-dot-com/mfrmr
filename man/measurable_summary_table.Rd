@@ -15,6 +15,8 @@ measurable_summary_table(fit, diagnostics = NULL)
 A named list with:
 \itemize{
 \item \code{summary}: one-row measurable-data summary
+\item \code{residual_summary}: FACETS Table 5-style residual moment rows
+\item \code{variance_summary}: FACETS Table 5-style variance/Pearson review
 \item \code{facet_coverage}: per-facet coverage summary
 \item \code{category_stats}: category-level usage/fit summary
 \item \code{subsets}: subset summary table (when available)
@@ -25,8 +27,9 @@ Build a measurable-data summary
 }
 \details{
 This helper consolidates measurable-data diagnostics into a dedicated
-report bundle: run-level summary, facet coverage, category usage, and
-subset (connected-component) information.
+report bundle: run-level summary, FACETS Table 5-style residual/variance
+checks, facet coverage, category usage, and subset (connected-component)
+information.
 
 \code{summary(t5)} is supported through \code{summary()}.
 \code{plot(t5)} is dispatched through \code{plot()} for class
@@ -37,6 +40,11 @@ subset (connected-component) information.
 
 \itemize{
 \item \code{summary}: overall measurable design status.
+\item \code{residual_summary}: weighted mean and standard-deviation rows for
+category, recounted score, expected score, residual, and standardized
+residual columns.
+\item \code{variance_summary}: raw-score error variance, explained-variance
+approximation, and approximate global Pearson chi-square review.
 \item \code{facet_coverage}: spread/precision by facet.
 \item \code{category_stats}: category usage and fit context.
 \item \code{subsets}: connectivity diagnostics (fragmented subsets reduce comparability).
@@ -67,6 +75,38 @@ The \code{summary} data.frame (one row) contains:
 \item{Persons, Facets, Categories}{Design dimensions.}
 \item{ConnectedSubsets}{Number of connected subsets.}
 \item{LargestSubsetObs, LargestSubsetPct}{Largest subset coverage.}
+\item{RawScoreErrorVariancePct}{Approximate residual error variance as a
+percentage of raw-score population variance.}
+\item{ExplainedVariancePctApprox}{Approximate explained variance percent
+using raw-score and residual population variances.}
+\item{GlobalPearsonChiSq, GlobalPearsonDFApprox,
+GlobalPearsonRatioApprox, GlobalPearsonPApprox}{Approximate global
+Pearson residual chi-square screen.}
+}
+
+The \code{residual_summary} data.frame contains:
+\describe{
+\item{Statistic}{\code{"Mean"}, \code{"SDPopulation"}, or \code{"SDSample"}.}
+\item{N, TotalWeight}{Rows and summed weight contributing to the row.}
+\item{Category}{Observed category value on the fitted score scale.}
+\item{Score}{Recounted cardinal score (\code{score_k}, starting at 0).}
+\item{Expected}{Expected recounted score.}
+\item{Residual}{Observed-minus-expected score residual.}
+\item{StdResidual}{Standardized residual.}
+}
+
+The \code{variance_summary} data.frame contains:
+\describe{
+\item{RawScoreVariancePopulation, ResidualVariancePopulation}{Population
+variances for the recounted score and residual columns.}
+\item{RawScoreErrorVariancePct}{\verb{100 * residual variance / raw-score variance}, matching the FACETS Table 5 raw-score error-variance idea.}
+\item{ExplainedVarianceApprox, ExplainedVariancePctApprox}{Approximate
+raw-score variance explained after residual variance is removed.}
+\item{GlobalPearsonChiSq, GlobalPearsonDFApprox,
+GlobalPearsonRatioApprox, GlobalPearsonPApprox}{Approximate global
+Pearson chi-square, degrees of freedom, ratio, and upper-tail
+probability.}
+\item{Basis}{Short caveat describing the approximation.}
 }
 
 The \code{facet_coverage} data.frame contains:

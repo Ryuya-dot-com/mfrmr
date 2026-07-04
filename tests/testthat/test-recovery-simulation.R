@@ -18,6 +18,7 @@ test_that("evaluate_mfrm_recovery returns row-level and summary recovery tables"
   expect_s3_class(rec$rep_overview, "data.frame")
   expect_s3_class(rec$diagnostic_oc, "data.frame")
   expect_s3_class(rec$diagnostic_oc_summary, "data.frame")
+  expect_s3_class(rec$runtime, "data.frame")
   expect_true(all(c("Truth", "Estimate", "EstimateAligned", "ErrorAligned",
                     "RawTruth", "RawEstimate", "ComparisonScale") %in%
                     names(rec$recovery)))
@@ -41,18 +42,39 @@ test_that("evaluate_mfrm_recovery returns row-level and summary recovery tables"
   expect_true(all(is.finite(rec$recovery_summary$RMSE)))
   expect_true(is.list(rec$ademp))
   expect_match(rec$ademp$aims, "parameter recovery", ignore.case = TRUE)
+  expect_false(rec$settings$progress)
+  expect_true(all(c("TotalElapsedSec", "CompletedReps", "FailedRuns",
+                    "MeanRepElapsedSec", "ProgressShown") %in%
+                    names(rec$runtime)))
+  expect_equal(rec$runtime$CompletedReps[1], 1L)
+  expect_false(rec$runtime$ProgressShown[1])
 
   s <- summary(rec)
   expect_s3_class(s, "summary.mfrm_recovery_simulation")
   expect_true(all(c("overview", "recovery_summary", "rep_overview",
-                    "diagnostic_oc", "diagnostic_oc_summary", "ademp") %in%
+                    "runtime", "diagnostic_oc", "diagnostic_oc_summary",
+                    "reading_order", "next_actions", "reporting_notes",
+                    "ademp") %in%
                     names(s)))
+  expect_s3_class(s$runtime, "data.frame")
+  expect_s3_class(s$reading_order, "data.frame")
+  expect_s3_class(s$next_actions, "data.frame")
+  expect_s3_class(s$reporting_notes, "data.frame")
+  expect_true(all(c("Step", "Route", "WhatToRead") %in%
+                    names(s$reading_order)))
+  expect_true(all(c("Priority", "Area", "Status", "NextAction") %in%
+                    names(s$next_actions)))
+  expect_true(any(grepl("assess_mfrm_recovery", s$next_actions$NextAction, fixed = TRUE)))
   expect_true(all(c("DiagnosticRuns", "DiagnosticSuccessfulRuns",
                     "DiagnosticSuccessRate") %in% names(s$overview)))
   expect_equal(s$overview$DiagnosticRuns[1], 1L)
   expect_equal(s$overview$DiagnosticSuccessfulRuns[1], 1L)
   expect_equal(s$overview$DiagnosticSuccessRate[1], 1)
+  expect_output(print(s), "Recommended reading order")
+  expect_output(print(s), "Next actions")
+  expect_output(print(s), "Reporting notes")
   expect_output(print(s), "Diagnostic operating-characteristic summary")
+  expect_output(print(s), "Runtime")
   expect_output(print(s), "MFRM Parameter Recovery Simulation Summary")
   expect_output(print(rec), "MFRM Parameter Recovery Simulation Summary")
 
@@ -60,23 +82,45 @@ test_that("evaluate_mfrm_recovery returns row-level and summary recovery tables"
   expect_s3_class(summary_plot, "mfrm_plot_data")
   expect_identical(summary_plot$name, "recovery_simulation")
   expect_identical(summary_plot$data$type, "summary")
-  expect_true(all(c("plot_table", "metric", "metric_label", "notes") %in%
+  expect_true(all(c("plot_table", "metric", "metric_label", "reading_order",
+                    "guidance", "figure_recipes", "interpretation_note",
+                    "notes") %in%
                     names(summary_plot$data)))
   expect_true(nrow(summary_plot$data$plot_table) > 0)
+  expect_s3_class(summary_plot$data$figure_recipes, "data.frame")
+  expect_true(any(summary_plot$data$figure_recipes$FigureID ==
+                    "recovery_metric_summary"))
+  expect_true(any(summary_plot$data$figure_recipes$SelectedRoute))
+  expect_true(any(grepl("first metric-level scan",
+                        summary_plot$data$guidance, fixed = TRUE)))
+  expect_match(summary_plot$data$interpretation_note,
+               "Use assess_mfrm_recovery", fixed = TRUE)
+  if (requireNamespace("ggplot2", quietly = TRUE)) {
+    expect_s3_class(as_ggplot(summary_plot), "ggplot")
+    expect_s3_class(as_ggplot(rec, type = "summary", metric = "rmse"),
+                    "ggplot")
+  }
 
   error_plot <- plot(rec, type = "errors", parameter_type = "facet", draw = FALSE)
   expect_s3_class(error_plot, "mfrm_plot_data")
   expect_identical(error_plot$data$type, "errors")
   expect_true(all(error_plot$data$plot_table$ParameterType == "facet"))
+  expect_true(any(error_plot$data$figure_recipes$SelectedRoute &
+                    error_plot$data$figure_recipes$Type == "errors"))
 
   scatter_plot <- plot(rec, type = "scatter", comparison = "unaligned", draw = FALSE)
   expect_s3_class(scatter_plot, "mfrm_plot_data")
   expect_identical(scatter_plot$data$comparison, "unaligned")
+  expect_true(any(grepl("truth-estimate",
+                        scatter_plot$data$guidance, fixed = TRUE)))
 
   status_plot <- plot(rec, type = "replications", draw = FALSE)
   expect_s3_class(status_plot, "mfrm_plot_data")
   expect_identical(status_plot$data$type, "replications")
-  expect_true("rep_overview" %in% names(status_plot$data))
+  expect_true(all(c("rep_overview", "reading_order", "guidance",
+                    "figure_recipes") %in% names(status_plot$data)))
+  expect_true(any(status_plot$data$figure_recipes$SelectedRoute &
+                    status_plot$data$figure_recipes$Type == "replications"))
 
   assessment <- assess_mfrm_recovery(
     rec,
@@ -202,6 +246,10 @@ test_that("evaluate_mfrm_recovery returns row-level and summary recovery tables"
     drop = FALSE
   ]
   expect_identical(rmse_row$Status[1], "not_assessed")
+  expect_error(
+    evaluate_mfrm_recovery(reps = 1, progress = NA),
+    "`progress` must be a single TRUE/FALSE value"
+  )
 
   expect_identical(
     mfrmr:::recovery_assessment_coverage_status(0.93, target = NULL),
@@ -211,6 +259,64 @@ test_that("evaluate_mfrm_recovery returns row-level and summary recovery tables"
     mfrmr:::recovery_assessment_coverage_status(NA_real_, target = NULL),
     "not_available"
   )
+})
+
+test_that("evaluate_mfrm_recovery carries opt-in MML population SD estimates", {
+  rec <- suppressWarnings(evaluate_mfrm_recovery(
+    n_person = 16,
+    n_rater = 2,
+    n_criterion = 2,
+    raters_per_person = 2,
+    reps = 1,
+    theta_sd = 1.35,
+    fit_method = "MML",
+    model = "RSM",
+    quad_points = 5,
+    maxit = 20,
+    estimate_population_sd = TRUE,
+    seed = 20260614
+  ))
+
+  expect_s3_class(rec, "mfrm_recovery_simulation")
+  expect_true(all(c("PopulationSDMode", "PopulationPriorSD",
+                    "EstimatedPopulationSD", "PopulationSDSE",
+                    "PopulationSDSEStatus") %in% names(rec$rep_overview)))
+  expect_true(rec$rep_overview$RunOK[1])
+  expect_identical(rec$rep_overview$PopulationSDMode[1], "estimated")
+  expect_true(is.finite(rec$rep_overview$EstimatedPopulationSD[1]))
+  expect_true(rec$settings$estimate_population_sd)
+  expect_equal(rec$settings$population_prior_sd, 1, tolerance = 1e-12)
+
+  expect_error(
+    evaluate_mfrm_recovery(
+      n_person = 8,
+      n_rater = 2,
+      n_criterion = 2,
+      reps = 1,
+      fit_method = "JML",
+      estimate_population_sd = TRUE
+    ),
+    "requires `fit_method = \"MML\"`",
+    fixed = TRUE
+  )
+  gpcm_rec <- suppressWarnings(evaluate_mfrm_recovery(
+    n_person = 12,
+    n_rater = 2,
+    n_criterion = 2,
+    raters_per_person = 2,
+    reps = 1,
+    fit_method = "MML",
+    model = "GPCM",
+    step_facet = "Criterion",
+    slope_facet = "Criterion",
+    quad_points = 5,
+    maxit = 20,
+    estimate_population_sd = TRUE,
+    seed = 20260615
+  ))
+  expect_true(gpcm_rec$rep_overview$RunOK[1])
+  expect_identical(gpcm_rec$rep_overview$PopulationSDMode[1], "estimated")
+  expect_true(is.finite(gpcm_rec$rep_overview$EstimatedPopulationSD[1]))
 })
 
 test_that("evaluate_mfrm_recovery keeps optional diagnostics non-gating", {

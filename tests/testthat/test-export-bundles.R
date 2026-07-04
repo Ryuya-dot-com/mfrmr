@@ -450,6 +450,154 @@ diagnostic_screening_appendix_summary_fixture <- function() {
   out
 }
 
+simulation_reader_handoff_summary_fixtures <- function() {
+  reading_order <- data.frame(
+    Step = 1L,
+    Route = "summary(x)$overview",
+    WhatToRead = "Start with run status and reader guidance.",
+    Purpose = "Avoid reading dense metric tables first.",
+    InterpretationBoundary = "Workflow guidance, not a statistical decision rule.",
+    stringsAsFactors = FALSE
+  )
+  next_actions <- data.frame(
+    Priority = 1L,
+    Area = "Appendix handoff",
+    Status = "review",
+    Evidence = "Reader-first tables are available.",
+    NextAction = "Inspect reading_order, next_actions, and reporting_notes before metric tables.",
+    stringsAsFactors = FALSE
+  )
+  reporting_notes <- data.frame(
+    Priority = 1L,
+    Area = "Simulation scope",
+    ReportingBoundary = "Report as simulated operating characteristics under the declared DGM.",
+    RecommendedWording = "State the DGM, reps, MCSE, and claim boundary.",
+    stringsAsFactors = FALSE
+  )
+
+  design <- list(
+    overview = data.frame(
+      Designs = 1L,
+      Replications = 2L,
+      SuccessfulRuns = 2L,
+      ConvergedRuns = 2L,
+      MeanElapsedSec = 0.10,
+      stringsAsFactors = FALSE
+    ),
+    runtime = data.frame(
+      TotalElapsedSec = 0.20,
+      DesignConditions = 1L,
+      PlannedCells = 2L,
+      CompletedCells = 2L,
+      ProgressShown = FALSE,
+      stringsAsFactors = FALSE
+    ),
+    reading_order = reading_order,
+    next_actions = next_actions,
+    reporting_notes = reporting_notes,
+    design_summary = data.frame(
+      design_id = "D1",
+      Facet = "Rater",
+      n_person = 20L,
+      MeanSeparation = 1.5,
+      MeanReliability = 0.70,
+      ConvergenceRate = 1,
+      RecoveryComparableRate = 1,
+      stringsAsFactors = FALSE
+    ),
+    sparse_review = data.frame(),
+    notes = "Design evaluation fixture.",
+    digits = 3L
+  )
+  class(design) <- "summary.mfrm_design_evaluation"
+
+  signal <- list(
+    overview = data.frame(
+      Designs = 1L,
+      Replications = 2L,
+      SuccessfulRuns = 2L,
+      ConvergedRuns = 2L,
+      MeanElapsedSec = 0.15,
+      stringsAsFactors = FALSE
+    ),
+    runtime = data.frame(
+      TotalElapsedSec = 0.30,
+      DesignConditions = 1L,
+      PlannedCells = 2L,
+      CompletedCells = 2L,
+      ProgressShown = FALSE,
+      stringsAsFactors = FALSE
+    ),
+    reading_order = reading_order,
+    next_actions = next_actions,
+    reporting_notes = within(reporting_notes, {
+      ReportingBoundary <- "BiasScreenRate is a screening hit rate, not formal inferential power."
+      RecommendedWording <- "Use BiasScreenRate or screen_rate wording for bias-side outputs."
+    }),
+    detection_summary = data.frame(
+      design_id = "D1",
+      n_person = 20L,
+      DIFTargetLevel = "B",
+      BiasTargetRater = "R01",
+      BiasTargetCriterion = "C01",
+      DIFPower = 0.80,
+      BiasScreenRate = 0.70,
+      BiasScreenMetricAvailabilityRate = 1,
+      ConvergenceRate = 1,
+      stringsAsFactors = FALSE
+    ),
+    notes = "Signal detection fixture.",
+    digits = 3L
+  )
+  class(signal) <- "summary.mfrm_signal_detection"
+
+  population <- list(
+    design = data.frame(
+      n_person = 24L,
+      n_rater = 3L,
+      n_criterion = 2L,
+      raters_per_person = 2L,
+      stringsAsFactors = FALSE
+    ),
+    overview = data.frame(
+      Designs = 1L,
+      Replications = 2L,
+      SuccessfulRuns = 2L,
+      ConvergedRuns = 2L,
+      MeanElapsedSec = 0.20,
+      stringsAsFactors = FALSE
+    ),
+    runtime = data.frame(
+      TotalElapsedSec = 0.40,
+      DesignConditions = 1L,
+      PlannedCells = 2L,
+      CompletedCells = 2L,
+      ProgressShown = FALSE,
+      stringsAsFactors = FALSE
+    ),
+    reading_order = reading_order,
+    next_actions = next_actions,
+    reporting_notes = within(reporting_notes, {
+      ReportingBoundary <- "This is a scenario-level aggregate forecast, not deterministic future unit prediction."
+      RecommendedWording <- "Call it a scenario-level forecast."
+    }),
+    forecast = data.frame(
+      design_id = "D1",
+      Facet = "Rater",
+      n_person = 24L,
+      MeanSeparation = 1.4,
+      McseSeparation = 0.05,
+      ConvergenceRate = 1,
+      stringsAsFactors = FALSE
+    ),
+    notes = "Population forecast fixture.",
+    digits = 3L
+  )
+  class(population) <- "summary.mfrm_population_prediction"
+
+  list(design = design, signal = signal, population = population)
+}
+
 prediction_bundle_fixture <- delayed_export_fixture(function() {
   dat <- load_mfrmr_data("example_core")
   keep_people <- unique(dat$Person)[1:18]
@@ -2431,12 +2579,16 @@ test_that("export_mfrm_bundle writes requested tables and html output", {
   expect_true(is.data.frame(bundle$written_files))
   expect_true(any(bundle$written_files$Component == "bundle_html"))
   expect_true(any(grepl("bundle_test_manifest_summary.csv$", bundle$written_files$Path)))
+  expect_true(any(grepl("bundle_test_anchor_contract.csv$", bundle$written_files$Path)))
+  expect_true(any(grepl("bundle_test_manifest_anchor_contract.csv$", bundle$written_files$Path)))
   expect_true(any(grepl("bundle_test_checklist.csv$", bundle$written_files$Path)))
   expect_true(any(grepl("bundle_test_facet_dashboard_detail.csv$", bundle$written_files$Path)))
   expect_true(any(grepl("bundle_test_replay.R$", bundle$written_files$Path)))
   expect_true(any(grepl("bundle_test_visual_warning_counts.csv$", bundle$written_files$Path)))
   expect_true(file.exists(file.path(out_dir, "bundle_test_bundle.html")))
   expect_true(file.exists(file.path(out_dir, "bundle_test_manifest.txt")))
+  expect_true(file.exists(file.path(out_dir, "bundle_test_anchor_contract.csv")))
+  expect_true(file.exists(file.path(out_dir, "bundle_test_manifest_anchor_contract.csv")))
   expect_true(file.exists(file.path(out_dir, "bundle_test_replay.R")))
   expect_true(file.exists(file.path(out_dir, "bundle_test_visual_warning_map.txt")))
 })
@@ -2460,9 +2612,11 @@ test_that("export_mfrm_bundle writes optional prediction artifacts", {
 
   expect_s3_class(bundle, "mfrm_export_bundle")
   expect_true(any(bundle$written_files$Component == "population_prediction_forecast"))
+  expect_true(any(bundle$written_files$Component == "population_prediction_runtime"))
   expect_true(any(bundle$written_files$Component == "unit_prediction_estimates"))
   expect_true(any(bundle$written_files$Component == "plausible_values"))
   expect_true(file.exists(file.path(out_dir, "bundle_pred_test_population_prediction_forecast.csv")))
+  expect_true(file.exists(file.path(out_dir, "bundle_pred_test_population_prediction_runtime.csv")))
   expect_true(file.exists(file.path(out_dir, "bundle_pred_test_unit_prediction_estimates.csv")))
   expect_true(file.exists(file.path(out_dir, "bundle_pred_test_plausible_values.csv")))
   expect_true(file.exists(file.path(out_dir, "bundle_pred_test_population_prediction_ademp.csv")))
@@ -2491,6 +2645,7 @@ test_that("export_mfrm_bundle writes optional prediction artifacts", {
   html_lines <- readLines(file.path(out_dir, "bundle_pred_test_bundle.html"), warn = FALSE)
   html_text <- paste(html_lines, collapse = "\n")
   expect_match(html_text, "<h2>population_prediction_forecast</h2>", fixed = TRUE)
+  expect_match(html_text, "<h2>population_prediction_runtime</h2>", fixed = TRUE)
   expect_match(html_text, "<h2>unit_prediction_estimates</h2>", fixed = TRUE)
   expect_match(html_text, "<h2>plausible_value_summary</h2>", fixed = TRUE)
 
@@ -2892,7 +3047,15 @@ test_that("export_summary_appendix supports recovery simulation and assessment i
   expect_s3_class(direct_appendix, "mfrm_summary_appendix_export")
   expect_true(any(direct_appendix$written_files$Component ==
                     "summary_mfrm_recovery_simulation_recovery_summary"))
+  expect_true(any(direct_appendix$written_files$Component ==
+                    "summary_mfrm_recovery_simulation_reading_order"))
+  expect_true(any(direct_appendix$written_files$Component ==
+                    "summary_mfrm_recovery_simulation_next_actions"))
+  expect_true(any(direct_appendix$written_files$Component ==
+                    "summary_mfrm_recovery_simulation_reporting_notes"))
   expect_true(any(direct_appendix$selection_catalog$Role == "recovery_performance" &
+                    direct_appendix$selection_catalog$Selected %in% TRUE))
+  expect_true(any(direct_appendix$selection_catalog$Role == "recovery_simulation_reading_order" &
                     direct_appendix$selection_catalog$Selected %in% TRUE))
 
   appendix <- export_summary_appendix(
@@ -2909,6 +3072,9 @@ test_that("export_summary_appendix supports recovery simulation and assessment i
 
   expect_s3_class(appendix, "mfrm_summary_appendix_export")
   expect_true(all(appendix$selection_summary$Preset == "recommended"))
+  expect_true(any(appendix$written_files$Component == "summary_recovery_reading_order"))
+  expect_true(any(appendix$written_files$Component == "summary_recovery_next_actions"))
+  expect_true(any(appendix$written_files$Component == "summary_recovery_reporting_notes"))
   expect_true(any(appendix$written_files$Component == "summary_recovery_recovery_summary"))
   expect_true(any(appendix$written_files$Component == "summary_recovery_rep_overview"))
   expect_true(any(appendix$written_files$Component == "summary_recovery_ademp"))
@@ -3001,6 +3167,53 @@ test_that("export_summary_appendix supports diagnostic-screening summaries", {
   expect_true(file.exists(file.path(
     out_dir,
     "appendix_diagnostic_summary_diag_plot_overview_rate.csv"
+  )))
+})
+
+test_that("summary-table bundles preserve reader-first simulation handoff tables", {
+  out_dir <- file.path(tempdir(), "mfrmr-summary-appendix-simulation-reader")
+  if (dir.exists(out_dir)) unlink(out_dir, recursive = TRUE, force = TRUE)
+  dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
+
+  fixtures <- simulation_reader_handoff_summary_fixtures()
+
+  bundle <- build_summary_table_bundle(
+    fixtures$design,
+    appendix_preset = "recommended",
+    include_empty = FALSE
+  )
+  expect_true(any(bundle$table_index$Table == "reading_order"))
+  expect_true(any(bundle$table_index$Role == "design_evaluation_reading_order"))
+  expect_true(any(bundle$table_index$Role == "design_evaluation_next_actions"))
+  expect_true(any(bundle$table_index$Role == "design_evaluation_reporting_notes"))
+  expect_true(any(bundle$table_index$Role == "design_performance"))
+
+  appendix <- export_summary_appendix(
+    fixtures,
+    output_dir = out_dir,
+    prefix = "appendix_simulation_reader",
+    preset = "recommended",
+    include_html = FALSE,
+    overwrite = TRUE
+  )
+
+  expect_s3_class(appendix, "mfrm_summary_appendix_export")
+  expect_true(any(appendix$written_files$Component == "summary_design_reading_order"))
+  expect_true(any(appendix$written_files$Component == "summary_design_next_actions"))
+  expect_true(any(appendix$written_files$Component == "summary_design_reporting_notes"))
+  expect_true(any(appendix$written_files$Component == "summary_signal_reading_order"))
+  expect_true(any(appendix$written_files$Component == "summary_signal_next_actions"))
+  expect_true(any(appendix$written_files$Component == "summary_signal_reporting_notes"))
+  expect_true(any(appendix$written_files$Component == "summary_population_reading_order"))
+  expect_true(any(appendix$written_files$Component == "summary_population_next_actions"))
+  expect_true(any(appendix$written_files$Component == "summary_population_reporting_notes"))
+  expect_true(any(appendix$selection_catalog$Role == "signal_detection_reporting_notes" &
+                    appendix$selection_catalog$Selected %in% TRUE))
+  expect_true(any(appendix$selection_catalog$Role == "population_prediction_reporting_notes" &
+                    appendix$selection_catalog$Selected %in% TRUE))
+  expect_true(file.exists(file.path(
+    out_dir,
+    "appendix_simulation_reader_summary_population_reporting_notes.csv"
   )))
 })
 

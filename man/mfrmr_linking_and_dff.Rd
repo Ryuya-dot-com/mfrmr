@@ -13,8 +13,10 @@ monitoring drift, and screening differential facet functioning (DFF) in
 \itemize{
 \item "Is the design connected enough to support a common scale?"
 Use \code{\link[=subset_connectivity_report]{subset_connectivity_report()}} and \code{plot(..., type = "design_matrix")}.
-\item "Which elements can I export as anchors from an existing fit?"
-Use \code{\link[=make_anchor_table]{make_anchor_table()}} and \code{\link[=review_mfrm_anchors]{review_mfrm_anchors()}}.
+\item "Which elements can I export as anchors from an existing fit, and what is
+the FACETS \verb{Anchorfile=} boundary?"
+Use \code{\link[=make_anchor_table]{make_anchor_table()}}, \code{\link[=anchor_linking_contract]{anchor_linking_contract()}}, and
+\code{\link[=review_mfrm_anchors]{review_mfrm_anchors()}}.
 \item "How do I anchor a new administration to a baseline?"
 Use \code{\link[=anchor_to_baseline]{anchor_to_baseline()}}.
 \item "Have common elements drifted across separately fitted waves?"
@@ -31,8 +33,8 @@ Use \code{\link[=analyze_dff]{analyze_dff()}}, \code{\link[=plot_dif_heatmap]{pl
 \enumerate{
 \item Fit with \code{\link[=fit_mfrm]{fit_mfrm()}} and diagnose with \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}.
 \item Check connectedness with \code{\link[=subset_connectivity_report]{subset_connectivity_report()}}.
-\item Build or review anchors with \code{\link[=make_anchor_table]{make_anchor_table()}} and
-\code{\link[=review_mfrm_anchors]{review_mfrm_anchors()}}.
+\item Build or review anchors with \code{\link[=make_anchor_table]{make_anchor_table()}},
+\code{\link[=anchor_linking_contract]{anchor_linking_contract()}}, and \code{\link[=review_mfrm_anchors]{review_mfrm_anchors()}}.
 \item Use \code{\link[=anchor_to_baseline]{anchor_to_baseline()}} when you need to place raw new data onto a
 baseline scale.
 \item Use \code{\link[=build_equating_chain]{build_equating_chain()}} only as a screened linking aid across
@@ -52,6 +54,10 @@ evidence.
 \item{\code{\link[=subset_connectivity_report]{subset_connectivity_report()}}}{Summarizes connected subsets,
 bottleneck facets, and design-matrix coverage.}
 \item{\code{\link[=make_anchor_table]{make_anchor_table()}}}{Extracts reusable anchor candidates from a fit.}
+\item{\code{\link[=anchor_linking_contract]{anchor_linking_contract()}}}{Documents the R-native anchor replay
+route, anchor/group-anchor rows used by the current fit, optional
+displacement evidence, and unsupported FACETS \verb{Anchorfile=} rewrite
+surfaces.}
 \item{\code{\link[=anchor_to_baseline]{anchor_to_baseline()}}}{Anchors new raw data to a baseline fit and
 returns anchored diagnostics plus a consistency check against the baseline
 scale.}
@@ -81,6 +87,9 @@ labels require refit output whose \code{ClassificationSystem} is \code{"ETS"}.
 anchor must be removed.
 \item Treat \code{LinkSupportAdequate = FALSE} as a weak-link warning: at least one
 linking facet retained fewer than 5 common elements after screening.
+\item Treat \code{\link[=make_anchor_table]{make_anchor_table()}} output as an mfrmr \code{Facet} / \code{Level} /
+\code{Anchor} table for later \code{\link[=fit_mfrm]{fit_mfrm()}} calls, not as a complete FACETS
+\verb{Anchorfile=} specification rewrite.
 \item Rebuild anchors from a defensible baseline rather than chaining unstable
 links by hand.
 }
@@ -93,7 +102,8 @@ links by hand.
 \code{\link[=fit_mfrm]{fit_mfrm()}} -> \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} -> \code{\link[=subset_connectivity_report]{subset_connectivity_report()}} ->
 \code{plot(..., type = "design_matrix")}.
 \item Baseline placement review:
-\code{\link[=make_anchor_table]{make_anchor_table()}} -> \code{\link[=anchor_to_baseline]{anchor_to_baseline()}} -> \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}.
+\code{\link[=make_anchor_table]{make_anchor_table()}} -> \code{\link[=anchor_linking_contract]{anchor_linking_contract()}} ->
+\code{\link[=anchor_to_baseline]{anchor_to_baseline()}} -> \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}.
 \item Multi-wave drift review:
 fit each wave separately -> \code{\link[=detect_anchor_drift]{detect_anchor_drift()}} ->
 \code{\link[=build_linking_review]{build_linking_review()}} -> \code{\link[=plot_anchor_drift]{plot_anchor_drift()}}.

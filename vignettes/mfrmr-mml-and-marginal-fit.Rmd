@@ -52,6 +52,47 @@ population model is active, the package uses person-specific transformed nodes
 derived from the same quadrature basis rather than one unconditional fixed
 grid.
 
+For `population_formula = NULL` MML fits, the default latent scale is fixed
+normal with `population_prior_sd = 1`. For additive `RSM` / `PCM` and bounded
+`GPCM` fits, `estimate_population_sd = TRUE` estimates that normal SD under the
+EM engine and stores the resulting metric in the fit summary. This opt-in route
+is separate from latent-regression MML, where the conditional residual variance
+`sigma2` is already estimated in the population-model branch.
+
+A minimal review pattern is:
+
+```{r, eval=FALSE}
+toy <- load_mfrmr_data("example_core")
+
+fit_fixed <- fit_mfrm(
+  toy, "Person", c("Rater", "Criterion"), "Score",
+  method = "MML", model = "RSM", quad_points = 7, maxit = 30
+)
+
+fit_free <- fit_mfrm(
+  toy, "Person", c("Rater", "Criterion"), "Score",
+  method = "MML", model = "RSM", quad_points = 7, maxit = 80,
+  estimate_population_sd = TRUE
+)
+
+summary(fit_free)$population_overview[
+  , c("PopulationSDMode", "EstimatedPopulationSD",
+      "PopulationSDSE", "PopulationSDSEStatus")
+]
+
+compare_mfrm(fit_fixed, fit_free,
+             labels = c("fixed_SD", "free_SD"))$table[
+  , c("Label", "npar", "AIC", "PopulationSDMode",
+      "EstimatedPopulationSD")
+]
+```
+
+Use this comparison as a metric-calibration check, not as a substitute for
+substantive model checking. If `nested = TRUE` is requested,
+`compare_mfrm()` treats fixed-SD versus free-SD MML as a reviewed
+one-parameter extension only when the structural model and response data are
+otherwise unchanged.
+
 The posterior weight for person \(n\) at node \(q\) is
 
 \[
@@ -71,14 +112,15 @@ strict marginal expected values.
 
 ## Current MML scope
 
-For the `RSM` / `PCM` MML branch:
+For the additive `RSM` / `PCM` and bounded-`GPCM` MML branch:
 
 - the person distribution is integrated with Gauss-Hermite quadrature
 - `mml_engine = "direct"` uses gradient-based direct optimization of the
   marginal log-likelihood
 - `mml_engine = "em"` and `mml_engine = "hybrid"` are also available for
-  `RSM` / `PCM`; bounded `GPCM` uses the direct engine regardless of that
-  option
+  additive `RSM` / `PCM` and bounded `GPCM`
+- `estimate_population_sd = TRUE` is available under EM; it is not yet a
+  latent-regression, facet-interaction, or direct/hybrid free-SD route
 - person summaries are reported post-hoc from the integrated posterior
 
 This is the implemented MML-engine scope for this release.

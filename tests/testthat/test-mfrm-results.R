@@ -27,6 +27,12 @@ test_that("mfrm_results builds a comprehensive object from a fitted model", {
   sx <- summary(res)
   expect_s3_class(sx, "summary.mfrm_results")
   expect_true(all(c("overview", "triage", "status", "plot_map", "next_actions") %in% names(sx)))
+  expect_true(all(c(
+    "PopulationSDMode", "PopulationPriorSD", "EstimatedPopulationSD",
+    "PopulationSDSEStatus", "PopulationMetric"
+  ) %in% names(sx$overview)))
+  expect_true(is.na(sx$overview$PopulationSDMode[1]))
+  expect_true(is.na(sx$overview$PopulationMetric[1]))
   expect_true(nrow(sx$triage) > 0)
   expect_true(all(c("Area", "Severity", "Signal", "Route", "Detail") %in% names(sx$triage)))
   expect_true(any(sx$triage$Area == "Diagnostics"))
@@ -47,7 +53,7 @@ test_that("mfrm_results builds a comprehensive object from a fitted model", {
   report <- mfrm_report(res, style = "qc")
   expect_s3_class(report, "mfrm_report")
   printed_report <- capture.output(print(report))
-  expect_true(any(grepl("Read order: summary(report)", printed_report, fixed = TRUE)))
+  expect_true(any(grepl("Read order: summary(report, view = \"reader\")", printed_report, fixed = TRUE)))
   expect_true(any(grepl("Detailed tables are available in report$tables.", printed_report, fixed = TRUE)))
   expect_false(any(grepl("^Fit evidence summary$", printed_report)))
   expect_false(any(grepl("^Fit reporting templates$", printed_report)))
@@ -55,8 +61,8 @@ test_that("mfrm_results builds a comprehensive object from a fitted model", {
   expect_s3_class(report_summary, "summary.mfrm_report")
   expect_true(all(c(
     "overview", "first_screen", "status_counts", "immediate_actions",
-    "optional_sections", "claim_readiness", "report_gaps", "boundary_index",
-    "routes"
+    "optional_sections", "claim_readiness", "reader_claims", "report_gaps",
+    "boundary_index", "routes"
   ) %in% names(report_summary)))
   expect_true(report_summary$overview$OverallStatus[1] %in% c(
     "ok", "review", "caveat", "request_if_needed", "unavailable"
@@ -65,6 +71,15 @@ test_that("mfrm_results builds a comprehensive object from a fitted model", {
   expect_true(any(report_summary$immediate_actions$Status %in% c("review", "caveat", "unavailable")))
   expect_true(any(report_summary$optional_sections$Status == "request_if_needed"))
   expect_true(any(report_summary$routes$Route == "report$first_screen"))
+  reader_summary <- summary(report, view = "reader")
+  expect_s3_class(reader_summary, "summary.mfrm_report")
+  expect_identical(reader_summary$view, "reader")
+  expect_true(nrow(reader_summary$reader_claims) > 0L)
+  expect_true(any(reader_summary$reader_claims$ReportUse %in% c("Can report", "Write with caveat", "Need more evidence")))
+  printed_reader <- capture.output(print(reader_summary))
+  expect_true(any(grepl("mfrmr Report Reader Summary", printed_reader, fixed = TRUE)))
+  expect_true(any(grepl("Can report / Need follow-up", printed_reader, fixed = TRUE)))
+  expect_false(any(grepl("Boundary index", printed_reader, fixed = TRUE)))
   report_summary_bundle <- build_summary_table_bundle(report)
   expect_s3_class(report_summary_bundle, "mfrm_summary_table_bundle")
   expect_identical(report_summary_bundle$summary_class, "summary.mfrm_report")
@@ -99,6 +114,7 @@ test_that("mfrm_results builds a comprehensive object from a fitted model", {
   expect_true(any(report$report_index$Area == "Fit" &
                     grepl("type = 'qc'|type = \"qc\"", report$report_index$PlotRoute)))
   expect_true(all(grepl("export_mfrm_results", report$report_index$ExportRoute, fixed = TRUE)))
+  expect_true(all(grepl("preset = \"starter\"", report$report_index$ExportRoute, fixed = TRUE)))
   expect_true(any(grepl("include = \"bias\"", report$report_index$IncludePreset, fixed = TRUE)))
   expect_true(any(report$report_index$Readiness %in% c("ready", "review", "request_if_needed")))
   expect_true(all(c(
@@ -209,6 +225,8 @@ test_that("mfrm_results builds a comprehensive object from a fitted model", {
   expect_match(html$html, "Reader guidance", fixed = TRUE)
   expect_match(html$html, "report_summary_overview", fixed = TRUE)
   expect_match(html$html, "report_summary_first_screen", fixed = TRUE)
+  expect_match(html$html, "report_summary_reader_claims", fixed = TRUE)
+  expect_match(html$html, "Reader Claims", fixed = TRUE)
   expect_match(html$html, "Report Markdown", fixed = TRUE)
   expect_lt(
     regexpr("report_summary_overview", html$html, fixed = TRUE)[1],
@@ -393,6 +411,105 @@ test_that("export_mfrm_results writes lightweight result downloads", {
     report_export$written_files$Component == "report_markdown"
   ][1]
   expect_true(any(grepl("Report Index", readLines(report_md_path, warn = FALSE), fixed = TRUE)))
+})
+
+test_that("mfrm_results brief summary gives a reader-first view", {
+  toy <- load_mfrmr_data("example_core")
+  toy_small <- toy[toy$Person %in% unique(toy$Person)[1:6], , drop = FALSE]
+  fit <- suppressWarnings(
+    fit_mfrm(
+      toy_small,
+      "Person",
+      c("Rater", "Criterion"),
+      "Score",
+      method = "JML",
+      maxit = 30
+    )
+  )
+  res <- suppressWarnings(
+    mfrm_results(fit, include = c("fit", "diagnostics", "tables"))
+  )
+
+  brief <- summary(res, view = "brief")
+  expect_s3_class(brief, "summary.mfrm_results")
+  expect_identical(brief$view, "brief")
+  expect_lte(nrow(brief$triage), 5L)
+  expect_lte(nrow(brief$next_actions), 3L)
+  expect_true(any(brief$next_actions$Area == "Overview" &
+                    grepl("view = \"brief\"", brief$next_actions$Route, fixed = TRUE)))
+
+  printed <- capture.output(print(brief))
+  expect_true(any(grepl("mfrmr Results Brief", printed, fixed = TRUE)))
+  expect_true(any(grepl("Highest-priority triage", printed, fixed = TRUE)))
+  expect_false(any(grepl("Section status", printed, fixed = TRUE)))
+})
+
+test_that("export_mfrm_results starter preset writes reader-first files", {
+  toy <- load_mfrmr_data("example_core")
+  toy_small <- toy[toy$Person %in% unique(toy$Person)[1:6], , drop = FALSE]
+  fit <- suppressWarnings(
+    fit_mfrm(
+      toy_small,
+      "Person",
+      c("Rater", "Criterion"),
+      "Score",
+      method = "JML",
+      maxit = 30
+    )
+  )
+  res <- suppressWarnings(
+    mfrm_results(fit, include = c("fit", "diagnostics", "tables", "publication", "bias", "misfit_review", "linking"))
+  )
+
+  out_dir <- file.path(tempdir(), paste0("mfrmr_results_starter_", sample.int(1e6, 1)))
+  exported <- export_mfrm_results(
+    res,
+    output_dir = out_dir,
+    prefix = "starter export",
+    preset = "starter",
+    zip_bundle = TRUE,
+    zip_name = "starter_bundle.zip",
+    overwrite = TRUE
+  )
+
+  expect_s3_class(exported, "mfrm_results_export")
+  expect_identical(exported$preset, "starter")
+  expect_true(any(exported$written_files$Component == "index_html"))
+  expect_true(any(exported$written_files$Component == "readme"))
+  expect_true(any(exported$written_files$Component == "results_zip"))
+  expect_false(any(exported$written_files$Component == "results_rds"))
+  expect_true(file.exists(file.path(out_dir, "index.html")))
+  expect_true(file.exists(file.path(out_dir, "README.md")))
+  expect_true(file.exists(file.path(out_dir, "00_summary", "overview.csv")))
+  expect_true(file.exists(file.path(out_dir, "01_report", "first_screen.csv")))
+  expect_true(file.exists(file.path(out_dir, "02_evidence", "fit_evidence_summary.csv")))
+  expect_true(file.exists(file.path(out_dir, "03_reproducibility", "manifest.csv")))
+  expect_lt(nrow(exported$written_files), 40L)
+
+  manifest_path <- exported$written_files$Path[
+    exported$written_files$Component == "written_files"
+  ][1]
+  manifest <- utils::read.csv(manifest_path, stringsAsFactors = FALSE)
+  expect_true(all(c(
+    "Audience", "UseCase", "OpenFirst", "ClaimBoundary"
+  ) %in% names(manifest)))
+  expect_true(any(manifest$OpenFirst))
+  expect_true(any(manifest$Audience == "reader"))
+
+  zip_path <- exported$written_files$Path[
+    exported$written_files$Component == "results_zip"
+  ][1]
+  expect_true(file.exists(zip_path))
+  zip_listing <- utils::unzip(zip_path, list = TRUE)
+  expect_true(all(c(
+    "index.html",
+    "README.md",
+    "00_summary/overview.csv",
+    "01_report/first_screen.csv",
+    "02_evidence/fit_evidence_summary.csv",
+    "03_reproducibility/manifest.csv"
+  ) %in% zip_listing$Name))
+  expect_false("overview.csv" %in% zip_listing$Name)
 })
 
 test_that("mfrm_results output modes and standard data-frame route work", {

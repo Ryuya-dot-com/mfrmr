@@ -21,7 +21,7 @@ A data.frame with 5 columns:
 }
 \source{
 Simulated for this package with design settings informed by Eckes
-and Jin (2021). The Eckes & Jin (2021) Method section reports the
+and Jin (2021). The Eckes and Jin (2021) Method section reports the
 following design parameters that motivated the synthetic versions
 shipped here: Study 1 had 307 examinees (149 males, 158 females), 18
 raters (4 males, 14 females), and 3 criteria (global impression, task
@@ -58,6 +58,16 @@ Naming convention:
 
 Use \code{\link[=load_mfrmr_data]{load_mfrmr_data()}} for programmatic selection by key.
 }
+\section{Source boundary}{
+
+These are Eckes-and-Jin-inspired synthetic datasets, not redistributed
+TestDaF operational records. The paper informs the design shape and
+rating-scale context. The response rows, generated scores, baseline /
+iterative-calibration variants, and any fitted \code{mfrmr} estimates are
+package-generated artifacts. Do not cite these objects as reproductions of
+the Eckes and Jin empirical analyses or of their Bayesian FM-SC estimates.
+}
+
 \section{Data dimensions}{
 
 \tabular{lrrrr}{
@@ -106,4 +116,5 @@ table(ej2021_study1$Study)
 Eckes, T., & Jin, K.-Y. (2021). Measuring rater centrality effects in
 writing assessment: A Bayesian facets modeling approach.
 \emph{Psychological Test and Assessment Modeling, 63}(1), 65--94.
+\url{https://www.gast.de/fileadmin/gast.de/GAST/4_PDF/2-Forschung-Entwicklung/Publikationen/Eckes-u-Jin-PTAM-2021-1.pdf}
 }

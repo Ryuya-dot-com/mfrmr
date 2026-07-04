@@ -251,7 +251,7 @@ and stress evidence available outside CRAN timing constraints.
   the Snijders correction rather than approximating them as ML/MAP/WLE
   estimates.
 
-### 0.3.0: expand bounded GPCM only where validated
+### 0.2.2: expand bounded GPCM only where validated
 
 - Add posterior-predictive checks for bounded `GPCM`.
 - Add GPCM design-operating-characteristic evaluation after the recovery route

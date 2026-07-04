@@ -76,7 +76,8 @@ render_r_object_literal <- function(x) {
 # the `replay_inputs` list that `fit_mfrm()` stores on `fit$config`.
 # The helper emits every argument that materially affects the fit
 # (including the ones that were silently dropped before 0.1.6:
-# `missing_codes`, `mml_engine`, `slope_facet`, `anchor_policy`,
+# `missing_codes`, `mml_engine`, `slope_facet`, `population_prior_sd`,
+# `estimate_population_sd`, `population_sd_bounds`, `anchor_policy`,
 # `min_obs_per_*`, `min_common_anchors`, `facet_shrinkage`,
 # `facet_prior_sd`, `shrink_person`, `attach_diagnostics`).
 #
@@ -160,6 +161,9 @@ build_replay_fit_mfrm_lines <- function(replay_inputs,
     emit("min_obs_per_element", as.numeric(ri$min_obs_per_element %||% 30)),
     emit("min_obs_per_category", as.numeric(ri$min_obs_per_category %||% 10)),
     emit("quad_points", as.integer(ri$quad_points %||% 31L)),
+    emit("population_prior_sd", as.numeric(ri$population_prior_sd %||% 1)),
+    emit("estimate_population_sd", isTRUE(ri$estimate_population_sd)),
+    emit("population_sd_bounds", as.numeric(ri$population_sd_bounds %||% c(0.05, 10))),
     emit("maxit", as.integer(ri$maxit %||% 400L)),
     emit("reltol", as.numeric(ri$reltol %||% 1e-6)),
     emit("mml_engine", as.character(ri$mml_engine %||% "direct")),
@@ -410,6 +414,8 @@ validate_bias_results_input <- function(bias_results,
 #' - `estimation_control`: key-value optimizer settings table
 #' - `anchor_summary`: facet-level anchor summary
 #' - `anchors`: machine-readable anchor table
+#' - `anchor_contract_summary` and `anchor_contract`: package-native
+#'   anchor/linking guarantees and FACETS `Anchorfile=` boundaries
 #' - `hierarchical_review`: retained traceability table for hierarchical /
 #'   small-sample design flags
 #' - `missing_recoding`: retained traceability table for missing-code recoding
@@ -419,6 +425,10 @@ validate_bias_results_input <- function(bias_results,
 #' - `dependencies`, `input_hash`, and `session_info`: reproducibility
 #'   metadata tables
 #' - `settings`: manifest build settings
+#'
+#' For `MML` fits, `summary`, `model_settings`, and `settings` also record the
+#' marginal population-SD mode (`fixed` vs `estimated`), the fixed prior SD or
+#' estimated SD, and the profile-SE status when a free SD was estimated.
 #'
 #' @section Interpreting output:
 #' The `summary` table is the direct place to confirm that you are looking at
@@ -456,10 +466,16 @@ validate_bias_results_input <- function(bias_results,
 #' @examplesIf interactive()
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                 method = "JML", maxit = 30)
+#'                 method = "MML", quad_points = 7, maxit = 30,
+#'                 estimate_population_sd = TRUE)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
 #' manifest <- build_mfrm_manifest(fit, diagnostics = diag)
-#' manifest$summary[, c("Model", "Method", "Observations", "Facets")]
+#' manifest$summary[, c("Model", "Method", "Observations",
+#'                      "PopulationSDMode", "EstimatedPopulationSD")]
+#' manifest$model_settings[
+#'   manifest$model_settings$Setting %in% c("population_sd_mode",
+#'                                          "estimated_population_sd"),
+#' ]
 #' manifest$available_outputs[, c("Component", "Available")]
 #' @export
 build_mfrm_manifest <- function(fit,
@@ -502,10 +518,47 @@ build_mfrm_manifest <- function(fit,
     fit = fit,
     include_person = isTRUE(include_person_anchors)
   )
+  anchor_contract <- anchor_linking_contract(
+    fit = fit,
+    diagnostics = diagnostics,
+    include_person_anchors = isTRUE(include_person_anchors)
+  )
 
   cfg <- fit$config %||% list()
   prep <- fit$prep %||% list()
   est_ctl <- cfg$estimation_control %||% list()
+  population_sd_mode <- as.character(fit$summary$PopulationSDMode[1] %||% cfg$population_sd_mode %||% NA_character_)
+  population_prior_sd <- suppressWarnings(as.numeric(
+    fit$summary$PopulationPriorSD[1] %||%
+      cfg$population_prior_sd_input %||%
+      cfg$population_prior_sd %||%
+      NA_real_
+  ))
+  estimated_population_sd <- suppressWarnings(as.numeric(
+    fit$summary$EstimatedPopulationSD[1] %||%
+      cfg$estimated_population_sd %||%
+      NA_real_
+  ))
+  population_sd_se <- suppressWarnings(as.numeric(
+    fit$summary$PopulationSDSE[1] %||%
+      cfg$population_sd_se %||%
+      NA_real_
+  ))
+  population_sd_ci_lower <- suppressWarnings(as.numeric(
+    fit$summary$PopulationSDCI_Lower[1] %||%
+      (cfg$population_sd_ci %||% c(NA_real_, NA_real_))[1] %||%
+      NA_real_
+  ))
+  population_sd_ci_upper <- suppressWarnings(as.numeric(
+    fit$summary$PopulationSDCI_Upper[1] %||%
+      (cfg$population_sd_ci %||% c(NA_real_, NA_real_))[2] %||%
+      NA_real_
+  ))
+  population_sd_se_status <- as.character(
+    fit$summary$PopulationSDSEStatus[1] %||%
+      cfg$population_sd_se_status %||%
+      NA_character_
+  )
   fit_population <- fit$population %||% list(
     active = isTRUE(cfg$population_active),
     posterior_basis = cfg$posterior_basis %||% "legacy_mml",
@@ -530,6 +583,13 @@ build_mfrm_manifest <- function(fit,
     HasResidualPCA = export_has_residual_pca(diagnostics),
     FitPopulationActive = isTRUE(fit_population$active),
     FitPosteriorBasis = as.character(fit_population$posterior_basis %||% "legacy_mml"),
+    PopulationSDMode = population_sd_mode,
+    PopulationPriorSD = population_prior_sd,
+    EstimatedPopulationSD = estimated_population_sd,
+    PopulationSDSE = population_sd_se,
+    PopulationSDCI_Lower = population_sd_ci_lower,
+    PopulationSDCI_Upper = population_sd_ci_upper,
+    PopulationSDSEStatus = population_sd_se_status,
     Converged = isTRUE(fit$summary$Converged %||% FALSE),
     stringsAsFactors = FALSE
   )
@@ -568,6 +628,13 @@ build_mfrm_manifest <- function(fit,
     n_categories = as.character(cfg$n_cat %||% NA_character_),
     population_active = isTRUE(fit_population$active),
     posterior_basis = as.character(fit_population$posterior_basis %||% "legacy_mml"),
+    population_sd_mode = population_sd_mode,
+    population_prior_sd = population_prior_sd,
+    estimated_population_sd = estimated_population_sd,
+    population_sd_se = population_sd_se,
+    population_sd_ci_lower = population_sd_ci_lower,
+    population_sd_ci_upper = population_sd_ci_upper,
+    population_sd_se_status = population_sd_se_status,
     population_formula = if (!is.null(fit_population$formula)) {
       paste(deparse(fit_population$formula), collapse = " ")
     } else {
@@ -625,6 +692,13 @@ build_mfrm_manifest <- function(fit,
     plausible_values = !is.null(plausible_values),
     fit_population_active = isTRUE(fit_population$active),
     fit_posterior_basis = as.character(fit_population$posterior_basis %||% "legacy_mml"),
+    fit_population_sd_mode = population_sd_mode,
+    fit_population_prior_sd = population_prior_sd,
+    fit_estimated_population_sd = estimated_population_sd,
+    fit_population_sd_se = population_sd_se,
+    fit_population_sd_ci_lower = population_sd_ci_lower,
+    fit_population_sd_ci_upper = population_sd_ci_upper,
+    fit_population_sd_se_status = population_sd_se_status,
     fit_population_formula = if (!is.null(fit_population$formula)) {
       paste(deparse(fit_population$formula), collapse = " ")
     } else {
@@ -783,6 +857,8 @@ build_mfrm_manifest <- function(fit,
     estimation_control = estimation_control,
     anchor_summary = anchor_summary,
     anchors = as.data.frame(anchor_tbl, stringsAsFactors = FALSE),
+    anchor_contract_summary = as.data.frame(anchor_contract$summary, stringsAsFactors = FALSE),
+    anchor_contract = as.data.frame(anchor_contract$contract, stringsAsFactors = FALSE),
     hierarchical_review = hierarchical_review,
     missing_recoding = missing_recoding_review,
     shrinkage_review = shrinkage_review,
@@ -965,6 +1041,10 @@ build_mfrm_session_info_table <- function() {
 #' `fit_person_data_file` is supplied, the generated script reads it from that
 #' sidecar CSV relative to the replay script location.
 #'
+#' Fit-mode scripts explicitly replay `population_prior_sd`,
+#' `estimate_population_sd`, and `population_sd_bounds`, so fixed-SD and
+#' free-SD `MML` runs do not silently collapse to the default metric.
+#'
 #' For bounded `GPCM`, replay scripts are available with an explicit
 #' `gpcm_boundary` table. The generated script records `step_facet` and
 #' `slope_facet` settings, but full FACETS score-side contract review remains
@@ -981,7 +1061,8 @@ build_mfrm_session_info_table <- function() {
 #' @section Interpreting output:
 #' The returned object contains:
 #' - `summary`: a one-row overview of the chosen replay mode and whether bundle
-#'   export was included
+#'   export was included; for `MML` fits it also records the marginal
+#'   population-SD mode and estimated-SD profile-SE status
 #' - `script`: the generated R code as a single string
 #' - `anchors` and `group_anchors`: the exact stored constraints that were
 #'   embedded into the script
@@ -1010,10 +1091,13 @@ build_mfrm_session_info_table <- function() {
 #' @examplesIf interactive()
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                 method = "JML", maxit = 30)
+#'                 method = "MML", quad_points = 7, maxit = 30,
+#'                 estimate_population_sd = TRUE)
 #' replay <- build_mfrm_replay_script(fit, data_file = "your_data.csv")
-#' replay$summary[, c("ScriptMode", "ResidualPCA", "BiasPairs")]
-#' cat(substr(replay$script, 1, 120))
+#' replay$summary[, c("ScriptMode", "PopulationSDMode",
+#'                    "EstimatedPopulationSD")]
+#' grepl("estimate_population_sd = TRUE", replay$script, fixed = TRUE)
+#' cat(substr(replay$script, 1, 240))
 #' @export
 build_mfrm_replay_script <- function(fit,
                                      diagnostics = NULL,
@@ -1048,6 +1132,38 @@ build_mfrm_replay_script <- function(fit,
   }
 
   cfg <- fit$config %||% list()
+  population_sd_mode <- as.character(fit$summary$PopulationSDMode[1] %||% cfg$population_sd_mode %||% NA_character_)
+  population_prior_sd <- suppressWarnings(as.numeric(
+    fit$summary$PopulationPriorSD[1] %||%
+      cfg$population_prior_sd_input %||%
+      cfg$population_prior_sd %||%
+      NA_real_
+  ))
+  estimated_population_sd <- suppressWarnings(as.numeric(
+    fit$summary$EstimatedPopulationSD[1] %||%
+      cfg$estimated_population_sd %||%
+      NA_real_
+  ))
+  population_sd_se <- suppressWarnings(as.numeric(
+    fit$summary$PopulationSDSE[1] %||%
+      cfg$population_sd_se %||%
+      NA_real_
+  ))
+  population_sd_ci_lower <- suppressWarnings(as.numeric(
+    fit$summary$PopulationSDCI_Lower[1] %||%
+      (cfg$population_sd_ci %||% c(NA_real_, NA_real_))[1] %||%
+      NA_real_
+  ))
+  population_sd_ci_upper <- suppressWarnings(as.numeric(
+    fit$summary$PopulationSDCI_Upper[1] %||%
+      (cfg$population_sd_ci %||% c(NA_real_, NA_real_))[2] %||%
+      NA_real_
+  ))
+  population_sd_se_status <- as.character(
+    fit$summary$PopulationSDSEStatus[1] %||%
+      cfg$population_sd_se_status %||%
+      NA_character_
+  )
   src <- cfg$source_columns %||% list(
     person = "Person",
     facets = as.character(cfg$facet_names %||% character(0)),
@@ -1164,7 +1280,11 @@ build_mfrm_replay_script <- function(fit,
     "",
     "# Population-model basis recorded in the fitted analysis",
     paste0("# population_active = ", ifelse(isTRUE(fit_population$active), "TRUE", "FALSE")),
-    paste0("# posterior_basis = ", as.character(fit_population$posterior_basis %||% "legacy_mml"))
+    paste0("# posterior_basis = ", as.character(fit_population$posterior_basis %||% "legacy_mml")),
+    paste0("# population_sd_mode = ", population_sd_mode),
+    paste0("# population_prior_sd = ", ifelse(is.finite(population_prior_sd), population_prior_sd, NA_real_)),
+    paste0("# estimated_population_sd = ", ifelse(is.finite(estimated_population_sd), estimated_population_sd, NA_real_)),
+    paste0("# population_sd_se_status = ", population_sd_se_status)
   )
   if (isTRUE(fit_population$active)) {
     lines <- c(
@@ -1472,6 +1592,13 @@ build_mfrm_replay_script <- function(fit,
     ResidualPCA = residual_pca_mode,
     FitPopulationActive = isTRUE(fit_population$active),
     FitPosteriorBasis = as.character(fit_population$posterior_basis %||% "legacy_mml"),
+    PopulationSDMode = population_sd_mode,
+    PopulationPriorSD = population_prior_sd,
+    EstimatedPopulationSD = estimated_population_sd,
+    PopulationSDSE = population_sd_se,
+    PopulationSDCI_Lower = population_sd_ci_lower,
+    PopulationSDCI_Upper = population_sd_ci_upper,
+    PopulationSDSEStatus = population_sd_se_status,
     BiasPairs = length(bias_pairs),
     PopulationPrediction = !is.null(population_prediction),
     UnitPrediction = !is.null(unit_prediction),
@@ -1487,6 +1614,13 @@ build_mfrm_replay_script <- function(fit,
     input_mode = ctx$input_mode,
     fit_population_active = isTRUE(fit_population$active),
     fit_posterior_basis = as.character(fit_population$posterior_basis %||% "legacy_mml"),
+    fit_population_sd_mode = population_sd_mode,
+    fit_population_prior_sd = population_prior_sd,
+    fit_estimated_population_sd = estimated_population_sd,
+    fit_population_sd_se = population_sd_se,
+    fit_population_sd_ci_lower = population_sd_ci_lower,
+    fit_population_sd_ci_upper = population_sd_ci_upper,
+    fit_population_sd_se_status = population_sd_se_status,
     fit_population_formula = if (!is.null(fit_population$formula)) {
       paste(deparse(fit_population$formula), collapse = " ")
     } else {
@@ -3235,6 +3369,21 @@ review_conquest_overlap <- function(bundle,
 #' exported by passing `summary(validation)`, including top-line release
 #' decisions, condition notes, diagnostic notes, and domain decisions.
 #'
+#' Model-choice reviews from [build_model_choice_review()] can be exported
+#' directly. Their appendix bundle keeps `comparison_guidance` and
+#' `comparison_reporting_templates` beside the fit-comparison table so readers
+#' see the supported claim scope before using AIC/BIC or bounded-GPCM
+#' sensitivity evidence in text.
+#'
+#' G-study outputs from [mfrm_generalizability()],
+#' [check_mfrm_generalizability_design()],
+#' [bootstrap_mfrm_generalizability()], [compare_mfrm_generalizability()], and
+#' [mfrm_analysis_audit()] can also be exported directly. For
+#' [compare_mfrm_generalizability()], the appendix keeps `comparison_review`
+#' beside coefficient, variance-movement, D-study, design-check, and warning
+#' tables so readers see design support and fit-stability evidence before
+#' interpreting expanded interaction models.
+#'
 #' Unlike [export_mfrm_bundle()], this helper does not require a fitted model.
 #' It is intended for the stage where compact reporting summaries already exist
 #' and the task is to hand off appendix-ready tables, catalogs, and reporting
@@ -3242,7 +3391,7 @@ review_conquest_overlap <- function(bundle,
 #'
 #' @section Typical workflow:
 #' 1. Build `summary(...)` objects from fit, diagnostics, data description,
-#'    reporting checklist, or APA outputs.
+#'    reporting checklist, APA outputs, or model-choice review outputs.
 #' 2. Call `export_summary_appendix(...)` on one object or a named list.
 #' 3. Hand off the written CSV/HTML appendix artifacts to manuscript or QA
 #'    workflows.
@@ -3273,9 +3422,10 @@ review_conquest_overlap <- function(bundle,
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "JML", maxit = 30)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
+#' out_dir <- tempfile("mfrmr_appendix_example_")
 #' appendix <- export_summary_appendix(
 #'   list(fit = fit, diagnostics = diag),
-#'   output_dir = tempdir(),
+#'   output_dir = out_dir,
 #'   prefix = "mfrmr_appendix_example",
 #'   include_html = TRUE,
 #'   overwrite = TRUE
@@ -3781,7 +3931,8 @@ export_summary_appendix <- function(x,
 #' - manifest CSV/TXT via [build_mfrm_manifest()]
 #' - visual warning/summary artifacts via [build_visual_summaries()]
 #' - prediction/forecast CSVs via [predict_mfrm_population()],
-#'   [predict_mfrm_units()], and [sample_mfrm_plausible_values()]
+#'   [predict_mfrm_units()], and [sample_mfrm_plausible_values()], including
+#'   population-forecast runtime metadata when available
 #' - a package-native replay script via [build_mfrm_replay_script()]
 #' - for latent-regression fits, a replay-side person-data CSV paired with the
 #'   replay script
@@ -3826,10 +3977,11 @@ export_summary_appendix <- function(x,
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "JML", maxit = 30)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
+#' out_dir <- tempfile("mfrmr_bundle_example_")
 #' bundle <- export_mfrm_bundle(
 #'   fit,
 #'   diagnostics = diag,
-#'   output_dir = tempdir(),
+#'   output_dir = out_dir,
 #'   prefix = "mfrmr_bundle_example",
 #'   include = c("core_tables", "manifest", "script", "html"),
 #'   overwrite = TRUE
@@ -4271,21 +4423,33 @@ export_mfrm_bundle <- function(fit,
   }
 
   if ("anchors" %in% include) {
-    anchor_tbl <- make_anchor_table(
+    anchor_contract <- anchor_linking_contract(
       fit = fit,
-      include_person = isTRUE(include_person_anchors)
+      diagnostics = diagnostics,
+      include_person_anchors = isTRUE(include_person_anchors)
     )
+    anchor_tbl <- anchor_contract$candidate_anchors
     write_csv(anchor_tbl, paste0(prefix, "_anchors.csv"), "anchors")
+    write_csv(anchor_contract$contract, paste0(prefix, "_anchor_contract.csv"), "anchor_contract")
     html_tables$anchors <- anchor_tbl
+    html_tables$anchor_contract <- anchor_contract$contract
   }
 
   if ("predictions" %in% include) {
     if (!is.null(population_prediction)) {
       pop_forecast <- round_export_df(population_prediction$forecast, digits = 6)
       pop_overview <- round_export_df(population_prediction$overview, digits = 6)
+      pop_runtime <- round_export_df(population_prediction$runtime %||% data.frame(), digits = 6)
       write_csv(population_prediction$design, paste0(prefix, "_population_prediction_design.csv"), "population_prediction_design")
       write_csv(population_prediction$forecast, paste0(prefix, "_population_prediction_forecast.csv"), "population_prediction_forecast")
       write_csv(population_prediction$overview, paste0(prefix, "_population_prediction_overview.csv"), "population_prediction_overview")
+      if (is.data.frame(pop_runtime) && nrow(pop_runtime) > 0L) {
+        write_csv(
+          pop_runtime,
+          paste0(prefix, "_population_prediction_runtime.csv"),
+          "population_prediction_runtime"
+        )
+      }
       write_settings_table(
         compact_population_prediction_settings(population_prediction$settings),
         paste0(prefix, "_population_prediction_settings.csv"),
@@ -4308,6 +4472,9 @@ export_mfrm_bundle <- function(fit,
       }
       html_tables$population_prediction_forecast <- pop_forecast
       html_tables$population_prediction_overview <- pop_overview
+      if (is.data.frame(pop_runtime) && nrow(pop_runtime) > 0L) {
+        html_tables$population_prediction_runtime <- pop_runtime
+      }
     }
 
     if (!is.null(unit_prediction)) {
@@ -4415,6 +4582,12 @@ export_mfrm_bundle <- function(fit,
     if (nrow(as.data.frame(manifest$anchors, stringsAsFactors = FALSE)) > 0) {
       write_csv(manifest$anchors, paste0(prefix, "_manifest_anchors.csv"), "manifest_anchors")
     }
+    if (nrow(as.data.frame(manifest$anchor_contract_summary %||% data.frame(), stringsAsFactors = FALSE)) > 0) {
+      write_csv(manifest$anchor_contract_summary, paste0(prefix, "_manifest_anchor_contract_summary.csv"), "manifest_anchor_contract_summary")
+    }
+    if (nrow(as.data.frame(manifest$anchor_contract %||% data.frame(), stringsAsFactors = FALSE)) > 0) {
+      write_csv(manifest$anchor_contract, paste0(prefix, "_manifest_anchor_contract.csv"), "manifest_anchor_contract")
+    }
     write_csv(manifest$available_outputs, paste0(prefix, "_manifest_available_outputs.csv"), "manifest_available_outputs")
     if (nrow(as.data.frame(manifest$gpcm_boundary %||% data.frame(), stringsAsFactors = FALSE)) > 0) {
       write_csv(manifest$gpcm_boundary, paste0(prefix, "_manifest_gpcm_boundary.csv"), "manifest_gpcm_boundary")
@@ -4424,6 +4597,9 @@ export_mfrm_bundle <- function(fit,
     html_tables$manifest_summary <- manifest$summary
     html_tables$manifest_available_outputs <- manifest$available_outputs
     html_tables$manifest_settings <- manifest$settings
+    if (nrow(as.data.frame(manifest$anchor_contract %||% data.frame(), stringsAsFactors = FALSE)) > 0) {
+      html_tables$manifest_anchor_contract <- manifest$anchor_contract
+    }
   }
 
   if ("visual_summaries" %in% include) {
@@ -4725,6 +4901,11 @@ export_normalize_summary_table_inputs <- function(summary_tables,
     "mfrm_weighting_review",
     "mfrm_unit_prediction",
     "mfrm_plausible_values",
+    "mfrm_generalizability",
+    "mfrm_generalizability_design_check",
+    "mfrm_generalizability_bootstrap",
+    "mfrm_generalizability_comparison",
+    "mfrm_analysis_audit",
     "summary.mfrm_fit",
     "summary.mfrm_diagnostics",
     "summary.mfrm_precision_review",
@@ -4748,7 +4929,12 @@ export_normalize_summary_table_inputs <- function(summary_tables,
     "summary.mfrm_misfit_casebook",
     "summary.mfrm_weighting_review",
     "summary.mfrm_unit_prediction",
-    "summary.mfrm_plausible_values"
+    "summary.mfrm_plausible_values",
+    "summary.mfrm_generalizability",
+    "summary.mfrm_generalizability_design_check",
+    "summary.mfrm_generalizability_bootstrap",
+    "summary.mfrm_generalizability_comparison",
+    "summary.mfrm_analysis_audit"
   )
 
   if (inherits(summary_tables, "mfrm_summary_table_bundle")) {

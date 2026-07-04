@@ -49,6 +49,9 @@ after the basic \code{RSM} / \code{PCM} route is working cleanly.
 Guide pages:
 \itemize{
 \item \code{\link[=mfrmr_output_guide]{mfrmr_output_guide()}} for the compact purpose-to-helper map
+\item \code{mfrmr_output_guide("beginner")} for a narrow first-analysis route
+\item \code{mfrmr_output_guide("psychometric")} for reviewer-facing reporting and
+validity-boundary routes
 \item \link{mfrmr_workflow_methods}
 \item \link{mfrmr_visual_diagnostics}
 \item \link{mfrmr_reports_and_tables}
@@ -77,6 +80,9 @@ you want a customised version.
 
 Use this order before exploring the broader feature surface:
 \enumerate{
+\item For a beginner route, read \code{mfrmr_output_guide("beginner")}.
+\item For a report or thesis route, read \code{\link[=mfrmr_minimum_report_checklist]{mfrmr_minimum_report_checklist()}}
+before treating fit output as a complete report plan.
 \item \code{\link[=fit_mfrm]{fit_mfrm()}} with \code{method = "MML"}
 \item \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} with \code{diagnostic_mode = "both"} for \code{RSM} / \code{PCM};
 for bounded \code{GPCM}, keep diagnostics on the direct exploratory route
@@ -101,6 +107,10 @@ for ordered-response \code{RSM} / \code{PCM} models with a one-dimensional
 conditional-normal population model and explicit one-row-per-person
 covariates expanded through \code{stats::model.matrix()}
 \item bounded \code{GPCM} support is summarized by \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}}
+\item bounded \code{GPCM} means a constrained package-native branch, not a complete
+unrestricted GPCM implementation: the current route keeps the role-based
+design contract, \code{slope_facet == step_facet}, and positive
+geometric-mean-one slopes
 \item bounded \code{GPCM} supports the core fit/summary/scoring/information
 path, direct Wright/pathway/CCC plots, residual-PCA follow-up, and the
 residual-based diagnostics tables/plots as exploratory tools
@@ -126,7 +136,12 @@ exposed through planner metadata such as \code{planning_scope},
 \item latent-class mixture models and response-time / careless-rating
 adjustment are not estimated by mfrmr; use residual, person-fit,
 local-dependence, and rater-drift diagnostics as screening layers rather
-than as mixture-model substitutes
+than as mixture-model substitutes; use \code{\link[=mfrmr_model_family_scope]{mfrmr_model_family_scope()}} for
+the broader post-GPCM boundary across GRM, NRM, sequential, rater-process,
+unfolding, design-matrix, and mixture-family scope items, and
+\code{\link[=mfrmr_estimation_scope]{mfrmr_estimation_scope()}} for CMLE, pairwise/composite likelihood,
+free normal population SD for ordinary MML, optional Stan/backend,
+nonparametric, and mixture-estimation scope
 }
 }
 
@@ -152,6 +167,11 @@ Public entry map:
 \itemize{
 \item First-screen results: \code{\link[=mfrm_results]{mfrm_results()}}, \code{summary(res)$next_actions},
 and \code{mfrmr_output_guide("entry")}
+\item Beginner route: \code{mfrmr_output_guide("beginner")}
+\item Psychometric review route: \code{\link[=mfrmr_minimum_report_checklist]{mfrmr_minimum_report_checklist()}} and
+\code{mfrmr_output_guide("psychometric")}
+\item FACETS terminology route: \code{\link[=facets_term_crosswalk]{facets_term_crosswalk()}},
+\code{\link[=facets_feature_coverage]{facets_feature_coverage()}}, and \code{\link[=facets_visual_contract]{facets_visual_contract()}}
 \item Interactive exploration: \code{\link[=mfrm_results_interactive]{mfrm_results_interactive()}} only when prompts
 are explicitly wanted at the console
 }
@@ -165,13 +185,16 @@ Function families:
 \item Bias and interaction: \code{\link[=estimate_bias]{estimate_bias()}}, \code{\link[=estimate_all_bias]{estimate_all_bias()}},
 \code{summary(bias)}, \code{\link[=bias_interaction_report]{bias_interaction_report()}}, \code{\link[=plot_bias_interaction]{plot_bias_interaction()}}
 \item Differential functioning: \code{\link[=analyze_dff]{analyze_dff()}}, \code{\link[=analyze_dif]{analyze_dif()}},
-\code{\link[=dif_interaction_table]{dif_interaction_table()}}, \code{\link[=plot_dif_heatmap]{plot_dif_heatmap()}}, \code{\link[=dif_report]{dif_report()}}
+\code{\link[=analyze_dff_moderation]{analyze_dff_moderation()}}, \code{\link[=analyze_dif_moderation]{analyze_dif_moderation()}},
+\code{\link[=analyze_dif_mh]{analyze_dif_mh()}}, \code{\link[=analyze_dif_classical]{analyze_dif_classical()}}, \code{\link[=dif_interaction_table]{dif_interaction_table()}},
+\code{\link[=plot_dif_heatmap]{plot_dif_heatmap()}}, \code{\link[=dif_report]{dif_report()}}
 \item Design simulation: \code{\link[=build_mfrm_sim_spec]{build_mfrm_sim_spec()}}, \code{\link[=extract_mfrm_sim_spec]{extract_mfrm_sim_spec()}},
 \code{\link[=simulate_mfrm_data]{simulate_mfrm_data()}}, \code{\link[=evaluate_mfrm_recovery]{evaluate_mfrm_recovery()}},
 \code{\link[=assess_mfrm_recovery]{assess_mfrm_recovery()}}, \code{\link[=evaluate_mfrm_design]{evaluate_mfrm_design()}},
 \code{\link[=evaluate_mfrm_signal_detection]{evaluate_mfrm_signal_detection()}}, \code{\link[=predict_mfrm_population]{predict_mfrm_population()}},
-\code{\link[=predict_mfrm_units]{predict_mfrm_units()}}, \code{\link[=sample_mfrm_plausible_values]{sample_mfrm_plausible_values()}} (including
-fit-derived empirical / resampled / skeleton-based simulation
+\code{\link[=predict_mfrm_units]{predict_mfrm_units()}}, \code{\link[=sample_mfrm_plausible_values]{sample_mfrm_plausible_values()}},
+\code{\link[=analyze_eap_power_sensitivity]{analyze_eap_power_sensitivity()}} (including fit-derived empirical /
+resampled / skeleton-based simulation
 specifications; fixed-calibration unit scoring supports \code{MML} fits
 directly, latent-regression \code{MML} fits through the fitted population
 model when scored units also provide one-row-per-person background data,
@@ -264,7 +287,8 @@ persons under the fitted scoring basis.
 \code{diagnostic_mode = "both"} for final \code{MML} runs.
 \item For \code{RSM} / \code{PCM}, run \code{\link[=analyze_dff]{analyze_dff()}} or \code{\link[=estimate_bias]{estimate_bias()}} when
 fairness or interaction questions matter; bounded \code{GPCM} also supports
-\code{\link[=estimate_bias]{estimate_bias()}} as a conditional screening review.
+\code{\link[=estimate_bias]{estimate_bias()}} as a conditional screening review. For one-response
+person-by-item observed-score MH screens, use \code{\link[=analyze_dif_mh]{analyze_dif_mh()}}.
 \item For \code{RSM} / \code{PCM}, report with \code{\link[=build_apa_outputs]{build_apa_outputs()}} and
 \code{\link[=build_visual_summaries]{build_visual_summaries()}}.
 \item For design planning, move to \code{\link[=build_mfrm_sim_spec]{build_mfrm_sim_spec()}},
@@ -363,7 +387,13 @@ so they are handled through the ordinary ordered-score interface. This means
 \code{mfrmr} supports ordered binary and ordered polytomous data under \code{RSM} and
 \code{PCM}, plus a narrow bounded \code{GPCM} branch with one designated
 \code{slope_facet} that currently must equal \code{step_facet}. Unordered
-nominal/multinomial response models are not yet implemented.
+nominal/multinomial response models are not yet implemented. Use
+\code{\link[=mfrmr_model_family_scope]{mfrmr_model_family_scope()}} to inspect the broader boundary for GRM, NRM,
+sequential, rater-dependence, unfolding, design-matrix, and mixture-family
+scope items. Use \code{\link[=mfrmr_estimation_scope]{mfrmr_estimation_scope()}} to inspect separate
+estimator/backend boundaries, including CMLE, pairwise/composite likelihood,
+free normal population SD for ordinary MML, optional Stan integration,
+nonparametric latent distributions, and mixture estimation.
 }
 
 \section{Estimation methods}{
@@ -386,6 +416,13 @@ estimates are obtained post-hoc via Expected A Posteriori (EAP):
 \deqn{\hat{\theta}_n^{\mathrm{EAP}} =
   \frac{\sum_q \theta_q \, w_q \, L(\mathbf{X}_n \mid \theta_q)}
        {\sum_q w_q \, L(\mathbf{X}_n \mid \theta_q)}}
+
+In the default \code{population_formula = NULL} route, this prior is fixed to
+the standard normal scale. The latent population SD is therefore not
+estimated in ordinary \code{MML} fits. Supplying \code{population_formula} activates
+the separate latent-regression \code{MML} branch; there the conditional residual
+variance \code{sigma2} is estimated and the quadrature nodes become
+\eqn{\theta_{nq} = x_n^\top\beta + \sigma z_q}.
 
 MML avoids the incidental-parameter problem and is generally preferred
 for smaller samples.
@@ -663,7 +700,9 @@ mixed-category model with arbitrary item-specific category counts.
 Marginal Maximum Likelihood (MML) integrates over the person ability
 distribution using Gauss-Hermite quadrature and does not directly estimate
 person parameters; person estimates are computed post-hoc via Expected A
-Posteriori (EAP).  Joint Maximum Likelihood (JML) estimates all person
+Posteriori (EAP). In ordinary \code{MML} fits the latent prior is fixed to
+standard normal scale; an estimated \code{sigma2} is available only in the
+active latent-regression branch. Joint Maximum Likelihood (JML) estimates all person
 and facet parameters simultaneously as fixed effects; \code{"JMLE"} remains a
 backward-compatible alias.
 
@@ -689,6 +728,10 @@ step parameters together with a standard normal reference prior introduced
 only for the post hoc scoring layer. This is useful for practical
 fixed-scale scoring, but it should still be described as a limited
 approximation rather than as full ConQuest-style population modeling.
+\code{\link[=analyze_eap_power_sensitivity]{analyze_eap_power_sensitivity()}} adds a fixed-calibration robustness
+diagnostic for this same scoring layer by power-scaling the quadrature-grid
+prior and likelihood and reporting EAP deltas from the unscaled reference;
+it does not refit the model or make the MML fitting prior configurable.
 
 \strong{Current ConQuest overlap}
 

@@ -68,6 +68,10 @@ are retained in the \code{status} table as \code{not_available} rather than stop
 the whole results workflow. The returned object also carries
 \code{next_actions} and \code{input$reproducible_code} so users can move from the
 comprehensive first screen to explicit reporting or replay code.
+Use \code{summary(res, view = "brief")} for a reader-first printout that keeps
+only the overview, highest-priority triage rows, first next actions, and
+available plot routes. The default \code{summary(res)} remains the full
+first-screen table set.
 }
 \section{Include presets}{
 
@@ -108,9 +112,11 @@ only the measurement columns needed for estimation.
 
 \section{What to inspect first}{
 
-Start with \code{summary(res)}. The most useful fields are:
+Start with \code{summary(res, view = "brief")} for a short reader-first screen,
+or \code{summary(res)} when you need every indexed table. The most useful fields are:
 \itemize{
-\item \code{overview}: input mode, model, method, table count, and plot-route count
+\item \code{overview}: input mode, model, method, population-SD mode when relevant,
+table count, and plot-route count
 \item \code{triage}: first-screen signals ordered by unavailable/review/info/ok
 \item \code{status}: which sections were available, skipped, or unsupported
 \item \code{plot_map}: the supported \code{plot(res, type = ...)} routes for this object
@@ -147,8 +153,9 @@ analysis archive is needed.
 \enumerate{
 \item Fit explicitly with \code{\link[=fit_mfrm]{fit_mfrm()}} in scripts and manuscripts.
 \item Call \code{res <- mfrm_results(fit)}.
-\item Read \code{summary(res)$triage}, \code{summary(res)$status},
-\code{summary(res)$plot_map}, and \code{summary(res)$next_actions}.
+\item Read \code{summary(res, view = "brief")}, then inspect \code{summary(res)$overview},
+\code{summary(res)$triage}, \code{summary(res)$status}, \code{summary(res)$plot_map}, and
+\code{summary(res)$next_actions} when detailed routing is needed.
 \item Use \code{plot(res, type = "qc")} for the first visual screen.
 \item Optionally inspect the same result with \code{\link[=launch_mfrmr_viewer]{launch_mfrmr_viewer()}} in an
 interactive session.
@@ -161,6 +168,8 @@ interactive session.
 \dontrun{
 toy <- load_mfrmr_data("example_core")
 toy_small <- toy[toy$Person \%in\% unique(toy$Person)[1:8], , drop = FALSE]
+# example_core is a compact smoke fixture; use Study 1/2 or your own data
+# for substantive interpretation.
 
 # JML keeps the help example fast; use the recommended workflow settings
 # for final analyses.
@@ -168,8 +177,9 @@ fit <- fit_mfrm(toy_small, "Person", c("Rater", "Criterion"), "Score",
                 method = "JML", maxit = 30)
 res <- mfrm_results(fit)
 
-sx <- summary(res)
+sx <- summary(res, view = "brief")
 sx$overview
+# For MML fits, overview also records fixed/estimated population-SD mode.
 sx$triage
 sx$plot_map
 sx$next_actions

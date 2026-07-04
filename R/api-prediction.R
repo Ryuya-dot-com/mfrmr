@@ -32,6 +32,9 @@
 #' @param quad_points Quadrature points for `fit_method = "MML"`.
 #' @param residual_pca Residual PCA mode passed to [diagnose_mfrm()].
 #' @param seed Optional seed for reproducible replications.
+#' @param progress Logical; if `TRUE`, show CLI progress while the underlying
+#'   design-evaluation simulation/refit cells are running. Defaults to
+#'   [interactive()].
 #'
 #' @details
 #' `predict_mfrm_population()` is a **scenario-level forecasting helper** built
@@ -105,6 +108,8 @@
 #' - `design`: requested future design
 #' - `forecast`: facet-level forecast table
 #' - `overview`: run-level overview
+#' - `runtime`: elapsed-time and completion metadata retained from the
+#'   underlying design-evaluation run
 #' - `simulation`: underlying [evaluate_mfrm_design()] result
 #' - `sim_spec`: simulation specification used for the forecast
 #' - `facet_names`: public non-person facet names carried by the simulation
@@ -159,8 +164,12 @@ predict_mfrm_population <- function(fit = NULL,
                                     maxit = 25,
                                     quad_points = 7,
                                     residual_pca = c("none", "overall", "facet", "both"),
-                                    seed = NULL) {
+                                    seed = NULL,
+                                    progress = interactive()) {
   residual_pca <- match.arg(residual_pca)
+  if (!is.logical(progress) || length(progress) != 1L || is.na(progress)) {
+    stop("`progress` must be a single TRUE/FALSE value.", call. = FALSE)
+  }
   has_fit <- !is.null(fit)
   has_spec <- !is.null(sim_spec)
   if (identical(has_fit, has_spec)) {
@@ -235,7 +244,8 @@ predict_mfrm_population <- function(fit = NULL,
     quad_points = quad_points,
     residual_pca = residual_pca,
     sim_spec = forecast_spec,
-    seed = seed
+    seed = seed,
+    progress = progress
   )
 
   sim_summary <- summary(sim_eval, digits = 6)
@@ -271,6 +281,7 @@ predict_mfrm_population <- function(fit = NULL,
       design = design_public,
       forecast = tibble::as_tibble(sim_summary$design_summary),
       overview = tibble::as_tibble(sim_summary$overview),
+      runtime = tibble::as_tibble(sim_eval$runtime %||% sim_summary$runtime %||% data.frame()),
       simulation = sim_eval,
       sim_spec = forecast_spec,
       facet_names = facet_names,
@@ -289,6 +300,7 @@ predict_mfrm_population <- function(fit = NULL,
         residual_pca = residual_pca,
         source = if (has_fit) "fit_mfrm" else "mfrm_sim_spec",
         seed = seed,
+        progress = isTRUE(progress),
         facet_names = facet_names,
         design_variable_aliases = design_variable_aliases,
         design_descriptor = design_descriptor,
@@ -318,6 +330,13 @@ predict_mfrm_population <- function(fit = NULL,
 #' @return An object of class `summary.mfrm_population_prediction` with:
 #' - `design`: requested future design
 #' - `overview`: run-level overview
+#' - `runtime`: elapsed-time and completion metadata from the underlying
+#'   simulation/refit run
+#' - `reading_order`: recommended order for reading the summary tables
+#' - `next_actions`: action-oriented triage for interpreting and exporting the
+#'   summary
+#' - `reporting_notes`: report-facing boundaries and recommended wording
+#'   safeguards
 #' - `forecast`: facet-level forecast table
 #' - `facet_names`: public non-person facet names used in the forecast
 #' - `design_variable_aliases`: public aliases for design variables
@@ -370,7 +389,14 @@ summary.mfrm_population_prediction <- function(object, digits = 3, ...) {
   out <- list(
     design = round_df(object$design),
     overview = round_df(object$overview),
+    runtime = round_df(object$runtime %||% data.frame()),
     forecast = round_df(object$forecast),
+    reading_order = simulation_summary_reading_order("population_prediction"),
+    next_actions = simulation_population_next_actions(
+      round_df(object$overview),
+      round_df(object$forecast)
+    ),
+    reporting_notes = simulation_summary_reporting_notes("population_prediction"),
     facet_names = object$facet_names %||% object$settings$facet_names %||% simulation_spec_output_facet_names(object$sim_spec),
     design_variable_aliases = object$design_variable_aliases %||% object$settings$design_variable_aliases %||% simulation_design_variable_aliases(object$sim_spec),
     design_descriptor = object$design_descriptor %||% object$settings$design_descriptor %||% simulation_design_descriptor(object$sim_spec),
@@ -427,6 +453,24 @@ print.summary.mfrm_population_prediction <- function(x, ...) {
   if (!is.null(x$overview) && nrow(x$overview) > 0) {
     cat("\nOverview\n")
     print(round_df(as.data.frame(x$overview)), row.names = FALSE)
+  }
+  if (!is.null(x$runtime) && nrow(x$runtime) > 0) {
+    cat("\nRuntime\n")
+    print(round_df(as.data.frame(x$runtime)), row.names = FALSE)
+  }
+  if (!is.null(x$reading_order) && nrow(x$reading_order) > 0L) {
+    keep <- intersect(c("Step", "Route", "WhatToRead"), names(x$reading_order))
+    cat("\nRecommended reading order\n")
+    print(as.data.frame(x$reading_order[, keep, drop = FALSE]), row.names = FALSE)
+  }
+  if (!is.null(x$next_actions) && nrow(x$next_actions) > 0L) {
+    cat("\nNext actions\n")
+    print(as.data.frame(preview_df(x$next_actions)), row.names = FALSE)
+  }
+  if (!is.null(x$reporting_notes) && nrow(x$reporting_notes) > 0L) {
+    keep <- intersect(c("Priority", "Area", "ReportingBoundary", "RecommendedWording"), names(x$reporting_notes))
+    cat("\nReporting notes\n")
+    print(as.data.frame(preview_df(x$reporting_notes[, keep, drop = FALSE])), row.names = FALSE)
   }
   if (!is.null(x$design) && nrow(x$design) > 0) {
     cat("\nDesign grid (preview)\n")
@@ -517,6 +561,188 @@ prediction_validate_integer <- function(x,
   }
 
   x_int
+}
+
+prediction_validate_power_vector <- function(x, arg) {
+  if (is.null(x) || length(x) == 0L) {
+    stop("`", arg, "` must contain at least one positive finite value.", call. = FALSE)
+  }
+
+  x_num <- suppressWarnings(as.numeric(x))
+  if (any(!is.finite(x_num) | is.na(x_num) | x_num <= 0)) {
+    stop("`", arg, "` must contain only positive finite values.", call. = FALSE)
+  }
+
+  unique(x_num)
+}
+
+prediction_validate_stability_cutoffs <- function(stable_delta, unstable_delta) {
+  stable_delta <- suppressWarnings(as.numeric(stable_delta[1] %||% 0.05))
+  unstable_delta <- suppressWarnings(as.numeric(unstable_delta[1] %||% 0.15))
+  if (!is.finite(stable_delta) || stable_delta < 0) {
+    stop("`stable_delta` must be a single non-negative finite value.", call. = FALSE)
+  }
+  if (!is.finite(unstable_delta) || unstable_delta <= stable_delta) {
+    stop("`unstable_delta` must be a single finite value larger than `stable_delta`.", call. = FALSE)
+  }
+  c(stable_delta = stable_delta, unstable_delta = unstable_delta)
+}
+
+prediction_stability_flag <- function(x, stable_delta = 0.05, unstable_delta = 0.15) {
+  x <- suppressWarnings(as.numeric(x))
+  out <- rep("unknown", length(x))
+  ok <- is.finite(x)
+  out[ok & x <= stable_delta] <- "stable"
+  out[ok & x > stable_delta & x < unstable_delta] <- "review"
+  out[ok & x >= unstable_delta] <- "unstable"
+  out
+}
+
+format_eap_power_condition <- function(prior_power, likelihood_power) {
+  paste0(
+    "p=", formatC(as.numeric(prior_power), format = "fg", digits = 4),
+    ", l=", formatC(as.numeric(likelihood_power), format = "fg", digits = 4)
+  )
+}
+
+build_eap_power_facet_stability <- function(input_data,
+                                            sensitivity,
+                                            stable_delta = 0.05,
+                                            unstable_delta = 0.15) {
+  input_data <- as.data.frame(input_data %||% data.frame(), stringsAsFactors = FALSE)
+  sensitivity <- as.data.frame(sensitivity %||% data.frame(), stringsAsFactors = FALSE)
+  empty <- list(
+    exposure = tibble::tibble(),
+    facet_stability = tibble::tibble(),
+    facet_level_overview = tibble::tibble(),
+    facet_overview = tibble::tibble()
+  )
+  if (nrow(input_data) == 0L || nrow(sensitivity) == 0L || !"Person" %in% names(input_data)) {
+    return(empty)
+  }
+  facet_cols <- setdiff(names(input_data), c("Person", "Score", "Weight"))
+  if (length(facet_cols) == 0L) {
+    return(empty)
+  }
+  weight_vals <- if ("Weight" %in% names(input_data)) {
+    suppressWarnings(as.numeric(input_data$Weight))
+  } else {
+    rep(1, nrow(input_data))
+  }
+  weight_vals[!is.finite(weight_vals) | weight_vals <= 0] <- 1
+
+  exposure <- dplyr::bind_rows(lapply(facet_cols, function(facet) {
+    tibble::tibble(
+      Person = as.character(input_data$Person),
+      Facet = facet,
+      Level = as.character(input_data[[facet]]),
+      ExposureRows = 1,
+      ExposureWeight = weight_vals
+    )
+  }))
+  exposure <- exposure |>
+    dplyr::group_by(.data$Person, .data$Facet, .data$Level) |>
+    dplyr::summarise(
+      ExposureRows = sum(.data$ExposureRows),
+      ExposureWeight = sum(.data$ExposureWeight),
+      .groups = "drop"
+    )
+
+  join_args <- list(exposure, sensitivity, by = "Person")
+  left_join_df <- utils::getS3method(
+    "left_join",
+    "data.frame",
+    envir = asNamespace("dplyr"),
+    optional = TRUE
+  )
+  if (!is.null(left_join_df) && "relationship" %in% names(formals(left_join_df))) {
+    join_args$relationship <- "many-to-many"
+  }
+  joined <- do.call(dplyr::left_join, join_args)
+  if (nrow(joined) == 0L) {
+    return(empty)
+  }
+  wmean <- function(x, w) {
+    ok <- is.finite(x) & is.finite(w) & w > 0
+    if (!any(ok)) return(NA_real_)
+    stats::weighted.mean(x[ok], w[ok])
+  }
+  safe_max <- function(x) {
+    x <- suppressWarnings(as.numeric(x))
+    x <- x[is.finite(x)]
+    if (length(x) == 0L) NA_real_ else max(x)
+  }
+  facet_stability <- joined |>
+    dplyr::group_by(.data$PriorPower, .data$LikelihoodPower, .data$Condition,
+                    .data$ConditionOrder, .data$Reference, .data$Facet, .data$Level) |>
+    dplyr::group_modify(function(.x, .y) {
+      tibble::tibble(
+        Persons = dplyr::n_distinct(.x$Person),
+        ExposureRows = sum(.x$ExposureRows, na.rm = TRUE),
+        ExposureWeight = sum(.x$ExposureWeight, na.rm = TRUE),
+        MeanDeltaEstimate = wmean(.x$DeltaEstimate, .x$ExposureWeight),
+        MeanAbsDeltaEstimate = wmean(.x$AbsDeltaEstimate, .x$ExposureWeight),
+        MaxAbsDeltaEstimate = safe_max(.x$AbsDeltaEstimate),
+        MeanDeltaSD = wmean(.x$DeltaSD, .x$ExposureWeight),
+        MeanAbsDeltaSD = wmean(.x$AbsDeltaSD, .x$ExposureWeight),
+        MaxAbsDeltaSD = safe_max(.x$AbsDeltaSD)
+      )
+    }) |>
+    dplyr::ungroup()
+  facet_stability$StabilityFlag <- prediction_stability_flag(
+    facet_stability$MeanAbsDeltaEstimate,
+    stable_delta = stable_delta,
+    unstable_delta = unstable_delta
+  )
+
+  review_source <- facet_stability[!facet_stability$Reference, , drop = FALSE]
+  if (nrow(review_source) == 0L) {
+    review_source <- facet_stability
+  }
+  facet_level_overview <- review_source |>
+    dplyr::group_by(.data$Facet, .data$Level) |>
+    dplyr::summarise(
+      Persons = max(.data$Persons, na.rm = TRUE),
+      ExposureRows = max(.data$ExposureRows, na.rm = TRUE),
+      ExposureWeight = max(.data$ExposureWeight, na.rm = TRUE),
+      MeanAbsDeltaEstimate = mean(.data$MeanAbsDeltaEstimate, na.rm = TRUE),
+      MaxAbsDeltaEstimate = safe_max(.data$MeanAbsDeltaEstimate),
+      MeanAbsDeltaSD = mean(.data$MeanAbsDeltaSD, na.rm = TRUE),
+      MaxAbsDeltaSD = safe_max(.data$MeanAbsDeltaSD),
+      .groups = "drop"
+    )
+  facet_level_overview$StabilityFlag <- prediction_stability_flag(
+    facet_level_overview$MaxAbsDeltaEstimate,
+    stable_delta = stable_delta,
+    unstable_delta = unstable_delta
+  )
+
+  facet_overview <- facet_level_overview |>
+    dplyr::group_by(.data$Facet) |>
+    dplyr::summarise(
+      Levels = dplyr::n_distinct(.data$Level),
+      Persons = max(.data$Persons, na.rm = TRUE),
+      ExposureRows = sum(.data$ExposureRows, na.rm = TRUE),
+      ExposureWeight = sum(.data$ExposureWeight, na.rm = TRUE),
+      MeanAbsDeltaEstimate = mean(.data$MeanAbsDeltaEstimate, na.rm = TRUE),
+      MaxAbsDeltaEstimate = safe_max(.data$MaxAbsDeltaEstimate),
+      MostUnstableLevel = .data$Level[which.max(.data$MaxAbsDeltaEstimate)][1],
+      MeanAbsDeltaSD = mean(.data$MeanAbsDeltaSD, na.rm = TRUE),
+      MaxAbsDeltaSD = safe_max(.data$MaxAbsDeltaSD),
+      .groups = "drop"
+    )
+  facet_overview$StabilityFlag <- prediction_stability_flag(
+    facet_overview$MaxAbsDeltaEstimate,
+    stable_delta = stable_delta,
+    unstable_delta = unstable_delta
+  )
+
+  list(
+    exposure = tibble::as_tibble(exposure),
+    facet_stability = tibble::as_tibble(facet_stability),
+    facet_level_overview = tibble::as_tibble(facet_level_overview),
+    facet_overview = tibble::as_tibble(facet_overview)
+  )
 }
 
 prepare_mfrm_prediction_data <- function(fit,
@@ -843,7 +1069,9 @@ compute_person_posterior_summary <- function(idx,
                                              population_spec = NULL,
                                              interval_level = 0.95,
                                              n_draws = 0,
-                                             seed = NULL) {
+                                             seed = NULL,
+                                             prior_power = 1,
+                                             likelihood_power = 1) {
   n <- length(idx$score_k)
   if (n == 0) {
     empty_tbl <- tibble::tibble(
@@ -928,7 +1156,10 @@ compute_person_posterior_summary <- function(idx,
   person_ids <- as.integer(rownames(ll_by_person))
   n_persons <- nrow(ll_by_person)
   aligned_person_labels <- as.character(person_labels[person_ids])
-  log_post <- quad_basis$log_weights[person_ids, , drop = FALSE] + ll_by_person
+  prior_power <- as.numeric(prior_power[1] %||% 1)
+  likelihood_power <- as.numeric(likelihood_power[1] %||% 1)
+  log_post <- prior_power * quad_basis$log_weights[person_ids, , drop = FALSE] +
+    likelihood_power * ll_by_person
   row_max <- log_post[cbind(seq_len(n_persons), max.col(log_post))]
   log_norm <- row_max + log(rowSums(exp(log_post - row_max)))
   post_w <- exp(log_post - log_norm)
@@ -1213,7 +1444,7 @@ predict_mfrm_units <- function(fit,
   sizes <- build_param_sizes(fit$config)
   params <- expand_params(fit$opt$par, sizes, fit$config)
   quad_points <- fit$config$estimation_control$quad_points %||% 15L
-  quad <- gauss_hermite_normal(as.integer(quad_points))
+  quad <- make_mml_quadrature(as.integer(quad_points), config = fit$config)
 
   scored <- compute_person_posterior_summary(
     idx = idx,
@@ -1229,6 +1460,14 @@ predict_mfrm_units <- function(fit,
 
   calibration_note <- if (isTRUE(population_ready$active)) {
     "Posterior summaries are computed under the fitted MML calibration together with the fitted conditional normal population model for the scored persons."
+  } else if (identical(fit_method, "MML") &&
+             identical(as.character(fit$config$population_sd_mode %||% "fixed"), "estimated")) {
+    paste0(
+      "Posterior summaries are computed under the fixed fitted MML calibration ",
+      "using the estimated normal latent population SD (",
+      formatC(as.numeric(fit$config$estimated_population_sd %||% NA_real_), digits = 3, format = "fg"),
+      ")."
+    )
   } else if (identical(fit_method, "MML")) {
     "Posterior summaries are computed under the fixed fitted MML calibration."
   } else {
@@ -1293,6 +1532,10 @@ predict_mfrm_units <- function(fit,
         interval_level = interval_level,
         n_draws = n_draws,
         quad_points = as.integer(quad_points),
+        population_sd_mode = as.character(fit$config$population_sd_mode %||% NA_character_),
+        population_prior_sd = as.numeric(fit$config$population_prior_sd_input %||%
+                                           fit$config$population_prior_sd %||% NA_real_),
+        estimated_population_sd = as.numeric(fit$config$estimated_population_sd %||% NA_real_),
         seed = seed,
         method = fit_method,
         source_columns = prepared$prep$source_columns,
@@ -1321,6 +1564,522 @@ predict_mfrm_units <- function(fit,
     ),
     class = "mfrm_unit_prediction"
   )
+}
+
+#' Analyze EAP sensitivity to prior and likelihood power scaling
+#'
+#' @param fit Output from [fit_mfrm()] estimated with `method = "MML"` or
+#'   `method = "JML"`.
+#' @param new_data Long-format data for the future or partially observed units
+#'   to be scored.
+#' @param person Optional person column in `new_data`. Defaults to the person
+#'   column recorded in `fit`.
+#' @param facets Optional facet-column mapping for `new_data`.
+#' @param score Optional score column in `new_data`. Defaults to the score
+#'   column recorded in `fit`.
+#' @param weight Optional weight column in `new_data`. Defaults to the weight
+#'   column recorded in `fit`, if any.
+#' @param person_data Optional one-row-per-person data.frame with the
+#'   background variables required by a latent-regression fit. Ignored for
+#'   ordinary fixed-calibration scoring.
+#' @param person_id Optional person-ID column in `person_data`.
+#' @param population_policy How missing background data are handled when
+#'   `fit` uses the latent-regression branch. `"error"` (default) requires
+#'   complete person-level covariates; `"omit"` drops scored persons lacking
+#'   complete covariates and records that omission in `population_review`.
+#' @param prior_power Positive numeric vector of powers applied to the
+#'   quadrature-grid prior weights. Values below 1 weaken the prior
+#'   contribution; values above 1 strengthen it.
+#' @param likelihood_power Positive numeric vector of powers applied to the
+#'   row-summed person likelihood. Values below 1 weaken the response-data
+#'   contribution; values above 1 strengthen it.
+#' @param include_reference Logical; when `TRUE`, include the unperturbed
+#'   `(prior_power = 1, likelihood_power = 1)` condition in `sensitivity` even
+#'   if it was not requested explicitly.
+#' @param interval_level Posterior interval level for each perturbed EAP
+#'   summary.
+#' @param stable_delta Mean absolute EAP-delta cutoff at or below which a facet
+#'   level is flagged `"stable"` in the exposure-weighted stability summaries.
+#' @param unstable_delta Mean absolute EAP-delta cutoff at or above which a
+#'   facet level is flagged `"unstable"`; values between the two cutoffs are
+#'   flagged `"review"`.
+#'
+#' @details
+#' `analyze_eap_power_sensitivity()` recomputes fixed-calibration EAP summaries
+#' under a grid of power-scaled posterior weights,
+#' `prior_weight ^ prior_power * likelihood ^ likelihood_power`, after
+#' evaluating the existing response likelihood on the fitted quadrature grid.
+#' The fitted item/facet calibration is not refit.
+#'
+#' This is a lightweight scoring diagnostic inspired by Bayesian
+#' power-scaling sensitivity analysis. It is deliberately narrower than
+#' `priorsense`-style workflows: no MCMC draws, Pareto-smoothed importance
+#' sampling, moment matching, or posterior-refit diagnostics are used. Because
+#' the current scoring posterior is already represented on a finite quadrature
+#' grid, the package can directly renormalize the perturbed grid weights and
+#' report how EAP summaries change from the reference condition.
+#'
+#' For ordinary `MML` fits, the reference prior is the fitted normal
+#' quadrature prior: fixed by `population_prior_sd` or estimated through
+#' `estimate_population_sd = TRUE`. For latent-regression `MML` fits, the
+#' power is applied to the fitted conditional-normal quadrature weights for
+#' each scored person. For `JML` fits, the function uses the same post hoc
+#' standard-normal reference prior used by [predict_mfrm_units()].
+#'
+#' @section Interpreting output:
+#' - `sensitivity` contains one row per person per power condition, including
+#'   deltas from the unscaled reference EAP and posterior SD.
+#' - `summary` aggregates the absolute and signed deltas by power condition.
+#' - `facet_stability` and `facet_overview` aggregate person-level deltas over
+#'   the facet levels appearing in `new_data`; these are exposure-weighted
+#'   diagnostic summaries, not causal decompositions of item/rater effects.
+#' - Large `DeltaEstimate` or `DeltaSD` values indicate that reported EAP
+#'   scores are sensitive to the scoring prior/likelihood balance under the
+#'   fixed calibration, not that the original calibration has changed.
+#'
+#' @section What this does not justify:
+#' This helper does not make the MML fitting prior configurable, estimate a
+#' different latent distribution, compute MAP scores, or provide a full
+#' Bayesian prior-sensitivity workflow. Treat it as a scoring-stage robustness
+#' check for [predict_mfrm_units()] and [sample_mfrm_plausible_values()].
+#'
+#' @section References:
+#' The fixed-grid EAP scoring basis follows the quadrature-based MML/EAP
+#' tradition of Bock and Aitkin (1981) and Bock and Mislevy (1982). The
+#' power-scaling sensitivity framing follows Kallioinen, Paananen, Burkner, and
+#' Vehtari (2023) and the `priorsense` package, but the implementation here is
+#' a deterministic quadrature-grid diagnostic rather than a PSIS-based MCMC
+#' diagnostic.
+#'
+#' - Bock, R. D., & Aitkin, M. (1981). *Marginal maximum likelihood estimation
+#'   of item parameters: Application of an EM algorithm*. Psychometrika, 46(4),
+#'   443-459.
+#' - Bock, R. D., & Mislevy, R. J. (1982). *Adaptive EAP estimation of ability
+#'   in a microcomputer environment*. Applied Psychological Measurement, 6(4),
+#'   431-444.
+#' - Kallioinen, N., Paananen, T., Burkner, P.-C., & Vehtari, A. (2023).
+#'   *Detecting and diagnosing prior and likelihood sensitivity with
+#'   power-scaling*. Statistics and Computing, 34, 57.
+#'
+#' @return An object of class `mfrm_eap_power_sensitivity` with components:
+#' - `sensitivity`: person-level EAP summaries under each power condition
+#' - `summary`: power-condition summaries of deltas from the reference posterior
+#' - `baseline`: unscaled reference EAP summaries
+#' - `row_review`: row-level preparation review for `new_data`
+#' - `population_review`: optional person-level omission review for
+#'   latent-regression scoring
+#' - `input_data`: cleaned canonical scoring rows retained from `new_data`
+#' - `person_data`: cleaned or supplied person-level background data used for
+#'   latent-regression scoring; `NULL` otherwise
+#' - `facet_stability`: exposure-weighted facet-level summaries by power
+#'   condition
+#' - `facet_level_overview`: exposure-weighted stability summary by facet level
+#' - `facet_overview`: exposure-weighted stability summary by facet
+#' - `exposure`: person-by-facet exposure weights used for facet summaries
+#' - `settings`: sensitivity settings
+#' - `notes`: interpretation notes
+#' @seealso [predict_mfrm_units()], [sample_mfrm_plausible_values()], [as_ggplot()],
+#'   [mfrmr_estimation_scope()]
+#' @examples
+#' \dontrun{
+#' toy <- load_mfrmr_data("example_core")
+#' keep_people <- unique(toy$Person)[1:18]
+#' toy_fit <- suppressWarnings(
+#'   fit_mfrm(
+#'     toy[toy$Person %in% keep_people, , drop = FALSE],
+#'     "Person", c("Rater", "Criterion"), "Score",
+#'     method = "MML",
+#'     quad_points = 5,
+#'     maxit = 30
+#'   )
+#' )
+#' new_units <- data.frame(
+#'   Person = c("NEW01", "NEW01"),
+#'   Rater = unique(toy$Rater)[1],
+#'   Criterion = unique(toy$Criterion)[1:2],
+#'   Score = c(2, 3)
+#' )
+#' sens <- analyze_eap_power_sensitivity(
+#'   toy_fit,
+#'   new_units,
+#'   prior_power = c(0.8, 1, 1.25)
+#' )
+#' summary(sens)$summary
+#' plot(sens, type = "facet_stability")
+#' as_ggplot(plot(sens, type = "facet_heatmap", facet = "Rater", draw = FALSE))
+#' }
+#' @export
+analyze_eap_power_sensitivity <- function(fit,
+                                          new_data,
+                                          person = NULL,
+                                          facets = NULL,
+                                          score = NULL,
+                                          weight = NULL,
+                                          person_data = NULL,
+                                          person_id = NULL,
+                                          population_policy = c("error", "omit"),
+                                          prior_power = c(0.5, 0.8, 1, 1.25, 2),
+                                          likelihood_power = 1,
+                                          include_reference = TRUE,
+                                          interval_level = 0.95,
+                                          stable_delta = 0.05,
+                                          unstable_delta = 0.15) {
+  if (!inherits(fit, "mfrm_fit")) {
+    stop("`fit` must be output from fit_mfrm().", call. = FALSE)
+  }
+  fit_method <- prediction_resolve_fit_method(fit)
+  if (!fit_method %in% c("MML", "JML")) {
+    stop("`analyze_eap_power_sensitivity()` currently supports only fits estimated with method = 'MML' or 'JML'.",
+         call. = FALSE)
+  }
+  interval_level <- as.numeric(interval_level[1])
+  if (!is.finite(interval_level) || interval_level <= 0 || interval_level >= 1) {
+    stop("`interval_level` must be a single number in (0, 1).", call. = FALSE)
+  }
+  if (!is.logical(include_reference) || length(include_reference) != 1L || is.na(include_reference)) {
+    stop("`include_reference` must be a single TRUE or FALSE value.", call. = FALSE)
+  }
+  prior_power <- prediction_validate_power_vector(prior_power, "prior_power")
+  likelihood_power <- prediction_validate_power_vector(likelihood_power, "likelihood_power")
+  stability_cutoffs <- prediction_validate_stability_cutoffs(stable_delta, unstable_delta)
+  stable_delta <- stability_cutoffs[["stable_delta"]]
+  unstable_delta <- stability_cutoffs[["unstable_delta"]]
+
+  grid_prior <- if (isTRUE(include_reference)) {
+    unique(c(1, prior_power))
+  } else {
+    prior_power
+  }
+  grid_likelihood <- if (isTRUE(include_reference)) {
+    unique(c(1, likelihood_power))
+  } else {
+    likelihood_power
+  }
+  power_grid <- expand.grid(
+    PriorPower = grid_prior,
+    LikelihoodPower = grid_likelihood,
+    KEEP.OUT.ATTRS = FALSE,
+    stringsAsFactors = FALSE
+  )
+
+  prepared <- prepare_mfrm_prediction_data(
+    fit = fit,
+    new_data = new_data,
+    person = person,
+    facets = facets,
+    score = score,
+    weight = weight
+  )
+  population_ready <- prepare_mfrm_prediction_population(
+    fit = fit,
+    prepared = prepared,
+    person_data = person_data,
+    person_id = person_id,
+    population_policy = population_policy
+  )
+  prepared <- population_ready$prepared
+
+  idx <- build_indices(
+    prepared$prep,
+    step_facet = fit$config$step_facet,
+    slope_facet = fit$config$slope_facet,
+    interaction_specs = fit$config$interaction_specs
+  )
+  sizes <- build_param_sizes(fit$config)
+  params <- expand_params(fit$opt$par, sizes, fit$config)
+  quad_points <- fit$config$estimation_control$quad_points %||% 15L
+  quad <- make_mml_quadrature(as.integer(quad_points), config = fit$config)
+
+  baseline_scored <- compute_person_posterior_summary(
+    idx = idx,
+    config = fit$config,
+    params = params,
+    quad = quad,
+    person_labels = prepared$prep$levels$Person,
+    population_spec = population_ready$spec,
+    interval_level = interval_level,
+    n_draws = 0,
+    seed = NULL,
+    prior_power = 1,
+    likelihood_power = 1
+  )
+  baseline <- baseline_scored$estimates
+  baseline_key <- baseline[, c("Person", "Estimate", "SD", "Lower", "Upper"), drop = FALSE]
+  names(baseline_key) <- c("Person", "BaseEstimate", "BaseSD", "BaseLower", "BaseUpper")
+
+  sensitivity <- dplyr::bind_rows(lapply(seq_len(nrow(power_grid)), function(i) {
+    pp <- power_grid$PriorPower[i]
+    lp <- power_grid$LikelihoodPower[i]
+    if (identical(pp, 1) && identical(lp, 1)) {
+      est <- baseline
+    } else {
+      scored <- compute_person_posterior_summary(
+        idx = idx,
+        config = fit$config,
+        params = params,
+        quad = quad,
+        person_labels = prepared$prep$levels$Person,
+        population_spec = population_ready$spec,
+        interval_level = interval_level,
+        n_draws = 0,
+        seed = NULL,
+        prior_power = pp,
+        likelihood_power = lp
+      )
+      est <- scored$estimates
+    }
+    est$PriorPower <- pp
+    est$LikelihoodPower <- lp
+    est
+  }))
+
+  sensitivity <- dplyr::left_join(sensitivity, baseline_key, by = "Person")
+  sensitivity$Reference <- sensitivity$PriorPower == 1 & sensitivity$LikelihoodPower == 1
+  sensitivity$Condition <- format_eap_power_condition(
+    sensitivity$PriorPower,
+    sensitivity$LikelihoodPower
+  )
+  condition_order <- unique(format_eap_power_condition(power_grid$PriorPower, power_grid$LikelihoodPower))
+  sensitivity$ConditionOrder <- match(sensitivity$Condition, condition_order)
+  sensitivity$DeltaEstimate <- sensitivity$Estimate - sensitivity$BaseEstimate
+  sensitivity$AbsDeltaEstimate <- abs(sensitivity$DeltaEstimate)
+  sensitivity$DeltaSD <- sensitivity$SD - sensitivity$BaseSD
+  sensitivity$AbsDeltaSD <- abs(sensitivity$DeltaSD)
+  sensitivity <- sensitivity[, c(
+    "PriorPower", "LikelihoodPower", "Condition", "ConditionOrder", "Reference", "Person",
+    "Estimate", "SD", "Lower", "Upper", "Observations", "WeightedN",
+    "BaseEstimate", "BaseSD", "BaseLower", "BaseUpper",
+    "DeltaEstimate", "AbsDeltaEstimate", "DeltaSD", "AbsDeltaSD"
+  )]
+
+  summary_tbl <- sensitivity |>
+    dplyr::group_by(.data$PriorPower, .data$LikelihoodPower, .data$Condition,
+                    .data$ConditionOrder, .data$Reference) |>
+    dplyr::summarise(
+      Persons = dplyr::n_distinct(.data$Person),
+      MeanEstimate = mean(.data$Estimate),
+      MeanSD = mean(.data$SD),
+      MeanDeltaEstimate = mean(.data$DeltaEstimate),
+      MeanAbsDeltaEstimate = mean(.data$AbsDeltaEstimate),
+      MaxAbsDeltaEstimate = max(.data$AbsDeltaEstimate),
+      MeanDeltaSD = mean(.data$DeltaSD),
+      MeanAbsDeltaSD = mean(.data$AbsDeltaSD),
+      MaxAbsDeltaSD = max(.data$AbsDeltaSD),
+      .groups = "drop"
+    )
+  facet_bundle <- build_eap_power_facet_stability(
+    input_data = prepared$input_data,
+    sensitivity = sensitivity,
+    stable_delta = stable_delta,
+    unstable_delta = unstable_delta
+  )
+
+  calibration_note <- if (isTRUE(population_ready$active)) {
+    "Power scaling is applied to fitted conditional-normal quadrature weights and response likelihoods under the fixed latent-regression MML calibration."
+  } else if (identical(fit_method, "MML") &&
+             identical(as.character(fit$config$population_sd_mode %||% "fixed"), "estimated")) {
+    "Power scaling is applied to estimated-SD normal quadrature weights and response likelihoods under the fixed MML calibration."
+  } else if (identical(fit_method, "MML")) {
+    paste0(
+      "Power scaling is applied to fixed normal quadrature weights (SD = ",
+      formatC(as.numeric(fit$config$population_prior_sd %||% 1), digits = 3, format = "fg"),
+      ") and response likelihoods under the fixed MML calibration."
+    )
+  } else {
+    "Power scaling is applied to a post hoc standard-normal reference prior and response likelihoods under the fixed JML calibration."
+  }
+  notes <- c(
+    calibration_note,
+    "The function recomputes EAP summaries by renormalizing finite quadrature-grid weights; it does not refit the model or change the calibration prior.",
+    "Interpret deltas as scoring-stage sensitivity to the prior/likelihood balance, not as evidence that a different fitted model has been estimated.",
+    "Facet stability summaries are exposure-weighted aggregations over scored rows; they identify where unstable scored persons appear in the design, not a causal decomposition of facet parameter instability.",
+    "This is not a full priorsense/PSIS diagnostic and does not compute MAP scores."
+  )
+  if (isTRUE(population_ready$active) && isTRUE(population_ready$auto_person_data)) {
+    notes <- c(
+      notes,
+      "This latent-regression fit uses an intercept-only population model, so `mfrmr` reconstructed the minimal scored-person table from the person IDs in `new_data`."
+    )
+  }
+
+  structure(
+    list(
+      sensitivity = tibble::as_tibble(sensitivity),
+      summary = tibble::as_tibble(summary_tbl),
+      baseline = tibble::as_tibble(baseline),
+      facet_stability = facet_bundle$facet_stability,
+      facet_level_overview = facet_bundle$facet_level_overview,
+      facet_overview = facet_bundle$facet_overview,
+      exposure = facet_bundle$exposure,
+      row_review = prepared$row_review,
+      population_review = population_ready$population_review,
+      input_data = prepared$input_data,
+      person_data = population_ready$input_data,
+      settings = list(
+        interval_level = interval_level,
+        prior_power = prior_power,
+        likelihood_power = likelihood_power,
+        include_reference = include_reference,
+        stable_delta = stable_delta,
+        unstable_delta = unstable_delta,
+        quad_points = as.integer(quad_points),
+        population_sd_mode = as.character(fit$config$population_sd_mode %||% NA_character_),
+        population_prior_sd = as.numeric(fit$config$population_prior_sd_input %||%
+                                           fit$config$population_prior_sd %||% NA_real_),
+        estimated_population_sd = as.numeric(fit$config$estimated_population_sd %||% NA_real_),
+        method = fit_method,
+        source_columns = prepared$prep$source_columns,
+        posterior_basis = if (isTRUE(population_ready$active)) {
+          "population_model"
+        } else {
+          as.character(fit$config$posterior_basis %||% "legacy_mml")
+        },
+        person_id = if (isTRUE(population_ready$active)) {
+          as.character(population_ready$scaffold$person_id %||% person_id %||% "Person")
+        } else {
+          NULL
+        },
+        population_policy = if (isTRUE(population_ready$active)) {
+          as.character(population_ready$scaffold$policy %||% population_policy)
+        } else {
+          NULL
+        },
+        population_formula = if (isTRUE(population_ready$active)) {
+          paste(deparse(population_ready$scaffold$formula), collapse = " ")
+        } else {
+          NULL
+        }
+      ),
+      notes = notes
+    ),
+    class = "mfrm_eap_power_sensitivity"
+  )
+}
+
+#' Summarize EAP power-scaling sensitivity output
+#'
+#' @param object Output from [analyze_eap_power_sensitivity()].
+#' @param digits Number of digits used in numeric summaries.
+#' @param ... Reserved for generic compatibility.
+#'
+#' @return An object of class `summary.mfrm_eap_power_sensitivity` with:
+#' - `summary`: power-condition summaries of deltas from the reference posterior
+#' - `sensitivity`: person-level sensitivity table
+#' - `baseline`: unscaled reference EAP summaries
+#' - `facet_overview`: exposure-weighted stability summary by facet
+#' - `facet_level_overview`: exposure-weighted stability summary by facet level
+#' - `row_review`: row-preparation review
+#' - `population_review`: optional person-level omission review
+#' - `settings`: sensitivity settings
+#' - `notes`: interpretation notes
+#' @seealso [analyze_eap_power_sensitivity()]
+#' @examples
+#' \dontrun{
+#' toy <- load_mfrmr_data("example_core")
+#' keep_people <- unique(toy$Person)[1:18]
+#' toy_fit <- suppressWarnings(
+#'   fit_mfrm(
+#'     toy[toy$Person %in% keep_people, , drop = FALSE],
+#'     "Person", c("Rater", "Criterion"), "Score",
+#'     method = "MML",
+#'     quad_points = 5,
+#'     maxit = 30
+#'   )
+#' )
+#' new_units <- data.frame(
+#'   Person = c("NEW01", "NEW01"),
+#'   Rater = unique(toy$Rater)[1],
+#'   Criterion = unique(toy$Criterion)[1:2],
+#'   Score = c(2, 3)
+#' )
+#' sens <- analyze_eap_power_sensitivity(toy_fit, new_units, prior_power = c(0.8, 1))
+#' summary(sens)
+#' }
+#' @method summary mfrm_eap_power_sensitivity
+#' @export
+summary.mfrm_eap_power_sensitivity <- function(object, digits = 3, ...) {
+  if (!inherits(object, "mfrm_eap_power_sensitivity")) {
+    stop("`object` must be output from analyze_eap_power_sensitivity().", call. = FALSE)
+  }
+  digits <- prediction_validate_integer(digits, "digits", min_value = 0L, positive = FALSE)
+
+  round_df <- function(df) {
+    if (!is.data.frame(df) || nrow(df) == 0) return(df)
+    num_cols <- vapply(df, is.numeric, logical(1))
+    df[num_cols] <- lapply(df[num_cols], round, digits = digits)
+    df
+  }
+
+  out <- list(
+    summary = round_df(object$summary),
+    sensitivity = round_df(object$sensitivity),
+    baseline = round_df(object$baseline),
+    facet_overview = round_df(object$facet_overview),
+    facet_level_overview = round_df(object$facet_level_overview),
+    row_review = round_df(object$row_review),
+    population_review = round_df(object$population_review),
+    settings = object$settings,
+    notes = object$notes %||% character(0),
+    digits = digits
+  )
+  class(out) <- "summary.mfrm_eap_power_sensitivity"
+  out
+}
+
+#' @export
+print.mfrm_eap_power_sensitivity <- function(x, ...) {
+  print(summary(x), ...)
+  invisible(x)
+}
+
+#' @export
+print.summary.mfrm_eap_power_sensitivity <- function(x, ...) {
+  digits <- prediction_validate_integer(x$digits %||% 3L, "digits", min_value = 0L, positive = FALSE)
+  round_df <- function(df) {
+    if (!is.data.frame(df) || nrow(df) == 0) return(df)
+    num_cols <- vapply(df, is.numeric, logical(1))
+    df[num_cols] <- lapply(df[num_cols], round, digits = digits)
+    df
+  }
+  preview_df <- function(df, n = 10L) {
+    if (!is.data.frame(df) || nrow(df) == 0) return(df)
+    utils::head(df, n = n)
+  }
+
+  cat("mfrmr EAP Power Sensitivity Summary\n")
+  if (!is.null(x$summary) && nrow(x$summary) > 0) {
+    cat("\nPower-condition summary\n")
+    print(round_df(as.data.frame(x$summary)), row.names = FALSE)
+  }
+  if (!is.null(x$sensitivity) && nrow(x$sensitivity) > 0) {
+    cat("\nPerson-level sensitivity (preview)\n")
+    print(round_df(as.data.frame(preview_df(x$sensitivity))), row.names = FALSE)
+  }
+  if (!is.null(x$facet_overview) && nrow(x$facet_overview) > 0) {
+    cat("\nFacet stability overview\n")
+    print(round_df(as.data.frame(x$facet_overview)), row.names = FALSE)
+  }
+  if (!is.null(x$facet_level_overview) && nrow(x$facet_level_overview) > 0) {
+    cat("\nFacet-level stability (preview)\n")
+    print(round_df(as.data.frame(preview_df(x$facet_level_overview))), row.names = FALSE)
+  }
+  if (!is.null(x$row_review) && nrow(x$row_review) > 0) {
+    cat("\nRow preparation review\n")
+    print(round_df(as.data.frame(x$row_review)), row.names = FALSE)
+  }
+  if (!is.null(x$population_review) && nrow(x$population_review) > 0) {
+    cat("\nPopulation-model omission review\n")
+    print(round_df(as.data.frame(x$population_review)), row.names = FALSE)
+  }
+  if (!is.null(x$settings) && length(x$settings) > 0L) {
+    cat("\nSettings\n")
+    print(bundle_settings_table(x$settings), row.names = FALSE)
+  }
+  if (length(x$notes %||% character(0)) > 0L) {
+    cat("\nNotes\n")
+    for (line in x$notes) cat(" - ", line, "\n", sep = "")
+  }
+  invisible(x)
 }
 
 #' Summarize posterior unit scoring output
@@ -1420,6 +2179,250 @@ print.summary.mfrm_unit_prediction <- function(x, ...) {
     for (line in x$notes) cat(" - ", line, "\n", sep = "")
   }
   invisible(x)
+}
+
+eap_power_plot_metric_choices <- function(type) {
+  if (type %in% c("facet_stability", "facet_heatmap")) {
+    c(
+      "MeanAbsDeltaEstimate", "MaxAbsDeltaEstimate",
+      "MeanDeltaEstimate", "MeanAbsDeltaSD", "MaxAbsDeltaSD", "MeanDeltaSD"
+    )
+  } else {
+    c("AbsDeltaEstimate", "DeltaEstimate", "AbsDeltaSD", "DeltaSD", "Estimate", "SD")
+  }
+}
+
+eap_power_draw_heatmap <- function(df,
+                                   row_col,
+                                   metric,
+                                   main,
+                                   xlab = "Power condition",
+                                   ylab = NULL) {
+  if (!is.data.frame(df) || nrow(df) == 0L) return(invisible(NULL))
+  rows <- unique(as.character(df[[row_col]]))
+  cols <- unique(as.character(df$Condition[order(df$ConditionOrder)]))
+  mat <- matrix(NA_real_, nrow = length(rows), ncol = length(cols),
+                dimnames = list(rows, cols))
+  for (i in seq_len(nrow(df))) {
+    r <- as.character(df[[row_col]][i])
+    c <- as.character(df$Condition[i])
+    mat[r, c] <- suppressWarnings(as.numeric(df[[metric]][i]))
+  }
+  mat_plot <- mat[rev(seq_len(nrow(mat))), , drop = FALSE]
+  zlim <- range(mat_plot, finite = TRUE)
+  if (!all(is.finite(zlim)) || diff(zlim) == 0) {
+    zlim <- c(0, max(abs(zlim), 1e-6))
+  }
+  pal <- grDevices::colorRampPalette(c("#2b6cb0", "white", "#b83227"))(101)
+  graphics::image(
+    x = seq_len(ncol(mat_plot)),
+    y = seq_len(nrow(mat_plot)),
+    z = t(mat_plot),
+    col = pal,
+    zlim = zlim,
+    axes = FALSE,
+    xlab = xlab,
+    ylab = ylab %||% row_col,
+    main = main
+  )
+  graphics::axis(1, at = seq_len(ncol(mat_plot)), labels = FALSE)
+  draw_rotated_x_labels(seq_len(ncol(mat_plot)), colnames(mat_plot), srt = 45, cex = 0.72)
+  graphics::axis(2, at = seq_len(nrow(mat_plot)), labels = rownames(mat_plot), las = 2, cex.axis = 0.72)
+  graphics::box()
+  invisible(mat)
+}
+
+eap_power_draw_curve <- function(df, metric, main) {
+  if (!is.data.frame(df) || nrow(df) == 0L) return(invisible(NULL))
+  df <- df[order(df$Person, df$ConditionOrder), , drop = FALSE]
+  persons <- unique(as.character(df$Person))
+  cols <- grDevices::hcl.colors(max(3L, length(persons)), palette = "Dark 3")
+  ylim <- range(df[[metric]], finite = TRUE)
+  if (!all(is.finite(ylim)) || diff(ylim) == 0) ylim <- ylim + c(-0.01, 0.01)
+  graphics::plot(
+    NA,
+    xlim = range(df$ConditionOrder, finite = TRUE),
+    ylim = ylim,
+    xlab = "Power condition",
+    ylab = metric,
+    main = main,
+    axes = FALSE
+  )
+  graphics::axis(2)
+  cond_labels <- unique(df[order(df$ConditionOrder), c("ConditionOrder", "Condition")])
+  graphics::axis(1, at = cond_labels$ConditionOrder, labels = FALSE)
+  draw_rotated_x_labels(cond_labels$ConditionOrder, cond_labels$Condition, srt = 45, cex = 0.72)
+  graphics::abline(h = 0, col = "grey75", lty = 2)
+  for (i in seq_along(persons)) {
+    sub <- df[df$Person == persons[i], , drop = FALSE]
+    graphics::lines(sub$ConditionOrder, sub[[metric]], type = "b", pch = 19,
+                    col = cols[i], lwd = 1.2)
+  }
+  if (length(persons) <= 10L) {
+    graphics::legend("topright", legend = persons, col = cols[seq_along(persons)],
+                     lty = 1, pch = 19, bty = "n", cex = 0.72)
+  }
+  invisible(NULL)
+}
+
+eap_power_draw_bar <- function(df, metric, main) {
+  if (!is.data.frame(df) || nrow(df) == 0L) return(invisible(NULL))
+  flag_cols <- c(stable = "#238b45", review = "#d95f02", unstable = "#b11f24", unknown = "#6b7280")
+  flags <- as.character(df$StabilityFlag %||% "unknown")
+  cols <- unname(flag_cols[flags])
+  cols[is.na(cols)] <- flag_cols[["unknown"]]
+  vals <- suppressWarnings(as.numeric(df[[metric]]))
+  vals[!is.finite(vals)] <- 0
+  old_mar <- graphics::par("mar")
+  on.exit(graphics::par(mar = old_mar), add = TRUE)
+  graphics::par(mar = c(4.5, 9.5, 3.5, 1.5))
+  mids <- graphics::barplot(
+    vals,
+    horiz = TRUE,
+    names.arg = FALSE,
+    col = cols,
+    border = "white",
+    xlab = metric,
+    main = main,
+    las = 1
+  )
+  graphics::axis(2, at = mids, labels = truncate_axis_label(df$DisplayLabel, width = 34L),
+                 las = 2, cex.axis = 0.72)
+  graphics::abline(v = 0, col = "grey60")
+  graphics::legend("bottomright", legend = names(flag_cols), fill = flag_cols, bty = "n", cex = 0.75)
+  invisible(NULL)
+}
+
+#' Plot EAP power-scaling sensitivity diagnostics
+#'
+#' @param x Output from [analyze_eap_power_sensitivity()].
+#' @param type Plot type: `"person_heatmap"`, `"person_curve"`,
+#'   `"facet_stability"`, or `"facet_heatmap"`.
+#' @param metric Sensitivity metric to plot. Defaults to absolute EAP-delta
+#'   metrics for heatmaps and facet summaries.
+#' @param facet Optional facet name used by `"facet_stability"` and
+#'   `"facet_heatmap"` to focus on one facet.
+#' @param top_n Maximum number of persons or facet levels to display.
+#' @param draw Logical. If `FALSE`, return an `mfrm_plot_data` object without
+#'   drawing.
+#' @param ... Reserved for future graphical options.
+#'
+#' @return If `draw = FALSE`, an `mfrm_plot_data` object returned visibly
+#'   without drawing. If `draw = TRUE`, the plot is drawn with base graphics
+#'   and the same `mfrm_plot_data` object is returned invisibly.
+#' @seealso [analyze_eap_power_sensitivity()], [as_ggplot()]
+#' @export
+plot.mfrm_eap_power_sensitivity <- function(x,
+                                            type = c("person_heatmap", "person_curve",
+                                                     "facet_stability", "facet_heatmap"),
+                                            metric = NULL,
+                                            facet = NULL,
+                                            top_n = 20,
+                                            draw = TRUE,
+                                            ...) {
+  if (!inherits(x, "mfrm_eap_power_sensitivity")) {
+    stop("`x` must be output from analyze_eap_power_sensitivity().", call. = FALSE)
+  }
+  type <- match.arg(type)
+  choices <- eap_power_plot_metric_choices(type)
+  metric <- as.character(metric[1] %||% choices[1])
+  if (!metric %in% choices) {
+    stop("`metric` must be one of: ", paste(choices, collapse = ", "), ".", call. = FALSE)
+  }
+  top_n <- prediction_validate_integer(top_n[1] %||% 20L, "top_n", positive = TRUE)
+
+  if (type %in% c("person_heatmap", "person_curve")) {
+    plot_df <- as.data.frame(x$sensitivity, stringsAsFactors = FALSE)
+    if (identical(type, "person_heatmap")) {
+      person_rank <- plot_df |>
+        dplyr::group_by(.data$Person) |>
+        dplyr::summarise(.rank_value = max(.data[[metric]], na.rm = TRUE), .groups = "drop") |>
+        dplyr::arrange(dplyr::desc(.data$.rank_value))
+      keep_person <- utils::head(person_rank$Person, n = top_n)
+      plot_df <- plot_df[plot_df$Person %in% keep_person, , drop = FALSE]
+    }
+    plot_df$DisplayLabel <- as.character(plot_df$Person)
+  } else if (identical(type, "facet_stability")) {
+    plot_df <- as.data.frame(x$facet_level_overview, stringsAsFactors = FALSE)
+    if (!is.null(facet)) {
+      plot_df <- plot_df[plot_df$Facet %in% as.character(facet), , drop = FALSE]
+    }
+    if (nrow(plot_df) == 0L) {
+      stop("No facet stability rows are available for this plot.", call. = FALSE)
+    }
+    plot_df <- plot_df[order(plot_df[[metric]], decreasing = TRUE), , drop = FALSE]
+    plot_df <- utils::head(plot_df, n = top_n)
+    plot_df <- plot_df[order(plot_df[[metric]], decreasing = FALSE), , drop = FALSE]
+    plot_df$DisplayLabel <- paste(plot_df$Facet, plot_df$Level, sep = ": ")
+  } else {
+    plot_df <- as.data.frame(x$facet_stability, stringsAsFactors = FALSE)
+    if (!is.null(facet)) {
+      plot_df <- plot_df[plot_df$Facet %in% as.character(facet), , drop = FALSE]
+    } else if (nrow(x$facet_overview %||% data.frame()) > 0L) {
+      overview <- as.data.frame(x$facet_overview, stringsAsFactors = FALSE)
+      overview <- overview[order(overview$MaxAbsDeltaEstimate, decreasing = TRUE), , drop = FALSE]
+      plot_df <- plot_df[plot_df$Facet == overview$Facet[1], , drop = FALSE]
+    }
+    if (nrow(plot_df) == 0L) {
+      stop("No facet stability rows are available for this plot.", call. = FALSE)
+    }
+    level_rank <- plot_df |>
+      dplyr::group_by(.data$Facet, .data$Level) |>
+      dplyr::summarise(.rank_value = max(.data[[metric]], na.rm = TRUE), .groups = "drop") |>
+      dplyr::arrange(dplyr::desc(.data$.rank_value))
+    keep <- utils::head(paste(level_rank$Facet, level_rank$Level, sep = "\r"), n = top_n)
+    plot_df$.key <- paste(plot_df$Facet, plot_df$Level, sep = "\r")
+    plot_df <- plot_df[plot_df$.key %in% keep, , drop = FALSE]
+    plot_df$DisplayLabel <- paste(plot_df$Facet, plot_df$Level, sep = ": ")
+  }
+
+  title <- switch(
+    type,
+    person_heatmap = "EAP power sensitivity by person",
+    person_curve = "EAP power sensitivity curves",
+    facet_stability = "Facet-level EAP sensitivity stability",
+    facet_heatmap = "Facet-level EAP sensitivity by power condition"
+  )
+  subtitle <- paste0(
+    "Metric: ", metric,
+    "; stable <= ", formatC(x$settings$stable_delta %||% 0.05, format = "fg", digits = 3),
+    ", unstable >= ", formatC(x$settings$unstable_delta %||% 0.15, format = "fg", digits = 3)
+  )
+  payload <- list(
+    type = type,
+    metric = metric,
+    data = tibble::as_tibble(plot_df),
+    sensitivity = x$sensitivity,
+    summary = x$summary,
+    facet_stability = x$facet_stability,
+    facet_level_overview = x$facet_level_overview,
+    facet_overview = x$facet_overview,
+    settings = list(
+      type = type,
+      metric = metric,
+      facet = facet,
+      top_n = top_n,
+      stable_delta = x$settings$stable_delta %||% 0.05,
+      unstable_delta = x$settings$unstable_delta %||% 0.15
+    ),
+    title = title,
+    subtitle = subtitle
+  )
+  out <- new_mfrm_plot_data("eap_power_sensitivity", payload)
+  if (!isTRUE(draw)) {
+    return(out)
+  }
+
+  if (identical(type, "person_heatmap")) {
+    eap_power_draw_heatmap(plot_df, row_col = "Person", metric = metric, main = title, ylab = "Person")
+  } else if (identical(type, "person_curve")) {
+    eap_power_draw_curve(plot_df, metric = metric, main = title)
+  } else if (identical(type, "facet_stability")) {
+    eap_power_draw_bar(plot_df, metric = metric, main = title)
+  } else {
+    eap_power_draw_heatmap(plot_df, row_col = "DisplayLabel", metric = metric, main = title, ylab = "Facet level")
+  }
+  invisible(out)
 }
 
 #' Sample approximate plausible values under fitted posterior scoring

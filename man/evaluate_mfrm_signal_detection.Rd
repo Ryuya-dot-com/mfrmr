@@ -42,7 +42,8 @@ evaluate_mfrm_signal_detection(
   bias_max_iter = 2,
   bias_p_cut = 0.05,
   bias_abs_t = 2,
-  seed = NULL
+  seed = NULL,
+  progress = interactive()
 )
 }
 \arguments{
@@ -158,6 +159,13 @@ target DIF detection. When omitted, the effective default is \code{0.43} for
 \item{bias_abs_t}{Absolute t cutoff for counting a target bias screen-positive result.}
 
 \item{seed}{Optional seed for reproducible replications.}
+
+\item{progress}{Logical. Whether to show a progress bar across
+design-by-replication screening cells, with status text for data
+generation, refitting, diagnostics, DIF analysis, and bias screening.
+Defaults to \code{\link[=interactive]{interactive()}}, so interactive exploratory runs show progress
+while non-interactive tests, scripts, and report rendering stay quiet. Set
+\code{TRUE} or \code{FALSE} explicitly to override.}
 }
 \value{
 An object of class \code{mfrm_signal_detection} with:
@@ -169,6 +177,8 @@ alongside the canonical internal columns.
 design-variable alias columns when applicable.
 \item \code{rep_overview}: run-level status and timing, with the same design-variable
 alias columns when applicable.
+\item \code{runtime}: run-level elapsed-time metadata for auditing long signal-
+detection simulations after completion.
 \item \code{design_descriptor}: role-based design-variable metadata used by planning
 summaries and plots
 \item \code{planning_scope}: explicit record of the current planning contract

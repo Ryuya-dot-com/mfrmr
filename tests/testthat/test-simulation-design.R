@@ -3512,6 +3512,14 @@ test_that("evaluate_mfrm_design returns usable summary and plot data", {
   expect_s3_class(sim_eval, "mfrm_design_evaluation")
   expect_true(is.data.frame(sim_eval$results))
   expect_true(is.data.frame(sim_eval$rep_overview))
+  expect_true(is.data.frame(sim_eval$runtime))
+  expect_true(all(c("TotalElapsedSec", "DesignConditions", "PlannedCells",
+                    "CompletedCells", "FailedRuns", "MeanCellElapsedSec",
+                    "ProgressShown") %in% names(sim_eval$runtime)))
+  expect_equal(sim_eval$runtime$DesignConditions[1], 2L)
+  expect_equal(sim_eval$runtime$PlannedCells[1], 2L)
+  expect_equal(sim_eval$runtime$CompletedCells[1], 2L)
+  expect_false(sim_eval$runtime$ProgressShown[1])
   expect_true(all(c("Person", "Rater", "Criterion") %in% unique(sim_eval$results$Facet)))
   expect_true(all(c("SeverityRMSERaw", "SeverityBiasRaw") %in% names(sim_eval$results)))
   expect_true(all(c("GeneratorModel", "GeneratorStepFacet", "FitModel", "FitStepFacet",
@@ -3521,6 +3529,13 @@ test_that("evaluate_mfrm_design returns usable summary and plot data", {
   s <- summary(sim_eval)
   expect_s3_class(s, "summary.mfrm_design_evaluation")
   expect_true(is.data.frame(s$overview))
+  expect_true(is.data.frame(s$runtime))
+  expect_true(is.data.frame(s$reading_order))
+  expect_true(is.data.frame(s$next_actions))
+  expect_true(is.data.frame(s$reporting_notes))
+  expect_true(all(c("Step", "Route", "WhatToRead") %in% names(s$reading_order)))
+  expect_true(all(c("Priority", "Area", "Status", "NextAction") %in% names(s$next_actions)))
+  expect_true(any(grepl("recommend_mfrm_design", s$next_actions$NextAction, fixed = TRUE)))
   expect_true(is.data.frame(s$design_summary))
   expect_true(all(c("Facet", "MeanSeparation", "MeanSeverityRMSE", "ConvergenceRate",
                     "McseSeparation", "McseSeverityRMSE", "McseConvergenceRate") %in% names(s$design_summary)))
@@ -3534,13 +3549,31 @@ test_that("evaluate_mfrm_design returns usable summary and plot data", {
   expect_true(is.data.frame(s$future_branch_active_summary$recommendation_table))
   printed <- capture.output(print(summary(sim_eval)))
   expect_true(any(grepl("mfrmr Design Evaluation Summary", printed, fixed = TRUE)))
+  expect_true(any(grepl("Runtime", printed, fixed = TRUE)))
+  expect_true(any(grepl("Recommended reading order", printed, fixed = TRUE)))
+  expect_true(any(grepl("Next actions", printed, fixed = TRUE)))
   expect_true(any(grepl("Future arbitrary-facet planning scaffold", printed, fixed = TRUE)))
 
   p <- plot(sim_eval, facet = "Rater", metric = "separation", x_var = "n_person", draw = FALSE)
+  expect_s3_class(p, "mfrm_design_evaluation_plot_data")
   expect_true(is.list(p))
   expect_true(is.data.frame(p$data))
   expect_equal(p$facet, "Rater")
   expect_equal(p$metric_col, "MeanSeparation")
+  expect_true(all(c("display_metric", "guidance", "figure_recipes",
+                    "interpretation_note") %in% names(p)))
+  expect_s3_class(p$figure_recipes, "data.frame")
+  expect_true(any(p$figure_recipes$FigureID == "selected_design_metric"))
+  expect_true(any(grepl("design-planning scan", p$guidance, fixed = TRUE)))
+  expect_match(p$interpretation_note, "recommend_mfrm_design", fixed = TRUE)
+  if (requireNamespace("ggplot2", quietly = TRUE)) {
+    expect_s3_class(as_ggplot(p), "ggplot")
+    expect_s3_class(
+      as_ggplot(sim_eval, facet = "Rater", metric = "separation",
+                x_var = "n_person"),
+      "ggplot"
+    )
+  }
 })
 
 test_that("recommend_mfrm_design returns threshold tables", {
@@ -3790,13 +3823,38 @@ test_that("evaluate_mfrm_signal_detection returns usable detection summaries", {
   expect_s3_class(sig_eval, "mfrm_signal_detection")
   expect_true(is.data.frame(sig_eval$results))
   expect_true(is.data.frame(sig_eval$rep_overview))
+  expect_true(is.data.frame(sig_eval$runtime))
+  expect_true(all(c("TotalElapsedSec", "DesignConditions", "PlannedCells",
+                    "CompletedCells", "FailedRuns", "MeanCellElapsedSec",
+                    "ProgressShown") %in% names(sig_eval$runtime)))
+  expect_equal(sig_eval$runtime$DesignConditions[1], 2L)
+  expect_equal(sig_eval$runtime$PlannedCells[1], 2L)
+  expect_equal(sig_eval$runtime$CompletedCells[1], 2L)
+  expect_false(sig_eval$runtime$ProgressShown[1])
   expect_true(all(c("DIFDetected", "BiasDetected", "BiasScreenMetricAvailable",
                     "DIFFalsePositiveRate", "BiasScreenFalsePositiveRate") %in%
                     names(sig_eval$results)))
+  expect_error(
+    evaluate_mfrm_signal_detection(
+      n_person = 8,
+      n_rater = 2,
+      n_criterion = 2,
+      reps = 1,
+      progress = NA
+    ),
+    "`progress` must be a single TRUE/FALSE value"
+  )
 
   s_sig <- summary(sig_eval)
   expect_s3_class(s_sig, "summary.mfrm_signal_detection")
   expect_true(is.data.frame(s_sig$overview))
+  expect_true(is.data.frame(s_sig$runtime))
+  expect_true(is.data.frame(s_sig$reading_order))
+  expect_true(is.data.frame(s_sig$next_actions))
+  expect_true(is.data.frame(s_sig$reporting_notes))
+  expect_true(all(c("Step", "Route", "WhatToRead") %in% names(s_sig$reading_order)))
+  expect_true(all(c("Priority", "Area", "Status", "NextAction") %in% names(s_sig$next_actions)))
+  expect_true(any(grepl("BiasScreenRate", s_sig$reporting_notes$ReportingBoundary, fixed = TRUE)))
   expect_true(is.data.frame(s_sig$detection_summary))
   expect_true(all(c("DIFPower", "BiasScreenRate",
                     "BiasScreenFalsePositiveRate",
@@ -3810,22 +3868,45 @@ test_that("evaluate_mfrm_signal_detection returns usable detection summaries", {
   expect_true(is.data.frame(s_sig$future_branch_active_summary$recommendation_table))
   printed_sig <- capture.output(print(summary(sig_eval)))
   expect_true(any(grepl("mfrmr Signal Detection Summary", printed_sig, fixed = TRUE)))
+  expect_true(any(grepl("Runtime", printed_sig, fixed = TRUE)))
+  expect_true(any(grepl("Recommended reading order", printed_sig, fixed = TRUE)))
+  expect_true(any(grepl("Reporting notes", printed_sig, fixed = TRUE)))
   expect_true(any(grepl("Future arbitrary-facet planning scaffold", printed_sig, fixed = TRUE)))
 
   p_sig <- plot(sig_eval, signal = "dif", metric = "power", x_var = "n_person", draw = FALSE)
+  expect_s3_class(p_sig, "mfrm_signal_detection_plot_data")
   expect_true(is.list(p_sig))
   expect_true(is.data.frame(p_sig$data))
   expect_equal(p_sig$metric_col, "DIFPower")
   expect_equal(p_sig$display_metric, "DIF target-flag rate")
   expect_match(p_sig$interpretation_note, "DIF-side rates summarize target/non-target flagging behavior", fixed = TRUE)
+  expect_true(all(c("guidance", "figure_recipes", "metric_requested") %in%
+                    names(p_sig)))
+  expect_s3_class(p_sig$figure_recipes, "data.frame")
+  expect_true(any(p_sig$figure_recipes$FigureID == "dif_target_flag_rate"))
+  expect_true(any(grepl("DIF-side scan", p_sig$guidance, fixed = TRUE)))
+  if (requireNamespace("ggplot2", quietly = TRUE)) {
+    expect_s3_class(as_ggplot(p_sig), "ggplot")
+    expect_s3_class(
+      as_ggplot(sig_eval, signal = "dif", metric = "power",
+                x_var = "n_person"),
+      "ggplot"
+    )
+  }
 
   p_sig_bias <- plot(sig_eval, signal = "bias", metric = "power", x_var = "n_person", draw = FALSE)
   expect_equal(p_sig_bias$metric_col, "BiasScreenRate")
   expect_equal(p_sig_bias$display_metric, "Bias screening hit rate")
   expect_match(p_sig_bias$interpretation_note, "not formal inferential power or alpha estimates", fixed = TRUE)
+  expect_true(any(grepl("not formal power", p_sig_bias$guidance, fixed = TRUE)))
+  expect_true(any(grepl("not formal inferential power",
+                        p_sig_bias$figure_recipes$CaptionBoundary,
+                        fixed = TRUE)))
   p_sig_bias_screen <- plot(sig_eval, signal = "bias", metric = "screen_rate", x_var = "n_person", draw = FALSE)
   expect_equal(p_sig_bias_screen$metric_col, "BiasScreenRate")
   expect_equal(p_sig_bias_screen$display_metric, "Bias screening hit rate")
+  expect_equal(p_sig_bias_screen$metric_requested, "screen_rate")
+  expect_true(any(p_sig_bias_screen$figure_recipes$Metric == "screen_rate"))
 
   expect_true(any(sig_eval$results$DIFDetected, na.rm = TRUE))
   expect_true(all(is.finite(s_sig$detection_summary$BiasScreenMetricAvailabilityRate)))
@@ -3888,10 +3969,20 @@ test_that("predict_mfrm_population returns scenario-level forecast from sim_spec
   expect_s3_class(pred, "mfrm_population_prediction")
   expect_true(is.data.frame(pred$forecast))
   expect_true(is.data.frame(pred$overview))
+  expect_true(is.data.frame(pred$runtime))
+  expect_true(all(c(
+    "TotalElapsedSec", "DesignConditions", "PlannedCells", "CompletedCells",
+    "FailedRuns", "MeanCellElapsedSec", "ProgressShown"
+  ) %in% names(pred$runtime)))
+  expect_equal(pred$runtime$DesignConditions[1], 1L)
+  expect_equal(pred$runtime$PlannedCells[1], 1L)
+  expect_equal(pred$runtime$CompletedCells[1], 1L)
+  expect_false(pred$runtime$ProgressShown[1])
   expect_true(inherits(pred$sim_spec, "mfrm_sim_spec"))
   expect_equal(pred$sim_spec$n_person, 24L)
   expect_true(is.list(pred$ademp))
   expect_equal(pred$settings$source, "mfrm_sim_spec")
+  expect_false(pred$settings$progress)
   expect_identical(pred$facet_names, c("Judge", "Task"))
   expect_equal(pred$design_variable_aliases[["n_rater"]], "n_judge")
   expect_equal(pred$design_variable_aliases[["n_criterion"]], "n_task")
@@ -3906,6 +3997,13 @@ test_that("predict_mfrm_population returns scenario-level forecast from sim_spec
   s_pred <- summary(pred)
   expect_s3_class(s_pred, "summary.mfrm_population_prediction")
   expect_true(is.data.frame(s_pred$forecast))
+  expect_true(is.data.frame(s_pred$runtime))
+  expect_true(is.data.frame(s_pred$reading_order))
+  expect_true(is.data.frame(s_pred$next_actions))
+  expect_true(is.data.frame(s_pred$reporting_notes))
+  expect_true(all(c("Step", "Route", "WhatToRead") %in% names(s_pred$reading_order)))
+  expect_true(all(c("Priority", "Area", "Status", "NextAction") %in% names(s_pred$next_actions)))
+  expect_true(any(grepl("scenario-level forecast", s_pred$reporting_notes$RecommendedWording, fixed = TRUE)))
   expect_identical(s_pred$facet_names, c("Judge", "Task"))
   expect_equal(s_pred$design_variable_aliases[["n_rater"]], "n_judge")
   expect_true(is.data.frame(s_pred$design_descriptor))
@@ -3921,7 +4019,15 @@ test_that("predict_mfrm_population returns scenario-level forecast from sim_spec
   expect_true(all(c("Facet", "MeanSeparation", "McseSeparation") %in% names(s_pred$forecast)))
   printed_pred <- capture.output(print(summary(pred)))
   expect_true(any(grepl("mfrmr Population Prediction Summary", printed_pred, fixed = TRUE)))
+  expect_true(any(grepl("Runtime", printed_pred, fixed = TRUE)))
+  expect_true(any(grepl("Recommended reading order", printed_pred, fixed = TRUE)))
+  expect_true(any(grepl("Next actions", printed_pred, fixed = TRUE)))
   expect_true(any(grepl("Future arbitrary-facet planning scaffold", printed_pred, fixed = TRUE)))
+
+  expect_error(
+    predict_mfrm_population(sim_spec = spec, n_person = 24, reps = 1, progress = NA),
+    "`progress` must be a single TRUE/FALSE value"
+  )
 })
 
 test_that("predict_mfrm_population can derive its specification from a fitted model", {

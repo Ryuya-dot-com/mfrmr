@@ -36,6 +36,13 @@ test_that("build_weighting_review returns a structured review bundle", {
     "reporting_map", "support_status", "notes", "settings"
   ) %in% names(audit)))
   expect_true(all(c(
+    "ReferencePopulationSDMode", "ComparisonPopulationSDMode",
+    "ReferenceEstimatedPopulationSD", "ComparisonEstimatedPopulationSD",
+    "PopulationSDModeAligned"
+  ) %in% names(audit$overview)))
+  expect_true(isTRUE(audit$overview$PopulationSDModeAligned[1]))
+  expect_true(any(audit$status$Item == "Population metric"))
+  expect_true(all(c(
     "Facet", "Level", "ReferenceEstimate", "ComparisonEstimate",
     "DeltaEstimate", "AbsDeltaEstimate", "ReferenceRank", "ComparisonRank",
     "RankShift"

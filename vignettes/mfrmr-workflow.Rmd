@@ -71,13 +71,29 @@ study1_alt <- load_mfrmr_data("study1")
 identical(names(ej2021_study1), names(study1_alt))
 ```
 
-## Minimal Runnable Example
+The `study*` objects are synthetic datasets whose dimensions and rating-scale
+context are informed by Eckes and Jin (2021). They are not the original TestDaF
+operational data, and they do not reproduce the paper's Bayesian FM-SC
+estimates. Use them to rehearse a realistic `mfrmr` workflow before moving to
+user data.
+
+## Minimal Smoke Example
 
 Start with the packaged `example_core` dataset. It is intentionally compact,
 category-complete, and generated from a single latent trait plus facet main
 effects so that help-page examples stay fast without relying on undersized toy
-data. The same object is also available via
-`data("mfrmr_example_core", package = "mfrmr")`:
+data. Use it to check the route shape, not to draw substantive conclusions.
+It is package-generated and not derived from a paper dataset.
+The Study 1 workflow below is the more realistic example for interpretation.
+The same compact object is also available via `data("mfrmr_example_core",
+package = "mfrmr")`:
+
+For a deliberately narrow first-analysis route, start with:
+
+```{r beginner-guide}
+mfrmr_output_guide("beginner")[, c("Question", "MainFunction", "NextStep")]
+mfrmr_minimum_report_checklist()[, c("Section", "ReportItem", "Required")]
+```
 
 ```{r toy-setup}
 data("mfrmr_example_core", package = "mfrmr")
@@ -98,6 +114,33 @@ summary(fit_toy)$overview
 summary(diag_toy)$overview
 names(plot(fit_toy, draw = FALSE))
 ```
+
+## First-Screen and File Handoff
+
+After fitting, use `mfrm_results()` as the compact result surface before opening
+specialist helpers. The short reader-first path is:
+
+```{r first-screen-handoff, eval = FALSE}
+res_toy <- mfrm_results(fit_toy)
+summary(res_toy, view = "brief")
+plot(res_toy, type = "qc", preset = "publication")
+
+report_toy <- mfrm_report(res_toy)
+summary(report_toy, view = "reader")
+
+export_mfrm_results(
+  res_toy,
+  output_dir = tempfile("mfrmr-starter-"),
+  preset = "starter",
+  zip_bundle = TRUE,
+  overwrite = TRUE
+)
+```
+
+Open `index.html` first in the starter export. The export separates compact
+summary files, report-readiness tables, primary evidence summaries, and replay
+artifacts so a reader does not have to scan every generated CSV. Replace
+`fit_toy` with the full-data `fit` below when preparing a real analysis.
 
 ## Diagnostics and Reporting
 
@@ -311,6 +354,92 @@ bias_rep <- bias_interaction_report(bias, top_n = 20)
 plot_bias_interaction(bias_rep, plot = "scatter")
 ```
 
+## Observed-Score G-Study / D-Study Complement
+
+MFRM diagnostics and G-theory answer related but different questions. The fitted
+MFRM reports Rasch/FACETS-style separation, strata, fit, and facet estimates on
+the fitted logit scale. `mfrm_generalizability()` reuses the rating data for an
+observed-score G-study: it asks how observed score variance is partitioned
+across the object of measurement, random measurement facets, selected
+interactions, and residual/error. Treat `G` and `Phi` as design-planning
+coefficients, not as MFRM separation reliability.
+
+Use the main-effects G-study as the baseline. Add `random_interactions` only
+when a specific interaction is substantively important, and compare it with the
+baseline rather than replacing the baseline silently. A singular
+interaction-expanded fit is useful evidence that the observed design may not
+support that variance partition.
+
+```{r g-study-complement, eval = FALSE}
+if (requireNamespace("lme4", quietly = TRUE)) {
+  gt_main <- mfrm_generalizability(fit_toy)
+  summary(gt_main)
+
+  design_check <- check_mfrm_generalizability_design(
+    fit_toy,
+    random_interactions = c("Person:Rater", "Rater:Criterion")
+  )
+  design_check$interaction_overview
+  design_check$highest_order_review
+  plot(design_check, draw = FALSE)
+  plot(design_check, type = "highest_order", draw = FALSE)
+  plot(gt_main, type = "design_check", draw = FALSE)
+
+  gt_compare <- compare_mfrm_generalizability(
+    fit_toy,
+    random_interactions = c("Person:Rater", "Rater:Criterion"),
+    design_grid = expand.grid(Rater = 2:4, Criterion = c(2, 4)),
+    residual_scaling = "sensitivity"
+  )
+  gt_compare$summary
+  gt_compare$comparison_review
+  gt_compare$design_checks$overview
+  gt_compare$variance_delta
+  gt_compare$warnings
+  plot(gt_compare, type = "design_check", draw = FALSE)
+  plot(gt_compare, draw = FALSE)
+  plot(gt_compare, type = "variance_delta", component_type = "object_interaction",
+       draw = FALSE)
+  plot(gt_compare, type = "d_study_overlay", metric = "Phi",
+       x_var = "n_Rater", panel_by = "ResidualScaling", draw = FALSE)
+  gt_compare_bundle <- build_summary_table_bundle(
+    gt_compare,
+    appendix_preset = "recommended"
+  )
+  gt_compare_bundle$tables$comparison_review
+  export_summary_appendix(
+    gt_compare,
+    output_dir = tempfile("mfrmr-gstudy-appendix-"),
+    prefix = "mfrmr_gstudy",
+    preset = "recommended"
+  )
+
+  gt_boot <- bootstrap_mfrm_generalizability(
+    fit_toy,
+    reps = 50,
+    seed = 2026
+  )
+  summary(gt_boot)
+
+  ds <- mfrm_d_study(
+    gt_main,
+    expand.grid(Rater = 2:4, Criterion = c(2, 4)),
+    residual_scaling = "sensitivity"
+  )
+  plot(ds, type = "heatmap", metric = "Phi", draw = FALSE)
+
+  analysis_review <- mfrm_analysis_audit(
+    fit_toy,
+    diagnostics = diag_toy,
+    generalizability = gt_main,
+    generalizability_bootstrap = gt_boot,
+    comparison = gt_compare,
+    d_study = ds
+  )
+  analysis_review$next_actions
+}
+```
+
 ## Design Simulation and Prediction
 
 The package also supports a separate simulation/prediction layer. The key
@@ -345,6 +474,9 @@ recovery <- suppressWarnings(
   )
 )
 
+summary(recovery)$reading_order
+summary(recovery)$next_actions
+summary(recovery)$reporting_notes
 summary(recovery)$recovery_summary[, c("ParameterType", "Facet", "RMSE", "Bias")]
 plot(recovery, type = "summary", metric = "rmse", draw = FALSE)$data$plot_table
 
@@ -412,7 +544,10 @@ pred_pop <- predict_mfrm_population(
   seed = 1
 )
 
+summary(pred_pop)$reading_order
+summary(pred_pop)$next_actions
 summary(pred_pop)$forecast[, c("Facet", "MeanSeparation", "McseSeparation")]
+summary(pred_pop)$reporting_notes
 
 keep_people <- unique(toy$Person)[1:18]
 toy_mml <- suppressWarnings(
@@ -445,9 +580,10 @@ For a report or appendix handoff, pass the recovery objects through the same
 summary-table export route used by the rest of the package:
 
 ```{r recovery-export, eval = FALSE}
+recovery_out_dir <- tempfile("mfrmr-recovery-appendix-")
 export_summary_appendix(
   list(recovery = recovery, recovery_review = recovery_review),
-  output_dir = tempdir(),
+  output_dir = recovery_out_dir,
   prefix = "mfrmr_recovery_appendix",
   preset = "recommended",
   include_html = FALSE,

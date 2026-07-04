@@ -944,6 +944,133 @@ summarize_population_model_for_apa <- function(res) {
   )
 }
 
+summarize_mml_population_sd_for_apa <- function(res, population_summary = NULL) {
+  empty <- list(
+    active = FALSE,
+    mode = "",
+    prior_sd = NA_real_,
+    estimated_sd = NA_real_,
+    se = NA_real_,
+    ci_lower = NA_real_,
+    ci_upper = NA_real_,
+    se_status = "",
+    se_detail = "",
+    method_sentence = "",
+    result_sentence = "",
+    caution_sentence = "",
+    table_note = ""
+  )
+
+  config <- res$config %||% list()
+  if (!identical(as.character(config$method %||% NA_character_)[1], "MML")) {
+    return(empty)
+  }
+  if (isTRUE((population_summary %||% list())$active) ||
+      isTRUE((res$population %||% list())$active)) {
+    return(empty)
+  }
+
+  summary <- if (!is.null(res$summary) && nrow(res$summary) > 0L) {
+    res$summary[1, , drop = FALSE]
+  } else {
+    NULL
+  }
+  if (is.null(summary)) {
+    return(empty)
+  }
+
+  mode <- tolower(trimws(as.character(summary$PopulationSDMode[1] %||% "")))
+  if (!nzchar(mode)) {
+    mode <- if (isTRUE(config$estimate_population_sd)) "estimated" else "fixed"
+  }
+  if (!mode %in% c("fixed", "estimated")) {
+    return(empty)
+  }
+
+  prior_sd <- suppressWarnings(as.numeric(summary$PopulationPriorSD[1] %||%
+                                            config$population_prior_sd %||% NA_real_))
+  estimated_sd <- suppressWarnings(as.numeric(summary$EstimatedPopulationSD[1] %||% NA_real_))
+  se <- suppressWarnings(as.numeric(summary$PopulationSDSE[1] %||% NA_real_))
+  ci_lower <- suppressWarnings(as.numeric(summary$PopulationSDCI_Lower[1] %||% NA_real_))
+  ci_upper <- suppressWarnings(as.numeric(summary$PopulationSDCI_Upper[1] %||% NA_real_))
+  se_status <- trimws(as.character(summary$PopulationSDSEStatus[1] %||% ""))
+  se_detail <- trimws(as.character(summary$PopulationSDSEDetail[1] %||% ""))
+
+  if (identical(mode, "estimated")) {
+    se_ci_text <- if (is.finite(se) && is.finite(ci_lower) && is.finite(ci_upper)) {
+      paste0(
+        "profile SE = ", fmt_num(se, 3),
+        ", 95% profile CI [", fmt_num(ci_lower, 3), ", ",
+        fmt_num(ci_upper, 3), "]"
+      )
+    } else {
+      paste0(
+        "profile SE/CI unavailable",
+        if (nzchar(se_status)) paste0(" (status = ", se_status, ")") else "",
+        if (nzchar(se_detail)) paste0(": ", se_detail) else ""
+      )
+    }
+    method_sentence <- paste0(
+      "The normal marginal person-distribution SD was estimated during MML ",
+      "by the EM variance M-step",
+      if (is.finite(prior_sd)) {
+        paste0("; the input `population_prior_sd` = ", fmt_num(prior_sd, 3),
+               " was retained as the starting/reference scale")
+      } else {
+        ""
+      },
+      "."
+    )
+    result_sentence <- paste0(
+      "The estimated marginal person-distribution SD was ",
+      if (is.finite(estimated_sd)) fmt_num(estimated_sd, 3) else "NA",
+      " (", se_ci_text, ")."
+    )
+    caution_sentence <- paste(
+      "Population-SD uncertainty note: the reported profile SE/CI for the",
+      "free normal MML population SD holds other structural parameters fixed",
+      "and can be slightly optimistic relative to a full joint uncertainty",
+      "calculation."
+    )
+    table_note <- paste0(
+      "Population SD mode = estimated",
+      if (is.finite(estimated_sd)) paste0("; estimated SD = ", fmt_num(estimated_sd, 3)) else "",
+      "; ", se_ci_text,
+      ". Profile SE/CI hold other structural parameters fixed."
+    )
+  } else {
+    method_sentence <- paste0(
+      "The normal marginal person-distribution SD was fixed at ",
+      if (is.finite(prior_sd)) fmt_num(prior_sd, 3) else "the configured prior value",
+      " via `population_prior_sd`; person measures are therefore reported on ",
+      "that fixed prior scale."
+    )
+    result_sentence <- ""
+    caution_sentence <- ""
+    table_note <- paste0(
+      "Population SD mode = fixed",
+      if (is.finite(prior_sd)) paste0("; prior SD = ", fmt_num(prior_sd, 3)) else "",
+      "."
+    )
+  }
+
+  list(
+    active = TRUE,
+    mode = mode,
+    prior_sd = prior_sd,
+    estimated_sd = estimated_sd,
+    se = se,
+    ci_lower = ci_lower,
+    ci_upper = ci_upper,
+    se_status = se_status,
+    se_detail = se_detail,
+    method_sentence = method_sentence,
+    result_sentence = result_sentence,
+    caution_sentence = caution_sentence,
+    table_note = table_note
+  )
+}
+
 build_apa_table_figure_key_order <- function(include_population = FALSE) {
   keys <- c(
     "table1", "table2", "table3", "table4",
@@ -1001,7 +1128,13 @@ build_apa_note_map_from_contract <- function(contract) {
     "Model = ", meta$model, "; estimation = ", meta$method,
     "; N = ", fmt_count(meta$n_obs), " observations from ", fmt_count(meta$n_person),
     " persons on a ", fmt_count(meta$n_cat), "-category scale (",
-    fmt_count(meta$rating_min), "-", fmt_count(meta$rating_max), ")."
+    fmt_count(meta$rating_min), "-", fmt_count(meta$rating_max), ").",
+    if (isTRUE(availability$has_mml_population_sd) &&
+        nzchar((summaries$mml_population_sd %||% list())$table_note %||% "")) {
+      paste0(" ", summaries$mml_population_sd$table_note)
+    } else {
+      ""
+    }
   )
 
   note_map$table2 <- paste0(
@@ -1528,6 +1661,10 @@ build_apa_reporting_contract <- function(res, diagnostics, bias_results = NULL, 
   }
 
   population_summary <- summarize_population_model_for_apa(res)
+  population_sd_summary <- summarize_mml_population_sd_for_apa(
+    res,
+    population_summary = population_summary
+  )
   method <- config$method
   model_sentence <- paste0("The ", model, " specification was estimated using ", method, " with mfrmr.")
   if (identical(model, "PCM") && !is.null(config$step_facet) && nzchar(config$step_facet)) {
@@ -1548,6 +1685,13 @@ build_apa_reporting_contract <- function(res, diagnostics, bias_results = NULL, 
   if (nzchar(estimation_basis_sentence)) {
     method_estimation_sentences <- c(method_estimation_sentences, estimation_basis_sentence)
     method_sentences <- c(method_sentences, estimation_basis_sentence)
+  }
+  if (isTRUE(population_sd_summary$active)) {
+    method_estimation_sentences <- c(
+      method_estimation_sentences,
+      population_sd_summary$method_sentence
+    )
+    method_sentences <- c(method_sentences, population_sd_summary$method_sentence)
   }
   if (isTRUE(population_summary$active)) {
     method_estimation_sentences <- c(
@@ -1634,6 +1778,14 @@ build_apa_reporting_contract <- function(res, diagnostics, bias_results = NULL, 
       population_summary$omission_sentence
     )
     results_sentences <- c(results_sentences, results_population_sentences)
+  }
+  if (isTRUE(population_sd_summary$active) &&
+      nzchar(population_sd_summary$result_sentence %||% "")) {
+    results_fit_precision_sentences <- c(
+      results_fit_precision_sentences,
+      population_sd_summary$result_sentence
+    )
+    results_sentences <- c(results_sentences, population_sd_summary$result_sentence)
   }
 
   band <- mfrm_misfit_thresholds()
@@ -1990,6 +2142,7 @@ build_apa_reporting_contract <- function(res, diagnostics, bias_results = NULL, 
       has_interrater = nrow(interrater_summary) > 0,
       has_measure_ci = ci_available_n > 0,
       has_population_model = isTRUE(population_summary$active),
+      has_mml_population_sd = isTRUE(population_sd_summary$active),
       has_population_coding = isTRUE(population_summary$active) &&
         nrow(population_summary$coding) > 0L
     ),
@@ -2032,7 +2185,8 @@ build_apa_reporting_contract <- function(res, diagnostics, bias_results = NULL, 
       bias_summary = summarize_bias_counts(bias_results),
       bias_sig_n = bias_sig_n,
       bias_facet_pair = bias_facet_pair,
-      population_model = population_summary
+      population_model = population_summary,
+      mml_population_sd = population_sd_summary
     ),
     method_design_sentences = method_design_sentences,
     method_estimation_sentences = method_estimation_sentences,
@@ -2049,6 +2203,7 @@ build_apa_reporting_contract <- function(res, diagnostics, bias_results = NULL, 
       eap_fit_caution,
       bias_caution,
       gpcm_caution,
+      population_sd_summary$caution_sentence,
       population_summary$caution_sentence,
       population_summary$conquest_sentence
     )),
