@@ -93,8 +93,13 @@ infer_facets_mode_mapping <- function(dat, person = NULL, facets = NULL, score =
 #' @param dummy_facets Optional dummy facets fixed at zero.
 #' @param positive_facets Optional facets with positive orientation.
 #' @param quad_points Quadrature points for MML; passed to [fit_mfrm()].
-#' @param maxit Maximum optimizer iterations.
-#' @param reltol Optimization tolerance.
+#' @param maxit Maximum outer optimizer iterations passed to [fit_mfrm()].
+#'   For direct BFGS fits, this is not the same unit as
+#'   `fit$summary$Iterations` (function evaluations).
+#' @param reltol Relative optimizer tolerance passed to [fit_mfrm()]. For
+#'   direct BFGS fits, tighter values are needed for likelihood or
+#'   cross-implementation comparisons; inspect `ConvergenceSeverity` and
+#'   `TerminalGradientSupNorm` in the returned fit summary.
 #' @param mml_engine MML optimization engine passed to [fit_mfrm()]. Applies
 #'   only when `method = "MML"`.
 #' @param top_n_interactions Number of rows for interaction diagnostics.

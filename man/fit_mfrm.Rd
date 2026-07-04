@@ -31,6 +31,9 @@ fit_mfrm(
   min_obs_per_element = 30,
   min_obs_per_category = 10,
   quad_points = 31,
+  population_prior_sd = 1,
+  estimate_population_sd = FALSE,
+  population_sd_bounds = c(0.05, 10),
   maxit = 400,
   reltol = 1e-06,
   mml_engine = c("direct", "em", "hybrid"),
@@ -102,8 +105,14 @@ surfaced by \code{\link[=build_mfrm_manifest]{build_mfrm_manifest()}}. Equivalen
 backward-compatible alias for the same joint-maximum-likelihood path.}
 
 \item{step_facet}{Step facet for \code{PCM} and the bounded \code{GPCM}
-branch. For \code{GPCM}, this should be supplied explicitly rather than
-relying on an implicit default.}
+branch. This is the facet whose levels receive separate rating-scale
+step/threshold vectors. In FACETS-facing rater analyses,
+\code{step_facet = "Rater"} is the clearest example: it lets each rater have
+their own category-use structure. Use \code{"Item"} for item-specific
+partial-credit scales, \code{"Criterion"} for criterion-specific rubrics, or
+another declared facet when that facet is the intended source of threshold
+variation. For \code{GPCM}, supply this explicitly rather than relying on an
+implicit default.}
 
 \item{slope_facet}{Slope facet for the bounded \code{GPCM} branch. The
 current release requires \code{slope_facet == step_facet} and uses a
@@ -165,9 +174,34 @@ on moderately sized designs, which is why the default now sits at
 the publication tier; set a lower value explicitly for
 exploratory runs.}
 
-\item{maxit}{Maximum optimizer iterations.}
+\item{population_prior_sd}{Positive numeric. SD of the fixed normal latent
+distribution used by ordinary \code{MML} fits. The default \code{1} preserves the
+historical standard-normal metric. When \code{estimate_population_sd = TRUE},
+this value is used as the starting SD.}
 
-\item{reltol}{Optimization tolerance.}
+\item{estimate_population_sd}{Logical. If \code{TRUE}, additive \code{RSM}/\code{PCM} and
+bounded-\code{GPCM} \code{MML} fits estimate the normal latent population SD by an EM
+variance M-step. The current implementation is opt-in, forces the EM
+engine, and is not yet available for latent-regression MML or model-
+estimated facet interactions.}
+
+\item{population_sd_bounds}{Length-two positive numeric vector giving lower
+and upper bounds for \code{estimate_population_sd}. Defaults to \code{c(0.05, 10)}.}
+
+\item{maxit}{Maximum outer optimizer iterations. For direct \code{JMLE} and
+direct \code{MML} fits this is the BFGS iteration cap passed to
+\code{\link[stats:optim]{stats::optim()}}. It is not the same unit as \code{fit$summary$Iterations},
+which records function evaluations for direct BFGS fits.}
+
+\item{reltol}{Relative optimizer tolerance. For direct BFGS fits this is
+passed to \code{\link[stats:optim]{stats::optim()}}, whose stopping rule is based on relative
+objective improvement. The effective absolute log-likelihood change
+threshold therefore scales roughly with \code{reltol * abs(LogLik)}, so large
+rating tables can stop with non-negligible absolute log-likelihood drift.
+For likelihood, step-parameter, or cross-implementation comparisons, use
+a tighter value such as \code{1e-10} to \code{1e-12} with enough \code{maxit}, and inspect
+\code{TerminalGradientSupNorm} / \code{ConvergenceSeverity} in \code{fit$summary}.
+Looser values are appropriate only for exploratory approximate fits.}
 
 \item{mml_engine}{MML optimization engine for \code{method = "MML"}:
 \code{"direct"} (default) uses direct BFGS on the marginal log-likelihood,
@@ -247,8 +281,17 @@ fits crash-resilient on shared compute environments.}
 An object of class \code{mfrm_fit} (named list) with:
 \itemize{
 \item \code{summary}: one-row model summary (\code{LogLik}, \code{AIC}, \code{BIC}, convergence)
-including public \code{Method}, internal \code{MethodUsed}, and
-\code{MMLEngineRequested}, \code{MMLEngineUsed}, and \code{EMIterations} for MML fits
+including public \code{Method}, internal \code{MethodUsed}, and optimizer
+diagnostics. For direct BFGS fits, \code{Iterations} records function
+evaluations (\code{IterationsBasis = "function_evaluations"}), while
+\code{BFGSIterations} mirrors \code{GradientEvaluations} as the closest reported
+BFGS iteration count. \code{Converged} keeps the optimizer code-0 contract;
+use \code{ConvergenceStatus}, \code{ConvergenceSeverity}, \code{TerminalGradientSupNorm},
+and \code{GradientReviewTolerance} to decide whether the fit needs review.
+Code-0 large-gradient warnings are controlled by
+\code{options(mfrmr.warn_large_gradient = TRUE/FALSE)}.
+MML fits also record \code{MMLEngineRequested}, \code{MMLEngineUsed}, and
+\code{EMIterations}
 \item \code{facets$person}: person estimates (\code{Estimate}; plus \code{SD} for MML)
 \item \code{facets$others}: facet-level estimates for each facet
 \item \code{steps}: estimated threshold/step parameters as a one-row-per-step
@@ -271,7 +314,10 @@ convention pins the geometric mean of slopes at 1.
 \item \code{interactions}: model-estimated facet interaction effects and metadata
 when \code{facet_interactions} is supplied
 \item \code{population}: population-model metadata. Ordinary fits keep an inactive
-scaffold (\code{active = FALSE}, \code{posterior_basis = "legacy_mml"}). Active
+scaffold (\code{active = FALSE}) with the MML population-SD mode recorded in
+\code{population_sd_mode}, \code{population_prior_sd}, \code{estimated_population_sd},
+and \code{posterior_basis} (\code{"legacy_mml"} for fixed-SD MML,
+\code{"estimated_population_sd_mml"} for opt-in free-SD MML). Active
 latent-regression fits store the fitted design matrix, regression
 coefficients, residual variance, omission review, the complete-case
 estimation table (\code{person_table}), and the observed-person-aligned
@@ -317,7 +363,22 @@ With \code{model = "RSM"}, thresholds \eqn{\tau_k} are shared across all
 levels of all facets.
 With \code{model = "PCM"}, each level of \code{step_facet} receives its own
 threshold vector \eqn{\tau_{i,k}} on the package's shared observed
-score scale.
+score scale. In FACETS terms, this is the package-native route for a
+partial-credit / Specific rating-scale structure. For example,
+\code{step_facet = "Rater"} records rater-specific category-use thresholds,
+matching the common judging question "do raters use the score categories
+differently?" The same mechanism supports \code{step_facet = "Item"} for
+item-specific partial-credit scales or \code{step_facet = "Criterion"} for
+criterion-specific rubric thresholds. Design-matrix software may label
+these blocks \code{rater:step}, \code{item:step}, or \code{criterion:step}; mfrmr keeps the
+public API in FACETS-facing \code{step_facet} terms and records that vocabulary
+only as external comparison metadata.
+
+Each fit stores a compact internal \code{fit$config$design_spec} describing the
+unidimensional engine, observed roles, threshold structure, constraints, and
+external FACETS/TAM analogues. This specification is metadata for replay,
+reporting, and future design-matrix routes; it is not a dense design matrix
+and it does not add \code{ndim}, \code{Q}, or covariance arguments to \code{fit_mfrm()}.
 
 With bounded \code{model = "GPCM"}, the adjacent-category kernel is multiplied by
 a positive slope for the designated slope-facet level:
@@ -339,7 +400,14 @@ Bounded \code{GPCM} uses the slope-scaled counterpart
 \eqn{\alpha_g(\eta - \tau_{g,1})}.
 
 With \code{method = "MML"}, person parameters are integrated out using
-Gauss-Hermite quadrature and EAP estimates are computed post-hoc.
+Gauss-Hermite quadrature and EAP estimates are computed post-hoc. In the
+default \code{population_formula = NULL} route, the latent distribution is the
+package's legacy fixed normal prior (\code{population_prior_sd = 1}). Set
+\code{estimate_population_sd = TRUE} to estimate the additive \code{RSM}/\code{PCM} or
+bounded-\code{GPCM} MML population SD under EM. Supplying \code{population_formula} activates the
+separate latent-regression MML branch, where the conditional residual variance
+\code{sigma2} is estimated and quadrature nodes are transformed as
+\eqn{\theta_{nq} = x_n^\top\beta + \sigma z_q}.
 With \code{method = "JML"}, all parameters are estimated jointly as fixed
 effects. \code{"JMLE"} remains an accepted compatibility alias, but package
 output now uses \code{"JML"} as the public label. See the "Estimation methods"
@@ -520,13 +588,20 @@ the shared observed-score scale.
 
 Supported model/estimation combinations in the current release:
 \itemize{
-\item \code{model = "RSM"} with \code{method = "MML"} or \code{"JML"/"JMLE"}
+\item \code{model = "RSM"} with \code{method = "MML"} or \code{"JML"/"JMLE"};
+\code{step_facet} and \code{slope_facet} are not part of this common-threshold
+model and are ignored with a warning if supplied
 \item \code{model = "PCM"} with a designated \code{step_facet} (defaults to first facet)
 \item \code{facet_interactions} with \code{model = "RSM"} or \code{"PCM"} for explicit
 two-way non-person facet interactions
 \item \code{model = "GPCM"} is currently implemented only for the narrow bounded
-branch with \code{slope_facet == step_facet}; \code{MML} and \code{JML} fitting, core
-summaries, fixed-calibration posterior scoring, \code{\link[=compute_information]{compute_information()}},
+branch with \code{slope_facet == step_facet}. This is not a complete
+unrestricted GPCM implementation: arbitrary slope structures,
+multidimensional or random-effect GPCM extensions, MCMC or posterior
+predictive engines, and full FACETS-style score-side equivalence remain
+outside the current boundary. Within the bounded branch, \code{MML} and \code{JML}
+fitting, core summaries, fixed-calibration posterior scoring,
+\code{\link[=compute_information]{compute_information()}},
 Wright/pathway/CCC fit plots, \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, residual-PCA follow-up,
 \code{\link[=interrater_agreement_table]{interrater_agreement_table()}}, \code{\link[=unexpected_response_table]{unexpected_response_table()}},
 \code{\link[=displacement_table]{displacement_table()}}, \code{\link[=measurable_summary_table]{measurable_summary_table()}},
@@ -552,10 +627,14 @@ current \code{GPCM} scope.
 
 Latent-regression status:
 \itemize{
-\item \code{population_formula = NULL} keeps the legacy unconditional \code{MML} / \code{JML}
-behavior.
+\item \code{population_formula = NULL} keeps the ordinary unconditional \code{MML} / \code{JML}
+behavior. For \code{MML}, this means a fixed normal latent prior by default
+(\code{population_prior_sd = 1}) or an opt-in estimated normal population SD
+for additive \code{RSM}/\code{PCM} and bounded-\code{GPCM} EM fits when
+\code{estimate_population_sd = TRUE}.
 \item Supplying \code{population_formula} activates a first-version latent-regression
-branch for \code{method = "MML"} only.
+branch for \code{method = "MML"} only. In that branch, the conditional
+residual variance \code{sigma2} is estimated.
 \item The current branch assumes a one-dimensional conditional-normal population
 model with person-specific quadrature nodes
 \eqn{\theta_{nq} = x_n^\top \beta + \sigma z_q}.
@@ -664,8 +743,12 @@ manuscript reporting.
 \item \code{quad_points = 61} (or higher) is reserved for ultra-precise
 benchmarking on very narrow score supports.
 \item \code{mml_engine = "direct"} remains the most stable general-purpose path.
-\item \code{mml_engine = "em"} or \code{"hybrid"} currently target \code{RSM} / \code{PCM} fits
-without a latent-regression population model.
+\item \code{mml_engine = "em"} or \code{"hybrid"} currently target additive \code{RSM} /
+\code{PCM} and bounded \code{GPCM} fits without a latent-regression population
+model or model-estimated facet interactions.
+\item \code{estimate_population_sd = TRUE} uses the EM variance M-step and overrides
+\code{mml_engine = "direct"} / \code{"hybrid"} to the EM path for the supported
+additive \code{RSM} / \code{PCM} and bounded-\code{GPCM} scope.
 \item Benchmark your own workload before using \code{mml_engine = "em"} or
 \code{"hybrid"} for final reporting; \code{direct} remains the safer default when
 you have not compared engines for your data.
@@ -784,10 +867,11 @@ fit <- fit_mfrm(
 )
 fit$summary
 s_fit <- summary(fit)
-s_fit$overview[, c("Model", "Method", "Converged")]
-# Look for: Converged = TRUE. If FALSE, raise `maxit`, relax `reltol`,
-#   or inspect `summary(fit)$key_warnings` for sparse-cell or
-#   identification flags.
+s_fit$overview[, c("Model", "Method", "Converged", "ConvergenceSeverity")]
+# Look for: Converged = TRUE and ConvergenceSeverity = "pass".
+# If the fit needs review, inspect TerminalGradientSupNorm and either
+#   increase maxit while keeping/tightening reltol for precision, or use
+#   a looser reltol only for exploratory approximate fits.
 s_fit$person_overview
 # Look for: Mean ~ 0 logits and SD ~ 1 logit are typical when the
 #   sample is centred on the test difficulty. SD < 0.5 suggests the
@@ -797,8 +881,36 @@ s_fit$targeting
 # Look for: |Targeting| < ~0.5 logits is comfortable; larger absolute
 #   values mean persons sit systematically above or below the facet
 #   means under the package's sum-to-zero identification.
+s_fit$population_overview[, c("PosteriorBasis", "PopulationSDMode",
+                              "PopulationPriorSD")]
+# Look for: ordinary MML uses a fixed N(0, 1) latent prior unless
+#   `estimate_population_sd = TRUE` is explicitly requested.
 p_fit <- plot(fit, draw = FALSE)
 p_fit$wright_map$data$plot
+
+# Opt-in free population SD: use this when the latent metric itself
+# should be estimated rather than fixed to the historical N(0, 1)
+# scale. This forces the EM path and adds one parameter to AIC/BIC.
+fit_free_sd <- fit_mfrm(
+  data = toy,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  method = "MML",
+  model = "RSM",
+  quad_points = 7,
+  maxit = 80,
+  estimate_population_sd = TRUE
+)
+summary(fit_free_sd)$population_overview[
+  , c("PopulationSDMode", "EstimatedPopulationSD",
+      "PopulationSDSE", "PopulationSDSEStatus")
+]
+compare_mfrm(fit, fit_free_sd,
+             labels = c("fixed_SD", "estimated_SD"))$table[
+  , c("Label", "npar", "AIC", "PopulationSDMode",
+      "EstimatedPopulationSD")
+]
 
 # JML is available for exploratory / fast iteration passes:
 fit_jml <- fit_mfrm(

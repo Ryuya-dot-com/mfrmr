@@ -3701,6 +3701,20 @@ print.mfrm_fit <- function(x, ...) {
       first_status <- fit_summary$status[1, , drop = FALSE]
       cat(sprintf("  Summary status: %s\n", first_status$Value[1] %||% NA_character_))
     }
+    if (!is.null(fit_summary) && nrow(fit_summary$design_spec %||% data.frame()) > 0) {
+      ds <- fit_summary$design_spec[1, , drop = FALSE]
+      step_label <- as.character(ds$StepFacet %||% NA_character_)
+      threshold_label <- if (!is.na(step_label) && nzchar(step_label)) {
+        paste0(ds$ThresholdStructure %||% NA_character_, " by ", step_label)
+      } else {
+        as.character(ds$ThresholdStructure %||% NA_character_)
+      }
+      cat(sprintf(
+        "  Design: %s | Thresholds: %s\n",
+        ds$Engine %||% NA_character_,
+        threshold_label
+      ))
+    }
     if (!is.null(fit_summary) &&
         length(fit_summary$key_warnings) > 0 &&
         !summary_lines_are_default(

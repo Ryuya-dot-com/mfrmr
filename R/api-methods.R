@@ -494,9 +494,10 @@ summarize_measurable_bundle <- function(object, digits = 3, top_n = 10) {
     object = object,
     obj_class = "mfrm_measurable",
     summary_candidates = "summary",
-    preview_candidates = c("facet_coverage", "category_stats", "subsets"),
+    preview_candidates = c("variance_summary", "residual_summary",
+                           "facet_coverage", "category_stats", "subsets"),
     settings_candidates = character(0),
-    notes = "Measurable-data summary with facet coverage, category diagnostics, and subset/connectivity checks.",
+    notes = "Measurable-data summary with FACETS Table 5-style residual moments, variance/Pearson review, facet coverage, category diagnostics, and subset/connectivity checks.",
     digits = digits,
     top_n = top_n
   )
@@ -1434,6 +1435,20 @@ summarize_displacement_bundle <- function(object, digits = 3, top_n = 10) {
   )
 }
 
+summarize_anchor_contract_bundle <- function(object, digits = 3, top_n = 10) {
+  summarize_known_bundle(
+    object = object,
+    obj_class = "mfrm_anchor_contract",
+    summary_candidates = "summary",
+    preview_candidates = c("contract", "candidate_anchors", "input_anchors",
+                           "input_group_anchors", "constraint_summary"),
+    settings_candidates = "settings",
+    notes = "Anchor/linking contract separating mfrmr R-native anchor tables and replay metadata from unsupported FACETS Anchorfile= specification rewrites.",
+    digits = digits,
+    top_n = top_n
+  )
+}
+
 summarize_interrater_bundle <- function(object, digits = 3, top_n = 10) {
   summarize_known_bundle(
     object = object,
@@ -1737,6 +1752,9 @@ summary.mfrm_bundle <- function(object, digits = 3, top_n = 10, ...) {
   if (inherits(object, "mfrm_displacement")) {
     return(summarize_displacement_bundle(object, digits = digits, top_n = top_n))
   }
+  if (inherits(object, "mfrm_anchor_contract")) {
+    return(summarize_anchor_contract_bundle(object, digits = digits, top_n = top_n))
+  }
   if (inherits(object, "mfrm_interrater")) {
     return(summarize_interrater_bundle(object, digits = digits, top_n = top_n))
   }
@@ -1889,6 +1907,7 @@ bundle_summary_labels <- function(summary_kind, overview = NULL) {
     mfrm_unexpected = list(title = "mfrmr Unexpected Response Summary", summary = "Threshold summary", preview = "Flagged responses"),
     mfrm_fair_average = list(title = "mfrmr Adjusted Score Summary", summary = "Overview", preview = "Facet-level adjusted-score rows"),
     mfrm_displacement = list(title = "mfrmr Displacement Summary", summary = "Displacement summary", preview = "Displacement rows"),
+    mfrm_anchor_contract = list(title = "mfrmr Anchor Contract Summary", summary = "Anchor contract overview", preview = "Contract rows"),
     mfrm_interrater = list(title = "mfrmr Agreement Summary", summary = "Agreement summary", preview = "Rater-pair rows"),
     mfrm_facets_chisq = list(title = "mfrmr Facet Variability Summary", summary = "Facet variability summary", preview = "Facet rows"),
     mfrm_bias_interaction = list(title = "mfrmr Bias Interaction Summary", summary = "Interaction summary", preview = "Ranked interaction rows"),
@@ -1897,7 +1916,7 @@ bundle_summary_labels <- function(summary_kind, overview = NULL) {
     mfrm_rating_scale = list(title = "mfrmr Rating Scale Summary", summary = "Category/threshold summary", preview = "Category rows"),
     mfrm_category_structure = list(title = "mfrmr Category Structure Summary", summary = "Category structure overview", preview = "Category structure rows"),
     mfrm_category_curves = list(title = "mfrmr Category Curves Summary", summary = "Curve grid summary", preview = "Boundary / curve rows"),
-    mfrm_measurable = list(title = "mfrmr Measurable Summary", summary = "Run overview", preview = "Facet/category rows"),
+    mfrm_measurable = list(title = "mfrmr Measurable Summary", summary = "Run overview", preview = "Variance/residual rows"),
     mfrm_unexpected_after_bias = list(title = "mfrmr Unexpected-after-Bias Summary", summary = "After-bias threshold summary", preview = "After-bias flagged rows"),
     mfrm_output_bundle = list(title = "mfrmr Output File Bundle Summary", summary = "Output overview", preview = "Output preview rows"),
     mfrm_residual_pca = list(title = "mfrmr Residual PCA Summary", summary = "PCA overview", preview = "Eigenvalue / loading rows"),
@@ -2621,7 +2640,7 @@ draw_category_curves_bundle <- function(x,
         "`type = \"conditional_probability\"` now shows adjacent-category",
         "conditional ogives (the Winsteps/FACETS \"Conditional Probability",
         "Curves\" display). Use `type = \"ccc\"` for the category probability",
-        "curves this alias returned before 0.3.0."
+        "curves this alias returned before 0.2.2."
       ),
       .frequency = "once",
       .frequency_id = "mfrmr_conditional_probability_alias"
@@ -6194,7 +6213,7 @@ plot_visual_summaries_bundle <- function(x,
 #' Probability Curves"); the same `boundary_status` setting controls its
 #' `.5` crossing lines, which estimate the Rasch-Andrich thresholds.
 #' `type = "conditional_probability"` routes to this display (it was a `ccc`
-#' alias before 0.3.0). Use
+#' alias before 0.2.2). Use
 #' `plot_data(x, component = "plot_long")` on a category-curve bundle when
 #' you want one ggplot2/plotly-friendly table across all curve families.
 #'
@@ -7582,6 +7601,41 @@ print.summary.mfrm_bias <- function(x, ...) {
   invisible(x)
 }
 
+summarize_mfrm_design_spec <- function(design_spec) {
+  design_spec <- design_spec %||% list()
+  dimension <- design_spec$dimension %||% list()
+  response_model <- design_spec$response_model %||% list()
+  thresholds <- design_spec$parameter_blocks$thresholds %||% list()
+  threshold_structure <- design_spec$threshold_structure %||% list()
+  validation <- design_spec$validation %||% list()
+  step_facet <- threshold_structure$facet %||% thresholds$facet %||% NA_character_
+  if (is.null(step_facet) || length(step_facet) == 0L ||
+      is.na(step_facet[1]) || !nzchar(as.character(step_facet[1]))) {
+    step_facet <- NA_character_
+  }
+  external_analogue <- threshold_structure$tam_analogue %||% NA_character_
+  if (is.null(external_analogue) || length(external_analogue) == 0L ||
+      is.na(external_analogue[1]) || !nzchar(as.character(external_analogue[1]))) {
+    external_analogue <- NA_character_
+  }
+  tibble::tibble(
+    Engine = as.character(design_spec$engine %||% NA_character_),
+    Dimension = as.character(dimension$type %||% NA_character_),
+    NDim = as.integer(dimension$ndim %||% NA_integer_),
+    LatentVariance = as.character(dimension$latent_variance %||% NA_character_),
+    ResponseModel = as.character(response_model$family %||% NA_character_),
+    ThresholdStructure = as.character(threshold_structure$type %||% thresholds$type %||% NA_character_),
+    StepFacet = as.character(step_facet[1]),
+    ThresholdLevels = as.integer(thresholds$n_levels %||% NA_integer_),
+    StepsPerLevel = as.integer(thresholds$n_steps %||% threshold_structure$n_steps %||% NA_integer_),
+    ThresholdFreeParameters = as.integer(thresholds$n_free %||% NA_integer_),
+    Constraint = as.character(threshold_structure$constraint %||% NA_character_),
+    FACETSAnalogue = as.character(threshold_structure$facets_analogue %||% NA_character_),
+    ExternalDesignAnalogue = as.character(external_analogue[1]),
+    DenseDesignMatrixStored = isTRUE(validation$dense_design_matrix_stored)
+  )
+}
+
 #' Summarize an `mfrm_fit` object in a user-friendly format
 #'
 #' @param object Output from [fit_mfrm()].
@@ -7630,12 +7684,17 @@ print.summary.mfrm_bias <- function(x, ...) {
 #'    [plot_information()] or the fixed-calibration posterior scoring helpers.
 #'
 #' @return An object of class `summary.mfrm_fit` with:
-#' - `overview`: global model/fit indicators
+#' - `overview`: global model/fit indicators, including convergence status,
+#'   severity, function evaluations, BFGS iteration approximation, and terminal
+#'   gradient metrics when available
 #' - `status`: concise front-door status block for quick review
 #' - `key_warnings`: highest-priority warnings to review first
 #' - `next_actions`: recommended follow-up helpers
-#' - `population_overview`: current population-model basis, residual variance,
-#'   and omission review
+#' - `population_overview`: current population-model basis, marginal
+#'   population-SD mode/estimate, residual variance, and omission review
+#' - `design_spec`: compact threshold/design metadata, including whether
+#'   thresholds are common (`RSM`) or vary by `step_facet` (`PCM` / bounded
+#'   `GPCM`), the FACETS analogue, and any external design-matrix analogue
 #' - `population_coefficients`: fitted latent-regression coefficients when a
 #'   population model is active
 #' - `population_design`: latent-regression design-matrix column check when a
@@ -7679,9 +7738,11 @@ print.summary.mfrm_bias <- function(x, ...) {
 #'   method = "MML", quad_points = 5
 #' )
 #' s <- summary(fit)
-#' s$overview[, c("Model", "Method", "Converged")]
-#' # Look for: Converged = TRUE. If FALSE the fit is not safe to report;
-#' #   raise `maxit`, relax `reltol`, or rerun with `quad_points = 31`.
+#' s$overview[, c("Model", "Method", "Converged", "ConvergenceSeverity")]
+#' # Look for: Converged = TRUE and ConvergenceSeverity = "pass".
+#' # If severity is "review" or "fail", inspect TerminalGradientSupNorm,
+#' #   increase maxit and tighten/keep reltol for precision, or rerun with
+#' #   `quad_points = 31` for final MML reporting.
 #' s$person_overview
 #' # Look for: Mean ~ 0 (logits) and SD ~ 1 are typical when the sample
 #' #   is centred on the test difficulty. Min < -3 or Max > 3 with
@@ -7713,6 +7774,7 @@ summary.mfrm_fit <- function(object, digits = 3, top_n = 5, ...) {
   }
   prep <- object$prep %||% list()
   population_raw <- object$population %||% list()
+  design_spec_overview <- summarize_mfrm_design_spec(config$design_spec %||% list())
   person_raw <- object$facets$person
   if (is.null(person_raw)) person_raw <- tibble::tibble()
   other_raw <- object$facets$others
@@ -7740,9 +7802,52 @@ summary.mfrm_fit <- function(object, digits = 3, top_n = 5, ...) {
   } else {
     ""
   }
+  population_sd_mode <- as.character(overview$PopulationSDMode[1] %||% NA_character_)
+  population_prior_sd <- suppressWarnings(as.numeric(
+    overview$PopulationPriorSD[1] %||%
+      config$population_prior_sd_input %||%
+      config$population_prior_sd %||%
+      NA_real_
+  ))
+  estimated_population_sd <- suppressWarnings(as.numeric(
+    overview$EstimatedPopulationSD[1] %||%
+      population_raw$estimated_population_sd %||%
+      config$estimated_population_sd %||%
+      NA_real_
+  ))
+  population_sd_se <- suppressWarnings(as.numeric(
+    overview$PopulationSDSE[1] %||%
+      population_raw$population_sd_se %||%
+      config$population_sd_se %||%
+      NA_real_
+  ))
+  population_sd_ci <- suppressWarnings(as.numeric(c(
+    overview$PopulationSDCI_Lower[1] %||% NA_real_,
+    overview$PopulationSDCI_Upper[1] %||% NA_real_
+  )))
+  if (length(population_sd_ci) < 2L || any(!is.finite(population_sd_ci))) {
+    population_sd_ci <- suppressWarnings(as.numeric(
+      population_raw$population_sd_ci %||%
+        config$population_sd_ci %||%
+        c(NA_real_, NA_real_)
+    ))
+  }
+  if (length(population_sd_ci) < 2L) population_sd_ci <- c(NA_real_, NA_real_)
+  population_sd_se_status <- as.character(
+    overview$PopulationSDSEStatus[1] %||%
+      config$population_sd_se_status %||%
+      NA_character_
+  )
   population_overview <- tibble::tibble(
     PopulationModel = isTRUE(population_raw$active),
     PosteriorBasis = as.character(population_raw$posterior_basis %||% "legacy_mml"),
+    PopulationSDMode = population_sd_mode,
+    PopulationPriorSD = population_prior_sd,
+    EstimatedPopulationSD = estimated_population_sd,
+    PopulationSDSE = population_sd_se,
+    PopulationSDCI_Lower = population_sd_ci[1],
+    PopulationSDCI_Upper = population_sd_ci[2],
+    PopulationSDSEStatus = population_sd_se_status,
     Formula = if (!is.null(population_raw$formula)) paste(deparse(population_raw$formula), collapse = " ") else NA_character_,
     PersonRows = if (!is.null(population_raw$person_table)) nrow(as.data.frame(population_raw$person_table, stringsAsFactors = FALSE)) else NA_integer_,
     DesignColumns = if (!is.null(population_raw$design_matrix)) ncol(population_raw$design_matrix) else NA_integer_,
@@ -8007,15 +8112,23 @@ summary.mfrm_fit <- function(object, digits = 3, top_n = 5, ...) {
   }
 
   notes <- character(0)
-  if ("Converged" %in% names(overview) && !isTRUE(overview$Converged[1])) {
+  if ("Converged" %in% names(overview)) {
     status <- as.character(overview$ConvergenceStatus[1] %||% NA_character_)
-    if (identical(status, "reviewable_warning")) {
+    severity <- as.character(overview$ConvergenceSeverity[1] %||% NA_character_)
+    if (identical(status, "converged_plateau_large_gradient")) {
+      notes <- c(
+        notes,
+        "Optimizer returned code 0, but the terminal gradient exceeded the review tolerance; verify convergence precision before reporting the fit."
+      )
+    } else if (!isTRUE(overview$Converged[1]) && identical(status, "reviewable_warning")) {
       notes <- c(
         notes,
         "Optimizer returned a nonzero code, but the terminal gradient was already small; treat the fit as reviewable rather than an immediate hard failure."
       )
-    } else {
+    } else if (!isTRUE(overview$Converged[1])) {
       notes <- c(notes, "Optimization did not converge; interpret parameter estimates cautiously.")
+    } else if (identical(severity, "review")) {
+      notes <- c(notes, "Optimizer diagnostics request convergence review before reporting this fit.")
     }
   }
   if (identical(as.character(overview$Method[1] %||% NA_character_), "MML")) {
@@ -8032,7 +8145,18 @@ summary.mfrm_fit <- function(object, digits = 3, top_n = 5, ...) {
   if (nrow(population_overview) > 0 && !isTRUE(population_overview$PopulationModel[1])) {
     fit_method <- as.character(overview$Method[1] %||% NA_character_)
     if (identical(fit_method, "MML")) {
-      notes <- c(notes, "No population model was requested; current MML output uses the package's legacy unconditional prior.")
+      pop_mode <- tolower(trimws(as.character(population_overview$PopulationSDMode[1] %||% "")))
+      if (identical(pop_mode, "estimated")) {
+        notes <- c(
+          notes,
+          "No latent-regression population model was requested; ordinary MML estimated the normal marginal population SD, so person scores and posterior summaries use the fitted population metric."
+        )
+      } else {
+        notes <- c(
+          notes,
+          "No latent-regression population model was requested; ordinary MML uses the fixed normal marginal prior scale recorded in PopulationPriorSD."
+        )
+      }
     }
   } else if (nrow(population_overview) > 0 && isTRUE(population_overview$PopulationModel[1])) {
     notes <- c(
@@ -8078,17 +8202,21 @@ summary.mfrm_fit <- function(object, digits = 3, top_n = 5, ...) {
   convergence_status <- as.character(overview$ConvergenceStatus[1] %||% NA_character_)
   convergence_severity <- as.character(overview$ConvergenceSeverity[1] %||% NA_character_)
   converged <- isTRUE(overview$Converged[1])
+  convergence_review <- identical(convergence_status, "reviewable_warning") ||
+    identical(convergence_status, "converged_plateau_large_gradient") ||
+    identical(convergence_severity, "review")
   engine_requested <- as.character(overview$MMLEngineRequested[1] %||% NA_character_)
   engine_used <- as.character(overview$MMLEngineUsed[1] %||% NA_character_)
 
   reporting_readiness <- dplyr::case_when(
     !converged && !identical(convergence_status, "reviewable_warning") ~ "review_before_reporting",
+    convergence_review ~ "review_before_reporting",
     identical(method_label, "MML") ~ "ready_for_diagnostics_and_reporting_follow_up",
     TRUE ~ "exploratory_fit_ready_for_diagnostics"
   )
   overall_status <- dplyr::case_when(
+    convergence_review ~ "reviewable_fit",
     converged ~ "usable_fit",
-    identical(convergence_status, "reviewable_warning") ~ "reviewable_fit",
     TRUE ~ "fit_needs_review"
   )
   convergence_line <- if (isTRUE(is.finite(overview$TerminalGradientSupNorm[1] %||% NA_real_))) {
@@ -8111,10 +8239,44 @@ summary.mfrm_fit <- function(object, digits = 3, top_n = 5, ...) {
   } else {
     NA_character_
   }
+  fmt_metric <- function(x) {
+    x <- suppressWarnings(as.numeric(x))
+    if (length(x) == 0L || !is.finite(x[1])) return(NA_character_)
+    format(round(x[1], digits = digits), nsmall = digits, trim = TRUE)
+  }
+  population_metric_line <- NA_character_
+  if (identical(method_label, "MML")) {
+    pop_mode <- tolower(trimws(as.character(population_sd_mode %||% "")))
+    if (identical(pop_mode, "estimated")) {
+      metric_parts <- paste0("estimated normal SD = ", fmt_metric(estimated_population_sd))
+      if (is.finite(population_sd_se)) {
+        metric_parts <- paste0(metric_parts, "; profile SE = ", fmt_metric(population_sd_se))
+      }
+      if (all(is.finite(population_sd_ci[1:2]))) {
+        metric_parts <- paste0(
+          metric_parts,
+          "; 95% profile CI [",
+          fmt_metric(population_sd_ci[1]),
+          ", ",
+          fmt_metric(population_sd_ci[2]),
+          "]"
+        )
+      }
+      if (!is.na(population_sd_se_status) &&
+          nzchar(trimws(population_sd_se_status)) &&
+          !identical(population_sd_se_status, "ok")) {
+        metric_parts <- paste0(metric_parts, " (profile SE status: ", population_sd_se_status, ")")
+      }
+      population_metric_line <- metric_parts
+    } else if (identical(pop_mode, "fixed")) {
+      population_metric_line <- paste0("fixed normal prior SD = ", fmt_metric(population_prior_sd))
+    }
+  }
   status <- make_summary_block(
     "Overall status" = overall_status,
     "Convergence" = convergence_line,
     "Estimation path" = paste(model_label, "/", engine_line),
+    "Population metric" = population_metric_line,
     "Reporting readiness" = reporting_readiness
   )
 
@@ -8179,6 +8341,7 @@ summary.mfrm_fit <- function(object, digits = 3, top_n = 5, ...) {
     key_warnings = key_warnings,
     next_actions = next_actions,
     population_overview = population_overview,
+    design_spec = design_spec_overview,
     population_design = population_design,
     population_coefficients = population_coefficients,
     population_coding = population_coding,
@@ -8210,6 +8373,19 @@ round_numeric_df <- function(df, digits = 3L) {
   out <- df
   numeric_cols <- vapply(out, is.numeric, logical(1))
   out[numeric_cols] <- lapply(out[numeric_cols], round, digits = digits)
+  out
+}
+
+drop_empty_print_columns <- function(df, columns) {
+  if (!is.data.frame(df) || nrow(df) == 0L) return(df)
+  out <- df
+  for (col in intersect(as.character(columns %||% character(0)), names(out))) {
+    vals <- out[[col]]
+    vals_chr <- trimws(as.character(vals))
+    if (all(is.na(vals) | is.na(vals_chr) | !nzchar(vals_chr))) {
+      out[[col]] <- NULL
+    }
+  }
   out
 }
 
@@ -8373,12 +8549,12 @@ print.summary.mfrm_fit <- function(x, ...) {
     cat("\nFit overview\n")
     cat(sprintf("  LogLik: %s | AIC: %s | BIC: %s\n", ov$LogLik, ov$AIC, ov$BIC))
     cat(sprintf(
-      "  Converged: %s | Status: %s | Basis: %s | Fn evals: %s | Gr evals: %s\n",
+      "  Converged: %s | Status: %s | Basis: %s | Fn evals: %s | BFGS iters: %s\n",
       ifelse(isTRUE(ov$Converged), "Yes", "No"),
       ov$ConvergenceStatus %||% NA_character_,
       ov$ConvergenceBasis %||% NA_character_,
       ov$FunctionEvaluations %||% ov$Iterations %||% NA,
-      ov$GradientEvaluations %||% NA
+      ov$BFGSIterations %||% ov$GradientEvaluations %||% NA
     ))
     if (is.finite(ov$TerminalGradientSupNorm %||% NA_real_)) {
       cat(sprintf(
@@ -8391,6 +8567,15 @@ print.summary.mfrm_fit <- function(x, ...) {
     if (!is.na(ov$ConvergenceDetail %||% NA_character_) && nzchar(ov$ConvergenceDetail %||% "")) {
       cat(sprintf("  Optimization note: %s\n", ov$ConvergenceDetail))
     }
+  }
+
+  if (nrow(x$design_spec %||% data.frame()) > 0) {
+    cat("\nDesign specification\n")
+    design_print <- drop_empty_print_columns(
+      as.data.frame(x$design_spec),
+      c("StepFacet", "ExternalDesignAnalogue")
+    )
+    print(design_print, row.names = FALSE)
   }
 
   if (nrow(x$population_overview) > 0) {
@@ -8439,7 +8624,11 @@ print.summary.mfrm_fit <- function(x, ...) {
   }
   if (nrow(x$settings_overview %||% data.frame()) > 0) {
     cat("\nEstimation settings\n")
-    print(round_numeric_df(as.data.frame(x$settings_overview), digits = digits), row.names = FALSE)
+    settings_print <- drop_empty_print_columns(
+      round_numeric_df(as.data.frame(x$settings_overview), digits = digits),
+      c("StepFacet", "SlopeFacet")
+    )
+    print(settings_print, row.names = FALSE)
   }
 
   if (nrow(x$facet_extremes) > 0) {

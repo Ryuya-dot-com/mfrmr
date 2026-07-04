@@ -18,12 +18,17 @@
 \value{
 An object of class \code{summary.mfrm_fit} with:
 \itemize{
-\item \code{overview}: global model/fit indicators
+\item \code{overview}: global model/fit indicators, including convergence status,
+severity, function evaluations, BFGS iteration approximation, and terminal
+gradient metrics when available
 \item \code{status}: concise front-door status block for quick review
 \item \code{key_warnings}: highest-priority warnings to review first
 \item \code{next_actions}: recommended follow-up helpers
-\item \code{population_overview}: current population-model basis, residual variance,
-and omission review
+\item \code{population_overview}: current population-model basis, marginal
+population-SD mode/estimate, residual variance, and omission review
+\item \code{design_spec}: compact threshold/design metadata, including whether
+thresholds are common (\code{RSM}) or vary by \code{step_facet} (\code{PCM} / bounded
+\code{GPCM}), the FACETS analogue, and any external design-matrix analogue
 \item \code{population_coefficients}: fitted latent-regression coefficients when a
 population model is active
 \item \code{population_design}: latent-regression design-matrix column check when a
@@ -121,9 +126,11 @@ fit <- fit_mfrm(
   method = "MML", quad_points = 5
 )
 s <- summary(fit)
-s$overview[, c("Model", "Method", "Converged")]
-# Look for: Converged = TRUE. If FALSE the fit is not safe to report;
-#   raise `maxit`, relax `reltol`, or rerun with `quad_points = 31`.
+s$overview[, c("Model", "Method", "Converged", "ConvergenceSeverity")]
+# Look for: Converged = TRUE and ConvergenceSeverity = "pass".
+# If severity is "review" or "fail", inspect TerminalGradientSupNorm,
+#   increase maxit and tighten/keep reltol for precision, or rerun with
+#   `quad_points = 31` for final MML reporting.
 s$person_overview
 # Look for: Mean ~ 0 (logits) and SD ~ 1 are typical when the sample
 #   is centred on the test difficulty. Min < -3 or Max > 3 with

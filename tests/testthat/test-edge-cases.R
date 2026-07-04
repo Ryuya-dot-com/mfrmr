@@ -61,7 +61,7 @@ test_that("fit_mfrm warns about non-convergence with tiny maxit", {
   expect_warning(
     fit_mfrm(d, "Person", c("Rater", "Task", "Criterion"), "Score",
              method = "JML", maxit = 1),
-    "did not fully converge"
+    "Optimizer result needs convergence review"
   )
 })
 

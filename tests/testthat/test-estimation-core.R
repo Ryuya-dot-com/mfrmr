@@ -404,33 +404,106 @@ test_that("RSM step estimates are finite", {
 test_that("binary scores are supported as ordered two-category responses", {
   set.seed(42)
   persons <- paste0("P", 1:60)
-  items <- paste0("I", 1:5)
-  d <- expand.grid(Person = persons, Item = items, stringsAsFactors = FALSE)
+  raters <- paste0("R", 1:5)
+  d <- expand.grid(Person = persons, Rater = raters, stringsAsFactors = FALSE)
   theta <- stats::rnorm(length(persons), 0, 1)
-  beta <- seq(-1, 1, length.out = length(items))
-  eta <- theta[match(d$Person, persons)] - beta[match(d$Item, items)]
+  beta <- seq(-1, 1, length.out = length(raters))
+  eta <- theta[match(d$Person, persons)] - beta[match(d$Rater, raters)]
   d$Score <- stats::rbinom(nrow(d), 1, stats::plogis(eta))
 
   fit_rsm <- suppressWarnings(fit_mfrm(
-    d, "Person", "Item", "Score",
+    d, "Person", "Rater", "Score",
     method = "JML", model = "RSM", maxit = 100
   ))
   fit_pcm <- suppressWarnings(fit_mfrm(
-    d, "Person", "Item", "Score",
-    method = "JML", model = "PCM", step_facet = "Item", maxit = 100
+    d, "Person", "Rater", "Score",
+    method = "JML", model = "PCM", step_facet = "Rater", maxit = 100
   ))
 
   expect_true(isTRUE(fit_rsm$summary$Converged[1]))
   expect_true(isTRUE(fit_pcm$summary$Converged[1]))
   expect_equal(fit_rsm$summary$Categories[1], 2)
   expect_equal(fit_pcm$summary$Categories[1], 2)
-  expect_identical(fit_rsm$config$facet_names, "Item")
+  expect_identical(fit_rsm$config$facet_names, "Rater")
   expect_equal(fit_rsm$config$n_cat, 2)
   expect_equal(fit_rsm$prep$score_map$OriginalScore, c(0, 1))
   expect_equal(fit_rsm$prep$score_map$InternalScore, c(0, 1))
   expect_equal(nrow(fit_rsm$steps), 1)
-  expect_equal(nrow(fit_pcm$steps), length(items))
+  expect_equal(nrow(fit_pcm$steps), length(raters))
   expect_true(all(is.finite(fit_pcm$steps$Estimate)))
+  expect_equal(fit_pcm$config$design_spec$engine, "fit_mfrm_unidim")
+  expect_equal(fit_pcm$config$design_spec$dimension$ndim, 1L)
+  expect_false(fit_pcm$config$design_spec$validation$dense_design_matrix_stored)
+  expect_equal(fit_pcm$config$design_spec$threshold_structure$type, "by_facet")
+  expect_equal(fit_pcm$config$design_spec$threshold_structure$facet, "Rater")
+  expect_match(
+    fit_pcm$config$design_spec$threshold_structure$facets_analogue,
+    "FACETS partial-credit",
+    fixed = TRUE
+  )
+  expect_equal(fit_pcm$config$design_spec$threshold_structure$tam_analogue, "Rater:step")
+  expect_match(
+    fit_pcm$config$design_spec$threshold_structure$binary_note,
+    "Two-category fits",
+    fixed = TRUE
+  )
+})
+
+test_that("RSM warns and fixes ignored step facets to the common-threshold design", {
+  set.seed(43)
+  persons <- paste0("P", 1:50)
+  raters <- paste0("R", 1:4)
+  d <- expand.grid(Person = persons, Rater = raters, stringsAsFactors = FALSE)
+  theta <- stats::rnorm(length(persons), 0, 1)
+  severity <- seq(-0.6, 0.6, length.out = length(raters))
+  eta <- theta[match(d$Person, persons)] - severity[match(d$Rater, raters)]
+  d$Score <- stats::rbinom(nrow(d), 1, stats::plogis(eta))
+
+  fit <- NULL
+  expect_warning(
+    fit <- fit_mfrm(
+      d, "Person", "Rater", "Score",
+      method = "JML",
+      model = "RSM",
+      step_facet = "Rater",
+      maxit = 100
+    ),
+    "`step_facet` is ignored for `model = \"RSM\"`",
+    fixed = TRUE
+  )
+
+  expect_null(fit$config$step_facet)
+  expect_null(fit$config$replay_inputs$step_facet)
+  expect_equal(fit$config$design_spec$threshold_structure$type, "common")
+  expect_null(fit$config$design_spec$threshold_structure$facet)
+  expect_true(is.na(fit$config$design_spec$threshold_structure$tam_analogue))
+
+  s <- summary(fit)
+  expect_s3_class(s, "summary.mfrm_fit")
+  expect_equal(s$design_spec$ResponseModel[1], "RSM")
+  expect_equal(s$design_spec$ThresholdStructure[1], "common")
+  expect_true(is.na(s$design_spec$StepFacet[1]))
+  expect_equal(s$settings_overview$StepFacet[1], NA_character_)
+  expect_match(
+    paste(capture.output(print(fit)), collapse = "\n"),
+    "Thresholds: common",
+    fixed = TRUE
+  )
+  expect_match(
+    paste(capture.output(print(s)), collapse = "\n"),
+    "Design specification",
+    fixed = TRUE
+  )
+  expect_false(grepl(
+    "StepFacet",
+    paste(capture.output(print(s)), collapse = "\n"),
+    fixed = TRUE
+  ))
+
+  wright <- plot(fit, type = "wright", draw = FALSE)
+  step <- plot(fit, type = "step", draw = FALSE)
+  expect_s3_class(wright, "mfrm_plot_data")
+  expect_s3_class(step, "mfrm_plot_data")
 })
 
 test_that("GPCM requires explicit and aligned step/slope facets", {
@@ -547,6 +620,21 @@ test_that("GPCM config scaffold records slope identification metadata", {
   expect_equal(cfg$config$gpcm_spec$reduction_reference, "PCM when all slopes equal 1")
   expect_equal(cfg$sizes$log_slopes, length(prep$levels$Criterion) - 1L)
   expect_identical(idx$step_idx, idx$slope_idx)
+  expect_equal(cfg$config$design_spec$response_model$family, "GPCM")
+  expect_true(cfg$config$design_spec$response_model$bounded_gpcm)
+  expect_equal(cfg$config$design_spec$threshold_structure$facet, "Criterion")
+  expect_equal(
+    cfg$config$design_spec$threshold_structure$constraint,
+    "sum_to_zero_within_step_facet_level"
+  )
+  expect_equal(
+    cfg$config$design_spec$parameter_blocks$slopes$identification,
+    "sum_to_zero_log_slopes"
+  )
+  expect_equal(
+    cfg$config$design_spec$parameter_blocks$thresholds$n_free,
+    cfg$sizes$steps
+  )
 })
 
 test_that("GPCM slope scaffold expands positive slopes with geometric mean one", {
@@ -890,8 +978,22 @@ test_that("optimizer diagnostics distinguish converged, reviewable, and hard war
   expect_identical(converged$ConvergenceReason, "tolerance_met")
   expect_identical(converged$ConvergenceSeverity, "pass")
   expect_false(isTRUE(converged$ReviewableWarning))
+  expect_false(isTRUE(converged$LargeGradientWarning))
   expect_equal(converged$FunctionEvaluations, 18L)
   expect_equal(converged$GradientEvaluations, 17L)
+
+  plateau_large_gradient <- mfrmr:::build_optimizer_diagnostics(
+    opt = list(convergence = 0L, counts = stats::setNames(c(18L, 17L), c("function", "gradient")), message = NULL),
+    gradient = c(5e-2, -2e-2),
+    reltol = 1e-6,
+    maxit = 50L,
+    optimizer_method = "BFGS"
+  )
+  expect_identical(plateau_large_gradient$ConvergenceStatus, "converged_plateau_large_gradient")
+  expect_identical(plateau_large_gradient$ConvergenceReason, "tolerance_met_large_gradient")
+  expect_identical(plateau_large_gradient$ConvergenceSeverity, "review")
+  expect_false(isTRUE(plateau_large_gradient$ReviewableWarning))
+  expect_true(isTRUE(plateau_large_gradient$LargeGradientWarning))
 
   reviewable <- mfrmr:::build_optimizer_diagnostics(
     opt = list(convergence = 1L, counts = stats::setNames(c(50L, 49L), c("function", "gradient")), message = "iteration limit"),
@@ -956,8 +1058,8 @@ test_that("MML engine planner falls back only for unsupported combinations", {
     requested = "em",
     population_active = FALSE
   )
-  expect_identical(gpcm$Used, "direct")
-  expect_true(isTRUE(gpcm$Fallback))
+  expect_identical(gpcm$Used, "em")
+  expect_false(isTRUE(gpcm$Fallback))
 })
 
 test_that("EM and hybrid MML engines are wired for RSM/PCM", {

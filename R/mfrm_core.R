@@ -72,6 +72,8 @@ gpcm_scope_helper_area <- function(helper) {
     "evaluate_mfrm_signal_detection" = "Diagnostic and signal-detection design screening under bounded GPCM",
     "analyze_dff" =,
     "analyze_dif" =,
+    "analyze_dff_moderation" =,
+    "analyze_dif_moderation" =,
     "dif_interaction_table" =,
     "dif_report" =,
     "plot_dif_heatmap" =,
@@ -262,15 +264,19 @@ gpcm_planning_scope_rationale <- function() {
   )
 }
 
-# Gauss-Hermite nodes/weights for standard normal integration
+# Gauss-Hermite nodes/weights for normal integration
 # Based on Golub-Welsch for Hermite polynomials
-# Returns nodes and weights for phi(x) dx
-#   integral f(x) phi(x) dx \approx sum w_i f(x_i)
-gauss_hermite_normal <- function(n) {
+# Returns nodes and weights for N(0, sd^2)
+#   integral f(x) phi_sd(x) dx \approx sum w_i f(x_i)
+gauss_hermite_normal <- function(n, sd = 1) {
   if (n < 1) stop("Gauss-Hermite quadrature requires n >= 1 quadrature points. ",
                    "Check the 'quad_points' argument.", call. = FALSE)
+  if (!is.numeric(sd) || length(sd) != 1L || !is.finite(sd) || sd <= 0) {
+    stop("Gauss-Hermite quadrature requires `sd` to be a single positive finite number.",
+         call. = FALSE)
+  }
   if (n == 1) {
-    return(list(nodes = 0, weights = 1))
+    return(list(nodes = 0, weights = 1, sd = as.numeric(sd), standard_nodes = 0))
   }
   i <- seq_len(n - 1)
   a <- rep(0, n)
@@ -285,7 +291,55 @@ gauss_hermite_normal <- function(n) {
   # Convert from exp(-x^2) to standard normal
   nodes <- sqrt(2) * nodes
   weights <- weights / sqrt(pi)
-  list(nodes = nodes, weights = weights)
+  list(
+    nodes = nodes * as.numeric(sd),
+    weights = weights,
+    sd = as.numeric(sd),
+    standard_nodes = nodes
+  )
+}
+
+normalize_population_sd_bounds <- function(population_sd_bounds = c(0.05, 10)) {
+  if (!is.numeric(population_sd_bounds) || length(population_sd_bounds) != 2L ||
+      any(!is.finite(population_sd_bounds)) || any(population_sd_bounds <= 0)) {
+    stop("`population_sd_bounds` must be two positive finite numbers, for example c(0.05, 10).",
+         call. = FALSE)
+  }
+  bounds <- as.numeric(population_sd_bounds)
+  if (!(bounds[1] < bounds[2])) {
+    stop("`population_sd_bounds[1]` must be smaller than `population_sd_bounds[2]`.",
+         call. = FALSE)
+  }
+  bounds
+}
+
+mml_population_sd_mode <- function(config) {
+  if (isTRUE(config$estimate_population_sd)) {
+    "estimated"
+  } else {
+    "fixed"
+  }
+}
+
+mml_population_sd_value <- function(config, default = 1) {
+  pop_active <- isTRUE((config$population_spec %||% list())$active)
+  if (isTRUE(pop_active)) {
+    return(1)
+  }
+  if (isTRUE(config$estimate_population_sd)) {
+    val <- as.numeric(config$estimated_population_sd %||% config$population_prior_sd %||% default)
+  } else {
+    val <- as.numeric(config$population_prior_sd %||% default)
+  }
+  if (!is.finite(val) || val <= 0) default else val
+}
+
+make_mml_quadrature <- function(quad_points, config = NULL, sd = NULL) {
+  quad_points <- as.integer(quad_points)
+  if (is.null(sd)) {
+    sd <- if (is.null(config)) 1 else mml_population_sd_value(config, default = 1)
+  }
+  gauss_hermite_normal(quad_points, sd = sd)
 }
 
 compact_population_spec <- function(population = NULL, person_levels = character(0)) {
@@ -317,6 +371,11 @@ compact_population_spec <- function(population = NULL, person_levels = character
     contrasts = pop$contrasts %||% NULL,
     coefficients = pop$coefficients %||% NULL,
     sigma2 = pop$sigma2 %||% NULL,
+    population_sd_mode = pop$population_sd_mode %||% NULL,
+    population_prior_sd = pop$population_prior_sd %||% NULL,
+    estimated_population_sd = pop$estimated_population_sd %||% NULL,
+    population_sd_se = pop$population_sd_se %||% NULL,
+    population_sd_ci = pop$population_sd_ci %||% NULL,
     converged = isTRUE(pop$converged),
     policy = pop$policy %||% NULL,
     person_lookup = person_lookup,
@@ -483,6 +542,137 @@ build_gpcm_slope_spec <- function(levels,
     identification = "sum_to_zero_log_slopes",
     scale_reference = "geometric_mean_one",
     reduction_reference = "PCM when all slopes equal 1"
+  )
+}
+
+build_mfrm_design_spec <- function(prep, config, sizes) {
+  n_steps <- max(as.integer(config$n_cat %||% 0L) - 1L, 0L)
+  model <- as.character(config$model %||% NA_character_)
+  step_facet <- as.character(config$step_facet %||% NA_character_)
+  step_facet <- if (is.na(step_facet) || !nzchar(step_facet)) NULL else step_facet
+  slope_facet <- as.character(config$slope_facet %||% NA_character_)
+  slope_facet <- if (is.na(slope_facet) || !nzchar(slope_facet)) NULL else slope_facet
+
+  threshold_levels <- if (identical(model, "RSM") || is.null(step_facet)) {
+    "common"
+  } else {
+    as.character(config$facet_levels[[step_facet]] %||% character(0))
+  }
+  threshold_type <- if (identical(model, "RSM")) "common" else "by_facet"
+  threshold_rows <- if (identical(threshold_type, "common")) 1L else length(threshold_levels)
+  threshold_free <- as.integer(sizes$steps %||% 0L)
+  facets_analogue <- if (identical(threshold_type, "common")) {
+    "FACETS common rating-scale structure"
+  } else {
+    paste0("FACETS partial-credit / Specific rating-scale structure by ", step_facet)
+  }
+  tam_analogue <- if (identical(threshold_type, "common")) {
+    NA_character_
+  } else {
+    paste0(step_facet, ":step")
+  }
+
+  facet_blocks <- lapply(config$facet_names, function(facet) {
+    spec <- config$facet_specs[[facet]] %||% list()
+    list(
+      facet = facet,
+      n_levels = length(config$facet_levels[[facet]] %||% character(0)),
+      n_free = as.integer(sizes[[facet]] %||% 0L),
+      centered = isTRUE(spec$centered),
+      sign = as.numeric(config$facet_signs[[facet]] %||% -1),
+      positive_orientation = facet %in% as.character(config$positive_facets %||% character(0))
+    )
+  })
+  names(facet_blocks) <- config$facet_names
+
+  list(
+    version = as.character(utils::packageVersion("mfrmr")),
+    engine = "fit_mfrm_unidim",
+    dimension = list(
+      type = "unidimensional",
+      ndim = 1L,
+      q_matrix = NULL,
+      latent_variance = if (isTRUE(config$estimate_population_sd)) {
+        "estimated_scalar"
+      } else if (isTRUE(config$population_spec$active)) {
+        "latent_regression_conditional_scalar"
+      } else {
+        "fixed_scalar"
+      }
+    ),
+    response_model = list(
+      family = model,
+      kernel = "adjacent_category",
+      bounded_gpcm = identical(model, "GPCM")
+    ),
+    observed_roles = list(
+      person = config$source_columns$person %||% "Person",
+      facets = as.character(config$source_columns$facets %||% config$facet_names),
+      score = config$source_columns$score %||% "Score",
+      weight = config$source_columns$weight %||% NULL
+    ),
+    parameter_blocks = list(
+      person = list(
+        n_levels = as.integer(config$n_person %||% 0L),
+        n_free = as.integer(sizes$theta %||% 0L),
+        role = if (identical(config$method, "JMLE")) "estimated" else "integrated"
+      ),
+      facets = facet_blocks,
+      thresholds = list(
+        type = threshold_type,
+        facet = step_facet,
+        n_levels = threshold_rows,
+        n_steps = n_steps,
+        n_expanded = threshold_rows * n_steps,
+        n_free = threshold_free
+      ),
+      slopes = if (identical(model, "GPCM")) {
+        list(
+          type = "positive_by_facet",
+          facet = slope_facet,
+          n_levels = length(config$facet_levels[[slope_facet]] %||% character(0)),
+          n_free = as.integer(sizes$log_slopes %||% 0L),
+          identification = config$gpcm_spec$identification %||% NA_character_,
+          scale_reference = config$gpcm_spec$scale_reference %||% NA_character_
+        )
+      } else {
+        NULL
+      },
+      interactions = list(
+        active = facet_interactions_active(config),
+        names = names(config$interaction_specs %||% list()),
+        n_free = as.integer(sizes$interactions %||% 0L)
+      )
+    ),
+    threshold_structure = list(
+      type = threshold_type,
+      facet = step_facet,
+      n_steps = n_steps,
+      levels = threshold_levels,
+      constraint = if (identical(threshold_type, "common")) {
+        "sum_to_zero_thresholds"
+      } else {
+        "sum_to_zero_within_step_facet_level"
+      },
+      binary_note = if (n_steps <= 1L) {
+        "Two-category fits have no free threshold contrast under the sum-to-zero step parameterization."
+      } else {
+        NULL
+      },
+      facets_analogue = facets_analogue,
+      tam_analogue = tam_analogue
+    ),
+    constraints = list(
+      noncenter_facet = config$noncenter_facet %||% NA_character_,
+      dummy_facets = as.character(config$dummy_facets %||% character(0)),
+      anchor_summary = config$anchor_summary %||% NULL
+    ),
+    validation = list(
+      dense_design_matrix_stored = FALSE,
+      index_design = TRUE,
+      rank_status = "implicit_index_parameterization",
+      connectivity_status = "checked_during_data_preparation"
+    )
   )
 }
 
@@ -2339,7 +2529,10 @@ build_estimation_config <- function(prep,
                                     dummy_facets,
                                     anchor_df,
                                     group_anchor_df,
-                                    population = NULL) {
+                                    population = NULL,
+                                    population_prior_sd = 1,
+                                    estimate_population_sd = FALSE,
+                                    population_sd_bounds = c(0.05, 10)) {
   config <- list(
     model = model,
     method = method,
@@ -2380,6 +2573,16 @@ build_estimation_config <- function(prep,
   config$anchor_review <- constraint_specs$anchor_review
   config$source_columns <- prep$source_columns
   config$population_spec <- compact_population_spec(population, prep$levels$Person)
+  config$population_prior_sd_input <- as.numeric(population_prior_sd)
+  config$population_prior_sd <- as.numeric(population_prior_sd)
+  config$estimate_population_sd <- isTRUE(estimate_population_sd)
+  config$population_sd_bounds <- normalize_population_sd_bounds(population_sd_bounds)
+  config$population_sd_mode <- mml_population_sd_mode(config)
+  config$estimated_population_sd <- if (isTRUE(config$estimate_population_sd)) NA_real_ else NA_real_
+  config$population_sd_se <- NA_real_
+  config$population_sd_ci <- c(NA_real_, NA_real_)
+  config$population_sd_se_status <- NA_character_
+  config$population_sd_se_detail <- NA_character_
   config$gpcm_spec <- if (identical(model, "GPCM")) {
     build_gpcm_slope_spec(
       levels = prep$levels[[slope_facet]],
@@ -2390,9 +2593,16 @@ build_estimation_config <- function(prep,
     NULL
   }
 
+  sizes <- build_param_sizes(config)
+  config$design_spec <- build_mfrm_design_spec(
+    prep = prep,
+    config = config,
+    sizes = sizes
+  )
+
   list(
     config = config,
-    sizes = build_param_sizes(config)
+    sizes = sizes
   )
 }
 
@@ -2507,6 +2717,7 @@ build_optimizer_diagnostics <- function(opt,
 
   grad_metrics <- compute_gradient_metrics(gradient)
   grad_tol <- if (is.finite(reltol)) max(1e-4, 10 * reltol) else 1e-4
+  large_gradient_plateau <- FALSE
   if (identical(convergence_basis, "relative_loglik")) {
     reviewable_warning <- FALSE
     if (is.na(code)) {
@@ -2535,6 +2746,10 @@ build_optimizer_diagnostics <- function(opt,
       code != 0L &&
       is.finite(grad_metrics$TerminalGradientSupNorm) &&
       grad_metrics$TerminalGradientSupNorm <= grad_tol
+    large_gradient_plateau <- !is.na(code) &&
+      identical(code, 0L) &&
+      is.finite(grad_metrics$TerminalGradientSupNorm) &&
+      grad_metrics$TerminalGradientSupNorm > grad_tol
     precision_warning <- is.character(message) &&
       !is.na(message) &&
       grepl("precision loss", message, ignore.case = TRUE)
@@ -2545,10 +2760,17 @@ build_optimizer_diagnostics <- function(opt,
       severity <- "review"
       detail <- "Optimizer did not return a convergence code."
     } else if (identical(code, 0L)) {
-      status <- "converged"
-      reason <- "tolerance_met"
-      severity <- "pass"
-      detail <- "Optimizer returned convergence code 0."
+      if (isTRUE(large_gradient_plateau)) {
+        status <- "converged_plateau_large_gradient"
+        reason <- "tolerance_met_large_gradient"
+        severity <- "review"
+        detail <- "Optimizer returned convergence code 0, but the terminal gradient exceeded the review tolerance; verify precision before reporting the fit."
+      } else {
+        status <- "converged"
+        reason <- "tolerance_met"
+        severity <- "pass"
+        detail <- "Optimizer returned convergence code 0."
+      }
     } else if (reviewable_warning && precision_warning) {
       status <- "reviewable_warning"
       reason <- "precision_warning_small_gradient"
@@ -2587,6 +2809,7 @@ build_optimizer_diagnostics <- function(opt,
     ConvergenceMessage = message,
     ConvergenceDetail = detail,
     ReviewableWarning = reviewable_warning,
+    LargeGradientWarning = isTRUE(large_gradient_plateau),
     GradientReviewTolerance = grad_tol,
     FunctionEvaluations = fn_evals,
     GradientEvaluations = gr_evals,
@@ -2624,15 +2847,6 @@ resolve_mml_engine_plan <- function(method,
       Used = requested,
       Fallback = FALSE,
       Detail = "Direct marginal likelihood optimization."
-    ))
-  }
-
-  if (identical(model, "GPCM")) {
-    return(list(
-      Requested = requested,
-      Used = "direct",
-      Fallback = TRUE,
-      Detail = "EM and hybrid MML are currently implemented only for RSM/PCM; falling back to direct optimization for GPCM."
     ))
   }
 
@@ -2692,7 +2906,7 @@ build_person_table <- function(method, idx, config, params, prep, quad_points) {
                                         rating_max = prep$rating_max)
 
   if (method == "MML") {
-    quad <- gauss_hermite_normal(quad_points)
+    quad <- make_mml_quadrature(quad_points, config = config)
     tbl <- compute_person_eap(idx, config, params, quad) |>
       mutate(Person = prep$levels$Person) |>
       select(Person, Estimate, SD)
@@ -2776,6 +2990,9 @@ build_slope_table <- function(config, prep, params) {
 
 build_estimation_summary <- function(model, method, prep, config, sizes, opt) {
   k_params <- sum(unlist(sizes))
+  if (identical(method, "MML") && isTRUE(config$estimate_population_sd)) {
+    k_params <- k_params + 1L
+  }
   loglik <- -opt$value
   n_obs <- if (!is.null(config$weight_col) && "Weight" %in% names(prep$data)) {
     sum(prep$data$Weight, na.rm = TRUE)
@@ -2840,6 +3057,11 @@ build_estimation_summary <- function(model, method, prep, config, sizes, opt) {
   } else {
     "function_evaluations"
   }
+  bfgs_iterations <- if (identical(as.character(optimizer_diag$OptimizerMethod %||% NA_character_), "BFGS")) {
+    as.integer(optimizer_diag$GradientEvaluations %||% NA_integer_)
+  } else {
+    NA_integer_
+  }
 
   tibble(
     Model = model,
@@ -2853,12 +3075,14 @@ build_estimation_summary <- function(model, method, prep, config, sizes, opt) {
     InteractionCells = interaction_cells,
     InteractionSparseCells = interaction_sparse_cells,
     Categories = config$n_cat,
+    Parameters = as.integer(k_params),
     LogLik = loglik,
     AIC = aic,
     BIC = bic,
     Converged = opt$convergence == 0,
     Iterations = iterations,
     IterationsBasis = iterations_basis,
+    BFGSIterations = bfgs_iterations,
     MMLEngineRequested = if (identical(method, "MML")) {
       as.character(mml_engine$Requested %||% config$estimation_control$mml_engine_requested %||% "direct")
     } else {
@@ -2885,6 +3109,46 @@ build_estimation_summary <- function(model, method, prep, config, sizes, opt) {
     } else {
       NA_real_
     },
+    PopulationSDMode = if (identical(method, "MML")) {
+      as.character(config$population_sd_mode %||% "fixed")
+    } else {
+      NA_character_
+    },
+    PopulationPriorSD = if (identical(method, "MML")) {
+      as.numeric(config$population_prior_sd_input %||% config$population_prior_sd %||% NA_real_)
+    } else {
+      NA_real_
+    },
+    EstimatedPopulationSD = if (identical(method, "MML") && isTRUE(config$estimate_population_sd)) {
+      as.numeric(config$estimated_population_sd %||% NA_real_)
+    } else {
+      NA_real_
+    },
+    PopulationSDSE = if (identical(method, "MML") && isTRUE(config$estimate_population_sd)) {
+      as.numeric(config$population_sd_se %||% NA_real_)
+    } else {
+      NA_real_
+    },
+    PopulationSDCI_Lower = if (identical(method, "MML") && isTRUE(config$estimate_population_sd)) {
+      as.numeric((config$population_sd_ci %||% c(NA_real_, NA_real_))[1])
+    } else {
+      NA_real_
+    },
+    PopulationSDCI_Upper = if (identical(method, "MML") && isTRUE(config$estimate_population_sd)) {
+      as.numeric((config$population_sd_ci %||% c(NA_real_, NA_real_))[2])
+    } else {
+      NA_real_
+    },
+    PopulationSDSEStatus = if (identical(method, "MML") && isTRUE(config$estimate_population_sd)) {
+      as.character(config$population_sd_se_status %||% NA_character_)
+    } else {
+      NA_character_
+    },
+    PopulationSDSEDetail = if (identical(method, "MML") && isTRUE(config$estimate_population_sd)) {
+      as.character(config$population_sd_se_detail %||% NA_character_)
+    } else {
+      NA_character_
+    },
     OptimizerMethod = optimizer_diag$OptimizerMethod,
     ConvergenceCode = optimizer_diag$ConvergenceCode,
     ConvergenceBasis = optimizer_diag$ConvergenceBasis,
@@ -2894,6 +3158,7 @@ build_estimation_summary <- function(model, method, prep, config, sizes, opt) {
     ConvergenceMessage = optimizer_diag$ConvergenceMessage,
     ConvergenceDetail = optimizer_diag$ConvergenceDetail,
     ReviewableWarning = optimizer_diag$ReviewableWarning,
+    LargeGradientWarning = optimizer_diag$LargeGradientWarning %||% FALSE,
     GradientReviewTolerance = optimizer_diag$GradientReviewTolerance,
     FunctionEvaluations = optimizer_diag$FunctionEvaluations,
     GradientEvaluations = optimizer_diag$GradientEvaluations,
@@ -2939,7 +3204,11 @@ mfrm_estimate <- function(data, person_col, facet_cols, score_col,
                           dummy_facets = character(0),
                           positive_facets = character(0),
                           population = NULL,
-                          quad_points = 15, maxit = 400, reltol = 1e-6,
+                          quad_points = 15,
+                          population_prior_sd = 1,
+                          estimate_population_sd = FALSE,
+                          population_sd_bounds = c(0.05, 10),
+                          maxit = 400, reltol = 1e-6,
                           mml_engine = "direct",
                           checkpoint = NULL) {
   # Stage 1: Normalize model options and input data.
@@ -3008,13 +3277,19 @@ mfrm_estimate <- function(data, person_col, facet_cols, score_col,
     dummy_facets = dummy_facets,
     anchor_df = anchor_df,
     group_anchor_df = group_anchor_df,
-    population = population
+    population = population,
+    population_prior_sd = population_prior_sd,
+    estimate_population_sd = estimate_population_sd,
+    population_sd_bounds = population_sd_bounds
   )
   config <- cfg$config
   config$estimation_control <- list(
     maxit = as.integer(maxit),
     reltol = as.numeric(reltol),
     quad_points = as.integer(quad_points),
+    population_prior_sd = as.numeric(population_prior_sd),
+    estimate_population_sd = isTRUE(estimate_population_sd),
+    population_sd_bounds = as.numeric(population_sd_bounds),
     mml_engine_requested = normalize_mml_engine(mml_engine),
     checkpoint = checkpoint
   )
@@ -3035,6 +3310,28 @@ mfrm_estimate <- function(data, person_col, facet_cols, score_col,
   )
   config$estimation_control$mml_engine_used <- as.character(opt$mml_engine$Used %||% NA_character_)
   config$estimation_control$mml_engine_detail <- as.character(opt$mml_engine$Detail %||% NA_character_)
+  if (identical(method, "MML")) {
+    config$population_sd_mode <- mml_population_sd_mode(config)
+    if (isTRUE(config$estimate_population_sd)) {
+      config$estimated_population_sd <- as.numeric(opt$estimated_population_sd %||% NA_real_)
+      config$population_prior_sd <- config$estimated_population_sd
+      profile <- opt$population_sd_profile %||% list()
+      config$population_sd_se <- as.numeric(profile$se %||% NA_real_)
+      ci <- as.numeric(profile$ci %||% c(NA_real_, NA_real_))
+      config$population_sd_ci <- if (length(ci) == 2L) ci else c(NA_real_, NA_real_)
+      config$population_sd_se_status <- as.character(profile$status %||% NA_character_)
+      config$population_sd_se_reason <- as.character(profile$reason %||% NA_character_)
+      config$population_sd_se_detail <- as.character(profile$detail %||% NA_character_)
+      config$population_sd_engine_notice <- as.character(opt$mml_engine$Detail %||% NA_character_)
+    } else {
+      config$estimated_population_sd <- NA_real_
+      config$population_sd_se <- NA_real_
+      config$population_sd_ci <- c(NA_real_, NA_real_)
+      config$population_sd_se_status <- NA_character_
+      config$population_sd_se_reason <- NA_character_
+      config$population_sd_se_detail <- NA_character_
+    }
+  }
 
   # Stage 5: Build human-readable output tables.
   params <- expand_params(opt$par, sizes, config)
@@ -5248,11 +5545,12 @@ add_gpcm_score_side_delta_se <- function(scorefile,
       )
     ))
   }
-  if (!"Person" %in% names(scorefile) || !"ScoreSlope" %in% names(scorefile)) {
+  if (!"Person" %in% names(scorefile) || !"ScoreSlope" %in% names(scorefile) ||
+      !"Var" %in% names(scorefile)) {
     return(add_unavailable(
       scorefile,
       status = "not_available",
-      detail = "Score-side delta SE requires Person and ScoreSlope columns."
+      detail = "Score-side delta SE requires Person, ScoreSlope, and Var columns."
     ))
   }
 
@@ -5304,8 +5602,10 @@ add_gpcm_score_side_delta_se <- function(scorefile,
   expected_components <- 1L + length(facet_names)
   eta_se <- sqrt(eta_var)
   score_slope <- abs(suppressWarnings(as.numeric(scorefile$ScoreSlope)))
-  se <- score_slope * eta_se
-  ok <- is.finite(se) & component_count == expected_components &
+  score_var <- suppressWarnings(as.numeric(scorefile$Var))
+  se <- score_slope * score_var * eta_se
+  ok <- is.finite(se) & is.finite(score_var) & score_var >= 0 &
+    component_count == expected_components &
     missing_count == 0L
 
   expected <- suppressWarnings(as.numeric(scorefile$Expected %||% NA_real_))
@@ -5328,15 +5628,16 @@ add_gpcm_score_side_delta_se <- function(scorefile,
   residual_lower <- residual - z * se
   residual_upper <- residual + z * se
 
-  method <- "Score-side delta method (measure SE components x ScoreSlope)"
+  method <- "Score-side delta method (measure SE components x ScoreSlope x Var)"
   detail <- paste(
-    "Delta transform from logit-side ModelSE components through ScoreSlope;",
+    "Delta transform from logit-side ModelSE components through the",
+    "expected-score derivative ScoreSlope * Var;",
     "row component variances are summed without cross-component covariance.",
     "This is not FACETS-equivalent score-side uncertainty."
   )
   missing_detail <- paste(
     "Score-side delta SE unavailable because required measure SE components",
-    "or ScoreSlope were missing."
+    "or ScoreSlope/Var fields were missing."
   )
 
   scorefile$ScoreSideLogitSE <- ifelse(ok, eta_se, NA_real_)
@@ -5640,7 +5941,7 @@ compute_mml_expected_category_diagnostics <- function(res,
   sizes <- build_param_sizes(config)
   params <- expand_params(res$opt$par, sizes, config)
   quad_points <- max(1L, as.integer(config$estimation_control$quad_points %||% 15L))
-  quad <- gauss_hermite_normal(quad_points)
+  quad <- make_mml_quadrature(quad_points, config = config)
   base_eta <- compute_base_eta(idx, params, config)
   logprob_bundle <- mfrm_mml_logprob_bundle(
     idx = idx,
@@ -7398,7 +7699,7 @@ compute_mml_parameter_covariance <- function(res) {
                        slope_facet = config$slope_facet,
                        interaction_specs = config$interaction_specs)
   quad_points <- max(1L, as.integer(config$estimation_control$quad_points %||% 15L))
-  quad <- gauss_hermite_normal(quad_points)
+  quad <- make_mml_quadrature(quad_points, config = config)
   cache <- make_param_cache(sizes, config, idx, is_mml = TRUE)
 
   fn <- function(par, idx, config, sizes, quad) {

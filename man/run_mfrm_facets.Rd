@@ -81,9 +81,14 @@ columns after person/score/weight mapping.}
 
 \item{quad_points}{Quadrature points for MML; passed to \code{\link[=fit_mfrm]{fit_mfrm()}}.}
 
-\item{maxit}{Maximum optimizer iterations.}
+\item{maxit}{Maximum outer optimizer iterations passed to \code{\link[=fit_mfrm]{fit_mfrm()}}.
+For direct BFGS fits, this is not the same unit as
+\code{fit$summary$Iterations} (function evaluations).}
 
-\item{reltol}{Optimization tolerance.}
+\item{reltol}{Relative optimizer tolerance passed to \code{\link[=fit_mfrm]{fit_mfrm()}}. For
+direct BFGS fits, tighter values are needed for likelihood or
+cross-implementation comparisons; inspect \code{ConvergenceSeverity} and
+\code{TerminalGradientSupNorm} in the returned fit summary.}
 
 \item{mml_engine}{MML optimization engine passed to \code{\link[=fit_mfrm]{fit_mfrm()}}. Applies
 only when \code{method = "MML"}.}

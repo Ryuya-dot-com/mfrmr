@@ -51,8 +51,14 @@
 #' @param method `"MML"` (default) or `"JML"`. `"JMLE"` is accepted as a
 #'   backward-compatible alias for the same joint-maximum-likelihood path.
 #' @param step_facet Step facet for `PCM` and the bounded `GPCM`
-#'   branch. For `GPCM`, this should be supplied explicitly rather than
-#'   relying on an implicit default.
+#'   branch. This is the facet whose levels receive separate rating-scale
+#'   step/threshold vectors. In FACETS-facing rater analyses,
+#'   `step_facet = "Rater"` is the clearest example: it lets each rater have
+#'   their own category-use structure. Use `"Item"` for item-specific
+#'   partial-credit scales, `"Criterion"` for criterion-specific rubrics, or
+#'   another declared facet when that facet is the intended source of threshold
+#'   variation. For `GPCM`, supply this explicitly rather than relying on an
+#'   implicit default.
 #' @param slope_facet Slope facet for the bounded `GPCM` branch. The
 #'   current release requires `slope_facet == step_facet` and uses a
 #'   positive-slope identification convention on the log scale with geometric
@@ -99,8 +105,30 @@
 #'   on moderately sized designs, which is why the default now sits at
 #'   the publication tier; set a lower value explicitly for
 #'   exploratory runs.
-#' @param maxit Maximum optimizer iterations.
-#' @param reltol Optimization tolerance.
+#' @param population_prior_sd Positive numeric. SD of the fixed normal latent
+#'   distribution used by ordinary `MML` fits. The default `1` preserves the
+#'   historical standard-normal metric. When `estimate_population_sd = TRUE`,
+#'   this value is used as the starting SD.
+#' @param estimate_population_sd Logical. If `TRUE`, additive `RSM`/`PCM` and
+#'   bounded-`GPCM` `MML` fits estimate the normal latent population SD by an EM
+#'   variance M-step. The current implementation is opt-in, forces the EM
+#'   engine, and is not yet available for latent-regression MML or model-
+#'   estimated facet interactions.
+#' @param population_sd_bounds Length-two positive numeric vector giving lower
+#'   and upper bounds for `estimate_population_sd`. Defaults to `c(0.05, 10)`.
+#' @param maxit Maximum outer optimizer iterations. For direct `JMLE` and
+#'   direct `MML` fits this is the BFGS iteration cap passed to
+#'   [stats::optim()]. It is not the same unit as `fit$summary$Iterations`,
+#'   which records function evaluations for direct BFGS fits.
+#' @param reltol Relative optimizer tolerance. For direct BFGS fits this is
+#'   passed to [stats::optim()], whose stopping rule is based on relative
+#'   objective improvement. The effective absolute log-likelihood change
+#'   threshold therefore scales roughly with `reltol * abs(LogLik)`, so large
+#'   rating tables can stop with non-negligible absolute log-likelihood drift.
+#'   For likelihood, step-parameter, or cross-implementation comparisons, use
+#'   a tighter value such as `1e-10` to `1e-12` with enough `maxit`, and inspect
+#'   `TerminalGradientSupNorm` / `ConvergenceSeverity` in `fit$summary`.
+#'   Looser values are appropriate only for exploratory approximate fits.
 #' @param mml_engine MML optimization engine for `method = "MML"`:
 #'   `"direct"` (default) uses direct BFGS on the marginal log-likelihood,
 #'   `"em"` uses an EM loop for `RSM` / `PCM` with `population = NULL`, and
@@ -190,7 +218,22 @@
 #' levels of all facets.
 #' With `model = "PCM"`, each level of `step_facet` receives its own
 #' threshold vector \eqn{\tau_{i,k}} on the package's shared observed
-#' score scale.
+#' score scale. In FACETS terms, this is the package-native route for a
+#' partial-credit / Specific rating-scale structure. For example,
+#' `step_facet = "Rater"` records rater-specific category-use thresholds,
+#' matching the common judging question "do raters use the score categories
+#' differently?" The same mechanism supports `step_facet = "Item"` for
+#' item-specific partial-credit scales or `step_facet = "Criterion"` for
+#' criterion-specific rubric thresholds. Design-matrix software may label
+#' these blocks `rater:step`, `item:step`, or `criterion:step`; mfrmr keeps the
+#' public API in FACETS-facing `step_facet` terms and records that vocabulary
+#' only as external comparison metadata.
+#'
+#' Each fit stores a compact internal `fit$config$design_spec` describing the
+#' unidimensional engine, observed roles, threshold structure, constraints, and
+#' external FACETS/TAM analogues. This specification is metadata for replay,
+#' reporting, and future design-matrix routes; it is not a dense design matrix
+#' and it does not add `ndim`, `Q`, or covariance arguments to `fit_mfrm()`.
 #'
 #' With bounded `model = "GPCM"`, the adjacent-category kernel is multiplied by
 #' a positive slope for the designated slope-facet level:
@@ -212,7 +255,14 @@
 #' \eqn{\alpha_g(\eta - \tau_{g,1})}.
 #'
 #' With `method = "MML"`, person parameters are integrated out using
-#' Gauss-Hermite quadrature and EAP estimates are computed post-hoc.
+#' Gauss-Hermite quadrature and EAP estimates are computed post-hoc. In the
+#' default `population_formula = NULL` route, the latent distribution is the
+#' package's legacy fixed normal prior (`population_prior_sd = 1`). Set
+#' `estimate_population_sd = TRUE` to estimate the additive `RSM`/`PCM` or
+#' bounded-`GPCM` MML population SD under EM. Supplying `population_formula` activates the
+#' separate latent-regression MML branch, where the conditional residual variance
+#' `sigma2` is estimated and quadrature nodes are transformed as
+#' \eqn{\theta_{nq} = x_n^\top\beta + \sigma z_q}.
 #' With `method = "JML"`, all parameters are estimated jointly as fixed
 #' effects. `"JMLE"` remains an accepted compatibility alias, but package
 #' output now uses `"JML"` as the public label. See the "Estimation methods"
@@ -379,13 +429,20 @@
 #' the shared observed-score scale.
 #'
 #' Supported model/estimation combinations in the current release:
-#' - `model = "RSM"` with `method = "MML"` or `"JML"/"JMLE"`
+#' - `model = "RSM"` with `method = "MML"` or `"JML"/"JMLE"`;
+#'   `step_facet` and `slope_facet` are not part of this common-threshold
+#'   model and are ignored with a warning if supplied
 #' - `model = "PCM"` with a designated `step_facet` (defaults to first facet)
 #' - `facet_interactions` with `model = "RSM"` or `"PCM"` for explicit
 #'   two-way non-person facet interactions
 #' - `model = "GPCM"` is currently implemented only for the narrow bounded
-#'   branch with `slope_facet == step_facet`; `MML` and `JML` fitting, core
-#'   summaries, fixed-calibration posterior scoring, [compute_information()],
+#'   branch with `slope_facet == step_facet`. This is not a complete
+#'   unrestricted GPCM implementation: arbitrary slope structures,
+#'   multidimensional or random-effect GPCM extensions, MCMC or posterior
+#'   predictive engines, and full FACETS-style score-side equivalence remain
+#'   outside the current boundary. Within the bounded branch, `MML` and `JML`
+#'   fitting, core summaries, fixed-calibration posterior scoring,
+#'   [compute_information()],
 #'   Wright/pathway/CCC fit plots, [diagnose_mfrm()], residual-PCA follow-up,
 #'   [interrater_agreement_table()], [unexpected_response_table()],
 #'   [displacement_table()], [measurable_summary_table()],
@@ -409,10 +466,14 @@
 #'   current `GPCM` scope.
 #'
 #' Latent-regression status:
-#' - `population_formula = NULL` keeps the legacy unconditional `MML` / `JML`
-#'   behavior.
+#' - `population_formula = NULL` keeps the ordinary unconditional `MML` / `JML`
+#'   behavior. For `MML`, this means a fixed normal latent prior by default
+#'   (`population_prior_sd = 1`) or an opt-in estimated normal population SD
+#'   for additive `RSM`/`PCM` and bounded-`GPCM` EM fits when
+#'   `estimate_population_sd = TRUE`.
 #' - Supplying `population_formula` activates a first-version latent-regression
-#'   branch for `method = "MML"` only.
+#'   branch for `method = "MML"` only. In that branch, the conditional
+#'   residual variance `sigma2` is estimated.
 #' - The current branch assumes a one-dimensional conditional-normal population
 #'   model with person-specific quadrature nodes
 #'   \eqn{\theta_{nq} = x_n^\top \beta + \sigma z_q}.
@@ -505,8 +566,12 @@
 #' - `quad_points = 61` (or higher) is reserved for ultra-precise
 #'   benchmarking on very narrow score supports.
 #' - `mml_engine = "direct"` remains the most stable general-purpose path.
-#' - `mml_engine = "em"` or `"hybrid"` currently target `RSM` / `PCM` fits
-#'   without a latent-regression population model.
+#' - `mml_engine = "em"` or `"hybrid"` currently target additive `RSM` /
+#'   `PCM` and bounded `GPCM` fits without a latent-regression population
+#'   model or model-estimated facet interactions.
+#' - `estimate_population_sd = TRUE` uses the EM variance M-step and overrides
+#'   `mml_engine = "direct"` / `"hybrid"` to the EM path for the supported
+#'   additive `RSM` / `PCM` and bounded-`GPCM` scope.
 #' - Benchmark your own workload before using `mml_engine = "em"` or
 #'   `"hybrid"` for final reporting; `direct` remains the safer default when
 #'   you have not compared engines for your data.
@@ -587,8 +652,17 @@
 #' @return
 #' An object of class `mfrm_fit` (named list) with:
 #' - `summary`: one-row model summary (`LogLik`, `AIC`, `BIC`, convergence)
-#'   including public `Method`, internal `MethodUsed`, and
-#'   `MMLEngineRequested`, `MMLEngineUsed`, and `EMIterations` for MML fits
+#'   including public `Method`, internal `MethodUsed`, and optimizer
+#'   diagnostics. For direct BFGS fits, `Iterations` records function
+#'   evaluations (`IterationsBasis = "function_evaluations"`), while
+#'   `BFGSIterations` mirrors `GradientEvaluations` as the closest reported
+#'   BFGS iteration count. `Converged` keeps the optimizer code-0 contract;
+#'   use `ConvergenceStatus`, `ConvergenceSeverity`, `TerminalGradientSupNorm`,
+#'   and `GradientReviewTolerance` to decide whether the fit needs review.
+#'   Code-0 large-gradient warnings are controlled by
+#'   `options(mfrmr.warn_large_gradient = TRUE/FALSE)`.
+#'   MML fits also record `MMLEngineRequested`, `MMLEngineUsed`, and
+#'   `EMIterations`
 #' - `facets$person`: person estimates (`Estimate`; plus `SD` for MML)
 #' - `facets$others`: facet-level estimates for each facet
 #' - `steps`: estimated threshold/step parameters as a one-row-per-step
@@ -611,7 +685,10 @@
 #' - `interactions`: model-estimated facet interaction effects and metadata
 #'   when `facet_interactions` is supplied
 #' - `population`: population-model metadata. Ordinary fits keep an inactive
-#'   scaffold (`active = FALSE`, `posterior_basis = "legacy_mml"`). Active
+#'   scaffold (`active = FALSE`) with the MML population-SD mode recorded in
+#'   `population_sd_mode`, `population_prior_sd`, `estimated_population_sd`,
+#'   and `posterior_basis` (`"legacy_mml"` for fixed-SD MML,
+#'   `"estimated_population_sd_mml"` for opt-in free-SD MML). Active
 #'   latent-regression fits store the fitted design matrix, regression
 #'   coefficients, residual variance, omission review, the complete-case
 #'   estimation table (`person_table`), and the observed-person-aligned
@@ -653,10 +730,11 @@
 #' )
 #' fit$summary
 #' s_fit <- summary(fit)
-#' s_fit$overview[, c("Model", "Method", "Converged")]
-#' # Look for: Converged = TRUE. If FALSE, raise `maxit`, relax `reltol`,
-#' #   or inspect `summary(fit)$key_warnings` for sparse-cell or
-#' #   identification flags.
+#' s_fit$overview[, c("Model", "Method", "Converged", "ConvergenceSeverity")]
+#' # Look for: Converged = TRUE and ConvergenceSeverity = "pass".
+#' # If the fit needs review, inspect TerminalGradientSupNorm and either
+#' #   increase maxit while keeping/tightening reltol for precision, or use
+#' #   a looser reltol only for exploratory approximate fits.
 #' s_fit$person_overview
 #' # Look for: Mean ~ 0 logits and SD ~ 1 logit are typical when the
 #' #   sample is centred on the test difficulty. SD < 0.5 suggests the
@@ -666,8 +744,36 @@
 #' # Look for: |Targeting| < ~0.5 logits is comfortable; larger absolute
 #' #   values mean persons sit systematically above or below the facet
 #' #   means under the package's sum-to-zero identification.
+#' s_fit$population_overview[, c("PosteriorBasis", "PopulationSDMode",
+#'                               "PopulationPriorSD")]
+#' # Look for: ordinary MML uses a fixed N(0, 1) latent prior unless
+#' #   `estimate_population_sd = TRUE` is explicitly requested.
 #' p_fit <- plot(fit, draw = FALSE)
 #' p_fit$wright_map$data$plot
+#'
+#' # Opt-in free population SD: use this when the latent metric itself
+#' # should be estimated rather than fixed to the historical N(0, 1)
+#' # scale. This forces the EM path and adds one parameter to AIC/BIC.
+#' fit_free_sd <- fit_mfrm(
+#'   data = toy,
+#'   person = "Person",
+#'   facets = c("Rater", "Criterion"),
+#'   score = "Score",
+#'   method = "MML",
+#'   model = "RSM",
+#'   quad_points = 7,
+#'   maxit = 80,
+#'   estimate_population_sd = TRUE
+#' )
+#' summary(fit_free_sd)$population_overview[
+#'   , c("PopulationSDMode", "EstimatedPopulationSD",
+#'       "PopulationSDSE", "PopulationSDSEStatus")
+#' ]
+#' compare_mfrm(fit, fit_free_sd,
+#'              labels = c("fixed_SD", "estimated_SD"))$table[
+#'   , c("Label", "npar", "AIC", "PopulationSDMode",
+#'       "EstimatedPopulationSD")
+#' ]
 #'
 #' # JML is available for exploratory / fast iteration passes:
 #' fit_jml <- fit_mfrm(
@@ -752,6 +858,9 @@ fit_mfrm <- function(data,
                      min_obs_per_element = 30,
                      min_obs_per_category = 10,
                      quad_points = 31,
+                     population_prior_sd = 1,
+                     estimate_population_sd = FALSE,
+                     population_sd_bounds = c(0.05, 10),
                      maxit = 400,
                      reltol = 1e-6,
                      mml_engine = c("direct", "em", "hybrid"),
@@ -817,6 +926,17 @@ fit_mfrm <- function(data,
     stop("`quad_points` must be a finite positive integer. Got: ",
          deparse(quad_points), ".", call. = FALSE)
   }
+  if (!is.numeric(population_prior_sd) || length(population_prior_sd) != 1L ||
+      !is.finite(population_prior_sd) || population_prior_sd <= 0) {
+    stop("`population_prior_sd` must be a single positive finite number.",
+         call. = FALSE)
+  }
+  if (!is.logical(estimate_population_sd) || length(estimate_population_sd) != 1L ||
+      is.na(estimate_population_sd)) {
+    stop("`estimate_population_sd` must be a single logical value.",
+         call. = FALSE)
+  }
+  population_sd_bounds <- normalize_population_sd_bounds(population_sd_bounds)
   if (!is.null(person_id) && (!is.character(person_id) || length(person_id) != 1 || !nzchar(person_id))) {
     stop("`person_id` must be NULL or a single non-empty character string naming the person column in `person_data`.",
          call. = FALSE)
@@ -829,11 +949,43 @@ fit_mfrm <- function(data,
   model <- toupper(match.arg(model))
   method_input <- toupper(match.arg(method))
   method <- ifelse(method_input == "JML", "JMLE", method_input)
+  if (identical(model, "RSM")) {
+    if (!is.null(step_facet)) {
+      warning(
+        "`step_facet` is ignored for `model = \"RSM\"`; RSM uses one common ",
+        "rating-scale threshold vector. Use `model = \"PCM\"` with ",
+        "`step_facet = \"Rater\"`, `\"Item\"`, `\"Criterion\"`, or another ",
+        "declared facet when thresholds should vary by that facet.",
+        call. = FALSE
+      )
+      step_facet <- NULL
+    }
+    if (!is.null(slope_facet)) {
+      warning(
+        "`slope_facet` is ignored for `model = \"RSM\"`; slope facets are ",
+        "used only by the bounded `GPCM` branch.",
+        call. = FALSE
+      )
+      slope_facet <- NULL
+    }
+  }
   mml_engine <- tolower(match.arg(mml_engine))
   interaction_policy <- tolower(match.arg(interaction_policy))
   anchor_policy <- tolower(match.arg(anchor_policy))
   population_policy <- tolower(match.arg(population_policy))
   facet_shrinkage <- match.arg(facet_shrinkage)
+  user_maxit <- as.integer(maxit)
+  if (isTRUE(estimate_population_sd)) {
+    if (!identical(method, "MML")) {
+      stop("`estimate_population_sd = TRUE` requires `method = 'MML'`.",
+           call. = FALSE)
+    }
+    if (!is.null(facet_interactions) && length(facet_interactions) > 0L) {
+      stop("`estimate_population_sd = TRUE` currently supports additive MML only; model-estimated facet interactions are not yet supported.",
+           call. = FALSE)
+    }
+    maxit <- max(as.integer(maxit), 300L)
+  }
   if (!is.null(facet_prior_sd)) {
     if (!is.numeric(facet_prior_sd) || length(facet_prior_sd) != 1L ||
         !is.finite(facet_prior_sd) || facet_prior_sd < 0) {
@@ -858,6 +1010,10 @@ fit_mfrm <- function(data,
     if (!identical(method_input, "MML")) {
       stop("Latent-regression scaffolding currently requires `method = 'MML'`. ",
            "The requested population model can currently be estimated only in the MML branch.",
+           call. = FALSE)
+    }
+    if (isTRUE(estimate_population_sd)) {
+      stop("`estimate_population_sd = TRUE` cannot be combined with `population_formula`; latent-regression MML already estimates conditional residual variance `sigma2` in its separate branch.",
            call. = FALSE)
     }
   }
@@ -933,6 +1089,9 @@ fit_mfrm <- function(data,
     positive_facets = positive_facets,
     population = population,
     quad_points = quad_points,
+    population_prior_sd = population_prior_sd,
+    estimate_population_sd = estimate_population_sd,
+    population_sd_bounds = population_sd_bounds,
     maxit = maxit,
     reltol = reltol,
     mml_engine = mml_engine,
@@ -1004,7 +1163,10 @@ fit_mfrm <- function(data,
     min_obs_per_element = as.numeric(min_obs_per_element),
     min_obs_per_category = as.numeric(min_obs_per_category),
     quad_points = as.integer(quad_points),
-    maxit = as.integer(maxit),
+    population_prior_sd = as.numeric(population_prior_sd),
+    estimate_population_sd = isTRUE(estimate_population_sd),
+    population_sd_bounds = as.numeric(population_sd_bounds),
+    maxit = as.integer(user_maxit),
     reltol = as.numeric(reltol),
     mml_engine = as.character(mml_engine),
     population_formula = population_formula,
@@ -1206,6 +1368,21 @@ attach_diagnostics_to_fit <- function(fit) {
 finalize_mfrm_population_fit <- function(fit, population) {
   pop <- population %||% list()
   if (!isTRUE(pop$active)) {
+    if (identical(fit$config$method, "MML")) {
+      pop$population_sd_mode <- as.character(fit$config$population_sd_mode %||% "fixed")
+      pop$population_prior_sd <- as.numeric(fit$config$population_prior_sd_input %||%
+                                              fit$config$population_prior_sd %||% 1)
+      pop$estimated_population_sd <- as.numeric(fit$config$estimated_population_sd %||% NA_real_)
+      pop$population_sd_se <- as.numeric(fit$config$population_sd_se %||% NA_real_)
+      pop$population_sd_ci <- as.numeric(fit$config$population_sd_ci %||% c(NA_real_, NA_real_))
+      if (isTRUE(fit$config$estimate_population_sd)) {
+        pop$posterior_basis <- "estimated_population_sd_mml"
+        pop$notes <- unique(c(
+          as.character(pop$notes %||% character(0)),
+          "Ordinary MML estimated the normal latent population SD by an opt-in EM variance M-step."
+        ))
+      }
+    }
     return(pop)
   }
 
@@ -1263,7 +1440,7 @@ prepare_mfrm_population_scaffold <- function(data,
       omitted_persons = character(0),
       response_rows_retained = nrow(data),
       response_rows_omitted = 0L,
-      notes = "No population model was requested; this fit uses the package's legacy unconditional estimation path."
+      notes = "No latent-regression population model was requested; this fit uses the ordinary unconditional estimation path, with any MML population-SD mode recorded after estimation."
     ))
   }
 
@@ -1524,6 +1701,13 @@ normalize_compare_signature <- function(fit) {
     facet_interactions = canonical_compare_interaction_terms(
       cfg$facet_interactions
     ),
+    estimate_population_sd = isTRUE(cfg$estimate_population_sd),
+    population_prior_sd = suppressWarnings(as.numeric(
+      cfg$population_prior_sd_input %||% cfg$population_prior_sd %||% 1
+    )),
+    population_sd_bounds = suppressWarnings(as.numeric(
+      cfg$population_sd_bounds %||% c(0.05, 10)
+    )),
     noncenter_facet = as.character(cfg$noncenter_facet %||% "Person"),
     dummy_facets = sort(as.character(cfg$dummy_facets %||% character(0))),
     positive_facets = sort(as.character(cfg$positive_facets %||% character(0))),
@@ -1587,6 +1771,25 @@ audit_compare_mfrm_nesting <- function(fits, labels) {
   interaction_sets <- lapply(sigs, function(sig) {
     sort(unique(as.character(sig$facet_interactions %||% character(0))))
   })
+  population_metric_same <- function(sig_a, sig_b) {
+    est_a <- isTRUE(sig_a$estimate_population_sd)
+    est_b <- isTRUE(sig_b$estimate_population_sd)
+    if (!identical(est_a, est_b)) return(FALSE)
+    if (est_a && est_b) {
+      return(isTRUE(all.equal(
+        as.numeric(sig_a$population_sd_bounds %||% c(NA_real_, NA_real_)),
+        as.numeric(sig_b$population_sd_bounds %||% c(NA_real_, NA_real_)),
+        tolerance = sqrt(.Machine$double.eps),
+        check.attributes = FALSE
+      )))
+    }
+    isTRUE(all.equal(
+      as.numeric(sig_a$population_prior_sd %||% NA_real_),
+      as.numeric(sig_b$population_prior_sd %||% NA_real_),
+      tolerance = sqrt(.Machine$double.eps),
+      check.attributes = FALSE
+    ))
+  }
   if (identical(model_pair[1], model_pair[2])) {
     same_family_components <- c(
       step_facet = same_signature_component(sigs[[1]]$step_facet, sigs[[2]]$step_facet),
@@ -1609,6 +1812,67 @@ audit_compare_mfrm_nesting <- function(fits, labels) {
 
     int_1 <- interaction_sets[[1]]
     int_2 <- interaction_sets[[2]]
+    same_population_metric <- population_metric_same(sigs[[1]], sigs[[2]])
+    population_sd_flags <- vapply(sigs, function(sig) isTRUE(sig$estimate_population_sd), logical(1))
+    if (!identical(population_sd_flags[1], population_sd_flags[2]) &&
+        !identical(int_1, int_2)) {
+      return(list(
+        eligible = FALSE,
+        reason = paste0(
+          "Same-family fits differ in both fixed facet-interaction terms and ",
+          "population-SD mode; compare one extension at a time before using an LRT."
+        ),
+        simpler = NA_character_,
+        complex = NA_character_,
+        relation = "same_model"
+      ))
+    }
+    if (!identical(population_sd_flags[1], population_sd_flags[2]) &&
+        identical(int_1, int_2)) {
+      idx_simple <- which(!population_sd_flags)[1]
+      idx_complex <- which(population_sd_flags)[1]
+      fixed_sd <- as.numeric(sigs[[idx_simple]]$population_prior_sd %||% NA_real_)
+      bounds <- as.numeric(sigs[[idx_complex]]$population_sd_bounds %||% c(NA_real_, NA_real_))
+      inside_bounds <- length(bounds) >= 2L &&
+        is.finite(fixed_sd) &&
+        is.finite(bounds[1]) &&
+        is.finite(bounds[2]) &&
+        fixed_sd >= min(bounds[1:2]) &&
+        fixed_sd <= max(bounds[1:2])
+      if (isTRUE(inside_bounds)) {
+        return(list(
+          eligible = TRUE,
+          reason = paste0(
+            "Supported nesting review passed: shared model family and constraints; ",
+            "the complex fit estimates the normal MML population SD instead of ",
+            "fixing it at ", format(fixed_sd, trim = TRUE), "."
+          ),
+          simpler = lbls[idx_simple],
+          complex = lbls[idx_complex],
+          relation = "population_sd_extension"
+        ))
+      }
+      return(list(
+        eligible = FALSE,
+        reason = paste0(
+          "The fixed population SD (", format(fixed_sd, trim = TRUE),
+          ") is outside the free-SD fit bounds, so the fixed run is not inside ",
+          "the reviewed free-SD parameter space."
+        ),
+        simpler = NA_character_,
+        complex = NA_character_,
+        relation = "same_model"
+      ))
+    }
+    if (!same_population_metric) {
+      return(list(
+        eligible = FALSE,
+        reason = "Same-family fits use different fixed population SD values or free-SD bounds.",
+        simpler = NA_character_,
+        complex = NA_character_,
+        relation = "same_model"
+      ))
+    }
     first_in_second <- all(int_1 %in% int_2)
     second_in_first <- all(int_2 %in% int_1)
     if (length(int_1) < length(int_2) && first_in_second) {
@@ -1661,6 +1925,18 @@ audit_compare_mfrm_nesting <- function(fits, labels) {
   }
 
   if (setequal(model_pair, c("RSM", "PCM"))) {
+    if (!population_metric_same(sigs[[1]], sigs[[2]])) {
+      return(list(
+        eligible = FALSE,
+        reason = paste0(
+          "RSM/PCM nesting review requires the same population-SD mode and ",
+          "scale settings; compare free-SD and fixed-SD changes separately."
+        ),
+        simpler = NA_character_,
+        complex = NA_character_,
+        relation = "unsupported"
+      ))
+    }
     idx_simple <- which(model_pair == "RSM")[1]
     idx_complex <- which(model_pair == "PCM")[1]
     step_facet <- sigs[[idx_complex]]$step_facet
@@ -1689,6 +1965,131 @@ audit_compare_mfrm_nesting <- function(fits, labels) {
     simpler = NA_character_,
     complex = NA_character_,
     relation = "unsupported"
+  )
+}
+
+compare_mfrm_family_guidance <- function(tbl, nesting_review, ic_comparable) {
+  tbl <- as.data.frame(tbl %||% data.frame(), stringsAsFactors = FALSE)
+  nonempty_unique <- function(x) {
+    x <- unique(as.character(x %||% character(0)))
+    x[!is.na(x) & nzchar(trimws(x))]
+  }
+  models <- nonempty_unique(tbl$Model)
+  population_modes <- nonempty_unique(tbl$PopulationSDMode)
+  relation <- as.character((nesting_review %||% list())$relation %||% "")
+  same_model_family <- length(models) == 1L
+  mixed_population_metric <- length(population_modes) > 1L
+  has_gpcm <- any(models %in% "GPCM")
+  multiple_models <- length(models) > 1L
+
+  comparison_family <- dplyr::case_when(
+    identical(relation, "population_sd_extension") ||
+      (same_model_family && isTRUE(mixed_population_metric)) ~ "population_sd_sensitivity",
+    isTRUE(mixed_population_metric) && isTRUE(multiple_models) ~ "mixed_metric_and_response_model",
+    identical(relation, "facet_interaction_extension") ~ "facet_interaction_sensitivity",
+    isTRUE(has_gpcm) && isTRUE(multiple_models) ~ "bounded_gpcm_sensitivity",
+    isTRUE(multiple_models) ~ "response_model_choice",
+    isTRUE(same_model_family) ~ "same_model_refit_or_settings",
+    TRUE ~ "descriptive_comparison"
+  )
+  comparison_strength <- if (isTRUE(ic_comparable)) {
+    "formal_mml_ic_available"
+  } else {
+    "descriptive_only"
+  }
+
+  claim_scope <- switch(
+    comparison_family,
+    population_sd_sensitivity = "Latent-metric sensitivity within the same response model.",
+    mixed_metric_and_response_model = "Mixed latent-metric and response-model comparison; not a single model-choice contrast.",
+    facet_interaction_sensitivity = "Same-family fixed facet-interaction sensitivity.",
+    bounded_gpcm_sensitivity = "Slope-aware bounded-GPCM sensitivity against a Rasch-family reference.",
+    response_model_choice = "Response-model comparison on the recorded population metric.",
+    same_model_refit_or_settings = "Same response-model family comparison of refits or settings.",
+    "Descriptive comparison with limited claim scope."
+  )
+  interpretation_guard <- switch(
+    comparison_family,
+    population_sd_sensitivity = paste(
+      "Report this as a fixed-prior versus free normal population-SD sensitivity analysis;",
+      "do not attribute changes in person measures or IC values to a response-model change."
+    ),
+    mixed_metric_and_response_model = paste(
+      "Do not make one combined model-choice claim; first isolate fixed-SD versus free-SD",
+      "within each response model and response-model differences within the same population metric."
+    ),
+    facet_interaction_sensitivity = paste(
+      "Interpret as sensitivity to fixed facet-interaction terms under the same model family;",
+      "do not present it as evidence for a different response-model family."
+    ),
+    bounded_gpcm_sensitivity = paste(
+      "Treat bounded GPCM as slope-aware sensitivity evidence; better IC is not an automatic",
+      "operational scoring decision, and weighting changes should be reviewed explicitly."
+    ),
+    response_model_choice = paste(
+      "Interpret IC differences as response-model evidence only when comparability is formal;",
+      "also report the score contract and population-SD mode."
+    ),
+    same_model_refit_or_settings = paste(
+      "Treat differences as refit/settings sensitivity; inspect convergence, constraints,",
+      "population metric, and prepared data before making substantive claims."
+    ),
+    "Treat as descriptive unless the comparison basis records formal MML comparability."
+  )
+  apa_template <- switch(
+    comparison_family,
+    population_sd_sensitivity = paste(
+      "A population-SD sensitivity fit estimated the normal marginal person-distribution SD instead",
+      "of fixing it at the configured prior value; model-comparison results were interpreted as metric-calibration",
+      "sensitivity rather than response-model selection evidence."
+    ),
+    mixed_metric_and_response_model = paste(
+      "The candidate set changed both the response model and the MML population-SD mode, so results",
+      "were treated as exploratory and were not summarized as a single model-selection contrast."
+    ),
+    facet_interaction_sensitivity = paste(
+      "A same-family sensitivity fit added fixed facet-interaction terms; likelihood or IC differences",
+      "were interpreted as interaction-sensitivity evidence under the same response model."
+    ),
+    bounded_gpcm_sensitivity = paste(
+      "A bounded generalized partial-credit many-facet fit was used as a slope-aware sensitivity analysis;",
+      "differences from the Rasch-family reference were interpreted alongside discrimination-based",
+      "reweighting evidence."
+    ),
+    response_model_choice = paste(
+      "Response-model candidates were compared on the same fitted-data and population-metric basis;",
+      "IC differences were interpreted as model-fit evidence, not as a standalone validity decision."
+    ),
+    same_model_refit_or_settings = paste(
+      "Same-family refits or setting variants were compared as sensitivity checks; observed differences",
+      "were interpreted with convergence, constraints, and metric settings in view."
+    ),
+    "Model-comparison results were treated descriptively because the comparison basis was limited."
+  )
+  technical_template <- paste(
+    "Comparison family:", comparison_family,
+    "| strength:", comparison_strength,
+    "| guard:", interpretation_guard
+  )
+  next_action <- switch(
+    comparison_family,
+    population_sd_sensitivity = "Report fixed SD, estimated SD, profile SE/CI status, and whether substantive conclusions changed.",
+    mixed_metric_and_response_model = "Run a two-step sensitivity grid: fixed/free SD within model, then response-model comparison within metric.",
+    facet_interaction_sensitivity = "Inspect the added interaction terms and keep local-dependence wording separate from response-model wording.",
+    bounded_gpcm_sensitivity = "Call build_weighting_review() and inspect slope_profile plus information redistribution before operational wording.",
+    response_model_choice = "Use compare_mfrm() with the score contract and population-SD mode in the methods/results text.",
+    same_model_refit_or_settings = "Inspect settings, convergence, seeds/starts, constraints, and prepared data before reporting differences.",
+    "Use comparison_basis to decide whether a stronger claim is defensible."
+  )
+
+  tibble(
+    ComparisonFamily = comparison_family,
+    ComparisonStrength = comparison_strength,
+    ClaimScope = claim_scope,
+    InterpretationGuard = interpretation_guard,
+    APAStyleTemplate = apa_template,
+    TechnicalAppendixTemplate = technical_template,
+    NextAction = next_action
   )
 }
 
@@ -3333,10 +3734,19 @@ diagnose_mfrm <- function(fit,
 #' basis used for the BIC penalty (`ICSampleSize`, `ICSampleSizeBasis`); for
 #' weighted fits this is the sum of weights rather than the number of rows.
 #'
+#' The output also classifies the *kind* of comparison before it asks users to
+#' interpret fit evidence. `ComparisonFamily` and `comparison_guidance` separate
+#' ordinary response-model choice from fixed-SD versus free-SD population-metric
+#' sensitivity, bounded-GPCM slope sensitivity, facet-interaction sensitivity,
+#' and same-family refit/settings checks. The guidance rows include APA-style and
+#' technical-appendix wording templates, plus an interpretation guard for cases
+#' where a single model-choice claim would overstate the evidence.
+#'
 #' **Nesting**: Two models are *nested* when one is a special case of the
 #' other obtained by imposing equality constraints.  The most common
 #' nesting in MFRM is RSM (shared thresholds) inside PCM
-#' (item-specific thresholds).  Models that differ only in estimation
+#' (step-facet-specific thresholds, such as rater-specific category-use
+#' thresholds when `step_facet = "Rater"`). Models that differ only in estimation
 #' method (MML vs JML) on the same specification are not nested in the
 #' usual sense---use information criteria rather than LRT for that
 #' comparison.
@@ -3396,16 +3806,28 @@ diagnose_mfrm <- function(fit,
 #' - Same-family additive-vs-interaction fits are considered nested only when
 #'   all other structural settings match and the smaller model's
 #'   `facet_interactions` set is a subset of the larger model's set.
+#' - Fixed-SD vs free-SD `MML` fits are considered a one-parameter
+#'   population-SD extension only when the model family, data, constraints,
+#'   steps, slopes, and interaction terms match and the fixed SD is inside the
+#'   free-SD bounds. Do not combine this LRT with a simultaneous
+#'   item/facet-structure change.
 #' - Do not assume that `nested = TRUE` overrides the package's conservative
 #'   nesting boundary; unsupported relations remain unsupported.
 #' - Do not compare models fit to different datasets, different score codings,
 #'   or materially different constraint systems as if they were commensurate.
 #'
 #' @section Interpreting output:
+#' - Start with `ComparisonFamily`, `ComparisonStrength`, and
+#'   `InterpretationGuard`; these fields state whether the table is primarily a
+#'   response-model comparison, a population-SD sensitivity check, bounded-GPCM
+#'   sensitivity evidence, or a descriptive settings/refit comparison.
 #' - Lower AIC/BIC values indicate better parsimony-accuracy trade-off only
 #'   when `table$ICComparable` is `TRUE`.
 #' - A significant LRT p-value suggests the more complex model provides a
 #'   meaningfully better fit only when the nesting assumption truly holds.
+#' - `comparison_guidance$APAStyleTemplate` and
+#'   `TechnicalAppendixTemplate` provide short reporting text that keeps fit
+#'   evidence, population metric, and score-contract claims separated.
 #' - `preferred` indicates the model preferred by each criterion.
 #' - `evidence_ratios` gives pairwise Akaike-weight ratios (returned only
 #'   when Akaike weights can be computed for at least two models).
@@ -3414,10 +3836,13 @@ diagnose_mfrm <- function(fit,
 #'
 #' @section How to read the main outputs:
 #' - `table`: first-pass comparison table; start with `ICComparable`,
-#'   `Model`, `Method`, `AIC`, and `BIC`.
+#'   `ComparisonFamily`, `ComparisonStrength`, `InterpretationGuard`, `Model`,
+#'   `Method`, `AIC`, and `BIC`.
 #' - `comparison_basis`: records whether IC and LRT claims are defensible for
 #'   the supplied models. Inspect `comparison_basis$nesting_review$relation`
 #'   and `reason` before reading any LRT output.
+#' - `comparison_guidance`: one-row reporting guide with `ClaimScope`,
+#'   `APAStyleTemplate`, `TechnicalAppendixTemplate`, and `NextAction`.
 #' - `lrt`: nested-model test summary, present only when the requested and
 #'   reviewed conditions are met.
 #' - `preferred`: candidate preferred by each criterion when those summaries
@@ -3439,12 +3864,19 @@ diagnose_mfrm <- function(fit,
 #' An object of class `mfrm_comparison` (named list) with:
 #' - `table`: data.frame of model-level statistics (LogLik, AIC, BIC,
 #'   Delta_AIC, AkaikeWeight, Delta_BIC, BICWeight, npar, nobs, WeightedN,
-#'   ICSampleSize, ICSampleSizeBasis, Model, Method, Converged, ICComparable).
+#'   ICSampleSize, ICSampleSizeBasis, Model, Method, `MMLEngineRequested`,
+#'   `MMLEngineUsed`, `PopulationSDMode`, `PopulationPriorSD`,
+#'   `EstimatedPopulationSD`, population-SD profile SE/CI fields, Converged,
+#'   ICComparable, `ComparisonFamily`, `ComparisonStrength`,
+#'   `InterpretationGuard`).
 #' - `lrt`: data.frame with likelihood-ratio test result (only when two models
 #'   are supplied and `nested = TRUE`). Contains `ChiSq`, `df`, `p_value`.
 #' - `evidence_ratios`: data.frame of pairwise Akaike-weight ratios (Model1,
 #'   Model2, EvidenceRatio). `NULL` when weights cannot be computed.
 #' - `preferred`: named list with the preferred model label by each criterion.
+#' - `comparison_guidance`: one-row data.frame with claim scope, APA-style
+#'   reporting template, technical-appendix template, interpretation guard, and
+#'   next action.
 #' - `comparison_basis`: list describing whether IC and LRT comparisons were
 #'   considered comparable. Includes a conservative `nesting_review` plus
 #'   `lrt_status` / `lrt_reason` so withheld LRTs are explicit rather than
@@ -3463,6 +3895,24 @@ diagnose_mfrm <- function(fit,
 #' comp <- compare_mfrm(fit_rsm, fit_pcm, labels = c("RSM", "PCM"))
 #' comp$table
 #' comp$evidence_ratios
+#'
+#' # Compare a fixed normal MML metric with the opt-in free-SD metric.
+#' # Keep the response data and structural model identical; this isolates
+#' # the extra population-SD parameter.
+#' fit_fixed_sd <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
+#'                          method = "MML", model = "RSM",
+#'                          quad_points = 7, maxit = 30)
+#' fit_free_sd <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
+#'                         method = "MML", model = "RSM",
+#'                         quad_points = 7, maxit = 80,
+#'                         estimate_population_sd = TRUE)
+#' comp_sd <- compare_mfrm(fit_fixed_sd, fit_free_sd,
+#'                         labels = c("fixed_SD", "free_SD"),
+#'                         nested = TRUE)
+#' comp_sd$table[, c("Label", "npar", "AIC", "PopulationSDMode",
+#'                   "EstimatedPopulationSD")]
+#' comp_sd$comparison_basis$nesting_review
+#' comp_sd$comparison_guidance[, c("ComparisonFamily", "InterpretationGuard")]
 #' }
 #'
 #' @section References:
@@ -3581,13 +4031,38 @@ compare_mfrm <- function(..., labels = NULL, warn_constraints = TRUE, nested = F
     } else {
       "row_count"
     }
-    npar <- if (!is.null(f$opt$par)) length(f$opt$par) else NA_integer_
+    npar <- if ("Parameters" %in% names(s)) {
+      as.integer(s$Parameters[1])
+    } else if (!is.null(f$opt$par)) {
+      length(f$opt$par)
+    } else {
+      NA_integer_
+    }
+    summary_chr <- function(name) {
+      if (!is.data.frame(s) || !(name %in% names(s))) return(NA_character_)
+      val <- as.character(s[[name]][1] %||% NA_character_)
+      if (length(val) == 0L || is.na(val) || !nzchar(trimws(val))) NA_character_ else val[1]
+    }
+    summary_num <- function(name) {
+      if (!is.data.frame(s) || !(name %in% names(s))) return(NA_real_)
+      val <- suppressWarnings(as.numeric(s[[name]][1] %||% NA_real_))
+      if (length(val) == 0L) NA_real_ else val[1]
+    }
     method <- if (!is.null(f$config$method)) toupper(f$config$method[1]) else NA_character_
     method <- ifelse(identical(method, "JMLE"), "JML", method)
     tibble(
       Label     = labels[i],
       Model     = if (!is.null(f$config$model)) toupper(f$config$model[1]) else NA_character_,
       Method    = method,
+      MMLEngineRequested = summary_chr("MMLEngineRequested"),
+      MMLEngineUsed = summary_chr("MMLEngineUsed"),
+      PopulationSDMode = summary_chr("PopulationSDMode"),
+      PopulationPriorSD = summary_num("PopulationPriorSD"),
+      EstimatedPopulationSD = summary_num("EstimatedPopulationSD"),
+      PopulationSDSE = summary_num("PopulationSDSE"),
+      PopulationSDCI_Lower = summary_num("PopulationSDCI_Lower"),
+      PopulationSDCI_Upper = summary_num("PopulationSDCI_Upper"),
+      PopulationSDSEStatus = summary_chr("PopulationSDSEStatus"),
       nobs      = nobs,
       WeightedN = weighted_n,
       ICSampleSize = ic_sample_size,
@@ -3614,6 +4089,12 @@ compare_mfrm <- function(..., labels = NULL, warn_constraints = TRUE, nested = F
   conv_vals <- tbl$Converged
   all_converged <- length(conv_vals) > 0 && all(!is.na(conv_vals) & as.logical(conv_vals))
   ic_comparable <- same_method && same_nobs && same_data && all_converged && all_mml
+  nesting_review <- audit_compare_mfrm_nesting(fits, labels = labels)
+  comparison_guidance <- compare_mfrm_family_guidance(
+    tbl = tbl,
+    nesting_review = nesting_review,
+    ic_comparable = ic_comparable
+  )
 
   if (!isTRUE(nested)) {
     if (!same_method) {
@@ -3658,6 +4139,9 @@ compare_mfrm <- function(..., labels = NULL, warn_constraints = TRUE, nested = F
   }
 
   tbl$ICComparable <- ic_comparable
+  tbl$ComparisonFamily <- comparison_guidance$ComparisonFamily[1]
+  tbl$ComparisonStrength <- comparison_guidance$ComparisonStrength[1]
+  tbl$InterpretationGuard <- comparison_guidance$InterpretationGuard[1]
   preferred <- list()
 
   # -- Delta AIC and Akaike Weights --
@@ -3696,7 +4180,6 @@ compare_mfrm <- function(..., labels = NULL, warn_constraints = TRUE, nested = F
   } else {
     "Likelihood-ratio test was not requested; set `nested = TRUE` only for supported nested comparisons."
   }
-  nesting_review <- audit_compare_mfrm_nesting(fits, labels = labels)
   if (isTRUE(nested)) {
     if (length(fits) != 2L) {
       lrt_status <- "not_computed"
@@ -3807,6 +4290,9 @@ compare_mfrm <- function(..., labels = NULL, warn_constraints = TRUE, nested = F
     same_data = same_data,
     all_converged = all_converged,
     ic_comparable = ic_comparable,
+    comparison_family = comparison_guidance$ComparisonFamily[1],
+    comparison_strength = comparison_guidance$ComparisonStrength[1],
+    interpretation_guard = comparison_guidance$InterpretationGuard[1],
     nested_requested = isTRUE(nested),
     nesting_review = nesting_review,
     lrt_status = lrt_status,
@@ -3818,6 +4304,7 @@ compare_mfrm <- function(..., labels = NULL, warn_constraints = TRUE, nested = F
     lrt             = lrt,
     evidence_ratios = evidence_ratios,
     preferred       = preferred,
+    comparison_guidance = comparison_guidance,
     comparison_basis = comparison_basis
   )
   class(out) <- c("mfrm_comparison", class(out))
@@ -3831,6 +4318,7 @@ summary.mfrm_comparison <- function(object, ...) {
     lrt             = object$lrt,
     evidence_ratios = object$evidence_ratios,
     preferred       = object$preferred,
+    comparison_guidance = object$comparison_guidance,
     comparison_basis = object$comparison_basis
   )
   class(out) <- "summary.mfrm_comparison"
@@ -3860,6 +4348,13 @@ print.summary.mfrm_comparison <- function(x, ...) {
   if (!isTRUE(x$comparison_basis$ic_comparable)) {
     cat("\nInformation-criterion ranking was suppressed because the models do not share\n")
     cat("a comparable formal MML likelihood basis, observation set, and convergence status.\n")
+  }
+  if (!is.null(x$comparison_guidance) && nrow(as.data.frame(x$comparison_guidance)) > 0L) {
+    guide <- as.data.frame(x$comparison_guidance)
+    cat("\nComparison guidance:\n")
+    cat("  Family:", as.character(guide$ComparisonFamily[1]), "\n")
+    cat("  Strength:", as.character(guide$ComparisonStrength[1]), "\n")
+    cat("  Guard:", as.character(guide$InterpretationGuard[1]), "\n")
   }
 
   if (!is.null(x$lrt)) {
