@@ -389,6 +389,53 @@ surfaces around that engine. The detailed map is:
   person-reliability note now reports the empirical value alongside the
   conservative adjusted-true-variance summary. The default person
   separation/reliability formulas are unchanged.
+- `subset_connectivity_report()`, `mfrm_network_analysis()`, and
+  `build_mfrm_network_review()` now accept `facets = ...` to recompute a
+  projected Person-plus-selected-facet design graph. This keeps broad task or
+  criterion facets from acting as universal hubs when the diagnostic question
+  is specifically rater linkage or self-review isolation. The default full
+  person/facet graph is unchanged. `rater_network_analysis()` now also handles
+  zero-overlap rater-pair designs without crashing, preserving the
+  zero-common-context pair table and returning an empty-edge network with an
+  explicit caveat. Network reviews now also carry downstream
+  `assumption_checks`, `visualization_map`, and APA-style `report_templates`
+  tables, and `plot(review, ...)` delegates to the selected design-network
+  graph for immediate figure payloads. The help pages now show projected
+  rater-linkage examples, downstream APA/reporting tables, and appendix-bundle
+  handoff code. Network-review downstream tables now also include reporting
+  guardrails: `assumption_checks$NextStep`, `visualization_map$Prerequisite`,
+  `report_templates$RequiredReview`, and `report_templates$Avoid`.
+  `print(summary(review))` now uses compact downstream columns by default,
+  while `print(summary(review), full = TRUE)` and
+  `build_summary_table_bundle(review)` retain the complete wording tables.
+  The reporting and visual-diagnostics vignettes now include short
+  network-review recipes for full-versus-projected graph comparison, APA
+  wording, and appendix handoff.
+- `review_mfrm_anchors()` now counts group-anchor constrained levels, not only
+  directly anchored levels, when applying the `min_common_anchors`
+  recommendation. This fixes group-anchor-only linking reviews where low
+  common group-anchor coverage previously failed to trigger the guidance.
+- `inst/validation/network-anchor-stress-0.2.2.R` now records the release
+  stress-test matrix for the diagnostic-network and anchor fixes. The artifact
+  covers literal self-rater identity designs, collapsed self-assessor designs,
+  zero-common-context rater networks across all modes, rater-panel gaps masked
+  by task/criterion hubs in the full graph, role/mode projections, peer-rater
+  designs that reuse student IDs, teacher-coverage dose scenarios, and
+  group-anchor-only low-common-anchor guidance.
+- `inst/validation/self-other-speaking-network-0.2.2.R` adds a fixed speaking
+  self-/teacher-assessment example where self-rater IDs are literally the
+  person IDs. It documents the masked full-graph route, the Person-plus-Rater
+  projection that recovers self-rater leaves, the `AssessorType` mode graph,
+  the collapsed `Assessor` rater network, and the APA template handoff.
+- The release-readiness helper now compares the selected `R CMD check` log
+  timestamp against source files and reports package-check `review` when the
+  log predates current source changes, even if the log's package version still
+  matches the target release. It also verifies the network/anchor stress and
+  self-/other-speaking network artifacts, including their CSV checks and
+  downstream reporting-template handoff, as part of the evidence-artifact gate.
+  The live DIF/DFF APA reporting review now captures expected optimizer
+  convergence-review warnings in structured status fields instead of emitting
+  them during release-readiness execution.
 
 # mfrmr 0.2.1
 
@@ -978,8 +1025,11 @@ The detailed notes below are organized as follows:
 - **Connectivity network visualization**: `subset_connectivity_report()` now
   includes reusable node/edge tables, and `plot(..., type = "network")`
   provides an igraph-based co-observation graph when `igraph` is installed.
-  With `draw = FALSE`, the returned plot data supports custom R visualization
-  without depending on the base plotting default.
+  With `draw = FALSE`, the returned plot data now includes reusable
+  `layout`, `node_plot`, and `edge_plot` tables so custom R visualization can
+  reproduce node positions, node aesthetics, and edge geometry without
+  depending on the base plotting default. `as_ggplot()` can now render these
+  network payloads as editable ggplot figures for reporting pipelines.
 - **MFRM design-network analysis**: new `mfrm_network_analysis()` treats the
   person/facet-level observation design as an undirected weighted
   co-observation graph and returns graph-level connectedness, node degree and
@@ -988,17 +1038,30 @@ The detailed notes below are organized as follows:
   linking diagnostics, not as person ability, rater quality, or model-fit
   statistics. `plot(..., type = "centrality")`, `plot(..., type =
   "facet_summary")`, and `plot(..., type = "network")` provide immediate
-  visual checks with draw-free plot data.
+  visual checks with draw-free plot data, including network layout/node/edge
+  payloads for figure pipelines.
+- **Network assumption diagnostics**: network reviews now add explicit
+  `facet_scope_alignment`, `hub_facet_screen`, `component_size_balance`, and
+  `metric_boundary_declared` checks so full-graph hub masking, projected-scope
+  mismatch, disconnected component size, and interpretation-boundary risks are
+  visible before users report network metrics.
 - **Rater-effect network analysis**: new `rater_network_analysis()` adds a
   Lamprianou-style pairwise rater network route separate from design
   connectedness. It supports agreement, disagreement, and directed
   severity-direction networks, returns rater-level in/out strength,
   betweenness/closeness, a finite network severity index, retained edge
-  tables, and all pairwise metrics used before thresholding. The help page
-  states that these indices are descriptive network diagnostics rather than
-  Rasch logit estimates or formal fit statistics. `plot(..., type =
+  tables, and all pairwise metrics used before thresholding. The returned
+  `assumption_checks` table records rater/context facets, shared-context
+  coverage, zero-overlap and thresholded pair loss, retained components,
+  direction/score-scale assumptions, and interpretation boundaries. The help
+  page states that these indices are descriptive network diagnostics rather
+  than Rasch logit estimates or formal fit statistics. `plot(..., type =
   "network")`, `"severity"`, `"centrality"`, and `"matrix"` provide immediate
-  visual checks and reusable plot data.
+  visual checks and reusable plot data. `summary(rn)` and
+  `build_summary_table_bundle(rn)` now keep rater-network assumption checks,
+  visualization maps, APA-style report templates, node metrics, retained
+  edges, pair metrics, caveats, and settings together for appendix/reporting
+  handoff.
 - **Halo-effect network screening**: new `rater_halo_network_analysis()`
   reshapes observed ratings into rater-by-criterion nodes, computes
   Spearman/Pearson/Kendall node-pair correlations, labels same-rater

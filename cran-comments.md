@@ -22,6 +22,9 @@ Headline changes relative to CRAN 0.2.1 are:
   payloads;
 - bounded-`GPCM` score-side expected-score SE correction and fixed smoke
   evidence for the score-side estimand;
+- diagnostic-network and rater-network stress evidence, including projected
+  rater-linkage graphs, zero-overlap rater pairs, and group-anchor-only
+  recommendation coverage;
 - explicit bounded-`GPCM`, model-family, and estimator/back-end scope helpers
   so users do not read the current route as complete unrestricted GPCM,
   posterior-predictive, MCMC, or full FACETS score-side support;
@@ -47,27 +50,23 @@ release-evidence infrastructure around that engine.
 
 ## Test environments
 
-The local full-vignette pre-submission check was run against the generated
-`mfrmr_0.2.2.tar.gz` source tarball on:
+The refreshed local lightweight source-tarball check was run against the
+generated `mfrmr_0.2.2.tar.gz` source tarball on:
 
 - local macOS Tahoe 26.5.1, aarch64-apple-darwin23, R 4.6.1
   (2026-06-24).
 
-Expected local pre-submission command:
+Final local commands refreshed on 2026-07-06 JST:
 
 ```sh
 R CMD build .
 _R_CHECK_FORCE_SUGGESTS_=false R CMD check --no-manual mfrmr_0.2.2.tar.gz
+_R_CHECK_FORCE_SUGGESTS_=false R CMD check --no-manual --as-cran mfrmr_0.2.2.tar.gz
 ```
 
-For CRAN-like timing and incoming checks, also run:
-
-```sh
-R CMD check --no-manual --as-cran mfrmr_0.2.2.tar.gz
-```
-
-The release-readiness review should then be run against the resulting
-`mfrmr.Rcheck/00check.log`; the log must report package version 0.2.2.
+Both checks reported `Status: OK`. The release-readiness review is run
+against the final `mfrmr.Rcheck/00check.log`, which must report package
+version 0.2.2.
 
 ## CRAN-time test scope
 
@@ -90,27 +89,29 @@ versioned validation artifacts.
 
 ## R CMD check results
 
-The current local full-vignette `R CMD check --no-manual` outcome for
-`Version: 0.2.2` is:
+For the current tree, the final local source-tarball checks were refreshed
+with vignettes enabled:
 
-- 0 errors.
-- 0 warnings.
-- 0 notes.
+```sh
+R CMD build .
+_R_CHECK_FORCE_SUGGESTS_=false R CMD check --no-manual mfrmr_0.2.2.tar.gz
+_R_CHECK_FORCE_SUGGESTS_=false R CMD check --no-manual --as-cran mfrmr_0.2.2.tar.gz
+```
 
-The most recent local check run reported `Status: OK` and package version
-0.2.2. With that check log present, the release-readiness helper also reported
-all gates as `ok`: version contract, package check, CI workflow contract,
-terminology, evidence artifacts, and example policy.
-
-A win-builder check and a final `--as-cran` local check should be refreshed
+Both checks reported `Status: OK`. Current targeted regression checks also
+cover the changed network, anchor, GPCM-boundary, reporting, namespace, and
+release-readiness paths. The release-readiness gate verifies the
+network/anchor stress and self-/other-speaking network validation artifacts
+rather than relying only on their presence, and expected optimizer
+convergence-review warnings from the live DIF/DFF APA review are captured in
+structured status fields. win-builder checks should still be run and recorded
 immediately before CRAN submission.
 
 ## Downstream dependencies
 
 No reverse dependencies are listed in the current CRAN package index for
-Depends, Imports, or LinkingTo. Recheck this immediately before submission
-with `tools::package_dependencies(..., reverse = TRUE)` against
-`https://cloud.r-project.org`.
+Depends, Imports, or LinkingTo, checked against `https://cloud.r-project.org`
+on 2026-07-06 JST.
 
 ## Default changes
 

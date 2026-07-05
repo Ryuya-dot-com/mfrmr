@@ -174,6 +174,30 @@ test_that("as_ggplot converts fit-pathway plot data", {
   expect_no_error(ggplot2::ggplot_build(fit_pathway_plot))
 })
 
+test_that("as_ggplot converts network plot payloads", {
+  skip_if_not_installed("ggplot2")
+  skip_if_not_installed("igraph")
+
+  fit <- make_toy_fit(maxit = 20)
+  diag <- make_toy_diagnostics(fit)
+
+  review <- build_mfrm_network_review(fit, diagnostics = diag, facets = "Rater")
+  design_payload <- plot(review, type = "network", draw = FALSE)
+  design_plot <- as_ggplot(design_payload)
+  expect_s3_class(design_plot, "ggplot")
+  expect_no_error(ggplot2::ggplot_build(design_plot))
+
+  rater_net <- rater_network_analysis(
+    fit,
+    diagnostics = diag,
+    mode = "severity_direction"
+  )
+  rater_payload <- plot(rater_net, type = "network", draw = FALSE)
+  rater_plot <- as_ggplot(rater_payload)
+  expect_s3_class(rater_plot, "ggplot")
+  expect_no_error(ggplot2::ggplot_build(rater_plot))
+})
+
 test_that("as_ggplot converts DIF/DFF summary and heatmap payloads", {
   skip_if_not_installed("ggplot2")
 

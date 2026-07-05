@@ -57,7 +57,7 @@ The converter is intentionally conservative. It supports common
 displays, EAP power-sensitivity diagnostics, DIF/DFF summaries and heatmaps,
 G-study/D-study planning plots, G-study design checks, simulation
 design/recovery/signal handoff plots, category and information curves,
-threshold ladders, and
+threshold ladders, network plot payloads, and
 estimate/profile rows. When a payload cannot be inferred safely, use
 \code{\link[=plot_data_components]{plot_data_components()}} and \code{\link[=plot_data]{plot_data()}} to build a custom figure directly.
 }
@@ -90,6 +90,10 @@ dff <- analyze_dff(
 )
 as_ggplot(plot_dif_summary(dff, draw = FALSE))
 as_ggplot(plot_dif_heatmap(dff, metric = "obs_exp", draw = FALSE))
+if (requireNamespace("igraph", quietly = TRUE)) {
+  review <- build_mfrm_network_review(fit, facets = "Rater")
+  as_ggplot(plot(review, type = "network", draw = FALSE))
+}
 
 rec <- evaluate_mfrm_recovery(reps = 1, maxit = 30)
 as_ggplot(plot(rec, type = "summary", metric = "rmse", draw = FALSE))

@@ -287,24 +287,31 @@ pathway_fit_payload <- function(x,
                                 endpoint_labels = data.frame()) {
   curve_groups <- unique(as.character(curve_groups %||% character(0)))
   curve_groups <- curve_groups[nzchar(curve_groups)]
+  empty_curve_status <- function(fit_status, review_reason) {
+    n <- length(curve_groups)
+    data.frame(
+      CurveGroup = curve_groups,
+      Facet = rep(NA_character_, n),
+      Level = rep(NA_character_, n),
+      Measure = rep(NA_real_, n),
+      SE = rep(NA_real_, n),
+      Infit = rep(NA_real_, n),
+      Outfit = rep(NA_real_, n),
+      InfitZSTD = rep(NA_real_, n),
+      OutfitZSTD = rep(NA_real_, n),
+      FitStatus = rep(fit_status, n),
+      Underfit = rep(FALSE, n),
+      Overfit = rep(FALSE, n),
+      ReviewReason = rep(review_reason, n),
+      MatchedFitRow = rep(FALSE, n),
+      stringsAsFactors = FALSE
+    )
+  }
   if (!isTRUE(include_fit_measures)) {
     out <- empty_pathway_fit_payload("not_requested", "`include_fit_measures = FALSE`.")
-    out$curve_fit_status <- data.frame(
-      CurveGroup = curve_groups,
-      Facet = NA_character_,
-      Level = NA_character_,
-      Measure = NA_real_,
-      SE = NA_real_,
-      Infit = NA_real_,
-      Outfit = NA_real_,
-      InfitZSTD = NA_real_,
-      OutfitZSTD = NA_real_,
-      FitStatus = "not_requested",
-      Underfit = FALSE,
-      Overfit = FALSE,
-      ReviewReason = "Fit measures not requested",
-      MatchedFitRow = FALSE,
-      stringsAsFactors = FALSE
+    out$curve_fit_status <- empty_curve_status(
+      "not_requested",
+      "Fit measures not requested"
     )
     return(out)
   }
@@ -321,22 +328,9 @@ pathway_fit_payload <- function(x,
   )
   if (inherits(fm, "error")) {
     out <- empty_pathway_fit_payload("error", conditionMessage(fm))
-    out$curve_fit_status <- data.frame(
-      CurveGroup = curve_groups,
-      Facet = NA_character_,
-      Level = NA_character_,
-      Measure = NA_real_,
-      SE = NA_real_,
-      Infit = NA_real_,
-      Outfit = NA_real_,
-      InfitZSTD = NA_real_,
-      OutfitZSTD = NA_real_,
-      FitStatus = "not_available",
-      Underfit = FALSE,
-      Overfit = FALSE,
-      ReviewReason = conditionMessage(fm),
-      MatchedFitRow = FALSE,
-      stringsAsFactors = FALSE
+    out$curve_fit_status <- empty_curve_status(
+      "not_available",
+      conditionMessage(fm)
     )
     return(out)
   }

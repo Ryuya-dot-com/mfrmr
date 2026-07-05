@@ -186,6 +186,55 @@ Interpretation:
 - Sparse rows or columns indicate weak subset coverage.
 - Facets with low overlap are weaker anchors for cross-subset comparisons.
 
+For rater-linkage or self-/peer-/teacher bridging questions, follow the
+coverage matrix with a projected network review. The projected graph keeps the
+diagnostic target explicit, while the assumption and template tables keep the
+figure caption from overclaiming.
+
+```{r network-linking}
+if (requireNamespace("igraph", quietly = TRUE)) {
+  net_review <- build_mfrm_network_review(
+    fit,
+    diagnostics = diag,
+    facets = "Rater"
+  )
+
+  net_review$assumption_checks[
+    , c("Check", "Status", "Evidence", "NextStep")
+  ]
+  net_review$visualization_map[
+    , c("Route", "Prerequisite", "Boundary")
+  ]
+
+  net_plot <- plot(net_review, type = "network", draw = FALSE)
+  net_plot$data$plot
+  head(net_plot$data$nodes)
+  head(net_plot$data$node_plot)
+  head(net_plot$data$edge_plot)
+  if (requireNamespace("ggplot2", quietly = TRUE)) {
+    as_ggplot(net_plot)
+  }
+}
+```
+
+Interpretation:
+
+- Use the full design graph for overall connectedness and the projected
+  Person-plus-Rater graph for rater-linkage questions.
+- Treat bridge edges, articulation points, and pendant nodes as design
+  diagnostics, not as person measures or rater-quality estimates.
+- Use `node_plot` and `edge_plot` from draw-free network plots when the figure
+  is redrawn in `ggplot2`, `ggraph`, or a journal-specific graphics workflow.
+- `as_ggplot()` gives a quick editable ggplot rendering; the coordinates still
+  come from the graph layout and should not be read as model estimates.
+- Use the figure only after the `projection_scope_declared`,
+  `facet_scope_alignment`, `hub_facet_screen`, and `connected_components`
+  rows are reviewed.
+
+For a fixed self-versus-teacher speaking-assessment replay where each
+self-rater ID is also the `Person` ID, see
+`inst/validation/self-other-speaking-network-0.2.2.md`.
+
 If you are working across administrations, follow up with anchor-drift plots:
 
 ```{r eval = FALSE}

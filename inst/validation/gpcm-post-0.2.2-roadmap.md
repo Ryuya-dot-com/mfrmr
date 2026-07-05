@@ -1,9 +1,18 @@
-# Post-0.2.2 bounded GPCM roadmap
+# Post-0.2.2 bounded GPCM and adjacent roadmap
 
 This note tracks bounded-`GPCM` work that remains caveated, blocked, or
-deferred after the 0.2.2 release boundary. It is a maintenance roadmap, not a
-public support promise. The current public contract remains
-`gpcm_capability_matrix()`.
+deferred after the 0.2.2 release boundary, plus adjacent model-family,
+estimation, diagnostic, documentation, and submission-readiness work that
+should not be mixed into the 0.2.2 release scope. It is a maintenance roadmap,
+not a public support promise. The current public contract remains
+`gpcm_capability_matrix()`, `mfrmr_model_family_scope()`, and
+`mfrmr_estimation_scope()`.
+
+The 2026-07-05 consolidation folded the temporary `ROADMAP_20260705.md`
+planning note into this roadmap. Items that were release-blocking for 0.2.2
+but have since been fixed in the working tree are not kept as open roadmap
+items here; the remaining entries describe post-0.2.2 work or calendar-bound
+submission preparation.
 
 ## Current release boundary
 
@@ -161,6 +170,85 @@ The public helper `mfrmr_estimation_scope()` records these lanes explicitly:
 Any future row promoted from this boundary into implementation should receive
 a dedicated capability-matrix row, source-basis note, negative tests, and
 release wording before it is advertised as supported.
+
+## Consolidated post-0.2.2 priorities from the 2026-07-05 audit
+
+The 2026-07-05 audit confirmed that the immediate 0.2.2 diagnostic-network and
+anchor-review gaps were release-stabilization work, not new roadmap scope.
+Those fixes are covered by the tests and validation artifacts for 0.2.2. The
+remaining roadmap priorities are:
+
+### Submission and packaging preparation
+
+These are calendar-bound or packaging/documentation tasks, not model-family
+work.
+
+- Keep visible public repository activity accruing before JOSS submission.
+  The local submission notes treated repository age/visible history as the
+  highest-leverage JOSS risk because it cannot be compressed by more code.
+- Record the CRAN release history and archive link in submission-facing
+  materials at submission time.
+- Resolve any literal placeholder text in `MFRM_JOSS/paper.md`, keep
+  `CITATION.cff` synchronized with the submitted release, and cut an archival
+  release tag / DOI for the version submitted.
+- Re-run full pre-submission checks, win-builder, and reverse-dependency
+  checks immediately before CRAN submission rather than relying on earlier
+  0.2.2 stabilization logs.
+
+### Model-family and diagnostic priorities
+
+- Complete unrestricted `GPCM` remains the highest non-current model-family
+  target. It is the package's own highest post-0.2.2 tier and the most concrete
+  externally verifiable gap against packages that fit free discrimination GPCM
+  routes.
+- Extend model-estimated DFF/bias interaction terms to bounded or unrestricted
+  `GPCM` only after the GPCM identification, covariance, and slope-design work
+  lands. Until then, GPCM DFF/DIF support remains screening evidence.
+- Add posterior-predictive follow-up diagnostics for strict marginal,
+  pairwise, residual, and category-support checks. The current strict
+  diagnostics remain exploratory screens until replicated-discrepancy
+  computation exists.
+- Consider an explicit `Pendant` / `IsLeaf` column in
+  `mfrm_network_analysis()` node metrics. The 0.2.2 stress tests show that
+  literal self-rater nodes are often leaf nodes rather than articulation
+  points; exposing that label would reduce downstream misinterpretation.
+
+### Estimation and uncertainty priorities
+
+- Promote the unified SE / uncertainty-estimand contract above WLE and
+  population-SE work in execution order. The package already computes multiple
+  uncertainty quantities correctly, but the reporting contract should state the
+  estimand, conditioning basis, calibration-uncertainty inclusion, and
+  recommended use for each SE/SD/interval source.
+- Add gradient-aware optimizer refinement for the native JMLE/MML BFGS route.
+  The 0.2.2 convergence status labels plateau-large-gradient fits after the
+  optimizer returns; a future opt-in route should use a gradient threshold to
+  trigger tighter-refinement reruns rather than leaving this as a manual
+  workflow.
+- Add equating-constant options beyond simple mean offset in
+  `build_equating_chain()`, such as mean-sigma scaling or robust/trimmed
+  offsets, before making stronger multi-wave equating claims.
+- Treat omnibus subgroup parameter-invariance tests as research-only unless a
+  reviewer asks for them by name. They are distinct from the existing
+  element-level DIF/DFF screens but overlap with the same validity argument.
+
+### User-facing adoption and code consistency
+
+- Add a plain-language conceptual vignette or README section before the
+  procedural workflow: what a many-facet Rasch model is, what a facet means,
+  how RSM/PCM/GPCM differ, and how to read logits, fit statistics, and Wright
+  maps.
+- Update or retire the cheatsheet if it still reflects an older workflow and
+  does not point users toward `mfrm_results()` / `mfrm_report()` as the current
+  first-screen route.
+- Group the `fit_mfrm()` help arguments into essential, design/
+  identification, and advanced-estimation sections, or provide a narrower
+  quick-start wrapper.
+- Add a short glossary for recurring terms such as logit, Infit/Outfit, ZSTD,
+  separation/reliability/strata, EAP/MAP/MLE, Wright map, anchor, DIF, and DFF.
+- Finish adopting the plot `preset=` system for remaining hardcoded-color
+  plotting helpers and add a `facets=` filter to `facet_statistics_report()`
+  for consistency with the other facet-filtered report and network helpers.
 
 ## Roadmap work packages
 

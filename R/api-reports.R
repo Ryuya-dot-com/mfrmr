@@ -1245,13 +1245,18 @@ estimation_iteration_report <- function(fit,
 #' @param diagnostics Optional output from [diagnose_mfrm()].
 #' @param top_n_subsets Optional maximum number of subset rows to keep.
 #' @param min_observations Minimum observations required to keep a subset row.
+#' @param facets Optional subset of non-person facets to include in the
+#'   connectivity graph. When supplied, the graph is recomputed as a projection
+#'   over `Person` plus these facets, which is useful when broad task or
+#'   criterion facets would otherwise act as universal hubs.
 #' @details
 #' `summary(out)` is supported through `summary()`.
 #' `plot(out)` is dispatched through `plot()` for class
 #' `mfrm_subset_connectivity` (`type = "subset_observations"`,
 #' `"facet_levels"`, or `"linking_matrix"` / `"coverage_matrix"` /
-#' `"design_matrix"` / `"network"`). The network route returns reusable node
-#' and edge tables with `draw = FALSE`; drawing uses `igraph` when available.
+#' `"design_matrix"` / `"network"`). The network route returns reusable
+#' `layout`, `node_plot`, and `edge_plot` tables with `draw = FALSE`; drawing
+#' uses `igraph` when available.
 #'
 #' @section Interpreting output:
 #' - `summary`: number and size of connected subsets.
@@ -1277,19 +1282,22 @@ estimation_iteration_report <- function(fit,
 #' p_net <- plot(out, type = "network", draw = FALSE)
 #' p_sub$data$plot
 #' p_design$data$plot
-#' p_net$data$edges
+#' p_net$data$node_plot
+#' p_net$data$edge_plot
 #' out$summary[, c("Subset", "Observations", "ObservationPercent")]
 #' @export
 subset_connectivity_report <- function(fit,
                                        diagnostics = NULL,
                                        top_n_subsets = NULL,
-                                       min_observations = 0) {
+                                       min_observations = 0,
+                                       facets = NULL) {
   out <- with_legacy_name_warning_suppressed(
     table6_subsets_listing(
       fit = fit,
       diagnostics = diagnostics,
       top_n_subsets = top_n_subsets,
-      min_observations = min_observations
+      min_observations = min_observations,
+      facets = facets
     )
   )
   as_mfrm_bundle(out, "mfrm_subset_connectivity")
@@ -1302,6 +1310,10 @@ subset_connectivity_report <- function(fit,
 #' @param top_n_subsets Optional maximum number of connected-subset rows to
 #'   retain before constructing the graph.
 #' @param min_observations Minimum observations required to keep a subset row.
+#' @param facets Optional subset of non-person facets to include in the
+#'   connectivity graph. When supplied, the graph is recomputed as a projection
+#'   over `Person` plus these facets, avoiding universal-hub facets such as
+#'   common tasks or criteria when the diagnostic target is rater linkage.
 #' @param include_graph Logical; if `TRUE`, include the underlying `igraph`
 #'   object in the returned bundle. Defaults to `FALSE` so outputs remain easy
 #'   to serialize.
@@ -1314,7 +1326,9 @@ subset_connectivity_report <- function(fit,
 #' not psychometric measures of person ability or rater quality.
 #' `plot(net, type = "centrality")`, `plot(net, type = "facet_summary")`, and
 #' `plot(net, type = "network")` provide immediate visual checks; use
-#' `draw = FALSE` to extract reusable plot data.
+#' `draw = FALSE` to extract reusable plot data. Network plot data include
+#' `layout`, `node_plot`, and `edge_plot` tables for custom figure pipelines;
+#' the layout coordinates are graphical positions, not MFRM estimates.
 #'
 #' The most useful review columns are:
 #' - `Components`: more than one component means the design has disconnected
@@ -1327,6 +1341,27 @@ subset_connectivity_report <- function(fit,
 #' In incomplete rater-mediated designs, these graph summaries help identify
 #' fragile linking structures before interpreting facet measures or planning
 #' additional data collection.
+#'
+#' @section Choosing the graph scope:
+#' - The default full graph answers whether the fitted person-plus-all-facet
+#'   observation design forms one connected co-observation graph. In many
+#'   speaking or performance-assessment datasets, common tasks or criteria can
+#'   legitimately connect many persons and raters, so this graph is useful for
+#'   overall design connectedness but can hide rater-specific isolation.
+#' - `facets = "Rater"` recomputes the graph as Person plus Rater only. Use
+#'   this projection when the diagnostic question is rater linkage,
+#'   self-rater isolation, or whether teacher/peer raters bridge otherwise
+#'   separate self-assessment links.
+#' - If student IDs appear both as `Person` and as literal `Rater` levels,
+#'   the projected graph describes the observed student-rater topology. If the
+#'   estimand is a self-versus-other mode effect, add an explicit role/mode
+#'   facet in the fitted data and compare the projected design graph with
+#'   rater-effect summaries from [rater_network_analysis()].
+#' - [rater_network_analysis()] answers a different question: it uses shared
+#'   scoring contexts to summarize pairwise rater agreement, disagreement, or
+#'   severity direction. It is not a substitute for the co-observation design
+#'   graph, and the design graph is not a substitute for pairwise score
+#'   relationship diagnostics.
 #'
 #' @section References:
 #' - McEwen, M. R. (2015). *Development of a Software Prototype for Generating
@@ -1356,6 +1391,16 @@ subset_connectivity_report <- function(fit,
 #'   head(net$node_metrics)
 #'   net$cut_nodes
 #'   plot(net, type = "centrality", draw = FALSE)
+#'
+#'   # For rater-linkage questions, compare the full design graph with a
+#'   # Person-plus-Rater projection so common tasks/criteria do not act as hubs.
+#'   rater_net <- mfrm_network_analysis(fit, facets = "Rater")
+#'   net$summary[, c("Components", "ArticulationPoints", "Bridges")]
+#'   rater_net$summary[, c("Components", "ArticulationPoints", "Bridges")]
+#'   rater_net$facet_summary
+#'   p_net <- plot(rater_net, type = "network", draw = FALSE)
+#'   head(p_net$data$node_plot)
+#'   head(p_net$data$edge_plot)
 #' }
 #' }
 #' @export
@@ -1363,6 +1408,7 @@ mfrm_network_analysis <- function(fit,
                                   diagnostics = NULL,
                                   top_n_subsets = NULL,
                                   min_observations = 0,
+                                  facets = NULL,
                                   include_graph = FALSE) {
   if (!inherits(fit, "mfrm_fit")) {
     stop("`fit` must be an mfrm_fit object from fit_mfrm().", call. = FALSE)
@@ -1376,7 +1422,8 @@ mfrm_network_analysis <- function(fit,
     fit = fit,
     diagnostics = diagnostics,
     top_n_subsets = top_n_subsets,
-    min_observations = min_observations
+    min_observations = min_observations,
+    facets = facets
   )
   nodes_tbl <- as.data.frame(sc$nodes %||% data.frame(), stringsAsFactors = FALSE)
   edges_tbl <- as.data.frame(sc$edges %||% data.frame(), stringsAsFactors = FALSE)
@@ -1414,6 +1461,8 @@ mfrm_network_analysis <- function(fit,
     settings = list(
       top_n_subsets = top_n_subsets %||% NA_integer_,
       min_observations = min_observations,
+      facets = as.character(sc$settings$facets %||% character(0)),
+      projected = isTRUE(sc$settings$projected),
       include_graph = isTRUE(include_graph),
       graph_definition = "undirected weighted co-observation graph"
     )
@@ -1634,6 +1683,8 @@ mfrm_network_analysis <- function(fit,
     settings = list(
       top_n_subsets = top_n_subsets %||% NA_integer_,
       min_observations = min_observations,
+      facets = as.character(sc$settings$facets %||% character(0)),
+      projected = isTRUE(sc$settings$projected),
       include_graph = isTRUE(include_graph),
       graph_definition = "undirected weighted co-observation graph",
       weight_interpretation = "Weight is the number of observations in which the two levels co-occur; DistanceWeight = 1 / max(Weight, 1)."
@@ -2187,6 +2238,367 @@ network_review_reporting_map <- function() {
   )
 }
 
+network_review_scope_label <- function(settings) {
+  settings <- settings %||% list()
+  facets <- as.character(settings$facets %||% character(0))
+  facets <- facets[nzchar(facets)]
+  if (isTRUE(settings$projected) && length(facets) > 0L) {
+    paste0("Person plus ", paste(facets, collapse = ", "))
+  } else {
+    "Person plus all fitted facets"
+  }
+}
+
+network_review_assumption_checks <- function(net) {
+  summary_tbl <- as.data.frame(net$summary %||% data.frame(), stringsAsFactors = FALSE)
+  node_tbl <- as.data.frame(net$node_metrics %||% data.frame(), stringsAsFactors = FALSE)
+  settings <- net$settings %||% list()
+  scope <- network_review_scope_label(settings)
+  retained_facets <- as.character(settings$facets %||% character(0))
+  retained_facets <- retained_facets[nzchar(retained_facets)]
+
+  nodes <- if (nrow(summary_tbl) > 0L) suppressWarnings(as.integer(summary_tbl$Nodes[1])) else NA_integer_
+  edges <- if (nrow(summary_tbl) > 0L) suppressWarnings(as.integer(summary_tbl$Edges[1])) else NA_integer_
+  components <- if (nrow(summary_tbl) > 0L) suppressWarnings(as.integer(summary_tbl$Components[1])) else NA_integer_
+  connected <- if (nrow(summary_tbl) > 0L && "Connected" %in% names(summary_tbl)) {
+    as.logical(summary_tbl$Connected[1])
+  } else {
+    NA
+  }
+  articulation <- if (nrow(summary_tbl) > 0L) {
+    suppressWarnings(as.integer(summary_tbl$ArticulationPoints[1]))
+  } else {
+    NA_integer_
+  }
+  bridges <- if (nrow(summary_tbl) > 0L) suppressWarnings(as.integer(summary_tbl$Bridges[1])) else NA_integer_
+  density <- if (nrow(summary_tbl) > 0L) suppressWarnings(as.numeric(summary_tbl$Density[1])) else NA_real_
+
+  leaf_count <- NA_integer_
+  nonperson_leaf_count <- NA_integer_
+  person_nodes <- NA_integer_
+  high_degree_nonperson <- NA_integer_
+  high_degree_cut <- NA_real_
+  component_sizes <- integer(0)
+  largest_component_share <- NA_real_
+  small_components <- NA_integer_
+  if (nrow(node_tbl) > 0L && all(c("Degree", "Facet") %in% names(node_tbl))) {
+    deg <- suppressWarnings(as.numeric(node_tbl$Degree))
+    leaf_count <- sum(is.finite(deg) & deg == 1)
+    nonperson_leaf_count <- sum(is.finite(deg) & deg == 1 & !(node_tbl$Facet %in% "Person"))
+    person_nodes <- sum(as.character(node_tbl$Facet) == "Person", na.rm = TRUE)
+    high_degree_cut <- if (is.finite(person_nodes) && person_nodes > 0L) {
+      max(2, ceiling(0.75 * person_nodes))
+    } else {
+      NA_real_
+    }
+    high_degree_nonperson <- if (is.finite(high_degree_cut)) {
+      sum(
+        is.finite(deg) &
+          !(as.character(node_tbl$Facet) %in% "Person") &
+          deg >= high_degree_cut,
+        na.rm = TRUE
+      )
+    } else {
+      NA_integer_
+    }
+  }
+  if (nrow(node_tbl) > 0L && "ComponentSize" %in% names(node_tbl)) {
+    component_sizes <- sort(unique(suppressWarnings(as.integer(node_tbl$ComponentSize))),
+                            decreasing = TRUE)
+    component_sizes <- component_sizes[is.finite(component_sizes)]
+    if (length(component_sizes) > 0L && is.finite(nodes) && nodes > 0L) {
+      largest_component_share <- max(component_sizes, na.rm = TRUE) / nodes
+      small_components <- sum(component_sizes <= 2L)
+    }
+  }
+
+  check_row <- function(check, status, evidence, interpretation, next_step) {
+    data.frame(
+      Check = check,
+      Status = status,
+      Evidence = evidence,
+      Interpretation = interpretation,
+      NextStep = next_step,
+      ReviewUse = "design_diagnostic_not_measurement_gate",
+      stringsAsFactors = FALSE
+    )
+  }
+
+  graph_status <- if (is.finite(nodes) && is.finite(edges) && nodes > 0L && edges > 0L) {
+    "pass"
+  } else {
+    "warning"
+  }
+  connected_status <- if (identical(connected, TRUE) && is.finite(components) && components == 1L) {
+    "pass"
+  } else {
+    "warning"
+  }
+  vulnerability_status <- if ((is.finite(articulation) && articulation > 0L) ||
+                              (is.finite(bridges) && bridges > 0L)) {
+    "review"
+  } else if (is.finite(articulation) && is.finite(bridges)) {
+    "pass"
+  } else {
+    "info"
+  }
+  projection_status <- if (isTRUE(settings$projected)) "pass" else "info"
+  facet_scope_status <- if (isTRUE(settings$projected) && length(retained_facets) > 0L) {
+    "pass"
+  } else if (isTRUE(settings$projected)) {
+    "warning"
+  } else {
+    "info"
+  }
+  hub_status <- if (isTRUE(settings$projected)) {
+    "pass"
+  } else if (is.finite(high_degree_nonperson) && high_degree_nonperson > 0L) {
+    "review"
+  } else if (is.finite(high_degree_nonperson)) {
+    "pass"
+  } else {
+    "info"
+  }
+  component_balance_status <- if (is.finite(components) && components <= 1L) {
+    "pass"
+  } else if (is.finite(components) && components > 1L) {
+    "review"
+  } else {
+    "info"
+  }
+  pendant_status <- if (is.finite(nonperson_leaf_count) && nonperson_leaf_count > 0L) "review" else "pass"
+
+  rbind(
+    check_row(
+      "graph_constructed",
+      graph_status,
+      paste0("nodes=", nodes, "; edges=", edges),
+      "A node/edge graph is required before interpreting network metrics.",
+      if (identical(graph_status, "pass")) {
+        "Proceed to scope and component checks before reporting graph metrics."
+      } else {
+        "Check the fitted data, diagnostics object, facet names, and min_observations setting."
+      }
+    ),
+    check_row(
+      "projection_scope_declared",
+      projection_status,
+      paste0("scope=", scope),
+      if (isTRUE(settings$projected)) {
+        "The graph was recomputed for the stated projection, reducing hub effects from omitted facets."
+      } else {
+        "The full graph includes all fitted facets; broad task or criterion facets may act as hubs."
+      },
+      "For rater-linkage or self-assessment questions, compare the full graph with facets = \"Rater\" or another explicit projection."
+    ),
+    check_row(
+      "facet_scope_alignment",
+      facet_scope_status,
+      paste0(
+        "projected=", isTRUE(settings$projected),
+        "; retained_facets=",
+        if (length(retained_facets) > 0L) paste(retained_facets, collapse = ",") else "all"
+      ),
+      "The graph scope must match the substantive network claim before interpreting components, bridges, or articulation points.",
+      "Use a projected review for rater-linkage claims and the full graph only for overall observation-design connectedness claims."
+    ),
+    check_row(
+      "hub_facet_screen",
+      hub_status,
+      paste0(
+        "person_nodes=", person_nodes,
+        "; high_degree_cut=", high_degree_cut,
+        "; high_degree_nonperson_nodes=", high_degree_nonperson
+      ),
+      "High-degree non-person nodes in the full graph can act as broad hubs and mask rater-specific isolation or bridge patterns.",
+      "If high-degree task, criterion, role, or rater nodes drive connectedness, rerun the review with an explicit projection that matches the claim."
+    ),
+    check_row(
+      "connected_components",
+      connected_status,
+      paste0("components=", components, "; connected=", connected),
+      "More than one component indicates disconnected design subsets for the selected graph scope.",
+      "If disconnected, inspect component membership and avoid common-scale claims without explicit linking or anchoring evidence."
+    ),
+    check_row(
+      "component_size_balance",
+      component_balance_status,
+      paste0(
+        "largest_component_share=", signif(largest_component_share, 4),
+        "; small_components=", small_components,
+        "; component_sizes=",
+        if (length(component_sizes) > 0L) paste(component_sizes, collapse = ",") else "not_available"
+      ),
+      "Component count alone can hide whether disconnection is a small isolated tail or a split design.",
+      "Inspect component membership before describing the design as fragmented, weakly linked, or suitable for a common-scale claim."
+    ),
+    check_row(
+      "articulation_and_bridge_review",
+      vulnerability_status,
+      paste0("articulation_points=", articulation, "; bridges=", bridges),
+      "Articulation points or bridge edges indicate design links whose removal would fragment the graph.",
+      "Inspect top_cut_nodes and top_bridge_edges before deciding whether the design has fragile one-link dependencies."
+    ),
+    check_row(
+      "pendant_node_review",
+      pendant_status,
+      paste0("leaf_nodes=", leaf_count, "; nonperson_leaf_nodes=", nonperson_leaf_count),
+      "Pendant non-person nodes can indicate self-rater, rare-rater, or sparse-facet levels that depend on one person link.",
+      "Check whether pendant non-person nodes are intended self-raters or unintended sparse levels before interpreting isolation."
+    ),
+    check_row(
+      "density_context",
+      "info",
+      paste0("density=", signif(density, 4)),
+      "Density is descriptive and should be interpreted with the selected projection and assignment design.",
+      "Report density only as context; do not use it as a standalone adequacy threshold."
+    ),
+    check_row(
+      "metric_boundary_declared",
+      "info",
+      "network_metrics=design_diagnostics_not_measurement_estimates",
+      "Network quantities summarize the observed co-observation graph; they are not Rasch fit statistics, person measures, rater-quality estimates, or validity evidence by themselves.",
+      "Keep model-fit, precision, fairness, and validity claims in their own evidence lanes and use this review only for design-linking interpretation."
+    )
+  )
+}
+
+network_review_visualization_map <- function(settings) {
+  scope <- network_review_scope_label(settings)
+  data.frame(
+    Route = c(
+      "plot(review, type = \"network\")",
+      "plot(review, type = \"centrality\", metric = \"Betweenness\")",
+      "plot(review, type = \"facet_summary\", metric = \"ArticulationPoints\")",
+      "plot(review, type = \"facet_summary\", metric = \"Bridges\")",
+      "build_summary_table_bundle(review)"
+    ),
+    Output = c(
+      "Node-link design graph",
+      "Centrality bar chart",
+      "Facet articulation summary",
+      "Facet bridge summary",
+      "APA/appendix-ready tables"
+    ),
+    Use = c(
+      "Visualize connected components, leaf nodes, and bridge structure for the selected graph scope.",
+      "Identify person or facet levels that carry many shortest paths through the design.",
+      "Summarize which facets contain articulation-point nodes.",
+      "Summarize which facets participate in bridge edges.",
+      "Export overview, assumption checks, APA templates, and follow-up node/edge tables."
+    ),
+    Prerequisite = c(
+      "Declare the selected graph scope and review assumption_checks.",
+      "Confirm the graph was constructed and centrality is available in node_metrics.",
+      "Confirm facet_summary is available for the selected graph scope.",
+      "Confirm bridge_edges or facet_summary bridge counts are available.",
+      "Review table_index roles before selecting appendix tables."
+    ),
+    Scope = scope,
+    Boundary = c(
+      "Layout is graphical; node position is not a Rasch estimate.",
+      "Centrality is a design-link diagnostic, not person ability or rater quality.",
+      "Facet counts describe graph vulnerability, not measurement bias.",
+      "Bridge counts describe observed co-observation links, not formal adequacy thresholds.",
+      "Tables support manuscript drafting and appendix review, not automatic validity decisions."
+    ),
+    stringsAsFactors = FALSE
+  )
+}
+
+network_review_apa_templates <- function(net, overview, assumption_checks) {
+  summary_tbl <- as.data.frame(net$summary %||% data.frame(), stringsAsFactors = FALSE)
+  settings <- net$settings %||% list()
+  scope <- network_review_scope_label(settings)
+  nodes <- if (nrow(summary_tbl) > 0L) suppressWarnings(as.integer(summary_tbl$Nodes[1])) else NA_integer_
+  edges <- if (nrow(summary_tbl) > 0L) suppressWarnings(as.integer(summary_tbl$Edges[1])) else NA_integer_
+  components <- if (nrow(summary_tbl) > 0L) suppressWarnings(as.integer(summary_tbl$Components[1])) else NA_integer_
+  density <- if (nrow(summary_tbl) > 0L) suppressWarnings(as.numeric(summary_tbl$Density[1])) else NA_real_
+  articulation <- if (nrow(summary_tbl) > 0L) {
+    suppressWarnings(as.integer(summary_tbl$ArticulationPoints[1]))
+  } else {
+    NA_integer_
+  }
+  bridges <- if (nrow(summary_tbl) > 0L) suppressWarnings(as.integer(summary_tbl$Bridges[1])) else NA_integer_
+  status <- as.data.frame(overview %||% data.frame(), stringsAsFactors = FALSE)
+  status_text <- if (nrow(status) > 0L && "NetworkReviewStatus" %in% names(status)) {
+    as.character(status$NetworkReviewStatus[1])
+  } else {
+    "not_available"
+  }
+  reason_text <- if (nrow(status) > 0L && "NetworkReviewReason" %in% names(status)) {
+    as.character(status$NetworkReviewReason[1])
+  } else {
+    "No network-review reason was available."
+  }
+  checks_tbl <- as.data.frame(assumption_checks %||% data.frame(), stringsAsFactors = FALSE)
+  check_summary <- if (nrow(checks_tbl) > 0L && "Status" %in% names(checks_tbl)) {
+    paste(names(table(checks_tbl$Status)), as.integer(table(checks_tbl$Status)), collapse = "; ")
+  } else {
+    "not available"
+  }
+
+  data.frame(
+    TemplateId = c(
+      "methods_design_network",
+      "results_network_summary",
+      "assumption_check_summary",
+      "figure_caption_network",
+      "interpretation_boundary"
+    ),
+    APASection = c("Method", "Results", "Results", "Figure caption", "Limitations"),
+    RecommendedUse = c(
+      "Describe the graph construction.",
+      "Report graph-level connectedness and vulnerability metrics.",
+      "Summarize prerequisite/design checks before interpretation.",
+      "Caption a node-link design-network figure.",
+      "Keep design-network evidence separate from MFRM measurement evidence."
+    ),
+    RequiredReview = c(
+      "Verify graph scope, retained facets, edge definition, and whether the graph is projected.",
+      "Check assumption_checks, network_summary, and any caveats before reporting counts.",
+      "Inspect warning/review rows and decide whether they require design or linking follow-up.",
+      "Use the same graph scope as the plotted object and avoid interpreting layout distances.",
+      "Keep fit, precision, fairness, and validity claims in their own evidence lanes."
+    ),
+    Text = c(
+      paste0(
+        "A design-network diagnostic was constructed from the observed co-observation structure. ",
+        "Nodes represented persons and retained facet levels, weighted edges represented co-occurrence ",
+        "within rating rows, and the reported graph scope was ", scope, "."
+      ),
+      paste0(
+        "The selected design graph contained ", nodes, " nodes and ", edges,
+        " weighted edges, with ", components, " connected component(s), density = ",
+        signif(density, 4), ", ", articulation, " articulation point(s), and ",
+        bridges, " bridge edge(s). The network-review status was ", status_text,
+        ": ", reason_text
+      ),
+      paste0(
+        "Before interpreting the graph, assumption/design checks were reviewed for graph construction, ",
+        "projection scope, facet-scope alignment, hub-facet masking, connected components, ",
+        "component-size balance, articulation/bridge vulnerability, pendant nodes, density context, ",
+        "and interpretation boundaries (status counts: ", check_summary, ")."
+      ),
+      paste0(
+        "Design-network diagnostic for ", scope,
+        ". Nodes represent persons and retained facet levels; edges represent observed co-occurrence ",
+        "within rating rows, and edge widths reflect co-observation counts. Node placement is graphical."
+      ),
+      "Network metrics were interpreted as observation-design diagnostics only; they were not treated as Rasch fit statistics, person measures, rater-quality estimates, or evidence of validity by themselves."
+    ),
+    Boundary = rep("design_diagnostic_not_measurement_gate", 5L),
+    Avoid = c(
+      "Do not imply that graph construction changed the fitted MFRM model.",
+      "Do not treat connectedness, density, articulation points, or bridges as fit statistics or rater-quality estimates.",
+      "Do not suppress warning/review rows when they affect the intended common-scale claim.",
+      "Do not interpret node position, visual distance, or color as an MFRM estimate unless explicitly mapped.",
+      "Do not present design-network evidence as sufficient validity, fairness, or operational-use evidence."
+    ),
+    stringsAsFactors = FALSE
+  )
+}
+
 #' Build an MFRM network review
 #'
 #' @param fit Output from [fit_mfrm()].
@@ -2203,6 +2615,8 @@ network_review_reporting_map <- function() {
 #'   retain before constructing the graph; passed to [mfrm_network_analysis()].
 #' @param min_observations Minimum observations required to keep a subset row;
 #'   passed to [mfrm_network_analysis()].
+#' @param facets Optional subset of non-person facets to project into the
+#'   network review; passed to [mfrm_network_analysis()].
 #' @param top_n Number of central/cut/bridge rows to retain in the review.
 #' @param include_graph Logical; if `TRUE`, keep the underlying `igraph` object
 #'   in the nested `source_network` bundle.
@@ -2222,6 +2636,36 @@ network_review_reporting_map <- function() {
 #' rater quality. Use it to decide which design links, anchors, or additional
 #' observations need inspection before making common-scale claims.
 #'
+#' @section Choosing the review scope:
+#' - Use the default full review to document the fitted observation design as a
+#'   whole. This is the right first check when the report needs a broad
+#'   statement about whether persons and all fitted facets are connected.
+#' - Use `facets = "Rater"` when the downstream claim concerns rater linkage,
+#'   self-assessment isolation, or teacher/peer bridging. Common tasks or
+#'   criteria can be universal hubs in the full graph and may mask these
+#'   rater-specific patterns.
+#' - In speaking self-assessment designs where the self-rater is the same
+#'   identifier as the person, keep the measurement model and the graph claim
+#'   separate. The MFRM fit estimates person and rater facets from the supplied
+#'   long data; the projected network review documents whether self-rater
+#'   nodes are isolated or bridged by other raters in the observed design.
+#' - If the substantive contrast is self versus teacher or peer mode rather
+#'   than literal rater identity, include a `Role`, `AssessorType`, or similar
+#'   facet in the data and report that mode effect separately from the
+#'   Person-plus-Rater topology.
+#'
+#' @section Reporting sequence:
+#' 1. State the graph scope and edge definition from `report_templates`.
+#' 2. Read `assumption_checks`; warning or review rows should be resolved or
+#'    reported before using network metrics as design evidence.
+#' 3. Report only the metrics needed for the claim, typically components,
+#'    articulation points, bridge edges, and the projected facet summary.
+#' 4. Use `visualization_map` to choose one figure route and match its caption
+#'    to the selected scope.
+#' 5. Use the `Avoid` column in `report_templates` as a guardrail against
+#'    treating network diagnostics as fit, rater-quality, fairness, or validity
+#'    evidence.
+#'
 #' @section References:
 #' - Wind, S. A., & Jones, E. (2018). The stabilizing influences of linking set
 #'   size and model-data fit in sparse rater-mediated assessment networks.
@@ -2239,6 +2683,15 @@ network_review_reporting_map <- function() {
 #' - `network_summary`: graph-level metrics from [mfrm_network_analysis()]
 #' - `facet_summary`: facet-level vulnerability summaries
 #' - `top_central_nodes`, `top_cut_nodes`, `top_bridge_edges`: follow-up rows
+#' - `assumption_checks`: graph-construction, projection, facet-scope,
+#'   hub-facet, component-size, bridge/articulation, pendant-node,
+#'   density-context, and interpretation-boundary checks, including next-step
+#'   guidance
+#' - `visualization_map`: recommended plot and appendix routes, including
+#'   prerequisites for using each route
+#' - `report_templates`: APA-style draft wording for methods, results,
+#'   figure captions, interpretation boundaries, required review checks, and
+#'   wording to avoid
 #' - `sparse_review`: optional sparse-design linking review
 #' - `peer_review`: optional peer-review assignment and linkage diagnostics
 #' - `reporting_map`: boundary between MFRM, design network, sparse design,
@@ -2256,6 +2709,27 @@ network_review_reporting_map <- function() {
 #'   review <- build_mfrm_network_review(fit)
 #'   summary(review)
 #'   build_summary_table_bundle(review)
+#'
+#'   # Downstream reporting pieces are carried as ordinary data frames.
+#'   review$assumption_checks[, c("Check", "Status", "Evidence", "NextStep")]
+#'   review$visualization_map[, c("Route", "Prerequisite", "Boundary")]
+#'   review$report_templates[, c("APASection", "Text", "Avoid")]
+#'
+#'   # A projected review is usually the clearer route for rater-linkage
+#'   # questions in speaking or peer-/self-assessment designs.
+#'   rater_review <- build_mfrm_network_review(fit, facets = "Rater")
+#'   rater_review$assumption_checks
+#'   rater_review$report_templates[
+#'     rater_review$report_templates$TemplateId == "results_network_summary",
+#'     c("RecommendedUse", "RequiredReview", "Text", "Avoid")
+#'   ]
+#'   p_network <- plot(rater_review, type = "network", draw = FALSE)
+#'   head(p_network$data$node_plot)
+#'   head(p_network$data$edge_plot)
+#'   plot(rater_review, type = "centrality", draw = FALSE)
+#'
+#'   appendix <- build_summary_table_bundle(rater_review)
+#'   appendix$table_index[, c("Table", "Role", "Recommended")]
 #' }
 #' }
 #' @export
@@ -2265,6 +2739,7 @@ build_mfrm_network_review <- function(fit,
                                       peer_review_design = NULL,
                                       top_n_subsets = NULL,
                                       min_observations = 0,
+                                      facets = NULL,
                                       top_n = 10,
                                       include_graph = FALSE) {
   if (!inherits(fit, "mfrm_fit")) {
@@ -2277,12 +2752,21 @@ build_mfrm_network_review <- function(fit,
     diagnostics = diagnostics,
     top_n_subsets = top_n_subsets,
     min_observations = min_observations,
+    facets = facets,
     include_graph = include_graph
   )
   net_summary <- as.data.frame(net$summary %||% data.frame(), stringsAsFactors = FALSE)
   sparse_tbl <- network_review_sparse_design_table(sparse_design)
   sparse_review <- simulation_sparse_design_review_summary(sparse_tbl)
   peer_tbl <- network_review_peer_review_table(peer_review_design)
+  overview <- network_review_overview(net_summary)
+  assumption_checks <- network_review_assumption_checks(net)
+  visualization_map <- network_review_visualization_map(net$settings %||% list())
+  report_templates <- network_review_apa_templates(
+    net = net,
+    overview = overview,
+    assumption_checks = assumption_checks
+  )
 
   caveats <- as.data.frame(net$caveats %||% data.frame(), stringsAsFactors = FALSE)
   boundary_caveat <- data.frame(
@@ -2305,12 +2789,15 @@ build_mfrm_network_review <- function(fit,
   }
 
   out <- list(
-    overview = network_review_overview(net_summary),
+    overview = overview,
     network_summary = net_summary,
     facet_summary = as.data.frame(net$facet_summary %||% data.frame(), stringsAsFactors = FALSE),
     top_central_nodes = network_review_top_rows(central, top_n = top_n),
     top_cut_nodes = network_review_top_rows(net$cut_nodes, top_n = top_n),
     top_bridge_edges = network_review_top_rows(net$bridge_edges, top_n = top_n),
+    assumption_checks = assumption_checks,
+    visualization_map = visualization_map,
+    report_templates = report_templates,
     sparse_review = as.data.frame(sparse_review, stringsAsFactors = FALSE),
     peer_review = as.data.frame(peer_tbl, stringsAsFactors = FALSE),
     reporting_map = network_review_reporting_map(),
@@ -2320,6 +2807,8 @@ build_mfrm_network_review <- function(fit,
       top_n = top_n,
       top_n_subsets = top_n_subsets %||% NA_integer_,
       min_observations = min_observations,
+      facets = as.character(net$settings$facets %||% character(0)),
+      projected = isTRUE(net$settings$projected),
       include_graph = isTRUE(include_graph),
       review_use = "design_diagnostic_not_measurement_gate"
     ),
@@ -2347,6 +2836,12 @@ print.mfrm_network_review <- function(x, ...) {
 #'   summary.
 #' @param ... Reserved for generic compatibility.
 #'
+#' @details
+#' The summary object retains all network-review tables. Its print method uses
+#' compact downstream columns by default so long APA wording and guardrail text
+#' do not overwhelm the console; use `print(summary(review), full = TRUE)` or
+#' [build_summary_table_bundle()] when the complete table columns are needed.
+#'
 #' @return An object of class `summary.mfrm_network_review`.
 #' @seealso [build_mfrm_network_review()]
 #' @export
@@ -2363,6 +2858,9 @@ summary.mfrm_network_review <- function(object, digits = 3, top_n = 10, ...) {
     top_central_nodes = tibble::as_tibble(network_review_top_rows(object$top_central_nodes, top_n = top_n)),
     top_cut_nodes = tibble::as_tibble(network_review_top_rows(object$top_cut_nodes, top_n = top_n)),
     top_bridge_edges = tibble::as_tibble(network_review_top_rows(object$top_bridge_edges, top_n = top_n)),
+    assumption_checks = tibble::as_tibble(object$assumption_checks %||% tibble::tibble()),
+    visualization_map = tibble::as_tibble(object$visualization_map %||% tibble::tibble()),
+    report_templates = tibble::as_tibble(object$report_templates %||% tibble::tibble()),
     sparse_review = tibble::as_tibble(object$sparse_review %||% tibble::tibble()),
     peer_review = tibble::as_tibble(object$peer_review %||% tibble::tibble()),
     reporting_map = tibble::as_tibble(object$reporting_map %||% tibble::tibble()),
@@ -2375,10 +2873,41 @@ summary.mfrm_network_review <- function(object, digits = 3, top_n = 10, ...) {
   out
 }
 
+network_review_print_text <- function(x, width = 88L) {
+  x <- as.character(x)
+  missing <- is.na(x)
+  x[!missing] <- gsub("\\s+", " ", x[!missing])
+  width <- max(12L, as.integer(width))
+  too_long <- !missing & nchar(x, type = "width", allowNA = TRUE) > width
+  if (any(too_long)) {
+    x[too_long] <- paste0(substr(x[too_long], 1L, width - 3L), "...")
+  }
+  x
+}
+
+network_review_print_table <- function(x, columns = NULL, width = 88L, max_rows = Inf) {
+  df <- as.data.frame(x %||% data.frame(), stringsAsFactors = FALSE)
+  if (nrow(df) == 0L) return(df)
+  if (!is.null(columns)) {
+    keep <- intersect(as.character(columns), names(df))
+    if (length(keep) > 0L) {
+      df <- df[, keep, drop = FALSE]
+    }
+  }
+  max_rows <- suppressWarnings(as.integer(max_rows))
+  if (is.finite(max_rows) && max_rows > 0L && nrow(df) > max_rows) {
+    df <- df[seq_len(max_rows), , drop = FALSE]
+  }
+  char_cols <- vapply(df, function(z) is.character(z) || is.factor(z), logical(1))
+  df[char_cols] <- lapply(df[char_cols], network_review_print_text, width = width)
+  df
+}
+
 #' @export
-print.summary.mfrm_network_review <- function(x, ...) {
+print.summary.mfrm_network_review <- function(x, full = FALSE, ...) {
   digits <- as.integer(x$digits %||% 3L)
   if (!is.finite(digits)) digits <- 3L
+  full <- isTRUE(full)
 
   cat("mfrm Network Review Summary\n")
   if (is.data.frame(x$overview) && nrow(x$overview) > 0L) {
@@ -2404,6 +2933,54 @@ print.summary.mfrm_network_review <- function(x, ...) {
   if (is.data.frame(x$top_bridge_edges) && nrow(x$top_bridge_edges) > 0L) {
     cat("\nBridge edges\n")
     print(round_numeric_df(as.data.frame(x$top_bridge_edges), digits = digits), row.names = FALSE)
+  }
+  if (is.data.frame(x$assumption_checks) && nrow(x$assumption_checks) > 0L) {
+    cat("\nAssumption/design checks")
+    if (!full) cat(" (compact)")
+    cat("\n")
+    assumption_tbl <- if (full) {
+      as.data.frame(x$assumption_checks)
+    } else {
+      network_review_print_table(
+        x$assumption_checks,
+        columns = c("Check", "Status", "Evidence", "NextStep"),
+        width = 86L
+      )
+    }
+    print(assumption_tbl, row.names = FALSE)
+  }
+  if (is.data.frame(x$visualization_map) && nrow(x$visualization_map) > 0L) {
+    cat("\nVisualization map")
+    if (!full) cat(" (compact)")
+    cat("\n")
+    visualization_tbl <- if (full) {
+      as.data.frame(x$visualization_map)
+    } else {
+      network_review_print_table(
+        x$visualization_map,
+        columns = c("Route", "Output", "Prerequisite", "Boundary"),
+        width = 86L
+      )
+    }
+    print(visualization_tbl, row.names = FALSE)
+  }
+  if (is.data.frame(x$report_templates) && nrow(x$report_templates) > 0L) {
+    cat("\nAPA-style report templates")
+    if (!full) cat(" (compact)")
+    cat("\n")
+    templates_tbl <- if (full) {
+      as.data.frame(x$report_templates)
+    } else {
+      network_review_print_table(
+        x$report_templates,
+        columns = c("TemplateId", "APASection", "RecommendedUse", "RequiredReview", "Avoid"),
+        width = 86L
+      )
+    }
+    print(templates_tbl, row.names = FALSE)
+    if (!full) {
+      cat("Full template text is retained in summary(review)$report_templates and build_summary_table_bundle(review).\n")
+    }
   }
   if (is.data.frame(x$sparse_review) && nrow(x$sparse_review) > 0L) {
     cat("\nSparse design review\n")
@@ -2510,12 +3087,437 @@ rater_network_direction_pairs <- function(wide, raters, score_diff_tolerance = 0
   dplyr::bind_rows(rows)
 }
 
+rater_network_assumption_checks <- function(summary_tbl,
+                                            pair_metrics,
+                                            edge_metrics,
+                                            settings) {
+  summary_tbl <- as.data.frame(summary_tbl %||% data.frame(),
+                               stringsAsFactors = FALSE)
+  pair_metrics <- as.data.frame(pair_metrics %||% data.frame(),
+                                stringsAsFactors = FALSE)
+  edge_metrics <- as.data.frame(edge_metrics %||% data.frame(),
+                                stringsAsFactors = FALSE)
+  settings <- settings %||% list()
+
+  first_num <- function(name, default = NA_real_) {
+    if (!name %in% names(summary_tbl) || nrow(summary_tbl) == 0L) {
+      return(default)
+    }
+    out <- suppressWarnings(as.numeric(summary_tbl[[name]][1]))
+    if (length(out) == 0L) default else out[1]
+  }
+  first_chr <- function(name, default = NA_character_) {
+    if (!name %in% names(summary_tbl) || nrow(summary_tbl) == 0L) {
+      return(default)
+    }
+    out <- as.character(summary_tbl[[name]][1])
+    if (length(out) == 0L || is.na(out)) default else out[1]
+  }
+  check_row <- function(check, status, evidence, interpretation, next_step) {
+    data.frame(
+      Check = check,
+      Status = status,
+      Evidence = evidence,
+      Interpretation = interpretation,
+      NextStep = next_step,
+      ReviewUse = "rater_network_descriptive_diagnostic_not_measurement_gate",
+      stringsAsFactors = FALSE
+    )
+  }
+
+  pair_rows <- first_num("PairRows", 0)
+  eligible_pairs <- first_num("EligiblePairRows", 0)
+  dropped_pairs <- first_num("DroppedPairRows", 0)
+  zero_overlap <- first_num("ZeroOverlapPairs", 0)
+  edges <- first_num("Edges", 0)
+  components <- first_num("Components", NA_real_)
+  raters <- first_num("Raters", 0)
+  density <- first_num("Density", NA_real_)
+  min_pair_n <- first_num("MinPairN", settings$min_pair_n %||% NA_real_)
+  min_weight <- first_num("MinWeight", settings$min_weight %||% NA_real_)
+  mode <- first_chr("Mode", settings$mode %||% "network")
+  rater_facet <- first_chr("RaterFacet", settings$rater_facet %||% NA_character_)
+  context_facets <- as.character(settings$context_facets %||% character(0))
+  context_facets <- context_facets[nzchar(context_facets)]
+  weight_metric <- first_chr("WeightMetric", settings$weight_metric %||% NA_character_)
+  directed <- isTRUE(settings$directed %||% FALSE)
+  score_diff_tolerance <- first_num(
+    "ScoreDiffTolerance",
+    settings$score_diff_tolerance %||% NA_real_
+  )
+
+  eligible_share <- if (is.finite(pair_rows) && pair_rows > 0) {
+    eligible_pairs / pair_rows
+  } else {
+    NA_real_
+  }
+  zero_share <- if (is.finite(pair_rows) && pair_rows > 0) {
+    zero_overlap / pair_rows
+  } else {
+    NA_real_
+  }
+  edge_weights <- if ("Weight" %in% names(edge_metrics)) {
+    suppressWarnings(as.numeric(edge_metrics$Weight))
+  } else {
+    numeric(0)
+  }
+  finite_weights <- edge_weights[is.finite(edge_weights)]
+  min_edge_weight <- if (length(finite_weights) > 0L) {
+    min(finite_weights)
+  } else {
+    NA_real_
+  }
+
+  context_status <- if (length(context_facets) > 0L && !is.na(rater_facet) &&
+                        nzchar(rater_facet)) {
+    "pass"
+  } else {
+    "warning"
+  }
+  coverage_status <- if (!is.finite(pair_rows) || pair_rows == 0L ||
+                         !is.finite(eligible_pairs) || eligible_pairs == 0L) {
+    "warning"
+  } else if ((is.finite(dropped_pairs) && dropped_pairs > 0L) ||
+             (is.finite(zero_overlap) && zero_overlap > 0L)) {
+    "review"
+  } else {
+    "pass"
+  }
+  threshold_status <- if (!is.finite(edges) || edges == 0L) {
+    "warning"
+  } else if (is.finite(dropped_pairs) && dropped_pairs > 0L) {
+    "review"
+  } else {
+    "pass"
+  }
+  component_status <- if (!is.finite(edges) || edges == 0L) {
+    "warning"
+  } else if (is.finite(components) && components > 1L) {
+    "review"
+  } else if (is.finite(components)) {
+    "pass"
+  } else {
+    "info"
+  }
+
+  rbind(
+    check_row(
+      "rater_context_declared",
+      context_status,
+      paste0(
+        "rater_facet=", rater_facet,
+        "; context_facets=",
+        if (length(context_facets) > 0L) paste(context_facets, collapse = ",") else "not_available",
+        "; mode=", mode
+      ),
+      "Rater-network edges are defined only within the declared shared scoring contexts.",
+      "Confirm that context_facets represent the units for which two raters can be meaningfully compared."
+    ),
+    check_row(
+      "shared_context_coverage",
+      coverage_status,
+      paste0(
+        "pair_rows=", pair_rows,
+        "; eligible_pair_rows=", eligible_pairs,
+        "; eligible_share=", signif(eligible_share, 4),
+        "; zero_overlap_pairs=", zero_overlap,
+        "; zero_overlap_share=", signif(zero_share, 4)
+      ),
+      "Sparse or zero shared contexts limit the pairwise evidence available for agreement, disagreement, or severity-direction edges.",
+      "Inspect pair_metrics before interpreting isolated raters, missing edges, or centrality rankings."
+    ),
+    check_row(
+      "edge_threshold_effect",
+      threshold_status,
+      paste0(
+        "min_pair_n=", min_pair_n,
+        "; min_weight=", min_weight,
+        "; dropped_pair_rows=", dropped_pairs,
+        "; retained_edges=", edges,
+        "; min_edge_weight=", signif(min_edge_weight, 4)
+      ),
+      "Pair-count and weight thresholds can remove weakly supported rater relationships from the graph.",
+      "Report threshold settings and rerun sensitivity checks when substantive conclusions depend on missing or retained edges."
+    ),
+    check_row(
+      "rater_network_components",
+      component_status,
+      paste0(
+        "raters=", raters,
+        "; edges=", edges,
+        "; components=", components,
+        "; density=", signif(density, 4)
+      ),
+      "Disconnected rater networks indicate that not all raters are compared through retained shared-context edges.",
+      "Avoid ranking all raters on a single network scale when the retained graph is empty or split into components."
+    ),
+    check_row(
+      "directionality_and_score_scale",
+      "info",
+      paste0(
+        "directed=", directed,
+        "; score_diff_tolerance=", score_diff_tolerance,
+        "; weight_metric=", weight_metric
+      ),
+      "Severity-direction edges assume that higher observed scores represent more lenient scoring in the shared context; agreement and disagreement modes are descriptive pair summaries.",
+      "State the score direction, tolerance, and weight metric before interpreting SeverityIndex or edge direction."
+    ),
+    check_row(
+      "metric_boundary_declared",
+      "info",
+      "network_metrics=descriptive_rater_relationships_not_mfrm_estimates",
+      "Rater-network indices are descriptive network diagnostics, not MFRM severity logits, fit statistics, bias estimates, or causal halo effects.",
+      "Keep these results separate from MFRM measurement estimates and use model diagnostics for inferential claims."
+    )
+  )
+}
+
+rater_network_scope_label <- function(settings) {
+  settings <- settings %||% list()
+  rater_facet <- as.character(settings$rater_facet %||% NA_character_)
+  mode <- as.character(settings$mode %||% "network")
+  context_facets <- as.character(settings$context_facets %||% character(0))
+  context_facets <- context_facets[nzchar(context_facets)]
+  paste0(
+    "rater facet = ", if (!is.na(rater_facet) && nzchar(rater_facet)) rater_facet else "not available",
+    "; context facets = ",
+    if (length(context_facets) > 0L) paste(context_facets, collapse = ", ") else "not available",
+    "; mode = ", mode
+  )
+}
+
+rater_network_mode_phrase <- function(mode) {
+  mode <- as.character(mode %||% "network")[1]
+  if (identical(mode, "agreement")) {
+    return("observed pairwise agreement")
+  }
+  if (identical(mode, "disagreement")) {
+    return("observed pairwise disagreement")
+  }
+  if (identical(mode, "severity_direction")) {
+    return("directed relative severity/leniency")
+  }
+  "observed pairwise rater relationships"
+}
+
+rater_network_visualization_map <- function(settings) {
+  settings <- settings %||% list()
+  scope <- rater_network_scope_label(settings)
+  mode <- as.character(settings$mode %||% "network")[1]
+  direction_boundary <- if (identical(mode, "severity_direction")) {
+    "Arrow direction summarizes observed higher-score direction under the declared score scale; it is not an MFRM severity logit."
+  } else {
+    "Edges summarize observed pair metrics within shared contexts; they are not MFRM fit or severity estimates."
+  }
+  data.frame(
+    Route = c(
+      "plot(rn, type = \"network\")",
+      "plot(rn, type = \"severity\")",
+      "plot(rn, type = \"centrality\")",
+      "plot(rn, type = \"matrix\")",
+      "build_summary_table_bundle(rn)"
+    ),
+    Output = c(
+      "Node-link rater network",
+      "Rater severity-direction bar chart",
+      "Rater centrality/strength bar chart",
+      "Pairwise rater matrix",
+      "APA/appendix-ready tables"
+    ),
+    Use = c(
+      "Visualize retained rater relationships after pair-count and weight thresholds.",
+      "Display relative SeverityIndex values when mode = \"severity_direction\".",
+      "Compare rater-level degree, strength, betweenness, or closeness as descriptive diagnostics.",
+      "Inspect retained pairwise agreement, disagreement, or directional weights in table-like form.",
+      "Export overview, assumption checks, templates, caveats, settings, and node/edge/pair tables."
+    ),
+    Prerequisite = c(
+      "Review assumption_checks for context scope, shared coverage, threshold loss, components, and score direction.",
+      "Use only for directed severity networks and state the score direction and tolerance.",
+      "Confirm retained edges and graph components before ranking raters.",
+      "Inspect pair_metrics when zero-overlap or thresholded pairs affect interpretation.",
+      "Review table_index roles before selecting appendix tables."
+    ),
+    Scope = scope,
+    Boundary = c(
+      direction_boundary,
+      "SeverityIndex is a descriptive network index, not a Rasch rater-severity estimate.",
+      "Centrality and strength reflect retained graph structure, not rater quality by themselves.",
+      "Matrix values summarize observed pairwise comparisons and do not replace model diagnostics.",
+      "Tables support manuscript drafting and appendix review, not automatic validity, fairness, or operational decisions."
+    ),
+    stringsAsFactors = FALSE
+  )
+}
+
+rater_network_apa_templates <- function(summary_tbl, assumption_checks, settings) {
+  summary_tbl <- as.data.frame(summary_tbl %||% data.frame(), stringsAsFactors = FALSE)
+  settings <- settings %||% list()
+  scope <- rater_network_scope_label(settings)
+  mode <- if (nrow(summary_tbl) > 0L && "Mode" %in% names(summary_tbl)) {
+    as.character(summary_tbl$Mode[1])
+  } else {
+    as.character(settings$mode %||% "network")
+  }
+  mode_phrase <- rater_network_mode_phrase(mode)
+  rater_facet <- if (nrow(summary_tbl) > 0L && "RaterFacet" %in% names(summary_tbl)) {
+    as.character(summary_tbl$RaterFacet[1])
+  } else {
+    as.character(settings$rater_facet %||% NA_character_)
+  }
+  raters <- if (nrow(summary_tbl) > 0L && "Raters" %in% names(summary_tbl)) {
+    suppressWarnings(as.integer(summary_tbl$Raters[1]))
+  } else {
+    NA_integer_
+  }
+  pair_rows <- if (nrow(summary_tbl) > 0L && "PairRows" %in% names(summary_tbl)) {
+    suppressWarnings(as.integer(summary_tbl$PairRows[1]))
+  } else {
+    NA_integer_
+  }
+  eligible_pairs <- if (nrow(summary_tbl) > 0L && "EligiblePairRows" %in% names(summary_tbl)) {
+    suppressWarnings(as.integer(summary_tbl$EligiblePairRows[1]))
+  } else {
+    NA_integer_
+  }
+  zero_pairs <- if (nrow(summary_tbl) > 0L && "ZeroOverlapPairs" %in% names(summary_tbl)) {
+    suppressWarnings(as.integer(summary_tbl$ZeroOverlapPairs[1]))
+  } else {
+    NA_integer_
+  }
+  edges <- if (nrow(summary_tbl) > 0L && "Edges" %in% names(summary_tbl)) {
+    suppressWarnings(as.integer(summary_tbl$Edges[1]))
+  } else {
+    NA_integer_
+  }
+  components <- if (nrow(summary_tbl) > 0L && "Components" %in% names(summary_tbl)) {
+    suppressWarnings(as.integer(summary_tbl$Components[1]))
+  } else {
+    NA_integer_
+  }
+  density <- if (nrow(summary_tbl) > 0L && "Density" %in% names(summary_tbl)) {
+    suppressWarnings(as.numeric(summary_tbl$Density[1]))
+  } else {
+    NA_real_
+  }
+  min_pair_n <- if (nrow(summary_tbl) > 0L && "MinPairN" %in% names(summary_tbl)) {
+    suppressWarnings(as.integer(summary_tbl$MinPairN[1]))
+  } else {
+    suppressWarnings(as.integer(settings$min_pair_n %||% NA_integer_))
+  }
+  min_weight <- if (nrow(summary_tbl) > 0L && "MinWeight" %in% names(summary_tbl)) {
+    suppressWarnings(as.numeric(summary_tbl$MinWeight[1]))
+  } else {
+    suppressWarnings(as.numeric(settings$min_weight %||% NA_real_))
+  }
+  weight_metric <- if (nrow(summary_tbl) > 0L && "WeightMetric" %in% names(summary_tbl)) {
+    as.character(summary_tbl$WeightMetric[1])
+  } else {
+    as.character(settings$weight_metric %||% NA_character_)
+  }
+  score_diff_tolerance <- if (nrow(summary_tbl) > 0L && "ScoreDiffTolerance" %in% names(summary_tbl)) {
+    suppressWarnings(as.numeric(summary_tbl$ScoreDiffTolerance[1]))
+  } else {
+    suppressWarnings(as.numeric(settings$score_diff_tolerance %||% NA_real_))
+  }
+  checks_tbl <- as.data.frame(assumption_checks %||% data.frame(), stringsAsFactors = FALSE)
+  check_summary <- if (nrow(checks_tbl) > 0L && "Status" %in% names(checks_tbl)) {
+    paste(names(table(checks_tbl$Status)), as.integer(table(checks_tbl$Status)), collapse = "; ")
+  } else {
+    "not available"
+  }
+  direction_text <- if (identical(mode, "severity_direction")) {
+    paste0(
+      "For directed severity edges, an outgoing edge indicates that the source rater ",
+      "more often assigned higher scores than the comparison rater within shared contexts; ",
+      "positive SeverityIndex values indicate relatively more severe network position."
+    )
+  } else {
+    paste0(
+      "Edges were undirected and weighted by the selected ", mode,
+      " metric within shared contexts."
+    )
+  }
+
+  data.frame(
+    TemplateId = c(
+      "methods_rater_network",
+      "results_rater_network_summary",
+      "assumption_check_summary",
+      "figure_caption_rater_network",
+      "interpretation_boundary"
+    ),
+    APASection = c("Method", "Results", "Results", "Figure caption", "Limitations"),
+    RecommendedUse = c(
+      "Describe the rater-network construction.",
+      "Report retained rater-network coverage and graph-level metrics.",
+      "Summarize prerequisite checks before interpreting rater-network indices.",
+      "Caption a rater-network figure.",
+      "Keep rater-network evidence separate from MFRM measurement evidence."
+    ),
+    RequiredReview = c(
+      "Verify rater facet, context facets, mode, weight metric, pair-count threshold, and score direction.",
+      "Check assumption_checks, pair_metrics, edge_metrics, node_metrics, and caveats before reporting graph counts.",
+      "Inspect warning/review rows and decide whether sparse shared contexts require sensitivity checks.",
+      "Use the same mode and threshold settings as the plotted object and avoid interpreting layout distances.",
+      "Keep fit, precision, bias/fairness, and validity claims in their own evidence lanes."
+    ),
+    Text = c(
+      paste0(
+        "A rater-network diagnostic was constructed for ", mode_phrase,
+        ". Nodes represented levels of the ", rater_facet,
+        " facet, and edges summarized pairwise observed score relationships ",
+        "within the declared shared scoring contexts (", scope, ")."
+      ),
+      paste0(
+        "The rater network contained ", raters, " rater node(s), ",
+        pair_rows, " pair row(s), ", eligible_pairs,
+        " eligible pair row(s), ", zero_pairs, " zero-overlap pair(s), and ",
+        edges, " retained edge(s). The retained graph had ", components,
+        " component(s), density = ", signif(density, 4),
+        ", min_pair_n = ", min_pair_n, ", min_weight = ", signif(min_weight, 4),
+        ", and weight metric = ", weight_metric, "."
+      ),
+      paste0(
+        "Before interpreting rater-network indices, assumption checks were reviewed for ",
+        "declared rater/context scope, shared-context coverage, threshold effects, retained components, ",
+        "directionality and score-scale assumptions, and interpretation boundaries ",
+        "(status counts: ", check_summary, ")."
+      ),
+      paste0(
+        "Rater-network diagnostic for ", mode_phrase,
+        ". Nodes represent rater levels, edges represent retained pairwise relationships ",
+        "within shared scoring contexts, and edge widths reflect the selected edge weight. ",
+        direction_text, " Node placement is graphical."
+      ),
+      paste0(
+        "Rater-network metrics were interpreted as descriptive observed-score relationship ",
+        "diagnostics only; they were not treated as MFRM severity logits, fit statistics, ",
+        "bias estimates, rater-quality estimates, or validity evidence by themselves. ",
+        "The score-difference tolerance was ", signif(score_diff_tolerance, 4), "."
+      )
+    ),
+    Boundary = rep("rater_network_descriptive_diagnostic_not_measurement_gate", 5L),
+    Avoid = c(
+      "Do not imply that rater-network construction changed the fitted MFRM model.",
+      "Do not treat centrality, density, retained components, or SeverityIndex as fit statistics or rater-quality estimates.",
+      "Do not suppress sparse-coverage, zero-overlap, or threshold-loss checks when they affect interpretation.",
+      "Do not interpret node position, visual distance, or color as an MFRM estimate unless explicitly mapped.",
+      "Do not present rater-network evidence as sufficient validity, fairness, or operational-use evidence."
+    ),
+    stringsAsFactors = FALSE
+  )
+}
+
 empty_rater_network_bundle <- function(settings, source_interrater = NULL, message = NULL) {
   summary_tbl <- data.frame(
     RaterFacet = as.character(settings$rater_facet %||% NA_character_),
     Mode = as.character(settings$mode %||% NA_character_),
     Raters = 0L,
     PairRows = 0L,
+    EligiblePairRows = 0L,
+    DroppedPairRows = 0L,
+    ZeroOverlapPairs = 0L,
     Edges = 0L,
     Directed = isTRUE(settings$directed),
     WeightMetric = as.character(settings$weight_metric %||% NA_character_),
@@ -2523,6 +3525,14 @@ empty_rater_network_bundle <- function(settings, source_interrater = NULL, messa
     MeanWeight = NA_real_,
     MeanDegree = NA_real_,
     MeanStrength = NA_real_,
+    Components = NA_integer_,
+    Diameter = NA_real_,
+    MeanDistance = NA_real_,
+    MeanSeverityIndex = NA_real_,
+    SeverityContinuity = suppressWarnings(as.numeric(settings$severity_continuity %||% NA_real_)),
+    ScoreDiffTolerance = suppressWarnings(as.numeric(settings$score_diff_tolerance %||% NA_real_)),
+    MinPairN = suppressWarnings(as.integer(settings$min_pair_n %||% NA_integer_)),
+    MinWeight = suppressWarnings(as.numeric(settings$min_weight %||% NA_real_)),
     stringsAsFactors = FALSE
   )
   caveats <- data.frame(
@@ -2531,11 +3541,22 @@ empty_rater_network_bundle <- function(settings, source_interrater = NULL, messa
     Message = message %||% "No rater network could be constructed from shared scoring contexts.",
     stringsAsFactors = FALSE
   )
+  assumption_checks <- rater_network_assumption_checks(
+    summary_tbl = summary_tbl,
+    pair_metrics = data.frame(),
+    edge_metrics = data.frame(),
+    settings = settings
+  )
+  visualization_map <- rater_network_visualization_map(settings)
+  report_templates <- rater_network_apa_templates(summary_tbl, assumption_checks, settings)
   as_mfrm_bundle(list(
     summary = summary_tbl,
     node_metrics = data.frame(),
     edge_metrics = data.frame(),
     pair_metrics = data.frame(),
+    assumption_checks = assumption_checks,
+    visualization_map = visualization_map,
+    report_templates = report_templates,
     caveats = caveats,
     source_interrater = source_interrater,
     settings = settings
@@ -2592,14 +3613,38 @@ empty_rater_network_bundle <- function(settings, source_interrater = NULL, messa
 #' negative for relatively lenient raters, but it is on a network-analysis scale
 #' and should not be read as an MFRM severity logit.
 #'
+#' `plot(rn, type = "network", draw = FALSE)` returns reusable `layout`,
+#' `node_plot`, and `edge_plot` tables. These support custom network figures
+#' while keeping graph coordinates separate from model estimates.
+#'
+#' The returned `assumption_checks` table should be read before interpreting
+#' centrality, severity, or component results. It records the declared
+#' rater/context facets, shared-context coverage, zero-overlap and thresholded
+#' pair loss, retained graph components, direction/score-scale assumptions, and
+#' interpretation boundaries.
+#' `visualization_map` lists the supported figure routes and their
+#' prerequisites, and `report_templates` provides conservative APA-style
+#' Methods, Results, figure-caption, and boundary wording.
+#' `summary(rn)` keeps these assumption checks beside compact node, edge, and
+#' pair previews; [build_summary_table_bundle()] converts the same material to
+#' appendix-ready tables.
+#'
 #' @return A bundle of class `mfrm_rater_network` containing:
 #' \describe{
 #'   \item{`summary`}{One-row graph summary.}
 #'   \item{`node_metrics`}{Rater-level degree, strength, centrality, and
 #'     severity-direction summaries.}
 #'   \item{`edge_metrics`}{Retained rater-pair network edges.}
-#'   \item{`pair_metrics`}{All eligible pairwise agreement and directional
-#'     comparison metrics before edge thresholding.}
+#'   \item{`pair_metrics`}{All pairwise agreement and directional comparison
+#'     metrics before pair-count eligibility and edge thresholding, including
+#'     zero-overlap pairs.}
+#'   \item{`assumption_checks`}{Rater-network context, shared-coverage,
+#'     threshold, component, directionality, and interpretation-boundary
+#'     checks.}
+#'   \item{`visualization_map`}{Recommended plot routes, prerequisites, and
+#'     interpretation boundaries.}
+#'   \item{`report_templates`}{APA-style draft wording and overclaim checks
+#'     for methods, results, figure captions, and limitations.}
 #'   \item{`caveats`}{Interpretation notes and sparse-design warnings.}
 #'   \item{`source_interrater`}{The underlying [interrater_agreement_table()]
 #'     output used for agreement statistics.}
@@ -2615,7 +3660,8 @@ empty_rater_network_bundle <- function(settings, source_interrater = NULL, messa
 #' *Research Methods in Applied Linguistics, 4*, 100205.
 #'
 #' @seealso [interrater_agreement_table()], [plot_interrater_agreement()],
-#'   [mfrm_network_analysis()], [plot.mfrm_bundle()]
+#'   [mfrm_network_analysis()], [build_summary_table_bundle()],
+#'   [plot.mfrm_bundle()]
 #' @examples
 #' \dontrun{
 #' toy <- load_mfrmr_data("example_core")
@@ -2626,6 +3672,12 @@ empty_rater_network_bundle <- function(settings, source_interrater = NULL, messa
 #'   rn$summary
 #'   head(rn$node_metrics)
 #'   plot(rn, type = "severity", draw = FALSE)
+#'   p_net <- plot(rn, type = "network", draw = FALSE)
+#'   head(p_net$data$node_plot)
+#'   head(p_net$data$edge_plot)
+#'   summary(rn)$assumption_checks
+#'   rn$report_templates[, c("TemplateId", "APASection", "Text", "Avoid")]
+#'   build_summary_table_bundle(rn)$table_index
 #' }
 #' }
 #' @export
@@ -2764,6 +3816,7 @@ rater_network_analysis <- function(fit,
 
   eligible_pairs <- pair_metrics[pair_metrics$EligiblePair, , drop = FALSE]
   if (identical(mode, "severity_direction")) {
+    n_eligible <- nrow(eligible_pairs)
     fwd <- data.frame(
       From = as.character(eligible_pairs$Rater1),
       To = as.character(eligible_pairs$Rater2),
@@ -2771,8 +3824,8 @@ rater_network_analysis <- function(fit,
       Weight = suppressWarnings(as.numeric(eligible_pairs$Rater1HigherProp)),
       Count = suppressWarnings(as.numeric(eligible_pairs$Rater1HigherCount)),
       OpportunityCount = suppressWarnings(as.numeric(eligible_pairs$DirectionN)),
-      Direction = "Rater1Higher",
-      WeightMetric = "DirectionalHigherProp",
+      Direction = rep("Rater1Higher", n_eligible),
+      WeightMetric = rep("DirectionalHigherProp", n_eligible),
       stringsAsFactors = FALSE
     )
     rev <- data.frame(
@@ -2782,8 +3835,8 @@ rater_network_analysis <- function(fit,
       Weight = suppressWarnings(as.numeric(eligible_pairs$Rater2HigherProp)),
       Count = suppressWarnings(as.numeric(eligible_pairs$Rater2HigherCount)),
       OpportunityCount = suppressWarnings(as.numeric(eligible_pairs$DirectionN)),
-      Direction = "Rater2Higher",
-      WeightMetric = "DirectionalHigherProp",
+      Direction = rep("Rater2Higher", n_eligible),
+      WeightMetric = rep("DirectionalHigherProp", n_eligible),
       stringsAsFactors = FALSE
     )
     edges <- dplyr::bind_rows(fwd, rev) |>
@@ -2800,6 +3853,7 @@ rater_network_analysis <- function(fit,
     if (identical(mode, "agreement")) {
       graph_weight <- pmax(graph_weight, 0)
     }
+    n_eligible <- nrow(eligible_pairs)
     edges <- data.frame(
       From = as.character(eligible_pairs$Rater1),
       To = as.character(eligible_pairs$Rater2),
@@ -2808,8 +3862,8 @@ rater_network_analysis <- function(fit,
       SignedWeight = signed_weight,
       Count = suppressWarnings(as.numeric(eligible_pairs$N)),
       OpportunityCount = suppressWarnings(as.numeric(eligible_pairs$N)),
-      Direction = "undirected",
-      WeightMetric = weight_metric,
+      Direction = rep("undirected", n_eligible),
+      WeightMetric = rep(weight_metric, n_eligible),
       stringsAsFactors = FALSE
     ) |>
       dplyr::filter(is.finite(.data$Weight), .data$Weight >= min_weight)
@@ -2869,6 +3923,10 @@ rater_network_analysis <- function(fit,
   severity_ratio <- (as.numeric(strength_out) + severity_continuity) /
     (as.numeric(strength_in) + severity_continuity)
   severity_index <- if (directed) -log(severity_ratio) else rep(NA_real_, length(severity_ratio))
+  if (directed) {
+    no_directional_edges <- (as.numeric(strength_in) + as.numeric(strength_out)) <= 0
+    severity_index[no_directional_edges] <- NA_real_
+  }
 
   node_metrics <- data.frame(
     Rater = igraph::V(graph)$name,
@@ -2885,6 +3943,7 @@ rater_network_analysis <- function(fit,
     SeverityIndex = severity_index,
     RelativePattern = if (directed) {
       dplyr::case_when(
+        !is.finite(severity_index) ~ "insufficient_directional_edges",
         is.finite(severity_index) & severity_index > 0 ~ "more_severe",
         is.finite(severity_index) & severity_index < 0 ~ "more_lenient",
         is.finite(severity_index) ~ "balanced",
@@ -2943,7 +4002,10 @@ rater_network_analysis <- function(fit,
     RaterFacet = rater_facet,
     Mode = mode,
     Raters = igraph::vcount(graph),
-    PairRows = nrow(eligible_pairs),
+    PairRows = nrow(pair_metrics),
+    EligiblePairRows = nrow(eligible_pairs),
+    DroppedPairRows = sum(!pair_metrics$EligiblePair, na.rm = TRUE),
+    ZeroOverlapPairs = sum(is.finite(pair_metrics$N) & pair_metrics$N == 0, na.rm = TRUE),
     Edges = igraph::ecount(graph),
     Directed = directed,
     WeightMetric = weight_metric,
@@ -2997,12 +4059,27 @@ rater_network_analysis <- function(fit,
       stringsAsFactors = FALSE
     ))
   }
+  assumption_checks <- rater_network_assumption_checks(
+    summary_tbl = summary_tbl,
+    pair_metrics = pair_metrics,
+    edge_metrics = edge_metrics,
+    settings = settings
+  )
+  visualization_map <- rater_network_visualization_map(settings)
+  report_templates <- rater_network_apa_templates(
+    summary_tbl = summary_tbl,
+    assumption_checks = assumption_checks,
+    settings = settings
+  )
 
   out <- list(
     summary = summary_tbl,
     node_metrics = node_metrics,
     edge_metrics = edge_metrics,
     pair_metrics = pair_metrics,
+    assumption_checks = assumption_checks,
+    visualization_map = visualization_map,
+    report_templates = report_templates,
     caveats = caveats,
     source_interrater = source_interrater,
     settings = settings
@@ -3011,6 +4088,121 @@ rater_network_analysis <- function(fit,
     out$graph <- graph
   }
   as_mfrm_bundle(out, "mfrm_rater_network")
+}
+
+#' Summarize rater-network diagnostics
+#'
+#' @param object Output from [rater_network_analysis()].
+#' @param digits Number of digits for numeric rounding.
+#' @param top_n Maximum number of node, edge, and pair rows retained in the
+#'   summary preview.
+#' @param ... Unused.
+#'
+#' @return An object of class `summary.mfrm_rater_network`.
+#' @seealso [rater_network_analysis()], [build_summary_table_bundle()]
+#' @export
+summary.mfrm_rater_network <- function(object, digits = 3, top_n = 10, ...) {
+  if (!inherits(object, "mfrm_rater_network")) {
+    stop("`object` must be output from rater_network_analysis().", call. = FALSE)
+  }
+  digits <- max(0L, as.integer(digits))
+  top_n <- max(1L, as.integer(top_n))
+  component_names <- names(object) %||% character(0)
+
+  summary_tbl <- round_numeric_df(
+    as.data.frame(object$summary %||% data.frame(), stringsAsFactors = FALSE),
+    digits = digits
+  )
+  node_tbl <- round_numeric_df(
+    utils::head(
+      as.data.frame(object$node_metrics %||% data.frame(), stringsAsFactors = FALSE),
+      n = top_n
+    ),
+    digits = digits
+  )
+  edge_tbl <- round_numeric_df(
+    utils::head(
+      as.data.frame(object$edge_metrics %||% data.frame(), stringsAsFactors = FALSE),
+      n = top_n
+    ),
+    digits = digits
+  )
+  pair_tbl <- round_numeric_df(
+    utils::head(
+      as.data.frame(object$pair_metrics %||% data.frame(), stringsAsFactors = FALSE),
+      n = top_n
+    ),
+    digits = digits
+  )
+  assumption_tbl <- as.data.frame(object$assumption_checks %||% data.frame(),
+                                  stringsAsFactors = FALSE)
+  visualization_tbl <- as.data.frame(object$visualization_map %||% data.frame(),
+                                     stringsAsFactors = FALSE)
+  template_tbl <- as.data.frame(object$report_templates %||% data.frame(),
+                                stringsAsFactors = FALSE)
+  caveat_tbl <- as.data.frame(object$caveats %||% data.frame(),
+                              stringsAsFactors = FALSE)
+  settings_tbl <- bundle_settings_table(object$settings %||% list())
+
+  first_value <- function(tbl, column, default = NA) {
+    if (!is.data.frame(tbl) || nrow(tbl) == 0L || !column %in% names(tbl)) {
+      return(default)
+    }
+    tbl[[column]][1]
+  }
+  overview <- data.frame(
+    Class = "mfrm_rater_network",
+    Components = length(component_names),
+    ComponentNames = paste(component_names, collapse = ", "),
+    RaterFacet = as.character(first_value(summary_tbl, "RaterFacet", "")),
+    Mode = as.character(first_value(summary_tbl, "Mode", "")),
+    Raters = suppressWarnings(as.integer(first_value(summary_tbl, "Raters", NA_integer_))),
+    PairRows = suppressWarnings(as.integer(first_value(summary_tbl, "PairRows", NA_integer_))),
+    EligiblePairRows = suppressWarnings(as.integer(first_value(summary_tbl, "EligiblePairRows", NA_integer_))),
+    ZeroOverlapPairs = suppressWarnings(as.integer(first_value(summary_tbl, "ZeroOverlapPairs", NA_integer_))),
+    Edges = suppressWarnings(as.integer(first_value(summary_tbl, "Edges", NA_integer_))),
+    RetainedGraphComponents = suppressWarnings(as.integer(first_value(summary_tbl, "Components", NA_integer_))),
+    AssumptionCheckRows = nrow(assumption_tbl),
+    VisualizationRows = nrow(visualization_tbl),
+    ReportTemplateRows = nrow(template_tbl),
+    CaveatRows = nrow(caveat_tbl),
+    stringsAsFactors = FALSE
+  )
+
+  notes <- c(
+    "Rater-network metrics summarize observed pairwise rater relationships; they are not Rasch logit estimates or formal fit statistics.",
+    "Read assumption_checks before reporting centrality, retained components, or severity-direction indices.",
+    "Use visualization_map and report_templates to keep figure routes, APA wording, and overclaim checks explicit."
+  )
+  if (nrow(summary_tbl) > 0L) {
+    notes <- c(
+      notes,
+      paste0(
+        "Graph: ", first_value(summary_tbl, "Raters", NA), " rater node(s), ",
+        first_value(summary_tbl, "Edges", NA), " edge(s), mode = ",
+        first_value(summary_tbl, "Mode", NA), "."
+      )
+    )
+  }
+
+  out <- list(
+    summary_kind = "rater_network",
+    overview = overview,
+    summary = summary_tbl,
+    node_metrics = node_tbl,
+    edge_metrics = edge_tbl,
+    pair_metrics = pair_tbl,
+    assumption_checks = assumption_tbl,
+    visualization_map = visualization_tbl,
+    report_templates = template_tbl,
+    caveats = caveat_tbl,
+    settings = settings_tbl,
+    notes = notes,
+    digits = digits,
+    top_n = top_n
+  )
+  class(out) <- c("summary.mfrm_rater_network", "summary.mfrm_bundle")
+  out
 }
 
 infer_default_criterion_facet <- function(facet_names, rater_facet = NULL) {
@@ -5770,6 +6962,7 @@ summary_table_bundle_supported_summary_classes <- function() {
     "summary.mfrm_anchor_review",
     "summary.mfrm_peer_review_design_review",
     "summary.mfrm_network_review",
+    "summary.mfrm_rater_network",
     "summary.mfrm_linking_review",
     "summary.mfrm_misfit_casebook",
     "summary.mfrm_model_choice_review",
@@ -5963,6 +7156,13 @@ resolve_summary_table_bundle_input <- function(x,
       summary_class = "summary.mfrm_network_review"
     ))
   }
+  if (inherits(x, "mfrm_rater_network")) {
+    return(list(
+      summary = summary(x, digits = digits, top_n = top_n),
+      source_class = "mfrm_rater_network",
+      summary_class = "summary.mfrm_rater_network"
+    ))
+  }
   if (inherits(x, "mfrm_linking_review")) {
     return(list(
       summary = summary(x, digits = digits, top_n = top_n),
@@ -6051,7 +7251,7 @@ resolve_summary_table_bundle_input <- function(x,
     "mfrm_population_prediction, mfrm_future_branch_active_branch, ",
     "mfrm_facets_run, mfrm_results, mfrm_report, mfrm_bias, mfrm_anchor_review, ",
     "mfrm_peer_review_design_review, mfrm_network_review, ",
-    "mfrm_linking_review, mfrm_misfit_casebook, mfrm_model_choice_review, ",
+    "mfrm_rater_network, mfrm_linking_review, mfrm_misfit_casebook, mfrm_model_choice_review, ",
     "mfrm_weighting_review, mfrm_unit_prediction, mfrm_plausible_values, ",
     "mfrm_generalizability, mfrm_generalizability_design_check, ",
     "mfrm_generalizability_bootstrap, mfrm_generalizability_comparison, ",
@@ -6087,6 +7287,7 @@ summary_table_bundle_required_components <- function(summary_class) {
     "summary.mfrm_anchor_review" = c("facet_summary", "recommendations"),
     "summary.mfrm_peer_review_design_review" = c("overview", "load_summary", "low_common_pairs", "reporting_map"),
     "summary.mfrm_network_review" = c("overview", "network_summary", "reporting_map"),
+    "summary.mfrm_rater_network" = c("overview", "summary", "assumption_checks"),
     "summary.mfrm_linking_review" = c("overview", "top_linking_risks", "group_view_index", "reporting_map"),
     "summary.mfrm_misfit_casebook" = c("overview", "top_cases", "case_rollup", "group_view_index", "reporting_map"),
     "summary.mfrm_model_choice_review" = c("overview", "comparison_guidance", "comparison_table", "model_roles"),
@@ -7293,6 +8494,9 @@ summary_table_bundle_spec <- function(summary_obj) {
       central_tbl <- summary_table_bundle_df(summary_obj$top_central_nodes)
       cut_tbl <- summary_table_bundle_df(summary_obj$top_cut_nodes)
       bridge_tbl <- summary_table_bundle_df(summary_obj$top_bridge_edges)
+      assumption_tbl <- summary_table_bundle_df(summary_obj$assumption_checks)
+      visualization_tbl <- summary_table_bundle_df(summary_obj$visualization_map)
+      template_tbl <- summary_table_bundle_df(summary_obj$report_templates)
       sparse_tbl <- summary_table_bundle_df(summary_obj$sparse_review)
       peer_tbl <- summary_table_bundle_df(summary_obj$peer_review)
       reporting_tbl <- summary_table_bundle_df(summary_obj$reporting_map)
@@ -7308,6 +8512,9 @@ summary_table_bundle_spec <- function(summary_obj) {
           top_central_nodes = central_tbl,
           top_cut_nodes = cut_tbl,
           top_bridge_edges = bridge_tbl,
+          assumption_checks = assumption_tbl,
+          visualization_map = visualization_tbl,
+          report_templates = template_tbl,
           sparse_review = sparse_tbl,
           peer_review = peer_tbl,
           reporting_map = reporting_tbl,
@@ -7322,6 +8529,9 @@ summary_table_bundle_spec <- function(summary_obj) {
           top_central_nodes = "network_central_nodes",
           top_cut_nodes = "network_articulation_nodes",
           top_bridge_edges = "network_bridge_edges",
+          assumption_checks = "network_assumption_checks",
+          visualization_map = "network_visualization_map",
+          report_templates = "network_apa_templates",
           sparse_review = "sparse_design_diagnostics",
           peer_review = "peer_review_design_diagnostics",
           reporting_map = "reporting_map",
@@ -7336,12 +8546,70 @@ summary_table_bundle_spec <- function(summary_obj) {
           top_central_nodes = "Highest-betweenness design-network nodes for follow-up inspection.",
           top_cut_nodes = "Articulation-point rows whose removal would fragment the design graph.",
           top_bridge_edges = "Bridge-edge rows indicating one-link dependencies between graph regions.",
+          assumption_checks = "Graph-construction, projection, component, bridge/articulation, pendant-node, and density-context checks with next-step guidance.",
+          visualization_map = "Recommended plot routes, route prerequisites, APA/appendix uses, and interpretation boundaries.",
+          report_templates = "APA-style draft wording for methods, results, figure captions, required review checks, and wording to avoid.",
           sparse_review = "Optional sparse linked design-review counts for planned missingness and rater-pair linkage.",
           peer_review = "Optional peer-review assignment, load, and common-submission linkage diagnostics.",
           reporting_map = "Map separating MFRM measurement, design-network review, sparse-design review, peer-review design, and rater-effect network routes.",
           caveats = "Interpretation caveats for network-design diagnostics.",
           notes = "Compact interpretation notes for network-design review.",
           settings = "Settings and provenance recorded by build_mfrm_network_review()."
+        )
+      )
+    },
+    "summary.mfrm_rater_network" = {
+      overview_tbl <- summary_table_bundle_df(summary_obj$overview)
+      summary_tbl <- summary_table_bundle_df(summary_obj$summary)
+      node_tbl <- summary_table_bundle_df(summary_obj$node_metrics)
+      edge_tbl <- summary_table_bundle_df(summary_obj$edge_metrics)
+      pair_tbl <- summary_table_bundle_df(summary_obj$pair_metrics)
+      assumption_tbl <- summary_table_bundle_df(summary_obj$assumption_checks)
+      visualization_tbl <- summary_table_bundle_df(summary_obj$visualization_map)
+      template_tbl <- summary_table_bundle_df(summary_obj$report_templates)
+      caveat_tbl <- summary_table_bundle_df(summary_obj$caveats)
+      notes_tbl <- summary_table_bundle_text_df(summary_obj$notes, column = "Note")
+      settings_tbl <- summary_table_bundle_settings_df(summary_obj$settings)
+      list(
+        title = "Rater Network Tables",
+        tables = list(
+          overview = overview_tbl,
+          summary = summary_tbl,
+          node_metrics = node_tbl,
+          edge_metrics = edge_tbl,
+          pair_metrics = pair_tbl,
+          assumption_checks = assumption_tbl,
+          visualization_map = visualization_tbl,
+          report_templates = template_tbl,
+          caveats = caveat_tbl,
+          notes = notes_tbl,
+          settings = settings_tbl
+        ),
+        roles = c(
+          overview = "rater_network_overview",
+          summary = "rater_network_summary",
+          node_metrics = "rater_network_nodes",
+          edge_metrics = "rater_network_edges",
+          pair_metrics = "rater_network_pairs",
+          assumption_checks = "rater_network_assumption_checks",
+          visualization_map = "rater_network_visualization_map",
+          report_templates = "rater_network_apa_templates",
+          caveats = "analysis_caveats",
+          notes = "interpretation_notes",
+          settings = "review_settings"
+        ),
+        descriptions = c(
+          overview = "Front-door rater-network appendix handoff with pair, edge, and assumption-check counts.",
+          summary = "Graph-level rater relationship summary, including retained edges, components, zero-overlap pairs, and threshold settings.",
+          node_metrics = "Rater-level degree, strength, centrality, and severity-direction summaries retained for follow-up.",
+          edge_metrics = "Retained rater-pair graph edges after pair-count and weight thresholds.",
+          pair_metrics = "Pairwise agreement, disagreement, and directional comparison metrics before graph edge thresholding.",
+          assumption_checks = "Rater/context scope, shared-context coverage, threshold, component, directionality, score-scale, and boundary checks.",
+          visualization_map = "Recommended rater-network plot routes, prerequisites, and interpretation boundaries.",
+          report_templates = "APA-style draft wording for rater-network methods, results, figure captions, limitations, and wording to avoid.",
+          caveats = "Interpretation caveats for rater-network diagnostics.",
+          notes = "Compact interpretation notes for rater-network reporting.",
+          settings = "Settings and provenance recorded by rater_network_analysis()."
         )
       )
     },
@@ -7935,6 +9203,8 @@ build_summary_table_index <- function(tables, roles, descriptions) {
 #' - [mfrm_report()] or `summary(report)`
 #' - [estimate_bias()] or `summary(bias)`
 #' - [review_mfrm_anchors()] or `summary(review)`
+#' - [build_mfrm_network_review()] or `summary(review)`
+#' - [rater_network_analysis()] or `summary(rn)`
 #' - [build_linking_review()] or `summary(review)`
 #' - [build_misfit_casebook()] or `summary(casebook)`
 #' - [build_weighting_review()] or `summary(review)`
@@ -8598,6 +9868,43 @@ summary_table_bundle_appendix_role_registry <- function() {
     ),
     stringsAsFactors = FALSE
   )
+  rater_network_roles <- data.frame(
+    Role = c(
+      "rater_network_overview",
+      "rater_network_summary",
+      "rater_network_nodes",
+      "rater_network_edges",
+      "rater_network_pairs",
+      "rater_network_assumption_checks",
+      "rater_network_visualization_map",
+      "rater_network_apa_templates"
+    ),
+    AppendixSection = c(
+      "diagnostics",
+      "diagnostics",
+      "diagnostics",
+      "diagnostics",
+      "diagnostics",
+      "diagnostics",
+      "diagnostics",
+      "reporting"
+    ),
+    RecommendedAppendix = c(TRUE, TRUE, TRUE, TRUE, FALSE, TRUE, TRUE, TRUE),
+    CompactAppendix = c(TRUE, TRUE, FALSE, FALSE, FALSE, TRUE, TRUE, TRUE),
+    PreferredAppendixOrder = c(260.1, 260.2, 260.3, 260.4, 260.5, 260.6, 260.7, 260.8),
+    AppendixRationale = c(
+      "Recommended front-door table for rater-network appendix handoff.",
+      "Recommended graph-level rater-network table for diagnostic reporting.",
+      "Recommended rater-level centrality and severity-direction table for follow-up appendices.",
+      "Recommended retained-edge table for checking which rater relationships drove the graph.",
+      "Full pairwise metric table; retain for full exports but omit from recommended presets.",
+      "Required assumption-check table before reporting rater-network graph metrics.",
+      "Recommended route map for rater-network figures, prerequisites, and appendix-ready tables.",
+      "APA-style wording templates for rater-network methods, results, figure captions, interpretation boundaries, and wording to avoid."
+    ),
+    stringsAsFactors = FALSE
+  )
+  out <- rbind(out, rater_network_roles)
   design_roles <- data.frame(
     Role = c("design_runtime", "signal_detection_runtime", "population_prediction_runtime"),
     AppendixSection = c("methods", "methods", "methods"),
@@ -8891,19 +10198,25 @@ summary_table_bundle_appendix_role_registry <- function() {
       "network_facet_vulnerability",
       "network_central_nodes",
       "network_articulation_nodes",
-      "network_bridge_edges"
+      "network_bridge_edges",
+      "network_assumption_checks",
+      "network_visualization_map",
+      "network_apa_templates"
     ),
-    AppendixSection = rep("diagnostics", 6),
-    RecommendedAppendix = rep(TRUE, 6),
-    CompactAppendix = c(TRUE, TRUE, TRUE, FALSE, TRUE, TRUE),
-    PreferredAppendixOrder = 285:290,
+    AppendixSection = c(rep("diagnostics", 8), "reporting"),
+    RecommendedAppendix = rep(TRUE, 9),
+    CompactAppendix = c(TRUE, TRUE, TRUE, FALSE, TRUE, TRUE, TRUE, TRUE, TRUE),
+    PreferredAppendixOrder = seq(266.1, 266.9, by = 0.1),
     AppendixRationale = c(
       "Recommended overview table for design-network connectedness and vulnerability review.",
       "Recommended graph-level design-network summary for connectivity diagnostics.",
       "Recommended facet-level design-network vulnerability table for follow-up appendices.",
       "High-betweenness node table; retain for full diagnostics exports but omit from compact presets.",
       "Recommended articulation-point table for fragile-link follow-up.",
-      "Recommended bridge-edge table for one-link dependency follow-up."
+      "Recommended bridge-edge table for one-link dependency follow-up.",
+      "Recommended prerequisite/design check table with next-step guidance before interpreting network metrics.",
+      "Recommended route map for network figures, prerequisites, and appendix-ready tables.",
+      "APA-style wording templates for methods, results, figure captions, interpretation boundaries, and wording to avoid."
     ),
     stringsAsFactors = FALSE
   )

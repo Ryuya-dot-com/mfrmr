@@ -2722,11 +2722,49 @@ table3_iteration_report <- function(fit,
 #' t6 <- subset_connectivity_report(fit)
 #' @keywords internal
 #' @noRd
-build_subset_connectivity_edges <- function(fit, nodes_tbl, keep_subsets) {
-  data <- as.data.frame(fit$prep$data %||% data.frame(), stringsAsFactors = FALSE)
+resolve_subset_connectivity_facets <- function(fit, facets = NULL) {
   source_cols <- fit$config$source_columns %||% list()
   person_col <- as.character(source_cols$person %||% "Person")
-  facet_cols <- as.character(source_cols$facets %||% fit$config$facet_names %||% character(0))
+  available_facets <- as.character(source_cols$facets %||% fit$config$facet_names %||% character(0))
+  available_facets <- available_facets[nzchar(available_facets)]
+  data <- as.data.frame(fit$prep$data %||% data.frame(), stringsAsFactors = FALSE)
+  if (!person_col %in% names(data) && "Person" %in% names(data)) {
+    person_col <- "Person"
+  }
+
+  if (is.null(facets)) {
+    return(list(
+      person_col = person_col,
+      facets = available_facets,
+      projected = FALSE,
+      requested = NULL
+    ))
+  }
+
+  requested <- unique(as.character(facets))
+  requested <- requested[nzchar(requested)]
+  requested <- setdiff(requested, c("Person", person_col))
+  if (length(requested) == 0L) {
+    stop("`facets` must include at least one non-person facet.", call. = FALSE)
+  }
+  unknown <- setdiff(requested, available_facets)
+  if (length(unknown) > 0L) {
+    stop("Unknown `facets`: ", paste(unknown, collapse = ", "), call. = FALSE)
+  }
+
+  list(
+    person_col = person_col,
+    facets = requested,
+    projected = TRUE,
+    requested = requested
+  )
+}
+
+build_subset_connectivity_edges <- function(fit, nodes_tbl, keep_subsets, facets = NULL) {
+  data <- as.data.frame(fit$prep$data %||% data.frame(), stringsAsFactors = FALSE)
+  facet_spec <- resolve_subset_connectivity_facets(fit, facets = facets)
+  person_col <- facet_spec$person_col
+  facet_cols <- facet_spec$facets
   cols <- c(person_col, facet_cols)
   cols <- cols[nzchar(cols)]
   if (!is.data.frame(data) || nrow(data) == 0L || length(cols) < 2L ||
@@ -2793,7 +2831,8 @@ build_subset_connectivity_edges <- function(fit, nodes_tbl, keep_subsets) {
 table6_subsets_listing <- function(fit,
                                    diagnostics = NULL,
                                    top_n_subsets = NULL,
-                                   min_observations = 0) {
+                                   min_observations = 0,
+                                   facets = NULL) {
   signal_legacy_name_deprecation(
     old_name = "table6_subsets_listing",
     new_name = "subset_connectivity_report",
@@ -2806,15 +2845,28 @@ table6_subsets_listing <- function(fit,
     diagnostics <- diagnose_mfrm(fit, residual_pca = "none")
   }
 
-  summary_tbl <- if (!is.null(diagnostics$subsets$summary)) {
-    as.data.frame(diagnostics$subsets$summary, stringsAsFactors = FALSE)
+  facet_spec <- resolve_subset_connectivity_facets(fit, facets = facets)
+  if (isTRUE(facet_spec$projected)) {
+    data <- as.data.frame(fit$prep$data %||% data.frame(), stringsAsFactors = FALSE)
+    cols <- c(facet_spec$person_col, facet_spec$facets)
+    if (is.data.frame(data) && nrow(data) > 0L && all(cols %in% names(data))) {
+      subset_tbls <- calc_subsets(data, cols)
+    } else {
+      subset_tbls <- list(summary = tibble::tibble(), nodes = tibble::tibble())
+    }
+    summary_tbl <- as.data.frame(subset_tbls$summary %||% data.frame(), stringsAsFactors = FALSE)
+    nodes_tbl <- as.data.frame(subset_tbls$nodes %||% data.frame(), stringsAsFactors = FALSE)
   } else {
-    data.frame()
-  }
-  nodes_tbl <- if (!is.null(diagnostics$subsets$nodes)) {
-    as.data.frame(diagnostics$subsets$nodes, stringsAsFactors = FALSE)
-  } else {
-    data.frame()
+    summary_tbl <- if (!is.null(diagnostics$subsets$summary)) {
+      as.data.frame(diagnostics$subsets$summary, stringsAsFactors = FALSE)
+    } else {
+      data.frame()
+    }
+    nodes_tbl <- if (!is.null(diagnostics$subsets$nodes)) {
+      as.data.frame(diagnostics$subsets$nodes, stringsAsFactors = FALSE)
+    } else {
+      data.frame()
+    }
   }
 
   if (nrow(summary_tbl) == 0 || nrow(nodes_tbl) == 0) {
@@ -2826,7 +2878,9 @@ table6_subsets_listing <- function(fit,
       settings = list(
         top_n_subsets = if (is.null(top_n_subsets)) NA_integer_ else max(1L, as.integer(top_n_subsets)),
         min_observations = as.numeric(min_observations),
-        is_disjoint = FALSE
+        is_disjoint = FALSE,
+        facets = facet_spec$facets,
+        projected = isTRUE(facet_spec$projected)
       )
     ))
   }
@@ -2898,11 +2952,18 @@ table6_subsets_listing <- function(fit,
     summary = as.data.frame(summary_tbl, stringsAsFactors = FALSE),
     listing = as.data.frame(listing_tbl, stringsAsFactors = FALSE),
     nodes = as.data.frame(nodes_tbl, stringsAsFactors = FALSE),
-    edges = build_subset_connectivity_edges(fit, as.data.frame(nodes_tbl, stringsAsFactors = FALSE), keep_subsets),
+    edges = build_subset_connectivity_edges(
+      fit,
+      as.data.frame(nodes_tbl, stringsAsFactors = FALSE),
+      keep_subsets,
+      facets = facet_spec$facets
+    ),
     settings = list(
       top_n_subsets = if (is.null(top_n_subsets)) NA_integer_ else max(1L, as.integer(top_n_subsets)),
       min_observations = min_observations,
-      is_disjoint = nrow(summary_tbl) > 1
+      is_disjoint = nrow(summary_tbl) > 1,
+      facets = facet_spec$facets,
+      projected = isTRUE(facet_spec$projected)
     )
   )
 }

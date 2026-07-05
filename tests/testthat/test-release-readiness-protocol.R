@@ -121,6 +121,89 @@ test_that("release-readiness protocol rejects stale check logs by version", {
   expect_identical(gate$Status[gate$Gate == "package_check"], "review")
 })
 
+test_that("release-readiness protocol reviews check logs older than source", {
+  protocol <- release_readiness_protocol_path()
+  env <- new.env(parent = globalenv())
+  source(protocol, local = env)
+
+  root <- tempfile("pkg")
+  dir.create(file.path(root, "R"), recursive = TRUE)
+  writeLines("Package: mfrmr\nVersion: 0.2.1", file.path(root, "DESCRIPTION"))
+  source_file <- file.path(root, "R", "changed.R")
+  writeLines("changed <- TRUE", source_file)
+  log_file <- file.path(root, "mfrmr.Rcheck", "00check.log")
+  dir.create(dirname(log_file), recursive = TRUE)
+  writeLines(c(
+    "* this is package ‘mfrmr’ version ‘0.2.1’",
+    "* checking tests ... OK",
+    "Status: OK"
+  ), log_file)
+
+  old_time <- Sys.time() - 3600
+  new_time <- Sys.time()
+  Sys.setFileTime(log_file, old_time)
+  Sys.setFileTime(file.path(root, "DESCRIPTION"), old_time)
+  Sys.setFileTime(source_file, new_time)
+
+  parsed <- env$mfrmr_release_readiness_parse_check_log(
+    log_file,
+    target_version = "0.2.1",
+    pkg_dir = root
+  )
+  expect_true(parsed$CheckPassed)
+  expect_true(parsed$VersionMatchesTarget)
+  expect_false(parsed$FreshAgainstSource)
+  expect_identical(parsed$SourceLatestFile, "R/changed.R")
+
+  version_status <- data.frame(
+    TargetVersion = "0.2.1",
+    DescriptionVersion = "0.2.1",
+    NewsHeading = "# mfrmr 0.2.1",
+    DevelopmentLabelPresent = FALSE,
+    VersionOK = TRUE
+  )
+  term_status <- data.frame(
+    FilesScanned = 1L,
+    DisallowedRemovedTerms = 0L,
+    TerminologyOK = TRUE,
+    Examples = ""
+  )
+  checklist_status <- data.frame(
+    Checklist = tempfile(),
+    Rows = 1L,
+    BlockerRows = 1L,
+    CaveatRows = 0L,
+    RoadmapRows = 0L,
+    ChecklistAvailable = TRUE
+  )
+  ci_status <- data.frame(
+    WorkflowAvailable = TRUE,
+    PackageCheckStepPresent = TRUE,
+    WarningsAreFailures = TRUE,
+    CheckArtifactsUploaded = TRUE,
+    ReadinessGatePresent = TRUE,
+    CIWorkflowOK = TRUE
+  )
+  paths <- list(
+    evidence_map = log_file,
+    gpcm_roadmap = log_file,
+    external_recovery_evidence = log_file,
+    external_recovery_helper = log_file
+  )
+  gate <- env$mfrmr_release_readiness_gate_summary(
+    version_status = version_status,
+    check_status = parsed,
+    term_status = term_status,
+    checklist_status = checklist_status,
+    ci_workflow_status = ci_status,
+    paths = paths
+  )
+  expect_identical(gate$Status[gate$Gate == "package_check"], "review")
+  expect_true(grepl("fresh_against_source=FALSE",
+                    gate$Detail[gate$Gate == "package_check"],
+                    fixed = TRUE))
+})
+
 test_that("release-readiness protocol uses release evidence for development versions", {
   protocol <- release_readiness_protocol_path()
   env <- new.env(parent = globalenv())
@@ -288,7 +371,10 @@ test_that("release-readiness protocol reviews the source tree shape", {
 
   pkg_root <- release_readiness_source_root()
   expect_true(nzchar(pkg_root))
-  review <- env$mfrmr_release_readiness_review(pkg_dir = pkg_root)
+  expect_warning(
+    review <- env$mfrmr_release_readiness_review(pkg_dir = pkg_root),
+    NA
+  )
   expect_s3_class(review, "mfrmr_release_readiness_review")
   expect_true(all(c(
     "prompt_steps", "gate_summary", "release_decision",
@@ -298,6 +384,8 @@ test_that("release-readiness protocol reviews the source tree shape", {
     "gpcm_score_side_status",
     "gpcm_score_side_external_status",
     "release_scope_status",
+    "network_anchor_stress_status",
+    "self_other_speaking_network_status",
     "external_recovery_status"
   ) %in% names(review)))
   expect_false(review$external_recovery_status$ExternalRecoveryRequested[1])
@@ -323,12 +411,24 @@ test_that("release-readiness protocol reviews the source tree shape", {
   expect_true(file.exists(review$paths$release_scope_helper))
   expect_true(file.exists(review$paths$release_scope_evidence))
   expect_true(file.exists(review$paths$release_scope_checks))
+  expect_true(file.exists(review$paths$network_anchor_stress_helper))
+  expect_true(file.exists(review$paths$network_anchor_stress_evidence))
+  expect_true(file.exists(review$paths$network_anchor_stress_summary))
+  expect_true(file.exists(review$paths$network_anchor_stress_checks))
+  expect_true(file.exists(review$paths$network_anchor_stress_rater_modes))
+  expect_true(file.exists(review$paths$self_other_speaking_network_helper))
+  expect_true(file.exists(review$paths$self_other_speaking_network_evidence))
+  expect_true(file.exists(review$paths$self_other_speaking_network_summary))
+  expect_true(file.exists(review$paths$self_other_speaking_network_checks))
+  expect_true(file.exists(review$paths$self_other_speaking_network_templates))
   expect_true(review$mh_dif_comparison_status$MHDIFComparisonStatus[1] %in%
                 c("ok", "skipped"))
   expect_true(isTRUE(review$mh_dif_comparison_status$ComparisonGateOK[1]))
   expect_equal(review$dif_apa_reporting_status$DIFAPAReportingStatus[1], "ok")
   expect_true(isTRUE(review$dif_apa_reporting_status$ReportingGateOK[1]))
   expect_equal(review$dif_apa_reporting_status$FailedChecks[1], 0L)
+  expect_gte(review$dif_apa_reporting_status$WarningCount[1], 0L)
+  expect_equal(review$dif_apa_reporting_status$UnexpectedWarnings[1], 0L)
   expect_equal(review$dif_dff_simulation_status$DIFDFFSimulationStatus[1], "ok")
   expect_true(isTRUE(review$dif_dff_simulation_status$SimulationGateOK[1]))
   expect_equal(review$dif_dff_simulation_status$FailedChecks[1], 0L)
@@ -348,6 +448,22 @@ test_that("release-readiness protocol reviews the source tree shape", {
   expect_true(isTRUE(review$release_scope_status$ScopeGateOK[1]))
   expect_equal(review$release_scope_status$FailedChecks[1], 0L)
   expect_gte(review$release_scope_status$Checks[1], 67L)
+  expect_equal(review$network_anchor_stress_status$NetworkAnchorStressStatus[1], "ok")
+  expect_true(isTRUE(review$network_anchor_stress_status$StressGateOK[1]))
+  expect_equal(review$network_anchor_stress_status$FailedChecks[1], 0L)
+  expect_gte(review$network_anchor_stress_status$Scenarios[1], 16L)
+  expect_gte(review$network_anchor_stress_status$Checks[1], 101L)
+  expect_true(grepl("severity_direction",
+                    review$network_anchor_stress_status$ModesCovered[1],
+                    fixed = TRUE))
+  expect_equal(
+    review$self_other_speaking_network_status$SelfOtherSpeakingNetworkStatus[1],
+    "ok"
+  )
+  expect_true(isTRUE(review$self_other_speaking_network_status$NetworkGateOK[1]))
+  expect_equal(review$self_other_speaking_network_status$FailedChecks[1], 0L)
+  expect_gte(review$self_other_speaking_network_status$Checks[1], 9L)
+  expect_gte(review$self_other_speaking_network_status$TemplateRows[1], 5L)
   release_scope_checks <- utils::read.csv(
     review$paths$release_scope_checks,
     stringsAsFactors = FALSE,

@@ -647,6 +647,28 @@ test_that("compare_mfrm_generalizability returns baseline and expanded sensitivi
   expect_identical(p_overlay$data$x_var, "n_Rater")
   expect_true(all(c("Series", "Panel", "ModelLabel") %in% names(p_overlay$data$series)))
 
+  cmp_without_models <- cmp
+  cmp_without_models$coefficients <- data.frame(
+    Model = NA_character_,
+    G = 0.8,
+    stringsAsFactors = FALSE
+  )
+  expect_error(
+    plot(cmp_without_models, type = "coefficients", draw = FALSE),
+    "No comparison model rows"
+  )
+
+  cmp_without_metrics <- cmp
+  cmp_without_metrics$coefficients <- data.frame(
+    Model = "baseline_main_effects",
+    Label = "not numeric",
+    stringsAsFactors = FALSE
+  )
+  expect_error(
+    plot(cmp_without_metrics, type = "coefficients", draw = FALSE),
+    "No finite metric columns"
+  )
+
   if (requireNamespace("ggplot2", quietly = TRUE)) {
     expect_s3_class(as_ggplot(p_coef), "ggplot")
     expect_s3_class(as_ggplot(p_coef_delta), "ggplot")

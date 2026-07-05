@@ -244,7 +244,76 @@ names(vis)
 names(vis$warning_map)
 ```
 
-## 8. Reporting route when interaction screening matters
+## 8. Report design-network evidence without overclaiming
+
+Network diagnostics belong in the design-evidence lane. They can explain
+co-observation connectedness, rater-linkage fragility, and self-/peer-/teacher
+bridging patterns, but they should not be written as model fit, rater quality,
+fairness, reliability, or validity evidence.
+
+```{r network-reporting}
+if (requireNamespace("igraph", quietly = TRUE)) {
+  full_review <- build_mfrm_network_review(fit, diagnostics = diag)
+  rater_review <- build_mfrm_network_review(
+    fit,
+    diagnostics = diag,
+    facets = "Rater"
+  )
+
+  full_review$network_summary[
+    , c("Components", "ArticulationPoints", "Bridges")
+  ]
+  rater_review$network_summary[
+    , c("Components", "ArticulationPoints", "Bridges")
+  ]
+
+  rater_review$assumption_checks[
+    , c("Check", "Status", "Evidence", "NextStep")
+  ]
+
+  rater_review$report_templates[
+    , c("TemplateId", "APASection", "Text", "Avoid")
+  ]
+
+  network_bundle <- build_summary_table_bundle(rater_review)
+  network_bundle$table_index[
+    , c("Table", "Role", "Recommended", "Description")
+  ]
+
+  rater_effect_net <- rater_network_analysis(
+    fit,
+    diagnostics = diag,
+    mode = "severity_direction"
+  )
+  rater_effect_net$assumption_checks[
+    , c("Check", "Status", "Evidence", "NextStep")
+  ]
+  rater_effect_net$report_templates[
+    , c("TemplateId", "APASection", "Text", "Avoid")
+  ]
+  rater_effect_bundle <- build_summary_table_bundle(rater_effect_net)
+  rater_effect_bundle$table_index[
+    , c("Table", "Role", "Recommended", "Description")
+  ]
+}
+```
+
+Interpretation:
+
+- Compare the full graph with a projected graph when the claim is about rater
+  linkage rather than the whole fitted observation design.
+- Read `assumption_checks` before reporting either design-network graph metrics
+  or rater-effect network centrality/severity summaries.
+- Use `report_templates$Text` as draft wording, and
+  `report_templates$Avoid` as the overclaim check.
+- Use `build_summary_table_bundle()` for appendix handoff rather than manually
+  copying selected graph tables.
+
+For a fixed self-versus-teacher speaking-assessment replay where each
+self-rater ID is also the `Person` ID, see
+`inst/validation/self-other-speaking-network-0.2.2.md`.
+
+## 9. Reporting route when interaction screening matters
 
 When bias or local interaction screens matter, keep the wording conservative.
 The package treats these outputs as screening-oriented unless the current
@@ -281,12 +350,15 @@ For a compact manuscript-oriented route:
 5. `build_apa_outputs()`
 6. Check `summary(fit)$population_overview` and `summary(apa)$content_checks`
    when MML population-SD mode affects the report.
-7. `apa_table()`
-8. `build_visual_summaries()`
+7. Use `build_mfrm_network_review()` when design connectedness or rater
+   linkage is part of the report.
+8. `apa_table()`
+9. `build_visual_summaries()`
 
 ## Related help
 
 - `help("mfrmr_reporting_and_apa", package = "mfrmr")`
 - `help("mfrmr_reports_and_tables", package = "mfrmr")`
+- `help("build_mfrm_network_review", package = "mfrmr")`
 - `help("reporting_checklist", package = "mfrmr")`
 - `help("build_apa_outputs", package = "mfrmr")`

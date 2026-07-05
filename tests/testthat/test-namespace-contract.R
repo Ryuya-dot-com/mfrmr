@@ -301,6 +301,7 @@ test_that("NAMESPACE roxygen contract keeps expected exports and methods", {
     "S3method(summary,mfrm_linking_review)",
     "S3method(summary,mfrm_peer_review_design_review)",
     "S3method(summary,mfrm_network_review)",
+    "S3method(summary,mfrm_rater_network)",
     "S3method(summary,mfrm_weighting_review)",
     "S3method(print,mfrm_qc_pipeline)",
     "S3method(print,summary.mfrm_facet_dashboard)",

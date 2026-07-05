@@ -9,6 +9,7 @@ mfrm_network_analysis(
   diagnostics = NULL,
   top_n_subsets = NULL,
   min_observations = 0,
+  facets = NULL,
   include_graph = FALSE
 )
 }
@@ -21,6 +22,11 @@ mfrm_network_analysis(
 retain before constructing the graph.}
 
 \item{min_observations}{Minimum observations required to keep a subset row.}
+
+\item{facets}{Optional subset of non-person facets to include in the
+connectivity graph. When supplied, the graph is recomputed as a projection
+over \code{Person} plus these facets, avoiding universal-hub facets such as
+common tasks or criteria when the diagnostic target is rater linkage.}
 
 \item{include_graph}{Logical; if \code{TRUE}, include the underlying \code{igraph}
 object in the returned bundle. Defaults to \code{FALSE} so outputs remain easy
@@ -48,7 +54,9 @@ co-observation counts. The resulting network metrics are design diagnostics,
 not psychometric measures of person ability or rater quality.
 \code{plot(net, type = "centrality")}, \code{plot(net, type = "facet_summary")}, and
 \code{plot(net, type = "network")} provide immediate visual checks; use
-\code{draw = FALSE} to extract reusable plot data.
+\code{draw = FALSE} to extract reusable plot data. Network plot data include
+\code{layout}, \code{node_plot}, and \code{edge_plot} tables for custom figure pipelines;
+the layout coordinates are graphical positions, not MFRM estimates.
 
 The most useful review columns are:
 \itemize{
@@ -63,6 +71,30 @@ that carry many shortest paths through the design graph.
 In incomplete rater-mediated designs, these graph summaries help identify
 fragile linking structures before interpreting facet measures or planning
 additional data collection.
+}
+\section{Choosing the graph scope}{
+
+\itemize{
+\item The default full graph answers whether the fitted person-plus-all-facet
+observation design forms one connected co-observation graph. In many
+speaking or performance-assessment datasets, common tasks or criteria can
+legitimately connect many persons and raters, so this graph is useful for
+overall design connectedness but can hide rater-specific isolation.
+\item \code{facets = "Rater"} recomputes the graph as Person plus Rater only. Use
+this projection when the diagnostic question is rater linkage,
+self-rater isolation, or whether teacher/peer raters bridge otherwise
+separate self-assessment links.
+\item If student IDs appear both as \code{Person} and as literal \code{Rater} levels,
+the projected graph describes the observed student-rater topology. If the
+estimand is a self-versus-other mode effect, add an explicit role/mode
+facet in the fitted data and compare the projected design graph with
+rater-effect summaries from \code{\link[=rater_network_analysis]{rater_network_analysis()}}.
+\item \code{\link[=rater_network_analysis]{rater_network_analysis()}} answers a different question: it uses shared
+scoring contexts to summarize pairwise rater agreement, disagreement, or
+severity direction. It is not a substitute for the co-observation design
+graph, and the design graph is not a substitute for pairwise score
+relationship diagnostics.
+}
 }
 \section{References}{
 
@@ -86,6 +118,16 @@ if (requireNamespace("igraph", quietly = TRUE)) {
   head(net$node_metrics)
   net$cut_nodes
   plot(net, type = "centrality", draw = FALSE)
+
+  # For rater-linkage questions, compare the full design graph with a
+  # Person-plus-Rater projection so common tasks/criteria do not act as hubs.
+  rater_net <- mfrm_network_analysis(fit, facets = "Rater")
+  net$summary[, c("Components", "ArticulationPoints", "Bridges")]
+  rater_net$summary[, c("Components", "ArticulationPoints", "Bridges")]
+  rater_net$facet_summary
+  p_net <- plot(rater_net, type = "network", draw = FALSE)
+  head(p_net$data$node_plot)
+  head(p_net$data$edge_plot)
 }
 }
 }

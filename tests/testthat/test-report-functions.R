@@ -472,8 +472,167 @@ test_that("mfrm_network_analysis returns graph metrics for the fitted design", {
   expect_identical(p_facet$data$plot, "facet_summary")
   p_network <- plot(net, type = "network", draw = FALSE)
   expect_identical(p_network$data$plot, "network")
+  expect_true(all(c("layout", "node_plot", "edge_plot") %in% names(p_network$data)))
+  expect_true(all(c("Node", "PlotX", "PlotY", "Facet", "Level") %in%
+                    names(p_network$data$layout)))
+  expect_true(all(c("Node", "PlotX", "PlotY", "NodeColor", "NodeSize", "NodeLabel") %in%
+                    names(p_network$data$node_plot)))
+  expect_true(all(c("From", "To", "PlotX", "PlotY", "PlotXEnd", "PlotYEnd",
+                    "EdgeWidth", "EdgeColor") %in% names(p_network$data$edge_plot)))
+  expect_equal(nrow(p_network$data$layout), nrow(p_network$data$nodes))
+  expect_equal(nrow(p_network$data$node_plot), nrow(p_network$data$nodes))
+  expect_equal(nrow(p_network$data$edge_plot), nrow(p_network$data$edges))
+  expect_true(all(is.finite(p_network$data$node_plot$PlotX)))
+  expect_true(all(is.finite(p_network$data$node_plot$PlotY)))
+  expect_true(all(is.finite(p_network$data$edge_plot$EdgeWidth)))
   s <- summary(net)
   expect_s3_class(s, "summary.mfrm_bundle")
+})
+
+test_that("mfrm_network_analysis can project to person-rater connectivity", {
+  if (!requireNamespace("igraph", quietly = TRUE)) {
+    skip("igraph (Suggests) not installed.")
+  }
+  d <- expand.grid(
+    Person = paste0("P", 1:4),
+    Task = paste0("T", 1:2),
+    Criterion = paste0("C", 1:2),
+    stringsAsFactors = FALSE
+  )
+  d$Rater <- paste0("Self_", d$Person)
+  d$Score <- rep(c(1L, 2L, 3L, 2L), length.out = nrow(d))
+  fit <- suppressWarnings(
+    fit_mfrm(
+      d,
+      person = "Person",
+      facets = c("Rater", "Task", "Criterion"),
+      score = "Score",
+      method = "JML",
+      maxit = 20
+    )
+  )
+  diag <- diagnose_mfrm(fit, residual_pca = "none")
+
+  full <- mfrm_network_analysis(fit, diagnostics = diag)
+  projected <- mfrm_network_analysis(fit, diagnostics = diag, facets = "Rater")
+
+  expect_true(isTRUE(full$summary$Connected[1]))
+  expect_false(isTRUE(projected$summary$Connected[1]))
+  expect_gt(projected$summary$Components[1], 1L)
+  expect_gt(projected$summary$Bridges[1], 0L)
+  expect_true(projected$settings$projected)
+  expect_identical(projected$settings$facets, "Rater")
+
+  review <- build_mfrm_network_review(fit, diagnostics = diag, facets = "Rater")
+  expect_s3_class(review, "mfrm_network_review")
+  expect_true(review$settings$projected)
+  expect_identical(review$settings$facets, "Rater")
+  expect_true(any(grepl("scope=Person plus Rater", review$assumption_checks$Evidence, fixed = TRUE)))
+  expect_true(any(grepl("Person plus Rater", review$report_templates$Text, fixed = TRUE)))
+  p_review <- plot(review, type = "network", draw = FALSE)
+  expect_s3_class(p_review, "mfrm_plot_data")
+  expect_identical(p_review$data$plot, "network")
+  expect_true(all(c("layout", "node_plot", "edge_plot") %in% names(p_review$data)))
+  expect_true(all(p_review$data$node_plot$Facet %in% c("Person", "Rater")))
+  expect_equal(nrow(p_review$data$edge_plot), nrow(p_review$data$edges))
+})
+
+test_that("self-rater ids that match persons remain diagnosable with external raters", {
+  if (!requireNamespace("igraph", quietly = TRUE)) {
+    skip("igraph (Suggests) not installed.")
+  }
+  persons <- paste0("P", 1:8)
+  teachers <- paste0("T", 1:2)
+  tasks <- paste0("Task", 1:2)
+  criteria <- paste0("C", 1:2)
+  theta <- stats::setNames(seq(-1.1, 1.1, length.out = length(persons)), persons)
+  teacher_severity <- stats::setNames(c(0.00, 0.35), teachers)
+  task_effect <- stats::setNames(c(-0.15, 0.15), tasks)
+  criterion_effect <- stats::setNames(c(-0.20, 0.20), criteria)
+
+  rows <- vector("list", length(persons))
+  for (i in seq_along(persons)) {
+    person_id <- persons[i]
+    assigned_teachers <- teachers[((i - 1L + 0:1) %% length(teachers)) + 1L]
+    rows[[i]] <- expand.grid(
+      Person = person_id,
+      Rater = c(person_id, assigned_teachers),
+      Task = tasks,
+      Criterion = criteria,
+      stringsAsFactors = FALSE
+    )
+  }
+  d <- dplyr::bind_rows(rows)
+  d$Role <- ifelse(d$Rater == d$Person, "Self", "Teacher")
+  severity <- ifelse(d$Role == "Self", -0.45, teacher_severity[d$Rater])
+  eta <- theta[d$Person] - severity -
+    task_effect[d$Task] - criterion_effect[d$Criterion]
+  d$Score <- as.integer(cut(
+    eta,
+    breaks = c(-Inf, -0.9, -0.25, 0.35, 0.9, Inf),
+    labels = 1:5
+  ))
+
+  expect_equal(sum(d$Role == "Self" & d$Rater == d$Person),
+               length(persons) * length(tasks) * length(criteria))
+
+  fit <- suppressWarnings(
+    fit_mfrm(
+      d,
+      person = "Person",
+      facets = c("Rater", "Task", "Criterion"),
+      score = "Score",
+      rating_min = 1,
+      rating_max = 5,
+      method = "JML",
+      maxit = 80,
+      min_obs_per_element = 2,
+      min_obs_per_category = 1
+    )
+  )
+  diag <- diagnose_mfrm(fit, residual_pca = "none")
+
+  projected <- mfrm_network_analysis(fit, diagnostics = diag, facets = "Rater")
+  expect_true(isTRUE(projected$summary$Connected[1]))
+  expect_equal(projected$summary$Bridges[1], length(persons))
+  expect_equal(projected$summary$ArticulationPoints[1], length(persons))
+
+  self_nodes <- projected$node_metrics[
+    projected$node_metrics$Facet == "Rater" &
+      projected$node_metrics$Level %in% persons,
+    ,
+    drop = FALSE
+  ]
+  expect_equal(nrow(self_nodes), length(persons))
+  expect_true(all(self_nodes$Degree == 1))
+  expect_false(any(self_nodes$IsArticulationPoint))
+
+  rn <- rater_network_analysis(
+    fit,
+    diagnostics = diag,
+    rater_facet = "Rater",
+    context_facets = c("Person", "Task", "Criterion"),
+    mode = "severity_direction"
+  )
+  pair_metrics <- rn$pair_metrics
+  self_self <- pair_metrics[
+    pair_metrics$Rater1 %in% persons & pair_metrics$Rater2 %in% persons,
+    ,
+    drop = FALSE
+  ]
+  self_teacher <- pair_metrics[
+    (pair_metrics$Rater1 %in% persons) != (pair_metrics$Rater2 %in% persons),
+    ,
+    drop = FALSE
+  ]
+
+  expect_gt(nrow(self_self), 0L)
+  expect_true(all(self_self$N == 0))
+  expect_gt(nrow(self_teacher), 0L)
+  expect_true(any(self_teacher$N > 0))
+  expect_gt(rn$summary$ZeroOverlapPairs[1], 0L)
+  expect_gt(rn$summary$EligiblePairRows[1], 0L)
+  expect_gt(nrow(rn$edge_metrics), 0L)
 })
 
 test_that("build_mfrm_network_review keeps design-network diagnostics separate from measurement results", {
@@ -514,7 +673,8 @@ test_that("build_mfrm_network_review keeps design-network diagnostics separate f
   expect_s3_class(review, "mfrm_network_review")
   expect_true(all(c(
     "overview", "network_summary", "facet_summary", "top_central_nodes",
-    "top_cut_nodes", "top_bridge_edges", "sparse_review", "peer_review",
+    "top_cut_nodes", "top_bridge_edges", "assumption_checks",
+    "visualization_map", "report_templates", "sparse_review", "peer_review",
     "reporting_map", "source_network"
   ) %in% names(review)))
   expect_true(all(c(
@@ -527,6 +687,16 @@ test_that("build_mfrm_network_review keeps design-network diagnostics separate f
   expect_true(any(review$reporting_map$Area == "MFRM measurement model"))
   expect_true(any(review$reporting_map$Area == "Peer-review design"))
   expect_true(any(grepl("Design diagnostic", review$reporting_map$Boundary, fixed = TRUE)))
+  expect_true(all(c("Check", "Status", "Evidence", "Interpretation", "NextStep") %in% names(review$assumption_checks)))
+  expect_true(any(review$assumption_checks$Check == "projection_scope_declared"))
+  expect_true(any(review$assumption_checks$Check == "hub_facet_screen"))
+  expect_true(any(review$assumption_checks$Check == "metric_boundary_declared"))
+  expect_true(all(c("Route", "Output", "Use", "Prerequisite", "Boundary") %in% names(review$visualization_map)))
+  expect_true(any(grepl("plot(review", review$visualization_map$Route, fixed = TRUE)))
+  expect_true(all(c("TemplateId", "APASection", "RequiredReview", "Text", "Boundary", "Avoid") %in% names(review$report_templates)))
+  expect_true(any(review$report_templates$TemplateId == "results_network_summary"))
+  expect_true(any(grepl("design-network diagnostic", review$report_templates$Text, fixed = TRUE)))
+  expect_true(any(grepl("fit statistics", review$report_templates$Avoid, fixed = TRUE)))
   expect_true(nrow(review$top_central_nodes) <= 3L)
   expect_true(nrow(review$sparse_review) == 1L)
   expect_identical(
@@ -543,13 +713,36 @@ test_that("build_mfrm_network_review keeps design-network diagnostics separate f
   s <- summary(review, top_n = 2)
   expect_s3_class(s, "summary.mfrm_network_review")
   expect_true(nrow(s$top_central_nodes) <= 2L)
+  expect_true(nrow(s$assumption_checks) > 0L)
+  expect_true(nrow(s$visualization_map) > 0L)
+  expect_true(nrow(s$report_templates) > 0L)
   expect_true(nrow(s$peer_review) == 1L)
+  compact_print <- capture.output(print(s))
+  expect_true(any(grepl("Assumption/design checks (compact)", compact_print, fixed = TRUE)))
+  expect_true(any(grepl("Full template text is retained", compact_print, fixed = TRUE)))
+  expect_false(any(grepl(
+    "Network metrics were interpreted as observation-design diagnostics only",
+    compact_print,
+    fixed = TRUE
+  )))
+  full_print <- capture.output(print(s, full = TRUE))
+  expect_false(any(grepl("APA-style report templates (compact)", full_print, fixed = TRUE)))
+  expect_true(any(grepl(
+    "Network metrics were interpreted as observation-design diagnostics only",
+    full_print,
+    fixed = TRUE
+  )))
+
+  p_review <- plot(review, type = "centrality", draw = FALSE)
+  expect_s3_class(p_review, "mfrm_plot_data")
+  expect_identical(p_review$data$plot, "centrality")
 
   bundle <- build_summary_table_bundle(review)
   expect_identical(bundle$source_class, "mfrm_network_review")
   expect_identical(bundle$summary_class, "summary.mfrm_network_review")
   expect_true(all(c(
     "overview", "network_summary", "facet_summary", "top_central_nodes",
+    "assumption_checks", "visualization_map", "report_templates",
     "sparse_review", "peer_review", "reporting_map"
   ) %in% names(bundle$tables)))
   expect_identical(
@@ -559,6 +752,14 @@ test_that("build_mfrm_network_review keeps design-network diagnostics separate f
   expect_identical(
     as.character(bundle$table_index$Role[bundle$table_index$Table == "peer_review"]),
     "peer_review_design_diagnostics"
+  )
+  expect_identical(
+    as.character(bundle$table_index$Role[bundle$table_index$Table == "assumption_checks"]),
+    "network_assumption_checks"
+  )
+  expect_identical(
+    as.character(bundle$table_index$Role[bundle$table_index$Table == "report_templates"]),
+    "network_apa_templates"
   )
 })
 
@@ -571,6 +772,7 @@ test_that("rater_network_analysis returns rater relationship graph metrics", {
   expect_s3_class(rn, "mfrm_rater_network")
   expect_true(all(c(
     "summary", "node_metrics", "edge_metrics", "pair_metrics",
+    "assumption_checks", "visualization_map", "report_templates",
     "source_interrater", "caveats"
   ) %in% names(rn)))
   expect_true(all(c(
@@ -578,19 +780,134 @@ test_that("rater_network_analysis returns rater relationship graph metrics", {
     "RelativePattern"
   ) %in% names(rn$node_metrics)))
   expect_true(all(c("From", "To", "Weight", "Direction") %in% names(rn$edge_metrics)))
+  expect_true(all(c("Check", "Status", "Evidence", "Interpretation", "NextStep") %in%
+                    names(rn$assumption_checks)))
+  expect_true(any(rn$assumption_checks$Check == "shared_context_coverage"))
+  expect_true(any(rn$assumption_checks$Check == "directionality_and_score_scale"))
+  expect_true(all(c("Route", "Output", "Prerequisite", "Boundary") %in%
+                    names(rn$visualization_map)))
+  expect_true(any(grepl("plot(rn", rn$visualization_map$Route, fixed = TRUE)))
+  expect_true(all(c("TemplateId", "APASection", "Text", "Avoid") %in%
+                    names(rn$report_templates)))
+  expect_true(any(rn$report_templates$TemplateId == "figure_caption_rater_network"))
+  expect_true(any(grepl("descriptive", rn$report_templates$Text, fixed = TRUE)))
   expect_true(any(is.finite(rn$node_metrics$SeverityIndex)))
   p_sev <- plot(rn, type = "severity", draw = FALSE)
   expect_s3_class(p_sev, "mfrm_plot_data")
   expect_identical(p_sev$data$plot, "severity")
   p_net <- plot(rn, type = "network", draw = FALSE)
   expect_identical(p_net$data$plot, "network")
+  expect_true(all(c("layout", "node_plot", "edge_plot") %in% names(p_net$data)))
+  expect_true(all(c("Rater", "PlotX", "PlotY") %in% names(p_net$data$layout)))
+  expect_true(all(c("Rater", "PlotX", "PlotY", "NodeColor", "NodeSize", "NodeLabel") %in%
+                    names(p_net$data$node_plot)))
+  expect_true(all(c("From", "To", "PlotX", "PlotY", "PlotXEnd", "PlotYEnd",
+                    "EdgeWidth", "EdgeColor", "ArrowSize") %in%
+                    names(p_net$data$edge_plot)))
+  expect_equal(nrow(p_net$data$layout), nrow(rn$node_metrics))
+  expect_equal(nrow(p_net$data$node_plot), nrow(rn$node_metrics))
+  expect_equal(nrow(p_net$data$edge_plot), nrow(rn$edge_metrics))
+  expect_true(all(is.finite(p_net$data$node_plot$PlotX)))
+  expect_true(all(is.finite(p_net$data$edge_plot$EdgeWidth)))
   p_mat <- plot(rn, type = "matrix", draw = FALSE)
   expect_identical(p_mat$data$plot, "matrix")
   rn_agree <- rater_network_analysis(.fit, diagnostics = .diag, mode = "agreement")
   expect_identical(rn_agree$summary$Mode[1], "agreement")
   expect_true(all(rn_agree$edge_metrics$Weight >= 0))
+  expect_true(any(rn_agree$assumption_checks$Check == "edge_threshold_effect"))
   s <- summary(rn)
+  expect_s3_class(s, "summary.mfrm_rater_network")
   expect_s3_class(s, "summary.mfrm_bundle")
+  expect_true(all(c(
+    "overview", "summary", "node_metrics", "edge_metrics", "pair_metrics",
+    "assumption_checks", "visualization_map", "report_templates",
+    "caveats", "settings"
+  ) %in% names(s)))
+  expect_true(any(s$assumption_checks$Check == "shared_context_coverage"))
+  expect_true(any(s$report_templates$TemplateId == "methods_rater_network"))
+  bundle <- build_summary_table_bundle(rn)
+  expect_identical(bundle$source_class, "mfrm_rater_network")
+  expect_identical(bundle$summary_class, "summary.mfrm_rater_network")
+  expect_true(all(c(
+    "overview", "summary", "node_metrics", "edge_metrics",
+    "assumption_checks", "visualization_map", "report_templates", "caveats"
+  ) %in% names(bundle$tables)))
+  expect_identical(
+    as.character(bundle$table_index$Role[bundle$table_index$Table == "assumption_checks"]),
+    "rater_network_assumption_checks"
+  )
+  expect_identical(
+    as.character(bundle$table_index$Role[bundle$table_index$Table == "node_metrics"]),
+    "rater_network_nodes"
+  )
+  expect_identical(
+    as.character(bundle$table_index$Role[bundle$table_index$Table == "report_templates"]),
+    "rater_network_apa_templates"
+  )
+})
+
+test_that("rater_network_analysis keeps zero-overlap rater pairs instead of crashing", {
+  if (!requireNamespace("igraph", quietly = TRUE)) {
+    skip("igraph (Suggests) not installed.")
+  }
+  d <- expand.grid(
+    Person = paste0("P", 1:4),
+    Task = paste0("T", 1:2),
+    Criterion = paste0("C", 1:2),
+    stringsAsFactors = FALSE
+  )
+  d$Rater <- paste0("Self_", d$Person)
+  d$Score <- rep(c(1L, 2L, 3L, 2L), length.out = nrow(d))
+  fit <- suppressWarnings(
+    fit_mfrm(
+      d,
+      person = "Person",
+      facets = c("Rater", "Task", "Criterion"),
+      score = "Score",
+      method = "JML",
+      maxit = 20
+    )
+  )
+  diag <- diagnose_mfrm(fit, residual_pca = "none")
+
+  rn <- rater_network_analysis(
+    fit,
+    diagnostics = diag,
+    mode = "severity_direction",
+    context_facets = "Person"
+  )
+
+  expect_s3_class(rn, "mfrm_rater_network")
+  expect_gt(nrow(rn$pair_metrics), 0L)
+  expect_true(all(rn$pair_metrics$N == 0))
+  expect_equal(rn$summary$PairRows[1], nrow(rn$pair_metrics))
+  expect_equal(rn$summary$EligiblePairRows[1], 0L)
+  expect_equal(rn$summary$ZeroOverlapPairs[1], nrow(rn$pair_metrics))
+  expect_equal(nrow(rn$edge_metrics), 0L)
+  expect_true(all(rn$node_metrics$Degree == 0))
+  expect_true(all(rn$node_metrics$RelativePattern == "insufficient_directional_edges"))
+  expect_true(any(rn$report_templates$TemplateId == "interpretation_boundary"))
+  expect_true(any(rn$caveats$Area == "empty_edges"))
+
+  for (mode in c("agreement", "disagreement")) {
+    rn_mode <- rater_network_analysis(
+      fit,
+      diagnostics = diag,
+      mode = mode,
+      context_facets = "Person"
+    )
+    expect_s3_class(rn_mode, "mfrm_rater_network")
+    expect_identical(rn_mode$summary$Mode[1], mode)
+    expect_gt(nrow(rn_mode$pair_metrics), 0L)
+    expect_true(all(rn_mode$pair_metrics$N == 0))
+    expect_equal(rn_mode$summary$PairRows[1], nrow(rn_mode$pair_metrics))
+    expect_equal(rn_mode$summary$EligiblePairRows[1], 0L)
+    expect_equal(rn_mode$summary$ZeroOverlapPairs[1], nrow(rn_mode$pair_metrics))
+    expect_equal(nrow(rn_mode$edge_metrics), 0L)
+    expect_true(all(rn_mode$node_metrics$Degree == 0))
+    expect_true(all(is.na(rn_mode$node_metrics$RelativePattern)))
+    expect_true(any(rn_mode$caveats$Area == "empty_edges"))
+  }
 })
 
 test_that("rater_halo_network_analysis returns rater-by-criterion halo diagnostics", {
@@ -1152,6 +1469,16 @@ test_that("plot.mfrm_fit supports all named types", {
     "CurveGroup", "FitStatus", "MatchedFitRow"
   ) %in% names(p_pathway$data$curve_fit_status)))
   expect_true(isTRUE(p_pathway$data$fit_measure_status$Available[1]))
+
+  empty_fit_payload <- mfrmr:::pathway_fit_payload(
+    .fit,
+    diagnostics = .diag,
+    include_fit_measures = FALSE,
+    curve_groups = character()
+  )
+  expect_equal(nrow(empty_fit_payload$curve_fit_status), 0L)
+  expect_identical(empty_fit_payload$fit_measure_status$Status[1],
+                   "not_requested")
 
   p_ccc <- plot(.fit, type = "ccc", draw = FALSE)
   expect_s3_class(p_ccc, "mfrm_plot_data")

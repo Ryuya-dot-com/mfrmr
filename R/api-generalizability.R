@@ -2593,6 +2593,12 @@ mfrm_gt_model_label <- function(model) {
 }
 
 mfrm_gt_validate_metric <- function(metric, available, default, arg_name = "metric") {
+  available <- unique(as.character(available %||% character(0)))
+  available <- available[!is.na(available) & nzchar(available)]
+  if (length(available) == 0L) {
+    stop("No finite metric columns are available for `", arg_name, "`.",
+         call. = FALSE)
+  }
   if (is.null(metric)) metric <- default
   metric <- as.character(metric)
   metric <- metric[!is.na(metric) & nzchar(metric)]
@@ -2673,10 +2679,22 @@ plot.mfrm_generalizability_comparison <- function(x,
   reading_order <- gtheory_comparison_reading_order()
   interpretation_note <- gtheory_interpretation_note()
   validate_model <- function(model, available, default = available) {
+    available <- unique(as.character(available %||% character(0)))
+    available <- available[!is.na(available) & nzchar(available)]
+    if (length(available) == 0L) {
+      stop("No comparison model rows are available for plotting.",
+           call. = FALSE)
+    }
     if (is.null(model)) model <- default
     model <- as.character(model)
     model <- model[!is.na(model) & nzchar(model)]
     if (length(model) == 0L) model <- default
+    model <- as.character(model)
+    model <- model[!is.na(model) & nzchar(model)]
+    if (length(model) == 0L) {
+      stop("No comparison model rows are available for plotting.",
+           call. = FALSE)
+    }
     missing <- setdiff(model, available)
     if (length(missing) > 0L) {
       stop("`model` must use value(s) from: ",

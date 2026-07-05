@@ -42,6 +42,16 @@
 #'   [apa_table()] for the aligned table/note/caption, and
 #'   `build_apa_outputs(..., dif_results = ...)` when the DFF/DIF paragraph
 #'   should be appended to the main APA draft.
+#' - "How should I report design-network connectedness or rater-linkage
+#'   diagnostics?"
+#'   Use [build_mfrm_network_review()] with an explicit graph scope. For
+#'   rater-linkage, self-assessment, or peer/teacher bridging questions, compare
+#'   the full graph with `facets = "Rater"`; then use
+#'   `assumption_checks`, `visualization_map`, and `report_templates` rather
+#'   than writing network interpretations from raw graph metrics alone. When
+#'   the claim concerns pairwise rater agreement, disagreement, or relative
+#'   severity direction, use [rater_network_analysis()] separately and export
+#'   its `assumption_checks` through [build_summary_table_bundle()].
 #' - "How should I report the MML population metric?"
 #'   Inspect `summary(fit)$population_overview`, run [build_apa_outputs()],
 #'   and check `summary(apa)$content_checks` for the
@@ -110,6 +120,12 @@
 #'   \item{[visual_reporting_template()]}{Provides conservative figure
 #'   placement, caption-starter, results-wording, and overclaim-avoidance
 #'   guidance for public visual helpers.}
+#'   \item{[build_mfrm_network_review()]}{Provides design-network review
+#'   tables for connectedness, rater-linkage, self-assessment isolation, and
+#'   peer/teacher bridging questions. Report its assumption checks before its
+#'   graph metrics, use its APA templates for draft wording, and use its
+#'   `Avoid` column to keep network diagnostics separate from fit, precision,
+#'   fairness, and validity claims.}
 #' }
 #'
 #' @section Practical reporting rules:
@@ -132,6 +148,11 @@
 #'   from fitted-MFRM `RSM`, `PCM`, and bounded-`GPCM` DFF/DIF. It can be
 #'   reported through [dif_report()] with `style = "apa"` and [apa_table()], but
 #'   its note states that no fitted MFRM likelihood was used.
+#' - Keep design-network evidence from [build_mfrm_network_review()] separate
+#'   from fitted MFRM evidence. Components, articulation points, bridges,
+#'   centrality, and graph density describe observed co-observation topology;
+#'   they are not model fit, rater quality, fairness, reliability, or validity
+#'   indices.
 #' - Keep MML population-SD mode separate from model fit and GPCM slope
 #'   interpretation. The fixed-prior and free-SD routes put person measures on
 #'   different latent metrics, so mixed comparisons need sensitivity wording.
@@ -169,6 +190,13 @@
 #' - Precision-sensitive route:
 #'   [diagnose_mfrm()] -> [precision_review_report()] ->
 #'   [reporting_checklist()] -> [build_apa_outputs()].
+#' - Network-reporting route:
+#'   [build_mfrm_network_review()] -> inspect `assumption_checks` ->
+#'   compare full and projected reviews when the target is rater linkage ->
+#'   use `visualization_map` for figure selection ->
+#'   use `report_templates[, c("APASection", "Text", "Avoid")]` for wording ->
+#'   [build_summary_table_bundle()] / [export_summary_appendix()] for appendix
+#'   handoff.
 #' - bounded `GPCM` route:
 #'   [diagnose_mfrm()] -> [precision_review_report()] ->
 #'   [reporting_checklist()] -> direct residual/category/information helpers ->
@@ -218,6 +246,13 @@
 #' bundle$table_index
 #' apa_from_bundle <- apa_table(bundle, which = "section_summary")
 #' apa_from_bundle$caption
+#'
+#' if (requireNamespace("igraph", quietly = TRUE)) {
+#'   net_review <- build_mfrm_network_review(fit, diagnostics = diag,
+#'                                           facets = "Rater")
+#'   net_review$assumption_checks[, c("Check", "Status", "NextStep")]
+#'   net_review$report_templates[, c("APASection", "Text", "Avoid")]
+#' }
 #' }
 #'
 #' @name mfrmr_reporting_and_apa

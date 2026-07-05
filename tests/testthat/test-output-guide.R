@@ -125,6 +125,9 @@ test_that("mfrmr_output_guide supports focused scopes", {
   expect_true(all(network$Scope == "network"))
   expect_true(all(network$Lifecycle == "advanced"))
   expect_true(any(grepl("build_mfrm_network_review", network$MainFunction, fixed = TRUE)))
+  expect_true(any(grepl("plot(review", network$MainFunction, fixed = TRUE)))
+  expect_true(any(grepl("assumption_checks", network$NextStep, fixed = TRUE)))
+  expect_true(any(grepl("APA templates", network$Notes, fixed = TRUE)))
 
   reviews <- mfrmr_output_guide("reviews")
   expect_true(nrow(reviews) > 0L)

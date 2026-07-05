@@ -110,6 +110,8 @@ manuscript-facing subset before plotting or export.
 \item \code{\link[=mfrm_report]{mfrm_report()}} or \code{summary(report)}
 \item \code{\link[=estimate_bias]{estimate_bias()}} or \code{summary(bias)}
 \item \code{\link[=review_mfrm_anchors]{review_mfrm_anchors()}} or \code{summary(review)}
+\item \code{\link[=build_mfrm_network_review]{build_mfrm_network_review()}} or \code{summary(review)}
+\item \code{\link[=rater_network_analysis]{rater_network_analysis()}} or \code{summary(rn)}
 \item \code{\link[=build_linking_review]{build_linking_review()}} or \code{summary(review)}
 \item \code{\link[=build_misfit_casebook]{build_misfit_casebook()}} or \code{summary(casebook)}
 \item \code{\link[=build_weighting_review]{build_weighting_review()}} or \code{summary(review)}

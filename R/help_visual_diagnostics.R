@@ -168,14 +168,15 @@
 #' - Optional `ggplot2` handoff:
 #'   [as_ggplot()] converts common `mfrm_plot_data` shapes, including Wright
 #'   maps, pathway maps, fit-pathway displays, DIF/DFF summaries and heatmaps,
-#'   category/information curves, threshold ladders, and estimate/profile rows,
-#'   into editable
-#'   `ggplot` objects. Wright maps retain the person-distribution band and
-#'   facet/step rails; pathway maps retain dominant-category strips,
-#'   thresholds, endpoint labels, and fit annotations. CCC converters also
-#'   retain empirical overlay points when available and can map a `GPCM`
-#'   slope/discrimination column to line width, alpha, or colour. This does
-#'   not replace the base-R default renderer.
+#'   category/information curves, threshold ladders, network plot payloads, and
+#'   estimate/profile rows, into editable `ggplot` objects. Wright maps retain
+#'   the person-distribution band and facet/step rails; pathway maps retain
+#'   dominant-category strips, thresholds, endpoint labels, and fit
+#'   annotations. Network plots use the draw-free `layout`, `node_plot`, and
+#'   `edge_plot` payloads; layout positions remain graphical coordinates, not
+#'   model estimates. CCC converters also retain empirical overlay points when
+#'   available and can map a `GPCM` slope/discrimination column to line width,
+#'   alpha, or colour. This does not replace the base-R default renderer.
 #' - 3D-ready exploratory handoff:
 #'   `plot(fit, type = "ccc_surface", draw = FALSE)` returns a
 #'   theta-by-category-by-probability `mfrm_plot_data` object. This is not a
@@ -363,7 +364,9 @@
 #' - Linking review:
 #'   [subset_connectivity_report()] -> `plot(..., type = "design_matrix")` /
 #'   [mfrm_network_analysis()] / [build_mfrm_network_review()] /
-#'   `plot(..., type = "network")` -> [plot_anchor_drift()].
+#'   inspect `assumption_checks`, `visualization_map`, and
+#'   `report_templates` -> `plot(..., type = "network")` ->
+#'   [plot_anchor_drift()].
 #' - Interaction review:
 #'   [estimate_bias()] -> [plot_bias_interaction()] ->
 #'   [reporting_checklist()].
@@ -424,6 +427,19 @@
 #'
 #' wright <- plot(fit, type = "wright", draw = FALSE, preset = "publication")
 #' wright$data$preset
+#'
+#' if (requireNamespace("igraph", quietly = TRUE)) {
+#'   net_review <- build_mfrm_network_review(fit, diagnostics = diag,
+#'                                           facets = "Rater")
+#'   net_review$assumption_checks[, c("Check", "Status", "NextStep")]
+#'   net_review$report_templates[, c("APASection", "Text", "Avoid")]
+#'   p_net <- plot(net_review, type = "network", draw = FALSE)
+#'   head(p_net$data$node_plot)
+#'   head(p_net$data$edge_plot)
+#'   if (requireNamespace("ggplot2", quietly = TRUE)) {
+#'     as_ggplot(p_net)
+#'   }
+#' }
 #'
 #' pca <- analyze_residual_pca(diag, mode = "overall")
 #' scree <- plot_residual_pca(pca, plot_type = "scree", draw = FALSE, preset = "publication")

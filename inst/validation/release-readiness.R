@@ -256,6 +256,46 @@ mfrmr_release_readiness_paths <- function(pkg_dir = ".",
       validation_dir,
       "release-scope-review-0.2.2-checks.csv"
     ),
+    network_anchor_stress_helper = file.path(
+      validation_dir,
+      "network-anchor-stress-0.2.2.R"
+    ),
+    network_anchor_stress_evidence = file.path(
+      validation_dir,
+      "network-anchor-stress-0.2.2.md"
+    ),
+    network_anchor_stress_summary = file.path(
+      validation_dir,
+      "network-anchor-stress-0.2.2-summary.csv"
+    ),
+    network_anchor_stress_checks = file.path(
+      validation_dir,
+      "network-anchor-stress-0.2.2-checks.csv"
+    ),
+    network_anchor_stress_rater_modes = file.path(
+      validation_dir,
+      "network-anchor-stress-0.2.2-rater-modes.csv"
+    ),
+    self_other_speaking_network_helper = file.path(
+      validation_dir,
+      "self-other-speaking-network-0.2.2.R"
+    ),
+    self_other_speaking_network_evidence = file.path(
+      validation_dir,
+      "self-other-speaking-network-0.2.2.md"
+    ),
+    self_other_speaking_network_summary = file.path(
+      validation_dir,
+      "self-other-speaking-network-0.2.2-summary.csv"
+    ),
+    self_other_speaking_network_checks = file.path(
+      validation_dir,
+      "self-other-speaking-network-0.2.2-checks.csv"
+    ),
+    self_other_speaking_network_templates = file.path(
+      validation_dir,
+      "self-other-speaking-network-0.2.2-templates.csv"
+    ),
     check_log = file.path(pkg_dir, "mfrmr.Rcheck", "00check.log")
   )
 }
@@ -288,6 +328,10 @@ mfrmr_release_readiness_find_check_log <- function(pkg_dir,
   }
   candidates <- unique(c(candidates, recursive))
   existing <- candidates[file.exists(candidates)]
+  if (length(existing) > 1L) {
+    mtimes <- file.info(existing)$mtime
+    existing <- existing[order(mtimes, decreasing = TRUE, na.last = TRUE)]
+  }
   if (length(existing) > 0L &&
       mfrmr_release_readiness_has_value(target_version)) {
     versions <- vapply(existing, function(path) {
@@ -310,6 +354,85 @@ mfrmr_release_readiness_read_lines <- function(path) {
   readLines(path, warn = FALSE, encoding = "UTF-8")
 }
 
+mfrmr_release_readiness_source_files <- function(pkg_dir) {
+  pkg_dir <- normalizePath(pkg_dir, winslash = "/", mustWork = FALSE)
+  roots <- c(
+    "DESCRIPTION", "NAMESPACE", "NEWS.md", "README.md",
+    "R", "man", "tests", "vignettes", "inst", "src",
+    "data", "data-raw", "configure", "configure.win", "cleanup",
+    "cleanup.win"
+  )
+  paths <- file.path(pkg_dir, roots)
+  files <- unlist(lapply(paths, function(path) {
+    if (!file.exists(path)) {
+      return(character(0))
+    }
+    if (dir.exists(path)) {
+      list.files(path, recursive = TRUE, full.names = TRUE,
+                 all.files = TRUE, no.. = TRUE)
+    } else {
+      path
+    }
+  }), use.names = FALSE)
+  files <- files[file.exists(files) & !dir.exists(files)]
+  if (length(files) == 0L) {
+    return(character(0))
+  }
+  rel <- sub(paste0("^", gsub("([\\^$.|?*+(){}\\[\\]\\\\])", "\\\\\\1", pkg_dir), "/?"),
+             "", normalizePath(files, winslash = "/", mustWork = FALSE))
+  keep <- !grepl("(^|/)(mfrmr[.]Rcheck|check)(/|$)", rel)
+  normalizePath(files[keep], winslash = "/", mustWork = FALSE)
+}
+
+mfrmr_release_readiness_source_mtime_status <- function(pkg_dir, check_log) {
+  files <- mfrmr_release_readiness_source_files(pkg_dir)
+  if (length(files) == 0L || !file.exists(check_log)) {
+    return(data.frame(
+      FreshAgainstSource = NA,
+      SourceFiles = length(files),
+      SourceLatestMTime = as.POSIXct(NA),
+      SourceLatestFile = NA_character_,
+      CheckLogMTime = if (file.exists(check_log)) {
+        file.info(check_log)$mtime[1]
+      } else {
+        as.POSIXct(NA)
+      },
+      stringsAsFactors = FALSE
+    ))
+  }
+  info <- file.info(files)
+  mtimes <- info$mtime
+  ok <- !is.na(mtimes)
+  if (!any(ok)) {
+    return(data.frame(
+      FreshAgainstSource = NA,
+      SourceFiles = length(files),
+      SourceLatestMTime = as.POSIXct(NA),
+      SourceLatestFile = NA_character_,
+      CheckLogMTime = file.info(check_log)$mtime[1],
+      stringsAsFactors = FALSE
+    ))
+  }
+  latest_idx <- which.max(as.numeric(mtimes[ok]))
+  ok_files <- files[ok]
+  latest_file <- ok_files[latest_idx]
+  latest_mtime <- mtimes[ok][latest_idx]
+  check_mtime <- file.info(check_log)$mtime[1]
+  data.frame(
+    FreshAgainstSource = isTRUE(!is.na(check_mtime) && check_mtime >= latest_mtime),
+    SourceFiles = length(files),
+    SourceLatestMTime = latest_mtime,
+    SourceLatestFile = sub(
+      paste0("^", gsub("([\\^$.|?*+(){}\\[\\]\\\\])", "\\\\\\1",
+                       normalizePath(pkg_dir, winslash = "/", mustWork = FALSE)), "/?"),
+      "",
+      latest_file
+    ),
+    CheckLogMTime = check_mtime,
+    stringsAsFactors = FALSE
+  )
+}
+
 mfrmr_release_readiness_count_status <- function(status_line, label) {
   if (length(status_line) == 0L || !nzchar(status_line[1])) {
     return(NA_integer_)
@@ -324,10 +447,23 @@ mfrmr_release_readiness_count_status <- function(status_line, label) {
 }
 
 mfrmr_release_readiness_parse_check_log <- function(path,
-                                                    target_version = NULL) {
+                                                    target_version = NULL,
+                                                    pkg_dir = NULL) {
   lines <- mfrmr_release_readiness_read_lines(path)
+  freshness <- if (is.null(pkg_dir)) {
+    data.frame(
+      FreshAgainstSource = NA,
+      SourceFiles = NA_integer_,
+      SourceLatestMTime = as.POSIXct(NA),
+      SourceLatestFile = NA_character_,
+      CheckLogMTime = if (file.exists(path)) file.info(path)$mtime[1] else as.POSIXct(NA),
+      stringsAsFactors = FALSE
+    )
+  } else {
+    mfrmr_release_readiness_source_mtime_status(pkg_dir, path)
+  }
   if (length(lines) == 0L) {
-    return(data.frame(
+    return(cbind(data.frame(
       CheckLog = path,
       PackageVersion = NA_character_,
       TargetVersion = target_version %||% NA_character_,
@@ -339,7 +475,7 @@ mfrmr_release_readiness_parse_check_log <- function(path,
       CheckPassed = FALSE,
       NeedsExplanation = TRUE,
       stringsAsFactors = FALSE
-    ))
+    ), freshness))
   }
   package_version <- mfrmr_release_readiness_check_log_package_version(lines)
   version_matches_target <- if (!mfrmr_release_readiness_has_value(target_version)) {
@@ -355,7 +491,7 @@ mfrmr_release_readiness_parse_check_log <- function(path,
   if (identical(status, "Status: OK")) {
     errors <- warnings <- notes <- 0L
   }
-  data.frame(
+  cbind(data.frame(
     CheckLog = path,
     PackageVersion = package_version,
     TargetVersion = target_version %||% NA_character_,
@@ -367,7 +503,7 @@ mfrmr_release_readiness_parse_check_log <- function(path,
     CheckPassed = isTRUE(errors == 0L && warnings == 0L),
     NeedsExplanation = isTRUE(notes > 0L),
     stringsAsFactors = FALSE
-  )
+  ), freshness)
 }
 
 mfrmr_release_readiness_version_status <- function(paths, target_version = NULL) {
@@ -766,6 +902,8 @@ mfrmr_release_readiness_gate_summary <- function(version_status,
                                                  gpcm_score_side_status = NULL,
                                                  gpcm_score_side_external_status = NULL,
                                                  release_scope_status = NULL,
+                                                 network_anchor_stress_status = NULL,
+                                                 self_other_speaking_network_status = NULL,
                                                  example_policy_status = NULL) {
   path_exists <- function(path) {
     is.character(path) && length(path) > 0L && file.exists(path[1])
@@ -824,6 +962,20 @@ mfrmr_release_readiness_gate_summary <- function(version_status,
   }
   release_scope_gate_ok <- is.null(release_scope_status) ||
     isTRUE(release_scope_status$ScopeGateOK[1])
+  network_anchor_stress_value <- if (is.null(network_anchor_stress_status)) {
+    "not_checked"
+  } else {
+    network_anchor_stress_status$NetworkAnchorStressStatus[1]
+  }
+  network_anchor_stress_gate_ok <- is.null(network_anchor_stress_status) ||
+    isTRUE(network_anchor_stress_status$StressGateOK[1])
+  self_other_speaking_network_value <- if (is.null(self_other_speaking_network_status)) {
+    "not_checked"
+  } else {
+    self_other_speaking_network_status$SelfOtherSpeakingNetworkStatus[1]
+  }
+  self_other_speaking_network_gate_ok <- is.null(self_other_speaking_network_status) ||
+    isTRUE(self_other_speaking_network_status$NetworkGateOK[1])
   evidence_available <- path_exists(paths$evidence_map) &&
     path_exists(paths$gpcm_roadmap) &&
     path_exists(paths$external_recovery_evidence) &&
@@ -849,6 +1001,16 @@ mfrmr_release_readiness_gate_summary <- function(version_status,
     path_exists(paths$release_scope_helper) &&
     path_exists(paths$release_scope_evidence) &&
     path_exists(paths$release_scope_checks) &&
+    path_exists(paths$network_anchor_stress_helper) &&
+    path_exists(paths$network_anchor_stress_evidence) &&
+    path_exists(paths$network_anchor_stress_summary) &&
+    path_exists(paths$network_anchor_stress_checks) &&
+    path_exists(paths$network_anchor_stress_rater_modes) &&
+    path_exists(paths$self_other_speaking_network_helper) &&
+    path_exists(paths$self_other_speaking_network_evidence) &&
+    path_exists(paths$self_other_speaking_network_summary) &&
+    path_exists(paths$self_other_speaking_network_checks) &&
+    path_exists(paths$self_other_speaking_network_templates) &&
     isTRUE(checklist_status$ChecklistAvailable[1]) &&
     isTRUE(gpcm_scope_ok) &&
     isTRUE(mh_dif_gate_ok) &&
@@ -857,14 +1019,17 @@ mfrmr_release_readiness_gate_summary <- function(version_status,
     isTRUE(convergence_reporting_gate_ok) &&
     isTRUE(gpcm_score_side_gate_ok) &&
     isTRUE(gpcm_score_side_external_gate_ok) &&
-    isTRUE(release_scope_gate_ok)
+    isTRUE(release_scope_gate_ok) &&
+    isTRUE(network_anchor_stress_gate_ok) &&
+    isTRUE(self_other_speaking_network_gate_ok)
   rows <- data.frame(
     Gate = c("version_contract", "package_check", "ci_workflow", "terminology", "evidence_artifacts"),
     Status = c(
       if (isTRUE(version_status$VersionOK[1])) "ok" else "concern",
       if (isTRUE(check_status$CheckPassed[1]) &&
           !isTRUE(check_status$NeedsExplanation[1]) &&
-          !identical(check_status$VersionMatchesTarget[1], FALSE)) {
+          !identical(check_status$VersionMatchesTarget[1], FALSE) &&
+          !identical(check_status$FreshAgainstSource[1], FALSE)) {
         "ok"
       } else if (isTRUE(check_status$CheckPassed[1])) {
         "review"
@@ -881,7 +1046,9 @@ mfrmr_release_readiness_gate_summary <- function(version_status,
         check_status$StatusLine[1],
         "; check_version=", check_status$PackageVersion[1],
         "; target=", check_status$TargetVersion[1],
-        "; version_match=", check_status$VersionMatchesTarget[1]
+        "; version_match=", check_status$VersionMatchesTarget[1],
+        "; fresh_against_source=", check_status$FreshAgainstSource[1],
+        "; source_latest=", check_status$SourceLatestFile[1]
       ),
       paste0(
         "workflow=", ci_workflow_status$WorkflowAvailable[1],
@@ -923,6 +1090,18 @@ mfrmr_release_readiness_gate_summary <- function(version_status,
         "; release_scope_evidence=", path_exists(paths$release_scope_evidence),
         "; release_scope_checks=", path_exists(paths$release_scope_checks),
         "; release_scope_status=", release_scope_value,
+        "; network_anchor_stress_helper=", path_exists(paths$network_anchor_stress_helper),
+        "; network_anchor_stress_evidence=", path_exists(paths$network_anchor_stress_evidence),
+        "; network_anchor_stress_summary=", path_exists(paths$network_anchor_stress_summary),
+        "; network_anchor_stress_checks=", path_exists(paths$network_anchor_stress_checks),
+        "; network_anchor_stress_rater_modes=", path_exists(paths$network_anchor_stress_rater_modes),
+        "; network_anchor_stress_status=", network_anchor_stress_value,
+        "; self_other_speaking_network_helper=", path_exists(paths$self_other_speaking_network_helper),
+        "; self_other_speaking_network_evidence=", path_exists(paths$self_other_speaking_network_evidence),
+        "; self_other_speaking_network_summary=", path_exists(paths$self_other_speaking_network_summary),
+        "; self_other_speaking_network_checks=", path_exists(paths$self_other_speaking_network_checks),
+        "; self_other_speaking_network_templates=", path_exists(paths$self_other_speaking_network_templates),
+        "; self_other_speaking_network_status=", self_other_speaking_network_value,
         "; mh_dif_status=", mh_dif_status,
         "; checklist_rows=", checklist_status$Rows[1],
         "; gpcm_scope=", if (is.null(gpcm_scope_status)) {
@@ -1144,10 +1323,17 @@ mfrmr_release_readiness_dif_apa_reporting_status <- function(paths) {
       file.exists(file.path(paths$pkg_dir, "DESCRIPTION"))) {
     try(pkgload::load_all(paths$pkg_dir, quiet = TRUE), silent = TRUE)
   }
+  review_warnings <- character(0)
   review <- tryCatch(
-    env$mfrmr_review_dif_apa_reporting(
-      include_refit = TRUE,
-      include_gpcm = TRUE
+    withCallingHandlers(
+      env$mfrmr_review_dif_apa_reporting(
+        include_refit = TRUE,
+        include_gpcm = TRUE
+      ),
+      warning = function(w) {
+        review_warnings <<- c(review_warnings, conditionMessage(w))
+        invokeRestart("muffleWarning")
+      }
     ),
     error = function(e) e
   )
@@ -1170,15 +1356,33 @@ mfrmr_release_readiness_dif_apa_reporting_status <- function(paths) {
     NA_integer_
   }
   status <- as.character(review$status %||% "unknown")[1]
+  warning_is_expected <- grepl(
+    "Optimizer result needs convergence review",
+    review_warnings,
+    fixed = TRUE
+  )
+  unexpected_warnings <- sum(!warning_is_expected, na.rm = TRUE)
+  warning_summary <- if (length(review_warnings) == 0L) {
+    ""
+  } else {
+    paste(unique(review_warnings), collapse = " | ")
+  }
   data.frame(
     DIFAPAReportingStatus = status,
-    ReportingGateOK = identical(status, "ok") && identical(failed, 0L),
+    ReportingGateOK = identical(status, "ok") &&
+      identical(failed, 0L) &&
+      identical(unexpected_warnings, 0L),
     Cases = nrow(as.data.frame(review$case_table %||% data.frame())),
     Checks = nrow(checks),
     FailedChecks = failed,
+    WarningCount = length(review_warnings),
+    UnexpectedWarnings = unexpected_warnings,
     Detail = paste0(
       "include_refit=", isTRUE(review$include_refit),
-      "; include_gpcm=", isTRUE(review$include_gpcm)
+      "; include_gpcm=", isTRUE(review$include_gpcm),
+      "; captured_warnings=", length(review_warnings),
+      "; unexpected_warnings=", unexpected_warnings,
+      "; warning_summary=", warning_summary
     ),
     stringsAsFactors = FALSE
   )
@@ -1824,6 +2028,363 @@ mfrmr_release_readiness_release_scope_status <- function(paths) {
   )
 }
 
+mfrmr_release_readiness_passed_values <- function(x) {
+  if (is.logical(x)) {
+    x
+  } else {
+    tolower(as.character(x)) %in% c("true", "t", "1", "yes")
+  }
+}
+
+mfrmr_release_readiness_network_anchor_stress_status <- function(paths) {
+  helper <- paths$network_anchor_stress_helper %||% NA_character_
+  evidence <- paths$network_anchor_stress_evidence %||% NA_character_
+  summary_csv <- paths$network_anchor_stress_summary %||% NA_character_
+  checks_csv <- paths$network_anchor_stress_checks %||% NA_character_
+  rater_modes_csv <- paths$network_anchor_stress_rater_modes %||% NA_character_
+  path_ok <- function(path) {
+    is.character(path) && length(path) > 0L && file.exists(path[1])
+  }
+  missing <- character(0)
+  if (!path_ok(helper)) missing <- c(missing, "helper")
+  if (!path_ok(evidence)) missing <- c(missing, "evidence")
+  if (!path_ok(summary_csv)) missing <- c(missing, "summary")
+  if (!path_ok(checks_csv)) missing <- c(missing, "checks")
+  if (!path_ok(rater_modes_csv)) missing <- c(missing, "rater_modes")
+  if (length(missing) > 0L) {
+    return(data.frame(
+      NetworkAnchorStressStatus = "missing",
+      StressGateOK = FALSE,
+      Scenarios = NA_integer_,
+      Checks = NA_integer_,
+      FailedChecks = NA_integer_,
+      RaterModeRows = NA_integer_,
+      ModesCovered = NA_character_,
+      Detail = paste("network-anchor stress", paste(missing, collapse = "+"),
+                     "missing"),
+      stringsAsFactors = FALSE
+    ))
+  }
+
+  summary <- tryCatch(
+    utils::read.csv(summary_csv[1], stringsAsFactors = FALSE, check.names = FALSE),
+    error = function(e) NULL
+  )
+  checks <- tryCatch(
+    utils::read.csv(checks_csv[1], stringsAsFactors = FALSE, check.names = FALSE),
+    error = function(e) NULL
+  )
+  rater_modes <- tryCatch(
+    utils::read.csv(rater_modes_csv[1], stringsAsFactors = FALSE, check.names = FALSE),
+    error = function(e) NULL
+  )
+  summary_schema_ok <- !is.null(summary) &&
+    all(c("Scenario", "FullComponents", "ProjectedComponents",
+          "AssumptionCheckRows", "VisualizationRows",
+          "ReportTemplateRows", "ReviewNetworkPlotAvailable",
+          "NetworkLayoutRows", "NetworkNodePlotRows", "NetworkEdgePlotRows",
+          "NetworkLayoutFinite", "NetworkNodePlotFinite",
+          "NetworkEdgePlotFinite") %in% names(summary))
+  checks_schema_ok <- !is.null(checks) &&
+    all(c("Scenario", "Check", "Passed", "Detail") %in% names(checks))
+  modes_schema_ok <- !is.null(rater_modes) &&
+    all(c("Scenario", "Mode", "PairRows", "ZeroOverlapPairs",
+          "Edges", "Components", "AssumptionCheckRows",
+          "VisualizationRows", "ReportTemplateRows", "AvoidRows",
+          "VisualizationRoutes", "TemplateIds") %in% names(rater_modes))
+
+  passed <- if (checks_schema_ok) {
+    mfrmr_release_readiness_passed_values(checks$Passed)
+  } else {
+    FALSE
+  }
+  failed <- if (checks_schema_ok) {
+    sum(!passed, na.rm = TRUE)
+  } else {
+    NA_integer_
+  }
+  required_checks <- c(
+    "projected_graph_disconnected",
+    "projected_connected_with_self_leaves",
+    "all_modes_empty_edges",
+    "all_modes_zero_overlap_only",
+    "full_graph_masks_panel_gap",
+    "role_projection_masks_rater_only_question",
+    "collapsed_self_assessor_more_lenient",
+    "network_plot_payload_available",
+    "rater_mode_downstream_tables_available",
+    "coverage_zero_disconnected_after_projection",
+    "coverage_one_rotating_panel_disconnected",
+    "coverage_common_or_full_connected_after_projection",
+    "group_anchor_recommendation_present"
+  )
+  required_scenarios <- c(
+    "self_only_zero_overlap",
+    "mixed_literal_self_plus_teachers_seed1",
+    "self_teacher_role_rater_only_projection",
+    "self_teacher_role_rater_projection",
+    "speaking_peer_literal_student_ids",
+    "speaking_peer_collapsed_self_assessor",
+    "speaking_role_only_modes",
+    "two_panel_gap_full_graph_masked",
+    "coverage_T0",
+    "coverage_T1_rotating_panel",
+    "coverage_T1_common_teacher",
+    "coverage_T4",
+    "group_anchor_only_low_common"
+  )
+  checks_present <- checks_schema_ok &&
+    all(required_checks %in% as.character(checks$Check))
+  scenarios_present <- summary_schema_ok &&
+    all(required_scenarios %in% as.character(summary$Scenario))
+  modes_covered <- if (modes_schema_ok) {
+    sort(unique(as.character(rater_modes$Mode)))
+  } else {
+    character(0)
+  }
+  modes_ok <- all(c("agreement", "disagreement", "severity_direction") %in%
+                    modes_covered)
+  evidence_text <- paste(readLines(evidence[1], warn = FALSE), collapse = "\n")
+  evidence_ok <- grepl("- Failed checks: 0", evidence_text, fixed = TRUE) &&
+    grepl("projected graph", evidence_text, ignore.case = TRUE) &&
+    grepl("group-anchor", evidence_text, fixed = TRUE) &&
+    grepl("Each rater-network mode is checked", evidence_text, fixed = TRUE)
+  downstream_ok <- summary_schema_ok &&
+    any(summary$AssumptionCheckRows >= 10L &
+          summary$VisualizationRows >= 5L &
+          summary$ReportTemplateRows >= 5L, na.rm = TRUE)
+  rater_downstream_ok <- modes_schema_ok &&
+    nrow(rater_modes) > 0L &&
+    isTRUE(all(rater_modes$AssumptionCheckRows >= 6L, na.rm = FALSE)) &&
+    isTRUE(all(rater_modes$VisualizationRows >= 5L, na.rm = FALSE)) &&
+    isTRUE(all(rater_modes$ReportTemplateRows >= 5L, na.rm = FALSE)) &&
+    isTRUE(all(rater_modes$AvoidRows >= 5L, na.rm = FALSE))
+  active_rows <- if (summary_schema_ok) {
+    as.character(summary$Scenario) != "group_anchor_only_low_common"
+  } else {
+    logical(0)
+  }
+  plot_payload_ok <- summary_schema_ok &&
+    any(active_rows) &&
+    isTRUE(all(mfrmr_release_readiness_passed_values(
+      summary$ReviewNetworkPlotAvailable[active_rows]
+    ))) &&
+    isTRUE(all(summary$NetworkLayoutRows[active_rows] > 0L)) &&
+    isTRUE(all(summary$NetworkNodePlotRows[active_rows] > 0L)) &&
+    isTRUE(all(summary$NetworkEdgePlotRows[active_rows] > 0L)) &&
+    isTRUE(all(mfrmr_release_readiness_passed_values(
+      summary$NetworkLayoutFinite[active_rows]
+    ))) &&
+    isTRUE(all(mfrmr_release_readiness_passed_values(
+      summary$NetworkNodePlotFinite[active_rows]
+    ))) &&
+    isTRUE(all(mfrmr_release_readiness_passed_values(
+      summary$NetworkEdgePlotFinite[active_rows]
+    )))
+  zero_overlap_ok <- modes_schema_ok &&
+    all(rater_modes$ZeroOverlapPairs[
+      rater_modes$Scenario == "self_only_zero_overlap"
+    ] > 0, na.rm = TRUE)
+  zero_overlap_downstream_ok <- modes_schema_ok &&
+    any(rater_modes$Scenario == "self_only_zero_overlap") &&
+    isTRUE(all(rater_modes$Edges[
+      rater_modes$Scenario == "self_only_zero_overlap"
+    ] == 0L, na.rm = FALSE)) &&
+    isTRUE(all(rater_modes$AssumptionCheckRows[
+      rater_modes$Scenario == "self_only_zero_overlap"
+    ] >= 6L, na.rm = FALSE)) &&
+    isTRUE(all(rater_modes$VisualizationRows[
+      rater_modes$Scenario == "self_only_zero_overlap"
+    ] >= 5L, na.rm = FALSE)) &&
+    isTRUE(all(rater_modes$ReportTemplateRows[
+      rater_modes$Scenario == "self_only_zero_overlap"
+    ] >= 5L, na.rm = FALSE)) &&
+    isTRUE(all(rater_modes$AvoidRows[
+      rater_modes$Scenario == "self_only_zero_overlap"
+    ] >= 5L, na.rm = FALSE))
+  gate_ok <- summary_schema_ok &&
+    checks_schema_ok &&
+    modes_schema_ok &&
+    identical(failed, 0L) &&
+    checks_present &&
+    scenarios_present &&
+    modes_ok &&
+    evidence_ok &&
+    downstream_ok &&
+    rater_downstream_ok &&
+    plot_payload_ok &&
+    zero_overlap_ok &&
+    zero_overlap_downstream_ok
+
+  data.frame(
+    NetworkAnchorStressStatus = if (gate_ok) "ok" else "review",
+    StressGateOK = gate_ok,
+    Scenarios = if (summary_schema_ok) length(unique(summary$Scenario)) else NA_integer_,
+    Checks = if (checks_schema_ok) nrow(checks) else NA_integer_,
+    FailedChecks = failed,
+    RaterModeRows = if (modes_schema_ok) nrow(rater_modes) else NA_integer_,
+    ModesCovered = paste(modes_covered, collapse = ";"),
+    Detail = paste0(
+      "summary_schema_ok=", summary_schema_ok,
+      "; checks_schema_ok=", checks_schema_ok,
+      "; modes_schema_ok=", modes_schema_ok,
+      "; checks_present=", checks_present,
+      "; scenarios_present=", scenarios_present,
+      "; modes_ok=", modes_ok,
+      "; evidence_ok=", evidence_ok,
+      "; downstream_ok=", downstream_ok,
+      "; rater_downstream_ok=", rater_downstream_ok,
+      "; plot_payload_ok=", plot_payload_ok,
+      "; zero_overlap_ok=", zero_overlap_ok,
+      "; zero_overlap_downstream_ok=", zero_overlap_downstream_ok
+    ),
+    stringsAsFactors = FALSE
+  )
+}
+
+mfrmr_release_readiness_self_other_speaking_network_status <- function(paths) {
+  helper <- paths$self_other_speaking_network_helper %||% NA_character_
+  evidence <- paths$self_other_speaking_network_evidence %||% NA_character_
+  summary_csv <- paths$self_other_speaking_network_summary %||% NA_character_
+  checks_csv <- paths$self_other_speaking_network_checks %||% NA_character_
+  templates_csv <- paths$self_other_speaking_network_templates %||% NA_character_
+  path_ok <- function(path) {
+    is.character(path) && length(path) > 0L && file.exists(path[1])
+  }
+  missing <- character(0)
+  if (!path_ok(helper)) missing <- c(missing, "helper")
+  if (!path_ok(evidence)) missing <- c(missing, "evidence")
+  if (!path_ok(summary_csv)) missing <- c(missing, "summary")
+  if (!path_ok(checks_csv)) missing <- c(missing, "checks")
+  if (!path_ok(templates_csv)) missing <- c(missing, "templates")
+  if (length(missing) > 0L) {
+    return(data.frame(
+      SelfOtherSpeakingNetworkStatus = "missing",
+      NetworkGateOK = FALSE,
+      Checks = NA_integer_,
+      FailedChecks = NA_integer_,
+      TemplateRows = NA_integer_,
+      Detail = paste("self/other speaking network",
+                     paste(missing, collapse = "+"), "missing"),
+      stringsAsFactors = FALSE
+    ))
+  }
+
+  summary <- tryCatch(
+    utils::read.csv(summary_csv[1], stringsAsFactors = FALSE, check.names = FALSE),
+    error = function(e) NULL
+  )
+  checks <- tryCatch(
+    utils::read.csv(checks_csv[1], stringsAsFactors = FALSE, check.names = FALSE),
+    error = function(e) NULL
+  )
+  templates <- tryCatch(
+    utils::read.csv(templates_csv[1], stringsAsFactors = FALSE, check.names = FALSE),
+    error = function(e) NULL
+  )
+  summary_schema_ok <- !is.null(summary) &&
+    all(c("Scenario", "Persons", "TeacherRaters", "FullComponents",
+          "FullArticulationPoints", "FullBridges",
+          "RaterProjectedArticulationPoints", "RaterProjectedBridges",
+          "SelfRaterNodes", "SelfRaterDegreeMin", "SelfRaterDegreeMax",
+          "AssessorNetworkEdges", "SelfModeSeverityIndex",
+          "AssumptionCheckRows",
+          "ReviewNetworkPlotAvailable", "ReviewNetworkLayoutRows",
+          "ReviewNetworkNodePlotRows", "ReviewNetworkEdgePlotRows",
+          "ReviewNetworkPlotFinite", "AssessorNetworkPlotAvailable",
+          "AssessorNetworkLayoutRows", "AssessorNetworkNodePlotRows",
+          "AssessorNetworkEdgePlotRows",
+          "AssessorNetworkPlotFinite") %in% names(summary))
+  checks_schema_ok <- !is.null(checks) &&
+    all(c("Check", "Passed", "Detail") %in% names(checks))
+  templates_schema_ok <- !is.null(templates) &&
+    all(c("TemplateId", "APASection", "Text", "Avoid",
+          "ExampleScope") %in% names(templates))
+  passed <- if (checks_schema_ok) {
+    mfrmr_release_readiness_passed_values(checks$Passed)
+  } else {
+    FALSE
+  }
+  failed <- if (checks_schema_ok) {
+    sum(!passed, na.rm = TRUE)
+  } else {
+    NA_integer_
+  }
+  required_checks <- c(
+    "literal_fit_converged",
+    "full_graph_connected_but_hub_masked",
+    "rater_projection_recovers_self_leaves",
+    "review_downstream_tables_available",
+    "design_network_plot_payload_available",
+    "assessor_type_fit_converged",
+    "assessor_type_mode_graph_is_not_literal_identity_graph",
+    "collapsed_assessor_network_detects_self_mode_leniency",
+    "assessor_network_plot_payload_available"
+  )
+  checks_present <- checks_schema_ok &&
+    all(required_checks %in% as.character(checks$Check))
+  summary_values_ok <- summary_schema_ok &&
+    identical(as.character(summary$Scenario[1]), "self_teacher_speaking") &&
+    isTRUE(summary$FullComponents[1] == 1L) &&
+    isTRUE(summary$FullArticulationPoints[1] == 0L) &&
+    isTRUE(summary$FullBridges[1] == 0L) &&
+    isTRUE(summary$RaterProjectedArticulationPoints[1] >= summary$Persons[1]) &&
+    isTRUE(summary$RaterProjectedBridges[1] >= summary$Persons[1]) &&
+    isTRUE(summary$SelfRaterNodes[1] == summary$Persons[1]) &&
+    isTRUE(summary$SelfRaterDegreeMin[1] == 1L) &&
+    isTRUE(summary$SelfRaterDegreeMax[1] == 1L) &&
+    isTRUE(summary$AssessorNetworkEdges[1] > 0L) &&
+    isTRUE(is.finite(summary$SelfModeSeverityIndex[1])) &&
+    isTRUE(summary$AssumptionCheckRows[1] >= 10L)
+  template_values_ok <- templates_schema_ok &&
+    isTRUE(nrow(templates) >= 5L) &&
+    all(nzchar(as.character(templates$Avoid)))
+  plot_payload_ok <- summary_schema_ok &&
+    isTRUE(mfrmr_release_readiness_passed_values(summary$ReviewNetworkPlotAvailable[1])) &&
+    isTRUE(summary$ReviewNetworkLayoutRows[1] > 0L) &&
+    isTRUE(summary$ReviewNetworkNodePlotRows[1] > 0L) &&
+    isTRUE(summary$ReviewNetworkEdgePlotRows[1] > 0L) &&
+    isTRUE(mfrmr_release_readiness_passed_values(summary$ReviewNetworkPlotFinite[1])) &&
+    isTRUE(mfrmr_release_readiness_passed_values(summary$AssessorNetworkPlotAvailable[1])) &&
+    isTRUE(summary$AssessorNetworkLayoutRows[1] > 0L) &&
+    isTRUE(summary$AssessorNetworkNodePlotRows[1] > 0L) &&
+    isTRUE(summary$AssessorNetworkEdgePlotRows[1] > 0L) &&
+    isTRUE(mfrmr_release_readiness_passed_values(summary$AssessorNetworkPlotFinite[1]))
+  evidence_text <- paste(readLines(evidence[1], warn = FALSE), collapse = "\n")
+  evidence_ok <- grepl("- Status: ok", evidence_text, fixed = TRUE) &&
+    grepl("- Failed checks: 0", evidence_text, fixed = TRUE) &&
+    grepl("Person-plus-Rater projection", evidence_text, fixed = TRUE) &&
+    grepl("AssessorType", evidence_text, fixed = TRUE)
+  gate_ok <- summary_schema_ok &&
+    checks_schema_ok &&
+    templates_schema_ok &&
+    identical(failed, 0L) &&
+    checks_present &&
+    summary_values_ok &&
+    template_values_ok &&
+    plot_payload_ok &&
+    evidence_ok
+
+  data.frame(
+    SelfOtherSpeakingNetworkStatus = if (gate_ok) "ok" else "review",
+    NetworkGateOK = gate_ok,
+    Checks = if (checks_schema_ok) nrow(checks) else NA_integer_,
+    FailedChecks = failed,
+    TemplateRows = if (templates_schema_ok) nrow(templates) else NA_integer_,
+    Detail = paste0(
+      "summary_schema_ok=", summary_schema_ok,
+      "; checks_schema_ok=", checks_schema_ok,
+      "; templates_schema_ok=", templates_schema_ok,
+      "; checks_present=", checks_present,
+      "; summary_values_ok=", summary_values_ok,
+      "; template_values_ok=", template_values_ok,
+      "; plot_payload_ok=", plot_payload_ok,
+      "; evidence_ok=", evidence_ok
+    ),
+    stringsAsFactors = FALSE
+  )
+}
+
 mfrmr_release_readiness_review <- function(pkg_dir = ".",
                                            check_log = NULL,
                                            checklist = NULL,
@@ -1845,7 +2406,8 @@ mfrmr_release_readiness_review <- function(pkg_dir = ".",
   version_status <- mfrmr_release_readiness_version_status(paths, target_version = target_version)
   check_status <- mfrmr_release_readiness_parse_check_log(
     paths$check_log,
-    target_version = target_version
+    target_version = target_version,
+    pkg_dir = paths$pkg_dir
   )
   term_status <- mfrmr_release_readiness_term_status(paths$pkg_dir)
   checklist_status <- mfrmr_release_readiness_checklist_status(paths$evidence_checklist)
@@ -1875,6 +2437,12 @@ mfrmr_release_readiness_review <- function(pkg_dir = ".",
   release_scope_status <- mfrmr_release_readiness_release_scope_status(
     paths = paths
   )
+  network_anchor_stress_status <- mfrmr_release_readiness_network_anchor_stress_status(
+    paths = paths
+  )
+  self_other_speaking_network_status <- mfrmr_release_readiness_self_other_speaking_network_status(
+    paths = paths
+  )
   example_policy_status <- mfrmr_release_readiness_example_policy_status(paths)
   gate_summary <- mfrmr_release_readiness_gate_summary(
     version_status = version_status,
@@ -1891,6 +2459,8 @@ mfrmr_release_readiness_review <- function(pkg_dir = ".",
     gpcm_score_side_status = gpcm_score_side_status,
     gpcm_score_side_external_status = gpcm_score_side_external_status,
     release_scope_status = release_scope_status,
+    network_anchor_stress_status = network_anchor_stress_status,
+    self_other_speaking_network_status = self_other_speaking_network_status,
     example_policy_status = example_policy_status
   )
   external_recovery_status <- mfrmr_release_readiness_external_recovery_status(
@@ -1918,6 +2488,8 @@ mfrmr_release_readiness_review <- function(pkg_dir = ".",
     gpcm_score_side_status = gpcm_score_side_status,
     gpcm_score_side_external_status = gpcm_score_side_external_status,
     release_scope_status = release_scope_status,
+    network_anchor_stress_status = network_anchor_stress_status,
+    self_other_speaking_network_status = self_other_speaking_network_status,
     example_policy_status = example_policy_status,
     external_recovery_status = external_recovery_status,
     paths = paths
@@ -1944,6 +2516,8 @@ summary.mfrmr_release_readiness_review <- function(object, ...) {
     gpcm_score_side_status = object$gpcm_score_side_status,
     gpcm_score_side_external_status = object$gpcm_score_side_external_status,
     release_scope_status = object$release_scope_status,
+    network_anchor_stress_status = object$network_anchor_stress_status,
+    self_other_speaking_network_status = object$self_other_speaking_network_status,
     external_recovery_status = object$external_recovery_status
   )
   class(out) <- "summary.mfrmr_release_readiness_review"
@@ -1973,6 +2547,14 @@ print.summary.mfrmr_release_readiness_review <- function(x, ...) {
   if (!is.null(x$convergence_reporting_status)) {
     cat("\nConvergence-reporting stress status:\n")
     print(x$convergence_reporting_status, row.names = FALSE)
+  }
+  if (!is.null(x$network_anchor_stress_status)) {
+    cat("\nNetwork/anchor stress status:\n")
+    print(x$network_anchor_stress_status, row.names = FALSE)
+  }
+  if (!is.null(x$self_other_speaking_network_status)) {
+    cat("\nSelf/other speaking network status:\n")
+    print(x$self_other_speaking_network_status, row.names = FALSE)
   }
   if (isTRUE(x$external_recovery_status$ExternalRecoveryRequested[1])) {
     cat("\nExternal recovery status:\n")

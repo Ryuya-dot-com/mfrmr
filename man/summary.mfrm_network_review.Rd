@@ -22,6 +22,12 @@ An object of class \code{summary.mfrm_network_review}.
 \description{
 Summarize an MFRM network review
 }
+\details{
+The summary object retains all network-review tables. Its print method uses
+compact downstream columns by default so long APA wording and guardrail text
+do not overwhelm the console; use \code{print(summary(review), full = TRUE)} or
+\code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}} when the complete table columns are needed.
+}
 \seealso{
 \code{\link[=build_mfrm_network_review]{build_mfrm_network_review()}}
 }

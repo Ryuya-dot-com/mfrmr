@@ -275,6 +275,7 @@ NULL
 #' mfrmr_output_guide("psychometric")[, c("Question", "MainFunction")]
 #' mfrmr_output_guide("simulation")[, c("Question", "MainFunction", "NextStep")]
 #' mfrmr_output_guide("linking")[, c("Question", "MainFunction")]
+#' mfrmr_output_guide("network")[, c("Question", "MainFunction", "NextStep")]
 #' mfrmr_output_guide("facets")[, c("Question", "MainFunction")]
 #' mfrmr_output_guide("binary")[, c("Question", "MainFunction")]
 #' mfrmr_output_guide("viewer")[, c("Question", "MainFunction")]
@@ -767,7 +768,7 @@ mfrmr_output_guide <- function(scope = c("all", "public", "beginner", "entry", "
       "evaluate_mfrm_diagnostic_screening(); summary(diag_eval)$reading_order; plot(..., draw = FALSE); plot_data()",
       "evaluate_mfrm_signal_detection(); summary(sig_eval)$reading_order; plot(signal = \"bias\", metric = \"screen_rate\", draw = FALSE)",
       "build_summary_table_bundle(); export_summary_appendix()",
-      "mfrm_network_analysis(); build_mfrm_network_review()",
+      "mfrm_network_analysis(); build_mfrm_network_review(); plot(review, ...); build_summary_table_bundle(review)",
       "build_peer_review_sim_spec(); build_peer_review_design_review(); build_mfrm_network_review(peer_review_design = ...)"
     ),
     UseWhen = c(
@@ -803,7 +804,7 @@ mfrmr_output_guide <- function(scope = c("all", "public", "beginner", "entry", "
       "Read scenario_summary and performance_summary first; use plot_overview_rate or plot_report_rate for reusable figure data.",
       "Read summary(sig_eval)$reporting_notes before prose; use BiasScreenRate/screen_rate wording for bias-side outputs.",
       "Use appendix_preset = \"recommended\" for a compact handoff, or include_empty = TRUE when documenting unavailable report-signal tables.",
-      "Carry design connectivity into reporting as design evidence, not as fit, separation, or fairness evidence.",
+      "Read assumption_checks first, then use visualization_map, report_templates, and appendix tables for reporting.",
       "Use the design review before any peer-quality, fairness, fit, separation, or recovery interpretation."
     ),
     GPCMStatus = c(
@@ -827,7 +828,7 @@ mfrmr_output_guide <- function(scope = c("all", "public", "beginner", "entry", "
       "Diagnostic-screening simulations are operating-characteristic readouts, not calibrated inferential tests or release gates.",
       "Bias-side rates are screening summaries from estimate_bias(), not formal power or alpha-calibrated false-positive rates.",
       "The appendix route reuses the package-wide summary-table contract instead of creating a separate simulation-only export API.",
-      "Network review is a design/connectivity layer and does not replace MFRM estimates.",
+      "Network review is a design/connectivity layer; assumption checks, APA templates, and plot routes do not replace MFRM estimates.",
       "Peer-review topology is an assignment-design diagnostic, not a reviewer-quality decision."
     ),
     stringsAsFactors = FALSE

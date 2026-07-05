@@ -11,6 +11,7 @@ build_mfrm_network_review(
   peer_review_design = NULL,
   top_n_subsets = NULL,
   min_observations = 0,
+  facets = NULL,
   top_n = 10,
   include_graph = FALSE
 )
@@ -36,6 +37,9 @@ retain before constructing the graph; passed to \code{\link[=mfrm_network_analys
 \item{min_observations}{Minimum observations required to keep a subset row;
 passed to \code{\link[=mfrm_network_analysis]{mfrm_network_analysis()}}.}
 
+\item{facets}{Optional subset of non-person facets to project into the
+network review; passed to \code{\link[=mfrm_network_analysis]{mfrm_network_analysis()}}.}
+
 \item{top_n}{Number of central/cut/bridge rows to retain in the review.}
 
 \item{include_graph}{Logical; if \code{TRUE}, keep the underlying \code{igraph} object
@@ -48,6 +52,15 @@ A bundle of class \code{mfrm_network_review} containing:
 \item \code{network_summary}: graph-level metrics from \code{\link[=mfrm_network_analysis]{mfrm_network_analysis()}}
 \item \code{facet_summary}: facet-level vulnerability summaries
 \item \code{top_central_nodes}, \code{top_cut_nodes}, \code{top_bridge_edges}: follow-up rows
+\item \code{assumption_checks}: graph-construction, projection, facet-scope,
+hub-facet, component-size, bridge/articulation, pendant-node,
+density-context, and interpretation-boundary checks, including next-step
+guidance
+\item \code{visualization_map}: recommended plot and appendix routes, including
+prerequisites for using each route
+\item \code{report_templates}: APA-style draft wording for methods, results,
+figure captions, interpretation boundaries, required review checks, and
+wording to avoid
 \item \code{sparse_review}: optional sparse-design linking review
 \item \code{peer_review}: optional peer-review assignment and linkage diagnostics
 \item \code{reporting_map}: boundary between MFRM, design network, sparse design,
@@ -71,6 +84,42 @@ The review status is deliberately conservative and descriptive. It is not a
 literature-derived adequacy cut point for fit, separation, recovery, or
 rater quality. Use it to decide which design links, anchors, or additional
 observations need inspection before making common-scale claims.
+}
+\section{Choosing the review scope}{
+
+\itemize{
+\item Use the default full review to document the fitted observation design as a
+whole. This is the right first check when the report needs a broad
+statement about whether persons and all fitted facets are connected.
+\item Use \code{facets = "Rater"} when the downstream claim concerns rater linkage,
+self-assessment isolation, or teacher/peer bridging. Common tasks or
+criteria can be universal hubs in the full graph and may mask these
+rater-specific patterns.
+\item In speaking self-assessment designs where the self-rater is the same
+identifier as the person, keep the measurement model and the graph claim
+separate. The MFRM fit estimates person and rater facets from the supplied
+long data; the projected network review documents whether self-rater
+nodes are isolated or bridged by other raters in the observed design.
+\item If the substantive contrast is self versus teacher or peer mode rather
+than literal rater identity, include a \code{Role}, \code{AssessorType}, or similar
+facet in the data and report that mode effect separately from the
+Person-plus-Rater topology.
+}
+}
+\section{Reporting sequence}{
+
+\enumerate{
+\item State the graph scope and edge definition from \code{report_templates}.
+\item Read \code{assumption_checks}; warning or review rows should be resolved or
+reported before using network metrics as design evidence.
+\item Report only the metrics needed for the claim, typically components,
+articulation points, bridge edges, and the projected facet summary.
+\item Use \code{visualization_map} to choose one figure route and match its caption
+to the selected scope.
+\item Use the \code{Avoid} column in \code{report_templates} as a guardrail against
+treating network diagnostics as fit, rater-quality, fairness, or validity
+evidence.
+}
 }
 \section{References}{
 
@@ -97,6 +146,27 @@ if (requireNamespace("igraph", quietly = TRUE)) {
   review <- build_mfrm_network_review(fit)
   summary(review)
   build_summary_table_bundle(review)
+
+  # Downstream reporting pieces are carried as ordinary data frames.
+  review$assumption_checks[, c("Check", "Status", "Evidence", "NextStep")]
+  review$visualization_map[, c("Route", "Prerequisite", "Boundary")]
+  review$report_templates[, c("APASection", "Text", "Avoid")]
+
+  # A projected review is usually the clearer route for rater-linkage
+  # questions in speaking or peer-/self-assessment designs.
+  rater_review <- build_mfrm_network_review(fit, facets = "Rater")
+  rater_review$assumption_checks
+  rater_review$report_templates[
+    rater_review$report_templates$TemplateId == "results_network_summary",
+    c("RecommendedUse", "RequiredReview", "Text", "Avoid")
+  ]
+  p_network <- plot(rater_review, type = "network", draw = FALSE)
+  head(p_network$data$node_plot)
+  head(p_network$data$edge_plot)
+  plot(rater_review, type = "centrality", draw = FALSE)
+
+  appendix <- build_summary_table_bundle(rater_review)
+  appendix$table_index[, c("Table", "Role", "Recommended")]
 }
 }
 }

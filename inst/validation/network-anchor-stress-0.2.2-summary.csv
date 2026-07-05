@@ -1,0 +1,17 @@
+"Scenario","Seed","Rows","Persons","RaterFacet","RaterLevels","ModelFacets","ProjectionFacets","FitConverged","FullComponents","FullArticulationPoints","FullBridges","FullConnected","ProjectedComponents","ProjectedArticulationPoints","ProjectedBridges","ProjectedConnected","SelfNodeCount","SelfDegreeMin","SelfDegreeMax","SelfSeverityIndex","AssumptionCheckRows","VisualizationRows","ReportTemplateRows","ReviewPlotAvailable","ReviewNetworkPlotAvailable","NetworkLayoutRows","NetworkNodePlotRows","NetworkEdgePlotRows","NetworkLayoutFinite","NetworkNodePlotFinite","NetworkEdgePlotFinite"
+"self_only_zero_overlap",20260701,144,24,"Rater",24,"Rater;Task;Criterion","Rater",TRUE,1,0,0,TRUE,24,0,24,FALSE,24,1,1,NA,10,5,5,TRUE,TRUE,48,48,24,TRUE,TRUE,TRUE
+"mixed_literal_self_plus_teachers_seed1",20260702,432,24,"Rater",28,"Rater;Task;Criterion","Rater",TRUE,1,0,0,TRUE,1,24,24,TRUE,24,1,1,NA,10,5,5,TRUE,TRUE,52,52,72,TRUE,TRUE,TRUE
+"mixed_literal_self_plus_teachers_seed2",20260703,432,24,"Rater",28,"Rater;Task;Criterion","Rater",TRUE,1,0,0,TRUE,1,24,24,TRUE,24,1,1,NA,10,5,5,TRUE,TRUE,52,52,72,TRUE,TRUE,TRUE
+"self_teacher_role_rater_only_projection",20260711,432,24,"Rater",28,"Role;Rater;Task;Criterion","Rater",TRUE,1,0,0,TRUE,1,24,24,TRUE,24,1,1,NA,10,5,5,TRUE,TRUE,52,52,72,TRUE,TRUE,TRUE
+"self_teacher_role_rater_projection",20260712,432,24,"Rater",28,"Role;Rater;Task;Criterion","Role;Rater",TRUE,1,0,0,TRUE,1,0,0,TRUE,24,2,2,NA,10,5,5,TRUE,TRUE,54,54,148,TRUE,TRUE,TRUE
+"speaking_peer_literal_student_ids",20260713,720,24,"Rater",26,"Rater;Task;Criterion","Rater",TRUE,1,0,0,TRUE,1,0,0,TRUE,24,3,3,NA,10,5,5,TRUE,TRUE,50,50,120,TRUE,TRUE,TRUE
+"speaking_peer_collapsed_self_assessor",20260714,720,24,"Assessor",27,"Assessor;Task;Criterion","Assessor",TRUE,1,0,0,TRUE,1,0,0,TRUE,1,24,24,-2.15640258281596,10,5,5,TRUE,TRUE,51,51,120,TRUE,TRUE,TRUE
+"speaking_role_only_modes",20260715,720,24,"Role",3,"Role;Task;Criterion","Role",TRUE,1,0,0,TRUE,1,0,0,TRUE,1,24,24,-0.825571766209277,10,5,5,TRUE,TRUE,27,27,72,TRUE,TRUE,TRUE
+"assessor_collapsed_self_plus_teachers_seed1",20260704,432,24,"Assessor",5,"Assessor;Task;Criterion","Assessor",TRUE,1,0,0,TRUE,1,0,0,TRUE,1,24,24,-1.28966752543082,10,5,5,TRUE,TRUE,29,29,72,TRUE,TRUE,TRUE
+"assessor_collapsed_self_plus_teachers_seed2",20260705,432,24,"Assessor",5,"Assessor;Task;Criterion","Assessor",TRUE,1,0,0,TRUE,1,0,0,TRUE,1,24,24,-1.22666421552801,10,5,5,TRUE,TRUE,29,29,72,TRUE,TRUE,TRUE
+"two_panel_gap_full_graph_masked",20260706,288,24,"Rater",4,"Rater;Task;Criterion","Rater",TRUE,1,0,0,TRUE,2,0,0,FALSE,0,NA,NA,NA,10,5,5,TRUE,TRUE,28,28,48,TRUE,TRUE,TRUE
+"coverage_T0",20260707,144,24,"Rater",24,"Rater;Task;Criterion","Rater",TRUE,1,0,0,TRUE,24,0,24,FALSE,24,1,1,NA,10,5,5,TRUE,TRUE,48,48,24,TRUE,TRUE,TRUE
+"coverage_T1_rotating_panel",20260708,288,24,"Rater",28,"Rater;Task;Criterion","Rater",TRUE,1,0,0,TRUE,4,28,48,FALSE,24,1,1,NA,10,5,5,TRUE,TRUE,52,52,48,TRUE,TRUE,TRUE
+"coverage_T1_common_teacher",20260710,288,24,"Rater",25,"Rater;Task;Criterion","Rater",TRUE,1,0,0,TRUE,1,25,48,TRUE,24,1,1,NA,10,5,5,TRUE,TRUE,49,49,48,TRUE,TRUE,TRUE
+"coverage_T4",20260709,720,24,"Rater",28,"Rater;Task;Criterion","Rater",TRUE,1,0,0,TRUE,1,24,24,TRUE,24,1,1,NA,10,5,5,TRUE,TRUE,52,52,120,TRUE,TRUE,TRUE
+"group_anchor_only_low_common",42,1296,36,"Rater",3,"Rater;Task;Criterion","Rater",NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA

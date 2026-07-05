@@ -71,8 +71,15 @@ A bundle of class \code{mfrm_rater_network} containing:
 \item{\code{node_metrics}}{Rater-level degree, strength, centrality, and
 severity-direction summaries.}
 \item{\code{edge_metrics}}{Retained rater-pair network edges.}
-\item{\code{pair_metrics}}{All eligible pairwise agreement and directional
-comparison metrics before edge thresholding.}
+\item{\code{pair_metrics}}{All pairwise agreement and directional comparison
+metrics before pair-count eligibility and edge thresholding, including
+zero-overlap pairs.}
+\item{\code{assumption_checks}}{Rater-network context, shared-coverage,
+threshold, component, directionality, and interpretation-boundary checks.}
+\item{\code{visualization_map}}{Recommended plot routes, prerequisites, and
+interpretation boundaries.}
+\item{\code{report_templates}}{APA-style draft wording and overclaim checks
+for methods, results, figure captions, and limitations.}
 \item{\code{caveats}}{Interpretation notes and sparse-design warnings.}
 \item{\code{source_interrater}}{The underlying \code{\link[=interrater_agreement_table]{interrater_agreement_table()}}
 output used for agreement statistics.}
@@ -96,6 +103,22 @@ comparison raters more often assigned higher scores than this rater. The
 reported \code{SeverityIndex} is positive for relatively severe raters and
 negative for relatively lenient raters, but it is on a network-analysis scale
 and should not be read as an MFRM severity logit.
+
+\code{plot(rn, type = "network", draw = FALSE)} returns reusable \code{layout},
+\code{node_plot}, and \code{edge_plot} tables. These support custom network figures
+while keeping graph coordinates separate from model estimates.
+
+The returned \code{assumption_checks} table should be read before interpreting
+centrality, severity, or component results. It records the declared
+rater/context facets, shared-context coverage, zero-overlap and thresholded
+pair loss, retained graph components, direction/score-scale assumptions, and
+interpretation boundaries.
+\code{visualization_map} lists the supported figure routes and their
+prerequisites, and \code{report_templates} provides conservative APA-style
+Methods, Results, figure-caption, and boundary wording.
+\code{summary(rn)} keeps these assumption checks beside compact node, edge, and
+pair previews; \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}} converts the same material to
+appendix-ready tables.
 }
 \examples{
 \dontrun{
@@ -107,6 +130,12 @@ if (requireNamespace("igraph", quietly = TRUE)) {
   rn$summary
   head(rn$node_metrics)
   plot(rn, type = "severity", draw = FALSE)
+  p_net <- plot(rn, type = "network", draw = FALSE)
+  head(p_net$data$node_plot)
+  head(p_net$data$edge_plot)
+  summary(rn)$assumption_checks
+  rn$report_templates[, c("TemplateId", "APASection", "Text", "Avoid")]
+  build_summary_table_bundle(rn)$table_index
 }
 }
 }
@@ -121,5 +150,6 @@ effects in language assessment: A comparison of ChatGPT vs human raters.
 }
 \seealso{
 \code{\link[=interrater_agreement_table]{interrater_agreement_table()}}, \code{\link[=plot_interrater_agreement]{plot_interrater_agreement()}},
-\code{\link[=mfrm_network_analysis]{mfrm_network_analysis()}}, \code{\link[=plot.mfrm_bundle]{plot.mfrm_bundle()}}
+\code{\link[=mfrm_network_analysis]{mfrm_network_analysis()}}, \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}},
+\code{\link[=plot.mfrm_bundle]{plot.mfrm_bundle()}}
 }

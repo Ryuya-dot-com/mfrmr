@@ -551,3 +551,21 @@ support contract.
   The fixed summary records `ReleaseScopeReviewStatus = "ok"` with
   67 checks and zero failed checks, and `release-readiness.R` requires that
   review to pass.
+- The 0.2.2 diagnostic-network and anchor-review fixes now have a fixed stress
+  matrix. `network-anchor-stress-0.2.2.R` checks projected design-network
+  behavior, zero-common-context rater pairs, agreement/disagreement/severity
+  rater-network modes, role/mode specifications, peer-rater ID reuse,
+  teacher-coverage conditions, and group-anchor-only low-common-anchor
+  guidance. The fixed summary records 16 scenarios, 116 checks, zero failed
+  checks, and 45 rater-mode rows. `release-readiness.R` requires the summary,
+  check, and rater-mode CSV schemas to include downstream assumption-check,
+  visualization-route, APA-template, and wording-to-avoid evidence, including
+  empty-edge zero-overlap designs.
+- The speaking self-/other-assessment network example now has a fixed evidence
+  artifact. `self-other-speaking-network-0.2.2.R` separates the literal
+  self-rater identity graph, the projected Person-plus-Rater design graph, the
+  `AssessorType` mode graph, and the collapsed `Assessor` rater-effect
+  network. The fixed summary records nine checks, zero failed checks, and five
+  APA template rows. `release-readiness.R` requires both the design-network
+  and collapsed rater-network plot payloads plus non-empty APA overclaim
+  guardrails.

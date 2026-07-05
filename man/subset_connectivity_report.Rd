@@ -8,7 +8,8 @@ subset_connectivity_report(
   fit,
   diagnostics = NULL,
   top_n_subsets = NULL,
-  min_observations = 0
+  min_observations = 0,
+  facets = NULL
 )
 }
 \arguments{
@@ -19,6 +20,11 @@ subset_connectivity_report(
 \item{top_n_subsets}{Optional maximum number of subset rows to keep.}
 
 \item{min_observations}{Minimum observations required to keep a subset row.}
+
+\item{facets}{Optional subset of non-person facets to include in the
+connectivity graph. When supplied, the graph is recomputed as a projection
+over \code{Person} plus these facets, which is useful when broad task or
+criterion facets would otherwise act as universal hubs.}
 }
 \value{
 A named list with subset-connectivity components. Class:
@@ -32,8 +38,9 @@ Build a subset connectivity report (preferred alias)
 \code{plot(out)} is dispatched through \code{plot()} for class
 \code{mfrm_subset_connectivity} (\code{type = "subset_observations"},
 \code{"facet_levels"}, or \code{"linking_matrix"} / \code{"coverage_matrix"} /
-\code{"design_matrix"} / \code{"network"}). The network route returns reusable node
-and edge tables with \code{draw = FALSE}; drawing uses \code{igraph} when available.
+\code{"design_matrix"} / \code{"network"}). The network route returns reusable
+\code{layout}, \code{node_plot}, and \code{edge_plot} tables with \code{draw = FALSE}; drawing
+uses \code{igraph} when available.
 }
 \section{Interpreting output}{
 
@@ -64,7 +71,8 @@ p_design <- plot(out, type = "design_matrix", draw = FALSE)
 p_net <- plot(out, type = "network", draw = FALSE)
 p_sub$data$plot
 p_design$data$plot
-p_net$data$edges
+p_net$data$node_plot
+p_net$data$edge_plot
 out$summary[, c("Subset", "Observations", "ObservationPercent")]
 \dontshow{\}) # examplesIf}
 }

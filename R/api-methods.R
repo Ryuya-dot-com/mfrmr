@@ -4725,6 +4725,43 @@ draw_network_analysis_bundle <- function(x,
   ))
 }
 
+draw_network_review_bundle <- function(x,
+                                       type = c("network", "centrality", "facet_summary"),
+                                       metric = NULL,
+                                       top_n = 20,
+                                       draw = TRUE,
+                                       main = NULL,
+                                       palette = NULL,
+                                       label_angle = 45,
+                                       preset = c("standard", "publication", "compact", "monochrome")) {
+  type <- match.arg(tolower(as.character(type[1])), c("network", "centrality", "facet_summary"))
+  source_network <- x$source_network %||% NULL
+  if (is.null(source_network) || !inherits(source_network, "mfrm_network_analysis")) {
+    stop("Network-review source graph data are not available.", call. = FALSE)
+  }
+  if (is.null(main)) {
+    scope <- "design network"
+    settings <- source_network$settings %||% list()
+    facets <- as.character(settings$facets %||% character(0))
+    facets <- facets[nzchar(facets)]
+    if (isTRUE(settings$projected) && length(facets) > 0L) {
+      scope <- paste0("Person + ", paste(facets, collapse = " + "))
+    }
+    main <- paste("Network review:", scope)
+  }
+  draw_network_analysis_bundle(
+    source_network,
+    type = type,
+    metric = metric,
+    top_n = top_n,
+    draw = draw,
+    main = main,
+    palette = palette,
+    label_angle = label_angle,
+    preset = preset
+  )
+}
+
 draw_rater_network_bundle <- function(x,
                                       type = c("network", "centrality", "severity", "matrix"),
                                       metric = NULL,
@@ -4902,15 +4939,54 @@ draw_rater_network_bundle <- function(x,
     directed = directed,
     vertices = vertices
   )
+  layout <- igraph::layout_nicely(graph)
+  layout_tbl <- data.frame(
+    Rater = as.character(igraph::V(graph)$name),
+    PlotX = suppressWarnings(as.numeric(layout[, 1])),
+    PlotY = suppressWarnings(as.numeric(layout[, 2])),
+    stringsAsFactors = FALSE
+  )
+  node_match <- match(layout_tbl$Rater, as.character(nodes$Rater))
+  node_plot <- cbind(
+    layout_tbl,
+    nodes[node_match, setdiff(names(nodes), "Rater"), drop = FALSE]
+  )
+  row.names(node_plot) <- NULL
+  weights <- suppressWarnings(as.numeric(igraph::E(graph)$Weight))
+  edge_width <- if (length(weights) > 0L && any(is.finite(weights) & weights > 0)) {
+    1 + 5 * weights / max(weights, na.rm = TRUE)
+  } else {
+    rep(1, igraph::ecount(graph))
+  }
+  sev <- node_plot$SeverityIndex
+  node_plot$NodeColor <- if (directed && length(sev) == nrow(node_plot)) {
+    ifelse(is.finite(sev) & sev > 0, pal["severe"],
+           ifelse(is.finite(sev) & sev < 0, pal["lenient"], pal["neutral"]))
+  } else {
+    pal["agreement"]
+  }
+  node_plot$NodeSize <- 18
+  node_plot$NodeLabel <- truncate_axis_label(as.character(node_plot$Rater), width = 16L)
+  edge_plot <- as.data.frame(edges, stringsAsFactors = FALSE)
+  if (nrow(edge_plot) > 0L) {
+    edge_plot$PlotX <- node_plot$PlotX[match(as.character(edge_plot$From), as.character(node_plot$Rater))]
+    edge_plot$PlotY <- node_plot$PlotY[match(as.character(edge_plot$From), as.character(node_plot$Rater))]
+    edge_plot$PlotXEnd <- node_plot$PlotX[match(as.character(edge_plot$To), as.character(node_plot$Rater))]
+    edge_plot$PlotYEnd <- node_plot$PlotY[match(as.character(edge_plot$To), as.character(node_plot$Rater))]
+    edge_plot$EdgeWidth <- edge_width[seq_len(nrow(edge_plot))]
+    edge_plot$EdgeColor <- grDevices::adjustcolor(style$axis, alpha.f = 0.55)
+    edge_plot$ArrowSize <- if (directed) 0.35 else 0
+  } else {
+    edge_plot$PlotX <- numeric(0)
+    edge_plot$PlotY <- numeric(0)
+    edge_plot$PlotXEnd <- numeric(0)
+    edge_plot$PlotYEnd <- numeric(0)
+    edge_plot$EdgeWidth <- numeric(0)
+    edge_plot$EdgeColor <- character(0)
+    edge_plot$ArrowSize <- numeric(0)
+  }
   if (isTRUE(draw)) {
     apply_plot_preset(style)
-    weights <- suppressWarnings(as.numeric(igraph::E(graph)$Weight))
-    edge_width <- if (length(weights) > 0L && any(is.finite(weights) & weights > 0)) {
-      1 + 5 * weights / max(weights, na.rm = TRUE)
-    } else {
-      1
-    }
-    sev <- nodes$SeverityIndex[match(igraph::V(graph)$name, nodes$Rater)]
     vertex_col <- if (directed && length(sev) == igraph::vcount(graph)) {
       ifelse(is.finite(sev) & sev > 0, pal["severe"],
              ifelse(is.finite(sev) & sev < 0, pal["lenient"], pal["neutral"]))
@@ -4919,7 +4995,7 @@ draw_rater_network_bundle <- function(x,
     }
     igraph::plot.igraph(
       graph,
-      layout = igraph::layout_nicely(graph),
+      layout = layout,
       vertex.label = truncate_axis_label(igraph::V(graph)$name, width = 16L),
       vertex.color = vertex_col,
       vertex.frame.color = style$foreground,
@@ -4937,6 +5013,9 @@ draw_rater_network_bundle <- function(x,
       plot = "network",
       nodes = nodes,
       edges = edges,
+      layout = layout_tbl,
+      node_plot = node_plot,
+      edge_plot = edge_plot,
       mode = mode,
       directed = directed,
       title = main %||% paste("Rater-network", mode),
@@ -5272,23 +5351,60 @@ draw_subset_connectivity_bundle <- function(x,
         Weight = suppressWarnings(as.numeric(.data$Weight))
       ) |>
       dplyr::arrange(.data$Subset, dplyr::desc(.data$Weight), .data$From, .data$To)
+    facet_levels <- sort(unique(as.character(node_order$Facet)))
+    facet_cols <- stats::setNames(
+      grDevices::hcl.colors(max(3L, length(facet_levels)), palette = "Dark 3")[seq_along(facet_levels)],
+      facet_levels
+    )
+    layout_tbl <- data.frame()
+    node_plot <- as.data.frame(node_order, stringsAsFactors = FALSE)
+    node_plot$PlotX <- NA_real_
+    node_plot$PlotY <- NA_real_
+    node_plot$NodeColor <- unname(facet_cols[as.character(node_plot$Facet)])
+    node_plot$NodeSize <- ifelse(as.character(node_plot$Facet) == "Person", 4.5, 7)
+    node_plot$NodeLabel <- if (nrow(node_plot) <= 80L) as.character(node_plot$Level) else NA_character_
+    edge_plot <- as.data.frame(edge_order, stringsAsFactors = FALSE)
+    edge_plot$PlotX <- NA_real_
+    edge_plot$PlotY <- NA_real_
+    edge_plot$PlotXEnd <- NA_real_
+    edge_plot$PlotYEnd <- NA_real_
+    edge_plot$EdgeWidth <- pmax(0.4, log1p(suppressWarnings(as.numeric(edge_plot$Weight))))
+    edge_plot$EdgeColor <- grDevices::adjustcolor(style$grid, alpha.f = 0.55)
+    if (requireNamespace("igraph", quietly = TRUE)) {
+      vertices <- node_order
+      row.names(vertices) <- vertices$Node
+      g <- igraph::graph_from_data_frame(
+        d = edge_order[, c("From", "To", "Weight"), drop = FALSE],
+        directed = FALSE,
+        vertices = vertices
+      )
+      layout <- igraph::layout_with_fr(g, weights = sqrt(pmax(1, as.numeric(igraph::E(g)$Weight))))
+      layout_tbl <- data.frame(
+        Node = as.character(igraph::V(g)$name),
+        PlotX = suppressWarnings(as.numeric(layout[, 1])),
+        PlotY = suppressWarnings(as.numeric(layout[, 2])),
+        stringsAsFactors = FALSE
+      )
+      layout_tbl <- merge(
+        layout_tbl,
+        node_order[, c("Node", "Facet", "Level", "Subset"), drop = FALSE],
+        by = "Node",
+        all.x = TRUE,
+        sort = FALSE
+      )
+      node_match <- match(as.character(node_plot$Node), layout_tbl$Node)
+      node_plot$PlotX <- layout_tbl$PlotX[node_match]
+      node_plot$PlotY <- layout_tbl$PlotY[node_match]
+      edge_plot$PlotX <- node_plot$PlotX[match(as.character(edge_plot$From), as.character(node_plot$Node))]
+      edge_plot$PlotY <- node_plot$PlotY[match(as.character(edge_plot$From), as.character(node_plot$Node))]
+      edge_plot$PlotXEnd <- node_plot$PlotX[match(as.character(edge_plot$To), as.character(node_plot$Node))]
+      edge_plot$PlotYEnd <- node_plot$PlotY[match(as.character(edge_plot$To), as.character(node_plot$Node))]
+    }
     if (isTRUE(draw)) {
       if (!requireNamespace("igraph", quietly = TRUE)) {
         message("`plot(..., type = \"network\")` requires the `igraph` package for drawing. Returning plot data only.")
       } else {
         apply_plot_preset(style)
-        vertices <- node_order
-        row.names(vertices) <- vertices$Node
-        g <- igraph::graph_from_data_frame(
-          d = edge_order[, c("From", "To", "Weight"), drop = FALSE],
-          directed = FALSE,
-          vertices = vertices
-        )
-        facet_levels <- sort(unique(as.character(igraph::V(g)$Facet)))
-        facet_cols <- stats::setNames(
-          grDevices::hcl.colors(max(3L, length(facet_levels)), palette = "Dark 3")[seq_along(facet_levels)],
-          facet_levels
-        )
         igraph::V(g)$color <- facet_cols[as.character(igraph::V(g)$Facet)]
         igraph::V(g)$size <- ifelse(as.character(igraph::V(g)$Facet) == "Person", 4.5, 7)
         igraph::V(g)$label <- if (igraph::vcount(g) <= 80L) as.character(igraph::V(g)$Level) else NA_character_
@@ -5296,7 +5412,6 @@ draw_subset_connectivity_bundle <- function(x,
         igraph::V(g)$frame.color <- grDevices::adjustcolor(style$foreground, alpha.f = 0.35)
         igraph::E(g)$width <- pmax(0.4, log1p(as.numeric(igraph::E(g)$Weight)))
         igraph::E(g)$color <- grDevices::adjustcolor(style$grid, alpha.f = 0.55)
-        layout <- igraph::layout_with_fr(g, weights = sqrt(pmax(1, as.numeric(igraph::E(g)$Weight))))
         graphics::plot(
           g,
           layout = layout,
@@ -5321,6 +5436,9 @@ draw_subset_connectivity_bundle <- function(x,
         plot = "network",
         nodes = as.data.frame(node_order, stringsAsFactors = FALSE),
         edges = as.data.frame(edge_order, stringsAsFactors = FALSE),
+        layout = as.data.frame(layout_tbl, stringsAsFactors = FALSE),
+        node_plot = as.data.frame(node_plot, stringsAsFactors = FALSE),
+        edge_plot = as.data.frame(edge_plot, stringsAsFactors = FALSE),
         title = main %||% "Connectivity network",
         subtitle = "Facet-level co-observation network; edge width is observation count",
         legend = new_plot_legend(
@@ -6538,6 +6656,27 @@ plot.mfrm_bundle <- function(x, y = NULL, type = NULL, ...) {
     return(invisible(draw_subset_connectivity_bundle(
       x,
       type = ptype,
+      draw = draw,
+      main = main,
+      palette = palette,
+      label_angle = label_angle,
+      preset = preset
+    )))
+  }
+  if (inherits(x, "mfrm_network_review")) {
+    draw <- if ("draw" %in% names(dots)) isTRUE(dots$draw) else TRUE
+    ptype <- if (is.null(type)) "network" else as.character(type[1])
+    metric <- dots$metric %||% NULL
+    top_n <- if ("top_n" %in% names(dots)) dots$top_n else 20L
+    main <- dots$main %||% NULL
+    palette <- dots$palette %||% NULL
+    label_angle <- as.numeric(dots$label_angle %||% 45)
+    preset <- dots$preset %||% "standard"
+    return(invisible(draw_network_review_bundle(
+      x,
+      type = ptype,
+      metric = metric,
+      top_n = top_n,
       draw = draw,
       main = main,
       palette = palette,

@@ -803,6 +803,34 @@ test_that("descriptive and anchor-review helpers run", {
   expect_true(any(aud$issue_counts$Issue == "duplicate_anchors" & aud$issue_counts$N > 0))
   expect_true(any(aud$issue_counts$Issue == "unknown_anchor_facets" & aud$issue_counts$N > 0))
   expect_true(any(aud$issue_counts$Issue == "unknown_anchor_levels" & aud$issue_counts$N > 0))
+  expect_true(any(grepl("common constrained anchor/group-anchor levels", aud$recommendations, fixed = TRUE)))
+
+  group_only <- mfrmr::review_mfrm_anchors(
+    data = toy,
+    person = "Person",
+    facets = c("Rater", "Criterion"),
+    score = "Score",
+    group_anchors = data.frame(
+      Facet = c("Rater", "Rater"),
+      Level = c("R2", "R3"),
+      Group = c("G1", "G1"),
+      GroupValue = c(0, 0),
+      stringsAsFactors = FALSE
+    ),
+    min_common_anchors = 4,
+    min_obs_per_element = 20,
+    min_obs_per_category = 8
+  )
+  rater_group_only <- group_only$facet_summary[
+    group_only$facet_summary$Facet == "Rater",
+    ,
+    drop = FALSE
+  ]
+  expect_equal(rater_group_only$AnchoredLevels[1], 0L)
+  expect_gt(rater_group_only$GroupedLevels[1], 0L)
+  expect_true(any(grepl("common constrained anchor/group-anchor levels",
+                        group_only$recommendations,
+                        fixed = TRUE)))
 
   expect_error(
     mfrmr::fit_mfrm(

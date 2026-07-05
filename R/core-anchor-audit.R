@@ -135,14 +135,25 @@ build_anchor_recommendations <- function(facet_summary,
   }
 
   if (!is.null(facet_summary) && nrow(facet_summary) > 0) {
+    constrained_levels <- if ("ConstrainedLevels" %in% names(facet_summary)) {
+      facet_summary$ConstrainedLevels
+    } else {
+      suppressWarnings(as.integer(facet_summary$AnchoredLevels %||% 0L)) +
+        suppressWarnings(as.integer(facet_summary$GroupedLevels %||% 0L))
+    }
     link_tbl <- facet_summary |>
-      filter(Facet != "Person", AnchoredLevels > 0, AnchoredLevels < min_common_anchors)
+      mutate(.CommonConstrainedLevels = constrained_levels) |>
+      filter(
+        Facet != "Person",
+        .CommonConstrainedLevels > 0,
+        .CommonConstrainedLevels < min_common_anchors
+      )
     if (nrow(link_tbl) > 0) {
       rec <- c(
         rec,
         paste0(
           "FACETS linking guideline: consider >= ", min_common_anchors,
-          " common anchor levels per linking facet. Low-anchor facets: ",
+          " common constrained anchor/group-anchor levels per linking facet. Low-anchor facets: ",
           paste(link_tbl$Facet, collapse = ", "), "."
         )
       )

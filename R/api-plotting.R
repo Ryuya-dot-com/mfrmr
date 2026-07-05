@@ -2066,6 +2066,173 @@ plot_data_components <- function(x, type = NULL, ...) {
   )
 }
 
+.mfrm_rescale_ggplot_numeric <- function(x, to = c(0.25, 1.8), fallback = NULL) {
+  x <- suppressWarnings(as.numeric(x))
+  if (length(x) == 0L) return(numeric(0))
+  finite <- is.finite(x)
+  if (!any(finite)) {
+    return(rep(fallback %||% mean(to), length(x)))
+  }
+  rng <- range(x[finite], finite = TRUE)
+  out <- rep(fallback %||% mean(to), length(x))
+  if (is.finite(diff(rng)) && diff(rng) > sqrt(.Machine$double.eps)) {
+    out[finite] <- to[1] + (x[finite] - rng[1]) * diff(to) / diff(rng)
+  } else {
+    out[finite] <- fallback %||% mean(to)
+  }
+  out
+}
+
+.mfrm_ggplot_network <- function(payload) {
+  nodes <- as.data.frame(payload$node_plot %||% data.frame(),
+                         stringsAsFactors = FALSE)
+  edges <- as.data.frame(payload$edge_plot %||% data.frame(),
+                         stringsAsFactors = FALSE)
+  if (!all(c("PlotX", "PlotY", "NodeColor", "NodeSize") %in% names(nodes))) {
+    stop("Network ggplot conversion requires `node_plot` with PlotX, PlotY, NodeColor, and NodeSize columns.",
+         call. = FALSE)
+  }
+  nodes$PlotX <- suppressWarnings(as.numeric(nodes$PlotX))
+  nodes$PlotY <- suppressWarnings(as.numeric(nodes$PlotY))
+  nodes$NodeSize <- suppressWarnings(as.numeric(nodes$NodeSize))
+  nodes <- nodes[is.finite(nodes$PlotX) & is.finite(nodes$PlotY), , drop = FALSE]
+  if (nrow(nodes) == 0L) {
+    stop("No finite network node coordinates are available for ggplot conversion.",
+         call. = FALSE)
+  }
+  if (!"NodeLabel" %in% names(nodes)) {
+    label_col <- intersect(c("Level", "Rater", "Node"), names(nodes))[1]
+    nodes$NodeLabel <- if (!is.na(label_col)) as.character(nodes[[label_col]]) else ""
+  }
+  nodes$NodeLabel <- as.character(nodes$NodeLabel)
+  nodes$NodeLabel[is.na(nodes$NodeLabel)] <- ""
+  nodes$.NodeSizeGG <- .mfrm_rescale_ggplot_numeric(
+    nodes$NodeSize,
+    to = c(2.5, 5.8),
+    fallback = 4.2
+  )
+
+  if ("Facet" %in% names(nodes)) {
+    nodes$NodeGroup <- as.character(nodes$Facet)
+  } else if ("SeverityIndex" %in% names(nodes)) {
+    sev <- suppressWarnings(as.numeric(nodes$SeverityIndex))
+    nodes$NodeGroup <- ifelse(
+      is.finite(sev) & sev > 0,
+      "More severe",
+      ifelse(is.finite(sev) & sev < 0, "More lenient", "Balanced")
+    )
+  } else {
+    nodes$NodeGroup <- "Rater"
+  }
+  nodes$NodeGroup[is.na(nodes$NodeGroup) | !nzchar(nodes$NodeGroup)] <- "Node"
+  group_colours <- stats::setNames(
+    as.character(nodes$NodeColor),
+    nodes$NodeGroup
+  )
+  group_colours <- group_colours[!duplicated(names(group_colours))]
+
+  edges_ok <- all(c("PlotX", "PlotY", "PlotXEnd", "PlotYEnd", "EdgeWidth") %in%
+                    names(edges))
+  if (nrow(edges) > 0L && edges_ok) {
+    edge_cols <- c("PlotX", "PlotY", "PlotXEnd", "PlotYEnd", "EdgeWidth")
+    edges[edge_cols] <- lapply(edges[edge_cols], function(z) {
+      suppressWarnings(as.numeric(z))
+    })
+    edges <- edges[
+      is.finite(edges$PlotX) & is.finite(edges$PlotY) &
+        is.finite(edges$PlotXEnd) & is.finite(edges$PlotYEnd),
+      ,
+      drop = FALSE
+    ]
+    edges$.EdgeWidthGG <- .mfrm_rescale_ggplot_numeric(
+      edges$EdgeWidth,
+      to = c(0.25, 1.45),
+      fallback = 0.55
+    )
+  } else {
+    edges <- data.frame()
+  }
+  if (nrow(edges) > 0L && !"EdgeColor" %in% names(edges)) {
+    edges$EdgeColor <- "#64748b"
+  }
+
+  directed <- isTRUE(payload$directed %||% FALSE)
+  p <- ggplot2::ggplot()
+  if (nrow(edges) > 0L) {
+    segment_args <- list(
+      data = edges,
+      mapping = ggplot2::aes(
+        x = .data$PlotX,
+        y = .data$PlotY,
+        xend = .data$PlotXEnd,
+        yend = .data$PlotYEnd,
+        colour = .data$EdgeColor,
+        linewidth = .data$.EdgeWidthGG
+      ),
+      inherit.aes = FALSE,
+      alpha = 0.72,
+      lineend = "round"
+    )
+    if (isTRUE(directed)) {
+      segment_args$arrow <- grid::arrow(
+        length = grid::unit(0.11, "inches"),
+        type = "closed"
+      )
+    }
+    p <- p + do.call(ggplot2::geom_segment, segment_args)
+  }
+  p <- p +
+    ggplot2::geom_point(
+      data = nodes,
+      ggplot2::aes(
+        x = .data$PlotX,
+        y = .data$PlotY,
+        fill = .data$NodeGroup,
+        size = .data$.NodeSizeGG
+      ),
+      inherit.aes = FALSE,
+      shape = 21,
+      colour = "grey20",
+      stroke = 0.28,
+      alpha = 0.94
+    )
+  label_nodes <- nodes[nzchar(nodes$NodeLabel), , drop = FALSE]
+  if (nrow(label_nodes) > 0L) {
+    p <- p + ggplot2::geom_text(
+      data = label_nodes,
+      ggplot2::aes(
+        x = .data$PlotX,
+        y = .data$PlotY,
+        label = .data$NodeLabel
+      ),
+      inherit.aes = FALSE,
+      size = 2.6,
+      vjust = -0.85,
+      colour = "grey15",
+      check_overlap = TRUE
+    )
+  }
+  p <- p +
+    ggplot2::scale_colour_identity() +
+    ggplot2::scale_fill_manual(values = group_colours, name = NULL) +
+    ggplot2::scale_size_identity() +
+    ggplot2::scale_linewidth_identity() +
+    ggplot2::coord_equal() +
+    .mfrm_ggplot_theme() +
+    ggplot2::theme(
+      axis.title = ggplot2::element_blank(),
+      axis.text = ggplot2::element_blank(),
+      axis.ticks = ggplot2::element_blank(),
+      panel.grid = ggplot2::element_blank(),
+      legend.position = "bottom"
+    )
+  .mfrm_ggplot_labs(
+    p,
+    payload,
+    fallback = "Network diagnostic"
+  )
+}
+
 .mfrm_ggplot_wright_map <- function(payload) {
   loc <- as.data.frame(payload$locations %||% data.frame(),
                        stringsAsFactors = FALSE)
@@ -2686,7 +2853,7 @@ plot_data_components <- function(x, type = NULL, ...) {
 #' displays, EAP power-sensitivity diagnostics, DIF/DFF summaries and heatmaps,
 #' G-study/D-study planning plots, G-study design checks, simulation
 #' design/recovery/signal handoff plots, category and information curves,
-#' threshold ladders, and
+#' threshold ladders, network plot payloads, and
 #' estimate/profile rows. When a payload cannot be inferred safely, use
 #' [plot_data_components()] and [plot_data()] to build a custom figure directly.
 #'
@@ -2734,6 +2901,10 @@ plot_data_components <- function(x, type = NULL, ...) {
 #' )
 #' as_ggplot(plot_dif_summary(dff, draw = FALSE))
 #' as_ggplot(plot_dif_heatmap(dff, metric = "obs_exp", draw = FALSE))
+#' if (requireNamespace("igraph", quietly = TRUE)) {
+#'   review <- build_mfrm_network_review(fit, facets = "Rater")
+#'   as_ggplot(plot(review, type = "network", draw = FALSE))
+#' }
 #'
 #' rec <- evaluate_mfrm_recovery(reps = 1, maxit = 30)
 #' as_ggplot(plot(rec, type = "summary", metric = "rmse", draw = FALSE))
@@ -2835,6 +3006,11 @@ as_ggplot.mfrm_plot_data <- function(x, type = NULL, component = NULL, ...) {
   }
   if (x$name %in% c("bubble", "fit_pathway") && is.null(component)) {
     return(.mfrm_ggplot_bubble(payload))
+  }
+  if (x$name %in% c("subset_connectivity", "rater_network") &&
+      identical(as.character(payload$plot %||% ""), "network") &&
+      is.null(component)) {
+    return(.mfrm_ggplot_network(payload))
   }
   if (x$name %in% c(
     "category_characteristic_curves",

@@ -182,14 +182,15 @@ estimates are available, \code{build_visual_summaries()} also exposes
 \item Optional \code{ggplot2} handoff:
 \code{\link[=as_ggplot]{as_ggplot()}} converts common \code{mfrm_plot_data} shapes, including Wright
 maps, pathway maps, fit-pathway displays, DIF/DFF summaries and heatmaps,
-category/information curves, threshold ladders, and estimate/profile rows,
-into editable
-\code{ggplot} objects. Wright maps retain the person-distribution band and
-facet/step rails; pathway maps retain dominant-category strips,
-thresholds, endpoint labels, and fit annotations. CCC converters also
-retain empirical overlay points when available and can map a \code{GPCM}
-slope/discrimination column to line width, alpha, or colour. This does
-not replace the base-R default renderer.
+category/information curves, threshold ladders, network plot payloads, and
+estimate/profile rows, into editable \code{ggplot} objects. Wright maps retain
+the person-distribution band and facet/step rails; pathway maps retain
+dominant-category strips, thresholds, endpoint labels, and fit
+annotations. Network plots use the draw-free \code{layout}, \code{node_plot}, and
+\code{edge_plot} payloads; layout positions remain graphical coordinates, not
+model estimates. CCC converters also retain empirical overlay points when
+available and can map a \code{GPCM} slope/discrimination column to line width,
+alpha, or colour. This does not replace the base-R default renderer.
 \item 3D-ready exploratory handoff:
 \code{plot(fit, type = "ccc_surface", draw = FALSE)} returns a
 theta-by-category-by-probability \code{mfrm_plot_data} object. This is not a
@@ -389,7 +390,9 @@ inspect \code{"Visual Displays"} rows -> chosen public plot helper.
 \item Linking review:
 \code{\link[=subset_connectivity_report]{subset_connectivity_report()}} -> \code{plot(..., type = "design_matrix")} /
 \code{\link[=mfrm_network_analysis]{mfrm_network_analysis()}} / \code{\link[=build_mfrm_network_review]{build_mfrm_network_review()}} /
-\code{plot(..., type = "network")} -> \code{\link[=plot_anchor_drift]{plot_anchor_drift()}}.
+inspect \code{assumption_checks}, \code{visualization_map}, and
+\code{report_templates} -> \code{plot(..., type = "network")} ->
+\code{\link[=plot_anchor_drift]{plot_anchor_drift()}}.
 \item Interaction review:
 \code{\link[=estimate_bias]{estimate_bias()}} -> \code{\link[=plot_bias_interaction]{plot_bias_interaction()}} ->
 \code{\link[=reporting_checklist]{reporting_checklist()}}.
@@ -435,6 +438,19 @@ p_marg$data$preset
 
 wright <- plot(fit, type = "wright", draw = FALSE, preset = "publication")
 wright$data$preset
+
+if (requireNamespace("igraph", quietly = TRUE)) {
+  net_review <- build_mfrm_network_review(fit, diagnostics = diag,
+                                          facets = "Rater")
+  net_review$assumption_checks[, c("Check", "Status", "NextStep")]
+  net_review$report_templates[, c("APASection", "Text", "Avoid")]
+  p_net <- plot(net_review, type = "network", draw = FALSE)
+  head(p_net$data$node_plot)
+  head(p_net$data$edge_plot)
+  if (requireNamespace("ggplot2", quietly = TRUE)) {
+    as_ggplot(p_net)
+  }
+}
 
 pca <- analyze_residual_pca(diag, mode = "overall")
 scree <- plot_residual_pca(pca, plot_type = "scree", draw = FALSE, preset = "publication")
