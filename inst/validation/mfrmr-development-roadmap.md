@@ -1,10 +1,17 @@
 # mfrmr development roadmap
 
-This roadmap keeps the package-development sequence aligned with the immediate
-0.2.2 release goal and the post-release research/software extensions that are
-likely to matter most to users. It is a planning artifact, not a public support
-promise. Public support boundaries remain the package help pages,
-`gpcm_capability_matrix()`, and release notes.
+Status update: this bundled file is a historical/public validation artifact as
+of 2026-07-09. Active package-development sequencing is controlled by the
+consolidated roadmap outside the public package copy. Keep this file only for
+release-evidence context and update it when public validation wording must stay
+synchronized with the consolidated roadmap.
+
+Historically, this roadmap kept the package-development sequence aligned with
+the immediate 0.2.2 release goal and the post-release research/software
+extensions that seemed likely to matter most to users at that time. It is a
+validation-history artifact rather than an analysis guide. User-facing support
+boundaries remain the package help pages, `gpcm_capability_matrix()`, and
+release notes.
 
 ## Guiding priorities
 
@@ -80,7 +87,7 @@ Implementation rules:
   blocked until the design audit, estimator, simulations, and examples cover
   the same pattern.
 
-## Release sequence
+## Historical release sequence
 
 ### 0.2.2: bounded GPCM safe-use release
 
