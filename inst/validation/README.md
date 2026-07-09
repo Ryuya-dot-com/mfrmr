@@ -5,10 +5,19 @@ artifacts. They are included with the package so that release decisions can be
 reconstructed from source files, check logs, and documented validation
 criteria.
 
-These files are not user-facing analysis functions. They support release
-review, CRAN submission preparation, and future maintenance. Public release
-notes stay in `NEWS.md`; implementation-level evidence, source-grounding, and
-long-run validation details belong here.
+Most package users can ignore this directory. Start with `README.md`,
+`?fit_mfrm`, `?mfrm_results`, `?mfrm_report`, and `mfrmr_output_guide()` for
+analysis guidance. The files here support package release checks and
+maintenance review; public release notes stay in `NEWS.md`.
+
+## Evidence types
+
+| Type | What it is for |
+| --- | --- |
+| Gate helper | A script that checks whether version labels, terminology, evidence files, and check logs still agree. |
+| Fixed/status artifact | A compact Markdown or CSV record of evidence from a seeded or previously reviewed workflow. |
+| Optional stress helper | A script for slower validation runs that should not run during ordinary CRAN checks. |
+| Scope excerpt | A bounded roadmap or capability note used to keep unsupported claims out of public helpers. |
 
 ## Primary files
 
@@ -25,14 +34,13 @@ long-run validation details belong here.
 - `release-evidence-checklist-0.2.2.csv`: structured checklist used by the
   readiness helper and by manual release review for the current release. Older
   checklists are retained as historical release evidence.
-- `mfrmr-development-roadmap.md`: broad development roadmap separating the
-  0.2.2 bounded-`GPCM` release path from post-0.2.2 work such as special-case
-  multivariate G-theory, bounded-`GPCM` evidence strengthening, possible
-  package/software article preparation, and later heavy-backend or
-  multidimensional branches.
-- `gpcm-post-0.2.2-roadmap.md`: maintenance roadmap for bounded-`GPCM`
-  surfaces that remain caveated, `blocked`, or `deferred` after 0.2.2,
-  including score-side review, report/QC bundles, design and screening
+- `mfrmr-development-roadmap.md`: historical public validation artifact for
+  the 0.2.2 bounded-`GPCM` release path and post-0.2.2 planning context.
+  Active package-development sequencing is kept in the consolidated roadmap
+  outside the public package copy.
+- `gpcm-post-0.2.2-roadmap.md`: bundled validation excerpt for
+  bounded-`GPCM` surfaces that remain caveated, `blocked`, or `deferred` after
+  0.2.2, including score-side review, report/QC bundles, design and screening
   operating characteristics, linking synthesis, posterior predictive checks,
   and heavy-backend extensions.
 - `external-parameter-recovery-simulation-0.2.0.md`: compact review of the
@@ -117,7 +125,7 @@ review can compare local and CI evidence instead of relying only on the final
 job status.
 
 The readiness helper checks the workflow contract from source. It does not
-replace reading the uploaded CI artifacts before release submission. The
+replace reading the uploaded CI artifacts before release. The
 external parameter-recovery summary is an additional source-grounded review
 artifact, not a substitute for rerunning the package tests or the optional
 long-running validation scripts.

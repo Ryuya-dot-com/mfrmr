@@ -1,8 +1,8 @@
 # Post-0.2.1 bounded GPCM roadmap
 
 This note tracks bounded-`GPCM` work that remains caveated, blocked, or
-deferred after the 0.2.1 release boundary. It is a maintenance roadmap, not a
-public support promise. The current public contract remains
+deferred after the 0.2.1 release boundary. It is a validation evidence
+artifact rather than an analysis guide. The current user-facing contract remains
 `gpcm_capability_matrix()`.
 
 ## Current release boundary
