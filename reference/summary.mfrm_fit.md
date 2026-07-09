@@ -199,8 +199,8 @@ s$targeting
 #> # A tibble: 2 × 7
 #>   Facet     PersonMean FacetMean Targeting PersonSD FacetSD SpreadRatio
 #>   <chr>          <dbl>     <dbl>     <dbl>    <dbl>   <dbl>       <dbl>
-#> 1 Criterion     0.0214  0           0.0214     1.04   0.290        3.59
-#> 2 Rater         0.0214 -6.94e-18    0.0214     1.04   0.316        3.30
+#> 1 Criterion     0.0214         0    0.0214     1.04   0.290        3.59
+#> 2 Rater         0.0214         0    0.0214     1.04   0.316        3.30
 # Look for: |Targeting| < ~0.5 logits across non-person facets is
 #   comfortable. Larger absolute values mean the test is systematically
 #   easier or harder than the person sample. SpreadRatio > 2 means

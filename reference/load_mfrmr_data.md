@@ -165,8 +165,8 @@ summary(fit)
 #>    P015   -2.179 NA    none
 #>    P045   -1.821 NA    none
 #>    P008   -1.665 NA    none
+#>    P006   -1.524 NA    none
 #>    P026   -1.524 NA    none
-#>    P046   -1.524 NA    none
 #> 
 #> Paper reporting map
 #>                                Area CoveredHere

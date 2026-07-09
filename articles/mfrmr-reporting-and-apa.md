@@ -222,7 +222,7 @@ cat(apa$report_text)
 #> under the marginal person distribution, and residual-based fit statistics are evaluated at
 #> these EAP measures rather than at joint maximum likelihood (JMLE) estimates. Recommended
 #> use for this precision profile: Use for primary reporting of SE, CI, and reliability in
-#> this package.. Optimization converged after 73 function evaluations and 12 gradient
+#> this package.. Optimization converged after 74 function evaluations and 12 gradient
 #> evaluations (LogLik = -903.081, AIC = 1822.162, BIC = 1859.312). Terminal gradient sup-norm
 #> = 0.2906 (review threshold = 0.0001). Optimizer returned convergence code 0. Constraint
 #> settings: noncenter facet = Person; anchored levels = 0 (facets: none); group anchors = 0

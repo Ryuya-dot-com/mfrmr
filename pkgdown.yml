@@ -1,5 +1,5 @@
 pandoc: 3.8.3
-pkgdown: 2.2.0
+pkgdown: 2.2.1
 pkgdown_sha: ~
 articles:
   mfrmr-facets-migration: mfrmr-facets-migration.html
@@ -9,7 +9,7 @@ articles:
   mfrmr-reporting-and-apa: mfrmr-reporting-and-apa.html
   mfrmr-visual-diagnostics: mfrmr-visual-diagnostics.html
   mfrmr-workflow: mfrmr-workflow.html
-last_built: 2026-07-03T05:47Z
+last_built: 2026-07-09T04:34Z
 urls:
   reference: https://ryuya-dot-com.github.io/mfrmr/reference
   article: https://ryuya-dot-com.github.io/mfrmr/articles

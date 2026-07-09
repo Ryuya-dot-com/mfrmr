@@ -178,12 +178,12 @@ head(export_toy$written_files)
 #> 5        summary_plot_map    csv
 #> 6          summary_triage    csv
 #>                                                                              Path
-#> 1        /tmp/RtmpUQ0HRa/mfrmr-workflow-export/mfrmr_results_summary_overview.csv
-#> 2          /tmp/RtmpUQ0HRa/mfrmr-workflow-export/mfrmr_results_summary_status.csv
-#> 3 /tmp/RtmpUQ0HRa/mfrmr-workflow-export/mfrmr_results_summary_component_index.csv
-#> 4     /tmp/RtmpUQ0HRa/mfrmr-workflow-export/mfrmr_results_summary_table_index.csv
-#> 5        /tmp/RtmpUQ0HRa/mfrmr-workflow-export/mfrmr_results_summary_plot_map.csv
-#> 6          /tmp/RtmpUQ0HRa/mfrmr-workflow-export/mfrmr_results_summary_triage.csv
+#> 1        /tmp/RtmpcbSNf6/mfrmr-workflow-export/mfrmr_results_summary_overview.csv
+#> 2          /tmp/RtmpcbSNf6/mfrmr-workflow-export/mfrmr_results_summary_status.csv
+#> 3 /tmp/RtmpcbSNf6/mfrmr-workflow-export/mfrmr_results_summary_component_index.csv
+#> 4     /tmp/RtmpcbSNf6/mfrmr-workflow-export/mfrmr_results_summary_table_index.csv
+#> 5        /tmp/RtmpcbSNf6/mfrmr-workflow-export/mfrmr_results_summary_plot_map.csv
+#> 6          /tmp/RtmpcbSNf6/mfrmr-workflow-export/mfrmr_results_summary_triage.csv
 #>   Note
 #> 1     
 #> 2     
@@ -1569,10 +1569,10 @@ summary(recovery)$recovery_summary[, c("ParameterType", "Facet", "RMSE", "Bias")
 #> # A tibble: 4 × 4
 #>   ParameterType Facet      RMSE      Bias
 #>   <chr>         <chr>     <dbl>     <dbl>
-#> 1 facet         Criterion 0.151  1.73e-18
+#> 1 facet         Criterion 0.151 -3.47e-18
 #> 2 facet         Rater     0.161  0       
-#> 3 person        Person    0.480  6.70e-18
-#> 4 step          Common    0.200 -1.39e-17
+#> 3 person        Person    0.480 -8.56e-18
+#> 4 step          Common    0.200  4.62e-18
 plot(recovery, type = "summary", metric = "rmse", draw = FALSE)$data$plot_table
 #> # A tibble: 4 × 22
 #>   ParameterType Facet     ComparisonScale  Rows  Reps ComparableRate MeanTruth
@@ -1710,10 +1710,10 @@ metric_plot$data$plot_table
 #> 3         facet     Rater           logit     facet / Rater / logit   rmse
 #> 4         facet Criterion           logit facet / Criterion / logit   rmse
 #>       Value Limit Status OverallStatus StatusRank AttentionOrder
-#> 1 0.4799605     1     ok        review          1              1
-#> 2 0.1998507     1     ok        review          1              2
-#> 3 0.1608330     1     ok        review          1              3
-#> 4 0.1511157     1     ok        review          1              4
+#> 1 0.4799616     1     ok        review          1              1
+#> 2 0.1998446     1     ok        review          1              2
+#> 3 0.1608361     1     ok        review          1              3
+#> 4 0.1511768     1     ok        review          1              4
 metric_plot$data$guidance
 #> [1] "This metric plot is sorted by status priority, then by RMSE."                                     
 #> [2] "Inspect concern/review rows before ok rows."                                                      
