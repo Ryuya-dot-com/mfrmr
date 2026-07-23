@@ -644,7 +644,7 @@ mfrm_results_plot_map <- function(has_fit, has_diagnostics, tables, components) 
       "plot(res, type = 'wright')",
       "plot(res, type = 'fit')",
       "plot(res, type = 'pathway')",
-      "plot(res, type = 'fit_pathway')",
+      "plot(res, type = 'fit_pathway', fit_stat = 'Infit', include_person = TRUE, top_n_person = 12, person_labels = 'none', facet_labels = 'flagged')",
       "plot(res, type = 'qc')",
       "plot(res, type = 'category')",
       "plot(res, type = 'anchors')",
@@ -655,7 +655,7 @@ mfrm_results_plot_map <- function(has_fit, has_diagnostics, tables, components) 
       "Required first fitted-scale artifact: persons, facet levels, and thresholds on the shared logit ruler.",
       "Model-level visual bundle from plot.mfrm_fit().",
       "Expected-score pathway map from plot.mfrm_fit().",
-      "Infit/Outfit-versus-measure pathway with optional person rows and measure uncertainty.",
+      "Infit/Outfit-versus-measure pathway with selected person rows and measure uncertainty.",
       "Quality-control dashboard from plot_qc_dashboard().",
       "Rating-scale/category plot when rating_scale_table() is available.",
       "Anchor-review plot from the stored fit_mfrm() anchor review.",
@@ -836,7 +836,7 @@ mfrm_results_triage <- function(status, plot_map, components, table_index,
     if (qc_available) "ok" else "not_available",
     if (qc_available) "qc_plot_available" else "qc_plot_missing",
     if (qc_available) "plot(res, type = \"qc\", preset = \"publication\")" else "summary(res)$plot_map",
-    if (qc_available) "The QC dashboard route is available for first visual review." else "QC plotting is unavailable for this result object."
+    if (qc_available) "The QC dashboard route is available as a focused follow-up after the required Wright-map review." else "QC plotting is unavailable for this result object."
   )
 
   add(
@@ -1016,7 +1016,7 @@ mfrm_results_next_actions <- function(status, plot_map, components, table_index,
       5L,
       "Fit pathway",
       "Review Infit against measure, including selected person rows when useful.",
-      "plot(res, type = \"fit_pathway\", fit_stat = \"Infit\", include_person = TRUE, preset = \"publication\")",
+      "plot(res, type = \"fit_pathway\", fit_stat = \"Infit\", include_person = TRUE, top_n_person = 12, person_labels = \"none\", facet_labels = \"flagged\", preset = \"publication\")",
       "This follow-up separates measure uncertainty from fit displacement while keeping person inclusion explicit."
     )
   }
@@ -4582,7 +4582,8 @@ mfrm_results_export_index_html <- function(prefix, written_files, plot_errors) {
     "<ol>",
     paste0("<li><strong>Fit and result summary:</strong> ", link("results_html", "open the results summary"), ".</li>"),
     paste0("<li><strong>Required scale display:</strong> ", link("plot_wright", "open the Wright map PNG"), ".</li>"),
-    paste0("<li><strong>Diagnostics and follow-up plots:</strong> use the plot files and summary triage; do not turn a single flag into an exclusion rule.</li>"),
+    paste0("<li><strong>Focused fit pathway:</strong> ", link("plot_fit_pathway", "open the Infit-versus-measure PNG"), "; the export includes selected person rows.</li>"),
+    paste0("<li><strong>Other diagnostics:</strong> use the remaining plot files and summary triage; do not turn a single flag into an exclusion rule.</li>"),
     paste0("<li><strong>Report readiness:</strong> ", link("report_html", "open the report"), ".</li>"),
     paste0("<li><strong>Reproducibility:</strong> ", link("replay_code", "review the replay script"), " and ", link("written_files", "the written-files manifest"), ".</li>"),
     "</ol>",
@@ -4702,7 +4703,9 @@ mfrm_results_export_add_written <- function(written_files, component, format, pa
 #' recorded in the returned `plot_errors` table rather than stopping the export.
 #' The `"starter"` preset is the recommended final handoff because it always
 #' requests the Wright map in addition to the result summary, report, replay
-#' script, and manifest.
+#' script, and manifest. Its Infit pathway includes a bounded selection of
+#' person rows so person fit can be reviewed without replacing the required
+#' Wright-map first screen.
 #'
 #' @return An `mfrm_results_export` object with `summary`, `written_files`,
 #'   `plot_errors`, and zip status fields.
@@ -4902,7 +4905,15 @@ export_mfrm_results <- function(x,
       result <- tryCatch(
         {
           grDevices::png(filename = plot_path, width = plot_width, height = plot_height, res = plot_res)
-          plot(x, type = type)
+          plot_args <- list(x = x, type = type)
+          if (identical(type, "fit_pathway")) {
+            plot_args$fit_stat <- "Infit"
+            plot_args$include_person <- TRUE
+            plot_args$top_n_person <- 12
+            plot_args$person_labels <- "none"
+            plot_args$facet_labels <- "flagged"
+          }
+          do.call(plot, plot_args)
           TRUE
         },
         error = function(e) e,
@@ -4913,7 +4924,16 @@ export_mfrm_results <- function(x,
         }
       )
       if (isTRUE(result) && file.exists(plot_path)) {
-        add_written(paste0("plot_", tag), "png", plot_path)
+        add_written(
+          paste0("plot_", tag),
+          "png",
+          plot_path,
+          note = if (identical(type, "fit_pathway")) {
+            "Infit-versus-measure pathway with up to 12 selected person rows included; IDs remain in the result data."
+          } else {
+            ""
+          }
+        )
       } else {
         if (file.exists(plot_path)) unlink(plot_path)
         plot_errors <- rbind(
@@ -5137,7 +5157,9 @@ export_mfrm_results <- function(x,
 #' 6. Use `export_mfrm_results(res, preset = "starter")` to write the Wright
 #'    map, CSV, report, RDS, replay, and
 #'    manifest files for handoff or review.
-#' 7. Use `plot(res, type = "fit_pathway", include_person = TRUE)` or
+#' 7. Use `plot(res, type = "fit_pathway", include_person = TRUE,
+#'    top_n_person = 12, person_labels = "none", facet_labels = "flagged")`
+#'    or
 #'    `plot(res, type = "qc")` for focused visual follow-up.
 #' 8. Optionally inspect the same result with [launch_mfrmr_viewer()] in an
 #'    interactive session.

@@ -135,7 +135,7 @@ test_that("FACETS-style Wright payload is complete and explicitly visual", {
   expect_identical(fs$settings$RowsPerLogit, 4L)
   expect_equal(fs$settings$PersonsPerStar, 2)
   expect_equal(fs$settings$StarsPerPerson, 0.5)
-  expect_match(fs$settings$VisualParity, "not a claim", fixed = TRUE)
+  expect_match(fs$settings$VisualCorrespondence, "not a claim", fixed = TRUE)
 })
 
 test_that("FACETS-style headers and transitions respect fit metadata", {

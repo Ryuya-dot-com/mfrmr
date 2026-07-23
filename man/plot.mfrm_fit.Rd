@@ -26,6 +26,7 @@
   person_subset = NULL,
   top_n_person = 30,
   person_labels = c("flagged", "all", "none"),
+  facet_labels = c("all", "flagged", "none"),
   panel = c("combined", "facet"),
   fit_range = c(0.5, 1.5),
   zstd_cut = 2,
@@ -70,7 +71,9 @@ category-surface plot data.}
 \item{label_angle}{Rotation angle for x-axis labels where applicable.}
 
 \item{show_ci}{If \code{TRUE}, add approximate confidence intervals when
-available.}
+available. The formal default is \code{FALSE}; \code{type = "fit_pathway"} is the
+exception and displays intervals when this argument is omitted. Pass
+\code{show_ci = FALSE} explicitly to suppress them there.}
 
 \item{ci_level}{Confidence level used when \code{show_ci = TRUE}.}
 
@@ -114,6 +117,10 @@ by distance from expected fit. Use \code{Inf} for all selected persons.}
 
 \item{person_labels}{Person-label policy for a fit pathway: \code{"flagged"}
 (default), \code{"all"}, or \code{"none"}.}
+
+\item{facet_labels}{Facet-level label policy for a fit pathway: \code{"all"}
+(default), \code{"flagged"}, or \code{"none"}. This changes drawn labels only;
+all retained facet rows remain in the draw-free table.}
 
 \item{panel}{Fit-pathway layout: \code{"combined"} (distinguish persons by
 shape) or \code{"facet"} (one base-graphics panel per facet).}

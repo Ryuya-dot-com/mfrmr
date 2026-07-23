@@ -158,7 +158,8 @@ analysis archive is needed.
 \item Use \code{export_mfrm_results(res, preset = "starter")} to write the Wright
 map, CSV, report, RDS, replay, and
 manifest files for handoff or review.
-\item Use \code{plot(res, type = "fit_pathway", include_person = TRUE)} or
+\item Use \code{plot(res, type = "fit_pathway", include_person = TRUE, top_n_person = 12, person_labels = "none", facet_labels = "flagged")}
+or
 \code{plot(res, type = "qc")} for focused visual follow-up.
 \item Optionally inspect the same result with \code{\link[=launch_mfrmr_viewer]{launch_mfrmr_viewer()}} in an
 interactive session.

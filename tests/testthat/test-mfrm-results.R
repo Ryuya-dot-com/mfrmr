@@ -36,6 +36,14 @@ test_that("mfrm_results builds a comprehensive object from a fitted model", {
   expect_true(any(grepl("mfrm_results", sx$reproducible_code$Code)))
   expect_true(any(sx$plot_map$Type == "wright" & sx$plot_map$RequiredArtifact))
   expect_true(any(sx$plot_map$Type == "fit_pathway" & sx$plot_map$Available))
+  expect_true(any(sx$plot_map$Type == "fit_pathway" &
+                    grepl("include_person = TRUE", sx$plot_map$Route, fixed = TRUE)))
+  expect_true(any(sx$plot_map$Type == "fit_pathway" &
+                    grepl("top_n_person = 12", sx$plot_map$Route, fixed = TRUE)))
+  expect_true(any(sx$plot_map$Type == "fit_pathway" &
+                    grepl("person_labels = 'none'", sx$plot_map$Route, fixed = TRUE)))
+  expect_true(any(sx$plot_map$Type == "fit_pathway" &
+                    grepl("facet_labels = 'flagged'", sx$plot_map$Route, fixed = TRUE)))
   expect_true(any(sx$next_actions$Area == "Wright map"))
 
   brief <- summary(res, view = "brief")
@@ -386,12 +394,18 @@ test_that("export_mfrm_results writes lightweight result downloads", {
   expect_true(all(c("report", "plots") %in% starter_export$include))
   expect_true(any(starter_export$written_files$Component == "starter_index"))
   expect_true(any(starter_export$written_files$Component == "plot_wright"))
+  expect_true(any(
+    starter_export$written_files$Component == "plot_fit_pathway" &
+      grepl("person rows included", starter_export$written_files$Note, fixed = TRUE)
+  ))
   index_path <- starter_export$written_files$Path[
     starter_export$written_files$Component == "starter_index"
   ][1]
   index_html <- paste(readLines(index_path, warn = FALSE), collapse = "\n")
   expect_match(index_html, "required first visual artifact", fixed = TRUE)
   expect_match(index_html, "starter_plot_wright.png", fixed = TRUE)
+  expect_match(index_html, "starter_plot_fit_pathway.png", fixed = TRUE)
+  expect_match(index_html, "selected person rows", fixed = TRUE)
 
   report_dir <- file.path(tempdir(), paste0("mfrmr_results_export_report_", sample.int(1e6, 1)))
   report_export <- export_mfrm_results(

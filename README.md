@@ -36,7 +36,8 @@ plot(res, type = "wright", preset = "publication", show_ci = TRUE)
 
 # Focused fit follow-up: Infit on x, measure on y, persons included.
 plot(fit, type = "fit_pathway", diagnostics = res$diagnostics,
-     fit_stat = "Infit", include_person = TRUE,
+     fit_stat = "Infit", include_person = TRUE, top_n_person = 12,
+     person_labels = "none", facet_labels = "flagged",
      preset = "publication")
 
 report <- mfrm_report(res)
@@ -50,6 +51,12 @@ FACETS-style asterisk ruler is needed for visual migration, use
 `plot_wright_unified(fit, renderer = "facets")`; this reproduces the visual
 grammar, while numerical equivalence still requires aligned settings and an
 external FACETS comparison.
+
+The fit-pathway example caps the person layer at 12 and suppresses routine
+point labels so larger designs remain readable. Person IDs and all retained
+coordinates remain in the draw-free `data$table`; switch `person_labels` or
+`facet_labels` to `"all"` when identifying every point is more important than
+a compact first screen.
 
 After that first screen, use `mfrmr_output_guide("public")` to choose the next
 route. Use `mfrmr_output_guide("beginner")` for a gentler map,
@@ -167,6 +174,9 @@ plot(
   diagnostics = res$diagnostics,
   fit_stat = "Infit",
   include_person = TRUE,
+  top_n_person = 12,
+  person_labels = "none",
+  facet_labels = "flagged",
   preset = "publication"
 )
 
@@ -420,7 +430,7 @@ If you want the shortest possible recommendation:
 - Fast exploratory pass only: use `method = "JML"`
 - Preferred `RSM` / `PCM` fit screen: `diagnose_mfrm(..., diagnostic_mode = "both")`
 - Required first visual: `plot(res, type = "wright", preset = "publication", show_ci = TRUE)`
-- Fit follow-up: `plot(fit, type = "fit_pathway", diagnostics = res$diagnostics, fit_stat = "Infit", include_person = TRUE)`
+- Fit follow-up: `plot(fit, type = "fit_pathway", diagnostics = res$diagnostics, fit_stat = "Infit", include_person = TRUE, top_n_person = 12, person_labels = "none", facet_labels = "flagged")`
 - Optional dashboard: `plot_qc_dashboard(..., preset = "publication")`
 - First reporting screen: `report <- mfrm_report(res)` and `summary(report, view = "reader")`
 - Manuscript checklist follow-up: `reporting_checklist()`

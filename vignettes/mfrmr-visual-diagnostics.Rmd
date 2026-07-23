@@ -75,15 +75,15 @@ Interpretation:
 - Wide overlap in confidence whiskers means neighboring levels are not cleanly separated.
 
 The native view above remains the recommended analytic figure because it keeps
-facet/step uncertainty visible. For a FACETS-facing handoff, switch only the
-renderer. The fitted coordinates and SE source do not change.
+facet/step uncertainty visible. For a closer FACETS-facing handoff, switch the
+renderer and leave `show_ci` at its default `FALSE`. The fitted coordinates do
+not change.
 
 ```{r wright-facets-style}
 plot(
   fit,
   type = "wright",
   renderer = "facets",
-  show_ci = TRUE,
   category_labels = c(
     `1` = "Beginning", `2` = "Developing", `3` = "Secure", `4` = "Advanced"
   )
@@ -92,12 +92,13 @@ plot(
 
 This renderer uses one common logit ruler, a `*` person-frequency column,
 signed facet headers, every facet level, and short labeled score-transition
-lines. It is FACETS-style visual parity, not a claim that `mfrmr` and FACETS
+lines. It is FACETS-style visual correspondence, not a claim that `mfrmr` and FACETS
 produce numerically identical estimates. An external FACETS golden output and
 aligned estimator, identification, score, and orientation settings are still
-required for a numerical-equivalence statement. Use `draw = FALSE` and inspect
-the `facets_style` tables when rebuilding the display with ggplot2 or another
-graphics system.
+required for a numerical-equivalence statement. Set `show_ci = TRUE` only when
+you deliberately want a hybrid FACETS-style ruler with the mfrmr uncertainty
+extension. Use `draw = FALSE` and inspect the `facets_style` tables when
+rebuilding the display with ggplot2 or another graphics system.
 
 Next, use the pathway map when you want to see how expected scores progress
 across theta.

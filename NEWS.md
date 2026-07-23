@@ -21,12 +21,23 @@
   with a shared logit ruler, person-frequency stars, signed facet
   headers, all facet levels, labeled score-transition lines, optional rubric
   labels, ruler/extreme controls, and tidy draw-free tables. The existing
-  native renderer and facet-SE whiskers remain the default; the new name and
-  metadata explicitly describe visual parity rather than FACETS numerical
-  equivalence. The native `top_n` compact-display contract remains unchanged,
-  while the FACETS-style payload retains every fitted location. Wright CI data
-  now store absolute endpoints and reuse supplied diagnostic SE metadata
-  without replacing fitted coordinates.
+  native renderer remains the default, while its facet-SE whiskers remain
+  available with `show_ci = TRUE` and are enabled by the canonical results
+  workflow; the new name and metadata explicitly describe visual correspondence
+  rather than FACETS numerical equivalence. The native `top_n` compact-display
+  contract remains unchanged, while the FACETS-style payload retains every
+  fitted location. Wright CI data now store absolute endpoints and reuse
+  supplied diagnostic SE metadata without replacing fitted coordinates.
+- `plot(..., type = "fit_pathway")` adds the requested fit-oriented pathway:
+  Infit (or Outfit) is on the x-axis, measure logits are on the y-axis,
+  screening bands are explicit, and person rows can be included with a
+  bounded selection plus independent person/facet label policies. The
+  existing expected-score-over-theta
+  `type = "pathway"` remains unchanged. Measure SE intervals, engine or
+  FACETS-style ZSTD companions, draw-free data, and optional `as_ggplot()`
+  conversion are available for editable reporting. `plot_bubble()` can also
+  include persons and now sizes bubbles consistently from inverse SE. The
+  starter plot export includes selected person rows in its Infit pathway.
 - The example-execution policy now keeps `R CMD check` time within the
   CRAN incoming budget (the 0.2.1 submission passed the content checks on
   Windows and Debian but tripped the overall-checktime limit on the

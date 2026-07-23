@@ -255,7 +255,7 @@ test_that("facets_positioning_guide prevents FACETS numerical-clone wording", {
   expect_false(any(grepl("\\baudit\\b", unlist(guide), ignore.case = TRUE)))
 })
 
-test_that("FACETS term and visual contracts make visual and numerical parity distinct", {
+test_that("FACETS term and visual contracts separate visual and numerical correspondence", {
   terms <- facets_term_crosswalk()
   expect_true(all(c(
     "FACETSTerm", "mfrmrTerm", "mfrmrRoute", "Relationship", "Boundary"
@@ -273,6 +273,8 @@ test_that("FACETS term and visual contracts make visual and numerical parity dis
                     grepl('renderer = "facets"', visuals$FirstMfrmrRoute, fixed = TRUE)))
   expect_true(any(grepl("uncertainty", visuals$FACETSVisualSurface, fixed = TRUE) &
                     visuals$Status == "mfrmr_extension"))
+  expect_true(any(grepl("ruler_rows", visuals$EditableDataRoute, fixed = TRUE)))
+  expect_false(any(grepl('component = "ruler"', visuals$EditableDataRoute, fixed = TRUE)))
   expect_true(any(grepl("numerical equivalence", visuals$ClaimBoundary, fixed = TRUE)))
 })
 

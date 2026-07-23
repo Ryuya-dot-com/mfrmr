@@ -76,7 +76,9 @@ comparatively slow or require richer graphics devices. Plot failures are
 recorded in the returned \code{plot_errors} table rather than stopping the export.
 The \code{"starter"} preset is the recommended final handoff because it always
 requests the Wright map in addition to the result summary, report, replay
-script, and manifest.
+script, and manifest. Its Infit pathway includes a bounded selection of
+person rows so person fit can be reviewed without replacing the required
+Wright-map first screen.
 }
 \examples{
 \dontrun{

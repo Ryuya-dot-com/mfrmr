@@ -223,9 +223,18 @@ plot(
   diagnostics = res$diagnostics,
   fit_stat = "Infit",
   include_person = TRUE,
+  top_n_person = 12,
+  person_labels = "none",
+  facet_labels = "flagged",
   preset = "publication"
 )
 ```
+
+This full-data figure caps the displayed person layer at 12 and suppresses
+routine point labels to keep the first screen legible. The selected person IDs
+and every retained facet row remain in
+`plot(..., draw = FALSE)$data$table`; use `person_labels = "all"` or
+`facet_labels = "all"` for a point-identification figure.
 
 If you need residual-structure evidence for a final report, you can add residual
 PCA after the initial diagnostic pass. Treat this as an exploratory screen, not

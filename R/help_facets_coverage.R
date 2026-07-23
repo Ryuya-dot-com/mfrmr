@@ -160,12 +160,12 @@ facets_visual_contract <- function() {
       "plot_wright_unified(fit, renderer = \"native\", show_ci = TRUE)",
       "rating_scale_table(); category_structure_report()",
       "plot(fit, type = \"pathway\")",
-      "plot(fit, type = \"fit_pathway\", fit_stat = \"Infit\", include_person = TRUE)",
+      "plot(fit, type = \"fit_pathway\", fit_stat = \"Infit\", include_person = TRUE, top_n_person = 12)",
       "plot_bias_interaction()",
       "facets_output_file_bundle(); plot_data(); as_ggplot()"
     ),
     EditableDataRoute = c(
-      "plot(..., draw = FALSE); plot_data(component = \"ruler\")",
+      "plot(..., draw = FALSE)$data$facets_style$ruler_rows",
       "plot(..., draw = FALSE); plot_data(component = \"locations\")",
       "rating_scale_table(); plot_data()",
       "plot_data(type = \"pathway\")",

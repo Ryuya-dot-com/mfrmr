@@ -368,7 +368,14 @@ test_that("NAMESPACE roxygen contract keeps expected exports and methods", {
     "S3method(plot,mfrm_response_time_review)",
     "S3method(print,mfrm_response_time_review)",
     "S3method(print,summary.mfrm_response_time_review)",
-    "S3method(summary,mfrm_response_time_review)"
+    "S3method(summary,mfrm_response_time_review)",
+    # 0.2.2: optional ggplot2 conversion for draw-free plot payloads.
+    "S3method(as_ggplot,default)",
+    "S3method(as_ggplot,mfrm_design_evaluation)",
+    "S3method(as_ggplot,mfrm_design_evaluation_plot_data)",
+    "S3method(as_ggplot,mfrm_plot_data)",
+    "S3method(as_ggplot,mfrm_signal_detection)",
+    "S3method(as_ggplot,mfrm_signal_detection_plot_data)"
   )
   expect_setequal(s3, expected_s3)
 })

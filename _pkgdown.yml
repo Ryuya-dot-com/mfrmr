@@ -66,6 +66,7 @@ reference:
       - apa_table
       - as_kable
       - as_flextable
+      - as_ggplot
       - plot_data
       - plot_data_components
 

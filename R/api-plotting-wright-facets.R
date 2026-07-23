@@ -424,7 +424,7 @@ build_facets_style_wright_data <- function(fit,
   settings <- tibble::tibble(
     Renderer = "facets",
     WrightStyle = "facets_style",
-    VisualParity = "FACETS Table 6-style layout; not a claim of FACETS numerical equivalence",
+    VisualCorrespondence = "FACETS Table 6-style layout; not a claim of FACETS numerical equivalence",
     LowerLogit = lower,
     UpperLogit = upper,
     RowsPerLogit = rows_per_logit,
@@ -486,7 +486,7 @@ draw_wright_facets_style <- function(plot_data,
   graphics::par(
     mar = c(4.6, 4.8, 5.4, 2.2),
     mgp = c(2.6, 0.8, 0),
-    xpd = NA
+    xpd = FALSE
   )
   graphics::plot(
     NA_real_, NA_real_,
@@ -524,10 +524,15 @@ draw_wright_facets_style <- function(plot_data,
     x_pos <- match(facet_headers$Header[i], headers$Header)
     cell <- facet_cells[facet_cells$Facet == facet_headers$Group[i], , drop = FALSE]
     if (nrow(cell) > 0L) {
+      cell_labels <- vapply(
+        as.character(cell$CellLabel),
+        function(value) paste(strwrap(value, width = 22L), collapse = "\n"),
+        character(1)
+      )
       graphics::text(
         x = x_pos,
         y = cell$RulerValue,
-        labels = cell$CellLabel,
+        labels = cell_labels,
         cex = 0.68,
         col = pal["facet_level"]
       )

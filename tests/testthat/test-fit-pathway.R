@@ -38,6 +38,7 @@ test_that("fit pathway supports person selection and labels", {
     person_subset = person_ids,
     top_n_person = 2,
     person_labels = "all",
+    facet_labels = "none",
     panel = "facet",
     draw = FALSE
   ))
@@ -47,6 +48,8 @@ test_that("fit pathway supports person selection and labels", {
   expect_true(all(persons$Level %in% person_ids))
   expect_true(all(nzchar(persons$LabelText)))
   expect_true(all(persons$Shape == 15L))
+  expect_true(all(out$data$table$LabelText[out$data$table$Facet != "Person"] == ""))
+  expect_identical(out$data$facet_labels, "none")
   expect_true(all(out$data$table$Panel == out$data$table$Facet))
 })
 
@@ -93,4 +96,12 @@ test_that("fit pathway base renderer draws CI whiskers", {
     include_person = TRUE,
     top_n_person = 3
   )))
+})
+
+test_that("fit pathway label policies are validated", {
+  fit <- make_toy_fit(maxit = 20)
+  expect_error(
+    plot(fit, type = "fit_pathway", facet_labels = "everything", draw = FALSE),
+    "arg"
+  )
 })

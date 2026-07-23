@@ -923,7 +923,7 @@ draw_wright_map <- function(plot_data,
     )
   }
   graphics::legend(
-    "topleft",
+    "topright",
     legend = c("Facet level", "Step threshold", "IQR / range"),
     pch = c(16, 17, NA),
     lty = c(0, 0, 1),
@@ -1194,6 +1194,7 @@ build_fit_pathway_data <- function(x,
                                    person_subset = NULL,
                                    top_n_person = 30L,
                                    person_labels = c("flagged", "all", "none"),
+                                   facet_labels = c("all", "flagged", "none"),
                                    panel = c("combined", "facet"),
                                    fit_range = c(0.5, 1.5),
                                    zstd_cut = 2,
@@ -1202,6 +1203,7 @@ build_fit_pathway_data <- function(x,
   fit_scale <- match.arg(tolower(as.character(fit_scale[1])), c("mnsq", "zstd"))
   zstd_method <- match.arg(tolower(as.character(zstd_method[1])), c("engine", "facets"))
   person_labels <- match.arg(tolower(as.character(person_labels[1])), c("flagged", "all", "none"))
+  facet_labels <- match.arg(tolower(as.character(facet_labels[1])), c("all", "flagged", "none"))
   panel <- match.arg(tolower(as.character(panel[1])), c("combined", "facet"))
   if (!is.logical(include_person) || length(include_person) != 1L || is.na(include_person)) {
     stop("`include_person` must be TRUE or FALSE.", call. = FALSE)
@@ -1344,6 +1346,11 @@ build_fit_pathway_data <- function(x,
   } else if (identical(person_labels, "flagged")) {
     tbl$LabelText[person_rows & !tbl$Flagged] <- ""
   }
+  if (identical(facet_labels, "none")) {
+    tbl$LabelText[!person_rows] <- ""
+  } else if (identical(facet_labels, "flagged")) {
+    tbl$LabelText[!person_rows & !tbl$Flagged] <- ""
+  }
 
   uncertainty_cols <- c(
     "ElementType", "SE_Method", "PrecisionTier", "SupportsFormalInference",
@@ -1389,6 +1396,7 @@ build_fit_pathway_data <- function(x,
     person_subset = person_subset,
     top_n_person = top_n_person,
     person_labels = person_labels,
+    facet_labels = facet_labels,
     panel = panel,
     ci_level = ci_level,
     diagnostics_source = diagnostics_source,
@@ -1786,7 +1794,9 @@ draw_facet_plot <- function(facet_tbl,
 #' @param palette Optional color overrides.
 #' @param label_angle Rotation angle for x-axis labels where applicable.
 #' @param show_ci If `TRUE`, add approximate confidence intervals when
-#'   available.
+#'   available. The formal default is `FALSE`; `type = "fit_pathway"` is the
+#'   exception and displays intervals when this argument is omitted. Pass
+#'   `show_ci = FALSE` explicitly to suppress them there.
 #' @param ci_level Confidence level used when `show_ci = TRUE`.
 #' @param group Optional grouping for `type = "wright"` to overlay
 #'   per-group person-density curves (DIF / DFF screening view).
@@ -1819,6 +1829,9 @@ draw_facet_plot <- function(facet_tbl,
 #'   by distance from expected fit. Use `Inf` for all selected persons.
 #' @param person_labels Person-label policy for a fit pathway: `"flagged"`
 #'   (default), `"all"`, or `"none"`.
+#' @param facet_labels Facet-level label policy for a fit pathway: `"all"`
+#'   (default), `"flagged"`, or `"none"`. This changes drawn labels only;
+#'   all retained facet rows remain in the draw-free table.
 #' @param panel Fit-pathway layout: `"combined"` (distinguish persons by
 #'   shape) or `"facet"` (one base-graphics panel per facet).
 #' @param fit_range Mean-square review lines for a fit pathway.
@@ -1992,6 +2005,7 @@ plot.mfrm_fit <- function(x,
                           person_subset = NULL,
                           top_n_person = 30,
                           person_labels = c("flagged", "all", "none"),
+                          facet_labels = c("all", "flagged", "none"),
                           panel = c("combined", "facet"),
                           fit_range = c(0.5, 1.5),
                           zstd_cut = 2,
@@ -2323,6 +2337,7 @@ plot.mfrm_fit <- function(x,
         person_subset = person_subset,
         top_n_person = top_n_person,
         person_labels = person_labels,
+        facet_labels = facet_labels,
         panel = panel,
         fit_range = fit_range,
         zstd_cut = zstd_cut,
