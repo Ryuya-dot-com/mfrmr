@@ -473,7 +473,44 @@ build_curve_tables <- function(curve_spec, theta_grid) {
   )
 }
 
-compute_se_for_plot <- function(x, ci_level = 0.95) {
+compute_se_for_plot <- function(x, ci_level = 0.95, diagnostics = NULL) {
+  ci_level <- suppressWarnings(as.numeric(ci_level[1]))
+  if (!is.finite(ci_level) || ci_level <= 0 || ci_level >= 1) {
+    stop("`ci_level` must be strictly between 0 and 1.", call. = FALSE)
+  }
+  if (!is.null(diagnostics)) {
+    measures <- as.data.frame(diagnostics$measures %||% data.frame(), stringsAsFactors = FALSE)
+    if (!all(c("Facet", "Level", "Estimate") %in% names(measures))) {
+      stop("`diagnostics$measures` must contain Facet, Level, and Estimate columns.", call. = FALSE)
+    }
+    if (!"SE" %in% names(measures)) measures$SE <- NA_real_
+    keep <- intersect(
+      c(
+        "Facet", "Level", "Estimate", "SE", "SE_Method", "PrecisionTier",
+        "SupportsFormalInference", "SEUse", "CIBasis", "CIUse"
+      ),
+      names(measures)
+    )
+    se_tbl <- measures[, keep, drop = FALSE]
+    se_tbl$Facet <- as.character(se_tbl$Facet)
+    se_tbl$Level <- as.character(se_tbl$Level)
+    se_tbl$Estimate <- suppressWarnings(as.numeric(se_tbl$Estimate))
+    se_tbl$SE <- suppressWarnings(as.numeric(se_tbl$SE))
+    z <- stats::qnorm(1 - (1 - ci_level) / 2)
+    se_tbl$CI_Lower <- ifelse(
+      is.finite(se_tbl$Estimate) & is.finite(se_tbl$SE),
+      se_tbl$Estimate - z * se_tbl$SE,
+      NA_real_
+    )
+    se_tbl$CI_Upper <- ifelse(
+      is.finite(se_tbl$Estimate) & is.finite(se_tbl$SE),
+      se_tbl$Estimate + z * se_tbl$SE,
+      NA_real_
+    )
+    se_tbl$CI_Level <- ci_level
+    se_tbl$Measure_Source <- "diagnostics$measures"
+    return(se_tbl)
+  }
   tryCatch({
     obs_df <- compute_obs_table(x)
     facet_cols <- x$config$source_columns$facets
@@ -481,15 +518,48 @@ compute_se_for_plot <- function(x, ci_level = 0.95) {
       facet_cols <- x$config$facet_names
     }
     se_tbl <- calc_facet_se(obs_df, facet_cols)
+    estimates <- tibble::as_tibble(x$facets$others) |>
+      dplyr::transmute(
+        Facet = as.character(.data$Facet),
+        Level = as.character(.data$Level),
+        Estimate = as.numeric(.data$Estimate)
+      )
+    se_tbl <- se_tbl |>
+      dplyr::mutate(
+        Facet = as.character(.data$Facet),
+        Level = as.character(.data$Level)
+      ) |>
+      dplyr::left_join(estimates, by = c("Facet", "Level"))
     z <- stats::qnorm(1 - (1 - ci_level) / 2)
-    se_tbl$CI_Lower <- -z * se_tbl$SE
-    se_tbl$CI_Upper <- z * se_tbl$SE
+    se_tbl$CI_Lower <- ifelse(
+      is.finite(se_tbl$Estimate) & is.finite(se_tbl$SE),
+      se_tbl$Estimate - z * se_tbl$SE,
+      NA_real_
+    )
+    se_tbl$CI_Upper <- ifelse(
+      is.finite(se_tbl$Estimate) & is.finite(se_tbl$SE),
+      se_tbl$Estimate + z * se_tbl$SE,
+      NA_real_
+    )
     se_tbl$CI_Level <- ci_level
+    se_tbl$SE_Method <- "Observation-table information"
+    se_tbl$Measure_Source <- "fit + observation-table information"
     as.data.frame(se_tbl, stringsAsFactors = FALSE)
   }, error = function(e) NULL)
 }
 
-build_wright_map_data <- function(x, top_n = 30L, se_tbl = NULL, include_steps = TRUE) {
+build_wright_map_data <- function(x,
+                                  top_n = 30L,
+                                  se_tbl = NULL,
+                                  include_steps = TRUE,
+                                  wright_style = c("native", "facets_style"),
+                                  renderer = NULL,
+                                  category_labels = NULL,
+                                  rows_per_logit = 2L,
+                                  wright_range = NULL,
+                                  extreme_placement = c("ends", "estimate"),
+                                  persons_per_star = NULL) {
+  wright_style <- match_wright_style(wright_style, renderer = renderer)
   person_tbl <- tibble::as_tibble(x$facets$person)
   person_tbl <- person_tbl[is.finite(person_tbl$Estimate), , drop = FALSE]
   if (nrow(person_tbl) == 0) stop("Person estimates are not available for Wright map.")
@@ -524,8 +594,16 @@ build_wright_map_data <- function(x, top_n = 30L, se_tbl = NULL, include_steps =
       Estimate = .data$Estimate
     )
   if (!is.null(se_tbl) && is.data.frame(se_tbl) && nrow(se_tbl) > 0 &&
-      all(c("Facet", "Level", "SE") %in% names(se_tbl))) {
-    se_join <- se_tbl[, intersect(c("Facet", "Level", "SE", "CI_Lower", "CI_Upper"), names(se_tbl)), drop = FALSE]
+      all(c("Facet", "Level") %in% names(se_tbl)) &&
+      "SE" %in% names(se_tbl)) {
+    se_join <- se_tbl[, intersect(
+      c(
+        "Facet", "Level", "SE",
+        "CI_Level", "SE_Method", "PrecisionTier", "SupportsFormalInference",
+        "SEUse", "CIBasis", "CIUse", "Measure_Source"
+      ),
+      names(se_tbl)
+    ), drop = FALSE]
     se_join$Level <- as.character(se_join$Level)
     facet_pts$Group <- as.character(facet_pts$Group)
     facet_pts$Label <- as.character(facet_pts$Label)
@@ -537,11 +615,30 @@ build_wright_map_data <- function(x, top_n = 30L, se_tbl = NULL, include_steps =
       all.x = TRUE,
       sort = FALSE
     )
+    if ("SE" %in% names(facet_pts)) {
+      ci_level_value <- if ("CI_Level" %in% names(facet_pts)) {
+        suppressWarnings(as.numeric(facet_pts$CI_Level))
+      } else {
+        rep(0.95, nrow(facet_pts))
+      }
+      ci_level_value[!is.finite(ci_level_value) | ci_level_value <= 0 | ci_level_value >= 1] <- 0.95
+      z <- stats::qnorm(1 - (1 - ci_level_value) / 2)
+      facet_pts$CI_Lower <- ifelse(
+        is.finite(facet_pts$Estimate) & is.finite(facet_pts$SE),
+        facet_pts$Estimate - z * facet_pts$SE,
+        NA_real_
+      )
+      facet_pts$CI_Upper <- ifelse(
+        is.finite(facet_pts$Estimate) & is.finite(facet_pts$SE),
+        facet_pts$Estimate + z * facet_pts$SE,
+        NA_real_
+      )
+    }
   }
   point_tbl <- dplyr::bind_rows(facet_pts, step_tbl)
   if (nrow(point_tbl) == 0) stop("No facet/step locations available for Wright map.")
 
-  if (nrow(point_tbl) > top_n) {
+  if (identical(wright_style, "native") && nrow(point_tbl) > top_n) {
     point_tbl <- point_tbl[order(abs(point_tbl$Estimate), decreasing = TRUE), , drop = FALSE]
     point_tbl <- utils::head(point_tbl, top_n)
   }
@@ -569,6 +666,9 @@ build_wright_map_data <- function(x, top_n = 30L, se_tbl = NULL, include_steps =
     dplyr::slice(c(1L, dplyr::n())) |>
     dplyr::ungroup() |>
     dplyr::distinct(.data$Group, .data$Label, .keep_all = TRUE)
+  if (nrow(label_tbl) > top_n) {
+    label_tbl <- utils::head(label_tbl, top_n)
+  }
 
   group_summary <- point_tbl |>
     dplyr::group_by(.data$Group, .data$PlotType) |>
@@ -591,8 +691,15 @@ build_wright_map_data <- function(x, top_n = 30L, se_tbl = NULL, include_steps =
     SD = stats::sd(person_tbl$Estimate, na.rm = TRUE)
   )
 
-  list(
+  out <- list(
     title = "Wright Map",
+    wright_style = wright_style,
+    renderer = if (identical(wright_style, "facets_style")) "facets" else "native",
+    visual_contract = if (identical(wright_style, "facets_style")) {
+      "FACETS Table 6-style visual layout; not FACETS numerical equivalence"
+    } else {
+      "mfrmr native Wright-map layout"
+    },
     person = person_tbl,
     person_hist = hist_data,
     person_stats = person_stats,
@@ -600,8 +707,26 @@ build_wright_map_data <- function(x, top_n = 30L, se_tbl = NULL, include_steps =
     label_points = label_tbl,
     group_summary = group_summary,
     group_levels = group_levels,
-    y_range = y_range
+    y_range = y_range,
+    label_limit = top_n
   )
+  if (identical(wright_style, "facets_style")) {
+    out$facets_style <- build_facets_style_wright_data(
+      fit = x,
+      plot_data = out,
+      category_labels = category_labels,
+      rows_per_logit = rows_per_logit,
+      wright_range = wright_range,
+      extreme_placement = extreme_placement,
+      persons_per_star = persons_per_star,
+      include_steps = include_steps
+    )
+    out$y_range <- c(
+      out$facets_style$settings$LowerLogit[1],
+      out$facets_style$settings$UpperLogit[1]
+    )
+  }
+  out
 }
 
 draw_wright_map <- function(plot_data,
@@ -610,6 +735,15 @@ draw_wright_map <- function(plot_data,
                             label_angle = 45,
                             show_ci = FALSE,
                             ci_level = 0.95) {
+  if (identical(as.character(plot_data$wright_style %||% "native"), "facets_style")) {
+    return(draw_wright_facets_style(
+      plot_data,
+      title = title,
+      palette = palette,
+      show_ci = show_ci,
+      ci_level = ci_level
+    ))
+  }
   pal <- resolve_palette(
     palette = palette,
     defaults = c(
@@ -789,7 +923,7 @@ draw_wright_map <- function(plot_data,
     )
   }
   graphics::legend(
-    "topleft",
+    "topright",
     legend = c("Facet level", "Step threshold", "IQR / range"),
     pch = c(16, 17, NA),
     lty = c(0, 0, 1),
@@ -933,7 +1067,7 @@ build_pathway_map_data <- function(x,
   )
   rownames(pathway_annotations) <- NULL
   list(
-    title = "Pathway Map (Expected Score by Theta)",
+    title = "Expected-score pathway (theta to score)",
     expected = curve_tbl$expected,
     steps = step_df,
     endpoint_labels = endpoint_labels,
@@ -1048,6 +1182,350 @@ draw_pathway_map <- function(plot_data, title = NULL, palette = NULL) {
     )
   } else {
     graphics::legend("topleft", legend = groups, col = cols[groups], lty = 1, lwd = 2, bty = "n")
+  }
+}
+
+build_fit_pathway_data <- function(x,
+                                   diagnostics = NULL,
+                                   fit_stat = c("Infit", "Outfit"),
+                                   fit_scale = c("mnsq", "zstd"),
+                                   zstd_method = c("engine", "facets"),
+                                   include_person = FALSE,
+                                   person_subset = NULL,
+                                   top_n_person = 30L,
+                                   person_labels = c("flagged", "all", "none"),
+                                   facet_labels = c("all", "flagged", "none"),
+                                   panel = c("combined", "facet"),
+                                   fit_range = c(0.5, 1.5),
+                                   zstd_cut = 2,
+                                   ci_level = 0.95) {
+  fit_stat <- match.arg(fit_stat)
+  fit_scale <- match.arg(tolower(as.character(fit_scale[1])), c("mnsq", "zstd"))
+  zstd_method <- match.arg(tolower(as.character(zstd_method[1])), c("engine", "facets"))
+  person_labels <- match.arg(tolower(as.character(person_labels[1])), c("flagged", "all", "none"))
+  facet_labels <- match.arg(tolower(as.character(facet_labels[1])), c("all", "flagged", "none"))
+  panel <- match.arg(tolower(as.character(panel[1])), c("combined", "facet"))
+  if (!is.logical(include_person) || length(include_person) != 1L || is.na(include_person)) {
+    stop("`include_person` must be TRUE or FALSE.", call. = FALSE)
+  }
+  fit_range <- suppressWarnings(as.numeric(fit_range))
+  if (length(fit_range) != 2L || !all(is.finite(fit_range)) || fit_range[1] >= fit_range[2]) {
+    stop("`fit_range` must be a finite increasing numeric length-2 vector.", call. = FALSE)
+  }
+  zstd_cut <- suppressWarnings(as.numeric(zstd_cut[1]))
+  if (!is.finite(zstd_cut) || zstd_cut <= 0) {
+    stop("`zstd_cut` must be a positive finite number.", call. = FALSE)
+  }
+  top_n_person <- suppressWarnings(as.numeric(top_n_person[1]))
+  if (is.na(top_n_person) || top_n_person <= 0) {
+    stop("`top_n_person` must be a positive number or `Inf`.", call. = FALSE)
+  }
+
+  diagnostics_source <- if (is.null(diagnostics)) "computed" else "supplied"
+  diag_use <- diagnostics
+  if (is.null(diag_use)) {
+    diag_use <- diagnose_mfrm(
+      x,
+      residual_pca = "none",
+      fit_df_method = if (identical(fit_scale, "zstd")) "both" else "engine"
+    )
+  }
+  if (!is.list(diag_use) || is.null(diag_use$measures)) {
+    stop("`diagnostics` must contain a `measures` table.", call. = FALSE)
+  }
+  if (identical(fit_scale, "zstd")) {
+    selected_z_col <- paste0(fit_stat, "ZSTD_", toupper(zstd_method))
+    if (!selected_z_col %in% names(diag_use$measures)) {
+      diag_use <- diagnose_mfrm(x, residual_pca = "none", fit_df_method = "both")
+      diagnostics_source <- paste0(diagnostics_source, "; recomputed for engine/FACETS ZSTD companions")
+    }
+  }
+
+  fm <- fit_measures_table(
+    x,
+    diagnostics = diag_use,
+    include_person = isTRUE(include_person),
+    fit_df_method = if (identical(fit_scale, "zstd")) "both" else "engine",
+    lower = fit_range[1],
+    upper = fit_range[2],
+    zstd_cut = zstd_cut,
+    ci_level = ci_level,
+    sort_by = "facet",
+    top_n = Inf
+  )
+  tbl <- as.data.frame(fm$table %||% data.frame(), stringsAsFactors = FALSE)
+  if (nrow(tbl) == 0L) {
+    stop("No fit-measure rows are available for the fit pathway.", call. = FALSE)
+  }
+
+  raw_measures <- as.data.frame(diag_use$measures, stringsAsFactors = FALSE)
+  metadata_cols <- intersect(
+    c("SE_Method", "PrecisionTier", "SupportsFormalInference", "SEUse",
+      "CIBasis", "CIUse", "Converged", "CI_Method", "CILabel"),
+    names(raw_measures)
+  )
+  raw_key <- paste(as.character(raw_measures$Facet), as.character(raw_measures$Level), sep = "\r")
+  tbl_key <- paste(as.character(tbl$Facet), as.character(tbl$Level), sep = "\r")
+  meta_idx <- match(tbl_key, raw_key)
+  for (nm in metadata_cols) tbl[[nm]] <- raw_measures[[nm]][meta_idx]
+  for (nm in setdiff(
+    c("SE_Method", "PrecisionTier", "SupportsFormalInference", "SEUse",
+      "CIBasis", "CIUse", "Converged", "CI_Method", "CILabel"),
+    names(tbl)
+  )) {
+    tbl[[nm]] <- NA
+  }
+
+  fit_col <- if (identical(fit_scale, "mnsq")) {
+    fit_stat
+  } else {
+    candidate <- paste0(fit_stat, "ZSTD_", toupper(zstd_method))
+    if (candidate %in% names(tbl)) candidate else paste0(fit_stat, "ZSTD")
+  }
+  if (!fit_col %in% names(tbl)) {
+    stop("The selected fit statistic is not available: `", fit_col, "`.", call. = FALSE)
+  }
+  tbl$FitValue <- suppressWarnings(as.numeric(tbl[[fit_col]]))
+  tbl$Measure <- suppressWarnings(as.numeric(tbl$Measure))
+  tbl$SE <- suppressWarnings(as.numeric(tbl$SE))
+  tbl$ElementType <- ifelse(as.character(tbl$Facet) == "Person", "Person", "Facet level")
+  tbl$FitScale <- fit_scale
+  tbl$FitStatistic <- fit_stat
+  tbl$FitColumn <- fit_col
+  tbl$FitDistance <- if (identical(fit_scale, "mnsq")) {
+    abs(tbl$FitValue - 1)
+  } else {
+    abs(tbl$FitValue)
+  }
+  tbl$Flagged <- if (identical(fit_scale, "mnsq")) {
+    tbl$FitValue < fit_range[1] | tbl$FitValue > fit_range[2]
+  } else {
+    abs(tbl$FitValue) >= zstd_cut
+  }
+  tbl$FitDirection <- ifelse(
+    !is.finite(tbl$FitValue), "not_available",
+    ifelse(
+      identical(fit_scale, "mnsq") & tbl$FitValue > fit_range[2] |
+        identical(fit_scale, "zstd") & tbl$FitValue > zstd_cut,
+      "underfit",
+      ifelse(
+        identical(fit_scale, "mnsq") & tbl$FitValue < fit_range[1] |
+          identical(fit_scale, "zstd") & tbl$FitValue < -zstd_cut,
+        "overfit",
+        "within_band"
+      )
+    )
+  )
+  tbl <- tbl[is.finite(tbl$FitValue) & is.finite(tbl$Measure), , drop = FALSE]
+  if (nrow(tbl) == 0L) {
+    stop("No finite fit/measure pairs are available for the fit pathway.", call. = FALSE)
+  }
+
+  person_rows <- tbl$ElementType == "Person"
+  if (isTRUE(include_person) && !is.null(person_subset)) {
+    keep_ids <- unique(as.character(person_subset))
+    tbl <- tbl[!person_rows | as.character(tbl$Level) %in% keep_ids, , drop = FALSE]
+    person_rows <- tbl$ElementType == "Person"
+  }
+  if (isTRUE(include_person) && is.finite(top_n_person) && sum(person_rows) > top_n_person) {
+    person_idx <- which(person_rows)
+    ord <- order(tbl$FitDistance[person_idx], decreasing = TRUE, na.last = NA)
+    keep_person_idx <- person_idx[utils::head(ord, as.integer(top_n_person))]
+    tbl <- tbl[!person_rows | seq_len(nrow(tbl)) %in% keep_person_idx, , drop = FALSE]
+  }
+  if (nrow(tbl) == 0L) {
+    stop("No fit-pathway rows remain after person filtering.", call. = FALSE)
+  }
+
+  person_rows <- tbl$ElementType == "Person"
+  tbl$Panel <- if (identical(panel, "facet")) as.character(tbl$Facet) else "All elements"
+  tbl$Shape <- ifelse(person_rows, 15L, 21L)
+  tbl$LabelText <- as.character(tbl$Level)
+  if (identical(person_labels, "none")) {
+    tbl$LabelText[person_rows] <- ""
+  } else if (identical(person_labels, "flagged")) {
+    tbl$LabelText[person_rows & !tbl$Flagged] <- ""
+  }
+  if (identical(facet_labels, "none")) {
+    tbl$LabelText[!person_rows] <- ""
+  } else if (identical(facet_labels, "flagged")) {
+    tbl$LabelText[!person_rows & !tbl$Flagged] <- ""
+  }
+
+  uncertainty_cols <- c(
+    "ElementType", "SE_Method", "PrecisionTier", "SupportsFormalInference",
+    "SEUse", "CIBasis", "CIUse", "Converged"
+  )
+  uncertainty_basis <- unique(tbl[, uncertainty_cols, drop = FALSE])
+  uncertainty_basis$CI_Level <- ci_level
+  uncertainty_basis$WhiskerDefinition <- sprintf(
+    "Measure +/- %.6g x SE (normal %.1f%% interval)",
+    stats::qnorm(1 - (1 - ci_level) / 2), 100 * ci_level
+  )
+  rownames(uncertainty_basis) <- NULL
+
+  reference_values <- if (identical(fit_scale, "mnsq")) {
+    c(fit_range[1], 1, fit_range[2])
+  } else {
+    c(-zstd_cut, 0, zstd_cut)
+  }
+  reference_labels <- if (identical(fit_scale, "mnsq")) {
+    c("Lower MnSq review line", "Expected MnSq", "Upper MnSq review line")
+  } else {
+    c("Lower ZSTD review line", "Expected ZSTD", "Upper ZSTD review line")
+  }
+
+  list(
+    title = paste0("Fit pathway: ", fit_stat, " ", if (fit_scale == "mnsq") "MnSq" else "ZSTD", " by measure"),
+    subtitle = if (identical(fit_scale, "zstd")) {
+      paste0("Vertical logits with ", zstd_method, "-df ZSTD on the horizontal axis")
+    } else {
+      "Vertical logits with mean-square fit on the horizontal axis"
+    },
+    table = tbl,
+    full_table = as.data.frame(fm$table, stringsAsFactors = FALSE),
+    uncertainty_basis = uncertainty_basis,
+    fit_stat = fit_stat,
+    fit_scale = fit_scale,
+    view = "fit_measure",
+    fit_column = fit_col,
+    zstd_method = zstd_method,
+    fit_range = fit_range,
+    zstd_cut = zstd_cut,
+    include_person = isTRUE(include_person),
+    person_subset = person_subset,
+    top_n_person = top_n_person,
+    person_labels = person_labels,
+    facet_labels = facet_labels,
+    panel = panel,
+    ci_level = ci_level,
+    diagnostics_source = diagnostics_source,
+    legend = new_plot_legend(
+      label = c("Facet level", "Person", "Measure uncertainty"),
+      role = c("element", "element", "interval"),
+      aesthetic = c("point", "point", "vertical whisker"),
+      value = c("circle", "square", paste0(round(100 * ci_level), "% CI"))
+    ),
+    reference_lines = new_reference_lines(
+      axis = rep("v", 3L),
+      value = reference_values,
+      label = reference_labels,
+      linetype = c("dotted", "dashed", "dotted"),
+      role = c("threshold", "reference", "threshold")
+    )
+  )
+}
+
+draw_fit_pathway <- function(plot_data,
+                             title = NULL,
+                             palette = NULL,
+                             show_ci = TRUE) {
+  tbl <- as.data.frame(plot_data$table, stringsAsFactors = FALSE)
+  facets <- unique(as.character(tbl$Facet))
+  default_cols <- stats::setNames(
+    grDevices::hcl.colors(max(3L, length(facets)), "Dark 3")[seq_along(facets)],
+    facets
+  )
+  cols <- resolve_palette(palette = palette, defaults = default_cols)
+  refs <- as.data.frame(plot_data$reference_lines, stringsAsFactors = FALSE)
+  x_ref <- suppressWarnings(as.numeric(refs$value))
+
+  draw_panel <- function(panel_tbl, panel_title) {
+    x_rng <- range(c(panel_tbl$FitValue, x_ref), finite = TRUE)
+    y_values <- panel_tbl$Measure
+    if (isTRUE(show_ci)) {
+      y_values <- c(y_values, panel_tbl$CI_Lower, panel_tbl$CI_Upper)
+    }
+    y_rng <- range(y_values, finite = TRUE)
+    if (diff(x_rng) <= sqrt(.Machine$double.eps)) x_rng <- x_rng[1] + c(-0.5, 0.5)
+    if (diff(y_rng) <= sqrt(.Machine$double.eps)) y_rng <- y_rng[1] + c(-0.5, 0.5)
+    x_rng <- x_rng + c(-0.08, 0.08) * diff(x_rng)
+    y_rng <- y_rng + c(-0.08, 0.08) * diff(y_rng)
+    graphics::plot(
+      panel_tbl$FitValue,
+      panel_tbl$Measure,
+      type = "n",
+      xlim = x_rng,
+      ylim = y_rng,
+      xlab = if (identical(plot_data$fit_scale, "mnsq")) {
+        paste0(plot_data$fit_stat, " MnSq")
+      } else {
+        paste0(plot_data$fit_stat, " ZSTD (", plot_data$zstd_method, " df)")
+      },
+      ylab = "Measure (logits)",
+      main = panel_title
+    )
+    if (identical(plot_data$fit_scale, "mnsq")) {
+      graphics::rect(
+        plot_data$fit_range[1], y_rng[1], plot_data$fit_range[2], y_rng[2],
+        col = grDevices::adjustcolor("#E8F0FE", alpha.f = 0.55), border = NA
+      )
+    } else {
+      graphics::rect(
+        -plot_data$zstd_cut, y_rng[1], plot_data$zstd_cut, y_rng[2],
+        col = grDevices::adjustcolor("#E8F0FE", alpha.f = 0.55), border = NA
+      )
+    }
+    for (i in seq_len(nrow(refs))) {
+      graphics::abline(
+        v = refs$value[i],
+        lty = if (refs$role[i] == "reference") 2 else 3,
+        col = if (refs$role[i] == "reference") "gray35" else "gray65"
+      )
+    }
+    graphics::abline(h = pretty(y_rng, n = 6), col = "gray92", lty = 1)
+    point_cols <- unname(cols[as.character(panel_tbl$Facet)])
+    if (isTRUE(show_ci)) {
+      ci_ok <- is.finite(panel_tbl$CI_Lower) & is.finite(panel_tbl$CI_Upper)
+      if (any(ci_ok)) {
+        graphics::arrows(
+          x0 = panel_tbl$FitValue[ci_ok], y0 = panel_tbl$CI_Lower[ci_ok],
+          x1 = panel_tbl$FitValue[ci_ok], y1 = panel_tbl$CI_Upper[ci_ok],
+          angle = 90, code = 3, length = 0.035,
+          col = grDevices::adjustcolor(point_cols[ci_ok], alpha.f = 0.60)
+        )
+      }
+    }
+    graphics::points(
+      panel_tbl$FitValue, panel_tbl$Measure,
+      pch = panel_tbl$Shape,
+      col = point_cols,
+      bg = grDevices::adjustcolor(point_cols, alpha.f = 0.35),
+      cex = ifelse(panel_tbl$ElementType == "Person", 0.82, 1)
+    )
+    label_rows <- nzchar(as.character(panel_tbl$LabelText))
+    if (any(label_rows)) {
+      graphics::text(
+        panel_tbl$FitValue[label_rows], panel_tbl$Measure[label_rows],
+        labels = truncate_axis_label(panel_tbl$LabelText[label_rows], width = 16L),
+        pos = 4, cex = 0.65, offset = 0.35, xpd = NA,
+        col = point_cols[label_rows]
+      )
+    }
+  }
+
+  old_par <- graphics::par(no.readonly = TRUE)
+  on.exit(graphics::par(old_par), add = TRUE)
+  if (identical(plot_data$panel, "facet") && length(unique(tbl$Panel)) > 1L) {
+    panel_names <- unique(as.character(tbl$Panel))
+    n_cols <- ceiling(sqrt(length(panel_names)))
+    graphics::par(mfrow = c(ceiling(length(panel_names) / n_cols), n_cols))
+    for (nm in panel_names) {
+      draw_panel(tbl[as.character(tbl$Panel) == nm, , drop = FALSE], nm)
+    }
+  } else {
+    draw_panel(tbl, title %||% plot_data$title)
+    graphics::legend(
+      "topleft", legend = facets, col = cols[facets], pch = 16,
+      bty = "n", cex = 0.76
+    )
+    if (any(tbl$ElementType == "Person")) {
+      graphics::legend(
+        "bottomright", legend = c("Facet level", "Person"),
+        pch = c(21, 15), col = "gray30", pt.bg = "gray80",
+        bty = "n", cex = 0.76
+      )
+    }
   }
 }
 
@@ -1300,11 +1778,14 @@ draw_facet_plot <- function(facet_tbl,
 #' @param x An `mfrm_fit` object from [fit_mfrm()].
 #' @param type Plot type. Use `NULL`, `"bundle"`, or `"all"` for the
 #'   three-part fit bundle; otherwise choose one of `"facet"`, `"person"`,
-#'   `"step"`, `"wright"`, `"pathway"`, `"ccc"`, `"ccc_surface"`, or
-#'   `"category_surface"`.
+#'   `"step"`, `"wright"`, `"pathway"`, `"fit_pathway"`, `"ccc"`,
+#'   `"ccc_surface"`, or `"category_surface"`. `"pathway"` is the
+#'   theta-to-expected-score display; `"fit_pathway"` is the
+#'   fit-statistic-to-measure display.
 #' @param facet Optional facet name for `type = "facet"`.
-#' @param top_n Maximum number of facet/step locations retained for
-#'   compact displays.
+#' @param top_n Maximum number of facet/step locations retained by the native
+#'   Wright map for compact displays. The FACETS-style payload always retains
+#'   every fitted facet and step location.
 #' @param theta_range Numeric length-2 range for pathway, CCC, and
 #'   category-surface plot data.
 #' @param theta_points Number of theta grid points used for pathway, CCC, and
@@ -1313,24 +1794,71 @@ draw_facet_plot <- function(facet_tbl,
 #' @param palette Optional color overrides.
 #' @param label_angle Rotation angle for x-axis labels where applicable.
 #' @param show_ci If `TRUE`, add approximate confidence intervals when
-#'   available.
+#'   available. The formal default is `FALSE`; `type = "fit_pathway"` is the
+#'   exception and displays intervals when this argument is omitted. Pass
+#'   `show_ci = FALSE` explicitly to suppress them there.
 #' @param ci_level Confidence level used when `show_ci = TRUE`.
 #' @param group Optional grouping for `type = "wright"` to overlay
 #'   per-group person-density curves (DIF / DFF screening view).
 #'   Either a column name (looked up first in `group_data` when
 #'   supplied through `...`, then in `fit$prep$data`) or a vector
 #'   aligned with `fit$facets$person`. Ignored for other `type`
-#'   values. To pass the source data alongside, use
+#'   values and for `wright_style = "facets_style"`, whose person column is a
+#'   single FACETS-style star frequency. To pass the source data alongside, use
 #'   `plot(fit, type = "wright", group = "MyCol", group_data = <df>)`.
 #' @param diagnostics Optional output from [diagnose_mfrm()]. When supplied,
-#'   pathway plot data reuse it for `fit_measures`, `fit_status`, and
+#'   Wright-map standard errors and precision metadata reuse matching rows from
+#'   `diagnostics$measures` without replacing fitted coordinates,
+#'   while pathway plot data reuse `fit_measures`, `fit_status`, and
 #'   `curve_fit_status` instead of recomputing diagnostics.
 #' @param include_fit_measures If `TRUE` (default), pathway plot data include
 #'   tidy fit-measure and fit-status tables for custom R graphics. Set to
 #'   `FALSE` when only the curve coordinates are needed.
+#' @param fit_stat For `type = "fit_pathway"`, the horizontal fit statistic:
+#'   `"Infit"` (default) or `"Outfit"`.
+#' @param fit_scale For `type = "fit_pathway"`, use mean squares (`"mnsq"`)
+#'   or standardized fit (`"zstd"`) on the horizontal axis.
+#' @param zstd_method For a ZSTD fit pathway, use the package engine degrees
+#'   of freedom (`"engine"`, default) or the FACETS/Wright-Masters companion
+#'   calculation (`"facets"`). The latter is a comparison aid, not a claim of
+#'   complete FACETS output equivalence.
+#' @param include_person If `TRUE`, include person rows in a fit pathway.
+#' @param person_subset Optional character vector of person IDs retained in a
+#'   fit pathway before ranking.
+#' @param top_n_person Maximum person rows retained in a fit pathway, ranked
+#'   by distance from expected fit. Use `Inf` for all selected persons.
+#' @param person_labels Person-label policy for a fit pathway: `"flagged"`
+#'   (default), `"all"`, or `"none"`.
+#' @param facet_labels Facet-level label policy for a fit pathway: `"all"`
+#'   (default), `"flagged"`, or `"none"`. This changes drawn labels only;
+#'   all retained facet rows remain in the draw-free table.
+#' @param panel Fit-pathway layout: `"combined"` (distinguish persons by
+#'   shape) or `"facet"` (one base-graphics panel per facet).
+#' @param fit_range Mean-square review lines for a fit pathway.
+#' @param zstd_cut Absolute ZSTD review line for a fit pathway.
 #' @param draw If `TRUE`, draw the plot with base graphics.
 #' @param preset Visual preset (`"standard"`, `"publication"`, `"compact"`,
 #'   or `"monochrome"`).
+#' @param renderer Wright-map renderer. Use `"native"` (default) or
+#'   `"facets"` for the FACETS Table 6-style visual layout. This is the
+#'   canonical selector for new code.
+#' @param wright_style Wright-map renderer. `"native"` preserves the package's
+#'   histogram, point, range, and facet-SE display. `"facets_style"` adds a
+#'   FACETS Table 6-style text ruler with person-frequency stars, signed facet
+#'   headers, and labeled score-transition lines. It is a visual-layout option,
+#'   not a claim of numerical equivalence with FACETS. This explicit style name
+#'   is equivalent to `renderer = "facets"`.
+#' @param category_labels Optional score rubric labels used by
+#'   `wright_style = "facets_style"`. Supply a named character vector keyed by
+#'   original score, an unnamed vector with one label per retained category, or
+#'   a data frame with `Score` and `Label` columns.
+#' @param rows_per_logit Number of FACETS-style ruler rows per logit.
+#' @param wright_range Optional finite increasing length-2 logit range for the
+#'   FACETS-style ruler. `NULL` derives a range that contains the fitted data.
+#' @param extreme_placement In the FACETS-style renderer, place extreme-score
+#'   persons at the ruler `"ends"` or retain their fitted `"estimate"`.
+#' @param persons_per_star Number of persons represented by one `*` in the
+#'   FACETS-style frequency column. `NULL` chooses a compact value automatically.
 #' @param ... Additional arguments ignored for S3 compatibility.
 #'
 #' @details
@@ -1351,11 +1879,24 @@ draw_facet_plot <- function(facet_tbl,
 #' severity/difficulty under the default negative facet orientation.
 #' Facets listed in `fit_mfrm(positive_facets = ...)` are reversed
 #' (higher values raise expected scores); state the active orientation in
-#' figure captions when reporting. `type = "pathway"` shows expected score
+#' figure captions when reporting.
+#'
+#' Set `renderer = "facets"` (equivalently,
+#' `wright_style = "facets_style"`) for a line-printer-inspired common
+#' ruler. That mode retains every facet location in its data and shows actual
+#' (original, when scores were internally recoded) adjacent score transitions.
+#' Its `facets_style` payload contains tidy ruler, person-frequency, facet,
+#' step, mean-half-score, header, category-label, and settings tables for custom
+#' graphics. The styling emulates the semantics of FACETS Table 6; estimates
+#' and standard errors remain those produced by `mfrmr`.
+#'
+#' `type = "pathway"` shows expected score
 #' traces and dominant-category regions across theta. This expected-score
-#' display is distinct from the Bond-and-Fox-style measure-versus-fit
-#' "pathway" bubble chart used around FACETS/Winsteps output; for that
-#' display, use [plot_bubble()]. Its draw-free plot data also
+#' display is distinct from the Bond-and-Fox-style fit-versus-measure
+#' pathway: use `type = "fit_pathway"` for Infit/Outfit on the horizontal
+#' axis and measure logits on the vertical axis. Its draw-free plot data
+#' include person-selection settings, CI columns, and explicit SE-source
+#' metadata. The expected-score pathway draw-free data also
 #' includes `pathway_long`, `pathway_annotations`, `fit_measures`,
 #' `fit_status`, and `curve_fit_status`, so R users can rebuild the pathway
 #' map in ggplot2, plotly, or a report pipeline while keeping the same
@@ -1373,7 +1914,8 @@ draw_facet_plot <- function(facet_tbl,
 #' @section Typical workflow:
 #' 1. Fit a model with [fit_mfrm()].
 #' 2. Use `plot(fit)` to inspect the Wright map at a glance.
-#' 3. Switch to `type = "pathway"`, `"ccc"`, or `"shrinkage"` for the
+#' 3. Switch to `type = "pathway"`, `"fit_pathway"`, `"ccc"`, or
+#'    `"shrinkage"` for the
 #'    relevant follow-up figure, or `type = "bundle"` for the
 #'    three-plot overview when preparing a FACETS-style summary.
 #'
@@ -1402,13 +1944,13 @@ draw_facet_plot <- function(facet_tbl,
 #'   maxit = 30
 #' )
 #' wright <- plot(fit, draw = FALSE)
-#' wright$data$plot
+#' head(wright$data$locations)
 #' # Look for: persons clustered against the facet / step rows on the
 #' #   shared logit axis. Large gaps between the person density and
 #' #   the step / facet rails indicate weak targeting; ceiling /
 #' #   floor stripes mean the test is too easy / hard.
 #' bundle <- plot(fit, type = "bundle", draw = FALSE)
-#' bundle$wright_map$data$plot
+#' bundle$wright_map$data$group_summary
 #' # Look for: pathway curves rising in the expected order with
 #' #   visible dominant-category bands; CCC curves peaking sequentially
 #' #   without one category being completely overlapped by neighbours.
@@ -1456,23 +1998,51 @@ plot.mfrm_fit <- function(x,
                           group = NULL,
                           diagnostics = NULL,
                           include_fit_measures = TRUE,
+                          fit_stat = c("Infit", "Outfit"),
+                          fit_scale = c("mnsq", "zstd"),
+                          zstd_method = c("engine", "facets"),
+                          include_person = FALSE,
+                          person_subset = NULL,
+                          top_n_person = 30,
+                          person_labels = c("flagged", "all", "none"),
+                          facet_labels = c("all", "flagged", "none"),
+                          panel = c("combined", "facet"),
+                          fit_range = c(0.5, 1.5),
+                          zstd_cut = 2,
                           draw = TRUE,
                           preset = c("standard", "publication", "compact", "monochrome"),
+                          renderer = NULL,
+                          wright_style = c("native", "facets_style"),
+                          category_labels = NULL,
+                          rows_per_logit = 2L,
+                          wright_range = NULL,
+                          extreme_placement = c("ends", "estimate"),
+                          persons_per_star = NULL,
                           ...) {
   if (!inherits(x, "mfrm_fit")) {
     stop("`x` must be an mfrm_fit object from fit_mfrm().")
   }
+  show_ci_missing <- missing(show_ci)
   top_n <- max(1L, as.integer(top_n))
   theta_points <- max(51L, as.integer(theta_points))
   theta_range <- as.numeric(theta_range)
   style <- resolve_plot_preset(preset)
+  wright_style <- match_wright_style(wright_style, renderer = renderer)
   if (length(theta_range) != 2 || !all(is.finite(theta_range)) || theta_range[1] >= theta_range[2]) {
     stop("`theta_range` must be a numeric length-2 vector with increasing values.")
   }
 
-  as_plot_data <- function(name, data) new_mfrm_plot_data(name, data)
+  as_plot_data <- function(name, data) {
+    data_names <- names(data) %||% rep("", length(data))
+    duplicated_named <- nzchar(data_names) & duplicated(data_names, fromLast = TRUE)
+    new_mfrm_plot_data(name, data[!duplicated_named])
+  }
 
-  se_tbl_ci <- if (isTRUE(show_ci)) compute_se_for_plot(x, ci_level = ci_level) else NULL
+  se_tbl_ci <- if (isTRUE(show_ci) || !is.null(diagnostics)) {
+    compute_se_for_plot(x, ci_level = ci_level, diagnostics = diagnostics)
+  } else {
+    NULL
+  }
 
   # Default routing: a bare plot(fit) call now renders the Wright map
   # alone. The previous three-plot bundle (Wright + pathway + CCC) is
@@ -1484,10 +2054,24 @@ plot.mfrm_fit <- function(x,
   if (tolower(as.character(type[1])) %in% c("bundle", "all", "default")) {
     out <- list(
       wright_map = as_plot_data("wright_map", c(
-        build_wright_map_data(x, top_n = top_n, se_tbl = se_tbl_ci),
+        build_wright_map_data(
+          x,
+          top_n = top_n,
+          se_tbl = se_tbl_ci,
+          wright_style = wright_style,
+          category_labels = category_labels,
+          rows_per_logit = rows_per_logit,
+          wright_range = wright_range,
+          extreme_placement = extreme_placement,
+          persons_per_star = persons_per_star
+        ),
         list(
           title = title %||% "Wright map",
-          subtitle = "Shared logit scale for persons, facets, and thresholds",
+          subtitle = if (identical(wright_style, "facets_style")) {
+            "FACETS Table 6-style visual layout (mfrmr estimates)"
+          } else {
+            "Shared logit scale for persons, facets, and thresholds"
+          },
           preset = style$name,
           legend = new_plot_legend(
             label = c("Person density", "Facet levels", "Step thresholds"),
@@ -1507,8 +2091,8 @@ plot.mfrm_fit <- function(x,
           include_fit_measures = include_fit_measures
         ),
         list(
-          title = title %||% "Pathway map",
-          subtitle = "Dominant score categories across the latent continuum",
+          title = title %||% "Expected-score pathway (theta to score)",
+          subtitle = "Expected score and dominant categories across the latent continuum",
           preset = style$name,
           legend = new_plot_legend(
             label = c("Step thresholds", "Dominant-category regions"),
@@ -1570,7 +2154,7 @@ plot.mfrm_fit <- function(x,
 
   # Locale-independent validation (match.arg() would produce a
   # translated error string on non-English locales).
-  type_choices <- c("facet", "person", "step", "wright", "pathway",
+  type_choices <- c("facet", "person", "step", "wright", "pathway", "fit_pathway",
                     "ccc", "ccc_overlay", "ccc_surface", "category_surface",
                     "shrinkage")
   type_in <- tolower(as.character(type[1]))
@@ -1644,23 +2228,43 @@ plot.mfrm_fit <- function(x,
     # main Wright map.
     group_payload <- NULL
     if (!is.null(group)) {
-      group_payload <- tryCatch(
-        .build_wright_group_density(x, group = group,
-                                     group_data = list(...)$group_data),
-        error = function(e) {
-          message(sprintf(
-            "Wright group overlay disabled: %s",
-            conditionMessage(e)
-          ))
-          NULL
-        }
-      )
+      if (identical(wright_style, "facets_style")) {
+        warning(
+          "`group` overlays are available only for `wright_style = \"native\"`; ",
+          "the FACETS-style star column remains ungrouped.",
+          call. = FALSE
+        )
+      } else {
+        group_payload <- tryCatch(
+          .build_wright_group_density(x, group = group,
+                                       group_data = list(...)$group_data),
+          error = function(e) {
+            message(sprintf(
+              "Wright group overlay disabled: %s",
+              conditionMessage(e)
+            ))
+            NULL
+          }
+        )
+      }
     }
     out <- as_plot_data("wright_map", c(
-      build_wright_map_data(x, top_n = top_n, se_tbl = se_tbl_ci),
+      build_wright_map_data(
+        x,
+        top_n = top_n,
+        se_tbl = se_tbl_ci,
+        wright_style = wright_style,
+        category_labels = category_labels,
+        rows_per_logit = rows_per_logit,
+        wright_range = wright_range,
+        extreme_placement = extreme_placement,
+        persons_per_star = persons_per_star
+      ),
       list(
         title = title %||% "Wright map",
-        subtitle = if (is.null(group_payload)) {
+        subtitle = if (identical(wright_style, "facets_style")) {
+          "FACETS Table 6-style visual layout (mfrmr estimates; not numerical equivalence)"
+        } else if (is.null(group_payload)) {
           "Shared logit scale for persons, facets, and thresholds"
         } else {
           sprintf(
@@ -1697,7 +2301,7 @@ plot.mfrm_fit <- function(x,
         show_ci = show_ci,
         ci_level = ci_level
       )
-      if (!is.null(group_payload) && nrow(group_payload) > 0L) {
+      if (identical(wright_style, "native") && !is.null(group_payload) && nrow(group_payload) > 0L) {
         # Overlay per-group density curves on the Wright map's left
         # density column, using the existing usr coordinate system.
         usr <- graphics::par("usr")
@@ -1720,6 +2324,42 @@ plot.mfrm_fit <- function(x,
     }
     return(invisible(out))
   }
+  if (type == "fit_pathway") {
+    fit_pathway_show_ci <- if (isTRUE(show_ci_missing)) TRUE else isTRUE(show_ci)
+    out <- as_plot_data("fit_pathway", c(
+      build_fit_pathway_data(
+        x,
+        diagnostics = diagnostics,
+        fit_stat = fit_stat,
+        fit_scale = fit_scale,
+        zstd_method = zstd_method,
+        include_person = include_person,
+        person_subset = person_subset,
+        top_n_person = top_n_person,
+        person_labels = person_labels,
+        facet_labels = facet_labels,
+        panel = panel,
+        fit_range = fit_range,
+        zstd_cut = zstd_cut,
+        ci_level = ci_level
+      ),
+      list(
+        show_ci = fit_pathway_show_ci,
+        preset = style$name
+      )
+    ))
+    if (!is.null(title)) out$data$title <- as.character(title[1])
+    if (isTRUE(draw)) {
+      apply_plot_preset(style)
+      draw_fit_pathway(
+        out$data,
+        title = title,
+        palette = palette,
+        show_ci = fit_pathway_show_ci
+      )
+    }
+    return(invisible(out))
+  }
   if (type == "pathway") {
     out <- as_plot_data("pathway_map", c(
       build_pathway_map_data(
@@ -1730,8 +2370,8 @@ plot.mfrm_fit <- function(x,
         include_fit_measures = include_fit_measures
       ),
       list(
-        title = title %||% "Pathway map",
-        subtitle = "Dominant score categories across the latent continuum",
+        title = title %||% "Expected-score pathway (theta to score)",
+        subtitle = "Expected score and dominant categories across the latent continuum",
         preset = style$name,
         legend = new_plot_legend(
           label = c("Step thresholds", "Dominant-category regions"),

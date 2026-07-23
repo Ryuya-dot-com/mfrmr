@@ -223,6 +223,10 @@ NULL
 #' Use `mfrmr_output_guide("viewer")` when the next step is the optional local
 #' Shiny reader; it shows which `include` preset to use before calling
 #' [launch_mfrmr_viewer()].
+#' Use `mfrmr_output_guide("beginner")` for all beginner-labelled entry
+#' routes. Use `mfrmr_output_guide("psychometric")` for the technical table,
+#' review, and reporting routes whose interpretation boundaries should be
+#' checked before manuscript use.
 #'
 #' @section How to use this guide:
 #' Treat `MainFunction` as the route to try next and `UseWhen` as the guardrail.
@@ -265,11 +269,14 @@ NULL
 #' mfrmr_output_guide("binary")[, c("Question", "MainFunction")]
 #' mfrmr_output_guide("viewer")[, c("Question", "MainFunction")]
 #' mfrmr_output_guide("response_time")[, c("Question", "MainFunction")]
+#' mfrmr_output_guide("beginner")[, c("Question", "MainFunction")]
+#' mfrmr_output_guide("psychometric")[, c("Question", "DecisionBoundary")]
 #' @concept reporting workflow
 #' @concept route selection
 #' @concept GPCM boundaries
 #' @export
-mfrmr_output_guide <- function(scope = c("all", "public", "entry", "viewer", "binary", "tables", "reports", "reviews",
+mfrmr_output_guide <- function(scope = c("all", "public", "beginner", "psychometric",
+                                         "entry", "viewer", "binary", "tables", "reports", "reviews",
                                          "bundles", "exports", "compatibility",
                                          "gpcm", "simulation", "linking", "network",
                                          "response_time", "facets", "conquest", "r")) {
@@ -991,6 +998,17 @@ mfrmr_output_guide <- function(scope = c("all", "public", "entry", "viewer", "bi
 
   if (identical(scope, "all")) {
     return(out)
+  }
+  if (identical(scope, "beginner")) {
+    return(out[out$UserLevel %in% "beginner", , drop = FALSE])
+  }
+  if (identical(scope, "psychometric")) {
+    keep <- out$Scope %in% c("tables", "reports", "reviews", "linking") &
+      out$ObjectRole %in% c(
+        "focused evidence table", "reporting evidence bundle",
+        "review and follow-up surface", "specialist evidence component"
+      )
+    return(out[keep, , drop = FALSE])
   }
   if (identical(scope, "gpcm")) {
     keep <- out$GPCMStatus != "supported" |

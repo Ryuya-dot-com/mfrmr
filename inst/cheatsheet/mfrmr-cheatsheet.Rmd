@@ -17,7 +17,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-# Quick reference: mfrmr 0.2.0
+# Quick reference: mfrmr 0.2.2
 
 A two-page reference for the fit / diagnose / report loop in mfrmr.
 Every snippet assumes `library(mfrmr)` and a long-format
@@ -46,6 +46,13 @@ diag <- diagnose_mfrm(fit, residual_pca = "none")
 # diagnostic_mode = "both" (default) runs residual + strict marginal.
 summary(fit)
 summary(diag)
+
+res <- mfrm_results(fit)
+# Required first fitted-scale artifact:
+plot(res, type = "wright", preset = "publication", show_ci = TRUE)
+# Fit follow-up (x = Infit, y = measure), including persons:
+plot(fit, type = "fit_pathway", diagnostics = diag,
+     fit_stat = "Infit", include_person = TRUE)
 ```
 
 ## 3. Report / APA
@@ -110,6 +117,8 @@ fit_eb2 <- apply_empirical_bayes_shrinkage(fit)
 | Function | Purpose |
 |---|---|
 | `plot(fit)` | Wright map (default) |
+| `plot_wright_unified(fit, renderer="facets")` | FACETS-style `*` ruler; visual compatibility |
+| `plot(fit, type="fit_pathway", diagnostics=diag, include_person=TRUE)` | Infit-vs-measure pathway |
 | `plot(fit, type = "bundle")` | Wright + pathway + CCC |
 | `plot(fit, type = "ccc_overlay")` | Model + observed theta-bin dots |
 | `plot(fit, type = "wright", group=..., group_data=...)` | DIF density overlay |
@@ -129,6 +138,8 @@ fit_eb2 <- apply_empirical_bayes_shrinkage(fit)
 
 ```{r export}
 export_mfrm_bundle(fit, diagnostics = diag, path = "mfrmr_bundle/")
+export_mfrm_results(res, output_dir = "mfrmr-results",
+                    preset = "starter", overwrite = TRUE)
 manifest <- build_mfrm_manifest(fit, diagnostics = diag)
 # manifest$environment, $dependencies, $input_hash, $session_info,
 # $hierarchical_review, $missing_recoding, $shrinkage_review
@@ -150,4 +161,4 @@ fit$prep$missing_recoding
 - Source and documentation: <https://github.com/Ryuya-dot-com/mfrmr>
 - Citation:      `citation("mfrmr")`
 
-*mfrmr 0.2.0 cheatsheet*. Distributed under MIT License.
+*mfrmr 0.2.2 cheatsheet*. Distributed under MIT License.

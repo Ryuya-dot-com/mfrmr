@@ -14,9 +14,12 @@
 #'
 #' 1. Fit with [fit_mfrm()] using `method = "MML"`
 #' 2. Build a comprehensive first screen with [mfrm_results()]
-#' 3. Build report-ready output with [mfrm_report()]
-#' 4. Export a reproducible result folder with [export_mfrm_results()]
-#' 5. Add [diagnose_mfrm()], [plot_qc_dashboard()], and
+#' 3. Create the required Wright map with
+#'    `plot(res, type = "wright", show_ci = TRUE)`
+#' 4. Build report-ready output with [mfrm_report()]
+#' 5. Export a reproducible result folder with
+#'    `export_mfrm_results(res, preset = "starter")`
+#' 6. Add [diagnose_mfrm()], [plot_qc_dashboard()], and
 #'    [reporting_checklist()] when the review needs deeper diagnostics; for
 #'    bounded `GPCM`, read [gpcm_capability_matrix()] before interpreting
 #'    specialist helpers
@@ -69,12 +72,14 @@
 #' Use this order before exploring the broader feature surface:
 #' 1. [fit_mfrm()] with `method = "MML"`
 #' 2. [mfrm_results()] for a comprehensive first screen
-#' 3. [mfrm_report()] for report-ready wording, tables, and route labels
-#' 4. [export_mfrm_results()] for a reproducible result folder
-#' 5. Add [diagnose_mfrm()] with `diagnostic_mode = "both"` for deeper
+#' 3. `plot(res, type = "wright", show_ci = TRUE)` for the required shared-logit figure
+#' 4. [mfrm_report()] for report-ready wording, tables, and route labels
+#' 5. `export_mfrm_results(res, preset = "starter")` for a reproducible
+#'    folder whose `index.html` starts with the Wright map
+#' 6. Add [diagnose_mfrm()] with `diagnostic_mode = "both"` for deeper
 #'    `RSM` / `PCM` diagnostics; for bounded `GPCM`, keep diagnostics on the
 #'    direct exploratory route and read [gpcm_capability_matrix()]
-#' 6. Choose the next branch:
+#' 7. Choose the next branch:
 #'    [reporting_checklist()] for reporting,
 #'    [build_weighting_review()] for Rasch-versus-`GPCM` weighting review,
 #'    [build_misfit_casebook()] for operational case review, or

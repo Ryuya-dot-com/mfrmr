@@ -66,6 +66,7 @@ reference:
       - apa_table
       - as_kable
       - as_flextable
+      - as_ggplot
       - plot_data
       - plot_data_components
 
@@ -105,7 +106,9 @@ reference:
     desc: "FACETS handoff, external-table review, and related package import adapters."
     contents:
       - facets_positioning_guide
+      - facets_term_crosswalk
       - facets_feature_coverage
+      - facets_visual_contract
       - facets_fit_df_guide
       - facets_fit_review
       - facets_output_file_bundle

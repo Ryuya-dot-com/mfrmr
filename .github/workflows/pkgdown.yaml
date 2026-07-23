@@ -17,6 +17,9 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      # Vignettes use CRAN-safe cached tables by default. The public site must
+      # execute them so readers can see the required Wright-map figures.
+      NOT_CRAN: "true"
     steps:
       - uses: actions/checkout@v4
 

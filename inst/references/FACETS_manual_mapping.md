@@ -39,8 +39,15 @@ explicitly supplied for comparison.
 - Table 7-style facet/person measures and fit summary: `diagnose_mfrm()` + `summary.mfrm_fit()`
 - Table 7 reliability + facet chi-square style summaries: `diagnose_mfrm()$reliability`, `diagnose_mfrm()$facets_chisq`, `facets_chisq_table()`, `plot_facets_chisq()`
 - Table 7 agreement style summaries: `diagnose_mfrm()$interrater`, `interrater_agreement_table()`, `rater_network_analysis()`, `rater_halo_network_analysis()`, `plot_interrater_agreement()`
-- Wright/variable-map visual display: `plot(fit, type = "wright")`,
-  `plot_wright_unified()`, and `plot_data(type = "wright")`
+- Table 6-style Wright/variable-map visual display:
+  `plot_wright_unified(fit, renderer = "facets")` reproduces the shared
+  logit ruler, person-frequency asterisks, signed facet columns, and labeled
+  score-transition lines; `renderer = "native"` retains the package-native
+  facet SE/CI display. Both routes expose editable draw-free data.
+- Fit-oriented pathway display:
+  `plot(fit, type = "fit_pathway", fit_stat = "Infit", include_person = TRUE, top_n_person = 12)`
+  places Infit/Outfit on the x-axis and measure logits on the y-axis without
+  changing the existing expected-score `type = "pathway"` contract.
 - Table 8.1-style rating scale bundle: `rating_scale_table()`
 - Table 8-style bar-chart and curves exporters: `category_structure_report()`,
   `category_curves_report()`, including cumulative probability, total
@@ -82,6 +89,12 @@ explicitly supplied for comparison.
   - FACETS-style routes are transition and reporting aids, not claims that
     FACETS produced or numerically determined the estimates
   - legacy numbered `table*` names are internal and not exported
+- Table 6 Wright-map equivalence boundary:
+  - current: the FACETS renderer reproduces the requested visual grammar and
+    retains all fitted locations; the native renderer adds SE/CI uncertainty
+  - gap: exact pixel/fixed-column identity across FACETS versions and exact
+    numerical identity require version-aligned external FACETS golden output
+    and are not inferred from visual similarity
 - Table 1/2/3 reports:
   - current: `specifications_report()`, `data_quality_report()`, `estimation_iteration_report()` with structured output and optional fixed-width text
   - gap: FACETS fixed-width text layout and exact optimizer-internal iteration path are not yet 1:1

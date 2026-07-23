@@ -132,8 +132,11 @@ column-selection wizard in an interactive session.
 \section{Visualization and HTML}{
 
 \code{plot(res)} routes to a FACETS-style model-level visual bundle by default.
-Other routes include \code{plot(res, type = "wright")}, \code{"pathway"}, \code{"qc"},
-\code{"category"}, \code{"anchors"}, and \code{"tables"}. \code{output = "html"} writes a
+Other routes include \code{plot(res, type = "wright")}, \code{"pathway"},
+\code{"fit_pathway"}, \code{"qc"}, \code{"category"}, \code{"anchors"}, \code{"response_time"},
+and \code{"tables"}. The Wright map is the required first fitted-scale artifact;
+\code{"fit_pathway"} is a follow-up with Infit or Outfit on the horizontal axis
+and measure on the vertical axis. \code{output = "html"} writes a
 lightweight temporary HTML file;
 use \code{\link[=launch_mfrmr_viewer]{launch_mfrmr_viewer()}} when you want an optional local Shiny reader
 for an already-created \code{mfrm_results} object. Use
@@ -147,12 +150,17 @@ analysis archive is needed.
 \enumerate{
 \item Fit explicitly with \code{\link[=fit_mfrm]{fit_mfrm()}} in scripts and manuscripts.
 \item Call \code{res <- mfrm_results(fit)}.
+\item Read \code{summary(res, view = "brief")}, then create the required
+\code{plot(res, type = "wright", show_ci = TRUE)} artifact.
 \item Read \code{summary(res)$triage}, \code{summary(res)$status},
 \code{summary(res)$plot_map}, and \code{summary(res)$next_actions}.
 \item Call \code{report <- mfrm_report(res)} when a report-ready surface is needed.
-\item Use \code{\link[=export_mfrm_results]{export_mfrm_results()}} to write CSV, report, RDS, replay, and
+\item Use \code{export_mfrm_results(res, preset = "starter")} to write the Wright
+map, CSV, report, RDS, replay, and
 manifest files for handoff or review.
-\item Use \code{plot(res, type = "qc")} for the first visual screen.
+\item Use \code{plot(res, type = "fit_pathway", include_person = TRUE, top_n_person = 12, person_labels = "none", facet_labels = "flagged")}
+or
+\code{plot(res, type = "qc")} for focused visual follow-up.
 \item Optionally inspect the same result with \code{\link[=launch_mfrmr_viewer]{launch_mfrmr_viewer()}} in an
 interactive session.
 \item Use \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}} or the helper named in

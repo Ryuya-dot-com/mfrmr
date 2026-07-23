@@ -627,21 +627,24 @@ mfrm_results_table_index <- function(tables) {
 mfrm_results_plot_map <- function(has_fit, has_diagnostics, tables, components) {
   table_names <- names(tables %||% list())
   data.frame(
-    Type = c("fit", "wright", "pathway", "qc", "category", "anchors", "response_time", "tables"),
+    Type = c("wright", "fit", "pathway", "fit_pathway", "qc", "category", "anchors", "response_time", "tables"),
     Available = c(
       isTRUE(has_fit),
       isTRUE(has_fit),
       isTRUE(has_fit),
+      isTRUE(has_fit) && isTRUE(has_diagnostics),
       isTRUE(has_fit) && isTRUE(has_diagnostics),
       "rating_scale" %in% names(components) || any(grepl("^rating_scale", table_names)),
       "linking_review" %in% names(components),
       "response_time_review" %in% names(components),
       length(table_names) > 0L
     ),
+    RequiredArtifact = c(TRUE, rep(FALSE, 8L)),
     Route = c(
-      "plot(res, type = 'fit')",
       "plot(res, type = 'wright')",
+      "plot(res, type = 'fit')",
       "plot(res, type = 'pathway')",
+      "plot(res, type = 'fit_pathway', fit_stat = 'Infit', include_person = TRUE, top_n_person = 12, person_labels = 'none', facet_labels = 'flagged')",
       "plot(res, type = 'qc')",
       "plot(res, type = 'category')",
       "plot(res, type = 'anchors')",
@@ -649,9 +652,10 @@ mfrm_results_plot_map <- function(has_fit, has_diagnostics, tables, components) 
       "plot(res, type = 'tables')"
     ),
     Detail = c(
+      "Required first fitted-scale artifact: persons, facet levels, and thresholds on the shared logit ruler.",
       "Model-level visual bundle from plot.mfrm_fit().",
-      "Wright map from plot.mfrm_fit().",
       "Expected-score pathway map from plot.mfrm_fit().",
+      "Infit/Outfit-versus-measure pathway with selected person rows and measure uncertainty.",
       "Quality-control dashboard from plot_qc_dashboard().",
       "Rating-scale/category plot when rating_scale_table() is available.",
       "Anchor-review plot from the stored fit_mfrm() anchor review.",
@@ -814,12 +818,25 @@ mfrm_results_triage <- function(status, plot_map, components, table_index,
 
   qc_available <- nrow(plot_map) > 0L &&
     any(plot_map$Type %in% "qc" & plot_map$Available %in% TRUE)
+  wright_available <- nrow(plot_map) > 0L &&
+    any(plot_map$Type %in% "wright" & plot_map$Available %in% TRUE)
   add(
-    "Visual screen",
+    "Wright map",
+    if (wright_available) "ok" else "not_available",
+    if (wright_available) "required_wright_map_available" else "required_wright_map_missing",
+    if (wright_available) "plot(res, type = \"wright\", preset = \"publication\", show_ci = TRUE)" else "summary(res)$plot_map",
+    if (wright_available) {
+      "The required shared-logit Wright map is available; inspect person targeting, facet locations, steps, and uncertainty before follow-up plots."
+    } else {
+      "The required Wright-map artifact is unavailable for this result object."
+    }
+  )
+  add(
+    "Diagnostic dashboard",
     if (qc_available) "ok" else "not_available",
     if (qc_available) "qc_plot_available" else "qc_plot_missing",
     if (qc_available) "plot(res, type = \"qc\", preset = \"publication\")" else "summary(res)$plot_map",
-    if (qc_available) "The QC dashboard route is available for first visual review." else "QC plotting is unavailable for this result object."
+    if (qc_available) "The QC dashboard route is available as a focused follow-up after the required Wright-map review." else "QC plotting is unavailable for this result object."
   )
 
   add(
@@ -954,6 +971,15 @@ mfrm_results_next_actions <- function(status, plot_map, components, table_index,
     "summary(res)",
     "Confirms input mode, model, method, section status, table coverage, and plot routes."
   )
+  if (nrow(plot_map) > 0L && any(plot_map$Type %in% "wright" & plot_map$Available %in% TRUE)) {
+    add(
+      2L,
+      "Wright map",
+      "Create and inspect the required shared-logit scale map.",
+      "plot(res, type = \"wright\", preset = \"publication\", show_ci = TRUE)",
+      "The Wright map is the primary fitted-scale artifact: compare person targeting with facet levels and step thresholds before branching into diagnostics."
+    )
+  }
   if (nrow(triage) > 0L &&
       "Severity" %in% names(triage) &&
       any(triage$Severity %in% c("not_available", "review"), na.rm = TRUE)) {
@@ -980,9 +1006,18 @@ mfrm_results_next_actions <- function(status, plot_map, components, table_index,
     add(
       4L,
       "Visual diagnostics",
-      "Open the QC dashboard before drilling into individual tables.",
+      "Open the QC dashboard after reviewing the Wright map.",
       "plot(res, type = \"qc\", preset = \"publication\")",
-      "The QC route gives a first visual check of fit, residual, and category surfaces."
+      "The QC route gives a focused follow-up view of fit, residual, and category surfaces."
+    )
+  }
+  if (nrow(plot_map) > 0L && any(plot_map$Type %in% "fit_pathway" & plot_map$Available %in% TRUE)) {
+    add(
+      5L,
+      "Fit pathway",
+      "Review Infit against measure, including selected person rows when useful.",
+      "plot(res, type = \"fit_pathway\", fit_stat = \"Infit\", include_person = TRUE, top_n_person = 12, person_labels = \"none\", facet_labels = \"flagged\", preset = \"publication\")",
+      "This follow-up separates measure uncertainty from fit displacement while keeping person inclusion explicit."
     )
   }
   if ("precision_review" %in% names(components)) {
@@ -4179,10 +4214,12 @@ mfrm_report_route_table <- function() {
 }
 
 #' @export
-summary.mfrm_report <- function(object, top_n = 8, ...) {
+summary.mfrm_report <- function(object, top_n = 8,
+                                view = c("full", "reader"), ...) {
   if (!inherits(object, "mfrm_report")) {
     stop("`object` must be an mfrm_report object.", call. = FALSE)
   }
+  view <- match.arg(tolower(as.character(view[1])), c("full", "reader"))
   top_n <- max(1L, as.integer(top_n))
   first_screen <- as.data.frame(object$first_screen %||% data.frame(), stringsAsFactors = FALSE)
   first_rows <- first_screen
@@ -4275,7 +4312,8 @@ summary.mfrm_report <- function(object, top_n = 8, ...) {
     report_gaps = report_gaps,
     boundary_index = boundary_index,
     routes = mfrm_report_route_table(),
-    top_n = top_n
+    top_n = top_n,
+    view = view
   )
   class(out) <- "summary.mfrm_report"
   out
@@ -4470,7 +4508,13 @@ mfrm_report <- function(x,
   )
 }
 
-mfrm_results_export_include <- function(include) {
+mfrm_results_export_include <- function(include, preset = NULL) {
+  if (!is.null(preset)) {
+    preset <- match.arg(tolower(as.character(preset[1])), c("starter"))
+    if (identical(preset, "starter")) {
+      include <- unique(c(include %||% "default", "default", "report", "plots"))
+    }
+  }
   include <- unique(tolower(as.character(include %||% "default")))
   default <- c("summary", "tables", "html", "rds", "replay", "manifest")
   allowed <- c(default, "report", "plots", "all", "default")
@@ -4491,6 +4535,63 @@ mfrm_results_export_include <- function(include) {
     stop("`include` must contain at least one export component.", call. = FALSE)
   }
   include
+}
+
+mfrm_results_export_index_html <- function(prefix, written_files, plot_errors) {
+  files <- as.data.frame(written_files %||% data.frame(), stringsAsFactors = FALSE)
+  errors <- as.data.frame(plot_errors %||% data.frame(), stringsAsFactors = FALSE)
+  component_file <- function(component) {
+    hit <- files[files$Component %in% component, , drop = FALSE]
+    if (nrow(hit) == 0L && identical(component, "written_files")) {
+      return(paste0(prefix, "_written_files.csv"))
+    }
+    if (nrow(hit) == 0L) return("")
+    basename(as.character(hit$Path[1]))
+  }
+  link <- function(component, label) {
+    file <- component_file(component)
+    if (!nzchar(file)) return(paste0("<span>", html_escape(label), " (not available)</span>"))
+    paste0("<a href=\"", html_escape(file), "\">", html_escape(label), "</a>")
+  }
+  wright <- component_file("plot_wright")
+  wright_block <- if (nzchar(wright)) {
+    c(
+      "<figure>",
+      paste0("<a href=\"", html_escape(wright), "\"><img src=\"", html_escape(wright),
+             "\" alt=\"Wright map: persons, facets, and steps on a shared logit scale\"></a>"),
+      "<figcaption>Required Wright map. Inspect person targeting, facet locations, step thresholds, and uncertainty on the shared logit scale.</figcaption>",
+      "</figure>"
+    )
+  } else {
+    "<p class=\"warning\">The required Wright-map PNG was not created. Review the plot-errors file and rerun the export before handoff.</p>"
+  }
+  plot_error_note <- if (nrow(errors) > 0L) {
+    paste0("<p class=\"warning\">", nrow(errors),
+           " optional plot route(s) failed. See the written-files manifest and plot-errors CSV.</p>")
+  } else {
+    "<p>All requested plot routes completed without a recorded error.</p>"
+  }
+  c(
+    "<!doctype html>",
+    "<html lang=\"en\"><head><meta charset=\"utf-8\">",
+    paste0("<title>", html_escape(prefix), " mfrmr results</title>"),
+    "<style>body{font-family:system-ui,sans-serif;max-width:960px;margin:2rem auto;padding:0 1rem;line-height:1.5;color:#222}ol{padding-left:1.4rem}li{margin:.55rem 0}figure{margin:1.5rem 0;padding:1rem;border:1px solid #ddd;background:#fafafa}img{display:block;max-width:100%;height:auto;margin:auto}figcaption{margin-top:.75rem;color:#444}.warning{padding:.75rem;border-left:4px solid #b45309;background:#fff7ed}.boundary{padding:.75rem;border-left:4px solid #2563eb;background:#eff6ff}</style>",
+    "</head><body>",
+    paste0("<h1>", html_escape(prefix), " mfrmr results</h1>"),
+    "<p>Use this reading order for the fitted analysis. The Wright map is the required first visual artifact; the remaining plots and tables are follow-up evidence.</p>",
+    "<ol>",
+    paste0("<li><strong>Fit and result summary:</strong> ", link("results_html", "open the results summary"), ".</li>"),
+    paste0("<li><strong>Required scale display:</strong> ", link("plot_wright", "open the Wright map PNG"), ".</li>"),
+    paste0("<li><strong>Focused fit pathway:</strong> ", link("plot_fit_pathway", "open the Infit-versus-measure PNG"), "; the export includes selected person rows.</li>"),
+    paste0("<li><strong>Other diagnostics:</strong> use the remaining plot files and summary triage; do not turn a single flag into an exclusion rule.</li>"),
+    paste0("<li><strong>Report readiness:</strong> ", link("report_html", "open the report"), ".</li>"),
+    paste0("<li><strong>Reproducibility:</strong> ", link("replay_code", "review the replay script"), " and ", link("written_files", "the written-files manifest"), ".</li>"),
+    "</ol>",
+    wright_block,
+    plot_error_note,
+    "<p class=\"boundary\"><strong>Interpretation boundary:</strong> these files summarize the fitted model and its diagnostics. They do not establish validity, fairness, or an automatic pass/fail decision by themselves.</p>",
+    "</body></html>"
+  )
 }
 
 mfrm_results_export_table <- function(x) {
@@ -4573,6 +4674,9 @@ mfrm_results_export_add_written <- function(written_files, component, format, pa
 #'   `"tables"`, `"html"`, `"rds"`, `"replay"`, and `"manifest"`. Add
 #'   `"report"` to write [mfrm_report()] tables plus Markdown and HTML; add
 #'   `"plots"` to write available plot routes as PNG files, or use `"all"`.
+#' @param preset Optional reader-facing export preset. `"starter"` adds the
+#'   report and plot routes to the default files and writes `index.html` with
+#'   the required Wright map embedded at the start of the reading flow.
 #' @param overwrite Logical; if `FALSE`, existing files stop the export.
 #' @param zip_bundle Logical; if `TRUE`, create a best-effort zip archive of
 #'   the written files.
@@ -4597,6 +4701,11 @@ mfrm_results_export_add_written <- function(written_files, component, format, pa
 #' Plot export is intentionally optional because some plot routes can be
 #' comparatively slow or require richer graphics devices. Plot failures are
 #' recorded in the returned `plot_errors` table rather than stopping the export.
+#' The `"starter"` preset is the recommended final handoff because it always
+#' requests the Wright map in addition to the result summary, report, replay
+#' script, and manifest. Its Infit pathway includes a bounded selection of
+#' person rows so person fit can be reviewed without replacing the required
+#' Wright-map first screen.
 #'
 #' @return An `mfrm_results_export` object with `summary`, `written_files`,
 #'   `plot_errors`, and zip status fields.
@@ -4614,6 +4723,7 @@ mfrm_results_export_add_written <- function(written_files, component, format, pa
 #'   res,
 #'   output_dir = tempdir(),
 #'   prefix = "mfrmr_results_example",
+#'   preset = "starter",
 #'   overwrite = TRUE
 #' )
 #' exported$summary[, c("FilesWritten", "CsvWritten", "HtmlWritten")]
@@ -4623,6 +4733,7 @@ export_mfrm_results <- function(x,
                                 output_dir = ".",
                                 prefix = "mfrmr_results",
                                 include = "default",
+                                preset = NULL,
                                 overwrite = FALSE,
                                 zip_bundle = FALSE,
                                 zip_name = NULL,
@@ -4632,7 +4743,10 @@ export_mfrm_results <- function(x,
   if (!inherits(x, "mfrm_results")) {
     stop("`x` must be an mfrm_results object. Call `mfrm_results()` first.", call. = FALSE)
   }
-  include <- mfrm_results_export_include(include)
+  preset_name <- if (is.null(preset)) "none" else match.arg(
+    tolower(as.character(preset[1])), c("starter")
+  )
+  include <- mfrm_results_export_include(include, preset = preset)
   overwrite <- isTRUE(overwrite)
   zip_bundle <- isTRUE(zip_bundle)
   prefix <- export_sanitize_component_tag(prefix, fallback = "mfrmr_results")
@@ -4791,7 +4905,15 @@ export_mfrm_results <- function(x,
       result <- tryCatch(
         {
           grDevices::png(filename = plot_path, width = plot_width, height = plot_height, res = plot_res)
-          plot(x, type = type)
+          plot_args <- list(x = x, type = type)
+          if (identical(type, "fit_pathway")) {
+            plot_args$fit_stat <- "Infit"
+            plot_args$include_person <- TRUE
+            plot_args$top_n_person <- 12
+            plot_args$person_labels <- "none"
+            plot_args$facet_labels <- "flagged"
+          }
+          do.call(plot, plot_args)
           TRUE
         },
         error = function(e) e,
@@ -4802,7 +4924,16 @@ export_mfrm_results <- function(x,
         }
       )
       if (isTRUE(result) && file.exists(plot_path)) {
-        add_written(paste0("plot_", tag), "png", plot_path)
+        add_written(
+          paste0("plot_", tag),
+          "png",
+          plot_path,
+          note = if (identical(type, "fit_pathway")) {
+            "Infit-versus-measure pathway with up to 12 selected person rows included; IDs remain in the result data."
+          } else {
+            ""
+          }
+        )
       } else {
         if (file.exists(plot_path)) unlink(plot_path)
         plot_errors <- rbind(
@@ -4817,12 +4948,23 @@ export_mfrm_results <- function(x,
     }
   }
 
+  if (identical(preset_name, "starter")) {
+    write_text(
+      mfrm_results_export_index_html(prefix, written_files, plot_errors),
+      "index.html",
+      "starter_index",
+      format = "html",
+      note = "Reader-first index with the required Wright map and ordered fit-to-report flow."
+    )
+  }
+
   if ("manifest" %in% include) {
     export_summary_path <- ensure_path(paste0(prefix, "_export_summary.csv"))
     export_summary <- data.frame(
       Created = format(Sys.time(), "%Y-%m-%d %H:%M:%S %Z"),
       PackageVersion = as.character(utils::packageVersion("mfrmr")),
       Prefix = prefix,
+      Preset = preset_name,
       Include = paste(include, collapse = ","),
       FilesWritten = nrow(written_files) + 2L,
       CsvWritten = sum(written_files$Format %in% "csv") + 2L,
@@ -4885,6 +5027,7 @@ export_mfrm_results <- function(x,
   summary_out <- data.frame(
     OutputDir = output_dir,
     Prefix = prefix,
+    Preset = preset_name,
     FilesWritten = nrow(written_files),
     CsvWritten = sum(written_files$Format %in% "csv"),
     HtmlWritten = sum(written_files$Format %in% "html"),
@@ -4899,6 +5042,7 @@ export_mfrm_results <- function(x,
   out <- list(
     output_dir = output_dir,
     prefix = prefix,
+    preset = preset_name,
     include = include,
     summary = summary_out,
     written_files = written_files,
@@ -4990,8 +5134,11 @@ export_mfrm_results <- function(x,
 #'
 #' @section Visualization and HTML:
 #' `plot(res)` routes to a FACETS-style model-level visual bundle by default.
-#' Other routes include `plot(res, type = "wright")`, `"pathway"`, `"qc"`,
-#' `"category"`, `"anchors"`, and `"tables"`. `output = "html"` writes a
+#' Other routes include `plot(res, type = "wright")`, `"pathway"`,
+#' `"fit_pathway"`, `"qc"`, `"category"`, `"anchors"`, `"response_time"`,
+#' and `"tables"`. The Wright map is the required first fitted-scale artifact;
+#' `"fit_pathway"` is a follow-up with Infit or Outfit on the horizontal axis
+#' and measure on the vertical axis. `output = "html"` writes a
 #' lightweight temporary HTML file;
 #' use [launch_mfrmr_viewer()] when you want an optional local Shiny reader
 #' for an already-created `mfrm_results` object. Use
@@ -5002,15 +5149,21 @@ export_mfrm_results <- function(x,
 #' @section Typical workflow:
 #' 1. Fit explicitly with [fit_mfrm()] in scripts and manuscripts.
 #' 2. Call `res <- mfrm_results(fit)`.
-#' 3. Read `summary(res)$triage`, `summary(res)$status`,
+#' 3. Read `summary(res, view = "brief")`, then create the required
+#'    `plot(res, type = "wright", show_ci = TRUE)` artifact.
+#' 4. Read `summary(res)$triage`, `summary(res)$status`,
 #'    `summary(res)$plot_map`, and `summary(res)$next_actions`.
-#' 4. Call `report <- mfrm_report(res)` when a report-ready surface is needed.
-#' 5. Use [export_mfrm_results()] to write CSV, report, RDS, replay, and
+#' 5. Call `report <- mfrm_report(res)` when a report-ready surface is needed.
+#' 6. Use `export_mfrm_results(res, preset = "starter")` to write the Wright
+#'    map, CSV, report, RDS, replay, and
 #'    manifest files for handoff or review.
-#' 6. Use `plot(res, type = "qc")` for the first visual screen.
-#' 7. Optionally inspect the same result with [launch_mfrmr_viewer()] in an
+#' 7. Use `plot(res, type = "fit_pathway", include_person = TRUE,
+#'    top_n_person = 12, person_labels = "none", facet_labels = "flagged")`
+#'    or
+#'    `plot(res, type = "qc")` for focused visual follow-up.
+#' 8. Optionally inspect the same result with [launch_mfrmr_viewer()] in an
 #'    interactive session.
-#' 8. Use [build_summary_table_bundle()] or the helper named in
+#' 9. Use [build_summary_table_bundle()] or the helper named in
 #'    `summary(res)$next_actions` for report-specific follow-up.
 #'
 #' @param response_time Optional response-time column name. When `NULL` and
@@ -5230,10 +5383,12 @@ mfrm_results_interactive <- function(data,
 }
 
 #' @export
-summary.mfrm_results <- function(object, digits = 3, top_n = 10, ...) {
+summary.mfrm_results <- function(object, digits = 3, top_n = 10,
+                                 view = c("full", "brief"), ...) {
   if (!inherits(object, "mfrm_results")) {
     stop("`object` must be an mfrm_results object.", call. = FALSE)
   }
+  view <- match.arg(tolower(as.character(view[1])), c("full", "brief"))
   digits <- max(0L, as.integer(digits))
   top_n <- max(1L, as.integer(top_n))
   fit <- object$fit
@@ -5286,7 +5441,8 @@ summary.mfrm_results <- function(object, digits = 3, top_n = 10, ...) {
     mapping = mapping,
     reproducible_code = reproducible_code,
     notes = object$notes %||% character(0),
-    digits = digits
+    digits = digits,
+    view = view
   )
   class(out) <- "summary.mfrm_results"
   out
@@ -5299,21 +5455,30 @@ print.summary.mfrm_results <- function(x, ...) {
     cat("\nOverview\n")
     print(as.data.frame(x$overview), row.names = FALSE)
   }
-  if (!is.null(x$status) && nrow(x$status) > 0L) {
+  if (!identical(x$view %||% "full", "brief") &&
+      !is.null(x$status) && nrow(x$status) > 0L) {
     cat("\nSection status\n")
     print(as.data.frame(x$status), row.names = FALSE)
   }
   if (!is.null(x$triage) && nrow(x$triage) > 0L) {
     cat("\nTriage\n")
-    print(as.data.frame(x$triage), row.names = FALSE)
+    triage <- as.data.frame(x$triage)
+    if (identical(x$view %||% "full", "brief")) triage <- utils::head(triage, 5L)
+    print(triage, row.names = FALSE)
   }
   if (!is.null(x$plot_map) && nrow(x$plot_map) > 0L) {
     cat("\nPlot routes\n")
-    print(as.data.frame(x$plot_map), row.names = FALSE)
+    plot_map <- as.data.frame(x$plot_map)
+    if (identical(x$view %||% "full", "brief")) {
+      plot_map <- plot_map[plot_map$Type %in% c("wright", "fit_pathway", "qc"), , drop = FALSE]
+    }
+    print(plot_map, row.names = FALSE)
   }
   if (!is.null(x$next_actions) && nrow(x$next_actions) > 0L) {
     cat("\nNext actions\n")
-    print(as.data.frame(x$next_actions), row.names = FALSE)
+    next_actions <- as.data.frame(x$next_actions)
+    if (identical(x$view %||% "full", "brief")) next_actions <- utils::head(next_actions, 5L)
+    print(next_actions, row.names = FALSE)
   }
   if (!is.null(x$notes) && length(x$notes) > 0L) {
     cat("\nNotes\n")
@@ -5401,15 +5566,22 @@ print.summary.mfrm_report <- function(x, ...) {
     cat("\nFirst screen\n")
     print(as.data.frame(x$first_screen), row.names = FALSE)
   }
+  if (identical(x$view %||% "full", "reader") &&
+      !is.null(x$claim_readiness) && nrow(x$claim_readiness) > 0L) {
+    cat("\nClaim readiness\n")
+    print(as.data.frame(x$claim_readiness), row.names = FALSE)
+  }
   if (!is.null(x$immediate_actions) && nrow(x$immediate_actions) > 0L) {
     cat("\nImmediate actions\n")
     print(as.data.frame(x$immediate_actions), row.names = FALSE)
   }
-  if (!is.null(x$optional_sections) && nrow(x$optional_sections) > 0L) {
+  if (!identical(x$view %||% "full", "reader") &&
+      !is.null(x$optional_sections) && nrow(x$optional_sections) > 0L) {
     cat("\nOptional sections not requested\n")
     print(as.data.frame(x$optional_sections), row.names = FALSE)
   }
-  if (!is.null(x$claim_readiness) && nrow(x$claim_readiness) > 0L) {
+  if (!identical(x$view %||% "full", "reader") &&
+      !is.null(x$claim_readiness) && nrow(x$claim_readiness) > 0L) {
     cat("\nClaim readiness\n")
     print(as.data.frame(x$claim_readiness), row.names = FALSE)
   }
@@ -5417,7 +5589,8 @@ print.summary.mfrm_report <- function(x, ...) {
     cat("\nReport gaps\n")
     print(as.data.frame(x$report_gaps), row.names = FALSE)
   }
-  if (!is.null(x$boundary_index) && nrow(x$boundary_index) > 0L) {
+  if (!identical(x$view %||% "full", "reader") &&
+      !is.null(x$boundary_index) && nrow(x$boundary_index) > 0L) {
     cat("\nBoundary index\n")
     print(as.data.frame(x$boundary_index), row.names = FALSE)
   }
@@ -5434,7 +5607,7 @@ print.mfrm_report_html <- function(x, ...) {
 #' @export
 plot.mfrm_results <- function(x,
                               y = NULL,
-                              type = c("fit", "wright", "pathway", "qc", "category", "anchors", "response_time", "tables"),
+                              type = c("fit", "wright", "pathway", "fit_pathway", "qc", "category", "anchors", "response_time", "tables"),
                               ...) {
   if (!inherits(x, "mfrm_results")) {
     stop("`x` must be an mfrm_results object.", call. = FALSE)
@@ -5460,6 +5633,12 @@ plot.mfrm_results <- function(x,
   if (identical(type, "pathway")) {
     dots <- list(...)
     dots$type <- "pathway"
+    return(do.call(plot, c(list(x$fit), dots)))
+  }
+  if (identical(type, "fit_pathway")) {
+    dots <- list(...)
+    dots$type <- "fit_pathway"
+    if (is.null(dots$diagnostics)) dots$diagnostics <- x$diagnostics
     return(do.call(plot, c(list(x$fit), dots)))
   }
   if (identical(type, "qc")) {

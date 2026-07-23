@@ -36,6 +36,7 @@ This vignette outlines a reproducible workflow for:
 
 - loading packaged simulation data
 - fitting an MFRM with flexible facets
+- producing the required Wright map on the fitted shared logit scale
 - running diagnostics and residual PCA
 - generating APA and visual summary outputs
 - moving from fitted models into design simulation and fixed-calibration
@@ -107,10 +108,14 @@ fit_toy <- fit_mfrm(
   maxit = 30
 )
 diag_toy <- diagnose_mfrm(fit_toy, residual_pca = "none")
+res_toy <- mfrm_results(fit_toy)
 
 summary(fit_toy)$overview
 summary(diag_toy)$overview
-names(plot(fit_toy, draw = FALSE))
+summary(res_toy, view = "brief")
+
+# Required first fitted-scale artifact.
+plot(res_toy, type = "wright", preset = "publication", show_ci = TRUE)
 ```
 
 ```{r toy-setup-artifacts, echo = FALSE, eval = is_cran_check}
@@ -206,7 +211,30 @@ diag <- diagnose_mfrm(
 
 summary(fit)
 summary(diag)
+
+# Keep the final artifact flow explicit: fit -> Wright map -> follow-up plots.
+res <- mfrm_results(fit)
+summary(res, view = "brief")
+plot(res, type = "wright", preset = "publication", show_ci = TRUE)
+
+plot(
+  fit,
+  type = "fit_pathway",
+  diagnostics = res$diagnostics,
+  fit_stat = "Infit",
+  include_person = TRUE,
+  top_n_person = 12,
+  person_labels = "none",
+  facet_labels = "flagged",
+  preset = "publication"
+)
 ```
+
+This full-data figure caps the displayed person layer at 12 and suppresses
+routine point labels to keep the first screen legible. The selected person IDs
+and every retained facet row remain in
+`plot(..., draw = FALSE)$data$table`; use `person_labels = "all"` or
+`facet_labels = "all"` for a point-identification figure.
 
 If you need residual-structure evidence for a final report, you can add residual
 PCA after the initial diagnostic pass. Treat this as an exploratory screen, not

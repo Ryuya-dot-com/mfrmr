@@ -11,6 +11,7 @@ plot_bubble(
   view = c("measure", "infit_outfit"),
   bubble_size = NULL,
   facets = NULL,
+  include_person = FALSE,
   fit_range = c(0.5, 1.5),
   top_n = 60,
   main = NULL,
@@ -43,7 +44,11 @@ default for \code{view = "infit_outfit"}), or \code{"equal"}
 (uniform size).}
 
 \item{facets}{Character vector of facets to include. \code{NULL} (default)
-includes all non-person facets.}
+includes every row allowed by \code{include_person}.}
+
+\item{include_person}{If \code{TRUE}, person measures may be included in
+the chart (and in \code{facets} filtering). The default is \code{FALSE}
+because person rows commonly overwhelm facet-level patterns.}
 
 \item{fit_range}{Numeric length-2 vector defining the heuristic fit-review band
 shown as a shaded region (default \code{c(0.5, 1.5)}).}

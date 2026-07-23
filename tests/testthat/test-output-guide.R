@@ -47,6 +47,16 @@ test_that("mfrmr_output_guide supports focused scopes", {
   expect_true(any(grepl("export_mfrm_results", public$MainFunction, fixed = TRUE)))
   expect_true(any(grepl("launch_mfrmr_viewer", public$MainFunction, fixed = TRUE)))
 
+  beginner <- mfrmr_output_guide("beginner")
+  expect_true(nrow(beginner) > 0L)
+  expect_true(all(beginner$UserLevel == "beginner"))
+  expect_true(any(grepl("fit_mfrm", beginner$MainFunction, fixed = TRUE)))
+
+  psychometric <- mfrmr_output_guide("psychometric")
+  expect_true(nrow(psychometric) > 0L)
+  expect_true(all(nzchar(psychometric$DecisionBoundary)))
+  expect_true(any(psychometric$ObjectRole == "focused evidence table"))
+
   entry <- mfrmr_output_guide("entry")
   expect_true(nrow(entry) > 0L)
   expect_true(all(entry$Scope == "entry"))
@@ -243,6 +253,29 @@ test_that("facets_positioning_guide prevents FACETS numerical-clone wording", {
                         fixed = TRUE)))
   expect_true(any(grepl("read_facets_fit_table", guide$PrimaryRoute, fixed = TRUE)))
   expect_false(any(grepl("\\baudit\\b", unlist(guide), ignore.case = TRUE)))
+})
+
+test_that("FACETS term and visual contracts separate visual and numerical correspondence", {
+  terms <- facets_term_crosswalk()
+  expect_true(all(c(
+    "FACETSTerm", "mfrmrTerm", "mfrmrRoute", "Relationship", "Boundary"
+  ) %in% names(terms)))
+  expect_true(any(terms$FACETSTerm == "Measure"))
+  expect_true(any(terms$FACETSTerm == "ZSTD" &
+                    grepl("convention", terms$Relationship, fixed = TRUE)))
+
+  visuals <- facets_visual_contract()
+  expect_true(all(c(
+    "FACETSVisualSurface", "Status", "FirstMfrmrRoute",
+    "EditableDataRoute", "ClaimBoundary"
+  ) %in% names(visuals)))
+  expect_true(any(grepl("asterisk Wright", visuals$FACETSVisualSurface, fixed = TRUE) &
+                    grepl('renderer = "facets"', visuals$FirstMfrmrRoute, fixed = TRUE)))
+  expect_true(any(grepl("uncertainty", visuals$FACETSVisualSurface, fixed = TRUE) &
+                    visuals$Status == "mfrmr_extension"))
+  expect_true(any(grepl("ruler_rows", visuals$EditableDataRoute, fixed = TRUE)))
+  expect_false(any(grepl('component = "ruler"', visuals$EditableDataRoute, fixed = TRUE)))
+  expect_true(any(grepl("numerical equivalence", visuals$ClaimBoundary, fixed = TRUE)))
 })
 
 test_that("mfrmr_output_guide gives FACETS, ConQuest, and R user pathways", {

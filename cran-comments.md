@@ -9,6 +9,14 @@ minor-release claim is intended for this submission.
 
 Headline changes relative to CRAN 0.2.1 are:
 
+- an explicit data -> fit -> required Wright map -> focused diagnostics ->
+  report/export reading order, including a reader-first starter index;
+- an opt-in FACETS Table 6-style Wright renderer with person-frequency
+  asterisks, signed facet columns, and labeled score-transition lines, while
+  retaining the native renderer and its opt-in facet SE/CI display; the
+  canonical results route enables those intervals;
+- a distinct Infit/Outfit-versus-measure pathway with bounded person-row
+  inclusion and editable plot data;
 - reader-first summaries, report views, and starter exports for the
   `fit_mfrm()` -> `mfrm_results()` -> `mfrm_report()` ->
   `export_mfrm_results()` workflow;
@@ -53,18 +61,18 @@ release-evidence infrastructure around that engine.
 The refreshed local lightweight source-tarball check was run against the
 generated `mfrmr_0.2.2.tar.gz` source tarball on:
 
-- local macOS Tahoe 26.5.1, aarch64-apple-darwin23, R 4.6.1
+- local macOS Tahoe 26.5.2, aarch64-apple-darwin23, R 4.6.1
   (2026-06-24).
 
-Final local commands refreshed on 2026-07-09 JST:
+Final local source-tarball check refreshed on 2026-07-23 JST:
 
 ```sh
 R CMD build .
-_R_CHECK_FORCE_SUGGESTS_=false R CMD check --no-manual mfrmr_0.2.2.tar.gz
 _R_CHECK_FORCE_SUGGESTS_=false R CMD check --no-manual --as-cran mfrmr_0.2.2.tar.gz
 ```
 
-Both checks reported `Status: OK`. The release-readiness review is run
+The check reported `Status: OK` with 0 errors, 0 warnings, and 0 notes.
+The release-readiness review is run
 against the final `mfrmr.Rcheck/00check.log`, which must report package
 version 0.2.2.
 
@@ -89,18 +97,20 @@ versioned validation artifacts.
 
 ## R CMD check results
 
-For the current tree, the final local source-tarball checks were refreshed
-with vignettes enabled:
+For the current tree, the final local source-tarball check was refreshed with
+vignettes enabled:
 
 ```sh
 R CMD build .
-_R_CHECK_FORCE_SUGGESTS_=false R CMD check --no-manual mfrmr_0.2.2.tar.gz
 _R_CHECK_FORCE_SUGGESTS_=false R CMD check --no-manual --as-cran mfrmr_0.2.2.tar.gz
 ```
 
-Both checks reported `Status: OK`. Current targeted regression checks also
-cover the changed network, anchor, GPCM-boundary, reporting, namespace, and
-release-readiness paths. The release-readiness gate verifies the
+The check reported `Status: OK` with 0 errors, 0 warnings, and 0 notes.
+The separate non-CRAN regression run covers the Wright renderers, Infit
+pathway, person inclusion, starter export, editable ggplot conversion,
+network, anchor, GPCM-boundary, reporting, namespace, and release-readiness
+paths. Its final run covered 1,560 tests and 9,509 expectations, with 0
+failures and 0 errors. The release-readiness gate verifies the
 network/anchor stress and self-/other-speaking network validation artifacts
 rather than relying only on their presence, and expected optimizer
 convergence-review warnings from the live DIF/DFF APA review are captured in
@@ -119,6 +129,9 @@ No defaults change between CRAN 0.2.1 and 0.2.2.
 
 The 0.1.6 defaults (`quad_points = 31`, `diagnostic_mode = "both"`,
 `plot.mfrm_fit(type = "wright")`, `keep_original = FALSE`) are retained.
+The FACETS-style renderer and fit-oriented pathway are opt-in; the native
+Wright renderer remains the default, and its SE/CI overlay remains available
+through `show_ci = TRUE`.
 
 ## Deferred to a follow-up release
 

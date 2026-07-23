@@ -2928,11 +2928,14 @@ plot_information <- function(x,
 #' the same scale.
 #'
 #' @param fit Output from [fit_mfrm()].
-#' @param diagnostics Optional output from [diagnose_mfrm()].
+#' @param diagnostics Optional output from [diagnose_mfrm()]. When supplied,
+#'   the map uses matching standard errors and precision metadata while keeping
+#'   coordinates from `fit`.
 #' @param bins Integer number of bins for the person histogram. Default `20`.
 #' @param show_thresholds Logical; if `TRUE`, display threshold/step
 #'   positions on the map. Default `TRUE`.
-#' @param top_n Maximum number of facet/step points retained for labeling.
+#' @param top_n Maximum number of facet/step locations retained by the native
+#'   renderer. The FACETS-style payload retains every fitted location.
 #' @param show_ci Logical; if `TRUE`, draw approximate confidence intervals when
 #'   standard errors are available.
 #' @param ci_level Confidence level used when `show_ci = TRUE`.
@@ -2942,6 +2945,20 @@ plot_information <- function(x,
 #' @param palette Optional named color overrides passed to the shared Wright-map
 #'   drawer.
 #' @param label_angle Rotation angle for group labels on the facet panel.
+#' @param renderer Canonical Wright-map renderer selector: `"native"`
+#'   (default) or `"facets"` for the FACETS Table 6-style visual layout.
+#' @param wright_style Wright-map renderer: `"native"` preserves the histogram,
+#'   point, range, and facet-SE display; `"facets_style"` adds a FACETS Table
+#'   6-style text ruler. The latter is a visual layout, not a claim of numerical
+#'   equivalence with FACETS, and is equivalent to `renderer = "facets"`.
+#' @param category_labels Optional named/ordered score rubric labels, or a data
+#'   frame with `Score` and `Label`, for `wright_style = "facets_style"`.
+#' @param rows_per_logit Number of rows per logit on the FACETS-style ruler.
+#' @param wright_range Optional finite increasing length-2 logit range.
+#' @param extreme_placement Place extreme-score persons at ruler `"ends"` or at
+#'   their fitted `"estimate"` in the FACETS-style renderer.
+#' @param persons_per_star Number of persons represented by one `*`; `NULL`
+#'   selects a compact value automatically.
 #' @param ... Additional graphical parameters.
 #'
 #' @details
@@ -2957,6 +2974,14 @@ plot_information <- function(x,
 #'
 #' The logit scale on the y-axis is shared, allowing direct visual
 #' comparison of all facets and persons.
+#'
+#' With `renderer = "facets"` (or `wright_style = "facets_style"`), the
+#' draw-free result additionally
+#' contains tidy ruler rows, person star frequencies, signed facet headers,
+#' all facet levels, step lines, original-score transitions, mean half-score
+#' boundaries, category labels, and display settings under `facets_style`.
+#' These tables support custom ggplot2/plotly rendering without parsing the
+#' base plot.
 #'
 #' @section Interpreting output:
 #' - Facet levels at the same height on the map are at similar difficulty.
@@ -2997,6 +3022,15 @@ plot_information <- function(x,
 #'                  method = "JML", model = "RSM", maxit = 30)
 #' map_data <- plot_wright_unified(fit, draw = FALSE)
 #' names(map_data)
+#' facets_map <- plot_wright_unified(
+#'   fit,
+#'   renderer = "facets",
+#'   category_labels = c(
+#'     `1` = "Beginning", `2` = "Developing", `3` = "Secure", `4` = "Advanced"
+#'   ),
+#'   draw = FALSE
+#' )
+#' facets_map$facets_style$settings
 #' @export
 plot_wright_unified <- function(fit,
                                 diagnostics = NULL,
@@ -3009,6 +3043,13 @@ plot_wright_unified <- function(fit,
                                 preset = c("standard", "publication", "compact", "monochrome"),
                                 palette = NULL,
                                 label_angle = 45,
+                                renderer = NULL,
+                                wright_style = c("native", "facets_style"),
+                                category_labels = NULL,
+                                rows_per_logit = 2L,
+                                wright_range = NULL,
+                                extreme_placement = c("ends", "estimate"),
+                                persons_per_star = NULL,
                                 ...) {
   if (!inherits(fit, "mfrm_fit")) {
     stop("`fit` must be an `mfrm_fit` object.", call. = FALSE)
@@ -3016,12 +3057,23 @@ plot_wright_unified <- function(fit,
   top_n <- max(1L, as.integer(top_n))
   bins <- max(5L, as.integer(bins))
   style <- resolve_plot_preset(preset)
-  se_tbl_ci <- if (isTRUE(show_ci)) compute_se_for_plot(fit, ci_level = ci_level) else NULL
+  wright_style <- match_wright_style(wright_style, renderer = renderer)
+  se_tbl_ci <- if (isTRUE(show_ci) || !is.null(diagnostics)) {
+    compute_se_for_plot(fit, ci_level = ci_level, diagnostics = diagnostics)
+  } else {
+    NULL
+  }
   plot_core <- build_wright_map_data(
     fit,
     top_n = top_n,
     se_tbl = se_tbl_ci,
-    include_steps = isTRUE(show_thresholds)
+    include_steps = isTRUE(show_thresholds),
+    wright_style = wright_style,
+    category_labels = category_labels,
+    rows_per_logit = rows_per_logit,
+    wright_range = wright_range,
+    extreme_placement = extreme_placement,
+    persons_per_star = persons_per_star
   )
   plot_core$person_hist <- graphics::hist(plot_core$person$Estimate, breaks = bins, plot = FALSE)
   plot_data <- c(

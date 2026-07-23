@@ -5,9 +5,9 @@
 \title{Choose an mfrmr output helper by user goal}
 \usage{
 mfrmr_output_guide(
-  scope = c("all", "public", "entry", "viewer", "binary", "tables", "reports", "reviews",
-    "bundles", "exports", "compatibility", "gpcm", "simulation", "linking", "network",
-    "response_time", "facets", "conquest", "r")
+  scope = c("all", "public", "beginner", "psychometric", "entry", "viewer", "binary",
+    "tables", "reports", "reviews", "bundles", "exports", "compatibility", "gpcm",
+    "simulation", "linking", "network", "response_time", "facets", "conquest", "r")
 )
 }
 \arguments{
@@ -70,6 +70,10 @@ work to \code{\link[=mfrm_results_interactive]{mfrm_results_interactive()}}. Aft
 Use \code{mfrmr_output_guide("viewer")} when the next step is the optional local
 Shiny reader; it shows which \code{include} preset to use before calling
 \code{\link[=launch_mfrmr_viewer]{launch_mfrmr_viewer()}}.
+Use \code{mfrmr_output_guide("beginner")} for all beginner-labelled entry
+routes. Use \code{mfrmr_output_guide("psychometric")} for the technical table,
+review, and reporting routes whose interpretation boundaries should be
+checked before manuscript use.
 }
 
 \section{How to use this guide}{
@@ -98,6 +102,8 @@ mfrmr_output_guide("facets")[, c("Question", "MainFunction")]
 mfrmr_output_guide("binary")[, c("Question", "MainFunction")]
 mfrmr_output_guide("viewer")[, c("Question", "MainFunction")]
 mfrmr_output_guide("response_time")[, c("Question", "MainFunction")]
+mfrmr_output_guide("beginner")[, c("Question", "MainFunction")]
+mfrmr_output_guide("psychometric")[, c("Question", "DecisionBoundary")]
 }
 \concept{GPCM boundaries}
 \concept{reporting workflow}
