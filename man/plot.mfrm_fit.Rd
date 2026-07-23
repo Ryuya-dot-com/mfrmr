@@ -31,6 +31,13 @@
   zstd_cut = 2,
   draw = TRUE,
   preset = c("standard", "publication", "compact", "monochrome"),
+  renderer = NULL,
+  wright_style = c("native", "facets_style"),
+  category_labels = NULL,
+  rows_per_logit = 2L,
+  wright_range = NULL,
+  extreme_placement = c("ends", "estimate"),
+  persons_per_star = NULL,
   ...
 )
 }
@@ -46,8 +53,9 @@ fit-statistic-to-measure display.}
 
 \item{facet}{Optional facet name for \code{type = "facet"}.}
 
-\item{top_n}{Maximum number of facet/step locations retained for
-compact displays.}
+\item{top_n}{Maximum number of facet/step locations retained by the native
+Wright map for compact displays. The FACETS-style payload always retains
+every fitted facet and step location.}
 
 \item{theta_range}{Numeric length-2 range for pathway, CCC, and
 category-surface plot data.}
@@ -71,11 +79,14 @@ per-group person-density curves (DIF / DFF screening view).
 Either a column name (looked up first in \code{group_data} when
 supplied through \code{...}, then in \code{fit$prep$data}) or a vector
 aligned with \code{fit$facets$person}. Ignored for other \code{type}
-values. To pass the source data alongside, use
+values and for \code{wright_style = "facets_style"}, whose person column is a
+single FACETS-style star frequency. To pass the source data alongside, use
 \verb{plot(fit, type = "wright", group = "MyCol", group_data = <df>)}.}
 
 \item{diagnostics}{Optional output from \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}. When supplied,
-pathway plot data reuse it for \code{fit_measures}, \code{fit_status}, and
+Wright-map standard errors and precision metadata reuse matching rows from
+\code{diagnostics$measures} without replacing fitted coordinates,
+while pathway plot data reuse \code{fit_measures}, \code{fit_status}, and
 \code{curve_fit_status} instead of recomputing diagnostics.}
 
 \item{include_fit_measures}{If \code{TRUE} (default), pathway plot data include
@@ -116,6 +127,33 @@ shape) or \code{"facet"} (one base-graphics panel per facet).}
 \item{preset}{Visual preset (\code{"standard"}, \code{"publication"}, \code{"compact"},
 or \code{"monochrome"}).}
 
+\item{renderer}{Wright-map renderer. Use \code{"native"} (default) or
+\code{"facets"} for the FACETS Table 6-style visual layout. This is the
+canonical selector for new code.}
+
+\item{wright_style}{Wright-map renderer. \code{"native"} preserves the package's
+histogram, point, range, and facet-SE display. \code{"facets_style"} adds a
+FACETS Table 6-style text ruler with person-frequency stars, signed facet
+headers, and labeled score-transition lines. It is a visual-layout option,
+not a claim of numerical equivalence with FACETS. This explicit style name
+is equivalent to \code{renderer = "facets"}.}
+
+\item{category_labels}{Optional score rubric labels used by
+\code{wright_style = "facets_style"}. Supply a named character vector keyed by
+original score, an unnamed vector with one label per retained category, or
+a data frame with \code{Score} and \code{Label} columns.}
+
+\item{rows_per_logit}{Number of FACETS-style ruler rows per logit.}
+
+\item{wright_range}{Optional finite increasing length-2 logit range for the
+FACETS-style ruler. \code{NULL} derives a range that contains the fitted data.}
+
+\item{extreme_placement}{In the FACETS-style renderer, place extreme-score
+persons at the ruler \code{"ends"} or retain their fitted \code{"estimate"}.}
+
+\item{persons_per_star}{Number of persons represented by one \code{*} in the
+FACETS-style frequency column. \code{NULL} chooses a compact value automatically.}
+
 \item{...}{Additional arguments ignored for S3 compatibility.}
 }
 \value{
@@ -144,7 +182,18 @@ ability, and higher non-person facet values indicate greater
 severity/difficulty under the default negative facet orientation.
 Facets listed in \code{fit_mfrm(positive_facets = ...)} are reversed
 (higher values raise expected scores); state the active orientation in
-figure captions when reporting. \code{type = "pathway"} shows expected score
+figure captions when reporting.
+
+Set \code{renderer = "facets"} (equivalently,
+\code{wright_style = "facets_style"}) for a line-printer-inspired common
+ruler. That mode retains every facet location in its data and shows actual
+(original, when scores were internally recoded) adjacent score transitions.
+Its \code{facets_style} payload contains tidy ruler, person-frequency, facet,
+step, mean-half-score, header, category-label, and settings tables for custom
+graphics. The styling emulates the semantics of FACETS Table 6; estimates
+and standard errors remain those produced by \code{mfrmr}.
+
+\code{type = "pathway"} shows expected score
 traces and dominant-category regions across theta. This expected-score
 display is distinct from the Bond-and-Fox-style fit-versus-measure
 pathway: use \code{type = "fit_pathway"} for Infit/Outfit on the horizontal
@@ -197,13 +246,13 @@ fit <- fit_mfrm(
   maxit = 30
 )
 wright <- plot(fit, draw = FALSE)
-wright$data$plot
+head(wright$data$locations)
 # Look for: persons clustered against the facet / step rows on the
 #   shared logit axis. Large gaps between the person density and
 #   the step / facet rails indicate weak targeting; ceiling /
 #   floor stripes mean the test is too easy / hard.
 bundle <- plot(fit, type = "bundle", draw = FALSE)
-bundle$wright_map$data$plot
+bundle$wright_map$data$group_summary
 # Look for: pathway curves rising in the expected order with
 #   visible dominant-category bands; CCC curves peaking sequentially
 #   without one category being completely overlapped by neighbours.

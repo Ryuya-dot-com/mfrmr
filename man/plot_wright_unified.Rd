@@ -16,20 +16,30 @@ plot_wright_unified(
   preset = c("standard", "publication", "compact", "monochrome"),
   palette = NULL,
   label_angle = 45,
+  renderer = NULL,
+  wright_style = c("native", "facets_style"),
+  category_labels = NULL,
+  rows_per_logit = 2L,
+  wright_range = NULL,
+  extreme_placement = c("ends", "estimate"),
+  persons_per_star = NULL,
   ...
 )
 }
 \arguments{
 \item{fit}{Output from \code{\link[=fit_mfrm]{fit_mfrm()}}.}
 
-\item{diagnostics}{Optional output from \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}.}
+\item{diagnostics}{Optional output from \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}. When supplied,
+the map uses matching standard errors and precision metadata while keeping
+coordinates from \code{fit}.}
 
 \item{bins}{Integer number of bins for the person histogram. Default \code{20}.}
 
 \item{show_thresholds}{Logical; if \code{TRUE}, display threshold/step
 positions on the map. Default \code{TRUE}.}
 
-\item{top_n}{Maximum number of facet/step points retained for labeling.}
+\item{top_n}{Maximum number of facet/step locations retained by the native
+renderer. The FACETS-style payload retains every fitted location.}
 
 \item{show_ci}{Logical; if \code{TRUE}, draw approximate confidence intervals when
 standard errors are available.}
@@ -45,6 +55,27 @@ plot data invisibly.}
 drawer.}
 
 \item{label_angle}{Rotation angle for group labels on the facet panel.}
+
+\item{renderer}{Canonical Wright-map renderer selector: \code{"native"}
+(default) or \code{"facets"} for the FACETS Table 6-style visual layout.}
+
+\item{wright_style}{Wright-map renderer: \code{"native"} preserves the histogram,
+point, range, and facet-SE display; \code{"facets_style"} adds a FACETS Table
+6-style text ruler. The latter is a visual layout, not a claim of numerical
+equivalence with FACETS, and is equivalent to \code{renderer = "facets"}.}
+
+\item{category_labels}{Optional named/ordered score rubric labels, or a data
+frame with \code{Score} and \code{Label}, for \code{wright_style = "facets_style"}.}
+
+\item{rows_per_logit}{Number of rows per logit on the FACETS-style ruler.}
+
+\item{wright_range}{Optional finite increasing length-2 logit range.}
+
+\item{extreme_placement}{Place extreme-score persons at ruler \code{"ends"} or at
+their fitted \code{"estimate"} in the FACETS-style renderer.}
+
+\item{persons_per_star}{Number of persons represented by one \code{*}; \code{NULL}
+selects a compact value automatically.}
 
 \item{...}{Additional graphical parameters.}
 }
@@ -72,6 +103,14 @@ relative to the same latent scale.
 
 The logit scale on the y-axis is shared, allowing direct visual
 comparison of all facets and persons.
+
+With \code{renderer = "facets"} (or \code{wright_style = "facets_style"}), the
+draw-free result additionally
+contains tidy ruler rows, person star frequencies, signed facet headers,
+all facet levels, step lines, original-score transitions, mean half-score
+boundaries, category labels, and display settings under \code{facets_style}.
+These tables support custom ggplot2/plotly rendering without parsing the
+base plot.
 }
 \section{Interpreting output}{
 
@@ -117,6 +156,15 @@ fit <- fit_mfrm(toy_small, "Person", c("Rater", "Criterion"), "Score",
                  method = "JML", model = "RSM", maxit = 30)
 map_data <- plot_wright_unified(fit, draw = FALSE)
 names(map_data)
+facets_map <- plot_wright_unified(
+  fit,
+  renderer = "facets",
+  category_labels = c(
+    `1` = "Beginning", `2` = "Developing", `3` = "Secure", `4` = "Advanced"
+  ),
+  draw = FALSE
+)
+facets_map$facets_style$settings
 }
 \seealso{
 \code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=plot.mfrm_fit]{plot.mfrm_fit()}}, \link{mfrmr_visual_diagnostics}

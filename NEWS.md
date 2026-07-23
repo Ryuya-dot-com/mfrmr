@@ -16,6 +16,17 @@
 - The pkgdown build executes vignette chunks with `NOT_CRAN=true`, so the
   public visual-diagnostics pages contain rendered Wright maps rather than
   code-only placeholders. The printable cheatsheet now reports version 0.2.2.
+- Wright maps now offer an opt-in `renderer = "facets"` visual renderer
+  (`wright_style = "facets_style"` is the explicit equivalent)
+  with a shared logit ruler, person-frequency stars, signed facet
+  headers, all facet levels, labeled score-transition lines, optional rubric
+  labels, ruler/extreme controls, and tidy draw-free tables. The existing
+  native renderer and facet-SE whiskers remain the default; the new name and
+  metadata explicitly describe visual parity rather than FACETS numerical
+  equivalence. The native `top_n` compact-display contract remains unchanged,
+  while the FACETS-style payload retains every fitted location. Wright CI data
+  now store absolute endpoints and reuse supplied diagnostic SE metadata
+  without replacing fitted coordinates.
 - The example-execution policy now keeps `R CMD check` time within the
   CRAN incoming budget (the 0.2.1 submission passed the content checks on
   Windows and Debian but tripped the overall-checktime limit on the
