@@ -11,7 +11,7 @@ dif_report(dif_result, ...)
 (class \code{mfrm_dff} with compatibility class \code{mfrm_dif}) or
 \code{\link[=dif_interaction_table]{dif_interaction_table()}} (class \code{mfrm_dif_interaction}).}
 
-\item{...}{Currently unused; reserved for future extensions.}
+\item{...}{Reserved for generic compatibility.}
 }
 \value{
 Object of class \code{mfrm_dif_report} with \code{narrative},

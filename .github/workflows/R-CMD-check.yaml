@@ -1,6 +1,7 @@
 # Workflow derived from https://github.com/r-lib/actions/tree/v2/examples
-# Runs `R CMD check --as-cran` on every push and pull request, across the
-# Linux / macOS / Windows matrix at R release, devel, and oldrel-1.
+# Runs `R CMD check --as-cran` on every push and pull request. The Linux
+# release job runs the complete regression/vignette suite; the remaining
+# platform jobs run the representative CRAN-time test layer.
 on:
   push:
     branches: [main, master, 'dev/**']
@@ -21,12 +22,13 @@ jobs:
           - {os: macos-latest,   r: 'release'}
           - {os: windows-latest, r: 'release'}
           - {os: ubuntu-latest,  r: 'devel', http-user-agent: 'release'}
-          - {os: ubuntu-latest,  r: 'release'}
+          - {os: ubuntu-latest,  r: 'release', full: true}
           - {os: ubuntu-latest,  r: 'oldrel-1'}
 
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       R_KEEP_PKG_SOURCE: yes
+      NOT_CRAN: ${{ matrix.config.full && 'true' || 'false' }}
 
     steps:
       - uses: actions/checkout@v4
@@ -60,12 +62,12 @@ jobs:
             *.Rcheck
           if-no-files-found: ignore
 
-      - name: Release-readiness gate
+      - name: Repository validation review
         run: |
           source("inst/validation/release-readiness.R")
           readiness <- mfrmr_release_readiness_review(pkg_dir = ".")
           print(summary(readiness))
           if (any(readiness$gate_summary$Status == "concern", na.rm = TRUE)) {
-            stop("Release-readiness gate has concern rows.", call. = FALSE)
+            stop("Repository validation review has concern rows.", call. = FALSE)
           }
         shell: Rscript {0}

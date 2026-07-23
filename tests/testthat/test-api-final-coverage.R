@@ -182,10 +182,19 @@ test_that("describe_mfrm_data agreement path and error guards", {
   )
   expect_s3_class(desc2, "mfrm_data_description")
 
+  # The two-facet guard checks below need one observation per model cell;
+  # otherwise the duplicate-cell warning obscures the argument error under
+  # test because the source fixture also contains Criterion replications.
+  d_two_facet <- d[
+    !duplicated(d[c("Person", "Rater", "Task")]),
+    ,
+    drop = FALSE
+  ]
+
   # Error: rater_facet = "Person" (line 480)
   expect_error(
     mfrmr::describe_mfrm_data(
-      data = d, person = "Person", facets = c("Rater", "Task"), score = "Score",
+      data = d_two_facet, person = "Person", facets = c("Rater", "Task"), score = "Score",
       include_agreement = TRUE, rater_facet = "Person"
     ),
     "Person"
@@ -194,7 +203,7 @@ test_that("describe_mfrm_data agreement path and error guards", {
   # Error: unknown context_facets (line 490)
   expect_error(
     mfrmr::describe_mfrm_data(
-      data = d, person = "Person", facets = c("Rater", "Task"), score = "Score",
+      data = d_two_facet, person = "Person", facets = c("Rater", "Task"), score = "Score",
       include_agreement = TRUE, rater_facet = "Rater",
       context_facets = c("Nonexistent")
     ),
@@ -204,7 +213,7 @@ test_that("describe_mfrm_data agreement path and error guards", {
   # Error: context_facets same as rater_facet (line 494)
   expect_error(
     mfrmr::describe_mfrm_data(
-      data = d, person = "Person", facets = c("Rater", "Task"), score = "Score",
+      data = d_two_facet, person = "Person", facets = c("Rater", "Task"), score = "Score",
       include_agreement = TRUE, rater_facet = "Rater",
       context_facets = c("Rater")
     ),
@@ -746,7 +755,7 @@ test_that("summary.mfrm_fit covers person SD + convergence notes", {
 
   # print
   out <- capture.output(print(s))
-  expect_true(any(grepl("Many-Facet Rasch Model Summary", out, fixed = TRUE)))
+  expect_true(any(grepl("Many-Facet Measurement Model Summary", out, fixed = TRUE)))
 })
 
 # ---------------------------------------------------------------------------

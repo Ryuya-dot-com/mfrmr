@@ -141,14 +141,71 @@ wright_score_labels <- function(fit, categories, category_labels = NULL) {
       if (!all(c("Score", "Label") %in% names(label_tbl))) {
         stop("A data-frame `category_labels` must contain `Score` and `Label` columns.", call. = FALSE)
       }
-      rubric <- as.character(label_tbl$Label[match(original, as.character(label_tbl$Score))])
+      label_keys <- as.character(label_tbl$Score)
+      if (anyNA(label_keys) || any(!nzchar(label_keys))) {
+        stop("Every `Score` key in a data-frame `category_labels` must be non-missing and non-empty.", call. = FALSE)
+      }
+      if (anyDuplicated(label_keys)) {
+        duplicated_keys <- unique(label_keys[duplicated(label_keys)])
+        stop(
+          "`category_labels$Score` contains duplicate key(s): ",
+          paste(duplicated_keys, collapse = ", "),
+          ". Supply one label per original score.",
+          call. = FALSE
+        )
+      }
+      missing_keys <- setdiff(unique(original), label_keys)
+      if (length(missing_keys) > 0L) {
+        stop(
+          "`category_labels` does not cover retained original score key(s): ",
+          paste(missing_keys, collapse = ", "),
+          ". Key labels by the original scores in `fit$prep$score_map$OriginalScore`.",
+          call. = FALSE
+        )
+      }
+      rubric <- as.character(label_tbl$Label[match(original, label_keys)])
     } else {
       labels <- as.character(category_labels)
       label_names <- names(category_labels)
       if (!is.null(label_names) && any(nzchar(label_names))) {
+        if (anyNA(label_names) || any(!nzchar(label_names))) {
+          stop(
+            "A named `category_labels` vector must name every label with its original score key.",
+            call. = FALSE
+          )
+        }
+        if (anyDuplicated(label_names)) {
+          duplicated_keys <- unique(label_names[duplicated(label_names)])
+          stop(
+            "A named `category_labels` vector contains duplicate key(s): ",
+            paste(duplicated_keys, collapse = ", "),
+            ". Supply one label per original score.",
+            call. = FALSE
+          )
+        }
+        missing_keys <- setdiff(unique(original), label_names)
+        if (length(missing_keys) > 0L) {
+          internal_hint <- if (
+            !identical(original, categories) &&
+              all(categories %in% label_names)
+          ) {
+            paste0(
+              " The supplied names appear to use internal score keys (",
+              paste(categories, collapse = ", "),
+              "); use the original keys shown in `fit$prep$score_map` instead."
+            )
+          } else {
+            ""
+          }
+          stop(
+            "Named `category_labels` does not cover retained original score key(s): ",
+            paste(missing_keys, collapse = ", "),
+            ".",
+            internal_hint,
+            call. = FALSE
+          )
+        }
         rubric <- labels[match(original, label_names)]
-        internal_match <- labels[match(categories, label_names)]
-        rubric[is.na(rubric)] <- internal_match[is.na(rubric)]
       } else if (length(labels) == length(categories)) {
         rubric <- labels
       } else {
@@ -484,7 +541,7 @@ draw_wright_facets_style <- function(plot_data,
   old_par <- graphics::par(no.readonly = TRUE)
   on.exit(graphics::par(old_par), add = TRUE)
   graphics::par(
-    mar = c(4.6, 4.8, 5.4, 2.2),
+    mar = c(5.4, 4.8, 5.4, 2.2),
     mgp = c(2.6, 0.8, 0),
     xpd = FALSE
   )

@@ -116,7 +116,7 @@ test_that("release recovery-validation summary handles completed case objects", 
         "Read slope recovery with uncertainty and score support.",
         "Inspect category-level recovery before generalizing."
       ),
-      ValidationUse = "generator_condition_not_release_gate",
+      ValidationUse = "generator_condition_context",
       stringsAsFactors = FALSE
     ),
     diagnostic_review = data.frame(
@@ -130,7 +130,7 @@ test_that("release recovery-validation summary handles completed case objects", 
       MeanDfSensitiveFlagRate = 0,
       DiagnosticAvailability = "available",
       Status = "not_assessed",
-      ValidationUse = "diagnostic_only_not_release_gate",
+      ValidationUse = "diagnostic_context_only",
       Interpretation = "Diagnostic context only.",
       NextAction = "Keep separate from release status.",
       stringsAsFactors = FALSE
@@ -185,12 +185,12 @@ test_that("release recovery-validation summary handles completed case objects", 
                     "ConditionFinding", "ValidationUse") %in%
                     names(summary$condition_reporting_notes)))
   expect_equal(summary$condition_reporting_notes$ValidationUse,
-               rep("generator_condition_not_release_gate", 2))
+               rep("generator_condition_context", 2))
   expect_s3_class(summary$diagnostic_oc_summary, "data.frame")
   expect_true(all(c("CaseID", "Facet", "ValidationUse") %in%
                     names(summary$diagnostic_oc_summary)))
   expect_true(all(summary$diagnostic_oc_summary$ValidationUse ==
-                    "diagnostic_only_not_release_gate"))
+                    "diagnostic_context_only"))
   expect_s3_class(summary$diagnostic_reporting_notes, "data.frame")
   expect_true(all(c("CaseID", "Facet", "ReportingAttention",
                     "DiagnosticFinding", "ValidationUse") %in%

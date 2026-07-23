@@ -153,7 +153,7 @@ test_that("release-readiness protocol checks CI workflow contract", {
     "  uses: actions/upload-artifact@v4",
     "  with:",
     "    path: check",
-    "- name: Release-readiness gate",
+    "- name: Repository validation review",
     "  run: mfrmr_release_readiness_review(pkg_dir = \".\")"
   ), workflow)
 

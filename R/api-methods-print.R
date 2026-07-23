@@ -1,10 +1,8 @@
-# Lightweight print delegates added in 0.1.6 to close the first-use surface.
+# Lightweight print delegates for concise first-use output.
 #
-# NEWS 0.1.5 committed to `Status`, `Key warnings`, and `Next actions`
-# leading every first-use print, but 13 classes shipped only `summary()`
-# methods. Without a matching `print()` S3, typing the object at the R
-# console fell back to the default list printer and dumped hundreds of
-# rows of raw tables.
+# These classes provide curated `summary()` methods. Matching `print()`
+# delegates prevent the default list printer from dumping large raw tables
+# when a user types an object at the R console.
 #
 # The following delegates route `print(x)` through `summary(x)`, so the
 # curated first-use output defined in the summary methods becomes the

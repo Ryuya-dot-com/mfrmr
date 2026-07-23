@@ -44,13 +44,13 @@ labeled \code{large_zstd_shift} when the |ZSTD| flag status is unchanged.
 Default \code{0.5}.}
 
 \item{df_ratio_tolerance}{Relative df-difference tolerance used to classify
-the internal engine-vs-FACETS-style df difference; for example, \code{0.05}
+the within-mfrmr engine-vs-FACETS-style df difference; for example, \code{0.05}
 means a 5 percent df difference.}
 }
 \value{
 An \code{mfrm_facets_fit_review} bundle with:
 \itemize{
-\item \code{summary}: one-row overview of internal and external comparison counts
+\item \code{summary}: one-row overview of within-mfrmr and external comparison counts
 \item \code{standardization}: the fit-standardization guide from diagnostics
 \item \code{df_sensitivity}: engine-vs-FACETS-style df/ZSTD comparison using
 the same row-level status taxonomy as \code{fit_measures_table()$df_sensitivity}

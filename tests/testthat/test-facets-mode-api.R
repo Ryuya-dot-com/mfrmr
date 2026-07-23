@@ -1,4 +1,4 @@
-test_that("run_mfrm_facets returns legacy-compatible workflow bundle", {
+test_that("run_mfrm_facets returns a FACETS-style workflow bundle", {
   old_opt <- options(lifecycle_verbosity = "quiet")
   on.exit(options(old_opt), add = TRUE)
 
@@ -25,7 +25,9 @@ test_that("run_mfrm_facets returns legacy-compatible workflow bundle", {
   out_summary <- summary(out, top_n = 5)
   expect_s3_class(out_summary, "summary.mfrm_facets_run")
   printed <- capture.output(print(out_summary))
-  expect_true(any(grepl("Legacy-compatible Workflow Summary", printed, fixed = TRUE)))
+  expect_true(any(grepl("FACETS-style Workflow Summary", printed, fixed = TRUE)))
+  expect_true(any(grepl("Column mapping", printed, fixed = TRUE)))
+  expect_false(any(grepl("Legacy-compatible", printed, fixed = TRUE)))
 
   p_fit <- plot(out, type = "fit", draw = FALSE)
   expect_s3_class(p_fit, "mfrm_plot_bundle")

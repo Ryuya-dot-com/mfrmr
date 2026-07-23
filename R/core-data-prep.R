@@ -3,7 +3,7 @@
 # ==============================================================================
 #
 # Core helpers for `fit_mfrm()`-style pipelines. Split out of
-# `mfrm_core.R` for 0.1.6 so the data-validation, indexing, and
+# `mfrm_core.R` so the data-validation, indexing, and
 # print / formatting utilities live in a single browseable file.
 # Functions are internal (no @export); they are called directly by
 # `mfrm_estimate()` and the surrounding orchestration helpers.
@@ -92,7 +92,7 @@ prepare_mfrm_data <- function(data, person_col, facet_cols, score_col,
          call. = FALSE)
   }
 
-  # 0.1.6 second-pass polish: optional pre-processing step that converts
+  # Optional pre-processing step that converts
   # FACETS / SPSS / SAS sentinel values to NA so the drop_na() downstream
   # behaves intuitively. Accepts TRUE / "default" for the conventional
   # set, or a character vector of custom codes. Recoding is restricted
@@ -111,6 +111,29 @@ prepare_mfrm_data <- function(data, person_col, facet_cols, score_col,
     data <- recode_missing_codes(data, columns = recode_cols,
                                  codes = codes, verbose = FALSE)
     missing_audit <- attr(data, "mfrm_missing_recoding")
+    replaced_n <- if (is.data.frame(missing_audit) &&
+                      "Replaced" %in% names(missing_audit)) {
+      sum(suppressWarnings(as.integer(missing_audit$Replaced)), na.rm = TRUE)
+    } else {
+      0L
+    }
+    if (replaced_n > 0L) {
+      replaced_cols <- missing_audit$Column[
+        suppressWarnings(as.integer(missing_audit$Replaced)) > 0L
+      ]
+      add_preparation_note(
+        stage = "missing_code_recode",
+        condition = "declared_missing_codes_replaced",
+        severity = "review",
+        count = replaced_n,
+        affected = paste(replaced_cols, collapse = ", "),
+        message = paste0(
+          "Replaced ", replaced_n,
+          " declared missing-code value(s) with NA before row filtering."
+        ),
+        action = "Inspect `fit$prep$missing_recoding` (or `describe_mfrm_data(...)$missing_recoding`) before reporting exclusions."
+      )
+    }
   }
   if (any(duplicated(names(data)))) {
     dupes <- unique(names(data)[duplicated(names(data))])
@@ -441,16 +464,47 @@ prepare_mfrm_data <- function(data, person_col, facet_cols, score_col,
       all(score_vals %in% expected_vals)
     if (!identical(score_vals, expected_vals) && !isTRUE(boundary_only_gap)) {
       recoded_vals <- seq(rating_min, rating_min + length(score_vals) - 1L)
-      warning(
+      suspected_missing_codes <- intersect(score_vals, c(-1L, 99L, 999L))
+      sentinel_note <- if (length(suspected_missing_codes) > 0L &&
+                           (is.null(missing_codes) || isFALSE(missing_codes))) {
+        paste0(
+          " Value(s) ", paste(suspected_missing_codes, collapse = ", "),
+          " are commonly used as missing-value codes in FACETS, SPSS, or SAS exports. ",
+          "If they mean missing data here, refit with `missing_codes = TRUE` or an explicit code vector."
+        )
+      } else {
+        ""
+      }
+      recode_msg <- paste0(
         "Observed `Score` categories were non-consecutive (",
         paste(score_vals, collapse = ", "),
         ") and were recoded internally to a contiguous scale (",
         paste(recoded_vals, collapse = ", "),
-        ") because `keep_original = FALSE`. Inspect the returned `score_map` ",
-        "(for example `fit$prep$score_map`) to see the mapping or set ",
-        "`keep_original = TRUE` to preserve the original labels.",
-        call. = FALSE
+        ") because `keep_original = FALSE`. Inspect `fit$prep$score_map` ",
+        "before interpreting category labels, or set `keep_original = TRUE` ",
+        "to preserve the declared score support.", sentinel_note
       )
+      add_preparation_note(
+        stage = "score_support",
+        condition = "score_categories_recoded",
+        severity = "warning",
+        count = length(score_vals),
+        affected = score_col,
+        message = recode_msg,
+        action = if (length(suspected_missing_codes) > 0L &&
+                     (is.null(missing_codes) || isFALSE(missing_codes))) {
+          "Confirm whether common sentinel values represent missing data; then set `missing_codes`, `keep_original`, and the rating range explicitly."
+        } else {
+          "Inspect `fit$prep$score_map` and document the mapping, or preserve the intended support explicitly."
+        }
+      )
+      score_recode_announced <- isTRUE(getOption("mfrmr._score_recode_announced"))
+      if (!score_recode_announced) {
+        warning(recode_msg, call. = FALSE)
+        if (!is.null(getOption("mfrmr._score_recode_announced"))) {
+          options(mfrmr._score_recode_announced = TRUE)
+        }
+      }
       df <- df |>
         mutate(Score = match(Score, score_vals) + rating_min - 1)
       rating_max <- rating_min + length(score_vals) - 1
@@ -504,25 +558,22 @@ prepare_mfrm_data <- function(data, person_col, facet_cols, score_col,
   facet_levels <- lapply(facet_names, function(f) levels(df[[f]]))
   names(facet_levels) <- facet_names
 
-  # Minimum data requirement (0.1.6 polish). MFRM needs at least two
-  # persons and enough observations to identify the parameters; below
-  # the threshold, the resulting fit is degenerate but `fit_mfrm()`
-  # would still return an object. Surface the limit as an explicit
-  # stop so callers get a targeted message.
+  # Minimum data requirements. Surface these limits as targeted errors before
+  # estimation starts.
   n_person <- length(levels(df$Person))
   if (n_person < 2L) {
     stop(
-      "fit_mfrm() requires at least 2 persons to identify a measurement model",
-      " (got ", n_person, "). Combine datasets, check the `person` column, or",
-      " use a single-person item analysis via `psych::irt.fa()` instead.",
+      "fit_mfrm() requires at least two persons (got ", n_person, "). ",
+      "Check the `person` column or provide data from multiple persons; ",
+      "a one-person dataset cannot identify person and facet effects in this model.",
       call. = FALSE
     )
   }
   if (nrow(df) < 10L) {
     stop(
-      "fit_mfrm() requires at least 10 observations (got ", nrow(df), "). ",
-      "This is below any Rasch-family sample-size guidance for stable ",
-      "estimates; see `?fit_mfrm` 'Fixed effects assumption' for context.",
+      "fit_mfrm() requires at least 10 response rows (got ", nrow(df), "). ",
+      "This software minimum does not imply that 10 rows are sufficient for ",
+      "stable estimates; evaluate data support for the intended model.",
       call. = FALSE
     )
   }

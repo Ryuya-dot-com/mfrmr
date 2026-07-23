@@ -55,9 +55,9 @@ test_that("interrater agreement draws all plot types", {
   diag <- diagnose_mfrm(fit)
   ia <- interrater_agreement_table(fit, diagnostics = diag)
 
-  with_null_device(plot(ia, plot = "exact", draw = TRUE))
-  with_null_device(plot(ia, plot = "corr", draw = TRUE))
-  with_null_device(plot(ia, plot = "difference", draw = TRUE))
+  expect_no_error(with_null_device(plot(ia, plot = "exact", draw = TRUE)))
+  expect_no_error(with_null_device(plot(ia, plot = "corr", draw = TRUE)))
+  expect_no_error(with_null_device(plot(ia, plot = "difference", draw = TRUE)))
 })
 
 # ---- Unexpected response - severity bar plot ----
@@ -71,7 +71,7 @@ test_that("unexpected response draws severity type", {
   diag <- diagnose_mfrm(fit)
   ut <- unexpected_response_table(fit, diagnostics = diag)
 
-  with_null_device(plot(ut, plot = "severity", draw = TRUE))
+  expect_no_error(with_null_device(plot(ut, plot = "severity", draw = TRUE)))
 })
 
 # ---- Fair average - multiple facets ----
@@ -86,8 +86,9 @@ test_that("fair_average_table exercises per-facet paths", {
   fa <- fair_average_table(fit, diagnostics = diag)
 
   # Plot for each facet
+  expect_gt(length(fa$by_facet), 0L)
   for (facet_name in names(fa$by_facet)) {
-    with_null_device(plot(fa, facet = facet_name, draw = TRUE))
+    expect_no_error(with_null_device(plot(fa, facet = facet_name, draw = TRUE)))
   }
 })
 
@@ -102,8 +103,8 @@ test_that("displacement table draws severity and histogram", {
   diag <- diagnose_mfrm(fit)
   dt <- displacement_table(fit, diagnostics = diag)
 
-  with_null_device(plot(dt, plot = "lollipop", draw = TRUE))
-  with_null_device(plot(dt, plot = "hist", draw = TRUE))
+  expect_no_error(with_null_device(plot(dt, plot = "lollipop", draw = TRUE)))
+  expect_no_error(with_null_device(plot(dt, plot = "hist", draw = TRUE)))
 })
 
 # ---- Chi-square drawing sub-types ----
@@ -117,8 +118,8 @@ test_that("facets_chisq draws scatter and bar plots", {
   diag <- diagnose_mfrm(fit)
   fc <- facets_chisq_table(fit, diagnostics = diag)
 
-  with_null_device(plot(fc, plot = "fixed", draw = TRUE))
-  with_null_device(plot(fc, plot = "random", draw = TRUE))
+  expect_no_error(with_null_device(plot(fc, plot = "fixed", draw = TRUE)))
+  expect_no_error(with_null_device(plot(fc, plot = "random", draw = TRUE)))
 })
 
 # ---- Output bundle (graphfile/scorefile) plot sub-types ----
@@ -136,10 +137,11 @@ test_that("output bundle draws all graph types", {
     mfrmr:::facets_output_file_bundle(fit, diagnostics = diag),
     error = function(e) NULL
   )
+  expect_s3_class(bundle, "mfrm_output_bundle")
   if (!is.null(bundle)) {
-    with_null_device(plot(bundle, type = "graph_expected", draw = TRUE))
-    with_null_device(plot(bundle, type = "score_residuals", draw = TRUE))
-    with_null_device(plot(bundle, type = "obs_probability", draw = TRUE))
+    expect_no_error(with_null_device(plot(bundle, type = "graph_expected", draw = TRUE)))
+    expect_no_error(with_null_device(plot(bundle, type = "score_residuals", draw = TRUE)))
+    expect_no_error(with_null_device(plot(bundle, type = "obs_probability", draw = TRUE)))
   }
 })
 
@@ -251,7 +253,8 @@ test_that("summary.mfrm_facets_run and print work", {
   expect_s3_class(s, "summary.mfrm_facets_run")
 
   printed <- capture.output(print(s))
-  expect_true(any(grepl("Legacy-compatible", printed)))
+  expect_true(any(grepl("FACETS-style Workflow Summary", printed, fixed = TRUE)))
+  expect_false(any(grepl("Legacy-compatible", printed, fixed = TRUE)))
 
   # Direct print delegates to summary
   printed2 <- capture.output(print(out))

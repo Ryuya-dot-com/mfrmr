@@ -33,7 +33,7 @@ reporting lanes.
 }
 \section{What this review means}{
 
-\code{precision_review_report()} is a reporting gatekeeper for precision claims.
+\code{precision_review_report()} is a structured prerequisite review for precision claims.
 It tells you how the package derived uncertainty summaries for the current
 run and how cautiously those summaries should be written up.
 }

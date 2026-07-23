@@ -191,6 +191,7 @@ test_that("build_apa_outputs surfaces latent-regression population-model wording
 
   apa <- build_apa_outputs(fit, diag)
   text <- as.character(apa$report_text)
+  text_normalized <- gsub("\\s+", " ", text)
 
   expect_true(isTRUE(apa$contract$availability$has_population_model))
   expect_true(isTRUE(apa$contract$availability$has_population_coding))
@@ -198,9 +199,9 @@ test_that("build_apa_outputs surfaces latent-regression population-model wording
   expect_true(apa$section_map$Available[apa$section_map$SectionId == "results_population_model"][1])
   expect_true("population_model" %in% names(apa$contract$note_map))
   expect_true("population_model" %in% apa$contract$ordered_keys)
-  expect_match(text, "conditional-normal latent-regression", fixed = TRUE)
-  expect_match(text, "not as post hoc regression", fixed = TRUE)
-  expect_match(text, "documented latent-regression MML comparison scope", fixed = TRUE)
+  expect_match(text_normalized, "conditional-normal latent-regression", fixed = TRUE)
+  expect_match(text_normalized, "not as post hoc regression", fixed = TRUE)
+  expect_match(text_normalized, "documented latent-regression MML comparison scope", fixed = TRUE)
   expect_match(apa$table_figure_notes, "Latent-regression population model", fixed = TRUE)
   expect_match(apa$table_figure_captions, "Latent-Regression Population Model", fixed = TRUE)
 

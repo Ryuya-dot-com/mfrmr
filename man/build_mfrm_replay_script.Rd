@@ -63,10 +63,9 @@ A named list with class \code{mfrm_replay_script}.
 Build a package-native replay script for an MFRM analysis
 }
 \details{
-This helper mirrors the Streamlit app's reproducible-download idea, but uses
-\code{mfrmr}'s installed API rather than embedding a separate estimation engine.
-The generated script assumes the user has the package installed and provides
-a data file at \code{data_file}.
+This helper builds a reproducible script from \code{mfrmr}'s installed API. The
+generated script assumes the user has the package installed and provides a
+data file at \code{data_file}.
 
 Anchor and group-anchor constraints are embedded directly from the fitted
 object's stored configuration, so the script can replay anchored analyses

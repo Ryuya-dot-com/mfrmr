@@ -23,20 +23,21 @@ mfrmr_generate_vignette_artifacts <- function(pkg_dir = ".",
       Artifact = name,
       Rows = nrow(x),
       Columns = ncol(x),
+      Schema = paste(names(x), collapse = "|"),
+      MD5 = unname(tools::md5sum(path)),
       Source = source,
       stringsAsFactors = FALSE
     )
   }
 
-  toy <- mfrmr::load_mfrmr_data("example_core")
+  toy <- mfrmr::load_mfrmr_data("example_operational")
   fit_toy <- suppressWarnings(mfrmr::fit_mfrm(
     data = toy,
     person = "Person",
     facets = c("Rater", "Criterion"),
     score = "Score",
-    method = "JML",
-    model = "RSM",
-    maxit = 30
+    method = "MML",
+    model = "RSM"
   ))
   diag_toy <- suppressWarnings(mfrmr::diagnose_mfrm(
     fit_toy,
@@ -50,7 +51,8 @@ mfrmr_generate_vignette_artifacts <- function(pkg_dir = ".",
     res_toy,
     output_dir = export_dir,
     include = c("default", "report"),
-    overwrite = TRUE
+    overwrite = TRUE,
+    acknowledge_sensitive = TRUE
   )
   export_files <- utils::head(export_toy$written_files)
   if ("Path" %in% names(export_files)) {
@@ -111,6 +113,7 @@ mfrmr_generate_vignette_artifacts <- function(pkg_dir = ".",
     write_artifact("workflow_plot_object_components.csv", plot_components, "names(plot(..., draw = FALSE))"),
     write_artifact("workflow_visual_checklist.csv", visual_checklist, "reporting_checklist(...), Visual Displays")
   )
+  manifest$DataKey <- "example_operational"
   manifest$GeneratedWith <- as.character(utils::packageVersion("mfrmr"))
   write.csv(
     manifest,

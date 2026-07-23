@@ -225,7 +225,7 @@ facets_fit_df_guide <- function(include_references = TRUE) {
       "DF_Infit, DF_Outfit, InfitZSTD, OutfitZSTD use FACETS-style df.",
       "DF_Infit, DF_Outfit, InfitZSTD, OutfitZSTD use engine df.",
       "FACETS-style table keeps primary df and companion FACETS df/ZSTD columns.",
-      "Internal comparison places engine and FACETS-style df/ZSTD side by side."
+      "Within-mfrmr comparison places engine and FACETS-style df/ZSTD side by side."
     ),
     CompanionColumns = c(
       "No FACETS companion columns are retained.",
@@ -1221,12 +1221,19 @@ data_quality_report <- function(fit,
 #' - `summary`: final status and stopping diagnostics.
 #' - optional `PROX` row: pseudo-initial reference point when enabled.
 #'
+#' For bounded `GPCM`, this helper replays slope-aware optimization steps from
+#' a reconstructed starting state. It is not the exact optimizer history from
+#' the fitted object and is not an additional convergence test. Use
+#' `summary(fit, profile = "fit", detail = "brief")` for the recorded
+#' convergence result, and read the returned `gpcm_boundary` before reporting
+#' the replay.
+#'
 #' @section Typical workflow:
 #' 1. Run `estimation_iteration_report(fit)`.
 #' 2. Inspect plateau/stability patterns in summary/plot.
 #' 3. Adjust optimization settings if convergence looks weak.
-#' @return A named list with iteration-report components. Class:
-#'   `mfrm_iteration_report`.
+#' @return A named list with iteration-report components and, for bounded
+#'   `GPCM`, a `gpcm_boundary` table. Class: `mfrm_iteration_report`.
 #' @seealso [fit_mfrm()], [specifications_report()], [data_quality_report()],
 #'   [mfrmr_reports_and_tables], [mfrmr_compatibility_layer]
 #' @examples
@@ -1250,6 +1257,10 @@ estimation_iteration_report <- function(fit,
       include_prox = include_prox,
       include_fixed = include_fixed
     )
+  )
+  out$gpcm_boundary <- gpcm_capability_boundary_table(
+    fit,
+    helper = "estimation_iteration_report()"
   )
   as_mfrm_bundle(out, "mfrm_iteration_report")
 }
@@ -3953,7 +3964,7 @@ build_fit_separation_reporting_basis <- function(fit, diagnostics) {
 #' reporting lanes.
 #'
 #' @section What this review means:
-#' `precision_review_report()` is a reporting gatekeeper for precision claims.
+#' `precision_review_report()` is a structured prerequisite review for precision claims.
 #' It tells you how the package derived uncertainty summaries for the current
 #' run and how cautiously those summaries should be written up.
 #'
@@ -4810,9 +4821,7 @@ plot_bias_interaction <- function(x,
 #' @seealso [build_visual_summaries()], [estimate_bias()],
 #'   [reporting_checklist()], [mfrmr_reporting_and_apa]
 #' @examplesIf interactive()
-#' # Fast smoke run: a JML fit and a legacy diagnostic let us build the
-#' # APA bundle and confirm `report_text` is non-empty in well under
-#' # a second.
+#' # Minimal APA-output example using a JML fit and lightweight diagnostics.
 #' toy <- load_mfrmr_data("example_core")
 #' fit_quick <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'   method = "JML", maxit = 30
@@ -4902,7 +4911,7 @@ build_apa_outputs <- function(fit,
       extra_areas = c(
         "Score-side scorefile export under bounded GPCM",
         "FACETS output-contract score-side review",
-        "Design planning and forecasting"
+        "Design evaluation and population forecasting under bounded GPCM"
       )
     ),
     contract = contract
@@ -5753,7 +5762,7 @@ resolve_summary_table_bundle_input <- function(x,
     "mfrm_design_evaluation, ",
     "mfrm_signal_detection, mfrm_diagnostic_screening, ",
     "mfrm_recovery_simulation, mfrm_recovery_assessment, ",
-    "mfrm_population_prediction, mfrm_future_branch_active_branch, ",
+    "mfrm_population_prediction, a structural design-review component, ",
     "mfrm_facets_run, mfrm_results, mfrm_report, mfrm_bias, mfrm_anchor_review, ",
     "mfrm_peer_review_design_review, mfrm_network_review, ",
     "mfrm_linking_review, mfrm_misfit_casebook, ",
@@ -5939,7 +5948,9 @@ summary_table_bundle_resolve_future_branch_summary <- function(summary_obj) {
   if (inherits(summary_obj, "summary.mfrm_future_branch_active_branch")) {
     return(summary_obj)
   }
-  summary_obj$future_branch_active_summary %||% NULL
+  summary_obj$structural_design_review %||%
+    summary_obj$future_branch_active_summary %||%
+    NULL
 }
 
 summary_table_bundle_future_branch_spec <- function(summary_obj,
@@ -5949,39 +5960,39 @@ summary_table_bundle_future_branch_spec <- function(summary_obj,
     future <- NULL
   }
   overview_desc <- if (isTRUE(embedded)) {
-    "Deterministic overview of the embedded future arbitrary-facet planning scaffold."
+    "Deterministic overview of the embedded structural design review."
   } else {
-    "Deterministic overview of the future arbitrary-facet planning active branch."
+    "Deterministic overview of the structural design review."
   }
   profile_desc <- if (isTRUE(embedded)) {
-    "Exact-count and balanced-expectation design metrics from the embedded future-branch scaffold."
+    "Exact-count and balanced-expectation metrics from the embedded design review."
   } else {
-    "Exact-count and balanced-expectation design metrics from the future arbitrary-facet planning active branch."
+    "Exact-count and balanced-expectation metrics from the structural design review."
   }
   load_balance_desc <- if (isTRUE(embedded)) {
-    "Deterministic rater-load and integer-balance diagnostics from the embedded future-branch scaffold."
+    "Deterministic rater-load and integer-balance diagnostics from the embedded design review."
   } else {
-    "Deterministic rater-load and integer-balance diagnostics from the future arbitrary-facet planning active branch."
+    "Deterministic rater-load and integer-balance diagnostics from the structural design review."
   }
   coverage_desc <- if (isTRUE(embedded)) {
-    "Deterministic coverage and connectivity summaries from the embedded future-branch scaffold."
+    "Deterministic coverage and connectivity summaries from the embedded design review."
   } else {
-    "Deterministic coverage and connectivity summaries from the future arbitrary-facet planning active branch."
+    "Deterministic coverage and connectivity summaries from the structural design review."
   }
   guardrail_desc <- if (isTRUE(embedded)) {
-    "Exact structural guardrail classifications from the embedded future-branch scaffold."
+    "Exact structural classifications from the embedded design review."
   } else {
-    "Exact structural guardrail classifications from the future arbitrary-facet planning active branch."
+    "Exact structural classifications from the structural design review."
   }
   readiness_desc <- if (isTRUE(embedded)) {
     "Structural readiness tiers indicating which overlap/balance conditions currently hold."
   } else {
-    "Structural readiness tiers for the future arbitrary-facet planning active branch."
+    "Structural readiness tiers for the design review."
   }
   recommendation_desc <- if (isTRUE(embedded)) {
-    "Conservative structural recommendation derived from the embedded future-branch scaffold."
+    "Conservative structural recommendation derived from the embedded design review."
   } else {
-    "Conservative structural recommendation derived from the future arbitrary-facet planning active branch."
+    "Conservative structural recommendation derived from the structural design review."
   }
   list(
     tables = list(
@@ -6042,22 +6053,22 @@ summary_table_bundle_future_branch_spec <- function(summary_obj,
       future_branch_guardrails = guardrail_desc,
       future_branch_readiness = readiness_desc,
       future_branch_recommendation = recommendation_desc,
-      future_branch_appendix_presets = "Preset-level appendix routing counts for the future arbitrary-facet planning surface.",
-      future_branch_appendix_roles = "Appendix routing counts by reporting role for the future arbitrary-facet planning surface.",
-      future_branch_appendix_sections = "Appendix routing counts by manuscript section for the future arbitrary-facet planning surface.",
-      future_branch_selection_table_presets = "Preset-specific appendix table selections for the future arbitrary-facet planning surface.",
-      future_branch_selection_handoff_tables = "Preset-specific table-level appendix handoff crosswalk for the future arbitrary-facet planning surface.",
-      future_branch_selection_handoff_presets = "Preset-level appendix handoff overview for the future arbitrary-facet planning surface.",
-      future_branch_selection_handoff = "Section-aware appendix handoff summary for the future arbitrary-facet planning surface.",
-      future_branch_selection_handoff_bundles = "Bundle-aware appendix handoff summary for the future arbitrary-facet planning surface.",
-      future_branch_selection_handoff_roles = "Role-aware appendix handoff summary for the future arbitrary-facet planning surface.",
-      future_branch_selection_handoff_role_sections = "Role-by-section appendix handoff summary for the future arbitrary-facet planning surface.",
-      future_branch_selection_tables = "Preset-aware appendix table selections for the future arbitrary-facet planning surface.",
-      future_branch_selection_summary = "Preset-filtered appendix selection counts for the future arbitrary-facet planning surface.",
-      future_branch_selection_roles = "Preset-filtered appendix selection counts by reporting role for the future arbitrary-facet planning surface.",
-      future_branch_selection_sections = "Preset-filtered appendix selection counts by manuscript section for the future arbitrary-facet planning surface.",
-      future_branch_selection_catalog = "Full appendix selection catalog for the future arbitrary-facet planning surface.",
-      future_branch_reporting_map = "Direct reporting-map bridge for the future arbitrary-facet planning surface."
+      future_branch_appendix_presets = "Preset-level appendix routing counts for the structural design review.",
+      future_branch_appendix_roles = "Appendix routing counts by reporting role for the structural design review.",
+      future_branch_appendix_sections = "Appendix routing counts by manuscript section for the structural design review.",
+      future_branch_selection_table_presets = "Preset-specific appendix table selections for the structural design review.",
+      future_branch_selection_handoff_tables = "Preset-specific table-level appendix handoff crosswalk for the structural design review.",
+      future_branch_selection_handoff_presets = "Preset-level appendix handoff overview for the structural design review.",
+      future_branch_selection_handoff = "Section-aware appendix handoff summary for the structural design review.",
+      future_branch_selection_handoff_bundles = "Bundle-aware appendix handoff summary for the structural design review.",
+      future_branch_selection_handoff_roles = "Role-aware appendix handoff summary for the structural design review.",
+      future_branch_selection_handoff_role_sections = "Role-by-section appendix handoff summary for the structural design review.",
+      future_branch_selection_tables = "Preset-aware appendix table selections for the structural design review.",
+      future_branch_selection_summary = "Preset-filtered appendix selection counts for the structural design review.",
+      future_branch_selection_roles = "Preset-filtered appendix selection counts by reporting role for the structural design review.",
+      future_branch_selection_sections = "Preset-filtered appendix selection counts by manuscript section for the structural design review.",
+      future_branch_selection_catalog = "Full appendix selection catalog for the structural design review.",
+      future_branch_reporting_map = "Reporting-map metadata for the structural design review."
     )
   )
 }
@@ -6283,7 +6294,7 @@ summary_table_bundle_spec <- function(summary_obj) {
       ),
       descriptions = c(
         overview = "Run-level FACETS fit-review bundle metadata.",
-        summary = "Overview of internal df/ZSTD sensitivity and optional external FACETS comparison coverage.",
+        summary = "Overview of within-mfrmr df/ZSTD sensitivity and optional external FACETS comparison coverage.",
         standardization = "Primary fit-df method, companion columns, and ZSTD transform metadata from diagnostics.",
         df_sensitivity = "Engine-vs-FACETS-style df/ZSTD comparison rows.",
         df_sensitive = "Subset of df-sensitivity rows where df convention changes flag status or materially shifts ZSTD.",
@@ -6600,8 +6611,8 @@ summary_table_bundle_spec <- function(summary_obj) {
         checklist = "Reviewer-facing adequacy checklist for replication count, convergence, uncertainty, Monte Carlo precision, and practical thresholds.",
         condition_reporting_notes = "Reporter-facing generator-condition notes for bounded-GPCM slope stress and generated score-category support.",
         condition_review = "Generator-condition metadata for interpreting recovery evidence, including bounded-GPCM slope-regime labels and generated score-category support when available.",
-        diagnostic_reporting_notes = "Reporter-facing fit/separation diagnostic notes that flag caveats without treating them as recovery gates.",
-        diagnostic_review = "Fit/separation operating-characteristic review retained as diagnostic context rather than a release-recovery gate.",
+        diagnostic_reporting_notes = "Reporter-facing fit/separation diagnostic notes that flag caveats without treating them as recovery criteria.",
+        diagnostic_review = "Fit/separation operating-characteristic review retained as diagnostic context rather than a recovery criterion.",
         metric_review = "Parameter-group recovery review with threshold status and next-action guidance.",
         uncertainty_review = "Parameter-group coverage and standard-error availability interpretation.",
         next_actions = "Prioritized follow-up actions for strengthening or documenting the recovery evidence.",
@@ -6610,11 +6621,11 @@ summary_table_bundle_spec <- function(summary_obj) {
       )
     ),
     "summary.mfrmr_recovery_validation" = list(
-      title = "Recovery Validation Tables",
+      title = "Recovery Evidence Tables",
       tables = list(
-        topline_release_decision = summary_table_bundle_df(summary_obj$topline_release_decision),
+        evidence_overview = summary_table_bundle_df(summary_obj$topline_release_decision),
         reading_order = summary_table_bundle_df(summary_obj$reading_order),
-        release_decision_table = summary_table_bundle_df(summary_obj$release_decision_table),
+        case_evidence_assessment = summary_table_bundle_df(summary_obj$release_decision_table),
         case_summary = summary_table_bundle_df(summary_obj$case_summary),
         condition_reporting_notes = summary_table_bundle_df(summary_obj$condition_reporting_notes),
         condition_summary = summary_table_bundle_df(summary_obj$condition_summary),
@@ -6623,9 +6634,9 @@ summary_table_bundle_spec <- function(summary_obj) {
         domain_decision_table = summary_table_bundle_df(summary_obj$domain_decision_table)
       ),
       roles = c(
-        topline_release_decision = "recovery_validation_topline",
+        evidence_overview = "recovery_evidence_overview",
         reading_order = "recovery_validation_reading_order",
-        release_decision_table = "recovery_validation_release_decisions",
+        case_evidence_assessment = "recovery_evidence_case_assessment",
         case_summary = "recovery_validation_case_summary",
         condition_reporting_notes = "recovery_validation_condition_reporting_notes",
         condition_summary = "recovery_validation_condition_summary",
@@ -6634,13 +6645,13 @@ summary_table_bundle_spec <- function(summary_obj) {
         domain_decision_table = "recovery_validation_domain_decisions"
       ),
       descriptions = c(
-        topline_release_decision = "Top-line release-recovery decision across the summarized validation cases.",
-        reading_order = "Recommended first-read order for recovery-validation summary outputs.",
-        release_decision_table = "Case-level release-recovery decision table with recovery, uncertainty, and Monte Carlo status.",
+        evidence_overview = "Top-line recovery-evidence assessment across the summarized cases.",
+        reading_order = "Recommended first-read order for recovery-evidence summary outputs.",
+        case_evidence_assessment = "Case-level recovery-evidence table with recovery, uncertainty, and Monte Carlo status.",
         case_summary = "Case-level validation summary including recovery status and generator-condition fields.",
         condition_reporting_notes = "Reporter-facing generator-condition notes for slope-regime and score-support caveats.",
         condition_summary = "Generator-condition summary for slope-regime and score-support evidence across validation cases.",
-        diagnostic_reporting_notes = "Reporter-facing fit/separation diagnostic notes that flag caveats without treating them as release gates.",
+        diagnostic_reporting_notes = "Reporter-facing fit/separation notes that retain caveats without treating diagnostics as standalone validation criteria.",
         diagnostic_oc_summary = "Fit/separation operating-characteristic summary across validation cases, retained as diagnostic-only context.",
         domain_decision_table = "Long-form validation-domain status table for recovery metrics, uncertainty, Monte Carlo precision, score support, and overall status."
       )
@@ -6751,7 +6762,7 @@ summary_table_bundle_spec <- function(summary_obj) {
         plot_map = "User-facing plot routes exposed by plot.mfrm_results().",
         next_actions = "Prioritized next-action routes after the comprehensive first screen.",
         mapping = "Column mapping used when mfrm_results() started from a data.frame or run_mfrm_facets() object.",
-        reproducible_code = "Line-by-line replay scaffold for the mfrm_results() route.",
+        reproducible_code = "Line-by-line replay script for the mfrm_results() route.",
         notes = "Compact interpretation notes carried by mfrm_results()."
       )
     ),
@@ -7335,13 +7346,13 @@ build_summary_table_index <- function(tables, roles, descriptions) {
 #'   `mfrm_reporting_checklist`, `mfrm_apa_outputs`,
 #'   `mfrm_design_evaluation`, `mfrm_signal_detection`,
 #'   `mfrm_recovery_simulation`, `mfrm_recovery_assessment`,
-#'   `mfrm_population_prediction`, `mfrm_future_branch_active_branch`,
+#'   `mfrm_population_prediction`,
 #'   `mfrm_facets_run`, `mfrm_bias`, `mfrm_anchor_review`,
 #'   `mfrm_linking_review`, `mfrm_misfit_casebook`,
 #'   `mfrm_model_choice_review`, `mfrm_weighting_review`,
 #'   `mfrm_unit_prediction`, or `mfrm_plausible_values` object, one of their
-#'   `summary()` outputs, or a `summary.mfrmr_recovery_validation` object from
-#'   the packaged validation protocol.
+#'   `summary()` outputs, or a compatible precomputed recovery-evidence
+#'   summary.
 #' @param which Optional character vector selecting a subset of named tables.
 #' @param appendix_preset Optional appendix-oriented table preset:
 #'   `"all"`, `"recommended"`, `"compact"`, `"methods"`, `"results"`,
@@ -7387,9 +7398,9 @@ build_summary_table_index <- function(tables, roles, descriptions) {
 #' - [evaluate_mfrm_signal_detection()] or `summary(sig_eval)`
 #' - [evaluate_mfrm_recovery()] or `summary(rec)`
 #' - [assess_mfrm_recovery()] or `summary(rec_assessment)`
-#' - `summary(validation)` from `recovery-validation.R`
+#' - a compatible precomputed recovery-evidence summary
 #' - [predict_mfrm_population()] or `summary(pred)`
-#' - `planning_schema$future_branch_active_branch` or `summary(...)`
+#' - the `structural_design_review` component of a design or prediction summary
 #' - [run_mfrm_facets()] or `summary(out)`
 #' - [estimate_bias()] or `summary(bias)`
 #' - [review_mfrm_anchors()] or `summary(review)`
@@ -7415,13 +7426,13 @@ build_summary_table_index <- function(tables, roles, descriptions) {
 #' - recovery-assessment and recovery-validation summaries expose
 #'   `diagnostic_reporting_notes` before `diagnostic_review` or
 #'   `diagnostic_oc_summary` so fit/separation caveats can be reported without
-#'   treating them as recovery or release gates.
+#'   treating them as direct evidence of parameter recovery.
 #' - recovery-validation summaries expose `condition_reporting_notes` before
 #'   `condition_summary` so GPCM generator stress and sparse score support are
 #'   not mistaken for recovery-metric failures.
 #' - precision-review summaries expose `fit_separation_basis` so fit,
 #'   ZSTD, separation/reliability/strata, and QC thresholds remain separate
-#'   reporting surfaces rather than implicit validation gates.
+#'   reporting surfaces rather than interchangeable evidence.
 #' - fit-measure and FACETS fit-review summaries expose df/ZSTD sensitivity
 #'   tables under precision-review roles, keeping MnSq status, ZSTD
 #'   standardization, and external FACETS matching distinct in appendix
@@ -7474,21 +7485,6 @@ build_summary_table_index <- function(tables, roles, descriptions) {
 #' summary(bundle)$role_summary
 #' }
 #'
-#' # Recovery-validation output can be converted to appendix-ready tables.
-#' \dontrun{
-#' source(system.file("validation", "recovery-validation.R", package = "mfrmr"))
-#' validation <- mfrmr_run_recovery_validation(
-#'   case_ids = c("gpcm_slope_profile", "gpcm_high_dispersion_sparse"),
-#'   quick = TRUE,
-#'   seed = 20260525
-#' )
-#' validation_bundle <- build_summary_table_bundle(summary(validation))
-#' validation_bundle$tables$reading_order
-#' validation_bundle$tables$topline_release_decision
-#' validation_bundle$tables$condition_reporting_notes
-#' validation_bundle$tables$condition_summary
-#' validation_bundle$tables$diagnostic_reporting_notes
-#' }
 #' @export
 build_summary_table_bundle <- function(x,
                                        which = NULL,
@@ -7972,29 +7968,29 @@ summary_table_bundle_appendix_role_registry <- function() {
       "Exploratory extreme table; available only in full exports.",
       "Drafting action list; keep out of recommended presets.",
       "Checklist settings; keep out of recommended presets.",
-      "Recommended methods appendix overview for the future arbitrary-facet planning scaffold.",
-      "Recommended exact-count profile for future arbitrary-facet planning methods appendices.",
+      "Recommended methods appendix overview for the structural design review.",
+      "Recommended exact-count profile for structural-design methods appendices.",
       "Detailed load-balance diagnostics; retain for full exports but omit from recommended presets.",
       "Detailed coverage/connectivity diagnostics; retain for full exports but omit from recommended presets.",
       "Detailed guardrail classifications; retain for full exports but omit from recommended presets.",
-      "Core structural readiness table for future arbitrary-facet planning review.",
-      "Core conservative future-branch recommendation table for methods appendices.",
-      "Workflow-only appendix preset counts for direct future-branch review.",
-      "Workflow-only appendix role counts for direct future-branch review.",
-      "Workflow-only appendix section counts for direct future-branch review.",
-      "Workflow-only preset-specific appendix table selections for direct future-branch review.",
-      "Workflow-only table-level appendix handoff crosswalk for direct future-branch review.",
-      "Workflow-only preset-level appendix handoff overview for direct future-branch review.",
-      "Workflow-only manuscript-section handoff summary for direct future-branch review.",
-      "Workflow-only bundle-aware appendix handoff summary for direct future-branch review.",
-      "Workflow-only role-aware appendix handoff summary for direct future-branch review.",
-      "Workflow-only role-by-section appendix handoff summary for direct future-branch review.",
-      "Workflow-only preset-aware appendix table selections for direct future-branch review.",
-      "Workflow-only preset-filtered appendix bundle counts for direct future-branch review.",
-      "Workflow-only preset-filtered appendix role counts for direct future-branch review.",
-      "Workflow-only preset-filtered appendix section counts for direct future-branch review.",
-      "Workflow-only preset-filtered appendix selection catalog for direct future-branch review.",
-      "Workflow-only reporting bridge metadata for the direct future-branch surface.",
+      "Core structural readiness table for the design review.",
+      "Core conservative recommendation table for structural-design methods appendices.",
+      "Workflow-only appendix preset counts for the structural design review.",
+      "Workflow-only appendix role counts for the structural design review.",
+      "Workflow-only appendix section counts for the structural design review.",
+      "Workflow-only preset-specific appendix table selections for the structural design review.",
+      "Workflow-only table-level appendix handoff crosswalk for the structural design review.",
+      "Workflow-only preset-level appendix handoff overview for the structural design review.",
+      "Workflow-only manuscript-section handoff summary for the structural design review.",
+      "Workflow-only bundle-aware appendix handoff summary for the structural design review.",
+      "Workflow-only role-aware appendix handoff summary for the structural design review.",
+      "Workflow-only role-by-section appendix handoff summary for the structural design review.",
+      "Workflow-only preset-aware appendix table selections for the structural design review.",
+      "Workflow-only preset-filtered appendix bundle counts for the structural design review.",
+      "Workflow-only preset-filtered appendix role counts for the structural design review.",
+      "Workflow-only preset-filtered appendix section counts for the structural design review.",
+      "Workflow-only preset-filtered appendix selection catalog for the structural design review.",
+      "Workflow-only reporting-map metadata for the structural design review.",
       "Recommended overview table for linking-review appendix handoff.",
       "Recommended top-risk table for operational linking-review follow-up appendices.",
       "Recommended grouping-view index for operational linking-review triage.",
@@ -8103,9 +8099,9 @@ summary_table_bundle_appendix_role_registry <- function() {
   out <- rbind(out, recovery_roles)
   recovery_validation_roles <- data.frame(
     Role = c(
-      "recovery_validation_topline",
+      "recovery_evidence_overview",
       "recovery_validation_reading_order",
-      "recovery_validation_release_decisions",
+      "recovery_evidence_case_assessment",
       "recovery_validation_case_summary",
       "recovery_validation_condition_reporting_notes",
       "recovery_validation_condition_summary",
@@ -8128,14 +8124,14 @@ summary_table_bundle_appendix_role_registry <- function() {
     CompactAppendix = rep(TRUE, 9),
     PreferredAppendixOrder = 276:284,
     AppendixRationale = c(
-      "Recommended top-line recovery-validation decision table for release-review appendices.",
-      "Recommended reading-order table for recovery-validation handoff.",
-      "Recommended case-level release-decision table for validation handoff.",
-      "Recommended validation case summary table for release-review traceability.",
-      "Recommended reporter-facing table for generator-condition caveats kept out of release gates.",
+      "Recommended top-line recovery-evidence assessment for methodological appendices.",
+      "Recommended reading-order table for recovery-evidence handoff.",
+      "Recommended case-level recovery-evidence table for appendix handoff.",
+      "Recommended validation-case summary for evidence traceability.",
+      "Recommended reporting table that keeps generator-condition caveats separate from validation conclusions.",
       "Recommended generator-condition summary table separating GPCM slope-regime and score-support stress.",
-      "Recommended reporter-facing table for fit/separation diagnostic caveats kept out of release gates.",
-      "Recommended fit/separation operating-characteristic summary kept separate from release-recovery gates.",
+      "Recommended reporting table that keeps fit/separation caveats separate from validation conclusions.",
+      "Recommended fit/separation operating-characteristic summary kept separate from recovery criteria.",
       "Recommended long-form domain-decision table for validation diagnostics."
     ),
     stringsAsFactors = FALSE
@@ -9850,7 +9846,7 @@ as_kable.apa_table <- function(x, format = c("pipe", "html", "latex"),
 #' caption and note wired in. Requires `flextable` (in Suggests).
 #'
 #' @param x An `apa_table` object from [apa_table()].
-#' @param ... Additional arguments reserved for future use.
+#' @param ... Reserved for generic compatibility.
 #'
 #' @return A `flextable` object, or a message when `flextable` is
 #'   unavailable.
@@ -10576,7 +10572,7 @@ build_visual_summaries <- function(fit,
       extra_areas = c(
         "Score-side scorefile export under bounded GPCM",
         "FACETS output-contract score-side review",
-        "Design planning and forecasting"
+        "Design evaluation and population forecasting under bounded GPCM"
       )
     ),
     branch = branch,
@@ -11822,10 +11818,10 @@ facets_fit_review_guidance <- function(model, external_supplied) {
       if (isTRUE(external_supplied)) {
         "External rows are matched by Facet and Level. Rows without a match are marked no_external_match."
       } else {
-        "No external FACETS table was supplied; the review reports internal engine-vs-FACETS-style standardization only."
+        "No external FACETS table was supplied; the review reports within-mfrmr engine-vs-FACETS-style standardization only."
       },
       if (identical(model, "GPCM")) {
-        "Bounded GPCM has no direct FACETS free-slope counterpart; read this as an internal standardization review, not external FACETS equivalence."
+        "Bounded GPCM has no direct FACETS free-slope counterpart; read this as a within-mfrmr comparison of engine and FACETS-style df/ZSTD conventions, not external FACETS equivalence."
       } else {
         "For RSM/PCM this review supports FACETS comparison, but it still does not prove full software equivalence."
       }
@@ -11853,7 +11849,7 @@ facets_fit_review_guidance <- function(model, external_supplied) {
 #'   labeled `large_zstd_shift` when the |ZSTD| flag status is unchanged.
 #'   Default `0.5`.
 #' @param df_ratio_tolerance Relative df-difference tolerance used to classify
-#'   the internal engine-vs-FACETS-style df difference; for example, `0.05`
+#'   the within-mfrmr engine-vs-FACETS-style df difference; for example, `0.05`
 #'   means a 5 percent df difference.
 #'
 #' @details
@@ -11879,7 +11875,7 @@ facets_fit_review_guidance <- function(model, external_supplied) {
 #' fit differences. Both notes are repeated in the returned `guidance` table.
 #'
 #' @return An `mfrm_facets_fit_review` bundle with:
-#' - `summary`: one-row overview of internal and external comparison counts
+#' - `summary`: one-row overview of within-mfrmr and external comparison counts
 #' - `standardization`: the fit-standardization guide from diagnostics
 #' - `df_sensitivity`: engine-vs-FACETS-style df/ZSTD comparison using
 #'   the same row-level status taxonomy as `fit_measures_table()$df_sensitivity`
@@ -11936,7 +11932,7 @@ facets_fit_review <- function(fit,
     stop(
       "External FACETS fit comparison is not defined for bounded GPCM, ",
       "because FACETS does not estimate the package's free-slope GPCM route. ",
-      "Run without `facets_fit` for an internal standardization review.",
+      "Run without `facets_fit` to compare the engine and FACETS-style df/ZSTD conventions within mfrmr.",
       call. = FALSE
     )
   }
@@ -12033,7 +12029,7 @@ facets_fit_review <- function(fit,
 #'   diagnostics are computed internally with `residual_pca = "none"`.
 #' @param bias_results Optional output from [estimate_bias()]. If omitted and
 #'   at least two facets exist, a 2-way bias run is computed internally.
-#' @param branch Contract branch. `"facets"` checks legacy-compatible columns.
+#' @param branch Contract branch. `"facets"` checks FACETS-style contract columns.
 #'   `"original"` adapts branch-sensitive contracts to the package's compact
 #'   naming.
 #' @param contract_file Optional path to a custom contract CSV.
@@ -12049,14 +12045,15 @@ facets_fit_review <- function(fit,
 #' - table-level coverage summaries
 #' - optional metric-level consistency checks
 #'
-#' It is intended for output-contract QA and regression review. It does
-#' not establish external validity or software equivalence beyond the specific
+#' It is intended to show users which FACETS-style output fields have a
+#' package-native counterpart and which remain unavailable. It does not
+#' establish external validity or software equivalence beyond the specific
 #' schema/metric contract encoded in the contract file.
 #'
 #' @section Bounded GPCM boundary:
-#' This helper remains blocked for bounded `GPCM` fits in this release. The FACETS
+#' This helper is unavailable for bounded `GPCM` fits because the FACETS
 #' output contract includes score-side rows whose measure-to-score and
-#' uncertainty semantics are validated for the current Rasch-family route, not
+#' uncertainty semantics are supported for the Rasch-family route, not
 #' for free-discrimination bounded `GPCM`. Use [gpcm_capability_matrix()] before
 #' routing a bounded `GPCM` fit into score-side compatibility-output helpers.
 #'
@@ -12083,7 +12080,8 @@ facets_fit_review <- function(fit,
 #' @section Typical workflow:
 #' 1. Run `facets_output_contract_review(fit, branch = "facets")`.
 #' 2. Inspect `summary(contract_review)` and `missing_preview`.
-#' 3. Patch upstream table builders, then rerun the output-contract review.
+#' 3. For unresolved rows, use the documented package-native alternative or
+#'    retain the scope limitation in the report.
 #'
 #' @return
 #' An object of class `mfrm_facets_contract_review` with:
@@ -12627,7 +12625,7 @@ collect_bias_screening_summary <- function(diagnostics = NULL, bias_results = NU
 #' @param dif_result Output from [analyze_dff()] / [analyze_dif()]
 #'   (class `mfrm_dff` with compatibility class `mfrm_dif`) or
 #'   [dif_interaction_table()] (class `mfrm_dif_interaction`).
-#' @param ... Currently unused; reserved for future extensions.
+#' @param ... Reserved for generic compatibility.
 #'
 #' @details
 #' When `dif_result` is an `mfrm_dff`/`mfrm_dif` object, the report is based on
@@ -13250,19 +13248,43 @@ run_qc_pipeline <- function(fit,
   recommendations <- character(0)
 
   # ---- Check 1: Convergence ----
-  converged <- isTRUE(fit$summary$Converged)
-  verdicts[1] <- if (converged) "Pass" else "Fail"
-  values[1] <- if (converged) "TRUE" else "FALSE"
-  thresh[1] <- "Converged = TRUE"
-  details[1] <- if (converged) "Model converged" else "Model did NOT converge"
+  convergence <- mfrm_convergence_state(fit)
+  converged <- convergence$inference_ready
+  verdicts[1] <- if (converged) {
+    "Pass"
+  } else if (identical(convergence$severity, "fail")) {
+    "Fail"
+  } else {
+    "Warn"
+  }
+  values[1] <- if (convergence$code_converged) {
+    if (converged) "Code 0; inference ready" else "Code 0; review required"
+  } else {
+    "Nonzero code; review required"
+  }
+  thresh[1] <- "Convergence severity = pass"
+  details[1] <- if (nzchar(convergence$detail)) {
+    convergence$detail
+  } else if (converged) {
+    "Optimizer diagnostics support inference-ready status."
+  } else {
+    "Optimizer diagnostics require review before inference."
+  }
   raw_details$convergence <- list(
-    converged = converged,
+    optimizer_code_zero = convergence$code_converged,
+    inference_ready = converged,
+    severity = convergence$severity,
+    status = convergence$status,
     iterations = fit$summary$Iterations
   )
   if (!converged) {
     recommendations <- c(
       recommendations,
-      "Model did not converge. Consider increasing maxit, simplifying the model, or checking data quality."
+      paste(
+        "The fit is not inference-ready. Increase `maxit`; if review remains,",
+        "inspect the model specification, data support, and starting values",
+        "before interpreting estimates."
+      )
     )
   }
 
@@ -13734,7 +13756,7 @@ run_qc_pipeline <- function(fit,
       extra_areas = c(
         "Score-side scorefile export under bounded GPCM",
         "FACETS output-contract score-side review",
-        "Design planning and forecasting"
+        "Design evaluation and population forecasting under bounded GPCM"
       )
     ),
     config = list(

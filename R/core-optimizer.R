@@ -4,7 +4,7 @@
 #
 # Internal helpers for running the underlying optim() / nlminb() loops
 # and the MML-EM hybrid scaffolding. Split out of `mfrm_core.R` for
-# 0.1.6 so the engine-dispatch layer lives in a single file. The
+# so the engine-dispatch layer lives in a single file. The
 # functions are internal (no @export); they are called from
 # `mfrm_estimate()` once estimation configuration / parameter cache /
 # initial values have been built upstream.
@@ -207,8 +207,9 @@ run_mfrm_direct_optimization <- function(start,
     warning("Optimizer did not fully converge (code = ", opt$convergence,
             ", status = ", opt$optimizer_diagnostics$ConvergenceStatus, "). ",
             opt$optimizer_diagnostics$ConvergenceDetail, " ",
-            "Consider increasing maxit (current: ", maxit, ") ",
-            "or relaxing reltol (current: ", reltol, ").",
+            "Increase `maxit` (current: ", maxit, "); if the warning persists, ",
+            "inspect the model specification, data support, and starting values. ",
+            "Do not interpret estimates until the review is resolved.",
             call. = FALSE)
   }
 

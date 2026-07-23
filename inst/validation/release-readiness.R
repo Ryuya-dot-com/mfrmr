@@ -427,6 +427,10 @@ mfrmr_release_readiness_gpcm_scope_status <- function(paths,
       getExportedValue("mfrmr", "gpcm_capability_matrix")
     env$gpcm_runtime_guard_coverage <-
       getExportedValue("mfrmr", "gpcm_runtime_guard_coverage")
+    env$.gpcm_capability_registry <-
+      getFromNamespace(".gpcm_capability_registry", "mfrmr")
+    env$.gpcm_runtime_guard_registry <-
+      getFromNamespace(".gpcm_runtime_guard_registry", "mfrmr")
   } else {
     return(empty_status("concern", "GPCM capability source is missing"))
   }
@@ -436,10 +440,14 @@ mfrmr_release_readiness_gpcm_scope_status <- function(paths,
   if (!exists("gpcm_runtime_guard_coverage", envir = env, inherits = FALSE)) {
     return(empty_status("concern", "GPCM runtime guard coverage function is missing"))
   }
+  if (!exists(".gpcm_capability_registry", envir = env, inherits = FALSE) ||
+      !exists(".gpcm_runtime_guard_registry", envir = env, inherits = FALSE)) {
+    return(empty_status("concern", "GPCM scope data are missing"))
+  }
 
-  matrix <- env$gpcm_capability_matrix()
+  matrix <- env$.gpcm_capability_registry()
   required_columns <- c(
-    "Area", "Status", "RecommendedRoute", "NextValidationStep"
+    "CapabilityID", "Area", "Status", "RecommendedRoute"
   )
   missing_columns <- setdiff(required_columns, names(matrix))
   if (length(missing_columns) > 0L) {
@@ -448,10 +456,10 @@ mfrmr_release_readiness_gpcm_scope_status <- function(paths,
       paste("GPCM capability matrix missing columns:", paste(missing_columns, collapse = ", "))
     ))
   }
-  guard_coverage <- env$gpcm_runtime_guard_coverage()
+  guard_coverage <- env$.gpcm_runtime_guard_registry()
   required_guard_columns <- c(
-    "Area", "Helper", "Status", "GuardMode", "ExpectedConditionClass",
-    "RecommendedRoute", "NextValidationStep"
+    "CapabilityID", "Area", "Helper", "Status", "AvailabilityMode",
+    "ConditionClass", "RecommendedRoute"
   )
   missing_guard_columns <- setdiff(required_guard_columns, names(guard_coverage))
   if (length(missing_guard_columns) > 0L) {
@@ -463,16 +471,18 @@ mfrmr_release_readiness_gpcm_scope_status <- function(paths,
   }
 
   outstanding <- matrix[matrix$Status %in% c("blocked", "deferred"), , drop = FALSE]
-  guard_idx <- match(guard_coverage$Area, matrix$Area)
+  guard_idx <- match(guard_coverage$CapabilityID, matrix$CapabilityID)
   guard_status_ok <- all(!is.na(guard_idx)) &&
     all(guard_coverage$Status == matrix$Status[guard_idx]) &&
-    all(guard_coverage$RecommendedRoute == matrix$RecommendedRoute[guard_idx]) &&
-    all(guard_coverage$NextValidationStep == matrix$NextValidationStep[guard_idx])
-  runtime_rows <- guard_coverage[guard_coverage$GuardMode == "runtime_error", , drop = FALSE]
+    all(guard_coverage$RecommendedRoute == matrix$RecommendedRoute[guard_idx])
+  runtime_rows <- guard_coverage[
+    guard_coverage$AvailabilityMode == "structured_error", , drop = FALSE
+  ]
   runtime_condition_ok <- nrow(runtime_rows) > 0L &&
-    all(runtime_rows$ExpectedConditionClass == "mfrmr_gpcm_scope_error")
+    all(runtime_rows$ConditionClass == "mfrmr_gpcm_scope_error")
   covered_guard_areas <- unique(guard_coverage$Area[
-    guard_coverage$GuardMode %in% c("runtime_error", "roadmap_only")
+    guard_coverage$AvailabilityMode %in%
+      c("structured_error", "no_public_helper")
   ])
   missing_guard_areas <- setdiff(outstanding$Area, covered_guard_areas)
   runtime_guard_coverage_ok <- length(missing_guard_areas) == 0L &&
@@ -483,8 +493,7 @@ mfrmr_release_readiness_gpcm_scope_status <- function(paths,
     grepl(area, roadmap, fixed = TRUE)
   }, logical(1))
   missing_areas <- outstanding$Area[!area_present]
-  guidance_complete <- all(nzchar(outstanding$RecommendedRoute)) &&
-    all(nzchar(outstanding$NextValidationStep))
+  guidance_complete <- all(nzchar(outstanding$RecommendedRoute))
   checklist_rows <- if (!is.null(checklist_status)) {
     checklist_status$RoadmapRows[1] %||% NA_integer_
   } else {
@@ -560,7 +569,7 @@ mfrmr_release_readiness_ci_workflow_status <- function(path) {
     grepl("warning", lines, fixed = TRUE))
   artifact_upload <- contains("actions/upload-artifact@v4") &&
     any(grepl("check", lines, fixed = TRUE) | grepl("Rcheck", lines, fixed = TRUE))
-  readiness_gate <- contains("Release-readiness gate") &&
+  readiness_gate <- contains("Repository validation review") &&
     contains("mfrmr_release_readiness_review")
   data.frame(
     Workflow = path,

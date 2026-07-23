@@ -55,11 +55,14 @@ for the standalone version.}
 \item{include_person_facet}{If \code{TRUE}, include person-level rows in
 \code{facet_level_summary}.}
 
-\item{include_agreement}{If \code{TRUE}, include an observed-score inter-rater
-agreement bundle (summary/pairs/settings) in the output.}
+\item{include_agreement}{If \code{TRUE}, include an observed-score agreement
+bundle (summary/pairs/settings) for a selected non-person facet.}
 
-\item{rater_facet}{Optional rater facet name used for agreement summaries.
-If \code{NULL}, inferred from facet names.}
+\item{rater_facet}{Optional facet name used to identify repeated scorers for
+agreement summaries. If \code{NULL}, a rater-like name such as \code{Rater}, \code{Judge},
+or \code{Scorer} is inferred. No agreement analysis is run when such a name is
+absent; set this argument explicitly only when another facet genuinely
+represents repeated scorers.}
 
 \item{context_facets}{Optional facets used to define matched contexts for
 agreement. If \code{NULL}, all remaining facets (including \code{Person}) are used.}
@@ -85,10 +88,12 @@ non-person facets (named list keyed \code{"facetA__facetB"}); used by
 \code{summary(ds)$design_links} to flag sparse / disconnected
 facet-pair coverage
 \item \code{linkage_summary}: person-facet connectivity diagnostics
-\item \code{agreement}: observed-score inter-rater agreement bundle
+\item \code{agreement}: observed-score agreement bundle for the selected scorer facet
 \item \code{row_retention}: row counts before and after preparation filters
 \item \code{preparation_notes}: structured notes for row drops, ID trimming, and
 design conditions detected during preparation
+\item \code{missing_recoding}: per-column counts of declared missing-code values
+replaced with \code{NA} before row filtering
 \item \code{score_support}: minimal prepared score-support metadata used by
 \code{summary(ds)$caveats}
 }
@@ -104,9 +109,10 @@ sample size, score distribution, per-facet coverage, and linkage counts.
 
 \strong{Key data-quality checks to perform before fitting:}
 \itemize{
-\item \emph{Sparse categories}: any score category with fewer than 10 weighted
-observations may produce unstable threshold estimates
-(Linacre, 2002).  Consider collapsing adjacent categories.
+\item \emph{Sparse categories}: review categories with little weighted support because
+their threshold estimates may be imprecise. Do not collapse categories
+solely from a package warning; also consider the rubric, intended score
+interpretation, and category diagnostics after fitting.
 \item \emph{Unlinked elements}: if a facet level has zero overlap with one or
 more levels of another facet, the design is disconnected and
 parameters cannot be placed on a common scale.  Check
@@ -121,19 +127,19 @@ they are handled via Bayesian shrinkage under MML.
 Recommended order:
 \itemize{
 \item \code{overview}: confirms sample size, facet count, and category span.
-The \code{MinWeightedN} column shows the smallest weighted observation
-count across all facet levels; values below 30 may lead to
-unstable parameter estimates.
+The \code{MinWeightedN} column shows the smallest weighted observation count
+across facet levels; interpret it relative to the design and intended use.
 \item \code{missing_by_column}: identifies immediate data-quality risks.
-Any non-zero count warrants investigation before fitting.
+Understand why values are missing and whether the fitted missing-data
+handling matches the study design.
 \item \code{score_distribution}: checks sparse/unused score categories.
-Balanced usage across categories is ideal; heavily skewed
-distributions may compress the measurement range.
+Skew can be substantively expected, but weakly supported or unused
+categories need explicit interpretation.
 \item \code{facet_level_summary} and \code{linkage_summary}: checks per-level
 support and person-facet connectivity.  Low linkage ratios
 indicate sparse or disconnected design blocks.
-\item \code{agreement}: optional observed inter-rater consistency summary
-(exact agreement, correlation, mean differences per rater pair).
+\item \code{agreement}: optional observed agreement summary for the selected scorer
+facet (exact agreement, correlation, and mean differences per pair).
 }
 }
 

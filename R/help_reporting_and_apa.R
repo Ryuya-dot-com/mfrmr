@@ -5,7 +5,7 @@
 #' manuscript-draft text, tables, notes, and revision checklists in `mfrmr`.
 #'
 #' This guide currently applies fully to diagnostics-based `RSM` / `PCM`
-#' workflows. First-release `GPCM` fits now support [reporting_checklist()],
+#' workflows. Bounded `GPCM` fits support [reporting_checklist()],
 #' [precision_review_report()], direct curve/graph and residual table helpers,
 #' and caveated APA/QC/export bundles. Use [gpcm_capability_matrix()] when you
 #' need the formal boundary for the current `GPCM` reporting path.
@@ -20,7 +20,7 @@
 #' treated as automatic operational-scoring evidence.
 #'
 #' @section Start with the reporting question:
-#' - "Which parts of this run are draft-complete, and with what caveats?"
+#' - "Which parts of this run are ready to draft, and with what caveats?"
 #'   Use [reporting_checklist()].
 #' - "How should I phrase the model, fit, and precision sections?"
 #'   For `RSM` / `PCM`, use [build_apa_outputs()].
@@ -94,8 +94,8 @@
 #'
 #' Prediction-side helpers [predict_mfrm_units()] and
 #' [sample_mfrm_plausible_values()] can carry the fitted population model into
-#' future-unit scoring and plausible-value draws. In 0.2.2 this remains a
-#' first-version, one-dimensional `MML` route for `RSM` / `PCM`; avoid stronger
+#' future-unit scoring and plausible-value draws. The supported route is
+#' one-dimensional `MML` for `RSM` / `PCM`; avoid stronger
 #' claims about multidimensional latent regression, Wald tests, posterior
 #' predictive checking, or full external-engine equivalence unless those checks
 #' were performed outside this helper family.
@@ -130,7 +130,7 @@
 #'   into named `data.frame` tables plus an index for manuscript or appendix
 #'   handoff, and now also supports bundle-level `summary()` / `plot()` for
 #'   role coverage and numeric QC.}
-#'   \item{[export_summary_appendix()]}{Writes those validated summary-table
+#'   \item{[export_summary_appendix()]}{Writes those documented summary-table
 #'   bundles to CSV and optional HTML appendix artifacts without requiring a
 #'   full fit-based export bundle.}
 #'   \item{[apa_table()]}{Produces reproducible base-R tables with APA-oriented
@@ -178,7 +178,9 @@
 #' [mfrm_results()] object. Use [mfrm_results()] and [mfrm_report()] first when
 #' the goal is interactive triage or report-readiness review; use
 #' [export_mfrm_bundle()] when the goal is a file bundle for a project folder,
-#' coauthor handoff, or supplementary-methods archive.
+#' coauthor handoff, or supplementary-methods archive. The bundle is not
+#' deidentified; review every file under the study's data-handling policy before
+#' any handoff.
 #'
 #' @section Typical workflow:
 #' - Manuscript-first route:
@@ -254,7 +256,8 @@
 #'   output_dir = tempdir(),
 #'   prefix = "mfrmr_report_bundle",
 #'   include = c("core_tables", "checklist", "apa", "summary_tables", "html"),
-#'   overwrite = TRUE
+#'   overwrite = TRUE,
+#'   acknowledge_sensitive = TRUE
 #' )
 #' report_bundle$summary[, c("FilesWritten", "HtmlWritten")]
 #' }

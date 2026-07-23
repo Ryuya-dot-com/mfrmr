@@ -12,7 +12,7 @@ route, and claim-boundary columns.
 }
 \description{
 \code{facets_visual_contract()} identifies the closest package route for common
-FACETS visual surfaces and states what may—and may not—be claimed from that
+FACETS visual surfaces and states what can and cannot be claimed from that
 visual correspondence. It distinguishes the FACETS-style asterisk ruler
 from the native uncertainty-aware Wright map.
 }

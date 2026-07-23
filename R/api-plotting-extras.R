@@ -1,5 +1,5 @@
 # ==============================================================================
-# Additional visualization helpers (added in 0.1.6)
+# Additional visualization helpers
 # ==============================================================================
 #
 # Each function in this file follows the established mfrmr plot conventions:
@@ -299,7 +299,7 @@ plot_person_fit <- function(fit,
   plot_title <- "Person fit"
   plot_subtitle <- if (identical(fit_index, "meansquare")) {
     sprintf(
-      "Infit and Outfit per person (acceptance band [%g, %g], Linacre 2002)",
+      "Infit and Outfit per person (heuristic review band [%g, %g], Linacre 2002)",
       lower, upper
     )
   } else {

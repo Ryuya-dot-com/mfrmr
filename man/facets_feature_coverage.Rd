@@ -21,13 +21,13 @@ A data.frame with columns:
 \item \code{FACETSReference}
 \item \code{mfrmrRoute}
 \item \code{Status}
-\item \code{Scope}
-\item \code{GapOrBoundary}
-\item \code{Priority}
+\item \code{Capability}
+\item \code{Limitation}
+\item \code{Alternative}
 }
 }
 \description{
-\code{facets_feature_coverage()} summarizes how the current \code{mfrmr} release maps
+\code{facets_feature_coverage()} summarizes how \code{mfrmr} maps
 the main FACETS output-table, output-file, and graph-menu surface to package
 functions.
 
@@ -54,9 +54,9 @@ must be read with explicit identification, validation, or scope caveats.
 \item \code{partial}: the concept is covered, but not the full FACETS formatting,
 option surface, file type, or external integration.
 \item \code{not_implemented}: a FACETS feature has no direct package-native route in
-the current release.
+the documented package scope.
 \item \code{not_targeted}: the feature is tied to FACETS UI, Web/Excel handoff, or
-another external program format and is not a release goal.
+another external program format and is outside the package scope.
 }
 }
 \examples{

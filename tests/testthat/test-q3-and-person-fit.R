@@ -301,8 +301,8 @@ test_that("mfrm_d_study downgrades coefficients when G-study identification is c
 
   expect_true(all(ds$GStatus == "identification_warning"))
   expect_true(all(ds$PhiStatus == "identification_warning"))
-  expect_false(any(ds$GStatus == "high_stakes_candidate"))
-  expect_false(any(ds$PhiStatus == "high_stakes_candidate"))
+  expect_false(any(ds$GStatus == "at_or_above_0.80_reference"))
+  expect_false(any(ds$PhiStatus == "at_or_above_0.80_reference"))
   expect_identical(unique(ds$IdentificationStatus), "boundary_or_singular_fit")
   expect_true(all(ds$BoundaryFit))
 })

@@ -432,7 +432,7 @@ Exit criteria:
 
 Capability row:
 
-- `MCMC and heavy-backend extensions` (`deferred`) for posterior predictive
+- `Posterior-predictive and Bayesian workflows` (`deferred`) for posterior predictive
   computation in the current matrix wording.
 
 Required evidence before unblocking:
@@ -457,7 +457,7 @@ Exit criteria:
 
 Capability row:
 
-- `MCMC and heavy-backend extensions` (`deferred`)
+- `Posterior-predictive and Bayesian workflows` (`deferred`)
 
 Potential future scope:
 

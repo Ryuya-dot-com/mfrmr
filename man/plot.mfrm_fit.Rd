@@ -14,7 +14,7 @@
   title = NULL,
   palette = NULL,
   label_angle = 45,
-  show_ci = FALSE,
+  show_ci = NULL,
   ci_level = 0.95,
   group = NULL,
   diagnostics = NULL,
@@ -45,8 +45,9 @@
 \arguments{
 \item{x}{An \code{mfrm_fit} object from \code{\link[=fit_mfrm]{fit_mfrm()}}.}
 
-\item{type}{Plot type. Use \code{NULL}, \code{"bundle"}, or \code{"all"} for the
-three-part fit bundle; otherwise choose one of \code{"facet"}, \code{"person"},
+\item{type}{Plot type. Omit \code{type} (or use \code{NULL} / \code{"wright"}) for the
+primary native Wright map. Use \code{"bundle"}, \code{"all"}, or \code{"default"} for
+the three-part fit bundle; otherwise choose one of \code{"facet"}, \code{"person"},
 \code{"step"}, \code{"wright"}, \code{"pathway"}, \code{"fit_pathway"}, \code{"ccc"},
 \code{"ccc_surface"}, or \code{"category_surface"}. \code{"pathway"} is the
 theta-to-expected-score display; \code{"fit_pathway"} is the
@@ -55,8 +56,11 @@ fit-statistic-to-measure display.}
 \item{facet}{Optional facet name for \code{type = "facet"}.}
 
 \item{top_n}{Maximum number of facet/step locations retained by the native
-Wright map for compact displays. The FACETS-style payload always retains
-every fitted facet and step location.}
+Wright map for compact displays. Step transitions are always retained;
+any omitted facet locations are counted in the returned \code{retention} table
+and disclosed in the plot subtitle/note. Use \code{Inf} for a complete
+all-level final map. The FACETS-style payload always retains every fitted
+facet and step location.}
 
 \item{theta_range}{Numeric length-2 range for pathway, CCC, and
 category-surface plot data.}
@@ -70,10 +74,12 @@ category-surface plot data.}
 
 \item{label_angle}{Rotation angle for x-axis labels where applicable.}
 
-\item{show_ci}{If \code{TRUE}, add approximate confidence intervals when
-available. The formal default is \code{FALSE}; \code{type = "fit_pathway"} is the
-exception and displays intervals when this argument is omitted. Pass
-\code{show_ci = FALSE} explicitly to suppress them there.}
+\item{show_ci}{Whether to add approximate confidence intervals when
+available. \code{NULL} selects the display-specific default: \code{TRUE} for the
+primary native Wright map and \code{type = "fit_pathway"}, and \code{FALSE} for the
+FACETS-style ruler and other plot types. With \code{renderer = "facets"},
+explicitly setting \code{show_ci = TRUE} creates a hybrid display: FACETS-style
+ruler grammar with mfrmr uncertainty intervals.}
 
 \item{ci_level}{Confidence level used when \code{show_ci = TRUE}.}
 
@@ -136,14 +142,17 @@ or \code{"monochrome"}).}
 
 \item{renderer}{Wright-map renderer. Use \code{"native"} (default) or
 \code{"facets"} for the FACETS Table 6-style visual layout. This is the
-canonical selector for new code.}
+canonical selector for new code. The native map is the primary display
+and includes available facet uncertainty by default. The closest
+FACETS-style visual uses \code{show_ci = FALSE}.}
 
 \item{wright_style}{Wright-map renderer. \code{"native"} preserves the package's
 histogram, point, range, and facet-SE display. \code{"facets_style"} adds a
 FACETS Table 6-style text ruler with person-frequency stars, signed facet
 headers, and labeled score-transition lines. It is a visual-layout option,
 not a claim of numerical equivalence with FACETS. This explicit style name
-is equivalent to \code{renderer = "facets"}.}
+is equivalent to \code{renderer = "facets"}. Adding \code{show_ci = TRUE} to that
+style is an mfrmr/FACETS hybrid rather than the closest FACETS-style view.}
 
 \item{category_labels}{Optional score rubric labels used by
 \code{wright_style = "facets_style"}. Supply a named character vector keyed by
@@ -178,6 +187,12 @@ an \code{mfrm_plot_data} object (the most useful single figure for a
 first inspection). Pass \code{type = "bundle"} (or \code{"all"} / \code{"default"})
 to obtain the legacy three-plot \code{mfrm_plot_bundle} containing a
 Wright map, pathway map, and category characteristic curves. The
+compact native default records any omitted facet locations in
+\code{data$retention} and annotates the subtitle and drawn figure; use
+\code{top_n = Inf} to retain every fitted location in the final Wright map.
+Native text labels remain collision-aware, so a retained point may be
+unlabeled; its exact level and estimate remain available in the returned
+plot data. The
 returned object always carries machine-readable metadata through
 the \code{mfrm_plot_data} contract, even when the plot is drawn
 immediately.
@@ -198,7 +213,10 @@ ruler. That mode retains every facet location in its data and shows actual
 Its \code{facets_style} payload contains tidy ruler, person-frequency, facet,
 step, mean-half-score, header, category-label, and settings tables for custom
 graphics. The styling emulates the semantics of FACETS Table 6; estimates
-and standard errors remain those produced by \code{mfrmr}.
+and standard errors remain those produced by \code{mfrmr}. Use
+\code{show_ci = FALSE} for the closest FACETS-style rendering. If
+\code{show_ci = TRUE} is requested, interpret the result as a hybrid that adds
+mfrmr uncertainty intervals to FACETS-style ruler grammar.
 
 \code{type = "pathway"} shows expected score
 traces and dominant-category regions across theta. This expected-score
@@ -241,15 +259,15 @@ For a plot-selection guide and extended examples, see
 }
 
 \examples{
-\dontshow{if (interactive()) withAutoprint(\{ # examplesIf}
-toy <- load_mfrmr_data("example_core")
+toy <- load_mfrmr_data("example_operational")
 fit <- fit_mfrm(
   toy,
   "Person",
   c("Rater", "Criterion"),
   "Score",
-  method = "JML",
+  method = "MML",
   model = "RSM",
+  quad_points = 7,
   maxit = 30
 )
 wright <- plot(fit, draw = FALSE)
@@ -292,7 +310,6 @@ if (interactive()) {
     palette = c("#1b9e77", "#d95f02", "#7570b3")
   )
 }
-\dontshow{\}) # examplesIf}
 }
 \seealso{
 \code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=plot_wright_unified]{plot_wright_unified()}}, \code{\link[=plot_bubble]{plot_bubble()}},

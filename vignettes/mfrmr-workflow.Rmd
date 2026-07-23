@@ -59,8 +59,9 @@ For speed-sensitive work, a useful pattern is:
 `mfrmr` treats `MML` and `JML` differently on purpose.
 
 - `MML` integrates over the person distribution with Gauss-Hermite quadrature.
-- The current `MML` branch optimizes the quadrature-based marginal
-  log-likelihood directly; it is not an EM implementation.
+- `mml_engine = "direct"` (the default) optimizes the quadrature-based
+  marginal log-likelihood directly. `mml_engine = "em"` and `"hybrid"` provide
+  the documented EM and EM-warm-start routes for supported RSM/PCM fits.
 - `JML` is often useful for quick exploratory passes, but `MML` remains the
   preferred route for final estimation and fixed-calibration follow-up.
 
@@ -71,7 +72,7 @@ For `RSM` and `PCM`, diagnostics now expose two distinct evidence paths:
 - `diagnostic_mode = "both"` is the safest default when you want to inspect
   both views side by side.
 
-The strict marginal branch is still screening-oriented in the current release.
+Strict marginal diagnostics are screening-oriented.
 Use `summary(diag)$diagnostic_basis` to separate the legacy residual evidence
 from the strict marginal evidence rather than pooling them into one decision.
 
@@ -80,7 +81,7 @@ from the strict marginal evidence rather than pooling them into one decision.
 ```{r load-data}
 library(mfrmr)
 
-list_mfrmr_data()
+list_mfrmr_data(details = TRUE)[, c("Key", "PrimaryUse", "Design", "CountBasis")]
 
 data("ej2021_study1", package = "mfrmr")
 head(ej2021_study1)
@@ -89,26 +90,28 @@ study1_alt <- load_mfrmr_data("study1")
 identical(names(ej2021_study1), names(study1_alt))
 ```
 
-## Minimal Runnable Example
+## Applied Runnable Example
 
-Start with the packaged `example_core` dataset. It is intentionally compact,
-category-complete, and generated from a single latent trait plus facet main
-effects so that help-page examples stay fast without relying on undersized toy
-data. The same object is also available via
-`data("mfrmr_example_core", package = "mfrmr")`:
+Start with the packaged `example_operational` dataset. It is intentionally
+compact but uses a connected two-rater assignment, unequal rater workloads,
+and six planned omissions represented by absent long-format rows rather than
+`NA` or sentinel scores. This makes the main tutorial closer to an applied
+rating design without using empirical records. The same object is also
+available via `data("mfrmr_example_operational", package = "mfrmr")`.
+`example_core` remains available as an idealized complete-crossing example for
+fast help-page checks.
 
 ```{r toy-setup}
-data("mfrmr_example_core", package = "mfrmr")
-toy <- mfrmr_example_core
+data("mfrmr_example_operational", package = "mfrmr")
+toy <- mfrmr_example_operational
 
 fit_toy <- fit_mfrm(
   data = toy,
   person = "Person",
   facets = c("Rater", "Criterion"),
   score = "Score",
-  method = "JML",
-  model = "RSM",
-  maxit = 30
+  method = "MML",
+  model = "RSM"
 )
 diag_toy <- diagnose_mfrm(
   fit_toy,
@@ -134,23 +137,25 @@ summary(diag_toy)$overview
 facets_summary_toy
 
 # Required first fitted-scale artifact.
-plot(res_toy, type = "wright", preset = "publication", show_ci = TRUE)
+plot(res_toy, type = "wright", preset = "publication", show_ci = TRUE, top_n = Inf)
 
 # Optional FACETS-style ruler. Replace these examples with the study rubric.
 rubric_labels <- c(
-  "0" = "Level 0",
   "1" = "Level 1",
   "2" = "Level 2",
-  "3" = "Level 3"
+  "3" = "Level 3",
+  "4" = "Level 4"
 )
 plot(
   res_toy,
   type = "wright",
   renderer = "facets",
   category_labels = rubric_labels,
-  show_ci = TRUE,
+  show_ci = FALSE,
   preset = "publication"
 )
+# Setting show_ci = TRUE on this FACETS-style ruler is available as a
+# deliberate hybrid: FACETS ruler grammar plus mfrmr uncertainty intervals.
 
 # Optional follow-up: Infit on x, measure on y; persons are explicit opt-in.
 plot(
@@ -206,15 +211,21 @@ report_toy <- mfrm_report(res_toy, style = "qc")
 summary(res_toy)$next_actions
 summary(report_toy)$overview
 
+# This is a controlled analysis archive, not a deidentified shareable export.
 export_dir <- file.path(tempdir(), "mfrmr-workflow-export")
 export_toy <- export_mfrm_results(
   res_toy,
   output_dir = export_dir,
   include = c("default", "report"),
-  overwrite = TRUE
+  overwrite = TRUE,
+  acknowledge_sensitive = TRUE
 )
 head(export_toy$written_files)
 ```
+
+The acknowledgement suppresses the warning only; it does not redact person
+identifiers, person-level results, local paths, or the complete RDS object.
+Review every artifact under the study's data-handling policy before sharing.
 
 ```{r primary-route-artifacts, echo = FALSE, eval = is_cran_check}
 vignette_artifact("workflow_next_actions.csv")
@@ -264,7 +275,7 @@ vignette_artifact("workflow_visual_checklist.csv")
 
 ## Fit and Diagnose with Full Data
 
-For a realistic analysis, use the packaged Study 1 dataset:
+For a larger sparse synthetic illustration, use the packaged Study 1 dataset:
 
 ```{r fit-full}
 fit <- fit_mfrm(
@@ -291,10 +302,11 @@ summary(diag)
 s <- summary(fit, profile = "facets", diagnostics = diag)
 res <- s$results
 s
-plot(res, type = "wright", preset = "publication", show_ci = TRUE)
+plot(res, type = "wright", preset = "publication", show_ci = TRUE, top_n = Inf)
 
-# Optional FACETS-style asterisk ruler, retaining supplied uncertainty metadata.
-plot(res, type = "wright", renderer = "facets", show_ci = TRUE,
+# Optional closest FACETS-style asterisk ruler (without mfrmr CI overlays).
+plot(res, type = "wright", renderer = "facets",
+     category_labels = rubric_labels, show_ci = FALSE,
      preset = "publication")
 
 plot(
@@ -558,33 +570,6 @@ recovery_bundle <- build_summary_table_bundle(
 )
 recovery_bundle$table_index[, c("Table", "Rows", "Role")]
 
-# For a release-scale check, use the optional validation protocol:
-# source(system.file("validation", "recovery-validation.R", package = "mfrmr"))
-# validation <- mfrmr_run_recovery_validation(tier = "core", output_dir = "recovery-validation")
-# summary(validation)
-# validation_summary <- summary(validation)
-# validation_summary$reading_order
-# validation_summary$topline_release_decision
-# validation_summary$release_decision_table
-# validation_summary$condition_reporting_notes
-# validation_summary$condition_summary
-# validation_summary$diagnostic_reporting_notes
-# validation_summary$domain_decision_table
-# validation_bundle <- build_summary_table_bundle(validation_summary)
-# validation_bundle$tables$reading_order
-# validation_bundle$tables$topline_release_decision
-# validation_bundle$tables$condition_reporting_notes
-# validation_bundle$tables$condition_summary
-# validation_bundle$tables$diagnostic_reporting_notes
-# The top-line table is the release-recovery conclusion. It uses recovery
-# metrics, convergence, and Monte Carlo precision from core cases as the
-# primary evidence, while ExtendedSensitivityStatus reports non-core stress
-# cases separately. The condition notes and condition table keep generator
-# stress and score support separate from recovery metrics, so OverallStatus = "review" is not
-# read as a recovery-metric failure by itself. The diagnostic reporting notes
-# turn fit/separation operating characteristics into report caveats rather
-# than release gates.
-
 pred_pop <- predict_mfrm_population(
   sim_spec = sim_spec,
   reps = 2,
@@ -635,8 +620,8 @@ export_summary_appendix(
 )
 ```
 
-For a quick smoke test, `reps = 2` or another very small value is useful only to
-check that the data-generating setup and refit path run. For a study report,
+For an initial exploratory run, `reps = 2` or another very small value is useful
+only to check the data-generating setup and refit path. For a study report,
 increase `reps`, keep the ADEMP-style metadata in the exported tables, and set
 substantive RMSE/Bias thresholds so that `assess_mfrm_recovery()` can mark those
 rows as `ok`, `review`, or `concern` rather than `not_assessed`.

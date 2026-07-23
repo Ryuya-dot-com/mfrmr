@@ -33,9 +33,9 @@ reporting-oriented results profile.}
 
 \item{detail}{Printed detail. When \code{NULL} (the default), the lightweight
 \code{"fit"} profile retains the legacy \code{"full"} print while expanded profiles
-use \code{"brief"}. An explicit \code{"brief"} avoids printing person identifiers or
-observation rows; \code{"full"} prints the legacy fit sections and, for expanded
-profiles, prints extreme-person tables only when \code{include_person = TRUE}.}
+use \code{"brief"}. Neither mode prints person identifiers unless
+\code{include_person = TRUE}; \code{"brief"} also reduces the number of fit-level
+sections shown in the console.}
 
 \item{diagnostics}{Optional matching output from \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}. It is
 reused by the \code{"facets"} and \code{"reporting"} profiles without recomputation.}
@@ -46,8 +46,9 @@ reused by the \code{"facets"} and \code{"reporting"} profiles without recomputat
 dependent section as \code{"not_computed"}. The \code{"fit"} profile never computes
 diagnostics.}
 
-\item{include_person}{Logical. Whether expanded person-level detail may be
-printed in \code{detail = "full"} and requested by the fit-pathway route.}
+\item{include_person}{Logical. Whether person identifiers may be printed in
+extreme-person tables and requested by the fit-pathway route. The default
+is \code{FALSE} for privacy-safe console output.}
 }
 \value{
 An object of class \code{summary.mfrm_fit} with:
@@ -68,7 +69,8 @@ when a population model uses model-matrix coding
 \item \code{person_overview}: person-measure distribution summary
 \item \code{targeting}: person-versus-non-person facet targeting overview
 (Wright-map-style mean/SD comparison)
-\item \code{step_overview}: threshold/step diagnostics
+\item \code{step_overview}: threshold/step diagnostics by PCM/GPCM \code{StepFacet}
+ladder, or for the common RSM ladder
 \item \code{slope_overview}: discrimination summary for \code{GPCM} fits
 \item \code{interaction_overview}: model-estimated facet-interaction summary
 when the fit was specified with \code{facet_interactions}
@@ -120,7 +122,8 @@ It returns a structured object and prints:
 \item a reporting map showing which companion summaries/tables should be used for
 manuscript-oriented data description, diagnostics, category checks, and draft
 reporting
-\item high/low person measures and extreme facet levels
+\item extreme facet levels and, when explicitly requested, high/low person
+measures
 }
 }
 \section{Interpreting output}{
@@ -129,7 +132,8 @@ reporting
 \item \code{overview}: convergence and information criteria.
 \item \code{facet_overview}: per-facet spread and range of estimates.
 \item \code{person_overview}: distribution of person measures.
-\item \code{step_overview}: threshold spread and monotonicity checks.
+\item \code{step_overview}: threshold spread and monotonicity checks, reported by
+\code{StepFacet} ladder for PCM/GPCM fits and as one common ladder for RSM fits.
 \item \code{settings_overview}: estimation settings that affect interpretation.
 \item \code{population_coding}: fitted categorical levels and contrasts that must be
 reused when scoring new persons under the population-model posterior.
@@ -143,15 +147,21 @@ population-design check row.
 \item \code{caveats}: structured rows behind those warnings for appendix/export use;
 \code{print(summary(fit))} shows a compact \code{Caveats} block when rows are present.
 \item \code{reporting_map}: where to get companion outputs for manuscript reporting.
-\item \code{top_person} / \code{top_facet}: extreme estimates for quick triage.
+\item \code{person_high} / \code{person_low} (opt-in for printing) and \code{facet_extremes}:
+extreme estimates for focused review.
 }
 }
 
 \section{Typical workflow}{
 
 \enumerate{
-\item Fit model with \code{\link[=fit_mfrm]{fit_mfrm()}}.
-\item Run \code{summary(fit)} for first-pass diagnostics.
+\item Review data and score support with \code{\link[=describe_mfrm_data]{describe_mfrm_data()}}.
+\item Fit with \code{\link[=fit_mfrm]{fit_mfrm()}} and read \code{summary(fit, profile = "fit")}.
+\item Request \code{summary(fit, profile = "facets")} for the comprehensive
+FACETS-organized review.
+\item Draw the required native Wright map with
+\code{plot(fit, type = "wright", show_ci = TRUE)}; add the FACETS renderer or
+Infit pathway only when they answer a specific follow-up question.
 \item For \code{RSM} / \code{PCM}, continue with \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} for element-level fit
 checks. For bounded \code{GPCM}, continue with \code{\link[=compute_information]{compute_information()}} /
 \code{\link[=plot_information]{plot_information()}} or the fixed-calibration posterior scoring helpers.
@@ -159,24 +169,40 @@ checks. For bounded \code{GPCM}, continue with \code{\link[=compute_information]
 }
 
 \examples{
-toy <- load_mfrmr_data("example_core")
+toy <- load_mfrmr_data("example_operational")
 fit <- fit_mfrm(
   toy, "Person", c("Rater", "Criterion"), "Score",
-  method = "MML", quad_points = 5
+  method = "MML", model = "RSM", quad_points = 7, maxit = 30
 )
 s <- summary(fit)
-s$overview[, c("Model", "Method", "Converged")]
-# Look for: Converged = TRUE. If FALSE the fit is not safe to report;
-#   raise `maxit`, relax `reltol`, or rerun with `quad_points = 31`.
+s$overview[, c(
+  "Model", "Method", "Converged", "InferenceReady",
+  "ConvergenceSeverity"
+)]
+# Require `InferenceReady = TRUE` before interpreting the fitted scale.
+# If it is FALSE, inspect the terminal gradient, data, model, and
+# identification; increasing `maxit` alone may not resolve the review.
 s$person_overview
-# Look for: Mean ~ 0 (logits) and SD ~ 1 are typical when the sample
-#   is centred on the test difficulty. Min < -3 or Max > 3 with
-#   `Extreme = "min"/"max"` rows indicates ceiling / floor cases.
+# Interpret location and spread on the fitted logit scale together with the
+# score distribution and extreme-score counts.
 s$targeting
-# Look for: |Targeting| < ~0.5 logits across non-person facets is
-#   comfortable. Larger absolute values mean the test is systematically
-#   easier or harder than the person sample. SpreadRatio > 2 means
-#   persons dominate facet variability; < 0.5 means facets dominate.
+# Targeting and spread are descriptive. Their practical importance depends
+# on the assessment purpose, sample, and facet orientation.
+facets_summary <- summary(fit, profile = "facets", compute = "never")
+res <- facets_summary$results
+native_map <- plot(
+  fit, type = "wright", renderer = "native", show_ci = TRUE, draw = FALSE
+)
+facets_map <- plot(
+  fit, type = "wright", renderer = "facets", show_ci = FALSE,
+  category_labels = c(
+    `1` = "Beginning", `2` = "Developing",
+    `3` = "Secure", `4` = "Advanced"
+  ),
+  draw = FALSE
+)
+# For fit statistics and the optional person-inclusive pathway, rerun the
+# FACETS profile with diagnostics available, then use its `results` object.
 }
 \seealso{
 \code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}

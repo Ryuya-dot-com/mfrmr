@@ -81,7 +81,7 @@ if (requireNamespace("lme4", quietly = TRUE)) {
   ds[, c("n_Rater", "n_Criterion", "G", "Phi",
          "GStatus", "PhiStatus", "IdentificationStatus")]
   # If IdentificationStatus is not "identified", even large G/Phi
-  # values remain identification warnings, not high-stakes evidence.
+  # values remain identification warnings, not decision-ready evidence.
 }
 }
 }

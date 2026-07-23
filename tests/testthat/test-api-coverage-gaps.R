@@ -52,8 +52,8 @@ test_that("print.mfrm_data_description prints overview, score distribution, and 
   # score distribution section
 
   expect_true(any(grepl("Score distribution", out, fixed = TRUE)))
-  # inter-rater agreement section
-  expect_true(any(grepl("Inter-rater agreement", out, fixed = TRUE)))
+  # selected scorer-facet agreement section
+  expect_true(any(grepl("Observed agreement by Rater", out, fixed = TRUE)))
 
   # The function must return invisible(x)
   ret <- capture.output(invisible_ret <- print(desc))

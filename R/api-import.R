@@ -2,13 +2,10 @@
 # Import adapters: mirt / TAM / eRm fits to mfrmr-compatible bundles
 # ==============================================================================
 #
-# The current import path is **partial**: each helper extracts the
-# subset of measurement information that maps cleanly to the
-# `mfrm_fit` contract (item / step parameters, person scores, basic
-# fit statistics) and returns a thin object that the mfrmr plot and
-# reporting helpers can consume. Full bundle import (bias / DIF /
-# anchor review / replay) is deferred to a future release because the
-# source packages do not always expose the underlying data.
+# Importers expose the measurement information that maps reliably to the
+# `mfrm_fit` contract: item/step parameters, person scores, and basic fit
+# statistics. Bias, DIF, anchor-review, and replay components are outside this
+# adapter contract when the source package does not expose the underlying data.
 #
 # All importers refuse to claim the `mfrm_fit` class outright; they
 # return an `mfrm_imported_fit` object that downstream helpers can
@@ -60,8 +57,8 @@
 #'
 #' @section Scope:
 #' Bundles bias / DIF / anchor / replay slots are explicitly not
-#' populated; full bidirectional import / export is planned for a
-#' future release.
+#' populated. This helper provides a one-way fitted-object import for the
+#' documented core fields, not a bidirectional interchange format.
 #' @seealso [import_tam_fit()], [import_erm_fit()]
 #' @examples
 #' \dontrun{
@@ -897,7 +894,7 @@ import_erm_fit <- function(fit, model = c("RSM", "PCM", "GPCM"),
 
 #' @export
 print.mfrm_imported_fit <- function(x, ...) {
-  cat("mfrmr imported fit (measurement-side slots only)\n")
+  cat("Imported measurement results (limited functionality)\n")
   cat(sprintf("  Source: %s (%s)\n",
               x$source$package %||% "unknown",
               x$source$source_object_class %||% "unknown"))
@@ -906,7 +903,7 @@ print.mfrm_imported_fit <- function(x, ...) {
     cat(sprintf("  Model: %s | Method: %s | Persons: %s\n",
                 ov$Model, ov$Method, ov$Persons))
   }
-  cat("  Use mfrmr plot helpers for measurement-side views;\n")
-  cat("  bias / DIF / anchor / replay slots are not available.\n")
+  cat("  Use mfrmr plot helpers for available measurement views.\n")
+  cat("  Bias, DIF, anchoring, and reproducibility workflows require a native fit_mfrm() object.\n")
   invisible(x)
 }

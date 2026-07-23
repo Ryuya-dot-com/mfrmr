@@ -39,8 +39,8 @@ A named list with checklist tables. Class:
 Build an auto-filled MFRM reporting checklist
 }
 \details{
-This helper ports the app-level reporting checklist into a package-native
-bundle. It does not try to judge substantive reporting quality; instead, it
+This helper builds a package-native reporting checklist. It does not try to
+judge substantive reporting quality; instead, it
 checks whether the fitted object and related diagnostics contain the evidence
 typically reported in MFRM write-ups.
 
@@ -147,8 +147,7 @@ available from the current analysis objects.
 
 \examples{
 \dontshow{if (interactive()) withAutoprint(\{ # examplesIf}
-# Fast smoke run: a JML fit + legacy-only diagnostic produces a
-# populated checklist in well under a second.
+# Minimal checklist example using a JML fit and lightweight diagnostics.
 toy <- load_mfrmr_data("example_core")
 fit_quick <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                       method = "JML", maxit = 30)

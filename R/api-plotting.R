@@ -2780,7 +2780,7 @@ plot_facets_chisq <- function(x,
 #' @return A plotting-data object of class `mfrm_plot_data`.
 #' @seealso [plot_unexpected()], [plot_fair_average()], [plot_displacement()], [plot_interrater_agreement()], [plot_facets_chisq()], [build_visual_summaries()]
 #' @examplesIf interactive()
-#' # Fast smoke run: build the plot data only (no graphics device).
+#' # Build the plotting data without opening a graphics device.
 #' toy <- load_mfrmr_data("example_core")
 #' toy_small <- toy[toy$Person %in% unique(toy$Person)[1:3], ]
 #' fit_quick <- suppressWarnings(
@@ -3493,6 +3493,10 @@ plot_bubble <- function(x,
 #'   \code{"measures"}. Default exports all available tables.
 #' @param overwrite If \code{FALSE} (default), refuse to overwrite existing
 #'   files.
+#' @param acknowledge_sensitive Logical; set to \code{TRUE} only after
+#'   acknowledging that these tables can contain direct person identifiers,
+#'   person-level estimates, and original facet labels. This suppresses the
+#'   privacy warning; it does not deidentify any file.
 #'
 #' @section Exported files:
 #' \describe{
@@ -3508,7 +3512,9 @@ plot_bubble <- function(x,
 #' @section Interpreting output:
 #' The returned data.frame tells you exactly which files were written and where.
 #' This is convenient for scripted pipelines where the output directory is created
-#' on the fly.
+#' on the fly. The files are analysis tables, not a deidentified sharing
+#' package; review each file under the applicable data-handling policy before
+#' sharing it.
 #'
 #' @section Typical workflow:
 #' \enumerate{
@@ -3517,8 +3523,9 @@ plot_bubble <- function(x,
 #' \item Call \code{export_mfrm(...)} and inspect the returned \code{Path} column.
 #' }
 #'
-#' @return Invisibly, a data.frame listing written files with columns
-#'   \code{Table} and \code{Path}.
+#' @return Invisibly, a data.frame listing written files, their paths, and
+#'   explicit privacy/data-handling metadata. `Deidentified` and
+#'   `ShareableWithoutReview` are always `FALSE`.
 #' @seealso \code{\link{fit_mfrm}}, \code{\link{diagnose_mfrm}},
 #'   \code{\link{as.data.frame.mfrm_fit}}
 #' @examplesIf interactive()
@@ -3531,7 +3538,8 @@ plot_bubble <- function(x,
 #'   diagnostics = diag,
 #'   output_dir = tempdir(),
 #'   prefix = "mfrmr_example",
-#'   overwrite = TRUE
+#'   overwrite = TRUE,
+#'   acknowledge_sensitive = TRUE
 #' )
 #' out$Table
 #' @export
@@ -3540,7 +3548,8 @@ export_mfrm <- function(fit,
                         output_dir = ".",
                         prefix = "mfrm",
                         tables = c("person", "facets", "summary", "steps", "measures"),
-                        overwrite = FALSE) {
+                        overwrite = FALSE,
+                        acknowledge_sensitive = FALSE) {
   if (!inherits(fit, "mfrm_fit")) {
     stop("`fit` must be an mfrm_fit object from fit_mfrm().")
   }
@@ -3554,6 +3563,7 @@ export_mfrm <- function(fit,
   prefix <- as.character(prefix[1])
   if (!nzchar(prefix)) prefix <- "mfrm"
   overwrite <- isTRUE(overwrite)
+  acknowledge_sensitive <- isTRUE(acknowledge_sensitive)
   output_dir <- as.character(output_dir[1])
 
   if (!dir.exists(output_dir)) {
@@ -3563,8 +3573,31 @@ export_mfrm <- function(fit,
     stop("Could not create output directory: ", output_dir)
   }
 
-  written <- data.frame(Table = character(0), Path = character(0),
-                        stringsAsFactors = FALSE)
+  privacy_notice <- paste0(
+    "These CSV files are analysis tables, not a deidentified or automatically ",
+    "shareable package. They can contain direct person identifiers, person-level ",
+    "estimates, and original facet labels. Review and transform every file under ",
+    "the applicable data-handling policy before sharing it."
+  )
+  if (!acknowledge_sensitive) {
+    warning(
+      privacy_notice,
+      " Set `acknowledge_sensitive = TRUE` only to acknowledge this risk; ",
+      "that setting does not deidentify the export.",
+      call. = FALSE
+    )
+  }
+
+  written <- data.frame(
+    Table = character(0),
+    Path = character(0),
+    DataHandling = character(0),
+    PrivacyClass = character(0),
+    Deidentified = logical(0),
+    ShareableWithoutReview = logical(0),
+    SensitiveDataAcknowledged = logical(0),
+    stringsAsFactors = FALSE
+  )
 
   write_one <- function(df, filename, table_name) {
     path <- file.path(output_dir, filename)
@@ -3572,8 +3605,23 @@ export_mfrm <- function(fit,
       stop("File already exists: ", path, ". Set overwrite = TRUE to replace.")
     }
     utils::write.csv(df, file = path, row.names = FALSE, na = "")
-    written <<- rbind(written, data.frame(Table = table_name, Path = path,
-                                          stringsAsFactors = FALSE))
+    data_handling <- if (table_name %in% c("person", "measures")) {
+      "may_contain_person_level_data"
+    } else if (identical(table_name, "facets")) {
+      "may_contain_original_facet_labels"
+    } else {
+      "review_before_sharing"
+    }
+    written <<- rbind(written, data.frame(
+      Table = table_name,
+      Path = normalizePath(path, winslash = "/", mustWork = FALSE),
+      DataHandling = data_handling,
+      PrivacyClass = "analysis_archive",
+      Deidentified = FALSE,
+      ShareableWithoutReview = FALSE,
+      SensitiveDataAcknowledged = acknowledge_sensitive,
+      stringsAsFactors = FALSE
+    ))
   }
 
   if ("person" %in% tables) {
@@ -3621,8 +3669,9 @@ export_mfrm <- function(fit,
 #' Convert mfrm_fit to a tidy data.frame
 #'
 #' Returns all facet-level estimates (person and others) in a single
-#' tidy data.frame. Useful for quick interactive export:
-#' \code{write.csv(as.data.frame(fit), "results.csv")}.
+#' tidy data.frame. Person rows retain their original identifiers; review or
+#' transform them before writing the result outside a controlled analysis
+#' environment.
 #'
 #' @param x An \code{mfrm_fit} object from \code{\link{fit_mfrm}}.
 #' @param row.names Ignored (included for S3 generic compatibility).
@@ -3647,8 +3696,8 @@ export_mfrm <- function(fit,
 #'
 #' @return A data.frame with columns \code{Facet}, \code{Level},
 #'   \code{Estimate}, and \code{Extreme}. The \code{Extreme} column
-#'   is populated for person rows from the extreme-score flag added
-#'   in 0.1.6 (\code{"Min"} / \code{"Max"} / \code{NA}); non-person
+#'   is populated for person rows from the extreme-score flag
+#'   (\code{"Min"} / \code{"Max"} / \code{NA}); non-person
 #'   facet rows carry \code{NA} in that column by design.
 #' @seealso \code{\link{fit_mfrm}}, \code{\link{export_mfrm}}
 #' @examples
@@ -3658,7 +3707,7 @@ export_mfrm <- function(fit,
 #' head(as.data.frame(fit))
 #' @export
 as.data.frame.mfrm_fit <- function(x, row.names = NULL, optional = FALSE, ...) {
-  # Carry forward the Extreme flag added in 0.1.6 (via build_person_table)
+  # Carry forward the Extreme flag from build_person_table().
   # so downstream ggplot / CSV export paths see per-person extreme status.
   person_extreme <- if ("Extreme" %in% names(x$facets$person)) {
     as.character(x$facets$person$Extreme)
@@ -3703,9 +3752,26 @@ print.mfrm_fit <- function(x, ...) {
     cat(sprintf("  LogLik: %s | AIC: %s | BIC: %s\n",
                 ov$LogLik %||% NA, ov$AIC %||% NA, ov$BIC %||% NA))
     if ("Converged" %in% names(ov) && "ConvergenceStatus" %in% names(ov)) {
-      cat(sprintf("  Converged: %s | Status: %s\n",
-                  ifelse(isTRUE(ov$Converged), "Yes", "No"),
-                  ov$ConvergenceStatus %||% NA_character_))
+      convergence <- mfrm_convergence_state(x)
+      status_label <- switch(
+        convergence$status,
+        converged = "No further numerical review indicated",
+        converged_gradient_review = "Terminal gradient needs review",
+        reviewable_warning = "Optimizer warning needs review",
+        iteration_limit = "Iteration limit reached",
+        optimizer_warning = "Optimizer warning",
+        unknown = "Status unavailable",
+        convergence$status
+      )
+      cat(sprintf(
+        "  Optimizer returned code 0: %s | Convergence review: %s\n",
+        ifelse(convergence$code_converged, "Yes", "No"),
+        status_label
+      ))
+      cat(sprintf(
+        "  Formal inference: %s\n",
+        ifelse(convergence$inference_ready, "Ready", "Not ready")
+      ))
     }
     if (isTRUE(x$config$attached_diagnostics)) {
       attached_cols <- as.character(x$config$attached_diagnostics_cols %||% character(0))

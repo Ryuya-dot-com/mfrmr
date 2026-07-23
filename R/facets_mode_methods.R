@@ -85,13 +85,19 @@ print.summary.mfrm_facets_run <- function(x, ...) {
   digits <- x$digits
   if (is.null(digits) || !is.finite(digits)) digits <- 3L
 
-  cat("Legacy-compatible Workflow Summary\n")
+  cat("FACETS-style Workflow Summary\n")
   if (!is.null(x$overview) && nrow(x$overview) > 0) {
     ov <- round_numeric_frame(as.data.frame(x$overview), digits = digits)[1, , drop = FALSE]
     cat(sprintf("  Model: %s | Method: %s\n", ov$Model, ov$Method))
     cat(sprintf("  N: %s | Persons: %s | Facets: %s | Categories: %s\n", ov$N, ov$Persons, ov$Facets, ov$Categories))
     cat(sprintf("  LogLik: %s | AIC: %s | BIC: %s\n", ov$LogLik, ov$AIC, ov$BIC))
-    cat(sprintf("  Converged: %s | Iterations: %s\n", ifelse(isTRUE(ov$Converged), "Yes", "No"), ov$Iterations))
+    convergence <- mfrm_convergence_state(ov)
+    cat(sprintf(
+      "  Optimizer returned code 0: %s | Formal inference: %s | Iterations: %s\n",
+      ifelse(convergence$code_converged, "Yes", "No"),
+      ifelse(convergence$inference_ready, "Ready", "Not ready"),
+      ov$Iterations
+    ))
   }
 
   if (!is.null(x$mapping) && nrow(x$mapping) > 0) {

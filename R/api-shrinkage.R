@@ -1,5 +1,5 @@
 # ==============================================================================
-# Empirical-Bayes and Laplace shrinkage for small-N facets (added in 0.1.6)
+# Empirical-Bayes and Laplace shrinkage for small-N facets
 # ==============================================================================
 #
 # mfrmr estimates every non-person facet as a fixed effect with a sum-to-zero
@@ -19,7 +19,7 @@
 # - `fit_mfrm(..., facet_shrinkage = "empirical_bayes")` wires the same
 #   helper into the primary entry point so users can opt in up front.
 #
-# The default `facet_shrinkage = "none"` keeps the 0.1.5 / 0.1.6 behaviour
+# The default `facet_shrinkage = "none"` keeps the unshrunk behavior
 # unchanged; every new column is additive.
 #
 # References:

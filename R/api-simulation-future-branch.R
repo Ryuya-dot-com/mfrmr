@@ -1,11 +1,11 @@
 # ==============================================================================
-# Future-branch design-schema layer for the simulation engine
+# Compatibility design-schema layer for structural simulation review
 # ==============================================================================
 #
-# Internal helpers that build, normalize, and report the experimental
-# "future-branch" design schema used by the simulation engine
-# (`api-simulation.R`). Split out for 0.1.6 so the design-schema
-# scaffolding has a dedicated home; the main public simulator entry
+# Internal helpers that build, normalize, and report the backward-compatible
+# design schema used by the simulation engine (`api-simulation.R`). Split out
+# so the design-schema structural review machinery has a dedicated home; the
+# main public simulator entry
 # (`simulate_mfrm_data`) and the design / diagnostic / signal
 # evaluation entries (`evaluate_mfrm_*`) remain in `api-simulation.R`.
 # Functions here are internal (no @export); they are called from
@@ -1248,8 +1248,8 @@ simulation_future_branch_grid_plot_payload <- function(x,
         grid_summary = grid_summary,
         grid_recommendation = recommendation,
         note = paste(
-          "Draw-free plot data for the schema-only future branch are",
-          "unavailable until the branch grid can be materialized."
+          "Draw-free plotting data are unavailable until the named-facet",
+          "design grid can be materialized."
         )
       )
     ))
@@ -1348,9 +1348,9 @@ simulation_future_branch_grid_plot_payload <- function(x,
       grid_recommendation = recommendation,
       legend = legend,
       note = paste(
-        "Draw-free plot data for the schema-only future branch. They",
-        "summarizes the current branch grid and the deterministic baseline",
-        "pick without implying an active arbitrary-facet planner."
+        "Draw-free plotting data for the named-facet design review. They",
+        "summarize the current grid and deterministic baseline selection",
+        "without implying support for arbitrary-facet simulation."
       )
     )
   )
@@ -5195,21 +5195,22 @@ future_branch_active_plot_index_from_bundle <- function(plot_index) {
   idx
 }
 
-#' Summarize a future arbitrary-facet planning active branch
+#' Summarize a deterministic named-facet design review
 #'
-#' @param object Output from the future-branch active planning scaffold stored
-#'   in `planning_schema$future_branch_active_branch`.
+#' @param object The structural design-review object stored in the
+#'   backward-compatible `planning_schema$future_branch_active_branch` field.
 #' @param digits Number of digits used in numeric summaries.
 #' @param top_n Maximum number of recommendation rows to print in the preview.
+#' @param detail Console detail: `"brief"` (default) prints the design overview,
+#'   readiness, and recommendation; `"full"` prints all supporting tables.
 #' @param ... Reserved for generic compatibility.
 #'
 #' @details
-#' This summary is intentionally conservative. It aggregates only deterministic
-#' branch-side quantities already validated in the schema-first arbitrary-facet
-#' planning scaffold: observation bookkeeping, load/balance, coverage,
-#' guardrails, structural readiness, and conservative recommendation ranking.
+#' This summary is intentionally conservative. It aggregates deterministic
+#' design quantities: observation bookkeeping, load/balance, coverage,
+#' structural checks, and a conservative recommendation ranking.
 #' It also exposes the same manuscript-facing table/appendix metadata used by
-#' [build_summary_table_bundle()] so the future branch can be reviewed directly
+#' [build_summary_table_bundle()] so the design review can be inspected directly
 #' without first routing through planning summaries. In addition to bundle-level
 #' appendix presets and section counts, it includes export-like appendix
 #' selection summaries by preset, reporting role, manuscript section,
@@ -5219,7 +5220,8 @@ future_branch_active_plot_index_from_bundle <- function(plot_index) {
 #' It does not report psychometric recovery or Monte Carlo performance.
 #'
 #' @return An object of class `summary.mfrm_future_branch_active_branch`.
-#' @seealso [summary.mfrm_design_evaluation()], [plot.mfrm_future_branch_active_branch()]
+#' @seealso [summary.mfrm_design_evaluation()]
+#' @noRd
 #' @examples
 #' \dontrun{
 #' spec <- build_mfrm_sim_spec(
@@ -5230,7 +5232,11 @@ future_branch_active_plot_index_from_bundle <- function(plot_index) {
 #' summary(active)
 #' }
 #' @export
-summary.mfrm_future_branch_active_branch <- function(object, digits = 3, top_n = 8, ...) {
+summary.mfrm_future_branch_active_branch <- function(object,
+                                                     digits = 3,
+                                                     top_n = 8,
+                                                     detail = c("brief", "full"),
+                                                     ...) {
   active <- simulation_future_branch_active_branch(object)
   overview <- simulation_future_branch_active_branch_overview(active)
   load_balance <- simulation_future_branch_active_branch_load_balance_overview(active)
@@ -5241,6 +5247,7 @@ summary.mfrm_future_branch_active_branch <- function(object, digits = 3, top_n =
 
   digits <- max(0L, as.integer(digits[1]))
   top_n <- max(1L, as.integer(top_n[1]))
+  detail <- match.arg(detail)
 
   round_df <- function(df) {
     if (!is.data.frame(df) || nrow(df) == 0L) return(df)
@@ -5264,15 +5271,16 @@ summary.mfrm_future_branch_active_branch <- function(object, digits = 3, top_n =
     recommendation_table <- utils::head(recommendation_table, n = top_n)
   }
 
-  notes <- unique(stats::na.omit(c(
-    as.character(active$note %||% character(0)),
-    as.character(overview$note %||% character(0)),
-    as.character(load_balance$note %||% character(0)),
-    as.character(coverage$note %||% character(0)),
-    as.character(guardrails$note %||% character(0)),
-    as.character(readiness$note %||% character(0)),
-    as.character(recommendation$note %||% character(0))
-  )))
+  notes <- c(
+    paste(
+      "Design planning varies the documented person-count, non-person",
+      "facet-count, and assignment axes."
+    ),
+    paste(
+      "Readiness summarizes structural overlap and balance; it does not",
+      "estimate parameter recovery or Monte Carlo performance."
+    )
+  )
 
   out <- list(
     overview = round_df(headline),
@@ -5292,7 +5300,8 @@ summary.mfrm_future_branch_active_branch <- function(object, digits = 3, top_n =
     readiness_summary = round_df(tibble::as_tibble(readiness$readiness_summary_table %||% tibble::tibble())),
     recommendation_table = round_df(recommendation_table),
     notes = notes,
-    digits = digits
+    digits = digits,
+    detail = detail
   )
   temp_core <- out
   class(temp_core) <- "summary.mfrm_future_branch_active_branch"
@@ -5381,10 +5390,26 @@ summary.mfrm_future_branch_active_branch <- function(object, digits = 3, top_n =
 print.summary.mfrm_future_branch_active_branch <- function(x, ...) {
   digits <- max(0L, as.integer(x$digits %||% 3L))
 
-  cat("mfrmr Future Arbitrary-Facet Planning Summary\n")
+  cat("mfrmr Structural Design Review\n")
   if (!is.null(x$overview) && nrow(x$overview) > 0L) {
     cat("\nOverview\n")
     print(round_numeric_df(as.data.frame(x$overview), digits = digits), row.names = FALSE)
+  }
+  if (identical(as.character(x$detail %||% "brief"), "brief")) {
+    if (!is.null(x$readiness_summary) && nrow(x$readiness_summary) > 0L) {
+      cat("\nReadiness summary\n")
+      print(round_numeric_df(as.data.frame(x$readiness_summary), digits = digits), row.names = FALSE)
+    }
+    if (!is.null(x$recommendation_table) && nrow(x$recommendation_table) > 0L) {
+      cat("\nRecommendation table\n")
+      print(round_numeric_df(as.data.frame(x$recommendation_table), digits = digits), row.names = FALSE)
+    }
+    if (length(x$notes %||% character(0)) > 0L) {
+      cat("\nNotes\n")
+      for (line in x$notes) cat(" - ", line, "\n", sep = "")
+    }
+    cat("\nAdditional design tables remain in the structured summary; use `detail = \"full\"` to print them.\n")
+    return(invisible(x))
   }
   if (!is.null(x$table_index) && nrow(x$table_index) > 0L) {
     cat("\nTable index\n")
@@ -5523,7 +5548,7 @@ simulation_compact_future_branch_active_summary <- function(x,
 
 print_compact_future_branch_active_summary <- function(x,
                                                        digits = 3,
-                                                       heading = "Future arbitrary-facet planning scaffold") {
+                                                       heading = "Structural design review") {
   if (!inherits(x, "summary.mfrm_future_branch_active_branch")) {
     return(invisible(NULL))
   }
@@ -5544,21 +5569,21 @@ print_compact_future_branch_active_summary <- function(x,
   invisible(x)
 }
 
-#' Plot a future arbitrary-facet planning active branch
+#' Plot a deterministic named-facet design review
 #'
-#' @param x Output from the future-branch active planning scaffold stored in
-#'   `planning_schema$future_branch_active_branch`.
+#' @param x The structural design-review object stored in the
+#'   backward-compatible `planning_schema$future_branch_active_branch` field.
 #' @param y Unused placeholder for generic compatibility.
 #' @param type Plot type: `"profile_metrics"` for recommended deterministic
 #'   profile values by metric, `"load_balance"` for recommended load/balance
 #'   values by metric, `"coverage"` for recommended coverage/connectivity values
 #'   by metric, `"readiness_tiers"` for counts of structural tiers across the
-#'   current active-branch design grid, `"table_rows"` / `"role_tables"` /
+#'   current design grid, `"table_rows"` / `"role_tables"` /
 #'   `"appendix_roles"` for summary-table bundle QC,
 #'   `"appendix_sections"` / `"appendix_presets"` for manuscript-facing
 #'   appendix selection counts, `"selection_handoff_presets"` for preset-level
 #'   appendix handoff counts, `"selection_tables"` for appendix-selected
-#'   future-branch tables ranked by row count within a preset,
+#'   design-review tables ranked by row count within a preset,
 #'   `"selection_handoff"` for section-aware plot-ready appendix handoff counts,
 #'   `"selection_handoff_bundles"` for section-and-bundle plot-ready appendix
 #'   handoff counts,
@@ -5579,7 +5604,7 @@ print_compact_future_branch_active_summary <- function(x,
 #' @param ... Reserved for generic compatibility.
 #'
 #' @return A plotting-data object of class `mfrm_plot_data`.
-#' @seealso [summary.mfrm_future_branch_active_branch()]
+#' @noRd
 #' @examples
 #' \dontrun{
 #' spec <- build_mfrm_sim_spec(
@@ -5628,7 +5653,7 @@ plot.mfrm_future_branch_active_branch <- function(x,
       tbl <- as.data.frame(sx$selection_handoff_preset_summary %||% data.frame(), stringsAsFactors = FALSE)
       tbl <- tbl[as.character(tbl$Preset %||% "") %in% appendix_preset, , drop = FALSE]
       if (nrow(tbl) == 0L || !all(c("Preset", "PlotReadyTables") %in% names(tbl))) {
-        stop("No future-branch appendix handoff-preset summary is available for preset `", appendix_preset, "`.", call. = FALSE)
+        stop("No structural-design appendix handoff-preset summary is available for preset `", appendix_preset, "`.", call. = FALSE)
       }
       labels <- as.character(tbl$Preset)
       measure <- resolve_selection_plot_measure(tbl, type, selection_value = selection_value)
@@ -5644,7 +5669,7 @@ plot.mfrm_future_branch_active_branch <- function(x,
         preset = appendix_preset
       )
       if (nrow(tbl) == 0L || !all(c("Table", "Rows") %in% names(tbl))) {
-        stop("No future-branch appendix table selection is available for preset `", appendix_preset, "`.", call. = FALSE)
+        stop("No structural-design appendix table selection is available for preset `", appendix_preset, "`.", call. = FALSE)
       }
       labels <- as.character(tbl$Table)
       measure <- resolve_selection_plot_measure(tbl, type, selection_value = selection_value)
@@ -5658,7 +5683,7 @@ plot.mfrm_future_branch_active_branch <- function(x,
       tbl <- as.data.frame(sx$selection_handoff_summary %||% data.frame(), stringsAsFactors = FALSE)
       tbl <- tbl[as.character(tbl$Preset %||% "") %in% appendix_preset, , drop = FALSE]
       if (nrow(tbl) == 0L || !all(c("AppendixSection", "PlotReadyTables") %in% names(tbl))) {
-        stop("No future-branch appendix handoff summary is available for preset `", appendix_preset, "`.", call. = FALSE)
+        stop("No structural-design appendix handoff summary is available for preset `", appendix_preset, "`.", call. = FALSE)
       }
       labels <- as.character(tbl$AppendixSection)
       measure <- resolve_selection_plot_measure(tbl, type, selection_value = selection_value)
@@ -5672,7 +5697,7 @@ plot.mfrm_future_branch_active_branch <- function(x,
       tbl <- as.data.frame(sx$selection_handoff_bundle_summary %||% data.frame(), stringsAsFactors = FALSE)
       tbl <- tbl[as.character(tbl$Preset %||% "") %in% appendix_preset, , drop = FALSE]
       if (nrow(tbl) == 0L || !all(c("AppendixSection", "Bundle", "PlotReadyTables") %in% names(tbl))) {
-        stop("No future-branch appendix handoff-bundle summary is available for preset `", appendix_preset, "`.", call. = FALSE)
+        stop("No structural-design appendix handoff-bundle summary is available for preset `", appendix_preset, "`.", call. = FALSE)
       }
       labels <- paste0(as.character(tbl$AppendixSection), " :: ", as.character(tbl$Bundle))
       measure <- resolve_selection_plot_measure(tbl, type, selection_value = selection_value)
@@ -5686,7 +5711,7 @@ plot.mfrm_future_branch_active_branch <- function(x,
       tbl <- as.data.frame(sx$selection_handoff_role_summary %||% data.frame(), stringsAsFactors = FALSE)
       tbl <- tbl[as.character(tbl$Preset %||% "") %in% appendix_preset, , drop = FALSE]
       if (nrow(tbl) == 0L || !all(c("Role", "PlotReadyTables") %in% names(tbl))) {
-        stop("No future-branch appendix handoff-role summary is available for preset `", appendix_preset, "`.", call. = FALSE)
+        stop("No structural-design appendix handoff-role summary is available for preset `", appendix_preset, "`.", call. = FALSE)
       }
       labels <- as.character(tbl$Role)
       measure <- resolve_selection_plot_measure(tbl, type, selection_value = selection_value)
@@ -5700,7 +5725,7 @@ plot.mfrm_future_branch_active_branch <- function(x,
       tbl <- as.data.frame(sx$selection_handoff_role_section_summary %||% data.frame(), stringsAsFactors = FALSE)
       tbl <- tbl[as.character(tbl$Preset %||% "") %in% appendix_preset, , drop = FALSE]
       if (nrow(tbl) == 0L || !all(c("AppendixSection", "Role", "PlotReadyTables") %in% names(tbl))) {
-        stop("No future-branch appendix handoff role-section summary is available for preset `", appendix_preset, "`.", call. = FALSE)
+        stop("No structural-design appendix handoff role-section summary is available for preset `", appendix_preset, "`.", call. = FALSE)
       }
       labels <- paste0(as.character(tbl$AppendixSection), " :: ", as.character(tbl$Role))
       measure <- resolve_selection_plot_measure(tbl, type, selection_value = selection_value)
@@ -5714,7 +5739,7 @@ plot.mfrm_future_branch_active_branch <- function(x,
       tbl <- as.data.frame(sx$selection_summary %||% data.frame(), stringsAsFactors = FALSE)
       tbl <- tbl[as.character(tbl$Preset %||% "") %in% appendix_preset, , drop = FALSE]
       if (nrow(tbl) == 0L || !all(c("Bundle", "TablesSelected") %in% names(tbl))) {
-        stop("No future-branch appendix selection summary is available for preset `", appendix_preset, "`.", call. = FALSE)
+        stop("No structural-design appendix selection summary is available for preset `", appendix_preset, "`.", call. = FALSE)
       }
       labels <- as.character(tbl$Bundle)
       measure <- resolve_selection_plot_measure(tbl, type, selection_value = selection_value)
@@ -5728,7 +5753,7 @@ plot.mfrm_future_branch_active_branch <- function(x,
       tbl <- as.data.frame(sx$selection_role_summary %||% data.frame(), stringsAsFactors = FALSE)
       tbl <- tbl[as.character(tbl$Preset %||% "") %in% appendix_preset, , drop = FALSE]
       if (nrow(tbl) == 0L || !all(c("Role", "Tables") %in% names(tbl))) {
-        stop("No future-branch appendix role summary is available for preset `", appendix_preset, "`.", call. = FALSE)
+        stop("No structural-design appendix role summary is available for preset `", appendix_preset, "`.", call. = FALSE)
       }
       labels <- as.character(tbl$Role)
       measure <- resolve_selection_plot_measure(tbl, type, selection_value = selection_value)
@@ -5742,7 +5767,7 @@ plot.mfrm_future_branch_active_branch <- function(x,
       tbl <- as.data.frame(sx$selection_section_summary %||% data.frame(), stringsAsFactors = FALSE)
       tbl <- tbl[as.character(tbl$Preset %||% "") %in% appendix_preset, , drop = FALSE]
       if (nrow(tbl) == 0L || !all(c("AppendixSection", "Tables") %in% names(tbl))) {
-        stop("No future-branch appendix section summary is available for preset `", appendix_preset, "`.", call. = FALSE)
+        stop("No structural-design appendix section summary is available for preset `", appendix_preset, "`.", call. = FALSE)
       }
       labels <- as.character(tbl$AppendixSection)
       measure <- resolve_selection_plot_measure(tbl, type, selection_value = selection_value)
@@ -5756,13 +5781,13 @@ plot.mfrm_future_branch_active_branch <- function(x,
 
     keep <- is.finite(values) & nzchar(labels)
     if (!any(keep)) {
-      stop("Selected future-branch appendix plot has no finite values to display.", call. = FALSE)
+      stop("Selected structural-design appendix plot has no finite values to display.", call. = FALSE)
     }
     labels <- labels[keep]
     values <- values[keep]
     tbl <- tbl[keep, , drop = FALSE]
     pal <- resolve_palette(palette = palette, defaults = default_palette)
-    plot_title <- if (is.null(main)) paste("Future branch", gsub("_", " ", plot_name)) else as.character(main[1])
+    plot_title <- if (is.null(main)) paste("Structural design review:", gsub("_", " ", plot_name)) else as.character(main[1])
 
     if (isTRUE(draw)) {
       barplot_rot45(
@@ -5796,7 +5821,7 @@ plot.mfrm_future_branch_active_branch <- function(x,
     tbl <- simulation_future_branch_active_branch_profile(active)$profile_summary_table
     tbl <- tibble::as_tibble(tbl %||% tibble::tibble())
     if (nrow(tbl) == 0L || !all(c("metric", "recommended_value") %in% names(tbl))) {
-      stop("No future-branch profile metrics are available for plotting.", call. = FALSE)
+      stop("No structural-design profile metrics are available for plotting.", call. = FALSE)
     }
     labels <- as.character(tbl$metric)
     values <- suppressWarnings(as.numeric(tbl$recommended_value))
@@ -5808,7 +5833,7 @@ plot.mfrm_future_branch_active_branch <- function(x,
     tbl <- simulation_future_branch_active_branch_load_balance(active)$diagnostic_summary_table
     tbl <- tibble::as_tibble(tbl %||% tibble::tibble())
     if (nrow(tbl) == 0L || !all(c("metric", "recommended_value") %in% names(tbl))) {
-      stop("No future-branch load/balance metrics are available for plotting.", call. = FALSE)
+      stop("No structural-design load/balance metrics are available for plotting.", call. = FALSE)
     }
     labels <- as.character(tbl$metric)
     values <- suppressWarnings(as.numeric(tbl$recommended_value))
@@ -5820,7 +5845,7 @@ plot.mfrm_future_branch_active_branch <- function(x,
     tbl <- simulation_future_branch_active_branch_coverage(active)$diagnostic_summary_table
     tbl <- tibble::as_tibble(tbl %||% tibble::tibble())
     if (nrow(tbl) == 0L || !all(c("metric", "recommended_value") %in% names(tbl))) {
-      stop("No future-branch coverage metrics are available for plotting.", call. = FALSE)
+      stop("No structural-design coverage metrics are available for plotting.", call. = FALSE)
     }
     labels <- as.character(tbl$metric)
     values <- suppressWarnings(as.numeric(tbl$recommended_value))
@@ -5832,12 +5857,12 @@ plot.mfrm_future_branch_active_branch <- function(x,
     tbl <- simulation_future_branch_active_branch_readiness(active)$readiness_table
     tbl <- tibble::as_tibble(tbl %||% tibble::tibble())
     if (nrow(tbl) == 0L || !"structural_tier" %in% names(tbl)) {
-      stop("No future-branch readiness tiers are available for plotting.", call. = FALSE)
+      stop("No structural-design readiness tiers are available for plotting.", call. = FALSE)
     }
     counts <- sort(table(as.character(tbl$structural_tier)), decreasing = TRUE)
     labels <- names(counts)
     values <- as.numeric(counts)
-    subtitle <- "Structural tier counts across active-branch designs"
+    subtitle <- "Structural tier counts across candidate designs"
     default_palette <- c(readiness_tiers = "#b279a2", grid = "#ececec")
     plot_name <- "readiness_tiers"
     legend_label <- "Designs"
@@ -5845,13 +5870,13 @@ plot.mfrm_future_branch_active_branch <- function(x,
 
   keep <- is.finite(values) & nzchar(labels)
   if (!any(keep)) {
-    stop("Selected future-branch plot has no finite values to display.", call. = FALSE)
+    stop("Selected structural-design plot has no finite values to display.", call. = FALSE)
   }
   labels <- labels[keep]
   values <- values[keep]
   pal <- resolve_palette(palette = palette, defaults = default_palette)
   color_name <- names(default_palette)[1]
-  plot_title <- if (is.null(main)) "Future arbitrary-facet planning profile" else as.character(main[1])
+  plot_title <- if (is.null(main)) "Structural design review" else as.character(main[1])
 
   if (isTRUE(draw)) {
     barplot_rot45(
@@ -5982,6 +6007,8 @@ simulation_future_branch_schema <- function(sim_spec = NULL, facet_names = NULL)
     simulation_future_branch_design_schema(facet_names = facet_names)
   }
   branch_schema <- list(
+    design_review_contract = "structural_design_review",
+    design_review_stage = "supported",
     planner_contract = "arbitrary_facet_planning_scaffold",
     planner_stage = "schema_only",
     input_contract = "design$facets(named counts)",
@@ -5991,10 +6018,9 @@ simulation_future_branch_schema <- function(sim_spec = NULL, facet_names = NULL)
     design_schema = design_schema,
     grid_semantics = design_schema$grid_semantics,
     note = paste(
-      "Schema-only future-branch contract bundling the stable facet-count table",
-      "and matching `design$facets(named counts)` template for a later",
-      "arbitrary-facet planner, together with a preview-ready nested",
-      "design schema."
+      "Backward-compatible structural design schema bundling the named",
+      "facet-count table, the matching `design$facets(named counts)` template,",
+      "and preview-ready design-review metadata."
     )
   )
   branch_schema$grid_contract <- simulation_future_branch_grid_contract(branch_schema)
@@ -6046,8 +6072,11 @@ simulation_planning_scope <- function(sim_spec = NULL, facet_names = NULL) {
     facet_manifest <- simulation_facet_manifest(facet_names = facet_names)
   }
   list(
+    design_review_contract = "role_based_named_facets",
+    design_review_stage = "supported",
     planner_contract = "role_based_two_non_person_facets",
-    planner_stage = "first_release",
+    planner_stage = "role_based",
+    planning_mode = "role_based",
     supports_arbitrary_facet_planning = FALSE,
     supports_arbitrary_facet_estimation = TRUE,
     supported_non_person_roles = c("rater", "criterion"),
@@ -6060,10 +6089,9 @@ simulation_planning_scope <- function(sim_spec = NULL, facet_names = NULL) {
     future_planner_stage = "schema_only",
     future_branch_input_contract = "design$facets(named counts)",
     note = paste0(
-      "Current planning helpers vary one person count and exactly two non-person facet roles (",
+      "Planning helpers vary one person count and two named non-person facet roles (",
       facet_names[1], " and ", facet_names[2], "). ",
-      "The estimation core supports arbitrary facet counts, but planning/forecasting remain role-based until a fully arbitrary-facet planner is validated. ",
-      "A facet manifest is now exposed so a future arbitrary-facet branch can reuse the same public facet labels without changing the current planner contract."
+      "Estimation may contain additional facets, but planning and forecasting are limited to this role-based design."
     )
   )
 }
@@ -6128,7 +6156,7 @@ simulation_planning_constraints <- function(sim_spec = NULL) {
     lock_var <- if (identical(role, "criterion")) "n_criterion" else if (identical(role, "rater")) "n_rater" else NULL
     if (!is.null(lock_var)) {
       reasons[lock_var] <- paste0(
-        "First-release `GPCM` stores slope values for `",
+        "The bounded `GPCM` specification stores slope values for `",
         sim_spec$slope_facet,
         "` levels."
       )
@@ -6268,21 +6296,10 @@ simulation_planning_schema <- function(sim_spec = NULL, facet_names = NULL) {
     role_table = role_table,
     feasibility_rules = constraints$feasibility_rule,
     note = paste(
-      "Current planning schema exposes one person-count axis, two non-person facet-count axes,",
-      "and one assignments-per-person axis under the first-release role-based planner,",
-      "while exposing a facet manifest and a nested schema-only future-branch",
-      "contract for arbitrary-facet planning, including machine-readable",
-      "future-branch preview, grid, bundle, context, report-bundle,",
-      "report-summary, report-overview, report-catalog, and report-digest metadata",
-      "plus a report-surface registry and compact report panel when default",
-      "counts are available, alongside one combined report operation object",
-      "plus one lightweight report snapshot, one selected-surface report brief,",
-      "one mode-based report consumer, one active pilot object,",
-      "compact pilot-level summary/table/plot consumers, and one bundled",
-      "active-branch object plus deterministic active-branch profile,",
-      "load/balance diagnostics, coverage/connectivity diagnostics,",
-      "guardrail classifications, structural readiness summaries,",
-      "and conservative recommendation/overview contracts."
+      "Named-facet structural design metadata for person count, non-person",
+      "facet counts, and assignments per person. These deterministic design",
+      "summaries do not establish arbitrary-facet simulation support or",
+      "parameter-recovery performance."
     )
   )
 }

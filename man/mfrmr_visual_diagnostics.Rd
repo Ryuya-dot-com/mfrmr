@@ -33,7 +33,7 @@ strict invariance.
 transformation. Under \code{GPCM} the fair-average panel of
 \code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}} therefore renders with an explicit
 "unavailable" status, and the broader compatibility-export helpers
-stay outside the validated \code{GPCM} boundary.
+stay outside the documented \code{GPCM} boundary.
 }
 
 Use \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}} for the formal per-helper boundary
@@ -102,8 +102,7 @@ Use \code{\link[=plot_shrinkage_funnel]{plot_shrinkage_funnel()}} on a fit augme
 Use \code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}} for \code{RSM} / \code{PCM}. The bounded \code{GPCM}
 branch can also call \code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}}, but its fair-average
 panel reports an explicit unavailability indicator because that
-panel's score-metric semantics have not yet been generalized
-beyond the Rasch-family branch.
+panel's score-metric semantics are limited to the Rasch-family branch.
 \item "Which figures are already supported by my current run?"
 Use \code{\link[=reporting_checklist]{reporting_checklist()}} and review the \code{"Visual Displays"} rows before
 choosing the next plot.
@@ -164,10 +163,10 @@ or rendering technology without losing the measurement scale, caveats, and
 caption boundary attached to the package-native plot.
 }
 
-\section{Visual coverage for this release}{
+\section{Visual coverage}{
 
-This release treats the plotting layer as sufficient when the current run
-supports all of the following follow-up roles through public helpers:
+The plotting layer supports the following public follow-up roles when the
+fitted object contains the required data:
 \itemize{
 \item First-pass triage:
 \code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}} or the \code{"Visual Displays"} rows from

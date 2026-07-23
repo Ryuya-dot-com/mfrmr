@@ -291,7 +291,7 @@ support contract.
   replication-by-facet and facet-level fit/separation operating
   characteristics. `assess_mfrm_recovery()` carries these into
   `diagnostic_review` with `ValidationUse =
-  "diagnostic_only_not_release_gate"`.
+  "diagnostic_context_only"`.
 - `assess_mfrm_recovery()` also carries diagnostic operating characteristics
   into `diagnostic_reporting_notes`, a reporter-facing table that should be
   read before the raw diagnostic review when drafting fit, separation, or

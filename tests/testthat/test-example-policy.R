@@ -11,7 +11,8 @@ example_policy_source_root <- function() {
   ), winslash = "/", mustWork = FALSE))
 
   candidates[file.exists(file.path(candidates, "DESCRIPTION")) &
-               dir.exists(file.path(candidates, "R"))][1]
+               file.exists(file.path(candidates, "R", "api-estimation.R")) &
+               file.exists(file.path(candidates, "tests", "testthat.R"))][1]
 }
 
 example_policy_roxygen_examples <- function(pkg_root) {
@@ -82,7 +83,7 @@ example_policy_hits <- function(rows) {
   paste0(rows$file, ":", rows$line)
 }
 
-test_that("CRAN testthat surface is an explicit lightweight whitelist", {
+test_that("CRAN testthat surface is an explicit representative whitelist", {
   pkg_root <- example_policy_source_root()
   testthat::skip_if(is.na(pkg_root), "source files are not available")
 
@@ -97,14 +98,36 @@ test_that("CRAN testthat surface is an explicit lightweight whitelist", {
   expect_false(grepl("invert\\s*=\\s*TRUE", text, perl = TRUE))
 
   expected <- c(
+    "cran-smoke",
     "compatibility-aliases",
     "data-and-citation",
+    "example-datasets",
+    "data-processing",
+    "estimation-core",
+    "mml-cpp11-backend",
+    "facets-summary-profile",
+    "wright-facets-style",
+    "fit-pathway",
+    "marginal-fit-diagnostics",
+    "missing-codes-integration",
+    "bundle-summary-privacy",
+    "console-output-contract",
+    "output-guide",
     "gpcm-capability-matrix",
-    "namespace-contract"
+    "namespace-contract",
+    "vignette-artifacts"
   )
   for (slug in expected) {
     expect_true(grepl(paste0('"', slug, '"'), text, fixed = TRUE))
   }
+  expect_true(grepl('load_mfrmr_data\\("example_operational"\\)',
+                    paste(readLines(file.path(pkg_root, "tests", "testthat",
+                                              "test-cran-smoke.R"), warn = FALSE),
+                          collapse = "\n")))
+  expect_true(grepl('method = "MML"',
+                    paste(readLines(file.path(pkg_root, "tests", "testthat",
+                                              "test-cran-smoke.R"), warn = FALSE),
+                          collapse = "\n"), fixed = TRUE))
 })
 
 test_that("roxygen examples keep expensive demonstrations conditional", {

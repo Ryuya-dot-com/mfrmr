@@ -603,7 +603,7 @@ test_that("invalid anchor (non-existent level) with warn policy triggers warning
   expect_warning(
     fit_mfrm(d, "Person",
       c("Rater", "Task", "Criterion"), "Score",
-      method = "JML", maxit = 60,
+      method = "JML", maxit = 100,
       anchors = anchor_tbl,
       anchor_policy = "warn"),
     regex = "Anchor review"

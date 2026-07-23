@@ -8,7 +8,7 @@ Package-native guide to moving from fitted model objects to
 manuscript-draft text, tables, notes, and revision checklists in \code{mfrmr}.
 
 This guide currently applies fully to diagnostics-based \code{RSM} / \code{PCM}
-workflows. First-release \code{GPCM} fits now support \code{\link[=reporting_checklist]{reporting_checklist()}},
+workflows. Bounded \code{GPCM} fits support \code{\link[=reporting_checklist]{reporting_checklist()}},
 \code{\link[=precision_review_report]{precision_review_report()}}, direct curve/graph and residual table helpers,
 and caveated APA/QC/export bundles. Use \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}} when you
 need the formal boundary for the current \code{GPCM} reporting path.
@@ -25,7 +25,7 @@ treated as automatic operational-scoring evidence.
 \section{Start with the reporting question}{
 
 \itemize{
-\item "Which parts of this run are draft-complete, and with what caveats?"
+\item "Which parts of this run are ready to draft, and with what caveats?"
 Use \code{\link[=reporting_checklist]{reporting_checklist()}}.
 \item "How should I phrase the model, fit, and precision sections?"
 For \code{RSM} / \code{PCM}, use \code{\link[=build_apa_outputs]{build_apa_outputs()}}.
@@ -108,8 +108,8 @@ omitted-person or omitted-row counts when complete-case handling was used.
 
 Prediction-side helpers \code{\link[=predict_mfrm_units]{predict_mfrm_units()}} and
 \code{\link[=sample_mfrm_plausible_values]{sample_mfrm_plausible_values()}} can carry the fitted population model into
-future-unit scoring and plausible-value draws. In 0.2.2 this remains a
-first-version, one-dimensional \code{MML} route for \code{RSM} / \code{PCM}; avoid stronger
+future-unit scoring and plausible-value draws. The supported route is
+one-dimensional \code{MML} for \code{RSM} / \code{PCM}; avoid stronger
 claims about multidimensional latent regression, Wald tests, posterior
 predictive checking, or full external-engine equivalence unless those checks
 were performed outside this helper family.
@@ -148,7 +148,7 @@ captions, and a section map from the current fit and diagnostics.}
 into named \code{data.frame} tables plus an index for manuscript or appendix
 handoff, and now also supports bundle-level \code{summary()} / \code{plot()} for
 role coverage and numeric QC.}
-\item{\code{\link[=export_summary_appendix]{export_summary_appendix()}}}{Writes those validated summary-table
+\item{\code{\link[=export_summary_appendix]{export_summary_appendix()}}}{Writes those documented summary-table
 bundles to CSV and optional HTML appendix artifacts without requiring a
 full fit-based export bundle.}
 \item{\code{\link[=apa_table]{apa_table()}}}{Produces reproducible base-R tables with APA-oriented
@@ -201,7 +201,9 @@ and creates a lightweight HTML summary without requiring a prior
 \code{\link[=mfrm_results]{mfrm_results()}} object. Use \code{\link[=mfrm_results]{mfrm_results()}} and \code{\link[=mfrm_report]{mfrm_report()}} first when
 the goal is interactive triage or report-readiness review; use
 \code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}} when the goal is a file bundle for a project folder,
-coauthor handoff, or supplementary-methods archive.
+coauthor handoff, or supplementary-methods archive. The bundle is not
+deidentified; review every file under the study's data-handling policy before
+any handoff.
 }
 
 \section{Typical workflow}{
@@ -286,7 +288,8 @@ report_bundle <- export_mfrm_bundle(
   output_dir = tempdir(),
   prefix = "mfrmr_report_bundle",
   include = c("core_tables", "checklist", "apa", "summary_tables", "html"),
-  overwrite = TRUE
+  overwrite = TRUE,
+  acknowledge_sensitive = TRUE
 )
 report_bundle$summary[, c("FilesWritten", "HtmlWritten")]
 }

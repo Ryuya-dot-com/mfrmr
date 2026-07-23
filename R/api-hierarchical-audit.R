@@ -1,5 +1,5 @@
 # ==============================================================================
-# Hierarchical structure and small-sample review (added in 0.1.6)
+# Hierarchical structure and small-sample review
 # ==============================================================================
 #
 # Background and literature:
@@ -16,7 +16,7 @@
 #
 # - Myford & Wolfe (2004) Part II classified rater effects as
 #   severity/leniency, central tendency, randomness (inaccuracy), halo,
-#   and differential severity/leniency. 0.1.6 adds only the review layer
+#   and differential severity/leniency. This module adds only the review layer
 #   needed to screen adequacy; bias screening for central tendency / halo
 #   remains out of the current fit_mfrm() surface.
 #
@@ -1132,8 +1132,8 @@ compute_facet_design_effect <- function(data, facets, icc_table = NULL,
 #'   adds a connectivity component summary using a bipartite graph over
 #'   person x facet levels.
 #' @param icc_ci_method,icc_ci_level,icc_ci_boot_reps,icc_ci_boot_seed
-#'   Deprecated spellings of the `ci_*` arguments above, retained for
-#'   one release. Supplying a non-`NULL` value routes through
+#'   Deprecated compatibility spellings of the `ci_*` arguments above.
+#'   Supplying a non-`NULL` value routes through
 #'   [lifecycle::deprecate_warn()] and overrides the canonical
 #'   `ci_*` argument.
 #'
@@ -1232,8 +1232,7 @@ analyze_hierarchical_structure <- function(data,
                                            icc_ci_boot_seed = NULL) {
   # Deprecated `icc_ci_*` spellings route through lifecycle and
   # override the canonical `ci_*` values when supplied. This unifies
-  # the API with compute_facet_icc() while preserving one release of
-  # backward compatibility.
+  # the API with compute_facet_icc() while preserving compatibility.
   if (!is.null(icc_ci_method)) {
     lifecycle::deprecate_warn(
       when = "0.1.6",

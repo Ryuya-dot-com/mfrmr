@@ -41,7 +41,7 @@ mfrmr_gt_boundary_status <- function(fit_lmer,
     boundary_or_singular_fit = paste(
       "The lme4 random-effects fit is singular or on a boundary;",
       "interpret G/D-study coefficients as design-identification",
-      "warnings rather than high-stakes-ready evidence."
+      "warnings rather than decision-ready evidence."
     ),
     singularity_check_unavailable = paste(
       "The lme4 singularity check was unavailable;",
@@ -71,9 +71,9 @@ mfrmr_gt_classify_coef <- function(value,
   }
   dplyr::case_when(
     !is.finite(value) ~ "unavailable",
-    value >= 0.80 ~ "high_stakes_candidate",
-    value >= 0.70 ~ "routine_candidate",
-    TRUE ~ "review"
+    value >= 0.80 ~ "at_or_above_0.80_reference",
+    value >= 0.70 ~ "at_or_above_0.70_reference",
+    TRUE ~ "below_0.70_reference"
   )
 }
 
@@ -119,8 +119,10 @@ mfrmr_gt_classify_coef <- function(value,
 #'   main effects) + sigma2(Residual))`, before D-study scaling.
 #' - Use [mfrm_d_study()] to project `G` / `Phi` under planned numbers of
 #'   raters, items, criteria, or other random measurement facets.
-#' - Reporting bands follow Brennan (2001): G / Phi >= 0.8 for
-#'   high-stakes decisions, >= 0.7 for routine reporting.
+#' - Values of 0.70 and 0.80 are displayed as familiar planning references,
+#'   not as universal decision rules. Required dependability depends on the
+#'   decision, consequences, population, and evidence beyond a single
+#'   coefficient.
 #'
 #' @section Limitations:
 #' This helper formulates the random-effects model with main effects
@@ -138,7 +140,7 @@ mfrmr_gt_classify_coef <- function(value,
 #' D-study projections remain practical planning evidence rather than a
 #' replacement for a fully specified G-theory design.
 #' Boundary or singular `lme4` fits are retained as diagnostic evidence but are
-#' not treated as high-stakes-ready G/D-study evidence.
+#' not treated as decision-ready G/D-study evidence.
 #'
 #' @section References:
 #' - Cronbach, L. J., Gleser, G. C., Nanda, H., & Rajaratnam, N.
@@ -160,15 +162,15 @@ mfrmr_gt_classify_coef <- function(value,
 #'   #   variance shares mean those conditions add measurement error
 #'   #   relative to person spread.
 #'   gt$coefficients
-#'   # Look for: G >= 0.7 for routine reporting, >= 0.8 for high-stakes.
-#'   #   G < Phi means absolute decisions are noisier than relative
+#'   # Compare G and Phi with study-specific requirements; 0.70 and 0.80
+#'   #   are reference guides only. G < Phi means absolute decisions are noisier than relative
 #'   #   decisions; review whether facet main effects need anchoring.
 #'   # Always check IdentificationStatus before using the bands:
 #'   gt$coefficients[, c("G", "Phi", "GStatus", "PhiStatus",
 #'                       "IdentificationStatus")]
 #'   gt$design$identification_note
 #'   # If IdentificationStatus is not "identified", treat G/Phi as
-#'   # design-review evidence rather than high-stakes-ready reliability.
+#'   # design-review evidence rather than decision-ready reliability.
 #' }
 #' }
 #' @export
@@ -398,7 +400,7 @@ mfrm_generalizability <- function(fit,
 #'   ds[, c("n_Rater", "n_Criterion", "G", "Phi",
 #'          "GStatus", "PhiStatus", "IdentificationStatus")]
 #'   # If IdentificationStatus is not "identified", even large G/Phi
-#'   # values remain identification warnings, not high-stakes evidence.
+#'   # values remain identification warnings, not decision-ready evidence.
 #' }
 #' }
 #' @export
@@ -569,6 +571,7 @@ print.mfrm_d_study <- function(x, ...) {
     cat("\n")
   }
   print.data.frame(x, row.names = FALSE, ...)
+  cat("\n  Note: 0.70 and 0.80 are reference guides, not universal decision rules.\n")
   invisible(x)
 }
 
@@ -978,9 +981,9 @@ plot.mfrm_d_study <- function(x,
         new_reference_lines(
           axis = rep("y", 2L),
           value = c(0.70, 0.80),
-          label = c("routine", "high_stakes"),
+          label = c("0.70 reference", "0.80 reference"),
           linetype = c("dotted", "dashed"),
-          role = rep("decision_band", 2L)
+          role = rep("reference_guide", 2L)
         )
       } else {
         new_reference_lines()

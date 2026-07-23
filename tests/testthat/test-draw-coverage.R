@@ -256,7 +256,11 @@ test_that("plot.mfrm_anchor_review draws", {
 
 test_that("summary.mfrm_fit prints to console", {
   out <- capture.output(print(summary(.fit)))
-  expect_true(any(grepl("Many-Facet Rasch", out)))
+  expect_true(length(out) > 0L)
+  expect_true(any(grepl("Measurement Model Summary", out, fixed = TRUE)))
+  expect_true(any(grepl("Model:", out, fixed = TRUE)))
+  expect_true(any(grepl("Next actions", out, fixed = TRUE)))
+  expect_false(any(grepl("Many-Facet Rasch", out, fixed = TRUE)))
 })
 
 test_that("summary.mfrm_diagnostics prints to console", {

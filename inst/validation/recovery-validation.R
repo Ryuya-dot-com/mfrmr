@@ -713,7 +713,7 @@ mfrmr_recovery_validation_diagnostic_reporting_notes <- function(diagnostic_oc_s
       Evidence = build_evidence(row),
       ReportingImplication = implication,
       NextAction = next_action,
-      ValidationUse = "diagnostic_only_not_release_gate",
+      ValidationUse = "diagnostic_context_only",
       stringsAsFactors = FALSE
     )
   }

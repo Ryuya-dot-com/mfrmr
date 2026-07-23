@@ -20,7 +20,7 @@ model-estimated deviations from the additive main-effects MFRM, not the
 residual screening statistics returned by \code{\link[=estimate_bias]{estimate_bias()}}.
 }
 \details{
-The current release supports two-way interactions between non-person facets,
+mfrmr supports two-way interactions between non-person facets,
 for example \code{facet_interactions = "Rater:Criterion"}. Each interaction matrix
 is identified by zero marginal sums across both participating facets, so the
 interaction estimates are separable from the two main effects. Positive values

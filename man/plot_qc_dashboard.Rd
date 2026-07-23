@@ -121,7 +121,7 @@ Treat this dashboard as a screening layer; follow up with dedicated helpers
 
 \examples{
 \dontshow{if (interactive()) withAutoprint(\{ # examplesIf}
-# Fast smoke run: build the plot data only (no graphics device).
+# Build the plotting data without opening a graphics device.
 toy <- load_mfrmr_data("example_core")
 toy_small <- toy[toy$Person \%in\% unique(toy$Person)[1:3], ]
 fit_quick <- suppressWarnings(

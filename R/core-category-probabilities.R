@@ -3,7 +3,7 @@
 # ==============================================================================
 #
 # Pure-math helpers for the Rasch-family polytomous response models.
-# Split out of `mfrm_core.R` for 0.1.6 so the category probability
+# Split out of `mfrm_core.R` so the category probability
 # kernels live in a single, browseable file. The functions are
 # internal (no @export) and are called directly by the MML / JML
 # likelihood builders, the information helpers, and the pathway /

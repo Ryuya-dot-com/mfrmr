@@ -1151,7 +1151,7 @@ test_that("build_summary_table_bundle supports diagnostic-screening summaries", 
   expect_true(any(diag_bundle$tables$figure_recipes$FigureID == "overview_rates"))
   expect_true(any(grepl("plot_data", diag_bundle$tables$figure_recipes$PlotDataCall, fixed = TRUE)))
   expect_true(any(grepl("build_summary_table_bundle", diag_bundle$tables$next_actions$Route, fixed = TRUE)))
-  expect_true(any(grepl("release gates", diag_bundle$tables$reporting_notes$ReportingBoundary, fixed = TRUE)))
+  expect_true(any(grepl("standalone validation criteria", diag_bundle$tables$reporting_notes$ReportingBoundary, fixed = TRUE)))
   expect_true(any(diag_bundle$tables$plot_overview_rate$Signal == "Strict combined any-flag rate"))
   expect_true("diagnostic_screening_plot_data" %in% diag_bundle$table_index$Role)
 
@@ -1210,7 +1210,7 @@ test_that("build_summary_table_bundle supports recovery simulation and assessmen
         Reliability = 0.82,
         MeanInfit = 1.00,
         MeanOutfit = 1.02,
-        ValidationUse = "diagnostic_only_not_release_gate"
+        ValidationUse = "diagnostic_context_only"
       ),
       diagnostic_oc_summary = tibble::tibble(
         Facet = "Rater",
@@ -1219,7 +1219,7 @@ test_that("build_summary_table_bundle supports recovery simulation and assessmen
         MeanReliability = 0.82,
         MeanInfit = 1.00,
         MeanOutfit = 1.02,
-        ValidationUse = "diagnostic_only_not_release_gate"
+        ValidationUse = "diagnostic_context_only"
       ),
       settings = list(reps = 1L, fit_method = "MML", model = "RSM"),
       notes = "Use more replications before treating this as a final recovery study.",
@@ -1298,7 +1298,7 @@ test_that("build_summary_table_bundle supports recovery simulation and assessmen
         Evidence = "model=GPCM; slope_regime=moderate",
         ReportingImplication = "The slope-regime label describes generator context.",
         NextAction = "Report the generator condition.",
-        ValidationUse = "generator_condition_not_release_gate"
+        ValidationUse = "generator_condition_context"
       ),
       diagnostic_reporting_notes = tibble::tibble(
         Facet = "Rater",
@@ -1307,7 +1307,7 @@ test_that("build_summary_table_bundle supports recovery simulation and assessmen
         Evidence = "replications=1; mean_separation=2.10; mean_reliability=0.82",
         ReportingImplication = "Fit/separation diagnostics are available for context.",
         NextAction = "Keep this row separate from recovery gates.",
-        ValidationUse = "diagnostic_only_not_release_gate"
+        ValidationUse = "diagnostic_context_only"
       ),
       diagnostic_review = tibble::tibble(
         Facet = "Rater",
@@ -1318,7 +1318,7 @@ test_that("build_summary_table_bundle supports recovery simulation and assessmen
         MeanOutfit = 1.02,
         DiagnosticAvailability = "available",
         Status = "not_assessed",
-        ValidationUse = "diagnostic_only_not_release_gate",
+        ValidationUse = "diagnostic_context_only",
         Interpretation = "Diagnostic context only.",
         NextAction = "Keep separate from recovery gates."
       ),
@@ -1421,7 +1421,7 @@ test_that("build_summary_table_bundle supports recovery simulation and assessmen
       Evidence = "max_zero_score_levels=1",
       ReportingImplication = "Report sparse generated score support as condition stress.",
       NextAction = "Inspect category-level recovery before generalizing.",
-      ValidationUse = "generator_condition_not_release_gate"
+      ValidationUse = "generator_condition_context"
     ),
     diagnostic_oc_summary = tibble::tibble(
       CaseID = "gpcm_high_dispersion_sparse",
@@ -1430,7 +1430,7 @@ test_that("build_summary_table_bundle supports recovery simulation and assessmen
       MeanReliability = 0,
       DiagnosticAvailability = "available",
       Status = "not_assessed",
-      ValidationUse = "diagnostic_only_not_release_gate"
+      ValidationUse = "diagnostic_context_only"
     ),
     diagnostic_reporting_notes = tibble::tibble(
       CaseID = "gpcm_high_dispersion_sparse",
@@ -1440,7 +1440,7 @@ test_that("build_summary_table_bundle supports recovery simulation and assessmen
       Evidence = "mean_separation=0; mean_reliability=0",
       ReportingImplication = "Report zero separation as diagnostic context, not release failure.",
       NextAction = "Inspect the generated condition before using reliability language.",
-      ValidationUse = "diagnostic_only_not_release_gate"
+      ValidationUse = "diagnostic_context_only"
     ),
     domain_decision_table = tibble::tibble(
       CaseID = "gpcm_high_dispersion_sparse",
@@ -1452,7 +1452,7 @@ test_that("build_summary_table_bundle supports recovery simulation and assessmen
   validation_bundle <- build_summary_table_bundle(validation_summary)
   expect_identical(validation_bundle$source_class, "summary.mfrmr_recovery_validation")
   expect_true(all(c(
-    "topline_release_decision", "reading_order", "release_decision_table",
+    "evidence_overview", "reading_order", "case_evidence_assessment",
     "case_summary", "condition_summary", "condition_reporting_notes",
     "diagnostic_reporting_notes",
     "diagnostic_oc_summary",
@@ -1512,7 +1512,7 @@ test_that("build_summary_table_bundle supports recovery simulation and assessmen
   ) %in%
     names(validation_diag$tables)))
   expect_false("reading_order" %in% names(validation_diag$tables))
-  expect_false("topline_release_decision" %in% names(validation_diag$tables))
+  expect_false("evidence_overview" %in% names(validation_diag$tables))
   expect_summary_bundle_roles_registered(
     recovery_bundle, recovery_compact,
     assessment_bundle, assessment_diag,

@@ -1,14 +1,61 @@
-test_that("native top_n remains compact while FACETS payload keeps all locations", {
+test_that("native top_n compacts facets but retains every step transition", {
   fit <- make_toy_fit()
   full <- plot(fit, type = "wright", top_n = 100L, draw = FALSE)
   compact <- plot(fit, type = "wright", top_n = 2L, draw = FALSE)
+  complete <- plot(fit, type = "wright", top_n = Inf, draw = FALSE)
   facets <- plot(fit, type = "wright", renderer = "facets", top_n = 2L, draw = FALSE)
 
   expect_identical(compact$data$wright_style, "native")
-  expect_lte(nrow(compact$data$locations), 2L)
-  expect_lte(nrow(compact$data$label_points), 2L)
+  expect_true(compact$data$show_ci)
+  expect_identical(compact$data$uncertainty_display, "native_mfrmr_ci")
+  full_steps <- full$data$locations[
+    full$data$locations$PlotType == "Step threshold",
+    ,
+    drop = FALSE
+  ]
+  compact_steps <- compact$data$locations[
+    compact$data$locations$PlotType == "Step threshold",
+    ,
+    drop = FALSE
+  ]
+  compact_step_labels <- compact$data$label_points[
+    compact$data$label_points$PlotType == "Step threshold",
+    ,
+    drop = FALSE
+  ]
+  expect_equal(nrow(compact_steps), nrow(full_steps))
+  expect_setequal(as.character(compact_steps$Label), as.character(full_steps$Label))
+  expect_setequal(
+    as.character(compact_step_labels$Label),
+    as.character(full_steps$Label)
+  )
+  expect_true(all(grepl(" -> ", compact_step_labels$Label, fixed = TRUE)))
   expect_identical(compact$data$label_limit, 2L)
+  expect_true(all(c("Component", "Shown", "Total", "Omitted", "Complete", "RequestedTopN") %in%
+                    names(compact$data$retention)))
+  compact_all <- compact$data$retention[
+    compact$data$retention$Component == "All locations",
+    ,
+    drop = FALSE
+  ]
+  expect_equal(compact_all$Shown + compact_all$Omitted, compact_all$Total)
+  expect_gt(compact_all$Omitted, 0L)
+  expect_false(compact_all$Complete)
+  expect_match(compact$data$retention_note, "Use `top_n = Inf`", fixed = TRUE)
+  expect_match(compact$data$subtitle, "facet locations", fixed = TRUE)
+  complete_all <- complete$data$retention[
+    complete$data$retention$Component == "All locations",
+    ,
+    drop = FALSE
+  ]
+  expect_equal(complete_all$Shown, complete_all$Total)
+  expect_equal(complete_all$Omitted, 0L)
+  expect_true(complete_all$Complete)
+  expect_identical(complete$data$retention_note, "")
+  expect_equal(nrow(complete$data$locations), complete_all$Total)
   expect_identical(facets$data$renderer, "facets")
+  expect_false(facets$data$show_ci)
+  expect_identical(facets$data$uncertainty_display, "facets_style_no_ci")
   expect_equal(nrow(facets$data$locations), nrow(full$data$locations))
 })
 
@@ -97,6 +144,9 @@ test_that("FACETS-style Wright payload is complete and explicitly visual", {
 
   expect_identical(out$data$wright_style, "facets_style")
   expect_identical(out$data$renderer, "facets")
+  expect_true(out$data$show_ci)
+  expect_identical(out$data$uncertainty_display, "hybrid_mfrmr_ci")
+  expect_match(out$data$subtitle, "Hybrid", fixed = TRUE)
   expect_match(out$data$visual_contract, "not FACETS numerical equivalence", fixed = TRUE)
   fs <- out$data$facets_style
   expect_true(all(c(
@@ -161,6 +211,72 @@ test_that("FACETS-style headers and transitions respect fit metadata", {
   expect_true(all(grepl("Level", fs$step_ruler$TransitionLabel, fixed = TRUE)))
 })
 
+test_that("named Wright category labels must cover original score keys after recoding", {
+  fit <- make_toy_fit()
+  n_cat <- nrow(fit$prep$score_map)
+  internal_scores <- 0:(n_cat - 1L)
+  original_scores <- seq_len(n_cat)
+  fit$prep$rating_min <- 0L
+  fit$prep$rating_max <- n_cat - 1L
+  fit$config$n_cat <- n_cat
+  fit$prep$score_map <- data.frame(
+    OriginalScore = original_scores,
+    InternalScore = internal_scores
+  )
+
+  valid <- stats::setNames(paste("Level", original_scores), original_scores)
+  out <- plot(
+    fit,
+    type = "wright",
+    renderer = "facets",
+    category_labels = valid,
+    draw = FALSE
+  )
+  expect_equal(
+    out$data$facets_style$category_labels$OriginalScore,
+    as.character(original_scores)
+  )
+  expect_equal(
+    out$data$facets_style$category_labels$RubricLabel,
+    unname(valid)
+  )
+
+  internal_keyed <- stats::setNames(paste("Internal", internal_scores), internal_scores)
+  expect_error(
+    plot(
+      fit,
+      type = "wright",
+      renderer = "facets",
+      category_labels = internal_keyed,
+      draw = FALSE
+    ),
+    "appear to use internal score keys"
+  )
+  expect_error(
+    plot(
+      fit,
+      type = "wright",
+      renderer = "facets",
+      category_labels = valid[-n_cat],
+      draw = FALSE
+    ),
+    paste0("original score key\\(s\\): ", n_cat)
+  )
+  expect_error(
+    plot(
+      fit,
+      type = "wright",
+      renderer = "facets",
+      category_labels = data.frame(
+        Score = original_scores[-n_cat],
+        Label = unname(valid[-n_cat])
+      ),
+      draw = FALSE
+    ),
+    paste0("original score key\\(s\\): ", n_cat)
+  )
+})
+
 test_that("FACETS-style range, ruler resolution, and extremes are controllable", {
   fit <- make_toy_fit()
   fit$facets$person$Extreme[1:2] <- c("low", "high")
@@ -208,13 +324,46 @@ test_that("FACETS-style thresholds can be omitted and base renderer draws", {
   expect_silent(plot(
     fit,
     type = "wright",
-    renderer = "facets",
-    show_ci = TRUE
+    renderer = "native",
+    top_n = 2L
   ))
+  expect_silent(plot(
+    fit,
+    type = "wright",
+    renderer = "facets",
+    show_ci = FALSE
+  ))
+})
+
+test_that("plot_wright_unified uses the same renderer-specific uncertainty contract", {
+  fit <- make_toy_fit()
+
+  native <- plot_wright_unified(fit, top_n = Inf, draw = FALSE)
+  expect_true(native$show_ci)
+  expect_identical(native$uncertainty_display, "native_mfrmr_ci")
+  expect_true(all(native$retention$Omitted == 0L))
+
+  facets <- plot_wright_unified(fit, renderer = "facets", draw = FALSE)
+  expect_false(facets$show_ci)
+  expect_identical(facets$uncertainty_display, "facets_style_no_ci")
+
+  hybrid <- plot_wright_unified(
+    fit,
+    renderer = "facets",
+    show_ci = TRUE,
+    draw = FALSE
+  )
+  expect_true(hybrid$show_ci)
+  expect_identical(hybrid$uncertainty_display, "hybrid_mfrmr_ci")
+  expect_match(hybrid$title, "hybrid", ignore.case = TRUE)
 })
 
 test_that("FACETS-style Wright arguments are validated", {
   fit <- make_toy_fit()
+  expect_error(
+    plot(fit, type = "wright", top_n = 0, draw = FALSE),
+    "top_n"
+  )
   expect_error(
     plot(fit, type = "wright", wright_style = "facets", draw = FALSE),
     "not recognized"

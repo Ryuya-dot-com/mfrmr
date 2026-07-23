@@ -20,8 +20,7 @@
 #'   view. Default `0.95`.
 #' @param conf_level Deprecated alias for `ci_level`, retained for
 #'   backward compatibility. Supplying a non-`NULL` value overrides
-#'   `ci_level` and emits a one-time deprecation warning. Will be
-#'   removed in a future release.
+#'   `ci_level` and emits a one-time deprecation warning.
 #'   Default `0.95`.
 #'
 #' @details
@@ -168,10 +167,10 @@ analyze_facet_equivalence <- function(fit,
   }
   # `conf_level` is the deprecated spelling; the canonical name
   # elsewhere in mfrmr is `ci_level`. When both are supplied we honor
-  # `conf_level` for one release and route the notification through
+  # `conf_level` and route the notification through
   # lifecycle so users can control verbosity with
   # options(lifecycle_verbosity = "..."). `conf_level` will be
-  # removed in a future release.
+  # deprecated; prefer `ci_level` in new code.
   if (!is.null(conf_level)) {
     lifecycle::deprecate_warn(
       when = "0.1.6",

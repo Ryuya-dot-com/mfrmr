@@ -354,7 +354,11 @@ test_that("read_flexible_table handles empty and NULL input", {
 test_that("resolve_pcm_step_facet resolves correctly", {
   rpsf <- mfrmr:::resolve_pcm_step_facet
   expect_null(rpsf("RSM", NULL, c("Rater", "Task")))
-  expect_equal(rpsf("PCM", NULL, c("Rater", "Task")), "Rater")
+  expect_equal(rpsf("PCM", NULL, c("Rater", "Task")), "Task")
+  expect_warning(
+    expect_equal(rpsf("PCM", NULL, c("Rater", "Judge")), "Rater"),
+    "set `step_facet` explicitly"
+  )
   expect_equal(rpsf("PCM", "Task", c("Rater", "Task")), "Task")
   expect_error(rpsf("PCM", "Missing", c("Rater", "Task")), "not among")
 })
@@ -363,14 +367,20 @@ test_that("sanitize_noncenter_facet returns valid facet or Person", {
   snf <- mfrmr:::sanitize_noncenter_facet
   expect_equal(snf("Rater", c("Rater", "Task")), "Rater")
   expect_equal(snf("Person", c("Rater", "Task")), "Person")
-  expect_equal(snf("Missing", c("Rater", "Task")), "Person")
+  expect_warning(
+    expect_equal(snf("Missing", c("Rater", "Task")), "Person"),
+    "not one of the available facets"
+  )
   expect_equal(snf(NULL, c("Rater", "Task")), "Person")
 })
 
 test_that("sanitize_dummy_facets returns valid intersections", {
   sdf <- mfrmr:::sanitize_dummy_facets
   expect_equal(sdf(NULL, c("Rater", "Task")), character(0))
-  expect_equal(sdf(c("Rater", "Missing"), c("Rater", "Task")), "Rater")
+  expect_warning(
+    expect_equal(sdf(c("Rater", "Missing"), c("Rater", "Task")), "Rater"),
+    "not present in the model"
+  )
   expect_equal(sdf(c("Person"), c("Rater", "Task")), "Person")
 })
 
@@ -656,11 +666,13 @@ test_that("fit_mfrm with noncenter_facet adjusts centering", {
 # ============================================================================
 
 test_that("calc_bias_pairwise produces pairwise comparisons", {
-  bias_tbl <- .diag$bias_interactions
-  if (!is.null(bias_tbl) && nrow(bias_tbl) > 0) {
-    result <- mfrmr:::calc_bias_pairwise(bias_tbl, "Rater", "Task")
-    expect_true(is.data.frame(result))
-  }
+  bias <- estimate_bias(.fit, .diag, facet_a = "Rater", facet_b = "Task")
+  expect_s3_class(bias, "mfrm_bias")
+  expect_gt(nrow(bias$table), 0L)
+
+  result <- mfrmr:::calc_bias_pairwise(bias$table, "Rater", "Task")
+  expect_true(is.data.frame(result))
+  expect_gt(nrow(result), 0L)
 })
 
 # ============================================================================

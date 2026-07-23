@@ -48,7 +48,7 @@ comprehensive results object, not a new estimation interface.
 The viewer assumes that fitting, diagnostics, and section selection have
 already happened through \code{\link[=mfrm_results]{mfrm_results()}}. This keeps GUI exploration
 separate from reproducible analysis setup: the Replay tab displays the
-\code{mfrm_results()} scaffold stored in the result object.
+\code{mfrm_results()} replay script stored in the result object.
 
 The app includes tabs for overview/triage, QC evidence, APA-style report
 text when \code{include = "publication"} or \code{"apa"} was used, available bias

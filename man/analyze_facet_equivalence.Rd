@@ -39,8 +39,7 @@ view. Default \code{0.95}.}
 
 \item{conf_level}{Deprecated alias for \code{ci_level}, retained for
 backward compatibility. Supplying a non-\code{NULL} value overrides
-\code{ci_level} and emits a one-time deprecation warning. Will be
-removed in a future release.
+\code{ci_level} and emits a one-time deprecation warning.
 Default \code{0.95}.}
 }
 \value{

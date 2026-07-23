@@ -37,7 +37,7 @@ For a plot-first route, see
 ```{r setup}
 library(mfrmr)
 
-toy <- load_mfrmr_data("example_core")
+toy <- load_mfrmr_data("example_operational")
 
 # The vignette uses compact quadrature so optional local execution stays fast.
 # For final manuscript reporting, refit with the package default or a higher
@@ -150,7 +150,7 @@ head(report$template_index[, c(
 ```
 
 For a high-stakes manuscript, treat `build_apa_outputs()` and
-`mfrm_report(style = "apa")` as conservative scaffolding. Stronger journal
+`mfrm_report(style = "apa")` as a conservative drafting template. Stronger journal
 claims still require a defensible study design, cited measurement rationale,
 adequate precision evidence, linked or balanced design evidence where relevant,
 and substantive interpretation written in the language of the target journal.
@@ -159,7 +159,9 @@ formal acceptance decisions; use them to decide what wording is currently safe
 and which caveats must remain visible.
 
 When the target is a local HTML/CSV/replay bundle rather than an interactive
-review object, use `export_mfrm_bundle()` directly from the fitted object:
+review object, use `export_mfrm_bundle()` directly from the fitted object. The
+result is a potentially identifying analysis archive, not a deidentified
+sharing package:
 
 ```{r fit-to-html-bundle, eval=FALSE}
 bundle <- export_mfrm_bundle(
@@ -171,7 +173,8 @@ bundle <- export_mfrm_bundle(
     "core_tables", "checklist", "dashboard", "apa",
     "summary_tables", "manifest", "script", "html"
   ),
-  overwrite = TRUE
+  overwrite = TRUE,
+  acknowledge_sensitive = TRUE
 )
 
 bundle$written_files[bundle$written_files$Format == "html", ]
@@ -279,7 +282,7 @@ s_pop$population_coding
 s_pop$caveats
 ```
 
-In this release, keep latent-regression claims to the documented
+Keep latent-regression claims within the documented
 one-dimensional `MML` `RSM` / `PCM` route. Report the population formula,
 coding/contrast handling, population policy, and any omitted-person or
 omitted-row counts; do not imply multidimensional latent regression,

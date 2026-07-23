@@ -34,23 +34,64 @@ test_that("mfrmr_output_guide returns a stable purpose-to-helper map", {
 })
 
 test_that("mfrmr_output_guide supports focused scopes", {
+  guide_columns <- c(
+    "Scope", "Question", "OutputFamily", "Lifecycle", "UserLevel",
+    "APILayer", "ObjectRole", "DecisionBoundary", "RecommendedEntry",
+    "MainFunction", "UseWhen", "TypicalInput", "NextStep", "GPCMStatus",
+    "Notes"
+  )
+
   public <- mfrmr_output_guide("public")
-  expect_true(nrow(public) > 0L)
+  expect_identical(names(public), guide_columns)
+  expect_equal(nrow(public), 6L)
   expect_true(all(public$Scope == "public"))
   expect_true(all(public$RecommendedEntry))
   expect_true(all(public$UserLevel == "beginner"))
   expect_true(all(public$APILayer == "top_level_public_surface"))
   expect_true(any(public$ObjectRole == "model estimation and result-object entry"))
-  expect_true(any(public$ObjectRole == "report-readiness surface"))
-  expect_true(any(grepl("does not recompute diagnostics", public$DecisionBoundary, fixed = TRUE)))
+  expect_identical(public$ObjectRole[2], "fit summary surface")
+  expect_identical(public$ObjectRole[3], "comprehensive result object")
+  expect_match(
+    public$DecisionBoundary[2],
+    "without computing comprehensive diagnostics",
+    fixed = TRUE
+  )
+  expect_identical(
+    public$Question,
+    c(
+      "1. Check score support and fit with explicit data roles",
+      "2. Check convergence and fitted-model settings",
+      "3. Build the comprehensive FACETS-organized review",
+      "4. Create the required native Wright map with SE or CI",
+      "5. Add optional FACETS-style and Infit pathway views",
+      "6. Review, report, and export the completed results"
+    )
+  )
+  expect_match(public$MainFunction[1], "describe_mfrm_data", fixed = TRUE)
+  expect_match(public$MainFunction[1], 'method = "MML"', fixed = TRUE)
+  expect_match(public$MainFunction[2], 'profile = "fit"', fixed = TRUE)
+  expect_match(public$MainFunction[3], 'profile = "facets"', fixed = TRUE)
+  expect_match(public$MainFunction[3], "review$results", fixed = TRUE)
+  expect_match(public$MainFunction[4], 'renderer = "native"', fixed = TRUE)
+  expect_match(public$MainFunction[4], "show_ci = TRUE", fixed = TRUE)
+  expect_match(public$MainFunction[4], "top_n = Inf", fixed = TRUE)
+  expect_match(public$MainFunction[5], 'renderer = "facets"', fixed = TRUE)
+  expect_match(public$MainFunction[5], "category_labels", fixed = TRUE)
+  expect_match(public$MainFunction[5], "show_ci = FALSE", fixed = TRUE)
+  expect_match(public$MainFunction[5], 'type = "fit_pathway"', fixed = TRUE)
+  expect_match(public$MainFunction[5], 'fit_stat = "Infit"', fixed = TRUE)
+  expect_match(public$MainFunction[5], "include_person = TRUE", fixed = TRUE)
   expect_true(any(grepl("mfrm_report", public$MainFunction, fixed = TRUE)))
   expect_true(any(grepl("export_mfrm_results", public$MainFunction, fixed = TRUE)))
-  expect_true(any(grepl("launch_mfrmr_viewer", public$MainFunction, fixed = TRUE)))
+  expect_false(any(grepl("launch_mfrmr_viewer", public$MainFunction, fixed = TRUE)))
+  expect_false(any(grepl("mfrm_results_interactive", public$MainFunction, fixed = TRUE)))
 
   beginner <- mfrmr_output_guide("beginner")
-  expect_true(nrow(beginner) > 0L)
+  expect_identical(names(beginner), guide_columns)
+  expect_equal(beginner, public)
+  expect_true(all(beginner$Scope == "public"))
   expect_true(all(beginner$UserLevel == "beginner"))
-  expect_true(any(grepl("fit_mfrm", beginner$MainFunction, fixed = TRUE)))
+  expect_false(any(beginner$Scope %in% c("entry", "viewer", "binary")))
 
   psychometric <- mfrmr_output_guide("psychometric")
   expect_true(nrow(psychometric) > 0L)
@@ -98,7 +139,7 @@ test_that("mfrmr_output_guide supports focused scopes", {
   expect_true(any(grepl("evaluate_mfrm_diagnostic_screening", simulation$MainFunction, fixed = TRUE)))
   expect_true(any(grepl("export_summary_appendix", simulation$MainFunction, fixed = TRUE)))
   expect_true(any(grepl("plot_overview_rate", simulation$NextStep, fixed = TRUE)))
-  expect_true(any(grepl("operating-characteristic", simulation$Notes, fixed = TRUE)))
+  expect_true(any(grepl("operating characteristics", simulation$Notes, fixed = TRUE)))
 
   linking <- mfrmr_output_guide("linking")
   expect_true(nrow(linking) > 0L)
@@ -174,8 +215,8 @@ test_that("mfrmr_output_guide supports focused scopes", {
                     grepl("gpcm_capability_matrix", gpcm$MainFunction, fixed = TRUE)))
   expect_true(any(gpcm$Scope == "gpcm" &
                     grepl("gpcm_runtime_guard_coverage", gpcm$MainFunction, fixed = TRUE)))
-  expect_true(any(gpcm$ObjectRole == "out-of-scope route-status table"))
-  expect_true(any(grepl("does not broaden any route beyond its current capability row",
+  expect_true(any(gpcm$ObjectRole == "unavailable-route alternatives"))
+  expect_true(any(grepl("inspect the source object and help page",
                         gpcm$DecisionBoundary,
                         fixed = TRUE)))
 })
@@ -184,16 +225,25 @@ test_that("facets_feature_coverage separates implemented and unsupported FACETS 
   coverage <- facets_feature_coverage()
 
   expect_s3_class(coverage, "data.frame")
-  expect_true(all(c(
+  expect_identical(names(coverage), c(
     "FACETSArea",
     "FACETSFeature",
     "FACETSReference",
     "mfrmrRoute",
     "Status",
-    "Scope",
-    "GapOrBoundary",
-    "Priority"
-  ) %in% names(coverage)))
+    "Capability",
+    "Limitation",
+    "Alternative"
+  ))
+  expect_false("Priority" %in% names(coverage))
+  expect_true(all(nzchar(coverage$Capability)))
+  expect_true(all(nzchar(coverage$Limitation)))
+  expect_true(all(nzchar(coverage$Alternative)))
+  expect_true(any(grepl(
+    "documented FACETS version",
+    coverage$Limitation,
+    fixed = TRUE
+  )))
   expect_true(nrow(coverage) >= 40L)
   expect_true(any(grepl("Table 14", coverage$FACETSFeature, fixed = TRUE) &
                     coverage$Status == "implemented"))
@@ -202,7 +252,7 @@ test_that("facets_feature_coverage separates implemented and unsupported FACETS 
   expect_true(any(grepl("Generalizability Theory", coverage$FACETSFeature, fixed = TRUE) &
                     coverage$Status == "supported_with_caveat" &
                     grepl("mfrm_d_study", coverage$mfrmrRoute, fixed = TRUE) &
-                    grepl("IdentificationStatus", coverage$Scope, fixed = TRUE)))
+                    grepl("IdentificationStatus", coverage$Capability, fixed = TRUE)))
   expect_true(any(grepl("Connectivity network graph", coverage$FACETSFeature, fixed = TRUE) &
                     coverage$Status == "implemented" &
                     grepl("mfrm_network_analysis", coverage$mfrmrRoute, fixed = TRUE) &
@@ -275,13 +325,31 @@ test_that("FACETS term and visual contracts separate visual and numerical corres
                     visuals$Status == "mfrmr_extension"))
   expect_true(any(grepl("ruler_rows", visuals$EditableDataRoute, fixed = TRUE)))
   expect_false(any(grepl('component = "ruler"', visuals$EditableDataRoute, fixed = TRUE)))
-  expect_true(any(grepl("numerical equivalence", visuals$ClaimBoundary, fixed = TRUE)))
+  expect_true(any(grepl(
+    "documented FACETS version",
+    visuals$ClaimBoundary,
+    fixed = TRUE
+  )))
 })
 
 test_that("mfrmr_output_guide gives FACETS, ConQuest, and R user pathways", {
   facets <- mfrmr_output_guide("facets")
-  expect_true(nrow(facets) >= 10L)
+  expect_true(nrow(facets) >= 14L)
   expect_true(all(facets$Scope == "facets"))
+  expect_match(facets$MainFunction[1], 'method = "MML"', fixed = TRUE)
+  expect_match(facets$MainFunction[1], 'profile = "facets"', fixed = TRUE)
+  expect_match(facets$MainFunction[2], 'renderer = "native"', fixed = TRUE)
+  expect_match(facets$MainFunction[2], "show_ci = TRUE", fixed = TRUE)
+  expect_match(facets$MainFunction[2], "top_n = Inf", fixed = TRUE)
+  expect_match(facets$MainFunction[3], 'renderer = "facets"', fixed = TRUE)
+  expect_match(facets$MainFunction[3], "category_labels", fixed = TRUE)
+  expect_match(facets$MainFunction[3], "show_ci = FALSE", fixed = TRUE)
+  expect_match(facets$MainFunction[4], 'type = "fit_pathway"', fixed = TRUE)
+  expect_match(facets$MainFunction[4], 'fit_stat = "Infit"', fixed = TRUE)
+  expect_match(facets$MainFunction[4], "include_person = TRUE", fixed = TRUE)
+  expect_match(facets$Notes[1], "FACETS software was run", fixed = TRUE)
+  expect_match(facets$Notes[3], "labelled step lines", fixed = TRUE)
+  expect_match(facets$Notes[3], "uncertainty hybrid", fixed = TRUE)
   expect_true(any(grepl("facets_positioning_guide", facets$MainFunction, fixed = TRUE)))
   expect_true(any(grepl("not a FACETS numerical clone", facets$Notes, fixed = TRUE)))
   expect_true(any(grepl("facets_feature_coverage", facets$MainFunction, fixed = TRUE)))
@@ -307,11 +375,17 @@ test_that("mfrmr_output_guide gives FACETS, ConQuest, and R user pathways", {
   expect_true(any(grepl("write_mfrm_subset_file", facets$MainFunction, fixed = TRUE)))
 
   conquest <- mfrmr_output_guide("conquest")
-  expect_true(nrow(conquest) >= 3L)
+  expect_true(nrow(conquest) >= 5L)
   expect_true(all(conquest$Scope == "conquest"))
+  expect_match(conquest$MainFunction[1], 'method = "MML"', fixed = TRUE)
+  expect_match(conquest$Notes[1], "does not execute ConQuest", fixed = TRUE)
+  expect_match(conquest$MainFunction[2], "build_conquest_overlap_bundle", fixed = TRUE)
+  expect_match(conquest$Notes[2], "does not execute ConQuest", fixed = TRUE)
+  expect_match(conquest$Notes[2], "parse raw report text", fixed = TRUE)
   expect_true(any(grepl("build_conquest_overlap_bundle", conquest$MainFunction, fixed = TRUE)))
+  expect_true(any(grepl("normalize_conquest_overlap_exports", conquest$MainFunction, fixed = TRUE)))
   expect_true(any(grepl("review_conquest_overlap", conquest$MainFunction, fixed = TRUE)))
-  expect_true(any(grepl("less free than ConQuest", conquest$Question, fixed = TRUE)))
+  expect_true(any(grepl("less flexible than ConQuest", conquest$Question, fixed = TRUE)))
 
   r_path <- mfrmr_output_guide("r")
   expect_true(nrow(r_path) >= 3L)

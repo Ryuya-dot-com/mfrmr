@@ -142,7 +142,7 @@ categories}. Psychometrika, 43(4), 561-573.
 Psychometrika, 47(2), 149-174. \doi{10.1007/BF02296272}
 \item Linacre, J. M. (2002). What do Infit and Outfit, mean-square and
 standardized mean? \emph{Rasch Measurement Transactions, 16}(2), 878.
-(Source for the 0.5-1.5 mean-square acceptance band and the
+(Source for the 0.5-1.5 mean-square heuristic review interval and the
 threshold-gap heuristics used in \code{summary(t8)$summary}.)
 \item Wind, S. A. (2023). \emph{Detecting rating scale malfunctioning with the
 partial credit model and generalized partial credit model}.

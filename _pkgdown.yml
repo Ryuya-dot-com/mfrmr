@@ -165,6 +165,7 @@ reference:
       - mfrmr_reports_and_tables
       - mfrmr_visual_diagnostics
       - mfrmr_workflow_methods
+      - normalize_conquest_overlap_exports
       - normalize_conquest_overlap_files
       - normalize_conquest_overlap_tables
       - mfrm_network_analysis
@@ -182,7 +183,6 @@ reference:
       - plot.mfrm_facet_sample_review
       - plot.mfrm_facets_run
       - plot.mfrm_fit
-      - plot.mfrm_future_branch_active_branch
       - plot.mfrm_recovery_simulation
       - plot.mfrm_signal_detection
       - plot.mfrm_summary_table_bundle
@@ -216,7 +216,6 @@ reference:
       - summary.mfrm_facet_dashboard
       - summary.mfrm_facets_run
       - summary.mfrm_fit
-      - summary.mfrm_future_branch_active_branch
       - summary.mfrm_linking_review
       - summary.mfrm_misfit_casebook
       - summary.mfrm_model_choice_review

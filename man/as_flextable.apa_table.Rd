@@ -9,7 +9,7 @@
 \arguments{
 \item{x}{An \code{apa_table} object from \code{\link[=apa_table]{apa_table()}}.}
 
-\item{...}{Additional arguments reserved for future use.}
+\item{...}{Reserved for generic compatibility.}
 }
 \value{
 A \code{flextable} object, or a message when \code{flextable} is

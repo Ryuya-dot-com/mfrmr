@@ -10,7 +10,7 @@ plot_wright_unified(
   bins = 20L,
   show_thresholds = TRUE,
   top_n = 30L,
-  show_ci = FALSE,
+  show_ci = NULL,
   ci_level = 0.95,
   draw = TRUE,
   preset = c("standard", "publication", "compact", "monochrome"),
@@ -39,10 +39,16 @@ coordinates from \code{fit}.}
 positions on the map. Default \code{TRUE}.}
 
 \item{top_n}{Maximum number of facet/step locations retained by the native
-renderer. The FACETS-style payload retains every fitted location.}
+renderer for a compact display. Step transitions are always retained and
+omitted facet locations are reported in \code{retention}; use \code{Inf} for the
+complete final map. Native text labels remain collision-aware even when
+all coordinates are retained. The FACETS-style payload retains and labels
+every fitted location, grouping coincident labels when needed.}
 
-\item{show_ci}{Logical; if \code{TRUE}, draw approximate confidence intervals when
-standard errors are available.}
+\item{show_ci}{Logical or \code{NULL}. \code{NULL} (the default) draws available
+uncertainty intervals for the native renderer and omits them from the
+FACETS-style renderer. Explicit \code{TRUE} with \code{renderer = "facets"} creates
+a hybrid FACETS-style ruler with mfrmr uncertainty intervals.}
 
 \item{ci_level}{Confidence level used when \code{show_ci = TRUE}.}
 
@@ -64,8 +70,10 @@ point, range, and facet-SE display; \code{"facets_style"} adds a FACETS Table
 6-style text ruler. The latter is a visual layout, not a claim of numerical
 equivalence with FACETS, and is equivalent to \code{renderer = "facets"}.}
 
-\item{category_labels}{Optional named/ordered score rubric labels, or a data
-frame with \code{Score} and \code{Label}, for \code{wright_style = "facets_style"}.}
+\item{category_labels}{Optional score-rubric labels for
+\code{wright_style = "facets_style"}. Supply a named character vector keyed by
+every retained original score, an unnamed vector with one label per
+retained category, or a data frame with \code{Score} and \code{Label} columns.}
 
 \item{rows_per_logit}{Number of rows per logit on the FACETS-style ruler.}
 
@@ -80,8 +88,10 @@ selects a compact value automatically.}
 \item{...}{Additional graphical parameters.}
 }
 \value{
-Invisibly, a list with \code{persons}, \code{facets}, and \code{thresholds}
-data used for the plot.
+Invisibly, a list with \code{persons}, \code{facets}, \code{thresholds}, and the
+underlying Wright-map tables used for the plot. Native output includes a
+\code{retention} table and \code{retention_note} documenting compact-display
+omissions.
 }
 \description{
 Produces a shared-logit variable map showing person ability distribution
@@ -111,6 +121,9 @@ all facet levels, step lines, original-score transitions, mean half-score
 boundaries, category labels, and display settings under \code{facets_style}.
 These tables support custom ggplot2/plotly rendering without parsing the
 base plot.
+Use \code{show_ci = FALSE} for the closest FACETS-style presentation. A
+FACETS-style ruler drawn with \code{show_ci = TRUE} is intentionally labelled as
+a hybrid because its uncertainty intervals are supplied by \code{mfrmr}.
 }
 \section{Interpreting output}{
 

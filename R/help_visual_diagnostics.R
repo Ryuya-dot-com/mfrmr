@@ -30,7 +30,7 @@
 #'   transformation. Under `GPCM` the fair-average panel of
 #'   [plot_qc_dashboard()] therefore renders with an explicit
 #'   "unavailable" status, and the broader compatibility-export helpers
-#'   stay outside the validated `GPCM` boundary.
+#'   stay outside the documented `GPCM` boundary.
 #'
 #' Use [gpcm_capability_matrix()] for the formal per-helper boundary
 #' before choosing a `GPCM` follow-up plot route.
@@ -96,8 +96,7 @@
 #'   Use [plot_qc_dashboard()] for `RSM` / `PCM`. The bounded `GPCM`
 #'   branch can also call [plot_qc_dashboard()], but its fair-average
 #'   panel reports an explicit unavailability indicator because that
-#'   panel's score-metric semantics have not yet been generalized
-#'   beyond the Rasch-family branch.
+#'   panel's score-metric semantics are limited to the Rasch-family branch.
 #' - "Which figures are already supported by my current run?"
 #'   Use [reporting_checklist()] and review the `"Visual Displays"` rows before
 #'   choosing the next plot.
@@ -150,9 +149,9 @@
 #' or rendering technology without losing the measurement scale, caveats, and
 #' caption boundary attached to the package-native plot.
 #'
-#' @section Visual coverage for this release:
-#' This release treats the plotting layer as sufficient when the current run
-#' supports all of the following follow-up roles through public helpers:
+#' @section Visual coverage:
+#' The plotting layer supports the following public follow-up roles when the
+#' fitted object contains the required data:
 #' - First-pass triage:
 #'   [plot_qc_dashboard()] or the `"Visual Displays"` rows from
 #'   [reporting_checklist()].

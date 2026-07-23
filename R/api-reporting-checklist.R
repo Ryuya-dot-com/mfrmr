@@ -15,8 +15,8 @@
 #'   returned bundle.
 #'
 #' @details
-#' This helper ports the app-level reporting checklist into a package-native
-#' bundle. It does not try to judge substantive reporting quality; instead, it
+#' This helper builds a package-native reporting checklist. It does not try to
+#' judge substantive reporting quality; instead, it
 #' checks whether the fitted object and related diagnostics contain the evidence
 #' typically reported in MFRM write-ups.
 #'
@@ -105,8 +105,7 @@
 #'   [specifications_report()], [data_quality_report()],
 #'   [build_misfit_casebook()], [build_linking_review()]
 #' @examplesIf interactive()
-#' # Fast smoke run: a JML fit + legacy-only diagnostic produces a
-#' # populated checklist in well under a second.
+#' # Minimal checklist example using a JML fit and lightweight diagnostics.
 #' toy <- load_mfrmr_data("example_core")
 #' fit_quick <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                       method = "JML", maxit = 30)
@@ -168,13 +167,14 @@ reporting_checklist <- function(fit,
   bias_error_tbl <- attr(bias_tbls, "errors", exact = TRUE)
   n_bias_errors <- if (is.data.frame(bias_error_tbl)) nrow(bias_error_tbl) else 0L
 
-  converged <- isTRUE(fit$summary$Converged %||% FALSE)
+  convergence <- mfrm_convergence_state(fit)
+  converged <- convergence$inference_ready
   summary_msg <- if (is.data.frame(fit$summary) && "Message" %in% names(fit$summary)) {
     as.character(fit$summary$Message[1] %||% "")
   } else {
     ""
   }
-  conv_msg <- as.character(fit$opt$message %||% summary_msg %||% "")
+  conv_msg <- as.character(convergence$detail %||% fit$opt$message %||% summary_msg %||% "")
   n_bias_pairs <- length(bias_tbls)
   has_bias_sig <- FALSE
   bias_stat_parse_issue <- FALSE
@@ -341,7 +341,7 @@ reporting_checklist <- function(fit,
         severity = "required",
         ready_for_apa = population_active && identical(population_posterior_basis, "population_model"),
         missing_action = "Fit with `method = \"MML\"`, `population_formula`, and one-row-per-person `person_data` before reporting latent regression.",
-        available_action = "Describe the fit as a first-version conditional-normal latent-regression MML model, not as a post hoc regression on EAP/MLE scores."
+        available_action = "Describe the fit as a conditional-normal latent-regression MML model, not as a post hoc regression on EAP/MLE scores."
       ),
       add_item(
         "Population Model",
@@ -462,7 +462,13 @@ reporting_checklist <- function(fit,
         "Method Section",
         "Convergence",
         converged,
-        detail = if (nzchar(conv_msg)) conv_msg else if (converged) "Converged" else "Convergence status unavailable",
+        detail = if (nzchar(conv_msg)) {
+          conv_msg
+        } else if (converged) {
+          "Optimizer diagnostics support inference-ready status."
+        } else {
+          "Optimizer diagnostics require review before inference."
+        },
         source_component = "fit$summary + fit$opt",
         missing_action = "Resolve convergence before reporting model results."
       ),
@@ -1052,7 +1058,7 @@ external_software_scope_table <- function(fit) {
     CurrentSupport = c(
       "active",
       "active compatibility layer",
-      if (conquest_candidate) "candidate fit; additional exact-overlap restrictions apply" else "not active for this fit",
+      if (conquest_candidate) "candidate fit; additional documented comparison restrictions apply" else "not active for this fit",
       "CSV/data.frame outputs only"
     ),
     PrimaryHelpers = c(

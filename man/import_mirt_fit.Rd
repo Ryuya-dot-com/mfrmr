@@ -62,8 +62,8 @@ downstream plot helpers (Wright map, QC dashboard, etc.).
 \section{Scope}{
 
 Bundles bias / DIF / anchor / replay slots are explicitly not
-populated; full bidirectional import / export is planned for a
-future release.
+populated. This helper provides a one-way fitted-object import for the
+documented core fields, not a bidirectional interchange format.
 }
 
 \examples{

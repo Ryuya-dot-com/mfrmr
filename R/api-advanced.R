@@ -41,10 +41,10 @@ resolve_dff_subgroup_precision <- function(sub_fit, sub_diag = NULL, diagnostics
     method_input = sub_fit$config$method_input %||% NA_character_,
     method_used = sub_fit$config$method %||% NA_character_
   )
-  converged <- if (nrow(precision_profile) > 0 && "Converged" %in% names(precision_profile)) {
-    isTRUE(precision_profile$Converged[1])
+  converged <- if (nrow(precision_profile) > 0 && "InferenceReady" %in% names(precision_profile)) {
+    isTRUE(precision_profile$InferenceReady[1])
   } else {
-    isTRUE(as.logical(sub_fit$summary$Converged[1] %||% FALSE))
+    mfrm_inference_ready(sub_fit)
   }
 
   precision_tier <- if (!is.null(diagnostics_error) && nzchar(diagnostics_error)) {
@@ -1541,9 +1541,8 @@ print.mfrm_dff <- function(x, ...) {
 #'   Obs-Exp average (in logits). Default `0.5`.
 #'
 #' @details
-#' This function uses the fitted model's observation-level residuals
-#' (from the internal `compute_obs_table()` function) rather than
-#' re-estimating the model. For each facet-level x group-value cell,
+#' This function uses observation-level residuals computed from the fitted
+#' model rather than re-estimating it. For each facet-level x group-value cell,
 #' it computes:
 #' \itemize{
 #'   \item N: number of observations in the cell
@@ -2935,9 +2934,15 @@ plot_information <- function(x,
 #' @param show_thresholds Logical; if `TRUE`, display threshold/step
 #'   positions on the map. Default `TRUE`.
 #' @param top_n Maximum number of facet/step locations retained by the native
-#'   renderer. The FACETS-style payload retains every fitted location.
-#' @param show_ci Logical; if `TRUE`, draw approximate confidence intervals when
-#'   standard errors are available.
+#'   renderer for a compact display. Step transitions are always retained and
+#'   omitted facet locations are reported in `retention`; use `Inf` for the
+#'   complete final map. Native text labels remain collision-aware even when
+#'   all coordinates are retained. The FACETS-style payload retains and labels
+#'   every fitted location, grouping coincident labels when needed.
+#' @param show_ci Logical or `NULL`. `NULL` (the default) draws available
+#'   uncertainty intervals for the native renderer and omits them from the
+#'   FACETS-style renderer. Explicit `TRUE` with `renderer = "facets"` creates
+#'   a hybrid FACETS-style ruler with mfrmr uncertainty intervals.
 #' @param ci_level Confidence level used when `show_ci = TRUE`.
 #' @param draw If `TRUE` (default), draw the plot. If `FALSE`, return
 #'   plot data invisibly.
@@ -2951,8 +2956,10 @@ plot_information <- function(x,
 #'   point, range, and facet-SE display; `"facets_style"` adds a FACETS Table
 #'   6-style text ruler. The latter is a visual layout, not a claim of numerical
 #'   equivalence with FACETS, and is equivalent to `renderer = "facets"`.
-#' @param category_labels Optional named/ordered score rubric labels, or a data
-#'   frame with `Score` and `Label`, for `wright_style = "facets_style"`.
+#' @param category_labels Optional score-rubric labels for
+#'   `wright_style = "facets_style"`. Supply a named character vector keyed by
+#'   every retained original score, an unnamed vector with one label per
+#'   retained category, or a data frame with `Score` and `Label` columns.
 #' @param rows_per_logit Number of rows per logit on the FACETS-style ruler.
 #' @param wright_range Optional finite increasing length-2 logit range.
 #' @param extreme_placement Place extreme-score persons at ruler `"ends"` or at
@@ -2982,6 +2989,9 @@ plot_information <- function(x,
 #' boundaries, category labels, and display settings under `facets_style`.
 #' These tables support custom ggplot2/plotly rendering without parsing the
 #' base plot.
+#' Use `show_ci = FALSE` for the closest FACETS-style presentation. A
+#' FACETS-style ruler drawn with `show_ci = TRUE` is intentionally labelled as
+#' a hybrid because its uncertainty intervals are supplied by `mfrmr`.
 #'
 #' @section Interpreting output:
 #' - Facet levels at the same height on the map are at similar difficulty.
@@ -3008,8 +3018,10 @@ plot_information <- function(x,
 #' [mfrmr_visual_diagnostics] and
 #' `vignette("mfrmr-visual-diagnostics", package = "mfrmr")`.
 #'
-#' @return Invisibly, a list with `persons`, `facets`, and `thresholds`
-#'   data used for the plot.
+#' @return Invisibly, a list with `persons`, `facets`, `thresholds`, and the
+#'   underlying Wright-map tables used for the plot. Native output includes a
+#'   `retention` table and `retention_note` documenting compact-display
+#'   omissions.
 #'
 #' @seealso [fit_mfrm()], [plot.mfrm_fit()], [mfrmr_visual_diagnostics]
 #' @concept confidence intervals
@@ -3037,7 +3049,7 @@ plot_wright_unified <- function(fit,
                                 bins = 20L,
                                 show_thresholds = TRUE,
                                 top_n = 30L,
-                                show_ci = FALSE,
+                                show_ci = NULL,
                                 ci_level = 0.95,
                                 draw = TRUE,
                                 preset = c("standard", "publication", "compact", "monochrome"),
@@ -3054,10 +3066,23 @@ plot_wright_unified <- function(fit,
   if (!inherits(fit, "mfrm_fit")) {
     stop("`fit` must be an `mfrm_fit` object.", call. = FALSE)
   }
-  top_n <- max(1L, as.integer(top_n))
+  show_ci_auto <- missing(show_ci) || is.null(show_ci)
+  top_n <- suppressWarnings(as.numeric(top_n[1]))
+  if (length(top_n) != 1L || is.na(top_n) || top_n <= 0) {
+    stop("`top_n` must be a positive number or `Inf`.", call. = FALSE)
+  }
+  if (is.finite(top_n)) {
+    top_n <- as.integer(floor(top_n))
+    if (top_n < 1L) stop("`top_n` must be at least 1 or `Inf`.", call. = FALSE)
+  }
   bins <- max(5L, as.integer(bins))
   style <- resolve_plot_preset(preset)
   wright_style <- match_wright_style(wright_style, renderer = renderer)
+  if (isTRUE(show_ci_auto)) {
+    show_ci <- identical(wright_style, "native")
+  } else if (!is.logical(show_ci) || length(show_ci) != 1L || is.na(show_ci)) {
+    stop("`show_ci` must be NULL, TRUE, or FALSE.", call. = FALSE)
+  }
   se_tbl_ci <- if (isTRUE(show_ci) || !is.null(diagnostics)) {
     compute_se_for_plot(fit, ci_level = ci_level, diagnostics = diagnostics)
   } else {
@@ -3086,12 +3111,34 @@ plot_wright_unified <- function(fit,
     ),
     plot_core
   )
+  plot_data$show_ci <- isTRUE(show_ci)
+  plot_data$uncertainty_display <- if (identical(wright_style, "facets_style")) {
+    if (isTRUE(show_ci)) "hybrid_mfrmr_ci" else "facets_style_no_ci"
+  } else if (isTRUE(show_ci)) {
+    "native_mfrmr_ci"
+  } else {
+    "native_no_ci"
+  }
+  plot_data$title <- if (identical(plot_data$uncertainty_display, "hybrid_mfrmr_ci")) {
+    "Unified Wright Map (FACETS-style + mfrmr CI hybrid)"
+  } else {
+    "Unified Wright Map"
+  }
+  plot_data$subtitle <- if (identical(wright_style, "facets_style")) {
+    if (isTRUE(show_ci)) {
+      "Hybrid display: FACETS-style ruler with mfrmr uncertainty intervals"
+    } else {
+      "FACETS Table 6-style visual layout (mfrmr estimates)"
+    }
+  } else {
+    "Shared logit scale for persons, facets, and thresholds"
+  }
   if (!draw) return(invisible(plot_data))
 
   apply_plot_preset(style)
   draw_wright_map(
     plot_core,
-    title = "Unified Wright Map",
+    title = plot_data$title,
     palette = resolve_palette(
       palette = palette,
       defaults = c(
@@ -3377,14 +3424,14 @@ compute_equating_offset <- function(diffs, se_from = NULL, se_to = NULL,
 #' @export
 #' @examples
 #' \dontrun{
-#' d1 <- load_mfrmr_data("study1")
-#' keep1 <- unique(d1$Person)[1:15]
-#' d1 <- d1[d1$Person %in% keep1, , drop = FALSE]
+#' # Deliberately linked teaching waves: both retain the same rater and
+#' # criterion identities from one synthetic calibration design.
+#' toy <- load_mfrmr_data("example_core")
+#' people <- unique(toy$Person)
+#' d1 <- toy[toy$Person %in% people[1:24], , drop = FALSE]
+#' d2 <- toy[toy$Person %in% people[25:48], , drop = FALSE]
 #' fit1 <- fit_mfrm(d1, "Person", c("Rater", "Criterion"), "Score",
-#'                  method = "JML", maxit = 30)
-#' d2 <- load_mfrmr_data("study2")
-#' keep2 <- unique(d2$Person)[1:15]
-#' d2 <- d2[d2$Person %in% keep2, , drop = FALSE]
+#'                  method = "MML", quad_points = 7, maxit = 30)
 #' res <- anchor_to_baseline(d2, fit1, "Person",
 #'                           c("Rater", "Criterion"), "Score",
 #'                           anchor_facets = "Criterion")
@@ -3472,7 +3519,9 @@ summary.mfrm_anchored_fit <- function(object, ...) {
       tibble::tibble()
     },
     flagged = drift |> dplyr::filter(.data$Flag),
-    converged = object$fit$summary$Converged
+    converged = mfrm_inference_ready(object$fit),
+    optimizer_code_zero = mfrm_convergence_state(object$fit)$code_converged,
+    convergence_status = mfrm_convergence_state(object$fit)$status
   )
   class(out) <- "summary.mfrm_anchored_fit"
   out
@@ -3482,7 +3531,9 @@ summary.mfrm_anchored_fit <- function(object, ...) {
 #' @export
 print.summary.mfrm_anchored_fit <- function(x, ...) {
   cat("--- Anchored Fit Summary ---\n")
-  cat("Converged:", x$converged, "\n")
+  cat("Inference-ready:", x$converged, "\n")
+  cat("Optimizer returned code 0:", x$optimizer_code_zero,
+      "| Status:", x$convergence_status, "\n")
   cat("Anchors used:", x$n_anchored, "| Common elements:", x$n_common,
       "| Flagged:", x$n_flagged, "\n\n")
   if (nrow(x$drift_summary) > 0) {
@@ -3593,12 +3644,16 @@ print.summary.mfrm_anchored_fit <- function(x, ...) {
 #' @export
 #' @examples
 #' \dontrun{
-#' d1 <- load_mfrmr_data("study1")
-#' d2 <- load_mfrmr_data("study2")
+#' # Deliberately linked teaching waves: common labels below represent the
+#' # same rater and criterion identities by construction.
+#' toy <- load_mfrmr_data("example_core")
+#' people <- unique(toy$Person)
+#' d1 <- toy[toy$Person %in% people[1:24], , drop = FALSE]
+#' d2 <- toy[toy$Person %in% people[25:48], , drop = FALSE]
 #' fit1 <- fit_mfrm(d1, "Person", c("Rater", "Criterion"), "Score",
-#'                  method = "JML", maxit = 30)
+#'                  method = "MML", quad_points = 7, maxit = 30)
 #' fit2 <- fit_mfrm(d2, "Person", c("Rater", "Criterion"), "Score",
-#'                  method = "JML", maxit = 30)
+#'                  method = "MML", quad_points = 7, maxit = 30)
 #' drift <- detect_anchor_drift(list(Wave1 = fit1, Wave2 = fit2))
 #' summary(drift)
 #' head(drift$drift_table[, c("Facet", "Level", "Wave", "Drift", "Flag")])
@@ -4345,7 +4400,7 @@ print.summary.mfrm_equating_chain <- function(x, ...) {
     Scope = c("RSM / PCM", "bounded GPCM"),
     Status = c("supported", "supported_with_caveat"),
     Note = c(
-      "Supported as a synthesis layer over validated anchor-review, drift, and equating-chain objects.",
+      "Supported as a synthesis layer over documented anchor-review, drift, and equating-chain objects.",
       if (gpcm_detected) {
         "Supported with caveat: bounded GPCM source objects are summarized as exploratory anchor/drift/chain evidence, not an operational linking decision."
       } else {
@@ -4772,7 +4827,7 @@ print.summary.mfrm_equating_chain <- function(x, ...) {
 #'   helper should be used separately.
 #'
 #' @section GPCM boundary:
-#' This helper is currently intended for the validated `RSM` / `PCM` linking
+#' This helper is currently intended for the documented `RSM` / `PCM` linking
 #' workflow. If the supplied drift/chain sources resolve to bounded `GPCM`,
 #' the helper stops with a package-level message rather than silently implying
 #' support.
@@ -4782,12 +4837,16 @@ print.summary.mfrm_equating_chain <- function(x, ...) {
 #'   [build_equating_chain()], [plot_anchor_drift()], [mfrmr_linking_and_dff]
 #' @examples
 #' \dontrun{
-#' d1 <- load_mfrmr_data("study1")
-#' d2 <- load_mfrmr_data("study2")
+#' # Deliberately linked teaching waves: common labels below represent the
+#' # same rater and criterion identities by construction.
+#' toy <- load_mfrmr_data("example_core")
+#' people <- unique(toy$Person)
+#' d1 <- toy[toy$Person %in% people[1:24], , drop = FALSE]
+#' d2 <- toy[toy$Person %in% people[25:48], , drop = FALSE]
 #' fit1 <- fit_mfrm(d1, "Person", c("Rater", "Criterion"), "Score",
-#'                  method = "JML", maxit = 30)
+#'                  method = "MML", quad_points = 7, maxit = 30)
 #' fit2 <- fit_mfrm(d2, "Person", c("Rater", "Criterion"), "Score",
-#'                  method = "JML", maxit = 30)
+#'                  method = "MML", quad_points = 7, maxit = 30)
 #' anchor_review_obj <- review_mfrm_anchors(d1, "Person", c("Rater", "Criterion"), "Score")
 #' drift <- detect_anchor_drift(list(Wave1 = fit1, Wave2 = fit2))
 #' chain <- build_equating_chain(list(Wave1 = fit1, Wave2 = fit2))
@@ -5996,8 +6055,8 @@ print.summary.mfrm_linking_review <- function(x, ...) {
 #' existing evidence families into one case-level review surface:
 #'
 #' - element-level Infit / Outfit MnSq misfit from `diagnostics$fit`
-#'   (rows whose Infit or Outfit MnSq falls outside the 0.5-1.5 Linacre
-#'   acceptance band)
+#'   (rows whose Infit or Outfit MnSq falls outside the configured Linacre
+#'   heuristic review band, 0.5-1.5 by default)
 #' - strict marginal cell screens from `diagnostics$marginal_fit$top_cells`
 #' - strict pairwise screens from `diagnostics$marginal_fit$pairwise$top_pairs`
 #' - unexpected responses from [unexpected_response_table()]
@@ -6992,18 +7051,34 @@ print.summary.mfrm_weighting_review <- function(x, ...) {
     ))
   }
   if (identical(model, "GPCM")) {
+    capability <- .gpcm_capability_registry()
+    status_for <- function(capability_id) {
+      idx <- which(capability$CapabilityID == capability_id)
+      if (length(idx) != 1L) {
+        stop(
+          "Expected one bounded-GPCM capability for ID `",
+          capability_id,
+          "`; found ",
+          length(idx),
+          ".",
+          call. = FALSE
+        )
+      }
+      capability$Status[[idx]]
+    }
     return(tibble::tibble(
-      FullAPARoute = "blocked",
-      ScoreSideExport = "blocked",
-      LinkingSynthesis = "deferred",
-      RecoveryChecks = "supported_with_caveat",
-      FairAverage = "supported_with_caveat",
-      BiasScreening = "supported_with_caveat",
-      SummaryAppendix = "supported_with_caveat",
+      FullAPARoute = status_for("apa_export_bundles"),
+      ScoreSideExport = status_for("scorefile_export"),
+      LinkingSynthesis = status_for("linking_synthesis"),
+      RecoveryChecks = status_for("simulation_recovery"),
+      FairAverage = status_for("fair_average"),
+      BiasScreening = status_for("residual_bias_screening"),
+      SummaryAppendix = status_for("summary_appendix"),
       PrimaryHelpers = paste(
-        "gpcm_capability_matrix(); compare_mfrm(); build_weighting_review();",
-        "compute_information(); evaluate_mfrm_recovery(); fair_average_table();",
-        "estimate_bias(); export_summary_appendix()"
+        "gpcm_capability_matrix(); build_apa_outputs();",
+        "facets_output_file_bundle(include = \"score\"); build_linking_review();",
+        "evaluate_mfrm_recovery(); fair_average_table(); estimate_bias();",
+        "export_summary_appendix()"
       )
     ))
   }
@@ -7093,10 +7168,10 @@ print.summary.mfrm_weighting_review <- function(x, ...) {
       "Use AIC/BIC/logLik as fit evidence, not as a standalone scoring decision.",
       "Use only when comparing an RSM/PCM reference to bounded GPCM.",
       "Review item/rater/criterion information redistribution before changing the operational model.",
-      "Supported for RSM/PCM; blocked for bounded GPCM in this release.",
+      "Supported for RSM/PCM; available with explicit sensitivity-reporting caveats for bounded GPCM.",
       "Supported for RSM/PCM; supported with explicit SE caveat for bounded GPCM.",
       "Supported for RSM/PCM; conditional screening with profile-likelihood follow-up for bounded GPCM.",
-      "Available for direct supported outputs; fit-based bundles remain RSM/PCM only."
+      "Available for direct supported outputs; bounded-GPCM fit bundles remain sensitivity-reporting outputs with explicit caveats."
     )
   )
   if (isTRUE(has_gpcm)) {
@@ -7159,7 +7234,7 @@ print.summary.mfrm_weighting_review <- function(x, ...) {
 #' route, not every possible generalized partial-credit many-facet extension.
 #' The current route uses positive slopes, requires `slope_facet == step_facet`,
 #' identifies slopes on the log scale with geometric mean 1, and keeps several
-#' downstream score-side/reporting helpers outside the validated boundary.
+#' downstream score-side/reporting helpers outside the documented boundary.
 #'
 #' @return An object of class `mfrm_model_choice_review`.
 #' @seealso [compare_mfrm()], [build_weighting_review()],

@@ -38,16 +38,15 @@ public plotting family shown here.
 ```{r setup}
 library(mfrmr)
 
-toy <- load_mfrmr_data("example_core")
+toy <- load_mfrmr_data("example_operational")
 
 fit <- fit_mfrm(
   toy,
   person = "Person",
   facets = c("Rater", "Criterion"),
   score = "Score",
-  method = "JML",
-  model = "RSM",
-  maxit = 20
+  method = "MML",
+  model = "RSM"
 )
 
 diag <- diagnose_mfrm(fit, residual_pca = "none")
@@ -72,10 +71,12 @@ Interpretation:
 
 - Compare person density on the left to facet and step locations on the right.
 - Large gaps suggest weaker targeting in that logit region.
-- Wide overlap in confidence whiskers means neighboring levels are not cleanly separated.
+- Wide overlap in marginal confidence whiskers suggests imprecision; estimate
+  the relevant pairwise contrast directly before claiming that two levels are
+  separated or indistinguishable.
 
 The native view above remains the recommended analytic figure because it keeps
-facet/step uncertainty visible. For a closer FACETS-facing handoff, switch the
+facet uncertainty and fitted step locations visible. For a closer FACETS-facing handoff, switch the
 renderer and leave `show_ci` at its default `FALSE`. The fitted coordinates do
 not change.
 
@@ -93,9 +94,9 @@ plot(
 This renderer uses one common logit ruler, a `*` person-frequency column,
 signed facet headers, every facet level, and short labeled score-transition
 lines. It is FACETS-style visual correspondence, not a claim that `mfrmr` and FACETS
-produce numerically identical estimates. An external FACETS golden output and
-aligned estimator, identification, score, and orientation settings are still
-required for a numerical-equivalence statement. Set `show_ci = TRUE` only when
+produce numerically identical estimates. A numerical comparison requires output
+from a documented FACETS version and aligned estimator, identification, score,
+and orientation settings. Set `show_ci = TRUE` only when
 you deliberately want a hybrid FACETS-style ruler with the mfrmr uncertainty
 extension. Use `draw = FALSE` and inspect the `facets_style` tables when
 rebuilding the display with ggplot2 or another graphics system.
@@ -328,7 +329,7 @@ the package-native plot.
 
 ## 6. Secondary visual layer
 
-The package ships a second-wave visual layer for teaching and
+The package ships a complementary visual layer for teaching and
 diagnostic follow-up. These helpers are not default reporting figures;
 use them after the main screens above.
 

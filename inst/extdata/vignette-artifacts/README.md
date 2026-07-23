@@ -1,12 +1,8 @@
-These CSV files are lightweight vignette artifacts generated from the public
-`mfrmr-workflow` route. During CRAN-style vignette builds, heavy fitting and
-simulation chunks stay unevaluated, and the vignette reads these small tables
-to show representative output. Maintainers can regenerate the files with:
+These CSV files contain compact examples used by the `mfrmr-workflow`
+vignette. They let the installed vignette show the shape of fitted summaries,
+diagnostic summaries, plot-data objects, reporting tables, and export records
+without rerunning a model during document rendering.
 
-```r
-source(system.file("validation", "generate-vignette-artifacts.R", package = "mfrmr"))
-mfrmr_generate_vignette_artifacts(".")
-```
-
-For a source checkout, source `inst/validation/generate-vignette-artifacts.R`
-from the package root.
+The values are illustrative. They are not reference estimates, acceptance
+thresholds, or evidence that a new analysis is adequate. Reproduce results for
+your own data by running the corresponding workflow shown in the vignette.

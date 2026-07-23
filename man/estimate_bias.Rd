@@ -61,7 +61,7 @@ dominant bias direction (empty when not applicable)
 \item \code{recommended_action}: one-line recommended-action label routing
 the user to the appropriate follow-up helper
 \item \code{inference_tier}: summary label indicating that the bias rows are
-intended for screening and follow-up review in this release
+intended for screening and follow-up review
 \item \code{optimization_failures}: per-cell record of any inner-loop
 optimizer failures encountered while estimating the bias
 parameters; empty when every cell converged cleanly

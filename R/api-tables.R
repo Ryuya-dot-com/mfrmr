@@ -1014,7 +1014,7 @@ measurable_summary_table <- function(fit, diagnostics = NULL) {
 #'   Psychometrika, 47(2), 149-174. \doi{10.1007/BF02296272}
 #' - Linacre, J. M. (2002). What do Infit and Outfit, mean-square and
 #'   standardized mean? *Rasch Measurement Transactions, 16*(2), 878.
-#'   (Source for the 0.5-1.5 mean-square acceptance band and the
+#'   (Source for the 0.5-1.5 mean-square heuristic review interval and the
 #'   threshold-gap heuristics used in `summary(t8)$summary`.)
 #' - Wind, S. A. (2023). *Detecting rating scale malfunctioning with the
 #'   partial credit model and generalized partial credit model*.
@@ -1380,8 +1380,12 @@ bias_count_table <- function(bias_results,
 #' - `table`: residual unexpected responses after bias adjustment.
 #' - `thresholds`: screening settings used in this comparison.
 #'
-#' Large reductions indicate bias terms explain part of prior unexpectedness;
-#' persistent unexpected rows indicate remaining model-data mismatch.
+#' Lower after-adjustment counts describe an in-sample change in flags; they do
+#' not show that bias has been removed or establish fairness. For bounded
+#' `GPCM`, both the bias estimate and the post-adjustment comparison use the
+#' fitted slope-aware probability kernel while holding the other fitted
+#' quantities fixed. Read the returned `gpcm_boundary` before reporting the
+#' comparison.
 #'
 #' @section Typical workflow:
 #' 1. Run [unexpected_response_table()] as baseline.
@@ -1412,6 +1416,7 @@ bias_count_table <- function(bias_results,
 #' - `summary`: one-row summary (includes baseline-vs-after counts)
 #' - `thresholds`: applied thresholds
 #' - `facets`: analyzed bias facet pair
+#' - `gpcm_boundary`: bounded-`GPCM` interpretation guidance when applicable
 #'
 #' @seealso [estimate_bias()], [unexpected_response_table()], [bias_count_table()],
 #'   [mfrmr_visual_diagnostics]
@@ -1436,7 +1441,6 @@ unexpected_after_bias_table <- function(fit,
   if (!inherits(fit, "mfrm_fit")) {
     stop("`fit` must be an mfrm_fit object from fit_mfrm().")
   }
-  stop_if_gpcm_out_of_scope(fit, "unexpected_after_bias_table()")
   if (is.null(bias_results) || is.null(bias_results$table) || nrow(bias_results$table) == 0) {
     stop("`bias_results` must be output from estimate_bias() with non-empty `table`.")
   }
@@ -1503,6 +1507,10 @@ unexpected_after_bias_table <- function(fit,
       interaction_facets = bias_results$interaction_facets %||% c(bias_results$facet_a, bias_results$facet_b),
       interaction_order = bias_results$interaction_order %||% 2L,
       interaction_mode = bias_results$interaction_mode %||% "pairwise"
+    ),
+    gpcm_boundary = gpcm_capability_boundary_table(
+      fit,
+      helper = "unexpected_after_bias_table()"
     )
   )
   as_mfrm_bundle(out, "mfrm_unexpected_after_bias")
@@ -1810,12 +1818,15 @@ table1_specifications <- function(fit,
     stringsAsFactors = FALSE
   )
 
+  convergence <- mfrm_convergence_state(fit)
   convergence_control <- data.frame(
     Setting = c(
       "MaxIterations",
       "RelativeTolerance",
       "QuadPoints",
-      "Converged",
+      "OptimizerCodeZero",
+      "InferenceReady",
+      "ConvergenceSeverity",
       "FunctionEvaluations",
       "OptimizerMessage"
     ),
@@ -1823,7 +1834,9 @@ table1_specifications <- function(fit,
       as.character(est_ctl$maxit %||% NA_integer_),
       as.character(est_ctl$reltol %||% NA_real_),
       as.character(est_ctl$quad_points %||% NA_integer_),
-      as.character(isTRUE(ov$Converged[1])),
+      as.character(convergence$code_converged),
+      as.character(convergence$inference_ready),
+      as.character(convergence$severity),
       as.character(fit$opt$counts[["function"]] %||% NA_integer_),
       as.character(fit$opt$message %||% "")
     ),
@@ -2287,7 +2300,6 @@ table3_iteration_report <- function(fit,
   if (!inherits(fit, "mfrm_fit")) {
     stop("`fit` must be an mfrm_fit object from fit_mfrm().")
   }
-  stop_if_gpcm_out_of_scope(fit, "estimation_iteration_report()")
   cfg <- fit$config
   prep <- fit$prep
   sizes <- build_param_sizes(cfg)
@@ -2381,8 +2393,11 @@ table3_iteration_report <- function(fit,
   subset_tbl <- calc_subsets(compute_obs_table(fit), c("Person", cfg$facet_names))$summary
   connected <- if (!is.null(subset_tbl) && nrow(subset_tbl) > 0) nrow(subset_tbl) == 1 else NA
 
+  convergence <- mfrm_convergence_state(fit)
   summary_tbl <- data.frame(
-    FinalConverged = isTRUE(fit$summary$Converged[1]),
+    FinalConverged = convergence$inference_ready,
+    OptimizerCodeZero = convergence$code_converged,
+    ConvergenceSeverity = convergence$severity,
     FinalIterations = as.integer(fit$summary$Iterations[1]),
     ReplayRows = nrow(tbl),
     ConnectedSubset = connected,
@@ -6521,7 +6536,7 @@ plot_residual_pca <- function(x,
 #' - `recommended_action`: one-line recommended-action label routing
 #'   the user to the appropriate follow-up helper
 #' - `inference_tier`: summary label indicating that the bias rows are
-#'   intended for screening and follow-up review in this release
+#'   intended for screening and follow-up review
 #' - `optimization_failures`: per-cell record of any inner-loop
 #'   optimizer failures encountered while estimating the bias
 #'   parameters; empty when every cell converged cleanly

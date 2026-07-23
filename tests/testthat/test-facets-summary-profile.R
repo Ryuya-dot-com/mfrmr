@@ -27,6 +27,9 @@ test_that("fit profile stays lightweight and preserves the legacy fit contract",
     "overview", "facet_overview", "person_overview", "step_overview",
     "facet_extremes", "person_high", "person_low"
   ) %in% names(default_summary)))
+  default_print <- capture.output(print(default_summary))
+  expect_false(any(grepl("Highest person measures", default_print, fixed = TRUE)))
+  expect_false(any(grepl("Lowest person measures", default_print, fixed = TRUE)))
   expect_identical(default_summary$provenance$ComputePolicy, "never_fit_profile")
   expect_true(any(
     default_summary$section_status$Section == "diagnostics" &
@@ -37,6 +40,62 @@ test_that("fit profile stays lightweight and preserves the legacy fit contract",
     "must be TRUE or FALSE",
     fixed = TRUE
   )
+})
+
+test_that("step overview evaluates PCM and GPCM ladders within StepFacet", {
+  multi_ladder_fit <- fit_for_summary_profile
+  multi_ladder_fit$steps <- tibble::tibble(
+    StepFacet = rep(c("Criterion_A", "Criterion_B"), each = 3L),
+    Step = rep(c("Step_1", "Step_2", "Step_3"), times = 2L),
+    Estimate = c(-1, 0, 1, -2, -0.5, 0.75)
+  )
+
+  for (model in c("PCM", "GPCM")) {
+    model_fit <- multi_ladder_fit
+    model_fit$config$model <- model
+    model_fit$summary$Model <- model
+    fit_summary <- summary(model_fit, profile = "fit")
+
+    expect_identical(
+      as.character(fit_summary$step_overview$StepFacet),
+      c("Criterion_A", "Criterion_B"),
+      info = model
+    )
+    expect_identical(
+      fit_summary$step_overview$Steps,
+      c(3L, 3L),
+      info = model
+    )
+    expect_equal(
+      fit_summary$step_overview$Span,
+      c(2, 2.75),
+      info = model
+    )
+    expect_true(all(fit_summary$step_overview$Monotonic), info = model)
+    expect_false(any(grepl(
+      "Step estimates are not monotonic",
+      fit_summary$notes,
+      fixed = TRUE
+    )), info = model)
+  }
+
+  multi_ladder_fit$config$model <- "PCM"
+  multi_ladder_fit$summary$Model <- "PCM"
+  multi_ladder_fit$steps$Estimate[5:6] <- c(0.5, 0.25)
+  nonmonotone_summary <- summary(multi_ladder_fit, profile = "fit")
+  expect_identical(
+    nonmonotone_summary$step_overview$Monotonic,
+    c(TRUE, FALSE)
+  )
+  expect_true(any(grepl(
+    "Step estimates are not monotonic",
+    nonmonotone_summary$notes,
+    fixed = TRUE
+  )))
+
+  rsm_summary <- summary(fit_for_summary_profile, profile = "fit")
+  expect_equal(nrow(rsm_summary$step_overview), 1L)
+  expect_equal(rsm_summary$step_overview$Steps, nrow(fit_for_summary_profile$steps))
 })
 
 test_that("brief fit summaries lead with Wright and do not print person IDs", {
@@ -69,6 +128,43 @@ test_that("brief fit summaries lead with Wright and do not print person IDs", {
     function(id) any(grepl(id, printed, fixed = TRUE)),
     logical(1)
   )))
+
+  opted_in <- summary(
+    fit_for_summary_profile,
+    profile = "fit",
+    detail = "full",
+    include_person = TRUE
+  )
+  opted_in_print <- capture.output(print(opted_in))
+  expect_true(any(grepl("Highest person measures", opted_in_print, fixed = TRUE)))
+})
+
+test_that("small terminal gradients remain visible in the printed status", {
+  gradient_fit <- fit_for_summary_profile
+  gradient_fit$summary$TerminalGradientSupNorm <- 0.000232887
+  gradient_fit$summary$TerminalGradientRMS <- 0.000135901
+  gradient_fit$summary$GradientReviewTolerance <- 0.0001
+  gradient_fit$summary$ConvergenceStatus <- "converged_gradient_review"
+  gradient_fit$summary$ConvergenceSeverity <- "review"
+  gradient_fit$summary$InferenceReady <- FALSE
+
+  printed <- capture.output(print(summary(
+    gradient_fit,
+    profile = "fit",
+    detail = "brief"
+  ), digits = 3))
+  printed_text <- gsub("[[:space:]]+", " ", paste(printed, collapse = " "))
+
+  expect_match(
+    printed_text,
+    "maximum absolute gradient: 0.000233",
+    fixed = TRUE
+  )
+  expect_false(grepl(
+    "maximum absolute gradient: 0)",
+    printed_text,
+    fixed = TRUE
+  ))
 })
 
 test_that("facets profile reuses diagnostics and keeps explicit analysis boundaries", {
@@ -125,7 +221,10 @@ test_that("facets profile reuses diagnostics and keeps explicit analysis boundar
   )
   expect_identical(visual$Required, c(TRUE, FALSE, FALSE))
   expect_match(visual$Route[1], "show_ci = TRUE", fixed = TRUE)
+  expect_match(visual$Route[1], "top_n = Inf", fixed = TRUE)
   expect_match(visual$Route[2], "renderer = \"facets\"", fixed = TRUE)
+  expect_match(visual$Route[2], "show_ci = FALSE", fixed = TRUE)
+  expect_false(any(grepl("summary(fit", visual$Route, fixed = TRUE), na.rm = TRUE))
   expect_match(
     paste(visual$Route[2], visual$Detail[2]),
     "category_labels",
@@ -169,9 +268,10 @@ test_that("facets profile reuses diagnostics and keeps explicit analysis boundar
     printed,
     fixed = TRUE
   )))
-  expect_true(any(grepl("bias_dif", printed, fixed = TRUE)))
-  expect_true(any(grepl("residual_pca", printed, fixed = TRUE)))
-  expect_true(any(grepl("linking_drift", printed, fixed = TRUE)))
+  expect_true(any(grepl("Bias / DIF", printed, fixed = TRUE)))
+  expect_true(any(grepl("Residual PCA", printed, fixed = TRUE)))
+  expect_true(any(grepl("Linking / anchor drift", printed, fixed = TRUE)))
+  expect_false(any(grepl("not_computed_by_summary", printed, fixed = TRUE)))
   expect_false(any(vapply(
     person_ids,
     function(id) any(grepl(id, printed, fixed = TRUE)),
@@ -249,6 +349,11 @@ test_that("compute never exposes unavailable diagnostics without hidden work", {
       facets_summary$section_status$Status == "not_computed"
   ))
   expect_false(facets_summary$required_visual$Available[3])
+  expect_true(is.na(facets_summary$required_visual$Route[3]))
+  expect_false(any(
+    grepl("summary(fit", facets_summary$required_visual$Route, fixed = TRUE),
+    na.rm = TRUE
+  ))
   expect_true(any(
     facets_summary$analysis$triage$Area == "Section availability" &
       facets_summary$analysis$triage$Severity == "review"
@@ -295,7 +400,9 @@ test_that("data-frame compute never fits without running diagnostic workflow", {
   )
 
   data_result <- suppressWarnings(mfrm_results(
-    load_mfrmr_data("example_core"),
+    load_mfrmr_data("example_core")[, c(
+      "Person", "Rater", "Criterion", "Score"
+    )],
     include = "fit",
     compute = "never"
   ))

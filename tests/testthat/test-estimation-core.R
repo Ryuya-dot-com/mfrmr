@@ -504,7 +504,7 @@ test_that("GPCM core fits return positive discrimination tables", {
   }
 })
 
-test_that("GPCM config scaffold records slope identification metadata", {
+test_that("GPCM configuration records slope identification metadata", {
   d <- mfrmr:::sample_mfrm_data(seed = 42)
   prep <- mfrmr:::prepare_mfrm_data(
     d,
@@ -549,7 +549,7 @@ test_that("GPCM config scaffold records slope identification metadata", {
   expect_identical(idx$step_idx, idx$slope_idx)
 })
 
-test_that("GPCM slope scaffold expands positive slopes with geometric mean one", {
+test_that("GPCM slope parameterization has geometric mean one", {
   d <- mfrmr:::sample_mfrm_data(seed = 42)
   prep <- mfrmr:::prepare_mfrm_data(
     d,
@@ -637,6 +637,18 @@ test_that("latent-regression scaffolding requires person_data and MML", {
       person_data = person_tbl
     ),
     "requires `method = 'MML'`"
+  )
+
+  expect_error(
+    fit_mfrm(
+      d, "Person", c("Rater", "Task", "Criterion"), "Score",
+      method = "MML",
+      population_formula = ~ Grade,
+      person_data = person_tbl,
+      noncenter_facet = "Rater"
+    ),
+    "requires `noncenter_facet = \"Person\"`",
+    fixed = TRUE
   )
 })
 
@@ -892,6 +904,22 @@ test_that("optimizer diagnostics distinguish converged, reviewable, and hard war
   expect_false(isTRUE(converged$ReviewableWarning))
   expect_equal(converged$FunctionEvaluations, 18L)
   expect_equal(converged$GradientEvaluations, 17L)
+
+  gradient_review <- mfrmr:::build_optimizer_diagnostics(
+    opt = list(
+      convergence = 0L,
+      counts = stats::setNames(c(18L, 17L), c("function", "gradient")),
+      message = NULL
+    ),
+    gradient = c(5e-2, -2e-2),
+    reltol = 1e-6,
+    maxit = 50L,
+    optimizer_method = "BFGS"
+  )
+  expect_identical(gradient_review$ConvergenceStatus, "converged_gradient_review")
+  expect_identical(gradient_review$ConvergenceReason, "code_zero_large_gradient")
+  expect_identical(gradient_review$ConvergenceSeverity, "review")
+  expect_true(isTRUE(gradient_review$ReviewableWarning))
 
   reviewable <- mfrmr:::build_optimizer_diagnostics(
     opt = list(convergence = 1L, counts = stats::setNames(c(50L, 49L), c("function", "gradient")), message = "iteration limit"),

@@ -41,7 +41,7 @@ test_that("fit_mfrm returns all required components", {
   expect_type(fit$facets$others$Facet, "character")
 })
 
-test_that("summary.mfrm_fit reports legacy population basis for ordinary fits", {
+test_that("summary.mfrm_fit explains the ordinary MML population basis", {
   d <- mfrmr:::sample_mfrm_data(seed = 42)
   fit <- suppressWarnings(fit_mfrm(
     d, "Person", c("Rater", "Task", "Criterion"), "Score",
@@ -71,7 +71,9 @@ test_that("summary.mfrm_fit reports legacy population basis for ordinary fits", 
   expect_identical(as.character(s$population_overview$PosteriorBasis[1]), "legacy_mml")
   expect_true(all(c("StepFacet", "SlopeFacet", "NoncenterFacet", "QuadPoints") %in% names(s$settings_overview)))
   expect_true(all(c("Area", "CoveredHere", "CompanionOutput") %in% names(s$reporting_map)))
-  expect_true(any(grepl("legacy unconditional prior", s$notes, fixed = TRUE)))
+  expect_true(any(grepl("No population model was requested", s$notes, fixed = TRUE)))
+  expect_true(any(grepl("unconditional normal person distribution", s$notes, fixed = TRUE)))
+  expect_false(any(grepl("legacy", s$notes, ignore.case = TRUE)))
 })
 
 test_that("GPCM summaries expose slope overview and diagnostics are now available", {
@@ -171,11 +173,14 @@ test_that("curve/report GPCM workflows open where the probability kernel is alre
   expect_s3_class(cc, "mfrm_category_curves")
   expect_true(all(c("graphfile", "graphfile_syntactic", "settings") %in% names(out_graph)))
 
-  expect_error(
-    estimation_iteration_report(fit, max_iter = 3),
-    "does not support `GPCM` fits",
-    fixed = TRUE
-  )
+  replay <- suppressWarnings(estimation_iteration_report(fit, max_iter = 3))
+  expect_s3_class(replay, "mfrm_iteration_report")
+  expect_true(all(c("table", "summary", "settings", "gpcm_boundary") %in% names(replay)))
+  expect_gt(nrow(replay$table), 0L)
+  expect_true(any(is.finite(replay$table$Objective)))
+  expect_equal(nrow(replay$gpcm_boundary), 1L)
+  expect_identical(replay$gpcm_boundary$Status[1], "supported_with_caveat")
+  expect_match(replay$gpcm_boundary$Boundary[1], "replay", ignore.case = TRUE)
   out_score <- facets_output_file_bundle(fit, include = "score", write_files = FALSE)
   expect_s3_class(out_score, "mfrm_output_bundle")
   expect_true(all(c("scorefile", "gpcm_score_side_contract", "gpcm_boundary") %in% names(out_score)))

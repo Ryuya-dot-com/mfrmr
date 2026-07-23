@@ -126,23 +126,30 @@ Start with \code{summary(res)}. The most useful fields are:
 \item \code{status}: which sections were available, skipped, or unsupported
 \item \code{plot_map}: the supported \code{plot(res, type = ...)} routes for this object
 \item \code{next_actions}: recommended follow-up calls
-\item \code{reproducible_code}: replay scaffold for the first-screen route
+\item \code{reproducible_code}: replay script for the first-screen route
 }
 }
 
 \section{Data-frame input}{
 
-Direct data-frame input is intentionally conservative. It is intended for
-standard columns such as \code{Person}, \code{Score}, \code{Rater}, and \code{Criterion}. For
-research scripts, use \code{\link[=fit_mfrm]{fit_mfrm()}} or \code{\link[=run_mfrm_facets]{run_mfrm_facets()}} explicitly when
-column roles, model, method, anchors, or missing-data rules need to be
-documented. Use \code{\link[=mfrm_results_interactive]{mfrm_results_interactive()}} only when you want an opt-in
-column-selection wizard in an interactive session.
+Direct data-frame input is intentionally narrow. It accepts unambiguous
+\code{Person} / \code{Score} columns and familiar facet-role names such as \code{Rater},
+\code{Item}, \code{Task}, or \code{Criterion}, and fits the \code{RSM} / \code{MML} route. It stops
+when other columns could be metadata, grouping variables, or background
+variables rather than silently treating them as measurement facets. For
+research scripts, use \code{\link[=fit_mfrm]{fit_mfrm()}} explicitly so column roles, model,
+method, anchors, and missing-data rules are recorded. Use
+\code{\link[=mfrm_results_interactive]{mfrm_results_interactive()}} only for opt-in column selection at the console.
 }
 
 \section{Visualization and HTML}{
 
-\code{plot(res)} routes to a FACETS-style model-level visual bundle by default.
+\code{plot(res)} routes to the primary native Wright map when the fitted object
+contains compatible person and facet locations. This default retains
+available mfrmr facet uncertainty. Use \code{plot(res, type = "fit")} when the
+explicit three-plot Wright/pathway/category bundle is wanted. The compact
+native default discloses any omitted facet locations in its subtitle and
+\code{data$retention}; use \code{plot(res, top_n = Inf)} for a complete final map.
 Other routes include \code{plot(res, type = "wright")}, \code{"pathway"},
 \code{"fit_pathway"}, \code{"qc"}, \code{"category"}, \code{"anchors"}, \code{"response_time"},
 and \code{"tables"}. The Wright map is the required first fitted-scale artifact;
@@ -151,9 +158,9 @@ and measure on the vertical axis. \code{output = "html"} writes a
 lightweight temporary HTML file;
 use \code{\link[=launch_mfrmr_viewer]{launch_mfrmr_viewer()}} when you want an optional local Shiny reader
 for an already-created \code{mfrm_results} object. Use
-\code{\link[=export_mfrm_results]{export_mfrm_results()}} for a lightweight download of the comprehensive
+\code{\link[=export_mfrm_results]{export_mfrm_results()}} for a compact analysis archive of the comprehensive
 results object, or \code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}} when a fit-centered durable
-analysis archive is needed.
+analysis archive is needed. Neither route deidentifies its contents.
 }
 
 \section{Typical workflow}{
@@ -162,13 +169,15 @@ analysis archive is needed.
 \item Fit explicitly with \code{\link[=fit_mfrm]{fit_mfrm()}} in scripts and manuscripts.
 \item Call \code{res <- mfrm_results(fit)}.
 \item Read \code{summary(res, view = "brief")}, then create the required
-\code{plot(res, type = "wright", show_ci = TRUE)} artifact.
+\code{plot(res, type = "wright", show_ci = TRUE, top_n = Inf)} artifact.
 \item Read \code{summary(res)$triage}, \code{summary(res)$status},
 \code{summary(res)$plot_map}, and \code{summary(res)$next_actions}.
 \item Call \code{report <- mfrm_report(res)} when a report-ready surface is needed.
 \item Use \code{export_mfrm_results(res, preset = "starter")} to write the Wright
 map, CSV, report, RDS, replay, and
-manifest files for handoff or review.
+manifest files for controlled review. Treat the folder as potentially
+identifying unless it has been separately transformed and reviewed under
+the applicable data-handling policy.
 \item Use \code{plot(res, type = "fit_pathway", include_person = TRUE, top_n_person = 12, person_labels = "none", facet_labels = "flagged")}
 or
 \code{plot(res, type = "qc")} for focused visual follow-up.
@@ -190,6 +199,10 @@ fit <- fit_mfrm(toy_small, "Person", c("Rater", "Criterion"), "Score",
                 method = "JML", maxit = 30)
 res <- mfrm_results(fit)
 
+wright <- plot(res, draw = FALSE)
+wright$name
+fit_bundle <- plot(res, type = "fit", draw = FALSE)
+
 sx <- summary(res)
 sx$overview
 sx$triage
@@ -199,10 +212,10 @@ mfrm_results(fit, include = "validation", output = "summary")$status
 
 plot(res, type = "qc", draw = FALSE)
 
-# Direct data-frame input is available for conservative exploratory use
-# when Person and Score columns are unambiguous.
+# Direct data-frame input is available only after selecting unambiguous
+# measurement columns. Extra study/group columns require an explicit fit.
 mfrm_results(
-  toy_small,
+  toy_small[, c("Person", "Rater", "Criterion", "Score")],
   include = c("fit", "diagnostics"),
   output = "summary"
 )$mapping

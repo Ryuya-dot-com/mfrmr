@@ -559,6 +559,14 @@ build_wright_map_data <- function(x,
                                   wright_range = NULL,
                                   extreme_placement = c("ends", "estimate"),
                                   persons_per_star = NULL) {
+  top_n <- suppressWarnings(as.numeric(top_n[1]))
+  if (length(top_n) != 1L || is.na(top_n) || top_n <= 0) {
+    stop("`top_n` must be a positive number or `Inf`.", call. = FALSE)
+  }
+  if (is.finite(top_n)) {
+    top_n <- as.integer(floor(top_n))
+    if (top_n < 1L) stop("`top_n` must be at least 1 or `Inf`.", call. = FALSE)
+  }
   wright_style <- match_wright_style(wright_style, renderer = renderer)
   person_tbl <- tibble::as_tibble(x$facets$person)
   person_tbl <- person_tbl[is.finite(person_tbl$Estimate), , drop = FALSE]
@@ -576,10 +584,29 @@ build_wright_map_data <- function(x,
     tibble::tibble()
   }
   step_tbl <- if (nrow(step_points) > 0) {
+    categories <- seq(x$prep$rating_min, x$prep$rating_max)
+    score_labels <- wright_score_labels(
+      x,
+      categories = categories,
+      category_labels = category_labels
+    )
+    step_index <- suppressWarnings(as.integer(step_points$StepIndex))
+    if (length(step_index) != nrow(step_points) || any(!is.finite(step_index))) {
+      step_index <- step_index_from_label(step_points$Step)
+    }
+    lower_label <- score_labels$DisplayLabel[step_index]
+    upper_label <- score_labels$DisplayLabel[step_index + 1L]
+    transition_label <- ifelse(
+      !is.na(lower_label) & !is.na(upper_label),
+      paste0(lower_label, " -> ", upper_label),
+      as.character(step_points$Step)
+    )
     tibble::tibble(
       PlotType = "Step threshold",
       Group = if ("CurveGroup" %in% names(step_points)) paste0("Step:", step_points$CurveGroup) else "Step",
-      Label = step_points$Step,
+      Label = transition_label,
+      Step = as.character(step_points$Step),
+      StepIndex = step_index,
       Estimate = step_points$Threshold
     )
   } else {
@@ -637,10 +664,49 @@ build_wright_map_data <- function(x,
   }
   point_tbl <- dplyr::bind_rows(facet_pts, step_tbl)
   if (nrow(point_tbl) == 0) stop("No facet/step locations available for Wright map.")
+  location_totals <- c(
+    `Facet level` = sum(point_tbl$PlotType %in% "Facet level"),
+    `Step threshold` = sum(point_tbl$PlotType %in% "Step threshold")
+  )
 
   if (identical(wright_style, "native") && nrow(point_tbl) > top_n) {
-    point_tbl <- point_tbl[order(abs(point_tbl$Estimate), decreasing = TRUE), , drop = FALSE]
-    point_tbl <- utils::head(point_tbl, top_n)
+    # Category transitions are part of the scale definition, so keep every
+    # step label even when facet-level locations are compacted by `top_n`.
+    step_keep <- point_tbl$PlotType %in% "Step threshold"
+    step_rows <- point_tbl[step_keep, , drop = FALSE]
+    facet_rows <- point_tbl[!step_keep, , drop = FALSE]
+    facet_rows <- facet_rows[
+      order(abs(facet_rows$Estimate), decreasing = TRUE),
+      ,
+      drop = FALSE
+    ]
+    facet_limit <- max(0L, top_n - nrow(step_rows))
+    facet_rows <- utils::head(facet_rows, facet_limit)
+    point_tbl <- dplyr::bind_rows(facet_rows, step_rows)
+  }
+  location_shown <- c(
+    `Facet level` = sum(point_tbl$PlotType %in% "Facet level"),
+    `Step threshold` = sum(point_tbl$PlotType %in% "Step threshold")
+  )
+  retention <- tibble::tibble(
+    Component = c(names(location_totals), "All locations"),
+    Shown = as.integer(c(location_shown, sum(location_shown))),
+    Total = as.integer(c(location_totals, sum(location_totals))),
+    Omitted = as.integer(c(location_totals - location_shown, sum(location_totals - location_shown))),
+    RequestedTopN = rep(top_n, 3L)
+  )
+  retention$Complete <- retention$Omitted == 0L
+  omitted_facets <- retention$Omitted[retention$Component == "Facet level"]
+  retention_note <- if (length(omitted_facets) == 1L && omitted_facets > 0L) {
+    paste0(
+      "Compact native view: showing ",
+      retention$Shown[retention$Component == "Facet level"],
+      " of ", retention$Total[retention$Component == "Facet level"],
+      " facet locations; ", omitted_facets,
+      " omitted. Use `top_n = Inf` for the complete final map."
+    )
+  } else {
+    ""
   }
 
   group_levels <- unique(point_tbl$Group)
@@ -661,14 +727,20 @@ build_wright_map_data <- function(x,
     y_range <- center + c(-0.5, 0.5)
   }
 
-  label_tbl <- point_tbl |>
+  step_label_tbl <- point_tbl |>
+    dplyr::filter(.data$PlotType == "Step threshold")
+  facet_label_tbl <- point_tbl |>
+    dplyr::filter(.data$PlotType != "Step threshold") |>
     dplyr::group_by(.data$Group) |>
     dplyr::slice(c(1L, dplyr::n())) |>
     dplyr::ungroup() |>
     dplyr::distinct(.data$Group, .data$Label, .keep_all = TRUE)
-  if (nrow(label_tbl) > top_n) {
-    label_tbl <- utils::head(label_tbl, top_n)
+  facet_label_limit <- max(0L, top_n - nrow(step_label_tbl))
+  if (nrow(facet_label_tbl) > facet_label_limit) {
+    facet_label_tbl <- utils::head(facet_label_tbl, facet_label_limit)
   }
+  label_tbl <- dplyr::bind_rows(facet_label_tbl, step_label_tbl) |>
+    dplyr::distinct(.data$Group, .data$Label, .keep_all = TRUE)
 
   group_summary <- point_tbl |>
     dplyr::group_by(.data$Group, .data$PlotType) |>
@@ -708,7 +780,9 @@ build_wright_map_data <- function(x,
     group_summary = group_summary,
     group_levels = group_levels,
     y_range = y_range,
-    label_limit = top_n
+    label_limit = top_n,
+    retention = retention,
+    retention_note = retention_note
   )
   if (identical(wright_style, "facets_style")) {
     out$facets_style <- build_facets_style_wright_data(
@@ -932,6 +1006,17 @@ draw_wright_map <- function(plot_data,
     bty = "n",
     cex = 0.9
   )
+  retention_note <- as.character(plot_data$retention_note %||% "")
+  if (length(retention_note) > 0L && nzchar(retention_note[1])) {
+    graphics::mtext(
+      retention_note[1],
+      side = 1,
+      line = 7.4,
+      adj = 0,
+      cex = 0.68,
+      col = "#9A3412"
+    )
+  }
 }
 
 build_pathway_map_data <- function(x,
@@ -1776,16 +1861,20 @@ draw_facet_plot <- function(facet_tbl,
 #' Plot fitted MFRM results with base R
 #'
 #' @param x An `mfrm_fit` object from [fit_mfrm()].
-#' @param type Plot type. Use `NULL`, `"bundle"`, or `"all"` for the
-#'   three-part fit bundle; otherwise choose one of `"facet"`, `"person"`,
+#' @param type Plot type. Omit `type` (or use `NULL` / `"wright"`) for the
+#'   primary native Wright map. Use `"bundle"`, `"all"`, or `"default"` for
+#'   the three-part fit bundle; otherwise choose one of `"facet"`, `"person"`,
 #'   `"step"`, `"wright"`, `"pathway"`, `"fit_pathway"`, `"ccc"`,
 #'   `"ccc_surface"`, or `"category_surface"`. `"pathway"` is the
 #'   theta-to-expected-score display; `"fit_pathway"` is the
 #'   fit-statistic-to-measure display.
 #' @param facet Optional facet name for `type = "facet"`.
 #' @param top_n Maximum number of facet/step locations retained by the native
-#'   Wright map for compact displays. The FACETS-style payload always retains
-#'   every fitted facet and step location.
+#'   Wright map for compact displays. Step transitions are always retained;
+#'   any omitted facet locations are counted in the returned `retention` table
+#'   and disclosed in the plot subtitle/note. Use `Inf` for a complete
+#'   all-level final map. The FACETS-style payload always retains every fitted
+#'   facet and step location.
 #' @param theta_range Numeric length-2 range for pathway, CCC, and
 #'   category-surface plot data.
 #' @param theta_points Number of theta grid points used for pathway, CCC, and
@@ -1793,10 +1882,12 @@ draw_facet_plot <- function(facet_tbl,
 #' @param title Optional custom title.
 #' @param palette Optional color overrides.
 #' @param label_angle Rotation angle for x-axis labels where applicable.
-#' @param show_ci If `TRUE`, add approximate confidence intervals when
-#'   available. The formal default is `FALSE`; `type = "fit_pathway"` is the
-#'   exception and displays intervals when this argument is omitted. Pass
-#'   `show_ci = FALSE` explicitly to suppress them there.
+#' @param show_ci Whether to add approximate confidence intervals when
+#'   available. `NULL` selects the display-specific default: `TRUE` for the
+#'   primary native Wright map and `type = "fit_pathway"`, and `FALSE` for the
+#'   FACETS-style ruler and other plot types. With `renderer = "facets"`,
+#'   explicitly setting `show_ci = TRUE` creates a hybrid display: FACETS-style
+#'   ruler grammar with mfrmr uncertainty intervals.
 #' @param ci_level Confidence level used when `show_ci = TRUE`.
 #' @param group Optional grouping for `type = "wright"` to overlay
 #'   per-group person-density curves (DIF / DFF screening view).
@@ -1841,13 +1932,16 @@ draw_facet_plot <- function(facet_tbl,
 #'   or `"monochrome"`).
 #' @param renderer Wright-map renderer. Use `"native"` (default) or
 #'   `"facets"` for the FACETS Table 6-style visual layout. This is the
-#'   canonical selector for new code.
+#'   canonical selector for new code. The native map is the primary display
+#'   and includes available facet uncertainty by default. The closest
+#'   FACETS-style visual uses `show_ci = FALSE`.
 #' @param wright_style Wright-map renderer. `"native"` preserves the package's
 #'   histogram, point, range, and facet-SE display. `"facets_style"` adds a
 #'   FACETS Table 6-style text ruler with person-frequency stars, signed facet
 #'   headers, and labeled score-transition lines. It is a visual-layout option,
 #'   not a claim of numerical equivalence with FACETS. This explicit style name
-#'   is equivalent to `renderer = "facets"`.
+#'   is equivalent to `renderer = "facets"`. Adding `show_ci = TRUE` to that
+#'   style is an mfrmr/FACETS hybrid rather than the closest FACETS-style view.
 #' @param category_labels Optional score rubric labels used by
 #'   `wright_style = "facets_style"`. Supply a named character vector keyed by
 #'   original score, an unnamed vector with one label per retained category, or
@@ -1868,6 +1962,12 @@ draw_facet_plot <- function(facet_tbl,
 #' first inspection). Pass `type = "bundle"` (or `"all"` / `"default"`)
 #' to obtain the legacy three-plot `mfrm_plot_bundle` containing a
 #' Wright map, pathway map, and category characteristic curves. The
+#' compact native default records any omitted facet locations in
+#' `data$retention` and annotates the subtitle and drawn figure; use
+#' `top_n = Inf` to retain every fitted location in the final Wright map.
+#' Native text labels remain collision-aware, so a retained point may be
+#' unlabeled; its exact level and estimate remain available in the returned
+#' plot data. The
 #' returned object always carries machine-readable metadata through
 #' the `mfrm_plot_data` contract, even when the plot is drawn
 #' immediately.
@@ -1888,7 +1988,10 @@ draw_facet_plot <- function(facet_tbl,
 #' Its `facets_style` payload contains tidy ruler, person-frequency, facet,
 #' step, mean-half-score, header, category-label, and settings tables for custom
 #' graphics. The styling emulates the semantics of FACETS Table 6; estimates
-#' and standard errors remain those produced by `mfrmr`.
+#' and standard errors remain those produced by `mfrmr`. Use
+#' `show_ci = FALSE` for the closest FACETS-style rendering. If
+#' `show_ci = TRUE` is requested, interpret the result as a hybrid that adds
+#' mfrmr uncertainty intervals to FACETS-style ruler grammar.
 #'
 #' `type = "pathway"` shows expected score
 #' traces and dominant-category regions across theta. This expected-score
@@ -1932,15 +2035,16 @@ draw_facet_plot <- function(facet_tbl,
 #' @concept confidence intervals
 #' @concept visual diagnostics
 #' @concept shrinkage
-#' @examplesIf interactive()
-#' toy <- load_mfrmr_data("example_core")
+#' @examples
+#' toy <- load_mfrmr_data("example_operational")
 #' fit <- fit_mfrm(
 #'   toy,
 #'   "Person",
 #'   c("Rater", "Criterion"),
 #'   "Score",
-#'   method = "JML",
+#'   method = "MML",
 #'   model = "RSM",
+#'   quad_points = 7,
 #'   maxit = 30
 #' )
 #' wright <- plot(fit, draw = FALSE)
@@ -1993,7 +2097,7 @@ plot.mfrm_fit <- function(x,
                           title = NULL,
                           palette = NULL,
                           label_angle = 45,
-                          show_ci = FALSE,
+                          show_ci = NULL,
                           ci_level = 0.95,
                           group = NULL,
                           diagnostics = NULL,
@@ -2022,8 +2126,15 @@ plot.mfrm_fit <- function(x,
   if (!inherits(x, "mfrm_fit")) {
     stop("`x` must be an mfrm_fit object from fit_mfrm().")
   }
-  show_ci_missing <- missing(show_ci)
-  top_n <- max(1L, as.integer(top_n))
+  show_ci_auto <- missing(show_ci) || is.null(show_ci)
+  top_n <- suppressWarnings(as.numeric(top_n[1]))
+  if (length(top_n) != 1L || is.na(top_n) || top_n <= 0) {
+    stop("`top_n` must be a positive number or `Inf`.", call. = FALSE)
+  }
+  if (is.finite(top_n)) {
+    top_n <- as.integer(floor(top_n))
+    if (top_n < 1L) stop("`top_n` must be at least 1 or `Inf`.", call. = FALSE)
+  }
   theta_points <- max(51L, as.integer(theta_points))
   theta_range <- as.numeric(theta_range)
   style <- resolve_plot_preset(preset)
@@ -2032,10 +2143,34 @@ plot.mfrm_fit <- function(x,
     stop("`theta_range` must be a numeric length-2 vector with increasing values.")
   }
 
+  # Resolve the primary route before deciding the uncertainty default. Native
+  # Wright maps retain mfrmr's uncertainty advantage; the FACETS-style ruler
+  # stays closest to its source grammar unless a hybrid is requested explicitly.
+  if (missing(type) || is.null(type)) {
+    type <- "wright"
+  }
+  requested_type <- tolower(as.character(type[1]))
+  bundle_requested <- requested_type %in% c("bundle", "all", "default")
+  if (isTRUE(show_ci_auto)) {
+    show_ci <- isTRUE(
+      (requested_type %in% "wright" || bundle_requested) &&
+        identical(wright_style, "native")
+    ) || requested_type %in% "fit_pathway"
+  } else if (!is.logical(show_ci) || length(show_ci) != 1L || is.na(show_ci)) {
+    stop("`show_ci` must be NULL, TRUE, or FALSE.", call. = FALSE)
+  }
+
   as_plot_data <- function(name, data) {
     data_names <- names(data) %||% rep("", length(data))
     duplicated_named <- nzchar(data_names) & duplicated(data_names, fromLast = TRUE)
     new_mfrm_plot_data(name, data[!duplicated_named])
+  }
+  append_retention_subtitle <- function(plot_object) {
+    note <- as.character(plot_object$data$retention_note %||% "")
+    if (length(note) > 0L && nzchar(note[1])) {
+      plot_object$data$subtitle <- paste(plot_object$data$subtitle, note[1], sep = " - ")
+    }
+    plot_object
   }
 
   se_tbl_ci <- if (isTRUE(show_ci) || !is.null(diagnostics)) {
@@ -2044,14 +2179,9 @@ plot.mfrm_fit <- function(x,
     NULL
   }
 
-  # Default routing: a bare plot(fit) call now renders the Wright map
-  # alone. The previous three-plot bundle (Wright + pathway + CCC) is
-  # still available via plot(fit, type = "bundle") for users who want
-  # the combined FACETS-style overview.
-  if (missing(type) || is.null(type)) {
-    type <- "wright"
-  }
-  if (tolower(as.character(type[1])) %in% c("bundle", "all", "default")) {
+  # A bare plot(fit) call renders the primary native Wright map. The previous
+  # three-plot bundle (Wright + pathway + CCC) remains explicit.
+  if (isTRUE(bundle_requested)) {
     out <- list(
       wright_map = as_plot_data("wright_map", c(
         build_wright_map_data(
@@ -2068,9 +2198,21 @@ plot.mfrm_fit <- function(x,
         list(
           title = title %||% "Wright map",
           subtitle = if (identical(wright_style, "facets_style")) {
-            "FACETS Table 6-style visual layout (mfrmr estimates)"
+            if (isTRUE(show_ci)) {
+              "Hybrid: FACETS Table 6-style ruler with mfrmr uncertainty intervals"
+            } else {
+              "FACETS Table 6-style visual layout (mfrmr estimates)"
+            }
           } else {
             "Shared logit scale for persons, facets, and thresholds"
+          },
+          show_ci = isTRUE(show_ci),
+          uncertainty_display = if (identical(wright_style, "facets_style")) {
+            if (isTRUE(show_ci)) "hybrid_mfrmr_ci" else "facets_style_no_ci"
+          } else if (isTRUE(show_ci)) {
+            "native_mfrmr_ci"
+          } else {
+            "native_no_ci"
           },
           preset = style$name,
           legend = new_plot_legend(
@@ -2119,6 +2261,7 @@ plot.mfrm_fit <- function(x,
         )
       ))
     )
+    out$wright_map <- append_retention_subtitle(out$wright_map)
     class(out) <- c("mfrm_plot_bundle", class(out))
     if (isTRUE(draw)) {
       apply_plot_preset(style)
@@ -2263,7 +2406,11 @@ plot.mfrm_fit <- function(x,
       list(
         title = title %||% "Wright map",
         subtitle = if (identical(wright_style, "facets_style")) {
-          "FACETS Table 6-style visual layout (mfrmr estimates; not numerical equivalence)"
+          if (isTRUE(show_ci)) {
+            "Hybrid: FACETS Table 6-style ruler with mfrmr uncertainty intervals"
+          } else {
+            "FACETS Table 6-style visual layout (mfrmr estimates; not numerical equivalence)"
+          }
         } else if (is.null(group_payload)) {
           "Shared logit scale for persons, facets, and thresholds"
         } else {
@@ -2271,6 +2418,14 @@ plot.mfrm_fit <- function(x,
             "Shared logit scale; person density split by `%s` (%d level(s))",
             group, length(unique(group_payload$Group))
           )
+        },
+        show_ci = isTRUE(show_ci),
+        uncertainty_display = if (identical(wright_style, "facets_style")) {
+          if (isTRUE(show_ci)) "hybrid_mfrmr_ci" else "facets_style_no_ci"
+        } else if (isTRUE(show_ci)) {
+          "native_mfrmr_ci"
+        } else {
+          "native_no_ci"
         },
         group = group_payload,
         preset = style$name,
@@ -2283,6 +2438,7 @@ plot.mfrm_fit <- function(x,
         reference_lines = new_reference_lines("h", 0, "Centered logit reference", "dashed", "reference")
       )
     ))
+    out <- append_retention_subtitle(out)
     if (isTRUE(draw)) {
       apply_plot_preset(style)
       draw_wright_map(
@@ -2325,7 +2481,7 @@ plot.mfrm_fit <- function(x,
     return(invisible(out))
   }
   if (type == "fit_pathway") {
-    fit_pathway_show_ci <- if (isTRUE(show_ci_missing)) TRUE else isTRUE(show_ci)
+    fit_pathway_show_ci <- isTRUE(show_ci)
     out <- as_plot_data("fit_pathway", c(
       build_fit_pathway_data(
         x,

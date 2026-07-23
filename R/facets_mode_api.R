@@ -94,7 +94,8 @@ infer_facets_mode_mapping <- function(dat, person = NULL, facets = NULL, score =
 #' @param positive_facets Optional facets with positive orientation.
 #' @param quad_points Quadrature points for MML; passed to [fit_mfrm()].
 #' @param maxit Maximum optimizer iterations.
-#' @param reltol Optimization tolerance.
+#' @param reltol Relative optimizer tolerance passed to [fit_mfrm()]. The
+#'   default is `1e-9`.
 #' @param mml_engine MML optimization engine passed to [fit_mfrm()]. Applies
 #'   only when `method = "MML"`.
 #' @param top_n_interactions Number of rows for interaction diagnostics.
@@ -207,7 +208,7 @@ run_mfrm_facets <- function(data,
                             positive_facets = NULL,
                             quad_points = 15,
                             maxit = 400,
-                            reltol = 1e-6,
+                            reltol = 1e-9,
                             mml_engine = c("direct", "em", "hybrid"),
                             top_n_interactions = 20L) {
   model <- toupper(match.arg(model))
@@ -315,7 +316,7 @@ mfrmRFacets <- function(data,
                         positive_facets = NULL,
                         quad_points = 15,
                         maxit = 400,
-                        reltol = 1e-6,
+                        reltol = 1e-9,
                         mml_engine = c("direct", "em", "hybrid"),
                         top_n_interactions = 20L) {
   run_mfrm_facets(

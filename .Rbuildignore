@@ -4,6 +4,7 @@
 ^\.{2}Rcheck$
 ^mfrmr\.Rcheck$
 ^mfrmr_[0-9.]+\.tar\.gz$
+^Rplots[.]pdf$
 ^src/.*[.](o|so|dll|dylib)$
 ^src/.*[.](gcda|gcno|gcov)$
 ^src/symbols[.]rds$
@@ -28,6 +29,11 @@
 ^Library$
 ^Outputs$
 ^validation-results$
+^tmp$
 ^man/.*DESKTOP-.*\.Rd$
 ^revdep$
 ^design-notes$
+^inst/validation$
+^tests/testthat/test-external-recovery-review[.]R$
+^tests/testthat/test-recovery-validation-protocol[.]R$
+^tests/testthat/test-release-readiness-protocol[.]R$
