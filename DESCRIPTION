@@ -57,6 +57,7 @@ Suggests:
     flextable,
     future.apply,
     shiny,
+    ggplot2 (>= 3.4.0),
     mirt,
     TAM,
     eRm

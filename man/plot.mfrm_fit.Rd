@@ -19,6 +19,16 @@
   group = NULL,
   diagnostics = NULL,
   include_fit_measures = TRUE,
+  fit_stat = c("Infit", "Outfit"),
+  fit_scale = c("mnsq", "zstd"),
+  zstd_method = c("engine", "facets"),
+  include_person = FALSE,
+  person_subset = NULL,
+  top_n_person = 30,
+  person_labels = c("flagged", "all", "none"),
+  panel = c("combined", "facet"),
+  fit_range = c(0.5, 1.5),
+  zstd_cut = 2,
   draw = TRUE,
   preset = c("standard", "publication", "compact", "monochrome"),
   ...
@@ -29,8 +39,10 @@
 
 \item{type}{Plot type. Use \code{NULL}, \code{"bundle"}, or \code{"all"} for the
 three-part fit bundle; otherwise choose one of \code{"facet"}, \code{"person"},
-\code{"step"}, \code{"wright"}, \code{"pathway"}, \code{"ccc"}, \code{"ccc_surface"}, or
-\code{"category_surface"}.}
+\code{"step"}, \code{"wright"}, \code{"pathway"}, \code{"fit_pathway"}, \code{"ccc"},
+\code{"ccc_surface"}, or \code{"category_surface"}. \code{"pathway"} is the
+theta-to-expected-score display; \code{"fit_pathway"} is the
+fit-statistic-to-measure display.}
 
 \item{facet}{Optional facet name for \code{type = "facet"}.}
 
@@ -70,6 +82,35 @@ pathway plot data reuse it for \code{fit_measures}, \code{fit_status}, and
 tidy fit-measure and fit-status tables for custom R graphics. Set to
 \code{FALSE} when only the curve coordinates are needed.}
 
+\item{fit_stat}{For \code{type = "fit_pathway"}, the horizontal fit statistic:
+\code{"Infit"} (default) or \code{"Outfit"}.}
+
+\item{fit_scale}{For \code{type = "fit_pathway"}, use mean squares (\code{"mnsq"})
+or standardized fit (\code{"zstd"}) on the horizontal axis.}
+
+\item{zstd_method}{For a ZSTD fit pathway, use the package engine degrees
+of freedom (\code{"engine"}, default) or the FACETS/Wright-Masters companion
+calculation (\code{"facets"}). The latter is a comparison aid, not a claim of
+complete FACETS output equivalence.}
+
+\item{include_person}{If \code{TRUE}, include person rows in a fit pathway.}
+
+\item{person_subset}{Optional character vector of person IDs retained in a
+fit pathway before ranking.}
+
+\item{top_n_person}{Maximum person rows retained in a fit pathway, ranked
+by distance from expected fit. Use \code{Inf} for all selected persons.}
+
+\item{person_labels}{Person-label policy for a fit pathway: \code{"flagged"}
+(default), \code{"all"}, or \code{"none"}.}
+
+\item{panel}{Fit-pathway layout: \code{"combined"} (distinguish persons by
+shape) or \code{"facet"} (one base-graphics panel per facet).}
+
+\item{fit_range}{Mean-square review lines for a fit pathway.}
+
+\item{zstd_cut}{Absolute ZSTD review line for a fit pathway.}
+
 \item{draw}{If \code{TRUE}, draw the plot with base graphics.}
 
 \item{preset}{Visual preset (\code{"standard"}, \code{"publication"}, \code{"compact"},
@@ -105,9 +146,11 @@ Facets listed in \code{fit_mfrm(positive_facets = ...)} are reversed
 (higher values raise expected scores); state the active orientation in
 figure captions when reporting. \code{type = "pathway"} shows expected score
 traces and dominant-category regions across theta. This expected-score
-display is distinct from the Bond-and-Fox-style measure-versus-fit
-"pathway" bubble chart used around FACETS/Winsteps output; for that
-display, use \code{\link[=plot_bubble]{plot_bubble()}}. Its draw-free plot data also
+display is distinct from the Bond-and-Fox-style fit-versus-measure
+pathway: use \code{type = "fit_pathway"} for Infit/Outfit on the horizontal
+axis and measure logits on the vertical axis. Its draw-free plot data
+include person-selection settings, CI columns, and explicit SE-source
+metadata. The expected-score pathway draw-free data also
 includes \code{pathway_long}, \code{pathway_annotations}, \code{fit_measures},
 \code{fit_status}, and \code{curve_fit_status}, so R users can rebuild the pathway
 map in ggplot2, plotly, or a report pipeline while keeping the same
@@ -127,7 +170,8 @@ compact location-specific displays.
 \enumerate{
 \item Fit a model with \code{\link[=fit_mfrm]{fit_mfrm()}}.
 \item Use \code{plot(fit)} to inspect the Wright map at a glance.
-\item Switch to \code{type = "pathway"}, \code{"ccc"}, or \code{"shrinkage"} for the
+\item Switch to \code{type = "pathway"}, \code{"fit_pathway"}, \code{"ccc"}, or
+\code{"shrinkage"} for the
 relevant follow-up figure, or \code{type = "bundle"} for the
 three-plot overview when preparing a FACETS-style summary.
 }

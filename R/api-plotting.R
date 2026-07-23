@@ -3193,7 +3193,10 @@ resolve_bubble_measures <- function(x, diagnostics = NULL) {
 #'   default for \code{view = "infit_outfit"}), or \code{"equal"}
 #'   (uniform size).
 #' @param facets Character vector of facets to include. \code{NULL} (default)
-#'   includes all non-person facets.
+#'   includes every row allowed by \code{include_person}.
+#' @param include_person If \code{TRUE}, person measures may be included in
+#'   the chart (and in \code{facets} filtering). The default is \code{FALSE}
+#'   because person rows commonly overwhelm facet-level patterns.
 #' @param fit_range Numeric length-2 vector defining the heuristic fit-review band
 #'   shown as a shaded region (default \code{c(0.5, 1.5)}).
 #' @param top_n Maximum number of elements to plot (default 60).
@@ -3275,6 +3278,7 @@ plot_bubble <- function(x,
                         view = c("measure", "infit_outfit"),
                         bubble_size = NULL,
                         facets = NULL,
+                        include_person = FALSE,
                         fit_range = c(0.5, 1.5),
                         top_n = 60,
                         main = NULL,
@@ -3287,11 +3291,16 @@ plot_bubble <- function(x,
     bubble_size <- if (identical(view, "infit_outfit")) "N" else "SE"
   }
   bubble_size <- match.arg(bubble_size, c("SE", "N", "equal"))
+  if (!is.logical(include_person) || length(include_person) != 1L || is.na(include_person)) {
+    stop("`include_person` must be TRUE or FALSE.", call. = FALSE)
+  }
   top_n <- max(1L, as.integer(top_n))
   style <- resolve_plot_preset(preset)
 
   measures <- resolve_bubble_measures(x, diagnostics)
-  measures <- measures[measures$Facet != "Person", , drop = FALSE]
+  if (!isTRUE(include_person)) {
+    measures <- measures[measures$Facet != "Person", , drop = FALSE]
+  }
   if (!is.null(facets)) {
     measures <- measures[measures$Facet %in% as.character(facets), , drop = FALSE]
   }
@@ -3328,8 +3337,11 @@ plot_bubble <- function(x,
   radius <- switch(bubble_size,
     SE = {
       se_vals <- if ("SE" %in% names(measures)) measures$SE else rep(0.1, nrow(measures))
-      se_vals[!is.finite(se_vals)] <- stats::median(se_vals[is.finite(se_vals)], na.rm = TRUE)
-      se_vals / max(se_vals, na.rm = TRUE) * 0.15
+      valid_se <- is.finite(se_vals) & se_vals > 0
+      fallback_se <- if (any(valid_se)) stats::median(se_vals[valid_se]) else 0.1
+      se_vals[!valid_se] <- fallback_se
+      precision <- 1 / pmax(se_vals, sqrt(.Machine$double.eps))
+      precision / max(precision, na.rm = TRUE) * 0.15
     },
     N = {
       n_vals <- if ("N" %in% names(measures)) measures$N else rep(1, nrow(measures))
@@ -3444,6 +3456,7 @@ plot_bubble <- function(x,
       view = view,
       fit_stat = fit_stat,
       bubble_size = bubble_size,
+      include_person = isTRUE(include_person),
       fit_range = fit_range,
       table = measures,
       radius = radius,
