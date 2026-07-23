@@ -14,6 +14,7 @@ plot_bubble(
   view = c("measure", "infit_outfit"),
   bubble_size = NULL,
   facets = NULL,
+  include_person = FALSE,
   fit_range = c(0.5, 1.5),
   top_n = 60,
   main = NULL,
@@ -61,8 +62,14 @@ plot_bubble(
 
 - facets:
 
-  Character vector of facets to include. `NULL` (default) includes all
-  non-person facets.
+  Character vector of facets to include. `NULL` (default) includes every
+  row allowed by `include_person`.
+
+- include_person:
+
+  If `TRUE`, person measures may be included in the chart (and in
+  `facets` filtering). The default is `FALSE` because person rows
+  commonly overwhelm facet-level patterns.
 
 - fit_range:
 

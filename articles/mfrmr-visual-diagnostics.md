@@ -87,6 +87,36 @@ Interpretation:
 - Wide overlap in confidence whiskers means neighboring levels are not
   cleanly separated.
 
+The native view above remains the recommended analytic figure because it
+keeps facet/step uncertainty visible. For a closer FACETS-facing
+handoff, switch the renderer and leave `show_ci` at its default `FALSE`.
+The fitted coordinates do not change.
+
+``` r
+
+plot(
+  fit,
+  type = "wright",
+  renderer = "facets",
+  category_labels = c(
+    `1` = "Beginning", `2` = "Developing", `3` = "Secure", `4` = "Advanced"
+  )
+)
+```
+
+![](mfrmr-visual-diagnostics_files/figure-html/wright-facets-style-1.png)
+
+This renderer uses one common logit ruler, a `*` person-frequency
+column, signed facet headers, every facet level, and short labeled
+score-transition lines. It is FACETS-style visual correspondence, not a
+claim that `mfrmr` and FACETS produce numerically identical estimates.
+An external FACETS golden output and aligned estimator, identification,
+score, and orientation settings are still required for a
+numerical-equivalence statement. Set `show_ci = TRUE` only when you
+deliberately want a hybrid FACETS-style ruler with the mfrmr uncertainty
+extension. Use `draw = FALSE` and inspect the `facets_style` tables when
+rebuilding the display with ggplot2 or another graphics system.
+
 Next, use the pathway map when you want to see how expected scores
 progress across theta.
 
@@ -103,6 +133,37 @@ Interpretation:
 - Dominant-category strips show where each category is most likely to
   govern the score.
 - Flat or compressed regions suggest weaker category separation.
+
+The expected-score pathway is not a fit pathway. To review measure
+against Infit, place Infit on the horizontal axis and include person
+rows explicitly:
+
+``` r
+
+plot(
+  fit,
+  type = "fit_pathway",
+  diagnostics = diag,
+  fit_stat = "Infit",
+  fit_scale = "mnsq",
+  include_person = TRUE,
+  show_ci = TRUE,
+  preset = "publication"
+)
+```
+
+![](mfrmr-visual-diagnostics_files/figure-html/fit-pathway-1.png)
+
+Interpretation:
+
+- The vertical axis remains the fitted measure in logits.
+- The horizontal axis is Infit MnSq; the 1.0 line is the
+  model-expectation reference.
+- Vertical whiskers show measure uncertainty; person and non-person rows
+  have distinct uncertainty bases, recorded in the draw-free payload
+  metadata.
+- Treat displaced or flagged rows as review prompts, not automatic
+  exclusions.
 
 ## 2. Local response and level issues
 
@@ -313,39 +374,45 @@ plot(fit, type = "wright", preset = "monochrome")
 wright_payload <- plot(fit, type = "wright", draw = FALSE, preset = "publication")
 plot_data_components(wright_payload)
 #>      PlotName       Component                Role     ObjectType Rows Columns
-#> 1  wright_map           title    scalar_or_vector      character   NA      NA
-#> 2  wright_map          person          table_data     data.frame   48       4
-#> 3  wright_map     person_hist            metadata list:histogram   NA       6
-#> 4  wright_map    person_stats          table_data     data.frame    1       4
-#> 5  wright_map       locations          table_data     data.frame   11       6
-#> 6  wright_map    label_points          table_data     data.frame    6       6
-#> 7  wright_map   group_summary summary_or_guidance     data.frame    3      10
-#> 8  wright_map    group_levels            settings      character   NA      NA
-#> 9  wright_map         y_range            settings         double   NA      NA
-#> 10 wright_map           title    scalar_or_vector      character   NA      NA
-#> 11 wright_map        subtitle    scalar_or_vector      character   NA      NA
-#> 12 wright_map           group    scalar_or_vector           NULL   NA      NA
-#> 13 wright_map          preset            settings      character   NA      NA
-#> 14 wright_map          legend               style     data.frame    3       4
-#> 15 wright_map reference_lines          annotation     data.frame    1       5
-#> 16 wright_map       plot_name    scalar_or_vector      character   NA      NA
+#> 1  wright_map    wright_style               style      character   NA      NA
+#> 2  wright_map        renderer    scalar_or_vector      character   NA      NA
+#> 3  wright_map visual_contract    scalar_or_vector      character   NA      NA
+#> 4  wright_map          person          table_data     data.frame   48       4
+#> 5  wright_map     person_hist            metadata list:histogram   NA       6
+#> 6  wright_map    person_stats          table_data     data.frame    1       4
+#> 7  wright_map       locations          table_data     data.frame   11       6
+#> 8  wright_map    label_points          table_data     data.frame    6       6
+#> 9  wright_map   group_summary summary_or_guidance     data.frame    3      10
+#> 10 wright_map    group_levels            settings      character   NA      NA
+#> 11 wright_map         y_range            settings         double   NA      NA
+#> 12 wright_map     label_limit    scalar_or_vector        integer   NA      NA
+#> 13 wright_map           title    scalar_or_vector      character   NA      NA
+#> 14 wright_map        subtitle    scalar_or_vector      character   NA      NA
+#> 15 wright_map           group    scalar_or_vector           NULL   NA      NA
+#> 16 wright_map          preset            settings      character   NA      NA
+#> 17 wright_map          legend               style     data.frame    3       4
+#> 18 wright_map reference_lines          annotation     data.frame    1       5
+#> 19 wright_map       plot_name    scalar_or_vector      character   NA      NA
 #>    Length IsTabular                                    Accessor
-#> 1       1     FALSE           plot_data(x, component = "title")
-#> 2       4      TRUE          plot_data(x, component = "person")
-#> 3       6     FALSE     plot_data(x, component = "person_hist")
-#> 4       4      TRUE    plot_data(x, component = "person_stats")
-#> 5       6      TRUE       plot_data(x, component = "locations")
-#> 6       6      TRUE    plot_data(x, component = "label_points")
-#> 7      10      TRUE   plot_data(x, component = "group_summary")
-#> 8       3     FALSE    plot_data(x, component = "group_levels")
-#> 9       2     FALSE         plot_data(x, component = "y_range")
-#> 10      1     FALSE           plot_data(x, component = "title")
-#> 11      1     FALSE        plot_data(x, component = "subtitle")
-#> 12      0     FALSE           plot_data(x, component = "group")
-#> 13      1     FALSE          plot_data(x, component = "preset")
-#> 14      4      TRUE          plot_data(x, component = "legend")
-#> 15      5      TRUE plot_data(x, component = "reference_lines")
-#> 16      1     FALSE       plot_data(x, component = "plot_name")
+#> 1       1     FALSE    plot_data(x, component = "wright_style")
+#> 2       1     FALSE        plot_data(x, component = "renderer")
+#> 3       1     FALSE plot_data(x, component = "visual_contract")
+#> 4       4      TRUE          plot_data(x, component = "person")
+#> 5       6     FALSE     plot_data(x, component = "person_hist")
+#> 6       4      TRUE    plot_data(x, component = "person_stats")
+#> 7       6      TRUE       plot_data(x, component = "locations")
+#> 8       6      TRUE    plot_data(x, component = "label_points")
+#> 9      10      TRUE   plot_data(x, component = "group_summary")
+#> 10      3     FALSE    plot_data(x, component = "group_levels")
+#> 11      2     FALSE         plot_data(x, component = "y_range")
+#> 12      1     FALSE     plot_data(x, component = "label_limit")
+#> 13      1     FALSE           plot_data(x, component = "title")
+#> 14      1     FALSE        plot_data(x, component = "subtitle")
+#> 15      0     FALSE           plot_data(x, component = "group")
+#> 16      1     FALSE          plot_data(x, component = "preset")
+#> 17      4      TRUE          plot_data(x, component = "legend")
+#> 18      5      TRUE plot_data(x, component = "reference_lines")
+#> 19      1     FALSE       plot_data(x, component = "plot_name")
 #>                                                                     Notes
 #> 1                                                                        
 #> 2                                                                        
@@ -353,33 +420,39 @@ plot_data_components(wright_payload)
 #> 4                                                                        
 #> 5                                                                        
 #> 6                                                                        
-#> 7                            Use for captions, QA checks, or report text.
+#> 7                                                                        
 #> 8                                                                        
-#> 9                                                                        
+#> 9                            Use for captions, QA checks, or report text.
 #> 10                                                                       
 #> 11                                                                       
 #> 12                                                                       
 #> 13                                                                       
-#> 14                 Use to reproduce color, line-type, or legend mappings.
-#> 15 Use with primary data to draw thresholds, labels, and reference lines.
+#> 14                                                                       
+#> 15                                                                       
 #> 16                                                                       
+#> 17                 Use to reproduce color, line-type, or legend mappings.
+#> 18 Use with primary data to draw thresholds, labels, and reference lines.
+#> 19                                                                       
 #>                                                       ColumnNames
 #> 1                                                                
-#> 2                                   Person, Estimate, SE, Extreme
-#> 3                  breaks, counts, density, mids, xname, equidist
-#> 4                                             N, Mean, Median, SD
-#> 5                      PlotType, Group, Label, Estimate, XBase, X
-#> 6                      PlotType, Group, Label, Estimate, XBase, X
-#> 7  Group, PlotType, Min, Q1, Median, Q3, Max, N, XBase, TargetGap
-#> 8                                                                
-#> 9                                                                
+#> 2                                                                
+#> 3                                                                
+#> 4                                   Person, Estimate, SE, Extreme
+#> 5                  breaks, counts, density, mids, xname, equidist
+#> 6                                             N, Mean, Median, SD
+#> 7                      PlotType, Group, Label, Estimate, XBase, X
+#> 8                      PlotType, Group, Label, Estimate, XBase, X
+#> 9  Group, PlotType, Min, Q1, Median, Q3, Max, N, XBase, TargetGap
 #> 10                                                               
 #> 11                                                               
 #> 12                                                               
 #> 13                                                               
-#> 14                                  label, role, aesthetic, value
-#> 15                             axis, value, label, linetype, role
-#> 16
+#> 14                                                               
+#> 15                                                               
+#> 16                                                               
+#> 17                                  label, role, aesthetic, value
+#> 18                             axis, value, label, linetype, role
+#> 19
 
 locations <- plot_data(wright_payload, component = "locations")
 head(locations)
@@ -415,10 +488,11 @@ the plot data:
 ``` r
 
 names(wright_payload$data)
-#>  [1] "title"           "person"          "person_hist"     "person_stats"   
-#>  [5] "locations"       "label_points"    "group_summary"   "group_levels"   
-#>  [9] "y_range"         "title"           "subtitle"        "group"          
-#> [13] "preset"          "legend"          "reference_lines" "plot_name"
+#>  [1] "wright_style"    "renderer"        "visual_contract" "person"         
+#>  [5] "person_hist"     "person_stats"    "locations"       "label_points"   
+#>  [9] "group_summary"   "group_levels"    "y_range"         "label_limit"    
+#> [13] "title"           "subtitle"        "group"           "preset"         
+#> [17] "legend"          "reference_lines" "plot_name"
 wright_payload$data$reference_lines
 #>   axis value                    label linetype      role
 #> 1    h     0 Centered logit reference   dashed reference

@@ -62,8 +62,11 @@ documented.</p>
     <p>Start with the following core workflow before branching into diagnostics,
 bounded <code>GPCM</code>, simulation, and planning notes:</p><ol><li><p>Fit with <code><a href="fit_mfrm.html">fit_mfrm()</a></code> using <code>method = "MML"</code></p></li>
 <li><p>Build a comprehensive first screen with <code><a href="mfrm_results.html">mfrm_results()</a></code></p></li>
+<li><p>Create the required Wright map with
+<code>plot(res, type = "wright", show_ci = TRUE)</code></p></li>
 <li><p>Build report-ready output with <code><a href="mfrm_report.html">mfrm_report()</a></code></p></li>
-<li><p>Export a reproducible result folder with <code><a href="export_mfrm_results.html">export_mfrm_results()</a></code></p></li>
+<li><p>Export a reproducible result folder with
+<code>export_mfrm_results(res, preset = "starter")</code></p></li>
 <li><p>Add <code><a href="diagnose_mfrm.html">diagnose_mfrm()</a></code>, <code><a href="plot_qc_dashboard.html">plot_qc_dashboard()</a></code>, and
 <code><a href="reporting_checklist.html">reporting_checklist()</a></code> when the review needs deeper diagnostics; for
 bounded <code>GPCM</code>, read <code><a href="gpcm_capability_matrix.html">gpcm_capability_matrix()</a></code> before interpreting
@@ -110,8 +113,10 @@ you want a customised version.</p>
 
 <p>Use this order before exploring the broader feature surface:</p><ol><li><p><code><a href="fit_mfrm.html">fit_mfrm()</a></code> with <code>method = "MML"</code></p></li>
 <li><p><code><a href="mfrm_results.html">mfrm_results()</a></code> for a comprehensive first screen</p></li>
+<li><p><code>plot(res, type = "wright", show_ci = TRUE)</code> for the required shared-logit figure</p></li>
 <li><p><code><a href="mfrm_report.html">mfrm_report()</a></code> for report-ready wording, tables, and route labels</p></li>
-<li><p><code><a href="export_mfrm_results.html">export_mfrm_results()</a></code> for a reproducible result folder</p></li>
+<li><p><code>export_mfrm_results(res, preset = "starter")</code> for a reproducible
+folder whose <code>index.html</code> starts with the Wright map</p></li>
 <li><p>Add <code><a href="diagnose_mfrm.html">diagnose_mfrm()</a></code> with <code>diagnostic_mode = "both"</code> for deeper
 <code>RSM</code> / <code>PCM</code> diagnostics; for bounded <code>GPCM</code>, keep diagnostics on the
 direct exploratory route and read <code><a href="gpcm_capability_matrix.html">gpcm_capability_matrix()</a></code></p></li>

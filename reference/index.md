@@ -145,6 +145,9 @@ bundles.
 
   Generic for converting objects to a `flextable`
 
+- [`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md)
+  : Convert draw-free mfrmr plot data to ggplot2
+
 - [`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md)
   : Extract reusable data from an mfrmr plot object
 
@@ -233,8 +236,14 @@ adapters.
 - [`facets_positioning_guide()`](https://ryuya-dot-com.github.io/mfrmr/reference/facets_positioning_guide.md)
   : FACETS Positioning Guide
 
+- [`facets_term_crosswalk()`](https://ryuya-dot-com.github.io/mfrmr/reference/facets_term_crosswalk.md)
+  : FACETS-to-mfrmr term crosswalk
+
 - [`facets_feature_coverage()`](https://ryuya-dot-com.github.io/mfrmr/reference/facets_feature_coverage.md)
   : FACETS Feature Coverage Matrix
+
+- [`facets_visual_contract()`](https://ryuya-dot-com.github.io/mfrmr/reference/facets_visual_contract.md)
+  : FACETS-facing visual contract
 
 - [`facets_fit_df_guide()`](https://ryuya-dot-com.github.io/mfrmr/reference/facets_fit_df_guide.md)
   : Guide FACETS-style fit df and ZSTD standardization

@@ -21,8 +21,26 @@ plot(
   group = NULL,
   diagnostics = NULL,
   include_fit_measures = TRUE,
+  fit_stat = c("Infit", "Outfit"),
+  fit_scale = c("mnsq", "zstd"),
+  zstd_method = c("engine", "facets"),
+  include_person = FALSE,
+  person_subset = NULL,
+  top_n_person = 30,
+  person_labels = c("flagged", "all", "none"),
+  facet_labels = c("all", "flagged", "none"),
+  panel = c("combined", "facet"),
+  fit_range = c(0.5, 1.5),
+  zstd_cut = 2,
   draw = TRUE,
   preset = c("standard", "publication", "compact", "monochrome"),
+  renderer = NULL,
+  wright_style = c("native", "facets_style"),
+  category_labels = NULL,
+  rows_per_logit = 2L,
+  wright_range = NULL,
+  extreme_placement = c("ends", "estimate"),
+  persons_per_star = NULL,
   ...
 )
 ```
@@ -38,8 +56,9 @@ plot(
 
   Plot type. Use `NULL`, `"bundle"`, or `"all"` for the three-part fit
   bundle; otherwise choose one of `"facet"`, `"person"`, `"step"`,
-  `"wright"`, `"pathway"`, `"ccc"`, `"ccc_surface"`, or
-  `"category_surface"`.
+  `"wright"`, `"pathway"`, `"fit_pathway"`, `"ccc"`, `"ccc_surface"`, or
+  `"category_surface"`. `"pathway"` is the theta-to-expected-score
+  display; `"fit_pathway"` is the fit-statistic-to-measure display.
 
 - facet:
 
@@ -47,7 +66,9 @@ plot(
 
 - top_n:
 
-  Maximum number of facet/step locations retained for compact displays.
+  Maximum number of facet/step locations retained by the native Wright
+  map for compact displays. The FACETS-style payload always retains
+  every fitted facet and step location.
 
 - theta_range:
 
@@ -73,7 +94,10 @@ plot(
 
 - show_ci:
 
-  If `TRUE`, add approximate confidence intervals when available.
+  If `TRUE`, add approximate confidence intervals when available. The
+  formal default is `FALSE`; `type = "fit_pathway"` is the exception and
+  displays intervals when this argument is omitted. Pass
+  `show_ci = FALSE` explicitly to suppress them there.
 
 - ci_level:
 
@@ -85,14 +109,18 @@ plot(
   person-density curves (DIF / DFF screening view). Either a column name
   (looked up first in `group_data` when supplied through `...`, then in
   `fit$prep$data`) or a vector aligned with `fit$facets$person`. Ignored
-  for other `type` values. To pass the source data alongside, use
+  for other `type` values and for `wright_style = "facets_style"`, whose
+  person column is a single FACETS-style star frequency. To pass the
+  source data alongside, use
   `plot(fit, type = "wright", group = "MyCol", group_data = <df>)`.
 
 - diagnostics:
 
   Optional output from
   [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md).
-  When supplied, pathway plot data reuse it for `fit_measures`,
+  When supplied, Wright-map standard errors and precision metadata reuse
+  matching rows from `diagnostics$measures` without replacing fitted
+  coordinates, while pathway plot data reuse `fit_measures`,
   `fit_status`, and `curve_fit_status` instead of recomputing
   diagnostics.
 
@@ -102,6 +130,61 @@ plot(
   fit-status tables for custom R graphics. Set to `FALSE` when only the
   curve coordinates are needed.
 
+- fit_stat:
+
+  For `type = "fit_pathway"`, the horizontal fit statistic: `"Infit"`
+  (default) or `"Outfit"`.
+
+- fit_scale:
+
+  For `type = "fit_pathway"`, use mean squares (`"mnsq"`) or
+  standardized fit (`"zstd"`) on the horizontal axis.
+
+- zstd_method:
+
+  For a ZSTD fit pathway, use the package engine degrees of freedom
+  (`"engine"`, default) or the FACETS/Wright-Masters companion
+  calculation (`"facets"`). The latter is a comparison aid, not a claim
+  of complete FACETS output equivalence.
+
+- include_person:
+
+  If `TRUE`, include person rows in a fit pathway.
+
+- person_subset:
+
+  Optional character vector of person IDs retained in a fit pathway
+  before ranking.
+
+- top_n_person:
+
+  Maximum person rows retained in a fit pathway, ranked by distance from
+  expected fit. Use `Inf` for all selected persons.
+
+- person_labels:
+
+  Person-label policy for a fit pathway: `"flagged"` (default), `"all"`,
+  or `"none"`.
+
+- facet_labels:
+
+  Facet-level label policy for a fit pathway: `"all"` (default),
+  `"flagged"`, or `"none"`. This changes drawn labels only; all retained
+  facet rows remain in the draw-free table.
+
+- panel:
+
+  Fit-pathway layout: `"combined"` (distinguish persons by shape) or
+  `"facet"` (one base-graphics panel per facet).
+
+- fit_range:
+
+  Mean-square review lines for a fit pathway.
+
+- zstd_cut:
+
+  Absolute ZSTD review line for a fit pathway.
+
 - draw:
 
   If `TRUE`, draw the plot with base graphics.
@@ -110,6 +193,47 @@ plot(
 
   Visual preset (`"standard"`, `"publication"`, `"compact"`, or
   `"monochrome"`).
+
+- renderer:
+
+  Wright-map renderer. Use `"native"` (default) or `"facets"` for the
+  FACETS Table 6-style visual layout. This is the canonical selector for
+  new code.
+
+- wright_style:
+
+  Wright-map renderer. `"native"` preserves the package's histogram,
+  point, range, and facet-SE display. `"facets_style"` adds a FACETS
+  Table 6-style text ruler with person-frequency stars, signed facet
+  headers, and labeled score-transition lines. It is a visual-layout
+  option, not a claim of numerical equivalence with FACETS. This
+  explicit style name is equivalent to `renderer = "facets"`.
+
+- category_labels:
+
+  Optional score rubric labels used by `wright_style = "facets_style"`.
+  Supply a named character vector keyed by original score, an unnamed
+  vector with one label per retained category, or a data frame with
+  `Score` and `Label` columns.
+
+- rows_per_logit:
+
+  Number of FACETS-style ruler rows per logit.
+
+- wright_range:
+
+  Optional finite increasing length-2 logit range for the FACETS-style
+  ruler. `NULL` derives a range that contains the fitted data.
+
+- extreme_placement:
+
+  In the FACETS-style renderer, place extreme-score persons at the ruler
+  `"ends"` or retain their fitted `"estimate"`.
+
+- persons_per_star:
+
+  Number of persons represented by one `*` in the FACETS-style frequency
+  column. `NULL` chooses a compact value automatically.
 
 - ...:
 
@@ -139,12 +263,25 @@ ability, and higher non-person facet values indicate greater
 severity/difficulty under the default negative facet orientation. Facets
 listed in `fit_mfrm(positive_facets = ...)` are reversed (higher values
 raise expected scores); state the active orientation in figure captions
-when reporting. `type = "pathway"` shows expected score traces and
-dominant-category regions across theta. This expected-score display is
-distinct from the Bond-and-Fox-style measure-versus-fit "pathway" bubble
-chart used around FACETS/Winsteps output; for that display, use
-[`plot_bubble()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_bubble.md).
-Its draw-free plot data also includes `pathway_long`,
+when reporting.
+
+Set `renderer = "facets"` (equivalently,
+`wright_style = "facets_style"`) for a line-printer-inspired common
+ruler. That mode retains every facet location in its data and shows
+actual (original, when scores were internally recoded) adjacent score
+transitions. Its `facets_style` payload contains tidy ruler,
+person-frequency, facet, step, mean-half-score, header, category-label,
+and settings tables for custom graphics. The styling emulates the
+semantics of FACETS Table 6; estimates and standard errors remain those
+produced by `mfrmr`.
+
+`type = "pathway"` shows expected score traces and dominant-category
+regions across theta. This expected-score display is distinct from the
+Bond-and-Fox-style fit-versus-measure pathway: use
+`type = "fit_pathway"` for Infit/Outfit on the horizontal axis and
+measure logits on the vertical axis. Its draw-free plot data include
+person-selection settings, CI columns, and explicit SE-source metadata.
+The expected-score pathway draw-free data also includes `pathway_long`,
 `pathway_annotations`, `fit_measures`, `fit_status`, and
 `curve_fit_status`, so R users can rebuild the pathway map in ggplot2,
 plotly, or a report pipeline while keeping the same underfit/overfit
@@ -168,9 +305,10 @@ displays.
 
 2.  Use `plot(fit)` to inspect the Wright map at a glance.
 
-3.  Switch to `type = "pathway"`, `"ccc"`, or `"shrinkage"` for the
-    relevant follow-up figure, or `type = "bundle"` for the three-plot
-    overview when preparing a FACETS-style summary.
+3.  Switch to `type = "pathway"`, `"fit_pathway"`, `"ccc"`, or
+    `"shrinkage"` for the relevant follow-up figure, or
+    `type = "bundle"` for the three-plot overview when preparing a
+    FACETS-style summary.
 
 ## Further guidance
 
@@ -201,13 +339,13 @@ fit <- fit_mfrm(
   maxit = 30
 )
 wright <- plot(fit, draw = FALSE)
-wright$data$plot
+head(wright$data$locations)
 # Look for: persons clustered against the facet / step rows on the
 #   shared logit axis. Large gaps between the person density and
 #   the step / facet rails indicate weak targeting; ceiling /
 #   floor stripes mean the test is too easy / hard.
 bundle <- plot(fit, type = "bundle", draw = FALSE)
-bundle$wright_map$data$plot
+bundle$wright_map$data$group_summary
 # Look for: pathway curves rising in the expected order with
 #   visible dominant-category bands; CCC curves peaking sequentially
 #   without one category being completely overlapped by neighbours.

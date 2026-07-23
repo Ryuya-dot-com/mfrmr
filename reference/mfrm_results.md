@@ -171,7 +171,10 @@ session.
 
 `plot(res)` routes to a FACETS-style model-level visual bundle by
 default. Other routes include `plot(res, type = "wright")`, `"pathway"`,
-`"qc"`, `"category"`, `"anchors"`, and `"tables"`. `output = "html"`
+`"fit_pathway"`, `"qc"`, `"category"`, `"anchors"`, `"response_time"`,
+and `"tables"`. The Wright map is the required first fitted-scale
+artifact; `"fit_pathway"` is a follow-up with Infit or Outfit on the
+horizontal axis and measure on the vertical axis. `output = "html"`
 writes a lightweight temporary HTML file; use
 [`launch_mfrmr_viewer()`](https://ryuya-dot-com.github.io/mfrmr/reference/launch_mfrmr_viewer.md)
 when you want an optional local Shiny reader for an already-created
@@ -189,24 +192,28 @@ when a fit-centered durable analysis archive is needed.
 
 2.  Call `res <- mfrm_results(fit)`.
 
-3.  Read `summary(res)$triage`, `summary(res)$status`,
+3.  Read `summary(res, view = "brief")`, then create the required
+    `plot(res, type = "wright", show_ci = TRUE)` artifact.
+
+4.  Read `summary(res)$triage`, `summary(res)$status`,
     `summary(res)$plot_map`, and `summary(res)$next_actions`.
 
-4.  Call `report <- mfrm_report(res)` when a report-ready surface is
+5.  Call `report <- mfrm_report(res)` when a report-ready surface is
     needed.
 
-5.  Use
-    [`export_mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_results.md)
-    to write CSV, report, RDS, replay, and manifest files for handoff or
-    review.
+6.  Use `export_mfrm_results(res, preset = "starter")` to write the
+    Wright map, CSV, report, RDS, replay, and manifest files for handoff
+    or review.
 
-6.  Use `plot(res, type = "qc")` for the first visual screen.
+7.  Use
+    `plot(res, type = "fit_pathway", include_person = TRUE, top_n_person = 12, person_labels = "none", facet_labels = "flagged")`
+    or `plot(res, type = "qc")` for focused visual follow-up.
 
-7.  Optionally inspect the same result with
+8.  Optionally inspect the same result with
     [`launch_mfrmr_viewer()`](https://ryuya-dot-com.github.io/mfrmr/reference/launch_mfrmr_viewer.md)
     in an interactive session.
 
-8.  Use
+9.  Use
     [`build_summary_table_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_summary_table_bundle.md)
     or the helper named in `summary(res)$next_actions` for
     report-specific follow-up.

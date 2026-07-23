@@ -243,7 +243,7 @@ facets_feature_coverage()
 #> 3                                                                                                                estimation_iteration_report()
 #> 4                                                                                               unexpected_response_table(); plot_unexpected()
 #> 5                                                                                             measurable_summary_table(); describe_mfrm_data()
-#> 6                                                                                            plot(fit, type = "wright"); plot_wright_unified()
+#> 6                                                                         plot_wright_unified(renderer = "facets"); plot(fit, type = "wright")
 #> 7                                                                                                                 subset_connectivity_report()
 #> 8                                                                                                         facet_statistics_report(); plot(...)
 #> 9                                                                                          fit_measures_table(); diagnose_mfrm(); summary(fit)
@@ -339,7 +339,7 @@ facets_feature_coverage()
 #> 3                                                                                                    Convergence and replayed iteration evidence.
 #> 4                                                                                                       Case-level unexpected-response screening.
 #> 5                                                                                Facet coverage, category counts, and subset/connectivity checks.
-#> 6                                                                                                    Common-logit person/facet/threshold display.
+#> 6                                         Common-logit person/facet/threshold display with FACETS-style asterisk ruler or native SE/CI rendering.
 #> 7                                                                                              Disconnected subsets and facet-by-subset coverage.
 #> 8                                                                                                          Facet statistics and visual summaries.
 #> 9                                                                                         Measures, SEs, fit, anchoring status, and review flags.
@@ -387,7 +387,7 @@ facets_feature_coverage()
 #> 3                                                                                                                           Does not reproduce every FACETS optimizer-internal line.
 #> 4                                                                                                                   Structured table and plots, not printer-identical FACETS output.
 #> 5                                                                                                                                   Column order and text layout differ from FACETS.
-#> 6                                                                                                                                       R-native graphics replace FACETS ruler text.
+#> 6                                                           Visual grammar is reproducible; numerical equivalence still requires aligned settings and external FACETS golden output.
 #> 7                                                                                                                                    Network-style graph is not the default display.
 #> 8                                                                                                                 FACETS M/S/Q/X printer-graph formatting is not reproduced exactly.
 #> 9                                                                                                                    FACETS column order/options are broader than the default table.

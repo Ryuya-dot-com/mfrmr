@@ -75,6 +75,8 @@
 <ul>
 <li>loading packaged simulation data</li>
 <li>fitting an MFRM with flexible facets</li>
+<li>producing the required Wright map on the fitted shared logit
+scale</li>
 <li>running diagnostics and residual PCA</li>
 <li>generating APA and visual summary outputs</li>
 <li>moving from fitted models into design simulation and
@@ -173,6 +175,7 @@ available via
 <span>  maxit <span class="op">=</span> <span class="fl">30</span></span>
 <span><span class="op">)</span></span>
 <span><span class="va">diag_toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/diagnose_mfrm.html">diagnose_mfrm</a></span><span class="op">(</span><span class="va">fit_toy</span>, residual_pca <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span>
+<span><span class="va">res_toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_results.html">mfrm_results</a></span><span class="op">(</span><span class="va">fit_toy</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit_toy</span><span class="op">)</span><span class="op">$</span><span class="va">overview</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 42</span></span></span>
@@ -192,8 +195,78 @@ available via
 <span><span class="co">#&gt;          <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         </span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span>          768      48      2          4       1 none        both          </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># ℹ 3 more variables: Method &lt;chr&gt;, PrecisionTier &lt;chr&gt;, MarginalFit &lt;chr&gt;</span></span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit_toy</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] "name" "data"</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">res_toy</span>, view <span class="op">=</span> <span class="st">"brief"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; mfrmr Results Summary</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Overview</span></span>
+<span><span class="co">#&gt;  InputMode Model Method   N Persons Facets Categories Components Tables</span></span>
+<span><span class="co">#&gt;   mfrm_fit   RSM    JML 768      48      2          4         10     92</span></span>
+<span><span class="co">#&gt;  PlotRoutes NotAvailable</span></span>
+<span><span class="co">#&gt;           7            0</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Triage</span></span>
+<span><span class="co">#&gt;                    Area Severity                        Signal</span></span>
+<span><span class="co">#&gt;             Diagnostics   review   diagnostic_warnings_present</span></span>
+<span><span class="co">#&gt;  Precision / separation   review    precision_review_available</span></span>
+<span><span class="co">#&gt;    Diagnostic dashboard       ok             qc_plot_available</span></span>
+<span><span class="co">#&gt;               Reporting       ok reporting_checklist_available</span></span>
+<span><span class="co">#&gt;    Section availability       ok  requested_sections_available</span></span>
+<span><span class="co">#&gt;                                           Route</span></span>
+<span><span class="co">#&gt;           summary(res$diagnostics)$key_warnings</span></span>
+<span><span class="co">#&gt;        summary(res$components$precision_review)</span></span>
+<span><span class="co">#&gt;  plot(res, type = "qc", preset = "publication")</span></span>
+<span><span class="co">#&gt;     summary(res$components$reporting_checklist)</span></span>
+<span><span class="co">#&gt;                             summary(res)$status</span></span>
+<span><span class="co">#&gt;                                                                                                              Detail</span></span>
+<span><span class="co">#&gt;                                 Precision review flagged 1 review/warn checks. | Unexpected responses flagged: 100.</span></span>
+<span><span class="co">#&gt;  Precision review is available; inspect fit, separation, reliability, and ZSTD wording boundaries before reporting.</span></span>
+<span><span class="co">#&gt;                    The QC dashboard route is available as a focused follow-up after the required Wright-map review.</span></span>
+<span><span class="co">#&gt;                                                 Reporting checklist is available as the manuscript-routing surface.</span></span>
+<span><span class="co">#&gt;                                                           Requested sections that could be computed were available.</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Plot routes</span></span>
+<span><span class="co">#&gt;         Type Available RequiredArtifact</span></span>
+<span><span class="co">#&gt;       wright      TRUE             TRUE</span></span>
+<span><span class="co">#&gt;  fit_pathway      TRUE            FALSE</span></span>
+<span><span class="co">#&gt;           qc      TRUE            FALSE</span></span>
+<span><span class="co">#&gt;                                                                                                                                            Route</span></span>
+<span><span class="co">#&gt;                                                                                                                       plot(res, type = 'wright')</span></span>
+<span><span class="co">#&gt;  plot(res, type = 'fit_pathway', fit_stat = 'Infit', include_person = TRUE, top_n_person = 12, person_labels = 'none', facet_labels = 'flagged')</span></span>
+<span><span class="co">#&gt;                                                                                                                           plot(res, type = 'qc')</span></span>
+<span><span class="co">#&gt;                                                                                                  Detail</span></span>
+<span><span class="co">#&gt;  Required first fitted-scale artifact: persons, facet levels, and thresholds on the shared logit ruler.</span></span>
+<span><span class="co">#&gt;                  Infit/Outfit-versus-measure pathway with selected person rows and measure uncertainty.</span></span>
+<span><span class="co">#&gt;                                                     Quality-control dashboard from plot_qc_dashboard().</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Next actions</span></span>
+<span><span class="co">#&gt;  Priority               Area</span></span>
+<span><span class="co">#&gt;         1           Overview</span></span>
+<span><span class="co">#&gt;         2             Triage</span></span>
+<span><span class="co">#&gt;         2         Wright map</span></span>
+<span><span class="co">#&gt;         3        Diagnostics</span></span>
+<span><span class="co">#&gt;         4 Visual diagnostics</span></span>
+<span><span class="co">#&gt;                                                   Action</span></span>
+<span><span class="co">#&gt;                        Read the compact results summary.</span></span>
+<span><span class="co">#&gt;           Read the first-screen triage before branching.</span></span>
+<span><span class="co">#&gt;  Create and inspect the required shared-logit scale map.</span></span>
+<span><span class="co">#&gt;   Review diagnostic key warnings before report drafting.</span></span>
+<span><span class="co">#&gt;    Open the QC dashboard after reviewing the Wright map.</span></span>
+<span><span class="co">#&gt;                                                               Route</span></span>
+<span><span class="co">#&gt;                                                        summary(res)</span></span>
+<span><span class="co">#&gt;                                                 summary(res)$triage</span></span>
+<span><span class="co">#&gt;  plot(res, type = "wright", preset = "publication", show_ci = TRUE)</span></span>
+<span><span class="co">#&gt;                               summary(res$diagnostics)$key_warnings</span></span>
+<span><span class="co">#&gt;                      plot(res, type = "qc", preset = "publication")</span></span>
+<span><span class="co">#&gt;                                                                                                                                                  Reason</span></span>
+<span><span class="co">#&gt;                                                                    Confirms input mode, model, method, section status, table coverage, and plot routes.</span></span>
+<span><span class="co">#&gt;                               Triage orders unavailable, review, information, and OK signals across diagnostics, tables, plots, and reporting surfaces.</span></span>
+<span><span class="co">#&gt;  The Wright map is the primary fitted-scale artifact: compare person targeting with facet levels and step thresholds before branching into diagnostics.</span></span>
+<span><span class="co">#&gt;                                             Diagnostic warnings identify the highest-priority fit, precision, residual, or category follow-up surfaces.</span></span>
+<span><span class="co">#&gt;                                                                    The QC route gives a focused follow-up view of fit, residual, and category surfaces.</span></span>
+<span></span>
+<span><span class="co"># Required first fitted-scale artifact.</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">res_toy</span>, type <span class="op">=</span> <span class="st">"wright"</span>, preset <span class="op">=</span> <span class="st">"publication"</span>, show_ci <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<p><img src="mfrmr-workflow_files/figure-html/toy-setup-1.png" class="r-plt" alt="" width="672"></p>
 <p>The same fit can then move through the public first-contact
 route:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
@@ -203,36 +276,44 @@ route:</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">res_toy</span><span class="op">)</span><span class="op">$</span><span class="va">next_actions</span></span>
 <span><span class="co">#&gt;   Priority               Area</span></span>
 <span><span class="co">#&gt; 1        1           Overview</span></span>
-<span><span class="co">#&gt; 2        2             Triage</span></span>
-<span><span class="co">#&gt; 3        3        Diagnostics</span></span>
-<span><span class="co">#&gt; 4        4 Visual diagnostics</span></span>
-<span><span class="co">#&gt; 5        5          Precision</span></span>
-<span><span class="co">#&gt; 6        6          Reporting</span></span>
-<span><span class="co">#&gt; 7       11             Tables</span></span>
-<span><span class="co">#&gt;                                                               Action</span></span>
-<span><span class="co">#&gt; 1                                  Read the compact results summary.</span></span>
-<span><span class="co">#&gt; 2                     Read the first-screen triage before branching.</span></span>
-<span><span class="co">#&gt; 3             Review diagnostic key warnings before report drafting.</span></span>
-<span><span class="co">#&gt; 4      Open the QC dashboard before drilling into individual tables.</span></span>
-<span><span class="co">#&gt; 5 Inspect fit, separation, reliability, and ZSTD wording boundaries.</span></span>
-<span><span class="co">#&gt; 6     Use the reporting checklist as the manuscript-routing surface.</span></span>
-<span><span class="co">#&gt; 7                     Create an appendix-ready summary-table bundle.</span></span>
-<span><span class="co">#&gt;                                            Route</span></span>
-<span><span class="co">#&gt; 1                                   summary(res)</span></span>
-<span><span class="co">#&gt; 2                            summary(res)$triage</span></span>
-<span><span class="co">#&gt; 3          summary(res$diagnostics)$key_warnings</span></span>
-<span><span class="co">#&gt; 4 plot(res, type = "qc", preset = "publication")</span></span>
-<span><span class="co">#&gt; 5       summary(res$components$precision_review)</span></span>
-<span><span class="co">#&gt; 6    summary(res$components$reporting_checklist)</span></span>
-<span><span class="co">#&gt; 7                build_summary_table_bundle(res)</span></span>
-<span><span class="co">#&gt;                                                                                                                      Reason</span></span>
-<span><span class="co">#&gt; 1                                      Confirms input mode, model, method, section status, table coverage, and plot routes.</span></span>
-<span><span class="co">#&gt; 2 Triage orders unavailable, review, information, and OK signals across diagnostics, tables, plots, and reporting surfaces.</span></span>
-<span><span class="co">#&gt; 3               Diagnostic warnings identify the highest-priority fit, precision, residual, or category follow-up surfaces.</span></span>
-<span><span class="co">#&gt; 4                                          The QC route gives a first visual check of fit, residual, and category surfaces.</span></span>
-<span><span class="co">#&gt; 5                   Precision review keeps fit-size, standardized fit, and separation evidence in separate reporting lanes.</span></span>
-<span><span class="co">#&gt; 6                                                     Checklist rows identify report-ready, missing, and caveated sections.</span></span>
-<span><span class="co">#&gt; 7                                        The bundle exposes table roles, plot readiness, and conservative appendix presets.</span></span>
+<span><span class="co">#&gt; 3        2             Triage</span></span>
+<span><span class="co">#&gt; 2        2         Wright map</span></span>
+<span><span class="co">#&gt; 4        3        Diagnostics</span></span>
+<span><span class="co">#&gt; 5        4 Visual diagnostics</span></span>
+<span><span class="co">#&gt; 6        5        Fit pathway</span></span>
+<span><span class="co">#&gt; 7        5          Precision</span></span>
+<span><span class="co">#&gt; 8        6          Reporting</span></span>
+<span><span class="co">#&gt; 9       11             Tables</span></span>
+<span><span class="co">#&gt;                                                                      Action</span></span>
+<span><span class="co">#&gt; 1                                         Read the compact results summary.</span></span>
+<span><span class="co">#&gt; 3                            Read the first-screen triage before branching.</span></span>
+<span><span class="co">#&gt; 2                   Create and inspect the required shared-logit scale map.</span></span>
+<span><span class="co">#&gt; 4                    Review diagnostic key warnings before report drafting.</span></span>
+<span><span class="co">#&gt; 5                     Open the QC dashboard after reviewing the Wright map.</span></span>
+<span><span class="co">#&gt; 6 Review Infit against measure, including selected person rows when useful.</span></span>
+<span><span class="co">#&gt; 7        Inspect fit, separation, reliability, and ZSTD wording boundaries.</span></span>
+<span><span class="co">#&gt; 8            Use the reporting checklist as the manuscript-routing surface.</span></span>
+<span><span class="co">#&gt; 9                            Create an appendix-ready summary-table bundle.</span></span>
+<span><span class="co">#&gt;                                                                                                                                                                     Route</span></span>
+<span><span class="co">#&gt; 1                                                                                                                                                            summary(res)</span></span>
+<span><span class="co">#&gt; 3                                                                                                                                                     summary(res)$triage</span></span>
+<span><span class="co">#&gt; 2                                                                                                      plot(res, type = "wright", preset = "publication", show_ci = TRUE)</span></span>
+<span><span class="co">#&gt; 4                                                                                                                                   summary(res$diagnostics)$key_warnings</span></span>
+<span><span class="co">#&gt; 5                                                                                                                          plot(res, type = "qc", preset = "publication")</span></span>
+<span><span class="co">#&gt; 6 plot(res, type = "fit_pathway", fit_stat = "Infit", include_person = TRUE, top_n_person = 12, person_labels = "none", facet_labels = "flagged", preset = "publication")</span></span>
+<span><span class="co">#&gt; 7                                                                                                                                summary(res$components$precision_review)</span></span>
+<span><span class="co">#&gt; 8                                                                                                                             summary(res$components$reporting_checklist)</span></span>
+<span><span class="co">#&gt; 9                                                                                                                                         build_summary_table_bundle(res)</span></span>
+<span><span class="co">#&gt;                                                                                                                                                   Reason</span></span>
+<span><span class="co">#&gt; 1                                                                   Confirms input mode, model, method, section status, table coverage, and plot routes.</span></span>
+<span><span class="co">#&gt; 3                              Triage orders unavailable, review, information, and OK signals across diagnostics, tables, plots, and reporting surfaces.</span></span>
+<span><span class="co">#&gt; 2 The Wright map is the primary fitted-scale artifact: compare person targeting with facet levels and step thresholds before branching into diagnostics.</span></span>
+<span><span class="co">#&gt; 4                                            Diagnostic warnings identify the highest-priority fit, precision, residual, or category follow-up surfaces.</span></span>
+<span><span class="co">#&gt; 5                                                                   The QC route gives a focused follow-up view of fit, residual, and category surfaces.</span></span>
+<span><span class="co">#&gt; 6                                            This follow-up separates measure uncertainty from fit displacement while keeping person inclusion explicit.</span></span>
+<span><span class="co">#&gt; 7                                                Precision review keeps fit-size, standardized fit, and separation evidence in separate reporting lanes.</span></span>
+<span><span class="co">#&gt; 8                                                                                  Checklist rows identify report-ready, missing, and caveated sections.</span></span>
+<span><span class="co">#&gt; 9                                                                     The bundle exposes table roles, plot readiness, and conservative appendix presets.</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">report_toy</span><span class="op">)</span><span class="op">$</span><span class="va">overview</span></span>
 <span><span class="co">#&gt;   Style OverallStatus     FirstAction ReviewAreas CaveatAreas OptionalAreas</span></span>
 <span><span class="co">#&gt; 1    qc        review Start with Fit.           2           0             3</span></span>
@@ -257,12 +338,12 @@ route:</p>
 <span><span class="co">#&gt; 5        summary_plot_map    csv</span></span>
 <span><span class="co">#&gt; 6          summary_triage    csv</span></span>
 <span><span class="co">#&gt;                                                                              Path</span></span>
-<span><span class="co">#&gt; 1        /tmp/RtmpcbSNf6/mfrmr-workflow-export/mfrmr_results_summary_overview.csv</span></span>
-<span><span class="co">#&gt; 2          /tmp/RtmpcbSNf6/mfrmr-workflow-export/mfrmr_results_summary_status.csv</span></span>
-<span><span class="co">#&gt; 3 /tmp/RtmpcbSNf6/mfrmr-workflow-export/mfrmr_results_summary_component_index.csv</span></span>
-<span><span class="co">#&gt; 4     /tmp/RtmpcbSNf6/mfrmr-workflow-export/mfrmr_results_summary_table_index.csv</span></span>
-<span><span class="co">#&gt; 5        /tmp/RtmpcbSNf6/mfrmr-workflow-export/mfrmr_results_summary_plot_map.csv</span></span>
-<span><span class="co">#&gt; 6          /tmp/RtmpcbSNf6/mfrmr-workflow-export/mfrmr_results_summary_triage.csv</span></span>
+<span><span class="co">#&gt; 1        /tmp/Rtmp1umPTj/mfrmr-workflow-export/mfrmr_results_summary_overview.csv</span></span>
+<span><span class="co">#&gt; 2          /tmp/Rtmp1umPTj/mfrmr-workflow-export/mfrmr_results_summary_status.csv</span></span>
+<span><span class="co">#&gt; 3 /tmp/Rtmp1umPTj/mfrmr-workflow-export/mfrmr_results_summary_component_index.csv</span></span>
+<span><span class="co">#&gt; 4     /tmp/Rtmp1umPTj/mfrmr-workflow-export/mfrmr_results_summary_table_index.csv</span></span>
+<span><span class="co">#&gt; 5        /tmp/Rtmp1umPTj/mfrmr-workflow-export/mfrmr_results_summary_plot_map.csv</span></span>
+<span><span class="co">#&gt; 6          /tmp/Rtmp1umPTj/mfrmr-workflow-export/mfrmr_results_summary_triage.csv</span></span>
 <span><span class="co">#&gt;   Note</span></span>
 <span><span class="co">#&gt; 1     </span></span>
 <span><span class="co">#&gt; 2     </span></span>
@@ -887,7 +968,100 @@ route:</p>
 <span><span class="co">#&gt;  - Strict marginal fit was computed from latent-integrated first-order category counts.</span></span>
 <span><span class="co">#&gt;  - Strict pairwise local-dependence checks were computed from posterior-integrated expected exact and adjacent agreement and should be read as exploratory screening summaries.</span></span>
 <span><span class="co">#&gt;  - Posterior predictive checking remains a planned corroborating follow-up for strict marginal flags and practical-significance review.</span></span>
-<span><span class="co">#&gt;  - Legacy residual diagnostics and strict marginal diagnostics target different quantities; do not compare their residual magnitudes directly.</span></span></code></pre></div>
+<span><span class="co">#&gt;  - Legacy residual diagnostics and strict marginal diagnostics target different quantities; do not compare their residual magnitudes directly.</span></span>
+<span></span>
+<span><span class="co"># Keep the final artifact flow explicit: fit -&gt; Wright map -&gt; follow-up plots.</span></span>
+<span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_results.html">mfrm_results</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">res</span>, view <span class="op">=</span> <span class="st">"brief"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; mfrmr Results Summary</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Overview</span></span>
+<span><span class="co">#&gt;  InputMode Model Method    N Persons Facets Categories Components Tables</span></span>
+<span><span class="co">#&gt;   mfrm_fit   RSM    MML 1842     307      2          4         10     94</span></span>
+<span><span class="co">#&gt;  PlotRoutes NotAvailable</span></span>
+<span><span class="co">#&gt;           7            0</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Triage</span></span>
+<span><span class="co">#&gt;                    Area Severity                        Signal</span></span>
+<span><span class="co">#&gt;             Diagnostics   review   diagnostic_warnings_present</span></span>
+<span><span class="co">#&gt;  Precision / separation   review    precision_review_available</span></span>
+<span><span class="co">#&gt;    Diagnostic dashboard       ok             qc_plot_available</span></span>
+<span><span class="co">#&gt;               Reporting       ok reporting_checklist_available</span></span>
+<span><span class="co">#&gt;    Section availability       ok  requested_sections_available</span></span>
+<span><span class="co">#&gt;                                           Route</span></span>
+<span><span class="co">#&gt;           summary(res$diagnostics)$key_warnings</span></span>
+<span><span class="co">#&gt;        summary(res$components$precision_review)</span></span>
+<span><span class="co">#&gt;  plot(res, type = "qc", preset = "publication")</span></span>
+<span><span class="co">#&gt;     summary(res$components$reporting_checklist)</span></span>
+<span><span class="co">#&gt;                             summary(res)$status</span></span>
+<span><span class="co">#&gt;                                                                                                              Detail</span></span>
+<span><span class="co">#&gt;                                               Unexpected responses flagged: 100. | Flagged displacement levels: 40.</span></span>
+<span><span class="co">#&gt;  Precision review is available; inspect fit, separation, reliability, and ZSTD wording boundaries before reporting.</span></span>
+<span><span class="co">#&gt;                    The QC dashboard route is available as a focused follow-up after the required Wright-map review.</span></span>
+<span><span class="co">#&gt;                                                 Reporting checklist is available as the manuscript-routing surface.</span></span>
+<span><span class="co">#&gt;                                                           Requested sections that could be computed were available.</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Plot routes</span></span>
+<span><span class="co">#&gt;         Type Available RequiredArtifact</span></span>
+<span><span class="co">#&gt;       wright      TRUE             TRUE</span></span>
+<span><span class="co">#&gt;  fit_pathway      TRUE            FALSE</span></span>
+<span><span class="co">#&gt;           qc      TRUE            FALSE</span></span>
+<span><span class="co">#&gt;                                                                                                                                            Route</span></span>
+<span><span class="co">#&gt;                                                                                                                       plot(res, type = 'wright')</span></span>
+<span><span class="co">#&gt;  plot(res, type = 'fit_pathway', fit_stat = 'Infit', include_person = TRUE, top_n_person = 12, person_labels = 'none', facet_labels = 'flagged')</span></span>
+<span><span class="co">#&gt;                                                                                                                           plot(res, type = 'qc')</span></span>
+<span><span class="co">#&gt;                                                                                                  Detail</span></span>
+<span><span class="co">#&gt;  Required first fitted-scale artifact: persons, facet levels, and thresholds on the shared logit ruler.</span></span>
+<span><span class="co">#&gt;                  Infit/Outfit-versus-measure pathway with selected person rows and measure uncertainty.</span></span>
+<span><span class="co">#&gt;                                                     Quality-control dashboard from plot_qc_dashboard().</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Next actions</span></span>
+<span><span class="co">#&gt;  Priority               Area</span></span>
+<span><span class="co">#&gt;         1           Overview</span></span>
+<span><span class="co">#&gt;         2             Triage</span></span>
+<span><span class="co">#&gt;         2         Wright map</span></span>
+<span><span class="co">#&gt;         3        Diagnostics</span></span>
+<span><span class="co">#&gt;         4 Visual diagnostics</span></span>
+<span><span class="co">#&gt;                                                   Action</span></span>
+<span><span class="co">#&gt;                        Read the compact results summary.</span></span>
+<span><span class="co">#&gt;           Read the first-screen triage before branching.</span></span>
+<span><span class="co">#&gt;  Create and inspect the required shared-logit scale map.</span></span>
+<span><span class="co">#&gt;   Review diagnostic key warnings before report drafting.</span></span>
+<span><span class="co">#&gt;    Open the QC dashboard after reviewing the Wright map.</span></span>
+<span><span class="co">#&gt;                                                               Route</span></span>
+<span><span class="co">#&gt;                                                        summary(res)</span></span>
+<span><span class="co">#&gt;                                                 summary(res)$triage</span></span>
+<span><span class="co">#&gt;  plot(res, type = "wright", preset = "publication", show_ci = TRUE)</span></span>
+<span><span class="co">#&gt;                               summary(res$diagnostics)$key_warnings</span></span>
+<span><span class="co">#&gt;                      plot(res, type = "qc", preset = "publication")</span></span>
+<span><span class="co">#&gt;                                                                                                                                                  Reason</span></span>
+<span><span class="co">#&gt;                                                                    Confirms input mode, model, method, section status, table coverage, and plot routes.</span></span>
+<span><span class="co">#&gt;                               Triage orders unavailable, review, information, and OK signals across diagnostics, tables, plots, and reporting surfaces.</span></span>
+<span><span class="co">#&gt;  The Wright map is the primary fitted-scale artifact: compare person targeting with facet levels and step thresholds before branching into diagnostics.</span></span>
+<span><span class="co">#&gt;                                             Diagnostic warnings identify the highest-priority fit, precision, residual, or category follow-up surfaces.</span></span>
+<span><span class="co">#&gt;                                                                    The QC route gives a focused follow-up view of fit, residual, and category surfaces.</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">res</span>, type <span class="op">=</span> <span class="st">"wright"</span>, preset <span class="op">=</span> <span class="st">"publication"</span>, show_ci <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<p><img src="mfrmr-workflow_files/figure-html/fit-full-1.png" class="r-plt" alt="" width="672"></p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span></span>
+<span>  <span class="va">fit</span>,</span>
+<span>  type <span class="op">=</span> <span class="st">"fit_pathway"</span>,</span>
+<span>  diagnostics <span class="op">=</span> <span class="va">res</span><span class="op">$</span><span class="va">diagnostics</span>,</span>
+<span>  fit_stat <span class="op">=</span> <span class="st">"Infit"</span>,</span>
+<span>  include_person <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  top_n_person <span class="op">=</span> <span class="fl">12</span>,</span>
+<span>  person_labels <span class="op">=</span> <span class="st">"none"</span>,</span>
+<span>  facet_labels <span class="op">=</span> <span class="st">"flagged"</span>,</span>
+<span>  preset <span class="op">=</span> <span class="st">"publication"</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p><img src="mfrmr-workflow_files/figure-html/fit-full-2.png" class="r-plt" alt="" width="672"></p>
+<p>This full-data figure caps the displayed person layer at 12 and
+suppresses routine point labels to keep the first screen legible. The
+selected person IDs and every retained facet row remain in
+<code>plot(..., draw = FALSE)$data$table</code>; use
+<code>person_labels = "all"</code> or <code>facet_labels = "all"</code>
+for a point-identification figure.</p>
 <p>If you need residual-structure evidence for a final report, you can
 add residual PCA after the initial diagnostic pass. Treat this as an
 exploratory screen, not as a standalone unidimensionality test or as a
@@ -895,7 +1069,7 @@ DIMTEST/UNIDIM substitute. In MFRM reporting, a cautious claim should
 combine global residual fit, element-level fit, residual PCA, and
 local-dependence screens, for example: “evidence consistent with
 essential unidimensionality under the specified facet structure.”</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">diag_pca</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/diagnose_mfrm.html">diagnose_mfrm</a></span><span class="op">(</span></span>
 <span>  <span class="va">fit</span>,</span>
 <span>  residual_pca <span class="op">=</span> <span class="st">"both"</span>,</span>
@@ -1342,7 +1516,7 @@ essential unidimensionality under the specified facet structure.”</p>
 </h2>
 <p>For <code>RSM</code> and <code>PCM</code>, the package can now keep
 the legacy residual path and the strict marginal path side by side:</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fit_rsm_strict</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="va">toy</span>,</span>
 <span>  person <span class="op">=</span> <span class="st">"Person"</span>,</span>
@@ -1395,7 +1569,7 @@ the legacy residual path and the strict marginal path side by side:</p>
 <p>When you want a compact simulation-based screening check for the
 strict branch, use <code><a href="../reference/evaluate_mfrm_diagnostic_screening.html">evaluate_mfrm_diagnostic_screening()</a></code> on
 a small design:</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">screen_rsm</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/evaluate_mfrm_diagnostic_screening.html">evaluate_mfrm_diagnostic_screening</a></span><span class="op">(</span></span>
 <span>  design <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>person <span class="op">=</span> <span class="fl">18</span>, rater <span class="op">=</span> <span class="fl">3</span>, criterion <span class="op">=</span> <span class="fl">3</span>, assignment <span class="op">=</span> <span class="fl">3</span><span class="op">)</span>,</span>
 <span>  reps <span class="op">=</span> <span class="fl">1</span>,</span>
@@ -1429,7 +1603,7 @@ a small design:</p>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> well_specified     type_I_proxy                      <span style="color: #BB0000;">NA</span>                     <span style="color: #BB0000;">NA</span></span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># ℹ 1 more variable: DeltaStrictMinusLegacyFlagRate &lt;dbl&gt;</span></span></span></code></pre></div>
 <p>The same strict branch is now reflected in the reporting router:</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">chk_rsm_strict</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/reporting_checklist.html">reporting_checklist</a></span><span class="op">(</span><span class="va">fit_rsm_strict</span>, diagnostics <span class="op">=</span> <span class="va">diag_rsm_strict</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span></span>
 <span>  <span class="va">chk_rsm_strict</span><span class="op">$</span><span class="va">checklist</span>,</span>
@@ -1449,11 +1623,11 @@ a small design:</p>
 <div class="section level2">
 <h2 id="residual-pca-and-reporting">Residual PCA and Reporting<a class="anchor" aria-label="anchor" href="#residual-pca-and-reporting"></a>
 </h2>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pca</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/analyze_residual_pca.html">analyze_residual_pca</a></span><span class="op">(</span><span class="va">diag_pca</span>, mode <span class="op">=</span> <span class="st">"both"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/plot_residual_pca.html">plot_residual_pca</a></span><span class="op">(</span><span class="va">pca</span>, mode <span class="op">=</span> <span class="st">"overall"</span>, plot_type <span class="op">=</span> <span class="st">"scree"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="mfrmr-workflow_files/figure-html/residual-pca-1.png" class="r-plt" alt="" width="672"></p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"mfrmr_example_bias"</span>, package <span class="op">=</span> <span class="st">"mfrmr"</span><span class="op">)</span></span>
 <span><span class="va">bias_df</span> <span class="op">&lt;-</span> <span class="va">mfrmr_example_bias</span></span>
 <span><span class="va">fit_bias</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span></span>
@@ -1533,7 +1707,7 @@ pattern instead of a fully clean result. It can be loaded either with
 <div class="section level2">
 <h2 id="human-readable-reporting-api">Human-Readable Reporting API<a class="anchor" aria-label="anchor" href="#human-readable-reporting-api"></a>
 </h2>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">spec</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/specifications_report.html">specifications_report</a></span><span class="op">(</span><span class="va">fit</span>, title <span class="op">=</span> <span class="st">"Study run"</span><span class="op">)</span></span>
 <span><span class="va">data_qc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/data_quality_report.html">data_quality_report</a></span><span class="op">(</span></span>
 <span>  <span class="va">fit</span>,</span>
@@ -1580,7 +1754,7 @@ evidence.</li>
 <code><a href="../reference/sample_mfrm_plausible_values.html">sample_mfrm_plausible_values()</a></code> score future or partially
 observed persons under a fixed <code>MML</code> calibration.</li>
 </ul>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"lme4"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">gt</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_generalizability.html">mfrm_generalizability</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span>
 <span>  <span class="va">gt</span><span class="op">$</span><span class="va">coefficients</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"G"</span>, <span class="st">"Phi"</span>, <span class="st">"GStatus"</span>, <span class="st">"PhiStatus"</span>,</span>
@@ -1594,7 +1768,7 @@ observed persons under a fixed <code>MML</code> calibration.</li>
 <span>  <span class="va">ds</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"n_Rater"</span>, <span class="st">"n_Criterion"</span>, <span class="st">"ResidualScaling"</span>,</span>
 <span>         <span class="st">"G"</span>, <span class="st">"Phi"</span>, <span class="st">"GStatus"</span>, <span class="st">"PhiStatus"</span>, <span class="st">"IdentificationStatus"</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="op">}</span></span></code></pre></div>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sim_spec</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_mfrm_sim_spec.html">build_mfrm_sim_spec</a></span><span class="op">(</span></span>
 <span>  n_person <span class="op">=</span> <span class="fl">30</span>,</span>
 <span>  n_rater <span class="op">=</span> <span class="fl">4</span>,</span>
@@ -1866,7 +2040,7 @@ observed persons under a fixed <code>MML</code> calibration.</li>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> NEW01      2         0</span></span></code></pre></div>
 <p>For a report or appendix handoff, pass the recovery objects through
 the same summary-table export route used by the rest of the package:</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/export_summary_appendix.html">export_summary_appendix</a></span><span class="op">(</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>recovery <span class="op">=</span> <span class="va">recovery</span>, recovery_review <span class="op">=</span> <span class="va">recovery_review</span><span class="op">)</span>,</span>
 <span>  output_dir <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>,</span>

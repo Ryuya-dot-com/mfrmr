@@ -8,9 +8,9 @@ It is a user-facing map, not an analysis result.
 
 ``` r
 mfrmr_output_guide(
-  scope = c("all", "public", "entry", "viewer", "binary", "tables", "reports", "reviews",
-    "bundles", "exports", "compatibility", "gpcm", "simulation", "linking", "network",
-    "response_time", "facets", "conquest", "r")
+  scope = c("all", "public", "beginner", "psychometric", "entry", "viewer", "binary",
+    "tables", "reports", "reviews", "bundles", "exports", "compatibility", "gpcm",
+    "simulation", "linking", "network", "response_time", "facets", "conquest", "r")
 )
 ```
 
@@ -97,6 +97,10 @@ purpose-specific helper. Use `mfrmr_output_guide("viewer")` when the
 next step is the optional local Shiny reader; it shows which `include`
 preset to use before calling
 [`launch_mfrmr_viewer()`](https://ryuya-dot-com.github.io/mfrmr/reference/launch_mfrmr_viewer.md).
+Use `mfrmr_output_guide("beginner")` for all beginner-labelled entry
+routes. Use `mfrmr_output_guide("psychometric")` for the technical
+table, review, and reporting routes whose interpretation boundaries
+should be checked before manuscript use.
 
 ## How to use this guide
 
@@ -413,4 +417,72 @@ mfrmr_output_guide("response_time")[, c("Question", "MainFunction")]
 #>                                                                                                                                 MainFunction
 #> 25 response_time_review(); mfrm_results(include = "response_time", response_time = ...); plot_response_time_review(); plot_data_components()
 #> 64                                 response_time_review(); plot_response_time_review(..., draw = FALSE); plot_data_components(); plot_data()
+mfrmr_output_guide("beginner")[, c("Question", "MainFunction")]
+#>                                                                  Question
+#> 1                                       Start a new reproducible analysis
+#> 2                       Open the comprehensive first-screen result object
+#> 3                                    Read report readiness before writing
+#> 4                                     Open a local point-and-click reader
+#> 5                  Download results, report tables, HTML, and replay code
+#> 6                                        Find the next specialized helper
+#> 7                  Use exploratory prompts only when explicitly requested
+#> 8        Start with explicit model roles and a comprehensive first screen
+#> 9                 Open a FACETS-style result surface from an existing fit
+#> 10                Browse the comprehensive result in a local Shiny viewer
+#> 11 Choose the next purpose-specific helper without scanning the namespace
+#> 12          Use column-selection prompts for exploratory data-frame input
+#> 13                                  Open the standard first-screen viewer
+#> 14                           Prepare publication-oriented viewer sections
+#> 15        Check validation, fit, and separation surfaces before reporting
+#> 16   Inspect bias-screen prompts without choosing contrasts automatically
+#> 17                       Inspect pathway-map and row-level misfit prompts
+#> 18                                   Inspect anchor and linking readiness
+#> 19                          Prepare a broad reviewer-facing viewer object
+#> 20                              Fit ordinary person-item binary responses
+#> 21                                 Confirm the two-category score support
+#> 22                   Open the first-screen results for a binary Rasch run
+#>                                                                                                          MainFunction
+#> 1                                                               fit_mfrm(); diagnose_mfrm(); res <- mfrm_results(fit)
+#> 2                                                               res <- mfrm_results(fit, include = ...); summary(res)
+#> 3                                      report <- mfrm_report(res); summary(report); mfrm_report(res, output = "html")
+#> 4                                                                                            launch_mfrmr_viewer(res)
+#> 5                                                          export_mfrm_results(res, include = c("default", "report"))
+#> 6                                                                mfrmr_output_guide(scope); summary(res)$next_actions
+#> 7                                                                                        mfrm_results_interactive(df)
+#> 8                                                                         fit_mfrm(); diagnose_mfrm(); mfrm_results()
+#> 9                                                                                                      mfrm_results()
+#> 10                                                                 res <- mfrm_results(fit); launch_mfrmr_viewer(res)
+#> 11                                                                    mfrmr_output_guide(); summary(res)$next_actions
+#> 12                                                                                         mfrm_results_interactive()
+#> 13                                           res <- mfrm_results(fit, include = "standard"); launch_mfrmr_viewer(res)
+#> 14                                        res <- mfrm_results(fit, include = "publication"); launch_mfrmr_viewer(res)
+#> 15                                         res <- mfrm_results(fit, include = "validation"); launch_mfrmr_viewer(res)
+#> 16                                               res <- mfrm_results(fit, include = "bias"); launch_mfrmr_viewer(res)
+#> 17                                      res <- mfrm_results(fit, include = "misfit_review"); launch_mfrmr_viewer(res)
+#> 18                                            res <- mfrm_results(fit, include = "linking"); launch_mfrmr_viewer(res)
+#> 19 res <- mfrm_results(fit, include = c("publication", "bias", "misfit_review", "linking")); launch_mfrmr_viewer(res)
+#> 20                          fit_mfrm(data, person = ..., facets = "Item", score = ..., model = "RSM"); mfrm_results()
+#> 21                                           describe_mfrm_data(); fit$prep$score_map; summary(fit)$settings_overview
+#> 22                                              mfrm_results(fit); plot(res, type = "wright"); plot(res, type = "qc")
+mfrmr_output_guide("psychometric")[, c("Question", "DecisionBoundary")]
+#>                                                       Question
+#> 23                   Document the model setup and run settings
+#> 24      Check whether data were filtered, dropped, or remapped
+#> 26         Decide how strongly precision claims can be phrased
+#> 27  Summarize facet variability, separation, and measurability
+#> 28       Review category functioning and expected-score curves
+#> 30                Review anchors, drift, and linking readiness
+#> 31             Compare equal-weighting and bounded-GPCM routes
+#> 38         Check drift across separately fitted waves or forms
+#> 39 Build a screened equating chain across ordered calibrations
+#>                                                                                                                            DecisionBoundary
+#> 23                                 Specialist follow-up: inspect the source object and help page before treating output as report evidence.
+#> 24                                 Specialist follow-up: inspect the source object and help page before treating output as report evidence.
+#> 26                                            Precision and separation evidence are not inter-rater agreement or standalone validity proof.
+#> 27                                 Specialist follow-up: inspect the source object and help page before treating output as report evidence.
+#> 28                                 Specialist follow-up: inspect the source object and help page before treating output as report evidence.
+#> 30 Anchor and linking evidence support scale-maintenance review; drift and equating claims require explicit multi-fit wave or form designs.
+#> 31                                 Specialist follow-up: inspect the source object and help page before treating output as report evidence.
+#> 38 Anchor and linking evidence support scale-maintenance review; drift and equating claims require explicit multi-fit wave or form designs.
+#> 39 Anchor and linking evidence support scale-maintenance review; drift and equating claims require explicit multi-fit wave or form designs.
 ```

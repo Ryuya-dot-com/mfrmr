@@ -17,13 +17,16 @@ diagnostics, bounded `GPCM`, simulation, and planning notes:
 2.  Build a comprehensive first screen with
     [`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md)
 
-3.  Build report-ready output with
+3.  Create the required Wright map with
+    `plot(res, type = "wright", show_ci = TRUE)`
+
+4.  Build report-ready output with
     [`mfrm_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md)
 
-4.  Export a reproducible result folder with
-    [`export_mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_results.md)
+5.  Export a reproducible result folder with
+    `export_mfrm_results(res, preset = "starter")`
 
-5.  Add
+6.  Add
     [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md),
     [`plot_qc_dashboard()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_qc_dashboard.md),
     and
@@ -119,20 +122,23 @@ Use this order before exploring the broader feature surface:
 2.  [`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md)
     for a comprehensive first screen
 
-3.  [`mfrm_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md)
+3.  `plot(res, type = "wright", show_ci = TRUE)` for the required
+    shared-logit figure
+
+4.  [`mfrm_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md)
     for report-ready wording, tables, and route labels
 
-4.  [`export_mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_results.md)
-    for a reproducible result folder
+5.  `export_mfrm_results(res, preset = "starter")` for a reproducible
+    folder whose `index.html` starts with the Wright map
 
-5.  Add
+6.  Add
     [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md)
     with `diagnostic_mode = "both"` for deeper `RSM` / `PCM`
     diagnostics; for bounded `GPCM`, keep diagnostics on the direct
     exploratory route and read
     [`gpcm_capability_matrix()`](https://ryuya-dot-com.github.io/mfrmr/reference/gpcm_capability_matrix.md)
 
-6.  Choose the next branch:
+7.  Choose the next branch:
     [`reporting_checklist()`](https://ryuya-dot-com.github.io/mfrmr/reference/reporting_checklist.md)
     for reporting,
     [`build_weighting_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_weighting_review.md)

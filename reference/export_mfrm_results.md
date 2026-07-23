@@ -14,6 +14,7 @@ export_mfrm_results(
   output_dir = ".",
   prefix = "mfrmr_results",
   include = "default",
+  preset = NULL,
   overwrite = FALSE,
   zip_bundle = FALSE,
   zip_name = NULL,
@@ -48,6 +49,12 @@ export_mfrm_results(
   [`mfrm_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md)
   tables plus Markdown and HTML; add `"plots"` to write available plot
   routes as PNG files, or use `"all"`.
+
+- preset:
+
+  Optional reader-facing export preset. `"starter"` adds the report and
+  plot routes to the default files and writes `index.html` with the
+  required Wright map embedded at the start of the reading flow.
 
 - overwrite:
 
@@ -97,7 +104,11 @@ The helper writes:
 Plot export is intentionally optional because some plot routes can be
 comparatively slow or require richer graphics devices. Plot failures are
 recorded in the returned `plot_errors` table rather than stopping the
-export.
+export. The `"starter"` preset is the recommended final handoff because
+it always requests the Wright map in addition to the result summary,
+report, replay script, and manifest. Its Infit pathway includes a
+bounded selection of person rows so person fit can be reviewed without
+replacing the required Wright-map first screen.
 
 ## See also
 
@@ -120,6 +131,7 @@ exported <- export_mfrm_results(
   res,
   output_dir = tempdir(),
   prefix = "mfrmr_results_example",
+  preset = "starter",
   overwrite = TRUE
 )
 exported$summary[, c("FilesWritten", "CsvWritten", "HtmlWritten")]

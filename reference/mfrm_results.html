@@ -195,8 +195,11 @@ column-selection wizard in an interactive session.</p>
 
 
 <p><code>plot(res)</code> routes to a FACETS-style model-level visual bundle by default.
-Other routes include <code>plot(res, type = "wright")</code>, <code>"pathway"</code>, <code>"qc"</code>,
-<code>"category"</code>, <code>"anchors"</code>, and <code>"tables"</code>. <code>output = "html"</code> writes a
+Other routes include <code>plot(res, type = "wright")</code>, <code>"pathway"</code>,
+<code>"fit_pathway"</code>, <code>"qc"</code>, <code>"category"</code>, <code>"anchors"</code>, <code>"response_time"</code>,
+and <code>"tables"</code>. The Wright map is the required first fitted-scale artifact;
+<code>"fit_pathway"</code> is a follow-up with Infit or Outfit on the horizontal axis
+and measure on the vertical axis. <code>output = "html"</code> writes a
 lightweight temporary HTML file;
 use <code><a href="launch_mfrmr_viewer.html">launch_mfrmr_viewer()</a></code> when you want an optional local Shiny reader
 for an already-created <code>mfrm_results</code> object. Use
@@ -210,12 +213,17 @@ analysis archive is needed.</p>
 
 <ol><li><p>Fit explicitly with <code><a href="fit_mfrm.html">fit_mfrm()</a></code> in scripts and manuscripts.</p></li>
 <li><p>Call <code>res &lt;- mfrm_results(fit)</code>.</p></li>
+<li><p>Read <code>summary(res, view = "brief")</code>, then create the required
+<code>plot(res, type = "wright", show_ci = TRUE)</code> artifact.</p></li>
 <li><p>Read <code>summary(res)$triage</code>, <code>summary(res)$status</code>,
 <code>summary(res)$plot_map</code>, and <code>summary(res)$next_actions</code>.</p></li>
 <li><p>Call <code>report &lt;- mfrm_report(res)</code> when a report-ready surface is needed.</p></li>
-<li><p>Use <code><a href="export_mfrm_results.html">export_mfrm_results()</a></code> to write CSV, report, RDS, replay, and
+<li><p>Use <code>export_mfrm_results(res, preset = "starter")</code> to write the Wright
+map, CSV, report, RDS, replay, and
 manifest files for handoff or review.</p></li>
-<li><p>Use <code>plot(res, type = "qc")</code> for the first visual screen.</p></li>
+<li><p>Use <code>plot(res, type = "fit_pathway", include_person = TRUE, top_n_person = 12, person_labels = "none", facet_labels = "flagged")</code>
+or
+<code>plot(res, type = "qc")</code> for focused visual follow-up.</p></li>
 <li><p>Optionally inspect the same result with <code><a href="launch_mfrmr_viewer.html">launch_mfrmr_viewer()</a></code> in an
 interactive session.</p></li>
 <li><p>Use <code><a href="build_summary_table_bundle.html">build_summary_table_bundle()</a></code> or the helper named in

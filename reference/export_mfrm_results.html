@@ -63,6 +63,7 @@ validation step.</p>
 <span>  output_dir <span class="op">=</span> <span class="st">"."</span>,</span>
 <span>  prefix <span class="op">=</span> <span class="st">"mfrmr_results"</span>,</span>
 <span>  include <span class="op">=</span> <span class="st">"default"</span>,</span>
+<span>  preset <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  overwrite <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  zip_bundle <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  zip_name <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -94,6 +95,12 @@ underscores.</p></dd>
 <code>"tables"</code>, <code>"html"</code>, <code>"rds"</code>, <code>"replay"</code>, and <code>"manifest"</code>. Add
 <code>"report"</code> to write <code><a href="mfrm_report.html">mfrm_report()</a></code> tables plus Markdown and HTML; add
 <code>"plots"</code> to write available plot routes as PNG files, or use <code>"all"</code>.</p></dd>
+
+
+<dt id="arg-preset">preset<a class="anchor" aria-label="anchor" href="#arg-preset"></a></dt>
+<dd><p>Optional reader-facing export preset. <code>"starter"</code> adds the
+report and plot routes to the default files and writes <code>index.html</code> with
+the required Wright map embedded at the start of the reading flow.</p></dd>
 
 
 <dt id="arg-overwrite">overwrite<a class="anchor" aria-label="anchor" href="#arg-overwrite"></a></dt>
@@ -134,7 +141,12 @@ for the already-created object;</p></li>
 <li><p>a written-files manifest and compact export summary.</p></li>
 </ul><p>Plot export is intentionally optional because some plot routes can be
 comparatively slow or require richer graphics devices. Plot failures are
-recorded in the returned <code>plot_errors</code> table rather than stopping the export.</p>
+recorded in the returned <code>plot_errors</code> table rather than stopping the export.
+The <code>"starter"</code> preset is the recommended final handoff because it always
+requests the Wright map in addition to the result summary, report, replay
+script, and manifest. Its Infit pathway includes a bounded selection of
+person rows so person fit can be reviewed without replacing the required
+Wright-map first screen.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -155,6 +167,7 @@ recorded in the returned <code>plot_errors</code> table rather than stopping the
 <span class="r-in"><span>  <span class="va">res</span>,</span></span>
 <span class="r-in"><span>  output_dir <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>  prefix <span class="op">=</span> <span class="st">"mfrmr_results_example"</span>,</span></span>
+<span class="r-in"><span>  preset <span class="op">=</span> <span class="st">"starter"</span>,</span></span>
 <span class="r-in"><span>  overwrite <span class="op">=</span> <span class="cn">TRUE</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">exported</span><span class="op">$</span><span class="va">summary</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"FilesWritten"</span>, <span class="st">"CsvWritten"</span>, <span class="st">"HtmlWritten"</span><span class="op">)</span><span class="op">]</span></span></span>

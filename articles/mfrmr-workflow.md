@@ -4,6 +4,7 @@ This vignette outlines a reproducible workflow for:
 
 - loading packaged simulation data
 - fitting an MFRM with flexible facets
+- producing the required Wright map on the fitted shared logit scale
 - running diagnostics and residual PCA
 - generating APA and visual summary outputs
 - moving from fitted models into design simulation and fixed-calibration
@@ -91,6 +92,7 @@ fit_toy <- fit_mfrm(
   maxit = 30
 )
 diag_toy <- diagnose_mfrm(fit_toy, residual_pca = "none")
+res_toy <- mfrm_results(fit_toy)
 
 summary(fit_toy)$overview
 #> # A tibble: 1 × 42
@@ -110,9 +112,80 @@ summary(diag_toy)$overview
 #>          <int>   <int>  <int>      <int>   <int> <chr>       <chr>         
 #> 1          768      48      2          4       1 none        both          
 #> # ℹ 3 more variables: Method <chr>, PrecisionTier <chr>, MarginalFit <chr>
-names(plot(fit_toy, draw = FALSE))
-#> [1] "name" "data"
+summary(res_toy, view = "brief")
+#> mfrmr Results Summary
+#> 
+#> Overview
+#>  InputMode Model Method   N Persons Facets Categories Components Tables
+#>   mfrm_fit   RSM    JML 768      48      2          4         10     92
+#>  PlotRoutes NotAvailable
+#>           7            0
+#> 
+#> Triage
+#>                    Area Severity                        Signal
+#>             Diagnostics   review   diagnostic_warnings_present
+#>  Precision / separation   review    precision_review_available
+#>    Diagnostic dashboard       ok             qc_plot_available
+#>               Reporting       ok reporting_checklist_available
+#>    Section availability       ok  requested_sections_available
+#>                                           Route
+#>           summary(res$diagnostics)$key_warnings
+#>        summary(res$components$precision_review)
+#>  plot(res, type = "qc", preset = "publication")
+#>     summary(res$components$reporting_checklist)
+#>                             summary(res)$status
+#>                                                                                                              Detail
+#>                                 Precision review flagged 1 review/warn checks. | Unexpected responses flagged: 100.
+#>  Precision review is available; inspect fit, separation, reliability, and ZSTD wording boundaries before reporting.
+#>                    The QC dashboard route is available as a focused follow-up after the required Wright-map review.
+#>                                                 Reporting checklist is available as the manuscript-routing surface.
+#>                                                           Requested sections that could be computed were available.
+#> 
+#> Plot routes
+#>         Type Available RequiredArtifact
+#>       wright      TRUE             TRUE
+#>  fit_pathway      TRUE            FALSE
+#>           qc      TRUE            FALSE
+#>                                                                                                                                            Route
+#>                                                                                                                       plot(res, type = 'wright')
+#>  plot(res, type = 'fit_pathway', fit_stat = 'Infit', include_person = TRUE, top_n_person = 12, person_labels = 'none', facet_labels = 'flagged')
+#>                                                                                                                           plot(res, type = 'qc')
+#>                                                                                                  Detail
+#>  Required first fitted-scale artifact: persons, facet levels, and thresholds on the shared logit ruler.
+#>                  Infit/Outfit-versus-measure pathway with selected person rows and measure uncertainty.
+#>                                                     Quality-control dashboard from plot_qc_dashboard().
+#> 
+#> Next actions
+#>  Priority               Area
+#>         1           Overview
+#>         2             Triage
+#>         2         Wright map
+#>         3        Diagnostics
+#>         4 Visual diagnostics
+#>                                                   Action
+#>                        Read the compact results summary.
+#>           Read the first-screen triage before branching.
+#>  Create and inspect the required shared-logit scale map.
+#>   Review diagnostic key warnings before report drafting.
+#>    Open the QC dashboard after reviewing the Wright map.
+#>                                                               Route
+#>                                                        summary(res)
+#>                                                 summary(res)$triage
+#>  plot(res, type = "wright", preset = "publication", show_ci = TRUE)
+#>                               summary(res$diagnostics)$key_warnings
+#>                      plot(res, type = "qc", preset = "publication")
+#>                                                                                                                                                  Reason
+#>                                                                    Confirms input mode, model, method, section status, table coverage, and plot routes.
+#>                               Triage orders unavailable, review, information, and OK signals across diagnostics, tables, plots, and reporting surfaces.
+#>  The Wright map is the primary fitted-scale artifact: compare person targeting with facet levels and step thresholds before branching into diagnostics.
+#>                                             Diagnostic warnings identify the highest-priority fit, precision, residual, or category follow-up surfaces.
+#>                                                                    The QC route gives a focused follow-up view of fit, residual, and category surfaces.
+
+# Required first fitted-scale artifact.
+plot(res_toy, type = "wright", preset = "publication", show_ci = TRUE)
 ```
+
+![](mfrmr-workflow_files/figure-html/toy-setup-1.png)
 
 The same fit can then move through the public first-contact route:
 
@@ -124,36 +197,44 @@ report_toy <- mfrm_report(res_toy, style = "qc")
 summary(res_toy)$next_actions
 #>   Priority               Area
 #> 1        1           Overview
-#> 2        2             Triage
-#> 3        3        Diagnostics
-#> 4        4 Visual diagnostics
-#> 5        5          Precision
-#> 6        6          Reporting
-#> 7       11             Tables
-#>                                                               Action
-#> 1                                  Read the compact results summary.
-#> 2                     Read the first-screen triage before branching.
-#> 3             Review diagnostic key warnings before report drafting.
-#> 4      Open the QC dashboard before drilling into individual tables.
-#> 5 Inspect fit, separation, reliability, and ZSTD wording boundaries.
-#> 6     Use the reporting checklist as the manuscript-routing surface.
-#> 7                     Create an appendix-ready summary-table bundle.
-#>                                            Route
-#> 1                                   summary(res)
-#> 2                            summary(res)$triage
-#> 3          summary(res$diagnostics)$key_warnings
-#> 4 plot(res, type = "qc", preset = "publication")
-#> 5       summary(res$components$precision_review)
-#> 6    summary(res$components$reporting_checklist)
-#> 7                build_summary_table_bundle(res)
-#>                                                                                                                      Reason
-#> 1                                      Confirms input mode, model, method, section status, table coverage, and plot routes.
-#> 2 Triage orders unavailable, review, information, and OK signals across diagnostics, tables, plots, and reporting surfaces.
-#> 3               Diagnostic warnings identify the highest-priority fit, precision, residual, or category follow-up surfaces.
-#> 4                                          The QC route gives a first visual check of fit, residual, and category surfaces.
-#> 5                   Precision review keeps fit-size, standardized fit, and separation evidence in separate reporting lanes.
-#> 6                                                     Checklist rows identify report-ready, missing, and caveated sections.
-#> 7                                        The bundle exposes table roles, plot readiness, and conservative appendix presets.
+#> 3        2             Triage
+#> 2        2         Wright map
+#> 4        3        Diagnostics
+#> 5        4 Visual diagnostics
+#> 6        5        Fit pathway
+#> 7        5          Precision
+#> 8        6          Reporting
+#> 9       11             Tables
+#>                                                                      Action
+#> 1                                         Read the compact results summary.
+#> 3                            Read the first-screen triage before branching.
+#> 2                   Create and inspect the required shared-logit scale map.
+#> 4                    Review diagnostic key warnings before report drafting.
+#> 5                     Open the QC dashboard after reviewing the Wright map.
+#> 6 Review Infit against measure, including selected person rows when useful.
+#> 7        Inspect fit, separation, reliability, and ZSTD wording boundaries.
+#> 8            Use the reporting checklist as the manuscript-routing surface.
+#> 9                            Create an appendix-ready summary-table bundle.
+#>                                                                                                                                                                     Route
+#> 1                                                                                                                                                            summary(res)
+#> 3                                                                                                                                                     summary(res)$triage
+#> 2                                                                                                      plot(res, type = "wright", preset = "publication", show_ci = TRUE)
+#> 4                                                                                                                                   summary(res$diagnostics)$key_warnings
+#> 5                                                                                                                          plot(res, type = "qc", preset = "publication")
+#> 6 plot(res, type = "fit_pathway", fit_stat = "Infit", include_person = TRUE, top_n_person = 12, person_labels = "none", facet_labels = "flagged", preset = "publication")
+#> 7                                                                                                                                summary(res$components$precision_review)
+#> 8                                                                                                                             summary(res$components$reporting_checklist)
+#> 9                                                                                                                                         build_summary_table_bundle(res)
+#>                                                                                                                                                   Reason
+#> 1                                                                   Confirms input mode, model, method, section status, table coverage, and plot routes.
+#> 3                              Triage orders unavailable, review, information, and OK signals across diagnostics, tables, plots, and reporting surfaces.
+#> 2 The Wright map is the primary fitted-scale artifact: compare person targeting with facet levels and step thresholds before branching into diagnostics.
+#> 4                                            Diagnostic warnings identify the highest-priority fit, precision, residual, or category follow-up surfaces.
+#> 5                                                                   The QC route gives a focused follow-up view of fit, residual, and category surfaces.
+#> 6                                            This follow-up separates measure uncertainty from fit displacement while keeping person inclusion explicit.
+#> 7                                                Precision review keeps fit-size, standardized fit, and separation evidence in separate reporting lanes.
+#> 8                                                                                  Checklist rows identify report-ready, missing, and caveated sections.
+#> 9                                                                     The bundle exposes table roles, plot readiness, and conservative appendix presets.
 summary(report_toy)$overview
 #>   Style OverallStatus     FirstAction ReviewAreas CaveatAreas OptionalAreas
 #> 1    qc        review Start with Fit.           2           0             3
@@ -178,12 +259,12 @@ head(export_toy$written_files)
 #> 5        summary_plot_map    csv
 #> 6          summary_triage    csv
 #>                                                                              Path
-#> 1        /tmp/RtmpcbSNf6/mfrmr-workflow-export/mfrmr_results_summary_overview.csv
-#> 2          /tmp/RtmpcbSNf6/mfrmr-workflow-export/mfrmr_results_summary_status.csv
-#> 3 /tmp/RtmpcbSNf6/mfrmr-workflow-export/mfrmr_results_summary_component_index.csv
-#> 4     /tmp/RtmpcbSNf6/mfrmr-workflow-export/mfrmr_results_summary_table_index.csv
-#> 5        /tmp/RtmpcbSNf6/mfrmr-workflow-export/mfrmr_results_summary_plot_map.csv
-#> 6          /tmp/RtmpcbSNf6/mfrmr-workflow-export/mfrmr_results_summary_triage.csv
+#> 1        /tmp/Rtmp1umPTj/mfrmr-workflow-export/mfrmr_results_summary_overview.csv
+#> 2          /tmp/Rtmp1umPTj/mfrmr-workflow-export/mfrmr_results_summary_status.csv
+#> 3 /tmp/Rtmp1umPTj/mfrmr-workflow-export/mfrmr_results_summary_component_index.csv
+#> 4     /tmp/Rtmp1umPTj/mfrmr-workflow-export/mfrmr_results_summary_table_index.csv
+#> 5        /tmp/Rtmp1umPTj/mfrmr-workflow-export/mfrmr_results_summary_plot_map.csv
+#> 6          /tmp/Rtmp1umPTj/mfrmr-workflow-export/mfrmr_results_summary_triage.csv
 #>   Note
 #> 1     
 #> 2     
@@ -812,7 +893,105 @@ summary(diag)
 #>  - Strict pairwise local-dependence checks were computed from posterior-integrated expected exact and adjacent agreement and should be read as exploratory screening summaries.
 #>  - Posterior predictive checking remains a planned corroborating follow-up for strict marginal flags and practical-significance review.
 #>  - Legacy residual diagnostics and strict marginal diagnostics target different quantities; do not compare their residual magnitudes directly.
+
+# Keep the final artifact flow explicit: fit -> Wright map -> follow-up plots.
+res <- mfrm_results(fit)
+summary(res, view = "brief")
+#> mfrmr Results Summary
+#> 
+#> Overview
+#>  InputMode Model Method    N Persons Facets Categories Components Tables
+#>   mfrm_fit   RSM    MML 1842     307      2          4         10     94
+#>  PlotRoutes NotAvailable
+#>           7            0
+#> 
+#> Triage
+#>                    Area Severity                        Signal
+#>             Diagnostics   review   diagnostic_warnings_present
+#>  Precision / separation   review    precision_review_available
+#>    Diagnostic dashboard       ok             qc_plot_available
+#>               Reporting       ok reporting_checklist_available
+#>    Section availability       ok  requested_sections_available
+#>                                           Route
+#>           summary(res$diagnostics)$key_warnings
+#>        summary(res$components$precision_review)
+#>  plot(res, type = "qc", preset = "publication")
+#>     summary(res$components$reporting_checklist)
+#>                             summary(res)$status
+#>                                                                                                              Detail
+#>                                               Unexpected responses flagged: 100. | Flagged displacement levels: 40.
+#>  Precision review is available; inspect fit, separation, reliability, and ZSTD wording boundaries before reporting.
+#>                    The QC dashboard route is available as a focused follow-up after the required Wright-map review.
+#>                                                 Reporting checklist is available as the manuscript-routing surface.
+#>                                                           Requested sections that could be computed were available.
+#> 
+#> Plot routes
+#>         Type Available RequiredArtifact
+#>       wright      TRUE             TRUE
+#>  fit_pathway      TRUE            FALSE
+#>           qc      TRUE            FALSE
+#>                                                                                                                                            Route
+#>                                                                                                                       plot(res, type = 'wright')
+#>  plot(res, type = 'fit_pathway', fit_stat = 'Infit', include_person = TRUE, top_n_person = 12, person_labels = 'none', facet_labels = 'flagged')
+#>                                                                                                                           plot(res, type = 'qc')
+#>                                                                                                  Detail
+#>  Required first fitted-scale artifact: persons, facet levels, and thresholds on the shared logit ruler.
+#>                  Infit/Outfit-versus-measure pathway with selected person rows and measure uncertainty.
+#>                                                     Quality-control dashboard from plot_qc_dashboard().
+#> 
+#> Next actions
+#>  Priority               Area
+#>         1           Overview
+#>         2             Triage
+#>         2         Wright map
+#>         3        Diagnostics
+#>         4 Visual diagnostics
+#>                                                   Action
+#>                        Read the compact results summary.
+#>           Read the first-screen triage before branching.
+#>  Create and inspect the required shared-logit scale map.
+#>   Review diagnostic key warnings before report drafting.
+#>    Open the QC dashboard after reviewing the Wright map.
+#>                                                               Route
+#>                                                        summary(res)
+#>                                                 summary(res)$triage
+#>  plot(res, type = "wright", preset = "publication", show_ci = TRUE)
+#>                               summary(res$diagnostics)$key_warnings
+#>                      plot(res, type = "qc", preset = "publication")
+#>                                                                                                                                                  Reason
+#>                                                                    Confirms input mode, model, method, section status, table coverage, and plot routes.
+#>                               Triage orders unavailable, review, information, and OK signals across diagnostics, tables, plots, and reporting surfaces.
+#>  The Wright map is the primary fitted-scale artifact: compare person targeting with facet levels and step thresholds before branching into diagnostics.
+#>                                             Diagnostic warnings identify the highest-priority fit, precision, residual, or category follow-up surfaces.
+#>                                                                    The QC route gives a focused follow-up view of fit, residual, and category surfaces.
+plot(res, type = "wright", preset = "publication", show_ci = TRUE)
 ```
+
+![](mfrmr-workflow_files/figure-html/fit-full-1.png)
+
+``` r
+
+
+plot(
+  fit,
+  type = "fit_pathway",
+  diagnostics = res$diagnostics,
+  fit_stat = "Infit",
+  include_person = TRUE,
+  top_n_person = 12,
+  person_labels = "none",
+  facet_labels = "flagged",
+  preset = "publication"
+)
+```
+
+![](mfrmr-workflow_files/figure-html/fit-full-2.png)
+
+This full-data figure caps the displayed person layer at 12 and
+suppresses routine point labels to keep the first screen legible. The
+selected person IDs and every retained facet row remain in
+`plot(..., draw = FALSE)$data$table`; use `person_labels = "all"` or
+`facet_labels = "all"` for a point-identification figure.
 
 If you need residual-structure evidence for a final report, you can add
 residual PCA after the initial diagnostic pass. Treat this as an

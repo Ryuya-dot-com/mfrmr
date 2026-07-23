@@ -20,17 +20,45 @@ source, such as people, raters, items, tasks, criteria, forms, or
 occasions. The package fits the model, then helps you read the result
 without treating every diagnostic as a final decision.
 
-The shortest route is:
+The canonical route is data -\> fit -\> required Wright map -\> focused
+diagnostics -\> report/export:
 
 ``` r
 
-fit <- fit_mfrm(my_data, person = "Person", facets = c("Rater", "Criterion"),
-                score = "Score", model = "RSM")
+library(mfrmr)
+
+dat <- load_mfrmr_data("example_core")
+fit <- fit_mfrm(dat, person = "Person", facets = c("Rater", "Criterion"),
+                score = "Score", method = "MML", model = "RSM")
 res <- mfrm_results(fit)
 summary(res, view = "brief")
+
+# Required final scale artifact: inspect this before follow-up plots.
+plot(res, type = "wright", preset = "publication", show_ci = TRUE)
+
+# Focused fit follow-up: Infit on x, measure on y, persons included.
+plot(fit, type = "fit_pathway", diagnostics = res$diagnostics,
+     fit_stat = "Infit", include_person = TRUE, top_n_person = 12,
+     person_labels = "none", facet_labels = "flagged",
+     preset = "publication")
+
 report <- mfrm_report(res)
 summary(report, view = "reader")
+export_mfrm_results(res, output_dir = "mfrmr-results",
+                    preset = "starter", overwrite = TRUE)
 ```
+
+The native Wright map keeps facet/step SE or CI information. When a
+FACETS-style asterisk ruler is needed for visual migration, use
+`plot_wright_unified(fit, renderer = "facets")`; this reproduces the
+visual grammar, while numerical equivalence still requires aligned
+settings and an external FACETS comparison.
+
+The fit-pathway example caps the person layer at 12 and suppresses
+routine point labels so larger designs remain readable. Person IDs and
+all retained coordinates remain in the draw-free `data$table`; switch
+`person_labels` or `facet_labels` to `"all"` when identifying every
+point is more important than a compact first screen.
 
 After that first screen, use `mfrmr_output_guide("public")` to choose
 the next route. Use `mfrmr_output_guide("beginner")` for a gentler map,
@@ -72,14 +100,14 @@ before treating a helper as a new model engine.
 |----|----|----|
 | Core model engine | [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md) estimates the existing unidimensional ordered-response MFRM route for `RSM`, `PCM`, and the documented bounded-`GPCM` branch. | No multidimensional latent trait engine, Q-matrix design, arbitrary covariance structure, `formulaA`-style model matrix, mixture, or response-process model is implemented in [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md). |
 | First-screen workflow | [`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md), `summary(..., view = "brief")`, [`mfrm_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md), `summary(..., view = "reader")`, and `export_mfrm_results(preset = "starter")` make the first result/report/export route easier to read. | These helpers organize existing evidence; they do not refit the model, change diagnostics, or create an acceptance rule. |
-| FACETS transition | [`facets_positioning_guide()`](https://ryuya-dot-com.github.io/mfrmr/reference/facets_positioning_guide.md), `facets_term_crosswalk()`, [`facets_feature_coverage()`](https://ryuya-dot-com.github.io/mfrmr/reference/facets_feature_coverage.md), `facets_visual_contract()`, and related file contracts explain FACETS-facing terminology and handoff surfaces. | FACETS-style names are migration/presentation contracts, not numerical equivalence claims unless external FACETS output is explicitly supplied and compared. |
+| FACETS transition | [`facets_positioning_guide()`](https://ryuya-dot-com.github.io/mfrmr/reference/facets_positioning_guide.md), [`facets_term_crosswalk()`](https://ryuya-dot-com.github.io/mfrmr/reference/facets_term_crosswalk.md), [`facets_feature_coverage()`](https://ryuya-dot-com.github.io/mfrmr/reference/facets_feature_coverage.md), [`facets_visual_contract()`](https://ryuya-dot-com.github.io/mfrmr/reference/facets_visual_contract.md), and related file contracts explain FACETS-facing terminology and handoff surfaces. | FACETS-style names are migration/presentation contracts, not numerical equivalence claims unless external FACETS output is explicitly supplied and compared. |
 | Reporting and reviewer completeness | `mfrmr_minimum_report_checklist()`, [`reporting_checklist()`](https://ryuya-dot-com.github.io/mfrmr/reference/reporting_checklist.md), `mfrmr_output_guide("beginner")`, and `mfrmr_output_guide("psychometric")` separate beginner routes from technical review routes. | Package output supports the validity argument; it does not establish content evidence, response-process evidence, consequences, fairness, or operational use by itself. |
 | Generalizability theory | [`mfrm_generalizability()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_generalizability.md), [`mfrm_d_study()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_d_study.md), `check_mfrm_generalizability_design()`, `compare_mfrm_generalizability()`, and `bootstrap_mfrm_generalizability()` provide observed-score G-study/D-study complements, interaction sensitivity review, design checks, and person-cluster bootstrap intervals. | `G` and `Phi` are observed-score G-theory coefficients, not fitted-logit MFRM separation reliability, rater agreement, or validity evidence. Sparse or singular interaction models are sensitivity evidence. |
 | Bounded `GPCM` | [`gpcm_capability_matrix()`](https://ryuya-dot-com.github.io/mfrmr/reference/gpcm_capability_matrix.md), [`gpcm_score_side_contract()`](https://ryuya-dot-com.github.io/mfrmr/reference/gpcm_score_side_contract.md), fixed score-side simulation evidence, and fixed external probability-kernel comparisons document supported and caveated routes. | This is not complete unrestricted GPCM, not full FACETS score-side equivalence, not posterior predictive checking, and not a heavy-backend Bayesian implementation. |
 | Model-family and estimator scope | `mfrmr_model_family_scope()`, `mfrmr_estimation_scope()`, `estimate_population_sd = TRUE`, and `analyze_eap_power_sensitivity()` document current and deferred model/estimation choices. | Scope helpers do not implement the deferred models they describe. Free-SD and EAP sensitivity routes do not imply latent-regression, mixture, MCMC, or structural-SE unification. |
 | DIF/DFF and fairness screening | [`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md), [`analyze_dff()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_dff.md), `analyze_dif_mh()`, `analyze_dff_moderation()`, and `dif_report(style = "apa")` support conservative bias/DIF screening and APA-style reporting boundaries. | Screens are prompts for follow-up design and substantive review, not final fairness, invariance, or subgroup-decision conclusions. |
 | Anchoring and linking | [`make_anchor_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/make_anchor_table.md), [`review_mfrm_anchors()`](https://ryuya-dot-com.github.io/mfrmr/reference/review_mfrm_anchors.md), `anchor_linking_contract()`, [`detect_anchor_drift()`](https://ryuya-dot-com.github.io/mfrmr/reference/detect_anchor_drift.md), [`build_equating_chain()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_equating_chain.md), and [`build_linking_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_linking_review.md) make anchor/linking support auditable. | Drift, equating, or scale-maintenance claims require explicit multi-fit wave/form designs and anchor support, not a single fitted summary. |
-| Visualization | `plot(..., draw = FALSE)`, [`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md), `as_ggplot()`, [`visual_reporting_template()`](https://ryuya-dot-com.github.io/mfrmr/reference/visual_reporting_template.md), and `facets_visual_contract()` expose editable visual payloads and caption guidance. | Visuals are diagnostic/reporting evidence; they are not standalone validity, fairness, or FACETS-equivalent graphics claims. |
+| Visualization | `plot(..., draw = FALSE)`, [`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md), [`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md), [`visual_reporting_template()`](https://ryuya-dot-com.github.io/mfrmr/reference/visual_reporting_template.md), and [`facets_visual_contract()`](https://ryuya-dot-com.github.io/mfrmr/reference/facets_visual_contract.md) expose editable visual payloads and caption guidance. | Visuals are diagnostic/reporting evidence; they are not standalone validity, fairness, or FACETS-equivalent graphics claims. |
 | Simulation and design planning | [`build_mfrm_sim_spec()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_mfrm_sim_spec.md), [`evaluate_mfrm_design()`](https://ryuya-dot-com.github.io/mfrmr/reference/evaluate_mfrm_design.md), [`evaluate_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/reference/evaluate_mfrm_recovery.md), and [`evaluate_mfrm_signal_detection()`](https://ryuya-dot-com.github.io/mfrmr/reference/evaluate_mfrm_signal_detection.md) separate data generation, recovery, design-grid review, and screening operating characteristics. | Simulation results inform planning and sensitivity, not observed-study validity or automatic operational decisions. |
 | Response-time QC | [`response_time_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/response_time_review.md) and response-time plot/export routes carry timing metadata as descriptive QC context. | No speed parameter, joint speed-accuracy model, modified logit, or automatic exclusion rule is fitted. |
 | Release evidence | Versioned validation artifacts under `inst/validation/` and `release_readiness()` record fixed smoke evidence, evidence maps, and release-scope checks for 0.2.2. | Fixed artifacts document the release claim; they do not rerun every long simulation during ordinary CRAN checks. |
@@ -92,8 +120,9 @@ question requires it.
 
 | Layer | Use first | Purpose |
 |----|----|----|
-| Fit | [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md) -\> [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md) | Explicit, scriptable model roles and diagnostics |
-| Results | `res <- mfrm_results(fit)` -\> `summary(res, view = "brief")` | Reader-first overview, highest-priority triage, next actions, plot routes, replay code |
+| Fit | [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md) -\> [`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md) | Explicit model roles followed by a comprehensive fitted result object |
+| Required figure | `plot(res, type = "wright", show_ci = TRUE)` | Persons, facets, and steps on the shared logit scale; always inspect before follow-up figures |
+| Results | `summary(res, view = "brief")` | Reader-first overview, highest-priority triage, next actions, plot routes, replay code |
 | Report | `report <- mfrm_report(res)` -\> `summary(report, view = "reader")` | Report readiness, claim-use guidance, cautious wording routes, HTML/Markdown report output |
 | Viewer | `launch_mfrmr_viewer(res)` | Optional local reader over an existing `mfrm_results` object |
 | Export | `export_mfrm_results(res, preset = "starter")` | Reader-first folder with `index.html`, report tables, evidence summaries, replay code, manifest |
@@ -141,6 +170,24 @@ summary(fit)
 # Comprehensive first screen: diagnostics, tables, report status, plot routes.
 res <- mfrm_results(fit)
 summary(res, view = "brief")
+
+# Required final scale artifact. Keep this before all optional visual screens.
+plot(res, type = "wright", preset = "publication", show_ci = TRUE)
+
+# Infit pathway: x = fit statistic, y = measure; include person rows explicitly.
+plot(
+  fit,
+  type = "fit_pathway",
+  diagnostics = res$diagnostics,
+  fit_stat = "Infit",
+  include_person = TRUE,
+  top_n_person = 12,
+  person_labels = "none",
+  facet_labels = "flagged",
+  preset = "publication"
+)
+
+# Optional dashboard after the shared-scale display.
 plot(res, type = "qc", preset = "publication")
 summary(res)$next_actions
 
@@ -179,7 +226,7 @@ applies.
 
 | Situation | First call | Then |
 |----|----|----|
-| New reproducible analysis | [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md) -\> [`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md) | `summary(res, view = "brief")`, `plot(res, type = "qc")`, `summary(res)$next_actions` |
+| New reproducible analysis | [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md) -\> [`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md) | `summary(res, view = "brief")`, required `plot(res, type = "wright", show_ci = TRUE)`, then focused follow-up plots |
 | Binary person-item response data | `fit_mfrm(..., facets = "Item", model = "RSM")` -\> [`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md) | Check `fit$summary$Categories == 2`; use `mfrmr_output_guide("binary")` for the route |
 | Existing `mfrm_fit` object | `mfrm_results(fit)` | Drill into `res$components` or `build_summary_table_bundle(res)` |
 | Local point-and-click review | `mfrm_results(fit, include = ...)` -\> `launch_mfrmr_viewer(res)` | Use `mfrmr_output_guide("viewer")` to choose `include = "publication"`, `"bias"`, `"misfit_review"`, `"linking"`, or a combined route |
@@ -279,12 +326,11 @@ download <- export_mfrm_results(
 download$written_files
 ```
 
-Open `index.html` first. The starter export keeps the reader-facing
-files at the root, groups compact summaries in `00_summary/`,
-report-readiness tables in `01_report/`, primary evidence summaries in
-`02_evidence/`, and replay/manifest artifacts in `03_reproducibility/`.
-When `zip_bundle = TRUE`, that folder layout is preserved inside the zip
-archive.
+Open `index.html` first. The starter export places the required
+Wright-map PNG directly in the reading flow, followed by links to the
+result summary, report, replay script, and written-files manifest. All
+files use the requested prefix in one portable folder; when
+`zip_bundle = TRUE`, the same files are included in the zip archive.
 
 For report drafting, keep the same object-first route and turn the
 already assembled evidence into a section plan:
@@ -407,7 +453,11 @@ If you want the shortest possible recommendation:
 - Fast exploratory pass only: use `method = "JML"`
 - Preferred `RSM` / `PCM` fit screen:
   `diagnose_mfrm(..., diagnostic_mode = "both")`
-- First visual screen: `plot_qc_dashboard(..., preset = "publication")`
+- Required first visual:
+  `plot(res, type = "wright", preset = "publication", show_ci = TRUE)`
+- Fit follow-up:
+  `plot(fit, type = "fit_pathway", diagnostics = res$diagnostics, fit_stat = "Infit", include_person = TRUE, top_n_person = 12, person_labels = "none", facet_labels = "flagged")`
+- Optional dashboard: `plot_qc_dashboard(..., preset = "publication")`
 - First reporting screen: `report <- mfrm_report(res)` and
   `summary(report, view = "reader")`
 - Manuscript checklist follow-up:
@@ -1307,7 +1357,8 @@ help pages for the main workflows.
 - Reviewer-facing reporting route: `mfrmr_output_guide("psychometric")`
 - Reporting and APA map:
   [`help("mfrmr_reporting_and_apa", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_reporting_and_apa.md)
-- FACETS terminology crosswalk: `facets_term_crosswalk()`
+- FACETS terminology crosswalk:
+  [`facets_term_crosswalk()`](https://ryuya-dot-com.github.io/mfrmr/reference/facets_term_crosswalk.md)
 - Linking and DFF map:
   [`help("mfrmr_linking_and_dff", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_linking_and_dff.md)
 - Compatibility layer map:
@@ -1713,7 +1764,8 @@ characteristics. The same draw-free plot object also retains `overview`,
 `reading_order`, `next_actions`, `reporting_notes`, and
 `figure_recipes`, so custom ggplot2, plotly, Quarto, or Shiny displays
 can carry the interpretation boundaries and caption/display guidance
-beside the plotted values. For common plot-data shapes, `as_ggplot()`
+beside the plotted values. For common plot-data shapes,
+[`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md)
 provides a direct optional `ggplot2` route:
 
 ``` r
@@ -1727,18 +1779,19 @@ as_ggplot(plot_dif_heatmap(dff_refit, metric = "contrast", draw = FALSE))
 ```
 
 The package still keeps base R as the default renderer; use
-`as_ggplot()` when the figure needs journal-specific themes, scales,
-facets, or downstream composition in Quarto. The Wright-map converter
-carries over the person distribution and facet/step rails; the pathway
-converter carries over dominant-category strips, thresholds, endpoint
-labels, and available fit annotations; the fit-pathway converter keeps
-the selected Infit/Outfit axis separate from the vertical measure/logit
-axis. The CCC converter keeps category curves editable and can map a
-`GPCM` slope/discrimination column to line width, alpha, or colour; for
-RSM/PCM payloads this remains a constant-slope display. For appendix
-handoff, `summary(diag_eval)`, `build_summary_table_bundle(diag_eval)`,
-and `export_summary_appendix(diag_eval, preset = "recommended")` return
-the same scenario, performance, report-signal, contrast, and draw-free
+[`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md)
+when the figure needs journal-specific themes, scales, facets, or
+downstream composition in Quarto. The Wright-map converter carries over
+the person distribution and facet/step rails; the pathway converter
+carries over dominant-category strips, thresholds, endpoint labels, and
+available fit annotations; the fit-pathway converter keeps the selected
+Infit/Outfit axis separate from the vertical measure/logit axis. The CCC
+converter keeps category curves editable and can map a `GPCM`
+slope/discrimination column to line width, alpha, or colour; for RSM/PCM
+payloads this remains a constant-slope display. For appendix handoff,
+`summary(diag_eval)`, `build_summary_table_bundle(diag_eval)`, and
+`export_summary_appendix(diag_eval, preset = "recommended")` return the
+same scenario, performance, report-signal, contrast, and draw-free
 plot-data surfaces as tables, keeping simulation screening signals
 separate from validation pass/fail decisions. Start with
 `summary(diag_eval)$reading_order`, then read
@@ -2023,9 +2076,11 @@ facets_visual_contract()[, c(
 This maps FACETS Table 6/8 displays, Graphs-menu curves, DIF/bias Excel
 plots, Graphfile output, and R/Web plot menus to `mfrmr` plot,
 [`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md),
-and `as_ggplot()` routes. It is a review-purpose migration guide, not a
-claim that `mfrmr` reproduces FACETS graph-window behavior, Excel
-workbook plots, clickable Webpage output, or line-printer artwork.
+and
+[`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md)
+routes. It is a review-purpose migration guide, not a claim that `mfrmr`
+reproduces FACETS graph-window behavior, Excel workbook plots, clickable
+Webpage output, or line-printer artwork.
 
 ## DFF / DIF analysis
 
@@ -2148,9 +2203,10 @@ Interpretation rules:
   `ClassificationSystem == "ETS"`, and draw-free payloads expose
   `ETSDisplayEligible` / `ets_display_eligible` so reports can avoid
   relabeling screening plots as ETS classifications.
-- `as_ggplot()` can re-render the draw-free DIF/DFF payloads as editable
-  `ggplot2` objects; it does not change the underlying classification or
-  reporting boundary.
+- [`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md)
+  can re-render the draw-free DIF/DFF payloads as editable `ggplot2`
+  objects; it does not change the underlying classification or reporting
+  boundary.
 - Use `dif_report(..., style = "apa")` and
   [`apa_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/apa_table.md)
   for manuscript handoff, and pass `dif_results = ...` to
@@ -2970,17 +3026,20 @@ partitions. Use `check_mfrm_generalizability_design()` before fitting
 expanded models when you need to review observed cell density,
 exact-cell replication, and whether highest-order interaction remains
 difficult to separate from residual error. Use
-`plot(design_check, draw = FALSE)` or `as_ggplot()` to turn that review
-into editable interaction-cell, highest-order, facet-coverage, or
-signal-count figures; the same route is available from a fitted G-study
-with `plot(gt, type = "design_check", draw = FALSE)`. For reporting, use
+`plot(design_check, draw = FALSE)` or
+[`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md)
+to turn that review into editable interaction-cell, highest-order,
+facet-coverage, or signal-count figures; the same route is available
+from a fitted G-study with
+`plot(gt, type = "design_check", draw = FALSE)`. For reporting, use
 `plot(compare, type = "variance_delta", draw = FALSE)` to show variance
 movement and `plot(compare, type = "d_study_overlay", draw = FALSE)` to
 check whether design recommendations change. Start that comparison with
 `plot(compare, type = "design_check", draw = FALSE)` when named
 interactions are central to the claim, and inspect
 `compare$comparison_review` before writing a model-comparison
-conclusion. The returned `mfrm_plot_data` can be passed to `as_ggplot()`
+conclusion. The returned `mfrm_plot_data` can be passed to
+[`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md)
 or inspected with
 [`plot_data_components()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data_components.md)
 for custom figures. When G/Phi or variance-component differences will be
@@ -3218,6 +3277,9 @@ bundles.
 
   Generic for converting objects to a `flextable`
 
+- [`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md)
+  : Convert draw-free mfrmr plot data to ggplot2
+
 - [`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md)
   : Extract reusable data from an mfrmr plot object
 
@@ -3306,8 +3368,14 @@ adapters.
 - [`facets_positioning_guide()`](https://ryuya-dot-com.github.io/mfrmr/reference/facets_positioning_guide.md)
   : FACETS Positioning Guide
 
+- [`facets_term_crosswalk()`](https://ryuya-dot-com.github.io/mfrmr/reference/facets_term_crosswalk.md)
+  : FACETS-to-mfrmr term crosswalk
+
 - [`facets_feature_coverage()`](https://ryuya-dot-com.github.io/mfrmr/reference/facets_feature_coverage.md)
   : FACETS Feature Coverage Matrix
+
+- [`facets_visual_contract()`](https://ryuya-dot-com.github.io/mfrmr/reference/facets_visual_contract.md)
+  : FACETS-facing visual contract
 
 - [`facets_fit_df_guide()`](https://ryuya-dot-com.github.io/mfrmr/reference/facets_fit_df_guide.md)
   : Guide FACETS-style fit df and ZSTD standardization

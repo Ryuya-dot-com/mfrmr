@@ -19,6 +19,13 @@ plot_wright_unified(
   preset = c("standard", "publication", "compact", "monochrome"),
   palette = NULL,
   label_angle = 45,
+  renderer = NULL,
+  wright_style = c("native", "facets_style"),
+  category_labels = NULL,
+  rows_per_logit = 2L,
+  wright_range = NULL,
+  extreme_placement = c("ends", "estimate"),
+  persons_per_star = NULL,
   ...
 )
 ```
@@ -34,6 +41,8 @@ plot_wright_unified(
 
   Optional output from
   [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md).
+  When supplied, the map uses matching standard errors and precision
+  metadata while keeping coordinates from `fit`.
 
 - bins:
 
@@ -46,7 +55,8 @@ plot_wright_unified(
 
 - top_n:
 
-  Maximum number of facet/step points retained for labeling.
+  Maximum number of facet/step locations retained by the native
+  renderer. The FACETS-style payload retains every fitted location.
 
 - show_ci:
 
@@ -75,6 +85,41 @@ plot_wright_unified(
 
   Rotation angle for group labels on the facet panel.
 
+- renderer:
+
+  Canonical Wright-map renderer selector: `"native"` (default) or
+  `"facets"` for the FACETS Table 6-style visual layout.
+
+- wright_style:
+
+  Wright-map renderer: `"native"` preserves the histogram, point, range,
+  and facet-SE display; `"facets_style"` adds a FACETS Table 6-style
+  text ruler. The latter is a visual layout, not a claim of numerical
+  equivalence with FACETS, and is equivalent to `renderer = "facets"`.
+
+- category_labels:
+
+  Optional named/ordered score rubric labels, or a data frame with
+  `Score` and `Label`, for `wright_style = "facets_style"`.
+
+- rows_per_logit:
+
+  Number of rows per logit on the FACETS-style ruler.
+
+- wright_range:
+
+  Optional finite increasing length-2 logit range.
+
+- extreme_placement:
+
+  Place extreme-score persons at ruler `"ends"` or at their fitted
+  `"estimate"` in the FACETS-style renderer.
+
+- persons_per_star:
+
+  Number of persons represented by one `*`; `NULL` selects a compact
+  value automatically.
+
 - ...:
 
   Additional graphical parameters.
@@ -101,6 +146,13 @@ sit relative to the same latent scale.
 
 The logit scale on the y-axis is shared, allowing direct visual
 comparison of all facets and persons.
+
+With `renderer = "facets"` (or `wright_style = "facets_style"`), the
+draw-free result additionally contains tidy ruler rows, person star
+frequencies, signed facet headers, all facet levels, step lines,
+original-score transitions, mean half-score boundaries, category labels,
+and display settings under `facets_style`. These tables support custom
+ggplot2/plotly rendering without parsing the base plot.
 
 ## Interpreting output
 
@@ -155,8 +207,24 @@ fit <- fit_mfrm(toy_small, "Person", c("Rater", "Criterion"), "Score",
                  method = "JML", model = "RSM", maxit = 30)
 map_data <- plot_wright_unified(fit, draw = FALSE)
 names(map_data)
-#>  [1] "persons"       "facets"        "thresholds"    "facet_names"  
-#>  [5] "y_lim"         "title"         "person"        "person_hist"  
-#>  [9] "person_stats"  "locations"     "label_points"  "group_summary"
-#> [13] "group_levels"  "y_range"      
+#>  [1] "persons"         "facets"          "thresholds"      "facet_names"    
+#>  [5] "y_lim"           "title"           "wright_style"    "renderer"       
+#>  [9] "visual_contract" "person"          "person_hist"     "person_stats"   
+#> [13] "locations"       "label_points"    "group_summary"   "group_levels"   
+#> [17] "y_range"         "label_limit"    
+facets_map <- plot_wright_unified(
+  fit,
+  renderer = "facets",
+  category_labels = c(
+    `1` = "Beginning", `2` = "Developing", `3` = "Secure", `4` = "Advanced"
+  ),
+  draw = FALSE
+)
+facets_map$facets_style$settings
+#> # A tibble: 1 × 10
+#>   Renderer WrightStyle  VisualCorrespondence  LowerLogit UpperLogit RowsPerLogit
+#>   <chr>    <chr>        <chr>                      <dbl>      <dbl>        <int>
+#> 1 facets   facets_style FACETS Table 6-style…         -2          2            2
+#> # ℹ 4 more variables: ExtremePlacement <chr>, PersonsPerStar <dbl>,
+#> #   StarsPerPerson <dbl>, PersonN <int>
 ```

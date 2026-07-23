@@ -2,6 +2,55 @@
 
 ## mfrmr 0.2.2
 
+- The canonical user route is now explicit and executable: data -\>
+  [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
+  -\>
+  [`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md)
+  -\> required Wright map -\> focused diagnostics -\> report/export. The
+  first-screen triage and next-action tables identify the Wright map as
+  the required fitted-scale artifact.
+- `export_mfrm_results(preset = "starter")` now implements the
+  previously documented preset. It requests reports and plots, writes a
+  reader-first `index.html`, embeds the required Wright-map PNG, and
+  links the result, report, replay, and manifest artifacts in reading
+  order.
+- `summary(res, view = "brief")` and `summary(report, view = "reader")`
+  are now real view contracts rather than silently ignored arguments.
+- [`facets_term_crosswalk()`](https://ryuya-dot-com.github.io/mfrmr/reference/facets_term_crosswalk.md)
+  and
+  [`facets_visual_contract()`](https://ryuya-dot-com.github.io/mfrmr/reference/facets_visual_contract.md)
+  now provide the documented FACETS migration tables, explicitly
+  separating visual compatibility from numerical equivalence.
+- The pkgdown build executes vignette chunks with `NOT_CRAN=true`, so
+  the public visual-diagnostics pages contain rendered Wright maps
+  rather than code-only placeholders. The printable cheatsheet now
+  reports version 0.2.2.
+- Wright maps now offer an opt-in `renderer = "facets"` visual renderer
+  (`wright_style = "facets_style"` is the explicit equivalent) with a
+  shared logit ruler, person-frequency stars, signed facet headers, all
+  facet levels, labeled score-transition lines, optional rubric labels,
+  ruler/extreme controls, and tidy draw-free tables. The existing native
+  renderer remains the default, while its facet-SE whiskers remain
+  available with `show_ci = TRUE` and are enabled by the canonical
+  results workflow; the new name and metadata explicitly describe visual
+  correspondence rather than FACETS numerical equivalence. The native
+  `top_n` compact-display contract remains unchanged, while the
+  FACETS-style payload retains every fitted location. Wright CI data now
+  store absolute endpoints and reuse supplied diagnostic SE metadata
+  without replacing fitted coordinates.
+- `plot(..., type = "fit_pathway")` adds the requested fit-oriented
+  pathway: Infit (or Outfit) is on the x-axis, measure logits are on the
+  y-axis, screening bands are explicit, and person rows can be included
+  with a bounded selection plus independent person/facet label policies.
+  The existing expected-score-over-theta `type = "pathway"` remains
+  unchanged. Measure SE intervals, engine or FACETS-style ZSTD
+  companions, draw-free data, and optional
+  [`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md)
+  conversion are available for editable reporting.
+  [`plot_bubble()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_bubble.md)
+  can also include persons and now sizes bubbles consistently from
+  inverse SE. The starter plot export includes selected person rows in
+  its Infit pathway.
 - The example-execution policy now keeps `R CMD check` time within the
   CRAN incoming budget (the 0.2.1 submission passed the content checks
   on Windows and Debian but tripped the overall-checktime limit on the

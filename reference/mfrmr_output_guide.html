@@ -56,9 +56,9 @@ user-facing map, not an analysis result.</p>
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">mfrmr_output_guide</span><span class="op">(</span></span>
-<span>  scope <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"all"</span>, <span class="st">"public"</span>, <span class="st">"entry"</span>, <span class="st">"viewer"</span>, <span class="st">"binary"</span>, <span class="st">"tables"</span>, <span class="st">"reports"</span>, <span class="st">"reviews"</span>,</span>
-<span>    <span class="st">"bundles"</span>, <span class="st">"exports"</span>, <span class="st">"compatibility"</span>, <span class="st">"gpcm"</span>, <span class="st">"simulation"</span>, <span class="st">"linking"</span>, <span class="st">"network"</span>,</span>
-<span>    <span class="st">"response_time"</span>, <span class="st">"facets"</span>, <span class="st">"conquest"</span>, <span class="st">"r"</span><span class="op">)</span></span>
+<span>  scope <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"all"</span>, <span class="st">"public"</span>, <span class="st">"beginner"</span>, <span class="st">"psychometric"</span>, <span class="st">"entry"</span>, <span class="st">"viewer"</span>, <span class="st">"binary"</span>,</span>
+<span>    <span class="st">"tables"</span>, <span class="st">"reports"</span>, <span class="st">"reviews"</span>, <span class="st">"bundles"</span>, <span class="st">"exports"</span>, <span class="st">"compatibility"</span>, <span class="st">"gpcm"</span>,</span>
+<span>    <span class="st">"simulation"</span>, <span class="st">"linking"</span>, <span class="st">"network"</span>, <span class="st">"response_time"</span>, <span class="st">"facets"</span>, <span class="st">"conquest"</span>, <span class="st">"r"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -119,7 +119,11 @@ work to <code><a href="mfrm_results_interactive.html">mfrm_results_interactive()
 <code>summary(res)$next_actions</code> to choose the next purpose-specific helper.
 Use <code>mfrmr_output_guide("viewer")</code> when the next step is the optional local
 Shiny reader; it shows which <code>include</code> preset to use before calling
-<code><a href="launch_mfrmr_viewer.html">launch_mfrmr_viewer()</a></code>.</p>
+<code><a href="launch_mfrmr_viewer.html">launch_mfrmr_viewer()</a></code>.
+Use <code>mfrmr_output_guide("beginner")</code> for all beginner-labelled entry
+routes. Use <code>mfrmr_output_guide("psychometric")</code> for the technical table,
+review, and reporting routes whose interpretation boundaries should be
+checked before manuscript use.</p>
     </div>
     <div class="section level2">
     <h2 id="how-to-use-this-guide">How to use this guide<a class="anchor" aria-label="anchor" href="#how-to-use-this-guide"></a></h2>
@@ -438,6 +442,74 @@ and the table that explains how out-of-scope routes are handled.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                 MainFunction</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 25 response_time_review(); mfrm_results(include = "response_time", response_time = ...); plot_response_time_review(); plot_data_components()</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 64                                 response_time_review(); plot_response_time_review(..., draw = FALSE); plot_data_components(); plot_data()</span>
+<span class="r-in"><span><span class="fu">mfrmr_output_guide</span><span class="op">(</span><span class="st">"beginner"</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Question"</span>, <span class="st">"MainFunction"</span><span class="op">)</span><span class="op">]</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                  Question</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                       Start a new reproducible analysis</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                       Open the comprehensive first-screen result object</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3                                    Read report readiness before writing</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4                                     Open a local point-and-click reader</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5                  Download results, report tables, HTML, and replay code</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6                                        Find the next specialized helper</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7                  Use exploratory prompts only when explicitly requested</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8        Start with explicit model roles and a comprehensive first screen</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9                 Open a FACETS-style result surface from an existing fit</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10                Browse the comprehensive result in a local Shiny viewer</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11 Choose the next purpose-specific helper without scanning the namespace</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12          Use column-selection prompts for exploratory data-frame input</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13                                  Open the standard first-screen viewer</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14                           Prepare publication-oriented viewer sections</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 15        Check validation, fit, and separation surfaces before reporting</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 16   Inspect bias-screen prompts without choosing contrasts automatically</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 17                       Inspect pathway-map and row-level misfit prompts</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 18                                   Inspect anchor and linking readiness</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 19                          Prepare a broad reviewer-facing viewer object</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 20                              Fit ordinary person-item binary responses</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 21                                 Confirm the two-category score support</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 22                   Open the first-screen results for a binary Rasch run</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                          MainFunction</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                               fit_mfrm(); diagnose_mfrm(); res &lt;- mfrm_results(fit)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                                                               res &lt;- mfrm_results(fit, include = ...); summary(res)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3                                      report &lt;- mfrm_report(res); summary(report); mfrm_report(res, output = "html")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4                                                                                            launch_mfrmr_viewer(res)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5                                                          export_mfrm_results(res, include = c("default", "report"))</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6                                                                mfrmr_output_guide(scope); summary(res)$next_actions</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7                                                                                        mfrm_results_interactive(df)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8                                                                         fit_mfrm(); diagnose_mfrm(); mfrm_results()</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9                                                                                                      mfrm_results()</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10                                                                 res &lt;- mfrm_results(fit); launch_mfrmr_viewer(res)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11                                                                    mfrmr_output_guide(); summary(res)$next_actions</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12                                                                                         mfrm_results_interactive()</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13                                           res &lt;- mfrm_results(fit, include = "standard"); launch_mfrmr_viewer(res)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14                                        res &lt;- mfrm_results(fit, include = "publication"); launch_mfrmr_viewer(res)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 15                                         res &lt;- mfrm_results(fit, include = "validation"); launch_mfrmr_viewer(res)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 16                                               res &lt;- mfrm_results(fit, include = "bias"); launch_mfrmr_viewer(res)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 17                                      res &lt;- mfrm_results(fit, include = "misfit_review"); launch_mfrmr_viewer(res)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 18                                            res &lt;- mfrm_results(fit, include = "linking"); launch_mfrmr_viewer(res)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 19 res &lt;- mfrm_results(fit, include = c("publication", "bias", "misfit_review", "linking")); launch_mfrmr_viewer(res)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 20                          fit_mfrm(data, person = ..., facets = "Item", score = ..., model = "RSM"); mfrm_results()</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 21                                           describe_mfrm_data(); fit$prep$score_map; summary(fit)$settings_overview</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 22                                              mfrm_results(fit); plot(res, type = "wright"); plot(res, type = "qc")</span>
+<span class="r-in"><span><span class="fu">mfrmr_output_guide</span><span class="op">(</span><span class="st">"psychometric"</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Question"</span>, <span class="st">"DecisionBoundary"</span><span class="op">)</span><span class="op">]</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                       Question</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 23                   Document the model setup and run settings</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 24      Check whether data were filtered, dropped, or remapped</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 26         Decide how strongly precision claims can be phrased</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 27  Summarize facet variability, separation, and measurability</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 28       Review category functioning and expected-score curves</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 30                Review anchors, drift, and linking readiness</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 31             Compare equal-weighting and bounded-GPCM routes</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 38         Check drift across separately fitted waves or forms</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 39 Build a screened equating chain across ordered calibrations</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                            DecisionBoundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 23                                 Specialist follow-up: inspect the source object and help page before treating output as report evidence.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 24                                 Specialist follow-up: inspect the source object and help page before treating output as report evidence.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 26                                            Precision and separation evidence are not inter-rater agreement or standalone validity proof.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 27                                 Specialist follow-up: inspect the source object and help page before treating output as report evidence.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 28                                 Specialist follow-up: inspect the source object and help page before treating output as report evidence.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 30 Anchor and linking evidence support scale-maintenance review; drift and equating claims require explicit multi-fit wave or form designs.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 31                                 Specialist follow-up: inspect the source object and help page before treating output as report evidence.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 38 Anchor and linking evidence support scale-maintenance review; drift and equating claims require explicit multi-fit wave or form designs.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 39 Anchor and linking evidence support scale-maintenance review; drift and equating claims require explicit multi-fit wave or form designs.</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

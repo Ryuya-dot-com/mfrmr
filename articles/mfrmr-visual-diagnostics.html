@@ -153,9 +153,35 @@ the right.</li>
 <li>Wide overlap in confidence whiskers means neighboring levels are not
 cleanly separated.</li>
 </ul>
+<p>The native view above remains the recommended analytic figure because
+it keeps facet/step uncertainty visible. For a closer FACETS-facing
+handoff, switch the renderer and leave <code>show_ci</code> at its
+default <code>FALSE</code>. The fitted coordinates do not change.</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span></span>
+<span>  <span class="va">fit</span>,</span>
+<span>  type <span class="op">=</span> <span class="st">"wright"</span>,</span>
+<span>  renderer <span class="op">=</span> <span class="st">"facets"</span>,</span>
+<span>  category_labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>    `1` <span class="op">=</span> <span class="st">"Beginning"</span>, `2` <span class="op">=</span> <span class="st">"Developing"</span>, `3` <span class="op">=</span> <span class="st">"Secure"</span>, `4` <span class="op">=</span> <span class="st">"Advanced"</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p><img src="mfrmr-visual-diagnostics_files/figure-html/wright-facets-style-1.png" class="r-plt" alt="" width="672"></p>
+<p>This renderer uses one common logit ruler, a <code>*</code>
+person-frequency column, signed facet headers, every facet level, and
+short labeled score-transition lines. It is FACETS-style visual
+correspondence, not a claim that <code>mfrmr</code> and FACETS produce
+numerically identical estimates. An external FACETS golden output and
+aligned estimator, identification, score, and orientation settings are
+still required for a numerical-equivalence statement. Set
+<code>show_ci = TRUE</code> only when you deliberately want a hybrid
+FACETS-style ruler with the mfrmr uncertainty extension. Use
+<code>draw = FALSE</code> and inspect the <code>facets_style</code>
+tables when rebuilding the display with ggplot2 or another graphics
+system.</p>
 <p>Next, use the pathway map when you want to see how expected scores
 progress across theta.</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit</span>, type <span class="op">=</span> <span class="st">"pathway"</span>, preset <span class="op">=</span> <span class="st">"publication"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="mfrmr-visual-diagnostics_files/figure-html/pathway-1.png" class="r-plt" alt="" width="672"></p>
 <p>Interpretation:</p>
@@ -165,12 +191,38 @@ progress across theta.</p>
 govern the score.</li>
 <li>Flat or compressed regions suggest weaker category separation.</li>
 </ul>
+<p>The expected-score pathway is not a fit pathway. To review measure
+against Infit, place Infit on the horizontal axis and include person
+rows explicitly:</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span></span>
+<span>  <span class="va">fit</span>,</span>
+<span>  type <span class="op">=</span> <span class="st">"fit_pathway"</span>,</span>
+<span>  diagnostics <span class="op">=</span> <span class="va">diag</span>,</span>
+<span>  fit_stat <span class="op">=</span> <span class="st">"Infit"</span>,</span>
+<span>  fit_scale <span class="op">=</span> <span class="st">"mnsq"</span>,</span>
+<span>  include_person <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  show_ci <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  preset <span class="op">=</span> <span class="st">"publication"</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p><img src="mfrmr-visual-diagnostics_files/figure-html/fit-pathway-1.png" class="r-plt" alt="" width="672"></p>
+<p>Interpretation:</p>
+<ul>
+<li>The vertical axis remains the fitted measure in logits.</li>
+<li>The horizontal axis is Infit MnSq; the 1.0 line is the
+model-expectation reference.</li>
+<li>Vertical whiskers show measure uncertainty; person and non-person
+rows have distinct uncertainty bases, recorded in the draw-free payload
+metadata.</li>
+<li>Treat displaced or flagged rows as review prompts, not automatic
+exclusions.</li>
+</ul>
 </div>
 <div class="section level2">
 <h2 id="local-response-and-level-issues">2. Local response and level issues<a class="anchor" aria-label="anchor" href="#local-response-and-level-issues"></a>
 </h2>
 <p>Unexpected-response screening is useful for case-level review.</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_unexpected.html">plot_unexpected</a></span><span class="op">(</span></span>
 <span>  <span class="va">fit</span>,</span>
 <span>  diagnostics <span class="op">=</span> <span class="va">diag</span>,</span>
@@ -189,7 +241,7 @@ informative than a single extreme point.</li>
 </ul>
 <p>Displacement focuses on level movement rather than individual
 responses.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_displacement.html">plot_displacement</a></span><span class="op">(</span></span>
 <span>  <span class="va">fit</span>,</span>
 <span>  diagnostics <span class="op">=</span> <span class="va">diag</span>,</span>
@@ -214,7 +266,7 @@ the legacy and strict branches stay visible side by side. The chunk
 below uses compact quadrature for optional local execution; final
 reporting should be refit with the package default or a higher
 quadrature setting.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fit_strict</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span></span>
 <span>  <span class="va">toy</span>,</span>
 <span>  person <span class="op">=</span> <span class="st">"Person"</span>,</span>
@@ -268,7 +320,7 @@ supports the strict branch before routing figures into a report.</li>
 </h2>
 <p>When the design may be incomplete or spread across subsets, inspect
 the coverage matrix before interpreting cross-subset contrasts.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/subset_connectivity_report.html">subset_connectivity_report</a></span><span class="op">(</span><span class="va">fit</span>, diagnostics <span class="op">=</span> <span class="va">diag</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">sc</span>, type <span class="op">=</span> <span class="st">"design_matrix"</span>, preset <span class="op">=</span> <span class="st">"publication"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="mfrmr-visual-diagnostics_files/figure-html/linking-1.png" class="r-plt" alt="" width="672"></p>
@@ -280,7 +332,7 @@ comparisons.</li>
 </ul>
 <p>If you are working across administrations, follow up with
 anchor-drift plots:</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">drift</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/detect_anchor_drift.html">detect_anchor_drift</a></span><span class="op">(</span><span class="va">current_fit</span>, baseline <span class="op">=</span> <span class="va">baseline_anchors</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/plot_anchor_drift.html">plot_anchor_drift</a></span><span class="op">(</span><span class="va">drift</span>, type <span class="op">=</span> <span class="st">"heatmap"</span>, preset <span class="op">=</span> <span class="st">"publication"</span><span class="op">)</span></span></code></pre></div>
 </div>
@@ -288,7 +340,7 @@ anchor-drift plots:</p>
 <h2 id="residual-structure-and-interaction-screens">4. Residual structure and interaction screens<a class="anchor" aria-label="anchor" href="#residual-structure-and-interaction-screens"></a>
 </h2>
 <p>Residual PCA is a follow-up layer after the main fit screen.</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">diag_pca</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/diagnose_mfrm.html">diagnose_mfrm</a></span><span class="op">(</span><span class="va">fit</span>, residual_pca <span class="op">=</span> <span class="st">"both"</span>, pca_max_factors <span class="op">=</span> <span class="fl">4</span><span class="op">)</span></span>
 <span><span class="va">pca</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/analyze_residual_pca.html">analyze_residual_pca</a></span><span class="op">(</span><span class="va">diag_pca</span>, mode <span class="op">=</span> <span class="st">"both"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/plot_residual_pca.html">plot_residual_pca</a></span><span class="op">(</span><span class="va">pca</span>, mode <span class="op">=</span> <span class="st">"overall"</span>, plot_type <span class="op">=</span> <span class="st">"scree"</span>, preset <span class="op">=</span> <span class="st">"publication"</span><span class="op">)</span></span></code></pre></div>
@@ -301,7 +353,7 @@ follow-up.</li>
 component of interest.</li>
 </ul>
 <p>For interaction screening, use the packaged bias example.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bias_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_bias"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">fit_bias</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span></span>
@@ -340,47 +392,53 @@ or print workflow needs grayscale output. For journal figures, teaching
 material, dashboards, or lab-specific styles, use
 <code>draw = FALSE</code> and the plot-data accessors instead of editing
 screenshots.</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit</span>, type <span class="op">=</span> <span class="st">"wright"</span>, preset <span class="op">=</span> <span class="st">"monochrome"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="mfrmr-visual-diagnostics_files/figure-html/custom-plot-data-1.png" class="r-plt" alt="" width="672"></p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span><span class="va">wright_payload</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit</span>, type <span class="op">=</span> <span class="st">"wright"</span>, draw <span class="op">=</span> <span class="cn">FALSE</span>, preset <span class="op">=</span> <span class="st">"publication"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/plot_data_components.html">plot_data_components</a></span><span class="op">(</span><span class="va">wright_payload</span><span class="op">)</span></span>
 <span><span class="co">#&gt;      PlotName       Component                Role     ObjectType Rows Columns</span></span>
-<span><span class="co">#&gt; 1  wright_map           title    scalar_or_vector      character   NA      NA</span></span>
-<span><span class="co">#&gt; 2  wright_map          person          table_data     data.frame   48       4</span></span>
-<span><span class="co">#&gt; 3  wright_map     person_hist            metadata list:histogram   NA       6</span></span>
-<span><span class="co">#&gt; 4  wright_map    person_stats          table_data     data.frame    1       4</span></span>
-<span><span class="co">#&gt; 5  wright_map       locations          table_data     data.frame   11       6</span></span>
-<span><span class="co">#&gt; 6  wright_map    label_points          table_data     data.frame    6       6</span></span>
-<span><span class="co">#&gt; 7  wright_map   group_summary summary_or_guidance     data.frame    3      10</span></span>
-<span><span class="co">#&gt; 8  wright_map    group_levels            settings      character   NA      NA</span></span>
-<span><span class="co">#&gt; 9  wright_map         y_range            settings         double   NA      NA</span></span>
-<span><span class="co">#&gt; 10 wright_map           title    scalar_or_vector      character   NA      NA</span></span>
-<span><span class="co">#&gt; 11 wright_map        subtitle    scalar_or_vector      character   NA      NA</span></span>
-<span><span class="co">#&gt; 12 wright_map           group    scalar_or_vector           NULL   NA      NA</span></span>
-<span><span class="co">#&gt; 13 wright_map          preset            settings      character   NA      NA</span></span>
-<span><span class="co">#&gt; 14 wright_map          legend               style     data.frame    3       4</span></span>
-<span><span class="co">#&gt; 15 wright_map reference_lines          annotation     data.frame    1       5</span></span>
-<span><span class="co">#&gt; 16 wright_map       plot_name    scalar_or_vector      character   NA      NA</span></span>
+<span><span class="co">#&gt; 1  wright_map    wright_style               style      character   NA      NA</span></span>
+<span><span class="co">#&gt; 2  wright_map        renderer    scalar_or_vector      character   NA      NA</span></span>
+<span><span class="co">#&gt; 3  wright_map visual_contract    scalar_or_vector      character   NA      NA</span></span>
+<span><span class="co">#&gt; 4  wright_map          person          table_data     data.frame   48       4</span></span>
+<span><span class="co">#&gt; 5  wright_map     person_hist            metadata list:histogram   NA       6</span></span>
+<span><span class="co">#&gt; 6  wright_map    person_stats          table_data     data.frame    1       4</span></span>
+<span><span class="co">#&gt; 7  wright_map       locations          table_data     data.frame   11       6</span></span>
+<span><span class="co">#&gt; 8  wright_map    label_points          table_data     data.frame    6       6</span></span>
+<span><span class="co">#&gt; 9  wright_map   group_summary summary_or_guidance     data.frame    3      10</span></span>
+<span><span class="co">#&gt; 10 wright_map    group_levels            settings      character   NA      NA</span></span>
+<span><span class="co">#&gt; 11 wright_map         y_range            settings         double   NA      NA</span></span>
+<span><span class="co">#&gt; 12 wright_map     label_limit    scalar_or_vector        integer   NA      NA</span></span>
+<span><span class="co">#&gt; 13 wright_map           title    scalar_or_vector      character   NA      NA</span></span>
+<span><span class="co">#&gt; 14 wright_map        subtitle    scalar_or_vector      character   NA      NA</span></span>
+<span><span class="co">#&gt; 15 wright_map           group    scalar_or_vector           NULL   NA      NA</span></span>
+<span><span class="co">#&gt; 16 wright_map          preset            settings      character   NA      NA</span></span>
+<span><span class="co">#&gt; 17 wright_map          legend               style     data.frame    3       4</span></span>
+<span><span class="co">#&gt; 18 wright_map reference_lines          annotation     data.frame    1       5</span></span>
+<span><span class="co">#&gt; 19 wright_map       plot_name    scalar_or_vector      character   NA      NA</span></span>
 <span><span class="co">#&gt;    Length IsTabular                                    Accessor</span></span>
-<span><span class="co">#&gt; 1       1     FALSE           plot_data(x, component = "title")</span></span>
-<span><span class="co">#&gt; 2       4      TRUE          plot_data(x, component = "person")</span></span>
-<span><span class="co">#&gt; 3       6     FALSE     plot_data(x, component = "person_hist")</span></span>
-<span><span class="co">#&gt; 4       4      TRUE    plot_data(x, component = "person_stats")</span></span>
-<span><span class="co">#&gt; 5       6      TRUE       plot_data(x, component = "locations")</span></span>
-<span><span class="co">#&gt; 6       6      TRUE    plot_data(x, component = "label_points")</span></span>
-<span><span class="co">#&gt; 7      10      TRUE   plot_data(x, component = "group_summary")</span></span>
-<span><span class="co">#&gt; 8       3     FALSE    plot_data(x, component = "group_levels")</span></span>
-<span><span class="co">#&gt; 9       2     FALSE         plot_data(x, component = "y_range")</span></span>
-<span><span class="co">#&gt; 10      1     FALSE           plot_data(x, component = "title")</span></span>
-<span><span class="co">#&gt; 11      1     FALSE        plot_data(x, component = "subtitle")</span></span>
-<span><span class="co">#&gt; 12      0     FALSE           plot_data(x, component = "group")</span></span>
-<span><span class="co">#&gt; 13      1     FALSE          plot_data(x, component = "preset")</span></span>
-<span><span class="co">#&gt; 14      4      TRUE          plot_data(x, component = "legend")</span></span>
-<span><span class="co">#&gt; 15      5      TRUE plot_data(x, component = "reference_lines")</span></span>
-<span><span class="co">#&gt; 16      1     FALSE       plot_data(x, component = "plot_name")</span></span>
+<span><span class="co">#&gt; 1       1     FALSE    plot_data(x, component = "wright_style")</span></span>
+<span><span class="co">#&gt; 2       1     FALSE        plot_data(x, component = "renderer")</span></span>
+<span><span class="co">#&gt; 3       1     FALSE plot_data(x, component = "visual_contract")</span></span>
+<span><span class="co">#&gt; 4       4      TRUE          plot_data(x, component = "person")</span></span>
+<span><span class="co">#&gt; 5       6     FALSE     plot_data(x, component = "person_hist")</span></span>
+<span><span class="co">#&gt; 6       4      TRUE    plot_data(x, component = "person_stats")</span></span>
+<span><span class="co">#&gt; 7       6      TRUE       plot_data(x, component = "locations")</span></span>
+<span><span class="co">#&gt; 8       6      TRUE    plot_data(x, component = "label_points")</span></span>
+<span><span class="co">#&gt; 9      10      TRUE   plot_data(x, component = "group_summary")</span></span>
+<span><span class="co">#&gt; 10      3     FALSE    plot_data(x, component = "group_levels")</span></span>
+<span><span class="co">#&gt; 11      2     FALSE         plot_data(x, component = "y_range")</span></span>
+<span><span class="co">#&gt; 12      1     FALSE     plot_data(x, component = "label_limit")</span></span>
+<span><span class="co">#&gt; 13      1     FALSE           plot_data(x, component = "title")</span></span>
+<span><span class="co">#&gt; 14      1     FALSE        plot_data(x, component = "subtitle")</span></span>
+<span><span class="co">#&gt; 15      0     FALSE           plot_data(x, component = "group")</span></span>
+<span><span class="co">#&gt; 16      1     FALSE          plot_data(x, component = "preset")</span></span>
+<span><span class="co">#&gt; 17      4      TRUE          plot_data(x, component = "legend")</span></span>
+<span><span class="co">#&gt; 18      5      TRUE plot_data(x, component = "reference_lines")</span></span>
+<span><span class="co">#&gt; 19      1     FALSE       plot_data(x, component = "plot_name")</span></span>
 <span><span class="co">#&gt;                                                                     Notes</span></span>
 <span><span class="co">#&gt; 1                                                                        </span></span>
 <span><span class="co">#&gt; 2                                                                        </span></span>
@@ -388,33 +446,39 @@ screenshots.</p>
 <span><span class="co">#&gt; 4                                                                        </span></span>
 <span><span class="co">#&gt; 5                                                                        </span></span>
 <span><span class="co">#&gt; 6                                                                        </span></span>
-<span><span class="co">#&gt; 7                            Use for captions, QA checks, or report text.</span></span>
+<span><span class="co">#&gt; 7                                                                        </span></span>
 <span><span class="co">#&gt; 8                                                                        </span></span>
-<span><span class="co">#&gt; 9                                                                        </span></span>
+<span><span class="co">#&gt; 9                            Use for captions, QA checks, or report text.</span></span>
 <span><span class="co">#&gt; 10                                                                       </span></span>
 <span><span class="co">#&gt; 11                                                                       </span></span>
 <span><span class="co">#&gt; 12                                                                       </span></span>
 <span><span class="co">#&gt; 13                                                                       </span></span>
-<span><span class="co">#&gt; 14                 Use to reproduce color, line-type, or legend mappings.</span></span>
-<span><span class="co">#&gt; 15 Use with primary data to draw thresholds, labels, and reference lines.</span></span>
+<span><span class="co">#&gt; 14                                                                       </span></span>
+<span><span class="co">#&gt; 15                                                                       </span></span>
 <span><span class="co">#&gt; 16                                                                       </span></span>
+<span><span class="co">#&gt; 17                 Use to reproduce color, line-type, or legend mappings.</span></span>
+<span><span class="co">#&gt; 18 Use with primary data to draw thresholds, labels, and reference lines.</span></span>
+<span><span class="co">#&gt; 19                                                                       </span></span>
 <span><span class="co">#&gt;                                                       ColumnNames</span></span>
 <span><span class="co">#&gt; 1                                                                </span></span>
-<span><span class="co">#&gt; 2                                   Person, Estimate, SE, Extreme</span></span>
-<span><span class="co">#&gt; 3                  breaks, counts, density, mids, xname, equidist</span></span>
-<span><span class="co">#&gt; 4                                             N, Mean, Median, SD</span></span>
-<span><span class="co">#&gt; 5                      PlotType, Group, Label, Estimate, XBase, X</span></span>
-<span><span class="co">#&gt; 6                      PlotType, Group, Label, Estimate, XBase, X</span></span>
-<span><span class="co">#&gt; 7  Group, PlotType, Min, Q1, Median, Q3, Max, N, XBase, TargetGap</span></span>
-<span><span class="co">#&gt; 8                                                                </span></span>
-<span><span class="co">#&gt; 9                                                                </span></span>
+<span><span class="co">#&gt; 2                                                                </span></span>
+<span><span class="co">#&gt; 3                                                                </span></span>
+<span><span class="co">#&gt; 4                                   Person, Estimate, SE, Extreme</span></span>
+<span><span class="co">#&gt; 5                  breaks, counts, density, mids, xname, equidist</span></span>
+<span><span class="co">#&gt; 6                                             N, Mean, Median, SD</span></span>
+<span><span class="co">#&gt; 7                      PlotType, Group, Label, Estimate, XBase, X</span></span>
+<span><span class="co">#&gt; 8                      PlotType, Group, Label, Estimate, XBase, X</span></span>
+<span><span class="co">#&gt; 9  Group, PlotType, Min, Q1, Median, Q3, Max, N, XBase, TargetGap</span></span>
 <span><span class="co">#&gt; 10                                                               </span></span>
 <span><span class="co">#&gt; 11                                                               </span></span>
 <span><span class="co">#&gt; 12                                                               </span></span>
 <span><span class="co">#&gt; 13                                                               </span></span>
-<span><span class="co">#&gt; 14                                  label, role, aesthetic, value</span></span>
-<span><span class="co">#&gt; 15                             axis, value, label, linetype, role</span></span>
-<span><span class="co">#&gt; 16</span></span>
+<span><span class="co">#&gt; 14                                                               </span></span>
+<span><span class="co">#&gt; 15                                                               </span></span>
+<span><span class="co">#&gt; 16                                                               </span></span>
+<span><span class="co">#&gt; 17                                  label, role, aesthetic, value</span></span>
+<span><span class="co">#&gt; 18                             axis, value, label, linetype, role</span></span>
+<span><span class="co">#&gt; 19</span></span>
 <span></span>
 <span><span class="va">locations</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/plot_data.html">plot_data</a></span><span class="op">(</span><span class="va">wright_payload</span>, component <span class="op">=</span> <span class="st">"locations"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">locations</span><span class="op">)</span></span>
@@ -444,12 +508,13 @@ screenshots.</p>
 <span><span class="co">#&gt; 6 expected_score     Common -5.75 1.011984</span></span></code></pre></div>
 <p>When you build a custom figure, keep the helper’s guidance tables
 with the plot data:</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">wright_payload</span><span class="op">$</span><span class="va">data</span><span class="op">)</span></span>
-<span><span class="co">#&gt;  [1] "title"           "person"          "person_hist"     "person_stats"   </span></span>
-<span><span class="co">#&gt;  [5] "locations"       "label_points"    "group_summary"   "group_levels"   </span></span>
-<span><span class="co">#&gt;  [9] "y_range"         "title"           "subtitle"        "group"          </span></span>
-<span><span class="co">#&gt; [13] "preset"          "legend"          "reference_lines" "plot_name"</span></span>
+<span><span class="co">#&gt;  [1] "wright_style"    "renderer"        "visual_contract" "person"         </span></span>
+<span><span class="co">#&gt;  [5] "person_hist"     "person_stats"    "locations"       "label_points"   </span></span>
+<span><span class="co">#&gt;  [9] "group_summary"   "group_levels"    "y_range"         "label_limit"    </span></span>
+<span><span class="co">#&gt; [13] "title"           "subtitle"        "group"           "preset"         </span></span>
+<span><span class="co">#&gt; [17] "legend"          "reference_lines" "plot_name"</span></span>
 <span><span class="va">wright_payload</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">reference_lines</span></span>
 <span><span class="co">#&gt;   axis value                    label linetype      role</span></span>
 <span><span class="co">#&gt; 1    h     0 Centered logit reference   dashed reference</span></span></code></pre></div>
@@ -506,7 +571,7 @@ separately from the MFRM likelihood. Rapid and slow response-time flags
 are descriptive quality-control prompts; they do not change measures and
 should not be treated as proof of disengagement, cheating, or
 speededness.</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">toy_rt</span> <span class="op">&lt;-</span> <span class="va">toy</span></span>
 <span><span class="va">toy_rt</span><span class="op">$</span><span class="va">ResponseTime</span> <span class="op">&lt;-</span> <span class="fl">12</span> <span class="op">+</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">toy_rt</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://rdrr.io/r/base/Arithmetic.html" class="external-link">%%</a></span> <span class="fl">7</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="va">toy_rt</span><span class="op">$</span><span class="va">Score</span><span class="op">)</span></span>
@@ -558,7 +623,7 @@ speededness.</p>
 <span><span class="co">#&gt; - Score-level summaries are descriptive and should not be read as response-time model parameters.</span></span>
 <span><span class="fu"><a href="../reference/plot_response_time_review.html">plot_response_time_review</a></span><span class="op">(</span><span class="va">rt</span>, type <span class="op">=</span> <span class="st">"distribution"</span>, preset <span class="op">=</span> <span class="st">"publication"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="mfrmr-visual-diagnostics_files/figure-html/response-time-review-1.png" class="r-plt" alt="" width="672"></p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_response_time_review.html">plot_response_time_review</a></span><span class="op">(</span><span class="va">rt</span>, type <span class="op">=</span> <span class="st">"person"</span>, preset <span class="op">=</span> <span class="st">"publication"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="mfrmr-visual-diagnostics_files/figure-html/response-time-review-2.png" class="r-plt" alt="" width="672"></p>
 <p>Interpretation:</p>
@@ -580,7 +645,7 @@ large raw severity estimate can be a noisy estimate rather than a stable
 facet signal. The shrinkage funnel shows how far empirical-Bayes pooling
 moved each level toward the facet mean and whether the uncertainty
 remains wide after pooling.</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fit_eb</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/apply_empirical_bayes_shrinkage.html">apply_empirical_bayes_shrinkage</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">shrink</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/plot_shrinkage_funnel.html">plot_shrinkage_funnel</a></span><span class="op">(</span></span>

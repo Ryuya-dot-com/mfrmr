@@ -67,6 +67,13 @@ the same scale.</p>
 <span>  preset <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"standard"</span>, <span class="st">"publication"</span>, <span class="st">"compact"</span>, <span class="st">"monochrome"</span><span class="op">)</span>,</span>
 <span>  palette <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  label_angle <span class="op">=</span> <span class="fl">45</span>,</span>
+<span>  renderer <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  wright_style <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"native"</span>, <span class="st">"facets_style"</span><span class="op">)</span>,</span>
+<span>  category_labels <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  rows_per_logit <span class="op">=</span> <span class="fl">2L</span>,</span>
+<span>  wright_range <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  extreme_placement <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ends"</span>, <span class="st">"estimate"</span><span class="op">)</span>,</span>
+<span>  persons_per_star <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -80,7 +87,9 @@ the same scale.</p>
 
 
 <dt id="arg-diagnostics">diagnostics<a class="anchor" aria-label="anchor" href="#arg-diagnostics"></a></dt>
-<dd><p>Optional output from <code><a href="diagnose_mfrm.html">diagnose_mfrm()</a></code>.</p></dd>
+<dd><p>Optional output from <code><a href="diagnose_mfrm.html">diagnose_mfrm()</a></code>. When supplied,
+the map uses matching standard errors and precision metadata while keeping
+coordinates from <code>fit</code>.</p></dd>
 
 
 <dt id="arg-bins">bins<a class="anchor" aria-label="anchor" href="#arg-bins"></a></dt>
@@ -93,7 +102,8 @@ positions on the map. Default <code>TRUE</code>.</p></dd>
 
 
 <dt id="arg-top-n">top_n<a class="anchor" aria-label="anchor" href="#arg-top-n"></a></dt>
-<dd><p>Maximum number of facet/step points retained for labeling.</p></dd>
+<dd><p>Maximum number of facet/step locations retained by the native
+renderer. The FACETS-style payload retains every fitted location.</p></dd>
 
 
 <dt id="arg-show-ci">show_ci<a class="anchor" aria-label="anchor" href="#arg-show-ci"></a></dt>
@@ -123,6 +133,41 @@ drawer.</p></dd>
 <dd><p>Rotation angle for group labels on the facet panel.</p></dd>
 
 
+<dt id="arg-renderer">renderer<a class="anchor" aria-label="anchor" href="#arg-renderer"></a></dt>
+<dd><p>Canonical Wright-map renderer selector: <code>"native"</code>
+(default) or <code>"facets"</code> for the FACETS Table 6-style visual layout.</p></dd>
+
+
+<dt id="arg-wright-style">wright_style<a class="anchor" aria-label="anchor" href="#arg-wright-style"></a></dt>
+<dd><p>Wright-map renderer: <code>"native"</code> preserves the histogram,
+point, range, and facet-SE display; <code>"facets_style"</code> adds a FACETS Table
+6-style text ruler. The latter is a visual layout, not a claim of numerical
+equivalence with FACETS, and is equivalent to <code>renderer = "facets"</code>.</p></dd>
+
+
+<dt id="arg-category-labels">category_labels<a class="anchor" aria-label="anchor" href="#arg-category-labels"></a></dt>
+<dd><p>Optional named/ordered score rubric labels, or a data
+frame with <code>Score</code> and <code>Label</code>, for <code>wright_style = "facets_style"</code>.</p></dd>
+
+
+<dt id="arg-rows-per-logit">rows_per_logit<a class="anchor" aria-label="anchor" href="#arg-rows-per-logit"></a></dt>
+<dd><p>Number of rows per logit on the FACETS-style ruler.</p></dd>
+
+
+<dt id="arg-wright-range">wright_range<a class="anchor" aria-label="anchor" href="#arg-wright-range"></a></dt>
+<dd><p>Optional finite increasing length-2 logit range.</p></dd>
+
+
+<dt id="arg-extreme-placement">extreme_placement<a class="anchor" aria-label="anchor" href="#arg-extreme-placement"></a></dt>
+<dd><p>Place extreme-score persons at ruler <code>"ends"</code> or at
+their fitted <code>"estimate"</code> in the FACETS-style renderer.</p></dd>
+
+
+<dt id="arg-persons-per-star">persons_per_star<a class="anchor" aria-label="anchor" href="#arg-persons-per-star"></a></dt>
+<dd><p>Number of persons represented by one <code>*</code>; <code>NULL</code>
+selects a compact value automatically.</p></dd>
+
+
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>Additional graphical parameters.</p></dd>
 
@@ -143,6 +188,13 @@ that shows where persons, facet levels, and category thresholds sit
 relative to the same latent scale.</p>
 <p>The logit scale on the y-axis is shared, allowing direct visual
 comparison of all facets and persons.</p>
+<p>With <code>renderer = "facets"</code> (or <code>wright_style = "facets_style"</code>), the
+draw-free result additionally
+contains tidy ruler rows, person star frequencies, signed facet headers,
+all facet levels, step lines, original-score transitions, mean half-score
+boundaries, category labels, and display settings under <code>facets_style</code>.
+These tables support custom ggplot2/plotly rendering without parsing the
+base plot.</p>
     </div>
     <div class="section level2">
     <h2 id="interpreting-output">Interpreting output<a class="anchor" aria-label="anchor" href="#interpreting-output"></a></h2>
@@ -194,10 +246,26 @@ is measurement precision across theta.</p>
 <span class="r-in"><span>                 method <span class="op">=</span> <span class="st">"JML"</span>, model <span class="op">=</span> <span class="st">"RSM"</span>, maxit <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">map_data</span> <span class="op">&lt;-</span> <span class="fu">plot_wright_unified</span><span class="op">(</span><span class="va">fit</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">map_data</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [1] "persons"       "facets"        "thresholds"    "facet_names"  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [5] "y_lim"         "title"         "person"        "person_hist"  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [9] "person_stats"  "locations"     "label_points"  "group_summary"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [13] "group_levels"  "y_range"      </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [1] "persons"         "facets"          "thresholds"      "facet_names"    </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [5] "y_lim"           "title"           "wright_style"    "renderer"       </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [9] "visual_contract" "person"          "person_hist"     "person_stats"   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [13] "locations"       "label_points"    "group_summary"   "group_levels"   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [17] "y_range"         "label_limit"    </span>
+<span class="r-in"><span><span class="va">facets_map</span> <span class="op">&lt;-</span> <span class="fu">plot_wright_unified</span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="va">fit</span>,</span></span>
+<span class="r-in"><span>  renderer <span class="op">=</span> <span class="st">"facets"</span>,</span></span>
+<span class="r-in"><span>  category_labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>    `1` <span class="op">=</span> <span class="st">"Beginning"</span>, `2` <span class="op">=</span> <span class="st">"Developing"</span>, `3` <span class="op">=</span> <span class="st">"Secure"</span>, `4` <span class="op">=</span> <span class="st">"Advanced"</span></span></span>
+<span class="r-in"><span>  <span class="op">)</span>,</span></span>
+<span class="r-in"><span>  draw <span class="op">=</span> <span class="cn">FALSE</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">facets_map</span><span class="op">$</span><span class="va">facets_style</span><span class="op">$</span><span class="va">settings</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 10</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Renderer WrightStyle  VisualCorrespondence  LowerLogit UpperLogit RowsPerLogit</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> facets   facets_style FACETS Table 6-style…         -<span style="color: #BB0000;">2</span>          2            2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 4 more variables: ExtremePlacement &lt;chr&gt;, PersonsPerStar &lt;dbl&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   StarsPerPerson &lt;dbl&gt;, PersonN &lt;int&gt;</span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
