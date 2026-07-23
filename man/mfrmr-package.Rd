@@ -17,8 +17,11 @@ bounded \code{GPCM}, simulation, and planning notes:
 \enumerate{
 \item Fit with \code{\link[=fit_mfrm]{fit_mfrm()}} using \code{method = "MML"}
 \item Build a comprehensive first screen with \code{\link[=mfrm_results]{mfrm_results()}}
+\item Create the required Wright map with
+\code{plot(res, type = "wright", show_ci = TRUE)}
 \item Build report-ready output with \code{\link[=mfrm_report]{mfrm_report()}}
-\item Export a reproducible result folder with \code{\link[=export_mfrm_results]{export_mfrm_results()}}
+\item Export a reproducible result folder with
+\code{export_mfrm_results(res, preset = "starter")}
 \item Add \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}}, and
 \code{\link[=reporting_checklist]{reporting_checklist()}} when the review needs deeper diagnostics; for
 bounded \code{GPCM}, read \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}} before interpreting
@@ -79,8 +82,10 @@ Use this order before exploring the broader feature surface:
 \enumerate{
 \item \code{\link[=fit_mfrm]{fit_mfrm()}} with \code{method = "MML"}
 \item \code{\link[=mfrm_results]{mfrm_results()}} for a comprehensive first screen
+\item \code{plot(res, type = "wright", show_ci = TRUE)} for the required shared-logit figure
 \item \code{\link[=mfrm_report]{mfrm_report()}} for report-ready wording, tables, and route labels
-\item \code{\link[=export_mfrm_results]{export_mfrm_results()}} for a reproducible result folder
+\item \code{export_mfrm_results(res, preset = "starter")} for a reproducible
+folder whose \code{index.html} starts with the Wright map
 \item Add \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} with \code{diagnostic_mode = "both"} for deeper
 \code{RSM} / \code{PCM} diagnostics; for bounded \code{GPCM}, keep diagnostics on the
 direct exploratory route and read \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}}

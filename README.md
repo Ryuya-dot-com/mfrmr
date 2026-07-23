@@ -19,16 +19,37 @@ such as people, raters, items, tasks, criteria, forms, or occasions. The
 package fits the model, then helps you read the result without treating every
 diagnostic as a final decision.
 
-The shortest route is:
+The canonical route is data -> fit -> required Wright map -> focused
+diagnostics -> report/export:
 
 ```r
-fit <- fit_mfrm(my_data, person = "Person", facets = c("Rater", "Criterion"),
-                score = "Score", model = "RSM")
+library(mfrmr)
+
+dat <- load_mfrmr_data("example_core")
+fit <- fit_mfrm(dat, person = "Person", facets = c("Rater", "Criterion"),
+                score = "Score", method = "MML", model = "RSM")
 res <- mfrm_results(fit)
 summary(res, view = "brief")
+
+# Required final scale artifact: inspect this before follow-up plots.
+plot(res, type = "wright", preset = "publication", show_ci = TRUE)
+
+# Focused fit follow-up: Infit on x, measure on y, persons included.
+plot(fit, type = "fit_pathway", diagnostics = res$diagnostics,
+     fit_stat = "Infit", include_person = TRUE,
+     preset = "publication")
+
 report <- mfrm_report(res)
 summary(report, view = "reader")
+export_mfrm_results(res, output_dir = "mfrmr-results",
+                    preset = "starter", overwrite = TRUE)
 ```
+
+The native Wright map keeps facet/step SE or CI information. When a
+FACETS-style asterisk ruler is needed for visual migration, use
+`plot_wright_unified(fit, renderer = "facets")`; this reproduces the visual
+grammar, while numerical equivalence still requires aligned settings and an
+external FACETS comparison.
 
 After that first screen, use `mfrmr_output_guide("public")` to choose the next
 route. Use `mfrmr_output_guide("beginner")` for a gentler map,
@@ -86,8 +107,9 @@ it.
 
 | Layer | Use first | Purpose |
 | --- | --- | --- |
-| Fit | `fit_mfrm()` -> `diagnose_mfrm()` | Explicit, scriptable model roles and diagnostics |
-| Results | `res <- mfrm_results(fit)` -> `summary(res, view = "brief")` | Reader-first overview, highest-priority triage, next actions, plot routes, replay code |
+| Fit | `fit_mfrm()` -> `mfrm_results()` | Explicit model roles followed by a comprehensive fitted result object |
+| Required figure | `plot(res, type = "wright", show_ci = TRUE)` | Persons, facets, and steps on the shared logit scale; always inspect before follow-up figures |
+| Results | `summary(res, view = "brief")` | Reader-first overview, highest-priority triage, next actions, plot routes, replay code |
 | Report | `report <- mfrm_report(res)` -> `summary(report, view = "reader")` | Report readiness, claim-use guidance, cautious wording routes, HTML/Markdown report output |
 | Viewer | `launch_mfrmr_viewer(res)` | Optional local reader over an existing `mfrm_results` object |
 | Export | `export_mfrm_results(res, preset = "starter")` | Reader-first folder with `index.html`, report tables, evidence summaries, replay code, manifest |
@@ -134,6 +156,21 @@ summary(fit)
 # Comprehensive first screen: diagnostics, tables, report status, plot routes.
 res <- mfrm_results(fit)
 summary(res, view = "brief")
+
+# Required final scale artifact. Keep this before all optional visual screens.
+plot(res, type = "wright", preset = "publication", show_ci = TRUE)
+
+# Infit pathway: x = fit statistic, y = measure; include person rows explicitly.
+plot(
+  fit,
+  type = "fit_pathway",
+  diagnostics = res$diagnostics,
+  fit_stat = "Infit",
+  include_person = TRUE,
+  preset = "publication"
+)
+
+# Optional dashboard after the shared-scale display.
 plot(res, type = "qc", preset = "publication")
 summary(res)$next_actions
 
@@ -170,7 +207,7 @@ Use this table after the public surface when a specific situation applies.
 
 | Situation | First call | Then |
 | --- | --- | --- |
-| New reproducible analysis | `fit_mfrm()` -> `mfrm_results()` | `summary(res, view = "brief")`, `plot(res, type = "qc")`, `summary(res)$next_actions` |
+| New reproducible analysis | `fit_mfrm()` -> `mfrm_results()` | `summary(res, view = "brief")`, required `plot(res, type = "wright", show_ci = TRUE)`, then focused follow-up plots |
 | Binary person-item response data | `fit_mfrm(..., facets = "Item", model = "RSM")` -> `mfrm_results()` | Check `fit$summary$Categories == 2`; use `mfrmr_output_guide("binary")` for the route |
 | Existing `mfrm_fit` object | `mfrm_results(fit)` | Drill into `res$components` or `build_summary_table_bundle(res)` |
 | Local point-and-click review | `mfrm_results(fit, include = ...)` -> `launch_mfrmr_viewer(res)` | Use `mfrmr_output_guide("viewer")` to choose `include = "publication"`, `"bias"`, `"misfit_review"`, `"linking"`, or a combined route |
@@ -266,11 +303,11 @@ download <- export_mfrm_results(
 download$written_files
 ```
 
-Open `index.html` first. The starter export keeps the reader-facing files at
-the root, groups compact summaries in `00_summary/`, report-readiness tables in
-`01_report/`, primary evidence summaries in `02_evidence/`, and replay/manifest
-artifacts in `03_reproducibility/`. When `zip_bundle = TRUE`, that folder
-layout is preserved inside the zip archive.
+Open `index.html` first. The starter export places the required Wright-map PNG
+directly in the reading flow, followed by links to the result summary, report,
+replay script, and written-files manifest. All files use the requested prefix
+in one portable folder; when `zip_bundle = TRUE`, the same files are included
+in the zip archive.
 
 For report drafting, keep the same object-first route and turn the already
 assembled evidence into a section plan:
@@ -382,7 +419,9 @@ If you want the shortest possible recommendation:
 - Final estimation: prefer `method = "MML"`
 - Fast exploratory pass only: use `method = "JML"`
 - Preferred `RSM` / `PCM` fit screen: `diagnose_mfrm(..., diagnostic_mode = "both")`
-- First visual screen: `plot_qc_dashboard(..., preset = "publication")`
+- Required first visual: `plot(res, type = "wright", preset = "publication", show_ci = TRUE)`
+- Fit follow-up: `plot(fit, type = "fit_pathway", diagnostics = res$diagnostics, fit_stat = "Infit", include_person = TRUE)`
+- Optional dashboard: `plot_qc_dashboard(..., preset = "publication")`
 - First reporting screen: `report <- mfrm_report(res)` and `summary(report, view = "reader")`
 - Manuscript checklist follow-up: `reporting_checklist()`
 - First case-review screen: `build_misfit_casebook()` and then inspect

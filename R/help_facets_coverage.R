@@ -64,6 +64,128 @@ facets_positioning_guide <- function() {
   )
 }
 
+#' FACETS-to-mfrmr term crosswalk
+#'
+#' @description
+#' `facets_term_crosswalk()` maps common FACETS report and specification terms
+#' to their closest `mfrmr` objects or routes. The relationship column makes
+#' explicit whether a row is a substantive counterpart, a presentation
+#' convention, or only a migration aid.
+#'
+#' @return A data.frame with `FACETSTerm`, `mfrmrTerm`, `mfrmrRoute`,
+#'   `Relationship`, and `Boundary` columns.
+#' @seealso [facets_positioning_guide()], [facets_feature_coverage()],
+#'   [facets_visual_contract()]
+#' @examples
+#' facets_term_crosswalk()
+#' @export
+facets_term_crosswalk <- function() {
+  data.frame(
+    FACETSTerm = c(
+      "Measure", "S.E.", "Infit MnSq", "Outfit MnSq", "ZSTD",
+      "Rating Scale=", "Table 6 Wright/variable map", "Graphfile=",
+      "Anchorfile=", "Positive="
+    ),
+    mfrmrTerm = c(
+      "Estimate (logits)", "SE", "Infit", "Outfit", "InfitZSTD / OutfitZSTD",
+      "model = \"RSM\" or \"PCM\"", "Wright map", "graph output table",
+      "anchor table", "facet orientation"
+    ),
+    mfrmrRoute = c(
+      "fit_measures_table(); summary(fit)",
+      "fit_measures_table(); plot(fit, type = \"wright\", show_ci = TRUE)",
+      "diagnose_mfrm(); fit_measures_table()",
+      "diagnose_mfrm(); fit_measures_table()",
+      "facets_fit_df_guide(); fit_measures_table(df_sensitivity = TRUE)",
+      "fit_mfrm(model = \"RSM\" or \"PCM\")",
+      "plot_wright_unified(); plot(fit, type = \"wright\")",
+      "facets_output_file_bundle(include = \"graph\")",
+      "make_anchor_table(); fit_mfrm(anchors = ...)",
+      "fit_mfrm(positive_facets = ...); plot_wright_unified()"
+    ),
+    Relationship = c(
+      "substantive counterpart", "substantive counterpart", "substantive counterpart",
+      "substantive counterpart", "convention-sensitive counterpart",
+      "model-setting crosswalk", "visual counterpart", "handoff-file counterpart",
+      "input-table counterpart", "orientation convention"
+    ),
+    Boundary = c(
+      "Numerical equality requires aligned model, estimator, identification, and supplied external FACETS output.",
+      "SE bases differ by estimator and element type; inspect method metadata.",
+      "Compare MnSq before standardized fit and document residual basis.",
+      "Compare MnSq before standardized fit and document residual basis.",
+      "df and Wilson-Hilferty conventions can change ZSTD without changing MnSq.",
+      "The package exposes documented RSM/PCM and bounded-GPCM routes, not a FACETS command parser.",
+      "FACETS-style rendering reproduces the ruler grammar, not optimizer-level numerical identity.",
+      "CSV/TSV handoff is package-native rather than fixed-field FACETS syntax.",
+      "The table is an R-native anchor contract, not a complete FACETS specification file.",
+      "Always report which facets use the positive orientation."
+    ),
+    stringsAsFactors = FALSE
+  )
+}
+
+#' FACETS-facing visual contract
+#'
+#' @description
+#' `facets_visual_contract()` identifies the closest package route for common
+#' FACETS visual surfaces and states what may—and may not—be claimed from that
+#' visual correspondence. It distinguishes the FACETS-style asterisk ruler
+#' from the native uncertainty-aware Wright map.
+#'
+#' @return A data.frame with visual surface, status, first route, editable data
+#'   route, and claim-boundary columns.
+#' @seealso [plot_wright_unified()], [plot_data()], [facets_term_crosswalk()],
+#'   [facets_feature_coverage()]
+#' @examples
+#' facets_visual_contract()
+#' @export
+facets_visual_contract <- function() {
+  data.frame(
+    FACETSVisualSurface = c(
+      "Table 6 asterisk Wright ruler",
+      "Native Wright map with uncertainty",
+      "Table 8 rating-scale structure",
+      "Graphs: expected-score ICC/IRF",
+      "Bond-Fox fit pathway",
+      "DIF/bias visual review",
+      "Graphfile and R/Web handoff"
+    ),
+    Status = c(
+      "implemented_visual", "mfrmr_extension", "implemented",
+      "implemented", "implemented_extension", "partial", "partial"
+    ),
+    FirstMfrmrRoute = c(
+      "plot_wright_unified(fit, renderer = \"facets\")",
+      "plot_wright_unified(fit, renderer = \"native\", show_ci = TRUE)",
+      "rating_scale_table(); category_structure_report()",
+      "plot(fit, type = \"pathway\")",
+      "plot(fit, type = \"fit_pathway\", fit_stat = \"Infit\", include_person = TRUE)",
+      "plot_bias_interaction()",
+      "facets_output_file_bundle(); plot_data(); as_ggplot()"
+    ),
+    EditableDataRoute = c(
+      "plot(..., draw = FALSE); plot_data(component = \"ruler\")",
+      "plot(..., draw = FALSE); plot_data(component = \"locations\")",
+      "rating_scale_table(); plot_data()",
+      "plot_data(type = \"pathway\")",
+      "plot_data(type = \"fit_pathway\")",
+      "plot_data(); bias_interaction_report()",
+      "facets_output_file_bundle(); plot_data_components()"
+    ),
+    ClaimBoundary = c(
+      "FACETS-style visual grammar; numerical equivalence requires an external golden comparison under aligned settings.",
+      "The SE/CI display is an mfrmr extension and should be retained for uncertainty interpretation.",
+      "Structured R output replaces FACETS line-printer artwork.",
+      "This is expected score over theta, not a measure-versus-fit pathway map.",
+      "This is a Bond-Fox-style mfrmr extension; it is not a standard FACETS Table 6 output.",
+      "Screening display only; it is not a final fairness conclusion.",
+      "Editable handoff is supported, but FACETS UI, Excel, and webpage behavior is not cloned."
+    ),
+    stringsAsFactors = FALSE
+  )
+}
+
 #' FACETS Feature Coverage Matrix
 #'
 #' @description
@@ -166,9 +288,9 @@ facets_feature_coverage <- function(status = c("all", "implemented",
         "Facet coverage, category counts, and subset/connectivity checks.",
         "Column order and text layout differ from FACETS.", "release_core"),
     row("Output table", "Table 6.0: all-facet Wright map rulers", "table6.htm",
-        "plot(fit, type = \"wright\"); plot_wright_unified()", "implemented",
-        "Common-logit person/facet/threshold display.",
-        "R-native graphics replace FACETS ruler text.", "release_core"),
+        "plot_wright_unified(renderer = \"facets\"); plot(fit, type = \"wright\")", "implemented",
+        "Common-logit person/facet/threshold display with FACETS-style asterisk ruler or native SE/CI rendering.",
+        "Visual grammar is reproducible; numerical equivalence still requires aligned settings and external FACETS golden output.", "release_core"),
     row("Output table", "Table 6.0.0: disjoint element listing", "table6_0_0.htm",
         "subset_connectivity_report()", "implemented",
         "Disconnected subsets and facet-by-subset coverage.",

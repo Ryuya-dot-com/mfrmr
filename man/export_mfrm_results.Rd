@@ -9,6 +9,7 @@ export_mfrm_results(
   output_dir = ".",
   prefix = "mfrmr_results",
   include = "default",
+  preset = NULL,
   overwrite = FALSE,
   zip_bundle = FALSE,
   zip_name = NULL,
@@ -29,6 +30,10 @@ underscores.}
 \code{"tables"}, \code{"html"}, \code{"rds"}, \code{"replay"}, and \code{"manifest"}. Add
 \code{"report"} to write \code{\link[=mfrm_report]{mfrm_report()}} tables plus Markdown and HTML; add
 \code{"plots"} to write available plot routes as PNG files, or use \code{"all"}.}
+
+\item{preset}{Optional reader-facing export preset. \code{"starter"} adds the
+report and plot routes to the default files and writes \code{index.html} with
+the required Wright map embedded at the start of the reading flow.}
 
 \item{overwrite}{Logical; if \code{FALSE}, existing files stop the export.}
 
@@ -69,6 +74,9 @@ for the already-created object;
 Plot export is intentionally optional because some plot routes can be
 comparatively slow or require richer graphics devices. Plot failures are
 recorded in the returned \code{plot_errors} table rather than stopping the export.
+The \code{"starter"} preset is the recommended final handoff because it always
+requests the Wright map in addition to the result summary, report, replay
+script, and manifest.
 }
 \examples{
 \dontrun{
@@ -82,6 +90,7 @@ exported <- export_mfrm_results(
   res,
   output_dir = tempdir(),
   prefix = "mfrmr_results_example",
+  preset = "starter",
   overwrite = TRUE
 )
 exported$summary[, c("FilesWritten", "CsvWritten", "HtmlWritten")]

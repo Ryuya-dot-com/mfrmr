@@ -34,6 +34,15 @@ test_that("mfrm_results builds a comprehensive object from a fitted model", {
   expect_true(nrow(sx$next_actions) > 0)
   expect_true(any(sx$next_actions$Area %in% "Triage") || any(sx$triage$Severity %in% "ok"))
   expect_true(any(grepl("mfrm_results", sx$reproducible_code$Code)))
+  expect_true(any(sx$plot_map$Type == "wright" & sx$plot_map$RequiredArtifact))
+  expect_true(any(sx$next_actions$Area == "Wright map"))
+
+  brief <- summary(res, view = "brief")
+  expect_identical(brief$view, "brief")
+  brief_print <- capture.output(print(brief))
+  expect_true(any(grepl("Wright map", brief_print, fixed = TRUE)))
+  expect_false(any(grepl("Section status", brief_print, fixed = TRUE)))
+  expect_error(summary(res, view = "unknown"), "arg")
 
   bundle <- build_summary_table_bundle(res)
   expect_s3_class(bundle, "mfrm_summary_table_bundle")
@@ -65,6 +74,12 @@ test_that("mfrm_results builds a comprehensive object from a fitted model", {
   expect_true(any(report_summary$immediate_actions$Status %in% c("review", "caveat", "unavailable")))
   expect_true(any(report_summary$optional_sections$Status == "request_if_needed"))
   expect_true(any(report_summary$routes$Route == "report$first_screen"))
+  reader_summary <- summary(report, view = "reader")
+  expect_identical(reader_summary$view, "reader")
+  reader_print <- capture.output(print(reader_summary))
+  expect_true(any(grepl("Claim readiness", reader_print, fixed = TRUE)))
+  expect_false(any(grepl("Boundary index", reader_print, fixed = TRUE)))
+  expect_error(summary(report, view = "unknown"), "arg")
   report_summary_bundle <- build_summary_table_bundle(report)
   expect_s3_class(report_summary_bundle, "mfrm_summary_table_bundle")
   expect_identical(report_summary_bundle$summary_class, "summary.mfrm_report")
@@ -351,6 +366,25 @@ test_that("export_mfrm_results writes lightweight result downloads", {
     overwrite = TRUE
   )
   expect_true(any(plot_export$written_files$Format == "png") || nrow(plot_export$plot_errors) > 0L)
+
+  starter_dir <- file.path(tempdir(), paste0("mfrmr_results_export_starter_", sample.int(1e6, 1)))
+  starter_export <- export_mfrm_results(
+    res,
+    output_dir = starter_dir,
+    prefix = "starter",
+    preset = "starter",
+    overwrite = TRUE
+  )
+  expect_identical(starter_export$preset, "starter")
+  expect_true(all(c("report", "plots") %in% starter_export$include))
+  expect_true(any(starter_export$written_files$Component == "starter_index"))
+  expect_true(any(starter_export$written_files$Component == "plot_wright"))
+  index_path <- starter_export$written_files$Path[
+    starter_export$written_files$Component == "starter_index"
+  ][1]
+  index_html <- paste(readLines(index_path, warn = FALSE), collapse = "\n")
+  expect_match(index_html, "required first visual artifact", fixed = TRUE)
+  expect_match(index_html, "starter_plot_wright.png", fixed = TRUE)
 
   report_dir <- file.path(tempdir(), paste0("mfrmr_results_export_report_", sample.int(1e6, 1)))
   report_export <- export_mfrm_results(

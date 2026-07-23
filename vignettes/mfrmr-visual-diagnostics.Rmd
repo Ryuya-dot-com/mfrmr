@@ -74,6 +74,25 @@ Interpretation:
 - Large gaps suggest weaker targeting in that logit region.
 - Wide overlap in confidence whiskers means neighboring levels are not cleanly separated.
 
+The native view above remains the recommended analytic figure because it keeps
+facet/step uncertainty visible. For a FACETS-facing handoff, switch only the
+renderer:
+
+```{r wright-facets}
+plot_wright_unified(
+  fit,
+  renderer = "facets",
+  preset = "publication"
+)
+```
+
+In the FACETS-style view, the `*` key converts person frequencies to ruler
+symbols, facet levels share the same vertical logit ruler, and each step is a
+short horizontal crossing labelled with its observed-score transition. This
+is visual compatibility, not a claim of numerical equality with FACETS. An
+external FACETS golden output and aligned estimator/identification settings
+are still required for a numerical equivalence statement.
+
 Next, use the pathway map when you want to see how expected scores progress
 across theta.
 
@@ -86,6 +105,29 @@ Interpretation:
 - Steeper rises indicate stronger score progression.
 - Dominant-category strips show where each category is most likely to govern the score.
 - Flat or compressed regions suggest weaker category separation.
+
+The expected-score pathway is not a fit pathway. To review measure against
+Infit, place Infit on the horizontal axis and include person rows explicitly:
+
+```{r fit-pathway}
+plot(
+  fit,
+  type = "fit_pathway",
+  diagnostics = diag,
+  fit_stat = "Infit",
+  fit_scale = "mnsq",
+  include_person = TRUE,
+  show_ci = TRUE,
+  preset = "publication"
+)
+```
+
+Interpretation:
+
+- The vertical axis remains the fitted measure in logits.
+- The horizontal axis is Infit MnSq; the 1.0 line is the model-expectation reference.
+- Vertical whiskers show measure uncertainty; person and non-person rows have distinct uncertainty bases, recorded in the draw-free payload metadata.
+- Treat displaced or flagged rows as review prompts, not automatic exclusions.
 
 ## 2. Local response and level issues
 

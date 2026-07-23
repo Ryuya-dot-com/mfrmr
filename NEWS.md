@@ -1,5 +1,21 @@
 # mfrmr 0.2.2
 
+- The canonical user route is now explicit and executable: data ->
+  `fit_mfrm()` -> `mfrm_results()` -> required Wright map -> focused
+  diagnostics -> report/export. The first-screen triage and next-action tables
+  identify the Wright map as the required fitted-scale artifact.
+- `export_mfrm_results(preset = "starter")` now implements the previously
+  documented preset. It requests reports and plots, writes a reader-first
+  `index.html`, embeds the required Wright-map PNG, and links the result,
+  report, replay, and manifest artifacts in reading order.
+- `summary(res, view = "brief")` and `summary(report, view = "reader")` are
+  now real view contracts rather than silently ignored arguments.
+- `facets_term_crosswalk()` and `facets_visual_contract()` now provide the
+  documented FACETS migration tables, explicitly separating visual
+  compatibility from numerical equivalence.
+- The pkgdown build executes vignette chunks with `NOT_CRAN=true`, so the
+  public visual-diagnostics pages contain rendered Wright maps rather than
+  code-only placeholders. The printable cheatsheet now reports version 0.2.2.
 - The example-execution policy now keeps `R CMD check` time within the
   CRAN incoming budget (the 0.2.1 submission passed the content checks on
   Windows and Debian but tripped the overall-checktime limit on the
