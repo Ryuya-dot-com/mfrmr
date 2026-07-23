@@ -109,7 +109,8 @@ The check reported `Status: OK` with 0 errors, 0 warnings, and 0 notes.
 The separate non-CRAN regression run covers the Wright renderers, Infit
 pathway, person inclusion, starter export, editable ggplot conversion,
 network, anchor, GPCM-boundary, reporting, namespace, and release-readiness
-paths. The release-readiness gate verifies the
+paths. Its final run covered 1,560 tests and 9,509 expectations, with 0
+failures and 0 errors. The release-readiness gate verifies the
 network/anchor stress and self-/other-speaking network validation artifacts
 rather than relying only on their presence, and expected optimizer
 convergence-review warnings from the live DIF/DFF APA review are captured in
