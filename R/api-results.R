@@ -627,22 +627,24 @@ mfrm_results_table_index <- function(tables) {
 mfrm_results_plot_map <- function(has_fit, has_diagnostics, tables, components) {
   table_names <- names(tables %||% list())
   data.frame(
-    Type = c("wright", "fit", "pathway", "qc", "category", "anchors", "response_time", "tables"),
+    Type = c("wright", "fit", "pathway", "fit_pathway", "qc", "category", "anchors", "response_time", "tables"),
     Available = c(
       isTRUE(has_fit),
       isTRUE(has_fit),
       isTRUE(has_fit),
+      isTRUE(has_fit) && isTRUE(has_diagnostics),
       isTRUE(has_fit) && isTRUE(has_diagnostics),
       "rating_scale" %in% names(components) || any(grepl("^rating_scale", table_names)),
       "linking_review" %in% names(components),
       "response_time_review" %in% names(components),
       length(table_names) > 0L
     ),
-    RequiredArtifact = c(TRUE, rep(FALSE, 7L)),
+    RequiredArtifact = c(TRUE, rep(FALSE, 8L)),
     Route = c(
       "plot(res, type = 'wright')",
       "plot(res, type = 'fit')",
       "plot(res, type = 'pathway')",
+      "plot(res, type = 'fit_pathway')",
       "plot(res, type = 'qc')",
       "plot(res, type = 'category')",
       "plot(res, type = 'anchors')",
@@ -653,6 +655,7 @@ mfrm_results_plot_map <- function(has_fit, has_diagnostics, tables, components) 
       "Required first fitted-scale artifact: persons, facet levels, and thresholds on the shared logit ruler.",
       "Model-level visual bundle from plot.mfrm_fit().",
       "Expected-score pathway map from plot.mfrm_fit().",
+      "Infit/Outfit-versus-measure pathway with optional person rows and measure uncertainty.",
       "Quality-control dashboard from plot_qc_dashboard().",
       "Rating-scale/category plot when rating_scale_table() is available.",
       "Anchor-review plot from the stored fit_mfrm() anchor review.",
@@ -1003,9 +1006,18 @@ mfrm_results_next_actions <- function(status, plot_map, components, table_index,
     add(
       4L,
       "Visual diagnostics",
-      "Open the QC dashboard before drilling into individual tables.",
+      "Open the QC dashboard after reviewing the Wright map.",
       "plot(res, type = \"qc\", preset = \"publication\")",
-      "The QC route gives a first visual check of fit, residual, and category surfaces."
+      "The QC route gives a focused follow-up view of fit, residual, and category surfaces."
+    )
+  }
+  if (nrow(plot_map) > 0L && any(plot_map$Type %in% "fit_pathway" & plot_map$Available %in% TRUE)) {
+    add(
+      5L,
+      "Fit pathway",
+      "Review Infit against measure, including selected person rows when useful.",
+      "plot(res, type = \"fit_pathway\", fit_stat = \"Infit\", include_person = TRUE, preset = \"publication\")",
+      "This follow-up separates measure uncertainty from fit displacement while keeping person inclusion explicit."
     )
   }
   if ("precision_review" %in% names(components)) {
@@ -5102,8 +5114,11 @@ export_mfrm_results <- function(x,
 #'
 #' @section Visualization and HTML:
 #' `plot(res)` routes to a FACETS-style model-level visual bundle by default.
-#' Other routes include `plot(res, type = "wright")`, `"pathway"`, `"qc"`,
-#' `"category"`, `"anchors"`, and `"tables"`. `output = "html"` writes a
+#' Other routes include `plot(res, type = "wright")`, `"pathway"`,
+#' `"fit_pathway"`, `"qc"`, `"category"`, `"anchors"`, `"response_time"`,
+#' and `"tables"`. The Wright map is the required first fitted-scale artifact;
+#' `"fit_pathway"` is a follow-up with Infit or Outfit on the horizontal axis
+#' and measure on the vertical axis. `output = "html"` writes a
 #' lightweight temporary HTML file;
 #' use [launch_mfrmr_viewer()] when you want an optional local Shiny reader
 #' for an already-created `mfrm_results` object. Use
@@ -5114,15 +5129,19 @@ export_mfrm_results <- function(x,
 #' @section Typical workflow:
 #' 1. Fit explicitly with [fit_mfrm()] in scripts and manuscripts.
 #' 2. Call `res <- mfrm_results(fit)`.
-#' 3. Read `summary(res)$triage`, `summary(res)$status`,
+#' 3. Read `summary(res, view = "brief")`, then create the required
+#'    `plot(res, type = "wright", show_ci = TRUE)` artifact.
+#' 4. Read `summary(res)$triage`, `summary(res)$status`,
 #'    `summary(res)$plot_map`, and `summary(res)$next_actions`.
-#' 4. Call `report <- mfrm_report(res)` when a report-ready surface is needed.
-#' 5. Use [export_mfrm_results()] to write CSV, report, RDS, replay, and
+#' 5. Call `report <- mfrm_report(res)` when a report-ready surface is needed.
+#' 6. Use `export_mfrm_results(res, preset = "starter")` to write the Wright
+#'    map, CSV, report, RDS, replay, and
 #'    manifest files for handoff or review.
-#' 6. Use `plot(res, type = "qc")` for the first visual screen.
-#' 7. Optionally inspect the same result with [launch_mfrmr_viewer()] in an
+#' 7. Use `plot(res, type = "fit_pathway", include_person = TRUE)` or
+#'    `plot(res, type = "qc")` for focused visual follow-up.
+#' 8. Optionally inspect the same result with [launch_mfrmr_viewer()] in an
 #'    interactive session.
-#' 8. Use [build_summary_table_bundle()] or the helper named in
+#' 9. Use [build_summary_table_bundle()] or the helper named in
 #'    `summary(res)$next_actions` for report-specific follow-up.
 #'
 #' @param response_time Optional response-time column name. When `NULL` and
@@ -5566,7 +5585,7 @@ print.mfrm_report_html <- function(x, ...) {
 #' @export
 plot.mfrm_results <- function(x,
                               y = NULL,
-                              type = c("fit", "wright", "pathway", "qc", "category", "anchors", "response_time", "tables"),
+                              type = c("fit", "wright", "pathway", "fit_pathway", "qc", "category", "anchors", "response_time", "tables"),
                               ...) {
   if (!inherits(x, "mfrm_results")) {
     stop("`x` must be an mfrm_results object.", call. = FALSE)
@@ -5592,6 +5611,12 @@ plot.mfrm_results <- function(x,
   if (identical(type, "pathway")) {
     dots <- list(...)
     dots$type <- "pathway"
+    return(do.call(plot, c(list(x$fit), dots)))
+  }
+  if (identical(type, "fit_pathway")) {
+    dots <- list(...)
+    dots$type <- "fit_pathway"
+    if (is.null(dots$diagnostics)) dots$diagnostics <- x$diagnostics
     return(do.call(plot, c(list(x$fit), dots)))
   }
   if (identical(type, "qc")) {

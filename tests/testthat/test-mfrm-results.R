@@ -35,6 +35,7 @@ test_that("mfrm_results builds a comprehensive object from a fitted model", {
   expect_true(any(sx$next_actions$Area %in% "Triage") || any(sx$triage$Severity %in% "ok"))
   expect_true(any(grepl("mfrm_results", sx$reproducible_code$Code)))
   expect_true(any(sx$plot_map$Type == "wright" & sx$plot_map$RequiredArtifact))
+  expect_true(any(sx$plot_map$Type == "fit_pathway" & sx$plot_map$Available))
   expect_true(any(sx$next_actions$Area == "Wright map"))
 
   brief <- summary(res, view = "brief")
@@ -52,6 +53,12 @@ test_that("mfrm_results builds a comprehensive object from a fitted model", {
 
   plt <- plot(res, type = "tables", draw = FALSE)
   expect_s3_class(plt, "mfrm_plot_data")
+  fit_pathway <- plot(
+    res, type = "fit_pathway", fit_stat = "Infit",
+    include_person = TRUE, top_n_person = 2, draw = FALSE
+  )
+  expect_s3_class(fit_pathway, "mfrm_plot_data")
+  expect_identical(fit_pathway$name, "fit_pathway")
 
   report <- mfrm_report(res, style = "qc")
   expect_s3_class(report, "mfrm_report")
