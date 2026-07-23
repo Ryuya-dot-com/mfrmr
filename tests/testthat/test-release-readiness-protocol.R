@@ -215,7 +215,14 @@ test_that("release-readiness protocol reviews the source tree shape", {
     "checklist_status", "gpcm_scope_status", "external_recovery_status"
   ) %in% names(review)))
   expect_false(review$external_recovery_status$ExternalRecoveryRequested[1])
-  expect_true(isTRUE(review$version_status$VersionOK[1]))
+  description_version <- as.character(review$version_status$DescriptionVersion[1])
+  if (grepl("\\.9000$", description_version)) {
+    expect_false(isTRUE(review$version_status$VersionOK[1]))
+    expect_true(isTRUE(review$version_status$DevelopmentLabelPresent[1]))
+    expect_match(review$version_status$NewsHeading[1], "development version", fixed = TRUE)
+  } else {
+    expect_true(isTRUE(review$version_status$VersionOK[1]))
+  }
   expect_true(file.exists(review$paths$gpcm_roadmap))
   expect_equal(review$gpcm_scope_status$GPCMScopeStatus[1], "ok")
   if (file.exists(file.path(pkg_root, ".github", "workflows", "R-CMD-check.yaml"))) {

@@ -19,8 +19,10 @@ such as people, raters, items, tasks, criteria, forms, or occasions. The
 package fits the model, then helps you read the result without treating every
 diagnostic as a final decision.
 
-The canonical route is data -> fit -> required Wright map -> focused
-diagnostics -> report/export:
+The canonical route is data -> fit -> fit summary -> required Wright map ->
+focused diagnostics -> report/export. `summary(fit)` is intentionally the
+fast fit-only view. Ask for the comprehensive, FACETS-organized view
+explicitly when you need it:
 
 ```r
 library(mfrmr)
@@ -28,15 +30,24 @@ library(mfrmr)
 dat <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(dat, person = "Person", facets = c("Rater", "Criterion"),
                 score = "Score", method = "MML", model = "RSM")
-res <- mfrm_results(fit)
-summary(res, view = "brief")
+
+# Fast and backward-compatible: no diagnostics are computed here.
+fit_summary <- summary(fit, profile = "fit", detail = "brief")
+
+# Opt-in comprehensive review. This computes documented diagnostics when needed.
+s <- summary(fit, profile = "facets", detail = "brief")
+res <- s$results
 
 # Required final scale artifact: inspect this before follow-up plots.
 plot(res, type = "wright", preset = "publication", show_ci = TRUE)
 
+# Optional FACETS-style migration view; add category_labels for rubric wording.
+plot(res, type = "wright", renderer = "facets", show_ci = TRUE,
+     preset = "publication")
+
 # Focused fit follow-up: Infit on x, measure on y, persons included.
-plot(fit, type = "fit_pathway", diagnostics = res$diagnostics,
-     fit_stat = "Infit", include_person = TRUE, top_n_person = 12,
+plot(res, type = "fit_pathway", fit_stat = "Infit",
+     include_person = TRUE, top_n_person = 12,
      person_labels = "none", facet_labels = "flagged",
      preset = "publication")
 
@@ -45,6 +56,38 @@ summary(report, view = "reader")
 export_mfrm_results(res, output_dir = "mfrmr-results",
                     preset = "starter", overwrite = TRUE)
 ```
+
+The `facets` profile organizes the package's fitted measures, fit evidence,
+precision, categories/steps, and visual routes in a familiar review order. It
+does **not** imply that FACETS software was run or that the two programs are
+numerically equivalent. `profile = "reporting"` prepares the standard
+report-oriented result set. Use `detail = "brief"` for a selective console
+view without person identifiers, or `detail = "full"` for the legacy detailed
+fit tables.
+
+If diagnostics have already been computed, pass them back so they are checked
+and reused:
+
+```r
+diag <- diagnose_mfrm(
+  fit,
+  residual_pca = "none",
+  diagnostic_mode = "both",
+  fit_df_method = "both"
+)
+s <- summary(fit, profile = "facets", diagnostics = diag)
+```
+
+The `diagnostic_mode = "both"`, `fit_df_method = "both"` combination prepares
+the legacy and strict-marginal screens plus both fit-DF conventions once, so
+the FACETS-organized fit review can reuse them without a hidden recomputation.
+
+For a review-friendly no-computation pass, use
+`summary(fit, profile = "facets", compute = "never")`. Requested diagnostic
+sections are then marked explicitly as `not_computed` instead of being filled
+silently. The
+summary workflow also does not auto-run bias/DIF, residual PCA, or
+linking/drift analyses: each requires a design-specific follow-up decision.
 
 The native Wright map keeps facet/step SE or CI information. When a
 FACETS-style asterisk ruler is needed for visual migration, use
@@ -158,20 +201,24 @@ fit <- fit_mfrm(
   # Use the default quad_points = 31 for final publication-tier reruns.
 )
 
-summary(fit)
+# Fast fit-only screen: no diagnostic computation.
+summary(fit, profile = "fit", detail = "brief")
 
-# Comprehensive first screen: diagnostics, tables, report status, plot routes.
-res <- mfrm_results(fit)
-summary(res, view = "brief")
+# Comprehensive FACETS-organized screen and its structured result object.
+s <- summary(fit, profile = "facets", detail = "brief")
+res <- s$results
 
 # Required final scale artifact. Keep this before all optional visual screens.
 plot(res, type = "wright", preset = "publication", show_ci = TRUE)
 
+# Optional FACETS-style asterisk ruler (visual correspondence, not equivalence).
+plot(res, type = "wright", renderer = "facets", show_ci = TRUE,
+     preset = "publication")
+
 # Infit pathway: x = fit statistic, y = measure; include person rows explicitly.
 plot(
-  fit,
+  res,
   type = "fit_pathway",
-  diagnostics = res$diagnostics,
   fit_stat = "Infit",
   include_person = TRUE,
   top_n_person = 12,

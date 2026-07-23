@@ -292,7 +292,12 @@ mfrmr_release_readiness_version_status <- function(paths, target_version = NULL)
   first_heading <- news_lines[grep("^# ", news_lines)][1] %||% NA_character_
   current_files <- c(paths$description, paths$news, paths$cran_comments, paths$evidence_map)
   current_lines <- unlist(lapply(current_files[file.exists(current_files)], mfrmr_release_readiness_read_lines), use.names = FALSE)
-  dev_label_present <- any(grepl(paste0("\\b", gsub(".", "\\\\.", target_version, fixed = TRUE), "\\.9000\\b"), current_lines))
+  release_version <- sub("\\.9000$", "", target_version)
+  dev_label_present <- any(grepl(
+    paste0(release_version, ".9000"),
+    current_lines,
+    fixed = TRUE
+  ))
   data.frame(
     TargetVersion = target_version,
     DescriptionVersion = desc_version,

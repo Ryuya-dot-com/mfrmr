@@ -11,7 +11,9 @@ mfrm_results(
   response_time_data = NULL,
   response_time_facets = NULL,
   response_time_score = NULL,
-  output = c("object", "summary", "tables", "html")
+  output = c("object", "summary", "tables", "html"),
+  diagnostics = NULL,
+  compute = c("auto", "never")
 )
 }
 \arguments{
@@ -48,6 +50,15 @@ available.}
 \item{output}{Return format: \code{"object"} for an \code{mfrm_results} object,
 \code{"summary"} for its compact summary, \code{"tables"} for a named list of
 available data frames, or \code{"html"} for a temporary HTML report.}
+
+\item{diagnostics}{Optional matching output from \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}. When
+supplied, it is identity-checked and reused instead of recomputed.}
+
+\item{compute}{Diagnostic computation policy. \code{"auto"} preserves the
+standard behavior; \code{"never"} collects only sections that can be built
+without computing diagnostics and marks every requested dependent section
+as \code{"not_computed"}. Matching supplied or stored diagnostics are still
+reused under \code{"never"}.}
 }
 \value{
 Depending on \code{output}, an \code{mfrm_results} object, a

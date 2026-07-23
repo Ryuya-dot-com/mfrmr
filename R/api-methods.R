@@ -7463,10 +7463,32 @@ print.summary.mfrm_bias <- function(x, ...) {
 #' @param object Output from [fit_mfrm()].
 #' @param digits Number of digits for printed numeric values.
 #' @param top_n Number of extreme facet/person rows shown in summaries.
-#' @param ... Reserved for generic compatibility.
+#' @param ... Reserved for generic compatibility. The workflow arguments that
+#'   follow `...` must be supplied by name.
+#' @param profile Summary profile. `"fit"` preserves the lightweight fit-only
+#'   contract and does not compute diagnostics. `"facets"` adds a
+#'   FACETS-organized measurement review, while `"reporting"` adds the
+#'   reporting-oriented results profile.
+#' @param detail Printed detail. When `NULL` (the default), the lightweight
+#'   `"fit"` profile retains the legacy `"full"` print while expanded profiles
+#'   use `"brief"`. An explicit `"brief"` avoids printing person identifiers or
+#'   observation rows; `"full"` prints the legacy fit sections and, for expanded
+#'   profiles, prints extreme-person tables only when `include_person = TRUE`.
+#' @param diagnostics Optional matching output from [diagnose_mfrm()]. It is
+#'   reused by the `"facets"` and `"reporting"` profiles without recomputation.
+#' @param compute Diagnostic computation policy for the expanded profiles.
+#'   `"auto"` computes diagnostics once when they were not supplied;
+#'   `"never"` returns the available fit-only portions and marks every requested
+#'   dependent section as `"not_computed"`. The `"fit"` profile never computes
+#'   diagnostics.
+#' @param include_person Logical. Whether expanded person-level detail may be
+#'   printed in `detail = "full"` and requested by the fit-pathway route.
 #'
 #' @details
 #' This method provides a compact, human-readable summary oriented to reporting.
+#' The expanded profiles use FACETS-style organization for navigation, but do
+#' not claim that FACETS was executed or that estimates are numerically
+#' equivalent to FACETS output.
 #' It returns a structured object and prints:
 #' - model fit overview (N, LogLik, AIC/BIC, convergence)
 #' - estimation settings that affect identification/scoring interpretation
@@ -7547,6 +7569,13 @@ print.summary.mfrm_bias <- function(x, ...) {
 #' - `notes`: short interpretation notes
 #' - `digits`: numeric-print precision threaded through to
 #'   `print.summary.mfrm_fit()`
+#' - `section_status`: availability and explicit non-computation boundaries
+#' - `required_visual`: ordered Wright-map and Infit-pathway routes
+#' - `provenance`: profile, diagnostic source, computation policy, and the
+#'   FACETS-organization interpretation boundary
+#' - `analysis`: compact fit/results indexes used for first-screen review
+#' - `results`: the reused `mfrm_results` backend for expanded profiles, or
+#'   `NULL` for the lightweight `"fit"` profile
 #' @seealso [fit_mfrm()], [diagnose_mfrm()]
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
@@ -7568,7 +7597,38 @@ print.summary.mfrm_bias <- function(x, ...) {
 #' #   easier or harder than the person sample. SpreadRatio > 2 means
 #' #   persons dominate facet variability; < 0.5 means facets dominate.
 #' @export
-summary.mfrm_fit <- function(object, digits = 3, top_n = 5, ...) {
+summary.mfrm_fit <- function(object, digits = 3, top_n = 5, ...,
+                             profile = c("fit", "facets", "reporting"),
+                             detail = NULL,
+                             diagnostics = NULL,
+                             compute = c("auto", "never"),
+                             include_person = FALSE) {
+  profile <- match.arg(tolower(as.character(profile[1])),
+                       c("fit", "facets", "reporting"))
+  if (is.null(detail) || length(detail) == 0L) {
+    detail <- if (identical(profile, "fit")) "full" else "brief"
+  } else {
+    detail <- match.arg(tolower(as.character(detail[1])), c("brief", "full"))
+  }
+  compute <- match.arg(tolower(as.character(compute[1])), c("auto", "never"))
+  if (!is.logical(include_person) || length(include_person) != 1L || is.na(include_person)) {
+    stop("`include_person` must be TRUE or FALSE.", call. = FALSE)
+  }
+  include_person <- isTRUE(include_person)
+
+  out <- mfrm_fit_summary_core(object, digits = digits, top_n = top_n)
+  mfrm_fit_summary_workflow(
+    out = out,
+    fit = object,
+    profile = profile,
+    detail = detail,
+    diagnostics = diagnostics,
+    compute = compute,
+    include_person = include_person
+  )
+}
+
+mfrm_fit_summary_core <- function(object, digits = 3, top_n = 5) {
   if (is.null(object$summary) || nrow(object$summary) == 0) {
     stop("`object` does not contain fit summary information.")
   }
@@ -8081,6 +8141,242 @@ summary.mfrm_fit <- function(object, digits = 3, top_n = 5, ...) {
   out
 }
 
+mfrm_fit_summary_status_rows <- function(results = NULL, profile = "fit") {
+  if (inherits(results, "mfrm_results")) {
+    status <- as.data.frame(results$status %||% data.frame(), stringsAsFactors = FALSE)
+  } else {
+    status <- data.frame(
+      Section = c("fit_summary", "diagnostics"),
+      Status = c("ok", "not_requested"),
+      Detail = c(
+        "Lightweight fit summary is available.",
+        "The fit profile does not compute diagnostics. Use profile = 'facets' or 'reporting' to request them."
+      ),
+      stringsAsFactors = FALSE
+    )
+  }
+
+  boundaries <- data.frame(
+    Section = c("bias_dif", "residual_pca", "linking_drift"),
+    Status = rep("not_computed_by_summary", 3L),
+    Detail = c(
+      "Bias/DIF requires an explicitly chosen substantive contrast and is not screened automatically.",
+      "Residual PCA is not computed by the summary workflow; request it explicitly with diagnose_mfrm().",
+      "Anchor drift/linking requires an explicit multi-fit or multi-wave design and is not inferred automatically."
+    ),
+    stringsAsFactors = FALSE
+  )
+  if (nrow(status) == 0L) return(boundaries)
+  existing <- as.character(status$Section %||% character(0))
+  rbind(status, boundaries[!boundaries$Section %in% existing, , drop = FALSE])
+}
+
+mfrm_fit_summary_required_visual <- function(fit, results = NULL,
+                                             include_person = FALSE) {
+  plot_map <- if (inherits(results, "mfrm_results")) {
+    as.data.frame(results$plot_map %||% data.frame(), stringsAsFactors = FALSE)
+  } else {
+    data.frame()
+  }
+  route_available <- function(type, fallback = FALSE) {
+    if (nrow(plot_map) == 0L ||
+        !all(c("Type", "Available") %in% names(plot_map))) return(isTRUE(fallback))
+    any(plot_map$Type %in% type & plot_map$Available %in% TRUE, na.rm = TRUE)
+  }
+  pathway_person <- if (isTRUE(include_person)) "TRUE" else "FALSE"
+  wright_target <- if (inherits(results, "mfrm_results")) "s$results" else "fit"
+  diagnostics_arg <- if (inherits(results, "mfrm_results")) {
+    ", diagnostics = s$results$diagnostics"
+  } else {
+    ""
+  }
+  pathway_route <- paste0(
+    if (inherits(results, "mfrm_results")) {
+      ""
+    } else {
+      paste0(
+        "s <- summary(fit, profile = \"facets\", include_person = ",
+        pathway_person, "); "
+      )
+    },
+    "plot(s$results, type = \"fit_pathway\", fit_stat = \"Infit\", ",
+    "include_person = ", pathway_person,
+    ", person_labels = \"none\", facet_labels = \"flagged\", preset = \"publication\")"
+  )
+  data.frame(
+    Priority = 1:3,
+    Visual = c(
+      "mfrmr Wright map with SE",
+      "FACETS-style Wright map",
+      "Infit pathway"
+    ),
+    Required = c(TRUE, FALSE, FALSE),
+    Available = c(
+      route_available("wright", fallback = inherits(fit, "mfrm_fit")),
+      route_available("wright", fallback = inherits(fit, "mfrm_fit")),
+      route_available("fit_pathway", fallback = FALSE)
+    ),
+    Route = c(
+      paste0(
+        "plot(", wright_target,
+        ", type = \"wright\", renderer = \"native\", show_ci = TRUE",
+        diagnostics_arg,
+        ", preset = \"publication\")"
+      ),
+      paste0(
+        "plot(", wright_target,
+        ", type = \"wright\", renderer = \"facets\", show_ci = TRUE",
+        diagnostics_arg,
+        ", preset = \"publication\")"
+      ),
+      pathway_route
+    ),
+    Detail = c(
+      "Required first artifact: preserve mfrmr's facet uncertainty display while inspecting persons, facet levels, and steps on the shared logit ruler.",
+      paste(
+        "FACETS Table 6-style star ruler with signed facet headers and labeled score transitions.",
+        "For actual rubric labels, add e.g. `category_labels = c('0' = 'Below', '1' = 'Meets')`; this is visual organization, not numerical equivalence."
+      ),
+      if (isTRUE(include_person)) {
+        "Follow-up fit view with selected person points included; person labels remain suppressed by default."
+      } else {
+        "Follow-up fit view with Infit on the horizontal axis; set include_person = TRUE explicitly to add selected persons."
+      }
+    ),
+    stringsAsFactors = FALSE
+  )
+}
+
+mfrm_fit_summary_provenance <- function(profile, detail, compute,
+                                        include_person, results = NULL) {
+  result_provenance <- if (inherits(results, "mfrm_results")) {
+    results$diagnostics_provenance %||% list()
+  } else {
+    list()
+  }
+  diagnostics_source <- as.character(
+    result_provenance$source %||%
+      if (identical(profile, "fit")) "not_requested_fit_profile" else "not_available"
+  )
+  identity_status <- as.character(result_provenance$identity %||% "not_applicable")
+  diagnostic_mode <- as.character(result_provenance$diagnostic_mode %||% NA_character_)
+  residual_pca <- as.character(result_provenance$residual_pca %||% NA_character_)
+  data.frame(
+    Profile = profile,
+    Detail = detail,
+    ComputePolicy = if (identical(profile, "fit")) "never_fit_profile" else compute,
+    DiagnosticsSource = diagnostics_source,
+    IdentityCheck = identity_status,
+    DiagnosticMode = diagnostic_mode,
+    ResidualPCA = residual_pca,
+    PersonDetail = isTRUE(include_person),
+    OrganizationBoundary = paste(
+      "FACETS-style organization; not evidence that FACETS was run",
+      "and not a claim of numerical equivalence."
+    ),
+    stringsAsFactors = FALSE
+  )
+}
+
+mfrm_fit_summary_analysis <- function(out, results = NULL, digits = 3L,
+                                      top_n = 10L) {
+  fit_lane <- list(
+    overview = out$overview,
+    status = out$status,
+    key_warnings = out$key_warnings,
+    next_actions = out$next_actions
+  )
+  if (!inherits(results, "mfrm_results")) {
+    return(list(
+      fit = fit_lane,
+      results_summary = NULL,
+      diagnostics = NULL,
+      triage = data.frame(),
+      table_index = data.frame(),
+      plot_map = data.frame()
+    ))
+  }
+  results_summary <- summary(
+    results,
+    digits = digits,
+    top_n = top_n,
+    view = "brief"
+  )
+  list(
+    fit = fit_lane,
+    results_summary = results_summary,
+    diagnostics = results$summaries$diagnostics %||% NULL,
+    triage = results$triage %||% data.frame(),
+    table_index = results$table_index %||% data.frame(),
+    plot_map = results$plot_map %||% data.frame()
+  )
+}
+
+mfrm_fit_summary_workflow <- function(out, fit, profile, detail,
+                                      diagnostics, compute, include_person) {
+  results <- NULL
+  if (!identical(profile, "fit")) {
+    include <- if (identical(profile, "facets")) "facets" else "standard"
+    results <- mfrm_results(
+      fit,
+      include = include,
+      output = "object",
+      diagnostics = diagnostics,
+      compute = compute
+    )
+  }
+
+  out$profile <- profile
+  out$detail <- detail
+  out$include_person <- isTRUE(include_person)
+  out$section_status <- mfrm_fit_summary_status_rows(results, profile = profile)
+  out$required_visual <- mfrm_fit_summary_required_visual(
+    fit = fit,
+    results = results,
+    include_person = include_person
+  )
+  out$provenance <- mfrm_fit_summary_provenance(
+    profile = profile,
+    detail = detail,
+    compute = compute,
+    include_person = include_person,
+    results = results
+  )
+  out$results <- results
+
+  if (inherits(results, "mfrm_results")) {
+    diagnostic_warnings <- as.character(
+      results$summaries$diagnostics$key_warnings %||% character(0)
+    )
+    diagnostic_warnings <- diagnostic_warnings[
+      !diagnostic_warnings %in% "No immediate warnings from diagnostics summary."
+    ]
+    out$key_warnings <- clean_summary_lines(
+      c(out$key_warnings, diagnostic_warnings),
+      max_n = 6L
+    )
+    visual_actions <- out$required_visual$Route[out$required_visual$Available %in% TRUE]
+    result_actions <- as.data.frame(results$next_actions %||% data.frame(), stringsAsFactors = FALSE)
+    result_routes <- if (nrow(result_actions) > 0L && "Route" %in% names(result_actions)) {
+      as.character(utils::head(result_actions$Route, 4L))
+    } else {
+      character(0)
+    }
+    out$next_actions <- clean_summary_lines(
+      c(visual_actions, result_routes, "Use `s$results$tables` for full structured tables; the console intentionally remains selective."),
+      max_n = 8L
+    )
+  }
+  out$analysis <- mfrm_fit_summary_analysis(
+    out = out,
+    results = results,
+    digits = out$digits %||% 3L,
+    top_n = max(5L, nrow(out$facet_extremes %||% data.frame()))
+  )
+  class(out) <- "summary.mfrm_fit"
+  out
+}
+
 round_numeric_df <- function(df, digits = 3L) {
   if (!is.data.frame(df) || nrow(df) == 0) return(df)
   out <- df
@@ -8176,6 +8472,9 @@ print_preparation_section <- function(notes, title = "Data preparation notes") {
 print.summary.mfrm_fit <- function(x, ...) {
   digits <- x$digits
   if (is.null(digits) || !is.finite(digits)) digits <- 3L
+  profile <- as.character(x$profile %||% "fit")
+  detail <- as.character(x$detail %||% "full")
+  include_person <- isTRUE(x$include_person)
   overview <- round_numeric_df(as.data.frame(x$overview), digits = digits)
   key_warning_lines <- if (summary_lines_are_default(
     x$key_warnings,
@@ -8184,6 +8483,27 @@ print.summary.mfrm_fit <- function(x, ...) {
     "None."
   } else {
     x$key_warnings
+  }
+  if (identical(detail, "brief")) {
+    person_specific <- grepl(
+      "(^|[^[:alnum:]_])Person\\s*[:=]|Facet\\s*[:=]?\\s*Person([^[:alnum:]_]|$)",
+      key_warning_lines,
+      ignore.case = TRUE
+    )
+    if (any(person_specific, na.rm = TRUE)) {
+      person_warning_n <- sum(person_specific, na.rm = TRUE)
+      key_warning_lines <- c(
+        key_warning_lines[!person_specific],
+        sprintf(
+          paste(
+            "%d person-level diagnostic warning(s) are present; identifiers are suppressed",
+            "in the brief console view. Inspect the structured diagnostic tables",
+            "only under appropriate privacy controls."
+          ),
+          person_warning_n
+        )
+      )
+    }
   }
 
   cat("Many-Facet Rasch Model Summary\n")
@@ -8227,6 +8547,23 @@ print.summary.mfrm_fit <- function(x, ...) {
       }
     }
   }
+  if (!identical(profile, "fit")) {
+    boundary <- as.character(
+      x$provenance$OrganizationBoundary[1] %||%
+        "FACETS-style organization; not numerical equivalence."
+    )
+    cat(sprintf("\nWorkflow profile: %s\n", profile))
+    cat("  ", boundary, "\n", sep = "")
+  }
+  if (nrow(x$required_visual %||% data.frame()) > 0L) {
+    cat("\nVisual workflow (in order)\n")
+    visual <- as.data.frame(x$required_visual, stringsAsFactors = FALSE)
+    keep <- intersect(
+      c("Priority", "Visual", "Required", "Available", "Route"),
+      names(visual)
+    )
+    print(visual[, keep, drop = FALSE], row.names = FALSE)
+  }
   if (nrow(x$status %||% data.frame()) > 0) {
     cat("\nStatus\n")
     for (i in seq_len(nrow(x$status))) {
@@ -8242,7 +8579,149 @@ print.summary.mfrm_fit <- function(x, ...) {
     cat("\nRow retention\n")
     print(round_numeric_df(as.data.frame(x$row_retention), digits = digits), row.names = FALSE)
   }
-  print_preparation_section(x$preparation_notes)
+  if (identical(detail, "brief")) {
+    preparation_notes <- summary_preparation_display_table(x$preparation_notes)
+    preparation_notes$Affected <- NULL
+    if (nrow(preparation_notes) > 0L) {
+      cat("\nData preparation notes (identifiers suppressed)\n")
+      print(preparation_notes, row.names = FALSE)
+    }
+  } else {
+    print_preparation_section(x$preparation_notes)
+  }
+
+  if (identical(detail, "brief")) {
+    if (nrow(x$facet_overview %||% data.frame()) > 0L) {
+      cat("\nFacet measure overview\n")
+      print(round_numeric_df(as.data.frame(x$facet_overview), digits = digits), row.names = FALSE)
+    }
+    if (nrow(x$person_overview %||% data.frame()) > 0L) {
+      cat("\nPerson measure distribution (aggregate; no identifiers)\n")
+      print(round_numeric_df(as.data.frame(x$person_overview), digits = digits), row.names = FALSE)
+    }
+    if (nrow(x$step_overview %||% data.frame()) > 0L) {
+      cat("\nStep parameter summary\n")
+      print(round_numeric_df(as.data.frame(x$step_overview), digits = digits), row.names = FALSE)
+    }
+
+    if (inherits(x$results, "mfrm_results") &&
+        inherits(x$results$diagnostics, "mfrm_diagnostics")) {
+      diagnostics <- x$results$diagnostics
+      overall_fit <- as.data.frame(diagnostics$overall_fit %||% data.frame(), stringsAsFactors = FALSE)
+      if (nrow(overall_fit) > 0L) {
+        keep <- intersect(
+          c(
+            "Infit", "Outfit", "InfitZSTD", "OutfitZSTD",
+            "InfitZSTD_FACETS", "OutfitZSTD_FACETS",
+            "DF_Infit", "DF_Outfit", "DF_Infit_FACETS", "DF_Outfit_FACETS"
+          ),
+          names(overall_fit)
+        )
+        cat("\nOverall fit first screen\n")
+        print(round_numeric_df(overall_fit[, keep, drop = FALSE], digits = digits), row.names = FALSE)
+      }
+
+      reliability <- as.data.frame(diagnostics$reliability %||% data.frame(), stringsAsFactors = FALSE)
+      if (nrow(reliability) > 0L) {
+        keep <- intersect(
+          c(
+            "Facet", "Levels", "PrecisionTier", "Reliability", "RealReliability",
+            "Separation", "Strata", "MeanInfit", "MeanOutfit"
+          ),
+          names(reliability)
+        )
+        cat("\nReliability and separation first screen\n")
+        print(round_numeric_df(reliability[, keep, drop = FALSE], digits = digits), row.names = FALSE)
+      }
+
+      facets_chisq <- as.data.frame(diagnostics$facets_chisq %||% data.frame(), stringsAsFactors = FALSE)
+      if (nrow(facets_chisq) > 0L) {
+        keep <- intersect(
+          c(
+            "Facet", "Levels", "FixedChiSq", "FixedDF", "FixedProb",
+            "RandomChiSq", "RandomDF", "RandomProb"
+          ),
+          names(facets_chisq)
+        )
+        cat("\nFacet chi-square first screen\n")
+        print(round_numeric_df(facets_chisq[, keep, drop = FALSE], digits = digits), row.names = FALSE)
+      }
+
+      rating <- x$results$components$rating_scale %||% NULL
+      rating_summary <- as.data.frame(rating$summary %||% data.frame(), stringsAsFactors = FALSE)
+      if (nrow(rating_summary) > 0L) {
+        keep <- intersect(
+          c(
+            "Categories", "UsedCategories", "UnusedScoreCategories",
+            "WeaklyIdentifiedThresholds", "MinCategoryCount", "MeanCategoryInfit",
+            "MeanCategoryOutfit", "ThresholdMonotonic", "MarginalFitAvailable",
+            "MarginalFlaggedCategories"
+          ),
+          names(rating_summary)
+        )
+        cat("\nRating-scale first screen\n")
+        print(round_numeric_df(rating_summary[, keep, drop = FALSE], digits = digits), row.names = FALSE)
+      }
+      thresholds <- as.data.frame(rating$threshold_table %||% data.frame(), stringsAsFactors = FALSE)
+      if (nrow(thresholds) > 0L) {
+        if (all(c("LowerCategory", "UpperCategory") %in% names(thresholds))) {
+          thresholds$Transition <- paste0(
+            as.character(thresholds$LowerCategory),
+            " -> ",
+            as.character(thresholds$UpperCategory)
+          )
+        }
+        keep <- intersect(
+          c(
+            "StepFacet", "Step", "Transition", "LowerCategory", "UpperCategory",
+            "Estimate", "GapFromPrev", "ThresholdMonotonic",
+            "WeaklyIdentified", "ThresholdCaveat"
+          ),
+          names(thresholds)
+        )
+        cat("\nLabeled step transitions (first rows)\n")
+        print(
+          round_numeric_df(utils::head(thresholds[, keep, drop = FALSE], 8L), digits = digits),
+          row.names = FALSE
+        )
+      }
+    }
+
+    section_status <- as.data.frame(x$section_status %||% data.frame(), stringsAsFactors = FALSE)
+    if (nrow(section_status) > 0L && all(c("Section", "Status") %in% names(section_status))) {
+      boundaries <- section_status[
+        section_status$Status %in% "not_computed_by_summary",
+        , drop = FALSE
+      ]
+      if (nrow(boundaries) > 0L) {
+        cat("\nAnalyses intentionally not run by summary\n")
+        keep <- intersect(c("Section", "Status", "Detail"), names(boundaries))
+        print(boundaries[, keep, drop = FALSE], row.names = FALSE)
+      }
+      review <- section_status[
+        !section_status$Status %in% c("ok", "available", "not_computed_by_summary"),
+        , drop = FALSE
+      ]
+      if (nrow(review) > 0L) {
+        cat("\nSection availability requiring attention\n")
+        keep <- intersect(c("Section", "Status", "Detail"), names(review))
+        print(review[, keep, drop = FALSE], row.names = FALSE)
+      }
+    }
+    cat("\nStructured result access\n")
+    if (inherits(x$results, "mfrm_results")) {
+      cat(" - `s$analysis`: compact triage, table index, and plot map.\n")
+      cat(" - `s$results$tables`: full structured tables (not dumped here).\n")
+      cat(sprintf(
+        " - Re-run `summary(fit, profile = \"%s\", detail = \"full\")` only when more fit-level detail is needed.\n",
+        profile
+      ))
+    } else {
+      cat(" - Use `summary(fit, profile = \"facets\")` for the computed FACETS-organized review.\n")
+      cat(" - Use `summary(fit, detail = \"full\")` for legacy fit-level detail.\n")
+    }
+    return(invisible(x))
+  }
 
   if (nrow(overview) > 0) {
     ov <- overview[1, , drop = FALSE]
@@ -8323,12 +8802,13 @@ print.summary.mfrm_fit <- function(x, ...) {
     print(round_numeric_df(as.data.frame(x$facet_extremes), digits = digits), row.names = FALSE)
   }
 
-  if (nrow(x$person_high) > 0) {
+  show_person_extremes <- isTRUE(include_person) || identical(profile, "fit")
+  if (isTRUE(show_person_extremes) && nrow(x$person_high) > 0) {
     cat("\nHighest person measures\n")
     print(round_numeric_df(as.data.frame(x$person_high), digits = digits), row.names = FALSE)
   }
 
-  if (nrow(x$person_low) > 0) {
+  if (isTRUE(show_person_extremes) && nrow(x$person_low) > 0) {
     cat("\nLowest person measures\n")
     print(round_numeric_df(as.data.frame(x$person_low), digits = digits), row.names = FALSE)
   }

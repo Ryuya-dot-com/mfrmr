@@ -1,3 +1,22 @@
+# mfrmr 0.2.2.9000 (development version)
+
+- `summary(fit)` now has explicit `profile = "fit"`, `"facets"`, and
+  `"reporting"` workflows. The default fit profile remains the fast,
+  backward-compatible fit summary and does not silently compute diagnostics;
+  the FACETS profile is an opt-in, comprehensive organization of package
+  results, not a claim that FACETS was run or that the estimates are
+  numerically equivalent.
+- FACETS- and reporting-profile summaries accept a matching diagnostics object
+  for reuse, expose provenance and section-availability records, and support
+  `compute = "never"` when hidden diagnostic computation is undesirable.
+  Bias/DIF, residual PCA, and anchor-drift/linking analyses remain explicit
+  follow-up decisions rather than automatic summary side effects.
+- The concise summary print now leads with the required native Wright map with
+  SE, follows it with the optional FACETS-style ruler, and then gives the
+  optional Infit pathway. Person points are opt-in for the pathway and person
+  identifiers are not printed in `detail = "brief"`; full structured results
+  remain available without flooding the console.
+
 # mfrmr 0.2.2
 
 - The canonical user route is now explicit and executable: data ->

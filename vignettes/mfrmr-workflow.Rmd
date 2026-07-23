@@ -36,6 +36,7 @@ This vignette outlines a reproducible workflow for:
 
 - loading packaged simulation data
 - fitting an MFRM with flexible facets
+- choosing a fast fit summary or an opt-in comprehensive summary
 - producing the required Wright map on the fitted shared logit scale
 - running diagnostics and residual PCA
 - generating APA and visual summary outputs
@@ -48,7 +49,9 @@ For a plot-first companion guide, see the separate
 For speed-sensitive work, a useful pattern is:
 
 - start with `method = "JML"` or `quad_points = 7`
-- use `diagnose_mfrm(..., residual_pca = "none")` for the first pass
+- use `diagnose_mfrm(..., residual_pca = "none", diagnostic_mode = "both",
+  fit_df_method = "both")` when the diagnostics will feed a comprehensive
+  summary
 - reuse the same diagnostics object in downstream reports and plots
 
 ## MML and Diagnostic Modes
@@ -107,16 +110,87 @@ fit_toy <- fit_mfrm(
   model = "RSM",
   maxit = 30
 )
-diag_toy <- diagnose_mfrm(fit_toy, residual_pca = "none")
-res_toy <- mfrm_results(fit_toy)
+diag_toy <- diagnose_mfrm(
+  fit_toy,
+  residual_pca = "none",
+  diagnostic_mode = "both",
+  fit_df_method = "both"
+)
 
-summary(fit_toy)$overview
+# Fast fit-only summary: this does not compute diagnostics.
+fit_summary_toy <- summary(fit_toy, profile = "fit", detail = "brief")
+
+# Comprehensive review, reusing diagnostics already computed above.
+facets_summary_toy <- summary(
+  fit_toy,
+  profile = "facets",
+  detail = "brief",
+  diagnostics = diag_toy
+)
+res_toy <- facets_summary_toy$results
+
+fit_summary_toy$overview
 summary(diag_toy)$overview
-summary(res_toy, view = "brief")
+facets_summary_toy
 
 # Required first fitted-scale artifact.
 plot(res_toy, type = "wright", preset = "publication", show_ci = TRUE)
+
+# Optional FACETS-style ruler. Replace these examples with the study rubric.
+rubric_labels <- c(
+  "0" = "Level 0",
+  "1" = "Level 1",
+  "2" = "Level 2",
+  "3" = "Level 3"
+)
+plot(
+  res_toy,
+  type = "wright",
+  renderer = "facets",
+  category_labels = rubric_labels,
+  show_ci = TRUE,
+  preset = "publication"
+)
+
+# Optional follow-up: Infit on x, measure on y; persons are explicit opt-in.
+plot(
+  res_toy,
+  type = "fit_pathway",
+  fit_stat = "Infit",
+  include_person = TRUE,
+  top_n_person = 12,
+  person_labels = "none",
+  facet_labels = "flagged",
+  preset = "publication"
+)
 ```
+
+The `facets` profile is FACETS-style organization, not evidence that FACETS
+was run and not a numerical-equivalence claim. Its brief print is selective
+and does not print person identifiers; full tables remain in
+`facets_summary_toy$results$tables`. For a report-oriented result set, use
+`profile = "reporting"`. To inspect availability without allowing diagnostic
+computation, use `compute = "never"`; requested dependent sections are then
+recorded as `not_computed`:
+
+```{r summary-profile-controls, eval = FALSE}
+reporting_summary_toy <- summary(
+  fit_toy,
+  profile = "reporting",
+  diagnostics = diag_toy
+)
+
+availability_only <- summary(
+  fit_toy,
+  profile = "facets",
+  compute = "never"
+)
+availability_only$section_status
+```
+
+Bias/DIF, residual PCA, and anchor-drift/linking analyses are deliberately not
+auto-run by any summary profile. They require explicit contrasts, diagnostic
+settings, or multi-fit designs.
 
 ```{r toy-setup-artifacts, echo = FALSE, eval = is_cran_check}
 vignette_artifact("workflow_fit_overview.csv")
@@ -127,7 +201,6 @@ vignette_artifact("workflow_plot_components.csv")
 The same fit can then move through the public first-contact route:
 
 ```{r primary-route}
-res_toy <- mfrm_results(fit_toy)
 report_toy <- mfrm_report(res_toy, style = "qc")
 
 summary(res_toy)$next_actions
@@ -206,21 +279,27 @@ fit <- fit_mfrm(
 
 diag <- diagnose_mfrm(
   fit,
-  residual_pca = "none"
+  residual_pca = "none",
+  diagnostic_mode = "both",
+  fit_df_method = "both"
 )
 
-summary(fit)
+summary(fit, profile = "fit", detail = "brief")
 summary(diag)
 
 # Keep the final artifact flow explicit: fit -> Wright map -> follow-up plots.
-res <- mfrm_results(fit)
-summary(res, view = "brief")
+s <- summary(fit, profile = "facets", diagnostics = diag)
+res <- s$results
+s
 plot(res, type = "wright", preset = "publication", show_ci = TRUE)
 
+# Optional FACETS-style asterisk ruler, retaining supplied uncertainty metadata.
+plot(res, type = "wright", renderer = "facets", show_ci = TRUE,
+     preset = "publication")
+
 plot(
-  fit,
+  res,
   type = "fit_pathway",
-  diagnostics = res$diagnostics,
   fit_stat = "Infit",
   include_person = TRUE,
   top_n_person = 12,

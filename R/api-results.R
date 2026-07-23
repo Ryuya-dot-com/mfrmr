@@ -260,11 +260,13 @@ mfrm_results_mapping_table <- function(mapping) {
   )
 }
 
-mfrm_results_resolve_input <- function(x) {
+mfrm_results_resolve_input <- function(x, compute = c("auto", "never")) {
+  compute <- match.arg(tolower(as.character(compute[1])), c("auto", "never"))
   if (inherits(x, "mfrm_facets_run")) {
     return(list(
       fit = x$fit,
       diagnostics = x$diagnostics,
+      diagnostics_provenance = "mfrm_facets_run",
       input_mode = "mfrm_facets_run",
       run = x,
       mapping = x$mapping %||% NULL,
@@ -274,9 +276,16 @@ mfrm_results_resolve_input <- function(x) {
     ))
   }
   if (inherits(x, "mfrm_fit")) {
+    stored_diagnostics <- x$diagnostics %||% NULL
+    stored_provenance <- if (inherits(stored_diagnostics, "mfrm_diagnostics")) {
+      if (inherits(x, "mfrm_imported_fit")) "mfrm_imported_fit" else "mfrm_fit"
+    } else {
+      "not_supplied"
+    }
     return(list(
       fit = x,
-      diagnostics = NULL,
+      diagnostics = stored_diagnostics,
+      diagnostics_provenance = stored_provenance,
       input_mode = "mfrm_fit",
       run = NULL,
       mapping = NULL,
@@ -287,23 +296,46 @@ mfrm_results_resolve_input <- function(x) {
   }
   if (is.data.frame(x)) {
     mapping <- mfrm_results_infer_standard_mapping(x)
-    run <- run_mfrm_facets(
-      data = x,
-      person = mapping$person,
-      facets = mapping$facets,
-      score = mapping$score,
-      weight = mapping$weight
-    )
+    if (identical(compute, "never")) {
+      fit <- fit_mfrm(
+        data = x,
+        person = mapping$person,
+        facets = mapping$facets,
+        score = mapping$score,
+        weight = mapping$weight,
+        model = "RSM",
+        method = "JML",
+        maxit = 400,
+        reltol = 1e-6
+      )
+      run <- NULL
+      diagnostics <- NULL
+      diagnostics_provenance <- "not_supplied"
+      route_note <- "Input data.frame was estimated with fit_mfrm(); diagnostic computation was disabled with compute = 'never'."
+    } else {
+      run <- run_mfrm_facets(
+        data = x,
+        person = mapping$person,
+        facets = mapping$facets,
+        score = mapping$score,
+        weight = mapping$weight
+      )
+      fit <- run$fit
+      diagnostics <- run$diagnostics
+      diagnostics_provenance <- "data_frame_run"
+      route_note <- "Input data.frame was estimated with run_mfrm_facets()."
+    }
     return(list(
-      fit = run$fit,
-      diagnostics = run$diagnostics,
+      fit = fit,
+      diagnostics = diagnostics,
+      diagnostics_provenance = diagnostics_provenance,
       input_mode = "data.frame",
       run = run,
       mapping = mapping,
       source_columns = mapping,
       source_data = x,
       notes = paste0(
-        "Input data.frame was estimated with run_mfrm_facets() using inferred columns: ",
+        route_note, " Inferred columns: ",
         "person = ", mapping$person, ", score = ", mapping$score,
         ", facets = ", paste(mapping$facets, collapse = ", "), "."
       )
@@ -315,11 +347,156 @@ mfrm_results_resolve_input <- function(x) {
   )
 }
 
-mfrm_results_diagnose <- function(fit, diagnostics = NULL) {
+mfrm_results_native_diagnostics_match <- function(fit, diagnostics) {
+  evidence <- logical(0)
+  obs <- as.data.frame(diagnostics$obs %||% data.frame(), stringsAsFactors = FALSE)
+  fit_data <- as.data.frame(fit$prep$data %||% data.frame(), stringsAsFactors = FALSE)
+  if (nrow(obs) > 0L || nrow(fit_data) > 0L) {
+    identity_columns <- unique(c(
+      "Person",
+      as.character(fit$config$facet_names %||% character(0)),
+      "Score", "Weight", "score_k"
+    ))
+    identity_columns <- intersect(identity_columns, intersect(names(obs), names(fit_data)))
+    if (nrow(obs) != nrow(fit_data) || length(identity_columns) == 0L) return(FALSE)
+    obs_identity <- obs[, identity_columns, drop = FALSE]
+    fit_identity <- fit_data[, identity_columns, drop = FALSE]
+    rownames(obs_identity) <- NULL
+    rownames(fit_identity) <- NULL
+    if (!isTRUE(all.equal(obs_identity, fit_identity, check.attributes = FALSE))) return(FALSE)
+    evidence <- c(evidence, TRUE)
+  }
+
+  diagnostic_facets <- sort(as.character(diagnostics$facet_names %||% character(0)))
+  fit_facets <- sort(as.character(fit$config$facet_names %||% character(0)))
+  if (length(diagnostic_facets) > 0L) {
+    if (!identical(diagnostic_facets, fit_facets)) return(FALSE)
+    evidence <- c(evidence, TRUE)
+  }
+
+  measures <- as.data.frame(diagnostics$measures %||% data.frame(), stringsAsFactors = FALSE)
+  if (nrow(measures) > 0L && all(c("Facet", "Level", "Estimate") %in% names(measures))) {
+    person <- as.data.frame(fit$facets$person %||% data.frame(), stringsAsFactors = FALSE)
+    facets <- as.data.frame(fit$facets$others %||% data.frame(), stringsAsFactors = FALSE)
+    person_measures <- if (nrow(person) > 0L &&
+                           all(c("Person", "Estimate") %in% names(person))) {
+      data.frame(
+        Facet = "Person",
+        Level = as.character(person$Person),
+        Estimate = suppressWarnings(as.numeric(person$Estimate)),
+        stringsAsFactors = FALSE
+      )
+    } else {
+      data.frame(Facet = character(0), Level = character(0), Estimate = numeric(0))
+    }
+    facet_measures <- if (nrow(facets) > 0L &&
+                          all(c("Facet", "Level", "Estimate") %in% names(facets))) {
+      data.frame(
+        Facet = as.character(facets$Facet),
+        Level = as.character(facets$Level),
+        Estimate = suppressWarnings(as.numeric(facets$Estimate)),
+        stringsAsFactors = FALSE
+      )
+    } else {
+      data.frame(Facet = character(0), Level = character(0), Estimate = numeric(0))
+    }
+    fit_measures <- rbind(person_measures, facet_measures)
+    if (nrow(fit_measures) == 0L) return(FALSE)
+    measure_key <- paste(as.character(measures$Facet), as.character(measures$Level), sep = "\r")
+    fit_key <- paste(fit_measures$Facet, fit_measures$Level, sep = "\r")
+    idx <- match(measure_key, fit_key)
+    if (anyNA(idx)) return(FALSE)
+    diagnostic_estimate <- suppressWarnings(as.numeric(measures$Estimate))
+    fit_estimate <- fit_measures$Estimate[idx]
+    finite_or_missing <- is.finite(diagnostic_estimate) | is.finite(fit_estimate) |
+      is.na(diagnostic_estimate) | is.na(fit_estimate)
+    if (any(finite_or_missing) && !isTRUE(all.equal(
+      diagnostic_estimate[finite_or_missing],
+      fit_estimate[finite_or_missing],
+      tolerance = 1e-10,
+      check.attributes = FALSE
+    ))) return(FALSE)
+    evidence <- c(evidence, TRUE)
+  }
+  length(evidence) > 0L && all(evidence)
+}
+
+mfrm_results_validate_diagnostics_identity <- function(fit, diagnostics,
+                                                       helper = "mfrm_results()") {
+  if (!inherits(fit, "mfrm_fit")) {
+    stop("`fit` must be an mfrm_fit object.", call. = FALSE)
+  }
+  if (!inherits(diagnostics, "mfrm_diagnostics")) {
+    stop(
+      "`diagnostics` must be an mfrm_diagnostics object returned by diagnose_mfrm().",
+      call. = FALSE
+    )
+  }
+  if (inherits(fit, "mfrm_imported_fit") ||
+      inherits(diagnostics, "mfrm_imported_diagnostics")) {
+    matched <- inherits(fit, "mfrm_imported_fit") &&
+      inherits(diagnostics, "mfrm_imported_diagnostics") &&
+      !is.null(fit$diagnostics) && identical(fit$diagnostics, diagnostics)
+    if (!isTRUE(matched)) {
+      stop(
+        "fit/diagnostics mismatch in `", helper, "`: imported diagnostics must ",
+        "be the diagnostics stored in the matching imported fit.",
+        call. = FALSE
+      )
+    }
+    return(invisible("imported_identity_match"))
+  }
+  if (!isTRUE(mfrm_results_native_diagnostics_match(fit, diagnostics))) {
+    stop(
+      "fit/diagnostics mismatch in `", helper, "`: the supplied diagnostics ",
+      "do not match this fitted analysis. Recompute them with diagnose_mfrm(fit, ...).",
+      call. = FALSE
+    )
+  }
+  invisible("structural_identity_match")
+}
+
+mfrm_results_diagnose <- function(fit, diagnostics = NULL,
+                                  compute = c("auto", "never"),
+                                  provenance = "not_supplied") {
+  compute <- match.arg(tolower(as.character(compute[1])), c("auto", "never"))
   if (inherits(diagnostics, "mfrm_diagnostics")) {
+    identity <- mfrm_results_validate_diagnostics_identity(
+      fit = fit,
+      diagnostics = diagnostics,
+      helper = "mfrm_results()"
+    )
+    detail <- switch(
+      as.character(provenance[1] %||% "reused"),
+      explicit = "Reused diagnostics supplied explicitly via `diagnostics`.",
+      mfrm_facets_run = "Reused diagnostics stored in the supplied mfrm_facets_run object.",
+      mfrm_imported_fit = "Reused diagnostics stored in the supplied imported fit.",
+      mfrm_fit = "Reused diagnostics stored in the supplied fit.",
+      data_frame_run = "Reused diagnostics computed by the data-frame run_mfrm_facets() route.",
+      "Reused supplied diagnostics."
+    )
     return(list(
       diagnostics = diagnostics,
-      status = mfrm_results_status_row("diagnostics", "ok", "Reused supplied diagnostics.")
+      provenance = as.character(provenance[1] %||% "reused"),
+      identity = as.character(identity),
+      status = mfrm_results_status_row("diagnostics", "ok", detail)
+    ))
+  }
+  if (!is.null(diagnostics)) {
+    stop(
+      "`diagnostics` must be an mfrm_diagnostics object returned by diagnose_mfrm().",
+      call. = FALSE
+    )
+  }
+  if (identical(compute, "never")) {
+    return(list(
+      diagnostics = NULL,
+      provenance = "not_computed",
+      identity = "not_applicable",
+      status = mfrm_results_status_row(
+        "diagnostics", "not_computed",
+        "Diagnostic computation was disabled with compute = 'never'."
+      )
     ))
   }
   first <- mfrm_results_safe(
@@ -333,6 +510,8 @@ mfrm_results_diagnose <- function(fit, diagnostics = NULL) {
   if (isTRUE(first$ok)) {
     return(list(
       diagnostics = first$value,
+      provenance = "computed",
+      identity = "computed_from_fit",
       status = mfrm_results_status_row(
         "diagnostics", "ok",
         paste0(
@@ -346,6 +525,8 @@ mfrm_results_diagnose <- function(fit, diagnostics = NULL) {
   if (isTRUE(second$ok)) {
     return(list(
       diagnostics = second$value,
+      provenance = "computed_fallback",
+      identity = "computed_from_fit",
       status = mfrm_results_status_row(
         "diagnostics", "ok",
         paste0(
@@ -357,11 +538,45 @@ mfrm_results_diagnose <- function(fit, diagnostics = NULL) {
   }
   list(
     diagnostics = NULL,
+    provenance = "not_available",
+    identity = "not_applicable",
     status = mfrm_results_status_row(
       "diagnostics", "not_available",
       paste0("Automatic diagnostics failed: ", second$message)
     )
   )
+}
+
+mfrm_results_has_facets_companion <- function(diagnostics,
+                                              table = c("measures", "fit")) {
+  table <- match.arg(table)
+  if (!inherits(diagnostics, "mfrm_diagnostics")) return(FALSE)
+  tbl <- as.data.frame(diagnostics[[table]] %||% data.frame(), stringsAsFactors = FALSE)
+  all(c(
+    "DF_Infit_FACETS", "DF_Outfit_FACETS",
+    "InfitZSTD_FACETS", "OutfitZSTD_FACETS"
+  ) %in% names(tbl))
+}
+
+mfrm_results_diagnostic_dependent_sections <- function(include) {
+  sections <- character(0)
+  if ("diagnostics" %in% include) {
+    sections <- c(sections, "diagnostics_summary")
+  }
+  if (any(c("tables", "categories") %in% include)) {
+    sections <- c(
+      sections,
+      "fit_measures", "facet_statistics", "fair_average",
+      "rating_scale", "unexpected"
+    )
+  }
+  if ("precision" %in% include) sections <- c(sections, "precision_review")
+  if ("bias" %in% include) sections <- c(sections, "bias_screen")
+  if ("misfit" %in% include) sections <- c(sections, "misfit_review")
+  if ("reporting" %in% include) sections <- c(sections, "reporting_checklist")
+  if ("apa" %in% include) sections <- c(sections, "apa_outputs")
+  if ("network" %in% include) sections <- c(sections, "network_review")
+  unique(sections)
 }
 
 mfrm_results_flatten_data_frames <- function(x, prefix, max_depth = 2L, depth = 0L) {
@@ -709,6 +924,10 @@ mfrm_results_reproducible_code <- function(ctx, include, output = "object") {
   output_expr <- mfrm_results_deparse_one(output)
   mapping <- ctx$mapping %||% NULL
   rt_lines <- mfrm_results_reproducible_response_time_args(ctx)
+  compute <- as.character(ctx$diagnostics_compute %||% "auto")[1]
+  reuse_diagnostics <- as.character(
+    ctx$diagnostics_provenance %||% "not_supplied"
+  )[1] %in% c("explicit", "mfrm_facets_run", "mfrm_imported_fit", "mfrm_fit")
   if (is.list(mapping) && !is.null(mapping$person) && !is.null(mapping$score) &&
       length(mapping$facets %||% character(0)) > 0L) {
     fit_code <- mfrm_results_render_code(
@@ -718,7 +937,9 @@ mfrm_results_reproducible_code <- function(ctx, include, output = "object") {
       weight = mapping$weight %||% NULL,
       include = include,
       output = output,
-      response_time_lines = rt_lines
+      response_time_lines = rt_lines,
+      diagnostics = reuse_diagnostics,
+      compute = compute
     )
     return(fit_code)
   }
@@ -727,6 +948,8 @@ mfrm_results_reproducible_code <- function(ctx, include, output = "object") {
     "  fit = fit,",
     paste0("  include = ", include_expr, ","),
     rt_lines,
+    if (isTRUE(reuse_diagnostics)) "  diagnostics = diagnostics," else NULL,
+    paste0("  compute = ", mfrm_results_deparse_one(compute), ","),
     paste0("  output = ", output_expr),
     ")"
   )
@@ -794,26 +1017,42 @@ mfrm_results_triage <- function(status, plot_map, components, table_index,
       if (isTRUE(no_diag_warning)) "Diagnostics are available and no immediate summary warning was reported." else paste(utils::head(key_warnings, 2L), collapse = " | ")
     )
   } else {
+    diagnostics_not_computed <- nrow(status) > 0L &&
+      all(c("Section", "Status") %in% names(status)) &&
+      any(status$Section %in% "diagnostics" &
+            status$Status %in% "not_computed", na.rm = TRUE)
     add(
       "Diagnostics",
-      "not_available",
-      "diagnostics_missing",
-      "diagnose_mfrm(res$fit, residual_pca = \"none\")",
-      "Automatic diagnostics were not available; dependent result sections should be read as unavailable."
+      if (isTRUE(diagnostics_not_computed)) "review" else "not_available",
+      if (isTRUE(diagnostics_not_computed)) {
+        "diagnostics_not_computed"
+      } else {
+        "diagnostics_missing"
+      },
+      if (isTRUE(diagnostics_not_computed)) {
+        "mfrm_results(res$fit, include = res$include, compute = \"auto\")"
+      } else {
+        "diagnose_mfrm(res$fit, residual_pca = \"none\")"
+      },
+      if (isTRUE(diagnostics_not_computed)) {
+        "Diagnostics were deliberately not computed; dependent result sections are marked not_computed."
+      } else {
+        "Automatic diagnostics were unavailable; dependent result sections are marked not_available."
+      }
     )
   }
 
-  not_available <- if (nrow(status) > 0L && "Status" %in% names(status)) {
-    sum(status$Status %in% "not_available", na.rm = TRUE)
+  incomplete <- if (nrow(status) > 0L && "Status" %in% names(status)) {
+    sum(status$Status %in% c("not_available", "not_computed"), na.rm = TRUE)
   } else {
     0L
   }
   add(
     "Section availability",
-    if (not_available > 0L) "review" else "ok",
-    if (not_available > 0L) "some_sections_unavailable" else "requested_sections_available",
+    if (incomplete > 0L) "review" else "ok",
+    if (incomplete > 0L) "some_sections_unavailable" else "requested_sections_available",
     "summary(res)$status",
-    if (not_available > 0L) paste0(not_available, " requested section(s) were not available; review status before treating omissions as evidence.") else "Requested sections that could be computed were available."
+    if (incomplete > 0L) paste0(incomplete, " requested section(s) were unavailable or not computed; review status before treating omissions as evidence.") else "Requested sections that could be computed were available."
   )
 
   qc_available <- nrow(plot_map) > 0L &&
@@ -1083,13 +1322,13 @@ mfrm_results_next_actions <- function(status, plot_map, components, table_index,
       "The bundle exposes table roles, plot readiness, and conservative appendix presets."
     )
   }
-  if (nrow(status) > 0L && any(status$Status %in% "not_available")) {
+  if (nrow(status) > 0L && any(status$Status %in% c("not_available", "not_computed"))) {
     add(
       12L,
       "Availability",
-      "Review unavailable sections before interpreting missing output as evidence.",
+      "Review unavailable or uncomputed sections before interpreting missing output as evidence.",
       "summary(res)$status",
-      "Unavailable sections usually reflect model scope, missing dependencies, or insufficient data rather than a psychometric result."
+      "Unavailable or uncomputed sections reflect computation policy, model scope, missing dependencies, or insufficient data rather than a psychometric result."
     )
   }
   if (nrow(triage) > 0L &&
@@ -1116,17 +1355,54 @@ mfrm_results_build <- function(ctx, include) {
   tables <- list()
   notes <- as.character(ctx$notes %||% character(0))
 
-  diag_info <- mfrm_results_diagnose(fit, diagnostics = ctx$diagnostics)
+  diag_info <- mfrm_results_diagnose(
+    fit,
+    diagnostics = ctx$diagnostics,
+    compute = ctx$diagnostics_compute %||% "auto",
+    provenance = ctx$diagnostics_provenance %||% "not_supplied"
+  )
   diagnostics <- diag_info$diagnostics
   status <- rbind(status, diag_info$status)
   if (inherits(diagnostics, "mfrm_diagnostics")) {
     components$diagnostics <- diagnostics
   } else {
-    notes <- c(notes, "Diagnostics were not available; dependent sections are omitted.")
+    notes <- c(
+      notes,
+      if (identical(diag_info$provenance, "not_computed")) {
+        "Diagnostics were deliberately not computed; dependent sections are marked not_computed."
+      } else {
+        "Diagnostics were not available; dependent sections are marked not_available."
+      }
+    )
+    dependency_status <- if (identical(diag_info$provenance, "not_computed")) {
+      "not_computed"
+    } else {
+      "not_available"
+    }
+    dependency_detail <- if (identical(dependency_status, "not_computed")) {
+      "Not computed because diagnostic computation was disabled with compute = 'never'."
+    } else {
+      "Unavailable because diagnostics could not be obtained."
+    }
+    dependent_sections <- mfrm_results_diagnostic_dependent_sections(include)
+    if (length(dependent_sections) > 0L) {
+      status <- rbind(
+        status,
+        do.call(
+          rbind,
+          lapply(
+            dependent_sections,
+            mfrm_results_status_row,
+            status = dependency_status,
+            detail = dependency_detail
+          )
+        )
+      )
+    }
   }
 
   if ("fit" %in% include) {
-    fit_sum <- mfrm_results_safe(summary(fit))
+    fit_sum <- mfrm_results_safe(mfrm_fit_summary_core(fit))
     if (isTRUE(fit_sum$ok)) {
       summaries$fit <- fit_sum$value
       tables <- c(tables, mfrm_results_flatten_data_frames(fit_sum$value, "fit_summary"))
@@ -1148,13 +1424,21 @@ mfrm_results_build <- function(ctx, include) {
   }
 
   if ("tables" %in% include || "categories" %in% include) {
+    fit_measure_df_method <- if (mfrm_results_has_facets_companion(
+      diagnostics,
+      table = "measures"
+    )) {
+      "both"
+    } else {
+      "engine"
+    }
     table_calls <- list(
       iteration = quote(estimation_iteration_report(fit)),
       fit_measures = quote(fit_measures_table(
         fit,
         diagnostics = diagnostics,
         threshold_profiles = "all",
-        fit_df_method = "both"
+        fit_df_method = fit_measure_df_method
       )),
       facet_statistics = quote(facet_statistics_report(fit, diagnostics = diagnostics)),
       fair_average = quote(fair_average_table(fit, diagnostics = diagnostics)),
@@ -1181,12 +1465,41 @@ mfrm_results_build <- function(ctx, include) {
     status <- added$status
   }
 
-  if ("facets_fit" %in% include && inherits(diagnostics, "mfrm_diagnostics")) {
-    result <- mfrm_results_safe(facets_fit_review(fit, diagnostics = diagnostics))
-    added <- mfrm_results_add_component("facets_fit_review", result, components, tables, status)
-    components <- added$components
-    tables <- added$tables
-    status <- added$status
+  if ("facets_fit" %in% include) {
+    if (mfrm_results_has_facets_companion(diagnostics, table = "fit")) {
+      result <- mfrm_results_safe(facets_fit_review(fit, diagnostics = diagnostics))
+      added <- mfrm_results_add_component("facets_fit_review", result, components, tables, status)
+      components <- added$components
+      tables <- added$tables
+      status <- added$status
+    } else {
+      detail <- if (inherits(diagnostics, "mfrm_diagnostics")) {
+        paste(
+          "Not recomputed: the reused diagnostics do not contain the FACETS-style",
+          "df/ZSTD companion columns. Re-run diagnose_mfrm(fit, fit_df_method = 'both')",
+          "explicitly and pass that matching object as `diagnostics`."
+        )
+      } else {
+        if (identical(diag_info$provenance, "not_computed")) {
+          "Not computed because diagnostic computation was disabled with compute = 'never'."
+        } else {
+          "Unavailable because diagnostics could not be obtained."
+        }
+      }
+      status <- rbind(
+        status,
+        mfrm_results_status_row(
+          "facets_fit_review",
+          if (inherits(diagnostics, "mfrm_diagnostics") ||
+              identical(diag_info$provenance, "not_computed")) {
+            "not_computed"
+          } else {
+            "not_available"
+          },
+          detail
+        )
+      )
+    }
   }
 
   if ("bias" %in% include && inherits(diagnostics, "mfrm_diagnostics")) {
@@ -1292,6 +1605,13 @@ mfrm_results_build <- function(ctx, include) {
     triage = triage,
     next_actions = next_actions,
     status = status,
+    diagnostics_provenance = list(
+      source = as.character(diag_info$provenance %||% "not_available"),
+      identity = as.character(diag_info$identity %||% "not_applicable"),
+      compute = as.character(ctx$diagnostics_compute %||% "auto"),
+      diagnostic_mode = as.character(diagnostics$diagnostic_mode %||% NA_character_),
+      residual_pca = as.character(diagnostics$residual_pca_mode %||% NA_character_)
+    ),
     include = include,
     input = list(
       mode = ctx$input_mode,
@@ -1369,8 +1689,9 @@ mfrm_report_component_status <- function(x, component, available = "available",
   status <- as.data.frame(x$status %||% data.frame(), stringsAsFactors = FALSE)
   if (nrow(status) > 0L && all(c("Section", "Status") %in% names(status))) {
     hit <- status[status$Section %in% component, , drop = FALSE]
-    if (nrow(hit) > 0L && hit$Status[1] %in% "not_available") {
-      return("not_available")
+    if (nrow(hit) > 0L &&
+        hit$Status[1] %in% c("not_available", "not_computed")) {
+      return(as.character(hit$Status[1]))
     }
   }
   absent
@@ -1422,11 +1743,26 @@ mfrm_report_section_plan <- function(x, sx, style) {
     "Use for method and analysis-setup wording.",
     "Confirm scoring, column roles, missing-data handling, anchoring, and estimation settings in the analysis script."
   )
-  diag_status <- if (inherits(x$diagnostics, "mfrm_diagnostics")) "available" else "not_available"
+  diag_status <- if (inherits(x$diagnostics, "mfrm_diagnostics")) {
+    "available"
+  } else {
+    mfrm_report_component_status(
+      x,
+      "diagnostics",
+      available = "available",
+      absent = "not_available"
+    )
+  }
   add(
     "First-screen diagnostics",
     diag_status,
-    if (identical(diag_status, "available")) "Diagnostics object and triage rows are available." else "Diagnostics were not available in this result object.",
+    if (identical(diag_status, "available")) {
+      "Diagnostics object and triage rows are available."
+    } else if (identical(diag_status, "not_computed")) {
+      "Diagnostics were deliberately not computed in this result object."
+    } else {
+      "Diagnostics were not available in this result object."
+    },
     "summary(res)$triage; summary(res$diagnostics)",
     "Use for QC ordering and report-readiness checks.",
     "Diagnostics are evidence for follow-up and wording strength, not a standalone validity decision."
@@ -1441,7 +1777,11 @@ mfrm_report_section_plan <- function(x, sx, style) {
   )
   add(
     "Category functioning",
-    if (mfrm_report_has_category(x)) "available" else "not_requested",
+    if (mfrm_report_has_category(x)) {
+      "available"
+    } else {
+      mfrm_report_component_status(x, "rating_scale")
+    },
     "Rating-scale/category tables or curves are available when collected by mfrm_results().",
     "rating_scale_table(fit, diagnostics); category_structure_report(fit)",
     "Use for score-scale interpretation and category-functioning prose.",
@@ -3248,6 +3588,7 @@ mfrm_report_readiness_label <- function(status) {
   if (status %in% "review") return("write_with_caveat")
   if (status %in% "caveat") return("caveated")
   if (status %in% "not_requested") return("needs_requested_section")
+  if (status %in% "not_computed") return("needs_computation")
   if (status %in% "not_available") return("unavailable")
   "review"
 }
@@ -3366,8 +3707,11 @@ mfrm_report_claim_readiness <- function(x, sections, style) {
     )
   }
   out <- do.call(rbind, rows)
-  rank <- c(unavailable = 1L, needs_requested_section = 2L, write_with_caveat = 3L,
-            caveated = 4L, review = 5L, ready = 6L)
+  rank <- c(
+    unavailable = 1L, needs_computation = 2L,
+    needs_requested_section = 3L, write_with_caveat = 4L,
+    caveated = 5L, review = 6L, ready = 7L
+  )
   ord <- rank[out$Readiness]
   ord[is.na(ord)] <- 7L
   out[order(ord, out$Claim), , drop = FALSE]
@@ -3383,6 +3727,9 @@ mfrm_report_gap_action <- function(section, status, route) {
     if (grepl("Category", section, fixed = TRUE)) return("Rebuild the result with table/category sections or call the category helper directly.")
     return("Request the relevant mfrm_results() section or call the route-specific helper before reporting this claim.")
   }
+  if (status %in% "not_computed") {
+    return("Rebuild the result with compute = \"auto\" or supply matching diagnostics before reporting this section.")
+  }
   if (status %in% "not_available") {
     return("Document why this section was unavailable and avoid treating the omission as evidence.")
   }
@@ -3397,6 +3744,7 @@ mfrm_report_gap_action <- function(section, status, route) {
 
 mfrm_report_gap_type <- function(status) {
   status <- as.character(status %||% "")
+  if (status %in% "not_computed") return("not_computed")
   if (status %in% "not_available") return("unavailable")
   if (status %in% "not_requested") return("not_requested")
   if (status %in% "review") return("caveated_evidence")
@@ -3418,7 +3766,9 @@ mfrm_report_gaps <- function(sections) {
       stringsAsFactors = FALSE
     ))
   }
-  keep <- sections$Status %in% c("not_available", "not_requested", "review", "caveat")
+  keep <- sections$Status %in% c(
+    "not_available", "not_computed", "not_requested", "review", "caveat"
+  )
   gaps <- sections[keep, , drop = FALSE]
   if (nrow(gaps) == 0L) {
     return(data.frame(
@@ -3432,7 +3782,10 @@ mfrm_report_gaps <- function(sections) {
       stringsAsFactors = FALSE
     ))
   }
-  priority_rank <- c(not_available = 1L, not_requested = 2L, review = 3L, caveat = 4L)
+  priority_rank <- c(
+    not_available = 1L, not_computed = 2L,
+    not_requested = 3L, review = 4L, caveat = 5L
+  )
   priority <- priority_rank[gaps$Status]
   priority[is.na(priority)] <- 5L
   out <- data.frame(
@@ -3530,6 +3883,7 @@ mfrm_report_index_readiness <- function(status, review_signals) {
   status <- as.character(status %||% "")
   review_signals <- suppressWarnings(as.integer(review_signals[1]))
   if (status %in% "not_requested") return("request_if_needed")
+  if (status %in% "not_computed") return("not_computed")
   if (status %in% "not_available") return("unavailable")
   if (status %in% c("available_without_precision_review", "caveat")) return("write_with_caveat")
   if (status %in% c("review", "warn")) return("review")
@@ -3565,12 +3919,22 @@ mfrm_report_index <- function(sections,
                   include_preset, plot_route = "", export_route = "export_mfrm_results(res, include = \"report\")") {
     primary_table <- as.character(primary_table)
     template_table <- as.character(template_table)
+    section_status <- mfrm_report_section_status(
+      sections,
+      section,
+      default = "not_requested"
+    )
+    effective_status <- if (identical(section_status, "not_computed")) {
+      "not_computed"
+    } else {
+      as.character(evidence_status)
+    }
     rows[[length(rows) + 1L]] <<- data.frame(
       Area = as.character(area),
       Section = as.character(section),
-      SectionStatus = mfrm_report_section_status(sections, section, default = "not_requested"),
-      EvidenceStatus = as.character(evidence_status),
-      Readiness = mfrm_report_index_readiness(evidence_status, review_signals),
+      SectionStatus = section_status,
+      EvidenceStatus = effective_status,
+      Readiness = mfrm_report_index_readiness(effective_status, review_signals),
       ReviewSignalCount = suppressWarnings(as.integer(review_signals[1])),
       EvidenceDetail = as.character(evidence_detail %||% ""),
       PrimaryTable = primary_table,
@@ -3773,6 +4137,7 @@ mfrm_report_first_screen_status <- function(readiness) {
   if (readiness %in% "ready") return("ok")
   if (readiness %in% "review") return("review")
   if (readiness %in% "request_if_needed") return("request_if_needed")
+  if (readiness %in% "not_computed") return("not_computed")
   if (readiness %in% "unavailable") return("unavailable")
   if (readiness %in% "write_with_caveat") return("caveat")
   "review"
@@ -3783,6 +4148,7 @@ mfrm_report_first_screen_action <- function(status) {
     as.character(status %||% ""),
     ok = "Use the listed template route if this area is reported.",
     review = "Inspect the primary evidence table and template boundary before writing.",
+    not_computed = "Compute or supply the listed evidence before reporting this area.",
     request_if_needed = "Request this evidence only if the claim is needed.",
     unavailable = "Rebuild the result object or run the listed route before reporting.",
     caveat = "Use caveated wording and inspect the boundary before writing.",
@@ -3796,6 +4162,7 @@ mfrm_report_first_screen_issue <- function(row) {
   detail <- as.character(row$EvidenceDetail[1] %||% "")
   if (readiness %in% "ready") return("No report-index review signals.")
   if (readiness %in% "request_if_needed") return("Evidence was not requested.")
+  if (readiness %in% "not_computed") return("Evidence was deliberately not computed.")
   if (readiness %in% "unavailable") return("Evidence is unavailable in this report object.")
   if (is.finite(signals) && signals > 0L) {
     return(paste0("ReviewSignalCount = ", signals, "; ", detail))
@@ -3858,7 +4225,10 @@ mfrm_report_first_screen <- function(report_index, template_index) {
     )
   })
   out <- do.call(rbind, rows)
-  status_rank <- c(unavailable = 1L, review = 2L, caveat = 3L, request_if_needed = 4L, ok = 5L)
+  status_rank <- c(
+    unavailable = 1L, not_computed = 2L, review = 3L,
+    caveat = 4L, request_if_needed = 5L, ok = 6L
+  )
   rank <- status_rank[out$Status]
   rank[is.na(rank)] <- 99L
   out <- out[order(rank, out$Area), , drop = FALSE]
@@ -3867,6 +4237,8 @@ mfrm_report_first_screen <- function(report_index, template_index) {
   counts <- table(factor(out$Status, levels = names(status_rank)))
   overall_status <- if (any(out$Status %in% "unavailable")) {
     "unavailable"
+  } else if (any(out$Status %in% "not_computed")) {
+    "not_computed"
   } else if (any(out$Status %in% "review")) {
     "review"
   } else if (any(out$Status %in% "caveat")) {
@@ -3884,6 +4256,7 @@ mfrm_report_first_screen <- function(report_index, template_index) {
     MainIssue = paste0(
       "ok=", counts[["ok"]], "; review=", counts[["review"]],
       "; caveat=", counts[["caveat"]], "; request_if_needed=", counts[["request_if_needed"]],
+      "; not_computed=", counts[["not_computed"]],
       "; unavailable=", counts[["unavailable"]], "."
     ),
     NextAction = paste0("Start with ", first_area, "."),
@@ -4157,7 +4530,10 @@ mfrm_report_status_count_table <- function(first_screen) {
   if ("Area" %in% names(rows)) {
     rows <- rows[as.character(rows$Area) != "Overall", , drop = FALSE]
   }
-  levels <- c("unavailable", "review", "caveat", "request_if_needed", "ok")
+  levels <- c(
+    "unavailable", "not_computed", "review",
+    "caveat", "request_if_needed", "ok"
+  )
   counts <- table(factor(as.character(rows$Status), levels = levels))
   data.frame(
     Status = names(counts),
@@ -4250,6 +4626,7 @@ summary.mfrm_report <- function(object, top_n = 8,
     OverallStatus = as.character(overall$Status[1] %||% ""),
     FirstAction = as.character(overall$NextAction[1] %||% ""),
     ReviewAreas = status_value("review"),
+    NotComputedAreas = status_value("not_computed"),
     CaveatAreas = status_value("caveat"),
     OptionalAreas = status_value("request_if_needed"),
     UnavailableAreas = status_value("unavailable"),
@@ -4259,7 +4636,8 @@ summary.mfrm_report <- function(object, top_n = 8,
   )
 
   immediate_actions <- if (nrow(detail_rows) > 0L && "Status" %in% names(detail_rows)) {
-    rows <- detail_rows[as.character(detail_rows$Status) %in% c("unavailable", "review", "caveat"), , drop = FALSE]
+    rows <- detail_rows[as.character(detail_rows$Status) %in%
+                          c("unavailable", "not_computed", "review", "caveat"), , drop = FALSE]
     utils::head(rows[, intersect(c(
       "Area", "Status", "MainIssue", "NextAction", "PrimaryRoute", "TemplateRoute"
     ), names(rows)), drop = FALSE], top_n)
@@ -5178,6 +5556,13 @@ export_mfrm_results <- function(x,
 #' @param response_time_score Optional score column for response-time
 #'   summaries. Defaults to the fitted model's source score column when
 #'   available.
+#' @param diagnostics Optional matching output from [diagnose_mfrm()]. When
+#'   supplied, it is identity-checked and reused instead of recomputed.
+#' @param compute Diagnostic computation policy. `"auto"` preserves the
+#'   standard behavior; `"never"` collects only sections that can be built
+#'   without computing diagnostics and marks every requested dependent section
+#'   as `"not_computed"`. Matching supplied or stored diagnostics are still
+#'   reused under `"never"`.
 #'
 #' @return Depending on `output`, an `mfrm_results` object, a
 #'   `summary.mfrm_results` object, a named table list, or an
@@ -5221,10 +5606,28 @@ mfrm_results <- function(fit,
                          response_time_data = NULL,
                          response_time_facets = NULL,
                          response_time_score = NULL,
-                         output = c("object", "summary", "tables", "html")) {
+                         output = c("object", "summary", "tables", "html"),
+                         diagnostics = NULL,
+                         compute = c("auto", "never")) {
   output <- match.arg(tolower(as.character(output[1])), c("object", "summary", "tables", "html"))
+  compute <- match.arg(tolower(as.character(compute[1])), c("auto", "never"))
   include <- mfrm_results_resolve_include(include)
-  ctx <- mfrm_results_resolve_input(fit)
+  ctx <- mfrm_results_resolve_input(fit, compute = compute)
+  if (!is.null(diagnostics)) {
+    if (!inherits(diagnostics, "mfrm_diagnostics")) {
+      stop(
+        "`diagnostics` must be an mfrm_diagnostics object returned by diagnose_mfrm().",
+        call. = FALSE
+      )
+    }
+    ctx$diagnostics <- diagnostics
+    ctx$diagnostics_provenance <- "explicit"
+    ctx$notes <- c(
+      as.character(ctx$notes %||% character(0)),
+      "Explicit matching diagnostics were supplied to mfrm_results() and reused."
+    )
+  }
+  ctx$diagnostics_compute <- compute
   rt_requested <- "response_time" %in% include ||
     !is.null(response_time) ||
     !is.null(response_time_data)
@@ -5284,7 +5687,9 @@ mfrm_results_menu_many <- function(cols, role) {
 }
 
 mfrm_results_render_code <- function(person, facets, score, weight, include, output,
-                                     response_time_lines = character(0)) {
+                                     response_time_lines = character(0),
+                                     diagnostics = FALSE,
+                                     compute = "auto") {
   facet_expr <- paste(sprintf("%s", deparse(facets)), collapse = "")
   if (!grepl("^c\\(", facet_expr)) {
     facet_expr <- paste0("c(", paste(vapply(facets, function(x) deparse(x), character(1)), collapse = ", "), ")")
@@ -5301,12 +5706,19 @@ mfrm_results_render_code <- function(person, facets, score, weight, include, out
     "  model = \"RSM\",",
     "  method = \"JML\"",
     ")",
-    if (length(response_time_lines) > 0L) {
+    if (length(response_time_lines) > 0L || isTRUE(diagnostics) ||
+        !is.null(compute)) {
       c(
         "res <- mfrm_results(",
         "  fit,",
         paste0("  include = ", include_expr, ","),
         response_time_lines,
+        if (isTRUE(diagnostics)) "  diagnostics = diagnostics," else NULL,
+        if (!is.null(compute)) {
+          paste0("  compute = ", mfrm_results_deparse_one(as.character(compute)[1]), ",")
+        } else {
+          NULL
+        },
         paste0("  output = ", output_expr),
         ")"
       )
@@ -5406,6 +5818,7 @@ summary.mfrm_results <- function(object, digits = 3, top_n = 10,
     Tables = length(object$tables %||% list()),
     PlotRoutes = sum(object$plot_map$Available %in% TRUE, na.rm = TRUE),
     NotAvailable = sum(object$status$Status %in% "not_available", na.rm = TRUE),
+    NotComputed = sum(object$status$Status %in% "not_computed", na.rm = TRUE),
     stringsAsFactors = FALSE
   )
 
@@ -5628,6 +6041,10 @@ plot.mfrm_results <- function(x,
   if (identical(type, "wright")) {
     dots <- list(...)
     dots$type <- "wright"
+    if (is.null(dots$diagnostics) &&
+        inherits(x$diagnostics, "mfrm_diagnostics")) {
+      dots$diagnostics <- x$diagnostics
+    }
     return(do.call(plot, c(list(x$fit), dots)))
   }
   if (identical(type, "pathway")) {

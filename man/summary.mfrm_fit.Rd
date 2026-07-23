@@ -4,7 +4,17 @@
 \alias{summary.mfrm_fit}
 \title{Summarize an \code{mfrm_fit} object in a user-friendly format}
 \usage{
-\method{summary}{mfrm_fit}(object, digits = 3, top_n = 5, ...)
+\method{summary}{mfrm_fit}(
+  object,
+  digits = 3,
+  top_n = 5,
+  ...,
+  profile = c("fit", "facets", "reporting"),
+  detail = NULL,
+  diagnostics = NULL,
+  compute = c("auto", "never"),
+  include_person = FALSE
+)
 }
 \arguments{
 \item{object}{Output from \code{\link[=fit_mfrm]{fit_mfrm()}}.}
@@ -13,7 +23,31 @@
 
 \item{top_n}{Number of extreme facet/person rows shown in summaries.}
 
-\item{...}{Reserved for generic compatibility.}
+\item{...}{Reserved for generic compatibility. The workflow arguments that
+follow \code{...} must be supplied by name.}
+
+\item{profile}{Summary profile. \code{"fit"} preserves the lightweight fit-only
+contract and does not compute diagnostics. \code{"facets"} adds a
+FACETS-organized measurement review, while \code{"reporting"} adds the
+reporting-oriented results profile.}
+
+\item{detail}{Printed detail. When \code{NULL} (the default), the lightweight
+\code{"fit"} profile retains the legacy \code{"full"} print while expanded profiles
+use \code{"brief"}. An explicit \code{"brief"} avoids printing person identifiers or
+observation rows; \code{"full"} prints the legacy fit sections and, for expanded
+profiles, prints extreme-person tables only when \code{include_person = TRUE}.}
+
+\item{diagnostics}{Optional matching output from \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}. It is
+reused by the \code{"facets"} and \code{"reporting"} profiles without recomputation.}
+
+\item{compute}{Diagnostic computation policy for the expanded profiles.
+\code{"auto"} computes diagnostics once when they were not supplied;
+\code{"never"} returns the available fit-only portions and marks every requested
+dependent section as \code{"not_computed"}. The \code{"fit"} profile never computes
+diagnostics.}
+
+\item{include_person}{Logical. Whether expanded person-level detail may be
+printed in \code{detail = "full"} and requested by the fit-pathway route.}
 }
 \value{
 An object of class \code{summary.mfrm_fit} with:
@@ -59,6 +93,13 @@ latent-regression population-model issues
 \item \code{notes}: short interpretation notes
 \item \code{digits}: numeric-print precision threaded through to
 \code{print.summary.mfrm_fit()}
+\item \code{section_status}: availability and explicit non-computation boundaries
+\item \code{required_visual}: ordered Wright-map and Infit-pathway routes
+\item \code{provenance}: profile, diagnostic source, computation policy, and the
+FACETS-organization interpretation boundary
+\item \code{analysis}: compact fit/results indexes used for first-screen review
+\item \code{results}: the reused \code{mfrm_results} backend for expanded profiles, or
+\code{NULL} for the lightweight \code{"fit"} profile
 }
 }
 \description{
@@ -66,6 +107,9 @@ Summarize an \code{mfrm_fit} object in a user-friendly format
 }
 \details{
 This method provides a compact, human-readable summary oriented to reporting.
+The expanded profiles use FACETS-style organization for navigation, but do
+not claim that FACETS was executed or that estimates are numerically
+equivalent to FACETS output.
 It returns a structured object and prints:
 \itemize{
 \item model fit overview (N, LogLik, AIC/BIC, convergence)
