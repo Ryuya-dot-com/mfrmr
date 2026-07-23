@@ -380,9 +380,9 @@ detect_facet_nesting <- function(data, facets, person = NULL,
 #' Applied Measurement, 19*(2), 148-161.
 #'
 #' @examples
-#' toy <- load_mfrmr_data("example_core")
+#' toy <- load_mfrmr_data("example_operational")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                 method = "JML", maxit = 30)
+#'                 method = "MML", quad_points = 7, maxit = 30)
 #' review <- facet_small_sample_review(fit)
 #' summary(review)
 #'

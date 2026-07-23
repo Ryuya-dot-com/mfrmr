@@ -9,18 +9,16 @@ The principal user-facing changes are:
 - a reader-oriented `summary()` workflow for fitted models, with concise,
   FACETS-oriented, and reporting profiles;
 - improved native and FACETS-style Wright maps, including score-transition
-  labels and explicit handling of displayed versus omitted coordinates;
+  labels, uncertainty in the native display, and explicit handling of
+  displayed versus omitted coordinates;
 - an Infit-versus-measure diagnostic pathway with optional person rows;
+- a reproducible operational teaching dataset and clearer privacy and
+  provenance information; and
 - a deliberately scoped ConQuest MML comparison workflow for supported
-  unidimensional binary, RSM, and PCM designs;
-- clearer privacy warnings and provenance metadata for exported result
-  bundles; and
-- a tighter default relative optimization tolerance for more reliable
-  convergence assessment. The diagnostic threshold itself was not relaxed.
+  unidimensional binary, RSM, and PCM designs.
 
-Existing native Wright maps remain available and retain their uncertainty
-display. FACETS-style graphics reproduce the relevant visual grammar; no
-claim of numerical identity with proprietary software is made.
+FACETS-style graphics reproduce the relevant visual grammar; no claim of
+numerical identity with proprietary software is made.
 
 ## Test environment
 
@@ -28,21 +26,29 @@ claim of numerical identity with proprietary software is made.
 - aarch64-apple-darwin23
 - R 4.6.1 (2026-06-24)
 
-The final source tarball was checked with:
+The final source tarball was built and checked with:
 
 ```sh
+R CMD build .
 _R_CHECK_FORCE_SUGGESTS_=false R CMD check --as-cran mfrmr_0.2.3.tar.gz
 ```
 
-Result: 0 errors, 0 warnings, and 0 notes (`Status: OK`). The installed-package
-CRAN test selection completed with 1,385 passes and 3 intentional CRAN skips
+Result: 0 errors, 0 warnings, and 0 notes (`Status: OK`). Examples completed
+in 12 seconds and the installed-package test selection completed in 25.53
+seconds, with 1,385 passes, no failures or warnings, and 3 intentional skips
 for longer GPCM coverage.
 
-The complete non-CRAN regression suite was also run locally with long-running
-fit, plotting, export, simulation, and documentation checks enabled. It
-completed 1,583 test blocks and 9,963 expectations with 9,963 passes and no
-skips, failures, errors, or warnings.
+As an additional example-level check, all 127 active help topics were run
+individually. Their combined elapsed time was 3.967 seconds, the slowest topic
+took 0.784 seconds, and none produced an error or warning.
+
+The complete non-CRAN regression suite was also run locally. It completed in
+667.10 seconds with 9,747 passes, no failures or warnings, and 9 skips for
+source-only documentation checks that are unavailable after package
+installation. Those source-only checks were run separately without skips.
+The complete suite is also selected on the Linux release job in GitHub
+Actions by setting `NOT_CRAN=true`; it is not run during CRAN checks.
 
 ## Downstream dependencies
 
-No reverse dependencies are listed for mfrmr on CRAN.
+No reverse dependencies were listed for mfrmr on CRAN on 2026-07-24.

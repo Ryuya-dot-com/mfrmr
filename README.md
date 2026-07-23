@@ -344,8 +344,9 @@ The FACETS renderer reproduces the main reading grammar of a FACETS Table
 A defensible numerical comparison requires the same response records, score
 coding, model, estimator, identification constraints, anchors, facet
 orientation, extreme-score handling, and convergence criteria. FACETS commonly
-uses JMLE, whereas the recommended `mfrmr` workflow above uses MML with EAP
-person summaries. Those choices target related but different calculations.
+uses JMLE, whereas the starter `mfrmr` workflow above uses MML with EAP person
+summaries when its population-model assumptions are suitable. Those choices
+target related but different calculations.
 
 When a JMLE-oriented comparison is required, refit with `method = "JML"` and
 still document every remaining setting. Matching the estimator family alone

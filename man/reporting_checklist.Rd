@@ -111,9 +111,12 @@ short \code{InterpretationCheck} for the main user-facing caveat.
 Review the rows with \code{Available = FALSE} or \code{DraftReady = FALSE}, then add
 the missing diagnostics, bias results, or narrative context before calling
 \code{\link[=build_apa_outputs]{build_apa_outputs()}} for draft text generation. For \code{RSM} / \code{PCM}
-reporting runs, the preferred route is an \code{MML} fit plus
+reporting runs where the MML population assumptions are defensible, the
+most complete package-native route is an \code{MML} fit plus
 \code{diagnose_mfrm(..., diagnostic_mode = "both")} so the checklist can see the
-legacy and strict marginal screens together.
+legacy and strict marginal screens together. A JML route remains available
+when its estimand and incidental-parameter limitations better match the
+analysis purpose.
 }
 
 \section{How this differs from operational review}{

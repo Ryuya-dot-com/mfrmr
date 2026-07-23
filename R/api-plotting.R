@@ -3251,9 +3251,10 @@ resolve_bubble_measures <- function(x, diagnostics = NULL) {
 #' @seealso \code{\link{diagnose_mfrm}}, \code{\link{plot_unexpected}},
 #'   \code{\link{plot_fair_average}}
 #' @examplesIf interactive()
-#' toy <- load_mfrmr_data("example_core")
+#' toy <- load_mfrmr_data("example_operational")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                 method = "JML", model = "RSM", maxit = 30)
+#'                 method = "MML", model = "RSM",
+#'                 quad_points = 7, maxit = 30)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
 #' p <- plot_bubble(fit, diagnostics = diag, draw = FALSE)
 #' head(p$data$table[, c("Facet", "Level", "Estimate", "Infit", "Outfit")])
@@ -3701,9 +3702,10 @@ export_mfrm <- function(fit,
 #'   facet rows carry \code{NA} in that column by design.
 #' @seealso \code{\link{fit_mfrm}}, \code{\link{export_mfrm}}
 #' @examples
-#' toy <- load_mfrmr_data("example_core")
+#' toy <- load_mfrmr_data("example_operational")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                 method = "JML", model = "RSM", maxit = 30)
+#'                 method = "MML", model = "RSM",
+#'                 quad_points = 7, maxit = 30)
 #' head(as.data.frame(fit))
 #' @export
 as.data.frame.mfrm_fit <- function(x, row.names = NULL, optional = FALSE, ...) {

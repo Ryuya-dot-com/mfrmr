@@ -1062,12 +1062,14 @@ fit_mfrm <- function(data,
 #'   when the fit has no model-estimated facet interactions.
 #' @seealso [fit_mfrm()], [estimate_bias()], [compare_mfrm()]
 #' @examples
-#' toy <- load_mfrmr_data("example_core")
+#' toy <- load_mfrmr_data("example_operational")
 #' fit <- fit_mfrm(
 #'   toy, person = "Person", facets = c("Rater", "Criterion"),
-#'   score = "Score", method = "JML", model = "RSM", maxit = 30
+#'   score = "Score", method = "MML", model = "RSM",
+#'   facet_interactions = "Rater:Criterion",
+#'   quad_points = 7, maxit = 30
 #' )
-#' interaction_effect_table(fit)
+#' head(interaction_effect_table(fit))
 #' @export
 interaction_effect_table <- function(fit) {
   if (!inherits(fit, "mfrm_fit")) {
@@ -2983,8 +2985,11 @@ plot.mfrm_anchor_review <- function(x,
 #' @return A data.frame with `Facet`, `Level`, and `Anchor`.
 #' @seealso [fit_mfrm()], [review_mfrm_anchors()]
 #' @examples
-#' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+#' toy <- load_mfrmr_data("example_operational")
+#' fit <- fit_mfrm(
+#'   toy, "Person", c("Rater", "Criterion"), "Score",
+#'   method = "MML", quad_points = 7, maxit = 30
+#' )
 #' anchors_tbl <- make_anchor_table(fit)
 #' head(anchors_tbl)
 #' summary(anchors_tbl$Anchor)

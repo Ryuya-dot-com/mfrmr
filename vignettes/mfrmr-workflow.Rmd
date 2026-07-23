@@ -62,8 +62,10 @@ For speed-sensitive work, a useful pattern is:
 - `mml_engine = "direct"` (the default) optimizes the quadrature-based
   marginal log-likelihood directly. `mml_engine = "em"` and `"hybrid"` provide
   the documented EM and EM-warm-start routes for supported RSM/PCM fits.
-- `JML` is often useful for quick exploratory passes, but `MML` remains the
-  preferred route for final estimation and fixed-calibration follow-up.
+- `JML` is useful for JMLE-oriented comparisons and analyses that avoid a
+  parametric person distribution. `MML` is the package default and supports
+  marginal and fixed-calibration follow-up when its response-model and
+  population-distribution assumptions are defensible.
 
 For `RSM` and `PCM`, diagnostics now expose two distinct evidence paths:
 

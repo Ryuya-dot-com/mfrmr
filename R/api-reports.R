@@ -26,8 +26,11 @@
 #' @seealso [fit_mfrm()], [data_quality_report()], [estimation_iteration_report()],
 #'   [mfrmr_reports_and_tables], [mfrmr_compatibility_layer]
 #' @examples
-#' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+#' toy <- load_mfrmr_data("example_operational")
+#' fit <- fit_mfrm(
+#'   toy, "Person", c("Rater", "Criterion"), "Score",
+#'   method = "MML", quad_points = 7, maxit = 30
+#' )
 #' out <- specifications_report(fit, title = "Toy run")
 #' summary(out)
 #' p_spec <- plot(out, draw = FALSE)
@@ -704,8 +707,11 @@ summarize_fit_measure_df_sensitivity <- function(df_sensitivity) {
 #' @concept fit statistics
 #' @examples
 #' \dontrun{
-#' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+#' toy <- load_mfrmr_data("example_operational")
+#' fit <- fit_mfrm(
+#'   toy, "Person", c("Rater", "Criterion"), "Score",
+#'   method = "MML", quad_points = 7, maxit = 30
+#' )
 #' fm <- fit_measures_table(fit, facet = "Rater")
 #' fm$facets_table
 #' fm$underfit
@@ -1166,8 +1172,11 @@ fit_measures_table <- function(x,
 #' @seealso [fit_mfrm()], [describe_mfrm_data()], [specifications_report()],
 #'   [mfrmr_reports_and_tables], [mfrmr_compatibility_layer]
 #' @examples
-#' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+#' toy <- load_mfrmr_data("example_operational")
+#' fit <- fit_mfrm(
+#'   toy, "Person", c("Rater", "Criterion"), "Score",
+#'   method = "MML", quad_points = 7, maxit = 30
+#' )
 #' out <- data_quality_report(
 #'   fit,
 #'   data = toy, person = "Person",
@@ -1237,8 +1246,11 @@ data_quality_report <- function(fit,
 #' @seealso [fit_mfrm()], [specifications_report()], [data_quality_report()],
 #'   [mfrmr_reports_and_tables], [mfrmr_compatibility_layer]
 #' @examples
-#' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+#' toy <- load_mfrmr_data("example_operational")
+#' fit <- fit_mfrm(
+#'   toy, "Person", c("Rater", "Criterion"), "Score",
+#'   method = "MML", quad_points = 7, maxit = 30
+#' )
 #' out <- estimation_iteration_report(fit, max_iter = 5)
 #' summary(out)
 #' p_iter <- plot(out, draw = FALSE)
@@ -9540,8 +9552,11 @@ resolve_summary_bundle_table_selection <- function(bundle, which = NULL) {
 #' @seealso [fit_mfrm()], [diagnose_mfrm()], [build_apa_outputs()],
 #'   [reporting_checklist()], [mfrmr_reporting_and_apa]
 #' @examples
-#' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+#' toy <- load_mfrmr_data("example_operational")
+#' fit <- fit_mfrm(
+#'   toy, "Person", c("Rater", "Criterion"), "Score",
+#'   method = "MML", quad_points = 7, maxit = 30
+#' )
 #' tbl <- apa_table(fit, which = "summary", caption = "Model summary", note = "Toy example")
 #' tbl_facets <- apa_table(fit, which = "summary", branch = "facets")
 #' fit_bundle <- build_summary_table_bundle(summary(fit))

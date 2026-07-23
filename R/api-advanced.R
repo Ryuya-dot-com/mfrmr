@@ -2434,9 +2434,10 @@ information_build_step_structure <- function(fit, model) {
 #'
 #' @seealso [fit_mfrm()], [plot_information()]
 #' @examples
-#' toy <- load_mfrmr_data("example_core")
+#' toy <- load_mfrmr_data("example_operational")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                  method = "JML", model = "RSM", maxit = 30)
+#'                  method = "MML", model = "RSM",
+#'                  quad_points = 7, maxit = 30)
 #' info <- compute_information(fit)
 #' head(info$tif)
 #' info$tif$Theta[which.max(info$tif$Information)]
@@ -2709,9 +2710,10 @@ compute_information <- function(fit,
 #'
 #' @seealso [compute_information()], [fit_mfrm()]
 #' @examples
-#' toy <- load_mfrmr_data("example_core")
+#' toy <- load_mfrmr_data("example_operational")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                  method = "JML", model = "RSM", maxit = 30)
+#'                  method = "MML", model = "RSM",
+#'                  quad_points = 7, maxit = 30)
 #' info <- compute_information(fit)
 #' tif_data <- plot_information(info, type = "tif", draw = FALSE)
 #' head(tif_data$data$plot)

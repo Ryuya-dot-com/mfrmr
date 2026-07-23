@@ -32,12 +32,14 @@ of substantive interest. For exploratory screening without adding parameters
 to the fitted model, use \code{\link[=estimate_bias]{estimate_bias()}} or \code{\link[=estimate_all_bias]{estimate_all_bias()}}.
 }
 \examples{
-toy <- load_mfrmr_data("example_core")
+toy <- load_mfrmr_data("example_operational")
 fit <- fit_mfrm(
   toy, person = "Person", facets = c("Rater", "Criterion"),
-  score = "Score", method = "JML", model = "RSM", maxit = 30
+  score = "Score", method = "MML", model = "RSM",
+  facet_interactions = "Rater:Criterion",
+  quad_points = 7, maxit = 30
 )
-interaction_effect_table(fit)
+head(interaction_effect_table(fit))
 }
 \seealso{
 \code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=estimate_bias]{estimate_bias()}}, \code{\link[=compare_mfrm]{compare_mfrm()}}
