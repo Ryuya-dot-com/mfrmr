@@ -1,4 +1,4 @@
-## tests/testthat/test-api-final-coverage.R
+## tests/testthat/test-api-public-method-contracts.R
 ## Focused behavior and error-path regression tests for the api.R helpers.
 
 # ── shared fixtures ──────────────────────────────────────────────────────────

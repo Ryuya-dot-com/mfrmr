@@ -46,7 +46,7 @@ print.mfrm_facet_dashboard <- function(x, ...) {
 }
 
 #' @export
-print.mfrm_future_branch_active_branch <- function(x, ...) {
+print.mfrm_structural_design_review <- function(x, ...) {
   print(summary(x), ...)
   invisible(x)
 }

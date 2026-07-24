@@ -1,4 +1,4 @@
-# test-coverage-push-95.R
+# test-api-guard-paths.R
 # Regression tests for draw paths, error guards, and edge cases.
 
 with_null_device <- function(expr) {

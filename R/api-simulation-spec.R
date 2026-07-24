@@ -128,9 +128,9 @@
 #'   currently be changed from that specification without rebuilding it
 #' - `planning_schema`, a combined structural contract containing the role
 #'   descriptor, supported scope, mutability map, facet manifest, and the
-#'   normalized named-facet design representation. Fields beginning with
-#'   `future_` are retained for backward compatibility with earlier planning
-#'   objects; they do not imply support for arbitrary-facet simulation.
+#'   normalized named-facet design representation. Its `structural_design_*`
+#'   fields describe deterministic balance and connectivity reviews; they do
+#'   not imply support for arbitrary-facet simulation.
 #' - the `design$facets` parser normalizes named facet counts through the same
 #'   design representation used by the planning helpers
 #' - optional signal tables for DIF and interaction bias

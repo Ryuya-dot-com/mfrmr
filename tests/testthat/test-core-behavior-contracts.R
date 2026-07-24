@@ -1,4 +1,4 @@
-# test-core-coverage.R
+# test-core-behavior-contracts.R
 # Exercises low-level mfrm_core.R helpers and edge paths including:
 # - Math helpers: logsumexp, weighted_mean, gauss_hermite_normal, center_sum_zero
 # - Facet constraint building and expansion

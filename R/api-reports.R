@@ -5528,7 +5528,7 @@ summary_table_bundle_supported_summary_classes <- function() {
     "summary.mfrm_recovery_assessment",
     "summary.mfrmr_recovery_validation",
     "summary.mfrm_population_prediction",
-    "summary.mfrm_future_branch_active_branch",
+    "summary.mfrm_structural_design_review",
     "summary.mfrm_facets_run",
     "summary.mfrm_results",
     "summary.mfrm_report",
@@ -5668,11 +5668,11 @@ resolve_summary_table_bundle_input <- function(x,
       summary_class = "summary.mfrm_population_prediction"
     ))
   }
-  if (inherits(x, "mfrm_future_branch_active_branch")) {
+  if (inherits(x, "mfrm_structural_design_review")) {
     return(list(
       summary = summary(x, digits = digits, top_n = top_n),
-      source_class = "mfrm_future_branch_active_branch",
-      summary_class = "summary.mfrm_future_branch_active_branch"
+      source_class = "mfrm_structural_design_review",
+      summary_class = "summary.mfrm_structural_design_review"
     ))
   }
   if (inherits(x, "mfrm_facets_run")) {
@@ -5802,7 +5802,7 @@ summary_table_bundle_required_components <- function(summary_class) {
     "summary.mfrm_recovery_assessment" = c("overview", "reading_order", "checklist", "condition_reporting_notes", "condition_review", "diagnostic_reporting_notes", "diagnostic_review", "metric_review", "uncertainty_review"),
     "summary.mfrmr_recovery_validation" = c("topline_release_decision", "reading_order", "release_decision_table", "case_summary", "condition_reporting_notes", "condition_summary", "diagnostic_reporting_notes", "diagnostic_oc_summary", "domain_decision_table"),
     "summary.mfrm_population_prediction" = c("overview", "design", "forecast"),
-    "summary.mfrm_future_branch_active_branch" = c("overview", "profile_summary", "recommendation_table"),
+    "summary.mfrm_structural_design_review" = c("overview", "profile_summary", "recommendation_table"),
     "summary.mfrm_facets_run" = c("overview", "mapping", "run_info", "fit", "diagnostics"),
     "summary.mfrm_results" = c("overview", "triage", "status", "component_index", "table_index", "plot_map", "next_actions"),
     "summary.mfrm_report" = c("overview", "first_screen", "status_counts", "immediate_actions", "optional_sections", "claim_readiness", "report_gaps", "boundary_index", "routes"),
@@ -5956,19 +5956,17 @@ validate_summary_table_bundle_inputs <- function(x,
   )
 }
 
-summary_table_bundle_resolve_future_branch_summary <- function(summary_obj) {
-  if (inherits(summary_obj, "summary.mfrm_future_branch_active_branch")) {
+summary_table_bundle_resolve_structural_design_summary <- function(summary_obj) {
+  if (inherits(summary_obj, "summary.mfrm_structural_design_review")) {
     return(summary_obj)
   }
-  summary_obj$structural_design_review %||%
-    summary_obj$future_branch_active_summary %||%
-    NULL
+  summary_obj$structural_design_review %||% NULL
 }
 
-summary_table_bundle_future_branch_spec <- function(summary_obj,
+summary_table_bundle_structural_design_spec <- function(summary_obj,
                                                     embedded = TRUE) {
-  future <- summary_table_bundle_resolve_future_branch_summary(summary_obj)
-  if (!inherits(future, "summary.mfrm_future_branch_active_branch")) {
+  future <- summary_table_bundle_resolve_structural_design_summary(summary_obj)
+  if (!inherits(future, "summary.mfrm_structural_design_review")) {
     future <- NULL
   }
   overview_desc <- if (isTRUE(embedded)) {
@@ -6008,79 +6006,79 @@ summary_table_bundle_future_branch_spec <- function(summary_obj,
   }
   list(
     tables = list(
-      future_branch_overview = summary_table_bundle_df(future$overview),
-      future_branch_profile = summary_table_bundle_df(future$profile_summary),
-      future_branch_load_balance = summary_table_bundle_df(future$load_balance_summary),
-      future_branch_coverage = summary_table_bundle_df(future$coverage_summary),
-      future_branch_guardrails = summary_table_bundle_df(future$guardrail_summary),
-      future_branch_readiness = summary_table_bundle_df(future$readiness_summary),
-      future_branch_recommendation = summary_table_bundle_df(future$recommendation_table),
-      future_branch_appendix_presets = summary_table_bundle_df(future$appendix_presets),
-      future_branch_appendix_roles = summary_table_bundle_df(future$appendix_role_summary),
-      future_branch_appendix_sections = summary_table_bundle_df(future$appendix_section_summary),
-      future_branch_selection_table_presets = summary_table_bundle_df(future$selection_table_preset_summary),
-      future_branch_selection_handoff_tables = summary_table_bundle_df(future$selection_handoff_table_summary),
-      future_branch_selection_handoff_presets = summary_table_bundle_df(future$selection_handoff_preset_summary),
-      future_branch_selection_handoff = summary_table_bundle_df(future$selection_handoff_summary),
-      future_branch_selection_handoff_bundles = summary_table_bundle_df(future$selection_handoff_bundle_summary),
-      future_branch_selection_handoff_roles = summary_table_bundle_df(future$selection_handoff_role_summary),
-      future_branch_selection_handoff_role_sections = summary_table_bundle_df(future$selection_handoff_role_section_summary),
-      future_branch_selection_tables = summary_table_bundle_df(future$selection_table_summary),
-      future_branch_selection_summary = summary_table_bundle_df(future$selection_summary),
-      future_branch_selection_roles = summary_table_bundle_df(future$selection_role_summary),
-      future_branch_selection_sections = summary_table_bundle_df(future$selection_section_summary),
-      future_branch_selection_catalog = summary_table_bundle_df(future$selection_catalog),
-      future_branch_reporting_map = summary_table_bundle_df(future$reporting_map)
+      structural_design_overview = summary_table_bundle_df(future$overview),
+      structural_design_profile = summary_table_bundle_df(future$profile_summary),
+      structural_design_load_balance = summary_table_bundle_df(future$load_balance_summary),
+      structural_design_coverage = summary_table_bundle_df(future$coverage_summary),
+      structural_design_guardrails = summary_table_bundle_df(future$guardrail_summary),
+      structural_design_readiness = summary_table_bundle_df(future$readiness_summary),
+      structural_design_recommendation = summary_table_bundle_df(future$recommendation_table),
+      structural_design_appendix_presets = summary_table_bundle_df(future$appendix_presets),
+      structural_design_appendix_roles = summary_table_bundle_df(future$appendix_role_summary),
+      structural_design_appendix_sections = summary_table_bundle_df(future$appendix_section_summary),
+      structural_design_selection_table_presets = summary_table_bundle_df(future$selection_table_preset_summary),
+      structural_design_selection_handoff_tables = summary_table_bundle_df(future$selection_handoff_table_summary),
+      structural_design_selection_handoff_presets = summary_table_bundle_df(future$selection_handoff_preset_summary),
+      structural_design_selection_handoff = summary_table_bundle_df(future$selection_handoff_summary),
+      structural_design_selection_handoff_bundles = summary_table_bundle_df(future$selection_handoff_bundle_summary),
+      structural_design_selection_handoff_roles = summary_table_bundle_df(future$selection_handoff_role_summary),
+      structural_design_selection_handoff_role_sections = summary_table_bundle_df(future$selection_handoff_role_section_summary),
+      structural_design_selection_tables = summary_table_bundle_df(future$selection_table_summary),
+      structural_design_selection_summary = summary_table_bundle_df(future$selection_summary),
+      structural_design_selection_roles = summary_table_bundle_df(future$selection_role_summary),
+      structural_design_selection_sections = summary_table_bundle_df(future$selection_section_summary),
+      structural_design_selection_catalog = summary_table_bundle_df(future$selection_catalog),
+      structural_design_reporting_map = summary_table_bundle_df(future$reporting_map)
     ),
     roles = c(
-      future_branch_overview = "future_branch_overview",
-      future_branch_profile = "future_branch_profile",
-      future_branch_load_balance = "future_branch_load_balance",
-      future_branch_coverage = "future_branch_coverage",
-      future_branch_guardrails = "future_branch_guardrails",
-      future_branch_readiness = "future_branch_readiness",
-      future_branch_recommendation = "future_branch_recommendation",
-      future_branch_appendix_presets = "future_branch_appendix_presets",
-      future_branch_appendix_roles = "future_branch_appendix_roles",
-      future_branch_appendix_sections = "future_branch_appendix_sections",
-      future_branch_selection_table_presets = "future_branch_selection_table_presets",
-      future_branch_selection_handoff_tables = "future_branch_selection_handoff_tables",
-      future_branch_selection_handoff_presets = "future_branch_selection_handoff_presets",
-      future_branch_selection_handoff = "future_branch_selection_handoff",
-      future_branch_selection_handoff_bundles = "future_branch_selection_handoff_bundles",
-      future_branch_selection_handoff_roles = "future_branch_selection_handoff_roles",
-      future_branch_selection_handoff_role_sections = "future_branch_selection_handoff_role_sections",
-      future_branch_selection_tables = "future_branch_selection_tables",
-      future_branch_selection_summary = "future_branch_selection_summary",
-      future_branch_selection_roles = "future_branch_selection_roles",
-      future_branch_selection_sections = "future_branch_selection_sections",
-      future_branch_selection_catalog = "future_branch_selection_catalog",
-      future_branch_reporting_map = "future_branch_reporting_map"
+      structural_design_overview = "structural_design_overview",
+      structural_design_profile = "structural_design_profile",
+      structural_design_load_balance = "structural_design_load_balance",
+      structural_design_coverage = "structural_design_coverage",
+      structural_design_guardrails = "structural_design_guardrails",
+      structural_design_readiness = "structural_design_readiness",
+      structural_design_recommendation = "structural_design_recommendation",
+      structural_design_appendix_presets = "structural_design_appendix_presets",
+      structural_design_appendix_roles = "structural_design_appendix_roles",
+      structural_design_appendix_sections = "structural_design_appendix_sections",
+      structural_design_selection_table_presets = "structural_design_selection_table_presets",
+      structural_design_selection_handoff_tables = "structural_design_selection_handoff_tables",
+      structural_design_selection_handoff_presets = "structural_design_selection_handoff_presets",
+      structural_design_selection_handoff = "structural_design_selection_handoff",
+      structural_design_selection_handoff_bundles = "structural_design_selection_handoff_bundles",
+      structural_design_selection_handoff_roles = "structural_design_selection_handoff_roles",
+      structural_design_selection_handoff_role_sections = "structural_design_selection_handoff_role_sections",
+      structural_design_selection_tables = "structural_design_selection_tables",
+      structural_design_selection_summary = "structural_design_selection_summary",
+      structural_design_selection_roles = "structural_design_selection_roles",
+      structural_design_selection_sections = "structural_design_selection_sections",
+      structural_design_selection_catalog = "structural_design_selection_catalog",
+      structural_design_reporting_map = "structural_design_reporting_map"
     ),
     descriptions = c(
-      future_branch_overview = overview_desc,
-      future_branch_profile = profile_desc,
-      future_branch_load_balance = load_balance_desc,
-      future_branch_coverage = coverage_desc,
-      future_branch_guardrails = guardrail_desc,
-      future_branch_readiness = readiness_desc,
-      future_branch_recommendation = recommendation_desc,
-      future_branch_appendix_presets = "Preset-level appendix routing counts for the structural design review.",
-      future_branch_appendix_roles = "Appendix routing counts by reporting role for the structural design review.",
-      future_branch_appendix_sections = "Appendix routing counts by manuscript section for the structural design review.",
-      future_branch_selection_table_presets = "Preset-specific appendix table selections for the structural design review.",
-      future_branch_selection_handoff_tables = "Preset-specific table-level appendix handoff crosswalk for the structural design review.",
-      future_branch_selection_handoff_presets = "Preset-level appendix handoff overview for the structural design review.",
-      future_branch_selection_handoff = "Section-aware appendix handoff summary for the structural design review.",
-      future_branch_selection_handoff_bundles = "Bundle-aware appendix handoff summary for the structural design review.",
-      future_branch_selection_handoff_roles = "Role-aware appendix handoff summary for the structural design review.",
-      future_branch_selection_handoff_role_sections = "Role-by-section appendix handoff summary for the structural design review.",
-      future_branch_selection_tables = "Preset-aware appendix table selections for the structural design review.",
-      future_branch_selection_summary = "Preset-filtered appendix selection counts for the structural design review.",
-      future_branch_selection_roles = "Preset-filtered appendix selection counts by reporting role for the structural design review.",
-      future_branch_selection_sections = "Preset-filtered appendix selection counts by manuscript section for the structural design review.",
-      future_branch_selection_catalog = "Full appendix selection catalog for the structural design review.",
-      future_branch_reporting_map = "Reporting-map metadata for the structural design review."
+      structural_design_overview = overview_desc,
+      structural_design_profile = profile_desc,
+      structural_design_load_balance = load_balance_desc,
+      structural_design_coverage = coverage_desc,
+      structural_design_guardrails = guardrail_desc,
+      structural_design_readiness = readiness_desc,
+      structural_design_recommendation = recommendation_desc,
+      structural_design_appendix_presets = "Preset-level appendix routing counts for the structural design review.",
+      structural_design_appendix_roles = "Appendix routing counts by reporting role for the structural design review.",
+      structural_design_appendix_sections = "Appendix routing counts by manuscript section for the structural design review.",
+      structural_design_selection_table_presets = "Preset-specific appendix table selections for the structural design review.",
+      structural_design_selection_handoff_tables = "Preset-specific table-level appendix handoff crosswalk for the structural design review.",
+      structural_design_selection_handoff_presets = "Preset-level appendix handoff overview for the structural design review.",
+      structural_design_selection_handoff = "Section-aware appendix handoff summary for the structural design review.",
+      structural_design_selection_handoff_bundles = "Bundle-aware appendix handoff summary for the structural design review.",
+      structural_design_selection_handoff_roles = "Role-aware appendix handoff summary for the structural design review.",
+      structural_design_selection_handoff_role_sections = "Role-by-section appendix handoff summary for the structural design review.",
+      structural_design_selection_tables = "Preset-aware appendix table selections for the structural design review.",
+      structural_design_selection_summary = "Preset-filtered appendix selection counts for the structural design review.",
+      structural_design_selection_roles = "Preset-filtered appendix selection counts by reporting role for the structural design review.",
+      structural_design_selection_sections = "Preset-filtered appendix selection counts by manuscript section for the structural design review.",
+      structural_design_selection_catalog = "Full appendix selection catalog for the structural design review.",
+      structural_design_reporting_map = "Reporting-map metadata for the structural design review."
     )
   )
 }
@@ -6437,7 +6435,7 @@ summary_table_bundle_spec <- function(summary_obj) {
       )
     ),
     "summary.mfrm_design_evaluation" = {
-      future_spec <- summary_table_bundle_future_branch_spec(summary_obj)
+      structural_spec <- summary_table_bundle_structural_design_spec(summary_obj)
       list(
         title = "Design Evaluation Tables",
         tables = c(
@@ -6447,26 +6445,26 @@ summary_table_bundle_spec <- function(summary_obj) {
             sparse_review = summary_table_bundle_df(summary_obj$sparse_review),
             sparse_design = summary_table_bundle_sparse_design_df(summary_obj$design_summary)
           ),
-          future_spec$tables
+          structural_spec$tables
         ),
         roles = c(
           overview = "run_overview",
           design_summary = "design_performance",
           sparse_review = "sparse_design_diagnostics",
           sparse_design = "sparse_design_diagnostics",
-          future_spec$roles
+          structural_spec$roles
         ),
         descriptions = c(
           overview = "Run-level overview for the current design-evaluation study.",
           design_summary = "Aggregated Monte Carlo design summaries for the active two-role planner.",
           sparse_review = "Compact sparse linked design-review counts for planned missingness and rater-pair linkage.",
           sparse_design = "Sparse linked planned-missingness and rater-link diagnostics for design-evaluation rows.",
-          future_spec$descriptions
+          structural_spec$descriptions
         )
       )
     },
     "summary.mfrm_signal_detection" = {
-      future_spec <- summary_table_bundle_future_branch_spec(summary_obj)
+      structural_spec <- summary_table_bundle_structural_design_spec(summary_obj)
       list(
         title = "Signal Detection Tables",
         tables = c(
@@ -6474,17 +6472,17 @@ summary_table_bundle_spec <- function(summary_obj) {
             overview = summary_table_bundle_df(summary_obj$overview),
             detection_summary = summary_table_bundle_df(summary_obj$detection_summary)
           ),
-          future_spec$tables
+          structural_spec$tables
         ),
         roles = c(
           overview = "run_overview",
           detection_summary = "signal_detection",
-          future_spec$roles
+          structural_spec$roles
         ),
         descriptions = c(
           overview = "Run-level overview for the current signal-detection study.",
           detection_summary = "Aggregated DIF/bias screening summaries for the active two-role planner.",
-          future_spec$descriptions
+          structural_spec$descriptions
         )
       )
     },
@@ -6669,7 +6667,7 @@ summary_table_bundle_spec <- function(summary_obj) {
       )
     ),
     "summary.mfrm_population_prediction" = {
-      future_spec <- summary_table_bundle_future_branch_spec(summary_obj)
+      structural_spec <- summary_table_bundle_structural_design_spec(summary_obj)
       list(
         title = "Population Prediction Tables",
         tables = c(
@@ -6678,32 +6676,32 @@ summary_table_bundle_spec <- function(summary_obj) {
             overview = summary_table_bundle_df(summary_obj$overview),
             forecast = summary_table_bundle_df(summary_obj$forecast)
           ),
-          future_spec$tables
+          structural_spec$tables
         ),
         roles = c(
           design = "design_grid",
           overview = "run_overview",
           forecast = "forecast_summary",
-          future_spec$roles
+          structural_spec$roles
         ),
         descriptions = c(
           design = "Requested future design grid used for the current forecast run.",
           overview = "Run-level overview for the current population forecast.",
           forecast = "Facet-level forecast summary for the active two-role planner.",
-          future_spec$descriptions
+          structural_spec$descriptions
         )
       )
     },
-    "summary.mfrm_future_branch_active_branch" = {
-      future_spec <- summary_table_bundle_future_branch_spec(
+    "summary.mfrm_structural_design_review" = {
+      structural_spec <- summary_table_bundle_structural_design_spec(
         summary_obj,
         embedded = FALSE
       )
       list(
         title = "Future Arbitrary-Facet Planning Tables",
-        tables = future_spec$tables,
-        roles = future_spec$roles,
-        descriptions = future_spec$descriptions
+        tables = structural_spec$tables,
+        roles = structural_spec$roles,
+        descriptions = structural_spec$descriptions
       )
     },
     "summary.mfrm_facets_run" = list(
@@ -7739,29 +7737,29 @@ summary_table_bundle_appendix_role_registry <- function() {
       "extreme_fit_rows",
       "draft_actions",
       "checklist_settings",
-      "future_branch_overview",
-      "future_branch_profile",
-      "future_branch_load_balance",
-      "future_branch_coverage",
-      "future_branch_guardrails",
-      "future_branch_readiness",
-      "future_branch_recommendation",
-      "future_branch_appendix_presets",
-      "future_branch_appendix_roles",
-      "future_branch_appendix_sections",
-      "future_branch_selection_table_presets",
-      "future_branch_selection_handoff_tables",
-      "future_branch_selection_handoff_presets",
-      "future_branch_selection_handoff",
-      "future_branch_selection_handoff_bundles",
-      "future_branch_selection_handoff_roles",
-      "future_branch_selection_handoff_role_sections",
-      "future_branch_selection_tables",
-      "future_branch_selection_summary",
-      "future_branch_selection_roles",
-      "future_branch_selection_sections",
-      "future_branch_selection_catalog",
-      "future_branch_reporting_map",
+      "structural_design_overview",
+      "structural_design_profile",
+      "structural_design_load_balance",
+      "structural_design_coverage",
+      "structural_design_guardrails",
+      "structural_design_readiness",
+      "structural_design_recommendation",
+      "structural_design_appendix_presets",
+      "structural_design_appendix_roles",
+      "structural_design_appendix_sections",
+      "structural_design_selection_table_presets",
+      "structural_design_selection_handoff_tables",
+      "structural_design_selection_handoff_presets",
+      "structural_design_selection_handoff",
+      "structural_design_selection_handoff_bundles",
+      "structural_design_selection_handoff_roles",
+      "structural_design_selection_handoff_role_sections",
+      "structural_design_selection_tables",
+      "structural_design_selection_summary",
+      "structural_design_selection_roles",
+      "structural_design_selection_sections",
+      "structural_design_selection_catalog",
+      "structural_design_reporting_map",
       "linking_review_overview",
       "linking_risk_screen",
       "linking_risk_group_index",
@@ -8407,18 +8405,18 @@ summary_table_bundle_selection_surface <- function(bundle, surface) {
   }
 
   candidates <- switch(as.character(surface[1] %||% ""),
-    selection_summary = c("future_branch_selection_summary", "appendix_selection_summary", "selection_summary"),
-    selection_table_summary = c("future_branch_selection_tables", "appendix_selection_table_summary", "selection_table_summary"),
-    selection_table_preset_summary = c("future_branch_selection_table_presets", "selection_table_preset_summary"),
-    selection_handoff_table_summary = c("future_branch_selection_handoff_tables", "appendix_selection_handoff_table_summary", "selection_handoff_table_summary"),
-    selection_handoff_preset_summary = c("future_branch_selection_handoff_presets", "appendix_selection_handoff_preset_summary", "selection_handoff_preset_summary"),
-    selection_handoff_summary = c("future_branch_selection_handoff", "appendix_selection_handoff_summary", "selection_handoff_summary"),
-    selection_handoff_bundle_summary = c("future_branch_selection_handoff_bundles", "appendix_selection_handoff_bundle_summary", "selection_handoff_bundle_summary"),
-    selection_handoff_role_summary = c("future_branch_selection_handoff_roles", "appendix_selection_handoff_role_summary", "selection_handoff_role_summary"),
-    selection_handoff_role_section_summary = c("future_branch_selection_handoff_role_sections", "appendix_selection_handoff_role_section_summary", "selection_handoff_role_section_summary"),
-    selection_role_summary = c("future_branch_selection_roles", "appendix_selection_role_summary", "selection_role_summary"),
-    selection_section_summary = c("future_branch_selection_sections", "appendix_selection_section_summary", "selection_section_summary"),
-    selection_catalog = c("future_branch_selection_catalog", "appendix_selection_catalog", "selection_catalog"),
+    selection_summary = c("structural_design_selection_summary", "appendix_selection_summary", "selection_summary"),
+    selection_table_summary = c("structural_design_selection_tables", "appendix_selection_table_summary", "selection_table_summary"),
+    selection_table_preset_summary = c("structural_design_selection_table_presets", "selection_table_preset_summary"),
+    selection_handoff_table_summary = c("structural_design_selection_handoff_tables", "appendix_selection_handoff_table_summary", "selection_handoff_table_summary"),
+    selection_handoff_preset_summary = c("structural_design_selection_handoff_presets", "appendix_selection_handoff_preset_summary", "selection_handoff_preset_summary"),
+    selection_handoff_summary = c("structural_design_selection_handoff", "appendix_selection_handoff_summary", "selection_handoff_summary"),
+    selection_handoff_bundle_summary = c("structural_design_selection_handoff_bundles", "appendix_selection_handoff_bundle_summary", "selection_handoff_bundle_summary"),
+    selection_handoff_role_summary = c("structural_design_selection_handoff_roles", "appendix_selection_handoff_role_summary", "selection_handoff_role_summary"),
+    selection_handoff_role_section_summary = c("structural_design_selection_handoff_role_sections", "appendix_selection_handoff_role_section_summary", "selection_handoff_role_section_summary"),
+    selection_role_summary = c("structural_design_selection_roles", "appendix_selection_role_summary", "selection_role_summary"),
+    selection_section_summary = c("structural_design_selection_sections", "appendix_selection_section_summary", "selection_section_summary"),
+    selection_catalog = c("structural_design_selection_catalog", "appendix_selection_catalog", "selection_catalog"),
     character(0)
   )
 

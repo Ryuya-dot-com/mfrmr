@@ -3492,7 +3492,7 @@ test_that("export_summary_appendix supports section-aware appendix presets", {
 })
 
 test_that("export_summary_appendix supports future arbitrary-facet active-branch inputs", {
-  out_dir <- file.path(tempdir(), "mfrmr-summary-appendix-future-branch")
+  out_dir <- file.path(tempdir(), "mfrmr-summary-appendix-structural-design")
   if (dir.exists(out_dir)) unlink(out_dir, recursive = TRUE, force = TRUE)
   dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
 
@@ -3505,11 +3505,11 @@ test_that("export_summary_appendix supports future arbitrary-facet active-branch
     facet_names = c("Judge", "Task")
   )
 
-  active <- spec$planning_schema$future_branch_active_branch
+  active <- spec$planning_schema$structural_design_review
   appendix <- export_summary_appendix(
     active,
     output_dir = out_dir,
-    prefix = "appendix_future_branch",
+    prefix = "appendix_structural_design",
     include_html = FALSE,
     overwrite = TRUE
   )
@@ -3520,20 +3520,20 @@ test_that("export_summary_appendix supports future arbitrary-facet active-branch
   expect_true(is.data.frame(appendix_summary$selection_handoff_bundle_summary))
   expect_true(is.data.frame(appendix_summary$selection_handoff_role_summary))
   expect_true(is.data.frame(appendix_summary$selection_handoff_role_section_summary))
-  expect_true(any(appendix$written_files$Component == "summary_mfrm_future_branch_active_branch_future_branch_overview"))
-  expect_true(any(appendix$written_files$Component == "summary_mfrm_future_branch_active_branch_future_branch_recommendation"))
+  expect_true(any(appendix$written_files$Component == "summary_mfrm_structural_design_review_structural_design_overview"))
+  expect_true(any(appendix$written_files$Component == "summary_mfrm_structural_design_review_structural_design_recommendation"))
   expect_true(any(appendix$written_files$Component == "appendix_selection_handoff_preset_summary"))
   expect_true(any(appendix$written_files$Component == "appendix_selection_handoff_bundle_summary"))
   expect_true(any(appendix$written_files$Component == "appendix_selection_handoff_role_summary"))
   expect_true(any(appendix$written_files$Component == "appendix_selection_handoff_role_section_summary"))
   expect_true(file.exists(file.path(
     out_dir,
-    "appendix_future_branch_summary_mfrm_future_branch_active_branch_future_branch_recommendation.csv"
+    "appendix_structural_design_summary_mfrm_structural_design_review_structural_design_recommendation.csv"
   )))
 })
 
 test_that("export_summary_appendix applies appendix presets to future arbitrary-facet active-branch inputs", {
-  out_dir <- file.path(tempdir(), "mfrmr-summary-appendix-future-branch-recommended")
+  out_dir <- file.path(tempdir(), "mfrmr-summary-appendix-structural-design-recommended")
   if (dir.exists(out_dir)) unlink(out_dir, recursive = TRUE, force = TRUE)
   dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
 
@@ -3546,11 +3546,11 @@ test_that("export_summary_appendix applies appendix presets to future arbitrary-
     facet_names = c("Judge", "Task")
   )
 
-  active <- spec$planning_schema$future_branch_active_branch
+  active <- spec$planning_schema$structural_design_review
   appendix <- export_summary_appendix(
     active,
     output_dir = out_dir,
-    prefix = "appendix_future_branch_recommended",
+    prefix = "appendix_structural_design_recommended",
     preset = "recommended",
     include_html = FALSE,
     overwrite = TRUE
@@ -3563,13 +3563,13 @@ test_that("export_summary_appendix applies appendix presets to future arbitrary-
   expect_true(all(appendix$selection_handoff_bundle_summary$Preset == "recommended"))
   expect_true(all(appendix$selection_handoff_role_summary$Preset == "recommended"))
   expect_true(all(appendix$selection_handoff_role_section_summary$Preset == "recommended"))
-  expect_true(any(appendix$written_files$Component == "summary_mfrm_future_branch_active_branch_future_branch_overview"))
-  expect_true(any(appendix$written_files$Component == "summary_mfrm_future_branch_active_branch_future_branch_profile"))
-  expect_true(any(appendix$written_files$Component == "summary_mfrm_future_branch_active_branch_future_branch_readiness"))
-  expect_true(any(appendix$written_files$Component == "summary_mfrm_future_branch_active_branch_future_branch_recommendation"))
-  expect_false(any(appendix$written_files$Component == "summary_mfrm_future_branch_active_branch_future_branch_load_balance"))
-  expect_false(any(appendix$written_files$Component == "summary_mfrm_future_branch_active_branch_future_branch_coverage"))
-  expect_false(any(appendix$written_files$Component == "summary_mfrm_future_branch_active_branch_future_branch_guardrails"))
+  expect_true(any(appendix$written_files$Component == "summary_mfrm_structural_design_review_structural_design_overview"))
+  expect_true(any(appendix$written_files$Component == "summary_mfrm_structural_design_review_structural_design_profile"))
+  expect_true(any(appendix$written_files$Component == "summary_mfrm_structural_design_review_structural_design_readiness"))
+  expect_true(any(appendix$written_files$Component == "summary_mfrm_structural_design_review_structural_design_recommendation"))
+  expect_false(any(appendix$written_files$Component == "summary_mfrm_structural_design_review_structural_design_load_balance"))
+  expect_false(any(appendix$written_files$Component == "summary_mfrm_structural_design_review_structural_design_coverage"))
+  expect_false(any(appendix$written_files$Component == "summary_mfrm_structural_design_review_structural_design_guardrails"))
   expect_true(all(
     appendix$selection_catalog$AppendixSection[appendix$selection_catalog$Selected %in% TRUE] %in%
       c("methods", "diagnostics")

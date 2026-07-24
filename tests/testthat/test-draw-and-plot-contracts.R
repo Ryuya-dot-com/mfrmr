@@ -1,5 +1,5 @@
-# test-draw-coverage.R
-# Tests that exercise drawing code paths (draw=TRUE) to increase api.R coverage.
+# test-draw-and-plot-contracts.R
+# Validates drawing behavior for public functions with draw = TRUE.
 # Uses pdf(NULL) to suppress actual graphics output.
 
 # ---- Shared fixture ----

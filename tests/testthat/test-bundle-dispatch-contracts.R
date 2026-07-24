@@ -1,7 +1,7 @@
-# test-bundle-coverage.R
+# test-bundle-dispatch-contracts.R
 # Exercises print.summary.mfrm_bundle branches (lines 8747-8841)
 # and plot.mfrm_bundle dispatch branches (lines 10303-10634) in api.R.
-# Goal: cover all summary_kind branches and all plot type sub-variants.
+# Validates every supported summary kind and plot-dispatch variant.
 
 # ---- Shared fixture ----
 

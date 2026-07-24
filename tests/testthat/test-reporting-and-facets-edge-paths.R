@@ -1,5 +1,5 @@
-# test-remaining-coverage.R
-# Assorted regression tests for remaining edge paths.
+# test-reporting-and-facets-edge-paths.R
+# Regression tests for reporting and FACETS-compatible edge paths.
 
 with_null_device <- function(expr) {
   grDevices::pdf(NULL)

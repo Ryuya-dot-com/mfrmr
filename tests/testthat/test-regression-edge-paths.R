@@ -1,4 +1,4 @@
-# test-final-coverage-boost.R
+# test-regression-edge-paths.R
 # Focused regression tests for reporting.R and mfrm_core.R edge paths.
 
 # ---- shared fixture ----

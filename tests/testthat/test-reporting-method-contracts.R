@@ -1,4 +1,4 @@
-# test-reporting-coverage.R
+# test-reporting-method-contracts.R
 # Exercises reporting.R edge paths:
 # - build_visual_warning_map (all warning stages)
 # - build_visual_summary_map (all summary stages, including detail="detailed")

@@ -1,6 +1,6 @@
 # --------------------------------------------------------------------------
-# test-api-coverage-gaps.R
-# Behavior and error-path regression tests for less-traveled R/api.R branches.
+# test-api-error-and-edge-contracts.R
+# Behavior and error-path regression tests for public API error and edge contracts.
 # --------------------------------------------------------------------------
 
 with_null_device <- function(expr) {

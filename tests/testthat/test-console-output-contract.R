@@ -1,6 +1,6 @@
 console_output_internal_terms <- c(
   "internal_case",
-  "future_branch",
+  "structural_design",
   "planned_not_implemented",
   "source-backed",
   "scaffold",

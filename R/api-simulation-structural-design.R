@@ -1,8 +1,8 @@
 # ==============================================================================
-# Compatibility design-schema layer for structural simulation review
+# Named-facet design-schema layer for structural simulation review
 # ==============================================================================
 #
-# Internal helpers that build, normalize, and report the backward-compatible
+# Internal helpers that build, normalize, and report the deterministic
 # design schema used by the simulation engine (`api-simulation.R`). Split out
 # so the design-schema structural review machinery has a dedicated home; the
 # main public simulator entry
@@ -11,16 +11,16 @@
 # Functions here are internal (no @export); they are called from
 # `evaluate_mfrm_design()` and the surrounding orchestration helpers.
 
-simulation_future_branch_design_schema <- function(sim_spec = NULL, facet_names = NULL) {
-  future_facet_table <- if (is.null(facet_names)) {
-    simulation_future_facet_table(sim_spec)
+simulation_structural_design_contract <- function(sim_spec = NULL, facet_names = NULL) {
+  structural_facet_table <- if (is.null(facet_names)) {
+    simulation_structural_facet_table(sim_spec)
   } else {
-    simulation_future_facet_table(facet_names = facet_names)
+    simulation_structural_facet_table(facet_names = facet_names)
   }
-  future_design_template <- if (is.null(facet_names)) {
-    simulation_future_design_template(sim_spec)
+  structural_design_template <- if (is.null(facet_names)) {
+    simulation_structural_design_template(sim_spec)
   } else {
-    simulation_future_design_template(facet_names = facet_names)
+    simulation_structural_design_template(facet_names = facet_names)
   }
 
   alias_source <- if (!is.null(sim_spec)) {
@@ -31,23 +31,23 @@ simulation_future_branch_design_schema <- function(sim_spec = NULL, facet_names 
     NULL
   }
 
-  facet_axes <- future_facet_table |>
+  facet_axes <- structural_facet_table |>
     dplyr::transmute(
-      input_key = .data$future_facet_key,
+      input_key = .data$structural_facet_key,
       facet = .data$facet,
       facet_kind = .data$facet_kind,
-      axis_class = .data$future_axis_class,
+      axis_class = .data$design_axis_class,
       level_count = .data$level_count,
       canonical_design_variable = .data$current_planning_count_variable,
       public_design_alias = .data$current_planning_count_alias,
       current_planner_role_supported = .data$current_planner_role_supported,
-      arbitrary_facet_branch_candidate = .data$arbitrary_facet_branch_candidate
+      arbitrary_facet_design_candidate = .data$arbitrary_facet_design_candidate
     )
 
   assignment_axis <- list(
     current_planning_count_variable = "raters_per_person",
     current_planning_count_alias = unname(simulation_design_variable_aliases(alias_source)[["raters_per_person"]]),
-    future_input_key = "assignment",
+    design_input_key = "assignment",
     axis_class = "assignment_count",
     depends_on_input_key = as.character(facet_axes$input_key[match("facet_level_count", facet_axes$axis_class)] %||% "rater"),
     depends_on_canonical_design_variable = as.character(
@@ -60,34 +60,34 @@ simulation_future_branch_design_schema <- function(sim_spec = NULL, facet_names 
 
   schema <- list(
     schema_contract = "arbitrary_facet_design_schema",
-    schema_stage = "schema_only",
+    schema_stage = "deterministic_review",
     facet_axes = facet_axes,
     assignment_axis = assignment_axis,
-    input_keys = c(as.character(facet_axes$input_key), assignment_axis$future_input_key),
+    input_keys = c(as.character(facet_axes$input_key), assignment_axis$design_input_key),
     canonical_design_variables = c(
       as.character(facet_axes$canonical_design_variable),
       assignment_axis$current_planning_count_variable
     ),
-    default_design = future_design_template,
+    default_design = structural_design_template,
     note = paste(
-      "Schema-only design-schema object for the future arbitrary-facet branch,",
+      "Deterministic design-schema object for the named-facet structural review,",
       "bundling stable facet-count axes and the assignment axis in one",
       "machine-readable contract."
     )
   )
-  schema$grid_semantics <- simulation_future_branch_grid_semantics(schema)
+  schema$grid_semantics <- simulation_structural_design_grid_semantics(schema)
   schema
 }
 
-simulation_future_branch_grid_semantics <- function(design_schema) {
-  design_schema <- simulation_coerce_future_branch_design_schema(design_schema)
+simulation_structural_design_grid_semantics <- function(design_schema) {
+  design_schema <- simulation_coerce_structural_design_schema(design_schema)
   facet_axes <- design_schema$facet_axes
   assignment_axis <- design_schema$assignment_axis
   assignment_var <- as.character(
     assignment_axis$current_planning_count_variable %||% "raters_per_person"
   )
   assignment_key <- as.character(
-    assignment_axis$future_input_key %||% "assignment"
+    assignment_axis$design_input_key %||% "assignment"
   )
   canonical_columns <- c(
     "design_id",
@@ -107,7 +107,7 @@ simulation_future_branch_grid_semantics <- function(design_schema) {
 
   list(
     semantics_contract = "arbitrary_facet_design_grid_semantics",
-    semantics_stage = as.character(design_schema$schema_stage %||% "schema_only"),
+    semantics_stage = as.character(design_schema$schema_stage %||% "deterministic_review"),
     id_variable = "design_id",
     canonical_columns = canonical_columns,
     public_columns = public_columns,
@@ -118,7 +118,7 @@ simulation_future_branch_grid_semantics <- function(design_schema) {
       as.character(assignment_axis$depends_on_canonical_design_variable %||% "n_rater")
     ),
     row_meaning = paste(
-      "Each row is one schema-only future-branch design condition formed by",
+      "Each row is one deterministic structural-design condition formed by",
       "crossing facet-count axes and the assignment axis after applying the",
       "current feasibility rule."
     ),
@@ -126,7 +126,7 @@ simulation_future_branch_grid_semantics <- function(design_schema) {
   )
 }
 
-simulation_coerce_future_branch_design_schema <- function(future_branch_schema) {
+simulation_coerce_structural_design_schema <- function(structural_design_schema) {
   required_fields <- c(
     "schema_contract",
     "schema_stage",
@@ -149,7 +149,7 @@ simulation_coerce_future_branch_design_schema <- function(future_branch_schema) 
       assignment_axis$current_planning_count_variable %||% "raters_per_person"
     )
     assignment_key <- as.character(
-      assignment_axis$future_input_key %||% "assignment"
+      assignment_axis$design_input_key %||% "assignment"
     )
 
     c(
@@ -157,7 +157,7 @@ simulation_coerce_future_branch_design_schema <- function(future_branch_schema) 
       list(
         grid_semantics = list(
           semantics_contract = "arbitrary_facet_design_grid_semantics",
-          semantics_stage = as.character(x$schema_stage %||% "schema_only"),
+          semantics_stage = as.character(x$schema_stage %||% "deterministic_review"),
           id_variable = "design_id",
           canonical_columns = c(
             "design_id",
@@ -180,7 +180,7 @@ simulation_coerce_future_branch_design_schema <- function(future_branch_schema) 
             as.character(assignment_axis$depends_on_canonical_design_variable %||% "n_rater")
           ),
           row_meaning = paste(
-            "Each row is one schema-only future-branch design condition formed by",
+            "Each row is one deterministic structural-design condition formed by",
             "crossing facet-count axes and the assignment axis after applying the",
             "current feasibility rule."
           ),
@@ -189,15 +189,15 @@ simulation_coerce_future_branch_design_schema <- function(future_branch_schema) 
       )
     )
   }
-  if (is.list(future_branch_schema) &&
-      all(required_fields %in% names(future_branch_schema)) &&
-      is.data.frame(future_branch_schema$facet_axes) &&
-      is.list(future_branch_schema$assignment_axis) &&
-      is.list(future_branch_schema$default_design)) {
-    return(attach_grid_semantics(future_branch_schema))
+  if (is.list(structural_design_schema) &&
+      all(required_fields %in% names(structural_design_schema)) &&
+      is.data.frame(structural_design_schema$facet_axes) &&
+      is.list(structural_design_schema$assignment_axis) &&
+      is.list(structural_design_schema$default_design)) {
+    return(attach_grid_semantics(structural_design_schema))
   }
 
-  design_schema <- future_branch_schema$design_schema %||% NULL
+  design_schema <- structural_design_schema$design_schema %||% NULL
   if (is.list(design_schema) &&
       all(required_fields %in% names(design_schema)) &&
       is.data.frame(design_schema$facet_axes) &&
@@ -206,53 +206,53 @@ simulation_coerce_future_branch_design_schema <- function(future_branch_schema) 
     return(attach_grid_semantics(design_schema))
   }
 
-  if (!is.list(future_branch_schema) ||
-      !is.data.frame(future_branch_schema$facet_table) ||
-      !is.list(future_branch_schema$assignment_axis) ||
-      !is.list(future_branch_schema$design_template)) {
-    stop("`future_branch_schema` is not a valid schema-only arbitrary-facet branch contract.",
+  if (!is.list(structural_design_schema) ||
+      !is.data.frame(structural_design_schema$facet_table) ||
+      !is.list(structural_design_schema$assignment_axis) ||
+      !is.list(structural_design_schema$design_template)) {
+    stop("`structural_design_schema` is not a valid deterministic arbitrary-facet design contract.",
          call. = FALSE)
   }
 
-  facet_axes <- future_branch_schema$facet_table |>
+  facet_axes <- structural_design_schema$facet_table |>
     dplyr::transmute(
-      input_key = .data$future_facet_key,
+      input_key = .data$structural_facet_key,
       facet = .data$facet,
       facet_kind = .data$facet_kind,
-      axis_class = .data$future_axis_class,
+      axis_class = .data$design_axis_class,
       level_count = .data$level_count,
       canonical_design_variable = .data$current_planning_count_variable,
       public_design_alias = .data$current_planning_count_alias,
       current_planner_role_supported = .data$current_planner_role_supported,
-      arbitrary_facet_branch_candidate = .data$arbitrary_facet_branch_candidate
+      arbitrary_facet_design_candidate = .data$arbitrary_facet_design_candidate
     )
-  assignment_axis <- future_branch_schema$assignment_axis
+  assignment_axis <- structural_design_schema$assignment_axis
 
   attach_grid_semantics(list(
     schema_contract = "arbitrary_facet_design_schema",
-    schema_stage = as.character(future_branch_schema$planner_stage %||% "schema_only"),
+    schema_stage = as.character(structural_design_schema$planner_stage %||% "deterministic_review"),
     facet_axes = facet_axes,
     assignment_axis = assignment_axis,
-    input_keys = c(as.character(facet_axes$input_key), assignment_axis$future_input_key),
+    input_keys = c(as.character(facet_axes$input_key), assignment_axis$design_input_key),
     canonical_design_variables = c(
       as.character(facet_axes$canonical_design_variable),
       assignment_axis$current_planning_count_variable
     ),
-    default_design = future_branch_schema$design_template,
+    default_design = structural_design_schema$design_template,
     note = paste(
-      "Compatibility coercion of a schema-only future arbitrary-facet branch",
+      "Compatibility coercion of a deterministic named-facet structural review",
       "contract into the bundled design-schema object."
     )
   ))
 }
 
-simulation_build_future_branch_design_grid <- function(design_schema,
+simulation_build_structural_design_grid <- function(design_schema,
                                                        design = NULL,
                                                        id_prefix = "F") {
-  design_schema <- simulation_coerce_future_branch_design_schema(design_schema)
-  parsed <- simulation_parse_future_branch_design(
+  design_schema <- simulation_coerce_structural_design_schema(design_schema)
+  parsed <- simulation_parse_structural_design(
     design = design,
-    future_branch_schema = list(design_schema = design_schema),
+    structural_design_schema = list(design_schema = design_schema),
     arg_name = "design"
   )
 
@@ -271,7 +271,7 @@ simulation_build_future_branch_design_grid <- function(design_schema,
   }
 
   assignment_var <- as.character(assignment_axis$current_planning_count_variable %||% "raters_per_person")
-  assignment_key <- as.character(assignment_axis$future_input_key %||% "assignment")
+  assignment_key <- as.character(assignment_axis$design_input_key %||% "assignment")
   assignment_default <- defaults[[assignment_key]] %||%
     values[[as.character(assignment_axis$depends_on_canonical_design_variable %||% "n_rater")]]
   values[[assignment_var]] <- simulation_validate_count_values(
@@ -300,7 +300,7 @@ simulation_build_future_branch_design_grid <- function(design_schema,
   ]
   if (nrow(design_grid) == 0L) {
     stop(
-      "No valid future-branch design rows remain after enforcing `",
+      "No valid structural-design rows remain after enforcing `",
       assignment_var,
       " <= ",
       dependency_var,
@@ -328,17 +328,17 @@ simulation_build_future_branch_design_grid <- function(design_schema,
   list(
     canonical = design_grid,
     public = simulation_append_design_alias_columns(design_grid, aliases),
-    branch = branch_grid,
+    design = branch_grid,
     design_schema = design_schema,
     grid_semantics = grid_semantics
   )
 }
 
-simulation_future_branch_preview <- function(future_branch_schema,
+simulation_structural_design_preview <- function(structural_design_schema,
                                              design = NULL,
                                              id_prefix = "F") {
-  grid_contract <- simulation_future_branch_grid_contract(
-    future_branch_schema = future_branch_schema,
+  grid_contract <- simulation_structural_design_grid_contract(
+    structural_design_schema = structural_design_schema,
     design = design,
     id_prefix = id_prefix
   )
@@ -348,7 +348,7 @@ simulation_future_branch_preview <- function(future_branch_schema,
     "default_design",
     "canonical",
     "public",
-    "branch",
+    "design",
     "design_schema",
     "grid_semantics"
   )
@@ -358,15 +358,15 @@ simulation_future_branch_preview <- function(future_branch_schema,
   grid_contract[c("preview_contract", "preview_stage", preview_fields)]
 }
 
-simulation_future_branch_grid_contract <- function(future_branch_schema,
+simulation_structural_design_grid_contract <- function(structural_design_schema,
                                                    design = NULL,
                                                    id_prefix = "F") {
-  design_schema <- simulation_coerce_future_branch_design_schema(future_branch_schema)
+  design_schema <- simulation_coerce_structural_design_schema(structural_design_schema)
   default_design <- design_schema$default_design %||% list()
   grid_semantics <- design_schema$grid_semantics
   facet_defaults <- default_design$facets %||% list()
   assignment_key <- as.character(
-    design_schema$assignment_axis$future_input_key %||% "assignment"
+    design_schema$assignment_axis$design_input_key %||% "assignment"
   )
   assignment_default <- default_design[[assignment_key]] %||% NULL
 
@@ -383,30 +383,30 @@ simulation_future_branch_grid_contract <- function(future_branch_schema,
   if (!facet_complete || !assignment_complete) {
     return(list(
       contract = "arbitrary_facet_design_grid_contract",
-      stage = as.character(design_schema$schema_stage %||% "schema_only"),
+      stage = as.character(design_schema$schema_stage %||% "deterministic_review"),
       planner_contract = as.character(
-        future_branch_schema$planner_contract %||% "arbitrary_facet_planning_scaffold"
+        structural_design_schema$planner_contract %||% "named_facet_structural_review"
       ),
       input_contract = as.character(
-        future_branch_schema$input_contract %||% "design$facets(named counts)"
+        structural_design_schema$input_contract %||% "design$facets(named counts)"
       ),
       preview_available = FALSE,
       reason = paste(
-        "The schema-only future arbitrary-facet branch does not yet have",
+        "The deterministic named-facet structural review does not yet have",
         "complete default facet counts and assignment counts, so no",
-        "schema-only branch grid can be materialized."
+        "deterministic design grid can be materialized."
       ),
       default_design = default_design,
       design_schema = design_schema,
       grid_semantics = grid_semantics,
       note = paste(
-        "Schema-only future-branch grid contract is unavailable until the",
+        "Deterministic structural-design grid contract is unavailable until the",
         "default nested design carries finite facet and assignment counts."
       )
     ))
   }
 
-  preview_grid <- simulation_build_future_branch_design_grid(
+  preview_grid <- simulation_build_structural_design_grid(
     design_schema = design_schema,
     design = preview_design,
     id_prefix = id_prefix
@@ -414,33 +414,33 @@ simulation_future_branch_grid_contract <- function(future_branch_schema,
 
   list(
     contract = "arbitrary_facet_design_grid_contract",
-    stage = as.character(design_schema$schema_stage %||% "schema_only"),
+    stage = as.character(design_schema$schema_stage %||% "deterministic_review"),
     planner_contract = as.character(
-      future_branch_schema$planner_contract %||% "arbitrary_facet_planning_scaffold"
+      structural_design_schema$planner_contract %||% "named_facet_structural_review"
     ),
     input_contract = as.character(
-      future_branch_schema$input_contract %||% "design$facets(named counts)"
+      structural_design_schema$input_contract %||% "design$facets(named counts)"
     ),
     preview_available = TRUE,
     reason = paste(
-      "Schema-only branch grid built from the future arbitrary-facet",
+      "Deterministic design grid built from the future arbitrary-facet",
       "branch design schema and its current default design."
     ),
     default_design = default_design,
     canonical = preview_grid$canonical,
     public = preview_grid$public,
-    branch = preview_grid$branch,
+    design = preview_grid$design,
     design_schema = design_schema,
     grid_semantics = preview_grid$grid_semantics,
     note = paste(
-      "Schema-only future-branch grid contract bundling the default branch",
+      "Deterministic structural-design grid contract bundling the default branch",
       "grid, design schema, and grid semantics without activating arbitrary-",
       "facet planner logic."
     )
   )
 }
 
-simulation_coerce_future_branch_grid_contract <- function(x) {
+simulation_coerce_structural_design_grid_contract <- function(x) {
   required_fields <- c(
     "contract",
     "stage",
@@ -453,7 +453,7 @@ simulation_coerce_future_branch_grid_contract <- function(x) {
     "grid_semantics",
     "note"
   )
-  optional_grid_fields <- c("canonical", "public", "branch")
+  optional_grid_fields <- c("canonical", "public", "design")
 
   if (is.list(x) &&
       identical(x$contract %||% "", "arbitrary_facet_design_grid_contract") &&
@@ -464,39 +464,39 @@ simulation_coerce_future_branch_grid_contract <- function(x) {
     return(out)
   }
 
-  nested <- x$grid_contract %||% x$future_branch_grid_contract %||% NULL
+  nested <- x$grid_contract %||% x$structural_design_grid_contract %||% NULL
   if (is.list(nested)) {
-    return(simulation_coerce_future_branch_grid_contract(nested))
+    return(simulation_coerce_structural_design_grid_contract(nested))
   }
 
-  branch <- x$future_branch_schema %||% x
+  branch <- x$structural_design_schema %||% x
   if (!is.list(branch)) {
-    stop("`x` is not a valid schema-only future-branch grid contract.", call. = FALSE)
+    stop("`x` is not a valid deterministic structural-design grid contract.", call. = FALSE)
   }
 
-  simulation_future_branch_grid_contract(branch)
+  simulation_structural_design_grid_contract(branch)
 }
 
-simulation_build_future_branch_design_grid_from_contract <- function(grid_contract,
+simulation_build_structural_design_grid_from_contract <- function(grid_contract,
                                                                      design = NULL,
                                                                      id_prefix = NULL) {
-  grid_contract <- simulation_coerce_future_branch_grid_contract(grid_contract)
+  grid_contract <- simulation_coerce_structural_design_grid_contract(grid_contract)
   prefix <- as.character(id_prefix %||% grid_contract$grid_semantics$default_id_prefix %||% "F")
 
   if (is.null(design) &&
       isTRUE(grid_contract$preview_available) &&
-      all(c("canonical", "public", "branch") %in% names(grid_contract))) {
+      all(c("canonical", "public", "design") %in% names(grid_contract))) {
     return(list(
       canonical = grid_contract$canonical,
       public = grid_contract$public,
-      branch = grid_contract$branch,
+      design = grid_contract$design,
       design_schema = grid_contract$design_schema,
       grid_semantics = grid_contract$grid_semantics,
       grid_contract = grid_contract
     ))
   }
 
-  built <- simulation_build_future_branch_design_grid(
+  built <- simulation_build_structural_design_grid(
     design_schema = grid_contract$design_schema,
     design = design %||% grid_contract$default_design,
     id_prefix = prefix
@@ -505,7 +505,7 @@ simulation_build_future_branch_design_grid_from_contract <- function(grid_contra
   built
 }
 
-simulation_materialize_future_branch_grid <- function(x,
+simulation_materialize_structural_design_grid <- function(x,
                                                       design = NULL,
                                                       id_prefix = NULL) {
   grid_contract <- NULL
@@ -516,16 +516,16 @@ simulation_materialize_future_branch_grid <- function(x,
   }
 
   if (is.null(grid_contract) && is.list(x)) {
-    nested <- x$future_branch_grid_contract %||%
+    nested <- x$structural_design_grid_contract %||%
       x$grid_contract %||%
-      x$future_branch_schema %||%
+      x$structural_design_schema %||%
       x$planning_schema %||%
       x$settings$planning_schema %||%
       x$sim_spec$planning_schema %||%
       x$ademp$data_generating_mechanism$planning_schema %||%
       NULL
     if (is.list(nested)) {
-      grid_contract <- simulation_coerce_future_branch_grid_contract(nested)
+      grid_contract <- simulation_coerce_structural_design_grid_contract(nested)
     }
   }
 
@@ -534,8 +534,8 @@ simulation_materialize_future_branch_grid <- function(x,
       simulation_object_planning_schema(x),
       error = function(e) NULL
     )
-    if (is.list(schema) && is.list(schema$future_branch_grid_contract)) {
-      grid_contract <- schema$future_branch_grid_contract
+    if (is.list(schema) && is.list(schema$structural_design_grid_contract)) {
+      grid_contract <- schema$structural_design_grid_contract
     }
   }
 
@@ -544,37 +544,37 @@ simulation_materialize_future_branch_grid <- function(x,
       simulation_planning_schema(x),
       error = function(e) NULL
     )
-    if (is.list(schema) && is.list(schema$future_branch_grid_contract)) {
-      grid_contract <- schema$future_branch_grid_contract
+    if (is.list(schema) && is.list(schema$structural_design_grid_contract)) {
+      grid_contract <- schema$structural_design_grid_contract
     }
   }
 
   if (is.null(grid_contract)) {
     stop(
       "`x` is not a valid planning object, planning schema, sim spec, or ",
-      "future-branch grid contract.",
+      "structural-design grid contract.",
       call. = FALSE
     )
   }
 
-  simulation_build_future_branch_design_grid_from_contract(
+  simulation_build_structural_design_grid_from_contract(
     grid_contract = grid_contract,
     design = design,
     id_prefix = id_prefix
   )
 }
 
-simulation_future_branch_grid_bundle <- function(x,
+simulation_structural_design_grid_bundle <- function(x,
                                                  design = NULL,
                                                  id_prefix = NULL) {
-  grid_contract <- simulation_coerce_future_branch_grid_contract(x)
+  grid_contract <- simulation_coerce_structural_design_grid_contract(x)
 
   if (is.null(design) && !isTRUE(grid_contract$preview_available)) {
     return(list(
       bundle_contract = "arbitrary_facet_design_grid_bundle",
-      bundle_stage = as.character(grid_contract$stage %||% "schema_only"),
+      bundle_stage = as.character(grid_contract$stage %||% "deterministic_review"),
       planner_contract = as.character(
-        grid_contract$planner_contract %||% "arbitrary_facet_planning_scaffold"
+        grid_contract$planner_contract %||% "named_facet_structural_review"
       ),
       input_contract = as.character(
         grid_contract$input_contract %||% "design$facets(named counts)"
@@ -582,21 +582,21 @@ simulation_future_branch_grid_bundle <- function(x,
       grid_available = FALSE,
       reason = as.character(
         grid_contract$reason %||%
-          "No schema-only future-branch grid is currently materialized."
+          "No deterministic structural-design grid is currently materialized."
       ),
       default_design = grid_contract$default_design,
       design_schema = grid_contract$design_schema,
       grid_semantics = grid_contract$grid_semantics,
       grid_contract = grid_contract,
       note = paste(
-        "Schema-only future-branch bundle carrying the branch grid contract,",
+        "Deterministic structural-design bundle carrying the design grid contract,",
         "schema, and semantics without a materialized grid because default",
         "counts are not yet available."
       )
     ))
   }
 
-  built <- simulation_build_future_branch_design_grid_from_contract(
+  built <- simulation_build_structural_design_grid_from_contract(
     grid_contract = grid_contract,
     design = design,
     id_prefix = id_prefix
@@ -604,34 +604,34 @@ simulation_future_branch_grid_bundle <- function(x,
 
   list(
     bundle_contract = "arbitrary_facet_design_grid_bundle",
-    bundle_stage = as.character(grid_contract$stage %||% "schema_only"),
+    bundle_stage = as.character(grid_contract$stage %||% "deterministic_review"),
     planner_contract = as.character(
-      grid_contract$planner_contract %||% "arbitrary_facet_planning_scaffold"
+      grid_contract$planner_contract %||% "named_facet_structural_review"
     ),
     input_contract = as.character(
       grid_contract$input_contract %||% "design$facets(named counts)"
     ),
     grid_available = TRUE,
     reason = paste(
-      "Schema-only future-branch bundle materialized from the branch grid",
+      "Deterministic structural-design bundle materialized from the design grid",
       "contract and matching design schema."
     ),
     canonical = built$canonical,
     public = built$public,
-    branch = built$branch,
+    design = built$design,
     default_design = grid_contract$default_design,
     design_schema = built$design_schema,
     grid_semantics = built$grid_semantics,
     grid_contract = grid_contract,
     note = paste(
-      "Schema-only future-branch bundle that materializes canonical, public,",
+      "Deterministic structural-design bundle that materializes canonical, public,",
       "and branch-facing design grids from one authoritative branch-grid",
       "contract."
     )
   )
 }
 
-simulation_coerce_future_branch_grid_bundle <- function(x) {
+simulation_coerce_structural_design_grid_bundle <- function(x) {
   required_fields <- c(
     "bundle_contract",
     "bundle_stage",
@@ -645,7 +645,7 @@ simulation_coerce_future_branch_grid_bundle <- function(x) {
     "grid_contract",
     "note"
   )
-  optional_grid_fields <- c("canonical", "public", "branch")
+  optional_grid_fields <- c("canonical", "public", "design")
 
   if (is.list(x) &&
       identical(x$bundle_contract %||% "", "arbitrary_facet_design_grid_bundle") &&
@@ -656,15 +656,15 @@ simulation_coerce_future_branch_grid_bundle <- function(x) {
     return(x[unique(c(required_fields, optional_grid_fields[optional_grid_fields %in% names(x)]))])
   }
 
-  nested <- x$grid_bundle %||% x$future_branch_grid_bundle %||% NULL
+  nested <- x$grid_bundle %||% x$structural_design_grid_bundle %||% NULL
   if (is.list(nested)) {
-    return(simulation_coerce_future_branch_grid_bundle(nested))
+    return(simulation_coerce_structural_design_grid_bundle(nested))
   }
 
-  simulation_future_branch_grid_bundle(x)
+  simulation_structural_design_grid_bundle(x)
 }
 
-simulation_materialize_future_branch_grid_bundle <- function(x,
+simulation_materialize_structural_design_grid_bundle <- function(x,
                                                              design = NULL,
                                                              id_prefix = NULL) {
   grid_bundle <- NULL
@@ -675,16 +675,16 @@ simulation_materialize_future_branch_grid_bundle <- function(x,
   }
 
   if (is.null(grid_bundle) && is.list(x)) {
-    nested <- x$future_branch_grid_bundle %||%
+    nested <- x$structural_design_grid_bundle %||%
       x$grid_bundle %||%
-      x$future_branch_schema %||%
+      x$structural_design_schema %||%
       x$planning_schema %||%
       x$settings$planning_schema %||%
       x$sim_spec$planning_schema %||%
       x$ademp$data_generating_mechanism$planning_schema %||%
       NULL
     if (is.list(nested)) {
-      grid_bundle <- simulation_coerce_future_branch_grid_bundle(nested)
+      grid_bundle <- simulation_coerce_structural_design_grid_bundle(nested)
     }
   }
 
@@ -693,8 +693,8 @@ simulation_materialize_future_branch_grid_bundle <- function(x,
       simulation_object_planning_schema(x),
       error = function(e) NULL
     )
-    if (is.list(schema) && is.list(schema$future_branch_grid_bundle)) {
-      grid_bundle <- schema$future_branch_grid_bundle
+    if (is.list(schema) && is.list(schema$structural_design_grid_bundle)) {
+      grid_bundle <- schema$structural_design_grid_bundle
     }
   }
 
@@ -703,15 +703,15 @@ simulation_materialize_future_branch_grid_bundle <- function(x,
       simulation_planning_schema(x),
       error = function(e) NULL
     )
-    if (is.list(schema) && is.list(schema$future_branch_grid_bundle)) {
-      grid_bundle <- schema$future_branch_grid_bundle
+    if (is.list(schema) && is.list(schema$structural_design_grid_bundle)) {
+      grid_bundle <- schema$structural_design_grid_bundle
     }
   }
 
   if (is.null(grid_bundle)) {
     stop(
       "`x` is not a valid planning object, planning schema, sim spec, or ",
-      "future-branch grid bundle.",
+      "structural-design grid bundle.",
       call. = FALSE
     )
   }
@@ -720,19 +720,19 @@ simulation_materialize_future_branch_grid_bundle <- function(x,
     return(grid_bundle)
   }
 
-  simulation_future_branch_grid_bundle(
+  simulation_structural_design_grid_bundle(
     x = grid_bundle$grid_contract %||% grid_bundle,
     design = design,
     id_prefix = id_prefix
   )
 }
 
-simulation_future_branch_grid_view <- function(x,
-                                               view = c("canonical", "public", "branch"),
+simulation_structural_design_grid_view <- function(x,
+                                               view = c("canonical", "public", "design"),
                                                design = NULL,
                                                id_prefix = NULL) {
   view <- match.arg(view)
-  grid_bundle <- simulation_materialize_future_branch_grid_bundle(
+  grid_bundle <- simulation_materialize_structural_design_grid_bundle(
     x = x,
     design = design,
     id_prefix = id_prefix
@@ -740,8 +740,8 @@ simulation_future_branch_grid_view <- function(x,
 
   if (!isTRUE(grid_bundle$grid_available) || !is.data.frame(grid_bundle[[view]])) {
     stop(
-      "The requested `", view, "` future-branch grid view is not currently ",
-      "available from this schema-only bundle.",
+      "The requested `", view, "` structural-design grid view is not currently ",
+      "available from this deterministic bundle.",
       call. = FALSE
     )
   }
@@ -749,10 +749,10 @@ simulation_future_branch_grid_view <- function(x,
   grid_bundle[[view]]
 }
 
-simulation_future_branch_grid_context <- function(x,
+simulation_structural_design_grid_context <- function(x,
                                                   design = NULL,
                                                   id_prefix = NULL) {
-  grid_bundle <- simulation_materialize_future_branch_grid_bundle(
+  grid_bundle <- simulation_materialize_structural_design_grid_bundle(
     x = x,
     design = design,
     id_prefix = id_prefix
@@ -775,7 +775,7 @@ simulation_future_branch_grid_context <- function(x,
       ),
     tibble::tibble(
       axis_source = "assignment",
-      input_key = as.character(assignment_axis$future_input_key %||% "assignment"),
+      input_key = as.character(assignment_axis$design_input_key %||% "assignment"),
       canonical_design_variable = as.character(
         assignment_axis$current_planning_count_variable %||% "raters_per_person"
       ),
@@ -795,9 +795,9 @@ simulation_future_branch_grid_context <- function(x,
 
     return(list(
       context_contract = "arbitrary_facet_design_grid_context",
-      context_stage = as.character(grid_bundle$bundle_stage %||% "schema_only"),
+      context_stage = as.character(grid_bundle$bundle_stage %||% "deterministic_review"),
       grid_available = FALSE,
-      reason = as.character(grid_bundle$reason %||% "No future-branch grid is available."),
+      reason = as.character(grid_bundle$reason %||% "No structural-design grid is available."),
       id_variable = as.character(grid_semantics$id_variable %||% "design_id"),
       canonical_columns = as.character(grid_semantics$canonical_columns %||% character(0)),
       public_columns = as.character(grid_semantics$public_columns %||% character(0)),
@@ -809,7 +809,7 @@ simulation_future_branch_grid_context <- function(x,
       fixed_input_keys = character(0),
       grid_bundle = grid_bundle,
       note = paste(
-        "Schema-only future-branch context exposes axis metadata even when a",
+        "Deterministic structural-design context exposes axis metadata even when a",
         "materialized grid is not yet available."
       )
     ))
@@ -832,15 +832,15 @@ simulation_future_branch_grid_context <- function(x,
 
   list(
     context_contract = "arbitrary_facet_design_grid_context",
-    context_stage = as.character(grid_bundle$bundle_stage %||% "schema_only"),
+    context_stage = as.character(grid_bundle$bundle_stage %||% "deterministic_review"),
     grid_available = TRUE,
     reason = as.character(
-      grid_bundle$reason %||% "Future-branch grid context built from a materialized bundle."
+      grid_bundle$reason %||% "Named-facet design grid context built from a materialized bundle."
     ),
     id_variable = as.character(grid_semantics$id_variable %||% "design_id"),
     canonical_columns = as.character(grid_semantics$canonical_columns %||% names(canonical_grid)),
     public_columns = as.character(grid_semantics$public_columns %||% names(grid_bundle$public %||% canonical_grid)),
-    branch_columns = as.character(grid_semantics$branch_columns %||% names(grid_bundle$branch %||% canonical_grid)),
+    branch_columns = as.character(grid_semantics$branch_columns %||% names(grid_bundle$design %||% canonical_grid)),
     axis_table = axis_table,
     varying_canonical = as.character(axis_table$canonical_design_variable[axis_table$varying]),
     fixed_canonical = as.character(axis_table$canonical_design_variable[!axis_table$varying]),
@@ -848,16 +848,16 @@ simulation_future_branch_grid_context <- function(x,
     fixed_input_keys = as.character(axis_table$input_key[!axis_table$varying]),
     grid_bundle = grid_bundle,
     note = paste(
-      "Schema-only future-branch context summarizing which branch axes vary",
+      "Deterministic structural-design context summarizing which branch axes vary",
       "within the currently materialized design grid."
     )
   )
 }
 
-simulation_future_branch_grid_summary <- function(x,
+simulation_structural_design_grid_summary <- function(x,
                                                   design = NULL,
                                                   id_prefix = NULL) {
-  grid_context <- simulation_future_branch_grid_context(
+  grid_context <- simulation_structural_design_grid_context(
     x = x,
     design = design,
     id_prefix = id_prefix
@@ -873,9 +873,9 @@ simulation_future_branch_grid_summary <- function(x,
   if (!isTRUE(grid_context$grid_available)) {
     return(list(
       summary_contract = "arbitrary_facet_design_grid_summary",
-      summary_stage = as.character(grid_context$context_stage %||% "schema_only"),
+      summary_stage = as.character(grid_context$context_stage %||% "deterministic_review"),
       planner_contract = as.character(
-        grid_context$grid_bundle$planner_contract %||% "arbitrary_facet_planning_scaffold"
+        grid_context$grid_bundle$planner_contract %||% "named_facet_structural_review"
       ),
       input_contract = as.character(
         grid_context$grid_bundle$input_contract %||% "design$facets(named counts)"
@@ -883,7 +883,7 @@ simulation_future_branch_grid_summary <- function(x,
       grid_available = FALSE,
       reason = as.character(
         grid_context$reason %||%
-          "No schema-only future-branch grid is currently materialized."
+          "No deterministic structural-design grid is currently materialized."
       ),
       n_designs = 0L,
       n_varying_axes = sum(varying_rows),
@@ -897,22 +897,22 @@ simulation_future_branch_grid_summary <- function(x,
       grid_context = grid_context,
       grid_bundle = grid_context$grid_bundle,
       note = paste(
-        "Schema-only future-branch summary is unavailable because no",
-        "materialized branch grid exists yet, but axis metadata are still",
-        "returned for branch-side planning helpers."
+        "Deterministic structural-design summary is unavailable because no",
+        "materialized design grid exists yet, but axis metadata are still",
+        "returned for design-review planning helpers."
       )
     ))
   }
 
   canonical <- tibble::as_tibble(grid_context$grid_bundle$canonical)
   public <- tibble::as_tibble(grid_context$grid_bundle$public)
-  branch <- tibble::as_tibble(grid_context$grid_bundle$branch)
+  branch <- tibble::as_tibble(grid_context$grid_bundle$design)
 
   list(
     summary_contract = "arbitrary_facet_design_grid_summary",
-    summary_stage = as.character(grid_context$context_stage %||% "schema_only"),
+    summary_stage = as.character(grid_context$context_stage %||% "deterministic_review"),
     planner_contract = as.character(
-      grid_context$grid_bundle$planner_contract %||% "arbitrary_facet_planning_scaffold"
+      grid_context$grid_bundle$planner_contract %||% "named_facet_structural_review"
     ),
     input_contract = as.character(
       grid_context$grid_bundle$input_contract %||% "design$facets(named counts)"
@@ -920,7 +920,7 @@ simulation_future_branch_grid_summary <- function(x,
     grid_available = TRUE,
     reason = as.character(
       grid_context$reason %||%
-        "Schema-only future-branch grid is materialized."
+        "Deterministic structural-design grid is materialized."
     ),
     n_designs = nrow(canonical),
     n_varying_axes = sum(varying_rows),
@@ -933,18 +933,18 @@ simulation_future_branch_grid_summary <- function(x,
     axis_table = axis_table,
     canonical = canonical,
     public = public,
-    branch = branch,
+    design = branch,
     grid_context = grid_context,
     grid_bundle = grid_context$grid_bundle,
     note = paste(
-      "Schema-only future-branch summary bundling the materialized grid with",
+      "Deterministic structural-design summary bundling the materialized grid with",
       "axis-level varying/fixed metadata for later arbitrary-facet branch",
       "helpers."
     )
   )
 }
 
-simulation_future_branch_axis_lookup <- function(axis_table) {
+simulation_structural_design_axis_lookup <- function(axis_table) {
   axis_table <- tibble::as_tibble(axis_table)
   lookup <- c(
     stats::setNames(
@@ -964,14 +964,14 @@ simulation_future_branch_axis_lookup <- function(axis_table) {
   lookup[!duplicated(names(lookup))]
 }
 
-simulation_resolve_future_branch_axis <- function(value,
+simulation_resolve_structural_design_axis <- function(value,
                                                   axis_table,
                                                   arg_name = "axis",
                                                   allow_null = FALSE) {
   if (allow_null && is.null(value)) {
     return(NULL)
   }
-  lookup <- simulation_future_branch_axis_lookup(axis_table)
+  lookup <- simulation_structural_design_axis_lookup(axis_table)
   value <- as.character(value[1] %||% "")
   resolved <- unname(lookup[[value]])
   if (!is.null(resolved) && nzchar(resolved)) {
@@ -985,9 +985,9 @@ simulation_resolve_future_branch_axis <- function(value,
   )
 }
 
-simulation_future_branch_axis_label <- function(canonical,
+simulation_structural_design_axis_label <- function(canonical,
                                                 axis_table,
-                                                view = c("public", "canonical", "branch")) {
+                                                view = c("public", "canonical", "design")) {
   view <- match.arg(view)
   axis_table <- tibble::as_tibble(axis_table)
   row <- axis_table[axis_table$canonical_design_variable == canonical, , drop = FALSE]
@@ -997,7 +997,7 @@ simulation_future_branch_axis_label <- function(canonical,
   if (identical(view, "canonical")) {
     return(as.character(canonical))
   }
-  if (identical(view, "branch")) {
+  if (identical(view, "design")) {
     label <- as.character(row$input_key[[1]])
     if (nzchar(label)) return(label)
   }
@@ -1006,11 +1006,11 @@ simulation_future_branch_axis_label <- function(canonical,
   as.character(canonical)
 }
 
-simulation_future_branch_grid_recommendation <- function(x,
+simulation_structural_design_grid_recommendation <- function(x,
                                                          design = NULL,
                                                          prefer = NULL,
                                                          id_prefix = NULL) {
-  grid_summary <- simulation_future_branch_grid_summary(
+  grid_summary <- simulation_structural_design_grid_summary(
     x = x,
     design = design,
     id_prefix = id_prefix
@@ -1036,25 +1036,25 @@ simulation_future_branch_grid_recommendation <- function(x,
   if (!isTRUE(grid_summary$grid_available)) {
     return(list(
       recommendation_contract = "arbitrary_facet_design_grid_recommendation",
-      recommendation_stage = as.character(grid_summary$summary_stage %||% "schema_only"),
+      recommendation_stage = as.character(grid_summary$summary_stage %||% "deterministic_review"),
       planner_contract = as.character(
-        grid_summary$planner_contract %||% "arbitrary_facet_planning_scaffold"
+        grid_summary$planner_contract %||% "named_facet_structural_review"
       ),
       recommendation_available = FALSE,
       reason = as.character(
         grid_summary$reason %||%
-          "No schema-only future-branch grid is currently materialized."
+          "No deterministic structural-design grid is currently materialized."
       ),
       selection_rule = paste(
-        "Unavailable because no schema-only branch grid exists yet.",
+        "Unavailable because no deterministic design grid exists yet.",
         "This helper does not fabricate facet counts."
       ),
       prefer = character(0),
       rank_order = character(0),
       grid_summary = grid_summary,
       note = paste(
-        "Schema-only future-branch recommendation is unavailable until the",
-        "underlying branch grid is materialized."
+        "Deterministic structural-design recommendation is unavailable until the",
+        "underlying design grid is materialized."
       )
     ))
   }
@@ -1080,7 +1080,7 @@ simulation_future_branch_grid_recommendation <- function(x,
     resolved_prefer <- unique(resolved_prefer[!is.na(resolved_prefer) & nzchar(resolved_prefer)])
     if (length(resolved_prefer) == 0L) {
       stop(
-        "`prefer` must resolve to at least one future-branch design axis. Valid names: ",
+        "`prefer` must resolve to at least one structural-design axis. Valid names: ",
         paste(sort(unique(names(lookup))), collapse = ", "),
         ".",
         call. = FALSE
@@ -1093,22 +1093,22 @@ simulation_future_branch_grid_recommendation <- function(x,
   recommended_canonical <- dplyr::slice_head(ranked, n = 1)
   recommended_id <- as.character(recommended_canonical$design_id[[1]])
   recommended_public <- dplyr::filter(grid_summary$public, .data$design_id == recommended_id)
-  recommended_branch <- dplyr::filter(grid_summary$branch, .data$design_id == recommended_id)
+  recommended_branch <- dplyr::filter(grid_summary$design, .data$design_id == recommended_id)
 
   list(
     recommendation_contract = "arbitrary_facet_design_grid_recommendation",
-    recommendation_stage = as.character(grid_summary$summary_stage %||% "schema_only"),
+    recommendation_stage = as.character(grid_summary$summary_stage %||% "deterministic_review"),
     planner_contract = as.character(
-      grid_summary$planner_contract %||% "arbitrary_facet_planning_scaffold"
+      grid_summary$planner_contract %||% "named_facet_structural_review"
     ),
     recommendation_available = TRUE,
     reason = paste(
-      "Schema-only future-branch baseline design selected by deterministic",
+      "Deterministic structural-design baseline design selected by deterministic",
       "lexicographic ordering over the requested branch axes."
     ),
     selection_rule = paste(
       "Pick the lexicographically smallest feasible design row after sorting",
-      "the schema-only canonical grid by `prefer`, then by the remaining",
+      "the deterministic canonical grid by `prefer`, then by the remaining",
       "canonical design axes. This is a deterministic baseline pick, not a",
       "performance-based recommendation."
     ),
@@ -1120,25 +1120,25 @@ simulation_future_branch_grid_recommendation <- function(x,
     recommended_branch = recommended_branch,
     grid_summary = grid_summary,
     note = paste(
-      "Schema-only future-branch baseline pick derived from the currently",
-      "materialized branch grid without activating arbitrary-facet planner",
+      "Deterministic structural-design baseline pick derived from the currently",
+      "materialized design grid without activating arbitrary-facet planner",
       "logic or performance criteria."
     )
   )
 }
 
-simulation_future_branch_grid_table <- function(x,
+simulation_structural_design_grid_table <- function(x,
                                                 design = NULL,
                                                 prefer = NULL,
-                                                view = c("public", "canonical", "branch"),
+                                                view = c("public", "canonical", "design"),
                                                 id_prefix = NULL) {
   view <- match.arg(view)
-  grid_summary <- simulation_future_branch_grid_summary(
+  grid_summary <- simulation_structural_design_grid_summary(
     x = x,
     design = design,
     id_prefix = id_prefix
   )
-  recommendation <- simulation_future_branch_grid_recommendation(
+  recommendation <- simulation_structural_design_grid_recommendation(
     x = x,
     design = design,
     prefer = prefer,
@@ -1148,14 +1148,14 @@ simulation_future_branch_grid_table <- function(x,
   if (!isTRUE(grid_summary$grid_available)) {
     return(list(
       table_contract = "arbitrary_facet_design_grid_table",
-      table_stage = as.character(grid_summary$summary_stage %||% "schema_only"),
+      table_stage = as.character(grid_summary$summary_stage %||% "deterministic_review"),
       planner_contract = as.character(
-        grid_summary$planner_contract %||% "arbitrary_facet_planning_scaffold"
+        grid_summary$planner_contract %||% "named_facet_structural_review"
       ),
       grid_available = FALSE,
       reason = as.character(
         grid_summary$reason %||%
-          "No schema-only future-branch grid is currently materialized."
+          "No deterministic structural-design grid is currently materialized."
       ),
       view = view,
       view_label = view,
@@ -1164,8 +1164,8 @@ simulation_future_branch_grid_table <- function(x,
       grid_summary = grid_summary,
       grid_recommendation = recommendation,
       note = paste(
-        "Schema-only future-branch table is unavailable until the",
-        "underlying branch grid is materialized."
+        "Deterministic structural-design table is unavailable until the",
+        "underlying design grid is materialized."
       )
     ))
   }
@@ -1174,20 +1174,20 @@ simulation_future_branch_grid_table <- function(x,
     view,
     canonical = tibble::as_tibble(grid_summary$canonical),
     public = tibble::as_tibble(grid_summary$public),
-    branch = tibble::as_tibble(grid_summary$branch)
+    design = tibble::as_tibble(grid_summary$design)
   )
   table$recommended <- table$design_id == recommendation$recommended_design_id
 
   list(
     table_contract = "arbitrary_facet_design_grid_table",
-    table_stage = as.character(grid_summary$summary_stage %||% "schema_only"),
+    table_stage = as.character(grid_summary$summary_stage %||% "deterministic_review"),
     planner_contract = as.character(
-      grid_summary$planner_contract %||% "arbitrary_facet_planning_scaffold"
+      grid_summary$planner_contract %||% "named_facet_structural_review"
     ),
     grid_available = TRUE,
     reason = as.character(
       grid_summary$reason %||%
-        "Schema-only future-branch grid is materialized."
+        "Deterministic structural-design grid is materialized."
     ),
     view = view,
     view_label = view,
@@ -1196,26 +1196,26 @@ simulation_future_branch_grid_table <- function(x,
     grid_summary = grid_summary,
     grid_recommendation = recommendation,
     note = paste(
-      "Schema-only future-branch table exposing one grid view together with",
+      "Deterministic structural-design table exposing one grid view together with",
       "the deterministic baseline design flag."
     )
   )
 }
 
-simulation_future_branch_grid_plot_payload <- function(x,
+simulation_structural_design_grid_plot_payload <- function(x,
                                                        design = NULL,
                                                        x_var = NULL,
                                                        group_var = NULL,
                                                        prefer = NULL,
-                                                       view = c("public", "canonical", "branch"),
+                                                       view = c("public", "canonical", "design"),
                                                        id_prefix = NULL) {
   view <- match.arg(view)
-  grid_summary <- simulation_future_branch_grid_summary(
+  grid_summary <- simulation_structural_design_grid_summary(
     x = x,
     design = design,
     id_prefix = id_prefix
   )
-  recommendation <- simulation_future_branch_grid_recommendation(
+  recommendation <- simulation_structural_design_grid_recommendation(
     x = x,
     design = design,
     prefer = prefer,
@@ -1225,17 +1225,17 @@ simulation_future_branch_grid_plot_payload <- function(x,
 
   if (!isTRUE(grid_summary$grid_available)) {
     return(new_mfrm_plot_data(
-      "future_branch_grid_schema",
+      "structural_design_grid_schema",
       list(
-        title = "Schema-Only Future-Branch Grid",
+        title = "Deterministic Named-Facet Design Grid",
         subtitle = as.character(
           grid_summary$reason %||%
-            "No schema-only branch grid is currently materialized."
+            "No deterministic design grid is currently materialized."
         ),
         plot_available = FALSE,
         reason = as.character(
           grid_summary$reason %||%
-            "No schema-only branch grid is currently materialized."
+            "No deterministic design grid is currently materialized."
         ),
         view = view,
         x_var = NULL,
@@ -1255,20 +1255,20 @@ simulation_future_branch_grid_plot_payload <- function(x,
     ))
   }
 
-  lookup <- simulation_future_branch_axis_lookup(axis_table)
+  lookup <- simulation_structural_design_axis_lookup(axis_table)
   varying <- as.character(grid_summary$varying_canonical)
   canonical_default_x <- if (length(varying) > 0L) varying[[1]] else as.character(axis_table$canonical_design_variable[[1]])
   x_canonical <- if (is.null(x_var)) {
     canonical_default_x
   } else {
-    simulation_resolve_future_branch_axis(x_var, axis_table, arg_name = "x_var")
+    simulation_resolve_structural_design_axis(x_var, axis_table, arg_name = "x_var")
   }
 
   group_default <- setdiff(varying, x_canonical)
   group_canonical <- if (is.null(group_var)) {
     if (length(group_default) > 0L) group_default[[1]] else NULL
   } else {
-    simulation_resolve_future_branch_axis(group_var, axis_table, arg_name = "group_var", allow_null = TRUE)
+    simulation_resolve_structural_design_axis(group_var, axis_table, arg_name = "group_var", allow_null = TRUE)
   }
   if (!is.null(group_canonical) && identical(group_canonical, x_canonical)) {
     stop("`group_var` must differ from `x_var`.", call. = FALSE)
@@ -1278,7 +1278,7 @@ simulation_future_branch_grid_plot_payload <- function(x,
     view,
     canonical = tibble::as_tibble(grid_summary$canonical),
     public = tibble::as_tibble(grid_summary$public),
-    branch = tibble::as_tibble(grid_summary$branch)
+    design = tibble::as_tibble(grid_summary$design)
   )
   canonical_axes <- tibble::as_tibble(grid_summary$canonical[, c("design_id", unique(c(x_canonical, group_canonical))), drop = FALSE])
   names(canonical_axes)[-1] <- paste0(names(canonical_axes)[-1], "__canonical")
@@ -1292,13 +1292,13 @@ simulation_future_branch_grid_plot_payload <- function(x,
   plot_data$recommended <- plot_data$design_id == recommendation$recommended_design_id
   plot_data <- dplyr::arrange(plot_data, .data$x_value, .data$group_value, dplyr::desc(.data$recommended))
 
-  x_label <- simulation_future_branch_axis_label(x_canonical, axis_table, view = view)
-  group_label <- if (is.null(group_canonical)) "Design set" else simulation_future_branch_axis_label(group_canonical, axis_table, view = view)
+  x_label <- simulation_structural_design_axis_label(x_canonical, axis_table, view = view)
+  group_label <- if (is.null(group_canonical)) "Design set" else simulation_structural_design_axis_label(group_canonical, axis_table, view = view)
   fixed_rows <- !is.na(axis_table$varying) & !as.logical(axis_table$varying)
   fixed_text <- if (any(fixed_rows)) {
     fixed_bits <- vapply(which(fixed_rows), function(i) {
       paste0(
-        simulation_future_branch_axis_label(axis_table$canonical_design_variable[[i]], axis_table, view = view),
+        simulation_structural_design_axis_label(axis_table$canonical_design_variable[[i]], axis_table, view = view),
         "=",
         axis_table$fixed_value[[i]]
       )
@@ -1326,14 +1326,14 @@ simulation_future_branch_grid_plot_payload <- function(x,
   }
 
   new_mfrm_plot_data(
-    "future_branch_grid_schema",
+    "structural_design_grid_schema",
     list(
-      title = "Schema-Only Future-Branch Grid",
+      title = "Deterministic Named-Facet Design Grid",
       subtitle = fixed_text,
       plot_available = TRUE,
       reason = as.character(
         grid_summary$reason %||%
-          "Schema-only future-branch grid is materialized."
+          "Deterministic structural-design grid is materialized."
       ),
       view = view,
       x_var = x_canonical,
@@ -1356,7 +1356,7 @@ simulation_future_branch_grid_plot_payload <- function(x,
   )
 }
 
-simulation_future_branch_cached_default <- function(x,
+simulation_structural_design_cached_default <- function(x,
                                                     field,
                                                     design = NULL,
                                                     prefer = NULL,
@@ -1406,13 +1406,13 @@ simulation_future_branch_cached_default <- function(x,
   x[[field]]
 }
 
-simulation_future_branch_report_bundle <- function(x,
+simulation_structural_design_report_bundle <- function(x,
                                                    design = NULL,
                                                    prefer = NULL,
                                                    x_var = NULL,
                                                    group_var = NULL,
                                                    id_prefix = NULL) {
-  cached <- simulation_future_branch_cached_default(
+  cached <- simulation_structural_design_cached_default(
     x = x,
     field = "report_bundle",
     design = design,
@@ -1425,42 +1425,42 @@ simulation_future_branch_report_bundle <- function(x,
     return(cached)
   }
 
-  grid_summary <- simulation_future_branch_grid_summary(
+  grid_summary <- simulation_structural_design_grid_summary(
     x = x,
     design = design,
     id_prefix = id_prefix
   )
-  recommendation <- simulation_future_branch_grid_recommendation(
+  recommendation <- simulation_structural_design_grid_recommendation(
     x = x,
     design = design,
     prefer = prefer,
     id_prefix = id_prefix
   )
   tables <- list(
-    canonical = simulation_future_branch_grid_table(
+    canonical = simulation_structural_design_grid_table(
       x = x,
       design = design,
       prefer = prefer,
       view = "canonical",
       id_prefix = id_prefix
     ),
-    public = simulation_future_branch_grid_table(
+    public = simulation_structural_design_grid_table(
       x = x,
       design = design,
       prefer = prefer,
       view = "public",
       id_prefix = id_prefix
     ),
-    branch = simulation_future_branch_grid_table(
+    design = simulation_structural_design_grid_table(
       x = x,
       design = design,
       prefer = prefer,
-      view = "branch",
+      view = "design",
       id_prefix = id_prefix
     )
   )
   plots <- list(
-    canonical = simulation_future_branch_grid_plot_payload(
+    canonical = simulation_structural_design_grid_plot_payload(
       x = x,
       design = design,
       x_var = x_var,
@@ -1469,7 +1469,7 @@ simulation_future_branch_report_bundle <- function(x,
       view = "canonical",
       id_prefix = id_prefix
     ),
-    public = simulation_future_branch_grid_plot_payload(
+    public = simulation_structural_design_grid_plot_payload(
       x = x,
       design = design,
       x_var = x_var,
@@ -1478,13 +1478,13 @@ simulation_future_branch_report_bundle <- function(x,
       view = "public",
       id_prefix = id_prefix
     ),
-    branch = simulation_future_branch_grid_plot_payload(
+    design = simulation_structural_design_grid_plot_payload(
       x = x,
       design = design,
       x_var = x_var,
       group_var = group_var,
       prefer = prefer,
-      view = "branch",
+      view = "design",
       id_prefix = id_prefix
     )
   )
@@ -1494,14 +1494,14 @@ simulation_future_branch_report_bundle <- function(x,
   if (!isTRUE(grid_summary$grid_available)) {
     return(list(
       report_contract = "arbitrary_facet_design_grid_report_bundle",
-      report_stage = as.character(grid_summary$summary_stage %||% "schema_only"),
+      report_stage = as.character(grid_summary$summary_stage %||% "deterministic_review"),
       planner_contract = as.character(
-        grid_summary$planner_contract %||% "arbitrary_facet_planning_scaffold"
+        grid_summary$planner_contract %||% "named_facet_structural_review"
       ),
       report_available = FALSE,
       reason = as.character(
         grid_summary$reason %||%
-          "No schema-only future-branch grid is currently materialized."
+          "No deterministic structural-design grid is currently materialized."
       ),
       overview_table = overview_table,
       grid_summary = grid_summary,
@@ -1509,9 +1509,9 @@ simulation_future_branch_report_bundle <- function(x,
       tables = tables,
       plots = plots,
       note = paste(
-        "Schema-only future-branch report bundle is unavailable until the",
-        "underlying branch grid is materialized. The contract still bundles",
-        "summary metadata, branch-side table contracts, and draw-free plot",
+        "Deterministic structural-design report bundle is unavailable until the",
+        "underlying design grid is materialized. The contract still bundles",
+        "summary metadata, design-review table contracts, and draw-free plot",
         "data views in one shared object."
       )
     ))
@@ -1519,14 +1519,14 @@ simulation_future_branch_report_bundle <- function(x,
 
   list(
     report_contract = "arbitrary_facet_design_grid_report_bundle",
-    report_stage = as.character(grid_summary$summary_stage %||% "schema_only"),
+    report_stage = as.character(grid_summary$summary_stage %||% "deterministic_review"),
     planner_contract = as.character(
-      grid_summary$planner_contract %||% "arbitrary_facet_planning_scaffold"
+      grid_summary$planner_contract %||% "named_facet_structural_review"
     ),
     report_available = TRUE,
     reason = as.character(
       grid_summary$reason %||%
-        "Schema-only future-branch grid is materialized."
+        "Deterministic structural-design grid is materialized."
     ),
     recommended_design_id = as.character(recommendation$recommended_design_id %||% character(0)),
     overview_table = overview_table,
@@ -1535,7 +1535,7 @@ simulation_future_branch_report_bundle <- function(x,
     tables = tables,
     plots = plots,
     note = paste(
-      "Schema-only future-branch report bundle combining the shared",
+      "Deterministic structural-design report bundle combining the shared",
       "summary, deterministic baseline recommendation, canonical/public/",
       "branch table views, and draw-free plot data without implying an",
       "active arbitrary-facet planner."
@@ -1543,13 +1543,13 @@ simulation_future_branch_report_bundle <- function(x,
   )
 }
 
-simulation_future_branch_report_summary <- function(x,
+simulation_structural_design_report_summary <- function(x,
                                                     design = NULL,
                                                     prefer = NULL,
                                                     x_var = NULL,
                                                     group_var = NULL,
                                                     id_prefix = NULL) {
-  cached <- simulation_future_branch_cached_default(
+  cached <- simulation_structural_design_cached_default(
     x = x,
     field = "report_summary",
     design = design,
@@ -1562,7 +1562,7 @@ simulation_future_branch_report_summary <- function(x,
     return(cached)
   }
 
-  report_bundle <- simulation_future_branch_report_bundle(
+  report_bundle <- simulation_structural_design_report_bundle(
     x = x,
     design = design,
     prefer = prefer,
@@ -1658,14 +1658,14 @@ simulation_future_branch_report_summary <- function(x,
   if (!isTRUE(report_bundle$report_available)) {
     return(list(
       report_summary_contract = "arbitrary_facet_design_grid_report_summary",
-      report_summary_stage = as.character(report_bundle$report_stage %||% "schema_only"),
+      report_summary_stage = as.character(report_bundle$report_stage %||% "deterministic_review"),
       planner_contract = as.character(
-        report_bundle$planner_contract %||% "arbitrary_facet_planning_scaffold"
+        report_bundle$planner_contract %||% "named_facet_structural_review"
       ),
       report_available = FALSE,
       reason = as.character(
         report_bundle$reason %||%
-          "No schema-only future-branch grid is currently materialized."
+          "No deterministic structural-design grid is currently materialized."
       ),
       n_designs = 0L,
       available_table_views = as.character(table_views[table_available]),
@@ -1673,23 +1673,23 @@ simulation_future_branch_report_summary <- function(x,
       component_index = component_index,
       report_bundle = report_bundle,
       note = paste(
-        "Schema-only future-branch report summary is unavailable until the",
-        "underlying branch grid is materialized. The component index still",
-        "describes which branch-side report surfaces would be populated."
+        "Deterministic structural-design report summary is unavailable until the",
+        "underlying design grid is materialized. The component index still",
+        "describes which design-review report surfaces would be populated."
       )
     ))
   }
 
   list(
     report_summary_contract = "arbitrary_facet_design_grid_report_summary",
-    report_summary_stage = as.character(report_bundle$report_stage %||% "schema_only"),
+    report_summary_stage = as.character(report_bundle$report_stage %||% "deterministic_review"),
     planner_contract = as.character(
-      report_bundle$planner_contract %||% "arbitrary_facet_planning_scaffold"
+      report_bundle$planner_contract %||% "named_facet_structural_review"
     ),
     report_available = TRUE,
     reason = as.character(
       report_bundle$reason %||%
-        "Schema-only future-branch grid is materialized."
+        "Deterministic structural-design grid is materialized."
     ),
     n_designs = as.integer(report_bundle$grid_summary$n_designs %||% 0L),
     recommended_design_id = first_or_na(report_bundle$recommended_design_id),
@@ -1698,20 +1698,20 @@ simulation_future_branch_report_summary <- function(x,
     component_index = component_index,
     report_bundle = report_bundle,
     note = paste(
-      "Schema-only future-branch report summary exposing a compact component",
+      "Deterministic structural-design report summary exposing a compact component",
       "index over the current report bundle without implying an active",
       "arbitrary-facet planner."
     )
   )
 }
 
-simulation_future_branch_report_overview_table <- function(x,
+simulation_structural_design_report_overview_table <- function(x,
                                                            design = NULL,
                                                            prefer = NULL,
                                                            x_var = NULL,
                                                            group_var = NULL,
                                                            id_prefix = NULL) {
-  cached <- simulation_future_branch_cached_default(
+  cached <- simulation_structural_design_cached_default(
     x = x,
     field = "report_overview_table",
     design = design,
@@ -1724,7 +1724,7 @@ simulation_future_branch_report_overview_table <- function(x,
     return(cached)
   }
 
-  report_summary <- simulation_future_branch_report_summary(
+  report_summary <- simulation_structural_design_report_summary(
     x = x,
     design = design,
     prefer = prefer,
@@ -1783,14 +1783,14 @@ simulation_future_branch_report_overview_table <- function(x,
   if (!isTRUE(report_summary$report_available)) {
     return(list(
       overview_contract = "arbitrary_facet_design_report_overview_table",
-      overview_stage = as.character(report_summary$report_summary_stage %||% "schema_only"),
+      overview_stage = as.character(report_summary$report_summary_stage %||% "deterministic_review"),
       planner_contract = as.character(
-        report_summary$planner_contract %||% "arbitrary_facet_planning_scaffold"
+        report_summary$planner_contract %||% "named_facet_structural_review"
       ),
       report_available = FALSE,
       reason = as.character(
         report_summary$reason %||%
-          "No schema-only future-branch grid is currently materialized."
+          "No deterministic structural-design grid is currently materialized."
       ),
       metrics_table = metrics_table,
       axis_overview_table = axis_overview_table,
@@ -1798,8 +1798,8 @@ simulation_future_branch_report_overview_table <- function(x,
       report_summary = report_summary,
       report_bundle = report_bundle,
       note = paste(
-        "Schema-only future-branch overview table is unavailable until the",
-        "underlying branch grid is materialized. Metrics and axis metadata",
+        "Deterministic structural-design overview table is unavailable until the",
+        "underlying design grid is materialized. Metrics and axis metadata",
         "are still returned from the current report summary contract."
       )
     ))
@@ -1807,14 +1807,14 @@ simulation_future_branch_report_overview_table <- function(x,
 
   list(
     overview_contract = "arbitrary_facet_design_report_overview_table",
-    overview_stage = as.character(report_summary$report_summary_stage %||% "schema_only"),
+    overview_stage = as.character(report_summary$report_summary_stage %||% "deterministic_review"),
     planner_contract = as.character(
-      report_summary$planner_contract %||% "arbitrary_facet_planning_scaffold"
+      report_summary$planner_contract %||% "named_facet_structural_review"
     ),
     report_available = TRUE,
     reason = as.character(
       report_summary$reason %||%
-        "Schema-only future-branch grid is materialized."
+        "Deterministic structural-design grid is materialized."
     ),
     metrics_table = metrics_table,
     axis_overview_table = axis_overview_table,
@@ -1822,14 +1822,14 @@ simulation_future_branch_report_overview_table <- function(x,
     report_summary = report_summary,
     report_bundle = report_bundle,
     note = paste(
-      "Schema-only future-branch overview table exposing compact report",
+      "Deterministic structural-design overview table exposing compact report",
       "metrics and axis-level state summaries without implying an active",
       "arbitrary-facet planner."
     )
   )
 }
 
-simulation_future_branch_report_overview_view <- function(x,
+simulation_structural_design_report_overview_view <- function(x,
                                                           component = c("metrics", "axes", "components"),
                                                           design = NULL,
                                                           prefer = NULL,
@@ -1837,7 +1837,7 @@ simulation_future_branch_report_overview_view <- function(x,
                                                           group_var = NULL,
                                                           id_prefix = NULL) {
   component <- match.arg(component)
-  overview <- simulation_future_branch_report_overview_table(
+  overview <- simulation_structural_design_report_overview_table(
     x = x,
     design = design,
     prefer = prefer,
@@ -1861,21 +1861,21 @@ simulation_future_branch_report_overview_view <- function(x,
 
   list(
     overview_view_contract = "arbitrary_facet_design_report_overview_view",
-    overview_stage = as.character(overview$overview_stage %||% "schema_only"),
+    overview_stage = as.character(overview$overview_stage %||% "deterministic_review"),
     planner_contract = as.character(
-      overview$planner_contract %||% "arbitrary_facet_planning_scaffold"
+      overview$planner_contract %||% "named_facet_structural_review"
     ),
     component = component,
     component_label = component_label,
     report_available = isTRUE(overview$report_available),
     reason = as.character(
       overview$reason %||%
-        "No schema-only future-branch report overview is currently available."
+        "No deterministic structural-design report overview is currently available."
     ),
     table = table,
     report_overview = overview,
     note = paste(
-      "Schema-only future-branch overview view exposing the selected",
+      "Deterministic structural-design overview view exposing the selected",
       component_label,
       "table from the compact report-overview contract without implying an",
       "active arbitrary-facet planner."
@@ -1883,13 +1883,13 @@ simulation_future_branch_report_overview_view <- function(x,
   )
 }
 
-simulation_future_branch_report_catalog <- function(x,
+simulation_structural_design_report_catalog <- function(x,
                                                     design = NULL,
                                                     prefer = NULL,
                                                     x_var = NULL,
                                                     group_var = NULL,
                                                     id_prefix = NULL) {
-  cached <- simulation_future_branch_cached_default(
+  cached <- simulation_structural_design_cached_default(
     x = x,
     field = "report_catalog",
     design = design,
@@ -1906,7 +1906,7 @@ simulation_future_branch_report_catalog <- function(x,
   views <- stats::setNames(vector("list", length(component_ids)), component_ids)
 
   for (component in component_ids) {
-    views[[component]] <- simulation_future_branch_report_overview_view(
+    views[[component]] <- simulation_structural_design_report_overview_view(
       x = x,
       component = component,
       design = design,
@@ -1917,7 +1917,7 @@ simulation_future_branch_report_catalog <- function(x,
     )
   }
 
-  overview <- views[[1]]$report_overview %||% simulation_future_branch_report_overview_table(
+  overview <- views[[1]]$report_overview %||% simulation_structural_design_report_overview_table(
     x = x,
     design = design,
     prefer = prefer,
@@ -1944,35 +1944,35 @@ simulation_future_branch_report_catalog <- function(x,
 
   list(
     catalog_contract = "arbitrary_facet_design_report_catalog",
-    catalog_stage = as.character(overview$overview_stage %||% "schema_only"),
+    catalog_stage = as.character(overview$overview_stage %||% "deterministic_review"),
     planner_contract = as.character(
-      overview$planner_contract %||% "arbitrary_facet_planning_scaffold"
+      overview$planner_contract %||% "named_facet_structural_review"
     ),
     report_available = isTRUE(overview$report_available),
     reason = as.character(
       overview$reason %||%
-        "No schema-only future-branch report catalog is currently available."
+        "No deterministic structural-design report catalog is currently available."
     ),
     recommended_design_id = recommended_design_id,
     surface_index = surface_index,
     views = views,
     report_overview = overview,
     note = paste(
-      "Schema-only future-branch report catalog enumerating the compact",
-      "overview surfaces that branch-side reporting code can request from",
+      "Deterministic structural-design report catalog enumerating the compact",
+      "overview surfaces that design-review reporting code can request from",
       "the current overview contract without implying an active arbitrary-",
       "facet planner."
     )
   )
 }
 
-simulation_future_branch_report_digest <- function(x,
+simulation_structural_design_report_digest <- function(x,
                                                    design = NULL,
                                                    prefer = NULL,
                                                    x_var = NULL,
                                                    group_var = NULL,
                                                    id_prefix = NULL) {
-  cached <- simulation_future_branch_cached_default(
+  cached <- simulation_structural_design_cached_default(
     x = x,
     field = "report_digest",
     design = design,
@@ -1985,7 +1985,7 @@ simulation_future_branch_report_digest <- function(x,
     return(cached)
   }
 
-  report_catalog <- simulation_future_branch_report_catalog(
+  report_catalog <- simulation_structural_design_report_catalog(
     x = x,
     design = design,
     prefer = prefer,
@@ -1993,7 +1993,7 @@ simulation_future_branch_report_digest <- function(x,
     group_var = group_var,
     id_prefix = id_prefix
   )
-  report_overview <- report_catalog$report_overview %||% simulation_future_branch_report_overview_table(
+  report_overview <- report_catalog$report_overview %||% simulation_structural_design_report_overview_table(
     x = x,
     design = design,
     prefer = prefer,
@@ -2047,14 +2047,14 @@ simulation_future_branch_report_digest <- function(x,
 
   list(
     digest_contract = "arbitrary_facet_design_report_digest",
-    digest_stage = as.character(report_catalog$catalog_stage %||% "schema_only"),
+    digest_stage = as.character(report_catalog$catalog_stage %||% "deterministic_review"),
     planner_contract = as.character(
-      report_catalog$planner_contract %||% "arbitrary_facet_planning_scaffold"
+      report_catalog$planner_contract %||% "named_facet_structural_review"
     ),
     report_available = isTRUE(report_catalog$report_available),
     reason = as.character(
       report_catalog$reason %||%
-        "No schema-only future-branch report digest is currently available."
+        "No deterministic structural-design report digest is currently available."
     ),
     recommended_design_id = first_chr(metrics_table$recommended_design_id),
     available_surfaces = available_surfaces,
@@ -2064,7 +2064,7 @@ simulation_future_branch_report_digest <- function(x,
     report_catalog = report_catalog,
     report_overview = report_overview,
     note = paste(
-      "Schema-only future-branch report digest exposing headline report",
+      "Deterministic structural-design report digest exposing headline report",
       "availability, baseline design metadata, and compact surface/axis",
       "summaries from one shared contract without implying an active",
       "arbitrary-facet planner."
@@ -2072,7 +2072,7 @@ simulation_future_branch_report_digest <- function(x,
   )
 }
 
-simulation_future_branch_report_surface <- function(x,
+simulation_structural_design_report_surface <- function(x,
                                                     surface = c("digest", "catalog", "metrics", "axes", "components"),
                                                     design = NULL,
                                                     prefer = NULL,
@@ -2083,7 +2083,7 @@ simulation_future_branch_report_surface <- function(x,
 
   source_object <- switch(
     surface,
-    digest = simulation_future_branch_report_digest(
+    digest = simulation_structural_design_report_digest(
       x = x,
       design = design,
       prefer = prefer,
@@ -2091,7 +2091,7 @@ simulation_future_branch_report_surface <- function(x,
       group_var = group_var,
       id_prefix = id_prefix
     ),
-    catalog = simulation_future_branch_report_catalog(
+    catalog = simulation_structural_design_report_catalog(
       x = x,
       design = design,
       prefer = prefer,
@@ -2099,7 +2099,7 @@ simulation_future_branch_report_surface <- function(x,
       group_var = group_var,
       id_prefix = id_prefix
     ),
-    metrics = simulation_future_branch_report_overview_view(
+    metrics = simulation_structural_design_report_overview_view(
       x = x,
       component = "metrics",
       design = design,
@@ -2108,7 +2108,7 @@ simulation_future_branch_report_surface <- function(x,
       group_var = group_var,
       id_prefix = id_prefix
     ),
-    axes = simulation_future_branch_report_overview_view(
+    axes = simulation_structural_design_report_overview_view(
       x = x,
       component = "axes",
       design = design,
@@ -2117,7 +2117,7 @@ simulation_future_branch_report_surface <- function(x,
       group_var = group_var,
       id_prefix = id_prefix
     ),
-    components = simulation_future_branch_report_overview_view(
+    components = simulation_structural_design_report_overview_view(
       x = x,
       component = "components",
       design = design,
@@ -2184,19 +2184,19 @@ simulation_future_branch_report_surface <- function(x,
   )
   surface_stage <- switch(
     surface,
-    digest = as.character(source_object$digest_stage %||% "schema_only"),
-    catalog = as.character(source_object$catalog_stage %||% "schema_only"),
-    metrics = as.character(source_object$overview_stage %||% "schema_only"),
-    axes = as.character(source_object$overview_stage %||% "schema_only"),
-    components = as.character(source_object$overview_stage %||% "schema_only")
+    digest = as.character(source_object$digest_stage %||% "deterministic_review"),
+    catalog = as.character(source_object$catalog_stage %||% "deterministic_review"),
+    metrics = as.character(source_object$overview_stage %||% "deterministic_review"),
+    axes = as.character(source_object$overview_stage %||% "deterministic_review"),
+    components = as.character(source_object$overview_stage %||% "deterministic_review")
   )
   planner_contract <- switch(
     surface,
-    digest = as.character(source_object$planner_contract %||% "arbitrary_facet_planning_scaffold"),
-    catalog = as.character(source_object$planner_contract %||% "arbitrary_facet_planning_scaffold"),
-    metrics = as.character(source_object$planner_contract %||% "arbitrary_facet_planning_scaffold"),
-    axes = as.character(source_object$planner_contract %||% "arbitrary_facet_planning_scaffold"),
-    components = as.character(source_object$planner_contract %||% "arbitrary_facet_planning_scaffold")
+    digest = as.character(source_object$planner_contract %||% "named_facet_structural_review"),
+    catalog = as.character(source_object$planner_contract %||% "named_facet_structural_review"),
+    metrics = as.character(source_object$planner_contract %||% "named_facet_structural_review"),
+    axes = as.character(source_object$planner_contract %||% "named_facet_structural_review"),
+    components = as.character(source_object$planner_contract %||% "named_facet_structural_review")
   )
 
   list(
@@ -2212,21 +2212,21 @@ simulation_future_branch_report_surface <- function(x,
     table = table,
     source_object = source_object,
     note = paste(
-      "Schema-only future-branch report surface exposing the selected",
+      "Deterministic structural-design report surface exposing the selected",
       surface_label,
-      "from one compact branch-side operation without implying an active",
+      "from one compact design-review operation without implying an active",
       "arbitrary-facet planner."
     )
   )
 }
 
-simulation_future_branch_report_surface_registry <- function(x,
+simulation_structural_design_report_surface_registry <- function(x,
                                                              design = NULL,
                                                              prefer = NULL,
                                                              x_var = NULL,
                                                              group_var = NULL,
                                                              id_prefix = NULL) {
-  cached <- simulation_future_branch_cached_default(
+  cached <- simulation_structural_design_cached_default(
     x = x,
     field = "report_surface_registry",
     design = design,
@@ -2243,7 +2243,7 @@ simulation_future_branch_report_surface_registry <- function(x,
   surfaces <- stats::setNames(vector("list", length(surface_ids)), surface_ids)
 
   for (surface in surface_ids) {
-    surfaces[[surface]] <- simulation_future_branch_report_surface(
+    surfaces[[surface]] <- simulation_structural_design_report_surface(
       x = x,
       surface = surface,
       design = design,
@@ -2278,34 +2278,34 @@ simulation_future_branch_report_surface_registry <- function(x,
 
   list(
     registry_contract = "arbitrary_facet_design_report_surface_registry",
-    registry_stage = as.character(surfaces[[1]]$surface_stage %||% "schema_only"),
+    registry_stage = as.character(surfaces[[1]]$surface_stage %||% "deterministic_review"),
     planner_contract = as.character(
-      surfaces[[1]]$planner_contract %||% "arbitrary_facet_planning_scaffold"
+      surfaces[[1]]$planner_contract %||% "named_facet_structural_review"
     ),
     report_available = isTRUE(surfaces[[1]]$report_available),
     reason = as.character(
       surfaces[[1]]$reason %||%
-        "No schema-only future-branch report surfaces are currently available."
+        "No deterministic structural-design report surfaces are currently available."
     ),
     recommended_design_id = recommended_design_id,
     surface_index = surface_index,
     surfaces = surfaces,
     note = paste(
-      "Schema-only future-branch report surface registry exposing digest,",
+      "Deterministic structural-design report surface registry exposing digest,",
       "catalog, and compact overview surfaces from one shared contract",
       "without implying an active arbitrary-facet planner."
     )
   )
 }
 
-simulation_future_branch_report_panel <- function(x,
+simulation_structural_design_report_panel <- function(x,
                                                   surface = c("digest", "catalog", "metrics", "axes", "components"),
                                                   design = NULL,
                                                   prefer = NULL,
                                                   x_var = NULL,
                                                   group_var = NULL,
                                                   id_prefix = NULL) {
-  cached <- simulation_future_branch_cached_default(
+  cached <- simulation_structural_design_cached_default(
     x = x,
     field = "report_panel",
     design = design,
@@ -2321,7 +2321,7 @@ simulation_future_branch_report_panel <- function(x,
   }
 
   surface <- match.arg(surface)
-  registry <- simulation_future_branch_report_surface_registry(
+  registry <- simulation_structural_design_report_surface_registry(
     x = x,
     design = design,
     prefer = prefer,
@@ -2329,7 +2329,7 @@ simulation_future_branch_report_panel <- function(x,
     group_var = group_var,
     id_prefix = id_prefix
   )
-  selected_surface <- registry$surfaces[[surface]] %||% simulation_future_branch_report_surface(
+  selected_surface <- registry$surfaces[[surface]] %||% simulation_structural_design_report_surface(
     x = x,
     surface = surface,
     design = design,
@@ -2344,16 +2344,16 @@ simulation_future_branch_report_panel <- function(x,
 
   list(
     panel_contract = "arbitrary_facet_design_report_panel",
-    panel_stage = as.character(registry$registry_stage %||% "schema_only"),
+    panel_stage = as.character(registry$registry_stage %||% "deterministic_review"),
     planner_contract = as.character(
-      registry$planner_contract %||% "arbitrary_facet_planning_scaffold"
+      registry$planner_contract %||% "named_facet_structural_review"
     ),
     surface = surface,
     surface_label = as.character(selected_surface$surface_label %||% surface),
     report_available = isTRUE(selected_surface$report_available),
     reason = as.character(
       selected_surface$reason %||%
-        "No schema-only future-branch report panel is currently available."
+        "No deterministic structural-design report panel is currently available."
     ),
     recommended_design_id = as.character(
       selected_surface$recommended_design_id %||%
@@ -2366,7 +2366,7 @@ simulation_future_branch_report_panel <- function(x,
     selected_surface = selected_surface,
     registry = registry,
     note = paste(
-      "Schema-only future-branch report panel exposing one selected compact",
+      "Deterministic structural-design report panel exposing one selected compact",
       "surface together with headline digest metadata and the surface index",
       "from one shared contract without implying an active arbitrary-",
       "facet planner."
@@ -2374,14 +2374,14 @@ simulation_future_branch_report_panel <- function(x,
   )
 }
 
-simulation_future_branch_report_operation <- function(x,
+simulation_structural_design_report_operation <- function(x,
                                                       surface = c("digest", "catalog", "metrics", "axes", "components"),
                                                       design = NULL,
                                                       prefer = NULL,
                                                       x_var = NULL,
                                                       group_var = NULL,
                                                       id_prefix = NULL) {
-  cached <- simulation_future_branch_cached_default(
+  cached <- simulation_structural_design_cached_default(
     x = x,
     field = "report_operation",
     design = design,
@@ -2397,7 +2397,7 @@ simulation_future_branch_report_operation <- function(x,
   }
 
   surface <- match.arg(surface)
-  panel <- simulation_future_branch_report_panel(
+  panel <- simulation_structural_design_report_panel(
     x = x,
     surface = surface,
     design = design,
@@ -2406,7 +2406,7 @@ simulation_future_branch_report_operation <- function(x,
     group_var = group_var,
     id_prefix = id_prefix
   )
-  registry <- panel$registry %||% simulation_future_branch_report_surface_registry(
+  registry <- panel$registry %||% simulation_structural_design_report_surface_registry(
     x = x,
     design = design,
     prefer = prefer,
@@ -2414,7 +2414,7 @@ simulation_future_branch_report_operation <- function(x,
     group_var = group_var,
     id_prefix = id_prefix
   )
-  digest_surface <- registry$surfaces$digest %||% simulation_future_branch_report_surface(
+  digest_surface <- registry$surfaces$digest %||% simulation_structural_design_report_surface(
     x = x,
     surface = "digest",
     design = design,
@@ -2423,7 +2423,7 @@ simulation_future_branch_report_operation <- function(x,
     group_var = group_var,
     id_prefix = id_prefix
   )
-  metrics_surface <- registry$surfaces$metrics %||% simulation_future_branch_report_surface(
+  metrics_surface <- registry$surfaces$metrics %||% simulation_structural_design_report_surface(
     x = x,
     surface = "metrics",
     design = design,
@@ -2432,7 +2432,7 @@ simulation_future_branch_report_operation <- function(x,
     group_var = group_var,
     id_prefix = id_prefix
   )
-  axes_surface <- registry$surfaces$axes %||% simulation_future_branch_report_surface(
+  axes_surface <- registry$surfaces$axes %||% simulation_structural_design_report_surface(
     x = x,
     surface = "axes",
     design = design,
@@ -2441,7 +2441,7 @@ simulation_future_branch_report_operation <- function(x,
     group_var = group_var,
     id_prefix = id_prefix
   )
-  components_surface <- registry$surfaces$components %||% simulation_future_branch_report_surface(
+  components_surface <- registry$surfaces$components %||% simulation_structural_design_report_surface(
     x = x,
     surface = "components",
     design = design,
@@ -2454,19 +2454,19 @@ simulation_future_branch_report_operation <- function(x,
   list(
     operation_contract = "arbitrary_facet_design_report_operation",
     operation_stage = as.character(
-      panel$panel_stage %||% registry$registry_stage %||% "schema_only"
+      panel$panel_stage %||% registry$registry_stage %||% "deterministic_review"
     ),
     planner_contract = as.character(
       panel$planner_contract %||%
         registry$planner_contract %||%
-        "arbitrary_facet_planning_scaffold"
+        "named_facet_structural_review"
     ),
     surface = surface,
     surface_label = as.character(panel$surface_label %||% surface),
     report_available = isTRUE(panel$report_available),
     reason = as.character(
       panel$reason %||%
-        "No schema-only future-branch report operation is currently available."
+        "No deterministic structural-design report operation is currently available."
     ),
     recommended_design_id = as.character(
       panel$recommended_design_id %||%
@@ -2483,7 +2483,7 @@ simulation_future_branch_report_operation <- function(x,
     report_panel = panel,
     report_surface_registry = registry,
     note = paste(
-      "Schema-only future-branch report operation exposing digest, compact",
+      "Deterministic structural-design report operation exposing digest, compact",
       "overview tables, the current surface registry, and one selected",
       "surface from one shared contract without implying an active",
       "arbitrary-facet planner."
@@ -2491,14 +2491,14 @@ simulation_future_branch_report_operation <- function(x,
   )
 }
 
-simulation_future_branch_report_snapshot <- function(x,
+simulation_structural_design_report_snapshot <- function(x,
                                                      surface = c("digest", "catalog", "metrics", "axes", "components"),
                                                      design = NULL,
                                                      prefer = NULL,
                                                      x_var = NULL,
                                                      group_var = NULL,
                                                      id_prefix = NULL) {
-  cached <- simulation_future_branch_cached_default(
+  cached <- simulation_structural_design_cached_default(
     x = x,
     field = "report_snapshot",
     design = design,
@@ -2514,7 +2514,7 @@ simulation_future_branch_report_snapshot <- function(x,
   }
 
   surface <- match.arg(surface)
-  operation <- simulation_future_branch_report_operation(
+  operation <- simulation_structural_design_report_operation(
     x = x,
     surface = surface,
     design = design,
@@ -2555,16 +2555,16 @@ simulation_future_branch_report_snapshot <- function(x,
 
   list(
     snapshot_contract = "arbitrary_facet_design_report_snapshot",
-    snapshot_stage = as.character(operation$operation_stage %||% "schema_only"),
+    snapshot_stage = as.character(operation$operation_stage %||% "deterministic_review"),
     planner_contract = as.character(
-      operation$planner_contract %||% "arbitrary_facet_planning_scaffold"
+      operation$planner_contract %||% "named_facet_structural_review"
     ),
     surface = surface,
     surface_label = as.character(operation$surface_label %||% surface),
     report_available = isTRUE(operation$report_available),
     reason = as.character(
       operation$reason %||%
-        "No schema-only future-branch report snapshot is currently available."
+        "No deterministic structural-design report snapshot is currently available."
     ),
     recommended_design_id = as.character(
       operation$recommended_design_id %||% NA_character_
@@ -2580,21 +2580,21 @@ simulation_future_branch_report_snapshot <- function(x,
     axis_overview_table = tibble::as_tibble(operation$axis_overview_table %||% tibble::tibble()),
     component_index = tibble::as_tibble(operation$component_index %||% tibble::tibble()),
     note = paste(
-      "Schema-only future-branch report snapshot exposing compact headline",
+      "Deterministic structural-design report snapshot exposing compact headline",
       "metadata, compact overview tables, and one selected surface without",
       "carrying the deeper nested operation graph."
     )
   )
 }
 
-simulation_future_branch_report_brief <- function(x,
+simulation_structural_design_report_brief <- function(x,
                                                   surface = c("digest", "catalog", "metrics", "axes", "components"),
                                                   design = NULL,
                                                   prefer = NULL,
                                                   x_var = NULL,
                                                   group_var = NULL,
                                                   id_prefix = NULL) {
-  cached <- simulation_future_branch_cached_default(
+  cached <- simulation_structural_design_cached_default(
     x = x,
     field = "report_brief",
     design = design,
@@ -2610,7 +2610,7 @@ simulation_future_branch_report_brief <- function(x,
   }
 
   surface <- match.arg(surface)
-  snapshot <- simulation_future_branch_report_snapshot(
+  snapshot <- simulation_structural_design_report_snapshot(
     x = x,
     surface = surface,
     design = design,
@@ -2635,29 +2635,29 @@ simulation_future_branch_report_brief <- function(x,
 
   list(
     brief_contract = "arbitrary_facet_design_report_brief",
-    brief_stage = as.character(snapshot$snapshot_stage %||% "schema_only"),
+    brief_stage = as.character(snapshot$snapshot_stage %||% "deterministic_review"),
     planner_contract = as.character(
-      snapshot$planner_contract %||% "arbitrary_facet_planning_scaffold"
+      snapshot$planner_contract %||% "named_facet_structural_review"
     ),
     surface = surface,
     surface_label = as.character(snapshot$surface_label %||% surface),
     report_available = isTRUE(snapshot$report_available),
     reason = as.character(
       snapshot$reason %||%
-        "No schema-only future-branch report brief is currently available."
+        "No deterministic structural-design report brief is currently available."
     ),
     headline_table = headline_table,
     selected_table = tibble::as_tibble(snapshot$selected_table %||% tibble::tibble()),
     surface_index = tibble::as_tibble(snapshot$surface_index %||% tibble::tibble()),
     note = paste(
-      "Schema-only future-branch report brief exposing one selected surface",
+      "Deterministic structural-design report brief exposing one selected surface",
       "together with a headline table and surface index, without carrying",
       "the broader snapshot or nested operation graph."
     )
   )
 }
 
-simulation_future_branch_report_consume <- function(x,
+simulation_structural_design_report_consume <- function(x,
                                                     mode = c("brief", "snapshot", "operation"),
                                                     surface = c("digest", "catalog", "metrics", "axes", "components"),
                                                     design = NULL,
@@ -2665,7 +2665,7 @@ simulation_future_branch_report_consume <- function(x,
                                                     x_var = NULL,
                                                     group_var = NULL,
                                                     id_prefix = NULL) {
-  cached <- simulation_future_branch_cached_default(
+  cached <- simulation_structural_design_cached_default(
     x = x,
     field = "report_consumer",
     design = design,
@@ -2687,7 +2687,7 @@ simulation_future_branch_report_consume <- function(x,
 
   payload <- switch(
     mode,
-    brief = simulation_future_branch_report_brief(
+    brief = simulation_structural_design_report_brief(
       x = x,
       surface = surface,
       design = design,
@@ -2696,7 +2696,7 @@ simulation_future_branch_report_consume <- function(x,
       group_var = group_var,
       id_prefix = id_prefix
     ),
-    snapshot = simulation_future_branch_report_snapshot(
+    snapshot = simulation_structural_design_report_snapshot(
       x = x,
       surface = surface,
       design = design,
@@ -2705,7 +2705,7 @@ simulation_future_branch_report_consume <- function(x,
       group_var = group_var,
       id_prefix = id_prefix
     ),
-    operation = simulation_future_branch_report_operation(
+    operation = simulation_structural_design_report_operation(
       x = x,
       surface = surface,
       design = design,
@@ -2724,9 +2724,9 @@ simulation_future_branch_report_consume <- function(x,
   )
   stage <- switch(
     mode,
-    brief = as.character(payload$brief_stage %||% "schema_only"),
-    snapshot = as.character(payload$snapshot_stage %||% "schema_only"),
-    operation = as.character(payload$operation_stage %||% "schema_only")
+    brief = as.character(payload$brief_stage %||% "deterministic_review"),
+    snapshot = as.character(payload$snapshot_stage %||% "deterministic_review"),
+    operation = as.character(payload$operation_stage %||% "deterministic_review")
   )
   selected_table <- switch(
     mode,
@@ -2761,7 +2761,7 @@ simulation_future_branch_report_consume <- function(x,
     consumer_contract = "arbitrary_facet_design_report_consumer",
     consumer_stage = stage,
     planner_contract = as.character(
-      payload$planner_contract %||% "arbitrary_facet_planning_scaffold"
+      payload$planner_contract %||% "named_facet_structural_review"
     ),
     mode = mode,
     payload_contract = payload_contract,
@@ -2770,7 +2770,7 @@ simulation_future_branch_report_consume <- function(x,
     report_available = isTRUE(payload$report_available),
     reason = as.character(
       payload$reason %||%
-        "No schema-only future-branch report data are currently available."
+        "No deterministic structural-design report data are currently available."
     ),
     recommended_design_id = recommended_design_id,
     n_designs = n_designs,
@@ -2778,15 +2778,15 @@ simulation_future_branch_report_consume <- function(x,
     surface_index = surface_index,
     payload = payload,
     note = paste(
-      "Schema-only future-branch report consumer dispatching to the selected",
+      "Deterministic structural-design report consumer dispatching to the selected",
       mode,
-      "contract so branch-side code can switch report-data weight without",
+      "contract so design-review code can switch report-data weight without",
       "re-implementing the dispatch logic."
     )
   )
 }
 
-simulation_future_branch_report_mode_registry <- function(x) {
+simulation_structural_design_report_mode_registry <- function(x) {
   cached <- if (is.list(x)) x$report_mode_registry %||% NULL else NULL
   if (is.list(cached) || (is.data.frame(cached) && nrow(cached) >= 0L)) {
     return(cached)
@@ -2809,18 +2809,18 @@ simulation_future_branch_report_mode_registry <- function(x) {
   )
 }
 
-simulation_future_branch_pilot <- function(x,
+simulation_structural_design_compact_review <- function(x,
                                            design = NULL,
                                            prefer = NULL,
-                                           view = c("public", "canonical", "branch"),
+                                           view = c("public", "canonical", "design"),
                                            mode = c("brief", "snapshot", "operation"),
                                            surface = c("digest", "catalog", "metrics", "axes", "components"),
                                            x_var = NULL,
                                            group_var = NULL,
                                            id_prefix = NULL) {
-  cached <- simulation_future_branch_cached_default(
+  cached <- simulation_structural_design_cached_default(
     x = x,
-    field = "pilot",
+    field = "review",
     design = design,
     prefer = prefer,
     view = view,
@@ -2841,25 +2841,25 @@ simulation_future_branch_pilot <- function(x,
   mode <- match.arg(mode)
   surface <- match.arg(surface)
 
-  grid_summary <- simulation_future_branch_grid_summary(
+  grid_summary <- simulation_structural_design_grid_summary(
     x = x,
     design = design,
     id_prefix = id_prefix
   )
-  grid_recommendation <- simulation_future_branch_grid_recommendation(
+  grid_recommendation <- simulation_structural_design_grid_recommendation(
     x = x,
     design = design,
     prefer = prefer,
     id_prefix = id_prefix
   )
-  grid_table <- simulation_future_branch_grid_table(
+  grid_table <- simulation_structural_design_grid_table(
     x = x,
     design = design,
     prefer = prefer,
     view = view,
     id_prefix = id_prefix
   )
-  plot_payload <- simulation_future_branch_grid_plot_payload(
+  plot_payload <- simulation_structural_design_grid_plot_payload(
     x = x,
     design = design,
     x_var = x_var,
@@ -2868,7 +2868,7 @@ simulation_future_branch_pilot <- function(x,
     view = view,
     id_prefix = id_prefix
   )
-  report_consumer <- simulation_future_branch_report_consume(
+  report_consumer <- simulation_structural_design_report_consume(
     x = x,
     mode = mode,
     surface = surface,
@@ -2879,24 +2879,24 @@ simulation_future_branch_pilot <- function(x,
     id_prefix = id_prefix
   )
 
-  pilot_available <- isTRUE(grid_summary$grid_available) && isTRUE(report_consumer$report_available)
+  review_available <- isTRUE(grid_summary$grid_available) && isTRUE(report_consumer$report_available)
 
   list(
-    pilot_contract = "arbitrary_facet_planning_pilot",
-    pilot_stage = if (pilot_available) "pilot_active" else "schema_only",
+    compact_review_contract = "named_facet_compact_review",
+    review_stage = if (review_available) "review_ready" else "deterministic_review",
     planner_contract = as.character(
       grid_summary$planner_contract %||%
         report_consumer$planner_contract %||%
-        "arbitrary_facet_planning_scaffold"
+        "named_facet_structural_review"
     ),
-    pilot_available = pilot_available,
+    review_available = review_available,
     reason = as.character(
-      if (pilot_available) {
-        "Schema-only future-branch pilot is materialized from the current grid and report consumer contracts."
+      if (review_available) {
+        "Deterministic structural-design review is materialized from the current grid and report consumer contracts."
       } else {
         grid_summary$reason %||%
           report_consumer$reason %||%
-          "No schema-only future-branch pilot is currently available."
+          "No deterministic structural-design review is currently available."
       }
     ),
     view = view,
@@ -2918,26 +2918,26 @@ simulation_future_branch_pilot <- function(x,
     grid_summary = grid_summary,
     grid_recommendation = grid_recommendation,
     note = paste(
-      "Internal schema-only future-branch pilot bundling one materialized grid",
+      "Internal deterministic structural-design review bundling one materialized grid",
       "view, one draw-free plot-data object, and one mode-selected report consumer.",
-      "This is the first active branch-side object, but it remains a",
-      "deterministic scaffold rather than a performance-based arbitrary-facet planner."
+      "This is a compact structural-review object, but it remains a",
+      "deterministic review rather than a performance-based arbitrary-facet planner."
     )
   )
 }
 
-simulation_future_branch_pilot_summary <- function(x,
+simulation_structural_design_compact_review_summary <- function(x,
                                                    design = NULL,
                                                    prefer = NULL,
-                                                   view = c("public", "canonical", "branch"),
+                                                   view = c("public", "canonical", "design"),
                                                    mode = c("brief", "snapshot", "operation"),
                                                    surface = c("digest", "catalog", "metrics", "axes", "components"),
                                                    x_var = NULL,
                                                    group_var = NULL,
                                                    id_prefix = NULL) {
-  cached <- simulation_future_branch_cached_default(
+  cached <- simulation_structural_design_cached_default(
     x = x,
-    field = "pilot_summary",
+    field = "compact_review_summary",
     design = design,
     prefer = prefer,
     view = view,
@@ -2954,7 +2954,7 @@ simulation_future_branch_pilot_summary <- function(x,
     return(cached)
   }
 
-  pilot <- simulation_future_branch_pilot(
+  review <- simulation_structural_design_compact_review(
     x = x,
     design = design,
     prefer = prefer,
@@ -2967,53 +2967,53 @@ simulation_future_branch_pilot_summary <- function(x,
   )
 
   headline_table <- tibble::tibble(
-    pilot_available = isTRUE(pilot$pilot_available),
-    n_designs = as.integer(pilot$n_designs %||% 0L),
-    recommended_design_id = as.character(pilot$recommended_design_id %||% NA_character_),
-    view = as.character(pilot$view %||% NA_character_),
-    mode = as.character(pilot$mode %||% NA_character_),
-    surface = as.character(pilot$surface %||% NA_character_),
-    grid_rows = if (is.data.frame(pilot$grid_table)) nrow(pilot$grid_table) else 0L,
-    plot_available = isTRUE(pilot$plot_payload$data$plot_available %||% FALSE),
+    review_available = isTRUE(review$review_available),
+    n_designs = as.integer(review$n_designs %||% 0L),
+    recommended_design_id = as.character(review$recommended_design_id %||% NA_character_),
+    view = as.character(review$view %||% NA_character_),
+    mode = as.character(review$mode %||% NA_character_),
+    surface = as.character(review$surface %||% NA_character_),
+    grid_rows = if (is.data.frame(review$grid_table)) nrow(review$grid_table) else 0L,
+    plot_available = isTRUE(review$plot_payload$data$plot_available %||% FALSE),
     report_payload_contract = as.character(
-      pilot$report_consumer$payload_contract %||% NA_character_
+      review$report_consumer$payload_contract %||% NA_character_
     )
   )
 
   list(
-    pilot_summary_contract = "arbitrary_facet_planning_pilot_summary",
-    pilot_stage = as.character(pilot$pilot_stage %||% "schema_only"),
+    compact_review_summary_contract = "arbitrary_facet_planning_compact_review_summary",
+    review_stage = as.character(review$review_stage %||% "deterministic_review"),
     planner_contract = as.character(
-      pilot$planner_contract %||% "arbitrary_facet_planning_scaffold"
+      review$planner_contract %||% "named_facet_structural_review"
     ),
-    pilot_available = isTRUE(pilot$pilot_available),
+    review_available = isTRUE(review$review_available),
     reason = as.character(
-      pilot$reason %||%
-        "No schema-only future-branch pilot summary is currently available."
+      review$reason %||%
+        "No deterministic structural-design review summary is currently available."
     ),
     headline_table = headline_table,
-    pilot = pilot,
+    review = review,
     note = paste(
-      "Compact summary for the schema-only future-branch pilot, exposing one",
-      "headline table over the current grid/report scaffold without implying",
+      "Compact summary for the deterministic structural-design review, exposing one",
+      "headline table over the current grid and report layer without implying",
       "an active performance-based arbitrary-facet planner."
     )
   )
 }
 
-simulation_future_branch_pilot_table <- function(x,
+simulation_structural_design_compact_review_table <- function(x,
                                                  component = c("grid", "report", "surface_index"),
                                                  design = NULL,
                                                  prefer = NULL,
-                                                 view = c("public", "canonical", "branch"),
+                                                 view = c("public", "canonical", "design"),
                                                  mode = c("brief", "snapshot", "operation"),
                                                  surface = c("digest", "catalog", "metrics", "axes", "components"),
                                                  x_var = NULL,
                                                  group_var = NULL,
                                                  id_prefix = NULL) {
-  cached <- simulation_future_branch_cached_default(
+  cached <- simulation_structural_design_cached_default(
     x = x,
-    field = "pilot_table",
+    field = "compact_review_table",
     design = design,
     prefer = prefer,
     view = view,
@@ -3033,7 +3033,7 @@ simulation_future_branch_pilot_table <- function(x,
   }
 
   component <- match.arg(component)
-  pilot <- simulation_future_branch_pilot(
+  review <- simulation_structural_design_compact_review(
     x = x,
     design = design,
     prefer = prefer,
@@ -3047,45 +3047,45 @@ simulation_future_branch_pilot_table <- function(x,
 
   table <- switch(
     component,
-    grid = tibble::as_tibble(pilot$grid_table %||% tibble::tibble()),
-    report = tibble::as_tibble(pilot$report_consumer$selected_table %||% tibble::tibble()),
-    surface_index = tibble::as_tibble(pilot$report_consumer$surface_index %||% tibble::tibble())
+    grid = tibble::as_tibble(review$grid_table %||% tibble::tibble()),
+    report = tibble::as_tibble(review$report_consumer$selected_table %||% tibble::tibble()),
+    surface_index = tibble::as_tibble(review$report_consumer$surface_index %||% tibble::tibble())
   )
 
   list(
-    pilot_table_contract = "arbitrary_facet_planning_pilot_table",
-    pilot_stage = as.character(pilot$pilot_stage %||% "schema_only"),
+    compact_review_table_contract = "arbitrary_facet_planning_compact_review_table",
+    review_stage = as.character(review$review_stage %||% "deterministic_review"),
     planner_contract = as.character(
-      pilot$planner_contract %||% "arbitrary_facet_planning_scaffold"
+      review$planner_contract %||% "named_facet_structural_review"
     ),
-    pilot_available = isTRUE(pilot$pilot_available),
+    review_available = isTRUE(review$review_available),
     reason = as.character(
-      pilot$reason %||%
-        "No schema-only future-branch pilot table is currently available."
+      review$reason %||%
+        "No deterministic structural-design review table is currently available."
     ),
     component = component,
     table = table,
-    pilot = pilot,
+    review = review,
     note = paste(
-      "Selected table view from the schema-only future-branch pilot.",
+      "Selected table view from the deterministic structural-design review.",
       "This exposes either the grid table, the selected report table, or",
-      "the compact surface index from the current pilot scaffold."
+      "the compact surface index from the current review layer."
     )
   )
 }
 
-simulation_future_branch_pilot_plot <- function(x,
+simulation_structural_design_compact_review_plot <- function(x,
                                                 design = NULL,
                                                 prefer = NULL,
-                                                view = c("public", "canonical", "branch"),
+                                                view = c("public", "canonical", "design"),
                                                 mode = c("brief", "snapshot", "operation"),
                                                 surface = c("digest", "catalog", "metrics", "axes", "components"),
                                                 x_var = NULL,
                                                 group_var = NULL,
                                                 id_prefix = NULL) {
-  cached <- simulation_future_branch_cached_default(
+  cached <- simulation_structural_design_cached_default(
     x = x,
-    field = "pilot_plot",
+    field = "compact_review_plot",
     design = design,
     prefer = prefer,
     view = view,
@@ -3102,7 +3102,7 @@ simulation_future_branch_pilot_plot <- function(x,
     return(cached)
   }
 
-  pilot <- simulation_future_branch_pilot(
+  review <- simulation_structural_design_compact_review(
     x = x,
     design = design,
     prefer = prefer,
@@ -3115,39 +3115,39 @@ simulation_future_branch_pilot_plot <- function(x,
   )
 
   list(
-    pilot_plot_contract = "arbitrary_facet_planning_pilot_plot",
-    pilot_stage = as.character(pilot$pilot_stage %||% "schema_only"),
+    compact_review_plot_contract = "arbitrary_facet_planning_compact_review_plot",
+    review_stage = as.character(review$review_stage %||% "deterministic_review"),
     planner_contract = as.character(
-      pilot$planner_contract %||% "arbitrary_facet_planning_scaffold"
+      review$planner_contract %||% "named_facet_structural_review"
     ),
-    pilot_available = isTRUE(pilot$pilot_available),
+    review_available = isTRUE(review$review_available),
     reason = as.character(
-      pilot$reason %||%
-        "No schema-only future-branch pilot plot is currently available."
+      review$reason %||%
+        "No deterministic structural-design review plot is currently available."
     ),
-    plot = pilot$plot_payload,
-    pilot = pilot,
+    plot = review$plot_payload,
+    review = review,
     note = paste(
-      "Draw-free plot data from the schema-only future-branch pilot.",
+      "Draw-free plot data from the deterministic structural-design review.",
       "This preserves the existing plot contract while routing access through",
-      "the pilot scaffold."
+      "the review layer."
     )
   )
 }
 
-simulation_future_branch_active_branch <- function(x,
+simulation_structural_design_review <- function(x,
                                                    design = NULL,
                                                    prefer = NULL,
-                                                   view = c("public", "canonical", "branch"),
+                                                   view = c("public", "canonical", "design"),
                                                    mode = c("brief", "snapshot", "operation"),
                                                    surface = c("digest", "catalog", "metrics", "axes", "components"),
                                                    table_component = c("grid", "report", "surface_index"),
                                                    x_var = NULL,
                                                    group_var = NULL,
                                                    id_prefix = NULL) {
-  cached <- simulation_future_branch_cached_default(
+  cached <- simulation_structural_design_cached_default(
     x = x,
-    field = "active_branch",
+    field = "design_review",
     design = design,
     prefer = prefer,
     view = view,
@@ -3166,8 +3166,8 @@ simulation_future_branch_active_branch <- function(x,
     return(cached)
   }
 
-  if (inherits(x, "mfrm_future_branch_active_branch") ||
-      identical(as.character(x$branch_contract %||% NA_character_), "arbitrary_facet_planning_active_branch")) {
+  if (inherits(x, "mfrm_structural_design_review") ||
+      identical(as.character(x$review_contract %||% NA_character_), "arbitrary_facet_planning_design_review")) {
     return(x)
   }
 
@@ -3176,7 +3176,7 @@ simulation_future_branch_active_branch <- function(x,
   surface <- match.arg(surface)
   table_component <- match.arg(table_component)
 
-  pilot_summary <- simulation_future_branch_pilot_summary(
+  compact_review_summary <- simulation_structural_design_compact_review_summary(
     x = x,
     design = design,
     prefer = prefer,
@@ -3187,7 +3187,7 @@ simulation_future_branch_active_branch <- function(x,
     group_var = group_var,
     id_prefix = id_prefix
   )
-  pilot_table <- simulation_future_branch_pilot_table(
+  compact_review_table <- simulation_structural_design_compact_review_table(
     x = x,
     component = table_component,
     design = design,
@@ -3199,7 +3199,7 @@ simulation_future_branch_active_branch <- function(x,
     group_var = group_var,
     id_prefix = id_prefix
   )
-  pilot_plot <- simulation_future_branch_pilot_plot(
+  compact_review_plot <- simulation_structural_design_compact_review_plot(
     x = x,
     design = design,
     prefer = prefer,
@@ -3211,31 +3211,31 @@ simulation_future_branch_active_branch <- function(x,
     id_prefix = id_prefix
   )
 
-  branch_available <- isTRUE(pilot_summary$pilot_available) &&
-    isTRUE(pilot_table$pilot_available) &&
-    isTRUE(pilot_plot$pilot_available)
+  review_available <- isTRUE(compact_review_summary$review_available) &&
+    isTRUE(compact_review_table$review_available) &&
+    isTRUE(compact_review_plot$review_available)
   canonical_grid <- tibble::as_tibble(
-    pilot_summary$pilot$grid_summary$canonical %||% tibble::tibble()
+    compact_review_summary$review$grid_summary$canonical %||% tibble::tibble()
   )
 
   structure(list(
-    branch_contract = "arbitrary_facet_planning_active_branch",
-    branch_stage = if (branch_available) "pilot_active" else "schema_only",
+    review_contract = "arbitrary_facet_planning_design_review",
+    review_stage = if (review_available) "review_ready" else "deterministic_review",
     planner_contract = as.character(
-      pilot_summary$planner_contract %||%
-        pilot_table$planner_contract %||%
-        pilot_plot$planner_contract %||%
-        "arbitrary_facet_planning_scaffold"
+      compact_review_summary$planner_contract %||%
+        compact_review_table$planner_contract %||%
+        compact_review_plot$planner_contract %||%
+        "named_facet_structural_review"
     ),
-    branch_available = branch_available,
+    review_available = review_available,
     reason = as.character(
-      if (branch_available) {
-        "Schema-only future-branch active branch is materialized from the pilot summary, table, and plot contracts."
+      if (review_available) {
+        "Deterministic structural-design review is materialized from the review summary, table, and plot contracts."
       } else {
-        pilot_summary$reason %||%
-          pilot_table$reason %||%
-          pilot_plot$reason %||%
-          "No schema-only future-branch active branch is currently available."
+        compact_review_summary$reason %||%
+          compact_review_table$reason %||%
+          compact_review_plot$reason %||%
+          "No deterministic structural-design review is currently available."
       }
     ),
     view = view,
@@ -3243,29 +3243,29 @@ simulation_future_branch_active_branch <- function(x,
     surface = surface,
     table_component = table_component,
     recommended_design_id = as.character(
-      pilot_summary$headline_table$recommended_design_id[[1]] %||% NA_character_
+      compact_review_summary$headline_table$recommended_design_id[[1]] %||% NA_character_
     ),
     n_designs = as.integer(
-      pilot_summary$headline_table$n_designs[[1]] %||% 0L
+      compact_review_summary$headline_table$n_designs[[1]] %||% 0L
     ),
-    summary = pilot_summary,
-    table = pilot_table,
-    plot = pilot_plot,
+    summary = compact_review_summary,
+    table = compact_review_table,
+    plot = compact_review_plot,
     canonical_grid = canonical_grid,
     note = paste(
-      "Minimal active future-branch object bundling pilot-level summary, one",
+      "Compact structural-design review object bundling review-level summary, one",
       "selected table component, and one draw-free plot-data object from the",
-      "current arbitrary-facet scaffold."
+      "current named-facet review layer."
     )
-  ), class = c("mfrm_future_branch_active_branch", "list"))
+  ), class = c("mfrm_structural_design_review", "list"))
 }
 
-simulation_future_branch_active_branch_canonical_grid <- function(branch) {
+simulation_structural_design_review_canonical_grid <- function(branch) {
   candidates <- list(
     branch$canonical_grid,
-    branch$summary$pilot$grid_summary$canonical,
-    branch$table$pilot$grid_summary$canonical,
-    branch$plot$pilot$grid_summary$canonical
+    branch$summary$review$grid_summary$canonical,
+    branch$table$review$grid_summary$canonical,
+    branch$plot$review$grid_summary$canonical
   )
 
   for (candidate in candidates) {
@@ -3277,7 +3277,7 @@ simulation_future_branch_active_branch_canonical_grid <- function(branch) {
   tibble::tibble()
 }
 
-simulation_future_branch_active_branch_metric_registry <- function() {
+simulation_structural_design_review_metric_registry <- function() {
   tibble::tibble(
     metric = c(
       "total_observations",
@@ -3311,7 +3311,7 @@ simulation_future_branch_active_branch_metric_registry <- function() {
   )
 }
 
-simulation_future_branch_active_branch_load_balance_registry <- function() {
+simulation_structural_design_review_load_balance_registry <- function() {
   tibble::tibble(
     metric = c(
       "expected_observations_per_rater",
@@ -3349,7 +3349,7 @@ simulation_future_branch_active_branch_load_balance_registry <- function() {
   )
 }
 
-simulation_future_branch_active_branch_coverage_registry <- function() {
+simulation_structural_design_review_coverage_registry <- function() {
   tibble::tibble(
     metric = c(
       "person_criterion_cells",
@@ -3387,19 +3387,19 @@ simulation_future_branch_active_branch_coverage_registry <- function() {
   )
 }
 
-simulation_future_branch_active_branch_profile <- function(x,
+simulation_structural_design_review_profile <- function(x,
                                                            design = NULL,
                                                            prefer = NULL,
-                                                           view = c("public", "canonical", "branch"),
+                                                           view = c("public", "canonical", "design"),
                                                            mode = c("brief", "snapshot", "operation"),
                                                            surface = c("digest", "catalog", "metrics", "axes", "components"),
                                                            table_component = c("grid", "report", "surface_index"),
                                                            x_var = NULL,
                                                            group_var = NULL,
                                                            id_prefix = NULL) {
-  cached <- simulation_future_branch_cached_default(
+  cached <- simulation_structural_design_cached_default(
     x = x,
-    field = "active_branch_profile",
+    field = "design_review_profile",
     design = design,
     prefer = prefer,
     view = view,
@@ -3418,7 +3418,7 @@ simulation_future_branch_active_branch_profile <- function(x,
     return(cached)
   }
 
-  branch <- simulation_future_branch_active_branch(
+  branch <- simulation_structural_design_review(
     x = x,
     design = design,
     prefer = prefer,
@@ -3431,27 +3431,27 @@ simulation_future_branch_active_branch_profile <- function(x,
     id_prefix = id_prefix
   )
 
-  canonical <- simulation_future_branch_active_branch_canonical_grid(branch)
+  canonical <- simulation_structural_design_review_canonical_grid(branch)
 
-  if (!isTRUE(branch$branch_available) || nrow(canonical) == 0L) {
+  if (!isTRUE(branch$review_available) || nrow(canonical) == 0L) {
     return(list(
-      profile_contract = "arbitrary_facet_planning_active_branch_profile",
-      profile_stage = as.character(branch$branch_stage %||% "schema_only"),
+      profile_contract = "arbitrary_facet_planning_design_review_profile",
+      profile_stage = as.character(branch$review_stage %||% "deterministic_review"),
       planner_contract = as.character(
-        branch$planner_contract %||% "arbitrary_facet_planning_scaffold"
+        branch$planner_contract %||% "named_facet_structural_review"
       ),
-      branch_available = FALSE,
+      review_available = FALSE,
       reason = as.character(
         branch$reason %||%
-          "No schema-only future-branch active profile is currently available."
+          "No deterministic structural-design profile is currently available."
       ),
-      metric_registry = simulation_future_branch_active_branch_metric_registry(),
+      metric_registry = simulation_structural_design_review_metric_registry(),
       profile_summary_table = tibble::tibble(),
       profile_table = tibble::tibble(),
-      active_branch = branch,
+      design_review = branch,
       note = paste(
         "Deterministic design-profile metrics are unavailable until the",
-        "active future-branch scaffold can be materialized."
+        "structural-design review layer can be materialized."
       )
     ))
   }
@@ -3465,7 +3465,7 @@ simulation_future_branch_active_branch_profile <- function(x,
       assignment_fraction = as.numeric(.data$raters_per_person) / as.numeric(.data$n_rater),
       recommended = .data$design_id == as.character(branch$recommended_design_id %||% NA_character_)
     )
-  metric_registry <- simulation_future_branch_active_branch_metric_registry()
+  metric_registry <- simulation_structural_design_review_metric_registry()
   recommended_row <- profile_table[profile_table$recommended %in% TRUE, , drop = FALSE]
   profile_summary_table <- metric_registry |>
     dplyr::mutate(
@@ -3485,41 +3485,41 @@ simulation_future_branch_active_branch_profile <- function(x,
     )
 
   list(
-    profile_contract = "arbitrary_facet_planning_active_branch_profile",
-    profile_stage = as.character(branch$branch_stage %||% "schema_only"),
+    profile_contract = "arbitrary_facet_planning_design_review_profile",
+    profile_stage = as.character(branch$review_stage %||% "deterministic_review"),
     planner_contract = as.character(
-      branch$planner_contract %||% "arbitrary_facet_planning_scaffold"
+      branch$planner_contract %||% "named_facet_structural_review"
     ),
-    branch_available = TRUE,
+    review_available = TRUE,
     reason = as.character(
       branch$reason %||%
-        "Schema-only future-branch active profile is materialized."
+        "Deterministic structural-design profile is materialized."
     ),
     metric_registry = metric_registry,
     profile_summary_table = profile_summary_table,
     profile_table = profile_table,
-    active_branch = branch,
+    design_review = branch,
     note = paste(
-      "Deterministic design-bookkeeping profile for the active future-branch",
-      "scaffold. These quantities summarize observation counts, expected rater",
+      "Deterministic design-bookkeeping profile for the structural-design review",
+      "review layer. These quantities summarize observation counts, expected rater",
       "load, and assignment density; they are not psychometric performance estimates."
     )
   )
 }
 
-simulation_future_branch_active_branch_load_balance <- function(x,
+simulation_structural_design_review_load_balance <- function(x,
                                                                 design = NULL,
                                                                 prefer = NULL,
-                                                                view = c("public", "canonical", "branch"),
+                                                                view = c("public", "canonical", "design"),
                                                                 mode = c("brief", "snapshot", "operation"),
                                                                 surface = c("digest", "catalog", "metrics", "axes", "components"),
                                                                 table_component = c("grid", "report", "surface_index"),
                                                                 x_var = NULL,
                                                                 group_var = NULL,
                                                                 id_prefix = NULL) {
-  cached <- simulation_future_branch_cached_default(
+  cached <- simulation_structural_design_cached_default(
     x = x,
-    field = "active_branch_load_balance",
+    field = "design_review_load_balance",
     design = design,
     prefer = prefer,
     view = view,
@@ -3538,7 +3538,7 @@ simulation_future_branch_active_branch_load_balance <- function(x,
     return(cached)
   }
 
-  profile <- simulation_future_branch_active_branch_profile(
+  profile <- simulation_structural_design_review_profile(
     x = x,
     design = design,
     prefer = prefer,
@@ -3552,27 +3552,27 @@ simulation_future_branch_active_branch_load_balance <- function(x,
   )
 
   profile_table <- tibble::as_tibble(profile$profile_table %||% tibble::tibble())
-  metric_registry <- simulation_future_branch_active_branch_load_balance_registry()
+  metric_registry <- simulation_structural_design_review_load_balance_registry()
 
-  if (!isTRUE(profile$branch_available) || nrow(profile_table) == 0L) {
+  if (!isTRUE(profile$review_available) || nrow(profile_table) == 0L) {
     return(list(
-      diagnostics_contract = "arbitrary_facet_planning_active_branch_load_balance",
-      diagnostics_stage = as.character(profile$profile_stage %||% "schema_only"),
+      diagnostics_contract = "arbitrary_facet_planning_design_review_load_balance",
+      diagnostics_stage = as.character(profile$profile_stage %||% "deterministic_review"),
       planner_contract = as.character(
-        profile$planner_contract %||% "arbitrary_facet_planning_scaffold"
+        profile$planner_contract %||% "named_facet_structural_review"
       ),
-      branch_available = FALSE,
+      review_available = FALSE,
       reason = as.character(
         profile$reason %||%
-          "No schema-only future-branch load/balance diagnostics are currently available."
+          "No deterministic structural-design load/balance diagnostics are currently available."
       ),
       metric_registry = metric_registry,
       diagnostic_summary_table = tibble::tibble(),
       diagnostic_table = tibble::tibble(),
-      active_branch_profile = profile,
+      design_review_profile = profile,
       note = paste(
         "Deterministic load/balance diagnostics are unavailable until the",
-        "active future-branch scaffold can be materialized."
+        "structural-design review layer can be materialized."
       )
     ))
   }
@@ -3604,42 +3604,42 @@ simulation_future_branch_active_branch_load_balance <- function(x,
     )
 
   list(
-    diagnostics_contract = "arbitrary_facet_planning_active_branch_load_balance",
-    diagnostics_stage = as.character(profile$profile_stage %||% "schema_only"),
+    diagnostics_contract = "arbitrary_facet_planning_design_review_load_balance",
+    diagnostics_stage = as.character(profile$profile_stage %||% "deterministic_review"),
     planner_contract = as.character(
-      profile$planner_contract %||% "arbitrary_facet_planning_scaffold"
+      profile$planner_contract %||% "named_facet_structural_review"
     ),
-    branch_available = TRUE,
+    review_available = TRUE,
     reason = as.character(
       profile$reason %||%
-        "Schema-only future-branch load/balance diagnostics are materialized."
+        "Deterministic structural-design load/balance diagnostics are materialized."
     ),
     metric_registry = metric_registry,
     diagnostic_summary_table = diagnostic_summary_table,
     diagnostic_table = diagnostic_table,
-    active_branch_profile = profile,
+    design_review_profile = profile,
     note = paste(
-      "Deterministic load/balance diagnostics for the active future-branch",
-      "scaffold. Balanced-load quantities are labeled as expectations, while",
+      "Deterministic load/balance diagnostics for the structural-design review",
+      "review layer. Balanced-load quantities are labeled as expectations, while",
       "integer split diagnostics are exact combinatorial summaries of the",
       "current observation counts."
     )
   )
 }
 
-simulation_future_branch_active_branch_overview <- function(x,
+simulation_structural_design_review_overview <- function(x,
                                                             design = NULL,
                                                             prefer = NULL,
-                                                            view = c("public", "canonical", "branch"),
+                                                            view = c("public", "canonical", "design"),
                                                             mode = c("brief", "snapshot", "operation"),
                                                             surface = c("digest", "catalog", "metrics", "axes", "components"),
                                                             table_component = c("grid", "report", "surface_index"),
                                                             x_var = NULL,
                                                             group_var = NULL,
                                                             id_prefix = NULL) {
-  cached <- simulation_future_branch_cached_default(
+  cached <- simulation_structural_design_cached_default(
     x = x,
-    field = "active_branch_overview",
+    field = "design_review_overview",
     design = design,
     prefer = prefer,
     view = view,
@@ -3658,7 +3658,7 @@ simulation_future_branch_active_branch_overview <- function(x,
     return(cached)
   }
 
-  branch <- simulation_future_branch_active_branch(
+  branch <- simulation_structural_design_review(
     x = x,
     design = design,
     prefer = prefer,
@@ -3670,7 +3670,7 @@ simulation_future_branch_active_branch_overview <- function(x,
     group_var = group_var,
     id_prefix = id_prefix
   )
-  profile <- simulation_future_branch_active_branch_profile(
+  profile <- simulation_structural_design_review_profile(
     x = x,
     design = design,
     prefer = prefer,
@@ -3684,7 +3684,7 @@ simulation_future_branch_active_branch_overview <- function(x,
   )
 
   headline_table <- tibble::tibble(
-    branch_available = isTRUE(branch$branch_available),
+    review_available = isTRUE(branch$review_available),
     n_designs = as.integer(branch$n_designs %||% 0L),
     recommended_design_id = as.character(branch$recommended_design_id %||% NA_character_),
     view = as.character(branch$view %||% NA_character_),
@@ -3697,42 +3697,42 @@ simulation_future_branch_active_branch_overview <- function(x,
   )
 
   list(
-    overview_contract = "arbitrary_facet_planning_active_branch_overview",
-    overview_stage = as.character(branch$branch_stage %||% "schema_only"),
+    overview_contract = "arbitrary_facet_planning_design_review_overview",
+    overview_stage = as.character(branch$review_stage %||% "deterministic_review"),
     planner_contract = as.character(
-      branch$planner_contract %||% "arbitrary_facet_planning_scaffold"
+      branch$planner_contract %||% "named_facet_structural_review"
     ),
-    branch_available = isTRUE(branch$branch_available) && isTRUE(profile$branch_available),
+    review_available = isTRUE(branch$review_available) && isTRUE(profile$review_available),
     reason = as.character(
       branch$reason %||%
         profile$reason %||%
-        "No future-branch active overview is currently available."
+        "No structural-design overview is currently available."
     ),
     headline_table = headline_table,
     metric_registry = tibble::as_tibble(profile$metric_registry %||% tibble::tibble()),
     metric_summary_table = tibble::as_tibble(profile$profile_summary_table %||% tibble::tibble()),
-    active_branch = branch,
-    active_branch_profile = profile,
+    design_review = branch,
+    design_review_profile = profile,
     note = paste(
-      "Compact overview for the active future-branch scaffold, combining the",
+      "Compact overview for the structural-design review layer, combining the",
       "branch headline with metric-basis-aware deterministic design summaries."
     )
   )
 }
 
-simulation_future_branch_active_branch_load_balance_overview <- function(x,
+simulation_structural_design_review_load_balance_overview <- function(x,
                                                                          design = NULL,
                                                                          prefer = NULL,
-                                                                         view = c("public", "canonical", "branch"),
+                                                                         view = c("public", "canonical", "design"),
                                                                          mode = c("brief", "snapshot", "operation"),
                                                                          surface = c("digest", "catalog", "metrics", "axes", "components"),
                                                                          table_component = c("grid", "report", "surface_index"),
                                                                          x_var = NULL,
                                                                          group_var = NULL,
                                                                          id_prefix = NULL) {
-  cached <- simulation_future_branch_cached_default(
+  cached <- simulation_structural_design_cached_default(
     x = x,
-    field = "active_branch_load_balance_overview",
+    field = "design_review_load_balance_overview",
     design = design,
     prefer = prefer,
     view = view,
@@ -3751,7 +3751,7 @@ simulation_future_branch_active_branch_load_balance_overview <- function(x,
     return(cached)
   }
 
-  diagnostics <- simulation_future_branch_active_branch_load_balance(
+  diagnostics <- simulation_structural_design_review_load_balance(
     x = x,
     design = design,
     prefer = prefer,
@@ -3766,7 +3766,7 @@ simulation_future_branch_active_branch_load_balance_overview <- function(x,
 
   diagnostic_table <- tibble::as_tibble(diagnostics$diagnostic_table %||% tibble::tibble())
   headline_table <- tibble::tibble(
-    branch_available = isTRUE(diagnostics$branch_available),
+    review_available = isTRUE(diagnostics$review_available),
     n_designs = nrow(diagnostic_table),
     n_metrics = if (is.data.frame(diagnostics$metric_registry)) nrow(diagnostics$metric_registry) else 0L,
     recommended_design_id = if ("design_id" %in% names(diagnostic_table) &&
@@ -3788,41 +3788,41 @@ simulation_future_branch_active_branch_load_balance_overview <- function(x,
   )
 
   list(
-    overview_contract = "arbitrary_facet_planning_active_branch_load_balance_overview",
-    overview_stage = as.character(diagnostics$diagnostics_stage %||% "schema_only"),
+    overview_contract = "arbitrary_facet_planning_design_review_load_balance_overview",
+    overview_stage = as.character(diagnostics$diagnostics_stage %||% "deterministic_review"),
     planner_contract = as.character(
-      diagnostics$planner_contract %||% "arbitrary_facet_planning_scaffold"
+      diagnostics$planner_contract %||% "named_facet_structural_review"
     ),
-    branch_available = isTRUE(diagnostics$branch_available),
+    review_available = isTRUE(diagnostics$review_available),
     reason = as.character(
       diagnostics$reason %||%
-        "No future-branch load/balance overview is currently available."
+        "No structural-design load/balance overview is currently available."
     ),
     headline_table = headline_table,
     metric_registry = tibble::as_tibble(diagnostics$metric_registry %||% tibble::tibble()),
     diagnostic_summary_table = tibble::as_tibble(diagnostics$diagnostic_summary_table %||% tibble::tibble()),
-    active_branch_load_balance = diagnostics,
+    design_review_load_balance = diagnostics,
     note = paste(
-      "Compact load/balance overview for the active future-branch scaffold,",
+      "Compact load/balance overview for the structural-design review layer,",
       "combining a one-row divisibility headline with basis-aware deterministic",
       "observation-load diagnostics."
     )
   )
 }
 
-simulation_future_branch_active_branch_coverage <- function(x,
+simulation_structural_design_review_coverage <- function(x,
                                                             design = NULL,
                                                             prefer = NULL,
-                                                            view = c("public", "canonical", "branch"),
+                                                            view = c("public", "canonical", "design"),
                                                             mode = c("brief", "snapshot", "operation"),
                                                             surface = c("digest", "catalog", "metrics", "axes", "components"),
                                                             table_component = c("grid", "report", "surface_index"),
                                                             x_var = NULL,
                                                             group_var = NULL,
                                                             id_prefix = NULL) {
-  cached <- simulation_future_branch_cached_default(
+  cached <- simulation_structural_design_cached_default(
     x = x,
-    field = "active_branch_coverage",
+    field = "design_review_coverage",
     design = design,
     prefer = prefer,
     view = view,
@@ -3841,7 +3841,7 @@ simulation_future_branch_active_branch_coverage <- function(x,
     return(cached)
   }
 
-  profile <- simulation_future_branch_active_branch_profile(
+  profile <- simulation_structural_design_review_profile(
     x = x,
     design = design,
     prefer = prefer,
@@ -3855,27 +3855,27 @@ simulation_future_branch_active_branch_coverage <- function(x,
   )
 
   profile_table <- tibble::as_tibble(profile$profile_table %||% tibble::tibble())
-  metric_registry <- simulation_future_branch_active_branch_coverage_registry()
+  metric_registry <- simulation_structural_design_review_coverage_registry()
 
-  if (!isTRUE(profile$branch_available) || nrow(profile_table) == 0L) {
+  if (!isTRUE(profile$review_available) || nrow(profile_table) == 0L) {
     return(list(
-      diagnostics_contract = "arbitrary_facet_planning_active_branch_coverage",
-      diagnostics_stage = as.character(profile$profile_stage %||% "schema_only"),
+      diagnostics_contract = "arbitrary_facet_planning_design_review_coverage",
+      diagnostics_stage = as.character(profile$profile_stage %||% "deterministic_review"),
       planner_contract = as.character(
-        profile$planner_contract %||% "arbitrary_facet_planning_scaffold"
+        profile$planner_contract %||% "named_facet_structural_review"
       ),
-      branch_available = FALSE,
+      review_available = FALSE,
       reason = as.character(
         profile$reason %||%
-          "No schema-only future-branch coverage/connectivity diagnostics are currently available."
+          "No deterministic structural-design coverage/connectivity diagnostics are currently available."
       ),
       metric_registry = metric_registry,
       diagnostic_summary_table = tibble::tibble(),
       diagnostic_table = tibble::tibble(),
-      active_branch_profile = profile,
+      design_review_profile = profile,
       note = paste(
         "Deterministic coverage/connectivity diagnostics are unavailable until",
-        "the active future-branch scaffold can be materialized."
+        "the structural-design review layer can be materialized."
       )
     ))
   }
@@ -3915,41 +3915,41 @@ simulation_future_branch_active_branch_coverage <- function(x,
     )
 
   list(
-    diagnostics_contract = "arbitrary_facet_planning_active_branch_coverage",
-    diagnostics_stage = as.character(profile$profile_stage %||% "schema_only"),
+    diagnostics_contract = "arbitrary_facet_planning_design_review_coverage",
+    diagnostics_stage = as.character(profile$profile_stage %||% "deterministic_review"),
     planner_contract = as.character(
-      profile$planner_contract %||% "arbitrary_facet_planning_scaffold"
+      profile$planner_contract %||% "named_facet_structural_review"
     ),
-    branch_available = TRUE,
+    review_available = TRUE,
     reason = as.character(
       profile$reason %||%
-        "Schema-only future-branch coverage/connectivity diagnostics are materialized."
+        "Deterministic structural-design coverage/connectivity diagnostics are materialized."
     ),
     metric_registry = metric_registry,
     diagnostic_summary_table = diagnostic_summary_table,
     diagnostic_table = diagnostic_table,
-    active_branch_profile = profile,
+    design_review_profile = profile,
     note = paste(
-      "Deterministic coverage/connectivity diagnostics for the active future-branch",
-      "scaffold. These quantities summarize scored-cell counts and rater-pair",
+      "Deterministic coverage/connectivity diagnostics for the structural-design review",
+      "review layer. These quantities summarize scored-cell counts and rater-pair",
       "overlap identities without implying psychometric performance."
     )
   )
 }
 
-simulation_future_branch_active_branch_coverage_overview <- function(x,
+simulation_structural_design_review_coverage_overview <- function(x,
                                                                      design = NULL,
                                                                      prefer = NULL,
-                                                                     view = c("public", "canonical", "branch"),
+                                                                     view = c("public", "canonical", "design"),
                                                                      mode = c("brief", "snapshot", "operation"),
                                                                      surface = c("digest", "catalog", "metrics", "axes", "components"),
                                                                      table_component = c("grid", "report", "surface_index"),
                                                                      x_var = NULL,
                                                                      group_var = NULL,
                                                                      id_prefix = NULL) {
-  cached <- simulation_future_branch_cached_default(
+  cached <- simulation_structural_design_cached_default(
     x = x,
-    field = "active_branch_coverage_overview",
+    field = "design_review_coverage_overview",
     design = design,
     prefer = prefer,
     view = view,
@@ -3968,7 +3968,7 @@ simulation_future_branch_active_branch_coverage_overview <- function(x,
     return(cached)
   }
 
-  diagnostics <- simulation_future_branch_active_branch_coverage(
+  diagnostics <- simulation_structural_design_review_coverage(
     x = x,
     design = design,
     prefer = prefer,
@@ -3983,7 +3983,7 @@ simulation_future_branch_active_branch_coverage_overview <- function(x,
 
   diagnostic_table <- tibble::as_tibble(diagnostics$diagnostic_table %||% tibble::tibble())
   headline_table <- tibble::tibble(
-    branch_available = isTRUE(diagnostics$branch_available),
+    review_available = isTRUE(diagnostics$review_available),
     n_designs = nrow(diagnostic_table),
     n_metrics = if (is.data.frame(diagnostics$metric_registry)) nrow(diagnostics$metric_registry) else 0L,
     recommended_design_id = if ("design_id" %in% names(diagnostic_table) &&
@@ -4015,29 +4015,29 @@ simulation_future_branch_active_branch_coverage_overview <- function(x,
   )
 
   list(
-    overview_contract = "arbitrary_facet_planning_active_branch_coverage_overview",
-    overview_stage = as.character(diagnostics$diagnostics_stage %||% "schema_only"),
+    overview_contract = "arbitrary_facet_planning_design_review_coverage_overview",
+    overview_stage = as.character(diagnostics$diagnostics_stage %||% "deterministic_review"),
     planner_contract = as.character(
-      diagnostics$planner_contract %||% "arbitrary_facet_planning_scaffold"
+      diagnostics$planner_contract %||% "named_facet_structural_review"
     ),
-    branch_available = isTRUE(diagnostics$branch_available),
+    review_available = isTRUE(diagnostics$review_available),
     reason = as.character(
       diagnostics$reason %||%
-        "No future-branch coverage/connectivity overview is currently available."
+        "No structural-design coverage/connectivity overview is currently available."
     ),
     headline_table = headline_table,
     metric_registry = tibble::as_tibble(diagnostics$metric_registry %||% tibble::tibble()),
     diagnostic_summary_table = tibble::as_tibble(diagnostics$diagnostic_summary_table %||% tibble::tibble()),
-    active_branch_coverage = diagnostics,
+    design_review_coverage = diagnostics,
     note = paste(
-      "Compact coverage/connectivity overview for the active future-branch",
-      "scaffold, combining a one-row redundancy headline with basis-aware",
+      "Compact coverage/connectivity overview for the structural-design review",
+      "review layer, combining a one-row redundancy headline with basis-aware",
       "deterministic rater-overlap diagnostics."
     )
   )
 }
 
-simulation_future_branch_active_branch_guardrail_registry <- function() {
+simulation_structural_design_review_guardrail_registry <- function() {
   tibble::tibble(
     guardrail = c(
       "rater_linking_regime",
@@ -4067,19 +4067,19 @@ simulation_future_branch_active_branch_guardrail_registry <- function() {
   )
 }
 
-simulation_future_branch_active_branch_guardrails <- function(x,
+simulation_structural_design_review_guardrails <- function(x,
                                                               design = NULL,
                                                               prefer = NULL,
-                                                              view = c("public", "canonical", "branch"),
+                                                              view = c("public", "canonical", "design"),
                                                               mode = c("brief", "snapshot", "operation"),
                                                               surface = c("digest", "catalog", "metrics", "axes", "components"),
                                                               table_component = c("grid", "report", "surface_index"),
                                                               x_var = NULL,
                                                               group_var = NULL,
                                                               id_prefix = NULL) {
-  cached <- simulation_future_branch_cached_default(
+  cached <- simulation_structural_design_cached_default(
     x = x,
-    field = "active_branch_guardrails",
+    field = "design_review_guardrails",
     design = design,
     prefer = prefer,
     view = view,
@@ -4098,7 +4098,7 @@ simulation_future_branch_active_branch_guardrails <- function(x,
     return(cached)
   }
 
-  coverage <- simulation_future_branch_active_branch_coverage(
+  coverage <- simulation_structural_design_review_coverage(
     x = x,
     design = design,
     prefer = prefer,
@@ -4110,7 +4110,7 @@ simulation_future_branch_active_branch_guardrails <- function(x,
     group_var = group_var,
     id_prefix = id_prefix
   )
-  load_balance <- simulation_future_branch_active_branch_load_balance(
+  load_balance <- simulation_structural_design_review_load_balance(
     x = x,
     design = design,
     prefer = prefer,
@@ -4125,34 +4125,34 @@ simulation_future_branch_active_branch_guardrails <- function(x,
 
   coverage_table <- tibble::as_tibble(coverage$diagnostic_table %||% tibble::tibble())
   load_balance_table <- tibble::as_tibble(load_balance$diagnostic_table %||% tibble::tibble())
-  guardrail_registry <- simulation_future_branch_active_branch_guardrail_registry()
+  guardrail_registry <- simulation_structural_design_review_guardrail_registry()
 
-  if (!isTRUE(coverage$branch_available) || nrow(coverage_table) == 0L ||
-      !isTRUE(load_balance$branch_available) || nrow(load_balance_table) == 0L) {
+  if (!isTRUE(coverage$review_available) || nrow(coverage_table) == 0L ||
+      !isTRUE(load_balance$review_available) || nrow(load_balance_table) == 0L) {
     return(list(
-      guardrail_contract = "arbitrary_facet_planning_active_branch_guardrails",
+      guardrail_contract = "arbitrary_facet_planning_design_review_guardrails",
       guardrail_stage = as.character(
-        coverage$diagnostics_stage %||% load_balance$diagnostics_stage %||% "schema_only"
+        coverage$diagnostics_stage %||% load_balance$diagnostics_stage %||% "deterministic_review"
       ),
       planner_contract = as.character(
         coverage$planner_contract %||%
           load_balance$planner_contract %||%
-          "arbitrary_facet_planning_scaffold"
+          "named_facet_structural_review"
       ),
-      branch_available = FALSE,
+      review_available = FALSE,
       reason = as.character(
         coverage$reason %||%
           load_balance$reason %||%
-          "No schema-only future-branch guardrail classifications are currently available."
+          "No deterministic structural-design guardrail classifications are currently available."
       ),
       guardrail_registry = guardrail_registry,
       guardrail_summary_table = tibble::tibble(),
       guardrail_table = tibble::tibble(),
-      active_branch_coverage = coverage,
-      active_branch_load_balance = load_balance,
+      design_review_coverage = coverage,
+      design_review_load_balance = load_balance,
       note = paste(
         "Deterministic guardrail classifications are unavailable until the",
-        "active future-branch scaffold can be materialized."
+        "structural-design review layer can be materialized."
       )
     ))
   }
@@ -4201,43 +4201,43 @@ simulation_future_branch_active_branch_guardrails <- function(x,
     dplyr::ungroup()
 
   list(
-    guardrail_contract = "arbitrary_facet_planning_active_branch_guardrails",
+    guardrail_contract = "arbitrary_facet_planning_design_review_guardrails",
     guardrail_stage = as.character(
-      coverage$diagnostics_stage %||% load_balance$diagnostics_stage %||% "schema_only"
+      coverage$diagnostics_stage %||% load_balance$diagnostics_stage %||% "deterministic_review"
     ),
     planner_contract = as.character(
       coverage$planner_contract %||%
         load_balance$planner_contract %||%
-        "arbitrary_facet_planning_scaffold"
+        "named_facet_structural_review"
     ),
-    branch_available = TRUE,
-    reason = "Schema-only future-branch guardrail classifications are materialized.",
+    review_available = TRUE,
+    reason = "Deterministic structural-design guardrail classifications are materialized.",
     guardrail_registry = guardrail_registry,
     guardrail_summary_table = guardrail_summary_table,
     guardrail_table = guardrail_table,
-    active_branch_coverage = coverage,
-    active_branch_load_balance = load_balance,
+    design_review_coverage = coverage,
+    design_review_load_balance = load_balance,
     note = paste(
-      "Deterministic guardrail classifications for the active future-branch",
-      "scaffold. These are exact design-regime labels derived from overlap and",
+      "Deterministic guardrail classifications for the structural-design review",
+      "review layer. These are exact design-regime labels derived from overlap and",
       "integer-balance structure; they do not estimate psychometric performance."
     )
   )
 }
 
-simulation_future_branch_active_branch_guardrail_overview <- function(x,
+simulation_structural_design_review_guardrail_overview <- function(x,
                                                                       design = NULL,
                                                                       prefer = NULL,
-                                                                      view = c("public", "canonical", "branch"),
+                                                                      view = c("public", "canonical", "design"),
                                                                       mode = c("brief", "snapshot", "operation"),
                                                                       surface = c("digest", "catalog", "metrics", "axes", "components"),
                                                                       table_component = c("grid", "report", "surface_index"),
                                                                       x_var = NULL,
                                                                       group_var = NULL,
                                                                       id_prefix = NULL) {
-  cached <- simulation_future_branch_cached_default(
+  cached <- simulation_structural_design_cached_default(
     x = x,
-    field = "active_branch_guardrail_overview",
+    field = "design_review_guardrail_overview",
     design = design,
     prefer = prefer,
     view = view,
@@ -4256,7 +4256,7 @@ simulation_future_branch_active_branch_guardrail_overview <- function(x,
     return(cached)
   }
 
-  guardrails <- simulation_future_branch_active_branch_guardrails(
+  guardrails <- simulation_structural_design_review_guardrails(
     x = x,
     design = design,
     prefer = prefer,
@@ -4271,7 +4271,7 @@ simulation_future_branch_active_branch_guardrail_overview <- function(x,
 
   guardrail_table <- tibble::as_tibble(guardrails$guardrail_table %||% tibble::tibble())
   headline_table <- tibble::tibble(
-    branch_available = isTRUE(guardrails$branch_available),
+    review_available = isTRUE(guardrails$review_available),
     n_designs = nrow(guardrail_table),
     n_guardrails = if (is.data.frame(guardrails$guardrail_registry)) nrow(guardrails$guardrail_registry) else 0L,
     recommended_design_id = if ("design_id" %in% names(guardrail_table) &&
@@ -4303,28 +4303,28 @@ simulation_future_branch_active_branch_guardrail_overview <- function(x,
   )
 
   list(
-    overview_contract = "arbitrary_facet_planning_active_branch_guardrail_overview",
-    overview_stage = as.character(guardrails$guardrail_stage %||% "schema_only"),
+    overview_contract = "arbitrary_facet_planning_design_review_guardrail_overview",
+    overview_stage = as.character(guardrails$guardrail_stage %||% "deterministic_review"),
     planner_contract = as.character(
-      guardrails$planner_contract %||% "arbitrary_facet_planning_scaffold"
+      guardrails$planner_contract %||% "named_facet_structural_review"
     ),
-    branch_available = isTRUE(guardrails$branch_available),
+    review_available = isTRUE(guardrails$review_available),
     reason = as.character(
       guardrails$reason %||%
-        "No future-branch guardrail overview is currently available."
+        "No structural-design guardrail overview is currently available."
     ),
     headline_table = headline_table,
     guardrail_registry = tibble::as_tibble(guardrails$guardrail_registry %||% tibble::tibble()),
     guardrail_summary_table = tibble::as_tibble(guardrails$guardrail_summary_table %||% tibble::tibble()),
-    active_branch_guardrails = guardrails,
+    design_review_guardrails = guardrails,
     note = paste(
-      "Compact guardrail overview for the active future-branch scaffold,",
+      "Compact guardrail overview for the structural-design review layer,",
       "combining exact design-regime counts with a basis-aware guardrail index."
     )
   )
 }
 
-simulation_future_branch_active_branch_readiness_registry <- function() {
+simulation_structural_design_review_readiness_registry <- function() {
   tibble::tibble(
     indicator = c(
       "supports_multi_rater_cells",
@@ -4354,19 +4354,19 @@ simulation_future_branch_active_branch_readiness_registry <- function() {
   )
 }
 
-simulation_future_branch_active_branch_readiness <- function(x,
+simulation_structural_design_review_readiness <- function(x,
                                                              design = NULL,
                                                              prefer = NULL,
-                                                             view = c("public", "canonical", "branch"),
+                                                             view = c("public", "canonical", "design"),
                                                              mode = c("brief", "snapshot", "operation"),
                                                              surface = c("digest", "catalog", "metrics", "axes", "components"),
                                                              table_component = c("grid", "report", "surface_index"),
                                                              x_var = NULL,
                                                              group_var = NULL,
                                                              id_prefix = NULL) {
-  cached <- simulation_future_branch_cached_default(
+  cached <- simulation_structural_design_cached_default(
     x = x,
-    field = "active_branch_readiness",
+    field = "design_review_readiness",
     design = design,
     prefer = prefer,
     view = view,
@@ -4385,7 +4385,7 @@ simulation_future_branch_active_branch_readiness <- function(x,
     return(cached)
   }
 
-  guardrails <- simulation_future_branch_active_branch_guardrails(
+  guardrails <- simulation_structural_design_review_guardrails(
     x = x,
     design = design,
     prefer = prefer,
@@ -4399,27 +4399,27 @@ simulation_future_branch_active_branch_readiness <- function(x,
   )
 
   guardrail_table <- tibble::as_tibble(guardrails$guardrail_table %||% tibble::tibble())
-  indicator_registry <- simulation_future_branch_active_branch_readiness_registry()
+  indicator_registry <- simulation_structural_design_review_readiness_registry()
 
-  if (!isTRUE(guardrails$branch_available) || nrow(guardrail_table) == 0L) {
+  if (!isTRUE(guardrails$review_available) || nrow(guardrail_table) == 0L) {
     return(list(
-      readiness_contract = "arbitrary_facet_planning_active_branch_readiness",
-      readiness_stage = as.character(guardrails$guardrail_stage %||% "schema_only"),
+      readiness_contract = "arbitrary_facet_planning_design_review_readiness",
+      readiness_stage = as.character(guardrails$guardrail_stage %||% "deterministic_review"),
       planner_contract = as.character(
-        guardrails$planner_contract %||% "arbitrary_facet_planning_scaffold"
+        guardrails$planner_contract %||% "named_facet_structural_review"
       ),
-      branch_available = FALSE,
+      review_available = FALSE,
       reason = as.character(
         guardrails$reason %||%
-          "No schema-only future-branch structural readiness summary is currently available."
+          "No deterministic structural-design structural readiness summary is currently available."
       ),
       indicator_registry = indicator_registry,
       readiness_summary_table = tibble::tibble(),
       readiness_table = tibble::tibble(),
-      active_branch_guardrails = guardrails,
+      design_review_guardrails = guardrails,
       note = paste(
         "Deterministic structural readiness indicators are unavailable until",
-        "the active future-branch scaffold can be materialized."
+        "the structural-design review layer can be materialized."
       )
     ))
   }
@@ -4458,38 +4458,38 @@ simulation_future_branch_active_branch_readiness <- function(x,
     )
 
   list(
-    readiness_contract = "arbitrary_facet_planning_active_branch_readiness",
-    readiness_stage = as.character(guardrails$guardrail_stage %||% "schema_only"),
+    readiness_contract = "arbitrary_facet_planning_design_review_readiness",
+    readiness_stage = as.character(guardrails$guardrail_stage %||% "deterministic_review"),
     planner_contract = as.character(
-      guardrails$planner_contract %||% "arbitrary_facet_planning_scaffold"
+      guardrails$planner_contract %||% "named_facet_structural_review"
     ),
-    branch_available = TRUE,
-    reason = "Schema-only future-branch structural readiness summary is materialized.",
+    review_available = TRUE,
+    reason = "Deterministic structural-design structural readiness summary is materialized.",
     indicator_registry = indicator_registry,
     readiness_summary_table = readiness_summary_table,
     readiness_table = readiness_table,
-    active_branch_guardrails = guardrails,
+    design_review_guardrails = guardrails,
     note = paste(
-      "Deterministic structural readiness indicators for the active future-branch",
-      "scaffold. These summarize exact overlap and balance preconditions only;",
+      "Deterministic structural readiness indicators for the structural-design review",
+      "review layer. These summarize exact overlap and balance preconditions only;",
       "they do not estimate psychometric performance."
     )
   )
 }
 
-simulation_future_branch_active_branch_readiness_overview <- function(x,
+simulation_structural_design_review_readiness_overview <- function(x,
                                                                       design = NULL,
                                                                       prefer = NULL,
-                                                                      view = c("public", "canonical", "branch"),
+                                                                      view = c("public", "canonical", "design"),
                                                                       mode = c("brief", "snapshot", "operation"),
                                                                       surface = c("digest", "catalog", "metrics", "axes", "components"),
                                                                       table_component = c("grid", "report", "surface_index"),
                                                                       x_var = NULL,
                                                                       group_var = NULL,
                                                                       id_prefix = NULL) {
-  cached <- simulation_future_branch_cached_default(
+  cached <- simulation_structural_design_cached_default(
     x = x,
-    field = "active_branch_readiness_overview",
+    field = "design_review_readiness_overview",
     design = design,
     prefer = prefer,
     view = view,
@@ -4508,7 +4508,7 @@ simulation_future_branch_active_branch_readiness_overview <- function(x,
     return(cached)
   }
 
-  readiness <- simulation_future_branch_active_branch_readiness(
+  readiness <- simulation_structural_design_review_readiness(
     x = x,
     design = design,
     prefer = prefer,
@@ -4523,7 +4523,7 @@ simulation_future_branch_active_branch_readiness_overview <- function(x,
 
   readiness_table <- tibble::as_tibble(readiness$readiness_table %||% tibble::tibble())
   headline_table <- tibble::tibble(
-    branch_available = isTRUE(readiness$branch_available),
+    review_available = isTRUE(readiness$review_available),
     n_designs = nrow(readiness_table),
     n_indicators = if (is.data.frame(readiness$indicator_registry)) nrow(readiness$indicator_registry) else 0L,
     recommended_design_id = if ("design_id" %in% names(readiness_table) &&
@@ -4555,41 +4555,41 @@ simulation_future_branch_active_branch_readiness_overview <- function(x,
   )
 
   list(
-    overview_contract = "arbitrary_facet_planning_active_branch_readiness_overview",
-    overview_stage = as.character(readiness$readiness_stage %||% "schema_only"),
+    overview_contract = "arbitrary_facet_planning_design_review_readiness_overview",
+    overview_stage = as.character(readiness$readiness_stage %||% "deterministic_review"),
     planner_contract = as.character(
-      readiness$planner_contract %||% "arbitrary_facet_planning_scaffold"
+      readiness$planner_contract %||% "named_facet_structural_review"
     ),
-    branch_available = isTRUE(readiness$branch_available),
+    review_available = isTRUE(readiness$review_available),
     reason = as.character(
       readiness$reason %||%
-        "No future-branch structural readiness overview is currently available."
+        "No structural-design structural readiness overview is currently available."
     ),
     headline_table = headline_table,
     indicator_registry = tibble::as_tibble(readiness$indicator_registry %||% tibble::tibble()),
     readiness_summary_table = tibble::as_tibble(readiness$readiness_summary_table %||% tibble::tibble()),
-    active_branch_readiness = readiness,
+    design_review_readiness = readiness,
     note = paste(
-      "Compact structural readiness overview for the active future-branch",
-      "scaffold, combining exact overlap/balance tiers with a basis-aware",
+      "Compact structural readiness overview for the structural-design review",
+      "review layer, combining exact overlap/balance tiers with a basis-aware",
       "indicator index."
     )
   )
 }
 
-simulation_future_branch_active_branch_recommendation <- function(x,
+simulation_structural_design_review_recommendation <- function(x,
                                                                   design = NULL,
                                                                   prefer = NULL,
-                                                                  view = c("public", "canonical", "branch"),
+                                                                  view = c("public", "canonical", "design"),
                                                                   mode = c("brief", "snapshot", "operation"),
                                                                   surface = c("digest", "catalog", "metrics", "axes", "components"),
                                                                   table_component = c("grid", "report", "surface_index"),
                                                                   x_var = NULL,
                                                                   group_var = NULL,
                                                                   id_prefix = NULL) {
-  cached <- simulation_future_branch_cached_default(
+  cached <- simulation_structural_design_cached_default(
     x = x,
-    field = "active_branch_recommendation",
+    field = "design_review_recommendation",
     design = design,
     prefer = prefer,
     view = view,
@@ -4608,7 +4608,7 @@ simulation_future_branch_active_branch_recommendation <- function(x,
     return(cached)
   }
 
-  readiness <- simulation_future_branch_active_branch_readiness(
+  readiness <- simulation_structural_design_review_readiness(
     x = x,
     design = design,
     prefer = prefer,
@@ -4620,7 +4620,7 @@ simulation_future_branch_active_branch_recommendation <- function(x,
     group_var = group_var,
     id_prefix = id_prefix
   )
-  profile <- simulation_future_branch_active_branch_profile(
+  profile <- simulation_structural_design_review_profile(
     x = x,
     design = design,
     prefer = prefer,
@@ -4636,36 +4636,36 @@ simulation_future_branch_active_branch_recommendation <- function(x,
   readiness_table <- tibble::as_tibble(readiness$readiness_table %||% tibble::tibble())
   profile_table <- tibble::as_tibble(profile$profile_table %||% tibble::tibble())
 
-  if (!isTRUE(readiness$branch_available) || nrow(readiness_table) == 0L ||
-      !isTRUE(profile$branch_available) || nrow(profile_table) == 0L) {
+  if (!isTRUE(readiness$review_available) || nrow(readiness_table) == 0L ||
+      !isTRUE(profile$review_available) || nrow(profile_table) == 0L) {
     return(list(
-      recommendation_contract = "arbitrary_facet_planning_active_branch_recommendation",
+      recommendation_contract = "arbitrary_facet_planning_design_review_recommendation",
       recommendation_stage = as.character(
-        readiness$readiness_stage %||% profile$profile_stage %||% "schema_only"
+        readiness$readiness_stage %||% profile$profile_stage %||% "deterministic_review"
       ),
       planner_contract = as.character(
         readiness$planner_contract %||%
           profile$planner_contract %||%
-          "arbitrary_facet_planning_scaffold"
+          "named_facet_structural_review"
       ),
       recommendation_available = FALSE,
       reason = as.character(
         readiness$reason %||%
           profile$reason %||%
-          "No schema-only future-branch structural recommendation is currently available."
+          "No deterministic structural-design structural recommendation is currently available."
       ),
       ranking_rule = paste(
-        "Unavailable because the active future-branch readiness and profile",
+        "Unavailable because the structural-design readiness review and profile",
         "contracts are not both materialized."
       ),
       recommended_design_id = character(0),
       recommended_tier = character(0),
       recommendation_table = tibble::tibble(),
-      active_branch_readiness = readiness,
-      active_branch_profile = profile,
+      design_review_readiness = readiness,
+      design_review_profile = profile,
       note = paste(
-        "Structural recommendation is unavailable until the active future-branch",
-        "scaffold can be materialized."
+        "Structural recommendation is unavailable until the structural-design review",
+        "review layer can be materialized."
       )
     ))
   }
@@ -4712,18 +4712,18 @@ simulation_future_branch_active_branch_recommendation <- function(x,
   recommended_tier <- as.character(recommended_row$structural_tier[[1]] %||% NA_character_)
 
   list(
-    recommendation_contract = "arbitrary_facet_planning_active_branch_recommendation",
+    recommendation_contract = "arbitrary_facet_planning_design_review_recommendation",
     recommendation_stage = as.character(
-      readiness$readiness_stage %||% profile$profile_stage %||% "schema_only"
+      readiness$readiness_stage %||% profile$profile_stage %||% "deterministic_review"
     ),
     planner_contract = as.character(
       readiness$planner_contract %||%
         profile$planner_contract %||%
-        "arbitrary_facet_planning_scaffold"
+        "named_facet_structural_review"
     ),
     recommendation_available = TRUE,
     reason = paste(
-      "Structural recommendation is available from the active future-branch",
+      "Structural recommendation is available from the structural-design review",
       "readiness and profile contracts."
     ),
     ranking_rule = paste(
@@ -4735,29 +4735,29 @@ simulation_future_branch_active_branch_recommendation <- function(x,
     recommended_design_id = recommended_id,
     recommended_tier = recommended_tier,
     recommendation_table = recommendation_table,
-    active_branch_readiness = readiness,
-    active_branch_profile = profile,
+    design_review_readiness = readiness,
+    design_review_profile = profile,
     note = paste(
-      "Conservative structural recommendation for the active future-branch",
-      "scaffold. This ranking uses exact overlap/balance tiers and total",
+      "Conservative structural recommendation for the structural-design review",
+      "review layer. This ranking uses exact overlap/balance tiers and total",
       "observation counts only; it is not a psychometric optimization."
     )
   )
 }
 
-simulation_future_branch_active_branch_recommendation_overview <- function(x,
+simulation_structural_design_review_recommendation_overview <- function(x,
                                                                            design = NULL,
                                                                            prefer = NULL,
-                                                                           view = c("public", "canonical", "branch"),
+                                                                           view = c("public", "canonical", "design"),
                                                                            mode = c("brief", "snapshot", "operation"),
                                                                            surface = c("digest", "catalog", "metrics", "axes", "components"),
                                                                            table_component = c("grid", "report", "surface_index"),
                                                                            x_var = NULL,
                                                                            group_var = NULL,
                                                                            id_prefix = NULL) {
-  cached <- simulation_future_branch_cached_default(
+  cached <- simulation_structural_design_cached_default(
     x = x,
-    field = "active_branch_recommendation_overview",
+    field = "design_review_recommendation_overview",
     design = design,
     prefer = prefer,
     view = view,
@@ -4776,7 +4776,7 @@ simulation_future_branch_active_branch_recommendation_overview <- function(x,
     return(cached)
   }
 
-  recommendation <- simulation_future_branch_active_branch_recommendation(
+  recommendation <- simulation_structural_design_review_recommendation(
     x = x,
     design = design,
     prefer = prefer,
@@ -4804,27 +4804,27 @@ simulation_future_branch_active_branch_recommendation_overview <- function(x,
   )
 
   list(
-    overview_contract = "arbitrary_facet_planning_active_branch_recommendation_overview",
-    overview_stage = as.character(recommendation$recommendation_stage %||% "schema_only"),
+    overview_contract = "arbitrary_facet_planning_design_review_recommendation_overview",
+    overview_stage = as.character(recommendation$recommendation_stage %||% "deterministic_review"),
     planner_contract = as.character(
-      recommendation$planner_contract %||% "arbitrary_facet_planning_scaffold"
+      recommendation$planner_contract %||% "named_facet_structural_review"
     ),
     recommendation_available = isTRUE(recommendation$recommendation_available),
     reason = as.character(
       recommendation$reason %||%
-        "No future-branch structural recommendation overview is currently available."
+        "No structural-design structural recommendation overview is currently available."
     ),
     headline_table = headline_table,
     recommendation_table = recommendation_table,
-    active_branch_recommendation = recommendation,
+    design_review_recommendation = recommendation,
     note = paste(
-      "Compact structural recommendation overview for the active future-branch",
-      "scaffold, summarizing the conservative exact-tier ranking outcome."
+      "Compact structural recommendation overview for the structural-design review",
+      "review layer, summarizing the conservative exact-tier ranking outcome."
     )
   )
 }
 
-future_branch_active_table_index <- function(active,
+structural_design_review_table_index <- function(active,
                                              overview,
                                              load_balance,
                                              coverage,
@@ -4877,8 +4877,8 @@ future_branch_active_table_index <- function(active,
   )
 }
 
-future_branch_appendix_selection_tables <- function(bundle,
-                                                    label = "future_branch_active_branch",
+structural_design_appendix_selection_tables <- function(bundle,
+                                                    label = "structural_design_review",
                                                     presets = c("all", "recommended", "compact", "methods", "results", "diagnostics", "reporting")) {
   presets <- unique(as.character(presets))
   original_bundles <- stats::setNames(list(bundle), label)
@@ -4920,7 +4920,7 @@ future_branch_appendix_selection_tables <- function(bundle,
   )
 }
 
-future_branch_selection_table_summary <- function(selection_catalog,
+structural_design_selection_table_summary <- function(selection_catalog,
                                                   preset = NULL) {
   tbl <- as.data.frame(selection_catalog %||% data.frame(), stringsAsFactors = FALSE)
   if (nrow(tbl) == 0L) {
@@ -4979,7 +4979,7 @@ future_branch_selection_table_summary <- function(selection_catalog,
   out[order(out$PreferredAppendixOrder, out$Table, na.last = TRUE), , drop = FALSE]
 }
 
-future_branch_selection_table_preset_summary <- function(selection_catalog,
+structural_design_selection_table_preset_summary <- function(selection_catalog,
                                                          presets = c("all", "recommended", "compact", "methods", "results", "diagnostics", "reporting")) {
   bind_tables <- function(parts) {
     keep <- vapply(parts, function(df) is.data.frame(df) && nrow(df) > 0L, logical(1))
@@ -5001,7 +5001,7 @@ future_branch_selection_table_preset_summary <- function(selection_catalog,
   }))
 }
 
-future_branch_selection_handoff_table_summary <- function(selection_catalog,
+structural_design_selection_handoff_table_summary <- function(selection_catalog,
                                                           presets = c("all", "recommended", "compact", "methods", "results", "diagnostics", "reporting")) {
   bind_tables <- function(parts) {
     keep <- vapply(parts, function(df) is.data.frame(df) && nrow(df) > 0L, logical(1))
@@ -5023,7 +5023,7 @@ future_branch_selection_handoff_table_summary <- function(selection_catalog,
   }))
 }
 
-future_branch_selection_handoff_summary <- function(selection_catalog,
+structural_design_selection_handoff_summary <- function(selection_catalog,
                                                     presets = c("all", "recommended", "compact", "methods", "results", "diagnostics", "reporting")) {
   tbl <- as.data.frame(selection_catalog %||% data.frame(), stringsAsFactors = FALSE)
   if (nrow(tbl) == 0L) {
@@ -5065,7 +5065,7 @@ future_branch_selection_handoff_summary <- function(selection_catalog,
   out[order(out$Preset, out$AppendixSection), , drop = FALSE]
 }
 
-future_branch_selection_handoff_bundle_summary <- function(selection_catalog,
+structural_design_selection_handoff_bundle_summary <- function(selection_catalog,
                                                            presets = c("all", "recommended", "compact", "methods", "results", "diagnostics", "reporting")) {
   bind_tables <- function(parts) {
     keep <- vapply(parts, function(df) is.data.frame(df) && nrow(df) > 0L, logical(1))
@@ -5087,7 +5087,7 @@ future_branch_selection_handoff_bundle_summary <- function(selection_catalog,
   }))
 }
 
-future_branch_selection_handoff_preset_summary <- function(selection_catalog,
+structural_design_selection_handoff_preset_summary <- function(selection_catalog,
                                                            presets = c("all", "recommended", "compact", "methods", "results", "diagnostics", "reporting")) {
   bind_tables <- function(parts) {
     keep <- vapply(parts, function(df) is.data.frame(df) && nrow(df) > 0L, logical(1))
@@ -5109,7 +5109,7 @@ future_branch_selection_handoff_preset_summary <- function(selection_catalog,
   }))
 }
 
-future_branch_selection_handoff_role_summary <- function(selection_catalog,
+structural_design_selection_handoff_role_summary <- function(selection_catalog,
                                                          presets = c("all", "recommended", "compact", "methods", "results", "diagnostics", "reporting")) {
   bind_tables <- function(parts) {
     keep <- vapply(parts, function(df) is.data.frame(df) && nrow(df) > 0L, logical(1))
@@ -5131,7 +5131,7 @@ future_branch_selection_handoff_role_summary <- function(selection_catalog,
   }))
 }
 
-future_branch_selection_handoff_role_section_summary <- function(selection_catalog,
+structural_design_selection_handoff_role_section_summary <- function(selection_catalog,
                                                                  presets = c("all", "recommended", "compact", "methods", "results", "diagnostics", "reporting")) {
   bind_tables <- function(parts) {
     keep <- vapply(parts, function(df) is.data.frame(df) && nrow(df) > 0L, logical(1))
@@ -5153,7 +5153,7 @@ future_branch_selection_handoff_role_section_summary <- function(selection_catal
   }))
 }
 
-future_branch_active_plot_index_from_bundle <- function(plot_index) {
+structural_design_review_plot_index_from_bundle <- function(plot_index) {
   idx <- as.data.frame(plot_index %||% data.frame(), stringsAsFactors = FALSE)
   if (nrow(idx) == 0L) {
     return(idx)
@@ -5163,23 +5163,23 @@ future_branch_active_plot_index_from_bundle <- function(plot_index) {
   }
 
   direct_routes <- c(
-    future_branch_profile = "profile_metrics",
-    future_branch_load_balance = "load_balance",
-    future_branch_coverage = "coverage",
-    future_branch_readiness = "readiness_tiers",
-    future_branch_appendix_roles = "appendix_roles",
-    future_branch_appendix_sections = "appendix_sections",
-    future_branch_appendix_presets = "appendix_presets",
-    future_branch_selection_table_presets = "selection_tables",
-    future_branch_selection_handoff_presets = "selection_handoff_presets",
-    future_branch_selection_handoff = "selection_handoff",
-    future_branch_selection_handoff_bundles = "selection_handoff_bundles",
-    future_branch_selection_handoff_roles = "selection_handoff_roles",
-    future_branch_selection_handoff_role_sections = "selection_handoff_role_sections",
-    future_branch_selection_tables = "selection_tables",
-    future_branch_selection_summary = "selection_bundles",
-    future_branch_selection_roles = "selection_roles",
-    future_branch_selection_sections = "selection_sections"
+    structural_design_profile = "profile_metrics",
+    structural_design_load_balance = "load_balance",
+    structural_design_coverage = "coverage",
+    structural_design_readiness = "readiness_tiers",
+    structural_design_appendix_roles = "appendix_roles",
+    structural_design_appendix_sections = "appendix_sections",
+    structural_design_appendix_presets = "appendix_presets",
+    structural_design_selection_table_presets = "selection_tables",
+    structural_design_selection_handoff_presets = "selection_handoff_presets",
+    structural_design_selection_handoff = "selection_handoff",
+    structural_design_selection_handoff_bundles = "selection_handoff_bundles",
+    structural_design_selection_handoff_roles = "selection_handoff_roles",
+    structural_design_selection_handoff_role_sections = "selection_handoff_role_sections",
+    structural_design_selection_tables = "selection_tables",
+    structural_design_selection_summary = "selection_bundles",
+    structural_design_selection_roles = "selection_roles",
+    structural_design_selection_sections = "selection_sections"
   )
 
   idx$DefaultPlotTypes <- vapply(seq_len(nrow(idx)), function(i) {
@@ -5198,7 +5198,7 @@ future_branch_active_plot_index_from_bundle <- function(plot_index) {
 #' Summarize a deterministic named-facet design review
 #'
 #' @param object The structural design-review object stored in the
-#'   backward-compatible `planning_schema$future_branch_active_branch` field.
+#'   normalized `planning_schema$structural_design_review` field.
 #' @param digits Number of digits used in numeric summaries.
 #' @param top_n Maximum number of recommendation rows to print in the preview.
 #' @param detail Console detail: `"brief"` (default) prints the design overview,
@@ -5219,7 +5219,7 @@ future_branch_active_plot_index_from_bundle <- function(plot_index) {
 #' surfaces for table-shape review.
 #' It does not report psychometric recovery or Monte Carlo performance.
 #'
-#' @return An object of class `summary.mfrm_future_branch_active_branch`.
+#' @return An object of class `summary.mfrm_structural_design_review`.
 #' @seealso [summary.mfrm_design_evaluation()]
 #' @noRd
 #' @examples
@@ -5228,22 +5228,22 @@ future_branch_active_plot_index_from_bundle <- function(plot_index) {
 #'   design = list(person = 16, rater = 3, criterion = 2, assignment = 2),
 #'   assignment = "rotating"
 #' )
-#' active <- spec$planning_schema$future_branch_active_branch
+#' active <- spec$planning_schema$structural_design_review
 #' summary(active)
 #' }
 #' @export
-summary.mfrm_future_branch_active_branch <- function(object,
+summary.mfrm_structural_design_review <- function(object,
                                                      digits = 3,
                                                      top_n = 8,
                                                      detail = c("brief", "full"),
                                                      ...) {
-  active <- simulation_future_branch_active_branch(object)
-  overview <- simulation_future_branch_active_branch_overview(active)
-  load_balance <- simulation_future_branch_active_branch_load_balance_overview(active)
-  coverage <- simulation_future_branch_active_branch_coverage_overview(active)
-  guardrails <- simulation_future_branch_active_branch_guardrail_overview(active)
-  readiness <- simulation_future_branch_active_branch_readiness_overview(active)
-  recommendation <- simulation_future_branch_active_branch_recommendation_overview(active)
+  active <- simulation_structural_design_review(object)
+  overview <- simulation_structural_design_review_overview(active)
+  load_balance <- simulation_structural_design_review_load_balance_overview(active)
+  coverage <- simulation_structural_design_review_coverage_overview(active)
+  guardrails <- simulation_structural_design_review_guardrail_overview(active)
+  readiness <- simulation_structural_design_review_readiness_overview(active)
+  recommendation <- simulation_structural_design_review_recommendation_overview(active)
 
   digits <- max(0L, as.integer(digits[1]))
   top_n <- max(1L, as.integer(top_n[1]))
@@ -5257,7 +5257,7 @@ summary.mfrm_future_branch_active_branch <- function(object,
   }
 
   headline <- tibble::tibble(
-    branch_available = isTRUE(active$branch_available),
+    review_available = isTRUE(active$review_available),
     n_designs = as.integer(active$n_designs %||% 0L),
     recommended_design_id = as.character(active$recommended_design_id %||% NA_character_),
     view = as.character(active$view %||% NA_character_),
@@ -5284,7 +5284,7 @@ summary.mfrm_future_branch_active_branch <- function(object,
 
   out <- list(
     overview = round_df(headline),
-    table_index = future_branch_active_table_index(
+    table_index = structural_design_review_table_index(
       active = active,
       overview = overview,
       load_balance = load_balance,
@@ -5304,31 +5304,31 @@ summary.mfrm_future_branch_active_branch <- function(object,
     detail = detail
   )
   temp_core <- out
-  class(temp_core) <- "summary.mfrm_future_branch_active_branch"
+  class(temp_core) <- "summary.mfrm_structural_design_review"
   bundle_core <- build_summary_table_bundle(temp_core, include_empty = TRUE)
-  selection_tables <- future_branch_appendix_selection_tables(bundle_core)
-  out$selection_table_summary <- future_branch_selection_table_summary(
+  selection_tables <- structural_design_appendix_selection_tables(bundle_core)
+  out$selection_table_summary <- structural_design_selection_table_summary(
     selection_catalog = selection_tables$selection_catalog
   )
-  out$selection_table_preset_summary <- future_branch_selection_table_preset_summary(
+  out$selection_table_preset_summary <- structural_design_selection_table_preset_summary(
     selection_catalog = selection_tables$selection_catalog
   )
-  out$selection_handoff_table_summary <- future_branch_selection_handoff_table_summary(
+  out$selection_handoff_table_summary <- structural_design_selection_handoff_table_summary(
     selection_catalog = selection_tables$selection_catalog
   )
-  out$selection_handoff_preset_summary <- future_branch_selection_handoff_preset_summary(
+  out$selection_handoff_preset_summary <- structural_design_selection_handoff_preset_summary(
     selection_catalog = selection_tables$selection_catalog
   )
-  out$selection_handoff_summary <- future_branch_selection_handoff_summary(
+  out$selection_handoff_summary <- structural_design_selection_handoff_summary(
     selection_catalog = selection_tables$selection_catalog
   )
-  out$selection_handoff_bundle_summary <- future_branch_selection_handoff_bundle_summary(
+  out$selection_handoff_bundle_summary <- structural_design_selection_handoff_bundle_summary(
     selection_catalog = selection_tables$selection_catalog
   )
-  out$selection_handoff_role_summary <- future_branch_selection_handoff_role_summary(
+  out$selection_handoff_role_summary <- structural_design_selection_handoff_role_summary(
     selection_catalog = selection_tables$selection_catalog
   )
-  out$selection_handoff_role_section_summary <- future_branch_selection_handoff_role_section_summary(
+  out$selection_handoff_role_section_summary <- structural_design_selection_handoff_role_section_summary(
     selection_catalog = selection_tables$selection_catalog
   )
   out$selection_summary <- selection_tables$selection_summary
@@ -5337,10 +5337,10 @@ summary.mfrm_future_branch_active_branch <- function(object,
   out$selection_catalog <- selection_tables$selection_catalog
 
   temp_final <- out
-  class(temp_final) <- "summary.mfrm_future_branch_active_branch"
+  class(temp_final) <- "summary.mfrm_structural_design_review"
   bundle_final <- build_summary_table_bundle(temp_final, include_empty = TRUE)
   out$table_index <- as.data.frame(bundle_final$table_index %||% data.frame(), stringsAsFactors = FALSE)
-  out$plot_index <- future_branch_active_plot_index_from_bundle(
+  out$plot_index <- structural_design_review_plot_index_from_bundle(
     as.data.frame(bundle_final$plot_index %||% data.frame(), stringsAsFactors = FALSE)
   )
   out$table_catalog <- summary_table_bundle_catalog(bundle_final)
@@ -5382,12 +5382,12 @@ summary.mfrm_future_branch_active_branch <- function(object,
   out$overview$NumericTables <- sum(out$table_profile$NumericColumns > 0, na.rm = TRUE)
   out$overview$AnyNumericTable <- nrow(out$table_profile) > 0L &&
     any(out$table_profile$NumericColumns > 0, na.rm = TRUE)
-  class(out) <- "summary.mfrm_future_branch_active_branch"
+  class(out) <- "summary.mfrm_structural_design_review"
   out
 }
 
 #' @export
-print.summary.mfrm_future_branch_active_branch <- function(x, ...) {
+print.summary.mfrm_structural_design_review <- function(x, ...) {
   digits <- max(0L, as.integer(x$digits %||% 3L))
 
   cat("mfrmr Structural Design Review\n")
@@ -5522,34 +5522,34 @@ print.summary.mfrm_future_branch_active_branch <- function(x, ...) {
   invisible(x)
 }
 
-simulation_compact_future_branch_active_summary <- function(x,
+simulation_compact_structural_design_review_summary <- function(x,
                                                             digits = 3,
                                                             top_n = 6L) {
   planning_schema <- simulation_object_planning_schema(x)
-  active_branch <- planning_schema$future_branch_active_branch %||% NULL
-  if (!is.list(active_branch)) {
+  design_review <- planning_schema$structural_design_review %||% NULL
+  if (!is.list(design_review)) {
     return(NULL)
   }
 
   out <- tryCatch(
-    summary.mfrm_future_branch_active_branch(
-      active_branch,
+    summary.mfrm_structural_design_review(
+      design_review,
       digits = digits,
       top_n = top_n
     ),
     error = function(e) NULL
   )
-  if (!inherits(out, "summary.mfrm_future_branch_active_branch")) {
+  if (!inherits(out, "summary.mfrm_structural_design_review")) {
     return(NULL)
   }
 
   out
 }
 
-print_compact_future_branch_active_summary <- function(x,
+print_compact_structural_design_review_summary <- function(x,
                                                        digits = 3,
                                                        heading = "Structural design review") {
-  if (!inherits(x, "summary.mfrm_future_branch_active_branch")) {
+  if (!inherits(x, "summary.mfrm_structural_design_review")) {
     return(invisible(NULL))
   }
 
@@ -5572,7 +5572,7 @@ print_compact_future_branch_active_summary <- function(x,
 #' Plot a deterministic named-facet design review
 #'
 #' @param x The structural design-review object stored in the
-#'   backward-compatible `planning_schema$future_branch_active_branch` field.
+#'   normalized `planning_schema$structural_design_review` field.
 #' @param y Unused placeholder for generic compatibility.
 #' @param type Plot type: `"profile_metrics"` for recommended deterministic
 #'   profile values by metric, `"load_balance"` for recommended load/balance
@@ -5611,11 +5611,11 @@ print_compact_future_branch_active_summary <- function(x,
 #'   design = list(person = 16, rater = 3, criterion = 2, assignment = 2),
 #'   assignment = "rotating"
 #' )
-#' active <- spec$planning_schema$future_branch_active_branch
+#' active <- spec$planning_schema$structural_design_review
 #' plot(active, type = "readiness_tiers", draw = FALSE)
 #' }
 #' @export
-plot.mfrm_future_branch_active_branch <- function(x,
+plot.mfrm_structural_design_review <- function(x,
                                                   y = NULL,
                                                   type = c("profile_metrics", "load_balance", "coverage", "readiness_tiers", "table_rows", "role_tables", "appendix_roles", "appendix_sections", "appendix_presets", "selection_handoff_presets", "selection_tables", "selection_handoff", "selection_handoff_bundles", "selection_handoff_roles", "selection_handoff_role_sections", "selection_bundles", "selection_roles", "selection_sections"),
                                                   appendix_preset = c("recommended", "compact", "all", "methods", "results", "diagnostics", "reporting"),
@@ -5631,7 +5631,7 @@ plot.mfrm_future_branch_active_branch <- function(x,
     choices = c("recommended", "compact", "all", "methods", "results", "diagnostics", "reporting")
   )
   selection_value <- match.arg(selection_value)
-  active <- simulation_future_branch_active_branch(x)
+  active <- simulation_structural_design_review(x)
 
   if (type %in% c("table_rows", "role_tables", "appendix_roles", "appendix_sections", "appendix_presets")) {
     bundle <- build_summary_table_bundle(active)
@@ -5648,7 +5648,7 @@ plot.mfrm_future_branch_active_branch <- function(x,
   }
 
   if (type %in% c("selection_handoff_presets", "selection_tables", "selection_handoff", "selection_handoff_bundles", "selection_handoff_roles", "selection_handoff_role_sections", "selection_bundles", "selection_roles", "selection_sections")) {
-    sx <- summary.mfrm_future_branch_active_branch(active)
+    sx <- summary.mfrm_structural_design_review(active)
     if (type == "selection_handoff_presets") {
       tbl <- as.data.frame(sx$selection_handoff_preset_summary %||% data.frame(), stringsAsFactors = FALSE)
       tbl <- tbl[as.character(tbl$Preset %||% "") %in% appendix_preset, , drop = FALSE]
@@ -5664,7 +5664,7 @@ plot.mfrm_future_branch_active_branch <- function(x,
       legend_label <- measure$legend_label
       ylab <- measure$ylab
     } else if (type == "selection_tables") {
-      tbl <- future_branch_selection_table_summary(
+      tbl <- structural_design_selection_table_summary(
         selection_catalog = sx$selection_catalog,
         preset = appendix_preset
       )
@@ -5803,7 +5803,7 @@ plot.mfrm_future_branch_active_branch <- function(x,
     }
 
     return(invisible(new_mfrm_plot_data(
-      "future_branch_active_branch",
+      "structural_design_review",
       list(
         plot = plot_name,
         selection_value = measure$selection_value,
@@ -5811,14 +5811,14 @@ plot.mfrm_future_branch_active_branch <- function(x,
         table = tbl,
         title = plot_title,
         subtitle = subtitle,
-        legend = new_plot_legend(legend_label, "future_branch", "bar", pal[plot_name]),
+        legend = new_plot_legend(legend_label, "structural_design", "bar", pal[plot_name]),
         reference_lines = new_reference_lines("h", 0, "Zero-table reference", "dashed", "reference")
       )
     )))
   }
 
   if (type == "profile_metrics") {
-    tbl <- simulation_future_branch_active_branch_profile(active)$profile_summary_table
+    tbl <- simulation_structural_design_review_profile(active)$profile_summary_table
     tbl <- tibble::as_tibble(tbl %||% tibble::tibble())
     if (nrow(tbl) == 0L || !all(c("metric", "recommended_value") %in% names(tbl))) {
       stop("No structural-design profile metrics are available for plotting.", call. = FALSE)
@@ -5830,7 +5830,7 @@ plot.mfrm_future_branch_active_branch <- function(x,
     plot_name <- "profile_metrics"
     legend_label <- "Recommended value"
   } else if (type == "load_balance") {
-    tbl <- simulation_future_branch_active_branch_load_balance(active)$diagnostic_summary_table
+    tbl <- simulation_structural_design_review_load_balance(active)$diagnostic_summary_table
     tbl <- tibble::as_tibble(tbl %||% tibble::tibble())
     if (nrow(tbl) == 0L || !all(c("metric", "recommended_value") %in% names(tbl))) {
       stop("No structural-design load/balance metrics are available for plotting.", call. = FALSE)
@@ -5842,7 +5842,7 @@ plot.mfrm_future_branch_active_branch <- function(x,
     plot_name <- "load_balance"
     legend_label <- "Recommended value"
   } else if (type == "coverage") {
-    tbl <- simulation_future_branch_active_branch_coverage(active)$diagnostic_summary_table
+    tbl <- simulation_structural_design_review_coverage(active)$diagnostic_summary_table
     tbl <- tibble::as_tibble(tbl %||% tibble::tibble())
     if (nrow(tbl) == 0L || !all(c("metric", "recommended_value") %in% names(tbl))) {
       stop("No structural-design coverage metrics are available for plotting.", call. = FALSE)
@@ -5854,7 +5854,7 @@ plot.mfrm_future_branch_active_branch <- function(x,
     plot_name <- "coverage"
     legend_label <- "Recommended value"
   } else {
-    tbl <- simulation_future_branch_active_branch_readiness(active)$readiness_table
+    tbl <- simulation_structural_design_review_readiness(active)$readiness_table
     tbl <- tibble::as_tibble(tbl %||% tibble::tibble())
     if (nrow(tbl) == 0L || !"structural_tier" %in% names(tbl)) {
       stop("No structural-design readiness tiers are available for plotting.", call. = FALSE)
@@ -5892,7 +5892,7 @@ plot.mfrm_future_branch_active_branch <- function(x,
   }
 
   invisible(new_mfrm_plot_data(
-    "future_branch_active_branch",
+    "structural_design_review",
     list(
       plot = plot_name,
       label = labels,
@@ -5900,13 +5900,13 @@ plot.mfrm_future_branch_active_branch <- function(x,
       title = plot_title,
       subtitle = subtitle,
       recommended_design_id = as.character(active$recommended_design_id %||% NA_character_),
-      legend = new_plot_legend(legend_label, "future_branch", "bar", pal[color_name]),
+      legend = new_plot_legend(legend_label, "structural_design", "bar", pal[color_name]),
       reference_lines = new_reference_lines("h", 0, "Zero reference", "dashed", "reference")
     )
   ))
 }
 
-simulation_compact_future_branch_report_cache <- function(x) {
+simulation_compact_structural_design_report_cache <- function(x) {
   if (!is.list(x) || is.data.frame(x) || inherits(x, "mfrm_plot_data")) {
     return(x)
   }
@@ -5926,14 +5926,14 @@ simulation_compact_future_branch_report_cache <- function(x) {
 
   for (nm in names(x)) {
     if (is.list(x[[nm]]) && !is.data.frame(x[[nm]]) && !inherits(x[[nm]], "mfrm_plot_data")) {
-      x[[nm]] <- simulation_compact_future_branch_report_cache(x[[nm]])
+      x[[nm]] <- simulation_compact_structural_design_report_cache(x[[nm]])
     }
   }
 
   x
 }
 
-simulation_compact_future_branch_schema_report_cache <- function(branch_schema) {
+simulation_compact_structural_design_schema_report_cache <- function(branch_schema) {
   report_fields <- c(
     "report_summary",
     "report_overview_table",
@@ -5947,40 +5947,40 @@ simulation_compact_future_branch_schema_report_cache <- function(branch_schema) 
     "report_consumer"
   )
   for (nm in intersect(report_fields, names(branch_schema))) {
-    branch_schema[[nm]] <- simulation_compact_future_branch_report_cache(branch_schema[[nm]])
+    branch_schema[[nm]] <- simulation_compact_structural_design_report_cache(branch_schema[[nm]])
   }
   branch_schema
 }
 
-simulation_compact_future_branch_schema_active_cache <- function(branch_schema) {
-  if (is.list(branch_schema$active_branch)) {
-    if (is.list(branch_schema$active_branch$summary)) {
-      branch_schema$active_branch$summary$pilot <- NULL
+simulation_compact_structural_design_schema_active_cache <- function(branch_schema) {
+  if (is.list(branch_schema$design_review)) {
+    if (is.list(branch_schema$design_review$summary)) {
+      branch_schema$design_review$summary$review <- NULL
     }
-    if (is.list(branch_schema$active_branch$table)) {
-      branch_schema$active_branch$table$pilot <- NULL
+    if (is.list(branch_schema$design_review$table)) {
+      branch_schema$design_review$table$review <- NULL
     }
-    if (is.list(branch_schema$active_branch$plot)) {
-      branch_schema$active_branch$plot$pilot <- NULL
+    if (is.list(branch_schema$design_review$plot)) {
+      branch_schema$design_review$plot$review <- NULL
     }
   }
 
   drop_map <- list(
-    pilot_summary = "pilot",
-    pilot_table = "pilot",
-    pilot_plot = "pilot",
-    active_branch_profile = "active_branch",
-    active_branch_load_balance = "active_branch_profile",
-    active_branch_overview = c("active_branch", "active_branch_profile"),
-    active_branch_load_balance_overview = "active_branch_load_balance",
-    active_branch_coverage = "active_branch_profile",
-    active_branch_coverage_overview = "active_branch_coverage",
-    active_branch_guardrails = c("active_branch_coverage", "active_branch_load_balance"),
-    active_branch_guardrail_overview = "active_branch_guardrails",
-    active_branch_readiness = "active_branch_guardrails",
-    active_branch_readiness_overview = "active_branch_readiness",
-    active_branch_recommendation = c("active_branch_readiness", "active_branch_profile"),
-    active_branch_recommendation_overview = "active_branch_recommendation"
+    compact_review_summary = "review",
+    compact_review_table = "review",
+    compact_review_plot = "review",
+    design_review_profile = "design_review",
+    design_review_load_balance = "design_review_profile",
+    design_review_overview = c("design_review", "design_review_profile"),
+    design_review_load_balance_overview = "design_review_load_balance",
+    design_review_coverage = "design_review_profile",
+    design_review_coverage_overview = "design_review_coverage",
+    design_review_guardrails = c("design_review_coverage", "design_review_load_balance"),
+    design_review_guardrail_overview = "design_review_guardrails",
+    design_review_readiness = "design_review_guardrails",
+    design_review_readiness_overview = "design_review_readiness",
+    design_review_recommendation = c("design_review_readiness", "design_review_profile"),
+    design_review_recommendation_overview = "design_review_recommendation"
   )
 
   for (nm in intersect(names(drop_map), names(branch_schema))) {
@@ -5990,74 +5990,74 @@ simulation_compact_future_branch_schema_active_cache <- function(branch_schema) 
   branch_schema
 }
 
-simulation_future_branch_schema <- function(sim_spec = NULL, facet_names = NULL) {
-  future_facet_table <- if (is.null(facet_names)) {
-    simulation_future_facet_table(sim_spec)
+simulation_structural_design_schema <- function(sim_spec = NULL, facet_names = NULL) {
+  structural_facet_table <- if (is.null(facet_names)) {
+    simulation_structural_facet_table(sim_spec)
   } else {
-    simulation_future_facet_table(facet_names = facet_names)
+    simulation_structural_facet_table(facet_names = facet_names)
   }
-  future_design_template <- if (is.null(facet_names)) {
-    simulation_future_design_template(sim_spec)
+  structural_design_template <- if (is.null(facet_names)) {
+    simulation_structural_design_template(sim_spec)
   } else {
-    simulation_future_design_template(facet_names = facet_names)
+    simulation_structural_design_template(facet_names = facet_names)
   }
   design_schema <- if (is.null(facet_names)) {
-    simulation_future_branch_design_schema(sim_spec)
+    simulation_structural_design_contract(sim_spec)
   } else {
-    simulation_future_branch_design_schema(facet_names = facet_names)
+    simulation_structural_design_contract(facet_names = facet_names)
   }
   branch_schema <- list(
     design_review_contract = "structural_design_review",
     design_review_stage = "supported",
-    planner_contract = "arbitrary_facet_planning_scaffold",
-    planner_stage = "schema_only",
+    planner_contract = "named_facet_structural_review",
+    planner_stage = "deterministic_review",
     input_contract = "design$facets(named counts)",
-    facet_table = future_facet_table,
-    design_template = future_design_template,
+    facet_table = structural_facet_table,
+    design_template = structural_design_template,
     assignment_axis = design_schema$assignment_axis,
     design_schema = design_schema,
     grid_semantics = design_schema$grid_semantics,
     note = paste(
-      "Backward-compatible structural design schema bundling the named",
+      "Normalized structural design schema bundling the named",
       "facet-count table, the matching `design$facets(named counts)` template,",
       "and preview-ready design-review metadata."
     )
   )
-  branch_schema$grid_contract <- simulation_future_branch_grid_contract(branch_schema)
-  branch_schema$preview <- simulation_future_branch_preview(branch_schema)
-  branch_schema$grid_bundle <- simulation_future_branch_grid_bundle(branch_schema)
-  branch_schema$grid_context <- simulation_future_branch_grid_context(branch_schema)
-  branch_schema$report_bundle <- simulation_future_branch_report_bundle(branch_schema)
-  branch_schema$report_summary <- simulation_future_branch_report_summary(branch_schema)
-  branch_schema$report_overview_table <- simulation_future_branch_report_overview_table(branch_schema)
-  branch_schema$report_catalog <- simulation_future_branch_report_catalog(branch_schema)
-  branch_schema$report_digest <- simulation_future_branch_report_digest(branch_schema)
-  branch_schema$report_surface_registry <- simulation_future_branch_report_surface_registry(branch_schema)
-  branch_schema$report_panel <- simulation_future_branch_report_panel(branch_schema)
-  branch_schema$report_operation <- simulation_future_branch_report_operation(branch_schema)
-  branch_schema$report_snapshot <- simulation_future_branch_report_snapshot(branch_schema)
-  branch_schema$report_brief <- simulation_future_branch_report_brief(branch_schema)
-  branch_schema$report_mode_registry <- simulation_future_branch_report_mode_registry(branch_schema)
-  branch_schema$report_consumer <- simulation_future_branch_report_consume(branch_schema)
-  branch_schema$pilot <- simulation_future_branch_pilot(branch_schema)
-  branch_schema$pilot_summary <- simulation_future_branch_pilot_summary(branch_schema)
-  branch_schema$pilot_table <- simulation_future_branch_pilot_table(branch_schema)
-  branch_schema$pilot_plot <- simulation_future_branch_pilot_plot(branch_schema)
-  branch_schema$active_branch <- simulation_future_branch_active_branch(branch_schema)
-  branch_schema$active_branch_profile <- simulation_future_branch_active_branch_profile(branch_schema)
-  branch_schema$active_branch_load_balance <- simulation_future_branch_active_branch_load_balance(branch_schema)
-  branch_schema$active_branch_overview <- simulation_future_branch_active_branch_overview(branch_schema)
-  branch_schema$active_branch_load_balance_overview <- simulation_future_branch_active_branch_load_balance_overview(branch_schema)
-  branch_schema$active_branch_coverage <- simulation_future_branch_active_branch_coverage(branch_schema)
-  branch_schema$active_branch_coverage_overview <- simulation_future_branch_active_branch_coverage_overview(branch_schema)
-  branch_schema$active_branch_guardrails <- simulation_future_branch_active_branch_guardrails(branch_schema)
-  branch_schema$active_branch_guardrail_overview <- simulation_future_branch_active_branch_guardrail_overview(branch_schema)
-  branch_schema$active_branch_readiness <- simulation_future_branch_active_branch_readiness(branch_schema)
-  branch_schema$active_branch_readiness_overview <- simulation_future_branch_active_branch_readiness_overview(branch_schema)
-  branch_schema$active_branch_recommendation <- simulation_future_branch_active_branch_recommendation(branch_schema)
-  branch_schema$active_branch_recommendation_overview <- simulation_future_branch_active_branch_recommendation_overview(branch_schema)
-  branch_schema <- simulation_compact_future_branch_schema_report_cache(branch_schema)
-  branch_schema <- simulation_compact_future_branch_schema_active_cache(branch_schema)
+  branch_schema$grid_contract <- simulation_structural_design_grid_contract(branch_schema)
+  branch_schema$preview <- simulation_structural_design_preview(branch_schema)
+  branch_schema$grid_bundle <- simulation_structural_design_grid_bundle(branch_schema)
+  branch_schema$grid_context <- simulation_structural_design_grid_context(branch_schema)
+  branch_schema$report_bundle <- simulation_structural_design_report_bundle(branch_schema)
+  branch_schema$report_summary <- simulation_structural_design_report_summary(branch_schema)
+  branch_schema$report_overview_table <- simulation_structural_design_report_overview_table(branch_schema)
+  branch_schema$report_catalog <- simulation_structural_design_report_catalog(branch_schema)
+  branch_schema$report_digest <- simulation_structural_design_report_digest(branch_schema)
+  branch_schema$report_surface_registry <- simulation_structural_design_report_surface_registry(branch_schema)
+  branch_schema$report_panel <- simulation_structural_design_report_panel(branch_schema)
+  branch_schema$report_operation <- simulation_structural_design_report_operation(branch_schema)
+  branch_schema$report_snapshot <- simulation_structural_design_report_snapshot(branch_schema)
+  branch_schema$report_brief <- simulation_structural_design_report_brief(branch_schema)
+  branch_schema$report_mode_registry <- simulation_structural_design_report_mode_registry(branch_schema)
+  branch_schema$report_consumer <- simulation_structural_design_report_consume(branch_schema)
+  branch_schema$review <- simulation_structural_design_compact_review(branch_schema)
+  branch_schema$compact_review_summary <- simulation_structural_design_compact_review_summary(branch_schema)
+  branch_schema$compact_review_table <- simulation_structural_design_compact_review_table(branch_schema)
+  branch_schema$compact_review_plot <- simulation_structural_design_compact_review_plot(branch_schema)
+  branch_schema$design_review <- simulation_structural_design_review(branch_schema)
+  branch_schema$design_review_profile <- simulation_structural_design_review_profile(branch_schema)
+  branch_schema$design_review_load_balance <- simulation_structural_design_review_load_balance(branch_schema)
+  branch_schema$design_review_overview <- simulation_structural_design_review_overview(branch_schema)
+  branch_schema$design_review_load_balance_overview <- simulation_structural_design_review_load_balance_overview(branch_schema)
+  branch_schema$design_review_coverage <- simulation_structural_design_review_coverage(branch_schema)
+  branch_schema$design_review_coverage_overview <- simulation_structural_design_review_coverage_overview(branch_schema)
+  branch_schema$design_review_guardrails <- simulation_structural_design_review_guardrails(branch_schema)
+  branch_schema$design_review_guardrail_overview <- simulation_structural_design_review_guardrail_overview(branch_schema)
+  branch_schema$design_review_readiness <- simulation_structural_design_review_readiness(branch_schema)
+  branch_schema$design_review_readiness_overview <- simulation_structural_design_review_readiness_overview(branch_schema)
+  branch_schema$design_review_recommendation <- simulation_structural_design_review_recommendation(branch_schema)
+  branch_schema$design_review_recommendation_overview <- simulation_structural_design_review_recommendation_overview(branch_schema)
+  branch_schema <- simulation_compact_structural_design_schema_report_cache(branch_schema)
+  branch_schema <- simulation_compact_structural_design_schema_active_cache(branch_schema)
   branch_schema
 }
 
@@ -6085,9 +6085,9 @@ simulation_planning_scope <- function(sim_spec = NULL, facet_names = NULL) {
     design_variables = c("n_person", "n_rater", "n_criterion", "raters_per_person"),
     design_variable_aliases = aliases[c("n_person", "n_rater", "n_criterion", "raters_per_person")],
     facet_manifest = facet_manifest,
-    future_planner_contract = "arbitrary_facet_planning_scaffold",
-    future_planner_stage = "schema_only",
-    future_branch_input_contract = "design$facets(named counts)",
+    structural_review_contract = "named_facet_structural_review",
+    structural_review_stage = "deterministic_review",
+    structural_design_input_contract = "design$facets(named counts)",
     note = paste0(
       "Planning helpers vary one person count and two named non-person facet roles (",
       facet_names[1], " and ", facet_names[2], "). ",
@@ -6228,20 +6228,20 @@ simulation_planning_schema <- function(sim_spec = NULL, facet_names = NULL) {
   } else {
     simulation_facet_manifest(facet_names = facet_names)
   }
-  future_facet_table <- if (is.null(facet_names)) {
-    simulation_future_facet_table(sim_spec)
+  structural_facet_table <- if (is.null(facet_names)) {
+    simulation_structural_facet_table(sim_spec)
   } else {
-    simulation_future_facet_table(facet_names = facet_names)
+    simulation_structural_facet_table(facet_names = facet_names)
   }
-  future_design_template <- if (is.null(facet_names)) {
-    simulation_future_design_template(sim_spec)
+  structural_design_template <- if (is.null(facet_names)) {
+    simulation_structural_design_template(sim_spec)
   } else {
-    simulation_future_design_template(facet_names = facet_names)
+    simulation_structural_design_template(facet_names = facet_names)
   }
-  future_branch_schema <- if (is.null(facet_names)) {
-    simulation_future_branch_schema(sim_spec)
+  structural_design_schema <- if (is.null(facet_names)) {
+    simulation_structural_design_schema(sim_spec)
   } else {
-    simulation_future_branch_schema(facet_names = facet_names)
+    simulation_structural_design_schema(facet_names = facet_names)
   }
 
   list(
@@ -6253,46 +6253,46 @@ simulation_planning_schema <- function(sim_spec = NULL, facet_names = NULL) {
     design_variables = scope$design_variables,
     design_variable_aliases = scope$design_variable_aliases,
     facet_manifest = facet_manifest,
-    future_planner_contract = scope$future_planner_contract,
-    future_planner_stage = scope$future_planner_stage,
-    future_branch_input_contract = scope$future_branch_input_contract,
-    future_facet_table = future_facet_table,
-    future_design_template = future_design_template,
-    future_branch_schema = future_branch_schema,
-    future_branch_preview = future_branch_schema$preview,
-    future_branch_grid_semantics = future_branch_schema$grid_semantics,
-    future_branch_grid_contract = future_branch_schema$grid_contract,
-    future_branch_grid_bundle = future_branch_schema$grid_bundle,
-    future_branch_grid_context = future_branch_schema$grid_context,
-    future_branch_report_bundle = future_branch_schema$report_bundle,
-    future_branch_report_summary = future_branch_schema$report_summary,
-    future_branch_report_overview_table = future_branch_schema$report_overview_table,
-    future_branch_report_catalog = future_branch_schema$report_catalog,
-    future_branch_report_digest = future_branch_schema$report_digest,
-    future_branch_report_surface_registry = future_branch_schema$report_surface_registry,
-    future_branch_report_panel = future_branch_schema$report_panel,
-    future_branch_report_operation = future_branch_schema$report_operation,
-    future_branch_report_snapshot = future_branch_schema$report_snapshot,
-    future_branch_report_brief = future_branch_schema$report_brief,
-    future_branch_report_mode_registry = future_branch_schema$report_mode_registry,
-    future_branch_report_consumer = future_branch_schema$report_consumer,
-    future_branch_pilot = future_branch_schema$pilot,
-    future_branch_pilot_summary = future_branch_schema$pilot_summary,
-    future_branch_pilot_table = future_branch_schema$pilot_table,
-    future_branch_pilot_plot = future_branch_schema$pilot_plot,
-    future_branch_active_branch = future_branch_schema$active_branch,
-    future_branch_active_branch_profile = future_branch_schema$active_branch_profile,
-    future_branch_active_branch_load_balance = future_branch_schema$active_branch_load_balance,
-    future_branch_active_branch_overview = future_branch_schema$active_branch_overview,
-    future_branch_active_branch_load_balance_overview = future_branch_schema$active_branch_load_balance_overview,
-    future_branch_active_branch_coverage = future_branch_schema$active_branch_coverage,
-    future_branch_active_branch_coverage_overview = future_branch_schema$active_branch_coverage_overview,
-    future_branch_active_branch_guardrails = future_branch_schema$active_branch_guardrails,
-    future_branch_active_branch_guardrail_overview = future_branch_schema$active_branch_guardrail_overview,
-    future_branch_active_branch_readiness = future_branch_schema$active_branch_readiness,
-    future_branch_active_branch_readiness_overview = future_branch_schema$active_branch_readiness_overview,
-    future_branch_active_branch_recommendation = future_branch_schema$active_branch_recommendation,
-    future_branch_active_branch_recommendation_overview = future_branch_schema$active_branch_recommendation_overview,
+    structural_review_contract = scope$structural_review_contract,
+    structural_review_stage = scope$structural_review_stage,
+    structural_design_input_contract = scope$structural_design_input_contract,
+    structural_facet_table = structural_facet_table,
+    structural_design_template = structural_design_template,
+    structural_design_schema = structural_design_schema,
+    structural_design_preview = structural_design_schema$preview,
+    structural_design_grid_semantics = structural_design_schema$grid_semantics,
+    structural_design_grid_contract = structural_design_schema$grid_contract,
+    structural_design_grid_bundle = structural_design_schema$grid_bundle,
+    structural_design_grid_context = structural_design_schema$grid_context,
+    structural_design_report_bundle = structural_design_schema$report_bundle,
+    structural_design_report_summary = structural_design_schema$report_summary,
+    structural_design_report_overview_table = structural_design_schema$report_overview_table,
+    structural_design_report_catalog = structural_design_schema$report_catalog,
+    structural_design_report_digest = structural_design_schema$report_digest,
+    structural_design_report_surface_registry = structural_design_schema$report_surface_registry,
+    structural_design_report_panel = structural_design_schema$report_panel,
+    structural_design_report_operation = structural_design_schema$report_operation,
+    structural_design_report_snapshot = structural_design_schema$report_snapshot,
+    structural_design_report_brief = structural_design_schema$report_brief,
+    structural_design_report_mode_registry = structural_design_schema$report_mode_registry,
+    structural_design_report_consumer = structural_design_schema$report_consumer,
+    structural_design_compact_review = structural_design_schema$review,
+    structural_design_compact_review_summary = structural_design_schema$compact_review_summary,
+    structural_design_compact_review_table = structural_design_schema$compact_review_table,
+    structural_design_compact_review_plot = structural_design_schema$compact_review_plot,
+    structural_design_review = structural_design_schema$design_review,
+    structural_design_review_profile = structural_design_schema$design_review_profile,
+    structural_design_review_load_balance = structural_design_schema$design_review_load_balance,
+    structural_design_review_overview = structural_design_schema$design_review_overview,
+    structural_design_review_load_balance_overview = structural_design_schema$design_review_load_balance_overview,
+    structural_design_review_coverage = structural_design_schema$design_review_coverage,
+    structural_design_review_coverage_overview = structural_design_schema$design_review_coverage_overview,
+    structural_design_review_guardrails = structural_design_schema$design_review_guardrails,
+    structural_design_review_guardrail_overview = structural_design_schema$design_review_guardrail_overview,
+    structural_design_review_readiness = structural_design_schema$design_review_readiness,
+    structural_design_review_readiness_overview = structural_design_schema$design_review_readiness_overview,
+    structural_design_review_recommendation = structural_design_schema$design_review_recommendation,
+    structural_design_review_recommendation_overview = structural_design_schema$design_review_recommendation_overview,
     role_table = role_table,
     feasibility_rules = constraints$feasibility_rule,
     note = paste(
@@ -6350,9 +6350,9 @@ simulation_object_planning_scope <- function(x) {
     "design_variables",
     "design_variable_aliases",
     "facet_manifest",
-    "future_planner_contract",
-    "future_planner_stage",
-    "future_branch_input_contract",
+    "structural_review_contract",
+    "structural_review_stage",
+    "structural_design_input_contract",
     "note"
   )
   if (is.list(scope) &&
@@ -6395,46 +6395,46 @@ simulation_object_planning_schema <- function(x) {
     "design_variables",
     "design_variable_aliases",
     "facet_manifest",
-    "future_planner_contract",
-    "future_planner_stage",
-    "future_branch_input_contract",
-    "future_facet_table",
-    "future_design_template",
-    "future_branch_schema",
-    "future_branch_preview",
-    "future_branch_grid_semantics",
-    "future_branch_grid_contract",
-    "future_branch_grid_bundle",
-    "future_branch_grid_context",
-    "future_branch_report_bundle",
-    "future_branch_report_summary",
-    "future_branch_report_overview_table",
-    "future_branch_report_catalog",
-    "future_branch_report_digest",
-    "future_branch_report_surface_registry",
-    "future_branch_report_panel",
-    "future_branch_report_operation",
-    "future_branch_report_snapshot",
-    "future_branch_report_brief",
-    "future_branch_report_mode_registry",
-    "future_branch_report_consumer",
-    "future_branch_pilot",
-    "future_branch_pilot_summary",
-    "future_branch_pilot_table",
-    "future_branch_pilot_plot",
-    "future_branch_active_branch",
-    "future_branch_active_branch_profile",
-    "future_branch_active_branch_load_balance",
-    "future_branch_active_branch_overview",
-    "future_branch_active_branch_load_balance_overview",
-    "future_branch_active_branch_coverage",
-    "future_branch_active_branch_coverage_overview",
-    "future_branch_active_branch_guardrails",
-    "future_branch_active_branch_guardrail_overview",
-    "future_branch_active_branch_readiness",
-    "future_branch_active_branch_readiness_overview",
-    "future_branch_active_branch_recommendation",
-    "future_branch_active_branch_recommendation_overview",
+    "structural_review_contract",
+    "structural_review_stage",
+    "structural_design_input_contract",
+    "structural_facet_table",
+    "structural_design_template",
+    "structural_design_schema",
+    "structural_design_preview",
+    "structural_design_grid_semantics",
+    "structural_design_grid_contract",
+    "structural_design_grid_bundle",
+    "structural_design_grid_context",
+    "structural_design_report_bundle",
+    "structural_design_report_summary",
+    "structural_design_report_overview_table",
+    "structural_design_report_catalog",
+    "structural_design_report_digest",
+    "structural_design_report_surface_registry",
+    "structural_design_report_panel",
+    "structural_design_report_operation",
+    "structural_design_report_snapshot",
+    "structural_design_report_brief",
+    "structural_design_report_mode_registry",
+    "structural_design_report_consumer",
+    "structural_design_compact_review",
+    "structural_design_compact_review_summary",
+    "structural_design_compact_review_table",
+    "structural_design_compact_review_plot",
+    "structural_design_review",
+    "structural_design_review_profile",
+    "structural_design_review_load_balance",
+    "structural_design_review_overview",
+    "structural_design_review_load_balance_overview",
+    "structural_design_review_coverage",
+    "structural_design_review_coverage_overview",
+    "structural_design_review_guardrails",
+    "structural_design_review_guardrail_overview",
+    "structural_design_review_readiness",
+    "structural_design_review_readiness_overview",
+    "structural_design_review_recommendation",
+    "structural_design_review_recommendation_overview",
     "role_table",
     "feasibility_rules",
     "note"
@@ -6443,43 +6443,43 @@ simulation_object_planning_schema <- function(x) {
       all(required_fields %in% names(schema)) &&
       is.data.frame(schema$role_table) &&
       is.data.frame(schema$facet_manifest) &&
-      is.data.frame(schema$future_facet_table) &&
-      is.list(schema$future_design_template) &&
-      is.list(schema$future_branch_schema) &&
-      is.list(schema$future_branch_preview) &&
-      is.list(schema$future_branch_grid_semantics) &&
-      is.list(schema$future_branch_grid_contract) &&
-      is.list(schema$future_branch_grid_bundle) &&
-      is.list(schema$future_branch_grid_context) &&
-      is.list(schema$future_branch_report_bundle) &&
-      is.list(schema$future_branch_report_summary) &&
-      is.list(schema$future_branch_report_overview_table) &&
-      is.list(schema$future_branch_report_catalog) &&
-      is.list(schema$future_branch_report_digest) &&
-      is.list(schema$future_branch_report_surface_registry) &&
-      is.list(schema$future_branch_report_panel) &&
-      is.list(schema$future_branch_report_operation) &&
-      is.list(schema$future_branch_report_snapshot) &&
-      is.list(schema$future_branch_report_brief) &&
-      is.data.frame(schema$future_branch_report_mode_registry) &&
-      is.list(schema$future_branch_report_consumer) &&
-      is.list(schema$future_branch_pilot) &&
-      is.list(schema$future_branch_pilot_summary) &&
-      is.list(schema$future_branch_pilot_table) &&
-      is.list(schema$future_branch_pilot_plot) &&
-      is.list(schema$future_branch_active_branch) &&
-      is.list(schema$future_branch_active_branch_profile) &&
-      is.list(schema$future_branch_active_branch_load_balance) &&
-      is.list(schema$future_branch_active_branch_overview) &&
-      is.list(schema$future_branch_active_branch_load_balance_overview) &&
-      is.list(schema$future_branch_active_branch_coverage) &&
-      is.list(schema$future_branch_active_branch_coverage_overview) &&
-      is.list(schema$future_branch_active_branch_guardrails) &&
-      is.list(schema$future_branch_active_branch_guardrail_overview) &&
-      is.list(schema$future_branch_active_branch_readiness) &&
-      is.list(schema$future_branch_active_branch_readiness_overview) &&
-      is.list(schema$future_branch_active_branch_recommendation) &&
-      is.list(schema$future_branch_active_branch_recommendation_overview)) {
+      is.data.frame(schema$structural_facet_table) &&
+      is.list(schema$structural_design_template) &&
+      is.list(schema$structural_design_schema) &&
+      is.list(schema$structural_design_preview) &&
+      is.list(schema$structural_design_grid_semantics) &&
+      is.list(schema$structural_design_grid_contract) &&
+      is.list(schema$structural_design_grid_bundle) &&
+      is.list(schema$structural_design_grid_context) &&
+      is.list(schema$structural_design_report_bundle) &&
+      is.list(schema$structural_design_report_summary) &&
+      is.list(schema$structural_design_report_overview_table) &&
+      is.list(schema$structural_design_report_catalog) &&
+      is.list(schema$structural_design_report_digest) &&
+      is.list(schema$structural_design_report_surface_registry) &&
+      is.list(schema$structural_design_report_panel) &&
+      is.list(schema$structural_design_report_operation) &&
+      is.list(schema$structural_design_report_snapshot) &&
+      is.list(schema$structural_design_report_brief) &&
+      is.data.frame(schema$structural_design_report_mode_registry) &&
+      is.list(schema$structural_design_report_consumer) &&
+      is.list(schema$structural_design_compact_review) &&
+      is.list(schema$structural_design_compact_review_summary) &&
+      is.list(schema$structural_design_compact_review_table) &&
+      is.list(schema$structural_design_compact_review_plot) &&
+      is.list(schema$structural_design_review) &&
+      is.list(schema$structural_design_review_profile) &&
+      is.list(schema$structural_design_review_load_balance) &&
+      is.list(schema$structural_design_review_overview) &&
+      is.list(schema$structural_design_review_load_balance_overview) &&
+      is.list(schema$structural_design_review_coverage) &&
+      is.list(schema$structural_design_review_coverage_overview) &&
+      is.list(schema$structural_design_review_guardrails) &&
+      is.list(schema$structural_design_review_guardrail_overview) &&
+      is.list(schema$structural_design_review_readiness) &&
+      is.list(schema$structural_design_review_readiness_overview) &&
+      is.list(schema$structural_design_review_recommendation) &&
+      is.list(schema$structural_design_review_recommendation_overview)) {
     return(schema[required_fields])
   }
   sim_spec <- x$settings$sim_spec %||% x$sim_spec %||% NULL
@@ -6535,8 +6535,8 @@ simulation_design_variable_label <- function(value, aliases) {
   label
 }
 
-simulation_parse_future_facet_input <- function(facets,
-                                                future_facet_table,
+simulation_parse_structural_facet_input <- function(facets,
+                                                structural_facet_table,
                                                 arg_name = "design$facets") {
   if (is.null(facets)) {
     return(list())
@@ -6557,7 +6557,7 @@ simulation_parse_future_facet_input <- function(facets,
   }
 
   raw_names <- names(facets)
-  valid_names <- as.character(future_facet_table$future_facet_key)
+  valid_names <- as.character(structural_facet_table$structural_facet_key)
   if (is.null(raw_names) || any(!nzchar(raw_names))) {
     stop(
       "`", arg_name, "` must use names such as ",
@@ -6568,7 +6568,7 @@ simulation_parse_future_facet_input <- function(facets,
   }
 
   lookup <- stats::setNames(
-    as.character(future_facet_table$current_planning_count_variable),
+    as.character(structural_facet_table$current_planning_count_variable),
     valid_names
   )
   resolved <- unname(lookup[raw_names])
@@ -6596,23 +6596,23 @@ simulation_parse_future_facet_input <- function(facets,
   stats::setNames(unname(facets), resolved)
 }
 
-simulation_parse_future_branch_design <- function(design,
-                                                  future_branch_schema,
+simulation_parse_structural_design <- function(design,
+                                                  structural_design_schema,
                                                   arg_name = "design") {
-  if (is.null(future_branch_schema) || !is.list(future_branch_schema)) {
+  if (is.null(structural_design_schema) || !is.list(structural_design_schema)) {
     return(list())
   }
-  design_schema <- simulation_coerce_future_branch_design_schema(future_branch_schema)
+  design_schema <- simulation_coerce_structural_design_schema(structural_design_schema)
 
   parsed <- list()
   if ("facets" %in% names(design)) {
     parsed <- c(
       parsed,
-      simulation_parse_future_facet_input(
+      simulation_parse_structural_facet_input(
         facets = design[["facets"]],
-        future_facet_table = dplyr::transmute(
+        structural_facet_table = dplyr::transmute(
           design_schema$facet_axes,
-          future_facet_key = .data$input_key,
+          structural_facet_key = .data$input_key,
           current_planning_count_variable = .data$canonical_design_variable
         ),
         arg_name = paste0(arg_name, "$facets")
@@ -6621,7 +6621,7 @@ simulation_parse_future_branch_design <- function(design,
   }
 
   assignment_axis <- design_schema$assignment_axis
-  assignment_key <- as.character(assignment_axis$future_input_key %||% "assignment")
+  assignment_key <- as.character(assignment_axis$design_input_key %||% "assignment")
   assignment_var <- as.character(
     assignment_axis$current_planning_count_variable %||% "raters_per_person"
   )
@@ -6635,8 +6635,8 @@ simulation_parse_future_branch_design <- function(design,
 simulation_parse_design_input <- function(design,
                                           aliases,
                                           descriptor = NULL,
-                                          future_facet_table = NULL,
-                                          future_branch_schema = NULL,
+                                          structural_facet_table = NULL,
+                                          structural_design_schema = NULL,
                                           arg_name = "design") {
   if (is.null(design)) {
     return(list())
@@ -6659,40 +6659,40 @@ simulation_parse_design_input <- function(design,
     )
   }
 
-  parsed_future_branch <- list()
+  parsed_structural_design <- list()
   if ("facets" %in% names(design)) {
-    if (!is.null(future_branch_schema) && is.list(future_branch_schema)) {
-      parsed_future_branch <- simulation_parse_future_branch_design(
+    if (!is.null(structural_design_schema) && is.list(structural_design_schema)) {
+      parsed_structural_design <- simulation_parse_structural_design(
         design = design,
-        future_branch_schema = future_branch_schema,
+        structural_design_schema = structural_design_schema,
         arg_name = arg_name
       )
       assignment_key <- as.character(
-        future_branch_schema$assignment_axis$future_input_key %||% "assignment"
+        structural_design_schema$assignment_axis$design_input_key %||% "assignment"
       )
       design[["facets"]] <- NULL
       if (assignment_key %in% names(design)) {
         design[[assignment_key]] <- NULL
       }
     } else {
-      if (is.null(future_facet_table) || !is.data.frame(future_facet_table)) {
+      if (is.null(structural_facet_table) || !is.data.frame(structural_facet_table)) {
         stop("`", arg_name, "$facets` is not available for this planning object.", call. = FALSE)
       }
-      parsed_future_branch <- simulation_parse_future_facet_input(
+      parsed_structural_design <- simulation_parse_structural_facet_input(
         facets = design[["facets"]],
-        future_facet_table = future_facet_table,
+        structural_facet_table = structural_facet_table,
         arg_name = paste0(arg_name, "$facets")
       )
       design[["facets"]] <- NULL
     }
-  } else if (!is.null(future_branch_schema) && is.list(future_branch_schema)) {
+  } else if (!is.null(structural_design_schema) && is.list(structural_design_schema)) {
     assignment_key <- as.character(
-      future_branch_schema$assignment_axis$future_input_key %||% "assignment"
+      structural_design_schema$assignment_axis$design_input_key %||% "assignment"
     )
     if (assignment_key %in% names(design)) {
-      parsed_future_branch <- simulation_parse_future_branch_design(
+      parsed_structural_design <- simulation_parse_structural_design(
         design = design,
-        future_branch_schema = future_branch_schema,
+        structural_design_schema = structural_design_schema,
         arg_name = arg_name
       )
       design[[assignment_key]] <- NULL
@@ -6733,7 +6733,7 @@ simulation_parse_design_input <- function(design,
     parsed_top_level <- stats::setNames(unname(design), canonical_names)
   }
 
-  overlap <- intersect(names(parsed_top_level), names(parsed_future_branch))
+  overlap <- intersect(names(parsed_top_level), names(parsed_structural_design))
   if (length(overlap) > 0L) {
     stop(
       "`", arg_name, "` supplies the same design variable through both top-level names and `",
@@ -6745,7 +6745,7 @@ simulation_parse_design_input <- function(design,
     )
   }
 
-  c(parsed_top_level, parsed_future_branch)
+  c(parsed_top_level, parsed_structural_design)
 }
 
 simulation_resolve_design_counts <- function(sim_spec = NULL,
@@ -6763,8 +6763,8 @@ simulation_resolve_design_counts <- function(sim_spec = NULL,
     design = design,
     aliases = aliases,
     descriptor = descriptor,
-    future_facet_table = simulation_future_facet_table(sim_spec),
-    future_branch_schema = simulation_future_branch_schema(sim_spec),
+    structural_facet_table = simulation_structural_facet_table(sim_spec),
+    structural_design_schema = simulation_structural_design_schema(sim_spec),
     arg_name = design_arg
   )
 
@@ -6846,8 +6846,8 @@ simulation_resolve_design_grid_values <- function(sim_spec = NULL,
     design = design,
     aliases = aliases,
     descriptor = descriptor,
-    future_facet_table = simulation_future_facet_table(sim_spec),
-    future_branch_schema = simulation_future_branch_schema(sim_spec),
+    structural_facet_table = simulation_structural_facet_table(sim_spec),
+    structural_design_schema = simulation_structural_design_schema(sim_spec),
     arg_name = design_arg
   )
 

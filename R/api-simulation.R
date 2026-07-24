@@ -1515,11 +1515,11 @@ simulation_facet_manifest <- function(sim_spec = NULL, facet_names = NULL) {
     planning_count_variable = c("n_person", "n_rater", "n_criterion"),
     planning_count_alias = unname(aliases[c("n_person", "n_rater", "n_criterion")]),
     current_planner_role_supported = TRUE,
-    arbitrary_facet_branch_candidate = TRUE
+    arbitrary_facet_design_candidate = TRUE
   )
 }
 
-simulation_future_facet_table <- function(sim_spec = NULL, facet_names = NULL) {
+simulation_structural_facet_table <- function(sim_spec = NULL, facet_names = NULL) {
   facet_manifest <- if (is.null(facet_names)) {
     simulation_facet_manifest(sim_spec)
   } else {
@@ -1532,8 +1532,8 @@ simulation_future_facet_table <- function(sim_spec = NULL, facet_names = NULL) {
     facet = facets,
     facet_kind = facet_kinds,
     level_count = unname(facet_manifest$level_count),
-    future_facet_key = unname(vapply(facets, simulation_design_variable_slug, character(1))),
-    future_axis_class = ifelse(
+    structural_facet_key = unname(vapply(facets, simulation_design_variable_slug, character(1))),
+    design_axis_class = ifelse(
       facet_kinds == "person",
       "person_count",
       "facet_level_count"
@@ -1541,21 +1541,21 @@ simulation_future_facet_table <- function(sim_spec = NULL, facet_names = NULL) {
     current_planning_count_variable = as.character(facet_manifest$planning_count_variable),
     current_planning_count_alias = as.character(facet_manifest$planning_count_alias),
     current_planner_role_supported = as.logical(facet_manifest$current_planner_role_supported),
-    arbitrary_facet_branch_candidate = as.logical(facet_manifest$arbitrary_facet_branch_candidate),
-    branch_stage = "structural_metadata"
+    arbitrary_facet_design_candidate = as.logical(facet_manifest$arbitrary_facet_design_candidate),
+    review_stage = "structural_metadata"
   )
 }
 
-simulation_future_design_template <- function(sim_spec = NULL, facet_names = NULL) {
-  future_facet_table <- if (is.null(facet_names)) {
-    simulation_future_facet_table(sim_spec)
+simulation_structural_design_template <- function(sim_spec = NULL, facet_names = NULL) {
+  structural_facet_table <- if (is.null(facet_names)) {
+    simulation_structural_facet_table(sim_spec)
   } else {
-    simulation_future_facet_table(facet_names = facet_names)
+    simulation_structural_facet_table(facet_names = facet_names)
   }
 
   facet_counts <- stats::setNames(
-    as.list(unname(future_facet_table$level_count %||% rep(NA_integer_, nrow(future_facet_table)))),
-    as.character(future_facet_table$future_facet_key)
+    as.list(unname(structural_facet_table$level_count %||% rep(NA_integer_, nrow(structural_facet_table)))),
+    as.character(structural_facet_table$structural_facet_key)
   )
 
   assignment_value <- NA_integer_
@@ -5641,12 +5641,10 @@ summary.mfrm_design_evaluation <- function(object, digits = 3, ...) {
   out$planning_constraints <- simulation_object_planning_constraints(object)
   out$planning_schema <- simulation_object_planning_schema(object)
   out$gpcm_boundary <- object$gpcm_boundary %||% data.frame()
-  out$structural_design_review <- simulation_compact_future_branch_active_summary(
+  out$structural_design_review <- simulation_compact_structural_design_review_summary(
     object,
     digits = digits
   )
-  # Deprecated output alias retained for objects/scripts created with 0.2.2.
-  out$future_branch_active_summary <- out$structural_design_review
   out$digits <- digits
   out$notes <- unique(c(out$notes %||% character(0), object$notes %||% character(0)))
   scope_note <- simulation_planning_scope_note(out$planning_scope)
@@ -5661,7 +5659,7 @@ summary.mfrm_design_evaluation <- function(object, digits = 3, ...) {
   if (length(schema_note) > 0L && !schema_note %in% out$notes) {
     out$notes <- c(out$notes, schema_note)
   }
-  if (inherits(out$structural_design_review, "summary.mfrm_future_branch_active_branch")) {
+  if (inherits(out$structural_design_review, "summary.mfrm_structural_design_review")) {
     out$notes <- c(
       out$notes,
       "The structural design review reports deterministic bookkeeping and conservative design guidance, not Monte Carlo performance."
@@ -5699,8 +5697,8 @@ print.summary.mfrm_design_evaluation <- function(x, ...) {
     cat("\nSparse linked design review\n")
     print(round_df(as.data.frame(x$sparse_review)), row.names = FALSE)
   }
-  print_compact_future_branch_active_summary(
-    x$structural_design_review %||% x$future_branch_active_summary %||% NULL,
+  print_compact_structural_design_review_summary(
+    x$structural_design_review %||% NULL,
     digits = digits
   )
   if (is.list(x$ademp) && length(x$ademp) > 0L) {
@@ -9217,12 +9215,10 @@ summary.mfrm_signal_detection <- function(object, digits = 3, ...) {
   out$planning_constraints <- simulation_object_planning_constraints(object)
   out$planning_schema <- simulation_object_planning_schema(object)
   out$gpcm_boundary <- object$gpcm_boundary %||% data.frame()
-  out$structural_design_review <- simulation_compact_future_branch_active_summary(
+  out$structural_design_review <- simulation_compact_structural_design_review_summary(
     object,
     digits = digits
   )
-  # Deprecated output alias retained for objects/scripts created with 0.2.2.
-  out$future_branch_active_summary <- out$structural_design_review
   out$digits <- digits
   out$notes <- unique(c(out$notes, as.character(object$notes %||% character(0))))
   scope_note <- simulation_planning_scope_note(out$planning_scope)
@@ -9237,7 +9233,7 @@ summary.mfrm_signal_detection <- function(object, digits = 3, ...) {
   if (length(schema_note) > 0L && !schema_note %in% out$notes) {
     out$notes <- c(out$notes, schema_note)
   }
-  if (inherits(out$structural_design_review, "summary.mfrm_future_branch_active_branch")) {
+  if (inherits(out$structural_design_review, "summary.mfrm_structural_design_review")) {
     out$notes <- c(
       out$notes,
       "The structural design review reports deterministic bookkeeping and conservative design guidance, not DIF/bias detection power."
@@ -9279,8 +9275,8 @@ print.summary.mfrm_signal_detection <- function(x, ...) {
     )
     print(as.data.frame(preview_df(x$gpcm_boundary[, keep, drop = FALSE])), row.names = FALSE)
   }
-  print_compact_future_branch_active_summary(
-    x$structural_design_review %||% x$future_branch_active_summary %||% NULL,
+  print_compact_structural_design_review_summary(
+    x$structural_design_review %||% NULL,
     digits = digits
   )
   if (is.list(x$ademp) && length(x$ademp) > 0L) {

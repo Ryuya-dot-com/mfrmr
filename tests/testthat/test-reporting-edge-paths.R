@@ -1,5 +1,5 @@
-# test-reporting-gaps.R
-# Regression tests for less-traveled branches in reporting.R and facets_mode files.
+# test-reporting-edge-paths.R
+# Regression tests for edge behavior in reporting.R and facets_mode files.
 
 # ---- py_style_format fallback (line 20) ----
 

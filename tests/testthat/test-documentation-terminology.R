@@ -9,7 +9,6 @@ documentation_source_root <- function() {
   matches <- candidates[
     file.exists(file.path(candidates, "DESCRIPTION")) &
       file.exists(file.path(candidates, "README.md")) &
-      file.exists(file.path(candidates, ".Rbuildignore")) &
       file.exists(file.path(candidates, "R", "api-estimation.R")) &
       dir.exists(file.path(candidates, "man"))
   ]
@@ -137,8 +136,65 @@ test_that("CRAN-facing documentation excludes development-process language", {
 test_that("internal validation records are excluded from the source package", {
   pkg_root <- documentation_source_root()
   testthat::skip_if(is.na(pkg_root), "source documentation files are not available")
-  ignore <- readLines(file.path(pkg_root, ".Rbuildignore"), warn = FALSE)
+  ignore_path <- file.path(pkg_root, ".Rbuildignore")
+  testthat::skip_if_not(
+    file.exists(ignore_path),
+    ".Rbuildignore is available only in a source checkout"
+  )
+  ignore <- readLines(ignore_path, warn = FALSE)
   expect_true("^inst/validation$" %in% ignore)
+})
+
+test_that("the shipped source excludes development-stage contract names", {
+  pkg_root <- documentation_source_root()
+  testthat::skip_if(is.na(pkg_root), "source package files are not available")
+
+  source_files <- unique(c(
+    file.path(pkg_root, "NEWS.md"),
+    file.path(pkg_root, "NAMESPACE"),
+    list.files(file.path(pkg_root, "R"), pattern = "[.]R$",
+               full.names = TRUE, recursive = TRUE),
+    list.files(file.path(pkg_root, "tests", "testthat"), pattern = "[.]R$",
+               full.names = TRUE, recursive = TRUE)
+  ))
+  source_files <- source_files[
+    basename(source_files) != "test-documentation-terminology.R"
+  ]
+  bad_file_names <- grep(
+    "coverage-(push|boost|gaps)|final-coverage|remaining-coverage",
+    basename(source_files),
+    value = TRUE,
+    ignore.case = TRUE
+  )
+  expect_identical(bad_file_names, character(0))
+  source_text <- read_public_text(pkg_root, source_files)
+
+  blocked <- c(
+    "future_branch",
+    "future branch",
+    "future-branch",
+    "schema_only",
+    "schema-only",
+    "planning scaffold",
+    "roadmap_only",
+    "created with 0.2.2",
+    "coverage-push",
+    "coverage-boost",
+    "coverage-gaps",
+    "final-coverage",
+    "remaining-coverage"
+  )
+  hits <- character(0)
+  for (path in names(source_text)) {
+    lines <- source_text[[path]]
+    for (phrase in blocked) {
+      idx <- grep(tolower(phrase), tolower(lines), fixed = TRUE)
+      if (length(idx) > 0L) {
+        hits <- c(hits, paste0(path, ":", idx, ": ", trimws(lines[idx])))
+      }
+    }
+  }
+  expect_identical(hits, character(0))
 })
 
 test_that("high-level help pages retain searchable user concepts", {

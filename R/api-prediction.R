@@ -377,7 +377,7 @@ summary.mfrm_population_prediction <- function(object, digits = 3, ...) {
     planning_constraints = object$planning_constraints %||% object$settings$planning_constraints %||% simulation_planning_constraints(object$sim_spec),
     planning_schema = object$planning_schema %||% object$settings$planning_schema %||% simulation_planning_schema(object$sim_spec),
     gpcm_boundary = object$gpcm_boundary %||% data.frame(),
-    structural_design_review = simulation_compact_future_branch_active_summary(
+    structural_design_review = simulation_compact_structural_design_review_summary(
       object,
       digits = digits
     ),
@@ -385,8 +385,6 @@ summary.mfrm_population_prediction <- function(object, digits = 3, ...) {
     notes = object$notes %||% character(0),
     digits = digits
   )
-  # Deprecated output alias retained for objects/scripts created with 0.2.2.
-  out$future_branch_active_summary <- out$structural_design_review
   scope_note <- simulation_planning_scope_note(out$planning_scope)
   if (length(scope_note) > 0L && !scope_note %in% out$notes) {
     out$notes <- c(out$notes, scope_note)
@@ -399,7 +397,7 @@ summary.mfrm_population_prediction <- function(object, digits = 3, ...) {
   if (length(schema_note) > 0L && !schema_note %in% out$notes) {
     out$notes <- c(out$notes, schema_note)
   }
-  if (inherits(out$structural_design_review, "summary.mfrm_future_branch_active_branch")) {
+  if (inherits(out$structural_design_review, "summary.mfrm_structural_design_review")) {
     out$notes <- c(
       out$notes,
       "The structural design review reports deterministic bookkeeping and conservative design guidance, not forecast uncertainty."
@@ -437,8 +435,8 @@ print.summary.mfrm_population_prediction <- function(x, ...) {
     cat("\nForecast (preview)\n")
     print(round_df(as.data.frame(preview_df(x$forecast))), row.names = FALSE)
   }
-  print_compact_future_branch_active_summary(
-    x$structural_design_review %||% x$future_branch_active_summary %||% NULL,
+  print_compact_structural_design_review_summary(
+    x$structural_design_review %||% NULL,
     digits = digits
   )
   if (is.list(x$ademp) && length(x$ademp) > 0L) {

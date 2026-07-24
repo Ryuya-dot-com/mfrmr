@@ -457,7 +457,7 @@ test_that("summary table bundle role registry covers every supported spec role",
       overview = df,
       forecast = df
     ),
-    summary.mfrm_future_branch_active_branch = list(
+    summary.mfrm_structural_design_review = list(
       overview = df,
       profile_summary = df,
       load_balance_summary = df,
@@ -1076,7 +1076,7 @@ test_that("build_summary_table_bundle validates front-door inputs before bundle 
   )
 })
 
-test_that("build_summary_table_bundle supports planning and forecast summaries with future-branch tables", {
+test_that("build_summary_table_bundle supports planning and forecast summaries with structural-design tables", {
   spec <- build_mfrm_sim_spec(
     n_person = 10,
     n_rater = 3,
@@ -1112,20 +1112,20 @@ test_that("build_summary_table_bundle supports planning and forecast summaries w
   design_bundle <- build_summary_table_bundle(sim_eval)
   expect_identical(design_bundle$source_class, "mfrm_design_evaluation")
   expect_true(all(c(
-    "overview", "design_summary", "future_branch_overview",
-    "future_branch_recommendation"
+    "overview", "design_summary", "structural_design_overview",
+    "structural_design_recommendation"
   ) %in% names(design_bundle$tables)))
 
   signal_bundle <- build_summary_table_bundle(summary(sig_eval))
   expect_identical(signal_bundle$source_class, "summary.mfrm_signal_detection")
-  expect_true(all(c("overview", "detection_summary", "future_branch_readiness") %in%
+  expect_true(all(c("overview", "detection_summary", "structural_design_readiness") %in%
     names(signal_bundle$tables)))
 
   pred_bundle <- build_summary_table_bundle(pred)
   expect_identical(pred_bundle$source_class, "mfrm_population_prediction")
   expect_true(all(c(
-    "design", "forecast", "future_branch_profile",
-    "future_branch_load_balance", "future_branch_coverage"
+    "design", "forecast", "structural_design_profile",
+    "structural_design_load_balance", "structural_design_coverage"
   ) %in%
     names(pred_bundle$tables)))
   expect_summary_bundle_roles_registered(design_bundle, signal_bundle, pred_bundle)
@@ -1532,54 +1532,54 @@ test_that("build_summary_table_bundle supports future arbitrary-facet active-bra
     facet_names = c("Judge", "Task")
   )
 
-  active <- spec$planning_schema$future_branch_active_branch
+  active <- spec$planning_schema$structural_design_review
   active_bundle <- build_summary_table_bundle(active)
   expect_s3_class(active_bundle, "mfrm_summary_table_bundle")
-  expect_identical(active_bundle$source_class, "mfrm_future_branch_active_branch")
-  expect_identical(active_bundle$summary_class, "summary.mfrm_future_branch_active_branch")
+  expect_identical(active_bundle$source_class, "mfrm_structural_design_review")
+  expect_identical(active_bundle$summary_class, "summary.mfrm_structural_design_review")
   expect_true(all(c(
-    "future_branch_overview",
-    "future_branch_profile",
-    "future_branch_load_balance",
-    "future_branch_coverage",
-    "future_branch_guardrails",
-    "future_branch_readiness",
-    "future_branch_recommendation",
-    "future_branch_appendix_presets",
-    "future_branch_appendix_roles",
-    "future_branch_appendix_sections",
-    "future_branch_selection_table_presets",
-    "future_branch_selection_handoff_tables",
-    "future_branch_selection_handoff_presets",
-    "future_branch_selection_handoff",
-    "future_branch_selection_handoff_bundles",
-    "future_branch_selection_handoff_roles",
-    "future_branch_selection_handoff_role_sections",
-    "future_branch_selection_tables",
-    "future_branch_selection_summary",
-    "future_branch_selection_roles",
-    "future_branch_selection_sections",
-    "future_branch_selection_catalog",
-    "future_branch_reporting_map"
+    "structural_design_overview",
+    "structural_design_profile",
+    "structural_design_load_balance",
+    "structural_design_coverage",
+    "structural_design_guardrails",
+    "structural_design_readiness",
+    "structural_design_recommendation",
+    "structural_design_appendix_presets",
+    "structural_design_appendix_roles",
+    "structural_design_appendix_sections",
+    "structural_design_selection_table_presets",
+    "structural_design_selection_handoff_tables",
+    "structural_design_selection_handoff_presets",
+    "structural_design_selection_handoff",
+    "structural_design_selection_handoff_bundles",
+    "structural_design_selection_handoff_roles",
+    "structural_design_selection_handoff_role_sections",
+    "structural_design_selection_tables",
+    "structural_design_selection_summary",
+    "structural_design_selection_roles",
+    "structural_design_selection_sections",
+    "structural_design_selection_catalog",
+    "structural_design_reporting_map"
   ) %in% names(active_bundle$tables)))
 
   summary_bundle <- build_summary_table_bundle(summary(active))
-  expect_identical(summary_bundle$source_class, "summary.mfrm_future_branch_active_branch")
-  expect_identical(summary_bundle$summary_class, "summary.mfrm_future_branch_active_branch")
+  expect_identical(summary_bundle$source_class, "summary.mfrm_structural_design_review")
+  expect_identical(summary_bundle$summary_class, "summary.mfrm_structural_design_review")
   expect_true(all(c(
-    "future_branch_overview",
-    "future_branch_profile",
-    "future_branch_selection_table_presets",
-    "future_branch_selection_handoff_tables",
-    "future_branch_selection_handoff_presets",
-    "future_branch_selection_handoff",
-    "future_branch_selection_handoff_bundles",
-    "future_branch_selection_handoff_roles",
-    "future_branch_selection_handoff_role_sections",
-    "future_branch_selection_tables",
-    "future_branch_recommendation",
-    "future_branch_selection_summary",
-    "future_branch_reporting_map"
+    "structural_design_overview",
+    "structural_design_profile",
+    "structural_design_selection_table_presets",
+    "structural_design_selection_handoff_tables",
+    "structural_design_selection_handoff_presets",
+    "structural_design_selection_handoff",
+    "structural_design_selection_handoff_bundles",
+    "structural_design_selection_handoff_roles",
+    "structural_design_selection_handoff_role_sections",
+    "structural_design_selection_tables",
+    "structural_design_recommendation",
+    "structural_design_selection_summary",
+    "structural_design_reporting_map"
   ) %in% names(summary_bundle$tables)))
 
   active_bundle_summary <- summary(active_bundle)
@@ -1624,7 +1624,7 @@ test_that("future arbitrary-facet active-branch bundles support appendix presets
     facet_names = c("Judge", "Task")
   )
 
-  active <- spec$planning_schema$future_branch_active_branch
+  active <- spec$planning_schema$structural_design_review
   full_bundle <- build_summary_table_bundle(active)
   rec_bundle <- build_summary_table_bundle(active, appendix_preset = "recommended")
   compact_bundle <- build_summary_table_bundle(active, appendix_preset = "compact")
@@ -1632,27 +1632,27 @@ test_that("future arbitrary-facet active-branch bundles support appendix presets
   diagnostics_bundle <- build_summary_table_bundle(active, appendix_preset = "diagnostics")
 
   expect_true(all(c(
-    "future_branch_overview",
-    "future_branch_profile",
-    "future_branch_readiness",
-    "future_branch_recommendation"
+    "structural_design_overview",
+    "structural_design_profile",
+    "structural_design_readiness",
+    "structural_design_recommendation"
   ) %in% names(rec_bundle$tables)))
-  expect_false("future_branch_selection_table_presets" %in% names(rec_bundle$tables))
-  expect_false("future_branch_selection_handoff" %in% names(rec_bundle$tables))
-  expect_false("future_branch_selection_summary" %in% names(rec_bundle$tables))
-  expect_false("future_branch_load_balance" %in% names(rec_bundle$tables))
-  expect_false("future_branch_coverage" %in% names(rec_bundle$tables))
-  expect_false("future_branch_guardrails" %in% names(rec_bundle$tables))
+  expect_false("structural_design_selection_table_presets" %in% names(rec_bundle$tables))
+  expect_false("structural_design_selection_handoff" %in% names(rec_bundle$tables))
+  expect_false("structural_design_selection_summary" %in% names(rec_bundle$tables))
+  expect_false("structural_design_load_balance" %in% names(rec_bundle$tables))
+  expect_false("structural_design_coverage" %in% names(rec_bundle$tables))
+  expect_false("structural_design_guardrails" %in% names(rec_bundle$tables))
 
   expect_true(all(c(
-    "future_branch_overview",
-    "future_branch_readiness",
-    "future_branch_recommendation"
+    "structural_design_overview",
+    "structural_design_readiness",
+    "structural_design_recommendation"
   ) %in% names(compact_bundle$tables)))
-  expect_false("future_branch_selection_table_presets" %in% names(compact_bundle$tables))
-  expect_false("future_branch_selection_handoff" %in% names(compact_bundle$tables))
-  expect_false("future_branch_appendix_presets" %in% names(compact_bundle$tables))
-  expect_false("future_branch_profile" %in% names(compact_bundle$tables))
+  expect_false("structural_design_selection_table_presets" %in% names(compact_bundle$tables))
+  expect_false("structural_design_selection_handoff" %in% names(compact_bundle$tables))
+  expect_false("structural_design_appendix_presets" %in% names(compact_bundle$tables))
+  expect_false("structural_design_profile" %in% names(compact_bundle$tables))
 
   expect_true(all(methods_bundle$table_index$AppendixSection %in% "methods"))
   expect_true(all(diagnostics_bundle$table_index$AppendixSection %in% "diagnostics"))
@@ -1767,10 +1767,10 @@ test_that("apa_table consumes future arbitrary-facet active-branch summaries dir
     facet_names = c("Judge", "Task")
   )
 
-  active <- spec$planning_schema$future_branch_active_branch
-  tbl <- apa_table(summary(active), which = "future_branch_readiness")
+  active <- spec$planning_schema$structural_design_review
+  tbl <- apa_table(summary(active), which = "structural_design_readiness")
   expect_s3_class(tbl, "apa_table")
-  expect_identical(tbl$which, "future_branch_readiness")
+  expect_identical(tbl$which, "structural_design_readiness")
   expect_true(nrow(tbl$table) > 0L)
   expect_true(nzchar(tbl$caption))
 })
@@ -1818,7 +1818,7 @@ test_that("plot methods consume summary table bundles directly", {
   expect_identical(first_numeric_plot$data$source_table, "facet_overview")
 })
 
-test_that("future-branch summary table bundles expose selection plot surfaces", {
+test_that("structural-design summary table bundles expose selection plot surfaces", {
   spec <- build_mfrm_sim_spec(
     n_person = 12,
     n_rater = 3,
@@ -1828,7 +1828,7 @@ test_that("future-branch summary table bundles expose selection plot surfaces", 
     facet_names = c("Judge", "Task")
   )
 
-  active_bundle <- build_summary_table_bundle(spec$planning_schema$future_branch_active_branch)
+  active_bundle <- build_summary_table_bundle(spec$planning_schema$structural_design_review)
 
   handoff_preset_plot <- plot(active_bundle, type = "selection_handoff_presets", appendix_preset = "all", draw = FALSE)
   expect_s3_class(handoff_preset_plot, "mfrm_plot_data")

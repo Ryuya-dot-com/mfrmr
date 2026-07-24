@@ -1,9 +1,9 @@
 # mfrmr 0.2.2
 
-- Design, signal-detection, and population-prediction summaries now expose the
-  structural named-facet review as `structural_design_review`. The earlier
-  `future_branch_active_summary` name remains as a deprecated compatibility alias
-  but is no longer used in default printing or primary documentation.
+- Design, signal-detection, and population-prediction summaries now expose a
+  deterministic named-facet review as `structural_design_review`. The review
+  reports design balance, coverage, connectivity, and readiness without
+  implying Monte Carlo performance or arbitrary-facet simulation support.
 
 ## Summary workflow
 
