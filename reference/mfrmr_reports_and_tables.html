@@ -22,7 +22,7 @@ which bundle, table, or reporting helper to call."></head><body>
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from Facets to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
@@ -181,7 +181,7 @@ assessment outputs. It also supports bundle-level <code><a href="https://rdrr.io
 for QC before export.</p></dd>
 
 <dt><code><a href="export_summary_appendix.html">export_summary_appendix()</a></code></dt>
-<dd><p>Exports those validated summary-table
+<dd><p>Exports those documented summary-table
 bundles as CSV and optional HTML appendix artifacts without requiring the
 broader fit-based export bundle. This is the preferred export route for
 recovery simulation evidence.</p></dd>
@@ -198,7 +198,8 @@ table without rebuilding the analysis object path.</p></dd>
 
 
 <ul><li><p>Use bundle summaries first, then drill down into component tables.</p></li>
-<li><p>Treat <code><a href="precision_review_report.html">precision_review_report()</a></code> as the gatekeeper for formal inference.</p></li>
+<li><p>Use <code><a href="precision_review_report.html">precision_review_report()</a></code> to determine whether formal inference is
+supported for the fitted result.</p></li>
 <li><p>Treat category and bias outputs as complementary layers rather than
 substitutes for overall fit review.</p></li>
 <li><p>Treat zero-count score categories as scale-functioning caveats. Boundary

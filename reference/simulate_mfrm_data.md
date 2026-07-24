@@ -55,11 +55,12 @@ simulate_mfrm_data(
   Optional named design override supplied as a named list, named vector,
   or one-row data frame. When `sim_spec = NULL`, names may use canonical
   variables (`n_person`, `n_rater`, `n_criterion`, `raters_per_person`)
-  or role keywords (`person`, `rater`, `criterion`, `assignment`). For
-  the currently exposed facet keys, the schema-only future branch input
-  `design$facets = c(person = ..., rater = ..., criterion = ...)` is
-  also accepted. Do not specify the same variable through both `design`
-  and the scalar count arguments.
+  or role keywords (`person`, `rater`, `criterion`, `assignment`). A
+  nested named-facet form,
+  `design$facets = c(person = ..., rater = ..., criterion = ...)`, is
+  also accepted for the supported person/rater/criterion design. Do not
+  specify the same variable through both `design` and the scalar count
+  arguments.
 
 - score_levels:
 
@@ -241,16 +242,15 @@ Threshold handling is intentionally explicit:
   threshold values may vary by `StepFacet` (currently `Criterion` or
   `Rater`)
 
-For bounded `GPCM`, the generator now requires an explicit slope
-contract in parallel with the threshold table. The current public branch
-keeps `slope_facet == step_facet`, normalizes supplied slopes to the
-same geometric-mean-one log-slope identification used by
+For bounded `GPCM`, the generator requires an explicit slope contract in
+parallel with the threshold table. The supported route keeps
+`slope_facet == step_facet`, normalizes supplied slopes to the same
+geometric-mean-one log-slope identification used by
 [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md),
-and uses the internal `category_prob_gpcm()` helper for response
-sampling. Broader arbitrary-facet planning remains restricted until that
-slope-aware contract is generalized beyond the current role-based
-design, population-forecasting, diagnostic-screening, and
-signal-detection helpers.
+and samples responses from the corresponding GPCM category
+probabilities. Independent arbitrary slope-facet planning is not
+supported by these design, population-forecasting, diagnostic-screening,
+or signal-detection helpers.
 
 Assignment handling is also explicit:
 

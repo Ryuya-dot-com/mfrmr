@@ -134,8 +134,11 @@ dispatched through
 ## Examples
 
 ``` r
-toy <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+toy <- load_mfrmr_data("example_operational")
+fit <- fit_mfrm(
+  toy, "Person", c("Rater", "Criterion"), "Score",
+  method = "MML", quad_points = 7, maxit = 30
+)
 out <- data_quality_report(
   fit,
   data = toy, person = "Person",
@@ -144,49 +147,31 @@ out <- data_quality_report(
 summary(out)
 #> mfrmr Data Quality Summary 
 #>   Class: mfrm_data_quality
-#>   Components (14): summary, quality_overview, quality_flags, model_match, row_review, unknown_elements, category_counts, score_support_review, category_usage_by_facet, category_usage_summary, facet_response_patterns, caveats, score_map, settings
+#>   Components: 14
 #> 
 #> Data quality overview
 #>  TotalLinesInData TotalDataLines TotalNonBlankResponsesFound MissingScoreRows
-#>               768            768                         768                0
+#>               282            282                         282                0
 #>  MissingFacetRows MissingPersonRows InvalidWeightRows OutOfRangeScoreRows
 #>                 0                 0                 0                   0
 #>  ValidResponsesUsedForEstimation ZeroCountScoreCategories
-#>                              768                        0
+#>                              282                        0
 #>  IntermediateZeroCountScoreCategories FacetLevelsWithZeroCategories
 #>                                     0                             0
 #>  FacetLevelsWithIntermediateZeroCategories FacetLevelsWithSparseCategories
-#>                                          0                               0
+#>                                          0                               6
 #>  FacetLevelsWithSingleCategoryUse FacetLevelsWithDominantCategoryUse
 #>                                 0                                  0
 #>  FacetLevelsWithBoundaryOnlyUse ScoreSupportCaveats
 #>                               0                   0
 #> 
-#> Review rows: quality_overview
-#>                     Area Status Count         Unit PercentOfData
-#>             Design match     ok     0       levels            NA
-#>       Facet category use     ok     0 facet levels            NA
-#>  Facet response patterns     ok     0 facet levels            NA
-#>                     Rows     ok     0         rows             0
-#>            Score support     ok     0   conditions            NA
-#>                                                                           Message
-#>                            No raw-data level outside the fitted design was found.
-#>                       No facet-level zero or sparse category-use issue was found.
-#>         No single-category or dominant-category facet response pattern was found.
-#>  No row-level missingness, invalid weight, or out-of-range score issue was found.
-#>                       No score-support gap was found over the fitted score scale.
-#>                                                        NextStep QualityFlags
-#>       Proceed with estimation diagnostics and reporting checks.            0
-#>                                Continue to design-match checks.            0
-#>                                Continue to design-match checks.            0
-#>  Continue to score-support and facet-level category-use checks.            0
-#>                    Continue to facet-level category-use checks.            0
-#>  HighSeverityFlags
-#>                  0
-#>                  0
-#>                  0
-#>                  0
-#>                  0
+#> Review rows: quality_flags
+#>                Area Severity                                  Flag Count
+#>  Facet category use   review Facet levels have sparse category use     6
+#>          Unit PercentOfData
+#>  facet levels            NA
+#>                                                               Action
+#>  Interpret category-functioning evidence for these levels as sparse.
 #> 
 #> Settings
 #>                   Setting Value
@@ -194,9 +179,12 @@ summary(out)
 #>  dominant_category_cutoff  0.95
 #> 
 #> Notes
-#>  - Data quality summary for missingness, row status, score support, and category usage.
-#>  - QC overview: 0 high-priority area(s), 0 review area(s).
-#>  - No priority QC flags were found in the supplied data-quality checks.
+#>  - Data quality summary for missingness, row status, score support, and
+#>    category usage.
+#>  - QC overview: 0 high-priority area(s), 1 review area(s).
+#>  - Priority QC flags: 1 flag(s), including 0 high-severity flag(s).
+#>  - Facet-level category use: 0 level(s) have zero-count categories; 0 have
+#>    zero-count intermediate categories; 6 have sparse non-zero categories.
 p_dq <- plot(out, draw = FALSE)
 p_dq$data$plot
 #> [1] "dashboard"

@@ -32,7 +32,7 @@ already emits."></head><body>
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from Facets to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
@@ -136,8 +136,10 @@ persons): <code>G = sigma2(p) / (sigma2(p) + sigma2(Residual))</code>.</p></li>
 classification): <code>Phi = sigma2(p) / (sigma2(p) + sigma2(facet main effects) + sigma2(Residual))</code>, before D-study scaling.</p></li>
 <li><p>Use <code><a href="mfrm_d_study.html">mfrm_d_study()</a></code> to project <code>G</code> / <code>Phi</code> under planned numbers of
 raters, items, criteria, or other random measurement facets.</p></li>
-<li><p>Reporting bands follow Brennan (2001): G / Phi &gt;= 0.8 for
-high-stakes decisions, &gt;= 0.7 for routine reporting.</p></li>
+<li><p>Values of 0.70 and 0.80 are displayed as familiar planning references,
+not as universal decision rules. Required dependability depends on the
+decision, consequences, population, and evidence beyond a single
+coefficient.</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="limitations">Limitations<a class="anchor" aria-label="anchor" href="#limitations"></a></h2>
@@ -158,7 +160,7 @@ Because person-by-facet interaction terms are not estimated separately,
 D-study projections remain practical planning evidence rather than a
 replacement for a fully specified G-theory design.
 Boundary or singular <code>lme4</code> fits are retained as diagnostic evidence but are
-not treated as high-stakes-ready G/D-study evidence.</p>
+not treated as decision-ready G/D-study evidence.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
@@ -188,15 +190,15 @@ of generalizability for scores and profiles</em>. Wiley.</p></li>
 <span class="r-in"><span>  <span class="co">#   variance shares mean those conditions add measurement error</span></span></span>
 <span class="r-in"><span>  <span class="co">#   relative to person spread.</span></span></span>
 <span class="r-in"><span>  <span class="va">gt</span><span class="op">$</span><span class="va">coefficients</span></span></span>
-<span class="r-in"><span>  <span class="co"># Look for: G &gt;= 0.7 for routine reporting, &gt;= 0.8 for high-stakes.</span></span></span>
-<span class="r-in"><span>  <span class="co">#   G &lt; Phi means absolute decisions are noisier than relative</span></span></span>
+<span class="r-in"><span>  <span class="co"># Compare G and Phi with study-specific requirements; 0.70 and 0.80</span></span></span>
+<span class="r-in"><span>  <span class="co">#   are reference guides only. G &lt; Phi means absolute decisions are noisier than relative</span></span></span>
 <span class="r-in"><span>  <span class="co">#   decisions; review whether facet main effects need anchoring.</span></span></span>
 <span class="r-in"><span>  <span class="co"># Always check IdentificationStatus before using the bands:</span></span></span>
 <span class="r-in"><span>  <span class="va">gt</span><span class="op">$</span><span class="va">coefficients</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"G"</span>, <span class="st">"Phi"</span>, <span class="st">"GStatus"</span>, <span class="st">"PhiStatus"</span>,</span></span>
 <span class="r-in"><span>                      <span class="st">"IdentificationStatus"</span><span class="op">)</span><span class="op">]</span></span></span>
 <span class="r-in"><span>  <span class="va">gt</span><span class="op">$</span><span class="va">design</span><span class="op">$</span><span class="va">identification_note</span></span></span>
 <span class="r-in"><span>  <span class="co"># If IdentificationStatus is not "identified", treat G/Phi as</span></span></span>
-<span class="r-in"><span>  <span class="co"># design-review evidence rather than high-stakes-ready reliability.</span></span></span>
+<span class="r-in"><span>  <span class="co"># design-review evidence rather than decision-ready reliability.</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 </code></pre></div>

@@ -64,7 +64,7 @@ facets_fit_review(
 
 - df_ratio_tolerance:
 
-  Relative df-difference tolerance used to classify the internal
+  Relative df-difference tolerance used to classify the within-mfrmr
   engine-vs-FACETS-style df difference; for example, `0.05` means a 5
   percent df difference.
 
@@ -72,7 +72,8 @@ facets_fit_review(
 
 An `mfrm_facets_fit_review` bundle with:
 
-- `summary`: one-row overview of internal and external comparison counts
+- `summary`: one-row overview of within-mfrmr and external comparison
+  counts
 
 - `standardization`: the fit-standardization guide from diagnostics
 

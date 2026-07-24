@@ -38,7 +38,7 @@ report."></head><body>
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from Facets to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
@@ -153,12 +153,15 @@ engine-vs-FACETS-style ZSTD conventions visible, including the
 small-df/capping boundary used for FACETS-style ZSTD review. They summarize
 the stored <code>fit_measures</code> component from <code><a href="mfrm_results.html">mfrm_results()</a></code>; <code>mfrm_report()</code>
 itself does not recompute diagnostics. The <code>fit_reporting_templates</code> table
-turns those counts into cautious APA/QC/validation/reviewer wording
-scaffolds while keeping MnSq, ZSTD standardization, df sensitivity, and
+turns those counts into cautious reporting language while keeping MnSq,
+ZSTD standardization, df sensitivity, and
 separation/reliability in separate sentences. All reporting-template tables
 share <code>EvidenceTable</code>, <code>EvidenceRoute</code>, <code>BoundaryType</code>, <code>ClaimStrength</code>, and
 <code>RecommendedUse</code> columns so each template can be traced back to its evidence
-and claim boundary. <code>template_index</code> stacks those columns across all
+and claim boundary. The default <code>RecommendedUse</code> is
+<code>"report_with_context"</code>; more restrictive rows request evidence, identify a
+methods or appendix caveat, or require targeted follow-up. <code>template_index</code>
+stacks those columns across all
 template areas so report authors can review unsupported or caveated wording
 before opening the full template text. The <code>precision_reporting_templates</code>
 table does the same for separation, reliability, and strata using the

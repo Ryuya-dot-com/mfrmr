@@ -70,9 +70,10 @@ review_mfrm_anchors(
 - missing_codes:
 
   Optional. `NULL` (default) is a no-op; `TRUE` or `"default"` converts
-  the FACETS / SPSS / SAS sentinel set to `NA` on the person, facets,
-  and score columns before review. Supply a character vector for a
-  custom code set.
+  the FACETS / SPSS / SAS sentinel set to `NA` on the score column
+  before review while preserving person and facet identifiers. Supply a
+  character vector to apply a custom code set across the person, facet,
+  and score columns.
 
 - min_common_anchors:
 

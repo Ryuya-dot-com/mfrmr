@@ -13,7 +13,7 @@ plot_wright_unified(
   bins = 20L,
   show_thresholds = TRUE,
   top_n = 30L,
-  show_ci = FALSE,
+  show_ci = NULL,
   ci_level = 0.95,
   draw = TRUE,
   preset = c("standard", "publication", "compact", "monochrome"),
@@ -55,13 +55,20 @@ plot_wright_unified(
 
 - top_n:
 
-  Maximum number of facet/step locations retained by the native
-  renderer. The FACETS-style payload retains every fitted location.
+  Maximum number of facet/step locations retained by the native renderer
+  for a compact display. Step transitions are always retained and
+  omitted facet locations are reported in `retention`; use `Inf` for the
+  complete final map. Native text labels remain collision-aware even
+  when all coordinates are retained. The FACETS-style payload retains
+  and labels every fitted location, grouping coincident labels when
+  needed.
 
 - show_ci:
 
-  Logical; if `TRUE`, draw approximate confidence intervals when
-  standard errors are available.
+  Logical or `NULL`. `NULL` (the default) draws available uncertainty
+  intervals for the native renderer and omits them from the FACETS-style
+  renderer. Explicit `TRUE` with `renderer = "facets"` creates a hybrid
+  FACETS-style ruler with mfrmr uncertainty intervals.
 
 - ci_level:
 
@@ -99,8 +106,10 @@ plot_wright_unified(
 
 - category_labels:
 
-  Optional named/ordered score rubric labels, or a data frame with
-  `Score` and `Label`, for `wright_style = "facets_style"`.
+  Optional score-rubric labels for `wright_style = "facets_style"`.
+  Supply a named character vector keyed by every retained original
+  score, an unnamed vector with one label per retained category, or a
+  data frame with `Score` and `Label` columns.
 
 - rows_per_logit:
 
@@ -126,8 +135,11 @@ plot_wright_unified(
 
 ## Value
 
-Invisibly, a list with `persons`, `facets`, and `thresholds` data used
-for the plot.
+Invisibly, a list with `persons`, `facets`, `thresholds`, and the
+underlying Wright-map tables used for the plot. Native output includes a
+`retention` table and `retention_note` documenting compact-display
+omissions. All renderers include fit-readiness and interpretation-status
+metadata.
 
 ## Details
 
@@ -147,12 +159,32 @@ sit relative to the same latent scale.
 The logit scale on the y-axis is shared, allowing direct visual
 comparison of all facets and persons.
 
+If the fit records boundary-separated facet levels and `wright_range` is
+`NULL`, both renderers derive the display range from supported locations
+and place separated levels at ruler ends. The returned tables retain
+exact `OriginalEstimate` and `CI_Lower` / `CI_Upper` values alongside
+display and clipping metadata; endpoint triangles and footers disclose
+the adjustment.
+
 With `renderer = "facets"` (or `wright_style = "facets_style"`), the
 draw-free result additionally contains tidy ruler rows, person star
 frequencies, signed facet headers, all facet levels, step lines,
 original-score transitions, mean half-score boundaries, category labels,
-and display settings under `facets_style`. These tables support custom
-ggplot2/plotly rendering without parsing the base plot.
+and display settings under `facets_style`. The payload keeps both the
+nearest line-printer `RulerValue` and the exact step/midpoint
+`DrawValue`; the current renderer draws threshold lines at the exact
+value and prints fitted logits in step labels. These tables support
+custom ggplot2/plotly rendering without parsing the base plot. Use
+`show_ci = FALSE` for the closest FACETS-style presentation. A
+FACETS-style ruler drawn with `show_ci = TRUE` is intentionally labelled
+as a hybrid because its uncertainty intervals are supplied by `mfrmr`.
+
+The returned list separates plotting availability from interpretation.
+It includes `fit_readiness`, `interpretation_status`, and
+`interpretation_note`. If numerical, data, connectivity, or stability
+review is unresolved, the map is returned for diagnosis but the call
+warns and prefixes the returned subtitle and drawn title with
+`REVIEW ONLY`.
 
 ## Interpreting output
 
@@ -207,11 +239,16 @@ fit <- fit_mfrm(toy_small, "Person", c("Rater", "Criterion"), "Score",
                  method = "JML", model = "RSM", maxit = 30)
 map_data <- plot_wright_unified(fit, draw = FALSE)
 names(map_data)
-#>  [1] "persons"         "facets"          "thresholds"      "facet_names"    
-#>  [5] "y_lim"           "title"           "wright_style"    "renderer"       
-#>  [9] "visual_contract" "person"          "person_hist"     "person_stats"   
-#> [13] "locations"       "label_points"    "group_summary"   "group_levels"   
-#> [17] "y_range"         "label_limit"    
+#>  [1] "persons"               "facets"                "thresholds"           
+#>  [4] "facet_names"           "y_lim"                 "title"                
+#>  [7] "wright_style"          "renderer"              "visual_contract"      
+#> [10] "person"                "person_hist"           "person_stats"         
+#> [13] "locations"             "label_points"          "group_summary"        
+#> [16] "group_levels"          "y_range"               "display_settings"     
+#> [19] "label_limit"           "retention"             "retention_note"       
+#> [22] "show_ci"               "uncertainty_display"   "legend"               
+#> [25] "subtitle"              "fit_readiness"         "interpretation_status"
+#> [28] "interpretation_note"  
 facets_map <- plot_wright_unified(
   fit,
   renderer = "facets",
@@ -221,10 +258,12 @@ facets_map <- plot_wright_unified(
   draw = FALSE
 )
 facets_map$facets_style$settings
-#> # A tibble: 1 × 10
+#> # A tibble: 1 × 15
 #>   Renderer WrightStyle  VisualCorrespondence  LowerLogit UpperLogit RowsPerLogit
 #>   <chr>    <chr>        <chr>                      <dbl>      <dbl>        <int>
 #> 1 facets   facets_style FACETS Table 6-style…         -2          2            2
-#> # ℹ 4 more variables: ExtremePlacement <chr>, PersonsPerStar <dbl>,
-#> #   StarsPerPerson <dbl>, PersonN <int>
+#> # ℹ 9 more variables: ExtremePlacement <chr>, PersonsPerStar <dbl>,
+#> #   StarsPerPerson <dbl>, PersonN <int>, AutoRangePolicy <chr>,
+#> #   BoundaryLevelsAtEnds <int>, CIClippedCount <int>,
+#> #   BoundaryCIEndpointCount <int>, CIDisplayPolicy <chr>
 ```

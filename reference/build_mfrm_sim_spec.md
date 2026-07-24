@@ -1,6 +1,8 @@
 # Build an explicit simulation specification for MFRM design studies
 
-Build an explicit simulation specification for MFRM design studies
+Shows the model, design size, assignment, and latent-distribution
+settings needed to understand the specification without printing its
+complete machine-readable planning metadata.
 
 ## Usage
 
@@ -39,6 +41,9 @@ build_mfrm_sim_spec(
   population_sigma2 = NULL,
   population_covariates = NULL
 )
+
+# S3 method for class 'mfrm_sim_spec'
+print(x, ...)
 ```
 
 ## Arguments
@@ -66,10 +71,11 @@ build_mfrm_sim_spec(
   `n_rater`, `n_criterion`, `raters_per_person`), current public aliases
   implied by `facet_names` (for example `n_judge`, `n_task`,
   `judge_per_person`), or role keywords (`person`, `rater`, `criterion`,
-  `assignment`). The schema-only future branch input
+  `assignment`). The nested named-facet form
   `design$facets = c(person = ..., judge = ..., task = ...)` is also
-  accepted for the currently exposed facet keys. Do not specify the same
-  variable through both `design` and the scalar count arguments.
+  accepted for the supported person/rater/criterion design. Do not
+  specify the same variable through both `design` and the scalar count
+  arguments.
 
 - score_levels:
 
@@ -235,9 +241,19 @@ build_mfrm_sim_spec(
   contract used by latent-regression fitting. During simulation,
   template rows are resampled to the requested `n_person`.
 
+- x:
+
+  An `mfrm_sim_spec` object.
+
+- ...:
+
+  Reserved for generic compatibility.
+
 ## Value
 
 An object of class `mfrm_sim_spec`.
+
+`x`, invisibly.
 
 ## Details
 
@@ -286,38 +302,37 @@ The resulting object records:
 - `planning_constraints`, an explicit record of which design variables
   can currently be changed from that specification without rebuilding it
 
-- `planning_schema`, a combined schema contract bundling the role
-  descriptor, scope boundary, current mutability map, a
-  `facet_manifest`, a schema-only `future_facet_table`, and a matching
-  `future_design_template`, plus a nested `future_branch_schema`
-  scaffold for a future arbitrary-facet planning branch
+- `planning_schema`, a combined structural contract containing the role
+  descriptor, supported scope, mutability map, facet manifest, and the
+  normalized named-facet design representation. Its
+  `structural_design_*` fields describe deterministic balance and
+  connectivity reviews; they do not imply support for arbitrary-facet
+  simulation.
 
-- the current `design$facets(...)` parser now normalizes nested
-  facet-count input through that bundled `future_branch_schema`, whose
-  nested `design_schema` is now the authoritative schema-only branch
-  object
+- the `design$facets` parser normalizes named facet counts through the
+  same design representation used by the planning helpers
 
 - optional signal tables for DIF and interaction bias
 
 The current generator targets the package's standard person x rater x
 criterion workflow, but the public output names for those two facet
 roles can now be customized with `facet_names`. This naming layer
-improves public ergonomics; it does not yet turn the generator into a
-fully arbitrary-facet simulator. Internally, helper objects keep
-canonical role mappings so that planning functions can treat the first
-non-person facet as rater-like and the second as criterion-like. When
-threshold values are provided by `StepFacet`, the supported step facets
-are the generated levels of the chosen public rater-like or
-criterion-like column. For convenience, step-facet-specific thresholds
-can be supplied as a named list or as a numeric matrix whose row names
-are `StepFacet` labels. When `model = "GPCM"`, the same public facet
-naming rules apply to the slope table; the current bounded branch keeps
-`slope_facet` equal to `step_facet`. The `slope_regime` field summarizes
-the centered log-slope spread so recovery simulations can be read
-against the intended generator stress level. Its labels (`unit_slopes`,
-`near_flat`, `moderate`, and `high_dispersion`) are package validation
-labels; they are not model-fit decisions and should not be interpreted
-as literature-derived adequacy thresholds. The GPCM data-generating form
+improves public ergonomics; it does not provide a fully arbitrary-facet
+simulator. Internally, helper objects keep canonical role mappings so
+that planning functions can treat the first non-person facet as
+rater-like and the second as criterion-like. When threshold values are
+provided by `StepFacet`, the supported step facets are the generated
+levels of the chosen public rater-like or criterion-like column. For
+convenience, step-facet-specific thresholds can be supplied as a named
+list or as a numeric matrix whose row names are `StepFacet` labels. When
+`model = "GPCM"`, the same public facet naming rules apply to the slope
+table; the current bounded branch keeps `slope_facet` equal to
+`step_facet`. The `slope_regime` field summarizes the centered log-slope
+spread so recovery simulations can be read against the intended
+generator stress level. Its labels (`unit_slopes`, `near_flat`,
+`moderate`, and `high_dispersion`) are package validation labels; they
+are not model-fit decisions and should not be interpreted as
+literature-derived adequacy thresholds. The GPCM data-generating form
 follows Muraki (1992, doi:10.1177/014662169201600206), while
 information-function interpretation follows Muraki (1993,
 doi:10.1177/014662169301700403). The explicit simulation-specification
@@ -337,11 +352,11 @@ doi:10.1177/0013164417703733), and DeMars, Shapovalov, and Hathcoat
 (2023).
 
 If `population_formula` is supplied, the simulation specification
-carries a first-version person-level latent-regression generator. This
-affects only the person distribution. The current implementation keeps
-the non-person facets in the existing many-facet Rasch generator and
-resamples rows from `population_covariates` to the requested design size
-before computing \\\theta_n = x_n^\top \beta + \varepsilon_n\\ with
+carries a person-level latent-regression generator. This affects only
+the person distribution. The current implementation keeps the non-person
+facets in the existing many-facet Rasch generator and resamples rows
+from `population_covariates` to the requested design size before
+computing \\\theta_n = x_n^\top \beta + \varepsilon_n\\ with
 \\\varepsilon_n \sim N(0, \sigma^2)\\.
 
 ## Interpreting output

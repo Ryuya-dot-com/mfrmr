@@ -18,7 +18,7 @@
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from Facets to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
@@ -63,7 +63,9 @@
 <span>  include_agreement <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  rater_facet <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  context_facets <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  agreement_top_n <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  agreement_top_n <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  expected_design <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  min_linking_persons <span class="op">=</span> <span class="fl">2L</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -112,8 +114,10 @@ intermediate categories such as <code>1, 2, 4, 5</code> on a 1-5 scale.</p></dd>
 <dt id="arg-missing-codes">missing_codes<a class="anchor" aria-label="anchor" href="#arg-missing-codes"></a></dt>
 <dd><p>Optional. <code>NULL</code> (default) is a no-op;
 <code>TRUE</code> or <code>"default"</code> activates the FACETS / SPSS / SAS
-convention (<code>c("99", "999", "-1", "N", "NA", "n/a", ".", "")</code>);
-supply a character vector for a custom code set. Replacement
+convention (<code>c("99", "999", "-1", "N", "NA", "n/a", ".", "")</code>)
+for the score column while preserving person/facet identifiers;
+supply a character vector to apply a custom code set across all model
+columns. Replacement
 counts are returned in the <code>missing_recoding</code> component when
 supported by the calling helper. See <code><a href="recode_missing_codes.html">recode_missing_codes()</a></code>
 for the standalone version.</p></dd>
@@ -125,13 +129,16 @@ for the standalone version.</p></dd>
 
 
 <dt id="arg-include-agreement">include_agreement<a class="anchor" aria-label="anchor" href="#arg-include-agreement"></a></dt>
-<dd><p>If <code>TRUE</code>, include an observed-score inter-rater
-agreement bundle (summary/pairs/settings) in the output.</p></dd>
+<dd><p>If <code>TRUE</code>, include an observed-score agreement
+bundle (summary/pairs/settings) for a selected non-person facet.</p></dd>
 
 
 <dt id="arg-rater-facet">rater_facet<a class="anchor" aria-label="anchor" href="#arg-rater-facet"></a></dt>
-<dd><p>Optional rater facet name used for agreement summaries.
-If <code>NULL</code>, inferred from facet names.</p></dd>
+<dd><p>Optional facet name used to identify repeated scorers for
+agreement summaries. If <code>NULL</code>, a rater-like name such as <code>Rater</code>, <code>Judge</code>,
+or <code>Scorer</code> is inferred. No agreement analysis is run when such a name is
+absent; set this argument explicitly only when another facet genuinely
+represents repeated scorers.</p></dd>
 
 
 <dt id="arg-context-facets">context_facets<a class="anchor" aria-label="anchor" href="#arg-context-facets"></a></dt>
@@ -141,6 +148,21 @@ agreement. If <code>NULL</code>, all remaining facets (including <code>Person</c
 
 <dt id="arg-agreement-top-n">agreement_top_n<a class="anchor" aria-label="anchor" href="#arg-agreement-top-n"></a></dt>
 <dd><p>Optional maximum number of agreement pair rows.</p></dd>
+
+
+<dt id="arg-expected-design">expected_design<a class="anchor" aria-label="anchor" href="#arg-expected-design"></a></dt>
+<dd><p>Optional data frame declaring the planned assignment
+roster. It must contain the columns named by <code>person</code> and <code>facets</code>, with
+one row per planned Person x facet cell. Extra columns are ignored. When
+supplied, observed cells are compared with the roster so planned omissions
+can be distinguished from cells that were never assigned.</p></dd>
+
+
+<dt id="arg-min-linking-persons">min_linking_persons<a class="anchor" aria-label="anchor" href="#arg-min-linking-persons"></a></dt>
+<dd><p>Positive integer used as a descriptive sparse-link
+flag. A facet level observed for fewer than this many distinct persons is
+counted in <code>linkage_summary$SparseLevels</code>. This is a review threshold, not
+a model-acceptance rule.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -157,14 +179,24 @@ range was supplied explicitly; unused intermediate categories require
 <code>keep_original = TRUE</code>.</p></li>
 <li><p><code>facet_level_summary</code>: per-level usage and score summaries</p></li>
 <li><p><code>facet_crosstabs</code>: pairwise observation-count crosstabs between
-non-person facets (named list keyed <code>"facetA__facetB"</code>); used by
-<code>summary(ds)$design_links</code> to flag sparse / disconnected
-facet-pair coverage</p></li>
+non-person facets (named list keyed <code>"facetA__facetB"</code>) for optional
+downstream coverage displays</p></li>
 <li><p><code>linkage_summary</code>: person-facet connectivity diagnostics</p></li>
-<li><p><code>agreement</code>: observed-score inter-rater agreement bundle</p></li>
+<li><p><code>structural_missingness</code>: declared-design comparison bundle containing a
+one-row summary, missing expected cells, unexpected observed cells,
+per-facet level coverage, and settings</p></li>
+<li><p><code>design_connectivity</code>: component counts for each observed Person-facet
+graph and, when declared, each expected Person-facet graph</p></li>
+<li><p><code>design_components</code>: component-level counts and facet-level labels;
+person labels are included only when <code>include_person_facet = TRUE</code></p></li>
+<li><p><code>duplicate_cell_summary</code>: counts of duplicate Person x facet cells</p></li>
+<li><p><code>duplicate_cell_detail</code>: duplicate-cell keys and row counts</p></li>
+<li><p><code>agreement</code>: observed-score agreement bundle for the selected scorer facet</p></li>
 <li><p><code>row_retention</code>: row counts before and after preparation filters</p></li>
 <li><p><code>preparation_notes</code>: structured notes for row drops, ID trimming, and
 design conditions detected during preparation</p></li>
+<li><p><code>missing_recoding</code>: per-column counts of declared missing-code values
+replaced with <code>NA</code> before row filtering</p></li>
 <li><p><code>score_support</code>: minimal prepared score-support metadata used by
 <code>summary(ds)$caveats</code></p></li>
 </ul></div>
@@ -174,13 +206,14 @@ design conditions detected during preparation</p></li>
 pre-fit summaries commonly checked in TAM workflows:
 sample size, score distribution, per-facet coverage, and linkage counts.
 <code><a href="https://rdrr.io/pkg/psych/man/describe.html" class="external-link">psych::describe()</a></code> is used for numeric descriptives of score and weight.</p>
-<p><strong>Key data-quality checks to perform before fitting:</strong></p><ul><li><p><em>Sparse categories</em>: any score category with fewer than 10 weighted
-observations may produce unstable threshold estimates
-(Linacre, 2002).  Consider collapsing adjacent categories.</p></li>
-<li><p><em>Unlinked elements</em>: if a facet level has zero overlap with one or
-more levels of another facet, the design is disconnected and
-parameters cannot be placed on a common scale.  Check
-<code>linkage_summary</code> for low connectivity.</p></li>
+<p><strong>Key data-quality checks to perform before fitting:</strong></p><ul><li><p><em>Sparse categories</em>: review categories with little weighted support because
+their threshold estimates may be imprecise. Do not collapse categories
+solely from a package warning; also consider the rubric, intended score
+interpretation, and category diagnostics after fitting.</p></li>
+<li><p><em>Unlinked elements</em>: inspect <code>design_connectivity</code> for the observed
+Person-facet graph. More than one component means that the levels of that
+facet are not connected through shared persons. This facet-specific check
+is conservative and does not by itself prove full model identification.</p></li>
 <li><p><em>Extreme scores</em>: persons or facet levels with all-minimum or
 all-maximum scores yield infinite logit estimates under JML;
 they are handled via Bayesian shrinkage under MML.</p></li>
@@ -189,20 +222,21 @@ they are handled via Bayesian shrinkage under MML.</p></li>
     <h2 id="interpreting-output">Interpreting output<a class="anchor" aria-label="anchor" href="#interpreting-output"></a></h2>
 
 
-<p>Recommended order:</p><ul><li><p><code>overview</code>: confirms sample size, facet count, and category span.
-The <code>MinWeightedN</code> column shows the smallest weighted observation
-count across all facet levels; values below 30 may lead to
-unstable parameter estimates.</p></li>
+<p>Recommended order:</p><ul><li><p><code>overview</code>: confirms sample size, facet count, and category span.</p></li>
 <li><p><code>missing_by_column</code>: identifies immediate data-quality risks.
-Any non-zero count warrants investigation before fitting.</p></li>
+Understand why values are missing and whether the fitted missing-data
+handling matches the study design.</p></li>
+<li><p><code>structural_missingness</code>: compares observed rating cells with
+<code>expected_design</code>, when supplied. Without a declared roster, structural
+missingness is reported as not assessed rather than assumed to be zero.</p></li>
 <li><p><code>score_distribution</code>: checks sparse/unused score categories.
-Balanced usage across categories is ideal; heavily skewed
-distributions may compress the measurement range.</p></li>
-<li><p><code>facet_level_summary</code> and <code>linkage_summary</code>: checks per-level
-support and person-facet connectivity.  Low linkage ratios
-indicate sparse or disconnected design blocks.</p></li>
-<li><p><code>agreement</code>: optional observed inter-rater consistency summary
-(exact agreement, correlation, mean differences per rater pair).</p></li>
+Skew can be substantively expected, but weakly supported or unused
+categories need explicit interpretation.</p></li>
+<li><p><code>facet_level_summary</code> and <code>linkage_summary</code>: checks per-level support,
+shared-person counts, and sparse levels. Use <code>design_connectivity</code> for the
+separate graph-component result.</p></li>
+<li><p><code>agreement</code>: optional observed agreement summary for the selected scorer
+facet (exact agreement, correlation, and mean differences per pair).</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="typical-workflow">Typical workflow<a class="anchor" aria-label="anchor" href="#typical-workflow"></a></h2>

@@ -18,7 +18,7 @@
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from Facets to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
@@ -113,8 +113,8 @@ public aliases implied by <code>sim_spec</code>, or role keywords
 
 
 <dt id="arg-scenarios">scenarios<a class="anchor" aria-label="anchor" href="#arg-scenarios"></a></dt>
-<dd><p>Screening scenarios to evaluate. The current first release
-supports <code>"well_specified"</code>, <code>"local_dependence"</code>, and
+<dd><p>Screening scenarios to evaluate. Supported values are
+<code>"well_specified"</code>, <code>"local_dependence"</code>, and
 <code>"latent_misspecification"</code>, plus
 <code>"step_structure_misspecification"</code>.</p></dd>
 
@@ -179,7 +179,7 @@ simulation calls when <code>sim_spec = NULL</code>.</p></dd>
 
 
 <dt id="arg-quad-points">quad_points<a class="anchor" aria-label="anchor" href="#arg-quad-points"></a></dt>
-<dd><p>Quadrature points for the internal <code>MML</code> fit.</p></dd>
+<dd><p>Quadrature points for the underlying <code>MML</code> fit.</p></dd>
 
 
 <dt id="arg-residual-pca">residual_pca<a class="anchor" aria-label="anchor" href="#arg-residual-pca"></a></dt>
@@ -228,7 +228,7 @@ well-specified baseline when the baseline scenario was evaluated</p></li>
 <li><p><code>design_descriptor</code>: role-based design-variable metadata</p></li>
 <li><p><code>planning_scope</code>: explicit record of the current planning contract</p></li>
 <li><p><code>planning_constraints</code>: explicit record of mutable/locked design variables</p></li>
-<li><p><code>planning_schema</code>: combined planner-schema contract</p></li>
+<li><p><code>planning_schema</code>: structured planning metadata</p></li>
 <li><p><code>gpcm_boundary</code>: bounded-<code>GPCM</code> caveat row when present</p></li>
 <li><p><code>settings</code>: simulation and fitting settings</p></li>
 <li><p><code>ademp</code>: simulation-study metadata</p></li>
@@ -236,8 +236,8 @@ well-specified baseline when the baseline scenario was evaluated</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>This helper performs a compact Monte Carlo validation study for the package's
-current diagnostic architecture.</p>
+    <p>This helper performs a compact Monte Carlo evaluation of the package's
+diagnostic architecture under user-specified simulation conditions.</p>
 <p>For each design condition and scenario, the function:</p><ol><li><p>generates synthetic data with <code><a href="simulate_mfrm_data.html">simulate_mfrm_data()</a></code></p></li>
 <li><p>fits the model with <code>method = "MML"</code></p></li>
 <li><p>computes diagnostics with <code>diagnostic_mode = "both"</code></p></li>
@@ -261,7 +261,7 @@ non-person facet. For bounded <code>GPCM</code>, the generator and fit each keep
 <code>slope_facet == step_facet</code>; the misspecification is the generator-versus-fit
 step/slope facet mismatch.</p>
 <p>This function is intentionally screening-oriented. The strict marginal branch
-remains exploratory in the current release, so the returned summaries should
+remains exploratory, so the returned summaries should
 be used to compare relative sensitivity across scenarios rather than to claim
 calibrated inferential power. Bounded-<code>GPCM</code> rows add explicit
 <code>gpcm_boundary</code> caveats and should be read as slope-aware operating

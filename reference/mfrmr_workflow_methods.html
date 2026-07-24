@@ -20,7 +20,7 @@ output objects support summary() and plot()."></head><body>
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from Facets to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
@@ -56,8 +56,13 @@ output objects support <code><a href="https://rdrr.io/r/base/summary.html" class
 
 
 <p>For the clearest default route in <code>RSM</code> / <code>PCM</code>, use
+<code><a href="describe_mfrm_data.html">describe_mfrm_data()</a></code> -&gt;
 <code><a href="fit_mfrm.html">fit_mfrm()</a></code> with <code>method = "MML"</code> -&gt;
-<code><a href="diagnose_mfrm.html">diagnose_mfrm()</a></code> with <code>diagnostic_mode = "both"</code> -&gt;
+<code>summary(fit, profile = "fit")</code> -&gt;
+<code>review &lt;- summary(fit, profile = "facets")</code> -&gt;
+the required native <code>plot(fit, type = "wright", show_ci = TRUE)</code> -&gt;
+reuse <code>review$results$diagnostics</code>; call <code><a href="diagnose_mfrm.html">diagnose_mfrm()</a></code> again only when
+residual PCA or other custom settings are needed -&gt;
 <code><a href="reporting_checklist.html">reporting_checklist()</a></code> -&gt;
 <code><a href="plot_qc_dashboard.html">plot_qc_dashboard()</a></code> and, when flagged, <code><a href="plot_marginal_fit.html">plot_marginal_fit()</a></code> /
 <code><a href="plot_marginal_pairwise.html">plot_marginal_pairwise()</a></code> -&gt;
@@ -73,7 +78,7 @@ a later <code>MML</code> run.</p>
 
 
 <p>When the main question is scale maintenance rather than manuscript reporting,
-branch after <code><a href="diagnose_mfrm.html">diagnose_mfrm()</a></code> into:
+branch from <code>review$results$diagnostics</code> into:
 <code><a href="review_mfrm_anchors.html">review_mfrm_anchors()</a></code> and/or <code><a href="detect_anchor_drift.html">detect_anchor_drift()</a></code> -&gt;
 <code><a href="build_equating_chain.html">build_equating_chain()</a></code> when adjacent-link review is needed -&gt;
 <code><a href="build_linking_review.html">build_linking_review()</a></code> -&gt;
@@ -90,7 +95,7 @@ operational <code>GPCM</code> linking decision or evidence that anchor drift is 
 
 
 <p>When the main question is which observations, facet levels, or pairwise
-structures deserve follow-up, branch after <code><a href="diagnose_mfrm.html">diagnose_mfrm()</a></code> into:
+structures deserve follow-up, branch from <code>review$results$diagnostics</code> into:
 <code><a href="build_misfit_casebook.html">build_misfit_casebook()</a></code> -&gt;
 inspect <code>casebook$group_view_index</code>, <code>casebook$group_views</code>, and
 <code>summary(casebook)$plot_routes</code> for stable person / facet / wave rollups and
@@ -138,12 +143,29 @@ exports route those rows through <code>score_category_caveats</code> or
 weakly identified when an intermediate category is unobserved.</p>
     </div>
     <div class="section level2">
+    <h2 id="planned-assignment-and-structural-missingness">Planned assignment and structural missingness<a class="anchor" aria-label="anchor" href="#planned-assignment-and-structural-missingness"></a></h2>
+
+
+<p>A long-format table alone does not reveal whether an absent Person x facet
+cell was expected or never assigned. When a score-free assignment roster is
+available, pass it as <code>expected_design</code> to <code><a href="describe_mfrm_data.html">describe_mfrm_data()</a></code>. The
+summary then separates expected-but-unobserved cells from unexpected
+observations and reports observed versus declared Person-facet graph
+components. Without a roster, structural missingness is explicitly marked
+as not assessed; mfrmr does not assume a complete crossing.</p>
+    </div>
+    <div class="section level2">
     <h2 id="typical-workflow">Typical workflow<a class="anchor" aria-label="anchor" href="#typical-workflow"></a></h2>
 
 
-<ol><li><p>Fit a model with <code><a href="fit_mfrm.html">fit_mfrm()</a></code>.
+<ol><li><p>Review the long-format data and intended score support with
+<code><a href="describe_mfrm_data.html">describe_mfrm_data()</a></code>.</p></li>
+<li><p>Fit a model with <code><a href="fit_mfrm.html">fit_mfrm()</a></code>.
 For final reporting, prefer <code>method = "MML"</code> unless you explicitly want
 a fast exploratory JML pass.</p></li>
+<li><p>Read <code>summary(fit, profile = "fit")</code>, then request
+<code>summary(fit, profile = "facets")</code> and draw the required native Wright
+map with <code>plot(fit, type = "wright", show_ci = TRUE)</code>.</p></li>
 <li><p>(Optional) Use <code><a href="run_mfrm_facets.html">run_mfrm_facets()</a></code> or <code><a href="run_mfrm_facets.html">mfrmRFacets()</a></code> for a
 legacy-compatible one-shot workflow wrapper.</p></li>
 <li><p>For <code>RSM</code> / <code>PCM</code>, build diagnostics with <code><a href="diagnose_mfrm.html">diagnose_mfrm()</a></code>.
@@ -177,7 +199,7 @@ specification stores both thresholds and slopes. Use
 recovery checks plus caveated role-based design evaluation, population
 forecasting, diagnostic-screening, and signal-detection helpers.
 Caveated APA/QC/export bundles are available for sensitivity reporting,
-while score-side FACETS helpers remain outside the validated <code>GPCM</code>
+while score-side FACETS helpers remain outside the documented <code>GPCM</code>
 boundary. Use
 <code><a href="gpcm_capability_matrix.html">gpcm_capability_matrix()</a></code> as the formal capability map
 before branching into less common helpers.</p></li>
@@ -257,7 +279,7 @@ output with explicit <code>gpcm_boundary</code> rows.</p></li>
 <code>"Method Section"</code> rows -&gt; <code><a href="build_apa_outputs.html">build_apa_outputs()</a></code> -&gt;
 <code><a href="build_summary_table_bundle.html">build_summary_table_bundle()</a></code> -&gt; <code><a href="apa_table.html">apa_table()</a></code> or
 <code><a href="export_summary_appendix.html">export_summary_appendix()</a></code>.
-First-release <code>GPCM</code>:
+bounded <code>GPCM</code>:
 <code><a href="reporting_checklist.html">reporting_checklist()</a></code> -&gt; direct table/plot helpers -&gt;
 <code><a href="build_apa_outputs.html">build_apa_outputs()</a></code> / <code><a href="build_visual_summaries.html">build_visual_summaries()</a></code> -&gt;
 <code><a href="export_mfrm_bundle.html">export_mfrm_bundle()</a></code> with <code>gpcm_boundary</code> caveats.</p></li>
@@ -277,7 +299,7 @@ background data, or <code>JML</code> with the documented post hoc EAP approximat
 Here again, <code><a href="predict_mfrm_population.html">predict_mfrm_population()</a></code> is the
 scenario-level forecast helper, whereas <code><a href="predict_mfrm_units.html">predict_mfrm_units()</a></code> /
 <code><a href="sample_mfrm_plausible_values.html">sample_mfrm_plausible_values()</a></code> are the scoring layer. Prediction export
-requires actual prediction objects. First-release <code>GPCM</code> now supports
+requires actual prediction objects. Bounded <code>GPCM</code> supports
 direct data generation via
 <code><a href="build_mfrm_sim_spec.html">build_mfrm_sim_spec()</a></code>, <code><a href="extract_mfrm_sim_spec.html">extract_mfrm_sim_spec()</a></code>, and
 <code><a href="simulate_mfrm_data.html">simulate_mfrm_data()</a></code>, <code><a href="evaluate_mfrm_recovery.html">evaluate_mfrm_recovery()</a></code>,
@@ -286,8 +308,8 @@ population forecasting, diagnostic/signal-detection design screening,
 residual diagnostics, and direct curve/report helpers. The current
 planning layer remains role-based for two
 non-person facets even though estimation itself supports arbitrary facet
-counts; future arbitrary-facet planning fields should be treated as
-design metadata rather than finished public behavior.</p></li>
+counts. Additional arbitrary-facet fields are structural design metadata,
+not Monte Carlo performance results.</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="interpreting-output">Interpreting output<a class="anchor" aria-label="anchor" href="#interpreting-output"></a></h2>

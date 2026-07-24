@@ -1,10 +1,10 @@
-# Manuscript-ready four-panel composite (Wright + severity + threshold + summary)
+# Manuscript-oriented four-panel draft (Wright + severity + threshold + summary)
 
-Builds a 2x2 publication composite for an `mfrm_fit`, suitable for a
-"Figure 1" in the Rasch-family `RSM`/`PCM` manuscript route. Panels: (1)
-Wright map, (2) rater severity profile with CI whiskers, (3) threshold
-ladder, (4) a one-line reliability / separation summary block. Each
-panel reuses the standalone plot helper so the visual language is
+Builds a 2x2 draft composite for an `mfrm_fit`, suitable for reviewing a
+possible "Figure 1" in the Rasch-family `RSM`/`PCM` manuscript route.
+Panels: (1) Wright map, (2) rater severity profile with CI whiskers, (3)
+threshold ladder, (4) a one-line reliability / separation summary block.
+Each panel reuses the standalone plot helper so the visual language is
 consistent with the rest of the package.
 
 ## Usage
@@ -54,13 +54,17 @@ plot_apa_figure_one(
 
 Invisibly, an `mfrm_plot_data` object whose `data` slot bundles the four
 panel data objects under `wright`, `severity`, `threshold`, and
-`summary`.
+`summary`. Fit readiness is retained in `data$fit_readiness`,
+`data$interpretation_status`, and `data$interpretation_note`.
 
 ## Interpreting output
 
-Designed for a single-figure Methods or Results overview. The summary
-panel prints the model class, sample size, log-likelihood, AIC/BIC, and
-the largest non-Person facet's separation / reliability if available.
+Designed as a single-figure Methods or Results draft. The summary panel
+prints the model class, sample size, log-likelihood, AIC/BIC, and the
+largest non-Person facet's separation / reliability if available. A fit
+that has not passed its numerical, data, design, and stability gates
+produces one warning and a visible `"REVIEW ONLY"` label. Resolve that
+review before treating the composite as report-ready evidence.
 
 ## See also
 

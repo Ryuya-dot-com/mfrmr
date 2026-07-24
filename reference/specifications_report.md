@@ -78,17 +78,20 @@ dispatched through
 ## Examples
 
 ``` r
-toy <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+toy <- load_mfrmr_data("example_operational")
+fit <- fit_mfrm(
+  toy, "Person", c("Rater", "Criterion"), "Score",
+  method = "MML", quad_points = 7, maxit = 30
+)
 out <- specifications_report(fit, title = "Toy run")
 summary(out)
 #> mfrmr Specifications Summary 
 #>   Class: mfrm_specifications
-#>   Components (6): header, data_spec, facet_labels, output_spec, convergence_control, anchor_summary
+#>   Components: 6
 #> 
 #> Specification header
 #>       Engine   Title DataFile OutputFile Model Method
-#>  mfrmr 0.2.2 Toy run                       RSM    JML
+#>  mfrmr 0.2.2 Toy run                       RSM    MML
 #> 
 #> Specification rows: data_spec
 #>           Setting  Value

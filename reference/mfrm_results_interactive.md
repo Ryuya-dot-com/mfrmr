@@ -40,7 +40,7 @@ output.
 This helper is deliberately opt-in and stops in non-interactive
 sessions. It asks the user to choose the person, score, optional weight,
 and facet columns, prints reproducible code for the selected roles, then
-fits the default legacy-compatible `RSM`/`JML` route before calling
+fits the documented `RSM`/`MML` starting route before calling
 [`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md).
 Use explicit
 [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)

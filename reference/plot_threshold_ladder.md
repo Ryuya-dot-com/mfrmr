@@ -61,13 +61,13 @@ interval, and is a common trigger for category-collapsing decisions.
 ## Examples
 
 ``` r
-toy <- load_mfrmr_data("example_core")
+toy <- load_mfrmr_data("example_operational")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", maxit = 30)
+                method = "MML", quad_points = 7, maxit = 30)
 p <- plot_threshold_ladder(fit, draw = FALSE)
 head(p$data$data)
-#>    Group  Step  Threshold Disordered
-#> 1 Common tau_1 -1.3256307      FALSE
-#> 2 Common tau_2 -0.0589816      FALSE
-#> 3 Common tau_3  1.3846123      FALSE
+#>    Group  Step Threshold Disordered
+#> 1 Common tau_1 -1.206865      FALSE
+#> 2 Common tau_2  0.166140      FALSE
+#> 3 Common tau_3  1.040725      FALSE
 ```

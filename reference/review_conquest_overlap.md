@@ -1,7 +1,6 @@
-# Review an exact-overlap ConQuest comparison against an `mfrmr` overlap bundle
+# Review a ConQuest comparison within the documented `mfrmr` overlap scope
 
-Review an exact-overlap ConQuest comparison against an `mfrmr` overlap
-bundle
+Review a ConQuest comparison within the documented `mfrmr` overlap scope
 
 ## Usage
 
@@ -32,19 +31,22 @@ review_conquest_overlap(
 
   Normalized ConQuest population-parameter table as a data.frame, or
   output from
+  [`normalize_conquest_overlap_exports()`](https://ryuya-dot-com.github.io/mfrmr/reference/normalize_conquest_overlap_exports.md),
+  [`normalize_conquest_overlap_files()`](https://ryuya-dot-com.github.io/mfrmr/reference/normalize_conquest_overlap_files.md),
+  or
   [`normalize_conquest_overlap_tables()`](https://ryuya-dot-com.github.io/mfrmr/reference/normalize_conquest_overlap_tables.md).
 
 - conquest_item_estimates:
 
   Normalized ConQuest item-estimate table as a data.frame. Leave `NULL`
-  when `conquest_population` is an object from
-  [`normalize_conquest_overlap_tables()`](https://ryuya-dot-com.github.io/mfrmr/reference/normalize_conquest_overlap_tables.md).
+  when `conquest_population` is an object from one of the ConQuest
+  normalization helpers.
 
 - conquest_case_eap:
 
   Normalized ConQuest case-level EAP table as a data.frame. Leave `NULL`
-  when `conquest_population` is an object from
-  [`normalize_conquest_overlap_tables()`](https://ryuya-dot-com.github.io/mfrmr/reference/normalize_conquest_overlap_tables.md).
+  when `conquest_population` is an object from one of the ConQuest
+  normalization helpers.
 
 - conquest_population_term:
 
@@ -97,7 +99,12 @@ It is intentionally conservative:
 
 - it does **not** parse raw ConQuest text output automatically;
 
-- it expects already normalized data frames or output from
+- its primary route expects output from
+  [`normalize_conquest_overlap_exports()`](https://ryuya-dot-com.github.io/mfrmr/reference/normalize_conquest_overlap_exports.md),
+  which reads the four native CSV files requested by the generated
+  command; custom extracted tables may use
+  [`normalize_conquest_overlap_files()`](https://ryuya-dot-com.github.io/mfrmr/reference/normalize_conquest_overlap_files.md)
+  or
   [`normalize_conquest_overlap_tables()`](https://ryuya-dot-com.github.io/mfrmr/reference/normalize_conquest_overlap_tables.md);
 
 - and it reports numerical differences and missing elements without
@@ -110,12 +117,13 @@ normalization and review contract without executing ConQuest.
 
 The intended workflow is:
 
-1.  export an exact-overlap bundle with
+1.  export a bundle for the documented comparison scope with
     [`build_conquest_overlap_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_conquest_overlap_bundle.md);
 
 2.  run the narrow matching case in ConQuest;
 
-3.  normalize the resulting ConQuest outputs into data frames;
+3.  normalize the four requested CSV files with
+    [`normalize_conquest_overlap_exports()`](https://ryuya-dot-com.github.io/mfrmr/reference/normalize_conquest_overlap_exports.md);
 
 4.  pass those tables here to inspect direct differences, centered item
     agreement, and case-level EAP agreement.
@@ -161,8 +169,7 @@ includes:
   absolute difference occurs.
 
 - Missing or non-numeric rows in `attention_items` indicate that the
-  external tables do not yet align cleanly with the exported overlap
-  bundle.
+  external tables do not align cleanly with the exported overlap bundle.
 
 ## See also
 
@@ -176,28 +183,12 @@ includes:
 ``` r
 if (FALSE) { # \dontrun{
 bundle <- build_conquest_overlap_bundle()
-raw_pop <- data.frame(
-  Term = bundle$mfrmr_population$Parameter,
-  Est = bundle$mfrmr_population$Estimate
-)
-raw_item <- data.frame(
-  Item = bundle$mfrmr_item_estimates$ResponseVar,
-  Est = bundle$mfrmr_item_estimates$Estimate
-)
-raw_case <- data.frame(
-  PID = bundle$mfrmr_case_eap$Person,
-  EAP = bundle$mfrmr_case_eap$Estimate
-)
-normalized <- normalize_conquest_overlap_tables(
-  conquest_population = raw_pop,
-  conquest_item_estimates = raw_item,
-  conquest_case_eap = raw_case,
-  conquest_population_term = "Term",
-  conquest_population_estimate = "Est",
-  conquest_item_id = "Item",
-  conquest_item_estimate = "Est",
-  conquest_case_person = "PID",
-  conquest_case_estimate = "EAP"
+normalized <- normalize_conquest_overlap_exports(
+  bundle,
+  parameter_file = "conquest_overlap_conquest_parameters.csv",
+  regression_file = "conquest_overlap_conquest_reg_coefficients.csv",
+  covariance_file = "conquest_overlap_conquest_covariance.csv",
+  case_file = "conquest_overlap_conquest_cases_eap.csv"
 )
 review <- review_conquest_overlap(bundle, normalized)
 summary(review)$summary

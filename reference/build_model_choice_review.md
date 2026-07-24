@@ -80,7 +80,7 @@ route, not every possible generalized partial-credit many-facet
 extension. The current route uses positive slopes, requires
 `slope_facet == step_facet`, identifies slopes on the log scale with
 geometric mean 1, and keeps several downstream score-side/reporting
-helpers outside the validated boundary.
+helpers outside the documented boundary.
 
 ## See also
 

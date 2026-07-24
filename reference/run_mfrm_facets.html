@@ -22,7 +22,7 @@ users to choose compatible estimation options.'></head><body>
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from Facets to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
@@ -72,7 +72,8 @@ users to choose compatible estimation options.</p>
 <span>  positive_facets <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  quad_points <span class="op">=</span> <span class="fl">15</span>,</span>
 <span>  maxit <span class="op">=</span> <span class="fl">400</span>,</span>
-<span>  reltol <span class="op">=</span> <span class="fl">1e-06</span>,</span>
+<span>  reltol <span class="op">=</span> <span class="fl">1e-09</span>,</span>
+<span>  optimizer <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"auto"</span>, <span class="st">"BFGS"</span>, <span class="st">"L-BFGS-B"</span><span class="op">)</span>,</span>
 <span>  mml_engine <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"direct"</span>, <span class="st">"em"</span>, <span class="st">"hybrid"</span><span class="op">)</span>,</span>
 <span>  top_n_interactions <span class="op">=</span> <span class="fl">20L</span></span>
 <span><span class="op">)</span></span>
@@ -94,7 +95,7 @@ users to choose compatible estimation options.</p>
 <span>  positive_facets <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  quad_points <span class="op">=</span> <span class="fl">15</span>,</span>
 <span>  maxit <span class="op">=</span> <span class="fl">400</span>,</span>
-<span>  reltol <span class="op">=</span> <span class="fl">1e-06</span>,</span>
+<span>  reltol <span class="op">=</span> <span class="fl">1e-09</span>,</span>
 <span>  mml_engine <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"direct"</span>, <span class="st">"em"</span>, <span class="st">"hybrid"</span><span class="op">)</span>,</span>
 <span>  top_n_interactions <span class="op">=</span> <span class="fl">20L</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -170,7 +171,14 @@ columns after person/score/weight mapping.</p></dd>
 
 
 <dt id="arg-reltol">reltol<a class="anchor" aria-label="anchor" href="#arg-reltol"></a></dt>
-<dd><p>Optimization tolerance.</p></dd>
+<dd><p>Relative optimizer tolerance passed to <code><a href="fit_mfrm.html">fit_mfrm()</a></code>. The
+default is <code>1e-9</code>.</p></dd>
+
+
+<dt id="arg-optimizer">optimizer<a class="anchor" aria-label="anchor" href="#arg-optimizer"></a></dt>
+<dd><p>Direct optimizer passed to <code><a href="fit_mfrm.html">fit_mfrm()</a></code>. <code>"auto"</code> selects
+L-BFGS-B for MML and JML fits with at least 200 free parameters, and BFGS
+for smaller JML fits.</p></dd>
 
 
 <dt id="arg-mml-engine">mml_engine<a class="anchor" aria-label="anchor" href="#arg-mml-engine"></a></dt>

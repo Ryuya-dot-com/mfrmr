@@ -81,7 +81,7 @@ A list of class `mfrm_design_recommendation` with:
 - `planning_constraints`: explicit record of mutable/locked design
   variables
 
-- `planning_schema`: combined planner-schema contract
+- `planning_schema`: structured planning metadata
 
 - `caveats`: structured warning rows for situations where the
   recommendation rests on weak evidence (e.g., no design met every

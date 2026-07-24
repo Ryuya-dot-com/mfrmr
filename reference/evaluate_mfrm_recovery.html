@@ -24,7 +24,7 @@ and summarize bias, RMSE, MAE, correlation, and standard-error coverage."></head
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from Facets to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
@@ -114,8 +114,9 @@ and summarize bias, RMSE, MAE, correlation, and standard-error coverage.</p>
 named vector, or one-row data frame. When <code>sim_spec = NULL</code>, names may use
 canonical variables (<code>n_person</code>, <code>n_rater</code>, <code>n_criterion</code>,
 <code>raters_per_person</code>) or role keywords (<code>person</code>, <code>rater</code>, <code>criterion</code>,
-<code>assignment</code>). For the currently exposed facet keys, the schema-only
-future branch input <code>design$facets = c(person = ..., rater = ..., criterion = ...)</code> is also accepted. Do not specify the same variable
+<code>assignment</code>). A nested named-facet form,
+<code>design$facets = c(person = ..., rater = ..., criterion = ...)</code>, is also
+accepted for the supported person/rater/criterion design. Do not specify the same variable
 through both <code>design</code> and the scalar count arguments.</p></dd>
 
 
@@ -232,7 +233,7 @@ rows when the fitted object exposes person estimates.</p></dd>
 <dd><p>Logical. When <code>TRUE</code>, run <code><a href="diagnose_mfrm.html">diagnose_mfrm()</a></code> after
 each successful refit and retain facet-level fit/separation operating
 characteristics. These diagnostics are reported separately from recovery
-metrics and are not release-success criteria by themselves.</p></dd>
+metrics and are not parameter-recovery criteria by themselves.</p></dd>
 
 
 <dt id="arg-diagnostic-fit-df-method">diagnostic_fit_df_method<a class="anchor" aria-label="anchor" href="#arg-diagnostic-fit-df-method"></a></dt>
@@ -291,8 +292,9 @@ used in later simulation-study guidance.</p>
 
 <ol><li><p>Build a simulation specification with <code><a href="build_mfrm_sim_spec.html">build_mfrm_sim_spec()</a></code> or pass scalar
 generator arguments directly.</p></li>
-<li><p>Run <code>evaluate_mfrm_recovery(...)</code> with a modest <code>reps</code> value for a smoke
-check, then increase <code>reps</code> for stable Monte Carlo summaries.</p></li>
+<li><p>Run <code>evaluate_mfrm_recovery(...)</code> with a modest <code>reps</code> value for an
+initial end-to-end review, then increase <code>reps</code> for stable Monte Carlo
+summaries.</p></li>
 <li><p>Inspect <code>summary(x)$recovery_summary</code> and the row-level <code>x$recovery</code> table.</p></li>
 </ol></div>
     <div class="section level2">

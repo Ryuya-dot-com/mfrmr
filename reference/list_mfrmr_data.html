@@ -18,7 +18,7 @@
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from Facets to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
@@ -49,17 +49,30 @@
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">list_mfrmr_data</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">list_mfrmr_data</span><span class="op">(</span>details <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
+    <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
+
+
+<dl><dt id="arg-details">details<a class="anchor" aria-label="anchor" href="#arg-details"></a></dt>
+<dd><p>If <code>FALSE</code> (default), return the backward-compatible
+character vector of dataset keys. If <code>TRUE</code>, return a catalog describing
+the intended teaching role and design of every dataset.</p></dd>
+
+</dl></div>
+    <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>Character vector of dataset keys accepted by <code><a href="load_mfrmr_data.html">load_mfrmr_data()</a></code>.</p>
+    <p>A character vector of dataset keys accepted by <code><a href="load_mfrmr_data.html">load_mfrmr_data()</a></code>,
+or, when <code>details = TRUE</code>, a data.frame with <code>Key</code>, <code>Rows</code>, <code>Persons</code>,
+<code>Raters</code>, <code>Criteria</code>, <code>CountBasis</code>, <code>PrimaryUse</code>, <code>Design</code>, and
+<code>Empirical</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>Use this helper when you want to select packaged data programmatically
-(e.g., inside scripts, loops, or shiny/streamlit wrappers).</p>
+(e.g., inside scripts, loops, or interactive-application wrappers).</p>
 <p>Typical pattern:</p><ol><li><p>call <code>list_mfrmr_data()</code> to see available keys.</p></li>
 <li><p>pass one key to <code><a href="load_mfrmr_data.html">load_mfrmr_data()</a></code>.</p></li>
 </ol></div>
@@ -67,7 +80,12 @@
     <h2 id="interpreting-output">Interpreting output<a class="anchor" aria-label="anchor" href="#interpreting-output"></a></h2>
 
 
-<p>Returned values are canonical dataset keys accepted by <code><a href="load_mfrmr_data.html">load_mfrmr_data()</a></code>.</p>
+<p>With <code>details = FALSE</code>, returned values are canonical dataset keys accepted
+by <code><a href="load_mfrmr_data.html">load_mfrmr_data()</a></code>. With <code>details = TRUE</code>, use <code>PrimaryUse</code> and
+<code>Design</code> to distinguish the applied teaching example from idealized,
+planted-effect diagnostic, and larger sparse-design datasets. <code>CountBasis</code>
+states whether person/rater counts use raw labels or Study-prefixed labels.
+Every bundled dataset is synthetic rather than empirical.</p>
     </div>
     <div class="section level2">
     <h2 id="typical-workflow">Typical workflow<a class="anchor" aria-label="anchor" href="#typical-workflow"></a></h2>
@@ -75,7 +93,8 @@
 
 <ol><li><p>Capture keys in a script (<code>keys &lt;- list_mfrmr_data()</code>).</p></li>
 <li><p>Select one key by index or name.</p></li>
-<li><p>Load data via <code><a href="load_mfrmr_data.html">load_mfrmr_data()</a></code> and continue analysis.</p></li>
+<li><p>Load data via <code><a href="load_mfrmr_data.html">load_mfrmr_data()</a></code> and continue analysis. Treat a
+<code>combined</code> key as a design-review object, not as a direct-fit example.</p></li>
 </ol></div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -86,17 +105,51 @@
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">keys</span> <span class="op">&lt;-</span> <span class="fu">list_mfrmr_data</span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">keys</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "example_core"     "example_bias"     "study1"           "study2"          </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [5] "combined"         "study1_itercal"   "study2_itercal"   "combined_itercal"</span>
-<span class="r-in"><span><span class="va">d</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="va">keys</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "example_core"        "example_bias"        "example_operational"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [4] "study1"              "study2"              "combined"           </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [7] "study1_itercal"      "study2_itercal"      "combined_itercal"   </span>
+<span class="r-in"><span><span class="fu">list_mfrmr_data</span><span class="op">(</span>details <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="st">"Key"</span>, <span class="st">"PrimaryUse"</span>, <span class="st">"Design"</span>, <span class="st">"CountBasis"</span></span></span>
+<span class="r-in"><span><span class="op">)</span><span class="op">]</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                   Key                                          PrimaryUse</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1        example_core                             Idealized fast examples</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2        example_bias    DFF and bias demonstrations with planted effects</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 example_operational                           Beginner applied workflow</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4              study1               Unequal-workload sparse-design review</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5              study2                         Larger sparse-design review</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6            combined      Identity/linking design review; not direct fit</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7      study1_itercal                     Legacy synthetic variant review</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8      study2_itercal                     Legacy synthetic variant review</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9    combined_itercal Identity/linking sensitivity review; not direct fit</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                  Design</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                               Complete crossing; no planned omissions</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2               Balanced two-rater assignment; planted non-null effects</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3                 Connected two-rater assignment; six planned omissions</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4                 Two raters per person; highly unequal rater workloads</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5                  Two raters per person; incomplete criterion coverage</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6 Overlapping IDs; requires explicit anchors/linking for a common scale</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7                    Legacy Study 1 variant; rows and scores can differ</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8                    Legacy Study 2 variant; rows and scores can differ</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9 Overlapping IDs; requires explicit anchors/linking for a common scale</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                  CountBasis</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                             unique labels</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                                             unique labels</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3                                             unique labels</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4                                             unique labels</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5                                             unique labels</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6 raw labels; 513 persons and 30 raters when Study-prefixed</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7                                             unique labels</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8                                             unique labels</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9 raw labels; 513 persons and 30 raters when Study-prefixed</span>
+<span class="r-in"><span><span class="va">d</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_operational"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">d</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         Study Person Rater Criterion Score Group</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 ExampleCore   P001   R01   Content     3     A</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 ExampleCore   P002   R01   Content     3     A</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3 ExampleCore   P003   R01   Content     4     A</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4 ExampleCore   P004   R01   Content     3     A</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5 ExampleCore   P005   R01   Content     2     A</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6 ExampleCore   P006   R01   Content     3     A</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                Study Person Rater    Criterion Score Group</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 OperationalExample   P001   R01     Language     4     A</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 OperationalExample   P001   R01 Organization     2     A</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 OperationalExample   P001   R02      Content     4     A</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 OperationalExample   P001   R02     Language     3     A</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5 OperationalExample   P001   R02 Organization     2     A</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6 OperationalExample   P002   R01      Content     3     A</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

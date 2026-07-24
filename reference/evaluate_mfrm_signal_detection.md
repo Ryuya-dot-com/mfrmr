@@ -73,11 +73,11 @@ evaluate_mfrm_signal_detection(
   (`n_person`, `n_rater`, `n_criterion`, `raters_per_person`), current
   public aliases implied by `sim_spec` (for example `n_judge`, `n_task`,
   `judge_per_person`), or role keywords (`person`, `rater`, `criterion`,
-  `assignment`). Values may be vectors. The schema-only future branch
-  input `design$facets = c(person = ..., judge = ..., task = ...)` is
-  also accepted for the currently exposed facet keys. Do not specify the
-  same variable through both `design` and the scalar design-grid
-  arguments.
+  `assignment`). Values may be vectors. The nested named-facet form
+  `design$facets = c(person = ..., judge = ..., task = ...)` is also
+  accepted for the supported person/rater/criterion design. Do not
+  specify the same variable through both `design` and the scalar
+  design-grid arguments.
 
 - reps:
 
@@ -259,7 +259,7 @@ An object of class `mfrm_signal_detection` with:
 
 - `design_grid`: evaluated design conditions. When `sim_spec` carries
   custom public facet names, matching design-variable alias columns are
-  included alongside the canonical internal columns.
+  included alongside the standard result columns.
 
 - `results`: replicate-level detection results, with the same
   design-variable alias columns when applicable.
@@ -275,7 +275,7 @@ An object of class `mfrm_signal_detection` with:
 - `planning_constraints`: explicit record of which design variables
   remain mutable under the current simulation specification
 
-- `planning_schema`: combined planner-schema contract bundling the role
+- `planning_schema`: structured planning metadata bundling the role
   descriptor, scope boundary, and current mutability map
 
 - `gpcm_boundary`: bounded-`GPCM` caveat row when a `GPCM` screening

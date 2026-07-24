@@ -26,7 +26,7 @@ documented."></head><body>
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from Facets to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
@@ -89,7 +89,8 @@ documented.</p>
 <span>  min_obs_per_category <span class="op">=</span> <span class="fl">10</span>,</span>
 <span>  quad_points <span class="op">=</span> <span class="fl">31</span>,</span>
 <span>  maxit <span class="op">=</span> <span class="fl">400</span>,</span>
-<span>  reltol <span class="op">=</span> <span class="fl">1e-06</span>,</span>
+<span>  reltol <span class="op">=</span> <span class="fl">1e-09</span>,</span>
+<span>  optimizer <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"auto"</span>, <span class="st">"BFGS"</span>, <span class="st">"L-BFGS-B"</span><span class="op">)</span>,</span>
 <span>  mml_engine <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"direct"</span>, <span class="st">"em"</span>, <span class="st">"hybrid"</span><span class="op">)</span>,</span>
 <span>  population_formula <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  person_data <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -160,13 +161,15 @@ publication reporting.</p></dd>
 
 
 <dt id="arg-missing-codes">missing_codes<a class="anchor" aria-label="anchor" href="#arg-missing-codes"></a></dt>
-<dd><p>Optional pre-processing step that converts
-sentinel missing-code values to <code>NA</code> across the <code>person</code>, <code>facets</code>,
-and <code>score</code> columns before any downstream logic. One of:</p><ul><li><p><code>NULL</code> (default): no recoding; strictly backward-compatible.</p></li>
+<dd><p>Optional pre-processing step that converts sentinel
+missing-code values to <code>NA</code> before any downstream logic. One of:</p><ul><li><p><code>NULL</code> (default): no recoding; strictly backward-compatible.</p></li>
 <li><p><code>TRUE</code> or <code>"default"</code>: FACETS / SPSS / SAS convention set
-(<code>"99"</code>, <code>"999"</code>, <code>"-1"</code>, <code>"N"</code>, <code>"NA"</code>, <code>"n/a"</code>, <code>"."</code>, <code>""</code>).</p></li>
+(<code>"99"</code>, <code>"999"</code>, <code>"-1"</code>, <code>"N"</code>, <code>"NA"</code>, <code>"n/a"</code>, <code>"."</code>, <code>""</code>)
+on the score column only. Person and facet identifiers are preserved
+because short codes such as <code>"N"</code> can be legitimate labels.</p></li>
 <li><p>Character vector: an explicit code set, e.g.
-<code>c("99", "999", ".a")</code>.</p></li>
+<code>c("99", "999", ".a")</code>, applied across the person, facet, and
+score columns.</p></li>
 </ul><p>Replacement counts are recorded in <code>fit$prep$missing_recoding</code> and
 surfaced by <code><a href="build_mfrm_manifest.html">build_mfrm_manifest()</a></code>. Equivalent to calling
 <code><a href="recode_missing_codes.html">recode_missing_codes()</a></code> manually before the fit.</p></dd>
@@ -182,14 +185,18 @@ backward-compatible alias for the same joint-maximum-likelihood path.</p></dd>
 
 
 <dt id="arg-step-facet">step_facet<a class="anchor" aria-label="anchor" href="#arg-step-facet"></a></dt>
-<dd><p>Step facet for <code>PCM</code> and the bounded <code>GPCM</code>
-branch. For <code>GPCM</code>, this should be supplied explicitly rather than
-relying on an implicit default.</p></dd>
+<dd><p>Facet whose levels receive separate step parameters in
+<code>PCM</code> and bounded <code>GPCM</code>. Supply it explicitly for a final analysis. If it
+is omitted for <code>PCM</code>, mfrmr uses a unique item-like facet name (for
+example, <code>Item</code>, <code>Task</code>, or <code>Criterion</code>) when available; otherwise it
+retains the first-facet fallback with a warning. <code>GPCM</code> always requires an
+explicit value. This argument is not used by <code>RSM</code>, which has one shared
+set of rating-scale thresholds.</p></dd>
 
 
 <dt id="arg-slope-facet">slope_facet<a class="anchor" aria-label="anchor" href="#arg-slope-facet"></a></dt>
-<dd><p>Slope facet for the bounded <code>GPCM</code> branch. The
-current release requires <code>slope_facet == step_facet</code> and uses a
+<dd><p>Slope facet for the bounded <code>GPCM</code> branch. mfrmr
+requires <code>slope_facet == step_facet</code> and uses a
 positive-slope identification convention on the log scale with geometric
 mean discrimination fixed to 1.</p></dd>
 
@@ -256,16 +263,13 @@ used in anchor-review recommendations.</p></dd>
 
 <dt id="arg-quad-points">quad_points<a class="anchor" aria-label="anchor" href="#arg-quad-points"></a></dt>
 <dd><p>Integer number of Gauss-Hermite quadrature points
-used for MML integration over the person distribution. Default is
-<code>31</code>, chosen so that marginal log-likelihood values are stable
-enough for direct manuscript reporting. Recommended tiers:</p><table class="table table"><tr><td><code>7</code></td><td>fast exploratory scan; in-package helpers such as
+used for MML integration over the person distribution. The default is
+<code>31</code>. Useful accuracy/runtime settings are:</p><table class="table table"><tr><td><code>7</code></td><td>lightweight exploratory run; helpers such as
 <code><a href="predict_mfrm_population.html">predict_mfrm_population()</a></code> and
-<code><a href="reference_case_benchmark.html">reference_case_benchmark()</a></code> use this value.</td></tr><tr><td><code>15</code></td><td>intermediate analysis when runtime matters.</td></tr><tr><td><code>31</code></td><td>default / publication tier.</td></tr><tr><td><code>61+</code></td><td>ultra-precise runs when benchmarking or working on
-very narrow score supports.</td></tr></table><p>Internal benchmarks show the marginal log-likelihood still drifts
-by ~0.5-1 logit between <code>quad_points = 15</code> and <code>quad_points = 61</code>
-on moderately sized designs, which is why the default now sits at
-the publication tier; set a lower value explicitly for
-exploratory runs.</p></dd>
+<code><a href="reference_case_benchmark.html">reference_case_benchmark()</a></code> use this value.</td></tr><tr><td><code>15</code></td><td>intermediate analysis when runtime matters.</td></tr><tr><td><code>31</code></td><td>package default and a starting point for final analysis.</td></tr><tr><td><code>61+</code></td><td>sensitivity analysis for narrow score distributions or
+demanding numerical comparisons.</td></tr></table><p>Quadrature adequacy depends on the fitted distribution and score support.
+When substantive conclusions are sensitive, compare results under a
+denser rule and report the setting used.</p></dd>
 
 
 <dt id="arg-maxit">maxit<a class="anchor" aria-label="anchor" href="#arg-maxit"></a></dt>
@@ -273,22 +277,43 @@ exploratory runs.</p></dd>
 
 
 <dt id="arg-reltol">reltol<a class="anchor" aria-label="anchor" href="#arg-reltol"></a></dt>
-<dd><p>Optimization tolerance.</p></dd>
+<dd><p>Portable tolerance setting for the initial optimizer stage.
+The default is <code>1e-9</code>. For BFGS this is passed as <code>reltol</code>; for L-BFGS-B
+it is mapped to <code>factr</code> and <code>pgtol</code>, whose actual values are recorded in
+the fit. When this setting is at least as strict as the public default
+(<code>reltol &lt;= 1e-9</code>), optimizer code zero followed by a failed common
+terminal-gradient review triggers a bounded warm-started polish ladder.
+The best non-worsening stage under the recorded selection rule is
+retained. Requested and selected-stage settings remain in <code>fit$summary</code>,
+and the complete stage history remains in <code>fit$opt$optimizer_polish</code>.</p></dd>
+
+
+<dt id="arg-optimizer">optimizer<a class="anchor" aria-label="anchor" href="#arg-optimizer"></a></dt>
+<dd><p>Direct-optimization method. <code>"auto"</code> (default) uses the
+limited-memory <code>"L-BFGS-B"</code> method for MML and for larger JML parameter
+vectors (at least 200 free parameters), while retaining BFGS for smaller
+JML fits. Use <code>"BFGS"</code> or <code>"L-BFGS-B"</code> to request one method explicitly.
+The method actually used is recorded in <code>fit$summary$OptimizerMethod</code>.
+For L-BFGS-B, inspect <code>OptimizerFactr</code> and <code>OptimizerPgtol</code> rather than
+interpreting <code>EffectiveReltol</code> as a native <code><a href="https://rdrr.io/r/stats/optim.html" class="external-link">stats::optim()</a></code> control.</p></dd>
 
 
 <dt id="arg-mml-engine">mml_engine<a class="anchor" aria-label="anchor" href="#arg-mml-engine"></a></dt>
 <dd><p>MML optimization engine for <code>method = "MML"</code>:
-<code>"direct"</code> (default) uses direct BFGS on the marginal log-likelihood,
+<code>"direct"</code> (default) uses the selected direct optimizer on the marginal
+log-likelihood,
 <code>"em"</code> uses an EM loop for <code>RSM</code> / <code>PCM</code> with <code>population = NULL</code>, and
 <code>"hybrid"</code> uses EM as a warm start before the direct optimizer. Unsupported
 combinations currently fall back to <code>"direct"</code> and record that fallback in
-<code>fit$summary</code>.</p></dd>
+<code>fit$summary</code>. Direct, hybrid, and EM engines all require the common
+terminal-gradient gate for <code>InferenceReady</code>; EM relative log-likelihood
+convergence alone does not establish numerical readiness.</p></dd>
 
 
 <dt id="arg-population-formula">population_formula<a class="anchor" aria-label="anchor" href="#arg-population-formula"></a></dt>
 <dd><p>Optional one-sided formula for a person-level
-latent-regression population model, for example <code>~ grade + ses</code>. In the
-current release, latent regression is implemented only for
+latent-regression population model, for example <code>~ grade + ses</code>. Latent
+regression is implemented only for
 <code>method = "MML"</code> with a unidimensional conditional-normal population
 model.</p></dd>
 
@@ -316,15 +341,14 @@ replay/export provenance.</p></dd>
 
 
 <dt id="arg-facet-shrinkage">facet_shrinkage<a class="anchor" aria-label="anchor" href="#arg-facet-shrinkage"></a></dt>
-<dd><p>Character. <code>"none"</code> (default) keeps the 0.1.5
-fixed-effects behaviour. <code>"empirical_bayes"</code> applies a post-hoc
+<dd><p>Character. <code>"none"</code> (default) keeps the unshrunk
+fixed-effects estimates. <code>"empirical_bayes"</code> applies a post-hoc
 James-Stein / empirical-Bayes shrinkage to each non-person facet
 (Efron &amp; Morris, 1973); <code>fit$facets$others</code> gains <code>ShrunkEstimate</code>,
 <code>ShrunkSE</code>, and <code>ShrinkageFactor</code> columns, and
 <code>fit$shrinkage_report</code> records the per-facet prior variance and
-effective degrees of freedom. <code>"laplace"</code> currently aliases to
-<code>"empirical_bayes"</code> and is reserved for a future penalised-MML
-implementation.</p></dd>
+effective degrees of freedom. <code>"laplace"</code> is retained as a compatibility
+alias for <code>"empirical_bayes"</code>; it does not fit a penalized likelihood.</p></dd>
 
 
 <dt id="arg-facet-prior-sd">facet_prior_sd<a class="anchor" aria-label="anchor" href="#arg-facet-prior-sd"></a></dt>
@@ -372,9 +396,11 @@ fits crash-resilient on shared compute environments.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>An object of class <code>mfrm_fit</code> (named list) with:</p><ul><li><p><code>summary</code>: one-row model summary (<code>LogLik</code>, <code>AIC</code>, <code>BIC</code>, convergence)
-including public <code>Method</code>, internal <code>MethodUsed</code>, and
-<code>MMLEngineRequested</code>, <code>MMLEngineUsed</code>, and <code>EMIterations</code> for MML fits</p></li>
+    <p>An object of class <code>mfrm_fit</code> (named list) with:</p><ul><li><p><code>summary</code>: one-row model summary (<code>LogLik</code>, <code>AIC</code>, <code>BIC</code>, convergence),
+including user-facing <code>Method</code>, engine-facing <code>MethodUsed</code>, MML-engine
+fields, terminal-gradient readiness, requested/selected-stage tolerance
+settings, and the actual L-BFGS-B <code>OptimizerFactr</code> / <code>OptimizerPgtol</code>
+controls when applicable</p></li>
 <li><p><code>facets$person</code>: person estimates (<code>Estimate</code>; plus <code>SD</code> for MML)</p></li>
 <li><p><code>facets$others</code>: facet-level estimates for each facet</p></li>
 <li><p><code>steps</code>: estimated threshold/step parameters as a one-row-per-step
@@ -397,7 +423,7 @@ convention pins the geometric mean of slopes at 1.</p></li>
 <li><p><code>interactions</code>: model-estimated facet interaction effects and metadata
 when <code>facet_interactions</code> is supplied</p></li>
 <li><p><code>population</code>: population-model metadata. Ordinary fits keep an inactive
-scaffold (<code>active = FALSE</code>, <code>posterior_basis = "legacy_mml"</code>). Active
+record (<code>active = FALSE</code>, <code>posterior_basis = "legacy_mml"</code>). Active
 latent-regression fits store the fitted design matrix, regression
 coefficients, residual variance, omission review, the complete-case
 estimation table (<code>person_table</code>), and the observed-person-aligned
@@ -405,10 +431,15 @@ replay/export provenance table retained before complete-case omission
 (<code>person_table_replay</code>), plus stored categorical <code>xlevels</code> / <code>contrasts</code>
 for model-matrix replay and scoring, together with
 <code>posterior_basis = "population_model"</code>.</p></li>
+<li><p><code>data_review</code>: pre-fit Data, Design, Stability, and Reporting readiness
+evidence propagated into summaries and plot-interpretation gates</p></li>
 <li><p><code>config</code>: resolved model configuration used for estimation, including
-<code>config$anchor_review</code></p></li>
+<code>config$anchor_review</code> and the recorded estimation controls</p></li>
 <li><p><code>prep</code>: preprocessed data/level metadata</p></li>
-<li><p><code>opt</code>: raw optimizer result from <code><a href="https://rdrr.io/r/stats/optim.html" class="external-link">stats::optim()</a></code></p></li>
+<li><p><code>opt</code>: optimizer result augmented with <code>optimizer_diagnostics</code>, the
+complete <code>optimizer_polish</code> stage history, method-selection metadata, and
+evaluation-cache counters. For direct fitting, its core fields originate
+from <code><a href="https://rdrr.io/r/stats/optim.html" class="external-link">stats::optim()</a></code>; EM additionally records engine-specific diagnostics.</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -546,17 +577,17 @@ across non-person facet levels (<code>"sparse"</code> &lt; 10, <code>"marginal"<
 <code>"standard"</code> &lt; 50, <code>"strong"</code> &gt;= 50).</p>
     </div>
     <div class="section level2">
-    <h2 id="jml-estimator-caveat-use-mml-for-final-reporting-">JML estimator caveat (use MML for final reporting)<a class="anchor" aria-label="anchor" href="#jml-estimator-caveat-use-mml-for-final-reporting-"></a></h2>
+    <h2 id="estimator-choice-and-the-jml-incidental-parameter-caveat">Estimator choice and the JML incidental-parameter caveat<a class="anchor" aria-label="anchor" href="#estimator-choice-and-the-jml-incidental-parameter-caveat"></a></h2>
 
 
 <p>Joint maximum likelihood (<code>method = "JML"</code> / <code>"JMLE"</code>) estimates
 both the structural parameters (facets, thresholds, slopes) and
 every person measure as fixed parameters in one optimization. This
 is the <strong>incidental-parameter problem</strong> of Neyman &amp; Scott (1948):
-the structural parameter estimates are inconsistent as the number
-of persons grows with the number of items per person held fixed,
-carrying a bias of order \(1/L\) (where \(L\) is the number of
-items per person) that does not vanish with sample size. Wright &amp;
+structural-parameter bias can persist as the number of persons grows
+with the number of items per person held fixed. In classical Rasch
+settings this bias can be of order \(1/L\) (where \(L\) is the number of
+items per person) and therefore need not vanish by adding persons alone. Wright &amp;
 Stone (1979) and Wright &amp; Masters (1982, ch. 5) document an
 empirical \((L-1)/L\) correction that approximately removes the
 bias for the dichotomous Rasch model; mfrmr does <strong>not</strong> apply
@@ -565,17 +596,21 @@ branch also does not produce a profile-likelihood Hessian for the
 structural parameters: SEs reported under JML are observation-table
 approximations (\(1/\sqrt{\sum \mathrm{Var}(X_{pi})}\)) and are
 marked as exploratory in the diagnostics output.</p>
-<p>Practical recommendation:</p><ul><li><p>Use <strong><code>method = "MML"</code></strong> for any value reported in a manuscript
-or operational decision. MML integrates the person measures out
-under a population prior and produces consistent structural
-estimates with marginal observed-information SEs.</p></li>
-<li><p>Use <code>method = "JML"</code> only for fast exploratory iteration, the
-classical FACETS-style workflow, or contexts where the bias is
-tolerable (large \(L\) per person, descriptive screening, or
-teaching).</p></li>
-<li><p>When a third-party CML estimator is needed (the only consistent
-Rasch-family estimator under the incidental-parameter setting),
-fit with <code>eRm</code> and import via <code><a href="import_erm_fit.html">import_erm_fit()</a></code>.</p></li>
+<p>Practical recommendation:</p><ul><li><p>For manuscript or operational reporting, choose the estimator from the
+inferential target and assumptions, and report the choice. MML integrates
+person measures under a specified population model and provides marginal
+observed-information SEs; consistency of its structural estimates is
+conditional on an adequate response model, population distribution, and
+regularity conditions.</p></li>
+<li><p>JML remains useful for a JMLE-oriented FACETS comparison, descriptive or
+exploratory work, and designs with substantial information per person.
+Report its incidental-parameter limitation and the exploratory basis of
+this package's JML structural SEs rather than treating estimator choice as
+a universal reporting rule.</p></li>
+<li><p>For supported Rasch-family formulations, conditional maximum likelihood
+is a distribution-free alternative that conditions out person parameters.
+A third-party CML fit can be imported from <code>eRm</code> with
+<code><a href="import_erm_fit.html">import_erm_fit()</a></code>.</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="model-estimated-facet-interactions">Model-estimated facet interactions<a class="anchor" aria-label="anchor" href="#model-estimated-facet-interactions"></a></h2>
@@ -607,7 +642,7 @@ random-effect facet interactions are deferred.</p>
 <p>This is ordered binary support, not a separate nominal-response model.
 In <code>PCM</code>, a binary fit still uses one threshold per <code>step_facet</code> level on
 the shared observed-score scale.</p>
-<p>Supported model/estimation combinations in the current release:</p><ul><li><p><code>model = "RSM"</code> with <code>method = "MML"</code> or <code>"JML"/"JMLE"</code></p></li>
+<p>Supported model/estimation combinations:</p><ul><li><p><code>model = "RSM"</code> with <code>method = "MML"</code> or <code>"JML"/"JMLE"</code></p></li>
 <li><p><code>model = "PCM"</code> with a designated <code>step_facet</code> (defaults to first facet)</p></li>
 <li><p><code>facet_interactions</code> with <code>model = "RSM"</code> or <code>"PCM"</code> for explicit
 two-way non-person facet interactions</p></li>
@@ -631,21 +666,21 @@ explicitly; direct recovery checks are available through
 documented caveats. Role-based design evaluation, population forecasting,
 diagnostic-screening, and signal-detection helpers are available as
 caveated sensitivity evidence. Full FACETS-style score-side contract
-review, posterior predictive checks, and heavy backend routes should be
-treated as unsupported unless documented otherwise. Use
+review, posterior predictive checks, and MCMC estimation are not available
+for bounded <code>GPCM</code>. Use
 <code><a href="gpcm_capability_matrix.html">gpcm_capability_matrix()</a></code> as the formal boundary statement for the
 current <code>GPCM</code> scope.</p></li>
-</ul><p>Latent-regression status:</p><ul><li><p><code>population_formula = NULL</code> keeps the legacy unconditional <code>MML</code> / <code>JML</code>
+</ul><p>Latent-regression status:</p><ul><li><p><code>population_formula = NULL</code> keeps the standard unconditional <code>MML</code> / <code>JML</code>
 behavior.</p></li>
-<li><p>Supplying <code>population_formula</code> activates a first-version latent-regression
-branch for <code>method = "MML"</code> only.</p></li>
-<li><p>The current branch assumes a one-dimensional conditional-normal population
+<li><p>Supplying <code>population_formula</code> activates latent regression for
+<code>method = "MML"</code> only.</p></li>
+<li><p>This implementation assumes a one-dimensional conditional-normal population
 model with person-specific quadrature nodes
 \(\theta_{nq} = x_n^\top \beta + \sigma z_q\).</p></li>
 <li><p>Background variables must be supplied in <code>person_data</code>; numeric/logical
 columns and categorical factor/character columns are expanded through
 <code><a href="https://rdrr.io/r/stats/model.matrix.html" class="external-link">stats::model.matrix()</a></code>.</p></li>
-<li><p>Current overlap with the ConQuest latent-regression documentation is
+<li><p>Documented overlap with the ConQuest latent-regression model is
 limited to direct estimation from response data under a unidimensional
 <code>MML</code> population model with package-built model-matrix covariates. It
 should not be described as numerical equivalence for arbitrary imported design matrices,
@@ -692,20 +727,18 @@ marginal log-likelihood, and no <code><a href="https://rdrr.io/r/stats/vcov.html
 coefficients. Treat the coefficient table as point estimates suitable
 for descriptive reporting; <strong>do not</strong> quote \(\hat{\beta}_j \pm 1.96
 \cdot \mathrm{SE}\) bounds because the SE column is not provided. A
-marginal-Hessian-based SE for \((\boldsymbol{\beta}, \sigma^2)\) is
-planned for a future release.</p>
+marginal-Hessian-based SE for \((\boldsymbol{\beta}, \sigma^2)\) is not
+available from this function.</p>
 <p>Identification: the latent-regression intercept is identifiable only
 under the default <code>noncenter_facet = "Person"</code> (which sum-to-zero-
-centers all non-Person facets). If you re-anchor identification on a
-non-Person facet, the intercept becomes confounded with the freed
-Person-facet mean and the coefficient table becomes unidentified;
-mfrmr does not currently warn about this failure mode in the
-design-matrix check.</p>
+centers all non-Person facets). <code>fit_mfrm()</code> therefore rejects an active
+latent-regression model with a different <code>noncenter_facet</code> rather than
+returning a confounded intercept.</p>
 <p>Anchor inputs are optional:</p><ul><li><p><code>anchors</code> should contain facet/level/fixed-value information.</p></li>
 <li><p><code>group_anchors</code> should contain facet/level/group/group-value information.
 Both are normalized internally, so column names can be flexible
 (<code>facet</code>, <code>level</code>, <code>anchor</code>, <code>group</code>, <code>groupvalue</code>, etc.).</p></li>
-</ul><p>Anchor review behavior:</p><ul><li><p><code>fit_mfrm()</code> runs an internal anchor review.</p></li>
+</ul><p>Anchor review behavior:</p><ul><li><p><code>fit_mfrm()</code> automatically runs an anchor review.</p></li>
 <li><p>invalid rows are removed before estimation.</p></li>
 <li><p>duplicate rows keep the last occurrence for each key.</p></li>
 <li><p><code>anchor_policy</code> controls whether detected issues are warned, treated as
@@ -718,32 +751,29 @@ This affects interpretation of reported facet measures.</p></li>
     <h2 id="performance-tips">Performance tips<a class="anchor" aria-label="anchor" href="#performance-tips"></a></h2>
 
 
-<p>For exploratory work, <code>method = "JML"</code> is usually faster than <code>method = "MML"</code>,
-but it may require a larger <code>maxit</code> to converge on larger datasets.</p>
+<p>When JML is the prespecified estimand, it is often faster than MML but may
+require a larger <code>maxit</code> on larger datasets. Do not switch from MML to JML
+only to shorten runtime: integrating over a population distribution and
+treating person parameters as fixed effects are different analysis choices.</p>
 <p>For MML runs, <code>quad_points</code> is the main accuracy/speed trade-off.
 The <code>@param quad_points</code> tier table is the authoritative reference;
 in short:</p><ul><li><p><code>quad_points = 7</code> is a lightweight setting for quick iteration.</p></li>
 <li><p><code>quad_points = 15</code> is an intermediate option when runtime matters.</p></li>
-<li><p><code>quad_points = 31</code> is the package default and the publication
-tier: the marginal log-likelihood is stable enough for direct
-manuscript reporting.</p></li>
-<li><p><code>quad_points = 61</code> (or higher) is reserved for ultra-precise
-benchmarking on very narrow score supports.</p></li>
+<li><p><code>quad_points = 31</code> is the package default and a suitable starting point
+for a final analysis; always review convergence and, when conclusions are
+sensitive, compare a denser quadrature rule.</p></li>
+<li><p><code>quad_points = 61</code> (or higher) supports sensitivity checks on narrow score
+distributions at additional computational cost.</p></li>
 <li><p><code>mml_engine = "direct"</code> remains the most stable general-purpose path.</p></li>
 <li><p><code>mml_engine = "em"</code> or <code>"hybrid"</code> currently target <code>RSM</code> / <code>PCM</code> fits
 without a latent-regression population model.</p></li>
 <li><p>Benchmark your own workload before using <code>mml_engine = "em"</code> or
-<code>"hybrid"</code> for final reporting; <code>direct</code> remains the safer default when
-you have not compared engines for your data.</p></li>
-<li><p>For RSM and PCM fits only, an opt-in C++ MML backend can be
-enabled with <code>options(mfrmr.use_cpp11_backend = TRUE)</code>. The
-backend implements the same physicist Gauss-Hermite quadrature and
-sum-to-zero identification as the pure-R engine, validated against
-the pure-R reference at <code>tolerance = 1e-12</code> on a fixed regression
-fixture. It is opt-in for this release; the default flip to ON is
-planned for a follow-up release after a cycle of community
-testing. GPCM fits stay on the pure-R engine regardless of the
-option.</p></li>
+<code>"hybrid"</code> for final reporting; <code>direct</code> remains the documented default
+when you have not compared engines for your data.</p></li>
+<li><p>When a direct code-zero stage stops ahead of the terminal-gradient gate,
+bounded polishing is automatic. Inspect <code>fit$opt$optimizer_polish$Stages</code>
+rather than repeatedly lowering <code>reltol</code> without reviewing the retained
+objective, gradient, and parameter changes.</p></li>
 </ul><p>Downstream diagnostics can also be staged:</p><ul><li><p>use <code>diagnose_mfrm(fit, residual_pca = "none")</code> for a quick first pass</p></li>
 <li><p>add residual PCA only when you need exploratory residual-structure evidence</p></li>
 </ul><p>Downstream diagnostics report <code>ModelSE</code> / <code>RealSE</code> columns and related
@@ -820,52 +850,61 @@ Psychological Test and Assessment Modeling, 60(1), 101-139.</p></li>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Fast smoke run: a JML fit on the bundled `example_core` toy</span></span></span>
-<span class="r-in"><span><span class="co"># dataset finishes in well under a second and returns a populated</span></span></span>
-<span class="r-in"><span><span class="co"># `summary` overview ready for inspection.</span></span></span>
-<span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">fit_quick</span> <span class="op">&lt;-</span> <span class="fu">fit_mfrm</span><span class="op">(</span><span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span></span>
-<span class="r-in"><span>                      method <span class="op">=</span> <span class="st">"JML"</span>, maxit <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">fit_quick</span><span class="op">$</span><span class="va">summary</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Model"</span>, <span class="st">"Method"</span>, <span class="st">"N"</span>, <span class="st">"Converged"</span><span class="op">)</span><span class="op">]</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 4</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Model Method     N Converged</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>    </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> RSM   JML      768 TRUE     </span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Lightweight executable mechanics example on the connected teaching data.</span></span></span>
+<span class="r-in"><span><span class="co"># The small quadrature grid keeps CRAN example time short; the tighter</span></span></span>
+<span class="r-in"><span><span class="co"># portable tolerance setting keeps this reduced example numerically stable.</span></span></span>
+<span class="r-in"><span><span class="co"># Use the documented default grid and a sensitivity check for final work.</span></span></span>
+<span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_operational"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">fit_quick</span> <span class="op">&lt;-</span> <span class="fu">fit_mfrm</span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span></span>
+<span class="r-in"><span>  method <span class="op">=</span> <span class="st">"MML"</span>, model <span class="op">=</span> <span class="st">"RSM"</span>, quad_points <span class="op">=</span> <span class="fl">7</span>, maxit <span class="op">=</span> <span class="fl">30</span>,</span></span>
+<span class="r-in"><span>  reltol <span class="op">=</span> <span class="fl">1e-11</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">fit_quick</span><span class="op">$</span><span class="va">summary</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="st">"Model"</span>, <span class="st">"Method"</span>, <span class="st">"N"</span>, <span class="st">"Converged"</span>, <span class="st">"InferenceReady"</span>,</span></span>
+<span class="r-in"><span>  <span class="st">"ConvergenceSeverity"</span></span></span>
+<span class="r-in"><span><span class="op">)</span><span class="op">]</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 6</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Model Method     N Converged InferenceReady ConvergenceSeverity</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>              </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> RSM   MML      282 TRUE      TRUE           pass               </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
-<span class="r-in"><span><span class="co"># Full run with the package default MML estimator (recommended for</span></span></span>
-<span class="r-in"><span><span class="co"># final reporting because person parameters are integrated out under</span></span></span>
-<span class="r-in"><span><span class="co"># an N(0, 1) prior). The default `quad_points = 31` is the</span></span></span>
-<span class="r-in"><span><span class="co"># publication tier; `quad_points = 7` below is an exploratory speed</span></span></span>
-<span class="r-in"><span><span class="co"># setting and should not be used as the final manuscript fit.</span></span></span>
+<span class="r-in"><span><span class="co"># Full run with the package default MML estimator. This route integrates</span></span></span>
+<span class="r-in"><span><span class="co"># person parameters under an N(0, 1) population model, so its reporting</span></span></span>
+<span class="r-in"><span><span class="co"># value depends on the response-model and population assumptions. The</span></span></span>
+<span class="r-in"><span><span class="co"># default `quad_points = 31` is a practical starting value; compare a</span></span></span>
+<span class="r-in"><span><span class="co"># larger grid when quadrature sensitivity matters.</span></span></span>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu">fit_mfrm</span><span class="op">(</span></span></span>
 <span class="r-in"><span>  data <span class="op">=</span> <span class="va">toy</span>,</span></span>
 <span class="r-in"><span>  person <span class="op">=</span> <span class="st">"Person"</span>,</span></span>
 <span class="r-in"><span>  facets <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>  score <span class="op">=</span> <span class="st">"Score"</span>,</span></span>
 <span class="r-in"><span>  model <span class="op">=</span> <span class="st">"RSM"</span>,</span></span>
-<span class="r-in"><span>  quad_points <span class="op">=</span> <span class="fl">7</span>,</span></span>
+<span class="r-in"><span>  quad_points <span class="op">=</span> <span class="fl">31</span>,</span></span>
 <span class="r-in"><span>  maxit <span class="op">=</span> <span class="fl">30</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fit</span><span class="op">$</span><span class="va">summary</span></span></span>
 <span class="r-in"><span><span class="va">s_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">s_fit</span><span class="op">$</span><span class="va">overview</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Model"</span>, <span class="st">"Method"</span>, <span class="st">"Converged"</span><span class="op">)</span><span class="op">]</span></span></span>
-<span class="r-in"><span><span class="co"># Look for: Converged = TRUE. If FALSE, raise `maxit`, relax `reltol`,</span></span></span>
-<span class="r-in"><span><span class="co">#   or inspect `summary(fit)$key_warnings` for sparse-cell or</span></span></span>
-<span class="r-in"><span><span class="co">#   identification flags.</span></span></span>
+<span class="r-in"><span><span class="va">s_fit</span><span class="op">$</span><span class="va">overview</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Model"</span>, <span class="st">"Method"</span>, <span class="st">"Converged"</span>, <span class="st">"InferenceReady"</span>,</span></span>
+<span class="r-in"><span>                   <span class="st">"ConvergenceSeverity"</span><span class="op">)</span><span class="op">]</span></span></span>
+<span class="r-in"><span><span class="co"># `InferenceReady = FALSE` is a numerical stop signal. A TRUE value only</span></span></span>
+<span class="r-in"><span><span class="co"># clears the package's optimizer review; model specification, design,</span></span></span>
+<span class="r-in"><span><span class="co"># identification, and inferential assumptions still require review.</span></span></span>
 <span class="r-in"><span><span class="va">s_fit</span><span class="op">$</span><span class="va">person_overview</span></span></span>
-<span class="r-in"><span><span class="co"># Look for: Mean ~ 0 logits and SD ~ 1 logit are typical when the</span></span></span>
-<span class="r-in"><span><span class="co">#   sample is centred on the test difficulty. SD &lt; 0.5 suggests the</span></span></span>
-<span class="r-in"><span><span class="co">#   test is too easy / hard for this group; SD &gt; 1.5 suggests strong</span></span></span>
-<span class="r-in"><span><span class="co">#   targeting mismatch or extreme-score persons (see `Extreme` flag).</span></span></span>
+<span class="r-in"><span><span class="co"># Compare the person distribution with the facet and step locations. The</span></span></span>
+<span class="r-in"><span><span class="co"># scale identification does not create universal targeting thresholds.</span></span></span>
 <span class="r-in"><span><span class="va">s_fit</span><span class="op">$</span><span class="va">targeting</span></span></span>
-<span class="r-in"><span><span class="co"># Look for: |Targeting| &lt; ~0.5 logits is comfortable; larger absolute</span></span></span>
-<span class="r-in"><span><span class="co">#   values mean persons sit systematically above or below the facet</span></span></span>
-<span class="r-in"><span><span class="co">#   means under the package's sum-to-zero identification.</span></span></span>
+<span class="r-in"><span><span class="co"># Interpret targeting magnitude against the intended population and score</span></span></span>
+<span class="r-in"><span><span class="co"># use rather than a universal pass/fail cutoff.</span></span></span>
 <span class="r-in"><span><span class="va">p_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">p_fit</span><span class="op">$</span><span class="va">wright_map</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">plot</span></span></span>
+<span class="r-in"><span><span class="va">p_fit</span><span class="op">$</span><span class="va">name</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">p_fit</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">locations</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># The bare plot route is the native Wright map and includes available</span></span></span>
+<span class="r-in"><span><span class="co"># facet uncertainty. Use plot(fit, type = "bundle") for the three-plot</span></span></span>
+<span class="r-in"><span><span class="co"># Wright/pathway/category overview.</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># JML is available for exploratory / fast iteration passes:</span></span></span>
+<span class="r-in"><span><span class="co"># JML is a distinct fixed-person-effects route, not a drop-in speed setting:</span></span></span>
 <span class="r-in"><span><span class="va">fit_jml</span> <span class="op">&lt;-</span> <span class="fu">fit_mfrm</span><span class="op">(</span></span></span>
 <span class="r-in"><span>  data <span class="op">=</span> <span class="va">toy</span>,</span></span>
 <span class="r-in"><span>  person <span class="op">=</span> <span class="st">"Person"</span>,</span></span>
@@ -875,7 +914,10 @@ Psychological Test and Assessment Modeling, 60(1), 101-139.</p></li>
 <span class="r-in"><span>  model <span class="op">=</span> <span class="st">"RSM"</span>,</span></span>
 <span class="r-in"><span>  maxit <span class="op">=</span> <span class="fl">30</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit_jml</span><span class="op">)</span><span class="op">$</span><span class="va">overview</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Model"</span>, <span class="st">"Method"</span>, <span class="st">"Converged"</span><span class="op">)</span><span class="op">]</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit_jml</span><span class="op">)</span><span class="op">$</span><span class="va">overview</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="st">"Model"</span>, <span class="st">"Method"</span>, <span class="st">"Converged"</span>, <span class="st">"InferenceReady"</span>,</span></span>
+<span class="r-in"><span>  <span class="st">"ConvergenceSeverity"</span></span></span>
+<span class="r-in"><span><span class="op">)</span><span class="op">]</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Latent regression (MML only) uses person-level background variables:</span></span></span>
 <span class="r-in"><span><span class="va">person_tbl</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">toy</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Person"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span></span>

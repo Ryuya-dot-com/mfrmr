@@ -18,7 +18,7 @@
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from Facets to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
@@ -186,11 +186,12 @@ to on-target misfitting patterns.  Expected value = 1.0.</p></li>
 off-target outliers.  Expected value = 1.0.</p></li>
 <li><p><strong>ZSTD</strong>: Wilson-Hilferty cube-root transformation of MnSq to an
 approximate standard normal deviate.</p></li>
-<li><p><strong>PTMEA</strong>: point-measure correlation (item-rest correlation in MFRM
-context); positive values confirm alignment with the latent trait.</p></li>
+<li><p><strong>PTMEA</strong>: within-element point-measure correlation between observed
+scores and fitted person measures. A positive value is directionally
+consistent with the fitted orientation; it is not a confirmatory test.</p></li>
 </ul><p>The MnSq values and the ZSTD values should be read separately. <code>mfrmr</code> keeps
 the package-native engine df convention by default because it is the basis
-used by the R/Python/Julia validation engines. FACETS reports closely related
+used by the fitted observation-level diagnostics. FACETS reports closely related
 MnSq values but standardizes them with a Wright-Masters fourth-moment df
 approximation (<code>df = 2 / q^2</code>) and caps reported ZSTD values. Use
 <code>fit_df_method = "both"</code> to review these two standardization conventions
@@ -206,10 +207,12 @@ this difference: it is a residual-basis difference, not a
 standardization difference. Refit with <code>method = "JML"</code> when an
 external FACETS fit comparison requires a JMLE-style residual basis
 (see <code><a href="facets_fit_review.html">facets_fit_review()</a></code>).</p>
-<p><strong>Misfit flagging guidelines (Bond &amp; Fox, 2015):</strong></p><ul><li><p>MnSq &lt; 0.5: overfit (too predictable; may inflate reliability)</p></li>
+<p><strong>Heuristic misfit-screening guidelines (Bond &amp; Fox, 2015):</strong></p><ul><li><p>MnSq &lt; 0.5: overfit (too predictable; may inflate reliability)</p></li>
 <li><p>MnSq 0.5–1.5: productive for measurement</p></li>
 <li><p>MnSq &gt; 1.5: underfit (noise degrades measurement)</p></li>
-<li><p>\(|\mathrm{ZSTD}| &gt; 2\): statistically significant misfit (5\<!-- %) --></p></li>
+<li><p>\(|\mathrm{ZSTD}| &gt; 2\): conventional approximate-normal review flag;
+not a calibrated 5\<!-- % hypothesis test, especially after parameter estimation -->
+and repeated screening across elements</p></li>
 </ul><p>When Infit and Outfit disagree, Infit is generally more informative
 because it downweights extreme observations.  Large Outfit with
 acceptable Infit typically indicates a few outlying responses rather
@@ -247,8 +250,8 @@ quantities as exploratory approximations.</p></li>
 <li><p><code>fit</code>: element-level misfit scan (<code>Infit</code>, <code>Outfit</code>, <code>ZSTD</code>).</p></li>
 <li><p><code>unexpected</code>, <code>fair_average</code>, <code>displacement</code>: targeted QC bundles.
 For bounded <code>GPCM</code>, <code>fair_average</code> is retained with an unavailable
-status because that compatibility calculation has not yet been
-validated for the generalized model.</p></li>
+status because that compatibility calculation is outside the documented
+generalized-model contract.</p></li>
 <li><p><code>approximation_notes</code>: method notes for SE/CI/reliability summaries.</p></li>
 </ul></div>
     <div class="section level2">
@@ -290,7 +293,7 @@ formulas summarized in <code>s_diag$reliability</code> follow this
 convention.)</p></li>
 <li><p>Wright, B. D., &amp; Linacre, J. M. (1994). Reasonable mean-square
 fit values. <em>Rasch Measurement Transactions, 8</em>(3), 370.
-(Source for the 0.5-1.5 Infit / Outfit acceptance band that
+(Source for the 0.5-1.5 Infit / Outfit heuristic review interval that
 <code>s_diag$key_warnings</code> and <code>misfit_thresholds</code> apply.)</p></li>
 <li><p>Linacre, J. M. (1989). <em>Many-Facet Rasch Measurement</em>. MESA
 Press. (FACETS Tables 6 + 7 correspond to the per-facet
@@ -315,31 +318,35 @@ programs</em>. Winsteps.com. (WHEXACT / FACETS standardized fit df notes.)</p></
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># interactive()</span></span></span>
-<span class="r-in"><span><span class="co"># Fast smoke run: legacy-only diagnostic mode is enough to confirm</span></span></span>
-<span class="r-in"><span><span class="co"># the bundle has the expected slots. ~1 s on example_core.</span></span></span>
-<span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">fit_quick</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span></span>
-<span class="r-in"><span>                      method <span class="op">=</span> <span class="st">"JML"</span>, maxit <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">diag_quick</span> <span class="op">&lt;-</span> <span class="fu">diagnose_mfrm</span><span class="op">(</span><span class="va">fit_quick</span>, diagnostic_mode <span class="op">=</span> <span class="st">"legacy"</span>,</span></span>
-<span class="r-in"><span>                             residual_pca <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># Minimal diagnostic example without residual PCA.</span></span></span>
+<span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_operational"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">fit_quick</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span></span>
+<span class="r-in"><span>  method <span class="op">=</span> <span class="st">"MML"</span>, model <span class="op">=</span> <span class="st">"RSM"</span>, quad_points <span class="op">=</span> <span class="fl">7</span>, maxit <span class="op">=</span> <span class="fl">30</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">diag_quick</span> <span class="op">&lt;-</span> <span class="fu">diagnose_mfrm</span><span class="op">(</span><span class="va">fit_quick</span>, diagnostic_mode <span class="op">=</span> <span class="st">"both"</span>,</span></span>
+<span class="r-in"><span>                            residual_pca <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">diag_quick</span><span class="op">)</span><span class="op">$</span><span class="va">overview</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Observations"</span>, <span class="st">"Facets"</span>, <span class="st">"Categories"</span><span class="op">)</span><span class="op">]</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
-<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>, method <span class="op">=</span> <span class="st">"JML"</span>, maxit <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span></span>
+<span class="r-in"><span>  method <span class="op">=</span> <span class="st">"MML"</span>, model <span class="op">=</span> <span class="st">"RSM"</span>, quad_points <span class="op">=</span> <span class="fl">7</span>, maxit <span class="op">=</span> <span class="fl">30</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">diag</span> <span class="op">&lt;-</span> <span class="fu">diagnose_mfrm</span><span class="op">(</span><span class="va">fit</span>, diagnostic_mode <span class="op">=</span> <span class="st">"both"</span>, residual_pca <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">s_diag</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">diag</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">s_diag</span><span class="op">$</span><span class="va">overview</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Observations"</span>, <span class="st">"Facets"</span>, <span class="st">"Categories"</span><span class="op">)</span><span class="op">]</span></span></span>
 <span class="r-in"><span><span class="va">s_diag</span><span class="op">$</span><span class="va">diagnostic_basis</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"DiagnosticPath"</span>, <span class="st">"Status"</span>, <span class="st">"Basis"</span><span class="op">)</span><span class="op">]</span></span></span>
 <span class="r-in"><span><span class="va">s_diag</span><span class="op">$</span><span class="va">key_warnings</span></span></span>
-<span class="r-in"><span><span class="co"># Look for: "No immediate warnings ..." in `key_warnings` is the</span></span></span>
-<span class="r-in"><span><span class="co">#   "all clear" signal. Lines starting with "MnSq misfit:" name the</span></span></span>
-<span class="r-in"><span><span class="co">#   element + Infit / Outfit values that fell outside the</span></span></span>
-<span class="r-in"><span><span class="co">#   0.5-1.5 acceptance band; review those first.</span></span></span>
+<span class="r-in"><span><span class="co"># Look for: lines starting with "MnSq misfit:" name the element +</span></span></span>
+<span class="r-in"><span><span class="co">#   Infit / Outfit values outside the configured heuristic review band.</span></span></span>
+<span class="r-in"><span><span class="co">#   Review those signals in context; an empty warning list is not an</span></span></span>
+<span class="r-in"><span><span class="co">#   automatic all-clear decision.</span></span></span>
 <span class="r-in"><span><span class="va">s_diag</span><span class="op">$</span><span class="va">facets_chisq</span></span></span>
-<span class="r-in"><span><span class="co"># Look for: `FixedProb` &lt; 0.05 means that facet's elements differ</span></span></span>
-<span class="r-in"><span><span class="co">#   reliably under the fixed-effect "all elements equal" null. A</span></span></span>
-<span class="r-in"><span><span class="co">#   facet with a non-significant chi-square contributes little</span></span></span>
-<span class="r-in"><span><span class="co">#   spread to the test scale.</span></span></span>
+<span class="r-in"><span><span class="co"># Look for: `FixedProb` &lt; 0.05 is evidence against the fixed-effect</span></span></span>
+<span class="r-in"><span><span class="co">#   "all elements equal" null under the reported chi-square approximation.</span></span></span>
+<span class="r-in"><span><span class="co">#   Interpret the magnitude and precision as well; a non-significant result</span></span></span>
+<span class="r-in"><span><span class="co">#   does not demonstrate homogeneous elements or negligible facet spread.</span></span></span>
 <span class="r-in"><span><span class="va">s_diag</span><span class="op">$</span><span class="va">interrater</span></span></span>
 <span class="r-in"><span><span class="co"># Look for: ExactAgreement &gt;= ExpectedExactAgreement and</span></span></span>
 <span class="r-in"><span><span class="co">#   AgreementMinusExpected &gt;= 0 indicate raters agree at least as</span></span></span>

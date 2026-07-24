@@ -26,7 +26,7 @@ under-prediction, negative cells over-prediction."></head><body>
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from Facets to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
@@ -123,10 +123,11 @@ residual mean.</p></dd>
 <span class="r-in"><span>                 method <span class="op">=</span> <span class="st">"JML"</span>, maxit <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu">plot_residual_matrix</span><span class="op">(</span><span class="va">fit</span>, top_n_persons <span class="op">=</span> <span class="fl">12</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">p</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">matrix</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="co"># Look for: cell values within ~|2| are routine; |residual| &gt; 2 is</span></span></span>
-<span class="r-in"><span><span class="co">#   misfit at the 5% level and |residual| &gt; 3 at the 1% level</span></span></span>
-<span class="r-in"><span><span class="co">#   (Wright &amp; Linacre 1994). Persons with multiple high-magnitude</span></span></span>
-<span class="r-in"><span><span class="co">#   cells across the same facet level point at scoring drift.</span></span></span>
+<span class="r-in"><span><span class="co"># Look for: |residual| &gt; 2 or &gt; 3 crosses conventional two- or</span></span></span>
+<span class="r-in"><span><span class="co">#   three-standard-deviation review bands; these are heuristic screens,</span></span></span>
+<span class="r-in"><span><span class="co">#   not calibrated 5% or 1% tests (Wright &amp; Linacre 1994). Repeated</span></span></span>
+<span class="r-in"><span><span class="co">#   high-magnitude cells at one facet level warrant pattern review but</span></span></span>
+<span class="r-in"><span><span class="co">#   do not by themselves establish scoring drift.</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 </code></pre></div>
     </div>

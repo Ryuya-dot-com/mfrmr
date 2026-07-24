@@ -67,7 +67,7 @@ plot(
 
 - ...:
 
-  Reserved for future extensions.
+  Reserved for generic compatibility.
 
 ## Value
 

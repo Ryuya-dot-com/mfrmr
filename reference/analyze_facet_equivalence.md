@@ -55,8 +55,7 @@ analyze_facet_equivalence(
 
   Deprecated alias for `ci_level`, retained for backward compatibility.
   Supplying a non-`NULL` value overrides `ci_level` and emits a one-time
-  deprecation warning. Will be removed in a future release. Default
-  `0.95`.
+  deprecation warning. Default `0.95`.
 
 ## Value
 

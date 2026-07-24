@@ -1,11 +1,11 @@
-# Summarize a diagnostic-screening validation study
+# Summarize a diagnostic-screening simulation study
 
 Summarizes output from
 [`evaluate_mfrm_diagnostic_screening()`](https://ryuya-dot-com.github.io/mfrmr/reference/evaluate_mfrm_diagnostic_screening.md)
 for reporting, appendix export, and draw-free visualization handoff. The
 summary keeps simulation operating characteristics separate from
-validation gates: fit, marginal, pairwise, and report-review signals are
-screening readouts rather than pass/fail evidence.
+inferential conclusions: fit, marginal, pairwise, and report-review
+signals are screening readouts rather than pass/fail evidence.
 
 ## Usage
 

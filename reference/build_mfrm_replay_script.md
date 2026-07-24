@@ -102,10 +102,9 @@ A named list with class `mfrm_replay_script`.
 
 ## Details
 
-This helper mirrors the Streamlit app's reproducible-download idea, but
-uses `mfrmr`'s installed API rather than embedding a separate estimation
-engine. The generated script assumes the user has the package installed
-and provides a data file at `data_file`.
+This helper builds a reproducible script from `mfrmr`'s installed API.
+The generated script assumes the user has the package installed and
+provides a data file at `data_file`.
 
 Anchor and group-anchor constraints are embedded directly from the
 fitted object's stored configuration, so the script can replay anchored

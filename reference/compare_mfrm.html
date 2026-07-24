@@ -24,7 +24,7 @@ a likelihood-ratio test is included."></head><body>
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from Facets to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
@@ -93,7 +93,8 @@ structural nesting review and computes the LRT only for supported nesting patter
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>An object of class <code>mfrm_comparison</code> (named list) with:</p><ul><li><p><code>table</code>: data.frame of model-level statistics (LogLik, AIC, BIC,
 Delta_AIC, AkaikeWeight, Delta_BIC, BICWeight, npar, nobs, WeightedN,
-ICSampleSize, ICSampleSizeBasis, Model, Method, Converged, ICComparable).</p></li>
+ICSampleSize, ICSampleSizeBasis, Model, Method, Converged,
+InferenceReady, ConvergenceSeverity, ICComparable).</p></li>
 <li><p><code>lrt</code>: data.frame with likelihood-ratio test result (only when two models
 are supplied and <code>nested = TRUE</code>). Contains <code>ChiSq</code>, <code>df</code>, <code>p_value</code>.</p></li>
 <li><p><code>evidence_ratios</code>: data.frame of pairwise Akaike-weight ratios (Model1,

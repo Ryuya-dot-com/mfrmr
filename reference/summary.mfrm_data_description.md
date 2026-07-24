@@ -41,7 +41,26 @@ An object of class `summary.mfrm_data_description`.
 
 - `facet_overview`: facet-level coverage summary
 
-- `agreement`: inter-rater agreement summary when available
+- `structural_missingness`: declared assignment coverage summary; status
+  is `"not_declared"` when no assignment roster was supplied
+
+- `structural_level_coverage`: expected versus observed level counts
+
+- `design_connectivity`: Person-facet component counts for observed and
+  declared-expected designs
+
+- `design_components`: component sizes and facet-level labels; person
+  labels are suppressed unless explicitly requested in
+  [`describe_mfrm_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/describe_mfrm_data.md)
+
+- `linkage_summary`: sparse-support and shared-person counts by facet
+
+- `duplicate_cell_summary`: aggregate duplicate-cell counts
+
+- `agreement`: selected-facet agreement summary when available
+
+- `agreement_settings`: selected scorer facet, matching context, and
+  status
 
 - `row_retention`: row counts before and after preparation filters
 
@@ -77,7 +96,8 @@ Recommended read order:
 - `facet_overview`: coverage per facet (minimum/maximum weighted
   counts).
 
-- `agreement`: observed-score inter-rater agreement (when available).
+- `agreement`: observed-score agreement for the selected scorer facet
+  (when available).
 
 Very low `MinWeightedN` in `facet_overview` is a practical warning for
 unstable downstream facet estimates.
@@ -119,6 +139,34 @@ summary(ds)
 #>      Rater       0
 #>      Score       0
 #> 
+#> Planned assignment coverage
+#>        Status ExpectedCells ObservedCells MatchedCells MissingExpectedCells
+#>  not_declared            NA           768           NA                   NA
+#>  UnexpectedObservedCells CoverageRate ExpectedOnlyPersons UnexpectedPersons
+#>                       NA           NA                  NA                NA
+#> 
+#> Person-facet connectivity
+#>     Basis     Facet PersonNodes FacetLevelNodes Edges Components
+#>  observed     Rater          48               4   192          1
+#>  observed Criterion          48               4   192          1
+#>  LargestComponentPersons LargestComponentLevels LargestComponentPercent
+#>                       48                      4                     100
+#>                       48                      4                     100
+#>  Connected
+#>       TRUE
+#>       TRUE
+#> 
+#> Facet linkage support
+#>      Facet Levels Persons MinPersonsPerLevel MedianPersonsPerLevel
+#>      Rater      4      48                 48                    48
+#>  Criterion      4      48                 48                    48
+#>  MinLevelsPerPerson MedianLevelsPerPerson LinkingPersons LinkingPersonRate
+#>                   4                     4             48                 1
+#>                   4                     4             48                 1
+#>  SingleLevelPersons SparseLevels SparseLevelThreshold
+#>                   0            0                    2
+#>                   0            0                    2
+#> 
 #> Score distribution
 #>  Score RawN WeightedN Percent
 #>      1  139       139  18.099
@@ -131,7 +179,7 @@ summary(ds)
 #>  Criterion      4            768           192          192          192
 #>      Rater      4            768           192          192          192
 #> 
-#> Inter-rater agreement
+#> Observed agreement by Rater
 #>  RaterFacet Raters Pairs Contexts TotalPairs OpportunityCount ExactAgreements
 #>       Rater      4     6      192       1152             1152             417
 #>  ExpectedAgreements ExactAgreement ExpectedExactAgreement
@@ -142,16 +190,20 @@ summary(ds)
 #>     0.378
 #> 
 #> Paper reporting map
-#>                                 Area CoveredHere
-#>               Sample / design counts         yes
-#>                   Missingness review         yes
-#>  Score usage / category distribution         yes
-#>                       Facet coverage         yes
-#>                Inter-rater agreement         yes
-#>     Fit / reliability / residual PCA          no
+#>                                 Area  CoveredHere
+#>               Sample / design counts          yes
+#>                   Missingness review          yes
+#>          Planned assignment coverage not declared
+#>            Person-facet connectivity          yes
+#>  Score usage / category distribution          yes
+#>                       Facet coverage          yes
+#>                Rater-facet agreement          yes
+#>     Fit / reliability / residual PCA           no
 #>                                                 CompanionOutput
 #>                                summary(describe_mfrm_data(...))
 #>                                summary(describe_mfrm_data(...))
+#>       data_review$structural_missingness$missing_expected_cells
+#>                                   data_review$design_components
 #>                                summary(describe_mfrm_data(...))
 #>                                summary(describe_mfrm_data(...))
 #>  summary(describe_mfrm_data(...)) / plot_interrater_agreement()
@@ -159,4 +211,5 @@ summary(ds)
 #> 
 #> Notes
 #>  - No missing values were detected in selected input columns.
+#>  - Structural missingness was not assessed because `expected_design` was not supplied. Absent rows cannot be distinguished from cells that were never assigned.
 ```

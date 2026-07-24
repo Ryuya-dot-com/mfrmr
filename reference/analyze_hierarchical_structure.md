@@ -83,8 +83,8 @@ analyze_hierarchical_structure(
 
 - icc_ci_method, icc_ci_level, icc_ci_boot_reps, icc_ci_boot_seed:
 
-  Deprecated spellings of the `ci_*` arguments above, retained for one
-  release. Supplying a non-`NULL` value routes through
+  Deprecated compatibility spellings of the `ci_*` arguments above.
+  Supplying a non-`NULL` value routes through
   [`lifecycle::deprecate_warn()`](https://lifecycle.r-lib.org/reference/deprecate_soft.html)
   and overrides the canonical `ci_*` argument.
 

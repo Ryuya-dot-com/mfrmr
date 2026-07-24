@@ -4,6 +4,7 @@ This vignette outlines a reproducible workflow for:
 
 - loading packaged simulation data
 - fitting an MFRM with flexible facets
+- choosing a fast fit summary or an opt-in comprehensive summary
 - producing the required Wright map on the fitted shared logit scale
 - running diagnostics and residual PCA
 - generating APA and visual summary outputs
@@ -13,10 +14,18 @@ This vignette outlines a reproducible workflow for:
 For a plot-first companion guide, see the separate
 `mfrmr-visual-diagnostics` vignette.
 
-For speed-sensitive work, a useful pattern is:
+For efficient development without changing the final analysis target:
 
-- start with `method = "JML"` or `quad_points = 7`
-- use `diagnose_mfrm(..., residual_pca = "none")` for the first pass
+- test code mechanics on a small deterministic subset or, for an MML
+  workflow, a temporary `quad_points = 7` grid; restore the prespecified
+  final MML grid (31 points by default) and check quadrature sensitivity
+  before reporting
+- choose `method = "JML"` only when its person-parameter treatment is
+  methodologically appropriate, not merely as a faster substitute for
+  MML
+- use
+  `diagnose_mfrm(..., residual_pca = "none", diagnostic_mode = "both", fit_df_method = "both")`
+  when the diagnostics will feed a comprehensive summary
 - reuse the same diagnostics object in downstream reports and plots
 
 ## MML and Diagnostic Modes
@@ -25,11 +34,14 @@ For speed-sensitive work, a useful pattern is:
 
 - `MML` integrates over the person distribution with Gauss-Hermite
   quadrature.
-- The current `MML` branch optimizes the quadrature-based marginal
-  log-likelihood directly; it is not an EM implementation.
-- `JML` is often useful for quick exploratory passes, but `MML` remains
-  the preferred route for final estimation and fixed-calibration
-  follow-up.
+- `mml_engine = "direct"` (the default) optimizes the quadrature-based
+  marginal log-likelihood directly. `mml_engine = "em"` and `"hybrid"`
+  provide the documented EM and EM-warm-start routes for supported
+  RSM/PCM fits.
+- `JML` is useful for JMLE-oriented comparisons and analyses that avoid
+  a parametric person distribution. `MML` is the package default and
+  supports marginal and fixed-calibration follow-up when its
+  response-model and population-distribution assumptions are defensible.
 
 For `RSM` and `PCM`, diagnostics now expose two distinct evidence paths:
 
@@ -39,10 +51,10 @@ For `RSM` and `PCM`, diagnostics now expose two distinct evidence paths:
 - `diagnostic_mode = "both"` is the safest default when you want to
   inspect both views side by side.
 
-The strict marginal branch is still screening-oriented in the current
-release. Use `summary(diag)$diagnostic_basis` to separate the legacy
-residual evidence from the strict marginal evidence rather than pooling
-them into one decision.
+Strict marginal diagnostics are screening-oriented. Use
+`summary(diag)$diagnostic_basis` to separate the legacy residual
+evidence from the strict marginal evidence rather than pooling them into
+one decision.
 
 ## Load Data
 
@@ -50,9 +62,37 @@ them into one decision.
 
 library(mfrmr)
 
-list_mfrmr_data()
-#> [1] "example_core"     "example_bias"     "study1"           "study2"          
-#> [5] "combined"         "study1_itercal"   "study2_itercal"   "combined_itercal"
+list_mfrmr_data(details = TRUE)[, c("Key", "PrimaryUse", "Design", "CountBasis")]
+#>                   Key                                          PrimaryUse
+#> 1        example_core                             Idealized fast examples
+#> 2        example_bias    DFF and bias demonstrations with planted effects
+#> 3 example_operational                           Beginner applied workflow
+#> 4              study1               Unequal-workload sparse-design review
+#> 5              study2                         Larger sparse-design review
+#> 6            combined      Identity/linking design review; not direct fit
+#> 7      study1_itercal                     Legacy synthetic variant review
+#> 8      study2_itercal                     Legacy synthetic variant review
+#> 9    combined_itercal Identity/linking sensitivity review; not direct fit
+#>                                                                  Design
+#> 1                               Complete crossing; no planned omissions
+#> 2               Balanced two-rater assignment; planted non-null effects
+#> 3                 Connected two-rater assignment; six planned omissions
+#> 4                 Two raters per person; highly unequal rater workloads
+#> 5                  Two raters per person; incomplete criterion coverage
+#> 6 Overlapping IDs; requires explicit anchors/linking for a common scale
+#> 7                    Legacy Study 1 variant; rows and scores can differ
+#> 8                    Legacy Study 2 variant; rows and scores can differ
+#> 9 Overlapping IDs; requires explicit anchors/linking for a common scale
+#>                                                  CountBasis
+#> 1                                             unique labels
+#> 2                                             unique labels
+#> 3                                             unique labels
+#> 4                                             unique labels
+#> 5                                             unique labels
+#> 6 raw labels; 513 persons and 30 raters when Study-prefixed
+#> 7                                             unique labels
+#> 8                                             unique labels
+#> 9 raw labels; 513 persons and 30 raters when Study-prefixed
 
 data("ej2021_study1", package = "mfrmr")
 head(ej2021_study1)
@@ -69,129 +109,466 @@ identical(names(ej2021_study1), names(study1_alt))
 #> [1] TRUE
 ```
 
-## Minimal Runnable Example
+## Applied Runnable Example
 
-Start with the packaged `example_core` dataset. It is intentionally
-compact, category-complete, and generated from a single latent trait
-plus facet main effects so that help-page examples stay fast without
-relying on undersized toy data. The same object is also available via
-`data("mfrmr_example_core", package = "mfrmr")`:
+Start with the packaged `example_operational` dataset. It is
+intentionally compact but uses a connected two-rater assignment, unequal
+rater workloads, and six planned omissions represented by absent
+long-format rows rather than `NA` or sentinel scores. This makes the
+main tutorial closer to an applied rating design without using empirical
+records. The same object is also available via
+`data("mfrmr_example_operational", package = "mfrmr")`. A separate
+score-free assignment roster lets the pre-fit review identify those six
+omissions without guessing which cells should have existed.
+`example_core` remains available as an idealized complete-crossing
+example for fast help-page checks.
 
 ``` r
 
-data("mfrmr_example_core", package = "mfrmr")
-toy <- mfrmr_example_core
+data("mfrmr_example_operational", package = "mfrmr")
+data("mfrmr_example_operational_design", package = "mfrmr")
+toy <- mfrmr_example_operational
+
+data_review_toy <- describe_mfrm_data(
+  data = toy,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  rating_min = 1,
+  rating_max = 4,
+  expected_design = mfrmr_example_operational_design
+)
+data_summary_toy <- summary(data_review_toy)
+data_summary_toy$structural_missingness
+#>     Status ExpectedCells ObservedCells MatchedCells MissingExpectedCells
+#> 1 declared           288           282          282                    6
+#>   UnexpectedObservedCells CoverageRate ExpectedOnlyPersons UnexpectedPersons
+#> 1                       0    0.9791667                   0                 0
+data_summary_toy$design_connectivity
+#>               Basis     Facet PersonNodes FacetLevelNodes Edges Components
+#> 1          observed     Rater          48               6    96          1
+#> 2          observed Criterion          48               3   144          1
+#> 3 declared_expected     Rater          48               6    96          1
+#> 4 declared_expected Criterion          48               3   144          1
+#>   LargestComponentPersons LargestComponentLevels LargestComponentPercent
+#> 1                      48                      6                     100
+#> 2                      48                      3                     100
+#> 3                      48                      6                     100
+#> 4                      48                      3                     100
+#>   Connected
+#> 1      TRUE
+#> 2      TRUE
+#> 3      TRUE
+#> 4      TRUE
 
 fit_toy <- fit_mfrm(
   data = toy,
   person = "Person",
   facets = c("Rater", "Criterion"),
   score = "Score",
-  method = "JML",
-  model = "RSM",
-  maxit = 30
+  method = "MML",
+  model = "RSM"
 )
-diag_toy <- diagnose_mfrm(fit_toy, residual_pca = "none")
-res_toy <- mfrm_results(fit_toy)
+diag_toy <- diagnose_mfrm(
+  fit_toy,
+  residual_pca = "none",
+  diagnostic_mode = "both",
+  fit_df_method = "both"
+)
 
-summary(fit_toy)$overview
-#> # A tibble: 1 × 42
+# Fast fit-only summary: this does not compute diagnostics.
+fit_summary_toy <- summary(fit_toy, profile = "fit", detail = "brief")
+
+# Comprehensive review, reusing diagnostics already computed above.
+facets_summary_toy <- summary(
+  fit_toy,
+  profile = "facets",
+  detail = "brief",
+  diagnostics = diag_toy
+)
+res_toy <- facets_summary_toy$results
+
+fit_summary_toy$overview
+#> # A tibble: 1 × 52
 #>   Model Method MethodUsed     N Persons Facets FacetInteractions
 #>   <chr> <chr>  <chr>      <int>   <int>  <int>             <int>
-#> 1 RSM   JML    JMLE         768      48      2                 0
-#> # ℹ 35 more variables: InteractionParameters <int>, InteractionCells <int>,
+#> 1 RSM   MML    MML          282      48      2                 0
+#> # ℹ 45 more variables: InteractionParameters <int>, InteractionCells <int>,
 #> #   InteractionSparseCells <int>, Categories <dbl>, LogLik <dbl>, AIC <dbl>,
-#> #   BIC <dbl>, Converged <lgl>, Iterations <int>, IterationsBasis <chr>,
-#> #   MMLEngineRequested <chr>, MMLEngineUsed <chr>, MMLEngineDetail <chr>,
-#> #   EMIterations <int>, EMConverged <lgl>, EMRelativeChange <dbl>,
-#> #   OptimizerMethod <chr>, ConvergenceCode <int>, ConvergenceBasis <chr>,
-#> #   ConvergenceStatus <chr>, ConvergenceReason <chr>, …
+#> #   BIC <dbl>, Converged <lgl>, InferenceReady <lgl>, Iterations <int>,
+#> #   IterationsBasis <chr>, MMLEngineRequested <chr>, MMLEngineUsed <chr>,
+#> #   MMLEngineDetail <chr>, EMIterations <int>, EMConverged <lgl>,
+#> #   EMRelativeChange <dbl>, OptimizerMethod <chr>,
+#> #   OptimizerInitialMethod <chr>, OptimizerPolished <lgl>, …
+fit_summary_toy$readiness
+#>        Domain                                        Status
+#> 1   Numerical                                          pass
+#> 2        Data                                          pass
+#> 3      Design                                   pass_linked
+#> 4   Stability                                          pass
+#> 5 Diagnostics                                  not_assessed
+#> 6   Reporting ready_for_diagnostics_and_reporting_follow_up
+#>                                                                                                                              Detail
+#> 1                                                                                            Optimizer returned convergence code 0.
+#> 2                                                                                No preparation warning or review row was retained.
+#> 3 The observed graph satisfies the connectivity requirement; review the remaining design and identification assumptions separately.
+#> 4                                                                         No boundary-constant non-person facet level was detected.
+#> 5                                                             Diagnostics have not yet been incorporated into this fit-only status.
+#> 6                                                             Reporting status is the strictest applicable upstream workflow state.
+fit_summary_toy$data_review
+#> $status
+#>      Domain                Status
+#> 1      Data                  pass
+#> 2    Design           pass_linked
+#> 3 Stability                  pass
+#> 4 Reporting ready_for_diagnostics
+#> 
+#> $overall_connectivity
+#> $overall_connectivity$summary
+#>   Subset Criterion Person Rater Observations
+#> 1      1         3     48     6          282
+#> 
+#> $overall_connectivity$nodes
+#>                      Node   Component Subset     Facet        Level
+#> 1             Person:P001 Person:P048      1    Person         P001
+#> 2             Person:P002 Person:P048      1    Person         P002
+#> 3             Person:P003 Person:P048      1    Person         P003
+#> 4             Person:P004 Person:P048      1    Person         P004
+#> 5             Person:P005 Person:P048      1    Person         P005
+#> 6             Person:P006 Person:P048      1    Person         P006
+#> 7             Person:P007 Person:P048      1    Person         P007
+#> 8             Person:P008 Person:P048      1    Person         P008
+#> 9             Person:P009 Person:P048      1    Person         P009
+#> 10            Person:P010 Person:P048      1    Person         P010
+#> 11            Person:P011 Person:P048      1    Person         P011
+#> 12            Person:P012 Person:P048      1    Person         P012
+#> 13            Person:P013 Person:P048      1    Person         P013
+#> 14            Person:P014 Person:P048      1    Person         P014
+#> 15            Person:P015 Person:P048      1    Person         P015
+#> 16            Person:P016 Person:P048      1    Person         P016
+#> 17            Person:P017 Person:P048      1    Person         P017
+#> 18            Person:P018 Person:P048      1    Person         P018
+#> 19            Person:P019 Person:P048      1    Person         P019
+#> 20            Person:P020 Person:P048      1    Person         P020
+#> 21            Person:P021 Person:P048      1    Person         P021
+#> 22            Person:P022 Person:P048      1    Person         P022
+#> 23            Person:P023 Person:P048      1    Person         P023
+#> 24            Person:P024 Person:P048      1    Person         P024
+#> 25            Person:P025 Person:P048      1    Person         P025
+#> 26            Person:P026 Person:P048      1    Person         P026
+#> 27            Person:P027 Person:P048      1    Person         P027
+#> 28            Person:P028 Person:P048      1    Person         P028
+#> 29            Person:P029 Person:P048      1    Person         P029
+#> 30            Person:P030 Person:P048      1    Person         P030
+#> 31            Person:P031 Person:P048      1    Person         P031
+#> 32            Person:P032 Person:P048      1    Person         P032
+#> 33            Person:P033 Person:P048      1    Person         P033
+#> 34            Person:P034 Person:P048      1    Person         P034
+#> 35            Person:P035 Person:P048      1    Person         P035
+#> 36            Person:P036 Person:P048      1    Person         P036
+#> 37            Person:P037 Person:P048      1    Person         P037
+#> 38            Person:P038 Person:P048      1    Person         P038
+#> 39            Person:P039 Person:P048      1    Person         P039
+#> 40            Person:P040 Person:P048      1    Person         P040
+#> 41            Person:P041 Person:P048      1    Person         P041
+#> 42            Person:P042 Person:P048      1    Person         P042
+#> 43            Person:P043 Person:P048      1    Person         P043
+#> 44            Person:P044 Person:P048      1    Person         P044
+#> 45            Person:P045 Person:P048      1    Person         P045
+#> 46            Person:P046 Person:P048      1    Person         P046
+#> 47            Person:P047 Person:P048      1    Person         P047
+#> 48            Person:P048 Person:P048      1    Person         P048
+#> 49              Rater:R01 Person:P048      1     Rater          R01
+#> 50              Rater:R02 Person:P048      1     Rater          R02
+#> 51              Rater:R03 Person:P048      1     Rater          R03
+#> 52              Rater:R04 Person:P048      1     Rater          R04
+#> 53              Rater:R05 Person:P048      1     Rater          R05
+#> 54              Rater:R06 Person:P048      1     Rater          R06
+#> 55     Criterion:Language Person:P048      1 Criterion     Language
+#> 56 Criterion:Organization Person:P048      1 Criterion Organization
+#> 57      Criterion:Content Person:P048      1 Criterion      Content
+#> 
+#> $overall_connectivity$components
+#> [1] 1
+#> 
+#> $overall_connectivity$connected
+#> [1] TRUE
+#> 
+#> $overall_connectivity$anchors_present
+#> [1] FALSE
+#> 
+#> 
+#> $facet_support
+#>       Facet ConstantScore BoundaryConstant        Level Observations WeightedN
+#> 1     Rater         FALSE            FALSE          R01           47        47
+#> 2     Rater         FALSE            FALSE          R02           56        56
+#> 3     Rater         FALSE            FALSE          R03           50        50
+#> 4     Rater         FALSE            FALSE          R04           47        47
+#> 5     Rater         FALSE            FALSE          R05           44        44
+#> 6     Rater         FALSE            FALSE          R06           38        38
+#> 7 Criterion         FALSE            FALSE      Content           94        94
+#> 8 Criterion         FALSE            FALSE     Language           94        94
+#> 9 Criterion         FALSE            FALSE Organization           94        94
+#>   DistinctScores MinScore MaxScore
+#> 1              4        1        4
+#> 2              4        1        4
+#> 3              4        1        4
+#> 4              4        1        4
+#> 5              4        1        4
+#> 6              4        1        4
+#> 7              4        1        4
+#> 8              4        1        4
+#> 9              4        1        4
+#> 
+#> $boundary_levels
+#> [1] Facet            ConstantScore    BoundaryConstant Level           
+#> [5] Observations     WeightedN        DistinctScores   MinScore        
+#> [9] MaxScore        
+#> <0 rows> (or 0-length row.names)
+#> 
+#> $single_level_facets
+#> character(0)
+#> 
+#> $preparation_notes
+#> [1] Stage             Condition         Severity          Count            
+#> [5] Affected          Message           RecommendedAction
+#> <0 rows> (or 0-length row.names)
 summary(diag_toy)$overview
 #> # A tibble: 1 × 10
 #>   Observations Persons Facets Categories Subsets ResidualPCA DiagnosticMode
 #>          <int>   <int>  <int>      <int>   <int> <chr>       <chr>         
-#> 1          768      48      2          4       1 none        both          
+#> 1          282      48      2          4       1 none        both          
 #> # ℹ 3 more variables: Method <chr>, PrecisionTier <chr>, MarginalFit <chr>
-summary(res_toy, view = "brief")
-#> mfrmr Results Summary
+facets_summary_toy
+#> Many-Facet Measurement Model Summary
+#>   Model: RSM | Method: MML | N: 282 | Persons: 48 | Facets: 2 | Categories: 4
+#>   MML engine: direct (requested: direct)
 #> 
-#> Overview
-#>  InputMode Model Method   N Persons Facets Categories Components Tables
-#>   mfrm_fit   RSM    JML 768      48      2          4         10     92
-#>  PlotRoutes NotAvailable
-#>           7            0
+#> Workflow profile: facets
+#>   FACETS-style organization; not evidence that FACETS was run and not a claim of numerical equivalence.
 #> 
-#> Triage
-#>                    Area Severity                        Signal
-#>             Diagnostics   review   diagnostic_warnings_present
-#>  Precision / separation   review    precision_review_available
-#>    Diagnostic dashboard       ok             qc_plot_available
-#>               Reporting       ok reporting_checklist_available
-#>    Section availability       ok  requested_sections_available
-#>                                           Route
-#>           summary(res$diagnostics)$key_warnings
-#>        summary(res$components$precision_review)
-#>  plot(res, type = "qc", preset = "publication")
-#>     summary(res$components$reporting_checklist)
-#>                             summary(res)$status
-#>                                                                                                              Detail
-#>                                 Precision review flagged 1 review/warn checks. | Unexpected responses flagged: 100.
-#>  Precision review is available; inspect fit, separation, reliability, and ZSTD wording boundaries before reporting.
-#>                    The QC dashboard route is available as a focused follow-up after the required Wright-map review.
-#>                                                 Reporting checklist is available as the manuscript-routing surface.
-#>                                                           Requested sections that could be computed were available.
+#> Visual workflow (in order)
+#>  Priority                   Visual Required Available
+#>         1 mfrmr Wright map with SE     TRUE      TRUE
+#>         2  FACETS-style Wright map    FALSE      TRUE
+#>         3            Infit pathway    FALSE      TRUE
+#>                 InterpretationStatus InterpretationReady
+#>  ready_for_diagnostic_interpretation                TRUE
+#>  ready_for_diagnostic_interpretation                TRUE
+#>  ready_for_diagnostic_interpretation                TRUE
+#>   Executable routes are stored in `$required_visual$Route`.
 #> 
-#> Plot routes
-#>         Type Available RequiredArtifact
-#>       wright      TRUE             TRUE
-#>  fit_pathway      TRUE            FALSE
-#>           qc      TRUE            FALSE
-#>                                                                                                                                            Route
-#>                                                                                                                       plot(res, type = 'wright')
-#>  plot(res, type = 'fit_pathway', fit_stat = 'Infit', include_person = TRUE, top_n_person = 12, person_labels = 'none', facet_labels = 'flagged')
-#>                                                                                                                           plot(res, type = 'qc')
-#>                                                                                                  Detail
-#>  Required first fitted-scale artifact: persons, facet levels, and thresholds on the shared logit ruler.
-#>                  Infit/Outfit-versus-measure pathway with selected person rows and measure uncertainty.
-#>                                                     Quality-control dashboard from plot_qc_dashboard().
+#> Status
+#>  - Overall status: Fit completed, but data, design, stability, or diagnostics require review
+#>  - Convergence: converged (severity: pass, maximum absolute gradient: 1.58e-05)
+#>  - Estimation path: RSM / direct
+#>  - Reporting readiness: Review diagnostic findings before reporting
+#> 
+#> Workflow readiness
+#>       Domain                              Status
+#>    Numerical                                pass
+#>         Data                                pass
+#>       Design                         pass_linked
+#>    Stability                                pass
+#>  Diagnostics                              review
+#>    Reporting review_diagnostics_before_reporting
+#> 
+#> Key warnings
+#>  - No population model was requested; MML used an unconditional normal person
+#>    distribution.
+#>  - Unexpected responses flagged: 60.
+#>  - Flagged displacement levels: 1.
+#>  - MnSq screening flagged 18 element(s) outside the configured 0.5-1.5 band.
+#>  - Person-level fit warnings: 18 row(s); identifiers suppressed. Use
+#>    `include_person = TRUE` only under appropriate privacy controls.
+#>  - Strict marginal fit flagged 1 group-level summaries.
 #> 
 #> Next actions
-#>  Priority               Area
-#>         1           Overview
-#>         2             Triage
-#>         2         Wright map
-#>         3        Diagnostics
-#>         4 Visual diagnostics
-#>                                                   Action
-#>                        Read the compact results summary.
-#>           Read the first-screen triage before branching.
-#>  Create and inspect the required shared-logit scale map.
-#>   Review diagnostic key warnings before report drafting.
-#>    Open the QC dashboard after reviewing the Wright map.
-#>                                                               Route
-#>                                                        summary(res)
-#>                                                 summary(res)$triage
-#>  plot(res, type = "wright", preset = "publication", show_ci = TRUE)
-#>                               summary(res$diagnostics)$key_warnings
-#>                      plot(res, type = "qc", preset = "publication")
-#>                                                                                                                                                  Reason
-#>                                                                    Confirms input mode, model, method, section status, table coverage, and plot routes.
-#>                               Triage orders unavailable, review, information, and OK signals across diagnostics, tables, plots, and reporting surfaces.
-#>  The Wright map is the primary fitted-scale artifact: compare person targeting with facet levels and step thresholds before branching into diagnostics.
-#>                                             Diagnostic warnings identify the highest-priority fit, precision, residual, or category follow-up surfaces.
-#>                                                                    The QC route gives a focused follow-up view of fit, residual, and category surfaces.
+#>  - Create the required native Wright map first; use the first executable route
+#>    in `$required_visual$Route`.
+#>  - Use the FACETS-style ruler only when its familiar layout or rubric labels
+#>    help readers; it does not establish numerical equivalence.
+#>  - Use the optional Infit pathway after the Wright map; set `include_person =
+#>    TRUE` only when selected person points are needed.
+#>  - Inspect `$analysis` for triage and `$results$tables` for full structured
+#>    tables before preparing the report.
+#> 
+#> Facet measure overview
+#>      Facet Levels MeanEstimate SDEstimate MinEstimate MaxEstimate  Span
+#>  Criterion      3            0      0.302      -0.344       0.224 0.568
+#>      Rater      6            0      0.399      -0.606       0.412 1.018
+#> 
+#> Person measure distribution (aggregate; no identifiers)
+#>  Persons   Mean    SD Median    Min   Max  Span MeanPosteriorSD
+#>       48 -0.155 0.824 -0.208 -1.718 1.515 3.232           0.476
+#> 
+#> Step parameter summary
+#>  Steps    Min  Max  Span Monotonic
+#>      3 -1.223 1.06 2.283      TRUE
+#> 
+#> Overall fit first screen
+#>  Infit Outfit InfitZSTD OutfitZSTD InfitZSTD_FACETS OutfitZSTD_FACETS DF_Infit
+#>  0.866  0.857    -1.277     -1.752           -1.847            -1.913  173.534
+#>  DF_Outfit DF_Infit_FACETS DF_Outfit_FACETS
+#>        282         352.601          334.499
+#> 
+#> Reliability and separation first screen
+#>      Facet Levels PrecisionTier Reliability RealReliability Separation Strata
+#>  Criterion      3   model_based       0.867           0.866      2.555  3.740
+#>     Person     48   model_based       0.664           0.614      1.406  2.207
+#>      Rater      6   model_based       0.677           0.677      1.449  2.265
+#>  MeanInfit MeanOutfit
+#>      0.867      0.857
+#>      0.856      0.859
+#>      0.854      0.847
+#> 
+#> Facet chi-square first screen
+#>      Facet Levels FixedChiSq FixedDF FixedProb RandomChiSq RandomDF RandomProb
+#>  Criterion      3     14.936       2     0.001       1.998        1      0.158
+#>     Person     48    126.685      47     0.000      45.187       46      0.506
+#>      Rater      6     15.544       5     0.008       4.994        4      0.288
+#> 
+#> Rating-scale first screen
+#>  Categories UsedCategories UnusedScoreCategories WeaklyIdentifiedThresholds
+#>           4              4                                                0
+#>  MinCategoryCount MeanCategoryInfit MeanCategoryOutfit ThresholdMonotonic
+#>                46             1.079              0.999               TRUE
+#>  MarginalFitAvailable MarginalFlaggedCategories
+#>                  TRUE                         0
+#> 
+#> Labeled step transitions (first rows)
+#>    Step Transition LowerCategory UpperCategory Estimate GapFromPrev
+#>  Step_1     1 -> 2             1             2   -1.223          NA
+#>  Step_2     2 -> 3             2             3    0.163       1.386
+#>  Step_3     3 -> 4             3             4    1.060       0.896
+#>  ThresholdMonotonic WeaklyIdentified ThresholdCaveat
+#>                TRUE            FALSE                
+#>                TRUE            FALSE                
+#>                TRUE            FALSE                
+#> 
+#> Analyses intentionally not run by summary
+#>                 Section                Status
+#>              Bias / DIF Not run automatically
+#>            Residual PCA Not run automatically
+#>  Linking / anchor drift Not run automatically
+#>                                                                                                       Detail
+#>               Bias/DIF requires an explicitly chosen substantive contrast and is not screened automatically.
+#>            Residual PCA is not computed by the summary workflow; request it explicitly with diagnose_mfrm().
+#>  Anchor drift/linking requires an explicit multi-fit or multi-wave design and is not inferred automatically.
+#> 
+#> Structured result access
+#>  - `$analysis`: compact triage, table index, and plot map.
+#>  - `$results$tables`: full structured tables (not printed here).
+#>  - Re-run `summary(fit, profile = "facets", detail = "full")` only when more fit-level detail is needed.
 
 # Required first fitted-scale artifact.
-plot(res_toy, type = "wright", preset = "publication", show_ci = TRUE)
+plot(res_toy, type = "wright", preset = "publication", show_ci = TRUE, top_n = Inf)
 ```
 
 ![](mfrmr-workflow_files/figure-html/toy-setup-1.png)
+
+``` r
+
+
+# Optional FACETS-style ruler. Replace these examples with the study rubric.
+rubric_labels <- c(
+  "1" = "Level 1",
+  "2" = "Level 2",
+  "3" = "Level 3",
+  "4" = "Level 4"
+)
+plot(
+  res_toy,
+  type = "wright",
+  renderer = "facets",
+  category_labels = rubric_labels,
+  show_ci = FALSE,
+  preset = "publication"
+)
+```
+
+![](mfrmr-workflow_files/figure-html/toy-setup-2.png)
+
+``` r
+
+# Setting show_ci = TRUE on this FACETS-style ruler is available as a
+# deliberate hybrid: FACETS ruler grammar plus mfrmr uncertainty intervals.
+
+# Optional follow-up: Infit on x, measure on y; persons are explicit opt-in.
+plot(
+  res_toy,
+  type = "fit_pathway",
+  fit_stat = "Infit",
+  include_person = TRUE,
+  top_n_person = 12,
+  person_labels = "none",
+  facet_labels = "flagged",
+  preset = "publication"
+)
+```
+
+![](mfrmr-workflow_files/figure-html/toy-setup-3.png)
+
+Optimizer code zero is only one numerical signal.
+[`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
+also checks the terminal gradient; when the initial direct or hybrid
+solution stops with a larger gradient and `reltol <= 1e-9`, it runs a
+bounded sequence of warm-started polishing stages and retains the best
+non-worsening candidate under the recorded selection rule. Inspect
+`fit_toy$opt$optimizer_polish$Stages` when `Numerical` is not `pass`.
+`InferenceReady` describes this numerical gate only: Data, Design,
+Stability, Diagnostics, and Reporting remain separate rows in
+`fit_summary_toy$readiness`. For example, a disconnected design remains
+a reporting hold even if its optimizer converges. Conversely,
+`ready_for_diagnostics_and_reporting_follow_up` means that fitting
+completed and diagnostic review is the next stage; it is neither an
+optimization failure nor a claim that the analysis is already
+manuscript-ready.
+
+`expected_design` is a declared roster, not an inferred complete
+crossing. When no roster is available, the structural-missingness status
+is `"not_declared"`; the package does not label unassigned cells as
+missing.
+
+The `facets` profile is FACETS-style organization, not evidence that
+FACETS was run and not a numerical-equivalence claim. Its brief print is
+selective and does not print person identifiers; full tables remain in
+`facets_summary_toy$results$tables`. For a report-oriented result set,
+use `profile = "reporting"`. To inspect availability without allowing
+diagnostic computation, use `compute = "never"`; requested dependent
+sections are then recorded as `not_computed`:
+
+``` r
+
+reporting_summary_toy <- summary(
+  fit_toy,
+  profile = "reporting",
+  diagnostics = diag_toy
+)
+
+availability_only <- summary(
+  fit_toy,
+  profile = "facets",
+  compute = "never"
+)
+availability_only$section_status
+```
+
+Availability and interpretability are intentionally separate. Review
+`res_toy$readiness` and the `InterpretationStatus` columns in
+`res_toy$plot_map` before treating an available plot as a final result.
+Plots remain available during a numerical, data, design, or stability
+review, but they warn and carry `REVIEW ONLY` in the returned subtitle
+and drawn title until the upstream issue is resolved.
+
+Bias/DIF, residual PCA, and anchor-drift/linking analyses are
+deliberately not auto-run by any summary profile. They require explicit
+contrasts, diagnostic settings, or multi-fit designs.
 
 The same fit can then move through the public first-contact route:
 
 ``` r
 
-res_toy <- mfrm_results(fit_toy)
 report_toy <- mfrm_report(res_toy, style = "qc")
 
 summary(res_toy)$next_actions
@@ -202,9 +579,7 @@ summary(res_toy)$next_actions
 #> 4        3        Diagnostics
 #> 5        4 Visual diagnostics
 #> 6        5        Fit pathway
-#> 7        5          Precision
-#> 8        6          Reporting
-#> 9       11             Tables
+#> 7       11             Tables
 #>                                                                      Action
 #> 1                                         Read the compact results summary.
 #> 3                            Read the first-screen triage before branching.
@@ -212,19 +587,15 @@ summary(res_toy)$next_actions
 #> 4                    Review diagnostic key warnings before report drafting.
 #> 5                     Open the QC dashboard after reviewing the Wright map.
 #> 6 Review Infit against measure, including selected person rows when useful.
-#> 7        Inspect fit, separation, reliability, and ZSTD wording boundaries.
-#> 8            Use the reporting checklist as the manuscript-routing surface.
-#> 9                            Create an appendix-ready summary-table bundle.
+#> 7                            Create an appendix-ready summary-table bundle.
 #>                                                                                                                                                                     Route
 #> 1                                                                                                                                                            summary(res)
 #> 3                                                                                                                                                     summary(res)$triage
-#> 2                                                                                                      plot(res, type = "wright", preset = "publication", show_ci = TRUE)
+#> 2                                                                                         plot(res, type = "wright", preset = "publication", show_ci = TRUE, top_n = Inf)
 #> 4                                                                                                                                   summary(res$diagnostics)$key_warnings
 #> 5                                                                                                                          plot(res, type = "qc", preset = "publication")
 #> 6 plot(res, type = "fit_pathway", fit_stat = "Infit", include_person = TRUE, top_n_person = 12, person_labels = "none", facet_labels = "flagged", preset = "publication")
-#> 7                                                                                                                                summary(res$components$precision_review)
-#> 8                                                                                                                             summary(res$components$reporting_checklist)
-#> 9                                                                                                                                         build_summary_table_bundle(res)
+#> 7                                                                                                                                         build_summary_table_bundle(res)
 #>                                                                                                                                                   Reason
 #> 1                                                                   Confirms input mode, model, method, section status, table coverage, and plot routes.
 #> 3                              Triage orders unavailable, review, information, and OK signals across diagnostics, tables, plots, and reporting surfaces.
@@ -232,23 +603,23 @@ summary(res_toy)$next_actions
 #> 4                                            Diagnostic warnings identify the highest-priority fit, precision, residual, or category follow-up surfaces.
 #> 5                                                                   The QC route gives a focused follow-up view of fit, residual, and category surfaces.
 #> 6                                            This follow-up separates measure uncertainty from fit displacement while keeping person inclusion explicit.
-#> 7                                                Precision review keeps fit-size, standardized fit, and separation evidence in separate reporting lanes.
-#> 8                                                                                  Checklist rows identify report-ready, missing, and caveated sections.
-#> 9                                                                     The bundle exposes table roles, plot readiness, and conservative appendix presets.
+#> 7                                                                     The bundle exposes table roles, plot readiness, and conservative appendix presets.
 summary(report_toy)$overview
-#>   Style OverallStatus     FirstAction ReviewAreas CaveatAreas OptionalAreas
-#> 1    qc        review Start with Fit.           2           0             3
-#>   UnavailableAreas OkAreas
-#> 1                0       0
-#>                                                       SourceInclude
-#> 1 fit, diagnostics, tables, precision, reporting, categories, plots
+#>   Style OverallStatus     FirstAction ReviewAreas NotComputedAreas CaveatAreas
+#> 1    qc        review Start with Fit.           1                0           1
+#>   OptionalAreas UnavailableAreas OkAreas
+#> 1             3                0       0
+#>                                             SourceInclude
+#> 1 fit, diagnostics, tables, categories, plots, facets_fit
 
+# This is a controlled analysis archive, not a deidentified shareable export.
 export_dir <- file.path(tempdir(), "mfrmr-workflow-export")
 export_toy <- export_mfrm_results(
   res_toy,
   output_dir = export_dir,
   include = c("default", "report"),
-  overwrite = TRUE
+  overwrite = TRUE,
+  acknowledge_sensitive = TRUE
 )
 head(export_toy$written_files)
 #>                 Component Format
@@ -259,20 +630,25 @@ head(export_toy$written_files)
 #> 5        summary_plot_map    csv
 #> 6          summary_triage    csv
 #>                                                                              Path
-#> 1        /tmp/Rtmp1umPTj/mfrmr-workflow-export/mfrmr_results_summary_overview.csv
-#> 2          /tmp/Rtmp1umPTj/mfrmr-workflow-export/mfrmr_results_summary_status.csv
-#> 3 /tmp/Rtmp1umPTj/mfrmr-workflow-export/mfrmr_results_summary_component_index.csv
-#> 4     /tmp/Rtmp1umPTj/mfrmr-workflow-export/mfrmr_results_summary_table_index.csv
-#> 5        /tmp/Rtmp1umPTj/mfrmr-workflow-export/mfrmr_results_summary_plot_map.csv
-#> 6          /tmp/Rtmp1umPTj/mfrmr-workflow-export/mfrmr_results_summary_triage.csv
-#>   Note
-#> 1     
-#> 2     
-#> 3     
-#> 4     
-#> 5     
-#> 6
+#> 1        /tmp/Rtmpe5iVi8/mfrmr-workflow-export/mfrmr_results_summary_overview.csv
+#> 2          /tmp/Rtmpe5iVi8/mfrmr-workflow-export/mfrmr_results_summary_status.csv
+#> 3 /tmp/Rtmpe5iVi8/mfrmr-workflow-export/mfrmr_results_summary_component_index.csv
+#> 4     /tmp/Rtmpe5iVi8/mfrmr-workflow-export/mfrmr_results_summary_table_index.csv
+#> 5        /tmp/Rtmpe5iVi8/mfrmr-workflow-export/mfrmr_results_summary_plot_map.csv
+#> 6          /tmp/Rtmpe5iVi8/mfrmr-workflow-export/mfrmr_results_summary_triage.csv
+#>   Note          DataHandling
+#> 1      review_before_sharing
+#> 2      review_before_sharing
+#> 3      review_before_sharing
+#> 4      review_before_sharing
+#> 5      review_before_sharing
+#> 6      review_before_sharing
 ```
+
+The acknowledgement suppresses the warning only; it does not redact
+person identifiers, person-level results, local paths, or the complete
+RDS object. Review every artifact under the study’s data-handling policy
+before sharing.
 
 ## Diagnostics and Reporting
 
@@ -321,23 +697,24 @@ subset(
 #> 29  Inter-rater / displacement visuals       TRUE
 #> 30             Strict marginal visuals      FALSE
 #> 31                  Bias / DIF visuals      FALSE
-#> 32      Precision / information curves      FALSE
+#> 32      Precision / information curves       TRUE
 #> 33                Fit/category visuals       TRUE
-#>                                                                                                                                NextAction
-#> 25                                               Include a Wright map when the manuscript benefits from a shared-scale targeting display.
-#> 26                              Use the dashboard as a first-pass triage view, then move to the specific follow-up plot behind each flag.
-#> 27                                                  Run residual PCA if you want scree/loadings visuals for residual-structure follow-up.
-#> 28                                                                Use the design-matrix view to support linkage and comparability claims.
-#> 29                                                Use displacement and inter-rater views to localize QC issues after dashboard screening.
-#> 30 For MML reporting runs, call diagnose_mfrm(..., diagnostic_mode = "both") to enable strict marginal follow-up visuals where supported.
-#> 31                                                                 Run bias or DIF screening before discussing interaction-level visuals.
-#> 32                                      Use information curves descriptively and keep the current precision-tier caveat in the narrative.
-#> 33                                                 Use category curves and fit visuals as local descriptive follow-up after QC screening.
+#>                                                                                                                       NextAction
+#> 25                                      Include a Wright map when the manuscript benefits from a shared-scale targeting display.
+#> 26                     Use the dashboard as a first-pass triage view, then move to the specific follow-up plot behind each flag.
+#> 27                                         Run residual PCA if you want scree/loadings visuals for residual-structure follow-up.
+#> 28                                                       Use the design-matrix view to support linkage and comparability claims.
+#> 29                                       Use displacement and inter-rater views to localize QC issues after dashboard screening.
+#> 30 Treat strict marginal plots as exploratory corroboration screens, then corroborate with design review and legacy diagnostics.
+#> 31                                                        Run bias or DIF screening before discussing interaction-level visuals.
+#> 32                                Use information curves to describe precision across theta when that is the reporting question.
+#> 33                                        Use category curves and fit visuals as local descriptive follow-up after QC screening.
 ```
 
 ## Fit and Diagnose with Full Data
 
-For a realistic analysis, use the packaged Study 1 dataset:
+For a larger sparse synthetic illustration, use the packaged Study 1
+dataset:
 
 ``` r
 
@@ -353,193 +730,139 @@ fit <- fit_mfrm(
 
 diag <- diagnose_mfrm(
   fit,
-  residual_pca = "none"
+  residual_pca = "none",
+  diagnostic_mode = "both",
+  fit_df_method = "both"
 )
 
-summary(fit)
-#> Many-Facet Rasch Model Summary
+summary(fit, profile = "fit", detail = "brief")
+#> Many-Facet Measurement Model Summary
 #>   Model: RSM | Method: MML | N: 1842 | Persons: 307 | Facets: 2 | Categories: 4
 #>   MML engine: direct (requested: direct)
 #> 
+#> Visual workflow (in order)
+#>  Priority                   Visual Required Available
+#>         1 mfrmr Wright map with SE     TRUE      TRUE
+#>         2  FACETS-style Wright map    FALSE      TRUE
+#>         3            Infit pathway    FALSE     FALSE
+#>                 InterpretationStatus InterpretationReady
+#>  ready_for_diagnostic_interpretation                TRUE
+#>  ready_for_diagnostic_interpretation                TRUE
+#>                        not_available               FALSE
+#>   Executable routes are stored in `$required_visual$Route`.
+#> 
 #> Status
-#>  - Overall status: usable_fit
-#>  - Convergence: converged (severity: pass, sup-norm: 0.002)
+#>  - Overall status: Fit completed; review diagnostics before reporting
+#>  - Convergence: converged (severity: pass, maximum absolute gradient: 7.44e-05)
 #>  - Estimation path: RSM / direct
-#>  - Reporting readiness: ready_for_diagnostics_and_reporting_follow_up
+#>  - Reporting readiness: Fit completed; diagnostics and reporting review can proceed
+#> 
+#> Workflow readiness
+#>       Domain                                        Status
+#>    Numerical                                          pass
+#>         Data                                          pass
+#>       Design                                   pass_linked
+#>    Stability                                          pass
+#>  Diagnostics                                  not_assessed
+#>    Reporting ready_for_diagnostics_and_reporting_follow_up
 #> 
 #> Key warnings
-#>  - No population model was requested; current MML output uses the package's legacy unconditional prior.
+#>  - No population model was requested; MML used an unconditional normal person
+#>    distribution.
 #> 
 #> Next actions
-#>  - Run `diagnose_mfrm(fit, diagnostic_mode = "both")` for element-level fit review.
-#>  - Use `plot(fit, type = "wright", preset = "publication")` for targeting and scale review.
-#>  - After diagnostics, use `reporting_checklist(fit, diagnostics = diagnostics)` for reporting readiness.
+#>  - After reviewing convergence, run `review <- summary(fit, profile = "facets",
+#>    detail = "brief")` for the comprehensive FACETS-organized result surface.
+#>  - Then draw the complete native Wright map with `plot(fit, type = "wright",
+#>    show_ci = TRUE, top_n = Inf, preset = "publication")`.
+#>  - Reuse `review$results$diagnostics`; call `diagnose_mfrm()` again only for
+#>    residual PCA or other custom settings.
+#>  - Use `reporting_checklist(fit, diagnostics = review$results$diagnostics)` for
+#>    reporting readiness.
 #> 
-#> Fit overview
-#>   LogLik: -2102.731 | AIC: 4247.462 | BIC: 4363.353
-#>   Converged: Yes | Status: converged | Basis: optimizer_gradient | Fn evals: 95 | Gr evals: 26
-#>   Terminal gradient: sup-norm = 0.002 | RMS = 0.001 | Review tol = 0
-#>   Optimization note: Optimizer returned convergence code 0.
+#> Facet measure overview
+#>      Facet Levels MeanEstimate SDEstimate MinEstimate MaxEstimate  Span
+#>  Criterion      3            0      0.693      -0.799       0.431 1.230
+#>      Rater     18            0      0.667      -0.948       1.622 2.569
 #> 
-#> Population basis
-#>  PopulationModel PosteriorBasis Formula PersonRows DesignColumns
-#>            FALSE     legacy_mml    <NA>         NA            NA
-#>  CodingVariables ContrastVariables Policy ResidualVariance OmittedPersons
-#>                                      <NA>               NA              0
-#>  OmittedRows
-#>            0
-#> 
-#> Facet overview
-#>      Facet Levels MeanEstimate SDEstimate MinEstimate MaxEstimate Span
-#>  Criterion      3            0      0.693      -0.799       0.431 1.23
-#>      Rater     18            0      0.667      -0.948       1.622 2.57
-#> 
-#> Person measure distribution
+#> Person measure distribution (aggregate; no identifiers)
 #>  Persons  Mean    SD Median    Min   Max  Span MeanPosteriorSD
 #>      307 0.414 0.812  0.436 -1.451 2.385 3.835           0.482
-#> 
-#> Targeting (Person vs facet means; sum-to-zero ID makes Targeting = Person mean)
-#>      Facet PersonMean FacetMean Targeting PersonSD FacetSD SpreadRatio
-#>  Criterion      0.414         0     0.414    0.812   0.693       1.172
-#>      Rater      0.414         0     0.414    0.812   0.667       1.219
 #> 
 #> Step parameter summary
 #>  Steps    Min   Max  Span Monotonic
 #>      3 -1.093 0.958 2.051      TRUE
 #> 
-#> Estimation settings
-#>  StepFacet SlopeFacet NoncenterFacet WeightColumn QuadPoints RatingMin
-#>       <NA>       <NA>         Person         <NA>          7         1
-#>  RatingMax RatingRangeSource RatingMinSource RatingMaxSource DummyFacets
-#>          4          observed        observed        observed            
-#>  PositiveFacets FacetInteractions UnusedScoreCategories
-#>                                                        
-#>  UnusedScoreCategoryCount UnusedScoreCategoryType
-#>                         0                    none
+#> Analyses intentionally not run by summary
+#>                 Section                Status
+#>              Bias / DIF Not run automatically
+#>            Residual PCA Not run automatically
+#>  Linking / anchor drift Not run automatically
+#>                                                                                                       Detail
+#>               Bias/DIF requires an explicitly chosen substantive contrast and is not screened automatically.
+#>            Residual PCA is not computed by the summary workflow; request it explicitly with diagnose_mfrm().
+#>  Anchor drift/linking requires an explicit multi-fit or multi-wave design and is not inferred automatically.
 #> 
-#> Most extreme facet levels (|estimate|)
-#>      Facet             Level Estimate
-#>      Rater               R13    1.622
-#>      Rater               R08   -0.948
-#>      Rater               R09   -0.917
-#>      Rater               R06    0.892
-#>  Criterion Global_Impression   -0.799
+#> Section availability requiring attention
+#>      Section        Status
+#>  diagnostics not_requested
+#>                                                                                                Detail
+#>  The fit profile does not compute diagnostics. Use profile = 'facets' or 'reporting' to request them.
 #> 
-#> Highest person measures
-#>  Person Estimate    SD PosteriorSD    SE Extreme
-#>    P157    2.385 0.466       0.466 0.466    none
-#>    P239    2.349 0.543       0.543 0.543    high
-#>    P135    2.265 0.469       0.469 0.469    none
-#>    P018    2.121 0.613       0.613 0.613    high
-#>    P209    2.013 0.644       0.644 0.644    high
-#> 
-#> Lowest person measures
-#>  Person Estimate    SD PosteriorSD    SE Extreme
-#>    P136   -1.451 0.556       0.556 0.556    none
-#>    P173   -1.400 0.526       0.526 0.526    none
-#>    P159   -1.350 0.579       0.579 0.579    none
-#>    P048   -1.333 0.468       0.468 0.468    none
-#>    P089   -1.275 0.396       0.396 0.396    none
-#> 
-#> Paper reporting map
-#>                                Area CoveredHere
-#>  Model identification / convergence         yes
-#>        Data structure / missingness          no
-#>    Reliability / fit / residual PCA          no
-#>                Category functioning     partial
-#>     Bias / DIF / interaction checks          no
-#>         Draft reporting / checklist          no
-#>                                                                CompanionOutput
-#>                                                                   summary(fit)
-#>                                               summary(describe_mfrm_data(...))
-#>                                                    summary(diagnose_mfrm(fit))
-#>  rating_scale_table() / category_structure_report() / category_curves_report()
-#>         summary(estimate_bias(...)) / analyze_dff() / related bundle summaries
-#>                        reporting_checklist() / summary(build_apa_outputs(...))
-#> 
-#> Notes
-#>  - No population model was requested; current MML output uses the package's legacy unconditional prior.
+#> Structured result access
+#>  - Use `summary(fit, profile = "facets")` for the computed FACETS-organized review.
+#>  - Use `summary(fit, detail = "full")` for legacy fit-level detail.
 summary(diag)
-#> Many-Facet Rasch Diagnostics Summary
+#> Many-Facet Measurement Diagnostics Summary
 #>   Observations: 1842 | Persons: 307 | Facets: 2 | Categories: 4 | Subsets: 1
 #>   Residual PCA mode: none
-#>   Method: MML | Precision tier: model_based
-#>   Diagnostic mode: both | Strict marginal fit: available
+#>   Method: MML | Precision tier: Model-based precision
+#>   Diagnostic mode: Legacy and strict marginal
+#>   Strict marginal fit: Available
 #> 
 #> Status
-#>  - Overall status: follow_up_needed
-#>  - Diagnostic path: both
-#>  - Strict marginal fit: available
-#>  - Precision tier: model_based
-#>  - Primary screen: Read strict marginal fit first; use legacy residuals for continuity and follow-up.
+#>  - Overall status: Follow-up needed
+#>  - Diagnostic path: Legacy and strict marginal
+#>  - Strict marginal fit: Available
+#>  - Precision tier: Model-based precision
+#>  - Primary screen: Read strict marginal fit first; use legacy residuals for
+#>    continuity and follow-up.
 #> 
 #> Key warnings
 #>  - Unexpected responses flagged: 100.
 #>  - Flagged displacement levels: 40.
-#>  - MnSq misfit flagged 130 element(s) outside 0.5-1.5 (Linacre threshold).
-#>  - MnSq misfit: Person:P020 (Infit=0.03, Outfit=0.03; outside 0.5-1.5).
-#>  - MnSq misfit: Person:P203 (Infit=0.04, Outfit=0.07; outside 0.5-1.5).
+#>  - MnSq screening flagged 130 element(s) outside the configured 0.5-1.5 band.
+#>  - Person-level fit warnings: 130 row(s); identifiers suppressed. Use
+#>    `include_person = TRUE` only under appropriate privacy controls.
+#>  - Strict marginal fit flagged 4 group-level summaries.
 #> 
 #> Next actions
-#>  - Inspect `diagnostic_basis` before comparing legacy residual evidence with strict marginal evidence.
-#>  - Review `top_marginal_cells` and `rating_scale_table(..., diagnostics = diag)` for first-order strict marginal follow-up.
+#>  - Inspect `diagnostic_basis` before comparing legacy residual evidence with
+#>    strict marginal evidence.
+#>  - Review `top_marginal_cells` and `rating_scale_table(..., diagnostics =
+#>    diag)` for first-order strict marginal follow-up.
 #>  - Review `top_marginal_pairs` for pairwise local-dependence follow-up.
-#>  - Use `unexpected_response_table()` / `plot_unexpected()` and `displacement_table()` / `plot_displacement()` for case-level follow-up.
+#>  - Use `unexpected_response_table()` / `plot_unexpected()` and
+#>    `displacement_table()` / `plot_displacement()` for case-level follow-up.
 #> 
 #> Overall fit
-#>  Infit Outfit InfitZSTD OutfitZSTD DF_Infit DF_Outfit
-#>  0.811  0.786    -4.629      -7.01 1058.852      1842
+#>  Infit Outfit InfitZSTD OutfitZSTD DF_Infit DF_Outfit DF_Infit_FACETS
+#>  0.811  0.786    -4.629      -7.01 1058.853      1842        2068.188
+#>  DF_Outfit_FACETS DF_Infit_ENGINE DF_Outfit_ENGINE InfitZSTD_ENGINE
+#>          1613.625        1058.853             1842           -4.629
+#>  OutfitZSTD_ENGINE InfitZSTD_FACETS OutfitZSTD_FACETS
+#>              -7.01            -6.48             -6.56
+#>                      FitDfMethod FitZSTDTransform FitZSTDCap
+#>  engine_primary_facets_available  Wilson-Hilferty          9
 #> 
-#> Fit ZSTD standardization
-#>  PrimaryFitDfMethod                   PrimaryZSTDColumns
-#>              engine InfitZSTD / OutfitZSTD use engine df
-#>                                               EngineDf
-#>  DF_Infit = sum(Var * Weight); DF_Outfit = sum(Weight)
-#>                                                                  FacetsDf
-#>  DF = 2 / q^2 using the Wright-Masters/FACETS fourth-moment approximation
-#>  FacetsColumnsAvailable   ZSTDTransform FacetsZSTDCap
-#>                   FALSE Wilson-Hilferty            NA
-#> 
-#> Diagnostic basis guide
-#>                    DiagnosticPath                      Component
-#>               legacy_residual_fit           element_residual_fit
-#>               strict_marginal_fit    first_order_category_counts
-#>  strict_pairwise_local_dependence      pairwise_local_dependence
-#>    posterior_predictive_follow_up posterior_predictive_follow_up
-#>                   Status                                    Basis
-#>                 computed          plugin_residuals_and_eap_tables
-#>                 computed     latent_integrated_first_order_counts
-#>                 computed latent_integrated_second_order_agreement
-#>  planned_not_implemented         posterior_predictive_replication
-#>                                    PrimaryStatistics
-#>  Infit / Outfit / ZSTD / PTMEA / residual QC bundles
-#>   category residuals / standardized residuals / RMSD
-#>               exact and adjacent agreement residuals
-#>                   replicated-data discrepancy checks
-#>                 ReportingUse
-#>  legacy_compatibility_screen
-#>               screening_only
-#>               screening_only
-#>               screening_only
-#>                                                                                                                                InterpretationNote
-#>                        Legacy fit statistics use plug-in residual machinery and should not be interpreted as latent-integrated marginal evidence.
-#>  Strict marginal fit integrates over the latent distribution and is the preferred strict screen for category-level misfit in the current release.
-#>               Strict pairwise local-dependence checks are exploratory follow-ups to first-order marginal flags, not standalone inferential tests.
-#>           Posterior predictive checking is reserved for corroborating strict marginal flags and practical-significance review in a later release.
-#> 
-#> Precision basis
-#>  Method Converged PrecisionTier SupportsFormalInference HasFallbackSE
-#>     MML      TRUE   model_based                    TRUE         FALSE
-#>       PersonSEBasis           NonPersonSEBasis
-#>  Posterior SD (EAP) Observed information (MML)
-#>                              CIBasis
-#>  Normal interval from model-based SE
-#>                                                  ReliabilityBasis
-#>  Observed variance with model-based and fit-adjusted error bounds
-#>  HasFitAdjustedSE HasSamplePopulationCoverage
-#>              TRUE                        TRUE
-#>                                                         RecommendedUse
-#>  Use for primary reporting of SE, CI, and reliability in this package.
+#> Flag counts
+#>                                 Metric Count
+#>                   Unexpected responses   100
+#>            Flagged displacement levels    40
+#>                       Interaction rows    20
+#>                      Inter-rater pairs   153
+#>            Marginal fit flagged groups     4
+#>  Marginal pairwise flagged level pairs    90
 #> 
 #> Facet precision and spread
 #>      Facet Levels Separation Strata Reliability RealSeparation RealStrata
@@ -551,420 +874,155 @@ summary(diag)
 #>            0.600     0.798      0.786
 #>            0.906     0.813      0.786
 #> 
-#> Facet variability (fixed-effect chi-square; null = all elements equal)
-#>      Facet Levels MeanMeasure    SD FixedChiSq FixedDF FixedProb RandomChiSq
-#>  Criterion      3       0.000 0.693    413.140       2         0       1.999
-#>     Person    307       0.414 0.812    888.264     306         0     302.435
-#>      Rater     18       0.000 0.667    248.678      17         0      17.049
-#>  RandomDF RandomProb
-#>         1      0.157
-#>       305      0.531
-#>        16      0.382
-#> 
-#> Inter-rater agreement summary
-#>  RaterFacet Raters Pairs OpportunityCount ExactAgreement ExpectedExactAgreement
-#>       Rater     18   153              921          0.362                  0.355
-#>  AgreementMinusExpected AdjacentAgreement MeanAbsDiff MeanCorr RaterSeparation
-#>                   0.007             0.805       0.858    0.325           3.121
-#>  RaterReliability
-#>             0.907
-#> 
-#> Largest |ZSTD| rows
+#> Highest-priority non-person fit rows
 #>      Facet                  Level Infit Outfit InfitZSTD OutfitZSTD DF_Infit
-#>  Criterion      Global_Impression 0.799  0.744    -2.590     -4.913  292.461
+#>  Criterion      Global_Impression 0.799  0.744    -2.590     -4.913  292.462
 #>      Rater                    R08 0.702  0.661    -2.434     -4.103  110.307
 #>  Criterion Linguistic_Realization 0.803  0.798    -2.907     -3.799  382.619
-#>     Person                   P020 0.028  0.027    -2.744     -3.436    4.080
 #>  Criterion       Task_Fulfillment 0.830  0.816    -2.481     -3.416  383.772
 #>      Rater                    R10 0.738  0.726    -2.187     -2.939  118.696
-#>     Person                   P203 0.041  0.073    -2.500     -2.836    3.885
-#>     Person                   P098 2.328  3.387     1.549      2.800    3.539
-#>      Rater                    R05 0.745  0.750    -1.916     -2.522   98.234
-#>     Person                   P056 0.075  0.125    -1.727     -2.407    2.688
-#>  DF_Outfit  AbsZ
-#>        614 4.913
-#>        228 4.103
-#>        614 3.799
-#>          6 3.436
-#>        614 3.416
-#>        192 2.939
-#>          6 2.836
-#>          6 2.800
-#>        174 2.522
-#>          6 2.407
+#>  DF_Outfit InfitZSTD_FACETS OutfitZSTD_FACETS DF_Infit_FACETS DF_Outfit_FACETS
+#>        614           -3.621            -3.881         565.702          384.918
+#>        228           -3.420            -3.134         213.893          134.449
+#>        614           -4.086            -3.969         750.062          669.476
+#>        614           -3.491            -3.578         752.499          673.020
+#>        192           -3.085            -3.012         231.661          201.432
+#>   AbsZ
+#>  4.913
+#>  4.103
+#>  3.799
+#>  3.416
+#>  2.939
 #> 
-#> MnSq misfit (outside 0.5-1.5 Linacre band; 130 element(s))
-#>   Facet Level Infit InfitZSTD Outfit OutfitZSTD
-#>  Person  P001 0.300    -1.082  0.307     -1.497
-#>  Person  P005 0.467    -0.599  0.554     -0.736
-#>  Person  P007 0.345    -0.369  0.277     -1.616
-#>  Person  P012 1.537     0.841  1.569      1.035
-#>  Person  P016 0.328    -1.052  0.332     -1.405
-#>  Person  P017 0.202    -1.530  0.214     -1.896
-#>  Person  P018 0.394    -0.361  0.325     -1.432
-#>  Person  P020 0.028    -2.744  0.027     -3.436
-#>  Person  P022 1.773     1.141  1.638      1.121
-#>  Person  P023 0.478    -0.378  0.417     -1.122
-#>  Person  P025 0.323    -1.105  0.349     -1.345
-#>  Person  P026 0.440    -0.703  0.481     -0.932
-#>  Person  P030 0.487    -0.703  0.475     -0.950
-#>  Person  P035 0.356    -0.972  0.387     -1.218
-#>  Person  P038 1.641     0.979  1.734      1.239
-#>  Person  P039 0.263    -1.262  0.288     -1.573
-#>  Person  P043 0.359    -1.009  0.382     -1.234
-#>  Person  P046 0.251    -1.288  0.283     -1.594
-#>  Person  P048 1.972     1.218  2.090      1.640
-#>  Person  P049 0.436    -0.418  0.350     -1.341
-#>  Person  P052 1.772     1.105  1.819      1.339
-#>  Person  P055 1.696     1.007  1.443      0.868
-#>  Person  P056 0.075    -1.727  0.125     -2.407
-#>  Person  P057 0.329    -0.399  0.276     -1.622
-#>  Person  P058 0.352    -1.055  0.353     -1.331
-#>  Person  P062 0.249    -1.331  0.296     -1.541
-#>  Person  P066 0.379    -0.979  0.390     -1.208
-#>  Person  P067 0.499    -0.606  0.558     -0.726
-#>  Person  P073 0.476    -0.499  1.022      0.231
-#>  Person  P074 0.400    -0.773  0.486     -0.919
-#>  Person  P075 0.350    -0.848  0.422     -1.106
-#>  Person  P076 0.162    -1.594  0.185     -2.042
-#>  Person  P079 0.521    -0.503  0.493     -0.900
-#>  Person  P082 0.273    -0.987  0.279     -1.608
-#>  Person  P083 1.132     0.414  1.559      1.022
-#>  Person  P084 0.446    -0.354  0.372     -1.266
-#>  Person  P085 0.208    -1.559  0.201     -1.959
-#>  Person  P086 0.250    -1.382  0.270     -1.646
-#>  Person  P090 0.278    -1.204  0.313     -1.474
-#>  Person  P098 2.328     1.549  3.387      2.800
-#>  Person  P102 0.146    -1.684  0.202     -1.956
-#>  Person  P103 0.346    -1.071  0.361     -1.302
-#>  Person  P104 1.783     1.128  1.616      1.094
-#>  Person  P105 0.185    -1.157  0.233     -1.804
-#>  Person  P106 0.444    -0.782  0.468     -0.969
-#>  Person  P108 0.563    -0.215  0.480     -0.935
-#>  Person  P112 0.297    -0.861  0.322     -1.444
-#>  Person  P113 0.137    -1.702  0.201     -1.961
-#>  Person  P114 0.239    -1.068  0.261     -1.684
-#>  Person  P115 0.461    -0.738  0.465     -0.978
-#>  Person  P116 0.549    -0.268  0.472     -0.959
-#>  Person  P117 1.817     1.145  1.742      1.248
-#>  Person  P118 0.255    -1.002  0.292     -1.558
-#>  Person  P124 1.214     0.517  1.582      1.051
-#>  Person  P125 0.482    -0.493  0.440     -1.050
-#>  Person  P127 0.431    -0.395  0.359     -1.311
-#>  Person  P129 0.487    -0.700  0.502     -0.874
-#>  Person  P132 0.271    -1.244  0.296     -1.541
-#>  Person  P133 0.480    -0.686  0.498     -0.884
-#>  Person  P135 0.483    -0.400  0.410     -1.143
-#>  Person  P136 0.412    -0.553  0.390     -1.206
-#>  Person  P137 0.468    -0.606  0.450     -1.022
-#>  Person  P138 1.717     1.078  1.567      1.032
-#>  Person  P140 0.440    -0.670  0.433     -1.072
-#>  Person  P141 2.353     1.591  2.441      1.992
-#>  Person  P142 1.864     1.219  1.772      1.284
-#>  Person  P143 1.552     0.895  1.714      1.215
-#>  Person  P146 0.414    -0.670  0.485     -0.923
-#>  Person  P148 0.323    -1.138  0.319     -1.452
-#>  Person  P149 0.446    -0.354  0.372     -1.266
-#>  Person  P155 0.451    -0.644  0.443     -1.042
-#>  Person  P156 0.399    -0.453  0.341     -1.373
-#>  Person  P159 0.222    -0.746  0.235     -1.799
-#>  Person  P161 0.541    -0.256  0.462     -0.986
-#>  Person  P164 0.483    -0.685  0.495     -0.892
-#>  Person  P167 0.330    -1.085  0.331     -1.411
-#>  Person  P170 0.256    -1.221  0.308     -1.494
-#>  Person  P175 0.275    -0.939  0.302     -1.519
-#>  Person  P176 0.500    -0.309  0.429     -1.086
-#>  Person  P177 0.202    -1.530  0.214     -1.896
-#>  Person  P178 0.455    -0.617  0.439     -1.056
-#>  Person  P182 0.448    -0.795  0.470     -0.962
-#>  Person  P188 0.435    -0.261  0.312     -1.478
-#>  Person  P190 0.306    -1.122  0.306     -1.503
-#>  Person  P191 0.371    -0.840  0.362     -1.300
-#>  Person  P193 0.297    -0.861  0.322     -1.444
-#>  Person  P195 0.419    -0.764  0.445     -1.037
-#>  Person  P196 2.064     1.214  1.405      0.816
-#>  Person  P198 0.526    -0.201  0.443     -1.042
-#>  Person  P199 1.999     1.208  1.436      0.858
-#>  Person  P203 0.041    -2.500  0.073     -2.836
-#>  Person  P204 0.454    -0.411  0.389     -1.212
-#>  Person  P207 0.480    -0.696  0.468     -0.969
-#>  Person  P208 0.422    -0.470  0.371     -1.269
-#>  Person  P209 0.463    -0.226  0.323     -1.439
-#>  Person  P211 1.900     1.223  1.745      1.252
-#>  Person  P215 0.315    -1.093  0.325     -1.431
-#>  Person  P217 0.436    -0.578  0.536     -0.783
-#>  Person  P219 2.017     1.302  2.047      1.594
-#>  Person  P222 0.343    -0.802  0.323     -1.439
-#>  Person  P223 0.415    -0.723  0.645     -0.514
-#>  Person  P224 1.621     0.980  1.601      1.075
-#>  Person  P227 0.333    -1.040  0.336     -1.392
-#>  Person  P235 1.589     0.894  1.448      0.875
-#>  Person  P237 0.499    -0.349  0.436     -1.065
-#>  Person  P239 0.712     0.052  0.420     -1.113
-#>  Person  P242 0.391    -0.890  0.380     -1.240
-#>  Person  P243 1.464     0.809  1.613      1.090
-#>  Person  P244 0.375    -0.984  0.377     -1.250
-#>  Person  P247 1.585     0.849  1.429      0.849
-#>  Person  P250 0.329    -1.114  0.308     -1.495
-#>  Person  P255 0.518    -0.421  0.465     -0.978
-#>  Person  P261 0.208    -1.541  0.228     -1.830
-#>  Person  P262 1.682     1.006  1.639      1.122
-#>  Person  P264 0.426    -0.706  0.598     -0.625
-#>  Person  P266 0.433    -0.783  0.458     -0.999
-#>  Person  P267 0.484    -0.675  0.505     -0.866
-#>  Person  P269 0.451    -0.614  0.434     -1.068
-#>  Person  P271 1.456     0.810  1.502      0.947
-#>  Person  P272 0.208    -1.467  0.232     -1.812
-#>  Person  P277 0.359    -0.921  0.358     -1.314
-#>  Person  P278 0.483    -0.503  0.442     -1.044
-#>  Person  P281 0.326    -1.086  0.352     -1.336
-#>  Person  P282 1.770     1.094  1.670      1.161
-#>  Person  P285 1.526     0.873  1.472      0.907
-#>  Person  P287 0.578    -0.307  0.500     -0.881
-#>  Person  P290 0.462    -0.549  0.431     -1.080
-#>  Person  P293 0.480    -0.624  0.477     -0.944
-#>  Person  P300 0.427    -0.631  0.416     -1.124
-#>  Person  P306 1.717     1.075  1.589      1.060
-#> 
-#> Category usage (Count + AvgMeasure within each observed score)
-#>  Category Count AvgMeasure Disordering
-#>         1   215     -0.404            
-#>         2   451     -0.005            
-#>         3   525      0.450            
-#>         4   651      0.945            
-#> 
-#> Strict marginal fit
-#>  Available Method Model                                Basis ObservationCount
-#>       TRUE    MML   RSM latent_integrated_first_order_counts             1842
-#>  CategoryCount OverallRMSD OverallMaxAbsStdResidual StepGroupsFlagged
-#>              4       0.016                    3.137                 1
-#>  FacetLevelsFlagged PairwiseAvailable PairwiseFlaggedLevelPairs
-#>                   3              TRUE                        90
-#>  PosteriorPredictiveFollowUp InferenceTier SupportsFormalInference
-#>      planned_not_implemented   exploratory                   FALSE
-#>  FormalInferenceEligible PrimaryReportingEligible ClassificationSystem
-#>                    FALSE                    FALSE            screening
-#>    ReportingUse             StatisticLabel
-#>  screening_only strict marginal fit screen
-#>                                                                                        LiteratureSeries
-#>  limited_information_inspired_marginal_screen + agreement_screen_informed_by_generalized_residual_logic
-#>  InterpretationBasis
-#>    latent_integrated
-#>                                                                                                   FollowUpRecommendation
-#>  Use as screening evidence and corroborate with companion diagnostics, model comparisons, and substantive design review.
-#> 
-#> Largest marginal residual cells
-#>     CellType StepFacet     Facet                  Level Category ObservedCount
-#>   step_facet    Common      <NA>                   <NA>        1           215
-#>  facet_level      <NA>     Rater                    R17        3            14
-#>  facet_level      <NA>     Rater                    R17        4            36
-#>   step_facet    Common      <NA>                   <NA>        4           651
-#>  facet_level      <NA>     Rater                    R18        2            19
-#>  facet_level      <NA> Criterion Linguistic_Realization        1            93
-#>  facet_level      <NA> Criterion       Task_Fulfillment        1            99
-#>  facet_level      <NA>     Rater                    R14        1             0
-#>  facet_level      <NA>     Rater                    R15        1             1
-#>  facet_level      <NA>     Rater                    R08        2            45
-#>  ExpectedCount PropDiff StdResidual AbsStdResidual
-#>        255.396   -0.022      -3.137          3.137
-#>         24.202   -0.121      -2.508          2.508
-#>         26.894    0.108       2.476          2.476
-#>        610.605    0.022       2.356          2.356
-#>         28.274   -0.075      -2.100          2.100
-#>        108.761   -0.026      -1.896          1.896
-#>        114.751   -0.026      -1.858          1.858
-#>          2.690   -0.064      -1.847          1.847
-#>          3.788   -0.186      -1.796          1.796
-#>         35.807    0.040       1.789          1.789
-#> 
-#> Strict pairwise local dependence
-#>      Facet LevelPairs ContextPairs MeanAbsExactGap MeanAbsAdjacentGap
-#>  Criterion          3         1842           0.007              0.008
-#>      Rater        111          921           0.122              0.097
-#>  MaxAbsExactStdResidual MaxAbsAdjacentStdResidual OpportunityWeight
-#>                   0.624                     0.923              1842
-#>                   2.547                     2.674               921
-#>  FlaggedLevelPairs InferenceTier SupportsFormalInference
-#>                  0   exploratory                   FALSE
-#>                 90   exploratory                   FALSE
-#>  FormalInferenceEligible PrimaryReportingEligible ClassificationSystem
-#>                    FALSE                    FALSE            screening
-#>                    FALSE                    FALSE            screening
-#>    ReportingUse                     StatisticLabel
-#>  screening_only strict pairwise agreement residual
-#>  screening_only strict pairwise agreement residual
-#>                                         LiteratureSeries
-#>  agreement_screen_informed_by_generalized_residual_logic
-#>  agreement_screen_informed_by_generalized_residual_logic
-#> 
-#> Largest marginal pairwise residuals
-#>  Facet Level1 Level2 LevelPairCount OpportunityWeight ExactAgreement
-#>  Rater    R05    R10             30                30          0.167
-#>  Rater    R01    R12              6                 6          0.833
-#>  Rater    R02    R08              9                 9          0.000
-#>  Rater    R13    R16              6                 6          0.667
-#>  Rater    R11    R12             12                12          0.083
-#>  Rater    R05    R12              6                 6          0.000
-#>  Rater    R03    R09             12                12          0.167
-#>  Rater    R08    R17             18                18          0.611
-#>  Rater    R04    R12              6                 6          0.667
-#>  Rater    R02    R04              9                 9          0.111
-#>  ExpectedExactAgreement ExactGap ExactStdResidual AdjacentAgreement
-#>                   0.389   -0.222           -2.547             0.767
-#>                   0.355    0.479            2.482             1.000
-#>                   0.377   -0.377           -2.391             0.778
-#>                   0.252    0.415            2.348             0.667
-#>                   0.362   -0.279           -2.029             0.667
-#>                   0.351   -0.351           -1.818             0.667
-#>                   0.412   -0.246           -1.774             0.833
-#>                   0.417    0.194            1.752             0.944
-#>                   0.336    0.330            1.727             0.833
-#>                   0.382   -0.270           -1.716             0.778
-#>  ExpectedAdjacentAgreement AdjacentGap AdjacentStdResidual Flagged
-#>                      0.827      -0.060              -0.878    TRUE
-#>                      0.803       0.197               1.225    TRUE
-#>                      0.800      -0.022              -0.167    TRUE
-#>                      0.673      -0.006              -0.034    TRUE
-#>                      0.819      -0.152              -1.376    TRUE
-#>                      0.800      -0.133              -0.823    TRUE
-#>                      0.838      -0.005              -0.043    TRUE
-#>                      0.821       0.124               1.406    TRUE
-#>                      0.780       0.053               0.315    TRUE
-#>                      0.807      -0.029              -0.228    TRUE
-#> 
-#> Strict marginal guidance
-#>                       Component                     StatisticLabel
-#>     first_order_category_counts  strict marginal category residual
-#>       pairwise_local_dependence strict pairwise agreement residual
-#>  posterior_predictive_follow_up     posterior predictive follow-up
-#>                                         LiteratureSeries
-#>             limited_information_inspired_marginal_screen
-#>  agreement_screen_informed_by_generalized_residual_logic
-#>               posterior_predictive_model_check_follow_up
-#>                                              PrimaryRole InferenceTier
-#>                               category / facet screening   exploratory
-#>                               local dependence follow-up   exploratory
-#>  misfit corroboration / practical-significance follow-up   exploratory
-#>  SupportsFormalInference FormalInferenceEligible PrimaryReportingEligible
-#>                    FALSE                   FALSE                    FALSE
-#>                    FALSE                   FALSE                    FALSE
-#>                    FALSE                   FALSE                    FALSE
-#>  ClassificationSystem   ReportingUse
-#>             screening screening_only
-#>             screening screening_only
-#>             screening screening_only
-#>                                                                                                                                                                                      InterpretationNote
-#>                                                                                  Use as a latent-integrated limited-information screen; do not treat isolated flags as definitive inferential evidence.
-#>  Use as an exploratory local-dependence follow-up after first-order marginal screening; this is informed by generalized-residual logic but is not a formal Haberman-Sinharay generalized residual test.
-#>              Reserve for corroborating strict marginal flags and assessing practical significance; the current release labels this follow-up path but does not yet compute posterior predictive checks.
-#> 
-#> Paper reporting map
-#>                                   Area CoveredHere
-#>              Overall fit / reliability         yes
-#>  Precision basis / inferential caveats         yes
-#>                    Strict marginal fit         yes
-#>         Residual PCA / local structure     partial
-#>    Unexpected responses / displacement     partial
-#>                 Connectivity / subsets     partial
-#>          Manuscript checklist / export          no
-#>                                                                CompanionOutput
-#>                                                           summary(diagnostics)
-#>                                                           summary(diagnostics)
-#>  diagnostics$marginal_fit / rating_scale_table(..., diagnostics = diagnostics)
-#>                               analyze_residual_pca() / diagnostics$pca details
-#>        unexpected_response_table() / displacement_table() / interaction tables
-#>                      subset_connectivity_report() / measurable_summary_table()
-#>                        reporting_checklist() / summary(build_apa_outputs(...))
-#> 
-#> Flag counts
-#>                                 Metric Count
-#>                   Unexpected responses   100
-#>            Flagged displacement levels    40
-#>                       Interaction rows    20
-#>                      Inter-rater pairs   153
-#>            Marginal fit flagged groups     4
-#>  Marginal pairwise flagged level pairs    90
-#> 
-#> Notes
-#>  - Unexpected responses were flagged under current thresholds.
-#>  - SE/ModelSE, CI, and reliability conventions depend on the estimation path; see diagnostics$approximation_notes for MML-vs-JML details.
-#>  - Use `diagnostics$reliability` for facet-level separation/reliability. Use `diagnostics$interrater` only for observed agreement across matched rater contexts.
-#>  - Strict marginal fit was computed from latent-integrated first-order category counts.
-#>  - Strict pairwise local-dependence checks were computed from posterior-integrated expected exact and adjacent agreement and should be read as exploratory screening summaries.
-#>  - Posterior predictive checking remains a planned corroborating follow-up for strict marginal flags and practical-significance review.
-#>  - Legacy residual diagnostics and strict marginal diagnostics target different quantities; do not compare their residual magnitudes directly.
+#> Further detail
+#>  - Additional tables remain in the structured summary; use `detail = "full"` to
+#>    print them.
 
 # Keep the final artifact flow explicit: fit -> Wright map -> follow-up plots.
-res <- mfrm_results(fit)
-summary(res, view = "brief")
-#> mfrmr Results Summary
+s <- summary(fit, profile = "facets", diagnostics = diag)
+res <- s$results
+s
+#> Many-Facet Measurement Model Summary
+#>   Model: RSM | Method: MML | N: 1842 | Persons: 307 | Facets: 2 | Categories: 4
+#>   MML engine: direct (requested: direct)
 #> 
-#> Overview
-#>  InputMode Model Method    N Persons Facets Categories Components Tables
-#>   mfrm_fit   RSM    MML 1842     307      2          4         10     94
-#>  PlotRoutes NotAvailable
-#>           7            0
+#> Workflow profile: facets
+#>   FACETS-style organization; not evidence that FACETS was run and not a claim of numerical equivalence.
 #> 
-#> Triage
-#>                    Area Severity                        Signal
-#>             Diagnostics   review   diagnostic_warnings_present
-#>  Precision / separation   review    precision_review_available
-#>    Diagnostic dashboard       ok             qc_plot_available
-#>               Reporting       ok reporting_checklist_available
-#>    Section availability       ok  requested_sections_available
-#>                                           Route
-#>           summary(res$diagnostics)$key_warnings
-#>        summary(res$components$precision_review)
-#>  plot(res, type = "qc", preset = "publication")
-#>     summary(res$components$reporting_checklist)
-#>                             summary(res)$status
-#>                                                                                                              Detail
-#>                                               Unexpected responses flagged: 100. | Flagged displacement levels: 40.
-#>  Precision review is available; inspect fit, separation, reliability, and ZSTD wording boundaries before reporting.
-#>                    The QC dashboard route is available as a focused follow-up after the required Wright-map review.
-#>                                                 Reporting checklist is available as the manuscript-routing surface.
-#>                                                           Requested sections that could be computed were available.
+#> Visual workflow (in order)
+#>  Priority                   Visual Required Available
+#>         1 mfrmr Wright map with SE     TRUE      TRUE
+#>         2  FACETS-style Wright map    FALSE      TRUE
+#>         3            Infit pathway    FALSE      TRUE
+#>                 InterpretationStatus InterpretationReady
+#>  ready_for_diagnostic_interpretation                TRUE
+#>  ready_for_diagnostic_interpretation                TRUE
+#>  ready_for_diagnostic_interpretation                TRUE
+#>   Executable routes are stored in `$required_visual$Route`.
 #> 
-#> Plot routes
-#>         Type Available RequiredArtifact
-#>       wright      TRUE             TRUE
-#>  fit_pathway      TRUE            FALSE
-#>           qc      TRUE            FALSE
-#>                                                                                                                                            Route
-#>                                                                                                                       plot(res, type = 'wright')
-#>  plot(res, type = 'fit_pathway', fit_stat = 'Infit', include_person = TRUE, top_n_person = 12, person_labels = 'none', facet_labels = 'flagged')
-#>                                                                                                                           plot(res, type = 'qc')
-#>                                                                                                  Detail
-#>  Required first fitted-scale artifact: persons, facet levels, and thresholds on the shared logit ruler.
-#>                  Infit/Outfit-versus-measure pathway with selected person rows and measure uncertainty.
-#>                                                     Quality-control dashboard from plot_qc_dashboard().
+#> Status
+#>  - Overall status: Fit completed, but data, design, stability, or diagnostics require review
+#>  - Convergence: converged (severity: pass, maximum absolute gradient: 7.44e-05)
+#>  - Estimation path: RSM / direct
+#>  - Reporting readiness: Review diagnostic findings before reporting
+#> 
+#> Workflow readiness
+#>       Domain                              Status
+#>    Numerical                                pass
+#>         Data                                pass
+#>       Design                         pass_linked
+#>    Stability                                pass
+#>  Diagnostics                              review
+#>    Reporting review_diagnostics_before_reporting
+#> 
+#> Key warnings
+#>  - No population model was requested; MML used an unconditional normal person
+#>    distribution.
+#>  - Unexpected responses flagged: 100.
+#>  - Flagged displacement levels: 40.
+#>  - MnSq screening flagged 130 element(s) outside the configured 0.5-1.5 band.
+#>  - Person-level fit warnings: 130 row(s); identifiers suppressed. Use
+#>    `include_person = TRUE` only under appropriate privacy controls.
+#>  - Strict marginal fit flagged 4 group-level summaries.
 #> 
 #> Next actions
-#>  Priority               Area
-#>         1           Overview
-#>         2             Triage
-#>         2         Wright map
-#>         3        Diagnostics
-#>         4 Visual diagnostics
-#>                                                   Action
-#>                        Read the compact results summary.
-#>           Read the first-screen triage before branching.
-#>  Create and inspect the required shared-logit scale map.
-#>   Review diagnostic key warnings before report drafting.
-#>    Open the QC dashboard after reviewing the Wright map.
-#>                                                               Route
-#>                                                        summary(res)
-#>                                                 summary(res)$triage
-#>  plot(res, type = "wright", preset = "publication", show_ci = TRUE)
-#>                               summary(res$diagnostics)$key_warnings
-#>                      plot(res, type = "qc", preset = "publication")
-#>                                                                                                                                                  Reason
-#>                                                                    Confirms input mode, model, method, section status, table coverage, and plot routes.
-#>                               Triage orders unavailable, review, information, and OK signals across diagnostics, tables, plots, and reporting surfaces.
-#>  The Wright map is the primary fitted-scale artifact: compare person targeting with facet levels and step thresholds before branching into diagnostics.
-#>                                             Diagnostic warnings identify the highest-priority fit, precision, residual, or category follow-up surfaces.
-#>                                                                    The QC route gives a focused follow-up view of fit, residual, and category surfaces.
-plot(res, type = "wright", preset = "publication", show_ci = TRUE)
+#>  - Create the required native Wright map first; use the first executable route
+#>    in `$required_visual$Route`.
+#>  - Use the FACETS-style ruler only when its familiar layout or rubric labels
+#>    help readers; it does not establish numerical equivalence.
+#>  - Use the optional Infit pathway after the Wright map; set `include_person =
+#>    TRUE` only when selected person points are needed.
+#>  - Inspect `$analysis` for triage and `$results$tables` for full structured
+#>    tables before preparing the report.
+#> 
+#> Facet measure overview
+#>      Facet Levels MeanEstimate SDEstimate MinEstimate MaxEstimate  Span
+#>  Criterion      3            0      0.693      -0.799       0.431 1.230
+#>      Rater     18            0      0.667      -0.948       1.622 2.569
+#> 
+#> Person measure distribution (aggregate; no identifiers)
+#>  Persons  Mean    SD Median    Min   Max  Span MeanPosteriorSD
+#>      307 0.414 0.812  0.436 -1.451 2.385 3.835           0.482
+#> 
+#> Step parameter summary
+#>  Steps    Min   Max  Span Monotonic
+#>      3 -1.093 0.958 2.051      TRUE
+#> 
+#> Overall fit first screen
+#>  Infit Outfit InfitZSTD OutfitZSTD InfitZSTD_FACETS OutfitZSTD_FACETS DF_Infit
+#>  0.811  0.786    -4.629      -7.01            -6.48             -6.56 1058.853
+#>  DF_Outfit DF_Infit_FACETS DF_Outfit_FACETS
+#>       1842        2068.188         1613.625
+#> 
+#> Reliability and separation first screen
+#>      Facet Levels PrecisionTier Reliability RealReliability Separation Strata
+#>  Criterion      3   model_based       0.996           0.996     14.918 20.223
+#>     Person    307   model_based       0.636           0.600      1.322  2.096
+#>      Rater     18   model_based       0.907           0.906      3.121  4.495
+#>  MeanInfit MeanOutfit
+#>      0.810      0.786
+#>      0.798      0.786
+#>      0.813      0.786
+#> 
+#> Facet chi-square first screen
+#>      Facet Levels FixedChiSq FixedDF FixedProb RandomChiSq RandomDF RandomProb
+#>  Criterion      3    413.138       2         0       1.999        1      0.157
+#>     Person    307    888.264     306         0     302.434      305      0.531
+#>      Rater     18    248.677      17         0      17.049       16      0.382
+#> 
+#> Rating-scale first screen
+#>  Categories UsedCategories UnusedScoreCategories WeaklyIdentifiedThresholds
+#>           4              4                                                0
+#>  MinCategoryCount MeanCategoryInfit MeanCategoryOutfit ThresholdMonotonic
+#>               215             0.948              0.864               TRUE
+#>  MarginalFitAvailable MarginalFlaggedCategories
+#>                  TRUE                         2
+#> 
+#> Labeled step transitions (first rows)
+#>    Step Transition LowerCategory UpperCategory Estimate GapFromPrev
+#>  Step_1     1 -> 2             1             2   -1.093          NA
+#>  Step_2     2 -> 3             2             3    0.134       1.227
+#>  Step_3     3 -> 4             3             4    0.958       0.824
+#>  ThresholdMonotonic WeaklyIdentified ThresholdCaveat
+#>                TRUE            FALSE                
+#>                TRUE            FALSE                
+#>                TRUE            FALSE                
+#> 
+#> Analyses intentionally not run by summary
+#>                 Section                Status
+#>              Bias / DIF Not run automatically
+#>            Residual PCA Not run automatically
+#>  Linking / anchor drift Not run automatically
+#>                                                                                                       Detail
+#>               Bias/DIF requires an explicitly chosen substantive contrast and is not screened automatically.
+#>            Residual PCA is not computed by the summary workflow; request it explicitly with diagnose_mfrm().
+#>  Anchor drift/linking requires an explicit multi-fit or multi-wave design and is not inferred automatically.
+#> 
+#> Structured result access
+#>  - `$analysis`: compact triage, table index, and plot map.
+#>  - `$results$tables`: full structured tables (not printed here).
+#>  - Re-run `summary(fit, profile = "facets", detail = "full")` only when more fit-level detail is needed.
+plot(res, type = "wright", preset = "publication", show_ci = TRUE, top_n = Inf)
 ```
 
 ![](mfrmr-workflow_files/figure-html/fit-full-1.png)
@@ -972,10 +1030,20 @@ plot(res, type = "wright", preset = "publication", show_ci = TRUE)
 ``` r
 
 
+# Optional closest FACETS-style asterisk ruler (without mfrmr CI overlays).
+plot(res, type = "wright", renderer = "facets",
+     category_labels = rubric_labels, show_ci = FALSE,
+     preset = "publication")
+```
+
+![](mfrmr-workflow_files/figure-html/fit-full-2.png)
+
+``` r
+
+
 plot(
-  fit,
+  res,
   type = "fit_pathway",
-  diagnostics = res$diagnostics,
   fit_stat = "Infit",
   include_person = TRUE,
   top_n_person = 12,
@@ -985,7 +1053,7 @@ plot(
 )
 ```
 
-![](mfrmr-workflow_files/figure-html/fit-full-2.png)
+![](mfrmr-workflow_files/figure-html/fit-full-3.png)
 
 This full-data figure caps the displayed person layer at 12 and
 suppresses routine point labels to keep the first screen legible. The
@@ -1010,86 +1078,50 @@ diag_pca <- diagnose_mfrm(
 )
 
 summary(diag_pca)
-#> Many-Facet Rasch Diagnostics Summary
+#> Many-Facet Measurement Diagnostics Summary
 #>   Observations: 1842 | Persons: 307 | Facets: 2 | Categories: 4 | Subsets: 1
 #>   Residual PCA mode: both
-#>   Method: MML | Precision tier: model_based
-#>   Diagnostic mode: both | Strict marginal fit: available
+#>   Method: MML | Precision tier: Model-based precision
+#>   Diagnostic mode: Legacy and strict marginal
+#>   Strict marginal fit: Available
 #> 
 #> Status
-#>  - Overall status: follow_up_needed
-#>  - Diagnostic path: both
-#>  - Strict marginal fit: available
-#>  - Precision tier: model_based
-#>  - Primary screen: Read strict marginal fit first; use legacy residuals for continuity and follow-up.
+#>  - Overall status: Follow-up needed
+#>  - Diagnostic path: Legacy and strict marginal
+#>  - Strict marginal fit: Available
+#>  - Precision tier: Model-based precision
+#>  - Primary screen: Read strict marginal fit first; use legacy residuals for
+#>    continuity and follow-up.
 #> 
 #> Key warnings
 #>  - Unexpected responses flagged: 100.
 #>  - Flagged displacement levels: 40.
-#>  - MnSq misfit flagged 130 element(s) outside 0.5-1.5 (Linacre threshold).
-#>  - MnSq misfit: Person:P020 (Infit=0.03, Outfit=0.03; outside 0.5-1.5).
-#>  - MnSq misfit: Person:P203 (Infit=0.04, Outfit=0.07; outside 0.5-1.5).
+#>  - MnSq screening flagged 130 element(s) outside the configured 0.5-1.5 band.
+#>  - Person-level fit warnings: 130 row(s); identifiers suppressed. Use
+#>    `include_person = TRUE` only under appropriate privacy controls.
+#>  - Strict marginal fit flagged 4 group-level summaries.
 #> 
 #> Next actions
-#>  - Inspect `diagnostic_basis` before comparing legacy residual evidence with strict marginal evidence.
-#>  - Review `top_marginal_cells` and `rating_scale_table(..., diagnostics = diag)` for first-order strict marginal follow-up.
+#>  - Inspect `diagnostic_basis` before comparing legacy residual evidence with
+#>    strict marginal evidence.
+#>  - Review `top_marginal_cells` and `rating_scale_table(..., diagnostics =
+#>    diag)` for first-order strict marginal follow-up.
 #>  - Review `top_marginal_pairs` for pairwise local-dependence follow-up.
-#>  - Use `unexpected_response_table()` / `plot_unexpected()` and `displacement_table()` / `plot_displacement()` for case-level follow-up.
+#>  - Use `unexpected_response_table()` / `plot_unexpected()` and
+#>    `displacement_table()` / `plot_displacement()` for case-level follow-up.
 #> 
 #> Overall fit
 #>  Infit Outfit InfitZSTD OutfitZSTD DF_Infit DF_Outfit
-#>  0.811  0.786    -4.629      -7.01 1058.852      1842
+#>  0.811  0.786    -4.629      -7.01 1058.853      1842
 #> 
-#> Fit ZSTD standardization
-#>  PrimaryFitDfMethod                   PrimaryZSTDColumns
-#>              engine InfitZSTD / OutfitZSTD use engine df
-#>                                               EngineDf
-#>  DF_Infit = sum(Var * Weight); DF_Outfit = sum(Weight)
-#>                                                                  FacetsDf
-#>  DF = 2 / q^2 using the Wright-Masters/FACETS fourth-moment approximation
-#>  FacetsColumnsAvailable   ZSTDTransform FacetsZSTDCap
-#>                   FALSE Wilson-Hilferty            NA
-#> 
-#> Diagnostic basis guide
-#>                    DiagnosticPath                      Component
-#>               legacy_residual_fit           element_residual_fit
-#>               strict_marginal_fit    first_order_category_counts
-#>  strict_pairwise_local_dependence      pairwise_local_dependence
-#>    posterior_predictive_follow_up posterior_predictive_follow_up
-#>                   Status                                    Basis
-#>                 computed          plugin_residuals_and_eap_tables
-#>                 computed     latent_integrated_first_order_counts
-#>                 computed latent_integrated_second_order_agreement
-#>  planned_not_implemented         posterior_predictive_replication
-#>                                    PrimaryStatistics
-#>  Infit / Outfit / ZSTD / PTMEA / residual QC bundles
-#>   category residuals / standardized residuals / RMSD
-#>               exact and adjacent agreement residuals
-#>                   replicated-data discrepancy checks
-#>                 ReportingUse
-#>  legacy_compatibility_screen
-#>               screening_only
-#>               screening_only
-#>               screening_only
-#>                                                                                                                                InterpretationNote
-#>                        Legacy fit statistics use plug-in residual machinery and should not be interpreted as latent-integrated marginal evidence.
-#>  Strict marginal fit integrates over the latent distribution and is the preferred strict screen for category-level misfit in the current release.
-#>               Strict pairwise local-dependence checks are exploratory follow-ups to first-order marginal flags, not standalone inferential tests.
-#>           Posterior predictive checking is reserved for corroborating strict marginal flags and practical-significance review in a later release.
-#> 
-#> Precision basis
-#>  Method Converged PrecisionTier SupportsFormalInference HasFallbackSE
-#>     MML      TRUE   model_based                    TRUE         FALSE
-#>       PersonSEBasis           NonPersonSEBasis
-#>  Posterior SD (EAP) Observed information (MML)
-#>                              CIBasis
-#>  Normal interval from model-based SE
-#>                                                  ReliabilityBasis
-#>  Observed variance with model-based and fit-adjusted error bounds
-#>  HasFitAdjustedSE HasSamplePopulationCoverage
-#>              TRUE                        TRUE
-#>                                                         RecommendedUse
-#>  Use for primary reporting of SE, CI, and reliability in this package.
+#> Flag counts
+#>                                 Metric Count
+#>                   Unexpected responses   100
+#>            Flagged displacement levels    40
+#>                       Interaction rows    20
+#>                      Inter-rater pairs   153
+#>            Marginal fit flagged groups     4
+#>  Marginal pairwise flagged level pairs    90
 #> 
 #> Facet precision and spread
 #>      Facet Levels Separation Strata Reliability RealSeparation RealStrata
@@ -1101,348 +1133,23 @@ summary(diag_pca)
 #>            0.600     0.798      0.786
 #>            0.906     0.813      0.786
 #> 
-#> Facet variability (fixed-effect chi-square; null = all elements equal)
-#>      Facet Levels MeanMeasure    SD FixedChiSq FixedDF FixedProb RandomChiSq
-#>  Criterion      3       0.000 0.693    413.140       2         0       1.999
-#>     Person    307       0.414 0.812    888.264     306         0     302.435
-#>      Rater     18       0.000 0.667    248.678      17         0      17.049
-#>  RandomDF RandomProb
-#>         1      0.157
-#>       305      0.531
-#>        16      0.382
-#> 
-#> Inter-rater agreement summary
-#>  RaterFacet Raters Pairs OpportunityCount ExactAgreement ExpectedExactAgreement
-#>       Rater     18   153              921          0.362                  0.355
-#>  AgreementMinusExpected AdjacentAgreement MeanAbsDiff MeanCorr RaterSeparation
-#>                   0.007             0.805       0.858    0.325           3.121
-#>  RaterReliability
-#>             0.907
-#> 
-#> Largest |ZSTD| rows
+#> Highest-priority non-person fit rows
 #>      Facet                  Level Infit Outfit InfitZSTD OutfitZSTD DF_Infit
-#>  Criterion      Global_Impression 0.799  0.744    -2.590     -4.913  292.461
+#>  Criterion      Global_Impression 0.799  0.744    -2.590     -4.913  292.462
 #>      Rater                    R08 0.702  0.661    -2.434     -4.103  110.307
 #>  Criterion Linguistic_Realization 0.803  0.798    -2.907     -3.799  382.619
-#>     Person                   P020 0.028  0.027    -2.744     -3.436    4.080
 #>  Criterion       Task_Fulfillment 0.830  0.816    -2.481     -3.416  383.772
 #>      Rater                    R10 0.738  0.726    -2.187     -2.939  118.696
-#>     Person                   P203 0.041  0.073    -2.500     -2.836    3.885
-#>     Person                   P098 2.328  3.387     1.549      2.800    3.539
-#>      Rater                    R05 0.745  0.750    -1.916     -2.522   98.234
-#>     Person                   P056 0.075  0.125    -1.727     -2.407    2.688
 #>  DF_Outfit  AbsZ
 #>        614 4.913
 #>        228 4.103
 #>        614 3.799
-#>          6 3.436
 #>        614 3.416
 #>        192 2.939
-#>          6 2.836
-#>          6 2.800
-#>        174 2.522
-#>          6 2.407
 #> 
-#> MnSq misfit (outside 0.5-1.5 Linacre band; 130 element(s))
-#>   Facet Level Infit InfitZSTD Outfit OutfitZSTD
-#>  Person  P001 0.300    -1.082  0.307     -1.497
-#>  Person  P005 0.467    -0.599  0.554     -0.736
-#>  Person  P007 0.345    -0.369  0.277     -1.616
-#>  Person  P012 1.537     0.841  1.569      1.035
-#>  Person  P016 0.328    -1.052  0.332     -1.405
-#>  Person  P017 0.202    -1.530  0.214     -1.896
-#>  Person  P018 0.394    -0.361  0.325     -1.432
-#>  Person  P020 0.028    -2.744  0.027     -3.436
-#>  Person  P022 1.773     1.141  1.638      1.121
-#>  Person  P023 0.478    -0.378  0.417     -1.122
-#>  Person  P025 0.323    -1.105  0.349     -1.345
-#>  Person  P026 0.440    -0.703  0.481     -0.932
-#>  Person  P030 0.487    -0.703  0.475     -0.950
-#>  Person  P035 0.356    -0.972  0.387     -1.218
-#>  Person  P038 1.641     0.979  1.734      1.239
-#>  Person  P039 0.263    -1.262  0.288     -1.573
-#>  Person  P043 0.359    -1.009  0.382     -1.234
-#>  Person  P046 0.251    -1.288  0.283     -1.594
-#>  Person  P048 1.972     1.218  2.090      1.640
-#>  Person  P049 0.436    -0.418  0.350     -1.341
-#>  Person  P052 1.772     1.105  1.819      1.339
-#>  Person  P055 1.696     1.007  1.443      0.868
-#>  Person  P056 0.075    -1.727  0.125     -2.407
-#>  Person  P057 0.329    -0.399  0.276     -1.622
-#>  Person  P058 0.352    -1.055  0.353     -1.331
-#>  Person  P062 0.249    -1.331  0.296     -1.541
-#>  Person  P066 0.379    -0.979  0.390     -1.208
-#>  Person  P067 0.499    -0.606  0.558     -0.726
-#>  Person  P073 0.476    -0.499  1.022      0.231
-#>  Person  P074 0.400    -0.773  0.486     -0.919
-#>  Person  P075 0.350    -0.848  0.422     -1.106
-#>  Person  P076 0.162    -1.594  0.185     -2.042
-#>  Person  P079 0.521    -0.503  0.493     -0.900
-#>  Person  P082 0.273    -0.987  0.279     -1.608
-#>  Person  P083 1.132     0.414  1.559      1.022
-#>  Person  P084 0.446    -0.354  0.372     -1.266
-#>  Person  P085 0.208    -1.559  0.201     -1.959
-#>  Person  P086 0.250    -1.382  0.270     -1.646
-#>  Person  P090 0.278    -1.204  0.313     -1.474
-#>  Person  P098 2.328     1.549  3.387      2.800
-#>  Person  P102 0.146    -1.684  0.202     -1.956
-#>  Person  P103 0.346    -1.071  0.361     -1.302
-#>  Person  P104 1.783     1.128  1.616      1.094
-#>  Person  P105 0.185    -1.157  0.233     -1.804
-#>  Person  P106 0.444    -0.782  0.468     -0.969
-#>  Person  P108 0.563    -0.215  0.480     -0.935
-#>  Person  P112 0.297    -0.861  0.322     -1.444
-#>  Person  P113 0.137    -1.702  0.201     -1.961
-#>  Person  P114 0.239    -1.068  0.261     -1.684
-#>  Person  P115 0.461    -0.738  0.465     -0.978
-#>  Person  P116 0.549    -0.268  0.472     -0.959
-#>  Person  P117 1.817     1.145  1.742      1.248
-#>  Person  P118 0.255    -1.002  0.292     -1.558
-#>  Person  P124 1.214     0.517  1.582      1.051
-#>  Person  P125 0.482    -0.493  0.440     -1.050
-#>  Person  P127 0.431    -0.395  0.359     -1.311
-#>  Person  P129 0.487    -0.700  0.502     -0.874
-#>  Person  P132 0.271    -1.244  0.296     -1.541
-#>  Person  P133 0.480    -0.686  0.498     -0.884
-#>  Person  P135 0.483    -0.400  0.410     -1.143
-#>  Person  P136 0.412    -0.553  0.390     -1.206
-#>  Person  P137 0.468    -0.606  0.450     -1.022
-#>  Person  P138 1.717     1.078  1.567      1.032
-#>  Person  P140 0.440    -0.670  0.433     -1.072
-#>  Person  P141 2.353     1.591  2.441      1.992
-#>  Person  P142 1.864     1.219  1.772      1.284
-#>  Person  P143 1.552     0.895  1.714      1.215
-#>  Person  P146 0.414    -0.670  0.485     -0.923
-#>  Person  P148 0.323    -1.138  0.319     -1.452
-#>  Person  P149 0.446    -0.354  0.372     -1.266
-#>  Person  P155 0.451    -0.644  0.443     -1.042
-#>  Person  P156 0.399    -0.453  0.341     -1.373
-#>  Person  P159 0.222    -0.746  0.235     -1.799
-#>  Person  P161 0.541    -0.256  0.462     -0.986
-#>  Person  P164 0.483    -0.685  0.495     -0.892
-#>  Person  P167 0.330    -1.085  0.331     -1.411
-#>  Person  P170 0.256    -1.221  0.308     -1.494
-#>  Person  P175 0.275    -0.939  0.302     -1.519
-#>  Person  P176 0.500    -0.309  0.429     -1.086
-#>  Person  P177 0.202    -1.530  0.214     -1.896
-#>  Person  P178 0.455    -0.617  0.439     -1.056
-#>  Person  P182 0.448    -0.795  0.470     -0.962
-#>  Person  P188 0.435    -0.261  0.312     -1.478
-#>  Person  P190 0.306    -1.122  0.306     -1.503
-#>  Person  P191 0.371    -0.840  0.362     -1.300
-#>  Person  P193 0.297    -0.861  0.322     -1.444
-#>  Person  P195 0.419    -0.764  0.445     -1.037
-#>  Person  P196 2.064     1.214  1.405      0.816
-#>  Person  P198 0.526    -0.201  0.443     -1.042
-#>  Person  P199 1.999     1.208  1.436      0.858
-#>  Person  P203 0.041    -2.500  0.073     -2.836
-#>  Person  P204 0.454    -0.411  0.389     -1.212
-#>  Person  P207 0.480    -0.696  0.468     -0.969
-#>  Person  P208 0.422    -0.470  0.371     -1.269
-#>  Person  P209 0.463    -0.226  0.323     -1.439
-#>  Person  P211 1.900     1.223  1.745      1.252
-#>  Person  P215 0.315    -1.093  0.325     -1.431
-#>  Person  P217 0.436    -0.578  0.536     -0.783
-#>  Person  P219 2.017     1.302  2.047      1.594
-#>  Person  P222 0.343    -0.802  0.323     -1.439
-#>  Person  P223 0.415    -0.723  0.645     -0.514
-#>  Person  P224 1.621     0.980  1.601      1.075
-#>  Person  P227 0.333    -1.040  0.336     -1.392
-#>  Person  P235 1.589     0.894  1.448      0.875
-#>  Person  P237 0.499    -0.349  0.436     -1.065
-#>  Person  P239 0.712     0.052  0.420     -1.113
-#>  Person  P242 0.391    -0.890  0.380     -1.240
-#>  Person  P243 1.464     0.809  1.613      1.090
-#>  Person  P244 0.375    -0.984  0.377     -1.250
-#>  Person  P247 1.585     0.849  1.429      0.849
-#>  Person  P250 0.329    -1.114  0.308     -1.495
-#>  Person  P255 0.518    -0.421  0.465     -0.978
-#>  Person  P261 0.208    -1.541  0.228     -1.830
-#>  Person  P262 1.682     1.006  1.639      1.122
-#>  Person  P264 0.426    -0.706  0.598     -0.625
-#>  Person  P266 0.433    -0.783  0.458     -0.999
-#>  Person  P267 0.484    -0.675  0.505     -0.866
-#>  Person  P269 0.451    -0.614  0.434     -1.068
-#>  Person  P271 1.456     0.810  1.502      0.947
-#>  Person  P272 0.208    -1.467  0.232     -1.812
-#>  Person  P277 0.359    -0.921  0.358     -1.314
-#>  Person  P278 0.483    -0.503  0.442     -1.044
-#>  Person  P281 0.326    -1.086  0.352     -1.336
-#>  Person  P282 1.770     1.094  1.670      1.161
-#>  Person  P285 1.526     0.873  1.472      0.907
-#>  Person  P287 0.578    -0.307  0.500     -0.881
-#>  Person  P290 0.462    -0.549  0.431     -1.080
-#>  Person  P293 0.480    -0.624  0.477     -0.944
-#>  Person  P300 0.427    -0.631  0.416     -1.124
-#>  Person  P306 1.717     1.075  1.589      1.060
-#> 
-#> Category usage (Count + AvgMeasure within each observed score)
-#>  Category Count AvgMeasure Disordering
-#>         1   215     -0.404            
-#>         2   451     -0.005            
-#>         3   525      0.450            
-#>         4   651      0.945            
-#> 
-#> Strict marginal fit
-#>  Available Method Model                                Basis ObservationCount
-#>       TRUE    MML   RSM latent_integrated_first_order_counts             1842
-#>  CategoryCount OverallRMSD OverallMaxAbsStdResidual StepGroupsFlagged
-#>              4       0.016                    3.137                 1
-#>  FacetLevelsFlagged PairwiseAvailable PairwiseFlaggedLevelPairs
-#>                   3              TRUE                        90
-#>  PosteriorPredictiveFollowUp InferenceTier SupportsFormalInference
-#>      planned_not_implemented   exploratory                   FALSE
-#>  FormalInferenceEligible PrimaryReportingEligible ClassificationSystem
-#>                    FALSE                    FALSE            screening
-#>    ReportingUse             StatisticLabel
-#>  screening_only strict marginal fit screen
-#>                                                                                        LiteratureSeries
-#>  limited_information_inspired_marginal_screen + agreement_screen_informed_by_generalized_residual_logic
-#>  InterpretationBasis
-#>    latent_integrated
-#>                                                                                                   FollowUpRecommendation
-#>  Use as screening evidence and corroborate with companion diagnostics, model comparisons, and substantive design review.
-#> 
-#> Largest marginal residual cells
-#>     CellType StepFacet     Facet                  Level Category ObservedCount
-#>   step_facet    Common      <NA>                   <NA>        1           215
-#>  facet_level      <NA>     Rater                    R17        3            14
-#>  facet_level      <NA>     Rater                    R17        4            36
-#>   step_facet    Common      <NA>                   <NA>        4           651
-#>  facet_level      <NA>     Rater                    R18        2            19
-#>  facet_level      <NA> Criterion Linguistic_Realization        1            93
-#>  facet_level      <NA> Criterion       Task_Fulfillment        1            99
-#>  facet_level      <NA>     Rater                    R14        1             0
-#>  facet_level      <NA>     Rater                    R15        1             1
-#>  facet_level      <NA>     Rater                    R08        2            45
-#>  ExpectedCount PropDiff StdResidual AbsStdResidual
-#>        255.396   -0.022      -3.137          3.137
-#>         24.202   -0.121      -2.508          2.508
-#>         26.894    0.108       2.476          2.476
-#>        610.605    0.022       2.356          2.356
-#>         28.274   -0.075      -2.100          2.100
-#>        108.761   -0.026      -1.896          1.896
-#>        114.751   -0.026      -1.858          1.858
-#>          2.690   -0.064      -1.847          1.847
-#>          3.788   -0.186      -1.796          1.796
-#>         35.807    0.040       1.789          1.789
-#> 
-#> Strict pairwise local dependence
-#>      Facet LevelPairs ContextPairs MeanAbsExactGap MeanAbsAdjacentGap
-#>  Criterion          3         1842           0.007              0.008
-#>      Rater        111          921           0.122              0.097
-#>  MaxAbsExactStdResidual MaxAbsAdjacentStdResidual OpportunityWeight
-#>                   0.624                     0.923              1842
-#>                   2.547                     2.674               921
-#>  FlaggedLevelPairs InferenceTier SupportsFormalInference
-#>                  0   exploratory                   FALSE
-#>                 90   exploratory                   FALSE
-#>  FormalInferenceEligible PrimaryReportingEligible ClassificationSystem
-#>                    FALSE                    FALSE            screening
-#>                    FALSE                    FALSE            screening
-#>    ReportingUse                     StatisticLabel
-#>  screening_only strict pairwise agreement residual
-#>  screening_only strict pairwise agreement residual
-#>                                         LiteratureSeries
-#>  agreement_screen_informed_by_generalized_residual_logic
-#>  agreement_screen_informed_by_generalized_residual_logic
-#> 
-#> Largest marginal pairwise residuals
-#>  Facet Level1 Level2 LevelPairCount OpportunityWeight ExactAgreement
-#>  Rater    R05    R10             30                30          0.167
-#>  Rater    R01    R12              6                 6          0.833
-#>  Rater    R02    R08              9                 9          0.000
-#>  Rater    R13    R16              6                 6          0.667
-#>  Rater    R11    R12             12                12          0.083
-#>  Rater    R05    R12              6                 6          0.000
-#>  Rater    R03    R09             12                12          0.167
-#>  Rater    R08    R17             18                18          0.611
-#>  Rater    R04    R12              6                 6          0.667
-#>  Rater    R02    R04              9                 9          0.111
-#>  ExpectedExactAgreement ExactGap ExactStdResidual AdjacentAgreement
-#>                   0.389   -0.222           -2.547             0.767
-#>                   0.355    0.479            2.482             1.000
-#>                   0.377   -0.377           -2.391             0.778
-#>                   0.252    0.415            2.348             0.667
-#>                   0.362   -0.279           -2.029             0.667
-#>                   0.351   -0.351           -1.818             0.667
-#>                   0.412   -0.246           -1.774             0.833
-#>                   0.417    0.194            1.752             0.944
-#>                   0.336    0.330            1.727             0.833
-#>                   0.382   -0.270           -1.716             0.778
-#>  ExpectedAdjacentAgreement AdjacentGap AdjacentStdResidual Flagged
-#>                      0.827      -0.060              -0.878    TRUE
-#>                      0.803       0.197               1.225    TRUE
-#>                      0.800      -0.022              -0.167    TRUE
-#>                      0.673      -0.006              -0.034    TRUE
-#>                      0.819      -0.152              -1.376    TRUE
-#>                      0.800      -0.133              -0.823    TRUE
-#>                      0.838      -0.005              -0.043    TRUE
-#>                      0.821       0.124               1.406    TRUE
-#>                      0.780       0.053               0.315    TRUE
-#>                      0.807      -0.029              -0.228    TRUE
-#> 
-#> Strict marginal guidance
-#>                       Component                     StatisticLabel
-#>     first_order_category_counts  strict marginal category residual
-#>       pairwise_local_dependence strict pairwise agreement residual
-#>  posterior_predictive_follow_up     posterior predictive follow-up
-#>                                         LiteratureSeries
-#>             limited_information_inspired_marginal_screen
-#>  agreement_screen_informed_by_generalized_residual_logic
-#>               posterior_predictive_model_check_follow_up
-#>                                              PrimaryRole InferenceTier
-#>                               category / facet screening   exploratory
-#>                               local dependence follow-up   exploratory
-#>  misfit corroboration / practical-significance follow-up   exploratory
-#>  SupportsFormalInference FormalInferenceEligible PrimaryReportingEligible
-#>                    FALSE                   FALSE                    FALSE
-#>                    FALSE                   FALSE                    FALSE
-#>                    FALSE                   FALSE                    FALSE
-#>  ClassificationSystem   ReportingUse
-#>             screening screening_only
-#>             screening screening_only
-#>             screening screening_only
-#>                                                                                                                                                                                      InterpretationNote
-#>                                                                                  Use as a latent-integrated limited-information screen; do not treat isolated flags as definitive inferential evidence.
-#>  Use as an exploratory local-dependence follow-up after first-order marginal screening; this is informed by generalized-residual logic but is not a formal Haberman-Sinharay generalized residual test.
-#>              Reserve for corroborating strict marginal flags and assessing practical significance; the current release labels this follow-up path but does not yet compute posterior predictive checks.
-#> 
-#> Paper reporting map
-#>                                   Area CoveredHere
-#>              Overall fit / reliability         yes
-#>  Precision basis / inferential caveats         yes
-#>                    Strict marginal fit         yes
-#>         Residual PCA / local structure     partial
-#>    Unexpected responses / displacement     partial
-#>                 Connectivity / subsets     partial
-#>          Manuscript checklist / export          no
-#>                                                                CompanionOutput
-#>                                                           summary(diagnostics)
-#>                                                           summary(diagnostics)
-#>  diagnostics$marginal_fit / rating_scale_table(..., diagnostics = diagnostics)
-#>                               analyze_residual_pca() / diagnostics$pca details
-#>        unexpected_response_table() / displacement_table() / interaction tables
-#>                      subset_connectivity_report() / measurable_summary_table()
-#>                        reporting_checklist() / summary(build_apa_outputs(...))
-#> 
-#> Flag counts
-#>                                 Metric Count
-#>                   Unexpected responses   100
-#>            Flagged displacement levels    40
-#>                       Interaction rows    20
-#>                      Inter-rater pairs   153
-#>            Marginal fit flagged groups     4
-#>  Marginal pairwise flagged level pairs    90
-#> 
-#> Notes
-#>  - Unexpected responses were flagged under current thresholds.
-#>  - SE/ModelSE, CI, and reliability conventions depend on the estimation path; see diagnostics$approximation_notes for MML-vs-JML details.
-#>  - Use `diagnostics$reliability` for facet-level separation/reliability. Use `diagnostics$interrater` only for observed agreement across matched rater contexts.
-#>  - Strict marginal fit was computed from latent-integrated first-order category counts.
-#>  - Strict pairwise local-dependence checks were computed from posterior-integrated expected exact and adjacent agreement and should be read as exploratory screening summaries.
-#>  - Posterior predictive checking remains a planned corroborating follow-up for strict marginal flags and practical-significance review.
-#>  - Legacy residual diagnostics and strict marginal diagnostics target different quantities; do not compare their residual magnitudes directly.
+#> Further detail
+#>  - Additional tables remain in the structured summary; use `detail = "full"` to
+#>    print them.
 ```
 
 ## Strict Diagnostics for RSM and PCM
@@ -1487,20 +1194,20 @@ diag_pcm_strict <- diagnose_mfrm(
 
 summary(diag_rsm_strict)$diagnostic_basis[, c("DiagnosticPath", "Status", "Basis")]
 #> # A tibble: 4 × 3
-#>   DiagnosticPath                   Status                  Basis                
-#>   <chr>                            <chr>                   <chr>                
-#> 1 legacy_residual_fit              computed                plugin_residuals_and…
-#> 2 strict_marginal_fit              computed                latent_integrated_fi…
-#> 3 strict_pairwise_local_dependence computed                latent_integrated_se…
-#> 4 posterior_predictive_follow_up   planned_not_implemented posterior_predictive…
+#>   DiagnosticPath                   Status        Basis                          
+#>   <chr>                            <chr>         <chr>                          
+#> 1 legacy_residual_fit              computed      plugin_residuals_and_eap_tables
+#> 2 strict_marginal_fit              computed      latent_integrated_first_order_…
+#> 3 strict_pairwise_local_dependence computed      latent_integrated_second_order…
+#> 4 posterior_predictive_follow_up   not_available posterior_predictive_replicati…
 summary(diag_pcm_strict)$diagnostic_basis[, c("DiagnosticPath", "Status", "Basis")]
 #> # A tibble: 4 × 3
-#>   DiagnosticPath                   Status                  Basis                
-#>   <chr>                            <chr>                   <chr>                
-#> 1 legacy_residual_fit              computed                plugin_residuals_and…
-#> 2 strict_marginal_fit              computed                latent_integrated_fi…
-#> 3 strict_pairwise_local_dependence computed                latent_integrated_se…
-#> 4 posterior_predictive_follow_up   planned_not_implemented posterior_predictive…
+#>   DiagnosticPath                   Status        Basis                          
+#>   <chr>                            <chr>         <chr>                          
+#> 1 legacy_residual_fit              computed      plugin_residuals_and_eap_tables
+#> 2 strict_marginal_fit              computed      latent_integrated_first_order_…
+#> 3 strict_pairwise_local_dependence computed      latent_integrated_second_order…
+#> 4 posterior_predictive_follow_up   not_available posterior_predictive_replicati…
 ```
 
 When you want a compact simulation-based screening check for the strict
@@ -1749,9 +1456,9 @@ summary(recovery)$recovery_summary[, c("ParameterType", "Facet", "RMSE", "Bias")
 #>   ParameterType Facet      RMSE      Bias
 #>   <chr>         <chr>     <dbl>     <dbl>
 #> 1 facet         Criterion 0.151 -3.47e-18
-#> 2 facet         Rater     0.161  0       
-#> 3 person        Person    0.480 -8.56e-18
-#> 4 step          Common    0.200  4.62e-18
+#> 2 facet         Rater     0.161 -3.47e-18
+#> 3 person        Person    0.480  1.27e-17
+#> 4 step          Common    0.200 -4.62e-18
 plot(recovery, type = "summary", metric = "rmse", draw = FALSE)$data$plot_table
 #> # A tibble: 4 × 22
 #>   ParameterType Facet     ComparisonScale  Rows  Reps ComparableRate MeanTruth
@@ -1780,7 +1487,7 @@ summary(recovery_review)$checklist[, c("Section", "Item", "Status")]
 #>    <chr>                 <chr>                            <chr>       
 #>  1 Run completion        Replication count                ok          
 #>  2 Run completion        Simulation and refit success     ok          
-#>  3 Run completion        Reported convergence             ok          
+#>  3 Run completion        Reported convergence             concern     
 #>  4 Recovery content      Recoverable truth-estimate rows  ok          
 #>  5 Generator conditions  Bounded-GPCM slope regime        not_assessed
 #>  6 Generator conditions  Generated score-category support ok          
@@ -1843,14 +1550,15 @@ summary(recovery_review)$diagnostic_review
 status_plot <- plot(recovery_review, type = "status", draw = FALSE)
 status_plot$data$section_status
 #>                 Section       Status Checks StatusRank AttentionOrder
-#> 1           Uncertainty       review      1          3              1
-#> 2  Generator conditions not_assessed      1          2              2
-#> 3 Monte Carlo precision not_assessed      1          2              3
-#> 4           Uncertainty not_assessed      1          2              4
-#> 5  Generator conditions           ok      1          1              5
-#> 6  Practical thresholds           ok      2          1              6
-#> 7      Recovery content           ok      1          1              7
-#> 8        Run completion           ok      3          1              8
+#> 1        Run completion      concern      1          4              1
+#> 2           Uncertainty       review      1          3              2
+#> 3  Generator conditions not_assessed      1          2              3
+#> 4 Monte Carlo precision not_assessed      1          2              4
+#> 5           Uncertainty not_assessed      1          2              5
+#> 6  Generator conditions           ok      1          1              6
+#> 7  Practical thresholds           ok      2          1              7
+#> 8      Recovery content           ok      1          1              8
+#> 9        Run completion           ok      2          1              9
 status_plot$data$reading_order
 #>   Step
 #> 1    1
@@ -1876,7 +1584,7 @@ status_plot$data$reading_order
 #>                                                                                                                          Purpose
 #> 1                                                                             Decide whether the assessment is ready to inspect.
 #> 2 Separate generator stress conditions and sparse score support from parameter-recovery performance before interpreting metrics.
-#> 3                                        Check diagnostic behavior without treating fit or separation as release-recovery gates.
+#> 3                                   Check diagnostic behavior without treating fit or separation as parameter-recovery criteria.
 #> 4                                                                    Find the part of the assessment that needs attention first.
 #> 5                                                           Identify the specific parameter group and metric driving the status.
 #> 6                                               Diagnose the underlying recovery pattern before changing design or fit settings.
@@ -1889,10 +1597,10 @@ metric_plot$data$plot_table
 #> 3         facet     Rater           logit     facet / Rater / logit   rmse
 #> 4         facet Criterion           logit facet / Criterion / logit   rmse
 #>       Value Limit Status OverallStatus StatusRank AttentionOrder
-#> 1 0.4799616     1     ok        review          1              1
-#> 2 0.1998446     1     ok        review          1              2
-#> 3 0.1608361     1     ok        review          1              3
-#> 4 0.1511768     1     ok        review          1              4
+#> 1 0.4802121     1     ok        review          1              1
+#> 2 0.2002376     1     ok        review          1              2
+#> 3 0.1608166     1     ok        review          1              3
+#> 4 0.1509518     1     ok        review          1              4
 metric_plot$data$guidance
 #> [1] "This metric plot is sorted by status priority, then by RMSE."                                     
 #> [2] "Inspect concern/review rows before ok rows."                                                      
@@ -1913,35 +1621,8 @@ recovery_bundle$table_index[, c("Table", "Rows", "Role")]
 #> 7           diagnostic_review    3          recovery_diagnostic_review
 #> 8               metric_review    4              recovery_metric_review
 #> 9          uncertainty_review    4         recovery_uncertainty_review
-#> 10               next_actions    5              repair_recommendations
+#> 10               next_actions    6              repair_recommendations
 #> 11                 thresholds    9                     review_settings
-
-# For a release-scale check, use the optional validation protocol:
-# source(system.file("validation", "recovery-validation.R", package = "mfrmr"))
-# validation <- mfrmr_run_recovery_validation(tier = "core", output_dir = "recovery-validation")
-# summary(validation)
-# validation_summary <- summary(validation)
-# validation_summary$reading_order
-# validation_summary$topline_release_decision
-# validation_summary$release_decision_table
-# validation_summary$condition_reporting_notes
-# validation_summary$condition_summary
-# validation_summary$diagnostic_reporting_notes
-# validation_summary$domain_decision_table
-# validation_bundle <- build_summary_table_bundle(validation_summary)
-# validation_bundle$tables$reading_order
-# validation_bundle$tables$topline_release_decision
-# validation_bundle$tables$condition_reporting_notes
-# validation_bundle$tables$condition_summary
-# validation_bundle$tables$diagnostic_reporting_notes
-# The top-line table is the release-recovery conclusion. It uses recovery
-# metrics, convergence, and Monte Carlo precision from core cases as the
-# primary evidence, while ExtendedSensitivityStatus reports non-core stress
-# cases separately. The condition notes and condition table keep generator
-# stress and score support separate from recovery metrics, so OverallStatus = "review" is not
-# read as a recovery-metric failure by itself. The diagnostic reporting notes
-# turn fit/separation operating characteristics into report caveats rather
-# than release gates.
 
 pred_pop <- predict_mfrm_population(
   sim_spec = sim_spec,
@@ -1988,7 +1669,7 @@ summary(pred_units)$estimates[, c("Person", "Estimate", "Lower", "Upper")]
 #> # A tibble: 1 × 4
 #>   Person Estimate Lower Upper
 #>   <chr>     <dbl> <dbl> <dbl>
-#> 1 NEW01    -0.097 -1.36  1.36
+#> 1 NEW01    -0.178 -1.36  1.36
 summary(pv_units)$draw_summary[, c("Person", "Draws", "MeanValue")]
 #> # A tibble: 1 × 3
 #>   Person Draws MeanValue
@@ -2011,8 +1692,8 @@ export_summary_appendix(
 )
 ```
 
-For a quick smoke test, `reps = 2` or another very small value is useful
-only to check that the data-generating setup and refit path run. For a
+For an initial exploratory run, `reps = 2` or another very small value
+is useful only to check the data-generating setup and refit path. For a
 study report, increase `reps`, keep the ADEMP-style metadata in the
 exported tables, and set substantive RMSE/Bias thresholds so that
 [`assess_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/reference/assess_mfrm_recovery.md)

@@ -50,14 +50,12 @@ An object of class `summary.mfrm_plausible_values` with:
 ``` r
 toy <- load_mfrmr_data("example_core")
 keep_people <- unique(toy$Person)[1:18]
-toy_fit <- suppressWarnings(
-  fit_mfrm(
-    toy[toy$Person %in% keep_people, , drop = FALSE],
-    "Person", c("Rater", "Criterion"), "Score",
-    method = "MML",
-    quad_points = 5,
-    maxit = 30
-  )
+toy_fit <- fit_mfrm(
+  toy[toy$Person %in% keep_people, , drop = FALSE],
+  "Person", c("Rater", "Criterion"), "Score",
+  method = "MML",
+  quad_points = 5,
+  maxit = 30
 )
 new_units <- data.frame(
   Person = c("NEW01", "NEW01"),

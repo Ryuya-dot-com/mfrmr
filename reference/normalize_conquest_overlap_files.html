@@ -18,7 +18,7 @@
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from Facets to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
@@ -149,7 +149,8 @@ standardized identifier and estimate columns.</p></dd>
     <p>This helper is a thin file-wrapper around <code><a href="normalize_conquest_overlap_tables.html">normalize_conquest_overlap_tables()</a></code>.
 It is intentionally limited to already extracted tabular files and does not
 parse raw ConQuest report text.</p>
-<p>The recommended workflow is:</p><ol><li><p>export an exact-overlap bundle with <code><a href="build_conquest_overlap_bundle.html">build_conquest_overlap_bundle()</a></code>;</p></li>
+<p>The recommended workflow is:</p><ol><li><p>export a bundle for the documented comparison scope with
+<code><a href="build_conquest_overlap_bundle.html">build_conquest_overlap_bundle()</a></code>;</p></li>
 <li><p>extract the relevant ConQuest tables to CSV/TSV/TXT files;</p></li>
 <li><p>call <code>normalize_conquest_overlap_files()</code> on those files;</p></li>
 <li><p>pass the result to <code><a href="review_conquest_overlap.html">review_conquest_overlap()</a></code>.</p></li>

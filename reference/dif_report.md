@@ -28,7 +28,7 @@ dif_report(dif_result, ...)
 
 - ...:
 
-  Currently unused; reserved for future extensions.
+  Reserved for generic compatibility.
 
 ## Value
 

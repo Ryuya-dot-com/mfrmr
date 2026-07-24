@@ -22,7 +22,7 @@ the same scale."></head><body>
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from Facets to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
@@ -61,7 +61,7 @@ the same scale.</p>
 <span>  bins <span class="op">=</span> <span class="fl">20L</span>,</span>
 <span>  show_thresholds <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  top_n <span class="op">=</span> <span class="fl">30L</span>,</span>
-<span>  show_ci <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  show_ci <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  ci_level <span class="op">=</span> <span class="fl">0.95</span>,</span>
 <span>  draw <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  preset <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"standard"</span>, <span class="st">"publication"</span>, <span class="st">"compact"</span>, <span class="st">"monochrome"</span><span class="op">)</span>,</span>
@@ -103,12 +103,18 @@ positions on the map. Default <code>TRUE</code>.</p></dd>
 
 <dt id="arg-top-n">top_n<a class="anchor" aria-label="anchor" href="#arg-top-n"></a></dt>
 <dd><p>Maximum number of facet/step locations retained by the native
-renderer. The FACETS-style payload retains every fitted location.</p></dd>
+renderer for a compact display. Step transitions are always retained and
+omitted facet locations are reported in <code>retention</code>; use <code>Inf</code> for the
+complete final map. Native text labels remain collision-aware even when
+all coordinates are retained. The FACETS-style payload retains and labels
+every fitted location, grouping coincident labels when needed.</p></dd>
 
 
 <dt id="arg-show-ci">show_ci<a class="anchor" aria-label="anchor" href="#arg-show-ci"></a></dt>
-<dd><p>Logical; if <code>TRUE</code>, draw approximate confidence intervals when
-standard errors are available.</p></dd>
+<dd><p>Logical or <code>NULL</code>. <code>NULL</code> (the default) draws available
+uncertainty intervals for the native renderer and omits them from the
+FACETS-style renderer. Explicit <code>TRUE</code> with <code>renderer = "facets"</code> creates
+a hybrid FACETS-style ruler with mfrmr uncertainty intervals.</p></dd>
 
 
 <dt id="arg-ci-level">ci_level<a class="anchor" aria-label="anchor" href="#arg-ci-level"></a></dt>
@@ -146,8 +152,10 @@ equivalence with FACETS, and is equivalent to <code>renderer = "facets"</code>.<
 
 
 <dt id="arg-category-labels">category_labels<a class="anchor" aria-label="anchor" href="#arg-category-labels"></a></dt>
-<dd><p>Optional named/ordered score rubric labels, or a data
-frame with <code>Score</code> and <code>Label</code>, for <code>wright_style = "facets_style"</code>.</p></dd>
+<dd><p>Optional score-rubric labels for
+<code>wright_style = "facets_style"</code>. Supply a named character vector keyed by
+every retained original score, an unnamed vector with one label per
+retained category, or a data frame with <code>Score</code> and <code>Label</code> columns.</p></dd>
 
 
 <dt id="arg-rows-per-logit">rows_per_logit<a class="anchor" aria-label="anchor" href="#arg-rows-per-logit"></a></dt>
@@ -174,8 +182,11 @@ selects a compact value automatically.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>Invisibly, a list with <code>persons</code>, <code>facets</code>, and <code>thresholds</code>
-data used for the plot.</p>
+    <p>Invisibly, a list with <code>persons</code>, <code>facets</code>, <code>thresholds</code>, and the
+underlying Wright-map tables used for the plot. Native output includes a
+<code>retention</code> table and <code>retention_note</code> documenting compact-display
+omissions. All renderers include fit-readiness and interpretation-status
+metadata.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -188,13 +199,29 @@ that shows where persons, facet levels, and category thresholds sit
 relative to the same latent scale.</p>
 <p>The logit scale on the y-axis is shared, allowing direct visual
 comparison of all facets and persons.</p>
+<p>If the fit records boundary-separated facet levels and <code>wright_range</code> is
+<code>NULL</code>, both renderers derive the display range from supported locations and
+place separated levels at ruler ends. The returned tables retain exact
+<code>OriginalEstimate</code> and <code>CI_Lower</code> / <code>CI_Upper</code> values alongside display and
+clipping metadata; endpoint triangles and footers disclose the adjustment.</p>
 <p>With <code>renderer = "facets"</code> (or <code>wright_style = "facets_style"</code>), the
 draw-free result additionally
 contains tidy ruler rows, person star frequencies, signed facet headers,
 all facet levels, step lines, original-score transitions, mean half-score
 boundaries, category labels, and display settings under <code>facets_style</code>.
+The payload keeps both the nearest line-printer <code>RulerValue</code> and the exact
+step/midpoint <code>DrawValue</code>; the current renderer draws threshold lines at the
+exact value and prints fitted logits in step labels.
 These tables support custom ggplot2/plotly rendering without parsing the
-base plot.</p>
+base plot.
+Use <code>show_ci = FALSE</code> for the closest FACETS-style presentation. A
+FACETS-style ruler drawn with <code>show_ci = TRUE</code> is intentionally labelled as
+a hybrid because its uncertainty intervals are supplied by <code>mfrmr</code>.</p>
+<p>The returned list separates plotting availability from interpretation. It
+includes <code>fit_readiness</code>, <code>interpretation_status</code>, and
+<code>interpretation_note</code>. If numerical, data, connectivity, or stability
+review is unresolved, the map is returned for diagnosis but the call warns
+and prefixes the returned subtitle and drawn title with <code>REVIEW ONLY</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="interpreting-output">Interpreting output<a class="anchor" aria-label="anchor" href="#interpreting-output"></a></h2>
@@ -246,11 +273,16 @@ is measurement precision across theta.</p>
 <span class="r-in"><span>                 method <span class="op">=</span> <span class="st">"JML"</span>, model <span class="op">=</span> <span class="st">"RSM"</span>, maxit <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">map_data</span> <span class="op">&lt;-</span> <span class="fu">plot_wright_unified</span><span class="op">(</span><span class="va">fit</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">map_data</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [1] "persons"         "facets"          "thresholds"      "facet_names"    </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [5] "y_lim"           "title"           "wright_style"    "renderer"       </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [9] "visual_contract" "person"          "person_hist"     "person_stats"   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [13] "locations"       "label_points"    "group_summary"   "group_levels"   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [17] "y_range"         "label_limit"    </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [1] "persons"               "facets"                "thresholds"           </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [4] "facet_names"           "y_lim"                 "title"                </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [7] "wright_style"          "renderer"              "visual_contract"      </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [10] "person"                "person_hist"           "person_stats"         </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [13] "locations"             "label_points"          "group_summary"        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [16] "group_levels"          "y_range"               "display_settings"     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [19] "label_limit"           "retention"             "retention_note"       </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [22] "show_ci"               "uncertainty_display"   "legend"               </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [25] "subtitle"              "fit_readiness"         "interpretation_status"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [28] "interpretation_note"  </span>
 <span class="r-in"><span><span class="va">facets_map</span> <span class="op">&lt;-</span> <span class="fu">plot_wright_unified</span><span class="op">(</span></span></span>
 <span class="r-in"><span>  <span class="va">fit</span>,</span></span>
 <span class="r-in"><span>  renderer <span class="op">=</span> <span class="st">"facets"</span>,</span></span>
@@ -260,12 +292,14 @@ is measurement precision across theta.</p>
 <span class="r-in"><span>  draw <span class="op">=</span> <span class="cn">FALSE</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">facets_map</span><span class="op">$</span><span class="va">facets_style</span><span class="op">$</span><span class="va">settings</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 10</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 15</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Renderer WrightStyle  VisualCorrespondence  LowerLogit UpperLogit RowsPerLogit</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> facets   facets_style FACETS Table 6-style…         -<span style="color: #BB0000;">2</span>          2            2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 4 more variables: ExtremePlacement &lt;chr&gt;, PersonsPerStar &lt;dbl&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   StarsPerPerson &lt;dbl&gt;, PersonN &lt;int&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 9 more variables: ExtremePlacement &lt;chr&gt;, PersonsPerStar &lt;dbl&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   StarsPerPerson &lt;dbl&gt;, PersonN &lt;int&gt;, AutoRangePolicy &lt;chr&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   BoundaryLevelsAtEnds &lt;int&gt;, CIClippedCount &lt;int&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   BoundaryCIEndpointCount &lt;int&gt;, CIDisplayPolicy &lt;chr&gt;</span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

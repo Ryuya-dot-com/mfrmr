@@ -33,7 +33,7 @@
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from Facets to mfrmr</a></li>
+<li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
@@ -103,7 +103,7 @@ plot-first route, see
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ryuya-dot-com.github.io/mfrmr/">mfrmr</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span>
+<span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_operational"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># The vignette uses compact quadrature so optional local execution stays fast.</span></span>
 <span><span class="co"># For final manuscript reporting, refit with the package default or a higher</span></span>
@@ -159,7 +159,7 @@ plot-first route, see
 <span><span class="co">#&gt; 2                                                      Available; adapt this evidence into the manuscript draft after methodological review.</span></span>
 <span><span class="co">#&gt; 3                                                                             Report the precision tier as model-based in the APA narrative.</span></span>
 <span><span class="co">#&gt; 4                                                      Available; adapt this evidence into the manuscript draft after methodological review.</span></span>
-<span><span class="co">#&gt; 5                                                             Document the connectivity result before making common-scale or linking claims.</span></span>
+<span><span class="co">#&gt; 5                                                                    Document the single connected subset before making common-scale claims.</span></span>
 <span><span class="co">#&gt; 6                          Report both the fixed-effects and shrunk estimates; cite Efron &amp; Morris (1973) for the empirical-Bayes rationale.</span></span>
 <span><span class="co">#&gt; 7       Report the per-facet adequacy bands and discuss any sparse/marginal levels; cite Linacre (1994) sample-size guidance where relevant.</span></span>
 <span><span class="co">#&gt; 8  Run `analyze_hierarchical_structure(fit)` once per design and pass the result to `reporting_checklist(..., hierarchical_structure = hs)`.</span></span>
@@ -188,12 +188,12 @@ for closing the gap.</li>
 <code class="sourceCode R"><span><span class="va">prec</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/precision_review_report.html">precision_review_report</a></span><span class="op">(</span><span class="va">fit</span>, diagnostics <span class="op">=</span> <span class="va">diag</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">prec</span><span class="op">$</span><span class="va">profile</span></span>
-<span><span class="co">#&gt;   Method Converged PrecisionTier SupportsFormalInference HasFallbackSE</span></span>
-<span><span class="co">#&gt; 1    MML      TRUE   model_based                    TRUE         FALSE</span></span>
-<span><span class="co">#&gt;        PersonSEBasis           NonPersonSEBasis</span></span>
-<span><span class="co">#&gt; 1 Posterior SD (EAP) Observed information (MML)</span></span>
-<span><span class="co">#&gt;                               CIBasis</span></span>
-<span><span class="co">#&gt; 1 Normal interval from model-based SE</span></span>
+<span><span class="co">#&gt;   Method Converged InferenceReady ConvergenceSeverity PrecisionTier</span></span>
+<span><span class="co">#&gt; 1    MML      TRUE           TRUE                pass   model_based</span></span>
+<span><span class="co">#&gt;   SupportsFormalInference HasFallbackSE      PersonSEBasis</span></span>
+<span><span class="co">#&gt; 1                    TRUE         FALSE Posterior SD (EAP)</span></span>
+<span><span class="co">#&gt;             NonPersonSEBasis                             CIBasis</span></span>
+<span><span class="co">#&gt; 1 Observed information (MML) Normal interval from model-based SE</span></span>
 <span><span class="co">#&gt;                                                   ReliabilityBasis</span></span>
 <span><span class="co">#&gt; 1 Observed variance with model-based and fit-adjusted error bounds</span></span>
 <span><span class="co">#&gt;   HasFitAdjustedSE HasSamplePopulationCoverage</span></span>
@@ -211,7 +211,7 @@ for closing the gap.</li>
 <span><span class="co">#&gt; 7         SE source labels   pass</span></span>
 <span><span class="co">#&gt;                                                                                 Detail</span></span>
 <span><span class="co">#&gt; 1                              This run uses the package's model-based precision path.</span></span>
-<span><span class="co">#&gt; 2                                                  The optimizer reported convergence.</span></span>
+<span><span class="co">#&gt; 2                                Optimizer diagnostics support inference-ready status.</span></span>
 <span><span class="co">#&gt; 3                             Finite ModelSE values were available for 100.0% of rows.</span></span>
 <span><span class="co">#&gt; 4            Fit-adjusted SE values were not smaller than their paired ModelSE values.</span></span>
 <span><span class="co">#&gt; 5         Conservative reliability values were not larger than the model-based values.</span></span>
@@ -284,12 +284,12 @@ the same output contract.</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Design and data.</span></span>
 <span><span class="co">#&gt; The analysis focused on Writing assessment in Local scoring study. A many-facet</span></span>
-<span><span class="co">#&gt; rating-scale Rasch model was fit to 768 observations from 48 persons scored on a 4-category</span></span>
-<span><span class="co">#&gt; scale (1-4). The design included facets for Rater (n = 4), Criterion (n = 4). Facet-level</span></span>
-<span><span class="co">#&gt; sample sizes were strong (smallest level N = 192), though facets were still estimated as</span></span>
-<span><span class="co">#&gt; fixed effects with sum-to-zero identification; `analyze_hierarchical_structure()` is</span></span>
-<span><span class="co">#&gt; available for nesting and variance-component follow-up. The rating scale was described as</span></span>
-<span><span class="co">#&gt; 0-4 rubric scale.</span></span>
+<span><span class="co">#&gt; rating-scale Rasch model was fit to 282 observations from 48 persons scored on a 4-category</span></span>
+<span><span class="co">#&gt; scale (1-4). The design included facets for Rater (n = 6), Criterion (n = 6). Facet-level</span></span>
+<span><span class="co">#&gt; sample sizes met the package's `standard` band (smallest level N = 38), an mfrmr-specific</span></span>
+<span><span class="co">#&gt; watermark adapted from Linacre's (1994) 30/100 guidance; facets were nonetheless estimated</span></span>
+<span><span class="co">#&gt; as fixed effects with sum-to-zero identification (see `facet_small_sample_review()`). The</span></span>
+<span><span class="co">#&gt; rating scale was described as 0-4 rubric scale.</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Estimation settings.</span></span>
 <span><span class="co">#&gt; The RSM specification was estimated using MML with mfrmr. Model-based precision summaries</span></span>
@@ -297,53 +297,53 @@ the same output contract.</p>
 <span><span class="co">#&gt; under the marginal person distribution, and residual-based fit statistics are evaluated at</span></span>
 <span><span class="co">#&gt; these EAP measures rather than at joint maximum likelihood (JMLE) estimates. Recommended</span></span>
 <span><span class="co">#&gt; use for this precision profile: Use for primary reporting of SE, CI, and reliability in</span></span>
-<span><span class="co">#&gt; this package.. Optimization converged after 74 function evaluations and 12 gradient</span></span>
-<span><span class="co">#&gt; evaluations (LogLik = -903.081, AIC = 1822.162, BIC = 1859.312). Terminal gradient sup-norm</span></span>
-<span><span class="co">#&gt; = 0.2906 (review threshold = 0.0001). Optimizer returned convergence code 0. Constraint</span></span>
-<span><span class="co">#&gt; settings: noncenter facet = Person; anchored levels = 0 (facets: none); group anchors = 0</span></span>
-<span><span class="co">#&gt; (facets: none); dummy facets = none.</span></span>
+<span><span class="co">#&gt; this package.. Optimization met the package convergence checks after 16 function</span></span>
+<span><span class="co">#&gt; evaluations and 16 gradient evaluations (LogLik = -347.201, AIC = 712.401, BIC = 745.179).</span></span>
+<span><span class="co">#&gt; Terminal gradient sup-norm = 0.0001 (review threshold = 0.0001). Optimizer returned</span></span>
+<span><span class="co">#&gt; convergence code 0. Constraint settings: noncenter facet = Person; anchored levels = 0</span></span>
+<span><span class="co">#&gt; (facets: none); group anchors = 0 (facets: none); dummy facets = none.</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Results.</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Scale functioning.</span></span>
 <span><span class="co">#&gt; Category usage was adequate (unused categories = 0, low-count categories = 0), and</span></span>
-<span><span class="co">#&gt; thresholds were ordered. Step/threshold summary: 3 step(s); estimate range = -1.30 to 1.35</span></span>
+<span><span class="co">#&gt; thresholds were ordered. Step/threshold summary: 3 step(s); estimate range = -1.21 to 1.04</span></span>
 <span><span class="co">#&gt; logits; no disordered steps.</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Facet measures.</span></span>
-<span><span class="co">#&gt; Person measures ranged from -2.02 to 2.33 logits (M = 0.03, SD = 1.01). Rater measures</span></span>
-<span><span class="co">#&gt; ranged from -0.32 to 0.33 logits (M = 0.00, SD = 0.31). Criterion measures ranged from</span></span>
-<span><span class="co">#&gt; -0.41 to 0.24 logits (M = 0.00, SD = 0.28).</span></span>
+<span><span class="co">#&gt; Person measures ranged from -1.71 to 1.45 logits (M = -0.14, SD = 0.81). Rater measures</span></span>
+<span><span class="co">#&gt; ranged from -0.60 to 0.37 logits (M = 0.00, SD = 0.38). Criterion measures ranged from</span></span>
+<span><span class="co">#&gt; -0.34 to 0.22 logits (M = 0.00, SD = 0.30).</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Fit and precision.</span></span>
-<span><span class="co">#&gt; Overall mean-square fit was within the 0.5-1.5 screening band (infit MnSq = 0.99, outfit</span></span>
-<span><span class="co">#&gt; MnSq = 1.01). This band is the package's review convention; published mean-square</span></span>
+<span><span class="co">#&gt; Overall mean-square fit was within the 0.5-1.5 screening band (infit MnSq = 0.86, outfit</span></span>
+<span><span class="co">#&gt; MnSq = 0.86). This band is the package's review convention; published mean-square</span></span>
 <span><span class="co">#&gt; guidelines differ, and band position is screening evidence rather than a model-validity</span></span>
-<span><span class="co">#&gt; decision. 1 of 56 elements fell outside the 0.5-1.5 mean-square screening band. Largest</span></span>
-<span><span class="co">#&gt; misfit signals: Person:P023 (|ZSTD| = 2.09); Criterion:Organization (|ZSTD| = 1.69);</span></span>
-<span><span class="co">#&gt; Person:P018 (|ZSTD| = 1.45). Criterion reliability = 0.91 (separation = 3.20). Person</span></span>
-<span><span class="co">#&gt; reliability = 0.90 (separation = 3.06). Rater reliability = 0.92 (separation = 3.51). These</span></span>
-<span><span class="co">#&gt; are Rasch/FACETS-style separation indices (measure spread relative to measurement error),</span></span>
-<span><span class="co">#&gt; not inter-rater agreement. The Person row uses EAP measures with posterior SDs, which</span></span>
-<span><span class="co">#&gt; yields a conservative summary that is not numerically comparable to JMLE-based person</span></span>
-<span><span class="co">#&gt; reliability from FACETS. Observed inter-rater agreement is reported separately from</span></span>
-<span><span class="co">#&gt; separation reliability: for Rater, exact agreement = 0.36, expected exact agreement = 0.37,</span></span>
-<span><span class="co">#&gt; adjacent agreement = 0.83. Element-level 95% confidence intervals (Normal approximation)</span></span>
-<span><span class="co">#&gt; accompany the measures (CI_Lower / CI_Upper); 56 of 56 rows are flagged CIEligible for</span></span>
-<span><span class="co">#&gt; primary reporting.</span></span>
+<span><span class="co">#&gt; decision. 19 of 57 elements fell outside the 0.5-1.5 mean-square screening band. Largest</span></span>
+<span><span class="co">#&gt; misfit signals: Person:P026 (|ZSTD| = 2.48); Person:P022 (|ZSTD| = 2.41); Person:P016</span></span>
+<span><span class="co">#&gt; (|ZSTD| = 2.05). Criterion reliability = 0.86 (separation = 2.53). Person reliability =</span></span>
+<span><span class="co">#&gt; 0.66 (separation = 1.40). Rater reliability = 0.66 (separation = 1.38). These are</span></span>
+<span><span class="co">#&gt; Rasch/FACETS-style separation indices (measure spread relative to measurement error), not</span></span>
+<span><span class="co">#&gt; inter-rater agreement. The Person row uses EAP measures with posterior SDs, which yields a</span></span>
+<span><span class="co">#&gt; conservative summary that is not numerically comparable to JMLE-based person reliability</span></span>
+<span><span class="co">#&gt; from FACETS. Observed inter-rater agreement is reported separately from separation</span></span>
+<span><span class="co">#&gt; reliability: for Rater, exact agreement = 0.39, expected exact agreement = 0.35, adjacent</span></span>
+<span><span class="co">#&gt; agreement = 0.86. Element-level 95% confidence intervals (Normal approximation) accompany</span></span>
+<span><span class="co">#&gt; the measures (CI_Lower / CI_Upper); 57 of 57 rows are flagged CIEligible for primary</span></span>
+<span><span class="co">#&gt; reporting.</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Residual structure.</span></span>
 <span><span class="co">#&gt; Exploratory residual PCA (overall standardized residual matrix) showed PC1 eigenvalue =</span></span>
-<span><span class="co">#&gt; 2.10 (13.2% variance), with PC2 eigenvalue = 1.79. Facet-specific exploratory residual PCA</span></span>
-<span><span class="co">#&gt; showed the largest first-component signal in Rater (eigenvalue = 1.55, 38.7% variance).</span></span>
+<span><span class="co">#&gt; 2.85 (15.9% variance), with PC2 eigenvalue = 2.46. Facet-specific exploratory residual PCA</span></span>
+<span><span class="co">#&gt; showed the largest first-component signal in Rater (eigenvalue = 2.15, 35.9% variance).</span></span>
 <span><span class="co">#&gt; Heuristic reference bands: EV &gt;= 1.4 (critical minimum), &gt;= 1.5 (caution), &gt;= 2.0 (common),</span></span>
 <span><span class="co">#&gt; &gt;= 3.0 (strong); variance &gt;= 5% (minor), &gt;= 10% (caution), &gt;= 20% (strong). Strict marginal</span></span>
-<span><span class="co">#&gt; screening was available as a latent-integrated exploratory check (overall RMSD = 0.00,</span></span>
-<span><span class="co">#&gt; overall max |standardized residual| = 0.48). The largest strict marginal cell involved</span></span>
-<span><span class="co">#&gt; Criterion: Language | Cat 1 (standardized residual = 2.47, proportion difference = 0.06).</span></span>
-<span><span class="co">#&gt; Strict pairwise local-dependence follow-up flagged 0 level pair(s) under the</span></span>
-<span><span class="co">#&gt; latent-integrated agreement screen. The largest strict pairwise signal involved Criterion:</span></span>
-<span><span class="co">#&gt; Language vs Organization (ExactStdResidual = -1.45, AdjacentStdResidual = 0.39).</span></span>
+<span><span class="co">#&gt; screening was available as a latent-integrated exploratory check (overall RMSD = 0.01,</span></span>
+<span><span class="co">#&gt; overall max |standardized residual| = 0.51). The largest strict marginal cell involved</span></span>
+<span><span class="co">#&gt; Criterion: Content | Cat 4 (standardized residual = -1.57, proportion difference = -0.06).</span></span>
+<span><span class="co">#&gt; Strict pairwise local-dependence follow-up flagged 1 level pair(s) under the</span></span>
+<span><span class="co">#&gt; latent-integrated agreement screen. The largest strict pairwise signal involved Rater: R04</span></span>
+<span><span class="co">#&gt; vs R05 (ExactStdResidual = 2.12, AdjacentStdResidual = 0.25).</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Reporting cautions.</span></span>
 <span><span class="co">#&gt; Fit-basis note: MnSq/ZSTD fit statistics in this run were computed at EAP person measures,</span></span>
@@ -392,13 +392,13 @@ together:</p>
 <span><span class="co">#&gt; 4 Linking / anchors request_if_needed request_if_needed</span></span>
 <span><span class="co">#&gt; 5  Misfit / pathway request_if_needed request_if_needed</span></span>
 <span><span class="co">#&gt; 6         Precision                ok             ready</span></span>
-<span><span class="co">#&gt;                                                       MainIssue</span></span>
-<span><span class="co">#&gt; 1 ok=1; review=1; caveat=0; request_if_needed=3; unavailable=0.</span></span>
-<span><span class="co">#&gt; 2  ReviewSignalCount = 8; underfit=0; overfit=0; df_sensitive=8</span></span>
-<span><span class="co">#&gt; 3                                   Evidence was not requested.</span></span>
-<span><span class="co">#&gt; 4                                   Evidence was not requested.</span></span>
-<span><span class="co">#&gt; 5                                   Evidence was not requested.</span></span>
-<span><span class="co">#&gt; 6                               No report-index review signals.</span></span>
+<span><span class="co">#&gt;                                                                       MainIssue</span></span>
+<span><span class="co">#&gt; 1 ok=1; review=1; caveat=0; request_if_needed=3; not_computed=0; unavailable=0.</span></span>
+<span><span class="co">#&gt; 2                  ReviewSignalCount = 9; underfit=0; overfit=0; df_sensitive=9</span></span>
+<span><span class="co">#&gt; 3                                                   Evidence was not requested.</span></span>
+<span><span class="co">#&gt; 4                                                   Evidence was not requested.</span></span>
+<span><span class="co">#&gt; 5                                                   Evidence was not requested.</span></span>
+<span><span class="co">#&gt; 6                                               No report-index review signals.</span></span>
 <span><span class="co">#&gt;                                                                 NextAction</span></span>
 <span><span class="co">#&gt; 1                                                          Start with Fit.</span></span>
 <span><span class="co">#&gt; 2 Inspect the primary evidence table and template boundary before writing.</span></span>
@@ -507,12 +507,12 @@ together:</p>
 <span><span class="co">#&gt; 1    apa</span></span>
 <span><span class="va">report</span><span class="op">$</span><span class="va">report_gaps</span></span>
 <span><span class="co">#&gt;   Priority           GapType                        Section CurrentStatus</span></span>
-<span><span class="co">#&gt; 4        2     not_requested            Anchors and linking not_requested</span></span>
-<span><span class="co">#&gt; 2        2     not_requested                 Bias screening not_requested</span></span>
-<span><span class="co">#&gt; 3        2     not_requested      Misfit and pathway review not_requested</span></span>
-<span><span class="co">#&gt; 6        2     not_requested       Network and connectivity not_requested</span></span>
-<span><span class="co">#&gt; 5        2     not_requested               Response-time QC not_requested</span></span>
-<span><span class="co">#&gt; 1        3 caveated_evidence Fit, separation, and precision        review</span></span>
+<span><span class="co">#&gt; 4        3     not_requested            Anchors and linking not_requested</span></span>
+<span><span class="co">#&gt; 2        3     not_requested                 Bias screening not_requested</span></span>
+<span><span class="co">#&gt; 3        3     not_requested      Misfit and pathway review not_requested</span></span>
+<span><span class="co">#&gt; 6        3     not_requested       Network and connectivity not_requested</span></span>
+<span><span class="co">#&gt; 5        3     not_requested               Response-time QC not_requested</span></span>
+<span><span class="co">#&gt; 1        4 caveated_evidence Fit, separation, and precision        review</span></span>
 <span><span class="co">#&gt;                                                                                                    RecommendedAction</span></span>
 <span><span class="co">#&gt; 4               Rebuild the result with mfrm_results(fit, include = "linking") before writing anchor-readiness text.</span></span>
 <span><span class="co">#&gt; 2           Rebuild the result with mfrm_results(fit, include = "bias") before writing bias or fairness-screen text.</span></span>
@@ -559,18 +559,19 @@ together:</p>
 <span><span class="co">#&gt; 5      methods_or_appendix_caveat</span></span>
 <span><span class="co">#&gt; 6 request_evidence_before_writing</span></span></code></pre></div>
 <p>For a high-stakes manuscript, treat <code><a href="../reference/build_apa_outputs.html">build_apa_outputs()</a></code>
-and <code>mfrm_report(style = "apa")</code> as conservative scaffolding.
-Stronger journal claims still require a defensible study design, cited
-measurement rationale, adequate precision evidence, linked or balanced
-design evidence where relevant, and substantive interpretation written
-in the language of the target journal. Do not report
-<code>DraftReady</code>, <code>ReadyForAPA</code>, or
+and <code>mfrm_report(style = "apa")</code> as a conservative drafting
+template. Stronger journal claims still require a defensible study
+design, cited measurement rationale, adequate precision evidence, linked
+or balanced design evidence where relevant, and substantive
+interpretation written in the language of the target journal. Do not
+report <code>DraftReady</code>, <code>ReadyForAPA</code>, or
 <code>ClaimStrength</code> as if they were formal acceptance decisions;
 use them to decide what wording is currently safe and which caveats must
 remain visible.</p>
 <p>When the target is a local HTML/CSV/replay bundle rather than an
 interactive review object, use <code><a href="../reference/export_mfrm_bundle.html">export_mfrm_bundle()</a></code>
-directly from the fitted object:</p>
+directly from the fitted object. The result is a potentially identifying
+analysis archive, not a deidentified sharing package:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bundle</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/export_mfrm_bundle.html">export_mfrm_bundle</a></span><span class="op">(</span></span>
 <span>  <span class="va">fit</span>,</span>
@@ -581,7 +582,8 @@ directly from the fitted object:</p>
 <span>    <span class="st">"core_tables"</span>, <span class="st">"checklist"</span>, <span class="st">"dashboard"</span>, <span class="st">"apa"</span>,</span>
 <span>    <span class="st">"summary_tables"</span>, <span class="st">"manifest"</span>, <span class="st">"script"</span>, <span class="st">"html"</span></span>
 <span>  <span class="op">)</span>,</span>
-<span>  overwrite <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>  overwrite <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  acknowledge_sensitive <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">bundle</span><span class="op">$</span><span class="va">written_files</span><span class="op">[</span><span class="va">bundle</span><span class="op">$</span><span class="va">written_files</span><span class="op">$</span><span class="va">Format</span> <span class="op">==</span> <span class="st">"html"</span>, <span class="op">]</span></span></code></pre></div>
@@ -598,7 +600,7 @@ tables without rebuilding captions or notes by hand.</p>
 <span><span class="va">tbl_summary</span><span class="op">$</span><span class="va">caption</span></span>
 <span><span class="co">#&gt; [1] "Table 1\nFacet Summary (Measures, Precision, Fit, Reliability)"</span></span>
 <span><span class="va">tbl_reliability</span><span class="op">$</span><span class="va">note</span></span>
-<span><span class="co">#&gt; [1] "Separation and reliability are based on observed variance, measurement error, and adjusted true variance. Overall fit: infit MnSq = 0.99, outfit MnSq = 1.01. Rater facet (Rater) reliability = 0.92, separation = 3.51. Observed inter-rater agreement is reported separately from separation reliability: for Rater, exact agreement = 0.36, expected exact agreement = 0.37, adjacent agreement = 0.83."</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] "Separation and reliability are based on observed variance, measurement error, and adjusted true variance. Overall fit: infit MnSq = 0.86, outfit MnSq = 0.86. Rater facet (Rater) reliability = 0.66, separation = 1.38. Observed inter-rater agreement is reported separately from separation reliability: for Rater, exact agreement = 0.39, expected exact agreement = 0.35, adjacent agreement = 0.86."</span></span></code></pre></div>
 <p>The actual table data are stored in <code>tbl_summary$table</code>
 and <code>tbl_reliability$table</code>.</p>
 </div>
@@ -708,12 +710,12 @@ scores.</p>
 <span><span class="va">s_pop</span><span class="op">$</span><span class="va">population_coefficients</span></span>
 <span><span class="va">s_pop</span><span class="op">$</span><span class="va">population_coding</span></span>
 <span><span class="va">s_pop</span><span class="op">$</span><span class="va">caveats</span></span></code></pre></div>
-<p>In this release, keep latent-regression claims to the documented
-one-dimensional <code>MML</code> <code>RSM</code> / <code>PCM</code>
-route. Report the population formula, coding/contrast handling,
-population policy, and any omitted-person or omitted-row counts; do not
-imply multidimensional latent regression, Wald-test inference, or
-posterior predictive checking from these tables alone.</p>
+<p>Keep latent-regression claims within the documented one-dimensional
+<code>MML</code> <code>RSM</code> / <code>PCM</code> route. Report the
+population formula, coding/contrast handling, population policy, and any
+omitted-person or omitted-row counts; do not imply multidimensional
+latent regression, Wald-test inference, or posterior predictive checking
+from these tables alone.</p>
 </div>
 <div class="section level2">
 <h2 id="recommended-sequence">Recommended sequence<a class="anchor" aria-label="anchor" href="#recommended-sequence"></a>

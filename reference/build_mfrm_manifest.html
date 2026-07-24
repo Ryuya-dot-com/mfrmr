@@ -18,7 +18,7 @@
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from Facets to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
@@ -112,8 +112,8 @@ columns) so the recorded fingerprint matches what
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>This helper captures the package-native equivalent of the Streamlit app's
-configuration export. It summarizes analysis settings, source columns,
+    <p>This helper creates a compact package-native analysis record. It summarizes
+analysis settings, source columns,
 anchoring information, and which downstream outputs are currently available.</p>
     </div>
     <div class="section level2">
@@ -124,7 +124,9 @@ anchoring information, and which downstream outputs are currently available.</p>
 of how an analysis was run. Compared with related helpers:</p><ul><li><p><code><a href="export_mfrm.html">export_mfrm()</a></code> writes analysis tables only.</p></li>
 <li><p><code>build_mfrm_manifest()</code> records settings and available outputs.</p></li>
 <li><p><code><a href="build_mfrm_replay_script.html">build_mfrm_replay_script()</a></code> creates an executable R script.</p></li>
-<li><p><code><a href="export_mfrm_bundle.html">export_mfrm_bundle()</a></code> writes a shareable folder of files.</p></li>
+<li><p><code><a href="export_mfrm_bundle.html">export_mfrm_bundle()</a></code> writes a project-folder reproducibility bundle;
+review every included artifact for person-level or sensitive data before
+sharing it.</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="output">Output<a class="anchor" aria-label="anchor" href="#output"></a></h2>

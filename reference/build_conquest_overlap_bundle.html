@@ -18,7 +18,7 @@
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from Facets to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
@@ -57,7 +57,7 @@
 <span>  overwrite <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  quad_points <span class="op">=</span> <span class="fl">7L</span>,</span>
 <span>  maxit <span class="op">=</span> <span class="fl">40L</span>,</span>
-<span>  reltol <span class="op">=</span> <span class="fl">1e-06</span></span>
+<span>  reltol <span class="op">=</span> <span class="fl">1e-09</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -95,11 +95,15 @@ overlap case is fit on the fly.</p></dd>
 
 
 <dt id="arg-maxit">maxit<a class="anchor" aria-label="anchor" href="#arg-maxit"></a></dt>
-<dd><p>Maximum optimizer iterations used when <code>fit = NULL</code>.</p></dd>
+<dd><p>Maximum optimizer iterations used when <code>fit = NULL</code>. The
+fitted object's actual value is recorded in the returned summary and
+settings.</p></dd>
 
 
 <dt id="arg-reltol">reltol<a class="anchor" aria-label="anchor" href="#arg-reltol"></a></dt>
-<dd><p>Relative convergence tolerance used when <code>fit = NULL</code>.</p></dd>
+<dd><p>Relative convergence tolerance used when <code>fit = NULL</code>.
+Default <code>1e-9</code>. The fitted object's actual value is recorded in the
+returned summary and settings.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -119,23 +123,37 @@ narrow:</p><ul><li><p>ordered-response <code>RSM</code> / <code>PCM</code> only;
 <li><p>complete person-by-item rectangular data.</p></li>
 </ul><p>The returned bundle standardizes the responses to <code>{0, 1}</code>, pivots them to a
 one-row-per-person wide CSV, stores the corresponding person covariates, and
-records the <code>mfrmr</code> estimates that should be compared externally.</p>
+records the <code>mfrmr</code> estimates that should be compared externally.
+It also records the actual <code>mfrmr</code> optimizer controls, MML engine, terminal
+gradient, convergence status and severity, and inference-readiness decision.
+A fit that is not inference-ready remains available for convergence review,
+but its estimates should not be used for inferential comparison with
+ConQuest until the convergence issue is resolved and the model is refit.</p>
 <p>The <code>conquest_command</code> component is a conservative starting template, not a
 guaranteed version-invariant automation. The <code>conquest_output_contract</code>
 component records which requested external output should feed each
 normalized review table.
-Use <code><a href="normalize_conquest_overlap_files.html">normalize_conquest_overlap_files()</a></code> or
-<code><a href="normalize_conquest_overlap_tables.html">normalize_conquest_overlap_tables()</a></code> and then <code><a href="review_conquest_overlap.html">review_conquest_overlap()</a></code> only
-after the matching ConQuest run has been executed externally and the relevant
-output tables have been extracted. The bundle and command template alone are
-not external validation evidence.</p>
+Use <code><a href="normalize_conquest_overlap_exports.html">normalize_conquest_overlap_exports()</a></code> for the four CSV files requested
+by the generated command. <code><a href="normalize_conquest_overlap_files.html">normalize_conquest_overlap_files()</a></code> and
+<code><a href="normalize_conquest_overlap_tables.html">normalize_conquest_overlap_tables()</a></code> remain available for already-extracted
+custom tables. Then use <code><a href="review_conquest_overlap.html">review_conquest_overlap()</a></code> only after the matching
+ConQuest run has been executed externally. The bundle and command template
+alone are not external validation evidence.</p>
+<p>This is a controlled analysis bundle, not a deidentified or automatically
+shareable export. Response files contain person identifiers and responses;
+the person-data file contains identifiers and covariates; and case-EAP files
+contain identifiers and person-level estimates. When files are written, the
+helper emits a warning and writes an artifact-level privacy notice. Apply the
+study's data-handling policy before sharing or moving any bundle file.</p>
     </div>
     <div class="section level2">
     <h2 id="comparison-targets">Comparison targets<a class="anchor" aria-label="anchor" href="#comparison-targets"></a></h2>
 
 
-<ul><li><p>regression slope: compare directly;</p></li>
-<li><p>residual variance <code>sigma2</code>: compare directly;</p></li>
+<ul><li><p>regression slope: compare after confirming identical covariate coding and
+population-model parameterization;</p></li>
+<li><p>residual variance <code>sigma2</code>: compare after confirming the same latent-scale
+and variance parameterization;</p></li>
 <li><p>item estimates: compare after centering because the Rasch location origin
 remains constraint-dependent;</p></li>
 <li><p>case EAP estimates: compare as posterior summaries under the fitted
@@ -145,8 +163,8 @@ population model.</p></li>
     <h2 id="output">Output<a class="anchor" aria-label="anchor" href="#output"></a></h2>
 
 
-<p>The returned object has class <code>mfrm_conquest_overlap_bundle</code> and includes:</p><ul><li><p><code>summary</code>: one-row scope summary with posterior-basis and
-population-model review fields</p></li>
+<p>The returned object has class <code>mfrm_conquest_overlap_bundle</code> and includes:</p><ul><li><p><code>summary</code>: one-row scope summary with posterior-basis, population-model,
+optimizer-control, and convergence-review fields</p></li>
 <li><p><code>comparison_targets</code>: comparison rules for the exported tables</p></li>
 <li><p><code>conquest_output_contract</code>: requested ConQuest outputs and review handoff</p></li>
 <li><p><code>response_long</code>: long-format binary response data used by the bundle</p></li>
@@ -158,13 +176,15 @@ population-model review fields</p></li>
 <li><p><code>mfrmr_case_eap</code>: posterior EAP summaries for the fitted persons</p></li>
 <li><p><code>conquest_command</code>: conservative ConQuest command template</p></li>
 <li><p><code>written_files</code>: file inventory when <code>output_dir</code> is supplied</p></li>
-<li><p><code>settings</code>: bundle settings</p></li>
+<li><p><code>privacy_notice</code>: artifact-level sensitive-data inventory</p></li>
+<li><p><code>settings</code>: bundle settings, including the actual <code>mfrmr</code> fit controls
+and convergence state</p></li>
 <li><p><code>notes</code>: interpretation notes</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="normalize_conquest_overlap_files.html">normalize_conquest_overlap_files()</a></code>,
-<code><a href="normalize_conquest_overlap_tables.html">normalize_conquest_overlap_tables()</a></code>, <code><a href="review_conquest_overlap.html">review_conquest_overlap()</a></code>,
+    <div class="dont-index"><p><code><a href="normalize_conquest_overlap_files.html">normalize_conquest_overlap_files()</a></code>, <code><a href="normalize_conquest_overlap_tables.html">normalize_conquest_overlap_tables()</a></code>,
+<code><a href="review_conquest_overlap.html">review_conquest_overlap()</a></code>,
 <code><a href="reference_case_benchmark.html">reference_case_benchmark()</a></code>, <code><a href="build_mfrm_replay_script.html">build_mfrm_replay_script()</a></code>,
 <code><a href="export_mfrm_bundle.html">export_mfrm_bundle()</a></code></p></div>
     </div>
@@ -174,6 +194,7 @@ population-model review fields</p></li>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
 <span class="r-in"><span><span class="va">bundle</span> <span class="op">&lt;-</span> <span class="fu">build_conquest_overlap_bundle</span><span class="op">(</span>quad_points <span class="op">=</span> <span class="fl">3</span>, maxit <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">bundle</span><span class="op">$</span><span class="va">summary</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Case"</span>, <span class="st">"Facet"</span>, <span class="st">"Covariate"</span>, <span class="st">"Persons"</span>, <span class="st">"Items"</span><span class="op">)</span><span class="op">]</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">bundle</span><span class="op">)</span><span class="op">$</span><span class="va">mfrmr_fit_status</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">bundle</span><span class="op">)</span><span class="op">$</span><span class="va">conquest_command_scope</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">bundle</span><span class="op">)</span><span class="op">$</span><span class="va">conquest_output_contract</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/substr.html" class="external-link">substr</a></span><span class="op">(</span><span class="va">bundle</span><span class="op">$</span><span class="va">conquest_command</span>, <span class="fl">1</span>, <span class="fl">120</span><span class="op">)</span><span class="op">)</span></span></span>

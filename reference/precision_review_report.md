@@ -45,9 +45,10 @@ thresholds in separate reporting lanes.
 
 ## What this review means
 
-`precision_review_report()` is a reporting gatekeeper for precision
-claims. It tells you how the package derived uncertainty summaries for
-the current run and how cautiously those summaries should be written up.
+`precision_review_report()` is a structured prerequisite review for
+precision claims. It tells you how the package derived uncertainty
+summaries for the current run and how cautiously those summaries should
+be written up.
 
 ## What this review does not justify
 

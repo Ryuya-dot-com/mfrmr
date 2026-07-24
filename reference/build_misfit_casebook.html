@@ -18,7 +18,7 @@
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from Facets to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
@@ -104,8 +104,8 @@ It is stored in row-level provenance and summary outputs when supplied.</p></dd>
     <p><code>build_misfit_casebook()</code> is a synthesis layer over package-native screening
 outputs. It does not invent a new misfit statistic. Instead, it organizes
 existing evidence families into one case-level review surface:</p><ul><li><p>element-level Infit / Outfit MnSq misfit from <code>diagnostics$fit</code>
-(rows whose Infit or Outfit MnSq falls outside the 0.5-1.5 Linacre
-acceptance band)</p></li>
+(rows whose Infit or Outfit MnSq falls outside the configured Linacre
+heuristic review band, 0.5-1.5 by default)</p></li>
 <li><p>strict marginal cell screens from <code>diagnostics$marginal_fit$top_cells</code></p></li>
 <li><p>strict pairwise screens from <code>diagnostics$marginal_fit$pairwise$top_pairs</code></p></li>
 <li><p>unexpected responses from <code><a href="unexpected_response_table.html">unexpected_response_table()</a></code></p></li>

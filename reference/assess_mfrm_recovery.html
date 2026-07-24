@@ -30,7 +30,7 @@ GPCM, which slope-regime generator condition frames the recovery evidence?"></he
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from Facets to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
@@ -106,7 +106,7 @@ from <code>assess_mfrm_recovery()</code>.</p></dd>
 
 <dt id="arg-min-reps">min_reps<a class="anchor" aria-label="anchor" href="#arg-min-reps"></a></dt>
 <dd><p>Minimum replication count expected before treating the
-simulation as more than a smoke check.</p></dd>
+simulation for inferential use.</p></dd>
 
 
 <dt id="arg-min-success-rate">min_success_rate<a class="anchor" aria-label="anchor" href="#arg-min-success-rate"></a></dt>
@@ -157,7 +157,7 @@ groups or a named vector/list with names such as <code>"facet"</code>, <code>"st
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>Reserved for future extensions.</p></dd>
+<dd><p>Reserved for generic compatibility.</p></dd>
 
 
 <dt id="arg-y">y<a class="anchor" aria-label="anchor" href="#arg-y"></a></dt>
@@ -188,7 +188,7 @@ its status.</p></dd>
 <code>GPCM</code> slope-regime interpretation and generated score-category support
 when available.</p></li>
 <li><p><code>condition_reporting_notes</code>: reporter-facing generator-condition caveats
-separated from recovery metrics and release-gate decisions.</p></li>
+separated from parameter-recovery conclusions.</p></li>
 <li><p><code>diagnostic_reporting_notes</code>: reporter-facing fit/separation caveats
 retained as diagnostic context rather than recovery gates.</p></li>
 <li><p><code>diagnostic_review</code>: optional fit/separation operating-characteristic

@@ -10,40 +10,50 @@ documented.
 Start with the following core workflow before branching into
 diagnostics, bounded `GPCM`, simulation, and planning notes:
 
-1.  Fit with
+1.  Review long-format data and the intended score support with
+    [`describe_mfrm_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/describe_mfrm_data.md).
+    When a planned assignment roster exists, pass it as
+    `expected_design` so absent rows are not confused with unassigned
+    cells
+
+2.  Fit with
     [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
     using `method = "MML"`
 
-2.  Build a comprehensive first screen with
-    [`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md)
+3.  Read `summary(fit, profile = "fit")`, then request the comprehensive
+    FACETS-organized view with `summary(fit, profile = "facets")`
 
-3.  Create the required Wright map with
-    `plot(res, type = "wright", show_ci = TRUE)`
+4.  Create the required native Wright map with
+    `plot(fit, type = "wright", show_ci = TRUE)`; use the FACETS
+    renderer only as an optional familiar presentation
 
-4.  Build report-ready output with
+5.  Continue from the summary's `results` component to
     [`mfrm_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md)
-
-5.  Export a reproducible result folder with
-    `export_mfrm_results(res, preset = "starter")`
-
-6.  Add
-    [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md),
-    [`plot_qc_dashboard()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_qc_dashboard.md),
     and
-    [`reporting_checklist()`](https://ryuya-dot-com.github.io/mfrmr/reference/reporting_checklist.md)
-    when the review needs deeper diagnostics; for bounded `GPCM`, read
+    [`export_mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_results.md)
+
+6.  Reuse `review$results$diagnostics` for
+    [`plot_qc_dashboard()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_qc_dashboard.md)
+    and
+    [`reporting_checklist()`](https://ryuya-dot-com.github.io/mfrmr/reference/reporting_checklist.md);
+    call
+    [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md)
+    again only for residual PCA or other custom settings. For bounded
+    `GPCM`, read
     [`gpcm_capability_matrix()`](https://ryuya-dot-com.github.io/mfrmr/reference/gpcm_capability_matrix.md)
     before interpreting specialist helpers
 
 Recommended workflow:
 
-1.  Fit model with
+1.  Review the data with
+    [`describe_mfrm_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/describe_mfrm_data.md)
+    and fit with
     [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
 
-2.  For `RSM` / `PCM`, compute diagnostics with
+2.  For `RSM` / `PCM`, create the comprehensive summary and reuse its
+    diagnostics; request a separate
     [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md)
-    and prefer `diagnostic_mode = "both"` when you want legacy residual
-    continuity plus the newer strict marginal-fit screen
+    call only for custom settings
 
 3.  For `RSM` / `PCM`, run residual PCA with
     [`analyze_residual_pca()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_residual_pca.md)
@@ -103,7 +113,7 @@ Companion vignettes:
 
 - [`vignette("mfrmr-linking-and-dff", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-linking-and-dff.md)
 
-A two-page landscape cheatsheet of the public API ships at
+A printable landscape cheatsheet of the public API ships at
 `system.file("cheatsheet", "mfrmr-cheatsheet.pdf", package = "mfrmr")`
 (pre-rendered) and
 `system.file("cheatsheet", "mfrmr-cheatsheet.Rmd", package = "mfrmr")`
@@ -116,20 +126,25 @@ when you want a customised version.
 
 Use this order before exploring the broader feature surface:
 
-1.  [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
+1.  [`describe_mfrm_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/describe_mfrm_data.md)
+    for score support, column missingness, declared assignment coverage,
+    and Person-facet connectivity
+
+2.  [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
     with `method = "MML"`
 
-2.  [`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md)
-    for a comprehensive first screen
+3.  `summary(fit, profile = "fit")`, followed by
+    `summary(fit, profile = "facets")` for the comprehensive first
+    screen
 
-3.  `plot(res, type = "wright", show_ci = TRUE)` for the required
+4.  `plot(fit, type = "wright", show_ci = TRUE)` for the required
     shared-logit figure
 
-4.  [`mfrm_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md)
-    for report-ready wording, tables, and route labels
-
-5.  `export_mfrm_results(res, preset = "starter")` for a reproducible
-    folder whose `index.html` starts with the Wright map
+5.  [`mfrm_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md)
+    and
+    [`export_mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_results.md)
+    from the summary's `results` component for reporting and
+    reproducible analysis handoff
 
 6.  Add
     [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md)
@@ -153,10 +168,10 @@ Use this order before exploring the broader feature surface:
 
 After the basic route above:
 
-- the package now includes a first-version latent-regression `MML`
-  branch for ordered-response `RSM` / `PCM` models with a
-  one-dimensional conditional-normal population model and explicit
-  one-row-per-person covariates expanded through
+- the package supports latent-regression `MML` for ordered-response
+  `RSM` / `PCM` models with a one-dimensional conditional-normal
+  population model and explicit one-row-per-person covariates expanded
+  through
   [`stats::model.matrix()`](https://rdrr.io/r/stats/model.matrix.html)
 
 - bounded `GPCM` support is summarized by
@@ -166,9 +181,9 @@ After the basic route above:
   direct Wright/pathway/CCC plots, residual-PCA follow-up, and the
   residual-based diagnostics tables/plots as exploratory tools
 
-- posterior-predictive computation, `MCMC` engines, and Docker-based
-  advanced runtimes are future extensions rather than requirements for
-  the current bounded `GPCM` route
+- posterior-predictive checks and `MCMC` estimation are not available
+  for bounded `GPCM`; use external Bayesian software when they are
+  required
 
 - direct `GPCM` data generation through
   [`build_mfrm_sim_spec()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_mfrm_sim_spec.md),
@@ -190,8 +205,8 @@ After the basic route above:
   and
   [`export_mfrm_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_bundle.md)
   are available as caveated partial reporting/export surfaces;
-  score-side FACETS compatibility and broader planning semantics remain
-  validated for `RSM` / `PCM`
+  score-side FACETS compatibility remains limited, and fully
+  arbitrary-facet planning is outside the documented planning scope
 
 - [`predict_mfrm_population()`](https://ryuya-dot-com.github.io/mfrmr/reference/predict_mfrm_population.md)
   remains a scenario-level forecast helper and should not be described
@@ -295,9 +310,9 @@ Function families:
   [`build_visual_summaries()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_visual_summaries.md),
   [`reporting_checklist()`](https://ryuya-dot-com.github.io/mfrmr/reference/reporting_checklist.md),
   [`apa_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/apa_table.md)
-  for the full `RSM` / `PCM` route; bounded `GPCM` currently stays on
-  the checklist / direct-table / direct- plot / summary-appendix side
-  instead of the narrative/QC layer
+  for the full `RSM` / `PCM` route; bounded `GPCM` uses these as
+  caveated partial surfaces and retains direct table, plot, checklist,
+  and summary-appendix routes
 
 - Weighting review:
   [`compare_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/compare_mfrm.md),
@@ -328,15 +343,15 @@ Function families:
   [`build_mfrm_manifest()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_mfrm_manifest.md),
   [`build_mfrm_replay_script()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_mfrm_replay_script.md),
   [`build_conquest_overlap_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_conquest_overlap_bundle.md),
+  [`normalize_conquest_overlap_exports()`](https://ryuya-dot-com.github.io/mfrmr/reference/normalize_conquest_overlap_exports.md),
   [`normalize_conquest_overlap_files()`](https://ryuya-dot-com.github.io/mfrmr/reference/normalize_conquest_overlap_files.md),
   [`normalize_conquest_overlap_tables()`](https://ryuya-dot-com.github.io/mfrmr/reference/normalize_conquest_overlap_tables.md),
   [`review_conquest_overlap()`](https://ryuya-dot-com.github.io/mfrmr/reference/review_conquest_overlap.md),
   [`export_mfrm_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_bundle.md)
   for the diagnostics-compatible Rasch-family route; bounded `GPCM`
-  remains outside the current fit-based manifest/replay/bundle layer but
-  can use
+  supports caveated partial manifest, replay, and bundle output as well
+  as
   [`export_summary_appendix()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_summary_appendix.md)
-  for documented direct outputs
 
 - Equivalence:
   [`analyze_facet_equivalence()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_facet_equivalence.md),
@@ -382,9 +397,11 @@ Data interface:
 - Optional columns such as `Subset`, `Weight`, and `Group` support
   linking, weighted analysis, and fairness-focused follow-up workflows.
 
-- Packaged simulation data is available via
+- Packaged synthetic data is available via
   [`load_mfrmr_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/load_mfrmr_data.md)
-  or [`data()`](https://rdrr.io/r/utils/data.html).
+  or [`data()`](https://rdrr.io/r/utils/data.html). Use
+  `list_mfrmr_data(details = TRUE)` to distinguish the applied teaching,
+  idealized, planted-effect, and larger sparse-design datasets.
 
 ## Interpreting output
 
@@ -448,10 +465,13 @@ Core object classes are:
     Bounded `GPCM` also supports direct simulation via
     [`extract_mfrm_sim_spec()`](https://ryuya-dot-com.github.io/mfrmr/reference/extract_mfrm_sim_spec.md)
     /
-    [`simulate_mfrm_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/simulate_mfrm_data.md),
-    but not the broader planning helpers. Those helpers assume two
-    non-person facet roles even though the estimation core supports
-    arbitrary facet counts. Treat
+    [`simulate_mfrm_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/simulate_mfrm_data.md)
+    and caveated role-based
+    [`evaluate_mfrm_design()`](https://ryuya-dot-com.github.io/mfrmr/reference/evaluate_mfrm_design.md)
+    /
+    [`predict_mfrm_population()`](https://ryuya-dot-com.github.io/mfrmr/reference/predict_mfrm_population.md)
+    routes. Those helpers assume two non-person facet roles even though
+    the estimation core supports arbitrary facet counts. Treat
     [`evaluate_mfrm_design()`](https://ryuya-dot-com.github.io/mfrmr/reference/evaluate_mfrm_design.md)
     as Monte Carlo design evaluation, and use
     [`mfrm_d_study()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_d_study.md)
@@ -494,7 +514,7 @@ Core object classes are:
     role-based design evaluation, population forecasting,
     diagnostic-screening, and signal-detection helpers are available,
     while full score-side FACETS review, posterior-predictive checks,
-    and heavy backends remain outside the bounded `GPCM` route. Use
+    and `MCMC` estimation are not available for bounded `GPCM`. Use
     [`gpcm_capability_matrix()`](https://ryuya-dot-com.github.io/mfrmr/reference/gpcm_capability_matrix.md)
     as the formal boundary statement.
 
@@ -561,7 +581,8 @@ they are handled through the ordinary ordered-score interface. This
 means `mfrmr` supports ordered binary and ordered polytomous data under
 `RSM` and `PCM`, plus a narrow bounded `GPCM` branch with one designated
 `slope_facet` that currently must equal `step_facet`. Unordered
-nominal/multinomial response models are not yet implemented.
+nominal/multinomial response models are outside the documented model
+scope.
 
 ## Estimation methods
 
@@ -584,17 +605,20 @@ post-hoc via Expected A Posteriori (EAP):
 L(\mathbf{X}\_n \mid \theta_q)} {\sum_q w_q \\ L(\mathbf{X}\_n \mid
 \theta_q)}\$\$
 
-MML avoids the incidental-parameter problem and is generally preferred
-for smaller samples.
+MML does not estimate one fixed person parameter per respondent and
+therefore avoids that JML incidental-parameter mechanism. Its structural
+inference is nevertheless conditional on the specified population
+distribution, response model, quadrature approximation, and regularity
+conditions; it is not an automatic small-sample guarantee.
 
 Note: Bock & Aitkin (1981) is the canonical citation for the
 Gauss-Hermite-quadrature MML *framework*. The default mfrmr engine
 (`mml_engine = "direct"`) optimises this marginal log-likelihood by
 direct gradient methods (BFGS / L-BFGS-B), not by Bock & Aitkin's
 signature EM algorithm. The `"em"` and `"hybrid"` engines do follow the
-EM template but use a BFGS M-step rather than B&A's probit IRLS, because
-the target is the polytomous Rasch family rather than B&A's 2PL probit
-model.
+EM template but use the selected gradient-based M-step rather than B&A's
+probit IRLS, because the target is the polytomous Rasch family rather
+than B&A's 2PL probit model.
 
 **Joint Maximum Likelihood (JML)**
 
@@ -602,11 +626,13 @@ JML estimates all person and facet parameters simultaneously as fixed
 effects by maximising the joint log-likelihood
 \\\ell(\boldsymbol{\theta}, \boldsymbol{\delta} \mid \mathbf{X})\\
 directly. It does not assume a parametric person distribution, which can
-be advantageous when the population shape is strongly non-normal, but
-parameter estimates are known to be biased when the number of persons is
-small relative to the number of items (Neyman & Scott, 1948). The
-package still accepts `"JMLE"` as a backward-compatible alias, but
-user-facing summaries and documentation use `"JML"` as the public label.
+be advantageous when the population shape is strongly non-normal. Its
+incidental-parameter concern is not simply a small-person-sample issue:
+structural-parameter bias can persist as the number of persons increases
+when the number of ratings or items per person remains fixed (Neyman &
+Scott, 1948). The package still accepts `"JMLE"` as a
+backward-compatible alias, but user-facing summaries and documentation
+use `"JML"` as the public label.
 
 See
 [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
@@ -668,12 +694,16 @@ mean-square chi-square ratio to an approximate standard normal deviate:
 \$\$\mathrm{ZSTD} = \frac{\mathrm{MnSq}^{1/3} - (1 -
 2/(9\\\mathit{df}))} {\sqrt{2/(9\\\mathit{df})}}\$\$
 
-Values near 0 indicate expected fit; \\\|\mathrm{ZSTD}\| \> 2\\ flags
-potential misfit at the 5\\ 1\\ ZSTD is reported alongside every Infit
-and Outfit value. ZSTD is withheld (`NA`) when the applicable df falls
-below 1, where the Wilson-Hilferty transformation is numerically
-unstable; FACETS/Winsteps under `WHEXACT` can continue with a linear
-approximation on such cells.
+Values near 0 indicate expected fit. The conventional
+\\\|\mathrm{ZSTD}\| \> 2\\ and \\\|\mathrm{ZSTD}\| \> 3\\ cutoffs are
+heuristic two- and three-standard-deviation reference bands (Wright &
+Linacre, 1994; see also Wilson & Hilferty, 1931), not calibrated 5\\
+tests. Parameter estimation, sparse cells, the selected df convention,
+and repeated screening across elements all affect that interpretation.
+ZSTD is reported alongside every Infit and Outfit value. ZSTD is
+withheld (`NA`) when the applicable df falls below 1, where the
+Wilson-Hilferty transformation is numerically unstable; FACETS/Winsteps
+under `WHEXACT` can continue with a linear approximation on such cells.
 
 **Residual basis under MML vs JMLE engines**
 
@@ -691,9 +721,11 @@ for the separate standardization-side df/ZSTD conventions.
 **PTMEA (Point-Measure Correlation)**
 
 Pearson correlation between observed scores and estimated person
-measures within each facet level. Positive values indicate that scoring
-aligns with the latent trait dimension; negative values suggest reversed
-orientation or scoring errors.
+measures within each facet level. A positive value is directionally
+consistent with the fitted orientation, but it is not a confirmatory
+test of alignment. A negative value prompts review of orientation,
+response patterns, and model specification; it does not by itself
+establish a scoring error.
 
 **Separation**
 
@@ -789,11 +821,13 @@ approximation limits as the separation index.
 
 - Muraki, E. (1992). A generalized partial credit model: Application of
   an EM algorithm. *Applied Psychological Measurement*, 16(2), 159–176.
-  (Source for the bounded `GPCM` extension used in
-  `fit_mfrm(model = "GPCM")`,
-  [`fair_average_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/fair_average_table.md),
+  (Source for the GPCM response-probability kernel used by the package's
+  bounded `fit_mfrm(model = "GPCM")` route. The slope-aware
+  [`fair_average_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/fair_average_table.md)
   and
-  [`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md).)
+  [`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md)
+  extensions are package-specific, caveated adaptations built from that
+  kernel, not procedures proposed in Muraki 1992.)
 
 - Muraki, E. (1993). Information functions of the generalized partial
   credit model. *Applied Psychological Measurement*, 17(4), 351–363.
@@ -877,10 +911,14 @@ Expected A Posteriori (EAP). Joint Maximum Likelihood (JML) estimates
 all person and facet parameters simultaneously as fixed effects;
 `"JMLE"` remains a backward-compatible alias.
 
-MML is generally preferred for smaller samples because it avoids the
-incidental-parameter problem of JML. JML does not assume a normal person
-distribution and can be lighter computationally in some settings, which
-may be an advantage when the population shape is strongly non-normal.
+Estimator choice should follow the inferential target and assumptions.
+MML avoids estimating one fixed effect per person, but its structural
+inference depends on the specified population distribution and response
+model. JML does not assume a parametric person distribution and can be
+lighter computationally, but structural-parameter bias can persist as
+the number of persons increases when the number of ratings or items per
+person remains fixed. Sample size alone therefore does not determine the
+preferred route.
 
 See
 [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
@@ -906,18 +944,16 @@ practical fixed-scale scoring, but it should still be described as a
 limited approximation rather than as full ConQuest-style population
 modeling.
 
-**Current ConQuest overlap**
+**ConQuest overlap**
 
-The package now includes a first-version latent-regression `MML` branch,
-but the overlap with ConQuest should still be described conservatively.
-The documented overlap is: ordered-response `RSM` / `PCM`, one latent
-dimension, a conditional-normal person population model, and person
-covariates supplied through an explicit one-row-per-person table and
-expanded through the package-built model matrix. Categorical person
-covariates carry fitted levels and contrasts into scoring. This is a
-scoped overlap, not a claim of broad ConQuest numerical equivalence for
-arbitrary imported design matrices, multidimensional models, imported
-design specifications, or the full plausible-values workflow.
+The package supports a scoped latent-regression `MML` model, but the
+overlap with ConQuest should still be described conservatively. The
+documented comparison is binary `RSM` / `PCM`, one latent dimension,
+exactly one item facet, complete rectangular responses, and exactly one
+numeric person covariate beyond the intercept in a conditional-normal
+person population model. This is a scoped file-based comparison, not a
+claim of broad ConQuest numerical equivalence for polytomous,
+multidimensional, incomplete, or arbitrary imported designs.
 
 ## See also
 
@@ -989,12 +1025,60 @@ mfrm_threshold_profiles()
 #> 
 #> Notes
 #>  - Profiles tune warning strictness for build_visual_summaries().Use `thresholds` in build_visual_summaries() to override selected values.
-list_mfrmr_data()
-#> [1] "example_core"     "example_bias"     "study1"           "study2"          
-#> [5] "combined"         "study1_itercal"   "study2_itercal"   "combined_itercal"
+list_mfrmr_data(details = TRUE)
+#>                   Key Rows Persons Raters Criteria
+#> 1        example_core  768      48      4        4
+#> 2        example_bias  384      48      4        4
+#> 3 example_operational  282      48      6        3
+#> 4              study1 1842     307     18        3
+#> 5              study2 3287     206     12        9
+#> 6            combined 5129     307     18       12
+#> 7      study1_itercal 1842     307     18        3
+#> 8      study2_itercal 3341     206     12        9
+#> 9    combined_itercal 5183     307     18       12
+#>                                                  CountBasis
+#> 1                                             unique labels
+#> 2                                             unique labels
+#> 3                                             unique labels
+#> 4                                             unique labels
+#> 5                                             unique labels
+#> 6 raw labels; 513 persons and 30 raters when Study-prefixed
+#> 7                                             unique labels
+#> 8                                             unique labels
+#> 9 raw labels; 513 persons and 30 raters when Study-prefixed
+#>                                            PrimaryUse
+#> 1                             Idealized fast examples
+#> 2    DFF and bias demonstrations with planted effects
+#> 3                           Beginner applied workflow
+#> 4               Unequal-workload sparse-design review
+#> 5                         Larger sparse-design review
+#> 6      Identity/linking design review; not direct fit
+#> 7                     Legacy synthetic variant review
+#> 8                     Legacy synthetic variant review
+#> 9 Identity/linking sensitivity review; not direct fit
+#>                                                                  Design
+#> 1                               Complete crossing; no planned omissions
+#> 2               Balanced two-rater assignment; planted non-null effects
+#> 3                 Connected two-rater assignment; six planned omissions
+#> 4                 Two raters per person; highly unequal rater workloads
+#> 5                  Two raters per person; incomplete criterion coverage
+#> 6 Overlapping IDs; requires explicit anchors/linking for a common scale
+#> 7                    Legacy Study 1 variant; rows and scores can differ
+#> 8                    Legacy Study 2 variant; rows and scores can differ
+#> 9 Overlapping IDs; requires explicit anchors/linking for a common scale
+#>   Empirical
+#> 1     FALSE
+#> 2     FALSE
+#> 3     FALSE
+#> 4     FALSE
+#> 5     FALSE
+#> 6     FALSE
+#> 7     FALSE
+#> 8     FALSE
+#> 9     FALSE
 
 if (FALSE) { # \dontrun{
-toy <- load_mfrmr_data("example_core")
+toy <- load_mfrmr_data("example_operational")
 fit <- fit_mfrm(
   toy,
   person = "Person",

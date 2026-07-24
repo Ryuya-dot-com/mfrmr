@@ -22,7 +22,7 @@ output with FACETS-style fit tables."></head><body>
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from Facets to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
@@ -107,7 +107,7 @@ indicating a fit difference.</p>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu">facets_fit_df_guide</span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> mfrmr FACETS Fit df Guide </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Class: mfrm_facets_fit_df_guide</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Components (7): summary, formula_guide, column_guide, decision_guide, interpretation_guide, references, settings</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Components: 7</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Guide overview</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                    Scope</span>
@@ -138,7 +138,8 @@ indicating a fit difference.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  include_references  TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Notes</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - FACETS-style fit df and ZSTD comparison guide. Compare MnSq first, then df and ZSTD.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - FACETS-style fit df and ZSTD comparison guide. Compare MnSq first, then df</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    and ZSTD.</span>
 <span class="r-in"><span><span class="fu">facets_fit_df_guide</span><span class="op">(</span><span class="op">)</span><span class="op">$</span><span class="va">decision_guide</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Step                                                         Question</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1    1                                           Are MnSq values close?</span>

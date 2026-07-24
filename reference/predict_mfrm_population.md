@@ -66,11 +66,12 @@ predict_mfrm_population(
   or one-row data frame. Names may use canonical variables (`n_person`,
   `n_rater`, `n_criterion`, `raters_per_person`), current public aliases
   (for example `n_judge`, `n_task`, `judge_per_person`), or role
-  keywords (`person`, `rater`, `criterion`, `assignment`). The
-  schema-only future branch input
+  keywords (`person`, `rater`, `criterion`, `assignment`). The nested
+  named-facet form
   `design$facets = c(person = ..., judge = ..., task = ...)` is also
-  accepted for the currently exposed facet keys. Do not specify the same
-  variable through both `design` and the scalar count arguments.
+  accepted for the supported person/rater/criterion design. Do not
+  specify the same variable through both `design` and the scalar count
+  arguments.
 
 - reps:
 
@@ -131,15 +132,14 @@ An object of class `mfrm_population_prediction` with components:
 - `design_descriptor`: role-based description of design variables
   carried from the underlying planning object
 
-- `planning_scope`: explicit record of the current planning contract,
-  including a `facet_manifest` and future-planner scaffold marker
+- `planning_scope`: explicit record of the supported planning contract,
+  including a `facet_manifest`
 
 - `planning_constraints`: explicit record of mutable/locked design
   variables
 
-- `planning_schema`: combined planner-schema contract carrying the role
-  table, current boundary, mutability map, facet manifest, and a
-  schema-only future facet-count table
+- `planning_schema`: structured planning metadata carrying the role
+  table, supported boundary, mutability map, and facet manifest
 
 - `gpcm_boundary`: bounded-`GPCM` caveat row when a `GPCM` forecast
   route is used

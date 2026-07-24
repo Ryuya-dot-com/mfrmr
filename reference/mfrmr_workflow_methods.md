@@ -8,10 +8,15 @@ output objects support
 ## Canonical reporting route
 
 For the clearest default route in `RSM` / `PCM`, use
+[`describe_mfrm_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/describe_mfrm_data.md)
+-\>
 [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
-with `method = "MML"` -\>
+with `method = "MML"` -\> `summary(fit, profile = "fit")` -\>
+`review <- summary(fit, profile = "facets")` -\> the required native
+`plot(fit, type = "wright", show_ci = TRUE)` -\> reuse
+`review$results$diagnostics`; call
 [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md)
-with `diagnostic_mode = "both"` -\>
+again only when residual PCA or other custom settings are needed -\>
 [`reporting_checklist()`](https://ryuya-dot-com.github.io/mfrmr/reference/reporting_checklist.md)
 -\>
 [`plot_qc_dashboard()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_qc_dashboard.md)
@@ -35,9 +40,7 @@ language to a later `MML` run.
 ## Canonical operational review route
 
 When the main question is scale maintenance rather than manuscript
-reporting, branch after
-[`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md)
-into:
+reporting, branch from `review$results$diagnostics` into:
 [`review_mfrm_anchors()`](https://ryuya-dot-com.github.io/mfrmr/reference/review_mfrm_anchors.md)
 and/or
 [`detect_anchor_drift()`](https://ryuya-dot-com.github.io/mfrmr/reference/detect_anchor_drift.md)
@@ -59,8 +62,7 @@ that anchor drift is absent.
 ## Canonical misfit case-review route
 
 When the main question is which observations, facet levels, or pairwise
-structures deserve follow-up, branch after
-[`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md)
+structures deserve follow-up, branch from `review$results$diagnostics`
 into:
 [`build_misfit_casebook()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_misfit_casebook.md)
 -\> inspect `casebook$group_view_index`, `casebook$group_views`, and
@@ -123,20 +125,38 @@ or `analysis_caveats`. Adjacent threshold estimates should still be
 treated as weakly identified when an intermediate category is
 unobserved.
 
+## Planned assignment and structural missingness
+
+A long-format table alone does not reveal whether an absent Person x
+facet cell was expected or never assigned. When a score-free assignment
+roster is available, pass it as `expected_design` to
+[`describe_mfrm_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/describe_mfrm_data.md).
+The summary then separates expected-but-unobserved cells from unexpected
+observations and reports observed versus declared Person-facet graph
+components. Without a roster, structural missingness is explicitly
+marked as not assessed; mfrmr does not assume a complete crossing.
+
 ## Typical workflow
 
-1.  Fit a model with
+1.  Review the long-format data and intended score support with
+    [`describe_mfrm_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/describe_mfrm_data.md).
+
+2.  Fit a model with
     [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md).
     For final reporting, prefer `method = "MML"` unless you explicitly
     want a fast exploratory JML pass.
 
-2.  (Optional) Use
+3.  Read `summary(fit, profile = "fit")`, then request
+    `summary(fit, profile = "facets")` and draw the required native
+    Wright map with `plot(fit, type = "wright", show_ci = TRUE)`.
+
+4.  (Optional) Use
     [`run_mfrm_facets()`](https://ryuya-dot-com.github.io/mfrmr/reference/run_mfrm_facets.md)
     or
     [`mfrmRFacets()`](https://ryuya-dot-com.github.io/mfrmr/reference/run_mfrm_facets.md)
     for a legacy-compatible one-shot workflow wrapper.
 
-3.  For `RSM` / `PCM`, build diagnostics with
+5.  For `RSM` / `PCM`, build diagnostics with
     [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md).
     For final reporting, prefer `diagnostic_mode = "both"` so the legacy
     residual path and the strict marginal screen remain visible side by
@@ -190,16 +210,16 @@ unobserved.
     evaluation, population forecasting, diagnostic-screening, and
     signal-detection helpers. Caveated APA/QC/export bundles are
     available for sensitivity reporting, while score-side FACETS helpers
-    remain outside the validated `GPCM` boundary. Use
+    remain outside the documented `GPCM` boundary. Use
     [`gpcm_capability_matrix()`](https://ryuya-dot-com.github.io/mfrmr/reference/gpcm_capability_matrix.md)
     as the formal capability map before branching into less common
     helpers.
 
-4.  (Optional, `RSM` / `PCM`; bounded `GPCM` with caveat) Estimate
+6.  (Optional, `RSM` / `PCM`; bounded `GPCM` with caveat) Estimate
     interaction bias with
     [`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md).
 
-5.  Choose a downstream branch:
+7.  Choose a downstream branch:
     [`reporting_checklist()`](https://ryuya-dot-com.github.io/mfrmr/reference/reporting_checklist.md)
     for direct report preparation, or
     [`build_weighting_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_weighting_review.md)
@@ -212,7 +232,7 @@ unobserved.
     only as an exploratory index over direct anchor/drift/chain
     evidence.
 
-6.  Generate reporting bundles:
+8.  Generate reporting bundles:
     [`build_summary_table_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_summary_table_bundle.md),
     [`apa_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/apa_table.md),
     [`export_summary_appendix()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_summary_appendix.md),
@@ -224,13 +244,13 @@ unobserved.
     design screening has its own caveated operating-characteristic
     route.
 
-7.  (Optional, `RSM` / `PCM`) Review report completeness with
+9.  (Optional, `RSM` / `PCM`) Review report completeness with
     [`reference_case_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/reference_case_review.md).
     Use
     [`facets_output_contract_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/facets_output_contract_review.md)
     only when you explicitly need the compatibility layer.
 
-8.  (Optional, `RSM` / `PCM`) For operational linking follow-up, combine
+10. (Optional, `RSM` / `PCM`) For operational linking follow-up, combine
     [`review_mfrm_anchors()`](https://ryuya-dot-com.github.io/mfrmr/reference/review_mfrm_anchors.md),
     [`detect_anchor_drift()`](https://ryuya-dot-com.github.io/mfrmr/reference/detect_anchor_drift.md),
     and
@@ -239,11 +259,11 @@ unobserved.
     [`build_linking_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_linking_review.md)
     before exporting appendix-style tables.
 
-9.  (Optional) Check packaged reference cases with
+11. (Optional) Check packaged reference cases with
     [`reference_case_benchmark()`](https://ryuya-dot-com.github.io/mfrmr/reference/reference_case_benchmark.md)
     when you want package-side reference checks.
 
-10. (Optional) For design planning or future scoring, move to the
+12. (Optional) For design planning or future scoring, move to the
     simulation/prediction layer:
     [`build_mfrm_sim_spec()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_mfrm_sim_spec.md)
     /
@@ -278,7 +298,7 @@ unobserved.
     estimator itself. Prediction export still requires actual prediction
     objects in addition to `include = "predictions"`.
 
-11. Use [`summary()`](https://rdrr.io/r/base/summary.html) for compact
+13. Use [`summary()`](https://rdrr.io/r/base/summary.html) for compact
     text checks and
     [`plot()`](https://rdrr.io/r/graphics/plot.default.html) (or
     dedicated plot helpers) for base-R visual diagnostics.
@@ -338,7 +358,7 @@ unobserved.
   [`apa_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/apa_table.md)
   or
   [`export_summary_appendix()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_summary_appendix.md).
-  First-release `GPCM`:
+  bounded `GPCM`:
   [`reporting_checklist()`](https://ryuya-dot-com.github.io/mfrmr/reference/reporting_checklist.md)
   -\> direct table/plot helpers -\>
   [`build_apa_outputs()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_apa_outputs.md)
@@ -385,7 +405,7 @@ unobserved.
   /
   [`sample_mfrm_plausible_values()`](https://ryuya-dot-com.github.io/mfrmr/reference/sample_mfrm_plausible_values.md)
   are the scoring layer. Prediction export requires actual prediction
-  objects. First-release `GPCM` now supports direct data generation via
+  objects. Bounded `GPCM` supports direct data generation via
   [`build_mfrm_sim_spec()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_mfrm_sim_spec.md),
   [`extract_mfrm_sim_spec()`](https://ryuya-dot-com.github.io/mfrmr/reference/extract_mfrm_sim_spec.md),
   and
@@ -396,9 +416,8 @@ unobserved.
   diagnostic/signal-detection design screening, residual diagnostics,
   and direct curve/report helpers. The current planning layer remains
   role-based for two non-person facets even though estimation itself
-  supports arbitrary facet counts; future arbitrary-facet planning
-  fields should be treated as design metadata rather than finished
-  public behavior.
+  supports arbitrary facet counts. Additional arbitrary-facet fields are
+  structural design metadata, not Monte Carlo performance results.
 
 ## Interpreting output
 

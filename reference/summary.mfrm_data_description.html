@@ -18,7 +18,7 @@
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from Facets to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
@@ -80,7 +80,17 @@
 <li><p><code>score_distribution</code>: compact score-usage table, including zero-count
 categories retained by the prepared score support</p></li>
 <li><p><code>facet_overview</code>: facet-level coverage summary</p></li>
-<li><p><code>agreement</code>: inter-rater agreement summary when available</p></li>
+<li><p><code>structural_missingness</code>: declared assignment coverage summary; status is
+<code>"not_declared"</code> when no assignment roster was supplied</p></li>
+<li><p><code>structural_level_coverage</code>: expected versus observed level counts</p></li>
+<li><p><code>design_connectivity</code>: Person-facet component counts for observed and
+declared-expected designs</p></li>
+<li><p><code>design_components</code>: component sizes and facet-level labels; person labels
+are suppressed unless explicitly requested in <code><a href="describe_mfrm_data.html">describe_mfrm_data()</a></code></p></li>
+<li><p><code>linkage_summary</code>: sparse-support and shared-person counts by facet</p></li>
+<li><p><code>duplicate_cell_summary</code>: aggregate duplicate-cell counts</p></li>
+<li><p><code>agreement</code>: selected-facet agreement summary when available</p></li>
+<li><p><code>agreement_settings</code>: selected scorer facet, matching context, and status</p></li>
 <li><p><code>row_retention</code>: row counts before and after preparation filters</p></li>
 <li><p><code>preparation_notes</code>: structured preparation notes retained from
 <code><a href="describe_mfrm_data.html">describe_mfrm_data()</a></code></p></li>
@@ -105,7 +115,8 @@ manuscripts and analysis logs.</p>
 related score-support caveats; intermediate unused categories should be
 treated as threshold-functioning warnings before model fitting.</p></li>
 <li><p><code>facet_overview</code>: coverage per facet (minimum/maximum weighted counts).</p></li>
-<li><p><code>agreement</code>: observed-score inter-rater agreement (when available).</p></li>
+<li><p><code>agreement</code>: observed-score agreement for the selected scorer facet (when
+available).</p></li>
 </ul><p>Very low <code>MinWeightedN</code> in <code>facet_overview</code> is a practical warning for
 unstable downstream facet estimates.</p>
     </div>
@@ -142,6 +153,34 @@ unstable downstream facet estimates.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      Rater       0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      Score       0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Planned assignment coverage</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        Status ExpectedCells ObservedCells MatchedCells MissingExpectedCells</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  not_declared            NA           768           NA                   NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  UnexpectedObservedCells CoverageRate ExpectedOnlyPersons UnexpectedPersons</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                       NA           NA                  NA                NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Person-facet connectivity</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     Basis     Facet PersonNodes FacetLevelNodes Edges Components</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  observed     Rater          48               4   192          1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  observed Criterion          48               4   192          1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  LargestComponentPersons LargestComponentLevels LargestComponentPercent</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                       48                      4                     100</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                       48                      4                     100</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Connected</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Facet linkage support</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      Facet Levels Persons MinPersonsPerLevel MedianPersonsPerLevel</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      Rater      4      48                 48                    48</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Criterion      4      48                 48                    48</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  MinLevelsPerPerson MedianLevelsPerPerson LinkingPersons LinkingPersonRate</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                   4                     4             48                 1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                   4                     4             48                 1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  SingleLevelPersons SparseLevels SparseLevelThreshold</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                   0            0                    2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                   0            0                    2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Score distribution</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Score RawN WeightedN Percent</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      1  139       139  18.099</span>
@@ -154,7 +193,7 @@ unstable downstream facet estimates.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Criterion      4            768           192          192          192</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      Rater      4            768           192          192          192</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Inter-rater agreement</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Observed agreement by Rater</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  RaterFacet Raters Pairs Contexts TotalPairs OpportunityCount ExactAgreements</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       Rater      4     6      192       1152             1152             417</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  ExpectedAgreements ExactAgreement ExpectedExactAgreement</span>
@@ -165,16 +204,20 @@ unstable downstream facet estimates.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     0.378</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Paper reporting map</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                 Area CoveredHere</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               Sample / design counts         yes</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                   Missingness review         yes</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Score usage / category distribution         yes</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                       Facet coverage         yes</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                Inter-rater agreement         yes</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     Fit / reliability / residual PCA          no</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                 Area  CoveredHere</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>               Sample / design counts          yes</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                   Missingness review          yes</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          Planned assignment coverage not declared</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            Person-facet connectivity          yes</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Score usage / category distribution          yes</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                       Facet coverage          yes</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                Rater-facet agreement          yes</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     Fit / reliability / residual PCA           no</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                                 CompanionOutput</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                summary(describe_mfrm_data(...))</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                summary(describe_mfrm_data(...))</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       data_review$structural_missingness$missing_expected_cells</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                   data_review$design_components</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                summary(describe_mfrm_data(...))</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                summary(describe_mfrm_data(...))</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  summary(describe_mfrm_data(...)) / plot_interrater_agreement()</span>
@@ -182,6 +225,7 @@ unstable downstream facet estimates.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Notes</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - No missing values were detected in selected input columns.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Structural missingness was not assessed because `expected_design` was not supplied. Absent rows cannot be distinguished from cells that were never assigned.</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

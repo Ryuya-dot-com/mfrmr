@@ -1,6 +1,6 @@
-# Export an analysis bundle for sharing or archiving
+# Export a fit-level analysis archive
 
-Export an analysis bundle for sharing or archiving
+Export a fit-level analysis archive
 
 ## Usage
 
@@ -20,6 +20,7 @@ export_mfrm_bundle(
   facet = NULL,
   include_person_anchors = FALSE,
   overwrite = FALSE,
+  acknowledge_sensitive = FALSE,
   zip_bundle = FALSE,
   zip_name = NULL,
   data = NULL
@@ -77,8 +78,9 @@ export_mfrm_bundle(
   [`reporting_checklist()`](https://ryuya-dot-com.github.io/mfrmr/reference/reporting_checklist.md),
   and
   [`build_apa_outputs()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_apa_outputs.md).
-  Recovery-validation summaries can be supplied here to co-locate
-  release-review appendix tables with a fit-based export bundle.
+  Compatible precomputed recovery-evidence summaries can be supplied
+  here to co-locate their appendix tables with a fit-based export
+  bundle.
 
 - output_dir:
 
@@ -108,6 +110,13 @@ export_mfrm_bundle(
 
   If `FALSE`, refuse to overwrite existing files.
 
+- acknowledge_sensitive:
+
+  Logical; set to `TRUE` only after acknowledging that the archive can
+  contain direct person identifiers, person-level estimates, original
+  labels, replay data, and local paths. This suppresses the privacy
+  warning; it does not deidentify any file.
+
 - zip_bundle:
 
   If `TRUE`, attempt to zip the written files into a single archive
@@ -135,18 +144,23 @@ A named list with class `mfrm_export_bundle`.
 
 ## Details
 
-This function is the package-native counterpart to the app's download
-bundle. It reuses existing `mfrmr` helpers instead of reimplementing
-estimation or diagnostics. It is also the one-call fit-level HTML route:
-when `diagnostics = NULL`, the exporter computes the diagnostics it
-needs, then writes the requested CSV/text/replay artifacts and a
-lightweight HTML page from the fitted object. Use
+This function is the one-call fit-level archive and HTML route. It
+reuses existing `mfrmr` helpers instead of reimplementing estimation or
+diagnostics. When `diagnostics = NULL`, the exporter computes the
+diagnostics it needs, then writes the requested CSV/text/replay
+artifacts and a lightweight HTML page from the fitted object. Use
 [`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md)
 and
 [`mfrm_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md)
 first when you want to inspect a results object before writing files;
 use `export_mfrm_bundle()` when the goal is a project-folder bundle from
 `fit`.
+
+Every bundle is an analysis archive, not a deidentified or automatically
+shareable package. Core tables, anchors, predictions, replay sidecars,
+scripts, and HTML can contain identifying or study-sensitive
+information. Review and transform every file under the applicable
+data-handling policy before sharing it.
 
 ## Choosing exports
 
@@ -161,11 +175,12 @@ audiences:
   this also writes the fit-level replay person-data sidecar when
   available.
 
-- `"html"` for a light, shareable summary page. When replay sidecars are
-  present, the HTML shows an artifact index for them rather than
-  embedding the raw person-level replay table.
+- `"html"` for a lightweight summary page. This is not a
+  deidentification guarantee. When replay sidecars are present, the HTML
+  shows an artifact index for them rather than embedding the raw
+  person-level replay table.
 
-- `"summary_tables"` for manuscript-facing CSV exports of validated
+- `"summary_tables"` for manuscript-facing CSV exports of documented
   [`summary()`](https://rdrr.io/r/base/summary.html) surfaces and their
   compact indexes.
 
@@ -237,10 +252,11 @@ remains the scenario-level forecast helper, whereas
 and
 [`sample_mfrm_plausible_values()`](https://ryuya-dot-com.github.io/mfrmr/reference/sample_mfrm_plausible_values.md)
 are the scoring layer. To keep exports and replay scripts practical,
-large future-planning schemas from scenario-level population predictions
-are not flattened into `*_population_prediction_settings.csv` or ADeMP
-CSVs; the compact simulation specification files carry the
-replay-relevant settings instead.
+large structural-design schemas from scenario-level population
+predictions are not flattened into
+`*_population_prediction_settings.csv` or ADeMP CSVs; the compact
+simulation specification files carry the replay-relevant settings
+instead.
 
 For bounded `GPCM`, this exporter is available as a caveated partial
 bundle over supported diagnostics, report text, visual summaries,
@@ -293,7 +309,8 @@ bundle <- export_mfrm_bundle(
   output_dir = tempdir(),
   prefix = "mfrmr_bundle_example",
   include = c("core_tables", "manifest", "script", "html"),
-  overwrite = TRUE
+  overwrite = TRUE,
+  acknowledge_sensitive = TRUE
 )
 bundle$summary[, c("FilesWritten", "HtmlWritten", "ScriptWritten")]
 head(bundle$written_files)

@@ -1,10 +1,11 @@
-# Export a lightweight mfrm_results archive
+# Export an mfrm_results analysis archive
 
 `export_mfrm_results()` writes the contents of an existing
 [`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md)
-object to a small shareable folder. It is a results-download helper for
+object to a compact analysis folder. It is a results-download helper for
 the comprehensive first-screen workflow, not a new estimation,
-diagnostics, or validation step.
+diagnostics, or validation step. The folder is not deidentified or
+automatically shareable.
 
 ## Usage
 
@@ -16,6 +17,7 @@ export_mfrm_results(
   include = "default",
   preset = NULL,
   overwrite = FALSE,
+  acknowledge_sensitive = FALSE,
   zip_bundle = FALSE,
   zip_name = NULL,
   plot_width = 1200,
@@ -52,13 +54,21 @@ export_mfrm_results(
 
 - preset:
 
-  Optional reader-facing export preset. `"starter"` adds the report and
-  plot routes to the default files and writes `index.html` with the
-  required Wright map embedded at the start of the reading flow.
+  Optional reader-facing analysis-archive preset. `"starter"` adds the
+  report and plot routes to the default files and writes `index.html`
+  with the required Wright map embedded at the start of the reading
+  flow.
 
 - overwrite:
 
   Logical; if `FALSE`, existing files stop the export.
+
+- acknowledge_sensitive:
+
+  Logical; set to `TRUE` only after acknowledging that every preset can
+  contain direct person identifiers, person-level results, original
+  labels, local paths, and a complete result object. This suppresses the
+  privacy warning; it does not deidentify any file.
 
 - zip_bundle:
 
@@ -97,18 +107,26 @@ The helper writes:
 
 - an `.rds` copy of the `mfrm_results` object;
 
-- a replay `.R` scaffold from `x$input$reproducible_code`;
+- a replay `.R` script from `x$input$reproducible_code`;
 
 - a written-files manifest and compact export summary.
+
+All presets, including `"starter"`, are analysis archives. In
+particular, the default `.rds` file retains the complete result object,
+and CSV, HTML, plot, and replay artifacts can retain direct identifiers
+or other sensitive study information. The manifest labels each file for
+review, but the helper does not pseudonymize, redact, or certify an
+export for sharing. Apply the study's data-governance process before
+moving the files outside the approved analysis environment.
 
 Plot export is intentionally optional because some plot routes can be
 comparatively slow or require richer graphics devices. Plot failures are
 recorded in the returned `plot_errors` table rather than stopping the
-export. The `"starter"` preset is the recommended final handoff because
-it always requests the Wright map in addition to the result summary,
-report, replay script, and manifest. Its Infit pathway includes a
-bounded selection of person rows so person fit can be reviewed without
-replacing the required Wright-map first screen.
+export. The `"starter"` preset is the recommended reader-oriented
+analysis archive because it always requests the Wright map in addition
+to the result summary, report, replay script, and manifest. Its Infit
+pathway includes a bounded selection of person rows so person fit can be
+reviewed without replacing the required Wright-map first screen.
 
 ## See also
 

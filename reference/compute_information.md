@@ -215,20 +215,21 @@ language can be used in reporting, follow with
 ## Examples
 
 ``` r
-toy <- load_mfrmr_data("example_core")
+toy <- load_mfrmr_data("example_operational")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                 method = "JML", model = "RSM", maxit = 30)
+                 method = "MML", model = "RSM",
+                 quad_points = 7, maxit = 30)
 info <- compute_information(fit)
 head(info$tif)
 #> # A tibble: 6 × 3
 #>   Theta Information    SE
 #>   <dbl>       <dbl> <dbl>
-#> 1 -6           7.61 0.363
-#> 2 -5.94        8.07 0.352
-#> 3 -5.88        8.56 0.342
-#> 4 -5.82        9.09 0.332
-#> 5 -5.76        9.64 0.322
-#> 6 -5.7        10.2  0.313
+#> 1 -6           2.59 0.621
+#> 2 -5.94        2.75 0.603
+#> 3 -5.88        2.92 0.586
+#> 4 -5.82        3.09 0.569
+#> 5 -5.76        3.28 0.552
+#> 6 -5.7         3.48 0.536
 info$tif$Theta[which.max(info$tif$Information)]
-#> [1] -0.06
+#> [1] 0.12
 ```

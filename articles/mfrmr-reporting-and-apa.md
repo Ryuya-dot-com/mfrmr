@@ -26,7 +26,7 @@ For a plot-first route, see
 
 library(mfrmr)
 
-toy <- load_mfrmr_data("example_core")
+toy <- load_mfrmr_data("example_operational")
 
 # The vignette uses compact quadrature so optional local execution stays fast.
 # For final manuscript reporting, refit with the package default or a higher
@@ -86,7 +86,7 @@ head(
 #> 2                                                      Available; adapt this evidence into the manuscript draft after methodological review.
 #> 3                                                                             Report the precision tier as model-based in the APA narrative.
 #> 4                                                      Available; adapt this evidence into the manuscript draft after methodological review.
-#> 5                                                             Document the connectivity result before making common-scale or linking claims.
+#> 5                                                                    Document the single connected subset before making common-scale claims.
 #> 6                          Report both the fixed-effects and shrunk estimates; cite Efron & Morris (1973) for the empirical-Bayes rationale.
 #> 7       Report the per-facet adequacy bands and discuss any sparse/marginal levels; cite Linacre (1994) sample-size guidance where relevant.
 #> 8  Run `analyze_hierarchical_structure(fit)` once per design and pass the result to `reporting_checklist(..., hierarchical_structure = hs)`.
@@ -112,12 +112,12 @@ Interpretation:
 prec <- precision_review_report(fit, diagnostics = diag)
 
 prec$profile
-#>   Method Converged PrecisionTier SupportsFormalInference HasFallbackSE
-#> 1    MML      TRUE   model_based                    TRUE         FALSE
-#>        PersonSEBasis           NonPersonSEBasis
-#> 1 Posterior SD (EAP) Observed information (MML)
-#>                               CIBasis
-#> 1 Normal interval from model-based SE
+#>   Method Converged InferenceReady ConvergenceSeverity PrecisionTier
+#> 1    MML      TRUE           TRUE                pass   model_based
+#>   SupportsFormalInference HasFallbackSE      PersonSEBasis
+#> 1                    TRUE         FALSE Posterior SD (EAP)
+#>             NonPersonSEBasis                             CIBasis
+#> 1 Observed information (MML) Normal interval from model-based SE
 #>                                                   ReliabilityBasis
 #> 1 Observed variance with model-based and fit-adjusted error bounds
 #>   HasFitAdjustedSE HasSamplePopulationCoverage
@@ -135,7 +135,7 @@ prec$checks
 #> 7         SE source labels   pass
 #>                                                                                 Detail
 #> 1                              This run uses the package's model-based precision path.
-#> 2                                                  The optimizer reported convergence.
+#> 2                                Optimizer diagnostics support inference-ready status.
 #> 3                             Finite ModelSE values were available for 100.0% of rows.
 #> 4            Fit-adjusted SE values were not smaller than their paired ModelSE values.
 #> 5         Conservative reliability values were not larger than the model-based values.
@@ -209,12 +209,12 @@ cat(apa$report_text)
 #> 
 #> Design and data.
 #> The analysis focused on Writing assessment in Local scoring study. A many-facet
-#> rating-scale Rasch model was fit to 768 observations from 48 persons scored on a 4-category
-#> scale (1-4). The design included facets for Rater (n = 4), Criterion (n = 4). Facet-level
-#> sample sizes were strong (smallest level N = 192), though facets were still estimated as
-#> fixed effects with sum-to-zero identification; `analyze_hierarchical_structure()` is
-#> available for nesting and variance-component follow-up. The rating scale was described as
-#> 0-4 rubric scale.
+#> rating-scale Rasch model was fit to 282 observations from 48 persons scored on a 4-category
+#> scale (1-4). The design included facets for Rater (n = 6), Criterion (n = 6). Facet-level
+#> sample sizes met the package's `standard` band (smallest level N = 38), an mfrmr-specific
+#> watermark adapted from Linacre's (1994) 30/100 guidance; facets were nonetheless estimated
+#> as fixed effects with sum-to-zero identification (see `facet_small_sample_review()`). The
+#> rating scale was described as 0-4 rubric scale.
 #> 
 #> Estimation settings.
 #> The RSM specification was estimated using MML with mfrmr. Model-based precision summaries
@@ -222,53 +222,53 @@ cat(apa$report_text)
 #> under the marginal person distribution, and residual-based fit statistics are evaluated at
 #> these EAP measures rather than at joint maximum likelihood (JMLE) estimates. Recommended
 #> use for this precision profile: Use for primary reporting of SE, CI, and reliability in
-#> this package.. Optimization converged after 74 function evaluations and 12 gradient
-#> evaluations (LogLik = -903.081, AIC = 1822.162, BIC = 1859.312). Terminal gradient sup-norm
-#> = 0.2906 (review threshold = 0.0001). Optimizer returned convergence code 0. Constraint
-#> settings: noncenter facet = Person; anchored levels = 0 (facets: none); group anchors = 0
-#> (facets: none); dummy facets = none.
+#> this package.. Optimization met the package convergence checks after 16 function
+#> evaluations and 16 gradient evaluations (LogLik = -347.201, AIC = 712.401, BIC = 745.179).
+#> Terminal gradient sup-norm = 0.0001 (review threshold = 0.0001). Optimizer returned
+#> convergence code 0. Constraint settings: noncenter facet = Person; anchored levels = 0
+#> (facets: none); group anchors = 0 (facets: none); dummy facets = none.
 #> 
 #> Results.
 #> 
 #> Scale functioning.
 #> Category usage was adequate (unused categories = 0, low-count categories = 0), and
-#> thresholds were ordered. Step/threshold summary: 3 step(s); estimate range = -1.30 to 1.35
+#> thresholds were ordered. Step/threshold summary: 3 step(s); estimate range = -1.21 to 1.04
 #> logits; no disordered steps.
 #> 
 #> Facet measures.
-#> Person measures ranged from -2.02 to 2.33 logits (M = 0.03, SD = 1.01). Rater measures
-#> ranged from -0.32 to 0.33 logits (M = 0.00, SD = 0.31). Criterion measures ranged from
-#> -0.41 to 0.24 logits (M = 0.00, SD = 0.28).
+#> Person measures ranged from -1.71 to 1.45 logits (M = -0.14, SD = 0.81). Rater measures
+#> ranged from -0.60 to 0.37 logits (M = 0.00, SD = 0.38). Criterion measures ranged from
+#> -0.34 to 0.22 logits (M = 0.00, SD = 0.30).
 #> 
 #> Fit and precision.
-#> Overall mean-square fit was within the 0.5-1.5 screening band (infit MnSq = 0.99, outfit
-#> MnSq = 1.01). This band is the package's review convention; published mean-square
+#> Overall mean-square fit was within the 0.5-1.5 screening band (infit MnSq = 0.86, outfit
+#> MnSq = 0.86). This band is the package's review convention; published mean-square
 #> guidelines differ, and band position is screening evidence rather than a model-validity
-#> decision. 1 of 56 elements fell outside the 0.5-1.5 mean-square screening band. Largest
-#> misfit signals: Person:P023 (|ZSTD| = 2.09); Criterion:Organization (|ZSTD| = 1.69);
-#> Person:P018 (|ZSTD| = 1.45). Criterion reliability = 0.91 (separation = 3.20). Person
-#> reliability = 0.90 (separation = 3.06). Rater reliability = 0.92 (separation = 3.51). These
-#> are Rasch/FACETS-style separation indices (measure spread relative to measurement error),
-#> not inter-rater agreement. The Person row uses EAP measures with posterior SDs, which
-#> yields a conservative summary that is not numerically comparable to JMLE-based person
-#> reliability from FACETS. Observed inter-rater agreement is reported separately from
-#> separation reliability: for Rater, exact agreement = 0.36, expected exact agreement = 0.37,
-#> adjacent agreement = 0.83. Element-level 95% confidence intervals (Normal approximation)
-#> accompany the measures (CI_Lower / CI_Upper); 56 of 56 rows are flagged CIEligible for
-#> primary reporting.
+#> decision. 19 of 57 elements fell outside the 0.5-1.5 mean-square screening band. Largest
+#> misfit signals: Person:P026 (|ZSTD| = 2.48); Person:P022 (|ZSTD| = 2.41); Person:P016
+#> (|ZSTD| = 2.05). Criterion reliability = 0.86 (separation = 2.53). Person reliability =
+#> 0.66 (separation = 1.40). Rater reliability = 0.66 (separation = 1.38). These are
+#> Rasch/FACETS-style separation indices (measure spread relative to measurement error), not
+#> inter-rater agreement. The Person row uses EAP measures with posterior SDs, which yields a
+#> conservative summary that is not numerically comparable to JMLE-based person reliability
+#> from FACETS. Observed inter-rater agreement is reported separately from separation
+#> reliability: for Rater, exact agreement = 0.39, expected exact agreement = 0.35, adjacent
+#> agreement = 0.86. Element-level 95% confidence intervals (Normal approximation) accompany
+#> the measures (CI_Lower / CI_Upper); 57 of 57 rows are flagged CIEligible for primary
+#> reporting.
 #> 
 #> Residual structure.
 #> Exploratory residual PCA (overall standardized residual matrix) showed PC1 eigenvalue =
-#> 2.10 (13.2% variance), with PC2 eigenvalue = 1.79. Facet-specific exploratory residual PCA
-#> showed the largest first-component signal in Rater (eigenvalue = 1.55, 38.7% variance).
+#> 2.85 (15.9% variance), with PC2 eigenvalue = 2.46. Facet-specific exploratory residual PCA
+#> showed the largest first-component signal in Rater (eigenvalue = 2.15, 35.9% variance).
 #> Heuristic reference bands: EV >= 1.4 (critical minimum), >= 1.5 (caution), >= 2.0 (common),
 #> >= 3.0 (strong); variance >= 5% (minor), >= 10% (caution), >= 20% (strong). Strict marginal
-#> screening was available as a latent-integrated exploratory check (overall RMSD = 0.00,
-#> overall max |standardized residual| = 0.48). The largest strict marginal cell involved
-#> Criterion: Language | Cat 1 (standardized residual = 2.47, proportion difference = 0.06).
-#> Strict pairwise local-dependence follow-up flagged 0 level pair(s) under the
-#> latent-integrated agreement screen. The largest strict pairwise signal involved Criterion:
-#> Language vs Organization (ExactStdResidual = -1.45, AdjacentStdResidual = 0.39).
+#> screening was available as a latent-integrated exploratory check (overall RMSD = 0.01,
+#> overall max |standardized residual| = 0.51). The largest strict marginal cell involved
+#> Criterion: Content | Cat 4 (standardized residual = -1.57, proportion difference = -0.06).
+#> Strict pairwise local-dependence follow-up flagged 1 level pair(s) under the
+#> latent-integrated agreement screen. The largest strict pairwise signal involved Rater: R04
+#> vs R05 (ExactStdResidual = 2.12, AdjacentStdResidual = 0.25).
 #> 
 #> Reporting cautions.
 #> Fit-basis note: MnSq/ZSTD fit statistics in this run were computed at EAP person measures,
@@ -320,13 +320,13 @@ report$first_screen
 #> 4 Linking / anchors request_if_needed request_if_needed
 #> 5  Misfit / pathway request_if_needed request_if_needed
 #> 6         Precision                ok             ready
-#>                                                       MainIssue
-#> 1 ok=1; review=1; caveat=0; request_if_needed=3; unavailable=0.
-#> 2  ReviewSignalCount = 8; underfit=0; overfit=0; df_sensitive=8
-#> 3                                   Evidence was not requested.
-#> 4                                   Evidence was not requested.
-#> 5                                   Evidence was not requested.
-#> 6                               No report-index review signals.
+#>                                                                       MainIssue
+#> 1 ok=1; review=1; caveat=0; request_if_needed=3; not_computed=0; unavailable=0.
+#> 2                  ReviewSignalCount = 9; underfit=0; overfit=0; df_sensitive=9
+#> 3                                                   Evidence was not requested.
+#> 4                                                   Evidence was not requested.
+#> 5                                                   Evidence was not requested.
+#> 6                                               No report-index review signals.
 #>                                                                 NextAction
 #> 1                                                          Start with Fit.
 #> 2 Inspect the primary evidence table and template boundary before writing.
@@ -435,12 +435,12 @@ report$claim_readiness
 #> 1    apa
 report$report_gaps
 #>   Priority           GapType                        Section CurrentStatus
-#> 4        2     not_requested            Anchors and linking not_requested
-#> 2        2     not_requested                 Bias screening not_requested
-#> 3        2     not_requested      Misfit and pathway review not_requested
-#> 6        2     not_requested       Network and connectivity not_requested
-#> 5        2     not_requested               Response-time QC not_requested
-#> 1        3 caveated_evidence Fit, separation, and precision        review
+#> 4        3     not_requested            Anchors and linking not_requested
+#> 2        3     not_requested                 Bias screening not_requested
+#> 3        3     not_requested      Misfit and pathway review not_requested
+#> 6        3     not_requested       Network and connectivity not_requested
+#> 5        3     not_requested               Response-time QC not_requested
+#> 1        4 caveated_evidence Fit, separation, and precision        review
 #>                                                                                                    RecommendedAction
 #> 4               Rebuild the result with mfrm_results(fit, include = "linking") before writing anchor-readiness text.
 #> 2           Rebuild the result with mfrm_results(fit, include = "bias") before writing bias or fairness-screen text.
@@ -490,8 +490,8 @@ head(report$template_index[, c(
 
 For a high-stakes manuscript, treat
 [`build_apa_outputs()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_apa_outputs.md)
-and `mfrm_report(style = "apa")` as conservative scaffolding. Stronger
-journal claims still require a defensible study design, cited
+and `mfrm_report(style = "apa")` as a conservative drafting template.
+Stronger journal claims still require a defensible study design, cited
 measurement rationale, adequate precision evidence, linked or balanced
 design evidence where relevant, and substantive interpretation written
 in the language of the target journal. Do not report `DraftReady`,
@@ -502,7 +502,8 @@ caveats must remain visible.
 When the target is a local HTML/CSV/replay bundle rather than an
 interactive review object, use
 [`export_mfrm_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_bundle.md)
-directly from the fitted object:
+directly from the fitted object. The result is a potentially identifying
+analysis archive, not a deidentified sharing package:
 
 ``` r
 
@@ -515,7 +516,8 @@ bundle <- export_mfrm_bundle(
     "core_tables", "checklist", "dashboard", "apa",
     "summary_tables", "manifest", "script", "html"
   ),
-  overwrite = TRUE
+  overwrite = TRUE,
+  acknowledge_sensitive = TRUE
 )
 
 bundle$written_files[bundle$written_files$Format == "html", ]
@@ -536,7 +538,7 @@ tbl_reliability <- apa_table(fit, which = "reliability", diagnostics = diag)
 tbl_summary$caption
 #> [1] "Table 1\nFacet Summary (Measures, Precision, Fit, Reliability)"
 tbl_reliability$note
-#> [1] "Separation and reliability are based on observed variance, measurement error, and adjusted true variance. Overall fit: infit MnSq = 0.99, outfit MnSq = 1.01. Rater facet (Rater) reliability = 0.92, separation = 3.51. Observed inter-rater agreement is reported separately from separation reliability: for Rater, exact agreement = 0.36, expected exact agreement = 0.37, adjacent agreement = 0.83."
+#> [1] "Separation and reliability are based on observed variance, measurement error, and adjusted true variance. Overall fit: infit MnSq = 0.86, outfit MnSq = 0.86. Rater facet (Rater) reliability = 0.66, separation = 1.38. Observed inter-rater agreement is reported separately from separation reliability: for Rater, exact agreement = 0.39, expected exact agreement = 0.35, adjacent agreement = 0.86."
 ```
 
 The actual table data are stored in `tbl_summary$table` and
@@ -660,12 +662,12 @@ s_pop$population_coding
 s_pop$caveats
 ```
 
-In this release, keep latent-regression claims to the documented
-one-dimensional `MML` `RSM` / `PCM` route. Report the population
-formula, coding/contrast handling, population policy, and any
-omitted-person or omitted-row counts; do not imply multidimensional
-latent regression, Wald-test inference, or posterior predictive checking
-from these tables alone.
+Keep latent-regression claims within the documented one-dimensional
+`MML` `RSM` / `PCM` route. Report the population formula,
+coding/contrast handling, population policy, and any omitted-person or
+omitted-row counts; do not imply multidimensional latent regression,
+Wald-test inference, or posterior predictive checking from these tables
+alone.
 
 ## Recommended sequence
 

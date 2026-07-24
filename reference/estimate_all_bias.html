@@ -18,7 +18,7 @@
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from Facets to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
@@ -154,7 +154,7 @@ captured in <code>errors</code> rather than stopping the entire batch.</p>
 <ol><li><p>Fit with <code><a href="fit_mfrm.html">fit_mfrm()</a></code> and diagnose with <code><a href="diagnose_mfrm.html">diagnose_mfrm()</a></code>. For
 <code>RSM</code> / <code>PCM</code> reporting runs, prefer <code>method = "MML"</code> plus
 <code>diagnostic_mode = "both"</code> in the diagnostics call.</p></li>
-<li><p>Run <code>estimate_all_bias()</code> to compute app-style multi-pair interactions.</p></li>
+<li><p>Run <code>estimate_all_bias()</code> to compute the requested multi-pair interactions.</p></li>
 <li><p>Pass the resulting <code>by_pair</code> list into <code><a href="reporting_checklist.html">reporting_checklist()</a></code> or
 <code><a href="facet_quality_dashboard.html">facet_quality_dashboard()</a></code>.</p></li>
 </ol></div>

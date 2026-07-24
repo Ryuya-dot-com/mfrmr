@@ -33,7 +33,7 @@
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from Facets to mfrmr</a></li>
+<li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
@@ -244,7 +244,7 @@ the interaction table and narrative report.</p>
 <span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> Accur… A             48      125     113.   0.251      28.5 FALSE       2.26  </span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> Accur… B             48      117     124.  -<span style="color: #BB0000;">0.150</span>      29.2 FALSE      -<span style="color: #BB0000;">1.33</span>  </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> Conte… A             48      134     134.   0.009<span style="text-decoration: underline;">69</span>    27.8 FALSE       0.088<span style="text-decoration: underline;">2</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> Conte… A             48      134     134.   0.009<span style="text-decoration: underline;">68</span>    27.8 FALSE       0.088<span style="text-decoration: underline;">2</span></span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> Conte… B             48      148     144.   0.074<span style="text-decoration: underline;">5</span>     26.1 FALSE       0.700 </span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> Langu… A             48      128     136.  -<span style="color: #BB0000;">0.159</span>      27.5 FALSE      -<span style="color: #BB0000;">1.46</span>  </span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> Langu… B             48      158     146.   0.242      25.6 FALSE       2.30  </span></span>
@@ -302,25 +302,36 @@ claims.</li>
 <div class="section level2">
 <h2 id="multi-wave-anchor-review">7. Multi-wave anchor review<a class="anchor" aria-label="anchor" href="#multi-wave-anchor-review"></a>
 </h2>
-<p>When you work across administrations, the route usually moves from
-anchor export to anchored fitting and then to drift review.</p>
+<p>When you work across administrations, the route usually moves from a
+declared common-anchor design to anchored fitting and then to drift
+review. The block below is schematic: <code>wave1</code> and
+<code>wave2</code> must be administrations for which the listed facet
+levels have documented cross-wave identity and unchanged meaning.</p>
+<p>Do <strong>not</strong> substitute <code>ej2021_study1</code> and
+<code>ej2021_study2</code> here. They are independent legacy synthetic
+studies; reused raw labels do not identify common persons, raters, or
+anchors and do not link their scales.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">d1</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"study1"</span><span class="op">)</span></span>
-<span><span class="va">d2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"study2"</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">declared_common_facets</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Criterion"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">fit1</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">d1</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span>
-<span>                 method <span class="op">=</span> <span class="st">"JML"</span>, maxit <span class="op">=</span> <span class="fl">25</span><span class="op">)</span></span>
-<span><span class="va">fit2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">d2</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span>
-<span>                 method <span class="op">=</span> <span class="st">"JML"</span>, maxit <span class="op">=</span> <span class="fl">25</span><span class="op">)</span></span>
+<span><span class="va">fit1</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span></span>
+<span>  <span class="va">wave1</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span>
+<span>  method <span class="op">=</span> <span class="st">"MML"</span></span>
+<span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">anchored</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/anchor_to_baseline.html">anchor_to_baseline</a></span><span class="op">(</span></span>
-<span>  <span class="va">d2</span>,</span>
+<span>  <span class="va">wave2</span>,</span>
 <span>  <span class="va">fit1</span>,</span>
 <span>  person <span class="op">=</span> <span class="st">"Person"</span>,</span>
 <span>  facets <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>,</span>
-<span>  score <span class="op">=</span> <span class="st">"Score"</span></span>
+<span>  score <span class="op">=</span> <span class="st">"Score"</span>,</span>
+<span>  anchor_facets <span class="op">=</span> <span class="va">declared_common_facets</span></span>
 <span><span class="op">)</span></span>
 <span></span>
+<span><span class="va">fit2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span></span>
+<span>  <span class="va">wave2</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span>
+<span>  method <span class="op">=</span> <span class="st">"MML"</span></span>
+<span><span class="op">)</span></span>
 <span><span class="va">drift</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/detect_anchor_drift.html">detect_anchor_drift</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>Wave1 <span class="op">=</span> <span class="va">fit1</span>, Wave2 <span class="op">=</span> <span class="va">fit2</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/plot_anchor_drift.html">plot_anchor_drift</a></span><span class="op">(</span><span class="va">drift</span>, type <span class="op">=</span> <span class="st">"drift"</span>, preset <span class="op">=</span> <span class="st">"publication"</span><span class="op">)</span></span></code></pre></div>
 </div>

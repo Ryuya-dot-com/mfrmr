@@ -43,13 +43,14 @@ devtools::check(args = c("--no-manual"), document = FALSE)
 
 ## Examples and timing policy
 
-CRAN examples are smoke checks, not the full validation suite. Keep Rd
-examples short enough to run on slower Windows check hosts, and move
-realistic multi-step analyses to README/vignettes or non-CRAN tests.
+CRAN examples are fast executable illustrations, not the full validation
+suite. Keep Rd examples short enough to run on slower Windows check
+hosts, and move realistic multi-step analyses to README/vignettes or
+non-CRAN tests.
 
-- Use `example_core` for ordinary fitting, plotting, and reporting
-  examples. Use `example_bias` only when a non-null DFF/bias signal is
-  needed.
+- Use `example_operational` for applied tutorials, `example_core` for
+  idealized fast checks, and `example_bias` only when a planted non-null
+  DFF/bias signal is needed.
 - Prefer `method = "JML"`, `maxit = 30`, and
   `diagnose_mfrm(..., residual_pca = "none")` in standard Rd examples.
 - Wrap multi-fit workflows, MML examples, recovery simulations, design
@@ -63,8 +64,10 @@ realistic multi-step analyses to README/vignettes or non-CRAN tests.
 - Do not shrink example data below a meaningful many-facet structure
   just to satisfy CRAN timing. Reduce what CRAN executes; keep realistic
   examples in vignettes and in the full `NOT_CRAN=true` test run.
-- CRAN-time `testthat` is intentionally limited by `tests/testthat.R`;
-  run the complete suite locally/CI with `NOT_CRAN=true`.
+- CRAN-time `testthat` runs the representative MML-to-export workflow
+  test and selected contracts from `tests/testthat.R`. Run the complete
+  suite locally/CI with `NOT_CRAN=true`; one CI matrix job must always
+  use that setting.
 
 ## Pull request checklist
 

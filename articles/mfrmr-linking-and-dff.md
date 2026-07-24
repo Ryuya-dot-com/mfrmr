@@ -189,7 +189,7 @@ head(dit$table)
 #>   <chr>  <chr>      <int>    <int>    <dbl>     <dbl>   <dbl> <lgl>        <dbl>
 #> 1 Accur… A             48      125     113.   0.251      28.5 FALSE       2.26  
 #> 2 Accur… B             48      117     124.  -0.150      29.2 FALSE      -1.33  
-#> 3 Conte… A             48      134     134.   0.00969    27.8 FALSE       0.0882
+#> 3 Conte… A             48      134     134.   0.00968    27.8 FALSE       0.0882
 #> 4 Conte… B             48      148     144.   0.0745     26.1 FALSE       0.700 
 #> 5 Langu… A             48      128     136.  -0.159      27.5 FALSE      -1.46  
 #> 6 Langu… B             48      158     146.   0.242      25.6 FALSE       2.30  
@@ -248,27 +248,38 @@ Interpretation:
 
 ## 7. Multi-wave anchor review
 
-When you work across administrations, the route usually moves from
-anchor export to anchored fitting and then to drift review.
+When you work across administrations, the route usually moves from a
+declared common-anchor design to anchored fitting and then to drift
+review. The block below is schematic: `wave1` and `wave2` must be
+administrations for which the listed facet levels have documented
+cross-wave identity and unchanged meaning.
+
+Do **not** substitute `ej2021_study1` and `ej2021_study2` here. They are
+independent legacy synthetic studies; reused raw labels do not identify
+common persons, raters, or anchors and do not link their scales.
 
 ``` r
 
-d1 <- load_mfrmr_data("study1")
-d2 <- load_mfrmr_data("study2")
+declared_common_facets <- c("Criterion")
 
-fit1 <- fit_mfrm(d1, "Person", c("Rater", "Criterion"), "Score",
-                 method = "JML", maxit = 25)
-fit2 <- fit_mfrm(d2, "Person", c("Rater", "Criterion"), "Score",
-                 method = "JML", maxit = 25)
+fit1 <- fit_mfrm(
+  wave1, "Person", c("Rater", "Criterion"), "Score",
+  method = "MML"
+)
 
 anchored <- anchor_to_baseline(
-  d2,
+  wave2,
   fit1,
   person = "Person",
   facets = c("Rater", "Criterion"),
-  score = "Score"
+  score = "Score",
+  anchor_facets = declared_common_facets
 )
 
+fit2 <- fit_mfrm(
+  wave2, "Person", c("Rater", "Criterion"), "Score",
+  method = "MML"
+)
 drift <- detect_anchor_drift(list(Wave1 = fit1, Wave2 = fit2))
 plot_anchor_drift(drift, type = "drift", preset = "publication")
 ```

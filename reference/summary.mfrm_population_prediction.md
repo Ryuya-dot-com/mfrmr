@@ -45,13 +45,12 @@ An object of class `summary.mfrm_population_prediction` with:
 - `planning_constraints`: explicit record of mutable/locked design
   variables
 
-- `planning_schema`: combined planner-schema contract
+- `planning_schema`: structured planning metadata
 
 - `gpcm_boundary`: bounded-`GPCM` caveat row when present
 
-- `future_branch_active_summary`: compact deterministic summary of the
-  schema-only future arbitrary-facet planning branch embedded in the
-  current planning schema
+- `structural_design_review`: deterministic structural review of the
+  named-facet design grid; it is not a forecast-uncertainty result
 
 - `ademp`: simulation-study metadata
 

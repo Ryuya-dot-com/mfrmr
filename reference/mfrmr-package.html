@@ -24,7 +24,7 @@ documented."></head><body>
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from Facets to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
@@ -60,21 +60,26 @@ documented.</p>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>Start with the following core workflow before branching into diagnostics,
-bounded <code>GPCM</code>, simulation, and planning notes:</p><ol><li><p>Fit with <code><a href="fit_mfrm.html">fit_mfrm()</a></code> using <code>method = "MML"</code></p></li>
-<li><p>Build a comprehensive first screen with <code><a href="mfrm_results.html">mfrm_results()</a></code></p></li>
-<li><p>Create the required Wright map with
-<code>plot(res, type = "wright", show_ci = TRUE)</code></p></li>
-<li><p>Build report-ready output with <code><a href="mfrm_report.html">mfrm_report()</a></code></p></li>
-<li><p>Export a reproducible result folder with
-<code>export_mfrm_results(res, preset = "starter")</code></p></li>
-<li><p>Add <code><a href="diagnose_mfrm.html">diagnose_mfrm()</a></code>, <code><a href="plot_qc_dashboard.html">plot_qc_dashboard()</a></code>, and
-<code><a href="reporting_checklist.html">reporting_checklist()</a></code> when the review needs deeper diagnostics; for
+bounded <code>GPCM</code>, simulation, and planning notes:</p><ol><li><p>Review long-format data and the intended score support with
+<code><a href="describe_mfrm_data.html">describe_mfrm_data()</a></code>. When a planned assignment roster exists, pass it
+as <code>expected_design</code> so absent rows are not confused with unassigned cells</p></li>
+<li><p>Fit with <code><a href="fit_mfrm.html">fit_mfrm()</a></code> using <code>method = "MML"</code></p></li>
+<li><p>Read <code>summary(fit, profile = "fit")</code>, then request the comprehensive
+FACETS-organized view with <code>summary(fit, profile = "facets")</code></p></li>
+<li><p>Create the required native Wright map with
+<code>plot(fit, type = "wright", show_ci = TRUE)</code>; use the FACETS renderer
+only as an optional familiar presentation</p></li>
+<li><p>Continue from the summary's <code>results</code> component to <code><a href="mfrm_report.html">mfrm_report()</a></code> and
+<code><a href="export_mfrm_results.html">export_mfrm_results()</a></code></p></li>
+<li><p>Reuse <code>review$results$diagnostics</code> for <code><a href="plot_qc_dashboard.html">plot_qc_dashboard()</a></code> and
+<code><a href="reporting_checklist.html">reporting_checklist()</a></code>; call <code><a href="diagnose_mfrm.html">diagnose_mfrm()</a></code> again only for residual
+PCA or other custom settings. For
 bounded <code>GPCM</code>, read <code><a href="gpcm_capability_matrix.html">gpcm_capability_matrix()</a></code> before interpreting
 specialist helpers</p></li>
-</ol><p>Recommended workflow:</p><ol><li><p>Fit model with <code><a href="fit_mfrm.html">fit_mfrm()</a></code></p></li>
-<li><p>For <code>RSM</code> / <code>PCM</code>, compute diagnostics with
-<code><a href="diagnose_mfrm.html">diagnose_mfrm()</a></code> and prefer <code>diagnostic_mode = "both"</code> when you want
-legacy residual continuity plus the newer strict marginal-fit screen</p></li>
+</ol><p>Recommended workflow:</p><ol><li><p>Review the data with <code><a href="describe_mfrm_data.html">describe_mfrm_data()</a></code> and fit with <code><a href="fit_mfrm.html">fit_mfrm()</a></code></p></li>
+<li><p>For <code>RSM</code> / <code>PCM</code>, create the comprehensive summary and reuse its
+diagnostics; request a separate <code><a href="diagnose_mfrm.html">diagnose_mfrm()</a></code> call only for custom
+settings</p></li>
 <li><p>For <code>RSM</code> / <code>PCM</code>, run residual PCA with <code><a href="analyze_residual_pca.html">analyze_residual_pca()</a></code> if needed</p></li>
 <li><p>For <code>RSM</code> / <code>PCM</code>, or bounded <code>GPCM</code> with the documented screening
 caveat, estimate interactions with <code><a href="estimate_bias.html">estimate_bias()</a></code></p></li>
@@ -101,7 +106,7 @@ after the basic <code>RSM</code> / <code>PCM</code> route is working cleanly.</p
 <li><p><code><a href="../articles/mfrmr-visual-diagnostics.html">vignette("mfrmr-visual-diagnostics", package = "mfrmr")</a></code></p></li>
 <li><p><code><a href="../articles/mfrmr-reporting-and-apa.html">vignette("mfrmr-reporting-and-apa", package = "mfrmr")</a></code></p></li>
 <li><p><code><a href="../articles/mfrmr-linking-and-dff.html">vignette("mfrmr-linking-and-dff", package = "mfrmr")</a></code></p></li>
-</ul><p>A two-page landscape cheatsheet of the public API ships at
+</ul><p>A printable landscape cheatsheet of the public API ships at
 <code>system.file("cheatsheet", "mfrmr-cheatsheet.pdf", package = "mfrmr")</code>
 (pre-rendered) and <code>system.file("cheatsheet", "mfrmr-cheatsheet.Rmd", package = "mfrmr")</code> (source). Open the PDF directly for a printable
 reference card, or knit the source with <code><a href="https://pkgs.rstudio.com/rmarkdown/reference/render.html" class="external-link">rmarkdown::render()</a></code> when
@@ -111,12 +116,15 @@ you want a customised version.</p>
     <h2 id="first-minute-route">First 5-minute route<a class="anchor" aria-label="anchor" href="#first-minute-route"></a></h2>
 
 
-<p>Use this order before exploring the broader feature surface:</p><ol><li><p><code><a href="fit_mfrm.html">fit_mfrm()</a></code> with <code>method = "MML"</code></p></li>
-<li><p><code><a href="mfrm_results.html">mfrm_results()</a></code> for a comprehensive first screen</p></li>
-<li><p><code>plot(res, type = "wright", show_ci = TRUE)</code> for the required shared-logit figure</p></li>
-<li><p><code><a href="mfrm_report.html">mfrm_report()</a></code> for report-ready wording, tables, and route labels</p></li>
-<li><p><code>export_mfrm_results(res, preset = "starter")</code> for a reproducible
-folder whose <code>index.html</code> starts with the Wright map</p></li>
+<p>Use this order before exploring the broader feature surface:</p><ol><li><p><code><a href="describe_mfrm_data.html">describe_mfrm_data()</a></code> for score support, column missingness, declared
+assignment coverage, and Person-facet connectivity</p></li>
+<li><p><code><a href="fit_mfrm.html">fit_mfrm()</a></code> with <code>method = "MML"</code></p></li>
+<li><p><code>summary(fit, profile = "fit")</code>, followed by
+<code>summary(fit, profile = "facets")</code> for the comprehensive first screen</p></li>
+<li><p><code>plot(fit, type = "wright", show_ci = TRUE)</code> for the required
+shared-logit figure</p></li>
+<li><p><code><a href="mfrm_report.html">mfrm_report()</a></code> and <code><a href="export_mfrm_results.html">export_mfrm_results()</a></code> from the summary's <code>results</code>
+component for reporting and reproducible analysis handoff</p></li>
 <li><p>Add <code><a href="diagnose_mfrm.html">diagnose_mfrm()</a></code> with <code>diagnostic_mode = "both"</code> for deeper
 <code>RSM</code> / <code>PCM</code> diagnostics; for bounded <code>GPCM</code>, keep diagnostics on the
 direct exploratory route and read <code><a href="gpcm_capability_matrix.html">gpcm_capability_matrix()</a></code></p></li>
@@ -131,7 +139,7 @@ or caveated bounded-<code>GPCM</code> linking synthesis</p></li>
     <h2 id="advanced-scope">Advanced scope<a class="anchor" aria-label="anchor" href="#advanced-scope"></a></h2>
 
 
-<p>After the basic route above:</p><ul><li><p>the package now includes a first-version latent-regression <code>MML</code> branch
+<p>After the basic route above:</p><ul><li><p>the package supports latent-regression <code>MML</code>
 for ordered-response <code>RSM</code> / <code>PCM</code> models with a one-dimensional
 conditional-normal population model and explicit one-row-per-person
 covariates expanded through <code><a href="https://rdrr.io/r/stats/model.matrix.html" class="external-link">stats::model.matrix()</a></code></p></li>
@@ -139,9 +147,8 @@ covariates expanded through <code><a href="https://rdrr.io/r/stats/model.matrix.
 <li><p>bounded <code>GPCM</code> supports the core fit/summary/scoring/information
 path, direct Wright/pathway/CCC plots, residual-PCA follow-up, and the
 residual-based diagnostics tables/plots as exploratory tools</p></li>
-<li><p>posterior-predictive computation, <code>MCMC</code> engines, and Docker-based
-advanced runtimes are future extensions rather than requirements for the
-current bounded <code>GPCM</code> route</p></li>
+<li><p>posterior-predictive checks and <code>MCMC</code> estimation are not available for
+bounded <code>GPCM</code>; use external Bayesian software when they are required</p></li>
 <li><p>direct <code>GPCM</code> data generation through <code><a href="build_mfrm_sim_spec.html">build_mfrm_sim_spec()</a></code>,
 <code><a href="extract_mfrm_sim_spec.html">extract_mfrm_sim_spec()</a></code>, and <code><a href="simulate_mfrm_data.html">simulate_mfrm_data()</a></code> is available when
 the specification carries both thresholds and slopes</p></li>
@@ -150,8 +157,8 @@ bounded <code>GPCM</code> with explicit caveats; <code><a href="build_apa_output
 <code><a href="build_visual_summaries.html">build_visual_summaries()</a></code>, <code><a href="run_qc_pipeline.html">run_qc_pipeline()</a></code>,
 <code><a href="build_mfrm_manifest.html">build_mfrm_manifest()</a></code>, <code><a href="build_mfrm_replay_script.html">build_mfrm_replay_script()</a></code>, and
 <code><a href="export_mfrm_bundle.html">export_mfrm_bundle()</a></code> are available as caveated partial reporting/export
-surfaces; score-side FACETS compatibility and broader planning semantics
-remain validated for <code>RSM</code> / <code>PCM</code></p></li>
+surfaces; score-side FACETS compatibility remains limited, and fully
+arbitrary-facet planning is outside the documented planning scope</p></li>
 <li><p><code><a href="predict_mfrm_population.html">predict_mfrm_population()</a></code> remains a scenario-level forecast helper and
 should not be described as the latent-regression estimator itself</p></li>
 <li><p>the current simulation/planning layer remains role-based for two
@@ -210,8 +217,8 @@ fair-average tables, and bias screening are also available for bounded
 <code>GPCM</code> with documented caveats)</p></li>
 <li><p>Reporting: <code><a href="build_apa_outputs.html">build_apa_outputs()</a></code>, <code><a href="build_visual_summaries.html">build_visual_summaries()</a></code>,
 <code><a href="reporting_checklist.html">reporting_checklist()</a></code>, <code><a href="apa_table.html">apa_table()</a></code> for the full <code>RSM</code> / <code>PCM</code> route;
-bounded <code>GPCM</code> currently stays on the checklist / direct-table / direct-
-plot / summary-appendix side instead of the narrative/QC layer</p></li>
+bounded <code>GPCM</code> uses these as caveated partial surfaces and retains direct
+table, plot, checklist, and summary-appendix routes</p></li>
 <li><p>Weighting review: <code><a href="compare_mfrm.html">compare_mfrm()</a></code>, <code><a href="build_weighting_review.html">build_weighting_review()</a></code>,
 <code><a href="build_model_choice_review.html">build_model_choice_review()</a></code>, <code><a href="compute_information.html">compute_information()</a></code>, <code><a href="plot_information.html">plot_information()</a></code></p></li>
 <li><p>Case review: <code><a href="build_misfit_casebook.html">build_misfit_casebook()</a></code>, <code><a href="plot_unexpected.html">plot_unexpected()</a></code>,
@@ -221,13 +228,13 @@ plot / summary-appendix side instead of the narrative/QC layer</p></li>
 <code><a href="build_linking_review.html">build_linking_review()</a></code>, <code><a href="plot_anchor_drift.html">plot_anchor_drift()</a></code></p></li>
 <li><p>Dashboards: <code><a href="facet_quality_dashboard.html">facet_quality_dashboard()</a></code>, <code><a href="plot_facet_quality_dashboard.html">plot_facet_quality_dashboard()</a></code></p></li>
 <li><p>Export / reproducibility: <code><a href="build_mfrm_manifest.html">build_mfrm_manifest()</a></code>, <code><a href="build_mfrm_replay_script.html">build_mfrm_replay_script()</a></code>,
-<code><a href="build_conquest_overlap_bundle.html">build_conquest_overlap_bundle()</a></code>, <code><a href="normalize_conquest_overlap_files.html">normalize_conquest_overlap_files()</a></code>,
+<code><a href="build_conquest_overlap_bundle.html">build_conquest_overlap_bundle()</a></code>, <code><a href="normalize_conquest_overlap_exports.html">normalize_conquest_overlap_exports()</a></code>,
+<code><a href="normalize_conquest_overlap_files.html">normalize_conquest_overlap_files()</a></code>,
 <code><a href="normalize_conquest_overlap_tables.html">normalize_conquest_overlap_tables()</a></code>,
 <code><a href="review_conquest_overlap.html">review_conquest_overlap()</a></code>,
 <code><a href="export_mfrm_bundle.html">export_mfrm_bundle()</a></code> for the diagnostics-compatible Rasch-family route;
-bounded <code>GPCM</code> remains outside the current fit-based
-manifest/replay/bundle layer but can use <code><a href="export_summary_appendix.html">export_summary_appendix()</a></code> for
-documented direct outputs</p></li>
+bounded <code>GPCM</code> supports caveated partial manifest, replay, and bundle
+output as well as <code><a href="export_summary_appendix.html">export_summary_appendix()</a></code></p></li>
 <li><p>Equivalence: <code><a href="analyze_facet_equivalence.html">analyze_facet_equivalence()</a></code>, <code><a href="plot_facet_equivalence.html">plot_facet_equivalence()</a></code></p></li>
 <li><p>Data and anchors: <code><a href="describe_mfrm_data.html">describe_mfrm_data()</a></code>, <code><a href="review_mfrm_anchors.html">review_mfrm_anchors()</a></code>,
 <code><a href="make_anchor_table.html">make_anchor_table()</a></code>, <code><a href="load_mfrmr_data.html">load_mfrmr_data()</a></code></p></li>
@@ -254,7 +261,9 @@ as a short triage subset. Summary-table exports route those rows through
 as weakly identified when an intermediate category is unobserved.</p></li>
 <li><p>Optional columns such as <code>Subset</code>, <code>Weight</code>, and <code>Group</code> support linking,
 weighted analysis, and fairness-focused follow-up workflows.</p></li>
-<li><p>Packaged simulation data is available via <code><a href="load_mfrmr_data.html">load_mfrmr_data()</a></code> or <code><a href="https://rdrr.io/r/utils/data.html" class="external-link">data()</a></code>.</p></li>
+<li><p>Packaged synthetic data is available via <code><a href="load_mfrmr_data.html">load_mfrmr_data()</a></code> or <code><a href="https://rdrr.io/r/utils/data.html" class="external-link">data()</a></code>.
+Use <code>list_mfrmr_data(details = TRUE)</code> to distinguish the applied teaching,
+idealized, planted-effect, and larger sparse-design datasets.</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="interpreting-output">Interpreting output<a class="anchor" aria-label="anchor" href="#interpreting-output"></a></h2>
@@ -290,8 +299,9 @@ fairness or interaction questions matter; bounded <code>GPCM</code> also support
 <code><a href="evaluate_mfrm_design.html">evaluate_mfrm_design()</a></code>, <code><a href="mfrm_generalizability.html">mfrm_generalizability()</a></code>, <code><a href="mfrm_d_study.html">mfrm_d_study()</a></code>,
 and <code><a href="predict_mfrm_population.html">predict_mfrm_population()</a></code>. Bounded
 <code>GPCM</code> also supports direct simulation via
-<code><a href="extract_mfrm_sim_spec.html">extract_mfrm_sim_spec()</a></code> / <code><a href="simulate_mfrm_data.html">simulate_mfrm_data()</a></code>, but not the broader
-planning helpers. Those helpers assume two non-person facet roles
+<code><a href="extract_mfrm_sim_spec.html">extract_mfrm_sim_spec()</a></code> / <code><a href="simulate_mfrm_data.html">simulate_mfrm_data()</a></code> and caveated role-based
+<code><a href="evaluate_mfrm_design.html">evaluate_mfrm_design()</a></code> / <code><a href="predict_mfrm_population.html">predict_mfrm_population()</a></code> routes. Those
+helpers assume two non-person facet roles
 even though the estimation core supports arbitrary facet counts. Treat
 <code><a href="evaluate_mfrm_design.html">evaluate_mfrm_design()</a></code> as Monte Carlo design evaluation, and use
 <code><a href="mfrm_d_study.html">mfrm_d_study()</a></code> for analytic G/Phi design projections. Always read
@@ -319,7 +329,7 @@ documented caveats. Caveated APA/QC/export bundles and exploratory
 linking review plus role-based design evaluation, population
 forecasting, diagnostic-screening, and signal-detection helpers are
 available, while full score-side FACETS review, posterior-predictive
-checks, and heavy backends remain outside the bounded <code>GPCM</code> route. Use
+checks, and <code>MCMC</code> estimation are not available for bounded <code>GPCM</code>. Use
 <code><a href="gpcm_capability_matrix.html">gpcm_capability_matrix()</a></code> as the formal boundary statement.</p></li>
 </ol></div>
     <div class="section level2">
@@ -371,7 +381,7 @@ so they are handled through the ordinary ordered-score interface. This means
 <code>mfrmr</code> supports ordered binary and ordered polytomous data under <code>RSM</code> and
 <code>PCM</code>, plus a narrow bounded <code>GPCM</code> branch with one designated
 <code>slope_facet</code> that currently must equal <code>step_facet</code>. Unordered
-nominal/multinomial response models are not yet implemented.</p>
+nominal/multinomial response models are outside the documented model scope.</p>
     </div>
     <div class="section level2">
     <h2 id="estimation-methods">Estimation methods<a class="anchor" aria-label="anchor" href="#estimation-methods"></a></h2>
@@ -391,14 +401,18 @@ estimates are obtained post-hoc via Expected A Posteriori (EAP):</p>
 <p>$$\hat{\theta}_n^{\mathrm{EAP}} =
   \frac{\sum_q \theta_q \, w_q \, L(\mathbf{X}_n \mid \theta_q)}
        {\sum_q w_q \, L(\mathbf{X}_n \mid \theta_q)}$$</p>
-<p>MML avoids the incidental-parameter problem and is generally preferred
-for smaller samples.</p>
+<p>MML does not estimate one fixed person parameter per respondent and therefore
+avoids that JML incidental-parameter mechanism. Its structural inference is
+nevertheless conditional on the specified population distribution, response
+model, quadrature approximation, and regularity conditions; it is not an
+automatic small-sample guarantee.</p>
 <p>Note: Bock &amp; Aitkin (1981) is the canonical citation for the
 Gauss-Hermite-quadrature MML <em>framework</em>. The default mfrmr engine
 (<code>mml_engine = "direct"</code>) optimises this marginal log-likelihood by
 direct gradient methods (BFGS / L-BFGS-B), not by Bock &amp; Aitkin's
 signature EM algorithm. The <code>"em"</code> and <code>"hybrid"</code> engines do follow
-the EM template but use a BFGS M-step rather than B&amp;A's probit IRLS,
+the EM template but use the selected gradient-based M-step rather than
+B&amp;A's probit IRLS,
 because the target is the polytomous Rasch family rather than B&amp;A's
 2PL probit model.</p>
 <p><strong>Joint Maximum Likelihood (JML)</strong></p>
@@ -406,9 +420,11 @@ because the target is the polytomous Rasch family rather than B&amp;A's
 effects by maximising the joint log-likelihood
 \(\ell(\boldsymbol{\theta}, \boldsymbol{\delta} \mid \mathbf{X})\)
 directly.  It does not assume a parametric person distribution, which
-can be advantageous when the population shape is strongly non-normal,
-but parameter estimates are known to be biased when the number of
-persons is small relative to the number of items (Neyman &amp; Scott, 1948).
+can be advantageous when the population shape is strongly non-normal.
+Its incidental-parameter concern is not simply a small-person-sample issue:
+structural-parameter bias can persist as the number of persons increases
+when the number of ratings or items per person remains fixed (Neyman &amp;
+Scott, 1948).
 The package still accepts <code>"JMLE"</code> as a backward-compatible alias, but
 user-facing summaries and documentation use <code>"JML"</code> as the public label.</p>
 <p>See <code><a href="fit_mfrm.html">fit_mfrm()</a></code> for practical guidance on choosing between the two.</p>
@@ -462,9 +478,12 @@ lowest category).</p>
 mean-square chi-square ratio to an approximate standard normal deviate:</p>
 <p>$$\mathrm{ZSTD} = \frac{\mathrm{MnSq}^{1/3} - (1 - 2/(9\,\mathit{df}))}
                            {\sqrt{2/(9\,\mathit{df})}}$$</p>
-<p>Values near 0 indicate expected fit; \(|\mathrm{ZSTD}| &gt; 2\) flags
-potential misfit at the 5\<!-- % level, and \eqn{|\mathrm{ZSTD}| &gt; 3} at the -->
-1\<!-- % level (Wright &amp; Linacre, 1994; see also Wilson &amp; Hilferty, 1931). -->
+<p>Values near 0 indicate expected fit. The conventional
+\(|\mathrm{ZSTD}| &gt; 2\) and \(|\mathrm{ZSTD}| &gt; 3\) cutoffs are heuristic
+two- and three-standard-deviation reference bands (Wright &amp; Linacre, 1994;
+see also Wilson &amp; Hilferty, 1931), not calibrated 5\<!-- % and 1\\% hypothesis -->
+tests. Parameter estimation, sparse cells, the selected df convention, and
+repeated screening across elements all affect that interpretation.
 ZSTD is reported alongside every Infit and Outfit value. ZSTD is
 withheld (<code>NA</code>) when the applicable df falls below 1, where the
 Wilson-Hilferty transformation is numerically unstable; FACETS/Winsteps
@@ -481,9 +500,10 @@ basis, and see <code><a href="facets_fit_df_guide.html">facets_fit_df_guide()</a
 standardization-side df/ZSTD conventions.</p>
 <p><strong>PTMEA (Point-Measure Correlation)</strong></p>
 <p>Pearson correlation between observed scores and estimated person measures
-within each facet level.  Positive values indicate that scoring aligns
-with the latent trait dimension; negative values suggest reversed
-orientation or scoring errors.</p>
+within each facet level. A positive value is directionally consistent with
+the fitted orientation, but it is not a confirmatory test of alignment.
+A negative value prompts review of orientation, response patterns, and model
+specification; it does not by itself establish a scoring error.</p>
 <p><strong>Separation</strong></p>
 <p>Package-reported separation is the ratio of adjusted true standard deviation
 to root-mean-square measurement error:</p>
@@ -555,9 +575,11 @@ performance assessments: A many-facet Rasch analysis. <em>Language Assessment
 Quarterly</em>, 2, 197–221.</p></li>
 <li><p>Muraki, E. (1992). A generalized partial credit model: Application of
 an EM algorithm. <em>Applied Psychological Measurement</em>, 16(2),
-159–176. (Source for the bounded <code>GPCM</code> extension used in
-<code>fit_mfrm(model = "GPCM")</code>, <code><a href="fair_average_table.html">fair_average_table()</a></code>, and
-<code><a href="estimate_bias.html">estimate_bias()</a></code>.)</p></li>
+159–176. (Source for the GPCM response-probability kernel used by the
+package's bounded <code>fit_mfrm(model = "GPCM")</code> route. The slope-aware
+<code><a href="fair_average_table.html">fair_average_table()</a></code> and <code><a href="estimate_bias.html">estimate_bias()</a></code> extensions are package-specific,
+caveated adaptations built from that kernel, not procedures proposed in
+Muraki 1992.)</p></li>
 <li><p>Muraki, E. (1993). Information functions of the generalized partial
 credit model. <em>Applied Psychological Measurement</em>, 17(4),
 351–363. (Companion paper to Muraki 1992 that derives the GPCM
@@ -622,10 +644,13 @@ person parameters; person estimates are computed post-hoc via Expected A
 Posteriori (EAP).  Joint Maximum Likelihood (JML) estimates all person
 and facet parameters simultaneously as fixed effects; <code>"JMLE"</code> remains a
 backward-compatible alias.</p>
-<p>MML is generally preferred for smaller samples because it avoids the
-incidental-parameter problem of JML.  JML does not assume a normal person
-distribution and can be lighter computationally in some settings, which
-may be an advantage when the population shape is strongly non-normal.</p>
+<p>Estimator choice should follow the inferential target and assumptions. MML
+avoids estimating one fixed effect per person, but its structural inference
+depends on the specified population distribution and response model. JML
+does not assume a parametric person distribution and can be lighter
+computationally, but structural-parameter bias can persist as the number of
+persons increases when the number of ratings or items per person remains
+fixed. Sample size alone therefore does not determine the preferred route.</p>
 <p>See <code><a href="fit_mfrm.html">fit_mfrm()</a></code> for usage.</p>
 <p><strong>Fixed-calibration scoring after fitting</strong></p>
 <p><code><a href="predict_mfrm_units.html">predict_mfrm_units()</a></code> and <code><a href="sample_mfrm_plausible_values.html">sample_mfrm_plausible_values()</a></code> score future or
@@ -641,17 +666,15 @@ step parameters together with a standard normal reference prior introduced
 only for the post hoc scoring layer. This is useful for practical
 fixed-scale scoring, but it should still be described as a limited
 approximation rather than as full ConQuest-style population modeling.</p>
-<p><strong>Current ConQuest overlap</strong></p>
-<p>The package now includes a first-version latent-regression <code>MML</code> branch, but
+<p><strong>ConQuest overlap</strong></p>
+<p>The package supports a scoped latent-regression <code>MML</code> model, but
 the overlap with ConQuest should still be described conservatively. The
-documented overlap is:
-ordered-response <code>RSM</code> / <code>PCM</code>, one latent dimension, a conditional-normal
-person population model, and person covariates supplied through an explicit
-one-row-per-person table and expanded through the package-built model
-matrix. Categorical person covariates carry fitted levels and contrasts into
-scoring. This is a scoped overlap, not a claim of broad ConQuest numerical
-equivalence for arbitrary imported design matrices, multidimensional models,
-imported design specifications, or the full plausible-values workflow.</p>
+documented comparison is binary <code>RSM</code> / <code>PCM</code>, one latent dimension,
+exactly one item facet, complete rectangular responses, and exactly one
+numeric person covariate beyond the intercept in a conditional-normal person
+population model. This is a scoped file-based comparison, not a claim of
+broad ConQuest numerical equivalence for polytomous, multidimensional,
+incomplete, or arbitrary imported designs.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -715,12 +738,60 @@ imported design specifications, or the full plausible-values workflow.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Notes</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - Profiles tune warning strictness for build_visual_summaries().Use `thresholds` in build_visual_summaries() to override selected values.</span>
-<span class="r-in"><span><span class="fu"><a href="list_mfrmr_data.html">list_mfrmr_data</a></span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "example_core"     "example_bias"     "study1"           "study2"          </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [5] "combined"         "study1_itercal"   "study2_itercal"   "combined_itercal"</span>
+<span class="r-in"><span><span class="fu"><a href="list_mfrmr_data.html">list_mfrmr_data</a></span><span class="op">(</span>details <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                   Key Rows Persons Raters Criteria</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1        example_core  768      48      4        4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2        example_bias  384      48      4        4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 example_operational  282      48      6        3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4              study1 1842     307     18        3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5              study2 3287     206     12        9</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6            combined 5129     307     18       12</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7      study1_itercal 1842     307     18        3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8      study2_itercal 3341     206     12        9</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9    combined_itercal 5183     307     18       12</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                  CountBasis</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                             unique labels</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                                             unique labels</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3                                             unique labels</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4                                             unique labels</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5                                             unique labels</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6 raw labels; 513 persons and 30 raters when Study-prefixed</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7                                             unique labels</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8                                             unique labels</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9 raw labels; 513 persons and 30 raters when Study-prefixed</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                            PrimaryUse</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                             Idealized fast examples</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2    DFF and bias demonstrations with planted effects</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3                           Beginner applied workflow</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4               Unequal-workload sparse-design review</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5                         Larger sparse-design review</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6      Identity/linking design review; not direct fit</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7                     Legacy synthetic variant review</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8                     Legacy synthetic variant review</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9 Identity/linking sensitivity review; not direct fit</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                  Design</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                               Complete crossing; no planned omissions</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2               Balanced two-rater assignment; planted non-null effects</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3                 Connected two-rater assignment; six planned omissions</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4                 Two raters per person; highly unequal rater workloads</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5                  Two raters per person; incomplete criterion coverage</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6 Overlapping IDs; requires explicit anchors/linking for a common scale</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7                    Legacy Study 1 variant; rows and scores can differ</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8                    Legacy Study 2 variant; rows and scores can differ</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9 Overlapping IDs; requires explicit anchors/linking for a common scale</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Empirical</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1     FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2     FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3     FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4     FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5     FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6     FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7     FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8     FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9     FALSE</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
-<span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_operational"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>  <span class="va">toy</span>,</span></span>
 <span class="r-in"><span>  person <span class="op">=</span> <span class="st">"Person"</span>,</span></span>

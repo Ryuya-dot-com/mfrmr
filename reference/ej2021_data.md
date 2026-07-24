@@ -1,4 +1,4 @@
-# Simulated MFRM datasets based on Eckes and Jin (2021)
+# Legacy synthetic MFRM datasets inspired by Eckes and Jin (2021)
 
 Synthetic many-facet rating datasets in long format. All datasets
 include one row per observed rating.
@@ -45,10 +45,6 @@ not the real TestDaF data.
 
 Available data objects:
 
-- `mfrmr_example_core`
-
-- `mfrmr_example_bias`
-
 - `ej2021_study1`
 
 - `ej2021_study2`
@@ -67,7 +63,9 @@ Naming convention:
 
 - `combined`: row-bind of study1 and study2
 
-- `_itercal`: iterative-calibration variant
+- `_itercal`: legacy synthetic sensitivity variant. These objects can
+  differ in observed rows as well as scores and should not be
+  interpreted as a controlled one-parameter recalibration.
 
 Use
 [`load_mfrmr_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/load_mfrmr_data.md)
@@ -87,20 +85,41 @@ for programmatic selection by key.
 
 Score range: 1–4 (four-category rating scale).
 
-## Simulation design
+For the combined rows, `Persons` and `Raters` count unique raw labels.
+Treating the two Study labels as distinct namespaces would instead give
+513 person labels and 30 rater labels, but would leave two unlinked
+components.
 
-Person ability is drawn from N(0, 1). Rater severity effects span
-approximately -0.5 to +0.5 logits. Criterion difficulty effects span
-approximately -0.3 to +0.3 logits. Scores are generated from the
-resulting linear predictor plus Gaussian noise, then discretized into
-four categories. The `_itercal` variants use a second iteration of
-calibrated rater severity parameters.
+## Provenance and limits
+
+These are legacy synthetic datasets whose stored responses reproduce the
+dimensions described above. The exact response-generation code and
+random seed are not available, so the objects must not be used as
+parameter-recovery evidence or as evidence for a particular generating
+distribution. The separately stored `_itercal` objects can differ in
+observed rows as well as scores; they are legacy variants, not empirical
+calibration standards or a controlled one-parameter recalibration.
+
+## Combined-data caution
+
+The `combined` objects reuse `P001`–`P206` and `R01`–`R12` across the
+two study labels. A combined analysis is meaningful only when those
+labels encode an intended cross-study identity and an explicit anchor or
+linking design establishes a common scale. Prefixing `Person` and
+`Rater` by `Study` removes accidental label collisions, but it creates
+disconnected study components and does not by itself establish a common
+scale. Analyze the studies separately unless the linking design has been
+specified and reviewed. The combined datasets are not beginner workflow
+examples or direct-fit examples.
 
 ## Interpreting output
 
-Each dataset is already in long format and can be passed directly to
+The study-specific datasets are in long format and can be passed to
 [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
-after confirming column-role mapping.
+after confirming column-role mapping. The `combined` objects require a
+reviewed identity and anchor/linking design before a joint fit;
+row-binding or prefixing identifiers alone does not create a common
+scale.
 
 ## Typical workflow
 

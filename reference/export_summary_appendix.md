@@ -1,6 +1,6 @@
-# Export manuscript appendix tables from validated summary surfaces
+# Export manuscript appendix tables from documented summary surfaces
 
-Export manuscript appendix tables from validated summary surfaces
+Export manuscript appendix tables from documented summary surfaces
 
 ## Usage
 
@@ -118,7 +118,7 @@ A named list of class `mfrm_summary_appendix_export` with:
 
 ## Details
 
-This helper is the narrow public bridge from validated
+This helper is the narrow public bridge from documented
 [`summary()`](https://rdrr.io/r/base/summary.html) surfaces to
 manuscript appendix artifacts. It accepts the same reporting objects
 that
@@ -134,8 +134,8 @@ presets when the source summary contains caveat rows.
 
 Precision-review summaries keep `fit_separation_basis` in the exported
 precision-review role so fit, ZSTD, separation/reliability/strata, and
-package QC thresholds can be reported without turning them into release
-or recovery success gates. Fit-measure and FACETS fit-review summaries
+package review thresholds can be reported without turning them into
+universal recovery criteria. Fit-measure and FACETS fit-review summaries
 keep df/ZSTD sensitivity and optional external FACETS matching tables in
 the same precision-review lane.
 
@@ -147,9 +147,9 @@ output directly. The exported bundle keeps the ADEMP-style simulation
 basis, recovery metrics, replication status, adequacy checklist,
 thresholds, and next actions in separate appendix-ready tables.
 
-Recovery-validation summaries from the packaged validation protocol can
-be exported by passing `summary(validation)`, including top-line release
-decisions, condition notes, diagnostic notes, and domain decisions.
+A compatible precomputed recovery-evidence summary can also be exported,
+including its case assessments, condition notes, diagnostic notes, and
+domain assessments.
 
 Unlike
 [`export_mfrm_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_bundle.md),

@@ -18,7 +18,7 @@
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from Facets to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
@@ -50,7 +50,14 @@
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="co"># S3 method for class 'mfrm_diagnostics'</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">object</span>, digits <span class="op">=</span> <span class="fl">3</span>, top_n <span class="op">=</span> <span class="fl">10</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span></span>
+<span>  <span class="va">object</span>,</span>
+<span>  digits <span class="op">=</span> <span class="fl">3</span>,</span>
+<span>  top_n <span class="op">=</span> <span class="fl">10</span>,</span>
+<span>  detail <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"brief"</span>, <span class="st">"full"</span><span class="op">)</span>,</span>
+<span>  include_person <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  <span class="va">...</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -67,6 +74,17 @@
 
 <dt id="arg-top-n">top_n<a class="anchor" aria-label="anchor" href="#arg-top-n"></a></dt>
 <dd><p>Number of highest-absolute-Z fit rows to keep.</p></dd>
+
+
+<dt id="arg-detail">detail<a class="anchor" aria-label="anchor" href="#arg-detail"></a></dt>
+<dd><p>Console detail: <code>"brief"</code> (default) prints the first-screen
+review; <code>"full"</code> prints the additional structured tables.</p></dd>
+
+
+<dt id="arg-include-person">include_person<a class="anchor" aria-label="anchor" href="#arg-include-person"></a></dt>
+<dd><p>If <code>TRUE</code>, person-level identifiers may be printed in
+fit-review tables. The default keeps identifiers out of console output;
+person-level rows remain available in the returned object.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
@@ -160,13 +178,11 @@ before comparing legacy and strict outputs.</p></li>
 <span class="r-in"><span><span class="co">#   element + Infit / Outfit values; "Unexpected responses flagged"</span></span></span>
 <span class="r-in"><span><span class="co">#   counts how many cell-level surprises the screen returned.</span></span></span>
 <span class="r-in"><span><span class="va">s</span><span class="op">$</span><span class="va">top_fit</span></span></span>
-<span class="r-in"><span><span class="co"># Look for: rows with |InfitZSTD| or |OutfitZSTD| &gt; 2 are misfitting</span></span></span>
-<span class="r-in"><span><span class="co">#   at the 5% level; &gt; 3 is misfitting at the 1% level. Investigate</span></span></span>
-<span class="r-in"><span><span class="co">#   in order of the AbsZ column.</span></span></span>
+<span class="r-in"><span><span class="co"># Large absolute standardized values identify rows for follow-up; they do</span></span></span>
+<span class="r-in"><span><span class="co"># not create a universal accept/reject rule.</span></span></span>
 <span class="r-in"><span><span class="va">s</span><span class="op">$</span><span class="va">facets_chisq</span></span></span>
-<span class="r-in"><span><span class="co"># Look for: FixedProb &lt; 0.05 in each non-Person facet means the</span></span></span>
-<span class="r-in"><span><span class="co">#   facet contributes meaningful spread; FixedProb &gt;= 0.05 means</span></span></span>
-<span class="r-in"><span><span class="co">#   that facet is statistically indistinguishable.</span></span></span>
+<span class="r-in"><span><span class="co"># Read the fixed-effect chi-square as a heterogeneity screen in the context</span></span></span>
+<span class="r-in"><span><span class="co"># of the design and intended score use.</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 </code></pre></div>
     </div>

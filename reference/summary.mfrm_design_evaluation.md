@@ -52,11 +52,11 @@ An object of class `summary.mfrm_design_evaluation` with components:
 - `planning_constraints`: explicit record of mutable/locked design
   variables
 
-- `planning_schema`: combined planner-schema contract
+- `planning_schema`: structured planning metadata
 
-- `future_branch_active_summary`: compact deterministic summary of the
-  schema-only future arbitrary-facet planning branch embedded in the
-  current planning schema
+- `structural_design_review`: deterministic structural review of the
+  named-facet design grid; it reports design bookkeeping rather than
+  simulation performance
 
 - `notes`: short interpretation notes
 

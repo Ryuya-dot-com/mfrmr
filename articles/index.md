@@ -2,7 +2,7 @@
 
 ### All vignettes
 
-- [Migrating from Facets to
+- [Migrating from FACETS to
   mfrmr](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-facets-migration.md):
 - [GPCM scope and current
   limitations](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-gpcm-scope.md):

@@ -18,7 +18,7 @@
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from Facets to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
@@ -67,6 +67,13 @@
 
         <dt>
 
+          <code><a href="mfrmr_example_operational_design.html">mfrmr_example_operational_design</a></code>
+
+        </dt>
+        <dd>Planned assignment roster for the operational example</dd>
+
+        <dt>
+
           <code><a href="describe_mfrm_data.html">describe_mfrm_data()</a></code>
 
         </dt>
@@ -105,7 +112,7 @@
           <code><a href="export_mfrm_results.html">export_mfrm_results()</a></code>
 
         </dt>
-        <dd>Export a lightweight mfrm_results archive</dd>
+        <dd>Export an mfrm_results analysis archive</dd>
 
         <dt>
 
@@ -135,21 +142,21 @@
           <code><a href="gpcm_capability_matrix.html">gpcm_capability_matrix()</a></code>
 
         </dt>
-        <dd>Bounded GPCM Support Matrix</dd>
+        <dd>GPCM Workflow Availability</dd>
 
         <dt>
 
           <code><a href="gpcm_runtime_guard_coverage.html">gpcm_runtime_guard_coverage()</a></code>
 
         </dt>
-        <dd>Bounded GPCM Route-Boundary Coverage</dd>
+        <dd>Unavailable GPCM Routes and Alternatives</dd>
 
         <dt>
 
           <code><a href="gpcm_score_side_contract.html">gpcm_score_side_contract()</a></code>
 
         </dt>
-        <dd>Bounded GPCM Score-Side Export Contract</dd>
+        <dd>Bounded GPCM Score-Side Availability</dd>
 
         <dt>
 
@@ -342,7 +349,7 @@
           <code><a href="export_summary_appendix.html">export_summary_appendix()</a></code>
 
         </dt>
-        <dd>Export manuscript appendix tables from validated summary surfaces</dd>
+        <dd>Export manuscript appendix tables from documented summary surfaces</dd>
 
         <dt>
 
@@ -363,7 +370,7 @@
           <code><a href="export_mfrm_bundle.html">export_mfrm_bundle()</a></code>
 
         </dt>
-        <dd>Export an analysis bundle for sharing or archiving</dd>
+        <dd>Export a fit-level analysis archive</dd>
 
         <dt>
 
@@ -418,7 +425,7 @@
 
       <dl><dt>
 
-          <code><a href="build_mfrm_sim_spec.html">build_mfrm_sim_spec()</a></code>
+          <code><a href="build_mfrm_sim_spec.html">build_mfrm_sim_spec()</a></code> <code><a href="build_mfrm_sim_spec.html">print(<i>&lt;mfrm_sim_spec&gt;</i>)</a></code>
 
         </dt>
         <dd>Build an explicit simulation specification for MFRM design studies</dd>
@@ -707,7 +714,7 @@
           <code><a href="plot_apa_figure_one.html">plot_apa_figure_one()</a></code>
 
         </dt>
-        <dd>Manuscript-ready four-panel composite (Wright + severity + threshold + summary)</dd>
+        <dd>Manuscript-oriented four-panel draft (Wright + severity + threshold + summary)</dd>
 
         <dt>
 
@@ -1022,7 +1029,7 @@
           <code><a href="ej2021_data.html">ej2021_data</a></code> <code><a href="ej2021_data.html">ej2021_study1</a></code> <code><a href="ej2021_data.html">ej2021_study2</a></code> <code><a href="ej2021_data.html">ej2021_combined</a></code> <code><a href="ej2021_data.html">ej2021_study1_itercal</a></code> <code><a href="ej2021_data.html">ej2021_study2_itercal</a></code> <code><a href="ej2021_data.html">ej2021_combined_itercal</a></code>
 
         </dt>
-        <dd>Simulated MFRM datasets based on Eckes and Jin (2021)</dd>
+        <dd>Legacy synthetic MFRM datasets inspired by Eckes and Jin (2021)</dd>
 
         <dt>
 
@@ -1110,10 +1117,10 @@
 
         <dt>
 
-          <code><a href="mfrmr_example_data.html">mfrmr_example_data</a></code> <code><a href="mfrmr_example_data.html">mfrmr_example_core</a></code> <code><a href="mfrmr_example_data.html">mfrmr_example_bias</a></code>
+          <code><a href="mfrmr_example_data.html">mfrmr_example_data</a></code> <code><a href="mfrmr_example_data.html">mfrmr_example_operational</a></code> <code><a href="mfrmr_example_data.html">mfrmr_example_core</a></code> <code><a href="mfrmr_example_data.html">mfrmr_example_bias</a></code>
 
         </dt>
-        <dd>Purpose-built example datasets for package help pages</dd>
+        <dd>Synthetic many-facet rating examples</dd>
 
         <dt>
 
@@ -1149,6 +1156,13 @@
 
         </dt>
         <dd>mfrmr Workflow and Method Map</dd>
+
+        <dt>
+
+          <code><a href="normalize_conquest_overlap_exports.html">normalize_conquest_overlap_exports()</a></code>
+
+        </dt>
+        <dd>Normalize the CSV exports generated by the ConQuest overlap template</dd>
 
         <dt>
 
@@ -1239,7 +1253,7 @@
           <code><a href="plot.mfrm_diagnostic_screening.html">plot(<i>&lt;mfrm_diagnostic_screening&gt;</i>)</a></code>
 
         </dt>
-        <dd>Plot a diagnostic-screening validation study</dd>
+        <dd>Plot a diagnostic-screening simulation study</dd>
 
         <dt>
 
@@ -1268,13 +1282,6 @@
 
         </dt>
         <dd>Plot fitted MFRM results with base R</dd>
-
-        <dt>
-
-          <code><a href="plot.mfrm_future_branch_active_branch.html">plot(<i>&lt;mfrm_future_branch_active_branch&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Plot a future arbitrary-facet planning active branch</dd>
 
         <dt>
 
@@ -1386,7 +1393,7 @@
           <code><a href="review_conquest_overlap.html">review_conquest_overlap()</a></code>
 
         </dt>
-        <dd>Review an exact-overlap ConQuest comparison against an <code>mfrmr</code> overlap bundle</dd>
+        <dd>Review a ConQuest comparison within the documented <code>mfrmr</code> overlap scope</dd>
 
         <dt>
 
@@ -1477,7 +1484,7 @@
           <code><a href="summary.mfrm_diagnostic_screening.html">summary(<i>&lt;mfrm_diagnostic_screening&gt;</i>)</a></code>
 
         </dt>
-        <dd>Summarize a diagnostic-screening validation study</dd>
+        <dd>Summarize a diagnostic-screening simulation study</dd>
 
         <dt>
 
@@ -1506,13 +1513,6 @@
 
         </dt>
         <dd>Summarize an <code>mfrm_fit</code> object in a user-friendly format</dd>
-
-        <dt>
-
-          <code><a href="summary.mfrm_future_branch_active_branch.html">summary(<i>&lt;mfrm_future_branch_active_branch&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Summarize a future arbitrary-facet planning active branch</dd>
 
         <dt>
 

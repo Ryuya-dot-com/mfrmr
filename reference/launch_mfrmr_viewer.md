@@ -80,7 +80,7 @@ already happened through
 This keeps GUI exploration separate from reproducible analysis setup:
 the Replay tab displays the
 [`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md)
-scaffold stored in the result object.
+replay script stored in the result object.
 
 The app includes tabs for overview/triage, QC evidence, APA-style report
 text when `include = "publication"` or `"apa"` was used, available bias

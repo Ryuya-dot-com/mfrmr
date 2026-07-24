@@ -18,7 +18,7 @@
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from Facets to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
@@ -71,13 +71,13 @@
 <code>mfrm_reporting_checklist</code>, <code>mfrm_apa_outputs</code>,
 <code>mfrm_design_evaluation</code>, <code>mfrm_signal_detection</code>,
 <code>mfrm_recovery_simulation</code>, <code>mfrm_recovery_assessment</code>,
-<code>mfrm_population_prediction</code>, <code>mfrm_future_branch_active_branch</code>,
+<code>mfrm_population_prediction</code>,
 <code>mfrm_facets_run</code>, <code>mfrm_bias</code>, <code>mfrm_anchor_review</code>,
 <code>mfrm_linking_review</code>, <code>mfrm_misfit_casebook</code>,
 <code>mfrm_model_choice_review</code>, <code>mfrm_weighting_review</code>,
 <code>mfrm_unit_prediction</code>, or <code>mfrm_plausible_values</code> object, one of their
-<code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> outputs, or a <code>summary.mfrmr_recovery_validation</code> object from
-the packaged validation protocol.</p></dd>
+<code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> outputs, or a compatible precomputed recovery-evidence
+summary.</p></dd>
 
 
 <dt id="arg-which">which<a class="anchor" aria-label="anchor" href="#arg-which"></a></dt>
@@ -155,9 +155,9 @@ manuscript-facing subset before plotting or export.</p>
 <li><p><code><a href="evaluate_mfrm_signal_detection.html">evaluate_mfrm_signal_detection()</a></code> or <code>summary(sig_eval)</code></p></li>
 <li><p><code><a href="evaluate_mfrm_recovery.html">evaluate_mfrm_recovery()</a></code> or <code>summary(rec)</code></p></li>
 <li><p><code><a href="assess_mfrm_recovery.html">assess_mfrm_recovery()</a></code> or <code>summary(rec_assessment)</code></p></li>
-<li><p><code>summary(validation)</code> from <code>recovery-validation.R</code></p></li>
+<li><p>a compatible precomputed recovery-evidence summary</p></li>
 <li><p><code><a href="predict_mfrm_population.html">predict_mfrm_population()</a></code> or <code>summary(pred)</code></p></li>
-<li><p><code>planning_schema$future_branch_active_branch</code> or <code>summary(...)</code></p></li>
+<li><p>the <code>structural_design_review</code> component of a design or prediction summary</p></li>
 <li><p><code><a href="run_mfrm_facets.html">run_mfrm_facets()</a></code> or <code>summary(out)</code></p></li>
 <li><p><code><a href="estimate_bias.html">estimate_bias()</a></code> or <code>summary(bias)</code></p></li>
 <li><p><code><a href="review_mfrm_anchors.html">review_mfrm_anchors()</a></code> or <code>summary(review)</code></p></li>
@@ -186,13 +186,13 @@ classified as diagnostics and stay in <code>recommended</code> appendix subsets.
 <li><p>recovery-assessment and recovery-validation summaries expose
 <code>diagnostic_reporting_notes</code> before <code>diagnostic_review</code> or
 <code>diagnostic_oc_summary</code> so fit/separation caveats can be reported without
-treating them as recovery or release gates.</p></li>
+treating them as direct evidence of parameter recovery.</p></li>
 <li><p>recovery-validation summaries expose <code>condition_reporting_notes</code> before
 <code>condition_summary</code> so GPCM generator stress and sparse score support are
 not mistaken for recovery-metric failures.</p></li>
 <li><p>precision-review summaries expose <code>fit_separation_basis</code> so fit,
 ZSTD, separation/reliability/strata, and QC thresholds remain separate
-reporting surfaces rather than implicit validation gates.</p></li>
+reporting surfaces rather than interchangeable evidence.</p></li>
 <li><p>fit-measure and FACETS fit-review summaries expose df/ZSTD sensitivity
 tables under precision-review roles, keeping MnSq status, ZSTD
 standardization, and external FACETS matching distinct in appendix
@@ -243,21 +243,6 @@ plan.</p></li>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">bundle</span><span class="op">)</span><span class="op">$</span><span class="va">role_summary</span></span></span>
 <span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Recovery-validation output can be converted to appendix-ready tables.</span></span></span>
-<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
-<span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/source.html" class="external-link">source</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"validation"</span>, <span class="st">"recovery-validation.R"</span>, package <span class="op">=</span> <span class="st">"mfrmr"</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">validation</span> <span class="op">&lt;-</span> <span class="fu">mfrmr_run_recovery_validation</span><span class="op">(</span></span></span>
-<span class="r-in"><span>  case_ids <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"gpcm_slope_profile"</span>, <span class="st">"gpcm_high_dispersion_sparse"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  quick <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
-<span class="r-in"><span>  seed <span class="op">=</span> <span class="fl">20260525</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">validation_bundle</span> <span class="op">&lt;-</span> <span class="fu">build_summary_table_bundle</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">validation</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">validation_bundle</span><span class="op">$</span><span class="va">tables</span><span class="op">$</span><span class="va">reading_order</span></span></span>
-<span class="r-in"><span><span class="va">validation_bundle</span><span class="op">$</span><span class="va">tables</span><span class="op">$</span><span class="va">topline_release_decision</span></span></span>
-<span class="r-in"><span><span class="va">validation_bundle</span><span class="op">$</span><span class="va">tables</span><span class="op">$</span><span class="va">condition_reporting_notes</span></span></span>
-<span class="r-in"><span><span class="va">validation_bundle</span><span class="op">$</span><span class="va">tables</span><span class="op">$</span><span class="va">condition_summary</span></span></span>
-<span class="r-in"><span><span class="va">validation_bundle</span><span class="op">$</span><span class="va">tables</span><span class="op">$</span><span class="va">diagnostic_reporting_notes</span></span></span>
-<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

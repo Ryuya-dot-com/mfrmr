@@ -85,8 +85,10 @@ An object of class `mfrm_generalizability` with:
   to project `G` / `Phi` under planned numbers of raters, items,
   criteria, or other random measurement facets.
 
-- Reporting bands follow Brennan (2001): G / Phi \>= 0.8 for high-stakes
-  decisions, \>= 0.7 for routine reporting.
+- Values of 0.70 and 0.80 are displayed as familiar planning references,
+  not as universal decision rules. Required dependability depends on the
+  decision, consequences, population, and evidence beyond a single
+  coefficient.
 
 ## Limitations
 
@@ -105,7 +107,7 @@ person-by-facet interaction terms are not estimated separately, D-study
 projections remain practical planning evidence rather than a replacement
 for a fully specified G-theory design. Boundary or singular `lme4` fits
 are retained as diagnostic evidence but are not treated as
-high-stakes-ready G/D-study evidence.
+decision-ready G/D-study evidence.
 
 ## References
 
@@ -136,15 +138,15 @@ if (requireNamespace("lme4", quietly = TRUE)) {
   #   variance shares mean those conditions add measurement error
   #   relative to person spread.
   gt$coefficients
-  # Look for: G >= 0.7 for routine reporting, >= 0.8 for high-stakes.
-  #   G < Phi means absolute decisions are noisier than relative
+  # Compare G and Phi with study-specific requirements; 0.70 and 0.80
+  #   are reference guides only. G < Phi means absolute decisions are noisier than relative
   #   decisions; review whether facet main effects need anchoring.
   # Always check IdentificationStatus before using the bands:
   gt$coefficients[, c("G", "Phi", "GStatus", "PhiStatus",
                       "IdentificationStatus")]
   gt$design$identification_note
   # If IdentificationStatus is not "identified", treat G/Phi as
-  # design-review evidence rather than high-stakes-ready reliability.
+  # design-review evidence rather than decision-ready reliability.
 }
 } # }
 ```

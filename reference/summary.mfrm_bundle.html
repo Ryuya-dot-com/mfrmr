@@ -18,7 +18,7 @@
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from Facets to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
@@ -50,7 +50,7 @@
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="co"># S3 method for class 'mfrm_bundle'</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">object</span>, digits <span class="op">=</span> <span class="fl">3</span>, top_n <span class="op">=</span> <span class="fl">10</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">object</span>, digits <span class="op">=</span> <span class="fl">3</span>, top_n <span class="op">=</span> <span class="fl">10</span>, include_person <span class="op">=</span> <span class="cn">FALSE</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -67,6 +67,14 @@
 
 <dt id="arg-top-n">top_n<a class="anchor" aria-label="anchor" href="#arg-top-n"></a></dt>
 <dd><p>Number of preview rows shown from the main table component.</p></dd>
+
+
+<dt id="arg-include-person">include_person<a class="anchor" aria-label="anchor" href="#arg-include-person"></a></dt>
+<dd><p>If <code>TRUE</code>, person-level identifiers may appear in
+supported summary and preview tables. The default suppresses identifier
+columns, person-facet level labels, and ConQuest case labels from the
+returned summary object and its console output. This does not alter the
+source bundle.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
@@ -106,12 +114,15 @@ category report objects). It extracts:</p><ul><li><p>object class and available 
 <li><p><code>summary</code>: one-row aggregate block when supplied by the bundle.</p></li>
 <li><p><code>preview</code>: first <code>top_n</code> rows from the main table-like component.</p></li>
 <li><p><code>settings</code>: resolved option values if available.</p></li>
-<li><p><code>validation_scope</code>: internal-versus-external validation scope when
+<li><p><code>validation_scope</code>: package-generated versus independently supplied
+evidence scope when
 summarizing <code>mfrm_reference_benchmark</code>.</p></li>
 <li><p><code>conquest_command_scope</code>: ConQuest command-template scope when summarizing
 <code>mfrm_conquest_overlap_bundle</code>.</p></li>
 <li><p><code>conquest_output_contract</code>: requested ConQuest outputs and review handoff
 when summarizing <code>mfrm_conquest_overlap_bundle</code>.</p></li>
+<li><p><code>mfrmr_fit_status</code>: actual optimizer controls, MML engine, convergence
+evidence, and inference-readiness state for an <code>mfrm_conquest_overlap_bundle</code>.</p></li>
 <li><p><code>normalization_scope</code>: extracted-table normalization scope when summarizing
 <code>mfrm_conquest_overlap_tables</code>.</p></li>
 <li><p><code>review_scope</code>: supplied-table review scope when summarizing

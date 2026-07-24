@@ -33,7 +33,7 @@
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from Facets to mfrmr</a></li>
+<li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
@@ -72,12 +72,12 @@
     
     
 <p><code>mfrmr</code> includes a bounded implementation of the
-Generalized Partial Credit Model (GPCM; Muraki 1992). The estimator is
-fully functional, but several downstream reporting helpers remain
-restricted because score-side semantics under free discrimination differ
-from the Rasch-family case. This vignette documents which helpers are
-available, which are not, and what to use as a substitute when a helper
-is restricted.</p>
+Generalized Partial Credit Model (GPCM; Muraki 1992). The bounded
+estimator is available under the documented constraints, while several
+downstream reporting helpers remain restricted because score-side
+semantics under free discrimination differ from the Rasch-family case.
+This vignette documents which helpers are available, which are not, and
+what to use as a substitute when a helper is restricted.</p>
 <div class="section level2">
 <h2 id="before-fitting-model-choice-triage">Before fitting: model-choice triage<a class="anchor" aria-label="anchor" href="#before-fitting-model-choice-triage"></a>
 </h2>
@@ -155,64 +155,80 @@ contract.</p>
 <p><code><a href="../reference/gpcm_capability_matrix.html">gpcm_capability_matrix()</a></code> is the canonical reference. It
 returns one row per helper family with a <code>Status</code> column
 drawn from <code>supported</code>, <code>supported_with_caveat</code>,
-<code>blocked</code>, and <code>deferred</code>, plus the rationale and
-the evidence trail behind each classification. The
-<code>RecommendedRoute</code> column states what to do instead when a
-helper is blocked or deferred, and <code>NextValidationStep</code>
-records what evidence would be needed before broadening that route.</p>
+<code>blocked</code>, and <code>deferred</code>. Read
+<code>Boundary</code> for the interpretive limit and
+<code>RecommendedRoute</code> for the route to use next. The default
+print is deliberately compact; subset by status to inspect a focused set
+of rows.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ryuya-dot-com.github.io/mfrmr/">mfrmr</a></span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/gpcm_capability_matrix.html">gpcm_capability_matrix</a></span><span class="op">(</span><span class="st">"supported"</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Area"</span>, <span class="st">"Status"</span><span class="op">)</span><span class="op">]</span></span>
-<span><span class="co">#&gt;                                        Area    Status</span></span>
-<span><span class="co">#&gt; 1                Core fitting and summaries supported</span></span>
-<span><span class="co">#&gt; 2 Fixed-calibration scoring and information supported</span></span>
-<span><span class="co">#&gt; 3             Core curve and category views supported</span></span></code></pre></div>
+<span><span class="co">#&gt; mfrmr bounded-GPCM workflow availability</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;     Status Routes</span></span>
+<span><span class="co">#&gt;  supported      3</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Route preview</span></span>
+<span><span class="co">#&gt;                                       Area    Status</span></span>
+<span><span class="co">#&gt;                 Core fitting and summaries supported</span></span>
+<span><span class="co">#&gt;  Fixed-calibration scoring and information supported</span></span>
+<span><span class="co">#&gt;              Core curve and category views supported</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Filter by status, for example gpcm_capability_matrix("supported_with_caveat").</span></span>
+<span><span class="co">#&gt; Read Boundary and RecommendedRoute before interpreting a caveated or unavailable route.</span></span></code></pre></div>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/gpcm_capability_matrix.html">gpcm_capability_matrix</a></span><span class="op">(</span><span class="st">"supported_with_caveat"</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Area"</span>, <span class="st">"Status"</span><span class="op">)</span><span class="op">]</span></span>
-<span><span class="co">#&gt;                                                                   Area</span></span>
-<span><span class="co">#&gt; 1                       Exploratory diagnostics and residual follow-up</span></span>
-<span><span class="co">#&gt; 2                           Checklist and summary-table appendix route</span></span>
-<span><span class="co">#&gt; 3                                          Operational misfit casebook</span></span>
-<span><span class="co">#&gt; 4                             Weighting review and model-choice review</span></span>
-<span><span class="co">#&gt; 5                                        Operational linking synthesis</span></span>
-<span><span class="co">#&gt; 6                       Direct simulation-spec generation and recovery</span></span>
-<span><span class="co">#&gt; 7                              APA writer and fit-based export bundles</span></span>
-<span><span class="co">#&gt; 8              Fair-average semantics under bounded GPCM (slope-aware)</span></span>
-<span><span class="co">#&gt; 9      Design evaluation and population forecasting under bounded GPCM</span></span>
-<span><span class="co">#&gt; 10 Diagnostic and signal-detection design screening under bounded GPCM</span></span>
-<span><span class="co">#&gt; 11         Differential facet functioning screening under bounded GPCM</span></span>
-<span><span class="co">#&gt; 12                          Residual-bias screening under bounded GPCM</span></span>
-<span><span class="co">#&gt; 13                      Score-side scorefile export under bounded GPCM</span></span>
-<span><span class="co">#&gt;                   Status</span></span>
-<span><span class="co">#&gt; 1  supported_with_caveat</span></span>
-<span><span class="co">#&gt; 2  supported_with_caveat</span></span>
-<span><span class="co">#&gt; 3  supported_with_caveat</span></span>
-<span><span class="co">#&gt; 4  supported_with_caveat</span></span>
-<span><span class="co">#&gt; 5  supported_with_caveat</span></span>
-<span><span class="co">#&gt; 6  supported_with_caveat</span></span>
-<span><span class="co">#&gt; 7  supported_with_caveat</span></span>
-<span><span class="co">#&gt; 8  supported_with_caveat</span></span>
-<span><span class="co">#&gt; 9  supported_with_caveat</span></span>
-<span><span class="co">#&gt; 10 supported_with_caveat</span></span>
-<span><span class="co">#&gt; 11 supported_with_caveat</span></span>
-<span><span class="co">#&gt; 12 supported_with_caveat</span></span>
-<span><span class="co">#&gt; 13 supported_with_caveat</span></span></code></pre></div>
+<span><span class="co">#&gt; mfrmr bounded-GPCM workflow availability</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;                 Status Routes</span></span>
+<span><span class="co">#&gt;  supported_with_caveat     14</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Route preview</span></span>
+<span><span class="co">#&gt;                                                     Area                Status</span></span>
+<span><span class="co">#&gt;           Exploratory diagnostics and residual follow-up supported_with_caveat</span></span>
+<span><span class="co">#&gt;               Checklist and summary-table appendix route supported_with_caveat</span></span>
+<span><span class="co">#&gt;                              Operational misfit casebook supported_with_caveat</span></span>
+<span><span class="co">#&gt;                 Weighting review and model-choice review supported_with_caveat</span></span>
+<span><span class="co">#&gt;                            Operational linking synthesis supported_with_caveat</span></span>
+<span><span class="co">#&gt;           Direct simulation-spec generation and recovery supported_with_caveat</span></span>
+<span><span class="co">#&gt;                  APA writer and fit-based export bundles supported_with_caveat</span></span>
+<span><span class="co">#&gt;  Fair-average semantics under bounded GPCM (slope-aware) supported_with_caveat</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; ... 6 more route(s).</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Filter by status, for example gpcm_capability_matrix("supported_with_caveat").</span></span>
+<span><span class="co">#&gt; Read Boundary and RecommendedRoute before interpreting a caveated or unavailable route.</span></span></code></pre></div>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/gpcm_capability_matrix.html">gpcm_capability_matrix</a></span><span class="op">(</span><span class="st">"blocked"</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Area"</span>, <span class="st">"Status"</span>, <span class="st">"RecommendedRoute"</span><span class="op">)</span><span class="op">]</span></span>
-<span><span class="co">#&gt;                                       Area  Status</span></span>
-<span><span class="co">#&gt; 1 FACETS output-contract score-side review blocked</span></span>
-<span><span class="co">#&gt;                                                                                                                                                                                                  RecommendedRoute</span></span>
-<span><span class="co">#&gt; 1 Use direct fair-average tables and graph-only compatibility outputs; use `gpcm_score_side_contract()` to inspect the unblock criteria, and keep full FACETS output-contract reviews on the `RSM` / `PCM` route.</span></span></code></pre></div>
+<span><span class="co">#&gt; mfrmr bounded-GPCM workflow availability</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;   Status Routes</span></span>
+<span><span class="co">#&gt;  blocked      1</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Route preview</span></span>
+<span><span class="co">#&gt;                                      Area  Status</span></span>
+<span><span class="co">#&gt;  FACETS output-contract score-side review blocked</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Filter by status, for example gpcm_capability_matrix("supported_with_caveat").</span></span>
+<span><span class="co">#&gt; Read Boundary and RecommendedRoute before interpreting a caveated or unavailable route.</span></span></code></pre></div>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/gpcm_capability_matrix.html">gpcm_capability_matrix</a></span><span class="op">(</span><span class="st">"deferred"</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Area"</span>, <span class="st">"Status"</span>, <span class="st">"NextValidationStep"</span><span class="op">)</span><span class="op">]</span></span>
-<span><span class="co">#&gt;                                Area   Status</span></span>
-<span><span class="co">#&gt; 1 MCMC and heavy-backend extensions deferred</span></span>
-<span><span class="co">#&gt;                                                                                   NextValidationStep</span></span>
-<span><span class="co">#&gt; 1 Decide posterior-predictive, MCMC, and backend scope only after the score-side contract is stable.</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/gpcm_capability_matrix.html">gpcm_capability_matrix</a></span><span class="op">(</span><span class="st">"deferred"</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Area"</span>, <span class="st">"Status"</span>, <span class="st">"Boundary"</span>, <span class="st">"RecommendedRoute"</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="co">#&gt; mfrmr bounded-GPCM workflow availability</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;    Status Routes</span></span>
+<span><span class="co">#&gt;  deferred      1</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Route preview</span></span>
+<span><span class="co">#&gt;                                         Area   Status</span></span>
+<span><span class="co">#&gt;  Posterior-predictive and Bayesian workflows deferred</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Filter by status, for example gpcm_capability_matrix("supported_with_caveat").</span></span>
+<span><span class="co">#&gt; Read Boundary and RecommendedRoute before interpreting a caveated or unavailable route.</span></span></code></pre></div>
 <p>The matrix is intentionally conservative. A row stays in
 <code>blocked</code> or <code>deferred</code> even when some lower-level
-component already runs, because the scope statement reflects the
-validation evidence rather than the raw code path.</p>
+component already runs, because the scope statement includes the
+interpretation needed for a complete public workflow rather than only
+checking whether code executes.</p>
 </div>
 <div class="section level2">
 <h2 id="source-grounded-recovery-interpretation">Source-grounded recovery interpretation<a class="anchor" aria-label="anchor" href="#source-grounded-recovery-interpretation"></a>
@@ -243,28 +259,16 @@ were retained, then <code>plot(recovery_review, type = "status")</code>,
 then
 <code>plot(recovery_review, type = "metrics", metric = "rmse")</code>.</li>
 </ol>
-<p>For release-scale checks, the packaged
-<code>recovery-validation.R</code> protocol separates core release
-evidence from extended sensitivity cases. Read
-<code>topline_release_decision</code> before
-<code>condition_reporting_notes</code>, <code>condition_summary</code>,
-or row-level case tables, and treat
-<code>ExtendedSensitivityStatus</code> as sensitivity evidence rather
-than as the core release gate by itself. Fit/separation operating
-characteristics belong in the diagnostic summary; they are not part of
-the top-line release-recovery gate. Read
-<code>diagnostic_reporting_notes</code> first when deciding whether zero
-separation, reliability collapse, or df-sensitive ZSTD flags need
-explicit report language.</p>
 </div>
 <div class="section level2">
-<h2 id="what-works-today">What works today<a class="anchor" aria-label="anchor" href="#what-works-today"></a>
+<h2 id="supported-routes-and-verification-evidence">Supported routes and verification evidence<a class="anchor" aria-label="anchor" href="#supported-routes-and-verification-evidence"></a>
 </h2>
-<p>The following routes are validated for bounded <code>GPCM</code>:</p>
+<p>The following bounded-<code>GPCM</code> routes are documented and
+verified within the stated constraints:</p>
 <ul>
 <li>
 <strong>Fitting and core summaries</strong> via
-<code>fit_mfrm(model = "GPCM", step_facet = ...)</code>. The validated
+<code>fit_mfrm(model = "GPCM", step_facet = ...)</code>. The documented
 default keeps <code>slope_facet == step_facet</code>, with the direct
 <code>MML</code> engine.</li>
 <li>
@@ -318,7 +322,14 @@ screening framing of its underlying sources.</li>
 <code><a href="../reference/estimate_bias.html">estimate_bias()</a></code> now provides bounded-GPCM conditional
 screening rows with slope-aware information and profile-likelihood
 columns. Treat these rows as screening evidence for follow-up, not as
-standalone confirmatory fairness tests.</li>
+standalone confirmatory fairness tests.
+<code><a href="../reference/unexpected_after_bias_table.html">unexpected_after_bias_table()</a></code> provides a descriptive
+in-sample before/after flag comparison; a lower flag count does not show
+that bias has been removed.</li>
+<li>
+<code><a href="../reference/estimation_iteration_report.html">estimation_iteration_report()</a></code> provides a slope-aware
+reconstructed optimization trajectory. It is a diagnostic replay, not
+the exact optimizer history or an additional convergence test.</li>
 <li>
 <code><a href="../reference/analyze_dff.html">analyze_dff()</a></code>, <code><a href="../reference/analyze_dff.html">analyze_dif()</a></code>,
 <code><a href="../reference/dif_interaction_table.html">dif_interaction_table()</a></code>, <code><a href="../reference/dif_report.html">dif_report()</a></code>,
@@ -369,8 +380,9 @@ score-side summaries. Specifically:</p>
 <code><a href="../reference/facets_output_contract_review.html">facets_output_contract_review()</a></code> still depends on
 FACETS-style compatibility semantics that are not generalized to free
 discrimination.</li>
-<li>posterior-predictive checks, MCMC, and heavy-backend extensions are
-still future scope.</li>
+<li>posterior-predictive checks and MCMC estimation are not available in
+mfrmr; use external Bayesian software when those analyses are
+required.</li>
 <li>Caveated reporting, export, linking, design-forecast, and screening
 helpers must keep their <code>gpcm_boundary</code> wording visible and
 must not imply FACETS-equivalent score-side uncertainty, operational
@@ -385,36 +397,28 @@ validation.</li>
 the practical paths are:</p>
 <ul>
 <li>Refit with <code>model = "PCM"</code> if the discrimination-free
-assumption is defensible for the data. The full APA / output-contract /
-fit-based export stack becomes available, and
-<code><a href="../reference/compare_mfrm.html">compare_mfrm()</a></code> quantifies the loss in fit.</li>
+assumption is defensible for the data and a full FACETS score-side
+review is required; <code><a href="../reference/compare_mfrm.html">compare_mfrm()</a></code> quantifies the loss in
+fit.</li>
 <li>Keep the report on the <code>GPCM</code> fit itself but draft the
 manuscript section manually around the supported tables:
 <code>summary(fit)</code> for parameters, <code><a href="../reference/diagnose_mfrm.html">diagnose_mfrm()</a></code>
 for residual fit, <code><a href="../reference/facet_quality_dashboard.html">facet_quality_dashboard()</a></code> for the
 per-facet quality summary, and <code><a href="../reference/compute_information.html">compute_information()</a></code> for
 precision evidence.</li>
-<li>Generate the reproducibility manifest from a parallel
-<code>RSM</code> or <code>PCM</code> baseline fit. The two fits can be
-reported side by side in the same document, with the <code>GPCM</code>
-fit footnoted as the discrimination-aware counterpart.</li>
+<li>When a Rasch-family baseline comparison is substantively useful,
+optionally generate a second manifest from a parallel <code>RSM</code>
+or <code>PCM</code> fit. The two fits can be reported side by side, with
+the <code>GPCM</code> fit identified as the discrimination-aware
+counterpart. This is not required to use the caveated
+bounded-<code>GPCM</code> manifest/replay/export route.</li>
 </ul>
-<p>Those restricted helpers use the same capability matrix at runtime. A
-blocked or deferred bounded-<code>GPCM</code> call stops with the
-relevant capability row, recommended route, and next validation step
-instead of producing a partial score-side or unsupported backend result.
-The condition class is <code>mfrmr_gpcm_scope_error</code>, and the
-condition object carries <code>helper</code>, <code>area</code>,
-<code>status</code>, <code>recommended_route</code>, and
-<code>next_validation_step</code> fields so wrappers can catch and route
-the failure without parsing the message text. The release-readiness
-protocol checks that the blocked/deferred rows in
-<code><a href="../reference/gpcm_capability_matrix.html">gpcm_capability_matrix()</a></code> are represented in the runtime
-guard coverage table or explicitly marked as roadmap-only. Call
-<code><a href="../reference/gpcm_runtime_guard_coverage.html">gpcm_runtime_guard_coverage()</a></code> to inspect that table. Use
-<code>mfrmr_output_guide("gpcm")</code> when you want the shorter
-user-facing route map that points to both the support matrix and guard
-coverage.</p>
+<p>Restricted helpers use the capability matrix at runtime. An
+unsupported bounded-<code>GPCM</code> call stops with the relevant
+limitation and a supported alternative instead of producing a partial
+score-side or backend result. Use <code><a href="../reference/gpcm_capability_matrix.html">gpcm_capability_matrix()</a></code>
+or <code>mfrmr_output_guide("gpcm")</code> before choosing a downstream
+route.</p>
 </div>
 <div class="section level2">
 <h2 id="a-worked-example">A worked example<a class="anchor" aria-label="anchor" href="#a-worked-example"></a>
@@ -487,38 +491,22 @@ higher quadrature setting and a larger recovery design.</p>
 <span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">review_gpcm</span><span class="op">)</span><span class="op">$</span><span class="va">diagnostic_review</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">review_gpcm</span>, type <span class="op">=</span> <span class="st">"status"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">review_gpcm</span>, type <span class="op">=</span> <span class="st">"metrics"</span>, metric <span class="op">=</span> <span class="st">"rmse"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># For a release-scale smoke read:</span></span>
-<span><span class="co"># source(system.file("validation", "recovery-validation.R", package = "mfrmr"))</span></span>
-<span><span class="co"># validation &lt;- mfrmr_run_recovery_validation(</span></span>
-<span><span class="co">#   case_ids = c("gpcm_slope_profile", "gpcm_high_dispersion_sparse"),</span></span>
-<span><span class="co">#   quick = TRUE,</span></span>
-<span><span class="co">#   verbose = FALSE</span></span>
-<span><span class="co"># )</span></span>
-<span><span class="co"># validation_summary &lt;- summary(validation)</span></span>
-<span><span class="co"># validation_summary$reading_order</span></span>
-<span><span class="co"># validation_summary$topline_release_decision</span></span>
-<span><span class="co"># validation_summary$condition_reporting_notes</span></span>
-<span><span class="co"># validation_summary$condition_summary</span></span>
-<span><span class="co"># validation_summary$diagnostic_reporting_notes</span></span>
-<span><span class="co"># build_summary_table_bundle(validation_summary)$tables$reading_order</span></span>
-<span><span class="co"># build_summary_table_bundle(validation_summary)$tables$domain_decision_table</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">review_gpcm</span>, type <span class="op">=</span> <span class="st">"metrics"</span>, metric <span class="op">=</span> <span class="st">"rmse"</span><span class="op">)</span></span></code></pre></div>
 <p>The fit, summary, residual diagnostics, information, recovery,
 fair-average, and conditional bias-screening helpers all run under
-<code>GPCM</code> with the caveats listed above. Trying
-<code>build_apa_outputs(fit_gpcm)</code> raises an explicit message
-pointing back at <code><a href="../reference/gpcm_capability_matrix.html">gpcm_capability_matrix()</a></code> rather than
-producing a partial output.</p>
+<code>GPCM</code> with the caveats listed above.
+<code>build_apa_outputs(fit_gpcm)</code> returns a caveated
+sensitivity-reporting object with a <code>gpcm_boundary</code>; full
+FACETS score-side review remains on the <code>RSM</code> /
+<code>PCM</code> route.</p>
 </div>
 <div class="section level2">
-<h2 id="roadmap">Roadmap<a class="anchor" aria-label="anchor" href="#roadmap"></a>
+<h2 id="current-boundary">Current boundary<a class="anchor" aria-label="anchor" href="#current-boundary"></a>
 </h2>
-<p>The boundary above is a release-scope statement, not a permanent
-design choice. Score-side semantics for free-discrimination polytomous
-models are on the roadmap for a future release. Until then, the matrix
-returned by <code><a href="../reference/gpcm_capability_matrix.html">gpcm_capability_matrix()</a></code> is the binding
-contract.</p>
+<p>Score-side semantics for free-discrimination polytomous models differ
+from the Rasch-family route. Use the current matrix returned by
+<code><a href="../reference/gpcm_capability_matrix.html">gpcm_capability_matrix()</a></code> as the workflow contract and
+<code><a href="../reference/gpcm_score_side_contract.html">gpcm_score_side_contract()</a></code> for score-side alternatives.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

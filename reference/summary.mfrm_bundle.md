@@ -6,7 +6,7 @@ Summarize report/table bundles in a user-friendly format
 
 ``` r
 # S3 method for class 'mfrm_bundle'
-summary(object, digits = 3, top_n = 10, ...)
+summary(object, digits = 3, top_n = 10, include_person = FALSE, ...)
 ```
 
 ## Arguments
@@ -22,6 +22,14 @@ summary(object, digits = 3, top_n = 10, ...)
 - top_n:
 
   Number of preview rows shown from the main table component.
+
+- include_person:
+
+  If `TRUE`, person-level identifiers may appear in supported summary
+  and preview tables. The default suppresses identifier columns,
+  person-facet level labels, and ConQuest case labels from the returned
+  summary object and its console output. This does not alter the source
+  bundle.
 
 - ...:
 
@@ -82,14 +90,18 @@ Additional class-aware summaries are provided for:
 
 - `settings`: resolved option values if available.
 
-- `validation_scope`: internal-versus-external validation scope when
-  summarizing `mfrm_reference_benchmark`.
+- `validation_scope`: package-generated versus independently supplied
+  evidence scope when summarizing `mfrm_reference_benchmark`.
 
 - `conquest_command_scope`: ConQuest command-template scope when
   summarizing `mfrm_conquest_overlap_bundle`.
 
 - `conquest_output_contract`: requested ConQuest outputs and review
   handoff when summarizing `mfrm_conquest_overlap_bundle`.
+
+- `mfrmr_fit_status`: actual optimizer controls, MML engine, convergence
+  evidence, and inference-readiness state for an
+  `mfrm_conquest_overlap_bundle`.
 
 - `normalization_scope`: extracted-table normalization scope when
   summarizing `mfrm_conquest_overlap_tables`.

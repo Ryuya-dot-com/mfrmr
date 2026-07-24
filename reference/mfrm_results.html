@@ -18,7 +18,7 @@
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from Facets to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
@@ -56,7 +56,9 @@
 <span>  response_time_data <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  response_time_facets <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  response_time_score <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  output <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"object"</span>, <span class="st">"summary"</span>, <span class="st">"tables"</span>, <span class="st">"html"</span><span class="op">)</span></span>
+<span>  output <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"object"</span>, <span class="st">"summary"</span>, <span class="st">"tables"</span>, <span class="st">"html"</span><span class="op">)</span>,</span>
+<span>  diagnostics <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  compute <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"auto"</span>, <span class="st">"never"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -68,7 +70,8 @@
 <dd><p>Output from <code><a href="fit_mfrm.html">fit_mfrm()</a></code> or <code><a href="run_mfrm_facets.html">run_mfrm_facets()</a></code>. A standard
 long-format <code>data.frame</code> is also accepted when person and score columns can
 be inferred unambiguously from common names such as <code>Person</code> and <code>Score</code>;
-all remaining columns are treated as facets.</p></dd>
+remaining measurement columns must use recognizable facet-role names.
+Ambiguous extra columns are rejected rather than guessed as facets.</p></dd>
 
 
 <dt id="arg-include">include<a class="anchor" aria-label="anchor" href="#arg-include"></a></dt>
@@ -111,6 +114,19 @@ available.</p></dd>
 <code>"summary"</code> for its compact summary, <code>"tables"</code> for a named list of
 available data frames, or <code>"html"</code> for a temporary HTML report.</p></dd>
 
+
+<dt id="arg-diagnostics">diagnostics<a class="anchor" aria-label="anchor" href="#arg-diagnostics"></a></dt>
+<dd><p>Optional matching output from <code><a href="diagnose_mfrm.html">diagnose_mfrm()</a></code>. When
+supplied, it is identity-checked and reused instead of recomputed.</p></dd>
+
+
+<dt id="arg-compute">compute<a class="anchor" aria-label="anchor" href="#arg-compute"></a></dt>
+<dd><p>Diagnostic computation policy. <code>"auto"</code> preserves the
+standard behavior; <code>"never"</code> collects only sections that can be built
+without computing diagnostics and marks every requested dependent section
+as <code>"not_computed"</code>. Matching supplied or stored diagnostics are still
+reused under <code>"never"</code>.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -127,7 +143,11 @@ existing helpers such as <code><a href="diagnose_mfrm.html">diagnose_mfrm()</a><
 <code><a href="fit_measures_table.html">fit_measures_table()</a></code>, <code><a href="precision_review_report.html">precision_review_report()</a></code>, and
 <code><a href="reporting_checklist.html">reporting_checklist()</a></code>. Sections that are unsupported for a particular fit
 are retained in the <code>status</code> table as <code>not_available</code> rather than stopping
-the whole results workflow. The returned object also carries
+the whole results workflow. The additive <code>readiness</code> table keeps Numerical,
+Data, Design, Stability, Diagnostics, Reporting, and Plot interpretation
+states separate. Plot routes can therefore remain available for diagnosis
+while <code>InterpretationStatus</code> marks them as review-only. The returned object
+also carries
 <code>next_actions</code> and <code>input$reproducible_code</code> so users can move from the
 comprehensive first screen to explicit reporting or replay code.</p>
     </div>
@@ -173,28 +193,36 @@ only the measurement columns needed for estimation.</p>
 
 
 <p>Start with <code>summary(res)</code>. The most useful fields are:</p><ul><li><p><code>overview</code>: input mode, model, method, table count, and plot-route count</p></li>
+<li><p><code>readiness</code>: separate upstream analysis and plot-interpretation gates</p></li>
 <li><p><code>triage</code>: first-screen signals ordered by unavailable/review/info/ok</p></li>
 <li><p><code>status</code>: which sections were available, skipped, or unsupported</p></li>
-<li><p><code>plot_map</code>: the supported <code>plot(res, type = ...)</code> routes for this object</p></li>
+<li><p><code>plot_map</code>: supported plot routes, availability, and interpretation status</p></li>
 <li><p><code>next_actions</code>: recommended follow-up calls</p></li>
-<li><p><code>reproducible_code</code>: replay scaffold for the first-screen route</p></li>
+<li><p><code>reproducible_code</code>: replay script for the first-screen route</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="data-frame-input">Data-frame input<a class="anchor" aria-label="anchor" href="#data-frame-input"></a></h2>
 
 
-<p>Direct data-frame input is intentionally conservative. It is intended for
-standard columns such as <code>Person</code>, <code>Score</code>, <code>Rater</code>, and <code>Criterion</code>. For
-research scripts, use <code><a href="fit_mfrm.html">fit_mfrm()</a></code> or <code><a href="run_mfrm_facets.html">run_mfrm_facets()</a></code> explicitly when
-column roles, model, method, anchors, or missing-data rules need to be
-documented. Use <code><a href="mfrm_results_interactive.html">mfrm_results_interactive()</a></code> only when you want an opt-in
-column-selection wizard in an interactive session.</p>
+<p>Direct data-frame input is intentionally narrow. It accepts unambiguous
+<code>Person</code> / <code>Score</code> columns and familiar facet-role names such as <code>Rater</code>,
+<code>Item</code>, <code>Task</code>, or <code>Criterion</code>, and fits the <code>RSM</code> / <code>MML</code> route. It stops
+when other columns could be metadata, grouping variables, or background
+variables rather than silently treating them as measurement facets. For
+research scripts, use <code><a href="fit_mfrm.html">fit_mfrm()</a></code> explicitly so column roles, model,
+method, anchors, and missing-data rules are recorded. Use
+<code><a href="mfrm_results_interactive.html">mfrm_results_interactive()</a></code> only for opt-in column selection at the console.</p>
     </div>
     <div class="section level2">
     <h2 id="visualization-and-html">Visualization and HTML<a class="anchor" aria-label="anchor" href="#visualization-and-html"></a></h2>
 
 
-<p><code>plot(res)</code> routes to a FACETS-style model-level visual bundle by default.
+<p><code>plot(res)</code> routes to the primary native Wright map when the fitted object
+contains compatible person and facet locations. This default retains
+available mfrmr facet uncertainty. Use <code>plot(res, type = "fit")</code> when the
+explicit three-plot Wright/pathway/category bundle is wanted. The compact
+native default discloses any omitted facet locations in its subtitle and
+<code>data$retention</code>; use <code>plot(res, top_n = Inf)</code> for a complete final map.
 Other routes include <code>plot(res, type = "wright")</code>, <code>"pathway"</code>,
 <code>"fit_pathway"</code>, <code>"qc"</code>, <code>"category"</code>, <code>"anchors"</code>, <code>"response_time"</code>,
 and <code>"tables"</code>. The Wright map is the required first fitted-scale artifact;
@@ -203,9 +231,9 @@ and measure on the vertical axis. <code>output = "html"</code> writes a
 lightweight temporary HTML file;
 use <code><a href="launch_mfrmr_viewer.html">launch_mfrmr_viewer()</a></code> when you want an optional local Shiny reader
 for an already-created <code>mfrm_results</code> object. Use
-<code><a href="export_mfrm_results.html">export_mfrm_results()</a></code> for a lightweight download of the comprehensive
+<code><a href="export_mfrm_results.html">export_mfrm_results()</a></code> for a compact analysis archive of the comprehensive
 results object, or <code><a href="export_mfrm_bundle.html">export_mfrm_bundle()</a></code> when a fit-centered durable
-analysis archive is needed.</p>
+analysis archive is needed. Neither route deidentifies its contents.</p>
     </div>
     <div class="section level2">
     <h2 id="typical-workflow">Typical workflow<a class="anchor" aria-label="anchor" href="#typical-workflow"></a></h2>
@@ -213,14 +241,17 @@ analysis archive is needed.</p>
 
 <ol><li><p>Fit explicitly with <code><a href="fit_mfrm.html">fit_mfrm()</a></code> in scripts and manuscripts.</p></li>
 <li><p>Call <code>res &lt;- mfrm_results(fit)</code>.</p></li>
-<li><p>Read <code>summary(res, view = "brief")</code>, then create the required
-<code>plot(res, type = "wright", show_ci = TRUE)</code> artifact.</p></li>
+<li><p>Read <code>summary(res, view = "brief")</code> and its <code>readiness</code> table, then create
+the required
+<code>plot(res, type = "wright", show_ci = TRUE, top_n = Inf)</code> artifact.</p></li>
 <li><p>Read <code>summary(res)$triage</code>, <code>summary(res)$status</code>,
 <code>summary(res)$plot_map</code>, and <code>summary(res)$next_actions</code>.</p></li>
 <li><p>Call <code>report &lt;- mfrm_report(res)</code> when a report-ready surface is needed.</p></li>
 <li><p>Use <code>export_mfrm_results(res, preset = "starter")</code> to write the Wright
 map, CSV, report, RDS, replay, and
-manifest files for handoff or review.</p></li>
+manifest files for controlled review. Treat the folder as potentially
+identifying unless it has been separately transformed and reviewed under
+the applicable data-handling policy.</p></li>
 <li><p>Use <code>plot(res, type = "fit_pathway", include_person = TRUE, top_n_person = 12, person_labels = "none", facet_labels = "flagged")</code>
 or
 <code>plot(res, type = "qc")</code> for focused visual follow-up.</p></li>
@@ -249,8 +280,13 @@ interactive session.</p></li>
 <span class="r-in"><span>                method <span class="op">=</span> <span class="st">"JML"</span>, maxit <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu">mfrm_results</span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">wright</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">res</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">wright</span><span class="op">$</span><span class="va">name</span></span></span>
+<span class="r-in"><span><span class="va">fit_bundle</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">res</span>, type <span class="op">=</span> <span class="st">"fit"</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">sx</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">res</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">sx</span><span class="op">$</span><span class="va">overview</span></span></span>
+<span class="r-in"><span><span class="va">sx</span><span class="op">$</span><span class="va">readiness</span></span></span>
 <span class="r-in"><span><span class="va">sx</span><span class="op">$</span><span class="va">triage</span></span></span>
 <span class="r-in"><span><span class="va">sx</span><span class="op">$</span><span class="va">plot_map</span></span></span>
 <span class="r-in"><span><span class="va">sx</span><span class="op">$</span><span class="va">next_actions</span></span></span>
@@ -258,10 +294,10 @@ interactive session.</p></li>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">res</span>, type <span class="op">=</span> <span class="st">"qc"</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Direct data-frame input is available for conservative exploratory use</span></span></span>
-<span class="r-in"><span><span class="co"># when Person and Score columns are unambiguous.</span></span></span>
+<span class="r-in"><span><span class="co"># Direct data-frame input is available only after selecting unambiguous</span></span></span>
+<span class="r-in"><span><span class="co"># measurement columns. Extra study/group columns require an explicit fit.</span></span></span>
 <span class="r-in"><span><span class="fu">mfrm_results</span><span class="op">(</span></span></span>
-<span class="r-in"><span>  <span class="va">toy_small</span>,</span></span>
+<span class="r-in"><span>  <span class="va">toy_small</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Person"</span>, <span class="st">"Rater"</span>, <span class="st">"Criterion"</span>, <span class="st">"Score"</span><span class="op">)</span><span class="op">]</span>,</span></span>
 <span class="r-in"><span>  include <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"fit"</span>, <span class="st">"diagnostics"</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>  output <span class="op">=</span> <span class="st">"summary"</span></span></span>
 <span class="r-in"><span><span class="op">)</span><span class="op">$</span><span class="va">mapping</span></span></span>

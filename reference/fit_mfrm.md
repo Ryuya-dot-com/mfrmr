@@ -37,7 +37,8 @@ fit_mfrm(
   min_obs_per_category = 10,
   quad_points = 31,
   maxit = 400,
-  reltol = 1e-06,
+  reltol = 1e-09,
+  optimizer = c("auto", "BFGS", "L-BFGS-B"),
   mml_engine = c("direct", "em", "hybrid"),
   population_formula = NULL,
   person_data = NULL,
@@ -105,15 +106,17 @@ fit_mfrm(
 - missing_codes:
 
   Optional pre-processing step that converts sentinel missing-code
-  values to `NA` across the `person`, `facets`, and `score` columns
-  before any downstream logic. One of:
+  values to `NA` before any downstream logic. One of:
 
   - `NULL` (default): no recoding; strictly backward-compatible.
 
   - `TRUE` or `"default"`: FACETS / SPSS / SAS convention set (`"99"`,
-    `"999"`, `"-1"`, `"N"`, `"NA"`, `"n/a"`, `"."`, `""`).
+    `"999"`, `"-1"`, `"N"`, `"NA"`, `"n/a"`, `"."`, `""`) on the score
+    column only. Person and facet identifiers are preserved because
+    short codes such as `"N"` can be legitimate labels.
 
-  - Character vector: an explicit code set, e.g. `c("99", "999", ".a")`.
+  - Character vector: an explicit code set, e.g. `c("99", "999", ".a")`,
+    applied across the person, facet, and score columns.
 
   Replacement counts are recorded in `fit$prep$missing_recoding` and
   surfaced by
@@ -133,16 +136,20 @@ fit_mfrm(
 
 - step_facet:
 
-  Step facet for `PCM` and the bounded `GPCM` branch. For `GPCM`, this
-  should be supplied explicitly rather than relying on an implicit
-  default.
+  Facet whose levels receive separate step parameters in `PCM` and
+  bounded `GPCM`. Supply it explicitly for a final analysis. If it is
+  omitted for `PCM`, mfrmr uses a unique item-like facet name (for
+  example, `Item`, `Task`, or `Criterion`) when available; otherwise it
+  retains the first-facet fallback with a warning. `GPCM` always
+  requires an explicit value. This argument is not used by `RSM`, which
+  has one shared set of rating-scale thresholds.
 
 - slope_facet:
 
-  Slope facet for the bounded `GPCM` branch. The current release
-  requires `slope_facet == step_facet` and uses a positive-slope
-  identification convention on the log scale with geometric mean
-  discrimination fixed to 1.
+  Slope facet for the bounded `GPCM` branch. mfrmr requires
+  `slope_facet == step_facet` and uses a positive-slope identification
+  convention on the log scale with geometric mean discrimination fixed
+  to 1.
 
 - facet_interactions:
 
@@ -209,21 +216,19 @@ fit_mfrm(
 - quad_points:
 
   Integer number of Gauss-Hermite quadrature points used for MML
-  integration over the person distribution. Default is `31`, chosen so
-  that marginal log-likelihood values are stable enough for direct
-  manuscript reporting. Recommended tiers:
+  integration over the person distribution. The default is `31`. Useful
+  accuracy/runtime settings are:
 
   |  |  |
   |----|----|
-  | `7` | fast exploratory scan; in-package helpers such as [`predict_mfrm_population()`](https://ryuya-dot-com.github.io/mfrmr/reference/predict_mfrm_population.md) and [`reference_case_benchmark()`](https://ryuya-dot-com.github.io/mfrmr/reference/reference_case_benchmark.md) use this value. |
+  | `7` | lightweight exploratory run; helpers such as [`predict_mfrm_population()`](https://ryuya-dot-com.github.io/mfrmr/reference/predict_mfrm_population.md) and [`reference_case_benchmark()`](https://ryuya-dot-com.github.io/mfrmr/reference/reference_case_benchmark.md) use this value. |
   | `15` | intermediate analysis when runtime matters. |
-  | `31` | default / publication tier. |
-  | `61+` | ultra-precise runs when benchmarking or working on very narrow score supports. |
+  | `31` | package default and a starting point for final analysis. |
+  | `61+` | sensitivity analysis for narrow score distributions or demanding numerical comparisons. |
 
-  Internal benchmarks show the marginal log-likelihood still drifts by
-  ~0.5-1 logit between `quad_points = 15` and `quad_points = 61` on
-  moderately sized designs, which is why the default now sits at the
-  publication tier; set a lower value explicitly for exploratory runs.
+  Quadrature adequacy depends on the fitted distribution and score
+  support. When substantive conclusions are sensitive, compare results
+  under a denser rule and report the setting used.
 
 - maxit:
 
@@ -231,23 +236,46 @@ fit_mfrm(
 
 - reltol:
 
-  Optimization tolerance.
+  Portable tolerance setting for the initial optimizer stage. The
+  default is `1e-9`. For BFGS this is passed as `reltol`; for L-BFGS-B
+  it is mapped to `factr` and `pgtol`, whose actual values are recorded
+  in the fit. When this setting is at least as strict as the public
+  default (`reltol <= 1e-9`), optimizer code zero followed by a failed
+  common terminal-gradient review triggers a bounded warm-started polish
+  ladder. The best non-worsening stage under the recorded selection rule
+  is retained. Requested and selected-stage settings remain in
+  `fit$summary`, and the complete stage history remains in
+  `fit$opt$optimizer_polish`.
+
+- optimizer:
+
+  Direct-optimization method. `"auto"` (default) uses the limited-memory
+  `"L-BFGS-B"` method for MML and for larger JML parameter vectors (at
+  least 200 free parameters), while retaining BFGS for smaller JML fits.
+  Use `"BFGS"` or `"L-BFGS-B"` to request one method explicitly. The
+  method actually used is recorded in `fit$summary$OptimizerMethod`. For
+  L-BFGS-B, inspect `OptimizerFactr` and `OptimizerPgtol` rather than
+  interpreting `EffectiveReltol` as a native
+  [`stats::optim()`](https://rdrr.io/r/stats/optim.html) control.
 
 - mml_engine:
 
   MML optimization engine for `method = "MML"`: `"direct"` (default)
-  uses direct BFGS on the marginal log-likelihood, `"em"` uses an EM
-  loop for `RSM` / `PCM` with `population = NULL`, and `"hybrid"` uses
-  EM as a warm start before the direct optimizer. Unsupported
-  combinations currently fall back to `"direct"` and record that
-  fallback in `fit$summary`.
+  uses the selected direct optimizer on the marginal log-likelihood,
+  `"em"` uses an EM loop for `RSM` / `PCM` with `population = NULL`, and
+  `"hybrid"` uses EM as a warm start before the direct optimizer.
+  Unsupported combinations currently fall back to `"direct"` and record
+  that fallback in `fit$summary`. Direct, hybrid, and EM engines all
+  require the common terminal-gradient gate for `InferenceReady`; EM
+  relative log-likelihood convergence alone does not establish numerical
+  readiness.
 
 - population_formula:
 
   Optional one-sided formula for a person-level latent-regression
-  population model, for example `~ grade + ses`. In the current release,
-  latent regression is implemented only for `method = "MML"` with a
-  unidimensional conditional-normal population model.
+  population model, for example `~ grade + ses`. Latent regression is
+  implemented only for `method = "MML"` with a unidimensional
+  conditional-normal population model.
 
 - person_data:
 
@@ -274,14 +302,14 @@ fit_mfrm(
 
 - facet_shrinkage:
 
-  Character. `"none"` (default) keeps the 0.1.5 fixed-effects behaviour.
-  `"empirical_bayes"` applies a post-hoc James-Stein / empirical-Bayes
-  shrinkage to each non-person facet (Efron & Morris, 1973);
-  `fit$facets$others` gains `ShrunkEstimate`, `ShrunkSE`, and
+  Character. `"none"` (default) keeps the unshrunk fixed-effects
+  estimates. `"empirical_bayes"` applies a post-hoc James-Stein /
+  empirical-Bayes shrinkage to each non-person facet (Efron & Morris,
+  1973); `fit$facets$others` gains `ShrunkEstimate`, `ShrunkSE`, and
   `ShrinkageFactor` columns, and `fit$shrinkage_report` records the
   per-facet prior variance and effective degrees of freedom. `"laplace"`
-  currently aliases to `"empirical_bayes"` and is reserved for a future
-  penalised-MML implementation.
+  is retained as a compatibility alias for `"empirical_bayes"`; it does
+  not fit a penalized likelihood.
 
 - facet_prior_sd:
 
@@ -331,9 +359,11 @@ fit_mfrm(
 
 An object of class `mfrm_fit` (named list) with:
 
-- `summary`: one-row model summary (`LogLik`, `AIC`, `BIC`, convergence)
-  including public `Method`, internal `MethodUsed`, and
-  `MMLEngineRequested`, `MMLEngineUsed`, and `EMIterations` for MML fits
+- `summary`: one-row model summary (`LogLik`, `AIC`, `BIC`,
+  convergence), including user-facing `Method`, engine-facing
+  `MethodUsed`, MML-engine fields, terminal-gradient readiness,
+  requested/selected-stage tolerance settings, and the actual L-BFGS-B
+  `OptimizerFactr` / `OptimizerPgtol` controls when applicable
 
 - `facets$person`: person estimates (`Estimate`; plus `SD` for MML)
 
@@ -368,22 +398,29 @@ An object of class `mfrm_fit` (named list) with:
   when `facet_interactions` is supplied
 
 - `population`: population-model metadata. Ordinary fits keep an
-  inactive scaffold (`active = FALSE`,
-  `posterior_basis = "legacy_mml"`). Active latent-regression fits store
-  the fitted design matrix, regression coefficients, residual variance,
-  omission review, the complete-case estimation table (`person_table`),
-  and the observed-person-aligned replay/export provenance table
-  retained before complete-case omission (`person_table_replay`), plus
-  stored categorical `xlevels` / `contrasts` for model-matrix replay and
+  inactive record (`active = FALSE`, `posterior_basis = "legacy_mml"`).
+  Active latent-regression fits store the fitted design matrix,
+  regression coefficients, residual variance, omission review, the
+  complete-case estimation table (`person_table`), and the
+  observed-person-aligned replay/export provenance table retained before
+  complete-case omission (`person_table_replay`), plus stored
+  categorical `xlevels` / `contrasts` for model-matrix replay and
   scoring, together with `posterior_basis = "population_model"`.
 
+- `data_review`: pre-fit Data, Design, Stability, and Reporting
+  readiness evidence propagated into summaries and plot-interpretation
+  gates
+
 - `config`: resolved model configuration used for estimation, including
-  `config$anchor_review`
+  `config$anchor_review` and the recorded estimation controls
 
 - `prep`: preprocessed data/level metadata
 
-- `opt`: raw optimizer result from
-  [`stats::optim()`](https://rdrr.io/r/stats/optim.html)
+- `opt`: optimizer result augmented with `optimizer_diagnostics`, the
+  complete `optimizer_polish` stage history, method-selection metadata,
+  and evaluation-cache counters. For direct fitting, its core fields
+  originate from [`stats::optim()`](https://rdrr.io/r/stats/optim.html);
+  EM additionally records engine-specific diagnostics.
 
 ## Details
 
@@ -542,40 +579,44 @@ publication-workflow review of this, use:
 across non-person facet levels (`"sparse"` \< 10, `"marginal"` \< 30,
 `"standard"` \< 50, `"strong"` \>= 50).
 
-## JML estimator caveat (use MML for final reporting)
+## Estimator choice and the JML incidental-parameter caveat
 
 Joint maximum likelihood (`method = "JML"` / `"JMLE"`) estimates both
 the structural parameters (facets, thresholds, slopes) and every person
 measure as fixed parameters in one optimization. This is the
-**incidental-parameter problem** of Neyman & Scott (1948): the
-structural parameter estimates are inconsistent as the number of persons
-grows with the number of items per person held fixed, carrying a bias of
-order \\1/L\\ (where \\L\\ is the number of items per person) that does
-not vanish with sample size. Wright & Stone (1979) and Wright & Masters
-(1982, ch. 5) document an empirical \\(L-1)/L\\ correction that
-approximately removes the bias for the dichotomous Rasch model; mfrmr
-does **not** apply that correction (no `bias_correction` argument
-exists). The JML branch also does not produce a profile-likelihood
-Hessian for the structural parameters: SEs reported under JML are
-observation-table approximations (\\1/\sqrt{\sum
+**incidental-parameter problem** of Neyman & Scott (1948):
+structural-parameter bias can persist as the number of persons grows
+with the number of items per person held fixed. In classical Rasch
+settings this bias can be of order \\1/L\\ (where \\L\\ is the number of
+items per person) and therefore need not vanish by adding persons alone.
+Wright & Stone (1979) and Wright & Masters (1982, ch. 5) document an
+empirical \\(L-1)/L\\ correction that approximately removes the bias for
+the dichotomous Rasch model; mfrmr does **not** apply that correction
+(no `bias_correction` argument exists). The JML branch also does not
+produce a profile-likelihood Hessian for the structural parameters: SEs
+reported under JML are observation-table approximations (\\1/\sqrt{\sum
 \mathrm{Var}(X\_{pi})}\\) and are marked as exploratory in the
 diagnostics output.
 
 Practical recommendation:
 
-- Use **`method = "MML"`** for any value reported in a manuscript or
-  operational decision. MML integrates the person measures out under a
-  population prior and produces consistent structural estimates with
-  marginal observed-information SEs.
+- For manuscript or operational reporting, choose the estimator from the
+  inferential target and assumptions, and report the choice. MML
+  integrates person measures under a specified population model and
+  provides marginal observed-information SEs; consistency of its
+  structural estimates is conditional on an adequate response model,
+  population distribution, and regularity conditions.
 
-- Use `method = "JML"` only for fast exploratory iteration, the
-  classical FACETS-style workflow, or contexts where the bias is
-  tolerable (large \\L\\ per person, descriptive screening, or
-  teaching).
+- JML remains useful for a JMLE-oriented FACETS comparison, descriptive
+  or exploratory work, and designs with substantial information per
+  person. Report its incidental-parameter limitation and the exploratory
+  basis of this package's JML structural SEs rather than treating
+  estimator choice as a universal reporting rule.
 
-- When a third-party CML estimator is needed (the only consistent
-  Rasch-family estimator under the incidental-parameter setting), fit
-  with `eRm` and import via
+- For supported Rasch-family formulations, conditional maximum
+  likelihood is a distribution-free alternative that conditions out
+  person parameters. A third-party CML fit can be imported from `eRm`
+  with
   [`import_erm_fit()`](https://ryuya-dot-com.github.io/mfrmr/reference/import_erm_fit.md).
 
 ## Model-estimated facet interactions
@@ -619,7 +660,7 @@ This is ordered binary support, not a separate nominal-response model.
 In `PCM`, a binary fit still uses one threshold per `step_facet` level
 on the shared observed-score scale.
 
-Supported model/estimation combinations in the current release:
+Supported model/estimation combinations:
 
 - `model = "RSM"` with `method = "MML"` or `"JML"/"JMLE"`
 
@@ -666,20 +707,20 @@ Supported model/estimation combinations in the current release:
   evaluation, population forecasting, diagnostic-screening, and
   signal-detection helpers are available as caveated sensitivity
   evidence. Full FACETS-style score-side contract review, posterior
-  predictive checks, and heavy backend routes should be treated as
-  unsupported unless documented otherwise. Use
+  predictive checks, and MCMC estimation are not available for bounded
+  `GPCM`. Use
   [`gpcm_capability_matrix()`](https://ryuya-dot-com.github.io/mfrmr/reference/gpcm_capability_matrix.md)
   as the formal boundary statement for the current `GPCM` scope.
 
 Latent-regression status:
 
-- `population_formula = NULL` keeps the legacy unconditional `MML` /
+- `population_formula = NULL` keeps the standard unconditional `MML` /
   `JML` behavior.
 
-- Supplying `population_formula` activates a first-version
-  latent-regression branch for `method = "MML"` only.
+- Supplying `population_formula` activates latent regression for
+  `method = "MML"` only.
 
-- The current branch assumes a one-dimensional conditional-normal
+- This implementation assumes a one-dimensional conditional-normal
   population model with person-specific quadrature nodes \\\theta\_{nq}
   = x_n^\top \beta + \sigma z_q\\.
 
@@ -688,7 +729,7 @@ Latent-regression status:
   expanded through
   [`stats::model.matrix()`](https://rdrr.io/r/stats/model.matrix.html).
 
-- Current overlap with the ConQuest latent-regression documentation is
+- Documented overlap with the ConQuest latent-regression model is
   limited to direct estimation from response data under a unidimensional
   `MML` population model with package-built model-matrix covariates. It
   should not be described as numerical equivalence for arbitrary
@@ -745,15 +786,13 @@ these coefficients. Treat the coefficient table as point estimates
 suitable for descriptive reporting; **do not** quote \\\hat{\beta}\_j
 \pm 1.96 \cdot \mathrm{SE}\\ bounds because the SE column is not
 provided. A marginal-Hessian-based SE for \\(\boldsymbol{\beta},
-\sigma^2)\\ is planned for a future release.
+\sigma^2)\\ is not available from this function.
 
 Identification: the latent-regression intercept is identifiable only
 under the default `noncenter_facet = "Person"` (which sum-to-zero-
-centers all non-Person facets). If you re-anchor identification on a
-non-Person facet, the intercept becomes confounded with the freed
-Person-facet mean and the coefficient table becomes unidentified; mfrmr
-does not currently warn about this failure mode in the design-matrix
-check.
+centers all non-Person facets). `fit_mfrm()` therefore rejects an active
+latent-regression model with a different `noncenter_facet` rather than
+returning a confounded intercept.
 
 Anchor inputs are optional:
 
@@ -765,7 +804,7 @@ Anchor inputs are optional:
 
 Anchor review behavior:
 
-- `fit_mfrm()` runs an internal anchor review.
+- `fit_mfrm()` automatically runs an anchor review.
 
 - invalid rows are removed before estimation.
 
@@ -783,9 +822,11 @@ Facet sign orientation:
 
 ## Performance tips
 
-For exploratory work, `method = "JML"` is usually faster than
-`method = "MML"`, but it may require a larger `maxit` to converge on
-larger datasets.
+When JML is the prespecified estimand, it is often faster than MML but
+may require a larger `maxit` on larger datasets. Do not switch from MML
+to JML only to shorten runtime: integrating over a population
+distribution and treating person parameters as fixed effects are
+different analysis choices.
 
 For MML runs, `quad_points` is the main accuracy/speed trade-off. The
 `@param quad_points` tier table is the authoritative reference; in
@@ -795,12 +836,12 @@ short:
 
 - `quad_points = 15` is an intermediate option when runtime matters.
 
-- `quad_points = 31` is the package default and the publication tier:
-  the marginal log-likelihood is stable enough for direct manuscript
-  reporting.
+- `quad_points = 31` is the package default and a suitable starting
+  point for a final analysis; always review convergence and, when
+  conclusions are sensitive, compare a denser quadrature rule.
 
-- `quad_points = 61` (or higher) is reserved for ultra-precise
-  benchmarking on very narrow score supports.
+- `quad_points = 61` (or higher) supports sensitivity checks on narrow
+  score distributions at additional computational cost.
 
 - `mml_engine = "direct"` remains the most stable general-purpose path.
 
@@ -808,17 +849,14 @@ short:
   without a latent-regression population model.
 
 - Benchmark your own workload before using `mml_engine = "em"` or
-  `"hybrid"` for final reporting; `direct` remains the safer default
-  when you have not compared engines for your data.
+  `"hybrid"` for final reporting; `direct` remains the documented
+  default when you have not compared engines for your data.
 
-- For RSM and PCM fits only, an opt-in C++ MML backend can be enabled
-  with `options(mfrmr.use_cpp11_backend = TRUE)`. The backend implements
-  the same physicist Gauss-Hermite quadrature and sum-to-zero
-  identification as the pure-R engine, validated against the pure-R
-  reference at `tolerance = 1e-12` on a fixed regression fixture. It is
-  opt-in for this release; the default flip to ON is planned for a
-  follow-up release after a cycle of community testing. GPCM fits stay
-  on the pure-R engine regardless of the option.
+- When a direct code-zero stage stops ahead of the terminal-gradient
+  gate, bounded polishing is automatic. Inspect
+  `fit$opt$optimizer_polish$Stages` rather than repeatedly lowering
+  `reltol` without reviewing the retained objective, gradient, and
+  parameter changes.
 
 Downstream diagnostics can also be staged:
 
@@ -928,52 +966,61 @@ marginal-likelihood framework of Bock and Aitkin (1981).
 ## Examples
 
 ``` r
-# Fast smoke run: a JML fit on the bundled `example_core` toy
-# dataset finishes in well under a second and returns a populated
-# `summary` overview ready for inspection.
-toy <- load_mfrmr_data("example_core")
-fit_quick <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                      method = "JML", maxit = 30)
-fit_quick$summary[, c("Model", "Method", "N", "Converged")]
-#> # A tibble: 1 × 4
-#>   Model Method     N Converged
-#>   <chr> <chr>  <int> <lgl>    
-#> 1 RSM   JML      768 TRUE     
+# Lightweight executable mechanics example on the connected teaching data.
+# The small quadrature grid keeps CRAN example time short; the tighter
+# portable tolerance setting keeps this reduced example numerically stable.
+# Use the documented default grid and a sensitivity check for final work.
+toy <- load_mfrmr_data("example_operational")
+fit_quick <- fit_mfrm(
+  toy, "Person", c("Rater", "Criterion"), "Score",
+  method = "MML", model = "RSM", quad_points = 7, maxit = 30,
+  reltol = 1e-11
+)
+fit_quick$summary[, c(
+  "Model", "Method", "N", "Converged", "InferenceReady",
+  "ConvergenceSeverity"
+)]
+#> # A tibble: 1 × 6
+#>   Model Method     N Converged InferenceReady ConvergenceSeverity
+#>   <chr> <chr>  <int> <lgl>     <lgl>          <chr>              
+#> 1 RSM   MML      282 TRUE      TRUE           pass               
 
 if (FALSE) { # \dontrun{
-# Full run with the package default MML estimator (recommended for
-# final reporting because person parameters are integrated out under
-# an N(0, 1) prior). The default `quad_points = 31` is the
-# publication tier; `quad_points = 7` below is an exploratory speed
-# setting and should not be used as the final manuscript fit.
+# Full run with the package default MML estimator. This route integrates
+# person parameters under an N(0, 1) population model, so its reporting
+# value depends on the response-model and population assumptions. The
+# default `quad_points = 31` is a practical starting value; compare a
+# larger grid when quadrature sensitivity matters.
 fit <- fit_mfrm(
   data = toy,
   person = "Person",
   facets = c("Rater", "Criterion"),
   score = "Score",
   model = "RSM",
-  quad_points = 7,
+  quad_points = 31,
   maxit = 30
 )
 fit$summary
 s_fit <- summary(fit)
-s_fit$overview[, c("Model", "Method", "Converged")]
-# Look for: Converged = TRUE. If FALSE, raise `maxit`, relax `reltol`,
-#   or inspect `summary(fit)$key_warnings` for sparse-cell or
-#   identification flags.
+s_fit$overview[, c("Model", "Method", "Converged", "InferenceReady",
+                   "ConvergenceSeverity")]
+# `InferenceReady = FALSE` is a numerical stop signal. A TRUE value only
+# clears the package's optimizer review; model specification, design,
+# identification, and inferential assumptions still require review.
 s_fit$person_overview
-# Look for: Mean ~ 0 logits and SD ~ 1 logit are typical when the
-#   sample is centred on the test difficulty. SD < 0.5 suggests the
-#   test is too easy / hard for this group; SD > 1.5 suggests strong
-#   targeting mismatch or extreme-score persons (see `Extreme` flag).
+# Compare the person distribution with the facet and step locations. The
+# scale identification does not create universal targeting thresholds.
 s_fit$targeting
-# Look for: |Targeting| < ~0.5 logits is comfortable; larger absolute
-#   values mean persons sit systematically above or below the facet
-#   means under the package's sum-to-zero identification.
+# Interpret targeting magnitude against the intended population and score
+# use rather than a universal pass/fail cutoff.
 p_fit <- plot(fit, draw = FALSE)
-p_fit$wright_map$data$plot
+p_fit$name
+head(p_fit$data$locations)
+# The bare plot route is the native Wright map and includes available
+# facet uncertainty. Use plot(fit, type = "bundle") for the three-plot
+# Wright/pathway/category overview.
 
-# JML is available for exploratory / fast iteration passes:
+# JML is a distinct fixed-person-effects route, not a drop-in speed setting:
 fit_jml <- fit_mfrm(
   data = toy,
   person = "Person",
@@ -983,7 +1030,10 @@ fit_jml <- fit_mfrm(
   model = "RSM",
   maxit = 30
 )
-summary(fit_jml)$overview[, c("Model", "Method", "Converged")]
+summary(fit_jml)$overview[, c(
+  "Model", "Method", "Converged", "InferenceReady",
+  "ConvergenceSeverity"
+)]
 
 # Latent regression (MML only) uses person-level background variables:
 person_tbl <- unique(toy[c("Person")])

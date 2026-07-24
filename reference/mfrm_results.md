@@ -12,7 +12,9 @@ mfrm_results(
   response_time_data = NULL,
   response_time_facets = NULL,
   response_time_score = NULL,
-  output = c("object", "summary", "tables", "html")
+  output = c("object", "summary", "tables", "html"),
+  diagnostics = NULL,
+  compute = c("auto", "never")
 )
 ```
 
@@ -26,7 +28,9 @@ mfrm_results(
   [`run_mfrm_facets()`](https://ryuya-dot-com.github.io/mfrmr/reference/run_mfrm_facets.md).
   A standard long-format `data.frame` is also accepted when person and
   score columns can be inferred unambiguously from common names such as
-  `Person` and `Score`; all remaining columns are treated as facets.
+  `Person` and `Score`; remaining measurement columns must use
+  recognizable facet-role names. Ambiguous extra columns are rejected
+  rather than guessed as facets.
 
 - include:
 
@@ -66,6 +70,21 @@ mfrm_results(
   for its compact summary, `"tables"` for a named list of available data
   frames, or `"html"` for a temporary HTML report.
 
+- diagnostics:
+
+  Optional matching output from
+  [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md).
+  When supplied, it is identity-checked and reused instead of
+  recomputed.
+
+- compute:
+
+  Diagnostic computation policy. `"auto"` preserves the standard
+  behavior; `"never"` collects only sections that can be built without
+  computing diagnostics and marks every requested dependent section as
+  `"not_computed"`. Matching supplied or stored diagnostics are still
+  reused under `"never"`.
+
 ## Value
 
 Depending on `output`, an `mfrm_results` object, a
@@ -85,9 +104,13 @@ and
 [`reporting_checklist()`](https://ryuya-dot-com.github.io/mfrmr/reference/reporting_checklist.md).
 Sections that are unsupported for a particular fit are retained in the
 `status` table as `not_available` rather than stopping the whole results
-workflow. The returned object also carries `next_actions` and
-`input$reproducible_code` so users can move from the comprehensive first
-screen to explicit reporting or replay code.
+workflow. The additive `readiness` table keeps Numerical, Data, Design,
+Stability, Diagnostics, Reporting, and Plot interpretation states
+separate. Plot routes can therefore remain available for diagnosis while
+`InterpretationStatus` marks them as review-only. The returned object
+also carries `next_actions` and `input$reproducible_code` so users can
+move from the comprehensive first screen to explicit reporting or replay
+code.
 
 ## Include presets
 
@@ -142,47 +165,55 @@ Start with `summary(res)`. The most useful fields are:
 - `overview`: input mode, model, method, table count, and plot-route
   count
 
+- `readiness`: separate upstream analysis and plot-interpretation gates
+
 - `triage`: first-screen signals ordered by unavailable/review/info/ok
 
 - `status`: which sections were available, skipped, or unsupported
 
-- `plot_map`: the supported `plot(res, type = ...)` routes for this
-  object
+- `plot_map`: supported plot routes, availability, and interpretation
+  status
 
 - `next_actions`: recommended follow-up calls
 
-- `reproducible_code`: replay scaffold for the first-screen route
+- `reproducible_code`: replay script for the first-screen route
 
 ## Data-frame input
 
-Direct data-frame input is intentionally conservative. It is intended
-for standard columns such as `Person`, `Score`, `Rater`, and
-`Criterion`. For research scripts, use
+Direct data-frame input is intentionally narrow. It accepts unambiguous
+`Person` / `Score` columns and familiar facet-role names such as
+`Rater`, `Item`, `Task`, or `Criterion`, and fits the `RSM` / `MML`
+route. It stops when other columns could be metadata, grouping
+variables, or background variables rather than silently treating them as
+measurement facets. For research scripts, use
 [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
-or
-[`run_mfrm_facets()`](https://ryuya-dot-com.github.io/mfrmr/reference/run_mfrm_facets.md)
-explicitly when column roles, model, method, anchors, or missing-data
-rules need to be documented. Use
+explicitly so column roles, model, method, anchors, and missing-data
+rules are recorded. Use
 [`mfrm_results_interactive()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results_interactive.md)
-only when you want an opt-in column-selection wizard in an interactive
-session.
+only for opt-in column selection at the console.
 
 ## Visualization and HTML
 
-`plot(res)` routes to a FACETS-style model-level visual bundle by
-default. Other routes include `plot(res, type = "wright")`, `"pathway"`,
-`"fit_pathway"`, `"qc"`, `"category"`, `"anchors"`, `"response_time"`,
-and `"tables"`. The Wright map is the required first fitted-scale
-artifact; `"fit_pathway"` is a follow-up with Infit or Outfit on the
-horizontal axis and measure on the vertical axis. `output = "html"`
-writes a lightweight temporary HTML file; use
+`plot(res)` routes to the primary native Wright map when the fitted
+object contains compatible person and facet locations. This default
+retains available mfrmr facet uncertainty. Use `plot(res, type = "fit")`
+when the explicit three-plot Wright/pathway/category bundle is wanted.
+The compact native default discloses any omitted facet locations in its
+subtitle and `data$retention`; use `plot(res, top_n = Inf)` for a
+complete final map. Other routes include `plot(res, type = "wright")`,
+`"pathway"`, `"fit_pathway"`, `"qc"`, `"category"`, `"anchors"`,
+`"response_time"`, and `"tables"`. The Wright map is the required first
+fitted-scale artifact; `"fit_pathway"` is a follow-up with Infit or
+Outfit on the horizontal axis and measure on the vertical axis.
+`output = "html"` writes a lightweight temporary HTML file; use
 [`launch_mfrmr_viewer()`](https://ryuya-dot-com.github.io/mfrmr/reference/launch_mfrmr_viewer.md)
 when you want an optional local Shiny reader for an already-created
 `mfrm_results` object. Use
 [`export_mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_results.md)
-for a lightweight download of the comprehensive results object, or
+for a compact analysis archive of the comprehensive results object, or
 [`export_mfrm_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_bundle.md)
-when a fit-centered durable analysis archive is needed.
+when a fit-centered durable analysis archive is needed. Neither route
+deidentifies its contents.
 
 ## Typical workflow
 
@@ -192,8 +223,9 @@ when a fit-centered durable analysis archive is needed.
 
 2.  Call `res <- mfrm_results(fit)`.
 
-3.  Read `summary(res, view = "brief")`, then create the required
-    `plot(res, type = "wright", show_ci = TRUE)` artifact.
+3.  Read `summary(res, view = "brief")` and its `readiness` table, then
+    create the required
+    `plot(res, type = "wright", show_ci = TRUE, top_n = Inf)` artifact.
 
 4.  Read `summary(res)$triage`, `summary(res)$status`,
     `summary(res)$plot_map`, and `summary(res)$next_actions`.
@@ -202,8 +234,10 @@ when a fit-centered durable analysis archive is needed.
     needed.
 
 6.  Use `export_mfrm_results(res, preset = "starter")` to write the
-    Wright map, CSV, report, RDS, replay, and manifest files for handoff
-    or review.
+    Wright map, CSV, report, RDS, replay, and manifest files for
+    controlled review. Treat the folder as potentially identifying
+    unless it has been separately transformed and reviewed under the
+    applicable data-handling policy.
 
 7.  Use
     `plot(res, type = "fit_pathway", include_person = TRUE, top_n_person = 12, person_labels = "none", facet_labels = "flagged")`
@@ -242,8 +276,13 @@ fit <- fit_mfrm(toy_small, "Person", c("Rater", "Criterion"), "Score",
                 method = "JML", maxit = 30)
 res <- mfrm_results(fit)
 
+wright <- plot(res, draw = FALSE)
+wright$name
+fit_bundle <- plot(res, type = "fit", draw = FALSE)
+
 sx <- summary(res)
 sx$overview
+sx$readiness
 sx$triage
 sx$plot_map
 sx$next_actions
@@ -251,10 +290,10 @@ mfrm_results(fit, include = "validation", output = "summary")$status
 
 plot(res, type = "qc", draw = FALSE)
 
-# Direct data-frame input is available for conservative exploratory use
-# when Person and Score columns are unambiguous.
+# Direct data-frame input is available only after selecting unambiguous
+# measurement columns. Extra study/group columns require an explicit fit.
 mfrm_results(
-  toy_small,
+  toy_small[, c("Person", "Rater", "Criterion", "Score")],
   include = c("fit", "diagnostics"),
   output = "summary"
 )$mapping

@@ -160,9 +160,10 @@ range. Points are colored by facet for easy identification.
 
 ``` r
 if (FALSE) { # interactive()
-toy <- load_mfrmr_data("example_core")
+toy <- load_mfrmr_data("example_operational")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", model = "RSM", maxit = 30)
+                method = "MML", model = "RSM",
+                quad_points = 7, maxit = 30)
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 p <- plot_bubble(fit, diagnostics = diag, draw = FALSE)
 head(p$data$table[, c("Facet", "Level", "Estimate", "Infit", "Outfit")])

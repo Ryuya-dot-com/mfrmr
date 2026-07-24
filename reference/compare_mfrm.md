@@ -45,7 +45,7 @@ An object of class `mfrm_comparison` (named list) with:
 - `table`: data.frame of model-level statistics (LogLik, AIC, BIC,
   Delta_AIC, AkaikeWeight, Delta_BIC, BICWeight, npar, nobs, WeightedN,
   ICSampleSize, ICSampleSizeBasis, Model, Method, Converged,
-  ICComparable).
+  InferenceReady, ConvergenceSeverity, ICComparable).
 
 - `lrt`: data.frame with likelihood-ratio test result (only when two
   models are supplied and `nested = TRUE`). Contains `ChiSq`, `df`,

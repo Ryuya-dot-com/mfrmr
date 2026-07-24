@@ -18,7 +18,7 @@
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from Facets to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
@@ -101,8 +101,9 @@
 named vector, or one-row data frame. When <code>sim_spec = NULL</code>, names may use
 canonical variables (<code>n_person</code>, <code>n_rater</code>, <code>n_criterion</code>,
 <code>raters_per_person</code>) or role keywords (<code>person</code>, <code>rater</code>, <code>criterion</code>,
-<code>assignment</code>). For the currently exposed facet keys, the schema-only
-future branch input <code>design$facets = c(person = ..., rater = ..., criterion = ...)</code> is also accepted. Do not specify the same variable
+<code>assignment</code>). A nested named-facet form,
+<code>design$facets = c(person = ..., rater = ..., criterion = ...)</code>, is also
+accepted for the supported person/rater/criterion design. Do not specify the same variable
 through both <code>design</code> and the scalar count arguments.</p></dd>
 
 
@@ -259,14 +260,14 @@ from <code>step_span</code></p></li>
 <li><p>if <code>thresholds</code> is a numeric vector, it is used as one common threshold set</p></li>
 <li><p>if <code>thresholds</code> is a named list, numeric matrix, or data frame, threshold
 values may vary by <code>StepFacet</code> (currently <code>Criterion</code> or <code>Rater</code>)</p></li>
-</ul><p>For bounded <code>GPCM</code>, the generator now requires an explicit slope
-contract in parallel with the threshold table. The current public branch
-keeps <code>slope_facet == step_facet</code>, normalizes supplied slopes to the same
-geometric-mean-one log-slope identification used by <code><a href="fit_mfrm.html">fit_mfrm()</a></code>, and uses
-the internal <code>category_prob_gpcm()</code> helper for response sampling. Broader
-arbitrary-facet planning remains restricted until that slope-aware contract
-is generalized beyond the current role-based design, population-forecasting,
-diagnostic-screening, and signal-detection helpers.</p>
+</ul><p>For bounded <code>GPCM</code>, the generator requires an explicit slope contract in
+parallel with the threshold table. The supported route keeps
+<code>slope_facet == step_facet</code>, normalizes supplied slopes to the same
+geometric-mean-one log-slope identification used by <code><a href="fit_mfrm.html">fit_mfrm()</a></code>, and
+samples responses from the corresponding GPCM category probabilities.
+Independent arbitrary slope-facet planning is not supported by these
+design, population-forecasting, diagnostic-screening, or signal-detection
+helpers.</p>
 <p>Assignment handling is also explicit:</p><ul><li><p><code>"crossed"</code> uses the full person x rater x criterion design</p></li>
 <li><p><code>"rotating"</code> assigns a deterministic rotating subset of raters per person</p></li>
 <li><p><code>"sparse_linked"</code> assigns most persons to an incomplete rater subset and

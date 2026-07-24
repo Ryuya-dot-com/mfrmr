@@ -67,7 +67,7 @@ external value without indicating a fit difference.
 facets_fit_df_guide()
 #> mfrmr FACETS Fit df Guide 
 #>   Class: mfrm_facets_fit_df_guide
-#>   Components (7): summary, formula_guide, column_guide, decision_guide, interpretation_guide, references, settings
+#>   Components: 7
 #> 
 #> Guide overview
 #>                                    Scope
@@ -98,7 +98,8 @@ facets_fit_df_guide()
 #>  include_references  TRUE
 #> 
 #> Notes
-#>  - FACETS-style fit df and ZSTD comparison guide. Compare MnSq first, then df and ZSTD.
+#>  - FACETS-style fit df and ZSTD comparison guide. Compare MnSq first, then df
+#>    and ZSTD.
 facets_fit_df_guide()$decision_guide
 #>   Step                                                         Question
 #> 1    1                                           Are MnSq values close?

@@ -81,9 +81,9 @@ Object of class `mfrm_dif_interaction` with:
 
 ## Details
 
-This function uses the fitted model's observation-level residuals (from
-the internal `compute_obs_table()` function) rather than re-estimating
-the model. For each facet-level x group-value cell, it computes:
+This function uses observation-level residuals computed from the fitted
+model rather than re-estimating it. For each facet-level x group-value
+cell, it computes:
 
 - N: number of observations in the cell
 

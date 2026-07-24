@@ -18,7 +18,7 @@
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from Facets to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
@@ -107,8 +107,9 @@ specification.</p></dd>
 named vector, or one-row data frame. Names may use canonical variables
 (<code>n_person</code>, <code>n_rater</code>, <code>n_criterion</code>, <code>raters_per_person</code>), current
 public aliases (for example <code>n_judge</code>, <code>n_task</code>, <code>judge_per_person</code>), or
-role keywords (<code>person</code>, <code>rater</code>, <code>criterion</code>, <code>assignment</code>). The
-schema-only future branch input <code>design$facets = c(person = ..., judge = ..., task = ...)</code> is also accepted for the currently exposed facet keys.
+role keywords (<code>person</code>, <code>rater</code>, <code>criterion</code>, <code>assignment</code>). The nested
+named-facet form <code>design$facets = c(person = ..., judge = ..., task = ...)</code>
+is also accepted for the supported person/rater/criterion design.
 Do not specify the same variable through both <code>design</code> and the scalar
 count arguments.</p></dd>
 
@@ -157,12 +158,11 @@ specification</p></li>
 <code>n_person</code>/<code>n_rater</code>/<code>n_criterion</code>/<code>raters_per_person</code></p></li>
 <li><p><code>design_descriptor</code>: role-based description of design variables carried
 from the underlying planning object</p></li>
-<li><p><code>planning_scope</code>: explicit record of the current planning contract,
-including a <code>facet_manifest</code> and future-planner scaffold marker</p></li>
+<li><p><code>planning_scope</code>: explicit record of the supported planning contract,
+including a <code>facet_manifest</code></p></li>
 <li><p><code>planning_constraints</code>: explicit record of mutable/locked design variables</p></li>
-<li><p><code>planning_schema</code>: combined planner-schema contract carrying the role
-table, current boundary, mutability map, facet manifest, and a
-schema-only future facet-count table</p></li>
+<li><p><code>planning_schema</code>: structured planning metadata carrying the role
+table, supported boundary, mutability map, and facet manifest</p></li>
 <li><p><code>gpcm_boundary</code>: bounded-<code>GPCM</code> caveat row when a <code>GPCM</code> forecast route is
 used</p></li>
 <li><p><code>settings</code>: forecasting settings</p></li>

@@ -96,7 +96,7 @@ An object of class `mfrm_bias` with:
   user to the appropriate follow-up helper
 
 - `inference_tier`: summary label indicating that the bias rows are
-  intended for screening and follow-up review in this release
+  intended for screening and follow-up review
 
 - `optimization_failures`: per-cell record of any inner-loop optimizer
   failures encountered while estimating the bias parameters; empty when

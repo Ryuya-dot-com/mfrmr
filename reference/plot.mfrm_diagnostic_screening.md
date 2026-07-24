@@ -1,4 +1,4 @@
-# Plot a diagnostic-screening validation study
+# Plot a diagnostic-screening simulation study
 
 Builds an integrated visual summary from
 [`evaluate_mfrm_diagnostic_screening()`](https://ryuya-dot-com.github.io/mfrmr/reference/evaluate_mfrm_diagnostic_screening.md)
@@ -61,7 +61,7 @@ plot(
 
 - ...:
 
-  Reserved for future extensions.
+  Reserved for generic compatibility.
 
 ## Value
 

@@ -69,10 +69,10 @@ case families:
 - `synthetic_truth`: checks whether recovered facet measures align with
   the known generating values from the package's synthetic design.
 
-- `synthetic_latent_regression`: checks whether the first-version
-  latent-regression `MML` branch recovers known population coefficients,
-  residual latent variance, criterion ordering, and posterior-shift
-  direction from a synthetic overlap case.
+- `synthetic_latent_regression`: checks whether the latent-regression
+  `MML` branch recovers known population coefficients, residual latent
+  variance, criterion ordering, and posterior-shift direction from a
+  synthetic overlap case.
 
 - `synthetic_latent_regression_omit`: checks whether the
   population-model complete-case omission policy is reflected in the
@@ -136,7 +136,7 @@ remains visible.
   package-side check until actual ConQuest output tables are supplied.
 
 - `population_policy_checks`: complete-case omission checks for
-  population model benchmark fixtures.
+  population model reference data.
 
 - `source_profile`: source-backed rules used by the reference checks.
 

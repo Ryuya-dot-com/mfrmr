@@ -18,7 +18,7 @@
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from Facets to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
@@ -165,8 +165,11 @@ final estimation/reporting.</p></li>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>, method <span class="op">=</span> <span class="st">"JML"</span>, maxit <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_operational"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span></span>
+<span class="r-in"><span>  method <span class="op">=</span> <span class="st">"MML"</span>, quad_points <span class="op">=</span> <span class="fl">7</span>, maxit <span class="op">=</span> <span class="fl">30</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">out</span> <span class="op">&lt;-</span> <span class="fu">data_quality_report</span><span class="op">(</span></span></span>
 <span class="r-in"><span>  <span class="va">fit</span>,</span></span>
 <span class="r-in"><span>  data <span class="op">=</span> <span class="va">toy</span>, person <span class="op">=</span> <span class="st">"Person"</span>,</span></span>
@@ -175,49 +178,31 @@ final estimation/reporting.</p></li>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">out</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> mfrmr Data Quality Summary </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Class: mfrm_data_quality</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Components (14): summary, quality_overview, quality_flags, model_match, row_review, unknown_elements, category_counts, score_support_review, category_usage_by_facet, category_usage_summary, facet_response_patterns, caveats, score_map, settings</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Components: 14</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Data quality overview</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  TotalLinesInData TotalDataLines TotalNonBlankResponsesFound MissingScoreRows</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               768            768                         768                0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>               282            282                         282                0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  MissingFacetRows MissingPersonRows InvalidWeightRows OutOfRangeScoreRows</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 0                 0                 0                   0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  ValidResponsesUsedForEstimation ZeroCountScoreCategories</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                              768                        0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                              282                        0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  IntermediateZeroCountScoreCategories FacetLevelsWithZeroCategories</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                     0                             0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  FacetLevelsWithIntermediateZeroCategories FacetLevelsWithSparseCategories</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                          0                               0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                          0                               6</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  FacetLevelsWithSingleCategoryUse FacetLevelsWithDominantCategoryUse</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                 0                                  0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  FacetLevelsWithBoundaryOnlyUse ScoreSupportCaveats</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                               0                   0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Review rows: quality_overview</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                     Area Status Count         Unit PercentOfData</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             Design match     ok     0       levels            NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       Facet category use     ok     0 facet levels            NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Facet response patterns     ok     0 facet levels            NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                     Rows     ok     0         rows             0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            Score support     ok     0   conditions            NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                           Message</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                            No raw-data level outside the fitted design was found.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                       No facet-level zero or sparse category-use issue was found.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         No single-category or dominant-category facet response pattern was found.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  No row-level missingness, invalid weight, or out-of-range score issue was found.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                       No score-support gap was found over the fitted score scale.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                        NextStep QualityFlags</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       Proceed with estimation diagnostics and reporting checks.            0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                Continue to design-match checks.            0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                Continue to design-match checks.            0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Continue to score-support and facet-level category-use checks.            0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                    Continue to facet-level category-use checks.            0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  HighSeverityFlags</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                  0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                  0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                  0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                  0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                  0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Review rows: quality_flags</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                Area Severity                                  Flag Count</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Facet category use   review Facet levels have sparse category use     6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          Unit PercentOfData</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  facet levels            NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                               Action</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Interpret category-functioning evidence for these levels as sparse.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Settings</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                   Setting Value</span>
@@ -225,9 +210,12 @@ final estimation/reporting.</p></li>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  dominant_category_cutoff  0.95</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Notes</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Data quality summary for missingness, row status, score support, and category usage.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - QC overview: 0 high-priority area(s), 0 review area(s).</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - No priority QC flags were found in the supplied data-quality checks.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Data quality summary for missingness, row status, score support, and</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    category usage.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - QC overview: 0 high-priority area(s), 1 review area(s).</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Priority QC flags: 1 flag(s), including 0 high-severity flag(s).</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Facet-level category use: 0 level(s) have zero-count categories; 0 have</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    zero-count intermediate categories; 6 have sparse non-zero categories.</span>
 <span class="r-in"><span><span class="va">p_dq</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">out</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">p_dq</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">plot</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "dashboard"</span>

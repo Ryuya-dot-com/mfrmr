@@ -40,8 +40,8 @@ apply when interpreting these residual-based screens:
   transformation. Under `GPCM` the fair-average panel of
   [`plot_qc_dashboard()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_qc_dashboard.md)
   therefore renders with an explicit "unavailable" status, and the
-  broader compatibility-export helpers stay outside the validated `GPCM`
-  boundary.
+  broader compatibility-export helpers stay outside the documented
+  `GPCM` boundary.
 
 Use
 [`gpcm_capability_matrix()`](https://ryuya-dot-com.github.io/mfrmr/reference/gpcm_capability_matrix.md)
@@ -151,8 +151,8 @@ plot route.
   for `RSM` / `PCM`. The bounded `GPCM` branch can also call
   [`plot_qc_dashboard()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_qc_dashboard.md),
   but its fair-average panel reports an explicit unavailability
-  indicator because that panel's score-metric semantics have not yet
-  been generalized beyond the Rasch-family branch.
+  indicator because that panel's score-metric semantics are limited to
+  the Rasch-family branch.
 
 - "Which figures are already supported by my current run?" Use
   [`reporting_checklist()`](https://ryuya-dot-com.github.io/mfrmr/reference/reporting_checklist.md)
@@ -235,11 +235,10 @@ interpretation contract. They let users change colors, labels, panels,
 or rendering technology without losing the measurement scale, caveats,
 and caption boundary attached to the package-native plot.
 
-## Visual coverage for this release
+## Visual coverage
 
-This release treats the plotting layer as sufficient when the current
-run supports all of the following follow-up roles through public
-helpers:
+The plotting layer supports the following public follow-up roles when
+the fitted object contains the required data:
 
 - First-pass triage:
   [`plot_qc_dashboard()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_qc_dashboard.md)

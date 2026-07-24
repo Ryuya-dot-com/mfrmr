@@ -132,8 +132,11 @@ Supported `which` values:
 ## Examples
 
 ``` r
-toy <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+toy <- load_mfrmr_data("example_operational")
+fit <- fit_mfrm(
+  toy, "Person", c("Rater", "Criterion"), "Score",
+  method = "MML", quad_points = 7, maxit = 30
+)
 tbl <- apa_table(fit, which = "summary", caption = "Model summary", note = "Toy example")
 tbl_facets <- apa_table(fit, which = "summary", branch = "facets")
 fit_bundle <- build_summary_table_bundle(summary(fit))
@@ -141,7 +144,7 @@ tbl_from_summary <- apa_table(fit_bundle, which = "facet_overview")
 summary(tbl)
 #> APA Table Summary
 #>  Branch Style   Which Rows Columns NumericColumns MissingValues
-#>     apa   apa summary    1      42             24             7
+#>     apa   apa summary    1      52             30             3
 #> 
 #> Caption
 #>  - Model summary
@@ -150,15 +153,15 @@ summary(tbl)
 #>  - Toy example
 #> 
 #> Numeric profile
-#>            Column N    Mean SD     Min     Max
-#>               AIC 1 1753.90 NA 1753.90 1753.90
-#>               BIC 1 2013.95 NA 2013.95 2013.95
-#>        Categories 1    4.00 NA    4.00    4.00
-#>   ConvergenceCode 1    0.00 NA    0.00    0.00
-#>      EMIterations 0      NA NA      NA      NA
-#>  EMRelativeChange 0      NA NA      NA      NA
-#>      ExtremeHighN 1    0.00 NA    0.00    0.00
-#>       ExtremeLowN 1    0.00 NA    0.00    0.00
+#>            Column N   Mean SD    Min    Max
+#>               AIC 1 712.40 NA 712.40 712.40
+#>               BIC 1 745.18 NA 745.18 745.18
+#>        Categories 1   4.00 NA   4.00   4.00
+#>   ConvergenceCode 1   0.00 NA   0.00   0.00
+#>      EMIterations 0     NA NA     NA     NA
+#>  EMRelativeChange 0     NA NA     NA     NA
+#>   EffectiveReltol 1   0.00 NA   0.00   0.00
+#>      ExtremeHighN 1   0.00 NA   0.00   0.00
 p <- plot(tbl, draw = FALSE)
 p_facets <- plot(tbl_facets, type = "numeric_profile", draw = FALSE)
 p$data$plot

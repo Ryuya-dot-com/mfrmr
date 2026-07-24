@@ -22,21 +22,16 @@ mirror the public plotting family shown here.
 
 library(mfrmr)
 
-toy <- load_mfrmr_data("example_core")
+toy <- load_mfrmr_data("example_operational")
 
 fit <- fit_mfrm(
   toy,
   person = "Person",
   facets = c("Rater", "Criterion"),
   score = "Score",
-  method = "JML",
-  model = "RSM",
-  maxit = 20
+  method = "MML",
+  model = "RSM"
 )
-#> Warning: Optimizer did not fully converge (code = 1, status = iteration_limit).
-#> Optimizer reached the iteration limit before the terminal gradient became small
-#> enough for review-only acceptance. Consider increasing maxit (current: 20) or
-#> relaxing reltol (current: 1e-06).
 
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 checklist <- reporting_checklist(fit, diagnostics = diag)
@@ -51,20 +46,20 @@ subset(
 #> 27                Residual PCA visuals     FALSE
 #> 28 Connectivity / design-matrix visual      TRUE
 #> 29  Inter-rater / displacement visuals      TRUE
-#> 30             Strict marginal visuals     FALSE
+#> 30             Strict marginal visuals      TRUE
 #> 31                  Bias / DIF visuals     FALSE
-#> 32      Precision / information curves     FALSE
+#> 32      Precision / information curves      TRUE
 #> 33                Fit/category visuals      TRUE
-#>                                                                                                                                NextAction
-#> 25                                               Include a Wright map when the manuscript benefits from a shared-scale targeting display.
-#> 26                              Use the dashboard as a first-pass triage view, then move to the specific follow-up plot behind each flag.
-#> 27                                                  Run residual PCA if you want scree/loadings visuals for residual-structure follow-up.
-#> 28                                                                Use the design-matrix view to support linkage and comparability claims.
-#> 29                                                Use displacement and inter-rater views to localize QC issues after dashboard screening.
-#> 30 For MML reporting runs, call diagnose_mfrm(..., diagnostic_mode = "both") to enable strict marginal follow-up visuals where supported.
-#> 31                                                                 Run bias or DIF screening before discussing interaction-level visuals.
-#> 32                                                         Resolve convergence before using information or precision curves in reporting.
-#> 33                                                 Use category curves and fit visuals as local descriptive follow-up after QC screening.
+#>                                                                                                                       NextAction
+#> 25                                      Include a Wright map when the manuscript benefits from a shared-scale targeting display.
+#> 26                     Use the dashboard as a first-pass triage view, then move to the specific follow-up plot behind each flag.
+#> 27                                         Run residual PCA if you want scree/loadings visuals for residual-structure follow-up.
+#> 28                                                       Use the design-matrix view to support linkage and comparability claims.
+#> 29                                       Use displacement and inter-rater views to localize QC issues after dashboard screening.
+#> 30 Treat strict marginal plots as exploratory corroboration screens, then corroborate with design review and legacy diagnostics.
+#> 31                                                        Run bias or DIF screening before discussing interaction-level visuals.
+#> 32                                Use information curves to describe precision across theta when that is the reporting question.
+#> 33                                        Use category curves and fit visuals as local descriptive follow-up after QC screening.
 ```
 
 ## 1. Targeting and scale structure
@@ -84,13 +79,14 @@ Interpretation:
 - Compare person density on the left to facet and step locations on the
   right.
 - Large gaps suggest weaker targeting in that logit region.
-- Wide overlap in confidence whiskers means neighboring levels are not
-  cleanly separated.
+- Wide overlap in marginal confidence whiskers suggests imprecision;
+  estimate the relevant pairwise contrast directly before claiming that
+  two levels are separated or indistinguishable.
 
 The native view above remains the recommended analytic figure because it
-keeps facet/step uncertainty visible. For a closer FACETS-facing
-handoff, switch the renderer and leave `show_ci` at its default `FALSE`.
-The fitted coordinates do not change.
+keeps facet uncertainty and fitted step locations visible. For a closer
+FACETS-facing handoff, switch the renderer and leave `show_ci` at its
+default `FALSE`. The fitted coordinates do not change.
 
 ``` r
 
@@ -109,13 +105,13 @@ plot(
 This renderer uses one common logit ruler, a `*` person-frequency
 column, signed facet headers, every facet level, and short labeled
 score-transition lines. It is FACETS-style visual correspondence, not a
-claim that `mfrmr` and FACETS produce numerically identical estimates.
-An external FACETS golden output and aligned estimator, identification,
-score, and orientation settings are still required for a
-numerical-equivalence statement. Set `show_ci = TRUE` only when you
-deliberately want a hybrid FACETS-style ruler with the mfrmr uncertainty
-extension. Use `draw = FALSE` and inspect the `facets_style` tables when
-rebuilding the display with ggplot2 or another graphics system.
+claim that `mfrmr` and FACETS produce numerically identical estimates. A
+numerical comparison requires output from a documented FACETS version
+and aligned estimator, identification, score, and orientation settings.
+Set `show_ci = TRUE` only when you deliberately want a hybrid
+FACETS-style ruler with the mfrmr uncertainty extension. Use
+`draw = FALSE` and inspect the `facets_style` tables when rebuilding the
+display with ggplot2 or another graphics system.
 
 Next, use the pathway map when you want to see how expected scores
 progress across theta.
@@ -373,46 +369,62 @@ plot(fit, type = "wright", preset = "monochrome")
 
 wright_payload <- plot(fit, type = "wright", draw = FALSE, preset = "publication")
 plot_data_components(wright_payload)
-#>      PlotName       Component                Role     ObjectType Rows Columns
-#> 1  wright_map    wright_style               style      character   NA      NA
-#> 2  wright_map        renderer    scalar_or_vector      character   NA      NA
-#> 3  wright_map visual_contract    scalar_or_vector      character   NA      NA
-#> 4  wright_map          person          table_data     data.frame   48       4
-#> 5  wright_map     person_hist            metadata list:histogram   NA       6
-#> 6  wright_map    person_stats          table_data     data.frame    1       4
-#> 7  wright_map       locations          table_data     data.frame   11       6
-#> 8  wright_map    label_points          table_data     data.frame    6       6
-#> 9  wright_map   group_summary summary_or_guidance     data.frame    3      10
-#> 10 wright_map    group_levels            settings      character   NA      NA
-#> 11 wright_map         y_range            settings         double   NA      NA
-#> 12 wright_map     label_limit    scalar_or_vector        integer   NA      NA
-#> 13 wright_map           title    scalar_or_vector      character   NA      NA
-#> 14 wright_map        subtitle    scalar_or_vector      character   NA      NA
-#> 15 wright_map           group    scalar_or_vector           NULL   NA      NA
-#> 16 wright_map          preset            settings      character   NA      NA
-#> 17 wright_map          legend               style     data.frame    3       4
-#> 18 wright_map reference_lines          annotation     data.frame    1       5
-#> 19 wright_map       plot_name    scalar_or_vector      character   NA      NA
-#>    Length IsTabular                                    Accessor
-#> 1       1     FALSE    plot_data(x, component = "wright_style")
-#> 2       1     FALSE        plot_data(x, component = "renderer")
-#> 3       1     FALSE plot_data(x, component = "visual_contract")
-#> 4       4      TRUE          plot_data(x, component = "person")
-#> 5       6     FALSE     plot_data(x, component = "person_hist")
-#> 6       4      TRUE    plot_data(x, component = "person_stats")
-#> 7       6      TRUE       plot_data(x, component = "locations")
-#> 8       6      TRUE    plot_data(x, component = "label_points")
-#> 9      10      TRUE   plot_data(x, component = "group_summary")
-#> 10      3     FALSE    plot_data(x, component = "group_levels")
-#> 11      2     FALSE         plot_data(x, component = "y_range")
-#> 12      1     FALSE     plot_data(x, component = "label_limit")
-#> 13      1     FALSE           plot_data(x, component = "title")
-#> 14      1     FALSE        plot_data(x, component = "subtitle")
-#> 15      0     FALSE           plot_data(x, component = "group")
-#> 16      1     FALSE          plot_data(x, component = "preset")
-#> 17      4      TRUE          plot_data(x, component = "legend")
-#> 18      5      TRUE plot_data(x, component = "reference_lines")
-#> 19      1     FALSE       plot_data(x, component = "plot_name")
+#>      PlotName             Component                Role     ObjectType Rows
+#> 1  wright_map          wright_style               style      character   NA
+#> 2  wright_map              renderer    scalar_or_vector      character   NA
+#> 3  wright_map       visual_contract    scalar_or_vector      character   NA
+#> 4  wright_map                person          table_data     data.frame   48
+#> 5  wright_map           person_hist            metadata list:histogram   NA
+#> 6  wright_map          person_stats          table_data     data.frame    1
+#> 7  wright_map             locations          table_data     data.frame   12
+#> 8  wright_map          label_points          table_data     data.frame    7
+#> 9  wright_map         group_summary summary_or_guidance     data.frame    3
+#> 10 wright_map          group_levels            settings      character   NA
+#> 11 wright_map               y_range            settings         double   NA
+#> 12 wright_map      display_settings            settings     data.frame    1
+#> 13 wright_map           label_limit    scalar_or_vector        integer   NA
+#> 14 wright_map             retention          table_data     data.frame    3
+#> 15 wright_map        retention_note summary_or_guidance      character   NA
+#> 16 wright_map                 title    scalar_or_vector      character   NA
+#> 17 wright_map              subtitle    scalar_or_vector      character   NA
+#> 18 wright_map               show_ci    scalar_or_vector        logical   NA
+#> 19 wright_map   uncertainty_display    scalar_or_vector      character   NA
+#> 20 wright_map                 group    scalar_or_vector           NULL   NA
+#> 21 wright_map                preset            settings      character   NA
+#> 22 wright_map                legend               style     data.frame    5
+#> 23 wright_map       reference_lines          annotation     data.frame    1
+#> 24 wright_map             plot_name    scalar_or_vector      character   NA
+#> 25 wright_map         fit_readiness          fit_review     data.frame    5
+#> 26 wright_map interpretation_status summary_or_guidance      character   NA
+#> 27 wright_map   interpretation_note summary_or_guidance      character   NA
+#>    Columns Length IsTabular                                          Accessor
+#> 1       NA      1     FALSE          plot_data(x, component = "wright_style")
+#> 2       NA      1     FALSE              plot_data(x, component = "renderer")
+#> 3       NA      1     FALSE       plot_data(x, component = "visual_contract")
+#> 4        6      6      TRUE                plot_data(x, component = "person")
+#> 5        6      6     FALSE           plot_data(x, component = "person_hist")
+#> 6        4      4      TRUE          plot_data(x, component = "person_stats")
+#> 7       30     30      TRUE             plot_data(x, component = "locations")
+#> 8       30     30      TRUE          plot_data(x, component = "label_points")
+#> 9       16     16      TRUE         plot_data(x, component = "group_summary")
+#> 10      NA      3     FALSE          plot_data(x, component = "group_levels")
+#> 11      NA      2     FALSE               plot_data(x, component = "y_range")
+#> 12       8      8      TRUE      plot_data(x, component = "display_settings")
+#> 13      NA      1     FALSE           plot_data(x, component = "label_limit")
+#> 14       6      6      TRUE             plot_data(x, component = "retention")
+#> 15      NA      1     FALSE        plot_data(x, component = "retention_note")
+#> 16      NA      1     FALSE                 plot_data(x, component = "title")
+#> 17      NA      1     FALSE              plot_data(x, component = "subtitle")
+#> 18      NA      1     FALSE               plot_data(x, component = "show_ci")
+#> 19      NA      1     FALSE   plot_data(x, component = "uncertainty_display")
+#> 20      NA      0     FALSE                 plot_data(x, component = "group")
+#> 21      NA      1     FALSE                plot_data(x, component = "preset")
+#> 22       4      4      TRUE                plot_data(x, component = "legend")
+#> 23       5      5      TRUE       plot_data(x, component = "reference_lines")
+#> 24      NA      1     FALSE             plot_data(x, component = "plot_name")
+#> 25       2      2      TRUE         plot_data(x, component = "fit_readiness")
+#> 26      NA      1     FALSE plot_data(x, component = "interpretation_status")
+#> 27      NA      1     FALSE   plot_data(x, component = "interpretation_note")
 #>                                                                     Notes
 #> 1                                                                        
 #> 2                                                                        
@@ -428,43 +440,66 @@ plot_data_components(wright_payload)
 #> 12                                                                       
 #> 13                                                                       
 #> 14                                                                       
-#> 15                                                                       
+#> 15                           Use for captions, QA checks, or report text.
 #> 16                                                                       
-#> 17                 Use to reproduce color, line-type, or legend mappings.
-#> 18 Use with primary data to draw thresholds, labels, and reference lines.
+#> 17                                                                       
+#> 18                                                                       
 #> 19                                                                       
-#>                                                       ColumnNames
-#> 1                                                                
-#> 2                                                                
-#> 3                                                                
-#> 4                                   Person, Estimate, SE, Extreme
-#> 5                  breaks, counts, density, mids, xname, equidist
-#> 6                                             N, Mean, Median, SD
-#> 7                      PlotType, Group, Label, Estimate, XBase, X
-#> 8                      PlotType, Group, Label, Estimate, XBase, X
-#> 9  Group, PlotType, Min, Q1, Median, Q3, Max, N, XBase, TargetGap
-#> 10                                                               
-#> 11                                                               
-#> 12                                                               
-#> 13                                                               
-#> 14                                                               
-#> 15                                                               
-#> 16                                                               
-#> 17                                  label, role, aesthetic, value
-#> 18                             axis, value, label, linetype, role
-#> 19
+#> 20                                                                       
+#> 21                                                                       
+#> 22                 Use to reproduce color, line-type, or legend mappings.
+#> 23 Use with primary data to draw thresholds, labels, and reference lines.
+#> 24                                                                       
+#> 25                                                                       
+#> 26                           Use for captions, QA checks, or report text.
+#> 27                           Use for captions, QA checks, or report text.
+#>                                                                                                                                                                                                                                                                                                                                                                          ColumnNames
+#> 1                                                                                                                                                                                                                                                                                                                                                                                   
+#> 2                                                                                                                                                                                                                                                                                                                                                                                   
+#> 3                                                                                                                                                                                                                                                                                                                                                                                   
+#> 4                                                                                                                                                                                                                                                                                                                                     Person, Estimate, SD, PosteriorSD, SE, Extreme
+#> 5                                                                                                                                                                                                                                                                                                                                     breaks, counts, density, mids, xname, equidist
+#> 6                                                                                                                                                                                                                                                                                                                                                                N, Mean, Median, SD
+#> 7  Group, Label, PlotType, Estimate, SE, CI_Level, SE_Method, Measure_Source, CI_Lower, CI_Upper, Step, StepIndex, BoundarySeparated, XBase, X, OriginalEstimate, BelowRange, AboveRange, DisplayEstimate, DisplayLabel, OriginalCI_Lower, OriginalCI_Upper, DisplayCI_Lower, DisplayCI_Upper, CIClippedLower, CIClippedUpper, CIClipped, BoundaryEnd, CISuppressed, CIDisplayStatus
+#> 8  Group, Label, PlotType, Estimate, SE, CI_Level, SE_Method, Measure_Source, CI_Lower, CI_Upper, Step, StepIndex, BoundarySeparated, XBase, X, OriginalEstimate, BelowRange, AboveRange, DisplayEstimate, DisplayLabel, OriginalCI_Lower, OriginalCI_Upper, DisplayCI_Lower, DisplayCI_Upper, CIClippedLower, CIClippedUpper, CIClipped, BoundaryEnd, CISuppressed, CIDisplayStatus
+#> 9                                                                                                                                                                                                                                      Group, PlotType, Min, Q1, Median, Q3, Max, DisplayMin, DisplayQ1, DisplayMedian, DisplayQ3, DisplayMax, N, XBase, TargetGap, DisplayTargetGap
+#> 10                                                                                                                                                                                                                                                                                                                                                                                  
+#> 11                                                                                                                                                                                                                                                                                                                                                                                  
+#> 12                                                                                                                                                                                                                                                 Renderer, LowerLogit, UpperLogit, AutoRangePolicy, BoundaryLevelsAtEnds, CIClippedCount, BoundaryCIEndpointCount, CIDisplayPolicy
+#> 13                                                                                                                                                                                                                                                                                                                                                                                  
+#> 14                                                                                                                                                                                                                                                                                                                         Component, Shown, Total, Omitted, RequestedTopN, Complete
+#> 15                                                                                                                                                                                                                                                                                                                                                                                  
+#> 16                                                                                                                                                                                                                                                                                                                                                                                  
+#> 17                                                                                                                                                                                                                                                                                                                                                                                  
+#> 18                                                                                                                                                                                                                                                                                                                                                                                  
+#> 19                                                                                                                                                                                                                                                                                                                                                                                  
+#> 20                                                                                                                                                                                                                                                                                                                                                                                  
+#> 21                                                                                                                                                                                                                                                                                                                                                                                  
+#> 22                                                                                                                                                                                                                                                                                                                                                     label, role, aesthetic, value
+#> 23                                                                                                                                                                                                                                                                                                                                                axis, value, label, linetype, role
+#> 24                                                                                                                                                                                                                                                                                                                                                                                  
+#> 25                                                                                                                                                                                                                                                                                                                                                                    Domain, Status
+#> 26                                                                                                                                                                                                                                                                                                                                                                                  
+#> 27
 
 locations <- plot_data(wright_payload, component = "locations")
 head(locations)
-#> # A tibble: 6 × 6
-#>   PlotType    Group     Label        Estimate XBase     X
-#>   <chr>       <fct>     <chr>           <dbl> <dbl> <dbl>
-#> 1 Facet level Rater     R02           -0.329      1  0.82
-#> 2 Facet level Rater     R01           -0.192      1  0.94
-#> 3 Facet level Rater     R03            0.192      1  1.06
-#> 4 Facet level Rater     R04            0.330      1  1.18
-#> 5 Facet level Criterion Content       -0.415      2  1.82
-#> 6 Facet level Criterion Organization   0.0697     2  1.94
+#> # A tibble: 6 × 30
+#>   Group Label PlotType Estimate    SE CI_Level SE_Method Measure_Source CI_Lower
+#>   <fct> <chr> <chr>       <dbl> <dbl>    <dbl> <chr>     <chr>             <dbl>
+#> 1 Rater R01   Facet l…   -0.606 0.181     0.95 Observat… fit + observa…  -0.960 
+#> 2 Rater R02   Facet l…   -0.382 0.166     0.95 Observat… fit + observa…  -0.707 
+#> 3 Rater R04   Facet l…    0.180 0.185     0.95 Observat… fit + observa…  -0.183 
+#> 4 Rater R05   Facet l…    0.184 0.199     0.95 Observat… fit + observa…  -0.207 
+#> 5 Rater R03   Facet l…    0.212 0.179     0.95 Observat… fit + observa…  -0.138 
+#> 6 Rater R06   Facet l…    0.412 0.219     0.95 Observat… fit + observa…  -0.0168
+#> # ℹ 21 more variables: CI_Upper <dbl>, Step <chr>, StepIndex <int>,
+#> #   BoundarySeparated <lgl>, XBase <dbl>, X <dbl>, OriginalEstimate <dbl>,
+#> #   BelowRange <lgl>, AboveRange <lgl>, DisplayEstimate <dbl>,
+#> #   DisplayLabel <chr>, OriginalCI_Lower <dbl>, OriginalCI_Upper <dbl>,
+#> #   DisplayCI_Lower <dbl>, DisplayCI_Upper <dbl>, CIClippedLower <lgl>,
+#> #   CIClippedUpper <lgl>, CIClipped <lgl>, BoundaryEnd <chr>,
+#> #   CISuppressed <lgl>, CIDisplayStatus <chr>
 
 pathway_long <- plot_data(
   fit,
@@ -474,12 +509,12 @@ pathway_long <- plot_data(
 )
 head(pathway_long[, c("Layer", "CurveGroup", "Theta", "Value")])
 #>            Layer CurveGroup Theta    Value
-#> 1 expected_score     Common -6.00 1.009344
-#> 2 expected_score     Common -5.95 1.009821
-#> 3 expected_score     Common -5.90 1.010322
-#> 4 expected_score     Common -5.85 1.010849
-#> 5 expected_score     Common -5.80 1.011402
-#> 6 expected_score     Common -5.75 1.011984
+#> 1 expected_score     Common -6.00 1.008386
+#> 2 expected_score     Common -5.95 1.008814
+#> 3 expected_score     Common -5.90 1.009264
+#> 4 expected_score     Common -5.85 1.009736
+#> 5 expected_score     Common -5.80 1.010233
+#> 6 expected_score     Common -5.75 1.010755
 ```
 
 When you build a custom figure, keep the helper’s guidance tables with
@@ -488,11 +523,15 @@ the plot data:
 ``` r
 
 names(wright_payload$data)
-#>  [1] "wright_style"    "renderer"        "visual_contract" "person"         
-#>  [5] "person_hist"     "person_stats"    "locations"       "label_points"   
-#>  [9] "group_summary"   "group_levels"    "y_range"         "label_limit"    
-#> [13] "title"           "subtitle"        "group"           "preset"         
-#> [17] "legend"          "reference_lines" "plot_name"
+#>  [1] "wright_style"          "renderer"              "visual_contract"      
+#>  [4] "person"                "person_hist"           "person_stats"         
+#>  [7] "locations"             "label_points"          "group_summary"        
+#> [10] "group_levels"          "y_range"               "display_settings"     
+#> [13] "label_limit"           "retention"             "retention_note"       
+#> [16] "title"                 "subtitle"              "show_ci"              
+#> [19] "uncertainty_display"   "group"                 "preset"               
+#> [22] "legend"                "reference_lines"       "plot_name"            
+#> [25] "fit_readiness"         "interpretation_status" "interpretation_note"
 wright_payload$data$reference_lines
 #>   axis value                    label linetype      role
 #> 1    h     0 Centered logit reference   dashed reference
@@ -505,9 +544,9 @@ reporting role used by the package-native plot.
 
 ## 6. Secondary visual layer
 
-The package ships a second-wave visual layer for teaching and diagnostic
-follow-up. These helpers are not default reporting figures; use them
-after the main screens above.
+The package ships a complementary visual layer for teaching and
+diagnostic follow-up. These helpers are not default reporting figures;
+use them after the main screens above.
 
 - `plot_guttman_scalogram(fit, diagnostics)` renders a person x
   facet-level response matrix with an unexpected-response overlay, for
@@ -567,31 +606,31 @@ summary(rt)
 #> mfrmr response-time review
 #> 
 #>  Rows ValidRows DroppedRows Persons Facets   TimeColumn ScoreColumn TimeUnit
-#>   768       768           0      48      2 ResponseTime       Score  seconds
-#>  MedianTime MeanLogTime RapidThreshold SlowThreshold RapidRate SlowRate
-#>          17    2.852378             15            20 0.2070312  0.21875
+#>   282       282           0      48      2 ResponseTime       Score  seconds
+#>  MedianTime MeanLogTime RapidThreshold SlowThreshold RapidRate  SlowRate
+#>        17.5    2.841728             14            20 0.1205674 0.1950355
 #>  FlaggedGroups
-#>             48
+#>             27
 #>                                                                               InterpretationBoundary
 #>  Descriptive response-time screening; not a joint speed-accuracy model and not a fit/pass-fail rule.
 #> 
 #> Thresholds:
 #>  Threshold Value        Basis TimeUnit
-#>      rapid    15 quantile_0.1  seconds
+#>      rapid    14 quantile_0.1  seconds
 #>       slow    20 quantile_0.9  seconds
 #> 
 #> Flagged groups:
-#>  Source Group                     Flag   Rate  N ThresholdRate
-#>  person  P001 high_rapid_response_rate 0.3125 16          0.25
-#>  person  P006 high_rapid_response_rate 0.2500 16          0.25
-#>  person  P008 high_rapid_response_rate 0.3125 16          0.25
-#>  person  P009 high_rapid_response_rate 0.2500 16          0.25
-#>  person  P012 high_rapid_response_rate 0.2500 16          0.25
-#>  person  P013 high_rapid_response_rate 0.2500 16          0.25
-#>  person  P015 high_rapid_response_rate 0.5000 16          0.25
-#>  person  P021 high_rapid_response_rate 0.2500 16          0.25
-#>  person  P022 high_rapid_response_rate 0.4375 16          0.25
-#>  person  P026 high_rapid_response_rate 0.3125 16          0.25
+#>  Source Group                     Flag      Rate N ThresholdRate
+#>  person  P014 high_rapid_response_rate 0.3333333 6          0.25
+#>  person  P016 high_rapid_response_rate 0.3333333 6          0.25
+#>  person  P023 high_rapid_response_rate 0.3333333 6          0.25
+#>  person  P033 high_rapid_response_rate 0.3333333 6          0.25
+#>  person  P040 high_rapid_response_rate 0.3333333 6          0.25
+#>  person  P041 high_rapid_response_rate 0.3333333 6          0.25
+#>  person  P002  high_slow_response_rate 0.3333333 6          0.25
+#>  person  P003  high_slow_response_rate 0.3333333 6          0.25
+#>  person  P005  high_slow_response_rate 0.3333333 6          0.25
+#>  person  P006  high_slow_response_rate 0.6000000 5          0.25
 #> 
 #> Notes:
 #> - Response-time review is descriptive; it does not change fit_mfrm estimates.
@@ -642,16 +681,20 @@ head(shrink$data$table[, c(
   "ShrunkEstimate", "ShrunkCI_Lower", "ShrunkCI_Upper",
   "ShrinkageFactor"
 )])
-#>   Facet Level RawEstimate   RawCI_Lower  RawCI_Upper ShrunkEstimate
-#> 1 Rater   R02  -0.3293316 -0.5210314859 -0.137631628     -0.2860382
-#> 3 Rater   R01  -0.1921829 -0.3830902518 -0.001275487     -0.1671001
-#> 4 Rater   R03   0.1917634  0.0009478831  0.382578856      0.1667563
-#> 2 Rater   R04   0.3297511  0.1382033008  0.521298813      0.2864623
-#>   ShrunkCI_Lower ShrunkCI_Upper ShrinkageFactor
-#> 1    -0.46469401    -0.10738229       0.1314584
-#> 3    -0.34511389     0.01091374       0.1305153
-#> 4    -0.01118303     0.34469557       0.1304060
-#> 2     0.10792961     0.46499493       0.1312772
+#>   Facet Level RawEstimate RawCI_Lower RawCI_Upper ShrunkEstimate ShrunkCI_Lower
+#> 1 Rater   R01  -0.6059776 -1.04569977 -0.16625550     -0.3739155     -0.7193270
+#> 3 Rater   R02  -0.3820356 -0.79078871  0.02671748     -0.2486748     -0.5784554
+#> 6 Rater   R04   0.1799462 -0.25645356  0.61634590      0.1116787     -0.2321154
+#> 5 Rater   R05   0.1842365 -0.27475809  0.64323116      0.1099118     -0.2446091
+#> 4 Rater   R03   0.2120388 -0.21248930  0.63656689      0.1343311     -0.2035680
+#> 2 Rater   R06   0.4117917 -0.07719839  0.90078189      0.2329807     -0.1348274
+#>   ShrunkCI_Upper ShrinkageFactor
+#> 1    -0.02850402       0.3829550
+#> 3     0.08110572       0.3490794
+#> 6     0.45547282       0.3793770
+#> 5     0.46443264       0.4034204
+#> 4     0.47223032       0.3664785
+#> 2     0.60078878       0.4342269
 
 plot_shrinkage_funnel(
   fit_eb,

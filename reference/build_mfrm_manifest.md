@@ -72,10 +72,9 @@ A named list with class `mfrm_manifest`.
 
 ## Details
 
-This helper captures the package-native equivalent of the Streamlit
-app's configuration export. It summarizes analysis settings, source
-columns, anchoring information, and which downstream outputs are
-currently available.
+This helper creates a compact package-native analysis record. It
+summarizes analysis settings, source columns, anchoring information, and
+which downstream outputs are currently available.
 
 ## When to use this
 
@@ -91,7 +90,8 @@ record of how an analysis was run. Compared with related helpers:
   creates an executable R script.
 
 - [`export_mfrm_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_bundle.md)
-  writes a shareable folder of files.
+  writes a project-folder reproducibility bundle; review every included
+  artifact for person-level or sensitive data before sharing it.
 
 ## Output
 

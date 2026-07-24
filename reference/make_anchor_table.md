@@ -74,20 +74,23 @@ introduce avoidable calibration error.
 ## Examples
 
 ``` r
-toy <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+toy <- load_mfrmr_data("example_operational")
+fit <- fit_mfrm(
+  toy, "Person", c("Rater", "Criterion"), "Score",
+  method = "MML", quad_points = 7, maxit = 30
+)
 anchors_tbl <- make_anchor_table(fit)
 head(anchors_tbl)
 #> # A tibble: 6 × 3
-#>   Facet     Level         Anchor
-#>   <chr>     <chr>          <dbl>
-#> 1 Criterion Accuracy      0.249 
-#> 2 Criterion Content      -0.415 
-#> 3 Criterion Language      0.0973
-#> 4 Criterion Organization  0.0690
-#> 5 Rater     R01          -0.196 
-#> 6 Rater     R02          -0.329 
+#>   Facet     Level        Anchor
+#>   <chr>     <chr>         <dbl>
+#> 1 Criterion Content      -0.339
+#> 2 Criterion Language      0.118
+#> 3 Criterion Organization  0.221
+#> 4 Rater     R01          -0.597
+#> 5 Rater     R02          -0.334
+#> 6 Rater     R03           0.259
 summary(anchors_tbl$Anchor)
-#>     Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
-#> -0.41510 -0.22901  0.08316  0.00000  0.20551  0.33355 
+#>    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+#> -0.5968 -0.3339  0.1349  0.0000  0.2207  0.3678 
 ```

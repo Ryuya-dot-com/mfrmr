@@ -18,7 +18,7 @@
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from Facets to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
@@ -79,7 +79,7 @@ at least two facets exist, a 2-way bias run is computed internally.</p></dd>
 
 
 <dt id="arg-branch">branch<a class="anchor" aria-label="anchor" href="#arg-branch"></a></dt>
-<dd><p>Contract branch. <code>"facets"</code> checks legacy-compatible columns.
+<dd><p>Contract branch. <code>"facets"</code> checks FACETS-style contract columns.
 <code>"original"</code> adapts branch-sensitive contracts to the package's compact
 naming.</p></dd>
 
@@ -115,17 +115,18 @@ output-contract specification (<code>inst/references/facets_column_contract.csv<
 returns:</p><ul><li><p>column-level coverage per contract row</p></li>
 <li><p>table-level coverage summaries</p></li>
 <li><p>optional metric-level consistency checks</p></li>
-</ul><p>It is intended for output-contract QA and regression review. It does
-not establish external validity or software equivalence beyond the specific
+</ul><p>It is intended to show users which FACETS-style output fields have a
+package-native counterpart and which remain unavailable. It does not
+establish external validity or software equivalence beyond the specific
 schema/metric contract encoded in the contract file.</p>
     </div>
     <div class="section level2">
     <h2 id="bounded-gpcm-boundary">Bounded GPCM boundary<a class="anchor" aria-label="anchor" href="#bounded-gpcm-boundary"></a></h2>
 
 
-<p>This helper remains blocked for bounded <code>GPCM</code> fits in this release. The FACETS
+<p>This helper is unavailable for bounded <code>GPCM</code> fits because the FACETS
 output contract includes score-side rows whose measure-to-score and
-uncertainty semantics are validated for the current Rasch-family route, not
+uncertainty semantics are supported for the Rasch-family route, not
 for free-discrimination bounded <code>GPCM</code>. Use <code><a href="gpcm_capability_matrix.html">gpcm_capability_matrix()</a></code> before
 routing a bounded <code>GPCM</code> fit into score-side compatibility-output helpers.</p>
 <p>Coverage interpretation in <code>overall</code>:</p><ul><li><p><code>MeanColumnCoverage</code> and <code>MinColumnCoverage</code> are computed across all
@@ -155,7 +156,8 @@ current contract.</p></li>
 
 <ol><li><p>Run <code>facets_output_contract_review(fit, branch = "facets")</code>.</p></li>
 <li><p>Inspect <code>summary(contract_review)</code> and <code>missing_preview</code>.</p></li>
-<li><p>Patch upstream table builders, then rerun the output-contract review.</p></li>
+<li><p>For unresolved rows, use the documented package-native alternative or
+retain the scope limitation in the report.</p></li>
 </ol></div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

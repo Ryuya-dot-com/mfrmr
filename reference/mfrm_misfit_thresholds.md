@@ -1,9 +1,11 @@
 # MnSq misfit threshold pair used across mfrmr screening helpers
 
 Returns the lower / upper bounds that mfrmr screens treat as the
-acceptable mean-square (Infit / Outfit MnSq) band when flagging
-element-level misfit. Defaults follow Linacre's published 0.5-1.5
-acceptance band; both ends can be overridden via R options.
+heuristic mean-square (Infit / Outfit MnSq) review band when flagging
+element-level misfit. Defaults use the published 0.5-1.5 interval as a
+screening convention; both ends can be overridden via R options. The
+interval is not a universal acceptance rule or an automatic exclusion
+rule.
 
 ## Usage
 
@@ -47,11 +49,11 @@ Two scalar R options drive the band:
 
 - `mfrmr.misfit_lower`:
 
-  Lower acceptance bound. Default `0.5`.
+  Lower review bound. Default `0.5`.
 
 - `mfrmr.misfit_upper`:
 
-  Upper acceptance bound. Default `1.5`.
+  Upper review bound. Default `1.5`.
 
 Pass scalar arguments to override the options for a single call, e.g.
 `mfrm_misfit_thresholds(lower = 0.7, upper = 1.3)` for the tighter Bond

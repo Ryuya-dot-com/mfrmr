@@ -197,8 +197,8 @@ routes.
 
 - [`export_summary_appendix()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_summary_appendix.md):
 
-  Exports those validated summary-table bundles as CSV and optional HTML
-  appendix artifacts without requiring the broader fit-based export
+  Exports those documented summary-table bundles as CSV and optional
+  HTML appendix artifacts without requiring the broader fit-based export
   bundle. This is the preferred export route for recovery simulation
   evidence.
 
@@ -213,9 +213,10 @@ routes.
 
 - Use bundle summaries first, then drill down into component tables.
 
-- Treat
+- Use
   [`precision_review_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/precision_review_report.md)
-  as the gatekeeper for formal inference.
+  to determine whether formal inference is supported for the fitted
+  result.
 
 - Treat category and bias outputs as complementary layers rather than
   substitutes for overall fit review.

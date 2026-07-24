@@ -132,7 +132,7 @@ The returned object is a bundle-like list with class
     For `RSM` / `PCM` reporting runs, prefer `method = "MML"` plus
     `diagnostic_mode = "both"` in the diagnostics call.
 
-2.  Run `estimate_all_bias()` to compute app-style multi-pair
+2.  Run `estimate_all_bias()` to compute the requested multi-pair
     interactions.
 
 3.  Pass the resulting `by_pair` list into

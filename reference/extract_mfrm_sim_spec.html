@@ -18,7 +18,7 @@
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from Facets to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
@@ -119,15 +119,14 @@ contrast provenance for categorical covariates</p></li>
 claim that the fitted object perfectly recovers the true data-generating
 mechanism. Users should review and, if necessary, edit the returned
 specification before using it for design planning.</p>
-<p>First-release <code>GPCM</code> fits are now supported here for direct data generation
+<p>Bounded <code>GPCM</code> fits are supported here for direct data generation
 and parameter-recovery checks, provided that the returned simulation
 specification stores both a threshold table and a parallel slope table.
 The same fit-derived specification can feed caveated role-based design
 evaluation, population forecasting, and fit-based report/export bundles.
-Diagnostic/signal-detection design screening, full FACETS score-side
-contract review, posterior predictive checks, and heavy backend extensions
-remain outside the bounded-<code>GPCM</code> boundary until those downstream contracts
-are widened explicitly.</p>
+Diagnostic and signal-detection design screening is available with explicit
+caveats. Full FACETS score-side contract review, posterior predictive checks,
+and MCMC estimation are not available for bounded <code>GPCM</code>.</p>
 <p>If you want to carry person-level group labels into a fit-derived observed
 response skeleton, provide the original <code>source_data</code> together with
 <code>person</code> and <code>group</code>. Group labels are treated as person-level metadata and

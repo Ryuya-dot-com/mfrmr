@@ -103,7 +103,7 @@ not parse raw ConQuest report text.
 
 The recommended workflow is:
 
-1.  export an exact-overlap bundle with
+1.  export a bundle for the documented comparison scope with
     [`build_conquest_overlap_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_conquest_overlap_bundle.md);
 
 2.  extract the relevant ConQuest tables to CSV/TSV/TXT files;

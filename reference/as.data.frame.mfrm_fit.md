@@ -1,8 +1,9 @@
 # Convert mfrm_fit to a tidy data.frame
 
 Returns all facet-level estimates (person and others) in a single tidy
-data.frame. Useful for quick interactive export:
-`write.csv(as.data.frame(fit), "results.csv")`.
+data.frame. Person rows retain their original identifiers; review or
+transform them before writing the result outside a controlled analysis
+environment.
 
 ## Usage
 
@@ -34,8 +35,8 @@ as.data.frame(x, row.names = NULL, optional = FALSE, ...)
 
 A data.frame with columns `Facet`, `Level`, `Estimate`, and `Extreme`.
 The `Extreme` column is populated for person rows from the extreme-score
-flag added in 0.1.6 (`"Min"` / `"Max"` / `NA`); non-person facet rows
-carry `NA` in that column by design.
+flag (`"Min"` / `"Max"` / `NA`); non-person facet rows carry `NA` in
+that column by design.
 
 ## Details
 
@@ -65,15 +66,16 @@ facets are stacked underneath in the same schema.
 ## Examples
 
 ``` r
-toy <- load_mfrmr_data("example_core")
+toy <- load_mfrmr_data("example_operational")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", model = "RSM", maxit = 30)
+                method = "MML", model = "RSM",
+                quad_points = 7, maxit = 30)
 head(as.data.frame(fit))
-#>       Facet Level   Estimate Extreme
-#> P001 Person  P001  0.6857247    none
-#> P002 Person  P002  1.6727706    none
-#> P003 Person  P003  1.2575190    none
-#> P004 Person  P004  0.9010429    none
-#> P005 Person  P005  0.9010429    none
-#> P006 Person  P006 -1.5244704    none
+#>    Facet Level    Estimate Extreme
+#> 1 Person  P001  0.22371868    none
+#> 2 Person  P002  0.71054603    none
+#> 3 Person  P003  0.02517584    none
+#> 4 Person  P004  0.14530707    none
+#> 5 Person  P005 -0.06792434    none
+#> 6 Person  P006  0.70720576    none
 ```

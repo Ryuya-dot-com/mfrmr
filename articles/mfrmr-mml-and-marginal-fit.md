@@ -65,7 +65,31 @@ For the `RSM` / `PCM` MML branch:
   that option
 - person summaries are reported post-hoc from the integrated posterior
 
-This is the implemented MML-engine scope for this release.
+This is the implemented MML-engine scope.
+
+## Numerical readiness and bounded polishing
+
+An optimizer return code of zero does not by itself establish a
+stationary solution. `mfrmr` applies a common terminal-gradient review
+to direct, hybrid, and EM fits. For direct and hybrid fitting, a
+code-zero solution with a larger terminal gradient triggers a bounded
+sequence of warm-started polishing stages when the requested setting is
+at least as strict as the public default (`reltol <= 1e-9`). The package
+retains the best non-worsening candidate under the recorded selection
+rule and records every attempt in `fit$opt$optimizer_polish$Stages`,
+including the method, portable tolerance setting, objective, terminal
+gradient, parameter change, and evaluation counts. For L-BFGS-B, the
+stage table also records the actual `factr` and `pgtol` controls;
+`EffectiveReltol` is not itself a native L-BFGS-B argument. EM retains
+its relative log-likelihood stopping result but must also pass the same
+terminal-gradient gate; use the direct engine for bounded gradient
+polishing when an EM fit remains under numerical review.
+
+Read `summary(fit)$readiness` as separate gates. `InferenceReady` and
+the Numerical row describe numerical optimization, not the design,
+stability, diagnostic, or reporting decision. A small gradient cannot
+repair a disconnected measurement graph or a boundary-separated facet
+level.
 
 ## Strict Marginal Diagnostic Target
 
@@ -139,15 +163,14 @@ as formal Haberman- Sinharay generalized residual tests.
 
 4.  Posterior predictive follow-up. Sinharay et al. (2006) treat
     posterior predictive checking as a separate model-checking family
-    built around replicated datasets and discrepancy measures. That is
-    the intended follow-up role of the package’s
-    `posterior_predictive_follow_up` path, which is reserved for a
-    future release.
+    built around replicated datasets and discrepancy measures. mfrmr
+    does not implement posterior-predictive checks; use a model-specific
+    external workflow when this corroborating analysis is required.
 
 5.  Many-facet reporting context. Linacre’s FACETS framework and applied
     MFRM studies such as Eckes (2005) remain the primary references for
     severity/leniency, mean-square fit, separation, and inter-rater
-    agreement. The current strict marginal branch is designed to sit
+    agreement. mfrmr’s strict marginal diagnostics are designed to sit
     alongside that many-facet toolkit, not to replace it.
 
 ## Interpretation Boundaries
@@ -183,7 +206,7 @@ The documented follow-up is
 `strict_pairwise_local_dependence`, which surfaces evidence of
 dependence at the pair level. See Haberman and Sinharay (2013) for a
 generalized-residual framework that models such dependence explicitly;
-that path is not yet included in the current release scope.
+that path is not included in the documented diagnostic scope.
 
 For many-facet reporting, one additional boundary matters. Facet-level
 separation/reliability and inter-rater agreement answer different
@@ -193,9 +216,9 @@ raters are interchangeable on the latent severity scale. That is why
 `mfrmr` reports `diagnostics$reliability` and `diagnostics$interrater`
 as separate objects.
 
-## Validation Scope In The Current Release
+## Documented simulation-check scope
 
-The current simulation-based validation covers:
+The package’s documented simulation checks cover:
 
 - well-specified baselines
 - local dependence misspecification
@@ -223,8 +246,8 @@ export, QC pass/fail pipelines, linking synthesis, role-based design
 forecasting, and diagnostic/signal-detection design screening are
 available only as caveated bounded-`GPCM` surfaces with explicit
 boundary output. Full FACETS-style score-side contract review, posterior
-predictive checks, and heavy backends remain out of scope for `GPCM` in
-this release. See
+predictive checks, and MCMC estimation are not available for bounded
+`GPCM`. See
 [`gpcm_capability_matrix()`](https://ryuya-dot-com.github.io/mfrmr/reference/gpcm_capability_matrix.md)
 for the full per-helper support contract.
 
@@ -262,14 +285,14 @@ treats `RSM` / `PCM` as the equal-weighting reference models and bounded
 `GPCM` as a supported alternative for users who explicitly want to
 inspect or allow discrimination-based reweighting.
 
-This is also why full FACETS output-contract score-side review remains
-out of scope for bounded `GPCM` in this release: its published form is a
-Rasch-family score transformation, and the slope-aware analogue that
-would replace it in a free-discrimination context requires careful
-score-side uncertainty handling. Package-native scorefile export,
-manuscript-draft APA text, and fit-based report/export bundles are
-available only as caveated sensitivity-reporting surfaces, not as
-FACETS-equivalent or operational score transformations.
+This is also why full FACETS output-contract score-side review is not
+provided for bounded `GPCM`: its published form is a Rasch-family score
+transformation, and the slope-aware analogue that would replace it in a
+free-discrimination context requires careful score-side uncertainty
+handling. Package-native scorefile export, manuscript-draft APA text,
+and fit-based report/export bundles are available only as caveated
+sensitivity-reporting surfaces, not as FACETS-equivalent or operational
+score transformations.
 [`fair_average_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/fair_average_table.md)
 and
 [`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md)
@@ -310,16 +333,16 @@ This sequence keeps the interpretation aligned with the validation
 boundary: `RSM`/`PCM` support the full manuscript/reporting route, while
 bounded `GPCM` supports the documented direct and caveated routes.
 
-## Future extensions
+## Analyses not provided by mfrmr
 
-Posterior-predictive checking, `MCMC` engines, and heavier runtime
-infrastructure remain future extensions. They are not required for the
-current quadrature-based `MML` route or for the bounded `GPCM` support
-described here.
+Posterior-predictive checks and `MCMC` estimation are not provided by
+mfrmr. Use external Bayesian software when those analyses are required.
+They are not needed for the quadrature-based `MML` route or for the
+bounded `GPCM` workflows described here.
 
 ## Recommended Expert Reading Of Package Output
 
-For the current release, the most defensible interpretation sequence is:
+A defensible interpretation sequence is:
 
 1.  Read `summary(fit)` for estimation status and precision basis.
 2.  Read `summary(diag)` with `diagnostic_mode = "both"` to keep legacy

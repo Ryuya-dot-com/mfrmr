@@ -65,8 +65,8 @@ it organizes existing evidence families into one case-level review
 surface:
 
 - element-level Infit / Outfit MnSq misfit from `diagnostics$fit` (rows
-  whose Infit or Outfit MnSq falls outside the 0.5-1.5 Linacre
-  acceptance band)
+  whose Infit or Outfit MnSq falls outside the configured Linacre
+  heuristic review band, 0.5-1.5 by default)
 
 - strict marginal cell screens from `diagnostics$marginal_fit$top_cells`
 

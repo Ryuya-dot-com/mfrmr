@@ -1,8 +1,7 @@
 # FACETS Feature Coverage Matrix
 
-`facets_feature_coverage()` summarizes how the current `mfrmr` release
-maps the main FACETS output-table, output-file, and graph-menu surface
-to package functions.
+`facets_feature_coverage()` summarizes how `mfrmr` maps the main FACETS
+output-table, output-file, and graph-menu surface to package functions.
 
 Use this helper before migration work when you need a public,
 user-facing answer to three questions:
@@ -44,11 +43,11 @@ A data.frame with columns:
 
 - `Status`
 
-- `Scope`
+- `Capability`
 
-- `GapOrBoundary`
+- `Limitation`
 
-- `Priority`
+- `Alternative`
 
 ## Details
 
@@ -69,10 +68,10 @@ Status meanings:
   option surface, file type, or external integration.
 
 - `not_implemented`: a FACETS feature has no direct package-native route
-  in the current release.
+  in the documented package scope.
 
 - `not_targeted`: the feature is tied to FACETS UI, Web/Excel handoff,
-  or another external program format and is not a release goal.
+  or another external program format and is outside the package scope.
 
 ## References
 
@@ -333,7 +332,7 @@ facets_feature_coverage()
 #> 45          not_targeted
 #> 46          not_targeted
 #> 47               partial
-#>                                                                                                                                             Scope
+#>                                                                                                                                        Capability
 #> 1                                                                                            Structured run settings and reproducibility context.
 #> 2                                                                          Rows, exclusions, missingness, score support, and response-pattern QC.
 #> 3                                                                                                    Convergence and replayed iteration evidence.
@@ -368,7 +367,7 @@ facets_feature_coverage()
 #> 32                                                                                                         Graphfile-style category curve output.
 #> 33                                                                                                          Structured appendix/report artifacts.
 #> 34                              Standalone observation-level residual CSV/TSV output, residual tables, and residual visualizations are available.
-#> 35                                                                       Score-side export/import is available for validated Rasch-family routes.
+#> 35                                             Score-side export/import is available for documented Rasch-family routes covered by package tests.
 #> 36                                                                                        Simulation data and explicit simulation specifications.
 #> 37                                                              Connected-subset summary/node files and group-anchor inputs/checks are available.
 #> 38                                                                                                         No Winsteps control/data export route.
@@ -381,102 +380,102 @@ facets_feature_coverage()
 #> 45                                                                                                R function arguments are the package interface.
 #> 46                                                                                                     Selected fixed-width handoff is available.
 #> 47                                                                                                           Fit/score table import is supported.
-#>                                                                                                                                                                        GapOrBoundary
-#> 1                                                                                                                                           Not an exact FACETS line-printer layout.
-#> 2                                                                                                                                         Structured QC replaces FACETS text layout.
-#> 3                                                                                                                           Does not reproduce every FACETS optimizer-internal line.
-#> 4                                                                                                                   Structured table and plots, not printer-identical FACETS output.
-#> 5                                                                                                                                   Column order and text layout differ from FACETS.
-#> 6                                                           Visual grammar is reproducible; numerical equivalence still requires aligned settings and external FACETS golden output.
-#> 7                                                                                                                                    Network-style graph is not the default display.
-#> 8                                                                                                                 FACETS M/S/Q/X printer-graph formatting is not reproduced exactly.
-#> 9                                                                                                                    FACETS column order/options are broader than the default table.
-#> 10                                                                                                                                            Uses package-native structured output.
-#> 11                                                                                                                                    Structured output replaces FACETS text blocks.
-#> 12                                                                                                           FACETS binomial-trial and Poisson-specific reports are not implemented.
-#> 13                                                                                                                                       Exact FACETS text layout is not reproduced.
-#> 14                                                                                                                            FACETS line-printer artwork is not reproduced exactly.
-#> 15                                                                                                                            Uses R-native plot data rather than FACETS graph text.
-#> 16                                                                                                                        Conditional screening semantics are documented separately.
-#> 17                                                                                                                                     Structured table replaces FACETS text layout.
-#> 18                                                                                                                                    Structured output replaces FACETS text layout.
-#> 19                                                                                                                    FACETS vertical frequency bar-chart is not reproduced exactly.
-#> 20                                                                                                                     Reported as screening evidence, not final fairness inference.
-#> 21                                                                                                                               Higher-order runs omit pairwise sections by design.
-#> 22                                                                                                                                         Excel-specific output is not implemented.
-#> 23                                                                                                                           FACETS arbitrary R/Web plotting menus are not mirrored.
-#> 24                                                                                                                             No dedicated FACETS-style arbitrary X-Y plot wrapper.
-#> 25                                                                                                                                       Webpage menu output is a FACETS UI feature.
-#> 26                                                                                                                                           No arbitrary FACETS X-Y-Z plot wrapper.
-#> 27                                                                                                                                           No general FACETS histogram menu clone.
-#> 28 Package-native caveated G/D-study route; not a FACETS/gtheory UI clone, not multivariate/profile G-theory, and not high-stakes-ready when boundary or singular fits are reported.
-#> 29                                                                                                              R-native igraph analysis and display rather than FACETS menu output.
-#> 30                                                                                                                               Does not write a FACETS command specification file.
-#> 31                                                                                                                                Uses R/CSV tables rather than FACETS fixed syntax.
-#> 32                                                                                                                        Command-level FACETS graph options are not fully mirrored.
-#> 33                                                                                                                             Full FACETS report-file emulation is not implemented.
-#> 34                                                                                        Uses package-native residual columns rather than exact FACETS fixed-field residual syntax.
-#> 35                                                                                                              Bounded GPCM score-side equivalence is outside the current boundary.
-#> 36                                                                                                                                           Not a FACETS simulated-data file clone.
-#> 37                                                             The standalone subset writer exports connectivity review tables, not a full FACETS UI-compatible subset command file.
-#> 38                                                                                                                                Would require a separate Winsteps output contract.
-#> 39                                                                                                                                  R-native plots replace FACETS graph menu output.
-#> 40                                                                                                                                        Not labeled as FACETS ICC/IRF menu output.
-#> 41                                                                                                                              R-native plot data replace FACETS graph-menu output.
-#> 42                                                                                                                                    R-native information definition and plot data.
-#> 43                                                                                                                              R-native plot data replace FACETS graph-menu output.
-#> 44                                                                                                           FACETS conditional-probability menu semantics are not mirrored exactly.
-#> 45                                                                                                              Parsing arbitrary FACETS command files is outside the release scope.
-#> 46                                                                                                                  Exact full report emulation is intentionally not a package goal.
-#> 47                                                                                                                             General raw FACETS report parsing is not implemented.
-#>        Priority
-#> 1  release_core
-#> 2  release_core
-#> 3  release_core
-#> 4  release_core
-#> 5  release_core
-#> 6  release_core
-#> 7  release_core
-#> 8  release_core
-#> 9  release_core
-#> 10 release_core
-#> 11 release_core
-#> 12        defer
-#> 13 release_core
-#> 14 release_core
-#> 15 release_core
-#> 16 release_core
-#> 17 release_core
-#> 18 release_core
-#> 19 release_core
-#> 20 release_core
-#> 21 release_core
-#> 22        defer
-#> 23          low
-#> 24          low
-#> 25  not_planned
-#> 26          low
-#> 27          low
-#> 28 release_core
-#> 29 release_core
-#> 30 release_core
-#> 31 release_core
-#> 32 release_core
-#> 33        defer
-#> 34 release_core
-#> 35 release_core
-#> 36 release_core
-#> 37 release_core
-#> 38  not_planned
-#> 39 release_core
-#> 40 release_core
-#> 41 release_core
-#> 42 release_core
-#> 43 release_core
-#> 44        defer
-#> 45  not_planned
-#> 46  not_planned
-#> 47        defer
+#>                                                                                                                                                                                      Limitation
+#> 1                                                                                                                                                      Not an exact FACETS line-printer layout.
+#> 2                                                                                                                                                    Structured QC replaces FACETS text layout.
+#> 3                                                                                                                                       Does not reproduce the complete FACETS iteration trace.
+#> 4                                                                                                                              Structured table and plots, not printer-identical FACETS output.
+#> 5                                                                                                                                              Column order and text layout differ from FACETS.
+#> 6                                                       Visual correspondence does not establish numerical equivalence; compare output from a documented FACETS version under aligned settings.
+#> 7                                                                                                                                               Network-style graph is not the default display.
+#> 8                                                                                                                            FACETS M/S/Q/X printer-graph formatting is not reproduced exactly.
+#> 9                                                                                                                               FACETS column order/options are broader than the default table.
+#> 10                                                                                                                                                       Uses package-native structured output.
+#> 11                                                                                                                                               Structured output replaces FACETS text blocks.
+#> 12                                                                                                                      FACETS binomial-trial and Poisson-specific reports are not implemented.
+#> 13                                                                                                                                                  Exact FACETS text layout is not reproduced.
+#> 14                                                                                                                                       FACETS line-printer artwork is not reproduced exactly.
+#> 15                                                                                                                                       Uses R-native plot data rather than FACETS graph text.
+#> 16                                                                                                                                   Conditional screening semantics are documented separately.
+#> 17                                                                                                                                                Structured table replaces FACETS text layout.
+#> 18                                                                                                                                               Structured output replaces FACETS text layout.
+#> 19                                                                                                                               FACETS vertical frequency bar-chart is not reproduced exactly.
+#> 20                                                                                                                                Reported as screening evidence, not final fairness inference.
+#> 21                                                                                                                                          Higher-order runs omit pairwise sections by design.
+#> 22                                                                                                                                                    Excel-specific output is not implemented.
+#> 23                                                                                                                                      FACETS arbitrary R/Web plotting menus are not mirrored.
+#> 24                                                                                                                                        No dedicated FACETS-style arbitrary X-Y plot wrapper.
+#> 25                                                                                                                                                  Webpage menu output is a FACETS UI feature.
+#> 26                                                                                                                                                      No arbitrary FACETS X-Y-Z plot wrapper.
+#> 27                                                                                                                                                      No general FACETS histogram menu clone.
+#> 28 Package-native caveated G/D-study route; not a FACETS/gtheory UI clone, not multivariate/profile G-theory, and not suitable for high-stakes use when boundary or singular fits are reported.
+#> 29                                                                                                                         R-native igraph analysis and display rather than FACETS menu output.
+#> 30                                                                                                                                          Does not write a FACETS command specification file.
+#> 31                                                                                                                                           Uses R/CSV tables rather than FACETS fixed syntax.
+#> 32                                                                                                                                   Command-level FACETS graph options are not fully mirrored.
+#> 33                                                                                                                                        Full FACETS report-file emulation is not implemented.
+#> 34                                                                                                   Uses package-native residual columns rather than exact FACETS fixed-field residual syntax.
+#> 35                                                                                                                         Bounded GPCM score-side equivalence is outside the documented scope.
+#> 36                                                                                                                                                      Not a FACETS simulated-data file clone.
+#> 37                                                                        The standalone subset writer exports connectivity review tables, not a full FACETS UI-compatible subset command file.
+#> 38                                                                                                                                           Would require a separate Winsteps output contract.
+#> 39                                                                                                                                             R-native plots replace FACETS graph menu output.
+#> 40                                                                                                                                                   Not labeled as FACETS ICC/IRF menu output.
+#> 41                                                                                                                                         R-native plot data replace FACETS graph-menu output.
+#> 42                                                                                                                                               R-native information definition and plot data.
+#> 43                                                                                                                                         R-native plot data replace FACETS graph-menu output.
+#> 44                                                                                                                      FACETS conditional-probability menu semantics are not mirrored exactly.
+#> 45                                                                                                                         Parsing arbitrary FACETS command files is outside the package scope.
+#> 46                                                                                                                                    Exact full report emulation is outside the package scope.
+#> 47                                                                                                                                        General raw FACETS report parsing is not implemented.
+#>                                                                                                                              Alternative
+#> 1                        Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 2                        Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 3                        Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 4                        Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 5                        Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 6                        Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 7                        Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 8                        Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 9                        Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 10                       Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 11                       Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 12  Use the closest documented mfrmr table or plot for analysis; use FACETS externally when the omitted statistic or format is required.
+#> 13                       Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 14                       Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 15                       Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 16                       Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 17                       Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 18                       Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 19                       Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 20                       Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 21                       Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 22  Use the closest documented mfrmr table or plot for analysis; use FACETS externally when the omitted statistic or format is required.
+#> 23              Build the display from package plot data or another R graphics system; use FACETS externally for its menu-specific view.
+#> 24              Build the display from package plot data or another R graphics system; use FACETS externally for its menu-specific view.
+#> 25 Use package-native R output where suitable, or run the relevant external program for its program-specific file, interface, or report.
+#> 26              Build the display from package plot data or another R graphics system; use FACETS externally for its menu-specific view.
+#> 27              Build the display from package plot data or another R graphics system; use FACETS externally for its menu-specific view.
+#> 28                       Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 29                       Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 30                       Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 31                       Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 32                       Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 33  Use the closest documented mfrmr table or plot for analysis; use FACETS externally when the omitted statistic or format is required.
+#> 34                       Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 35                       Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 36                       Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 37                       Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 38 Use package-native R output where suitable, or run the relevant external program for its program-specific file, interface, or report.
+#> 39                       Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 40                       Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 41                       Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 42                       Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 43                       Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 44  Use the closest documented mfrmr table or plot for analysis; use FACETS externally when the omitted statistic or format is required.
+#> 45 Use package-native R output where suitable, or run the relevant external program for its program-specific file, interface, or report.
+#> 46 Use package-native R output where suitable, or run the relevant external program for its program-specific file, interface, or report.
+#> 47  Use the closest documented mfrmr table or plot for analysis; use FACETS externally when the omitted statistic or format is required.
 facets_feature_coverage("partial")
 #>                FACETSArea                                      FACETSFeature
 #> 3            Output table                     Table 3: main iteration report
@@ -550,26 +549,26 @@ facets_feature_coverage("partial")
 #> 37 partial
 #> 44 partial
 #> 47 partial
-#>                                                                                Scope
-#> 3                                       Convergence and replayed iteration evidence.
-#> 8                                             Facet statistics and visual summaries.
-#> 12                              Two-category Rasch-category summaries are available.
-#> 14                                      Category structure and transition summaries.
-#> 19                           Distributional and visual bias summaries are available.
-#> 22                       R-native scatter, heatmap, and facet-profile bias displays.
-#> 23                                    Reusable plot data supports custom R graphics.
-#> 24                              Users can build X-Y plots from returned data frames.
-#> 26                                Selected 3D/surface-ready plot data are available.
-#> 27                         Several package outputs include histogram-like summaries.
-#> 30                              R-native reproducibility manifest and replay script.
-#> 33                                             Structured appendix/report artifacts.
-#> 35          Score-side export/import is available for validated Rasch-family routes.
-#> 36                           Simulation data and explicit simulation specifications.
-#> 37 Connected-subset summary/node files and group-anchor inputs/checks are available.
-#> 44                   Category probability curves conditional on theta are available.
-#> 47                                              Fit/score table import is supported.
-#>                                                                                                            GapOrBoundary
-#> 3                                                               Does not reproduce every FACETS optimizer-internal line.
+#>                                                                                            Capability
+#> 3                                                        Convergence and replayed iteration evidence.
+#> 8                                                              Facet statistics and visual summaries.
+#> 12                                               Two-category Rasch-category summaries are available.
+#> 14                                                       Category structure and transition summaries.
+#> 19                                            Distributional and visual bias summaries are available.
+#> 22                                        R-native scatter, heatmap, and facet-profile bias displays.
+#> 23                                                     Reusable plot data supports custom R graphics.
+#> 24                                               Users can build X-Y plots from returned data frames.
+#> 26                                                 Selected 3D/surface-ready plot data are available.
+#> 27                                          Several package outputs include histogram-like summaries.
+#> 30                                               R-native reproducibility manifest and replay script.
+#> 33                                                              Structured appendix/report artifacts.
+#> 35 Score-side export/import is available for documented Rasch-family routes covered by package tests.
+#> 36                                            Simulation data and explicit simulation specifications.
+#> 37                  Connected-subset summary/node files and group-anchor inputs/checks are available.
+#> 44                                    Category probability curves conditional on theta are available.
+#> 47                                                               Fit/score table import is supported.
+#>                                                                                                               Limitation
+#> 3                                                                Does not reproduce the complete FACETS iteration trace.
 #> 8                                                     FACETS M/S/Q/X printer-graph formatting is not reproduced exactly.
 #> 12                                               FACETS binomial-trial and Poisson-specific reports are not implemented.
 #> 14                                                                FACETS line-printer artwork is not reproduced exactly.
@@ -581,29 +580,29 @@ facets_feature_coverage("partial")
 #> 27                                                                               No general FACETS histogram menu clone.
 #> 30                                                                   Does not write a FACETS command specification file.
 #> 33                                                                 Full FACETS report-file emulation is not implemented.
-#> 35                                                  Bounded GPCM score-side equivalence is outside the current boundary.
+#> 35                                                  Bounded GPCM score-side equivalence is outside the documented scope.
 #> 36                                                                               Not a FACETS simulated-data file clone.
 #> 37 The standalone subset writer exports connectivity review tables, not a full FACETS UI-compatible subset command file.
 #> 44                                               FACETS conditional-probability menu semantics are not mirrored exactly.
 #> 47                                                                 General raw FACETS report parsing is not implemented.
-#>        Priority
-#> 3  release_core
-#> 8  release_core
-#> 12        defer
-#> 14 release_core
-#> 19 release_core
-#> 22        defer
-#> 23          low
-#> 24          low
-#> 26          low
-#> 27          low
-#> 30 release_core
-#> 33        defer
-#> 35 release_core
-#> 36 release_core
-#> 37 release_core
-#> 44        defer
-#> 47        defer
+#>                                                                                                                             Alternative
+#> 3                       Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 8                       Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 12 Use the closest documented mfrmr table or plot for analysis; use FACETS externally when the omitted statistic or format is required.
+#> 14                      Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 19                      Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 22 Use the closest documented mfrmr table or plot for analysis; use FACETS externally when the omitted statistic or format is required.
+#> 23             Build the display from package plot data or another R graphics system; use FACETS externally for its menu-specific view.
+#> 24             Build the display from package plot data or another R graphics system; use FACETS externally for its menu-specific view.
+#> 26             Build the display from package plot data or another R graphics system; use FACETS externally for its menu-specific view.
+#> 27             Build the display from package plot data or another R graphics system; use FACETS externally for its menu-specific view.
+#> 30                      Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 33 Use the closest documented mfrmr table or plot for analysis; use FACETS externally when the omitted statistic or format is required.
+#> 35                      Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 36                      Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 37                      Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 44 Use the closest documented mfrmr table or plot for analysis; use FACETS externally when the omitted statistic or format is required.
+#> 47 Use the closest documented mfrmr table or plot for analysis; use FACETS externally when the omitted statistic or format is required.
 facets_feature_coverage("supported_with_caveat")
 #>     FACETSArea                                 FACETSFeature FACETSReference
 #> 28 R/Web plots Generalizability Theory via R package gtheory     gtheory.htm
@@ -611,17 +610,19 @@ facets_feature_coverage("supported_with_caveat")
 #> 28 mfrm_generalizability(); mfrm_d_study(); compute_facet_icc()
 #>                   Status
 #> 28 supported_with_caveat
-#>                                                                                                                                             Scope
+#>                                                                                                                                        Capability
 #> 28 Observed univariate G-study variance components plus D-study projections with residual-scaling sensitivity and `IdentificationStatus` columns.
-#>                                                                                                                                                                        GapOrBoundary
-#> 28 Package-native caveated G/D-study route; not a FACETS/gtheory UI clone, not multivariate/profile G-theory, and not high-stakes-ready when boundary or singular fits are reported.
-#>        Priority
-#> 28 release_core
+#>                                                                                                                                                                                      Limitation
+#> 28 Package-native caveated G/D-study route; not a FACETS/gtheory UI clone, not multivariate/profile G-theory, and not suitable for high-stakes use when boundary or singular fits are reported.
+#>                                                                                                        Alternative
+#> 28 Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
 facets_feature_coverage("not_implemented")
 #>     FACETSArea                  FACETSFeature  FACETSReference mfrmrRoute
 #> 38 Output file Winsteps control and data file winstepsfile.htm       none
-#>             Status                                  Scope
+#>             Status                             Capability
 #> 38 not_implemented No Winsteps control/data export route.
-#>                                         GapOrBoundary    Priority
-#> 38 Would require a separate Winsteps output contract. not_planned
+#>                                            Limitation
+#> 38 Would require a separate Winsteps output contract.
+#>                                                                                                                              Alternative
+#> 38 Use package-native R output where suitable, or run the relevant external program for its program-specific file, interface, or report.
 ```

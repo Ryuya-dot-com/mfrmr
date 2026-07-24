@@ -18,7 +18,7 @@
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from Facets to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
@@ -98,6 +98,7 @@
 <li><p><code>summary</code>: one-row summary (includes baseline-vs-after counts)</p></li>
 <li><p><code>thresholds</code>: applied thresholds</p></li>
 <li><p><code>facets</code>: analyzed bias facet pair</p></li>
+<li><p><code>gpcm_boundary</code>: bounded-<code>GPCM</code> interpretation guidance when applicable</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -115,8 +116,12 @@ adjustments from <code><a href="estimate_bias.html">estimate_bias()</a></code> h
 <ul><li><p><code>summary</code>: before/after unexpected counts and reduction metrics.</p></li>
 <li><p><code>table</code>: residual unexpected responses after bias adjustment.</p></li>
 <li><p><code>thresholds</code>: screening settings used in this comparison.</p></li>
-</ul><p>Large reductions indicate bias terms explain part of prior unexpectedness;
-persistent unexpected rows indicate remaining model-data mismatch.</p>
+</ul><p>Lower after-adjustment counts describe an in-sample change in flags; they do
+not show that bias has been removed or establish fairness. For bounded
+<code>GPCM</code>, both the bias estimate and the post-adjustment comparison use the
+fitted slope-aware probability kernel while holding the other fitted
+quantities fixed. Read the returned <code>gpcm_boundary</code> before reporting the
+comparison.</p>
     </div>
     <div class="section level2">
     <h2 id="typical-workflow">Typical workflow<a class="anchor" aria-label="anchor" href="#typical-workflow"></a></h2>

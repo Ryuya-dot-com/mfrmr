@@ -101,14 +101,16 @@ ZSTD review. They summarize the stored `fit_measures` component from
 [`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md);
 `mfrm_report()` itself does not recompute diagnostics. The
 `fit_reporting_templates` table turns those counts into cautious
-APA/QC/validation/reviewer wording scaffolds while keeping MnSq, ZSTD
-standardization, df sensitivity, and separation/reliability in separate
-sentences. All reporting-template tables share `EvidenceTable`,
-`EvidenceRoute`, `BoundaryType`, `ClaimStrength`, and `RecommendedUse`
-columns so each template can be traced back to its evidence and claim
-boundary. `template_index` stacks those columns across all template
-areas so report authors can review unsupported or caveated wording
-before opening the full template text. The
+reporting language while keeping MnSq, ZSTD standardization, df
+sensitivity, and separation/reliability in separate sentences. All
+reporting-template tables share `EvidenceTable`, `EvidenceRoute`,
+`BoundaryType`, `ClaimStrength`, and `RecommendedUse` columns so each
+template can be traced back to its evidence and claim boundary. The
+default `RecommendedUse` is `"report_with_context"`; more restrictive
+rows request evidence, identify a methods or appendix caveat, or require
+targeted follow-up. `template_index` stacks those columns across all
+template areas so report authors can review unsupported or caveated
+wording before opening the full template text. The
 `precision_reporting_templates` table does the same for separation,
 reliability, and strata using the stored precision review and
 `diagnostics$reliability`. The `bias_reporting_templates` table is

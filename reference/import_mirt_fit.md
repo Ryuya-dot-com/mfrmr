@@ -96,8 +96,9 @@ An `mfrm_imported_fit` object. Slots:
 
 ## Scope
 
-Bundles bias / DIF / anchor / replay slots are explicitly not populated;
-full bidirectional import / export is planned for a future release.
+Bundles bias / DIF / anchor / replay slots are explicitly not populated.
+This helper provides a one-way fitted-object import for the documented
+core fields, not a bidirectional interchange format.
 
 ## See also
 

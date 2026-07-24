@@ -19,7 +19,7 @@ as_flextable(x, ...)
 
 - ...:
 
-  Additional arguments reserved for future use.
+  Reserved for generic compatibility.
 
 ## Value
 

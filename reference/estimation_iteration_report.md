@@ -39,8 +39,8 @@ estimation_iteration_report(
 
 ## Value
 
-A named list with iteration-report components. Class:
-`mfrm_iteration_report`.
+A named list with iteration-report components and, for bounded `GPCM`, a
+`gpcm_boundary` table. Class: `mfrm_iteration_report`.
 
 ## Details
 
@@ -58,6 +58,13 @@ dispatched through
 - `summary`: final status and stopping diagnostics.
 
 - optional `PROX` row: pseudo-initial reference point when enabled.
+
+For bounded `GPCM`, this helper replays slope-aware optimization steps
+from a reconstructed starting state. It is not the exact optimizer
+history from the fitted object and is not an additional convergence
+test. Use `summary(fit, profile = "fit", detail = "brief")` for the
+recorded convergence result, and read the returned `gpcm_boundary`
+before reporting the replay.
 
 ## Typical workflow
 
@@ -78,47 +85,52 @@ dispatched through
 ## Examples
 
 ``` r
-toy <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+toy <- load_mfrmr_data("example_operational")
+fit <- fit_mfrm(
+  toy, "Person", c("Rater", "Criterion"), "Score",
+  method = "MML", quad_points = 7, maxit = 30
+)
 out <- estimation_iteration_report(fit, max_iter = 5)
 summary(out)
 #> mfrmr Iteration Report Summary 
 #>   Class: mfrm_iteration_report
-#>   Components (3): table, summary, settings
+#>   Components: 4
 #> 
 #> Iteration overview
-#>  FinalConverged FinalIterations ReplayRows ConnectedSubset
-#>            TRUE              71          6            TRUE
+#>  FinalConverged OptimizerCodeZero ConvergenceSeverity FinalIterations
+#>            TRUE              TRUE                pass              16
+#>  ReplayRows ConnectedSubset
+#>           6            TRUE
 #> 
 #> Iteration rows: table
 #>  Method Iteration MaxScoreResidualElements MaxScoreResidualPercent
-#>    PROX         1                   44.000                1466.667
-#>    JMLE         2                   32.372                1079.076
-#>    JMLE         3                   17.345                 578.164
-#>    JMLE         4                  -19.395                -646.496
-#>    JMLE         5                   14.979                 499.290
-#>    JMLE         6                   13.019                 433.962
+#>    PROX         1                   16.194                 539.801
+#>     MML         2                   -6.883                -229.443
+#>     MML         3                   -4.437                -147.905
+#>     MML         4                   -3.657                -121.909
+#>     MML         5                   -3.285                -109.487
+#>     MML         6                   -3.408                -113.614
 #>  MaxScoreResidualCategories MaxLogitChangeElements MaxLogitChangeSteps
-#>                     -39.726                     NA                  NA
-#>                     -33.843                  0.226               0.155
-#>                      38.014                  0.244               0.443
-#>                     -40.558                  0.145               0.582
-#>                     -20.843                  0.087               0.138
-#>                      27.980                  0.120               0.364
+#>                      -7.704                     NA                  NA
+#>                      -4.169                  0.465               0.069
+#>                       4.731                  0.218               0.110
+#>                       4.761                  0.080               0.017
+#>                       5.172                  0.064               0.017
+#>                       5.029                  0.031               0.004
 #>  Objective
 #>         NA
-#>  -1021.913
-#>   -982.631
-#>   -959.201
-#>   -948.673
-#>   -930.036
+#>   -349.983
+#>   -347.977
+#>   -347.563
+#>   -347.364
+#>   -347.291
 #> 
 #> Settings
 #>        Setting Value
 #>       max_iter     5
-#>         reltol 1e-06
+#>         reltol 1e-09
 #>   include_prox  TRUE
-#>    quad_points    31
+#>    quad_points     7
 #>  include_fixed FALSE
 #> 
 #> Notes

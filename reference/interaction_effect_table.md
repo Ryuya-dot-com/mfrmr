@@ -28,13 +28,13 @@ the fit has no model-estimated facet interactions.
 
 ## Details
 
-The current release supports two-way interactions between non-person
-facets, for example `facet_interactions = "Rater:Criterion"`. Each
-interaction matrix is identified by zero marginal sums across both
-participating facets, so the interaction estimates are separable from
-the two main effects. Positive values indicate higher-than-expected
-scores for the facet-level combination under the additive model;
-negative values indicate lower-than-expected scores.
+mfrmr supports two-way interactions between non-person facets, for
+example `facet_interactions = "Rater:Criterion"`. Each interaction
+matrix is identified by zero marginal sums across both participating
+facets, so the interaction estimates are separable from the two main
+effects. Positive values indicate higher-than-expected scores for the
+facet-level combination under the additive model; negative values
+indicate lower-than-expected scores.
 
 Use this table for confirmatory model review after specifying the facet
 pair of substantive interest. For exploratory screening without adding
@@ -52,11 +52,22 @@ or
 ## Examples
 
 ``` r
-toy <- load_mfrmr_data("example_core")
+toy <- load_mfrmr_data("example_operational")
 fit <- fit_mfrm(
   toy, person = "Person", facets = c("Rater", "Criterion"),
-  score = "Score", method = "JML", model = "RSM", maxit = 30
+  score = "Score", method = "MML", model = "RSM",
+  facet_interactions = "Rater:Criterion",
+  quad_points = 7, maxit = 30
 )
-interaction_effect_table(fit)
-#> # A tibble: 0 × 0
+head(interaction_effect_table(fit))
+#> # A tibble: 6 × 10
+#>   Interaction   FacetA FacetA_Level FacetB FacetB_Level Estimate     N WeightedN
+#>   <chr>         <chr>  <chr>        <chr>  <chr>           <dbl> <int>     <dbl>
+#> 1 Rater:Criter… Rater  R01          Crite… Content         0.130    15        15
+#> 2 Rater:Criter… Rater  R02          Crite… Content        -0.123    19        19
+#> 3 Rater:Criter… Rater  R03          Crite… Content        -0.382    17        17
+#> 4 Rater:Criter… Rater  R04          Crite… Content        -0.308    15        15
+#> 5 Rater:Criter… Rater  R05          Crite… Content         0.543    15        15
+#> 6 Rater:Criter… Rater  R06          Crite… Content         0.140    13        13
+#> # ℹ 2 more variables: Sparse <lgl>, Identification <chr>
 ```

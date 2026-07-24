@@ -63,11 +63,12 @@ evaluate_mfrm_recovery(
   Optional named design override supplied as a named list, named vector,
   or one-row data frame. When `sim_spec = NULL`, names may use canonical
   variables (`n_person`, `n_rater`, `n_criterion`, `raters_per_person`)
-  or role keywords (`person`, `rater`, `criterion`, `assignment`). For
-  the currently exposed facet keys, the schema-only future branch input
-  `design$facets = c(person = ..., rater = ..., criterion = ...)` is
-  also accepted. Do not specify the same variable through both `design`
-  and the scalar count arguments.
+  or role keywords (`person`, `rater`, `criterion`, `assignment`). A
+  nested named-facet form,
+  `design$facets = c(person = ..., rater = ..., criterion = ...)`, is
+  also accepted for the supported person/rater/criterion design. Do not
+  specify the same variable through both `design` and the scalar count
+  arguments.
 
 - reps:
 
@@ -190,7 +191,7 @@ evaluate_mfrm_recovery(
   [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md)
   after each successful refit and retain facet-level fit/separation
   operating characteristics. These diagnostics are reported separately
-  from recovery metrics and are not release-success criteria by
+  from recovery metrics and are not parameter-recovery criteria by
   themselves.
 
 - diagnostic_fit_df_method:
@@ -264,8 +265,9 @@ template used in later simulation-study guidance.
     [`build_mfrm_sim_spec()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_mfrm_sim_spec.md)
     or pass scalar generator arguments directly.
 
-2.  Run `evaluate_mfrm_recovery(...)` with a modest `reps` value for a
-    smoke check, then increase `reps` for stable Monte Carlo summaries.
+2.  Run `evaluate_mfrm_recovery(...)` with a modest `reps` value for an
+    initial end-to-end review, then increase `reps` for stable Monte
+    Carlo summaries.
 
 3.  Inspect `summary(x)$recovery_summary` and the row-level `x$recovery`
     table.

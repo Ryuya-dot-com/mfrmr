@@ -18,7 +18,7 @@
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from Facets to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
@@ -85,8 +85,8 @@ block.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A named list with iteration-report components. Class:
-<code>mfrm_iteration_report</code>.</p>
+    <p>A named list with iteration-report components and, for bounded
+<code>GPCM</code>, a <code>gpcm_boundary</code> table. Class: <code>mfrm_iteration_report</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -102,7 +102,13 @@ block.</p></dd>
 <ul><li><p><code>iterations</code>: trajectory of convergence indicators by iteration.</p></li>
 <li><p><code>summary</code>: final status and stopping diagnostics.</p></li>
 <li><p>optional <code>PROX</code> row: pseudo-initial reference point when enabled.</p></li>
-</ul></div>
+</ul><p>For bounded <code>GPCM</code>, this helper replays slope-aware optimization steps from
+a reconstructed starting state. It is not the exact optimizer history from
+the fitted object and is not an additional convergence test. Use
+<code>summary(fit, profile = "fit", detail = "brief")</code> for the recorded
+convergence result, and read the returned <code>gpcm_boundary</code> before reporting
+the replay.</p>
+    </div>
     <div class="section level2">
     <h2 id="typical-workflow">Typical workflow<a class="anchor" aria-label="anchor" href="#typical-workflow"></a></h2>
 
@@ -119,47 +125,52 @@ block.</p></dd>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>, method <span class="op">=</span> <span class="st">"JML"</span>, maxit <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_operational"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span></span>
+<span class="r-in"><span>  method <span class="op">=</span> <span class="st">"MML"</span>, quad_points <span class="op">=</span> <span class="fl">7</span>, maxit <span class="op">=</span> <span class="fl">30</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">out</span> <span class="op">&lt;-</span> <span class="fu">estimation_iteration_report</span><span class="op">(</span><span class="va">fit</span>, max_iter <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">out</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> mfrmr Iteration Report Summary </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Class: mfrm_iteration_report</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Components (3): table, summary, settings</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Components: 4</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Iteration overview</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  FinalConverged FinalIterations ReplayRows ConnectedSubset</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            TRUE              71          6            TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  FinalConverged OptimizerCodeZero ConvergenceSeverity FinalIterations</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            TRUE              TRUE                pass              16</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  ReplayRows ConnectedSubset</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           6            TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Iteration rows: table</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Method Iteration MaxScoreResidualElements MaxScoreResidualPercent</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    PROX         1                   44.000                1466.667</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    JMLE         2                   32.372                1079.076</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    JMLE         3                   17.345                 578.164</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    JMLE         4                  -19.395                -646.496</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    JMLE         5                   14.979                 499.290</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    JMLE         6                   13.019                 433.962</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    PROX         1                   16.194                 539.801</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     MML         2                   -6.883                -229.443</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     MML         3                   -4.437                -147.905</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     MML         4                   -3.657                -121.909</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     MML         5                   -3.285                -109.487</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     MML         6                   -3.408                -113.614</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  MaxScoreResidualCategories MaxLogitChangeElements MaxLogitChangeSteps</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                     -39.726                     NA                  NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                     -33.843                  0.226               0.155</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                      38.014                  0.244               0.443</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                     -40.558                  0.145               0.582</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                     -20.843                  0.087               0.138</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                      27.980                  0.120               0.364</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                      -7.704                     NA                  NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                      -4.169                  0.465               0.069</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                       4.731                  0.218               0.110</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                       4.761                  0.080               0.017</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                       5.172                  0.064               0.017</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                       5.029                  0.031               0.004</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Objective</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  -1021.913</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   -982.631</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   -959.201</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   -948.673</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   -930.036</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   -349.983</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   -347.977</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   -347.563</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   -347.364</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   -347.291</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Settings</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>        Setting Value</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       max_iter     5</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         reltol 1e-06</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         reltol 1e-09</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   include_prox  TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    quad_points    31</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    quad_points     7</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  include_fixed FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Notes</span>

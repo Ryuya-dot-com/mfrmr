@@ -51,8 +51,8 @@ plot(
 
 - min_reps:
 
-  Minimum replication count expected before treating the simulation as
-  more than a smoke check.
+  Minimum replication count expected before treating the simulation for
+  inferential use.
 
 - min_success_rate:
 
@@ -102,7 +102,7 @@ plot(
 
 - ...:
 
-  Reserved for future extensions.
+  Reserved for generic compatibility.
 
 - y:
 
@@ -137,7 +137,7 @@ An object of class `mfrm_recovery_assessment` with:
   support when available.
 
 - `condition_reporting_notes`: reporter-facing generator-condition
-  caveats separated from recovery metrics and release-gate decisions.
+  caveats separated from parameter-recovery conclusions.
 
 - `diagnostic_reporting_notes`: reporter-facing fit/separation caveats
   retained as diagnostic context rather than recovery gates.

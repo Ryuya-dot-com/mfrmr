@@ -69,7 +69,7 @@ evaluate_mfrm_diagnostic_screening(
 
 - scenarios:
 
-  Screening scenarios to evaluate. The current first release supports
+  Screening scenarios to evaluate. Supported values are
   `"well_specified"`, `"local_dependence"`, and
   `"latent_misspecification"`, plus `"step_structure_misspecification"`.
 
@@ -139,7 +139,7 @@ evaluate_mfrm_diagnostic_screening(
 
 - quad_points:
 
-  Quadrature points for the internal `MML` fit.
+  Quadrature points for the underlying `MML` fit.
 
 - residual_pca:
 
@@ -211,7 +211,7 @@ An object of class `mfrm_diagnostic_screening` with:
 - `planning_constraints`: explicit record of mutable/locked design
   variables
 
-- `planning_schema`: combined planner-schema contract
+- `planning_schema`: structured planning metadata
 
 - `gpcm_boundary`: bounded-`GPCM` caveat row when present
 
@@ -223,8 +223,8 @@ An object of class `mfrm_diagnostic_screening` with:
 
 ## Details
 
-This helper performs a compact Monte Carlo validation study for the
-package's current diagnostic architecture.
+This helper performs a compact Monte Carlo evaluation of the package's
+diagnostic architecture under user-specified simulation conditions.
 
 For each design condition and scenario, the function:
 
@@ -264,12 +264,11 @@ the generator and fit each keep `slope_facet == step_facet`; the
 misspecification is the generator-versus-fit step/slope facet mismatch.
 
 This function is intentionally screening-oriented. The strict marginal
-branch remains exploratory in the current release, so the returned
-summaries should be used to compare relative sensitivity across
-scenarios rather than to claim calibrated inferential power.
-Bounded-`GPCM` rows add explicit `gpcm_boundary` caveats and should be
-read as slope-aware operating characteristics under the evaluated
-role-based design.
+branch remains exploratory, so the returned summaries should be used to
+compare relative sensitivity across scenarios rather than to claim
+calibrated inferential power. Bounded-`GPCM` rows add explicit
+`gpcm_boundary` caveats and should be read as slope-aware operating
+characteristics under the evaluated role-based design.
 
 ## See also
 

@@ -27,14 +27,12 @@ build_summary_table_bundle(
   `mfrm_reporting_checklist`, `mfrm_apa_outputs`,
   `mfrm_design_evaluation`, `mfrm_signal_detection`,
   `mfrm_recovery_simulation`, `mfrm_recovery_assessment`,
-  `mfrm_population_prediction`, `mfrm_future_branch_active_branch`,
-  `mfrm_facets_run`, `mfrm_bias`, `mfrm_anchor_review`,
-  `mfrm_linking_review`, `mfrm_misfit_casebook`,
+  `mfrm_population_prediction`, `mfrm_facets_run`, `mfrm_bias`,
+  `mfrm_anchor_review`, `mfrm_linking_review`, `mfrm_misfit_casebook`,
   `mfrm_model_choice_review`, `mfrm_weighting_review`,
   `mfrm_unit_prediction`, or `mfrm_plausible_values` object, one of
   their [`summary()`](https://rdrr.io/r/base/summary.html) outputs, or a
-  `summary.mfrmr_recovery_validation` object from the packaged
-  validation protocol.
+  compatible precomputed recovery-evidence summary.
 
 - which:
 
@@ -154,12 +152,13 @@ manuscript-facing subset before plotting or export.
 - [`assess_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/reference/assess_mfrm_recovery.md)
   or `summary(rec_assessment)`
 
-- `summary(validation)` from `recovery-validation.R`
+- a compatible precomputed recovery-evidence summary
 
 - [`predict_mfrm_population()`](https://ryuya-dot-com.github.io/mfrmr/reference/predict_mfrm_population.md)
   or `summary(pred)`
 
-- `planning_schema$future_branch_active_branch` or `summary(...)`
+- the `structural_design_review` component of a design or prediction
+  summary
 
 - [`run_mfrm_facets()`](https://ryuya-dot-com.github.io/mfrmr/reference/run_mfrm_facets.md)
   or `summary(out)`
@@ -215,7 +214,7 @@ manuscript-facing subset before plotting or export.
 - recovery-assessment and recovery-validation summaries expose
   `diagnostic_reporting_notes` before `diagnostic_review` or
   `diagnostic_oc_summary` so fit/separation caveats can be reported
-  without treating them as recovery or release gates.
+  without treating them as direct evidence of parameter recovery.
 
 - recovery-validation summaries expose `condition_reporting_notes`
   before `condition_summary` so GPCM generator stress and sparse score
@@ -223,7 +222,7 @@ manuscript-facing subset before plotting or export.
 
 - precision-review summaries expose `fit_separation_basis` so fit, ZSTD,
   separation/reliability/strata, and QC thresholds remain separate
-  reporting surfaces rather than implicit validation gates.
+  reporting surfaces rather than interchangeable evidence.
 
 - fit-measure and FACETS fit-review summaries expose df/ZSTD sensitivity
   tables under precision-review roles, keeping MnSq status, ZSTD
@@ -284,21 +283,5 @@ fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 bundle <- build_summary_table_bundle(fit)
 bundle$table_index
 summary(bundle)$role_summary
-} # }
-
-# Recovery-validation output can be converted to appendix-ready tables.
-if (FALSE) { # \dontrun{
-source(system.file("validation", "recovery-validation.R", package = "mfrmr"))
-validation <- mfrmr_run_recovery_validation(
-  case_ids = c("gpcm_slope_profile", "gpcm_high_dispersion_sparse"),
-  quick = TRUE,
-  seed = 20260525
-)
-validation_bundle <- build_summary_table_bundle(summary(validation))
-validation_bundle$tables$reading_order
-validation_bundle$tables$topline_release_decision
-validation_bundle$tables$condition_reporting_notes
-validation_bundle$tables$condition_summary
-validation_bundle$tables$diagnostic_reporting_notes
 } # }
 ```

@@ -12,7 +12,8 @@ export_mfrm(
   output_dir = ".",
   prefix = "mfrm",
   tables = c("person", "facets", "summary", "steps", "measures"),
-  overwrite = FALSE
+  overwrite = FALSE,
+  acknowledge_sensitive = FALSE
 )
 ```
 
@@ -48,10 +49,18 @@ export_mfrm(
 
   If `FALSE` (default), refuse to overwrite existing files.
 
+- acknowledge_sensitive:
+
+  Logical; set to `TRUE` only after acknowledging that these tables can
+  contain direct person identifiers, person-level estimates, and
+  original facet labels. This suppresses the privacy warning; it does
+  not deidentify any file.
+
 ## Value
 
-Invisibly, a data.frame listing written files with columns `Table` and
-`Path`.
+Invisibly, a data.frame listing written files, their paths, and explicit
+privacy/data-handling metadata. `Deidentified` and
+`ShareableWithoutReview` are always `FALSE`.
 
 ## Exported files
 
@@ -80,7 +89,9 @@ Invisibly, a data.frame listing written files with columns `Table` and
 
 The returned data.frame tells you exactly which files were written and
 where. This is convenient for scripted pipelines where the output
-directory is created on the fly.
+directory is created on the fly. The files are analysis tables, not a
+deidentified sharing package; review each file under the applicable
+data-handling policy before sharing it.
 
 ## Typical workflow
 
@@ -112,7 +123,8 @@ out <- export_mfrm(
   diagnostics = diag,
   output_dir = tempdir(),
   prefix = "mfrmr_example",
-  overwrite = TRUE
+  overwrite = TRUE,
+  acknowledge_sensitive = TRUE
 )
 out$Table
 }

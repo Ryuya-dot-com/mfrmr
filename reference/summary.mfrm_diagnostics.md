@@ -6,7 +6,14 @@ Summarize an `mfrm_diagnostics` object in a user-friendly format
 
 ``` r
 # S3 method for class 'mfrm_diagnostics'
-summary(object, digits = 3, top_n = 10, ...)
+summary(
+  object,
+  digits = 3,
+  top_n = 10,
+  detail = c("brief", "full"),
+  include_person = FALSE,
+  ...
+)
 ```
 
 ## Arguments
@@ -23,6 +30,17 @@ summary(object, digits = 3, top_n = 10, ...)
 - top_n:
 
   Number of highest-absolute-Z fit rows to keep.
+
+- detail:
+
+  Console detail: `"brief"` (default) prints the first-screen review;
+  `"full"` prints the additional structured tables.
+
+- include_person:
+
+  If `TRUE`, person-level identifiers may be printed in fit-review
+  tables. The default keeps identifiers out of console output;
+  person-level rows remain available in the returned object.
 
 - ...:
 
@@ -158,12 +176,10 @@ s$key_warnings
 #   element + Infit / Outfit values; "Unexpected responses flagged"
 #   counts how many cell-level surprises the screen returned.
 s$top_fit
-# Look for: rows with |InfitZSTD| or |OutfitZSTD| > 2 are misfitting
-#   at the 5% level; > 3 is misfitting at the 1% level. Investigate
-#   in order of the AbsZ column.
+# Large absolute standardized values identify rows for follow-up; they do
+# not create a universal accept/reject rule.
 s$facets_chisq
-# Look for: FixedProb < 0.05 in each non-Person facet means the
-#   facet contributes meaningful spread; FixedProb >= 0.05 means
-#   that facet is statistically indistinguishable.
+# Read the fixed-effect chi-square as a heterogeneity screen in the context
+# of the design and intended score use.
 }
 ```

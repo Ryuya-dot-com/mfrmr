@@ -19,7 +19,9 @@ describe_mfrm_data(
   include_agreement = TRUE,
   rater_facet = NULL,
   context_facets = NULL,
-  agreement_top_n = NULL
+  agreement_top_n = NULL,
+  expected_design = NULL,
+  min_linking_persons = 2L
 )
 ```
 
@@ -65,10 +67,11 @@ describe_mfrm_data(
 
   Optional. `NULL` (default) is a no-op; `TRUE` or `"default"` activates
   the FACETS / SPSS / SAS convention
-  (`c("99", "999", "-1", "N", "NA", "n/a", ".", "")`); supply a
-  character vector for a custom code set. Replacement counts are
-  returned in the `missing_recoding` component when supported by the
-  calling helper. See
+  (`c("99", "999", "-1", "N", "NA", "n/a", ".", "")`) for the score
+  column while preserving person/facet identifiers; supply a character
+  vector to apply a custom code set across all model columns.
+  Replacement counts are returned in the `missing_recoding` component
+  when supported by the calling helper. See
   [`recode_missing_codes()`](https://ryuya-dot-com.github.io/mfrmr/reference/recode_missing_codes.md)
   for the standalone version.
 
@@ -78,13 +81,16 @@ describe_mfrm_data(
 
 - include_agreement:
 
-  If `TRUE`, include an observed-score inter-rater agreement bundle
-  (summary/pairs/settings) in the output.
+  If `TRUE`, include an observed-score agreement bundle
+  (summary/pairs/settings) for a selected non-person facet.
 
 - rater_facet:
 
-  Optional rater facet name used for agreement summaries. If `NULL`,
-  inferred from facet names.
+  Optional facet name used to identify repeated scorers for agreement
+  summaries. If `NULL`, a rater-like name such as `Rater`, `Judge`, or
+  `Scorer` is inferred. No agreement analysis is run when such a name is
+  absent; set this argument explicitly only when another facet genuinely
+  represents repeated scorers.
 
 - context_facets:
 
@@ -94,6 +100,21 @@ describe_mfrm_data(
 - agreement_top_n:
 
   Optional maximum number of agreement pair rows.
+
+- expected_design:
+
+  Optional data frame declaring the planned assignment roster. It must
+  contain the columns named by `person` and `facets`, with one row per
+  planned Person x facet cell. Extra columns are ignored. When supplied,
+  observed cells are compared with the roster so planned omissions can
+  be distinguished from cells that were never assigned.
+
+- min_linking_persons:
+
+  Positive integer used as a descriptive sparse-link flag. A facet level
+  observed for fewer than this many distinct persons is counted in
+  `linkage_summary$SparseLevels`. This is a review threshold, not a
+  model-acceptance rule.
 
 ## Value
 
@@ -122,18 +143,35 @@ A list of class `mfrm_data_description` with:
 - `facet_level_summary`: per-level usage and score summaries
 
 - `facet_crosstabs`: pairwise observation-count crosstabs between
-  non-person facets (named list keyed `"facetA__facetB"`); used by
-  `summary(ds)$design_links` to flag sparse / disconnected facet-pair
-  coverage
+  non-person facets (named list keyed `"facetA__facetB"`) for optional
+  downstream coverage displays
 
 - `linkage_summary`: person-facet connectivity diagnostics
 
-- `agreement`: observed-score inter-rater agreement bundle
+- `structural_missingness`: declared-design comparison bundle containing
+  a one-row summary, missing expected cells, unexpected observed cells,
+  per-facet level coverage, and settings
+
+- `design_connectivity`: component counts for each observed Person-facet
+  graph and, when declared, each expected Person-facet graph
+
+- `design_components`: component-level counts and facet-level labels;
+  person labels are included only when `include_person_facet = TRUE`
+
+- `duplicate_cell_summary`: counts of duplicate Person x facet cells
+
+- `duplicate_cell_detail`: duplicate-cell keys and row counts
+
+- `agreement`: observed-score agreement bundle for the selected scorer
+  facet
 
 - `row_retention`: row counts before and after preparation filters
 
 - `preparation_notes`: structured notes for row drops, ID trimming, and
   design conditions detected during preparation
+
+- `missing_recoding`: per-column counts of declared missing-code values
+  replaced with `NA` before row filtering
 
 - `score_support`: minimal prepared score-support metadata used by
   `summary(ds)$caveats`
@@ -148,14 +186,16 @@ used for numeric descriptives of score and weight.
 
 **Key data-quality checks to perform before fitting:**
 
-- *Sparse categories*: any score category with fewer than 10 weighted
-  observations may produce unstable threshold estimates (Linacre, 2002).
-  Consider collapsing adjacent categories.
+- *Sparse categories*: review categories with little weighted support
+  because their threshold estimates may be imprecise. Do not collapse
+  categories solely from a package warning; also consider the rubric,
+  intended score interpretation, and category diagnostics after fitting.
 
-- *Unlinked elements*: if a facet level has zero overlap with one or
-  more levels of another facet, the design is disconnected and
-  parameters cannot be placed on a common scale. Check `linkage_summary`
-  for low connectivity.
+- *Unlinked elements*: inspect `design_connectivity` for the observed
+  Person-facet graph. More than one component means that the levels of
+  that facet are not connected through shared persons. This
+  facet-specific check is conservative and does not by itself prove full
+  model identification.
 
 - *Extreme scores*: persons or facet levels with all-minimum or
   all-maximum scores yield infinite logit estimates under JML; they are
@@ -165,24 +205,28 @@ used for numeric descriptives of score and weight.
 
 Recommended order:
 
-- `overview`: confirms sample size, facet count, and category span. The
-  `MinWeightedN` column shows the smallest weighted observation count
-  across all facet levels; values below 30 may lead to unstable
-  parameter estimates.
+- `overview`: confirms sample size, facet count, and category span.
 
-- `missing_by_column`: identifies immediate data-quality risks. Any
-  non-zero count warrants investigation before fitting.
+- `missing_by_column`: identifies immediate data-quality risks.
+  Understand why values are missing and whether the fitted missing-data
+  handling matches the study design.
 
-- `score_distribution`: checks sparse/unused score categories. Balanced
-  usage across categories is ideal; heavily skewed distributions may
-  compress the measurement range.
+- `structural_missingness`: compares observed rating cells with
+  `expected_design`, when supplied. Without a declared roster,
+  structural missingness is reported as not assessed rather than assumed
+  to be zero.
 
-- `facet_level_summary` and `linkage_summary`: checks per-level support
-  and person-facet connectivity. Low linkage ratios indicate sparse or
-  disconnected design blocks.
+- `score_distribution`: checks sparse/unused score categories. Skew can
+  be substantively expected, but weakly supported or unused categories
+  need explicit interpretation.
 
-- `agreement`: optional observed inter-rater consistency summary (exact
-  agreement, correlation, mean differences per rater pair).
+- `facet_level_summary` and `linkage_summary`: checks per-level support,
+  shared-person counts, and sparse levels. Use `design_connectivity` for
+  the separate graph-component result.
+
+- `agreement`: optional observed agreement summary for the selected
+  scorer facet (exact agreement, correlation, and mean differences per
+  pair).
 
 ## Typical workflow
 

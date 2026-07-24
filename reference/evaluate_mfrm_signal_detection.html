@@ -18,7 +18,7 @@
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from Facets to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
@@ -117,9 +117,9 @@ named vector, or one-row data frame. Names may use canonical variables
 (<code>n_person</code>, <code>n_rater</code>, <code>n_criterion</code>, <code>raters_per_person</code>), current
 public aliases implied by <code>sim_spec</code> (for example <code>n_judge</code>, <code>n_task</code>,
 <code>judge_per_person</code>), or role keywords (<code>person</code>, <code>rater</code>, <code>criterion</code>,
-<code>assignment</code>). Values may be vectors. The schema-only future branch input
+<code>assignment</code>). Values may be vectors. The nested named-facet form
 <code>design$facets = c(person = ..., judge = ..., task = ...)</code> is also
-accepted for the currently exposed facet keys. Do not specify the same
+accepted for the supported person/rater/criterion design. Do not specify the same
 variable through both <code>design</code> and the scalar design-grid arguments.</p></dd>
 
 
@@ -288,7 +288,7 @@ target DIF detection. When omitted, the effective default is <code>0.43</code> f
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>An object of class <code>mfrm_signal_detection</code> with:</p><ul><li><p><code>design_grid</code>: evaluated design conditions. When <code>sim_spec</code> carries custom
 public facet names, matching design-variable alias columns are included
-alongside the canonical internal columns.</p></li>
+alongside the standard result columns.</p></li>
 <li><p><code>results</code>: replicate-level detection results, with the same
 design-variable alias columns when applicable.</p></li>
 <li><p><code>rep_overview</code>: run-level status and timing, with the same design-variable
@@ -298,7 +298,7 @@ summaries and plots</p></li>
 <li><p><code>planning_scope</code>: explicit record of the current planning contract</p></li>
 <li><p><code>planning_constraints</code>: explicit record of which design variables remain
 mutable under the current simulation specification</p></li>
-<li><p><code>planning_schema</code>: combined planner-schema contract bundling the role
+<li><p><code>planning_schema</code>: structured planning metadata bundling the role
 descriptor, scope boundary, and current mutability map</p></li>
 <li><p><code>gpcm_boundary</code>: bounded-<code>GPCM</code> caveat row when a <code>GPCM</code> screening route
 is used</p></li>

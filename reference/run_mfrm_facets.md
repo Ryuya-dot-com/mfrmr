@@ -24,7 +24,8 @@ run_mfrm_facets(
   positive_facets = NULL,
   quad_points = 15,
   maxit = 400,
-  reltol = 1e-06,
+  reltol = 1e-09,
+  optimizer = c("auto", "BFGS", "L-BFGS-B"),
   mml_engine = c("direct", "em", "hybrid"),
   top_n_interactions = 20L
 )
@@ -46,7 +47,7 @@ mfrmRFacets(
   positive_facets = NULL,
   quad_points = 15,
   maxit = 400,
-  reltol = 1e-06,
+  reltol = 1e-09,
   mml_engine = c("direct", "em", "hybrid"),
   top_n_interactions = 20L
 )
@@ -126,7 +127,16 @@ mfrmRFacets(
 
 - reltol:
 
-  Optimization tolerance.
+  Relative optimizer tolerance passed to
+  [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md).
+  The default is `1e-9`.
+
+- optimizer:
+
+  Direct optimizer passed to
+  [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md).
+  `"auto"` selects L-BFGS-B for MML and JML fits with at least 200 free
+  parameters, and BFGS for smaller JML fits.
 
 - mml_engine:
 

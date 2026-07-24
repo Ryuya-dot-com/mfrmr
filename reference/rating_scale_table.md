@@ -201,7 +201,7 @@ The `threshold_table` data.frame contains:
 
 - Linacre, J. M. (2002). What do Infit and Outfit, mean-square and
   standardized mean? *Rasch Measurement Transactions, 16*(2), 878.
-  (Source for the 0.5-1.5 mean-square acceptance band and the
+  (Source for the 0.5-1.5 mean-square heuristic review interval and the
   threshold-gap heuristics used in `summary(t8)$summary`.)
 
 - Wind, S. A. (2023). *Detecting rating scale malfunctioning with the

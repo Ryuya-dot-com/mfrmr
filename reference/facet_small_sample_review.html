@@ -24,7 +24,7 @@ Linacre sample-size bands.'></head><body>
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from Facets to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
@@ -140,8 +140,7 @@ about the band when <code>fit$summary$FacetSampleSizeFlag</code> is set.</p></li
     <p>Linacre, J. M. (2026). <em>A User's Guide to FACETS, Version 4.5.0</em>.
 Winsteps.com. <a href="https://www.winsteps.com/facets.htm" class="external-link">https://www.winsteps.com/facets.htm</a></p>
 <p>Linacre, J. M. (1994). Sample size and item calibration stability.
-<em>Rasch Measurement Transactions, 7</em>(4), 328.
-<a href="https://www.rasch.org/rmt/rmt74m.htm" class="external-link">https://www.rasch.org/rmt/rmt74m.htm</a></p>
+<em>Rasch Measurement Transactions, 7</em>(4), 328.</p>
 <p>Jones, E., &amp; Wind, S. A. (2018). Using repeated ratings to improve
 measurement precision in incomplete rating designs. <em>Journal of
 Applied Measurement, 19</em>(2), 148-161.</p>
@@ -155,24 +154,75 @@ Applied Measurement, 19</em>(2), 148-161.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_operational"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span></span>
-<span class="r-in"><span>                method <span class="op">=</span> <span class="st">"JML"</span>, maxit <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span></span>
+<span class="r-in"><span>                method <span class="op">=</span> <span class="st">"MML"</span>, quad_points <span class="op">=</span> <span class="fl">7</span>, maxit <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">review</span> <span class="op">&lt;-</span> <span class="fu">facet_small_sample_review</span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">review</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> mfrm_facet_sample_review</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Per-facet summary:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      Facet Levels MinN MedianN MaxN WorstCategory</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Criterion      4  192     192  192        strong</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     Person     48   16      16   16      marginal</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      Rater      4  192     192  192        strong</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Criterion      3   94      94   94        strong</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     Person     48    5       6    6        sparse</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      Rater      6   38      47   56        strong</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Sample-size category counts by facet:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      Facet sparse marginal standard strong</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Criterion      0        0        0      4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     Person      0       48        0      0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      Rater      0        0        0      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Criterion      0        0        0      3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     Person     48        0        0      0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      Rater      0        0        4      2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Sparse levels (n &lt; 10 ):</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Facet Level N     Estimate        SE SampleCategory</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Person  P001 5  0.223718682 0.4819485         sparse</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Person  P002 6  0.710546034 0.5769040         sparse</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Person  P003 6  0.025175839 0.3014112         sparse</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Person  P004 6  0.145307072 0.4063532         sparse</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Person  P005 6 -0.067924339 0.3332531         sparse</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Person  P006 5  0.707205764 0.5929125         sparse</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Person  P007 6 -1.041529288 0.3853554         sparse</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Person  P008 6 -0.227807377 0.4706276         sparse</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Person  P009 6 -0.513303518 0.5768065         sparse</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Person  P010 6 -0.067924339 0.3332531         sparse</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Person  P011 5 -0.113435183 0.4089420         sparse</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Person  P012 6 -0.300788956 0.5137565         sparse</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Person  P013 6  0.898236466 0.4992476         sparse</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Person  P014 6 -1.261998891 0.4297367         sparse</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Person  P015 6  1.445528324 0.5390337         sparse</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Person  P016 6 -1.261998891 0.4297367         sparse</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Person  P017 6 -0.615422601 0.5815007         sparse</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Person  P018 6 -0.300788956 0.5137565         sparse</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Person  P019 6  0.593800118 0.5814638         sparse</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Person  P020 6 -0.106698851 0.3699661         sparse</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Person  P021 6  0.286716989 0.5061980         sparse</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Person  P022 6 -0.002887683 0.2942347         sparse</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Person  P023 6 -1.134035661 0.4247138         sparse</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Person  P024 5  0.078177406 0.3906326         sparse</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Person  P025 6  0.896552902 0.4926192         sparse</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Person  P026 6 -0.106698851 0.3699661         sparse</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Person  P027 6  1.076228538 0.3585948         sparse</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Person  P028 5 -0.154080721 0.4367810         sparse</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Person  P029 6 -1.371387690 0.5135878         sparse</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Person  P030 6  1.164752547 0.3353590         sparse</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Person  P031 6  0.224679916 0.4679431         sparse</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Person  P032 6 -1.708566428 0.6302426         sparse</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Person  P033 6 -1.371387690 0.5135878         sparse</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Person  P034 6  0.508330362 0.5763367         sparse</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Person  P035 6  0.224679916 0.4679431         sparse</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Person  P036 6  1.202260432 0.3420540         sparse</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Person  P037 6 -1.318970599 0.4942716         sparse</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Person  P038 6  0.119411998 0.3830059         sparse</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Person  P039 5 -0.325465141 0.5354351         sparse</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Person  P040 6 -1.318970599 0.4942716         sparse</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Person  P041 6 -1.115802396 0.4328999         sparse</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Person  P042 6 -0.272258812 0.4992877         sparse</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Person  P043 6 -0.405495533 0.5562532         sparse</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Person  P044 6 -0.735556497 0.5634513         sparse</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Person  P045 6  1.425164270 0.5323968         sparse</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Person  P046 6 -0.405495533 0.5562532         sparse</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Person  P047 6 -1.153353508 0.3744804         sparse</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Person  P048 6  0.066129149 0.3368592         sparse</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Custom thresholds (e.g. a stricter protocol).</span></span></span>
 <span class="r-in"><span><span class="va">strict</span> <span class="op">&lt;-</span> <span class="fu">facet_small_sample_review</span><span class="op">(</span></span></span>
@@ -181,9 +231,9 @@ Applied Measurement, 19</em>(2), 148-161.</p>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">strict</span><span class="op">$</span><span class="va">facet_summary</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       Facet Levels MinN MedianN MaxN WorstCategory</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 Criterion      4  192     192  192        strong</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2    Person     48   16      16   16      marginal</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3     Rater      4  192     192  192        strong</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 Criterion      3   94      94   94      standard</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2    Person     48    5       6    6        sparse</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3     Rater      6   38      47   56      standard</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

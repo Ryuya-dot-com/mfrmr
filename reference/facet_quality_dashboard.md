@@ -98,8 +98,9 @@ complementary criteria:
 - **Severity**: elements with \\\|\mathrm{Estimate}\| \>\\
   `severity_warn` logits are flagged as unusually harsh or lenient.
 
-- **Misfit**: elements with Infit or Outfit MnSq outside the acceptance
-  band are flagged. The band defaults to the package pair returned by
+- **Misfit**: elements with Infit or Outfit MnSq outside the configured
+  heuristic review band are flagged. The band defaults to the package
+  pair returned by
   [`mfrm_misfit_thresholds()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_misfit_thresholds.md)
   (Linacre 0.5-1.5); pass `misfit_warn = 1.5` to keep the older
   symmetric \\\[1/\\`misfit_warn`\\,\\\\`misfit_warn`\\\]\\ form
@@ -117,11 +118,13 @@ complementary criteria:
 
 A **flag density** score counts how many of the four criteria each
 element triggers. Elements flagged on multiple criteria warrant priority
-review (e.g., rater retraining, data exclusion).
+review and may motivate training or a documented data-quality review;
+the dashboard does not justify automatic row, person, or rater
+exclusion.
 
-Default thresholds are designed for moderate-stakes rating contexts.
-Adjust for your application: stricter thresholds for high-stakes
-certification, more lenient for formative assessment.
+Default thresholds are screening heuristics. Prespecify and justify any
+application-specific alternatives rather than treating them as universal
+validity or acceptance criteria.
 
 ## Output
 

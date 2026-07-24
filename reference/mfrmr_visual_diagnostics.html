@@ -25,7 +25,7 @@ FACETS-style fair averages are a Rasch-family measure-to-score
 transformation. Under GPCM the fair-average panel of
 plot_qc_dashboard() therefore renders with an explicit
 "unavailable" status, and the broader compatibility-export helpers
-stay outside the validated GPCM boundary.
+stay outside the documented GPCM boundary.
 
 
 Use gpcm_capability_matrix() for the formal per-helper boundary
@@ -55,7 +55,7 @@ FACETS-style fair averages are a Rasch-family measure-to-score
 transformation. Under GPCM the fair-average panel of
 plot_qc_dashboard() therefore renders with an explicit
 "unavailable" status, and the broader compatibility-export helpers
-stay outside the validated GPCM boundary.
+stay outside the documented GPCM boundary.
 
 
 Use gpcm_capability_matrix() for the formal per-helper boundary
@@ -78,7 +78,7 @@ before choosing a GPCM follow-up plot route.'></head><body>
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from Facets to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
@@ -129,7 +129,7 @@ strict invariance.</p></li>
 transformation. Under <code>GPCM</code> the fair-average panel of
 <code><a href="plot_qc_dashboard.html">plot_qc_dashboard()</a></code> therefore renders with an explicit
 "unavailable" status, and the broader compatibility-export helpers
-stay outside the validated <code>GPCM</code> boundary.</p></li>
+stay outside the documented <code>GPCM</code> boundary.</p></li>
 </ul><p>Use <code><a href="gpcm_capability_matrix.html">gpcm_capability_matrix()</a></code> for the formal per-helper boundary
 before choosing a <code>GPCM</code> follow-up plot route.</p>
     </div>
@@ -199,8 +199,7 @@ Use <code><a href="plot_shrinkage_funnel.html">plot_shrinkage_funnel()</a></code
 Use <code><a href="plot_qc_dashboard.html">plot_qc_dashboard()</a></code> for <code>RSM</code> / <code>PCM</code>. The bounded <code>GPCM</code>
 branch can also call <code><a href="plot_qc_dashboard.html">plot_qc_dashboard()</a></code>, but its fair-average
 panel reports an explicit unavailability indicator because that
-panel's score-metric semantics have not yet been generalized
-beyond the Rasch-family branch.</p></li>
+panel's score-metric semantics are limited to the Rasch-family branch.</p></li>
 <li><p>"Which figures are already supported by my current run?"
 Use <code><a href="reporting_checklist.html">reporting_checklist()</a></code> and review the <code>"Visual Displays"</code> rows before
 choosing the next plot.</p></li>
@@ -259,11 +258,11 @@ or rendering technology without losing the measurement scale, caveats, and
 caption boundary attached to the package-native plot.</p>
     </div>
     <div class="section level2">
-    <h2 id="visual-coverage-for-this-release">Visual coverage for this release<a class="anchor" aria-label="anchor" href="#visual-coverage-for-this-release"></a></h2>
+    <h2 id="visual-coverage">Visual coverage<a class="anchor" aria-label="anchor" href="#visual-coverage"></a></h2>
 
 
-<p>This release treats the plotting layer as sufficient when the current run
-supports all of the following follow-up roles through public helpers:</p><ul><li><p>First-pass triage:
+<p>The plotting layer supports the following public follow-up roles when the
+fitted object contains the required data:</p><ul><li><p>First-pass triage:
 <code><a href="plot_qc_dashboard.html">plot_qc_dashboard()</a></code> or the <code>"Visual Displays"</code> rows from
 <code><a href="reporting_checklist.html">reporting_checklist()</a></code>.</p></li>
 <li><p>Structural interpretation:

@@ -39,7 +39,7 @@ facets_output_contract_review(
 
 - branch:
 
-  Contract branch. `"facets"` checks legacy-compatible columns.
+  Contract branch. `"facets"` checks FACETS-style contract columns.
   `"original"` adapts branch-sensitive contracts to the package's
   compact naming.
 
@@ -87,16 +87,17 @@ output-contract specification
 
 - optional metric-level consistency checks
 
-It is intended for output-contract QA and regression review. It does not
+It is intended to show users which FACETS-style output fields have a
+package-native counterpart and which remain unavailable. It does not
 establish external validity or software equivalence beyond the specific
 schema/metric contract encoded in the contract file.
 
 ## Bounded GPCM boundary
 
-This helper remains blocked for bounded `GPCM` fits in this release. The
-FACETS output contract includes score-side rows whose measure-to-score
-and uncertainty semantics are validated for the current Rasch-family
-route, not for free-discrimination bounded `GPCM`. Use
+This helper is unavailable for bounded `GPCM` fits because the FACETS
+output contract includes score-side rows whose measure-to-score and
+uncertainty semantics are supported for the Rasch-family route, not for
+free-discrimination bounded `GPCM`. Use
 [`gpcm_capability_matrix()`](https://ryuya-dot-com.github.io/mfrmr/reference/gpcm_capability_matrix.md)
 before routing a bounded `GPCM` fit into score-side compatibility-output
 helpers.
@@ -135,8 +136,8 @@ dispatched through
 
 2.  Inspect `summary(contract_review)` and `missing_preview`.
 
-3.  Patch upstream table builders, then rerun the output-contract
-    review.
+3.  For unresolved rows, use the documented package-native alternative
+    or retain the scope limitation in the report.
 
 ## See also
 

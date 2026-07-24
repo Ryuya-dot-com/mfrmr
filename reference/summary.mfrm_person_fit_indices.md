@@ -11,7 +11,7 @@ silently treat uncorrected `lz` as Snijders-corrected output.
 
 ``` r
 # S3 method for class 'mfrm_person_fit_indices'
-summary(object, digits = 3, top_n = 10, ...)
+summary(object, digits = 3, top_n = 10, include_person = FALSE, ...)
 ```
 
 ## Arguments
@@ -28,6 +28,12 @@ summary(object, digits = 3, top_n = 10, ...)
 - top_n:
 
   Number of review rows retained in `top_review`.
+
+- include_person:
+
+  If `TRUE`, print person identifiers in the review preview. The default
+  retains the rows in the returned object but suppresses identifiers
+  from console output.
 
 - ...:
 

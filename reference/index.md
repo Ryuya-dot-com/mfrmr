@@ -10,6 +10,9 @@ Start here for routine fit, first-screen results, reports, and exports.
 - [`list_mfrmr_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/list_mfrmr_data.md)
   : List packaged simulation datasets
 
+- [`mfrmr_example_operational_design`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_example_operational_design.md)
+  : Planned assignment roster for the operational example
+
 - [`describe_mfrm_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/describe_mfrm_data.md)
   : Summarize MFRM input data (TAM-style descriptive snapshot)
 
@@ -32,7 +35,7 @@ Start here for routine fit, first-screen results, reports, and exports.
   [`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md)
 
 - [`export_mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_results.md)
-  : Export a lightweight mfrm_results archive
+  : Export an mfrm_results analysis archive
 
 - [`mfrmr_output_guide()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_output_guide.md)
   : Choose an mfrmr output helper by user goal
@@ -45,11 +48,11 @@ Start here for routine fit, first-screen results, reports, and exports.
 Supported, caveated, blocked, and deferred bounded-GPCM routes.
 
 - [`gpcm_capability_matrix()`](https://ryuya-dot-com.github.io/mfrmr/reference/gpcm_capability_matrix.md)
-  : Bounded GPCM Support Matrix
+  : GPCM Workflow Availability
 - [`gpcm_runtime_guard_coverage()`](https://ryuya-dot-com.github.io/mfrmr/reference/gpcm_runtime_guard_coverage.md)
-  : Bounded GPCM Route-Boundary Coverage
+  : Unavailable GPCM Routes and Alternatives
 - [`gpcm_score_side_contract()`](https://ryuya-dot-com.github.io/mfrmr/reference/gpcm_score_side_contract.md)
-  : Bounded GPCM Score-Side Export Contract
+  : Bounded GPCM Score-Side Availability
 - [`build_model_choice_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_model_choice_review.md)
   : Build a model-choice review across RSM, PCM, and bounded GPCM fits
 - [`build_weighting_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_weighting_review.md)
@@ -120,7 +123,7 @@ bundles.
   [`summary()`](https://rdrr.io/r/base/summary.html) outputs
 
 - [`export_summary_appendix()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_summary_appendix.md)
-  : Export manuscript appendix tables from validated summary surfaces
+  : Export manuscript appendix tables from documented summary surfaces
 
 - [`build_mfrm_manifest()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_mfrm_manifest.md)
   : Build a reproducibility manifest for an MFRM analysis
@@ -129,7 +132,7 @@ bundles.
   : Build a package-native replay script for an MFRM analysis
 
 - [`export_mfrm_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_bundle.md)
-  : Export an analysis bundle for sharing or archiving
+  : Export a fit-level analysis archive
 
 - [`apa_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/apa_table.md)
   : Build APA-style table output using base R structures
@@ -160,6 +163,7 @@ Design review, bounded-GPCM recovery checks, and future-administration
 scenarios.
 
 - [`build_mfrm_sim_spec()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_mfrm_sim_spec.md)
+  [`print(`*`<mfrm_sim_spec>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/build_mfrm_sim_spec.md)
   : Build an explicit simulation specification for MFRM design studies
 - [`simulate_mfrm_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/simulate_mfrm_data.md)
   : Simulate long-format ordered many-facet data for design studies
@@ -291,7 +295,7 @@ and compatibility helpers.
   : Plot anchor drift or a screened linking chain
 
 - [`plot_apa_figure_one()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_apa_figure_one.md)
-  : Manuscript-ready four-panel composite (Wright + severity +
+  : Manuscript-oriented four-panel draft (Wright + severity +
   threshold + summary)
 
 - [`plot_bias_interaction()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_bias_interaction.md)
@@ -441,7 +445,7 @@ and compatibility helpers.
   [`ej2021_study1_itercal`](https://ryuya-dot-com.github.io/mfrmr/reference/ej2021_data.md)
   [`ej2021_study2_itercal`](https://ryuya-dot-com.github.io/mfrmr/reference/ej2021_data.md)
   [`ej2021_combined_itercal`](https://ryuya-dot-com.github.io/mfrmr/reference/ej2021_data.md)
-  : Simulated MFRM datasets based on Eckes and Jin (2021)
+  : Legacy synthetic MFRM datasets inspired by Eckes and Jin (2021)
 
 - [`estimation_iteration_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimation_iteration_report.md)
   : Build an estimation-iteration report (preferred alias)
@@ -485,9 +489,10 @@ and compatibility helpers.
   : mfrmr Compatibility Layer Map
 
 - [`mfrmr_example_data`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_example_data.md)
+  [`mfrmr_example_operational`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_example_data.md)
   [`mfrmr_example_core`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_example_data.md)
   [`mfrmr_example_bias`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_example_data.md)
-  : Purpose-built example datasets for package help pages
+  : Synthetic many-facet rating examples
 
 - [`mfrmr_linking_and_dff`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_linking_and_dff.md)
   : mfrmr Linking and DFF Guide
@@ -503,6 +508,9 @@ and compatibility helpers.
 
 - [`mfrmr_workflow_methods`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_workflow_methods.md)
   : mfrmr Workflow and Method Map
+
+- [`normalize_conquest_overlap_exports()`](https://ryuya-dot-com.github.io/mfrmr/reference/normalize_conquest_overlap_exports.md)
+  : Normalize the CSV exports generated by the ConQuest overlap template
 
 - [`normalize_conquest_overlap_files()`](https://ryuya-dot-com.github.io/mfrmr/reference/normalize_conquest_overlap_files.md)
   :
@@ -548,7 +556,7 @@ and compatibility helpers.
   : Plot a design-simulation study
 
 - [`plot(`*`<mfrm_diagnostic_screening>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_diagnostic_screening.md)
-  : Plot a diagnostic-screening validation study
+  : Plot a diagnostic-screening simulation study
 
 - [`plot(`*`<mfrm_facet_nesting>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_facet_nesting.md)
   : Plot the pairwise nesting index matrix
@@ -561,9 +569,6 @@ and compatibility helpers.
 
 - [`plot(`*`<mfrm_fit>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md)
   : Plot fitted MFRM results with base R
-
-- [`plot(`*`<mfrm_future_branch_active_branch>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_future_branch_active_branch.md)
-  : Plot a future arbitrary-facet planning active branch
 
 - [`plot(`*`<mfrm_recovery_simulation>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_recovery_simulation.md)
   : Plot parameter-recovery simulation results
@@ -616,8 +621,8 @@ and compatibility helpers.
 - [`review_conquest_overlap()`](https://ryuya-dot-com.github.io/mfrmr/reference/review_conquest_overlap.md)
   :
 
-  Review an exact-overlap ConQuest comparison against an `mfrmr` overlap
-  bundle
+  Review a ConQuest comparison within the documented `mfrmr` overlap
+  scope
 
 - [`response_time_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/response_time_review.md)
   : Review response-time patterns outside the MFRM likelihood
@@ -658,7 +663,7 @@ and compatibility helpers.
   : Summarize a design-simulation study
 
 - [`summary(`*`<mfrm_diagnostic_screening>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/summary.mfrm_diagnostic_screening.md)
-  : Summarize a diagnostic-screening validation study
+  : Summarize a diagnostic-screening simulation study
 
 - [`summary(`*`<mfrm_diagnostics>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/summary.mfrm_diagnostics.md)
   :
@@ -675,9 +680,6 @@ and compatibility helpers.
   :
 
   Summarize an `mfrm_fit` object in a user-friendly format
-
-- [`summary(`*`<mfrm_future_branch_active_branch>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/summary.mfrm_future_branch_active_branch.md)
-  : Summarize a future arbitrary-facet planning active branch
 
 - [`summary(`*`<mfrm_linking_review>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/summary.mfrm_linking_review.md)
   : Summarize a linking-review object

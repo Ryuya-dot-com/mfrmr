@@ -18,7 +18,7 @@
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from Facets to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
@@ -50,8 +50,8 @@
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">load_mfrmr_data</span><span class="op">(</span></span>
-<span>  name <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"example_core"</span>, <span class="st">"example_bias"</span>, <span class="st">"study1"</span>, <span class="st">"study2"</span>, <span class="st">"combined"</span>,</span>
-<span>    <span class="st">"study1_itercal"</span>, <span class="st">"study2_itercal"</span>, <span class="st">"combined_itercal"</span><span class="op">)</span></span>
+<span>  name <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"example_core"</span>, <span class="st">"example_bias"</span>, <span class="st">"example_operational"</span>, <span class="st">"study1"</span>, <span class="st">"study2"</span>,</span>
+<span>    <span class="st">"combined"</span>, <span class="st">"study1_itercal"</span>, <span class="st">"study2_itercal"</span>, <span class="st">"combined_itercal"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -60,7 +60,9 @@
 
 
 <dl><dt id="arg-name">name<a class="anchor" aria-label="anchor" href="#arg-name"></a></dt>
-<dd><p>Dataset key. One of values from <code><a href="list_mfrmr_data.html">list_mfrmr_data()</a></code>.</p></dd>
+<dd><p>Dataset key. One of the values from <code><a href="list_mfrmr_data.html">list_mfrmr_data()</a></code>. If
+omitted, the backward-compatible default is <code>"example_core"</code>; new code
+should pass a key explicitly.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -72,9 +74,9 @@
     <p><code>load_mfrmr_data("&lt;key&gt;")</code> is the canonical loader for the packaged
 datasets and the entry point used across the package help and
 vignettes. The equivalent base-R alternative
-<code>data("mfrmr_&lt;key&gt;", package = "mfrmr")</code> remains available for users
+<code>data("&lt;object-name&gt;", package = "mfrmr")</code> remains available for users
 who prefer the full <code><a href="https://rdrr.io/r/utils/data.html" class="external-link">data()</a></code> spelling; both paths return identical
-long-format data frames and are supported long-term.</p>
+long-format data frames.</p>
 <p>All returned datasets include the core long-format columns
 <code>Study</code>, <code>Person</code>, <code>Rater</code>, <code>Criterion</code>, and <code>Score</code>.
 Some datasets, such as the packaged documentation examples, also include
@@ -84,8 +86,12 @@ auxiliary variables like <code>Group</code> for DIF/bias demonstrations.</p>
     <h2 id="interpreting-output">Interpreting output<a class="anchor" aria-label="anchor" href="#interpreting-output"></a></h2>
 
 
-<p>The return value is a plain long-format <code>data.frame</code>, ready for direct use
-in <code><a href="fit_mfrm.html">fit_mfrm()</a></code> without additional reshaping.</p>
+<p>The return value is a plain long-format <code>data.frame</code>. The example and
+study-specific keys are ready for <code><a href="fit_mfrm.html">fit_mfrm()</a></code> after checking role and score
+mappings. The <code>combined</code> keys are design-review objects: overlapping IDs or
+simple Study-based prefixes do not establish a common measurement scale, so
+an explicit identity, anchor, or linking design is required before a joint
+fit is interpretable.</p>
     </div>
     <div class="section level2">
     <h2 id="typical-workflow">Typical workflow<a class="anchor" aria-label="anchor" href="#typical-workflow"></a></h2>
@@ -102,125 +108,27 @@ in <code><a href="fit_mfrm.html">fit_mfrm()</a></code> without additional reshap
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"mfrmr_example_core"</span>, package <span class="op">=</span> <span class="st">"mfrmr"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">mfrmr_example_core</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         Study Person Rater Criterion Score Group</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 ExampleCore   P001   R01   Content     3     A</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 ExampleCore   P002   R01   Content     3     A</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3 ExampleCore   P003   R01   Content     4     A</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4 ExampleCore   P004   R01   Content     3     A</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5 ExampleCore   P005   R01   Content     2     A</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6 ExampleCore   P006   R01   Content     3     A</span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"mfrmr_example_operational"</span>, package <span class="op">=</span> <span class="st">"mfrmr"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">mfrmr_example_operational</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                Study Person Rater    Criterion Score Group</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 OperationalExample   P001   R01     Language     4     A</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 OperationalExample   P001   R01 Organization     2     A</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 OperationalExample   P001   R02      Content     4     A</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 OperationalExample   P001   R02     Language     3     A</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5 OperationalExample   P001   R02 Organization     2     A</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6 OperationalExample   P002   R01      Content     3     A</span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">d</span> <span class="op">&lt;-</span> <span class="fu">load_mfrmr_data</span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  data <span class="op">=</span> <span class="va">d</span>,</span></span>
-<span class="r-in"><span>  person <span class="op">=</span> <span class="st">"Person"</span>,</span></span>
-<span class="r-in"><span>  facets <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  score <span class="op">=</span> <span class="st">"Score"</span>,</span></span>
-<span class="r-in"><span>  method <span class="op">=</span> <span class="st">"JML"</span>,</span></span>
-<span class="r-in"><span>  maxit <span class="op">=</span> <span class="fl">30</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Many-Facet Rasch Model Summary</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Model: RSM | Method: JML | N: 768 | Persons: 48 | Facets: 2 | Categories: 4</span>
+<span class="r-in"><span><span class="va">d</span> <span class="op">&lt;-</span> <span class="fu">load_mfrmr_data</span><span class="op">(</span><span class="st">"example_operational"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">d</span><span class="op">$</span><span class="va">Rater</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Status</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Overall status: usable_fit</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Convergence: converged (severity: pass, sup-norm: 0.033)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Estimation path: RSM / JML</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Reporting readiness: exploratory_fit_ready_for_diagnostics</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Key warnings</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - None.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Next actions</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - If formal SE/CI or strict marginal diagnostics are needed, re-fit with `method = "MML"`.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Run `diagnose_mfrm(fit, diagnostic_mode = "both")` for element-level fit review.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Use `plot(fit, type = "wright", preset = "publication")` for targeting and scale review.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - After diagnostics, use `reporting_checklist(fit, diagnostics = diagnostics)` for reporting readiness.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Fit overview</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   LogLik: -820.949 | AIC: 1753.898 | BIC: 2013.95</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Converged: Yes | Status: converged | Basis: optimizer_gradient | Fn evals: 71 | Gr evals: 24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Terminal gradient: sup-norm = 0.033 | RMS = 0.008 | Review tol = 0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Optimization note: Optimizer returned convergence code 0.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Population basis</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  PopulationModel PosteriorBasis Formula PersonRows DesignColumns</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            FALSE     legacy_mml    &lt;NA&gt;         NA            NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  CodingVariables ContrastVariables Policy ResidualVariance OmittedPersons</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                      &lt;NA&gt;               NA              0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  OmittedRows</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Facet overview</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      Facet Levels MeanEstimate SDEstimate MinEstimate MaxEstimate  Span</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Criterion      4            0      0.288      -0.415       0.249 0.664</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      Rater      4            0      0.313      -0.329       0.334 0.662</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Person measure distribution</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Persons  Mean  SD Median    Min   Max  Span</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       48 0.001 1.1  0.082 -2.179 2.683 4.863</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Targeting (Person vs facet means; sum-to-zero ID makes Targeting = Person mean)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      Facet PersonMean FacetMean Targeting PersonSD FacetSD SpreadRatio</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Criterion      0.001         0     0.001      1.1   0.288       3.823</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      Rater      0.001         0     0.001      1.1   0.313       3.512</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Step parameter summary</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Steps    Min   Max Span Monotonic</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      3 -1.326 1.385 2.71      TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Estimation settings</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  StepFacet SlopeFacet NoncenterFacet WeightColumn QuadPoints RatingMin</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       &lt;NA&gt;       &lt;NA&gt;         Person         &lt;NA&gt;         31         1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  RatingMax RatingRangeSource RatingMinSource RatingMaxSource DummyFacets</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          4          observed        observed        observed            </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  PositiveFacets FacetInteractions UnusedScoreCategories</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                        </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  UnusedScoreCategoryCount UnusedScoreCategoryType</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                         0                    none</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Most extreme facet levels (|estimate|)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      Facet    Level Estimate</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Criterion  Content   -0.415</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      Rater      R04    0.334</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      Rater      R02   -0.329</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Criterion Accuracy    0.249</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      Rater      R01   -0.196</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Highest person measures</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Person Estimate SE Extreme</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    P023    2.683 NA    none</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    P024    2.201 NA    none</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    P036    1.832 NA    none</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    P002    1.673 NA    none</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    P003    1.258 NA    none</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Lowest person measures</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Person Estimate SE Extreme</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    P015   -2.179 NA    none</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    P045   -1.821 NA    none</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    P008   -1.665 NA    none</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    P006   -1.524 NA    none</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    P026   -1.524 NA    none</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Paper reporting map</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                Area CoveredHere</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Model identification / convergence         yes</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        Data structure / missingness          no</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    Reliability / fit / residual PCA          no</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                Category functioning     partial</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     Bias / DIF / interaction checks          no</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         Draft reporting / checklist          no</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                CompanionOutput</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                   summary(fit)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                               summary(describe_mfrm_data(...))</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                    summary(diagnose_mfrm(fit))</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  rating_scale_table() / category_structure_report() / category_curves_report()</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         summary(estimate_bias(...)) / analyze_dff() / related bundle summaries</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                        reporting_checklist() / summary(build_apa_outputs(...))</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> R01 R02 R03 R04 R05 R06 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  47  56  50  47  44  38 </span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">d</span><span class="op">$</span><span class="va">Criterion</span>, <span class="va">d</span><span class="op">$</span><span class="va">Score</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>               </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                 1  2  3  4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Content      11 33 34 16</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Language     25 29 25 15</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Organization 26 34 19 15</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

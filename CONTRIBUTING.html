@@ -18,7 +18,7 @@
       <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="articles/mfrmr-facets-migration.html">Migrating from Facets to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
@@ -81,14 +81,14 @@
 </ul></div>
 <div class="section level2">
 <h2 id="examples-and-timing-policy">Examples and timing policy<a class="anchor" aria-label="anchor" href="#examples-and-timing-policy"></a></h2>
-<p>CRAN examples are smoke checks, not the full validation suite. Keep Rd examples short enough to run on slower Windows check hosts, and move realistic multi-step analyses to README/vignettes or non-CRAN tests.</p>
-<ul><li>Use <code>example_core</code> for ordinary fitting, plotting, and reporting examples. Use <code>example_bias</code> only when a non-null DFF/bias signal is needed.</li>
+<p>CRAN examples are fast executable illustrations, not the full validation suite. Keep Rd examples short enough to run on slower Windows check hosts, and move realistic multi-step analyses to README/vignettes or non-CRAN tests.</p>
+<ul><li>Use <code>example_operational</code> for applied tutorials, <code>example_core</code> for idealized fast checks, and <code>example_bias</code> only when a planted non-null DFF/bias signal is needed.</li>
 <li>Prefer <code>method = "JML"</code>, <code>maxit = 30</code>, and <code>diagnose_mfrm(..., residual_pca = "none")</code> in standard Rd examples.</li>
 <li>Wrap multi-fit workflows, MML examples, recovery simulations, design simulations, external-Suggests examples, and long reporting pipelines in <code>\donttest{}</code> unless the function cannot be demonstrated otherwise.</li>
 <li>When an MML example must run in standard examples, set a small <code>quad_points</code> value and explain that it is an exploratory speed setting.</li>
 <li>Use <code>draw = FALSE</code> in examples that only need to demonstrate returned plot payloads.</li>
 <li>Do not shrink example data below a meaningful many-facet structure just to satisfy CRAN timing. Reduce what CRAN executes; keep realistic examples in vignettes and in the full <code>NOT_CRAN=true</code> test run.</li>
-<li>CRAN-time <code>testthat</code> is intentionally limited by <code>tests/testthat.R</code>; run the complete suite locally/CI with <code>NOT_CRAN=true</code>.</li>
+<li>CRAN-time <code>testthat</code> runs the representative MML-to-export workflow test and selected contracts from <code>tests/testthat.R</code>. Run the complete suite locally/CI with <code>NOT_CRAN=true</code>; one CI matrix job must always use that setting.</li>
 </ul></div>
 <div class="section level2">
 <h2 id="pull-request-checklist">Pull request checklist<a class="anchor" aria-label="anchor" href="#pull-request-checklist"></a></h2>

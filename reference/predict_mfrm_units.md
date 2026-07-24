@@ -239,14 +239,12 @@ distribution.
 ``` r
 toy <- load_mfrmr_data("example_core")
 keep_people <- unique(toy$Person)[1:18]
-toy_fit <- suppressWarnings(
-  fit_mfrm(
-    toy[toy$Person %in% keep_people, , drop = FALSE],
-    "Person", c("Rater", "Criterion"), "Score",
-    method = "MML",
-    quad_points = 5,
-    maxit = 30
-  )
+toy_fit <- fit_mfrm(
+  toy[toy$Person %in% keep_people, , drop = FALSE],
+  "Person", c("Rater", "Criterion"), "Score",
+  method = "MML",
+  quad_points = 5,
+  maxit = 30
 )
 raters <- unique(toy$Rater)[1:2]
 criteria <- unique(toy$Criterion)[1:2]

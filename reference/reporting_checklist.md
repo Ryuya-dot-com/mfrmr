@@ -52,10 +52,10 @@ A named list with checklist tables. Class: `mfrm_reporting_checklist`.
 
 ## Details
 
-This helper ports the app-level reporting checklist into a
-package-native bundle. It does not try to judge substantive reporting
-quality; instead, it checks whether the fitted object and related
-diagnostics contain the evidence typically reported in MFRM write-ups.
+This helper builds a package-native reporting checklist. It does not try
+to judge substantive reporting quality; instead, it checks whether the
+fitted object and related diagnostics contain the evidence typically
+reported in MFRM write-ups.
 
 Checklist items are grouped into seven core sections:
 
@@ -135,10 +135,13 @@ Review the rows with `Available = FALSE` or `DraftReady = FALSE`, then
 add the missing diagnostics, bias results, or narrative context before
 calling
 [`build_apa_outputs()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_apa_outputs.md)
-for draft text generation. For `RSM` / `PCM` reporting runs, the
-preferred route is an `MML` fit plus
+for draft text generation. For `RSM` / `PCM` reporting runs where the
+MML population assumptions are defensible, the most complete
+package-native route is an `MML` fit plus
 `diagnose_mfrm(..., diagnostic_mode = "both")` so the checklist can see
-the legacy and strict marginal screens together.
+the legacy and strict marginal screens together. A JML route remains
+available when its estimand and incidental-parameter limitations better
+match the analysis purpose.
 
 ## How this differs from operational review
 
@@ -192,8 +195,7 @@ operational review:
 
 ``` r
 if (FALSE) { # interactive()
-# Fast smoke run: a JML fit + legacy-only diagnostic produces a
-# populated checklist in well under a second.
+# Minimal checklist example using a JML fit and lightweight diagnostics.
 toy <- load_mfrmr_data("example_core")
 fit_quick <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                       method = "JML", maxit = 30)

@@ -1,7 +1,7 @@
 # FACETS-facing visual contract
 
 `facets_visual_contract()` identifies the closest package route for
-common FACETS visual surfaces and states what may—and may not—be claimed
+common FACETS visual surfaces and states what can and cannot be claimed
 from that visual correspondence. It distinguishes the FACETS-style
 asterisk ruler from the native uncertainty-aware Wright map.
 
@@ -51,12 +51,12 @@ facets_visual_contract()
 #> 5                             plot_data(type = "fit_pathway")
 #> 6                      plot_data(); bias_interaction_report()
 #> 7         facets_output_file_bundle(); plot_data_components()
-#>                                                                                                       ClaimBoundary
-#> 1 FACETS-style visual grammar; numerical equivalence requires an external golden comparison under aligned settings.
-#> 2                    The SE/CI display is an mfrmr extension and should be retained for uncertainty interpretation.
-#> 3                                                         Structured R output replaces FACETS line-printer artwork.
-#> 4                                          This is expected score over theta, not a measure-versus-fit pathway map.
-#> 5                             This is a Bond-Fox-style mfrmr extension; it is not a standard FACETS Table 6 output.
-#> 6                                                    Screening display only; it is not a final fairness conclusion.
-#> 7                          Editable handoff is supported, but FACETS UI, Excel, and webpage behavior is not cloned.
+#>                                                                                                                ClaimBoundary
+#> 1 FACETS-style visual grammar; numerical comparison requires output from a documented FACETS version under aligned settings.
+#> 2                             The SE/CI display is an mfrmr extension and should be retained for uncertainty interpretation.
+#> 3                                                                  Structured R output replaces FACETS line-printer artwork.
+#> 4                                                   This is expected score over theta, not a measure-versus-fit pathway map.
+#> 5                                      This is a Bond-Fox-style mfrmr extension; it is not a standard FACETS Table 6 output.
+#> 6                                                             Screening display only; it is not a final fairness conclusion.
+#> 7                                   Editable handoff is supported, but FACETS UI, Excel, and webpage behavior is not cloned.
 ```

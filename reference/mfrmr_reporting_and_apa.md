@@ -5,7 +5,7 @@ manuscript-draft text, tables, notes, and revision checklists in
 `mfrmr`.
 
 This guide currently applies fully to diagnostics-based `RSM` / `PCM`
-workflows. First-release `GPCM` fits now support
+workflows. Bounded `GPCM` fits support
 [`reporting_checklist()`](https://ryuya-dot-com.github.io/mfrmr/reference/reporting_checklist.md),
 [`precision_review_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/precision_review_report.md),
 direct curve/graph and residual table helpers, and caveated
@@ -29,7 +29,7 @@ as automatic operational-scoring evidence.
 
 ## Start with the reporting question
 
-- "Which parts of this run are draft-complete, and with what caveats?"
+- "Which parts of this run are ready to draft, and with what caveats?"
   Use
   [`reporting_checklist()`](https://ryuya-dot-com.github.io/mfrmr/reference/reporting_checklist.md).
 
@@ -164,11 +164,11 @@ Prediction-side helpers
 and
 [`sample_mfrm_plausible_values()`](https://ryuya-dot-com.github.io/mfrmr/reference/sample_mfrm_plausible_values.md)
 can carry the fitted population model into future-unit scoring and
-plausible-value draws. In 0.2.2 this remains a first-version,
-one-dimensional `MML` route for `RSM` / `PCM`; avoid stronger claims
-about multidimensional latent regression, Wald tests, posterior
-predictive checking, or full external-engine equivalence unless those
-checks were performed outside this helper family.
+plausible-value draws. The supported route is one-dimensional `MML` for
+`RSM` / `PCM`; avoid stronger claims about multidimensional latent
+regression, Wald tests, posterior predictive checking, or full
+external-engine equivalence unless those checks were performed outside
+this helper family.
 
 ## Publication-readiness boundary
 
@@ -216,7 +216,7 @@ Before copying text, inspect
 
 - [`export_summary_appendix()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_summary_appendix.md):
 
-  Writes those validated summary-table bundles to CSV and optional HTML
+  Writes those documented summary-table bundles to CSV and optional HTML
   appendix artifacts without requiring a full fit-based export bundle.
 
 - [`apa_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/apa_table.md):
@@ -304,7 +304,8 @@ first when the goal is interactive triage or report-readiness review;
 use
 [`export_mfrm_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_bundle.md)
 when the goal is a file bundle for a project folder, coauthor handoff,
-or supplementary-methods archive.
+or supplementary-methods archive. The bundle is not deidentified; review
+every file under the study's data-handling policy before any handoff.
 
 ## Typical workflow
 
@@ -432,7 +433,8 @@ report_bundle <- export_mfrm_bundle(
   output_dir = tempdir(),
   prefix = "mfrmr_report_bundle",
   include = c("core_tables", "checklist", "apa", "summary_tables", "html"),
-  overwrite = TRUE
+  overwrite = TRUE,
+  acknowledge_sensitive = TRUE
 )
 report_bundle$summary[, c("FilesWritten", "HtmlWritten")]
 } # }
