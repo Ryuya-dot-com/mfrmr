@@ -13,7 +13,8 @@
 #' bounded `GPCM`, simulation, and planning notes:
 #'
 #' 1. Review long-format data and the intended score support with
-#'    [describe_mfrm_data()]
+#'    [describe_mfrm_data()]. When a planned assignment roster exists, pass it
+#'    as `expected_design` so absent rows are not confused with unassigned cells
 #' 2. Fit with [fit_mfrm()] using `method = "MML"`
 #' 3. Read `summary(fit, profile = "fit")`, then request the comprehensive
 #'    FACETS-organized view with `summary(fit, profile = "facets")`
@@ -74,7 +75,8 @@
 #'
 #' @section First 5-minute route:
 #' Use this order before exploring the broader feature surface:
-#' 1. [describe_mfrm_data()] for score support, missingness, and design links
+#' 1. [describe_mfrm_data()] for score support, column missingness, declared
+#'    assignment coverage, and Person-facet connectivity
 #' 2. [fit_mfrm()] with `method = "MML"`
 #' 3. `summary(fit, profile = "fit")`, followed by
 #'    `summary(fit, profile = "facets")` for the comprehensive first screen

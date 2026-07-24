@@ -108,6 +108,7 @@ NULL
 #'
 #' Available data objects:
 #' - `mfrmr_example_operational`
+#' - `mfrmr_example_operational_design` (documented separately below)
 #' - `mfrmr_example_core`
 #' - `mfrmr_example_bias`
 #'
@@ -125,7 +126,7 @@ NULL
 #' }
 #' @source Synthetic documentation data generated from rating-scale Rasch facet
 #'   designs with fixed seeds. Generator scripts are maintained under
-#'   `data-raw/` in each tagged version of the public source repository.
+#'   `data-raw/` for this release in the public source repository.
 #'   These are synthetic examples, not empirical records.
 #' @details
 #' `mfrmr_example_operational` is the primary applied teaching example. It has
@@ -178,6 +179,44 @@ NULL
 #' table(mfrmr_example_operational$Group)
 #' @name mfrmr_example_data
 #' @aliases mfrmr_example_operational mfrmr_example_core mfrmr_example_bias
+NULL
+
+#' Planned assignment roster for the operational example
+#'
+#' A score-free roster declaring all Person x Rater x Criterion cells planned
+#' for `mfrmr_example_operational`. Pass it to the `expected_design` argument of
+#' [describe_mfrm_data()] to distinguish the six expected-but-unobserved cells
+#' from combinations that were never assigned.
+#'
+#' @format A data.frame with 288 rows and 5 columns:
+#' \describe{
+#'   \item{Study}{Example dataset label (`"OperationalExample"`).}
+#'   \item{Person}{Person/respondent identifier.}
+#'   \item{Rater}{Planned rater identifier.}
+#'   \item{Criterion}{Planned criterion label.}
+#'   \item{Group}{Balanced grouping label (`"A"` / `"B"`).}
+#' }
+#' @source Synthetic assignment roster generated with the operational example
+#'   by `data-raw/make-operational-example.R`. It contains no empirical records
+#'   and no fabricated scores.
+#' @details
+#' The roster contains 288 planned cells. The observed
+#' `mfrmr_example_operational` table contains 282 rows, so an explicit design
+#' comparison identifies six planned omissions. Extra roster columns such as
+#' `Study` and `Group` are ignored unless they are named as model facets.
+#'
+#' @examples
+#' data("mfrmr_example_operational", package = "mfrmr")
+#' data("mfrmr_example_operational_design", package = "mfrmr")
+#' review <- describe_mfrm_data(
+#'   mfrmr_example_operational,
+#'   person = "Person",
+#'   facets = c("Rater", "Criterion"),
+#'   score = "Score",
+#'   expected_design = mfrmr_example_operational_design
+#' )
+#' summary(review)$structural_missingness
+#' @name mfrmr_example_operational_design
 NULL
 
 #' List packaged simulation datasets

@@ -98,6 +98,7 @@ leave 141 observed rows in Group A and 141 in Group B:
 library(mfrmr)
 
 dat <- load_mfrmr_data("example_operational")
+data("mfrmr_example_operational_design", package = "mfrmr")
 head(dat)
 table(dat$Score)
 list_mfrmr_data(details = TRUE)[, c("Key", "PrimaryUse", "Design", "CountBasis")]
@@ -122,10 +123,21 @@ data_review <- describe_mfrm_data(
   facets = c("Rater", "Criterion"),
   score = "Score",
   rating_min = 1,
-  rating_max = 4
+  rating_max = 4,
+  expected_design = mfrmr_example_operational_design
 )
-summary(data_review)
+data_summary <- summary(data_review)
+data_summary$structural_missingness
+data_summary$design_connectivity
 ```
+
+The assignment roster contains no scores. It tells `describe_mfrm_data()`
+which Person x Rater x Criterion cells were planned. The review therefore
+reports the six expected-but-unobserved cells separately from ordinary column
+`NA` counts, while confirming that both observed Person-facet graphs remain
+connected. Without `expected_design`, structural missingness is reported as
+not assessed because an absent row may simply mean that the cell was never
+assigned.
 
 `rating_min` and `rating_max` retain unobserved boundary categories. If an
 intended intermediate category is also unobserved, use `keep_original = TRUE`
@@ -552,6 +564,12 @@ The generated ConQuest command uses the fitted mfrmr quadrature-point count;
 the bundle records both values. Record the actual ConQuest version, edition,
 and run date during normalization so the external comparison remains
 reproducible.
+
+The 0.2.2 source includes an aggregate record of a matched 31-node check with
+ConQuest 5.47.5 in
+`inst/validation/conquest-mml-overlap-0.2.2.md`. It supports only the overlap
+case stated above; identifier-bearing response and case-level files are not
+included in the package.
 
 This route does not cover multidimensional models, arbitrary imported design
 matrices, bounded `GPCM` latent regression, JML latent regression, or the full

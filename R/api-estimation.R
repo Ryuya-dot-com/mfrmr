@@ -1475,7 +1475,237 @@ format_anchor_review_message <- function(anchor_review) {
   )
 }
 
-summarize_linkage_by_facet <- function(df, facet) {
+normalize_expected_mfrm_design <- function(expected_design, person, facets) {
+  if (is.null(expected_design)) return(NULL)
+  if (!is.data.frame(expected_design)) {
+    stop("`expected_design` must be a data.frame.", call. = FALSE)
+  }
+  required <- c(person, facets)
+  missing_cols <- setdiff(required, names(expected_design))
+  if (length(missing_cols) > 0L) {
+    stop(
+      "`expected_design` is missing required column(s): ",
+      paste(missing_cols, collapse = ", "), ".",
+      call. = FALSE
+    )
+  }
+  if (nrow(expected_design) == 0L) {
+    stop("`expected_design` must contain at least one planned rating cell.", call. = FALSE)
+  }
+
+  out <- as.data.frame(expected_design[, required, drop = FALSE], stringsAsFactors = FALSE)
+  names(out)[1L] <- "Person"
+  out[] <- lapply(out, function(x) trimws(as.character(x)))
+  invalid <- vapply(out, function(x) any(is.na(x) | !nzchar(x)), logical(1))
+  if (any(invalid)) {
+    stop(
+      "`expected_design` contains missing or blank IDs in: ",
+      paste(names(out)[invalid], collapse = ", "), ".",
+      call. = FALSE
+    )
+  }
+  duplicate_rows <- duplicated(out) | duplicated(out, fromLast = TRUE)
+  if (any(duplicate_rows)) {
+    stop(
+      "`expected_design` must contain one row per planned Person x ",
+      paste(facets, collapse = " x "),
+      " cell; duplicate planned cells were found.",
+      call. = FALSE
+    )
+  }
+  out
+}
+
+audit_mfrm_expected_design <- function(df, expected_design, facets) {
+  key_cols <- c("Person", facets)
+  observed <- unique(as.data.frame(df[, key_cols, drop = FALSE], stringsAsFactors = FALSE))
+  empty_cells <- observed[0, , drop = FALSE]
+
+  if (is.null(expected_design)) {
+    level_coverage <- purrr::map_dfr(facets, function(facet) {
+      tibble::tibble(
+        Facet = facet,
+        ExpectedLevels = NA_integer_,
+        ObservedLevels = dplyr::n_distinct(observed[[facet]]),
+        ExpectedOnlyLevels = NA_integer_,
+        UnexpectedLevels = NA_integer_
+      )
+    })
+    return(list(
+      summary = data.frame(
+        Status = "not_declared",
+        ExpectedCells = NA_integer_,
+        ObservedCells = nrow(observed),
+        MatchedCells = NA_integer_,
+        MissingExpectedCells = NA_integer_,
+        UnexpectedObservedCells = NA_integer_,
+        CoverageRate = NA_real_,
+        ExpectedOnlyPersons = NA_integer_,
+        UnexpectedPersons = NA_integer_,
+        stringsAsFactors = FALSE
+      ),
+      missing_expected_cells = empty_cells,
+      unexpected_observed_cells = empty_cells,
+      level_coverage = as.data.frame(level_coverage, stringsAsFactors = FALSE),
+      settings = list(
+        declared = FALSE,
+        key = key_cols,
+        note = paste0(
+          "Structural missingness was not assessed because `expected_design` was not supplied. ",
+          "Absent rows cannot be distinguished from cells that were never assigned."
+        )
+      )
+    ))
+  }
+
+  matched <- dplyr::semi_join(expected_design, observed, by = key_cols)
+  missing_expected <- dplyr::anti_join(expected_design, observed, by = key_cols)
+  unexpected_observed <- dplyr::anti_join(observed, expected_design, by = key_cols)
+  level_coverage <- purrr::map_dfr(facets, function(facet) {
+    expected_levels <- unique(expected_design[[facet]])
+    observed_levels <- unique(observed[[facet]])
+    tibble::tibble(
+      Facet = facet,
+      ExpectedLevels = length(expected_levels),
+      ObservedLevels = length(observed_levels),
+      ExpectedOnlyLevels = length(setdiff(expected_levels, observed_levels)),
+      UnexpectedLevels = length(setdiff(observed_levels, expected_levels))
+    )
+  })
+
+  list(
+    summary = data.frame(
+      Status = "declared",
+      ExpectedCells = nrow(expected_design),
+      ObservedCells = nrow(observed),
+      MatchedCells = nrow(matched),
+      MissingExpectedCells = nrow(missing_expected),
+      UnexpectedObservedCells = nrow(unexpected_observed),
+      CoverageRate = nrow(matched) / nrow(expected_design),
+      ExpectedOnlyPersons = length(setdiff(expected_design$Person, observed$Person)),
+      UnexpectedPersons = length(setdiff(observed$Person, expected_design$Person)),
+      stringsAsFactors = FALSE
+    ),
+    missing_expected_cells = as.data.frame(missing_expected, stringsAsFactors = FALSE),
+    unexpected_observed_cells = as.data.frame(unexpected_observed, stringsAsFactors = FALSE),
+    level_coverage = as.data.frame(level_coverage, stringsAsFactors = FALSE),
+    settings = list(
+      declared = TRUE,
+      key = key_cols,
+      note = "Observed unique cells were compared with the explicitly declared assignment roster."
+    )
+  )
+}
+
+summarize_duplicate_mfrm_cells <- function(df, facets) {
+  key_cols <- c("Person", facets)
+  detail <- df |>
+    dplyr::group_by(dplyr::across(dplyr::all_of(key_cols))) |>
+    dplyr::summarise(
+      Observations = dplyr::n(),
+      WeightedN = sum(.data$Weight, na.rm = TRUE),
+      .groups = "drop"
+    ) |>
+    dplyr::filter(.data$Observations > 1L) |>
+    dplyr::arrange(dplyr::desc(.data$Observations)) |>
+    as.data.frame(stringsAsFactors = FALSE)
+
+  list(
+    summary = data.frame(
+      DuplicateCells = nrow(detail),
+      RowsInDuplicateCells = if (nrow(detail) > 0L) sum(detail$Observations) else 0L,
+      ExtraRows = if (nrow(detail) > 0L) sum(detail$Observations - 1L) else 0L,
+      HasDuplicates = nrow(detail) > 0L,
+      stringsAsFactors = FALSE
+    ),
+    detail = detail
+  )
+}
+
+mfrm_bipartite_components <- function(cells, facet, basis, include_persons = FALSE) {
+  edges <- unique(as.data.frame(cells[, c("Person", facet), drop = FALSE], stringsAsFactors = FALSE))
+  edges$Person <- as.character(edges$Person)
+  edges[[facet]] <- as.character(edges[[facet]])
+  persons_to_levels <- split(edges[[facet]], edges$Person)
+  levels_to_persons <- split(edges$Person, edges[[facet]])
+  unseen <- unique(edges$Person)
+  components <- list()
+
+  while (length(unseen) > 0L) {
+    component_persons <- unseen[1L]
+    component_levels <- character(0)
+    repeat {
+      next_levels <- unique(unname(unlist(
+        persons_to_levels[component_persons], use.names = FALSE
+      )))
+      next_persons <- unique(unname(unlist(
+        levels_to_persons[next_levels], use.names = FALSE
+      )))
+      expanded_persons <- union(component_persons, next_persons)
+      expanded_levels <- union(component_levels, next_levels)
+      if (setequal(expanded_persons, component_persons) &&
+          setequal(expanded_levels, component_levels)) break
+      component_persons <- expanded_persons
+      component_levels <- expanded_levels
+    }
+    component_edges <- sum(
+      edges$Person %in% component_persons & edges[[facet]] %in% component_levels
+    )
+    components[[length(components) + 1L]] <- data.frame(
+      Basis = basis,
+      Facet = facet,
+      Component = length(components) + 1L,
+      Persons = length(component_persons),
+      FacetLevels = length(component_levels),
+      Edges = component_edges,
+      LevelLabels = paste(sort(component_levels), collapse = ", "),
+      PersonLabels = if (isTRUE(include_persons)) {
+        paste(sort(component_persons), collapse = ", ")
+      } else {
+        ""
+      },
+      stringsAsFactors = FALSE
+    )
+    unseen <- setdiff(unseen, component_persons)
+  }
+
+  component_table <- do.call(rbind, components)
+  largest_index <- which.max(component_table$Persons)
+  summary <- data.frame(
+    Basis = basis,
+    Facet = facet,
+    PersonNodes = length(unique(edges$Person)),
+    FacetLevelNodes = length(unique(edges[[facet]])),
+    Edges = nrow(edges),
+    Components = nrow(component_table),
+    LargestComponentPersons = component_table$Persons[largest_index],
+    LargestComponentLevels = component_table$FacetLevels[largest_index],
+    LargestComponentPercent = 100 * component_table$Persons[largest_index] /
+      length(unique(edges$Person)),
+    Connected = nrow(component_table) == 1L,
+    stringsAsFactors = FALSE
+  )
+  list(summary = summary, components = component_table)
+}
+
+audit_mfrm_connectivity <- function(df, expected_design, facets, include_persons = FALSE) {
+  bases <- list(observed = df)
+  if (!is.null(expected_design)) bases$declared_expected <- expected_design
+  audits <- unlist(lapply(names(bases), function(basis) {
+    lapply(facets, function(facet) {
+      mfrm_bipartite_components(
+        bases[[basis]], facet, basis, include_persons = include_persons
+      )
+    })
+  }), recursive = FALSE)
+
+  list(
+    summary = do.call(rbind, lapply(audits, `[[`, "summary")),
+    components = do.call(rbind, lapply(audits, `[[`, "components"))
+  )
+}
+
+summarize_linkage_by_facet <- function(df, facet, min_linking_persons = 2L) {
   by_level <- df |>
     dplyr::group_by(.data[[facet]]) |>
     dplyr::summarize(
@@ -1495,10 +1725,16 @@ summarize_linkage_by_facet <- function(df, facet) {
   tibble::tibble(
     Facet = facet,
     Levels = nrow(by_level),
+    Persons = nrow(by_person),
     MinPersonsPerLevel = min(by_level$PersonsPerLevel, na.rm = TRUE),
     MedianPersonsPerLevel = stats::median(by_level$PersonsPerLevel, na.rm = TRUE),
     MinLevelsPerPerson = min(by_person$LevelsPerPerson, na.rm = TRUE),
-    MedianLevelsPerPerson = stats::median(by_person$LevelsPerPerson, na.rm = TRUE)
+    MedianLevelsPerPerson = stats::median(by_person$LevelsPerPerson, na.rm = TRUE),
+    LinkingPersons = sum(by_person$LevelsPerPerson > 1L),
+    LinkingPersonRate = mean(by_person$LevelsPerPerson > 1L),
+    SingleLevelPersons = sum(by_person$LevelsPerPerson == 1L),
+    SparseLevels = sum(by_level$PersonsPerLevel < min_linking_persons),
+    SparseLevelThreshold = min_linking_persons
   )
 }
 
@@ -1742,6 +1978,15 @@ audit_compare_mfrm_nesting <- function(fits, labels) {
 #' @param context_facets Optional facets used to define matched contexts for
 #'   agreement. If `NULL`, all remaining facets (including `Person`) are used.
 #' @param agreement_top_n Optional maximum number of agreement pair rows.
+#' @param expected_design Optional data frame declaring the planned assignment
+#'   roster. It must contain the columns named by `person` and `facets`, with
+#'   one row per planned Person x facet cell. Extra columns are ignored. When
+#'   supplied, observed cells are compared with the roster so planned omissions
+#'   can be distinguished from cells that were never assigned.
+#' @param min_linking_persons Positive integer used as a descriptive sparse-link
+#'   flag. A facet level observed for fewer than this many distinct persons is
+#'   counted in `linkage_summary$SparseLevels`. This is a review threshold, not
+#'   a model-acceptance rule.
 #'
 #' @details
 #' This function provides a compact descriptive bundle similar to the
@@ -1754,10 +1999,10 @@ audit_compare_mfrm_nesting <- function(fits, labels) {
 #'   their threshold estimates may be imprecise. Do not collapse categories
 #'   solely from a package warning; also consider the rubric, intended score
 #'   interpretation, and category diagnostics after fitting.
-#' - *Unlinked elements*: if a facet level has zero overlap with one or
-#'   more levels of another facet, the design is disconnected and
-#'   parameters cannot be placed on a common scale.  Check
-#'   `linkage_summary` for low connectivity.
+#' - *Unlinked elements*: inspect `design_connectivity` for the observed
+#'   Person-facet graph. More than one component means that the levels of that
+#'   facet are not connected through shared persons. This facet-specific check
+#'   is conservative and does not by itself prove full model identification.
 #' - *Extreme scores*: persons or facet levels with all-minimum or
 #'   all-maximum scores yield infinite logit estimates under JML;
 #'   they are handled via Bayesian shrinkage under MML.
@@ -1765,17 +2010,18 @@ audit_compare_mfrm_nesting <- function(fits, labels) {
 #' @section Interpreting output:
 #' Recommended order:
 #' - `overview`: confirms sample size, facet count, and category span.
-#'   The `MinWeightedN` column shows the smallest weighted observation count
-#'   across facet levels; interpret it relative to the design and intended use.
 #' - `missing_by_column`: identifies immediate data-quality risks.
 #'   Understand why values are missing and whether the fitted missing-data
 #'   handling matches the study design.
+#' - `structural_missingness`: compares observed rating cells with
+#'   `expected_design`, when supplied. Without a declared roster, structural
+#'   missingness is reported as not assessed rather than assumed to be zero.
 #' - `score_distribution`: checks sparse/unused score categories.
 #'   Skew can be substantively expected, but weakly supported or unused
 #'   categories need explicit interpretation.
-#' - `facet_level_summary` and `linkage_summary`: checks per-level
-#'   support and person-facet connectivity.  Low linkage ratios
-#'   indicate sparse or disconnected design blocks.
+#' - `facet_level_summary` and `linkage_summary`: checks per-level support,
+#'   shared-person counts, and sparse levels. Use `design_connectivity` for the
+#'   separate graph-component result.
 #' - `agreement`: optional observed agreement summary for the selected scorer
 #'   facet (exact agreement, correlation, and mean differences per pair).
 #'
@@ -1797,10 +2043,18 @@ audit_compare_mfrm_nesting <- function(fits, labels) {
 #'   `keep_original = TRUE`.
 #' - `facet_level_summary`: per-level usage and score summaries
 #' - `facet_crosstabs`: pairwise observation-count crosstabs between
-#'   non-person facets (named list keyed `"facetA__facetB"`); used by
-#'   `summary(ds)$design_links` to flag sparse / disconnected
-#'   facet-pair coverage
+#'   non-person facets (named list keyed `"facetA__facetB"`) for optional
+#'   downstream coverage displays
 #' - `linkage_summary`: person-facet connectivity diagnostics
+#' - `structural_missingness`: declared-design comparison bundle containing a
+#'   one-row summary, missing expected cells, unexpected observed cells,
+#'   per-facet level coverage, and settings
+#' - `design_connectivity`: component counts for each observed Person-facet
+#'   graph and, when declared, each expected Person-facet graph
+#' - `design_components`: component-level counts and facet-level labels;
+#'   person labels are included only when `include_person_facet = TRUE`
+#' - `duplicate_cell_summary`: counts of duplicate Person x facet cells
+#' - `duplicate_cell_detail`: duplicate-cell keys and row counts
 #' - `agreement`: observed-score agreement bundle for the selected scorer facet
 #' - `row_retention`: row counts before and after preparation filters
 #' - `preparation_notes`: structured notes for row drops, ID trimming, and
@@ -1837,7 +2091,20 @@ describe_mfrm_data <- function(data,
                                include_agreement = TRUE,
                                rater_facet = NULL,
                                context_facets = NULL,
-                               agreement_top_n = NULL) {
+                               agreement_top_n = NULL,
+                               expected_design = NULL,
+                               min_linking_persons = 2L) {
+  if (!is.numeric(min_linking_persons) || length(min_linking_persons) != 1L ||
+      !is.finite(min_linking_persons) || min_linking_persons < 1L ||
+      abs(min_linking_persons - round(min_linking_persons)) > 1e-8) {
+    stop("`min_linking_persons` must be a positive integer.", call. = FALSE)
+  }
+  min_linking_persons <- as.integer(round(min_linking_persons))
+  expected_design_normalized <- normalize_expected_mfrm_design(
+    expected_design = expected_design,
+    person = person,
+    facets = facets
+  )
   prep <- prepare_mfrm_data(
     data = data,
     person_col = person,
@@ -1855,7 +2122,6 @@ describe_mfrm_data <- function(data,
       Person = as.character(.data$Person),
       dplyr::across(dplyr::all_of(prep$facet_names), as.character)
     )
-
   selected_cols <- unique(c(person, facets, score, if (!is.null(weight)) weight))
   missing_by_column <- tibble::tibble(
     Column = selected_cols,
@@ -1911,8 +2177,26 @@ describe_mfrm_data <- function(data,
   linkage_summary <- if (length(prep$facet_names) == 0) {
     tibble::tibble()
   } else {
-    purrr::map_dfr(prep$facet_names, function(facet) summarize_linkage_by_facet(df, facet))
+    purrr::map_dfr(prep$facet_names, function(facet) {
+      summarize_linkage_by_facet(
+        df,
+        facet,
+        min_linking_persons = min_linking_persons
+      )
+    })
   }
+  structural_missingness <- audit_mfrm_expected_design(
+    df = df,
+    expected_design = expected_design_normalized,
+    facets = prep$facet_names
+  )
+  connectivity <- audit_mfrm_connectivity(
+    df = df,
+    expected_design = expected_design_normalized,
+    facets = prep$facet_names,
+    include_persons = include_person_facet
+  )
+  duplicate_cells <- summarize_duplicate_mfrm_cells(df, prep$facet_names)
 
   agreement_bundle <- list(
     summary = data.frame(),
@@ -2058,6 +2342,11 @@ describe_mfrm_data <- function(data,
     facet_level_summary = facet_level_summary,
     facet_crosstabs = facet_crosstabs,
     linkage_summary = linkage_summary,
+    structural_missingness = structural_missingness,
+    design_connectivity = as.data.frame(connectivity$summary, stringsAsFactors = FALSE),
+    design_components = as.data.frame(connectivity$components, stringsAsFactors = FALSE),
+    duplicate_cell_summary = duplicate_cells$summary,
+    duplicate_cell_detail = duplicate_cells$detail,
     agreement = agreement_bundle,
     row_retention = as.data.frame(prep$row_retention %||% data.frame(), stringsAsFactors = FALSE),
     preparation_notes = as.data.frame(prep$preparation_notes %||% data.frame(), stringsAsFactors = FALSE),
@@ -2175,6 +2464,18 @@ print.mfrm_data_description <- function(x, ...) {
   if (!is.null(x$overview) && nrow(x$overview) > 0) {
     print(x$overview, row.names = FALSE)
   }
+  structural <- as.data.frame(
+    x$structural_missingness$summary %||% data.frame(),
+    stringsAsFactors = FALSE
+  )
+  if (nrow(structural) > 0L) {
+    cat("\nPlanned assignment coverage\n")
+    print(structural, row.names = FALSE)
+  }
+  if (!is.null(x$design_connectivity) && nrow(x$design_connectivity) > 0L) {
+    cat("\nPerson-facet connectivity\n")
+    print(as.data.frame(x$design_connectivity), row.names = FALSE)
+  }
   if (!is.null(x$score_distribution) && nrow(x$score_distribution) > 0) {
     cat("\nScore distribution\n")
     print(x$score_distribution, row.names = FALSE)
@@ -2185,6 +2486,121 @@ print.mfrm_data_description <- function(x, ...) {
     print(x$agreement$summary, row.names = FALSE)
   }
   invisible(x)
+}
+
+collect_mfrm_design_caveats <- function(object) {
+  out <- empty_mfrm_caveats()
+  add_caveat <- function(area, severity, condition, facets, message, action, details = "") {
+    out <<- rbind(
+      out,
+      data.frame(
+        Area = area,
+        Severity = severity,
+        Condition = condition,
+        Categories = paste(as.character(facets), collapse = ", "),
+        CategoryType = "design",
+        Message = message,
+        RecommendedAction = action,
+        Details = details,
+        stringsAsFactors = FALSE
+      )
+    )
+    invisible(NULL)
+  }
+
+  structural <- as.data.frame(
+    object$structural_missingness$summary %||% data.frame(),
+    stringsAsFactors = FALSE
+  )
+  if (nrow(structural) > 0L && identical(as.character(structural$Status[1L]), "declared")) {
+    missing_n <- suppressWarnings(as.integer(structural$MissingExpectedCells[1L]))
+    unexpected_n <- suppressWarnings(as.integer(structural$UnexpectedObservedCells[1L]))
+    if (is.finite(missing_n) && missing_n > 0L) {
+      add_caveat(
+        area = "structural_missingness",
+        severity = "review",
+        condition = "planned_cells_not_observed",
+        facets = object$structural_missingness$settings$key %||% character(0),
+        message = paste0(
+          missing_n,
+          " planned rating cell(s) in `expected_design` were not observed."
+        ),
+        action = "Inspect the returned object's `structural_missingness$missing_expected_cells` table and document whether each absence was planned, unavailable, or lost."
+      )
+    }
+    if (is.finite(unexpected_n) && unexpected_n > 0L) {
+      add_caveat(
+        area = "structural_missingness",
+        severity = "warning",
+        condition = "observed_cells_not_in_design",
+        facets = object$structural_missingness$settings$key %||% character(0),
+        message = paste0(
+          unexpected_n,
+          " observed rating cell(s) were not present in `expected_design`."
+        ),
+        action = "Reconcile the assignment roster and observed data before fitting."
+      )
+    }
+  }
+
+  connectivity <- as.data.frame(object$design_connectivity %||% data.frame(), stringsAsFactors = FALSE)
+  if (nrow(connectivity) > 0L && all(c("Connected", "Basis", "Facet", "Components") %in% names(connectivity))) {
+    disconnected <- connectivity[!as.logical(connectivity$Connected), , drop = FALSE]
+    for (i in seq_len(nrow(disconnected))) {
+      basis <- as.character(disconnected$Basis[i])
+      facet <- as.character(disconnected$Facet[i])
+      components <- suppressWarnings(as.integer(disconnected$Components[i]))
+      add_caveat(
+        area = "design_connectivity",
+        severity = "warning",
+        condition = paste0("disconnected_", basis, "_person_facet_graph"),
+        facets = facet,
+        message = paste0(
+          "The ", gsub("_", " ", basis), " Person-", facet,
+          " graph has ", components, " disconnected components."
+        ),
+        action = paste0(
+          "Inspect the returned object's `design_components` table for ", facet,
+          " and add defensible linking observations or analyze components separately."
+        )
+      )
+    }
+  }
+
+  duplicates <- as.data.frame(object$duplicate_cell_summary %||% data.frame(), stringsAsFactors = FALSE)
+  if (nrow(duplicates) > 0L && isTRUE(duplicates$HasDuplicates[1L])) {
+    add_caveat(
+      area = "duplicate_cells",
+      severity = "warning",
+      condition = "duplicate_person_facet_cells",
+      facets = object$structural_missingness$settings$key %||% character(0),
+      message = paste0(
+        duplicates$DuplicateCells[1L],
+        " Person x facet cell(s) contain multiple observed rows."
+      ),
+      action = "Aggregate, deduplicate, or add a distinguishing facet before fitting."
+    )
+  }
+
+  linkage <- as.data.frame(object$linkage_summary %||% data.frame(), stringsAsFactors = FALSE)
+  if (nrow(linkage) > 0L && all(c("Facet", "SparseLevels", "SparseLevelThreshold") %in% names(linkage))) {
+    sparse <- linkage[suppressWarnings(as.integer(linkage$SparseLevels)) > 0L, , drop = FALSE]
+    for (i in seq_len(nrow(sparse))) {
+      add_caveat(
+        area = "design_linkage",
+        severity = "review",
+        condition = "sparse_facet_levels",
+        facets = sparse$Facet[i],
+        message = paste0(
+          sparse$SparseLevels[i], " level(s) of ", sparse$Facet[i],
+          " were observed for fewer than ", sparse$SparseLevelThreshold[i],
+          " distinct persons."
+        ),
+        action = "Review the affected level support and intended inference; the threshold is descriptive, not an automatic exclusion rule."
+      )
+    }
+  }
+  out
 }
 
 #' Summarize a data-description object
@@ -2224,6 +2640,15 @@ print.mfrm_data_description <- function(x, ...) {
 #' - `score_distribution`: compact score-usage table, including zero-count
 #'   categories retained by the prepared score support
 #' - `facet_overview`: facet-level coverage summary
+#' - `structural_missingness`: declared assignment coverage summary; status is
+#'   `"not_declared"` when no assignment roster was supplied
+#' - `structural_level_coverage`: expected versus observed level counts
+#' - `design_connectivity`: Person-facet component counts for observed and
+#'   declared-expected designs
+#' - `design_components`: component sizes and facet-level labels; person labels
+#'   are suppressed unless explicitly requested in [describe_mfrm_data()]
+#' - `linkage_summary`: sparse-support and shared-person counts by facet
+#' - `duplicate_cell_summary`: aggregate duplicate-cell counts
 #' - `agreement`: selected-facet agreement summary when available
 #' - `agreement_settings`: selected scorer facet, matching context, and status
 #' - `row_retention`: row counts before and after preparation filters
@@ -2277,19 +2702,41 @@ summary.mfrm_data_description <- function(object, digits = 3, top_n = 10, ...) {
   agreement_tbl <- as.data.frame(object$agreement$summary %||% data.frame(), stringsAsFactors = FALSE)
   row_retention <- as.data.frame(object$row_retention %||% data.frame(), stringsAsFactors = FALSE)
   preparation_notes <- as.data.frame(object$preparation_notes %||% data.frame(), stringsAsFactors = FALSE)
+  structural_missingness <- as.data.frame(
+    object$structural_missingness$summary %||% data.frame(),
+    stringsAsFactors = FALSE
+  )
+  structural_level_coverage <- as.data.frame(
+    object$structural_missingness$level_coverage %||% data.frame(),
+    stringsAsFactors = FALSE
+  )
+  design_connectivity <- as.data.frame(object$design_connectivity %||% data.frame(), stringsAsFactors = FALSE)
+  design_components <- as.data.frame(object$design_components %||% data.frame(), stringsAsFactors = FALSE)
+  linkage_summary <- as.data.frame(object$linkage_summary %||% data.frame(), stringsAsFactors = FALSE)
+  duplicate_cell_summary <- as.data.frame(object$duplicate_cell_summary %||% data.frame(), stringsAsFactors = FALSE)
   reporting_map <- data.frame(
     Area = c(
       "Sample / design counts",
       "Missingness review",
+      "Planned assignment coverage",
+      "Person-facet connectivity",
       "Score usage / category distribution",
       "Facet coverage",
       "Rater-facet agreement",
       "Fit / reliability / residual PCA"
     ),
-    CoveredHere = c("yes", "yes", "yes", "yes", if (nrow(agreement_tbl) > 0) "yes" else "no", "no"),
+    CoveredHere = c(
+      "yes", "yes",
+      if (nrow(structural_missingness) > 0L &&
+          identical(as.character(structural_missingness$Status[1L]), "declared")) "yes" else "not declared",
+      "yes", "yes", "yes",
+      if (nrow(agreement_tbl) > 0) "yes" else "no", "no"
+    ),
     CompanionOutput = c(
       "summary(describe_mfrm_data(...))",
       "summary(describe_mfrm_data(...))",
+      "data_review$structural_missingness$missing_expected_cells",
+      "data_review$design_components",
       "summary(describe_mfrm_data(...))",
       "summary(describe_mfrm_data(...))",
       "summary(describe_mfrm_data(...)) / plot_interrater_agreement()",
@@ -2313,6 +2760,13 @@ summary.mfrm_data_description <- function(object, digits = 3, top_n = 10, ...) {
   if (nrow(caveats) > 0 && "Message" %in% names(caveats)) {
     notes <- c(notes, as.character(caveats$Message))
   }
+  design_caveats <- collect_mfrm_design_caveats(object)
+  caveats <- rbind(caveats, design_caveats)
+  if (nrow(design_caveats) > 0L && "Message" %in% names(design_caveats)) {
+    notes <- c(notes, as.character(design_caveats$Message))
+  }
+  structural_note <- as.character(object$structural_missingness$settings$note %||% "")
+  if (nzchar(structural_note)) notes <- c(notes, structural_note)
   prep_review_messages <- if (nrow(preparation_notes) > 0L &&
                               all(c("Severity", "Message") %in% names(preparation_notes))) {
     preparation_notes$Message[
@@ -2328,6 +2782,12 @@ summary.mfrm_data_description <- function(object, digits = 3, top_n = 10, ...) {
     missing = missing_tbl,
     score_distribution = score_dist,
     facet_overview = facet_overview,
+    structural_missingness = structural_missingness,
+    structural_level_coverage = structural_level_coverage,
+    design_connectivity = design_connectivity,
+    design_components = design_components,
+    linkage_summary = linkage_summary,
+    duplicate_cell_summary = duplicate_cell_summary,
     agreement = agreement_tbl,
     agreement_settings = object$agreement$settings %||% list(),
     row_retention = row_retention,
@@ -2353,6 +2813,18 @@ print.summary.mfrm_data_description <- function(x, ...) {
   if (!is.null(x$missing) && nrow(x$missing) > 0) {
     cat("\nMissing by column\n")
     print(round_numeric_df(as.data.frame(x$missing), digits = digits), row.names = FALSE)
+  }
+  if (!is.null(x$structural_missingness) && nrow(x$structural_missingness) > 0) {
+    cat("\nPlanned assignment coverage\n")
+    print(round_numeric_df(as.data.frame(x$structural_missingness), digits = digits), row.names = FALSE)
+  }
+  if (!is.null(x$design_connectivity) && nrow(x$design_connectivity) > 0) {
+    cat("\nPerson-facet connectivity\n")
+    print(round_numeric_df(as.data.frame(x$design_connectivity), digits = digits), row.names = FALSE)
+  }
+  if (!is.null(x$linkage_summary) && nrow(x$linkage_summary) > 0) {
+    cat("\nFacet linkage support\n")
+    print(round_numeric_df(as.data.frame(x$linkage_summary), digits = digits), row.names = FALSE)
   }
   if (!is.null(x$score_distribution) && nrow(x$score_distribution) > 0) {
     cat("\nScore distribution\n")

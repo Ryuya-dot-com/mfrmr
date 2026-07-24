@@ -101,7 +101,6 @@ Winsteps.com. \url{https://www.winsteps.com/facets.htm}
 
 Linacre, J. M. (1994). Sample size and item calibration stability.
 \emph{Rasch Measurement Transactions, 7}(4), 328.
-\url{https://www.rasch.org/rmt/rmt74m.htm}
 
 Jones, E., & Wind, S. A. (2018). Using repeated ratings to improve
 measurement precision in incomplete rating designs. \emph{Journal of

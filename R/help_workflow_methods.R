@@ -84,6 +84,15 @@
 #' `analysis_caveats`. Adjacent threshold estimates should still be treated as
 #' weakly identified when an intermediate category is unobserved.
 #'
+#' @section Planned assignment and structural missingness:
+#' A long-format table alone does not reveal whether an absent Person x facet
+#' cell was expected or never assigned. When a score-free assignment roster is
+#' available, pass it as `expected_design` to [describe_mfrm_data()]. The
+#' summary then separates expected-but-unobserved cells from unexpected
+#' observations and reports observed versus declared Person-facet graph
+#' components. Without a roster, structural missingness is explicitly marked
+#' as not assessed; mfrmr does not assume a complete crossing.
+#'
 #' @section Typical workflow:
 #' 1. Review the long-format data and intended score support with
 #'    [describe_mfrm_data()].

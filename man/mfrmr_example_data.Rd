@@ -23,7 +23,7 @@ group structure described below.}
 \source{
 Synthetic documentation data generated from rating-scale Rasch facet
 designs with fixed seeds. Generator scripts are maintained under
-\verb{data-raw/} in each tagged version of the public source repository.
+\verb{data-raw/} for this release in the public source repository.
 These are synthetic examples, not empirical records.
 }
 \description{
@@ -35,6 +35,7 @@ applied study.
 Available data objects:
 \itemize{
 \item \code{mfrmr_example_operational}
+\item \code{mfrmr_example_operational_design} (documented separately below)
 \item \code{mfrmr_example_core}
 \item \code{mfrmr_example_bias}
 }

@@ -99,6 +99,17 @@ exports route those rows through \code{score_category_caveats} or
 weakly identified when an intermediate category is unobserved.
 }
 
+\section{Planned assignment and structural missingness}{
+
+A long-format table alone does not reveal whether an absent Person x facet
+cell was expected or never assigned. When a score-free assignment roster is
+available, pass it as \code{expected_design} to \code{\link[=describe_mfrm_data]{describe_mfrm_data()}}. The
+summary then separates expected-but-unobserved cells from unexpected
+observations and reports observed versus declared Person-facet graph
+components. Without a roster, structural missingness is explicitly marked
+as not assessed; mfrmr does not assume a complete crossing.
+}
+
 \section{Typical workflow}{
 
 \enumerate{

@@ -76,6 +76,19 @@ mfrmr_example_operational$Score <- apply(
 )
 mfrmr_example_operational$Study <- "OperationalExample"
 
+# Preserve the complete planned assignment roster before removing unavailable
+# ratings. It deliberately has no Score column: it declares which rating cells
+# were expected, not fabricated outcomes for cells that were not observed.
+mfrmr_example_operational_design <- mfrmr_example_operational[
+  order(
+    mfrmr_example_operational$Person,
+    mfrmr_example_operational$Rater,
+    mfrmr_example_operational$Criterion
+  ),
+  c("Study", "Person", "Rater", "Criterion", "Group")
+]
+row.names(mfrmr_example_operational_design) <- NULL
+
 # Six planned criterion-level omissions: one for each rater, two for each
 # criterion, three in each person group, and six different persons. In long
 # form these unobserved ratings are absent rather than represented by
@@ -121,6 +134,9 @@ pair_key <- function(x) paste(sort(x), collapse = "|")
 observed_pair_keys <- vapply(observed_rater_pairs, pair_key, character(1))
 planned_pair_keys <- vapply(rater_pairs, pair_key, character(1))
 stopifnot(
+  nrow(mfrmr_example_operational_design) == 288L,
+  !"Score" %in% names(mfrmr_example_operational_design),
+  !anyDuplicated(mfrmr_example_operational_design[c("Person", "Rater", "Criterion")]),
   nrow(mfrmr_example_operational) == 282L,
   length(unique(mfrmr_example_operational$Person)) == 48L,
   length(unique(mfrmr_example_operational$Rater)) == 6L,
@@ -147,5 +163,11 @@ save(
   compress = "xz",
   version = 2
 )
+save(
+  mfrmr_example_operational_design,
+  file = file.path(data_dir, "mfrmr_example_operational_design.rda"),
+  compress = "xz",
+  version = 2
+)
 
-message("Saved operational example data to: ", data_dir)
+message("Saved operational example data and assignment roster to: ", data_dir)

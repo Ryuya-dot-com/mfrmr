@@ -1,14 +1,23 @@
 test_that("CRAN smoke covers the primary MML review and export route", {
   dat <- load_mfrmr_data("example_operational")
+  roster_env <- new.env(parent = emptyenv())
+  utils::data(
+    list = "mfrmr_example_operational_design",
+    package = "mfrmr",
+    envir = roster_env
+  )
   described <- describe_mfrm_data(
     dat,
     person = "Person",
     facets = c("Rater", "Criterion"),
     score = "Score",
     rating_min = 1,
-    rating_max = 4
+    rating_max = 4,
+    expected_design = roster_env$mfrmr_example_operational_design
   )
   expect_s3_class(described, "mfrm_data_description")
+  expect_equal(described$structural_missingness$summary$MissingExpectedCells, 6L)
+  expect_true(all(described$design_connectivity$Connected))
 
   fit <- fit_mfrm(
     dat,

@@ -373,7 +373,6 @@ detect_facet_nesting <- function(data, facets, person = NULL,
 #'
 #' Linacre, J. M. (1994). Sample size and item calibration stability.
 #' *Rasch Measurement Transactions, 7*(4), 328.
-#' <https://www.rasch.org/rmt/rmt74m.htm>
 #'
 #' Jones, E., & Wind, S. A. (2018). Using repeated ratings to improve
 #' measurement precision in incomplete rating designs. *Journal of

@@ -18,7 +18,9 @@ describe_mfrm_data(
   include_agreement = TRUE,
   rater_facet = NULL,
   context_facets = NULL,
-  agreement_top_n = NULL
+  agreement_top_n = NULL,
+  expected_design = NULL,
+  min_linking_persons = 2L
 )
 }
 \arguments{
@@ -68,6 +70,17 @@ represents repeated scorers.}
 agreement. If \code{NULL}, all remaining facets (including \code{Person}) are used.}
 
 \item{agreement_top_n}{Optional maximum number of agreement pair rows.}
+
+\item{expected_design}{Optional data frame declaring the planned assignment
+roster. It must contain the columns named by \code{person} and \code{facets}, with
+one row per planned Person x facet cell. Extra columns are ignored. When
+supplied, observed cells are compared with the roster so planned omissions
+can be distinguished from cells that were never assigned.}
+
+\item{min_linking_persons}{Positive integer used as a descriptive sparse-link
+flag. A facet level observed for fewer than this many distinct persons is
+counted in \code{linkage_summary$SparseLevels}. This is a review threshold, not
+a model-acceptance rule.}
 }
 \value{
 A list of class \code{mfrm_data_description} with:
@@ -84,10 +97,18 @@ range was supplied explicitly; unused intermediate categories require
 \code{keep_original = TRUE}.
 \item \code{facet_level_summary}: per-level usage and score summaries
 \item \code{facet_crosstabs}: pairwise observation-count crosstabs between
-non-person facets (named list keyed \code{"facetA__facetB"}); used by
-\code{summary(ds)$design_links} to flag sparse / disconnected
-facet-pair coverage
+non-person facets (named list keyed \code{"facetA__facetB"}) for optional
+downstream coverage displays
 \item \code{linkage_summary}: person-facet connectivity diagnostics
+\item \code{structural_missingness}: declared-design comparison bundle containing a
+one-row summary, missing expected cells, unexpected observed cells,
+per-facet level coverage, and settings
+\item \code{design_connectivity}: component counts for each observed Person-facet
+graph and, when declared, each expected Person-facet graph
+\item \code{design_components}: component-level counts and facet-level labels;
+person labels are included only when \code{include_person_facet = TRUE}
+\item \code{duplicate_cell_summary}: counts of duplicate Person x facet cells
+\item \code{duplicate_cell_detail}: duplicate-cell keys and row counts
 \item \code{agreement}: observed-score agreement bundle for the selected scorer facet
 \item \code{row_retention}: row counts before and after preparation filters
 \item \code{preparation_notes}: structured notes for row drops, ID trimming, and
@@ -113,10 +134,10 @@ sample size, score distribution, per-facet coverage, and linkage counts.
 their threshold estimates may be imprecise. Do not collapse categories
 solely from a package warning; also consider the rubric, intended score
 interpretation, and category diagnostics after fitting.
-\item \emph{Unlinked elements}: if a facet level has zero overlap with one or
-more levels of another facet, the design is disconnected and
-parameters cannot be placed on a common scale.  Check
-\code{linkage_summary} for low connectivity.
+\item \emph{Unlinked elements}: inspect \code{design_connectivity} for the observed
+Person-facet graph. More than one component means that the levels of that
+facet are not connected through shared persons. This facet-specific check
+is conservative and does not by itself prove full model identification.
 \item \emph{Extreme scores}: persons or facet levels with all-minimum or
 all-maximum scores yield infinite logit estimates under JML;
 they are handled via Bayesian shrinkage under MML.
@@ -127,17 +148,18 @@ they are handled via Bayesian shrinkage under MML.
 Recommended order:
 \itemize{
 \item \code{overview}: confirms sample size, facet count, and category span.
-The \code{MinWeightedN} column shows the smallest weighted observation count
-across facet levels; interpret it relative to the design and intended use.
 \item \code{missing_by_column}: identifies immediate data-quality risks.
 Understand why values are missing and whether the fitted missing-data
 handling matches the study design.
+\item \code{structural_missingness}: compares observed rating cells with
+\code{expected_design}, when supplied. Without a declared roster, structural
+missingness is reported as not assessed rather than assumed to be zero.
 \item \code{score_distribution}: checks sparse/unused score categories.
 Skew can be substantively expected, but weakly supported or unused
 categories need explicit interpretation.
-\item \code{facet_level_summary} and \code{linkage_summary}: checks per-level
-support and person-facet connectivity.  Low linkage ratios
-indicate sparse or disconnected design blocks.
+\item \code{facet_level_summary} and \code{linkage_summary}: checks per-level support,
+shared-person counts, and sparse levels. Use \code{design_connectivity} for the
+separate graph-component result.
 \item \code{agreement}: optional observed agreement summary for the selected scorer
 facet (exact agreement, correlation, and mean differences per pair).
 }

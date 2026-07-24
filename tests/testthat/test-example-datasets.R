@@ -20,17 +20,29 @@ test_that("example datasets are available through utils::data", {
   utils::data(list = "mfrmr_example_core", package = "mfrmr", envir = env)
   utils::data(list = "mfrmr_example_bias", package = "mfrmr", envir = env)
   utils::data(list = "mfrmr_example_operational", package = "mfrmr", envir = env)
+  utils::data(list = "mfrmr_example_operational_design", package = "mfrmr", envir = env)
 
   expect_true(exists("mfrmr_example_core", envir = env, inherits = FALSE))
   expect_true(exists("mfrmr_example_bias", envir = env, inherits = FALSE))
   expect_true(exists("mfrmr_example_operational", envir = env, inherits = FALSE))
+  expect_true(exists("mfrmr_example_operational_design", envir = env, inherits = FALSE))
   expect_s3_class(env$mfrmr_example_core, "data.frame")
   expect_s3_class(env$mfrmr_example_bias, "data.frame")
   expect_s3_class(env$mfrmr_example_operational, "data.frame")
+  expect_s3_class(env$mfrmr_example_operational_design, "data.frame")
+  expect_equal(nrow(env$mfrmr_example_operational_design), 288L)
+  expect_false("Score" %in% names(env$mfrmr_example_operational_design))
 })
 
 test_that("operational example has a connected incomplete assignment", {
   dat <- load_mfrmr_data("example_operational")
+  env <- new.env(parent = emptyenv())
+  utils::data(
+    list = "mfrmr_example_operational_design",
+    package = "mfrmr",
+    envir = env
+  )
+  planned <- env$mfrmr_example_operational_design
 
   expect_equal(nrow(dat), 282L)
   expect_equal(as.integer(table(dat$Rater)), c(47L, 56L, 50L, 47L, 44L, 38L))
@@ -42,6 +54,10 @@ test_that("operational example has a connected incomplete assignment", {
   )
   expect_equal(as.integer(table(dat$Group)), c(141L, 141L))
   expect_equal(sum(table(dat$Person) == 5L), 6L)
+  key <- c("Person", "Rater", "Criterion")
+  expect_equal(nrow(planned), 288L)
+  expect_equal(nrow(dplyr::anti_join(planned[key], dat[key], by = key)), 6L)
+  expect_equal(nrow(dplyr::anti_join(dat[key], planned[key], by = key)), 0L)
 
   person_rater <- unique(dat[c("Person", "Rater")])
   edges <- lapply(split(person_rater$Rater, person_rater$Person), unique)

@@ -16,7 +16,8 @@ Start with the following core workflow before branching into diagnostics,
 bounded \code{GPCM}, simulation, and planning notes:
 \enumerate{
 \item Review long-format data and the intended score support with
-\code{\link[=describe_mfrm_data]{describe_mfrm_data()}}
+\code{\link[=describe_mfrm_data]{describe_mfrm_data()}}. When a planned assignment roster exists, pass it
+as \code{expected_design} so absent rows are not confused with unassigned cells
 \item Fit with \code{\link[=fit_mfrm]{fit_mfrm()}} using \code{method = "MML"}
 \item Read \code{summary(fit, profile = "fit")}, then request the comprehensive
 FACETS-organized view with \code{summary(fit, profile = "facets")}
@@ -84,7 +85,8 @@ you want a customised version.
 
 Use this order before exploring the broader feature surface:
 \enumerate{
-\item \code{\link[=describe_mfrm_data]{describe_mfrm_data()}} for score support, missingness, and design links
+\item \code{\link[=describe_mfrm_data]{describe_mfrm_data()}} for score support, column missingness, declared
+assignment coverage, and Person-facet connectivity
 \item \code{\link[=fit_mfrm]{fit_mfrm()}} with \code{method = "MML"}
 \item \code{summary(fit, profile = "fit")}, followed by
 \code{summary(fit, profile = "facets")} for the comprehensive first screen

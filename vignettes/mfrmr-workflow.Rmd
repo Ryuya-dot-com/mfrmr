@@ -99,13 +99,29 @@ compact but uses a connected two-rater assignment, unequal rater workloads,
 and six planned omissions represented by absent long-format rows rather than
 `NA` or sentinel scores. This makes the main tutorial closer to an applied
 rating design without using empirical records. The same object is also
-available via `data("mfrmr_example_operational", package = "mfrmr")`.
+available via `data("mfrmr_example_operational", package = "mfrmr")`. A
+separate score-free assignment roster lets the pre-fit review identify those
+six omissions without guessing which cells should have existed.
 `example_core` remains available as an idealized complete-crossing example for
 fast help-page checks.
 
 ```{r toy-setup}
 data("mfrmr_example_operational", package = "mfrmr")
+data("mfrmr_example_operational_design", package = "mfrmr")
 toy <- mfrmr_example_operational
+
+data_review_toy <- describe_mfrm_data(
+  data = toy,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  rating_min = 1,
+  rating_max = 4,
+  expected_design = mfrmr_example_operational_design
+)
+data_summary_toy <- summary(data_review_toy)
+data_summary_toy$structural_missingness
+data_summary_toy$design_connectivity
 
 fit_toy <- fit_mfrm(
   data = toy,
@@ -171,6 +187,10 @@ plot(
   preset = "publication"
 )
 ```
+
+`expected_design` is a declared roster, not an inferred complete crossing.
+When no roster is available, the structural-missingness status is
+`"not_declared"`; the package does not label unassigned cells as missing.
 
 The `facets` profile is FACETS-style organization, not evidence that FACETS
 was run and not a numerical-equivalence claim. Its brief print is selective

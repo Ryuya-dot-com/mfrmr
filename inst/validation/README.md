@@ -47,6 +47,10 @@ maintenance review; public release notes stay in `NEWS.md`.
   separate common-data parameter-recovery simulation workflow. The large
   generated datasets and engine outputs are not bundled with the package; this
   file records the release-relevant evidence and its limits.
+- `conquest-mml-overlap-0.2.2.md`: aggregate evidence from a matched 31-node
+  external ConQuest 5.47.5 run in the documented binary, item-only,
+  one-covariate MML overlap scope. It records comparison results and limits but
+  does not include identifier-bearing response or case-level files.
 - `external-recovery-audit.R`: optional audit helper that reads a local
   `Parameter_Recovery_Simulation/` output directory, checks expected CSV
   schemas, records file fingerprints, and regenerates the compact evidence

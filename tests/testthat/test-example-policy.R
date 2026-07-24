@@ -102,17 +102,9 @@ test_that("CRAN testthat surface is an explicit representative whitelist", {
     "compatibility-aliases",
     "data-and-citation",
     "example-datasets",
-    "data-processing",
-    "estimation-core",
     "mml-cpp11-backend",
-    "facets-summary-profile",
-    "wright-facets-style",
-    "fit-pathway",
-    "marginal-fit-diagnostics",
     "missing-codes-integration",
     "bundle-summary-privacy",
-    "console-output-contract",
-    "output-guide",
     "gpcm-capability-matrix",
     "namespace-contract",
     "vignette-artifacts"
@@ -120,14 +112,24 @@ test_that("CRAN testthat surface is an explicit representative whitelist", {
   for (slug in expected) {
     expect_true(grepl(paste0('"', slug, '"'), text, fixed = TRUE))
   }
-  expect_true(grepl('load_mfrmr_data\\("example_operational"\\)',
-                    paste(readLines(file.path(pkg_root, "tests", "testthat",
-                                              "test-cran-smoke.R"), warn = FALSE),
-                          collapse = "\n")))
-  expect_true(grepl('method = "MML"',
-                    paste(readLines(file.path(pkg_root, "tests", "testthat",
-                                              "test-cran-smoke.R"), warn = FALSE),
-                          collapse = "\n"), fixed = TRUE))
+  smoke_text <- paste(
+    readLines(
+      file.path(pkg_root, "tests", "testthat", "test-cran-smoke.R"),
+      warn = FALSE
+    ),
+    collapse = "\n"
+  )
+  expect_true(grepl('load_mfrmr_data\\("example_operational"\\)', smoke_text))
+  for (route in c(
+    'expected_design =',
+    'method = "MML"',
+    'type = "wright"',
+    'fit_stat = "Infit"',
+    'include_person = TRUE',
+    'export_mfrm('
+  )) {
+    expect_true(grepl(route, smoke_text, fixed = TRUE))
+  }
 })
 
 test_that("roxygen examples keep expensive demonstrations conditional", {

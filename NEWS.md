@@ -1,8 +1,8 @@
-# mfrmr 0.2.3
+# mfrmr 0.2.2
 
 - Design, signal-detection, and population-prediction summaries now expose the
-  structural named-facet review as `structural_design_review`. The 0.2.2 field
-  `future_branch_active_summary` remains as a deprecated compatibility alias
+  structural named-facet review as `structural_design_review`. The earlier
+  `future_branch_active_summary` name remains as a deprecated compatibility alias
   but is no longer used in default printing or primary documentation.
 
 ## Summary workflow
@@ -34,6 +34,13 @@
   planned omissions. It is the primary applied tutorial dataset;
   `example_core` remains an explicitly idealized complete-crossing
   example, and `example_bias` remains the planted-effect diagnostic example.
+- `mfrmr_example_operational_design` declares the 288 planned assignment cells
+  separately from the 282 observed scores. `describe_mfrm_data()` can compare
+  an explicit `expected_design` with observed cells, report planned omissions
+  and unexpected observations, audit Person-facet graph components, summarize
+  sparse links and duplicate cells, and keep person labels out of its default
+  compact output. Without a roster, structural missingness is reported as not
+  assessed rather than inferred from a hypothetical complete crossing.
 - `list_mfrmr_data(details = TRUE)` now explains the design and intended role
   of every bundled synthetic dataset. Fixed-seed generators for the compact
   examples are tracked in the public source repository. Combined-study
@@ -72,6 +79,10 @@
   and avoids presenting a generic facet as a rater.
 - Latent regression rejects a non-person-centered parameterization that would
   confound the population intercept with the measurement scale.
+- CRAN checks now exercise the complete public first-contact route once and
+  retain lightweight compatibility/backend/artifact contracts. Repeated
+  estimation, detailed plotting, simulation, and broad regression coverage
+  remain in the complete local and GitHub Actions suite.
 
 ## Interpretation and compatibility boundaries
 
@@ -89,6 +100,10 @@
   `normalize_conquest_overlap_exports()` reads those files, reconstructs the
   sum-constrained item location, trims fixed-width person identifiers, and
   prepares them for `review_conquest_overlap()`.
+- A matched 31-node run with ConQuest 5.47.5 Demonstration Version is recorded
+  in the installed validation notes for the documented binary, item-only,
+  one-covariate MML overlap case. The result supports that narrow handoff and
+  is not a claim of general numerical equivalence.
 - `export_mfrm_results()` now labels every preset as a potentially identifying
   analysis archive, warns before writing unless the risk is explicitly
   acknowledged, and records privacy status in its summary, HTML index, and
@@ -97,8 +112,6 @@
   writer now records per-file handling metadata. ConQuest overlap bundles
   likewise warn on file export and include an artifact-level privacy inventory
   for response, covariate, and case-EAP files.
-
-# mfrmr 0.2.2
 
 ## First-use workflow
 
