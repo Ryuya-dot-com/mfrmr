@@ -1,3 +1,34 @@
+test_that("vignette artifact checksums are independent of text line endings", {
+  write_raw <- function(bytes) {
+    path <- tempfile(fileext = ".csv")
+    con <- file(path, open = "wb")
+    tryCatch(
+      writeBin(bytes, con),
+      finally = close(con)
+    )
+    path
+  }
+
+  paths <- c(
+    lf = write_raw(charToRaw("A,B\n1,2\n")),
+    crlf = write_raw(charToRaw("A,B\r\n1,2\r\n")),
+    cr = write_raw(charToRaw("A,B\r1,2\r")),
+    changed = write_raw(charToRaw("A,B\n1,3\n"))
+  )
+  on.exit(unlink(paths), add = TRUE)
+
+  raw_hashes <- unname(tools::md5sum(paths[c("lf", "crlf", "cr")]))
+  expect_length(unique(raw_hashes), 3L)
+
+  normalized_hashes <- vapply(
+    paths,
+    mfrmr:::mfrmr_normalized_text_md5,
+    character(1)
+  )
+  expect_length(unique(normalized_hashes[c("lf", "crlf", "cr")]), 1L)
+  expect_false(identical(normalized_hashes[["lf"]], normalized_hashes[["changed"]]))
+})
+
 test_that("precomputed vignette artifacts match their manifest", {
   artifact_dir <- system.file(
     "extdata", "vignette-artifacts",
@@ -35,7 +66,7 @@ test_that("precomputed vignette artifacts match their manifest", {
       info = manifest$Artifact[i]
     )
     expect_identical(
-      unname(tools::md5sum(path)),
+      mfrmr:::mfrmr_normalized_text_md5(path),
       manifest$MD5[i],
       info = manifest$Artifact[i]
     )

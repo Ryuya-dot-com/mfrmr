@@ -41,13 +41,13 @@ _R_CHECK_FORCE_SUGGESTS_=false R CMD check --as-cran mfrmr_0.2.2.tar.gz
 
 Result: 0 errors, 0 warnings, and 0 notes (`Status: OK`). In the recorded local
 check, examples completed in 15 seconds and the installed-package CRAN test
-selection completed in 4.253 seconds with 378 passes, no failures or warnings,
+selection completed in 4.203 seconds with 381 passes, no failures or warnings,
 and 3 intentional skips for longer GPCM coverage.
 
 The CRAN selection exercises the public data review -> MML fit -> summary ->
 Wright/pathway plot -> export route once, plus lightweight compatibility and
 artifact contracts. The complete non-CRAN regression suite was also run
-locally from the source tree with `NOT_CRAN=true`: 10,243 passes across 1,608
+locally from the source tree with `NOT_CRAN=true`: 10,246 passes across 1,609
 test blocks, with no failures, warnings, skips, or errors. The complete suite
 is also selected on the Linux release job in GitHub Actions.
 
