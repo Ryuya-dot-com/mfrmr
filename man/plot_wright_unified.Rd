@@ -91,7 +91,8 @@ selects a compact value automatically.}
 Invisibly, a list with \code{persons}, \code{facets}, \code{thresholds}, and the
 underlying Wright-map tables used for the plot. Native output includes a
 \code{retention} table and \code{retention_note} documenting compact-display
-omissions.
+omissions. All renderers include fit-readiness and interpretation-status
+metadata.
 }
 \description{
 Produces a shared-logit variable map showing person ability distribution
@@ -114,16 +115,31 @@ relative to the same latent scale.
 The logit scale on the y-axis is shared, allowing direct visual
 comparison of all facets and persons.
 
+If the fit records boundary-separated facet levels and \code{wright_range} is
+\code{NULL}, both renderers derive the display range from supported locations and
+place separated levels at ruler ends. The returned tables retain exact
+\code{OriginalEstimate} and \code{CI_Lower} / \code{CI_Upper} values alongside display and
+clipping metadata; endpoint triangles and footers disclose the adjustment.
+
 With \code{renderer = "facets"} (or \code{wright_style = "facets_style"}), the
 draw-free result additionally
 contains tidy ruler rows, person star frequencies, signed facet headers,
 all facet levels, step lines, original-score transitions, mean half-score
 boundaries, category labels, and display settings under \code{facets_style}.
+The payload keeps both the nearest line-printer \code{RulerValue} and the exact
+step/midpoint \code{DrawValue}; the current renderer draws threshold lines at the
+exact value and prints fitted logits in step labels.
 These tables support custom ggplot2/plotly rendering without parsing the
 base plot.
 Use \code{show_ci = FALSE} for the closest FACETS-style presentation. A
 FACETS-style ruler drawn with \code{show_ci = TRUE} is intentionally labelled as
 a hybrid because its uncertainty intervals are supplied by \code{mfrmr}.
+
+The returned list separates plotting availability from interpretation. It
+includes \code{fit_readiness}, \code{interpretation_status}, and
+\code{interpretation_note}. If numerical, data, connectivity, or stability
+review is unresolved, the map is returned for diagnosis but the call warns
+and prefixes the returned subtitle and drawn title with \verb{REVIEW ONLY}.
 }
 \section{Interpreting output}{
 

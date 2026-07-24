@@ -9,6 +9,118 @@ mfrm_results_status_row <- function(section, status, detail = "") {
   )
 }
 
+mfrm_results_fit_readiness <- function(fit, fit_summary = NULL) {
+  fit_summary <- fit_summary %||% list()
+  readiness <- as.data.frame(
+    fit_summary$readiness %||% data.frame(),
+    stringsAsFactors = FALSE
+  )
+  if (nrow(readiness) == 0L && inherits(fit, "mfrm_fit")) {
+    fit_summary_result <- mfrm_results_safe(mfrm_fit_summary_core(fit))
+    if (isTRUE(fit_summary_result$ok)) {
+      readiness <- as.data.frame(
+        fit_summary_result$value$readiness %||% data.frame(),
+        stringsAsFactors = FALSE
+      )
+    }
+  }
+  for (nm in c("Domain", "Status", "Detail")) {
+    if (!nm %in% names(readiness)) readiness[[nm]] <- character(nrow(readiness))
+  }
+  readiness <- readiness[, c("Domain", "Status", "Detail"), drop = FALSE]
+
+  plot_result <- if (inherits(fit, "mfrm_fit")) {
+    mfrm_results_safe(.mfrm_fit_plot_readiness(fit))
+  } else {
+    list(ok = FALSE, value = NULL)
+  }
+  plot_status <- "not_assessed"
+  plot_detail <- "Fit-level interpretation readiness could not be assessed."
+  if (isTRUE(plot_result$ok)) {
+    plot_status <- as.character(plot_result$value$status %||% plot_status)[1L]
+    plot_detail <- as.character(plot_result$value$detail %||% plot_detail)[1L]
+  }
+  readiness <- readiness[!as.character(readiness$Domain) %in% "Plot", , drop = FALSE]
+  readiness <- rbind(
+    readiness,
+    data.frame(
+      Domain = "Plot",
+      Status = plot_status,
+      Detail = plot_detail,
+      stringsAsFactors = FALSE
+    )
+  )
+  rownames(readiness) <- NULL
+  readiness
+}
+
+mfrm_results_readiness_row <- function(readiness, domain) {
+  readiness <- as.data.frame(readiness %||% data.frame(), stringsAsFactors = FALSE)
+  if (nrow(readiness) == 0L ||
+      !all(c("Domain", "Status", "Detail") %in% names(readiness))) {
+    return(NULL)
+  }
+  row <- readiness[as.character(readiness$Domain) %in% domain, , drop = FALSE]
+  if (nrow(row) == 0L) return(NULL)
+  row[1L, , drop = FALSE]
+}
+
+mfrm_results_readiness_is_ready <- function(domain, status) {
+  domain <- as.character(domain %||% "")[1L]
+  status <- as.character(status %||% "not_assessed")[1L]
+  if (length(status) == 0L || is.na(status) || !nzchar(status)) {
+    status <- "not_assessed"
+  }
+  switch(
+    domain,
+    Numerical = identical(status, "pass"),
+    Data = identical(status, "pass"),
+    Design = identical(status, "pass_linked"),
+    Stability = identical(status, "pass"),
+    Plot = identical(status, "ready_for_diagnostic_interpretation"),
+    Reporting = startsWith(status, "ready_for_"),
+    FALSE
+  )
+}
+
+mfrm_results_add_readiness_status <- function(status, readiness) {
+  status <- as.data.frame(status %||% data.frame(), stringsAsFactors = FALSE)
+  specs <- data.frame(
+    Section = c(
+      "data_readiness", "design_readiness", "stability_readiness",
+      "plot_interpretation", "reporting_readiness"
+    ),
+    Domain = c("Data", "Design", "Stability", "Plot", "Reporting"),
+    stringsAsFactors = FALSE
+  )
+  rows <- lapply(seq_len(nrow(specs)), function(i) {
+    domain <- specs$Domain[i]
+    row <- mfrm_results_readiness_row(readiness, domain)
+    raw_status <- if (is.null(row)) {
+      "not_assessed"
+    } else {
+      as.character(row$Status[1L] %||% "not_assessed")
+    }
+    detail <- if (is.null(row)) "" else as.character(row$Detail[1L] %||% "")
+    mfrm_results_status_row(
+      specs$Section[i],
+      if (isTRUE(mfrm_results_readiness_is_ready(domain, raw_status))) "ok" else "review",
+      paste0(
+        domain, " status: ", raw_status, ".",
+        if (nzchar(detail)) paste0(" ", detail) else ""
+      )
+    )
+  })
+  if ("Section" %in% names(status)) {
+    status <- status[
+      !as.character(status$Section) %in% specs$Section,
+      ,
+      drop = FALSE
+    ]
+  }
+  rbind(status, do.call(rbind, rows))
+}
+
 mfrm_results_component_class <- function(x) {
   if (is.null(x)) return("")
   paste(class(x), collapse = ", ")
@@ -858,9 +970,10 @@ mfrm_results_table_index <- function(tables) {
   do.call(rbind, rows)
 }
 
-mfrm_results_plot_map <- function(has_fit, has_diagnostics, tables, components) {
+mfrm_results_plot_map <- function(has_fit, has_diagnostics, tables, components,
+                                  readiness = NULL) {
   table_names <- names(tables %||% list())
-  data.frame(
+  out <- data.frame(
     Type = c("wright", "fit", "pathway", "fit_pathway", "qc", "category", "anchors", "response_time", "tables"),
     Available = c(
       isTRUE(has_fit),
@@ -898,6 +1011,31 @@ mfrm_results_plot_map <- function(has_fit, has_diagnostics, tables, components) 
     ),
     stringsAsFactors = FALSE
   )
+  plot_row <- mfrm_results_readiness_row(readiness, "Plot")
+  plot_status <- if (is.null(plot_row)) {
+    "not_assessed"
+  } else {
+    as.character(plot_row$Status[1L] %||% "not_assessed")
+  }
+  interpretive <- out$Type %in% c(
+    "wright", "fit", "pathway", "fit_pathway", "qc", "category", "anchors"
+  )
+  out$InterpretationStatus <- ifelse(
+    !interpretive,
+    "not_applicable",
+    ifelse(out$Available %in% TRUE, plot_status, "not_available")
+  )
+  out$InterpretationReady <- rep(NA, nrow(out))
+  out$InterpretationReady[interpretive] <-
+    out$Available[interpretive] %in% TRUE &
+    out$InterpretationStatus[interpretive] %in%
+      "ready_for_diagnostic_interpretation"
+  out$ReadinessRoute <- ifelse(
+    interpretive,
+    "summary(res)$readiness",
+    ""
+  )
+  out
 }
 
 mfrm_results_deparse_one <- function(x) {
@@ -1013,7 +1151,8 @@ mfrm_results_summary_key_warnings <- function(diagnostics, summaries) {
 }
 
 mfrm_results_triage <- function(status, plot_map, components, table_index,
-                                fit, diagnostics, summaries) {
+                                fit, diagnostics, summaries,
+                                readiness = NULL) {
   status <- as.data.frame(status %||% data.frame(), stringsAsFactors = FALSE)
   plot_map <- as.data.frame(plot_map %||% data.frame(), stringsAsFactors = FALSE)
   table_index <- as.data.frame(table_index %||% data.frame(), stringsAsFactors = FALSE)
@@ -1030,6 +1169,40 @@ mfrm_results_triage <- function(status, plot_map, components, table_index,
       stringsAsFactors = FALSE
     )
   }
+
+  add_readiness_domain <- function(domain, area, ready_status, ready_signal,
+                                   review_signal) {
+    row <- mfrm_results_readiness_row(readiness, domain)
+    raw_status <- if (is.null(row)) {
+      "not_assessed"
+    } else {
+      as.character(row$Status[1L] %||% "not_assessed")
+    }
+    detail <- if (is.null(row)) "" else as.character(row$Detail[1L] %||% "")
+    ready <- identical(raw_status, ready_status)
+    add(
+      area,
+      if (ready) "ok" else "review",
+      if (ready) ready_signal else review_signal,
+      "summary(res)$readiness",
+      paste0(
+        domain, " status is `", raw_status, "`.",
+        if (nzchar(detail)) paste0(" ", detail) else ""
+      )
+    )
+  }
+  add_readiness_domain(
+    "Data", "Data review", "pass", "data_readiness_pass",
+    "data_review_required"
+  )
+  add_readiness_domain(
+    "Design", "Design / connectivity", "pass_linked", "design_linked",
+    "design_connectivity_review_required"
+  )
+  add_readiness_domain(
+    "Stability", "Stability", "pass", "stability_readiness_pass",
+    "stability_review_required"
+  )
 
   key_warnings <- mfrm_results_summary_key_warnings(diagnostics, summaries)
   no_diag_warning <- length(key_warnings) == 0L ||
@@ -1085,13 +1258,40 @@ mfrm_results_triage <- function(status, plot_map, components, table_index,
     any(plot_map$Type %in% "qc" & plot_map$Available %in% TRUE)
   wright_available <- nrow(plot_map) > 0L &&
     any(plot_map$Type %in% "wright" & plot_map$Available %in% TRUE)
+  wright_ready <- if ("InterpretationReady" %in% names(plot_map)) {
+    any(
+      plot_map$Type %in% "wright" &
+        plot_map$Available %in% TRUE &
+        plot_map$InterpretationReady %in% TRUE
+    )
+  } else {
+    wright_available
+  }
   add(
     "Wright map",
-    if (wright_available) "ok" else "not_available",
-    if (wright_available) "required_wright_map_available" else "required_wright_map_missing",
+    if (!wright_available) {
+      "not_available"
+    } else if (!wright_ready) {
+      "review"
+    } else {
+      "ok"
+    },
+    if (!wright_available) {
+      "required_wright_map_missing"
+    } else if (!wright_ready) {
+      "required_wright_map_review_only"
+    } else {
+      "required_wright_map_available"
+    },
     if (wright_available) "plot(res, type = \"wright\", preset = \"publication\", show_ci = TRUE, top_n = Inf)" else "summary(res)$plot_map",
-    if (wright_available) {
+    if (wright_available && wright_ready) {
       "The required shared-logit Wright map is available; inspect person targeting, facet locations, steps, and uncertainty before follow-up plots."
+    } else if (wright_available) {
+      paste0(
+        "The required Wright-map route is available, but the display is review-only. ",
+        "Resolve the upstream numerical, data, design, or stability status in ",
+        "`summary(res)$readiness` before substantive or cross-subset interpretation."
+      )
     } else {
       "The required Wright-map artifact is unavailable for this result object."
     }
@@ -1132,12 +1332,42 @@ mfrm_results_triage <- function(status, plot_map, components, table_index,
   }
 
   if ("reporting_checklist" %in% names(components)) {
+    reporting_row <- mfrm_results_readiness_row(readiness, "Reporting")
+    reporting_status <- if (is.null(reporting_row)) {
+      "not_assessed"
+    } else {
+      as.character(reporting_row$Status[1L] %||% "not_assessed")
+    }
+    reporting_detail <- if (is.null(reporting_row)) {
+      ""
+    } else {
+      as.character(reporting_row$Detail[1L] %||% "")
+    }
+    reporting_ready <- isTRUE(mfrm_results_readiness_is_ready(
+      "Reporting", reporting_status
+    ))
     add(
       "Reporting",
-      "ok",
-      "reporting_checklist_available",
+      if (reporting_ready) "ok" else "review",
+      if (reporting_ready) {
+        "reporting_checklist_available"
+      } else {
+        "reporting_checklist_available_but_held"
+      },
       "summary(res$components$reporting_checklist)",
-      "Reporting checklist is available as the manuscript-routing surface."
+      if (reporting_ready) {
+        paste0(
+          "Reporting checklist is available; upstream reporting status is `",
+          reporting_status, "`.",
+          if (nzchar(reporting_detail)) paste0(" ", reporting_detail) else ""
+        )
+      } else {
+        paste0(
+          "Reporting checklist is available, but upstream reporting status is `",
+          reporting_status, "`.",
+          if (nzchar(reporting_detail)) paste0(" ", reporting_detail) else ""
+        )
+      }
     )
   }
 
@@ -1237,12 +1467,25 @@ mfrm_results_next_actions <- function(status, plot_map, components, table_index,
     "Confirms input mode, model, method, section status, table coverage, and plot routes."
   )
   if (nrow(plot_map) > 0L && any(plot_map$Type %in% "wright" & plot_map$Available %in% TRUE)) {
+    wright_ready <- !"InterpretationReady" %in% names(plot_map) || any(
+      plot_map$Type %in% "wright" &
+        plot_map$Available %in% TRUE &
+        plot_map$InterpretationReady %in% TRUE
+    )
     add(
       2L,
       "Wright map",
-      "Create and inspect the required shared-logit scale map.",
+      if (wright_ready) {
+        "Create and inspect the required shared-logit scale map."
+      } else {
+        "Create the required Wright map as a review-only diagnostic artifact."
+      },
       "plot(res, type = \"wright\", preset = \"publication\", show_ci = TRUE, top_n = Inf)",
-      "The Wright map is the primary fitted-scale artifact: compare person targeting with facet levels and step thresholds before branching into diagnostics."
+      if (wright_ready) {
+        "The Wright map is the primary fitted-scale artifact: compare person targeting with facet levels and step thresholds before branching into diagnostics."
+      } else {
+        "The plot route remains available for diagnosis, but resolve the upstream readiness review before substantive or cross-subset interpretation."
+      }
     )
   }
   if (nrow(triage) > 0L &&
@@ -1591,12 +1834,19 @@ mfrm_results_build <- function(ctx, include) {
     status <- added$status
   }
 
+  readiness <- mfrm_results_fit_readiness(
+    fit = fit,
+    fit_summary = summaries$fit %||% NULL
+  )
+  status <- mfrm_results_add_readiness_status(status, readiness)
+
   table_index <- mfrm_results_table_index(tables)
   plot_map <- mfrm_results_plot_map(
     has_fit = inherits(fit, "mfrm_fit"),
     has_diagnostics = inherits(diagnostics, "mfrm_diagnostics"),
     tables = tables,
-    components = components
+    components = components,
+    readiness = readiness
   )
   triage <- mfrm_results_triage(
     status = status,
@@ -1605,7 +1855,8 @@ mfrm_results_build <- function(ctx, include) {
     table_index = table_index,
     fit = fit,
     diagnostics = diagnostics,
-    summaries = summaries
+    summaries = summaries,
+    readiness = readiness
   )
   next_actions <- mfrm_results_next_actions(
     status = status,
@@ -1628,6 +1879,7 @@ mfrm_results_build <- function(ctx, include) {
     tables = tables,
     table_index = table_index,
     plot_map = plot_map,
+    readiness = readiness,
     triage = triage,
     next_actions = next_actions,
     status = status,
@@ -5552,7 +5804,8 @@ export_mfrm_results <- function(x,
 #' @param fit Output from [fit_mfrm()] or [run_mfrm_facets()]. A standard
 #'   long-format `data.frame` is also accepted when person and score columns can
 #'   be inferred unambiguously from common names such as `Person` and `Score`;
-#'   all remaining columns are treated as facets.
+#'   remaining measurement columns must use recognizable facet-role names.
+#'   Ambiguous extra columns are rejected rather than guessed as facets.
 #' @param include Result sections or purpose presets to include. Purpose
 #'   presets are `"standard"`, `"publication"`, `"validation"`, `"facets"`,
 #'   `"bias"`, `"misfit_review"`, `"linking"`, `"network"`,
@@ -5573,7 +5826,11 @@ export_mfrm_results <- function(x,
 #' [fit_measures_table()], [precision_review_report()], and
 #' [reporting_checklist()]. Sections that are unsupported for a particular fit
 #' are retained in the `status` table as `not_available` rather than stopping
-#' the whole results workflow. The returned object also carries
+#' the whole results workflow. The additive `readiness` table keeps Numerical,
+#' Data, Design, Stability, Diagnostics, Reporting, and Plot interpretation
+#' states separate. Plot routes can therefore remain available for diagnosis
+#' while `InterpretationStatus` marks them as review-only. The returned object
+#' also carries
 #' `next_actions` and `input$reproducible_code` so users can move from the
 #' comprehensive first screen to explicit reporting or replay code.
 #'
@@ -5611,9 +5868,10 @@ export_mfrm_results <- function(x,
 #' @section What to inspect first:
 #' Start with `summary(res)`. The most useful fields are:
 #' - `overview`: input mode, model, method, table count, and plot-route count
+#' - `readiness`: separate upstream analysis and plot-interpretation gates
 #' - `triage`: first-screen signals ordered by unavailable/review/info/ok
 #' - `status`: which sections were available, skipped, or unsupported
-#' - `plot_map`: the supported `plot(res, type = ...)` routes for this object
+#' - `plot_map`: supported plot routes, availability, and interpretation status
 #' - `next_actions`: recommended follow-up calls
 #' - `reproducible_code`: replay script for the first-screen route
 #'
@@ -5649,7 +5907,8 @@ export_mfrm_results <- function(x,
 #' @section Typical workflow:
 #' 1. Fit explicitly with [fit_mfrm()] in scripts and manuscripts.
 #' 2. Call `res <- mfrm_results(fit)`.
-#' 3. Read `summary(res, view = "brief")`, then create the required
+#' 3. Read `summary(res, view = "brief")` and its `readiness` table, then create
+#'    the required
 #'    `plot(res, type = "wright", show_ci = TRUE, top_n = Inf)` artifact.
 #' 4. Read `summary(res)$triage`, `summary(res)$status`,
 #'    `summary(res)$plot_map`, and `summary(res)$next_actions`.
@@ -5712,6 +5971,7 @@ export_mfrm_results <- function(x,
 #'
 #' sx <- summary(res)
 #' sx$overview
+#' sx$readiness
 #' sx$triage
 #' sx$plot_map
 #' sx$next_actions
@@ -5973,6 +6233,13 @@ summary.mfrm_results <- function(object, digits = 3, top_n = 10,
     table_index <- utils::head(table_index, n = top_n)
   }
   plot_map <- as.data.frame(object$plot_map %||% data.frame(), stringsAsFactors = FALSE)
+  readiness <- as.data.frame(object$readiness %||% data.frame(), stringsAsFactors = FALSE)
+  if (nrow(readiness) == 0L) {
+    readiness <- mfrm_results_fit_readiness(
+      fit = fit,
+      fit_summary = object$summaries$fit %||% NULL
+    )
+  }
   triage <- as.data.frame(object$triage %||% data.frame(), stringsAsFactors = FALSE)
   next_actions <- as.data.frame(object$next_actions %||% data.frame(), stringsAsFactors = FALSE)
   mapping <- mfrm_results_mapping_table(object$input$mapping %||% NULL)
@@ -5984,6 +6251,7 @@ summary.mfrm_results <- function(object, digits = 3, top_n = 10,
     component_index = component_index,
     table_index = table_index,
     plot_map = plot_map,
+    readiness = readiness,
     triage = triage,
     next_actions = next_actions,
     mapping = mapping,
@@ -6008,6 +6276,16 @@ print.summary.mfrm_results <- function(x, ...) {
       !is.null(x$status) && nrow(x$status) > 0L) {
     cat("\nSection status\n")
     print(as.data.frame(x$status), row.names = FALSE)
+  }
+  if (!is.null(x$readiness) && nrow(x$readiness) > 0L) {
+    cat("\nWorkflow readiness\n")
+    readiness <- as.data.frame(x$readiness)
+    if (brief) {
+      keep <- intersect(c("Domain", "Status"), names(readiness))
+      print(readiness[, keep, drop = FALSE], row.names = FALSE)
+    } else {
+      print(readiness, row.names = FALSE)
+    }
   }
   if (!is.null(x$triage) && nrow(x$triage) > 0L) {
     cat("\nTriage\n")

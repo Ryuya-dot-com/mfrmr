@@ -99,18 +99,46 @@ prepare_mfrm_data <- function(data, person_col, facet_cols, score_col,
   # to person / facets / score (weight retains its original meaning).
   missing_audit <- NULL
   if (!is.null(missing_codes) && !isFALSE(missing_codes)) {
-    codes <- if (isTRUE(missing_codes) ||
-                 (is.character(missing_codes) &&
-                  length(missing_codes) == 1L &&
-                  identical(tolower(missing_codes), "default"))) {
+    default_missing_codes <- isTRUE(missing_codes) ||
+      (is.character(missing_codes) &&
+       length(missing_codes) == 1L &&
+       identical(tolower(missing_codes), "default"))
+    codes <- if (default_missing_codes) {
       c("99", "999", "-1", "N", "NA", "n/a", ".", "")
     } else {
       as.character(missing_codes)
     }
     recode_cols <- c(person_col, facet_cols, score_col)
-    data <- recode_missing_codes(data, columns = recode_cols,
-                                 codes = codes, verbose = FALSE)
-    missing_audit <- attr(data, "mfrm_missing_recoding")
+    # The conventional set contains short tokens such as "N" and numeric
+    # strings such as "99" that can be legitimate person or facet labels.
+    # Applying it indiscriminately to identifier columns can silently delete a
+    # complete person or facet level. Therefore the convenience policy acts on
+    # the score column only. An explicit character vector remains an explicit
+    # request to apply those codes across all selected model columns.
+    applied_cols <- if (default_missing_codes) score_col else recode_cols
+    data <- recode_missing_codes(
+      data,
+      columns = applied_cols,
+      codes = codes,
+      verbose = FALSE
+    )
+    applied_audit <- attr(data, "mfrm_missing_recoding")
+    missing_audit <- data.frame(
+      Column = recode_cols,
+      Replaced = 0L,
+      Scope = ifelse(
+        recode_cols %in% applied_cols,
+        if (default_missing_codes) "default_score_only" else "explicit_all_model_columns",
+        "identifier_preserved_by_default"
+      ),
+      stringsAsFactors = FALSE
+    )
+    if (is.data.frame(applied_audit) && nrow(applied_audit) > 0L) {
+      matched <- match(applied_audit$Column, missing_audit$Column)
+      keep <- !is.na(matched)
+      missing_audit$Replaced[matched[keep]] <- as.integer(applied_audit$Replaced[keep])
+    }
+    attr(data, "mfrm_missing_recoding") <- missing_audit
     replaced_n <- if (is.data.frame(missing_audit) &&
                       "Replaced" %in% names(missing_audit)) {
       sum(suppressWarnings(as.integer(missing_audit$Replaced)), na.rm = TRUE)
@@ -174,7 +202,10 @@ prepare_mfrm_data <- function(data, person_col, facet_cols, score_col,
   # real fractional scores like 1.5 or 2.75 while accepting float
   # representation noise for integer codes.
   score_tol <- 1e-6
-  bad_score <- is.na(score_num) & !is.na(raw_score) & nzchar(trimws(raw_score))
+  nonfinite_score <- is.nan(score_num) |
+    (!is.na(score_num) & !is.finite(score_num))
+  bad_score <- is.na(score_num) & !is.nan(score_num) &
+    !is.na(raw_score) & nzchar(trimws(raw_score))
 
   # If essentially every non-empty value is non-numeric (e.g. "low", "medium",
   # "high" text labels), the later `drop_na` would silently remove every row
@@ -189,6 +220,17 @@ prepare_mfrm_data <- function(data, person_col, facet_cols, score_col,
       paste(shQuote(examples), collapse = ", "),
       ") rather than ordered integer category codes. Recode to integers ",
       "(for example 0/1 or 1:5) before calling fit_mfrm().",
+      call. = FALSE
+    )
+  }
+
+  if (any(nonfinite_score)) {
+    examples <- utils::head(unique(raw_score[nonfinite_score]), 5L)
+    stop(
+      "`Score` must contain finite ordered integer category codes. ",
+      "Non-finite value(s) were found: ",
+      paste(examples, collapse = ", "), ". ",
+      "Recode or remove these rows before fitting.",
       call. = FALSE
     )
   }
@@ -234,6 +276,29 @@ prepare_mfrm_data <- function(data, person_col, facet_cols, score_col,
       across(all_of(facet_cols), ~ trimws(as.character(.x))),
       Score = score_num
     )
+  blank_person <- !is.na(df$Person) & !nzchar(df$Person)
+  blank_facets <- vapply(facet_cols, function(facet) {
+    sum(!is.na(df[[facet]]) & !nzchar(df[[facet]]))
+  }, integer(1))
+  if (any(blank_person) || any(blank_facets > 0L)) {
+    blank_facet_names <- names(blank_facets)[blank_facets > 0L]
+    blank_facet_labels <- if (length(blank_facet_names) > 0L) {
+      paste0(blank_facet_names, " (", blank_facets[blank_facet_names], ")")
+    } else {
+      character(0)
+    }
+    affected <- c(
+      if (any(blank_person)) paste0(person_col, " (", sum(blank_person), ")"),
+      blank_facet_labels
+    )
+    stop(
+      "Blank person or facet identifier(s) were found after trimming whitespace: ",
+      paste(affected, collapse = ", "), ". ",
+      "Fill, remove, or explicitly recode these identifiers before fitting; ",
+      "blank labels cannot define measurement levels.",
+      call. = FALSE
+    )
+  }
   # Detect Person / facet IDs that gained / lost surrounding whitespace
   # in the trim and warn so users do not silently end up with a "P01"
   # vs " P01 " split.
@@ -279,7 +344,20 @@ prepare_mfrm_data <- function(data, person_col, facet_cols, score_col,
     df <- df |> mutate(Weight = 1)
   } else {
     weight_num <- suppressWarnings(as.numeric(raw_weight))
-    bad_weight <- is.na(weight_num) & !is.na(raw_weight) & nzchar(trimws(raw_weight))
+    nonfinite_weight <- is.nan(weight_num) |
+      (!is.na(weight_num) & !is.finite(weight_num))
+    if (any(nonfinite_weight)) {
+      examples <- utils::head(unique(raw_weight[nonfinite_weight]), 5L)
+      stop(
+        "`Weight` must contain finite numeric values. Non-finite value(s) ",
+        "were found: ", paste(examples, collapse = ", "), ". ",
+        "Use finite weights or remove the weight column; non-positive finite ",
+        "weights are excluded during data preparation.",
+        call. = FALSE
+      )
+    }
+    bad_weight <- is.na(weight_num) & !is.nan(weight_num) &
+      !is.na(raw_weight) & nzchar(trimws(raw_weight))
     if (any(bad_weight)) {
       bad_weight_n <- sum(bad_weight)
       bad_weight_msg <- paste0(
@@ -351,8 +429,10 @@ prepare_mfrm_data <- function(data, person_col, facet_cols, score_col,
                 duplicated(df[, key_cols, drop = FALSE], fromLast = TRUE)
     n_dup <- sum(dup_mask)
     if (n_dup > 0L) {
+      n_dup_cells <- nrow(unique(df[dup_mask, key_cols, drop = FALSE]))
       duplicate_msg <- paste0(
-        "Detected ", n_dup, " duplicate row(s) sharing the same Person x ",
+        "Detected ", n_dup, " row(s) across ", n_dup_cells,
+        " duplicated Person x ",
         "(", paste(facet_cols, collapse = ", "), ") combination. MFRM ",
         "assumes one observation per cell; aggregate, deduplicate, or ",
         "introduce a distinguishing facet column before fitting. Continuing ",
@@ -367,10 +447,15 @@ prepare_mfrm_data <- function(data, person_col, facet_cols, score_col,
         message = duplicate_msg,
         action = "Aggregate, deduplicate, or add a distinguishing facet before interpreting the fit."
       )
-      warning(
-        duplicate_msg,
-        call. = FALSE
+      duplicate_warning_announced <- isTRUE(
+        getOption("mfrmr._duplicate_warning_announced", FALSE)
       )
+      if (!duplicate_warning_announced) {
+        warning(duplicate_msg, call. = FALSE)
+        if (!is.null(getOption("mfrmr._duplicate_warning_announced"))) {
+          options(mfrmr._duplicate_warning_announced = TRUE)
+        }
+      }
     }
   }
 

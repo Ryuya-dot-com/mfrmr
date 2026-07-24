@@ -83,15 +83,17 @@ unused intermediate categories remain visible in
 \code{\link[=rating_scale_table]{rating_scale_table()}} and APA outputs, which is recommended for
 publication reporting.}
 
-\item{missing_codes}{Optional pre-processing step that converts
-sentinel missing-code values to \code{NA} across the \code{person}, \code{facets},
-and \code{score} columns before any downstream logic. One of:
+\item{missing_codes}{Optional pre-processing step that converts sentinel
+missing-code values to \code{NA} before any downstream logic. One of:
 \itemize{
 \item \code{NULL} (default): no recoding; strictly backward-compatible.
 \item \code{TRUE} or \code{"default"}: FACETS / SPSS / SAS convention set
-(\code{"99"}, \code{"999"}, \code{"-1"}, \code{"N"}, \code{"NA"}, \code{"n/a"}, \code{"."}, \code{""}).
+(\code{"99"}, \code{"999"}, \code{"-1"}, \code{"N"}, \code{"NA"}, \code{"n/a"}, \code{"."}, \code{""})
+on the score column only. Person and facet identifiers are preserved
+because short codes such as \code{"N"} can be legitimate labels.
 \item Character vector: an explicit code set, e.g.
-\code{c("99", "999", ".a")}.
+\code{c("99", "999", ".a")}, applied across the person, facet, and
+score columns.
 }
 Replacement counts are recorded in \code{fit$prep$missing_recoding} and
 surfaced by \code{\link[=build_mfrm_manifest]{build_mfrm_manifest()}}. Equivalent to calling
@@ -169,15 +171,23 @@ denser rule and report the setting used.}
 
 \item{maxit}{Maximum optimizer iterations.}
 
-\item{reltol}{Relative optimizer tolerance. The default, \code{1e-9}, is tighter
-than the terminal-gradient review threshold so that routine optimizer
-stopping and the package's post-fit convergence review are aligned.}
+\item{reltol}{Portable tolerance setting for the initial optimizer stage.
+The default is \code{1e-9}. For BFGS this is passed as \code{reltol}; for L-BFGS-B
+it is mapped to \code{factr} and \code{pgtol}, whose actual values are recorded in
+the fit. When this setting is at least as strict as the public default
+(\code{reltol <= 1e-9}), optimizer code zero followed by a failed common
+terminal-gradient review triggers a bounded warm-started polish ladder.
+The best non-worsening stage under the recorded selection rule is
+retained. Requested and selected-stage settings remain in \code{fit$summary},
+and the complete stage history remains in \code{fit$opt$optimizer_polish}.}
 
 \item{optimizer}{Direct-optimization method. \code{"auto"} (default) uses the
 limited-memory \code{"L-BFGS-B"} method for MML and for larger JML parameter
 vectors (at least 200 free parameters), while retaining BFGS for smaller
 JML fits. Use \code{"BFGS"} or \code{"L-BFGS-B"} to request one method explicitly.
-The method actually used is recorded in \code{fit$summary$OptimizerMethod}.}
+The method actually used is recorded in \code{fit$summary$OptimizerMethod}.
+For L-BFGS-B, inspect \code{OptimizerFactr} and \code{OptimizerPgtol} rather than
+interpreting \code{EffectiveReltol} as a native \code{\link[stats:optim]{stats::optim()}} control.}
 
 \item{mml_engine}{MML optimization engine for \code{method = "MML"}:
 \code{"direct"} (default) uses the selected direct optimizer on the marginal
@@ -185,7 +195,9 @@ log-likelihood,
 \code{"em"} uses an EM loop for \code{RSM} / \code{PCM} with \code{population = NULL}, and
 \code{"hybrid"} uses EM as a warm start before the direct optimizer. Unsupported
 combinations currently fall back to \code{"direct"} and record that fallback in
-\code{fit$summary}.}
+\code{fit$summary}. Direct, hybrid, and EM engines all require the common
+terminal-gradient gate for \code{InferenceReady}; EM relative log-likelihood
+convergence alone does not establish numerical readiness.}
 
 \item{population_formula}{Optional one-sided formula for a person-level
 latent-regression population model, for example \code{~ grade + ses}. Latent
@@ -256,9 +268,11 @@ fits crash-resilient on shared compute environments.}
 \value{
 An object of class \code{mfrm_fit} (named list) with:
 \itemize{
-\item \code{summary}: one-row model summary (\code{LogLik}, \code{AIC}, \code{BIC}, convergence)
-including user-facing \code{Method}, engine-facing \code{MethodUsed}, and
-\code{MMLEngineRequested}, \code{MMLEngineUsed}, and \code{EMIterations} for MML fits
+\item \code{summary}: one-row model summary (\code{LogLik}, \code{AIC}, \code{BIC}, convergence),
+including user-facing \code{Method}, engine-facing \code{MethodUsed}, MML-engine
+fields, terminal-gradient readiness, requested/selected-stage tolerance
+settings, and the actual L-BFGS-B \code{OptimizerFactr} / \code{OptimizerPgtol}
+controls when applicable
 \item \code{facets$person}: person estimates (\code{Estimate}; plus \code{SD} for MML)
 \item \code{facets$others}: facet-level estimates for each facet
 \item \code{steps}: estimated threshold/step parameters as a one-row-per-step
@@ -289,10 +303,15 @@ replay/export provenance table retained before complete-case omission
 (\code{person_table_replay}), plus stored categorical \code{xlevels} / \code{contrasts}
 for model-matrix replay and scoring, together with
 \code{posterior_basis = "population_model"}.
+\item \code{data_review}: pre-fit Data, Design, Stability, and Reporting readiness
+evidence propagated into summaries and plot-interpretation gates
 \item \code{config}: resolved model configuration used for estimation, including
-\code{config$anchor_review}
+\code{config$anchor_review} and the recorded estimation controls
 \item \code{prep}: preprocessed data/level metadata
-\item \code{opt}: raw optimizer result from \code{\link[stats:optim]{stats::optim()}}
+\item \code{opt}: optimizer result augmented with \code{optimizer_diagnostics}, the
+complete \code{optimizer_polish} stage history, method-selection metadata, and
+evaluation-cache counters. For direct fitting, its core fields originate
+from \code{\link[stats:optim]{stats::optim()}}; EM additionally records engine-specific diagnostics.
 }
 }
 \description{
@@ -661,8 +680,10 @@ This affects interpretation of reported facet measures.
 
 \section{Performance tips}{
 
-For exploratory work, \code{method = "JML"} is usually faster than \code{method = "MML"},
-but it may require a larger \code{maxit} to converge on larger datasets.
+When JML is the prespecified estimand, it is often faster than MML but may
+require a larger \code{maxit} on larger datasets. Do not switch from MML to JML
+only to shorten runtime: integrating over a population distribution and
+treating person parameters as fixed effects are different analysis choices.
 
 For MML runs, \code{quad_points} is the main accuracy/speed trade-off.
 The \verb{@param quad_points} tier table is the authoritative reference;
@@ -679,8 +700,12 @@ distributions at additional computational cost.
 \item \code{mml_engine = "em"} or \code{"hybrid"} currently target \code{RSM} / \code{PCM} fits
 without a latent-regression population model.
 \item Benchmark your own workload before using \code{mml_engine = "em"} or
-\code{"hybrid"} for final reporting; \code{direct} remains the safer default when
-you have not compared engines for your data.
+\code{"hybrid"} for final reporting; \code{direct} remains the documented default
+when you have not compared engines for your data.
+\item When a direct code-zero stage stops ahead of the terminal-gradient gate,
+bounded polishing is automatic. Inspect \code{fit$opt$optimizer_polish$Stages}
+rather than repeatedly lowering \code{reltol} without reviewing the retained
+objective, gradient, and parameter changes.
 }
 
 Downstream diagnostics can also be staged:
@@ -762,11 +787,15 @@ Psychological Test and Assessment Modeling, 60(1), 101-139.
 }
 
 \examples{
-# Canonical executable fit using the connected operational example.
+# Lightweight executable mechanics example on the connected teaching data.
+# The small quadrature grid keeps CRAN example time short; the tighter
+# portable tolerance setting keeps this reduced example numerically stable.
+# Use the documented default grid and a sensitivity check for final work.
 toy <- load_mfrmr_data("example_operational")
 fit_quick <- fit_mfrm(
   toy, "Person", c("Rater", "Criterion"), "Score",
-  method = "MML", model = "RSM", quad_points = 7, maxit = 30
+  method = "MML", model = "RSM", quad_points = 7, maxit = 30,
+  reltol = 1e-11
 )
 fit_quick$summary[, c(
   "Model", "Method", "N", "Converged", "InferenceReady",
@@ -808,7 +837,7 @@ head(p_fit$data$locations)
 # facet uncertainty. Use plot(fit, type = "bundle") for the three-plot
 # Wright/pathway/category overview.
 
-# JML is available for exploratory / fast iteration passes:
+# JML is a distinct fixed-person-effects route, not a drop-in speed setting:
 fit_jml <- fit_mfrm(
   data = toy,
   person = "Person",

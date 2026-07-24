@@ -191,13 +191,13 @@ test_that("analyze_dif refit demotes ETS when subgroup refits lack linking facet
   fit_one <- .mfrmr_muffle_expected_warnings(
     fit_mfrm(toy_one, person = "Person", facets = "Criterion",
              score = "Score", method = "JML", maxit = 20),
-    "^Optimizer did not fully converge"
+    "^Optimization convergence review did not produce"
   )
   diag_one <- diagnose_mfrm(fit_one, residual_pca = "none")
   dif_one <- .mfrmr_muffle_expected_warnings(
     analyze_dif(fit_one, diag_one, facet = "Criterion", group = "Group",
                 data = toy_one, method = "refit"),
-    "^Optimizer did not fully converge"
+    "^Optimization convergence review did not produce"
   )
 
   expect_true(all(dif_one$dif_table$ClassificationSystem == "descriptive"))

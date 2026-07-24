@@ -199,6 +199,23 @@ test_that("facets profile reuses diagnostics and keeps explicit analysis boundar
     facets_summary$results$diagnostics,
     diagnostics_for_summary_profile
   )
+  nested_readiness <- facets_summary$results$readiness[
+    facets_summary$results$readiness$Domain != "Plot",
+    ,
+    drop = FALSE
+  ]
+  rownames(nested_readiness) <- NULL
+  outer_readiness <- facets_summary$readiness
+  rownames(outer_readiness) <- NULL
+  expect_equal(nested_readiness, outer_readiness)
+  expect_identical(
+    summary(facets_summary$results)$readiness$Status[
+      summary(facets_summary$results)$readiness$Domain == "Reporting"
+    ],
+    facets_summary$readiness$Status[
+      facets_summary$readiness$Domain == "Reporting"
+    ]
+  )
   expect_identical(facets_summary$provenance$DiagnosticsSource, "explicit")
   expect_identical(
     facets_summary$provenance$IdentityCheck,
@@ -220,6 +237,9 @@ test_that("facets profile reuses diagnostics and keeps explicit analysis boundar
     )
   )
   expect_identical(visual$Required, c(TRUE, FALSE, FALSE))
+  expect_true(all(c(
+    "InterpretationStatus", "InterpretationReady"
+  ) %in% names(visual)))
   expect_match(visual$Route[1], "show_ci = TRUE", fixed = TRUE)
   expect_match(visual$Route[1], "top_n = Inf", fixed = TRUE)
   expect_match(visual$Route[2], "renderer = \"facets\"", fixed = TRUE)
@@ -437,7 +457,11 @@ test_that("replay code preserves diagnostic reuse and Wright uses it", {
     fixed = TRUE
   )
 
-  wright <- plot(result, type = "wright", show_ci = TRUE, draw = FALSE)
+  expect_warning(
+    wright <- plot(result, type = "wright", show_ci = TRUE, draw = FALSE),
+    "Review-only display",
+    fixed = TRUE
+  )
   locations <- as.data.frame(wright$data$locations, stringsAsFactors = FALSE)
   expect_true(any(
     locations$Measure_Source %in% "diagnostics$measures",

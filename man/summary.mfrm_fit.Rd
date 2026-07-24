@@ -55,6 +55,10 @@ An object of class \code{summary.mfrm_fit} with:
 \itemize{
 \item \code{overview}: global model/fit indicators
 \item \code{status}: concise front-door status block for quick review
+\item \code{readiness}: domain-specific numerical, data, design, stability,
+diagnostic, and reporting states
+\item \code{data_review}: structured connectivity and facet-support evidence used by
+the non-numerical readiness gates
 \item \code{key_warnings}: highest-priority warnings to review first
 \item \code{next_actions}: recommended follow-up helpers
 \item \code{population_overview}: current population-model basis, residual variance,
@@ -130,6 +134,13 @@ measures
 
 \itemize{
 \item \code{overview}: convergence and information criteria.
+\item \code{readiness}: separate Numerical, Data, Design, Stability, Diagnostics,
+and Reporting states. \code{InferenceReady} contributes only to Numerical;
+a numerical pass cannot override a disconnected-design or boundary-
+separation hold.
+\item \code{data_review}: overall multi-facet connectivity, facet-level score
+support, boundary-constant levels, single-level facets, and retained
+preparation notes behind the readiness rows.
 \item \code{facet_overview}: per-facet spread and range of estimates.
 \item \code{person_overview}: distribution of person measures.
 \item \code{step_overview}: threshold spread and monotonicity checks, reported by
@@ -170,6 +181,8 @@ checks. For bounded \code{GPCM}, continue with \code{\link[=compute_information]
 
 \examples{
 toy <- load_mfrmr_data("example_operational")
+# Seven quadrature points keep this executable example short. For a final
+# analysis, restore the default or a prespecified grid and review sensitivity.
 fit <- fit_mfrm(
   toy, "Person", c("Rater", "Criterion"), "Score",
   method = "MML", model = "RSM", quad_points = 7, maxit = 30
@@ -179,9 +192,11 @@ s$overview[, c(
   "Model", "Method", "Converged", "InferenceReady",
   "ConvergenceSeverity"
 )]
-# Require `InferenceReady = TRUE` before interpreting the fitted scale.
-# If it is FALSE, inspect the terminal gradient, data, model, and
-# identification; increasing `maxit` alone may not resolve the review.
+s$readiness
+# `InferenceReady = TRUE` clears only the numerical gate. Also require the
+# Data, Design, and Stability rows to support the intended interpretation.
+# If Numerical is not a pass, inspect the retained polish stages; increasing
+# `maxit` alone may not resolve the review.
 s$person_overview
 # Interpret location and spread on the fitted logit scale together with the
 # score distribution and extreme-score counts.

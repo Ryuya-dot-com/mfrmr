@@ -15,15 +15,15 @@ that the two programs are numerically identical.
 - Design: 60 persons, 6 items, 360 complete person-by-item responses
 - Quadrature nodes: 31 in both programs
 - mfrmr controls: `maxit = 400`, `reltol = 1e-13`
-- mfrmr terminal gradient sup-norm: 0.00000849843
+- mfrmr terminal gradient sup-norm: 0.000000150318
 - mfrmr inference-ready status: `TRUE`
 - ConQuest stopping result: deviance change below its convergence criterion
 
-The stricter mfrmr relative tolerance was used because the default optimizer
-stopping rule preceded the package's terminal-gradient gate in this small
-reference case. The analytical gradient was independently compared with a
-central finite-difference gradient; their largest absolute discrepancy was
-approximately 0.00000000646.
+The `1e-13` portable tolerance setting pins the package-side calculation used
+for this fixed external comparison. The public-default route was separately
+confirmed to clear the current numerical-readiness gate. The analytical
+gradient was independently compared with a central finite-difference gradient;
+their largest absolute discrepancy was approximately 0.00000000646.
 
 An initial seven-node external run was not accepted as release evidence because
 ConQuest recommended rerunning with more nodes after retaining an earlier,
@@ -38,15 +38,20 @@ with `normalize_conquest_overlap_exports()` and reviewed with
 
 | Target | Result |
 |---|---:|
-| Covariate-slope absolute difference | 0.00125904 |
-| Population-variance absolute difference | 0.00589397 |
+| Covariate-slope absolute difference | 0.00125900 |
+| Population-variance absolute difference | 0.00589376 |
 | Centered item correlation | 0.9999999982 |
-| Centered item mean absolute difference | 0.00062300 |
-| Centered item maximum absolute difference | 0.00127352 |
-| Case-EAP correlation | 0.9999945477 |
-| Case-EAP mean absolute difference | 0.00724613 |
-| Case-EAP maximum absolute difference | 0.01348400 |
+| Centered item mean absolute difference | 0.00062312 |
+| Centered item maximum absolute difference | 0.00127374 |
+| Case-EAP correlation | 0.9999945481 |
+| Case-EAP mean absolute difference | 0.00724600 |
+| Case-EAP maximum absolute difference | 0.01348363 |
 | Missing, duplicate, or non-numeric attention rows | 0 |
+
+The package-side bundle and comparison were regenerated after the 0.2.2
+optimizer-workspace changes, using the same responses and stored native
+ConQuest exports. The review again produced zero missing, duplicate, or
+non-numeric attention rows.
 
 The population intercept is recorded as constraint-dependent and is not counted
 as a directly comparable parameter. Item locations are compared after

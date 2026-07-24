@@ -890,10 +890,10 @@ plot_dif_summary <- function(x,
 }
 
 
-#' Manuscript-ready four-panel composite (Wright + severity + threshold + summary)
+#' Manuscript-oriented four-panel draft (Wright + severity + threshold + summary)
 #'
-#' Builds a 2x2 publication composite for an `mfrm_fit`, suitable for a
-#' "Figure 1" in the Rasch-family `RSM`/`PCM` manuscript route. Panels: (1)
+#' Builds a 2x2 draft composite for an `mfrm_fit`, suitable for reviewing a
+#' possible "Figure 1" in the Rasch-family `RSM`/`PCM` manuscript route. Panels: (1)
 #' Wright map, (2)
 #' rater severity profile with CI whiskers, (3) threshold ladder, (4)
 #' a one-line reliability / separation summary block. Each panel reuses
@@ -911,13 +911,18 @@ plot_dif_summary <- function(x,
 #'
 #' @return Invisibly, an `mfrm_plot_data` object whose `data` slot
 #'   bundles the four panel data objects under `wright`, `severity`,
-#'   `threshold`, and `summary`.
+#'   `threshold`, and `summary`. Fit readiness is retained in
+#'   `data$fit_readiness`, `data$interpretation_status`, and
+#'   `data$interpretation_note`.
 #'
 #' @section Interpreting output:
-#' Designed for a single-figure Methods or Results overview. The
+#' Designed as a single-figure Methods or Results draft. The
 #' summary panel prints the model class, sample size, log-likelihood,
 #' AIC/BIC, and the largest non-Person facet's separation /
-#' reliability if available.
+#' reliability if available. A fit that has not passed its numerical, data,
+#' design, and stability gates produces one warning and a visible
+#' `"REVIEW ONLY"` label. Resolve that review before treating the composite as
+#' report-ready evidence.
 #'
 #' @seealso [plot.mfrm_fit()] (`type = "wright"`),
 #'   [plot_rater_severity_profile()], [plot_threshold_ladder()],
@@ -944,17 +949,30 @@ plot_apa_figure_one <- function(fit,
     stop("`fit` must be an mfrm_fit object from fit_mfrm().", call. = FALSE)
   }
   style <- resolve_plot_preset(preset)
+  readiness <- .mfrm_fit_plot_readiness(fit)
+  muffle_nested_readiness <- function(expr) {
+    withCallingHandlers(
+      expr,
+      warning = function(w) {
+        if (identical(conditionMessage(w), readiness$detail)) {
+          invokeRestart("muffleWarning")
+        }
+      }
+    )
+  }
   if (is.null(diagnostics)) {
     diagnostics <- suppressMessages(suppressWarnings(
       diagnose_mfrm(fit, residual_pca = "none")
     ))
   }
-  wright <- plot(fit, type = "wright", draw = FALSE)
+  wright <- muffle_nested_readiness(
+    plot(fit, type = "wright", preset = preset, draw = FALSE)
+  )
   severity <- plot_rater_severity_profile(
     fit, diagnostics = diagnostics, facet = rater_facet,
-    ci_level = ci_level, draw = FALSE
+    ci_level = ci_level, preset = preset, draw = FALSE
   )
-  threshold <- plot_threshold_ladder(fit, draw = FALSE)
+  threshold <- plot_threshold_ladder(fit, preset = preset, draw = FALSE)
   summary_lines <- character(0)
   s <- fit$summary
   first_summary_value <- function(tbl, candidates, fallback = NA) {
@@ -1023,7 +1041,9 @@ plot_apa_figure_one <- function(fit,
     old_par <- graphics::par(no.readonly = TRUE)
     on.exit(graphics::par(old_par), add = TRUE)
     graphics::layout(matrix(c(1, 2, 3, 4), nrow = 2L, byrow = TRUE))
-    plot(fit, type = "wright", preset = preset, draw = TRUE)
+    muffle_nested_readiness(
+      plot(fit, type = "wright", preset = preset, draw = TRUE)
+    )
     plot_rater_severity_profile(fit, diagnostics = diagnostics,
                                 facet = rater_facet,
                                 ci_level = ci_level,
@@ -1031,7 +1051,14 @@ plot_apa_figure_one <- function(fit,
     plot_threshold_ladder(fit, preset = preset, draw = TRUE)
     apply_plot_preset(style)
     graphics::plot.new()
-    graphics::title(main = "Fit summary", line = 1)
+    graphics::title(
+      main = if (isTRUE(readiness$ready)) {
+        "Fit summary"
+      } else {
+        "REVIEW ONLY - Fit summary"
+      },
+      line = 1
+    )
     graphics::text(
       x = 0, y = seq(1, 0, length.out = length(summary_lines) + 2L)[-c(1, length(summary_lines) + 2L)],
       labels = summary_lines, adj = 0, cex = 0.9
@@ -1048,9 +1075,13 @@ plot_apa_figure_one <- function(fit,
         summary = summary_lines
       ),
       title = "APA Figure 1: Wright + severity + threshold + summary",
-      subtitle = "2x2 publication composite",
+      subtitle = "2x2 manuscript-oriented draft composite",
       preset = style$name
     )
   )
+  out <- .mfrm_attach_plot_readiness(out, readiness)
+  if (!isTRUE(readiness$ready)) {
+    warning(readiness$detail, call. = FALSE)
+  }
   invisible(out)
 }

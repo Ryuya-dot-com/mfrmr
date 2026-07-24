@@ -2,12 +2,15 @@ test_that("as_ggplot converts the core fitted-result plots", {
   skip_if_not_installed("ggplot2", minimum_version = "3.4.0")
   fit <- make_toy_fit(maxit = 20)
 
-  payloads <- list(
-    plot(fit, type = "wright", draw = FALSE),
-    plot(fit, type = "pathway", draw = FALSE),
-    plot(fit, type = "fit_pathway", include_person = TRUE,
-         top_n_person = 3, draw = FALSE),
-    plot(fit, type = "ccc", draw = FALSE)
+  payloads <- .mfrmr_muffle_expected_warnings(
+    list(
+      plot(fit, type = "wright", draw = FALSE),
+      plot(fit, type = "pathway", draw = FALSE),
+      plot(fit, type = "fit_pathway", include_person = TRUE,
+           top_n_person = 3, draw = FALSE),
+      plot(fit, type = "ccc", draw = FALSE)
+    ),
+    "^Review-only display:"
   )
   plots <- lapply(payloads, as_ggplot)
   expect_true(all(vapply(plots, inherits, logical(1), what = "ggplot")))
@@ -19,8 +22,10 @@ test_that("as_ggplot accepts fitted objects and CCC slope styling", {
   skip_if_not_installed("ggplot2", minimum_version = "3.4.0")
   fit <- make_toy_fit(maxit = 20)
 
-  direct <- as_ggplot(fit, type = "fit_pathway", fit_stat = "Outfit")
-  ccc <- as_ggplot(fit, type = "ccc", slope_aes = "linewidth")
+  .mfrmr_muffle_expected_warnings({
+    direct <- as_ggplot(fit, type = "fit_pathway", fit_stat = "Outfit")
+    ccc <- as_ggplot(fit, type = "ccc", slope_aes = "linewidth")
+  }, "^Review-only display:")
   expect_s3_class(direct, "ggplot")
   expect_s3_class(ccc, "ggplot")
   expect_no_error(ggplot2::ggplot_build(direct))

@@ -1098,7 +1098,14 @@ test_that("EM and hybrid MML engines are wired for RSM/PCM", {
   expect_identical(fit_em$summary$MMLEngineRequested[1], "em")
   expect_identical(fit_em$summary$MMLEngineUsed[1], "em")
   expect_identical(fit_em$summary$OptimizerMethod[1], "EM")
-  expect_identical(fit_em$summary$ConvergenceBasis[1], "relative_loglik")
+  expect_identical(
+    fit_em$summary$ConvergenceBasis[1],
+    "relative_loglik_and_gradient"
+  )
+  expect_identical(
+    fit_em$summary$InferenceReady[1],
+    identical(fit_em$summary$ConvergenceSeverity[1], "pass")
+  )
   expect_true(is.finite(fit_em$summary$EMIterations[1]))
   expect_gte(fit_em$summary$EMIterations[1], 1)
 
@@ -1344,6 +1351,23 @@ test_that("log-likelihood does not deteriorate with more iterations (MML)", {
     method = "MML", model = "RSM", maxit = 100, quad_points = 7
   ))
   expect_gte(fit_long$summary$LogLik, fit_short$summary$LogLik - 0.1)
+})
+
+test_that("portable optimizer settings map to the recorded native controls", {
+  bfgs <- mfrmr:::build_mfrm_optim_control("BFGS", 25, 1e-9)
+  expect_identical(bfgs$maxit, 25L)
+  expect_equal(bfgs$reltol, 1e-9)
+  expect_false(any(c("factr", "pgtol") %in% names(bfgs)))
+
+  limited <- mfrmr:::build_mfrm_optim_control("L-BFGS-B", 25, 1e-9)
+  expect_identical(limited$maxit, 25L)
+  expect_identical(limited$lmm, 20L)
+  expect_equal(limited$factr, 1e-9 / .Machine$double.eps)
+  expect_equal(limited$pgtol, sqrt(.Machine$double.eps))
+
+  tighter <- mfrmr:::build_mfrm_optim_control("L-BFGS-B", 25, 1e-13)
+  expect_lt(tighter$factr, limited$factr)
+  expect_equal(tighter$pgtol, limited$pgtol)
 })
 
 # ---- Additional: logsumexp stability ------------------------------------

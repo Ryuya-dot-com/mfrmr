@@ -1,9 +1,10 @@
 # mfrmr validation artifacts
 
-This directory contains non-exported release-review helpers and evidence
-artifacts. They are included with the package so that release decisions can be
-reconstructed from source files, check logs, and documented validation
-criteria.
+This directory contains repository-only release-review helpers and evidence
+artifacts. `.Rbuildignore` excludes it from the CRAN source tarball so optional
+stress protocols cannot add package size or check time. Release decisions can
+still be reconstructed from the public source repository, check logs, and
+documented validation criteria.
 
 Most package users can ignore this directory. Start with `README.md`,
 `?fit_mfrm`, `?mfrm_results`, `?mfrm_report`, and `mfrmr_output_guide()` for
@@ -59,6 +60,15 @@ maintenance review; public release notes stay in `NEWS.md`.
   `inst/extdata/vignette-artifacts/` that let CRAN-style vignette builds show
   representative workflow output without rerunning fitting and simulation
   chunks.
+- `first-use-workflow-stress.R`: deterministic first-use workflow stress
+  protocol for the complete data -> describe -> fit -> diagnostics ->
+  FACETS-organized summary -> Wright-map route. It separates scenario-contract
+  agreement from reporting triage and covers linked, sparse, disconnected,
+  shared-link, PCM, bounded-GPCM, extreme-score, separation, sentinel-code,
+  and weighted cases.
+- `first-use-workflow-stress-0.2.2.md`: compact record of the 30-fit core
+  matrix and the 300 cross-surface checks run for 0.2.2, with explicit limits
+  on what that evidence establishes.
 
 ## Recommended local sequence
 
@@ -78,10 +88,12 @@ readiness <- mfrmr_release_readiness_review(pkg_dir = ".")
 summary(readiness)
 ```
 
-The release candidate should have `Status: OK` in the local check log and no
-`concern` rows in `readiness$gate_summary`. The check log must also report the
-same package version as `DESCRIPTION`; stale logs from an earlier release are
-reported as a package-check concern. If the local environment cannot verify
+The release candidate should have `Status: OK` in the local check log,
+`ReleaseReadinessStatus = "ok"`, and only `ok` rows in
+`readiness$gate_summary`. A missing `Status:` line, a check-log package version
+that differs from `DESCRIPTION`, release inputs newer than the matching source
+tarball or check log, or a check log older than that tarball is a release
+blocker reported as a `concern`. If the local environment cannot verify
 external clock time, record that environment-only NOTE in `cran-comments.md`
 and rerun the package check with the clock check disabled to confirm that
 package checks are otherwise clean.
@@ -101,6 +113,32 @@ when release evidence is needed:
 ```sh
 NOT_CRAN=true Rscript -e 'testthat::test_local(".")'
 ```
+
+Run the first-use workflow protocol after loading the development tree. The
+quick tier is for iteration; the core tier uses every scenario and three
+deterministic seeds by default:
+
+```r
+pkgload::load_all(".")
+source("inst/validation/first-use-workflow-stress.R")
+
+quick <- mfrmr_run_first_use_stress("quick")
+summary(quick)
+
+core <- mfrmr_run_first_use_stress(
+  "core",
+  output_dir = "validation-results/first-use-workflow"
+)
+summary(core)
+```
+
+`ContractPassed` means that software behavior matched the scenario's explicit
+Numerical/Data/Design/Stability/Reporting/Plot expectations. It does not mean
+the run is manuscript-ready; inspect `UpstreamReportingHold`,
+`DiagnosticReviewRequired`, `DiagnosticFollowUpPending`, and the recorded
+readiness states separately. Large-data diagnostics, real graphics devices,
+and cross-platform UTF-8 rendering remain full/nightly checks rather than CRAN
+examples.
 
 If the external common-data simulation workflow has been refreshed, audit it
 from the package side before updating the evidence summary:

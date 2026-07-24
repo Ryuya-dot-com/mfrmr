@@ -34,15 +34,17 @@
 #'   unused intermediate categories remain visible in
 #'   [rating_scale_table()] and APA outputs, which is recommended for
 #'   publication reporting.
-#' @param missing_codes Optional pre-processing step that converts
-#'   sentinel missing-code values to `NA` across the `person`, `facets`,
-#'   and `score` columns before any downstream logic. One of:
+#' @param missing_codes Optional pre-processing step that converts sentinel
+#'   missing-code values to `NA` before any downstream logic. One of:
 #'   \itemize{
 #'     \item `NULL` (default): no recoding; strictly backward-compatible.
 #'     \item `TRUE` or `"default"`: FACETS / SPSS / SAS convention set
-#'       (`"99"`, `"999"`, `"-1"`, `"N"`, `"NA"`, `"n/a"`, `"."`, `""`).
+#'       (`"99"`, `"999"`, `"-1"`, `"N"`, `"NA"`, `"n/a"`, `"."`, `""`)
+#'       on the score column only. Person and facet identifiers are preserved
+#'       because short codes such as `"N"` can be legitimate labels.
 #'     \item Character vector: an explicit code set, e.g.
-#'       `c("99", "999", ".a")`.
+#'       `c("99", "999", ".a")`, applied across the person, facet, and
+#'       score columns.
 #'   }
 #'   Replacement counts are recorded in `fit$prep$missing_recoding` and
 #'   surfaced by [build_mfrm_manifest()]. Equivalent to calling
@@ -101,21 +103,31 @@
 #'   When substantive conclusions are sensitive, compare results under a
 #'   denser rule and report the setting used.
 #' @param maxit Maximum optimizer iterations.
-#' @param reltol Relative optimizer tolerance. The default, `1e-9`, is tighter
-#'   than the terminal-gradient review threshold so that routine optimizer
-#'   stopping and the package's post-fit convergence review are aligned.
+#' @param reltol Portable tolerance setting for the initial optimizer stage.
+#'   The default is `1e-9`. For BFGS this is passed as `reltol`; for L-BFGS-B
+#'   it is mapped to `factr` and `pgtol`, whose actual values are recorded in
+#'   the fit. When this setting is at least as strict as the public default
+#'   (`reltol <= 1e-9`), optimizer code zero followed by a failed common
+#'   terminal-gradient review triggers a bounded warm-started polish ladder.
+#'   The best non-worsening stage under the recorded selection rule is
+#'   retained. Requested and selected-stage settings remain in `fit$summary`,
+#'   and the complete stage history remains in `fit$opt$optimizer_polish`.
 #' @param optimizer Direct-optimization method. `"auto"` (default) uses the
 #'   limited-memory `"L-BFGS-B"` method for MML and for larger JML parameter
 #'   vectors (at least 200 free parameters), while retaining BFGS for smaller
 #'   JML fits. Use `"BFGS"` or `"L-BFGS-B"` to request one method explicitly.
 #'   The method actually used is recorded in `fit$summary$OptimizerMethod`.
+#'   For L-BFGS-B, inspect `OptimizerFactr` and `OptimizerPgtol` rather than
+#'   interpreting `EffectiveReltol` as a native [stats::optim()] control.
 #' @param mml_engine MML optimization engine for `method = "MML"`:
 #'   `"direct"` (default) uses the selected direct optimizer on the marginal
 #'   log-likelihood,
 #'   `"em"` uses an EM loop for `RSM` / `PCM` with `population = NULL`, and
 #'   `"hybrid"` uses EM as a warm start before the direct optimizer. Unsupported
 #'   combinations currently fall back to `"direct"` and record that fallback in
-#'   `fit$summary`.
+#'   `fit$summary`. Direct, hybrid, and EM engines all require the common
+#'   terminal-gradient gate for `InferenceReady`; EM relative log-likelihood
+#'   convergence alone does not establish numerical readiness.
 #' @param population_formula Optional one-sided formula for a person-level
 #'   latent-regression population model, for example `~ grade + ses`. Latent
 #'   regression is implemented only for
@@ -501,8 +513,10 @@
 #' This affects interpretation of reported facet measures.
 #'
 #' @section Performance tips:
-#' For exploratory work, `method = "JML"` is usually faster than `method = "MML"`,
-#' but it may require a larger `maxit` to converge on larger datasets.
+#' When JML is the prespecified estimand, it is often faster than MML but may
+#' require a larger `maxit` on larger datasets. Do not switch from MML to JML
+#' only to shorten runtime: integrating over a population distribution and
+#' treating person parameters as fixed effects are different analysis choices.
 #'
 #' For MML runs, `quad_points` is the main accuracy/speed trade-off.
 #' The `@param quad_points` tier table is the authoritative reference;
@@ -518,8 +532,12 @@
 #' - `mml_engine = "em"` or `"hybrid"` currently target `RSM` / `PCM` fits
 #'   without a latent-regression population model.
 #' - Benchmark your own workload before using `mml_engine = "em"` or
-#'   `"hybrid"` for final reporting; `direct` remains the safer default when
-#'   you have not compared engines for your data.
+#'   `"hybrid"` for final reporting; `direct` remains the documented default
+#'   when you have not compared engines for your data.
+#' - When a direct code-zero stage stops ahead of the terminal-gradient gate,
+#'   bounded polishing is automatic. Inspect `fit$opt$optimizer_polish$Stages`
+#'   rather than repeatedly lowering `reltol` without reviewing the retained
+#'   objective, gradient, and parameter changes.
 #'
 #' Downstream diagnostics can also be staged:
 #' - use `diagnose_mfrm(fit, residual_pca = "none")` for a quick first pass
@@ -587,9 +605,11 @@
 #'
 #' @return
 #' An object of class `mfrm_fit` (named list) with:
-#' - `summary`: one-row model summary (`LogLik`, `AIC`, `BIC`, convergence)
-#'   including user-facing `Method`, engine-facing `MethodUsed`, and
-#'   `MMLEngineRequested`, `MMLEngineUsed`, and `EMIterations` for MML fits
+#' - `summary`: one-row model summary (`LogLik`, `AIC`, `BIC`, convergence),
+#'   including user-facing `Method`, engine-facing `MethodUsed`, MML-engine
+#'   fields, terminal-gradient readiness, requested/selected-stage tolerance
+#'   settings, and the actual L-BFGS-B `OptimizerFactr` / `OptimizerPgtol`
+#'   controls when applicable
 #' - `facets$person`: person estimates (`Estimate`; plus `SD` for MML)
 #' - `facets$others`: facet-level estimates for each facet
 #' - `steps`: estimated threshold/step parameters as a one-row-per-step
@@ -620,20 +640,29 @@
 #'   (`person_table_replay`), plus stored categorical `xlevels` / `contrasts`
 #'   for model-matrix replay and scoring, together with
 #'   `posterior_basis = "population_model"`.
+#' - `data_review`: pre-fit Data, Design, Stability, and Reporting readiness
+#'   evidence propagated into summaries and plot-interpretation gates
 #' - `config`: resolved model configuration used for estimation, including
-#'   `config$anchor_review`
+#'   `config$anchor_review` and the recorded estimation controls
 #' - `prep`: preprocessed data/level metadata
-#' - `opt`: raw optimizer result from [stats::optim()]
+#' - `opt`: optimizer result augmented with `optimizer_diagnostics`, the
+#'   complete `optimizer_polish` stage history, method-selection metadata, and
+#'   evaluation-cache counters. For direct fitting, its core fields originate
+#'   from [stats::optim()]; EM additionally records engine-specific diagnostics.
 #'
 #' @seealso [diagnose_mfrm()], [estimate_bias()], [build_apa_outputs()],
 #'   [gpcm_capability_matrix], [mfrmr_workflow_methods],
 #'   [mfrmr_reporting_and_apa]
 #' @examples
-#' # Canonical executable fit using the connected operational example.
+#' # Lightweight executable mechanics example on the connected teaching data.
+#' # The small quadrature grid keeps CRAN example time short; the tighter
+#' # portable tolerance setting keeps this reduced example numerically stable.
+#' # Use the documented default grid and a sensitivity check for final work.
 #' toy <- load_mfrmr_data("example_operational")
 #' fit_quick <- fit_mfrm(
 #'   toy, "Person", c("Rater", "Criterion"), "Score",
-#'   method = "MML", model = "RSM", quad_points = 7, maxit = 30
+#'   method = "MML", model = "RSM", quad_points = 7, maxit = 30,
+#'   reltol = 1e-11
 #' )
 #' fit_quick$summary[, c(
 #'   "Model", "Method", "N", "Converged", "InferenceReady",
@@ -675,7 +704,7 @@
 #' # facet uncertainty. Use plot(fit, type = "bundle") for the three-plot
 #' # Wright/pathway/category overview.
 #'
-#' # JML is available for exploratory / fast iteration passes:
+#' # JML is a distinct fixed-person-effects route, not a drop-in speed setting:
 #' fit_jml <- fit_mfrm(
 #'   data = toy,
 #'   person = "Person",
@@ -791,6 +820,10 @@ fit_mfrm <- function(data,
   options(mfrmr._score_recode_announced = FALSE)
   on.exit(options(mfrmr._score_recode_announced = prior_score_recode_opt),
           add = TRUE)
+  prior_duplicate_warning_opt <- getOption("mfrmr._duplicate_warning_announced")
+  options(mfrmr._duplicate_warning_announced = FALSE)
+  on.exit(options(mfrmr._duplicate_warning_announced = prior_duplicate_warning_opt),
+          add = TRUE)
   # -- input validation --
   if (!is.data.frame(data)) {
     stop("`data` must be a data.frame. Got: ", class(data)[1], ". ",
@@ -816,8 +849,10 @@ fit_mfrm <- function(data,
     stop("`weight` must be NULL or a single character string ",
          "naming the weight column.", call. = FALSE)
   }
+  integer_tolerance <- sqrt(.Machine$double.eps)
   if (!is.numeric(maxit) || length(maxit) != 1 ||
-      !is.finite(maxit) || maxit < 1) {
+      !is.finite(maxit) || maxit < 1 ||
+      abs(maxit - round(maxit)) > integer_tolerance) {
     stop("`maxit` must be a finite positive integer. Got: ",
          deparse(maxit), ".", call. = FALSE)
   }
@@ -827,9 +862,20 @@ fit_mfrm <- function(data,
          deparse(reltol), ".", call. = FALSE)
   }
   if (!is.numeric(quad_points) || length(quad_points) != 1 ||
-      !is.finite(quad_points) || quad_points < 1) {
+      !is.finite(quad_points) || quad_points < 1 ||
+      abs(quad_points - round(quad_points)) > integer_tolerance) {
     stop("`quad_points` must be a finite positive integer. Got: ",
          deparse(quad_points), ".", call. = FALSE)
+  }
+  if (!is.logical(keep_original) || length(keep_original) != 1L ||
+      is.na(keep_original)) {
+    stop("`keep_original` must be a single logical value (TRUE or FALSE).",
+         call. = FALSE)
+  }
+  if (!is.logical(attach_diagnostics) || length(attach_diagnostics) != 1L ||
+      is.na(attach_diagnostics)) {
+    stop("`attach_diagnostics` must be a single logical value (TRUE or FALSE).",
+         call. = FALSE)
   }
   if (!is.null(person_id) && (!is.character(person_id) || length(person_id) != 1 || !nzchar(person_id))) {
     stop("`person_id` must be NULL or a single non-empty character string naming the person column in `person_data`.",
@@ -1033,11 +1079,6 @@ fit_mfrm <- function(data,
     package_version = as.character(utils::packageVersion("mfrmr"))
   )
 
-  if (!is.logical(attach_diagnostics) || length(attach_diagnostics) != 1L ||
-      is.na(attach_diagnostics)) {
-    stop("`attach_diagnostics` must be a single logical value (TRUE or FALSE).",
-         call. = FALSE)
-  }
   if (isTRUE(attach_diagnostics)) {
     fit <- attach_diagnostics_to_fit(fit)
   } else {
@@ -1971,8 +2012,10 @@ audit_compare_mfrm_nesting <- function(fits, labels) {
 #'   intermediate categories such as `1, 2, 4, 5` on a 1-5 scale.
 #' @param missing_codes Optional. `NULL` (default) is a no-op;
 #'   `TRUE` or `"default"` activates the FACETS / SPSS / SAS
-#'   convention (`c("99", "999", "-1", "N", "NA", "n/a", ".", "")`);
-#'   supply a character vector for a custom code set. Replacement
+#'   convention (`c("99", "999", "-1", "N", "NA", "n/a", ".", "")`)
+#'   for the score column while preserving person/facet identifiers;
+#'   supply a character vector to apply a custom code set across all model
+#'   columns. Replacement
 #'   counts are returned in the `missing_recoding` component when
 #'   supported by the calling helper. See [recode_missing_codes()]
 #'   for the standalone version.
@@ -3019,8 +3062,9 @@ plot.mfrm_data_description <- function(x,
 #' @param keep_original Keep original category values.
 #' @param missing_codes Optional. `NULL` (default) is a no-op;
 #'   `TRUE` or `"default"` converts the FACETS / SPSS / SAS sentinel
-#'   set to `NA` on the person, facets, and score columns before
-#'   review. Supply a character vector for a custom code set.
+#'   set to `NA` on the score column before review while preserving person and
+#'   facet identifiers. Supply a character vector to apply a custom code set
+#'   across the person, facet, and score columns.
 #' @param min_common_anchors Minimum anchored levels per linking facet used in
 #'   recommendations (default `5`).
 #' @param min_obs_per_element Minimum weighted observations per facet level used

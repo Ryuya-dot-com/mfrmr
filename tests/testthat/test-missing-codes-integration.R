@@ -48,11 +48,43 @@ test_that("prep$missing_recoding stores per-column replacement counts", {
   ))
   audit <- fit$prep$missing_recoding
   expect_s3_class(audit, "data.frame")
-  expect_true(all(c("Column", "Replaced") %in% names(audit)))
+  expect_true(all(c("Column", "Replaced", "Scope") %in% names(audit)))
   expect_setequal(audit$Column, c("Person", "Rater", "Task", "Score"))
   expect_true(is.numeric(audit$Replaced) || is.integer(audit$Replaced))
   # 99 is a valid sentinel; expect at least one Score replacement.
   expect_gt(audit$Replaced[audit$Column == "Score"], 0L)
+  expect_identical(
+    audit$Scope[audit$Column == "Score"],
+    "default_score_only"
+  )
+})
+
+test_that("default missing codes preserve legitimate person and facet IDs", {
+  d <- make_dirty_data(seed = 22L)
+  d$Person[d$Person == "P1"] <- "N"
+  d$Rater[d$Rater == "R1"] <- "N"
+
+  prep <- suppressWarnings(mfrmr:::prepare_mfrm_data(
+    d,
+    person_col = "Person",
+    facet_cols = c("Rater", "Task"),
+    score_col = "Score",
+    missing_codes = TRUE
+  ))
+
+  expect_true("N" %in% prep$data$Person)
+  expect_true("N" %in% prep$data$Rater)
+  expect_equal(
+    prep$missing_recoding$Replaced[
+      prep$missing_recoding$Column %in% c("Person", "Rater", "Task")
+    ],
+    rep(0L, 3L)
+  )
+  expect_true(all(
+    prep$missing_recoding$Scope[
+      prep$missing_recoding$Column %in% c("Person", "Rater", "Task")
+    ] == "identifier_preserved_by_default"
+  ))
 })
 
 test_that("missing_codes accepts custom character vectors", {

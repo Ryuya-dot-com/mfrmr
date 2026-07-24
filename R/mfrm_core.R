@@ -2940,6 +2940,7 @@ build_estimation_summary <- function(model, method, prep, config, sizes, opt) {
   }
   optimizer_diag <- opt$optimizer_diagnostics %||%
     build_optimizer_diagnostics(opt = opt)
+  optimizer_polish <- opt$optimizer_polish %||% list()
   mml_engine <- opt$mml_engine %||% list()
   mml_used <- if (identical(method, "MML")) {
     as.character(mml_engine$Used %||% config$estimation_control$mml_engine_used %||% "direct")
@@ -3003,6 +3004,35 @@ build_estimation_summary <- function(model, method, prep, config, sizes, opt) {
       NA_real_
     },
     OptimizerMethod = optimizer_diag$OptimizerMethod,
+    OptimizerInitialMethod = as.character(
+      optimizer_polish$InitialMethod %||% optimizer_diag$OptimizerMethod
+    ),
+    OptimizerPolished = isTRUE(optimizer_polish$Triggered),
+    OptimizerPolishSucceeded = isTRUE(optimizer_polish$Succeeded),
+    OptimizerPolishStages = if (isTRUE(optimizer_polish$Triggered)) {
+      max(0L, nrow(as.data.frame(optimizer_polish$Stages %||% data.frame())) - 1L)
+    } else {
+      0L
+    },
+    RequestedReltol = as.numeric(
+      optimizer_polish$RequestedReltol %||% optimizer_diag$RequestedReltol %||% NA_real_
+    ),
+    EffectiveReltol = as.numeric(
+      optimizer_polish$EffectiveReltol %||% optimizer_diag$EffectiveReltol %||%
+        config$estimation_control$reltol %||% NA_real_
+    ),
+    OptimizerFactr = as.numeric(
+      optimizer_polish$EffectiveFactr %||% optimizer_diag$OptimizerFactr %||%
+        NA_real_
+    ),
+    OptimizerPgtol = as.numeric(
+      optimizer_polish$EffectivePgtol %||% optimizer_diag$OptimizerPgtol %||%
+        NA_real_
+    ),
+    InitialTerminalGradientSupNorm = as.numeric(
+      optimizer_polish$InitialTerminalGradientSupNorm %||%
+        optimizer_diag$TerminalGradientSupNorm
+    ),
     ConvergenceCode = optimizer_diag$ConvergenceCode,
     ConvergenceBasis = optimizer_diag$ConvergenceBasis,
     ConvergenceStatus = optimizer_diag$ConvergenceStatus,
@@ -3037,6 +3067,107 @@ build_estimation_summary <- function(model, method, prep, config, sizes, opt) {
                                 rating_min = prep$rating_min,
                                 rating_max = prep$rating_max)
   as.integer(sum(flag == which, na.rm = TRUE))
+}
+
+build_mfrm_data_review <- function(prep, anchors = NULL, group_anchors = NULL) {
+  facet_names <- as.character(prep$facet_names %||% character(0))
+  subset_tables <- calc_subsets(prep$data, c("Person", facet_names))
+  subset_summary <- as.data.frame(
+    subset_tables$summary %||% data.frame(),
+    stringsAsFactors = FALSE
+  )
+  subset_nodes <- as.data.frame(
+    subset_tables$nodes %||% data.frame(),
+    stringsAsFactors = FALSE
+  )
+  subset_count <- if (nrow(subset_summary) > 0L) nrow(subset_summary) else NA_integer_
+  anchors_present <- nrow(as.data.frame(anchors %||% data.frame())) > 0L ||
+    nrow(as.data.frame(group_anchors %||% data.frame())) > 0L
+
+  support <- if (length(facet_names) == 0L) {
+    data.frame()
+  } else {
+    dplyr::bind_rows(lapply(facet_names, function(facet) {
+      prep$data |>
+        dplyr::group_by(Level = as.character(.data[[facet]])) |>
+        dplyr::summarise(
+          Observations = dplyr::n(),
+          WeightedN = sum(.data$Weight, na.rm = TRUE),
+          DistinctScores = dplyr::n_distinct(.data$Score),
+          MinScore = min(.data$Score, na.rm = TRUE),
+          MaxScore = max(.data$Score, na.rm = TRUE),
+          .groups = "drop"
+        ) |>
+        dplyr::mutate(
+          Facet = facet,
+          ConstantScore = .data$DistinctScores <= 1L,
+          BoundaryConstant = .data$ConstantScore &
+            (.data$MinScore == prep$rating_min | .data$MaxScore == prep$rating_max),
+          .before = 1L
+        )
+    }))
+  }
+  boundary_levels <- if (nrow(support) > 0L) {
+    support[as.logical(support$BoundaryConstant), , drop = FALSE]
+  } else {
+    data.frame()
+  }
+  single_level_facets <- facet_names[vapply(facet_names, function(facet) {
+    length(unique(as.character(prep$data[[facet]]))) <= 1L
+  }, logical(1))]
+  prep_notes <- as.data.frame(
+    prep$preparation_notes %||% data.frame(),
+    stringsAsFactors = FALSE
+  )
+  prep_review <- if (nrow(prep_notes) > 0L && "Severity" %in% names(prep_notes)) {
+    tolower(as.character(prep_notes$Severity)) %in% c("review", "warning", "error")
+  } else {
+    logical(0)
+  }
+
+  design_status <- if (is.finite(subset_count) && subset_count > 1L) {
+    if (isTRUE(anchors_present)) "review_disconnected_with_anchors" else "hold_disconnected"
+  } else if (identical(subset_count, 1L)) {
+    "pass_linked"
+  } else {
+    "review_not_assessed"
+  }
+  stability_status <- if (nrow(boundary_levels) > 0L) {
+    "hold_boundary_separation"
+  } else if (length(single_level_facets) > 0L) {
+    "hold_single_level_facet"
+  } else {
+    "pass"
+  }
+  data_status <- if (any(prep_review)) "review" else "pass"
+  reporting_status <- if (startsWith(design_status, "hold_")) {
+    "hold_design"
+  } else if (startsWith(stability_status, "hold_")) {
+    "hold_stability"
+  } else if (!identical(data_status, "pass") || startsWith(design_status, "review_")) {
+    "review"
+  } else {
+    "ready_for_diagnostics"
+  }
+
+  list(
+    status = data.frame(
+      Domain = c("Data", "Design", "Stability", "Reporting"),
+      Status = c(data_status, design_status, stability_status, reporting_status),
+      stringsAsFactors = FALSE
+    ),
+    overall_connectivity = list(
+      summary = subset_summary,
+      nodes = subset_nodes,
+      components = subset_count,
+      connected = identical(subset_count, 1L),
+      anchors_present = isTRUE(anchors_present)
+    ),
+    facet_support = as.data.frame(support, stringsAsFactors = FALSE),
+    boundary_levels = as.data.frame(boundary_levels, stringsAsFactors = FALSE),
+    single_level_facets = single_level_facets,
+    preparation_notes = prep_notes
+  )
 }
 
 # ---- estimation wrapper ----
@@ -3141,6 +3272,43 @@ mfrm_estimate <- function(data, person_col, facet_cols, score_col,
   )
   sizes <- cfg$sizes
   start <- build_initial_param_vector(config, sizes)
+  data_review <- build_mfrm_data_review(
+    prep = prep,
+    anchors = anchor_df,
+    group_anchors = group_anchor_df
+  )
+  design_status <- data_review$status$Status[
+    match("Design", data_review$status$Domain)
+  ]
+  stability_status <- data_review$status$Status[
+    match("Stability", data_review$status$Domain)
+  ]
+  if (startsWith(design_status, "hold_")) {
+    warning(
+      "The observed measurement design contains ",
+      data_review$overall_connectivity$components,
+      " disconnected subset(s). Numerical estimation can continue, but ",
+      "cross-subset comparisons are not design-linked and reporting remains ",
+      "on hold until the design or an external linking justification is reviewed.",
+      call. = FALSE
+    )
+  } else if (startsWith(design_status, "review_")) {
+    warning(
+      "The observed measurement design is disconnected and includes supplied ",
+      "anchors. Review whether those anchors justify cross-subset comparisons ",
+      "before reporting.",
+      call. = FALSE
+    )
+  }
+  if (startsWith(stability_status, "hold_")) {
+    warning(
+      "Boundary-constant or single-level facet support was detected. The model ",
+      "may return a small terminal gradient while one or more facet estimates ",
+      "remain weakly identified or separated; reporting is on hold pending ",
+      "the structured data-support review in `fit$data_review`.",
+      call. = FALSE
+    )
+  }
 
   # Stage 4: Optimize model parameters.
   opt <- run_mfrm_optimization(
@@ -3157,6 +3325,27 @@ mfrm_estimate <- function(data, person_col, facet_cols, score_col,
   )
   config$estimation_control$optimizer_used <- as.character(
     opt$optimizer_plan$Used %||% opt$optimizer_diagnostics$OptimizerMethod %||% NA_character_
+  )
+  config$estimation_control$optimizer_initial <- as.character(
+    opt$optimizer_plan$InitialUsed %||% config$estimation_control$optimizer_used
+  )
+  config$estimation_control$optimizer_polish <- opt$optimizer_polish %||% list(
+    Triggered = FALSE,
+    Succeeded = FALSE,
+    RequestedReltol = as.numeric(reltol),
+    EffectiveReltol = as.numeric(reltol),
+    EffectiveFactr = NA_real_,
+    EffectivePgtol = NA_real_,
+    Stages = data.frame()
+  )
+  config$estimation_control$effective_reltol <- as.numeric(
+    opt$optimizer_diagnostics$EffectiveReltol %||% reltol
+  )
+  config$estimation_control$optimizer_factr <- as.numeric(
+    opt$optimizer_diagnostics$OptimizerFactr %||% NA_real_
+  )
+  config$estimation_control$optimizer_pgtol <- as.numeric(
+    opt$optimizer_diagnostics$OptimizerPgtol %||% NA_real_
   )
   config$estimation_control$mml_engine_used <- as.character(opt$mml_engine$Used %||% NA_character_)
   config$estimation_control$mml_engine_detail <- as.character(opt$mml_engine$Detail %||% NA_character_)
@@ -3184,6 +3373,7 @@ mfrm_estimate <- function(data, person_col, facet_cols, score_col,
     slopes = slope_tbl,
     config = config,
     prep = prep,
+    data_review = data_review,
     opt = opt
   )
 }
@@ -6487,14 +6677,28 @@ calc_subsets <- function(obs_df, facet_cols) {
   }
   uf <- make_union_find(nodes)
 
-  for (i in seq_len(nrow(df))) {
-    row_vals <- unlist(df[i, facet_cols, drop = FALSE], use.names = FALSE)
-    row_nodes <- paste0(facet_cols, ":", as.character(row_vals))
-    row_nodes <- row_nodes[!is.na(row_nodes)]
-    if (length(row_nodes) < 2) next
-    base <- row_nodes[1]
-    for (node in row_nodes[-1]) {
-      uf$union(base, node)
+  # Each observation links the first facet node to every remaining facet
+  # node. Build those edges in the same row-major order as the earlier nested
+  # loop, but union only the first occurrence of an identical edge. Repeating
+  # an already-seen edge cannot change a connected component, and avoiding
+  # data-frame row extraction inside the loop materially reduces the cost for
+  # crossed designs.
+  if (length(facet_cols) >= 2L) {
+    base_nodes <- paste0(
+      facet_cols[1L], ":", as.character(df[[facet_cols[1L]]])
+    )
+    other_node_columns <- lapply(facet_cols[-1L], function(facet) {
+      paste0(facet, ":", as.character(df[[facet]]))
+    })
+    other_node_matrix <- do.call(cbind, other_node_columns)
+    edge_pairs <- data.frame(
+      From = rep(base_nodes, each = length(other_node_columns)),
+      To = as.vector(t(other_node_matrix)),
+      stringsAsFactors = FALSE
+    )
+    edge_pairs <- edge_pairs[!duplicated(edge_pairs), , drop = FALSE]
+    for (i in seq_len(nrow(edge_pairs))) {
+      uf$union(edge_pairs$From[i], edge_pairs$To[i])
     }
   }
 
@@ -6515,10 +6719,16 @@ calc_subsets <- function(obs_df, facet_cols) {
     summarize(Levels = n_distinct(Level), .groups = "drop") |>
     tidyr::pivot_wider(names_from = Facet, values_from = Levels, values_fill = 0)
 
-  row_subset <- vapply(seq_len(nrow(df)), function(i) {
-    node <- paste0(facet_cols[1], ":", as.character(df[[facet_cols[1]]][i]))
-    comp_index[uf$find(node)]
-  }, integer(1))
+  first_nodes <- paste0(
+    facet_cols[1L], ":", as.character(df[[facet_cols[1L]]])
+  )
+  unique_first_nodes <- unique(first_nodes)
+  unique_first_subsets <- unname(comp_index[
+    vapply(unique_first_nodes, uf$find, character(1))
+  ])
+  row_subset <- as.integer(
+    unique_first_subsets[match(first_nodes, unique_first_nodes)]
+  )
   obs_counts <- tibble(Subset = row_subset) |>
     count(Subset, name = "Observations")
 

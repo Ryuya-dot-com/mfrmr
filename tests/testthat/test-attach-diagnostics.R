@@ -61,7 +61,7 @@ test_that("attach_diagnostics rejects non-logical inputs", {
     .mfrmr_muffle_expected_warnings(
       fit_mfrm(.toy, "Person", c("Rater", "Criterion"), "Score",
                method = "JML", maxit = 5, attach_diagnostics = "yes"),
-      "^Optimizer did not fully converge"
+      "^Optimization convergence review did not produce"
     ),
     "attach_diagnostics"
   )
@@ -69,7 +69,7 @@ test_that("attach_diagnostics rejects non-logical inputs", {
     .mfrmr_muffle_expected_warnings(
       fit_mfrm(.toy, "Person", c("Rater", "Criterion"), "Score",
                method = "JML", maxit = 5, attach_diagnostics = NA),
-      "^Optimizer did not fully converge"
+      "^Optimization convergence review did not produce"
     ),
     "attach_diagnostics"
   )
@@ -78,7 +78,7 @@ test_that("attach_diagnostics rejects non-logical inputs", {
       fit_mfrm(.toy, "Person", c("Rater", "Criterion"), "Score",
                method = "JML", maxit = 5,
                attach_diagnostics = c(TRUE, FALSE)),
-      "^Optimizer did not fully converge"
+      "^Optimization convergence review did not produce"
     ),
     "attach_diagnostics"
   )

@@ -64,6 +64,17 @@ test_that("precomputed workflow artifacts represent the canonical successful fit
   expect_true(isTRUE(fit_overview$Converged))
   expect_true(isTRUE(fit_overview$InferenceReady))
   expect_identical(fit_overview$ConvergenceSeverity, "pass")
+  expect_true(all(c(
+    "OptimizerInitialMethod", "OptimizerMethod", "OptimizerPolished",
+    "RequestedReltol", "EffectiveReltol", "OptimizerFactr",
+    "OptimizerPgtol"
+  ) %in% names(fit_overview)))
+  expect_identical(fit_overview$OptimizerInitialMethod, "L-BFGS-B")
+  expect_true(isTRUE(fit_overview$OptimizerPolished))
+  expect_equal(fit_overview$RequestedReltol, 1e-9)
+  expect_lt(fit_overview$EffectiveReltol, fit_overview$RequestedReltol)
+  expect_true(is.finite(fit_overview$OptimizerFactr))
+  expect_true(is.finite(fit_overview$OptimizerPgtol))
   expect_identical(diagnostic_overview$Method, "MML")
   expect_identical(diagnostic_overview$PrecisionTier, "model_based")
 })

@@ -486,8 +486,9 @@ vignette now show `IdentificationStatus` alongside `G`, `Phi`, `GStatus`, and
   non-CRAN regression-evidence route.
 - `release-readiness.R` now resolves the target release from `DESCRIPTION`,
   selects versioned evidence-map and checklist files when available, and treats
-  a stale `R CMD check` log whose package version does not match the target
-  release as a package-check review item.
+  a missing check status, a package-version mismatch, release inputs newer than
+  the matching source tarball or check log, or a check log older than that
+  tarball as a release-blocking concern.
 - `release-readiness.R` also checks bounded-`GPCM` runtime guard coverage:
   every blocked/deferred capability row must be covered by a runtime guard or
   roadmap-only entry, runtime guards must use `mfrmr_gpcm_scope_error`, and

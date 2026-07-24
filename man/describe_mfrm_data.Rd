@@ -48,8 +48,10 @@ intermediate categories such as \verb{1, 2, 4, 5} on a 1-5 scale.}
 
 \item{missing_codes}{Optional. \code{NULL} (default) is a no-op;
 \code{TRUE} or \code{"default"} activates the FACETS / SPSS / SAS
-convention (\code{c("99", "999", "-1", "N", "NA", "n/a", ".", "")});
-supply a character vector for a custom code set. Replacement
+convention (\code{c("99", "999", "-1", "N", "NA", "n/a", ".", "")})
+for the score column while preserving person/facet identifiers;
+supply a character vector to apply a custom code set across all model
+columns. Replacement
 counts are returned in the \code{missing_recoding} component when
 supported by the calling helper. See \code{\link[=recode_missing_codes]{recode_missing_codes()}}
 for the standalone version.}

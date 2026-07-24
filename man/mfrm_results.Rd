@@ -20,7 +20,8 @@ mfrm_results(
 \item{fit}{Output from \code{\link[=fit_mfrm]{fit_mfrm()}} or \code{\link[=run_mfrm_facets]{run_mfrm_facets()}}. A standard
 long-format \code{data.frame} is also accepted when person and score columns can
 be inferred unambiguously from common names such as \code{Person} and \code{Score};
-all remaining columns are treated as facets.}
+remaining measurement columns must use recognizable facet-role names.
+Ambiguous extra columns are rejected rather than guessed as facets.}
 
 \item{include}{Result sections or purpose presets to include. Purpose
 presets are \code{"standard"}, \code{"publication"}, \code{"validation"}, \code{"facets"},
@@ -76,7 +77,11 @@ existing helpers such as \code{\link[=diagnose_mfrm]{diagnose_mfrm()}},
 \code{\link[=fit_measures_table]{fit_measures_table()}}, \code{\link[=precision_review_report]{precision_review_report()}}, and
 \code{\link[=reporting_checklist]{reporting_checklist()}}. Sections that are unsupported for a particular fit
 are retained in the \code{status} table as \code{not_available} rather than stopping
-the whole results workflow. The returned object also carries
+the whole results workflow. The additive \code{readiness} table keeps Numerical,
+Data, Design, Stability, Diagnostics, Reporting, and Plot interpretation
+states separate. Plot routes can therefore remain available for diagnosis
+while \code{InterpretationStatus} marks them as review-only. The returned object
+also carries
 \code{next_actions} and \code{input$reproducible_code} so users can move from the
 comprehensive first screen to explicit reporting or replay code.
 }
@@ -122,9 +127,10 @@ only the measurement columns needed for estimation.
 Start with \code{summary(res)}. The most useful fields are:
 \itemize{
 \item \code{overview}: input mode, model, method, table count, and plot-route count
+\item \code{readiness}: separate upstream analysis and plot-interpretation gates
 \item \code{triage}: first-screen signals ordered by unavailable/review/info/ok
 \item \code{status}: which sections were available, skipped, or unsupported
-\item \code{plot_map}: the supported \code{plot(res, type = ...)} routes for this object
+\item \code{plot_map}: supported plot routes, availability, and interpretation status
 \item \code{next_actions}: recommended follow-up calls
 \item \code{reproducible_code}: replay script for the first-screen route
 }
@@ -168,7 +174,8 @@ analysis archive is needed. Neither route deidentifies its contents.
 \enumerate{
 \item Fit explicitly with \code{\link[=fit_mfrm]{fit_mfrm()}} in scripts and manuscripts.
 \item Call \code{res <- mfrm_results(fit)}.
-\item Read \code{summary(res, view = "brief")}, then create the required
+\item Read \code{summary(res, view = "brief")} and its \code{readiness} table, then create
+the required
 \code{plot(res, type = "wright", show_ci = TRUE, top_n = Inf)} artifact.
 \item Read \code{summary(res)$triage}, \code{summary(res)$status},
 \code{summary(res)$plot_map}, and \code{summary(res)$next_actions}.
@@ -205,6 +212,7 @@ fit_bundle <- plot(res, type = "fit", draw = FALSE)
 
 sx <- summary(res)
 sx$overview
+sx$readiness
 sx$triage
 sx$plot_map
 sx$next_actions

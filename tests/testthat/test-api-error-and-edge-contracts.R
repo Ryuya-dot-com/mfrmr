@@ -589,27 +589,26 @@ test_that("plot.mfrm_anchor_review issue_counts drawn", {
 # 22. plot.mfrm_fit type="facet" with draw (lines 13144-13186)
 # ==========================================================================
 test_that("plot.mfrm_fit type=facet drawn covers facet plot branch", {
-  p_facet <- with_null_device(
-    plot(fit, type = "facet", draw = TRUE)
-  )
+  .mfrmr_muffle_expected_warnings({
+    p_facet <- with_null_device(
+      plot(fit, type = "facet", draw = TRUE)
+    )
+    # With a specific facet filter
+    p_rater <- with_null_device(
+      plot(fit, type = "facet", facet = "Rater", draw = TRUE)
+    )
+    # step drawn
+    p_step <- with_null_device(
+      plot(fit, type = "step", draw = TRUE)
+    )
+    # person drawn
+    p_person <- with_null_device(
+      plot(fit, type = "person", draw = TRUE)
+    )
+  }, "^Review-only display:")
   expect_s3_class(p_facet, "mfrm_plot_data")
-
-  # With a specific facet filter
-  p_rater <- with_null_device(
-    plot(fit, type = "facet", facet = "Rater", draw = TRUE)
-  )
   expect_s3_class(p_rater, "mfrm_plot_data")
-
-  # step drawn
-  p_step <- with_null_device(
-    plot(fit, type = "step", draw = TRUE)
-  )
   expect_s3_class(p_step, "mfrm_plot_data")
-
-  # person drawn
-  p_person <- with_null_device(
-    plot(fit, type = "person", draw = TRUE)
-  )
   expect_s3_class(p_person, "mfrm_plot_data")
 })
 
@@ -857,7 +856,10 @@ test_that("bundle_known_overview builds a one-row overview", {
 # 36. print.mfrm_plot_bundle (lines 13168-13176)
 # ==========================================================================
 test_that("print.mfrm_plot_bundle prints expected lines", {
-  p_bundle <- plot(fit, type = "bundle", draw = FALSE)
+  p_bundle <- .mfrmr_muffle_expected_warnings(
+    plot(fit, type = "bundle", draw = FALSE),
+    "^Review-only display:"
+  )
   out <- capture.output(print(p_bundle))
   expect_true(any(grepl("mfrm plot bundle", out, fixed = TRUE)))
   expect_true(any(grepl("wright_map", out, fixed = TRUE)))
@@ -897,8 +899,9 @@ test_that("facets_output_file_bundle plot types are drawn", {
 # 38. plot.mfrm_fit drawn bundle (wright, pathway, ccc)
 # ==========================================================================
 test_that("plot.mfrm_fit bundle drawn covers all three map types", {
-  p_all <- with_null_device(
-    plot(fit, type = "bundle", draw = TRUE)
+  p_all <- .mfrmr_muffle_expected_warnings(
+    with_null_device(plot(fit, type = "bundle", draw = TRUE)),
+    "^Review-only display:"
   )
   expect_s3_class(p_all, "mfrm_plot_bundle")
   expect_true(all(c("wright_map", "pathway_map", "category_characteristic_curves") %in% names(p_all)))
@@ -908,13 +911,13 @@ test_that("plot.mfrm_fit bundle drawn covers all three map types", {
 # 39. plot.mfrm_fit wright/pathway/ccc individually drawn
 # ==========================================================================
 test_that("plot.mfrm_fit individual types drawn", {
-  p_w <- with_null_device(plot(fit, type = "wright", draw = TRUE))
+  .mfrmr_muffle_expected_warnings({
+    p_w <- with_null_device(plot(fit, type = "wright", draw = TRUE))
+    p_p <- with_null_device(plot(fit, type = "pathway", draw = TRUE))
+    p_c <- with_null_device(plot(fit, type = "ccc", draw = TRUE))
+  }, "^Review-only display:")
   expect_s3_class(p_w, "mfrm_plot_data")
-
-  p_p <- with_null_device(plot(fit, type = "pathway", draw = TRUE))
   expect_s3_class(p_p, "mfrm_plot_data")
-
-  p_c <- with_null_device(plot(fit, type = "ccc", draw = TRUE))
   expect_s3_class(p_c, "mfrm_plot_data")
 })
 
@@ -961,8 +964,9 @@ test_that("plot.mfrm_data_description draws score_distribution and facet_level p
 # 42. plot.mfrm_fit type=facet with top_n filtering
 # ==========================================================================
 test_that("plot.mfrm_fit type=facet respects top_n", {
-  p_top <- with_null_device(
-    plot(fit, type = "facet", top_n = 3, draw = TRUE)
+  p_top <- .mfrmr_muffle_expected_warnings(
+    with_null_device(plot(fit, type = "facet", top_n = 3, draw = TRUE)),
+    "^Review-only display:"
   )
   expect_s3_class(p_top, "mfrm_plot_data")
 })

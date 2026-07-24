@@ -322,6 +322,148 @@ nearest_wright_row <- function(x, lower, upper, rows_per_logit) {
   pmin(upper, pmax(lower, round((x - lower) / step) * step + lower))
 }
 
+build_wright_display_scale <- function(fit,
+                                       person_values,
+                                       location_tbl,
+                                       category_labels = NULL,
+                                       rows_per_logit = 2L,
+                                       wright_range = NULL,
+                                       include_steps = TRUE) {
+  person_values <- suppressWarnings(as.numeric(person_values))
+  location_tbl <- as.data.frame(location_tbl, stringsAsFactors = FALSE)
+  location_values <- suppressWarnings(as.numeric(location_tbl$Estimate))
+  base_values <- c(person_values, location_values)
+  base_values <- base_values[is.finite(base_values)]
+  if (length(base_values) == 0L) base_values <- c(-1, 1)
+
+  boundary_levels <- as.data.frame(
+    fit$data_review$boundary_levels %||% data.frame(),
+    stringsAsFactors = FALSE
+  )
+  boundary_key <- character()
+  if (nrow(boundary_levels) > 0L &&
+      all(c("Facet", "Level") %in% names(boundary_levels))) {
+    boundary_key <- unique(paste(
+      as.character(boundary_levels$Facet),
+      as.character(boundary_levels$Level),
+      sep = "\r"
+    ))
+  }
+
+  auto_range_policy <- "all_fitted_locations"
+  range_basis <- base_values
+  if (is.null(wright_range) && length(boundary_key) > 0L &&
+      all(c("PlotType", "Group", "Label") %in% names(location_tbl))) {
+    location_key <- paste(
+      as.character(location_tbl$Group),
+      as.character(location_tbl$Label),
+      sep = "\r"
+    )
+    boundary_match <- location_tbl$PlotType == "Facet level" &
+      location_key %in% boundary_key
+    robust_basis <- c(person_values, location_values[!boundary_match])
+    robust_basis <- robust_basis[is.finite(robust_basis)]
+    if (any(boundary_match) && length(robust_basis) >= 2L) {
+      range_basis <- robust_basis
+      auto_range_policy <- "boundary_levels_at_ends"
+    }
+  }
+
+  provisional <- c(floor(min(range_basis)), ceiling(max(range_basis)))
+  if (diff(provisional) <= 0) provisional <- mean(provisional) + c(-1, 1)
+  score_rulers <- build_wright_score_rulers(
+    fit,
+    theta_range = provisional + c(-6, 6),
+    category_labels = category_labels,
+    include_steps = include_steps
+  )
+  transition_values <- c(
+    suppressWarnings(as.numeric(score_rulers$step_ruler$Estimate)),
+    suppressWarnings(as.numeric(score_rulers$score_transitions$Estimate))
+  )
+  transition_values <- transition_values[is.finite(transition_values)]
+  all_values <- c(range_basis, transition_values)
+  if (is.null(wright_range)) {
+    lower <- floor(min(all_values) * rows_per_logit) / rows_per_logit
+    upper <- ceiling(max(all_values) * rows_per_logit) / rows_per_logit
+    if (!is.finite(lower) || !is.finite(upper) || lower >= upper) {
+      center <- mean(all_values, na.rm = TRUE)
+      lower <- center - 1
+      upper <- center + 1
+    }
+  } else {
+    lower <- wright_range[1]
+    upper <- wright_range[2]
+  }
+
+  list(
+    lower = lower,
+    upper = upper,
+    auto_range_policy = auto_range_policy,
+    boundary_key = boundary_key,
+    score_rulers = score_rulers
+  )
+}
+
+add_wright_ci_display_metadata <- function(tbl, lower, upper) {
+  tbl <- as.data.frame(tbl, stringsAsFactors = FALSE)
+  n <- nrow(tbl)
+  numeric_column <- function(name) {
+    if (name %in% names(tbl)) {
+      suppressWarnings(as.numeric(tbl[[name]]))
+    } else {
+      rep(NA_real_, n)
+    }
+  }
+  logical_column <- function(name) {
+    if (name %in% names(tbl)) {
+      value <- as.logical(tbl[[name]])
+      value[is.na(value)] <- FALSE
+      value
+    } else {
+      rep(FALSE, n)
+    }
+  }
+
+  tbl$OriginalCI_Lower <- numeric_column("CI_Lower")
+  tbl$OriginalCI_Upper <- numeric_column("CI_Upper")
+  has_ci <- is.finite(tbl$OriginalCI_Lower) & is.finite(tbl$OriginalCI_Upper)
+  tbl$DisplayCI_Lower <- ifelse(
+    has_ci,
+    pmin(upper, pmax(lower, tbl$OriginalCI_Lower)),
+    NA_real_
+  )
+  tbl$DisplayCI_Upper <- ifelse(
+    has_ci,
+    pmin(upper, pmax(lower, tbl$OriginalCI_Upper)),
+    NA_real_
+  )
+  tbl$CIClippedLower <- has_ci & tbl$OriginalCI_Lower < lower
+  tbl$CIClippedUpper <- has_ci & tbl$OriginalCI_Upper > upper
+  tbl$CIClipped <- tbl$CIClippedLower | tbl$CIClippedUpper
+
+  boundary <- logical_column("BoundarySeparated")
+  below <- logical_column("BelowRange")
+  above <- logical_column("AboveRange")
+  tbl$BoundaryEnd <- ifelse(
+    boundary & below,
+    "lower",
+    ifelse(boundary & above, "upper", "none")
+  )
+  tbl$CISuppressed <- boundary & has_ci &
+    (below | above | tbl$CIClipped)
+  tbl$CIDisplayStatus <- ifelse(
+    !has_ci,
+    "not_available",
+    ifelse(
+      tbl$CISuppressed,
+      "boundary_endpoint_marker",
+      ifelse(tbl$CIClipped, "clipped_with_endpoint_marker", "full_interval")
+    )
+  )
+  tbl
+}
+
 build_facets_style_wright_data <- function(fit,
                                            plot_data,
                                            category_labels = NULL,
@@ -337,38 +479,22 @@ build_facets_style_wright_data <- function(fit,
   wright_range <- validate_wright_range(wright_range)
   extreme_placement <- match.arg(tolower(as.character(extreme_placement[1])), c("ends", "estimate"))
 
-  base_values <- c(
-    suppressWarnings(as.numeric(plot_data$person$Estimate)),
-    suppressWarnings(as.numeric(plot_data$locations$Estimate))
-  )
-  base_values <- base_values[is.finite(base_values)]
-  if (length(base_values) == 0L) base_values <- c(-1, 1)
-  provisional <- c(floor(min(base_values)), ceiling(max(base_values)))
-  if (diff(provisional) <= 0) provisional <- mean(provisional) + c(-1, 1)
-  score_rulers <- build_wright_score_rulers(
-    fit,
-    theta_range = provisional + c(-6, 6),
+  person_values <- suppressWarnings(as.numeric(plot_data$person$Estimate))
+  location_tbl <- as.data.frame(plot_data$locations, stringsAsFactors = FALSE)
+  display_scale <- build_wright_display_scale(
+    fit = fit,
+    person_values = person_values,
+    location_tbl = location_tbl,
     category_labels = category_labels,
+    rows_per_logit = rows_per_logit,
+    wright_range = wright_range,
     include_steps = include_steps
   )
-  transition_values <- c(
-    suppressWarnings(as.numeric(score_rulers$step_ruler$Estimate)),
-    suppressWarnings(as.numeric(score_rulers$score_transitions$Estimate))
-  )
-  transition_values <- transition_values[is.finite(transition_values)]
-  all_values <- c(base_values, transition_values)
-  if (is.null(wright_range)) {
-    lower <- floor(min(all_values) * rows_per_logit) / rows_per_logit
-    upper <- ceiling(max(all_values) * rows_per_logit) / rows_per_logit
-    if (!is.finite(lower) || !is.finite(upper) || lower >= upper) {
-      center <- mean(all_values, na.rm = TRUE)
-      lower <- center - 1
-      upper <- center + 1
-    }
-  } else {
-    lower <- wright_range[1]
-    upper <- wright_range[2]
-  }
+  lower <- display_scale$lower
+  upper <- display_scale$upper
+  auto_range_policy <- display_scale$auto_range_policy
+  boundary_key <- display_scale$boundary_key
+  score_rulers <- display_scale$score_rulers
   row_step <- 1 / rows_per_logit
   ruler_values <- seq(lower, upper + row_step / 10, by = row_step)
   ruler_values <- ruler_values[ruler_values <= upper + sqrt(.Machine$double.eps)]
@@ -437,6 +563,11 @@ build_facets_style_wright_data <- function(fit,
   sign_value[!is.finite(sign_value)] <- -1
   facet_ruler$Facet <- as.character(facet_ruler$Group)
   facet_ruler$Level <- as.character(facet_ruler$Label)
+  facet_ruler$BoundarySeparated <- paste(
+    facet_ruler$Facet,
+    facet_ruler$Level,
+    sep = "\r"
+  ) %in% boundary_key
   facet_ruler$Sign <- sign_value
   facet_ruler$Orientation <- ifelse(sign_value >= 0, "positive", "negative")
   facet_ruler$Header <- paste0(ifelse(sign_value >= 0, "+", "-"), facet_ruler$Facet)
@@ -449,6 +580,11 @@ build_facets_style_wright_data <- function(fit,
     facet_ruler$BelowRange | facet_ruler$AboveRange,
     paste0("(", facet_ruler$Level, ")"),
     facet_ruler$Level
+  )
+  facet_ruler <- add_wright_ci_display_metadata(
+    facet_ruler,
+    lower = lower,
+    upper = upper
   )
   facet_cells <- tibble::as_tibble(facet_ruler) |>
     dplyr::group_by(.data$Facet, .data$Header, .data$RulerValue) |>
@@ -464,10 +600,21 @@ build_facets_style_wright_data <- function(fit,
       dplyr::mutate(
         InRange = is.finite(.data$Estimate) & .data$Estimate >= lower & .data$Estimate <= upper,
         DisplayEstimate = pmin(upper, pmax(lower, .data$Estimate)),
-        RulerValue = nearest_wright_row(.data$DisplayEstimate, lower, upper, rows_per_logit)
+        RulerValue = nearest_wright_row(.data$DisplayEstimate, lower, upper, rows_per_logit),
+        # FACETS-style frequency cells use the discrete ruler row, while
+        # threshold lines retain their exact fitted logit coordinate.
+        DrawValue = .data$DisplayEstimate
       )
   }
   step_ruler <- add_ruler_position(score_rulers$step_ruler)
+  if (nrow(step_ruler) > 0L) {
+    step_ruler$DrawLabel <- paste0(
+      step_ruler$TransitionLabel,
+      " [",
+      formatC(step_ruler$Estimate, digits = 2L, format = "f"),
+      "]"
+    )
+  }
   score_transitions <- add_ruler_position(score_rulers$score_transitions)
   step_headers <- if (nrow(step_ruler) > 0L) {
     tibble::tibble(
@@ -489,6 +636,15 @@ build_facets_style_wright_data <- function(fit,
     PersonsPerStar = persons_per_star,
     StarsPerPerson = 1 / persons_per_star,
     PersonN = nrow(person)
+  )
+  settings$AutoRangePolicy <- auto_range_policy
+  settings$BoundaryLevelsAtEnds <- sum(facet_ruler$BoundaryEnd != "none")
+  settings$CIClippedCount <- sum(facet_ruler$CIClipped)
+  settings$BoundaryCIEndpointCount <- sum(facet_ruler$CISuppressed)
+  settings$CIDisplayPolicy <- paste0(
+    "Exact intervals remain in CI_Lower/CI_Upper; clipped intervals use ",
+    "endpoint markers and boundary-separated intervals may be omitted from ",
+    "the ruler."
   )
   headers <- dplyr::bind_rows(
     tibble::tibble(ColumnType = "person", Group = "Person", Header = "+Person"),
@@ -540,8 +696,19 @@ draw_wright_facets_style <- function(plot_data,
   yr <- c(settings$LowerLogit[1], settings$UpperLogit[1])
   old_par <- graphics::par(no.readonly = TRUE)
   on.exit(graphics::par(old_par), add = TRUE)
+  auto_range_policy <- as.character(
+    settings$AutoRangePolicy[1L] %||% "all_fitted_locations"
+  )
+  ci_clipped_count <- suppressWarnings(as.integer(
+    settings$CIClippedCount[1L] %||% 0L
+  ))
+  boundary_ci_count <- suppressWarnings(as.integer(
+    settings$BoundaryCIEndpointCount[1L] %||% 0L
+  ))
+  extra_footer <- isTRUE(show_ci) ||
+    identical(auto_range_policy, "boundary_levels_at_ends")
   graphics::par(
-    mar = c(5.4, 4.8, 5.4, 2.2),
+    mar = c(if (extra_footer) 7 else 5.4, 4.8, 5.4, 2.2),
     mgp = c(2.6, 0.8, 0),
     xpd = FALSE
   )
@@ -554,11 +721,22 @@ draw_wright_facets_style <- function(plot_data,
   )
   rows <- facets_data$ruler_rows
   major <- !is.na(rows$Major) & rows$Major
-  graphics::abline(h = rows$Logit, col = grDevices::adjustcolor(pal["grid"], alpha.f = 0.8), lty = 1)
-  graphics::abline(h = rows$Logit[major], col = grDevices::adjustcolor(pal["range"], alpha.f = 0.75), lwd = 1.1)
+  if (nrow(rows) <= 30L) {
+    axis_at <- rows$Logit
+    axis_labels <- rows$Label
+  } else {
+    axis_at <- pretty(yr, n = 10L)
+    axis_at <- axis_at[axis_at >= yr[1] & axis_at <= yr[2]]
+    axis_labels <- format(axis_at, trim = TRUE)
+  }
+  grid_at <- if (nrow(rows) <= 30L) rows$Logit else axis_at
+  graphics::abline(h = grid_at, col = grDevices::adjustcolor(pal["grid"], alpha.f = 0.38), lty = 1)
+  if (nrow(rows) <= 30L) {
+    graphics::abline(h = rows$Logit[major], col = grDevices::adjustcolor(pal["range"], alpha.f = 0.75), lwd = 1.1)
+  }
   graphics::abline(v = seq(0.5, n_col + 0.5, by = 1), col = grDevices::adjustcolor(pal["grid"], alpha.f = 0.9))
-  graphics::axis(2, at = rows$Logit, labels = rows$Label, las = 1, cex.axis = 0.78)
-  graphics::axis(4, at = rows$Logit[major], labels = rows$Label[major], las = 1, cex.axis = 0.78)
+  graphics::axis(2, at = axis_at, labels = axis_labels, las = 1, cex.axis = 0.78)
+  graphics::axis(4, at = axis_at, labels = axis_labels, las = 1, cex.axis = 0.78)
   graphics::axis(3, at = seq_len(n_col), labels = headers$Header, tick = FALSE, line = 0.25, cex.axis = 0.78)
 
   person_x <- which(headers$ColumnType == "person")[1]
@@ -577,10 +755,28 @@ draw_wright_facets_style <- function(plot_data,
   facet_cells <- facets_data$facet_cells
   facet_ruler <- facets_data$facet_ruler
   facet_headers <- headers[headers$ColumnType == "facet", , drop = FALSE]
+  spread_label_y <- function(y, lower, upper, min_separation) {
+    y <- pmin(upper, pmax(lower, as.numeric(y)))
+    finite <- which(is.finite(y))
+    if (length(finite) <= 1L) return(y)
+    ord <- finite[order(y[finite])]
+    adjusted <- y
+    for (j in 2:length(ord)) {
+      adjusted[ord[j]] <- max(
+        adjusted[ord[j]],
+        adjusted[ord[j - 1L]] + min_separation
+      )
+    }
+    overflow <- adjusted[ord[length(ord)]] - upper
+    if (is.finite(overflow) && overflow > 0) adjusted[ord] <- adjusted[ord] - overflow
+    underflow <- lower - adjusted[ord[1L]]
+    if (is.finite(underflow) && underflow > 0) adjusted[ord] <- adjusted[ord] + underflow
+    adjusted
+  }
   for (i in seq_len(nrow(facet_headers))) {
     x_pos <- match(facet_headers$Header[i], headers$Header)
     cell <- facet_cells[facet_cells$Facet == facet_headers$Group[i], , drop = FALSE]
-    if (nrow(cell) > 0L) {
+    if (nrow(cell) > 0L && !isTRUE(show_ci)) {
       cell_labels <- vapply(
         as.character(cell$CellLabel),
         function(value) paste(strwrap(value, width = 22L), collapse = "\n"),
@@ -596,26 +792,99 @@ draw_wright_facets_style <- function(plot_data,
     }
     if (isTRUE(show_ci) && all(c("SE", "Estimate") %in% names(facet_ruler))) {
       sub <- facet_ruler[facet_ruler$Facet == facet_headers$Group[i], , drop = FALSE]
-      ci_ok <- is.finite(sub$SE) & sub$SE > 0 & is.finite(sub$Estimate)
+      raw_label_y <- suppressWarnings(as.numeric(sub$DisplayEstimate))
+      label_y <- spread_label_y(
+        raw_label_y,
+        lower = yr[1],
+        upper = yr[2],
+        min_separation = 0.04 * diff(yr)
+      )
+      moved <- is.finite(raw_label_y) & is.finite(label_y) &
+        abs(raw_label_y - label_y) > sqrt(.Machine$double.eps)
+      if (any(moved)) {
+        graphics::segments(
+          x0 = x_pos - 0.04,
+          y0 = raw_label_y[moved],
+          x1 = x_pos + 0.04,
+          y1 = label_y[moved],
+          col = grDevices::adjustcolor(pal["facet_level"], alpha.f = 0.45),
+          lwd = 0.8
+        )
+      }
+      graphics::text(
+        x = x_pos,
+        y = label_y,
+        labels = as.character(sub$DisplayLabel),
+        cex = 0.64,
+        col = pal["facet_level"]
+      )
+      ci_ok <- is.finite(sub$OriginalCI_Lower) &
+        is.finite(sub$OriginalCI_Upper)
       if (any(ci_ok)) {
-        z <- stats::qnorm(1 - (1 - ci_level) / 2)
-        lo <- pmax(yr[1], sub$Estimate[ci_ok] - z * sub$SE[ci_ok])
-        hi <- pmin(yr[2], sub$Estimate[ci_ok] + z * sub$SE[ci_ok])
-        graphics::segments(
-          x0 = x_pos - 0.36, y0 = lo,
-          x1 = x_pos - 0.36, y1 = hi,
-          col = grDevices::adjustcolor(pal["facet_level"], alpha.f = 0.65), lwd = 1
-        )
-        graphics::segments(
-          x0 = x_pos - 0.40, y0 = lo,
-          x1 = x_pos - 0.32, y1 = lo,
-          col = grDevices::adjustcolor(pal["facet_level"], alpha.f = 0.65)
-        )
-        graphics::segments(
-          x0 = x_pos - 0.40, y0 = hi,
-          x1 = x_pos - 0.32, y1 = hi,
-          col = grDevices::adjustcolor(pal["facet_level"], alpha.f = 0.65)
-        )
+        ci_x_all <- if (nrow(sub) <= 1L) {
+          rep(x_pos - 0.36, nrow(sub))
+        } else {
+          seq(x_pos - 0.42, x_pos - 0.30, length.out = nrow(sub))
+        }
+        regular <- ci_ok & !sub$CISuppressed
+        if (any(regular)) {
+          ci_x <- ci_x_all[regular]
+          lo <- sub$DisplayCI_Lower[regular]
+          hi <- sub$DisplayCI_Upper[regular]
+          graphics::segments(
+            x0 = ci_x, y0 = lo,
+            x1 = ci_x, y1 = hi,
+            col = grDevices::adjustcolor(pal["facet_level"], alpha.f = 0.65), lwd = 1
+          )
+          graphics::segments(
+            x0 = ci_x - 0.035, y0 = lo,
+            x1 = ci_x + 0.035, y1 = lo,
+            col = grDevices::adjustcolor(pal["facet_level"], alpha.f = 0.65)
+          )
+          graphics::segments(
+            x0 = ci_x - 0.035, y0 = hi,
+            x1 = ci_x + 0.035, y1 = hi,
+            col = grDevices::adjustcolor(pal["facet_level"], alpha.f = 0.65)
+          )
+          if (any(sub$CIClippedLower[regular])) {
+            lower_marker <- regular & sub$CIClippedLower
+            graphics::points(
+              x = ci_x_all[lower_marker], y = yr[1],
+              pch = 25, bg = "white", col = pal["facet_level"], cex = 0.62
+            )
+          }
+          if (any(sub$CIClippedUpper[regular])) {
+            upper_marker <- regular & sub$CIClippedUpper
+            graphics::points(
+              x = ci_x_all[upper_marker], y = yr[2],
+              pch = 24, bg = "white", col = pal["facet_level"], cex = 0.62
+            )
+          }
+          graphics::points(
+            x = ci_x,
+            y = sub$DisplayEstimate[regular],
+            pch = 16,
+            cex = 0.42,
+            col = pal["facet_level"]
+          )
+        }
+        boundary_interval <- ci_ok & sub$CISuppressed
+        if (any(boundary_interval)) {
+          boundary_pch <- ifelse(
+            sub$BoundaryEnd[boundary_interval] == "lower",
+            25,
+            ifelse(sub$BoundaryEnd[boundary_interval] == "upper", 24, 23)
+          )
+          graphics::points(
+            x = ci_x_all[boundary_interval],
+            y = sub$DisplayEstimate[boundary_interval],
+            pch = boundary_pch,
+            bg = "white",
+            col = pal["facet_level"],
+            cex = 0.78,
+            lwd = 1.1
+          )
+        }
       }
     }
   }
@@ -630,16 +899,34 @@ draw_wright_facets_style <- function(plot_data,
       , drop = FALSE
     ]
     if (nrow(step_sub) > 0L) {
+      step_y <- suppressWarnings(as.numeric(step_sub$DrawValue))
       graphics::segments(
-        x0 = x_pos - 0.34, y0 = step_sub$RulerValue,
-        x1 = x_pos + 0.34, y1 = step_sub$RulerValue,
+        x0 = x_pos - 0.34, y0 = step_y,
+        x1 = x_pos + 0.34, y1 = step_y,
         col = pal["step_threshold"], lwd = 1.5
+      )
+      label_pos <- rep(3L, nrow(step_sub))
+      step_order <- order(step_y)
+      if (length(step_order) > 1L) {
+        close_pair <- diff(step_y[step_order]) < 0.09 * diff(yr)
+        cluster <- cumsum(c(TRUE, !close_pair))
+        for (cluster_id in unique(cluster)) {
+          members <- step_order[cluster == cluster_id]
+          if (length(members) > 1L) {
+            label_pos[members] <- rep(c(1L, 3L), length.out = length(members))
+          }
+        }
+      }
+      draw_labels <- vapply(
+        as.character(step_sub$DrawLabel),
+        function(value) paste(strwrap(value, width = 20L), collapse = "\n"),
+        character(1)
       )
       graphics::text(
         x = x_pos,
-        y = step_sub$RulerValue,
-        labels = step_sub$TransitionLabel,
-        pos = 3, offset = 0.18, cex = 0.58,
+        y = step_y,
+        labels = draw_labels,
+        pos = label_pos, offset = 0.16, cex = 0.54,
         col = pal["step_threshold"]
       )
     }
@@ -649,8 +936,8 @@ draw_wright_facets_style <- function(plot_data,
     ]
     if (nrow(half_sub) > 0L) {
       graphics::segments(
-        x0 = x_pos - 0.22, y0 = half_sub$RulerValue,
-        x1 = x_pos + 0.22, y1 = half_sub$RulerValue,
+        x0 = x_pos - 0.22, y0 = half_sub$DrawValue,
+        x1 = x_pos + 0.22, y1 = half_sub$DrawValue,
         col = grDevices::adjustcolor(pal["step_threshold"], alpha.f = 0.55),
         lty = 3, lwd = 1
       )
@@ -665,5 +952,34 @@ draw_wright_facets_style <- function(plot_data,
     "FACETS Table 6-style visual layout; estimates remain mfrmr estimates (not numerical equivalence).",
     side = 1, line = 3.7, adj = 0, cex = 0.67, col = "gray35"
   )
+  if (isTRUE(show_ci)) {
+    graphics::mtext(
+      sprintf(
+        "Whiskers show %g%% mfrmr confidence intervals; triangles mark bounds beyond the displayed ruler.",
+        round(100 * ci_level)
+      ),
+      side = 1, line = 4.6, adj = 0, cex = 0.64,
+      col = pal["facet_level"]
+    )
+  }
+  if (identical(auto_range_policy, "boundary_levels_at_ends")) {
+    graphics::mtext(
+      if (isTRUE(show_ci) && boundary_ci_count > 0L) {
+        paste0(
+          "Boundary-separated levels use end triangles and their intervals are omitted from the ruler; ",
+          "inspect OriginalEstimate and CI_Lower/CI_Upper."
+        )
+      } else {
+        "Boundary-separated levels are placed at ruler ends; inspect OriginalEstimate for their untruncated values."
+      },
+      side = 1, line = if (isTRUE(show_ci)) 5.4 else 4.6,
+      adj = 0, cex = 0.58, col = "#9A3412"
+    )
+  } else if (isTRUE(show_ci) && ci_clipped_count > 0L) {
+    graphics::mtext(
+      "CI endpoint triangles identify clipping; exact bounds remain in CI_Lower/CI_Upper.",
+      side = 1, line = 5.4, adj = 0, cex = 0.6, col = "#9A3412"
+    )
+  }
   invisible(NULL)
 }

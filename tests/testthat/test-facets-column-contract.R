@@ -49,7 +49,7 @@ test_that("FACETS column contract is satisfied by current outputs", {
       model = "RSM",
       maxit = 20
     ),
-    "^Optimizer did not fully converge"
+    "^Optimization convergence review did not produce"
   )
   diag <- mfrmr::diagnose_mfrm(fit, residual_pca = "none")
   bias <- mfrmr::estimate_bias(fit, diag, facet_a = "Rater", facet_b = "Task", max_iter = 2)

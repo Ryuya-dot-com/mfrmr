@@ -9,7 +9,7 @@ test_that("analyze_facet_equivalence returns the expected bundle structure", {
       method = "JML",
       maxit = 25
     ),
-    "^Optimizer did not fully converge"
+    "^Optimization convergence review did not produce"
   )
 
   eq <- analyze_facet_equivalence(fit, facet = "Rater")
@@ -41,7 +41,7 @@ test_that("plot_facet_equivalence prepares forest and rope views without drawing
       method = "JML",
       maxit = 25
     ),
-    "^Optimizer did not fully converge"
+    "^Optimization convergence review did not produce"
   )
   eq <- analyze_facet_equivalence(fit, facet = "Rater")
 

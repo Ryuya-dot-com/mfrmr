@@ -1,5 +1,124 @@
 # Plot methods centered on fitted many-facet Rasch objects.
 
+.mfrm_fit_plot_readiness <- function(fit) {
+  convergence <- mfrm_convergence_state(fit)
+  data_review <- fit$data_review %||% list()
+  review_status <- as.data.frame(
+    data_review$status %||% data.frame(),
+    stringsAsFactors = FALSE
+  )
+  if (nrow(review_status) == 0L && !is.null(fit$prep)) {
+    data_review <- tryCatch(
+      build_mfrm_data_review(fit$prep),
+      error = function(e) list()
+    )
+    review_status <- as.data.frame(
+      data_review$status %||% data.frame(),
+      stringsAsFactors = FALSE
+    )
+  }
+  domain_status <- function(domain, default = "not_assessed") {
+    if (nrow(review_status) == 0L ||
+        !all(c("Domain", "Status") %in% names(review_status))) return(default)
+    value <- review_status$Status[match(domain, review_status$Domain)]
+    if (length(value) == 0L || is.na(value[1L]) || !nzchar(value[1L])) {
+      default
+    } else {
+      as.character(value[1L])
+    }
+  }
+  convergence_severity <- tolower(trimws(as.character(
+    convergence$severity %||% "review"
+  )[1L]))
+  numerical_status <- if (isTRUE(convergence$inference_ready)) {
+    "pass"
+  } else if (convergence_severity %in% c("fail", "error")) {
+    "fail"
+  } else {
+    "review"
+  }
+  data_status <- domain_status("Data")
+  design_status <- domain_status("Design")
+  stability_status <- domain_status("Stability")
+  interpretation_ready <- identical(numerical_status, "pass") &&
+    identical(data_status, "pass") &&
+    identical(design_status, "pass_linked") &&
+    identical(stability_status, "pass")
+  interpretation_status <- if (interpretation_ready) {
+    "ready_for_diagnostic_interpretation"
+  } else {
+    "review_only"
+  }
+  statuses <- data.frame(
+    Domain = c("Numerical", "Data", "Design", "Stability", "Plot"),
+    Status = c(
+      numerical_status,
+      data_status,
+      design_status,
+      stability_status,
+      interpretation_status
+    ),
+    stringsAsFactors = FALSE
+  )
+  detail <- if (interpretation_ready) {
+    paste0(
+      "Fit-level numerical, data-support, connectivity, and stability gates ",
+      "passed. Treat this display as diagnostic evidence, not automatic ",
+      "publication approval."
+    )
+  } else {
+    paste0(
+      "Review-only display: Numerical=", numerical_status,
+      ", Data=", data_status,
+      ", Design=", design_status,
+      ", Stability=", stability_status,
+      ". Inspect `summary(fit)$readiness` and `fit$data_review` before ",
+      "substantive or cross-subset interpretation."
+    )
+  }
+  list(
+    status = interpretation_status,
+    ready = interpretation_ready,
+    detail = detail,
+    table = statuses
+  )
+}
+
+.mfrm_attach_plot_readiness <- function(plot_object, readiness) {
+  plot_object$data$fit_readiness <- readiness$table
+  plot_object$data$interpretation_status <- readiness$status
+  plot_object$data$interpretation_note <- readiness$detail
+  if (!isTRUE(readiness$ready)) {
+    subtitle <- as.character(plot_object$data$subtitle %||% "")
+    review_label <- "REVIEW ONLY"
+    plot_object$data$subtitle <- if (length(subtitle) > 0L && nzchar(subtitle[1L])) {
+      paste0(review_label, " - ", subtitle[1L])
+    } else {
+      review_label
+    }
+  }
+  plot_object
+}
+
+.mfrm_plot_display_title <- function(plot_data, title = NULL,
+                                     fallback = "mfrmr plot") {
+  display_title <- title
+  if (is.null(display_title) || length(display_title) == 0L ||
+      is.na(display_title[1L]) || !nzchar(as.character(display_title[1L]))) {
+    display_title <- plot_data$title %||% fallback
+  }
+  display_title <- as.character(display_title[1L])
+  if (!nzchar(display_title)) display_title <- as.character(fallback[1L])
+  review_only <- identical(
+    as.character(plot_data$interpretation_status %||% "")[1L],
+    "review_only"
+  )
+  if (isTRUE(review_only) && !startsWith(display_title, "REVIEW ONLY")) {
+    display_title <- paste0("REVIEW ONLY - ", display_title)
+  }
+  display_title
+}
+
 step_index_from_label <- function(step_labels) {
   step_labels <- as.character(step_labels)
   idx <- suppressWarnings(as.integer(gsub("[^0-9]+", "", step_labels)))
@@ -548,6 +667,149 @@ compute_se_for_plot <- function(x, ci_level = 0.95, diagnostics = NULL) {
   }, error = function(e) NULL)
 }
 
+.wright_native_legend_spec <- function(plot_core,
+                                       show_ci = FALSE,
+                                       ci_level = 0.95) {
+  loc <- as.data.frame(plot_core$locations %||% data.frame(),
+                       stringsAsFactors = FALSE)
+  has_type <- function(value) {
+    nrow(loc) > 0L && "PlotType" %in% names(loc) &&
+      any(as.character(loc$PlotType) == value)
+  }
+  logical_column <- function(name) {
+    if (name %in% names(loc)) {
+      value <- as.logical(loc[[name]])
+      value[is.na(value)] <- FALSE
+      value
+    } else {
+      rep(FALSE, nrow(loc))
+    }
+  }
+  has_interval <- if (all(c("OriginalCI_Lower", "OriginalCI_Upper") %in%
+                          names(loc))) {
+    is.finite(loc$OriginalCI_Lower) & is.finite(loc$OriginalCI_Upper)
+  } else if ("SE" %in% names(loc)) {
+    is.finite(loc$SE) & loc$SE > 0
+  } else {
+    rep(FALSE, nrow(loc))
+  }
+  suppressed <- logical_column("CISuppressed")
+  clipped <- logical_column("CIClipped")
+  boundary_end <- if ("BoundaryEnd" %in% names(loc)) {
+    as.character(loc$BoundaryEnd)
+  } else {
+    rep("none", nrow(loc))
+  }
+  ci_available <- isTRUE(show_ci) && any(has_interval & !suppressed)
+  clipped_available <- isTRUE(show_ci) && any(
+    has_interval & !suppressed & clipped
+  )
+  boundary_available <- any(boundary_end %in% c("lower", "upper"))
+  boundary_ci <- isTRUE(show_ci) && any(has_interval & suppressed)
+
+  key <- c(
+    "person_density",
+    if (has_type("Facet level")) "facet_level",
+    if (has_type("Step threshold")) "step_threshold",
+    if (nrow(plot_core$group_summary %||% data.frame()) > 0L) "iqr_range",
+    if (ci_available) "ci_whisker",
+    if (clipped_available) "ci_continues",
+    if (boundary_available) "boundary_endpoint"
+  )
+  label <- vapply(key, function(value) switch(
+    value,
+    person_density = "Person density",
+    facet_level = "Facet level",
+    step_threshold = "Step threshold",
+    iqr_range = "IQR / range",
+    ci_whisker = sprintf("%g%% mfrmr CI", round(100 * ci_level)),
+    ci_continues = "CI continues beyond ruler",
+    boundary_endpoint = if (boundary_ci) {
+      "Boundary level / CI beyond ruler"
+    } else {
+      "Boundary level at ruler end"
+    }
+  ), character(1))
+  role <- vapply(key, function(value) switch(
+    value,
+    person_density = "distribution",
+    facet_level = "location",
+    step_threshold = "location",
+    iqr_range = "summary",
+    ci_whisker = "uncertainty",
+    ci_continues = "uncertainty",
+    boundary_endpoint = "stability"
+  ), character(1))
+  aesthetic <- vapply(key, function(value) switch(
+    value,
+    person_density = "histogram",
+    facet_level = "point",
+    step_threshold = "point",
+    iqr_range = "range",
+    ci_whisker = "whisker",
+    ci_continues = "endpoint",
+    boundary_endpoint = "endpoint"
+  ), character(1))
+  data.frame(
+    key = key,
+    label = label,
+    role = role,
+    aesthetic = aesthetic,
+    stringsAsFactors = FALSE
+  )
+}
+
+.wright_map_legend <- function(plot_core,
+                               style,
+                               show_ci = FALSE,
+                               ci_level = 0.95) {
+  wright_style <- as.character(plot_core$wright_style %||% "native")[1L]
+  if (!identical(wright_style, "native")) {
+    ci_label <- if (isTRUE(show_ci)) {
+      sprintf("%g%% mfrmr CI", round(100 * ci_level))
+    } else {
+      character(0)
+    }
+    return(new_plot_legend(
+      label = c("Person density", "Facet levels", "Step thresholds", ci_label),
+      role = c(
+        "distribution", "location", "location",
+        if (length(ci_label) > 0L) "uncertainty"
+      ),
+      aesthetic = c(
+        "histogram", "points", "points",
+        if (length(ci_label) > 0L) "whisker"
+      ),
+      value = c(
+        style$fill_muted, style$accent_tertiary, style$accent_secondary,
+        if (length(ci_label) > 0L) style$accent_tertiary
+      )
+    ))
+  }
+
+  spec <- .wright_native_legend_spec(
+    plot_core,
+    show_ci = show_ci,
+    ci_level = ci_level
+  )
+  value <- vapply(spec$key, function(key) switch(
+    key,
+    person_density = style$fill_muted,
+    facet_level = style$accent_tertiary,
+    step_threshold = style$accent_secondary,
+    iqr_range = style$foreground,
+    ci_whisker = style$accent_tertiary,
+    ci_continues = style$accent_tertiary,
+    boundary_endpoint = style$warn
+  ), character(1))
+  new_plot_legend(
+    label = spec$label,
+    role = spec$role,
+    aesthetic = spec$aesthetic,
+    value = value
+  )
+}
+
 build_wright_map_data <- function(x,
                                   top_n = 30L,
                                   se_tbl = NULL,
@@ -664,6 +926,43 @@ build_wright_map_data <- function(x,
   }
   point_tbl <- dplyr::bind_rows(facet_pts, step_tbl)
   if (nrow(point_tbl) == 0) stop("No facet/step locations available for Wright map.")
+  boundary_levels <- as.data.frame(
+    x$data_review$boundary_levels %||% data.frame(),
+    stringsAsFactors = FALSE
+  )
+  boundary_key <- character()
+  if (nrow(boundary_levels) > 0L &&
+      all(c("Facet", "Level") %in% names(boundary_levels))) {
+    boundary_key <- unique(paste(
+      as.character(boundary_levels$Facet),
+      as.character(boundary_levels$Level),
+      sep = "\r"
+    ))
+  }
+  point_key <- paste(
+    as.character(point_tbl$Group),
+    as.character(point_tbl$Label),
+    sep = "\r"
+  )
+  point_tbl$BoundarySeparated <- point_tbl$PlotType == "Facet level" &
+    point_key %in% boundary_key
+
+  native_display_scale <- NULL
+  if (identical(wright_style, "native") && is.null(wright_range) &&
+      any(point_tbl$BoundarySeparated)) {
+    # The native map shares the FACETS-style automatic range policy only for
+    # diagnosed boundary separation. Ordinary native maps retain their prior
+    # estimate-based range exactly.
+    native_display_scale <- build_wright_display_scale(
+      fit = x,
+      person_values = person_tbl$Estimate,
+      location_tbl = point_tbl,
+      category_labels = NULL,
+      rows_per_logit = 2L,
+      wright_range = NULL,
+      include_steps = include_steps
+    )
+  }
   location_totals <- c(
     `Facet level` = sum(point_tbl$PlotType %in% "Facet level"),
     `Step threshold` = sum(point_tbl$PlotType %in% "Step threshold")
@@ -726,6 +1025,32 @@ build_wright_map_data <- function(x,
     center <- mean(c(point_tbl$Estimate, person_tbl$Estimate), na.rm = TRUE)
     y_range <- center + c(-0.5, 0.5)
   }
+  auto_range_policy <- "all_fitted_locations"
+  if (!is.null(native_display_scale) && identical(
+    native_display_scale$auto_range_policy,
+    "boundary_levels_at_ends"
+  )) {
+    y_range <- c(native_display_scale$lower, native_display_scale$upper)
+    auto_range_policy <- native_display_scale$auto_range_policy
+  }
+
+  point_tbl$OriginalEstimate <- suppressWarnings(as.numeric(point_tbl$Estimate))
+  point_tbl$BelowRange <- point_tbl$OriginalEstimate < y_range[1]
+  point_tbl$AboveRange <- point_tbl$OriginalEstimate > y_range[2]
+  point_tbl$DisplayEstimate <- pmin(
+    y_range[2],
+    pmax(y_range[1], point_tbl$OriginalEstimate)
+  )
+  point_tbl$DisplayLabel <- ifelse(
+    point_tbl$BelowRange | point_tbl$AboveRange,
+    paste0("(", as.character(point_tbl$Label), ")"),
+    as.character(point_tbl$Label)
+  )
+  point_tbl <- tibble::as_tibble(add_wright_ci_display_metadata(
+    point_tbl,
+    lower = y_range[1],
+    upper = y_range[2]
+  ))
 
   step_label_tbl <- point_tbl |>
     dplyr::filter(.data$PlotType == "Step threshold")
@@ -750,17 +1075,40 @@ build_wright_map_data <- function(x,
       Median = stats::median(.data$Estimate, na.rm = TRUE),
       Q3 = stats::quantile(.data$Estimate, 0.75, na.rm = TRUE, names = FALSE),
       Max = max(.data$Estimate, na.rm = TRUE),
+      DisplayMin = min(.data$DisplayEstimate, na.rm = TRUE),
+      DisplayQ1 = stats::quantile(.data$DisplayEstimate, 0.25, na.rm = TRUE, names = FALSE),
+      DisplayMedian = stats::median(.data$DisplayEstimate, na.rm = TRUE),
+      DisplayQ3 = stats::quantile(.data$DisplayEstimate, 0.75, na.rm = TRUE, names = FALSE),
+      DisplayMax = max(.data$DisplayEstimate, na.rm = TRUE),
       N = dplyr::n(),
       XBase = mean(.data$XBase, na.rm = TRUE),
       .groups = "drop"
     ) |>
-    dplyr::mutate(TargetGap = .data$Median - mean(person_tbl$Estimate, na.rm = TRUE))
+    dplyr::mutate(
+      TargetGap = .data$Median - mean(person_tbl$Estimate, na.rm = TRUE),
+      DisplayTargetGap = .data$DisplayMedian - mean(person_tbl$Estimate, na.rm = TRUE)
+    )
 
   person_stats <- tibble::tibble(
     N = nrow(person_tbl),
     Mean = mean(person_tbl$Estimate, na.rm = TRUE),
     Median = stats::median(person_tbl$Estimate, na.rm = TRUE),
     SD = stats::sd(person_tbl$Estimate, na.rm = TRUE)
+  )
+
+  display_settings <- tibble::tibble(
+    Renderer = if (identical(wright_style, "native")) "native" else "facets",
+    LowerLogit = y_range[1],
+    UpperLogit = y_range[2],
+    AutoRangePolicy = auto_range_policy,
+    BoundaryLevelsAtEnds = sum(point_tbl$BoundaryEnd != "none"),
+    CIClippedCount = sum(point_tbl$CIClipped),
+    BoundaryCIEndpointCount = sum(point_tbl$CISuppressed),
+    CIDisplayPolicy = paste0(
+      "Exact intervals remain in CI_Lower/CI_Upper; clipped intervals use ",
+      "endpoint markers and boundary-separated intervals may be omitted from ",
+      "the ruler."
+    )
   )
 
   out <- list(
@@ -780,6 +1128,7 @@ build_wright_map_data <- function(x,
     group_summary = group_summary,
     group_levels = group_levels,
     y_range = y_range,
+    display_settings = display_settings,
     label_limit = top_n,
     retention = retention,
     retention_note = retention_note
@@ -799,6 +1148,7 @@ build_wright_map_data <- function(x,
       out$facets_style$settings$LowerLogit[1],
       out$facets_style$settings$UpperLogit[1]
     )
+    out$display_settings <- out$facets_style$settings
   }
   out
 }
@@ -809,10 +1159,24 @@ draw_wright_map <- function(plot_data,
                             label_angle = 45,
                             show_ci = FALSE,
                             ci_level = 0.95) {
-  if (identical(as.character(plot_data$wright_style %||% "native"), "facets_style")) {
+  facets_style <- identical(
+    as.character(plot_data$wright_style %||% "native"),
+    "facets_style"
+  )
+  default_title <- if (isTRUE(facets_style)) {
+    "FACETS-style Wright map"
+  } else {
+    "Facet and step locations"
+  }
+  display_title <- .mfrm_plot_display_title(
+    plot_data,
+    title = if (is.null(title)) default_title else title,
+    fallback = default_title
+  )
+  if (isTRUE(facets_style)) {
     return(draw_wright_facets_style(
       plot_data,
-      title = title,
+      title = display_title,
       palette = palette,
       show_ci = show_ci,
       ci_level = ci_level
@@ -836,12 +1200,66 @@ draw_wright_map <- function(plot_data,
 
   loc <- plot_data$locations
   yr <- plot_data$y_range
+  loc_y <- if ("DisplayEstimate" %in% names(loc)) {
+    suppressWarnings(as.numeric(loc$DisplayEstimate))
+  } else {
+    suppressWarnings(as.numeric(loc$Estimate))
+  }
+  boundary_end <- if ("BoundaryEnd" %in% names(loc)) {
+    as.character(loc$BoundaryEnd)
+  } else {
+    rep("none", nrow(loc))
+  }
+  ci_clipped <- if ("CIClipped" %in% names(loc)) {
+    value <- as.logical(loc$CIClipped)
+    value[is.na(value)] <- FALSE
+    value
+  } else {
+    rep(FALSE, nrow(loc))
+  }
+  ci_suppressed <- if ("CISuppressed" %in% names(loc)) {
+    value <- as.logical(loc$CISuppressed)
+    value[is.na(value)] <- FALSE
+    value
+  } else {
+    rep(FALSE, nrow(loc))
+  }
+  retention_note <- as.character(plot_data$retention_note %||% "")
+  footer_notes <- character()
+  if (length(retention_note) > 0L && nzchar(retention_note[1L])) {
+    footer_notes <- c(footer_notes, retention_note[1L])
+  }
+  boundary_at_ends <- any(boundary_end %in% c("lower", "upper"))
+  if (boundary_at_ends) {
+    footer_notes <- c(footer_notes, if (isTRUE(show_ci) && any(ci_suppressed)) {
+      paste0(
+        "Boundary-separated levels use end triangles and their intervals are ",
+        "omitted from the ruler; inspect OriginalEstimate and CI_Lower/CI_Upper."
+      )
+    } else {
+      "Boundary-separated levels use end triangles; inspect OriginalEstimate for exact values."
+    })
+  } else if (isTRUE(show_ci) && any(ci_clipped)) {
+    footer_notes <- c(
+      footer_notes,
+      "CI endpoint triangles identify clipping; exact bounds remain in CI_Lower/CI_Upper."
+    )
+  }
+  footer_lines <- unlist(lapply(
+    footer_notes,
+    function(note) strwrap(note, width = 118L)
+  ), use.names = FALSE)
+  bottom_margin <- if (length(footer_lines) > 1L) {
+    9.3 + 0.65 * (length(footer_lines) - 1L)
+  } else {
+    8.8
+  }
   pretty_y <- pretty(yr, n = 6)
   hist_data <- plot_data$person_hist
   hist_max <- max(hist_data$counts, na.rm = TRUE)
   if (!is.finite(hist_max) || hist_max <= 0) hist_max <- 1
 
-  graphics::par(mar = c(8.8, 4.6, 3.2, 0.8))
+  graphics::par(mar = c(bottom_margin, 4.6, 3.2, 0.8))
   graphics::plot(
     x = c(0, hist_max * 1.12),
     y = yr,
@@ -881,10 +1299,10 @@ draw_wright_map <- function(plot_data,
   }
 
   xr <- c(0.5, length(plot_data$group_levels) + 0.75)
-  graphics::par(mar = c(8.8, 2.4, 3.2, 2.8))
+  graphics::par(mar = c(bottom_margin, 2.4, 3.2, 2.8))
   graphics::plot(
     x = loc$X,
-    y = loc$Estimate,
+    y = loc_y,
     type = "n",
     xlim = xr,
     ylim = yr,
@@ -892,7 +1310,7 @@ draw_wright_map <- function(plot_data,
     xlab = "",
     yaxt = "n",
     ylab = "",
-    main = if (is.null(title)) "Facet and step locations" else as.character(title[1])
+    main = display_title
   )
   for (i in seq_along(plot_data$group_levels)) {
     if (i %% 2 == 1) {
@@ -910,6 +1328,13 @@ draw_wright_map <- function(plot_data,
   graphics::abline(h = 0, col = grDevices::adjustcolor("gray35", alpha.f = 0.9), lty = 2)
   group_summary <- plot_data$group_summary
   if (!is.null(group_summary) && nrow(group_summary) > 0) {
+    summary_value <- function(display_name, original_name) {
+      if (display_name %in% names(group_summary)) {
+        group_summary[[display_name]]
+      } else {
+        group_summary[[original_name]]
+      }
+    }
     range_cols <- ifelse(
       group_summary$PlotType == "Step threshold",
       grDevices::adjustcolor(pal["step_threshold"], alpha.f = 0.42),
@@ -922,25 +1347,25 @@ draw_wright_map <- function(plot_data,
     )
     graphics::segments(
       x0 = group_summary$XBase,
-      y0 = group_summary$Min,
+      y0 = summary_value("DisplayMin", "Min"),
       x1 = group_summary$XBase,
-      y1 = group_summary$Max,
+      y1 = summary_value("DisplayMax", "Max"),
       col = range_cols,
       lwd = 1.6
     )
     graphics::segments(
       x0 = group_summary$XBase,
-      y0 = group_summary$Q1,
+      y0 = summary_value("DisplayQ1", "Q1"),
       x1 = group_summary$XBase,
-      y1 = group_summary$Q3,
+      y1 = summary_value("DisplayQ3", "Q3"),
       col = iqr_cols,
       lwd = 5.2
     )
     graphics::segments(
       x0 = group_summary$XBase - 0.13,
-      y0 = group_summary$Median,
+      y0 = summary_value("DisplayMedian", "Median"),
       x1 = group_summary$XBase + 0.13,
-      y1 = group_summary$Median,
+      y1 = summary_value("DisplayMedian", "Median"),
       col = grDevices::adjustcolor("gray15", alpha.f = 0.95),
       lwd = 1.4
     )
@@ -957,65 +1382,153 @@ draw_wright_map <- function(plot_data,
   )
   cols <- ifelse(loc$PlotType == "Step threshold", pal["step_threshold"], pal["facet_level"])
   pch <- ifelse(loc$PlotType == "Step threshold", 17, 16)
-  if (isTRUE(show_ci) && "SE" %in% names(loc)) {
-    z <- stats::qnorm(1 - (1 - ci_level) / 2)
-    ci_ok <- is.finite(loc$SE) & loc$SE > 0
-    if (any(ci_ok)) {
-      ci_lo <- loc$Estimate[ci_ok] - z * loc$SE[ci_ok]
-      ci_hi <- loc$Estimate[ci_ok] + z * loc$SE[ci_ok]
+  boundary_color <- "#9A3412"
+  boundary_lower <- boundary_end == "lower"
+  boundary_upper <- boundary_end == "upper"
+  pch[boundary_lower] <- 25
+  pch[boundary_upper] <- 24
+  cols[boundary_lower | boundary_upper] <- boundary_color
+  if (isTRUE(show_ci)) {
+    if (all(c("OriginalCI_Lower", "OriginalCI_Upper",
+              "DisplayCI_Lower", "DisplayCI_Upper") %in% names(loc))) {
+      ci_ok <- is.finite(loc$OriginalCI_Lower) & is.finite(loc$OriginalCI_Upper)
+      ci_lo <- loc$DisplayCI_Lower
+      ci_hi <- loc$DisplayCI_Upper
+    } else if ("SE" %in% names(loc)) {
+      z <- stats::qnorm(1 - (1 - ci_level) / 2)
+      ci_ok <- is.finite(loc$SE) & loc$SE > 0
+      ci_lo <- pmin(yr[2], pmax(yr[1], loc$Estimate - z * loc$SE))
+      ci_hi <- pmin(yr[2], pmax(yr[1], loc$Estimate + z * loc$SE))
+    } else {
+      ci_ok <- rep(FALSE, nrow(loc))
+      ci_lo <- ci_hi <- rep(NA_real_, nrow(loc))
+    }
+    regular_ci <- ci_ok & !ci_suppressed
+    if (any(regular_ci)) {
       graphics::arrows(
-        x0 = loc$X[ci_ok],
-        y0 = ci_lo,
-        x1 = loc$X[ci_ok],
-        y1 = ci_hi,
+        x0 = loc$X[regular_ci],
+        y0 = ci_lo[regular_ci],
+        x1 = loc$X[regular_ci],
+        y1 = ci_hi[regular_ci],
         angle = 90,
         code = 3,
         length = 0.04,
-        col = grDevices::adjustcolor(cols[ci_ok], alpha.f = 0.6),
+        col = grDevices::adjustcolor(cols[regular_ci], alpha.f = 0.6),
         lwd = 1.2
       )
+      clipped_lower <- regular_ci &
+        if ("CIClippedLower" %in% names(loc)) loc$CIClippedLower else FALSE
+      clipped_upper <- regular_ci &
+        if ("CIClippedUpper" %in% names(loc)) loc$CIClippedUpper else FALSE
+      if (any(clipped_lower)) {
+        graphics::points(
+          loc$X[clipped_lower], rep(yr[1], sum(clipped_lower)),
+          pch = 25, bg = "white", col = cols[clipped_lower], cex = 0.78
+        )
+      }
+      if (any(clipped_upper)) {
+        graphics::points(
+          loc$X[clipped_upper], rep(yr[2], sum(clipped_upper)),
+          pch = 24, bg = "white", col = cols[clipped_upper], cex = 0.78
+        )
+      }
     }
   }
   graphics::points(
     loc$X,
-    loc$Estimate,
+    loc_y,
     pch = pch,
     col = cols,
-    bg = grDevices::adjustcolor(cols, alpha.f = 0.22),
+    bg = ifelse(boundary_lower | boundary_upper, "white",
+                grDevices::adjustcolor(cols, alpha.f = 0.22)),
     cex = ifelse(loc$PlotType == "Step threshold", 1.08, 1)
   )
   label_tbl <- plot_data$label_points
   if (!is.null(label_tbl) && nrow(label_tbl) > 0) {
+    place_left <- label_tbl$X > xr[1] + 0.72 * diff(xr)
     graphics::text(
-      x = pmin(label_tbl$X + 0.06, xr[2] - 0.02),
-      y = label_tbl$Estimate,
-      labels = truncate_axis_label(label_tbl$Label, width = 14L),
-      pos = 4,
+      x = ifelse(place_left, label_tbl$X - 0.06, label_tbl$X + 0.06),
+      y = if ("DisplayEstimate" %in% names(label_tbl)) {
+        label_tbl$DisplayEstimate
+      } else {
+        label_tbl$Estimate
+      },
+      labels = truncate_axis_label(
+        if ("DisplayLabel" %in% names(label_tbl)) {
+          label_tbl$DisplayLabel
+        } else {
+          label_tbl$Label
+        },
+        width = 14L
+      ),
+      pos = ifelse(place_left, 2, 4),
       cex = 0.72,
       xpd = NA,
       col = grDevices::adjustcolor("gray20", alpha.f = 0.95)
     )
   }
+  legend_spec <- .wright_native_legend_spec(
+    plot_data,
+    show_ci = show_ci,
+    ci_level = ci_level
+  )
+  legend_pch <- vapply(legend_spec$key, function(key) switch(
+    key,
+    person_density = 15L,
+    facet_level = 16L,
+    step_threshold = 17L,
+    iqr_range = NA_integer_,
+    ci_whisker = NA_integer_,
+    ci_continues = 24L,
+    boundary_endpoint = 24L
+  ), integer(1))
+  legend_lty <- ifelse(
+    legend_spec$key %in% c("iqr_range", "ci_whisker"),
+    1,
+    0
+  )
+  legend_lwd <- ifelse(
+    legend_spec$key == "iqr_range",
+    4,
+    ifelse(legend_spec$key == "ci_whisker", 1.2, NA_real_)
+  )
+  legend_col <- vapply(legend_spec$key, function(key) switch(
+    key,
+    person_density = unname(pal["person_hist"]),
+    facet_level = unname(pal["facet_level"]),
+    step_threshold = unname(pal["step_threshold"]),
+    iqr_range = unname(pal["iqr"]),
+    ci_whisker = unname(grDevices::adjustcolor(pal["facet_level"], alpha.f = 0.6)),
+    ci_continues = unname(pal["facet_level"]),
+    boundary_endpoint = boundary_color
+  ), character(1))
   graphics::legend(
     "topright",
-    legend = c("Facet level", "Step threshold", "IQR / range"),
-    pch = c(16, 17, NA),
-    lty = c(0, 0, 1),
-    lwd = c(NA, NA, 4),
-    col = c(pal["facet_level"], pal["step_threshold"], pal["iqr"]),
+    legend = legend_spec$label,
+    pch = legend_pch,
+    pt.bg = ifelse(
+      legend_spec$key %in% c("ci_continues", "boundary_endpoint"),
+      "white",
+      legend_col
+    ),
+    lty = legend_lty,
+    lwd = legend_lwd,
+    col = legend_col,
     bty = "n",
     cex = 0.9
   )
-  retention_note <- as.character(plot_data$retention_note %||% "")
-  if (length(retention_note) > 0L && nzchar(retention_note[1])) {
-    graphics::mtext(
-      retention_note[1],
-      side = 1,
-      line = 7.4,
-      adj = 0,
-      cex = 0.68,
-      col = "#9A3412"
-    )
+  if (length(footer_lines) > 0L) {
+    footer_col <- rep("#9A3412", length(footer_lines))
+    for (i in seq_along(footer_lines)) {
+      graphics::mtext(
+        footer_lines[i],
+        side = 1,
+        line = 7.4 + 0.65 * (i - 1L),
+        adj = 0,
+        cex = 0.68,
+        col = footer_col[i]
+      )
+    }
   }
 }
 
@@ -1186,7 +1699,11 @@ draw_pathway_map <- function(plot_data, title = NULL, palette = NULL) {
     type = "n",
     xlab = "Theta / Logit",
     ylab = "Expected score",
-    main = if (is.null(title)) plot_data$title else as.character(title[1])
+    main = .mfrm_plot_display_title(
+      plot_data,
+      title = title,
+      fallback = "Expected-score pathway"
+    )
   )
   graphics::abline(h = y_breaks, col = grDevices::adjustcolor("#d9dde3", alpha.f = 0.8), lty = 1)
   if (isTRUE(use_strips)) {
@@ -1516,6 +2033,11 @@ draw_fit_pathway <- function(plot_data,
   x_ref <- suppressWarnings(as.numeric(refs$value))
 
   draw_panel <- function(panel_tbl, panel_title) {
+    panel_title <- .mfrm_plot_display_title(
+      plot_data,
+      title = panel_title,
+      fallback = "Fit pathway"
+    )
     x_rng <- range(c(panel_tbl$FitValue, x_ref), finite = TRUE)
     y_values <- panel_tbl$Measure
     if (isTRUE(show_ci)) {
@@ -1757,7 +2279,11 @@ draw_ccc <- function(plot_data, title = NULL, palette = NULL) {
     type = "n",
     xlab = "Theta / Logit",
     ylab = "Probability",
-    main = if (is.null(title)) plot_data$title else as.character(title[1])
+    main = .mfrm_plot_display_title(
+      plot_data,
+      title = title,
+      fallback = "Category characteristic curves"
+    )
   )
   for (i in seq_along(traces)) {
     parts <- strsplit(traces[i], " \\| Cat ", fixed = FALSE)[[1]]
@@ -1967,10 +2493,23 @@ draw_facet_plot <- function(facet_tbl,
 #' `top_n = Inf` to retain every fitted location in the final Wright map.
 #' Native text labels remain collision-aware, so a retained point may be
 #' unlabeled; its exact level and estimate remain available in the returned
-#' plot data. The
-#' returned object always carries machine-readable metadata through
+#' plot data. When the fit records boundary-separated facet levels and no
+#' display range was supplied, the native and FACETS-style maps use the same
+#' robust automatic range and place those levels at ruler ends. Exact fitted
+#' values and intervals remain in `OriginalEstimate`, `CI_Lower`, and
+#' `CI_Upper`; `DisplayEstimate`, `DisplayCI_Lower`, `DisplayCI_Upper`, and the
+#' clipping-status columns describe only the rendered coordinates. Endpoint
+#' triangles and the plot footer disclose any omitted or clipped interval.
+#' The returned object always carries machine-readable metadata through
 #' the `mfrm_plot_data` contract, even when the plot is drawn
 #' immediately.
+#'
+#' Every fit-derived payload also carries `data$fit_readiness`,
+#' `data$interpretation_status`, and `data$interpretation_note`. Availability
+#' and interpretability are separate: when a numerical, data, design, or
+#' stability gate requires review, the coordinates remain available for
+#' diagnosis, but the call warns and marks the returned subtitle and drawn
+#' title `REVIEW ONLY`.
 #'
 #' `type = "wright"` shows persons, facet levels, and step thresholds on
 #' a shared logit scale. Estimates are plotted as fitted, so the sign
@@ -1987,7 +2526,10 @@ draw_facet_plot <- function(facet_tbl,
 #' (original, when scores were internally recoded) adjacent score transitions.
 #' Its `facets_style` payload contains tidy ruler, person-frequency, facet,
 #' step, mean-half-score, header, category-label, and settings tables for custom
-#' graphics. The styling emulates the semantics of FACETS Table 6; estimates
+#' graphics. `RulerValue` records the nearest discrete ruler row for
+#' line-printer reconstruction, whereas step and midpoint lines are drawn at
+#' their exact fitted `DrawValue` and step labels print that logit value. The
+#' styling emulates the semantics of FACETS Table 6; estimates
 #' and standard errors remain those produced by `mfrmr`. Use
 #' `show_ci = FALSE` for the closest FACETS-style rendering. If
 #' `show_ci = TRUE` is requested, interpret the result as a hybrid that adds
@@ -2029,7 +2571,9 @@ draw_facet_plot <- function(facet_tbl,
 #'
 #' @return Invisibly, an `mfrm_plot_data` object (default and for any
 #'   single `type`), or an `mfrm_plot_bundle` when
-#'   `type = "bundle"` / `"all"` / `"default"`.
+#'   `type = "bundle"` / `"all"` / `"default"`. Each returned fit plot
+#'   includes domain-specific readiness and an interpretation status in its
+#'   data payload.
 #' @seealso [fit_mfrm()], [plot_wright_unified()], [plot_bubble()],
 #'   [mfrmr_visual_diagnostics]
 #' @concept confidence intervals
@@ -2037,6 +2581,8 @@ draw_facet_plot <- function(facet_tbl,
 #' @concept shrinkage
 #' @examples
 #' toy <- load_mfrmr_data("example_operational")
+#' # Seven quadrature points keep this executable example short. For a final
+#' # analysis, restore the default or a prespecified grid and review sensitivity.
 #' fit <- fit_mfrm(
 #'   toy,
 #'   "Person",
@@ -2160,10 +2706,19 @@ plot.mfrm_fit <- function(x,
     stop("`show_ci` must be NULL, TRUE, or FALSE.", call. = FALSE)
   }
 
+  fit_plot_readiness <- .mfrm_fit_plot_readiness(x)
+  readiness_warning_emitted <- FALSE
+
   as_plot_data <- function(name, data) {
     data_names <- names(data) %||% rep("", length(data))
     duplicated_named <- nzchar(data_names) & duplicated(data_names, fromLast = TRUE)
-    new_mfrm_plot_data(name, data[!duplicated_named])
+    out <- new_mfrm_plot_data(name, data[!duplicated_named])
+    out <- .mfrm_attach_plot_readiness(out, fit_plot_readiness)
+    if (!isTRUE(fit_plot_readiness$ready) && !isTRUE(readiness_warning_emitted)) {
+      warning(fit_plot_readiness$detail, call. = FALSE)
+      readiness_warning_emitted <<- TRUE
+    }
+    out
   }
   append_retention_subtitle <- function(plot_object) {
     note <- as.character(plot_object$data$retention_note %||% "")
@@ -2171,6 +2726,14 @@ plot.mfrm_fit <- function(x,
       plot_object$data$subtitle <- paste(plot_object$data$subtitle, note[1], sep = " - ")
     }
     plot_object
+  }
+  wright_legend <- function(plot_core) {
+    .wright_map_legend(
+      plot_core,
+      style = style,
+      show_ci = show_ci,
+      ci_level = ci_level
+    )
   }
 
   se_tbl_ci <- if (isTRUE(show_ci) || !is.null(diagnostics)) {
@@ -2182,19 +2745,20 @@ plot.mfrm_fit <- function(x,
   # A bare plot(fit) call renders the primary native Wright map. The previous
   # three-plot bundle (Wright + pathway + CCC) remains explicit.
   if (isTRUE(bundle_requested)) {
+    wright_core <- build_wright_map_data(
+      x,
+      top_n = top_n,
+      se_tbl = se_tbl_ci,
+      wright_style = wright_style,
+      category_labels = category_labels,
+      rows_per_logit = rows_per_logit,
+      wright_range = wright_range,
+      extreme_placement = extreme_placement,
+      persons_per_star = persons_per_star
+    )
     out <- list(
       wright_map = as_plot_data("wright_map", c(
-        build_wright_map_data(
-          x,
-          top_n = top_n,
-          se_tbl = se_tbl_ci,
-          wright_style = wright_style,
-          category_labels = category_labels,
-          rows_per_logit = rows_per_logit,
-          wright_range = wright_range,
-          extreme_placement = extreme_placement,
-          persons_per_star = persons_per_star
-        ),
+        wright_core,
         list(
           title = title %||% "Wright map",
           subtitle = if (identical(wright_style, "facets_style")) {
@@ -2215,12 +2779,7 @@ plot.mfrm_fit <- function(x,
             "native_no_ci"
           },
           preset = style$name,
-          legend = new_plot_legend(
-            label = c("Person density", "Facet levels", "Step thresholds"),
-            role = c("distribution", "location", "location"),
-            aesthetic = c("histogram", "points", "points"),
-            value = c(style$fill_muted, style$accent_tertiary, style$accent_secondary)
-          ),
+          legend = wright_legend(wright_core),
           reference_lines = new_reference_lines("h", 0, "Centered logit reference", "dashed", "reference")
         )
       )),
@@ -2357,7 +2916,11 @@ plot.mfrm_fit <- function(x,
     if (isTRUE(draw)) {
       apply_plot_preset(style)
       .draw_shrinkage_plot(data_list, style = style,
-                           title = title %||% "Empirical-Bayes shrinkage",
+                           title = .mfrm_plot_display_title(
+                             out$data,
+                             title = title,
+                             fallback = "Empirical-Bayes shrinkage"
+                           ),
                            show_ci = isTRUE(show_ci),
                            ci_level = ci_level)
     }
@@ -2391,18 +2954,19 @@ plot.mfrm_fit <- function(x,
         )
       }
     }
+    wright_core <- build_wright_map_data(
+      x,
+      top_n = top_n,
+      se_tbl = se_tbl_ci,
+      wright_style = wright_style,
+      category_labels = category_labels,
+      rows_per_logit = rows_per_logit,
+      wright_range = wright_range,
+      extreme_placement = extreme_placement,
+      persons_per_star = persons_per_star
+    )
     out <- as_plot_data("wright_map", c(
-      build_wright_map_data(
-        x,
-        top_n = top_n,
-        se_tbl = se_tbl_ci,
-        wright_style = wright_style,
-        category_labels = category_labels,
-        rows_per_logit = rows_per_logit,
-        wright_range = wright_range,
-        extreme_placement = extreme_placement,
-        persons_per_star = persons_per_star
-      ),
+      wright_core,
       list(
         title = title %||% "Wright map",
         subtitle = if (identical(wright_style, "facets_style")) {
@@ -2429,12 +2993,7 @@ plot.mfrm_fit <- function(x,
         },
         group = group_payload,
         preset = style$name,
-        legend = new_plot_legend(
-          label = c("Person density", "Facet levels", "Step thresholds"),
-          role = c("distribution", "location", "location"),
-          aesthetic = c("histogram", "points", "points"),
-          value = c(style$fill_muted, style$accent_tertiary, style$accent_secondary)
-        ),
+        legend = wright_legend(wright_core),
         reference_lines = new_reference_lines("h", 0, "Centered logit reference", "dashed", "reference")
       )
     ))
@@ -2658,7 +3217,7 @@ plot.mfrm_fit <- function(x,
     ))
     if (isTRUE(draw)) {
       apply_plot_preset(style)
-      draw_ccc(ccc_payload, title = out$title %||% "Category curves",
+      draw_ccc(out$data, title = title,
                palette = palette %||% c(
                  style$accent_primary, style$accent_secondary,
                  style$accent_tertiary, style$warn
@@ -2722,7 +3281,11 @@ plot.mfrm_fit <- function(x,
       draw_person_plot(
         person_tbl,
         bins = bins,
-        title = this_title,
+        title = .mfrm_plot_display_title(
+          out$data,
+          title = this_title,
+          fallback = "Person measure distribution"
+        ),
         palette = resolve_palette(palette = palette, defaults = c(person_hist = style$accent_primary))
       )
     }
@@ -2746,7 +3309,11 @@ plot.mfrm_fit <- function(x,
       apply_plot_preset(style)
       draw_step_plot(
         step_tbl,
-        title = this_title,
+        title = .mfrm_plot_display_title(
+          out$data,
+          title = this_title,
+          fallback = "Step parameter estimates"
+        ),
         palette = resolve_palette(
           palette = palette,
           defaults = c(step_line = style$accent_tertiary, grid = style$grid)
@@ -2796,7 +3363,11 @@ plot.mfrm_fit <- function(x,
     apply_plot_preset(style)
     draw_facet_plot(
       facet_tbl,
-      title = facet_title,
+      title = .mfrm_plot_display_title(
+        out$data,
+        title = facet_title,
+        fallback = "Facet-level estimates"
+      ),
       palette = resolve_palette(palette = palette, defaults = c(facet_bar = style$fill_soft)),
       show_ci = show_ci,
       ci_level = ci_level

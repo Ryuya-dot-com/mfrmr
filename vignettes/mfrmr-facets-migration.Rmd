@@ -83,13 +83,16 @@ jml_status$overview[, c(
   "Model", "Method", "Converged", "InferenceReady",
   "ConvergenceSeverity"
 )]
+jml_status$readiness
 head(run$fair_average)
 ```
 
 `method = "JML"` is shown here for a JMLE-oriented migration comparison.
 Do not infer readiness from `Converged` alone: require `InferenceReady = TRUE`
-and review the terminal-gradient guidance when severity is `"review"` or
-`"fail"`. For new analysis scripts, prefer `fit_mfrm(method = "MML")`
+for the numerical gate and review the terminal-gradient guidance when severity
+is `"review"` or `"fail"`. Numerical readiness does not override a Data,
+Design, or Stability hold; use the readiness table before interpreting or
+reporting the fit. For new analysis scripts, prefer `fit_mfrm(method = "MML")`
 directly. MML integrates over the person distribution under an N(0, 1) prior
 and exposes per-person posterior SEs that JML cannot produce.
 

@@ -175,7 +175,9 @@ FACETS-style frequency column. \code{NULL} chooses a compact value automatically
 \value{
 Invisibly, an \code{mfrm_plot_data} object (default and for any
 single \code{type}), or an \code{mfrm_plot_bundle} when
-\code{type = "bundle"} / \code{"all"} / \code{"default"}.
+\code{type = "bundle"} / \code{"all"} / \code{"default"}. Each returned fit plot
+includes domain-specific readiness and an interpretation status in its
+data payload.
 }
 \description{
 Plot fitted MFRM results with base R
@@ -192,10 +194,23 @@ compact native default records any omitted facet locations in
 \code{top_n = Inf} to retain every fitted location in the final Wright map.
 Native text labels remain collision-aware, so a retained point may be
 unlabeled; its exact level and estimate remain available in the returned
-plot data. The
-returned object always carries machine-readable metadata through
+plot data. When the fit records boundary-separated facet levels and no
+display range was supplied, the native and FACETS-style maps use the same
+robust automatic range and place those levels at ruler ends. Exact fitted
+values and intervals remain in \code{OriginalEstimate}, \code{CI_Lower}, and
+\code{CI_Upper}; \code{DisplayEstimate}, \code{DisplayCI_Lower}, \code{DisplayCI_Upper}, and the
+clipping-status columns describe only the rendered coordinates. Endpoint
+triangles and the plot footer disclose any omitted or clipped interval.
+The returned object always carries machine-readable metadata through
 the \code{mfrm_plot_data} contract, even when the plot is drawn
 immediately.
+
+Every fit-derived payload also carries \code{data$fit_readiness},
+\code{data$interpretation_status}, and \code{data$interpretation_note}. Availability
+and interpretability are separate: when a numerical, data, design, or
+stability gate requires review, the coordinates remain available for
+diagnosis, but the call warns and marks the returned subtitle and drawn
+title \verb{REVIEW ONLY}.
 
 \code{type = "wright"} shows persons, facet levels, and step thresholds on
 a shared logit scale. Estimates are plotted as fitted, so the sign
@@ -212,7 +227,10 @@ ruler. That mode retains every facet location in its data and shows actual
 (original, when scores were internally recoded) adjacent score transitions.
 Its \code{facets_style} payload contains tidy ruler, person-frequency, facet,
 step, mean-half-score, header, category-label, and settings tables for custom
-graphics. The styling emulates the semantics of FACETS Table 6; estimates
+graphics. \code{RulerValue} records the nearest discrete ruler row for
+line-printer reconstruction, whereas step and midpoint lines are drawn at
+their exact fitted \code{DrawValue} and step labels print that logit value. The
+styling emulates the semantics of FACETS Table 6; estimates
 and standard errors remain those produced by \code{mfrmr}. Use
 \code{show_ci = FALSE} for the closest FACETS-style rendering. If
 \code{show_ci = TRUE} is requested, interpret the result as a hybrid that adds
@@ -260,6 +278,8 @@ For a plot-selection guide and extended examples, see
 
 \examples{
 toy <- load_mfrmr_data("example_operational")
+# Seven quadrature points keep this executable example short. For a final
+# analysis, restore the default or a prespecified grid and review sensitivity.
 fit <- fit_mfrm(
   toy,
   "Person",

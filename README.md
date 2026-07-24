@@ -88,6 +88,13 @@ special missing-value codes before fitting. The design need not be fully
 crossed, but it must contain enough links among persons and facet levels to
 support the intended comparisons.
 
+For conventional score sentinels such as `99`, `-1`, `N`, or `.`, set
+`missing_codes = TRUE`. This convenience policy recodes the score column only;
+it preserves person and facet identifiers because short labels such as `N` can
+be legitimate IDs. Supplying an explicit character vector instead applies
+that user-declared code set across the selected model columns, so inspect the
+returned `missing_recoding` record before fitting or reporting exclusions.
+
 The main workflow below uses a compact synthetic dataset with a connected
 two-rater assignment, moderately unequal rater workloads, and six planned
 criterion-level omissions represented by absent long-format rows, not `NA` or
@@ -182,17 +189,39 @@ fit_summary <- summary(
 )
 
 fit_summary$overview
+fit_summary$status
+fit_summary$readiness
+fit_summary$data_review
 fit_summary$settings_overview
 fit_summary$facet_overview
 fit_summary$person_overview
 fit_summary$step_overview
 ```
 
-Start with convergence and estimation settings. Require both `Converged` and
-`InferenceReady` before interpreting estimates, figures, or derived
-statistics: optimizer code zero can still require review when the terminal
-gradient is too large. The remaining tables describe the fitted scale; they
-do not create universal acceptance thresholds.
+Start with convergence and estimation settings. When optimizer code zero is
+reached before the common terminal-gradient check passes, `fit_mfrm()` makes a
+bounded sequence of warm-started polishing attempts when the requested setting
+is at least as strict as the public default (`reltol <= 1e-9`). It retains the
+best non-worsening stage under the recorded selection rule. The requested and
+selected-stage settings, every attempted stage, terminal gradients, parameter
+changes, and evaluation counts remain in `fit$opt$optimizer_polish`. For
+L-BFGS-B, the native `factr` and `pgtol` controls are also recorded; do not
+interpret `EffectiveReltol` as a native L-BFGS-B argument.
+
+`InferenceReady` is deliberately a numerical status, not a publication
+decision. Require `Numerical = pass`, then inspect the separate Data, Design,
+and Stability rows in `fit_summary$readiness`. A disconnected design or a
+boundary-constant facet level remains a reporting hold even when the optimizer
+gradient is small. In an otherwise supported fit, a Reporting status such as
+`ready_for_diagnostics_and_reporting_follow_up` means that fitting succeeded
+and the next diagnostic stage is pending; it does not mean that optimization
+failed or that the result is already manuscript-ready. Plots can still be
+generated for diagnosis, but their
+returned data carry `interpretation_status = "review_only"`, their subtitle is
+marked `REVIEW ONLY`, the drawn title carries the same banner, and the plotting
+call warns before substantive or cross-subset interpretation. The remaining
+tables describe the fitted scale; they do not create universal acceptance
+thresholds.
 
 ### 4. Request the comprehensive FACETS-organized summary
 
@@ -211,6 +240,10 @@ facets_summary$section_status
 facets_summary$required_visual
 
 res <- facets_summary$results
+res$readiness
+res$plot_map[, c(
+  "Type", "Available", "InterpretationStatus", "InterpretationReady"
+)]
 ```
 
 This profile organizes model information, measures, uncertainty, fit evidence,
@@ -276,6 +309,15 @@ Quarto, or accessibility-aware figure.
 collision-aware, so a dense map may leave some retained points unlabeled;
 the returned plot data and retention table remain the complete record.
 
+When the fit review diagnoses boundary-separated facet levels and no explicit
+`wright_range` is supplied, the native and FACETS-style renderers use the same
+robust central range. Boundary levels appear at the appropriate ruler end with
+triangles, while `OriginalEstimate`, `CI_Lower`, and `CI_Upper` retain the
+untruncated values. `DisplayEstimate`, `DisplayCI_Lower`, `DisplayCI_Upper`, and
+the `CIClipped*` / `CISuppressed` fields describe only what was drawn. This
+prevents a huge separation interval from compressing the interpretable center
+or being mistaken for a complete visible interval.
+
 ### 6. Add the optional FACETS-style Wright map
 
 Use study-specific rubric labels rather than anonymous category numbers:
@@ -317,7 +359,8 @@ the map.
 The step display is designed to make the rating scale readable:
 
 - a solid horizontal line is an estimated adjacent-category step location;
-- its label names the lower and upper observed score categories;
+- its label names the lower and upper observed score categories and prints the
+  fitted logit value in brackets;
 - its height is the step location on the shared logit scale;
 - a shorter dotted line is an expected-score midpoint crossing, not an
   additional model parameter.
@@ -334,11 +377,23 @@ columns `Score` and `Label` is also accepted.
 
 With `draw = FALSE`, the returned `facets_style` component exposes
 `category_labels`, `step_ruler`, `score_transitions`, and `settings` tables.
+For line-printer reconstruction, `RulerValue` records the nearest discrete
+ruler row; `DrawValue` records the exact coordinate used for step and midpoint
+lines in the current renderer.
 
 For a closer FACETS visual comparison, leave `show_ci = FALSE`. Setting
 `show_ci = TRUE` adds `mfrmr` uncertainty whiskers to the asterisk ruler. That
 hybrid is useful analytically, but it is intentionally an extension of the
-FACETS-style layout.
+FACETS-style layout; its footer identifies the interval level and the dot at
+each whisker marks the corresponding fitted facet location.
+
+Boundary-separated levels otherwise make an estimate-derived ruler very wide.
+The automatic boundary-aware range described above is used by default; set an
+explicit, reported range such as `wright_range = c(-4, 4)` when the application
+requires a prespecified display scale. Out-of-range levels remain visible in
+parentheses at the ruler ends. With `show_ci = TRUE`, endpoint triangles and
+the footer identify intervals that extend beyond or are omitted from the
+displayed ruler; exact values remain in the returned data.
 
 ### Visual correspondence is not numerical equivalence
 
@@ -391,7 +446,8 @@ plot(
 The vertical axis remains the fitted logit measure. The horizontal reference
 at Infit MnSq = 1 represents model expectation; the outer lines are review
 guides. Selected persons use a different point shape from non-person facet
-levels.
+levels. Completing this follow-up can change the Reporting readiness row while
+leaving the already-passed Numerical row unchanged.
 
 `top_n_person` limits the displayed person layer so a large study remains
 readable. The selected persons are those with the largest fit distances;
@@ -565,11 +621,12 @@ the bundle records both values. Record the actual ConQuest version, edition,
 and run date during normalization so the external comparison remains
 reproducible.
 
-The 0.2.2 source includes an aggregate record of a matched 31-node check with
-ConQuest 5.47.5 in
-`inst/validation/conquest-mml-overlap-0.2.2.md`. It supports only the overlap
-case stated above; identifier-bearing response and case-level files are not
-included in the package.
+The public source repository contains a repository-only
+[aggregate record](https://github.com/Ryuya-dot-com/mfrmr/blob/main/inst/validation/conquest-mml-overlap-0.2.2.md)
+of a matched 31-node check with ConQuest 5.47.5. The record is excluded from
+the installed CRAN package and supports only the overlap case stated above;
+identifier-bearing response and case-level files are not included in the
+package.
 
 This route does not cover multidimensional models, arbitrary imported design
 matrices, bounded `GPCM` latent regression, JML latent regression, or the full

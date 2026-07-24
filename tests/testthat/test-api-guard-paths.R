@@ -371,14 +371,17 @@ test_that("bias_interaction_report scatter draws", {
 # ==== plot.mfrm_fit with draw=TRUE ====
 
 test_that("plot.mfrm_fit all types with draw=TRUE", {
-  with_null_device({
-    p1 <- plot(.fit, type = "wright", draw = TRUE)
-    expect_s3_class(p1, "mfrm_plot_data")
-    p2 <- plot(.fit, type = "pathway", draw = TRUE)
-    expect_s3_class(p2, "mfrm_plot_data")
-    p3 <- plot(.fit, type = "ccc", draw = TRUE)
-    expect_s3_class(p3, "mfrm_plot_data")
-  })
+  .mfrmr_muffle_expected_warnings(
+    with_null_device({
+      p1 <- plot(.fit, type = "wright", draw = TRUE)
+      expect_s3_class(p1, "mfrm_plot_data")
+      p2 <- plot(.fit, type = "pathway", draw = TRUE)
+      expect_s3_class(p2, "mfrm_plot_data")
+      p3 <- plot(.fit, type = "ccc", draw = TRUE)
+      expect_s3_class(p3, "mfrm_plot_data")
+    }),
+    "^Review-only display:"
+  )
 })
 
 # ==== data_quality_report draws ====
