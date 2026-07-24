@@ -2984,16 +2984,31 @@ plot_information <- function(x,
 #' The logit scale on the y-axis is shared, allowing direct visual
 #' comparison of all facets and persons.
 #'
+#' If the fit records boundary-separated facet levels and `wright_range` is
+#' `NULL`, both renderers derive the display range from supported locations and
+#' place separated levels at ruler ends. The returned tables retain exact
+#' `OriginalEstimate` and `CI_Lower` / `CI_Upper` values alongside display and
+#' clipping metadata; endpoint triangles and footers disclose the adjustment.
+#'
 #' With `renderer = "facets"` (or `wright_style = "facets_style"`), the
 #' draw-free result additionally
 #' contains tidy ruler rows, person star frequencies, signed facet headers,
 #' all facet levels, step lines, original-score transitions, mean half-score
 #' boundaries, category labels, and display settings under `facets_style`.
+#' The payload keeps both the nearest line-printer `RulerValue` and the exact
+#' step/midpoint `DrawValue`; the current renderer draws threshold lines at the
+#' exact value and prints fitted logits in step labels.
 #' These tables support custom ggplot2/plotly rendering without parsing the
 #' base plot.
 #' Use `show_ci = FALSE` for the closest FACETS-style presentation. A
 #' FACETS-style ruler drawn with `show_ci = TRUE` is intentionally labelled as
 #' a hybrid because its uncertainty intervals are supplied by `mfrmr`.
+#'
+#' The returned list separates plotting availability from interpretation. It
+#' includes `fit_readiness`, `interpretation_status`, and
+#' `interpretation_note`. If numerical, data, connectivity, or stability
+#' review is unresolved, the map is returned for diagnosis but the call warns
+#' and prefixes the returned subtitle and drawn title with `REVIEW ONLY`.
 #'
 #' @section Interpreting output:
 #' - Facet levels at the same height on the map are at similar difficulty.
@@ -3023,7 +3038,8 @@ plot_information <- function(x,
 #' @return Invisibly, a list with `persons`, `facets`, `thresholds`, and the
 #'   underlying Wright-map tables used for the plot. Native output includes a
 #'   `retention` table and `retention_note` documenting compact-display
-#'   omissions.
+#'   omissions. All renderers include fit-readiness and interpretation-status
+#'   metadata.
 #'
 #' @seealso [fit_mfrm()], [plot.mfrm_fit()], [mfrmr_visual_diagnostics]
 #' @concept confidence intervals
@@ -3121,6 +3137,12 @@ plot_wright_unified <- function(fit,
   } else {
     "native_no_ci"
   }
+  plot_data$legend <- .wright_map_legend(
+    plot_core,
+    style = style,
+    show_ci = show_ci,
+    ci_level = ci_level
+  )
   plot_data$title <- if (identical(plot_data$uncertainty_display, "hybrid_mfrmr_ci")) {
     "Unified Wright Map (FACETS-style + mfrmr CI hybrid)"
   } else {
@@ -3135,11 +3157,19 @@ plot_wright_unified <- function(fit,
   } else {
     "Shared logit scale for persons, facets, and thresholds"
   }
+  plot_readiness <- .mfrm_fit_plot_readiness(fit)
+  plot_data$fit_readiness <- plot_readiness$table
+  plot_data$interpretation_status <- plot_readiness$status
+  plot_data$interpretation_note <- plot_readiness$detail
+  if (!isTRUE(plot_readiness$ready)) {
+    plot_data$subtitle <- paste0("REVIEW ONLY - ", plot_data$subtitle)
+    warning(plot_readiness$detail, call. = FALSE)
+  }
   if (!draw) return(invisible(plot_data))
 
   apply_plot_preset(style)
   draw_wright_map(
-    plot_core,
+    plot_data,
     title = plot_data$title,
     palette = resolve_palette(
       palette = palette,

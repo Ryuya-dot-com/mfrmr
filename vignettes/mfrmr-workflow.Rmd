@@ -46,9 +46,13 @@ This vignette outlines a reproducible workflow for:
 For a plot-first companion guide, see the separate
 `mfrmr-visual-diagnostics` vignette.
 
-For speed-sensitive work, a useful pattern is:
+For efficient development without changing the final analysis target:
 
-- start with `method = "JML"` or `quad_points = 7`
+- test code mechanics on a small deterministic subset or, for an MML workflow,
+  a temporary `quad_points = 7` grid; restore the prespecified final MML grid
+  (31 points by default) and check quadrature sensitivity before reporting
+- choose `method = "JML"` only when its person-parameter treatment is
+  methodologically appropriate, not merely as a faster substitute for MML
 - use `diagnose_mfrm(..., residual_pca = "none", diagnostic_mode = "both",
   fit_df_method = "both")` when the diagnostics will feed a comprehensive
   summary
@@ -151,6 +155,8 @@ facets_summary_toy <- summary(
 res_toy <- facets_summary_toy$results
 
 fit_summary_toy$overview
+fit_summary_toy$readiness
+fit_summary_toy$data_review
 summary(diag_toy)$overview
 facets_summary_toy
 
@@ -188,6 +194,20 @@ plot(
 )
 ```
 
+Optimizer code zero is only one numerical signal. `fit_mfrm()` also checks the
+terminal gradient; when the initial direct or hybrid solution stops with a
+larger gradient and `reltol <= 1e-9`, it runs a bounded sequence of
+warm-started polishing stages and retains the best non-worsening candidate
+under the recorded selection rule. Inspect
+`fit_toy$opt$optimizer_polish$Stages` when `Numerical` is not `pass`.
+`InferenceReady` describes this numerical gate only: Data, Design, Stability,
+Diagnostics, and Reporting remain separate rows in `fit_summary_toy$readiness`.
+For example, a disconnected design remains a reporting hold even if its
+optimizer converges. Conversely,
+`ready_for_diagnostics_and_reporting_follow_up` means that fitting completed
+and diagnostic review is the next stage; it is neither an optimization failure
+nor a claim that the analysis is already manuscript-ready.
+
 `expected_design` is a declared roster, not an inferred complete crossing.
 When no roster is available, the structural-missingness status is
 `"not_declared"`; the package does not label unassigned cells as missing.
@@ -214,6 +234,13 @@ availability_only <- summary(
 )
 availability_only$section_status
 ```
+
+Availability and interpretability are intentionally separate. Review
+`res_toy$readiness` and the `InterpretationStatus` columns in
+`res_toy$plot_map` before treating an available plot as a final result.
+Plots remain available during a numerical, data, design, or stability review,
+but they warn and carry `REVIEW ONLY` in the returned subtitle and drawn title
+until the upstream issue is resolved.
 
 Bias/DIF, residual PCA, and anchor-drift/linking analyses are deliberately not
 auto-run by any summary profile. They require explicit contrasts, diagnostic

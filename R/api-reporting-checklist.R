@@ -215,7 +215,27 @@ reporting_checklist <- function(fit,
   has_pca <- !is.null(pca_obj) && length(pca_obj) > 0
   has_counts <- has_resid && "Observed" %in% names(obs_df)
   has_person_measure <- has_resid && "PersonMeasure" %in% names(obs_df)
-  has_subsets <- !is.null(diagnostics$subsets)
+  subset_summary_df <- as.data.frame(
+    diagnostics$subsets$summary %||% data.frame(),
+    stringsAsFactors = FALSE
+  )
+  has_subsets <- !is.null(diagnostics$subsets) && nrow(subset_summary_df) > 0L
+  subset_count <- if (has_subsets) nrow(subset_summary_df) else NA_integer_
+  common_scale_linked <- identical(subset_count, 1L)
+  connectivity_detail <- if (!has_subsets) {
+    "No subset/connectivity output"
+  } else if (common_scale_linked) {
+    paste(
+      "One connected subset; the observed design satisfies the graph-connectivity",
+      "requirement. Review other identification and design assumptions separately."
+    )
+  } else {
+    paste0(
+      subset_count,
+      " disconnected subsets; connectivity was assessed, but cross-subset ",
+      "comparisons require a reviewed linking design before reporting."
+    )
+  }
   marginal_fit_bundle <- diagnostics$marginal_fit %||% list()
   strict_marginal_available <- isTRUE(marginal_fit_bundle$available)
   strict_pairwise_available <- isTRUE(marginal_fit_bundle$pairwise$available)
@@ -478,12 +498,17 @@ reporting_checklist <- function(fit,
       add_item(
         "Method Section",
         "Connectivity assessed",
-        !is.null(diagnostics$subsets),
-        detail = if (!is.null(diagnostics$subsets)) "Connectivity/subset output available" else "No subset output",
+        has_subsets,
+        detail = connectivity_detail,
         source_component = "diagnostics$subsets",
-        severity = "recommended",
+        severity = "required",
+        ready_for_apa = common_scale_linked,
         missing_action = "Run the subset/connectivity diagnostics and summarize whether the design is connected.",
-        available_action = "Document the connectivity result before making common-scale or linking claims."
+        available_action = if (common_scale_linked) {
+          "Document the single connected subset before making common-scale claims."
+        } else {
+          "Do not make cross-subset or common-scale claims until the design or an external linking justification has been reviewed."
+        }
       ),
       add_item(
         "Method Section",
@@ -881,7 +906,10 @@ reporting_checklist <- function(fit,
         "Connectivity / design-matrix visual",
         has_subsets,
         detail = if (has_subsets) {
-          "subset_connectivity_report() and plot(..., type = \"design_matrix\") can use the current subset bundle"
+          paste0(
+            "subset_connectivity_report() and plot(..., type = \"design_matrix\") ",
+            "can use the current subset bundle; ", connectivity_detail
+          )
         } else {
           "No subset/connectivity bundle available"
         },

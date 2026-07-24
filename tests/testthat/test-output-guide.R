@@ -486,35 +486,47 @@ test_that("plot_data extracts reusable payloads and selected components", {
   expect_gt(length(unique(curve_style$LineType)), 1L)
 
   diag <- diagnose_mfrm(fit, residual_pca = "none")
-  pathway_long <- plot_data(
-    fit,
-    type = "pathway",
-    diagnostics = diag,
-    component = "pathway_long"
+  pathway_long <- .mfrmr_muffle_expected_warnings(
+    plot_data(
+      fit,
+      type = "pathway",
+      diagnostics = diag,
+      component = "pathway_long"
+    ),
+    "^Review-only display:"
   )
   expect_s3_class(pathway_long, "data.frame")
   expect_true(all(c("Layer", "CurveGroup", "Theta", "Value") %in% names(pathway_long)))
   expect_true(any(pathway_long$Layer == "expected_score"))
 
-  pathway_fit <- plot_data(
-    fit,
-    type = "pathway",
-    diagnostics = diag,
-    component = "fit_measures"
+  pathway_fit <- .mfrmr_muffle_expected_warnings(
+    plot_data(
+      fit,
+      type = "pathway",
+      diagnostics = diag,
+      component = "fit_measures"
+    ),
+    "^Review-only display:"
   )
   expect_s3_class(pathway_fit, "data.frame")
   expect_true(all(c("Facet", "Level", "Infit", "Outfit", "FitStatus") %in% names(pathway_fit)))
-  pathway_components <- plot_data_components(fit, type = "pathway", diagnostics = diag)
+  pathway_components <- .mfrmr_muffle_expected_warnings(
+    plot_data_components(fit, type = "pathway", diagnostics = diag),
+    "^Review-only display:"
+  )
   expect_true(any(pathway_components$Component == "pathway_long" &
                     pathway_components$Role == "primary_data"))
   expect_true(any(pathway_components$Component == "fit_measures" &
                     pathway_components$Role == "fit_review"))
 
-  pathway_without_fit <- plot_data(
-    fit,
-    type = "pathway",
-    include_fit_measures = FALSE,
-    component = "fit_measure_status"
+  pathway_without_fit <- .mfrmr_muffle_expected_warnings(
+    plot_data(
+      fit,
+      type = "pathway",
+      include_fit_measures = FALSE,
+      component = "fit_measure_status"
+    ),
+    "^Review-only display:"
   )
   expect_s3_class(pathway_without_fit, "data.frame")
   expect_false(isTRUE(pathway_without_fit$Available[1]))

@@ -7,6 +7,64 @@ release_readiness_protocol_path <- function() {
   }
 }
 
+release_readiness_gate_fixture <- function(env, check_status,
+                                           freshness_status = NULL) {
+  evidence_file <- tempfile()
+  writeLines("evidence", evidence_file)
+  target <- as.character(check_status$TargetVersion[1])
+  if (is.null(freshness_status)) {
+    freshness_status <- data.frame(
+      FreshnessOK = TRUE,
+      LatestInput = "DESCRIPTION",
+      CheckLogFresh = TRUE,
+      TarballAvailable = TRUE,
+      TarballFresh = TRUE,
+      CheckAfterTarball = TRUE,
+      StaleInputs = "",
+      stringsAsFactors = FALSE
+    )
+  }
+  env$mfrmr_release_readiness_gate_summary(
+    version_status = data.frame(
+      TargetVersion = target,
+      DescriptionVersion = target,
+      NewsHeading = paste("# mfrmr", target),
+      DevelopmentLabelPresent = FALSE,
+      VersionOK = TRUE
+    ),
+    check_status = check_status,
+    term_status = data.frame(
+      FilesScanned = 1L,
+      DisallowedRemovedTerms = 0L,
+      TerminologyOK = TRUE,
+      Examples = ""
+    ),
+    checklist_status = data.frame(
+      Checklist = evidence_file,
+      Rows = 1L,
+      BlockerRows = 1L,
+      CaveatRows = 0L,
+      RoadmapRows = 0L,
+      ChecklistAvailable = TRUE
+    ),
+    ci_workflow_status = data.frame(
+      WorkflowAvailable = TRUE,
+      PackageCheckStepPresent = TRUE,
+      WarningsAreFailures = TRUE,
+      CheckArtifactsUploaded = TRUE,
+      ReadinessGatePresent = TRUE,
+      CIWorkflowOK = TRUE
+    ),
+    paths = list(
+      evidence_map = evidence_file,
+      gpcm_roadmap = evidence_file,
+      external_recovery_evidence = evidence_file,
+      external_recovery_helper = evidence_file
+    ),
+    freshness_status = freshness_status
+  )
+}
+
 test_that("release-readiness protocol exposes review steps and parses check logs", {
   protocol <- release_readiness_protocol_path()
   expect_true(nzchar(protocol))
@@ -30,11 +88,39 @@ test_that("release-readiness protocol exposes review steps and parses check logs
   parsed <- env$mfrmr_release_readiness_parse_check_log(log_file, target_version = "0.2.1")
   expect_identical(parsed$PackageVersion, "0.2.1")
   expect_true(parsed$VersionMatchesTarget)
+  expect_true(parsed$StatusPresent)
   expect_true(parsed$CheckPassed)
   expect_true(parsed$NeedsExplanation)
   expect_equal(parsed$Errors, 0L)
   expect_equal(parsed$Warnings, 0L)
   expect_equal(parsed$Notes, 1L)
+})
+
+test_that("release-readiness protocol rejects a check log without Status", {
+  protocol <- release_readiness_protocol_path()
+  env <- new.env(parent = globalenv())
+  source(protocol, local = env)
+
+  log_file <- tempfile(fileext = ".log")
+  writeLines(c(
+    "* this is package ‘mfrmr’ version ‘0.2.1’",
+    "* checking tests ... OK",
+    "* checking examples ... OK"
+  ), log_file)
+  parsed <- env$mfrmr_release_readiness_parse_check_log(
+    log_file,
+    target_version = "0.2.1"
+  )
+
+  expect_true(parsed$VersionMatchesTarget)
+  expect_false(parsed$StatusPresent)
+  expect_true(is.na(parsed$StatusLine))
+  expect_false(parsed$CheckPassed)
+  expect_true(parsed$NeedsExplanation)
+  expect_true(all(is.na(parsed[c("Errors", "Warnings", "Notes")])))
+
+  gate <- release_readiness_gate_fixture(env, parsed)
+  expect_identical(gate$Status[gate$Gate == "package_check"], "concern")
 })
 
 test_that("release-readiness protocol rejects stale check logs by version", {
@@ -52,50 +138,114 @@ test_that("release-readiness protocol rejects stale check logs by version", {
   expect_true(parsed$CheckPassed)
   expect_false(parsed$VersionMatchesTarget)
 
-  version_status <- data.frame(
-    TargetVersion = "0.2.1",
-    DescriptionVersion = "0.2.1",
-    NewsHeading = "# mfrmr 0.2.1",
-    DevelopmentLabelPresent = FALSE,
-    VersionOK = TRUE
+  gate <- release_readiness_gate_fixture(env, parsed)
+  expect_identical(gate$Status[gate$Gate == "package_check"], "concern")
+})
+
+test_that("release-readiness protocol rejects stale tarball and check evidence", {
+  protocol <- release_readiness_protocol_path()
+  env <- new.env(parent = globalenv())
+  source(protocol, local = env)
+
+  root <- tempfile("pkg")
+  dir.create(file.path(root, "R"), recursive = TRUE)
+  dir.create(file.path(root, "man"), recursive = TRUE)
+  dir.create(file.path(root, "vignettes"), recursive = TRUE)
+  dir.create(file.path(root, "inst", "validation"), recursive = TRUE)
+  writeLines("Package: mfrmr", file.path(root, "DESCRIPTION"))
+  writeLines("# mfrmr", file.path(root, "README.md"))
+  writeLines("# mfrmr 0.2.1", file.path(root, "NEWS.md"))
+  writeLines("^inst/validation$", file.path(root, ".Rbuildignore"))
+  writeLines("fit <- function() NULL", file.path(root, "R", "fit.R"))
+  writeLines("\\name{fit}", file.path(root, "man", "fit.Rd"))
+  writeLines("---", file.path(root, "vignettes", "workflow.Rmd"))
+  writeLines(
+    "repository-only helper",
+    file.path(root, "inst", "validation", "gate.R")
   )
-  term_status <- data.frame(
-    FilesScanned = 1L,
-    DisallowedRemovedTerms = 0L,
-    TerminologyOK = TRUE,
-    Examples = ""
+
+  tarball <- file.path(root, "mfrmr_0.2.1.tar.gz")
+  check_log <- file.path(root, "mfrmr.Rcheck", "00check.log")
+  dir.create(dirname(check_log), recursive = TRUE)
+  writeLines("source archive placeholder", tarball)
+  writeLines(c(
+    "* this is package ‘mfrmr’ version ‘0.2.1’",
+    "Status: OK"
+  ), check_log)
+
+  input_files <- c(
+    file.path(root, "DESCRIPTION"),
+    file.path(root, "README.md"),
+    file.path(root, "NEWS.md"),
+    file.path(root, ".Rbuildignore"),
+    file.path(root, "R", "fit.R"),
+    file.path(root, "man", "fit.Rd"),
+    file.path(root, "vignettes", "workflow.Rmd"),
+    file.path(root, "inst", "validation", "gate.R")
   )
-  checklist_status <- data.frame(
-    Checklist = tempfile(),
-    Rows = 1L,
-    BlockerRows = 1L,
-    CaveatRows = 0L,
-    RoadmapRows = 0L,
-    ChecklistAvailable = TRUE
-  )
-  ci_status <- data.frame(
-    WorkflowAvailable = TRUE,
-    PackageCheckStepPresent = TRUE,
-    WarningsAreFailures = TRUE,
-    CheckArtifactsUploaded = TRUE,
-    ReadinessGatePresent = TRUE,
-    CIWorkflowOK = TRUE
-  )
+  base_time <- Sys.time() - 120
+  invisible(lapply(input_files, Sys.setFileTime, time = base_time))
+  Sys.setFileTime(tarball, base_time + 30)
+  Sys.setFileTime(check_log, base_time + 60)
+
   paths <- list(
-    evidence_map = log_file,
-    gpcm_roadmap = log_file,
-    external_recovery_evidence = log_file,
-    external_recovery_helper = log_file
+    pkg_dir = normalizePath(root, winslash = "/", mustWork = TRUE),
+    check_log = check_log,
+    tarball = tarball
   )
-  gate <- env$mfrmr_release_readiness_gate_summary(
-    version_status = version_status,
-    check_status = parsed,
-    term_status = term_status,
-    checklist_status = checklist_status,
-    ci_workflow_status = ci_status,
-    paths = paths
+  fresh <- env$mfrmr_release_readiness_evidence_freshness(
+    paths,
+    tolerance_seconds = 0
   )
-  expect_identical(gate$Status[gate$Gate == "package_check"], "review")
+  expect_true(fresh$FreshnessOK)
+  expect_true(fresh$TarballFresh)
+  expect_true(fresh$CheckLogFresh)
+  expect_true(fresh$CheckAfterTarball)
+
+  Sys.setFileTime(
+    file.path(root, "inst", "validation", "gate.R"),
+    base_time + 90
+  )
+  ignored_change <- env$mfrmr_release_readiness_evidence_freshness(
+    paths,
+    tolerance_seconds = 0
+  )
+  expect_true(ignored_change$FreshnessOK)
+
+  Sys.setFileTime(check_log, base_time + 20)
+  wrong_order <- env$mfrmr_release_readiness_evidence_freshness(
+    paths,
+    tolerance_seconds = 0
+  )
+  expect_true(wrong_order$TarballFresh)
+  expect_true(wrong_order$CheckLogFresh)
+  expect_false(wrong_order$CheckAfterTarball)
+  expect_false(wrong_order$FreshnessOK)
+  Sys.setFileTime(check_log, base_time + 60)
+
+  Sys.setFileTime(file.path(root, "R", "fit.R"), base_time + 90)
+  stale <- env$mfrmr_release_readiness_evidence_freshness(
+    paths,
+    tolerance_seconds = 0
+  )
+  expect_false(stale$FreshnessOK)
+  expect_false(stale$TarballFresh)
+  expect_false(stale$CheckLogFresh)
+  expect_match(stale$StaleInputs, "R/fit.R", fixed = TRUE)
+
+  parsed <- env$mfrmr_release_readiness_parse_check_log(
+    check_log,
+    target_version = "0.2.1"
+  )
+  gate <- release_readiness_gate_fixture(
+    env,
+    parsed,
+    freshness_status = stale
+  )
+  expect_identical(
+    gate$Status[gate$Gate == "release_evidence_freshness"],
+    "concern"
+  )
 })
 
 test_that("release-readiness protocol finds common check-log locations", {
@@ -211,7 +361,8 @@ test_that("release-readiness protocol reviews the source tree shape", {
   expect_s3_class(review, "mfrmr_release_readiness_review")
   expect_true(all(c(
     "prompt_steps", "gate_summary", "release_decision",
-    "version_status", "check_status", "ci_workflow_status", "terminology_status",
+    "version_status", "check_status", "freshness_status", "ci_workflow_status",
+    "terminology_status",
     "checklist_status", "gpcm_scope_status", "external_recovery_status"
   ) %in% names(review)))
   expect_false(review$external_recovery_status$ExternalRecoveryRequested[1])

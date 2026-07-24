@@ -3,7 +3,7 @@ make_qc_study1_fit <- function() {
   .mfrmr_muffle_expected_warnings(
     fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
              method = "JML", maxit = 25),
-    "^Optimizer did not fully converge"
+    "^Optimization convergence review did not produce"
   )
 }
 

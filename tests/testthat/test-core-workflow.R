@@ -44,10 +44,12 @@ test_that("core fit/diagnostics workflow runs", {
   expect_true(any(grepl("Facet overview", printed_summary, fixed = TRUE)))
   # Default plot(fit) now returns the Wright map alone; the 3-plot
   # bundle remains available via `type = "bundle"`.
-  p_fit_default <- plot(fit, draw = FALSE)
+  .mfrmr_muffle_expected_warnings({
+    p_fit_default <- plot(fit, draw = FALSE)
+    p_fit_bundle <- plot(fit, type = "bundle", draw = FALSE)
+  }, "^Review-only display:")
   expect_s3_class(p_fit_default, "mfrm_plot_data")
   expect_identical(p_fit_default$name, "wright_map")
-  p_fit_bundle <- plot(fit, type = "bundle", draw = FALSE)
   expect_s3_class(p_fit_bundle, "mfrm_plot_bundle")
   expect_true(all(c("wright_map", "pathway_map", "category_characteristic_curves") %in% names(p_fit_bundle)))
   expect_s3_class(p_fit_bundle$wright_map, "mfrm_plot_data")
@@ -56,11 +58,13 @@ test_that("core fit/diagnostics workflow runs", {
   printed_bundle <- capture.output(print(p_fit_bundle))
   expect_true(any(grepl("mfrm plot bundle", printed_bundle, fixed = TRUE)))
 
-  p_fit_wright <- plot(fit, type = "wright", draw = FALSE)
-  p_fit_pathway <- plot(fit, type = "pathway", draw = FALSE)
-  p_fit_ccc <- plot(fit, type = "ccc", draw = FALSE)
-  p_fit_person <- plot(fit, type = "person", draw = FALSE)
-  p_fit_step <- plot(fit, type = "step", draw = FALSE)
+  .mfrmr_muffle_expected_warnings({
+    p_fit_wright <- plot(fit, type = "wright", draw = FALSE)
+    p_fit_pathway <- plot(fit, type = "pathway", draw = FALSE)
+    p_fit_ccc <- plot(fit, type = "ccc", draw = FALSE)
+    p_fit_person <- plot(fit, type = "person", draw = FALSE)
+    p_fit_step <- plot(fit, type = "step", draw = FALSE)
+  }, "^Review-only display:")
   expect_s3_class(p_fit_wright, "mfrm_plot_data")
   expect_s3_class(p_fit_pathway, "mfrm_plot_data")
   expect_s3_class(p_fit_ccc, "mfrm_plot_data")
@@ -72,7 +76,10 @@ test_that("core fit/diagnostics workflow runs", {
   expect_s3_class(p_fit_pathway$data$pathway_long, "data.frame")
   expect_s3_class(p_fit_pathway$data$fit_measures, "data.frame")
 
-  p_fit_pub <- plot(fit, type = "wright", draw = FALSE, preset = "publication")
+  p_fit_pub <- .mfrmr_muffle_expected_warnings(
+    plot(fit, type = "wright", draw = FALSE, preset = "publication"),
+    "^Review-only display:"
+  )
   expect_identical(as.character(p_fit_pub$data$preset), "publication")
 
   diag <- mfrmr::diagnose_mfrm(fit, residual_pca = "both", pca_max_factors = 4)

@@ -1,6 +1,7 @@
 ^data-raw$
 (^|/)\.DS_Store$
 ^\.git$
+^\.gitattributes$
 ^\.{2}Rcheck$
 ^mfrmr\.Rcheck$
 ^mfrmr_[0-9.]+\.tar\.gz$

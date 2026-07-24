@@ -8074,6 +8074,13 @@ print.summary.mfrm_bias <- function(x, ...) {
 #'
 #' @section Interpreting output:
 #' - `overview`: convergence and information criteria.
+#' - `readiness`: separate Numerical, Data, Design, Stability, Diagnostics,
+#'   and Reporting states. `InferenceReady` contributes only to Numerical;
+#'   a numerical pass cannot override a disconnected-design or boundary-
+#'   separation hold.
+#' - `data_review`: overall multi-facet connectivity, facet-level score
+#'   support, boundary-constant levels, single-level facets, and retained
+#'   preparation notes behind the readiness rows.
 #' - `facet_overview`: per-facet spread and range of estimates.
 #' - `person_overview`: distribution of person measures.
 #' - `step_overview`: threshold spread and monotonicity checks, reported by
@@ -8109,6 +8116,10 @@ print.summary.mfrm_bias <- function(x, ...) {
 #' @return An object of class `summary.mfrm_fit` with:
 #' - `overview`: global model/fit indicators
 #' - `status`: concise front-door status block for quick review
+#' - `readiness`: domain-specific numerical, data, design, stability,
+#'   diagnostic, and reporting states
+#' - `data_review`: structured connectivity and facet-support evidence used by
+#'   the non-numerical readiness gates
 #' - `key_warnings`: highest-priority warnings to review first
 #' - `next_actions`: recommended follow-up helpers
 #' - `population_overview`: current population-model basis, residual variance,
@@ -8159,6 +8170,8 @@ print.summary.mfrm_bias <- function(x, ...) {
 #' @seealso [fit_mfrm()], [diagnose_mfrm()]
 #' @examples
 #' toy <- load_mfrmr_data("example_operational")
+#' # Seven quadrature points keep this executable example short. For a final
+#' # analysis, restore the default or a prespecified grid and review sensitivity.
 #' fit <- fit_mfrm(
 #'   toy, "Person", c("Rater", "Criterion"), "Score",
 #'   method = "MML", model = "RSM", quad_points = 7, maxit = 30
@@ -8168,9 +8181,11 @@ print.summary.mfrm_bias <- function(x, ...) {
 #'   "Model", "Method", "Converged", "InferenceReady",
 #'   "ConvergenceSeverity"
 #' )]
-#' # Require `InferenceReady = TRUE` before interpreting the fitted scale.
-#' # If it is FALSE, inspect the terminal gradient, data, model, and
-#' # identification; increasing `maxit` alone may not resolve the review.
+#' s$readiness
+#' # `InferenceReady = TRUE` clears only the numerical gate. Also require the
+#' # Data, Design, and Stability rows to support the intended interpretation.
+#' # If Numerical is not a pass, inspect the retained polish stages; increasing
+#' # `maxit` alone may not resolve the review.
 #' s$person_overview
 #' # Interpret location and spread on the fitted logit scale together with the
 #' # score distribution and extreme-score counts.
@@ -8244,6 +8259,7 @@ mfrm_fit_summary_core <- function(object, digits = 3, top_n = 5) {
     overview$MethodUsed[missing_used] <- as.character(config$method %||% NA_character_)
   }
   prep <- object$prep %||% list()
+  data_review <- object$data_review %||% list()
   population_raw <- object$population %||% list()
   person_raw <- object$facets$person
   if (is.null(person_raw)) person_raw <- tibble::tibble()
@@ -8659,15 +8675,45 @@ mfrm_fit_summary_core <- function(object, digits = 3, top_n = 5) {
   engine_requested <- as.character(overview$MMLEngineRequested[1] %||% NA_character_)
   engine_used <- as.character(overview$MMLEngineUsed[1] %||% NA_character_)
 
+  review_status <- as.data.frame(
+    data_review$status %||% data.frame(),
+    stringsAsFactors = FALSE
+  )
+  domain_status <- function(domain, default = "not_assessed") {
+    if (nrow(review_status) == 0L ||
+        !all(c("Domain", "Status") %in% names(review_status))) return(default)
+    value <- review_status$Status[match(domain, review_status$Domain)]
+    if (length(value) == 0L || is.na(value[1L]) || !nzchar(value[1L])) {
+      default
+    } else {
+      as.character(value[1L])
+    }
+  }
+  data_status <- domain_status("Data")
+  design_status <- domain_status("Design")
+  stability_status <- domain_status("Stability")
+  numerical_status <- dplyr::case_when(
+    identical(convergence_severity, "pass") && converged ~ "pass",
+    identical(convergence_severity, "review") ~ "review",
+    TRUE ~ "fail"
+  )
   reporting_readiness <- dplyr::case_when(
-    convergence_severity %in% c("review", "fail") ~ "review_before_reporting",
+    startsWith(design_status, "hold_") ~ "hold_for_design_review",
+    startsWith(stability_status, "hold_") ~ "hold_for_stability_review",
+    !identical(numerical_status, "pass") ~ "review_before_reporting",
+    startsWith(design_status, "review_") ~ "review_design_before_reporting",
+    !identical(data_status, "pass") ~ "review_data_before_reporting",
     identical(method_label, "MML") ~ "ready_for_diagnostics_and_reporting_follow_up",
     TRUE ~ "exploratory_fit_ready_for_diagnostics"
   )
   overall_status <- dplyr::case_when(
-    identical(convergence_severity, "pass") && converged ~ "usable_fit",
-    identical(convergence_severity, "review") ~ "reviewable_fit",
-    TRUE ~ "fit_needs_review"
+    startsWith(design_status, "hold_") ||
+      startsWith(stability_status, "hold_") ~ "review_required",
+    identical(numerical_status, "review") ~ "reviewable_fit",
+    identical(numerical_status, "fail") ~ "fit_needs_review",
+    startsWith(design_status, "review_") ||
+      !identical(data_status, "pass") ~ "review_required",
+    TRUE ~ "usable_fit"
   )
   convergence_display <- switch(
     convergence_status,
@@ -8710,6 +8756,55 @@ mfrm_fit_summary_core <- function(object, digits = 3, top_n = 5) {
     "Estimation path" = paste(model_label, "/", engine_line),
     "Reporting readiness" = reporting_readiness
   )
+  readiness <- data.frame(
+    Domain = c(
+      "Numerical", "Data", "Design", "Stability", "Diagnostics", "Reporting"
+    ),
+    Status = c(
+      numerical_status,
+      data_status,
+      design_status,
+      stability_status,
+      "not_assessed",
+      reporting_readiness
+    ),
+    Detail = c(
+      as.character(overview$ConvergenceDetail[1] %||% ""),
+      if (identical(data_status, "pass")) {
+        "No preparation warning or review row was retained."
+      } else {
+        "Review row retention, missing-code recoding, duplicate cells, and preparation notes."
+      },
+      if (startsWith(design_status, "hold_")) {
+        paste0(
+          "The observed multi-facet graph contains ",
+          data_review$overall_connectivity$components %||% NA_integer_,
+          " disconnected subsets."
+        )
+      } else if (identical(design_status, "review_disconnected_with_anchors")) {
+        paste0(
+          "The observed multi-facet graph is disconnected; supplied anchors ",
+          "require an explicit linking and identification justification ",
+          "before cross-subset comparisons."
+        )
+      } else if (identical(design_status, "pass_linked")) {
+        paste0(
+          "The observed graph satisfies the connectivity requirement; review ",
+          "the remaining design and identification assumptions separately."
+        )
+      } else {
+        "Observed multi-facet connectivity was not fully assessed."
+      },
+      if (startsWith(stability_status, "hold_")) {
+        "Boundary-constant or single-level facet support requires review."
+      } else {
+        "No boundary-constant non-person facet level was detected."
+      },
+      "Diagnostics have not yet been incorporated into this fit-only status.",
+      "Reporting status is the strictest applicable upstream workflow state."
+    ),
+    stringsAsFactors = FALSE
+  )
 
   row_retention <- as.data.frame(prep$row_retention %||% data.frame(), stringsAsFactors = FALSE)
   preparation_notes <- as.data.frame(prep$preparation_notes %||% data.frame(), stringsAsFactors = FALSE)
@@ -8727,6 +8822,24 @@ mfrm_fit_summary_core <- function(object, digits = 3, top_n = 5) {
     "After reviewing convergence, run `review <- summary(fit, profile = \"facets\", detail = \"brief\")` for the comprehensive FACETS-organized result surface.",
     "Then draw the complete native Wright map with `plot(fit, type = \"wright\", show_ci = TRUE, top_n = Inf, preset = \"publication\")`."
   )
+  if (!identical(numerical_status, "pass")) {
+    next_actions <- c(
+      "Inspect `fit$opt$optimizer_polish$Stages` before changing controls; compare the retained objective, terminal gradient, and maximum parameter change, and keep the fit on review if bounded polishing did not clear the numerical gate.",
+      next_actions
+    )
+  }
+  if (startsWith(design_status, "hold_") || startsWith(design_status, "review_")) {
+    next_actions <- c(
+      "Resolve or justify the multi-facet connectivity state in `fit$data_review$overall_connectivity` before making common-scale or cross-subset claims.",
+      next_actions
+    )
+  }
+  if (startsWith(stability_status, "hold_")) {
+    next_actions <- c(
+      "Review `fit$data_review$boundary_levels` and facet support before interpreting separated or boundary-constant estimates.",
+      next_actions
+    )
+  }
   if (!identical(method_label, "MML")) {
     next_actions <- c(
       next_actions,
@@ -8766,6 +8879,8 @@ mfrm_fit_summary_core <- function(object, digits = 3, top_n = 5) {
   out <- list(
     overview = overview,
     status = status,
+    readiness = readiness,
+    data_review = data_review,
     key_warnings = key_warnings,
     next_actions = next_actions,
     population_overview = population_overview,
@@ -8837,8 +8952,43 @@ mfrm_fit_summary_required_visual <- function(fit, results = NULL,
         !all(c("Type", "Available") %in% names(plot_map))) return(isTRUE(fallback))
     any(plot_map$Type %in% type & plot_map$Available %in% TRUE, na.rm = TRUE)
   }
+  fallback_readiness <- if (inherits(fit, "mfrm_fit")) {
+    .mfrm_fit_plot_readiness(fit)
+  } else {
+    list(status = "not_assessed", ready = FALSE)
+  }
+  route_interpretation <- function(type, available) {
+    if (!isTRUE(available)) {
+      return(list(status = "not_available", ready = FALSE))
+    }
+    if (nrow(plot_map) > 0L &&
+        all(c("Type", "InterpretationStatus", "InterpretationReady") %in%
+            names(plot_map))) {
+      row <- plot_map[plot_map$Type %in% type & plot_map$Available %in% TRUE,
+                      , drop = FALSE]
+      if (nrow(row) > 0L) {
+        return(list(
+          status = as.character(row$InterpretationStatus[1L]),
+          ready = isTRUE(row$InterpretationReady[1L])
+        ))
+      }
+    }
+    list(
+      status = as.character(fallback_readiness$status),
+      ready = isTRUE(fallback_readiness$ready)
+    )
+  }
   pathway_person <- if (isTRUE(include_person)) "TRUE" else "FALSE"
+  wright_available <- route_available(
+    "wright",
+    fallback = inherits(fit, "mfrm_fit")
+  )
   pathway_available <- route_available("fit_pathway", fallback = FALSE)
+  wright_interpretation <- route_interpretation("wright", wright_available)
+  pathway_interpretation <- route_interpretation(
+    "fit_pathway",
+    pathway_available
+  )
   pathway_route <- if (isTRUE(pathway_available)) {
     paste0(
       "plot(fit, type = \"fit_pathway\", fit_stat = \"Infit\", ",
@@ -8858,9 +9008,19 @@ mfrm_fit_summary_required_visual <- function(fit, results = NULL,
     ),
     Required = c(TRUE, FALSE, FALSE),
     Available = c(
-      route_available("wright", fallback = inherits(fit, "mfrm_fit")),
-      route_available("wright", fallback = inherits(fit, "mfrm_fit")),
+      wright_available,
+      wright_available,
       pathway_available
+    ),
+    InterpretationStatus = c(
+      wright_interpretation$status,
+      wright_interpretation$status,
+      pathway_interpretation$status
+    ),
+    InterpretationReady = c(
+      wright_interpretation$ready,
+      wright_interpretation$ready,
+      pathway_interpretation$ready
     ),
     Route = c(
       paste0(
@@ -8992,8 +9152,9 @@ mfrm_fit_summary_workflow <- function(out, fit, profile, detail,
   out$results <- results
 
   if (inherits(results, "mfrm_results")) {
+    diagnostic_summary <- results$summaries$diagnostics %||% list()
     diagnostic_warnings <- as.character(
-      results$summaries$diagnostics$key_warnings %||% character(0)
+      diagnostic_summary$key_warnings %||% character(0)
     )
     diagnostic_warnings <- diagnostic_warnings[
       !diagnostic_warnings %in% "No immediate warnings from diagnostics summary."
@@ -9012,6 +9173,113 @@ mfrm_fit_summary_workflow <- function(out, fit, profile, detail,
       },
       "Inspect `$analysis` for triage and `$results$tables` for full structured tables before preparing the report."
     ), max_n = 4L)
+
+    diagnostic_status_tbl <- as.data.frame(
+      diagnostic_summary$status %||% data.frame(),
+      stringsAsFactors = FALSE
+    )
+    diagnostic_value <- if (nrow(diagnostic_status_tbl) > 0L &&
+                            all(c("Item", "Value") %in% names(diagnostic_status_tbl))) {
+      as.character(diagnostic_status_tbl$Value[
+        match("Overall status", diagnostic_status_tbl$Item)
+      ][1L] %||% "not_assessed")
+    } else {
+      "not_assessed"
+    }
+    diagnostic_readiness <- dplyr::case_when(
+      identical(diagnostic_value, "no_major_screening_flags") ~ "pass",
+      identical(diagnostic_value, "follow_up_needed") ~ "review",
+      identical(diagnostic_value, "exploratory_screen_only") ~ "review_exploratory",
+      TRUE ~ "not_assessed"
+    )
+    if (is.data.frame(out$readiness) &&
+        all(c("Domain", "Status", "Detail") %in% names(out$readiness))) {
+      diagnostic_row <- match("Diagnostics", out$readiness$Domain)
+      if (!is.na(diagnostic_row)) {
+        out$readiness$Status[diagnostic_row] <- diagnostic_readiness
+        out$readiness$Detail[diagnostic_row] <- if (identical(diagnostic_readiness, "pass")) {
+          "No major configured diagnostic screening flag was found."
+        } else if (startsWith(diagnostic_readiness, "review")) {
+          "One or more diagnostic screens require substantive follow-up before reporting."
+        } else {
+          "Diagnostic readiness could not be assessed."
+        }
+      }
+    }
+
+    current_reporting <- as.character(
+      out$status$Value[match("Reporting readiness", out$status$Item)][1L]
+    )
+    upstream_hold <- current_reporting %in% c(
+      "review_before_reporting",
+      "hold_for_design_review",
+      "hold_for_stability_review",
+      "review_design_before_reporting",
+      "review_data_before_reporting"
+    )
+    if (startsWith(diagnostic_readiness, "review") && !isTRUE(upstream_hold)) {
+      reporting_row <- match("Reporting readiness", out$status$Item)
+      overall_row <- match("Overall status", out$status$Item)
+      if (!is.na(reporting_row)) {
+        out$status$Value[reporting_row] <- "review_diagnostics_before_reporting"
+      }
+      if (!is.na(overall_row) &&
+          identical(as.character(out$status$Value[overall_row]), "usable_fit")) {
+        out$status$Value[overall_row] <- "review_required"
+      }
+      if (is.data.frame(out$readiness)) {
+        readiness_reporting_row <- match("Reporting", out$readiness$Domain)
+        if (!is.na(readiness_reporting_row)) {
+          out$readiness$Status[readiness_reporting_row] <-
+            "review_diagnostics_before_reporting"
+          out$readiness$Detail[readiness_reporting_row] <-
+            "Numerical and design gates passed, but diagnostic findings require follow-up."
+        }
+      }
+    }
+
+    # Keep the nested mfrm_results object on the same readiness decision as
+    # the enclosing FACETS/reporting profile. Diagnostic readiness is learned
+    # only after mfrm_results() has assembled its configured diagnostics, so
+    # the initial nested tables must be refreshed before they are returned.
+    synced_readiness <- mfrm_results_fit_readiness(
+      fit,
+      fit_summary = list(readiness = out$readiness)
+    )
+    results$readiness <- synced_readiness
+    if (is.list(results$summaries$fit)) {
+      results$summaries$fit$readiness <- out$readiness
+      results$summaries$fit$status <- out$status
+    }
+    results$status <- mfrm_results_add_readiness_status(
+      results$status,
+      synced_readiness
+    )
+    results$plot_map <- mfrm_results_plot_map(
+      has_fit = inherits(results$fit, "mfrm_fit"),
+      has_diagnostics = inherits(results$diagnostics, "mfrm_diagnostics"),
+      tables = results$tables,
+      components = results$components,
+      readiness = synced_readiness
+    )
+    results$triage <- mfrm_results_triage(
+      status = results$status,
+      plot_map = results$plot_map,
+      components = results$components,
+      table_index = results$table_index,
+      fit = results$fit,
+      diagnostics = results$diagnostics,
+      summaries = results$summaries,
+      readiness = synced_readiness
+    )
+    results$next_actions <- mfrm_results_next_actions(
+      status = results$status,
+      plot_map = results$plot_map,
+      components = results$components,
+      table_index = results$table_index,
+      triage = results$triage
+    )
+    out$results <- results
   }
   out$analysis <- mfrm_fit_summary_analysis(
     out = out,
@@ -9218,7 +9486,10 @@ print.summary.mfrm_fit <- function(x, ...) {
     cat("\nVisual workflow (in order)\n")
     visual <- as.data.frame(x$required_visual, stringsAsFactors = FALSE)
     keep <- intersect(
-      c("Priority", "Visual", "Required", "Available"),
+      c(
+        "Priority", "Visual", "Required", "Available",
+        "InterpretationStatus", "InterpretationReady"
+      ),
       names(visual)
     )
     print(visual[, keep, drop = FALSE], row.names = FALSE)
@@ -9233,7 +9504,13 @@ print.summary.mfrm_fit <- function(x, ...) {
         usable_fit = "Fit completed; review diagnostics before reporting",
         reviewable_fit = "Fit completed, but numerical convergence requires review",
         fit_needs_review = "Fit requires numerical review before interpretation",
+        review_required = "Fit completed, but data, design, stability, or diagnostics require review",
         review_before_reporting = "Resolve numerical warnings before reporting",
+        hold_for_design_review = "Reporting is on hold until disconnected-design comparability is resolved",
+        hold_for_stability_review = "Reporting is on hold until boundary/separation stability is resolved",
+        review_design_before_reporting = "Review the design-linking justification before reporting",
+        review_data_before_reporting = "Review retained data-preparation issues before reporting",
+        review_diagnostics_before_reporting = "Review diagnostic findings before reporting",
         ready_for_diagnostics_and_reporting_follow_up = "Fit completed; diagnostics and reporting review can proceed",
         exploratory_fit_ready_for_diagnostics = "Fit available for diagnostic review; inferential strength depends on the estimator and convergence evidence",
         value
@@ -9246,6 +9523,12 @@ print.summary.mfrm_fit <- function(x, ...) {
         for (part in wrapped[-1L]) cat("   ", part, "\n", sep = "")
       }
     }
+  }
+  if (nrow(x$readiness %||% data.frame()) > 0L) {
+    cat("\nWorkflow readiness\n")
+    readiness <- as.data.frame(x$readiness, stringsAsFactors = FALSE)
+    keep <- intersect(c("Domain", "Status"), names(readiness))
+    print(readiness[, keep, drop = FALSE], row.names = FALSE)
   }
   print_bullet_section("Key warnings", key_warning_lines)
   print_bullet_section("Next actions", x$next_actions)

@@ -12,6 +12,7 @@ reference:
     contents:
       - load_mfrmr_data
       - list_mfrmr_data
+      - mfrmr_example_operational_design
       - describe_mfrm_data
       - fit_mfrm
       - diagnose_mfrm

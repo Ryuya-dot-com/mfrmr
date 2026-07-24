@@ -29,7 +29,10 @@ test_that("run_mfrm_facets returns a FACETS-style workflow bundle", {
   expect_true(any(grepl("Column mapping", printed, fixed = TRUE)))
   expect_false(any(grepl("Legacy-compatible", printed, fixed = TRUE)))
 
-  p_fit <- plot(out, type = "fit", draw = FALSE)
+  p_fit <- .mfrmr_muffle_expected_warnings(
+    plot(out, type = "fit", draw = FALSE),
+    "^Review-only display:"
+  )
   expect_s3_class(p_fit, "mfrm_plot_bundle")
   p_qc <- plot(out, type = "qc", draw = FALSE)
   expect_s3_class(p_qc, "mfrm_plot_data")

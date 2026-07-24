@@ -159,9 +159,11 @@ test_that("curve/report GPCM workflows open where the probability kernel is alre
     method = "MML", quad_points = 5, maxit = 20
   ))
 
-  p_bundle <- plot(fit, type = "bundle", draw = FALSE)
-  p_ccc <- plot(fit, type = "ccc", draw = FALSE)
-  p_path <- plot(fit, type = "pathway", draw = FALSE)
+  .mfrmr_muffle_expected_warnings({
+    p_bundle <- plot(fit, type = "bundle", draw = FALSE)
+    p_ccc <- plot(fit, type = "ccc", draw = FALSE)
+    p_path <- plot(fit, type = "pathway", draw = FALSE)
+  }, "^Review-only display:")
   cs <- category_structure_report(fit)
   cc <- category_curves_report(fit)
   out_graph <- facets_output_file_bundle(fit, include = "graph", write_files = FALSE)

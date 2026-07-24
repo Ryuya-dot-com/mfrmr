@@ -10673,9 +10673,11 @@ build_visual_plot_payloads <- function(x, fit = NULL) {
   )
   if (inherits(fit, "mfrm_fit")) {
     surface <- tryCatch(
-      plot(fit, type = "ccc_surface", draw = FALSE),
-      error = function(e) NULL,
-      warning = function(w) NULL
+      withCallingHandlers(
+        plot(fit, type = "ccc_surface", draw = FALSE),
+        warning = function(w) invokeRestart("muffleWarning")
+      ),
+      error = function(e) NULL
     )
     if (inherits(surface, "mfrm_plot_data")) {
       payloads$category_probability_surface <- surface

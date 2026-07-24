@@ -155,7 +155,7 @@ test_that("anchor with non-existent level produces warning", {
       fit_mfrm(d, "Person",
         c("Rater", "Task", "Criterion"), "Score",
         anchors = anchors, method = "JML", maxit = 30),
-      "^Optimizer did not fully converge"
+      "^Optimization convergence review did not produce"
     ),
     "anchor|Anchor"
   )

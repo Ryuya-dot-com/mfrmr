@@ -27,19 +27,31 @@ with_null_device <- function(expr) {
 # ---- plot.mfrm_fit drawing ----
 
 test_that("plot.mfrm_fit draws wright map", {
-  with_null_device(plot(.fit, type = "wright", draw = TRUE))
+  .mfrmr_muffle_expected_warnings(
+    with_null_device(plot(.fit, type = "wright", draw = TRUE)),
+    "^Review-only display:"
+  )
 })
 
 test_that("plot.mfrm_fit draws pathway map", {
-  with_null_device(plot(.fit, type = "pathway", draw = TRUE))
+  .mfrmr_muffle_expected_warnings(
+    with_null_device(plot(.fit, type = "pathway", draw = TRUE)),
+    "^Review-only display:"
+  )
 })
 
 test_that("plot.mfrm_fit draws CCC", {
-  with_null_device(plot(.fit, type = "ccc", draw = TRUE))
+  .mfrmr_muffle_expected_warnings(
+    with_null_device(plot(.fit, type = "ccc", draw = TRUE)),
+    "^Review-only display:"
+  )
 })
 
 test_that("plot.mfrm_fit returns 3D-ready CCC surface payload", {
-  surface <- plot(.fit, type = "ccc_surface", draw = FALSE, theta_points = 55)
+  surface <- .mfrmr_muffle_expected_warnings(
+    plot(.fit, type = "ccc_surface", draw = FALSE, theta_points = 55),
+    "^Review-only display:"
+  )
   expect_s3_class(surface, "mfrm_plot_data")
   expect_identical(surface$name, "category_probability_surface")
   expect_true(all(c(
@@ -63,21 +75,33 @@ test_that("plot.mfrm_fit returns 3D-ready CCC surface payload", {
 })
 
 test_that("plot.mfrm_fit draws person distribution", {
-  with_null_device(plot(.fit, type = "person", draw = TRUE))
+  .mfrmr_muffle_expected_warnings(
+    with_null_device(plot(.fit, type = "person", draw = TRUE)),
+    "^Review-only display:"
+  )
 })
 
 test_that("plot.mfrm_fit draws step parameters", {
-  with_null_device(plot(.fit, type = "step", draw = TRUE))
+  .mfrmr_muffle_expected_warnings(
+    with_null_device(plot(.fit, type = "step", draw = TRUE)),
+    "^Review-only display:"
+  )
 })
 
 test_that("plot.mfrm_fit default returns the Wright map", {
-  result <- with_null_device(plot(.fit, draw = TRUE))
+  result <- .mfrmr_muffle_expected_warnings(
+    with_null_device(plot(.fit, draw = TRUE)),
+    "^Review-only display:"
+  )
   expect_s3_class(result, "mfrm_plot_data")
   expect_identical(result$name, "wright_map")
 })
 
 test_that("plot.mfrm_fit(type = 'bundle') returns the three-plot bundle", {
-  result <- with_null_device(plot(.fit, type = "bundle", draw = TRUE))
+  result <- .mfrmr_muffle_expected_warnings(
+    with_null_device(plot(.fit, type = "bundle", draw = TRUE)),
+    "^Review-only display:"
+  )
   expect_s3_class(result, "mfrm_plot_bundle")
 })
 
@@ -310,7 +334,10 @@ test_that("plot.mfrm_facets_run draws fit type", {
                     facets = c("Rater", "Task", "Criterion"),
                     score = "Score", maxit = 15)
   )
-  result <- with_null_device(plot(out, type = "fit", draw = TRUE))
+  result <- .mfrmr_muffle_expected_warnings(
+    with_null_device(plot(out, type = "fit", draw = TRUE)),
+    "^Review-only display:"
+  )
   expect_s3_class(result, "mfrm_plot_bundle")
 })
 

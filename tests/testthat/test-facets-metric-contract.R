@@ -14,7 +14,7 @@ test_that("FACETS-style metric contracts hold for key summary tables", {
       model = "RSM",
       maxit = 20
     ),
-    "^Optimizer did not fully converge"
+    "^Optimization convergence review did not produce"
   )
   diag <- mfrmr::diagnose_mfrm(fit, residual_pca = "none")
   bias <- mfrmr::estimate_bias(fit, diag, facet_a = "Rater", facet_b = "Task", max_iter = 2)
@@ -69,7 +69,7 @@ test_that("FACETS-style range contracts hold for agreement, fit, displacement, a
       model = "RSM",
       maxit = 20
     ),
-    "^Optimizer did not fully converge"
+    "^Optimization convergence review did not produce"
   )
   diag <- mfrmr::diagnose_mfrm(fit, residual_pca = "none")
 

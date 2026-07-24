@@ -14,6 +14,10 @@ mfrmr_generate_vignette_artifacts <- function(pkg_dir = ".",
   } else {
     requireNamespace("mfrmr", quietly = TRUE)
   }
+  normalized_text_md5 <- getFromNamespace(
+    "mfrmr_normalized_text_md5",
+    "mfrmr"
+  )
 
   write_artifact <- function(name, x, source) {
     path <- file.path(output_dir, name)
@@ -24,7 +28,7 @@ mfrmr_generate_vignette_artifacts <- function(pkg_dir = ".",
       Rows = nrow(x),
       Columns = ncol(x),
       Schema = paste(names(x), collapse = "|"),
-      MD5 = unname(tools::md5sum(path)),
+      MD5 = normalized_text_md5(path),
       Source = source,
       stringsAsFactors = FALSE
     )

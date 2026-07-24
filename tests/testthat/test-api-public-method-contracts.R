@@ -1160,7 +1160,10 @@ test_that("plot.mfrm_fit error guards", {
   )
 
   # line 13162: facet filter
-  p_facet <- plot(fit, type = "facet", facet = "Rater", draw = FALSE)
+  p_facet <- .mfrmr_muffle_expected_warnings(
+    plot(fit, type = "facet", facet = "Rater", draw = FALSE),
+    "^Review-only display:"
+  )
   expect_s3_class(p_facet, "mfrm_plot_data")
 
   # line 13150: nonexistent facet filter

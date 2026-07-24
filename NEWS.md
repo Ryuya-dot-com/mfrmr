@@ -7,6 +7,17 @@
 
 ## Estimation performance
 
+- A code-zero solution whose terminal gradient still requires review now
+  triggers a bounded warm-started polish ladder when the portable tolerance
+  setting is at least as strict as the public default. Each stage records its
+  optimizer, portable setting, native L-BFGS-B controls when applicable,
+  objective, terminal gradient, maximum parameter change, evaluations, and
+  elapsed time; the best non-worsening stage is retained rather than assuming
+  that stricter controls improve every fit monotonically.
+- Direct, hybrid, and EM MML engines now apply the same terminal-gradient gate
+  to `InferenceReady`. EM relative log-likelihood convergence remains visible
+  as an engine-specific stopping condition but no longer overrides the common
+  numerical-readiness contract.
 - `fit_mfrm()` now shares likelihood and analytical-gradient work at an
   identical parameter vector. MML direct and EM paths reuse quadrature
   probabilities and posterior quantities, while JML reuses category
@@ -18,14 +29,35 @@
 - `optimizer = "auto"` selects limited-memory L-BFGS-B for MML and for large
   JML parameter vectors; `"BFGS"` and `"L-BFGS-B"` remain explicit choices.
   The requested and actual methods are recorded for summaries, exports, and
-  replay. Existing `reltol` semantics are mapped to the corresponding
-  L-BFGS-B controls.
+  replay. The portable `reltol` setting is mapped to L-BFGS-B `factr` and
+  `pgtol`; actual stage controls are recorded alongside the requested and
+  selected-stage settings.
 - Per-fit workspaces are local to one optimization and are discarded with the
   fit evaluator. They are not global, are not shared across parallel fits,
   and are not stored as large probability arrays in the returned fit object.
+- Measurement-graph component detection now avoids repeated row-wise lookups
+  while preserving the established subset labels and ordering. This reduces
+  first-fit overhead for larger long-format rating designs.
 
 ## Summary workflow
 
+- Fit summaries now separate Numerical, Data, Design, Stability, Diagnostics,
+  and Reporting readiness. Disconnected measurement graphs and
+  boundary-constant or single-level facet support remain explicit reporting
+  holds even when numerical optimization succeeds.
+- Wright, FACETS-style Wright, pathway, and related fit plots carry additive
+  fit-readiness metadata. Review-only displays remain available for diagnosis
+  but warn, mark their returned subtitle and drawn title, and do not silently
+  promote availability to interpretability.
+- `plot_apa_figure_one()` now emits one consolidated readiness warning per
+  call, retains the readiness table and interpretation note on the composite,
+  and visibly labels a non-ready result as a manuscript-oriented draft for
+  review rather than a finished publication figure.
+- Native and FACETS-style Wright maps now share a robust automatic range when
+  boundary-separated facet levels are diagnosed. Exact estimates and CI bounds
+  remain in the returned tables; ruler-end triangles, clipping metadata, and
+  plot footers prevent truncated intervals from being read as complete, while
+  the native returned legend uses the same keys as the rendered legend.
 - `summary(fit)` now supports `profile = "fit"`, `"facets"`, and
   `"reporting"`. The default fit profile remains fast and does not compute
   diagnostics. The opt-in FACETS profile organizes fitted measures, fit,
@@ -42,9 +74,9 @@
   identifiers. Full structured results remain available through the returned
   object.
 - The concise summary presents the visual workflow in order: the required
-  native Wright map with facet uncertainty and labelled step locations, the optional
-  FACETS-style Wright ruler, and the optional Infit pathway. Person rows in
-  the pathway remain opt-in.
+  native Wright map with facet uncertainty and labelled step locations, the
+  optional FACETS-style Wright ruler, and the optional Infit pathway. Person
+  rows in the pathway remain opt-in.
 
 ## Examples and teaching data
 
@@ -56,7 +88,7 @@
 - `mfrmr_example_operational_design` declares the 288 planned assignment cells
   separately from the 282 observed scores. `describe_mfrm_data()` can compare
   an explicit `expected_design` with observed cells, report planned omissions
-  and unexpected observations, audit Person-facet graph components, summarize
+  and unexpected observations, review Person-facet graph components, summarize
   sparse links and duplicate cells, and keep person labels out of its default
   compact output. Without a roster, structural missingness is reported as not
   assessed rather than inferred from a hypothetical complete crossing.
@@ -71,12 +103,21 @@
 
 ## Safer first analyses
 
-- The default relative optimizer tolerance is now `1e-9`. This better aligns
-  routine optimizer stopping with the separate terminal-gradient review used
-  to decide whether numerical convergence passes the package review; the
-  fitted object records the actual tolerance for replay. Model specification,
-  design, identification, and inferential assumptions remain separate review
+- The public default remains `reltol = 1e-9` for the initial optimizer stage;
+  bounded polishing is invoked only when `reltol <= 1e-9` and code zero
+  precedes the terminal-gradient gate. The fitted object records requested and
+  selected-stage controls for replay. Model specification, design,
+  identification, and inferential assumptions remain separate review
   questions.
+- Non-finite scores or weights, blank person/facet identifiers, and fractional
+  `maxit` or `quad_points` values now fail before expensive optimization with a
+  focused correction. Duplicate Person-by-facet cells warn once per fit,
+  report both affected rows and duplicate cells, and propagate a Data review
+  state downstream.
+- `missing_codes = TRUE` now applies the conventional sentinel set to scores
+  while preserving person and facet IDs. An explicit character vector remains
+  an explicit request to apply those codes across all selected model columns;
+  the review records the scope used for each column.
 - On-the-fly ConQuest overlap examples now use the same `1e-9` tolerance.
   Their bundle summaries, settings, written README files, and compact console
   summaries report the actual mfrmr fit controls, MML engine, terminal
@@ -99,9 +140,16 @@
 - Latent regression rejects a non-person-centered parameterization that would
   confound the population intercept with the measurement scale.
 - CRAN checks now exercise the complete public first-contact route once and
-  retain lightweight compatibility/backend/artifact contracts. Repeated
+  use the exact README/default MML controls rather than a reduced quadrature
+  setting. They retain lightweight compatibility/backend/artifact contracts.
+  Repeated
   estimation, detailed plotting, simulation, and broad regression coverage
   remain in the complete local and GitHub Actions suite.
+- A repository-level first-use workflow stress protocol covers linked, sparse,
+  disconnected, shared-link, PCM, bounded-GPCM, extreme-score, separation,
+  missing-code, and weighted scenarios across deterministic seeds. It keeps
+  expectation matching separate from actual report readiness and is excluded
+  from routine CRAN checks.
 
 ## Interpretation and compatibility boundaries
 
@@ -120,9 +168,10 @@
   sum-constrained item location, trims fixed-width person identifiers, and
   prepares them for `review_conquest_overlap()`.
 - A matched 31-node run with ConQuest 5.47.5 Demonstration Version is recorded
-  in the installed validation notes for the documented binary, item-only,
-  one-covariate MML overlap case. The result supports that narrow handoff and
-  is not a claim of general numerical equivalence.
+  in the public source repository's validation record (excluded from the
+  installed CRAN package) for the documented binary, item-only, one-covariate
+  MML overlap case. The result supports that narrow handoff and is not a claim
+  of general numerical equivalence.
 - `export_mfrm_results()` now labels every preset as a potentially identifying
   analysis archive, warns before writing unless the risk is explicitly
   acknowledged, and records privacy status in its summary, HTML index, and

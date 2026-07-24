@@ -19,11 +19,13 @@ test_that("PCM model path exercises PCM-specific plotting", {
   expect_equal(fit$summary$Model[[1]], "PCM")
 
   # PCM plot paths
-  with_null_device(plot(fit, type = "wright", draw = TRUE))
-  with_null_device(plot(fit, type = "pathway", draw = TRUE))
-  with_null_device(plot(fit, type = "ccc", draw = TRUE))
-  with_null_device(plot(fit, type = "person", draw = TRUE))
-  with_null_device(plot(fit, type = "step", draw = TRUE))
+  .mfrmr_muffle_expected_warnings({
+    with_null_device(plot(fit, type = "wright", draw = TRUE))
+    with_null_device(plot(fit, type = "pathway", draw = TRUE))
+    with_null_device(plot(fit, type = "ccc", draw = TRUE))
+    with_null_device(plot(fit, type = "person", draw = TRUE))
+    with_null_device(plot(fit, type = "step", draw = TRUE))
+  }, "^Review-only display:")
 })
 
 test_that("PCM diagnostics and reports work", {

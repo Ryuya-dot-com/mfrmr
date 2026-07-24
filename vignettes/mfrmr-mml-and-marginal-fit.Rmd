@@ -83,6 +83,28 @@ For the `RSM` / `PCM` MML branch:
 
 This is the implemented MML-engine scope.
 
+## Numerical readiness and bounded polishing
+
+An optimizer return code of zero does not by itself establish a stationary
+solution. `mfrmr` applies a common terminal-gradient review to direct, hybrid,
+and EM fits. For direct and hybrid fitting, a code-zero solution with a larger
+terminal gradient triggers a bounded sequence of warm-started polishing stages
+when the requested setting is at least as strict as the public default
+(`reltol <= 1e-9`). The package retains the best non-worsening candidate under
+the recorded selection rule and records every attempt in
+`fit$opt$optimizer_polish$Stages`, including the method, portable tolerance
+setting, objective, terminal gradient, parameter change, and evaluation
+counts. For L-BFGS-B, the stage table also records the actual `factr` and
+`pgtol` controls; `EffectiveReltol` is not itself a native L-BFGS-B argument.
+EM retains its relative log-likelihood stopping result but must also pass the
+same terminal-gradient gate; use the direct engine for bounded gradient
+polishing when an EM fit remains under numerical review.
+
+Read `summary(fit)$readiness` as separate gates. `InferenceReady` and the
+Numerical row describe numerical optimization, not the design, stability,
+diagnostic, or reporting decision. A small gradient cannot repair a
+disconnected measurement graph or a boundary-separated facet level.
+
 ## Strict Marginal Diagnostic Target
 
 The strict marginal branch is not based on plugging \(\hat{\theta}_n^{EAP}\)
