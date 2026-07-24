@@ -383,7 +383,8 @@
 #' (`mml_engine = "direct"`) optimises this marginal log-likelihood by
 #' direct gradient methods (BFGS / L-BFGS-B), not by Bock & Aitkin's
 #' signature EM algorithm. The `"em"` and `"hybrid"` engines do follow
-#' the EM template but use a BFGS M-step rather than B&A's probit IRLS,
+#' the EM template but use the selected gradient-based M-step rather than
+#' B&A's probit IRLS,
 #' because the target is the polytomous Rasch family rather than B&A's
 #' 2PL probit model.
 #'

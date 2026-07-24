@@ -154,7 +154,7 @@ compute_P_geq_r <- function(probs) {
 }
 
 compute_P_geq <- function(probs) {
-  if (isTRUE(getOption("mfrmr.use_cpp11_backend", FALSE)) &&
+  if (isTRUE(getOption("mfrmr.use_cpp11_backend", TRUE)) &&
       mfrm_cpp11_backend_available() &&
       is.matrix(probs) &&
       is.numeric(probs)) {

@@ -76,7 +76,7 @@ render_r_object_literal <- function(x) {
 # the `replay_inputs` list that `fit_mfrm()` stores on `fit$config`.
 # The helper emits every argument that materially affects the fit
 # (including inputs that older serialized fits may not retain:
-# `missing_codes`, `mml_engine`, `slope_facet`, `anchor_policy`,
+# `missing_codes`, `optimizer`, `mml_engine`, `slope_facet`, `anchor_policy`,
 # `min_obs_per_*`, `min_common_anchors`, `facet_shrinkage`,
 # `facet_prior_sd`, `shrink_person`, `attach_diagnostics`).
 #
@@ -162,6 +162,7 @@ build_replay_fit_mfrm_lines <- function(replay_inputs,
     emit("quad_points", as.integer(ri$quad_points %||% 31L)),
     emit("maxit", as.integer(ri$maxit %||% 400L)),
     emit("reltol", as.numeric(ri$reltol %||% 1e-6)),
+    emit("optimizer", as.character(ri$optimizer %||% "auto")),
     emit("mml_engine", as.character(ri$mml_engine %||% "direct")),
     emit("facet_shrinkage", as.character(ri$facet_shrinkage %||% "none"))
   )
@@ -608,7 +609,9 @@ build_mfrm_manifest <- function(fit,
   estimation_control <- dashboard_settings_table(list(
     maxit = as.integer(est_ctl$maxit %||% NA_integer_),
     reltol = as.numeric(est_ctl$reltol %||% NA_real_),
-    quad_points = as.integer(est_ctl$quad_points %||% NA_integer_)
+    quad_points = as.integer(est_ctl$quad_points %||% NA_integer_),
+    optimizer_requested = as.character(est_ctl$optimizer_requested %||% NA_character_),
+    optimizer_used = as.character(est_ctl$optimizer_used %||% NA_character_)
   ))
 
   anchor_summary <- as.data.frame(cfg$anchor_summary %||% data.frame(), stringsAsFactors = FALSE)
@@ -1215,6 +1218,7 @@ build_mfrm_replay_script <- function(fit,
       paste0("  quad_points = ", render_r_object_literal(as.integer(est_ctl$quad_points %||% 15L)), ","),
       paste0("  maxit = ", render_r_object_literal(as.integer(est_ctl$maxit %||% 400L)), ","),
       paste0("  reltol = ", render_r_object_literal(as.numeric(est_ctl$reltol %||% 1e-6)), ","),
+      paste0("  optimizer = ", render_r_object_literal(as.character(est_ctl$optimizer_requested %||% "auto")), ","),
       paste0("  top_n_interactions = ", render_r_object_literal(as.integer(top_n_interactions))),
       ")",
       "fit <- run$fit",

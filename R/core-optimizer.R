@@ -37,7 +37,8 @@ mfrm_grad_mml_complete_data_core <- function(params,
                                              sizes,
                                              quad,
                                              obs_posterior,
-                                             step_cum = NULL) {
+                                             step_cum = NULL,
+                                             logprob_bundle = NULL) {
   if (identical(config$model, "GPCM")) {
     stop("Complete-data EM updates are currently implemented only for RSM/PCM.",
          call. = FALSE)
@@ -56,15 +57,17 @@ mfrm_grad_mml_complete_data_core <- function(params,
 
   score_k <- idx$score_k
   weight <- idx$weight
-  logprob_bundle <- mfrm_mml_logprob_bundle(
-    idx = idx,
-    config = config,
-    quad = quad,
-    params = params,
-    base_eta = base_eta,
-    step_cum = step_cum,
-    include_probs = TRUE
-  )
+  if (is.null(logprob_bundle)) {
+    logprob_bundle <- mfrm_mml_logprob_bundle(
+      idx = idx,
+      config = config,
+      quad = quad,
+      params = params,
+      base_eta = base_eta,
+      step_cum = step_cum,
+      include_probs = TRUE
+    )
+  }
   n_nodes <- ncol(obs_posterior)
   grad_facets_exp <- lapply(config$facet_names, function(f) numeric(length(params$facets[[f]])))
   names(grad_facets_exp) <- config$facet_names
@@ -139,6 +142,221 @@ mfrm_grad_mml_complete_data_core <- function(params,
   -c(grad_facet_free, grad_step_free)
 }
 
+normalize_mfrm_optimizer <- function(optimizer = "auto") {
+  value <- as.character(optimizer %||% "auto")[1]
+  aliases <- c(
+    auto = "auto",
+    bfgs = "BFGS",
+    `l-bfgs-b` = "L-BFGS-B",
+    lbfgsb = "L-BFGS-B",
+    `l_bfgs_b` = "L-BFGS-B"
+  )
+  key <- tolower(value)
+  resolved <- unname(aliases[key])
+  if (length(resolved) == 0L || is.na(resolved)) {
+    stop("`optimizer` must be one of 'auto', 'BFGS', or 'L-BFGS-B'.",
+         call. = FALSE)
+  }
+  resolved
+}
+
+resolve_mfrm_optimizer <- function(optimizer, n_parameters,
+                                   prefer_limited_memory = FALSE) {
+  requested <- normalize_mfrm_optimizer(optimizer)
+  # Fixed rather than option-driven so `optimizer = "auto"` is reproducible
+  # across sessions and replayed analysis bundles.
+  threshold <- 200L
+  used <- if (identical(requested, "auto")) {
+    if (isTRUE(prefer_limited_memory) ||
+        as.integer(n_parameters) >= threshold) "L-BFGS-B" else "BFGS"
+  } else {
+    requested
+  }
+  list(
+    Requested = requested,
+    Used = used,
+    ParameterCount = as.integer(n_parameters),
+    AutoThreshold = threshold
+  )
+}
+
+build_mfrm_optim_control <- function(method, maxit, reltol) {
+  if (identical(method, "L-BFGS-B")) {
+    return(list(
+      maxit = as.integer(maxit),
+      lmm = 20L,
+      factr = max(1, as.numeric(reltol) / .Machine$double.eps),
+      pgtol = max(as.numeric(reltol), sqrt(.Machine$double.eps))
+    ))
+  }
+  list(maxit = as.integer(maxit), reltol = as.numeric(reltol))
+}
+
+# Lazily fused objective / gradient evaluator. optim() may request several
+# objective values during a line search without requesting their gradients, so
+# the reusable probability workspace is built for paired objective / gradient
+# methods while the gradient itself is constructed only when gr() asks for it.
+# At an identical parameter vector, marginal-likelihood and posterior work is
+# reused; full probability matrices are retained only when the optimizer's
+# call pattern makes that reuse worthwhile.
+make_mfrm_direct_evaluator <- function(method, cache, idx, config, sizes, quad,
+                                       reuse_probability_workspace = TRUE) {
+  cached_par <- NULL
+  cached_value <- NULL
+  cached_gradient <- NULL
+  probability_bundle <- NULL
+  logprob_bundle <- NULL
+  posterior_bundle <- NULL
+  shared_evaluations <- 0L
+  gradient_builds <- 0L
+  value_hits <- 0L
+  gradient_hits <- 0L
+
+  ensure_shared <- function(par) {
+    if (identical(par, cached_par)) return(invisible(NULL))
+    cache$ensure(par)
+    cached_par <<- par
+    cached_gradient <<- NULL
+    probability_bundle <<- NULL
+    logprob_bundle <<- NULL
+    posterior_bundle <<- NULL
+    shared_evaluations <<- shared_evaluations + 1L
+
+    if (identical(method, "JMLE")) {
+      if (isTRUE(reuse_probability_workspace)) {
+        probability_bundle <<- mfrm_jmle_probability_bundle(
+          eta = cache$eta(),
+          score_k = idx$score_k,
+          model = config$model,
+          step_cum = cache$step_cum(),
+          criterion_idx = idx$step_idx,
+          slopes = cache$params()$slopes,
+          slope_idx = idx$slope_idx
+        )
+        log_prob_obs <- probability_bundle$log_prob_obs
+        if (!is.null(idx$weight)) log_prob_obs <- log_prob_obs * idx$weight
+        cached_value <<- -sum(log_prob_obs)
+      } else {
+        cached_value <<- mfrm_loglik_jmle_cached(cache, idx, config)
+      }
+    } else if (length(idx$score_k) == 0L) {
+      cached_value <<- 0
+    } else {
+      logprob_bundle <<- mfrm_mml_logprob_bundle(
+        idx = idx,
+        config = config,
+        quad = quad,
+        params = cache$params(),
+        base_eta = cache$base_eta(),
+        step_cum = cache$step_cum(),
+        include_probs = isTRUE(reuse_probability_workspace),
+        include_linear_part = isTRUE(reuse_probability_workspace) &&
+          identical(config$model, "GPCM")
+      )
+      posterior_bundle <<- mfrm_mml_posterior_bundle(logprob_bundle)
+      cached_value <<- -sum(
+        posterior_bundle$person_bundle$log_marginal
+      )
+    }
+    invisible(NULL)
+  }
+
+  list(
+    value = function(par) {
+      same <- identical(par, cached_par)
+      ensure_shared(par)
+      if (same) value_hits <<- value_hits + 1L
+      cached_value
+    },
+    gradient = function(par) {
+      ensure_shared(par)
+      if (!is.null(cached_gradient)) {
+        gradient_hits <<- gradient_hits + 1L
+        return(cached_gradient)
+      }
+      cached_gradient <<- if (identical(method, "JMLE")) {
+        mfrm_grad_jmle_cached(
+          cache, idx, config, sizes,
+          probability_bundle = probability_bundle
+        )
+      } else {
+        mfrm_grad_mml_cached(
+          cache, idx, config, sizes, quad,
+          logprob_bundle = if (isTRUE(reuse_probability_workspace)) {
+            logprob_bundle
+          } else {
+            NULL
+          },
+          posterior_bundle = posterior_bundle
+        )
+      }
+      gradient_builds <<- gradient_builds + 1L
+      cached_gradient
+    },
+    diagnostics = function() list(
+      SharedEvaluations = shared_evaluations,
+      GradientBuilds = gradient_builds,
+      ValueCacheHits = value_hits,
+      GradientCacheHits = gradient_hits
+    )
+  )
+}
+
+make_mfrm_em_mstep_evaluator <- function(cache, idx, config, sizes, quad,
+                                         obs_posterior,
+                                         reuse_probability_workspace = TRUE) {
+  cached_par <- NULL
+  cached_value <- NULL
+  cached_gradient <- NULL
+  logprob_bundle <- NULL
+
+  ensure_shared <- function(par) {
+    if (identical(par, cached_par)) return(invisible(NULL))
+    cache$ensure(par)
+    cached_par <<- par
+    cached_gradient <<- NULL
+    logprob_bundle <<- mfrm_mml_logprob_bundle(
+      idx = idx,
+      config = config,
+      quad = quad,
+      params = cache$params(),
+      base_eta = cache$base_eta(),
+      step_cum = cache$step_cum(),
+      include_probs = isTRUE(reuse_probability_workspace)
+    )
+    cached_value <<- -sum(logprob_bundle$log_prob_mat * obs_posterior)
+    invisible(NULL)
+  }
+
+  list(
+    value = function(par) {
+      ensure_shared(par)
+      cached_value
+    },
+    gradient = function(par) {
+      ensure_shared(par)
+      if (is.null(cached_gradient)) {
+        cached_gradient <<- mfrm_grad_mml_complete_data_core(
+          params = cache$params(),
+          base_eta = cache$base_eta(),
+          idx = idx,
+          config = config,
+          sizes = sizes,
+          quad = quad,
+          obs_posterior = obs_posterior,
+          step_cum = cache$step_cum(),
+          logprob_bundle = if (isTRUE(reuse_probability_workspace)) {
+            logprob_bundle
+          } else {
+            NULL
+          }
+        )
+      }
+      cached_gradient
+    }
+  )
+}
+
 run_mfrm_direct_optimization <- function(start,
                                          method,
                                          idx,
@@ -148,9 +366,16 @@ run_mfrm_direct_optimization <- function(start,
                                          maxit,
                                          reltol,
                                          quad = NULL,
-                                         optimizer_method = "BFGS",
+                                         optimizer = "auto",
                                          suppress_convergence_warning = FALSE) {
-  control <- list(maxit = maxit, reltol = reltol)
+  optimizer_plan <- resolve_mfrm_optimizer(
+    optimizer,
+    length(start),
+    prefer_limited_memory = identical(method, "MML")
+  )
+  control <- build_mfrm_optim_control(
+    optimizer_plan$Used, maxit = maxit, reltol = reltol
+  )
 
   if (method == "JMLE") {
     cache <- make_param_cache(sizes, config, idx, is_mml = FALSE)
@@ -159,28 +384,21 @@ run_mfrm_direct_optimization <- function(start,
     cache <- make_param_cache(sizes, config, idx, is_mml = TRUE)
   }
 
-  fn <- function(par, idx, config, sizes, quad = NULL) {
-    cache$ensure(par)
-    if (method == "JMLE") {
-      mfrm_loglik_jmle_cached(cache, idx, config)
-    } else {
-      mfrm_loglik_mml_cached(cache, idx, config, quad)
-    }
-  }
-
-  gr <- function(par, idx, config, sizes, quad = NULL) {
-    cache$ensure(par)
-    if (method == "JMLE") {
-      mfrm_grad_jmle_cached(cache, idx, config, sizes)
-    } else {
-      mfrm_grad_mml_cached(cache, idx, config, sizes, quad)
-    }
-  }
+  evaluator <- make_mfrm_direct_evaluator(
+    method = method,
+    cache = cache,
+    idx = idx,
+    config = config,
+    sizes = sizes,
+    quad = quad,
+    reuse_probability_workspace = identical(optimizer_plan$Used, "L-BFGS-B")
+  )
+  fn <- function(par, ...) evaluator$value(par)
+  gr <- function(par, ...) evaluator$gradient(par)
 
   opt <- tryCatch(
-    optim(par = start, fn = fn, gr = gr, method = "BFGS",
-          control = control, idx = idx, config = config, sizes = sizes,
-          quad = quad),
+    optim(par = start, fn = fn, gr = gr, method = optimizer_plan$Used,
+          control = control),
     error = function(e) {
       stop("Model optimization failed: ", conditionMessage(e), ". ",
            "Possible causes: (1) insufficient data for the number of parameters, ",
@@ -191,7 +409,7 @@ run_mfrm_direct_optimization <- function(start,
   )
 
   final_gradient <- tryCatch(
-    gr(opt$par, idx = idx, config = config, sizes = sizes, quad = quad),
+    gr(opt$par),
     error = function(e) rep(NA_real_, length(opt$par))
   )
   opt$optimizer_diagnostics <- build_optimizer_diagnostics(
@@ -199,9 +417,11 @@ run_mfrm_direct_optimization <- function(start,
     gradient = final_gradient,
     reltol = reltol,
     maxit = maxit,
-    optimizer_method = optimizer_method,
+    optimizer_method = optimizer_plan$Used,
     convergence_basis = "optimizer_gradient"
   )
+  opt$optimizer_plan <- optimizer_plan
+  opt$evaluation_cache <- evaluator$diagnostics()
 
   if (opt$convergence != 0 && !isTRUE(suppress_convergence_warning)) {
     warning("Optimizer did not fully converge (code = ", opt$convergence,
@@ -225,6 +445,7 @@ run_mfrm_mml_em_optimization <- function(start,
                                          reltol,
                                          m_step_maxit = NULL,
                                          m_step_reltol = NULL,
+                                         optimizer = "auto",
                                          suppress_convergence_warning = FALSE,
                                          checkpoint = NULL) {
   quad <- gauss_hermite_normal(quad_points)
@@ -235,6 +456,11 @@ run_mfrm_mml_em_optimization <- function(start,
   rel_change <- NA_real_
   total_fn <- 0L
   total_gr <- 0L
+  optimizer_plan <- resolve_mfrm_optimizer(
+    optimizer,
+    length(start),
+    prefer_limited_memory = TRUE
+  )
 
   # Resumable-fit checkpoint scaffolding. `checkpoint` is a list with
   # `file` (path) and `every_iter` (integer >= 1). When set, the
@@ -301,45 +527,29 @@ run_mfrm_mml_em_optimization <- function(start,
     cache <- make_param_cache(sizes, config, idx, is_mml = TRUE)
     obs_posterior_fixed <- state$posterior_bundle$obs_posterior
 
-    fn <- function(par, idx, config, sizes, quad, obs_posterior_fixed) {
-      cache$ensure(par)
-      logprob_bundle <- mfrm_mml_logprob_bundle(
-        idx = idx,
-        config = config,
-        quad = quad,
-        params = cache$params(),
-        base_eta = cache$base_eta(),
-        step_cum = cache$step_cum()
-      )
-      -sum(logprob_bundle$log_prob_mat * obs_posterior_fixed)
-    }
-
-    gr <- function(par, idx, config, sizes, quad, obs_posterior_fixed) {
-      cache$ensure(par)
-      mfrm_grad_mml_complete_data_core(
-        params = cache$params(),
-        base_eta = cache$base_eta(),
-        idx = idx,
-        config = config,
-        sizes = sizes,
-        quad = quad,
-        obs_posterior = obs_posterior_fixed,
-        step_cum = cache$step_cum()
-      )
-    }
+    evaluator <- make_mfrm_em_mstep_evaluator(
+      cache = cache,
+      idx = idx,
+      config = config,
+      sizes = sizes,
+      quad = quad,
+      obs_posterior = obs_posterior_fixed,
+      reuse_probability_workspace = identical(optimizer_plan$Used, "L-BFGS-B")
+    )
+    fn <- function(par, ...) evaluator$value(par)
+    gr <- function(par, ...) evaluator$gradient(par)
 
     m_opt <- tryCatch(
       optim(
         par = par,
         fn = fn,
         gr = gr,
-        method = "BFGS",
-        control = list(maxit = m_step_maxit, reltol = m_step_reltol),
-        idx = idx,
-        config = config,
-        sizes = sizes,
-        quad = quad,
-        obs_posterior_fixed = obs_posterior_fixed
+        method = optimizer_plan$Used,
+        control = build_mfrm_optim_control(
+          optimizer_plan$Used,
+          maxit = m_step_maxit,
+          reltol = m_step_reltol
+        )
       ),
       error = function(e) {
         stop("EM M-step optimization failed: ", conditionMessage(e), ". ",
@@ -417,6 +627,7 @@ run_mfrm_mml_em_optimization <- function(start,
     em_relative_change = rel_change,
     em_iterations = as.integer(length(ll_trace) - 1L)
   )
+  opt$optimizer_plan <- optimizer_plan
 
   opt$optimizer_diagnostics <- build_optimizer_diagnostics(
     opt = opt,
@@ -431,7 +642,8 @@ run_mfrm_mml_em_optimization <- function(start,
     EMConverged = isTRUE(converged),
     EMRelativeChange = rel_change,
     MStepMaxit = m_step_maxit,
-    MStepReltol = m_step_reltol
+    MStepReltol = m_step_reltol,
+    MStepOptimizer = optimizer_plan$Used
   )
 
   if (opt$convergence != 0 && !isTRUE(suppress_convergence_warning)) {
@@ -454,6 +666,7 @@ run_mfrm_optimization <- function(start,
                                   quad_points,
                                   maxit,
                                   reltol,
+                                  optimizer = "auto",
                                   suppress_convergence_warning = FALSE,
                                   checkpoint = NULL) {
   requested_engine <- normalize_mml_engine(config$estimation_control$mml_engine_requested %||% "direct")
@@ -481,6 +694,7 @@ run_mfrm_optimization <- function(start,
       quad_points = quad_points,
       maxit = maxit,
       reltol = reltol,
+      optimizer = optimizer,
       suppress_convergence_warning = suppress_convergence_warning
     )
   } else if (identical(engine_plan$Used, "em")) {
@@ -492,6 +706,7 @@ run_mfrm_optimization <- function(start,
       quad_points = quad_points,
       maxit = maxit,
       reltol = reltol,
+      optimizer = optimizer,
       suppress_convergence_warning = suppress_convergence_warning,
       checkpoint = checkpoint
     )
@@ -508,6 +723,7 @@ run_mfrm_optimization <- function(start,
       reltol = em_reltol,
       m_step_maxit = compute_hybrid_em_mstep_maxit(em_maxit),
       m_step_reltol = em_reltol,
+      optimizer = optimizer,
       suppress_convergence_warning = TRUE
     )
     opt <- run_mfrm_direct_optimization(
@@ -519,6 +735,7 @@ run_mfrm_optimization <- function(start,
       quad_points = quad_points,
       maxit = maxit,
       reltol = reltol,
+      optimizer = optimizer,
       suppress_convergence_warning = suppress_convergence_warning
     )
     opt$em_diagnostics <- em_opt$em_diagnostics

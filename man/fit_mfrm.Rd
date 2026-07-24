@@ -33,6 +33,7 @@ fit_mfrm(
   quad_points = 31,
   maxit = 400,
   reltol = 1e-09,
+  optimizer = c("auto", "BFGS", "L-BFGS-B"),
   mml_engine = c("direct", "em", "hybrid"),
   population_formula = NULL,
   person_data = NULL,
@@ -172,8 +173,15 @@ denser rule and report the setting used.}
 than the terminal-gradient review threshold so that routine optimizer
 stopping and the package's post-fit convergence review are aligned.}
 
+\item{optimizer}{Direct-optimization method. \code{"auto"} (default) uses the
+limited-memory \code{"L-BFGS-B"} method for MML and for larger JML parameter
+vectors (at least 200 free parameters), while retaining BFGS for smaller
+JML fits. Use \code{"BFGS"} or \code{"L-BFGS-B"} to request one method explicitly.
+The method actually used is recorded in \code{fit$summary$OptimizerMethod}.}
+
 \item{mml_engine}{MML optimization engine for \code{method = "MML"}:
-\code{"direct"} (default) uses direct BFGS on the marginal log-likelihood,
+\code{"direct"} (default) uses the selected direct optimizer on the marginal
+log-likelihood,
 \code{"em"} uses an EM loop for \code{RSM} / \code{PCM} with \code{population = NULL}, and
 \code{"hybrid"} uses EM as a warm start before the direct optimizer. Unsupported
 combinations currently fall back to \code{"direct"} and record that fallback in

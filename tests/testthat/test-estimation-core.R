@@ -184,6 +184,57 @@ test_that("GPCM probabilities and log-likelihood reduce exactly to PCM", {
   expect_equal(ll_gpcm, ll_pcm, tolerance = 1e-12)
 })
 
+test_that("joint JML probability bundles reproduce standalone kernels", {
+  eta <- c(-1.2, -0.4, 0.2, 0.9, 1.4)
+  score_k <- c(0L, 1L, 2L, 3L, 1L)
+  step_rsm <- c(0, -0.3, 0.2, 0.8)
+  rsm <- mfrmr:::mfrm_jmle_probability_bundle(
+    eta, score_k, "RSM", step_rsm
+  )
+  expect_equal(rsm$probs, mfrmr:::category_prob_rsm(eta, step_rsm),
+               tolerance = 1e-14)
+  expect_equal(sum(rsm$log_prob_obs),
+               mfrmr:::loglik_rsm(eta, score_k, step_rsm),
+               tolerance = 1e-14)
+
+  step_pcm <- matrix(c(
+    0, -0.3, 0.2, 0.5,
+    0, -0.1, 0.4, 0.8
+  ), nrow = 2, byrow = TRUE)
+  criterion <- c(1L, 2L, 1L, 2L, 1L)
+  pcm <- mfrmr:::mfrm_jmle_probability_bundle(
+    eta, score_k, "PCM", step_pcm, criterion_idx = criterion
+  )
+  expect_equal(
+    pcm$probs,
+    mfrmr:::category_prob_pcm(eta, step_pcm, criterion),
+    tolerance = 1e-14
+  )
+  expect_equal(
+    sum(pcm$log_prob_obs),
+    mfrmr:::loglik_pcm(eta, score_k, step_pcm, criterion),
+    tolerance = 1e-14
+  )
+
+  slopes <- c(0.8, 1.25)
+  gpcm <- mfrmr:::mfrm_jmle_probability_bundle(
+    eta, score_k, "GPCM", step_pcm,
+    criterion_idx = criterion,
+    slopes = slopes,
+    slope_idx = criterion
+  )
+  expect_equal(
+    gpcm$probs,
+    mfrmr:::category_prob_gpcm(eta, step_pcm, criterion, slopes),
+    tolerance = 1e-14
+  )
+  expect_equal(
+    sum(gpcm$log_prob_obs),
+    mfrmr:::loglik_gpcm(eta, score_k, step_pcm, criterion, slopes),
+    tolerance = 1e-14
+  )
+})
+
 test_that("RSM probabilities and log-likelihood reduce to common-threshold PCM", {
   step_cum <- c(0, -0.3, 0.2, 0.5)
   step_cum_mat <- matrix(rep(step_cum, times = 3L), nrow = 3L, byrow = TRUE)
@@ -959,6 +1010,45 @@ test_that("optimizer diagnostics distinguish converged, reviewable, and hard war
   expect_false(isTRUE(em_converged$ReviewableWarning))
 })
 
+test_that("optimizer selection supports automatic and explicit limited memory", {
+  small <- mfrmr:::resolve_mfrm_optimizer("auto", 50L)
+  large <- mfrmr:::resolve_mfrm_optimizer("auto", 500L)
+  mml <- mfrmr:::resolve_mfrm_optimizer(
+    "auto", 20L, prefer_limited_memory = TRUE
+  )
+  explicit <- mfrmr:::resolve_mfrm_optimizer("BFGS", 500L)
+
+  expect_identical(small$Used, "BFGS")
+  expect_identical(large$Used, "L-BFGS-B")
+  expect_identical(mml$Used, "L-BFGS-B")
+  expect_identical(explicit$Used, "BFGS")
+  expect_error(
+    mfrmr:::normalize_mfrm_optimizer("not-an-optimizer"),
+    "must be one of"
+  )
+})
+
+test_that("MML auto optimizer records shared probability workspace use", {
+  toy <- load_mfrmr_data("example_core")
+  fit <- suppressWarnings(suppressMessages(
+    fit_mfrm(
+      toy,
+      "Person", c("Rater", "Criterion"), "Score",
+      method = "MML",
+      quad_points = 5,
+      maxit = 10,
+      optimizer = "auto"
+    )
+  ))
+
+  expect_identical(fit$summary$OptimizerMethod[1], "L-BFGS-B")
+  expect_identical(fit$config$estimation_control$optimizer_requested, "auto")
+  expect_identical(fit$config$estimation_control$optimizer_used, "L-BFGS-B")
+  expect_gt(fit$opt$evaluation_cache$SharedEvaluations, 0L)
+  expect_gt(fit$opt$evaluation_cache$GradientBuilds, 0L)
+  expect_gte(fit$opt$evaluation_cache$GradientCacheHits, 1L)
+})
+
 test_that("MML engine planner falls back only for unsupported combinations", {
   supported <- mfrmr:::resolve_mml_engine_plan(
     method = "MML",
@@ -1026,7 +1116,7 @@ test_that("EM and hybrid MML engines are wired for RSM/PCM", {
   )
   expect_identical(fit_hybrid$summary$MMLEngineRequested[1], "hybrid")
   expect_identical(fit_hybrid$summary$MMLEngineUsed[1], "hybrid")
-  expect_identical(fit_hybrid$summary$OptimizerMethod[1], "BFGS")
+  expect_identical(fit_hybrid$summary$OptimizerMethod[1], "L-BFGS-B")
   expect_true(is.finite(fit_hybrid$summary$EMIterations[1]))
   expect_gte(fit_hybrid$summary$EMIterations[1], 1)
 })

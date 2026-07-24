@@ -96,6 +96,9 @@ infer_facets_mode_mapping <- function(dat, person = NULL, facets = NULL, score =
 #' @param maxit Maximum optimizer iterations.
 #' @param reltol Relative optimizer tolerance passed to [fit_mfrm()]. The
 #'   default is `1e-9`.
+#' @param optimizer Direct optimizer passed to [fit_mfrm()]. `"auto"` selects
+#'   L-BFGS-B for MML and JML fits with at least 200 free parameters, and BFGS
+#'   for smaller JML fits.
 #' @param mml_engine MML optimization engine passed to [fit_mfrm()]. Applies
 #'   only when `method = "MML"`.
 #' @param top_n_interactions Number of rows for interaction diagnostics.
@@ -209,10 +212,12 @@ run_mfrm_facets <- function(data,
                             quad_points = 15,
                             maxit = 400,
                             reltol = 1e-9,
+                            optimizer = c("auto", "BFGS", "L-BFGS-B"),
                             mml_engine = c("direct", "em", "hybrid"),
                             top_n_interactions = 20L) {
   model <- toupper(match.arg(model))
   method <- toupper(match.arg(method))
+  optimizer <- match.arg(optimizer)
   mml_engine <- tolower(match.arg(mml_engine))
 
   dat <- normalize_facets_mode_data(data)
@@ -245,6 +250,7 @@ run_mfrm_facets <- function(data,
     quad_points = as.integer(quad_points),
     maxit = as.integer(maxit),
     reltol = as.numeric(reltol),
+    optimizer = optimizer,
     mml_engine = mml_engine
   )
 
@@ -258,7 +264,7 @@ run_mfrm_facets <- function(data,
       "person", "score", "facets", "weight",
       "model", "method_input", "method_used", "step_facet", "noncenter_facet",
       "dummy_facets", "positive_facets", "keep_original", "quad_points",
-      "maxit", "reltol", "mml_engine", "top_n_interactions"
+      "maxit", "reltol", "optimizer", "mml_engine", "top_n_interactions"
     ),
     value = c(
       mapping$person,
@@ -276,6 +282,7 @@ run_mfrm_facets <- function(data,
       as.character(as.integer(quad_points)),
       as.character(as.integer(maxit)),
       as.character(as.numeric(reltol)),
+      optimizer,
       mml_engine,
       as.character(as.integer(top_n_interactions))
     ),

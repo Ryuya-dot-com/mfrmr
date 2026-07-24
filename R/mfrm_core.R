@@ -29,7 +29,7 @@ mfrm_cpp11_backend_available <- function() {
 }
 
 mfrm_use_cpp11_backend <- function(config, include_linear_part = FALSE) {
-  isTRUE(getOption("mfrmr.use_cpp11_backend", FALSE)) &&
+  isTRUE(getOption("mfrmr.use_cpp11_backend", TRUE)) &&
     mfrm_cpp11_backend_available() &&
     !isTRUE(include_linear_part) &&
     identical(config$model %in% c("RSM", "PCM"), TRUE)
@@ -1632,12 +1632,19 @@ mfrm_loglik_mml_cached <- function(cache, idx, config, quad) {
 }
 
 # Cached version of JMLE gradient (uses pre-computed params/eta/step_cum)
-mfrm_grad_jmle_cached <- function(cache, idx, config, sizes) {
-  mfrm_grad_jmle_core(cache$params(), cache$eta(), idx, config, sizes)
+mfrm_grad_jmle_cached <- function(cache, idx, config, sizes,
+                                  probability_bundle = NULL) {
+  mfrm_grad_jmle_core(
+    cache$params(), cache$eta(), idx, config, sizes,
+    probability_bundle = probability_bundle,
+    step_cum = cache$step_cum()
+  )
 }
 
 # Cached version of MML gradient (uses pre-computed params/base_eta/step_cum)
-mfrm_grad_mml_cached <- function(cache, idx, config, sizes, quad) {
+mfrm_grad_mml_cached <- function(cache, idx, config, sizes, quad,
+                                 logprob_bundle = NULL,
+                                 posterior_bundle = NULL) {
   mfrm_grad_mml_core(
     cache$params(),
     cache$base_eta(),
@@ -1645,7 +1652,9 @@ mfrm_grad_mml_cached <- function(cache, idx, config, sizes, quad) {
     config,
     sizes,
     quad,
-    step_cum = cache$step_cum()
+    step_cum = cache$step_cum(),
+    logprob_bundle = logprob_bundle,
+    posterior_bundle = posterior_bundle
   )
 }
 
@@ -1661,14 +1670,16 @@ mfrm_grad_jmle <- function(par, idx, config, sizes) {
   mfrm_grad_jmle_core(params, eta, idx, config, sizes)
 }
 
-mfrm_grad_jmle_core <- function(params, eta, idx, config, sizes) {
+mfrm_grad_jmle_core <- function(params, eta, idx, config, sizes,
+                                probability_bundle = NULL,
+                                step_cum = NULL) {
   n <- length(eta)
   score_k <- idx$score_k
   weight <- idx$weight
 
   if (config$model == "RSM") {
-    step_cum <- c(0, cumsum(params$steps))
-    probs <- category_prob_rsm(eta, step_cum)
+    step_cum <- step_cum %||% c(0, cumsum(params$steps))
+    probs <- probability_bundle$probs %||% category_prob_rsm(eta, step_cum)
     k_cat <- ncol(probs)
     n_steps <- k_cat - 1
 
@@ -1710,8 +1721,9 @@ mfrm_grad_jmle_core <- function(params, eta, idx, config, sizes) {
     grad_log_slope_free <- numeric(0)
 
   } else if (identical(config$model, "GPCM")) {
-    step_cum_mat <- t(apply(params$steps_mat, 1, function(x) c(0, cumsum(x))))
-    probs <- category_prob_gpcm(
+    step_cum_mat <- step_cum %||%
+      t(apply(params$steps_mat, 1, function(x) c(0, cumsum(x))))
+    probs <- probability_bundle$probs %||% category_prob_gpcm(
       eta = eta,
       step_cum_mat = step_cum_mat,
       criterion_idx = idx$step_idx,
@@ -1723,7 +1735,8 @@ mfrm_grad_jmle_core <- function(params, eta, idx, config, sizes) {
     n_criteria <- nrow(params$steps_mat)
     k_vals <- 0:(k_cat - 1)
     slope_obs <- params$slopes[idx$slope_idx]
-    linear_part <- outer(eta, k_vals) - step_cum_mat[idx$step_idx, , drop = FALSE]
+    linear_part <- probability_bundle$linear_part %||%
+      (outer(eta, k_vals) - step_cum_mat[idx$step_idx, , drop = FALSE])
 
     expected <- as.vector(probs %*% k_vals)
     residual <- slope_obs * (score_k - expected)
@@ -1768,9 +1781,11 @@ mfrm_grad_jmle_core <- function(params, eta, idx, config, sizes) {
     grad_log_slope_free <- project_sum_zero_gradient(grad_log_slope_exp)
   } else {
     # PCM
-    step_cum_mat <- t(apply(params$steps_mat, 1, function(x) c(0, cumsum(x))))
-    probs <- category_prob_pcm(eta, step_cum_mat, idx$step_idx,
-                               criterion_splits = idx$criterion_splits)
+    step_cum_mat <- step_cum %||%
+      t(apply(params$steps_mat, 1, function(x) c(0, cumsum(x))))
+    probs <- probability_bundle$probs %||%
+      category_prob_pcm(eta, step_cum_mat, idx$step_idx,
+                        criterion_splits = idx$criterion_splits)
     k_cat <- ncol(probs)
     n_steps <- k_cat - 1
     n_criteria <- nrow(params$steps_mat)
@@ -1864,7 +1879,10 @@ mfrm_grad_mml <- function(par, idx, config, sizes, quad) {
   mfrm_grad_mml_core(params, base_eta, idx, config, sizes, quad)
 }
 
-mfrm_grad_mml_core <- function(params, base_eta, idx, config, sizes, quad, step_cum = NULL) {
+mfrm_grad_mml_core <- function(params, base_eta, idx, config, sizes, quad,
+                               step_cum = NULL,
+                               logprob_bundle = NULL,
+                               posterior_bundle = NULL) {
   n <- length(idx$score_k)
   if (n == 0) return(rep(0, sum(unlist(sizes))))
   score_k <- idx$score_k
@@ -1882,17 +1900,20 @@ mfrm_grad_mml_core <- function(params, base_eta, idx, config, sizes, quad, step_
     sigma_pop <- NA_real_
     design_matrix <- NULL
   }
-  logprob_bundle <- mfrm_mml_logprob_bundle(
-    idx = idx,
-    config = config,
-    quad = quad,
-    params = params,
-    base_eta = base_eta,
-    step_cum = step_cum,
-    include_probs = TRUE,
-    include_linear_part = identical(config$model, "GPCM")
-  )
-  posterior_bundle <- mfrm_mml_posterior_bundle(logprob_bundle)
+  if (is.null(logprob_bundle)) {
+    logprob_bundle <- mfrm_mml_logprob_bundle(
+      idx = idx,
+      config = config,
+      quad = quad,
+      params = params,
+      base_eta = base_eta,
+      step_cum = step_cum,
+      include_probs = TRUE,
+      include_linear_part = identical(config$model, "GPCM")
+    )
+  }
+  posterior_bundle <- posterior_bundle %||%
+    mfrm_mml_posterior_bundle(logprob_bundle)
   person_bundle <- posterior_bundle$person_bundle
   posterior <- person_bundle$posterior
   obs_posterior <- posterior_bundle$obs_posterior
@@ -2518,8 +2539,7 @@ build_initial_param_vector <- function(config, sizes) {
 }
 
 # Parameter cache shared between fn and gr to avoid redundant expand_params /
-# compute_eta calls within the same optim iteration (BFGS calls fn then gr
-# with identical par).
+# compute_eta calls when optim requests both at an identical parameter vector.
 make_param_cache <- function(sizes, config, idx, is_mml = FALSE) {
   cached_par <- NULL
   cached_params <- NULL
@@ -3037,6 +3057,7 @@ mfrm_estimate <- function(data, person_col, facet_cols, score_col,
                           positive_facets = character(0),
                           population = NULL,
                           quad_points = 15, maxit = 400, reltol = 1e-9,
+                          optimizer = "auto",
                           mml_engine = "direct",
                           checkpoint = NULL) {
   # Stage 1: Normalize model options and input data.
@@ -3114,6 +3135,7 @@ mfrm_estimate <- function(data, person_col, facet_cols, score_col,
     maxit = as.integer(maxit),
     reltol = as.numeric(reltol),
     quad_points = as.integer(quad_points),
+    optimizer_requested = normalize_mfrm_optimizer(optimizer),
     mml_engine_requested = normalize_mml_engine(mml_engine),
     checkpoint = checkpoint
   )
@@ -3130,7 +3152,11 @@ mfrm_estimate <- function(data, person_col, facet_cols, score_col,
     quad_points = quad_points,
     maxit = maxit,
     reltol = reltol,
+    optimizer = config$estimation_control$optimizer_requested,
     checkpoint = config$estimation_control$checkpoint
+  )
+  config$estimation_control$optimizer_used <- as.character(
+    opt$optimizer_plan$Used %||% opt$optimizer_diagnostics$OptimizerMethod %||% NA_character_
   )
   config$estimation_control$mml_engine_used <- as.character(opt$mml_engine$Used %||% NA_character_)
   config$estimation_control$mml_engine_detail <- as.character(opt$mml_engine$Detail %||% NA_character_)

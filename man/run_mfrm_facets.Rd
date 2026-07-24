@@ -23,6 +23,7 @@ run_mfrm_facets(
   quad_points = 15,
   maxit = 400,
   reltol = 1e-09,
+  optimizer = c("auto", "BFGS", "L-BFGS-B"),
   mml_engine = c("direct", "em", "hybrid"),
   top_n_interactions = 20L
 )
@@ -85,6 +86,10 @@ columns after person/score/weight mapping.}
 
 \item{reltol}{Relative optimizer tolerance passed to \code{\link[=fit_mfrm]{fit_mfrm()}}. The
 default is \code{1e-9}.}
+
+\item{optimizer}{Direct optimizer passed to \code{\link[=fit_mfrm]{fit_mfrm()}}. \code{"auto"} selects
+L-BFGS-B for MML and JML fits with at least 200 free parameters, and BFGS
+for smaller JML fits.}
 
 \item{mml_engine}{MML optimization engine passed to \code{\link[=fit_mfrm]{fit_mfrm()}}. Applies
 only when \code{method = "MML"}.}

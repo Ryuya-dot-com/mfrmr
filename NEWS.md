@@ -5,6 +5,25 @@
   reports design balance, coverage, connectivity, and readiness without
   implying Monte Carlo performance or arbitrary-facet simulation support.
 
+## Estimation performance
+
+- `fit_mfrm()` now shares likelihood and analytical-gradient work at an
+  identical parameter vector. MML direct and EM paths reuse quadrature
+  probabilities and posterior quantities, while JML reuses category
+  probabilities and stable observed log probabilities.
+- The compiled cpp11 probability kernels are now the default for supported
+  RSM/PCM MML work, with automatic pure-R fallback. Set
+  `options(mfrmr.use_cpp11_backend = FALSE)` for an explicit reference-path
+  comparison; GPCM continues to use its validated R kernel.
+- `optimizer = "auto"` selects limited-memory L-BFGS-B for MML and for large
+  JML parameter vectors; `"BFGS"` and `"L-BFGS-B"` remain explicit choices.
+  The requested and actual methods are recorded for summaries, exports, and
+  replay. Existing `reltol` semantics are mapped to the corresponding
+  L-BFGS-B controls.
+- Per-fit workspaces are local to one optimization and are discarded with the
+  fit evaluator. They are not global, are not shared across parallel fits,
+  and are not stored as large probability arrays in the returned fit object.
+
 ## Summary workflow
 
 - `summary(fit)` now supports `profile = "fit"`, `"facets"`, and
@@ -342,9 +361,9 @@
   `plot(fit)` showing the Wright map, and `keep_original = FALSE`.
 - Users upgrading directly from 0.1.5 should note that these defaults were
   introduced in 0.1.6.
-- An optional cpp11 MML backend is available for RSM and PCM through
-  `options(mfrmr.use_cpp11_backend = TRUE)`; the pure-R path remains the
-  default in this version.
+- The cpp11 MML backend is used by default for supported RSM and PCM work;
+  `options(mfrmr.use_cpp11_backend = FALSE)` selects the pure-R reference
+  path. Unsupported kernels fall back automatically.
 
 ## 0.1.6
 

@@ -104,8 +104,14 @@
 #' @param reltol Relative optimizer tolerance. The default, `1e-9`, is tighter
 #'   than the terminal-gradient review threshold so that routine optimizer
 #'   stopping and the package's post-fit convergence review are aligned.
+#' @param optimizer Direct-optimization method. `"auto"` (default) uses the
+#'   limited-memory `"L-BFGS-B"` method for MML and for larger JML parameter
+#'   vectors (at least 200 free parameters), while retaining BFGS for smaller
+#'   JML fits. Use `"BFGS"` or `"L-BFGS-B"` to request one method explicitly.
+#'   The method actually used is recorded in `fit$summary$OptimizerMethod`.
 #' @param mml_engine MML optimization engine for `method = "MML"`:
-#'   `"direct"` (default) uses direct BFGS on the marginal log-likelihood,
+#'   `"direct"` (default) uses the selected direct optimizer on the marginal
+#'   log-likelihood,
 #'   `"em"` uses an EM loop for `RSM` / `PCM` with `population = NULL`, and
 #'   `"hybrid"` uses EM as a warm start before the direct optimizer. Unsupported
 #'   combinations currently fall back to `"direct"` and record that fallback in
@@ -757,6 +763,7 @@ fit_mfrm <- function(data,
                      quad_points = 31,
                      maxit = 400,
                      reltol = 1e-9,
+                     optimizer = c("auto", "BFGS", "L-BFGS-B"),
                      mml_engine = c("direct", "em", "hybrid"),
                      population_formula = NULL,
                      person_data = NULL,
@@ -836,6 +843,7 @@ fit_mfrm <- function(data,
   model <- toupper(match.arg(model))
   method_input <- toupper(match.arg(method))
   method <- ifelse(method_input == "JML", "JMLE", method_input)
+  optimizer <- normalize_mfrm_optimizer(match.arg(optimizer))
   mml_engine <- tolower(match.arg(mml_engine))
   interaction_policy <- tolower(match.arg(interaction_policy))
   anchor_policy <- tolower(match.arg(anchor_policy))
@@ -941,6 +949,7 @@ fit_mfrm <- function(data,
     quad_points = quad_points,
     maxit = maxit,
     reltol = reltol,
+    optimizer = optimizer,
     mml_engine = mml_engine,
     checkpoint = checkpoint
   )
@@ -1012,6 +1021,7 @@ fit_mfrm <- function(data,
     quad_points = as.integer(quad_points),
     maxit = as.integer(maxit),
     reltol = as.numeric(reltol),
+    optimizer = as.character(optimizer),
     mml_engine = as.character(mml_engine),
     population_formula = population_formula,
     person_id = if (is.null(person_id)) NULL else as.character(person_id),
