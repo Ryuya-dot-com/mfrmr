@@ -101,9 +101,9 @@ links, monitoring drift, and screening differential facet functioning
 
 - [`analyze_dff()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_dff.md):
 
-  Screens differential facet functioning with residual or refit methods,
-  using screening-only language unless linking and precision support
-  stronger interpretation.
+  Screens differential facet functioning with residual or refit methods.
+  Linked refit point contrasts remain screening-only because their
+  uncertainty is conditional on baseline anchors.
 
 ## Practical linking rules
 
@@ -116,8 +116,8 @@ links, monitoring drift, and screening differential facet functioning
   contrast. A generic "DIF exists" statement is not interpretable in a
   many-facet design.
 
-- Residual-method DFF classifications are screening labels. ETS A/B/C
-  labels require refit output whose `ClassificationSystem` is `"ETS"`.
+- Residual and refit DFF classifications are screening labels in 0.2.2;
+  current refit output does not assign ETS A/B/C labels.
 
 - Treat drift flags as prompts for review, not automatic evidence that
   an anchor must be removed.

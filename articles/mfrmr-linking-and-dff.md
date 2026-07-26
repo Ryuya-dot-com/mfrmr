@@ -147,14 +147,11 @@ dff_refit <- analyze_dff(
 )
 
 dff_refit$summary
-#> # A tibble: 5 × 2
+#> # A tibble: 2 × 2
 #>   Classification                      Count
 #>   <chr>                               <int>
-#> 1 A (Negligible)                          0
-#> 2 B (Moderate)                            0
-#> 3 C (Large)                               0
-#> 4 Linked contrast (screening only)        0
-#> 5 Unclassified (insufficient linking)     4
+#> 1 Linked contrast (screening only)        0
+#> 2 Unclassified (insufficient linking)     4
 head(
   dff_refit$dif_table[, c("Level", "Group1", "Group2", "Classification", "ContrastComparable")],
   8

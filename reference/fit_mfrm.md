@@ -425,6 +425,11 @@ An object of class `mfrm_fit` (named list) with:
 ## Details
 
 Data must be in **long format** (one row per observed rating event).
+Exact duplicate Person-by-facet combinations are retained, warned once,
+and propagated as a Data review state. They are not treated as
+independent replication evidence. A legitimate re-rating or replicated
+scoring event should be represented by an event, occasion, or other
+distinguishing facet before fitting.
 
 ## Model
 
@@ -448,6 +453,11 @@ With `model = "RSM"`, thresholds \\\tau_k\\ are shared across all levels
 of all facets. With `model = "PCM"`, each level of `step_facet` receives
 its own threshold vector \\\tau\_{i,k}\\ on the package's shared
 observed score scale.
+
+One response-model family is used per `fit_mfrm()` call. The current
+public interface does not combine binary, RSM, PCM, or GPCM observations
+in one fit, define multiple independent rating scales, or accept general
+threshold/scale anchors and fixed-calibration starting values.
 
 With bounded `model = "GPCM"`, the adjacent-category kernel is
 multiplied by a positive slope for the designated slope-facet level:

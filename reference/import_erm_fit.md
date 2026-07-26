@@ -2,7 +2,11 @@
 
 Extracts item / person parameters from an
 [`eRm::PCM()`](https://rdrr.io/pkg/eRm/man/PCM.html) /
-[`eRm::RM()`](https://rdrr.io/pkg/eRm/man/RM.html) fit. Same caveats as
+[`eRm::RM()`](https://rdrr.io/pkg/eRm/man/RM.html) fit. Current `eRm`
+person tables use `Person Parameter` and `Std.Error`; historical `theta`
+/ `thetapar` estimate labels are also accepted. Unknown or internally
+misaligned person-table schemas stop with an explicit error rather than
+silently recycling rows. Same caveats as
 [`import_mirt_fit()`](https://ryuya-dot-com.github.io/mfrmr/reference/import_mirt_fit.md).
 
 ## Usage

@@ -8,6 +8,12 @@ two systems. Bounded `GPCM` can be fit in `mfrmr`, but its slope-aware
 score semantics are intentionally outside the score-side FACETS
 output-contract route.
 
+The software reference target for this migration boundary is FACETS
+64-bit 4.5.1 (July 2026). A cited manual may retain its published 4.5.0
+edition; software version and documentation edition are recorded
+separately. The coverage described here is not an external
+numerical-parity result.
+
 ## Mental model
 
 The two stacks share the same psychometric framework but differ in
@@ -22,14 +28,20 @@ facets_feature_coverage()
 facets_feature_coverage("not_implemented")
 ```
 
+This matrix describes the availability of package-native output
+surfaces. `implemented` does not by itself mean that the two programs
+use the same estimand, conditioning, extreme-score rule, degrees of
+freedom, or numerical contract.
+
 | Concept | FACETS (Linacre 2026) | mfrmr |
 |----|----|----|
 | Input | Specification file plus data file | `data.frame` in long format |
 | Estimation | JMLE by default | `MML` by default; `JML` is the closest estimation route for a JMLE-oriented comparison |
 | Fit-statistic basis | Residuals at JMLE estimates | Residuals at EAP person measures under `MML` (shrunken toward the mean); refit with `method = "JML"` for a JMLE-style residual basis |
-| Models | Rating-scale, partial-credit, polytomous step models | `RSM`, `PCM`, bounded `GPCM` |
+| Models | Multiple model statements, rating scales, partial credit, and other response families can coexist | One response-model family per fit: `RSM`, `PCM`, or bounded `GPCM` |
 | Output | Tables 0-30 plus graphic files | Returned R objects with [`summary()`](https://rdrr.io/r/base/summary.html) and [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods |
-| Anchoring | `D=`, `A=` fields in the specification | `anchors` and `group_anchors` arguments to [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md) |
+| Anchoring | Element/group anchors, rating-scale calibration, and reusable starting values | Element and group anchors; no general threshold/scale anchors or fixed-calibration starting-value bundle |
+| Repeated cells | Multiple observations may be represented within a design cell | Exact Person-by-facet duplicates are retained but force Data review; distinguish legitimate repeats with an event/occasion facet |
 | Bias / interaction | Table 14 | [`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md) and [`bias_interaction_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/bias_interaction_report.md) |
 | Wright map / variable map | Graphic variable-map output | `plot(fit, type = "wright")` and [`plot_wright_unified()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_wright_unified.md) |
 | Fair average | Table 7 fair-M average | [`fair_average_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/fair_average_table.md) |

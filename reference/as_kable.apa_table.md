@@ -3,10 +3,9 @@
 Renders the table data for direct inclusion in RMarkdown, Quarto, or
 HTML reports, wiring the `caption` and `note` slots into the standard
 APA placement (caption above, note below). When `kableExtra` is
-installed the note is attached as a footer; otherwise the note is
-appended as a
-[`knitr::asis_output()`](https://rdrr.io/pkg/knitr/man/asis_output.html)
-block.
+installed the note is attached as a footer for HTML or LaTeX. Otherwise
+the complete rendered table is collapsed to one `knitr_kable` string
+before a single note is appended.
 
 ## Usage
 

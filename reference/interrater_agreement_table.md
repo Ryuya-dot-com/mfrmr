@@ -70,7 +70,14 @@ A named list with:
 This helper computes pairwise rater agreement on matched contexts and
 returns both a pair-level table and a one-row summary. The output is
 package-native and does not require knowledge of legacy report
-numbering.
+numbering. When fitted category probabilities are available, expected
+exact agreement for a matched context is the model-implied quantity
+\\\sum_k P\_{r1}(X=k)P\_{r2}(X=k)\\. It is not a marginal-frequency
+chance agreement statistic. Observed exact agreement uses equality of
+the package's observed score categories. The current function does not
+translate category positions across multiple independent scales, apply
+an agreement-based SE inflation, or establish numerical equivalence with
+FACETS Table 7.
 
 ## Interpreting output
 
@@ -111,7 +118,9 @@ The `pairs` data.frame contains:
 
 - ExpectedExact:
 
-  Expected exact agreement under chance.
+  Model-implied expected exact agreement from the two raters' fitted
+  category-probability vectors. `NA` when those probabilities are
+  unavailable.
 
 - Adjacent:
 

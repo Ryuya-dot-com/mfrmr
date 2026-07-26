@@ -6,6 +6,11 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Migrating from FACETS to mfrmr • mfrmr</title>
+<!-- favicons --><link rel="icon" type="image/png" sizes="96x96" href="../favicon-96x96.png">
+<link rel="icon" type="”image/svg+xml”" href="../favicon.svg">
+<link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
+<link rel="icon" sizes="any" href="../favicon.ico">
+<link rel="manifest" href="../site.webmanifest">
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
@@ -61,8 +66,7 @@
 
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
-
-      <h1>Migrating from FACETS to mfrmr</h1>
+      <img src="../logo.png" class="logo" alt=""><h1>Migrating from FACETS to mfrmr</h1>
             
       
       <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/main/vignettes/mfrmr-facets-migration.Rmd" class="external-link"><code>vignettes/mfrmr-facets-migration.Rmd</code></a></small>
@@ -79,6 +83,11 @@ tables, and reviewing the output-contract boundary between the two
 systems. Bounded <code>GPCM</code> can be fit in <code>mfrmr</code>, but
 its slope-aware score semantics are intentionally outside the score-side
 FACETS output-contract route.</p>
+<p>The software reference target for this migration boundary is FACETS
+64-bit 4.5.1 (July 2026). A cited manual may retain its published 4.5.0
+edition; software version and documentation edition are recorded
+separately. The coverage described here is not an external
+numerical-parity result.</p>
 <div class="section level2">
 <h2 id="mental-model">Mental model<a class="anchor" aria-label="anchor" href="#mental-model"></a>
 </h2>
@@ -89,6 +98,10 @@ coverage boundary:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/facets_feature_coverage.html">facets_feature_coverage</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/facets_feature_coverage.html">facets_feature_coverage</a></span><span class="op">(</span><span class="st">"not_implemented"</span><span class="op">)</span></span></code></pre></div>
+<p>This matrix describes the availability of package-native output
+surfaces. <code>implemented</code> does not by itself mean that the two
+programs use the same estimand, conditioning, extreme-score rule,
+degrees of freedom, or numerical contract.</p>
 <table class="table">
 <colgroup>
 <col width="33%">
@@ -123,9 +136,10 @@ JMLE-style residual basis</td>
 </tr>
 <tr class="even">
 <td>Models</td>
-<td>Rating-scale, partial-credit, polytomous step models</td>
-<td>
-<code>RSM</code>, <code>PCM</code>, bounded <code>GPCM</code>
+<td>Multiple model statements, rating scales, partial credit, and other
+response families can coexist</td>
+<td>One response-model family per fit: <code>RSM</code>,
+<code>PCM</code>, or bounded <code>GPCM</code>
 </td>
 </tr>
 <tr class="odd">
@@ -136,14 +150,18 @@ JMLE-style residual basis</td>
 </tr>
 <tr class="even">
 <td>Anchoring</td>
-<td>
-<code>D=</code>, <code>A=</code> fields in the specification</td>
-<td>
-<code>anchors</code> and <code>group_anchors</code> arguments to
-<code><a href="../reference/fit_mfrm.html">fit_mfrm()</a></code>
-</td>
+<td>Element/group anchors, rating-scale calibration, and reusable
+starting values</td>
+<td>Element and group anchors; no general threshold/scale anchors or
+fixed-calibration starting-value bundle</td>
 </tr>
 <tr class="odd">
+<td>Repeated cells</td>
+<td>Multiple observations may be represented within a design cell</td>
+<td>Exact Person-by-facet duplicates are retained but force Data review;
+distinguish legitimate repeats with an event/occasion facet</td>
+</tr>
+<tr class="even">
 <td>Bias / interaction</td>
 <td>Table 14</td>
 <td>
@@ -151,7 +169,7 @@ JMLE-style residual basis</td>
 <code><a href="../reference/bias_interaction_report.html">bias_interaction_report()</a></code>
 </td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>Wright map / variable map</td>
 <td>Graphic variable-map output</td>
 <td>
@@ -159,12 +177,12 @@ JMLE-style residual basis</td>
 <code><a href="../reference/plot_wright_unified.html">plot_wright_unified()</a></code>
 </td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>Fair average</td>
 <td>Table 7 fair-M average</td>
 <td><code><a href="../reference/fair_average_table.html">fair_average_table()</a></code></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>Reproducibility</td>
 <td>Specification, input data, FACETS version, and recorded run
 environment/settings</td>

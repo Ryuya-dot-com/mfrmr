@@ -152,10 +152,15 @@ observed-category probability, GPCM slope fields, and native structural
 delta-method expected-score uncertainty and/or score-side delta-method
 SEs when the required MML diagnostics are available. Use
 `score_se_method` to choose `"both"` (default), `"native"`,
-`"score_side"`, or `"none"`. The scorefile also carries explicit
-score-side caveat columns. It is not a FACETS score-side equivalence
-file, does not export FACETS-equivalent score-side standard errors, and
-does not establish an operational score-scale decision. Use
+`"score_side"`, or `"none"`. The score-side route transforms a
+logit-side standard error with the bounded GPCM expected-score
+derivative \\dE\[X\]/d\eta = \alpha Var(X)\\, where `ScoreSlope` is
+\\\alpha\\. `ScoreSideLogitSE` remains on the logit side; `ScoreSideSE`
+and its interval columns are on the expected-score scale. The scorefile
+also carries explicit score-side caveat columns. It is not a FACETS
+score-side equivalence file, does not export FACETS-equivalent
+score-side standard errors, and does not establish an operational
+score-scale decision. Use
 [`gpcm_score_side_contract()`](https://ryuya-dot-com.github.io/mfrmr/reference/gpcm_score_side_contract.md)
 and
 [`gpcm_capability_matrix()`](https://ryuya-dot-com.github.io/mfrmr/reference/gpcm_capability_matrix.md)

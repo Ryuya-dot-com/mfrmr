@@ -99,9 +99,15 @@ The `summary` table aggregates results across pairs:
 
 - `Rows`: number of interaction cells estimated
 
-- `Significant`: count of cells with \\\|t\| \ge 2\\
+- `ScreenPositive`: count of cells with \\\|t\| \ge 2\\
+
+- `Significant`: backward-compatible alias for `ScreenPositive`
 
 - `MeanAbsBias`: average absolute bias magnitude (logits)
+
+- `FormalInferenceEligible` / `PrimaryReportingEligible`: always
+  `FALSE`; these conditional plug-in interaction statistics are
+  screening evidence
 
 Per-pair failures (e.g., insufficient data for a sparse pair) are
 captured in `errors` rather than stopping the entire batch.
@@ -155,6 +161,6 @@ fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "MML", quad_points = 7, maxit = 30)
 diag <- diagnose_mfrm(fit, residual_pca = "none", diagnostic_mode = "both")
 bias_all <- estimate_all_bias(fit, diagnostics = diag)
-bias_all$summary[, c("Interaction", "Rows", "Significant")]
+bias_all$summary[, c("Interaction", "Rows", "ScreenPositive")]
 } # }
 ```

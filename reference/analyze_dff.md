@@ -97,7 +97,7 @@ with:
 
 - `cell_table`: (residual method) per-cell detail table.
 
-- `summary`: counts by screening or ETS classification.
+- `summary`: counts by method-appropriate screening classification.
 
 - `group_fits`: (refit method) per-group facet estimates.
 
@@ -134,28 +134,25 @@ screening procedure rather than an ETS-style classifier.
 **Refit method** (`method = "refit"`): Subsets the data by group, refits
 the MFRM model within each subset, anchors all non-target facets back to
 the baseline calibration when possible, and compares the resulting
-facet-level estimates using a Welch t-statistic: \$\$t =
-\frac{\hat{\delta}\_1 - \hat{\delta}\_2} {\sqrt{SE_1^2 + SE_2^2}}\$\$
-This provides group-specific parameter estimates on a common scale when
-linking anchors are available, but is slower and may encounter
-convergence issues with small subsets. ETS categories are reported only
-for contrasts whose subgroup calibrations retained enough linking
-anchors to support a common-scale interpretation and whose subgroup
-precision remained on the package's model-based MML path.
+facet-level estimates. When linking, convergence, model-based MML
+precision, and sparsity screens all pass, a conditional plug-in Welch
+statistic is also shown: \$\$t = \frac{\hat{\delta}\_1 -
+\hat{\delta}\_2} {\sqrt{SE_1^2 + SE_2^2}}\$\$ This provides
+group-specific point estimates on a common scale when linking anchors
+are available. However, the plug-in standard error conditions on the
+baseline anchors and omits baseline-anchor uncertainty and cross-refit
+covariance. Refit statistics therefore remain screening evidence and set
+`FormalInferenceEligible`, `SupportsFormalInference`,
+`PrimaryReportingEligible`, and `ETS_Eligible` to `FALSE`.
 
 When `facet` refers to an item-like facet (for example `Criterion`),
 this recovers the familiar DIF case. When `facet` refers to raters or
 prompts/tasks, the same machinery supports DRF/DPF-style analyses.
 
-For the refit method only, effect size is classified following the ETS
-(Educational Testing Service) DIF guidelines when subgroup calibrations
-are both linked and eligible for model-based inference:
-
-- **A (Negligible)**: \\\|\Delta\| \<\\ 0.43 logits
-
-- **B (Moderate)**: 0.43 \\\le \|\Delta\| \<\\ 0.64 logits
-
-- **C (Large)**: \\\|\Delta\| \ge\\ 0.64 logits
+Refit contrasts are not assigned ETS A/B/C labels. Even when subgroup
+point estimates share a linked logit scale, a validated joint,
+bootstrap, or replicate covariance contract is required before formal
+refit inference.
 
 Multiple comparisons are adjusted using Holm's step-down procedure by
 default, which controls the family-wise error rate without assuming
@@ -184,9 +181,8 @@ differential-functioning detection).
 - `$cell_table`: (residual method only) per-cell detail with N,
   ObsScore, ExpScore, ObsExpAvg, StdResidual.
 
-- `$summary`: counts by screening result (`method = "residual"`) or ETS
-  category plus linked-screening and insufficient-linking rows
-  (`method = "refit"`).
+- `$summary`: counts by screening result (`method = "residual"`) or
+  linked- screening and insufficient-linking rows (`method = "refit"`).
 
 - `$group_fits`: (refit method only) list of per-group facet estimates
   and subgroup linking diagnostics.
@@ -200,7 +196,7 @@ For bounded `GPCM`, DFF/DIF rows are available as slope-aware screening
 evidence over the fitted expected-score and residual scale. Keep
 residual-method contrasts and interaction cells in screening language.
 Refit contrasts require explicit subgroup linking and precision support
-before stronger subgroup-comparison language is used.
+for conditional screening, but remain in screening language.
 
 ## Typical workflow
 
@@ -261,8 +257,9 @@ head(dff$dif_table[, c("Level", "Group1", "Group2", "Contrast",
 dff_refit <- analyze_dff(fit, diag, facet = "Rater", group = "Group",
                          data = toy, method = "refit")
 unique(dff_refit$dif_table$ClassificationSystem)
-# Look for: "ETS" only when subgroup calibration, linking, and precision
-#   checks all support a common-scale model-based contrast.
+# Look for: "descriptive". Linked refit contrasts remain screening-only
+#   because their plug-in uncertainty omits anchor uncertainty and
+#   cross-refit covariance.
 sc <- subset_connectivity_report(fit, diagnostics = diag)
 plot(sc, type = "design_matrix", draw = FALSE)
 if ("ScaleLinkStatus" %in% names(dff_refit$dif_table)) {

@@ -602,7 +602,7 @@ and compatibility helpers.
   : Print APA narrative text with preserved line breaks
 
 - [`q3_statistic()`](https://ryuya-dot-com.github.io/mfrmr/reference/q3_statistic.md)
-  : Yen-style Q3 local-dependence statistic between facet levels
+  : mfrmr standardized/aggregated-residual Q3-style screen
 
 - [`recode_missing_codes()`](https://ryuya-dot-com.github.io/mfrmr/reference/recode_missing_codes.md)
   :

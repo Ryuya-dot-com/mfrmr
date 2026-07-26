@@ -26,7 +26,7 @@ summary(object, digits = 3, top_n = 10, p_cut = 0.05, ...)
 
 - p_cut:
 
-  Significance cutoff used for counting flagged rows.
+  Tail-area cutoff used for counting screen-positive rows.
 
 - ...:
 
@@ -53,7 +53,7 @@ This method returns a compact interaction-bias summary:
 
 - interaction facets/order and analyzed cell counts
 
-- effect-size profile (`|bias|` mean/max, significant cell count)
+- effect-size profile (`|bias|` mean/max, screen-positive cell count)
 
 - fixed-effect chi-square block
 

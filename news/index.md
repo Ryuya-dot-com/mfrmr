@@ -2,6 +2,60 @@
 
 ## mfrmr 0.2.2
 
+- Corrected bounded-GPCM score-side delta-method uncertainty to use the
+  expected-score derivative `ScoreSlope * Var`. `ScoreSideLogitSE`
+  remains the logit-side component SE, while `ScoreSideSE` and its
+  interval columns now apply `ScoreSlope * Var * ScoreSideLogitSE` on
+  the expected-score scale.
+
+- Refit DFF/DIF contrasts are now explicitly exploratory:
+  separate-subgroup plug-in standard errors are labeled as conditional
+  on baseline anchors and as omitting baseline-anchor uncertainty and
+  cross-refit covariance. Refit rows no longer receive ETS A/B/C,
+  formal-inference, or primary-reporting eligibility.
+
+- Bias summaries and multi-pair bias collections now use
+  `ScreenPositive` as the primary label and expose explicit
+  screening-only eligibility metadata. Historical `Significant` names
+  remain as compatibility aliases.
+
+- [`import_erm_fit()`](https://ryuya-dot-com.github.io/mfrmr/reference/import_erm_fit.md)
+  now reads the current `eRm` `Person Parameter` / `Std.Error` schema as
+  well as historical estimate labels, preserves usable person IDs, and
+  rejects ambiguous or misaligned schemas instead of silently returning
+  empty or recycled person rows.
+
+- [`q3_statistic()`](https://ryuya-dot-com.github.io/mfrmr/reference/q3_statistic.md)
+  and its print method now identify the result as mfrmr’s standardized,
+  Person-by-level aggregated-residual Q3-style screen. Legacy `YenFlag`
+  names remain for compatibility, while fixed 0.20/0.30 rules are
+  explicitly described as uncalibrated heuristics rather than
+  raw-residual Yen Q3 critical values.
+
+- `as_kable.apa_table(format = "pipe")` now appends an APA note once
+  after the complete Markdown table. Previously the vectorized append
+  could repeat the same note after every rendered table line.
+
+- Added the package hex sticker to the README and pkgdown-standard
+  `man/figures/logo.png` location, while retaining the editable SVG
+  source.
+
+- Tightened the FACETS positioning contract against the current 64-bit
+  4.5.1 software target: coverage rows describe package-native surfaces,
+  not external numerical equivalence, and mixed models, multiple scales,
+  threshold anchoring, and fixed-calibration scoring remain outside
+  0.2.2.
+
+- Corrected the
+  [`interrater_agreement_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/interrater_agreement_table.md)
+  documentation: `ExpectedExact` is computed from fitted
+  category-probability vectors, not marginal-frequency chance agreement.
+  A focused regression test now guards that definition.
+
+- Clarified that exact Person-by-facet duplicate rows are retained but
+  place Data readiness under review; legitimate repeated ratings should
+  carry a distinguishing event or occasion facet.
+
 - Design, signal-detection, and population-prediction summaries now
   expose a deterministic named-facet review as
   `structural_design_review`. The review reports design balance,

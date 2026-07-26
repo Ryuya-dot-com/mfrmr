@@ -2,8 +2,8 @@
 
 Produces APA-style narrative text interpreting the results of a
 differential- functioning analysis or interaction table. For
-`method = "refit"`, the report summarises the number of facet levels
-classified as negligible (A), moderate (B), and large (C). For
+`method = "refit"`, the report summarises linked screening contrasts and
+whether conditional plug-in uncertainty was available. For
 `method = "residual"`, it summarises screening-positive results, lists
 the specific levels and their direction, and includes a caveat about the
 distinction between construct-relevant variation and measurement bias.
@@ -42,13 +42,13 @@ based on the pairwise differential-functioning contrasts in
 `$dif_table`. When it is an `mfrm_dif_interaction` object, the report
 uses the cell-level statistics and flags from `$table`.
 
-For `method = "refit"`, ETS-style magnitude labels are used only when
-subgroup calibrations were successfully linked back to a common baseline
-scale; otherwise the report labels those contrasts as unclassified
-because the refit difference is descriptive rather than comparable on a
-linked logit scale. For `method = "residual"`, the report describes
-screening-positive versus screening-negative contrasts instead of
-applying ETS labels.
+Refit differences are descriptive on a linked logit scale when subgroup
+calibrations retain the required anchors. Their separate-subgroup
+plug-in standard errors condition on those anchors and omit
+baseline-anchor uncertainty and cross-refit covariance, so the report
+does not assign ETS labels or present refit rows as formal inference.
+The residual method also uses screening-positive versus
+screening-negative language.
 
 ## Interpreting output
 
@@ -56,8 +56,8 @@ applying ETS labels.
 
 - `$counts`: named integer vector of method-appropriate counts.
 
-- `$large_dif`: tibble of large ETS results (`method = "refit"`) or
-  screening-positive contrasts/cells (`method = "residual"`).
+- `$large_dif`: an empty compatibility table for current refit output,
+  or screening-positive contrasts/cells (`method = "residual"`).
 
 - `$gpcm_boundary`: for bounded `GPCM` inputs, a capability-boundary
   table marking the narrative as caveated DFF screening output.

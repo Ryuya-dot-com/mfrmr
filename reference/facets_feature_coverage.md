@@ -2,6 +2,9 @@
 
 `facets_feature_coverage()` summarizes how `mfrmr` maps the main FACETS
 output-table, output-file, and graph-menu surface to package functions.
+It is a surface-coverage guide, not a statement that estimands,
+conditioning, extreme-score handling, degrees of freedom, or numerical
+results are equivalent.
 
 Use this helper before migration work when you need a public,
 user-facing answer to three questions:
@@ -56,9 +59,16 @@ output Tables 1–14, DIF/bias plots, R/Web plots, output files, and
 graph-menu curves. `mfrmr` intentionally prioritizes structured R tables
 and reusable plot data over exact FACETS line-printer output.
 
+The current software reference target is FACETS 64-bit 4.5.1 (July
+2026). Bibliographic references retain the title and edition of the
+consulted manual rather than silently relabelling a 4.5.0 manual as
+4.5.1. External numerical validation is a separate evidence contract.
+
 Status meanings:
 
-- `implemented`: a package-native route covers the substantive output.
+- `implemented`: a package-native route covers the substantive output
+  surface; this status alone does not claim an externally matched
+  statistical contract.
 
 - `supported_with_caveat`: a package-native route exists, but the output
   must be read with explicit identification, validation, or scope
@@ -75,8 +85,9 @@ Status meanings:
 
 ## References
 
-Linacre, J. M. (2026). *A user's guide to FACETS, version 4.5.0*. Output
-tables - files - plots - graphs:
+Linacre, J. M. (2026). *A user's guide to FACETS, version 4.5.0*.
+Current FACETS software release: <https://www.winsteps.com/facets.htm>.
+Output tables - files - plots - graphs:
 <https://www.winsteps.com/facetman64/outputtableindex.htm>.
 
 ## See also
@@ -293,11 +304,11 @@ facets_feature_coverage()
 #> 6            implemented
 #> 7            implemented
 #> 8                partial
-#> 9            implemented
-#> 10           implemented
-#> 11           implemented
+#> 9  supported_with_caveat
+#> 10 supported_with_caveat
+#> 11 supported_with_caveat
 #> 12               partial
-#> 13           implemented
+#> 13 supported_with_caveat
 #> 14               partial
 #> 15           implemented
 #> 16           implemented
@@ -332,54 +343,54 @@ facets_feature_coverage()
 #> 45          not_targeted
 #> 46          not_targeted
 #> 47               partial
-#>                                                                                                                                        Capability
-#> 1                                                                                            Structured run settings and reproducibility context.
-#> 2                                                                          Rows, exclusions, missingness, score support, and response-pattern QC.
-#> 3                                                                                                    Convergence and replayed iteration evidence.
-#> 4                                                                                                       Case-level unexpected-response screening.
-#> 5                                                                                Facet coverage, category counts, and subset/connectivity checks.
-#> 6                                         Common-logit person/facet/threshold display with FACETS-style asterisk ruler or native SE/CI rendering.
-#> 7                                                                                              Disconnected subsets and facet-by-subset coverage.
-#> 8                                                                                                          Facet statistics and visual summaries.
-#> 9                                                                                         Measures, SEs, fit, anchoring status, and review flags.
-#> 10                                                                          Rasch/FACETS-style separation, reliability, and chi-square summaries.
-#> 11                               Observed/expected agreement, pairwise rater-network, rater-by-criterion halo network, and rater-agreement views.
-#> 12                                                                                           Two-category Rasch-category summaries are available.
-#> 13                                                                               Rating-scale/partial-credit category diagnostics and thresholds.
-#> 14                                                                                                   Category structure and transition summaries.
-#> 15                                                                                            Category probability and expected-score curve data.
-#> 16                                                                                            Bias recalibration path and final iteration status.
-#> 17                                                                                        Unexpected rows after the current bias-screening layer.
-#> 18                                                                                                         Response counts behind bias estimates.
-#> 19                                                                                        Distributional and visual bias summaries are available.
-#> 20                                                                                 Ranked cell-level bias/interactions with screening statistics.
-#> 21                                                                                                      Pairwise contrasts for two-way bias runs.
-#> 22                                                                                    R-native scatter, heatmap, and facet-profile bias displays.
-#> 23                                                                                                 Reusable plot data supports custom R graphics.
-#> 24                                                                                           Users can build X-Y plots from returned data frames.
-#> 25                                                                                                      No package-native Webpage plot generator.
-#> 26                                                                                             Selected 3D/surface-ready plot data are available.
-#> 27                                                                                      Several package outputs include histogram-like summaries.
-#> 28 Observed univariate G-study variance components plus D-study projections with residual-scaling sensitivity and `IdentificationStatus` columns.
-#> 29      Facet-level co-observation network plus rater agreement/disagreement/severity-direction and halo networks with reusable node/edge tables.
-#> 30                                                                                           R-native reproducibility manifest and replay script.
-#> 31                                                                                                  Reusable anchor tables from fitted estimates.
-#> 32                                                                                                         Graphfile-style category curve output.
-#> 33                                                                                                          Structured appendix/report artifacts.
-#> 34                              Standalone observation-level residual CSV/TSV output, residual tables, and residual visualizations are available.
-#> 35                                             Score-side export/import is available for documented Rasch-family routes covered by package tests.
-#> 36                                                                                        Simulation data and explicit simulation specifications.
-#> 37                                                              Connected-subset summary/node files and group-anchor inputs/checks are available.
-#> 38                                                                                                         No Winsteps control/data export route.
-#> 39                                                                                                     Category probability curve data and plots.
-#> 40                                                                                                              Expected-score curves over theta.
-#> 41                               Cumulative category-probability curve data, flipped direction data, and approximate .5 boundaries are available.
-#> 42                                                                                                 Design-weighted test/scale information curves.
-#> 43                      Category-specific information contributions, total information curves, and facet/level contribution curves are available.
-#> 44                                                                                Category probability curves conditional on theta are available.
-#> 45                                                                                                R function arguments are the package interface.
-#> 46                                                                                                     Selected fixed-width handoff is available.
-#> 47                                                                                                           Fit/score table import is supported.
+#>                                                                                                                                                            Capability
+#> 1                                                                                                                Structured run settings and reproducibility context.
+#> 2                                                                                              Rows, exclusions, missingness, score support, and response-pattern QC.
+#> 3                                                                                                                        Convergence and replayed iteration evidence.
+#> 4                                                                                                                           Case-level unexpected-response screening.
+#> 5                                                                                                    Facet coverage, category counts, and subset/connectivity checks.
+#> 6                                                             Common-logit person/facet/threshold display with FACETS-style asterisk ruler or native SE/CI rendering.
+#> 7                                                                                                                  Disconnected subsets and facet-by-subset coverage.
+#> 8                                                                                                                              Facet statistics and visual summaries.
+#> 9                                                                                                             Measures, SEs, fit, anchoring status, and review flags.
+#> 10                                                                                              Rasch/FACETS-style separation, reliability, and chi-square summaries.
+#> 11 Raw-category observed agreement and model-probability expected agreement, plus pairwise rater-network, rater-by-criterion halo network, and rater-agreement views.
+#> 12                                                                                                               Two-category Rasch-category summaries are available.
+#> 13                                     Core category diagnostics and thresholds for one RSM scale or one PCM step facet on the package's shared observed score scale.
+#> 14                                                                                                                       Category structure and transition summaries.
+#> 15                                                                                                                Category probability and expected-score curve data.
+#> 16                                                                                                                Bias recalibration path and final iteration status.
+#> 17                                                                                                            Unexpected rows after the current bias-screening layer.
+#> 18                                                                                                                             Response counts behind bias estimates.
+#> 19                                                                                                            Distributional and visual bias summaries are available.
+#> 20                                                                                                     Ranked cell-level bias/interactions with screening statistics.
+#> 21                                                                                                                          Pairwise contrasts for two-way bias runs.
+#> 22                                                                                                        R-native scatter, heatmap, and facet-profile bias displays.
+#> 23                                                                                                                     Reusable plot data supports custom R graphics.
+#> 24                                                                                                               Users can build X-Y plots from returned data frames.
+#> 25                                                                                                                          No package-native Webpage plot generator.
+#> 26                                                                                                                 Selected 3D/surface-ready plot data are available.
+#> 27                                                                                                          Several package outputs include histogram-like summaries.
+#> 28                     Observed univariate G-study variance components plus D-study projections with residual-scaling sensitivity and `IdentificationStatus` columns.
+#> 29                          Facet-level co-observation network plus rater agreement/disagreement/severity-direction and halo networks with reusable node/edge tables.
+#> 30                                                                                                               R-native reproducibility manifest and replay script.
+#> 31                                                                                                                      Reusable anchor tables from fitted estimates.
+#> 32                                                                                                                             Graphfile-style category curve output.
+#> 33                                                                                                                              Structured appendix/report artifacts.
+#> 34                                                  Standalone observation-level residual CSV/TSV output, residual tables, and residual visualizations are available.
+#> 35                                                                 Score-side export/import is available for documented Rasch-family routes covered by package tests.
+#> 36                                                                                                            Simulation data and explicit simulation specifications.
+#> 37                                                                                  Connected-subset summary/node files and group-anchor inputs/checks are available.
+#> 38                                                                                                                             No Winsteps control/data export route.
+#> 39                                                                                                                         Category probability curve data and plots.
+#> 40                                                                                                                                  Expected-score curves over theta.
+#> 41                                                   Cumulative category-probability curve data, flipped direction data, and approximate .5 boundaries are available.
+#> 42                                                                                                                     Design-weighted test/scale information curves.
+#> 43                                          Category-specific information contributions, total information curves, and facet/level contribution curves are available.
+#> 44                                                                                                    Category probability curves conditional on theta are available.
+#> 45                                                                                                                    R function arguments are the package interface.
+#> 46                                                                                                                         Selected fixed-width handoff is available.
+#> 47                                                                                                                               Fit/score table import is supported.
 #>                                                                                                                                                                                      Limitation
 #> 1                                                                                                                                                      Not an exact FACETS line-printer layout.
 #> 2                                                                                                                                                    Structured QC replaces FACETS text layout.
@@ -389,11 +400,11 @@ facets_feature_coverage()
 #> 6                                                       Visual correspondence does not establish numerical equivalence; compare output from a documented FACETS version under aligned settings.
 #> 7                                                                                                                                               Network-style graph is not the default display.
 #> 8                                                                                                                            FACETS M/S/Q/X printer-graph formatting is not reproduced exactly.
-#> 9                                                                                                                               FACETS column order/options are broader than the default table.
-#> 10                                                                                                                                                       Uses package-native structured output.
-#> 11                                                                                                                                               Structured output replaces FACETS text blocks.
+#> 9                                    Estimator and person-score basis, extreme handling, df/ZSTD conventions, and FACETS options can differ; external numerical equivalence is not established.
+#> 10                                                                      Uses package-native structured output and documented df conventions; external numerical equivalence is not established.
+#> 11                       The package does not translate category positions across multiple independent scales, apply FACETS agreement-based SE inflation, or establish external Table 7 parity.
 #> 12                                                                                                                      FACETS binomial-trial and Poisson-specific reports are not implemented.
-#> 13                                                                                                                                                  Exact FACETS text layout is not reproduced.
+#> 13                                                     Multiple independent scales, scale-specific anchors or starting values, Thurstone thresholds, and FACETS text layout are not reproduced.
 #> 14                                                                                                                                       FACETS line-printer artwork is not reproduced exactly.
 #> 15                                                                                                                                       Uses R-native plot data rather than FACETS graph text.
 #> 16                                                                                                                                   Conditional screening semantics are documented separately.
@@ -604,17 +615,47 @@ facets_feature_coverage("partial")
 #> 44 Use the closest documented mfrmr table or plot for analysis; use FACETS externally when the omitted statistic or format is required.
 #> 47 Use the closest documented mfrmr table or plot for analysis; use FACETS externally when the omitted statistic or format is required.
 facets_feature_coverage("supported_with_caveat")
-#>     FACETSArea                                 FACETSFeature FACETSReference
-#> 28 R/Web plots Generalizability Theory via R package gtheory     gtheory.htm
-#>                                                      mfrmrRoute
-#> 28 mfrm_generalizability(); mfrm_d_study(); compute_facet_icc()
+#>      FACETSArea                                                FACETSFeature
+#> 9  Output table                            Table 7: facet measurement report
+#> 10 Output table                          Table 7: reliability and chi-square
+#> 11 Output table                                Table 7: agreement statistics
+#> 13 Output table Table 8.1: polytomous rating-scale/partial-credit statistics
+#> 28  R/Web plots                Generalizability Theory via R package gtheory
+#>                  FACETSReference
+#> 9                     table7.htm
+#> 10   table7summarystatistics.htm
+#> 11 table7agreementstatistics.htm
+#> 13       table8_1ratingscale.htm
+#> 28                   gtheory.htm
+#>                                                                                                            mfrmrRoute
+#> 9                                                                 fit_measures_table(); diagnose_mfrm(); summary(fit)
+#> 10                                                                  facets_chisq_table(); diagnose_mfrm()$reliability
+#> 11 interrater_agreement_table(); rater_network_analysis(); rater_halo_network_analysis(); plot_interrater_agreement()
+#> 13                                                                  rating_scale_table(); category_structure_report()
+#> 28                                                       mfrm_generalizability(); mfrm_d_study(); compute_facet_icc()
 #>                   Status
+#> 9  supported_with_caveat
+#> 10 supported_with_caveat
+#> 11 supported_with_caveat
+#> 13 supported_with_caveat
 #> 28 supported_with_caveat
-#>                                                                                                                                        Capability
-#> 28 Observed univariate G-study variance components plus D-study projections with residual-scaling sensitivity and `IdentificationStatus` columns.
+#>                                                                                                                                                            Capability
+#> 9                                                                                                             Measures, SEs, fit, anchoring status, and review flags.
+#> 10                                                                                              Rasch/FACETS-style separation, reliability, and chi-square summaries.
+#> 11 Raw-category observed agreement and model-probability expected agreement, plus pairwise rater-network, rater-by-criterion halo network, and rater-agreement views.
+#> 13                                     Core category diagnostics and thresholds for one RSM scale or one PCM step facet on the package's shared observed score scale.
+#> 28                     Observed univariate G-study variance components plus D-study projections with residual-scaling sensitivity and `IdentificationStatus` columns.
 #>                                                                                                                                                                                      Limitation
+#> 9                                    Estimator and person-score basis, extreme handling, df/ZSTD conventions, and FACETS options can differ; external numerical equivalence is not established.
+#> 10                                                                      Uses package-native structured output and documented df conventions; external numerical equivalence is not established.
+#> 11                       The package does not translate category positions across multiple independent scales, apply FACETS agreement-based SE inflation, or establish external Table 7 parity.
+#> 13                                                     Multiple independent scales, scale-specific anchors or starting values, Thurstone thresholds, and FACETS text layout are not reproduced.
 #> 28 Package-native caveated G/D-study route; not a FACETS/gtheory UI clone, not multivariate/profile G-theory, and not suitable for high-stakes use when boundary or singular fits are reported.
 #>                                                                                                        Alternative
+#> 9  Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 10 Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 11 Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 13 Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
 #> 28 Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
 facets_feature_coverage("not_implemented")
 #>     FACETSArea                  FACETSFeature  FACETSReference mfrmrRoute
