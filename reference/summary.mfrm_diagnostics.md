@@ -165,21 +165,39 @@ review:
 ## Examples
 
 ``` r
-if (FALSE) { # interactive()
+# \donttest{
 toy <- load_mfrmr_data("example_core")
 toy <- toy[toy$Person %in% unique(toy$Person)[1:4], ]
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 s <- summary(diag, top_n = 3)
 s$key_warnings
+#> [1] "Precision review flagged 1 review/warn checks."                                                                  
+#> [2] "Unexpected responses flagged: 15."                                                                               
+#> [3] "MnSq screening flagged 1 element(s) outside the configured 0.5-1.5 band."                                        
+#> [4] "MnSq follow-up: Criterion:Organization (Infit=0.48, Outfit=0.49; outside the configured 0.5-1.5 screening band)."
+#> [5] "Strict marginal diagnostics currently require an MML fit."                                                       
 # Look for: lines beginning with "MnSq misfit:" name the worst
 #   element + Infit / Outfit values; "Unexpected responses flagged"
 #   counts how many cell-level surprises the screen returned.
 s$top_fit
+#> # A tibble: 3 × 9
+#>   Facet     Level     Infit Outfit InfitZSTD OutfitZSTD DF_Infit DF_Outfit  AbsZ
+#>   <chr>     <fct>     <dbl>  <dbl>     <dbl>      <dbl>    <dbl>     <dbl> <dbl>
+#> 1 Criterion Organiza… 0.481  0.493    -1.18      -1.67      8.48        16 1.67 
+#> 2 Criterion Accuracy  1.34   1.35      0.818      1.00      9.29        16 1.00 
+#> 3 Criterion Language  1.21   1.27      0.542      0.821     7.14        16 0.821
 # Large absolute standardized values identify rows for follow-up; they do
 # not create a universal accept/reject rule.
 s$facets_chisq
+#> # A tibble: 3 × 10
+#>   Facet     Levels MeanMeasure    SD FixedChiSq FixedDF FixedProb RandomChiSq
+#>   <chr>      <int>       <dbl> <dbl>      <dbl>   <dbl>     <dbl>       <dbl>
+#> 1 Criterion      4       0     0.270       1.80       3     0.616       NA   
+#> 2 Person         4       0.974 0.443       4.41       3     0.220        2.89
+#> 3 Rater          4       0     0.323       2.52       3     0.471       NA   
+#> # ℹ 2 more variables: RandomDF <dbl>, RandomProb <dbl>
 # Read the fixed-effect chi-square as a heterogeneity screen in the context
 # of the design and intended score use.
-}
+# }
 ```

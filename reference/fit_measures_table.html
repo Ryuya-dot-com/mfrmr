@@ -191,7 +191,7 @@ rules.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_operational"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>  <span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span></span>
@@ -199,12 +199,96 @@ rules.</p>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fm</span> <span class="op">&lt;-</span> <span class="fu">fit_measures_table</span><span class="op">(</span><span class="va">fit</span>, facet <span class="op">=</span> <span class="st">"Rater"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fm</span><span class="op">$</span><span class="va">facets_table</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Facet Level    Measure      S.E.   Lower CI    Upper CI CI Level Obs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 Rater   R05  0.1348932 0.2298500 -0.3156044  0.58539090     0.95  44</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 Rater   R01 -0.5968433 0.2231594 -1.0342276 -0.15945899     0.95  47</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 Rater   R06  0.3677868 0.2401725 -0.1029426  0.83851627     0.95  38</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 Rater   R04  0.1692568 0.2164848 -0.2550456  0.59355929     0.95  47</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5 Rater   R02 -0.3339430 0.2066065 -0.7388843  0.07099831     0.95  56</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6 Rater   R03  0.2588494 0.2123514 -0.1573516  0.67505041     0.95  50</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Infit MnSq  Infit ZStd Outfit MnSq Outfit ZStd Infit df Outfit df</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1  0.6437494 -1.37224963   0.6364430 -1.89645401 25.59501        44</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2  0.7558296 -0.96473720   0.7419517 -1.30848364 30.84427        47</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3  0.8062824 -0.57564164   0.7890478 -0.91654625 21.28480        38</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4  0.9195966 -0.22988795   0.9036096 -0.41438157 29.38610        47</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5  0.9659519 -0.06996692   1.0267816  0.20346215 36.77909        56</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6  1.0003529  0.08533360   0.9692421 -0.08872733 31.54496        50</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Fit df method Max ZStd shift Flag changed by df Max df rel shift</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1        engine             NA              FALSE               NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2        engine             NA              FALSE               NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3        engine             NA              FALSE               NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4        engine             NA              FALSE               NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5        engine             NA              FALSE               NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6        engine             NA              FALSE               NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       df review  Fit Status               Review Reason</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 not_available within_band Within selected review band</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 not_available within_band Within selected review band</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 not_available within_band Within selected review band</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 not_available within_band Within selected review band</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5 not_available within_band Within selected review band</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6 not_available within_band Within selected review band</span>
 <span class="r-in"><span><span class="va">fm</span><span class="op">$</span><span class="va">underfit</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [1] Facet                                   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [2] Level                                   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [3] Measure                                 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [4] SE                                      </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [5] CI_Lower                                </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [6] CI_Upper                                </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [7] CI_Level                                </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [8] N                                       </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [9] Infit                                   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [10] Outfit                                  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [11] InfitZSTD                               </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [12] OutfitZSTD                              </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [13] DF_Infit                                </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [14] DF_Outfit                               </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [15] DF_Infit_ENGINE                         </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [16] DF_Outfit_ENGINE                        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [17] DF_Infit_FACETS                         </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [18] DF_Outfit_FACETS                        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [19] InfitZSTD_ENGINE                        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [20] OutfitZSTD_ENGINE                       </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [21] InfitZSTD_FACETS                        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [22] OutfitZSTD_FACETS                       </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [23] FitDfMethod                             </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [24] FitZSTDTransform                        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [25] InfitBand                               </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [26] OutfitBand                              </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [27] InfitZSTDBand                           </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [28] OutfitZSTDBand                          </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [29] Underfit                                </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [30] Overfit                                 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [31] FitStatus                               </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [32] ReviewReason                            </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [33] MaxAbsZSTD                              </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [34] MaxMnSqDistance                         </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [35] InfitZSTDDiff_FACETS_minus_ENGINE       </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [36] OutfitZSTDDiff_FACETS_minus_ENGINE      </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [37] MaxAbsZSTDDiff_FACETS_vs_ENGINE         </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [38] MaxAbsLogDFRatio_ENGINE_over_FACETS     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [39] MaxDFRelativeDifference_ENGINE_vs_FACETS</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [40] EngineFlagAbsZ                          </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [41] FacetsStyleFlagAbsZ                     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [42] FlagChangedByDf                         </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [43] DfSensitivityStatus                     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;0 rows&gt; (or 0-length row.names)</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Include FACETS-style df/ZSTD companion columns for comparison.</span></span></span>
 <span class="r-in"><span><span class="va">fm_facets</span> <span class="op">&lt;-</span> <span class="fu">fit_measures_table</span><span class="op">(</span><span class="va">fit</span>, facet <span class="op">=</span> <span class="st">"Rater"</span>, fit_df_method <span class="op">=</span> <span class="st">"both"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fm_facets</span><span class="op">$</span><span class="va">df_conversion_guide</span><span class="op">$</span><span class="va">decision_guide</span></span></span>
-<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Step                                                         Question</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1    1                                           Are MnSq values close?</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2    2                   Are df values close under the same convention?</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3    3                   Do ZSTD values differ after MnSq and df agree?</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4    4 Does |ZSTD| &gt; 2 status change only after changing df convention?</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5    5                            Is an external FACETS table supplied?</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                            RecommendedAction</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 If MnSq differs materially, treat this as a fit-statistic or estimation difference before discussing ZSTD.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                    If df differs, classify the ZSTD gap as a df-convention issue unless MnSq also differs.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3            Check WHEXACT/normalization settings and rounding/truncation before making a substantive claim.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4         Report the flag as convention-sensitive; inspect MnSq and substantive context before acting on it.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5                     Use read_facets_fit_table() or normalize_facets_fit_frame(), then facets_fit_review().</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

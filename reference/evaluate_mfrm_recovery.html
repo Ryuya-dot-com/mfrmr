@@ -303,7 +303,7 @@ summaries.</p></li>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="va">rec</span> <span class="op">&lt;-</span> <span class="fu">evaluate_mfrm_recovery</span><span class="op">(</span></span></span>
 <span class="r-in"><span>  n_person <span class="op">=</span> <span class="fl">12</span>,</span></span>
 <span class="r-in"><span>  n_rater <span class="op">=</span> <span class="fl">2</span>,</span></span>
@@ -313,7 +313,14 @@ summaries.</p></li>
 <span class="r-in"><span>  seed <span class="op">=</span> <span class="fl">123</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">rec</span><span class="op">)</span><span class="op">$</span><span class="va">recovery_summary</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ParameterType"</span>, <span class="st">"Facet"</span>, <span class="st">"RMSE"</span>, <span class="st">"Bias"</span><span class="op">)</span><span class="op">]</span></span></span>
-<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 4 × 4</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ParameterType Facet        RMSE      Bias</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> facet         Criterion  0.013<span style="text-decoration: underline;">0</span> -<span style="color: #BB0000;">1.73</span><span style="color: #949494;">e</span><span style="color: #BB0000;">-18</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> facet         Rater      0.222  -<span style="color: #BB0000;">2.78</span><span style="color: #949494;">e</span><span style="color: #BB0000;">-17</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> person        Person    11.2    -<span style="color: #BB0000;">1.48</span><span style="color: #949494;">e</span><span style="color: #BB0000;">-16</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> step          Common    13.7    -<span style="color: #BB0000;">5.92</span><span style="color: #949494;">e</span><span style="color: #BB0000;">-16</span></span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

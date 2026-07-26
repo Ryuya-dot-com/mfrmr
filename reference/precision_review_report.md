@@ -41,7 +41,7 @@ This helper summarizes how `mfrmr` derived SE, CI, and reliability
 values for the current run. It also includes a source-grounded
 fit/separation basis table so users can keep mean-square fit, ZSTD
 standardization, Rasch/FACETS-style separation, and package QC
-thresholds in separate reporting lanes.
+thresholds in distinct reporting categories.
 
 ## What this review means
 
@@ -103,11 +103,51 @@ qualified as hybrid, or should remain exploratory in the final report.
 ## Examples
 
 ``` r
-if (FALSE) { # interactive()
+# \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+#> Warning: Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 out <- precision_review_report(fit, diagnostics = diag)
 summary(out)
-}
+#> mfrmr Precision Review Summary 
+#>   Class: mfrm_precision_review
+#>   Components: 5
+#> 
+#> Precision overview
+#>  Method PrecisionTier SupportsFormalInference Checks ReviewOrWarn
+#>     JML   exploratory                   FALSE      7            2
+#>  FitSeparationRows NoteRows
+#>                  4        4
+#> 
+#> Review checks: checks
+#>                     Check Status
+#>            Precision tier review
+#>     Optimizer convergence review
+#>      ModelSE availability   pass
+#>  Fit-adjusted SE ordering   pass
+#>      Reliability ordering   pass
+#>  Facet precision coverage   pass
+#>          SE source labels   pass
+#>                                                                                                                                                                                                 Detail
+#>                                                                                       This run uses the package's exploratory precision path; prefer MML for formal SE, CI, and reliability reporting.
+#>  Optimizer diagnostics require review; keep SE, CI, and reliability in review mode. Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance.
+#>                                                                                                                                               Finite ModelSE values were available for 100.0% of rows.
+#>                                                                                                                              Fit-adjusted SE values were not smaller than their paired ModelSE values.
+#>                                                                                                                           Conservative reliability values were not larger than the model-based values.
+#>                                                                                                                   Each facet had sample/population summaries for both model and fit-adjusted SE modes.
+#>                                                                                                                                     JML SE labels consistently identify observation-table information.
+#> 
+#> Settings
+#>         Setting       Value
+#>           model         RSM
+#>          method         JML
+#>  precision_tier exploratory
+#> 
+#> Notes
+#>  - Exploratory precision path detected; use this run for screening and
+#>    calibration triage, not as the package's primary inferential summary.
+#>  - Fit/separation basis rows state source grounding and validation-use
+#>    boundaries.
+# }
 ```

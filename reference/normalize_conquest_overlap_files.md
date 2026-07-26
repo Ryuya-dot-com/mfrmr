@@ -125,7 +125,7 @@ text, and to check duplicate-ID / non-numeric-estimate pre-review flags.
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+# \donttest{
 bundle <- build_conquest_overlap_bundle()
 tmp_dir <- tempdir()
 pop_path <- file.path(tmp_dir, "cq_pop.csv")
@@ -168,7 +168,34 @@ normalized <- normalize_conquest_overlap_files(
   conquest_case_estimate = "EAP"
 )
 summary(normalized)$normalization_scope
+#>                            Area             Status
+#> 1 Extracted table normalization             active
+#> 2     Raw ConQuest text parsing      not performed
+#> 3               Bundle matching deferred to review
+#> 4        Pre-review table check      none detected
+#>                                                             Evidence
+#> 1                                             69 standardized row(s)
+#> 2            already extracted CSV/TSV/TXT or data.frame inputs only
+#> 3 review_conquest_overlap() matches rows against the exported bundle
+#> 4                  0 duplicate ID(s); 0 non-numeric estimate cell(s)
+#>                                                                               Interpretation
+#> 1        Population, item, and case tables have been converted to the mfrmr review contract.
+#> 2             This object does not prove that raw ConQuest report text was parsed correctly.
+#> 3 Identifier matching and numerical comparison are intentionally handled by the review step.
+#> 4        Resolve duplicate IDs or non-numeric estimates before treating the review as clean.
 review <- review_conquest_overlap(bundle, normalized)
 summary(review)$summary
-} # }
+#>   PopulationParametersExpected PopulationParametersCompared PopulationMae
+#> 1                            3                            2  3.330669e-16
+#>   PopulationMaxAbsDifference PopulationMaxAbsParameter ItemRowsExpected
+#> 1               4.440892e-16                         X                6
+#>   ItemRowsCompared ItemCenteredCorrelation ItemCenteredMae
+#> 1                6                       1    1.122944e-15
+#>   ItemCenteredMaxAbsDifference ItemCenteredMaxAbsItem CaseRowsExpected
+#> 1                 3.330669e-15                   I006               60
+#>   CaseRowsCompared CaseCorrelation      CaseMae CaseMaxAbsDifference
+#> 1               60               1 9.641882e-16         4.884981e-15
+#>   AttentionItems AttentionMissing AttentionDuplicate AttentionNonNumeric
+#> 1              0                0                  0                   0
+# }
 ```

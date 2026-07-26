@@ -229,7 +229,7 @@ before using IC or LRT results in reporting.
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+# \donttest{
 toy <- load_mfrmr_data("example_core")
 
 fit_rsm <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
@@ -239,6 +239,18 @@ fit_pcm <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                      step_facet = "Criterion", quad_points = 7, maxit = 30)
 comp <- compare_mfrm(fit_rsm, fit_pcm, labels = c("RSM", "PCM"))
 comp$table
+#> # A tibble: 2 × 19
+#>   Label Model Method  nobs WeightedN ICSampleSize ICSampleSizeBasis  npar LogLik
+#>   <chr> <chr> <chr>  <int>     <dbl>        <dbl> <chr>             <int>  <dbl>
+#> 1 RSM   RSM   MML      768       768          768 row_count             8  -903.
+#> 2 PCM   PCM   MML      768       768          768 row_count            14  -896.
+#> # ℹ 10 more variables: AIC <dbl>, BIC <dbl>, Converged <lgl>,
+#> #   InferenceReady <lgl>, ConvergenceSeverity <chr>, ICComparable <lgl>,
+#> #   Delta_AIC <dbl>, AkaikeWeight <dbl>, Delta_BIC <dbl>, BICWeight <dbl>
 comp$evidence_ratios
-} # }
+#> # A tibble: 1 × 3
+#>   Model1 Model2 EvidenceRatio
+#>   <chr>  <chr>          <dbl>
+#> 1 RSM    PCM            0.441
+# }
 ```

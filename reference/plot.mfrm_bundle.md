@@ -139,7 +139,7 @@ base graphics.
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+# \donttest{
 toy_full <- load_mfrmr_data("example_core")
 toy_people <- unique(toy_full$Person)[1:12]
 toy <- toy_full[toy_full$Person %in% toy_people, , drop = FALSE]
@@ -170,5 +170,5 @@ if (interactive()) {
     label_angle = 45
   )
 }
-} # }
+# }
 ```

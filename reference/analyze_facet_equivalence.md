@@ -217,12 +217,22 @@ Biopharmaceutics, 15*(6), 657-680.
 ## Examples
 
 ``` r
-if (FALSE) { # interactive()
+# \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "JML", maxit = 30)
+#> Warning: Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.
 eq <- analyze_facet_equivalence(fit, facet = "Rater")
 eq$summary[, c("Facet", "Elements", "Decision", "MeanROPE")]
+#>   Facet Elements                     Decision MeanROPE
+#> 1 Rater        4 partial_pairwise_equivalence 97.86251
 head(eq$pairwise[, c("ElementA", "ElementB", "Equivalent")])
-}
+#>   ElementA ElementB Equivalent
+#> 1      R01      R02       TRUE
+#> 2      R01      R03      FALSE
+#> 3      R01      R04      FALSE
+#> 4      R02      R03      FALSE
+#> 5      R02      R04      FALSE
+#> 6      R03      R04       TRUE
+# }
 ```

@@ -232,7 +232,12 @@ fit_mfrm(
 
 - maxit:
 
-  Maximum optimizer iterations.
+  Computational ceiling on optimizer iterations. The default is `400`.
+  This is not a convergence criterion or a model-selection control: a
+  fit that reaches the ceiling remains non-ready until the common
+  convergence and terminal-gradient checks pass. Smaller values used in
+  executable examples shorten package checks and should not be copied
+  into a final analysis without an explicit computational protocol.
 
 - reltol:
 
@@ -830,6 +835,44 @@ Facet sign orientation:
 - all other facets are treated as `-1` This affects interpretation of
   reported facet measures.
 
+## Choosing maxit without result-driven tuning
+
+Treat `maxit` as a predeclared computational budget, not as a value to
+tune until preferred estimates appear.
+
+1.  Choose the model, estimation method, optimizer, tolerance,
+    quadrature rule, and initial `maxit` before examining coefficient or
+    fit results. The default `maxit = 400` is the package starting point
+    for an analysis.
+
+2.  Use estimates substantively only when `Converged` and
+    `InferenceReady` are both `TRUE` and the Numerical row of
+    `summary(fit)$readiness` is `pass`. Optimizer code zero alone is
+    insufficient.
+
+3.  If `ConvergenceStatus == "iteration_limit"`, keep that fit
+    review-only. Refit the same data, model, method, anchors, optimizer,
+    tolerance, and quadrature rule with the next ceiling in a
+    prespecified sequence, such as 400, 800, then 1600. Do not choose
+    among runs by coefficient size, statistical significance, fit
+    statistics, or agreement with an expected answer.
+
+4.  The first run in that sequence that clears the numerical gate
+    becomes eligible for interpretation. If separately ready runs differ
+    materially, treat the difference as numerical instability and review
+    the model, identification, data support, and optimizer rather than
+    selecting the preferred result.
+
+5.  Report the requested `maxit`, actual iteration/evaluation counts,
+    convergence status and reason, optimizer, terminal gradient, and any
+    polishing stages. These are retained in `fit$summary` and
+    `fit$opt$optimizer_polish`.
+
+This rule applies to both JML and MML. JML can require a larger
+computation budget because it estimates one fixed effect per person;
+increasing `maxit` does not make JML equivalent to MML and must not be
+used to switch the estimand after seeing results.
+
 ## Performance tips
 
 When JML is the prespecified estimand, it is often faster than MML but
@@ -995,7 +1038,7 @@ fit_quick$summary[, c(
 #>   <chr> <chr>  <int> <lgl>     <lgl>          <chr>              
 #> 1 RSM   MML      282 TRUE      TRUE           pass               
 
-if (FALSE) { # \dontrun{
+# \donttest{
 # Full run with the package default MML estimator. This route integrates
 # person parameters under an N(0, 1) population model, so its reporting
 # value depends on the response-model and population assumptions. The
@@ -1007,25 +1050,65 @@ fit <- fit_mfrm(
   facets = c("Rater", "Criterion"),
   score = "Score",
   model = "RSM",
-  quad_points = 31,
-  maxit = 30
+  quad_points = 31
 )
 fit$summary
+#> # A tibble: 1 × 52
+#>   Model Method MethodUsed     N Persons Facets FacetInteractions
+#>   <chr> <chr>  <chr>      <int>   <int>  <int>             <int>
+#> 1 RSM   MML    MML          282      48      2                 0
+#> # ℹ 45 more variables: InteractionParameters <int>, InteractionCells <int>,
+#> #   InteractionSparseCells <int>, Categories <dbl>, LogLik <dbl>, AIC <dbl>,
+#> #   BIC <dbl>, Converged <lgl>, InferenceReady <lgl>, Iterations <int>,
+#> #   IterationsBasis <chr>, MMLEngineRequested <chr>, MMLEngineUsed <chr>,
+#> #   MMLEngineDetail <chr>, EMIterations <int>, EMConverged <lgl>,
+#> #   EMRelativeChange <dbl>, OptimizerMethod <chr>,
+#> #   OptimizerInitialMethod <chr>, OptimizerPolished <lgl>, …
 s_fit <- summary(fit)
 s_fit$overview[, c("Model", "Method", "Converged", "InferenceReady",
                    "ConvergenceSeverity")]
+#> # A tibble: 1 × 5
+#>   Model Method Converged InferenceReady ConvergenceSeverity
+#>   <chr> <chr>  <lgl>     <lgl>          <chr>              
+#> 1 RSM   MML    TRUE      TRUE           pass               
 # `InferenceReady = FALSE` is a numerical stop signal. A TRUE value only
 # clears the package's optimizer review; model specification, design,
 # identification, and inferential assumptions still require review.
 s_fit$person_overview
+#> # A tibble: 1 × 8
+#>   Persons   Mean    SD Median   Min   Max  Span MeanPosteriorSD
+#>     <int>  <dbl> <dbl>  <dbl> <dbl> <dbl> <dbl>           <dbl>
+#> 1      48 -0.155 0.824 -0.208 -1.72  1.51  3.23           0.476
 # Compare the person distribution with the facet and step locations. The
 # scale identification does not create universal targeting thresholds.
 s_fit$targeting
+#> # A tibble: 2 × 7
+#>   Facet     PersonMean FacetMean Targeting PersonSD FacetSD SpreadRatio
+#>   <chr>          <dbl>     <dbl>     <dbl>    <dbl>   <dbl>       <dbl>
+#> 1 Criterion     -0.155  4.62e-18    -0.155    0.824   0.302        2.72
+#> 2 Rater         -0.155  0           -0.155    0.824   0.399        2.07
 # Interpret targeting magnitude against the intended population and score
 # use rather than a universal pass/fail cutoff.
 p_fit <- plot(fit, draw = FALSE)
 p_fit$name
+#> [1] "wright_map"
 head(p_fit$data$locations)
+#> # A tibble: 6 × 30
+#>   Group Label PlotType Estimate    SE CI_Level SE_Method Measure_Source CI_Lower
+#>   <fct> <chr> <chr>       <dbl> <dbl>    <dbl> <chr>     <chr>             <dbl>
+#> 1 Rater R01   Facet l…   -0.606 0.181     0.95 Observat… fit + observa…  -0.960 
+#> 2 Rater R02   Facet l…   -0.382 0.166     0.95 Observat… fit + observa…  -0.707 
+#> 3 Rater R04   Facet l…    0.180 0.185     0.95 Observat… fit + observa…  -0.183 
+#> 4 Rater R05   Facet l…    0.184 0.199     0.95 Observat… fit + observa…  -0.207 
+#> 5 Rater R03   Facet l…    0.212 0.179     0.95 Observat… fit + observa…  -0.138 
+#> 6 Rater R06   Facet l…    0.412 0.219     0.95 Observat… fit + observa…  -0.0168
+#> # ℹ 21 more variables: CI_Upper <dbl>, Step <chr>, StepIndex <int>,
+#> #   BoundarySeparated <lgl>, XBase <dbl>, X <dbl>, OriginalEstimate <dbl>,
+#> #   BelowRange <lgl>, AboveRange <lgl>, DisplayEstimate <dbl>,
+#> #   DisplayLabel <chr>, OriginalCI_Lower <dbl>, OriginalCI_Upper <dbl>,
+#> #   DisplayCI_Lower <dbl>, DisplayCI_Upper <dbl>, CIClippedLower <lgl>,
+#> #   CIClippedUpper <lgl>, CIClipped <lgl>, BoundaryEnd <chr>,
+#> #   CISuppressed <lgl>, CIDisplayStatus <chr>
 # The bare plot route is the native Wright map and includes available
 # facet uncertainty. Use plot(fit, type = "bundle") for the three-plot
 # Wright/pathway/category overview.
@@ -1037,13 +1120,16 @@ fit_jml <- fit_mfrm(
   facets = c("Rater", "Criterion"),
   score = "Score",
   method = "JML",
-  model = "RSM",
-  maxit = 30
+  model = "RSM"
 )
 summary(fit_jml)$overview[, c(
   "Model", "Method", "Converged", "InferenceReady",
   "ConvergenceSeverity"
 )]
+#> # A tibble: 1 × 5
+#>   Model Method Converged InferenceReady ConvergenceSeverity
+#>   <chr> <chr>  <lgl>     <lgl>          <chr>              
+#> 1 RSM   JML    TRUE      TRUE           pass               
 
 # Latent regression (MML only) uses person-level background variables:
 person_tbl <- unique(toy[c("Person")])
@@ -1059,7 +1145,18 @@ fit_pop <- fit_mfrm(
   person_data = person_tbl
 )
 summary(fit_pop)$population_overview
+#> # A tibble: 1 × 11
+#>   PopulationModel PosteriorBasis   Formula        PersonRows DesignColumns
+#>   <lgl>           <chr>            <chr>               <int>         <int>
+#> 1 TRUE            population_model ~Grade + Group         48             3
+#> # ℹ 6 more variables: CodingVariables <chr>, ContrastVariables <chr>,
+#> #   Policy <chr>, ResidualVariance <dbl>, OmittedPersons <int>,
+#> #   OmittedRows <int>
 summary(fit_pop)$population_coding
+#> # A tibble: 1 × 6
+#>   Variable LevelCount Levels Contrast        EncodedColumns CodingNote          
+#>   <chr>         <int> <chr>  <chr>           <chr>          <chr>               
+#> 1 Group             2 A, B   contr.treatment GroupB         stored levels and c…
 
 # Binary responses are supported as ordered two-category scores:
 set.seed(1)
@@ -1082,11 +1179,30 @@ fit_binary <- fit_mfrm(
   method = "JML",
   maxit = 30
 )
+#> Warning: Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.
 fit_binary$summary[, c("Model", "Categories", "Converged")]
+#> # A tibble: 1 × 3
+#>   Model Categories Converged
+#>   <chr>      <dbl> <lgl>    
+#> 1 RSM            2 FALSE    
 
 # Next steps after fitting:
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 chk <- reporting_checklist(fit, diagnostics = diag)
 head(chk$checklist[, c("Section", "Item", "DraftReady")])
-} # }
+#>          Section                                                      Item
+#> 1 Method Section                                       Model specification
+#> 2 Method Section                                          Data description
+#> 3 Method Section                                           Precision basis
+#> 4 Method Section                                               Convergence
+#> 5 Method Section                                     Connectivity assessed
+#> 6 Method Section Empirical-Bayes shrinkage when small-N facets are present
+#>   DraftReady
+#> 1       TRUE
+#> 2       TRUE
+#> 3       TRUE
+#> 4       TRUE
+#> 5       TRUE
+#> 6       TRUE
+# }
 ```

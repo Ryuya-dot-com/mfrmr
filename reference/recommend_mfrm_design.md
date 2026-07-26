@@ -122,7 +122,7 @@ fewer criteria).
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+# \donttest{
 sim_eval <- suppressWarnings(evaluate_mfrm_design(
   n_person = c(8, 12),
   n_rater = 2,
@@ -134,5 +134,11 @@ sim_eval <- suppressWarnings(evaluate_mfrm_design(
 ))
 rec <- recommend_mfrm_design(sim_eval)
 rec$recommended
-} # }
+#> # A tibble: 0 × 14
+#> # ℹ 14 variables: design_id <chr>, n_person <dbl>, n_rater <dbl>,
+#> #   n_criterion <dbl>, raters_per_person <dbl>, FacetsChecked <chr>,
+#> #   MinSeparation <dbl>, MinReliability <dbl>, MaxSeverityRMSE <dbl>,
+#> #   MaxMisfitRate <dbl>, MinConvergenceRate <dbl>, FacetsPassing <int>,
+#> #   FacetsRequired <int>, Pass <lgl>
+# }
 ```

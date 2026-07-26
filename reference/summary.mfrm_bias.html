@@ -117,14 +117,62 @@ summaries also retain the profile-likelihood review columns when present.</p></l
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># interactive()</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_bias"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="va">toy</span><span class="op">[</span><span class="va">toy</span><span class="op">$</span><span class="va">Person</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">toy</span><span class="op">$</span><span class="va">Person</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">8</span><span class="op">]</span>, <span class="op">]</span></span></span>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>, method <span class="op">=</span> <span class="st">"JML"</span>, maxit <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">diag</span> <span class="op">&lt;-</span> <span class="fu"><a href="diagnose_mfrm.html">diagnose_mfrm</a></span><span class="op">(</span><span class="va">fit</span>, residual_pca <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">bias</span> <span class="op">&lt;-</span> <span class="fu"><a href="estimate_bias.html">estimate_bias</a></span><span class="op">(</span><span class="va">fit</span>, <span class="va">diag</span>, facet_a <span class="op">=</span> <span class="st">"Rater"</span>, facet_b <span class="op">=</span> <span class="st">"Criterion"</span>, max_iter <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">bias</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Many-Facet Measurement Bias Summary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Interaction facets: Rater x Criterion | Cells: 16</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Order: 2 | Mode: pairwise</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Mean |Bias|: 0.304 | Max |Bias|: 0.909 | Screen-positive (p &lt;= 0.050): 0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Bonferroni screen-positive: 0 | Holm screen-positive: 0 (cut = 0.050, m = 16)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Fixed-effect chi-square</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  FixedChiSq FixedDF FixedProb InferenceTier SupportsFormalInference</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       3.521      15     0.999     screening                   FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  FormalInferenceEligible PrimaryReportingEligible   ReportingUse</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                    FALSE                    FALSE screening_only</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                 TestBasis InteractionFacets InteractionOrder</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  conditional plug-in heterogeneity screen Rater x Criterion                2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  InteractionMode</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         pairwise</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Final iteration status</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Iteration MaxScoreResidual MaxScoreResidualPct MaxScoreResidualCategories</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          1                0                   0                         NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  MaxLogitChange BiasCells</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          -0.909        16</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Top |t| bias rows</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                Pair Rater    Criterion Bias Size  S.E.      t Prob.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      R04 | Accuracy   R04     Accuracy    -0.909 0.929 -0.979 0.431</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       R04 | Content   R04      Content     0.759 0.982  0.773 0.520</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  R04 | Organization   R04 Organization     0.759 0.982  0.773 0.520</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  R01 | Organization   R01 Organization    -0.384 0.624 -0.615 0.572</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       R02 | Content   R02      Content    -0.473 0.783 -0.604 0.588</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      R04 | Language   R04     Language    -0.470 0.929 -0.506 0.663</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      R02 | Accuracy   R02     Accuracy     0.248 0.735  0.337 0.758</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      R01 | Language   R01     Language     0.203 0.624  0.325 0.761</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      R01 | Accuracy   R01     Accuracy     0.163 0.643  0.253 0.813</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      R03 | Accuracy   R03     Accuracy     0.134 0.823  0.163 0.881</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Obs-Exp Average  AbsT</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                0 0.979</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                0 0.773</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                0 0.773</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                0 0.615</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                0 0.604</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                0 0.506</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                0 0.337</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                0 0.325</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                0 0.253</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                0 0.163</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Notes</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Bias iteration may not have fully stabilized (BiasCells &gt; 0 at final step).</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

@@ -64,7 +64,7 @@ adequacy cutoff.
 ## Examples
 
 ``` r
-if (FALSE) { # interactive()
+# \donttest{
 peer_spec <- build_peer_review_sim_spec(
   n_submission = 12,
   n_criterion = 3,
@@ -74,5 +74,16 @@ peer_spec <- build_peer_review_sim_spec(
 peer_sim <- simulate_mfrm_data(sim_spec = peer_spec, seed = 123)
 review <- build_peer_review_design_review(peer_sim)
 summary(review)$overview
-}
+#> # A tibble: 1 × 26
+#>   Active Scenario    Submissions Reviewers Criteria  Rows ReviewPairs
+#>   <lgl>  <chr>             <int>     <int>    <int> <int>       <int>
+#> 1 TRUE   peer_review          12        12        3   126          42
+#> # ℹ 19 more variables: PossibleReviewPairs <int>, DesignDensity <dbl>,
+#> #   SelfReviews <int>, AvoidSelfReview <lgl>, ReciprocalPairs <int>,
+#> #   AnchorSubmissions <int>, OrdinaryReviewersPerSubmission <int>,
+#> #   AnchorReviewersPerSubmission <int>, MinReviewersPerSubmission <int>,
+#> #   MeanReviewersPerSubmission <dbl>, MaxReviewersPerSubmission <int>,
+#> #   MinSubmissionsPerReviewer <int>, MeanSubmissionsPerReviewer <dbl>,
+#> #   MaxSubmissionsPerReviewer <int>, …
+# }
 ```

@@ -266,13 +266,62 @@ the fair-average value.**
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+# \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+#> Warning: Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.
 t12 <- fair_average_table(fit, udecimals = 2)
 t12_native <- fair_average_table(fit, reference = "mean", label_style = "native")
 summary(t12)
+#> mfrmr Adjusted Score Summary 
+#>   Class: mfrm_fair_average
+#>   Components: 4
+#> 
+#> Overview
+#>  Facets Levels MeanAbsObservedFairM FairSERequested FairSEAvailableRows
+#>       3     56                0.012           FALSE                   0
+#>  FairSEUnavailableRows  FairSEMethod  FairSEStatus MeanAdjustedAverageSE
+#>                      0 not_requested not_requested                    NA
+#>  MaxAdjustedAverageSE AdjustedAverageCILevel
+#>                    NA                     NA
+#> 
+#> Facet-level adjusted-score rows: stacked
+#>      Facet        Level ObservedAverage AdjustedAverage
+#>      Rater          R02            2.68            2.73
+#>  Criterion      Content            2.73            2.78
+#>      Rater          R01            2.61            2.64
+#>      Rater          R04            2.32            2.29
+#>     Person <suppressed>            3.62            3.64
+#>     Person <suppressed>            3.12            3.14
+#>     Person <suppressed>            1.50            1.48
+#>     Person <suppressed>            1.88            1.86
+#>     Person <suppressed>            1.88            1.86
+#>     Person <suppressed>            1.88            1.86
+#> 
+#> Settings
+#>          Setting   Value
+#>           facets    NULL
+#>       totalscore    TRUE
+#>            umean       0
+#>           uscale       1
+#>        udecimals       2
+#>        reference    both
+#>      label_style    both
+#>  omit_unobserved   FALSE
+#>           xtreme       0
+#>          fair_se   FALSE
+#>         ci_level    0.95
+#>            model     RSM
+#>           method PCM/RSM
+#> 
+#> Notes
+#>  - Adjusted-score reference summary by facet level.
+#>  - Fair-average structural SE columns are omitted unless requested by `fair_se
+#>    = TRUE`.
+#>  - Person identifiers are suppressed in this summary. Use `include_person =
+#>    TRUE` only under appropriate privacy controls.
 p_t12 <- plot(t12, draw = FALSE)
 p_t12$data$plot
-} # }
+#> [1] "difference"
+# }
 ```

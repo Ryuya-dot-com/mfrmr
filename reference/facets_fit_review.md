@@ -116,7 +116,7 @@ and df differences separately because FACETS documentation makes the df
 convention and Wilson-Hilferty/WHEXACT handling central to ZSTD
 interpretation.
 
-Two upstream boundaries also apply. For `method = "MML"` fits, residuals
+Two prior limitations also apply. For `method = "MML"` fits, residuals
 are evaluated at shrunken EAP person measures while FACETS uses JMLE
 estimates, so MnSq itself can differ before standardization; refit with
 `method = "JML"` for a JMLE-style residual basis. And mfrmr withholds
@@ -135,12 +135,58 @@ table.
 ## Examples
 
 ``` r
-if (FALSE) { # interactive()
+# \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
   method = "JML", maxit = 30
 )
+#> Warning: Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.
 review <- facets_fit_review(fit)
 summary(review)
-}
+#> mfrmr FACETS Fit Review Summary
+#>   Class: mfrm_facets_fit_review
+#>   Components: 10
+#> 
+#> Review overview
+#>  Model Elements DfComparedRows DfSensitiveRows DfSameOrRoundingRows
+#>    RSM       56             56              56                    0
+#>  LargeZSTDShiftRows DfConventionDifferenceRows FlagChangedByDf ExternalRows
+#>                   4                         52               0            0
+#>  ExternalDuplicateKeyRows ExternalCompleteMnSqRows ExternalCompleteZSTDRows
+#>                         0                        0                        0
+#>  ExternalCompleteDFRows ExternalMatched ExternalNeedsReview ExternalComparison
+#>                       0               0                   0       Not supplied
+#> 
+#> Fit-standardization rows requiring review
+#>      Facet        Level Infit Outfit MaxAbsZDiff FlagChanged
+#>  Criterion Organization 0.867  0.858       0.492       FALSE
+#>           ReviewStatus
+#>  DF convention differs
+#> 
+#> Interpretation
+#>  - The df convention differs enough to affect ZSTD interpretation even if the
+#>    flag status is unchanged.
+#> 
+#> Settings
+#>                     Setting                      Value
+#>                     Purpose Fit standardization review
+#>    External FACETS supplied                      FALSE
+#>               DF comparison    Engine and FACETS-style
+#>              MnSq tolerance                       0.01
+#>     External ZSTD tolerance                       0.05
+#>                DF tolerance                        0.5
+#>           DF/ZSTD tolerance                       0.05
+#>  Large ZSTD-shift threshold                        0.5
+#>          DF-ratio tolerance                       0.05
+#> 
+#> Notes
+#>  - Engine-vs-FACETS-style df/ZSTD differences need review for 56 element(s).
+#>  - Person-level fit-review rows: 9; identifiers suppressed. Use `include_person
+#>    = TRUE` only under appropriate privacy controls.
+#>  - Person identifiers are suppressed in this summary. Use `include_person =
+#>    TRUE` only under appropriate privacy controls.
+#> 
+#> Further detail
+#>  - Complete comparison rows remain in `$df_sensitivity` and `$df_sensitive`.
+# }
 ```

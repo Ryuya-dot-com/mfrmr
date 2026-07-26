@@ -108,7 +108,7 @@ core fields, not a bidirectional interchange format.
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+# \donttest{
 if (requireNamespace("mirt", quietly = TRUE)) {
   response_matrix <- matrix(sample(0:3, 60, replace = TRUE), nrow = 20)
   colnames(response_matrix) <- paste0("Item", seq_len(ncol(response_matrix)))
@@ -116,5 +116,11 @@ if (requireNamespace("mirt", quietly = TRUE)) {
   imported <- import_mirt_fit(fit, model = "GPCM")
   imported$summary
 }
-} # }
+#> "Item2" re-mapped to ensure all categories have a distance of 1
+#> Warning: EM cycles terminated after 500 iterations.
+#>   Model Method Source  N Persons Facets Categories    LogLik      AIC     BIC
+#> 1  GPCM    MML   mirt 20      20      1         NA -71.49995 164.9999 175.953
+#>   Converged ConvergenceStatus
+#> 1     FALSE            review
+# }
 ```

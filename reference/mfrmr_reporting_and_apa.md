@@ -395,7 +395,7 @@ every file under the study's data-handling policy before any handoff.
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+# \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(
   toy,
@@ -410,22 +410,99 @@ diag <- diagnose_mfrm(fit, residual_pca = "none", diagnostic_mode = "both")
 
 checklist <- reporting_checklist(fit, diagnostics = diag)
 visual_reporting_template("manuscript")[, c("FigureFamily", "CaptionSkeleton")]
+#>                     FigureFamily
+#> 1                     Wright map
+#> 2                    Pathway map
+#> 3 Category characteristic curves
+#> 5             Information curves
+#>                                                                                                                 CaptionSkeleton
+#> 1           Figure X. Wright map showing person measures, facet-level locations, and step thresholds on the shared logit scale.
+#> 2                    Figure X. Expected score pathway across theta, with dominant-category regions for the fitted rating scale.
+#> 3                                  Figure X. Category characteristic curves showing fitted category probabilities across theta.
+#> 5 Figure X. Test information curve showing where the fitted model provides relatively stronger or weaker measurement precision.
 head(checklist$checklist[, c("Section", "Item", "DraftReady", "NextAction")])
+#>          Section                                                      Item
+#> 1 Method Section                                       Model specification
+#> 2 Method Section                                          Data description
+#> 3 Method Section                                           Precision basis
+#> 4 Method Section                                               Convergence
+#> 5 Method Section                                     Connectivity assessed
+#> 6 Method Section Empirical-Bayes shrinkage when small-N facets are present
+#>   DraftReady
+#> 1       TRUE
+#> 2       TRUE
+#> 3       TRUE
+#> 4       TRUE
+#> 5       TRUE
+#> 6       TRUE
+#>                                                                                                          NextAction
+#> 1                             Available; adapt this evidence into the manuscript draft after methodological review.
+#> 2                             Available; adapt this evidence into the manuscript draft after methodological review.
+#> 3                                                    Report the precision tier as model-based in the APA narrative.
+#> 4                             Available; adapt this evidence into the manuscript draft after methodological review.
+#> 5                                           Document the single connected subset before making common-scale claims.
+#> 6 Report both the fixed-effects and shrunk estimates; cite Efron & Morris (1973) for the empirical-Bayes rationale.
 subset(
   checklist$checklist,
   Section == "Visual Displays",
   c("Item", "Available", "NextAction")
 )
+#>                                   Item Available
+#> 25                          Wright map      TRUE
+#> 26                QC / facet dashboard      TRUE
+#> 27                Residual PCA visuals     FALSE
+#> 28 Connectivity / design-matrix visual      TRUE
+#> 29  Inter-rater / displacement visuals      TRUE
+#> 30             Strict marginal visuals      TRUE
+#> 31                  Bias / DIF visuals     FALSE
+#> 32      Precision / information curves      TRUE
+#> 33                Fit/category visuals      TRUE
+#>                                                                                                                       NextAction
+#> 25                                      Include a Wright map when the manuscript benefits from a shared-scale targeting display.
+#> 26                     Use the dashboard as a first-pass triage view, then move to the specific follow-up plot behind each flag.
+#> 27                                         Run residual PCA if you want scree/loadings visuals for residual-structure follow-up.
+#> 28                                                       Use the design-matrix view to support linkage and comparability claims.
+#> 29                                       Use displacement and inter-rater views to localize QC issues after dashboard screening.
+#> 30 Treat strict marginal plots as exploratory corroboration screens, then corroborate with design review and legacy diagnostics.
+#> 31                                                        Run bias or DIF screening before discussing interaction-level visuals.
+#> 32                                Use information curves to describe precision across theta when that is the reporting question.
+#> 33                                        Use category curves and fit visuals as local descriptive follow-up after QC screening.
 
 apa <- build_apa_outputs(fit, diagnostics = diag)
 apa$section_map[, c("SectionId", "Available")]
+#>                    SectionId Available
+#> 1              method_design      TRUE
+#> 2          method_estimation      TRUE
+#> 3              results_scale      TRUE
+#> 4           results_measures      TRUE
+#> 5   results_population_model     FALSE
+#> 6      results_fit_precision      TRUE
+#> 7 results_residual_structure      TRUE
+#> 8     results_bias_screening     FALSE
+#> 9           results_cautions      TRUE
 
 tbl <- apa_table(fit, which = "summary")
 tbl$caption
+#> [1] "Table 1\nFacet Summary (Measures, Precision, Fit, Reliability)"
 bundle <- build_summary_table_bundle(checklist)
 bundle$table_index
+#>                Table Rows Cols                        Role
+#> 1           overview    1    6          checklist_overview
+#> 2    section_summary    7    8            section_coverage
+#> 3 facets_positioning    6    4 facets_relationship_wording
+#> 4   priority_summary    4    3       priority_distribution
+#> 5       action_items    7    7               draft_actions
+#> 6           settings    5    2          checklist_settings
+#>                                                                                                Description
+#> 1                                    Overall checklist coverage across sections and draft-readiness flags.
+#> 2                                                                   Coverage summary by reporting section.
+#> 3 Report-ready wording that separates mfrmr estimation from FACETS-style handoff or external-table review.
+#> 4                                                                High/medium/low/ready counts by severity.
+#> 5                                                              Top unresolved manuscript-drafting actions.
+#> 6                                                 Checklist settings used to build the reporting contract.
 apa_from_bundle <- apa_table(bundle, which = "section_summary")
 apa_from_bundle$caption
+#> [1] "Coverage summary by reporting section."
 
 report_bundle <- export_mfrm_bundle(
   fit,
@@ -437,5 +514,7 @@ report_bundle <- export_mfrm_bundle(
   acknowledge_sensitive = TRUE
 )
 report_bundle$summary[, c("FilesWritten", "HtmlWritten")]
-} # }
+#>   FilesWritten HtmlWritten
+#> 1           76           1
+# }
 ```

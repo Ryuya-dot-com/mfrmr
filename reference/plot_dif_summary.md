@@ -90,15 +90,27 @@ preset's neutral colour.
 ## Examples
 
 ``` r
-if (FALSE) { # interactive()
+# \donttest{
 toy <- load_mfrmr_data("example_bias")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "JML", maxit = 30)
+#> Warning: Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 dff <- analyze_dff(fit, diagnostics = diag,
                    facet = "Rater", group = "Group", data = toy)
 unique(dff$dif_table$ClassificationSystem)
+#> [1] "screening"
 p <- plot_dif_summary(dff, draw = FALSE)
 head(p$data$data)
-}
+#>          Pair      Effect        SE CI_Lower CI_Upper  Classification
+#> 1 R01 | A | B  0.16851952 0.1369979       NA       NA Screen negative
+#> 2 R02 | A | B -0.13201751 0.1419285       NA       NA Screen negative
+#> 3 R03 | A | B -0.11255952 0.1377812       NA       NA Screen negative
+#> 4 R04 | A | B  0.07636974 0.1412431       NA       NA Screen negative
+#>   ClassificationSystem   Color
+#> 1            screening #6b7280
+#> 2            screening #6b7280
+#> 3            screening #6b7280
+#> 4            screening #6b7280
+# }
 ```

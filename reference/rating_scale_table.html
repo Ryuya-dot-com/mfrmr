@@ -228,15 +228,64 @@ interpreting the <code>summary(t8)$summary</code> flags in the bounded
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># interactive()</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>, method <span class="op">=</span> <span class="st">"JML"</span>, maxit <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span></span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.</span>
 <span class="r-in"><span><span class="va">t8</span> <span class="op">&lt;-</span> <span class="fu">rating_scale_table</span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">t8</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> mfrmr Rating Scale Summary </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Class: mfrm_rating_scale</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Components: 6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Category/threshold summary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Categories UsedCategories UnusedScoreCategories WeaklyIdentifiedThresholds</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           4              4                                                0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  MinCategoryCount MaxCategoryCount MeanCategoryInfit MeanCategoryOutfit</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>               136              252             1.211              1.147</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  ThresholdMonotonic DiagnosticMode ExpectedCountBasis MarginalFitAvailable</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                TRUE           both      legacy_plugin                FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  MarginalOverallRMSD MarginalMaxAbsStdResidual MarginalFlaggedCategories</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                   NA                        NA                        NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Category rows: category_table</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Category Count AvgPersonMeasure ExpectedAverage Infit Outfit MeanResidual</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         1   139           -0.984           1.864 1.806  1.602       -0.864</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         2   241           -0.376           2.262 0.613  0.780       -0.262</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         3   252            0.328           2.734 0.556  0.617        0.266</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         4   136            1.068           3.145 1.871  1.590        0.855</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  DF_Infit DF_Outfit Percent InfitZSTD OutfitZSTD ExpectedCount ExpectedPercent</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    70.957       139  18.099     3.947      4.292       138.998          18.099</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   138.039       241  31.380    -3.710     -2.586       241.000          31.380</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   145.307       252  32.812    -4.511     -4.977       252.001          32.813</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    66.751       136  17.708     4.081      4.176       136.002          17.709</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  DiffCount DiffPercent LowCount InfitFlag OutfitFlag ZSTDFlag ZeroCount</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      0.002           0    FALSE      TRUE       TRUE     TRUE     FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      0.000           0    FALSE     FALSE      FALSE     TRUE     FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     -0.001           0    FALSE     FALSE      FALSE     TRUE     FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     -0.002           0    FALSE      TRUE       TRUE     TRUE     FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  UnusedCategoryType WeaklyIdentified CategoryCaveat</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                none            FALSE               </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                none            FALSE               </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                none            FALSE               </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                none            FALSE               </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Notes</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Rating-scale diagnostics with category usage, fit, and threshold ordering.</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">t8</span><span class="op">)</span><span class="op">$</span><span class="va">summary</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Categories UsedCategories UnusedScoreCategories WeaklyIdentifiedThresholds</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1          4              4                                                0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   MinCategoryCount MaxCategoryCount MeanCategoryInfit MeanCategoryOutfit</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1              136              252          1.211281           1.147213</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ThresholdMonotonic DiagnosticMode ExpectedCountBasis MarginalFitAvailable</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1               TRUE           both      legacy_plugin                FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   MarginalOverallRMSD MarginalMaxAbsStdResidual MarginalFlaggedCategories</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                  NA                        NA                        NA</span>
 <span class="r-in"><span><span class="va">p_t8</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">t8</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">p_t8</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">plot</span></span></span>
-<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "counts"</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

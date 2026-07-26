@@ -229,10 +229,10 @@ of rows.</p>
 <span><span class="co">#&gt; Filter by status, for example gpcm_capability_matrix("supported_with_caveat").</span></span>
 <span><span class="co">#&gt; Read Boundary and RecommendedRoute before interpreting a caveated or unavailable route.</span></span></code></pre></div>
 <p>The matrix is intentionally conservative. A row stays in
-<code>blocked</code> or <code>deferred</code> even when some lower-level
-component already runs, because the scope statement includes the
-interpretation needed for a complete public workflow rather than only
-checking whether code executes.</p>
+<code>blocked</code> or <code>deferred</code> even when some individual
+computation is already available, because the scope statement includes
+the interpretation needed for a complete public workflow rather than
+only checking whether code executes.</p>
 </div>
 <div class="section level2">
 <h2 id="source-grounded-recovery-interpretation">Source-grounded recovery interpretation<a class="anchor" aria-label="anchor" href="#source-grounded-recovery-interpretation"></a>

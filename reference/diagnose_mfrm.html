@@ -316,7 +316,7 @@ programs</em>. Winsteps.com. (WHEXACT / FACETS standardized fit df notes.)</p></
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># interactive()</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="co"># Minimal diagnostic example without residual PCA.</span></span></span>
 <span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_operational"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fit_quick</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span></span></span>
@@ -326,8 +326,11 @@ programs</em>. Winsteps.com. (WHEXACT / FACETS standardized fit df notes.)</p></
 <span class="r-in"><span><span class="va">diag_quick</span> <span class="op">&lt;-</span> <span class="fu">diagnose_mfrm</span><span class="op">(</span><span class="va">fit_quick</span>, diagnostic_mode <span class="op">=</span> <span class="st">"both"</span>,</span></span>
 <span class="r-in"><span>                            residual_pca <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">diag_quick</span><span class="op">)</span><span class="op">$</span><span class="va">overview</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Observations"</span>, <span class="st">"Facets"</span>, <span class="st">"Categories"</span><span class="op">)</span><span class="op">]</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 3</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Observations Facets Categories</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span>          282      2          4</span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>  <span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span></span>
 <span class="r-in"><span>  method <span class="op">=</span> <span class="st">"MML"</span>, model <span class="op">=</span> <span class="st">"RSM"</span>, quad_points <span class="op">=</span> <span class="fl">7</span>, maxit <span class="op">=</span> <span class="fl">30</span></span></span>
@@ -335,35 +338,111 @@ programs</em>. Winsteps.com. (WHEXACT / FACETS standardized fit df notes.)</p></
 <span class="r-in"><span><span class="va">diag</span> <span class="op">&lt;-</span> <span class="fu">diagnose_mfrm</span><span class="op">(</span><span class="va">fit</span>, diagnostic_mode <span class="op">=</span> <span class="st">"both"</span>, residual_pca <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">s_diag</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">diag</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">s_diag</span><span class="op">$</span><span class="va">overview</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Observations"</span>, <span class="st">"Facets"</span>, <span class="st">"Categories"</span><span class="op">)</span><span class="op">]</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 3</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Observations Facets Categories</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span>          282      2          4</span>
 <span class="r-in"><span><span class="va">s_diag</span><span class="op">$</span><span class="va">diagnostic_basis</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"DiagnosticPath"</span>, <span class="st">"Status"</span>, <span class="st">"Basis"</span><span class="op">)</span><span class="op">]</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 4 × 3</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   DiagnosticPath                   Status        Basis                          </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                            <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                          </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> legacy_residual_fit              computed      plugin_residuals_and_eap_tables</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> strict_marginal_fit              computed      latent_integrated_first_order_…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> strict_pairwise_local_dependence computed      latent_integrated_second_order…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> posterior_predictive_follow_up   not_available posterior_predictive_replicati…</span>
 <span class="r-in"><span><span class="va">s_diag</span><span class="op">$</span><span class="va">key_warnings</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "Unexpected responses flagged: 63."                                                                                                 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [2] "Flagged displacement levels: 5."                                                                                                   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [3] "MnSq screening flagged 19 element(s) outside the configured 0.5-1.5 band."                                                         </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [4] "Person-level fit warnings: 19 row(s); identifiers suppressed. Use `include_person = TRUE` only under appropriate privacy controls."</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [5] "Strict marginal fit flagged 2 group-level summaries."                                                                              </span>
 <span class="r-in"><span><span class="co"># Look for: lines starting with "MnSq misfit:" name the element +</span></span></span>
 <span class="r-in"><span><span class="co">#   Infit / Outfit values outside the configured heuristic review band.</span></span></span>
 <span class="r-in"><span><span class="co">#   Review those signals in context; an empty warning list is not an</span></span></span>
 <span class="r-in"><span><span class="co">#   automatic all-clear decision.</span></span></span>
 <span class="r-in"><span><span class="va">s_diag</span><span class="op">$</span><span class="va">facets_chisq</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 3 × 10</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Facet     Levels MeanMeasure    SD FixedChiSq FixedDF FixedProb RandomChiSq</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> Criterion      3    4.62<span style="color: #949494;">e</span><span style="color: #BB0000;">-18</span> 0.298       14.6       2  6.60<span style="color: #949494;">e</span><span style="color: #BB0000;">- 4</span>        2.00</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> Person        48   -<span style="color: #BB0000;">1.41</span><span style="color: #949494;">e</span><span style="color: #BB0000;">- 1</span> 0.811      149.       47  1.83<span style="color: #949494;">e</span><span style="color: #BB0000;">-12</span>       46.5 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> Rater          6    0   <span style="color: #949494;"> </span>    0.379       14.5       5  1.26<span style="color: #949494;">e</span><span style="color: #BB0000;">- 2</span>        4.99</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 2 more variables: RandomDF &lt;dbl&gt;, RandomProb &lt;dbl&gt;</span></span>
 <span class="r-in"><span><span class="co"># Look for: `FixedProb` &lt; 0.05 is evidence against the fixed-effect</span></span></span>
 <span class="r-in"><span><span class="co">#   "all elements equal" null under the reported chi-square approximation.</span></span></span>
 <span class="r-in"><span><span class="co">#   Interpret the magnitude and precision as well; a non-significant result</span></span></span>
 <span class="r-in"><span><span class="co">#   does not demonstrate homogeneous elements or negligible facet spread.</span></span></span>
 <span class="r-in"><span><span class="va">s_diag</span><span class="op">$</span><span class="va">interrater</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 12</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   RaterFacet Raters Pairs OpportunityCount ExactAgreement ExpectedExactAgreement</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>                  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> Rater           6    15              138          0.391                  0.349</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 6 more variables: AgreementMinusExpected &lt;dbl&gt;, AdjacentAgreement &lt;dbl&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   MeanAbsDiff &lt;dbl&gt;, MeanCorr &lt;dbl&gt;, RaterSeparation &lt;dbl&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   RaterReliability &lt;dbl&gt;</span></span>
 <span class="r-in"><span><span class="co"># Look for: ExactAgreement &gt;= ExpectedExactAgreement and</span></span></span>
 <span class="r-in"><span><span class="co">#   AgreementMinusExpected &gt;= 0 indicate raters agree at least as</span></span></span>
 <span class="r-in"><span><span class="co">#   often as the model expects. Negative values warrant a closer</span></span></span>
 <span class="r-in"><span><span class="co">#   look at `diag$interrater$pairs`.</span></span></span>
 <span class="r-in"><span><span class="va">p_qc</span> <span class="op">&lt;-</span> <span class="fu"><a href="plot_qc_dashboard.html">plot_qc_dashboard</a></span><span class="op">(</span><span class="va">fit</span>, diagnostics <span class="op">=</span> <span class="va">diag</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">p_qc</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">plot</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "qc_dashboard"</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Optional: include residual PCA in the diagnostic bundle</span></span></span>
 <span class="r-in"><span><span class="va">diag_pca</span> <span class="op">&lt;-</span> <span class="fu">diagnose_mfrm</span><span class="op">(</span><span class="va">fit</span>, residual_pca <span class="op">=</span> <span class="st">"overall"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">pca</span> <span class="op">&lt;-</span> <span class="fu"><a href="analyze_residual_pca.html">analyze_residual_pca</a></span><span class="op">(</span><span class="va">diag_pca</span>, mode <span class="op">=</span> <span class="st">"overall"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">pca</span><span class="op">$</span><span class="va">overall_table</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Component Eigenvalue Proportion Cumulative</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1         1   2.853684 0.15853802  0.1585380</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2         2   2.458881 0.13660448  0.2951425</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3         3   2.200935 0.12227419  0.4174167</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4         4   1.996765 0.11093138  0.5283481</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5         5   1.598169 0.08878715  0.6171352</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6         6   1.452093 0.08067183  0.6978070</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Reporting route:</span></span></span>
 <span class="r-in"><span><span class="va">prec</span> <span class="op">&lt;-</span> <span class="fu"><a href="precision_review_report.html">precision_review_report</a></span><span class="op">(</span><span class="va">fit</span>, diagnostics <span class="op">=</span> <span class="va">diag</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">prec</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
-<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> mfrmr Precision Review Summary </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Class: mfrm_precision_review</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Components: 5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Precision overview</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Method PrecisionTier SupportsFormalInference Checks ReviewOrWarn</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     MML   model_based                    TRUE      7            0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  FitSeparationRows NoteRows</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                  4        4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Review checks: checks</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                     Check Status</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            Precision tier   pass</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     Optimizer convergence   pass</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      ModelSE availability   pass</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Fit-adjusted SE ordering   pass</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      Reliability ordering   pass</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Facet precision coverage   pass</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          SE source labels   pass</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                Detail</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                               This run uses the package's model-based precision path.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                 Optimizer diagnostics support inference-ready status.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                              Finite ModelSE values were available for 100.0% of rows.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             Fit-adjusted SE values were not smaller than their paired ModelSE values.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          Conservative reliability values were not larger than the model-based values.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Each facet had sample/population summaries for both model and fit-adjusted SE modes.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                         Person and non-person SE labels match the MML precision path.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Settings</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         Setting       Value</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           model         RSM</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          method         MML</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  precision_tier model_based</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Notes</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Model-based precision path detected for the current run.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Fit/separation basis rows state source grounding and validation-use</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    boundaries.</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

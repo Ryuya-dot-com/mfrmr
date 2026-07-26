@@ -196,7 +196,7 @@ Points are colored by facet for easy identification.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># interactive()</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_operational"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span></span>
 <span class="r-in"><span>                method <span class="op">=</span> <span class="st">"MML"</span>, model <span class="op">=</span> <span class="st">"RSM"</span>,</span></span>
@@ -204,6 +204,13 @@ Points are colored by facet for easy identification.</p>
 <span class="r-in"><span><span class="va">diag</span> <span class="op">&lt;-</span> <span class="fu"><a href="diagnose_mfrm.html">diagnose_mfrm</a></span><span class="op">(</span><span class="va">fit</span>, residual_pca <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu">plot_bubble</span><span class="op">(</span><span class="va">fit</span>, diagnostics <span class="op">=</span> <span class="va">diag</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">p</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">table</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Facet"</span>, <span class="st">"Level"</span>, <span class="st">"Estimate"</span>, <span class="st">"Infit"</span>, <span class="st">"Outfit"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    Facet Level   Estimate     Infit    Outfit</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 49 Rater   R01 -0.5968433 0.7558296 0.7419517</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 50 Rater   R02 -0.3339430 0.9659519 1.0267816</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 51 Rater   R03  0.2588494 1.0003529 0.9692421</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 52 Rater   R04  0.1692568 0.9195966 0.9036096</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 53 Rater   R05  0.1348932 0.6437494 0.6364430</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 54 Rater   R06  0.3677868 0.8062824 0.7890478</span>
 <span class="r-in"><span><span class="co"># Look for (default `view = "measure"`): bubbles inside the shaded</span></span></span>
 <span class="r-in"><span><span class="co">#   0.5-1.5 fit-review band. Bubbles above the band are underfit</span></span></span>
 <span class="r-in"><span><span class="co">#   (noisy elements); below the band are overfit (overly predictable).</span></span></span>
@@ -212,13 +219,14 @@ Points are colored by facet for easy identification.</p>
 <span class="r-in"><span><span class="va">p_io</span> <span class="op">&lt;-</span> <span class="fu">plot_bubble</span><span class="op">(</span><span class="va">fit</span>, diagnostics <span class="op">=</span> <span class="va">diag</span>, view <span class="op">=</span> <span class="st">"infit_outfit"</span>,</span></span>
 <span class="r-in"><span>                     draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">p_io</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">view</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "infit_outfit"</span>
 <span class="r-in"><span><span class="co"># Look for: bubbles clustered inside the central [0.5, 1.5] x [0.5, 1.5]</span></span></span>
 <span class="r-in"><span><span class="co">#   square. Points outside the upper-right corner have both Infit</span></span></span>
 <span class="r-in"><span><span class="co">#   AND Outfit &gt; 1.5 (consistent underfit); points outside the</span></span></span>
 <span class="r-in"><span><span class="co">#   lower-left have both &lt; 0.5 (consistent overfit). Bubble size in</span></span></span>
 <span class="r-in"><span><span class="co">#   this view defaults to N (observation count) so the visual</span></span></span>
 <span class="r-in"><span><span class="co">#   weighting matches how seriously the misfit should be taken.</span></span></span>
-<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

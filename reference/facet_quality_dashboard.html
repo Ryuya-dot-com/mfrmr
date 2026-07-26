@@ -190,14 +190,78 @@ when <code>bias_results</code> was supplied; <code>NULL</code> otherwise</p></li
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># interactive()</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="va">toy</span><span class="op">[</span><span class="va">toy</span><span class="op">$</span><span class="va">Person</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">toy</span><span class="op">$</span><span class="va">Person</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">8</span><span class="op">]</span>, <span class="op">]</span></span></span>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>, method <span class="op">=</span> <span class="st">"JML"</span>, maxit <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">diag</span> <span class="op">&lt;-</span> <span class="fu"><a href="diagnose_mfrm.html">diagnose_mfrm</a></span><span class="op">(</span><span class="va">fit</span>, residual_pca <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">dash</span> <span class="op">&lt;-</span> <span class="fu">facet_quality_dashboard</span><span class="op">(</span><span class="va">fit</span>, diagnostics <span class="op">=</span> <span class="va">diag</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">dash</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> mfrmr Facet Quality Dashboard Summary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Overview</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Facet FacetSource Levels FlaggedLevels BiasSourceBundles</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Rater    inferred      4             2                 0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Summary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Facet Levels MeanEstimate   SD MinEstimate MaxEstimate MeanInfit MeanOutfit</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Rater      4            0 0.26      -0.322       0.315     0.997      0.978</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  SeverityFlagged MisfitFlagged CentralTendencyFlagged BiasFlagged AnyFlagged</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                0             0                      2           0          2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  BiasRows</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Flagged levels</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Facet Level Estimate N.x    SE ModelSE RealSE                     SE_Method</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Rater   R01    0.003  32 0.252   0.252  0.289 Observation-table information</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Rater   R02    0.003  32 0.252   0.252  0.252 Observation-table information</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Converged InferenceReady ConvergenceSeverity PrecisionTier</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       TRUE           TRUE                pass   exploratory</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       TRUE           TRUE                pass   exploratory</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  SupportsFormalInference          SEUse</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                    FALSE screening_only</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                    FALSE screening_only</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                CIBasis          CIUse N.y Infit</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Normal interval from exploratory observation-table SE screening_only  32 1.321</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Normal interval from exploratory observation-table SE screening_only  32 0.943</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Outfit InfitZSTD OutfitZSTD DF_Infit DF_Outfit N.x.x ObservedAverage</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   1.277     0.937      1.101   15.765        32    32            2.75</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   0.912    -0.046     -0.278   15.765        32    32            2.75</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  ExpectedAverage Bias MeanResidual MeanStdResidual MeanAbsStdResidual  ChiSq</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             2.75    0            0          -0.026              0.922 40.856</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             2.75    0            0           0.011              0.779 29.192</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  ChiDf  ChiP SE_Residual t_Residual p_Residual SE_StdResidual t_StdResidual</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     31 0.111       0.124          0          1          0.177        -0.149</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     31 0.559       0.124          0          1          0.177         0.063</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  p_StdResidual DF PTMEA N.y.y CI_Lower CI_Upper CI_Level            CI_Method</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          0.882 31 0.609    32    -0.49    0.497     0.95 Normal approximation</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          0.950 31 0.667    32    -0.49    0.497     0.95 Normal approximation</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  CIEligible                              CILabel  N AbsEstimate SeverityFlag</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       FALSE Approximate interval; screening only 32       0.003        FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       FALSE Approximate interval; screening only 32       0.003        FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  MisfitFlag CentralTendencyFlag BiasCount BiasSources BiasFlag FlagCount</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       FALSE                TRUE         0           0    FALSE         1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       FALSE                TRUE         0           0    FALSE         1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  AnyFlag FlagLabel .AbsEstimate</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     TRUE   central        0.003</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     TRUE   central        0.003</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Settings</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>               Setting    Value</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                 facet    Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          facet_source inferred</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         severity_warn        1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           misfit_warn      1.5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  central_tendency_max     0.25</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       bias_count_warn        1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       bias_abs_t_warn        2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    bias_abs_size_warn      0.5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            bias_p_max     0.05</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   bias_source_bundles        0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Notes</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Dashboard constructed successfully.</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

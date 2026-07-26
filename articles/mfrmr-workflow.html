@@ -89,7 +89,7 @@ fixed-calibration prediction</li>
 </ul>
 <p>For a plot-first companion guide, see the separate
 <code>mfrmr-visual-diagnostics</code> vignette.</p>
-<p>For efficient development without changing the final analysis
+<p>For a faster preliminary run without changing the final analysis
 target:</p>
 <ul>
 <li>test code mechanics on a small deterministic subset or, for an MML
@@ -442,7 +442,7 @@ complete-crossing example for fast help-page checks.</p>
 <span><span class="co">#&gt;  ready_for_diagnostic_interpretation                TRUE</span></span>
 <span><span class="co">#&gt;  ready_for_diagnostic_interpretation                TRUE</span></span>
 <span><span class="co">#&gt;  ready_for_diagnostic_interpretation                TRUE</span></span>
-<span><span class="co">#&gt;   Executable routes are stored in `$required_visual$Route`.</span></span>
+<span><span class="co">#&gt;   Plot commands are stored in `$required_visual$Route`.</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Status</span></span>
 <span><span class="co">#&gt;  - Overall status: Fit completed, but data, design, stability, or diagnostics require review</span></span>
@@ -470,7 +470,7 @@ complete-crossing example for fast help-page checks.</p>
 <span><span class="co">#&gt;  - Strict marginal fit flagged 1 group-level summaries.</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Next actions</span></span>
-<span><span class="co">#&gt;  - Create the required native Wright map first; use the first executable route</span></span>
+<span><span class="co">#&gt;  - Create the required native Wright map first; run the first available command</span></span>
 <span><span class="co">#&gt;    in `$required_visual$Route`.</span></span>
 <span><span class="co">#&gt;  - Use the FACETS-style ruler only when its familiar layout or rubric labels</span></span>
 <span><span class="co">#&gt;    help readers; it does not establish numerical equivalence.</span></span>
@@ -547,7 +547,7 @@ complete-crossing example for fast help-page checks.</p>
 <span><span class="co">#&gt;  - `$results$tables`: full structured tables (not printed here).</span></span>
 <span><span class="co">#&gt;  - Re-run `summary(fit, profile = "facets", detail = "full")` only when more fit-level detail is needed.</span></span>
 <span></span>
-<span><span class="co"># Required first fitted-scale artifact.</span></span>
+<span><span class="co"># Required first fitted-scale figure.</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">res_toy</span>, type <span class="op">=</span> <span class="st">"wright"</span>, preset <span class="op">=</span> <span class="st">"publication"</span>, show_ci <span class="op">=</span> <span class="cn">TRUE</span>, top_n <span class="op">=</span> <span class="cn">Inf</span><span class="op">)</span></span></code></pre></div>
 <p><img src="mfrmr-workflow_files/figure-html/toy-setup-1.png" class="r-plt" alt="" width="672"></p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
@@ -591,8 +591,22 @@ initial direct or hybrid solution stops with a larger gradient and
 warm-started polishing stages and retains the best non-worsening
 candidate under the recorded selection rule. Inspect
 <code>fit_toy$opt$optimizer_polish$Stages</code> when
-<code>Numerical</code> is not <code>pass</code>.
-<code>InferenceReady</code> describes this numerical gate only: Data,
+<code>Numerical</code> is not <code>pass</code>.</p>
+<p><code>maxit</code> is only a computational ceiling. It must not be
+increased until a preferred coefficient, fit statistic, or expected
+conclusion appears. For a final analysis, prespecify the estimator and
+controls and start from the package default <code>maxit = 400</code>
+unless the analysis protocol states otherwise. If a run reaches
+<code>ConvergenceStatus = "iteration_limit"</code>, keep it review-only
+and repeat the same data, model, method, anchors, optimizer, tolerance,
+and quadrature rule with the next ceiling in a prespecified sequence.
+Interpret only a run with <code>Converged = TRUE</code>,
+<code>InferenceReady = TRUE</code>, and <code>Numerical = pass</code>.
+If two separately ready runs differ materially, investigate numerical
+stability instead of selecting the preferred result. Report the
+requested ceiling, actual evaluations, convergence reason, and terminal
+gradient.</p>
+<p><code>InferenceReady</code> describes this numerical gate only: Data,
 Design, Stability, Diagnostics, and Reporting remain separate rows in
 <code>fit_summary_toy$readiness</code>. For example, a disconnected
 design remains a reporting hold even if its optimizer converges.
@@ -631,12 +645,12 @@ columns in <code>res_toy$plot_map</code> before treating an available
 plot as a final result. Plots remain available during a numerical, data,
 design, or stability review, but they warn and carry
 <code>REVIEW ONLY</code> in the returned subtitle and drawn title until
-the upstream issue is resolved.</p>
+the readiness issue is resolved.</p>
 <p>Bias/DIF, residual PCA, and anchor-drift/linking analyses are
 deliberately not auto-run by any summary profile. They require explicit
 contrasts, diagnostic settings, or multi-fit designs.</p>
-<p>The same fit can then move through the public first-contact
-route:</p>
+<p>The same fit can then move through the recommended first reporting
+workflow:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">report_toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_report.html">mfrm_report</a></span><span class="op">(</span><span class="va">res_toy</span>, style <span class="op">=</span> <span class="st">"qc"</span><span class="op">)</span></span>
 <span></span>
@@ -665,14 +679,14 @@ route:</p>
 <span><span class="co">#&gt; 5                                                                                                                          plot(res, type = "qc", preset = "publication")</span></span>
 <span><span class="co">#&gt; 6 plot(res, type = "fit_pathway", fit_stat = "Infit", include_person = TRUE, top_n_person = 12, person_labels = "none", facet_labels = "flagged", preset = "publication")</span></span>
 <span><span class="co">#&gt; 7                                                                                                                                         build_summary_table_bundle(res)</span></span>
-<span><span class="co">#&gt;                                                                                                                                                   Reason</span></span>
-<span><span class="co">#&gt; 1                                                                   Confirms input mode, model, method, section status, table coverage, and plot routes.</span></span>
-<span><span class="co">#&gt; 3                              Triage orders unavailable, review, information, and OK signals across diagnostics, tables, plots, and reporting surfaces.</span></span>
-<span><span class="co">#&gt; 2 The Wright map is the primary fitted-scale artifact: compare person targeting with facet levels and step thresholds before branching into diagnostics.</span></span>
-<span><span class="co">#&gt; 4                                            Diagnostic warnings identify the highest-priority fit, precision, residual, or category follow-up surfaces.</span></span>
-<span><span class="co">#&gt; 5                                                                   The QC route gives a focused follow-up view of fit, residual, and category surfaces.</span></span>
-<span><span class="co">#&gt; 6                                            This follow-up separates measure uncertainty from fit displacement while keeping person inclusion explicit.</span></span>
-<span><span class="co">#&gt; 7                                                                     The bundle exposes table roles, plot readiness, and conservative appendix presets.</span></span>
+<span><span class="co">#&gt;                                                                                                                                                 Reason</span></span>
+<span><span class="co">#&gt; 1                                                           Confirms input mode, model, method, section status, table coverage, and available figures.</span></span>
+<span><span class="co">#&gt; 3                             Triage orders unavailable, review, information, and OK signals across diagnostics, tables, plots, and reporting outputs.</span></span>
+<span><span class="co">#&gt; 2 The Wright map is the primary fitted-scale figure: compare person targeting with facet levels and step thresholds before branching into diagnostics.</span></span>
+<span><span class="co">#&gt; 4                                            Diagnostic warnings identify the highest-priority fit, precision, residual, or category follow-up checks.</span></span>
+<span><span class="co">#&gt; 5                                                            The QC dashboard gives a focused follow-up view of fit, residual, and category summaries.</span></span>
+<span><span class="co">#&gt; 6                                          This follow-up separates measure uncertainty from fit displacement while keeping person inclusion explicit.</span></span>
+<span><span class="co">#&gt; 7                                                                   The bundle exposes table roles, plot readiness, and conservative appendix presets.</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">report_toy</span><span class="op">)</span><span class="op">$</span><span class="va">overview</span></span>
 <span><span class="co">#&gt;   Style OverallStatus     FirstAction ReviewAreas NotComputedAreas CaveatAreas</span></span>
 <span><span class="co">#&gt; 1    qc        review Start with Fit.           1                0           1</span></span>
@@ -699,12 +713,12 @@ route:</p>
 <span><span class="co">#&gt; 5        summary_plot_map    csv</span></span>
 <span><span class="co">#&gt; 6          summary_triage    csv</span></span>
 <span><span class="co">#&gt;                                                                              Path</span></span>
-<span><span class="co">#&gt; 1        /tmp/RtmpgJhVO9/mfrmr-workflow-export/mfrmr_results_summary_overview.csv</span></span>
-<span><span class="co">#&gt; 2          /tmp/RtmpgJhVO9/mfrmr-workflow-export/mfrmr_results_summary_status.csv</span></span>
-<span><span class="co">#&gt; 3 /tmp/RtmpgJhVO9/mfrmr-workflow-export/mfrmr_results_summary_component_index.csv</span></span>
-<span><span class="co">#&gt; 4     /tmp/RtmpgJhVO9/mfrmr-workflow-export/mfrmr_results_summary_table_index.csv</span></span>
-<span><span class="co">#&gt; 5        /tmp/RtmpgJhVO9/mfrmr-workflow-export/mfrmr_results_summary_plot_map.csv</span></span>
-<span><span class="co">#&gt; 6          /tmp/RtmpgJhVO9/mfrmr-workflow-export/mfrmr_results_summary_triage.csv</span></span>
+<span><span class="co">#&gt; 1        /tmp/Rtmp53ZhTe/mfrmr-workflow-export/mfrmr_results_summary_overview.csv</span></span>
+<span><span class="co">#&gt; 2          /tmp/Rtmp53ZhTe/mfrmr-workflow-export/mfrmr_results_summary_status.csv</span></span>
+<span><span class="co">#&gt; 3 /tmp/Rtmp53ZhTe/mfrmr-workflow-export/mfrmr_results_summary_component_index.csv</span></span>
+<span><span class="co">#&gt; 4     /tmp/Rtmp53ZhTe/mfrmr-workflow-export/mfrmr_results_summary_table_index.csv</span></span>
+<span><span class="co">#&gt; 5        /tmp/Rtmp53ZhTe/mfrmr-workflow-export/mfrmr_results_summary_plot_map.csv</span></span>
+<span><span class="co">#&gt; 6          /tmp/Rtmp53ZhTe/mfrmr-workflow-export/mfrmr_results_summary_triage.csv</span></span>
 <span><span class="co">#&gt;   Note          DataHandling</span></span>
 <span><span class="co">#&gt; 1      review_before_sharing</span></span>
 <span><span class="co">#&gt; 2      review_before_sharing</span></span>
@@ -714,8 +728,8 @@ route:</p>
 <span><span class="co">#&gt; 6      review_before_sharing</span></span></code></pre></div>
 <p>The acknowledgement suppresses the warning only; it does not redact
 person identifiers, person-level results, local paths, or the complete
-RDS object. Review every artifact under the study’s data-handling policy
-before sharing.</p>
+RDS object. Review every exported file under the study’s data-handling
+policy before sharing.</p>
 </div>
 <div class="section level2">
 <h2 id="diagnostics-and-reporting">Diagnostics and Reporting<a class="anchor" aria-label="anchor" href="#diagnostics-and-reporting"></a>
@@ -814,7 +828,7 @@ dataset:</p>
 <span><span class="co">#&gt;  ready_for_diagnostic_interpretation                TRUE</span></span>
 <span><span class="co">#&gt;  ready_for_diagnostic_interpretation                TRUE</span></span>
 <span><span class="co">#&gt;                        not_available               FALSE</span></span>
-<span><span class="co">#&gt;   Executable routes are stored in `$required_visual$Route`.</span></span>
+<span><span class="co">#&gt;   Plot commands are stored in `$required_visual$Route`.</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Status</span></span>
 <span><span class="co">#&gt;  - Overall status: Fit completed; review diagnostics before reporting</span></span>
@@ -963,7 +977,7 @@ dataset:</p>
 <span><span class="co">#&gt;  - Additional tables remain in the structured summary; use `detail = "full"` to</span></span>
 <span><span class="co">#&gt;    print them.</span></span>
 <span></span>
-<span><span class="co"># Keep the final artifact flow explicit: fit -&gt; Wright map -&gt; follow-up plots.</span></span>
+<span><span class="co"># Keep the final figure flow explicit: fit -&gt; Wright map -&gt; follow-up plots.</span></span>
 <span><span class="va">s</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit</span>, profile <span class="op">=</span> <span class="st">"facets"</span>, diagnostics <span class="op">=</span> <span class="va">diag</span><span class="op">)</span></span>
 <span><span class="va">res</span> <span class="op">&lt;-</span> <span class="va">s</span><span class="op">$</span><span class="va">results</span></span>
 <span><span class="va">s</span></span>
@@ -983,7 +997,7 @@ dataset:</p>
 <span><span class="co">#&gt;  ready_for_diagnostic_interpretation                TRUE</span></span>
 <span><span class="co">#&gt;  ready_for_diagnostic_interpretation                TRUE</span></span>
 <span><span class="co">#&gt;  ready_for_diagnostic_interpretation                TRUE</span></span>
-<span><span class="co">#&gt;   Executable routes are stored in `$required_visual$Route`.</span></span>
+<span><span class="co">#&gt;   Plot commands are stored in `$required_visual$Route`.</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Status</span></span>
 <span><span class="co">#&gt;  - Overall status: Fit completed, but data, design, stability, or diagnostics require review</span></span>
@@ -1011,7 +1025,7 @@ dataset:</p>
 <span><span class="co">#&gt;  - Strict marginal fit flagged 4 group-level summaries.</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Next actions</span></span>
-<span><span class="co">#&gt;  - Create the required native Wright map first; use the first executable route</span></span>
+<span><span class="co">#&gt;  - Create the required native Wright map first; run the first available command</span></span>
 <span><span class="co">#&gt;    in `$required_visual$Route`.</span></span>
 <span><span class="co">#&gt;  - Use the FACETS-style ruler only when its familiar layout or rubric labels</span></span>
 <span><span class="co">#&gt;    help readers; it does not establish numerical equivalence.</span></span>

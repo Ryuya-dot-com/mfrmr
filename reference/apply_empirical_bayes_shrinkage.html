@@ -217,12 +217,19 @@ and applications. <em>Journal of the American Statistical Association,
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># interactive()</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span></span>
 <span class="r-in"><span>                method <span class="op">=</span> <span class="st">"JML"</span>, maxit <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span></span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.</span>
 <span class="r-in"><span><span class="va">fit_eb</span> <span class="op">&lt;-</span> <span class="fu">apply_empirical_bayes_shrinkage</span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fit_eb</span><span class="op">$</span><span class="va">shrinkage_report</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       Facet NLevels NLevelsUsed       Tau2     MeanSE2 MeanShrinkage</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1     Rater       4           4 0.06403506 0.009500135     0.1291914</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 Criterion       4           4 0.05259214 0.009500604     0.1530053</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   EffectiveDF          Method PriorSource Note</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1    3.483234 empirical_bayes   empirical &lt;NA&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2    3.387979 empirical_bayes   empirical &lt;NA&gt;</span>
 <span class="r-in"><span><span class="co"># Look for:</span></span></span>
 <span class="r-in"><span><span class="co"># - `Tau2` is the estimated between-level prior variance per facet.</span></span></span>
 <span class="r-in"><span><span class="co">#   `Tau2 = 0` means the data did not justify any pooling and the</span></span></span>
@@ -235,9 +242,16 @@ and applications. <em>Journal of the American Statistical Association,
 <span class="r-in"><span><span class="co">#   count of the facet means most levels were pooled together.</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">fit_eb</span><span class="op">$</span><span class="va">facets</span><span class="op">$</span><span class="va">others</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Facet"</span>, <span class="st">"Level"</span>, <span class="st">"Estimate"</span>,</span></span>
 <span class="r-in"><span>                               <span class="st">"ShrunkEstimate"</span>, <span class="st">"ShrinkageFactor"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       Facet    Level   Estimate ShrunkEstimate ShrinkageFactor</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1     Rater      R01 -0.1957561     -0.1705417       0.1288054</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2     Rater      R02 -0.3287963     -0.2861443       0.1297216</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3     Rater      R03  0.1910876      0.1665002       0.1286707</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4     Rater      R04  0.3334649      0.2902585       0.1295680</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5 Criterion Accuracy  0.2487261      0.2106946       0.1529051</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6 Criterion  Content -0.4150580     -0.3508239       0.1547593</span>
 <span class="r-in"><span><span class="co"># Look for: rows where `ShrinkageFactor` is large (close to 1) had</span></span></span>
 <span class="r-in"><span><span class="co">#   their estimates pulled most strongly toward the facet mean (0).</span></span></span>
-<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

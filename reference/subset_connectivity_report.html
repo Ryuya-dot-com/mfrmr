@@ -115,19 +115,859 @@ and edge tables with <code>draw = FALSE</code>; drawing uses <code>igraph</code>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># interactive()</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>, method <span class="op">=</span> <span class="st">"JML"</span>, maxit <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span></span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.</span>
 <span class="r-in"><span><span class="va">out</span> <span class="op">&lt;-</span> <span class="fu">subset_connectivity_report</span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">out</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> mfrmr Subset Connectivity Summary </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Class: mfrm_subset_connectivity</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Components: 5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Subset overview</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Subset Criterion Rater Observations ObservationPercent</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       1         4     4          768                100</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Subset/node rows: listing</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Subset     Facet LevelsN</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       1 Criterion       4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       1    Person      48</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       1     Rater       4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                                                                                                                                                                          Levels</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                                                                                                                                       Accuracy, Content, Language, Organization</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  P001, P002, P003, P004, P005, P006, P007, P008, P009, P010, P011, P012, P013, P014, P015, P016, P017, P018, P019, P020, P021, P022, P023, P024, P025, P026, P027, P028, P029, P030, P031, P032, P033, P034, P035, P036, P037, P038, P039, P040, P041, P042, P043, P044, P045, P046, P047, P048</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                                                                                                                                                              R01, R02, R03, R04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Observations ObservationPercent                  Ruler</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           768                100 [====================]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           768                100 [====================]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           768                100 [====================]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Settings</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           Setting Value</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     top_n_subsets    NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  min_observations     0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       is_disjoint FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Notes</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Legacy-compatible Table 6 subset/connectivity report with subset and node</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    listings.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Person identifiers are suppressed in this summary. Use `include_person =</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    TRUE` only under appropriate privacy controls.</span>
 <span class="r-in"><span><span class="va">p_sub</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">out</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">p_design</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">out</span>, type <span class="op">=</span> <span class="st">"design_matrix"</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">p_net</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">out</span>, type <span class="op">=</span> <span class="st">"network"</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">p_sub</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">plot</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "subset_observations"</span>
 <span class="r-in"><span><span class="va">p_design</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">plot</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "coverage_matrix"</span>
 <span class="r-in"><span><span class="va">p_net</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">edges</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     Subset                   From          To FromFacet    FromLevel ToFacet</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1        1     Criterion:Accuracy   Rater:R01 Criterion     Accuracy   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2        1     Criterion:Accuracy   Rater:R02 Criterion     Accuracy   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3        1     Criterion:Accuracy   Rater:R03 Criterion     Accuracy   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4        1     Criterion:Accuracy   Rater:R04 Criterion     Accuracy   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5        1      Criterion:Content   Rater:R01 Criterion      Content   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6        1      Criterion:Content   Rater:R02 Criterion      Content   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7        1      Criterion:Content   Rater:R03 Criterion      Content   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8        1      Criterion:Content   Rater:R04 Criterion      Content   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9        1     Criterion:Language   Rater:R01 Criterion     Language   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10       1     Criterion:Language   Rater:R02 Criterion     Language   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11       1     Criterion:Language   Rater:R03 Criterion     Language   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12       1     Criterion:Language   Rater:R04 Criterion     Language   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13       1 Criterion:Organization   Rater:R01 Criterion Organization   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14       1 Criterion:Organization   Rater:R02 Criterion Organization   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 15       1 Criterion:Organization   Rater:R03 Criterion Organization   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 16       1 Criterion:Organization   Rater:R04 Criterion Organization   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 17       1     Criterion:Accuracy Person:P001 Criterion     Accuracy  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 18       1     Criterion:Accuracy Person:P002 Criterion     Accuracy  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 19       1     Criterion:Accuracy Person:P003 Criterion     Accuracy  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 20       1     Criterion:Accuracy Person:P004 Criterion     Accuracy  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 21       1     Criterion:Accuracy Person:P005 Criterion     Accuracy  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 22       1     Criterion:Accuracy Person:P006 Criterion     Accuracy  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 23       1     Criterion:Accuracy Person:P007 Criterion     Accuracy  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 24       1     Criterion:Accuracy Person:P008 Criterion     Accuracy  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 25       1     Criterion:Accuracy Person:P009 Criterion     Accuracy  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 26       1     Criterion:Accuracy Person:P010 Criterion     Accuracy  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 27       1     Criterion:Accuracy Person:P011 Criterion     Accuracy  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 28       1     Criterion:Accuracy Person:P012 Criterion     Accuracy  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 29       1     Criterion:Accuracy Person:P013 Criterion     Accuracy  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 30       1     Criterion:Accuracy Person:P014 Criterion     Accuracy  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 31       1     Criterion:Accuracy Person:P015 Criterion     Accuracy  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 32       1     Criterion:Accuracy Person:P016 Criterion     Accuracy  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 33       1     Criterion:Accuracy Person:P017 Criterion     Accuracy  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 34       1     Criterion:Accuracy Person:P018 Criterion     Accuracy  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 35       1     Criterion:Accuracy Person:P019 Criterion     Accuracy  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 36       1     Criterion:Accuracy Person:P020 Criterion     Accuracy  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 37       1     Criterion:Accuracy Person:P021 Criterion     Accuracy  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 38       1     Criterion:Accuracy Person:P022 Criterion     Accuracy  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 39       1     Criterion:Accuracy Person:P023 Criterion     Accuracy  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 40       1     Criterion:Accuracy Person:P024 Criterion     Accuracy  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 41       1     Criterion:Accuracy Person:P025 Criterion     Accuracy  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 42       1     Criterion:Accuracy Person:P026 Criterion     Accuracy  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 43       1     Criterion:Accuracy Person:P027 Criterion     Accuracy  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 44       1     Criterion:Accuracy Person:P028 Criterion     Accuracy  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 45       1     Criterion:Accuracy Person:P029 Criterion     Accuracy  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 46       1     Criterion:Accuracy Person:P030 Criterion     Accuracy  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 47       1     Criterion:Accuracy Person:P031 Criterion     Accuracy  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 48       1     Criterion:Accuracy Person:P032 Criterion     Accuracy  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 49       1     Criterion:Accuracy Person:P033 Criterion     Accuracy  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 50       1     Criterion:Accuracy Person:P034 Criterion     Accuracy  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 51       1     Criterion:Accuracy Person:P035 Criterion     Accuracy  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 52       1     Criterion:Accuracy Person:P036 Criterion     Accuracy  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 53       1     Criterion:Accuracy Person:P037 Criterion     Accuracy  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 54       1     Criterion:Accuracy Person:P038 Criterion     Accuracy  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 55       1     Criterion:Accuracy Person:P039 Criterion     Accuracy  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 56       1     Criterion:Accuracy Person:P040 Criterion     Accuracy  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 57       1     Criterion:Accuracy Person:P041 Criterion     Accuracy  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 58       1     Criterion:Accuracy Person:P042 Criterion     Accuracy  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 59       1     Criterion:Accuracy Person:P043 Criterion     Accuracy  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 60       1     Criterion:Accuracy Person:P044 Criterion     Accuracy  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 61       1     Criterion:Accuracy Person:P045 Criterion     Accuracy  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 62       1     Criterion:Accuracy Person:P046 Criterion     Accuracy  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 63       1     Criterion:Accuracy Person:P047 Criterion     Accuracy  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 64       1     Criterion:Accuracy Person:P048 Criterion     Accuracy  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 65       1      Criterion:Content Person:P001 Criterion      Content  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 66       1      Criterion:Content Person:P002 Criterion      Content  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 67       1      Criterion:Content Person:P003 Criterion      Content  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 68       1      Criterion:Content Person:P004 Criterion      Content  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 69       1      Criterion:Content Person:P005 Criterion      Content  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 70       1      Criterion:Content Person:P006 Criterion      Content  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 71       1      Criterion:Content Person:P007 Criterion      Content  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 72       1      Criterion:Content Person:P008 Criterion      Content  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 73       1      Criterion:Content Person:P009 Criterion      Content  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 74       1      Criterion:Content Person:P010 Criterion      Content  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 75       1      Criterion:Content Person:P011 Criterion      Content  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 76       1      Criterion:Content Person:P012 Criterion      Content  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 77       1      Criterion:Content Person:P013 Criterion      Content  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 78       1      Criterion:Content Person:P014 Criterion      Content  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 79       1      Criterion:Content Person:P015 Criterion      Content  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 80       1      Criterion:Content Person:P016 Criterion      Content  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 81       1      Criterion:Content Person:P017 Criterion      Content  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 82       1      Criterion:Content Person:P018 Criterion      Content  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 83       1      Criterion:Content Person:P019 Criterion      Content  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 84       1      Criterion:Content Person:P020 Criterion      Content  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 85       1      Criterion:Content Person:P021 Criterion      Content  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 86       1      Criterion:Content Person:P022 Criterion      Content  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 87       1      Criterion:Content Person:P023 Criterion      Content  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 88       1      Criterion:Content Person:P024 Criterion      Content  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 89       1      Criterion:Content Person:P025 Criterion      Content  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 90       1      Criterion:Content Person:P026 Criterion      Content  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 91       1      Criterion:Content Person:P027 Criterion      Content  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 92       1      Criterion:Content Person:P028 Criterion      Content  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 93       1      Criterion:Content Person:P029 Criterion      Content  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 94       1      Criterion:Content Person:P030 Criterion      Content  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 95       1      Criterion:Content Person:P031 Criterion      Content  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 96       1      Criterion:Content Person:P032 Criterion      Content  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 97       1      Criterion:Content Person:P033 Criterion      Content  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 98       1      Criterion:Content Person:P034 Criterion      Content  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 99       1      Criterion:Content Person:P035 Criterion      Content  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 100      1      Criterion:Content Person:P036 Criterion      Content  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 101      1      Criterion:Content Person:P037 Criterion      Content  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 102      1      Criterion:Content Person:P038 Criterion      Content  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 103      1      Criterion:Content Person:P039 Criterion      Content  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 104      1      Criterion:Content Person:P040 Criterion      Content  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 105      1      Criterion:Content Person:P041 Criterion      Content  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 106      1      Criterion:Content Person:P042 Criterion      Content  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 107      1      Criterion:Content Person:P043 Criterion      Content  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 108      1      Criterion:Content Person:P044 Criterion      Content  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 109      1      Criterion:Content Person:P045 Criterion      Content  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 110      1      Criterion:Content Person:P046 Criterion      Content  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 111      1      Criterion:Content Person:P047 Criterion      Content  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 112      1      Criterion:Content Person:P048 Criterion      Content  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 113      1     Criterion:Language Person:P001 Criterion     Language  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 114      1     Criterion:Language Person:P002 Criterion     Language  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 115      1     Criterion:Language Person:P003 Criterion     Language  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 116      1     Criterion:Language Person:P004 Criterion     Language  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 117      1     Criterion:Language Person:P005 Criterion     Language  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 118      1     Criterion:Language Person:P006 Criterion     Language  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 119      1     Criterion:Language Person:P007 Criterion     Language  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 120      1     Criterion:Language Person:P008 Criterion     Language  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 121      1     Criterion:Language Person:P009 Criterion     Language  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 122      1     Criterion:Language Person:P010 Criterion     Language  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 123      1     Criterion:Language Person:P011 Criterion     Language  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 124      1     Criterion:Language Person:P012 Criterion     Language  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 125      1     Criterion:Language Person:P013 Criterion     Language  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 126      1     Criterion:Language Person:P014 Criterion     Language  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 127      1     Criterion:Language Person:P015 Criterion     Language  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 128      1     Criterion:Language Person:P016 Criterion     Language  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 129      1     Criterion:Language Person:P017 Criterion     Language  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 130      1     Criterion:Language Person:P018 Criterion     Language  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 131      1     Criterion:Language Person:P019 Criterion     Language  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 132      1     Criterion:Language Person:P020 Criterion     Language  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 133      1     Criterion:Language Person:P021 Criterion     Language  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 134      1     Criterion:Language Person:P022 Criterion     Language  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 135      1     Criterion:Language Person:P023 Criterion     Language  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 136      1     Criterion:Language Person:P024 Criterion     Language  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 137      1     Criterion:Language Person:P025 Criterion     Language  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 138      1     Criterion:Language Person:P026 Criterion     Language  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 139      1     Criterion:Language Person:P027 Criterion     Language  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 140      1     Criterion:Language Person:P028 Criterion     Language  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 141      1     Criterion:Language Person:P029 Criterion     Language  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 142      1     Criterion:Language Person:P030 Criterion     Language  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 143      1     Criterion:Language Person:P031 Criterion     Language  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 144      1     Criterion:Language Person:P032 Criterion     Language  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 145      1     Criterion:Language Person:P033 Criterion     Language  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 146      1     Criterion:Language Person:P034 Criterion     Language  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 147      1     Criterion:Language Person:P035 Criterion     Language  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 148      1     Criterion:Language Person:P036 Criterion     Language  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 149      1     Criterion:Language Person:P037 Criterion     Language  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 150      1     Criterion:Language Person:P038 Criterion     Language  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 151      1     Criterion:Language Person:P039 Criterion     Language  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 152      1     Criterion:Language Person:P040 Criterion     Language  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 153      1     Criterion:Language Person:P041 Criterion     Language  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 154      1     Criterion:Language Person:P042 Criterion     Language  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 155      1     Criterion:Language Person:P043 Criterion     Language  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 156      1     Criterion:Language Person:P044 Criterion     Language  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 157      1     Criterion:Language Person:P045 Criterion     Language  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 158      1     Criterion:Language Person:P046 Criterion     Language  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 159      1     Criterion:Language Person:P047 Criterion     Language  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 160      1     Criterion:Language Person:P048 Criterion     Language  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 161      1 Criterion:Organization Person:P001 Criterion Organization  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 162      1 Criterion:Organization Person:P002 Criterion Organization  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 163      1 Criterion:Organization Person:P003 Criterion Organization  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 164      1 Criterion:Organization Person:P004 Criterion Organization  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 165      1 Criterion:Organization Person:P005 Criterion Organization  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 166      1 Criterion:Organization Person:P006 Criterion Organization  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 167      1 Criterion:Organization Person:P007 Criterion Organization  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 168      1 Criterion:Organization Person:P008 Criterion Organization  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 169      1 Criterion:Organization Person:P009 Criterion Organization  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 170      1 Criterion:Organization Person:P010 Criterion Organization  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 171      1 Criterion:Organization Person:P011 Criterion Organization  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 172      1 Criterion:Organization Person:P012 Criterion Organization  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 173      1 Criterion:Organization Person:P013 Criterion Organization  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 174      1 Criterion:Organization Person:P014 Criterion Organization  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 175      1 Criterion:Organization Person:P015 Criterion Organization  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 176      1 Criterion:Organization Person:P016 Criterion Organization  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 177      1 Criterion:Organization Person:P017 Criterion Organization  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 178      1 Criterion:Organization Person:P018 Criterion Organization  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 179      1 Criterion:Organization Person:P019 Criterion Organization  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 180      1 Criterion:Organization Person:P020 Criterion Organization  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 181      1 Criterion:Organization Person:P021 Criterion Organization  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 182      1 Criterion:Organization Person:P022 Criterion Organization  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 183      1 Criterion:Organization Person:P023 Criterion Organization  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 184      1 Criterion:Organization Person:P024 Criterion Organization  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 185      1 Criterion:Organization Person:P025 Criterion Organization  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 186      1 Criterion:Organization Person:P026 Criterion Organization  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 187      1 Criterion:Organization Person:P027 Criterion Organization  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 188      1 Criterion:Organization Person:P028 Criterion Organization  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 189      1 Criterion:Organization Person:P029 Criterion Organization  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 190      1 Criterion:Organization Person:P030 Criterion Organization  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 191      1 Criterion:Organization Person:P031 Criterion Organization  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 192      1 Criterion:Organization Person:P032 Criterion Organization  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 193      1 Criterion:Organization Person:P033 Criterion Organization  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 194      1 Criterion:Organization Person:P034 Criterion Organization  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 195      1 Criterion:Organization Person:P035 Criterion Organization  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 196      1 Criterion:Organization Person:P036 Criterion Organization  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 197      1 Criterion:Organization Person:P037 Criterion Organization  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 198      1 Criterion:Organization Person:P038 Criterion Organization  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 199      1 Criterion:Organization Person:P039 Criterion Organization  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 200      1 Criterion:Organization Person:P040 Criterion Organization  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 201      1 Criterion:Organization Person:P041 Criterion Organization  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 202      1 Criterion:Organization Person:P042 Criterion Organization  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 203      1 Criterion:Organization Person:P043 Criterion Organization  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 204      1 Criterion:Organization Person:P044 Criterion Organization  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 205      1 Criterion:Organization Person:P045 Criterion Organization  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 206      1 Criterion:Organization Person:P046 Criterion Organization  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 207      1 Criterion:Organization Person:P047 Criterion Organization  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 208      1 Criterion:Organization Person:P048 Criterion Organization  Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 209      1            Person:P001   Rater:R01    Person         P001   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 210      1            Person:P001   Rater:R02    Person         P001   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 211      1            Person:P001   Rater:R03    Person         P001   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 212      1            Person:P001   Rater:R04    Person         P001   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 213      1            Person:P002   Rater:R01    Person         P002   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 214      1            Person:P002   Rater:R02    Person         P002   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 215      1            Person:P002   Rater:R03    Person         P002   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 216      1            Person:P002   Rater:R04    Person         P002   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 217      1            Person:P003   Rater:R01    Person         P003   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 218      1            Person:P003   Rater:R02    Person         P003   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 219      1            Person:P003   Rater:R03    Person         P003   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 220      1            Person:P003   Rater:R04    Person         P003   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 221      1            Person:P004   Rater:R01    Person         P004   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 222      1            Person:P004   Rater:R02    Person         P004   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 223      1            Person:P004   Rater:R03    Person         P004   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 224      1            Person:P004   Rater:R04    Person         P004   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 225      1            Person:P005   Rater:R01    Person         P005   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 226      1            Person:P005   Rater:R02    Person         P005   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 227      1            Person:P005   Rater:R03    Person         P005   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 228      1            Person:P005   Rater:R04    Person         P005   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 229      1            Person:P006   Rater:R01    Person         P006   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 230      1            Person:P006   Rater:R02    Person         P006   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 231      1            Person:P006   Rater:R03    Person         P006   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 232      1            Person:P006   Rater:R04    Person         P006   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 233      1            Person:P007   Rater:R01    Person         P007   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 234      1            Person:P007   Rater:R02    Person         P007   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 235      1            Person:P007   Rater:R03    Person         P007   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 236      1            Person:P007   Rater:R04    Person         P007   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 237      1            Person:P008   Rater:R01    Person         P008   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 238      1            Person:P008   Rater:R02    Person         P008   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 239      1            Person:P008   Rater:R03    Person         P008   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 240      1            Person:P008   Rater:R04    Person         P008   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 241      1            Person:P009   Rater:R01    Person         P009   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 242      1            Person:P009   Rater:R02    Person         P009   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 243      1            Person:P009   Rater:R03    Person         P009   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 244      1            Person:P009   Rater:R04    Person         P009   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 245      1            Person:P010   Rater:R01    Person         P010   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 246      1            Person:P010   Rater:R02    Person         P010   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 247      1            Person:P010   Rater:R03    Person         P010   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 248      1            Person:P010   Rater:R04    Person         P010   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 249      1            Person:P011   Rater:R01    Person         P011   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 250      1            Person:P011   Rater:R02    Person         P011   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 251      1            Person:P011   Rater:R03    Person         P011   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 252      1            Person:P011   Rater:R04    Person         P011   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 253      1            Person:P012   Rater:R01    Person         P012   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 254      1            Person:P012   Rater:R02    Person         P012   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 255      1            Person:P012   Rater:R03    Person         P012   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 256      1            Person:P012   Rater:R04    Person         P012   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 257      1            Person:P013   Rater:R01    Person         P013   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 258      1            Person:P013   Rater:R02    Person         P013   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 259      1            Person:P013   Rater:R03    Person         P013   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 260      1            Person:P013   Rater:R04    Person         P013   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 261      1            Person:P014   Rater:R01    Person         P014   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 262      1            Person:P014   Rater:R02    Person         P014   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 263      1            Person:P014   Rater:R03    Person         P014   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 264      1            Person:P014   Rater:R04    Person         P014   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 265      1            Person:P015   Rater:R01    Person         P015   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 266      1            Person:P015   Rater:R02    Person         P015   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 267      1            Person:P015   Rater:R03    Person         P015   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 268      1            Person:P015   Rater:R04    Person         P015   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 269      1            Person:P016   Rater:R01    Person         P016   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 270      1            Person:P016   Rater:R02    Person         P016   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 271      1            Person:P016   Rater:R03    Person         P016   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 272      1            Person:P016   Rater:R04    Person         P016   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 273      1            Person:P017   Rater:R01    Person         P017   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 274      1            Person:P017   Rater:R02    Person         P017   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 275      1            Person:P017   Rater:R03    Person         P017   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 276      1            Person:P017   Rater:R04    Person         P017   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 277      1            Person:P018   Rater:R01    Person         P018   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 278      1            Person:P018   Rater:R02    Person         P018   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 279      1            Person:P018   Rater:R03    Person         P018   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 280      1            Person:P018   Rater:R04    Person         P018   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 281      1            Person:P019   Rater:R01    Person         P019   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 282      1            Person:P019   Rater:R02    Person         P019   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 283      1            Person:P019   Rater:R03    Person         P019   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 284      1            Person:P019   Rater:R04    Person         P019   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 285      1            Person:P020   Rater:R01    Person         P020   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 286      1            Person:P020   Rater:R02    Person         P020   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 287      1            Person:P020   Rater:R03    Person         P020   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 288      1            Person:P020   Rater:R04    Person         P020   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 289      1            Person:P021   Rater:R01    Person         P021   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 290      1            Person:P021   Rater:R02    Person         P021   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 291      1            Person:P021   Rater:R03    Person         P021   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 292      1            Person:P021   Rater:R04    Person         P021   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 293      1            Person:P022   Rater:R01    Person         P022   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 294      1            Person:P022   Rater:R02    Person         P022   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 295      1            Person:P022   Rater:R03    Person         P022   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 296      1            Person:P022   Rater:R04    Person         P022   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 297      1            Person:P023   Rater:R01    Person         P023   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 298      1            Person:P023   Rater:R02    Person         P023   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 299      1            Person:P023   Rater:R03    Person         P023   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 300      1            Person:P023   Rater:R04    Person         P023   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 301      1            Person:P024   Rater:R01    Person         P024   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 302      1            Person:P024   Rater:R02    Person         P024   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 303      1            Person:P024   Rater:R03    Person         P024   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 304      1            Person:P024   Rater:R04    Person         P024   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 305      1            Person:P025   Rater:R01    Person         P025   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 306      1            Person:P025   Rater:R02    Person         P025   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 307      1            Person:P025   Rater:R03    Person         P025   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 308      1            Person:P025   Rater:R04    Person         P025   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 309      1            Person:P026   Rater:R01    Person         P026   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 310      1            Person:P026   Rater:R02    Person         P026   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 311      1            Person:P026   Rater:R03    Person         P026   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 312      1            Person:P026   Rater:R04    Person         P026   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 313      1            Person:P027   Rater:R01    Person         P027   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 314      1            Person:P027   Rater:R02    Person         P027   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 315      1            Person:P027   Rater:R03    Person         P027   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 316      1            Person:P027   Rater:R04    Person         P027   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 317      1            Person:P028   Rater:R01    Person         P028   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 318      1            Person:P028   Rater:R02    Person         P028   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 319      1            Person:P028   Rater:R03    Person         P028   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 320      1            Person:P028   Rater:R04    Person         P028   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 321      1            Person:P029   Rater:R01    Person         P029   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 322      1            Person:P029   Rater:R02    Person         P029   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 323      1            Person:P029   Rater:R03    Person         P029   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 324      1            Person:P029   Rater:R04    Person         P029   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 325      1            Person:P030   Rater:R01    Person         P030   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 326      1            Person:P030   Rater:R02    Person         P030   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 327      1            Person:P030   Rater:R03    Person         P030   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 328      1            Person:P030   Rater:R04    Person         P030   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 329      1            Person:P031   Rater:R01    Person         P031   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 330      1            Person:P031   Rater:R02    Person         P031   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 331      1            Person:P031   Rater:R03    Person         P031   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 332      1            Person:P031   Rater:R04    Person         P031   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 333      1            Person:P032   Rater:R01    Person         P032   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 334      1            Person:P032   Rater:R02    Person         P032   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 335      1            Person:P032   Rater:R03    Person         P032   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 336      1            Person:P032   Rater:R04    Person         P032   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 337      1            Person:P033   Rater:R01    Person         P033   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 338      1            Person:P033   Rater:R02    Person         P033   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 339      1            Person:P033   Rater:R03    Person         P033   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 340      1            Person:P033   Rater:R04    Person         P033   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 341      1            Person:P034   Rater:R01    Person         P034   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 342      1            Person:P034   Rater:R02    Person         P034   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 343      1            Person:P034   Rater:R03    Person         P034   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 344      1            Person:P034   Rater:R04    Person         P034   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 345      1            Person:P035   Rater:R01    Person         P035   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 346      1            Person:P035   Rater:R02    Person         P035   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 347      1            Person:P035   Rater:R03    Person         P035   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 348      1            Person:P035   Rater:R04    Person         P035   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 349      1            Person:P036   Rater:R01    Person         P036   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 350      1            Person:P036   Rater:R02    Person         P036   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 351      1            Person:P036   Rater:R03    Person         P036   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 352      1            Person:P036   Rater:R04    Person         P036   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 353      1            Person:P037   Rater:R01    Person         P037   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 354      1            Person:P037   Rater:R02    Person         P037   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 355      1            Person:P037   Rater:R03    Person         P037   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 356      1            Person:P037   Rater:R04    Person         P037   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 357      1            Person:P038   Rater:R01    Person         P038   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 358      1            Person:P038   Rater:R02    Person         P038   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 359      1            Person:P038   Rater:R03    Person         P038   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 360      1            Person:P038   Rater:R04    Person         P038   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 361      1            Person:P039   Rater:R01    Person         P039   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 362      1            Person:P039   Rater:R02    Person         P039   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 363      1            Person:P039   Rater:R03    Person         P039   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 364      1            Person:P039   Rater:R04    Person         P039   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 365      1            Person:P040   Rater:R01    Person         P040   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 366      1            Person:P040   Rater:R02    Person         P040   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 367      1            Person:P040   Rater:R03    Person         P040   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 368      1            Person:P040   Rater:R04    Person         P040   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 369      1            Person:P041   Rater:R01    Person         P041   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 370      1            Person:P041   Rater:R02    Person         P041   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 371      1            Person:P041   Rater:R03    Person         P041   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 372      1            Person:P041   Rater:R04    Person         P041   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 373      1            Person:P042   Rater:R01    Person         P042   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 374      1            Person:P042   Rater:R02    Person         P042   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 375      1            Person:P042   Rater:R03    Person         P042   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 376      1            Person:P042   Rater:R04    Person         P042   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 377      1            Person:P043   Rater:R01    Person         P043   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 378      1            Person:P043   Rater:R02    Person         P043   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 379      1            Person:P043   Rater:R03    Person         P043   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 380      1            Person:P043   Rater:R04    Person         P043   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 381      1            Person:P044   Rater:R01    Person         P044   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 382      1            Person:P044   Rater:R02    Person         P044   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 383      1            Person:P044   Rater:R03    Person         P044   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 384      1            Person:P044   Rater:R04    Person         P044   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 385      1            Person:P045   Rater:R01    Person         P045   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 386      1            Person:P045   Rater:R02    Person         P045   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 387      1            Person:P045   Rater:R03    Person         P045   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 388      1            Person:P045   Rater:R04    Person         P045   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 389      1            Person:P046   Rater:R01    Person         P046   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 390      1            Person:P046   Rater:R02    Person         P046   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 391      1            Person:P046   Rater:R03    Person         P046   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 392      1            Person:P046   Rater:R04    Person         P046   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 393      1            Person:P047   Rater:R01    Person         P047   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 394      1            Person:P047   Rater:R02    Person         P047   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 395      1            Person:P047   Rater:R03    Person         P047   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 396      1            Person:P047   Rater:R04    Person         P047   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 397      1            Person:P048   Rater:R01    Person         P048   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 398      1            Person:P048   Rater:R02    Person         P048   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 399      1            Person:P048   Rater:R03    Person         P048   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 400      1            Person:P048   Rater:R04    Person         P048   Rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     ToLevel Weight</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1       R01     48</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2       R02     48</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3       R03     48</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4       R04     48</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5       R01     48</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6       R02     48</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7       R03     48</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8       R04     48</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9       R01     48</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10      R02     48</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11      R03     48</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12      R04     48</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13      R01     48</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14      R02     48</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 15      R03     48</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 16      R04     48</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 17     P001      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 18     P002      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 19     P003      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 20     P004      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 21     P005      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 22     P006      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 23     P007      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 24     P008      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 25     P009      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 26     P010      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 27     P011      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 28     P012      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 29     P013      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 30     P014      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 31     P015      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 32     P016      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 33     P017      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 34     P018      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 35     P019      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 36     P020      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 37     P021      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 38     P022      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 39     P023      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 40     P024      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 41     P025      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 42     P026      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 43     P027      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 44     P028      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 45     P029      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 46     P030      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 47     P031      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 48     P032      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 49     P033      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 50     P034      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 51     P035      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 52     P036      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 53     P037      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 54     P038      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 55     P039      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 56     P040      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 57     P041      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 58     P042      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 59     P043      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 60     P044      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 61     P045      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 62     P046      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 63     P047      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 64     P048      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 65     P001      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 66     P002      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 67     P003      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 68     P004      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 69     P005      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 70     P006      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 71     P007      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 72     P008      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 73     P009      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 74     P010      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 75     P011      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 76     P012      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 77     P013      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 78     P014      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 79     P015      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 80     P016      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 81     P017      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 82     P018      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 83     P019      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 84     P020      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 85     P021      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 86     P022      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 87     P023      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 88     P024      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 89     P025      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 90     P026      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 91     P027      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 92     P028      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 93     P029      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 94     P030      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 95     P031      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 96     P032      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 97     P033      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 98     P034      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 99     P035      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 100    P036      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 101    P037      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 102    P038      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 103    P039      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 104    P040      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 105    P041      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 106    P042      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 107    P043      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 108    P044      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 109    P045      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 110    P046      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 111    P047      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 112    P048      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 113    P001      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 114    P002      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 115    P003      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 116    P004      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 117    P005      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 118    P006      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 119    P007      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 120    P008      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 121    P009      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 122    P010      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 123    P011      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 124    P012      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 125    P013      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 126    P014      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 127    P015      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 128    P016      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 129    P017      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 130    P018      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 131    P019      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 132    P020      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 133    P021      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 134    P022      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 135    P023      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 136    P024      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 137    P025      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 138    P026      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 139    P027      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 140    P028      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 141    P029      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 142    P030      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 143    P031      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 144    P032      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 145    P033      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 146    P034      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 147    P035      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 148    P036      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 149    P037      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 150    P038      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 151    P039      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 152    P040      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 153    P041      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 154    P042      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 155    P043      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 156    P044      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 157    P045      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 158    P046      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 159    P047      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 160    P048      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 161    P001      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 162    P002      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 163    P003      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 164    P004      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 165    P005      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 166    P006      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 167    P007      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 168    P008      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 169    P009      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 170    P010      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 171    P011      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 172    P012      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 173    P013      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 174    P014      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 175    P015      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 176    P016      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 177    P017      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 178    P018      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 179    P019      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 180    P020      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 181    P021      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 182    P022      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 183    P023      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 184    P024      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 185    P025      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 186    P026      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 187    P027      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 188    P028      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 189    P029      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 190    P030      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 191    P031      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 192    P032      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 193    P033      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 194    P034      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 195    P035      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 196    P036      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 197    P037      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 198    P038      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 199    P039      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 200    P040      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 201    P041      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 202    P042      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 203    P043      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 204    P044      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 205    P045      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 206    P046      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 207    P047      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 208    P048      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 209     R01      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 210     R02      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 211     R03      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 212     R04      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 213     R01      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 214     R02      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 215     R03      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 216     R04      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 217     R01      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 218     R02      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 219     R03      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 220     R04      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 221     R01      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 222     R02      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 223     R03      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 224     R04      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 225     R01      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 226     R02      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 227     R03      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 228     R04      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 229     R01      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 230     R02      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 231     R03      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 232     R04      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 233     R01      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 234     R02      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 235     R03      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 236     R04      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 237     R01      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 238     R02      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 239     R03      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 240     R04      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 241     R01      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 242     R02      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 243     R03      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 244     R04      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 245     R01      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 246     R02      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 247     R03      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 248     R04      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 249     R01      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 250     R02      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 251     R03      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 252     R04      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 253     R01      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 254     R02      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 255     R03      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 256     R04      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 257     R01      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 258     R02      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 259     R03      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 260     R04      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 261     R01      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 262     R02      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 263     R03      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 264     R04      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 265     R01      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 266     R02      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 267     R03      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 268     R04      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 269     R01      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 270     R02      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 271     R03      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 272     R04      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 273     R01      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 274     R02      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 275     R03      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 276     R04      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 277     R01      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 278     R02      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 279     R03      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 280     R04      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 281     R01      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 282     R02      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 283     R03      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 284     R04      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 285     R01      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 286     R02      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 287     R03      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 288     R04      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 289     R01      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 290     R02      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 291     R03      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 292     R04      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 293     R01      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 294     R02      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 295     R03      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 296     R04      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 297     R01      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 298     R02      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 299     R03      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 300     R04      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 301     R01      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 302     R02      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 303     R03      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 304     R04      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 305     R01      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 306     R02      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 307     R03      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 308     R04      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 309     R01      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 310     R02      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 311     R03      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 312     R04      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 313     R01      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 314     R02      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 315     R03      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 316     R04      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 317     R01      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 318     R02      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 319     R03      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 320     R04      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 321     R01      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 322     R02      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 323     R03      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 324     R04      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 325     R01      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 326     R02      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 327     R03      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 328     R04      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 329     R01      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 330     R02      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 331     R03      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 332     R04      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 333     R01      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 334     R02      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 335     R03      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 336     R04      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 337     R01      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 338     R02      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 339     R03      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 340     R04      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 341     R01      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 342     R02      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 343     R03      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 344     R04      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 345     R01      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 346     R02      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 347     R03      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 348     R04      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 349     R01      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 350     R02      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 351     R03      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 352     R04      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 353     R01      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 354     R02      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 355     R03      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 356     R04      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 357     R01      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 358     R02      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 359     R03      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 360     R04      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 361     R01      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 362     R02      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 363     R03      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 364     R04      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 365     R01      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 366     R02      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 367     R03      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 368     R04      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 369     R01      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 370     R02      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 371     R03      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 372     R04      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 373     R01      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 374     R02      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 375     R03      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 376     R04      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 377     R01      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 378     R02      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 379     R03      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 380     R04      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 381     R01      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 382     R02      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 383     R03      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 384     R04      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 385     R01      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 386     R02      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 387     R03      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 388     R04      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 389     R01      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 390     R02      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 391     R03      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 392     R04      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 393     R01      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 394     R02      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 395     R03      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 396     R04      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 397     R01      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 398     R02      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 399     R03      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 400     R04      4</span>
 <span class="r-in"><span><span class="va">out</span><span class="op">$</span><span class="va">summary</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Subset"</span>, <span class="st">"Observations"</span>, <span class="st">"ObservationPercent"</span><span class="op">)</span><span class="op">]</span></span></span>
-<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Subset Observations ObservationPercent</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1      1          768                100</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

@@ -141,12 +141,33 @@ The `category_stats` data.frame contains:
 ## Examples
 
 ``` r
-if (FALSE) { # interactive()
+# \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+#> Warning: Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.
 t5 <- measurable_summary_table(fit)
 summary(t5)
+#> mfrmr Measurable Summary 
+#>   Class: mfrm_measurable
+#>   Components: 4
+#> 
+#> Run overview
+#>  Observations TotalWeight Persons Facets Categories ConnectedSubsets
+#>           768         768      48      2          4                1
+#>  LargestSubsetObs LargestSubsetPct
+#>               768              100
+#> 
+#> Facet/category rows: facet_coverage
+#>      Facet Levels MeanSE MeanInfit MeanOutfit MinEstimate MaxEstimate
+#>  Criterion      4  0.097     0.994      1.019      -0.415       0.249
+#>     Person     48  0.344     1.000      1.019      -2.178       2.684
+#>      Rater      4  0.097     0.994      1.019      -0.329       0.333
+#> 
+#> Notes
+#>  - Measurable-data summary with facet coverage, category diagnostics, and
+#>    subset/connectivity checks.
 p_t5 <- plot(t5, draw = FALSE)
 p_t5$data$plot
-}
+#> [1] "facet_coverage"
+# }
 ```

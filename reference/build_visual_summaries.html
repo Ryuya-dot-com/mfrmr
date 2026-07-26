@@ -156,7 +156,7 @@ functions behind each visual family.</p></li>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>  <span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span></span>
@@ -173,11 +173,129 @@ functions behind each visual family.</p></li>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">vis_facets</span> <span class="op">&lt;-</span> <span class="fu">build_visual_summaries</span><span class="op">(</span><span class="va">fit</span>, <span class="va">diag</span>, branch <span class="op">=</span> <span class="st">"facets"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">vis_facets</span><span class="op">$</span><span class="va">branch</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "facets"</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">vis</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> mfrmr Visual Summary Bundle</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Overview</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    Branch    Style ThresholdProfile WarningVisuals SummaryVisuals</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  original original           strict             13             13</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Warning counts</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                            Visual Messages</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>              residual_pca_overall        5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             residual_pca_by_facet        4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>               strict_marginal_fit        3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  strict_pairwise_local_dependence        2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                        wright_map        1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                   category_curves        0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                facet_distribution        0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                   fit_diagnostics        0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             fit_zstd_distribution        0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                     misfit_levels        0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                 observed_expected        0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                       pathway_map        0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                   step_thresholds        0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Summary counts</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                            Visual Messages</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>              residual_pca_overall        5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>               strict_marginal_fit        5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             residual_pca_by_facet        4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  strict_pairwise_local_dependence        4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                        wright_map        4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                   category_curves        2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             fit_zstd_distribution        2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                 observed_expected        2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                       pathway_map        2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                   step_thresholds        2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                facet_distribution        1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                   fit_diagnostics        1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                     misfit_levels        1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> FACETS crosswalk</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                            Visual</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                        unexpected</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                      fair_average</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                      displacement</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                        interrater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                      facets_chisq</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>               strict_marginal_fit</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  strict_pairwise_local_dependence</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>              residual_pca_overall</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             residual_pca_by_facet</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      category_probability_surface</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                       FACETS</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                           Table 4 / Table 10</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                     Table 12</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                      Table 9</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                          Inter-rater outputs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                Facet fixed/random chi-square</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          No direct FACETS equivalent (package-native strict marginal screen)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          No direct FACETS equivalent (package-native strict pairwise screen)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                       Residual PCA (overall)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                      Residual PCA (by facet)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  No direct FACETS equivalent (exploratory category-probability surface data)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Public plot routes</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                            Visual                  PlotHelper</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                        comparison          plot.mfrm_bundle()</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                    warning_counts          plot.mfrm_bundle()</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                    summary_counts          plot.mfrm_bundle()</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                        unexpected           plot_unexpected()</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                      fair_average         plot_fair_average()</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                      displacement         plot_displacement()</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                        interrater plot_interrater_agreement()</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                      facets_chisq         plot_facets_chisq()</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>               strict_marginal_fit         plot_marginal_fit()</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  strict_pairwise_local_dependence    plot_marginal_pairwise()</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                        DrawFreeRoute</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                         plot(vis, type = "comparison", draw = FALSE)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                     plot(vis, type = "warning_counts", draw = FALSE)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                     plot(vis, type = "summary_counts", draw = FALSE)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             plot_unexpected(unexpected_response_table(fit, diagnostics = diagnostics), draw = FALSE)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                  plot_fair_average(fair_average_table(fit, diagnostics = diagnostics), draw = FALSE)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                  plot_displacement(displacement_table(fit, diagnostics = diagnostics), draw = FALSE)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  plot_interrater_agreement(interrater_agreement_table(fit, diagnostics = diagnostics), draw = FALSE)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                  plot_facets_chisq(facets_chisq_table(fit, diagnostics = diagnostics), draw = FALSE)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                         plot_marginal_fit(diagnostics, draw = FALSE)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                    plot_marginal_pairwise(diagnostics, draw = FALSE)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  PlotReturnClass                         Scope</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   mfrm_plot_data               bundle overview</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   mfrm_plot_data               bundle overview</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   mfrm_plot_data               bundle overview</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   mfrm_plot_data unexpected-response follow-up</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   mfrm_plot_data        fair-average follow-up</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   mfrm_plot_data        displacement follow-up</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   mfrm_plot_data         inter-rater follow-up</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   mfrm_plot_data    facet chi-square follow-up</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   mfrm_plot_data     strict marginal follow-up</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   mfrm_plot_data     strict pairwise follow-up</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Notes</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Original branch keeps package-native warning/summary map organization.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Reusable draw-free plot data are available in `plot_payloads`: comparison, warning_counts, summary_counts, category_probability_surface.</span>
 <span class="r-in"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">vis</span>, type <span class="op">=</span> <span class="st">"comparison"</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">p2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">vis</span>, type <span class="op">=</span> <span class="st">"warning_counts"</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">vis</span><span class="op">$</span><span class="va">plot_payloads</span><span class="op">$</span><span class="va">comparison</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">plot</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "comparison"</span>
 <span class="r-in"><span><span class="va">vis</span><span class="op">$</span><span class="va">public_plot_routes</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Visual"</span>, <span class="st">"PlotHelper"</span>, <span class="st">"DrawFreeRoute"</span><span class="op">)</span><span class="op">]</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 13 × 3</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    Visual                           PlotHelper                  DrawFreeRoute   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                            <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>           </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> comparison                       plot.mfrm_bundle()          <span style="color: #949494;">"</span>plot(vis, type…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> warning_counts                   plot.mfrm_bundle()          <span style="color: #949494;">"</span>plot(vis, type…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> summary_counts                   plot.mfrm_bundle()          <span style="color: #949494;">"</span>plot(vis, type…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> unexpected                       plot_unexpected()           <span style="color: #949494;">"</span>plot_unexpecte…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> fair_average                     plot_fair_average()         <span style="color: #949494;">"</span>plot_fair_aver…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> displacement                     plot_displacement()         <span style="color: #949494;">"</span>plot_displacem…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> interrater                       plot_interrater_agreement() <span style="color: #949494;">"</span>plot_interrate…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> facets_chisq                     plot_facets_chisq()         <span style="color: #949494;">"</span>plot_facets_ch…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> strict_marginal_fit              plot_marginal_fit()         <span style="color: #949494;">"</span>plot_marginal_…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> strict_pairwise_local_dependence plot_marginal_pairwise()    <span style="color: #949494;">"</span>plot_marginal_…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">11</span> residual_pca_overall             plot_residual_pca()         <span style="color: #949494;">"</span>plot_residual_…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">12</span> residual_pca_by_facet            plot_residual_pca()         <span style="color: #949494;">"</span>plot_residual_…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">13</span> category_probability_surface     plot.mfrm_fit()             <span style="color: #949494;">"</span>plot(fit, type…</span>
 <span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/interactive.html" class="external-link">interactive</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>    <span class="va">vis</span>,</span></span>
@@ -188,7 +306,7 @@ functions behind each visual family.</p></li>
 <span class="r-in"><span>    label_angle <span class="op">=</span> <span class="fl">45</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

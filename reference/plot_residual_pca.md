@@ -142,7 +142,7 @@ specific facet after global PCA review.
 ## Examples
 
 ``` r
-if (FALSE) { # interactive()
+# \donttest{
 toy_full <- load_mfrmr_data("example_core")
 toy_people <- unique(toy_full$Person)[1:24]
 toy <- toy_full[match(toy_full$Person, toy_people, nomatch = 0L) > 0L, , drop = FALSE]
@@ -153,17 +153,83 @@ diag <- diagnose_mfrm(fit, residual_pca = "overall")
 pca <- analyze_residual_pca(diag, mode = "overall")
 plt <- plot_residual_pca(pca, mode = "overall", plot_type = "scree", draw = FALSE)
 head(plt$data)
-if (FALSE) { # \dontrun{
+#> $plot
+#> [1] "scree"
+#> 
+#> $mode
+#> [1] "overall"
+#> 
+#> $facet
+#> NULL
+#> 
+#> $title
+#> [1] "Overall Residual PCA (Scree)"
+#> 
+#> $subtitle
+#> [1] "Variance explained by residual components"
+#> 
+#> $legend
+#>                         label      role  aesthetic   value
+#> 1        Residual eigenvalues component line-point #1f78b4
+#> 2             Unit-eigenvalue reference       line #6b7280
+#> 3      Critical minimum (1.4) reference       line #6b7280
+#> 4 Noticeable second dim (2.0) reference       line #6b7280
+#> 5     Strong second dim (3.0) reference       line #6b7280
+#> 
 pca_pa <- analyze_residual_pca(diag, mode = "overall", parallel = TRUE, parallel_reps = 10)
 pa <- plot_residual_pca(pca_pa, mode = "overall", plot_type = "parallel_scree", draw = FALSE)
 head(pa$data)
-} # }
+#> $plot
+#> [1] "parallel_scree"
+#> 
+#> $mode
+#> [1] "overall"
+#> 
+#> $facet
+#> NULL
+#> 
+#> $title
+#> [1] "Overall Residual PCA (Parallel Scree)"
+#> 
+#> $subtitle
+#> [1] "Observed residual eigenvalues compared with the permutation null"
+#> 
+#> $legend
+#>                                label            role  aesthetic   value
+#> 1      Observed residual eigenvalues       component line-point #1f78b4
+#> 2    95% residual-permutation cutoff parallel_cutoff line-point #d95f02
+#> 3                      Parallel mean   parallel_mean       line #1b9e77
+#> 4                    Unit-eigenvalue       reference       line #6b7280
+#> 5             Critical minimum (1.4)       reference       line #6b7280
+#> 6        Noticeable second dim (2.0)       reference       line #6b7280
+#> 7            Strong second dim (3.0)       reference       line #6b7280
+#> 
 plt_load <- plot_residual_pca(
   pca, mode = "overall", plot_type = "loadings", component = 1, draw = FALSE
 )
 head(plt_load$data)
+#> $plot
+#> [1] "loadings"
+#> 
+#> $mode
+#> [1] "overall"
+#> 
+#> $facet
+#> NULL
+#> 
+#> $title
+#> [1] "Overall Residual PCA (Loadings: PC1)"
+#> 
+#> $subtitle
+#> [1] "Top 16 absolute loadings"
+#> 
+#> $legend
+#>               label    role aesthetic   value
+#> 1 Positive loadings loading       bar #1b9e77
+#> 2 Negative loadings loading       bar #d95f02
+#> 
 if (interactive()) {
   plot_residual_pca(pca, mode = "overall", plot_type = "scree", preset = "publication")
 }
-}
+# }
 ```

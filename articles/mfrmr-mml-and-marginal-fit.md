@@ -91,6 +91,21 @@ stability, diagnostic, or reporting decision. A small gradient cannot
 repair a disconnected measurement graph or a boundary-separated facet
 level.
 
+### Choosing the iteration ceiling
+
+`maxit` limits computation; it does not define convergence. Use the
+default `maxit = 400` as the initial analysis ceiling unless a
+prespecified protocol uses another value. A fit that stops at
+`ConvergenceStatus = "iteration_limit"` is review-only regardless of
+whether its estimates look plausible. Keep the data, model, method,
+anchors, optimizer, tolerance, and quadrature rule fixed, then use the
+next ceiling from a prespecified sequence. Accept a result only after
+`Converged`, `InferenceReady`, and the Numerical readiness row all pass.
+Do not select a run because its coefficients, fit statistics,
+significance, or agreement with an expected result are more favorable.
+Material differences between separately ready runs are evidence of
+numerical instability, not a choice among equally acceptable answers.
+
 ## Strict Marginal Diagnostic Target
 
 The strict marginal branch is not based on plugging
@@ -249,20 +264,17 @@ boundary output. Full FACETS-style score-side contract review, posterior
 predictive checks, and MCMC estimation are not available for bounded
 `GPCM`. See
 [`gpcm_capability_matrix()`](https://ryuya-dot-com.github.io/mfrmr/reference/gpcm_capability_matrix.md)
-for the full per-helper support contract.
+for the status and recommended alternative for each helper group.
 
-## Why GPCM Is The Current Upper Scope
+## Why bounded GPCM is the current limit
 
 `GPCM` is the current upper supported scope for three reasons.
 
-1.  The shared `MML` kernel and the response-probability core already
-    generalize to the bounded `GPCM` branch without changing the main
-    package architecture.
-2.  The package has direct checks for that bounded route.
-3.  The helpers that still depend on Rasch-family score semantics are
-    blocked explicitly, and role-based planning helpers carry explicit
-    caveats, so formal support does not require pretending that every
-    downstream helper has full coverage.
+1.  The bounded slope model uses the documented `MML` probability
+    framework under the stated restriction.
+2.  Direct verification checks are available for that model.
+3.  Score-side and reporting helpers that rely on Rasch-family semantics
+    remain unavailable or carry explicit caveats.
 
 This is a narrower but more defensible claim than saying the whole
 package is uniformly generalized to free-discrimination many-facet work.

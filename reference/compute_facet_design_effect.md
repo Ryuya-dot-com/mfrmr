@@ -90,7 +90,7 @@ Methods Section* (pp. 143-148).
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+# \donttest{
 toy <- load_mfrmr_data("example_core")
 if (requireNamespace("lme4", quietly = TRUE)) {
   icc <- compute_facet_icc(toy, facets = c("Rater", "Criterion"),
@@ -101,5 +101,9 @@ if (requireNamespace("lme4", quietly = TRUE)) {
   print(deff)
   # Large DesignEffect -> modest EffectiveN relative to raw N.
 }
-} # }
+#> mfrm_facet_design_effect (Kish, 1965)
+#>      Facet AvgClusterSize    ICC DesignEffect EffectiveN
+#>      Rater            192 0.0270        6.157      124.7
+#>  Criterion            192 0.0222        5.240      146.6
+# }
 ```

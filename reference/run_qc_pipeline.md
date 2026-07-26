@@ -175,14 +175,90 @@ The 10 checks are:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+# \donttest{
 toy <- load_mfrmr_data("study1")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
   method = "JML", maxit = 30
 )
+#> Warning: Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.
 qc <- run_qc_pipeline(fit)
 qc
+#> --- QC Pipeline ---
+#> Overall: Fail 
+#> 
+#>   [FAIL] Convergence               Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance.
+#>   [PASS] Global Fit                Global Infit=0.999, Outfit=0.990
+#>   [PASS] Reliability               Min non-person model reliability = 0.955
+#>   [PASS] Separation                Min non-person model separation = 4.592
+#>   [FAIL] Element Misfit            143 of 328 elements misfitting (43.6%)
+#>   [FAIL] Unexpected Responses      5.4% unexpected responses
+#>   [PASS] Category Structure        Thresholds ordered, min category count = 215
+#>   [PASS] Connectivity              1 disjoint subset(s)
+#>   [WARN] Inter-rater Agreement     Exact agreement = 36.2%
+#>   [FAIL] Functioning/Bias Screen   80.0% of screened interactions crossed |screening t| > 2
+#> 
+#> Recommendations:
+#>   - The fit reached its iteration ceiling and is not inference-ready. Do not interpret or select its estimates; refit the same specification with the next ceiling in a prespecified `maxit` sequence and accept it only after the numerical gate passes. 
+#>   - Excessive element misfit detected. Review individual element fit statistics. 
+#>   - High unexpected response rate. Inspect unexpected_response_table() for patterns. 
+#>   - Many interaction cells were screen-positive. Review estimate_bias() or analyze_dff() before making substantive bias claims. 
 summary(qc)
+#> --- QC Pipeline Summary ---
+#> Overall: Fail 
+#> Pass: 5 | Warn: 1 | Fail: 4 | Skip: 0
+#> 
+#>                    Check Verdict                         Value
+#>              Convergence    Fail Nonzero code; review required
+#>               Global Fit    Pass       Infit=1.00, Outfit=0.99
+#>              Reliability    Pass                          0.95
+#>               Separation    Pass                          4.59
+#>           Element Misfit    Fail               143/328 (43.6%)
+#>     Unexpected Responses    Fail                          5.4%
+#>       Category Structure    Pass     Ordered=Yes, MinCount=215
+#>             Connectivity    Pass                             1
+#>    Inter-rater Agreement    Warn                         36.2%
+#>  Functioning/Bias Screen    Fail                         80.0%
+#>                    Threshold
+#>  Convergence severity = pass
+#>                 [0.50, 1.50]
+#>       Pass>=0.80, Warn>=0.50
+#>       Pass>=2.00, Warn>=1.00
+#>           Pass<=5%, Fail>15%
+#>            Pass<=2%, Fail>5%
+#>          Ordered + count>=10
+#>      Pass=1, Warn=2, Fail>=3
+#>         Pass>=50%, Warn>=30%
+#>           Pass<=0%, Fail>10%
+#>                                                                                                              Detail
+#>  Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance.
+#>                                                                                    Global Infit=0.999, Outfit=0.990
+#>                                                                            Min non-person model reliability = 0.955
+#>                                                                             Min non-person model separation = 4.592
+#>                                                                              143 of 328 elements misfitting (43.6%)
+#>                                                                                           5.4% unexpected responses
+#>                                                                        Thresholds ordered, min category count = 215
+#>                                                                                                1 disjoint subset(s)
+#>                                                                                             Exact agreement = 36.2%
+#>                                                            80.0% of screened interactions crossed |screening t| > 2
+#> 
+#> Recommendations:
+#>   - The fit reached its iteration ceiling and is not inference-ready. Do not interpret or select its estimates; refit the same specification with the next ceiling in a prespecified `maxit` sequence and accept it only after the numerical gate passes. 
+#>   - Excessive element misfit detected. Review individual element fit statistics. 
+#>   - High unexpected response rate. Inspect unexpected_response_table() for patterns. 
+#>   - Many interaction cells were screen-positive. Review estimate_bias() or analyze_dff() before making substantive bias claims. 
 qc$verdicts
-} # }
+#> # A tibble: 10 × 5
+#>    Check                   Verdict Value                        Threshold Detail
+#>    <chr>                   <chr>   <chr>                        <chr>     <chr> 
+#>  1 Convergence             Fail    Nonzero code; review requir… Converge… Optim…
+#>  2 Global Fit              Pass    Infit=1.00, Outfit=0.99      [0.50, 1… Globa…
+#>  3 Reliability             Pass    0.95                         Pass>=0.… Min n…
+#>  4 Separation              Pass    4.59                         Pass>=2.… Min n…
+#>  5 Element Misfit          Fail    143/328 (43.6%)              Pass<=5%… 143 o…
+#>  6 Unexpected Responses    Fail    5.4%                         Pass<=2%… 5.4% …
+#>  7 Category Structure      Pass    Ordered=Yes, MinCount=215    Ordered … Thres…
+#>  8 Connectivity            Pass    1                            Pass=1, … 1 dis…
+#>  9 Inter-rater Agreement   Warn    36.2%                        Pass>=50… Exact…
+#> 10 Functioning/Bias Screen Fail    80.0%                        Pass<=0%… 80.0%…
+# }
 ```

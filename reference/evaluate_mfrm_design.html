@@ -369,7 +369,7 @@ reporting</em>. Psychological Methods.</p></li>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="va">sim_eval</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/warning.html" class="external-link">suppressWarnings</a></span><span class="op">(</span><span class="fu">evaluate_mfrm_design</span><span class="op">(</span></span></span>
 <span class="r-in"><span>  design <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>person <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">8</span>, <span class="fl">12</span><span class="op">)</span>, rater <span class="op">=</span> <span class="fl">2</span>, criterion <span class="op">=</span> <span class="fl">2</span>, assignment <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>  reps <span class="op">=</span> <span class="fl">1</span>,</span></span>
@@ -378,9 +378,25 @@ reporting</em>. Psychological Methods.</p></li>
 <span class="r-in"><span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">s_eval</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">sim_eval</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">s_eval</span><span class="op">$</span><span class="va">design_summary</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Facet"</span>, <span class="st">"n_person"</span>, <span class="st">"MeanSeparation"</span>, <span class="st">"MeanSeverityRMSE"</span><span class="op">)</span><span class="op">]</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 6 × 4</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Facet     n_person MeanSeparation MeanSeverityRMSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> Criterion        8           0               0.102</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> Criterion       12           0               0.155</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> Person           8           0              16.2  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> Person          12           0               6.03 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> Rater            8           0               0.783</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">6</span> Rater           12           9.06            2.86 </span>
 <span class="r-in"><span><span class="va">p_eval</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">sim_eval</span>, facet <span class="op">=</span> <span class="st">"Rater"</span>, metric <span class="op">=</span> <span class="st">"separation"</span>, x_var <span class="op">=</span> <span class="st">"n_person"</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">p_eval</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [1] "plot"                    "facet"                  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [3] "metric"                  "metric_col"             </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [5] "x_var"                   "x_label"                </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [7] "group_var"               "group_label"            </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [9] "design_variable_aliases" "design_descriptor"      </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [11] "planning_scope"          "planning_constraints"   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [13] "planning_schema"         "data"                   </span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

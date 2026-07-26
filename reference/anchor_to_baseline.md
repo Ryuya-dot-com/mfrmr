@@ -218,7 +218,7 @@ element is **flagged** when \\\|\Delta_e\| \> 0.5\\ logits or
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+# \donttest{
 # Deliberately linked teaching waves: both retain the same rater and
 # criterion identities from one synthetic calibration design.
 toy <- load_mfrmr_data("example_core")
@@ -231,7 +231,28 @@ res <- anchor_to_baseline(d2, fit1, "Person",
                           c("Rater", "Criterion"), "Score",
                           anchor_facets = "Criterion")
 summary(res)
+#> --- Anchored Fit Summary ---
+#> Inference-ready: TRUE 
+#> Optimizer returned code 0: TRUE | Status: converged 
+#> Anchors used: 4 | Common elements: 4 | Flagged: 0 
+#> 
+#> Drift by facet:
+#>      Facet N Mean_Drift Max_Drift N_Flagged
+#>  Criterion 4          0         0         0
 head(res$drift[, c("Facet", "Level", "Drift", "Flag")])
+#> # A tibble: 4 × 4
+#>   Facet     Level        Drift Flag 
+#>   <chr>     <chr>        <dbl> <lgl>
+#> 1 Criterion Accuracy         0 FALSE
+#> 2 Criterion Content          0 FALSE
+#> 3 Criterion Language         0 FALSE
+#> 4 Criterion Organization     0 FALSE
 res$baseline_anchors[1:3, ]
-} # }
+#> # A tibble: 3 × 3
+#>   Facet     Level    Anchor
+#>   <chr>     <chr>     <dbl>
+#> 1 Criterion Accuracy  0.213
+#> 2 Criterion Content  -0.508
+#> 3 Criterion Language  0.138
+# }
 ```

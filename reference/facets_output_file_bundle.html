@@ -206,14 +206,79 @@ score-scale decision. Use <code><a href="gpcm_score_side_contract.html">gpcm_sco
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># interactive()</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>, method <span class="op">=</span> <span class="st">"JML"</span>, maxit <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span></span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.</span>
 <span class="r-in"><span><span class="va">out</span> <span class="op">&lt;-</span> <span class="fu">facets_output_file_bundle</span><span class="op">(</span><span class="va">fit</span>, diagnostics <span class="op">=</span> <span class="fu"><a href="diagnose_mfrm.html">diagnose_mfrm</a></span><span class="op">(</span><span class="va">fit</span>, residual_pca <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">out</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> mfrmr Output File Bundle Summary </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Class: mfrm_output_bundle</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Components: 4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Output overview</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  GraphRows ScoreRows WrittenFiles IncludeFixed WriteFiles ScoreSEMethod</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        241       768            0        FALSE      FALSE          both</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Output preview rows: scorefile</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Rater Criterion Observed Expected Residual StdResidual   Var Weight score_k</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    R01   Content        3    3.282   -0.282      -0.403 0.490      1       2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    R01   Content        3    3.662   -0.662      -1.247 0.282      1       2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    R01   Content        4    3.528    0.472       0.779 0.367      1       3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    R01   Content        3    3.384   -0.384      -0.576 0.444      1       2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    R01   Content        2    3.384   -1.384      -2.077 0.444      1       1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    R01   Content        3    1.930    1.070       1.398 0.586      1       2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    R01   Content        3    3.384   -0.384      -0.576 0.444      1       2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    R01   Content        3    1.848    1.152       1.540 0.560      1       2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    R01   Content        3    2.309    0.691       0.853 0.656      1       2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    R01   Content        2    3.282   -1.282      -1.832 0.490      1       1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  PersonMeasure ScoreSlope ScoreInformation ObservedScoreDerivative PrObserved</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          0.684          1            0.490                  -0.282      0.456</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          1.672          1            0.282                  -0.662      0.281</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          1.257          1            0.367                   0.472      0.585</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          0.901          1            0.444                  -0.384      0.424</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          0.901          1            0.444                  -1.384      0.088</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         -1.522          1            0.586                   1.070      0.200</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          0.901          1            0.444                  -0.384      0.424</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         -1.665          1            0.560                   1.152      0.171</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         -0.918          1            0.656                   0.691      0.342</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          0.684          1            0.490                  -1.282      0.118</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  ObsProb</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    0.456</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    0.281</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    0.585</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    0.424</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    0.088</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    0.200</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    0.424</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    0.171</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    0.342</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    0.118</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Settings</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            Setting        Value</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            include graph, score</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        theta_range        -6, 6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       theta_points          241</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             digits            4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      include_fixed        FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     fixed_max_rows          400</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        write_files        FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         output_dir         NULL</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        file_prefix mfrmr_output</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          overwrite        FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    score_se_method         both</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  score_side_status     standard</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Notes</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Graphfile/SCORE-style export bundle (table output and optional file-write</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    metadata).</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Person identifiers are suppressed in this summary. Use `include_person =</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    TRUE` only under appropriate privacy controls.</span>
 <span class="r-in"><span><span class="va">p_out</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">out</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">p_out</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">plot</span></span></span>
-<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "graph_expected"</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

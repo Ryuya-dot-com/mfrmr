@@ -130,9 +130,10 @@ gpcm_capability_matrix("deferred")[, c("Area", "Status", "Boundary", "Recommende
 ```
 
 The matrix is intentionally conservative. A row stays in `blocked` or
-`deferred` even when some lower-level component already runs, because
-the scope statement includes the interpretation needed for a complete
-public workflow rather than only checking whether code executes.
+`deferred` even when some individual computation is already available,
+because the scope statement includes the interpretation needed for a
+complete public workflow rather than only checking whether code
+executes.
 
 ## Source-grounded recovery interpretation
 

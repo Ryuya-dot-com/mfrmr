@@ -183,7 +183,7 @@ current SE approximation.</p></li>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># interactive()</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="co"># Build the plotting data without opening a graphics device.</span></span></span>
 <span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">toy_small</span> <span class="op">&lt;-</span> <span class="va">toy</span><span class="op">[</span><span class="va">toy</span><span class="op">$</span><span class="va">Person</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">toy</span><span class="op">$</span><span class="va">Person</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">3</span><span class="op">]</span>, <span class="op">]</span></span></span>
@@ -193,11 +193,18 @@ current SE approximation.</p></li>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">qc_quick</span> <span class="op">&lt;-</span> <span class="fu">plot_qc_dashboard</span><span class="op">(</span><span class="va">fit_quick</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">qc_quick</span><span class="op">$</span><span class="va">data</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [1] "title"             "subtitle"          "legend"           </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [4] "reference_lines"   "preset"            "threshold_profile"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [7] "thresholds"        "category_stats"    "fit"              </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [10] "zstd"              "unexpected"        "fair_average"     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [13] "displacement"      "interrater"        "facets_chisq"     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [16] "reliability"       "plot_name"        </span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>, method <span class="op">=</span> <span class="st">"JML"</span>, maxit <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span></span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.</span>
 <span class="r-in"><span><span class="va">qc</span> <span class="op">&lt;-</span> <span class="fu">plot_qc_dashboard</span><span class="op">(</span><span class="va">fit</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">qc</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">panels</span><span class="op">$</span><span class="va">Status</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NULL</span>
 <span class="r-in"><span><span class="co"># Look for: a row whose `Status` is "OK" for each panel that</span></span></span>
 <span class="r-in"><span><span class="co">#   the run should support. "WARN" / "REVIEW" rows tell you which</span></span></span>
 <span class="r-in"><span><span class="co">#   downstream helper to run next (e.g. `plot_unexpected()`,</span></span></span>
@@ -206,8 +213,7 @@ current SE approximation.</p></li>
 <span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/interactive.html" class="external-link">interactive</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span>  <span class="fu">plot_qc_dashboard</span><span class="op">(</span><span class="va">fit</span>, rater_facet <span class="op">=</span> <span class="st">"Rater"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
-<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

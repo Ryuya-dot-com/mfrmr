@@ -45,7 +45,7 @@ An `mfrm_imported_fit` object.
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+# \donttest{
 if (requireNamespace("eRm", quietly = TRUE)) {
   response_matrix <- matrix(sample(0:3, 60, replace = TRUE), nrow = 20)
   colnames(response_matrix) <- paste0("Item", seq_len(ncol(response_matrix)))
@@ -53,5 +53,9 @@ if (requireNamespace("eRm", quietly = TRUE)) {
   imported <- import_erm_fit(fit, model = "PCM")
   imported$summary
 }
-} # }
+#>   Model Method Source  N Persons Facets Categories    LogLik AIC BIC Converged
+#> 1   PCM    CML    eRm 20      20      1         NA -34.92457  NA  NA      TRUE
+#>   ConvergenceStatus
+#> 1          imported
+# }
 ```

@@ -110,15 +110,19 @@ from unwanted measurement bias is grounded in:
 ## Examples
 
 ``` r
-if (FALSE) { # interactive()
+# \donttest{
 toy <- load_mfrmr_data("example_bias")
 
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
   method = "JML", model = "RSM", maxit = 30
 )
+#> Warning: Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 dif <- analyze_dff(fit, diag, facet = "Rater", group = "Group", data = toy)
 rpt <- dif_report(dif)
 cat(rpt$narrative)
-}
+#> DRF screening was conducted for the Rater facet across levels of Group using the residual method. A total of 4 pairwise facet-level comparisons were evaluated. 0 comparison(s) were screening-positive and 4 were screening-negative based on the residual-contrast test. 
+#> No pairwise contrasts were screening-positive under the residual-screening method. This does not by itself establish invariance or consistent functioning across groups. 
+#> Note: The presence of differential functioning does not necessarily indicate measurement bias. Differential functioning may reflect construct-relevant variation (e.g., true group differences in the attribute being measured) rather than unwanted measurement bias. Substantive review is recommended to distinguish between these possibilities (cf. Eckes, 2011; McNamara & Knoch, 2012).
+# }
 ```

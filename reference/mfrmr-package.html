@@ -789,7 +789,7 @@ incomplete, or arbitrary imported designs.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 8     FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 9     FALSE</span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
+<span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_operational"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>  <span class="va">toy</span>,</span></span>
@@ -802,7 +802,70 @@ incomplete, or arbitrary imported designs.</p>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">diag</span> <span class="op">&lt;-</span> <span class="fu"><a href="diagnose_mfrm.html">diagnose_mfrm</a></span><span class="op">(</span><span class="va">fit</span>, diagnostic_mode <span class="op">=</span> <span class="st">"both"</span>, residual_pca <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">diag</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Many-Facet Measurement Diagnostics Summary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Observations: 282 | Persons: 48 | Facets: 2 | Categories: 4 | Subsets: 1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Residual PCA mode: none</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Method: MML | Precision tier: Model-based precision</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Diagnostic mode: Legacy and strict marginal</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Strict marginal fit: Available</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Status</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Overall status: Follow-up needed</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Diagnostic path: Legacy and strict marginal</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Strict marginal fit: Available</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Precision tier: Model-based precision</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Primary screen: Read strict marginal fit first; use legacy residuals for</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    continuity and follow-up.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Key warnings</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Unexpected responses flagged: 63.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Flagged displacement levels: 5.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - MnSq screening flagged 19 element(s) outside the configured 0.5-1.5 band.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Person-level fit warnings: 19 row(s); identifiers suppressed. Use</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    `include_person = TRUE` only under appropriate privacy controls.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Strict marginal fit flagged 2 group-level summaries.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Next actions</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Inspect `diagnostic_basis` before comparing legacy residual evidence with</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    strict marginal evidence.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Review `top_marginal_cells` and `rating_scale_table(..., diagnostics =</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    diag)` for first-order strict marginal follow-up.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Review `top_marginal_pairs` for pairwise local-dependence follow-up.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Use `unexpected_response_table()` / `plot_unexpected()` and</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    `displacement_table()` / `plot_displacement()` for case-level follow-up.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Overall fit</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Infit Outfit InfitZSTD OutfitZSTD DF_Infit DF_Outfit</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  0.861  0.856    -1.331     -1.776  175.434       282</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Flag counts</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                 Metric Count</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                   Unexpected responses    63</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            Flagged displacement levels     5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                       Interaction rows    20</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                      Inter-rater pairs    15</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            Marginal fit flagged groups     2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Marginal pairwise flagged level pairs     1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Facet precision and spread</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      Facet Levels Separation Strata Reliability RealSeparation RealStrata</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Criterion      3      2.526  3.702       0.865          2.526      3.702</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     Person     48      1.402  2.203       0.663          1.263      2.018</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      Rater      6      1.384  2.179       0.657          1.384      2.179</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  RealReliability MeanInfit MeanOutfit</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            0.865     0.862      0.856</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            0.615     0.852      0.857</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            0.657     0.849      0.845</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Highest-priority non-person fit rows</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      Facet   Level Infit Outfit InfitZSTD OutfitZSTD DF_Infit DF_Outfit  AbsZ</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      Rater     R05 0.644  0.636    -1.372     -1.896   25.595        44 1.896</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Criterion Content 0.731  0.751    -1.556     -1.822   59.061        94 1.822</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Further detail</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Additional tables remain in the structured summary; use `detail = "full"` to</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    print them.</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

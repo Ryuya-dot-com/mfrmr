@@ -68,7 +68,7 @@ An object of class `summary.mfrm_signal_detection` with:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+# \donttest{
 sig_eval <- suppressWarnings(evaluate_mfrm_signal_detection(
   n_person = 8,
   n_rater = 2,
@@ -80,5 +80,58 @@ sig_eval <- suppressWarnings(evaluate_mfrm_signal_detection(
   seed = 123
 ))
 summary(sig_eval)
-} # }
+#> mfrmr Signal Detection Summary
+#> 
+#> Overview
+#>  Designs Replications SuccessfulRuns ConvergedRuns MeanElapsedSec
+#>        1            1              1             0          0.877
+#> 
+#> Detection summary (preview)
+#>  design_id n_person n_rater n_criterion raters_per_person DIFTargetLevel
+#>        S01        8       2           2                 1            C02
+#>  BiasTargetRater BiasTargetCriterion Reps ConvergenceRate McseConvergenceRate
+#>              R02                 C02    1               0                  NA
+#>  DIFPower McseDIFPower DIFClassificationPower McseDIFClassificationPower
+#>         0           NA                      0                         NA
+#>  MeanTargetContrast McseTargetContrast MeanTargetContrastAbs
+#>                 NaN                 NA                   NaN
+#>  McseTargetContrastAbs DIFFalsePositiveRate McseDIFFalsePositiveRate
+#>                     NA                    0                       NA
+#>  BiasScreenRate McseBiasScreenRate MeanTargetBias McseTargetBias
+#>               0                 NA         -6.756             NA
+#>  MeanAbsTargetBias McseAbsTargetBias MeanTargetBiasT McseTargetBiasT
+#>              6.756                NA          -0.326              NA
+#>  BiasScreenMetricAvailabilityRate McseBiasScreenMetricAvailabilityRate
+#>                                 1                                   NA
+#>  BiasScreenFalsePositiveRate McseBiasScreenFalsePositiveRate MeanElapsedSec
+#>                            0                              NA          0.877
+#>  McseElapsedSec
+#>              NA
+#> 
+#> Structural design review
+#>  review_available n_designs recommended_design_id   view  mode surface
+#>             FALSE         0                  <NA> public brief  digest
+#>  table_component RecommendedAppendixTables CompactAppendixTables NumericTables
+#>             grid                         4                     3             6
+#>  AnyNumericTable
+#>             TRUE
+#> 
+#> ADEMP metadata
+#>  - aims
+#>  - data_generating_mechanism
+#>  - estimands
+#>  - methods
+#>  - performance_measures
+#> 
+#> Notes
+#>  - Some design conditions did not converge in every replication.
+#>  - Some design conditions showed DIF power below 0.80.
+#>  - Some design conditions showed bias-screen hit rates below 0.80.
+#>  - Bias-side rates are screening summaries derived from `estimate_bias()` output and should not be interpreted as formal power or alpha-calibrated false-positive rates.
+#>  - MCSE columns summarize finite-replication uncertainty around the reported means and rates.
+#>  - Planning helpers vary one person count and two named non-person facet roles (Rater and Criterion). Estimation may contain additional facets, but planning and forecasting are limited to this role-based design.
+#>  - Current scalar-argument planning paths allow `n_person`, `n_rater`, `n_criterion`, and `raters_per_person` to vary subject to `raters_per_person <= n_rater`.
+#>  - Named-facet structural design metadata for person count, non-person facet counts, and assignments per person. These deterministic design summaries do not establish arbitrary-facet simulation support or parameter-recovery performance.
+#>  - The structural design review reports deterministic bookkeeping and conservative design guidance, not DIF/bias detection power.
+# }
 ```

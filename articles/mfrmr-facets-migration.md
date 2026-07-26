@@ -897,7 +897,7 @@ result object:
 review <- summary(fit, profile = "facets", detail = "brief")
 res <- review$results
 
-# Primary final-scale artifact: all locations and available facet uncertainty.
+# Primary final-scale figure: all locations and available facet uncertainty.
 plot(res, type = "wright", renderer = "native", show_ci = TRUE,
      top_n = Inf, preset = "publication")
 ```
@@ -1070,12 +1070,12 @@ files <- facets_output_file_bundle(
 For RSM and PCM the score-side helpers are available. Under bounded
 `GPCM` the score-side bundle is intentionally restricted; see
 [`?gpcm_capability_matrix`](https://ryuya-dot-com.github.io/mfrmr/reference/gpcm_capability_matrix.md)
-and the `mfrmr-gpcm-scope` vignette for the binding contract.
+and the `mfrmr-gpcm-scope` vignette for the documented limitation.
 
 ## Recommended next steps
 
-After a FACETS-oriented package-native fit is in hand, the canonical
-mfrmr reporting route extends the analysis with:
+After a FACETS-oriented package-native fit is in hand, the recommended
+mfrmr reporting workflow extends the analysis with:
 
 - [`review_mfrm_anchors()`](https://ryuya-dot-com.github.io/mfrmr/reference/review_mfrm_anchors.md)
   before anchored fitting, and
@@ -1112,6 +1112,6 @@ mfrmr reporting route extends the analysis with:
   of the box.
 
 The `mfrmr-workflow` vignette covers the full sequence end to end; the
-`mfrmr-reporting-and-apa` vignette focuses on the manuscript surface;
+`mfrmr-reporting-and-apa` vignette focuses on manuscript preparation;
 the `mfrmr-linking-and-dff` vignette covers anchoring, drift, and DFF in
 detail.

@@ -105,13 +105,65 @@ Practical read order:
 ## Examples
 
 ``` r
-if (FALSE) { # interactive()
+# \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+#> Warning: Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.
 out <- category_structure_report(fit)
 summary(out)
+#> mfrmr Category Structure Summary 
+#>   Class: mfrm_category_structure
+#>   Components: 9
+#> 
+#> Category structure overview
+#>  Categories UsedCategories FlaggedStats ModeBoundaries MeanHalfscorePoints
+#>           4              4            8              3                   3
+#>  DiagnosticMode MarginalFitAvailable MarginalFlaggedCategories
+#>            both                FALSE                        NA
+#>  MarginalOverallRMSD MarginalMaxAbsStdResidual
+#>                   NA                        NA
+#> 
+#> Category structure rows: category_table
+#>  Category Count AvgPersonMeasure ExpectedAverage Infit Outfit MeanResidual
+#>         1   139           -0.984           1.864 1.806  1.602       -0.864
+#>         2   241           -0.376           2.262 0.613  0.780       -0.262
+#>         3   252            0.328           2.734 0.556  0.617        0.266
+#>         4   136            1.068           3.145 1.871  1.590        0.855
+#>  DF_Infit DF_Outfit Percent InfitZSTD OutfitZSTD ExpectedCount ExpectedPercent
+#>    70.957       139  18.099     3.947      4.292       138.998          18.099
+#>   138.039       241  31.380    -3.710     -2.586       241.000          31.380
+#>   145.307       252  32.812    -4.511     -4.977       252.001          32.813
+#>    66.751       136  17.708     4.081      4.176       136.002          17.709
+#>  DiffCount DiffPercent LowCount InfitFlag OutfitFlag ZSTDFlag ZeroCount
+#>      0.002           0    FALSE      TRUE       TRUE     TRUE     FALSE
+#>      0.000           0    FALSE     FALSE      FALSE     TRUE     FALSE
+#>     -0.001           0    FALSE     FALSE      FALSE     TRUE     FALSE
+#>     -0.002           0    FALSE      TRUE       TRUE     TRUE     FALSE
+#>  UnusedCategoryType WeaklyIdentified CategoryCaveat
+#>                none            FALSE               
+#>                none            FALSE               
+#>                none            FALSE               
+#>                none            FALSE               
+#> 
+#> Settings
+#>         Setting Value
+#>     theta_range -6, 6
+#>    theta_points   241
+#>     drop_unused FALSE
+#>   include_fixed FALSE
+#>  fixed_max_rows   200
+#> 
+#> Notes
+#>  - Category-structure diagnostics with mode boundaries and half-score reference
+#>    points.
 head(out$category_table[, c("Category", "Count", "Infit", "Outfit")])
+#>   Category Count     Infit    Outfit
+#> 1        1   139 1.8058940 1.6016812
+#> 2        2   241 0.6131071 0.7801200
+#> 3        3   252 0.5555712 0.6169771
+#> 4        4   136 1.8705501 1.5900752
 p_cs <- plot(out, draw = FALSE)
 p_cs$data$plot
-}
+#> [1] "counts"
+# }
 ```

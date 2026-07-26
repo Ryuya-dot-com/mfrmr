@@ -238,7 +238,7 @@ for conditional screening, but remain in screening language.
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+# \donttest{
 toy <- load_mfrmr_data("example_bias")
 
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
@@ -246,17 +246,31 @@ fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 diag <- diagnose_mfrm(fit, residual_pca = "none", diagnostic_mode = "both")
 dff <- analyze_dff(fit, diag, facet = "Rater", group = "Group", data = toy)
 dff$summary
+#> # A tibble: 3 × 2
+#>   Classification  Count
+#>   <chr>           <int>
+#> 1 Screen positive     0
+#> 2 Screen negative     4
+#> 3 Unclassified        0
 # Look for: a small `FlaggedPairs` count relative to `Pairs`. Under
 #   method = "residual", `ClassificationSystem` is "screening", not
 #   ETS. "Screen positive" rows are prompts for substantive review.
 head(dff$dif_table[, c("Level", "Group1", "Group2", "Contrast",
                        "Classification", "ClassificationSystem")])
+#> # A tibble: 4 × 6
+#>   Level Group1 Group2 Contrast Classification  ClassificationSystem
+#>   <chr> <chr>  <chr>     <dbl> <chr>           <chr>               
+#> 1 R01   A      B       0.146   Screen negative screening           
+#> 2 R02   A      B      -0.152   Screen negative screening           
+#> 3 R03   A      B      -0.164   Screen negative screening           
+#> 4 R04   A      B       0.00347 Screen negative screening           
 # The residual contrast is an observed-minus-expected average contrast
 # between groups. It is useful for screening, but it is not an ETS
 # A/B/C logit-delta classification.
 dff_refit <- analyze_dff(fit, diag, facet = "Rater", group = "Group",
                          data = toy, method = "refit")
 unique(dff_refit$dif_table$ClassificationSystem)
+#> [1] "descriptive"
 # Look for: "descriptive". Linked refit contrasts remain screening-only
 #   because their plug-in uncertainty omits anchor uncertainty and
 #   cross-refit covariance.
@@ -265,9 +279,10 @@ plot(sc, type = "design_matrix", draw = FALSE)
 if ("ScaleLinkStatus" %in% names(dff_refit$dif_table)) {
   unique(dff_refit$dif_table$ScaleLinkStatus)
 }
+#> [1] "weak_link"
 # Look for: "linked" in `ScaleLinkStatus` confirms the focal and
 #   reference groups share enough common elements for a comparable
 #   contrast; "demoted_*" rows lose linking under the refit branch
 #   and should be read as exploratory.
-} # }
+# }
 ```

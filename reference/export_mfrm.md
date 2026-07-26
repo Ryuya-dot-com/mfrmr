@@ -113,10 +113,11 @@ data-handling policy before sharing it.
 ## Examples
 
 ``` r
-if (FALSE) { # interactive()
+# \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "JML", model = "RSM", maxit = 30)
+#> Warning: Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 out <- export_mfrm(
   fit,
@@ -127,5 +128,6 @@ out <- export_mfrm(
   acknowledge_sensitive = TRUE
 )
 out$Table
-}
+#> [1] "person"   "facets"   "summary"  "steps"    "measures"
+# }
 ```

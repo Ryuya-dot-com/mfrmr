@@ -303,7 +303,7 @@ Interpretation:
 ## Publication-readiness boundary
 
 The APA route is strongest when it is used as a structured drafting and
-review surface. It is not a one-click manuscript generator. Before
+review workflow. It is not a one-click manuscript generator. Before
 moving text into a journal article, inspect the following objects
 together:
 
@@ -645,9 +645,9 @@ unless the score interpretation explicitly justifies
 discrimination-based reweighting. Do not use AIC/BIC alone as an
 operational-scoring decision.
 
-## 8. Report latent regression as a population-model branch
+## 8. Report the latent-regression population model
 
-Latent-regression fits expose their reportable surface through the fit
+Latent-regression fits provide reportable results through the fit
 summary: `population_overview`, `population_coefficients`,
 `population_coding`, and `caveats`. Coefficients are conditional-normal
 population-model parameters, not post-hoc regressions on EAP or MLE

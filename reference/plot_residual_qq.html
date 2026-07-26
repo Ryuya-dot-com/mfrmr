@@ -94,18 +94,26 @@ entries are generated internally when absent.</p></dd>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># interactive()</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span></span>
 <span class="r-in"><span>                method <span class="op">=</span> <span class="st">"JML"</span>, maxit <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span></span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.</span>
 <span class="r-in"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu">plot_residual_qq</span><span class="op">(</span><span class="va">fit</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">p</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">data</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Person Theoretical      Sample</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1   P023   -2.310991 -0.37283950</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2   P002   -1.862732 -0.13615206</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3   P032   -1.624981 -0.10420916</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4   P005   -1.454408 -0.10222504</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5   P008   -1.318011 -0.08837233</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6   P004   -1.202508 -0.08278029</span>
 <span class="r-in"><span><span class="co"># Look for: points hugging the y = x reference line. Heavy upper-</span></span></span>
 <span class="r-in"><span><span class="co">#   right tails indicate persons whose residual aggregates exceed</span></span></span>
 <span class="r-in"><span><span class="co">#   the standard normal expectation; pair with `plot_unexpected()`</span></span></span>
 <span class="r-in"><span><span class="co">#   for case-level follow-up. This is an exploratory screen; do</span></span></span>
 <span class="r-in"><span><span class="co">#   not treat tail behaviour as a definitive normality test.</span></span></span>
-<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

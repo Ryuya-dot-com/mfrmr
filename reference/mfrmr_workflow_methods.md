@@ -33,9 +33,12 @@ and, when flagged,
 or
 [`export_summary_appendix()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_summary_appendix.md).
 
-Use `JML` only when you explicitly want a faster exploratory pass and
-are willing to defer strict marginal follow-up and formal precision
-language to a later `MML` run.
+Use `JML` only when its fixed-person-parameter estimand is
+methodologically intended, for example for a JMLE-oriented external
+comparison, descriptive or exploratory work, or a design with
+substantial information per person. Do not select it merely as a faster
+substitute for `MML`: a later `MML` run targets a different estimand
+rather than serving as stricter follow-up to the same analysis.
 
 ## Canonical operational review route
 
@@ -143,8 +146,8 @@ marked as not assessed; mfrmr does not assume a complete crossing.
 
 2.  Fit a model with
     [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md).
-    For final reporting, prefer `method = "MML"` unless you explicitly
-    want a fast exploratory JML pass.
+    Choose `MML` or `JML` from the prespecified estimand and
+    assumptions; do not select `JML` merely to shorten runtime.
 
 3.  Read `summary(fit, profile = "fit")`, then request
     `summary(fit, profile = "facets")` and draw the required native
@@ -564,7 +567,7 @@ base-R plots from component tables.
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+# \donttest{
 toy_full <- load_mfrmr_data("example_core")
 keep_people <- unique(toy_full$Person)[1:12]
 toy <- toy_full[toy_full$Person %in% keep_people, , drop = FALSE]
@@ -579,9 +582,17 @@ fit <- fit_mfrm(
   maxit = 30
 )
 summary(fit)$next_actions
+#> [1] "After reviewing convergence, run `review <- summary(fit, profile = \"facets\", detail = \"brief\")` for the comprehensive FACETS-organized result surface."
+#> [2] "Then draw the complete native Wright map with `plot(fit, type = \"wright\", show_ci = TRUE, top_n = Inf, preset = \"publication\")`."                      
+#> [3] "Reuse `review$results$diagnostics`; call `diagnose_mfrm()` again only for residual PCA or other custom settings."                                          
+#> [4] "Use `reporting_checklist(fit, diagnostics = review$results$diagnostics)` for reporting readiness."                                                         
 
 diag <- diagnose_mfrm(fit, residual_pca = "none", diagnostic_mode = "both")
 summary(diag)$next_actions
+#> [1] "Inspect `diagnostic_basis` before comparing legacy residual evidence with strict marginal evidence."                                 
+#> [2] "Review `top_marginal_cells` and `rating_scale_table(..., diagnostics = diag)` for first-order strict marginal follow-up."            
+#> [3] "Review `top_marginal_pairs` for pairwise local-dependence follow-up."                                                                
+#> [4] "Use `unexpected_response_table()` / `plot_unexpected()` and `displacement_table()` / `plot_displacement()` for case-level follow-up."
 
 chk <- reporting_checklist(fit, diagnostics = diag)
 subset(
@@ -589,18 +600,47 @@ subset(
   Section == "Visual Displays",
   c("Item", "DraftReady", "NextAction")
 )
+#>                                   Item DraftReady
+#> 25                          Wright map       TRUE
+#> 26                QC / facet dashboard       TRUE
+#> 27                Residual PCA visuals      FALSE
+#> 28 Connectivity / design-matrix visual       TRUE
+#> 29  Inter-rater / displacement visuals       TRUE
+#> 30             Strict marginal visuals      FALSE
+#> 31                  Bias / DIF visuals      FALSE
+#> 32      Precision / information curves       TRUE
+#> 33                Fit/category visuals       TRUE
+#>                                                                                                                       NextAction
+#> 25                                      Include a Wright map when the manuscript benefits from a shared-scale targeting display.
+#> 26                     Use the dashboard as a first-pass triage view, then move to the specific follow-up plot behind each flag.
+#> 27                                         Run residual PCA if you want scree/loadings visuals for residual-structure follow-up.
+#> 28                                                       Use the design-matrix view to support linkage and comparability claims.
+#> 29                                       Use displacement and inter-rater views to localize QC issues after dashboard screening.
+#> 30 Treat strict marginal plots as exploratory corroboration screens, then corroborate with design review and legacy diagnostics.
+#> 31                                                        Run bias or DIF screening before discussing interaction-level visuals.
+#> 32                                Use information curves to describe precision across theta when that is the reporting question.
+#> 33                                        Use category curves and fit visuals as local descriptive follow-up after QC screening.
 
 qc <- plot_qc_dashboard(fit, diagnostics = diag, draw = FALSE, preset = "publication")
 qc$data$preset
+#> [1] "publication"
 p_marg <- plot_marginal_fit(diag, draw = FALSE, preset = "publication")
 p_marg$data$preset
+#> [1] "publication"
 
 sc <- subset_connectivity_report(fit, diagnostics = diag)
 p_design <- plot(sc, type = "design_matrix", draw = FALSE, preset = "publication")
 p_design$data$plot
+#> [1] "coverage_matrix"
 
 bundle <- build_summary_table_bundle(chk, appendix_preset = "recommended")
 summary(bundle)$role_summary
+#>                          Role Tables TotalRows TotalCols
+#> 4            section_coverage      1         7         8
+#> 3       priority_distribution      1         4         3
+#> 2 facets_relationship_wording      1         6         4
+#> 1          checklist_overview      1         1         6
 plot(bundle, type = "appendix_presets", draw = FALSE)$data$plot
-} # }
+#> [1] "appendix_presets"
+# }
 ```

@@ -166,7 +166,7 @@ The `summary` data.frame contains:
 ## Examples
 
 ``` r
-if (FALSE) { # interactive()
+# \donttest{
 toy_full <- load_mfrmr_data("example_core")
 toy_people <- unique(toy_full$Person)[1:12]
 toy <- toy_full[toy_full$Person %in% toy_people, , drop = FALSE]
@@ -175,7 +175,48 @@ fit <- suppressWarnings(
 )
 t4 <- unexpected_response_table(fit, abs_z_min = 1.5, prob_max = 0.4, top_n = 5)
 summary(t4)
+#> mfrmr Unexpected Response Summary 
+#>   Class: mfrm_unexpected
+#>   Components: 3
+#> 
+#> Threshold summary
+#>  TotalObservations UnexpectedN UnexpectedPercent LowProbabilityN LargeResidualN
+#>                192           5             2.604               5              5
+#>    Rule AbsZThreshold ProbThreshold
+#>  either           1.5           0.4
+#> 
+#> Flagged responses: table
+#>  Row Rater    Criterion Weight Score Observed Expected Residual StdResidual
+#>  160   R02     Accuracy      1     1        1    3.071   -2.071      -2.816
+#>  130   R03     Language      1     1        1    2.966   -1.966      -2.602
+#>   55   R01 Organization      1     1        1    2.937   -1.937      -2.548
+#>   48   R04      Content      1     1        1    2.697   -1.697      -2.142
+#>  181   R04     Accuracy      1     1        1    2.660   -1.660      -2.087
+#>  ObsProb MostLikely MostLikelyProb CategoryGap Surprise           Direction
+#>    0.020          3          0.513           2    1.704 Lower than expected
+#>    0.029          3          0.515           2    1.538 Lower than expected
+#>    0.032          3          0.514           2    1.496 Lower than expected
+#>    0.066          3          0.478           2    1.181 Lower than expected
+#>    0.073          3          0.469           2    1.139 Lower than expected
+#>  FlagLowProbability FlagLargeResidual Severity
+#>                TRUE              TRUE    5.519
+#>                TRUE              TRUE    5.139
+#>                TRUE              TRUE    5.045
+#>                TRUE              TRUE    4.323
+#>                TRUE              TRUE    4.226
+#> 
+#> Settings
+#>    Setting  Value
+#>  abs_z_min    1.5
+#>   prob_max    0.4
+#>       rule either
+#> 
+#> Notes
+#>  - Unexpected-response summary for quick residual screening.
+#>  - Person identifiers are suppressed in this summary. Use `include_person =
+#>    TRUE` only under appropriate privacy controls.
 p_t4 <- plot(t4, draw = FALSE)
 p_t4$data$plot
-}
+#> [1] "scatter"
+# }
 ```

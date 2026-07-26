@@ -176,6 +176,23 @@ review.</p>
 optimization, not the design, stability, diagnostic, or reporting
 decision. A small gradient cannot repair a disconnected measurement
 graph or a boundary-separated facet level.</p>
+<div class="section level3">
+<h3 id="choosing-the-iteration-ceiling">Choosing the iteration ceiling<a class="anchor" aria-label="anchor" href="#choosing-the-iteration-ceiling"></a>
+</h3>
+<p><code>maxit</code> limits computation; it does not define
+convergence. Use the default <code>maxit = 400</code> as the initial
+analysis ceiling unless a prespecified protocol uses another value. A
+fit that stops at <code>ConvergenceStatus = "iteration_limit"</code> is
+review-only regardless of whether its estimates look plausible. Keep the
+data, model, method, anchors, optimizer, tolerance, and quadrature rule
+fixed, then use the next ceiling from a prespecified sequence. Accept a
+result only after <code>Converged</code>, <code>InferenceReady</code>,
+and the Numerical readiness row all pass. Do not select a run because
+its coefficients, fit statistics, significance, or agreement with an
+expected result are more favorable. Material differences between
+separately ready runs are evidence of numerical instability, not a
+choice among equally acceptable answers.</p>
+</div>
 </div>
 <div class="section level2">
 <h2 id="strict-marginal-diagnostic-target">Strict Marginal Diagnostic Target<a class="anchor" aria-label="anchor" href="#strict-marginal-diagnostic-target"></a>
@@ -347,22 +364,19 @@ available only as caveated bounded-<code>GPCM</code> surfaces with
 explicit boundary output. Full FACETS-style score-side contract review,
 posterior predictive checks, and MCMC estimation are not available for
 bounded <code>GPCM</code>. See <code><a href="../reference/gpcm_capability_matrix.html">gpcm_capability_matrix()</a></code> for
-the full per-helper support contract.</p>
+the status and recommended alternative for each helper group.</p>
 </div>
 <div class="section level2">
-<h2 id="why-gpcm-is-the-current-upper-scope">Why GPCM Is The Current Upper Scope<a class="anchor" aria-label="anchor" href="#why-gpcm-is-the-current-upper-scope"></a>
+<h2 id="why-bounded-gpcm-is-the-current-limit">Why bounded GPCM is the current limit<a class="anchor" aria-label="anchor" href="#why-bounded-gpcm-is-the-current-limit"></a>
 </h2>
 <p><code>GPCM</code> is the current upper supported scope for three
 reasons.</p>
 <ol style="list-style-type: decimal">
-<li>The shared <code>MML</code> kernel and the response-probability core
-already generalize to the bounded <code>GPCM</code> branch without
-changing the main package architecture.</li>
-<li>The package has direct checks for that bounded route.</li>
-<li>The helpers that still depend on Rasch-family score semantics are
-blocked explicitly, and role-based planning helpers carry explicit
-caveats, so formal support does not require pretending that every
-downstream helper has full coverage.</li>
+<li>The bounded slope model uses the documented <code>MML</code>
+probability framework under the stated restriction.</li>
+<li>Direct verification checks are available for that model.</li>
+<li>Score-side and reporting helpers that rely on Rasch-family semantics
+remain unavailable or carry explicit caveats.</li>
 </ol>
 <p>This is a narrower but more defensible claim than saying the whole
 package is uniformly generalized to free-discrimination many-facet

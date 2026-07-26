@@ -279,7 +279,7 @@ characteristics under the evaluated role-based design.
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+# \donttest{
 diag_eval <- evaluate_mfrm_diagnostic_screening(
   design = list(person = 10, rater = 2, criterion = 2, assignment = 2),
   reps = 1,
@@ -287,6 +287,29 @@ diag_eval <- evaluate_mfrm_diagnostic_screening(
   seed = 123
 )
 diag_eval$scenario_summary
+#> # A tibble: 2 × 23
+#>   design_id Scenario        ScenarioClass Model DependenceFacet n_person n_rater
+#>   <chr>     <chr>           <chr>         <chr> <chr>              <int>   <int>
+#> 1 V01       local_dependen… context_shar… RSM   Criterion             10       2
+#> 2 V01       well_specified  null_referen… RSM   Criterion             10       2
+#> # ℹ 16 more variables: n_criterion <int>, raters_per_person <int>, Reps <int>,
+#> #   RunOKRate <dbl>, ConvergenceRate <dbl>, MeanElapsedSec <dbl>,
+#> #   MeanLegacyMeanAbsZ <dbl>, MeanLegacyFlaggedLevels <dbl>,
+#> #   LegacyAnyFlagRate <dbl>, MeanMarginalOverallRMSD <dbl>,
+#> #   MeanMarginalMaxAbsStdResidual <dbl>, MeanMarginalFlaggedGroups <dbl>,
+#> #   MarginalAnyFlagRate <dbl>, MeanPairwiseFlaggedLevelPairs <dbl>,
+#> #   PairwiseAnyFlagRate <dbl>, PairwiseAvailabilityRate <dbl>
 diag_eval$scenario_contrast
-} # }
+#> # A tibble: 1 × 32
+#>   Scenario        ScenarioClass design_id Model DependenceFacet n_person n_rater
+#>   <chr>           <chr>         <chr>     <chr> <chr>              <int>   <int>
+#> 1 local_dependen… context_shar… V01       RSM   Criterion             10       2
+#> # ℹ 25 more variables: n_criterion <int>, raters_per_person <int>,
+#> #   MeanLegacyMeanAbsZ_Scenario <dbl>, MeanLegacyFlaggedLevels_Scenario <dbl>,
+#> #   MeanMarginalOverallRMSD_Scenario <dbl>,
+#> #   MeanMarginalMaxAbsStdResidual_Scenario <dbl>,
+#> #   MeanMarginalFlaggedGroups_Scenario <dbl>,
+#> #   MeanPairwiseFlaggedLevelPairs_Scenario <dbl>,
+#> #   PairwiseAnyFlagRate_Scenario <dbl>, …
+# }
 ```

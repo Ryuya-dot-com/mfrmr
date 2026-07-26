@@ -249,20 +249,103 @@ adaptive testing. <em>Computers &amp; Education</em>, 97, 69-85.</p></li>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>, method <span class="op">=</span> <span class="st">"JML"</span>, maxit <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span></span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.</span>
 <span class="r-in"><span><span class="va">diag</span> <span class="op">&lt;-</span> <span class="fu"><a href="diagnose_mfrm.html">diagnose_mfrm</a></span><span class="op">(</span><span class="va">fit</span>, residual_pca <span class="op">=</span> <span class="st">"both"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">pca</span> <span class="op">&lt;-</span> <span class="fu">analyze_residual_pca</span><span class="op">(</span><span class="va">diag</span>, mode <span class="op">=</span> <span class="st">"both"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">pca2</span> <span class="op">&lt;-</span> <span class="fu">analyze_residual_pca</span><span class="op">(</span><span class="va">fit</span>, mode <span class="op">=</span> <span class="st">"both"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">pca</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> mfrmr Residual PCA Summary </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Class: mfrm_residual_pca</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Components: 12</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> PCA overview</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Mode Facets OverallComponents FacetComponentRows</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  both      2                16                  8</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Eigenvalue / loading rows: overall_table</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Component Eigenvalue Proportion Cumulative</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          1      2.114      0.132      0.132</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          2      1.833      0.115      0.247</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          3      1.706      0.107      0.353</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          4      1.519      0.095      0.448</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          5      1.290      0.081      0.529</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          6      1.157      0.072      0.601</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          7      1.098      0.069      0.670</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          8      1.054      0.066      0.736</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          9      0.949      0.059      0.795</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         10      0.846      0.053      0.848</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Notes</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Residual PCA summary for unidimensionality checks (overall and/or by facet).</span>
 <span class="r-in"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="plot_residual_pca.html">plot_residual_pca</a></span><span class="op">(</span><span class="va">pca</span>, mode <span class="op">=</span> <span class="st">"overall"</span>, plot_type <span class="op">=</span> <span class="st">"scree"</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">p</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">plot</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "scree"</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">p</span><span class="op">$</span><span class="va">data</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $plot</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "scree"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $mode</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "overall"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $facet</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NULL</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $title</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "Overall Residual PCA (Scree)"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $subtitle</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "Variance explained by residual components"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $legend</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                         label      role  aesthetic   value</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1        Residual eigenvalues component line-point #1f78b4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2             Unit-eigenvalue reference       line #6b7280</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3      Critical minimum (1.4) reference       line #6b7280</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 Noticeable second dim (2.0) reference       line #6b7280</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5     Strong second dim (3.0) reference       line #6b7280</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span><span class="va">pca_pa</span> <span class="op">&lt;-</span> <span class="fu">analyze_residual_pca</span><span class="op">(</span><span class="va">diag</span>, mode <span class="op">=</span> <span class="st">"overall"</span>, parallel <span class="op">=</span> <span class="cn">TRUE</span>, parallel_reps <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">pca_pa</span><span class="op">$</span><span class="va">overall_table</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Component Eigenvalue Proportion Cumulative ParallelMean ParallelSD</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1         1   2.113536 0.13209603  0.1320960     2.160913 0.14855479</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2         2   1.832881 0.11455503  0.2466511     1.918642 0.07914670</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3         3   1.706244 0.10664025  0.3532913     1.697861 0.06202269</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4         4   1.519047 0.09494041  0.4482317     1.485696 0.07926864</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5         5   1.289965 0.08062283  0.5288545     1.297380 0.04976408</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6         6   1.157293 0.07233083  0.6011854     1.199561 0.04272479</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ParallelCutoff ParallelQuantile ExcessOverParallelCutoff</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1       2.449711             0.95              -0.33617439</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2       2.025522             0.95              -0.19264184</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3       1.801769             0.95              -0.09552545</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4       1.628377             0.95              -0.10933074</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5       1.407579             0.95              -0.11761333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6       1.257088             0.95              -0.09979494</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ExceedsParallelCutoff ParallelReps SuccessfulParallelReps</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                 FALSE           10                     10</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                 FALSE           10                     10</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3                 FALSE           10                     10</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4                 FALSE           10                     10</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5                 FALSE           10                     10</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6                 FALSE           10                     10</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         ParallelMethod</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 residual_permutation</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 residual_permutation</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 residual_permutation</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 residual_permutation</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5 residual_permutation</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6 residual_permutation</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">pca</span><span class="op">$</span><span class="va">overall_table</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Component Eigenvalue Proportion Cumulative</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1         1   2.113536 0.13209603  0.1320960</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2         2   1.832881 0.11455503  0.2466511</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3         3   1.706244 0.10664025  0.3532913</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4         4   1.519047 0.09494041  0.4482317</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5         5   1.289965 0.08062283  0.5288545</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6         6   1.157293 0.07233083  0.6011854</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

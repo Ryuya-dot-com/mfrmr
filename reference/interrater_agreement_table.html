@@ -206,19 +206,52 @@ rater facet, reported separately from agreement.</p></dd>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># interactive()</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>, method <span class="op">=</span> <span class="st">"JML"</span>, maxit <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span></span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.</span>
 <span class="r-in"><span><span class="va">ir</span> <span class="op">&lt;-</span> <span class="fu">interrater_agreement_table</span><span class="op">(</span><span class="va">fit</span>, rater_facet <span class="op">=</span> <span class="st">"Rater"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="co"># One-row overview: ExactAgreement, ExpectedExactAgreement, MeanCorr,</span></span></span>
 <span class="r-in"><span><span class="co"># RaterSeparation, and RaterReliability are the headline reportable</span></span></span>
 <span class="r-in"><span><span class="co"># statistics.</span></span></span>
 <span class="r-in"><span><span class="va">ir</span><span class="op">$</span><span class="va">summary</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   RaterFacet Raters Pairs Contexts TotalPairs OpportunityCount ExactAgreements</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1      Rater      4     6      192       1152             1152             417</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ExpectedAgreements ExactAgreement ExpectedExactAgreement</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1           431.5792      0.3619792              0.3746347</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   AgreementMinusExpected AdjacentAgreements AdjacentAgreement MeanAbsDiff</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1            -0.01265554                956         0.8298611   0.8255208</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    MeanCorr RaterSeparation RaterStrata RaterReliability RaterRealSeparation</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 0.3781067        3.052963    4.403951        0.9031062             3.01671</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   RaterRealReliability FlaggedPairs FlaggedShare</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1            0.9009954            6            1</span>
 <span class="r-in"><span><span class="co"># Per-pair detail (Rater1 vs Rater2 with Exact, Adjacent, Corr, MAD).</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">ir</span><span class="op">$</span><span class="va">pairs</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Rater1 Rater2   N OpportunityCount ExactCount ExpectedExactCount</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1    R01    R03 192              192         66           72.15929</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2    R01    R04 192              192         67           70.96800</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3    R02    R04 192              192         69           69.44126</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4    R02    R03 192              192         71           71.03851</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5    R01    R02 192              192         71           73.95176</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6    R03    R04 192              192         73           74.02036</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   AdjacentCount     Exact ExpectedExact  Adjacent    MeanDiff       MAD</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1           158 0.3437500     0.3758297 0.8229167  0.21354167 0.8489583</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2           152 0.3489583     0.3696250 0.7916667  0.29166667 0.8854167</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3           153 0.3593750     0.3616732 0.7968750  0.36458333 0.8645833</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4           158 0.3697917     0.3699922 0.8229167  0.28645833 0.8177083</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5           172 0.3697917     0.3851654 0.8958333 -0.07291667 0.7500000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6           163 0.3802083     0.3855227 0.8489583  0.07812500 0.7864583</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        Corr      Pair      ExactGap LowExactFlag LowCorrFlag Flag</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 0.3696655 R01 | R03 -0.0320796527         TRUE       FALSE TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 0.3313368 R01 | R04 -0.0206666586         TRUE       FALSE TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 0.3377719 R02 | R04 -0.0022982178         TRUE       FALSE TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 0.3723625 R02 | R03 -0.0002005704         TRUE       FALSE TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5 0.4366188 R01 | R02 -0.0153737478         TRUE       FALSE TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6 0.4208851 R03 | R04 -0.0053143712         TRUE       FALSE TRUE</span>
 <span class="r-in"><span><span class="va">p_ir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">ir</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">p_ir</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">plot</span></span></span>
-<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "exact"</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

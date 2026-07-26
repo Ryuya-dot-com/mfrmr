@@ -298,10 +298,11 @@ off to other tools.
 ## Examples
 
 ``` r
-if (FALSE) { # interactive()
+# \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "JML", maxit = 30)
+#> Warning: Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 bundle <- export_mfrm_bundle(
   fit,
@@ -313,6 +314,29 @@ bundle <- export_mfrm_bundle(
   acknowledge_sensitive = TRUE
 )
 bundle$summary[, c("FilesWritten", "HtmlWritten", "ScriptWritten")]
+#>   FilesWritten HtmlWritten ScriptWritten
+#> 1           17           1             1
 head(bundle$written_files)
-}
+#>          Component Format
+#> 1      core_person    csv
+#> 2      core_facets    csv
+#> 3     core_summary    csv
+#> 4    core_measures    csv
+#> 5       core_steps    csv
+#> 6 manifest_summary    csv
+#>                                                        Path
+#> 1 /tmp/Rtmpn0wMBx/mfrmr_bundle_example_person_estimates.csv
+#> 2  /tmp/Rtmpn0wMBx/mfrmr_bundle_example_facet_estimates.csv
+#> 3      /tmp/Rtmpn0wMBx/mfrmr_bundle_example_fit_summary.csv
+#> 4         /tmp/Rtmpn0wMBx/mfrmr_bundle_example_measures.csv
+#> 5  /tmp/Rtmpn0wMBx/mfrmr_bundle_example_step_parameters.csv
+#> 6 /tmp/Rtmpn0wMBx/mfrmr_bundle_example_manifest_summary.csv
+#>                    DataHandling
+#> 1 may_contain_person_level_data
+#> 2         review_before_sharing
+#> 3         review_before_sharing
+#> 4         review_before_sharing
+#> 5         review_before_sharing
+#> 6         review_before_sharing
+# }
 ```

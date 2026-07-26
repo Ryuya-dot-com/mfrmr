@@ -144,19 +144,113 @@ information formula.
 ## Examples
 
 ``` r
-if (FALSE) { # interactive()
+# \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+#> Warning: Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.
 out <- category_curves_report(fit, theta_points = 101)
 summary(out)
+#> mfrmr Category Curves Summary 
+#>   Class: mfrm_category_curves
+#>   Components: 8
+#> 
+#> Curve grid summary
+#>                                 Metric   Value
+#>                           curve_groups   1.000
+#>                           theta_points 101.000
+#>                             categories   4.000
+#>                      legacy_graph_rows 101.000
+#>                    expected_ogive_rows 101.000
+#>                       probability_rows 404.000
+#>                    probability_columns   4.000
+#>            cumulative_probability_rows 808.000
+#>               cumulative_boundary_rows   3.000
+#>              category_information_rows 404.000
+#>           boundary_rows_needing_review   0.000
+#>      boundary_rows_outside_theta_range   0.000
+#>  boundary_rows_with_multiple_crossings   0.000
+#>                  max_total_information   0.661
+#>               max_category_information   0.283
+#> 
+#> Boundary / curve rows: cumulative_boundaries
+#>  CurveGroup BoundaryOrder LowerOrEqualCategory AboveCategory ThresholdCategory
+#>      Common             1                    1             2                 2
+#>      Common             2                    2             3                 3
+#>      Common             3                    3             4                 4
+#>  CumulativeDirection TargetProbability ThurstonianThreshold InThetaRange
+#>          at_or_below               0.5               -1.540         TRUE
+#>          at_or_below               0.5               -0.034         TRUE
+#>          at_or_below               0.5                1.572         TRUE
+#>  CrossingCount BoundaryStatus   BoundaryLabel
+#>              1       in_range P(X <= 1) = 0.5
+#>              1       in_range P(X <= 2) = 0.5
+#>              1       in_range P(X <= 3) = 0.5
+#> 
+#> Settings
+#>         Setting       Value
+#>     theta_range       -6, 6
+#>    theta_points         101
+#>          digits           4
+#>   include_fixed       FALSE
+#>  fixed_max_rows         400
+#>          scales <table 1x2>
+#> 
+#> Notes
+#>  - Category-curve bundle with probabilities, cumulative probabilities, total
+#>    information, and category-specific information.
+#>  - Category-specific information contributions sum to total information at the
+#>    same curve and theta point.
+#>  - Cumulative .5 boundary rows are in range with a single crossing where
+#>    reported.
 head(out$probabilities[, c("CurveGroup", "Theta", "Category", "Probability")])
+#>   CurveGroup Theta Category Probability
+#> 1     Common -6.00        1      0.9907
+#> 2     Common -5.88        1      0.9896
+#> 3     Common -5.76        1      0.9882
+#> 4     Common -5.64        1      0.9868
+#> 5     Common -5.52        1      0.9851
+#> 6     Common -5.40        1      0.9832
 p_overview <- plot(out, draw = FALSE)
 p_overview$data$plot
+#> [1] "overview"
 p_cum <- plot(out, type = "cumulative", draw = FALSE)
 head(p_cum$data$cumulative_boundaries)
+#>   CurveGroup BoundaryOrder LowerOrEqualCategory AboveCategory ThresholdCategory
+#> 1     Common             1                    1             2                 2
+#> 2     Common             2                    2             3                 3
+#> 3     Common             3                    3             4                 4
+#>   CumulativeDirection TargetProbability ThurstonianThreshold InThetaRange
+#> 1         at_or_below               0.5              -1.5400         TRUE
+#> 2         at_or_below               0.5              -0.0335         TRUE
+#> 3         at_or_below               0.5               1.5722         TRUE
+#>   CrossingCount BoundaryStatus   BoundaryLabel
+#> 1             1       in_range P(X <= 1) = 0.5
+#> 2             1       in_range P(X <= 2) = 0.5
+#> 3             1       in_range P(X <= 3) = 0.5
 p_info <- plot(out, type = "category_information", draw = FALSE)
 head(p_info$data$category_information)
+#>   CurveGroup Theta Category Probability ExpectedScore ScoreVariance Information
+#> 1     Common -6.00        1      0.9907        1.0093        0.0092      0.0092
+#> 2     Common -5.88        1      0.9896        1.0105        0.0104      0.0104
+#> 3     Common -5.76        1      0.9882        1.0118        0.0117      0.0117
+#> 4     Common -5.64        1      0.9868        1.0133        0.0132      0.0132
+#> 5     Common -5.52        1      0.9851        1.0150        0.0149      0.0149
+#> 6     Common -5.40        1      0.9832        1.0169        0.0167      0.0167
+#>   CategoryInformation CategoryInformationShare Slope Model
+#> 1               1e-04                   0.0092     1   RSM
+#> 2               1e-04                   0.0104     1   RSM
+#> 3               1e-04                   0.0117     1   RSM
+#> 4               2e-04                   0.0132     1   RSM
+#> 5               2e-04                   0.0148     1   RSM
+#> 6               3e-04                   0.0167     1   RSM
 curve_long <- plot_data(out, component = "plot_long")
 head(curve_long[, c("PlotType", "Theta", "Series", "Value")])
-}
+#>   PlotType Theta Series  Value
+#> 1    ogive -6.00 Common 1.0093
+#> 2    ogive -5.88 Common 1.0105
+#> 3    ogive -5.76 Common 1.0118
+#> 4    ogive -5.64 Common 1.0133
+#> 5    ogive -5.52 Common 1.0150
+#> 6    ogive -5.40 Common 1.0169
+# }
 ```

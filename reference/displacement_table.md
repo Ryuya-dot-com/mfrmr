@@ -130,12 +130,68 @@ The `table` data.frame contains:
 ## Examples
 
 ``` r
-if (FALSE) { # interactive()
+# \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+#> Warning: Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.
 disp <- displacement_table(fit, anchored_only = FALSE)
 summary(disp)
+#> mfrmr Displacement Summary 
+#>   Class: mfrm_displacement
+#>   Components: 3
+#> 
+#> Displacement summary
+#>  Levels AnchoredLevels FlaggedLevels FlaggedAnchoredLevels MaxAbsDisplacement
+#>      56              0             0                     0                  0
+#>  MaxAbsDisplacementT AbsDisplacementThreshold AbsTThreshold
+#>                0.001                      0.5             2
+#> 
+#> Displacement rows: table
+#>   Facet        Level WeightedN ResidualSum Information Displacement
+#>  Person <suppressed>        16      -0.002       9.452            0
+#>  Person <suppressed>        16      -0.002       9.452            0
+#>  Person <suppressed>        16      -0.002      10.333            0
+#>  Person <suppressed>        16       0.001       6.760            0
+#>  Person <suppressed>        16       0.001       4.966            0
+#>  Person <suppressed>        16      -0.001       3.461            0
+#>  Person <suppressed>        16       0.001       9.182            0
+#>  Person <suppressed>        16      -0.001       4.840            0
+#>  Person <suppressed>        16      -0.001       9.205            0
+#>  Person <suppressed>        16      -0.001       9.205            0
+#>  DisplacementSE DisplacementT Estimate    SE  N AnchorValue AnchorStatus
+#>           0.325        -0.001    0.684 0.325 16          NA             
+#>           0.325        -0.001    0.684 0.325 16          NA             
+#>           0.311        -0.001   -0.015 0.311 16          NA             
+#>           0.385         0.000   -1.665 0.385 16          NA             
+#>           0.449         0.000   -2.178 0.449 16          NA             
+#>           0.538         0.000    2.684 0.538 16          NA             
+#>           0.330         0.000   -0.918 0.330 16          NA             
+#>           0.455         0.000    2.200 0.455 16          NA             
+#>           0.330         0.000    0.791 0.330 16          NA             
+#>           0.330         0.000    0.791 0.330 16          NA             
+#>  AnchorType ReleasedEstimate AnchorGap FlagDisplacement FlagT  Flag
+#>        Free            0.684        NA            FALSE FALSE FALSE
+#>        Free            0.684        NA            FALSE FALSE FALSE
+#>        Free           -0.016        NA            FALSE FALSE FALSE
+#>        Free           -1.665        NA            FALSE FALSE FALSE
+#>        Free           -2.178        NA            FALSE FALSE FALSE
+#>        Free            2.684        NA            FALSE FALSE FALSE
+#>        Free           -0.918        NA            FALSE FALSE FALSE
+#>        Free            2.199        NA            FALSE FALSE FALSE
+#>        Free            0.791        NA            FALSE FALSE FALSE
+#>        Free            0.791        NA            FALSE FALSE FALSE
+#> 
+#> Settings
+#>                Setting Value
+#>  abs_displacement_warn   0.5
+#>             abs_t_warn     2
+#> 
+#> Notes
+#>  - Displacement summary for anchor drift and baseline drift checks.
+#>  - Person identifiers are suppressed in this summary. Use `include_person =
+#>    TRUE` only under appropriate privacy controls.
 p_disp <- plot(disp, draw = FALSE)
 p_disp$data$plot
-}
+#> [1] "lollipop"
+# }
 ```

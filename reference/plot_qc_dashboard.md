@@ -172,7 +172,7 @@ for detailed diagnosis.
 ## Examples
 
 ``` r
-if (FALSE) { # interactive()
+# \donttest{
 # Build the plotting data without opening a graphics device.
 toy <- load_mfrmr_data("example_core")
 toy_small <- toy[toy$Person %in% unique(toy$Person)[1:3], ]
@@ -182,11 +182,18 @@ fit_quick <- suppressWarnings(
 )
 qc_quick <- plot_qc_dashboard(fit_quick, draw = FALSE)
 names(qc_quick$data)
+#>  [1] "title"             "subtitle"          "legend"           
+#>  [4] "reference_lines"   "preset"            "threshold_profile"
+#>  [7] "thresholds"        "category_stats"    "fit"              
+#> [10] "zstd"              "unexpected"        "fair_average"     
+#> [13] "displacement"      "interrater"        "facets_chisq"     
+#> [16] "reliability"       "plot_name"        
 
-if (FALSE) { # \dontrun{
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+#> Warning: Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.
 qc <- plot_qc_dashboard(fit, draw = FALSE)
 qc$data$panels$Status
+#> NULL
 # Look for: a row whose `Status` is "OK" for each panel that
 #   the run should support. "WARN" / "REVIEW" rows tell you which
 #   downstream helper to run next (e.g. `plot_unexpected()`,
@@ -195,6 +202,5 @@ qc$data$panels$Status
 if (interactive()) {
   plot_qc_dashboard(fit, rater_facet = "Rater")
 }
-} # }
-}
+# }
 ```

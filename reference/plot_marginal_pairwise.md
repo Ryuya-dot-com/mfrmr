@@ -124,7 +124,7 @@ and
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+# \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(
   toy,
@@ -138,6 +138,7 @@ fit <- fit_mfrm(
 diag <- diagnose_mfrm(fit, residual_pca = "none", diagnostic_mode = "both")
 p <- plot_marginal_pairwise(diag, draw = FALSE, preset = "publication")
 p$data$preset
+#> [1] "publication"
 if (interactive()) {
   plot_marginal_pairwise(
     diag,
@@ -146,5 +147,5 @@ if (interactive()) {
     preset = "publication"
   )
 }
-} # }
+# }
 ```

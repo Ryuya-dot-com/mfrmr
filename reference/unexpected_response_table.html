@@ -185,7 +185,7 @@ criterion.</p></dd>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># interactive()</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="va">toy_full</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">toy_people</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">toy_full</span><span class="op">$</span><span class="va">Person</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">12</span><span class="op">]</span></span></span>
 <span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="va">toy_full</span><span class="op">[</span><span class="va">toy_full</span><span class="op">$</span><span class="va">Person</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">toy_people</span>, , drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span></span></span>
@@ -194,9 +194,50 @@ criterion.</p></dd>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">t4</span> <span class="op">&lt;-</span> <span class="fu">unexpected_response_table</span><span class="op">(</span><span class="va">fit</span>, abs_z_min <span class="op">=</span> <span class="fl">1.5</span>, prob_max <span class="op">=</span> <span class="fl">0.4</span>, top_n <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">t4</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> mfrmr Unexpected Response Summary </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Class: mfrm_unexpected</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Components: 3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Threshold summary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  TotalObservations UnexpectedN UnexpectedPercent LowProbabilityN LargeResidualN</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                192           5             2.604               5              5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    Rule AbsZThreshold ProbThreshold</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  either           1.5           0.4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Flagged responses: table</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Row Rater    Criterion Weight Score Observed Expected Residual StdResidual</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  160   R02     Accuracy      1     1        1    3.071   -2.071      -2.816</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  130   R03     Language      1     1        1    2.966   -1.966      -2.602</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   55   R01 Organization      1     1        1    2.937   -1.937      -2.548</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   48   R04      Content      1     1        1    2.697   -1.697      -2.142</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  181   R04     Accuracy      1     1        1    2.660   -1.660      -2.087</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  ObsProb MostLikely MostLikelyProb CategoryGap Surprise           Direction</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    0.020          3          0.513           2    1.704 Lower than expected</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    0.029          3          0.515           2    1.538 Lower than expected</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    0.032          3          0.514           2    1.496 Lower than expected</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    0.066          3          0.478           2    1.181 Lower than expected</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    0.073          3          0.469           2    1.139 Lower than expected</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  FlagLowProbability FlagLargeResidual Severity</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                TRUE              TRUE    5.519</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                TRUE              TRUE    5.139</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                TRUE              TRUE    5.045</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                TRUE              TRUE    4.323</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                TRUE              TRUE    4.226</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Settings</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    Setting  Value</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  abs_z_min    1.5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   prob_max    0.4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       rule either</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Notes</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Unexpected-response summary for quick residual screening.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Person identifiers are suppressed in this summary. Use `include_person =</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    TRUE` only under appropriate privacy controls.</span>
 <span class="r-in"><span><span class="va">p_t4</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">t4</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">p_t4</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">plot</span></span></span>
-<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "scatter"</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

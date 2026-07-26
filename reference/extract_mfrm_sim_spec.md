@@ -114,7 +114,7 @@ observed design and estimated spread in the fitted run.
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+# \donttest{
 toy <- simulate_mfrm_data(
   n_person = 8,
   n_rater = 3,
@@ -124,7 +124,15 @@ toy <- simulate_mfrm_data(
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 spec <- extract_mfrm_sim_spec(fit, latent_distribution = "empirical")
 spec$assignment
+#> [1] "crossed"
 spec$model
+#> [1] "RSM"
 head(spec$threshold_table)
-} # }
+#> # A tibble: 3 × 4
+#>   StepFacet StepIndex Step   Estimate
+#>   <chr>         <int> <chr>     <dbl>
+#> 1 Common            1 Step_1   -2.79 
+#> 2 Common            2 Step_2   -0.583
+#> 3 Common            3 Step_3    3.37 
+# }
 ```

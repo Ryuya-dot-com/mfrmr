@@ -202,16 +202,95 @@ within a facet while controlling for the other.</p></li>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># interactive()</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_bias"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>, method <span class="op">=</span> <span class="st">"JML"</span>, maxit <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span></span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.</span>
 <span class="r-in"><span><span class="va">diag</span> <span class="op">&lt;-</span> <span class="fu"><a href="diagnose_mfrm.html">diagnose_mfrm</a></span><span class="op">(</span><span class="va">fit</span>, residual_pca <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">bias</span> <span class="op">&lt;-</span> <span class="fu"><a href="estimate_bias.html">estimate_bias</a></span><span class="op">(</span><span class="va">fit</span>, <span class="va">diag</span>, facet_a <span class="op">=</span> <span class="st">"Rater"</span>, facet_b <span class="op">=</span> <span class="st">"Criterion"</span>, max_iter <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">out</span> <span class="op">&lt;-</span> <span class="fu">bias_interaction_report</span><span class="op">(</span><span class="va">bias</span>, top_n <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">out</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> mfrmr Bias Interaction Summary </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Class: mfrm_bias_interaction</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Components: 14</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Interaction summary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  InteractionFacets InteractionOrder InteractionMode FacetA    FacetB Cells</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Rater x Criterion                2        pairwise  Rater Criterion    16</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Flagged FlaggedPercent MeanAbsT MeanAbsBias               FlagStatus</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        3          18.75    1.008        0.31 3 of 16 cell(s) flagged.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Ranked interaction rows: ranked_table</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  InteractionFacets InteractionOrder InteractionMode FacetA    FacetB Level1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Rater x Criterion                2        pairwise  Rater Criterion    R04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Rater x Criterion                2        pairwise  Rater Criterion    R01</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Rater x Criterion                2        pairwise  Rater Criterion    R04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Rater x Criterion                2        pairwise  Rater Criterion    R01</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Rater x Criterion                2        pairwise  Rater Criterion    R03</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Rater x Criterion                2        pairwise  Rater Criterion    R01</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Rater x Criterion                2        pairwise  Rater Criterion    R02</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Rater x Criterion                2        pairwise  Rater Criterion    R04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Rater x Criterion                2        pairwise  Rater Criterion    R03</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Rater x Criterion                2        pairwise  Rater Criterion    R02</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        Level2 ObsExpAverage BiasSize    SE      t  Prob ObservedCount LRChiSq</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      Accuracy             0   -1.102 0.333 -3.310 0.003            24      NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      Accuracy             0    0.777 0.308  2.521 0.019            24      NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Organization             0    0.683 0.299  2.281 0.032            24      NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Organization             0   -0.362 0.293 -1.235 0.229            24      NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Organization             0   -0.313 0.296 -1.059 0.301            24      NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       Content             0   -0.277 0.301 -0.921 0.367            24      NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      Accuracy             0    0.247 0.288  0.856 0.401            24      NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      Language             0    0.234 0.297  0.788 0.439            24      NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       Content             0    0.247 0.315  0.783 0.442            24      NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      Language             0   -0.208 0.294 -0.709 0.485            24      NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  LRDF LRProb ProfileCILower ProfileCIUpper ProfileCILevel ProfileCIStatus</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    NA     NA             NA             NA             NA            &lt;NA&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    NA     NA             NA             NA             NA            &lt;NA&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    NA     NA             NA             NA             NA            &lt;NA&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    NA     NA             NA             NA             NA            &lt;NA&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    NA     NA             NA             NA             NA            &lt;NA&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    NA     NA             NA             NA             NA            &lt;NA&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    NA     NA             NA             NA             NA            &lt;NA&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    NA     NA             NA             NA             NA            &lt;NA&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    NA     NA             NA             NA             NA            &lt;NA&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    NA     NA             NA             NA             NA            &lt;NA&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  LikelihoodBasis               Pair  AbsT AbsBias TFlag BiasFlag PFlag  Flag</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             &lt;NA&gt;     R04 | Accuracy 3.310   1.102  TRUE     TRUE  TRUE  TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             &lt;NA&gt;     R01 | Accuracy 2.521   0.777  TRUE     TRUE  TRUE  TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             &lt;NA&gt; R04 | Organization 2.281   0.683  TRUE     TRUE  TRUE  TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             &lt;NA&gt; R01 | Organization 1.235   0.362 FALSE    FALSE FALSE FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             &lt;NA&gt; R03 | Organization 1.059   0.313 FALSE    FALSE FALSE FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             &lt;NA&gt;      R01 | Content 0.921   0.277 FALSE    FALSE FALSE FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             &lt;NA&gt;     R02 | Accuracy 0.856   0.247 FALSE    FALSE FALSE FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             &lt;NA&gt;     R04 | Language 0.788   0.234 FALSE    FALSE FALSE FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             &lt;NA&gt;      R03 | Content 0.783   0.247 FALSE    FALSE FALSE FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             &lt;NA&gt;     R02 | Language 0.709   0.208 FALSE    FALSE FALSE FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Facet1 Facet1_Level    Facet2 Facet2_Level FacetA_Level FacetB_Level</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Rater          R04 Criterion     Accuracy          R04     Accuracy</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Rater          R01 Criterion     Accuracy          R01     Accuracy</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Rater          R04 Criterion Organization          R04 Organization</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Rater          R01 Criterion Organization          R01 Organization</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Rater          R03 Criterion Organization          R03 Organization</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Rater          R01 Criterion      Content          R01      Content</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Rater          R02 Criterion     Accuracy          R02     Accuracy</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Rater          R04 Criterion     Language          R04     Language</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Rater          R03 Criterion      Content          R03      Content</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Rater          R02 Criterion     Language          R02     Language</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Settings</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        Setting Value</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     abs_t_warn     2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  abs_bias_warn   0.5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          p_max  0.05</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        sort_by abs_t</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          top_n    10</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Notes</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Bias interaction report with ranked cells and facet-level profiles.</span>
 <span class="r-in"><span><span class="va">p_bi</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">out</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">p_bi</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">plot</span></span></span>
-<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "scatter"</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

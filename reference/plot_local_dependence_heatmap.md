@@ -72,15 +72,17 @@ scale so an analyst can scan for diagonal blocks or hotspots.
 ## Examples
 
 ``` r
-if (FALSE) { # interactive()
+# \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                  method = "JML", maxit = 30)
+#> Warning: Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.
 p <- plot_local_dependence_heatmap(fit, draw = FALSE)
 dim(p$data$matrix)
+#> [1] 4 4
 # Look for: |off-diagonal correlation| < 0.2 is the typical
 #   acceptable regime; values >= 0.3 (Yen 1984 / Marais 2013
 #   guideline) flag pairs that may share dependence beyond the
 #   main-effects MFRM. Inspect those cells in `diag$obs`.
-}
+# }
 ```

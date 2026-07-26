@@ -179,13 +179,26 @@ row.
 ## Examples
 
 ``` r
-if (FALSE) { # interactive()
+# \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "JML", maxit = 30)
+#> Warning: Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 manifest <- build_mfrm_manifest(fit, diagnostics = diag)
 manifest$summary[, c("Model", "Method", "Observations", "Facets")]
+#>   Model Method Observations Facets
+#> 1   RSM    JML          768      2
 manifest$available_outputs[, c("Component", "Available")]
-}
+#>               Component Available
+#> 1    observed_residuals      TRUE
+#> 2              measures      TRUE
+#> 3           reliability      TRUE
+#> 4          residual_pca     FALSE
+#> 5          bias_results     FALSE
+#> 6               anchors      TRUE
+#> 7 population_prediction     FALSE
+#> 8       unit_prediction     FALSE
+#> 9      plausible_values     FALSE
+# }
 ```

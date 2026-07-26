@@ -1077,7 +1077,7 @@ list_mfrmr_data(details = TRUE)
 #> 8     FALSE
 #> 9     FALSE
 
-if (FALSE) { # \dontrun{
+# \donttest{
 toy <- load_mfrmr_data("example_operational")
 fit <- fit_mfrm(
   toy,
@@ -1090,5 +1090,68 @@ fit <- fit_mfrm(
 )
 diag <- diagnose_mfrm(fit, diagnostic_mode = "both", residual_pca = "none")
 summary(diag)
-} # }
+#> Many-Facet Measurement Diagnostics Summary
+#>   Observations: 282 | Persons: 48 | Facets: 2 | Categories: 4 | Subsets: 1
+#>   Residual PCA mode: none
+#>   Method: MML | Precision tier: Model-based precision
+#>   Diagnostic mode: Legacy and strict marginal
+#>   Strict marginal fit: Available
+#> 
+#> Status
+#>  - Overall status: Follow-up needed
+#>  - Diagnostic path: Legacy and strict marginal
+#>  - Strict marginal fit: Available
+#>  - Precision tier: Model-based precision
+#>  - Primary screen: Read strict marginal fit first; use legacy residuals for
+#>    continuity and follow-up.
+#> 
+#> Key warnings
+#>  - Unexpected responses flagged: 63.
+#>  - Flagged displacement levels: 5.
+#>  - MnSq screening flagged 19 element(s) outside the configured 0.5-1.5 band.
+#>  - Person-level fit warnings: 19 row(s); identifiers suppressed. Use
+#>    `include_person = TRUE` only under appropriate privacy controls.
+#>  - Strict marginal fit flagged 2 group-level summaries.
+#> 
+#> Next actions
+#>  - Inspect `diagnostic_basis` before comparing legacy residual evidence with
+#>    strict marginal evidence.
+#>  - Review `top_marginal_cells` and `rating_scale_table(..., diagnostics =
+#>    diag)` for first-order strict marginal follow-up.
+#>  - Review `top_marginal_pairs` for pairwise local-dependence follow-up.
+#>  - Use `unexpected_response_table()` / `plot_unexpected()` and
+#>    `displacement_table()` / `plot_displacement()` for case-level follow-up.
+#> 
+#> Overall fit
+#>  Infit Outfit InfitZSTD OutfitZSTD DF_Infit DF_Outfit
+#>  0.861  0.856    -1.331     -1.776  175.434       282
+#> 
+#> Flag counts
+#>                                 Metric Count
+#>                   Unexpected responses    63
+#>            Flagged displacement levels     5
+#>                       Interaction rows    20
+#>                      Inter-rater pairs    15
+#>            Marginal fit flagged groups     2
+#>  Marginal pairwise flagged level pairs     1
+#> 
+#> Facet precision and spread
+#>      Facet Levels Separation Strata Reliability RealSeparation RealStrata
+#>  Criterion      3      2.526  3.702       0.865          2.526      3.702
+#>     Person     48      1.402  2.203       0.663          1.263      2.018
+#>      Rater      6      1.384  2.179       0.657          1.384      2.179
+#>  RealReliability MeanInfit MeanOutfit
+#>            0.865     0.862      0.856
+#>            0.615     0.852      0.857
+#>            0.657     0.849      0.845
+#> 
+#> Highest-priority non-person fit rows
+#>      Facet   Level Infit Outfit InfitZSTD OutfitZSTD DF_Infit DF_Outfit  AbsZ
+#>      Rater     R05 0.644  0.636    -1.372     -1.896   25.595        44 1.896
+#>  Criterion Content 0.731  0.751    -1.556     -1.822   59.061        94 1.822
+#> 
+#> Further detail
+#>  - Additional tables remain in the structured summary; use `detail = "full"` to
+#>    print them.
+# }
 ```

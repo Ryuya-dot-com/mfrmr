@@ -190,7 +190,7 @@ mixed-effects models using lme4. *Journal of Statistical Software,
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+# \donttest{
 toy <- load_mfrmr_data("example_core")
 if (requireNamespace("lme4", quietly = TRUE)) {
   icc <- compute_facet_icc(toy, facets = c("Rater", "Criterion"),
@@ -205,5 +205,16 @@ if (requireNamespace("lme4", quietly = TRUE)) {
   # - `Interpretation` summarises the variance-share band the helper
   #   has assigned to each row.
 }
-} # }
+#> mfrm_facet_icc
+#>      Facet Variance    ICC Interpretation InterpretationScale ICC_CI_Lower
+#>     Person 0.346261 0.3511           Poor  Koo-Li reliability           NA
+#>      Rater 0.026673 0.0270  Trivial share      Variance share           NA
+#>  Criterion 0.021884 0.0222  Trivial share      Variance share           NA
+#>   Residual 0.591449 0.5997    Large share      Variance share           NA
+#>  ICC_CI_Upper ICC_CI_Level ICC_CI_Method
+#>            NA         0.95          none
+#>            NA         0.95          none
+#>            NA         0.95          none
+#>            NA         0.95          none
+# }
 ```

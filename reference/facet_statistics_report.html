@@ -127,14 +127,81 @@ The returned bundle now includes:</p></li>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># interactive()</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>, method <span class="op">=</span> <span class="st">"JML"</span>, maxit <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span></span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.</span>
 <span class="r-in"><span><span class="va">out</span> <span class="op">&lt;-</span> <span class="fu">facet_statistics_report</span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">out</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> mfrmr Facet Profile Summary </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Class: mfrm_facet_statistics</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Components: 6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Facet-profile overview</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Facets Rows Metrics PrecisionRows VariabilityRows</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       3   12       4            12               3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Facet-profile rows: precision_summary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      Facet Levels DistributionBasis       SEMode SEColumn ObservedMean</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Criterion      4        population fit_adjusted   RealSE        0.000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Criterion      4        population        model  ModelSE        0.000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Criterion      4            sample fit_adjusted   RealSE        0.000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Criterion      4            sample        model  ModelSE        0.000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     Person     48        population fit_adjusted   RealSE        0.001</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     Person     48        population        model  ModelSE        0.001</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     Person     48            sample fit_adjusted   RealSE        0.001</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     Person     48            sample        model  ModelSE        0.001</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      Rater      4        population fit_adjusted   RealSE        0.000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      Rater      4        population        model  ModelSE        0.000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  ObservedSD  RMSE TrueSD ObservedVariance ErrorVariance TrueVariance Separation</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       0.249 0.099  0.229            0.062         0.010        0.052      2.316</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       0.249 0.097  0.229            0.062         0.010        0.053      2.353</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       0.288 0.099  0.270            0.083         0.010        0.073      2.736</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       0.288 0.097  0.271            0.083         0.010        0.073      2.777</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       1.088 0.365  1.025            1.184         0.133        1.051      2.809</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       1.088 0.347  1.031            1.184         0.120        1.064      2.975</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       1.099 0.365  1.037            1.209         0.133        1.076      2.843</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       1.099 0.347  1.043            1.209         0.120        1.089      3.010</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       0.271 0.099  0.253            0.074         0.010        0.064      2.564</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       0.271 0.097  0.253            0.074         0.010        0.064      2.596</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Strata Reliability SEAvailable MeanSE MedianSE MeanInfit MeanOutfit FixedChiSq</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   3.421       0.843           4  0.099    0.098     0.994      1.019     25.914</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   3.470       0.847           4  0.097    0.097     0.994      1.019     25.914</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   3.981       0.882           4  0.099    0.098     0.994      1.019     25.914</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   4.037       0.885           4  0.097    0.097     0.994      1.019     25.914</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   4.079       0.888          48  0.360    0.349     1.000      1.019    384.088</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   4.300       0.898          48  0.344    0.330     1.000      1.019    384.088</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   4.123       0.890          48  0.360    0.349     1.000      1.019    384.088</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   4.346       0.901          48  0.344    0.330     1.000      1.019    384.088</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   3.752       0.868           4  0.099    0.099     0.994      1.019     30.901</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   3.795       0.871           4  0.097    0.097     0.994      1.019     30.901</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  FixedDF FixedProb RandomVar RandomChiSq RandomDF RandomProb</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        3         0     0.073       2.997        2      0.223</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        3         0     0.073       2.997        2      0.223</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        3         0     0.073       2.997        2      0.223</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        3         0     0.073       2.997        2      0.223</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       47         0     1.089      45.462       46      0.495</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       47         0     1.089      45.462       46      0.495</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       47         0     1.089      45.462       46      0.495</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       47         0     1.089      45.462       46      0.495</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        3         0     0.089       2.999        2      0.223</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        3         0     0.089       2.999        2      0.223</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Settings</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             Setting                           Value</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             metrics     Estimate, Infit, Outfit, SE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         ruler_width                              41</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       marker_legend mean, +/-1 SD, +/-2 SD, +/-3 SD</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  distribution_basis                            both</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             se_mode                            both</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Notes</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Facet profile summary including distribution basis, SE mode, and variability</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    tests.</span>
 <span class="r-in"><span><span class="va">p_fs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">out</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">p_fs</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">plot</span></span></span>
-<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "means"</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

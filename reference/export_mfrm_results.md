@@ -138,7 +138,7 @@ reviewed without replacing the required Wright-map first screen.
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+# \donttest{
 toy <- load_mfrmr_data("example_core")
 toy_small <- toy[toy$Person %in% unique(toy$Person)[1:6], , drop = FALSE]
 fit <- fit_mfrm(toy_small, "Person", c("Rater", "Criterion"), "Score",
@@ -152,6 +152,9 @@ exported <- export_mfrm_results(
   preset = "starter",
   overwrite = TRUE
 )
+#> Warning: This export is an analysis archive, not a deidentified or automatically shareable package. It can contain direct person identifiers, person-level estimates, original facet labels, local file paths, and a complete RDS result object. Review and transform every file under the applicable data-handling policy before sharing it. Set `acknowledge_sensitive = TRUE` only to acknowledge this risk; that setting does not deidentify the export.
 exported$summary[, c("FilesWritten", "CsvWritten", "HtmlWritten")]
-} # }
+#>   FilesWritten CsvWritten HtmlWritten
+#> 1          142        129           3
+# }
 ```

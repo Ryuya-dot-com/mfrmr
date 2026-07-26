@@ -14,7 +14,7 @@ This vignette outlines a reproducible workflow for:
 For a plot-first companion guide, see the separate
 `mfrmr-visual-diagnostics` vignette.
 
-For efficient development without changing the final analysis target:
+For a faster preliminary run without changing the final analysis target:
 
 - test code mechanics on a small deterministic subset or, for an MML
   workflow, a temporary `quad_points = 7` grid; restore the prespecified
@@ -356,7 +356,7 @@ facets_summary_toy
 #>  ready_for_diagnostic_interpretation                TRUE
 #>  ready_for_diagnostic_interpretation                TRUE
 #>  ready_for_diagnostic_interpretation                TRUE
-#>   Executable routes are stored in `$required_visual$Route`.
+#>   Plot commands are stored in `$required_visual$Route`.
 #> 
 #> Status
 #>  - Overall status: Fit completed, but data, design, stability, or diagnostics require review
@@ -384,7 +384,7 @@ facets_summary_toy
 #>  - Strict marginal fit flagged 1 group-level summaries.
 #> 
 #> Next actions
-#>  - Create the required native Wright map first; use the first executable route
+#>  - Create the required native Wright map first; run the first available command
 #>    in `$required_visual$Route`.
 #>  - Use the FACETS-style ruler only when its familiar layout or rubric labels
 #>    help readers; it does not establish numerical equivalence.
@@ -461,7 +461,7 @@ facets_summary_toy
 #>  - `$results$tables`: full structured tables (not printed here).
 #>  - Re-run `summary(fit, profile = "facets", detail = "full")` only when more fit-level detail is needed.
 
-# Required first fitted-scale artifact.
+# Required first fitted-scale figure.
 plot(res_toy, type = "wright", preset = "publication", show_ci = TRUE, top_n = Inf)
 ```
 
@@ -516,6 +516,21 @@ solution stops with a larger gradient and `reltol <= 1e-9`, it runs a
 bounded sequence of warm-started polishing stages and retains the best
 non-worsening candidate under the recorded selection rule. Inspect
 `fit_toy$opt$optimizer_polish$Stages` when `Numerical` is not `pass`.
+
+`maxit` is only a computational ceiling. It must not be increased until
+a preferred coefficient, fit statistic, or expected conclusion appears.
+For a final analysis, prespecify the estimator and controls and start
+from the package default `maxit = 400` unless the analysis protocol
+states otherwise. If a run reaches
+`ConvergenceStatus = "iteration_limit"`, keep it review-only and repeat
+the same data, model, method, anchors, optimizer, tolerance, and
+quadrature rule with the next ceiling in a prespecified sequence.
+Interpret only a run with `Converged = TRUE`, `InferenceReady = TRUE`,
+and `Numerical = pass`. If two separately ready runs differ materially,
+investigate numerical stability instead of selecting the preferred
+result. Report the requested ceiling, actual evaluations, convergence
+reason, and terminal gradient.
+
 `InferenceReady` describes this numerical gate only: Data, Design,
 Stability, Diagnostics, and Reporting remain separate rows in
 `fit_summary_toy$readiness`. For example, a disconnected design remains
@@ -559,13 +574,14 @@ Availability and interpretability are intentionally separate. Review
 `res_toy$plot_map` before treating an available plot as a final result.
 Plots remain available during a numerical, data, design, or stability
 review, but they warn and carry `REVIEW ONLY` in the returned subtitle
-and drawn title until the upstream issue is resolved.
+and drawn title until the readiness issue is resolved.
 
 Bias/DIF, residual PCA, and anchor-drift/linking analyses are
 deliberately not auto-run by any summary profile. They require explicit
 contrasts, diagnostic settings, or multi-fit designs.
 
-The same fit can then move through the public first-contact route:
+The same fit can then move through the recommended first reporting
+workflow:
 
 ``` r
 
@@ -596,14 +612,14 @@ summary(res_toy)$next_actions
 #> 5                                                                                                                          plot(res, type = "qc", preset = "publication")
 #> 6 plot(res, type = "fit_pathway", fit_stat = "Infit", include_person = TRUE, top_n_person = 12, person_labels = "none", facet_labels = "flagged", preset = "publication")
 #> 7                                                                                                                                         build_summary_table_bundle(res)
-#>                                                                                                                                                   Reason
-#> 1                                                                   Confirms input mode, model, method, section status, table coverage, and plot routes.
-#> 3                              Triage orders unavailable, review, information, and OK signals across diagnostics, tables, plots, and reporting surfaces.
-#> 2 The Wright map is the primary fitted-scale artifact: compare person targeting with facet levels and step thresholds before branching into diagnostics.
-#> 4                                            Diagnostic warnings identify the highest-priority fit, precision, residual, or category follow-up surfaces.
-#> 5                                                                   The QC route gives a focused follow-up view of fit, residual, and category surfaces.
-#> 6                                            This follow-up separates measure uncertainty from fit displacement while keeping person inclusion explicit.
-#> 7                                                                     The bundle exposes table roles, plot readiness, and conservative appendix presets.
+#>                                                                                                                                                 Reason
+#> 1                                                           Confirms input mode, model, method, section status, table coverage, and available figures.
+#> 3                             Triage orders unavailable, review, information, and OK signals across diagnostics, tables, plots, and reporting outputs.
+#> 2 The Wright map is the primary fitted-scale figure: compare person targeting with facet levels and step thresholds before branching into diagnostics.
+#> 4                                            Diagnostic warnings identify the highest-priority fit, precision, residual, or category follow-up checks.
+#> 5                                                            The QC dashboard gives a focused follow-up view of fit, residual, and category summaries.
+#> 6                                          This follow-up separates measure uncertainty from fit displacement while keeping person inclusion explicit.
+#> 7                                                                   The bundle exposes table roles, plot readiness, and conservative appendix presets.
 summary(report_toy)$overview
 #>   Style OverallStatus     FirstAction ReviewAreas NotComputedAreas CaveatAreas
 #> 1    qc        review Start with Fit.           1                0           1
@@ -630,12 +646,12 @@ head(export_toy$written_files)
 #> 5        summary_plot_map    csv
 #> 6          summary_triage    csv
 #>                                                                              Path
-#> 1        /tmp/RtmpgJhVO9/mfrmr-workflow-export/mfrmr_results_summary_overview.csv
-#> 2          /tmp/RtmpgJhVO9/mfrmr-workflow-export/mfrmr_results_summary_status.csv
-#> 3 /tmp/RtmpgJhVO9/mfrmr-workflow-export/mfrmr_results_summary_component_index.csv
-#> 4     /tmp/RtmpgJhVO9/mfrmr-workflow-export/mfrmr_results_summary_table_index.csv
-#> 5        /tmp/RtmpgJhVO9/mfrmr-workflow-export/mfrmr_results_summary_plot_map.csv
-#> 6          /tmp/RtmpgJhVO9/mfrmr-workflow-export/mfrmr_results_summary_triage.csv
+#> 1        /tmp/Rtmp53ZhTe/mfrmr-workflow-export/mfrmr_results_summary_overview.csv
+#> 2          /tmp/Rtmp53ZhTe/mfrmr-workflow-export/mfrmr_results_summary_status.csv
+#> 3 /tmp/Rtmp53ZhTe/mfrmr-workflow-export/mfrmr_results_summary_component_index.csv
+#> 4     /tmp/Rtmp53ZhTe/mfrmr-workflow-export/mfrmr_results_summary_table_index.csv
+#> 5        /tmp/Rtmp53ZhTe/mfrmr-workflow-export/mfrmr_results_summary_plot_map.csv
+#> 6          /tmp/Rtmp53ZhTe/mfrmr-workflow-export/mfrmr_results_summary_triage.csv
 #>   Note          DataHandling
 #> 1      review_before_sharing
 #> 2      review_before_sharing
@@ -647,8 +663,8 @@ head(export_toy$written_files)
 
 The acknowledgement suppresses the warning only; it does not redact
 person identifiers, person-level results, local paths, or the complete
-RDS object. Review every artifact under the study’s data-handling policy
-before sharing.
+RDS object. Review every exported file under the study’s data-handling
+policy before sharing.
 
 ## Diagnostics and Reporting
 
@@ -749,7 +765,7 @@ summary(fit, profile = "fit", detail = "brief")
 #>  ready_for_diagnostic_interpretation                TRUE
 #>  ready_for_diagnostic_interpretation                TRUE
 #>                        not_available               FALSE
-#>   Executable routes are stored in `$required_visual$Route`.
+#>   Plot commands are stored in `$required_visual$Route`.
 #> 
 #> Status
 #>  - Overall status: Fit completed; review diagnostics before reporting
@@ -898,7 +914,7 @@ summary(diag)
 #>  - Additional tables remain in the structured summary; use `detail = "full"` to
 #>    print them.
 
-# Keep the final artifact flow explicit: fit -> Wright map -> follow-up plots.
+# Keep the final figure flow explicit: fit -> Wright map -> follow-up plots.
 s <- summary(fit, profile = "facets", diagnostics = diag)
 res <- s$results
 s
@@ -918,7 +934,7 @@ s
 #>  ready_for_diagnostic_interpretation                TRUE
 #>  ready_for_diagnostic_interpretation                TRUE
 #>  ready_for_diagnostic_interpretation                TRUE
-#>   Executable routes are stored in `$required_visual$Route`.
+#>   Plot commands are stored in `$required_visual$Route`.
 #> 
 #> Status
 #>  - Overall status: Fit completed, but data, design, stability, or diagnostics require review
@@ -946,7 +962,7 @@ s
 #>  - Strict marginal fit flagged 4 group-level summaries.
 #> 
 #> Next actions
-#>  - Create the required native Wright map first; use the first executable route
+#>  - Create the required native Wright map first; run the first available command
 #>    in `$required_visual$Route`.
 #>  - Use the FACETS-style ruler only when its familiar layout or rubric labels
 #>    help readers; it does not establish numerical equivalence.

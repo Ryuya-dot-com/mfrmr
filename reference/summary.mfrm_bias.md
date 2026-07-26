@@ -95,12 +95,60 @@ This method returns a compact interaction-bias summary:
 ## Examples
 
 ``` r
-if (FALSE) { # interactive()
+# \donttest{
 toy <- load_mfrmr_data("example_bias")
 toy <- toy[toy$Person %in% unique(toy$Person)[1:8], ]
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 bias <- estimate_bias(fit, diag, facet_a = "Rater", facet_b = "Criterion", max_iter = 1)
 summary(bias)
-}
+#> Many-Facet Measurement Bias Summary
+#>   Interaction facets: Rater x Criterion | Cells: 16
+#>   Order: 2 | Mode: pairwise
+#>   Mean |Bias|: 0.304 | Max |Bias|: 0.909 | Screen-positive (p <= 0.050): 0
+#>   Bonferroni screen-positive: 0 | Holm screen-positive: 0 (cut = 0.050, m = 16)
+#> 
+#> Fixed-effect chi-square
+#>  FixedChiSq FixedDF FixedProb InferenceTier SupportsFormalInference
+#>       3.521      15     0.999     screening                   FALSE
+#>  FormalInferenceEligible PrimaryReportingEligible   ReportingUse
+#>                    FALSE                    FALSE screening_only
+#>                                 TestBasis InteractionFacets InteractionOrder
+#>  conditional plug-in heterogeneity screen Rater x Criterion                2
+#>  InteractionMode
+#>         pairwise
+#> 
+#> Final iteration status
+#>  Iteration MaxScoreResidual MaxScoreResidualPct MaxScoreResidualCategories
+#>          1                0                   0                         NA
+#>  MaxLogitChange BiasCells
+#>          -0.909        16
+#> 
+#> Top |t| bias rows
+#>                Pair Rater    Criterion Bias Size  S.E.      t Prob.
+#>      R04 | Accuracy   R04     Accuracy    -0.909 0.929 -0.979 0.431
+#>       R04 | Content   R04      Content     0.759 0.982  0.773 0.520
+#>  R04 | Organization   R04 Organization     0.759 0.982  0.773 0.520
+#>  R01 | Organization   R01 Organization    -0.384 0.624 -0.615 0.572
+#>       R02 | Content   R02      Content    -0.473 0.783 -0.604 0.588
+#>      R04 | Language   R04     Language    -0.470 0.929 -0.506 0.663
+#>      R02 | Accuracy   R02     Accuracy     0.248 0.735  0.337 0.758
+#>      R01 | Language   R01     Language     0.203 0.624  0.325 0.761
+#>      R01 | Accuracy   R01     Accuracy     0.163 0.643  0.253 0.813
+#>      R03 | Accuracy   R03     Accuracy     0.134 0.823  0.163 0.881
+#>  Obs-Exp Average  AbsT
+#>                0 0.979
+#>                0 0.773
+#>                0 0.773
+#>                0 0.615
+#>                0 0.604
+#>                0 0.506
+#>                0 0.337
+#>                0 0.325
+#>                0 0.253
+#>                0 0.163
+#> 
+#> Notes
+#>  - Bias iteration may not have fully stabilized (BiasCells > 0 at final step).
+# }
 ```

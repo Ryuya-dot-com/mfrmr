@@ -126,10 +126,11 @@ decision-ready G/D-study evidence.
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+# \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "JML", maxit = 30)
+#> Warning: Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.
 if (requireNamespace("lme4", quietly = TRUE)) {
   gt <- mfrm_generalizability(fit)
   gt$variance_components
@@ -148,5 +149,6 @@ if (requireNamespace("lme4", quietly = TRUE)) {
   # If IdentificationStatus is not "identified", treat G/Phi as
   # design-review evidence rather than decision-ready reliability.
 }
-} # }
+#> [1] "No lme4 boundary or singular fit was detected."
+# }
 ```

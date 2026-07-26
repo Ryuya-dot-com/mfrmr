@@ -143,7 +143,7 @@ recovery.
 ## Examples
 
 ``` r
-if (FALSE) { # interactive()
+# \donttest{
 peer_spec <- build_peer_review_sim_spec(
   n_submission = 12,
   n_criterion = 3,
@@ -151,5 +151,11 @@ peer_spec <- build_peer_review_sim_spec(
   anchor_submissions = 2
 )
 peer_spec$peer_review$overview
-}
+#>      Scenario Submissions Reviewers Criteria OrdinaryReviewersPerSubmission
+#> 1 peer_review          12        12        3                              2
+#>   AnchorSubmissions AnchorReviewersPerSubmission AvoidSelfReview AssignmentMode
+#> 1                 2                           11            TRUE       balanced
+#>   SkeletonRows OrdinaryRows AnchorRows                              ReviewUse
+#> 1          126           60         66 design_diagnostic_not_measurement_gate
+# }
 ```

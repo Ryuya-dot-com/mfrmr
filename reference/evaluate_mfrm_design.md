@@ -393,7 +393,7 @@ study.
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+# \donttest{
 sim_eval <- suppressWarnings(evaluate_mfrm_design(
   design = list(person = c(8, 12), rater = 2, criterion = 2, assignment = 1),
   reps = 1,
@@ -402,7 +402,23 @@ sim_eval <- suppressWarnings(evaluate_mfrm_design(
 ))
 s_eval <- summary(sim_eval)
 s_eval$design_summary[, c("Facet", "n_person", "MeanSeparation", "MeanSeverityRMSE")]
+#> # A tibble: 6 × 4
+#>   Facet     n_person MeanSeparation MeanSeverityRMSE
+#>   <chr>        <dbl>          <dbl>            <dbl>
+#> 1 Criterion        8           0               0.102
+#> 2 Criterion       12           0               0.155
+#> 3 Person           8           0              16.2  
+#> 4 Person          12           0               6.03 
+#> 5 Rater            8           0               0.783
+#> 6 Rater           12           9.06            2.86 
 p_eval <- plot(sim_eval, facet = "Rater", metric = "separation", x_var = "n_person", draw = FALSE)
 names(p_eval)
-} # }
+#>  [1] "plot"                    "facet"                  
+#>  [3] "metric"                  "metric_col"             
+#>  [5] "x_var"                   "x_label"                
+#>  [7] "group_var"               "group_label"            
+#>  [9] "design_variable_aliases" "design_descriptor"      
+#> [11] "planning_scope"          "planning_constraints"   
+#> [13] "planning_schema"         "data"                   
+# }
 ```

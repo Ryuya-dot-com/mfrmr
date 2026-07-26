@@ -77,11 +77,17 @@ review before treating the composite as report-ready evidence.
 ## Examples
 
 ``` r
-if (FALSE) { # interactive()
+# \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "JML", maxit = 30)
+#> Warning: Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.
 p <- plot_apa_figure_one(fit, draw = FALSE)
+#> Warning: Review-only display: Numerical=fail, Data=pass, Design=pass_linked, Stability=pass. Inspect `summary(fit)$readiness` and `fit$data_review` before substantive or cross-subset interpretation.
 names(p$data)
-}
+#>  [1] "data"                  "title"                 "subtitle"             
+#>  [4] "preset"                "plot_name"             "legend"               
+#>  [7] "reference_lines"       "fit_readiness"         "interpretation_status"
+#> [10] "interpretation_note"  
+# }
 ```

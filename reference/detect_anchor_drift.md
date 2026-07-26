@@ -193,7 +193,7 @@ facets only.
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+# \donttest{
 # Deliberately linked teaching waves: common labels below represent the
 # same rater and criterion identities by construction.
 toy <- load_mfrmr_data("example_core")
@@ -205,8 +205,43 @@ fit1 <- fit_mfrm(d1, "Person", c("Rater", "Criterion"), "Score",
 fit2 <- fit_mfrm(d2, "Person", c("Rater", "Criterion"), "Score",
                  method = "MML", quad_points = 7, maxit = 30)
 drift <- detect_anchor_drift(list(Wave1 = fit1, Wave2 = fit2))
+#> Warning: Thin linking support between 'Wave1' and 'Wave2': fewer than 5 retained common elements in Criterion, Rater.
 summary(drift)
+#> --- Anchor Drift Screen ---
+#> Reference: Wave1 
+#> Method: screened_common_element_alignment | Intended use: review_screen 
+#> Comparisons: 8 | Flagged: 0 
+#> 
+#> Drift summary by facet and wave:
+#>      Facet  Wave N Mean_Drift Max_Drift N_Flagged
+#>  Criterion Wave2 4      0.126     0.187         0
+#>      Rater Wave2 4      0.148     0.179         0
+#> 
+#> Common elements:
+#>  Wave1 Wave2 N_Common
+#>  Wave1 Wave2        8
+#> 
+#> Retained common elements by facet:
+#>  Reference  Wave     Facet N_Common N_Retained GuidelineMinCommon
+#>      Wave1 Wave2 Criterion        4          4                  5
+#>      Wave1 Wave2     Rater        4          4                  5
+#>  LinkSupportAdequate
+#>                FALSE
+#>                FALSE
 head(drift$drift_table[, c("Facet", "Level", "Wave", "Drift", "Flag")])
+#> # A tibble: 6 × 5
+#>   Facet     Level        Wave   Drift Flag 
+#>   <chr>     <chr>        <chr>  <dbl> <lgl>
+#> 1 Criterion Content      Wave2  0.187 FALSE
+#> 2 Rater     R03          Wave2  0.179 FALSE
+#> 3 Rater     R02          Wave2 -0.178 FALSE
+#> 4 Criterion Organization Wave2 -0.170 FALSE
+#> 5 Rater     R04          Wave2  0.120 FALSE
+#> 6 Rater     R01          Wave2 -0.115 FALSE
 drift$common_elements
-} # }
+#> # A tibble: 1 × 3
+#>   Wave1 Wave2 N_Common
+#>   <chr> <chr>    <int>
+#> 1 Wave1 Wave2        8
+# }
 ```

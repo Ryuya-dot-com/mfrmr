@@ -155,17 +155,69 @@ NCME presentation.</p></li>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span></span>
 <span class="r-in"><span>  method <span class="op">=</span> <span class="st">"JML"</span>, maxit <span class="op">=</span> <span class="fl">30</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.</span>
 <span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"igraph"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span>  <span class="va">review</span> <span class="op">&lt;-</span> <span class="fu">build_mfrm_network_review</span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">review</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="build_summary_table_bundle.html">build_summary_table_bundle</a></span><span class="op">(</span><span class="va">review</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> mfrmr Summary Table Bundle</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Overview</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                  Title         SourceClass                SummaryClass</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Network Review Tables mfrm_network_review summary.mfrm_network_review</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  TablesAvailable TablesReturned AppendixPreset</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>               12             10           none</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Table index</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>              Table Rows Cols                        Role</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           overview    1   11     network_review_overview</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    network_summary    1   13      network_design_summary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      facet_summary    3    8 network_facet_vulnerability</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  top_central_nodes   10   11       network_central_nodes</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      top_cut_nodes    0   11  network_articulation_nodes</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   top_bridge_edges    0   12        network_bridge_edges</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      reporting_map    5    4               reporting_map</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            caveats    1    3            analysis_caveats</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>              notes    4    1        interpretation_notes</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           settings    5    2             review_settings</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                         Description</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                          Front-door connectedness and design-network review status.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                    Graph-level connectedness, density, articulation-point, and bridge-edge metrics.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                           Facet-level aggregation of node centrality and design-link vulnerability.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                  Highest-betweenness design-network nodes for follow-up inspection.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                              Articulation-point rows whose removal would fragment the design graph.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                            Bridge-edge rows indicating one-link dependencies between graph regions.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Map separating MFRM measurement, design-network review, sparse-design review, peer-review design, and rater-effect network routes.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                              Interpretation caveats for network-design diagnostics.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                             Compact interpretation notes for network-design review.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                    Settings and provenance recorded by build_mfrm_network_review().</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Plot index</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>              Table PlotReady NumericColumns               DefaultPlotTypes</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           overview      TRUE              7 numeric_profile, first_numeric</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    network_summary      TRUE             12 numeric_profile, first_numeric</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      facet_summary      TRUE              7 numeric_profile, first_numeric</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  top_central_nodes      TRUE              7 numeric_profile, first_numeric</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      top_cut_nodes     FALSE              7                               </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   top_bridge_edges     FALSE              5                               </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      reporting_map     FALSE              0                               </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            caveats     FALSE              0                               </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>              notes     FALSE              0                               </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           settings     FALSE              0                               </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Notes</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - MFRM estimates remain the measurement-model results; network rows summarize observed design links.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Articulation points and bridge edges identify levels or links whose removal would fragment the co-observation graph.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Sparse-design review rows, when supplied, report planned-missingness and rater-link diagnostics rather than recovery or fit gates.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Peer-review design rows, when supplied, report assignment structure and reviewer linkage rather than reviewer quality or fairness.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - 2 empty table(s) were omitted from `tables`; use `include_empty = TRUE` to retain them.</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

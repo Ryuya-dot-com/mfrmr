@@ -200,7 +200,7 @@ summary(hs)
 #>  Person Criterion                 0                 0   crossed
 #>   Rater Criterion                 0                 0   crossed
 
-if (FALSE) { # \dontrun{
+# \donttest{
 # Full review when lme4 and igraph are available.
 if (requireNamespace("lme4", quietly = TRUE) &&
     requireNamespace("igraph", quietly = TRUE)) {
@@ -209,5 +209,41 @@ if (requireNamespace("lme4", quietly = TRUE) &&
   summary(hs_full)
   plot(hs_full, type = "icc")
 }
-} # }
+#> mfrm_hierarchical_structure
+#> 
+#> Summary:
+#>  NFacets NestedPairs CrossedPairs ICCAvailable ConnectivityComponents
+#>        2           0            3         TRUE                      1
+#> 
+#> Nesting review:
+#>  FacetA    FacetB NestingIndex_AinB NestingIndex_BinA Direction
+#>  Person     Rater                 0                 0   crossed
+#>  Person Criterion                 0                 0   crossed
+#>   Rater Criterion                 0                 0   crossed
+#> 
+#> ICC (lme4 variance-components):
+#> mfrm_facet_icc
+#>      Facet Variance    ICC Interpretation InterpretationScale ICC_CI_Lower
+#>     Person 0.346261 0.3511           Poor  Koo-Li reliability           NA
+#>      Rater 0.026673 0.0270  Trivial share      Variance share           NA
+#>  Criterion 0.021884 0.0222  Trivial share      Variance share           NA
+#>   Residual 0.591449 0.5997    Large share      Variance share           NA
+#>  ICC_CI_Upper ICC_CI_Level ICC_CI_Method
+#>            NA         0.95          none
+#>            NA         0.95          none
+#>            NA         0.95          none
+#>            NA         0.95          none
+#> 
+#> Design effects (Kish):
+#> mfrm_facet_design_effect (Kish, 1965)
+#>      Facet AvgClusterSize    ICC DesignEffect EffectiveN
+#>      Rater            192 0.0270        6.157      124.7
+#>  Criterion            192 0.0222        5.240      146.6
+#> 
+#> Bipartite connectivity (via igraph):
+#>   Components: 1 
+#>   Largest component: 56 
+#>   Isolates: 0 
+
+# }
 ```

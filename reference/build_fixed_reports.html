@@ -132,14 +132,115 @@ artifact is specifically required for a compatibility handoff.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_bias"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>, method <span class="op">=</span> <span class="st">"JML"</span>, maxit <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span></span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.</span>
 <span class="r-in"><span><span class="va">diag</span> <span class="op">&lt;-</span> <span class="fu"><a href="diagnose_mfrm.html">diagnose_mfrm</a></span><span class="op">(</span><span class="va">fit</span>, residual_pca <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">bias</span> <span class="op">&lt;-</span> <span class="fu"><a href="estimate_bias.html">estimate_bias</a></span><span class="op">(</span><span class="va">fit</span>, <span class="va">diag</span>, facet_a <span class="op">=</span> <span class="st">"Rater"</span>, facet_b <span class="op">=</span> <span class="st">"Criterion"</span>, max_iter <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fixed</span> <span class="op">&lt;-</span> <span class="fu">build_fixed_reports</span><span class="op">(</span><span class="va">bias</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fixed_original</span> <span class="op">&lt;-</span> <span class="fu">build_fixed_reports</span><span class="op">(</span><span class="va">bias</span>, branch <span class="op">=</span> <span class="st">"original"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fixed</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> mfrmr Fixed-Report Bundle</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Overview</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Branch         Style       Interaction PairwiseRows BiasTextLines</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  facets facets_manual Rater x Criterion           24            26</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  PairwiseTextLines</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                 27</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Pairwise preview</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Target Target N Target Measure Target S.E. Context1 Context1 N Local Measure1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     R01        1         -0.867       0.152 Accuracy          1         -0.090</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     R01        1         -0.867       0.152 Accuracy          1         -0.090</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     R01        1         -0.867       0.152 Accuracy          1         -0.090</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     R01        1         -0.867       0.152  Content          2         -1.144</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     R01        1         -0.867       0.152  Content          2         -1.144</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     R01        1         -0.867       0.152 Language          3         -1.050</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     R02        2          0.007       0.147 Accuracy          1          0.253</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     R02        2          0.007       0.147 Accuracy          1          0.253</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     R02        2          0.007       0.147 Accuracy          1          0.253</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     R02        2          0.007       0.147  Content          2         -0.023</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    SE1 Obs-Exp Avg1 Count1 ObsN1     Context2 Context2 N Local Measure2   SE2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  0.344            0     24    24      Content          2         -1.144 0.337</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  0.344            0     24    24     Language          3         -1.050 0.344</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  0.344            0     24    24 Organization          4         -1.229 0.330</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  0.337            0     24    24     Language          3         -1.050 0.344</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  0.337            0     24    24 Organization          4         -1.229 0.330</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  0.344            0     24    24 Organization          4         -1.229 0.330</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  0.323            0     24    24      Content          2         -0.023 0.330</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  0.323            0     24    24     Language          3         -0.202 0.328</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  0.323            0     24    24 Organization          4         -0.016 0.327</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  0.330            0     24    24     Language          3         -0.202 0.328</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Obs-Exp Avg2 Count2 ObsN2 Contrast    SE      t   d.f. Prob. InferenceTier</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             0     24    24    1.054 0.431  2.447 45.976 0.018     screening</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             0     24    24    0.961 0.436  2.204 46.000 0.033     screening</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             0     24    24    1.139 0.425  2.678 45.886 0.010     screening</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             0     24    24   -0.094 0.431 -0.217 45.976 0.829     screening</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             0     24    24    0.085 0.420  0.202 45.966 0.841     screening</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             0     24    24    0.178 0.425  0.419 45.886 0.677     screening</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             0     24    24    0.276 0.413  0.670 45.969 0.506     screening</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             0     24    24    0.455 0.411  1.106 45.981 0.274     screening</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             0     24    24    0.269 0.410  0.656 45.990 0.515     screening</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             0     24    24    0.179 0.417  0.429 45.998 0.670     screening</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  SupportsFormalInference FormalInferenceEligible PrimaryReportingEligible</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                    FALSE                   FALSE                    FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                    FALSE                   FALSE                    FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                    FALSE                   FALSE                    FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                    FALSE                   FALSE                    FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                    FALSE                   FALSE                    FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                    FALSE                   FALSE                    FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                    FALSE                   FALSE                    FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                    FALSE                   FALSE                    FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                    FALSE                   FALSE                    FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                    FALSE                   FALSE                    FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    ReportingUse</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  screening_only</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  screening_only</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  screening_only</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  screening_only</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  screening_only</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  screening_only</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  screening_only</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  screening_only</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  screening_only</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  screening_only</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                      ContrastBasis</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  difference between local target measures across contexts (target term cancels to a bias contrast)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  difference between local target measures across contexts (target term cancels to a bias contrast)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  difference between local target measures across contexts (target term cancels to a bias contrast)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  difference between local target measures across contexts (target term cancels to a bias contrast)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  difference between local target measures across contexts (target term cancels to a bias contrast)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  difference between local target measures across contexts (target term cancels to a bias contrast)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  difference between local target measures across contexts (target term cancels to a bias contrast)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  difference between local target measures across contexts (target term cancels to a bias contrast)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  difference between local target measures across contexts (target term cancels to a bias contrast)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  difference between local target measures across contexts (target term cancels to a bias contrast)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                         SEBasis                  StatisticLabel</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  combined context-specific bias standard errors Bias-contrast Welch screening t</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  combined context-specific bias standard errors Bias-contrast Welch screening t</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  combined context-specific bias standard errors Bias-contrast Welch screening t</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  combined context-specific bias standard errors Bias-contrast Welch screening t</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  combined context-specific bias standard errors Bias-contrast Welch screening t</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  combined context-specific bias standard errors Bias-contrast Welch screening t</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  combined context-specific bias standard errors Bias-contrast Welch screening t</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  combined context-specific bias standard errors Bias-contrast Welch screening t</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  combined context-specific bias standard errors Bias-contrast Welch screening t</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  combined context-specific bias standard errors Bias-contrast Welch screening t</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    ProbabilityMetric                           DFBasis</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  screening tail area Welch-Satterthwaite approximation</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  screening tail area Welch-Satterthwaite approximation</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  screening tail area Welch-Satterthwaite approximation</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  screening tail area Welch-Satterthwaite approximation</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  screening tail area Welch-Satterthwaite approximation</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  screening tail area Welch-Satterthwaite approximation</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  screening tail area Welch-Satterthwaite approximation</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  screening tail area Welch-Satterthwaite approximation</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  screening tail area Welch-Satterthwaite approximation</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  screening tail area Welch-Satterthwaite approximation</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Notes</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Legacy-compatible branch: fixed-width text follows the compatibility layout.</span>
 <span class="r-in"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fixed</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">p2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fixed</span>, type <span class="op">=</span> <span class="st">"pvalue"</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/interactive.html" class="external-link">interactive</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
@@ -152,7 +253,7 @@ artifact is specifically required for a compatibility handoff.</p>
 <span class="r-in"><span>    label_angle <span class="op">=</span> <span class="fl">45</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

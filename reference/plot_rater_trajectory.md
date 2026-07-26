@@ -72,19 +72,28 @@ the supplied fits on their as-fit scales.
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+# \donttest{
 toy <- load_mfrmr_data("example_core")
 fit_a <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                   method = "JML", maxit = 30)
+#> Warning: Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.
 fit_b <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                   method = "JML", maxit = 30)
+#> Warning: Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.
 p <- plot_rater_trajectory(list(T1 = fit_a, T2 = fit_b), draw = FALSE)
 head(p$data$data)
+#>      Wave Level   Estimate         SE      CI_Lower     CI_Upper
+#> T1.1   T1   R01 -0.1957561 0.09730123 -0.3864630271 -0.005049222
+#> T2.1   T2   R01 -0.1957561 0.09730123 -0.3864630271 -0.005049222
+#> T1.2   T1   R02 -0.3287963 0.09769808 -0.5202810670 -0.137311629
+#> T2.2   T2   R02 -0.3287963 0.09769808 -0.5202810670 -0.137311629
+#> T1.3   T1   R03  0.1910876 0.09724282  0.0004951599  0.381680000
+#> T2.3   T2   R03  0.1910876 0.09724282  0.0004951599  0.381680000
 # Look for: stable trajectories (small wave-to-wave shifts within
 #   each rater's CI ribbon) once the waves are anchor-linked. A
 #   rater whose line drifts >0.5 logits across waves is the typical
 #   "calibration drift" signal. Without anchor linking the per-wave
 #   logits are on different scales and the picture cannot be read
 #   as drift; see the Anchor-linking caveat in the docstring.
-} # }
+# }
 ```

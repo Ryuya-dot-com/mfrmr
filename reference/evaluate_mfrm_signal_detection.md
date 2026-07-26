@@ -411,7 +411,7 @@ implementation of one published many-facet Rasch simulation design.
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+# \donttest{
 sig_eval <- suppressWarnings(evaluate_mfrm_signal_detection(
   design = list(person = 8, rater = 2, criterion = 2, assignment = 1),
   reps = 1,
@@ -421,5 +421,9 @@ sig_eval <- suppressWarnings(evaluate_mfrm_signal_detection(
 ))
 s_sig <- summary(sig_eval)
 s_sig$overview
-} # }
+#> # A tibble: 1 × 5
+#>   Designs Replications SuccessfulRuns ConvergedRuns MeanElapsedSec
+#>     <dbl>        <dbl>          <dbl>         <dbl>          <dbl>
+#> 1       1            1              1             0          0.896
+# }
 ```

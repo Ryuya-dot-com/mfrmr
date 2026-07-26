@@ -164,7 +164,7 @@ text, and to check duplicate-ID / non-numeric-estimate pre-review flags.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="va">bundle</span> <span class="op">&lt;-</span> <span class="fu"><a href="build_conquest_overlap_bundle.html">build_conquest_overlap_bundle</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">tmp_dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">pop_path</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">tmp_dir</span>, <span class="st">"cq_pop.csv"</span><span class="op">)</span></span></span>
@@ -207,9 +207,36 @@ text, and to check duplicate-ID / non-numeric-estimate pre-review flags.</p>
 <span class="r-in"><span>  conquest_case_estimate <span class="op">=</span> <span class="st">"EAP"</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">normalized</span><span class="op">)</span><span class="op">$</span><span class="va">normalization_scope</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                            Area             Status</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 Extracted table normalization             active</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2     Raw ConQuest text parsing      not performed</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3               Bundle matching deferred to review</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4        Pre-review table check      none detected</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                             Evidence</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                             69 standardized row(s)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2            already extracted CSV/TSV/TXT or data.frame inputs only</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 review_conquest_overlap() matches rows against the exported bundle</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4                  0 duplicate ID(s); 0 non-numeric estimate cell(s)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                               Interpretation</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1        Population, item, and case tables have been converted to the mfrmr review contract.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2             This object does not prove that raw ConQuest report text was parsed correctly.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 Identifier matching and numerical comparison are intentionally handled by the review step.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4        Resolve duplicate IDs or non-numeric estimates before treating the review as clean.</span>
 <span class="r-in"><span><span class="va">review</span> <span class="op">&lt;-</span> <span class="fu"><a href="review_conquest_overlap.html">review_conquest_overlap</a></span><span class="op">(</span><span class="va">bundle</span>, <span class="va">normalized</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">review</span><span class="op">)</span><span class="op">$</span><span class="va">summary</span></span></span>
-<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   PopulationParametersExpected PopulationParametersCompared PopulationMae</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                            3                            2  3.330669e-16</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   PopulationMaxAbsDifference PopulationMaxAbsParameter ItemRowsExpected</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1               4.440892e-16                         X                6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ItemRowsCompared ItemCenteredCorrelation ItemCenteredMae</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                6                       1    1.122944e-15</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ItemCenteredMaxAbsDifference ItemCenteredMaxAbsItem CaseRowsExpected</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                 3.330669e-15                   I006               60</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   CaseRowsCompared CaseCorrelation      CaseMae CaseMaxAbsDifference</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1               60               1 9.641882e-16         4.884981e-15</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   AttentionItems AttentionMissing AttentionDuplicate AttentionNonNumeric</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1              0                0                  0                   0</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

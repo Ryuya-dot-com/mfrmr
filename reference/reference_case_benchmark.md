@@ -143,12 +143,88 @@ remains visible.
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+# \donttest{
 bench <- reference_case_benchmark(
   cases = "synthetic_truth",
   method = "JML",
   maxit = 30
 )
 summary(bench)
-} # }
+#> mfrmr Reference Case Check Summary 
+#>   Class: mfrm_reference_benchmark
+#>   Components: 15
+#> 
+#> Case check summary
+#>             Case       CaseType Status Fits DesignChecks RecoveryChecks
+#>  synthetic_truth truth_recovery   Fail    1            7              3
+#>  BiasChecks LinkingChecks ConQuestOverlapChecks PopulationPolicyChecks
+#>           0             0                     0                      0
+#>  StabilityChecks                        KeySignal
+#>                0 Min recovery correlation = 0.992
+#> 
+#> Reference-case fit runs: fit_runs
+#>             Case         Dataset Method Model Rows Persons Raters Criteria
+#>  synthetic_truth synthetic_truth    JML   RSM 1296      36      3        3
+#>  Tasks Converged OptimizerCodeZero ConvergenceSeverity    LogLik
+#>      4     FALSE             FALSE                fail -1205.199
+#>  MMLEngineRequested MMLEngineUsed EMIterations PosteriorBasis
+#>                <NA>          <NA>           NA     legacy_mml
+#>  PopulationModelActive PopulationFormula PopulationPolicy
+#>                  FALSE              <NA>             <NA>
+#>  PopulationDesignColumns PopulationXlevelVariables PopulationContrastVariables
+#>                                                                               
+#>  PopulationCoefficientCount PopulationResidualVariance
+#>                           0                         NA
+#>  PopulationIncludedPersons PopulationOmittedPersons
+#>                          0                        0
+#>  PopulationResponseRowsRetained PopulationResponseRowsOmitted Infit Outfit
+#>                            1296                             0 0.992  0.955
+#>  PrecisionTier SupportsFormalInference
+#>    exploratory                   FALSE
+#> 
+#> Validation scope
+#>                                 Area        Status
+#>              Package reference check        active
+#>    Latent-regression omission policy not requested
+#>  ConQuest-overlap package-side check not requested
+#>         External ConQuest validation  not assessed
+#>                                                                 Evidence
+#>                                  case_summary and component check tables
+#>                               request `synthetic_latent_regression_omit`
+#>                             request `synthetic_conquest_overlap_dry_run`
+#>  Use review_conquest_overlap() with output from an external ConQuest run
+#>                                                                               Interpretation
+#>                                                            Use as a package reference check.
+#>        Complete-case omission behavior is reviewed only when the omission case is requested.
+#>               The check covers package-side export, normalization, and review plumbing only.
+#>  The package reference benchmark is not a substitute for reviewing external ConQuest output.
+#> 
+#> Settings
+#>              Setting                        Value
+#>                cases              synthetic_truth
+#>               method                          JML
+#>                model                          RSM
+#>           mml_engine                           NA
+#>         intended_use packaged_reference_benchmark
+#>  external_validation                        FALSE
+#>          quad_points                           NA
+#>                maxit                           30
+#>               reltol                        1e-06
+#> 
+#> Notes
+#>  - Synthetic truth checks compare recovered facet measures against known
+#>    generating values from the package simulation design.
+#>  - ConQuest-overlap package-side checks cover only export/normalization/review
+#>    preparation; actual external ConQuest output is still required for external
+#>    validation.
+#>  - Bias checks review package identities for observed-minus-expected averages,
+#>    local measures, and pairwise Rasch-Welch contrasts.
+#>  - Pair stability checks review baseline and iterative-calibration packaged
+#>    datasets using facet-measure alignment, fit deltas, reliability deltas, and
+#>    common-element linking coverage.
+#>  - Use this reference check as package evidence, not as a substitute for
+#>    external validation against commercial software or published studies.
+#>  - Non-MML benchmark runs remain useful for stability review, but
+#>    formal-inference expectations should be interpreted more conservatively.
+# }
 ```

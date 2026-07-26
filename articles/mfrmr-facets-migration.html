@@ -1023,7 +1023,7 @@ result object:</p>
 <code class="sourceCode R"><span><span class="va">review</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit</span>, profile <span class="op">=</span> <span class="st">"facets"</span>, detail <span class="op">=</span> <span class="st">"brief"</span><span class="op">)</span></span>
 <span><span class="va">res</span> <span class="op">&lt;-</span> <span class="va">review</span><span class="op">$</span><span class="va">results</span></span>
 <span></span>
-<span><span class="co"># Primary final-scale artifact: all locations and available facet uncertainty.</span></span>
+<span><span class="co"># Primary final-scale figure: all locations and available facet uncertainty.</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">res</span>, type <span class="op">=</span> <span class="st">"wright"</span>, renderer <span class="op">=</span> <span class="st">"native"</span>, show_ci <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>     top_n <span class="op">=</span> <span class="cn">Inf</span>, preset <span class="op">=</span> <span class="st">"publication"</span><span class="op">)</span></span></code></pre></div>
 <p><code><a href="../reference/plot_wright_unified.html">plot_wright_unified()</a></code> is the corresponding explicit
@@ -1167,13 +1167,14 @@ fixed-width or CSV exports:</p>
 <p>For RSM and PCM the score-side helpers are available. Under bounded
 <code>GPCM</code> the score-side bundle is intentionally restricted; see
 <code><a href="../reference/gpcm_capability_matrix.html">?gpcm_capability_matrix</a></code> and the
-<code>mfrmr-gpcm-scope</code> vignette for the binding contract.</p>
+<code>mfrmr-gpcm-scope</code> vignette for the documented
+limitation.</p>
 </div>
 <div class="section level2">
 <h2 id="recommended-next-steps">Recommended next steps<a class="anchor" aria-label="anchor" href="#recommended-next-steps"></a>
 </h2>
-<p>After a FACETS-oriented package-native fit is in hand, the canonical
-mfrmr reporting route extends the analysis with:</p>
+<p>After a FACETS-oriented package-native fit is in hand, the
+recommended mfrmr reporting workflow extends the analysis with:</p>
 <ul>
 <li>
 <code><a href="../reference/review_mfrm_anchors.html">review_mfrm_anchors()</a></code> before anchored fitting, and
@@ -1211,8 +1212,8 @@ and APA tables.</li>
 alongside the FACETS-style handoff out of the box.</li>
 </ul>
 <p>The <code>mfrmr-workflow</code> vignette covers the full sequence end
-to end; the <code>mfrmr-reporting-and-apa</code> vignette focuses on the
-manuscript surface; the <code>mfrmr-linking-and-dff</code> vignette
+to end; the <code>mfrmr-reporting-and-apa</code> vignette focuses on
+manuscript preparation; the <code>mfrmr-linking-and-dff</code> vignette
 covers anchoring, drift, and DFF in detail.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

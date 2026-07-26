@@ -249,7 +249,7 @@ published many-facet forecasting procedure.
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+# \donttest{
 spec <- build_mfrm_sim_spec(
   n_person = 16,
   n_rater = 3,
@@ -264,7 +264,16 @@ pred <- predict_mfrm_population(
   maxit = 30,
   seed = 123
 )
+#> Warning: Unknown or uninitialised column: `ConvergenceRate`.
+#> Warning: Unknown or uninitialised column: `MeanMinCategoryCount`.
+#> Warning: Unknown or uninitialised column: `MeanSeparation`.
 s_pred <- summary(pred)
 s_pred$forecast[, c("Facet", "MeanSeparation", "McseSeparation")]
-} # }
+#> # A tibble: 3 × 3
+#>   Facet     MeanSeparation McseSeparation
+#>   <chr>              <dbl>          <dbl>
+#> 1 Criterion           0                NA
+#> 2 Person              1.36             NA
+#> 3 Rater               0                NA
+# }
 ```

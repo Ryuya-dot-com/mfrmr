@@ -72,7 +72,7 @@ This method returns a compact cross-object summary that combines:
 ## Examples
 
 ``` r
-if (FALSE) { # interactive()
+# \donttest{
 toy <- load_mfrmr_data("example_core")
 toy_small <- toy[toy$Person %in% unique(toy$Person)[1:8], , drop = FALSE]
 out <- run_mfrm_facets(
@@ -84,6 +84,17 @@ out <- run_mfrm_facets(
 )
 s <- summary(out)
 s$overview[, c("Model", "Method", "Converged")]
+#> # A tibble: 1 × 3
+#>   Model Method Converged
+#>   <chr> <chr>  <lgl>    
+#> 1 RSM   JML    TRUE     
 s$mapping
-}
+#> # A tibble: 4 × 2
+#>   Key    Value             
+#>   <chr>  <chr>             
+#> 1 Person "Person"          
+#> 2 Score  "Score"           
+#> 3 Facets "Rater, Criterion"
+#> 4 Weight ""                
+# }
 ```

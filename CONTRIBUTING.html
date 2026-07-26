@@ -84,10 +84,12 @@
 <ul><li>Use <code>example_operational</code> for applied tutorials, <code>example_core</code> for idealized fast checks, and <code>example_bias</code> only when a planted non-null DFF/bias signal is needed.</li>
 <li>Prefer <code>method = "JML"</code>, <code>maxit = 30</code>, and <code>diagnose_mfrm(..., residual_pca = "none")</code> in standard Rd examples.</li>
 <li>Wrap multi-fit workflows, MML examples, recovery simulations, design simulations, external-Suggests examples, and long reporting pipelines in <code>\donttest{}</code> unless the function cannot be demonstrated otherwise.</li>
+<li>Reserve <code>\dontrun{}</code> for examples that genuinely cannot execute during a check, such as workflows that require files produced by external software. Reserve <code>@examplesIf interactive()</code> for functions that genuinely require an interactive session.</li>
 <li>When an MML example must run in standard examples, set a small <code>quad_points</code> value and explain that it is an exploratory speed setting.</li>
 <li>Use <code>draw = FALSE</code> in examples that only need to demonstrate returned plot payloads.</li>
 <li>Do not shrink example data below a meaningful many-facet structure just to satisfy CRAN timing. Reduce what CRAN executes; keep realistic examples in vignettes and in the full <code>NOT_CRAN=true</code> test run.</li>
 <li>CRAN-time <code>testthat</code> runs the representative MML-to-export workflow test and selected contracts from <code>tests/testthat.R</code>. Run the complete suite locally/CI with <code>NOT_CRAN=true</code>; one CI matrix job must always use that setting.</li>
+<li>Before release, run an <code>--as-cran</code> check with timing enabled and ensure the ordinary and <code>donttest</code> examples both execute. Treat the summed CRAN-side package workload for ordinary examples, <code>donttest</code> examples, tests, and vignette rebuilding above 600 seconds as a release concern. Retain the sum of all timed top-level check components as diagnostic context, but do not charge dependency, installation, manual, or other check-infrastructure time to this package-controlled threshold. Do not apply the threshold to the deliberately exhaustive <code>NOT_CRAN=true</code> regression job.</li>
 </ul></div>
 <div class="section level2">
 <h2 id="pull-request-checklist">Pull request checklist<a class="anchor" aria-label="anchor" href="#pull-request-checklist"></a></h2>

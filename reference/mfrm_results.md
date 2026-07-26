@@ -165,7 +165,7 @@ Start with `summary(res)`. The most useful fields are:
 - `overview`: input mode, model, method, table count, and plot-route
   count
 
-- `readiness`: separate upstream analysis and plot-interpretation gates
+- `readiness`: separate analysis and plot-interpretation gates
 
 - `triage`: first-screen signals ordered by unavailable/review/info/ok
 
@@ -203,8 +203,8 @@ subtitle and `data$retention`; use `plot(res, top_n = Inf)` for a
 complete final map. Other routes include `plot(res, type = "wright")`,
 `"pathway"`, `"fit_pathway"`, `"qc"`, `"category"`, `"anchors"`,
 `"response_time"`, and `"tables"`. The Wright map is the required first
-fitted-scale artifact; `"fit_pathway"` is a follow-up with Infit or
-Outfit on the horizontal axis and measure on the vertical axis.
+fitted-scale figure; `"fit_pathway"` is a follow-up with Infit or Outfit
+on the horizontal axis and measure on the vertical axis.
 `output = "html"` writes a lightweight temporary HTML file; use
 [`launch_mfrmr_viewer()`](https://ryuya-dot-com.github.io/mfrmr/reference/launch_mfrmr_viewer.md)
 when you want an optional local Shiny reader for an already-created
@@ -225,7 +225,7 @@ deidentifies its contents.
 
 3.  Read `summary(res, view = "brief")` and its `readiness` table, then
     create the required
-    `plot(res, type = "wright", show_ci = TRUE, top_n = Inf)` artifact.
+    `plot(res, type = "wright", show_ci = TRUE, top_n = Inf)` figure.
 
 4.  Read `summary(res)$triage`, `summary(res)$status`,
     `summary(res)$plot_map`, and `summary(res)$next_actions`.
@@ -266,7 +266,7 @@ deidentifies its contents.
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+# \donttest{
 toy <- load_mfrmr_data("example_core")
 toy_small <- toy[toy$Person %in% unique(toy$Person)[1:8], , drop = FALSE]
 
@@ -278,15 +278,197 @@ res <- mfrm_results(fit)
 
 wright <- plot(res, draw = FALSE)
 wright$name
+#> [1] "wright_map"
 fit_bundle <- plot(res, type = "fit", draw = FALSE)
 
 sx <- summary(res)
 sx$overview
+#>   InputMode Model Method   N Persons Facets Categories Components Tables
+#> 1  mfrm_fit   RSM    JML 128       8      2          4         10     98
+#>   PlotRoutes NotAvailable NotComputed
+#> 1          7            0           0
 sx$readiness
+#>        Domain                                Status
+#> 1   Numerical                                  pass
+#> 2        Data                                  pass
+#> 3      Design                           pass_linked
+#> 4   Stability                                  pass
+#> 5 Diagnostics                          not_assessed
+#> 6   Reporting exploratory_fit_ready_for_diagnostics
+#> 7        Plot   ready_for_diagnostic_interpretation
+#>                                                                                                                                                        Detail
+#> 1                                                                                                                      Optimizer returned convergence code 0.
+#> 2                                                                                                          No preparation warning or review row was retained.
+#> 3                           The observed graph satisfies the connectivity requirement; review the remaining design and identification assumptions separately.
+#> 4                                                                                                   No boundary-constant non-person facet level was detected.
+#> 5                                                                                       Diagnostics have not yet been incorporated into this fit-only status.
+#> 6                                                                                       Reporting status is the strictest applicable upstream workflow state.
+#> 7 Fit-level numerical, data-support, connectivity, and stability gates passed. Treat this display as diagnostic evidence, not automatic publication approval.
 sx$triage
+#>                      Area Severity                                 Signal
+#> 4             Diagnostics   review            diagnostic_warnings_present
+#> 9  Precision / separation   review             precision_review_available
+#> 10              Reporting   review reporting_checklist_available_but_held
+#> 1             Data review       ok                    data_readiness_pass
+#> 2   Design / connectivity       ok                          design_linked
+#> 7    Diagnostic dashboard       ok                      qc_plot_available
+#> 5    Section availability       ok           requested_sections_available
+#> 3               Stability       ok               stability_readiness_pass
+#> 8                  Tables       ok                       tables_collected
+#> 6              Wright map       ok          required_wright_map_available
+#>                                                                              Route
+#> 4                                            summary(res$diagnostics)$key_warnings
+#> 9                                         summary(res$components$precision_review)
+#> 10                                     summary(res$components$reporting_checklist)
+#> 1                                                           summary(res)$readiness
+#> 2                                                           summary(res)$readiness
+#> 7                                   plot(res, type = "qc", preset = "publication")
+#> 5                                                              summary(res)$status
+#> 3                                                           summary(res)$readiness
+#> 8                                                  build_summary_table_bundle(res)
+#> 6  plot(res, type = "wright", preset = "publication", show_ci = TRUE, top_n = Inf)
+#>                                                                                                                                                                                     Detail
+#> 4                                                                                                       Precision review flagged 1 review/warn checks. | Unexpected responses flagged: 25.
+#> 9                                                                       Precision review is available; inspect fit, separation, reliability, and ZSTD wording boundaries before reporting.
+#> 10 Reporting checklist is available, but the associated reporting status is `exploratory_fit_ready_for_diagnostics`. Reporting status is the strictest applicable upstream workflow state.
+#> 1                                                                                                                Data status is `pass`. No preparation warning or review row was retained.
+#> 2                        Design status is `pass_linked`. The observed graph satisfies the connectivity requirement; review the remaining design and identification assumptions separately.
+#> 7                                                                                               The QC dashboard is available as a focused follow-up after the required Wright-map review.
+#> 5                                                                                                                                Requested sections that could be computed were available.
+#> 3                                                                                                    Stability status is `pass`. No boundary-constant non-person facet level was detected.
+#> 8                                                                                                                       98 data-frame table(s) were collected for appendix or handoff use.
+#> 6                                             The required shared-logit Wright map is available; inspect person targeting, facet locations, steps, and uncertainty before follow-up plots.
 sx$plot_map
+#>            Type Available RequiredArtifact
+#> 1        wright      TRUE             TRUE
+#> 2           fit      TRUE            FALSE
+#> 3       pathway      TRUE            FALSE
+#> 4   fit_pathway      TRUE            FALSE
+#> 5            qc      TRUE            FALSE
+#> 6      category      TRUE            FALSE
+#> 7       anchors     FALSE            FALSE
+#> 8 response_time     FALSE            FALSE
+#> 9        tables      TRUE            FALSE
+#>                                                                                                                                             Route
+#> 1                                                                    plot(res, type = 'wright', renderer = 'native', show_ci = TRUE, top_n = Inf)
+#> 2                                                                                                                         plot(res, type = 'fit')
+#> 3                                                                                                                     plot(res, type = 'pathway')
+#> 4 plot(res, type = 'fit_pathway', fit_stat = 'Infit', include_person = FALSE, top_n_person = 0, person_labels = 'none', facet_labels = 'flagged')
+#> 5                                                                                                                          plot(res, type = 'qc')
+#> 6                                                                                                                    plot(res, type = 'category')
+#> 7                                                                                                                     plot(res, type = 'anchors')
+#> 8                                                                                                               plot(res, type = 'response_time')
+#> 9                                                                                                                      plot(res, type = 'tables')
+#>                                                                                                 Detail
+#> 1 Required first fitted-scale figure: persons, facet levels, and thresholds on the shared logit ruler.
+#> 2                                                      Model-level visual bundle from plot.mfrm_fit().
+#> 3                                                     Expected-score pathway map from plot.mfrm_fit().
+#> 4      Infit/Outfit-versus-measure pathway with facet uncertainty; person rows are an explicit opt-in.
+#> 5                                                  Quality-control dashboard from plot_qc_dashboard().
+#> 6                                   Rating-scale/category plot when rating_scale_table() is available.
+#> 7                                         Anchor-review plot from the stored fit_mfrm() anchor review.
+#> 8                          Descriptive response-time QC plot when response_time_review() is available.
+#> 9                                            Numeric table-profile plot from the summary-table bundle.
+#>                  InterpretationStatus InterpretationReady
+#> 1 ready_for_diagnostic_interpretation                TRUE
+#> 2 ready_for_diagnostic_interpretation                TRUE
+#> 3 ready_for_diagnostic_interpretation                TRUE
+#> 4 ready_for_diagnostic_interpretation                TRUE
+#> 5 ready_for_diagnostic_interpretation                TRUE
+#> 6 ready_for_diagnostic_interpretation                TRUE
+#> 7                       not_available               FALSE
+#> 8                      not_applicable                  NA
+#> 9                      not_applicable                  NA
+#>           ReadinessRoute
+#> 1 summary(res)$readiness
+#> 2 summary(res)$readiness
+#> 3 summary(res)$readiness
+#> 4 summary(res)$readiness
+#> 5 summary(res)$readiness
+#> 6 summary(res)$readiness
+#> 7 summary(res)$readiness
+#> 8                       
+#> 9                       
 sx$next_actions
+#>   Priority               Area
+#> 1        1           Overview
+#> 3        2             Triage
+#> 2        2         Wright map
+#> 4        3        Diagnostics
+#> 5        4 Visual diagnostics
+#> 6        5        Fit pathway
+#> 7        5          Precision
+#> 8        6          Reporting
+#> 9       11             Tables
+#>                                                                      Action
+#> 1                                         Read the compact results summary.
+#> 3                            Read the first-screen triage before branching.
+#> 2                   Create and inspect the required shared-logit scale map.
+#> 4                    Review diagnostic key warnings before report drafting.
+#> 5                     Open the QC dashboard after reviewing the Wright map.
+#> 6 Review Infit against measure, including selected person rows when useful.
+#> 7        Inspect fit, separation, reliability, and ZSTD wording boundaries.
+#> 8        Use the reporting checklist as a guide for preparing a manuscript.
+#> 9                            Create an appendix-ready summary-table bundle.
+#>                                                                                                                                                                     Route
+#> 1                                                                                                                                                            summary(res)
+#> 3                                                                                                                                                     summary(res)$triage
+#> 2                                                                                         plot(res, type = "wright", preset = "publication", show_ci = TRUE, top_n = Inf)
+#> 4                                                                                                                                   summary(res$diagnostics)$key_warnings
+#> 5                                                                                                                          plot(res, type = "qc", preset = "publication")
+#> 6 plot(res, type = "fit_pathway", fit_stat = "Infit", include_person = TRUE, top_n_person = 12, person_labels = "none", facet_labels = "flagged", preset = "publication")
+#> 7                                                                                                                                summary(res$components$precision_review)
+#> 8                                                                                                                             summary(res$components$reporting_checklist)
+#> 9                                                                                                                                         build_summary_table_bundle(res)
+#>                                                                                                                                                 Reason
+#> 1                                                           Confirms input mode, model, method, section status, table coverage, and available figures.
+#> 3                             Triage orders unavailable, review, information, and OK signals across diagnostics, tables, plots, and reporting outputs.
+#> 2 The Wright map is the primary fitted-scale figure: compare person targeting with facet levels and step thresholds before branching into diagnostics.
+#> 4                                            Diagnostic warnings identify the highest-priority fit, precision, residual, or category follow-up checks.
+#> 5                                                            The QC dashboard gives a focused follow-up view of fit, residual, and category summaries.
+#> 6                                          This follow-up separates measure uncertainty from fit displacement while keeping person inclusion explicit.
+#> 7                                         Precision review keeps fit-size, standardized fit, and separation evidence in separate reporting categories.
+#> 8                                                                                Checklist rows identify report-ready, missing, and caveated sections.
+#> 9                                                                   The bundle exposes table roles, plot readiness, and conservative appendix presets.
 mfrm_results(fit, include = "validation", output = "summary")$status
+#>                Section Status
+#> 1                input     ok
+#> 2          diagnostics     ok
+#> 3          fit_summary     ok
+#> 4  diagnostics_summary     ok
+#> 5            iteration     ok
+#> 6         fit_measures     ok
+#> 7     facet_statistics     ok
+#> 8         fair_average     ok
+#> 9         rating_scale     ok
+#> 10          unexpected     ok
+#> 11    precision_review     ok
+#> 12   facets_fit_review     ok
+#> 13 reporting_checklist     ok
+#> 14      data_readiness     ok
+#> 15    design_readiness     ok
+#> 16 stability_readiness     ok
+#> 17 plot_interpretation     ok
+#> 18 reporting_readiness review
+#>                                                                                                                                                                                                           Detail
+#> 1                                                                                                                                                                                          Input mode: mfrm_fit.
+#> 2                                                                                                       Computed automatically with residual_pca = 'none', diagnostic_mode = 'both', and fit_df_method = 'both'.
+#> 3                                                                                                                                                                                                     Available.
+#> 4                                                                                                                                                                                                     Available.
+#> 5                                                                                                                                                                                                     Available.
+#> 6                                                                                                                                                                                                     Available.
+#> 7                                                                                                                                                                                                     Available.
+#> 8                                                                                                                                                                                                     Available.
+#> 9                                                                                                                                                                                                     Available.
+#> 10                                                                                                                                                                                                    Available.
+#> 11                                                                                                                                                                                                    Available.
+#> 12                                                                                                                                                                                                    Available.
+#> 13                                                                                                                                                                                                    Available.
+#> 14                                                                                                                                         Data status: pass. No preparation warning or review row was retained.
+#> 15                                                 Design status: pass_linked. The observed graph satisfies the connectivity requirement; review the remaining design and identification assumptions separately.
+#> 16                                                                                                                             Stability status: pass. No boundary-constant non-person facet level was detected.
+#> 17 Plot status: ready_for_diagnostic_interpretation. Fit-level numerical, data-support, connectivity, and stability gates passed. Treat this display as diagnostic evidence, not automatic publication approval.
+#> 18                                                                                Reporting status: exploratory_fit_ready_for_diagnostics. Reporting status is the strictest applicable upstream workflow state.
 
 plot(res, type = "qc", draw = FALSE)
 
@@ -297,5 +479,10 @@ mfrm_results(
   include = c("fit", "diagnostics"),
   output = "summary"
 )$mapping
-} # }
+#>      Key            Value
+#> 1 Person           Person
+#> 2  Score            Score
+#> 3 Facets Rater, Criterion
+#> 4 Weight                 
+# }
 ```

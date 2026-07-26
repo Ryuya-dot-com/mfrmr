@@ -242,24 +242,90 @@ rater effects using many-facet Rasch measurement: Part II.
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># interactive()</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_bias"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>, method <span class="op">=</span> <span class="st">"JML"</span>, maxit <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span></span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.</span>
 <span class="r-in"><span><span class="va">diag</span> <span class="op">&lt;-</span> <span class="fu"><a href="diagnose_mfrm.html">diagnose_mfrm</a></span><span class="op">(</span><span class="va">fit</span>, residual_pca <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">out</span> <span class="op">&lt;-</span> <span class="fu">bias_pairwise_report</span><span class="op">(</span><span class="va">fit</span>, diagnostics <span class="op">=</span> <span class="va">diag</span>, facet_a <span class="op">=</span> <span class="st">"Rater"</span>, facet_b <span class="op">=</span> <span class="st">"Criterion"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">s</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">out</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">s</span><span class="op">$</span><span class="va">summary</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   TargetFacet ContextFacet Contrasts Flagged MeanAbsContrast MeanAbsT MixedSign</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1       Rater    Criterion        24       6       0.5123773 1.185078     FALSE</span>
 <span class="r-in"><span><span class="co"># Look for: `MaxAbsBiasDiff` &lt; ~0.5 logits and `Significant = 0` mean</span></span></span>
 <span class="r-in"><span><span class="co">#   no rater pair contrasts above the screen. The `BonferroniSignificant`</span></span></span>
 <span class="r-in"><span><span class="co">#   / `HolmSignificant` columns count pairs that survive multiple-</span></span></span>
 <span class="r-in"><span><span class="co">#   testing correction; both being 0 is a stronger "no rater-pair</span></span></span>
 <span class="r-in"><span><span class="co">#   inconsistency" signal than the raw screen-positive count alone.</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">out</span><span class="op">$</span><span class="va">table</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    Target Target N Target Measure Target S.E. Context1 Context1 N</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 21    R04        4      0.6750870   0.1474998 Accuracy          1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 20    R04        4      0.6750870   0.1474998 Accuracy          1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3     R01        1     -0.8667174   0.1520705 Accuracy          1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 19    R04        4      0.6750870   0.1474998 Accuracy          1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1     R01        1     -0.8667174   0.1520705 Accuracy          1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2     R01        1     -0.8667174   0.1520705 Accuracy          1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    Local Measure1       SE1 Obs-Exp Avg1 Count1 ObsN1     Context2 Context2 N</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 21    -0.42701557 0.3641703 1.089553e-06     24    24 Organization          4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 20    -0.42701557 0.3641703 1.089553e-06     24    24     Language          3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3     -0.08973921 0.3436801 2.183428e-06     24    24 Organization          4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 19    -0.42701557 0.3641703 1.089553e-06     24    24      Content          2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1     -0.08973921 0.3436801 2.183428e-06     24    24      Content          2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2     -0.08973921 0.3436801 2.183428e-06     24    24     Language          3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    Local Measure2       SE2  Obs-Exp Avg2 Count2 ObsN2   Contrast        SE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 21      1.3582187 0.3338509  7.031888e-06     24    24 -1.7852343 0.4478437</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 20      0.9087957 0.3313442 -7.940558e-06     24    24 -1.3358113 0.4459782</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3      -1.2288403 0.3302885 -1.723957e-07     24    24  1.1391011 0.4253888</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 19      0.7391378 0.3289915  8.007103e-06     24    24 -1.1661534 0.4442330</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1      -1.1441336 0.3374455 -8.662764e-07     24    24  1.0543944 0.4309694</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2      -1.0504354 0.3436804 -7.536498e-07     24    24  0.9606962 0.4358685</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            t     d.f.        Prob. InferenceTier SupportsFormalInference</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 21 -3.986289 45.49345 0.0002406443     screening                   FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 20 -2.995239 45.40177 0.0044300030     screening                   FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3   2.677788 45.88585 0.0102481613     screening                   FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 19 -2.625094 45.30823 0.0117696837     screening                   FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1   2.446564 45.97597 0.0183059804     screening                   FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2   2.204096 46.00000 0.0325602852     screening                   FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    FormalInferenceEligible PrimaryReportingEligible   ReportingUse</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 21                   FALSE                    FALSE screening_only</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 20                   FALSE                    FALSE screening_only</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3                    FALSE                    FALSE screening_only</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 19                   FALSE                    FALSE screening_only</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                    FALSE                    FALSE screening_only</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                    FALSE                    FALSE screening_only</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                        ContrastBasis</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 21 difference between local target measures across contexts (target term cancels to a bias contrast)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 20 difference between local target measures across contexts (target term cancels to a bias contrast)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3  difference between local target measures across contexts (target term cancels to a bias contrast)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 19 difference between local target measures across contexts (target term cancels to a bias contrast)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1  difference between local target measures across contexts (target term cancels to a bias contrast)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2  difference between local target measures across contexts (target term cancels to a bias contrast)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                           SEBasis</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 21 combined context-specific bias standard errors</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 20 combined context-specific bias standard errors</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3  combined context-specific bias standard errors</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 19 combined context-specific bias standard errors</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1  combined context-specific bias standard errors</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2  combined context-specific bias standard errors</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                     StatisticLabel   ProbabilityMetric</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 21 Bias-contrast Welch screening t screening tail area</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 20 Bias-contrast Welch screening t screening tail area</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3  Bias-contrast Welch screening t screening tail area</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 19 Bias-contrast Welch screening t screening tail area</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1  Bias-contrast Welch screening t screening tail area</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2  Bias-contrast Welch screening t screening tail area</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                              DFBasis     AbsT AbsContrast Flag</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 21 Welch-Satterthwaite approximation 3.986289   1.7852343 TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 20 Welch-Satterthwaite approximation 2.995239   1.3358113 TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3  Welch-Satterthwaite approximation 2.677788   1.1391011 TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 19 Welch-Satterthwaite approximation 2.625094   1.1661534 TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1  Welch-Satterthwaite approximation 2.446564   1.0543944 TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2  Welch-Satterthwaite approximation 2.204096   0.9606962 TRUE</span>
 <span class="r-in"><span><span class="co"># Look for: top rows with `|t_diff|` &gt; 2 and |Bias_diff| &gt; 0.5 logits</span></span></span>
 <span class="r-in"><span><span class="co">#   warrant content-review of the two raters' scoring conventions on</span></span></span>
 <span class="r-in"><span><span class="co">#   the conditioning context facet (e.g. compare their item-level</span></span></span>
 <span class="r-in"><span><span class="co">#   marks for systematic strictness/leniency patterns).</span></span></span>
-<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

@@ -191,15 +191,28 @@ routing design forecasting through its separate caveated capability row.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># interactive()</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span></span>
 <span class="r-in"><span>                method <span class="op">=</span> <span class="st">"JML"</span>, maxit <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span></span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.</span>
 <span class="r-in"><span><span class="va">diag</span> <span class="op">&lt;-</span> <span class="fu"><a href="diagnose_mfrm.html">diagnose_mfrm</a></span><span class="op">(</span><span class="va">fit</span>, residual_pca <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">manifest</span> <span class="op">&lt;-</span> <span class="fu">build_mfrm_manifest</span><span class="op">(</span><span class="va">fit</span>, diagnostics <span class="op">=</span> <span class="va">diag</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">manifest</span><span class="op">$</span><span class="va">summary</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Model"</span>, <span class="st">"Method"</span>, <span class="st">"Observations"</span>, <span class="st">"Facets"</span><span class="op">)</span><span class="op">]</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Model Method Observations Facets</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1   RSM    JML          768      2</span>
 <span class="r-in"><span><span class="va">manifest</span><span class="op">$</span><span class="va">available_outputs</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Component"</span>, <span class="st">"Available"</span><span class="op">)</span><span class="op">]</span></span></span>
-<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>               Component Available</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1    observed_residuals      TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2              measures      TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3           reliability      TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4          residual_pca     FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5          bias_results     FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6               anchors      TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7 population_prediction     FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8       unit_prediction     FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9      plausible_values     FALSE</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

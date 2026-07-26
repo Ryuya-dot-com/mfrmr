@@ -553,7 +553,7 @@ writing interpretation.</p></li>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>  <span class="va">toy</span>,</span></span>
@@ -567,25 +567,80 @@ writing interpretation.</p></li>
 <span class="r-in"><span><span class="va">diag</span> <span class="op">&lt;-</span> <span class="fu"><a href="diagnose_mfrm.html">diagnose_mfrm</a></span><span class="op">(</span><span class="va">fit</span>, residual_pca <span class="op">=</span> <span class="st">"none"</span>, diagnostic_mode <span class="op">=</span> <span class="st">"both"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">checklist</span> <span class="op">&lt;-</span> <span class="fu"><a href="reporting_checklist.html">reporting_checklist</a></span><span class="op">(</span><span class="va">fit</span>, diagnostics <span class="op">=</span> <span class="va">diag</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="visual_reporting_template.html">visual_reporting_template</a></span><span class="op">(</span><span class="st">"manuscript"</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                     FigureFamily      Scope</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                     Wright map manuscript</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                    Pathway map manuscript</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 Category characteristic curves manuscript</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5             Information curves manuscript</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                               PrimaryHelper</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                        plot(fit, type = "wright", preset = "publication")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                       plot(fit, type = "pathway", preset = "publication")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3                           plot(fit, type = "ccc", preset = "publication")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5 compute_information(fit) -&gt; plot_information(..., preset = "publication")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                    DefaultPlacement</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1      Main text when targeting, spread, or shared-logit interpretation is central.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 Main text or category-functioning subsection for ordered-category interpretation.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3       Main text or appendix; pair with pathway when category behavior is central.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5        Main text when precision or targeting across theta is a substantive claim.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                   WhatToReport</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1      Describe whether persons, facet levels, and thresholds overlap on the same logit scale.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2         Describe expected-score progression and the theta regions where categories dominate.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 Describe whether categories peak in the intended order and whether adjacent curves separate.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5                   Describe where measurement information is highest or weakest across theta.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                 CaptionSkeleton</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1           Figure X. Wright map showing person measures, facet-level locations, and step thresholds on the shared logit scale.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                    Figure X. Expected score pathway across theta, with dominant-category regions for the fitted rating scale.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3                                  Figure X. Category characteristic curves showing fitted category probabilities across theta.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5 Figure X. Test information curve showing where the fitted model provides relatively stronger or weaker measurement precision.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                       ResultsWording</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1           The Wright map was inspected to evaluate targeting and shared-scale overlap among persons, facet levels, and thresholds.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 The pathway plot was inspected to evaluate whether expected scores and dominant-category regions progressed in the intended order.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3           The category characteristic curves were inspected to evaluate the ordering and separation of fitted response categories.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5            The information curve was inspected to identify theta regions with relatively stronger or weaker measurement precision.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                            WhatNotToClaim</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                  Do not present targeting as proof of global model fit.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                       Do not treat smooth category progression as proof that the rating scale is valid.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 Do not overstate overlapping curves as definitive category failure without category counts and context.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5                    Do not ignore the precision tier or approximation caveats used to compute the curve.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                               BeginnerCheck</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1            Check gaps between person density and thresholds/facet levels.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 Check whether the dominant-category bands progress in the expected order.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3   Check whether every retained category has a visible peak or clear role.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5   Check whether the information peak covers the theta region of interest.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                 ThreeDPolicy</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1            2D recommended; 3D Wright maps are discouraged.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                                         2D report default.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3                                         2D report default.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5 2D curve route active; 3D information surface is deferred.</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>  <span class="va">checklist</span><span class="op">$</span><span class="va">checklist</span>,</span></span>
 <span class="r-in"><span>  <span class="va">Section</span> <span class="op">==</span> <span class="st">"Visual Displays"</span> <span class="op">&amp;</span> <span class="va">Item</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"QC / facet dashboard"</span>, <span class="st">"Strict marginal visuals"</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Item"</span>, <span class="st">"Available"</span>, <span class="st">"NextAction"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                       Item Available</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 26    QC / facet dashboard      TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 30 Strict marginal visuals      TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                       NextAction</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 26                     Use the dashboard as a first-pass triage view, then move to the specific follow-up plot behind each flag.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 30 Treat strict marginal plots as exploratory corroboration screens, then corroborate with design review and legacy diagnostics.</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">qc</span> <span class="op">&lt;-</span> <span class="fu"><a href="plot_qc_dashboard.html">plot_qc_dashboard</a></span><span class="op">(</span><span class="va">fit</span>, diagnostics <span class="op">=</span> <span class="va">diag</span>, draw <span class="op">=</span> <span class="cn">FALSE</span>, preset <span class="op">=</span> <span class="st">"publication"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">qc</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">plot</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "qc_dashboard"</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">p_marg</span> <span class="op">&lt;-</span> <span class="fu"><a href="plot_marginal_fit.html">plot_marginal_fit</a></span><span class="op">(</span><span class="va">diag</span>, draw <span class="op">=</span> <span class="cn">FALSE</span>, preset <span class="op">=</span> <span class="st">"publication"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">p_marg</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">preset</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "publication"</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">wright</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit</span>, type <span class="op">=</span> <span class="st">"wright"</span>, draw <span class="op">=</span> <span class="cn">FALSE</span>, preset <span class="op">=</span> <span class="st">"publication"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">wright</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">preset</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "publication"</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">pca</span> <span class="op">&lt;-</span> <span class="fu"><a href="analyze_residual_pca.html">analyze_residual_pca</a></span><span class="op">(</span><span class="va">diag</span>, mode <span class="op">=</span> <span class="st">"overall"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">scree</span> <span class="op">&lt;-</span> <span class="fu"><a href="plot_residual_pca.html">plot_residual_pca</a></span><span class="op">(</span><span class="va">pca</span>, plot_type <span class="op">=</span> <span class="st">"scree"</span>, draw <span class="op">=</span> <span class="cn">FALSE</span>, preset <span class="op">=</span> <span class="st">"publication"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">scree</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">preset</span></span></span>
-<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "publication"</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

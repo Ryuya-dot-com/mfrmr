@@ -342,7 +342,7 @@ the Wright & Masters (1982) conventions: \\G =
 ## Examples
 
 ``` r
-if (FALSE) { # interactive()
+# \donttest{
 # Minimal diagnostic example without residual PCA.
 toy <- load_mfrmr_data("example_operational")
 fit_quick <- fit_mfrm(
@@ -352,8 +352,11 @@ fit_quick <- fit_mfrm(
 diag_quick <- diagnose_mfrm(fit_quick, diagnostic_mode = "both",
                             residual_pca = "none")
 summary(diag_quick)$overview[, c("Observations", "Facets", "Categories")]
+#> # A tibble: 1 × 3
+#>   Observations Facets Categories
+#>          <int>  <int>      <int>
+#> 1          282      2          4
 
-if (FALSE) { # \dontrun{
 fit <- fit_mfrm(
   toy, "Person", c("Rater", "Criterion"), "Score",
   method = "MML", model = "RSM", quad_points = 7, maxit = 30
@@ -361,33 +364,109 @@ fit <- fit_mfrm(
 diag <- diagnose_mfrm(fit, diagnostic_mode = "both", residual_pca = "none")
 s_diag <- summary(diag)
 s_diag$overview[, c("Observations", "Facets", "Categories")]
+#> # A tibble: 1 × 3
+#>   Observations Facets Categories
+#>          <int>  <int>      <int>
+#> 1          282      2          4
 s_diag$diagnostic_basis[, c("DiagnosticPath", "Status", "Basis")]
+#> # A tibble: 4 × 3
+#>   DiagnosticPath                   Status        Basis                          
+#>   <chr>                            <chr>         <chr>                          
+#> 1 legacy_residual_fit              computed      plugin_residuals_and_eap_tables
+#> 2 strict_marginal_fit              computed      latent_integrated_first_order_…
+#> 3 strict_pairwise_local_dependence computed      latent_integrated_second_order…
+#> 4 posterior_predictive_follow_up   not_available posterior_predictive_replicati…
 s_diag$key_warnings
+#> [1] "Unexpected responses flagged: 63."                                                                                                 
+#> [2] "Flagged displacement levels: 5."                                                                                                   
+#> [3] "MnSq screening flagged 19 element(s) outside the configured 0.5-1.5 band."                                                         
+#> [4] "Person-level fit warnings: 19 row(s); identifiers suppressed. Use `include_person = TRUE` only under appropriate privacy controls."
+#> [5] "Strict marginal fit flagged 2 group-level summaries."                                                                              
 # Look for: lines starting with "MnSq misfit:" name the element +
 #   Infit / Outfit values outside the configured heuristic review band.
 #   Review those signals in context; an empty warning list is not an
 #   automatic all-clear decision.
 s_diag$facets_chisq
+#> # A tibble: 3 × 10
+#>   Facet     Levels MeanMeasure    SD FixedChiSq FixedDF FixedProb RandomChiSq
+#>   <chr>      <int>       <dbl> <dbl>      <dbl>   <dbl>     <dbl>       <dbl>
+#> 1 Criterion      3    4.62e-18 0.298       14.6       2  6.60e- 4        2.00
+#> 2 Person        48   -1.41e- 1 0.811      149.       47  1.83e-12       46.5 
+#> 3 Rater          6    0        0.379       14.5       5  1.26e- 2        4.99
+#> # ℹ 2 more variables: RandomDF <dbl>, RandomProb <dbl>
 # Look for: `FixedProb` < 0.05 is evidence against the fixed-effect
 #   "all elements equal" null under the reported chi-square approximation.
 #   Interpret the magnitude and precision as well; a non-significant result
 #   does not demonstrate homogeneous elements or negligible facet spread.
 s_diag$interrater
+#> # A tibble: 1 × 12
+#>   RaterFacet Raters Pairs OpportunityCount ExactAgreement ExpectedExactAgreement
+#>   <chr>       <int> <int>            <dbl>          <dbl>                  <dbl>
+#> 1 Rater           6    15              138          0.391                  0.349
+#> # ℹ 6 more variables: AgreementMinusExpected <dbl>, AdjacentAgreement <dbl>,
+#> #   MeanAbsDiff <dbl>, MeanCorr <dbl>, RaterSeparation <dbl>,
+#> #   RaterReliability <dbl>
 # Look for: ExactAgreement >= ExpectedExactAgreement and
 #   AgreementMinusExpected >= 0 indicate raters agree at least as
 #   often as the model expects. Negative values warrant a closer
 #   look at `diag$interrater$pairs`.
 p_qc <- plot_qc_dashboard(fit, diagnostics = diag, draw = FALSE)
 p_qc$data$plot
+#> [1] "qc_dashboard"
 
 # Optional: include residual PCA in the diagnostic bundle
 diag_pca <- diagnose_mfrm(fit, residual_pca = "overall")
 pca <- analyze_residual_pca(diag_pca, mode = "overall")
 head(pca$overall_table)
+#>   Component Eigenvalue Proportion Cumulative
+#> 1         1   2.853684 0.15853802  0.1585380
+#> 2         2   2.458881 0.13660448  0.2951425
+#> 3         3   2.200935 0.12227419  0.4174167
+#> 4         4   1.996765 0.11093138  0.5283481
+#> 5         5   1.598169 0.08878715  0.6171352
+#> 6         6   1.452093 0.08067183  0.6978070
 
 # Reporting route:
 prec <- precision_review_report(fit, diagnostics = diag)
 summary(prec)
-} # }
-}
+#> mfrmr Precision Review Summary 
+#>   Class: mfrm_precision_review
+#>   Components: 5
+#> 
+#> Precision overview
+#>  Method PrecisionTier SupportsFormalInference Checks ReviewOrWarn
+#>     MML   model_based                    TRUE      7            0
+#>  FitSeparationRows NoteRows
+#>                  4        4
+#> 
+#> Review checks: checks
+#>                     Check Status
+#>            Precision tier   pass
+#>     Optimizer convergence   pass
+#>      ModelSE availability   pass
+#>  Fit-adjusted SE ordering   pass
+#>      Reliability ordering   pass
+#>  Facet precision coverage   pass
+#>          SE source labels   pass
+#>                                                                                Detail
+#>                               This run uses the package's model-based precision path.
+#>                                 Optimizer diagnostics support inference-ready status.
+#>                              Finite ModelSE values were available for 100.0% of rows.
+#>             Fit-adjusted SE values were not smaller than their paired ModelSE values.
+#>          Conservative reliability values were not larger than the model-based values.
+#>  Each facet had sample/population summaries for both model and fit-adjusted SE modes.
+#>                         Person and non-person SE labels match the MML precision path.
+#> 
+#> Settings
+#>         Setting       Value
+#>           model         RSM
+#>          method         MML
+#>  precision_tier model_based
+#> 
+#> Notes
+#>  - Model-based precision path detected for the current run.
+#>  - Fit/separation basis rows state source grounding and validation-use
+#>    boundaries.
+
+# }
 ```

@@ -247,23 +247,50 @@ about fairness or invariance.
 ## Examples
 
 ``` r
-if (FALSE) { # interactive()
+# \donttest{
 toy <- load_mfrmr_data("example_bias")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+#> Warning: Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 bias <- estimate_bias(fit, diag, facet_a = "Rater", facet_b = "Criterion", max_iter = 2)
 s_bias <- summary(bias)
 s_bias$overview
+#> # A tibble: 1 × 19
+#>   FacetPair        InteractionOrder InteractionMode Cells MeanAbsBias MaxAbsBias
+#>   <chr>                       <int> <chr>           <int>       <dbl>      <dbl>
+#> 1 Rater x Criteri…                2 pairwise           16       0.310       1.10
+#> # ℹ 13 more variables: ScreenPositive <int>, ScreeningCut <dbl>,
+#> #   BonferroniScreenPositive <int>, HolmScreenPositive <int>,
+#> #   SupportsFormalInference <lgl>, FormalInferenceEligible <lgl>,
+#> #   PrimaryReportingEligible <lgl>, ClassificationSystem <chr>,
+#> #   ReportingUse <chr>, Significant <int>, SignificantCut <dbl>,
+#> #   BonferroniSignificant <int>, HolmSignificant <int>
 # Look for: `MaxAbsBias` < ~0.5 logits and `Significant = 0` mean
 #   no cell exceeded the screen. The `BonferroniSignificant` /
 #   `HolmSignificant` columns count cells that survive multiple-
 #   testing correction; both being 0 is a stronger "no bias"
 #   signal than the raw screen-positive count alone.
 s_bias$top_rows
+#> # A tibble: 10 × 9
+#>    Pair       Rater Criterion `Bias Size`  S.E.      t   Prob. `Obs-Exp Average`
+#>    <chr>      <chr> <chr>           <dbl> <dbl>  <dbl>   <dbl>             <dbl>
+#>  1 R04 | Acc… R04   Accuracy       -1.10  0.333 -3.31  0.00306       0.00000109 
+#>  2 R01 | Acc… R01   Accuracy        0.777 0.308  2.52  0.0191        0.00000218 
+#>  3 R04 | Org… R04   Organiza…       0.683 0.299  2.28  0.0321        0.00000703 
+#>  4 R01 | Org… R01   Organiza…      -0.362 0.293 -1.24  0.229        -0.000000172
+#>  5 R03 | Org… R03   Organiza…      -0.313 0.296 -1.06  0.301         0.00000167 
+#>  6 R01 | Con… R01   Content        -0.277 0.301 -0.921 0.367        -0.000000866
+#>  7 R02 | Acc… R02   Accuracy        0.247 0.288  0.856 0.401         0.00000166 
+#>  8 R04 | Lan… R04   Language        0.234 0.297  0.788 0.439        -0.00000794 
+#>  9 R03 | Con… R03   Content         0.247 0.315  0.783 0.442         0.000000986
+#> 10 R02 | Lan… R02   Language       -0.208 0.294 -0.709 0.485         0.00000302 
+#> # ℹ 1 more variable: AbsT <dbl>
 # Look for: rows with `|t|` > 2 and |Bias Size| > 0.5 logits warrant
 #   review (large effect AND statistically reliable). Rows with only
 #   one of those triggered are usually small-cell artefacts.
 p_bias <- plot_bias_interaction(bias, draw = FALSE)
 p_bias$data$plot
-}
+#> [1] "scatter"
+
+# }
 ```

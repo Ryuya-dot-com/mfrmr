@@ -233,7 +233,7 @@ equivalence.
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+# \donttest{
 toy <- load_mfrmr_data("example_core")
 toy_small <- toy[toy$Person %in% unique(toy$Person)[1:12], , drop = FALSE]
 
@@ -245,7 +245,32 @@ run <- run_mfrm_facets(
   maxit = 30
 )
 summary(run)
+#> FACETS-style Workflow Summary
+#>   Model: RSM | Method: JML
+#>   N: 192 | Persons: 12 | Facets: 2 | Categories: 4
+#>   LogLik: -203.282 | AIC: 446.564 | BIC: 511.714
+#>   Optimizer returned code 0: Yes | Formal inference: Ready | Iterations: 66
+#> 
+#> Column mapping
+#>     Key            Value
+#>  Person           Person
+#>   Score            Score
+#>  Facets Rater, Criterion
+#>  Weight                 
+#> 
+#> Detailed objects:
+#>  - summary(out$fit)
+#>  - summary(out$diagnostics)
 compatibility_alias_table("functions")
+#>         Alias   PreferredName  Surface      Lifecycle
+#> 1 mfrmRFacets run_mfrm_facets function retained_alias
+#> 2 analyze_dif     analyze_dff function retained_alias
+#>                         RetainedFor           RemovalPlan
+#> 1            older workflow scripts No scheduled removal.
+#> 2 earlier DIF-oriented package code No scheduled removal.
+#>                                                                                     Notes
+#> 1                      Compatibility wrapper for the legacy-compatible one-shot workflow.
+#> 2 DFF naming is preferred for many-facet workflows; the older DIF name is still accepted.
 
 fixed <- build_fixed_reports(
   estimate_bias(
@@ -258,5 +283,8 @@ fixed <- build_fixed_reports(
   branch = "original"
 )
 names(fixed)
-} # }
+#> [1] "bias_fixed"        "pairwise_fixed"    "pairwise_table"   
+#> [4] "branch"            "style"             "interaction_label"
+#> [7] "target_facet"     
+# }
 ```

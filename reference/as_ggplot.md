@@ -68,11 +68,14 @@ when automatic inference is not appropriate.
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+# \donttest{
 fit <- fit_mfrm(load_mfrmr_data("example_core"), "Person",
                 c("Rater", "Criterion"), "Score", maxit = 30)
 as_ggplot(fit, type = "wright")
+
 as_ggplot(fit, type = "fit_pathway", include_person = TRUE)
+
 as_ggplot(plot(fit, type = "ccc", draw = FALSE))
-} # }
+
+# }
 ```

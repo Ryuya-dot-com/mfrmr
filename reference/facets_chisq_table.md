@@ -115,12 +115,41 @@ The `table` data.frame contains:
 ## Examples
 
 ``` r
-if (FALSE) { # interactive()
+# \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+#> Warning: Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.
 chi <- facets_chisq_table(fit)
 summary(chi)
+#> mfrmr Facet Variability Summary 
+#>   Class: mfrm_facets_chisq
+#>   Components: 3
+#> 
+#> Facet variability summary
+#>  Facets FixedSignificant RandomSignificant MeanRandomVar MaxFixedChiSq
+#>       3                3                 0         0.417       384.088
+#>  MaxRandomChiSq
+#>          45.462
+#> 
+#> Facet rows: table
+#>      Facet Levels MeanMeasure    SD FixedChiSq FixedDF RandomVar FixedProb
+#>     Person     48       0.001 1.099    384.088      47     1.089         0
+#>      Rater      4       0.000 0.313     30.901       3     0.089         0
+#>  Criterion      4       0.000 0.288     25.914       3     0.073         0
+#>  RandomChiSq RandomDF RandomProb FixedFlag RandomFlag
+#>       45.462       46      0.495      TRUE      FALSE
+#>        2.999        2      0.223      TRUE      FALSE
+#>        2.997        2      0.223      TRUE      FALSE
+#> 
+#> Settings
+#>       Setting Value
+#>   fixed_p_max  0.05
+#>  random_p_max  0.05
+#> 
+#> Notes
+#>  - Facet variability summary with fixed/random reference tests.
 p_chi <- plot(chi, draw = FALSE)
 p_chi$data$plot
-}
+#> [1] "fixed"
+# }
 ```

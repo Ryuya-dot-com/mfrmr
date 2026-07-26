@@ -180,16 +180,92 @@ checks that did not pass.</p></li>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"study1"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span></span>
 <span class="r-in"><span>  method <span class="op">=</span> <span class="st">"JML"</span>, maxit <span class="op">=</span> <span class="fl">30</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.</span>
 <span class="r-in"><span><span class="va">qc</span> <span class="op">&lt;-</span> <span class="fu">run_qc_pipeline</span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">qc</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> --- QC Pipeline ---</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Overall: Fail </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [FAIL] Convergence               Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [PASS] Global Fit                Global Infit=0.999, Outfit=0.990</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [PASS] Reliability               Min non-person model reliability = 0.955</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [PASS] Separation                Min non-person model separation = 4.592</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [FAIL] Element Misfit            143 of 328 elements misfitting (43.6%)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [FAIL] Unexpected Responses      5.4% unexpected responses</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [PASS] Category Structure        Thresholds ordered, min category count = 215</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [PASS] Connectivity              1 disjoint subset(s)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [WARN] Inter-rater Agreement     Exact agreement = 36.2%</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [FAIL] Functioning/Bias Screen   80.0% of screened interactions crossed |screening t| &gt; 2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Recommendations:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   - The fit reached its iteration ceiling and is not inference-ready. Do not interpret or select its estimates; refit the same specification with the next ceiling in a prespecified `maxit` sequence and accept it only after the numerical gate passes. </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   - Excessive element misfit detected. Review individual element fit statistics. </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   - High unexpected response rate. Inspect unexpected_response_table() for patterns. </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   - Many interaction cells were screen-positive. Review estimate_bias() or analyze_dff() before making substantive bias claims. </span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">qc</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> --- QC Pipeline Summary ---</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Overall: Fail </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Pass: 5 | Warn: 1 | Fail: 4 | Skip: 0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                    Check Verdict                         Value</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>              Convergence    Fail Nonzero code; review required</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>               Global Fit    Pass       Infit=1.00, Outfit=0.99</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>              Reliability    Pass                          0.95</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>               Separation    Pass                          4.59</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           Element Misfit    Fail               143/328 (43.6%)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     Unexpected Responses    Fail                          5.4%</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       Category Structure    Pass     Ordered=Yes, MinCount=215</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             Connectivity    Pass                             1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    Inter-rater Agreement    Warn                         36.2%</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Functioning/Bias Screen    Fail                         80.0%</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                    Threshold</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Convergence severity = pass</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                 [0.50, 1.50]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       Pass&gt;=0.80, Warn&gt;=0.50</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       Pass&gt;=2.00, Warn&gt;=1.00</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           Pass&lt;=5%, Fail&gt;15%</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            Pass&lt;=2%, Fail&gt;5%</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          Ordered + count&gt;=10</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      Pass=1, Warn=2, Fail&gt;=3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         Pass&gt;=50%, Warn&gt;=30%</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           Pass&lt;=0%, Fail&gt;10%</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                              Detail</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                    Global Infit=0.999, Outfit=0.990</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                            Min non-person model reliability = 0.955</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                             Min non-person model separation = 4.592</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                              143 of 328 elements misfitting (43.6%)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                           5.4% unexpected responses</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                        Thresholds ordered, min category count = 215</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                1 disjoint subset(s)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                             Exact agreement = 36.2%</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                            80.0% of screened interactions crossed |screening t| &gt; 2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Recommendations:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   - The fit reached its iteration ceiling and is not inference-ready. Do not interpret or select its estimates; refit the same specification with the next ceiling in a prespecified `maxit` sequence and accept it only after the numerical gate passes. </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   - Excessive element misfit detected. Review individual element fit statistics. </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   - High unexpected response rate. Inspect unexpected_response_table() for patterns. </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   - Many interaction cells were screen-positive. Review estimate_bias() or analyze_dff() before making substantive bias claims. </span>
 <span class="r-in"><span><span class="va">qc</span><span class="op">$</span><span class="va">verdicts</span></span></span>
-<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 10 × 5</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    Check                   Verdict Value                        Threshold Detail</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                        <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> Convergence             Fail    Nonzero code; review requir… Converge… Optim…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> Global Fit              Pass    Infit=1.00, Outfit=0.99      [0.50, 1… Globa…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> Reliability             Pass    0.95                         Pass&gt;=0.… Min n…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> Separation              Pass    4.59                         Pass&gt;=2.… Min n…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> Element Misfit          Fail    143/328 (43.6%)              Pass&lt;=5%… 143 o…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> Unexpected Responses    Fail    5.4%                         Pass&lt;=2%… 5.4% …</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> Category Structure      Pass    Ordered=Yes, MinCount=215    Ordered … Thres…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> Connectivity            Pass    1                            Pass=1, … 1 dis…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> Inter-rater Agreement   Warn    36.2%                        Pass&gt;=50… Exact…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> Functioning/Bias Screen Fail    80.0%                        Pass&lt;=0%… 80.0%…</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

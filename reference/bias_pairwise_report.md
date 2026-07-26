@@ -205,22 +205,88 @@ that uses the full parameter covariance.
 ## Examples
 
 ``` r
-if (FALSE) { # interactive()
+# \donttest{
 toy <- load_mfrmr_data("example_bias")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+#> Warning: Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 out <- bias_pairwise_report(fit, diagnostics = diag, facet_a = "Rater", facet_b = "Criterion")
 s <- summary(out)
 s$summary
+#>   TargetFacet ContextFacet Contrasts Flagged MeanAbsContrast MeanAbsT MixedSign
+#> 1       Rater    Criterion        24       6       0.5123773 1.185078     FALSE
 # Look for: `MaxAbsBiasDiff` < ~0.5 logits and `Significant = 0` mean
 #   no rater pair contrasts above the screen. The `BonferroniSignificant`
 #   / `HolmSignificant` columns count pairs that survive multiple-
 #   testing correction; both being 0 is a stronger "no rater-pair
 #   inconsistency" signal than the raw screen-positive count alone.
 head(out$table)
+#>    Target Target N Target Measure Target S.E. Context1 Context1 N
+#> 21    R04        4      0.6750870   0.1474998 Accuracy          1
+#> 20    R04        4      0.6750870   0.1474998 Accuracy          1
+#> 3     R01        1     -0.8667174   0.1520705 Accuracy          1
+#> 19    R04        4      0.6750870   0.1474998 Accuracy          1
+#> 1     R01        1     -0.8667174   0.1520705 Accuracy          1
+#> 2     R01        1     -0.8667174   0.1520705 Accuracy          1
+#>    Local Measure1       SE1 Obs-Exp Avg1 Count1 ObsN1     Context2 Context2 N
+#> 21    -0.42701557 0.3641703 1.089553e-06     24    24 Organization          4
+#> 20    -0.42701557 0.3641703 1.089553e-06     24    24     Language          3
+#> 3     -0.08973921 0.3436801 2.183428e-06     24    24 Organization          4
+#> 19    -0.42701557 0.3641703 1.089553e-06     24    24      Content          2
+#> 1     -0.08973921 0.3436801 2.183428e-06     24    24      Content          2
+#> 2     -0.08973921 0.3436801 2.183428e-06     24    24     Language          3
+#>    Local Measure2       SE2  Obs-Exp Avg2 Count2 ObsN2   Contrast        SE
+#> 21      1.3582187 0.3338509  7.031888e-06     24    24 -1.7852343 0.4478437
+#> 20      0.9087957 0.3313442 -7.940558e-06     24    24 -1.3358113 0.4459782
+#> 3      -1.2288403 0.3302885 -1.723957e-07     24    24  1.1391011 0.4253888
+#> 19      0.7391378 0.3289915  8.007103e-06     24    24 -1.1661534 0.4442330
+#> 1      -1.1441336 0.3374455 -8.662764e-07     24    24  1.0543944 0.4309694
+#> 2      -1.0504354 0.3436804 -7.536498e-07     24    24  0.9606962 0.4358685
+#>            t     d.f.        Prob. InferenceTier SupportsFormalInference
+#> 21 -3.986289 45.49345 0.0002406443     screening                   FALSE
+#> 20 -2.995239 45.40177 0.0044300030     screening                   FALSE
+#> 3   2.677788 45.88585 0.0102481613     screening                   FALSE
+#> 19 -2.625094 45.30823 0.0117696837     screening                   FALSE
+#> 1   2.446564 45.97597 0.0183059804     screening                   FALSE
+#> 2   2.204096 46.00000 0.0325602852     screening                   FALSE
+#>    FormalInferenceEligible PrimaryReportingEligible   ReportingUse
+#> 21                   FALSE                    FALSE screening_only
+#> 20                   FALSE                    FALSE screening_only
+#> 3                    FALSE                    FALSE screening_only
+#> 19                   FALSE                    FALSE screening_only
+#> 1                    FALSE                    FALSE screening_only
+#> 2                    FALSE                    FALSE screening_only
+#>                                                                                        ContrastBasis
+#> 21 difference between local target measures across contexts (target term cancels to a bias contrast)
+#> 20 difference between local target measures across contexts (target term cancels to a bias contrast)
+#> 3  difference between local target measures across contexts (target term cancels to a bias contrast)
+#> 19 difference between local target measures across contexts (target term cancels to a bias contrast)
+#> 1  difference between local target measures across contexts (target term cancels to a bias contrast)
+#> 2  difference between local target measures across contexts (target term cancels to a bias contrast)
+#>                                           SEBasis
+#> 21 combined context-specific bias standard errors
+#> 20 combined context-specific bias standard errors
+#> 3  combined context-specific bias standard errors
+#> 19 combined context-specific bias standard errors
+#> 1  combined context-specific bias standard errors
+#> 2  combined context-specific bias standard errors
+#>                     StatisticLabel   ProbabilityMetric
+#> 21 Bias-contrast Welch screening t screening tail area
+#> 20 Bias-contrast Welch screening t screening tail area
+#> 3  Bias-contrast Welch screening t screening tail area
+#> 19 Bias-contrast Welch screening t screening tail area
+#> 1  Bias-contrast Welch screening t screening tail area
+#> 2  Bias-contrast Welch screening t screening tail area
+#>                              DFBasis     AbsT AbsContrast Flag
+#> 21 Welch-Satterthwaite approximation 3.986289   1.7852343 TRUE
+#> 20 Welch-Satterthwaite approximation 2.995239   1.3358113 TRUE
+#> 3  Welch-Satterthwaite approximation 2.677788   1.1391011 TRUE
+#> 19 Welch-Satterthwaite approximation 2.625094   1.1661534 TRUE
+#> 1  Welch-Satterthwaite approximation 2.446564   1.0543944 TRUE
+#> 2  Welch-Satterthwaite approximation 2.204096   0.9606962 TRUE
 # Look for: top rows with `|t_diff|` > 2 and |Bias_diff| > 0.5 logits
 #   warrant content-review of the two raters' scoring conventions on
 #   the conditioning context facet (e.g. compare their item-level
 #   marks for systematic strictness/leniency patterns).
-}
+# }
 ```

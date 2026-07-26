@@ -65,16 +65,18 @@ An `mfrm_plot_data` whose `data` slot bundles the residual `matrix`
 ## Examples
 
 ``` r
-if (FALSE) { # interactive()
+# \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                  method = "JML", maxit = 30)
+#> Warning: Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.
 p <- plot_residual_matrix(fit, top_n_persons = 12, draw = FALSE)
 dim(p$data$matrix)
+#> [1] 12  4
 # Look for: |residual| > 2 or > 3 crosses conventional two- or
 #   three-standard-deviation review bands; these are heuristic screens,
 #   not calibrated 5% or 1% tests (Wright & Linacre 1994). Repeated
 #   high-magnitude cells at one facet level warrant pattern review but
 #   do not by themselves establish scoring drift.
-}
+# }
 ```

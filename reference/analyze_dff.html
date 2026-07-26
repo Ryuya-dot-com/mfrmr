@@ -254,7 +254,7 @@ visible together.</p></li>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_bias"</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span></span>
@@ -262,17 +262,31 @@ visible together.</p></li>
 <span class="r-in"><span><span class="va">diag</span> <span class="op">&lt;-</span> <span class="fu"><a href="diagnose_mfrm.html">diagnose_mfrm</a></span><span class="op">(</span><span class="va">fit</span>, residual_pca <span class="op">=</span> <span class="st">"none"</span>, diagnostic_mode <span class="op">=</span> <span class="st">"both"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">dff</span> <span class="op">&lt;-</span> <span class="fu">analyze_dff</span><span class="op">(</span><span class="va">fit</span>, <span class="va">diag</span>, facet <span class="op">=</span> <span class="st">"Rater"</span>, group <span class="op">=</span> <span class="st">"Group"</span>, data <span class="op">=</span> <span class="va">toy</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">dff</span><span class="op">$</span><span class="va">summary</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 3 × 2</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Classification  Count</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> Screen positive     0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> Screen negative     4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> Unclassified        0</span>
 <span class="r-in"><span><span class="co"># Look for: a small `FlaggedPairs` count relative to `Pairs`. Under</span></span></span>
 <span class="r-in"><span><span class="co">#   method = "residual", `ClassificationSystem` is "screening", not</span></span></span>
 <span class="r-in"><span><span class="co">#   ETS. "Screen positive" rows are prompts for substantive review.</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">dff</span><span class="op">$</span><span class="va">dif_table</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Level"</span>, <span class="st">"Group1"</span>, <span class="st">"Group2"</span>, <span class="st">"Contrast"</span>,</span></span>
 <span class="r-in"><span>                       <span class="st">"Classification"</span>, <span class="st">"ClassificationSystem"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 4 × 6</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Level Group1 Group2 Contrast Classification  ClassificationSystem</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>               </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> R01   A      B       0.146   Screen negative screening           </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> R02   A      B      -<span style="color: #BB0000;">0.152</span>   Screen negative screening           </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> R03   A      B      -<span style="color: #BB0000;">0.164</span>   Screen negative screening           </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> R04   A      B       0.003<span style="text-decoration: underline;">47</span> Screen negative screening           </span>
 <span class="r-in"><span><span class="co"># The residual contrast is an observed-minus-expected average contrast</span></span></span>
 <span class="r-in"><span><span class="co"># between groups. It is useful for screening, but it is not an ETS</span></span></span>
 <span class="r-in"><span><span class="co"># A/B/C logit-delta classification.</span></span></span>
 <span class="r-in"><span><span class="va">dff_refit</span> <span class="op">&lt;-</span> <span class="fu">analyze_dff</span><span class="op">(</span><span class="va">fit</span>, <span class="va">diag</span>, facet <span class="op">=</span> <span class="st">"Rater"</span>, group <span class="op">=</span> <span class="st">"Group"</span>,</span></span>
 <span class="r-in"><span>                         data <span class="op">=</span> <span class="va">toy</span>, method <span class="op">=</span> <span class="st">"refit"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">dff_refit</span><span class="op">$</span><span class="va">dif_table</span><span class="op">$</span><span class="va">ClassificationSystem</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "descriptive"</span>
 <span class="r-in"><span><span class="co"># Look for: "descriptive". Linked refit contrasts remain screening-only</span></span></span>
 <span class="r-in"><span><span class="co">#   because their plug-in uncertainty omits anchor uncertainty and</span></span></span>
 <span class="r-in"><span><span class="co">#   cross-refit covariance.</span></span></span>
@@ -281,11 +295,12 @@ visible together.</p></li>
 <span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="st">"ScaleLinkStatus"</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">dff_refit</span><span class="op">$</span><span class="va">dif_table</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">dff_refit</span><span class="op">$</span><span class="va">dif_table</span><span class="op">$</span><span class="va">ScaleLinkStatus</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "weak_link"</span>
 <span class="r-in"><span><span class="co"># Look for: "linked" in `ScaleLinkStatus` confirms the focal and</span></span></span>
 <span class="r-in"><span><span class="co">#   reference groups share enough common elements for a comparable</span></span></span>
 <span class="r-in"><span><span class="co">#   contrast; "demoted_*" rows lose linking under the refit branch</span></span></span>
 <span class="r-in"><span><span class="co">#   and should be read as exploratory.</span></span></span>
-<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

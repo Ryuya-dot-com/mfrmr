@@ -125,19 +125,30 @@ a <code>fit_mfrm(..., facet_shrinkage = "empirical_bayes")</code> run, so that
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># interactive()</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span></span>
 <span class="r-in"><span>                 method <span class="op">=</span> <span class="st">"JML"</span>, maxit <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span></span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.</span>
 <span class="r-in"><span><span class="va">fit_eb</span> <span class="op">&lt;-</span> <span class="fu"><a href="apply_empirical_bayes_shrinkage.html">apply_empirical_bayes_shrinkage</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu">plot_shrinkage_funnel</span><span class="op">(</span><span class="va">fit_eb</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">p</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">table</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Facet Level RawEstimate         SE ShrunkEstimate   ShrunkSE ShrinkageFactor</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 Rater   R02  -0.3287963 0.09769808     -0.2861443 0.09114128       0.1297216</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 Rater   R01  -0.1957561 0.09730123     -0.1705417 0.09081883       0.1288054</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 Rater   R03   0.1910876 0.09724282      0.1665002 0.09077133       0.1286707</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 Rater   R04   0.3334649 0.09763161      0.2902585 0.09108731       0.1295680</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      Movement RowOrder</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2  0.04265200        1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3  0.02521444        2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 -0.02458737        3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 -0.04320639        4</span>
 <span class="r-in"><span><span class="co"># Look for: short segments (Raw and Shrunken close together) =</span></span></span>
 <span class="r-in"><span><span class="co">#   little pooling. Long segments fanning toward the centre = the</span></span></span>
 <span class="r-in"><span><span class="co">#   prior pulled the estimate strongly; this is most pronounced for</span></span></span>
 <span class="r-in"><span><span class="co">#   small-N levels. ShrinkageFactor near 1 means most of the</span></span></span>
 <span class="r-in"><span><span class="co">#   movement was driven by the prior rather than the data.</span></span></span>
-<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

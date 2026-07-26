@@ -123,7 +123,7 @@ after drawing.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="va">diag_eval</span> <span class="op">&lt;-</span> <span class="fu"><a href="evaluate_mfrm_diagnostic_screening.html">evaluate_mfrm_diagnostic_screening</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>  design <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>person <span class="op">=</span> <span class="fl">10</span>, rater <span class="op">=</span> <span class="fl">2</span>, criterion <span class="op">=</span> <span class="fl">2</span>, assignment <span class="op">=</span> <span class="fl">2</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>  reps <span class="op">=</span> <span class="fl">1</span>,</span></span>
@@ -132,11 +132,188 @@ after drawing.</p>
 <span class="r-in"><span>  seed <span class="op">=</span> <span class="fl">123</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">diag_eval</span>, type <span class="op">=</span> <span class="st">"overview"</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;mfrm_plot_data&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   name     : diagnostic_screening</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   title    : MFRM diagnostic screening overview</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   subtitle : Metric family: rate</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   data     :</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     $type : character [1]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     $metric : character [1]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     $x_var : character [1]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     $x_label : character [1]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     $group_var : NULL</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     $group_label : NULL</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     $design_variable_aliases : character [4]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     $design_descriptor : data.frame [4 x 6]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     $planning_scope : list (14 slots)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     $planning_constraints : list (5 slots)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     $planning_schema : list (51 slots)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     $gpcm_boundary : data.frame [0 x 0]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     $overview : data.frame [1 x 13]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     $reading_order : data.frame [10 x 5]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     $next_actions : data.frame [6 x 7]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     $reporting_notes : data.frame [6 x 4]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     $figure_recipes : data.frame [5 x 10]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     $source_tables : character [3]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     $signals : character [7]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     $interpretation_note : character [1]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     $plot_long : data.frame [14 x 57]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     $plot_table : data.frame [14 x 57]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     $plot_name : character [1]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   legend   : 4 entries</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ref lines: 0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Re-render via ggplot2 / plotly using `x$data`; or pass the</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> originating `draw = FALSE` plot helper its inverse to draw it.</span>
 <span class="r-in"><span><span class="fu"><a href="plot_data.html">plot_data</a></span><span class="op">(</span><span class="va">diag_eval</span>, type <span class="op">=</span> <span class="st">"overview"</span>, component <span class="op">=</span> <span class="st">"plot_long"</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 14 × 57</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    design_id Scenario       ScenarioClass Model DependenceFacet n_person n_rater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> V01       local_depende… context_shar… RSM   Criterion             10       2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> V01       local_depende… context_shar… RSM   Criterion             10       2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> V01       local_depende… context_shar… RSM   Criterion             10       2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> V01       local_depende… context_shar… RSM   Criterion             10       2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> V01       local_depende… context_shar… RSM   Criterion             10       2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> V01       local_depende… context_shar… RSM   Criterion             10       2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> V01       local_depende… context_shar… RSM   Criterion             10       2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> V01       well_specified null_referen… RSM   Criterion             10       2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> V01       well_specified null_referen… RSM   Criterion             10       2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> V01       well_specified null_referen… RSM   Criterion             10       2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">11</span> V01       well_specified null_referen… RSM   Criterion             10       2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">12</span> V01       well_specified null_referen… RSM   Criterion             10       2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">13</span> V01       well_specified null_referen… RSM   Criterion             10       2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">14</span> V01       well_specified null_referen… RSM   Criterion             10       2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 50 more variables: n_criterion &lt;int&gt;, raters_per_person &lt;int&gt;, Reps &lt;int&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   RunOKRate &lt;dbl&gt;, ConvergenceRate &lt;dbl&gt;, MeanElapsedSec &lt;dbl&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   MeanLegacyMeanAbsZ &lt;dbl&gt;, MeanLegacyFlaggedLevels &lt;dbl&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   LegacyAnyFlagRate &lt;dbl&gt;, MeanMarginalOverallRMSD &lt;dbl&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   MeanMarginalMaxAbsStdResidual &lt;dbl&gt;, MeanMarginalFlaggedGroups &lt;dbl&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   MarginalAnyFlagRate &lt;dbl&gt;, MeanPairwiseFlaggedLevelPairs &lt;dbl&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   PairwiseAnyFlagRate &lt;dbl&gt;, PairwiseAvailabilityRate &lt;dbl&gt;, …</span></span>
 <span class="r-in"><span><span class="fu"><a href="plot_data.html">plot_data</a></span><span class="op">(</span><span class="va">diag_eval</span>, type <span class="op">=</span> <span class="st">"overview"</span>, component <span class="op">=</span> <span class="st">"next_actions"</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Priority                           Area Status</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1        1              Replication count review</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2        2 Run completion and convergence     ok</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3        3       Screening interpretation     ok</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4        4             Scenario contrasts     ok</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5        5           Report-index signals     ok</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6        6 Appendix and plot-data handoff     ok</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                    Evidence</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                                                                 Reps = 1.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                                                               RunOKRate = 1.000; ConvergenceRate = 1.000.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3                                                  scenario_summary rows = 2; performance_summary rows = 2.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4                                                                               scenario_contrast rows = 1.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5                                                                           report_signal_summary rows = 2.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6 summary tables and draw-free plot-data tables are available through the package-wide bundle/export route.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                             Action</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 Treat this as an initial screening run; increase `reps` before interpreting operating characteristics as stable.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                      Proceed to scenario and performance summaries, while still reporting the convergence basis.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3          Read scenario_summary and performance_summary together before making legacy-vs-strict screening claims.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4      Use scenario_contrast to describe misspecification-minus-baseline shifts, with the baseline scenario named.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5                   Use report_signal_summary to prioritize report text review, not as a diagnostic adequacy test.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6               Use build_summary_table_bundle() or export_summary_appendix(); use plot_data() for custom figures.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                         Route</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                                                              evaluate_mfrm_diagnostic_screening(reps = ...)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                                                                    diag_eval$results[, c("Scenario", "rep", "RunOK", "Converged", "Error")]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3                                                                 summary(diag_eval)$scenario_summary; summary(diag_eval)$performance_summary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4                                                                                                        summary(diag_eval)$scenario_contrast</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5                                                                                                    summary(diag_eval)$report_signal_summary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6 build_summary_table_bundle(diag_eval); export_summary_appendix(diag_eval); plot_data(diag_eval, type = "overview", component = "plot_long")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                      ReportingBoundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                              Replication count affects Monte Carlo stability and should be reported.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 Failed or non-converged runs are design/runtime evidence, not evidence about diagnostic sensitivity.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3            Screening readouts compare operating behavior; they are not calibrated inferential tests.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4                Contrasts are descriptive and conditional on the evaluated design grid and scenarios.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5                        Report-index signals are reporting-layer prompts, not extra diagnostic tests.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6                      Exports and plot data are presentation handoffs over the same summary evidence.</span>
 <span class="r-in"><span><span class="fu"><a href="plot_data.html">plot_data</a></span><span class="op">(</span><span class="va">diag_eval</span>, type <span class="op">=</span> <span class="st">"overview"</span>, component <span class="op">=</span> <span class="st">"figure_recipes"</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                   FigureID                    RecommendedUse</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1           overview_rates   main_text_or_primary_supplement</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2          overview_counts     supplement_or_quality_control</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3      report_review_rates        reporting_layer_supplement</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 scenario_contrast_counts        misspecification_follow_up</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5          runtime_elapsed methods_or_computational_appendix</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                     PrimaryQuestion</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 How often do legacy, strict marginal, strict pairwise, strict combined, and optional report-review screens fire across scenarios?</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                    How many levels, groups, pairs, or report-review signals are accumulated under each scenario/design condition?</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3            When report signals were retained, how often does the reporting layer route fit, precision, or misfit areas to review?</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4                              How much do misspecification scenarios shift flagged counts relative to the well-specified baseline?</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5                        How much elapsed time does the diagnostic-screening workflow require under each design/scenario condition?</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                              PlotCall</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1   plot(diag_eval, type = "overview", metric = "rate", draw = FALSE)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2  plot(diag_eval, type = "overview", metric = "count", draw = FALSE)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3     plot(diag_eval, type = "report", metric = "rate", draw = FALSE)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4  plot(diag_eval, type = "contrast", metric = "count", draw = FALSE)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5 plot(diag_eval, type = "runtime", metric = "elapsed", draw = FALSE)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                          PlotDataCall</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1   plot_data(diag_eval, type = "overview", metric = "rate", component = "plot_long")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2  plot_data(diag_eval, type = "overview", metric = "count", component = "plot_long")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3     plot_data(diag_eval, type = "report", metric = "rate", component = "plot_long")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4  plot_data(diag_eval, type = "contrast", metric = "count", component = "plot_long")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5 plot_data(diag_eval, type = "runtime", metric = "elapsed", component = "plot_long")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          SummaryTable</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1  plot_overview_rate</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 plot_overview_count</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3    plot_report_rate</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 plot_contrast_count</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5        plot_runtime</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                    DisplaySuggestion</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1          Line or point plot by design variable; facet or color by scenario/signal.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2        Small-multiple count plot or appendix table when raw signal burden matters.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3    Focused report-readiness panel; suppress when include_report was not requested.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 Diverging or signed count display with the baseline scenario named in the caption.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5   Line or point plot with units stated as seconds or seconds per 100 observations.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                             CaptionFocus</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 Describe operating-characteristic signal rates and identify whether report-review rates were included.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                           Describe signal burden, not statistical significance or diagnostic adequacy.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3                     Describe reporting-layer review routing, not model validity or diagnostic success.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4                       Describe misspecification-minus-baseline deltas and name the evaluated baseline.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5                      Describe computational cost under the evaluated design grid and fitting settings.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                       InterpretationBoundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1              Rates are simulation summaries and should not be read as calibrated inferential test results.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 Counts are presentation summaries over the same simulation evidence and should not define pass/fail gates.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3           Report-review signals are prompts for text and evidence review, not additional diagnostic tests.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4      Contrasts are descriptive and conditional on scenarios, baseline, design grid, and replication count.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5        Runtime evidence describes this implementation and settings, not a general computational guarantee.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                             Availability</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                         available_when_plot_rows_exist</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                                         available_when_plot_rows_exist</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3                                       available_when_report_rows_exist</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 available_when_well_specified_baseline_and_misspecification_rows_exist</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5                                  available_when_performance_rows_exist</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">diag_eval</span>, type <span class="op">=</span> <span class="st">"report"</span>, metric <span class="op">=</span> <span class="st">"rate"</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;mfrm_plot_data&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   name     : diagnostic_screening</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   title    : MFRM diagnostic screening report</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   subtitle : Metric family: rate</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   data     :</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     $type : character [1]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     $metric : character [1]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     $x_var : character [1]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     $x_label : character [1]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     $group_var : NULL</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     $group_label : NULL</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     $design_variable_aliases : character [4]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     $design_descriptor : data.frame [4 x 6]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     $planning_scope : list (14 slots)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     $planning_constraints : list (5 slots)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     $planning_schema : list (51 slots)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     $gpcm_boundary : data.frame [0 x 0]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     $overview : data.frame [1 x 13]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     $reading_order : data.frame [10 x 5]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     $next_actions : data.frame [6 x 7]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     $reporting_notes : data.frame [6 x 4]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     $figure_recipes : data.frame [5 x 10]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     $source_tables : character [1]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     $signals : character [4]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     $interpretation_note : character [1]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     $plot_long : data.frame [8 x 27]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     $plot_table : data.frame [8 x 27]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     $plot_name : character [1]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   legend   : 4 entries</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ref lines: 0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Re-render via ggplot2 / plotly using `x$data`; or pass the</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> originating `draw = FALSE` plot helper its inverse to draw it.</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

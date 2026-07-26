@@ -185,7 +185,7 @@ NCME presentation.</p></li>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># interactive()</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="va">peer_spec</span> <span class="op">&lt;-</span> <span class="fu">build_peer_review_sim_spec</span><span class="op">(</span></span></span>
 <span class="r-in"><span>  n_submission <span class="op">=</span> <span class="fl">12</span>,</span></span>
 <span class="r-in"><span>  n_criterion <span class="op">=</span> <span class="fl">3</span>,</span></span>
@@ -193,7 +193,13 @@ NCME presentation.</p></li>
 <span class="r-in"><span>  anchor_submissions <span class="op">=</span> <span class="fl">2</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">peer_spec</span><span class="op">$</span><span class="va">peer_review</span><span class="op">$</span><span class="va">overview</span></span></span>
-<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      Scenario Submissions Reviewers Criteria OrdinaryReviewersPerSubmission</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 peer_review          12        12        3                              2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   AnchorSubmissions AnchorReviewersPerSubmission AvoidSelfReview AssignmentMode</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                 2                           11            TRUE       balanced</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   SkeletonRows OrdinaryRows AnchorRows                              ReviewUse</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1          126           60         66 design_diagnostic_not_measurement_gate</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

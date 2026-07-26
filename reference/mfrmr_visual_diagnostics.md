@@ -622,7 +622,7 @@ For a longer, plot-first walkthrough, run
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+# \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(
   toy,
@@ -636,23 +636,78 @@ fit <- fit_mfrm(
 diag <- diagnose_mfrm(fit, residual_pca = "none", diagnostic_mode = "both")
 checklist <- reporting_checklist(fit, diagnostics = diag)
 visual_reporting_template("manuscript")
+#>                     FigureFamily      Scope
+#> 1                     Wright map manuscript
+#> 2                    Pathway map manuscript
+#> 3 Category characteristic curves manuscript
+#> 5             Information curves manuscript
+#>                                                               PrimaryHelper
+#> 1                        plot(fit, type = "wright", preset = "publication")
+#> 2                       plot(fit, type = "pathway", preset = "publication")
+#> 3                           plot(fit, type = "ccc", preset = "publication")
+#> 5 compute_information(fit) -> plot_information(..., preset = "publication")
+#>                                                                    DefaultPlacement
+#> 1      Main text when targeting, spread, or shared-logit interpretation is central.
+#> 2 Main text or category-functioning subsection for ordered-category interpretation.
+#> 3       Main text or appendix; pair with pathway when category behavior is central.
+#> 5        Main text when precision or targeting across theta is a substantive claim.
+#>                                                                                   WhatToReport
+#> 1      Describe whether persons, facet levels, and thresholds overlap on the same logit scale.
+#> 2         Describe expected-score progression and the theta regions where categories dominate.
+#> 3 Describe whether categories peak in the intended order and whether adjacent curves separate.
+#> 5                   Describe where measurement information is highest or weakest across theta.
+#>                                                                                                                 CaptionSkeleton
+#> 1           Figure X. Wright map showing person measures, facet-level locations, and step thresholds on the shared logit scale.
+#> 2                    Figure X. Expected score pathway across theta, with dominant-category regions for the fitted rating scale.
+#> 3                                  Figure X. Category characteristic curves showing fitted category probabilities across theta.
+#> 5 Figure X. Test information curve showing where the fitted model provides relatively stronger or weaker measurement precision.
+#>                                                                                                                       ResultsWording
+#> 1           The Wright map was inspected to evaluate targeting and shared-scale overlap among persons, facet levels, and thresholds.
+#> 2 The pathway plot was inspected to evaluate whether expected scores and dominant-category regions progressed in the intended order.
+#> 3           The category characteristic curves were inspected to evaluate the ordering and separation of fitted response categories.
+#> 5            The information curve was inspected to identify theta regions with relatively stronger or weaker measurement precision.
+#>                                                                                            WhatNotToClaim
+#> 1                                                  Do not present targeting as proof of global model fit.
+#> 2                       Do not treat smooth category progression as proof that the rating scale is valid.
+#> 3 Do not overstate overlapping curves as definitive category failure without category counts and context.
+#> 5                    Do not ignore the precision tier or approximation caveats used to compute the curve.
+#>                                                               BeginnerCheck
+#> 1            Check gaps between person density and thresholds/facet levels.
+#> 2 Check whether the dominant-category bands progress in the expected order.
+#> 3   Check whether every retained category has a visible peak or clear role.
+#> 5   Check whether the information peak covers the theta region of interest.
+#>                                                 ThreeDPolicy
+#> 1            2D recommended; 3D Wright maps are discouraged.
+#> 2                                         2D report default.
+#> 3                                         2D report default.
+#> 5 2D curve route active; 3D information surface is deferred.
 subset(
   checklist$checklist,
   Section == "Visual Displays" & Item %in% c("QC / facet dashboard", "Strict marginal visuals"),
   c("Item", "Available", "NextAction")
 )
+#>                       Item Available
+#> 26    QC / facet dashboard      TRUE
+#> 30 Strict marginal visuals      TRUE
+#>                                                                                                                       NextAction
+#> 26                     Use the dashboard as a first-pass triage view, then move to the specific follow-up plot behind each flag.
+#> 30 Treat strict marginal plots as exploratory corroboration screens, then corroborate with design review and legacy diagnostics.
 
 qc <- plot_qc_dashboard(fit, diagnostics = diag, draw = FALSE, preset = "publication")
 qc$data$plot
+#> [1] "qc_dashboard"
 
 p_marg <- plot_marginal_fit(diag, draw = FALSE, preset = "publication")
 p_marg$data$preset
+#> [1] "publication"
 
 wright <- plot(fit, type = "wright", draw = FALSE, preset = "publication")
 wright$data$preset
+#> [1] "publication"
 
 pca <- analyze_residual_pca(diag, mode = "overall")
 scree <- plot_residual_pca(pca, plot_type = "scree", draw = FALSE, preset = "publication")
 scree$data$preset
-} # }
+#> [1] "publication"
+# }
 ```

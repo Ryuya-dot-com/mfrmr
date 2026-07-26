@@ -139,7 +139,7 @@ reporting.</p></li>
 </ul><p>The review is row-matched by <code>Facet</code> and <code>Level</code>. It treats MnSq, ZSTD, and df
 differences separately because FACETS documentation makes the df convention
 and Wilson-Hilferty/WHEXACT handling central to ZSTD interpretation.</p>
-<p>Two upstream boundaries also apply. For <code>method = "MML"</code> fits, residuals
+<p>Two prior limitations also apply. For <code>method = "MML"</code> fits, residuals
 are evaluated at shrunken EAP person measures while FACETS uses JMLE
 estimates, so MnSq itself can differ before standardization; refit with
 <code>method = "JML"</code> for a JMLE-style residual basis. And mfrmr withholds
@@ -156,14 +156,60 @@ fit differences. Both notes are repeated in the returned <code>guidance</code> t
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># interactive()</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span></span>
 <span class="r-in"><span>  method <span class="op">=</span> <span class="st">"JML"</span>, maxit <span class="op">=</span> <span class="fl">30</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.</span>
 <span class="r-in"><span><span class="va">review</span> <span class="op">&lt;-</span> <span class="fu">facets_fit_review</span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">review</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> mfrmr FACETS Fit Review Summary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Class: mfrm_facets_fit_review</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Components: 10</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Review overview</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Model Elements DfComparedRows DfSensitiveRows DfSameOrRoundingRows</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    RSM       56             56              56                    0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  LargeZSTDShiftRows DfConventionDifferenceRows FlagChangedByDf ExternalRows</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                   4                         52               0            0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  ExternalDuplicateKeyRows ExternalCompleteMnSqRows ExternalCompleteZSTDRows</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                         0                        0                        0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  ExternalCompleteDFRows ExternalMatched ExternalNeedsReview ExternalComparison</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                       0               0                   0       Not supplied</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Fit-standardization rows requiring review</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      Facet        Level Infit Outfit MaxAbsZDiff FlagChanged</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Criterion Organization 0.867  0.858       0.492       FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           ReviewStatus</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  DF convention differs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Interpretation</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - The df convention differs enough to affect ZSTD interpretation even if the</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    flag status is unchanged.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Settings</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                     Setting                      Value</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                     Purpose Fit standardization review</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    External FACETS supplied                      FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>               DF comparison    Engine and FACETS-style</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>              MnSq tolerance                       0.01</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     External ZSTD tolerance                       0.05</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                DF tolerance                        0.5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           DF/ZSTD tolerance                       0.05</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Large ZSTD-shift threshold                        0.5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          DF-ratio tolerance                       0.05</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Notes</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Engine-vs-FACETS-style df/ZSTD differences need review for 56 element(s).</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Person-level fit-review rows: 9; identifiers suppressed. Use `include_person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    = TRUE` only under appropriate privacy controls.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Person identifiers are suppressed in this summary. Use `include_person =</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    TRUE` only under appropriate privacy controls.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Further detail</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Complete comparison rows remain in `$df_sensitivity` and `$df_sensitive`.</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

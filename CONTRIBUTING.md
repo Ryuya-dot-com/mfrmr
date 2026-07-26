@@ -56,6 +56,10 @@ non-CRAN tests.
 - Wrap multi-fit workflows, MML examples, recovery simulations, design
   simulations, external-Suggests examples, and long reporting pipelines
   in `\donttest{}` unless the function cannot be demonstrated otherwise.
+- Reserve `\dontrun{}` for examples that genuinely cannot execute during
+  a check, such as workflows that require files produced by external
+  software. Reserve `@examplesIf interactive()` for functions that
+  genuinely require an interactive session.
 - When an MML example must run in standard examples, set a small
   `quad_points` value and explain that it is an exploratory speed
   setting.
@@ -68,6 +72,15 @@ non-CRAN tests.
   test and selected contracts from `tests/testthat.R`. Run the complete
   suite locally/CI with `NOT_CRAN=true`; one CI matrix job must always
   use that setting.
+- Before release, run an `--as-cran` check with timing enabled and
+  ensure the ordinary and `donttest` examples both execute. Treat the
+  summed CRAN-side package workload for ordinary examples, `donttest`
+  examples, tests, and vignette rebuilding above 600 seconds as a
+  release concern. Retain the sum of all timed top-level check
+  components as diagnostic context, but do not charge dependency,
+  installation, manual, or other check-infrastructure time to this
+  package-controlled threshold. Do not apply the threshold to the
+  deliberately exhaustive `NOT_CRAN=true` regression job.
 
 ## Pull request checklist
 

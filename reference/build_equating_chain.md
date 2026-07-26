@@ -207,7 +207,7 @@ the resulting scale placement.
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+# \donttest{
 toy <- load_mfrmr_data("example_core")
 people <- unique(toy$Person)
 d1 <- toy[toy$Person %in% people[1:12], , drop = FALSE]
@@ -217,7 +217,37 @@ fit1 <- fit_mfrm(d1, "Person", c("Rater", "Criterion"), "Score",
 fit2 <- fit_mfrm(d2, "Person", c("Rater", "Criterion"), "Score",
                  method = "JML", maxit = 30)
 chain <- build_equating_chain(list(Form1 = fit1, Form2 = fit2))
+#> Warning: Thin linking support between 'Form1' and 'Form2': fewer than 5 retained common elements in Criterion, Rater.
 summary(chain)
+#> --- Screened Linking Chain ---
+#> Method: screened_common_element_alignment | Intended use: screened_linking_aid 
+#> Links: 1 | Waves: Form1 -> Form2 
+#> 
+#> Link details:
+#>  Link  From    To N_Common N_Retained Min_Common_Per_Facet
+#>     1 Form1 Form2        8          8                    4
+#>  Min_Retained_Per_Facet Offset_Prelim  Offset Offset_SD Max_Residual
+#>                       4       0.00211 0.00211     0.275        0.498
+#>  LinkSupportAdequate    Offset_Method
+#>                FALSE inverse_variance
+#> 
+#> Retained common elements by facet:
+#>  Link  From    To     Facet N_Common N_Retained GuidelineMinCommon
+#>     1 Form1 Form2 Criterion        4          4                  5
+#>     1 Form1 Form2     Rater        4          4                  5
+#>  LinkSupportAdequate
+#>                FALSE
+#>                FALSE
+#> 
+#> Cumulative offsets:
+#>   Wave Cumulative_Offset
+#>  Form1           0.00000
+#>  Form2           0.00211
 chain$cumulative
-} # }
+#> # A tibble: 2 × 2
+#>   Wave  Cumulative_Offset
+#>   <chr>             <dbl>
+#> 1 Form1           0      
+#> 2 Form2           0.00211
+# }
 ```

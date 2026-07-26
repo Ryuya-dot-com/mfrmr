@@ -75,16 +75,18 @@ for the underlying diagnostics bundle.
 ## Examples
 
 ``` r
-if (FALSE) { # interactive()
+# \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "JML", maxit = 30)
+#> Warning: Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.
 p <- plot_guttman_scalogram(fit, draw = FALSE)
 dim(p$data$matrix)
+#> [1] 40  4
 # Look for: a clean monotone "staircase" of higher scores in the
 #   upper-right triangle and lower scores in the lower-left, once
 #   rows are sorted by person ability. Cells circled by the
 #   unexpected-response overlay break the staircase and warrant
 #   case-level review with `unexpected_response_table()`.
-}
+# }
 ```

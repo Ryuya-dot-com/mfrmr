@@ -138,17 +138,29 @@ preset's neutral colour.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># interactive()</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_bias"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span></span>
 <span class="r-in"><span>                method <span class="op">=</span> <span class="st">"JML"</span>, maxit <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span></span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.</span>
 <span class="r-in"><span><span class="va">diag</span> <span class="op">&lt;-</span> <span class="fu"><a href="diagnose_mfrm.html">diagnose_mfrm</a></span><span class="op">(</span><span class="va">fit</span>, residual_pca <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">dff</span> <span class="op">&lt;-</span> <span class="fu"><a href="analyze_dff.html">analyze_dff</a></span><span class="op">(</span><span class="va">fit</span>, diagnostics <span class="op">=</span> <span class="va">diag</span>,</span></span>
 <span class="r-in"><span>                   facet <span class="op">=</span> <span class="st">"Rater"</span>, group <span class="op">=</span> <span class="st">"Group"</span>, data <span class="op">=</span> <span class="va">toy</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">dff</span><span class="op">$</span><span class="va">dif_table</span><span class="op">$</span><span class="va">ClassificationSystem</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "screening"</span>
 <span class="r-in"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu">plot_dif_summary</span><span class="op">(</span><span class="va">dff</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">p</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">data</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          Pair      Effect        SE CI_Lower CI_Upper  Classification</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 R01 | A | B  0.16851952 0.1369979       NA       NA Screen negative</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 R02 | A | B -0.13201751 0.1419285       NA       NA Screen negative</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 R03 | A | B -0.11255952 0.1377812       NA       NA Screen negative</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 R04 | A | B  0.07636974 0.1412431       NA       NA Screen negative</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ClassificationSystem   Color</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1            screening #6b7280</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2            screening #6b7280</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3            screening #6b7280</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4            screening #6b7280</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

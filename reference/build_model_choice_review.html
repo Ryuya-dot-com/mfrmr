@@ -118,7 +118,7 @@ downstream score-side/reporting helpers outside the documented boundary.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fit_rsm</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span></span>
 <span class="r-in"><span>                    method <span class="op">=</span> <span class="st">"MML"</span>, model <span class="op">=</span> <span class="st">"RSM"</span>, quad_points <span class="op">=</span> <span class="fl">7</span><span class="op">)</span></span></span>
@@ -127,7 +127,63 @@ downstream score-side/reporting helpers outside the documented boundary.</p>
 <span class="r-in"><span>                    quad_points <span class="op">=</span> <span class="fl">7</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">review</span> <span class="op">&lt;-</span> <span class="fu">build_model_choice_review</span><span class="op">(</span>RSM <span class="op">=</span> <span class="va">fit_rsm</span>, PCM <span class="op">=</span> <span class="va">fit_pcm</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">review</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> mfrm Model Choice Review</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Overview</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  FitCount   Models HasBoundedGPCM OperationalReference SensitivityModel</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         2 RSM, PCM          FALSE                  RSM             &lt;NA&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  ICComparable                     ReviewStatus</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          TRUE rasch_family_model_choice_review</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Next Actions</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Read comparison_table for fit evidence, but decide operational use from the</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    score interpretation.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Use downstream_routes before calling APA, score-side export, linking,</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    recovery, fair-average, or bias-screening helpers.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Use report_templates when drafting methods text so the fitted model and</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    score contract are described accurately.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Comparison Table</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Label Model Method nobs WeightedN ICSampleSize ICSampleSizeBasis npar   LogLik</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    RSM   RSM    MML  768       768          768         row_count    8 -903.080</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    PCM   PCM    MML  768       768          768         row_count   14 -896.262</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       AIC      BIC Converged InferenceReady ConvergenceSeverity ICComparable</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  1822.161 1859.311      TRUE           TRUE                pass         TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  1820.524 1885.537      TRUE           TRUE                pass         TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Delta_AIC AkaikeWeight Delta_BIC BICWeight</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      1.637        0.306     0.000         1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      0.000        0.694    26.225         0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Model Roles</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Label Model           RecommendedRole</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    RSM   RSM equal_weighting_reference</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    PCM   PCM equal_weighting_reference</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                        ScoreContract</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                         Common threshold structure; equal discrimination fixed at 1.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Step thresholds vary by the designated step facet; equal discrimination fixed at 1.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Downstream Routes</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Label Model FullAPARoute ScoreSideExport LinkingSynthesis RecoveryChecks</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    RSM   RSM    supported       supported        supported      supported</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    PCM   PCM    supported       supported        supported      supported</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  FairAverage BiasScreening SummaryAppendix</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    supported     supported       supported</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    supported     supported       supported</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Weighting Review Status</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Requested Available</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      FALSE     FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                           Message</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Not requested; set `run_weighting_review = TRUE` for the first RSM/PCM versus bounded GPCM pair.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Notes</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - This review is a decision aid; it does not refit models or choose an</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    operational model automatically.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Observation weights and GPCM discrimination-based reweighting are separate</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    concepts.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Use bounded GPCM wording only for the current constrained implementation,</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    not for an unrestricted GPCM family claim.</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

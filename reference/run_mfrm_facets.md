@@ -192,8 +192,8 @@ with [`summary()`](https://rdrr.io/r/base/summary.html) and
   route because person parameters are integrated out under an N(0, 1)
   prior and per-person posterior SEs are available.
 
-- `method = "JMLE"`: explicit JMLE label; internally equivalent to JML
-  route.
+- `method = "JMLE"`: backward-compatible input alias for the JML route;
+  fitted objects and generated outputs use the canonical `"JML"` label.
 
 - `method = "MML"`: marginal maximum likelihood route using
   `quad_points`. Use `mml_engine = "em"` or `"hybrid"` only for `RSM` /
@@ -267,7 +267,7 @@ one-shot wrapper.
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+# \donttest{
 toy <- load_mfrmr_data("example_core")
 toy_small <- toy[toy$Person %in% unique(toy$Person)[1:12], , drop = FALSE]
 
@@ -280,10 +280,19 @@ out <- run_mfrm_facets(
   maxit = 30
 )
 out$fit$summary[, c("Model", "Method", "MethodUsed")]
+#> # A tibble: 1 × 3
+#>   Model Method MethodUsed
+#>   <chr> <chr>  <chr>     
+#> 1 RSM   JML    JML       
 s <- summary(out)
 s$overview[, c("Model", "Method", "Converged")]
+#> # A tibble: 1 × 3
+#>   Model Method Converged
+#>   <chr> <chr>  <lgl>    
+#> 1 RSM   JML    TRUE     
 p_fit <- plot(out, type = "fit", draw = FALSE)
 p_fit$wright_map$data$plot
+#> [1] "wright_map"
 
 # Optional: MML route
 if (interactive()) {
@@ -298,5 +307,5 @@ if (interactive()) {
   )
   out_mml$fit$summary[, c("Model", "Method", "MethodUsed")]
 }
-} # }
+# }
 ```

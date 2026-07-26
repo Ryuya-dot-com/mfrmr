@@ -316,7 +316,7 @@ routes.
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+# \donttest{
 toy <- load_mfrmr_data("example_core")
 toy_small <- toy[toy$Person %in% unique(toy$Person)[1:12], , drop = FALSE]
 fit <- fit_mfrm(
@@ -332,16 +332,82 @@ diag <- diagnose_mfrm(fit, residual_pca = "none", diagnostic_mode = "both")
 
 spec <- specifications_report(fit)
 summary(spec)$overview
+#>                 Class Components
+#> 1 mfrm_specifications          6
+#>                                                                      ComponentNames
+#> 1 header, data_spec, facet_labels, output_spec, convergence_control, anchor_summary
+#>   PreviewComponent PreviewRows
+#> 1        data_spec          10
 
 prec <- precision_review_report(fit, diagnostics = diag)
 summary(prec)$checks
+#>                      Check Status
+#> 1           Precision tier   pass
+#> 2    Optimizer convergence   pass
+#> 3     ModelSE availability   pass
+#> 4 Fit-adjusted SE ordering   pass
+#> 5     Reliability ordering   pass
+#> 6 Facet precision coverage   pass
+#> 7         SE source labels   pass
+#>                                                                                 Detail
+#> 1                              This run uses the package's model-based precision path.
+#> 2                                Optimizer diagnostics support inference-ready status.
+#> 3                             Finite ModelSE values were available for 100.0% of rows.
+#> 4            Fit-adjusted SE values were not smaller than their paired ModelSE values.
+#> 5         Conservative reliability values were not larger than the model-based values.
+#> 6 Each facet had sample/population summaries for both model and fit-adjusted SE modes.
+#> 7                        Person and non-person SE labels match the MML precision path.
 
 checklist <- reporting_checklist(fit, diagnostics = diag)
 subset(checklist$checklist, Section == "Visual Displays", c("Item", "NextAction"))
+#>                                   Item
+#> 25                          Wright map
+#> 26                QC / facet dashboard
+#> 27                Residual PCA visuals
+#> 28 Connectivity / design-matrix visual
+#> 29  Inter-rater / displacement visuals
+#> 30             Strict marginal visuals
+#> 31                  Bias / DIF visuals
+#> 32      Precision / information curves
+#> 33                Fit/category visuals
+#>                                                                                                                       NextAction
+#> 25                                      Include a Wright map when the manuscript benefits from a shared-scale targeting display.
+#> 26                     Use the dashboard as a first-pass triage view, then move to the specific follow-up plot behind each flag.
+#> 27                                         Run residual PCA if you want scree/loadings visuals for residual-structure follow-up.
+#> 28                                                       Use the design-matrix view to support linkage and comparability claims.
+#> 29                                       Use displacement and inter-rater views to localize QC issues after dashboard screening.
+#> 30 Treat strict marginal plots as exploratory corroboration screens, then corroborate with design review and legacy diagnostics.
+#> 31                                                        Run bias or DIF screening before discussing interaction-level visuals.
+#> 32                                Use information curves to describe precision across theta when that is the reporting question.
+#> 33                                        Use category curves and fit visuals as local descriptive follow-up after QC screening.
 
 apa <- build_apa_outputs(fit, diagnostics = diag)
 apa$section_map[, c("Heading", "Available")]
+#>                              Heading Available
+#> 1                    Design and data      TRUE
+#> 2                Estimation settings      TRUE
+#> 3                  Scale functioning      TRUE
+#> 4                     Facet measures      TRUE
+#> 5 Latent-regression population model     FALSE
+#> 6                  Fit and precision      TRUE
+#> 7                 Residual structure      TRUE
+#> 8                     Bias screening     FALSE
+#> 9                 Reporting cautions      TRUE
 bundle <- build_summary_table_bundle(checklist)
 bundle$table_index
-} # }
+#>                Table Rows Cols                        Role
+#> 1           overview    1    6          checklist_overview
+#> 2    section_summary    7    8            section_coverage
+#> 3 facets_positioning    6    4 facets_relationship_wording
+#> 4   priority_summary    4    3       priority_distribution
+#> 5       action_items    7    7               draft_actions
+#> 6           settings    5    2          checklist_settings
+#>                                                                                                Description
+#> 1                                    Overall checklist coverage across sections and draft-readiness flags.
+#> 2                                                                   Coverage summary by reporting section.
+#> 3 Report-ready wording that separates mfrmr estimation from FACETS-style handoff or external-table review.
+#> 4                                                                High/medium/low/ready counts by severity.
+#> 5                                                              Top unresolved manuscript-drafting actions.
+#> 6                                                 Checklist settings used to build the reporting contract.
+# }
 ```

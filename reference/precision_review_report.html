@@ -76,8 +76,8 @@
     <p>This helper summarizes how <code>mfrmr</code> derived SE, CI, and reliability values
 for the current run. It also includes a source-grounded fit/separation
 basis table so users can keep mean-square fit, ZSTD standardization,
-Rasch/FACETS-style separation, and package QC thresholds in separate
-reporting lanes.</p>
+Rasch/FACETS-style separation, and package QC thresholds in distinct
+reporting categories.</p>
     </div>
     <div class="section level2">
     <h2 id="what-this-review-means">What this review means<a class="anchor" aria-label="anchor" href="#what-this-review-means"></a></h2>
@@ -133,13 +133,53 @@ language or should remain in exploratory/screening mode.</p></li>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># interactive()</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>, method <span class="op">=</span> <span class="st">"JML"</span>, maxit <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span></span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.</span>
 <span class="r-in"><span><span class="va">diag</span> <span class="op">&lt;-</span> <span class="fu"><a href="diagnose_mfrm.html">diagnose_mfrm</a></span><span class="op">(</span><span class="va">fit</span>, residual_pca <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">out</span> <span class="op">&lt;-</span> <span class="fu">precision_review_report</span><span class="op">(</span><span class="va">fit</span>, diagnostics <span class="op">=</span> <span class="va">diag</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">out</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> mfrmr Precision Review Summary </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Class: mfrm_precision_review</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Components: 5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Precision overview</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Method PrecisionTier SupportsFormalInference Checks ReviewOrWarn</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     JML   exploratory                   FALSE      7            2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  FitSeparationRows NoteRows</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                  4        4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Review checks: checks</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                     Check Status</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            Precision tier review</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     Optimizer convergence review</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      ModelSE availability   pass</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Fit-adjusted SE ordering   pass</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      Reliability ordering   pass</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Facet precision coverage   pass</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          SE source labels   pass</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                                                                                 Detail</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                       This run uses the package's exploratory precision path; prefer MML for formal SE, CI, and reliability reporting.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Optimizer diagnostics require review; keep SE, CI, and reliability in review mode. Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                               Finite ModelSE values were available for 100.0% of rows.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                              Fit-adjusted SE values were not smaller than their paired ModelSE values.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                           Conservative reliability values were not larger than the model-based values.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                   Each facet had sample/population summaries for both model and fit-adjusted SE modes.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                     JML SE labels consistently identify observation-table information.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Settings</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         Setting       Value</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           model         RSM</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          method         JML</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  precision_tier exploratory</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Notes</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Exploratory precision path detected; use this run for screening and</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    calibration triage, not as the package's primary inferential summary.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Fit/separation basis rows state source grounding and validation-use</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    boundaries.</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

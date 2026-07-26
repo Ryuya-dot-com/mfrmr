@@ -78,11 +78,17 @@ interchangeable in operational scoring; levels outside `+/- 1.0 logit`
 ## Examples
 
 ``` r
-if (FALSE) { # interactive()
+# \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "JML", maxit = 30)
+#> Warning: Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.
 p <- plot_rater_severity_profile(fit, draw = FALSE)
 head(p$data$data)
-}
+#>   Level   Estimate         SE      CI_Lower     CI_Upper   Band
+#> 1   R02 -0.3287963 0.09769808 -0.5202810670 -0.137311629 gentle
+#> 2   R01 -0.1957561 0.09730123 -0.3864630271 -0.005049222 gentle
+#> 3   R03  0.1910876 0.09724282  0.0004951599  0.381680000 gentle
+#> 4   R04  0.3334649 0.09763161  0.1421104554  0.524819330 gentle
+# }
 ```

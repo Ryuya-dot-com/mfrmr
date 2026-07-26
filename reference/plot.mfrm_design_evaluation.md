@@ -92,7 +92,7 @@ Useful first plots are:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+# \donttest{
 sim_eval <- suppressWarnings(evaluate_mfrm_design(
   n_person = c(8, 12),
   n_rater = 2,
@@ -104,5 +104,6 @@ sim_eval <- suppressWarnings(evaluate_mfrm_design(
 ))
 p <- plot(sim_eval, facet = "Rater", metric = "separation", x_var = "n_person", draw = FALSE)
 c(p$facet, p$x_var)
-} # }
+#> [1] "Rater"    "n_person"
+# }
 ```

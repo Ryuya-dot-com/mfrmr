@@ -187,17 +187,50 @@ The `summary` data.frame contains:
 ## Examples
 
 ``` r
-if (FALSE) { # interactive()
+# \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+#> Warning: Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.
 ir <- interrater_agreement_table(fit, rater_facet = "Rater")
 # One-row overview: ExactAgreement, ExpectedExactAgreement, MeanCorr,
 # RaterSeparation, and RaterReliability are the headline reportable
 # statistics.
 ir$summary
+#>   RaterFacet Raters Pairs Contexts TotalPairs OpportunityCount ExactAgreements
+#> 1      Rater      4     6      192       1152             1152             417
+#>   ExpectedAgreements ExactAgreement ExpectedExactAgreement
+#> 1           431.5792      0.3619792              0.3746347
+#>   AgreementMinusExpected AdjacentAgreements AdjacentAgreement MeanAbsDiff
+#> 1            -0.01265554                956         0.8298611   0.8255208
+#>    MeanCorr RaterSeparation RaterStrata RaterReliability RaterRealSeparation
+#> 1 0.3781067        3.052963    4.403951        0.9031062             3.01671
+#>   RaterRealReliability FlaggedPairs FlaggedShare
+#> 1            0.9009954            6            1
 # Per-pair detail (Rater1 vs Rater2 with Exact, Adjacent, Corr, MAD).
 head(ir$pairs)
+#>   Rater1 Rater2   N OpportunityCount ExactCount ExpectedExactCount
+#> 1    R01    R03 192              192         66           72.15929
+#> 2    R01    R04 192              192         67           70.96800
+#> 3    R02    R04 192              192         69           69.44126
+#> 4    R02    R03 192              192         71           71.03851
+#> 5    R01    R02 192              192         71           73.95176
+#> 6    R03    R04 192              192         73           74.02036
+#>   AdjacentCount     Exact ExpectedExact  Adjacent    MeanDiff       MAD
+#> 1           158 0.3437500     0.3758297 0.8229167  0.21354167 0.8489583
+#> 2           152 0.3489583     0.3696250 0.7916667  0.29166667 0.8854167
+#> 3           153 0.3593750     0.3616732 0.7968750  0.36458333 0.8645833
+#> 4           158 0.3697917     0.3699922 0.8229167  0.28645833 0.8177083
+#> 5           172 0.3697917     0.3851654 0.8958333 -0.07291667 0.7500000
+#> 6           163 0.3802083     0.3855227 0.8489583  0.07812500 0.7864583
+#>        Corr      Pair      ExactGap LowExactFlag LowCorrFlag Flag
+#> 1 0.3696655 R01 | R03 -0.0320796527         TRUE       FALSE TRUE
+#> 2 0.3313368 R01 | R04 -0.0206666586         TRUE       FALSE TRUE
+#> 3 0.3377719 R02 | R04 -0.0022982178         TRUE       FALSE TRUE
+#> 4 0.3723625 R02 | R03 -0.0002005704         TRUE       FALSE TRUE
+#> 5 0.4366188 R01 | R02 -0.0153737478         TRUE       FALSE TRUE
+#> 6 0.4208851 R03 | R04 -0.0053143712         TRUE       FALSE TRUE
 p_ir <- plot(ir, draw = FALSE)
 p_ir$data$plot
-}
+#> [1] "exact"
+# }
 ```

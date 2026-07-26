@@ -192,7 +192,7 @@ only the measurement columns needed for estimation.</p>
 
 
 <p>Start with <code>summary(res)</code>. The most useful fields are:</p><ul><li><p><code>overview</code>: input mode, model, method, table count, and plot-route count</p></li>
-<li><p><code>readiness</code>: separate upstream analysis and plot-interpretation gates</p></li>
+<li><p><code>readiness</code>: separate analysis and plot-interpretation gates</p></li>
 <li><p><code>triage</code>: first-screen signals ordered by unavailable/review/info/ok</p></li>
 <li><p><code>status</code>: which sections were available, skipped, or unsupported</p></li>
 <li><p><code>plot_map</code>: supported plot routes, availability, and interpretation status</p></li>
@@ -224,7 +224,7 @@ native default discloses any omitted facet locations in its subtitle and
 <code>data$retention</code>; use <code>plot(res, top_n = Inf)</code> for a complete final map.
 Other routes include <code>plot(res, type = "wright")</code>, <code>"pathway"</code>,
 <code>"fit_pathway"</code>, <code>"qc"</code>, <code>"category"</code>, <code>"anchors"</code>, <code>"response_time"</code>,
-and <code>"tables"</code>. The Wright map is the required first fitted-scale artifact;
+and <code>"tables"</code>. The Wright map is the required first fitted-scale figure;
 <code>"fit_pathway"</code> is a follow-up with Infit or Outfit on the horizontal axis
 and measure on the vertical axis. <code>output = "html"</code> writes a
 lightweight temporary HTML file;
@@ -242,7 +242,7 @@ analysis archive is needed. Neither route deidentifies its contents.</p>
 <li><p>Call <code>res &lt;- mfrm_results(fit)</code>.</p></li>
 <li><p>Read <code>summary(res, view = "brief")</code> and its <code>readiness</code> table, then create
 the required
-<code>plot(res, type = "wright", show_ci = TRUE, top_n = Inf)</code> artifact.</p></li>
+<code>plot(res, type = "wright", show_ci = TRUE, top_n = Inf)</code> figure.</p></li>
 <li><p>Read <code>summary(res)$triage</code>, <code>summary(res)$status</code>,
 <code>summary(res)$plot_map</code>, and <code>summary(res)$next_actions</code>.</p></li>
 <li><p>Call <code>report &lt;- mfrm_report(res)</code> when a report-ready surface is needed.</p></li>
@@ -269,7 +269,7 @@ interactive session.</p></li>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">toy_small</span> <span class="op">&lt;-</span> <span class="va">toy</span><span class="op">[</span><span class="va">toy</span><span class="op">$</span><span class="va">Person</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">toy</span><span class="op">$</span><span class="va">Person</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">8</span><span class="op">]</span>, , drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span></span></span>
 <span class="r-in"><span></span></span>
@@ -281,15 +281,197 @@ interactive session.</p></li>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">wright</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">res</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">wright</span><span class="op">$</span><span class="va">name</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "wright_map"</span>
 <span class="r-in"><span><span class="va">fit_bundle</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">res</span>, type <span class="op">=</span> <span class="st">"fit"</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">sx</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">res</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">sx</span><span class="op">$</span><span class="va">overview</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   InputMode Model Method   N Persons Facets Categories Components Tables</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1  mfrm_fit   RSM    JML 128       8      2          4         10     98</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   PlotRoutes NotAvailable NotComputed</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1          7            0           0</span>
 <span class="r-in"><span><span class="va">sx</span><span class="op">$</span><span class="va">readiness</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        Domain                                Status</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1   Numerical                                  pass</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2        Data                                  pass</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3      Design                           pass_linked</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4   Stability                                  pass</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5 Diagnostics                          not_assessed</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6   Reporting exploratory_fit_ready_for_diagnostics</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7        Plot   ready_for_diagnostic_interpretation</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                                        Detail</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                                                                                      Optimizer returned convergence code 0.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                                                                                                          No preparation warning or review row was retained.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3                           The observed graph satisfies the connectivity requirement; review the remaining design and identification assumptions separately.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4                                                                                                   No boundary-constant non-person facet level was detected.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5                                                                                       Diagnostics have not yet been incorporated into this fit-only status.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6                                                                                       Reporting status is the strictest applicable upstream workflow state.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7 Fit-level numerical, data-support, connectivity, and stability gates passed. Treat this display as diagnostic evidence, not automatic publication approval.</span>
 <span class="r-in"><span><span class="va">sx</span><span class="op">$</span><span class="va">triage</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                      Area Severity                                 Signal</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4             Diagnostics   review            diagnostic_warnings_present</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9  Precision / separation   review             precision_review_available</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10              Reporting   review reporting_checklist_available_but_held</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1             Data review       ok                    data_readiness_pass</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2   Design / connectivity       ok                          design_linked</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7    Diagnostic dashboard       ok                      qc_plot_available</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5    Section availability       ok           requested_sections_available</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3               Stability       ok               stability_readiness_pass</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8                  Tables       ok                       tables_collected</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6              Wright map       ok          required_wright_map_available</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                              Route</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4                                            summary(res$diagnostics)$key_warnings</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9                                         summary(res$components$precision_review)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10                                     summary(res$components$reporting_checklist)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                           summary(res)$readiness</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                                                           summary(res)$readiness</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7                                   plot(res, type = "qc", preset = "publication")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5                                                              summary(res)$status</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3                                                           summary(res)$readiness</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8                                                  build_summary_table_bundle(res)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6  plot(res, type = "wright", preset = "publication", show_ci = TRUE, top_n = Inf)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                                                                     Detail</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4                                                                                                       Precision review flagged 1 review/warn checks. | Unexpected responses flagged: 25.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9                                                                       Precision review is available; inspect fit, separation, reliability, and ZSTD wording boundaries before reporting.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10 Reporting checklist is available, but the associated reporting status is `exploratory_fit_ready_for_diagnostics`. Reporting status is the strictest applicable upstream workflow state.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                                                                                Data status is `pass`. No preparation warning or review row was retained.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                        Design status is `pass_linked`. The observed graph satisfies the connectivity requirement; review the remaining design and identification assumptions separately.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7                                                                                               The QC dashboard is available as a focused follow-up after the required Wright-map review.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5                                                                                                                                Requested sections that could be computed were available.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3                                                                                                    Stability status is `pass`. No boundary-constant non-person facet level was detected.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8                                                                                                                       98 data-frame table(s) were collected for appendix or handoff use.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6                                             The required shared-logit Wright map is available; inspect person targeting, facet locations, steps, and uncertainty before follow-up plots.</span>
 <span class="r-in"><span><span class="va">sx</span><span class="op">$</span><span class="va">plot_map</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            Type Available RequiredArtifact</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1        wright      TRUE             TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2           fit      TRUE            FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3       pathway      TRUE            FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4   fit_pathway      TRUE            FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5            qc      TRUE            FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6      category      TRUE            FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7       anchors     FALSE            FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8 response_time     FALSE            FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9        tables      TRUE            FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                             Route</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                                    plot(res, type = 'wright', renderer = 'native', show_ci = TRUE, top_n = Inf)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                                                                                                                         plot(res, type = 'fit')</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3                                                                                                                     plot(res, type = 'pathway')</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 plot(res, type = 'fit_pathway', fit_stat = 'Infit', include_person = FALSE, top_n_person = 0, person_labels = 'none', facet_labels = 'flagged')</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5                                                                                                                          plot(res, type = 'qc')</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6                                                                                                                    plot(res, type = 'category')</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7                                                                                                                     plot(res, type = 'anchors')</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8                                                                                                               plot(res, type = 'response_time')</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9                                                                                                                      plot(res, type = 'tables')</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                 Detail</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 Required first fitted-scale figure: persons, facet levels, and thresholds on the shared logit ruler.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                                                      Model-level visual bundle from plot.mfrm_fit().</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3                                                     Expected-score pathway map from plot.mfrm_fit().</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4      Infit/Outfit-versus-measure pathway with facet uncertainty; person rows are an explicit opt-in.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5                                                  Quality-control dashboard from plot_qc_dashboard().</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6                                   Rating-scale/category plot when rating_scale_table() is available.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7                                         Anchor-review plot from the stored fit_mfrm() anchor review.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8                          Descriptive response-time QC plot when response_time_review() is available.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9                                            Numeric table-profile plot from the summary-table bundle.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                  InterpretationStatus InterpretationReady</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 ready_for_diagnostic_interpretation                TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 ready_for_diagnostic_interpretation                TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 ready_for_diagnostic_interpretation                TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 ready_for_diagnostic_interpretation                TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5 ready_for_diagnostic_interpretation                TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6 ready_for_diagnostic_interpretation                TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7                       not_available               FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8                      not_applicable                  NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9                      not_applicable                  NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           ReadinessRoute</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 summary(res)$readiness</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 summary(res)$readiness</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 summary(res)$readiness</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 summary(res)$readiness</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5 summary(res)$readiness</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6 summary(res)$readiness</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7 summary(res)$readiness</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8                       </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9                       </span>
 <span class="r-in"><span><span class="va">sx</span><span class="op">$</span><span class="va">next_actions</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Priority               Area</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1        1           Overview</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3        2             Triage</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2        2         Wright map</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4        3        Diagnostics</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5        4 Visual diagnostics</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6        5        Fit pathway</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7        5          Precision</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8        6          Reporting</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9       11             Tables</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                      Action</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                         Read the compact results summary.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3                            Read the first-screen triage before branching.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                   Create and inspect the required shared-logit scale map.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4                    Review diagnostic key warnings before report drafting.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5                     Open the QC dashboard after reviewing the Wright map.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6 Review Infit against measure, including selected person rows when useful.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7        Inspect fit, separation, reliability, and ZSTD wording boundaries.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8        Use the reporting checklist as a guide for preparing a manuscript.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9                            Create an appendix-ready summary-table bundle.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                                                     Route</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                                                                                                                            summary(res)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3                                                                                                                                                     summary(res)$triage</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                                                                                         plot(res, type = "wright", preset = "publication", show_ci = TRUE, top_n = Inf)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4                                                                                                                                   summary(res$diagnostics)$key_warnings</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5                                                                                                                          plot(res, type = "qc", preset = "publication")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6 plot(res, type = "fit_pathway", fit_stat = "Infit", include_person = TRUE, top_n_person = 12, person_labels = "none", facet_labels = "flagged", preset = "publication")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7                                                                                                                                summary(res$components$precision_review)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8                                                                                                                             summary(res$components$reporting_checklist)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9                                                                                                                                         build_summary_table_bundle(res)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                                 Reason</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                           Confirms input mode, model, method, section status, table coverage, and available figures.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3                             Triage orders unavailable, review, information, and OK signals across diagnostics, tables, plots, and reporting outputs.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 The Wright map is the primary fitted-scale figure: compare person targeting with facet levels and step thresholds before branching into diagnostics.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4                                            Diagnostic warnings identify the highest-priority fit, precision, residual, or category follow-up checks.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5                                                            The QC dashboard gives a focused follow-up view of fit, residual, and category summaries.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6                                          This follow-up separates measure uncertainty from fit displacement while keeping person inclusion explicit.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7                                         Precision review keeps fit-size, standardized fit, and separation evidence in separate reporting categories.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8                                                                                Checklist rows identify report-ready, missing, and caveated sections.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9                                                                   The bundle exposes table roles, plot readiness, and conservative appendix presets.</span>
 <span class="r-in"><span><span class="fu">mfrm_results</span><span class="op">(</span><span class="va">fit</span>, include <span class="op">=</span> <span class="st">"validation"</span>, output <span class="op">=</span> <span class="st">"summary"</span><span class="op">)</span><span class="op">$</span><span class="va">status</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                Section Status</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                input     ok</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2          diagnostics     ok</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3          fit_summary     ok</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4  diagnostics_summary     ok</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5            iteration     ok</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6         fit_measures     ok</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7     facet_statistics     ok</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8         fair_average     ok</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9         rating_scale     ok</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10          unexpected     ok</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11    precision_review     ok</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12   facets_fit_review     ok</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13 reporting_checklist     ok</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14      data_readiness     ok</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 15    design_readiness     ok</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 16 stability_readiness     ok</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 17 plot_interpretation     ok</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 18 reporting_readiness review</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                                                                                           Detail</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                                                                                                                                                          Input mode: mfrm_fit.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                                                                                                       Computed automatically with residual_pca = 'none', diagnostic_mode = 'both', and fit_df_method = 'both'.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3                                                                                                                                                                                                     Available.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4                                                                                                                                                                                                     Available.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5                                                                                                                                                                                                     Available.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6                                                                                                                                                                                                     Available.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7                                                                                                                                                                                                     Available.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8                                                                                                                                                                                                     Available.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9                                                                                                                                                                                                     Available.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10                                                                                                                                                                                                    Available.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11                                                                                                                                                                                                    Available.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12                                                                                                                                                                                                    Available.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13                                                                                                                                                                                                    Available.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14                                                                                                                                         Data status: pass. No preparation warning or review row was retained.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 15                                                 Design status: pass_linked. The observed graph satisfies the connectivity requirement; review the remaining design and identification assumptions separately.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 16                                                                                                                             Stability status: pass. No boundary-constant non-person facet level was detected.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 17 Plot status: ready_for_diagnostic_interpretation. Fit-level numerical, data-support, connectivity, and stability gates passed. Treat this display as diagnostic evidence, not automatic publication approval.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 18                                                                                Reporting status: exploratory_fit_ready_for_diagnostics. Reporting status is the strictest applicable upstream workflow state.</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">res</span>, type <span class="op">=</span> <span class="st">"qc"</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
@@ -300,7 +482,12 @@ interactive session.</p></li>
 <span class="r-in"><span>  include <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"fit"</span>, <span class="st">"diagnostics"</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>  output <span class="op">=</span> <span class="st">"summary"</span></span></span>
 <span class="r-in"><span><span class="op">)</span><span class="op">$</span><span class="va">mapping</span></span></span>
-<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      Key            Value</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 Person           Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2  Score            Score</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 Facets Rater, Criterion</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 Weight                 </span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

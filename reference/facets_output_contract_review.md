@@ -149,12 +149,66 @@ dispatched through
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+# \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+#> Warning: Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 contract_review <- facets_output_contract_review(fit, diagnostics = diag, branch = "facets")
 summary(contract_review)
+#> mfrmr FACETS Output Contract Review Summary 
+#>   Class: mfrm_facets_contract_review
+#>   Components: 8
+#> 
+#> Contract review overview
+#>  Branch ContractRows AvailableRows FullMatchRows ColumnMismatches
+#>  facets           55            55            55                0
+#>  ColumnMismatchRate MeanColumnCoverage MinColumnCoverage
+#>                   0                  1                 1
+#>  MeanColumnCoverageAvailable MinColumnCoverageAvailable MetricChecks
+#>                            1                          1           14
+#>  MetricEvaluated MetricFailed MetricPassRate
+#>               14            0              1
+#> 
+#> Lowest-coverage items: column_review
+#>  table_id         function_name object_id           component required_n
+#>   Table 1 specifications_report        t1              header          6
+#>   Table 1 specifications_report        t1           data_spec          2
+#>   Table 1 specifications_report        t1        facet_labels          3
+#>   Table 1 specifications_report        t1         output_spec          2
+#>   Table 1 specifications_report        t1 convergence_control          2
+#>   Table 1 specifications_report        t1      anchor_summary          4
+#>   Table 2   data_quality_report        t2             summary          9
+#>   Table 2   data_quality_report        t2         model_match          3
+#>   Table 2   data_quality_report        t2          row_review          2
+#>   Table 2   data_quality_report        t2     category_counts          3
+#>  present_n coverage available full_match status missing
+#>          6        1      TRUE       TRUE  match        
+#>          2        1      TRUE       TRUE  match        
+#>          3        1      TRUE       TRUE  match        
+#>          2        1      TRUE       TRUE  match        
+#>          2        1      TRUE       TRUE  match        
+#>          4        1      TRUE       TRUE  match        
+#>          9        1      TRUE       TRUE  match        
+#>          3        1      TRUE       TRUE  match        
+#>          2        1      TRUE       TRUE  match        
+#>          3        1      TRUE       TRUE  match        
+#> 
+#> Settings
+#>              Setting                         Value
+#>               branch                        facets
+#>        contract_path    facets_column_contract.csv
+#>         intended_use facets_output_contract_review
+#>  external_validation                         FALSE
+#>      include_metrics                          TRUE
+#>        top_n_missing                            15
+#>        bias_included                          TRUE
+#> 
+#> Notes
+#>  - All contract rows reached full column coverage.
+#>  - All evaluated metric checks passed.
+#>  - Local directory details are suppressed in this summary; the source bundle
+#>    retains complete provenance.
 p <- plot(contract_review, draw = FALSE)
-} # }
+# }
 ```

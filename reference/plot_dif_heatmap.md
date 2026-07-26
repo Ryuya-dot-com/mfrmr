@@ -116,16 +116,18 @@ consume `$data$matrix` to keep code forward-compatible.
 ## Examples
 
 ``` r
-if (FALSE) { # interactive()
+# \donttest{
 toy <- load_mfrmr_data("example_bias")
 
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                  method = "JML", model = "RSM", maxit = 30)
+#> Warning: Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 int <- dif_interaction_table(fit, diag, facet = "Rater",
                              group = "Group", data = toy, min_obs = 2)
 heat <- plot_dif_heatmap(int, metric = "obs_exp", draw = FALSE)
 dim(heat$data$matrix)
+#> [1] 4 2
 # Look for (`metric = "obs_exp"`): cells near 0 are aligned with
 #   model expectation; |Obs - Exp| > 0.5 logits is a substantive
 #   gap. With `metric = "t"` the cell scale becomes a standardized
@@ -133,5 +135,5 @@ dim(heat$data$matrix)
 #   hypothesis test. With `metric = "contrast"` the layout switches
 #   to Level x GroupPair and reads as the pairwise differential-
 #   functioning contrast (use `analyze_dff()`).
-}
+# }
 ```

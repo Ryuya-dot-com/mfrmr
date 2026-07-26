@@ -59,17 +59,22 @@ An `mfrm_plot_data` whose `data` slot bundles a tidy `Facet`, `Metric`,
 ## Examples
 
 ``` r
-if (FALSE) { # interactive()
+# \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                  method = "JML", maxit = 30)
+#> Warning: Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.
 p <- plot_reliability_snapshot(fit, draw = FALSE)
 p$data$table
+#>       Facet      Metric     Value
+#> 1     Rater reliability 0.9031062
+#> 2    Person reliability 0.9005787
+#> 3 Criterion reliability 0.8852450
 # Look for (default `metric = "reliability"`):
 # - >= 0.9 strong, 0.7-0.9 adequate, < 0.7 weak (Wright & Masters 1982).
 # - The Person row is the operative reliability for ability scores.
 # - Non-Person rows (Rater / Criterion) report the same index but
 #   should be read as "are facet elements distinguishable?"; values
 #   close to 1 mean facet means differ reliably from each other.
-}
+# }
 ```

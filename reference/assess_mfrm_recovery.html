@@ -241,7 +241,7 @@ user-facing plot tables such as <code>section_status</code> for status plots and
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="va">rec</span> <span class="op">&lt;-</span> <span class="fu"><a href="evaluate_mfrm_recovery.html">evaluate_mfrm_recovery</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>  n_person <span class="op">=</span> <span class="fl">12</span>,</span></span>
 <span class="r-in"><span>  n_rater <span class="op">=</span> <span class="fl">2</span>,</span></span>
@@ -251,6 +251,130 @@ user-facing plot tables such as <code>section_status</code> for status plots and
 <span class="r-in"><span>  seed <span class="op">=</span> <span class="fl">123</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">assess_mfrm_recovery</span><span class="op">(</span><span class="va">rec</span>, min_reps <span class="op">=</span> <span class="fl">1</span>, max_rmse <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> MFRM Recovery Adequacy Assessment</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Reps SuccessfulRuns SuccessRate ConvergedRuns ConvergenceRate RecoveryRows</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     1              1           1             0               0           19</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  RecoveryGroups OverallStatus</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>               4       concern</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Recommended reading order</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Step</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                               Route</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                            summary(recovery_review)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    recovery_review$condition_reporting_notes, then recovery_review$condition_review</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  recovery_review$diagnostic_reporting_notes, then recovery_review$diagnostic_review</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                              plot(recovery_review, type = "status")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                             plot(recovery_review, type = "metrics")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                     recovery_review$source$recovery</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                               WhatToRead</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                 Overall run status, next actions, and compact checklist.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                Generator-condition caveats, then GPCM slope-regime and generated score-support metadata.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Reporter-facing fit/separation caveats, then optional operating characteristics retained by include_diagnostics = TRUE.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                           Checklist domains ordered by attention status.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                               Parameter groups behind RMSE, bias, coverage, SE, or Monte Carlo statuses.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                       Row-level truth-estimate comparisons for the parameter groups that need follow-up.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Checklist</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                Section                             Item       Status</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         Run completion                Replication count           ok</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         Run completion     Simulation and refit success           ok</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         Run completion             Reported convergence      concern</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       Recovery content  Recoverable truth-estimate rows           ok</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Generator conditions        Bounded-GPCM slope regime not_assessed</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Generator conditions Generated score-category support       review</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            Uncertainty      Standard-error availability      concern</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            Uncertainty                         Coverage       review</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Monte Carlo precision           RMSE Monte Carlo error       review</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Practical thresholds                   RMSE threshold      concern</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Practical thresholds                   Bias threshold not_assessed</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                   Evidence</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                  1 replication(s); requested minimum is 1.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                       1/1 successful run(s); rate = 1.000.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                        0/1 converged run(s); rate = 0.000.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                       19 row-level recovery comparison(s).</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                 Model RSM does not use bounded-GPCM slope-regime metadata.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  1 replication(s) retained score support; minimum category count = 2; minimum category proportion = 0.042; maximum omitted categories = 0.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                 Group statuses: concern=4.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                           Group statuses: not_available=4.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                            Group statuses: ok=3, review=1.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                           Group statuses: concern=2, ok=2.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                         No practical absolute-bias threshold was supplied.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                         NextAction</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                       Use as supporting evidence under the stated simulation setup and thresholds.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                       Use as supporting evidence under the stated simulation setup and thresholds.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>              Do not use model convergence as adequacy evidence until the design, fit settings, or replication count are revisited.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                       Use as supporting evidence under the stated simulation setup and thresholds.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                        No GPCM slope-condition follow-up is needed for this model.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Report sparse generated score support explicitly and inspect category-level recovery or increase design size before generalizing.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    Do not use standard-error availability as adequacy evidence until the design, fit settings, or replication count are revisited.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                    Review coverage with plots and row-level output before using it for a decision.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                       Review Monte Carlo precision with plots and row-level output before using it for a decision.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                           Do not use RMSE as adequacy evidence until the design, fit settings, or replication count are revisited.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                Set a practical threshold if bias must support a go/no-go decision.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Condition review</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Model GPCMSlopeRegime    StressLevel SlopeLevels MaxAbsCenteredLogSlope</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    RSM            &lt;NA&gt; not_applicable          NA                     NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  MinScoreCount MinScoreProportion MaxZeroScoreLevels ScoreSupportStatus</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>              2              0.042                  0             review</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        Status</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  not_assessed</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                              Interpretation</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  The fitted generator is not bounded GPCM, so slope-regime metadata is not part of this recovery condition.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Condition reporting notes</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  ConditionArea ReportingAttention                      ConditionFinding</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   slope_regime            context           slope_regime_not_applicable</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  score_support   reporting_review thin_generated_score_category_support</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                     Evidence</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      model=RSM; slope_regime=NA; stress_level=not_applicable; slope_levels=NA; max_abs_centered_log_slope=NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  score_support_replications=1.00; min_score_count=2.00; min_score_proportion=0.0417; max_zero_score_levels=0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                ValidationUse</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  generator_condition_context</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  generator_condition_context</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Metric review</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  ParameterType     Facet ComparisonScale   RMSE Bias Coverage95 SEAvailableRate</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          facet Criterion           logit  0.013    0         NA               0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          facet     Rater           logit  0.222    0         NA               0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         person    Person           logit 11.186    0         NA               0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           step    Common           logit 13.703    0         NA               0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  McseRMSEToRMSE OverallStatus</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            0.00       concern</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            0.00       concern</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            0.22       concern</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            0.25       concern</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Uncertainty review</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  ParameterType     Facet ComparisonScale Coverage95 CoverageStatus</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          facet Criterion           logit         NA  not_available</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          facet     Rater           logit         NA  not_available</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         person    Person           logit         NA  not_available</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           step    Common           logit         NA  not_available</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  SEAvailableRate SEStatus</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                0  concern</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                0  concern</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                0  concern</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                0  concern</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                Interpretation</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Coverage was not computed because finite SE-based intervals were unavailable for this group.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Coverage was not computed because finite SE-based intervals were unavailable for this group.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Coverage was not computed because finite SE-based intervals were unavailable for this group.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Coverage was not computed because finite SE-based intervals were unavailable for this group.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Next actions</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Reported convergence: Do not use model convergence as adequacy evidence until the design, fit settings, or replication count are revisited.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Generated score-category support: Report sparse generated score support explicitly and inspect category-level recovery or increase design size before generalizing.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Standard-error availability: Do not use standard-error availability as adequacy evidence until the design, fit settings, or replication count are revisited.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Coverage: Review coverage with plots and row-level output before using it for a decision.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - RMSE Monte Carlo error: Review Monte Carlo precision with plots and row-level output before using it for a decision.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - RMSE threshold: Do not use RMSE as adequacy evidence until the design, fit settings, or replication count are revisited.</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Read the bounded-GPCM generator condition separately from recovery adequacy.</span></span></span>
 <span class="r-in"><span><span class="va">gpcm_spec</span> <span class="op">&lt;-</span> <span class="fu"><a href="build_mfrm_sim_spec.html">build_mfrm_sim_spec</a></span><span class="op">(</span></span></span>
@@ -285,14 +409,38 @@ user-facing plot tables such as <code>section_status</code> for status plots and
 <span class="r-in"><span><span class="va">gpcm_review</span><span class="op">$</span><span class="va">condition_reporting_notes</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>  <span class="st">"ConditionArea"</span>, <span class="st">"ReportingAttention"</span>, <span class="st">"ConditionFinding"</span></span></span>
 <span class="r-in"><span><span class="op">)</span><span class="op">]</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 2 × 3</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ConditionArea ReportingAttention ConditionFinding               </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                          </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> slope_regime  context            moderate_slope_regime          </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> score_support context            generated_score_support_context</span>
 <span class="r-in"><span><span class="va">gpcm_review</span><span class="op">$</span><span class="va">condition_review</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>  <span class="st">"Model"</span>, <span class="st">"GPCMSlopeRegime"</span>, <span class="st">"StressLevel"</span>, <span class="st">"ScoreSupportStatus"</span></span></span>
 <span class="r-in"><span><span class="op">)</span><span class="op">]</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 4</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Model GPCMSlopeRegime StressLevel ScoreSupportStatus</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>             </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> GPCM  moderate        moderate    ok                </span>
 <span class="r-in"><span><span class="va">gpcm_review</span><span class="op">$</span><span class="va">diagnostic_reporting_notes</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>  <span class="st">"Facet"</span>, <span class="st">"ReportingAttention"</span>, <span class="st">"DiagnosticFinding"</span></span></span>
 <span class="r-in"><span><span class="op">)</span><span class="op">]</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 3 × 3</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Facet     ReportingAttention DiagnosticFinding             </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                         </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> Criterion reporting_review   zero_separation_or_reliability</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> Person    context            diagnostic_context_available  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> Rater     reporting_review   zero_separation_or_reliability</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">gpcm_review</span><span class="op">)</span><span class="op">$</span><span class="va">reading_order</span></span></span>
-<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 6 × 4</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    Step Route                                                 WhatToRead Purpose</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                                                 <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span>     1 <span style="color: #949494;">"</span>summary(recovery_review)<span style="color: #949494;">"</span>                            Overall r… Decide…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span>     2 <span style="color: #949494;">"</span>recovery_review$condition_reporting_notes, then rec… Generator… Separa…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span>     3 <span style="color: #949494;">"</span>recovery_review$diagnostic_reporting_notes, then re… Reporter-… Check …</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span>     4 <span style="color: #949494;">"</span>plot(recovery_review, type = \"status\")<span style="color: #949494;">"</span>            Checklist… Find t…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span>     5 <span style="color: #949494;">"</span>plot(recovery_review, type = \"metrics\")<span style="color: #949494;">"</span>           Parameter… Identi…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">6</span>     6 <span style="color: #949494;">"</span>recovery_review$source$recovery<span style="color: #949494;">"</span>                     Row-level… Diagno…</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

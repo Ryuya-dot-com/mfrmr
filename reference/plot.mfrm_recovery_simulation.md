@@ -90,7 +90,7 @@ parameter groups with available standard errors.
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+# \donttest{
 rec <- evaluate_mfrm_recovery(
   n_person = 12,
   n_rater = 2,
@@ -100,5 +100,23 @@ rec <- evaluate_mfrm_recovery(
   seed = 123
 )
 plot(rec, type = "summary", metric = "rmse", draw = FALSE)
-} # }
+#> <mfrm_plot_data>
+#>   name     : recovery_simulation
+#>   title    : Parameter recovery: RMSE
+#>   subtitle : Summary by parameter type, facet, and comparison scale
+#>   data     :
+#>     $type : character [1]
+#>     $metric : character [1]
+#>     $metric_label : character [1]
+#>     $comparison : character [1]
+#>     $parameter_type : NULL
+#>     $facet : NULL
+#>     $plot_table : data.frame [4 x 22]
+#>     $notes : character [2]
+#>     $plot_name : character [1]
+#>   legend   : 4 entries
+#>   ref lines: 0
+#> Re-render via ggplot2 / plotly using `x$data`; or pass the
+#> originating `draw = FALSE` plot helper its inverse to draw it.
+# }
 ```

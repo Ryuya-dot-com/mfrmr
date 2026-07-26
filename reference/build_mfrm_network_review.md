@@ -129,15 +129,67 @@ common-scale claims.
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+# \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
   method = "JML", maxit = 30
 )
+#> Warning: Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.
 if (requireNamespace("igraph", quietly = TRUE)) {
   review <- build_mfrm_network_review(fit)
   summary(review)
   build_summary_table_bundle(review)
 }
-} # }
+#> mfrmr Summary Table Bundle
+#> 
+#> Overview
+#>                  Title         SourceClass                SummaryClass
+#>  Network Review Tables mfrm_network_review summary.mfrm_network_review
+#>  TablesAvailable TablesReturned AppendixPreset
+#>               12             10           none
+#> 
+#> Table index
+#>              Table Rows Cols                        Role
+#>           overview    1   11     network_review_overview
+#>    network_summary    1   13      network_design_summary
+#>      facet_summary    3    8 network_facet_vulnerability
+#>  top_central_nodes   10   11       network_central_nodes
+#>      top_cut_nodes    0   11  network_articulation_nodes
+#>   top_bridge_edges    0   12        network_bridge_edges
+#>      reporting_map    5    4               reporting_map
+#>            caveats    1    3            analysis_caveats
+#>              notes    4    1        interpretation_notes
+#>           settings    5    2             review_settings
+#>                                                                                                                         Description
+#>                                                                          Front-door connectedness and design-network review status.
+#>                                                    Graph-level connectedness, density, articulation-point, and bridge-edge metrics.
+#>                                                           Facet-level aggregation of node centrality and design-link vulnerability.
+#>                                                                  Highest-betweenness design-network nodes for follow-up inspection.
+#>                                                              Articulation-point rows whose removal would fragment the design graph.
+#>                                                            Bridge-edge rows indicating one-link dependencies between graph regions.
+#>  Map separating MFRM measurement, design-network review, sparse-design review, peer-review design, and rater-effect network routes.
+#>                                                                              Interpretation caveats for network-design diagnostics.
+#>                                                                             Compact interpretation notes for network-design review.
+#>                                                                    Settings and provenance recorded by build_mfrm_network_review().
+#> 
+#> Plot index
+#>              Table PlotReady NumericColumns               DefaultPlotTypes
+#>           overview      TRUE              7 numeric_profile, first_numeric
+#>    network_summary      TRUE             12 numeric_profile, first_numeric
+#>      facet_summary      TRUE              7 numeric_profile, first_numeric
+#>  top_central_nodes      TRUE              7 numeric_profile, first_numeric
+#>      top_cut_nodes     FALSE              7                               
+#>   top_bridge_edges     FALSE              5                               
+#>      reporting_map     FALSE              0                               
+#>            caveats     FALSE              0                               
+#>              notes     FALSE              0                               
+#>           settings     FALSE              0                               
+#> 
+#> Notes
+#>  - MFRM estimates remain the measurement-model results; network rows summarize observed design links.
+#>  - Articulation points and bridge edges identify levels or links whose removal would fragment the co-observation graph.
+#>  - Sparse-design review rows, when supplied, report planned-missingness and rater-link diagnostics rather than recovery or fit gates.
+#>  - Peer-review design rows, when supplied, report assignment structure and reviewer linkage rather than reviewer quality or fairness.
+#>  - 2 empty table(s) were omitted from `tables`; use `include_empty = TRUE` to retain them.
+# }
 ```

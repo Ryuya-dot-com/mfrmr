@@ -255,18 +255,101 @@ permutation rather than by simulating raw item scores.
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+# \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+#> Warning: Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.
 diag <- diagnose_mfrm(fit, residual_pca = "both")
 pca <- analyze_residual_pca(diag, mode = "both")
 pca2 <- analyze_residual_pca(fit, mode = "both")
 summary(pca)
+#> mfrmr Residual PCA Summary 
+#>   Class: mfrm_residual_pca
+#>   Components: 12
+#> 
+#> PCA overview
+#>  Mode Facets OverallComponents FacetComponentRows
+#>  both      2                16                  8
+#> 
+#> Eigenvalue / loading rows: overall_table
+#>  Component Eigenvalue Proportion Cumulative
+#>          1      2.114      0.132      0.132
+#>          2      1.833      0.115      0.247
+#>          3      1.706      0.107      0.353
+#>          4      1.519      0.095      0.448
+#>          5      1.290      0.081      0.529
+#>          6      1.157      0.072      0.601
+#>          7      1.098      0.069      0.670
+#>          8      1.054      0.066      0.736
+#>          9      0.949      0.059      0.795
+#>         10      0.846      0.053      0.848
+#> 
+#> Notes
+#>  - Residual PCA summary for unidimensionality checks (overall and/or by facet).
 p <- plot_residual_pca(pca, mode = "overall", plot_type = "scree", draw = FALSE)
 p$data$plot
+#> [1] "scree"
 head(p$data)
+#> $plot
+#> [1] "scree"
+#> 
+#> $mode
+#> [1] "overall"
+#> 
+#> $facet
+#> NULL
+#> 
+#> $title
+#> [1] "Overall Residual PCA (Scree)"
+#> 
+#> $subtitle
+#> [1] "Variance explained by residual components"
+#> 
+#> $legend
+#>                         label      role  aesthetic   value
+#> 1        Residual eigenvalues component line-point #1f78b4
+#> 2             Unit-eigenvalue reference       line #6b7280
+#> 3      Critical minimum (1.4) reference       line #6b7280
+#> 4 Noticeable second dim (2.0) reference       line #6b7280
+#> 5     Strong second dim (3.0) reference       line #6b7280
+#> 
 pca_pa <- analyze_residual_pca(diag, mode = "overall", parallel = TRUE, parallel_reps = 10)
 head(pca_pa$overall_table)
+#>   Component Eigenvalue Proportion Cumulative ParallelMean ParallelSD
+#> 1         1   2.113536 0.13209603  0.1320960     2.160913 0.14855479
+#> 2         2   1.832881 0.11455503  0.2466511     1.918642 0.07914670
+#> 3         3   1.706244 0.10664025  0.3532913     1.697861 0.06202269
+#> 4         4   1.519047 0.09494041  0.4482317     1.485696 0.07926864
+#> 5         5   1.289965 0.08062283  0.5288545     1.297380 0.04976408
+#> 6         6   1.157293 0.07233083  0.6011854     1.199561 0.04272479
+#>   ParallelCutoff ParallelQuantile ExcessOverParallelCutoff
+#> 1       2.449711             0.95              -0.33617439
+#> 2       2.025522             0.95              -0.19264184
+#> 3       1.801769             0.95              -0.09552545
+#> 4       1.628377             0.95              -0.10933074
+#> 5       1.407579             0.95              -0.11761333
+#> 6       1.257088             0.95              -0.09979494
+#>   ExceedsParallelCutoff ParallelReps SuccessfulParallelReps
+#> 1                 FALSE           10                     10
+#> 2                 FALSE           10                     10
+#> 3                 FALSE           10                     10
+#> 4                 FALSE           10                     10
+#> 5                 FALSE           10                     10
+#> 6                 FALSE           10                     10
+#>         ParallelMethod
+#> 1 residual_permutation
+#> 2 residual_permutation
+#> 3 residual_permutation
+#> 4 residual_permutation
+#> 5 residual_permutation
+#> 6 residual_permutation
 head(pca$overall_table)
-} # }
+#>   Component Eigenvalue Proportion Cumulative
+#> 1         1   2.113536 0.13209603  0.1320960
+#> 2         2   1.832881 0.11455503  0.2466511
+#> 3         3   1.706244 0.10664025  0.3532913
+#> 4         4   1.519047 0.09494041  0.4482317
+#> 5         5   1.289965 0.08062283  0.5288545
+#> 6         6   1.157293 0.07233083  0.6011854
+# }
 ```

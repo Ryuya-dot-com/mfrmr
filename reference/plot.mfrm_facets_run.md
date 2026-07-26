@@ -73,7 +73,7 @@ for `"qc"`.
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+# \donttest{
 toy <- load_mfrmr_data("example_core")
 toy_small <- toy[toy$Person %in% unique(toy$Person)[1:12], , drop = FALSE]
 out <- run_mfrm_facets(
@@ -85,7 +85,9 @@ out <- run_mfrm_facets(
 )
 p_fit <- plot(out, type = "fit", draw = FALSE)
 p_fit$wright_map$data$plot
+#> [1] "wright_map"
 p_qc <- plot(out, type = "qc", draw = FALSE)
 p_qc$data$plot
-} # }
+#> [1] "qc_dashboard"
+# }
 ```

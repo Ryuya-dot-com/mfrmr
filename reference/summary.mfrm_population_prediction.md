@@ -63,7 +63,7 @@ An object of class `summary.mfrm_population_prediction` with:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+# \donttest{
 spec <- build_mfrm_sim_spec(
   n_person = 16,
   n_rater = 3,
@@ -78,8 +78,21 @@ pred <- predict_mfrm_population(
   maxit = 30,
   seed = 123
 )
+#> Warning: Unknown or uninitialised column: `ConvergenceRate`.
+#> Warning: Unknown or uninitialised column: `MeanMinCategoryCount`.
+#> Warning: Unknown or uninitialised column: `MeanSeparation`.
 s <- summary(pred)
 s$overview
+#> # A tibble: 1 × 5
+#>   Designs Replications SuccessfulRuns ConvergedRuns MeanElapsedSec
+#>     <dbl>        <dbl>          <dbl>         <dbl>          <dbl>
+#> 1       1            1              1             1           1.10
 s$forecast[, c("Facet", "MeanSeparation", "McseSeparation")]
-} # }
+#> # A tibble: 3 × 3
+#>   Facet     MeanSeparation McseSeparation
+#>   <chr>              <dbl>          <dbl>
+#> 1 Criterion           0                NA
+#> 2 Person              1.36             NA
+#> 3 Rater               0                NA
+# }
 ```

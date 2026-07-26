@@ -168,16 +168,76 @@ observation's expected value.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># interactive()</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_bias"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>, method <span class="op">=</span> <span class="st">"JML"</span>, maxit <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span></span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.</span>
 <span class="r-in"><span><span class="va">diag</span> <span class="op">&lt;-</span> <span class="fu"><a href="diagnose_mfrm.html">diagnose_mfrm</a></span><span class="op">(</span><span class="va">fit</span>, residual_pca <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">bias</span> <span class="op">&lt;-</span> <span class="fu"><a href="estimate_bias.html">estimate_bias</a></span><span class="op">(</span><span class="va">fit</span>, <span class="va">diag</span>, facet_a <span class="op">=</span> <span class="st">"Rater"</span>, facet_b <span class="op">=</span> <span class="st">"Criterion"</span>, max_iter <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">t10</span> <span class="op">&lt;-</span> <span class="fu">unexpected_after_bias_table</span><span class="op">(</span><span class="va">fit</span>, <span class="va">bias</span>, diagnostics <span class="op">=</span> <span class="va">diag</span>, top_n <span class="op">=</span> <span class="fl">20</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">t10</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> mfrmr Unexpected-after-Bias Summary </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Class: mfrm_unexpected_after_bias</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Components: 5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> After-bias threshold summary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  TotalObservations UnexpectedN UnexpectedPercent LowProbabilityN LargeResidualN</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                384          20             5.208              20              9</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    Rule AbsZThreshold ProbThreshold BaselineUnexpectedN AfterBiasUnexpectedN</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  either             2           0.3                  88                   20</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  ReducedBy ReducedPercent</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         68         77.273</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> After-bias flagged rows: table</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Row Rater    Criterion Weight Score Observed Expected Residual StdResidual</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  343   R01     Accuracy      1     1        1    3.194   -2.194      -3.155</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  136   R04     Accuracy      1     3        3    1.451    1.549       2.627</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  279   R02     Accuracy      1     2        2    3.505   -1.505      -2.502</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  254   R03     Language      1     4        4    2.215    1.785       2.343</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   31   R02     Accuracy      1     3        3    1.493    1.507       2.476</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  131   R02 Organization      1     1        1    2.717   -1.717      -2.262</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  110   R03     Language      1     2        2    3.394   -1.394      -2.171</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  135   R02     Accuracy      1     4        4    2.471    1.529       1.990</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  269   R02     Language      1     1        1    2.498   -1.498      -1.950</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  215   R01     Accuracy      1     2        2    3.361   -1.361      -2.086</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  ObsProb MostLikely MostLikelyProb CategoryGap Surprise            Direction</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    0.008          3          0.504           2    2.077  Lower than expected</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    0.046          1          0.597           2    1.333 Higher than expected</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    0.051          4          0.559           2    1.290  Lower than expected</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    0.037          2          0.486           2    1.428 Higher than expected</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    0.056          1          0.565           2    1.255 Higher than expected</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    0.048          3          0.487           2    1.319  Lower than expected</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    0.078          4          0.478           2    1.110  Lower than expected</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    0.077          2          0.418           2    1.114 Higher than expected</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    0.088          3          0.421           2    1.057  Lower than expected</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    0.087          3          0.455           1    1.062  Lower than expected</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  FlagLowProbability FlagLargeResidual Severity BiasAdjustment</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                TRUE              TRUE    6.231          0.777</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                TRUE              TRUE    4.960         -1.102</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                TRUE              TRUE    4.792          0.247</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                TRUE              TRUE    4.771          0.155</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                TRUE              TRUE    4.731          0.247</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                TRUE              TRUE    4.581         -0.022</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                TRUE              TRUE    4.281          0.155</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                TRUE             FALSE    4.104          0.247</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                TRUE             FALSE    4.008         -0.208</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                TRUE              TRUE    3.648          0.777</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Settings</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    Setting  Value</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  abs_z_min      2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   prob_max    0.3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       rule either</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Notes</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Unexpected-response summary after interaction adjustment.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Bias interaction: Rater x Criterion x c("Rater", "Criterion") x 2 x pairwise</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Person identifiers are suppressed in this summary. Use `include_person =</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    TRUE` only under appropriate privacy controls.</span>
 <span class="r-in"><span><span class="va">p_t10</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">t10</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">p_t10</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">plot</span></span></span>
-<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "scatter"</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

@@ -154,14 +154,35 @@ The `summary` data.frame contains:
 ## Examples
 
 ``` r
-if (FALSE) { # interactive()
+# \donttest{
 toy <- load_mfrmr_data("example_bias")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+#> Warning: Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 bias <- estimate_bias(fit, diag, facet_a = "Rater", facet_b = "Criterion", max_iter = 2)
 t11 <- bias_count_table(bias)
 t11_facets <- bias_count_table(bias, branch = "facets", fit = fit)
 summary(t11)
+#> mfrmr Bias Count Summary
+#> 
+#> Overview
+#>  InteractionFacets InteractionOrder InteractionMode   Branch    Style FacetA
+#>  Rater x Criterion                2        pairwise original original  Rater
+#>     FacetB Cells TotalCount MeanCount MedianCount MinCount MaxCount
+#>  Criterion    16        384        24          24       24       24
+#>  LowCountCells LowCountPercent
+#>              0               0
+#> 
+#> Count distribution
+#>  Min Q1 Median Mean Q3 Max
+#>   24 24     24   24 24  24
+#> 
+#> Thresholds
+#>         Setting Value
+#>  min_count_warn    10
+#> 
+#> Notes
+#>  - Original branch: compact count/bias columns for QC screening.
 p <- plot(t11, draw = FALSE)
 p2 <- plot(t11, type = "lowcount_by_facet", draw = FALSE)
 if (interactive()) {
@@ -174,5 +195,5 @@ if (interactive()) {
     label_angle = 45
   )
 }
-}
+# }
 ```

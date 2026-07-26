@@ -168,12 +168,76 @@ The returned object is a bundle-like list with class
 ## Examples
 
 ``` r
-if (FALSE) { # interactive()
+# \donttest{
 toy <- load_mfrmr_data("example_core")
 toy <- toy[toy$Person %in% unique(toy$Person)[1:8], ]
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 dash <- facet_quality_dashboard(fit, diagnostics = diag)
 summary(dash)
-}
+#> mfrmr Facet Quality Dashboard Summary
+#> 
+#> Overview
+#>  Facet FacetSource Levels FlaggedLevels BiasSourceBundles
+#>  Rater    inferred      4             2                 0
+#> 
+#> Summary
+#>  Facet Levels MeanEstimate   SD MinEstimate MaxEstimate MeanInfit MeanOutfit
+#>  Rater      4            0 0.26      -0.322       0.315     0.997      0.978
+#>  SeverityFlagged MisfitFlagged CentralTendencyFlagged BiasFlagged AnyFlagged
+#>                0             0                      2           0          2
+#>  BiasRows
+#>         0
+#> 
+#> Flagged levels
+#>  Facet Level Estimate N.x    SE ModelSE RealSE                     SE_Method
+#>  Rater   R01    0.003  32 0.252   0.252  0.289 Observation-table information
+#>  Rater   R02    0.003  32 0.252   0.252  0.252 Observation-table information
+#>  Converged InferenceReady ConvergenceSeverity PrecisionTier
+#>       TRUE           TRUE                pass   exploratory
+#>       TRUE           TRUE                pass   exploratory
+#>  SupportsFormalInference          SEUse
+#>                    FALSE screening_only
+#>                    FALSE screening_only
+#>                                                CIBasis          CIUse N.y Infit
+#>  Normal interval from exploratory observation-table SE screening_only  32 1.321
+#>  Normal interval from exploratory observation-table SE screening_only  32 0.943
+#>  Outfit InfitZSTD OutfitZSTD DF_Infit DF_Outfit N.x.x ObservedAverage
+#>   1.277     0.937      1.101   15.765        32    32            2.75
+#>   0.912    -0.046     -0.278   15.765        32    32            2.75
+#>  ExpectedAverage Bias MeanResidual MeanStdResidual MeanAbsStdResidual  ChiSq
+#>             2.75    0            0          -0.026              0.922 40.856
+#>             2.75    0            0           0.011              0.779 29.192
+#>  ChiDf  ChiP SE_Residual t_Residual p_Residual SE_StdResidual t_StdResidual
+#>     31 0.111       0.124          0          1          0.177        -0.149
+#>     31 0.559       0.124          0          1          0.177         0.063
+#>  p_StdResidual DF PTMEA N.y.y CI_Lower CI_Upper CI_Level            CI_Method
+#>          0.882 31 0.609    32    -0.49    0.497     0.95 Normal approximation
+#>          0.950 31 0.667    32    -0.49    0.497     0.95 Normal approximation
+#>  CIEligible                              CILabel  N AbsEstimate SeverityFlag
+#>       FALSE Approximate interval; screening only 32       0.003        FALSE
+#>       FALSE Approximate interval; screening only 32       0.003        FALSE
+#>  MisfitFlag CentralTendencyFlag BiasCount BiasSources BiasFlag FlagCount
+#>       FALSE                TRUE         0           0    FALSE         1
+#>       FALSE                TRUE         0           0    FALSE         1
+#>  AnyFlag FlagLabel .AbsEstimate
+#>     TRUE   central        0.003
+#>     TRUE   central        0.003
+#> 
+#> Settings
+#>               Setting    Value
+#>                 facet    Rater
+#>          facet_source inferred
+#>         severity_warn        1
+#>           misfit_warn      1.5
+#>  central_tendency_max     0.25
+#>       bias_count_warn        1
+#>       bias_abs_t_warn        2
+#>    bias_abs_size_warn      0.5
+#>            bias_p_max     0.05
+#>   bias_source_bundles        0
+#> 
+#> Notes
+#>  - Dashboard constructed successfully.
+# }
 ```

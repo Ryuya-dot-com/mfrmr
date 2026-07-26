@@ -223,7 +223,7 @@ it.</p></li>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">toy_small</span> <span class="op">&lt;-</span> <span class="va">toy</span><span class="op">[</span><span class="va">toy</span><span class="op">$</span><span class="va">Person</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">toy</span><span class="op">$</span><span class="va">Person</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">12</span><span class="op">]</span>, , drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span></span></span>
 <span class="r-in"><span></span></span>
@@ -235,7 +235,32 @@ it.</p></li>
 <span class="r-in"><span>  maxit <span class="op">=</span> <span class="fl">30</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">run</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> FACETS-style Workflow Summary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Model: RSM | Method: JML</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   N: 192 | Persons: 12 | Facets: 2 | Categories: 4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   LogLik: -203.282 | AIC: 446.564 | BIC: 511.714</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Optimizer returned code 0: Yes | Formal inference: Ready | Iterations: 66</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Column mapping</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     Key            Value</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Person           Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Score            Score</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Facets Rater, Criterion</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Weight                 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Detailed objects:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - summary(out$fit)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - summary(out$diagnostics)</span>
 <span class="r-in"><span><span class="fu"><a href="compatibility_alias_table.html">compatibility_alias_table</a></span><span class="op">(</span><span class="st">"functions"</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         Alias   PreferredName  Surface      Lifecycle</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 mfrmRFacets run_mfrm_facets function retained_alias</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 analyze_dif     analyze_dff function retained_alias</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                         RetainedFor           RemovalPlan</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1            older workflow scripts No scheduled removal.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 earlier DIF-oriented package code No scheduled removal.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                     Notes</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                      Compatibility wrapper for the legacy-compatible one-shot workflow.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 DFF naming is preferred for many-facet workflows; the older DIF name is still accepted.</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">fixed</span> <span class="op">&lt;-</span> <span class="fu"><a href="build_fixed_reports.html">build_fixed_reports</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="estimate_bias.html">estimate_bias</a></span><span class="op">(</span></span></span>
@@ -248,7 +273,10 @@ it.</p></li>
 <span class="r-in"><span>  branch <span class="op">=</span> <span class="st">"original"</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">fixed</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "bias_fixed"        "pairwise_fixed"    "pairwise_table"   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [4] "branch"            "style"             "interaction_label"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [7] "target_facet"     </span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

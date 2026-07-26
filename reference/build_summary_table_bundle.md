@@ -221,8 +221,8 @@ manuscript-facing subset before plotting or export.
   support are not mistaken for recovery-metric failures.
 
 - precision-review summaries expose `fit_separation_basis` so fit, ZSTD,
-  separation/reliability/strata, and QC thresholds remain separate
-  reporting surfaces rather than interchangeable evidence.
+  separation/reliability/strata, and QC thresholds remain distinct forms
+  of evidence rather than interchangeable summaries.
 
 - fit-measure and FACETS fit-review summaries expose df/ZSTD sensitivity
   tables under precision-review roles, keeping MnSq status, ZSTD
@@ -275,13 +275,53 @@ manuscript-facing subset before plotting or export.
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+# \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
   method = "JML", maxit = 30
 )
+#> Warning: Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.
 bundle <- build_summary_table_bundle(fit)
 bundle$table_index
+#>                  Table Rows Cols                 Role
+#> 1             overview    1   52         run_overview
+#> 2  population_overview    1   11     population_basis
+#> 5    population_coding    0    6    population_coding
+#> 6       facet_overview    2    7   facet_distribution
+#> 7      person_overview    1    7  person_distribution
+#> 8        step_overview    1    5   category_structure
+#> 10   settings_overview    1   18  estimation_settings
+#> 11       reporting_map    6    3        reporting_map
+#> 12             caveats    0    8     analysis_caveats
+#> 13      facet_extremes    8    3 extreme_facet_levels
+#> 14         person_high   10    4  extreme_person_high
+#> 15          person_low   10    4   extreme_person_low
+#>                                                                                                                                       Description
+#> 1                                                                              One-row model fit, convergence, and information-criteria overview.
+#> 2                                                                                   Population-model basis, posterior basis, and omission review.
+#> 5                                                    Latent-regression categorical covariate levels, contrasts, and encoded model-matrix columns.
+#> 6                                                                                               Per-facet spread, range, and level-count summary.
+#> 7                                                                                     Distribution of person measures and posterior SD summaries.
+#> 8                                                                                                       Threshold range and monotonicity summary.
+#> 10                                                                             Estimation settings that affect identification and interpretation.
+#> 11                                                                                   Companion outputs to cite for manuscript-oriented reporting.
+#> 12 Structured fit-level caveats such as retained zero-count categories, score-category recoding, and latent-regression population-model warnings.
+#> 13                                                                                              Facet levels with the largest absolute estimates.
+#> 14                                                                                                  Highest person measures from the current fit.
+#> 15                                                                                                   Lowest person measures from the current fit.
 summary(bundle)$role_summary
-} # }
+#>                    Role Tables TotalRows TotalCols
+#> 12         run_overview      1         1        52
+#> 11        reporting_map      1         6         3
+#> 10    population_coding      1         0         6
+#> 9      population_basis      1         1        11
+#> 8   person_distribution      1         1         7
+#> 7    facet_distribution      1         2         7
+#> 6    extreme_person_low      1        10         4
+#> 5   extreme_person_high      1        10         4
+#> 4  extreme_facet_levels      1         8         3
+#> 3   estimation_settings      1         1        18
+#> 2    category_structure      1         1         5
+#> 1      analysis_caveats      1         0         8
+# }
 ```

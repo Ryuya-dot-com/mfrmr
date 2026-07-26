@@ -159,7 +159,7 @@ range. Points are colored by facet for easy identification.
 ## Examples
 
 ``` r
-if (FALSE) { # interactive()
+# \donttest{
 toy <- load_mfrmr_data("example_operational")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "MML", model = "RSM",
@@ -167,6 +167,13 @@ fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 p <- plot_bubble(fit, diagnostics = diag, draw = FALSE)
 head(p$data$table[, c("Facet", "Level", "Estimate", "Infit", "Outfit")])
+#>    Facet Level   Estimate     Infit    Outfit
+#> 49 Rater   R01 -0.5968433 0.7558296 0.7419517
+#> 50 Rater   R02 -0.3339430 0.9659519 1.0267816
+#> 51 Rater   R03  0.2588494 1.0003529 0.9692421
+#> 52 Rater   R04  0.1692568 0.9195966 0.9036096
+#> 53 Rater   R05  0.1348932 0.6437494 0.6364430
+#> 54 Rater   R06  0.3677868 0.8062824 0.7890478
 # Look for (default `view = "measure"`): bubbles inside the shaded
 #   0.5-1.5 fit-review band. Bubbles above the band are underfit
 #   (noisy elements); below the band are overfit (overly predictable).
@@ -175,11 +182,12 @@ head(p$data$table[, c("Facet", "Level", "Estimate", "Infit", "Outfit")])
 p_io <- plot_bubble(fit, diagnostics = diag, view = "infit_outfit",
                      draw = FALSE)
 p_io$data$view
+#> [1] "infit_outfit"
 # Look for: bubbles clustered inside the central [0.5, 1.5] x [0.5, 1.5]
 #   square. Points outside the upper-right corner have both Infit
 #   AND Outfit > 1.5 (consistent underfit); points outside the
 #   lower-left have both < 0.5 (consistent overfit). Bubble size in
 #   this view defaults to N (observation count) so the visual
 #   weighting matches how seriously the misfit should be taken.
-}
+# }
 ```

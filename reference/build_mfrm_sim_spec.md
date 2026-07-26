@@ -374,13 +374,16 @@ how to generate them.
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+# \donttest{
 spec <- build_mfrm_sim_spec(
   design = list(person = 8, rater = 2, criterion = 2, assignment = 1),
   assignment = "rotating"
 )
 spec$model
+#> [1] "RSM"
 spec$assignment
+#> [1] "rotating"
 nrow(spec$threshold_table)
-} # }
+#> [1] 3
+# }
 ```

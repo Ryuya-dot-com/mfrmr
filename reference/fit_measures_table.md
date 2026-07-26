@@ -166,7 +166,7 @@ stricter or more permissive review rules.
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+# \donttest{
 toy <- load_mfrmr_data("example_operational")
 fit <- fit_mfrm(
   toy, "Person", c("Rater", "Criterion"), "Score",
@@ -174,10 +174,94 @@ fit <- fit_mfrm(
 )
 fm <- fit_measures_table(fit, facet = "Rater")
 fm$facets_table
+#>   Facet Level    Measure      S.E.   Lower CI    Upper CI CI Level Obs
+#> 1 Rater   R05  0.1348932 0.2298500 -0.3156044  0.58539090     0.95  44
+#> 2 Rater   R01 -0.5968433 0.2231594 -1.0342276 -0.15945899     0.95  47
+#> 3 Rater   R06  0.3677868 0.2401725 -0.1029426  0.83851627     0.95  38
+#> 4 Rater   R04  0.1692568 0.2164848 -0.2550456  0.59355929     0.95  47
+#> 5 Rater   R02 -0.3339430 0.2066065 -0.7388843  0.07099831     0.95  56
+#> 6 Rater   R03  0.2588494 0.2123514 -0.1573516  0.67505041     0.95  50
+#>   Infit MnSq  Infit ZStd Outfit MnSq Outfit ZStd Infit df Outfit df
+#> 1  0.6437494 -1.37224963   0.6364430 -1.89645401 25.59501        44
+#> 2  0.7558296 -0.96473720   0.7419517 -1.30848364 30.84427        47
+#> 3  0.8062824 -0.57564164   0.7890478 -0.91654625 21.28480        38
+#> 4  0.9195966 -0.22988795   0.9036096 -0.41438157 29.38610        47
+#> 5  0.9659519 -0.06996692   1.0267816  0.20346215 36.77909        56
+#> 6  1.0003529  0.08533360   0.9692421 -0.08872733 31.54496        50
+#>   Fit df method Max ZStd shift Flag changed by df Max df rel shift
+#> 1        engine             NA              FALSE               NA
+#> 2        engine             NA              FALSE               NA
+#> 3        engine             NA              FALSE               NA
+#> 4        engine             NA              FALSE               NA
+#> 5        engine             NA              FALSE               NA
+#> 6        engine             NA              FALSE               NA
+#>       df review  Fit Status               Review Reason
+#> 1 not_available within_band Within selected review band
+#> 2 not_available within_band Within selected review band
+#> 3 not_available within_band Within selected review band
+#> 4 not_available within_band Within selected review band
+#> 5 not_available within_band Within selected review band
+#> 6 not_available within_band Within selected review band
 fm$underfit
+#>  [1] Facet                                   
+#>  [2] Level                                   
+#>  [3] Measure                                 
+#>  [4] SE                                      
+#>  [5] CI_Lower                                
+#>  [6] CI_Upper                                
+#>  [7] CI_Level                                
+#>  [8] N                                       
+#>  [9] Infit                                   
+#> [10] Outfit                                  
+#> [11] InfitZSTD                               
+#> [12] OutfitZSTD                              
+#> [13] DF_Infit                                
+#> [14] DF_Outfit                               
+#> [15] DF_Infit_ENGINE                         
+#> [16] DF_Outfit_ENGINE                        
+#> [17] DF_Infit_FACETS                         
+#> [18] DF_Outfit_FACETS                        
+#> [19] InfitZSTD_ENGINE                        
+#> [20] OutfitZSTD_ENGINE                       
+#> [21] InfitZSTD_FACETS                        
+#> [22] OutfitZSTD_FACETS                       
+#> [23] FitDfMethod                             
+#> [24] FitZSTDTransform                        
+#> [25] InfitBand                               
+#> [26] OutfitBand                              
+#> [27] InfitZSTDBand                           
+#> [28] OutfitZSTDBand                          
+#> [29] Underfit                                
+#> [30] Overfit                                 
+#> [31] FitStatus                               
+#> [32] ReviewReason                            
+#> [33] MaxAbsZSTD                              
+#> [34] MaxMnSqDistance                         
+#> [35] InfitZSTDDiff_FACETS_minus_ENGINE       
+#> [36] OutfitZSTDDiff_FACETS_minus_ENGINE      
+#> [37] MaxAbsZSTDDiff_FACETS_vs_ENGINE         
+#> [38] MaxAbsLogDFRatio_ENGINE_over_FACETS     
+#> [39] MaxDFRelativeDifference_ENGINE_vs_FACETS
+#> [40] EngineFlagAbsZ                          
+#> [41] FacetsStyleFlagAbsZ                     
+#> [42] FlagChangedByDf                         
+#> [43] DfSensitivityStatus                     
+#> <0 rows> (or 0-length row.names)
 
 # Include FACETS-style df/ZSTD companion columns for comparison.
 fm_facets <- fit_measures_table(fit, facet = "Rater", fit_df_method = "both")
 fm_facets$df_conversion_guide$decision_guide
-} # }
+#>   Step                                                         Question
+#> 1    1                                           Are MnSq values close?
+#> 2    2                   Are df values close under the same convention?
+#> 3    3                   Do ZSTD values differ after MnSq and df agree?
+#> 4    4 Does |ZSTD| > 2 status change only after changing df convention?
+#> 5    5                            Is an external FACETS table supplied?
+#>                                                                                            RecommendedAction
+#> 1 If MnSq differs materially, treat this as a fit-statistic or estimation difference before discussing ZSTD.
+#> 2                    If df differs, classify the ZSTD gap as a df-convention issue unless MnSq also differs.
+#> 3            Check WHEXACT/normalization settings and rounding/truncation before making a substantive claim.
+#> 4         Report the flag as convention-sensitive; inspect MnSq and substantive context before acting on it.
+#> 5                     Use read_facets_fit_table() or normalize_facets_fit_frame(), then facets_fit_review().
+# }
 ```

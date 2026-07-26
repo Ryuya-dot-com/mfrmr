@@ -92,7 +92,7 @@ helpers outside the documented boundary.
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+# \donttest{
 toy <- load_mfrmr_data("example_core")
 fit_rsm <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                     method = "MML", model = "RSM", quad_points = 7)
@@ -101,5 +101,61 @@ fit_pcm <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                     quad_points = 7)
 review <- build_model_choice_review(RSM = fit_rsm, PCM = fit_pcm)
 summary(review)
-} # }
+#> mfrm Model Choice Review
+#> 
+#> Overview
+#>  FitCount   Models HasBoundedGPCM OperationalReference SensitivityModel
+#>         2 RSM, PCM          FALSE                  RSM             <NA>
+#>  ICComparable                     ReviewStatus
+#>          TRUE rasch_family_model_choice_review
+#> 
+#> Next Actions
+#>  - Read comparison_table for fit evidence, but decide operational use from the
+#>    score interpretation.
+#>  - Use downstream_routes before calling APA, score-side export, linking,
+#>    recovery, fair-average, or bias-screening helpers.
+#>  - Use report_templates when drafting methods text so the fitted model and
+#>    score contract are described accurately.
+#> 
+#> Comparison Table
+#>  Label Model Method nobs WeightedN ICSampleSize ICSampleSizeBasis npar   LogLik
+#>    RSM   RSM    MML  768       768          768         row_count    8 -903.080
+#>    PCM   PCM    MML  768       768          768         row_count   14 -896.262
+#>       AIC      BIC Converged InferenceReady ConvergenceSeverity ICComparable
+#>  1822.161 1859.311      TRUE           TRUE                pass         TRUE
+#>  1820.524 1885.537      TRUE           TRUE                pass         TRUE
+#>  Delta_AIC AkaikeWeight Delta_BIC BICWeight
+#>      1.637        0.306     0.000         1
+#>      0.000        0.694    26.225         0
+#> 
+#> Model Roles
+#>  Label Model           RecommendedRole
+#>    RSM   RSM equal_weighting_reference
+#>    PCM   PCM equal_weighting_reference
+#>                                                                        ScoreContract
+#>                         Common threshold structure; equal discrimination fixed at 1.
+#>  Step thresholds vary by the designated step facet; equal discrimination fixed at 1.
+#> 
+#> Downstream Routes
+#>  Label Model FullAPARoute ScoreSideExport LinkingSynthesis RecoveryChecks
+#>    RSM   RSM    supported       supported        supported      supported
+#>    PCM   PCM    supported       supported        supported      supported
+#>  FairAverage BiasScreening SummaryAppendix
+#>    supported     supported       supported
+#>    supported     supported       supported
+#> 
+#> Weighting Review Status
+#>  Requested Available
+#>      FALSE     FALSE
+#>                                                                                           Message
+#>  Not requested; set `run_weighting_review = TRUE` for the first RSM/PCM versus bounded GPCM pair.
+#> 
+#> Notes
+#>  - This review is a decision aid; it does not refit models or choose an
+#>    operational model automatically.
+#>  - Observation weights and GPCM discrimination-based reweighting are separate
+#>    concepts.
+#>  - Use bounded GPCM wording only for the current constrained implementation,
+#>    not for an unrestricted GPCM family claim.
+# }
 ```

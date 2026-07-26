@@ -168,20 +168,21 @@ package-native bias helper that provides a table component.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># interactive()</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="co"># Minimal APA-output example using a JML fit and lightweight diagnostics.</span></span></span>
 <span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fit_quick</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span></span>
 <span class="r-in"><span>  method <span class="op">=</span> <span class="st">"JML"</span>, maxit <span class="op">=</span> <span class="fl">30</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.</span>
 <span class="r-in"><span><span class="va">diag_quick</span> <span class="op">&lt;-</span> <span class="fu"><a href="diagnose_mfrm.html">diagnose_mfrm</a></span><span class="op">(</span><span class="va">fit_quick</span>,</span></span>
 <span class="r-in"><span>  residual_pca <span class="op">=</span> <span class="st">"none"</span>,</span></span>
 <span class="r-in"><span>  diagnostic_mode <span class="op">=</span> <span class="st">"legacy"</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">apa_quick</span> <span class="op">&lt;-</span> <span class="fu">build_apa_outputs</span><span class="op">(</span><span class="va">fit_quick</span>, <span class="va">diag_quick</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/nchar.html" class="external-link">nchar</a></span><span class="op">(</span><span class="va">apa_quick</span><span class="op">$</span><span class="va">report_text</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span></span>
 <span class="r-in"><span>  method <span class="op">=</span> <span class="st">"MML"</span>, quad_points <span class="op">=</span> <span class="fl">7</span>, maxit <span class="op">=</span> <span class="fl">30</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
@@ -198,21 +199,128 @@ package-native bias helper that provides a table component.</p>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">s_apa</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">apa</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">s_apa</span><span class="op">$</span><span class="va">overview</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Components NonEmptyComponents TotalCharacters TotalNonEmptyLines Sections</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1          3                  3            9634                121        9</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   AvailableSections ContentChecks ContentChecksPassed DraftContractPass</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                 7             9                   9              TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ReadyForAPA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1        TRUE</span>
 <span class="r-in"><span><span class="co"># Look for: `SentenceCount` non-zero in every section that the run</span></span></span>
 <span class="r-in"><span><span class="co">#   should support (Method / Results / fit / reliability / bias).</span></span></span>
 <span class="r-in"><span><span class="co">#   Zero counts mean that section's prose is empty and the</span></span></span>
 <span class="r-in"><span><span class="co">#   manuscript will need to fill it manually.</span></span></span>
 <span class="r-in"><span><span class="va">chk</span> <span class="op">&lt;-</span> <span class="fu"><a href="reporting_checklist.html">reporting_checklist</a></span><span class="op">(</span><span class="va">fit</span>, diagnostics <span class="op">=</span> <span class="va">diag</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">chk</span><span class="op">$</span><span class="va">checklist</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Section"</span>, <span class="st">"Item"</span>, <span class="st">"DraftReady"</span>, <span class="st">"NextAction"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          Section                                                      Item</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 Method Section                                       Model specification</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 Method Section                                          Data description</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 Method Section                                           Precision basis</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 Method Section                                               Convergence</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5 Method Section                                     Connectivity assessed</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6 Method Section Empirical-Bayes shrinkage when small-N facets are present</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   DraftReady</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1       TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2       TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3       TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4       TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5       TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6       TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                          NextAction</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                             Available; adapt this evidence into the manuscript draft after methodological review.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                             Available; adapt this evidence into the manuscript draft after methodological review.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3                                                    Report the precision tier as model-based in the APA narrative.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4                             Available; adapt this evidence into the manuscript draft after methodological review.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5                                           Document the single connected subset before making common-scale claims.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6 Report both the fixed-effects and shrunk estimates; cite Efron &amp; Morris (1973) for the empirical-Bayes rationale.</span>
 <span class="r-in"><span><span class="co"># Look for: rows with `DraftReady = "yes"` are ready to paste into</span></span></span>
 <span class="r-in"><span><span class="co">#   the manuscript. `"no"` rows tell you which helper / setting</span></span></span>
 <span class="r-in"><span><span class="co">#   needs to run before that paragraph can be drafted, via</span></span></span>
 <span class="r-in"><span><span class="co">#   `NextAction`. Aim for every Visual Displays / Reliability /</span></span></span>
 <span class="r-in"><span><span class="co">#   Diagnostics row to be `"yes"` before submitting.</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="va">apa</span><span class="op">$</span><span class="va">report_text</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Method.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Design and data.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> The analysis focused on Toy writing task in Demonstration dataset. A many-facet</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> rating-scale Rasch model was fit to 768 observations from 48 persons scored on a 4-category</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> scale (1-4). The design included facets for Rater (n = 4), Criterion (n = 4). Facet-level</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> sample sizes were strong (smallest level N = 192), though facets were still estimated as</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> fixed effects with sum-to-zero identification; `analyze_hierarchical_structure()` is</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> available for nesting and variance-component follow-up. The rating scale was described as</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 0-2 rating scale.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Estimation settings.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> The RSM specification was estimated using MML with mfrmr. Model-based precision summaries</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> were available for this run. Person measures are expected a posteriori (EAP) estimates</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> under the marginal person distribution, and residual-based fit statistics are evaluated at</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> these EAP measures rather than at joint maximum likelihood (JMLE) estimates. Recommended</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> use for this precision profile: Use for primary reporting of SE, CI, and reliability in</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> this package.. Optimization met the package convergence checks after 13 function</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> evaluations and 13 gradient evaluations (LogLik = -903.080, AIC = 1822.161, BIC =</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1859.311). Terminal gradient sup-norm = 0.0001 (review threshold = 0.0001). Optimizer</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> returned convergence code 0. Constraint settings: noncenter facet = Person; anchored levels</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> = 0 (facets: none); group anchors = 0 (facets: none); dummy facets = none.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Results.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Scale functioning.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Category usage was adequate (unused categories = 0, low-count categories = 0), and</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> thresholds were ordered. Step/threshold summary: 3 step(s); estimate range = -1.30 to 1.35</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> logits; no disordered steps.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Facet measures.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Person measures ranged from -2.02 to 2.33 logits (M = 0.03, SD = 1.01). Rater measures</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ranged from -0.32 to 0.33 logits (M = -0.00, SD = 0.31). Criterion measures ranged from</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> -0.41 to 0.24 logits (M = 0.00, SD = 0.28).</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Fit and precision.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Overall mean-square fit was within the 0.5-1.5 screening band (infit MnSq = 0.99, outfit</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> MnSq = 1.01). This band is the package's review convention; published mean-square</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> guidelines differ, and band position is screening evidence rather than a model-validity</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> decision. 1 of 56 elements fell outside the 0.5-1.5 mean-square screening band. Largest</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> misfit signals: Person:P023 (|ZSTD| = 2.09); Criterion:Organization (|ZSTD| = 1.69);</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Person:P018 (|ZSTD| = 1.45). Criterion reliability = 0.91 (separation = 3.21). Person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> reliability = 0.90 (separation = 3.06). Rater reliability = 0.92 (separation = 3.51). These</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> are Rasch/FACETS-style separation indices (measure spread relative to measurement error),</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> not inter-rater agreement. The Person row uses EAP measures with posterior SDs, which</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> yields a conservative summary that is not numerically comparable to JMLE-based person</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> reliability from FACETS. Observed inter-rater agreement is reported separately from</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> separation reliability: for Rater, exact agreement = 0.36, expected exact agreement = 0.37,</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> adjacent agreement = 0.83. Element-level 95% confidence intervals (Normal approximation)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> accompany the measures (CI_Lower / CI_Upper); 56 of 56 rows are flagged CIEligible for</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> primary reporting.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Residual structure.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Exploratory residual PCA (overall standardized residual matrix) showed PC1 eigenvalue =</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2.10 (13.2% variance), with PC2 eigenvalue = 1.79. Facet-specific exploratory residual PCA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> showed the largest first-component signal in Rater (eigenvalue = 1.55, 38.7% variance).</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Heuristic reference bands: EV &gt;= 1.4 (critical minimum), &gt;= 1.5 (caution), &gt;= 2.0 (common),</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &gt;= 3.0 (strong); variance &gt;= 5% (minor), &gt;= 10% (caution), &gt;= 20% (strong). Strict marginal</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> screening was available as a latent-integrated exploratory check (overall RMSD = 0.00,</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> overall max |standardized residual| = 0.48). The largest strict marginal cell involved</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Criterion: Language | Cat 1 (standardized residual = 2.47, proportion difference = 0.06).</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Strict pairwise local-dependence follow-up flagged 0 level pair(s) under the</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> latent-integrated agreement screen. The largest strict pairwise signal involved Criterion:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Language vs Organization (ExactStdResidual = -1.45, AdjacentStdResidual = 0.39).</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Reporting cautions.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Fit-basis note: MnSq/ZSTD fit statistics in this run were computed at EAP person measures,</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> which are shrunken toward the population mean; they are therefore not numerically</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> interchangeable with JMLE-based engines such as FACETS. Refit with method = "JML" when a</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> JMLE-style residual basis is required for external comparison.</span>
 <span class="r-in"><span><span class="va">apa</span><span class="op">$</span><span class="va">section_map</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"SectionId"</span>, <span class="st">"Available"</span><span class="op">)</span><span class="op">]</span></span></span>
-<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
-<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                    SectionId Available</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1              method_design      TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2          method_estimation      TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3              results_scale      TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4           results_measures      TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5   results_population_model     FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6      results_fit_precision      TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7 results_residual_structure      TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8     results_bias_screening     FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9           results_cautions      TRUE</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

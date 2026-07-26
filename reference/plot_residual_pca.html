@@ -151,7 +151,7 @@ specific facet after global PCA review.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># interactive()</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="va">toy_full</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">toy_people</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">toy_full</span><span class="op">$</span><span class="va">Person</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">24</span><span class="op">]</span></span></span>
 <span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="va">toy_full</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/match.html" class="external-link">match</a></span><span class="op">(</span><span class="va">toy_full</span><span class="op">$</span><span class="va">Person</span>, <span class="va">toy_people</span>, nomatch <span class="op">=</span> <span class="fl">0L</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0L</span>, , drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span></span></span>
@@ -162,19 +162,85 @@ specific facet after global PCA review.</p>
 <span class="r-in"><span><span class="va">pca</span> <span class="op">&lt;-</span> <span class="fu"><a href="analyze_residual_pca.html">analyze_residual_pca</a></span><span class="op">(</span><span class="va">diag</span>, mode <span class="op">=</span> <span class="st">"overall"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">plt</span> <span class="op">&lt;-</span> <span class="fu">plot_residual_pca</span><span class="op">(</span><span class="va">pca</span>, mode <span class="op">=</span> <span class="st">"overall"</span>, plot_type <span class="op">=</span> <span class="st">"scree"</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">plt</span><span class="op">$</span><span class="va">data</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $plot</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "scree"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $mode</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "overall"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $facet</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NULL</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $title</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "Overall Residual PCA (Scree)"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $subtitle</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "Variance explained by residual components"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $legend</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                         label      role  aesthetic   value</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1        Residual eigenvalues component line-point #1f78b4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2             Unit-eigenvalue reference       line #6b7280</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3      Critical minimum (1.4) reference       line #6b7280</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 Noticeable second dim (2.0) reference       line #6b7280</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5     Strong second dim (3.0) reference       line #6b7280</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span><span class="va">pca_pa</span> <span class="op">&lt;-</span> <span class="fu"><a href="analyze_residual_pca.html">analyze_residual_pca</a></span><span class="op">(</span><span class="va">diag</span>, mode <span class="op">=</span> <span class="st">"overall"</span>, parallel <span class="op">=</span> <span class="cn">TRUE</span>, parallel_reps <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">pa</span> <span class="op">&lt;-</span> <span class="fu">plot_residual_pca</span><span class="op">(</span><span class="va">pca_pa</span>, mode <span class="op">=</span> <span class="st">"overall"</span>, plot_type <span class="op">=</span> <span class="st">"parallel_scree"</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">pa</span><span class="op">$</span><span class="va">data</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $plot</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "parallel_scree"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $mode</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "overall"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $facet</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NULL</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $title</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "Overall Residual PCA (Parallel Scree)"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $subtitle</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "Observed residual eigenvalues compared with the permutation null"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $legend</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                label            role  aesthetic   value</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1      Observed residual eigenvalues       component line-point #1f78b4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2    95% residual-permutation cutoff parallel_cutoff line-point #d95f02</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3                      Parallel mean   parallel_mean       line #1b9e77</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4                    Unit-eigenvalue       reference       line #6b7280</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5             Critical minimum (1.4)       reference       line #6b7280</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6        Noticeable second dim (2.0)       reference       line #6b7280</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7            Strong second dim (3.0)       reference       line #6b7280</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span><span class="va">plt_load</span> <span class="op">&lt;-</span> <span class="fu">plot_residual_pca</span><span class="op">(</span></span></span>
 <span class="r-in"><span>  <span class="va">pca</span>, mode <span class="op">=</span> <span class="st">"overall"</span>, plot_type <span class="op">=</span> <span class="st">"loadings"</span>, component <span class="op">=</span> <span class="fl">1</span>, draw <span class="op">=</span> <span class="cn">FALSE</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">plt_load</span><span class="op">$</span><span class="va">data</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $plot</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "loadings"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $mode</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "overall"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $facet</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NULL</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $title</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "Overall Residual PCA (Loadings: PC1)"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $subtitle</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "Top 16 absolute loadings"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $legend</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>               label    role aesthetic   value</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 Positive loadings loading       bar #1b9e77</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 Negative loadings loading       bar #d95f02</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/interactive.html" class="external-link">interactive</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span>  <span class="fu">plot_residual_pca</span><span class="op">(</span><span class="va">pca</span>, mode <span class="op">=</span> <span class="st">"overall"</span>, plot_type <span class="op">=</span> <span class="st">"scree"</span>, preset <span class="op">=</span> <span class="st">"publication"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

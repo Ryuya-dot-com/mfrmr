@@ -133,7 +133,7 @@ standard errors.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="va">rec</span> <span class="op">&lt;-</span> <span class="fu"><a href="evaluate_mfrm_recovery.html">evaluate_mfrm_recovery</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>  n_person <span class="op">=</span> <span class="fl">12</span>,</span></span>
 <span class="r-in"><span>  n_rater <span class="op">=</span> <span class="fl">2</span>,</span></span>
@@ -143,7 +143,25 @@ standard errors.</p>
 <span class="r-in"><span>  seed <span class="op">=</span> <span class="fl">123</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">rec</span>, type <span class="op">=</span> <span class="st">"summary"</span>, metric <span class="op">=</span> <span class="st">"rmse"</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;mfrm_plot_data&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   name     : recovery_simulation</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   title    : Parameter recovery: RMSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   subtitle : Summary by parameter type, facet, and comparison scale</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   data     :</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     $type : character [1]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     $metric : character [1]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     $metric_label : character [1]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     $comparison : character [1]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     $parameter_type : NULL</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     $facet : NULL</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     $plot_table : data.frame [4 x 22]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     $notes : character [2]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     $plot_name : character [1]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   legend   : 4 entries</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ref lines: 0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Re-render via ggplot2 / plotly using `x$data`; or pass the</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> originating `draw = FALSE` plot helper its inverse to draw it.</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

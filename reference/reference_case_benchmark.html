@@ -161,14 +161,90 @@ model reference data.</p></li>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="va">bench</span> <span class="op">&lt;-</span> <span class="fu">reference_case_benchmark</span><span class="op">(</span></span></span>
 <span class="r-in"><span>  cases <span class="op">=</span> <span class="st">"synthetic_truth"</span>,</span></span>
 <span class="r-in"><span>  method <span class="op">=</span> <span class="st">"JML"</span>,</span></span>
 <span class="r-in"><span>  maxit <span class="op">=</span> <span class="fl">30</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">bench</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> mfrmr Reference Case Check Summary </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Class: mfrm_reference_benchmark</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Components: 15</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Case check summary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             Case       CaseType Status Fits DesignChecks RecoveryChecks</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  synthetic_truth truth_recovery   Fail    1            7              3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  BiasChecks LinkingChecks ConQuestOverlapChecks PopulationPolicyChecks</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           0             0                     0                      0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  StabilityChecks                        KeySignal</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                0 Min recovery correlation = 0.992</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Reference-case fit runs: fit_runs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             Case         Dataset Method Model Rows Persons Raters Criteria</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  synthetic_truth synthetic_truth    JML   RSM 1296      36      3        3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Tasks Converged OptimizerCodeZero ConvergenceSeverity    LogLik</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      4     FALSE             FALSE                fail -1205.199</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  MMLEngineRequested MMLEngineUsed EMIterations PosteriorBasis</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                &lt;NA&gt;          &lt;NA&gt;           NA     legacy_mml</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  PopulationModelActive PopulationFormula PopulationPolicy</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                  FALSE              &lt;NA&gt;             &lt;NA&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  PopulationDesignColumns PopulationXlevelVariables PopulationContrastVariables</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                               </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  PopulationCoefficientCount PopulationResidualVariance</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                           0                         NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  PopulationIncludedPersons PopulationOmittedPersons</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                          0                        0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  PopulationResponseRowsRetained PopulationResponseRowsOmitted Infit Outfit</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                            1296                             0 0.992  0.955</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  PrecisionTier SupportsFormalInference</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    exploratory                   FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Validation scope</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                 Area        Status</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>              Package reference check        active</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    Latent-regression omission policy not requested</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  ConQuest-overlap package-side check not requested</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         External ConQuest validation  not assessed</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                 Evidence</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                  case_summary and component check tables</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                               request `synthetic_latent_regression_omit`</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                             request `synthetic_conquest_overlap_dry_run`</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Use review_conquest_overlap() with output from an external ConQuest run</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                               Interpretation</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                            Use as a package reference check.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        Complete-case omission behavior is reviewed only when the omission case is requested.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>               The check covers package-side export, normalization, and review plumbing only.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  The package reference benchmark is not a substitute for reviewing external ConQuest output.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Settings</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>              Setting                        Value</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                cases              synthetic_truth</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>               method                          JML</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                model                          RSM</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           mml_engine                           NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         intended_use packaged_reference_benchmark</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  external_validation                        FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          quad_points                           NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                maxit                           30</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>               reltol                        1e-06</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Notes</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Synthetic truth checks compare recovered facet measures against known</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    generating values from the package simulation design.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - ConQuest-overlap package-side checks cover only export/normalization/review</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    preparation; actual external ConQuest output is still required for external</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    validation.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Bias checks review package identities for observed-minus-expected averages,</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    local measures, and pairwise Rasch-Welch contrasts.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Pair stability checks review baseline and iterative-calibration packaged</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    datasets using facet-measure alignment, fit deltas, reliability deltas, and</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    common-element linking coverage.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Use this reference check as package evidence, not as a substitute for</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    external validation against commercial software or published studies.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Non-MML benchmark runs remain useful for stability review, but</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    formal-inference expectations should be interpreted more conservatively.</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

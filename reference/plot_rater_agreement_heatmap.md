@@ -71,12 +71,14 @@ for the diagnostics bundle the heatmap reads from.
 ## Examples
 
 ``` r
-if (FALSE) { # interactive()
+# \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "JML", maxit = 30)
+#> Warning: Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.
 p <- plot_rater_agreement_heatmap(fit, draw = FALSE)
 dim(p$data$matrix)
+#> [1] 4 4
 # Look for (default `metric = "exact"`):
 # - Off-diagonal cells close to the corresponding entry of
 #   `summary(diag)$interrater$ExactAgreement` indicate consistent
@@ -86,5 +88,5 @@ dim(p$data$matrix)
 #   `[-1, 1]`; positive cells = pairs agree on relative ordering,
 #   negative cells = pairs systematically rank persons in opposite
 #   directions and are the highest-priority review cases.
-}
+# }
 ```

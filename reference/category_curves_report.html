@@ -173,21 +173,115 @@ ggplot2, plotly, or another R graphics system.</p></li>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># interactive()</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>, method <span class="op">=</span> <span class="st">"JML"</span>, maxit <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span></span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.</span>
 <span class="r-in"><span><span class="va">out</span> <span class="op">&lt;-</span> <span class="fu">category_curves_report</span><span class="op">(</span><span class="va">fit</span>, theta_points <span class="op">=</span> <span class="fl">101</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">out</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> mfrmr Category Curves Summary </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Class: mfrm_category_curves</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Components: 8</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Curve grid summary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                 Metric   Value</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                           curve_groups   1.000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                           theta_points 101.000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                             categories   4.000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                      legacy_graph_rows 101.000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                    expected_ogive_rows 101.000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                       probability_rows 404.000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                    probability_columns   4.000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            cumulative_probability_rows 808.000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>               cumulative_boundary_rows   3.000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>              category_information_rows 404.000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           boundary_rows_needing_review   0.000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      boundary_rows_outside_theta_range   0.000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  boundary_rows_with_multiple_crossings   0.000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                  max_total_information   0.661</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>               max_category_information   0.283</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Boundary / curve rows: cumulative_boundaries</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  CurveGroup BoundaryOrder LowerOrEqualCategory AboveCategory ThresholdCategory</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      Common             1                    1             2                 2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      Common             2                    2             3                 3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      Common             3                    3             4                 4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  CumulativeDirection TargetProbability ThurstonianThreshold InThetaRange</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          at_or_below               0.5               -1.540         TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          at_or_below               0.5               -0.034         TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          at_or_below               0.5                1.572         TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  CrossingCount BoundaryStatus   BoundaryLabel</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>              1       in_range P(X &lt;= 1) = 0.5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>              1       in_range P(X &lt;= 2) = 0.5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>              1       in_range P(X &lt;= 3) = 0.5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Settings</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         Setting       Value</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     theta_range       -6, 6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    theta_points         101</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          digits           4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   include_fixed       FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  fixed_max_rows         400</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          scales &lt;table 1x2&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Notes</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Category-curve bundle with probabilities, cumulative probabilities, total</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    information, and category-specific information.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Category-specific information contributions sum to total information at the</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    same curve and theta point.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Cumulative .5 boundary rows are in range with a single crossing where</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    reported.</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">out</span><span class="op">$</span><span class="va">probabilities</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"CurveGroup"</span>, <span class="st">"Theta"</span>, <span class="st">"Category"</span>, <span class="st">"Probability"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   CurveGroup Theta Category Probability</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1     Common -6.00        1      0.9907</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2     Common -5.88        1      0.9896</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3     Common -5.76        1      0.9882</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4     Common -5.64        1      0.9868</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5     Common -5.52        1      0.9851</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6     Common -5.40        1      0.9832</span>
 <span class="r-in"><span><span class="va">p_overview</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">out</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">p_overview</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">plot</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "overview"</span>
 <span class="r-in"><span><span class="va">p_cum</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">out</span>, type <span class="op">=</span> <span class="st">"cumulative"</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">p_cum</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">cumulative_boundaries</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   CurveGroup BoundaryOrder LowerOrEqualCategory AboveCategory ThresholdCategory</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1     Common             1                    1             2                 2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2     Common             2                    2             3                 3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3     Common             3                    3             4                 4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   CumulativeDirection TargetProbability ThurstonianThreshold InThetaRange</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1         at_or_below               0.5              -1.5400         TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2         at_or_below               0.5              -0.0335         TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3         at_or_below               0.5               1.5722         TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   CrossingCount BoundaryStatus   BoundaryLabel</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1             1       in_range P(X &lt;= 1) = 0.5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2             1       in_range P(X &lt;= 2) = 0.5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3             1       in_range P(X &lt;= 3) = 0.5</span>
 <span class="r-in"><span><span class="va">p_info</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">out</span>, type <span class="op">=</span> <span class="st">"category_information"</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">p_info</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">category_information</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   CurveGroup Theta Category Probability ExpectedScore ScoreVariance Information</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1     Common -6.00        1      0.9907        1.0093        0.0092      0.0092</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2     Common -5.88        1      0.9896        1.0105        0.0104      0.0104</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3     Common -5.76        1      0.9882        1.0118        0.0117      0.0117</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4     Common -5.64        1      0.9868        1.0133        0.0132      0.0132</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5     Common -5.52        1      0.9851        1.0150        0.0149      0.0149</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6     Common -5.40        1      0.9832        1.0169        0.0167      0.0167</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   CategoryInformation CategoryInformationShare Slope Model</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1               1e-04                   0.0092     1   RSM</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2               1e-04                   0.0104     1   RSM</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3               1e-04                   0.0117     1   RSM</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4               2e-04                   0.0132     1   RSM</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5               2e-04                   0.0148     1   RSM</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6               3e-04                   0.0167     1   RSM</span>
 <span class="r-in"><span><span class="va">curve_long</span> <span class="op">&lt;-</span> <span class="fu"><a href="plot_data.html">plot_data</a></span><span class="op">(</span><span class="va">out</span>, component <span class="op">=</span> <span class="st">"plot_long"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">curve_long</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"PlotType"</span>, <span class="st">"Theta"</span>, <span class="st">"Series"</span>, <span class="st">"Value"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   PlotType Theta Series  Value</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1    ogive -6.00 Common 1.0093</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2    ogive -5.88 Common 1.0105</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3    ogive -5.76 Common 1.0118</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4    ogive -5.64 Common 1.0133</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5    ogive -5.52 Common 1.0150</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6    ogive -5.40 Common 1.0169</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

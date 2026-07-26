@@ -144,7 +144,7 @@ and
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+# \donttest{
 toy <- load_mfrmr_data("example_core")
 people <- unique(toy$Person)
 d1 <- toy[toy$Person %in% people[1:12], , drop = FALSE]
@@ -154,14 +154,24 @@ fit1 <- fit_mfrm(d1, "Person", c("Rater", "Criterion"), "Score",
 fit2 <- fit_mfrm(d2, "Person", c("Rater", "Criterion"), "Score",
                  method = "JML", maxit = 30)
 drift <- detect_anchor_drift(list(W1 = fit1, W2 = fit2))
+#> Warning: Thin linking support between 'W1' and 'W2': fewer than 5 retained common elements in Criterion, Rater.
 drift_plot <- plot_anchor_drift(drift, type = "drift", draw = FALSE)
 class(drift_plot)
+#> [1] "mfrm_plot_data" "list"          
 names(drift_plot$data)
+#> [1] "plot"            "table"           "title"           "subtitle"       
+#> [5] "legend"          "reference_lines" "preset"          "plot_name"      
 chain <- build_equating_chain(list(F1 = fit1, F2 = fit2))
+#> Warning: Thin linking support between 'F1' and 'F2': fewer than 5 retained common elements in Criterion, Rater.
 chain_plot <- plot_anchor_drift(chain, type = "chain", draw = FALSE)
 head(chain_plot$data$table)
+#> # A tibble: 2 × 2
+#>   Wave  Cumulative_Offset
+#>   <chr>             <dbl>
+#> 1 F1              0      
+#> 2 F2              0.00211
 if (interactive()) {
   plot_anchor_drift(drift, type = "heatmap", preset = "publication")
 }
-} # }
+# }
 ```

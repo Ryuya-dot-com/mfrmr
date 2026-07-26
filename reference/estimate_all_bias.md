@@ -155,12 +155,14 @@ The returned object is a bundle-like list with class
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+# \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "MML", quad_points = 7, maxit = 30)
 diag <- diagnose_mfrm(fit, residual_pca = "none", diagnostic_mode = "both")
 bias_all <- estimate_all_bias(fit, diagnostics = diag)
 bias_all$summary[, c("Interaction", "Rows", "ScreenPositive")]
-} # }
+#>         Interaction Rows ScreenPositive
+#> 1 Rater x Criterion   16              0
+# }
 ```

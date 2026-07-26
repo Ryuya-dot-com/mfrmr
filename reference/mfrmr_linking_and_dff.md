@@ -181,7 +181,7 @@ links, monitoring drift, and screening differential facet functioning
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+# \donttest{
 toy <- load_mfrmr_data("example_bias")
 fit <- fit_mfrm(
   toy,
@@ -196,9 +196,18 @@ diag <- diagnose_mfrm(fit, residual_pca = "none", diagnostic_mode = "both")
 
 subsets <- subset_connectivity_report(fit, diagnostics = diag)
 subsets$summary[, c("Subset", "Observations", "ObservationPercent")]
+#>   Subset Observations ObservationPercent
+#> 1      1          384                100
 
 dff <- analyze_dff(fit, diag, facet = "Rater", group = "Group", data = toy)
 head(dff$dif_table[, c("Level", "Group1", "Group2",
                        "Classification", "ClassificationSystem")])
-} # }
+#> # A tibble: 4 × 5
+#>   Level Group1 Group2 Classification  ClassificationSystem
+#>   <chr> <chr>  <chr>  <chr>           <chr>               
+#> 1 R01   A      B      Screen negative screening           
+#> 2 R02   A      B      Screen negative screening           
+#> 3 R03   A      B      Screen negative screening           
+#> 4 R04   A      B      Screen negative screening           
+# }
 ```

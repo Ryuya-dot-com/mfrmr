@@ -94,11 +94,51 @@ inspect the compatibility layer.
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+# \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+#> Warning: Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 review <- reference_case_review(fit, diagnostics = diag)
 summary(review)
-} # }
+#> mfrmr Reference Review Summary 
+#>   Class: mfrm_reference_review
+#>   Components: 7
+#> 
+#> Attention items: metric_checks
+#>  Table                         Check Pass            Actual         Expected
+#>     T4 UnexpectedPercent consistency TRUE  6.51041666666667 6.51041666666667
+#>    T10         ReducedBy consistency TRUE               148              148
+#>    T10    ReducedPercent consistency TRUE  74.7474747474748 74.7474747474748
+#>    T11   LowCountPercent consistency TRUE                 0                0
+#>     T7          ExactAgreement range TRUE 0.361979166666667            [0,1]
+#>     T7  ExpectedExactAgreement range TRUE 0.374634703073567            [0,1]
+#>     T7       AdjacentAgreement range TRUE 0.829861111111111            [0,1]
+#>     T7               FixedProb range TRUE               all            [0,1]
+#>     T7              RandomProb range TRUE               all            [0,1]
+#>     T9      AnchoredLevels <= Levels TRUE                 0               56
+#>  Note
+#>      
+#>      
+#>      
+#>      
+#>      
+#>      
+#>      
+#>      
+#>      
+#>      
+#> 
+#> Settings
+#>              Setting                     Value
+#>    reference_profile                      core
+#>      contract_branch                  original
+#>         intended_use reference_contract_review
+#>  external_validation                     FALSE
+#>      include_metrics                      TRUE
+#>      top_n_attention                        15
+#> 
+#> Notes
+#>  - No `summary` component found; showing preview rows from the main table.
+# }
 ```
