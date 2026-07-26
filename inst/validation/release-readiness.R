@@ -190,7 +190,7 @@ mfrmr_release_readiness_check_log_package_version <- function(lines) {
 
 mfrmr_release_readiness_find_check_log <- function(pkg_dir,
                                                    target_version = NULL) {
-  candidates <- c(
+  explicit_candidates <- c(
     file.path(pkg_dir, "mfrmr.Rcheck", "00check.log"),
     file.path(pkg_dir, "check", "mfrmr.Rcheck", "00check.log")
   )
@@ -199,7 +199,7 @@ mfrmr_release_readiness_find_check_log <- function(pkg_dir,
   } else {
     character(0)
   }
-  candidates <- unique(c(candidates, recursive))
+  candidates <- unique(c(explicit_candidates, recursive))
   existing <- candidates[file.exists(candidates)]
   if (length(existing) > 0L &&
       mfrmr_release_readiness_has_value(target_version)) {
@@ -210,6 +210,27 @@ mfrmr_release_readiness_find_check_log <- function(pkg_dir,
     }, character(1))
     matching <- existing[!is.na(versions) & versions == target_version[1]]
     if (length(matching) > 0L) {
+      explicit_matching <- matching[matching %in% explicit_candidates]
+      if (length(explicit_matching) > 0L) {
+        modified <- as.numeric(file.info(explicit_matching)$mtime)
+        return(explicit_matching[which.max(modified)])
+      }
+      expected_tarball <- paste0("mfrmr_", target_version[1], ".tar.gz")
+      paired <- file.exists(file.path(dirname(matching), expected_tarball))
+      if (any(paired)) {
+        matching <- matching[paired]
+      } else {
+        as_cran <- vapply(matching, function(path) {
+          any(grepl(
+            "--as-cran",
+            mfrmr_release_readiness_read_lines(path),
+            fixed = TRUE
+          ))
+        }, logical(1))
+        if (any(as_cran)) {
+          matching <- matching[as_cran]
+        }
+      }
       modified <- as.numeric(file.info(matching)$mtime)
       return(matching[which.max(modified)])
     }
@@ -224,8 +245,9 @@ mfrmr_release_readiness_find_check_log <- function(pkg_dir,
 mfrmr_release_readiness_find_tarball <- function(pkg_dir,
                                                  target_version = NULL) {
   expected <- paste0("mfrmr_", target_version, ".tar.gz")
+  root_tarball <- file.path(pkg_dir, expected)
   candidates <- c(
-    file.path(pkg_dir, expected),
+    root_tarball,
     if (dir.exists(pkg_dir)) {
       list.files(
         pkg_dir,
@@ -242,7 +264,28 @@ mfrmr_release_readiness_find_tarball <- function(pkg_dir,
     file.exists(candidates) & basename(candidates) == expected
   ]
   if (length(matching) == 0L) {
-    return(file.path(pkg_dir, expected))
+    return(root_tarball)
+  }
+  if (file.exists(root_tarball)) {
+    return(root_tarball)
+  }
+  checked <- vapply(matching, function(path) {
+    check_log <- file.path(dirname(path), "00check.log")
+    if (!file.exists(check_log)) {
+      return(FALSE)
+    }
+    if (!mfrmr_release_readiness_has_value(target_version)) {
+      return(TRUE)
+    }
+    identical(
+      mfrmr_release_readiness_check_log_package_version(
+        mfrmr_release_readiness_read_lines(check_log)
+      ),
+      target_version[1]
+    )
+  }, logical(1))
+  if (any(checked)) {
+    matching <- matching[checked]
   }
   modified <- as.numeric(file.info(matching)$mtime)
   matching[which.max(modified)]

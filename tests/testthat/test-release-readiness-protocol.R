@@ -414,6 +414,93 @@ test_that("release-readiness protocol finds common check-log locations", {
                    normalizePath(log_file, winslash = "/", mustWork = TRUE))
 })
 
+test_that("release-readiness prefers candidate check logs over newer archives", {
+  protocol <- release_readiness_protocol_path()
+  env <- new.env(parent = globalenv())
+  source(protocol, local = env)
+
+  root <- tempfile("pkg")
+  candidate_dir <- file.path(root, "release-candidates", "checked")
+  archive_dir <- file.path(root, "release-candidates", "win-builder")
+  dir.create(candidate_dir, recursive = TRUE)
+  dir.create(archive_dir, recursive = TRUE)
+
+  candidate_log <- file.path(candidate_dir, "00check.log")
+  archive_log <- file.path(archive_dir, "00check.log")
+  writeLines(c(
+    "* using options '--run-donttest --as-cran'",
+    "* this is package 'mfrmr' version '0.2.2'",
+    "Status: OK"
+  ), candidate_log)
+  writeLines(c(
+    "* this is package 'mfrmr' version '0.2.2'",
+    "Status: OK"
+  ), archive_log)
+  writeLines(
+    "checked candidate",
+    file.path(candidate_dir, "mfrmr_0.2.2.tar.gz")
+  )
+
+  base_time <- Sys.time() - 60
+  Sys.setFileTime(candidate_log, base_time)
+  Sys.setFileTime(archive_log, base_time + 30)
+
+  found <- env$mfrmr_release_readiness_find_check_log(
+    root,
+    target_version = "0.2.2"
+  )
+  expect_identical(
+    normalizePath(found, winslash = "/", mustWork = TRUE),
+    normalizePath(candidate_log, winslash = "/", mustWork = TRUE)
+  )
+})
+
+test_that("release-readiness prefers submission and checked tarballs over backups", {
+  protocol <- release_readiness_protocol_path()
+  env <- new.env(parent = globalenv())
+  source(protocol, local = env)
+
+  root <- tempfile("pkg")
+  checked_dir <- file.path(root, "release-candidates", "checked")
+  backup_dir <- file.path(root, "release-candidates", "pre-replacement")
+  dir.create(checked_dir, recursive = TRUE)
+  dir.create(backup_dir, recursive = TRUE)
+
+  checked_tarball <- file.path(checked_dir, "mfrmr_0.2.2.tar.gz")
+  backup_tarball <- file.path(backup_dir, "mfrmr_0.2.2.tar.gz")
+  writeLines("checked candidate", checked_tarball)
+  writeLines("newer backup", backup_tarball)
+  writeLines(c(
+    "* this is package 'mfrmr' version '0.2.2'",
+    "Status: OK"
+  ), file.path(checked_dir, "00check.log"))
+
+  base_time <- Sys.time() - 60
+  Sys.setFileTime(checked_tarball, base_time)
+  Sys.setFileTime(backup_tarball, base_time + 30)
+
+  found_checked <- env$mfrmr_release_readiness_find_tarball(
+    root,
+    target_version = "0.2.2"
+  )
+  expect_identical(
+    normalizePath(found_checked, winslash = "/", mustWork = TRUE),
+    normalizePath(checked_tarball, winslash = "/", mustWork = TRUE)
+  )
+
+  root_tarball <- file.path(root, "mfrmr_0.2.2.tar.gz")
+  writeLines("explicit submission tarball", root_tarball)
+  Sys.setFileTime(root_tarball, base_time - 30)
+  found_root <- env$mfrmr_release_readiness_find_tarball(
+    root,
+    target_version = "0.2.2"
+  )
+  expect_identical(
+    normalizePath(found_root, winslash = "/", mustWork = TRUE),
+    normalizePath(root_tarball, winslash = "/", mustWork = TRUE)
+  )
+})
+
 test_that("release-readiness protocol checks CI workflow contract", {
   protocol <- release_readiness_protocol_path()
   env <- new.env(parent = globalenv())
