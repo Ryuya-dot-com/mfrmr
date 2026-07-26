@@ -49,11 +49,13 @@ Result: 0 errors, 0 warnings, and 0 notes (`Status: OK`). In the recorded local
 check, the installed-package CRAN test selection completed with 392 passes,
 no failures or warnings, and 3 intentional skips for longer GPCM coverage.
 
-The full-manual check completed in 288.05 seconds of wall time. Timed top-level
-components summed to 266 seconds; examples including `donttest` blocks took
-148 seconds, tests took 5 seconds, vignette rebuilding took 4 seconds, and the
-PDF and HTML manual checks took 8 and 9 seconds. The remote CRAN incoming
-feasibility probes were enabled and completed successfully.
+The full-manual check completed in 282.60 seconds of wall time. The CRAN-side
+package workload was 153 seconds: examples including `donttest` blocks took
+144 seconds, tests took 5 seconds, and vignette rebuilding took 4 seconds.
+All timed top-level check components summed to 261 seconds; that broader value
+is retained as diagnostic context and is not used as the package-controlled
+timing gate. The PDF and HTML manual checks took 8 and 9 seconds. The remote
+CRAN incoming feasibility probes were enabled and completed successfully.
 
 The CRAN selection exercises the public data review -> MML fit -> summary ->
 Wright/pathway plot -> export route once, plus lightweight compatibility and

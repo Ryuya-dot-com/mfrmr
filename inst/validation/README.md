@@ -92,13 +92,17 @@ The release candidate should have `Status: OK` in the local check log,
 `ReleaseReadinessStatus = "ok"`, and only `ok` rows in
 `readiness$gate_summary`. The `example_policy` row restricts `\dontrun{}` to
 the two external-ConQuest-file workflows and `@examplesIf interactive()` to
-the local Shiny viewer. The `check_timing` row sums top-level timed check
-components; an estimate above 600 seconds is a `concern`, while a log without
-timings requires review. Inspect `mfrmr-Ex.timings` as well as the aggregate
-gate before submission. Jobs run with `NOT_CRAN=true` are labeled
-`full_non_cran` and are exempt from this CRAN-time threshold because their
-purpose is to execute the deliberately exhaustive regression suite; the
-ordinary matrix jobs still enforce the timing gate.
+the local Shiny viewer. The `check_timing` row applies the 600-second threshold
+to the summed CRAN-side package workload: ordinary examples, `donttest`
+examples, tests, and vignette rebuilding. It also reports the sum of every
+timed top-level check component as diagnostic context, without charging
+dependency, installation, manual, or other check-infrastructure time to the
+package-controlled threshold. A log without workload timings requires review.
+Inspect `mfrmr-Ex.timings` as well as the aggregate gate before submission.
+Jobs run with `NOT_CRAN=true` are labeled `full_non_cran` and are exempt from
+this CRAN-time threshold because their purpose is to execute the deliberately
+exhaustive regression suite; the ordinary matrix jobs still enforce the
+timing gate.
 
 A missing `Status:` line, a check-log package version that differs from
 `DESCRIPTION`, release inputs newer than the matching source tarball or check

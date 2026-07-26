@@ -149,6 +149,7 @@ available from the current analysis objects.
 }
 
 \examples{
+\donttest{
 # Minimal checklist example using a JML fit and lightweight diagnostics.
 toy <- load_mfrmr_data("example_core")
 fit_quick <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
@@ -158,7 +159,6 @@ diag_quick <- diagnose_mfrm(fit_quick, residual_pca = "none",
 chk_quick <- reporting_checklist(fit_quick, diagnostics = diag_quick)
 head(chk_quick$checklist[, c("Section", "Item", "DraftReady")])
 
-\donttest{
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "MML", quad_points = 7, maxit = 30)
 diag <- diagnose_mfrm(fit, residual_pca = "both", diagnostic_mode = "both")

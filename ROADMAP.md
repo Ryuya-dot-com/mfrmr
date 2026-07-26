@@ -89,13 +89,15 @@ Before CRAN submission or replacement of the GitHub release asset:
 - [ ] Keep `DESCRIPTION`, `CITATION.cff`, `NEWS.md`, `cran-comments.md`, tag,
   tarball, and check log on the same version and release date.
 - [x] Build one exact candidate tarball and record its SHA-256 digest
-  (`0485d3dad65a7aee747dd3f8a1f237f811f2022880c196782b211be31f09479a`).
+  (`dddeaaba8d2d0684784fa774b349e8fa1d13570143341daad4aa31e2990e5d00`).
 - [x] Run a full-manual `R CMD check --as-cran --run-donttest` on that exact
-  tarball and retain the full log (`Status: OK`; 288.05 seconds wall time).
+  tarball and retain the full log (`Status: OK`; 282.60 seconds wall time).
 - [x] Restrict `\dontrun{}` to the two examples requiring separately generated
   ConQuest files, restrict interactive-only examples to the local Shiny viewer,
-  and keep the timed top-level component estimate below ten minutes (266
-  seconds for this candidate).
+  and keep the CRAN-side package workload below ten minutes (153 seconds for
+  this candidate: examples including `donttest`, tests, and vignette
+  rebuilding). The 261-second sum of all timed top-level components is retained
+  as diagnostic context rather than used as the package-controlled gate.
 - [x] Audit README, NEWS, vignettes, generated help, and first-screen runtime
   guidance for maintainer-oriented wording while retaining documented API and
   status vocabulary.
@@ -104,8 +106,9 @@ Before CRAN submission or replacement of the GitHub release asset:
   JML and MML fits before estimator-agreement checks.
 - [ ] Confirm the full non-CRAN suite and all required CI matrix jobs complete
   for the example-policy source before merge.
-- [ ] Run the updated repository release-readiness review against the exact
-  tarball and check log after the example-policy gate is committed.
+- [x] Run the updated repository release-readiness review against the exact
+  tarball and check log for the final example-policy source (all nine gates
+  `ok`).
 - [x] Confirm source-package contents exclude repository-only roadmaps and
   validation helpers.
 - [x] Regenerate pkgdown from the final source and inspect key pages and logo.

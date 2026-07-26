@@ -1592,6 +1592,7 @@ print.mfrm_dff <- function(x, ...) {
 #' @seealso [analyze_dff()], [analyze_dif()], [plot_dif_heatmap()], [dif_report()],
 #'   [estimate_bias()]
 #' @examples
+#' \donttest{
 #' toy <- load_mfrmr_data("example_bias")
 #'
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
@@ -1601,6 +1602,7 @@ print.mfrm_dff <- function(x, ...) {
 #'                              group = "Group", data = toy, min_obs = 2)
 #' int$summary
 #' head(int$table[, c("Level", "GroupValue", "ObsExpAvg", "flag_bias")])
+#' }
 #' @export
 dif_interaction_table <- function(fit, diagnostics, facet, group, data = NULL,
                                   min_obs = 10, p_adjust = "holm",
@@ -1866,6 +1868,7 @@ print.mfrm_dif_interaction <- function(x, ...) {
 #'
 #' @seealso [dif_interaction_table()], [analyze_dff()], [analyze_dif()], [dif_report()]
 #' @examples
+#' \donttest{
 #' toy <- load_mfrmr_data("example_bias")
 #'
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
@@ -1882,6 +1885,7 @@ print.mfrm_dif_interaction <- function(x, ...) {
 #' #   hypothesis test. With `metric = "contrast"` the layout switches
 #' #   to Level x GroupPair and reads as the pairwise differential-
 #' #   functioning contrast (use `analyze_dff()`).
+#' }
 #' @export
 plot_dif_heatmap <- function(x, metric = c("obs_exp", "t", "contrast"),
                              draw = TRUE,

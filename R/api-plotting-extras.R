@@ -189,11 +189,13 @@ plot_threshold_ladder <- function(fit,
 #'   [build_misfit_casebook()].
 #'
 #' @examples
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "JML", maxit = 30)
 #' p <- plot_person_fit(fit, draw = FALSE)
 #' head(p$data$data)
+#' }
 #' @export
 plot_person_fit <- function(fit,
                             diagnostics = NULL,
@@ -530,11 +532,13 @@ plot_person_fit <- function(fit,
 #' @concept rater severity
 #'
 #' @examples
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "JML", maxit = 30)
 #' p <- plot_rater_severity_profile(fit, draw = FALSE)
 #' head(p$data$data)
+#' }
 #' @export
 plot_rater_severity_profile <- function(fit,
                                         diagnostics = NULL,
@@ -689,6 +693,7 @@ plot_rater_severity_profile <- function(fit,
 #' @concept DFF DIF
 #'
 #' @examples
+#' \donttest{
 #' toy <- load_mfrmr_data("example_bias")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "JML", maxit = 30)
@@ -698,6 +703,7 @@ plot_rater_severity_profile <- function(fit,
 #' unique(dff$dif_table$ClassificationSystem)
 #' p <- plot_dif_summary(dff, draw = FALSE)
 #' head(p$data$data)
+#' }
 #' @export
 plot_dif_summary <- function(x,
                              top_n = 30L,
@@ -931,11 +937,13 @@ plot_dif_summary <- function(x,
 #' @concept visual diagnostics
 #'
 #' @examples
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "JML", maxit = 30)
 #' p <- plot_apa_figure_one(fit, draw = FALSE)
 #' names(p$data)
+#' }
 #' @export
 plot_apa_figure_one <- function(fit,
                                 diagnostics = NULL,

@@ -132,6 +132,7 @@ appropriate cut-off? \emph{Journal of Educational Measurement, 62}(2),
 }
 
 \examples{
+\donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "JML", maxit = 30)
@@ -141,6 +142,7 @@ q3$summary
 #   0.20/0.30 absolute rules are uncalibrated heuristics for this Q3-style
 #   index, not standalone local-independence tests.
 head(q3$pairs)
+}
 }
 \seealso{
 \code{\link[=plot_local_dependence_heatmap]{plot_local_dependence_heatmap()}}, \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}

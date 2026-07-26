@@ -3824,6 +3824,7 @@ make_anchor_table <- function(fit,
 #' @seealso [fit_mfrm()], [analyze_residual_pca()], [build_visual_summaries()],
 #'   [mfrmr_visual_diagnostics], [mfrmr_reporting_and_apa]
 #' @examples
+#' \donttest{
 #' # Minimal diagnostic example without residual PCA.
 #' toy <- load_mfrmr_data("example_operational")
 #' fit_quick <- fit_mfrm(
@@ -3834,7 +3835,6 @@ make_anchor_table <- function(fit,
 #'                             residual_pca = "none")
 #' summary(diag_quick)$overview[, c("Observations", "Facets", "Categories")]
 #'
-#' \donttest{
 #' fit <- fit_mfrm(
 #'   toy, "Person", c("Rater", "Criterion"), "Score",
 #'   method = "MML", model = "RSM", quad_points = 7, maxit = 30
@@ -3869,8 +3869,8 @@ make_anchor_table <- function(fit,
 #' # Reporting route:
 #' prec <- precision_review_report(fit, diagnostics = diag)
 #' summary(prec)
-#' }
 #'
+#' }
 #' @section References:
 #' - Wright, B. D., & Masters, G. N. (1982). *Rating scale analysis*.
 #'   MESA Press. (G/R/H separation, reliability, and strata

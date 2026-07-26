@@ -67,9 +67,13 @@ multi-step analyses to README/vignettes or non-CRAN tests.
   locally/CI with `NOT_CRAN=true`; one CI matrix job must always use that
   setting.
 - Before release, run an `--as-cran` check with timing enabled and ensure the
-  ordinary and `donttest` examples both execute. Treat an estimated component
-  check time above 600 seconds as a release concern. Do not apply that CRAN
-  threshold to the deliberately exhaustive `NOT_CRAN=true` regression job.
+  ordinary and `donttest` examples both execute. Treat the summed CRAN-side
+  package workload for ordinary examples, `donttest` examples, tests, and
+  vignette rebuilding above 600 seconds as a release concern. Retain the sum
+  of all timed top-level check components as diagnostic context, but do not
+  charge dependency, installation, manual, or other check-infrastructure time
+  to this package-controlled threshold. Do not apply the threshold to the
+  deliberately exhaustive `NOT_CRAN=true` regression job.
 
 ## Pull request checklist
 

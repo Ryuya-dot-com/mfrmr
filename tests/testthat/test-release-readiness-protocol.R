@@ -33,7 +33,7 @@ release_readiness_gate_fixture <- function(env, check_status,
         collapse = ", "
       ),
       ExamplesIfSourceTargets = "launch_mfrmr_viewer",
-      DonttestRdPages = 87L,
+      DonttestRdPages = 147L,
       Detail = "",
       ExamplePolicyOK = TRUE,
       stringsAsFactors = FALSE
@@ -122,11 +122,45 @@ test_that("release-readiness protocol exposes review steps and parses check logs
   expect_equal(parsed$Notes, 1L)
   expect_true(parsed$TimingAvailable)
   expect_equal(parsed$ComponentElapsedSeconds, 12)
+  expect_equal(parsed$CranWorkloadElapsedSeconds, 12)
   expect_equal(parsed$ExamplesSeconds, 4)
   expect_equal(parsed$DonttestExamplesSeconds, 6)
   expect_equal(parsed$TestsSeconds, 1)
   expect_equal(parsed$VignetteRebuildSeconds, 1)
   expect_true(parsed$UnderTenMinutes)
+})
+
+test_that("release-readiness timing excludes check infrastructure overhead", {
+  protocol <- release_readiness_protocol_path()
+  env <- new.env(parent = globalenv())
+  source(protocol, local = env)
+
+  log_file <- tempfile(fileext = ".log")
+  writeLines(c(
+    "* using options ‘--run-donttest --as-cran’",
+    "* this is package ‘mfrmr’ version ‘0.2.1’",
+    "* checking package dependencies ... [1s/700s] OK",
+    "* checking examples ... [90s/100s] OK",
+    "* checking examples with --run-donttest ... [290s/300s] OK",
+    "* checking tests ... [9s/10s] OK",
+    "* checking re-building of vignette outputs ... [9s/10s] OK",
+    "* checking PDF version of manual ... OK",
+    "* checking HTML version of manual ... OK",
+    "Status: OK"
+  ), log_file)
+  parsed <- env$mfrmr_release_readiness_parse_check_log(
+    log_file,
+    target_version = "0.2.1"
+  )
+
+  expect_equal(parsed$ComponentElapsedSeconds, 1120)
+  expect_equal(parsed$CranWorkloadElapsedSeconds, 420)
+  expect_true(parsed$UnderTenMinutes)
+  gate <- release_readiness_gate_fixture(env, parsed)
+  expect_identical(
+    gate$Status[gate$Gate == "check_timing"],
+    "ok"
+  )
 })
 
 test_that("release-readiness protocol flags check timing above ten minutes", {
@@ -148,6 +182,7 @@ test_that("release-readiness protocol flags check timing above ten minutes", {
 
   expect_true(parsed$TimingAvailable)
   expect_equal(parsed$ComponentElapsedSeconds, 601)
+  expect_equal(parsed$CranWorkloadElapsedSeconds, 601)
   expect_false(parsed$UnderTenMinutes)
   gate <- release_readiness_gate_fixture(env, parsed)
   expect_identical(

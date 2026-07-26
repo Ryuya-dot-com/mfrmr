@@ -145,12 +145,14 @@
 #' Biopharmaceutics, 15*(6), 657-680.
 #'
 #' @examples
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "JML", maxit = 30)
 #' eq <- analyze_facet_equivalence(fit, facet = "Rater")
 #' eq$summary[, c("Facet", "Elements", "Decision", "MeanROPE")]
 #' head(eq$pairwise[, c("ElementA", "ElementB", "Equivalent")])
+#' }
 #' @export
 analyze_facet_equivalence <- function(fit,
                                       diagnostics = NULL,
@@ -452,12 +454,14 @@ classify_equivalence_bf <- function(bf01) {
 #' @concept facet equivalence
 #' @concept visual diagnostics
 #' @examples
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "JML", maxit = 30)
 #' eq <- analyze_facet_equivalence(fit, facet = "Rater")
 #' pdat <- plot_facet_equivalence(eq, type = "forest", draw = FALSE)
 #' c(pdat$facet, pdat$type)
+#' }
 #' @export
 plot_facet_equivalence <- function(x,
                                    diagnostics = NULL,

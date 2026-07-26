@@ -7055,6 +7055,7 @@ plot.mfrm_bundle <- function(x, y = NULL, type = NULL, ...) {
 #'   `print.summary.mfrm_diagnostics()`
 #' @seealso [diagnose_mfrm()], [summary.mfrm_fit()]
 #' @examples
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' toy <- toy[toy$Person %in% unique(toy$Person)[1:4], ]
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
@@ -7070,6 +7071,7 @@ plot.mfrm_bundle <- function(x, y = NULL, type = NULL, ...) {
 #' s$facets_chisq
 #' # Read the fixed-effect chi-square as a heterogeneity screen in the context
 #' # of the design and intended score use.
+#' }
 #' @export
 summary.mfrm_diagnostics <- function(object,
                                      digits = 3,
@@ -7840,12 +7842,14 @@ print.summary.mfrm_diagnostics <- function(x, ...) {
 #' - `notes`: short interpretation notes
 #' @seealso [estimate_bias()], [bias_interaction_report()]
 #' @examples
+#' \donttest{
 #' toy <- load_mfrmr_data("example_bias")
 #' toy <- toy[toy$Person %in% unique(toy$Person)[1:8], ]
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
 #' bias <- estimate_bias(fit, diag, facet_a = "Rater", facet_b = "Criterion", max_iter = 1)
 #' summary(bias)
+#' }
 #' @export
 summary.mfrm_bias <- function(object, digits = 3, top_n = 10, p_cut = 0.05, ...) {
   if (!is.list(object) || is.null(object$table) || nrow(object$table) == 0) {

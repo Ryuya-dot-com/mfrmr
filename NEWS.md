@@ -17,7 +17,10 @@
   checkable examples or `\donttest{}` blocks. Only the two workflows that need
   separately generated ConQuest files remain `\dontrun{}`, and only the local
   Shiny viewer remains interactive-only. The release-readiness review now
-  enforces that allowlist and flags timed component checks above ten minutes.
+  enforces that allowlist and flags CRAN-side package workload above ten
+  minutes, based on ordinary examples, `donttest` examples, tests, and vignette
+  rebuilding. Other top-level check components remain visible as diagnostics
+  but do not inflate that package-controlled threshold.
 
 - Added one authoritative repository roadmap and aligned release metadata and
   validation notes with the accepted 0.2.2 boundary. External numerical

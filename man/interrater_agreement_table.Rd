@@ -112,6 +112,7 @@ rater facet, reported separately from agreement.}
 }
 
 \examples{
+\donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 ir <- interrater_agreement_table(fit, rater_facet = "Rater")
@@ -123,6 +124,7 @@ ir$summary
 head(ir$pairs)
 p_ir <- plot(ir, draw = FALSE)
 p_ir$data$plot
+}
 }
 \seealso{
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=facets_chisq_table]{facets_chisq_table()}}, \code{\link[=plot_interrater_agreement]{plot_interrater_agreement()}},

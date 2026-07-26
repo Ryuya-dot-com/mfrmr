@@ -1306,6 +1306,7 @@ estimation_iteration_report <- function(fit,
 #'   [measurable_summary_table()], [data_quality_report()], [mfrmr_linking_and_dff],
 #'   [mfrmr_visual_diagnostics]
 #' @examples
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' out <- subset_connectivity_report(fit)
@@ -1317,6 +1318,7 @@ estimation_iteration_report <- function(fit,
 #' p_design$data$plot
 #' p_net$data$edges
 #' out$summary[, c("Subset", "Observations", "ObservationPercent")]
+#' }
 #' @export
 subset_connectivity_report <- function(fit,
                                        diagnostics = NULL,
@@ -1984,6 +1986,7 @@ peer_review_top_rows <- function(x, top_n = 10) {
 #' @seealso [build_peer_review_sim_spec()], [simulate_mfrm_data()],
 #'   [build_mfrm_network_review()], [build_summary_table_bundle()]
 #' @examples
+#' \donttest{
 #' peer_spec <- build_peer_review_sim_spec(
 #'   n_submission = 12,
 #'   n_criterion = 3,
@@ -1993,6 +1996,7 @@ peer_review_top_rows <- function(x, top_n = 10) {
 #' peer_sim <- simulate_mfrm_data(sim_spec = peer_spec, seed = 123)
 #' review <- build_peer_review_design_review(peer_sim)
 #' summary(review)$overview
+#' }
 #' @export
 build_peer_review_design_review <- function(peer_review_design, top_n = 10) {
   top_n <- max(1L, as.integer(top_n))
@@ -3810,12 +3814,14 @@ rater_halo_network_analysis <- function(fit,
 #' @seealso [diagnose_mfrm()], [summary.mfrm_fit()], [plot_facets_chisq()],
 #'   [mfrmr_reports_and_tables]
 #' @examples
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' out <- facet_statistics_report(fit)
 #' summary(out)
 #' p_fs <- plot(out, draw = FALSE)
 #' p_fs$data$plot
+#' }
 #' @export
 facet_statistics_report <- function(fit,
                                     diagnostics = NULL,
@@ -4016,11 +4022,13 @@ build_fit_separation_reporting_basis <- function(fit, diagnostics) {
 #'
 #' @seealso [diagnose_mfrm()], [facet_statistics_report()], [reporting_checklist()]
 #' @examples
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
 #' out <- precision_review_report(fit, diagnostics = diag)
 #' summary(out)
+#' }
 #' @name precision_review_report
 #' @export
 precision_review_report <- function(fit, diagnostics = NULL) {
@@ -4093,6 +4101,7 @@ precision_review_report <- function(fit, diagnostics = NULL) {
 #' @seealso [rating_scale_table()], [category_curves_report()], [plot.mfrm_fit()],
 #'   [mfrmr_reports_and_tables], [mfrmr_visual_diagnostics]
 #' @examples
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' out <- category_structure_report(fit)
@@ -4100,6 +4109,7 @@ precision_review_report <- function(fit, diagnostics = NULL) {
 #' head(out$category_table[, c("Category", "Count", "Infit", "Outfit")])
 #' p_cs <- plot(out, draw = FALSE)
 #' p_cs$data$plot
+#' }
 #' @export
 category_structure_report <- function(fit,
                                       diagnostics = NULL,
@@ -4204,6 +4214,7 @@ category_structure_report <- function(fit,
 #' @seealso [category_structure_report()], [rating_scale_table()], [plot.mfrm_fit()],
 #'   [mfrmr_reports_and_tables], [mfrmr_visual_diagnostics]
 #' @examples
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' out <- category_curves_report(fit, theta_points = 101)
@@ -4217,6 +4228,7 @@ category_structure_report <- function(fit,
 #' head(p_info$data$category_information)
 #' curve_long <- plot_data(out, component = "plot_long")
 #' head(curve_long[, c("PlotType", "Theta", "Series", "Value")])
+#' }
 #' @export
 category_curves_report <- function(fit,
                                    theta_range = c(-6, 6),
@@ -4292,6 +4304,7 @@ category_curves_report <- function(fit,
 #'   `mfrm_bias_interaction`.
 #' @seealso [estimate_bias()], [build_fixed_reports()], [plot_bias_interaction()]
 #' @examples
+#' \donttest{
 #' toy <- load_mfrmr_data("example_bias")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
@@ -4300,6 +4313,7 @@ category_curves_report <- function(fit,
 #' summary(out)
 #' p_bi <- plot(out, draw = FALSE)
 #' p_bi$data$plot
+#' }
 #' @export
 bias_interaction_report <- function(x,
                                     diagnostics = NULL,
@@ -4369,11 +4383,13 @@ bias_interaction_report <- function(x,
 #'
 #' @seealso [estimate_bias()], [bias_interaction_report()], [build_fixed_reports()]
 #' @examples
+#' \donttest{
 #' toy <- load_mfrmr_data("example_bias")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
 #' out <- bias_iteration_report(fit, diagnostics = diag, facet_a = "Rater", facet_b = "Criterion")
 #' summary(out)
+#' }
 #' @export
 bias_iteration_report <- function(x,
                                   diagnostics = NULL,
@@ -4521,6 +4537,7 @@ bias_iteration_report <- function(x,
 #'
 #' @seealso [estimate_bias()], [bias_interaction_report()], [build_fixed_reports()]
 #' @examples
+#' \donttest{
 #' toy <- load_mfrmr_data("example_bias")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
@@ -4537,6 +4554,7 @@ bias_iteration_report <- function(x,
 #' #   warrant content-review of the two raters' scoring conventions on
 #' #   the conditioning context facet (e.g. compare their item-level
 #' #   marks for systematic strictness/leniency patterns).
+#' }
 #' @export
 bias_pairwise_report <- function(x,
                                  diagnostics = NULL,
@@ -4703,6 +4721,7 @@ bias_pairwise_report <- function(x,
 #' @concept visual diagnostics
 #' @concept bias screening
 #' @examples
+#' \donttest{
 #' toy <- load_mfrmr_data("example_bias")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' p <- plot_bias_interaction(
@@ -4713,6 +4732,7 @@ bias_pairwise_report <- function(x,
 #'   preset = "publication",
 #'   draw = FALSE
 #' )
+#' }
 #' @export
 plot_bias_interaction <- function(x,
                                   plot = c("scatter", "ranked", "heatmap", "abs_t_hist", "facet_profile"),
@@ -4833,6 +4853,7 @@ plot_bias_interaction <- function(x,
 #' @seealso [build_visual_summaries()], [estimate_bias()],
 #'   [reporting_checklist()], [mfrmr_reporting_and_apa]
 #' @examples
+#' \donttest{
 #' # Minimal APA-output example using a JML fit and lightweight diagnostics.
 #' toy <- load_mfrmr_data("example_core")
 #' fit_quick <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
@@ -4845,7 +4866,6 @@ plot_bias_interaction <- function(x,
 #' apa_quick <- build_apa_outputs(fit_quick, diag_quick)
 #' nchar(apa_quick$report_text) > 0
 #'
-#' \donttest{
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'   method = "MML", quad_points = 7, maxit = 30
 #' )
@@ -4875,8 +4895,8 @@ plot_bias_interaction <- function(x,
 #' #   Diagnostics row to be `"yes"` before submitting.
 #' cat(apa$report_text)
 #' apa$section_map[, c("SectionId", "Available")]
-#' }
 #'
+#' }
 #' @section Input validation:
 #' `fit` must be an `mfrm_fit` object from [fit_mfrm()].
 #' `diagnostics` must be an `mfrm_diagnostics` object from [diagnose_mfrm()].
@@ -5150,11 +5170,13 @@ resolve_apa_output_checks <- function(object) {
 #'
 #' @return The input object (invisibly).
 #' @examples
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
 #' apa <- build_apa_outputs(fit, diag)
 #' apa$report_text
+#' }
 #' @export
 print.mfrm_apa_text <- function(x, ...) {
   cat(as.character(x), "\n", sep = "")
@@ -5196,11 +5218,13 @@ print.mfrm_apa_text <- function(x, ...) {
 #' @return An object of class `summary.mfrm_apa_outputs`.
 #' @seealso [build_apa_outputs()], [summary()]
 #' @examples
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
 #' apa <- build_apa_outputs(fit, diag)
 #' summary(apa)
+#' }
 #' @export
 summary.mfrm_apa_outputs <- function(object, top_n = 3, preview_chars = 160, ...) {
   if (!inherits(object, "mfrm_apa_outputs")) {
@@ -9977,10 +10001,12 @@ as_flextable <- function(x, ...) UseMethod("as_flextable")
 #' @return An object of class `summary.apa_table`.
 #' @seealso [apa_table()], [plot()]
 #' @examples
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' tbl <- apa_table(fit, which = "summary")
 #' summary(tbl)
+#' }
 #' @export
 summary.apa_table <- function(object, digits = 3, top_n = 8, ...) {
   digits <- max(0L, as.integer(digits))
@@ -11913,12 +11939,14 @@ facets_fit_review_guidance <- function(model, external_supplied) {
 #' @seealso [diagnose_mfrm()], [facets_output_contract_review()],
 #'   [mfrmr_compatibility_layer]
 #' @examples
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'   method = "JML", maxit = 30
 #' )
 #' review <- facets_fit_review(fit)
 #' summary(review)
+#' }
 #' @export
 facets_fit_review <- function(fit,
                               diagnostics = NULL,
@@ -12698,6 +12726,7 @@ collect_bias_screening_summary <- function(diagnostics = NULL, bias_results = NU
 #' @seealso [analyze_dff()], [analyze_dif()], [dif_interaction_table()],
 #'   [plot_dif_heatmap()], [build_apa_outputs()]
 #' @examples
+#' \donttest{
 #' toy <- load_mfrmr_data("example_bias")
 #'
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
@@ -12707,6 +12736,7 @@ collect_bias_screening_summary <- function(diagnostics = NULL, bias_results = NU
 #' dif <- analyze_dff(fit, diag, facet = "Rater", group = "Group", data = toy)
 #' rpt <- dif_report(dif)
 #' cat(rpt$narrative)
+#' }
 #' @export
 dif_report <- function(dif_result, ...) {
   if (inherits(dif_result, "mfrm_dff") || inherits(dif_result, "mfrm_dif")) {

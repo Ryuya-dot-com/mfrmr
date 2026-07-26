@@ -593,6 +593,7 @@ peer_review_build_design_skeleton <- function(n_submission,
 #' @seealso [simulate_mfrm_data()], [build_mfrm_network_review()],
 #'   [build_mfrm_sim_spec()]
 #' @examples
+#' \donttest{
 #' peer_spec <- build_peer_review_sim_spec(
 #'   n_submission = 12,
 #'   n_criterion = 3,
@@ -600,6 +601,7 @@ peer_review_build_design_skeleton <- function(n_submission,
 #'   anchor_submissions = 2
 #' )
 #' peer_spec$peer_review$overview
+#' }
 #' @export
 build_peer_review_sim_spec <- function(n_submission = 50,
                                        n_criterion = 4,

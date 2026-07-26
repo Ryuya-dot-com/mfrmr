@@ -288,20 +288,46 @@ mfrmr_release_readiness_check_timing <- function(lines) {
     elapsed_seconds(grep(pattern, timed, value = TRUE, perl = TRUE))
   }
   elapsed <- vapply(timed, elapsed_seconds, numeric(1))
-  timing_available <- length(timed) > 0L && all(is.finite(elapsed))
-  estimated_seconds <- if (timing_available) sum(elapsed) else NA_real_
+  component_timing_available <- length(timed) > 0L && all(is.finite(elapsed))
+  estimated_seconds <- if (component_timing_available) {
+    sum(elapsed)
+  } else {
+    NA_real_
+  }
+  examples_seconds <- component("^\\* checking examples \\.\\.\\.")
+  donttest_seconds <- component(
+    "^\\* checking examples with --run-donttest"
+  )
+  tests_seconds <- component("^\\* checking tests \\.\\.\\.")
+  vignette_seconds <- component(
+    "^\\* checking re-building of vignette outputs"
+  )
+  cran_workload_components <- c(
+    examples_seconds,
+    donttest_seconds,
+    tests_seconds,
+    vignette_seconds
+  )
+  timing_available <- component_timing_available &&
+    any(is.finite(cran_workload_components))
+  cran_workload_seconds <- if (timing_available) {
+    sum(cran_workload_components, na.rm = TRUE)
+  } else {
+    NA_real_
+  }
   data.frame(
     TimingAvailable = timing_available,
     ComponentElapsedSeconds = estimated_seconds,
-    ExamplesSeconds = component("^\\* checking examples \\.\\.\\."),
-    DonttestExamplesSeconds = component(
-      "^\\* checking examples with --run-donttest"
-    ),
-    TestsSeconds = component("^\\* checking tests \\.\\.\\."),
-    VignetteRebuildSeconds = component(
-      "^\\* checking re-building of vignette outputs"
-    ),
-    UnderTenMinutes = if (timing_available) estimated_seconds <= 600 else NA,
+    CranWorkloadElapsedSeconds = cran_workload_seconds,
+    ExamplesSeconds = examples_seconds,
+    DonttestExamplesSeconds = donttest_seconds,
+    TestsSeconds = tests_seconds,
+    VignetteRebuildSeconds = vignette_seconds,
+    UnderTenMinutes = if (timing_available) {
+      cran_workload_seconds <= 600
+    } else {
+      NA
+    },
     stringsAsFactors = FALSE
   )
 }
@@ -336,6 +362,7 @@ mfrmr_release_readiness_parse_check_log <- function(path,
       Notes = NA_integer_,
       TimingAvailable = FALSE,
       ComponentElapsedSeconds = NA_real_,
+      CranWorkloadElapsedSeconds = NA_real_,
       ExamplesSeconds = NA_real_,
       DonttestExamplesSeconds = NA_real_,
       TestsSeconds = NA_real_,
@@ -397,6 +424,7 @@ mfrmr_release_readiness_parse_check_log <- function(path,
     Notes = notes,
     TimingAvailable = timing$TimingAvailable,
     ComponentElapsedSeconds = timing$ComponentElapsedSeconds,
+    CranWorkloadElapsedSeconds = timing$CranWorkloadElapsedSeconds,
     ExamplesSeconds = timing$ExamplesSeconds,
     DonttestExamplesSeconds = timing$DonttestExamplesSeconds,
     TestsSeconds = timing$TestsSeconds,
@@ -1265,6 +1293,8 @@ mfrmr_release_readiness_gate_summary <- function(version_status,
         "scope=", check_timing_scope,
         "; component_elapsed_seconds=",
         check_status$ComponentElapsedSeconds[1],
+        "; cran_workload_elapsed_seconds=",
+        check_status$CranWorkloadElapsedSeconds[1],
         "; examples_seconds=", check_status$ExamplesSeconds[1],
         "; donttest_seconds=", check_status$DonttestExamplesSeconds[1],
         "; tests_seconds=", check_status$TestsSeconds[1],

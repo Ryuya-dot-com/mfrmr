@@ -43,6 +43,7 @@ the residual structure directly: large positive cells show
 under-prediction, negative cells over-prediction.
 }
 \examples{
+\donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                  method = "JML", maxit = 30)
@@ -53,6 +54,7 @@ dim(p$data$matrix)
 #   not calibrated 5\% or 1\% tests (Wright & Linacre 1994). Repeated
 #   high-magnitude cells at one facet level warrant pattern review but
 #   do not by themselves establish scoring drift.
+}
 }
 \seealso{
 \code{\link[=plot_guttman_scalogram]{plot_guttman_scalogram()}}, \code{\link[=plot_unexpected]{plot_unexpected()}},

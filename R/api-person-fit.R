@@ -117,6 +117,7 @@
 #'
 #' @seealso [diagnose_mfrm()]
 #' @examples
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "JML", maxit = 30)
@@ -130,6 +131,7 @@
 #' #   a 1% flag. lz_star is populated for JML/fixed-effect person
 #' #   estimates and left NA for MML/EAP estimates. Use ReportIndex /
 #' #   ReviewStatus for a compact report-ready reading.
+#' }
 #' @export
 compute_person_fit_indices <- function(diagnostics, fit = NULL) {
   if (is.null(diagnostics) || !is.list(diagnostics) ||

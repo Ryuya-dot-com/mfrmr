@@ -78,6 +78,7 @@ sharing it.
 }
 
 \examples{
+\donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "JML", model = "RSM", maxit = 30)
@@ -91,6 +92,7 @@ out <- export_mfrm(
   acknowledge_sensitive = TRUE
 )
 out$Table
+}
 }
 \seealso{
 \code{\link{fit_mfrm}}, \code{\link{diagnose_mfrm}},

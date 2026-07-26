@@ -1449,6 +1449,7 @@ plot_marginal_pairwise <- function(x,
 #' @seealso [unexpected_response_table()], [plot_fair_average()], [plot_displacement()],
 #'   [plot_qc_dashboard()], [mfrmr_visual_diagnostics]
 #' @examples
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' p <- plot_unexpected(fit, abs_z_min = 1.5, prob_max = 0.4, top_n = 10, draw = FALSE)
@@ -1464,6 +1465,7 @@ plot_marginal_pairwise <- function(x,
 #'     palette = c(higher = "#d95f02", lower = "#1b9e77", bar = "#2b8cbe"),
 #'     label_angle = 45
 #'   )
+#' }
 #' }
 #' @export
 plot_unexpected <- function(x,
@@ -1693,6 +1695,7 @@ plot_unexpected <- function(x,
 #' @concept visual diagnostics
 #' @concept fair averages
 #' @examples
+#' \donttest{
 #' toy_full <- load_mfrmr_data("example_core")
 #' toy_people <- unique(toy_full$Person)[1:12]
 #' toy <- toy_full[toy_full$Person %in% toy_people, , drop = FALSE]
@@ -1702,6 +1705,7 @@ plot_unexpected <- function(x,
 #' p <- plot_fair_average(fit, metric = "AdjustedAverage", draw = FALSE)
 #' if (interactive()) {
 #'   plot_fair_average(fit, metric = "AdjustedAverage", plot_type = "difference")
+#' }
 #' }
 #' @export
 plot_fair_average <- function(x,
@@ -2081,6 +2085,7 @@ plot_fair_average <- function(x,
 #' @concept visual diagnostics
 #' @concept displacement
 #' @examples
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' p <- plot_displacement(fit, anchored_only = FALSE, draw = FALSE)
@@ -2091,6 +2096,7 @@ plot_fair_average <- function(x,
 #'     plot_type = "lollipop",
 #'     preset = "publication"
 #'   )
+#' }
 #' }
 #' @export
 plot_displacement <- function(x,
@@ -2553,6 +2559,7 @@ plot_interrater_agreement <- function(x,
 #' @return A plotting-data object of class `mfrm_plot_data`.
 #' @seealso [facets_chisq_table()], [plot_interrater_agreement()], [plot_qc_dashboard()]
 #' @examples
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' p <- plot_facets_chisq(fit, draw = FALSE)
@@ -2566,6 +2573,7 @@ plot_interrater_agreement <- function(x,
 #'     palette = c(fixed_ok = "#2b8cbe", fixed_flag = "#cb181d"),
 #'     label_angle = 45
 #'   )
+#' }
 #' }
 #' @export
 plot_facets_chisq <- function(x,
@@ -2780,6 +2788,7 @@ plot_facets_chisq <- function(x,
 #' @return A plotting-data object of class `mfrm_plot_data`.
 #' @seealso [plot_unexpected()], [plot_fair_average()], [plot_displacement()], [plot_interrater_agreement()], [plot_facets_chisq()], [build_visual_summaries()]
 #' @examples
+#' \donttest{
 #' # Build the plotting data without opening a graphics device.
 #' toy <- load_mfrmr_data("example_core")
 #' toy_small <- toy[toy$Person %in% unique(toy$Person)[1:3], ]
@@ -2790,7 +2799,6 @@ plot_facets_chisq <- function(x,
 #' qc_quick <- plot_qc_dashboard(fit_quick, draw = FALSE)
 #' names(qc_quick$data)
 #'
-#' \donttest{
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' qc <- plot_qc_dashboard(fit, draw = FALSE)
 #' qc$data$panels$Status
@@ -3251,6 +3259,7 @@ resolve_bubble_measures <- function(x, diagnostics = NULL) {
 #' @seealso \code{\link{diagnose_mfrm}}, \code{\link{plot_unexpected}},
 #'   \code{\link{plot_fair_average}}
 #' @examples
+#' \donttest{
 #' toy <- load_mfrmr_data("example_operational")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "MML", model = "RSM",
@@ -3272,6 +3281,7 @@ resolve_bubble_measures <- function(x, diagnostics = NULL) {
 #' #   lower-left have both < 0.5 (consistent overfit). Bubble size in
 #' #   this view defaults to N (observation count) so the visual
 #' #   weighting matches how seriously the misfit should be taken.
+#' }
 #' @export
 plot_bubble <- function(x,
                         diagnostics = NULL,
@@ -3530,6 +3540,7 @@ plot_bubble <- function(x,
 #' @seealso \code{\link{fit_mfrm}}, \code{\link{diagnose_mfrm}},
 #'   \code{\link{as.data.frame.mfrm_fit}}
 #' @examples
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "JML", model = "RSM", maxit = 30)
@@ -3543,6 +3554,7 @@ plot_bubble <- function(x,
 #'   acknowledge_sensitive = TRUE
 #' )
 #' out$Table
+#' }
 #' @export
 export_mfrm <- function(fit,
                         diagnostics = NULL,

@@ -457,6 +457,7 @@ validate_bias_results_input <- function(bias_results,
 #' @seealso [export_mfrm_bundle()], [build_mfrm_replay_script()],
 #'   [make_anchor_table()], [reporting_checklist()]
 #' @examples
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "JML", maxit = 30)
@@ -464,6 +465,7 @@ validate_bias_results_input <- function(bias_results,
 #' manifest <- build_mfrm_manifest(fit, diagnostics = diag)
 #' manifest$summary[, c("Model", "Method", "Observations", "Facets")]
 #' manifest$available_outputs[, c("Component", "Available")]
+#' }
 #' @export
 build_mfrm_manifest <- function(fit,
                                 diagnostics = NULL,
@@ -1015,12 +1017,14 @@ build_mfrm_session_info_table <- function() {
 #' @return A named list with class `mfrm_replay_script`.
 #' @seealso [build_mfrm_manifest()], [export_mfrm_bundle()], [run_mfrm_facets()]
 #' @examples
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "JML", maxit = 30)
 #' replay <- build_mfrm_replay_script(fit, data_file = "your_data.csv")
 #' replay$summary[, c("ScriptMode", "ResidualPCA", "BiasPairs")]
 #' cat(substr(replay$script, 1, 120))
+#' }
 #' @export
 build_mfrm_replay_script <- function(fit,
                                      diagnostics = NULL,
@@ -4305,6 +4309,7 @@ export_summary_appendix <- function(x,
 #'   [build_mfrm_replay_script()], [export_mfrm()],
 #'   [reporting_checklist()], [export_summary_appendix()]
 #' @examples
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "JML", maxit = 30)
@@ -4320,6 +4325,7 @@ export_summary_appendix <- function(x,
 #' )
 #' bundle$summary[, c("FilesWritten", "HtmlWritten", "ScriptWritten")]
 #' head(bundle$written_files)
+#' }
 #' @export
 export_mfrm_bundle <- function(fit,
                                diagnostics = NULL,
