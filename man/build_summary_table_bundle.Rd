@@ -134,8 +134,8 @@ treating them as direct evidence of parameter recovery.
 \code{condition_summary} so GPCM generator stress and sparse score support are
 not mistaken for recovery-metric failures.
 \item precision-review summaries expose \code{fit_separation_basis} so fit,
-ZSTD, separation/reliability/strata, and QC thresholds remain separate
-reporting surfaces rather than interchangeable evidence.
+ZSTD, separation/reliability/strata, and QC thresholds remain distinct
+forms of evidence rather than interchangeable summaries.
 \item fit-measure and FACETS fit-review summaries expose df/ZSTD sensitivity
 tables under precision-review roles, keeping MnSq status, ZSTD
 standardization, and external FACETS matching distinct in appendix

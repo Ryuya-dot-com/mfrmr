@@ -3,7 +3,6 @@
 [![GitHub](https://img.shields.io/badge/GitHub-mfrmr-181717?logo=github)](https://github.com/Ryuya-dot-com/mfrmr)
 [![R-CMD-check](https://github.com/Ryuya-dot-com/mfrmr/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/Ryuya-dot-com/mfrmr/actions/workflows/R-CMD-check.yaml)
 [![pkgdown](https://github.com/Ryuya-dot-com/mfrmr/actions/workflows/pkgdown.yaml/badge.svg)](https://github.com/Ryuya-dot-com/mfrmr/actions/workflows/pkgdown.yaml)
-[![test-coverage](https://github.com/Ryuya-dot-com/mfrmr/actions/workflows/test-coverage.yaml/badge.svg)](https://github.com/Ryuya-dot-com/mfrmr/actions/workflows/test-coverage.yaml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 `mfrmr` fits unidimensional many-facet ordered-response models in R.
@@ -220,6 +219,19 @@ selected-stage settings, every attempted stage, terminal gradients, parameter
 changes, and evaluation counts remain in `fit$opt$optimizer_polish`. For
 L-BFGS-B, the native `factr` and `pgtol` controls are also recorded; do not
 interpret `EffectiveReltol` as a native L-BFGS-B argument.
+
+Treat `maxit` as a computational ceiling, not a convergence criterion or a
+control to tune until preferred estimates appear. The package default is
+`maxit = 400`; smaller values in executable examples exist only to shorten
+checks. Prespecify the estimator and controls before inspecting results. If a
+fit ends with `ConvergenceStatus = "iteration_limit"`, do not interpret or
+compare its estimates. Refit the same data, model, method, anchors, optimizer,
+tolerance, and quadrature rule using the next ceiling in a prespecified
+sequence. Use a result only after `Converged = TRUE`, `InferenceReady = TRUE`,
+and `Numerical = pass`; do not select among runs by coefficient size, fit
+statistics, significance, or agreement with an expected answer. Material
+differences between separately ready runs indicate numerical instability that
+requires review.
 
 `InferenceReady` is deliberately a numerical status, not a publication
 decision. Require `Numerical = pass`, then inspect the separate Data, Design,
@@ -634,9 +646,10 @@ the bundle records both values. Record the actual ConQuest version, edition,
 and run date during normalization so the external comparison remains
 reproducible.
 
-The public source repository contains a repository-only
-[aggregate record](https://github.com/Ryuya-dot-com/mfrmr/blob/main/inst/validation/conquest-mml-overlap-0.2.2.md)
-of a matched 31-node check with ConQuest 5.47.5. The record is excluded from
+A public
+[aggregate comparison record](https://github.com/Ryuya-dot-com/mfrmr/blob/main/inst/validation/conquest-mml-overlap-0.2.2.md)
+of a matched 31-node check with ConQuest 5.47.5 is available in the source
+repository. The record is excluded from
 the installed CRAN package and supports only the overlap case stated above;
 identifier-bearing response and case-level files are not included in the
 package.

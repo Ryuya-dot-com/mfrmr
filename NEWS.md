@@ -1,5 +1,17 @@
 # mfrmr 0.2.2
 
+* Revised first-contact guides and result guidance to use reader-facing
+  wording while retaining documented API and status vocabulary.
+
+* Clarified that `maxit` is a prespecified computational ceiling rather than a
+  result-selection control. Iteration-limited fits now direct users to keep the
+  specification fixed, follow a prespecified ceiling sequence, and withhold
+  interpretation until the numerical-readiness gate passes.
+
+- Added one authoritative repository roadmap and aligned release metadata and
+  validation notes with the accepted 0.2.2 boundary. External numerical
+  comparison and calibrated MML joint-stationarity gates are explicitly 0.2.3
+  work rather than retroactive 0.2.2 requirements.
 - Corrected bounded-GPCM score-side delta-method uncertainty to use the
   expected-score derivative `ScoreSlope * Var`. `ScoreSideLogitSE` remains the
   logit-side component SE, while `ScoreSideSE` and its interval columns now
@@ -176,7 +188,7 @@
   and avoids presenting a generic facet as a rater.
 - Latent regression rejects a non-person-centered parameterization that would
   confound the population intercept with the measurement scale.
-- CRAN checks now exercise the complete public first-contact route once and
+- CRAN checks now exercise the complete introductory workflow once and
   use the exact README/default MML controls rather than a reduced quadrature
   setting. They retain lightweight compatibility/backend/artifact contracts.
   Repeated

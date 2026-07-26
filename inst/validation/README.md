@@ -11,6 +11,10 @@ Most package users can ignore this directory. Start with `README.md`,
 analysis guidance. The files here support package release checks and
 maintenance review; public release notes stay in `NEWS.md`.
 
+The repository-root `ROADMAP.md` is the single source of truth for active
+development sequencing. Files in this directory may add evidence or preserve
+history, but they do not redefine release order or current API scope.
+
 ## Evidence types
 
 | Type | What it is for |
@@ -35,15 +39,11 @@ maintenance review; public release notes stay in `NEWS.md`.
 - `release-evidence-checklist-0.2.2.csv`: structured checklist used by the
   readiness helper and by manual release review for the current release. Older
   checklists are retained as historical release evidence.
-- `mfrmr-development-roadmap.md`: historical public validation artifact for
-  the 0.2.2 bounded-`GPCM` release path and post-0.2.2 planning context.
-  Active package-development sequencing is kept in the consolidated roadmap
-  outside the public package copy.
-- `gpcm-post-0.2.2-roadmap.md`: bundled validation excerpt for
-  bounded-`GPCM` surfaces that remain caveated, `blocked`, or `deferred` after
-  0.2.2, including score-side review, report/QC bundles, design and screening
-  operating characteristics, linking synthesis, posterior predictive checks,
-  and heavy-backend extensions.
+- `mfrmr-development-roadmap.md`: historical validation record retained for
+  links from older 0.2.2 evidence. It is not an active roadmap.
+- `gpcm-post-0.2.2-roadmap.md`: technical evidence supplement for bounded-
+  `GPCM` surfaces that remain caveated, `blocked`, or `deferred`. It is
+  subordinate to the root roadmap and the executable capability registry.
 - `external-parameter-recovery-simulation-0.2.0.md`: compact review of the
   separate common-data parameter-recovery simulation workflow. The large
   generated datasets and engine outputs are not bundled with the package; this

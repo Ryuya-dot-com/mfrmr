@@ -46,7 +46,7 @@ This vignette outlines a reproducible workflow for:
 For a plot-first companion guide, see the separate
 `mfrmr-visual-diagnostics` vignette.
 
-For efficient development without changing the final analysis target:
+For a faster preliminary run without changing the final analysis target:
 
 - test code mechanics on a small deterministic subset or, for an MML workflow,
   a temporary `quad_points = 7` grid; restore the prespecified final MML grid
@@ -160,7 +160,7 @@ fit_summary_toy$data_review
 summary(diag_toy)$overview
 facets_summary_toy
 
-# Required first fitted-scale artifact.
+# Required first fitted-scale figure.
 plot(res_toy, type = "wright", preset = "publication", show_ci = TRUE, top_n = Inf)
 
 # Optional FACETS-style ruler. Replace these examples with the study rubric.
@@ -200,6 +200,20 @@ larger gradient and `reltol <= 1e-9`, it runs a bounded sequence of
 warm-started polishing stages and retains the best non-worsening candidate
 under the recorded selection rule. Inspect
 `fit_toy$opt$optimizer_polish$Stages` when `Numerical` is not `pass`.
+
+`maxit` is only a computational ceiling. It must not be increased until a
+preferred coefficient, fit statistic, or expected conclusion appears. For a
+final analysis, prespecify the estimator and controls and start from the
+package default `maxit = 400` unless the analysis protocol states otherwise.
+If a run reaches `ConvergenceStatus = "iteration_limit"`, keep it review-only
+and repeat the same data, model, method, anchors, optimizer, tolerance, and
+quadrature rule with the next ceiling in a prespecified sequence. Interpret
+only a run with `Converged = TRUE`, `InferenceReady = TRUE`, and
+`Numerical = pass`. If two separately ready runs differ materially, investigate
+numerical stability instead of selecting the preferred result. Report the
+requested ceiling, actual evaluations, convergence reason, and terminal
+gradient.
+
 `InferenceReady` describes this numerical gate only: Data, Design, Stability,
 Diagnostics, and Reporting remain separate rows in `fit_summary_toy$readiness`.
 For example, a disconnected design remains a reporting hold even if its
@@ -240,7 +254,7 @@ Availability and interpretability are intentionally separate. Review
 `res_toy$plot_map` before treating an available plot as a final result.
 Plots remain available during a numerical, data, design, or stability review,
 but they warn and carry `REVIEW ONLY` in the returned subtitle and drawn title
-until the upstream issue is resolved.
+until the readiness issue is resolved.
 
 Bias/DIF, residual PCA, and anchor-drift/linking analyses are deliberately not
 auto-run by any summary profile. They require explicit contrasts, diagnostic
@@ -252,7 +266,7 @@ vignette_artifact("workflow_diagnostic_overview.csv")
 vignette_artifact("workflow_plot_components.csv")
 ```
 
-The same fit can then move through the public first-contact route:
+The same fit can then move through the recommended first reporting workflow:
 
 ```{r primary-route}
 report_toy <- mfrm_report(res_toy, style = "qc")
@@ -274,7 +288,7 @@ head(export_toy$written_files)
 
 The acknowledgement suppresses the warning only; it does not redact person
 identifiers, person-level results, local paths, or the complete RDS object.
-Review every artifact under the study's data-handling policy before sharing.
+Review every exported file under the study's data-handling policy before sharing.
 
 ```{r primary-route-artifacts, echo = FALSE, eval = is_cran_check}
 vignette_artifact("workflow_next_actions.csv")
@@ -347,7 +361,7 @@ diag <- diagnose_mfrm(
 summary(fit, profile = "fit", detail = "brief")
 summary(diag)
 
-# Keep the final artifact flow explicit: fit -> Wright map -> follow-up plots.
+# Keep the final figure flow explicit: fit -> Wright map -> follow-up plots.
 s <- summary(fit, profile = "facets", diagnostics = diag)
 res <- s$results
 s

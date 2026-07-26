@@ -102,7 +102,12 @@
 #'   Quadrature adequacy depends on the fitted distribution and score support.
 #'   When substantive conclusions are sensitive, compare results under a
 #'   denser rule and report the setting used.
-#' @param maxit Maximum optimizer iterations.
+#' @param maxit Computational ceiling on optimizer iterations. The default is
+#'   `400`. This is not a convergence criterion or a model-selection control:
+#'   a fit that reaches the ceiling remains non-ready until the common
+#'   convergence and terminal-gradient checks pass. Smaller values used in
+#'   executable examples shorten package checks and should not be copied into
+#'   a final analysis without an explicit computational protocol.
 #' @param reltol Portable tolerance setting for the initial optimizer stage.
 #'   The default is `1e-9`. For BFGS this is passed as `reltol`; for L-BFGS-B
 #'   it is mapped to `factr` and `pgtol`, whose actual values are recorded in
@@ -522,6 +527,37 @@
 #' - all other facets are treated as `-1`
 #' This affects interpretation of reported facet measures.
 #'
+#' @section Choosing maxit without result-driven tuning:
+#' Treat `maxit` as a predeclared computational budget, not as a value to tune
+#' until preferred estimates appear.
+#'
+#' 1. Choose the model, estimation method, optimizer, tolerance, quadrature
+#'    rule, and initial `maxit` before examining coefficient or fit results.
+#'    The default `maxit = 400` is the package starting point for an analysis.
+#' 2. Use estimates substantively only when `Converged` and `InferenceReady`
+#'    are both `TRUE` and the Numerical row of `summary(fit)$readiness` is
+#'    `pass`. Optimizer code zero alone is insufficient.
+#' 3. If `ConvergenceStatus == "iteration_limit"`, keep that fit review-only.
+#'    Refit the same data, model, method, anchors, optimizer, tolerance, and
+#'    quadrature rule with the next ceiling in a prespecified sequence, such as
+#'    400, 800, then 1600. Do not choose among runs by coefficient size,
+#'    statistical significance, fit statistics, or agreement with an expected
+#'    answer.
+#' 4. The first run in that sequence that clears the numerical gate becomes
+#'    eligible for interpretation. If separately ready runs differ materially,
+#'    treat the difference as numerical instability and review the model,
+#'    identification, data support, and optimizer rather than selecting the
+#'    preferred result.
+#' 5. Report the requested `maxit`, actual iteration/evaluation counts,
+#'    convergence status and reason, optimizer, terminal gradient, and any
+#'    polishing stages. These are retained in `fit$summary` and
+#'    `fit$opt$optimizer_polish`.
+#'
+#' This rule applies to both JML and MML. JML can require a larger computation
+#' budget because it estimates one fixed effect per person; increasing `maxit`
+#' does not make JML equivalent to MML and must not be used to switch the
+#' estimand after seeing results.
+#'
 #' @section Performance tips:
 #' When JML is the prespecified estimand, it is often faster than MML but may
 #' require a larger `maxit` on larger datasets. Do not switch from MML to JML
@@ -691,8 +727,7 @@
 #'   facets = c("Rater", "Criterion"),
 #'   score = "Score",
 #'   model = "RSM",
-#'   quad_points = 31,
-#'   maxit = 30
+#'   quad_points = 31
 #' )
 #' fit$summary
 #' s_fit <- summary(fit)
@@ -721,8 +756,7 @@
 #'   facets = c("Rater", "Criterion"),
 #'   score = "Score",
 #'   method = "JML",
-#'   model = "RSM",
-#'   maxit = 30
+#'   model = "RSM"
 #' )
 #' summary(fit_jml)$overview[, c(
 #'   "Model", "Method", "Converged", "InferenceReady",

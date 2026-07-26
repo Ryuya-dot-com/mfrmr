@@ -169,7 +169,12 @@ Quadrature adequacy depends on the fitted distribution and score support.
 When substantive conclusions are sensitive, compare results under a
 denser rule and report the setting used.}
 
-\item{maxit}{Maximum optimizer iterations.}
+\item{maxit}{Computational ceiling on optimizer iterations. The default is
+\code{400}. This is not a convergence criterion or a model-selection control:
+a fit that reaches the ceiling remains non-ready until the common
+convergence and terminal-gradient checks pass. Smaller values used in
+executable examples shorten package checks and should not be copied into
+a final analysis without an explicit computational protocol.}
 
 \item{reltol}{Portable tolerance setting for the initial optimizer stage.
 The default is \code{1e-9}. For BFGS this is passed as \code{reltol}; for L-BFGS-B
@@ -688,6 +693,40 @@ This affects interpretation of reported facet measures.
 }
 }
 
+\section{Choosing maxit without result-driven tuning}{
+
+Treat \code{maxit} as a predeclared computational budget, not as a value to tune
+until preferred estimates appear.
+\enumerate{
+\item Choose the model, estimation method, optimizer, tolerance, quadrature
+rule, and initial \code{maxit} before examining coefficient or fit results.
+The default \code{maxit = 400} is the package starting point for an analysis.
+\item Use estimates substantively only when \code{Converged} and \code{InferenceReady}
+are both \code{TRUE} and the Numerical row of \code{summary(fit)$readiness} is
+\code{pass}. Optimizer code zero alone is insufficient.
+\item If \code{ConvergenceStatus == "iteration_limit"}, keep that fit review-only.
+Refit the same data, model, method, anchors, optimizer, tolerance, and
+quadrature rule with the next ceiling in a prespecified sequence, such as
+400, 800, then 1600. Do not choose among runs by coefficient size,
+statistical significance, fit statistics, or agreement with an expected
+answer.
+\item The first run in that sequence that clears the numerical gate becomes
+eligible for interpretation. If separately ready runs differ materially,
+treat the difference as numerical instability and review the model,
+identification, data support, and optimizer rather than selecting the
+preferred result.
+\item Report the requested \code{maxit}, actual iteration/evaluation counts,
+convergence status and reason, optimizer, terminal gradient, and any
+polishing stages. These are retained in \code{fit$summary} and
+\code{fit$opt$optimizer_polish}.
+}
+
+This rule applies to both JML and MML. JML can require a larger computation
+budget because it estimates one fixed effect per person; increasing \code{maxit}
+does not make JML equivalent to MML and must not be used to switch the
+estimand after seeing results.
+}
+
 \section{Performance tips}{
 
 When JML is the prespecified estimand, it is often faster than MML but may
@@ -824,8 +863,7 @@ fit <- fit_mfrm(
   facets = c("Rater", "Criterion"),
   score = "Score",
   model = "RSM",
-  quad_points = 31,
-  maxit = 30
+  quad_points = 31
 )
 fit$summary
 s_fit <- summary(fit)
@@ -854,8 +892,7 @@ fit_jml <- fit_mfrm(
   facets = c("Rater", "Criterion"),
   score = "Score",
   method = "JML",
-  model = "RSM",
-  maxit = 30
+  model = "RSM"
 )
 summary(fit_jml)$overview[, c(
   "Model", "Method", "Converged", "InferenceReady",

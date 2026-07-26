@@ -28,8 +28,8 @@ Build a precision review report
 This helper summarizes how \code{mfrmr} derived SE, CI, and reliability values
 for the current run. It also includes a source-grounded fit/separation
 basis table so users can keep mean-square fit, ZSTD standardization,
-Rasch/FACETS-style separation, and package QC thresholds in separate
-reporting lanes.
+Rasch/FACETS-style separation, and package QC thresholds in distinct
+reporting categories.
 }
 \section{What this review means}{
 

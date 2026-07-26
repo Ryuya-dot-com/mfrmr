@@ -1081,10 +1081,10 @@ external_software_scope_table <- function(fit) {
   data.frame(
     Software = c("mfrmr native", "FACETS", "ConQuest", "SPSS"),
     Relationship = c(
-      "primary estimation/reporting surface",
-      "FACETS-style reporting and handoff surface",
+      "primary estimation and reporting workflow",
+      "FACETS-style reporting and file handoff",
       "scoped external-table comparison for latent-regression overlap",
-      "downstream table/report handoff only"
+      "table/report handoff only"
     ),
     CurrentSupport = c(
       "active",

@@ -80,6 +80,7 @@ test_that("release-readiness protocol exposes review steps and parses check logs
 
   log_file <- tempfile(fileext = ".log")
   writeLines(c(
+    "* using option ‘--as-cran’",
     "* this is package ‘mfrmr’ version ‘0.2.1’",
     "* checking package namespace information ... OK",
     "* checking tests ... OK",
@@ -89,6 +90,7 @@ test_that("release-readiness protocol exposes review steps and parses check logs
   expect_identical(parsed$PackageVersion, "0.2.1")
   expect_true(parsed$VersionMatchesTarget)
   expect_true(parsed$StatusPresent)
+  expect_true(parsed$AsCRAN)
   expect_true(parsed$CheckPassed)
   expect_true(parsed$NeedsExplanation)
   expect_equal(parsed$Errors, 0L)
@@ -114,6 +116,7 @@ test_that("release-readiness protocol rejects a check log without Status", {
 
   expect_true(parsed$VersionMatchesTarget)
   expect_false(parsed$StatusPresent)
+  expect_false(parsed$AsCRAN)
   expect_true(is.na(parsed$StatusLine))
   expect_false(parsed$CheckPassed)
   expect_true(parsed$NeedsExplanation)
@@ -137,6 +140,27 @@ test_that("release-readiness protocol rejects stale check logs by version", {
   parsed <- env$mfrmr_release_readiness_parse_check_log(log_file, target_version = "0.2.1")
   expect_true(parsed$CheckPassed)
   expect_false(parsed$VersionMatchesTarget)
+
+  gate <- release_readiness_gate_fixture(env, parsed)
+  expect_identical(gate$Status[gate$Gate == "package_check"], "concern")
+})
+
+test_that("release-readiness protocol requires --as-cran provenance", {
+  protocol <- release_readiness_protocol_path()
+  env <- new.env(parent = globalenv())
+  source(protocol, local = env)
+
+  log_file <- tempfile(fileext = ".log")
+  writeLines(c(
+    "* this is package ‘mfrmr’ version ‘0.2.1’",
+    "Status: OK"
+  ), log_file)
+  parsed <- env$mfrmr_release_readiness_parse_check_log(
+    log_file,
+    target_version = "0.2.1"
+  )
+  expect_true(parsed$CheckPassed)
+  expect_false(parsed$AsCRAN)
 
   gate <- release_readiness_gate_fixture(env, parsed)
   expect_identical(gate$Status[gate$Gate == "package_check"], "concern")
@@ -318,6 +342,56 @@ test_that("release-readiness protocol checks CI workflow contract", {
   expect_true(status$CIWorkflowOK)
 })
 
+test_that("release-readiness protocol checks source-truth alignment", {
+  protocol <- release_readiness_protocol_path()
+  env <- new.env(parent = globalenv())
+  source(protocol, local = env)
+
+  root <- tempfile("pkg")
+  dir.create(file.path(root, "inst", "validation"), recursive = TRUE)
+  writeLines(c(
+    "Package: mfrmr",
+    "Version: 0.2.2",
+    "Date: 2026-07-26"
+  ), file.path(root, "DESCRIPTION"))
+  writeLines(c(
+    "cff-version: 1.2.0",
+    "version: \"0.2.2\"",
+    "date-released: \"2026-07-26\""
+  ), file.path(root, "CITATION.cff"))
+  writeLines("^ROADMAP\\.md$", file.path(root, ".Rbuildignore"))
+  writeLines(c(
+    "# Roadmap",
+    "This file is the single source of truth."
+  ), file.path(root, "ROADMAP.md"))
+  writeLines(
+    "Current contract: gpcm_capability_matrix().",
+    file.path(root, "inst", "validation", "gpcm-post-0.2.2-roadmap.md")
+  )
+  paths <- env$mfrmr_release_readiness_paths(root, target_version = "0.2.2")
+  status <- env$mfrmr_release_readiness_source_truth_status(paths)
+
+  expect_true(status$VersionMatchesCFF)
+  expect_true(status$DateMatchesCFF)
+  expect_true(status$RoadmapAvailable)
+  expect_true(status$RoadmapExcludedFromTarball)
+  expect_true(status$RoadmapAuthoritative)
+  expect_identical(status$DevelopmentOnlyCurrentClaims, "")
+  expect_true(status$SourceTruthOK)
+
+  writeLines(
+    "The current API is mfrmr_model_family_scope().",
+    paths$gpcm_roadmap
+  )
+  stale <- env$mfrmr_release_readiness_source_truth_status(paths)
+  expect_false(stale$SourceTruthOK)
+  expect_match(
+    stale$DevelopmentOnlyCurrentClaims,
+    "mfrmr_model_family_scope()",
+    fixed = TRUE
+  )
+})
+
 test_that("release-readiness protocol checks GPCM scope alignment", {
   protocol <- release_readiness_protocol_path()
   env <- new.env(parent = globalenv())
@@ -362,7 +436,7 @@ test_that("release-readiness protocol reviews the source tree shape", {
   expect_true(all(c(
     "prompt_steps", "gate_summary", "release_decision",
     "version_status", "check_status", "freshness_status", "ci_workflow_status",
-    "terminology_status",
+    "source_truth_status", "terminology_status",
     "checklist_status", "gpcm_scope_status", "external_recovery_status"
   ) %in% names(review)))
   expect_false(review$external_recovery_status$ExternalRecoveryRequested[1])
@@ -375,6 +449,7 @@ test_that("release-readiness protocol reviews the source tree shape", {
     expect_true(isTRUE(review$version_status$VersionOK[1]))
   }
   expect_true(file.exists(review$paths$gpcm_roadmap))
+  expect_true(isTRUE(review$source_truth_status$SourceTruthOK[1]))
   expect_equal(review$gpcm_scope_status$GPCMScopeStatus[1], "ok")
   if (file.exists(file.path(pkg_root, ".github", "workflows", "R-CMD-check.yaml"))) {
     expect_true(isTRUE(review$ci_workflow_status$CIWorkflowOK[1]))

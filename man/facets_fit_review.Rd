@@ -84,7 +84,7 @@ The review is row-matched by \code{Facet} and \code{Level}. It treats MnSq, ZSTD
 differences separately because FACETS documentation makes the df convention
 and Wilson-Hilferty/WHEXACT handling central to ZSTD interpretation.
 
-Two upstream boundaries also apply. For \code{method = "MML"} fits, residuals
+Two prior limitations also apply. For \code{method = "MML"} fits, residuals
 are evaluated at shrunken EAP person measures while FACETS uses JMLE
 estimates, so MnSq itself can differ before standardization; refit with
 \code{method = "JML"} for a JMLE-style residual basis. And mfrmr withholds

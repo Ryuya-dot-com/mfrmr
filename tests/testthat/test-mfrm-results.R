@@ -466,7 +466,7 @@ test_that("export_mfrm_results writes privacy-labelled analysis archives", {
     starter_export$written_files$Component == "starter_index"
   ][1]
   index_html <- paste(readLines(index_path, warn = FALSE), collapse = "\n")
-  expect_match(index_html, "required first visual artifact", fixed = TRUE)
+  expect_match(index_html, "required first figure", fixed = TRUE)
   expect_match(index_html, "starter_plot_wright.png", fixed = TRUE)
   expect_match(index_html, "starter_plot_fit_pathway.png", fixed = TRUE)
   expect_match(index_html, "selected person rows", fixed = TRUE)

@@ -94,6 +94,29 @@ test_that("ConQuest guidance states the external MML comparison boundary", {
   expect_true(grepl("parse raw conquest output", tolower(combined), fixed = TRUE))
 })
 
+test_that("public maxit guidance prevents result-driven tuning", {
+  pkg_root <- documentation_source_root()
+  testthat::skip_if(is.na(pkg_root), "source documentation files are not available")
+  paths <- c(
+    file.path(pkg_root, "README.md"),
+    file.path(pkg_root, "man", "fit_mfrm.Rd"),
+    file.path(pkg_root, "vignettes", "mfrmr-workflow.Rmd"),
+    file.path(pkg_root, "vignettes", "mfrmr-mml-and-marginal-fit.Rmd")
+  )
+  docs <- paste(unlist(read_public_text(pkg_root, paths), use.names = FALSE),
+                collapse = "\n")
+  docs_flat <- gsub("[[:space:]]+", " ", docs)
+
+  expect_match(docs_flat, "computational ceiling", fixed = TRUE)
+  expect_match(docs_flat, "not a convergence criterion", fixed = TRUE)
+  expect_match(docs_flat, "prespecified", fixed = TRUE)
+  expect_match(docs_flat, "same data, model, method", fixed = TRUE)
+  expect_match(docs_flat, "Do not select", fixed = TRUE)
+  expect_match(docs_flat, "ConvergenceStatus", fixed = TRUE)
+  expect_match(docs_flat, "InferenceReady", fixed = TRUE)
+  expect_match(docs_flat, "Numerical", fixed = TRUE)
+})
+
 test_that("CRAN-facing documentation excludes development-process language", {
   pkg_root <- documentation_source_root()
   testthat::skip_if(is.na(pkg_root), "source documentation files are not available")
@@ -112,6 +135,19 @@ test_that("CRAN-facing documentation excludes development-process language", {
     "fast smoke run",
     "smoke check",
     "current public branch",
+    "repository-only",
+    "for efficient development",
+    "public first-contact route",
+    "review every artifact",
+    "lower-level component",
+    "full per-helper support contract",
+    "main package architecture",
+    "blocked explicitly",
+    "binding contract",
+    "manuscript surface",
+    "structured drafting and review surface",
+    "reportable surface",
+    "fitted-scale artifact",
     "planner-schema contract",
     "second-wave visual layer",
     "package-test coverage",

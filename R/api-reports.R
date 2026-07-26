@@ -3972,8 +3972,8 @@ build_fit_separation_reporting_basis <- function(fit, diagnostics) {
 #' This helper summarizes how `mfrmr` derived SE, CI, and reliability values
 #' for the current run. It also includes a source-grounded fit/separation
 #' basis table so users can keep mean-square fit, ZSTD standardization,
-#' Rasch/FACETS-style separation, and package QC thresholds in separate
-#' reporting lanes.
+#' Rasch/FACETS-style separation, and package QC thresholds in distinct
+#' reporting categories.
 #'
 #' @section What this review means:
 #' `precision_review_report()` is a structured prerequisite review for precision claims.
@@ -7441,8 +7441,8 @@ build_summary_table_index <- function(tables, roles, descriptions) {
 #'   `condition_summary` so GPCM generator stress and sparse score support are
 #'   not mistaken for recovery-metric failures.
 #' - precision-review summaries expose `fit_separation_basis` so fit,
-#'   ZSTD, separation/reliability/strata, and QC thresholds remain separate
-#'   reporting surfaces rather than interchangeable evidence.
+#'   ZSTD, separation/reliability/strata, and QC thresholds remain distinct
+#'   forms of evidence rather than interchangeable summaries.
 #' - fit-measure and FACETS fit-review summaries expose df/ZSTD sensitivity
 #'   tables under precision-review roles, keeping MnSq status, ZSTD
 #'   standardization, and external FACETS matching distinct in appendix
@@ -11885,7 +11885,7 @@ facets_fit_review_guidance <- function(model, external_supplied) {
 #' differences separately because FACETS documentation makes the df convention
 #' and Wilson-Hilferty/WHEXACT handling central to ZSTD interpretation.
 #'
-#' Two upstream boundaries also apply. For `method = "MML"` fits, residuals
+#' Two prior limitations also apply. For `method = "MML"` fits, residuals
 #' are evaluated at shrunken EAP person measures while FACETS uses JMLE
 #' estimates, so MnSq itself can differ before standardization; refit with
 #' `method = "JML"` for a JMLE-style residual basis. And mfrmr withholds
@@ -13269,13 +13269,21 @@ run_qc_pipeline <- function(fit,
     iterations = fit$summary$Iterations
   )
   if (!converged) {
+    convergence_action <- if (identical(convergence$status, "iteration_limit")) {
+      paste(
+        "The fit reached its iteration ceiling and is not inference-ready.",
+        "Do not interpret or select its estimates; refit the same specification",
+        "with the next ceiling in a prespecified `maxit` sequence and accept it only after the numerical gate passes."
+      )
+    } else {
+      paste(
+        "The fit is not inference-ready. Inspect the convergence status, model specification,",
+        "data support, starting values, and optimizer diagnostics before changing controls or interpreting estimates."
+      )
+    }
     recommendations <- c(
       recommendations,
-      paste(
-        "The fit is not inference-ready. Increase `maxit`; if review remains,",
-        "inspect the model specification, data support, and starting values",
-        "before interpreting estimates."
-      )
+      convergence_action
     )
   }
 

@@ -434,7 +434,7 @@ mfrmr_output_guide <- function(scope = c("all", "public", "beginner", "psychomet
       "You can name the person, facet, and ordered-score columns and confirm the intended rubric support in long-format data.",
       "The fit has completed and you need a fast check before computing diagnostic sections.",
       "The fitted model is ready for an organized first review of measures, fit, precision, and category steps.",
-      "You need the required shared-logit-scale artifact before any optional follow-up plot.",
+      "You need the required shared-logit-scale figure before any optional follow-up plot.",
       "FACETS-style reading, rubric-labelled transitions, or person-inclusive fit review will help answer a focused question.",
       "The required Wright map and first-screen evidence have been inspected and you are ready to draft a controlled report or create an analysis archive for approved handling."
     ),
@@ -842,7 +842,7 @@ mfrmr_output_guide <- function(scope = c("all", "public", "beginner", "psychomet
     ),
     Notes = c(
       "The model is estimated by mfrmr. FACETS-style organization does not mean that FACETS software was run.",
-      "The native Wright map is the required first scale artifact and retains the package's SE/CI advantage.",
+      "The native Wright map is the required first scale figure and retains the package's SE/CI advantage.",
       "The closest FACETS-style renderer uses show_ci = FALSE and reproduces Table 6-style ruler grammar and labelled step lines, not optimizer-level numerical identity; show_ci = TRUE is an mfrmr uncertainty hybrid.",
       "Persons are opt-in because person identifiers and dense labels require deliberate privacy and readability choices.",
       "This call runs mfrmr only; it does not execute ConQuest, read a ConQuest command file, or parse raw ConQuest output.",
