@@ -92,9 +92,9 @@ Before CRAN submission or replacement of the GitHub release asset:
 - [x] Document `maxit` as a prespecified computational ceiling, make
   iteration-limited fits explicitly review-only, and require numerically ready
   JML and MML fits before estimator-agreement checks.
-- [ ] Confirm the full non-CRAN suite and all required CI matrix jobs complete
-  against the final source-alignment commit. The local suite and the prior
-  published-commit matrix are complete; the new commit does not yet exist.
+- [x] Confirm the full non-CRAN suite and all required CI matrix jobs complete
+  against source-alignment commit `c7b1af1`: the local suite and all six
+  required draft-PR jobs completed successfully.
 - [x] Run the repository release-readiness review against the exact tarball and
   check log.
 - [x] Confirm source-package contents exclude repository-only roadmaps and
