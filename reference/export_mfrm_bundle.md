@@ -325,12 +325,12 @@ head(bundle$written_files)
 #> 5       core_steps    csv
 #> 6 manifest_summary    csv
 #>                                                        Path
-#> 1 /tmp/Rtmpn0wMBx/mfrmr_bundle_example_person_estimates.csv
-#> 2  /tmp/Rtmpn0wMBx/mfrmr_bundle_example_facet_estimates.csv
-#> 3      /tmp/Rtmpn0wMBx/mfrmr_bundle_example_fit_summary.csv
-#> 4         /tmp/Rtmpn0wMBx/mfrmr_bundle_example_measures.csv
-#> 5  /tmp/Rtmpn0wMBx/mfrmr_bundle_example_step_parameters.csv
-#> 6 /tmp/Rtmpn0wMBx/mfrmr_bundle_example_manifest_summary.csv
+#> 1 /tmp/RtmpIbcapd/mfrmr_bundle_example_person_estimates.csv
+#> 2  /tmp/RtmpIbcapd/mfrmr_bundle_example_facet_estimates.csv
+#> 3      /tmp/RtmpIbcapd/mfrmr_bundle_example_fit_summary.csv
+#> 4         /tmp/RtmpIbcapd/mfrmr_bundle_example_measures.csv
+#> 5  /tmp/RtmpIbcapd/mfrmr_bundle_example_step_parameters.csv
+#> 6 /tmp/RtmpIbcapd/mfrmr_bundle_example_manifest_summary.csv
 #>                    DataHandling
 #> 1 may_contain_person_level_data
 #> 2         review_before_sharing
