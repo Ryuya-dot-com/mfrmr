@@ -84,7 +84,7 @@ Before CRAN submission or replacement of the GitHub release asset:
 - [ ] Keep `DESCRIPTION`, `CITATION.cff`, `NEWS.md`, `cran-comments.md`, tag,
   tarball, and check log on the same version and release date.
 - [x] Build one exact candidate tarball and record its SHA-256 digest
-  (`5ce93b4bda34b4f9ebf17d7af568fb3ea27937dfbe78b6a9e74555936b29a4e3`).
+  (`958ce2f8f8c44850794036cb5edc2cbf0e3990ffb19be960ff3b0b24d2f8617a`).
 - [x] Run `R CMD check --as-cran` on that exact tarball and retain the full log.
 - [x] Audit README, NEWS, vignettes, generated help, and first-screen runtime
   guidance for maintainer-oriented wording while retaining documented API and

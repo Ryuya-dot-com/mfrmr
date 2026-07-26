@@ -24,9 +24,12 @@ residual PCA or other custom settings are needed ->
 \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}} -> \code{\link[=apa_table]{apa_table()}} or
 \code{\link[=export_summary_appendix]{export_summary_appendix()}}.
 
-Use \code{JML} only when you explicitly want a faster exploratory pass and are
-willing to defer strict marginal follow-up and formal precision language to
-a later \code{MML} run.
+Use \code{JML} only when its fixed-person-parameter estimand is methodologically
+intended, for example for a JMLE-oriented external comparison, descriptive
+or exploratory work, or a design with substantial information per person.
+Do not select it merely as a faster substitute for \code{MML}: a later \code{MML} run
+targets a different estimand rather than serving as stricter follow-up to
+the same analysis.
 }
 
 \section{Canonical operational review route}{
@@ -115,9 +118,8 @@ as not assessed; mfrmr does not assume a complete crossing.
 \enumerate{
 \item Review the long-format data and intended score support with
 \code{\link[=describe_mfrm_data]{describe_mfrm_data()}}.
-\item Fit a model with \code{\link[=fit_mfrm]{fit_mfrm()}}.
-For final reporting, prefer \code{method = "MML"} unless you explicitly want
-a fast exploratory JML pass.
+\item Fit a model with \code{\link[=fit_mfrm]{fit_mfrm()}}. Choose \code{MML} or \code{JML} from the prespecified
+estimand and assumptions; do not select \code{JML} merely to shorten runtime.
 \item Read \code{summary(fit, profile = "fit")}, then request
 \code{summary(fit, profile = "facets")} and draw the required native Wright
 map with \code{plot(fit, type = "wright", show_ci = TRUE)}.

@@ -100,6 +100,7 @@ test_that("public maxit guidance prevents result-driven tuning", {
   paths <- c(
     file.path(pkg_root, "README.md"),
     file.path(pkg_root, "man", "fit_mfrm.Rd"),
+    file.path(pkg_root, "man", "mfrmr_workflow_methods.Rd"),
     file.path(pkg_root, "vignettes", "mfrmr-workflow.Rmd"),
     file.path(pkg_root, "vignettes", "mfrmr-mml-and-marginal-fit.Rmd")
   )
@@ -115,6 +116,8 @@ test_that("public maxit guidance prevents result-driven tuning", {
   expect_match(docs_flat, "ConvergenceStatus", fixed = TRUE)
   expect_match(docs_flat, "InferenceReady", fixed = TRUE)
   expect_match(docs_flat, "Numerical", fixed = TRUE)
+  expect_match(docs_flat, "Do not select it merely as a faster substitute", fixed = TRUE)
+  expect_false(grepl("fast exploratory JML pass", docs_flat, fixed = TRUE))
 })
 
 test_that("CRAN-facing documentation excludes development-process language", {

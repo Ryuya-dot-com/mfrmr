@@ -20,9 +20,12 @@
 #' [build_summary_table_bundle()] -> [apa_table()] or
 #' [export_summary_appendix()].
 #'
-#' Use `JML` only when you explicitly want a faster exploratory pass and are
-#' willing to defer strict marginal follow-up and formal precision language to
-#' a later `MML` run.
+#' Use `JML` only when its fixed-person-parameter estimand is methodologically
+#' intended, for example for a JMLE-oriented external comparison, descriptive
+#' or exploratory work, or a design with substantial information per person.
+#' Do not select it merely as a faster substitute for `MML`: a later `MML` run
+#' targets a different estimand rather than serving as stricter follow-up to
+#' the same analysis.
 #'
 #' @section Canonical operational review route:
 #' When the main question is scale maintenance rather than manuscript reporting,
@@ -96,9 +99,8 @@
 #' @section Typical workflow:
 #' 1. Review the long-format data and intended score support with
 #'    [describe_mfrm_data()].
-#' 2. Fit a model with [fit_mfrm()].
-#'    For final reporting, prefer `method = "MML"` unless you explicitly want
-#'    a fast exploratory JML pass.
+#' 2. Fit a model with [fit_mfrm()]. Choose `MML` or `JML` from the prespecified
+#'    estimand and assumptions; do not select `JML` merely to shorten runtime.
 #' 3. Read `summary(fit, profile = "fit")`, then request
 #'    `summary(fit, profile = "facets")` and draw the required native Wright
 #'    map with `plot(fit, type = "wright", show_ci = TRUE)`.
