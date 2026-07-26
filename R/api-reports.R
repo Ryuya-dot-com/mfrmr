@@ -706,7 +706,7 @@ summarize_fit_measure_df_sensitivity <- function(df_sensitivity) {
 #' @concept confidence intervals
 #' @concept fit statistics
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' toy <- load_mfrmr_data("example_operational")
 #' fit <- fit_mfrm(
 #'   toy, "Person", c("Rater", "Criterion"), "Score",
@@ -1305,7 +1305,7 @@ estimation_iteration_report <- function(fit,
 #' @seealso [diagnose_mfrm()], [mfrm_network_analysis()],
 #'   [measurable_summary_table()], [data_quality_report()], [mfrmr_linking_and_dff],
 #'   [mfrmr_visual_diagnostics]
-#' @examplesIf interactive()
+#' @examples
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' out <- subset_connectivity_report(fit)
@@ -1384,7 +1384,7 @@ subset_connectivity_report <- function(fit,
 #' @seealso [subset_connectivity_report()], [diagnose_mfrm()],
 #'   [mfrmr_linking_and_dff], [mfrmr_visual_diagnostics]
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'   method = "JML", maxit = 30
@@ -1983,7 +1983,7 @@ peer_review_top_rows <- function(x, top_n = 10) {
 #' @return A bundle of class `mfrm_peer_review_design_review`.
 #' @seealso [build_peer_review_sim_spec()], [simulate_mfrm_data()],
 #'   [build_mfrm_network_review()], [build_summary_table_bundle()]
-#' @examplesIf interactive()
+#' @examples
 #' peer_spec <- build_peer_review_sim_spec(
 #'   n_submission = 12,
 #'   n_criterion = 3,
@@ -2293,7 +2293,7 @@ network_review_reporting_map <- function() {
 #'   [build_summary_table_bundle()], [rater_network_analysis()],
 #'   [rater_halo_network_analysis()]
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'   method = "JML", maxit = 30
@@ -2663,7 +2663,7 @@ empty_rater_network_bundle <- function(settings, source_interrater = NULL, messa
 #' @seealso [interrater_agreement_table()], [plot_interrater_agreement()],
 #'   [mfrm_network_analysis()], [plot.mfrm_bundle()]
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'   method = "JML", maxit = 30
@@ -3329,7 +3329,7 @@ empty_halo_network_bundle <- function(settings, message = NULL) {
 #' @seealso [rater_network_analysis()], [interrater_agreement_table()],
 #'   [plot.mfrm_bundle()]
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'   method = "JML", maxit = 30
@@ -3809,7 +3809,7 @@ rater_halo_network_analysis <- function(fit,
 #'   `mfrm_facet_statistics`.
 #' @seealso [diagnose_mfrm()], [summary.mfrm_fit()], [plot_facets_chisq()],
 #'   [mfrmr_reports_and_tables]
-#' @examplesIf interactive()
+#' @examples
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' out <- facet_statistics_report(fit)
@@ -4015,7 +4015,7 @@ build_fit_separation_reporting_basis <- function(fit, diagnostics) {
 #' - `settings`: resolved model and method labels
 #'
 #' @seealso [diagnose_mfrm()], [facet_statistics_report()], [reporting_checklist()]
-#' @examplesIf interactive()
+#' @examples
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
@@ -4092,7 +4092,7 @@ precision_review_report <- function(fit, diagnostics = NULL) {
 #'   `mfrm_category_structure`.
 #' @seealso [rating_scale_table()], [category_curves_report()], [plot.mfrm_fit()],
 #'   [mfrmr_reports_and_tables], [mfrmr_visual_diagnostics]
-#' @examplesIf interactive()
+#' @examples
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' out <- category_structure_report(fit)
@@ -4203,7 +4203,7 @@ category_structure_report <- function(fit,
 #'   `mfrm_category_curves`.
 #' @seealso [category_structure_report()], [rating_scale_table()], [plot.mfrm_fit()],
 #'   [mfrmr_reports_and_tables], [mfrmr_visual_diagnostics]
-#' @examplesIf interactive()
+#' @examples
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' out <- category_curves_report(fit, theta_points = 101)
@@ -4291,7 +4291,7 @@ category_curves_report <- function(fit,
 #' @return A named list with bias-interaction plotting/report components. Class:
 #'   `mfrm_bias_interaction`.
 #' @seealso [estimate_bias()], [build_fixed_reports()], [plot_bias_interaction()]
-#' @examplesIf interactive()
+#' @examples
 #' toy <- load_mfrmr_data("example_bias")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
@@ -4368,7 +4368,7 @@ bias_interaction_report <- function(x,
 #'   the underlying estimator does not emit one
 #'
 #' @seealso [estimate_bias()], [bias_interaction_report()], [build_fixed_reports()]
-#' @examplesIf interactive()
+#' @examples
 #' toy <- load_mfrmr_data("example_bias")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
@@ -4520,7 +4520,7 @@ bias_iteration_report <- function(x,
 #'   *Journal of Applied Measurement, 5*(2), 189-227.
 #'
 #' @seealso [estimate_bias()], [bias_interaction_report()], [build_fixed_reports()]
-#' @examplesIf interactive()
+#' @examples
 #' toy <- load_mfrmr_data("example_bias")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
@@ -4702,7 +4702,7 @@ bias_pairwise_report <- function(x,
 #' @concept confidence intervals
 #' @concept visual diagnostics
 #' @concept bias screening
-#' @examplesIf interactive()
+#' @examples
 #' toy <- load_mfrmr_data("example_bias")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' p <- plot_bias_interaction(
@@ -4832,7 +4832,7 @@ plot_bias_interaction <- function(x,
 #'
 #' @seealso [build_visual_summaries()], [estimate_bias()],
 #'   [reporting_checklist()], [mfrmr_reporting_and_apa]
-#' @examplesIf interactive()
+#' @examples
 #' # Minimal APA-output example using a JML fit and lightweight diagnostics.
 #' toy <- load_mfrmr_data("example_core")
 #' fit_quick <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
@@ -4845,7 +4845,7 @@ plot_bias_interaction <- function(x,
 #' apa_quick <- build_apa_outputs(fit_quick, diag_quick)
 #' nchar(apa_quick$report_text) > 0
 #'
-#' \dontrun{
+#' \donttest{
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'   method = "MML", quad_points = 7, maxit = 30
 #' )
@@ -5149,7 +5149,7 @@ resolve_apa_output_checks <- function(object) {
 #' 3. Use `summary(apa)` to check completeness before manuscript use.
 #'
 #' @return The input object (invisibly).
-#' @examplesIf interactive()
+#' @examples
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
@@ -5195,7 +5195,7 @@ print.mfrm_apa_text <- function(x, ...) {
 #'
 #' @return An object of class `summary.mfrm_apa_outputs`.
 #' @seealso [build_apa_outputs()], [summary()]
-#' @examplesIf interactive()
+#' @examples
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
@@ -7485,7 +7485,7 @@ build_summary_table_index <- function(tables, roles, descriptions) {
 #'   [build_apa_outputs()], [compare_mfrm()], [build_model_choice_review()],
 #'   [build_weighting_review()]
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'   method = "JML", maxit = 30
@@ -8658,7 +8658,7 @@ summary_table_bundle_reporting_map <- function(bundle, catalog) {
 #' @return An object of class `summary.mfrm_summary_table_bundle`.
 #' @seealso [build_summary_table_bundle()], [apa_table()], [plot()]
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'   method = "JML", maxit = 30
@@ -8998,7 +8998,7 @@ summary_table_bundle_filter_selection_tables <- function(tbl, appendix_preset) {
 #' @return A plotting-data object of class `mfrm_plot_data`.
 #' @seealso [build_summary_table_bundle()], [apa_table()], [plot.apa_table()]
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'   method = "JML", maxit = 30
@@ -9976,7 +9976,7 @@ as_flextable <- function(x, ...) UseMethod("as_flextable")
 #'
 #' @return An object of class `summary.apa_table`.
 #' @seealso [apa_table()], [plot()]
-#' @examplesIf interactive()
+#' @examples
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' tbl <- apa_table(fit, which = "summary")
@@ -10086,7 +10086,7 @@ print.summary.apa_table <- function(x, ...) {
 #' @return A plotting-data object of class `mfrm_plot_data`.
 #' @seealso [apa_table()], [summary()]
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' tbl <- apa_table(fit, which = "summary")
@@ -10468,7 +10468,7 @@ print.summary.mfrm_threshold_profiles <- function(x, ...) {
 #' @seealso [mfrm_threshold_profiles()], [build_apa_outputs()],
 #'   [plot_marginal_fit()], [plot_marginal_pairwise()]
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(
 #'   toy, "Person", c("Rater", "Criterion"), "Score",
@@ -11912,7 +11912,7 @@ facets_fit_review_guidance <- function(model, external_supplied) {
 #'
 #' @seealso [diagnose_mfrm()], [facets_output_contract_review()],
 #'   [mfrmr_compatibility_layer]
-#' @examplesIf interactive()
+#' @examples
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'   method = "JML", maxit = 30
@@ -12117,7 +12117,7 @@ facets_fit_review <- function(fit,
 #' @seealso [fit_mfrm()], [diagnose_mfrm()], [build_fixed_reports()],
 #'   [mfrmr_compatibility_layer]
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
@@ -12455,7 +12455,7 @@ facets_output_contract_review <- function(fit,
 #' @return An object of class `mfrm_reference_review`.
 #' @seealso [facets_output_contract_review()], [diagnose_mfrm()], [build_fixed_reports()]
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
@@ -12697,7 +12697,7 @@ collect_bias_screening_summary <- function(diagnostics = NULL, bias_results = NU
 #'
 #' @seealso [analyze_dff()], [analyze_dif()], [dif_interaction_table()],
 #'   [plot_dif_heatmap()], [build_apa_outputs()]
-#' @examplesIf interactive()
+#' @examples
 #' toy <- load_mfrmr_data("example_bias")
 #'
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
@@ -13110,7 +13110,7 @@ print.summary.mfrm_dif_report <- function(x, ...) {
 #'   [mfrm_threshold_profiles()], [plot_qc_pipeline()],
 #'   [plot_qc_dashboard()], [build_visual_summaries()]
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' toy <- load_mfrmr_data("study1")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'   method = "JML", maxit = 30

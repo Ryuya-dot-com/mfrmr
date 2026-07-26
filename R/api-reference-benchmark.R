@@ -1307,7 +1307,7 @@ summarize_reference_benchmark_case <- function(case_id, case_type, fit_runs, des
 #'
 #' @return An object of class `mfrm_reference_benchmark`.
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' bench <- reference_case_benchmark(
 #'   cases = "synthetic_truth",
 #'   method = "JML",

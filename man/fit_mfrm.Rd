@@ -851,7 +851,7 @@ fit_quick$summary[, c(
   "ConvergenceSeverity"
 )]
 
-\dontrun{
+\donttest{
 # Full run with the package default MML estimator. This route integrates
 # person parameters under an N(0, 1) population model, so its reporting
 # value depends on the response-model and population assumptions. The

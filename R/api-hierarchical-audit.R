@@ -639,7 +639,7 @@ facet_small_sample_review <- function(fit, diagnostics = NULL,
 #' Software, 67*(1), 1-48.
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' if (requireNamespace("lme4", quietly = TRUE)) {
 #'   icc <- compute_facet_icc(toy, facets = c("Rater", "Criterion"),
@@ -1042,7 +1042,7 @@ compute_facet_icc <- function(data, facets, score,
 #' Research Methods Section* (pp. 143-148).
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' if (requireNamespace("lme4", quietly = TRUE)) {
 #'   icc <- compute_facet_icc(toy, facets = c("Rater", "Criterion"),
@@ -1204,7 +1204,7 @@ compute_facet_design_effect <- function(data, facets, icc_table = NULL,
 #'                                      igraph_layout = FALSE)
 #' summary(hs)
 #'
-#' \dontrun{
+#' \donttest{
 #' # Full review when lme4 and igraph are available.
 #' if (requireNamespace("lme4", quietly = TRUE) &&
 #'     requireNamespace("igraph", quietly = TRUE)) {

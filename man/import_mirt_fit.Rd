@@ -67,7 +67,7 @@ documented core fields, not a bidirectional interchange format.
 }
 
 \examples{
-\dontrun{
+\donttest{
 if (requireNamespace("mirt", quietly = TRUE)) {
   response_matrix <- matrix(sample(0:3, 60, replace = TRUE), nrow = 20)
   colnames(response_matrix) <- paste0("Item", seq_len(ncol(response_matrix)))

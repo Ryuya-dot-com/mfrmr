@@ -102,7 +102,6 @@ cells.}
 }
 
 \examples{
-\dontshow{if (interactive()) withAutoprint(\{ # examplesIf}
 toy <- load_mfrmr_data("example_bias")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 diag <- diagnose_mfrm(fit, residual_pca = "none")
@@ -122,7 +121,6 @@ if (interactive()) {
     label_angle = 45
   )
 }
-\dontshow{\}) # examplesIf}
 }
 \seealso{
 \code{\link[=estimate_bias]{estimate_bias()}}, \code{\link[=unexpected_after_bias_table]{unexpected_after_bias_table()}}, \code{\link[=build_fixed_reports]{build_fixed_reports()}},

@@ -715,7 +715,7 @@
 #'   "ConvergenceSeverity"
 #' )]
 #'
-#' \dontrun{
+#' \donttest{
 #' # Full run with the package default MML estimator. This route integrates
 #' # person parameters under an N(0, 1) population model, so its reporting
 #' # value depends on the response-model and population assumptions. The
@@ -3823,7 +3823,7 @@ make_anchor_table <- function(fit,
 #'
 #' @seealso [fit_mfrm()], [analyze_residual_pca()], [build_visual_summaries()],
 #'   [mfrmr_visual_diagnostics], [mfrmr_reporting_and_apa]
-#' @examplesIf interactive()
+#' @examples
 #' # Minimal diagnostic example without residual PCA.
 #' toy <- load_mfrmr_data("example_operational")
 #' fit_quick <- fit_mfrm(
@@ -3834,7 +3834,7 @@ make_anchor_table <- function(fit,
 #'                             residual_pca = "none")
 #' summary(diag_quick)$overview[, c("Observations", "Facets", "Categories")]
 #'
-#' \dontrun{
+#' \donttest{
 #' fit <- fit_mfrm(
 #'   toy, "Person", c("Rater", "Criterion"), "Score",
 #'   method = "MML", model = "RSM", quad_points = 7, maxit = 30
@@ -4078,7 +4078,7 @@ diagnose_mfrm <- function(fit,
 #'
 #' @seealso [fit_mfrm()], [diagnose_mfrm()]
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #'
 #' fit_rsm <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",

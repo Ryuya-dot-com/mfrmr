@@ -116,7 +116,7 @@
 #'   *Psychometrika, 81*(4), 992-1013.
 #'
 #' @seealso [diagnose_mfrm()]
-#' @examplesIf interactive()
+#' @examples
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "JML", maxit = 30)

@@ -456,7 +456,7 @@ validate_bias_results_input <- function(bias_results,
 #' @return A named list with class `mfrm_manifest`.
 #' @seealso [export_mfrm_bundle()], [build_mfrm_replay_script()],
 #'   [make_anchor_table()], [reporting_checklist()]
-#' @examplesIf interactive()
+#' @examples
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "JML", maxit = 30)
@@ -1014,7 +1014,7 @@ build_mfrm_session_info_table <- function() {
 #'
 #' @return A named list with class `mfrm_replay_script`.
 #' @seealso [build_mfrm_manifest()], [export_mfrm_bundle()], [run_mfrm_facets()]
-#' @examplesIf interactive()
+#' @examples
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "JML", maxit = 30)
@@ -2105,7 +2105,7 @@ conquest_overlap_component_sensitivity <- function(component) {
 #'   [reference_case_benchmark()], [build_mfrm_replay_script()],
 #'   [export_mfrm_bundle()]
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' bundle <- build_conquest_overlap_bundle(quad_points = 3, maxit = 30)
 #' bundle$summary[, c("Case", "Facet", "Covariate", "Persons", "Items")]
 #' summary(bundle)$mfrmr_fit_status
@@ -3110,7 +3110,7 @@ normalize_conquest_overlap_exports <- function(bundle,
 #' @return A named list with class `mfrm_conquest_overlap_tables`.
 #' @seealso [normalize_conquest_overlap_tables()], [review_conquest_overlap()]
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' bundle <- build_conquest_overlap_bundle()
 #' tmp_dir <- tempdir()
 #' pop_path <- file.path(tmp_dir, "cq_pop.csv")
@@ -3733,7 +3733,7 @@ review_conquest_overlap <- function(bundle,
 #' @seealso [build_summary_table_bundle()], [export_mfrm_bundle()],
 #'   [apa_table()]
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "JML", maxit = 30)
@@ -4304,7 +4304,7 @@ export_summary_appendix <- function(x,
 #'   [export_mfrm_results()], [build_mfrm_manifest()],
 #'   [build_mfrm_replay_script()], [export_mfrm()],
 #'   [reporting_checklist()], [export_summary_appendix()]
-#' @examplesIf interactive()
+#' @examples
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "JML", maxit = 30)

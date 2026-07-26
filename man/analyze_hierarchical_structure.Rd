@@ -123,7 +123,7 @@ hs <- analyze_hierarchical_structure(toy,
                                      igraph_layout = FALSE)
 summary(hs)
 
-\dontrun{
+\donttest{
 # Full review when lme4 and igraph are available.
 if (requireNamespace("lme4", quietly = TRUE) &&
     requireNamespace("igraph", quietly = TRUE)) {

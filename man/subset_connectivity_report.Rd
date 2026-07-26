@@ -54,7 +54,6 @@ and edge tables with \code{draw = FALSE}; drawing uses \code{igraph} when availa
 }
 
 \examples{
-\dontshow{if (interactive()) withAutoprint(\{ # examplesIf}
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 out <- subset_connectivity_report(fit)
@@ -66,7 +65,6 @@ p_sub$data$plot
 p_design$data$plot
 p_net$data$edges
 out$summary[, c("Subset", "Observations", "ObservationPercent")]
-\dontshow{\}) # examplesIf}
 }
 \seealso{
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=mfrm_network_analysis]{mfrm_network_analysis()}},

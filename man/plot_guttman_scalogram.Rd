@@ -49,7 +49,6 @@ with a heavy border so the visual reads as a Rasch-convention
 Guttman scalogram.
 }
 \examples{
-\dontshow{if (interactive()) withAutoprint(\{ # examplesIf}
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "JML", maxit = 30)
@@ -60,7 +59,6 @@ dim(p$data$matrix)
 #   rows are sorted by person ability. Cells circled by the
 #   unexpected-response overlay break the staircase and warrant
 #   case-level review with `unexpected_response_table()`.
-\dontshow{\}) # examplesIf}
 }
 \seealso{
 \code{\link[=unexpected_response_table]{unexpected_response_table()}} for the case-level review of

@@ -77,7 +77,7 @@ compiled-code change:
 
 ```sh
 R CMD build .
-R CMD check --no-manual --as-cran mfrmr_0.2.2.tar.gz
+_R_CHECK_TIMINGS_=0 R CMD check --as-cran --run-donttest mfrmr_0.2.2.tar.gz
 ```
 
 Then run:
@@ -90,10 +90,17 @@ summary(readiness)
 
 The release candidate should have `Status: OK` in the local check log,
 `ReleaseReadinessStatus = "ok"`, and only `ok` rows in
-`readiness$gate_summary`. A missing `Status:` line, a check-log package version
-that differs from `DESCRIPTION`, release inputs newer than the matching source
-tarball or check log, or a check log older than that tarball is a release
-blocker reported as a `concern`. If the local environment cannot verify
+`readiness$gate_summary`. The `example_policy` row restricts `\dontrun{}` to
+the two external-ConQuest-file workflows and `@examplesIf interactive()` to
+the local Shiny viewer. The `check_timing` row sums top-level timed check
+components; an estimate above 600 seconds is a `concern`, while a log without
+timings requires review. Inspect `mfrmr-Ex.timings` as well as the aggregate
+gate before submission.
+
+A missing `Status:` line, a check-log package version that differs from
+`DESCRIPTION`, release inputs newer than the matching source tarball or check
+log, or a check log older than that tarball is a release blocker reported as a
+`concern`. If the local environment cannot verify
 external clock time, record that environment-only NOTE in `cran-comments.md`
 and rerun the package check with the clock check disabled to confirm that
 package checks are otherwise clean.

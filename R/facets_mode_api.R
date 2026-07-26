@@ -162,7 +162,7 @@ infer_facets_mode_mapping <- function(dat, person = NULL, facets = NULL, score =
 #'   [mfrmr_workflow_methods], [mfrmr_compatibility_layer]
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' toy_small <- toy[toy$Person %in% unique(toy$Person)[1:12], , drop = FALSE]
 #'

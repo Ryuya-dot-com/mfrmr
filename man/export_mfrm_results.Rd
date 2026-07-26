@@ -96,7 +96,7 @@ person rows so person fit can be reviewed without replacing the required
 Wright-map first screen.
 }
 \examples{
-\dontrun{
+\donttest{
 toy <- load_mfrmr_data("example_core")
 toy_small <- toy[toy$Person \%in\% unique(toy$Person)[1:6], , drop = FALSE]
 fit <- fit_mfrm(toy_small, "Person", c("Rater", "Criterion"), "Score",

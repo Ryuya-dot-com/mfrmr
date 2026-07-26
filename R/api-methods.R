@@ -1961,7 +1961,7 @@ summarize_category_curves_bundle <- function(object, digits = 3, top_n = 10) {
 #' @return An object of class `summary.mfrm_bundle`.
 #' @seealso [unexpected_response_table()], [fair_average_table()], `plot()`
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' toy_full <- load_mfrmr_data("example_core")
 #' toy_people <- unique(toy_full$Person)[1:12]
 #' toy <- toy_full[toy_full$Person %in% toy_people, , drop = FALSE]
@@ -6560,7 +6560,7 @@ plot_visual_summaries_bundle <- function(x,
 #' @return A plotting-data object of class `mfrm_plot_data`.
 #' @seealso `summary()`, [plot_unexpected()], [plot_fair_average()], [plot_displacement()]
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' toy_full <- load_mfrmr_data("example_core")
 #' toy_people <- unique(toy_full$Person)[1:12]
 #' toy <- toy_full[toy_full$Person %in% toy_people, , drop = FALSE]
@@ -7054,7 +7054,7 @@ plot.mfrm_bundle <- function(x, y = NULL, type = NULL, ...) {
 #' - `digits`: numeric-print precision threaded through to
 #'   `print.summary.mfrm_diagnostics()`
 #' @seealso [diagnose_mfrm()], [summary.mfrm_fit()]
-#' @examplesIf interactive()
+#' @examples
 #' toy <- load_mfrmr_data("example_core")
 #' toy <- toy[toy$Person %in% unique(toy$Person)[1:4], ]
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
@@ -7839,7 +7839,7 @@ print.summary.mfrm_diagnostics <- function(x, ...) {
 #' - `top_rows`: highest-`|t|` interaction rows
 #' - `notes`: short interpretation notes
 #' @seealso [estimate_bias()], [bias_interaction_report()]
-#' @examplesIf interactive()
+#' @examples
 #' toy <- load_mfrmr_data("example_bias")
 #' toy <- toy[toy$Person %in% unique(toy$Person)[1:8], ]
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)

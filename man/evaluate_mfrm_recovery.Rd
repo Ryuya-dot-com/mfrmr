@@ -198,7 +198,7 @@ summaries.
 }
 
 \examples{
-\dontrun{
+\donttest{
 rec <- evaluate_mfrm_recovery(
   n_person = 12,
   n_rater = 2,

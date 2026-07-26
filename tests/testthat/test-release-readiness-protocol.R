@@ -8,7 +8,8 @@ release_readiness_protocol_path <- function() {
 }
 
 release_readiness_gate_fixture <- function(env, check_status,
-                                           freshness_status = NULL) {
+                                           freshness_status = NULL,
+                                           example_policy_status = NULL) {
   evidence_file <- tempfile()
   writeLines("evidence", evidence_file)
   target <- as.character(check_status$TargetVersion[1])
@@ -21,6 +22,19 @@ release_readiness_gate_fixture <- function(env, check_status,
       TarballFresh = TRUE,
       CheckAfterTarball = TRUE,
       StaleInputs = "",
+      stringsAsFactors = FALSE
+    )
+  }
+  if (is.null(example_policy_status)) {
+    example_policy_status <- data.frame(
+      DontrunSourceTargets = paste(
+        c("normalize_conquest_overlap_exports", "review_conquest_overlap"),
+        collapse = ", "
+      ),
+      ExamplesIfSourceTargets = "launch_mfrmr_viewer",
+      DonttestRdPages = 87L,
+      Detail = "",
+      ExamplePolicyOK = TRUE,
       stringsAsFactors = FALSE
     )
   }
@@ -61,7 +75,8 @@ release_readiness_gate_fixture <- function(env, check_status,
       external_recovery_evidence = evidence_file,
       external_recovery_helper = evidence_file
     ),
-    freshness_status = freshness_status
+    freshness_status = freshness_status,
+    example_policy_status = example_policy_status
   )
 }
 
@@ -80,10 +95,15 @@ test_that("release-readiness protocol exposes review steps and parses check logs
 
   log_file <- tempfile(fileext = ".log")
   writeLines(c(
-    "* using option ‘--as-cran’",
+    "* using options ‘--run-donttest --as-cran’",
     "* this is package ‘mfrmr’ version ‘0.2.1’",
     "* checking package namespace information ... OK",
-    "* checking tests ... OK",
+    "* checking examples ... [3s/4s] OK",
+    "* checking examples with --run-donttest ... [5s/6s] OK",
+    "* checking tests ... [1s/1s] OK",
+    "* checking re-building of vignette outputs ... [1s/1s] OK",
+    "* checking PDF version of manual ... OK",
+    "* checking HTML version of manual ... OK",
     "Status: 1 NOTE"
   ), log_file)
   parsed <- env$mfrmr_release_readiness_parse_check_log(log_file, target_version = "0.2.1")
@@ -91,11 +111,47 @@ test_that("release-readiness protocol exposes review steps and parses check logs
   expect_true(parsed$VersionMatchesTarget)
   expect_true(parsed$StatusPresent)
   expect_true(parsed$AsCRAN)
+  expect_true(parsed$RunDonttest)
+  expect_true(parsed$ManualChecked)
   expect_true(parsed$CheckPassed)
   expect_true(parsed$NeedsExplanation)
   expect_equal(parsed$Errors, 0L)
   expect_equal(parsed$Warnings, 0L)
   expect_equal(parsed$Notes, 1L)
+  expect_true(parsed$TimingAvailable)
+  expect_equal(parsed$ComponentElapsedSeconds, 12)
+  expect_equal(parsed$ExamplesSeconds, 4)
+  expect_equal(parsed$DonttestExamplesSeconds, 6)
+  expect_equal(parsed$TestsSeconds, 1)
+  expect_equal(parsed$VignetteRebuildSeconds, 1)
+  expect_true(parsed$UnderTenMinutes)
+})
+
+test_that("release-readiness protocol flags check timing above ten minutes", {
+  protocol <- release_readiness_protocol_path()
+  env <- new.env(parent = globalenv())
+  source(protocol, local = env)
+
+  log_file <- tempfile(fileext = ".log")
+  writeLines(c(
+    "* using options ‘--run-donttest --as-cran’",
+    "* this is package ‘mfrmr’ version ‘0.2.1’",
+    "* checking examples ... [1s/601s] OK",
+    "Status: OK"
+  ), log_file)
+  parsed <- env$mfrmr_release_readiness_parse_check_log(
+    log_file,
+    target_version = "0.2.1"
+  )
+
+  expect_true(parsed$TimingAvailable)
+  expect_equal(parsed$ComponentElapsedSeconds, 601)
+  expect_false(parsed$UnderTenMinutes)
+  gate <- release_readiness_gate_fixture(env, parsed)
+  expect_identical(
+    gate$Status[gate$Gate == "check_timing"],
+    "concern"
+  )
 })
 
 test_that("release-readiness protocol rejects a check log without Status", {
@@ -392,6 +448,51 @@ test_that("release-readiness protocol checks source-truth alignment", {
   )
 })
 
+test_that("release-readiness protocol enforces semantic example guards", {
+  protocol <- release_readiness_protocol_path()
+  env <- new.env(parent = globalenv())
+  source(protocol, local = env)
+
+  pkg_root <- normalizePath(test_path("..", ".."), winslash = "/", mustWork = TRUE)
+  if (!file.exists(file.path(pkg_root, "DESCRIPTION"))) {
+    pkg_root <- system.file(package = "mfrmr")
+  }
+  status <- env$mfrmr_release_readiness_example_policy_status(pkg_root)
+
+  expect_true(status$SourceAvailable)
+  expect_true(status$GeneratedRdAvailable)
+  expect_identical(
+    status$DontrunSourceTargets,
+    "normalize_conquest_overlap_exports, review_conquest_overlap"
+  )
+  expect_identical(status$ExamplesIfSourceTargets, "launch_mfrmr_viewer")
+  expect_gt(status$DonttestRdPages, 0L)
+  expect_identical(status$Detail, "")
+  expect_true(status$ExamplePolicyOK)
+
+  status$ExamplePolicyOK <- FALSE
+  status$Detail <- "unexpected dontrun target"
+  log_file <- tempfile(fileext = ".log")
+  writeLines(c(
+    "* using option ‘--as-cran’",
+    "* this is package ‘mfrmr’ version ‘0.2.2’",
+    "Status: OK"
+  ), log_file)
+  parsed <- env$mfrmr_release_readiness_parse_check_log(
+    log_file,
+    target_version = "0.2.2"
+  )
+  gate <- release_readiness_gate_fixture(
+    env,
+    parsed,
+    example_policy_status = status
+  )
+  expect_identical(
+    gate$Status[gate$Gate == "example_policy"],
+    "concern"
+  )
+})
+
 test_that("release-readiness protocol checks GPCM scope alignment", {
   protocol <- release_readiness_protocol_path()
   env <- new.env(parent = globalenv())
@@ -436,7 +537,7 @@ test_that("release-readiness protocol reviews the source tree shape", {
   expect_true(all(c(
     "prompt_steps", "gate_summary", "release_decision",
     "version_status", "check_status", "freshness_status", "ci_workflow_status",
-    "source_truth_status", "terminology_status",
+    "source_truth_status", "terminology_status", "example_policy_status",
     "checklist_status", "gpcm_scope_status", "external_recovery_status"
   ) %in% names(review)))
   expect_false(review$external_recovery_status$ExternalRecoveryRequested[1])
@@ -455,5 +556,10 @@ test_that("release-readiness protocol reviews the source tree shape", {
     expect_true(isTRUE(review$ci_workflow_status$CIWorkflowOK[1]))
   }
   expect_true(isTRUE(review$terminology_status$TerminologyOK[1]))
+  expect_true(isTRUE(review$example_policy_status$ExamplePolicyOK[1]))
+  expect_identical(
+    review$gate_summary$Status[review$gate_summary$Gate == "example_policy"],
+    "ok"
+  )
   expect_true(isTRUE(review$checklist_status$ChecklistAvailable[1]))
 })

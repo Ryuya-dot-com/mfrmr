@@ -71,7 +71,7 @@ KR-20, or IRT marginal/separation reliability, even though all of those
 summaries may be displayed on a 0--1 scale in broader reporting dashboards.
 }
 \examples{
-\dontrun{
+\donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "JML", maxit = 30)

@@ -151,7 +151,7 @@ baseline scale.
 }
 
 \examples{
-\dontrun{
+\donttest{
 # Deliberately linked teaching waves: both retain the same rater and
 # criterion identities from one synthetic calibration design.
 toy <- load_mfrmr_data("example_core")

@@ -39,7 +39,7 @@ so downstream MFRM helpers (e.g. \code{plot_qc_dashboard()}) work
 on the imported object.
 }
 \examples{
-\dontrun{
+\donttest{
 if (requireNamespace("TAM", quietly = TRUE)) {
   response_matrix <- matrix(sample(0:3, 60, replace = TRUE), nrow = 20)
   colnames(response_matrix) <- paste0("Item", seq_len(ncol(response_matrix)))

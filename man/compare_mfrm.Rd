@@ -204,7 +204,7 @@ identification. \emph{IEEE Transactions on Automatic Control,
 }
 
 \examples{
-\dontrun{
+\donttest{
 toy <- load_mfrmr_data("example_core")
 
 fit_rsm <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",

@@ -188,7 +188,7 @@ plot_threshold_ladder <- function(fit,
 #' @seealso [diagnose_mfrm()], [unexpected_response_table()],
 #'   [build_misfit_casebook()].
 #'
-#' @examplesIf interactive()
+#' @examples
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "JML", maxit = 30)
@@ -529,7 +529,7 @@ plot_person_fit <- function(fit,
 #' @concept visual diagnostics
 #' @concept rater severity
 #'
-#' @examplesIf interactive()
+#' @examples
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "JML", maxit = 30)
@@ -688,7 +688,7 @@ plot_rater_severity_profile <- function(fit,
 #' @concept visual diagnostics
 #' @concept DFF DIF
 #'
-#' @examplesIf interactive()
+#' @examples
 #' toy <- load_mfrmr_data("example_bias")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "JML", maxit = 30)
@@ -930,7 +930,7 @@ plot_dif_summary <- function(x,
 #' @concept reporting workflow
 #' @concept visual diagnostics
 #'
-#' @examplesIf interactive()
+#' @examples
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "JML", maxit = 30)

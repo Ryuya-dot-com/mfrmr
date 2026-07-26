@@ -149,7 +149,6 @@ available from the current analysis objects.
 }
 
 \examples{
-\dontshow{if (interactive()) withAutoprint(\{ # examplesIf}
 # Minimal checklist example using a JML fit and lightweight diagnostics.
 toy <- load_mfrmr_data("example_core")
 fit_quick <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
@@ -159,7 +158,7 @@ diag_quick <- diagnose_mfrm(fit_quick, residual_pca = "none",
 chk_quick <- reporting_checklist(fit_quick, diagnostics = diag_quick)
 head(chk_quick$checklist[, c("Section", "Item", "DraftReady")])
 
-\dontrun{
+\donttest{
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "MML", quad_points = 7, maxit = 30)
 diag <- diagnose_mfrm(fit, residual_pca = "both", diagnostic_mode = "both")
@@ -176,7 +175,6 @@ head(chk$checklist[, c("Section", "Item", "DraftReady", "NextAction")])
 #   without re-reading the methodology guide.
 nchar(apa$report_text)
 }
-\dontshow{\}) # examplesIf}
 }
 \seealso{
 \code{\link[=build_apa_outputs]{build_apa_outputs()}}, \code{\link[=build_visual_summaries]{build_visual_summaries()}},

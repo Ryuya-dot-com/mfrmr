@@ -136,7 +136,7 @@
 #'   345-359. \doi{10.1111/jedm.12432}
 #'
 #' @seealso [plot_local_dependence_heatmap()], [diagnose_mfrm()]
-#' @examplesIf interactive()
+#' @examples
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "JML", maxit = 30)

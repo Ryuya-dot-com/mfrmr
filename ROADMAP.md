@@ -1,6 +1,6 @@
 # mfrmr development roadmap
 
-Status: authoritative project roadmap, reviewed 2026-07-26.
+Status: authoritative project roadmap, reviewed 2026-07-27.
 
 This file is the single source of truth for release sequencing. `NEWS.md`
 records completed user-visible changes. Files under `inst/validation/` provide
@@ -10,12 +10,17 @@ The roadmap is repository-only and is excluded from source-package tarballs.
 ## Current position
 
 - CRAN currently distributes 0.2.1.
-- 0.2.2 is published as a GitHub release and its implementation is frozen.
-- The published 0.2.2 commit passed all five required cross-platform CI matrix
-  jobs. The source-alignment candidate also passed an exact local `--as-cran`
-  check, with unavailable remote incoming/clock probes documented separately.
-- Source-truth cleanup may align dates, release evidence, and planning
-  documents without adding estimator or public-API scope to 0.2.2.
+- A 0.2.2 GitHub release exists, but its asset predates the current
+  source-alignment candidate and must not be treated as the CRAN candidate.
+  No third-party use has been reported; that lowers migration risk but does not
+  remove the need to replace artifacts deliberately and with explicit approval.
+- The estimator and public-API scope for 0.2.2 is frozen. Release-source
+  alignment may still correct help execution guards, release evidence, and
+  planning documents without expanding that scope.
+- The preceding source-alignment commit passed the five required cross-platform
+  package-check jobs plus pkgdown. The revised candidate has now passed an
+  exact local full-manual `--as-cran --run-donttest` check with remote incoming
+  probes enabled; CI must be rerun after the example-policy commit.
 
 The central sequencing decision is deliberate: numerical trust and external
 overlap evidence come before new model families. Operational calibration and
@@ -84,18 +89,23 @@ Before CRAN submission or replacement of the GitHub release asset:
 - [ ] Keep `DESCRIPTION`, `CITATION.cff`, `NEWS.md`, `cran-comments.md`, tag,
   tarball, and check log on the same version and release date.
 - [x] Build one exact candidate tarball and record its SHA-256 digest
-  (`958ce2f8f8c44850794036cb5edc2cbf0e3990ffb19be960ff3b0b24d2f8617a`).
-- [x] Run `R CMD check --as-cran` on that exact tarball and retain the full log.
+  (`0485d3dad65a7aee747dd3f8a1f237f811f2022880c196782b211be31f09479a`).
+- [x] Run a full-manual `R CMD check --as-cran --run-donttest` on that exact
+  tarball and retain the full log (`Status: OK`; 288.05 seconds wall time).
+- [x] Restrict `\dontrun{}` to the two examples requiring separately generated
+  ConQuest files, restrict interactive-only examples to the local Shiny viewer,
+  and keep the timed top-level component estimate below ten minutes (266
+  seconds for this candidate).
 - [x] Audit README, NEWS, vignettes, generated help, and first-screen runtime
   guidance for maintainer-oriented wording while retaining documented API and
   status vocabulary.
 - [x] Document `maxit` as a prespecified computational ceiling, make
   iteration-limited fits explicitly review-only, and require numerically ready
   JML and MML fits before estimator-agreement checks.
-- [x] Confirm the full non-CRAN suite and all required CI matrix jobs complete
-  for the final release-candidate package source before merge.
-- [x] Run the repository release-readiness review against the exact tarball and
-  check log.
+- [ ] Confirm the full non-CRAN suite and all required CI matrix jobs complete
+  for the example-policy source before merge.
+- [ ] Run the updated repository release-readiness review against the exact
+  tarball and check log after the example-policy gate is committed.
 - [x] Confirm source-package contents exclude repository-only roadmaps and
   validation helpers.
 - [x] Regenerate pkgdown from the final source and inspect key pages and logo.

@@ -28,6 +28,8 @@ The documented ConQuest overlap route was also run externally with ConQuest
 aggregate comparison is recorded in the public source repository's validation
 record, which is not installed with the CRAN package. It covers only the stated
 binary, item-only, one-covariate case and is not a general equivalence claim.
+It is descriptive supporting context, not the 0.2.2 release gate; a broader
+external-comparison gate remains scheduled for 0.2.3.
 
 ## Test environment
 
@@ -39,31 +41,26 @@ The final source tarball was built and checked with:
 
 ```sh
 R CMD build .
-_R_CHECK_FORCE_SUGGESTS_=false \
-_R_CHECK_CRAN_INCOMING_REMOTE_=false \
-_R_CHECK_SYSTEM_CLOCK_=false \
-_R_CHECK_THINGS_IN_TEMP_DIR_EXCLUDE_='^xcrun_db$' \
-R CMD check --as-cran --no-manual mfrmr_0.2.2.tar.gz
+_R_CHECK_TIMINGS_=0 \
+R CMD check --as-cran --run-donttest mfrmr_0.2.2.tar.gz
 ```
 
 Result: 0 errors, 0 warnings, and 0 notes (`Status: OK`). In the recorded local
-check, the installed-package CRAN test selection completed with 385 passes,
+check, the installed-package CRAN test selection completed with 392 passes,
 no failures or warnings, and 3 intentional skips for longer GPCM coverage.
 
-The local environment could not complete remote CRAN/Bioconductor index and
-system-clock probes, so only those external probes were disabled; the local
-CRAN incoming checks remained enabled. Apple clang also creates an
-environment-only `xcrun_db` directory during compilation, which was excluded
-from the final temp-directory detritus check after a separate run confirmed it
-as the only NOTE. Package installation, source, compiled-code, help, examples,
-tests, and vignette checks were otherwise run under `--as-cran`.
+The full-manual check completed in 288.05 seconds of wall time. Timed top-level
+components summed to 266 seconds; examples including `donttest` blocks took
+148 seconds, tests took 5 seconds, vignette rebuilding took 4 seconds, and the
+PDF and HTML manual checks took 8 and 9 seconds. The remote CRAN incoming
+feasibility probes were enabled and completed successfully.
 
 The CRAN selection exercises the public data review -> MML fit -> summary ->
 Wright/pathway plot -> export route once, plus lightweight compatibility and
-artifact contracts. The complete non-CRAN regression suite was also run
-locally from the source tree with `NOT_CRAN=true`, with no failures, warnings,
-skips, or errors. The complete suite is also selected on the Linux release job
-in GitHub Actions.
+artifact contracts. The complete non-CRAN regression suite was also run with
+`NOT_CRAN=true`, with no failures or warnings. The complete suite is selected
+on the Linux release job in GitHub Actions; the CRAN-time selection above
+remains intentionally representative rather than exhaustive.
 
 ## Downstream dependencies
 

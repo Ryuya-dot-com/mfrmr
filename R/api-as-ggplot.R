@@ -682,7 +682,7 @@
 #'
 #' @return A `ggplot2` plot object.
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' fit <- fit_mfrm(load_mfrmr_data("example_core"), "Person",
 #'                 c("Rater", "Criterion"), "Score", maxit = 30)
 #' as_ggplot(fit, type = "wright")

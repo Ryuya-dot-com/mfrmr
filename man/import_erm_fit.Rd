@@ -26,7 +26,7 @@ explicit error rather than silently recycling rows. Same caveats as
 \code{\link[=import_mirt_fit]{import_mirt_fit()}}.
 }
 \examples{
-\dontrun{
+\donttest{
 if (requireNamespace("eRm", quietly = TRUE)) {
   response_matrix <- matrix(sample(0:3, 60, replace = TRUE), nrow = 20)
   colnames(response_matrix) <- paste0("Item", seq_len(ncol(response_matrix)))

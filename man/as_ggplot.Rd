@@ -51,7 +51,7 @@ use a conservative tabular fallback; inspect \code{\link[=plot_data_components]{
 automatic inference is not appropriate.
 }
 \examples{
-\dontrun{
+\donttest{
 fit <- fit_mfrm(load_mfrmr_data("example_core"), "Person",
                 c("Rater", "Criterion"), "Score", maxit = 30)
 as_ggplot(fit, type = "wright")

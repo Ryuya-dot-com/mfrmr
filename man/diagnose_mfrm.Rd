@@ -281,7 +281,6 @@ programs}. Winsteps.com. (WHEXACT / FACETS standardized fit df notes.)
 }
 
 \examples{
-\dontshow{if (interactive()) withAutoprint(\{ # examplesIf}
 # Minimal diagnostic example without residual PCA.
 toy <- load_mfrmr_data("example_operational")
 fit_quick <- fit_mfrm(
@@ -292,7 +291,7 @@ diag_quick <- diagnose_mfrm(fit_quick, diagnostic_mode = "both",
                             residual_pca = "none")
 summary(diag_quick)$overview[, c("Observations", "Facets", "Categories")]
 
-\dontrun{
+\donttest{
 fit <- fit_mfrm(
   toy, "Person", c("Rater", "Criterion"), "Score",
   method = "MML", model = "RSM", quad_points = 7, maxit = 30
@@ -328,7 +327,7 @@ head(pca$overall_table)
 prec <- precision_review_report(fit, diagnostics = diag)
 summary(prec)
 }
-\dontshow{\}) # examplesIf}
+
 }
 \seealso{
 \code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=analyze_residual_pca]{analyze_residual_pca()}}, \code{\link[=build_visual_summaries]{build_visual_summaries()}},

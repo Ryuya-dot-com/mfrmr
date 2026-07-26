@@ -51,6 +51,10 @@ multi-step analyses to README/vignettes or non-CRAN tests.
 - Wrap multi-fit workflows, MML examples, recovery simulations, design
   simulations, external-Suggests examples, and long reporting pipelines in
   `\donttest{}` unless the function cannot be demonstrated otherwise.
+- Reserve `\dontrun{}` for examples that genuinely cannot execute during a
+  check, such as workflows that require files produced by external software.
+  Reserve `@examplesIf interactive()` for functions that genuinely require an
+  interactive session.
 - When an MML example must run in standard examples, set a small
   `quad_points` value and explain that it is an exploratory speed setting.
 - Use `draw = FALSE` in examples that only need to demonstrate returned plot
@@ -62,6 +66,9 @@ multi-step analyses to README/vignettes or non-CRAN tests.
   selected contracts from `tests/testthat.R`. Run the complete suite
   locally/CI with `NOT_CRAN=true`; one CI matrix job must always use that
   setting.
+- Before release, run an `--as-cran` check with timing enabled and ensure the
+  ordinary and `donttest` examples both execute. Treat an estimated component
+  check time above 600 seconds as a release concern.
 
 ## Pull request checklist
 

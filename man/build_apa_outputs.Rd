@@ -120,7 +120,6 @@ package-native bias helper that provides a table component.
 }
 
 \examples{
-\dontshow{if (interactive()) withAutoprint(\{ # examplesIf}
 # Minimal APA-output example using a JML fit and lightweight diagnostics.
 toy <- load_mfrmr_data("example_core")
 fit_quick <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
@@ -133,7 +132,7 @@ diag_quick <- diagnose_mfrm(fit_quick,
 apa_quick <- build_apa_outputs(fit_quick, diag_quick)
 nchar(apa_quick$report_text) > 0
 
-\dontrun{
+\donttest{
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
   method = "MML", quad_points = 7, maxit = 30
 )
@@ -164,7 +163,7 @@ head(chk$checklist[, c("Section", "Item", "DraftReady", "NextAction")])
 cat(apa$report_text)
 apa$section_map[, c("SectionId", "Available")]
 }
-\dontshow{\}) # examplesIf}
+
 }
 \seealso{
 \code{\link[=build_visual_summaries]{build_visual_summaries()}}, \code{\link[=estimate_bias]{estimate_bias()}},

@@ -144,7 +144,7 @@
 #' average bioavailability. *Journal of Pharmacokinetics and
 #' Biopharmaceutics, 15*(6), 657-680.
 #'
-#' @examplesIf interactive()
+#' @examples
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "JML", maxit = 30)
@@ -451,7 +451,7 @@ classify_equivalence_bf <- function(bf01) {
 #' @concept confidence intervals
 #' @concept facet equivalence
 #' @concept visual diagnostics
-#' @examplesIf interactive()
+#' @examples
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "JML", maxit = 30)

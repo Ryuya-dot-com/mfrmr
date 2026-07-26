@@ -218,7 +218,7 @@
 #'   `vignette("mfrmr-reporting-and-apa", package = "mfrmr")`.
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(
 #'   toy,

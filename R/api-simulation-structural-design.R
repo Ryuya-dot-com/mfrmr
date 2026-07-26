@@ -5223,7 +5223,7 @@ structural_design_review_plot_index_from_bundle <- function(plot_index) {
 #' @seealso [summary.mfrm_design_evaluation()]
 #' @noRd
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' spec <- build_mfrm_sim_spec(
 #'   design = list(person = 16, rater = 3, criterion = 2, assignment = 2),
 #'   assignment = "rotating"
@@ -5606,7 +5606,7 @@ print_compact_structural_design_review_summary <- function(x,
 #' @return A plotting-data object of class `mfrm_plot_data`.
 #' @noRd
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' spec <- build_mfrm_sim_spec(
 #'   design = list(person = 16, rater = 3, criterion = 2, assignment = 2),
 #'   assignment = "rotating"

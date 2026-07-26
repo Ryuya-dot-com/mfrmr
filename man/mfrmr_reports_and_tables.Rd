@@ -179,7 +179,7 @@ or \code{\link[=export_summary_appendix]{export_summary_appendix()}} /
 }
 
 \examples{
-\dontrun{
+\donttest{
 toy <- load_mfrmr_data("example_core")
 toy_small <- toy[toy$Person \%in\% unique(toy$Person)[1:12], , drop = FALSE]
 fit <- fit_mfrm(

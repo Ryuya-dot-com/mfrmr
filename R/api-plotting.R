@@ -291,7 +291,7 @@ plot_component_note <- function(name, role) {
 #'
 #' @return The full reusable plot-data list, or the selected component.
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", maxit = 30)
 #'
@@ -367,7 +367,7 @@ plot_data <- function(x, component = NULL, type = NULL, ...) {
 #'
 #' @return A data frame with one row per reusable plot-data component.
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", maxit = 30)
 #' plot_data_components(fit, type = "pathway")
@@ -975,7 +975,7 @@ format_marginal_pair_label <- function(facet, level1, level2) {
 #' @seealso [diagnose_mfrm()], [rating_scale_table()], [plot_marginal_pairwise()],
 #'   [mfrmr_visual_diagnostics]
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(
 #'   toy,
@@ -1212,7 +1212,7 @@ plot_marginal_fit <- function(x,
 #' @return A plotting-data object of class `mfrm_plot_data`.
 #' @seealso [diagnose_mfrm()], [plot_marginal_fit()], [mfrmr_visual_diagnostics]
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(
 #'   toy,
@@ -1448,7 +1448,7 @@ plot_marginal_pairwise <- function(x,
 #' @return A plotting-data object of class `mfrm_plot_data`.
 #' @seealso [unexpected_response_table()], [plot_fair_average()], [plot_displacement()],
 #'   [plot_qc_dashboard()], [mfrmr_visual_diagnostics]
-#' @examplesIf interactive()
+#' @examples
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' p <- plot_unexpected(fit, abs_z_min = 1.5, prob_max = 0.4, top_n = 10, draw = FALSE)
@@ -1692,7 +1692,7 @@ plot_unexpected <- function(x,
 #' @concept confidence intervals
 #' @concept visual diagnostics
 #' @concept fair averages
-#' @examplesIf interactive()
+#' @examples
 #' toy_full <- load_mfrmr_data("example_core")
 #' toy_people <- unique(toy_full$Person)[1:12]
 #' toy <- toy_full[toy_full$Person %in% toy_people, , drop = FALSE]
@@ -2080,7 +2080,7 @@ plot_fair_average <- function(x,
 #' @concept confidence intervals
 #' @concept visual diagnostics
 #' @concept displacement
-#' @examplesIf interactive()
+#' @examples
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' p <- plot_displacement(fit, anchored_only = FALSE, draw = FALSE)
@@ -2325,7 +2325,7 @@ plot_displacement <- function(x,
 #' @seealso [interrater_agreement_table()], [plot_facets_chisq()],
 #'   [plot_qc_dashboard()], [mfrmr_visual_diagnostics]
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' p <- plot_interrater_agreement(fit, rater_facet = "Rater", draw = FALSE)
@@ -2552,7 +2552,7 @@ plot_interrater_agreement <- function(x,
 #'
 #' @return A plotting-data object of class `mfrm_plot_data`.
 #' @seealso [facets_chisq_table()], [plot_interrater_agreement()], [plot_qc_dashboard()]
-#' @examplesIf interactive()
+#' @examples
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' p <- plot_facets_chisq(fit, draw = FALSE)
@@ -2779,7 +2779,7 @@ plot_facets_chisq <- function(x,
 #'
 #' @return A plotting-data object of class `mfrm_plot_data`.
 #' @seealso [plot_unexpected()], [plot_fair_average()], [plot_displacement()], [plot_interrater_agreement()], [plot_facets_chisq()], [build_visual_summaries()]
-#' @examplesIf interactive()
+#' @examples
 #' # Build the plotting data without opening a graphics device.
 #' toy <- load_mfrmr_data("example_core")
 #' toy_small <- toy[toy$Person %in% unique(toy$Person)[1:3], ]
@@ -2790,7 +2790,7 @@ plot_facets_chisq <- function(x,
 #' qc_quick <- plot_qc_dashboard(fit_quick, draw = FALSE)
 #' names(qc_quick$data)
 #'
-#' \dontrun{
+#' \donttest{
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' qc <- plot_qc_dashboard(fit, draw = FALSE)
 #' qc$data$panels$Status
@@ -3250,7 +3250,7 @@ resolve_bubble_measures <- function(x, diagnostics = NULL) {
 #' @return Invisibly, an object of class \code{mfrm_plot_data}.
 #' @seealso \code{\link{diagnose_mfrm}}, \code{\link{plot_unexpected}},
 #'   \code{\link{plot_fair_average}}
-#' @examplesIf interactive()
+#' @examples
 #' toy <- load_mfrmr_data("example_operational")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "MML", model = "RSM",
@@ -3529,7 +3529,7 @@ plot_bubble <- function(x,
 #'   `ShareableWithoutReview` are always `FALSE`.
 #' @seealso \code{\link{fit_mfrm}}, \code{\link{diagnose_mfrm}},
 #'   \code{\link{as.data.frame.mfrm_fit}}
-#' @examplesIf interactive()
+#' @examples
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "JML", model = "RSM", maxit = 30)

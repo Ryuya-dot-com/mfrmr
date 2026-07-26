@@ -83,6 +83,43 @@ example_policy_hits <- function(rows) {
   paste0(rows$file, ":", rows$line)
 }
 
+example_policy_rd_pages_with <- function(pkg_root, pattern) {
+  files <- list.files(
+    file.path(pkg_root, "man"),
+    pattern = "\\.Rd$",
+    full.names = TRUE
+  )
+  hits <- vapply(files, function(path) {
+    any(grepl(pattern, readLines(path, warn = FALSE), fixed = TRUE))
+  }, logical(1))
+  sort(basename(files[hits]))
+}
+
+test_that("Rd execution guards have a narrow semantic allowlist", {
+  pkg_root <- example_policy_source_root()
+  testthat::skip_if(is.na(pkg_root), "source files are not available")
+
+  expect_identical(
+    example_policy_rd_pages_with(pkg_root, "\\dontrun{"),
+    sort(c(
+      "normalize_conquest_overlap_exports.Rd",
+      "review_conquest_overlap.Rd"
+    )),
+    info = paste(
+      "dontrun is reserved for examples that require separately generated",
+      "external ConQuest output. Executable lengthy examples belong in donttest."
+    )
+  )
+  expect_identical(
+    example_policy_rd_pages_with(pkg_root, "# examplesIf"),
+    "launch_mfrmr_viewer.Rd",
+    info = paste(
+      "examplesIf interactive() is reserved for the local Shiny viewer;",
+      "ordinary reports, tables, exports, and plots must remain checkable."
+    )
+  )
+})
+
 test_that("CRAN testthat surface is an explicit representative whitelist", {
   pkg_root <- example_policy_source_root()
   testthat::skip_if(is.na(pkg_root), "source files are not available")

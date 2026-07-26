@@ -13,6 +13,12 @@
   specification fixed, follow a prespecified ceiling sequence, and withhold
   interpretation until the numerical-readiness gate passes.
 
+* Replaced blanket `\dontrun{}` and `@examplesIf interactive()` guards with
+  checkable examples or `\donttest{}` blocks. Only the two workflows that need
+  separately generated ConQuest files remain `\dontrun{}`, and only the local
+  Shiny viewer remains interactive-only. The release-readiness review now
+  enforces that allowlist and flags timed component checks above ten minutes.
+
 - Added one authoritative repository roadmap and aligned release metadata and
   validation notes with the accepted 0.2.2 boundary. External numerical
   comparison and calibrated MML joint-stationarity gates are explicitly 0.2.3

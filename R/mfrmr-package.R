@@ -682,7 +682,7 @@
 #' mfrm_threshold_profiles()
 #' list_mfrmr_data(details = TRUE)
 #'
-#' \dontrun{
+#' \donttest{
 #' toy <- load_mfrmr_data("example_operational")
 #' fit <- fit_mfrm(
 #'   toy,
