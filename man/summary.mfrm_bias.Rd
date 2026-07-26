@@ -13,7 +13,7 @@
 
 \item{top_n}{Number of strongest bias rows to keep.}
 
-\item{p_cut}{Significance cutoff used for counting flagged rows.}
+\item{p_cut}{Tail-area cutoff used for counting screen-positive rows.}
 
 \item{...}{Reserved for generic compatibility.}
 }
@@ -34,7 +34,7 @@ Summarize an \code{mfrm_bias} object in a user-friendly format
 This method returns a compact interaction-bias summary:
 \itemize{
 \item interaction facets/order and analyzed cell counts
-\item effect-size profile (\verb{|bias|} mean/max, significant cell count)
+\item effect-size profile (\verb{|bias|} mean/max, screen-positive cell count)
 \item fixed-effect chi-square block
 \item iteration-end convergence indicators
 \item top rows ranked by absolute t

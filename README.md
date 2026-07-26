@@ -1,4 +1,4 @@
-# mfrmr
+# mfrmr <img src="man/figures/logo.png" align="right" height="160" alt="mfrmr hex logo" />
 
 [![GitHub](https://img.shields.io/badge/GitHub-mfrmr-181717?logo=github)](https://github.com/Ryuya-dot-com/mfrmr)
 [![R-CMD-check](https://github.com/Ryuya-dot-com/mfrmr/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/Ryuya-dot-com/mfrmr/actions/workflows/R-CMD-check.yaml)
@@ -11,6 +11,13 @@ It supports rating-scale (`RSM`) and partial-credit (`PCM`) models, together
 with a documented bounded `GPCM` extension. A facet can represent a rater,
 item, task, criterion, form, occasion, or another observed role that affects
 an ordered score.
+
+The package extends Rasch-family RSM/PCM work with MML, modern diagnostics,
+reproducibility, network review, and reporting support. It is not a general
+FACETS replacement: each `fit_mfrm()` call uses one response-model family and
+one observed score scale, and the current public API does not provide mixed
+response families, multiple independent rating scales, general threshold
+anchoring, or fixed-calibration operational scoring.
 
 The recommended workflow is:
 
@@ -87,6 +94,12 @@ ordered categories. Use `NA` for missing responses, or document and recode
 special missing-value codes before fitting. The design need not be fully
 crossed, but it must contain enough links among persons and facet levels to
 support the intended comparisons.
+
+Each row should represent a distinguishable rating event. Exact duplicate
+Person-by-facet combinations are retained but trigger a warning and a Data
+review state because the package does not model within-cell dependence. For a
+legitimate re-rating or replicated scoring study, include an event or occasion
+facet that distinguishes the observations before fitting.
 
 For conventional score sentinels such as `99`, `-1`, `N`, or `.`, set
 `missing_codes = TRUE`. This convenience policy recodes the score column only;

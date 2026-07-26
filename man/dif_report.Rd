@@ -20,8 +20,8 @@ Object of class \code{mfrm_dif_report} with \code{narrative},
 \description{
 Produces APA-style narrative text interpreting the results of a differential-
 functioning analysis or interaction table. For \code{method = "refit"}, the
-report summarises the number of facet levels classified as negligible (A),
-moderate (B), and large (C). For \code{method = "residual"}, it summarises
+report summarises linked screening contrasts and whether conditional plug-in
+uncertainty was available. For \code{method = "residual"}, it summarises
 screening-positive results, lists the specific levels and their direction,
 and includes a caveat about the distinction between construct-relevant
 variation and measurement bias.
@@ -32,20 +32,19 @@ the pairwise differential-functioning contrasts in \verb{$dif_table}. When it is
 \code{mfrm_dif_interaction} object, the report uses the cell-level
 statistics and flags from \verb{$table}.
 
-For \code{method = "refit"}, ETS-style magnitude labels are used only when
-subgroup calibrations were successfully linked back to a common baseline
-scale; otherwise the report labels those contrasts as unclassified because
-the refit difference is descriptive rather than comparable on a linked
-logit scale. For \code{method = "residual"}, the report describes
-screening-positive versus screening-negative contrasts instead of applying
-ETS labels.
+Refit differences are descriptive on a linked logit scale when subgroup
+calibrations retain the required anchors. Their separate-subgroup plug-in
+standard errors condition on those anchors and omit baseline-anchor
+uncertainty and cross-refit covariance, so the report does not assign ETS
+labels or present refit rows as formal inference. The residual method also
+uses screening-positive versus screening-negative language.
 }
 \section{Interpreting output}{
 
 \itemize{
 \item \verb{$narrative}: character scalar with the full narrative text.
 \item \verb{$counts}: named integer vector of method-appropriate counts.
-\item \verb{$large_dif}: tibble of large ETS results (\code{method = "refit"}) or
+\item \verb{$large_dif}: an empty compatibility table for current refit output, or
 screening-positive contrasts/cells (\code{method = "residual"}).
 \item \verb{$gpcm_boundary}: for bounded \code{GPCM} inputs, a capability-boundary table
 marking the narrative as caveated DFF screening output.

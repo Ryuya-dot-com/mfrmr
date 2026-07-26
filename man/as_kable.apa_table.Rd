@@ -24,8 +24,9 @@ report, or a message when \code{knitr} is unavailable.
 Renders the table data for direct inclusion in RMarkdown,
 Quarto, or HTML reports, wiring the \code{caption} and \code{note} slots
 into the standard APA placement (caption above, note below).
-When \code{kableExtra} is installed the note is attached as a footer;
-otherwise the note is appended as a \code{knitr::asis_output()} block.
+When \code{kableExtra} is installed the note is attached as a footer for HTML or
+LaTeX. Otherwise the complete rendered table is collapsed to one
+\code{knitr_kable} string before a single note is appended.
 }
 \examples{
 tbl <- structure(

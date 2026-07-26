@@ -68,8 +68,11 @@ Rater\eqn{\times}Task, and Criterion\eqn{\times}Task.
 The \code{summary} table aggregates results across pairs:
 \itemize{
 \item \code{Rows}: number of interaction cells estimated
-\item \code{Significant}: count of cells with \eqn{|t| \ge 2}
+\item \code{ScreenPositive}: count of cells with \eqn{|t| \ge 2}
+\item \code{Significant}: backward-compatible alias for \code{ScreenPositive}
 \item \code{MeanAbsBias}: average absolute bias magnitude (logits)
+\item \code{FormalInferenceEligible} / \code{PrimaryReportingEligible}: always \code{FALSE};
+these conditional plug-in interaction statistics are screening evidence
 }
 
 Per-pair failures (e.g., insufficient data for a sparse pair) are
@@ -107,7 +110,7 @@ fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "MML", quad_points = 7, maxit = 30)
 diag <- diagnose_mfrm(fit, residual_pca = "none", diagnostic_mode = "both")
 bias_all <- estimate_all_bias(fit, diagnostics = diag)
-bias_all$summary[, c("Interaction", "Rows", "Significant")]
+bias_all$summary[, c("Interaction", "Rows", "ScreenPositive")]
 }
 }
 \seealso{

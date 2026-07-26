@@ -19,7 +19,11 @@ An \code{mfrm_imported_fit} object.
 }
 \description{
 Extracts item / person parameters from an \code{\link[eRm:PCM]{eRm::PCM()}} /
-\code{\link[eRm:RM]{eRm::RM()}} fit. Same caveats as \code{\link[=import_mirt_fit]{import_mirt_fit()}}.
+\code{\link[eRm:RM]{eRm::RM()}} fit. Current \code{eRm} person tables use \verb{Person Parameter} and
+\code{Std.Error}; historical \code{theta} / \code{thetapar} estimate labels are also
+accepted. Unknown or internally misaligned person-table schemas stop with an
+explicit error rather than silently recycling rows. Same caveats as
+\code{\link[=import_mirt_fit]{import_mirt_fit()}}.
 }
 \examples{
 \dontrun{

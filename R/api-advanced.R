@@ -82,76 +82,78 @@ annotate_dff_table <- function(tbl, method) {
     tbl$ClassificationSystem <- character(0)
     tbl$Classification <- character(0)
     tbl$ETS <- character(0)
+    tbl$ETS_Eligible <- logical(0)
+    tbl$ConditionalRefitScreenEligible <- logical(0)
+    tbl$FormalInferenceEligible <- logical(0)
+    tbl$SupportsFormalInference <- logical(0)
     tbl$ReportingUse <- character(0)
     tbl$PrimaryReportingEligible <- logical(0)
     return(tbl)
   }
 
   if (identical(method, "refit")) {
-    abs_diff <- abs(tbl$Contrast)
     linked <- if ("ContrastComparable" %in% names(tbl)) {
       as.logical(tbl$ContrastComparable)
     } else {
       rep(TRUE, nrow(tbl))
     }
-    formal <- if ("FormalInferenceEligible" %in% names(tbl)) {
-      as.logical(tbl$FormalInferenceEligible)
+    conditional <- if ("ConditionalRefitScreenEligible" %in% names(tbl)) {
+      as.logical(tbl$ConditionalRefitScreenEligible)
     } else {
-      rep(TRUE, nrow(tbl))
+      rep(FALSE, nrow(tbl))
     }
-    comparable <- linked & formal
-    linked_descriptive <- linked & !comparable
-    ets <- ifelse(
-      comparable & is.finite(abs_diff),
-      ifelse(abs_diff < 0.43, "A", ifelse(abs_diff < 0.64, "B", "C")),
-      NA_character_
-    )
     tbl$ContrastBasis <- ifelse(
       linked,
       "linked subgroup facet-measure difference",
       "descriptive subgroup facet-measure difference"
     )
     tbl$SEBasis <- ifelse(
-      comparable,
-      "joint subgroup-calibration standard error",
+      conditional,
+      paste0(
+        "conditional independent-subgroup plug-in SE; baseline-anchor ",
+        "uncertainty and cross-refit covariance omitted"
+      ),
       ifelse(
-        linked_descriptive,
-        "not reported without model-based subgroup precision",
+        linked,
+        "not reported without complete conditional-screen inputs",
         "not reported without common-scale linking"
       )
     )
     tbl$StatisticLabel <- ifelse(
-      comparable,
-      "Welch t",
-      ifelse(linked_descriptive, "linked descriptive contrast", "descriptive contrast")
+      conditional,
+      "conditional plug-in Welch t screen",
+      ifelse(linked, "linked descriptive contrast", "descriptive contrast")
     )
-    tbl$ProbabilityMetric <- ifelse(comparable, "Welch t tail area", "not reported")
-    tbl$DFBasis <- ifelse(comparable, "Welch-Satterthwaite approximation", "not reported")
+    tbl$ProbabilityMetric <- ifelse(
+      conditional,
+      "conditional plug-in Welch tail area (screening only)",
+      "not reported"
+    )
+    tbl$DFBasis <- ifelse(
+      conditional,
+      "Welch-Satterthwaite plug-in approximation; not a validated joint-refit df",
+      "not reported"
+    )
     tbl$EffectMetric <- ifelse(
-      comparable,
-      "linked_logit_difference",
-      ifelse(linked_descriptive, "linked_descriptive_logit_difference", "descriptive_refit_difference")
+      linked,
+      "linked_descriptive_logit_difference",
+      "descriptive_refit_difference"
     )
-    tbl$ClassificationSystem <- ifelse(comparable, "ETS", "descriptive")
+    tbl$ClassificationSystem <- "descriptive"
     tbl$Classification <- dplyr::case_when(
-      ets == "A" ~ "A (Negligible)",
-      ets == "B" ~ "B (Moderate)",
-      ets == "C" ~ "C (Large)",
-      linked_descriptive %in% TRUE & is.finite(tbl$Contrast) ~ "Linked contrast (screening only)",
+      linked %in% TRUE & is.finite(tbl$Contrast) ~ "Linked contrast (screening only)",
       linked %in% FALSE & is.finite(tbl$Contrast) ~ "Unclassified (insufficient linking)",
       TRUE ~ NA_character_
     )
-    tbl$ETS <- ets
-    existing_primary <- tbl$PrimaryReportingEligible %||% rep(NA, nrow(tbl))
-    existing_use <- tbl$ReportingUse %||% rep(NA_character_, nrow(tbl))
-    tbl$PrimaryReportingEligible <- dplyr::coalesce(as.logical(existing_primary), comparable)
-    tbl$ReportingUse <- dplyr::coalesce(
-      as.character(existing_use),
-      dplyr::case_when(
-        comparable ~ "primary_reporting",
-        linked_descriptive %in% TRUE ~ "review_before_reporting",
-        TRUE ~ "screening_only"
-      )
+    tbl$ETS <- NA_character_
+    tbl$ETS_Eligible <- FALSE
+    tbl$FormalInferenceEligible <- FALSE
+    tbl$SupportsFormalInference <- FALSE
+    tbl$PrimaryReportingEligible <- FALSE
+    tbl$ReportingUse <- dplyr::case_when(
+      conditional ~ "screening_only_conditional_plugin",
+      linked %in% TRUE ~ "screening_only_linked_descriptive",
+      TRUE ~ "screening_only"
     )
     return(tbl)
   }
@@ -175,10 +177,11 @@ annotate_dff_table <- function(tbl, method) {
     TRUE ~ NA_character_
   )
   tbl$ETS <- NA_character_
-  existing_primary <- tbl$PrimaryReportingEligible %||% rep(NA, nrow(tbl))
-  existing_use <- tbl$ReportingUse %||% rep(NA_character_, nrow(tbl))
-  tbl$PrimaryReportingEligible <- dplyr::coalesce(as.logical(existing_primary), FALSE)
-  tbl$ReportingUse <- dplyr::coalesce(as.character(existing_use), "screening_only")
+  tbl$ETS_Eligible <- FALSE
+  tbl$FormalInferenceEligible <- FALSE
+  tbl$SupportsFormalInference <- FALSE
+  tbl$PrimaryReportingEligible <- FALSE
+  tbl$ReportingUse <- "screening_only"
   tbl
 }
 
@@ -186,16 +189,10 @@ build_dff_summary <- function(tbl, method) {
   if (identical(method, "refit")) {
     return(tibble(
       Classification = c(
-        "A (Negligible)",
-        "B (Moderate)",
-        "C (Large)",
         "Linked contrast (screening only)",
         "Unclassified (insufficient linking)"
       ),
       Count = c(
-        sum(tbl$ETS == "A", na.rm = TRUE),
-        sum(tbl$ETS == "B", na.rm = TRUE),
-        sum(tbl$ETS == "C", na.rm = TRUE),
         sum(tbl$Classification == "Linked contrast (screening only)", na.rm = TRUE),
         sum(tbl$Classification == "Unclassified (insufficient linking)", na.rm = TRUE)
       )
@@ -365,7 +362,7 @@ extract_dff_group_estimates <- function(sub_fit, sub_diag, facet, fallback_level
       SubgroupMethod = precision_meta$method,
       DiagnosticsStatus = if (!is.null(diagnostics_error) && nzchar(diagnostics_error)) "failed" else "available",
       DiagnosticsDetail = if (!is.null(diagnostics_error) && nzchar(diagnostics_error)) diagnostics_error else NA_character_,
-      ETS_Eligible = isTRUE(linkage$ets_eligible) && isTRUE(precision_meta$supports_formal)
+      ETS_Eligible = FALSE
     )
 }
 
@@ -429,26 +426,25 @@ extract_dff_group_estimates <- function(sub_fit, sub_diag, facet, fallback_level
 #' **Refit method** (`method = "refit"`): Subsets the data by group, refits
 #' the MFRM model within each subset, anchors all non-target facets back to
 #' the baseline calibration when possible, and compares the resulting
-#' facet-level estimates using a Welch t-statistic:
+#' facet-level estimates. When linking, convergence, model-based MML precision,
+#' and sparsity screens all pass, a conditional plug-in Welch statistic is also
+#' shown:
 #' \deqn{t = \frac{\hat{\delta}_1 - \hat{\delta}_2}
 #'                {\sqrt{SE_1^2 + SE_2^2}}}
-#' This provides group-specific parameter estimates on a common scale when
-#' linking anchors are available, but is slower and may encounter convergence
-#' issues with small subsets.  ETS categories are reported only for contrasts
-#' whose subgroup calibrations retained enough linking anchors to support a
-#' common-scale interpretation and whose subgroup precision remained on the
-#' package's model-based MML path.
+#' This provides group-specific point estimates on a common scale when linking
+#' anchors are available. However, the plug-in standard error conditions on
+#' the baseline anchors and omits baseline-anchor uncertainty and cross-refit
+#' covariance. Refit statistics therefore remain screening evidence and set
+#' `FormalInferenceEligible`, `SupportsFormalInference`,
+#' `PrimaryReportingEligible`, and `ETS_Eligible` to `FALSE`.
 #'
 #' When `facet` refers to an item-like facet (for example `Criterion`), this
 #' recovers the familiar DIF case. When `facet` refers to raters or
 #' prompts/tasks, the same machinery supports DRF/DPF-style analyses.
 #'
-#' For the refit method only, effect size is classified following the ETS
-#' (Educational Testing Service) DIF guidelines when subgroup calibrations are
-#' both linked and eligible for model-based inference:
-#' - **A (Negligible)**: \eqn{|\Delta| <} 0.43 logits
-#' - **B (Moderate)**: 0.43 \eqn{\le |\Delta| <} 0.64 logits
-#' - **C (Large)**: \eqn{|\Delta| \ge} 0.64 logits
+#' Refit contrasts are not assigned ETS A/B/C labels. Even when subgroup point
+#' estimates share a linked logit scale, a validated joint, bootstrap, or
+#' replicate covariance contract is required before formal refit inference.
 #'
 #' Multiple comparisons are adjusted using Holm's step-down procedure by
 #' default, which controls the family-wise error rate without assuming
@@ -472,9 +468,8 @@ extract_dff_group_estimates <- function(sub_fit, sub_diag, facet, fallback_level
 #'   `ReportingUse`, `PrimaryReportingEligible`, and `sparse` columns.
 #' - `$cell_table`: (residual method only) per-cell detail with N,
 #'   ObsScore, ExpScore, ObsExpAvg, StdResidual.
-#' - `$summary`: counts by screening result (`method = "residual"`) or ETS
-#'   category plus linked-screening and insufficient-linking rows
-#'   (`method = "refit"`).
+#' - `$summary`: counts by screening result (`method = "residual"`) or linked-
+#'   screening and insufficient-linking rows (`method = "refit"`).
 #' - `$group_fits`: (refit method only) list of per-group facet estimates and
 #'   subgroup linking diagnostics.
 #' - `$gpcm_boundary`: for bounded `GPCM` fits, a capability-boundary table
@@ -484,8 +479,8 @@ extract_dff_group_estimates <- function(sub_fit, sub_diag, facet, fallback_level
 #' For bounded `GPCM`, DFF/DIF rows are available as slope-aware screening
 #' evidence over the fitted expected-score and residual scale. Keep
 #' residual-method contrasts and interaction cells in screening language.
-#' Refit contrasts require explicit subgroup linking and precision support
-#' before stronger subgroup-comparison language is used.
+#' Refit contrasts require explicit subgroup linking and precision support for
+#' conditional screening, but remain in screening language.
 #'
 #' @section Typical workflow:
 #' 1. Fit a model with [fit_mfrm()]. For `RSM` / `PCM` fairness review, prefer
@@ -502,7 +497,7 @@ extract_dff_group_estimates <- function(sub_fit, sub_diag, facet, fallback_level
 #' An object of class `mfrm_dff` (with compatibility class `mfrm_dif`) with:
 #' - `dif_table`: data.frame of differential-functioning contrasts.
 #' - `cell_table`: (residual method) per-cell detail table.
-#' - `summary`: counts by screening or ETS classification.
+#' - `summary`: counts by method-appropriate screening classification.
 #' - `group_fits`: (refit method) per-group facet estimates.
 #' - `gpcm_boundary`: for bounded `GPCM` fits, a capability-boundary table.
 #' - `config`: list with facet, group, method, min_obs, p_adjust settings.
@@ -530,8 +525,9 @@ extract_dff_group_estimates <- function(sub_fit, sub_diag, facet, fallback_level
 #' dff_refit <- analyze_dff(fit, diag, facet = "Rater", group = "Group",
 #'                          data = toy, method = "refit")
 #' unique(dff_refit$dif_table$ClassificationSystem)
-#' # Look for: "ETS" only when subgroup calibration, linking, and precision
-#' #   checks all support a common-scale model-based contrast.
+#' # Look for: "descriptive". Linked refit contrasts remain screening-only
+#' #   because their plug-in uncertainty omits anchor uncertainty and
+#' #   cross-refit covariance.
 #' sc <- subset_connectivity_report(fit, diagnostics = diag)
 #' plot(sc, type = "design_matrix", draw = FALSE)
 #' if ("ScaleLinkStatus" %in% names(dff_refit$dif_table)) {
@@ -823,11 +819,10 @@ analyze_dif <- function(...) {
       } else {
         "Refit-method effects are subgroup parameter differences when linking supports a comparable scale."
       },
-      ReportingNote = if (identical(classification_system, "ETS")) {
-        "ETS A/B/C labels may be reported for rows that remain model-based and linked."
-      } else {
-        "Treat classifications as screening labels unless the row reports ClassificationSystem == 'ETS'."
-      },
+      ReportingNote = paste(
+        "Treat current residual and refit classifications as screening evidence;",
+        "refit rows do not receive ETS A/B/C labels."
+      ),
       stringsAsFactors = FALSE
     )
   }
@@ -1261,24 +1256,23 @@ analyze_dif <- function(...) {
         TRUE ~ "unlinked"
       )
       is_sparse <- (n1 < min_obs) || (n2 < min_obs)
-      formal_eligible <- link_comparable &&
+      conditional_screen_eligible <- link_comparable &&
         subgroup_formal &&
         subgroup_converged &&
         isTRUE(baseline_precision_meta$supports_formal) &&
         isTRUE(baseline_precision_meta$converged) &&
         identical(comparison_method, "MML") &&
         !is_sparse
-      comparable <- formal_eligible
+      formal_eligible <- FALSE
       reporting_use <- dplyr::case_when(
-        formal_eligible ~ "primary_reporting",
-        link_comparable && identical(comparison_method, "MML") ~ "review_before_reporting",
-        link_comparable && identical(inference_tier, "hybrid") ~ "review_before_reporting",
+        conditional_screen_eligible ~ "screening_only_conditional_plugin",
+        link_comparable ~ "screening_only_linked_descriptive",
         TRUE ~ "screening_only"
       )
       contrast <- e1 - e2
-      se_diff <- if (comparable) sqrt(se1^2 + se2^2) else NA_real_
+      se_diff <- if (conditional_screen_eligible) sqrt(se1^2 + se2^2) else NA_real_
       t_val <- if (is.finite(se_diff) && se_diff > 0) contrast / se_diff else NA_real_
-      df_welch <- if (comparable && is.finite(se1) && is.finite(se2) && se1 > 0 && se2 > 0) {
+      df_welch <- if (conditional_screen_eligible && is.finite(se1) && is.finite(se2) && se1 > 0 && se2 > 0) {
         welch_satterthwaite_df(c(se1^2, se2^2), c(n1 - 1, n2 - 1))
       } else {
         NA_real_
@@ -1318,12 +1312,14 @@ analyze_dif <- function(...) {
         N_Group2 = as.integer(n2),
         sparse = is_sparse,
         ContrastComparable = link_comparable,
+        ConditionalRefitScreenEligible = conditional_screen_eligible,
         FormalInferenceEligible = formal_eligible,
         PrimaryReportingEligible = formal_eligible,
+        SupportsFormalInference = formal_eligible,
         InferenceTier = inference_tier,
         ComparisonMethod = comparison_method,
         ReportingUse = reporting_use,
-        ETS_Eligible = comparable,
+        ETS_Eligible = FALSE,
         ScaleLinkStatus = scale_link_status,
         BaselineMethod = baseline_precision_meta$method,
         BaselineConverged = isTRUE(baseline_precision_meta$converged),
@@ -1473,9 +1469,9 @@ print.mfrm_dff <- function(x, ...) {
   groups <- cfg$group_levels %||% character(0)
   tbl <- x$dif_table
   n_rows <- if (is.data.frame(tbl)) nrow(tbl) else 0L
-  n_flag <- if (n_rows > 0L && "Classification" %in% names(tbl)) {
-    sum(!is.na(tbl$Classification) & tbl$Classification != "Negligible" &
-          tbl$Classification != "None")
+  n_flag <- if (n_rows > 0L && "Classification" %in% names(tbl) &&
+                identical(method, "residual")) {
+    sum(tbl$Classification == "Screen positive", na.rm = TRUE)
   } else NA_integer_
   cat(sprintf("mfrm_%s (%s)\n", tolower(label), label))
   cat(sprintf("  Method: %s | Facet: %s | Group: %s\n",

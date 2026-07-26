@@ -318,9 +318,9 @@
 #'   whether facet elements are statistically distinguishable.
 #' - Residual PCA and bias plots should be interpreted as follow-up layers
 #'   after the main fit screen, not as first-pass diagnostics.
-#' - DFF residual-method plots are screening visuals. ETS A/B/C labels
-#'   should be claimed only for rows whose refit output reports
-#'   `ClassificationSystem == "ETS"`.
+#' - DFF residual- and refit-method plots are screening visuals. Current refit
+#'   rows do not receive ETS A/B/C labels because their plug-in uncertainty
+#'   omits baseline-anchor uncertainty and cross-refit covariance.
 #'
 #' @section Typical workflow:
 #' - Figure-readiness route:

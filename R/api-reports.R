@@ -9792,8 +9792,9 @@ print.apa_table <- function(x, ...) {
 #' Renders the table data for direct inclusion in RMarkdown,
 #' Quarto, or HTML reports, wiring the `caption` and `note` slots
 #' into the standard APA placement (caption above, note below).
-#' When `kableExtra` is installed the note is attached as a footer;
-#' otherwise the note is appended as a `knitr::asis_output()` block.
+#' When `kableExtra` is installed the note is attached as a footer for HTML or
+#' LaTeX. Otherwise the complete rendered table is collapsed to one
+#' `knitr_kable` string before a single note is appended.
 #'
 #' @param x An `apa_table` object from [apa_table()].
 #' @param format One of `"pipe"` (default, Markdown), `"html"`, or
@@ -9846,8 +9847,12 @@ as_kable.apa_table <- function(x, format = c("pipe", "html", "latex"),
         footnote_as_chunk = TRUE
       )
     } else {
-      k <- paste0(k, "\n\nNote. ", note)
-      class(k) <- c("knitr_kable", class(k))
+      rendered_table <- paste(as.character(k), collapse = "\n")
+      k <- structure(
+        paste0(rendered_table, "\n\nNote. ", note),
+        format = attr(k, "format") %||% format,
+        class = "knitr_kable"
+      )
     }
   }
   k
@@ -12631,8 +12636,8 @@ collect_bias_screening_summary <- function(diagnostics = NULL, bias_results = NU
 #'
 #' Produces APA-style narrative text interpreting the results of a differential-
 #' functioning analysis or interaction table. For `method = "refit"`, the
-#' report summarises the number of facet levels classified as negligible (A),
-#' moderate (B), and large (C). For `method = "residual"`, it summarises
+#' report summarises linked screening contrasts and whether conditional plug-in
+#' uncertainty was available. For `method = "residual"`, it summarises
 #' screening-positive results, lists the specific levels and their direction,
 #' and includes a caveat about the distinction between construct-relevant
 #' variation and measurement bias.
@@ -12648,18 +12653,17 @@ collect_bias_screening_summary <- function(diagnostics = NULL, bias_results = NU
 #' `mfrm_dif_interaction` object, the report uses the cell-level
 #' statistics and flags from `$table`.
 #'
-#' For `method = "refit"`, ETS-style magnitude labels are used only when
-#' subgroup calibrations were successfully linked back to a common baseline
-#' scale; otherwise the report labels those contrasts as unclassified because
-#' the refit difference is descriptive rather than comparable on a linked
-#' logit scale. For `method = "residual"`, the report describes
-#' screening-positive versus screening-negative contrasts instead of applying
-#' ETS labels.
+#' Refit differences are descriptive on a linked logit scale when subgroup
+#' calibrations retain the required anchors. Their separate-subgroup plug-in
+#' standard errors condition on those anchors and omit baseline-anchor
+#' uncertainty and cross-refit covariance, so the report does not assign ETS
+#' labels or present refit rows as formal inference. The residual method also
+#' uses screening-positive versus screening-negative language.
 #'
 #' @section Interpreting output:
 #' - `$narrative`: character scalar with the full narrative text.
 #' - `$counts`: named integer vector of method-appropriate counts.
-#' - `$large_dif`: tibble of large ETS results (`method = "refit"`) or
+#' - `$large_dif`: an empty compatibility table for current refit output, or
 #'   screening-positive contrasts/cells (`method = "residual"`).
 #' - `$gpcm_boundary`: for bounded `GPCM` inputs, a capability-boundary table
 #'   marking the narrative as caveated DFF screening output.
@@ -12728,28 +12732,26 @@ dif_report <- function(dif_result, ...) {
   functioning_label <- cfg$functioning_label %||% "DFF"
 
   if (identical(method_label, "refit")) {
-    n_a <- sum(dt$ETS == "A", na.rm = TRUE)
-    n_b <- sum(dt$ETS == "B", na.rm = TRUE)
-    n_c <- sum(dt$ETS == "C", na.rm = TRUE)
     n_total <- nrow(dt)
-    n_screen_only <- sum(dt$Classification == "Linked contrast (screening only)", na.rm = TRUE)
+    n_screen_only <- sum(
+      dt$Classification == "Linked contrast (screening only)",
+      na.rm = TRUE
+    )
+    conditional <- dt$ConditionalRefitScreenEligible %||% rep(FALSE, n_total)
+    n_conditional <- sum(as.logical(conditional) %in% TRUE, na.rm = TRUE)
     n_unclassified <- sum(dt$Classification == "Unclassified (insufficient linking)", na.rm = TRUE)
-    n_na <- sum(is.na(dt$ETS))
 
     counts <- c(
-      A = n_a,
-      B = n_b,
-      C = n_c,
+      Conditional_plugin_screen = n_conditional,
       Linked_screening_only = n_screen_only,
       Unclassified = n_unclassified,
-      NA_count = n_na,
       Total = n_total
     )
-    large_dif <- dt[!is.na(dt$ETS) & dt$ETS == "C", , drop = FALSE]
+    large_dif <- dt[FALSE, , drop = FALSE]
 
     lines <- character()
     lines <- c(lines, paste0(
-      functioning_label, " analysis was conducted for the ",
+      functioning_label, " screening was conducted for the ",
       facet_name, " facet across levels of ", group_name,
       " using the ", method_label, " method. "
     ))
@@ -12757,14 +12759,14 @@ dif_report <- function(dif_result, ...) {
       "A total of ", n_total, " pairwise facet-level comparisons were evaluated. "
     ))
     lines <- c(lines, paste0(
-      "Using ETS-style magnitude labels on the linked logit scale, ",
-      n_a, " comparison(s) were classified as A (negligible), ",
-      n_b, " as B (moderate), and ",
-      n_c, " as C (large). "
+      n_screen_only, " comparison(s) retained linked subgroup point contrasts; ",
+      n_conditional, " also retained conditional plug-in uncertainty. "
     ))
     if (n_screen_only > 0) {
       lines <- c(lines, paste0(
-        n_screen_only, " comparison(s) remained on a linked common scale but were retained as screening-only contrasts because the subgroup precision gate for primary reporting did not pass. "
+        "All linked refit contrasts remain screening-only. Their plug-in ",
+        "standard errors condition on baseline anchors and omit baseline-anchor ",
+        "uncertainty and cross-refit covariance. "
       ))
     }
     if (n_unclassified > 0) {
@@ -12774,36 +12776,10 @@ dif_report <- function(dif_result, ...) {
       ))
     }
 
-    if (n_c > 0) {
-      large_levels <- unique(as.character(large_dif$Level))
-      lines <- c(lines, paste0(
-        "\nThe following ", facet_name, " level(s) reached the current linked Category C threshold: ",
-        paste(large_levels, collapse = ", "), ". "
-      ))
-      for (lev in large_levels) {
-        lev_rows <- large_dif[large_dif$Level == lev, , drop = FALSE]
-        for (r in seq_len(nrow(lev_rows))) {
-          direction <- if (is.finite(lev_rows$Contrast[r]) && lev_rows$Contrast[r] > 0) {
-            "higher"
-          } else if (is.finite(lev_rows$Contrast[r]) && lev_rows$Contrast[r] < 0) {
-            "lower"
-          } else {
-            "different"
-          }
-          lines <- c(lines, paste0(
-            "  - ", lev, ": ",
-            lev_rows$Group1[r], " vs ", lev_rows$Group2[r],
-            " (contrast = ", sprintf("%.3f", lev_rows$Contrast[r]),
-            " logits; ", lev_rows$Group1[r], " was ", direction, "). "
-          ))
-        }
-      }
-    } else {
-      lines <- c(
-        lines,
-        "\nNo linked facet levels reached the current Category C threshold under the ETS-style labeling rule. "
-      )
-    }
+    lines <- c(
+      lines,
+      "\nNo ETS A/B/C labels or formal refit decisions are produced by the current uncertainty contract. "
+    )
   } else {
     class_col <- dt$Classification %||% rep(NA_character_, nrow(dt))
     n_positive <- sum(class_col == "Screen positive", na.rm = TRUE)

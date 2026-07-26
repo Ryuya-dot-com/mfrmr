@@ -5563,11 +5563,12 @@ add_gpcm_score_side_delta_se <- function(scorefile,
       )
     ))
   }
-  if (!"Person" %in% names(scorefile) || !"ScoreSlope" %in% names(scorefile)) {
+  if (!"Person" %in% names(scorefile) || !"ScoreSlope" %in% names(scorefile) ||
+      !"Var" %in% names(scorefile)) {
     return(add_unavailable(
       scorefile,
       status = "not_available",
-      detail = "Score-side delta SE requires Person and ScoreSlope columns."
+      detail = "Score-side delta SE requires Person, ScoreSlope, and Var columns."
     ))
   }
 
@@ -5619,8 +5620,10 @@ add_gpcm_score_side_delta_se <- function(scorefile,
   expected_components <- 1L + length(facet_names)
   eta_se <- sqrt(eta_var)
   score_slope <- abs(suppressWarnings(as.numeric(scorefile$ScoreSlope)))
-  se <- score_slope * eta_se
-  ok <- is.finite(se) & component_count == expected_components &
+  score_var <- suppressWarnings(as.numeric(scorefile$Var))
+  se <- score_slope * score_var * eta_se
+  ok <- is.finite(se) & is.finite(score_var) & score_var >= 0 &
+    component_count == expected_components &
     missing_count == 0L
 
   expected <- suppressWarnings(as.numeric(scorefile$Expected %||% NA_real_))
@@ -5643,15 +5646,16 @@ add_gpcm_score_side_delta_se <- function(scorefile,
   residual_lower <- residual - z * se
   residual_upper <- residual + z * se
 
-  method <- "Score-side delta method (measure SE components x ScoreSlope)"
+  method <- "Score-side delta method (measure SE components x ScoreSlope x Var)"
   detail <- paste(
-    "Delta transform from logit-side ModelSE components through ScoreSlope;",
+    "Delta transform from logit-side ModelSE components through the",
+    "expected-score derivative ScoreSlope * Var;",
     "row component variances are summed without cross-component covariance.",
     "This is not FACETS-equivalent score-side uncertainty."
   )
   missing_detail <- paste(
     "Score-side delta SE unavailable because required measure SE components",
-    "or ScoreSlope were missing."
+    "or ScoreSlope/Var fields were missing."
   )
 
   scorefile$ScoreSideLogitSE <- ifelse(ok, eta_se, NA_real_)

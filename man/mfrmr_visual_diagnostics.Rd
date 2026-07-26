@@ -344,9 +344,9 @@ agreement concerns scoring consistency, whereas variability concerns
 whether facet elements are statistically distinguishable.
 \item Residual PCA and bias plots should be interpreted as follow-up layers
 after the main fit screen, not as first-pass diagnostics.
-\item DFF residual-method plots are screening visuals. ETS A/B/C labels
-should be claimed only for rows whose refit output reports
-\code{ClassificationSystem == "ETS"}.
+\item DFF residual- and refit-method plots are screening visuals. Current refit
+rows do not receive ETS A/B/C labels because their plug-in uncertainty
+omits baseline-anchor uncertainty and cross-refit covariance.
 }
 }
 

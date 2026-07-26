@@ -323,6 +323,11 @@ documented.
 }
 \details{
 Data must be in \strong{long format} (one row per observed rating event).
+Exact duplicate Person-by-facet combinations are retained, warned once, and
+propagated as a Data review state. They are not treated as independent
+replication evidence. A legitimate re-rating or replicated scoring event
+should be represented by an event, occasion, or other distinguishing facet
+before fitting.
 }
 \section{Model}{
 
@@ -347,6 +352,11 @@ levels of all facets.
 With \code{model = "PCM"}, each level of \code{step_facet} receives its own
 threshold vector \eqn{\tau_{i,k}} on the package's shared observed
 score scale.
+
+One response-model family is used per \code{fit_mfrm()} call. The current public
+interface does not combine binary, RSM, PCM, or GPCM observations in one
+fit, define multiple independent rating scales, or accept general
+threshold/scale anchors and fixed-calibration starting values.
 
 With bounded \code{model = "GPCM"}, the adjacent-category kernel is multiplied by
 a positive slope for the designated slope-facet level:

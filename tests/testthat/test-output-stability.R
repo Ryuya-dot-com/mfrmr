@@ -379,6 +379,30 @@ test_that("interrater_agreement_table returns pairs + summary", {
     names(res$summary)))
 })
 
+test_that("ExpectedExact uses fitted category probabilities rather than marginal chance", {
+  res <- interrater_agreement_table(.stab_fit, diagnostics = .stab_dx,
+    rater_facet = "Rater")
+  pair <- res$pairs[1, , drop = FALSE]
+  probs <- mfrmr:::compute_prob_matrix(.stab_fit)
+  obs <- .stab_dx$obs
+  context_cols <- c("Person", "Task", "Criterion")
+  context_key <- do.call(paste, c(lapply(obs[context_cols], as.character), sep = "|"))
+  idx1 <- which(as.character(obs$Rater) == as.character(pair$Rater1))
+  idx2 <- which(as.character(obs$Rater) == as.character(pair$Rater2))
+  expect_identical(anyDuplicated(context_key[idx1]), 0L)
+  expect_identical(anyDuplicated(context_key[idx2]), 0L)
+  map1 <- stats::setNames(idx1, context_key[idx1])
+  map2 <- stats::setNames(idx2, context_key[idx2])
+  shared <- intersect(names(map1), names(map2))
+  manual_expected <- vapply(shared, function(key) {
+    sum(probs[map1[[key]], ] * probs[map2[[key]], ])
+  }, numeric(1))
+
+  expect_gt(length(manual_expected), 0L)
+  expect_equal(pair$ExpectedExact, mean(manual_expected), tolerance = 1e-12)
+  expect_equal(pair$ExpectedExactCount, sum(manual_expected), tolerance = 1e-12)
+})
+
 test_that("facets_chisq_table returns table + summary", {
   res <- facets_chisq_table(.stab_fit, diagnostics = .stab_dx)
   expect_true(all(c("table", "summary") %in% names(res)))

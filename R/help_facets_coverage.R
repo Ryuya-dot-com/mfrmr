@@ -7,7 +7,7 @@
 #' clone.
 #'
 #' @details
-#' The guide separates four ideas that are easy to conflate:
+#' The guide separates five ideas that are easy to conflate:
 #'
 #' - estimation authority: fitted values come from `mfrmr` unless external
 #'   FACETS output is explicitly supplied;
@@ -15,6 +15,10 @@
 #'   handoff, and report-organization surfaces;
 #' - external comparison: FACETS comparisons require a supplied external table
 #'   and should separate MnSq differences from df/ZSTD convention differences;
+#' - current model boundary: one response-model family and one observed score
+#'   scale are used per fit; mixed families, multiple independent scales,
+#'   general threshold anchoring, and fixed-calibration scoring are not part of
+#'   the current public estimator;
 #' - extension surface: native R tables, plot data, GPCM diagnostics,
 #'   network views, and G/D-study helpers are package extensions, not promises
 #'   of FACETS menu-level reproduction.
@@ -36,6 +40,7 @@ facets_positioning_guide <- function() {
       "Estimation authority",
       "Compatibility purpose",
       "External FACETS comparison",
+      "Current model and calibration boundary",
       "Reporting source of truth",
       "Extension beyond FACETS"
     ),
@@ -43,6 +48,7 @@ facets_positioning_guide <- function() {
       "mfrmr estimates are package-native; FACETS-style names do not mean that FACETS estimated the model.",
       "FACETS-style wrappers, table labels, and files support transition, handoff, and report organization, not optimizer-level reproduction.",
       "Numerical comparison requires an explicit external FACETS output table supplied by the user.",
+      "Each fit uses one response-model family and one observed score scale; mixed families, multiple independent scales, general threshold anchors, and fixed-calibration scoring are not current public capabilities.",
       "Inference and reporting should be based on native fit, diagnostics, review, table, and plot-data objects.",
       "GPCM, D-study, network, and reusable visualization data are extension routes rather than FACETS menu clones."
     ),
@@ -50,6 +56,7 @@ facets_positioning_guide <- function() {
       "The model was estimated with mfrmr; FACETS-style output names are used only to organize the report.",
       "FACETS-style outputs were generated for handoff or reader familiarity; they are not evidence of FACETS numerical equivalence.",
       "When external FACETS output is supplied, compare MnSq first and report df/ZSTD convention sensitivity separately.",
+      "Describe mfrmr as a native R RSM/PCM analysis, diagnostic, and reporting environment, not as a general FACETS operational-calibration replacement.",
       "Report estimates, standard errors, fit summaries, and plots from documented mfrmr objects.",
       "Use package-native extensions as additional evidence and label them as mfrmr analyses."
     ),
@@ -57,6 +64,7 @@ facets_positioning_guide <- function() {
       "fit_mfrm(); diagnose_mfrm(); reporting_checklist()",
       "facets_feature_coverage(); run_mfrm_facets(); facets_output_file_bundle()",
       "read_facets_fit_table(); facets_fit_review(); fit_measures_table(df_sensitivity = TRUE)",
+      "fit_mfrm(); facets_feature_coverage(); mfrmr_output_guide()",
       "build_summary_table_bundle(); build_visual_summaries(); plot_data()",
       "gpcm_capability_matrix(); mfrm_d_study(); mfrm_network_analysis(); plot_data_components()"
     ),
@@ -191,7 +199,9 @@ facets_visual_contract <- function() {
 #' @description
 #' `facets_feature_coverage()` summarizes how `mfrmr` maps
 #' the main FACETS output-table, output-file, and graph-menu surface to package
-#' functions.
+#' functions. It is a surface-coverage guide, not a statement that estimands,
+#' conditioning, extreme-score handling, degrees of freedom, or numerical
+#' results are equivalent.
 #'
 #' Use this helper before migration work when you need a public, user-facing
 #' answer to three questions:
@@ -210,9 +220,16 @@ facets_visual_contract <- function() {
 #' curves. `mfrmr` intentionally prioritizes structured R tables and reusable
 #' plot data over exact FACETS line-printer output.
 #'
+#' The current software reference target is FACETS 64-bit 4.5.1 (July 2026).
+#' Bibliographic references retain the title and edition of the consulted
+#' manual rather than silently relabelling a 4.5.0 manual as 4.5.1. External
+#' numerical validation is a separate evidence contract.
+#'
 #' Status meanings:
 #'
-#' - `implemented`: a package-native route covers the substantive output.
+#' - `implemented`: a package-native route covers the substantive output
+#'   surface; this status alone does not claim an externally matched
+#'   statistical contract.
 #' - `supported_with_caveat`: a package-native route exists, but the output
 #'   must be read with explicit identification, validation, or scope caveats.
 #' - `partial`: the concept is covered, but not the full FACETS formatting,
@@ -234,6 +251,8 @@ facets_visual_contract <- function() {
 #'
 #' @references
 #' Linacre, J. M. (2026). *A user's guide to FACETS, version 4.5.0*.
+#' Current FACETS software release:
+#' <https://www.winsteps.com/facets.htm>.
 #' Output tables - files - plots - graphs:
 #' <https://www.winsteps.com/facetman64/outputtableindex.htm>.
 #'
@@ -319,17 +338,17 @@ facets_feature_coverage <- function(status = c("all", "implemented",
         "Facet statistics and visual summaries.",
         "FACETS M/S/Q/X printer-graph formatting is not reproduced exactly.", package_native_alternative),
     row("Output table", "Table 7: facet measurement report", "table7.htm",
-        "fit_measures_table(); diagnose_mfrm(); summary(fit)", "implemented",
+        "fit_measures_table(); diagnose_mfrm(); summary(fit)", "supported_with_caveat",
         "Measures, SEs, fit, anchoring status, and review flags.",
-        "FACETS column order/options are broader than the default table.", package_native_alternative),
+        "Estimator and person-score basis, extreme handling, df/ZSTD conventions, and FACETS options can differ; external numerical equivalence is not established.", package_native_alternative),
     row("Output table", "Table 7: reliability and chi-square", "table7summarystatistics.htm",
-        "facets_chisq_table(); diagnose_mfrm()$reliability", "implemented",
+        "facets_chisq_table(); diagnose_mfrm()$reliability", "supported_with_caveat",
         "Rasch/FACETS-style separation, reliability, and chi-square summaries.",
-        "Uses package-native structured output.", package_native_alternative),
+        "Uses package-native structured output and documented df conventions; external numerical equivalence is not established.", package_native_alternative),
     row("Output table", "Table 7: agreement statistics", "table7agreementstatistics.htm",
-        "interrater_agreement_table(); rater_network_analysis(); rater_halo_network_analysis(); plot_interrater_agreement()", "implemented",
-        "Observed/expected agreement, pairwise rater-network, rater-by-criterion halo network, and rater-agreement views.",
-        "Structured output replaces FACETS text blocks.", package_native_alternative),
+        "interrater_agreement_table(); rater_network_analysis(); rater_halo_network_analysis(); plot_interrater_agreement()", "supported_with_caveat",
+        "Raw-category observed agreement and model-probability expected agreement, plus pairwise rater-network, rater-by-criterion halo network, and rater-agreement views.",
+        "The package does not translate category positions across multiple independent scales, apply FACETS agreement-based SE inflation, or establish external Table 7 parity.", package_native_alternative),
     row("Output table", "Table 8.1: dichotomous/binomial/Poisson statistics",
         "table8_1dichotomous.htm",
         "rating_scale_table() for two-category ordered scores", "partial",
@@ -337,9 +356,9 @@ facets_feature_coverage <- function(status = c("all", "implemented",
         "FACETS binomial-trial and Poisson-specific reports are not implemented.", external_format_alternative),
     row("Output table", "Table 8.1: polytomous rating-scale/partial-credit statistics",
         "table8_1ratingscale.htm",
-        "rating_scale_table(); category_structure_report()", "implemented",
-        "Rating-scale/partial-credit category diagnostics and thresholds.",
-        "Exact FACETS text layout is not reproduced.", package_native_alternative),
+        "rating_scale_table(); category_structure_report()", "supported_with_caveat",
+        "Core category diagnostics and thresholds for one RSM scale or one PCM step facet on the package's shared observed score scale.",
+        "Multiple independent scales, scale-specific anchors or starting values, Thurstone thresholds, and FACETS text layout are not reproduced.", package_native_alternative),
     row("Output table", "Table 8: scale-structure bar chart", "table8barchart.htm",
         "category_structure_report()", "partial",
         "Category structure and transition summaries.",

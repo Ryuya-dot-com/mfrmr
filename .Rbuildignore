@@ -15,6 +15,7 @@
 ^\.github$
 ^\.gitignore$
 ^_pkgdown\.yml$
+^pkgdown$
 ^CITATION\.cff$
 ^CODE_OF_CONDUCT\.md$
 ^CONTRIBUTING\.md$

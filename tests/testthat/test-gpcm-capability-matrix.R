@@ -405,10 +405,23 @@ test_that("GPCM partial report, QC, export, and linking helpers return caveated 
   expect_true(any(is.finite(score$scorefile$ExpectedScoreSE)))
   expect_true(any(score$scorefile$ScoreSideSE_Status == "ok"))
   expect_true(any(is.finite(score$scorefile$ScoreSideSE)))
+  ok_score_side <- score$scorefile$ScoreSideSE_Status == "ok"
+  expected_score_side_se <-
+    abs(as.numeric(score$scorefile$ScoreSlope[ok_score_side])) *
+    as.numeric(score$scorefile$Var[ok_score_side]) *
+    as.numeric(score$scorefile$ScoreSideLogitSE[ok_score_side])
+  expect_equal(
+    as.numeric(score$scorefile$ScoreSideSE[ok_score_side]),
+    expected_score_side_se,
+    tolerance = 1e-3
+  )
   expect_true(any(grepl("Native structural delta method",
                         score$scorefile$ScoreUncertaintyMethod,
                         fixed = TRUE)))
   expect_true(any(grepl("Score-side delta method",
+                        score$scorefile$ScoreSideSE_Method,
+                        fixed = TRUE)))
+  expect_true(any(grepl("ScoreSlope x Var",
                         score$scorefile$ScoreSideSE_Method,
                         fixed = TRUE)))
   score_side_only <- facets_output_file_bundle(
@@ -486,6 +499,42 @@ test_that("GPCM partial report, QC, export, and linking helpers return caveated 
   expect_true(nrow(summary(dff_interaction)$gpcm_boundary) > 0)
   dff_interaction_report <- dif_report(dff_interaction)
   expect_true(nrow(dff_interaction_report$gpcm_boundary) > 0)
+})
+
+test_that("GPCM score-side delta SE stays on the expected-score scale", {
+  fn <- getFromNamespace("add_gpcm_score_side_delta_se", "mfrmr")
+  scorefile <- data.frame(
+    Person = "P1",
+    Rater = "R1",
+    Criterion = "C1",
+    Observed = 3,
+    Expected = 2,
+    Residual = 1,
+    ScoreSlope = 1.25,
+    Var = 0.40,
+    stringsAsFactors = FALSE
+  )
+  res <- list(
+    config = list(model = "GPCM", facet_names = c("Rater", "Criterion")),
+    prep = list(rating_min = 1, rating_max = 4)
+  )
+  diagnostics <- list(
+    measures = data.frame(
+      Facet = c("Person", "Rater", "Criterion"),
+      Level = c("P1", "R1", "C1"),
+      ModelSE = c(0.30, 0.40, 0.50),
+      stringsAsFactors = FALSE
+    )
+  )
+
+  out <- fn(scorefile, res = res, diagnostics = diagnostics)
+  eta_se <- sqrt(0.30^2 + 0.40^2 + 0.50^2)
+  expected_score_se <- 1.25 * 0.40 * eta_se
+
+  expect_equal(out$ScoreSideLogitSE, eta_se, tolerance = 1e-12)
+  expect_equal(out$ScoreSideSE, expected_score_se, tolerance = 1e-12)
+  expect_equal(out$ScoreSideResidualSE, expected_score_se, tolerance = 1e-12)
+  expect_true(grepl("ScoreSlope x Var", out$ScoreSideSE_Method, fixed = TRUE))
 })
 
 test_that("GPCM design evaluation and population forecasts return caveated objects", {

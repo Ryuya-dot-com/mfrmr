@@ -49,6 +49,13 @@ Build an inter-rater agreement report
 This helper computes pairwise rater agreement on matched contexts
 and returns both a pair-level table and a one-row summary. The output is
 package-native and does not require knowledge of legacy report numbering.
+When fitted category probabilities are available, expected exact agreement
+for a matched context is the model-implied quantity
+\eqn{\sum_k P_{r1}(X=k)P_{r2}(X=k)}. It is not a marginal-frequency chance
+agreement statistic. Observed exact agreement uses equality of the package's
+observed score categories. The current function does not translate category
+positions across multiple independent scales, apply an agreement-based SE
+inflation, or establish numerical equivalence with FACETS Table 7.
 }
 \section{Interpreting output}{
 
@@ -78,7 +85,9 @@ The \code{pairs} data.frame contains:
 \item{Rater1, Rater2}{Rater pair identifiers.}
 \item{N}{Number of matched-context observations for this pair.}
 \item{Exact}{Proportion of exact score agreements.}
-\item{ExpectedExact}{Expected exact agreement under chance.}
+\item{ExpectedExact}{Model-implied expected exact agreement from the two
+raters' fitted category-probability vectors. \code{NA} when those probabilities
+are unavailable.}
 \item{Adjacent}{Proportion of adjacent (+/- 1 category) agreements.}
 \item{MeanDiff}{Signed mean score difference (Rater1 - Rater2).}
 \item{MAD}{Mean absolute score difference.}

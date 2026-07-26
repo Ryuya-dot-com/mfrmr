@@ -111,6 +111,11 @@ probability, GPCM slope fields, and native structural delta-method
 expected-score uncertainty and/or score-side delta-method SEs when the
 required MML diagnostics are available. Use \code{score_se_method} to choose
 \code{"both"} (default), \code{"native"}, \code{"score_side"}, or \code{"none"}.
+The score-side route transforms a logit-side standard error with the bounded
+GPCM expected-score derivative
+\eqn{dE[X]/d\eta = \alpha Var(X)}, where \code{ScoreSlope} is \eqn{\alpha}.
+\code{ScoreSideLogitSE} remains on the logit side; \code{ScoreSideSE} and its interval
+columns are on the expected-score scale.
 The scorefile also carries explicit score-side caveat columns. It is not a
 FACETS score-side equivalence file, does not export FACETS-equivalent
 score-side standard errors, and does not establish an operational

@@ -96,7 +96,8 @@ test_that("analyze_dif refit keeps JML contrasts descriptive even when linked", 
   expect_true(is.data.frame(dif$dif_table))
   expect_true(nrow(dif$dif_table) > 0)
   expect_true(all(c("ContrastComparable", "ScaleLinkStatus", "LinkingFacets",
-                    "FormalInferenceEligible", "InferenceTier",
+                    "ConditionalRefitScreenEligible", "FormalInferenceEligible",
+                    "SupportsFormalInference", "InferenceTier",
                     "ReportingUse", "PrimaryReportingEligible",
                     "BaselineConverged", "SubgroupConverged1", "SubgroupConverged2",
                     "BaselineMethod", "BaselinePrecisionTier",
@@ -106,14 +107,17 @@ test_that("analyze_dif refit keeps JML contrasts descriptive even when linked", 
   expect_true("Converged" %in% names(dif$group_fits[[1]]))
   expect_true(all(dif$dif_table$ClassificationSystem == "descriptive"))
   expect_true(all(dif$dif_table$StatisticLabel == "linked descriptive contrast"))
-  expect_true(all(dif$dif_table$SEBasis == "not reported without model-based subgroup precision"))
+  expect_true(all(dif$dif_table$SEBasis ==
+                    "not reported without complete conditional-screen inputs"))
   expect_true(all(is.na(dif$dif_table$ETS)))
   expect_true(all(dif$dif_table$ContrastComparable))
+  expect_true(all(!dif$dif_table$ConditionalRefitScreenEligible))
   expect_true(all(!dif$dif_table$FormalInferenceEligible))
+  expect_true(all(!dif$dif_table$SupportsFormalInference))
   expect_true(all(!dif$dif_table$PrimaryReportingEligible))
   expect_true(all(dif$dif_table$InferenceTier == "exploratory"))
   expect_true(all(dif$dif_table$ScaleLinkStatus == "linked"))
-  expect_true(all(dif$dif_table$ReportingUse == "screening_only"))
+  expect_true(all(dif$dif_table$ReportingUse == "screening_only_linked_descriptive"))
   expect_equal(dif$config$method, "refit")
 })
 
@@ -135,7 +139,7 @@ test_that("analyze_dif refit surfaces subgroup diagnostics failures", {
   expect_true(all(grepl("forced subgroup diagnostics failure", group_fit_tbl$DiagnosticsDetail, fixed = TRUE)))
 })
 
-test_that("analyze_dif refit uses ETS only for linked model-based MML contrasts", {
+test_that("analyze_dif refit keeps linked model-based MML contrasts exploratory", {
   dat <- mfrmr:::sample_mfrm_data(seed = 42)
   persons <- unique(dat$Person)
   half <- ceiling(length(persons) / 2)
@@ -164,20 +168,31 @@ test_that("analyze_dif refit uses ETS only for linked model-based MML contrasts"
     method = "refit"
   )
 
-  ets_rows <- dif_mml$dif_table$ClassificationSystem == "ETS"
-  if (any(ets_rows)) {
-    expect_true(all(dif_mml$dif_table$ContrastComparable[ets_rows]))
-    expect_true(all(dif_mml$dif_table$FormalInferenceEligible[ets_rows]))
-    expect_true(all(dif_mml$dif_table$PrimaryReportingEligible[ets_rows]))
-    expect_true(all(dif_mml$dif_table$InferenceTier[ets_rows] == "model_based"))
-    expect_true(all(dif_mml$dif_table$ReportingUse[ets_rows] == "primary_reporting"))
-    expect_true(all(stats::na.omit(dif_mml$dif_table$ETS) %in% c("A", "B", "C")))
-  } else {
-    expect_true(all(dif_mml$dif_table$ClassificationSystem == "descriptive"))
-    expect_true(all(is.na(dif_mml$dif_table$ETS)))
-    expect_true(all(!dif_mml$dif_table$FormalInferenceEligible))
-    expect_true(all(!dif_mml$dif_table$PrimaryReportingEligible))
+  expect_true(all(dif_mml$dif_table$ClassificationSystem == "descriptive"))
+  expect_true(all(is.na(dif_mml$dif_table$ETS)))
+  expect_true(all(!dif_mml$dif_table$ETS_Eligible))
+  expect_true(all(!dif_mml$dif_table$FormalInferenceEligible))
+  expect_true(all(!dif_mml$dif_table$SupportsFormalInference))
+  expect_true(all(!dif_mml$dif_table$PrimaryReportingEligible))
+
+  conditional_rows <- dif_mml$dif_table$ConditionalRefitScreenEligible
+  if (any(conditional_rows)) {
+    expect_true(all(dif_mml$dif_table$ContrastComparable[conditional_rows]))
+    expect_true(all(dif_mml$dif_table$InferenceTier[conditional_rows] == "model_based"))
+    expect_true(all(dif_mml$dif_table$ReportingUse[conditional_rows] ==
+                      "screening_only_conditional_plugin"))
+    expect_true(all(grepl(
+      "baseline-anchor uncertainty",
+      dif_mml$dif_table$SEBasis[conditional_rows],
+      fixed = TRUE
+    )))
+    expect_true(all(is.finite(dif_mml$dif_table$SE[conditional_rows])))
   }
+
+  refit_report <- dif_report(dif_mml)
+  expect_identical(nrow(refit_report$large_dif), 0L)
+  expect_false(any(c("A", "B", "C") %in% names(refit_report$counts)))
+  expect_match(refit_report$narrative, "No ETS A/B/C labels", fixed = TRUE)
 })
 
 test_that("analyze_dif refit demotes ETS when subgroup refits lack linking facets", {
@@ -298,7 +313,7 @@ test_that("residual method uses Welch-Satterthwaite degrees of freedom", {
   expect_equal(first_row$df, expected_df, tolerance = 1e-8)
 })
 
-test_that("refit method ETS classification is valid", {
+test_that("refit method never promotes screening contrasts to ETS", {
   dat <- mfrmr:::sample_mfrm_data(seed = 99)
   dat$Group <- ifelse(dat$Person %in% unique(dat$Person)[1:30], "A", "B")
   fit_mml <- suppressWarnings(fit_mfrm(
@@ -313,7 +328,11 @@ test_that("refit method ETS classification is valid", {
   diag_mml <- diagnose_mfrm(fit_mml, residual_pca = "none")
   dif <- analyze_dif(fit_mml, diag_mml, facet = "Criterion", group = "Group",
                      data = dat, method = "refit")
-  expect_true(all(stats::na.omit(dif$dif_table$ETS) %in% c("A", "B", "C")))
+  expect_true(all(dif$dif_table$ClassificationSystem == "descriptive"))
+  expect_true(all(is.na(dif$dif_table$ETS)))
+  expect_true(all(!dif$dif_table$ETS_Eligible))
+  expect_true(all(!dif$dif_table$FormalInferenceEligible))
+  expect_true(all(!dif$dif_table$PrimaryReportingEligible))
 })
 
 test_that("dif_interaction_table returns expected structure", {

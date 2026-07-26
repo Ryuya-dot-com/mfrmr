@@ -7809,13 +7809,13 @@ print.summary.mfrm_diagnostics <- function(x, ...) {
 #' @param object Output from [estimate_bias()].
 #' @param digits Number of digits for printed numeric values.
 #' @param top_n Number of strongest bias rows to keep.
-#' @param p_cut Significance cutoff used for counting flagged rows.
+#' @param p_cut Tail-area cutoff used for counting screen-positive rows.
 #' @param ... Reserved for generic compatibility.
 #'
 #' @details
 #' This method returns a compact interaction-bias summary:
 #' - interaction facets/order and analyzed cell counts
-#' - effect-size profile (`|bias|` mean/max, significant cell count)
+#' - effect-size profile (`|bias|` mean/max, screen-positive cell count)
 #' - fixed-effect chi-square block
 #' - iteration-end convergence indicators
 #' - top rows ranked by absolute t
@@ -7899,12 +7899,20 @@ summary.mfrm_bias <- function(object, digits = 3, top_n = 10, p_cut = 0.05, ...)
     Cells = nrow(bias_tbl),
     MeanAbsBias = mean(abs_bias, na.rm = TRUE),
     MaxAbsBias = max(abs_bias, na.rm = TRUE),
+    ScreenPositive = sig_n,
+    ScreeningCut = p_cut,
+    BonferroniScreenPositive = bonferroni_n,
+    HolmScreenPositive = holm_n,
+    SupportsFormalInference = FALSE,
+    FormalInferenceEligible = FALSE,
+    PrimaryReportingEligible = FALSE,
+    ClassificationSystem = "screening",
+    ReportingUse = "screening_only",
+    # Compatibility aliases retained for existing 0.1.x consumers.
     Significant = sig_n,
     SignificantCut = p_cut,
     BonferroniSignificant = bonferroni_n,
-    HolmSignificant = holm_n,
-    ScreenPositive = sig_n,
-    ScreeningCut = p_cut
+    HolmSignificant = holm_n
   )
   if (any(is.finite(lr_p_vals))) {
     overview$LRScreenPositive <- lr_sig_n
@@ -7999,10 +8007,10 @@ print.summary.mfrm_bias <- function(x, ...) {
         as.numeric(ov$ScreeningCut), ov$LRScreenPositive
       ))
     }
-    if (all(c("BonferroniSignificant", "HolmSignificant") %in% names(ov))) {
+    if (all(c("BonferroniScreenPositive", "HolmScreenPositive") %in% names(ov))) {
       cat(sprintf(
-        "  Bonferroni significant: %s | Holm significant: %s (alpha = %.3f, m = %s)\n",
-        ov$BonferroniSignificant, ov$HolmSignificant,
+        "  Bonferroni screen-positive: %s | Holm screen-positive: %s (cut = %.3f, m = %s)\n",
+        ov$BonferroniScreenPositive, ov$HolmScreenPositive,
         as.numeric(ov$ScreeningCut), ov$Cells
       ))
     }

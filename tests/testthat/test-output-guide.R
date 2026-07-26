@@ -247,6 +247,14 @@ test_that("facets_feature_coverage separates implemented and unsupported FACETS 
   expect_true(nrow(coverage) >= 40L)
   expect_true(any(grepl("Table 14", coverage$FACETSFeature, fixed = TRUE) &
                     coverage$Status == "implemented"))
+  expect_true(any(grepl("Table 7: agreement", coverage$FACETSFeature, fixed = TRUE) &
+                    coverage$Status == "supported_with_caveat" &
+                    grepl("model-probability", coverage$Capability, fixed = TRUE) &
+                    grepl("external Table 7 parity", coverage$Limitation, fixed = TRUE)))
+  expect_true(any(grepl("Table 8.1: polytomous", coverage$FACETSFeature, fixed = TRUE) &
+                    coverage$Status == "supported_with_caveat" &
+                    grepl("one RSM scale", coverage$Capability, fixed = TRUE) &
+                    grepl("Multiple independent scales", coverage$Limitation, fixed = TRUE)))
   expect_true(any(grepl("Wright map", coverage$FACETSFeature, fixed = TRUE) &
                     coverage$Status == "implemented"))
   expect_true(any(grepl("Generalizability Theory", coverage$FACETSFeature, fixed = TRUE) &
@@ -297,11 +305,15 @@ test_that("facets_positioning_guide prevents FACETS numerical-clone wording", {
   ) %in% names(guide)))
   expect_true(any(guide$Topic == "Estimation authority"))
   expect_true(any(guide$Topic == "External FACETS comparison"))
+  expect_true(any(guide$Topic == "Current model and calibration boundary"))
   expect_true(any(grepl("package-native", guide$Position, fixed = TRUE)))
   expect_true(any(grepl("not evidence of FACETS numerical equivalence",
                         guide$RecommendedWording,
                         fixed = TRUE)))
   expect_true(any(grepl("read_facets_fit_table", guide$PrimaryRoute, fixed = TRUE)))
+  expect_true(any(grepl("not as a general FACETS operational-calibration replacement",
+                        guide$RecommendedWording,
+                        fixed = TRUE)))
   expect_false(any(grepl("\\baudit\\b", unlist(guide), ignore.case = TRUE)))
 })
 

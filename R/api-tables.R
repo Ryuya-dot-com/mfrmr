@@ -15,6 +15,13 @@
 #' This helper computes pairwise rater agreement on matched contexts
 #' and returns both a pair-level table and a one-row summary. The output is
 #' package-native and does not require knowledge of legacy report numbering.
+#' When fitted category probabilities are available, expected exact agreement
+#' for a matched context is the model-implied quantity
+#' \eqn{\sum_k P_{r1}(X=k)P_{r2}(X=k)}. It is not a marginal-frequency chance
+#' agreement statistic. Observed exact agreement uses equality of the package's
+#' observed score categories. The current function does not translate category
+#' positions across multiple independent scales, apply an agreement-based SE
+#' inflation, or establish numerical equivalence with FACETS Table 7.
 #'
 #' @section Interpreting output:
 #' - `summary`: overall agreement level, number/share of flagged pairs.
@@ -35,7 +42,9 @@
 #'   \item{Rater1, Rater2}{Rater pair identifiers.}
 #'   \item{N}{Number of matched-context observations for this pair.}
 #'   \item{Exact}{Proportion of exact score agreements.}
-#'   \item{ExpectedExact}{Expected exact agreement under chance.}
+#'   \item{ExpectedExact}{Model-implied expected exact agreement from the two
+#'     raters' fitted category-probability vectors. `NA` when those probabilities
+#'     are unavailable.}
 #'   \item{Adjacent}{Proportion of adjacent (+/- 1 category) agreements.}
 #'   \item{MeanDiff}{Signed mean score difference (Rater1 - Rater2).}
 #'   \item{MAD}{Mean absolute score difference.}
@@ -4734,6 +4743,11 @@ build_cumulative_boundary_table <- function(cumulative, categories_chr) {
 #' expected-score uncertainty and/or score-side delta-method SEs when the
 #' required MML diagnostics are available. Use `score_se_method` to choose
 #' `"both"` (default), `"native"`, `"score_side"`, or `"none"`.
+#' The score-side route transforms a logit-side standard error with the bounded
+#' GPCM expected-score derivative
+#' \eqn{dE[X]/d\eta = \alpha Var(X)}, where `ScoreSlope` is \eqn{\alpha}.
+#' `ScoreSideLogitSE` remains on the logit side; `ScoreSideSE` and its interval
+#' columns are on the expected-score scale.
 #' The scorefile also carries explicit score-side caveat columns. It is not a
 #' FACETS score-side equivalence file, does not export FACETS-equivalent
 #' score-side standard errors, and does not establish an operational

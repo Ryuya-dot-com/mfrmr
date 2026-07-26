@@ -37,6 +37,32 @@ test_that("q3_statistic rejects unknown facet", {
   )
 })
 
+test_that("q3_statistic validates its screening controls", {
+  expect_error(
+    q3_statistic(.fit, diagnostics = .diag, min_pairs = 2),
+    "single integer of at least 3"
+  )
+  expect_error(
+    q3_statistic(.fit, diagnostics = .diag, min_pairs = c(5, 6)),
+    "single integer of at least 3"
+  )
+  expect_error(
+    q3_statistic(.fit, diagnostics = .diag, yen_threshold = c(0.2, 0.3)),
+    "finite positive numeric scalars"
+  )
+})
+
+test_that("q3_statistic prints the implemented Q3-style screening contract", {
+  q3 <- q3_statistic(.fit, diagnostics = .diag)
+  output <- capture.output(print(q3))
+
+  expect_true(any(grepl("standardized/aggregated-residual Q3-style", output,
+                        fixed = TRUE)))
+  expect_true(any(grepl("uncalibrated heuristics", output, fixed = TRUE)))
+  expect_false(any(grepl("Yen Q3 local-dependence statistic", output,
+                         fixed = TRUE)))
+})
+
 # --- compute_person_fit_indices ------------------------------------------
 
 test_that("compute_person_fit_indices returns one row per person", {

@@ -652,9 +652,8 @@ plot_rater_severity_profile <- function(fit,
 #' Compact effect-size summary for a [analyze_dff()] / [analyze_dif()]
 #' result. Shows each contrast's signed effect size as a horizontal bar
 #' with a vertical reference at zero, coloured by the method-appropriate
-#' classification. ETS-style A / B / C colours are used only when they
-#' are actually available; residual-method screening labels otherwise use
-#' the neutral colour.
+#' classification. Current residual and refit screening labels use the
+#' neutral colour; refit output does not receive ETS A/B/C labels.
 #'
 #' @param x Output from [analyze_dff()] or [analyze_dif()].
 #' @param top_n Maximum rows shown (default `30`).
@@ -666,8 +665,8 @@ plot_rater_severity_profile <- function(fit,
 #'   intervals drawn from `Effect +/- z * SE` when finite standard errors are
 #'   available. Use `NULL` (default) to omit intervals.
 #' @param effect_thresholds Optional numeric vector of absolute effect-size
-#'   guide lines to draw at `+/- threshold`. These are display aids; only use
-#'   ETS-like values when the source rows support ETS interpretation.
+#'   guide lines to draw at `+/- threshold`. These are display aids, not ETS
+#'   classification boundaries.
 #' @param effect_axis_label Optional x-axis label override. When `NULL`, the
 #'   label is chosen from the DFF method.
 #'
@@ -680,9 +679,8 @@ plot_rater_severity_profile <- function(fit,
 #' observed-minus-expected average screening contrast between groups. For
 #' `method = "refit"`, this is the subgroup parameter difference on the
 #' fitted logit scale when linking support allows a comparable contrast.
-#' The ETS classification (A negligible, B moderate, C large) drives bar
-#' colour only when `ClassificationSystem == "ETS"`; otherwise the bar
-#' uses the preset's neutral.
+#' Current DFF/DIF classifications are screening-only, so bars use the
+#' preset's neutral colour.
 #'
 #' @seealso [analyze_dff()], [analyze_dif()], [plot_dif_heatmap()].
 #'
