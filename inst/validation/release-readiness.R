@@ -50,14 +50,14 @@ mfrmr_release_readiness_prompt_steps <- function(target_version = NULL) {
       "Do cran-comments, NEWS, and validation artifacts tell the same story about release scope, caveats, and deferred work?"
     ),
     Evidence = c(
-      "DESCRIPTION Version; first NEWS heading; tarball/check timestamps; check-log package version; absence of development labels in current release files",
+      "DESCRIPTION/CITATION version and date; authoritative roadmap; first NEWS heading; tarball/check timestamps; check-log package version and --as-cran provenance; absence of development labels in current release files",
       "release-evidence-checklist blocker rows; targeted mathematical tests; recovery-validation summary",
       "gpcm_capability_matrix(); README; vignettes; NEWS deferred-work section; post-0.2.2 GPCM roadmap",
       "facets_positioning_guide(); facets_fit_review(); read_facets_fit_table(); output guide",
       "summary methods; plot(..., draw = FALSE); plot_data(); summary-table bundles",
       "README/vignettes/man/cheatsheet terminology scan",
       "mfrmr.Rcheck/00check.log or attached check log; GitHub Actions warning policy and check artifacts",
-      "cran-comments.md; NEWS.md; release-evidence map; GPCM roadmap; external parameter-recovery summary and local review helper"
+      "root ROADMAP.md; cran-comments.md; NEWS.md; release-evidence map; GPCM technical supplement; external parameter-recovery summary and local review helper"
     ),
     Gate = c(
       "blocker",
@@ -135,6 +135,9 @@ mfrmr_release_readiness_paths <- function(pkg_dir = ".",
     target_version = target_version,
     pkg_dir = pkg_dir,
     description = file.path(pkg_dir, "DESCRIPTION"),
+    cff = file.path(pkg_dir, "CITATION.cff"),
+    roadmap = file.path(pkg_dir, "ROADMAP.md"),
+    buildignore = file.path(pkg_dir, ".Rbuildignore"),
     news = file.path(pkg_dir, "NEWS.md"),
     cran_comments = file.path(pkg_dir, "cran-comments.md"),
     ci_workflow = file.path(pkg_dir, ".github", "workflows", "R-CMD-check.yaml"),
@@ -265,6 +268,81 @@ mfrmr_release_readiness_count_status <- function(status_line, label) {
   0L
 }
 
+mfrmr_release_readiness_check_timing <- function(lines) {
+  timed <- grep(
+    "^\\* checking .*\\[[0-9.]+s/[0-9.]+s\\]",
+    lines,
+    value = TRUE,
+    perl = TRUE
+  )
+  elapsed_seconds <- function(x) {
+    if (length(x) == 0L) return(NA_real_)
+    as.numeric(sub(
+      "^.*\\[[0-9.]+s/([0-9.]+)s\\].*$",
+      "\\1",
+      x[[1]],
+      perl = TRUE
+    ))
+  }
+  component <- function(pattern) {
+    elapsed_seconds(grep(pattern, timed, value = TRUE, perl = TRUE))
+  }
+  elapsed <- vapply(timed, elapsed_seconds, numeric(1))
+  component_timing_available <- length(timed) > 0L && all(is.finite(elapsed))
+  estimated_seconds <- if (component_timing_available) {
+    sum(elapsed)
+  } else {
+    NA_real_
+  }
+  examples_seconds <- component("^\\* checking examples \\.\\.\\.")
+  donttest_seconds <- component(
+    "^\\* checking examples with --run-donttest"
+  )
+  tests_seconds <- component("^\\* checking tests \\.\\.\\.")
+  vignette_seconds <- component(
+    "^\\* checking re-building of vignette outputs"
+  )
+  cran_workload_components <- c(
+    examples_seconds,
+    donttest_seconds,
+    tests_seconds,
+    vignette_seconds
+  )
+  timing_available <- component_timing_available &&
+    any(is.finite(cran_workload_components))
+  cran_workload_seconds <- if (timing_available) {
+    sum(cran_workload_components, na.rm = TRUE)
+  } else {
+    NA_real_
+  }
+  data.frame(
+    TimingAvailable = timing_available,
+    ComponentElapsedSeconds = estimated_seconds,
+    CranWorkloadElapsedSeconds = cran_workload_seconds,
+    ExamplesSeconds = examples_seconds,
+    DonttestExamplesSeconds = donttest_seconds,
+    TestsSeconds = tests_seconds,
+    VignetteRebuildSeconds = vignette_seconds,
+    UnderTenMinutes = if (timing_available) {
+      cran_workload_seconds <= 600
+    } else {
+      NA
+    },
+    stringsAsFactors = FALSE
+  )
+}
+
+mfrmr_release_readiness_check_timing_scope <- function(not_cran = Sys.getenv(
+  "NOT_CRAN",
+  unset = "false"
+)) {
+  if (identical(tolower(trimws(not_cran[1])), "true")) {
+    "full_non_cran"
+  } else {
+    "cran"
+  }
+}
+
 mfrmr_release_readiness_parse_check_log <- function(path,
                                                     target_version = NULL) {
   lines <- mfrmr_release_readiness_read_lines(path)
@@ -276,9 +354,20 @@ mfrmr_release_readiness_parse_check_log <- function(path,
       VersionMatchesTarget = if (is.null(target_version)) NA else FALSE,
       StatusLine = NA_character_,
       StatusPresent = FALSE,
+      AsCRAN = FALSE,
+      RunDonttest = FALSE,
+      ManualChecked = FALSE,
       Errors = NA_integer_,
       Warnings = NA_integer_,
       Notes = NA_integer_,
+      TimingAvailable = FALSE,
+      ComponentElapsedSeconds = NA_real_,
+      CranWorkloadElapsedSeconds = NA_real_,
+      ExamplesSeconds = NA_real_,
+      DonttestExamplesSeconds = NA_real_,
+      TestsSeconds = NA_real_,
+      VignetteRebuildSeconds = NA_real_,
+      UnderTenMinutes = NA,
       CheckPassed = FALSE,
       NeedsExplanation = TRUE,
       stringsAsFactors = FALSE
@@ -311,21 +400,42 @@ mfrmr_release_readiness_parse_check_log <- function(path,
   if (isTRUE(status_present) && identical(status, "Status: OK")) {
     errors <- warnings <- notes <- 0L
   }
-  data.frame(
+  timing <- mfrmr_release_readiness_check_timing(lines)
+  out <- data.frame(
     CheckLog = path,
     PackageVersion = package_version,
     TargetVersion = target_version %||% NA_character_,
     VersionMatchesTarget = version_matches_target,
     StatusLine = status,
     StatusPresent = status_present,
+    AsCRAN = any(grepl("--as-cran", lines, fixed = TRUE)),
+    RunDonttest = any(grepl("--run-donttest", lines, fixed = TRUE)),
+    ManualChecked = any(grepl(
+      "* checking PDF version of manual",
+      lines,
+      fixed = TRUE
+    )) && any(grepl(
+      "* checking HTML version of manual",
+      lines,
+      fixed = TRUE
+    )),
     Errors = errors,
     Warnings = warnings,
     Notes = notes,
+    TimingAvailable = timing$TimingAvailable,
+    ComponentElapsedSeconds = timing$ComponentElapsedSeconds,
+    CranWorkloadElapsedSeconds = timing$CranWorkloadElapsedSeconds,
+    ExamplesSeconds = timing$ExamplesSeconds,
+    DonttestExamplesSeconds = timing$DonttestExamplesSeconds,
+    TestsSeconds = timing$TestsSeconds,
+    VignetteRebuildSeconds = timing$VignetteRebuildSeconds,
+    UnderTenMinutes = timing$UnderTenMinutes,
     CheckPassed = isTRUE(status_present) &&
       isTRUE(errors == 0L && warnings == 0L),
     NeedsExplanation = !isTRUE(status_present) || isTRUE(notes > 0L),
     stringsAsFactors = FALSE
   )
+  out
 }
 
 mfrmr_release_readiness_buildignore_patterns <- function(pkg_dir) {
@@ -566,6 +676,79 @@ mfrmr_release_readiness_version_status <- function(paths, target_version = NULL)
   )
 }
 
+mfrmr_release_readiness_cff_value <- function(lines, key) {
+  hit <- grep(paste0("^", key, ":[[:space:]]*"), lines, value = TRUE)
+  if (length(hit) == 0L) {
+    return(NA_character_)
+  }
+  value <- sub(paste0("^", key, ":[[:space:]]*"), "", hit[1])
+  sub("^['\"](.*)['\"]$", "\\1", trimws(value))
+}
+
+mfrmr_release_readiness_source_truth_status <- function(paths) {
+  description <- if (file.exists(paths$description)) {
+    read.dcf(paths$description)
+  } else {
+    matrix(character(0), nrow = 0L, ncol = 0L)
+  }
+  description_value <- function(field) {
+    if (nrow(description) > 0L && field %in% colnames(description)) {
+      as.character(description[1, field])
+    } else {
+      NA_character_
+    }
+  }
+  cff_lines <- mfrmr_release_readiness_read_lines(paths$cff)
+  description_version <- description_value("Version")
+  description_date <- description_value("Date")
+  cff_version <- mfrmr_release_readiness_cff_value(cff_lines, "version")
+  cff_date <- mfrmr_release_readiness_cff_value(cff_lines, "date-released")
+  patterns <- mfrmr_release_readiness_buildignore_patterns(paths$pkg_dir)
+  roadmap_available <- file.exists(paths$roadmap)
+  roadmap_excluded <- roadmap_available &&
+    mfrmr_release_readiness_path_is_ignored("ROADMAP.md", patterns)
+  roadmap_lines <- mfrmr_release_readiness_read_lines(paths$roadmap)
+  roadmap_authoritative <- any(grepl(
+    "single source of truth",
+    roadmap_lines,
+    fixed = TRUE
+  ))
+  supplement_lines <- mfrmr_release_readiness_read_lines(paths$gpcm_roadmap)
+  forbidden_current_api <- c(
+    "mfrmr_model_family_scope()",
+    "mfrmr_estimation_scope()",
+    "estimate_population_sd = TRUE",
+    "analyze_eap_power_sensitivity()",
+    "analyze_dff_moderation()",
+    "analyze_dif_moderation()"
+  )
+  forbidden_hits <- forbidden_current_api[vapply(
+    forbidden_current_api,
+    function(value) any(grepl(value, supplement_lines, fixed = TRUE)),
+    logical(1)
+  )]
+  version_match <- !is.na(description_version) &&
+    identical(description_version, cff_version)
+  date_match <- !is.na(description_date) &&
+    identical(description_date, cff_date)
+  ok <- version_match && date_match && roadmap_available &&
+    roadmap_excluded && roadmap_authoritative && length(forbidden_hits) == 0L
+  data.frame(
+    DescriptionVersion = description_version,
+    CFFVersion = cff_version,
+    DescriptionDate = description_date,
+    CFFDate = cff_date,
+    VersionMatchesCFF = version_match,
+    DateMatchesCFF = date_match,
+    RoadmapAvailable = roadmap_available,
+    RoadmapExcludedFromTarball = roadmap_excluded,
+    RoadmapAuthoritative = roadmap_authoritative,
+    DevelopmentOnlyCurrentClaims = paste(forbidden_hits, collapse = " | "),
+    SourceTruthOK = ok,
+    stringsAsFactors = FALSE
+  )
+}
+
 mfrmr_release_readiness_public_doc_files <- function(pkg_dir) {
   list_rmd <- function(path) {
     if (!dir.exists(path)) {
@@ -611,6 +794,150 @@ mfrmr_release_readiness_term_status <- function(pkg_dir) {
     DisallowedRemovedTerms = length(hits),
     TerminologyOK = length(hits) == 0L,
     Examples = paste(utils::head(hits, 5L), collapse = " | "),
+    stringsAsFactors = FALSE
+  )
+}
+
+mfrmr_release_readiness_roxygen_marker_targets <- function(pkg_dir, marker) {
+  r_dir <- file.path(pkg_dir, "R")
+  if (!dir.exists(r_dir)) {
+    return(data.frame(
+      File = character(0),
+      Line = integer(0),
+      Target = character(0),
+      stringsAsFactors = FALSE
+    ))
+  }
+  files <- list.files(r_dir, pattern = "\\.R$", recursive = TRUE,
+                      full.names = TRUE)
+  rows <- list()
+  for (path in files) {
+    lines <- mfrmr_release_readiness_read_lines(path)
+    marker_lines <- grep(marker, lines, fixed = TRUE)
+    for (line_number in marker_lines) {
+      remaining <- if (line_number < length(lines)) {
+        lines[seq.int(line_number + 1L, length(lines))]
+      } else {
+        character(0)
+      }
+      assignment <- grep(
+        "^[.A-Za-z][A-Za-z0-9._]*\\s*<-\\s*function\\s*\\(",
+        remaining,
+        perl = TRUE
+      )
+      target <- if (length(assignment) == 0L) {
+        NA_character_
+      } else {
+        sub(
+          "^([.A-Za-z][A-Za-z0-9._]*)\\s*<-.*$",
+          "\\1",
+          remaining[[assignment[[1]]]],
+          perl = TRUE
+        )
+      }
+      rows[[length(rows) + 1L]] <- data.frame(
+        File = mfrmr_release_readiness_relative_path(path, pkg_dir),
+        Line = line_number,
+        Target = target,
+        stringsAsFactors = FALSE
+      )
+    }
+  }
+  if (length(rows) == 0L) {
+    return(data.frame(
+      File = character(0),
+      Line = integer(0),
+      Target = character(0),
+      stringsAsFactors = FALSE
+    ))
+  }
+  do.call(rbind, rows)
+}
+
+mfrmr_release_readiness_rd_marker_pages <- function(pkg_dir, marker) {
+  man_dir <- file.path(pkg_dir, "man")
+  if (!dir.exists(man_dir)) {
+    return(character(0))
+  }
+  files <- list.files(man_dir, pattern = "\\.Rd$", recursive = TRUE,
+                      full.names = TRUE)
+  hits <- vapply(files, function(path) {
+    any(grepl(
+      marker,
+      mfrmr_release_readiness_read_lines(path),
+      fixed = TRUE
+    ))
+  }, logical(1))
+  sort(basename(files[hits]))
+}
+
+mfrmr_release_readiness_example_policy_status <- function(pkg_dir) {
+  expected_dontrun_targets <- sort(c(
+    "normalize_conquest_overlap_exports",
+    "review_conquest_overlap"
+  ))
+  expected_dontrun_pages <- sort(paste0(expected_dontrun_targets, ".Rd"))
+  expected_examples_if_targets <- "launch_mfrmr_viewer"
+  expected_examples_if_pages <- paste0(expected_examples_if_targets, ".Rd")
+
+  dontrun_source <- mfrmr_release_readiness_roxygen_marker_targets(
+    pkg_dir,
+    "#' \\dontrun{"
+  )
+  examples_if_source <- mfrmr_release_readiness_roxygen_marker_targets(
+    pkg_dir,
+    "#' @examplesIf interactive()"
+  )
+  dontrun_targets <- sort(as.character(dontrun_source$Target))
+  examples_if_targets <- sort(as.character(examples_if_source$Target))
+  dontrun_pages <- mfrmr_release_readiness_rd_marker_pages(
+    pkg_dir,
+    "\\dontrun{"
+  )
+  examples_if_pages <- mfrmr_release_readiness_rd_marker_pages(
+    pkg_dir,
+    "# examplesIf"
+  )
+  donttest_pages <- mfrmr_release_readiness_rd_marker_pages(
+    pkg_dir,
+    "\\donttest{"
+  )
+
+  source_available <- dir.exists(file.path(pkg_dir, "R"))
+  man_available <- dir.exists(file.path(pkg_dir, "man"))
+  dontrun_ok <- nrow(dontrun_source) == length(expected_dontrun_targets) &&
+    identical(dontrun_targets, expected_dontrun_targets) &&
+    identical(dontrun_pages, expected_dontrun_pages)
+  examples_if_ok <- nrow(examples_if_source) ==
+    length(expected_examples_if_targets) &&
+    identical(examples_if_targets, expected_examples_if_targets) &&
+    identical(examples_if_pages, expected_examples_if_pages)
+  issue_parts <- c(
+    if (!source_available) "R source unavailable" else character(0),
+    if (!man_available) "generated Rd unavailable" else character(0),
+    if (!dontrun_ok) paste0(
+      "dontrun expected=", paste(expected_dontrun_targets, collapse = ","),
+      "; observed=", paste(dontrun_targets, collapse = ","),
+      "; Rd=", paste(dontrun_pages, collapse = ",")
+    ) else character(0),
+    if (!examples_if_ok) paste0(
+      "examplesIf expected=", paste(expected_examples_if_targets, collapse = ","),
+      "; observed=", paste(examples_if_targets, collapse = ","),
+      "; Rd=", paste(examples_if_pages, collapse = ",")
+    ) else character(0)
+  )
+
+  data.frame(
+    SourceAvailable = source_available,
+    GeneratedRdAvailable = man_available,
+    DontrunSourceTargets = paste(dontrun_targets, collapse = ", "),
+    DontrunRdPages = paste(dontrun_pages, collapse = ", "),
+    ExamplesIfSourceTargets = paste(examples_if_targets, collapse = ", "),
+    ExamplesIfRdPages = paste(examples_if_pages, collapse = ", "),
+    DonttestRdPages = length(donttest_pages),
+    Detail = paste(issue_parts, collapse = " | "),
+    ExamplePolicyOK = isTRUE(source_available && man_available &&
+      dontrun_ok && examples_if_ok),
     stringsAsFactors = FALSE
   )
 }
@@ -849,7 +1176,13 @@ mfrmr_release_readiness_gate_summary <- function(version_status,
                                                  ci_workflow_status,
                                                  paths,
                                                  gpcm_scope_status = NULL,
-                                                 freshness_status = NULL) {
+                                                 freshness_status = NULL,
+                                                 source_truth_status = NULL,
+                                                 example_policy_status = NULL,
+                                                 check_timing_scope = c(
+                                                   "cran", "full_non_cran"
+                                                 )) {
+  check_timing_scope <- match.arg(check_timing_scope)
   gpcm_scope_ok <- if (is.null(gpcm_scope_status)) {
     TRUE
   } else {
@@ -875,10 +1208,26 @@ mfrmr_release_readiness_gate_summary <- function(version_status,
   }
   package_check_status <- if (!isTRUE(check_status$CheckPassed[1]) ||
                               !isTRUE(check_status$StatusPresent[1]) ||
-                              !isTRUE(check_status$VersionMatchesTarget[1])) {
+                              !isTRUE(check_status$VersionMatchesTarget[1]) ||
+                              !isTRUE(check_status$AsCRAN[1])) {
     "concern"
-  } else if (isTRUE(check_status$NeedsExplanation[1])) {
+  } else if (isTRUE(check_status$NeedsExplanation[1]) ||
+             !isTRUE(check_status$ManualChecked[1])) {
     "review"
+  } else {
+    "ok"
+  }
+  check_timing_status <- if (identical(
+    check_timing_scope,
+    "full_non_cran"
+  )) {
+    "ok"
+  } else if (!isTRUE(check_status$RunDonttest[1])) {
+    "concern"
+  } else if (!isTRUE(check_status$TimingAvailable[1])) {
+    "review"
+  } else if (!isTRUE(check_status$UnderTenMinutes[1])) {
+    "concern"
   } else {
     "ok"
   }
@@ -889,14 +1238,27 @@ mfrmr_release_readiness_gate_summary <- function(version_status,
   } else {
     "ok"
   }
+  source_truth_ok <- is.null(source_truth_status) ||
+    isTRUE(source_truth_status$SourceTruthOK[1])
+  example_policy_gate_status <- if (is.null(example_policy_status)) {
+    "review"
+  } else if (isTRUE(example_policy_status$ExamplePolicyOK[1])) {
+    "ok"
+  } else {
+    "concern"
+  }
   rows <- data.frame(
     Gate = c(
-      "version_contract", "package_check", "release_evidence_freshness",
-      "ci_workflow", "terminology", "evidence_artifacts"
+      "version_contract", "source_truth", "package_check", "check_timing",
+      "example_policy", "release_evidence_freshness", "ci_workflow",
+      "terminology", "evidence_artifacts"
     ),
     Status = c(
       if (isTRUE(version_status$VersionOK[1])) "ok" else "concern",
+      if (source_truth_ok) "ok" else "concern",
       package_check_status,
+      check_timing_status,
+      example_policy_gate_status,
       freshness_gate_status,
       if (isTRUE(ci_workflow_status$CIWorkflowOK[1])) "ok" else "review",
       if (isTRUE(term_status$TerminologyOK[1])) "ok" else "concern",
@@ -904,13 +1266,54 @@ mfrmr_release_readiness_gate_summary <- function(version_status,
     ),
     Detail = c(
       paste0("DESCRIPTION=", version_status$DescriptionVersion[1], "; NEWS=", version_status$NewsHeading[1]),
+      if (is.null(source_truth_status)) {
+        "source truth not checked separately"
+      } else {
+        paste0(
+          "cff_version_match=", source_truth_status$VersionMatchesCFF[1],
+          "; cff_date_match=", source_truth_status$DateMatchesCFF[1],
+          "; roadmap=", source_truth_status$RoadmapAvailable[1],
+          "; roadmap_excluded=", source_truth_status$RoadmapExcludedFromTarball[1],
+          "; roadmap_authoritative=", source_truth_status$RoadmapAuthoritative[1],
+          "; development_only_current_claims=",
+          source_truth_status$DevelopmentOnlyCurrentClaims[1]
+        )
+      },
       paste0(
         check_status$StatusLine[1],
         "; status_present=", check_status$StatusPresent[1],
         "; check_version=", check_status$PackageVersion[1],
         "; target=", check_status$TargetVersion[1],
-        "; version_match=", check_status$VersionMatchesTarget[1]
+        "; version_match=", check_status$VersionMatchesTarget[1],
+        "; as_cran=", check_status$AsCRAN[1],
+        "; run_donttest=", check_status$RunDonttest[1],
+        "; manual_checked=", check_status$ManualChecked[1]
       ),
+      paste0(
+        "scope=", check_timing_scope,
+        "; component_elapsed_seconds=",
+        check_status$ComponentElapsedSeconds[1],
+        "; cran_workload_elapsed_seconds=",
+        check_status$CranWorkloadElapsedSeconds[1],
+        "; examples_seconds=", check_status$ExamplesSeconds[1],
+        "; donttest_seconds=", check_status$DonttestExamplesSeconds[1],
+        "; tests_seconds=", check_status$TestsSeconds[1],
+        "; vignette_rebuild_seconds=",
+        check_status$VignetteRebuildSeconds[1],
+        "; under_600_seconds=", check_status$UnderTenMinutes[1],
+        "; run_donttest=", check_status$RunDonttest[1]
+      ),
+      if (is.null(example_policy_status)) {
+        "example wrapper semantics not checked separately"
+      } else {
+        paste0(
+          "dontrun_targets=", example_policy_status$DontrunSourceTargets[1],
+          "; examples_if_targets=",
+          example_policy_status$ExamplesIfSourceTargets[1],
+          "; donttest_pages=", example_policy_status$DonttestRdPages[1],
+          "; detail=", example_policy_status$Detail[1]
+        )
+      },
       paste0(
         "latest_input=", freshness_status$LatestInput[1],
         "; check_fresh=", freshness_status$CheckLogFresh[1],
@@ -1017,7 +1420,16 @@ mfrmr_release_readiness_review <- function(pkg_dir = ".",
                                            tarball = NULL,
                                            checklist = NULL,
                                            target_version = NULL,
-                                           external_recovery_dir = NULL) {
+                                           external_recovery_dir = NULL,
+                                           check_timing_scope = NULL) {
+  if (is.null(check_timing_scope)) {
+    check_timing_scope <- mfrmr_release_readiness_check_timing_scope()
+  } else {
+    check_timing_scope <- match.arg(
+      check_timing_scope,
+      c("cran", "full_non_cran")
+    )
+  }
   paths <- mfrmr_release_readiness_paths(pkg_dir, target_version = target_version)
   target_version <- target_version %||% paths$target_version
   if (!is.null(check_log)) {
@@ -1050,6 +1462,10 @@ mfrmr_release_readiness_review <- function(pkg_dir = ".",
     tarball = paths$tarball
   )
   term_status <- mfrmr_release_readiness_term_status(paths$pkg_dir)
+  example_policy_status <- mfrmr_release_readiness_example_policy_status(
+    paths$pkg_dir
+  )
+  source_truth_status <- mfrmr_release_readiness_source_truth_status(paths)
   checklist_status <- mfrmr_release_readiness_checklist_status(paths$evidence_checklist)
   ci_workflow_status <- mfrmr_release_readiness_ci_workflow_status(paths$ci_workflow)
   gpcm_scope_status <- mfrmr_release_readiness_gpcm_scope_status(
@@ -1064,7 +1480,10 @@ mfrmr_release_readiness_review <- function(pkg_dir = ".",
     ci_workflow_status = ci_workflow_status,
     paths = paths,
     gpcm_scope_status = gpcm_scope_status,
-    freshness_status = freshness_status
+    freshness_status = freshness_status,
+    source_truth_status = source_truth_status,
+    example_policy_status = example_policy_status,
+    check_timing_scope = check_timing_scope
   )
   external_recovery_status <- mfrmr_release_readiness_external_recovery_status(
     paths = paths,
@@ -1079,10 +1498,13 @@ mfrmr_release_readiness_review <- function(pkg_dir = ".",
       stringsAsFactors = FALSE
     ),
     version_status = version_status,
+    source_truth_status = source_truth_status,
     check_status = check_status,
     freshness_status = freshness_status,
     ci_workflow_status = ci_workflow_status,
     terminology_status = term_status,
+    example_policy_status = example_policy_status,
+    check_timing_scope = check_timing_scope,
     checklist_status = checklist_status,
     gpcm_scope_status = gpcm_scope_status,
     external_recovery_status = external_recovery_status,
@@ -1101,8 +1523,11 @@ summary.mfrmr_release_readiness_review <- function(object, ...) {
     gate_summary = object$gate_summary,
     prompt_steps = object$prompt_steps,
     check_status = object$check_status,
+    source_truth_status = object$source_truth_status,
     freshness_status = object$freshness_status,
     ci_workflow_status = object$ci_workflow_status,
+    example_policy_status = object$example_policy_status,
+    check_timing_scope = object$check_timing_scope,
     gpcm_scope_status = object$gpcm_scope_status,
     external_recovery_status = object$external_recovery_status
   )

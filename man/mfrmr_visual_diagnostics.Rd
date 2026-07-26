@@ -386,7 +386,7 @@ For a longer, plot-first walkthrough, run
 }
 
 \examples{
-\dontrun{
+\donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(
   toy,

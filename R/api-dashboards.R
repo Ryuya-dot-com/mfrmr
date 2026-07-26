@@ -84,13 +84,15 @@
 #'   when `bias_results` was supplied; `NULL` otherwise
 #'
 #' @seealso [diagnose_mfrm()], [estimate_bias()], [plot_qc_dashboard()]
-#' @examplesIf interactive()
+#' @examples
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' toy <- toy[toy$Person %in% unique(toy$Person)[1:8], ]
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
 #' dash <- facet_quality_dashboard(fit, diagnostics = diag)
 #' summary(dash)
+#' }
 #' @export
 facet_quality_dashboard <- function(fit,
                                     diagnostics = NULL,
@@ -572,11 +574,13 @@ dashboard_draw_plot <- function(tbl,
 #'
 #' @return An object of class `summary.mfrm_facet_dashboard`.
 #' @seealso [facet_quality_dashboard()], [plot_facet_quality_dashboard()]
-#' @examplesIf interactive()
+#' @examples
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
 #' summary(facet_quality_dashboard(fit, diagnostics = diag))
+#' }
 #' @export
 summary.mfrm_facet_dashboard <- function(object, digits = 3, top_n = 10, ...) {
   if (!is.list(object) || is.null(object$detail)) {
@@ -669,12 +673,14 @@ print.summary.mfrm_facet_dashboard <- function(x, ...) {
 #'
 #' @return A plotting-data object of class `mfrm_plot_data`.
 #' @seealso [facet_quality_dashboard()], [summary.mfrm_facet_dashboard()]
-#' @examplesIf interactive()
+#' @examples
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
 #' p <- plot_facet_quality_dashboard(fit, diagnostics = diag, draw = FALSE)
 #' p$data$plot
+#' }
 #' @export
 plot_facet_quality_dashboard <- function(x,
                                          diagnostics = NULL,

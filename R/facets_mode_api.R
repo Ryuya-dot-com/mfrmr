@@ -1,4 +1,4 @@
-# Legacy-compatible workflow wrappers (defaults to public-spec: RSM + JML/JMLE path)
+# Legacy-compatible workflow wrappers (defaults to public-spec: RSM + JML path)
 
 normalize_facets_mode_data <- function(data) {
   if (!is.data.frame(data)) {
@@ -119,8 +119,8 @@ infer_facets_mode_mapping <- function(dat, person = NULL, facets = NULL, score =
 #'   prefer `fit_mfrm(..., method = "MML")` -- MML is the package-wide
 #'   recommended route because person parameters are integrated out
 #'   under an N(0, 1) prior and per-person posterior SEs are available.
-#' - `method = "JMLE"`: explicit JMLE label; internally equivalent to
-#'   JML route.
+#' - `method = "JMLE"`: backward-compatible input alias for the JML route;
+#'   fitted objects and generated outputs use the canonical `"JML"` label.
 #' - `method = "MML"`: marginal maximum likelihood route using
 #'   `quad_points`. Use `mml_engine = "em"` or `"hybrid"` only for
 #'   `RSM` / `PCM` fits when you want the staged MML alternatives.
@@ -162,7 +162,7 @@ infer_facets_mode_mapping <- function(dat, person = NULL, facets = NULL, score =
 #'   [mfrmr_workflow_methods], [mfrmr_compatibility_layer]
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' toy_small <- toy[toy$Person %in% unique(toy$Person)[1:12], , drop = FALSE]
 #'

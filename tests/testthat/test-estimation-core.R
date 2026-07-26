@@ -188,7 +188,7 @@ test_that("joint JML probability bundles reproduce standalone kernels", {
   eta <- c(-1.2, -0.4, 0.2, 0.9, 1.4)
   score_k <- c(0L, 1L, 2L, 3L, 1L)
   step_rsm <- c(0, -0.3, 0.2, 0.8)
-  rsm <- mfrmr:::mfrm_jmle_probability_bundle(
+  rsm <- mfrmr:::mfrm_jml_probability_bundle(
     eta, score_k, "RSM", step_rsm
   )
   expect_equal(rsm$probs, mfrmr:::category_prob_rsm(eta, step_rsm),
@@ -202,7 +202,7 @@ test_that("joint JML probability bundles reproduce standalone kernels", {
     0, -0.1, 0.4, 0.8
   ), nrow = 2, byrow = TRUE)
   criterion <- c(1L, 2L, 1L, 2L, 1L)
-  pcm <- mfrmr:::mfrm_jmle_probability_bundle(
+  pcm <- mfrmr:::mfrm_jml_probability_bundle(
     eta, score_k, "PCM", step_pcm, criterion_idx = criterion
   )
   expect_equal(
@@ -217,7 +217,7 @@ test_that("joint JML probability bundles reproduce standalone kernels", {
   )
 
   slopes <- c(0.8, 1.25)
-  gpcm <- mfrmr:::mfrm_jmle_probability_bundle(
+  gpcm <- mfrmr:::mfrm_jml_probability_bundle(
     eta, score_k, "GPCM", step_pcm,
     criterion_idx = criterion,
     slopes = slopes,
@@ -368,14 +368,22 @@ test_that("non-unit GPCM response bundle departs from PCM diagnostics", {
 test_that("JML and MML facet estimates are highly correlated", {
   d <- mfrmr:::sample_mfrm_data(seed = 42)
 
+  # Use the documented analysis ceiling for this deterministic comparison and
+  # require both numerical gates before comparing any estimates.
   fit_jml <- suppressWarnings(fit_mfrm(
     d, "Person", c("Rater", "Task", "Criterion"), "Score",
-    method = "JML", model = "RSM", maxit = 50, quad_points = 7
+    method = "JML", model = "RSM", maxit = 400, quad_points = 7
   ))
   fit_mml <- suppressWarnings(fit_mfrm(
     d, "Person", c("Rater", "Task", "Criterion"), "Score",
-    method = "MML", model = "RSM", maxit = 50, quad_points = 7
+    method = "MML", model = "RSM", maxit = 400, quad_points = 7
   ))
+
+  for (fit in list(fit_jml, fit_mml)) {
+    expect_true(isTRUE(fit$summary$Converged[1]))
+    expect_true(isTRUE(fit$summary$InferenceReady[1]))
+    expect_identical(as.character(fit$summary$ConvergenceSeverity[1]), "pass")
+  }
 
   for (facet in c("Rater", "Task", "Criterion")) {
     est_jml <- fit_jml$facets$others |>
@@ -387,8 +395,13 @@ test_that("JML and MML facet estimates are highly correlated", {
       dplyr::arrange(Level) |>
       dplyr::pull(Estimate)
     r <- cor(est_jml, est_mml)
+    centered_mae <- mean(abs(
+      (est_jml - mean(est_jml)) - (est_mml - mean(est_mml))
+    ))
     expect_gt(r, 0.9,
               label = paste("JML-MML correlation for", facet))
+    expect_lt(centered_mae, 0.2,
+              label = paste("JML-MML centered MAE for", facet))
   }
   expect_true(is.finite(fit_jml$summary$LogLik))
   expect_true(is.finite(fit_mml$summary$LogLik))

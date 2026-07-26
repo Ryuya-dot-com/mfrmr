@@ -127,7 +127,7 @@ only the measurement columns needed for estimation.
 Start with \code{summary(res)}. The most useful fields are:
 \itemize{
 \item \code{overview}: input mode, model, method, table count, and plot-route count
-\item \code{readiness}: separate upstream analysis and plot-interpretation gates
+\item \code{readiness}: separate analysis and plot-interpretation gates
 \item \code{triage}: first-screen signals ordered by unavailable/review/info/ok
 \item \code{status}: which sections were available, skipped, or unsupported
 \item \code{plot_map}: supported plot routes, availability, and interpretation status
@@ -158,7 +158,7 @@ native default discloses any omitted facet locations in its subtitle and
 \code{data$retention}; use \code{plot(res, top_n = Inf)} for a complete final map.
 Other routes include \code{plot(res, type = "wright")}, \code{"pathway"},
 \code{"fit_pathway"}, \code{"qc"}, \code{"category"}, \code{"anchors"}, \code{"response_time"},
-and \code{"tables"}. The Wright map is the required first fitted-scale artifact;
+and \code{"tables"}. The Wright map is the required first fitted-scale figure;
 \code{"fit_pathway"} is a follow-up with Infit or Outfit on the horizontal axis
 and measure on the vertical axis. \code{output = "html"} writes a
 lightweight temporary HTML file;
@@ -176,7 +176,7 @@ analysis archive is needed. Neither route deidentifies its contents.
 \item Call \code{res <- mfrm_results(fit)}.
 \item Read \code{summary(res, view = "brief")} and its \code{readiness} table, then create
 the required
-\code{plot(res, type = "wright", show_ci = TRUE, top_n = Inf)} artifact.
+\code{plot(res, type = "wright", show_ci = TRUE, top_n = Inf)} figure.
 \item Read \code{summary(res)$triage}, \code{summary(res)$status},
 \code{summary(res)$plot_map}, and \code{summary(res)$next_actions}.
 \item Call \code{report <- mfrm_report(res)} when a report-ready surface is needed.
@@ -196,7 +196,7 @@ interactive session.
 }
 
 \examples{
-\dontrun{
+\donttest{
 toy <- load_mfrmr_data("example_core")
 toy_small <- toy[toy$Person \%in\% unique(toy$Person)[1:8], , drop = FALSE]
 

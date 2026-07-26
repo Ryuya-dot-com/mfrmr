@@ -61,7 +61,7 @@
 #' documented core fields, not a bidirectional interchange format.
 #' @seealso [import_tam_fit()], [import_erm_fit()]
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' if (requireNamespace("mirt", quietly = TRUE)) {
 #'   response_matrix <- matrix(sample(0:3, 60, replace = TRUE), nrow = 20)
 #'   colnames(response_matrix) <- paste0("Item", seq_len(ncol(response_matrix)))
@@ -309,7 +309,7 @@ import_mirt_fit <- function(fit, model = c("RSM", "PCM", "GPCM"),
 #'   [import_mirt_fit()].
 #' @seealso [import_mirt_fit()], [import_erm_fit()]
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' if (requireNamespace("TAM", quietly = TRUE)) {
 #'   response_matrix <- matrix(sample(0:3, 60, replace = TRUE), nrow = 20)
 #'   colnames(response_matrix) <- paste0("Item", seq_len(ncol(response_matrix)))
@@ -642,7 +642,7 @@ import_tam_fit <- function(fit, model = c("RSM", "PCM", "GPCM"),
 #' @return An `mfrm_imported_fit` object.
 #' @seealso [import_mirt_fit()], [import_tam_fit()]
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' if (requireNamespace("eRm", quietly = TRUE)) {
 #'   response_matrix <- matrix(sample(0:3, 60, replace = TRUE), nrow = 20)
 #'   colnames(response_matrix) <- paste0("Item", seq_len(ncol(response_matrix)))

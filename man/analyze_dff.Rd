@@ -183,7 +183,7 @@ visible together.
 }
 
 \examples{
-\dontrun{
+\donttest{
 toy <- load_mfrmr_data("example_bias")
 
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",

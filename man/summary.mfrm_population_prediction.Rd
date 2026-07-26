@@ -37,7 +37,7 @@ a forecast-uncertainty result
 Summarize a population-level design forecast
 }
 \examples{
-\dontrun{
+\donttest{
 spec <- build_mfrm_sim_spec(
   n_person = 16,
   n_rater = 3,

@@ -249,7 +249,7 @@
 #' @concept linking
 #' @export
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' people <- unique(toy$Person)
 #' d1 <- toy[toy$Person %in% people[1:12], , drop = FALSE]
@@ -435,7 +435,7 @@ plot_anchor_drift <- function(x, type = c("drift", "chain", "heatmap", "forest")
 #' @seealso [run_qc_pipeline()], [plot_qc_dashboard()],
 #'   [build_visual_summaries()], [mfrmr_visual_diagnostics]
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' toy <- load_mfrmr_data("study1")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "JML", maxit = 30)

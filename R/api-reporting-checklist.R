@@ -107,7 +107,8 @@
 #' @seealso [build_apa_outputs()], [build_visual_summaries()],
 #'   [specifications_report()], [data_quality_report()],
 #'   [build_misfit_casebook()], [build_linking_review()]
-#' @examplesIf interactive()
+#' @examples
+#' \donttest{
 #' # Minimal checklist example using a JML fit and lightweight diagnostics.
 #' toy <- load_mfrmr_data("example_core")
 #' fit_quick <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
@@ -117,7 +118,6 @@
 #' chk_quick <- reporting_checklist(fit_quick, diagnostics = diag_quick)
 #' head(chk_quick$checklist[, c("Section", "Item", "DraftReady")])
 #'
-#' \dontrun{
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "MML", quad_points = 7, maxit = 30)
 #' diag <- diagnose_mfrm(fit, residual_pca = "both", diagnostic_mode = "both")
@@ -1081,10 +1081,10 @@ external_software_scope_table <- function(fit) {
   data.frame(
     Software = c("mfrmr native", "FACETS", "ConQuest", "SPSS"),
     Relationship = c(
-      "primary estimation/reporting surface",
-      "FACETS-style reporting and handoff surface",
+      "primary estimation and reporting workflow",
+      "FACETS-style reporting and file handoff",
       "scoped external-table comparison for latent-regression overlap",
-      "downstream table/report handoff only"
+      "table/report handoff only"
     ),
     CurrentSupport = c(
       "active",
@@ -1260,7 +1260,7 @@ visual_scope_table <- function(fit, checklist) {
 #' - `notes`: interpretation notes
 #' @seealso [reporting_checklist()], [summary.mfrm_apa_outputs]
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "MML", quad_points = 7, maxit = 30)

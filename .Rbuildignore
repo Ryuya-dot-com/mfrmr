@@ -17,6 +17,7 @@
 ^_pkgdown\.yml$
 ^pkgdown$
 ^CITATION\.cff$
+^ROADMAP\.md$
 ^CODE_OF_CONDUCT\.md$
 ^CONTRIBUTING\.md$
 ^SECURITY\.md$

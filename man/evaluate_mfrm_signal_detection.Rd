@@ -284,7 +284,7 @@ reporting}. Psychological Methods.
 }
 
 \examples{
-\dontrun{
+\donttest{
 sig_eval <- suppressWarnings(evaluate_mfrm_signal_detection(
   design = list(person = 8, rater = 2, criterion = 2, assignment = 1),
   reps = 1,

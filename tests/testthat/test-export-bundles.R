@@ -668,7 +668,7 @@ test_that("build_mfrm_manifest captures reproducibility metadata", {
     manifest$available_outputs$Available[manifest$available_outputs$Component == "bias_results"][1]
   )
   expect_equal(manifest$summary$Method[[1]], "JML")
-  expect_equal(manifest$summary$MethodUsed[[1]], "JMLE")
+  expect_equal(manifest$summary$MethodUsed[[1]], "JML")
   expect_equal(manifest$summary$Observations[[1]], nrow(export_core_fixture$fit$prep$data))
   expect_equal(manifest$summary$Persons[[1]], export_core_fixture$fit$config$n_person)
 })
@@ -2647,7 +2647,8 @@ test_that("build_mfrm_replay_script preserves keep_original and rating range", {
   expect_match(replay$script, "keep_original = TRUE", fixed = TRUE)
   expect_match(replay$script, "rating_min = 1", fixed = TRUE)
   expect_match(replay$script, "rating_max = 5", fixed = TRUE)
-  expect_match(replay$script, "# Model: RSM | Method: JML | ResolvedMethod: JMLE", fixed = TRUE)
+  expect_match(replay$script, "# Model: RSM | Method: JML", fixed = TRUE)
+  expect_false(grepl("ResolvedMethod", replay$script, fixed = TRUE))
   expect_match(replay$script, "# population_active = FALSE", fixed = TRUE)
   expect_match(replay$script, "# posterior_basis = legacy_mml", fixed = TRUE)
   expect_match(replay$script, 'method = "JML"', fixed = TRUE)

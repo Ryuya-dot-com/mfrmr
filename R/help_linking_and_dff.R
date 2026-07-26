@@ -90,7 +90,7 @@
 #'   `vignette("mfrmr-linking-and-dff", package = "mfrmr")`.
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' toy <- load_mfrmr_data("example_bias")
 #' fit <- fit_mfrm(
 #'   toy,

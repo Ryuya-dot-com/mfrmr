@@ -188,7 +188,7 @@
 #' @return An object of class `mfrm_sim_spec`.
 #' @seealso [extract_mfrm_sim_spec()], [simulate_mfrm_data()]
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' spec <- build_mfrm_sim_spec(
 #'   design = list(person = 8, rater = 2, criterion = 2, assignment = 1),
 #'   assignment = "rotating"
@@ -592,7 +592,8 @@ peer_review_build_design_skeleton <- function(n_submission,
 #'   a fixed peer-review design skeleton.
 #' @seealso [simulate_mfrm_data()], [build_mfrm_network_review()],
 #'   [build_mfrm_sim_spec()]
-#' @examplesIf interactive()
+#' @examples
+#' \donttest{
 #' peer_spec <- build_peer_review_sim_spec(
 #'   n_submission = 12,
 #'   n_criterion = 3,
@@ -600,6 +601,7 @@ peer_review_build_design_skeleton <- function(n_submission,
 #'   anchor_submissions = 2
 #' )
 #' peer_spec$peer_review$overview
+#' }
 #' @export
 build_peer_review_sim_spec <- function(n_submission = 50,
                                        n_criterion = 4,
@@ -812,7 +814,7 @@ build_peer_review_sim_spec <- function(n_submission = 50,
 #' @return An object of class `mfrm_sim_spec`.
 #' @seealso [build_mfrm_sim_spec()], [simulate_mfrm_data()]
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' toy <- simulate_mfrm_data(
 #'   n_person = 8,
 #'   n_rater = 3,

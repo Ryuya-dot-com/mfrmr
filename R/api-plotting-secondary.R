@@ -51,7 +51,8 @@
 #'   used.
 #' @seealso [plot_marginal_pairwise()], [plot_qc_dashboard()],
 #'   [mfrmr_visual_diagnostics]
-#' @examplesIf interactive()
+#' @examples
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                  method = "JML", maxit = 30)
@@ -61,6 +62,7 @@
 #' #   acceptable regime; values >= 0.3 (Yen 1984 / Marais 2013
 #' #   guideline) flag pairs that may share dependence beyond the
 #' #   main-effects MFRM. Inspect those cells in `diag$obs`.
+#' }
 #' @export
 plot_local_dependence_heatmap <- function(fit,
                                           diagnostics = NULL,
@@ -215,7 +217,8 @@ plot_local_dependence_heatmap <- function(fit,
 #' @return An `mfrm_plot_data` whose `data` slot bundles a tidy
 #'   `Facet`, `Metric`, `Value` data frame.
 #' @seealso [diagnose_mfrm()], [mfrmr_visual_diagnostics]
-#' @examplesIf interactive()
+#' @examples
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                  method = "JML", maxit = 30)
@@ -227,6 +230,7 @@ plot_local_dependence_heatmap <- function(fit,
 #' # - Non-Person rows (Rater / Criterion) report the same index but
 #' #   should be read as "are facet elements distinguishable?"; values
 #' #   close to 1 mean facet means differ reliably from each other.
+#' }
 #' @export
 plot_reliability_snapshot <- function(fit,
                                       diagnostics = NULL,
@@ -350,7 +354,8 @@ plot_reliability_snapshot <- function(fit,
 #'   `obs` table.
 #' @seealso [plot_guttman_scalogram()], [plot_unexpected()],
 #'   [mfrmr_visual_diagnostics]
-#' @examplesIf interactive()
+#' @examples
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                  method = "JML", maxit = 30)
@@ -361,6 +366,7 @@ plot_reliability_snapshot <- function(fit,
 #' #   not calibrated 5% or 1% tests (Wright & Linacre 1994). Repeated
 #' #   high-magnitude cells at one facet level warrant pattern review but
 #' #   do not by themselves establish scoring drift.
+#' }
 #' @export
 plot_residual_matrix <- function(fit,
                                  diagnostics = NULL,
@@ -491,7 +497,8 @@ plot_residual_matrix <- function(fit,
 #'   `RawCI_Upper`, `ShrunkCI_Lower`, `ShrunkCI_Upper`, and `CI_Level`.
 #' @seealso [apply_empirical_bayes_shrinkage()],
 #'   [mfrmr_visual_diagnostics]
-#' @examplesIf interactive()
+#' @examples
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                  method = "JML", maxit = 30)
@@ -503,6 +510,7 @@ plot_residual_matrix <- function(fit,
 #' #   prior pulled the estimate strongly; this is most pronounced for
 #' #   small-N levels. ShrinkageFactor near 1 means most of the
 #' #   movement was driven by the prior rather than the data.
+#' }
 #' @export
 plot_shrinkage_funnel <- function(fit,
                                   facet = NULL,

@@ -37,7 +37,8 @@ round_numeric_frame <- function(df, digits = 3L) {
 #' @seealso [run_mfrm_facets()], [summary.mfrm_fit()], [mfrmr_workflow_methods],
 #'   `summary()`
 #'
-#' @examplesIf interactive()
+#' @examples
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' toy_small <- toy[toy$Person %in% unique(toy$Person)[1:8], , drop = FALSE]
 #' out <- run_mfrm_facets(
@@ -50,6 +51,7 @@ round_numeric_frame <- function(df, digits = 3L) {
 #' s <- summary(out)
 #' s$overview[, c("Model", "Method", "Converged")]
 #' s$mapping
+#' }
 #' @export
 summary.mfrm_facets_run <- function(object, digits = 3, top_n = 10, ...) {
   if (!inherits(object, "mfrm_facets_run")) {
@@ -147,7 +149,7 @@ print.mfrm_facets_run <- function(x, ...) {
 #'   [mfrmr_visual_diagnostics], [mfrmr_workflow_methods]
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' toy_small <- toy[toy$Person %in% unique(toy$Person)[1:12], , drop = FALSE]
 #' out <- run_mfrm_facets(

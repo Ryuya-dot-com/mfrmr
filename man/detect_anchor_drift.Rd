@@ -137,7 +137,7 @@ investigated for substantive causes (e.g., rater re-training).
 }
 
 \examples{
-\dontrun{
+\donttest{
 # Deliberately linked teaching waves: common labels below represent the
 # same rater and criterion identities by construction.
 toy <- load_mfrmr_data("example_core")

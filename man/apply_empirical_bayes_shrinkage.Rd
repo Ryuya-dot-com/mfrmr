@@ -84,7 +84,7 @@ sentence automatically when \code{fit$config$facet_shrinkage} is set.
 }
 
 \examples{
-\dontshow{if (interactive()) withAutoprint(\{ # examplesIf}
+\donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "JML", maxit = 30)
@@ -104,7 +104,7 @@ head(fit_eb$facets$others[, c("Facet", "Level", "Estimate",
                                "ShrunkEstimate", "ShrinkageFactor")])
 # Look for: rows where `ShrinkageFactor` is large (close to 1) had
 #   their estimates pulled most strongly toward the facet mean (0).
-\dontshow{\}) # examplesIf}
+}
 }
 \references{
 Efron, B., & Morris, C. (1973). Combining possibly related

@@ -1,5 +1,31 @@
 # mfrmr 0.2.2
 
+* Standardized the package's canonical joint-maximum-likelihood label as
+  `"JML"` across fitted objects, engine state, manifests, and replay scripts.
+  `method = "JMLE"` remains accepted only as a backward-compatible input alias
+  and now resolves immediately to `"JML"`.
+
+* Revised first-contact guides and result guidance to use reader-facing
+  wording while retaining documented API and status vocabulary.
+
+* Clarified that `maxit` is a prespecified computational ceiling rather than a
+  result-selection control. Iteration-limited fits now direct users to keep the
+  specification fixed, follow a prespecified ceiling sequence, and withhold
+  interpretation until the numerical-readiness gate passes.
+
+* Replaced blanket `\dontrun{}` and `@examplesIf interactive()` guards with
+  checkable examples or `\donttest{}` blocks. Only the two workflows that need
+  separately generated ConQuest files remain `\dontrun{}`, and only the local
+  Shiny viewer remains interactive-only. The release-readiness review now
+  enforces that allowlist and flags CRAN-side package workload above ten
+  minutes, based on ordinary examples, `donttest` examples, tests, and vignette
+  rebuilding. Other top-level check components remain visible as diagnostics
+  but do not inflate that package-controlled threshold.
+
+- Added one authoritative repository roadmap and aligned release metadata and
+  validation notes with the accepted 0.2.2 boundary. External numerical
+  comparison and calibrated MML joint-stationarity gates are explicitly 0.2.3
+  work rather than retroactive 0.2.2 requirements.
 - Corrected bounded-GPCM score-side delta-method uncertainty to use the
   expected-score derivative `ScoreSlope * Var`. `ScoreSideLogitSE` remains the
   logit-side component SE, while `ScoreSideSE` and its interval columns now
@@ -176,7 +202,7 @@
   and avoids presenting a generic facet as a rater.
 - Latent regression rejects a non-person-centered parameterization that would
   confound the population intercept with the measurement scale.
-- CRAN checks now exercise the complete public first-contact route once and
+- CRAN checks now exercise the complete introductory workflow once and
   use the exact README/default MML controls rather than a reduced quadrature
   setting. They retain lightweight compatibility/backend/artifact contracts.
   Repeated

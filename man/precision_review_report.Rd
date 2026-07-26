@@ -28,8 +28,8 @@ Build a precision review report
 This helper summarizes how \code{mfrmr} derived SE, CI, and reliability values
 for the current run. It also includes a source-grounded fit/separation
 basis table so users can keep mean-square fit, ZSTD standardization,
-Rasch/FACETS-style separation, and package QC thresholds in separate
-reporting lanes.
+Rasch/FACETS-style separation, and package QC thresholds in distinct
+reporting categories.
 }
 \section{What this review means}{
 
@@ -80,13 +80,13 @@ language or should remain in exploratory/screening mode.
 }
 
 \examples{
-\dontshow{if (interactive()) withAutoprint(\{ # examplesIf}
+\donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 out <- precision_review_report(fit, diagnostics = diag)
 summary(out)
-\dontshow{\}) # examplesIf}
+}
 }
 \seealso{
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=facet_statistics_report]{facet_statistics_report()}}, \code{\link[=reporting_checklist]{reporting_checklist()}}

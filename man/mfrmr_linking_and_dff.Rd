@@ -115,7 +115,7 @@ fit each wave separately -> \code{\link[=detect_anchor_drift]{detect_anchor_drif
 }
 
 \examples{
-\dontrun{
+\donttest{
 toy <- load_mfrmr_data("example_bias")
 fit <- fit_mfrm(
   toy,

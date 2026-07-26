@@ -108,7 +108,7 @@ before comparing legacy and strict outputs.
 }
 
 \examples{
-\dontshow{if (interactive()) withAutoprint(\{ # examplesIf}
+\donttest{
 toy <- load_mfrmr_data("example_core")
 toy <- toy[toy$Person \%in\% unique(toy$Person)[1:4], ]
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
@@ -124,7 +124,7 @@ s$top_fit
 s$facets_chisq
 # Read the fixed-effect chi-square as a heterogeneity screen in the context
 # of the design and intended score use.
-\dontshow{\}) # examplesIf}
+}
 }
 \seealso{
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=summary.mfrm_fit]{summary.mfrm_fit()}}

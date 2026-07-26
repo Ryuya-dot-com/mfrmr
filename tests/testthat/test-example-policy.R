@@ -34,9 +34,33 @@ example_policy_roxygen_examples <- function(pkg_root) {
       active <- example_policy_active_lines(raw)
       text <- paste(raw, collapse = "\n")
       active_text <- paste(active, collapse = "\n")
+      remaining <- lines[seq.int(start + 1L, length(lines))]
+      assignment <- grep(
+        "^[.A-Za-z][A-Za-z0-9._]*\\s*<-\\s*function\\s*\\(",
+        remaining,
+        perl = TRUE
+      )
+      target <- if (length(assignment) == 0L) {
+        NA_character_
+      } else {
+        sub(
+          "^([.A-Za-z][A-Za-z0-9._]*)\\s*<-.*$",
+          "\\1",
+          remaining[[assignment[[1]]]],
+          perl = TRUE
+        )
+      }
       rows[[length(rows) + 1L]] <- data.frame(
         file = sub(paste0("^", gsub("([\\^$.|?*+(){}\\[\\]\\\\])", "\\\\\\1", pkg_root), "/?"), "", path),
         line = start,
+        target = target,
+        outer_donttest = length(raw) > 0L &&
+          identical(trimws(raw[[1]]), "\\donttest{"),
+        donttest_open_count = sum(grepl(
+          "^\\s*\\\\donttest\\s*\\{",
+          raw,
+          perl = TRUE
+        )),
         active_fit_calls = sum(grepl("fit_mfrm\\s*\\(", active, perl = TRUE)),
         has_mml = grepl('method\\s*=\\s*["\']MML["\']', text, perl = TRUE),
         active_has_mml = grepl('method\\s*=\\s*["\']MML["\']', active_text, perl = TRUE),
@@ -82,6 +106,99 @@ example_policy_hits <- function(rows) {
   if (nrow(rows) == 0L) return(character(0))
   paste0(rows$file, ":", rows$line)
 }
+
+example_policy_rd_pages_with <- function(pkg_root, pattern) {
+  files <- list.files(
+    file.path(pkg_root, "man"),
+    pattern = "\\.Rd$",
+    full.names = TRUE
+  )
+  hits <- vapply(files, function(path) {
+    any(grepl(pattern, readLines(path, warn = FALSE), fixed = TRUE))
+  }, logical(1))
+  sort(basename(files[hits]))
+}
+
+test_that("Rd execution guards have a narrow semantic allowlist", {
+  pkg_root <- example_policy_source_root()
+  testthat::skip_if(is.na(pkg_root), "source files are not available")
+
+  expect_identical(
+    example_policy_rd_pages_with(pkg_root, "\\dontrun{"),
+    sort(c(
+      "normalize_conquest_overlap_exports.Rd",
+      "review_conquest_overlap.Rd"
+    )),
+    info = paste(
+      "dontrun is reserved for examples that require separately generated",
+      "external ConQuest output. Executable lengthy examples belong in donttest."
+    )
+  )
+  expect_identical(
+    example_policy_rd_pages_with(pkg_root, "# examplesIf"),
+    "launch_mfrmr_viewer.Rd",
+    info = paste(
+      "examplesIf interactive() is reserved for the local Shiny viewer;",
+      "ordinary reports, tables, exports, and plots must remain checkable."
+    )
+  )
+})
+
+test_that("former interactive demonstrations run in the donttest pass", {
+  pkg_root <- example_policy_source_root()
+  testthat::skip_if(is.na(pkg_root), "source files are not available")
+
+  expected <- sort(c(
+    "dif_interaction_table", "plot_dif_heatmap", "facet_quality_dashboard",
+    "summary.mfrm_facet_dashboard", "plot_facet_quality_dashboard",
+    "diagnose_mfrm", "build_mfrm_manifest", "build_mfrm_replay_script",
+    "export_mfrm_bundle", "analyze_facet_equivalence",
+    "plot_facet_equivalence", "summary.mfrm_diagnostics",
+    "summary.mfrm_bias", "compute_person_fit_indices", "plot_person_fit",
+    "plot_rater_severity_profile", "plot_dif_summary",
+    "plot_apa_figure_one", "plot_guttman_scalogram", "plot_residual_qq",
+    "plot_rater_agreement_heatmap", "plot_local_dependence_heatmap",
+    "plot_reliability_snapshot", "plot_residual_matrix",
+    "plot_shrinkage_funnel", "plot_unexpected", "plot_fair_average",
+    "plot_displacement", "plot_facets_chisq", "plot_qc_dashboard",
+    "plot_bubble", "export_mfrm", "q3_statistic", "reporting_checklist",
+    "subset_connectivity_report", "build_peer_review_design_review",
+    "facet_statistics_report", "precision_review_report",
+    "category_structure_report", "category_curves_report",
+    "bias_interaction_report", "bias_iteration_report",
+    "bias_pairwise_report", "plot_bias_interaction", "build_apa_outputs",
+    "print.mfrm_apa_text", "summary.mfrm_apa_outputs", "summary.apa_table",
+    "facets_fit_review", "dif_report", "apply_empirical_bayes_shrinkage",
+    "shrinkage_report", "build_peer_review_sim_spec",
+    "interrater_agreement_table", "facets_chisq_table",
+    "unexpected_response_table", "displacement_table",
+    "measurable_summary_table", "rating_scale_table", "bias_count_table",
+    "unexpected_after_bias_table", "facets_output_file_bundle",
+    "plot_residual_pca", "estimate_bias", "summary.mfrm_facets_run"
+  ))
+  examples <- example_policy_roxygen_examples(pkg_root)
+  observed <- sort(unique(examples$target[examples$outer_donttest]))
+  missing <- setdiff(expected, observed)
+  nested <- examples[
+    examples$target %in% expected & examples$donttest_open_count != 1L,
+    c("file", "line", "target", "donttest_open_count"),
+    drop = FALSE
+  ]
+
+  expect_identical(
+    missing,
+    character(0),
+    info = paste(
+      "These noninteractive but comparatively expensive examples must remain",
+      "executable in the explicit --run-donttest pass."
+    )
+  )
+  expect_equal(
+    nrow(nested),
+    0L,
+    info = "Former interactive examples should have one outer donttest guard."
+  )
+})
 
 test_that("CRAN testthat surface is an explicit representative whitelist", {
   pkg_root <- example_policy_source_root()

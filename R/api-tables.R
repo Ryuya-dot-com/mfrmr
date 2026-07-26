@@ -74,7 +74,8 @@
 #'
 #' @seealso [diagnose_mfrm()], [facets_chisq_table()], [plot_interrater_agreement()],
 #'   [mfrmr_visual_diagnostics]
-#' @examplesIf interactive()
+#' @examples
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' ir <- interrater_agreement_table(fit, rater_facet = "Rater")
@@ -86,6 +87,7 @@
 #' head(ir$pairs)
 #' p_ir <- plot(ir, draw = FALSE)
 #' p_ir$data$plot
+#' }
 #' @export
 interrater_agreement_table <- function(fit,
                                        diagnostics = NULL,
@@ -242,13 +244,15 @@ interrater_agreement_table <- function(fit,
 #' - `thresholds`: applied p-value thresholds
 #'
 #' @seealso [diagnose_mfrm()], [interrater_agreement_table()], [plot_facets_chisq()]
-#' @examplesIf interactive()
+#' @examples
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' chi <- facets_chisq_table(fit)
 #' summary(chi)
 #' p_chi <- plot(chi, draw = FALSE)
 #' p_chi$data$plot
+#' }
 #' @export
 facets_chisq_table <- function(fit,
                                diagnostics = NULL,
@@ -380,7 +384,8 @@ facets_chisq_table <- function(fit,
 #'
 #' @seealso [diagnose_mfrm()], [displacement_table()], [fair_average_table()],
 #'   [mfrmr_visual_diagnostics]
-#' @examplesIf interactive()
+#' @examples
+#' \donttest{
 #' toy_full <- load_mfrmr_data("example_core")
 #' toy_people <- unique(toy_full$Person)[1:12]
 #' toy <- toy_full[toy_full$Person %in% toy_people, , drop = FALSE]
@@ -391,6 +396,7 @@ facets_chisq_table <- function(fit,
 #' summary(t4)
 #' p_t4 <- plot(t4, draw = FALSE)
 #' p_t4$data$plot
+#' }
 #' @export
 unexpected_response_table <- function(fit,
                                       diagnostics = NULL,
@@ -558,7 +564,7 @@ unexpected_response_table <- function(fit,
 #'
 #' @seealso [diagnose_mfrm()], [unexpected_response_table()], [displacement_table()]
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' t12 <- fair_average_table(fit, udecimals = 2)
@@ -714,13 +720,15 @@ fair_average_table <- function(fit,
 #' - `thresholds`: applied thresholds
 #'
 #' @seealso [diagnose_mfrm()], [unexpected_response_table()], [fair_average_table()]
-#' @examplesIf interactive()
+#' @examples
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' disp <- displacement_table(fit, anchored_only = FALSE)
 #' summary(disp)
 #' p_disp <- plot(disp, draw = FALSE)
 #' p_disp$data$plot
+#' }
 #' @export
 displacement_table <- function(fit,
                                diagnostics = NULL,
@@ -843,13 +851,15 @@ displacement_table <- function(fit,
 #'
 #' @seealso [diagnose_mfrm()], [rating_scale_table()], [describe_mfrm_data()],
 #'   [mfrmr_visual_diagnostics]
-#' @examplesIf interactive()
+#' @examples
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' t5 <- measurable_summary_table(fit)
 #' summary(t5)
 #' p_t5 <- plot(t5, draw = FALSE)
 #' p_t5$data$plot
+#' }
 #' @export
 measurable_summary_table <- function(fit, diagnostics = NULL) {
   if (!inherits(fit, "mfrm_fit")) {
@@ -1006,7 +1016,8 @@ measurable_summary_table <- function(fit, diagnostics = NULL) {
 #'
 #' @seealso [diagnose_mfrm()], [measurable_summary_table()], [plot.mfrm_fit()],
 #'   [mfrmr_visual_diagnostics]
-#' @examplesIf interactive()
+#' @examples
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' t8 <- rating_scale_table(fit)
@@ -1015,6 +1026,7 @@ measurable_summary_table <- function(fit, diagnostics = NULL) {
 #' p_t8 <- plot(t8, draw = FALSE)
 #' p_t8$data$plot
 #'
+#' }
 #' @section References:
 #' - Andrich, D. (1978). *A rating formulation for ordered response
 #'   categories*. Psychometrika, 43(4), 561-573.
@@ -1224,7 +1236,8 @@ rating_scale_table <- function(fit,
 #'
 #' @seealso [estimate_bias()], [unexpected_after_bias_table()], [build_fixed_reports()],
 #'   [mfrmr_visual_diagnostics]
-#' @examplesIf interactive()
+#' @examples
+#' \donttest{
 #' toy <- load_mfrmr_data("example_bias")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
@@ -1243,6 +1256,7 @@ rating_scale_table <- function(fit,
 #'     palette = c(count = "#2b8cbe", low = "#cb181d"),
 #'     label_angle = 45
 #'   )
+#' }
 #' }
 #' @export
 bias_count_table <- function(bias_results,
@@ -1429,7 +1443,8 @@ bias_count_table <- function(bias_results,
 #'
 #' @seealso [estimate_bias()], [unexpected_response_table()], [bias_count_table()],
 #'   [mfrmr_visual_diagnostics]
-#' @examplesIf interactive()
+#' @examples
+#' \donttest{
 #' toy <- load_mfrmr_data("example_bias")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
@@ -1438,6 +1453,7 @@ bias_count_table <- function(bias_results,
 #' summary(t10)
 #' p_t10 <- plot(t10, draw = FALSE)
 #' p_t10$data$plot
+#' }
 #' @export
 unexpected_after_bias_table <- function(fit,
                                         bias_results,
@@ -1722,7 +1738,7 @@ as_mfrm_bundle <- function(x, class_name) {
 #' \describe{
 #'   \item{Engine}{Estimation engine identifier (always `"mfrmr"`).}
 #'   \item{Model}{`"RSM"` or `"PCM"`.}
-#'   \item{Method}{`"JMLE"` or `"MML"`.}
+#'   \item{Method}{`"JML"` or `"MML"`.}
 #' }
 #'
 #' The `facet_labels` data.frame contains:
@@ -4770,13 +4786,15 @@ build_cumulative_boundary_table <- function(cumulative, categories_chr) {
 #' @seealso [category_curves_report()], [diagnose_mfrm()], [unexpected_response_table()],
 #'   [export_mfrm_bundle()], [mfrmr_reports_and_tables],
 #'   [mfrmr_compatibility_layer]
-#' @examplesIf interactive()
+#' @examples
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' out <- facets_output_file_bundle(fit, diagnostics = diagnose_mfrm(fit, residual_pca = "none"))
 #' summary(out)
 #' p_out <- plot(out, draw = FALSE)
 #' p_out$data$plot
+#' }
 #' @export
 facets_output_file_bundle <- function(fit,
                                       diagnostics = NULL,
@@ -5164,7 +5182,7 @@ mfrm_default_node_path <- function(path, format) {
 #' @seealso [diagnose_mfrm()], [facets_output_file_bundle()],
 #'   [write_mfrm_subset_file()]
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "JML", maxit = 30)
@@ -5251,7 +5269,7 @@ write_mfrm_residual_file <- function(fit,
 #' @seealso [diagnose_mfrm()], [subset_connectivity_report()],
 #'   [write_mfrm_residual_file()]
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "JML", maxit = 30)
@@ -5854,7 +5872,7 @@ infer_facet_names <- function(diagnostics) {
 #'
 #' @seealso [diagnose_mfrm()], [plot_residual_pca()], [mfrmr_visual_diagnostics]
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' diag <- diagnose_mfrm(fit, residual_pca = "both")
@@ -6149,7 +6167,8 @@ extract_loading_table <- function(pca_bundle, component = 1L, top_n = 20L) {
 #' - `data`: underlying table used for plotting
 #'
 #' @seealso [analyze_residual_pca()], [diagnose_mfrm()]
-#' @examplesIf interactive()
+#' @examples
+#' \donttest{
 #' toy_full <- load_mfrmr_data("example_core")
 #' toy_people <- unique(toy_full$Person)[1:24]
 #' toy <- toy_full[match(toy_full$Person, toy_people, nomatch = 0L) > 0L, , drop = FALSE]
@@ -6160,17 +6179,16 @@ extract_loading_table <- function(pca_bundle, component = 1L, top_n = 20L) {
 #' pca <- analyze_residual_pca(diag, mode = "overall")
 #' plt <- plot_residual_pca(pca, mode = "overall", plot_type = "scree", draw = FALSE)
 #' head(plt$data)
-#' \dontrun{
 #' pca_pa <- analyze_residual_pca(diag, mode = "overall", parallel = TRUE, parallel_reps = 10)
 #' pa <- plot_residual_pca(pca_pa, mode = "overall", plot_type = "parallel_scree", draw = FALSE)
 #' head(pa$data)
-#' }
 #' plt_load <- plot_residual_pca(
 #'   pca, mode = "overall", plot_type = "loadings", component = 1, draw = FALSE
 #' )
 #' head(plt_load$data)
 #' if (interactive()) {
 #'   plot_residual_pca(pca, mode = "overall", plot_type = "scree", preset = "publication")
+#' }
 #' }
 #' @export
 plot_residual_pca <- function(x,
@@ -6556,7 +6574,8 @@ plot_residual_pca <- function(x,
 #'   parameters; empty when every cell converged cleanly
 #'
 #' @seealso [build_fixed_reports()], [build_apa_outputs()]
-#' @examplesIf interactive()
+#' @examples
+#' \donttest{
 #' toy <- load_mfrmr_data("example_bias")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
@@ -6575,6 +6594,7 @@ plot_residual_pca <- function(x,
 #' p_bias <- plot_bias_interaction(bias, draw = FALSE)
 #' p_bias$data$plot
 #'
+#' }
 #' @section References:
 #' - Linacre, J. M. (1989). *Many-Facet Rasch Measurement*. MESA Press.
 #'   (FACETS Table 13 corresponds to the bias / interaction
@@ -6731,7 +6751,7 @@ estimate_bias <- function(fit,
 #' @seealso [estimate_bias()], [build_apa_outputs()], [bias_interaction_report()],
 #'   [mfrmr_reports_and_tables], [mfrmr_compatibility_layer]
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' toy <- load_mfrmr_data("example_bias")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")

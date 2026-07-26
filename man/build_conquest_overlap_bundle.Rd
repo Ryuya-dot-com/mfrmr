@@ -127,7 +127,7 @@ and convergence state
 }
 
 \examples{
-\dontrun{
+\donttest{
 bundle <- build_conquest_overlap_bundle(quad_points = 3, maxit = 30)
 bundle$summary[, c("Case", "Facet", "Covariate", "Persons", "Items")]
 summary(bundle)$mfrmr_fit_status

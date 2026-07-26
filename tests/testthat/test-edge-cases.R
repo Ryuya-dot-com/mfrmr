@@ -81,6 +81,17 @@ test_that("fit_mfrm reports a deterministic iteration-limit failure", {
   )
   expect_false(fit$summary$InferenceReady[[1]])
   expect_false(fit$opt$optimizer_polish$Triggered)
+  fit_summary <- summary(fit)
+  expect_true(any(grepl(
+    "Do not interpret or select estimates from this iteration-limited fit.",
+    fit_summary$next_actions,
+    fixed = TRUE
+  )))
+  expect_true(any(grepl(
+    "prespecified `maxit` sequence",
+    fit_summary$next_actions,
+    fixed = TRUE
+  )))
 })
 
 # ---- PCM model path ----

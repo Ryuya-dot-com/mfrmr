@@ -136,7 +136,8 @@
 #'   345-359. \doi{10.1111/jedm.12432}
 #'
 #' @seealso [plot_local_dependence_heatmap()], [diagnose_mfrm()]
-#' @examplesIf interactive()
+#' @examples
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "JML", maxit = 30)
@@ -146,6 +147,7 @@
 #' #   0.20/0.30 absolute rules are uncalibrated heuristics for this Q3-style
 #' #   index, not standalone local-independence tests.
 #' head(q3$pairs)
+#' }
 #' @export
 q3_statistic <- function(fit,
                          diagnostics = NULL,

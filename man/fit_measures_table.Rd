@@ -114,7 +114,7 @@ the same table can be reproduced under stricter or more permissive review
 rules.
 }
 \examples{
-\dontrun{
+\donttest{
 toy <- load_mfrmr_data("example_operational")
 fit <- fit_mfrm(
   toy, "Person", c("Rater", "Criterion"), "Score",

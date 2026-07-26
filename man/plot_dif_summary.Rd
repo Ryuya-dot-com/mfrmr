@@ -61,7 +61,7 @@ preset's neutral colour.
 }
 
 \examples{
-\dontshow{if (interactive()) withAutoprint(\{ # examplesIf}
+\donttest{
 toy <- load_mfrmr_data("example_bias")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "JML", maxit = 30)
@@ -71,7 +71,7 @@ dff <- analyze_dff(fit, diagnostics = diag,
 unique(dff$dif_table$ClassificationSystem)
 p <- plot_dif_summary(dff, draw = FALSE)
 head(p$data$data)
-\dontshow{\}) # examplesIf}
+}
 }
 \seealso{
 \code{\link[=analyze_dff]{analyze_dff()}}, \code{\link[=analyze_dif]{analyze_dif()}}, \code{\link[=plot_dif_heatmap]{plot_dif_heatmap()}}.

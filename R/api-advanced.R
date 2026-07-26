@@ -213,7 +213,7 @@ resolve_dff_refit_controls <- function(fit) {
   control <- fit$config$estimation_control %||% list()
   list(
     model = fit$config$model %||% fit$summary$Model[1] %||% "RSM",
-    method = fit$config$method %||% fit$summary$Method[1] %||% "JMLE",
+    method = fit$config$method %||% fit$summary$Method[1] %||% "JML",
     step_facet = fit$config$step_facet %||% NULL,
     weight = fit$config$weight_col %||% NULL,
     noncenter_facet = fit$config$noncenter_facet %||% "Person",
@@ -506,7 +506,7 @@ extract_dff_group_estimates <- function(sub_fit, sub_diag, facet, fallback_level
 #'   [dif_interaction_table()], [plot_dif_heatmap()], [dif_report()],
 #'   [subset_connectivity_report()], [mfrmr_linking_and_dff]
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' toy <- load_mfrmr_data("example_bias")
 #'
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
@@ -1591,7 +1591,8 @@ print.mfrm_dff <- function(x, ...) {
 #'
 #' @seealso [analyze_dff()], [analyze_dif()], [plot_dif_heatmap()], [dif_report()],
 #'   [estimate_bias()]
-#' @examplesIf interactive()
+#' @examples
+#' \donttest{
 #' toy <- load_mfrmr_data("example_bias")
 #'
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
@@ -1601,6 +1602,7 @@ print.mfrm_dff <- function(x, ...) {
 #'                              group = "Group", data = toy, min_obs = 2)
 #' int$summary
 #' head(int$table[, c("Level", "GroupValue", "ObsExpAvg", "flag_bias")])
+#' }
 #' @export
 dif_interaction_table <- function(fit, diagnostics, facet, group, data = NULL,
                                   min_obs = 10, p_adjust = "holm",
@@ -1865,7 +1867,8 @@ print.mfrm_dif_interaction <- function(x, ...) {
 #'   bare matrix; consume `$data$matrix` to keep code forward-compatible.
 #'
 #' @seealso [dif_interaction_table()], [analyze_dff()], [analyze_dif()], [dif_report()]
-#' @examplesIf interactive()
+#' @examples
+#' \donttest{
 #' toy <- load_mfrmr_data("example_bias")
 #'
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
@@ -1882,6 +1885,7 @@ print.mfrm_dif_interaction <- function(x, ...) {
 #' #   hypothesis test. With `metric = "contrast"` the layout switches
 #' #   to Level x GroupPair and reads as the pairwise differential-
 #' #   functioning contrast (use `analyze_dff()`).
+#' }
 #' @export
 plot_dif_heatmap <- function(x, metric = c("obs_exp", "t", "contrast"),
                              draw = TRUE,
@@ -3451,7 +3455,7 @@ compute_equating_offset <- function(diffs, se_from = NULL, se_to = NULL,
 #'   [diagnose_mfrm()], [build_equating_chain()], [mfrmr_linking_and_dff]
 #' @export
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # Deliberately linked teaching waves: both retain the same rater and
 #' # criterion identities from one synthetic calibration design.
 #' toy <- load_mfrmr_data("example_core")
@@ -3671,7 +3675,7 @@ print.summary.mfrm_anchored_fit <- function(x, ...) {
 #'   [make_anchor_table()], [plot_anchor_drift()], [mfrmr_linking_and_dff]
 #' @export
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # Deliberately linked teaching waves: common labels below represent the
 #' # same rater and criterion identities by construction.
 #' toy <- load_mfrmr_data("example_core")
@@ -4051,7 +4055,7 @@ print.summary.mfrm_anchor_drift <- function(x, ...) {
 #'   [make_anchor_table()], [plot_anchor_drift()]
 #' @export
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' people <- unique(toy$Person)
 #' d1 <- toy[toy$Person %in% people[1:12], , drop = FALSE]
@@ -4864,7 +4868,7 @@ print.summary.mfrm_equating_chain <- function(x, ...) {
 #' @seealso [review_mfrm_anchors()], [detect_anchor_drift()],
 #'   [build_equating_chain()], [plot_anchor_drift()], [mfrmr_linking_and_dff]
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # Deliberately linked teaching waves: common labels below represent the
 #' # same rater and criterion identities by construction.
 #' toy <- load_mfrmr_data("example_core")
@@ -6114,7 +6118,7 @@ print.summary.mfrm_linking_review <- function(x, ...) {
 #'   [displacement_table()], [plot_unexpected()], [plot_displacement()],
 #'   [plot_marginal_fit()], [plot_marginal_pairwise()]
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "MML", model = "RSM", quad_points = 5)
@@ -6657,7 +6661,7 @@ print.summary.mfrm_misfit_casebook <- function(x, ...) {
 #' @return An object of class `mfrm_weighting_review`.
 #' @seealso [compare_mfrm()], [compute_information()], [gpcm_capability_matrix()]
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' rasch_fit <- fit_mfrm(
 #'   toy,
@@ -7268,7 +7272,7 @@ print.summary.mfrm_weighting_review <- function(x, ...) {
 #' @seealso [compare_mfrm()], [build_weighting_review()],
 #'   [gpcm_capability_matrix()], [compute_information()]
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit_rsm <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                     method = "MML", model = "RSM", quad_points = 7)

@@ -999,7 +999,7 @@ mfrm_results_plot_map <- function(has_fit, has_diagnostics, tables, components,
       "plot(res, type = 'tables')"
     ),
     Detail = c(
-      "Required first fitted-scale artifact: persons, facet levels, and thresholds on the shared logit ruler.",
+      "Required first fitted-scale figure: persons, facet levels, and thresholds on the shared logit ruler.",
       "Model-level visual bundle from plot.mfrm_fit().",
       "Expected-score pathway map from plot.mfrm_fit().",
       "Infit/Outfit-versus-measure pathway with facet uncertainty; person rows are an explicit opt-in.",
@@ -1288,12 +1288,12 @@ mfrm_results_triage <- function(status, plot_map, components, table_index,
       "The required shared-logit Wright map is available; inspect person targeting, facet locations, steps, and uncertainty before follow-up plots."
     } else if (wright_available) {
       paste0(
-        "The required Wright-map route is available, but the display is review-only. ",
-        "Resolve the upstream numerical, data, design, or stability status in ",
+        "The required Wright map is available, but the display is review-only. ",
+        "Resolve the numerical, data, design, or stability status in ",
         "`summary(res)$readiness` before substantive or cross-subset interpretation."
       )
     } else {
-      "The required Wright-map artifact is unavailable for this result object."
+      "The required Wright-map figure is unavailable for this result object."
     }
   )
   add(
@@ -1301,7 +1301,7 @@ mfrm_results_triage <- function(status, plot_map, components, table_index,
     if (qc_available) "ok" else "not_available",
     if (qc_available) "qc_plot_available" else "qc_plot_missing",
     if (qc_available) "plot(res, type = \"qc\", preset = \"publication\")" else "summary(res)$plot_map",
-    if (qc_available) "The QC dashboard route is available as a focused follow-up after the required Wright-map review." else "QC plotting is unavailable for this result object."
+    if (qc_available) "The QC dashboard is available as a focused follow-up after the required Wright-map review." else "QC plotting is unavailable for this result object."
   )
 
   add(
@@ -1357,13 +1357,13 @@ mfrm_results_triage <- function(status, plot_map, components, table_index,
       "summary(res$components$reporting_checklist)",
       if (reporting_ready) {
         paste0(
-          "Reporting checklist is available; upstream reporting status is `",
+          "Reporting checklist is available; the associated reporting status is `",
           reporting_status, "`.",
           if (nzchar(reporting_detail)) paste0(" ", reporting_detail) else ""
         )
       } else {
         paste0(
-          "Reporting checklist is available, but upstream reporting status is `",
+          "Reporting checklist is available, but the associated reporting status is `",
           reporting_status, "`.",
           if (nzchar(reporting_detail)) paste0(" ", reporting_detail) else ""
         )
@@ -1464,7 +1464,7 @@ mfrm_results_next_actions <- function(status, plot_map, components, table_index,
     "Overview",
     "Read the compact results summary.",
     "summary(res)",
-    "Confirms input mode, model, method, section status, table coverage, and plot routes."
+    "Confirms input mode, model, method, section status, table coverage, and available figures."
   )
   if (nrow(plot_map) > 0L && any(plot_map$Type %in% "wright" & plot_map$Available %in% TRUE)) {
     wright_ready <- !"InterpretationReady" %in% names(plot_map) || any(
@@ -1478,13 +1478,13 @@ mfrm_results_next_actions <- function(status, plot_map, components, table_index,
       if (wright_ready) {
         "Create and inspect the required shared-logit scale map."
       } else {
-        "Create the required Wright map as a review-only diagnostic artifact."
+        "Create the required Wright map as a figure for diagnostic review."
       },
       "plot(res, type = \"wright\", preset = \"publication\", show_ci = TRUE, top_n = Inf)",
       if (wright_ready) {
-        "The Wright map is the primary fitted-scale artifact: compare person targeting with facet levels and step thresholds before branching into diagnostics."
+        "The Wright map is the primary fitted-scale figure: compare person targeting with facet levels and step thresholds before branching into diagnostics."
       } else {
-        "The plot route remains available for diagnosis, but resolve the upstream readiness review before substantive or cross-subset interpretation."
+        "The figure remains available for diagnosis, but resolve the readiness review before substantive or cross-subset interpretation."
       }
     )
   }
@@ -1496,7 +1496,7 @@ mfrm_results_next_actions <- function(status, plot_map, components, table_index,
       "Triage",
       "Read the first-screen triage before branching.",
       "summary(res)$triage",
-      "Triage orders unavailable, review, information, and OK signals across diagnostics, tables, plots, and reporting surfaces."
+      "Triage orders unavailable, review, information, and OK signals across diagnostics, tables, plots, and reporting outputs."
     )
   }
   if (nrow(triage) > 0L &&
@@ -1507,7 +1507,7 @@ mfrm_results_next_actions <- function(status, plot_map, components, table_index,
       "Diagnostics",
       "Review diagnostic key warnings before report drafting.",
       "summary(res$diagnostics)$key_warnings",
-      "Diagnostic warnings identify the highest-priority fit, precision, residual, or category follow-up surfaces."
+      "Diagnostic warnings identify the highest-priority fit, precision, residual, or category follow-up checks."
     )
   }
   if (nrow(plot_map) > 0L && any(plot_map$Type %in% "qc" & plot_map$Available %in% TRUE)) {
@@ -1516,7 +1516,7 @@ mfrm_results_next_actions <- function(status, plot_map, components, table_index,
       "Visual diagnostics",
       "Open the QC dashboard after reviewing the Wright map.",
       "plot(res, type = \"qc\", preset = \"publication\")",
-      "The QC route gives a focused follow-up view of fit, residual, and category surfaces."
+      "The QC dashboard gives a focused follow-up view of fit, residual, and category summaries."
     )
   }
   if (nrow(plot_map) > 0L && any(plot_map$Type %in% "fit_pathway" & plot_map$Available %in% TRUE)) {
@@ -1534,14 +1534,14 @@ mfrm_results_next_actions <- function(status, plot_map, components, table_index,
       "Precision",
       "Inspect fit, separation, reliability, and ZSTD wording boundaries.",
       "summary(res$components$precision_review)",
-      "Precision review keeps fit-size, standardized fit, and separation evidence in separate reporting lanes."
+      "Precision review keeps fit-size, standardized fit, and separation evidence in separate reporting categories."
     )
   }
   if ("reporting_checklist" %in% names(components)) {
     add(
       6L,
       "Reporting",
-      "Use the reporting checklist as the manuscript-routing surface.",
+      "Use the reporting checklist as a guide for preparing a manuscript.",
       "summary(res$components$reporting_checklist)",
       "Checklist rows identify report-ready, missing, and caveated sections."
     )
@@ -1552,7 +1552,7 @@ mfrm_results_next_actions <- function(status, plot_map, components, table_index,
       "Bias screening",
       "Review facet-level bias screens and choose any interaction contrast explicitly.",
       "res$components$bias_screen$guidance",
-      "The wrapper surfaces bias evidence but does not choose a facet pair for interaction-bias claims."
+      "The summary includes bias evidence but does not choose a facet pair for interaction-bias claims."
     )
   }
   if ("misfit_review" %in% names(components)) {
@@ -5124,7 +5124,7 @@ mfrm_report_html <- function(report) {
 #'   [build_apa_outputs()], [reporting_checklist()],
 #'   [mfrmr_output_guide()]
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' toy_small <- toy[toy$Person %in% unique(toy$Person)[1:6], , drop = FALSE]
 #' fit <- fit_mfrm(toy_small, "Person", c("Rater", "Criterion"), "Score",
@@ -5272,7 +5272,7 @@ mfrm_results_export_index_html <- function(prefix, written_files, plot_errors) {
       "It may contain direct person identifiers, person-level estimates, original labels, local paths, and a complete RDS result object. ",
       "Review and transform every file under the applicable data-handling policy before sharing.</p>"
     ),
-    "<p>Use this reading order for the fitted analysis. The Wright map is the required first visual artifact; the remaining plots and tables are follow-up evidence.</p>",
+    "<p>Use this reading order for the fitted analysis. The Wright map is the required first figure; the remaining plots and tables are follow-up evidence.</p>",
     "<ol>",
     paste0("<li><strong>Fit and result summary:</strong> ", link("results_html", "open the results summary"), ".</li>"),
     paste0("<li><strong>Required scale display:</strong> ", link("plot_wright", "open the Wright map PNG"), ".</li>"),
@@ -5424,7 +5424,7 @@ mfrm_results_export_add_written <- function(written_files, component, format, pa
 #' @seealso [mfrm_results()], [launch_mfrmr_viewer()],
 #'   [export_mfrm_bundle()], [export_summary_appendix()]
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' toy_small <- toy[toy$Person %in% unique(toy$Person)[1:6], , drop = FALSE]
 #' fit <- fit_mfrm(toy_small, "Person", c("Rater", "Criterion"), "Score",
@@ -5868,7 +5868,7 @@ export_mfrm_results <- function(x,
 #' @section What to inspect first:
 #' Start with `summary(res)`. The most useful fields are:
 #' - `overview`: input mode, model, method, table count, and plot-route count
-#' - `readiness`: separate upstream analysis and plot-interpretation gates
+#' - `readiness`: separate analysis and plot-interpretation gates
 #' - `triage`: first-screen signals ordered by unavailable/review/info/ok
 #' - `status`: which sections were available, skipped, or unsupported
 #' - `plot_map`: supported plot routes, availability, and interpretation status
@@ -5894,7 +5894,7 @@ export_mfrm_results <- function(x,
 #' `data$retention`; use `plot(res, top_n = Inf)` for a complete final map.
 #' Other routes include `plot(res, type = "wright")`, `"pathway"`,
 #' `"fit_pathway"`, `"qc"`, `"category"`, `"anchors"`, `"response_time"`,
-#' and `"tables"`. The Wright map is the required first fitted-scale artifact;
+#' and `"tables"`. The Wright map is the required first fitted-scale figure;
 #' `"fit_pathway"` is a follow-up with Infit or Outfit on the horizontal axis
 #' and measure on the vertical axis. `output = "html"` writes a
 #' lightweight temporary HTML file;
@@ -5909,7 +5909,7 @@ export_mfrm_results <- function(x,
 #' 2. Call `res <- mfrm_results(fit)`.
 #' 3. Read `summary(res, view = "brief")` and its `readiness` table, then create
 #'    the required
-#'    `plot(res, type = "wright", show_ci = TRUE, top_n = Inf)` artifact.
+#'    `plot(res, type = "wright", show_ci = TRUE, top_n = Inf)` figure.
 #' 4. Read `summary(res)$triage`, `summary(res)$status`,
 #'    `summary(res)$plot_map`, and `summary(res)$next_actions`.
 #' 5. Call `report <- mfrm_report(res)` when a report-ready surface is needed.
@@ -5955,7 +5955,7 @@ export_mfrm_results <- function(x,
 #'   [export_mfrm_results()],
 #'   [launch_mfrmr_viewer()], [mfrmr_output_guide()]
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' toy_small <- toy[toy$Person %in% unique(toy$Person)[1:8], , drop = FALSE]
 #'

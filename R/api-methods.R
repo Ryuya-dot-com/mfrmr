@@ -1961,7 +1961,7 @@ summarize_category_curves_bundle <- function(object, digits = 3, top_n = 10) {
 #' @return An object of class `summary.mfrm_bundle`.
 #' @seealso [unexpected_response_table()], [fair_average_table()], `plot()`
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' toy_full <- load_mfrmr_data("example_core")
 #' toy_people <- unique(toy_full$Person)[1:12]
 #' toy <- toy_full[toy_full$Person %in% toy_people, , drop = FALSE]
@@ -6560,7 +6560,7 @@ plot_visual_summaries_bundle <- function(x,
 #' @return A plotting-data object of class `mfrm_plot_data`.
 #' @seealso `summary()`, [plot_unexpected()], [plot_fair_average()], [plot_displacement()]
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' toy_full <- load_mfrmr_data("example_core")
 #' toy_people <- unique(toy_full$Person)[1:12]
 #' toy <- toy_full[toy_full$Person %in% toy_people, , drop = FALSE]
@@ -7054,7 +7054,8 @@ plot.mfrm_bundle <- function(x, y = NULL, type = NULL, ...) {
 #' - `digits`: numeric-print precision threaded through to
 #'   `print.summary.mfrm_diagnostics()`
 #' @seealso [diagnose_mfrm()], [summary.mfrm_fit()]
-#' @examplesIf interactive()
+#' @examples
+#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' toy <- toy[toy$Person %in% unique(toy$Person)[1:4], ]
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
@@ -7070,6 +7071,7 @@ plot.mfrm_bundle <- function(x, y = NULL, type = NULL, ...) {
 #' s$facets_chisq
 #' # Read the fixed-effect chi-square as a heterogeneity screen in the context
 #' # of the design and intended score use.
+#' }
 #' @export
 summary.mfrm_diagnostics <- function(object,
                                      digits = 3,
@@ -7839,13 +7841,15 @@ print.summary.mfrm_diagnostics <- function(x, ...) {
 #' - `top_rows`: highest-`|t|` interaction rows
 #' - `notes`: short interpretation notes
 #' @seealso [estimate_bias()], [bias_interaction_report()]
-#' @examplesIf interactive()
+#' @examples
+#' \donttest{
 #' toy <- load_mfrmr_data("example_bias")
 #' toy <- toy[toy$Person %in% unique(toy$Person)[1:8], ]
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
 #' bias <- estimate_bias(fit, diag, facet_a = "Rater", facet_b = "Criterion", max_iter = 1)
 #' summary(bias)
+#' }
 #' @export
 summary.mfrm_bias <- function(object, digits = 3, top_n = 10, p_cut = 0.05, ...) {
   if (!is.list(object) || is.null(object$table) || nrow(object$table) == 0) {
@@ -8610,7 +8614,12 @@ mfrm_fit_summary_core <- function(object, digits = 3, top_n = 5) {
     )
   } else if ("Converged" %in% names(overview) && !isTRUE(overview$Converged[1])) {
     status <- as.character(overview$ConvergenceStatus[1] %||% NA_character_)
-    if (identical(status, "reviewable_warning")) {
+    if (identical(status, "iteration_limit")) {
+      notes <- c(
+        notes,
+        "The iteration ceiling was reached before numerical readiness; estimates are review-only and must not be used to select a preferred result."
+      )
+    } else if (identical(status, "reviewable_warning")) {
       notes <- c(
         notes,
         "Optimizer returned a nonzero code, but the terminal gradient was already small; treat the fit as reviewable rather than an immediate hard failure."
@@ -8831,10 +8840,16 @@ mfrm_fit_summary_core <- function(object, digits = 3, top_n = 5) {
     "Then draw the complete native Wright map with `plot(fit, type = \"wright\", show_ci = TRUE, top_n = Inf, preset = \"publication\")`."
   )
   if (!identical(numerical_status, "pass")) {
-    next_actions <- c(
-      "Inspect `fit$opt$optimizer_polish$Stages` before changing controls; compare the retained objective, terminal gradient, and maximum parameter change, and keep the fit on review if bounded polishing did not clear the numerical gate.",
-      next_actions
-    )
+    numerical_action <- if (identical(convergence_status, "iteration_limit")) {
+      paste(
+        "Do not interpret or select estimates from this iteration-limited fit.",
+        "Refit the same data, model, method, anchors, optimizer, tolerance, and quadrature rule",
+        "with the next ceiling in a prespecified `maxit` sequence; accept a result only after the Numerical gate passes."
+      )
+    } else {
+      "Inspect `fit$opt$optimizer_polish$Stages` before changing controls; compare the retained objective, terminal gradient, and maximum parameter change, and keep the fit on review if bounded polishing did not clear the numerical gate."
+    }
+    next_actions <- c(numerical_action, next_actions)
   }
   if (startsWith(design_status, "hold_") || startsWith(design_status, "review_")) {
     next_actions <- c(
@@ -9043,7 +9058,7 @@ mfrm_fit_summary_required_visual <- function(fit, results = NULL,
       pathway_route
     ),
     Detail = c(
-      "Required first artifact: preserve mfrmr's facet uncertainty display while inspecting persons, facet levels, and steps on the shared logit ruler.",
+      "Required first figure: preserve mfrmr's facet uncertainty display while inspecting persons, facet levels, and steps on the shared logit ruler.",
       paste(
         "FACETS Table 6-style star ruler with signed facet headers and labeled score transitions.",
         "Define `rubric_labels` as a named vector covering every retained original score shown in `fit$prep$score_map`; this is visual organization, not numerical equivalence."
@@ -9172,7 +9187,7 @@ mfrm_fit_summary_workflow <- function(out, fit, profile, detail,
       max_n = 6L
     )
     out$next_actions <- clean_summary_lines(c(
-      "Create the required native Wright map first; use the first executable route in `$required_visual$Route`.",
+      "Create the required native Wright map first; run the first available command in `$required_visual$Route`.",
       "Use the FACETS-style ruler only when its familiar layout or rubric labels help readers; it does not establish numerical equivalence.",
       if (isTRUE(out$required_visual$Available[3])) {
         "Use the optional Infit pathway after the Wright map; set `include_person = TRUE` only when selected person points are needed."
@@ -9501,7 +9516,7 @@ print.summary.mfrm_fit <- function(x, ...) {
       names(visual)
     )
     print(visual[, keep, drop = FALSE], row.names = FALSE)
-    cat("  Executable routes are stored in `$required_visual$Route`.\n")
+    cat("  Plot commands are stored in `$required_visual$Route`.\n")
   }
   if (nrow(x$status %||% data.frame()) > 0) {
     cat("\nStatus\n")

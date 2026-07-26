@@ -294,9 +294,9 @@ make_mfrm_direct_evaluator <- function(method, cache, idx, config, sizes, quad,
     posterior_bundle <<- NULL
     shared_evaluations <<- shared_evaluations + 1L
 
-    if (identical(method, "JMLE")) {
+    if (identical(method, "JML")) {
       if (isTRUE(reuse_probability_workspace)) {
-        probability_bundle <<- mfrm_jmle_probability_bundle(
+        probability_bundle <<- mfrm_jml_probability_bundle(
           eta = cache$eta(),
           score_k = idx$score_k,
           model = config$model,
@@ -309,7 +309,7 @@ make_mfrm_direct_evaluator <- function(method, cache, idx, config, sizes, quad,
         if (!is.null(idx$weight)) log_prob_obs <- log_prob_obs * idx$weight
         cached_value <<- -sum(log_prob_obs)
       } else {
-        cached_value <<- mfrm_loglik_jmle_cached(cache, idx, config)
+        cached_value <<- mfrm_loglik_jml_cached(cache, idx, config)
       }
     } else if (length(idx$score_k) == 0L) {
       cached_value <<- 0
@@ -346,8 +346,8 @@ make_mfrm_direct_evaluator <- function(method, cache, idx, config, sizes, quad,
         gradient_hits <<- gradient_hits + 1L
         return(cached_gradient)
       }
-      cached_gradient <<- if (identical(method, "JMLE")) {
-        mfrm_grad_jmle_cached(
+      cached_gradient <<- if (identical(method, "JML")) {
+        mfrm_grad_jml_cached(
           cache, idx, config, sizes,
           probability_bundle = probability_bundle
         )
@@ -445,7 +445,7 @@ run_mfrm_direct_optimization <- function(start,
     length(start),
     prefer_limited_memory = identical(method, "MML")
   )
-  if (method == "JMLE") {
+  if (method == "JML") {
     cache <- make_param_cache(sizes, config, idx, is_mml = FALSE)
   } else {
     quad <- quad %||% gauss_hermite_normal(quad_points)

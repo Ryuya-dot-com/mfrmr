@@ -11,6 +11,10 @@ Most package users can ignore this directory. Start with `README.md`,
 analysis guidance. The files here support package release checks and
 maintenance review; public release notes stay in `NEWS.md`.
 
+The repository-root `ROADMAP.md` is the single source of truth for active
+development sequencing. Files in this directory may add evidence or preserve
+history, but they do not redefine release order or current API scope.
+
 ## Evidence types
 
 | Type | What it is for |
@@ -35,15 +39,11 @@ maintenance review; public release notes stay in `NEWS.md`.
 - `release-evidence-checklist-0.2.2.csv`: structured checklist used by the
   readiness helper and by manual release review for the current release. Older
   checklists are retained as historical release evidence.
-- `mfrmr-development-roadmap.md`: historical public validation artifact for
-  the 0.2.2 bounded-`GPCM` release path and post-0.2.2 planning context.
-  Active package-development sequencing is kept in the consolidated roadmap
-  outside the public package copy.
-- `gpcm-post-0.2.2-roadmap.md`: bundled validation excerpt for
-  bounded-`GPCM` surfaces that remain caveated, `blocked`, or `deferred` after
-  0.2.2, including score-side review, report/QC bundles, design and screening
-  operating characteristics, linking synthesis, posterior predictive checks,
-  and heavy-backend extensions.
+- `mfrmr-development-roadmap.md`: historical validation record retained for
+  links from older 0.2.2 evidence. It is not an active roadmap.
+- `gpcm-post-0.2.2-roadmap.md`: technical evidence supplement for bounded-
+  `GPCM` surfaces that remain caveated, `blocked`, or `deferred`. It is
+  subordinate to the root roadmap and the executable capability registry.
 - `external-parameter-recovery-simulation-0.2.0.md`: compact review of the
   separate common-data parameter-recovery simulation workflow. The large
   generated datasets and engine outputs are not bundled with the package; this
@@ -77,7 +77,7 @@ compiled-code change:
 
 ```sh
 R CMD build .
-R CMD check --no-manual --as-cran mfrmr_0.2.2.tar.gz
+_R_CHECK_TIMINGS_=0 R CMD check --as-cran --run-donttest mfrmr_0.2.2.tar.gz
 ```
 
 Then run:
@@ -90,10 +90,24 @@ summary(readiness)
 
 The release candidate should have `Status: OK` in the local check log,
 `ReleaseReadinessStatus = "ok"`, and only `ok` rows in
-`readiness$gate_summary`. A missing `Status:` line, a check-log package version
-that differs from `DESCRIPTION`, release inputs newer than the matching source
-tarball or check log, or a check log older than that tarball is a release
-blocker reported as a `concern`. If the local environment cannot verify
+`readiness$gate_summary`. The `example_policy` row restricts `\dontrun{}` to
+the two external-ConQuest-file workflows and `@examplesIf interactive()` to
+the local Shiny viewer. The `check_timing` row applies the 600-second threshold
+to the summed CRAN-side package workload: ordinary examples, `donttest`
+examples, tests, and vignette rebuilding. It also reports the sum of every
+timed top-level check component as diagnostic context, without charging
+dependency, installation, manual, or other check-infrastructure time to the
+package-controlled threshold. A log without workload timings requires review.
+Inspect `mfrmr-Ex.timings` as well as the aggregate gate before submission.
+Jobs run with `NOT_CRAN=true` are labeled `full_non_cran` and are exempt from
+this CRAN-time threshold because their purpose is to execute the deliberately
+exhaustive regression suite; the ordinary matrix jobs still enforce the
+timing gate.
+
+A missing `Status:` line, a check-log package version that differs from
+`DESCRIPTION`, release inputs newer than the matching source tarball or check
+log, or a check log older than that tarball is a release blocker reported as a
+`concern`. If the local environment cannot verify
 external clock time, record that environment-only NOTE in `cran-comments.md`
 and rerun the package check with the clock check disabled to confirm that
 package checks are otherwise clean.

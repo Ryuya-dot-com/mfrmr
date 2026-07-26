@@ -103,7 +103,7 @@ model reference data.
 }
 
 \examples{
-\dontrun{
+\donttest{
 bench <- reference_case_benchmark(
   cases = "synthetic_truth",
   method = "JML",

@@ -20,7 +20,7 @@ test_that("run_mfrm_facets returns a FACETS-style workflow bundle", {
   expect_true(is.data.frame(out$run_info))
   expect_equal(out$fit$summary$Model[[1]], "RSM")
   expect_equal(out$fit$summary$Method[[1]], "JML")
-  expect_equal(out$fit$summary$MethodUsed[[1]], "JMLE")
+  expect_equal(out$fit$summary$MethodUsed[[1]], "JML")
 
   out_summary <- summary(out, top_n = 5)
   expect_s3_class(out_summary, "summary.mfrm_facets_run")
