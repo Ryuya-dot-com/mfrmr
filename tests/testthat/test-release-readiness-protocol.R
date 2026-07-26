@@ -9,7 +9,8 @@ release_readiness_protocol_path <- function() {
 
 release_readiness_gate_fixture <- function(env, check_status,
                                            freshness_status = NULL,
-                                           example_policy_status = NULL) {
+                                           example_policy_status = NULL,
+                                           check_timing_scope = "cran") {
   evidence_file <- tempfile()
   writeLines("evidence", evidence_file)
   target <- as.character(check_status$TargetVersion[1])
@@ -76,7 +77,8 @@ release_readiness_gate_fixture <- function(env, check_status,
       external_recovery_helper = evidence_file
     ),
     freshness_status = freshness_status,
-    example_policy_status = example_policy_status
+    example_policy_status = example_policy_status,
+    check_timing_scope = check_timing_scope
   )
 }
 
@@ -151,6 +153,23 @@ test_that("release-readiness protocol flags check timing above ten minutes", {
   expect_identical(
     gate$Status[gate$Gate == "check_timing"],
     "concern"
+  )
+  full_gate <- release_readiness_gate_fixture(
+    env,
+    parsed,
+    check_timing_scope = "full_non_cran"
+  )
+  expect_identical(
+    full_gate$Status[full_gate$Gate == "check_timing"],
+    "ok"
+  )
+  expect_identical(
+    env$mfrmr_release_readiness_check_timing_scope("true"),
+    "full_non_cran"
+  )
+  expect_identical(
+    env$mfrmr_release_readiness_check_timing_scope("false"),
+    "cran"
   )
 })
 
@@ -538,6 +557,7 @@ test_that("release-readiness protocol reviews the source tree shape", {
     "prompt_steps", "gate_summary", "release_decision",
     "version_status", "check_status", "freshness_status", "ci_workflow_status",
     "source_truth_status", "terminology_status", "example_policy_status",
+    "check_timing_scope",
     "checklist_status", "gpcm_scope_status", "external_recovery_status"
   ) %in% names(review)))
   expect_false(review$external_recovery_status$ExternalRecoveryRequested[1])

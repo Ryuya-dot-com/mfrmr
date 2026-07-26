@@ -68,7 +68,8 @@ multi-step analyses to README/vignettes or non-CRAN tests.
   setting.
 - Before release, run an `--as-cran` check with timing enabled and ensure the
   ordinary and `donttest` examples both execute. Treat an estimated component
-  check time above 600 seconds as a release concern.
+  check time above 600 seconds as a release concern. Do not apply that CRAN
+  threshold to the deliberately exhaustive `NOT_CRAN=true` regression job.
 
 ## Pull request checklist
 

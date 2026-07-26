@@ -95,7 +95,10 @@ the two external-ConQuest-file workflows and `@examplesIf interactive()` to
 the local Shiny viewer. The `check_timing` row sums top-level timed check
 components; an estimate above 600 seconds is a `concern`, while a log without
 timings requires review. Inspect `mfrmr-Ex.timings` as well as the aggregate
-gate before submission.
+gate before submission. Jobs run with `NOT_CRAN=true` are labeled
+`full_non_cran` and are exempt from this CRAN-time threshold because their
+purpose is to execute the deliberately exhaustive regression suite; the
+ordinary matrix jobs still enforce the timing gate.
 
 A missing `Status:` line, a check-log package version that differs from
 `DESCRIPTION`, release inputs newer than the matching source tarball or check

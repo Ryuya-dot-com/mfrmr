@@ -306,6 +306,17 @@ mfrmr_release_readiness_check_timing <- function(lines) {
   )
 }
 
+mfrmr_release_readiness_check_timing_scope <- function(not_cran = Sys.getenv(
+  "NOT_CRAN",
+  unset = "false"
+)) {
+  if (identical(tolower(trimws(not_cran[1])), "true")) {
+    "full_non_cran"
+  } else {
+    "cran"
+  }
+}
+
 mfrmr_release_readiness_parse_check_log <- function(path,
                                                     target_version = NULL) {
   lines <- mfrmr_release_readiness_read_lines(path)
@@ -1139,7 +1150,11 @@ mfrmr_release_readiness_gate_summary <- function(version_status,
                                                  gpcm_scope_status = NULL,
                                                  freshness_status = NULL,
                                                  source_truth_status = NULL,
-                                                 example_policy_status = NULL) {
+                                                 example_policy_status = NULL,
+                                                 check_timing_scope = c(
+                                                   "cran", "full_non_cran"
+                                                 )) {
+  check_timing_scope <- match.arg(check_timing_scope)
   gpcm_scope_ok <- if (is.null(gpcm_scope_status)) {
     TRUE
   } else {
@@ -1174,7 +1189,12 @@ mfrmr_release_readiness_gate_summary <- function(version_status,
   } else {
     "ok"
   }
-  check_timing_status <- if (!isTRUE(check_status$RunDonttest[1])) {
+  check_timing_status <- if (identical(
+    check_timing_scope,
+    "full_non_cran"
+  )) {
+    "ok"
+  } else if (!isTRUE(check_status$RunDonttest[1])) {
     "concern"
   } else if (!isTRUE(check_status$TimingAvailable[1])) {
     "review"
@@ -1242,7 +1262,8 @@ mfrmr_release_readiness_gate_summary <- function(version_status,
         "; manual_checked=", check_status$ManualChecked[1]
       ),
       paste0(
-        "component_elapsed_seconds=",
+        "scope=", check_timing_scope,
+        "; component_elapsed_seconds=",
         check_status$ComponentElapsedSeconds[1],
         "; examples_seconds=", check_status$ExamplesSeconds[1],
         "; donttest_seconds=", check_status$DonttestExamplesSeconds[1],
@@ -1369,7 +1390,16 @@ mfrmr_release_readiness_review <- function(pkg_dir = ".",
                                            tarball = NULL,
                                            checklist = NULL,
                                            target_version = NULL,
-                                           external_recovery_dir = NULL) {
+                                           external_recovery_dir = NULL,
+                                           check_timing_scope = NULL) {
+  if (is.null(check_timing_scope)) {
+    check_timing_scope <- mfrmr_release_readiness_check_timing_scope()
+  } else {
+    check_timing_scope <- match.arg(
+      check_timing_scope,
+      c("cran", "full_non_cran")
+    )
+  }
   paths <- mfrmr_release_readiness_paths(pkg_dir, target_version = target_version)
   target_version <- target_version %||% paths$target_version
   if (!is.null(check_log)) {
@@ -1422,7 +1452,8 @@ mfrmr_release_readiness_review <- function(pkg_dir = ".",
     gpcm_scope_status = gpcm_scope_status,
     freshness_status = freshness_status,
     source_truth_status = source_truth_status,
-    example_policy_status = example_policy_status
+    example_policy_status = example_policy_status,
+    check_timing_scope = check_timing_scope
   )
   external_recovery_status <- mfrmr_release_readiness_external_recovery_status(
     paths = paths,
@@ -1443,6 +1474,7 @@ mfrmr_release_readiness_review <- function(pkg_dir = ".",
     ci_workflow_status = ci_workflow_status,
     terminology_status = term_status,
     example_policy_status = example_policy_status,
+    check_timing_scope = check_timing_scope,
     checklist_status = checklist_status,
     gpcm_scope_status = gpcm_scope_status,
     external_recovery_status = external_recovery_status,
@@ -1465,6 +1497,7 @@ summary.mfrmr_release_readiness_review <- function(object, ...) {
     freshness_status = object$freshness_status,
     ci_workflow_status = object$ci_workflow_status,
     example_policy_status = object$example_policy_status,
+    check_timing_scope = object$check_timing_scope,
     gpcm_scope_status = object$gpcm_scope_status,
     external_recovery_status = object$external_recovery_status
   )
