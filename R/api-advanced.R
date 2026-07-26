@@ -213,7 +213,7 @@ resolve_dff_refit_controls <- function(fit) {
   control <- fit$config$estimation_control %||% list()
   list(
     model = fit$config$model %||% fit$summary$Model[1] %||% "RSM",
-    method = fit$config$method %||% fit$summary$Method[1] %||% "JMLE",
+    method = fit$config$method %||% fit$summary$Method[1] %||% "JML",
     step_facet = fit$config$step_facet %||% NULL,
     weight = fit$config$weight_col %||% NULL,
     noncenter_facet = fit$config$noncenter_facet %||% "Person",

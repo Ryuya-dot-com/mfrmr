@@ -931,8 +931,8 @@ fit_mfrm <- function(data,
   }
 
   model <- toupper(match.arg(model))
-  method_input <- toupper(match.arg(method))
-  method <- ifelse(method_input == "JML", "JMLE", method_input)
+  method_input <- public_mfrm_method_label(toupper(match.arg(method)))
+  method <- method_input
   optimizer <- normalize_mfrm_optimizer(match.arg(optimizer))
   mml_engine <- tolower(match.arg(mml_engine))
   interaction_policy <- tolower(match.arg(interaction_policy))

@@ -1,5 +1,10 @@
 # mfrmr 0.2.2
 
+* Standardized the package's canonical joint-maximum-likelihood label as
+  `"JML"` across fitted objects, engine state, manifests, and replay scripts.
+  `method = "JMLE"` remains accepted only as a backward-compatible input alias
+  and now resolves immediately to `"JML"`.
+
 * Revised first-contact guides and result guidance to use reader-facing
   wording while retaining documented API and status vocabulary.
 

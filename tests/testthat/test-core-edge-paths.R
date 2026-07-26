@@ -71,7 +71,7 @@ test_that("build_param_sizes errors for PCM without valid step_facet", {
 
   mock_config <- list(
     model       = "PCM",
-    method      = "JMLE",
+    method      = "JML",
     facet_names = c("Rater", "Task"),
     facet_specs = list(
       Rater = list(n_params = 2),

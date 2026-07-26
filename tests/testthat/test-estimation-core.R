@@ -188,7 +188,7 @@ test_that("joint JML probability bundles reproduce standalone kernels", {
   eta <- c(-1.2, -0.4, 0.2, 0.9, 1.4)
   score_k <- c(0L, 1L, 2L, 3L, 1L)
   step_rsm <- c(0, -0.3, 0.2, 0.8)
-  rsm <- mfrmr:::mfrm_jmle_probability_bundle(
+  rsm <- mfrmr:::mfrm_jml_probability_bundle(
     eta, score_k, "RSM", step_rsm
   )
   expect_equal(rsm$probs, mfrmr:::category_prob_rsm(eta, step_rsm),
@@ -202,7 +202,7 @@ test_that("joint JML probability bundles reproduce standalone kernels", {
     0, -0.1, 0.4, 0.8
   ), nrow = 2, byrow = TRUE)
   criterion <- c(1L, 2L, 1L, 2L, 1L)
-  pcm <- mfrmr:::mfrm_jmle_probability_bundle(
+  pcm <- mfrmr:::mfrm_jml_probability_bundle(
     eta, score_k, "PCM", step_pcm, criterion_idx = criterion
   )
   expect_equal(
@@ -217,7 +217,7 @@ test_that("joint JML probability bundles reproduce standalone kernels", {
   )
 
   slopes <- c(0.8, 1.25)
-  gpcm <- mfrmr:::mfrm_jmle_probability_bundle(
+  gpcm <- mfrmr:::mfrm_jml_probability_bundle(
     eta, score_k, "GPCM", step_pcm,
     criterion_idx = criterion,
     slopes = slopes,

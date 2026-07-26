@@ -1722,7 +1722,7 @@ as_mfrm_bundle <- function(x, class_name) {
 #' \describe{
 #'   \item{Engine}{Estimation engine identifier (always `"mfrmr"`).}
 #'   \item{Model}{`"RSM"` or `"PCM"`.}
-#'   \item{Method}{`"JMLE"` or `"MML"`.}
+#'   \item{Method}{`"JML"` or `"MML"`.}
 #' }
 #'
 #' The `facet_labels` data.frame contains:

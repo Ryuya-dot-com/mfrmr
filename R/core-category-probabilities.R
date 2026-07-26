@@ -111,7 +111,7 @@ category_prob_gpcm <- function(eta, step_cum_mat, criterion_idx, slopes,
 # gradient share the same normalization work at an identical parameter vector.
 # The observed log probabilities are retained directly rather than recovered
 # with log(probs), which preserves log-domain stability for extreme logits.
-mfrm_jmle_probability_bundle <- function(eta,
+mfrm_jml_probability_bundle <- function(eta,
                                           score_k,
                                           model,
                                           step_cum,

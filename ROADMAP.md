@@ -84,7 +84,7 @@ Before CRAN submission or replacement of the GitHub release asset:
 - [ ] Keep `DESCRIPTION`, `CITATION.cff`, `NEWS.md`, `cran-comments.md`, tag,
   tarball, and check log on the same version and release date.
 - [x] Build one exact candidate tarball and record its SHA-256 digest
-  (`ec0061cd3977886e4d4155b5c3ee8223b8ebdb22950ff729761392c8873a506a`).
+  (`5ce93b4bda34b4f9ebf17d7af568fb3ea27937dfbe78b6a9e74555936b29a4e3`).
 - [x] Run `R CMD check --as-cran` on that exact tarball and retain the full log.
 - [x] Audit README, NEWS, vignettes, generated help, and first-screen runtime
   guidance for maintainer-oriented wording while retaining documented API and
@@ -93,8 +93,7 @@ Before CRAN submission or replacement of the GitHub release asset:
   iteration-limited fits explicitly review-only, and require numerically ready
   JML and MML fits before estimator-agreement checks.
 - [x] Confirm the full non-CRAN suite and all required CI matrix jobs complete
-  against source-alignment commit `c7b1af1`: the local suite and all six
-  required draft-PR jobs completed successfully.
+  for the final release-candidate package source before merge.
 - [x] Run the repository release-readiness review against the exact tarball and
   check log.
 - [x] Confirm source-package contents exclude repository-only roadmaps and

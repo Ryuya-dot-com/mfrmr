@@ -1081,7 +1081,7 @@ constraint_grad_project <- function(grad_expanded, spec) {
 build_param_sizes <- function(config) {
   n_steps <- max(config$n_cat - 1, 0)
   sizes <- list(
-    theta = if (config$method == "JMLE") config$theta_spec$n_params else 0
+    theta = if (config$method == "JML") config$theta_spec$n_params else 0
   )
   for (facet in config$facet_names) {
     sizes[[facet]] <- config$facet_specs[[facet]]$n_params
@@ -1155,7 +1155,7 @@ center_step_matrix_rows <- function(step_mat) {
 
 expand_params <- function(par, sizes, config) {
   parts <- split_params(par, sizes)
-  theta <- if (config$method == "JMLE") {
+  theta <- if (config$method == "JML") {
     expand_facet_with_constraints(parts$theta, config$theta_spec)
   } else {
     numeric(0)
@@ -1251,10 +1251,10 @@ compute_eta <- function(idx, params, config, theta_override = NULL) {
   eta + compute_base_eta(idx, params, config)
 }
 
-# Joint Maximum Likelihood Estimation (JMLE) negative log-likelihood.
+# Joint maximum likelihood (JML) negative log-likelihood.
 # Estimates person abilities and facet parameters simultaneously.
 # Returns -LL for minimization by optim().
-mfrm_loglik_jmle <- function(par, idx, config, sizes) {
+mfrm_loglik_jml <- function(par, idx, config, sizes) {
   params <- expand_params(par, sizes, config)
   eta <- compute_eta(idx, params, config)
 
@@ -1280,8 +1280,8 @@ mfrm_loglik_jmle <- function(par, idx, config, sizes) {
   -ll
 }
 
-# Cached version of JMLE log-likelihood (uses pre-computed params/eta/step_cum)
-mfrm_loglik_jmle_cached <- function(cache, idx, config) {
+# Cached version of JML log-likelihood (uses pre-computed params/eta/step_cum)
+mfrm_loglik_jml_cached <- function(cache, idx, config) {
   eta <- cache$eta()
   step_cum <- cache$step_cum()
   if (config$model == "RSM") {
@@ -1631,10 +1631,10 @@ mfrm_loglik_mml_cached <- function(cache, idx, config, quad) {
   -sum(person_bundle$log_marginal)
 }
 
-# Cached version of JMLE gradient (uses pre-computed params/eta/step_cum)
-mfrm_grad_jmle_cached <- function(cache, idx, config, sizes,
+# Cached version of JML gradient (uses pre-computed params/eta/step_cum)
+mfrm_grad_jml_cached <- function(cache, idx, config, sizes,
                                   probability_bundle = NULL) {
-  mfrm_grad_jmle_core(
+  mfrm_grad_jml_core(
     cache$params(), cache$eta(), idx, config, sizes,
     probability_bundle = probability_bundle,
     step_cum = cache$step_cum()
@@ -1658,19 +1658,19 @@ mfrm_grad_mml_cached <- function(cache, idx, config, sizes, quad,
   )
 }
 
-# ---- Analytical gradient for JMLE ----
+# ---- Analytical gradient for JML ----
 # Returns gradient of -LL (negative log-likelihood) w.r.t. free parameters.
 # Key derivation:
 #   d(LL)/d(eta_i)      = k_i - E[k|eta_i]  (observed minus expected score)
 #   d(LL)/d(delta_s)    = P(X >= s) - I(X >= s)  (for step parameters)
 # Chain rule maps these through constraint Jacobians to free parameters.
-mfrm_grad_jmle <- function(par, idx, config, sizes) {
+mfrm_grad_jml <- function(par, idx, config, sizes) {
   params <- expand_params(par, sizes, config)
   eta <- compute_eta(idx, params, config)
-  mfrm_grad_jmle_core(params, eta, idx, config, sizes)
+  mfrm_grad_jml_core(params, eta, idx, config, sizes)
 }
 
-mfrm_grad_jmle_core <- function(params, eta, idx, config, sizes,
+mfrm_grad_jml_core <- function(params, eta, idx, config, sizes,
                                 probability_bundle = NULL,
                                 step_cum = NULL) {
   n <- length(eta)
@@ -1871,7 +1871,7 @@ mfrm_loglik_mml <- function(par, idx, config, sizes, quad) {
 # Key formula:
 #   d(LL)/d(param) = sum_p sum_q posterior_pq * d(ll_pq)/d(param)
 # where posterior_pq = w_q * L_p(theta_q) / sum_q' w_q' * L_p(theta_q')
-# and d(ll_pq)/d(param) uses the same residual/step derivatives as JMLE
+# and d(ll_pq)/d(param) uses the same residual/step derivatives as JML
 # but evaluated at each quadrature node theta_q.
 mfrm_grad_mml <- function(par, idx, config, sizes, quad) {
   params <- expand_params(par, sizes, config)
@@ -2543,7 +2543,7 @@ build_initial_param_vector <- function(config, sizes) {
 make_param_cache <- function(sizes, config, idx, is_mml = FALSE) {
   cached_par <- NULL
   cached_params <- NULL
-  cached_eta <- NULL      # full eta for JMLE
+  cached_eta <- NULL      # full eta for JML
   cached_base_eta <- NULL  # base_eta for MML
   cached_step_cum <- NULL  # step_cum (RSM) or step_cum_mat (PCM)
 
@@ -2800,7 +2800,7 @@ compute_hybrid_em_reltol <- function(reltol) {
 
 build_person_table <- function(method, idx, config, params, prep, quad_points) {
   # Flag extreme persons (all observed at rating_min or rating_max).
-  # Under JMLE the corresponding theta diverges to +-Inf, so surfacing
+  # Under JML the corresponding theta diverges to +-Inf, so surfacing
   # the flag early lets downstream diagnostics and reporting avoid
   # presenting these runaway estimates as substantively meaningful.
   # See Wright (1998) on the JML extreme-score problem.
@@ -3051,7 +3051,7 @@ build_estimation_summary <- function(model, method, prep, config, sizes, opt) {
     FacetSampleSizeFlag = facet_sample_flag,
     FacetMinLevelN = facet_sample_min_n,
     FacetSparseCount = facet_sample_sparse_count,
-    # Extreme-person counts. Under JMLE, extreme persons
+    # Extreme-person counts. Under JML, extreme persons
     # produce +-Inf theta; MML returns a finite EAP but the information
     # is small. See `fit$facets$person$Extreme` for the per-person flag.
     ExtremeHighN = .count_extreme_persons(prep, which = "high"),
@@ -3175,7 +3175,7 @@ mfrm_estimate <- function(data, person_col, facet_cols, score_col,
                           rating_min = NULL, rating_max = NULL,
                           weight_col = NULL, keep_original = FALSE,
                           missing_codes = NULL,
-                          model = c("RSM", "PCM", "GPCM"), method = c("JMLE", "MML"),
+                          model = c("RSM", "PCM", "GPCM"), method = c("JML", "MML"),
                           step_facet = NULL,
                           slope_facet = NULL,
                           facet_interactions = NULL,
@@ -3386,7 +3386,7 @@ expected_score_table <- function(res) {
                        interaction_specs = config$interaction_specs)
   sizes <- build_param_sizes(config)
   params <- expand_params(res$opt$par, sizes, config)
-  theta_hat <- if (config$method == "JMLE") {
+  theta_hat <- if (config$method == "JML") {
     params$theta
   } else {
     res$facets$person$Estimate
@@ -3408,13 +3408,13 @@ compute_obs_table <- function(res) {
                        interaction_specs = config$interaction_specs)
   sizes <- build_param_sizes(config)
   params <- expand_params(res$opt$par, sizes, config)
-  theta_hat <- if (config$method == "JMLE") {
+  theta_hat <- if (config$method == "JML") {
     params$theta
   } else {
     res$facets$person$Estimate
   }
   person_levels <- prep$levels$Person
-  person_measure <- if (config$method == "JMLE") {
+  person_measure <- if (config$method == "JML") {
     params$theta
   } else {
     res$facets$person$Estimate[match(person_levels, res$facets$person$Person)]
@@ -3613,7 +3613,7 @@ compute_prob_matrix_with_bias <- function(res, bias_results = NULL) {
                        interaction_specs = config$interaction_specs)
   sizes <- build_param_sizes(config)
   params <- expand_params(res$opt$par, sizes, config)
-  theta_hat <- if (config$method == "JMLE") params$theta else res$facets$person$Estimate
+  theta_hat <- if (config$method == "JML") params$theta else res$facets$person$Estimate
   eta <- compute_eta(idx, params, config, theta_override = theta_hat)
   bias_adj <- compute_bias_adjustment_vector(res, bias_results = bias_results)
   if (length(bias_adj) == length(eta)) {
@@ -3630,13 +3630,13 @@ compute_obs_table_with_bias <- function(res, bias_results = NULL) {
                        interaction_specs = config$interaction_specs)
   sizes <- build_param_sizes(config)
   params <- expand_params(res$opt$par, sizes, config)
-  theta_hat <- if (config$method == "JMLE") {
+  theta_hat <- if (config$method == "JML") {
     params$theta
   } else {
     res$facets$person$Estimate
   }
   person_levels <- prep$levels$Person
-  person_measure <- if (config$method == "JMLE") {
+  person_measure <- if (config$method == "JML") {
     params$theta
   } else {
     res$facets$person$Estimate[match(person_levels, res$facets$person$Person)]
@@ -3809,7 +3809,7 @@ compute_prob_matrix <- function(res) {
                        interaction_specs = config$interaction_specs)
   sizes <- build_param_sizes(config)
   params <- expand_params(res$opt$par, sizes, config)
-  theta_hat <- if (config$method == "JMLE") {
+  theta_hat <- if (config$method == "JML") {
     params$theta
   } else {
     res$facets$person$Estimate
@@ -4727,7 +4727,7 @@ calc_facets_report_tbls <- function(res,
   rating_max <- prep$rating_max
   sizes <- build_param_sizes(config)
   params <- expand_params(res$opt$par, sizes, config)
-  theta_hat <- if (config$method == "JMLE") {
+  theta_hat <- if (config$method == "JML") {
     params$theta
   } else {
     res$facets$person$Estimate
@@ -5346,7 +5346,7 @@ compute_expected_score_vector_from_par <- function(res,
   sizes <- build_param_sizes(config)
   params <- expand_params(par, sizes, config)
   if (is.null(theta_hat)) {
-    theta_hat <- if (identical(config$method, "JMLE")) {
+    theta_hat <- if (identical(config$method, "JML")) {
       params$theta
     } else {
       res$facets$person$Estimate
@@ -5409,7 +5409,7 @@ add_gpcm_scorefile_delta_se <- function(scorefile,
     slope_facet = config$slope_facet,
     interaction_specs = config$interaction_specs
   )
-  theta_hat <- if (identical(config$method, "JMLE")) {
+  theta_hat <- if (identical(config$method, "JML")) {
     expand_params(par, build_param_sizes(config), config)$theta
   } else {
     res$facets$person$Estimate
@@ -5910,7 +5910,7 @@ calc_expected_category_counts <- function(res) {
                        interaction_specs = config$interaction_specs)
   sizes <- build_param_sizes(config)
   params <- expand_params(res$opt$par, sizes, config)
-  theta_hat <- if (config$method == "JMLE") {
+  theta_hat <- if (config$method == "JML") {
     params$theta
   } else {
     res$facets$person$Estimate
@@ -6869,7 +6869,7 @@ estimate_bias_interaction <- function(res,
   idx <- build_indices(prep, step_facet = config$step_facet,
                        slope_facet = config$slope_facet,
                        interaction_specs = config$interaction_specs)
-  theta_hat <- if (config$method == "JMLE") params$theta else res$facets$person$Estimate
+  theta_hat <- if (config$method == "JML") params$theta else res$facets$person$Estimate
   eta_base <- compute_eta(idx, params, config, theta_override = theta_hat)
   score_k <- idx$score_k
   weight <- idx$weight

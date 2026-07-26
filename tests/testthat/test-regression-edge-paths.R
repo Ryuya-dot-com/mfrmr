@@ -454,7 +454,7 @@ test_that("build_anchor_recommendations handles issue_counts", {
 # ---- lines 1339, 1368-1372: initial param vector, optimization error ----
 test_that("build_initial_param_vector with n_cat=1 returns no steps", {
   config <- list(
-    n_cat = 1, model = "RSM", method = "JMLE",
+    n_cat = 1, model = "RSM", method = "JML",
     facet_names = character(0),
     facet_levels = list(), facet_specs = list(),
     n_person = 5, step_facet = NULL
