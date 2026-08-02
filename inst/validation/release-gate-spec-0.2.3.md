@@ -5,11 +5,12 @@
 | Field | Value |
 | --- | --- |
 | Target release | 0.2.3 |
-| Specification ID | `0.2.3-draft.16` |
+| Specification ID | `0.2.3-draft.17` |
 | Date | 2026-08-03 |
-| Status | M1 source review recorded; M2 IC contract v2, GHQ pilots, external-IC normalizer v1, audited ConQuest objective/free-dimension handoff, strict binary and four-category RSM/PCM node ladders with same-platform q=31 repeats, TAM import guards, the first dimension-aware TAM integration pilot, the fixed-fixture canonical-score/GPCM-transformation pilot, the first additive RSM/PCM common-vector engine-path pilot, and fail-closed candidate/specification/result/public-scope/readiness-prose checks are instrumented, while score/objective/parameter tolerance freeze, independent-platform replication, bootstrap, attribution, consequence, candidate freeze, and confirmation work remain pending |
+| Status | M1 source review recorded; M2 IC, ConQuest/TAM, canonical-score, engine-path, and fail-closed release-readiness instrumentation are present; a mandatory FACETS JML RSM/PCM stress plan and tool-qualification gate are now specified. FACETS runner/normalizer implementation, executable/report identity qualification, score/objective/parameter/external tolerance freeze, independent replication, recovery/coverage, bootstrap, attribution, consequence, support-envelope registry, candidate freeze, and confirmation remain pending. |
 | Confirmation authorized | No |
 | Evidence checklist | `release-evidence-checklist-0.2.3.csv` |
+| FACETS stress plan | `facets-jml-stress-plan-0.2.3.md` |
 | M1 review record | `release-gate-m1-review-0.2.3.md` |
 | Authoritative sequence | Repository-root `ROADMAP.md` |
 
@@ -35,7 +36,8 @@ It does not add:
 - threshold/step anchors or frozen-calibration operational scoring;
 - unrestricted GPCM, posterior-predictive checks, MCMC, or multivariate
   G-theory; or
-- an automated dependency on ConQuest or FACETS.
+- a package/runtime dependency on ConQuest or FACETS. Locally executed,
+  synthetic external validation remains release evidence outside CRAN.
 
 The public estimator labels remain `MML` and `JML`. `JMLE` is an input alias
 for `JML`, not a separate estimator. Person estimates from MML and JML are not
@@ -204,7 +206,13 @@ following scenario classes.
 | `EXT-CQ-BINARY` | external | Matched unidimensional ConQuest binary MML core. |
 | `EXT-CQ-RSM` | external | Matched unidimensional ConQuest RSM MML core. |
 | `EXT-CQ-PCM` | external | Matched unidimensional ConQuest PCM MML core. |
-| `EXT-FACETS-PROMOTED` | external | Only the JML Rasch-family rows proposed for a public coverage promotion. |
+| `EXT-FACETS-QUALIFY` | external | Deterministic binary, RSM, and PCM microcases binding executable metadata/hash to report-header version and exact artifacts. |
+| `EXT-FACETS-RSM-CORE` | external | Paired JML RSM truth recovery and transformed parameter agreement over the mandatory connected core. |
+| `EXT-FACETS-PCM-CORE` | external | Paired JML PCM truth recovery and transformed parameter agreement over the mandatory connected core. |
+| `EXT-FACETS-ANCHOR` | external | Element/group anchor and scale-origin cases within current mfrmr support; threshold anchors remain excluded. |
+| `EXT-FACETS-SPARSE` | external | Sparse, weak-link, bridge, and disconnected topology classification and false-ready checks. |
+| `EXT-FACETS-EDGE` | external | Extreme score, category support, missingness, and failure-classification cases. |
+| `EXT-FACETS-DFF` | external | Optional definition-matched fit/DFF null and non-null rows; never part of core merely because FACETS emits them. |
 | `ENG-CRAN-SMOKE` | engineering | Deterministic CRAN-side package workload. |
 | `ENG-FULL-CORE` | engineering | Complete non-CRAN blocker suite and cross-platform matrix. |
 
@@ -222,8 +230,10 @@ Candidate identity is exact, not tolerance based.
   version must agree.
 - The gate specification, checklist, Q matrices, Person partitions, scenario
   registry, seed registry, and integration registry must match their hashes.
-- An external result without input, output, version, date, and normalizer
-  fingerprints is unresolved.
+- An external result without executable hash/file metadata, output-reported
+  version, command/control/input/output hashes, date, locale, parser/generator
+  and normalizer fingerprints is unresolved. Executable metadata and the
+  report header must agree with the version policy frozen after qualification.
 - A stale result from another candidate is a blocker even when its numerical
   values would pass.
 
@@ -735,11 +745,30 @@ orientation, and parameter transformation as far as the programs permit.
 Correlations are descriptive; blocker tolerances apply to signed/absolute
 differences on named estimands.
 
-FACETS is a conditional row-promotion gate. A JML Rasch-family parameter,
-estimated-threshold, fit, or reporting row may be promoted only with matched
-supplied output and an explicit transformation. FACETS JML Person measures are
-not targets for MML EAP scores. No proprietary program is launched by package
-tests, and no identifier-bearing external case file is committed.
+FACETS is the required 0.2.3 external JML stress lane for RSM and PCM, subject
+to the separate qualification gate in
+`facets-jml-stress-plan-0.2.3.md`. The binary microcase qualifies orientation,
+constraints, parser behavior, and executable/report identity; it does not by
+itself validate polytomous recovery. Mandatory core families cover connected
+recovery, current element/group anchors, sparse/weak-link topology, and edge
+cases. Threshold anchors remain 0.2.4 scope. Fit and DFF/DIF rows remain
+optional promotions until definitions, null/non-null generators, multiplicity,
+and tolerances are frozen.
+
+FACETS is not ground truth. For every paired replicate, mfrmr and FACETS are
+first evaluated separately against the common generating truth, then compared
+on explicitly transformed common estimands. Agreement between two biased
+solutions cannot pass recovery. FACETS JML Person measures are not targets for
+MML EAP scores, and no JML-versus-MML equality criterion is permitted. No
+proprietary program is launched by package tests, and no proprietary binary,
+license material, or identifier-bearing external case file is committed.
+
+FACETS evidence is generated in isolated synthetic run directories with exact
+replicate accounting, timeouts, exit/stderr capture, one process by default,
+and fail-closed stale-output detection. The official-site version, executable
+file metadata, report-header version, executable SHA-256, controls, inputs,
+outputs, parser/generator versions, and candidate manifest are retained as
+distinct fields; version ambiguity or mixing is a blocker.
 
 External numerical tolerances are `pilot_required`; the mandatory scenario
 scope and fail-closed provenance rules are structural blockers now.
@@ -801,7 +830,10 @@ draft:
 | `DIM-PRACTICAL-GAIN` | Smallest practical predictive/score consequence. |
 | `DIM-BOOTSTRAP` | Bootstrap replication and failed/singular replicate policy. |
 | `EXT-CQ-TOL` | ConQuest signed/absolute tolerances by common estimand. |
-| `EXT-FACETS-TOL` | FACETS tolerances for each proposed promoted row. |
+| `EXT-FACETS-IDENTITY` | Qualified executable SHA-256/file metadata, accepted report-header version rule, parser/generator identities, and stale/mixed-output rejection policy. |
+| `EXT-FACETS-GRID` | Mandatory RSM/PCM core, anchor, sparse, and edge cells plus optional fit/DFF promotions and explicit exclusions. |
+| `EXT-FACETS-TOL` | Truth-recovery and transformed between-program tolerances by model, parameter/statistic, design cell, and estimand. |
+| `EXT-FACETS-MCSE` | Replication, complete-case accounting, Monte Carlo uncertainty, failed-run, and escalation rules. |
 
 No placeholder above may be filled after its confirmatory result is viewed.
 If pilot evidence cannot support a defensible threshold, the corresponding
@@ -827,6 +859,7 @@ claim is reduced or deferred rather than decided ad hoc.
 | `0.2.3-draft.14` | Bound release-readiness output to an exact candidate-manifest schema, tarball/check-log/specification/checklist SHA-256 identities, a frozen specification ID, explicit confirmation authorization, and machine-checked current-versus-future public API truth; retained missing manifests, draft specifications, unfrozen blocker criteria, and every identity mismatch as concerns, so M3 and confirmation remain unauthorized. |
 | `0.2.3-draft.15` | Added a release-readiness guard against carrying numeric test/check pass counts forward in current README, NEWS, or cran-comments prose; historical NEWS sections remain untouched, while current engineering status must come from the exact candidate-linked logs and hashes. |
 | `0.2.3-draft.16` | Added fail-closed loading of candidate-linked gate-result rows, exact commit/specification identity checks, retained evidence-path SHA-256 verification, checklist item/scenario completeness, and blocker/roadmap/caveat status propagation into the release decision. |
+| `0.2.3-draft.17` | Promoted FACETS from a conditional supplied-output row to a mandatory qualified JML RSM/PCM stress lane; separated truth recovery from program agreement; added tool-identity, anchor, topology, edge, optional DFF, Monte Carlo, stale-output, and support-envelope requirements; and retained all new numeric criteria as pilot-required. |
 
 ## Release decision algorithm
 

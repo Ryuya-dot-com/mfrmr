@@ -1,6 +1,6 @@
 # mfrmr development roadmap
 
-Status: authoritative project roadmap, reviewed 2026-08-03.
+Status: authoritative project roadmap, reviewed and refined 2026-08-03.
 
 This file is the single source of truth for release sequencing. `NEWS.md`
 records completed user-visible changes. Files under `inst/validation/` provide
@@ -61,7 +61,23 @@ anchors in 0.2.4, and only then add explicit multi-scale parameter indexing in
 0.2.5. Existing fitted-object EAP/posterior scoring in 0.2.2 is not the same as
 loading a versioned frozen calibration for operational scoring of new data.
 
-## 0.2.2: stabilization and contract release
+### Release horizon
+
+| Version | Position | Primary exit decision |
+| --- | --- | --- |
+| 0.2.2 | Published stabilization and contract baseline | Frozen historical evidence; maintenance only unless CRAN requests a correction. |
+| 0.2.3 | Numerical trust and external validation | State exactly where current RSM, PCM, bounded GPCM, JML, and MML are validated, caveated, exploratory, or unsupported. |
+| 0.2.4 | Fixed calibration and operational scoring | A typed, versioned calibration can be saved, reloaded, and applied to new data with unknown or incompatible inputs failing closed. |
+| 0.2.5 | Multiple observed scales and mixed response structures | Explicit `ScaleId` routing reduces exactly to the one-scale contract and cannot pool or link incompatible scales silently. |
+| 0.3.0 | API, evidence, and ecosystem consolidation | Stable object schemas, compatibility/deprecation policy, reproducible case studies, performance envelope, and contributor review are in place. |
+| 1.0.0 | Validated core stability contract | The declared core—not FACETS feature parity—has replicated recovery/external evidence, stable schemas, failure-mode coverage, and public support boundaries. |
+
+Research tracks such as native multidimensional MFRM, unrestricted GPCM,
+Bayesian backends, and multivariate G-theory do not inherit a release number
+merely because code exists. Each enters only after its own estimand,
+identification, recovery, reduction, and public-contract gates are defined.
+
+## 0.2.2: published stabilization and contract baseline
 
 0.2.2 is a substantial stabilization release, not a broad API-expansion
 release. Its accepted scope is:
@@ -156,12 +172,28 @@ new functions. Small API changes are allowed only when they expose evidence or
 prevent an unsupported interpretation. A new response family or scoring
 architecture requires a later release.
 
+The central claim is deliberately narrower than feature development:
+
+> mfrmr 0.2.3 adds no new model family. It systematically establishes
+> parameter recovery, supported standard-error coverage, matched external
+> comparisons, and the applicable design envelope for the RSM, PCM, bounded
+> GPCM, JML, and MML surfaces published in 0.2.2.
+
+Terminal-gradient checks, limited ConQuest overlap, FACETS positioning, and
+the fit/diagnose/report workflow already existed in 0.2.2. Their 0.2.3 task is
+not reimplementation; it is promotion from fixed or narrow demonstrations to
+prespecified, replicated, candidate-linked evidence. Any surface that cannot
+earn that promotion remains caveated, exploratory, blocked, or deferred.
+
 ### Release contract
 
 The release owns these outcomes:
 
 - a candidate-linked MML stationarity and recovery gate shared by direct,
   hybrid, and EM routes;
+- parameter-recovery and supported-interval coverage evidence separated by
+  estimator, model, parameter class, and design cell rather than pooled into a
+  single success rate;
 - a prespecified stress envelope for connected, weakly linked, sparse, and
   deliberately disconnected designs;
 - a candidate-linked dimensionality challenge that separates exploratory
@@ -171,7 +203,11 @@ The release owns these outcomes:
   basis, free-parameter count, independent sampling unit, exact formula, and
   integration evaluation used for every reported criterion;
 - a same-candidate ConQuest MML overlap gate for the supported overlap region;
-- row-specific FACETS evidence for any coverage claim promoted in 0.2.3;
+- a mandatory, candidate-linked FACETS JML RSM/PCM stress core covering
+  connected recovery, element/group anchors, sparse topology, and edge cases,
+  with additional fit/DFF rows promoted only when their definitions match;
+- a machine-readable support envelope that ties maturity and operational
+  status to exact recovery, external-tool, and candidate evidence identities;
 - versioned, machine-readable gate criteria and evidence manifests; and
 - release tooling that cannot silently reuse a log, tarball, external result,
   threshold set, or prose pass count from another candidate.
@@ -195,7 +231,9 @@ The following remain outside 0.2.3:
 - unrestricted GPCM, native multidimensional latent-trait estimation,
   dimension-specific score production, posterior-predictive checks, MCMC, and
   multivariate G-theory; and
-- an automated dependency on proprietary ConQuest or FACETS software.
+- a package/runtime dependency on proprietary ConQuest or FACETS software.
+  Their locally executed synthetic validation is release evidence, not code
+  required to install or use mfrmr.
 
 ### Work sequence and evidence invalidation
 
@@ -203,12 +241,12 @@ The following remain outside 0.2.3:
 | --- | --- | --- |
 | M0: freeze the published 0.2.2 baseline | Keep the accepted asset and tag immutable. Conduct 0.2.3 gate-specification, pilot, and package work only under the explicit 0.2.3 identity; any later 0.2.2 correction branches from the published tag. | CRAN acceptance is recorded, and correction and development paths remain separate before M3. |
 | M1: draft the gate specification | Define scenario IDs, estimands, parameter transformations, readiness states, evidence roles, blocking rows, information-criterion formulas/sample-size bases, dimensionality discovery/confirmation partitions, candidate Q matrices, consequence criteria, and explicit pilot-required numeric criteria. | Versioned draft `inst/validation/release-gate-spec-0.2.3.md` and `inst/validation/release-evidence-checklist-0.2.3.csv` committed with review; confirmation remains unauthorized. |
-| M2: instrument, pilot, and freeze | Add independent gradient/objective checks, scenario generators, corrected MML information-criterion instrumentation, external normalization, a TAM dimensionality runner, integration-stability checks, fail-closed import guards, and candidate manifests. Use pilot-only data to calibrate every unresolved criterion, then freeze the specification before confirmation. | Reproducible pilot report with criterion changes recorded plus a reviewed `0.2.3-frozen.*` specification/checklist containing no unresolved blocker criterion and no release decision. |
-| M3: freeze one candidate | Freeze source commit, dependency lock information, external-tool versions, input/partition/Q-matrix fingerprints, integration controls, seeds, and tarball digest. | Candidate manifest that uniquely identifies every internal and external input. |
-| M4: run confirmation | Run the locked core recovery/stress matrix, dimensionality challenge, and matched external comparisons without changing criteria or reusing discovery data as independent confirmation. | Candidate-linked internal and external evidence with every blocker classified. |
+| M2: instrument, pilot, and freeze | Add independent gradient/objective checks, scenario generators, corrected MML information-criterion instrumentation, external normalization, a TAM dimensionality runner, integration-stability checks, fail-closed import guards, and candidate manifests. Qualify one pinned FACETS binary/report/parser identity, build the paired JML RSM/PCM stress runner, and pilot its core/anchor/sparse/edge families. Use pilot-only data to calibrate every unresolved criterion, then freeze the specification before confirmation. | Reproducible internal, ConQuest/TAM, and FACETS pilot reports with criterion changes recorded plus a reviewed `0.2.3-frozen.*` specification/checklist containing no unresolved blocker criterion and no release decision. |
+| M3: freeze one candidate | Freeze source commit, dependency lock information, external-tool executable/report identities, parser/generator versions, input/partition/Q-matrix/topology fingerprints, integration controls, seeds, failed-run policy, and tarball digest. | Candidate manifest that uniquely identifies every internal and external input and forbids mixed external-program versions. |
+| M4: run confirmation | Run the locked recovery/stress matrix, FACETS JML core, ConQuest/TAM comparisons, dimensionality challenge, and matched external rows without changing criteria or reusing discovery/pilot data as independent confirmation. | Candidate-linked internal and external evidence with every blocker classified and every expected scenario/replicate accounted for. |
 | M5: release handoff | Run full regression, cross-platform CI, manuals, URL checks, CRAN-time examples, Win-builder, package-content audit, and public-claim audit. | All blocker rows `ok`, all caveats visible, and an exact checked tarball. |
 
-The repository now contains `0.2.3-draft.16` planning artifacts at
+The repository now contains `0.2.3-draft.17` planning artifacts at
 `inst/validation/release-gate-spec-0.2.3.md` and
 `inst/validation/release-evidence-checklist-0.2.3.csv`. They deliberately
 record unresolved pilot-calibrated criteria and therefore do not authorize
@@ -219,6 +257,17 @@ but remains an open repository milestone until these artifacts receive the
 normal commit/review handoff. M2 completes only after package instrumentation
 and pilot work have resolved every blocking criterion and the specification
 is promoted to a reviewed `0.2.3-frozen.*` identity.
+
+Draft.17 promotes FACETS from a conditional supplied-output row to a mandatory
+JML RSM/PCM validation lane and adds
+`inst/validation/facets-jml-stress-plan-0.2.3.md`. The 2026-08-03 environment
+audit found that the official site advertises FACETS 4.5.1, the locally
+available `Facets.exe` has file metadata 4.5.0 and SHA-256
+`dfb0afb0faa18f026d1b3b4175f22e42cc3764430eb83cbd368c7a572b3593a1`,
+and retained 2026-05-07 reports identify FACETS 4.4.5. These are three distinct
+identities. Existing reports are historical only, and no local binary becomes
+0.2.3 evidence until a deterministic report-header qualification run binds
+the executable, parser, controls, inputs, outputs, and candidate manifest.
 
 The current M2 development branch now contains the first package-side G3
 instrumentation: one internal Person-basis AIC/BIC/SABIC builder, a retained-
@@ -327,7 +376,7 @@ specification, checklist, and gate results are bound by the candidate manifest.
 | Sparse/design behavior | Connected sparse cells are classified correctly; disconnected and unidentified negative controls fail closed and cannot become inferentially ready. | Convergence without connectivity, category support, or identification evidence. |
 | Information criteria | Comparable MML fits expose the same observed-data likelihood basis, free dimension after constraints, Person-based sample size for the current fixed-facet model, exact AIC/BIC/SABIC formula, and locked integration evaluation. | Response-row `N`, summed observation weights, JML incidental-parameter IC ranking, an unlabeled native `aBIC`, or a ranking that changes across the integration ladder. |
 | Dimensionality challenge | Prespecified synthetic 1D/2D controls, matched mfrmr/TAM 1D fits, independently confirmed TAM alternatives, integration-stability checks, rater-by-criterion confounding checks, and consequence classifications meet their locked criteria. | A naive LRT p-value, significance driven only by large N, a Q matrix generated and confirmed on the same data, one QMC node count, or better multidimensional fit without score-utility evidence. |
-| External overlap | Matched ConQuest core rows pass locked estimand-specific tolerances; any promoted FACETS row has matched external evidence. | Correlation alone, unmatched constraints, or comparison of MML/EAP persons with FACETS-style JML persons. |
+| External overlap | Matched ConQuest MML core rows and the qualified FACETS JML RSM/PCM stress core pass locked, estimand-specific rules; optional FACETS fit/DFF rows are promoted only after definition matching. | Correlation alone, FACETS-as-truth reasoning, mixed executable/report versions, unmatched constraints, or comparison of MML/EAP persons with FACETS-style JML persons. |
 | Public contract | Code, help, README, vignettes, capability tables, exports, and runtime guards state the same support boundary. | A roadmap sentence or callable internal helper by itself. |
 | Engineering release | Exact-candidate checks, full suite, platform matrix, manuals, package contents, URLs, examples, timing, and Win-builder are acceptable. | A source-tree check that was not run on the upload tarball. |
 
@@ -380,6 +429,13 @@ must not be advertised as implemented.
 - [ ] Record numerical convergence, identification, data/design readiness,
   inferential readiness, bias, RMSE, interval coverage where defined,
   terminal score, objective, condition indicators, and elapsed time by cell.
+- [ ] Pair every FACETS core replicate with the same generated observations and
+  truth record used by mfrmr. Judge truth recovery for each program separately
+  before judging transformed mfrmr-minus-FACETS differences; agreement between
+  two biased estimates is not validation.
+- [ ] Use microcases, baseline cells, one-factor stresses, targeted interactions,
+  and sensitivity cells instead of an unreviewed full Cartesian product. Freeze
+  the selected cells and Monte Carlo precision rule before confirmation.
 - [ ] Require disconnected or unidentified negative controls to fail closed.
   A negative control reported as numerically and inferentially ready is a
   blocker even if its optimizer converged.
@@ -660,11 +716,20 @@ model cannot silently create a multidimensional `mfrmr` support claim.
 - [ ] Classify every non-passing row as parameterization, identification,
   numerical, reporting, unsupported, or unresolved. An unresolved core row is
   `No-Go`; an unsupported row must remain outside the public claim.
-- [ ] Use FACETS as a row-promotion gate: supported JML Rasch-family element,
-  estimated-threshold (not threshold-anchor), fit, and reporting rows may be
-  promoted only with matched supplied output. FACETS availability is not
-  required to retain an already caveated or blocked row, but that row cannot be
-  advertised as externally validated.
+- [ ] Qualify one FACETS executable/report identity using deterministic binary,
+  RSM, and PCM microcases before it contributes evidence. Bind executable
+  SHA-256, file metadata, report-header version, command/control/input/output
+  hashes, parser/generator hashes, locale, and run date; reject mixed-version or
+  stale-output bundles.
+- [ ] Run the mandatory FACETS JML RSM/PCM stress core defined in
+  `inst/validation/facets-jml-stress-plan-0.2.3.md`: ordinary connected
+  recovery, element/group anchors, sparse/weak-link topology, and edge cases.
+  Require complete replicate accounting and frozen truth, coverage,
+  false-ready, and transformed-difference rules.
+- [ ] Treat FACETS fit and DFF/DIF evidence as separately promotable rows. They
+  enter the public support envelope only after statistic definition, null/non-
+  null generator, multiplicity, estimand, and acceptance rule match; attractive
+  output or familiar labels are insufficient.
 - [ ] Do not use FACETS JML person measures as an external target for MML EAP
   person scores. Compare model parameters or JML outputs only where estimands,
   constraints, and extreme-score handling match.
@@ -690,6 +755,13 @@ model cannot silently create a multidimensional `mfrmr` support claim.
 - [x] Add negative tests ensuring future calibration, threshold-anchor,
   multi-scale, and unrestricted-GPCM terms cannot be reported as current 0.2.3
   support.
+- [ ] Add a candidate-linked, machine-readable support-envelope registry with
+  estimator, model, parameter/statistic, design conditions, maturity state,
+  operational state, caveat, criterion ID, and evidence-manifest hash. Unknown
+  combinations must resolve to `unsupported`, not inherit a nearby row.
+- [ ] Add the FACETS batch audit: isolated synthetic run directories, one
+  process by default, timeout and exit-code capture, exact expected-output
+  inventory, parser failure tests, and a repository privacy/license scan.
 
 ### 0.2.3 Definition of Done
 
@@ -698,8 +770,8 @@ model cannot silently create a multidimensional `mfrmr` support claim.
 - [ ] the M1 draft was reviewed and the M2 gate specification was frozen after
   pilot calibration but before confirmatory evidence;
 - [ ] every numerical, recovery, sparse-design, dimensionality-challenge,
-  information-criterion, ConQuest-core, public-contract, and engineering
-  blocker is `ok` for one exact candidate;
+  information-criterion, ConQuest-core, qualified FACETS JML-core,
+  public-contract, and engineering blocker is `ok` for one exact candidate;
 - [ ] no failed cell is hidden by aggregation and no unresolved external core
   discrepancy remains;
 - [ ] every retained caveat appears in first-screen guidance, help, and the
@@ -708,6 +780,9 @@ model cannot silently create a multidimensional `mfrmr` support claim.
   complete release-blocking evidence runs outside CRAN and is reproducible;
 - [ ] a clean-room reviewer can reproduce the gate decision from the candidate
   manifest without access to private case-level data; and
+- [ ] the machine-readable support envelope resolves every advertised model,
+  estimator, statistic, and design row to exact evidence or an explicit caveat,
+  exploratory, blocked, or unsupported state; and
 - [ ] the release notes explicitly state that threshold anchors, frozen
   calibration, multiple scales, scale-specific PCM, native multidimensional
   estimation, and dimension-specific score production remain later work.
@@ -720,9 +795,11 @@ one observed score scale; multi-scale indexing remains deferred to 0.2.5.
 Public implementation starts only after the 0.2.3 Definition of Done is met;
 schema sketches may be prepared earlier, but they are not current API.
 
-- [ ] Define a versioned calibration bundle containing model specification,
-  typed parameters, identification constraints, element/group anchors,
-  category map, provenance, and software version.
+- [ ] Define a typed `mfrm_calibration` bundle containing model specification,
+  parameter role and scope, identification constraints, element/group anchors,
+  category map, scale namespace, training-data/schema fingerprints, provenance,
+  source package/API versions, and content hash. Unknown schema versions,
+  missing identities, and altered contents fail closed.
 - [ ] Add single-scale threshold/step anchor support, distinguishing partially
   anchored ladders, fully fixed ladders, and starting values, with explicit
   sum-to-zero/origin, degree-of-freedom, and conflict checks.
@@ -732,6 +809,9 @@ schema sketches may be prepared earlier, but they are not current API.
   scores; keep it distinct from 0.2.2 fitted-object posterior scoring.
 - [ ] Propagate calibration identity into reports, exports, and replay
   manifests.
+- [ ] Separate creation, validation, migration, and application APIs so a fit
+  object, an arbitrary parameter table, and a validated frozen calibration
+  cannot be substituted for one another by class coercion or column naming.
 - [ ] Reserve an unambiguous scale namespace in the calibration schema without
   claiming that a 0.2.4 fit can contain multiple observed `ScaleId` values.
 - [ ] Validate round trips, reduction cases, and external overlap before using
@@ -769,9 +849,35 @@ numerical or 0.2.4 calibration problem.
 - [ ] Demonstrate that multiple observed scales retain one latent dimension;
   treat multidimensionality as a separate 0.3-or-later model claim.
 
-## 0.3 and later: research extensions
+## 0.3.0: API, evidence, and ecosystem consolidation
 
-These are separate research programs, not promises attached to 0.2.x.
+0.3.0 is a consolidation release, not a container for whichever research
+feature happens to finish first. Its entry condition is completion of the
+0.2.3 evidence contract and stable 0.2.4/0.2.5 reduction cases. Its exit gates
+are:
+
+- [ ] Freeze versioned schemas for fits, diagnostics, comparisons,
+  calibrations, support-envelope rows, and evidence manifests; publish explicit
+  migration or rejection behavior for older objects.
+- [ ] Define a compatibility and deprecation policy covering argument names,
+  estimator aliases, print/report fields, serialized objects, and one full
+  minor-release warning cycle where technically safe.
+- [ ] Provide public, synthetic, end-to-end case studies for supported RSM/PCM
+  and bounded-GPCM routes, including an intentionally unsupported design that
+  demonstrates fail-closed behavior.
+- [ ] Publish reproducible benchmark bundles and a performance envelope by
+  sample size, response count, facet-level count, model, engine, memory, and
+  runtime; performance evidence does not relax numerical gates.
+- [ ] Obtain an independent methodological/code review of identification,
+  parameter transformations, recovery, interval interpretation, external
+  comparisons, and high-stakes caveats, with dispositions retained publicly.
+- [ ] Establish contributor-facing validation instructions, known-answer data,
+  generator/normalizer versioning, and a CI tier that detects evidence-schema
+  drift without requiring proprietary software.
+
+## Research tracks after core consolidation
+
+These are separate research programs, not promises attached to 0.2.x or 0.3.0.
 
 - restricted multidimensional `RSM`/`PCM`, followed only later by any
   multidimensional GPCM route;
@@ -792,6 +898,59 @@ These are separate research programs, not promises attached to 0.2.x.
 Each extension needs its own estimand, identification argument, negative
 tests, recovery evidence, external overlap where possible, and public support
 boundary. Experimental implementation alone is not a release claim.
+
+## 1.0.0: validated core stability contract
+
+1.0.0 means that a deliberately bounded core is stable; it does not mean
+feature parity with FACETS, TAM, ConQuest, or every MFRM formulation. Release is
+authorized only when:
+
+- the core estimands, identification constraints, object/calibration schemas,
+  public names, and migration policy are declared stable;
+- all supported core rows have independently rerun, versioned truth-recovery,
+  interval, external-overlap, negative-control, and cross-platform evidence;
+- the published support envelope states where evidence is absent or designs
+  are unsupported, with unknown combinations failing closed;
+- operational scoring has round-trip, stale-calibration, unknown-level,
+  incompatible-scale, and provenance-tampering tests; and
+- at least one external reviewer can reconstruct representative claims from
+  public synthetic inputs and retained manifests without proprietary case data.
+
+## Explicit icebox
+
+The following remain outside committed release scope until a separate proposal
+defines estimands, identification, reduction cases, computational cost, and
+evidence gates: unrestricted GPCM; native multidimensional MFRM and subscores;
+Bayesian/MCMC backends; posterior-predictive checks; multivariate G-theory;
+mixture, unfolding, and rater-process families; automatic DIF/DFF decision
+rules; and distributed/high-performance engines. An experimental branch or a
+callable internal helper does not remove an item from the icebox.
+
+## Feature maturity and common Definition of Done
+
+Every public capability is assigned exactly one maturity state: `experimental`,
+`validated`, `stable`, `deprecated`, or `unsupported`. Operational readiness
+(`ready`, `caveated`, `blocked`, or `not_applicable`) is recorded separately;
+maturity and readiness are not synonyms.
+
+A capability may be promoted only when all applicable items are complete:
+
+1. the estimand and user decision it informs are explicit;
+2. identification, constraints, scale orientation, and reduction cases are
+   specified and tested;
+3. public API, object schema, errors, warnings, and migration behavior are
+   documented;
+4. truth-recovery, uncertainty/coverage where supported, numerical, and
+   negative-control evidence pass prespecified rules;
+5. matched external evidence is supplied where a defensible overlap exists,
+   without treating external software as ground truth;
+6. sparse, extreme, missing, disconnected, and malformed inputs have explicit
+   outcomes and cannot become falsely ready;
+7. tests, examples, reference documentation, support-envelope rows, and release
+   notes agree;
+8. runtime, memory, dependency, privacy, licensing, and reproducibility costs
+   are acceptable for the declared execution tier; and
+9. an independent review and candidate-linked evidence manifest are complete.
 
 ## Permanent development principles
 
@@ -820,3 +979,9 @@ boundary. Experimental implementation alone is not a release claim.
 13. An information-criterion label never hides its likelihood basis, free-
     parameter count, independent sampling unit, exact formula, or integration
     evaluation.
+14. FACETS, ConQuest, and TAM are independent comparators, not truth. Simulation
+    truth, estimand matching, and between-program agreement are reported as
+    separate questions.
+15. External evidence binds the executable, version reported by the output,
+    parser/generator identity, input/output hashes, and candidate; version
+    ambiguity or stale-output reuse fails closed.
