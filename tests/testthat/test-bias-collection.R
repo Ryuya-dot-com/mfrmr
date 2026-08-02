@@ -76,3 +76,16 @@ test_that("estimate_all_bias accepts explicit pair specifications", {
   expect_identical(bias_subset$summary$Interaction, "Rater x Criterion")
   expect_true("Rater x Criterion" %in% names(bias_subset$by_pair) || !bias_subset$summary$Kept[1])
 })
+
+test_that("explicit Person pairs do not require automatic Person enumeration", {
+  one_facet_fit <- list(config = list(facet_names = "Rater"))
+
+  resolved <- mfrmr:::resolve_bias_collection_pairs(
+    one_facet_fit,
+    pairs = list(c("Person", "Rater")),
+    include_person = FALSE
+  )
+
+  expect_identical(resolved[[1]]$facets, c("Person", "Rater"))
+  expect_identical(resolved[[1]]$label, "Person x Rater")
+})

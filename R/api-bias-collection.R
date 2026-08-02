@@ -266,18 +266,23 @@ estimate_all_bias <- function(fit,
 }
 
 resolve_bias_collection_pairs <- function(fit, pairs = NULL, include_person = FALSE) {
-  available <- as.character(fit$config$facet_names %||% character(0))
-  available <- available[!is.na(available) & nzchar(available)]
+  modeled_facets <- as.character(fit$config$facet_names %||% character(0))
+  modeled_facets <- modeled_facets[!is.na(modeled_facets) & nzchar(modeled_facets)]
+  modeled_facets <- unique(modeled_facets)
+
+  # `include_person` controls automatic enumeration only. Explicit `pairs`
+  # may name the canonical Person role directly.
+  known_facets <- unique(c("Person", modeled_facets))
+  available <- modeled_facets
   if (isTRUE(include_person)) {
     available <- c("Person", available)
   }
   available <- unique(available)
 
-  if (length(available) < 2L) {
-    stop("At least two available facets are required for multi-pair bias estimation.", call. = FALSE)
-  }
-
   if (is.null(pairs)) {
+    if (length(available) < 2L) {
+      stop("At least two available facets are required for multi-pair bias estimation.", call. = FALSE)
+    }
     auto_pairs <- utils::combn(available, 2, simplify = FALSE)
     return(lapply(auto_pairs, function(x) list(facets = x, label = paste(x, collapse = " x "))))
   }
@@ -293,13 +298,13 @@ resolve_bias_collection_pairs <- function(fit, pairs = NULL, include_person = FA
     if (length(pair) < 2L) {
       stop("Each element of `pairs` must contain at least two facet names.", call. = FALSE)
     }
-    bad <- setdiff(pair, available)
+    bad <- setdiff(pair, known_facets)
     if (length(bad) > 0) {
       stop(
         "Unknown facet(s) in `pairs[[", i, "]]`: ",
         paste(bad, collapse = ", "),
         ". Available: ",
-        paste(available, collapse = ", "),
+        paste(known_facets, collapse = ", "),
         call. = FALSE
       )
     }
