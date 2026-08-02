@@ -1,0 +1,836 @@
+# mfrmr 0.2.3 release-gate specification
+
+## Document state
+
+| Field | Value |
+| --- | --- |
+| Target release | 0.2.3 |
+| Specification ID | `0.2.3-draft.13` |
+| Date | 2026-07-28 |
+| Status | M1 source review recorded; M2 IC contract v2, GHQ pilots, external-IC normalizer v1, audited ConQuest objective/free-dimension handoff, strict binary and four-category RSM/PCM node ladders with same-platform q=31 repeats, TAM import guards, the first dimension-aware TAM integration pilot, the fixed-fixture canonical-score/GPCM-transformation pilot, and the first additive RSM/PCM common-vector engine-path pilot are instrumented, while score/objective/parameter tolerance freeze, independent-platform replication, bootstrap, attribution, consequence, and confirmation work remain pending |
+| Confirmation authorized | No |
+| Evidence checklist | `release-evidence-checklist-0.2.3.csv` |
+| M1 review record | `release-gate-m1-review-0.2.3.md` |
+| Authoritative sequence | Repository-root `ROADMAP.md` |
+
+This document turns the 0.2.3 roadmap into a testable gate contract. It is a
+planning artifact, not evidence that any gate has passed. In particular,
+numeric rows marked `pilot_required` must be calibrated on pilot data, changed
+to `frozen_numeric`, and reviewed before any confirmatory result is viewed.
+Until then, M2 remains incomplete and M3-M5 evidence cannot be generated.
+
+The specification and checklist are repository evidence. `.Rbuildignore`
+excludes `inst/validation` from the CRAN source package, so these protocols do
+not add CRAN check time or create a public package API.
+
+## Scope and non-scope
+
+0.2.3 strengthens evidence for the existing single-observed-scale,
+unidimensional `RSM`, `PCM`, and bounded-`GPCM` contract. It may add small
+public fields or guards when needed to prevent an unsupported interpretation.
+It does not add:
+
+- native multidimensional latent-trait estimation or dimension scores;
+- multiple observed `ScaleId` values or scale-specific PCM;
+- threshold/step anchors or frozen-calibration operational scoring;
+- unrestricted GPCM, posterior-predictive checks, MCMC, or multivariate
+  G-theory; or
+- an automated dependency on ConQuest or FACETS.
+
+The public estimator labels remain `MML` and `JML`. `JMLE` is an input alias
+for `JML`, not a separate estimator. Person estimates from MML and JML are not
+assumed equal and are not compared without a named common estimand.
+
+## Gate states and evidence roles
+
+### Release decisions
+
+| Checklist value | Meaning |
+| --- | --- |
+| `blocker_if_failed` | A failure or unresolved result is a 0.2.3 No-Go. |
+| `caveat_if_incomplete` | It may ship only when the limitation is unavoidable in the affected first-screen output and documentation. |
+| `roadmap_if_missing` | It must remain guarded and outside the advertised 0.2.3 scope. |
+
+### Evidence status
+
+Every result row uses one of:
+
+- `not_run`: no candidate-linked result exists;
+- `ok`: the frozen acceptance rule passed;
+- `concern`: a blocking requirement failed or could not be established;
+- `review`: a prespecified caveat requires human classification;
+- `not_applicable`: the frozen scenario registry proves the row is outside the
+  candidate's claimed scope.
+
+`review` is not a synonym for pass. A blocker row cannot finish as `review`.
+
+### Evidence roles
+
+| Role | Permitted use |
+| --- | --- |
+| `unit` | Exact formula, schema, reduction, and fail-closed regression checks. |
+| `pilot` | Criterion calibration and feasibility only; never release confirmation. |
+| `confirmation` | Locked release decision on untouched simulation seeds, Persons, or external data. |
+| `sensitivity` | Robustness context that cannot hide a failed confirmation row. |
+| `external` | Matched result produced by a named external engine and normalized under a recorded contract. |
+| `engineering` | Candidate-linked build, check, timing, CI, and artifact evidence. |
+
+Pilot and confirmation rows must have disjoint seed registries and, for an
+empirical dimensionality challenge, disjoint Person partitions or a clearly
+labelled same-sample sensitivity status.
+
+### Criterion states
+
+| State | Meaning |
+| --- | --- |
+| `frozen_structural` | Exact schema, identity, formula, prohibition, or fail-closed rule that does not require pilot calibration. |
+| `pilot_required` | The metric or design is named, but its numeric value or grid must be calibrated before confirmation. |
+| `frozen_numeric` | Pilot calibration is complete and the numeric rule is frozen for confirmation. |
+| `candidate_required` | The rule is defined but can be evaluated only after a candidate or external result exists. |
+| `roadmap_guard` | The route remains unavailable or deferred in 0.2.3. |
+
+## Freeze and invalidation rules
+
+M2 may freeze the gate only when all of the following are true:
+
+1. every blocker row has a complete scenario definition, metric, direction,
+   threshold, aggregation rule, and missing/failed-replicate policy;
+2. no blocker row remains `pilot_required`, contains `TBD`, or relies on an
+   unstored software default;
+3. candidate Q matrices, model constraints, partitions, seed registries,
+   integration ladders, and consequence criteria have stable identifiers;
+4. the specification and checklist hashes are recorded and reviewed; and
+5. no confirmatory result has been inspected under the proposed thresholds.
+
+Pilot findings may revise the current draft, but each revision increments the
+specification ID and records the reason. The first confirmation-eligible
+version is named `0.2.3-frozen.1`. Any later change to a blocker scenario,
+metric, tolerance, Q matrix, partition, seed, integration policy, or
+aggregation rule invalidates all M3-M5 evidence and requires a new frozen
+version.
+
+## Candidate and evidence identity
+
+### Candidate manifest
+
+The M3 manifest must record at least:
+
+| Field | Requirement |
+| --- | --- |
+| Package identity | Version, source commit, tree hash, and tarball SHA-256. |
+| Gate identity | Specification ID/hash and checklist hash. |
+| Runtime identity | R version, platform, dependency versions, compiler, and relevant environment flags. |
+| Data identity | Scenario ID, input hash, category map, missingness map, weight policy, and Person partition hash. |
+| Model identity | Family, estimator, facets, interactions, anchors/constraints, free-parameter map, and starting-value hash. |
+| Integration identity | Engine, nodes, QMC setting, sequence/hash, seed where operative, and evaluation policy. |
+| External identity | Program, version/edition, run date, command/input/output hashes, and normalization version. |
+| Random identity | Generator seed registry, bootstrap seed registry, and failed-replicate policy. |
+
+No local absolute path, user name, identifier-bearing case data, license key,
+or proprietary binary is retained in repository evidence.
+
+### Result-row schema
+
+Every generated gate result must contain:
+
+`Gate`, `Item`, `ScenarioId`, `CandidateCommit`, `SpecId`, `EvidenceRole`,
+`Metric`, `Estimate`, `Threshold`, `Direction`, `MonteCarloSE`, `NumericalSE`,
+`ReplicatesPlanned`, `ReplicatesRetained`, `FailedReplicates`, `Status`,
+`EvidencePath`, and `EvidenceHash`.
+
+For an exact structural check, `Estimate`, `MonteCarloSE`, and `NumericalSE`
+may be empty, but `Status`, the exact rule, and evidence identity may not be.
+Aggregates must link to retained per-replicate evidence outside the package.
+
+## Scenario registry
+
+The final frozen registry may split a row into more cells, but may not omit the
+following scenario classes.
+
+| Scenario ID | Evidence role | Required design |
+| --- | --- | --- |
+| `NUM-BIN-REDUCE` | unit/confirmation | Two-category RSM and PCM reduction to the intended binary model. |
+| `NUM-RSM-CORE` | pilot/confirmation | Connected unidimensional RSM across planned Person counts and facet sizes. |
+| `NUM-PCM-CORE` | pilot/confirmation | Connected PCM with unequal supported step ladders in the current rectangular contract. |
+| `NUM-GPCM-BOUND` | pilot/confirmation | Bounded GPCM covering unit, near-flat, moderate, and boundary-adjacent slope regimes. |
+| `NUM-ENGINE-PARITY` | pilot/confirmation | Direct, hybrid, and EM-plus-polish evaluated at the same retained parameter vector and quadrature. |
+| `REC-SMALL-CORE` | pilot/confirmation | Small supported designs used to calibrate finite-sample recovery limits. |
+| `REC-STANDARD-CORE` | pilot/confirmation | Typical connected designs for every claimed parameter class. |
+| `DES-SPARSE-LINKED` | pilot/confirmation | Sparse but connected rater assignment with explicit common-Person links. |
+| `DES-WEAK-BRIDGE` | pilot/confirmation | Weak links, bridge levels, and articulation cases. |
+| `DES-DISCONNECTED` | unit/confirmation | Deliberately disconnected negative control that must fail closed. |
+| `DES-EMPTY-CATEGORY` | unit/confirmation | Empty or near-empty category support with a prespecified support classification. |
+| `DES-EXTREME-SCORE` | pilot/confirmation | Extreme Person/facet score patterns separated from optimizer status. |
+| `IC-FORMULA` | unit | Exact AIC, Person-BIC, and Sclove-SABIC formulas. |
+| `IC-FREE-DIMENSION` | unit | Constraint-aware parameter count under centering, anchors, steps, slopes, interactions, and latent regression. |
+| `IC-WEIGHT-POLICY` | unit | Unit weights, constant-within-Person frequency weights, and row-varying weights. |
+| `IC-INTEGRATION` | pilot/confirmation | Common-evaluation quadrature/QMC ladder for delta-criterion stability. |
+| `DIM-SYN-TRUE-1D` | pilot/confirmation | True 1D false-selection control across targeting and sparse-design cells. |
+| `DIM-SYN-TRUE-2D` | pilot/confirmation | Prespecified 2D alternatives spanning moderate and high dimension correlations. |
+| `DIM-SYN-INTERACTION` | pilot/confirmation | Rater-by-criterion interaction without latent multidimensionality. |
+| `DIM-SYN-CONFOUNDED` | pilot/confirmation | Deliberately inseparable interaction/dimension negative control. |
+| `DIM-EMP-DISCOVERY` | pilot | Residual PCAR/Q3-style hypothesis generation on discovery Persons only. |
+| `DIM-EMP-CONFIRM` | confirmation | Frozen TAM alternatives on untouched Persons or an external sample. |
+| `EXT-CQ-BINARY` | external | Matched unidimensional ConQuest binary MML core. |
+| `EXT-CQ-RSM` | external | Matched unidimensional ConQuest RSM MML core. |
+| `EXT-CQ-PCM` | external | Matched unidimensional ConQuest PCM MML core. |
+| `EXT-FACETS-PROMOTED` | external | Only the JML Rasch-family rows proposed for a public coverage promotion. |
+| `ENG-CRAN-SMOKE` | engineering | Deterministic CRAN-side package workload. |
+| `ENG-FULL-CORE` | engineering | Complete non-CRAN blocker suite and cross-platform matrix. |
+
+The frozen registry must give every simulation cell an ADEMP record: aim,
+data-generating mechanism, estimand, fitted method, and performance measures.
+Sample sizes, level counts, assignment densities, category probabilities,
+effect sizes, and replication counts remain `pilot_required` in this draft.
+
+## G0: candidate identity
+
+Candidate identity is exact, not tolerance based.
+
+- Every internal and external evidence row must resolve to one manifest.
+- Source commit, installed-package source, tarball, and check-log package
+  version must agree.
+- The gate specification, checklist, Q matrices, Person partitions, scenario
+  registry, seed registry, and integration registry must match their hashes.
+- An external result without input, output, version, date, and normalizer
+  fingerprints is unresolved.
+- A stale result from another candidate is a blocker even when its numerical
+  values would pass.
+
+## G1: MML stationarity and numerical agreement
+
+### Canonical score
+
+The gate operates on the identified free parameter vector after equality
+constraints. The current bounded-scope GPCM implementation is not optimized
+under box bounds: `n-1` free log slopes are expanded to `n` sum-zero log
+slopes, then exponentiated to positive slopes with geometric mean one. Its G1
+rule therefore uses the transformed free-coordinate score and stores both the
+log-slope and positive-slope Jacobians; it does not call this a projected
+gradient. If a future implementation introduces a genuine inequality or box
+constraint, that route requires a separately declared projected-gradient/KKT
+rule before entering this gate. The analytical score is checked against an
+independently implemented central-difference or automatic-differentiation
+reference on small binary, RSM, PCM, and bounded-GPCM fixtures.
+
+The draft.12 fixed pilot uses q=31, two fixed hashed fixtures, a relative-step
+ladder of `1e-4`, `3e-5`, and `1e-5`, and both retained-solution and
+deterministic nonzero-score points. All ten run/point references were
+computable; the maximum absolute/scaled score difference was `6.91e-9`, and
+the largest numeric step-ladder range was `6.91e-8`. The GPCM log/slope
+Jacobian check reached a maximum difference of `3.00e-10`. Exact binary
+RSM=PCM and unit-slope GPCM=PCM log-probability, probability, objective, and
+common-score reductions also held. These values are recorded in
+`numerical-stationarity-pilot-record-0.2.3.md` as pilot calibration and
+structural-regression evidence only.
+
+The current package review tolerance
+`max(1e-4, 10 * reltol)` is a pilot baseline, not the frozen 0.2.3 release
+criterion. Pilot work must determine whether a scaled score is also required
+when parameter classes have materially different curvature.
+
+### Retained solution
+
+- Direct, hybrid, and EM-plus-polish routes are compared at a common retained
+  parameter vector, likelihood implementation, quadrature, and constraints.
+- Optimizer code zero and EM relative change are secondary evidence. Neither
+  can override a failed canonical score check.
+- `maxit` is a prespecified ceiling. Iteration-limited fits remain review-only
+  and cannot pass a blocker row through repeated ad hoc reruns.
+- Objective and transformed parameter differences use pilot-calibrated
+  absolute and relative tolerances by parameter class.
+- Binary reduction, unit-slope reduction, and step/slope transformation checks
+  are exact regression blockers.
+
+The draft.13 fixed pilot applies this contract to binary and four-category
+additive RSM/PCM fits at q=31. It records four paths per run: public direct,
+public hybrid, converged raw EM as a diagnostic, and common direct polish
+started from the exact hashed raw-EM vector. The mandatory parity set is
+direct, hybrid, and EM-plus-common-direct-polish; raw EM readiness or native
+relative-likelihood convergence cannot satisfy the row by itself.
+
+Each retained path vector is evaluated through all direct, EM, and hybrid fit
+contexts after their quadrature, identification, coordinate order, objective,
+and score structures are shown to be identical. Across all 16 fixed run/path
+summaries, both the objective evaluator range and the coordinate-wise score
+evaluator range were exactly zero. Across the 12 mandatory path pairs, the
+largest objective difference was `1.47e-10`, the largest free or expanded
+parameter difference was `5.73e-6`, and the largest mandatory-path common
+score was `5.06e-5`. All mandatory paths happened to be inference-ready and no
+path emitted a warning. These are pilot observations only:
+`NUM-OBJECTIVE-TOL` and `NUM-PARAMETER-TOL` remain `pilot_required` until the
+grid is expanded and a reviewed margin rule is frozen.
+
+Engine parity currently applies only to additive equal-slope RSM/PCM. GPCM has
+one supported direct engine; requesting EM or hybrid falls back to direct and
+cannot count as independent parity evidence. Model-estimated interactions and
+latent regression likewise fall back to direct for unsupported engine
+requests. The fixed scope registry and fail-closed tests preserve this
+boundary. Full details are recorded in
+`mml-engine-parity-pilot-record-0.2.3.md`.
+
+## G2: recovery and sparse-design behavior
+
+Core recovery is evaluated separately for every claimed parameter class and
+scenario cell. The minimum record is bias, RMSE, interval coverage where the
+interval is supported, standard-error availability, run success,
+inference-ready rate, Monte Carlo standard error, terminal score, objective,
+condition indicator, and elapsed time.
+
+- Replication counts are selected from a frozen Monte Carlo-precision target,
+  not convenience or elapsed time alone.
+- A pooled mean cannot rescue a failed sample-size, family, facet, category,
+  slope, or link-density cell.
+- Connected sparse, weak-link, bridge, articulation, disconnected,
+  empty-category, and extreme-score cases retain separate labels.
+- `DES-DISCONNECTED` and other unidentified negative controls must not become
+  inferentially ready. A false-ready result is a blocker.
+- The deterministic CRAN smoke tier demonstrates execution only. Release
+  recovery decisions come from the non-CRAN confirmation tier; extended
+  sensitivity cannot hide a failed core cell.
+
+Bias, RMSE, coverage, failure-rate, and Monte Carlo-precision thresholds are
+`pilot_required`. Existing helper defaults are not silently adopted as
+release thresholds.
+
+## G3: information-criterion contract
+
+### Common MML panel
+
+For the current fixed-facet marginal MML likelihood, Persons are the
+independent likelihood units after the latent Person parameter is integrated
+out. Let `D = -2 logLik`, `k` be the dimension of the free optimization vector
+after constraints, and `N_person` be the number of independent Persons. The
+common panel is:
+
+```text
+AIC   = D + 2 k
+BIC   = D + log(N_person) k
+SABIC = D + log((N_person + 2) / 24) k
+```
+
+The SABIC formula identifier is `sclove_n_plus_2_over_24`.
+
+Every fitted MML object and comparison row must expose `Deviance`, `LogLik`,
+`Npar`, `ResponseRows`, `WeightedResponseTotal`, `Persons`, `ICSampleSize`,
+`ICSampleSizeBasis`, `AIC`, `BIC`, `SABIC`, the formula identifiers, and the
+integration-evaluation identity.
+
+### Migration and free dimension
+
+0.2.2 uses response rows, or summed observation weights, in the BIC penalty.
+0.2.3 corrects that basis without silently changing the meaning of the legacy
+summary `N`: response rows, weighted response total, Persons, and IC sample
+size remain separate fields, and NEWS identifies the behavior change.
+
+`k` excludes MML EAP Person estimates and includes every estimated free
+latent-regression, population variance/covariance, facet, step, slope, and
+interaction coordinate. It must equal the retained optimization-vector
+dimension after anchors and constraints.
+
+`Npar` is the canonical 0.2.3 field. The existing lower-case `npar` comparison
+column remains a compatibility alias during the 0.2.x series and must equal
+`Npar`; it is never counted as a second source of truth.
+
+### Comparability rules
+
+| Fit type | AIC/BIC/SABIC ranking |
+| --- | --- |
+| Unweighted inference-ready MML on the same observations and likelihood basis | Eligible after all identity checks. |
+| MML with an explicitly supplied all-unit weight column | Same as unweighted MML. |
+| MML with any non-unit observation weight, including a value constant within Person | Suppressed with `ICComparable = FALSE` in 0.2.3. |
+| JML | No primary AIC/BIC/SABIC ranking; any raw value is descriptive. |
+| Cross-engine MML | Eligible only after likelihood constants, observations, constraints, `k`, `N_person`, and integration evaluation are matched. |
+
+The non-unit-weight rule is structural rather than pilot-calibrated. In the
+current marginal likelihood, multiplying every conditional response
+contribution for a Person by a common weight is not generally equivalent to
+replicating that Person as independent latent draws. Therefore the label
+"Person-frequency weight" does not by itself justify an effective-Person BIC
+sample size. A later weighting contract may introduce a different likelihood
+with explicit sampling semantics; 0.2.3 does not infer one from the supplied
+row weights.
+
+External comparisons recompute the common panel from comparable `D`, `k`, and
+`N_person`. Native fields remain separately named and retain their formula.
+In the audited TAM 4.3-25/official-source snapshot, native `aBIC` uses
+`log((n - 2) / 24)` and must not be relabelled as the common Sclove SABIC.
+Every external run records and rechecks its installed version and native
+formula.
+
+### Stored-value and object-version rules
+
+Every newly fitted 0.2.3 MML object records `ICContractVersion`, `Deviance`,
+`LogLik`, `Npar`, `ResponseRows`, `WeightedResponseTotal`, `Persons`,
+`ICSampleSize`, `ICSampleSizeBasis`, `WeightPolicy`, `ICEligible`,
+`ICSelectable`, `ICStatus`, `AIC`, `BIC`, `SABIC`, `SABICSelectable`, formula
+identifiers, the integration-evaluation identity, `ICQuadraturePoints`,
+`ICIntegrationTier`, `ICIntegrationStatus`, and
+`ICIntegrationSelectable`.
+`N` retains its 0.2.2 response-row or summed-weight meaning for compatibility;
+it is not an IC input.
+
+When `ICEligible = FALSE`, the canonical `AIC`, `BIC`, and `SABIC` fields are
+`NA`; a backward-compatible raw quantity, if retained, must use an explicitly
+legacy/descriptive field name. This keeps a displayed value from bypassing the
+comparison guard.
+
+`compare_mfrm()` recomputes the common panel from canonical `LogLik`, `Npar`,
+and `Persons`, and verifies any stored criterion against that recomputation.
+It does not inherit a stale summary value as the comparison value. A mismatch
+between stored and recomputed values is a concern and suppresses ranking.
+
+An object without the 0.2.3 contract identity is classified
+`legacy_or_unknown`. Its stored 0.2.2 AIC/BIC may be displayed as explicitly
+legacy descriptive output, but it cannot be mixed into a 0.2.3 ranking or
+silently reinterpreted with Person-based BIC. Refit under the current package
+to obtain comparable criteria.
+
+### Numerical and interpretive guards
+
+- ICs are evaluated at a common locked integration setting. Their ordering and
+  delta values must be stable over the frozen quadrature/QMC ladder within a
+  pilot-calibrated numerical tolerance.
+- When QMC/deviance drift is not small relative to a model difference, the IC
+  comparison is unresolved.
+- At `N_person <= 22`, the Sclove SABIC penalty is non-positive; SABIC may be
+  displayed with a warning but cannot block or select a model.
+- Delta ICs are relative evidence within a candidate set. Neither Akaike nor
+  BIC-derived weights are described as assumption-free literal model
+  probabilities.
+- BIC/SABIC do not repair boundary/singularity or make a tiny large-N gain
+  practically important. No IC is a standalone dimensionality gate.
+
+### Current integration-pilot state
+
+The first working-tree `IC-INTEGRATION` pilot was run under `0.2.3-draft.2`,
+then extended to a deterministic six-scenario matrix under draft.3. Draft.4
+adds an independent-refit layer and a fail-closed public integration tier.
+All three development layers are recorded in
+`ic-integration-pilot-record-0.2.3.md`; none is candidate-linked confirmation.
+The policy `fixed_retained_vector_common_ghq_v1` holds each candidate's free
+parameter vector fixed and changes only the common GHQ evaluation grid. This
+isolates integration approximation from optimization and verifies that the
+source-grid evaluation reproduces the retained objective first.
+
+The development pilot ladder uses q = 7, 15, 31, 61, 91, and 121, with q=121 as the
+reference ceiling. q=7 and q=15 are diagnostic stress points. q=31 through
+q=121 are candidate core points, not a frozen release ladder. The following
+are candidate rules for calibration, not `frozen_numeric` criteria:
+
+- source-grid objective reproduction within
+  `1e-10 * max(1, abs(stored objective))`;
+- unchanged criterion ordering over the candidate core ladder;
+- maximum absolute raw-deviance drift no larger than 0.10;
+- maximum absolute pairwise criterion-gap drift no larger than 0.10 and no
+  larger than 10% of the corresponding non-tied reference gap; and
+- no automatic preference when the reference gap is within the declared
+  numerical tie tolerance.
+
+The absolute 0.10 candidate is one twentieth of the conventional delta-IC 2
+screening scale already described in the package help; it is a calibration
+anchor rather than a result-tailored pass line. The broader pilot must still
+challenge it with further weak-link, boundary-adjacent, and deliberately
+near-tied candidates. TAM product-quadrature and QMC ladders require their own
+evaluator and cannot inherit the mfrmr GHQ result. `IC-INTEGRATION-TOL`
+therefore remains `pilot_required`, and confirmation remains unauthorized.
+
+The six retained draft.3 cells had no fit failure or warning. Across the
+candidate q=31--121 core, every criterion ordering was stable; the largest
+raw drift was 0.0397363, pairwise-gap drift was 0.00924359, and relative gap
+drift was 0.0160086. These observed values sit inside all three candidate
+rules but do not freeze them. The wide-latent cell, whose estimated latent
+variance was approximately 9, changed AIC/SABIC ordering when q=7 and q=15
+were included. This is a direct warning against treating equal coarse-grid
+identities as sufficient IC evidence.
+
+The draft.4 policy `independent_refit_then_common_ghq_v1` separately refitted
+all six matrix scenarios at q = 7, 15, 31, 61, 91, and 121 from ordinary
+deterministic starts, then reevaluated every retained solution at common
+q=121. All fits remained warning-free and the q=31--121 ordering remained
+stable. Across the six scenarios, the largest core native criterion-gap
+drift was 0.00944565, the largest common-q=121 gap drift was 0.000202065, the
+largest parameter drift was 0.00484794, and the largest common-reference
+deviance excess was 0.000734096. In the wide-latent cell, the native q=7
+AIC/SABIC ordering reversed, but reevaluating both q=7 solutions at q=121
+restored the q=121 preference. The q=15 native gap was already order-stable
+but differed from the reference AIC gap by about 10.5%. These results locate
+the observed coarse-grid problem primarily in integration evaluation and do
+not justify automatic ranking at q=7 or q=15.
+
+Accordingly, contract `mfrmr_ic_person_v2` separates formula eligibility from
+selection readiness:
+
+| GHQ points | Integration tier | Public comparison policy |
+| ---: | --- | --- |
+| below 15 | `coarse_screening` | Raw canonical ICs may be inspected, but automatic ranking is screening-only and suppressed. |
+| 15--30 | `intermediate_review` | Raw canonical ICs are review-only; automatic ranking remains suppressed. |
+| 31--60 | `standard_start` | Same-basis eligible fits may enter comparison; this is a starting grid, not proof of integration stability. |
+| 61 or more | `dense_sensitivity` | Same-basis eligible fits may enter comparison and can provide denser-grid sensitivity evidence. |
+
+Below q=31, `ICEligible` may remain true while `ICSelectable` is false;
+`compare_mfrm()` suppresses delta criteria, criterion weights, preferred-model
+labels, evidence ratios, and LRT. This is a fail-closed draft policy, not a
+frozen declaration that every q>=31 comparison is adequate. Close,
+consequential, wide-latent, or otherwise sensitive comparisons still require
+a prespecified denser common-grid check. Weak-link/boundary cells,
+cross-platform replication, TAM QMC evaluation, and the practical reference
+ceiling remain unresolved before the ladder and tolerance can be frozen.
+
+### Current external-IC normalization state
+
+Draft.5 adds the repository-only contract `mfrmr_external_ic_v1`. It calls the
+same internal common-panel builder used by newly fitted mfrmr objects, so the
+normalized panel has one formula source:
+
+- `AIC = D + 2k`;
+- `BIC = D + log(N_person)k`; and
+- `SABIC = D + log((N_person + 2) / 24)k`.
+
+The record keeps engine-native fields and formula identifiers separately.
+The TAM 4.3-25 adapter verifies native AIC/BIC arithmetic and retains native
+`aBIC = D + log((n - 2) / 24)k`; it never copies that value into common
+`SABIC`. Seven deterministic fixtures cover ready MML arithmetic, unchecked
+integration, JML suppression, the small-N SABIC boundary, inconsistent
+deviance/log-likelihood, and incomplete identity. A local TAM 4.3-25 PCM
+development run also exercised the object adapter. These are pilot/unit
+observations, not candidate-linked external evidence.
+
+Arithmetic eligibility and comparison readiness are distinct. A record can
+show reproducible common criteria while remaining non-comparable. Delta
+criteria, weights, and preferred labels require all candidates to have:
+
+- MML, finite consistent deviance/log-likelihood, free dimension, and Person
+  count;
+- one shared observation-set, likelihood-basis, constraint-basis, and
+  integration-comparison identity;
+- an engine-specific integration-evaluation identity;
+- reviewed convergence status `pass`; and
+- integration-stability status `pass`.
+
+The public `import_tam_fit()` route now accepts only verified unidimensional
+`tam.mml` objects. It rejects `tam.jml` rather than relabelling it as MML and
+rejects `ndim > 1` rather than exposing a flattened one-scale imported fit.
+Native TAM criteria and version provenance remain descriptive on supported 1D
+imports, which cannot enter the current mfrmr IC contract automatically.
+Dimension-aware TAM evidence belongs to the separate repository runner.
+
+Draft.7 adds `mfrmr_conquest_ic_handoff_v1` to the ConQuest bundle and the
+repository-only external normalizer. The generated command retains the
+estimate `matrixout` history as CSV. The adapter reads its documented third
+matrix column as deviance, checks the history free dimension independently
+against the combined parameter/regression/covariance export rows, checks the
+final history vector against those exports, and requires the case-EAP PIDs to
+match the expected bundle Person IDs exactly. In ConQuest 5.47.5 the native CSV header calls that objective
+column `LogLikelihood` even though its positive values are the deviance stated
+in manual section 4.9.2 and match the human summary table; the audit preserves
+this header discrepancy rather than silently trusting the label.
+The adapter is locked to audited ConQuest 5.47.5; a later engine version must
+receive a schema/objective audit before it can enter the handoff.
+
+Draft.8 fixes the generated ConQuest benchmark controls at parameter change
+`1e-8`, deviance change `1e-10`, and 2000 iterations. In the 60-Person,
+six-item, one-covariate binary pilot, ConQuest's default stopping rule ended at
+iteration 42 with deviance `424.739512`, approximately `0.000533` above mfrmr.
+The strict run ended at iteration 132 with deviance `424.738979`, versus mfrmr
+`424.738979414`; the difference `-4.14e-7` is within the six-decimal ConQuest
+CSV resolution. The largest exported transformed-parameter difference was
+`5.77e-6`. This removes an apparent additive likelihood-constant discrepancy
+for this one pilot but does not freeze a tolerance or establish RSM/PCM and
+cross-platform agreement.
+
+Draft.9 adds repository-only contract
+`mfrmr_conquest_binary_ladder_v1`. It prepares but never launches the external
+program, then reviews strict runs at q=7, 15, 31, 61, 91, and 121 plus a second
+same-platform q=31 run. The q=31--121 rows all passed the arithmetic handoff:
+ConQuest deviance was `424.738979`, the maximum absolute cross-engine deviance
+difference was `4.142e-7`, and the maximum transformed-parameter difference
+was `5.762e-6`. The five native q=31 CSV outputs were byte-identical across
+the two runs. The q=7 row was rejected after ConQuest retained an earlier
+higher-likelihood solution and its final history/export vectors differed by
+up to `0.036778`; q=15 was rejected despite deviance-criterion termination
+because its final history/export vectors differed by up to `8.7e-5`.
+
+Draft.10 adds repository-only contract
+`mfrmr_conquest_polytomous_rsm_pcm_v1`. It prepares one deterministic
+120-Person, five-item, four-category input and matched q=31 latent-regression
+fits using ConQuest `item + step` for RSM and `item + item*step` for PCM. The
+reviewer verifies complete category coverage, audited native 5.47.5 parameter
+label order, history/export identity, free dimensions, item sum-zero, shared
+RSM step sum-zero, and item-specific PCM step-row sum-zero constraints. It
+never starts the external executable.
+
+Both same-platform runs terminated on the deviance criterion after 63
+iterations. RSM retained 9 and PCM 17 free parameters in both engines; all
+reconstructed sum-zero residuals were exactly zero. The largest absolute
+ConQuest-minus-mfrmr deviance difference was `1.24811e-6`, the largest free or
+full transformed-parameter difference was `1.604646e-6`, and the
+cross-engine difference in the RSM-minus-PCM deviance drop was `1.10628e-6`.
+Every row remains `ComparisonReady = FALSE` because integration stability is
+still `review` and no tolerance has been frozen.
+
+Draft.11 replaces the one-pair pilot contract with
+`mfrmr_conquest_polytomous_rsm_pcm_ladder_v1` and applies that same fixed input
+to q=7, 15, 31, 61, 91, and 121 plus a fresh q=31 directory for each model.
+Every q=31--121 RSM and PCM core row passed the arithmetic handoff. ConQuest
+deviance was constant at six-decimal export resolution within each core; the
+maximum absolute cross-engine deviance difference was `1.24811e-6`, the
+maximum free or full transformed-coordinate difference was `1.674273e-6`,
+and the maximum cross-engine difference in the RSM-minus-PCM deviance drop was
+`1.10628e-6`. The mfrmr core deviance ranges were `5.96e-8` for RSM and
+`8.7637e-7` for PCM. Within each model, all five native q=31 CSV files were
+byte-identical across the two runs.
+
+The low-node rows are deliberately retained. RSM q=7 and q=15 passed the
+schema/arithmetic handoff but differed from mfrmr by `4.437555` and
+`-0.227498` deviance units; PCM q=15 differed by `-0.116292`. PCM q=7 was
+rejected because its terminal history and native export vectors differed by
+`1e-6`. Thus `accepted_arithmetic` means that a native result can be audited,
+not that cross-engine agreement or integration stability has passed.
+
+This handoff now establishes reproducible arithmetic, one same-platform binary
+repeat, a useful coarse-node diagnostic boundary, and same-platform
+polytomous likelihood/constraint mapping, node-ladder, and repeat evidence
+only. Independent platform/version replication, integration-tolerance freeze,
+and candidate-linked mfrmr/TAM/ConQuest runs remain pending;
+`mfrmr_external_ic_v1` must not be used to manufacture cross-engine
+comparability by assigning identical identity strings without that evidence.
+
+## G4: dimensionality challenge
+
+The dimensionality challenge follows three stages and never creates a native
+multidimensional mfrmr feature.
+
+### Current draft.6 TAM runner state
+
+Contract `mfrmr_tam_dimensionality_pilot_v1` keeps multidimensional TAM
+objects in repository evidence and outside `import_tam_fit()`. Its first
+binary-Rasch matrix uses one prespecified true-1D and one prespecified true-2D
+control, fixed Q hashes, product grids of 15/21/31/41 nodes per dimension, and
+deterministic QMC grids of 512/1024/2048/4096 nodes. All 32 fits preserved the
+observation set, had finite fit/IC-consistent objectives and positive-definite
+latent covariance matrices, stopped before the iteration ceiling, and emitted
+no warnings or hard failures. Ten remain `review` because TAM's final reported
+objective did not equal the last iteration-history value.
+
+The true-1D 15-point product row reverses all three common-IC signs; the
+21--41 point rows agree and have maximum criterion-gap drift 0.000102. The
+true-2D product rows retain all signs, with maximum full-ladder gap drift
+0.025685. Deterministic-QMC signs are stable, but maximum gap drift reaches
+0.188133. Two independent 1024-node QMC refits for each model/control reproduce
+deviances and retained parameters exactly, separating finite-node drift from
+run-to-run randomness for these TAM 4.3-25 cells.
+
+The first `QMC = FALSE` audit uses 1024 stochastic nodes and four operative
+seeds. Every external integration-evaluation identity includes its seed. The
+maximum criterion-gap seed difference is 3.965763 in the true-1D control and
+2.865980 in the true-2D control; true-1D raw deviance-gain sign changes across
+seeds. No hard failure or warning occurred, but all stochastic results remain
+review-only. A single stochastic run or a retrospectively favored seed cannot
+enter release evidence.
+
+These are single-seed calibration observations. Every normalized record keeps
+integration stability unchecked, selection is unauthorized, no ordinary
+chi-square LRT p-value is produced, and no dimension score is returned.
+Replicated truth cells, multi-node/platform stochastic integration and its
+seed-aggregation rule, platform review, boundary bootstrap, empirical
+partitioning, interaction attribution, and consequence criteria remain
+unresolved.
+
+### Explore
+
+Substantive theory, design review, residual PCAR/parallel evidence, and
+Q3-style residual patterns generate candidate clusters, local-dependence
+pairs, rater effects, and Q matrices. The discovery output is a versioned
+hypothesis set only.
+
+The current `q3_statistic()` uses standardized residuals aggregated to
+Person-by-facet-level cells. It is not relabelled as raw-residual Yen Q3 or the
+published maximum-relative-to-mean Q3*. Fixed residual cutoffs remain
+exploratory. A formal blocking Q3* route requires an explicit residual unit,
+multiplicity policy, and design-specific parametric bootstrap.
+
+### Confirm
+
+- Freeze Q matrices, labels, variance/covariance constraints, response family,
+  partition, integration policy, starts, metrics, and failure policy.
+- Establish matched mfrmr-versus-TAM 1D overlap before using TAM alternatives.
+- Compare TAM 1D with prespecified TAM multidimensional models on untouched
+  Persons or an external sample.
+- Use the four-model attribution grid where identified: 1D additive; 1D plus
+  rater-by-criterion interaction; multidimensional additive; and
+  multidimensional plus interaction.
+- A deliberately confounded design is classified unidentified; fit gain is
+  not assigned to either explanation.
+- Do not use a direct cross-engine LRT. Within-engine nesting must be proved.
+  When 1D lies on a variance/correlation boundary, use a frozen parametric-
+  bootstrap deviance-difference reference rather than the ordinary chi-square
+  p-value.
+- Report deviance gain per Person and response, normalized AIC/BIC/SABIC,
+  held-out predictive gain where feasible, residual change, dimension
+  correlations, parameter stability, failed/singular replicate rates, and
+  numerical integration uncertainty.
+
+True-1D false-selection control, true-2D detection power, bootstrap size,
+smallest practically relevant gain, and QMC-stability thresholds are
+`pilot_required`. The pilot and confirmation seed/Person registries must be
+disjoint.
+
+### Test consequences
+
+A better-fitting multidimensional model does not by itself justify subscores.
+The consequence stage checks incremental prediction beyond the total score,
+conditional precision/information, replication stability, classification and
+rank changes, invariance, and an external criterion only where defensible.
+
+The final classification is one of:
+
+1. `total_score_only`: no confirmed material departure requiring a reporting
+   change;
+2. `multidimensionality_as_sensitivity`: structural improvement without
+   defensible individual subscore value;
+3. `future_subscore_research`: replicated practical value that motivates a
+   later native model but does not add scores in 0.2.3; or
+4. `unresolved`: identification, integration, replication, or consequence
+   evidence is insufficient.
+
+`unresolved` cannot support an unqualified unidimensionality claim.
+
+## G5: external comparison
+
+ConQuest is the required 0.2.3 external MML core for matched unidimensional
+binary, RSM, and PCM cases. Each row matches observations, missingness,
+categories, model, constraints, quadrature, starts, convergence review,
+orientation, and parameter transformation as far as the programs permit.
+Correlations are descriptive; blocker tolerances apply to signed/absolute
+differences on named estimands.
+
+FACETS is a conditional row-promotion gate. A JML Rasch-family parameter,
+estimated-threshold, fit, or reporting row may be promoted only with matched
+supplied output and an explicit transformation. FACETS JML Person measures are
+not targets for MML EAP scores. No proprietary program is launched by package
+tests, and no identifier-bearing external case file is committed.
+
+External numerical tolerances are `pilot_required`; the mandatory scenario
+scope and fail-closed provenance rules are structural blockers now.
+
+## G6: public contract
+
+Before release, code, help, README, vignettes, capability tables, reports,
+exports, and runtime guards must agree that:
+
+- the current latent trait is unidimensional;
+- PCAR/Q3-style output is exploratory hypothesis-generation evidence;
+- AIC/BIC/SABIC apply only under the recorded MML comparability contract;
+- IC-derived weights are not unconditional model probabilities;
+- `JML` is canonical and `JMLE` is only an input alias;
+- threshold anchors, frozen calibration, multiple scales, scale-specific PCM,
+  native multidimensional scores, and unrestricted GPCM remain later work;
+- external comparisons cover matched rows rather than blanket equivalence; and
+- repository planning, local paths, development decisions, and private
+  evidence language do not leak into installed first-screen output.
+
+Unsupported routes fail closed or display an unavoidable caveat before the
+affected quantity is interpreted.
+
+## G7: engineering release
+
+The exact candidate must pass:
+
+- full regression outside CRAN and the required macOS/Windows/Linux R matrix;
+- `R CMD check --as-cran --run-donttest` on the exact upload tarball;
+- manuals, URLs, examples, package-content, source-truth, and terminology
+  audits;
+- official Win-builder or the then-current CRAN-equivalent Windows check; and
+- a package-controlled CRAN workload below 600 seconds.
+
+The 600-second gate sums ordinary examples, `donttest` examples, tests, and
+vignette rebuilding. Dependency installation, manuals, and check
+infrastructure remain diagnostic context rather than package-controlled time.
+Heavy recovery, bootstrap, and external gates run outside CRAN and remain
+candidate-linked and reproducible.
+
+## Numeric criteria still required before freeze
+
+The following criterion IDs are intentionally unresolved in the current
+draft:
+
+| Criterion ID | Required frozen content |
+| --- | --- |
+| `NUM-SCORE-TOL` | Absolute/scaled canonical-score tolerance by model and parameter class. |
+| `NUM-OBJECTIVE-TOL` | Cross-engine objective tolerance at common evaluation. |
+| `NUM-PARAMETER-TOL` | Transformed parameter tolerance by estimand. |
+| `REC-GRID` | Core sample sizes, facet counts, category support, link density, and slope cells. |
+| `REC-MCSE` | Replication rule and maximum Monte Carlo uncertainty. |
+| `REC-BIAS-RMSE` | Practical bias and RMSE limits by parameter class. |
+| `REC-COVERAGE` | Supported-interval coverage limits and SE-availability rule. |
+| `REC-FAILURE` | Maximum failed-fit and false-ready rates. |
+| `IC-INTEGRATION-TOL` | Maximum acceptable IC/deviance drift across the integration ladder. |
+| `DIM-TYPE1` | Maximum false multidimensional selection rate with Monte Carlo margin. |
+| `DIM-POWER` | Minimum detection rate for each prespecified true-2D core. |
+| `DIM-PRACTICAL-GAIN` | Smallest practical predictive/score consequence. |
+| `DIM-BOOTSTRAP` | Bootstrap replication and failed/singular replicate policy. |
+| `EXT-CQ-TOL` | ConQuest signed/absolute tolerances by common estimand. |
+| `EXT-FACETS-TOL` | FACETS tolerances for each proposed promoted row. |
+
+No placeholder above may be filled after its confirmatory result is viewed.
+If pilot evidence cannot support a defensible threshold, the corresponding
+claim is reduced or deferred rather than decided ad hoc.
+
+## Revision record
+
+| Specification | Change |
+| --- | --- |
+| `0.2.3-draft.1` | Initial roadmap-to-gate translation. |
+| `0.2.3-draft.2` | Recorded the M1 source audit; made all non-unit-weight IC ranking fail closed; added legacy-object, canonical-recomputation, and `Npar` compatibility rules; and linked the fixed IC fixture contract. |
+| `0.2.3-draft.3` | Added the fixed-vector common-GHQ pilot policy, recorded the first RSM-versus-PCM run and six-scenario development matrix, and named candidate ladder/drift rules while leaving `IC-INTEGRATION-TOL` unfrozen. |
+| `0.2.3-draft.4` | Added independent refit-at-grid/common-reference evidence, introduced `mfrmr_ic_person_v2`, and made q<31 comparison-derived selection output fail closed while leaving the ladder and `IC-INTEGRATION-TOL` unfrozen. |
+| `0.2.3-draft.5` | Centralized the common IC formula panel, added fail-closed external normalization with native TAM aBIC preservation, and made public TAM imports reject JML and multidimensional objects rather than relabelling or flattening them. |
+| `0.2.3-draft.6` | Added a separate dimension-aware TAM 1D/2D runner, recorded the first product-quadrature, deterministic-QMC, and four-seed stochastic-integration truth controls, made stochastic seeds part of integration identity, distinguished final-history review from objective inconsistency, and verified exact same-node QMC replay while leaving every dimensionality criterion unfrozen. |
+| `0.2.3-draft.7` | Added explicit ConQuest stopping controls, a matrixout-history export, and a repository-only adapter that cross-check deviance, free dimension, exported parameter vectors, unit weights, Persons, convergence evidence identity, run metadata, and output fingerprints without parsing the free-form summary report; recorded the 5.47.5 objective-header discrepancy and left likelihood-constant, constraint, integration, RSM/PCM, and candidate-linked comparisons unresolved. |
+| `0.2.3-draft.8` | Made ConQuest benchmark stopping controls explicit and strict, reran the binary 31-node pilot, and showed that the apparent `5.33e-4` objective discrepancy under ConQuest defaults shrinks to `4.14e-7` at strict convergence, while leaving tolerance calibration, replication, RSM/PCM, platform, and candidate-linked evidence unresolved. |
+| `0.2.3-draft.9` | Added a repository-only ConQuest binary node-ladder preparer/reviewer, repeated q=31 with byte-identical native outputs, retained arithmetic agreement over q=31--121, and demonstrated fail-closed q=7/q=15 rejection from final-history/native-export disagreement; independent-platform replication, RSM/PCM, tolerance freeze, and candidate-linked evidence remain unresolved. |
+| `0.2.3-draft.10` | Added a repository-only four-category ConQuest RSM/PCM preparer/reviewer, matched q=31 objective/free dimensions and explicit sum-zero coordinate reconstruction on one same-platform input, and retained all rows as pilot-only; independent-platform replication, a polytomous node ladder, tolerance freeze, and candidate-linked evidence remain unresolved. |
+| `0.2.3-draft.11` | Extended the fixed four-category ConQuest RSM/PCM pilot to q=7/15/31/61/91/121 ladders and fresh same-platform q=31 repeats; retained objective and transformed-coordinate agreement across both q=31--121 cores, byte-identical native q=31 outputs within each model, and diagnostic low-node instability/fail-closed evidence while leaving independent-platform replication, tolerance freeze, and candidate-linked evidence unresolved. |
+| `0.2.3-draft.12` | Added the fixed-fixture canonical free-score pilot, independently implemented three-step central differences at retained and nonzero-score points, the explicit free-log-slope to sum-zero-log to positive-slope GPCM Jacobian contract, and exact binary/unit-slope reductions; corrected the earlier box-constraint/projected-gradient wording while leaving `NUM-SCORE-TOL`, engine parity, expanded boundary-regime calibration, and confirmation unresolved. |
+| `0.2.3-draft.13` | Added the fixed-fixture additive RSM/PCM engine-path pilot, exact hashed raw-EM-to-common-direct-polish handoff, common-vector objective/score evaluation through direct/EM/hybrid contexts, free and expanded parameter comparisons, and an explicit GPCM/interaction/latent-regression fallback boundary; left `NUM-OBJECTIVE-TOL`, `NUM-PARAMETER-TOL`, broader grid/platform calibration, and confirmation unresolved. |
+
+## Release decision algorithm
+
+1. Reject evidence whose candidate/specification identity does not match.
+2. Mark the release `No-Go` for any blocker row that is `concern`, `review`,
+   `not_run`, or missing.
+3. Do not aggregate across a failed core cell or silently drop failed
+   replications.
+4. Permit a caveat row only when its limitation appears in the first screen,
+   help, capability surface, and release notes for the affected result.
+5. Keep every roadmap row guarded from ordinary use.
+6. Require normalized common-likelihood evidence before cross-engine IC
+   comparison and matched estimands before parameter tolerances.
+7. Require the practical-consequence classification in addition to formal
+   dimensionality evidence.
+8. Run engineering release checks only after statistical blockers pass for one
+   frozen candidate.
+
+## Source anchors
+
+- Cho, S.-J., and De Boeck, P. (2018). A note on N in Bayesian information
+  criterion for item response models. *Applied Psychological Measurement*,
+  42, 169-172. doi:10.1177/0146621617726791.
+- Sclove, S. L. (1987). Application of model-selection criteria to some
+  problems in multivariate analysis. *Psychometrika*, 52, 333-343.
+  doi:10.1007/BF02294360.
+- Self, S. G., and Liang, K.-Y. (1987). Asymptotic properties of maximum
+  likelihood estimators and likelihood ratio tests under nonstandard
+  conditions. *Journal of the American Statistical Association*, 82,
+  605-610. doi:10.1080/01621459.1987.10478472.
+- Christensen, K. B., Makransky, G., and Horton, M. (2017). Critical values
+  for Yen's Q3. *Applied Psychological Measurement*, 41, 178-194.
+  doi:10.1177/0146621616677520.
+- Morris, T. P., White, I. R., and Crowther, M. J. (2019). Using simulation
+  studies to evaluate statistical methods. *Statistics in Medicine*, 38,
+  2074-2102. doi:10.1002/sim.8086.
+- TAM source function `tam_mml_ic_criteria()` in the official repository,
+  audited at commit `8fc1c216ff8bfd8a354ae760662a4897ae46a291`, records the
+  native `aBIC` formula that must remain distinct from the common Sclove SABIC:
+  https://github.com/alexanderrobitzsch/TAM/blob/8fc1c216ff8bfd8a354ae760662a4897ae46a291/R/tam_mml_ic_criteria.R

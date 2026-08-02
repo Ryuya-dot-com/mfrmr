@@ -2890,16 +2890,398 @@ build_slope_table <- function(config, prep, params) {
   )
 }
 
-build_estimation_summary <- function(model, method, prep, config, sizes, opt) {
-  k_params <- sum(unlist(sizes))
-  loglik <- -opt$value
-  n_obs <- if (!is.null(config$weight_col) && "Weight" %in% names(prep$data)) {
-    sum(prep$data$Weight, na.rm = TRUE)
-  } else {
-    nrow(prep$data)
+# ---- Information-criterion contract -------------------------------------
+
+mfrm_ic_contract_version <- function() {
+  "mfrmr_ic_person_v2"
+}
+
+mfrm_ic_formula_identifiers <- function() {
+  c(
+    AIC = "aic_deviance_plus_2k",
+    BIC = "bic_person_count",
+    SABIC = "sclove_n_plus_2_over_24"
+  )
+}
+
+mfrm_ic_common_panel <- function(deviance, npar, persons) {
+  deviance <- suppressWarnings(as.numeric(deviance)[1])
+  npar_raw <- suppressWarnings(as.numeric(npar)[1])
+  persons_raw <- suppressWarnings(as.numeric(persons)[1])
+  integer_tolerance <- sqrt(.Machine$double.eps)
+  if (!is.finite(deviance)) {
+    stop("`deviance` must be one finite numeric value.", call. = FALSE)
   }
-  aic <- 2 * k_params - 2 * loglik
-  bic <- log(n_obs) * k_params - 2 * loglik
+  if (!is.finite(npar_raw) || npar_raw < 0 ||
+      abs(npar_raw - round(npar_raw)) > integer_tolerance) {
+    stop("`npar` must be one non-negative integer.", call. = FALSE)
+  }
+  if (!is.finite(persons_raw) || persons_raw < 1 ||
+      abs(persons_raw - round(persons_raw)) > integer_tolerance) {
+    stop("`persons` must be one positive integer.", call. = FALSE)
+  }
+  npar <- as.integer(round(npar_raw))
+  persons <- as.integer(round(persons_raw))
+  formula_ids <- mfrm_ic_formula_identifiers()
+  list(
+    Deviance = deviance,
+    Npar = npar,
+    Persons = persons,
+    AIC = deviance + 2 * npar,
+    BIC = deviance + log(persons) * npar,
+    SABIC = deviance + log((persons + 2) / 24) * npar,
+    SABICSelectable = persons > 22L,
+    AICFormula = unname(formula_ids[["AIC"]]),
+    BICFormula = unname(formula_ids[["BIC"]]),
+    SABICFormula = unname(formula_ids[["SABIC"]])
+  )
+}
+
+mfrm_ic_console_lines <- function(summary_row, digits = 3L) {
+  row <- as.data.frame(summary_row %||% data.frame(), stringsAsFactors = FALSE)
+  if (nrow(row) == 0L) return(character(0))
+  row <- row[1, , drop = FALSE]
+  digits <- suppressWarnings(as.integer(digits)[1])
+  if (!is.finite(digits)) digits <- 3L
+  digits <- max(0L, digits)
+  format_value <- function(field, fallback = NA_real_) {
+    value <- if (field %in% names(row)) {
+      suppressWarnings(as.numeric(row[[field]][1]))
+    } else {
+      fallback
+    }
+    if (!is.finite(value)) return("NA")
+    formatC(value, format = "f", digits = digits)
+  }
+  contract_current <- "ICContractVersion" %in% names(row) &&
+    identical(as.character(row$ICContractVersion[1]), mfrm_ic_contract_version())
+  eligible <- contract_current && "ICEligible" %in% names(row) &&
+    isTRUE(as.logical(row$ICEligible[1]))
+  ic_selectable <- eligible && "ICSelectable" %in% names(row) &&
+    isTRUE(as.logical(row$ICSelectable[1]))
+  status <- if ("ICStatus" %in% names(row)) {
+    as.character(row$ICStatus[1])
+  } else {
+    "legacy_or_unknown"
+  }
+  integration_tier <- if ("ICIntegrationTier" %in% names(row)) {
+    as.character(row$ICIntegrationTier[1])
+  } else {
+    "legacy_or_unknown"
+  }
+  integration_status <- if ("ICIntegrationStatus" %in% names(row)) {
+    as.character(row$ICIntegrationStatus[1])
+  } else {
+    "legacy_or_unknown"
+  }
+  quadrature_points <- if ("ICQuadraturePoints" %in% names(row)) {
+    suppressWarnings(as.integer(row$ICQuadraturePoints[1]))
+  } else {
+    NA_integer_
+  }
+  loglik <- format_value("LogLik")
+
+  if (eligible) {
+    lines <- paste0(
+      "LogLik: ", loglik,
+      " | Canonical MML AIC: ", format_value("AIC"),
+      " | Person-BIC: ", format_value("BIC"),
+      " | Sclove SABIC: ", format_value("SABIC")
+    )
+    if (!ic_selectable) {
+      lines <- c(
+        lines,
+        paste0(
+          "Integration selection guard: criteria are displayed for ",
+          "screening/review only; automatic deltas, weights, preferences, ",
+          "and LRT are disabled at q=",
+          if (is.finite(quadrature_points)) quadrature_points else "unknown",
+          " (tier: ", integration_tier, "; status: ",
+          integration_status, "). Use q >= 31 as the comparison starting ",
+          "grid and check a denser common grid when the decision is close."
+        )
+      )
+    }
+    persons <- if ("Persons" %in% names(row)) {
+      suppressWarnings(as.integer(row$Persons[1]))
+    } else {
+      NA_integer_
+    }
+    if (is.finite(persons) && persons <= 22L) {
+      lines <- c(
+        lines,
+        paste0(
+          "SABIC selection guard: displayed for sensitivity only; automatic ",
+          "SABIC selection is disabled at Persons <= 22 (status: ", status,
+          ")."
+        )
+      )
+    }
+    return(lines)
+  }
+
+  legacy_aic <- if ("LegacyAIC" %in% names(row)) "LegacyAIC" else "AIC"
+  legacy_bic <- if ("LegacyBIC" %in% names(row)) "LegacyBIC" else "BIC"
+  lines <- paste0(
+    "LogLik: ", loglik,
+    " | Canonical MML information-criterion panel: not eligible (", status, ")."
+  )
+  if (is.finite(suppressWarnings(as.numeric(row[[legacy_aic]][1] %||% NA_real_))) ||
+      is.finite(suppressWarnings(as.numeric(row[[legacy_bic]][1] %||% NA_real_)))) {
+    lines <- c(
+      lines,
+      paste0(
+        "Legacy descriptive AIC: ", format_value(legacy_aic),
+        " | Legacy descriptive BIC: ", format_value(legacy_bic),
+        ". These values are not part of the common MML ranking panel."
+      )
+    )
+  }
+  lines
+}
+
+mfrm_ic_weight_policy <- function(prep,
+                                  config,
+                                  tolerance = sqrt(.Machine$double.eps)) {
+  dat <- prep$data %||% data.frame()
+  if (!is.data.frame(dat) || !"Weight" %in% names(dat)) {
+    return("invalid")
+  }
+  weights <- suppressWarnings(as.numeric(dat$Weight))
+  if (length(weights) == 0L || any(!is.finite(weights)) || any(weights <= 0)) {
+    return("invalid")
+  }
+  declared <- !is.null(config$weight_col) &&
+    length(config$weight_col) > 0L &&
+    !is.na(config$weight_col[1]) && nzchar(as.character(config$weight_col[1]))
+  if (all(abs(weights - 1) <= tolerance)) {
+    return(if (declared) "explicit_unit" else "unweighted")
+  }
+  if (!"Person" %in% names(dat)) return("nonunit_row_varying")
+  person_weights <- split(weights, as.character(dat$Person), drop = TRUE)
+  constant_within_person <- all(vapply(person_weights, function(x) {
+    length(x) > 0L && max(x) - min(x) <= tolerance
+  }, logical(1)))
+  if (constant_within_person) {
+    "nonunit_constant_within_person"
+  } else {
+    "nonunit_row_varying"
+  }
+}
+
+mfrm_ic_integration_evaluation_id <- function(method, config) {
+  method <- public_mfrm_method_label(toupper(as.character(method)[1]))
+  if (!identical(method, "MML")) return("not_applicable_jml")
+  quad_points <- suppressWarnings(as.integer(
+    config$estimation_control$quad_points %||% NA_integer_
+  ))
+  paste0(
+    "mfrmr_ghq_normal_v1:q=",
+    if (is.finite(quad_points)) quad_points else "unknown"
+  )
+}
+
+mfrm_ic_integration_policy <- function(method, config) {
+  method <- public_mfrm_method_label(toupper(as.character(method)[1]))
+  if (!identical(method, "MML")) {
+    return(list(
+      QuadraturePoints = NA_integer_,
+      Tier = "not_applicable_jml",
+      Status = "not_applicable_jml",
+      Selectable = FALSE
+    ))
+  }
+  quad_raw <- suppressWarnings(as.numeric(
+    config$estimation_control$quad_points %||% NA_real_
+  )[1])
+  integer_tolerance <- sqrt(.Machine$double.eps)
+  if (!is.finite(quad_raw) || quad_raw < 1 ||
+      abs(quad_raw - round(quad_raw)) > integer_tolerance) {
+    return(list(
+      QuadraturePoints = NA_integer_,
+      Tier = "unknown",
+      Status = "invalid_or_unknown_quadrature",
+      Selectable = FALSE
+    ))
+  }
+  quad_points <- as.integer(round(quad_raw))
+  if (quad_points < 15L) {
+    tier <- "coarse_screening"
+    status <- "screening_only"
+    selectable <- FALSE
+  } else if (quad_points < 31L) {
+    tier <- "intermediate_review"
+    status <- "review_only"
+    selectable <- FALSE
+  } else if (quad_points < 61L) {
+    tier <- "standard_start"
+    status <- "selection_start"
+    selectable <- TRUE
+  } else {
+    tier <- "dense_sensitivity"
+    status <- "dense_sensitivity"
+    selectable <- TRUE
+  }
+  list(
+    QuadraturePoints = quad_points,
+    Tier = tier,
+    Status = status,
+    Selectable = selectable
+  )
+}
+
+build_mfrm_ic_contract <- function(loglik, npar, prep, config, method) {
+  loglik <- suppressWarnings(as.numeric(loglik)[1])
+  npar_raw <- suppressWarnings(as.numeric(npar)[1])
+  npar <- if (is.finite(npar_raw) && npar_raw >= 0 &&
+              abs(npar_raw - round(npar_raw)) <= sqrt(.Machine$double.eps)) {
+    as.integer(round(npar_raw))
+  } else {
+    NA_integer_
+  }
+  method <- public_mfrm_method_label(toupper(as.character(method)[1]))
+  dat <- prep$data %||% data.frame()
+  response_rows <- if (is.data.frame(dat)) nrow(dat) else NA_integer_
+  weights <- if (is.data.frame(dat) && "Weight" %in% names(dat)) {
+    suppressWarnings(as.numeric(dat$Weight))
+  } else if (is.finite(response_rows) && response_rows >= 0L) {
+    rep(1, response_rows)
+  } else {
+    numeric(0)
+  }
+  weighted_response_total <- if (length(weights) > 0L &&
+                                 all(is.finite(weights))) {
+    sum(weights)
+  } else {
+    NA_real_
+  }
+  persons <- if (is.data.frame(dat) && "Person" %in% names(dat)) {
+    person_values <- as.character(dat$Person)
+    length(unique(person_values[!is.na(person_values)]))
+  } else {
+    suppressWarnings(as.integer(config$n_person %||% NA_integer_))
+  }
+  legacy_basis <- if (!is.null(config$weight_col)) "sum_weights" else "row_count"
+  legacy_n <- if (identical(legacy_basis, "sum_weights")) {
+    weighted_response_total
+  } else {
+    as.numeric(response_rows)
+  }
+  deviance <- if (is.finite(loglik)) -2 * loglik else NA_real_
+  legacy_aic <- if (is.finite(deviance) && is.finite(npar)) {
+    deviance + 2 * npar
+  } else {
+    NA_real_
+  }
+  legacy_bic <- if (is.finite(deviance) && is.finite(npar) &&
+                    is.finite(legacy_n) && legacy_n > 0) {
+    deviance + log(legacy_n) * npar
+  } else {
+    NA_real_
+  }
+
+  weight_policy <- mfrm_ic_weight_policy(prep, config)
+  valid_likelihood_contract <- is.finite(deviance) &&
+    is.finite(npar) && npar >= 0L
+  structural_eligible <- identical(method, "MML") &&
+    weight_policy %in% c("unweighted", "explicit_unit") &&
+    is.finite(persons) && persons >= 1L &&
+    valid_likelihood_contract
+  ic_status <- if (!identical(method, "MML")) {
+    "descriptive_jml"
+  } else if (identical(weight_policy, "invalid")) {
+    "invalid_weight_policy"
+  } else if (!weight_policy %in% c("unweighted", "explicit_unit")) {
+    "suppressed_nonunit_weight"
+  } else if (!is.finite(persons) || persons < 1L) {
+    "invalid_person_count"
+  } else if (!valid_likelihood_contract) {
+    "invalid_likelihood_contract"
+  } else if (persons <= 22L) {
+    "ok_sabic_nonpositive"
+  } else {
+    "ok"
+  }
+  ic_sample_size <- if (structural_eligible) as.numeric(persons) else NA_real_
+  ic_sample_size_basis <- if (structural_eligible) {
+    "person_count"
+  } else if (!identical(method, "MML")) {
+    "descriptive_jml"
+  } else if (identical(weight_policy, "invalid")) {
+    "invalid_weight_policy"
+  } else if (!weight_policy %in% c("unweighted", "explicit_unit")) {
+    "unsupported_nonunit_weights"
+  } else if (!valid_likelihood_contract) {
+    "invalid_likelihood_contract"
+  } else {
+    "invalid_person_count"
+  }
+  aic <- bic <- sabic <- NA_real_
+  common_panel <- NULL
+  if (structural_eligible) {
+    common_panel <- mfrm_ic_common_panel(deviance, npar, persons)
+    aic <- common_panel$AIC
+    bic <- common_panel$BIC
+    sabic <- common_panel$SABIC
+  }
+  formula_ids <- mfrm_ic_formula_identifiers()
+  integration_policy <- mfrm_ic_integration_policy(method, config)
+  ic_selectable <- isTRUE(structural_eligible) &&
+    isTRUE(integration_policy$Selectable)
+
+  list(
+    ICContractVersion = mfrm_ic_contract_version(),
+    N = legacy_n,
+    ResponseRows = as.integer(response_rows),
+    WeightedResponseTotal = as.numeric(weighted_response_total),
+    Persons = as.integer(persons),
+    Npar = as.integer(npar),
+    LogLik = as.numeric(loglik),
+    Deviance = as.numeric(deviance),
+    WeightPolicy = weight_policy,
+    ICEligible = isTRUE(structural_eligible),
+    ICSelectable = ic_selectable,
+    ICStatus = ic_status,
+    ICSampleSize = ic_sample_size,
+    ICSampleSizeBasis = ic_sample_size_basis,
+    AIC = as.numeric(aic),
+    BIC = as.numeric(bic),
+    SABIC = as.numeric(sabic),
+    SABICSelectable = ic_selectable && persons > 22L,
+    AICFormula = unname(formula_ids[["AIC"]]),
+    BICFormula = unname(formula_ids[["BIC"]]),
+    SABICFormula = unname(formula_ids[["SABIC"]]),
+    IntegrationEvaluationId = mfrm_ic_integration_evaluation_id(method, config),
+    ICQuadraturePoints = integration_policy$QuadraturePoints,
+    ICIntegrationTier = integration_policy$Tier,
+    ICIntegrationStatus = integration_policy$Status,
+    ICIntegrationSelectable = isTRUE(integration_policy$Selectable),
+    LegacyAIC = as.numeric(legacy_aic),
+    LegacyBIC = as.numeric(legacy_bic),
+    LegacyICSampleSize = as.numeric(legacy_n),
+    LegacyICSampleSizeBasis = legacy_basis
+  )
+}
+
+build_estimation_summary <- function(model, method, prep, config, sizes, opt) {
+  k_params <- as.integer(sum(unlist(sizes)))
+  retained_npar <- length(opt$par %||% numeric(0))
+  if (!identical(k_params, as.integer(retained_npar))) {
+    stop(
+      "Internal parameter-dimension mismatch: `sizes` imply ", k_params,
+      " free coordinates, but the retained optimizer vector has ",
+      retained_npar, ".",
+      call. = FALSE
+    )
+  }
+  loglik <- -opt$value
+  ic <- build_mfrm_ic_contract(
+    loglik = loglik,
+    npar = k_params,
+    prep = prep,
+    config = config,
+    method = method
+  )
   interaction_specs <- config$interaction_specs %||% list()
   interaction_count <- length(interaction_specs)
   interaction_params <- sum(vapply(interaction_specs, function(spec) {
@@ -2962,17 +3344,42 @@ build_estimation_summary <- function(model, method, prep, config, sizes, opt) {
     Model = model,
     Method = public_mfrm_method_label(method),
     MethodUsed = method,
-    N = n_obs,
-    Persons = config$n_person,
+    ICContractVersion = ic$ICContractVersion,
+    N = ic$N,
+    ResponseRows = ic$ResponseRows,
+    WeightedResponseTotal = ic$WeightedResponseTotal,
+    Persons = ic$Persons,
+    Npar = ic$Npar,
     Facets = length(config$facet_names),
     FacetInteractions = interaction_count,
     InteractionParameters = interaction_params,
     InteractionCells = interaction_cells,
     InteractionSparseCells = interaction_sparse_cells,
     Categories = config$n_cat,
-    LogLik = loglik,
-    AIC = aic,
-    BIC = bic,
+    LogLik = ic$LogLik,
+    Deviance = ic$Deviance,
+    WeightPolicy = ic$WeightPolicy,
+    ICEligible = ic$ICEligible,
+    ICSelectable = ic$ICSelectable,
+    ICStatus = ic$ICStatus,
+    ICSampleSize = ic$ICSampleSize,
+    ICSampleSizeBasis = ic$ICSampleSizeBasis,
+    AIC = ic$AIC,
+    BIC = ic$BIC,
+    SABIC = ic$SABIC,
+    SABICSelectable = ic$SABICSelectable,
+    AICFormula = ic$AICFormula,
+    BICFormula = ic$BICFormula,
+    SABICFormula = ic$SABICFormula,
+    IntegrationEvaluationId = ic$IntegrationEvaluationId,
+    ICQuadraturePoints = ic$ICQuadraturePoints,
+    ICIntegrationTier = ic$ICIntegrationTier,
+    ICIntegrationStatus = ic$ICIntegrationStatus,
+    ICIntegrationSelectable = ic$ICIntegrationSelectable,
+    LegacyAIC = ic$LegacyAIC,
+    LegacyBIC = ic$LegacyBIC,
+    LegacyICSampleSize = ic$LegacyICSampleSize,
+    LegacyICSampleSizeBasis = ic$LegacyICSampleSizeBasis,
     Converged = opt$convergence == 0,
     InferenceReady = identical(optimizer_diag$ConvergenceSeverity, "pass"),
     Iterations = iterations,

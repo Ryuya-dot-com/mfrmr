@@ -1032,6 +1032,9 @@ test_that("build_conquest_overlap_bundle returns a minimal supported-scope bundl
   expect_identical(bundle$summary$PopulationResponseRowsOmitted[[1]], 0L)
   expect_identical(bundle$summary$MfrmrQuadraturePoints[[1]], 7L)
   expect_identical(bundle$summary$ConQuestQuadratureNodes[[1]], 7L)
+  expect_equal(bundle$summary$ConQuestConvergence[[1]], 1e-8)
+  expect_equal(bundle$summary$ConQuestDevianceChange[[1]], 1e-10)
+  expect_identical(bundle$summary$ConQuestMaxIterations[[1]], 2000L)
   expect_identical(bundle$summary$MfrmrMaxit[[1]], 40L)
   expect_equal(bundle$summary$MfrmrReltol[[1]], 1e-9)
   expect_identical(bundle$summary$MfrmrMMLEngineUsed[[1]], "direct")
@@ -1044,6 +1047,9 @@ test_that("build_conquest_overlap_bundle returns a minimal supported-scope bundl
   }
   expect_identical(fit_setting("mfrmr_maxit"), "40")
   expect_identical(fit_setting("mfrmr_reltol"), "1e-09")
+  expect_identical(fit_setting("conquest_convergence"), "1e-08")
+  expect_identical(fit_setting("conquest_deviance_change"), "1e-10")
+  expect_identical(fit_setting("conquest_max_iterations"), "2000")
   expect_identical(fit_setting("mfrmr_mml_engine_used"), "direct")
   expect_identical(
     fit_setting("mfrmr_convergence_status"),
@@ -1077,7 +1083,7 @@ test_that("build_conquest_overlap_bundle returns a minimal supported-scope bundl
     "DataHandling",
     "RequiredForReview"
   ) %in% names(bundle$conquest_output_contract)))
-  expect_equal(sum(bundle$conquest_output_contract$RequiredForReview %in% TRUE), 4)
+  expect_equal(sum(bundle$conquest_output_contract$RequiredForReview %in% TRUE), 5)
   expect_match(
     bundle$conquest_output_contract$DataHandling[
       grepl("_conquest_cases_eap.csv", bundle$conquest_output_contract$ExternalFile, fixed = TRUE)
@@ -1100,7 +1106,11 @@ test_that("build_conquest_overlap_bundle returns a minimal supported-scope bundl
   expect_match(bundle$conquest_command, "model item;", fixed = TRUE)
   expect_match(
     bundle$conquest_command,
-    "estimate ! method=quadrature, nodes=7, fit=no, stderr=quick;",
+    paste0(
+      "estimate ! method=quadrature, nodes=7, fit=no, stderr=quick, ",
+      "matrixout=mfrmrCQ, convergence=0.00000001, ",
+      "deviancechange=0.0000000001, iterations=2000;"
+    ),
     fixed = TRUE
   )
   expect_false(grepl("score (0,1);", bundle$conquest_command, fixed = TRUE))
@@ -1108,6 +1118,8 @@ test_that("build_conquest_overlap_bundle returns a minimal supported-scope bundl
   expect_match(bundle$conquest_command, "export reg_coefficients ! filetype=csv", fixed = TRUE)
   expect_match(bundle$conquest_command, "export covariance ! filetype=csv", fixed = TRUE)
   expect_match(bundle$conquest_command, "show cases ! estimates=eap, filetype=csv, regressors=yes", fixed = TRUE)
+  expect_match(bundle$conquest_command, "write mfrmrCQ_history ! filetype=csv", fixed = TRUE)
+  expect_true(any(grepl("_conquest_history.csv", bundle$conquest_output_contract$ExternalFile, fixed = TRUE)))
   expect_match(bundle$conquest_command, "show parameters ! tables=1:2:3:4", fixed = TRUE)
   expect_match(bundle$conquest_command, "quit;", fixed = TRUE)
 
@@ -1428,6 +1440,7 @@ test_that("build_conquest_overlap_bundle writes expected external-comparison fil
   expect_false(bundle$summary$MfrmrInferenceReady[[1]])
   expect_match(readme, "Requested external ConQuest outputs", fixed = TRUE)
   expect_match(readme, "cq_overlap_test_conquest_reg_coefficients.csv", fixed = TRUE)
+  expect_match(readme, "cq_overlap_test_conquest_history.csv", fixed = TRUE)
   expect_match(readme, "normalize_conquest_overlap_exports()", fixed = TRUE)
   expect_match(readme, "not a deidentified or automatically shareable export", fixed = TRUE)
   expect_match(readme, "ConQuest case-EAP output contain person identifiers", fixed = TRUE)

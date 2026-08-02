@@ -58,7 +58,10 @@ design-forecasting evidence.
 By default, \code{report_text} includes:
 \itemize{
 \item model/data design summary (N, facet counts, scale range)
-\item optimization/convergence metrics (\code{Converged}, \code{Iterations}, \code{LogLik}, \code{AIC}, \code{BIC})
+\item optimization/convergence metrics (\code{Converged}, \code{Iterations}, \code{LogLik}) plus
+the eligible canonical MML AIC/Person-BIC/SABIC panel or its explicit
+ineligibility and legacy-descriptive status; q<31 MML criteria are
+explicitly labelled screening/review-only rather than automatic ranking
 \item anchor/constraint summary (\code{noncenter_facet}, anchored levels, group anchors, dummy facets)
 \item latent-regression population-model wording when \code{fit} has an active
 \code{population_formula}

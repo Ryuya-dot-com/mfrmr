@@ -68,7 +68,10 @@
 #' @section Model-comparison reporting route:
 #' Use [compare_mfrm()] to build the candidate-model table and inspect
 #' `ICComparable`, `ComparisonBasis`, and any nesting warnings before reading
-#' information criteria. Then use [build_model_choice_review()] to attach the
+#' information criteria. Automatic ranking requires the current contract and
+#' a shared q>=31 grid; q<31 retains raw screening/review criteria only, and a
+#' close decision still needs a prespecified denser common-grid check. Then use
+#' [build_model_choice_review()] to attach the
 #' comparison to explicit model roles, downstream-route boundaries, wording
 #' templates, and optional [build_weighting_review()] output. Convert that
 #' review with [build_summary_table_bundle()] when a manuscript appendix,

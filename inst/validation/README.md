@@ -39,6 +39,127 @@ history, but they do not redefine release order or current API scope.
 - `release-evidence-checklist-0.2.2.csv`: structured checklist used by the
   readiness helper and by manual release review for the current release. Older
   checklists are retained as historical release evidence.
+- `release-gate-spec-0.2.3.md`: planning specification for the 0.2.3
+  numerical, recovery, information-criterion, dimensionality, external,
+  public-contract, and engineering gates. A `draft` status is not permission
+  to run confirmation or evidence that a gate passed.
+- `release-evidence-checklist-0.2.3.csv`: machine-readable 0.2.3 gate
+  inventory. It preserves the existing `ReleaseDecision` field used by the
+  readiness helper and adds scenario, criterion-state, and evidence-status
+  fields needed to distinguish planning from candidate-linked evidence.
+- `release-gate-m1-review-0.2.3.md`: source-grounded adversarial review of the
+  draft gate. It records current implementation gaps, resolves the non-unit-
+  weight and legacy-object IC boundaries, and gives the M2 instrumentation
+  order. It is not evidence that a release gate passed.
+- `numerical-stationarity-pilot-0.2.3.R`: draft.12 repository-only G1 runner
+  for five fixed binary/RSM/PCM/GPCM fits. It checks the analytic derivative
+  of the retained marginal objective against an independently implemented
+  three-step central difference at retained and nonzero-score points, audits
+  the free-log to sum-zero-log to positive-slope GPCM Jacobian, and checks
+  exact binary and unit-slope reductions. It freezes no tolerance and never
+  authorizes selection or confirmation.
+- `numerical-stationarity-pilot-record-0.2.3.md`: compact draft.12 record of
+  the fixed fixture hashes, ten score-reference summaries, GPCM transformation
+  audit, exact reductions, fail-closed tests, and the remaining score-tolerance
+  and engine-parity work.
+- `mml-engine-parity-pilot-0.2.3.R`: draft.13 repository-only G1 runner for
+  fixed additive RSM/PCM direct, hybrid, raw-EM, and converged-EM-plus-common-
+  direct-polish paths. It verifies the exact hashed EM-to-polish handoff,
+  re-evaluates every retained vector through all three public engine contexts,
+  compares free and sum-zero-expanded parameters, and records unsupported
+  GPCM/interaction/latent-regression requests as fallback rather than parity
+  evidence. It freezes no tolerance and never authorizes selection or
+  confirmation.
+- `mml-engine-parity-pilot-record-0.2.3.md`: compact draft.13 record of the
+  path definitions, common-vector evaluator identity, 12 mandatory path-pair
+  observations, engine/fallback boundary, fail-closed tests, and remaining
+  objective/parameter-tolerance work.
+- `ic-contract-fixtures-0.2.3.csv`: fixed arithmetic and policy cases for the
+  Person-basis AIC/BIC/SABIC contract, including unbalanced response density,
+  explicit unit weights, unsupported non-unit weights, JML, legacy objects,
+  and the small-N SABIC boundary.
+- `ic-free-dimension-fixtures-0.2.3.csv`: independent expected free-coordinate
+  counts for RSM, PCM, bounded GPCM, interactions, anchors, dummy facets, JML,
+  latent regression, and alternative centering. These counts are checked
+  against both the parameter-size map and retained optimizer-vector dimension
+  by package-side regression tests.
+- `ic-contract-audit-0.2.3.R`: repository-only checker for those fixtures and
+  for the required IC fields on a fitted object. A fixture pass establishes
+  exact contract arithmetic only; integration stability remains a separate
+  pilot and confirmation gate.
+- `external-ic-fixtures-0.2.3.csv`: seven deterministic external-record cases
+  covering common Person-basis arithmetic, native TAM aBIC separation, JML,
+  unchecked integration, small-N SABIC, objective inconsistency, and missing
+  comparison identity.
+- `external-ic-normalizer-0.2.3.R`: repository-only external MML record and
+  comparison contract. It preserves native criteria/formulas, computes the
+  common panel from the package's single formula builder, includes the
+  draft.8 strict ConQuest matrixout-history/native-export adapter and benchmark
+  stopping controls, and fails
+  closed unless observation, likelihood, constraint, integration,
+  convergence, and integration-stability identities are complete. The adapter
+  cross-checks the objective, two independent free-dimension counts, final
+  parameter vector, unit weights, exact bundle-to-export Person IDs, run metadata, convergence
+  evidence, and output fingerprints without parsing the free-form report.
+- `external-ic-audit-0.2.3.R`: fixture checker for that normalizer, including
+  a negative integration-comparison-identity case. A pass is unit/pilot
+  evidence only and does not establish cross-engine likelihood equivalence.
+- `conquest-binary-ladder-pilot-0.2.3.R`: draft.9 repository-only preparer and
+  reviewer for strict binary q=7/15/31/61/91/121 runs plus a second q=31 run.
+  It never launches ConQuest. It verifies shared input identity, uses the
+  existing fail-closed matrixout adapter, checks same-platform native-output
+  replication, and leaves integration stability, selection, and confirmation
+  unauthorized.
+- `conquest-polytomous-rsm-pcm-pilot-0.2.3.R`: draft.11 repository-only
+  preparer and reviewer for one fixed four-category RSM/PCM node ladder at
+  q=7/15/31/61/91/121 plus a fresh q=31 repeat for each model. It never
+  launches ConQuest. It verifies complete per-item category coverage, audited
+  native parameter order, history/export identity, free dimensions, full
+  item/shared-step/item-specific-step sum-zero reconstruction, core-node
+  stability, and same-platform native-output repetition while leaving
+  integration stability, selection, and confirmation unauthorized.
+- `external-ic-pilot-record-0.2.3.md`: compact record of the seven-fixture
+  audit, a live TAM 4.3-25 unidimensional PCM adapter exercise, native aBIC
+  separation, and a live ConQuest 5.47.5 binary 31-node objective/free-
+  dimension handoff, including the native objective-header discrepancy and
+  strict-control follow-up and node ladder, plus the same-platform
+  four-category RSM/PCM node ladder and q=31 repeats. Both binary and
+  polytomous q=31--121 cores agree within the six-decimal ConQuest export
+  resolution, and each repeated q=31 native CSV set is byte-identical. The
+  RSM/PCM ladder matches free dimensions and reconstructs all sum-zero
+  constraints with zero residual; its low-node rows expose instability or
+  fail closed. Every cross-engine result remains non-comparable until
+  independent-platform replication, integration review, and frozen-tolerance
+  requirements are complete.
+- `tam-dimensionality-pilot-0.2.3.R`: dimension-aware repository runner for
+  prespecified TAM 1D/2D binary-Rasch controls, product-quadrature and
+  deterministic-QMC ladders, conservative convergence review, exact-QMC
+  repeat checks, and seed-identified stochastic integration. It never
+  authorizes model selection, a regular chi-square LRT, or multidimensional
+  mfrmr scores.
+- `tam-dimensionality-pilot-record-0.2.3.md`: compact draft.6 record of the
+  first 32-fit true-1D/true-2D matrix, eight-fit deterministic-QMC repeat audit,
+  and 16-fit stochastic seed audit, including the coarse-product false-
+  selection stress and unresolved Type-I-error, power, bootstrap, and
+  consequence gates.
+- `ic-integration-pilot-0.2.3.R`: repository-only fixed-vector common-GHQ
+  evaluator. It reproduces each source-grid objective, then records raw,
+  delta, pairwise-gap, and ordering drift over a shared quadrature ladder.
+  It does not refit candidates, freeze a tolerance, test TAM QMC, or authorize
+  confirmation.
+- `ic-integration-pilot-matrix-0.2.3.R`: deterministic six-scenario runner for
+  the fixed-vector evaluator. It covers the packaged RSM/PCM core, bounded
+  GPCM, a sparse linked design, a Rater-by-Criterion interaction, ordinary
+  latent regression, and a wide-latent near-tie stress cell without silently
+  dropping failed scenarios.
+- `ic-integration-refit-pilot-0.2.3.R`: independently refits a matrix scenario
+  at every retained GHQ count, then reevaluates each solution at one common
+  reference grid. This separates native refit-plus-integration movement from
+  solution movement under a shared likelihood approximation.
+- `ic-integration-pilot-record-0.2.3.md`: compact record of the first
+  working-tree RSM-versus-PCM evaluator run, the six-scenario fixed-vector
+  and refit matrices, and the draft.4 fail-closed public
+  integration tiers. Its status remains `review`.
 - `mfrmr-development-roadmap.md`: historical validation record retained for
   links from older 0.2.2 evidence. It is not an active roadmap.
 - `gpcm-post-0.2.2-roadmap.md`: technical evidence supplement for bounded-
@@ -87,6 +208,233 @@ source("inst/validation/release-readiness.R")
 readiness <- mfrmr_release_readiness_review(pkg_dir = ".")
 summary(readiness)
 ```
+
+During 0.2.3 M2 development, run the repository-only IC contract fixtures
+before fitting any pilot grid:
+
+```r
+source("inst/validation/ic-contract-audit-0.2.3.R")
+ic_contract <- mfrmr_run_ic_contract_fixture_audit(".")
+print(ic_contract)
+stopifnot(identical(ic_contract$status, "ok"))
+```
+
+Audit external-IC arithmetic and fail-closed identities separately:
+
+```r
+source("inst/validation/external-ic-normalizer-0.2.3.R")
+source("inst/validation/external-ic-audit-0.2.3.R")
+external_ic <- mfrmr_run_external_ic_fixture_audit(".")
+print(external_ic)
+stopifnot(identical(external_ic$status, "ok"))
+```
+
+Run the fixed G1 canonical-score pilot separately from external-engine work:
+
+```r
+pkgload::load_all(".")
+source("inst/validation/numerical-stationarity-pilot-0.2.3.R")
+numerical <- mfrmr_run_numerical_stationarity_pilot()
+print(numerical$score_summary)
+print(numerical$gpcm_jacobian$summary)
+print(numerical$reduction_results)
+stopifnot(
+  identical(numerical$status, "review"),
+  numerical$summary$AllScoreReferencesComplete,
+  numerical$summary$GpcmTransformationJacobianComplete,
+  numerical$summary$ExactReductionsObserved,
+  identical(numerical$summary$ScoreToleranceStatus, "pilot_required"),
+  !numerical$selection_authorized,
+  !numerical$confirmation_authorized
+)
+```
+
+This runner differentiates the same package objective through an independent
+algorithm; it does not itself establish direct/hybrid/EM solution parity or
+the separate ConQuest/FACETS gates.
+
+Run the fixed additive RSM/PCM engine-path pilot after loading the canonical-
+score helpers:
+
+```r
+source("inst/validation/mml-engine-parity-pilot-0.2.3.R")
+parity <- mfrmr_run_mml_engine_parity_pilot()
+print(parity$path_results)
+print(parity$common_vector_summary)
+print(parity$pairwise_results)
+print(parity$scope_registry)
+stopifnot(
+  identical(parity$status, "review"),
+  parity$summary$AllPathReferencesComplete,
+  parity$summary$EMPolishStartIdentityComplete,
+  parity$summary$AllCommonEvaluatorIdentitiesObserved,
+  parity$summary$AllPairwiseReferencesComplete,
+  parity$summary$FallbackScopeComplete,
+  identical(parity$summary$ObjectiveToleranceStatus, "pilot_required"),
+  identical(parity$summary$ParameterToleranceStatus, "pilot_required"),
+  !parity$selection_authorized,
+  !parity$confirmation_authorized
+)
+```
+
+Raw EM remains diagnostic even when it happens to be inference-ready. GPCM
+engine parity is not applicable while direct is its only supported engine;
+EM/hybrid fallback rows cannot satisfy parity.
+
+For the generated ConQuest bundle, retain all four comparison CSV files plus
+the additional `*_conquest_history.csv` written from estimate `matrixout`.
+`mfrmr_external_ic_from_conquest()` uses the history objective and free
+dimension, independently counts the parameter/regression/covariance exports,
+checks their final vector, and requires the unit-weight case PIDs to match the
+expected bundle Person IDs exactly. A convergence `pass` also requires a named
+review-evidence ID. The human summary
+is not parsed. The current adapter is version-locked to audited ConQuest
+5.47.5, and the resulting record stays non-comparable until the real
+likelihood, constraint, and integration identities have passed review.
+
+Prepare and review the strict binary node ladder with:
+
+```r
+pkgload::load_all(".")
+source("inst/validation/conquest-binary-ladder-pilot-0.2.3.R")
+prepared <- mfrmr_prepare_conquest_binary_ladder(
+  tempfile("mfrmr-conquest-binary-ladder-")
+)
+print(prepared$commands)
+
+# Run each generated .cqc file in ConQuest separately and capture its complete
+# console stream at the corresponding ExpectedLogFile. The runner never starts
+# the proprietary executable itself.
+reviewed <- mfrmr_review_conquest_binary_ladder(
+  prepared$output_dir,
+  pkg_dir = ".",
+  engine_version = "5.47.5 Demonstration Version",
+  run_date = Sys.Date()
+)
+print(reviewed$results)
+print(reviewed$summary)
+stopifnot(!reviewed$summary$ConfirmationAuthorized)
+```
+
+Prepare and review the fixed four-category RSM/PCM node ladder separately:
+
+```r
+pkgload::load_all(".")
+source("inst/validation/conquest-polytomous-rsm-pcm-pilot-0.2.3.R")
+poly_prepared <- mfrmr_prepare_conquest_polytomous_pilot(
+  tempfile("mfrmr-conquest-polytomous-")
+)
+print(poly_prepared$commands)
+
+# Run each generated .cqc file in ConQuest separately and capture its complete
+# console stream at ExpectedConsoleLog. This helper never starts ConQuest.
+poly_reviewed <- mfrmr_review_conquest_polytomous_pilot(
+  poly_prepared$output_dir,
+  pkg_dir = ".",
+  engine_version = "5.47.5 Demonstration Version",
+  run_date = Sys.Date()
+)
+print(poly_reviewed$results)
+print(poly_reviewed$summary)
+stopifnot(
+  !poly_reviewed$summary$AnyComparisonReady,
+  !poly_reviewed$summary$SelectionAuthorized,
+  !poly_reviewed$summary$ConfirmationAuthorized
+)
+```
+
+The prepared directories contain Person identifiers, responses, covariates,
+and case-level outputs. Use a new restricted directory for each pilot and do
+not commit those generated files. Only aggregate, non-identifying results
+belong in the repository record.
+
+For a local TAM marginal-MML pilot, use
+`mfrmr_external_ic_from_tam()` only after recording real observation,
+likelihood, constraint, and integration-comparison identities. Its defaults
+remain non-comparable; callers must not set convergence or integration
+stability to `pass` without the corresponding review. TAM native `aBIC` stays
+separate from the common Sclove `SABIC`. Public `import_tam_fit()` is narrower:
+it rejects `tam.jml` and `ndim > 1`, because multidimensional TAM evidence must
+remain in the separate dimension-aware repository runner.
+
+Run the first TAM dimensionality pilot and its deterministic-QMC replay with:
+
+```r
+source("inst/validation/tam-dimensionality-pilot-0.2.3.R")
+tam_dimension <- mfrmr_run_tam_dimensionality_pilot_matrix(progress = TRUE)
+print(tam_dimension)
+stopifnot(
+  identical(tam_dimension$status, "review"),
+  all(tam_dimension$fits$ConvergenceStatus != "fail"),
+  all(!tam_dimension$pairwise$SelectionAuthorized)
+)
+
+qmc_repeat <- mfrmr_run_tam_dimensionality_qmc_repeat_audit(
+  "DIM-SYN-TRUE-1D",
+  qmc_nodes = 1024L,
+  repeats = 2L
+)
+print(qmc_repeat)
+
+stochastic <- mfrmr_run_tam_dimensionality_stochastic_audit(
+  "DIM-SYN-TRUE-1D",
+  snodes = 1024L,
+  seeds = c(20260731L, 20260732L, 20260733L, 20260734L)
+)
+print(stochastic)
+```
+
+This is pilot-only. The ordinary chi-square LRT is deliberately unavailable,
+the parametric bootstrap and score-consequence stages are not implemented,
+and one seeded control per truth cannot estimate false-selection rates or
+power. Public `import_tam_fit()` must continue rejecting the multidimensional
+objects retained by this runner.
+
+The fixed-vector GHQ pilot can then be run on two or more inference-ready,
+same-basis MML fits. The source quadrature count must be included in the
+ladder:
+
+```r
+source("inst/validation/ic-integration-pilot-0.2.3.R")
+ic_integration <- mfrmr_run_ic_integration_pilot(
+  fits = list(RSM = fit_rsm, PCM = fit_pcm),
+  quad_points = c(7, 15, 31, 61, 91, 121),
+  reference_quad = 121,
+  core_quad_points = c(31, 61, 91, 121)
+)
+print(ic_integration)
+```
+
+Run the deterministic development matrix with:
+
+```r
+source("inst/validation/ic-integration-pilot-matrix-0.2.3.R")
+ic_matrix <- mfrmr_run_ic_integration_pilot_matrix(progress = TRUE)
+print(ic_matrix)
+stopifnot(nrow(ic_matrix$failures) == 0L)
+```
+
+Then separate native refit-plus-integration movement from retained-solution
+movement at a common reference grid:
+
+```r
+source("inst/validation/ic-integration-refit-pilot-0.2.3.R")
+ic_refit <- mfrmr_run_ic_integration_refit_matrix(progress = TRUE)
+print(ic_refit)
+stopifnot(nrow(ic_refit$failures) == 0L)
+```
+
+The fixed-vector and refit matrices remain small deterministic calibration
+sets. They support the draft q<31 comparison guard but do not freeze it.
+Additional weak-link/near-boundary cells, cross-platform evaluation, and the
+multi-node stochastic TAM integration policy remain necessary before
+`IC-INTEGRATION-TOL` can be frozen. The draft.6 deterministic-QMC ladder is an
+initial calibration result, not a frozen tolerance.
+
+After the package-side IC fields are implemented, pass representative fits to
+`mfrmr_audit_fit_ic_contract()`. An unmodified 0.2.2 fit is expected to return
+`concern` because it lacks the versioned Person-basis fields; that negative
+control prevents old row-basis BIC values from being silently relabelled.
 
 The release candidate should have `Status: OK` in the local check log,
 `ReleaseReadinessStatus = "ok"`, and only `ok` rows in

@@ -118,7 +118,7 @@ not claim that FACETS was executed or that estimates are numerically
 equivalent to FACETS output.
 It returns a structured object and prints:
 \itemize{
-\item model fit overview (N, LogLik, AIC/BIC, convergence)
+\item model fit overview (N, LogLik, the canonical/legacy IC status, convergence)
 \item estimation settings that affect identification/scoring interpretation
 \item facet-level estimate distribution (mean/SD/range)
 \item person measure distribution
@@ -133,7 +133,13 @@ measures
 \section{Interpreting output}{
 
 \itemize{
-\item \code{overview}: convergence and information criteria.
+\item \code{overview}: convergence plus the versioned information-criterion contract.
+For eligible fixed-facet MML fits, BIC/SABIC use unique Persons, not
+response rows; JML, non-unit observation weights, and legacy objects do
+not enter the common MML ranking panel. \code{ICSelectable} additionally
+distinguishes raw screening/review criteria at q<31 from criteria that
+may enter automatic same-grid comparison at q>=31; close decisions still
+require a denser common-grid sensitivity check.
 \item \code{readiness}: separate Numerical, Data, Design, Stability, Diagnostics,
 and Reporting states. \code{InferenceReady} contributes only to Numerical;
 a numerical pass cannot override a disconnected-design or boundary-

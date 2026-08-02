@@ -80,7 +80,10 @@ discrimination-based operational scoring.
 
 Use \code{\link[=compare_mfrm]{compare_mfrm()}} to build the candidate-model table and inspect
 \code{ICComparable}, \code{ComparisonBasis}, and any nesting warnings before reading
-information criteria. Then use \code{\link[=build_model_choice_review]{build_model_choice_review()}} to attach the
+information criteria. Automatic ranking requires the current contract and
+a shared q>=31 grid; q<31 retains raw screening/review criteria only, and a
+close decision still needs a prespecified denser common-grid check. Then use
+\code{\link[=build_model_choice_review]{build_model_choice_review()}} to attach the
 comparison to explicit model roles, downstream-route boundaries, wording
 templates, and optional \code{\link[=build_weighting_review]{build_weighting_review()}} output. Convert that
 review with \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}} when a manuscript appendix,

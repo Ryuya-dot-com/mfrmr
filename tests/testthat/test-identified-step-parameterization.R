@@ -36,12 +36,13 @@ test_that("step parameter counts match the sum-zero identification", {
   expect_equal(sizes_gpcm$steps, criterion_n * max(n_steps - 1L, 0L))
   expect_equal(sizes_gpcm$log_slopes, criterion_n - 1L)
 
-  implied_k <- function(fit) {
-    as.numeric((fit$summary$AIC[1] + 2 * fit$summary$LogLik[1]) / 2)
-  }
-  expect_equal(implied_k(fit_rsm), sum(unlist(sizes_rsm)), tolerance = 1e-8)
-  expect_equal(implied_k(fit_pcm), sum(unlist(sizes_pcm)), tolerance = 1e-8)
-  expect_equal(implied_k(fit_gpcm), sum(unlist(sizes_gpcm)), tolerance = 1e-8)
+  canonical_k <- function(fit) as.integer(fit$summary$Npar[1])
+  expect_equal(canonical_k(fit_rsm), sum(unlist(sizes_rsm)))
+  expect_equal(canonical_k(fit_pcm), sum(unlist(sizes_pcm)))
+  expect_equal(canonical_k(fit_gpcm), sum(unlist(sizes_gpcm)))
+  expect_equal(canonical_k(fit_rsm), length(fit_rsm$opt$par))
+  expect_equal(canonical_k(fit_pcm), length(fit_pcm$opt$par))
+  expect_equal(canonical_k(fit_gpcm), length(fit_gpcm$opt$par))
 
   expect_equal(sum(fit_rsm$steps$Estimate), 0, tolerance = 1e-8)
   step_sums <- tapply(fit_pcm$steps$Estimate, fit_pcm$steps$StepFacet, sum)

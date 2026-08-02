@@ -244,7 +244,10 @@ When candidate models are fitted, separate same-data comparison from the
 scoring interpretation. `compare_mfrm()` provides the fit-statistic table;
 `build_model_choice_review()` attaches model roles, downstream route
 boundaries, and cautious wording. Convert the review to a summary-table bundle
-when the comparison needs to appear in an appendix or exported report.
+when the comparison needs to appear in an appendix or exported report. Fit all
+candidates on the same q>=31 grid before automatic ranking; below q=31 the raw
+criteria remain screening/review-only, and a close decision still requires a
+prespecified denser common-grid check.
 
 ```{r model-choice-route, eval=FALSE}
 cmp <- compare_mfrm(RSM = fit_rsm, PCM = fit_pcm, GPCM = fit_gpcm)

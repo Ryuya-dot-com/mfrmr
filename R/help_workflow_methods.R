@@ -223,6 +223,8 @@
 #'   [compute_information()] / [plot_information()] when you want to inspect
 #'   whether bounded `GPCM` is introducing substantively acceptable
 #'   discrimination-based reweighting relative to the Rasch-family reference.
+#'   Use one selectable q>=31 grid for every candidate and a denser common-grid
+#'   sensitivity check when the comparison is close or consequential.
 #' - Design planning and forecasting:
 #'   [build_mfrm_sim_spec()] or [extract_mfrm_sim_spec()] ->
 #'   [evaluate_mfrm_recovery()] -> [assess_mfrm_recovery()] for

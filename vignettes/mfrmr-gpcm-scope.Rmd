@@ -212,7 +212,9 @@ are:
 
 - Refit with `model = "PCM"` if the discrimination-free assumption is
   defensible for the data and a full FACETS score-side review is required;
-  `compare_mfrm()` quantifies the loss in fit.
+  `compare_mfrm()` quantifies the loss in fit only after every candidate uses
+  the same selectable q>=31 grid; close decisions require a denser common-grid
+  sensitivity check.
 - Keep the report on the `GPCM` fit itself but draft the manuscript section
   manually around the supported tables: `summary(fit)` for parameters,
   `diagnose_mfrm()` for residual fit, `facet_quality_dashboard()` for the

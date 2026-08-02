@@ -1,0 +1,8 @@
+"FixtureId","Description","Engine","Method","Dimensions","Deviance","LogLik","Npar","Persons","NativeAIC","NativeBIC","NativeABIC","NativeSABIC","ConvergenceStatus","IntegrationStabilityStatus","CompleteIdentity","ExpectedArithmeticEligible","ExpectedComparisonReady","ExpectedSABICSelectable"
+"EXTIC-001","TAM MML record with verified native aBIC and complete pilot identities","TAM","MML","1","800","-400","12","100","824","855.26204223185709","816.88296377987149","","pass","pass","TRUE","TRUE","TRUE","TRUE"
+"EXTIC-002","mfrmr MML record using the same common Person-basis formulas","mfrmr","MML","1","812","-406","14","100","840","876.47238260383324","","832.2568657611085","pass","pass","TRUE","TRUE","TRUE","TRUE"
+"EXTIC-003","Valid TAM arithmetic with integration stability not checked","TAM","MML","1","800","-400","12","100","824","855.26204223185709","816.88296377987149","","pass","not_checked","TRUE","TRUE","FALSE","FALSE"
+"EXTIC-004","JML remains outside the common marginal-MML IC panel","TAM","JML","1","800","-400","12","100","824","855.26204223185709","816.88296377987149","","pass","pass","TRUE","FALSE","FALSE","FALSE"
+"EXTIC-005","Small Person count keeps common SABIC non-selectable","TAM","MML","1","80","-40","4","22","88","92.36416981343326","79.27071377282418","","pass","pass","TRUE","TRUE","TRUE","FALSE"
+"EXTIC-006","Inconsistent deviance and log likelihood fail closed","ConQuest","MML","1","800","-399","12","100","824","855.26204223185709","","","pass","pass","TRUE","FALSE","FALSE","FALSE"
+"EXTIC-007","Arithmetic is valid but comparison identity is incomplete","ConQuest","MML","1","800","-400","12","100","824","855.26204223185709","","","pass","pass","FALSE","TRUE","FALSE","FALSE"

@@ -91,17 +91,21 @@
 #'   used for MML integration over the person distribution. The default is
 #'   `31`. Useful accuracy/runtime settings are:
 #'   \tabular{ll}{
-#'     `7`  \tab lightweight exploratory run; helpers such as
+#'     `7`  \tab lightweight screening run; information-criterion deltas,
+#'                 weights, preferences, and LRT are disabled. Helpers such as
 #'                 [predict_mfrm_population()] and
 #'                 [reference_case_benchmark()] use this value. \cr
-#'     `15` \tab intermediate analysis when runtime matters. \cr
-#'     `31` \tab package default and a starting point for final analysis. \cr
+#'     `15` \tab intermediate review run when runtime matters; automatic
+#'                 model ranking remains disabled. \cr
+#'     `31` \tab package default and the starting grid for model comparison. \cr
 #'     `61+` \tab sensitivity analysis for narrow score distributions or
 #'                 demanding numerical comparisons.
 #'   }
 #'   Quadrature adequacy depends on the fitted distribution and score support.
 #'   When substantive conclusions are sensitive, compare results under a
-#'   denser rule and report the setting used.
+#'   denser rule and report the setting used. Raw AIC/BIC/SABIC remain visible
+#'   below 31 points for diagnosis, but [compare_mfrm()] fails closed rather
+#'   than turning a screening/review grid into automatic selection.
 #' @param maxit Computational ceiling on optimizer iterations. The default is
 #'   `400`. This is not a convergence criterion or a model-selection control:
 #'   a fit that reaches the ceiling remains non-ready until the common
@@ -567,8 +571,10 @@
 #' For MML runs, `quad_points` is the main accuracy/speed trade-off.
 #' The `@param quad_points` tier table is the authoritative reference;
 #' in short:
-#' - `quad_points = 7` is a lightweight setting for quick iteration.
-#' - `quad_points = 15` is an intermediate option when runtime matters.
+#' - `quad_points = 7` is a lightweight screening setting; do not use its IC
+#'   values for automatic model selection.
+#' - `quad_points = 15` is an intermediate review option when runtime matters;
+#'   automatic IC ranking remains disabled.
 #' - `quad_points = 31` is the package default and a suitable starting point
 #'   for a final analysis; always review convergence and, when conclusions are
 #'   sensitive, compare a denser quadrature rule.
@@ -621,6 +627,33 @@
 #'    caveats. Use [gpcm_capability_matrix()] to confirm which helper families
 #'    are currently supported, caveated, blocked, or deferred.
 #'
+#' @section Information-criterion contract:
+#' For an eligible fixed-facet `MML` fit, let `D = -2 * LogLik`, let `k` be
+#' `Npar` (the retained free optimization-vector dimension after constraints),
+#' and let `N_person` be the number of unique prepared Persons. The canonical
+#' panel is `AIC = D + 2 * k`, `BIC = D + log(N_person) * k`, and
+#' `SABIC = D + log((N_person + 2) / 24) * k`.
+#'
+#' `ResponseRows`, `WeightedResponseTotal`, `Persons`, and `ICSampleSize` are
+#' separate fields. The compatibility field `N` retains its earlier
+#' response-row or summed-observation-weight meaning and is not the 0.2.3 BIC
+#' sample size. Explicit all-unit weights remain eligible; every non-unit
+#' observation-weight fit, JML fit, and object without the current contract
+#' identity is excluded from the common MML panel. Its canonical
+#' `AIC`/`BIC`/`SABIC` fields are `NA`, while any retained raw values are
+#' explicitly named `LegacyAIC` and `LegacyBIC`. At 22 or fewer Persons,
+#' SABIC is displayed only as sensitivity evidence and
+#' `SABICSelectable = FALSE`.
+#'
+#' Integration adequacy is recorded separately from formula eligibility.
+#' `ICIntegrationTier` is `"coarse_screening"` below 15 points,
+#' `"intermediate_review"` at 15--30, `"standard_start"` at 31--60, and
+#' `"dense_sensitivity"` at 61 or more. Raw canonical criteria remain visible
+#' in every eligible MML tier, but `ICSelectable = FALSE` below 31 points;
+#' automatic deltas, criterion weights, preferences, and LRT are suppressed.
+#' A close or consequential q>=31 comparison should still be reevaluated on a
+#' denser common grid.
+#'
 #' @section References:
 #' The ordered-category many-facet formulation follows Linacre (1989), with
 #' the `RSM` and `PCM` branches grounded in Andrich (1978) and Masters (1982).
@@ -629,6 +662,8 @@
 #' log-slope identification convention. The `MML` route follows the
 #' quadrature-based marginal-likelihood framework of Bock and Aitkin (1981).
 #'
+#' - Akaike, H. (1974). *A new look at the statistical model identification*.
+#'   IEEE Transactions on Automatic Control, 19(6), 716-723.
 #' - Andrich, D. (1978). *A rating formulation for ordered response
 #'   categories*. Psychometrika, 43(4), 561-573.
 #' - Bock, R. D., & Aitkin, M. (1981). *Marginal maximum likelihood estimation
@@ -648,11 +683,19 @@
 #' - Robitzsch, A., & Steinfeld, J. (2018). *Item response models for human
 #'   ratings: Overview, estimation methods, and implementation in R*.
 #'   Psychological Test and Assessment Modeling, 60(1), 101-139.
+#' - Schwarz, G. (1978). *Estimating the dimension of a model*.
+#'   Annals of Statistics, 6(2), 461-464.
+#' - Sclove, S. L. (1987). *Application of model-selection criteria to some
+#'   problems in multivariate analysis*. Psychometrika, 52(3), 333-343.
 #'
 #' @return
 #' An object of class `mfrm_fit` (named list) with:
-#' - `summary`: one-row model summary (`LogLik`, `AIC`, `BIC`, convergence),
-#'   including user-facing `Method`, engine-facing `MethodUsed`, MML-engine
+#' - `summary`: one-row model summary including `LogLik`, `Deviance`, canonical
+#'   free dimension `Npar`, response-row/weight/Person counts, the versioned
+#'   information-criterion contract, Person-based MML `AIC`/`BIC`/`SABIC`,
+#'   explicitly descriptive legacy fields when the common panel is ineligible,
+#'   and convergence; it also includes user-facing `Method`, engine-facing
+#'   `MethodUsed`, MML-engine
 #'   fields, terminal-gradient readiness, requested/selected-stage tolerance
 #'   settings, and the actual L-BFGS-B `OptimizerFactr` / `OptimizerPgtol`
 #'   controls when applicable
@@ -1864,6 +1907,13 @@ normalize_compare_signature <- function(fit) {
     person = as.character(cfg$person_col %||% NA_character_),
     facets = sort(as.character(cfg$facet_cols %||% fit$prep$facet_names %||% character(0))),
     score = as.character(cfg$score_col %||% NA_character_),
+    rating_min = suppressWarnings(as.numeric(
+      cfg$rating_min %||% fit$prep$rating_min %||% NA_real_
+    )),
+    rating_max = suppressWarnings(as.numeric(
+      cfg$rating_max %||% fit$prep$rating_max %||% NA_real_
+    )),
+    score_map = cfg$score_map %||% fit$prep$score_map %||% NULL,
     weight = as.character(cfg$weight_col %||% NA_character_),
     step_facet = as.character(cfg$step_facet %||% NA_character_),
     slope_facet = as.character(cfg$slope_facet %||% NA_character_),
@@ -1906,6 +1956,9 @@ audit_compare_mfrm_nesting <- function(fits, labels) {
     person = same_signature_component(sigs[[1]]$person, sigs[[2]]$person),
     facets = same_signature_component(sigs[[1]]$facets, sigs[[2]]$facets),
     score = same_signature_component(sigs[[1]]$score, sigs[[2]]$score),
+    rating_min = same_signature_component(sigs[[1]]$rating_min, sigs[[2]]$rating_min),
+    rating_max = same_signature_component(sigs[[1]]$rating_max, sigs[[2]]$rating_max),
+    score_map = same_signature_component(sigs[[1]]$score_map, sigs[[2]]$score_map),
     weight = same_signature_component(sigs[[1]]$weight, sigs[[2]]$weight),
     noncenter_facet = same_signature_component(sigs[[1]]$noncenter_facet, sigs[[2]]$noncenter_facet),
     dummy_facets = same_signature_component(sigs[[1]]$dummy_facets, sigs[[2]]$dummy_facets),
@@ -3924,10 +3977,233 @@ diagnose_mfrm <- function(fit,
   out
 }
 
+mfrm_ic_contract_required_fields <- function() {
+  c(
+    "ICContractVersion", "N", "ResponseRows", "WeightedResponseTotal",
+    "Persons", "Npar", "LogLik", "Deviance", "WeightPolicy",
+    "ICEligible", "ICSelectable", "ICStatus", "ICSampleSize",
+    "ICSampleSizeBasis",
+    "AIC", "BIC", "SABIC", "SABICSelectable", "AICFormula",
+    "BICFormula", "SABICFormula", "IntegrationEvaluationId",
+    "ICQuadraturePoints", "ICIntegrationTier", "ICIntegrationStatus",
+    "ICIntegrationSelectable"
+  )
+}
+
+mfrm_ic_stored_value_matches <- function(actual,
+                                         expected,
+                                         tolerance = 1e-10) {
+  if (length(actual) == 0L || length(expected) == 0L) return(FALSE)
+  actual <- actual[1]
+  expected <- expected[1]
+  if (is.numeric(expected) || is.integer(expected)) {
+    actual <- suppressWarnings(as.numeric(actual))
+    expected <- suppressWarnings(as.numeric(expected))
+    if (is.na(actual) && is.na(expected)) return(TRUE)
+    if (!is.finite(actual) || !is.finite(expected)) {
+      return(identical(actual, expected))
+    }
+    return(abs(actual - expected) <=
+             tolerance * max(1, abs(expected)))
+  }
+  if (is.logical(expected)) {
+    actual <- suppressWarnings(as.logical(actual))
+    if (is.na(actual) && is.na(expected)) return(TRUE)
+    return(identical(actual, expected))
+  }
+  actual <- as.character(actual)
+  expected <- as.character(expected)
+  if (is.na(actual) && is.na(expected)) return(TRUE)
+  identical(actual, expected)
+}
+
+mfrm_extract_fit_ic_contract <- function(fit, tolerance = 1e-10) {
+  summary_row <- as.data.frame(fit$summary %||% data.frame(),
+                               stringsAsFactors = FALSE)
+  if (nrow(summary_row) > 0L) summary_row <- summary_row[1, , drop = FALSE]
+  config <- fit$config %||% list()
+  prep <- fit$prep %||% list()
+  method <- public_mfrm_method_label(toupper(as.character(
+    config$method %||%
+      if ("Method" %in% names(summary_row)) summary_row$Method[1] else NA_character_
+  )[1]))
+  model <- toupper(as.character(
+    config$model %||%
+      if ("Model" %in% names(summary_row)) summary_row$Model[1] else NA_character_
+  )[1])
+  current_contract <- nrow(summary_row) > 0L &&
+    "ICContractVersion" %in% names(summary_row) &&
+    identical(
+      as.character(summary_row$ICContractVersion[1]),
+      mfrm_ic_contract_version()
+    )
+  can_rebuild <- !is.null(fit$opt$value) && length(fit$opt$value) > 0L &&
+    !is.null(fit$opt$par) && is.list(prep) && is.data.frame(prep$data)
+
+  expected <- if (can_rebuild) {
+    tryCatch(
+      build_mfrm_ic_contract(
+        loglik = -as.numeric(fit$opt$value[1]),
+        npar = length(fit$opt$par),
+        prep = prep,
+        config = config,
+        method = method
+      ),
+      error = function(e) NULL
+    )
+  } else {
+    NULL
+  }
+
+  if (current_contract && !is.null(expected)) {
+    required <- mfrm_ic_contract_required_fields()
+    missing_fields <- setdiff(required, names(summary_row))
+    comparable_fields <- intersect(required, names(expected))
+    field_checks <- vapply(comparable_fields, function(field) {
+      field %in% names(summary_row) && mfrm_ic_stored_value_matches(
+        summary_row[[field]][1], expected[[field]], tolerance = tolerance
+      )
+    }, logical(1))
+    stored_consistent <- length(missing_fields) == 0L && all(field_checks)
+    mismatch <- c(missing_fields, names(field_checks)[!field_checks])
+    contract_state <- if (stored_consistent) "current" else "current_inconsistent"
+    values <- expected
+  } else {
+    stored_consistent <- NA
+    mismatch <- if (current_contract) "contract_rebuild_unavailable" else
+      "missing_current_contract"
+    contract_state <- "legacy_or_unknown"
+    response_rows <- if (is.data.frame(prep$data)) nrow(prep$data) else NA_integer_
+    weighted_total <- if (is.data.frame(prep$data) && "Weight" %in% names(prep$data)) {
+      legacy_weights <- suppressWarnings(as.numeric(prep$data$Weight))
+      if (length(legacy_weights) > 0L && all(is.finite(legacy_weights))) {
+        sum(legacy_weights)
+      } else {
+        NA_real_
+      }
+    } else {
+      as.numeric(response_rows)
+    }
+    persons <- if (is.data.frame(prep$data) && "Person" %in% names(prep$data)) {
+      person_values <- as.character(prep$data$Person)
+      length(unique(person_values[!is.na(person_values)]))
+    } else {
+      suppressWarnings(as.integer(config$n_person %||% NA_integer_))
+    }
+    stored_loglik <- if ("LogLik" %in% names(summary_row)) {
+      suppressWarnings(as.numeric(summary_row$LogLik[1]))
+    } else if (!is.null(fit$opt$value)) {
+      -suppressWarnings(as.numeric(fit$opt$value[1]))
+    } else {
+      NA_real_
+    }
+    stored_aic <- if ("LegacyAIC" %in% names(summary_row)) {
+      suppressWarnings(as.numeric(summary_row$LegacyAIC[1]))
+    } else if ("AIC" %in% names(summary_row)) {
+      suppressWarnings(as.numeric(summary_row$AIC[1]))
+    } else {
+      NA_real_
+    }
+    stored_bic <- if ("LegacyBIC" %in% names(summary_row)) {
+      suppressWarnings(as.numeric(summary_row$LegacyBIC[1]))
+    } else if ("BIC" %in% names(summary_row)) {
+      suppressWarnings(as.numeric(summary_row$BIC[1]))
+    } else {
+      NA_real_
+    }
+    legacy_n <- if ("N" %in% names(summary_row)) {
+      suppressWarnings(as.numeric(summary_row$N[1]))
+    } else {
+      NA_real_
+    }
+    values <- list(
+      ICContractVersion = "legacy_or_unknown",
+      N = legacy_n,
+      ResponseRows = as.integer(response_rows),
+      WeightedResponseTotal = as.numeric(weighted_total),
+      Persons = as.integer(persons),
+      Npar = if (!is.null(fit$opt$par)) length(fit$opt$par) else NA_integer_,
+      LogLik = stored_loglik,
+      Deviance = if (is.finite(stored_loglik)) -2 * stored_loglik else NA_real_,
+      WeightPolicy = if (is.data.frame(prep$data)) {
+        mfrm_ic_weight_policy(prep, config)
+      } else {
+        "unknown"
+      },
+      ICEligible = FALSE,
+      ICSelectable = FALSE,
+      ICStatus = "suppressed_legacy_contract",
+      ICSampleSize = NA_real_,
+      ICSampleSizeBasis = "legacy_or_unknown",
+      AIC = NA_real_,
+      BIC = NA_real_,
+      SABIC = NA_real_,
+      SABICSelectable = FALSE,
+      AICFormula = NA_character_,
+      BICFormula = NA_character_,
+      SABICFormula = NA_character_,
+      IntegrationEvaluationId = mfrm_ic_integration_evaluation_id(method, config),
+      ICQuadraturePoints = NA_integer_,
+      ICIntegrationTier = "legacy_or_unknown",
+      ICIntegrationStatus = "legacy_or_unknown",
+      ICIntegrationSelectable = FALSE,
+      LegacyAIC = stored_aic,
+      LegacyBIC = stored_bic,
+      LegacyICSampleSize = legacy_n,
+      LegacyICSampleSizeBasis = if (!is.null(config$weight_col)) {
+        "sum_weights"
+      } else {
+        "row_count"
+      }
+    )
+  }
+
+  tibble::tibble(
+    Model = model,
+    Method = method,
+    nobs = values$ResponseRows,
+    ResponseRows = values$ResponseRows,
+    WeightedN = values$WeightedResponseTotal,
+    WeightedResponseTotal = values$WeightedResponseTotal,
+    Persons = values$Persons,
+    ICSampleSize = values$ICSampleSize,
+    ICSampleSizeBasis = values$ICSampleSizeBasis,
+    Npar = values$Npar,
+    npar = values$Npar,
+    LogLik = values$LogLik,
+    Deviance = values$Deviance,
+    AIC = values$AIC,
+    BIC = values$BIC,
+    SABIC = values$SABIC,
+    SABICSelectable = values$SABICSelectable,
+    WeightPolicy = values$WeightPolicy,
+    ICEligible = values$ICEligible,
+    ICSelectable = values$ICSelectable,
+    ICStatus = values$ICStatus,
+    ICContractVersion = values$ICContractVersion,
+    AICFormula = values$AICFormula,
+    BICFormula = values$BICFormula,
+    SABICFormula = values$SABICFormula,
+    IntegrationEvaluationId = values$IntegrationEvaluationId,
+    ICQuadraturePoints = values$ICQuadraturePoints,
+    ICIntegrationTier = values$ICIntegrationTier,
+    ICIntegrationStatus = values$ICIntegrationStatus,
+    ICIntegrationSelectable = values$ICIntegrationSelectable,
+    LegacyAIC = values$LegacyAIC,
+    LegacyBIC = values$LegacyBIC,
+    LegacyICSampleSize = values$LegacyICSampleSize,
+    LegacyICSampleSizeBasis = values$LegacyICSampleSizeBasis,
+    ICContractState = contract_state,
+    StoredICConsistent = stored_consistent,
+    StoredICMismatch = paste(unique(mismatch), collapse = ";")
+  )
+}
+
 #' Compare two or more fitted MFRM models
 #'
 #' Produce a side-by-side comparison of multiple [fit_mfrm()] results using
-#' information criteria, log-likelihood, and parameter counts. When exactly
+#' AIC, Person-based BIC, Sclove SABIC, log-likelihood, and free-parameter
+#' counts. When exactly
 #' two models are supplied and the current conservative nesting review passes,
 #' a likelihood-ratio test is included.
 #'
@@ -3935,9 +4211,9 @@ diagnose_mfrm <- function(fit,
 #' @param labels Optional character vector of labels for each model.
 #'   If `NULL`, labels are generated from model/method combinations.
 #' @param warn_constraints Logical. If `TRUE` (the default), emit a warning
-#'   when models use different centering constraints (`noncenter_facet` or
-#'   `dummy_facets`), which can make information-criterion comparisons
-#'   misleading.
+#'   when models use different score coding or constraint settings. Ranking is
+#'   suppressed whenever this basis differs, regardless of whether the warning
+#'   is displayed.
 #' @param nested Logical. Set to `TRUE` only when the supplied models are
 #'   known to be nested and fitted with the same likelihood basis on the same
 #'   observations. The default is `FALSE`, in which case no likelihood-ratio
@@ -3949,21 +4225,38 @@ diagnose_mfrm <- function(fit,
 #' columns) for the comparison to be meaningful. The function checks that
 #' observation counts match and warns otherwise.
 #'
-#' Information-criterion ranking is reported only when all candidate models
-#' use the package's `MML` estimation path, analyze the same observations, and
-#' converge successfully. Raw `AIC` and `BIC` values are still shown for each
-#' model, but `Delta_*`, weights, and preferred-model summaries are suppressed
-#' when the likelihood basis is not comparable enough for primary reporting.
-#' The comparison table records both row count (`nobs`) and the sample-size
-#' basis used for the BIC penalty (`ICSampleSize`, `ICSampleSizeBasis`); for
-#' weighted fits this is the sum of weights rather than the number of rows.
+#' Information-criterion ranking is reported only when all candidates are
+#' inference-ready fits from the package's current `MML` contract, use the same
+#' prepared observations, score coding, constraints, formula contract, and
+#' integration-evaluation identity, are eligible under the weighting policy,
+#' and have a selectable integration tier. For fixed-facet MML,
+#' `ICSampleSize` is the number of independent
+#' Persons and `ICSampleSizeBasis` is `"person_count"`; response rows and their
+#' weighted total are retained separately. Explicit all-unit weights are
+#' eligible, whereas every non-unit observation-weight fit fails closed in
+#' version 0.2.3.
+#'
+#' Canonical `AIC`, `BIC`, and `SABIC` are recomputed from the retained
+#' objective, optimizer-vector dimension, and Person count. A stale stored
+#' value, a legacy object without the current contract identity, a JML fit, or
+#' an ineligible weighted fit cannot enter ranking. Earlier raw values may be
+#' shown only as explicitly labelled `LegacyAIC` and `LegacyBIC` fields.
+#'
+#' **Integration selection guard**: raw canonical criteria are retained at
+#' every valid MML quadrature count, but automatic comparison is screening-only
+#' below 15 points and review-only at 15--30 points. `ICSelectable` and
+#' `ICIntegrationSelectable` become `TRUE` at q>=31. q=31 is a starting grid,
+#' not a universal guarantee: close or consequential comparisons should be
+#' reevaluated at a denser shared grid (normally q>=61). The guard also applies
+#' to `nested = TRUE`, so a coarse-grid LRT cannot bypass it.
 #'
 #' **Nesting**: Two models are *nested* when one is a special case of the
 #' other obtained by imposing equality constraints.  The most common
 #' nesting in MFRM is RSM (shared thresholds) inside PCM
 #' (item-specific thresholds).  Models that differ only in estimation
 #' method (MML vs JML) on the same specification are not nested in the
-#' usual sense---use information criteria rather than LRT for that
+#' usual sense, and their information criteria do not share the common MML
+#' contract. Do not use either the LRT or IC ranking as a direct cross-method
 #' comparison.
 #'
 #' In the **current `mfrmr` model space**, the automatic nesting review is
@@ -3985,27 +4278,33 @@ diagnose_mfrm <- function(fit,
 #' \deqn{\Lambda = -2 (\ell_{\mathrm{restricted}} - \ell_{\mathrm{full}})
 #'   \sim \chi^2_{\Delta p}}
 #'
-#' The LRT is asymptotically valid when models are nested and the data
-#' are independent.  With small samples or boundary conditions (e.g.,
-#' variance components near zero), treat p-values as approximate.
+#' The LRT is asymptotically valid only under its regularity assumptions.
+#' With small samples or boundary/singular conditions, the reference
+#' chi-square p-value can be incorrect. At large Person counts, a very small
+#' practical improvement can also become statistically significant. Read the
+#' p-value as formal nested-fit evidence, not as an automatic practical model
+#' preference or evidence that a subscore is useful.
 #'
 #' @section Information-criterion diagnostics:
-#' In addition to raw AIC and BIC values, the function computes:
-#' - **Delta_AIC / Delta_BIC**: difference from the best (minimum) value.
+#' In addition to the canonical criteria, the function computes:
+#' - **Delta_AIC / Delta_BIC / Delta_SABIC**: difference from the minimum
+#'   value in the supplied candidate set.
 #'   A Delta < 2 is typically considered negligible; 4--7 suggests
 #'   moderate evidence; > 10 indicates strong evidence against the
 #'   higher-scoring model (Burnham & Anderson, 2002).
-#' - **AkaikeWeight / BICWeight**: model probabilities derived from
-#'   `exp(-0.5 * Delta)`, normalised across the candidate set.  An
-#'   Akaike weight of 0.90 means the model has a 90\% probability of
-#'   being the best in the candidate set.
+#' - **AkaikeWeight / BICWeight / SABICWeight**: relative candidate-set
+#'   weights derived from `exp(-0.5 * Delta)` and normalized only across the
+#'   supplied models. They are not posterior probabilities, probabilities of
+#'   model truth, or guarantees that the candidate set is adequate.
 #' - **Evidence ratios**: pairwise ratios of Akaike weights, quantifying
-#'   the relative evidence for one model over another (e.g., an
-#'   evidence ratio of 5 means the preferred model is 5 times more
-#'   likely).
+#'   relative support within this candidate set. A ratio of 5 means only that
+#'   one normalized Akaike weight is five times the other; it does not mean
+#'   that one model is five times more likely to be true.
 #'
-#' AIC penalises complexity less than BIC; when they disagree, AIC
-#' favours the more complex model and BIC the simpler one.
+#' AIC, BIC, and SABIC answer different approximation/penalty questions. SABIC
+#' is a sensitivity criterion, not a universal tie-breaker. At 22 or fewer
+#' Persons its Sclove penalty is non-positive, so `SABICSelectable` and
+#' `SABICComparable` are `FALSE` and no automatic SABIC preference is returned.
 #'
 #' @section What this comparison means:
 #' `compare_mfrm()` is a same-basis model-comparison helper. Its strongest
@@ -4014,8 +4313,11 @@ diagnose_mfrm <- function(fit,
 #' structure.
 #'
 #' @section What this comparison does not justify:
-#' - Do not treat AIC/BIC differences as primary evidence when
+#' - Do not treat AIC/BIC/SABIC differences as primary evidence when
 #'   `table$ICComparable` is `FALSE`.
+#' - Do not infer numerical adequacy merely because all models share the same
+#'   coarse quadrature identity. Below q=31, raw criteria are diagnostic only
+#'   and automatic deltas, weights, preferences, and LRT are suppressed.
 #' - Do not interpret the LRT unless `nested = TRUE` and the structural nesting review
 #'   in `comparison_basis$nesting_review` passes.
 #' - Same-family additive-vs-interaction fits are considered nested only when
@@ -4025,13 +4327,20 @@ diagnose_mfrm <- function(fit,
 #'   nesting boundary; unsupported relations remain unsupported.
 #' - Do not compare models fit to different datasets, different score codings,
 #'   or materially different constraint systems as if they were commensurate.
+#' - At large Person counts, a small systematic likelihood gain can dominate an
+#'   IC difference; boundary or singular fits can also invalidate routine
+#'   asymptotics. Evaluate effect size, stability, interpretability, and score
+#'   consequences separately.
 #'
 #' @section Interpreting output:
-#' - Lower AIC/BIC values indicate better parsimony-accuracy trade-off only
-#'   when `table$ICComparable` is `TRUE`.
-#' - A significant LRT p-value suggests the more complex model provides a
-#'   meaningfully better fit only when the nesting assumption truly holds.
-#' - `preferred` indicates the model preferred by each criterion.
+#' - Lower AIC/BIC values indicate relative support only when
+#'   `table$ICComparable` is `TRUE`; use SABIC ranking only when
+#'   `table$SABICComparable` is also `TRUE`.
+#' - A significant LRT p-value is formal evidence against the restricted
+#'   model under the stated assumptions; practical gain, score utility, and
+#'   dimensional interpretation require separate checks.
+#' - `preferred` identifies the minimum criterion within the supplied
+#'   candidate set; it is not an unconditional model verdict.
 #' - `evidence_ratios` gives pairwise Akaike-weight ratios (returned only
 #'   when Akaike weights can be computed for at least two models).
 #' - When comparing more than two models, interpret evidence ratios
@@ -4039,7 +4348,8 @@ diagnose_mfrm <- function(fit,
 #'
 #' @section How to read the main outputs:
 #' - `table`: first-pass comparison table; start with `ICComparable`,
-#'   `Model`, `Method`, `AIC`, and `BIC`.
+#'   `ICSelectable`, `ICIntegrationTier`, `Model`, `Method`, `ICStatus`, `AIC`,
+#'   `BIC`, and `SABIC`.
 #' - `comparison_basis`: records whether IC and LRT claims are defensible for
 #'   the supplied models. Inspect `comparison_basis$nesting_review$relation`
 #'   and `reason` before reading any LRT output.
@@ -4057,15 +4367,18 @@ diagnose_mfrm <- function(fit,
 #' @section Typical workflow:
 #' 1. Fit two models with [fit_mfrm()] (e.g., RSM and PCM).
 #' 2. Compare with `compare_mfrm(fit_rsm, fit_pcm)`.
-#' 3. Inspect `summary(comparison)` for AIC/BIC diagnostics and, when
+#' 3. Inspect `summary(comparison)` for AIC/BIC/SABIC diagnostics and, when
 #'    appropriate, an LRT.
 #'
 #' @return
 #' An object of class `mfrm_comparison` (named list) with:
-#' - `table`: data.frame of model-level statistics (LogLik, AIC, BIC,
-#'   Delta_AIC, AkaikeWeight, Delta_BIC, BICWeight, npar, nobs, WeightedN,
-#'   ICSampleSize, ICSampleSizeBasis, Model, Method, Converged,
-#'   InferenceReady, ConvergenceSeverity, ICComparable).
+#' - `table`: data.frame of model-level statistics including `LogLik`,
+#'   `Deviance`, `Npar` (and equal compatibility alias `npar`), `AIC`, `BIC`,
+#'   `SABIC`, criterion deltas and candidate-set weights, `ResponseRows`,
+#'   `WeightedResponseTotal`, `Persons`, `ICSampleSize`, formula and integration
+#'   identities, integration tier/selectability, stored-value consistency
+#'   fields, convergence fields,
+#'   `ICComparable`, `SABICComparable`, and `ConstraintComparable`.
 #' - `lrt`: data.frame with likelihood-ratio test result (only when two models
 #'   are supplied and `nested = TRUE`). Contains `ChiSq`, `df`, `p_value`.
 #' - `evidence_ratios`: data.frame of pairwise Akaike-weight ratios (Model1,
@@ -4082,10 +4395,10 @@ diagnose_mfrm <- function(fit,
 #' toy <- load_mfrmr_data("example_core")
 #'
 #' fit_rsm <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                      method = "MML", model = "RSM", quad_points = 7, maxit = 30)
+#'                      method = "MML", model = "RSM", quad_points = 31, maxit = 30)
 #' fit_pcm <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                      method = "MML", model = "PCM",
-#'                      step_facet = "Criterion", quad_points = 7, maxit = 30)
+#'                      step_facet = "Criterion", quad_points = 31, maxit = 30)
 #' comp <- compare_mfrm(fit_rsm, fit_pcm, labels = c("RSM", "PCM"))
 #' comp$table
 #' comp$evidence_ratios
@@ -4100,6 +4413,8 @@ diagnose_mfrm <- function(fit,
 #'   19*(6), 716-723.
 #' - Schwarz, G. (1978). Estimating the dimension of a model.
 #'   *Annals of Statistics, 6*(2), 461-464.
+#' - Sclove, S. L. (1987). Application of model-selection criteria to some
+#'   problems in multivariate analysis. *Psychometrika, 52*(3), 333-343.
 #' @export
 compare_mfrm <- function(..., labels = NULL, warn_constraints = TRUE, nested = FALSE) {
   fits <- list(...)
@@ -4159,73 +4474,67 @@ compare_mfrm <- function(..., labels = NULL, warn_constraints = TRUE, nested = F
     identical(dat_a, dat_b)
   }
 
-  # -- constraint compatibility check --
-  if (isTRUE(warn_constraints) && length(fits) >= 2) {
-    noncenter <- vapply(fits, function(f) {
-      nc <- f$config$noncenter_facet
-      if (is.null(nc)) "Person" else as.character(nc[1])
-    }, character(1))
-    if (length(unique(noncenter)) > 1) {
-      warning("Models use different centering constraints (",
-              paste(unique(noncenter), collapse = ", "),
-              "). IC comparisons may be misleading.", call. = FALSE)
+  # -- constraint and score-coding compatibility check --
+  comparison_signatures <- lapply(fits, normalize_compare_signature)
+  constraint_component_names <- c(
+    "person", "facets", "score", "rating_min", "rating_max", "score_map",
+    "noncenter_facet", "dummy_facets", "positive_facets", "anchors",
+    "group_anchors"
+  )
+  constraint_components <- vapply(constraint_component_names, function(nm) {
+    all(vapply(comparison_signatures[-1], function(sig) {
+      same_signature_component(comparison_signatures[[1]][[nm]], sig[[nm]])
+    }, logical(1)))
+  }, logical(1))
+  same_constraint_basis <- all(constraint_components)
+
+  if (isTRUE(warn_constraints) && !same_constraint_basis) {
+    mismatch <- names(constraint_components)[!constraint_components]
+    if ("noncenter_facet" %in% mismatch) {
+      noncenter <- vapply(comparison_signatures, function(sig) {
+        as.character(sig$noncenter_facet[1])
+      }, character(1))
+      warning(
+        "Models use different centering constraints (",
+        paste(unique(noncenter), collapse = ", "),
+        "). Information-criterion ranking is suppressed.",
+        call. = FALSE
+      )
     }
-    dummy_sets <- lapply(fits, function(f) {
-      d <- f$config$dummy_facets
-      if (is.null(d)) character(0) else sort(as.character(d))
-    })
-    dummy_sigs <- vapply(dummy_sets, paste, character(1), collapse = ",")
-    if (length(unique(dummy_sigs)) > 1) {
-      warning("Models use different dummy-facet constraints (",
-              paste(unique(dummy_sigs), collapse = " vs "),
-              "). IC comparisons may be misleading.", call. = FALSE)
+    if ("dummy_facets" %in% mismatch) {
+      dummy_sigs <- vapply(comparison_signatures, function(sig) {
+        paste(sig$dummy_facets, collapse = ",")
+      }, character(1))
+      warning(
+        "Models use different dummy-facet constraints (",
+        paste(unique(dummy_sigs), collapse = " vs "),
+        "). Information-criterion ranking is suppressed.",
+        call. = FALSE
+      )
+    }
+    other_mismatch <- setdiff(mismatch, c("noncenter_facet", "dummy_facets"))
+    if (length(other_mismatch) > 0L) {
+      warning(
+        "Models differ in likelihood-basis coding or constraint settings: ",
+        paste(other_mismatch, collapse = ", "),
+        ". Information-criterion ranking is suppressed.",
+        call. = FALSE
+      )
     }
   }
 
   # -- extract summary statistics --
   rows <- lapply(seq_along(fits), function(i) {
     f <- fits[[i]]
-    s <- f$summary
-    nobs <- if (!is.null(f$prep$data)) nrow(f$prep$data) else NA_integer_
-    weighted_n <- if (!is.null(f$config$weight_col) &&
-        !is.null(f$prep$data) && "Weight" %in% names(f$prep$data)) {
-      sum(f$prep$data$Weight, na.rm = TRUE)
-    } else if (is.finite(nobs)) {
-      as.numeric(nobs)
-    } else {
-      NA_real_
-    }
-    summary_n <- if ("N" %in% names(s)) {
-      suppressWarnings(as.numeric(s$N[1]))
-    } else {
-      NA_real_
-    }
-    ic_sample_size <- if (is.finite(summary_n)) summary_n else weighted_n
-    ic_sample_size_basis <- if (!is.null(f$config$weight_col) &&
-        !is.null(f$prep$data) && "Weight" %in% names(f$prep$data)) {
-      "sum_weights"
-    } else {
-      "row_count"
-    }
-    npar <- if (!is.null(f$opt$par)) length(f$opt$par) else NA_integer_
-    method <- if (!is.null(f$config$method)) toupper(f$config$method[1]) else NA_character_
-    method <- ifelse(identical(method, "JMLE"), "JML", method)
     convergence <- mfrm_convergence_state(f)
-    tibble(
-      Label     = labels[i],
-      Model     = if (!is.null(f$config$model)) toupper(f$config$model[1]) else NA_character_,
-      Method    = method,
-      nobs      = nobs,
-      WeightedN = weighted_n,
-      ICSampleSize = ic_sample_size,
-      ICSampleSizeBasis = ic_sample_size_basis,
-      npar      = npar,
-      LogLik    = if ("LogLik" %in% names(s)) s$LogLik[1] else NA_real_,
-      AIC       = if ("AIC" %in% names(s)) s$AIC[1] else NA_real_,
-      BIC       = if ("BIC" %in% names(s)) s$BIC[1] else NA_real_,
+    contract <- mfrm_extract_fit_ic_contract(f)
+    tibble::add_column(
+      contract,
+      Label = labels[i],
       Converged = convergence$code_converged,
       InferenceReady = convergence$inference_ready,
-      ConvergenceSeverity = convergence$severity
+      ConvergenceSeverity = convergence$severity,
+      .before = 1L
     )
   })
   tbl <- bind_rows(rows)
@@ -4242,21 +4551,48 @@ compare_mfrm <- function(..., labels = NULL, warn_constraints = TRUE, nested = F
   }
   conv_vals <- tbl$InferenceReady
   all_converged <- length(conv_vals) > 0 && all(!is.na(conv_vals) & as.logical(conv_vals))
-  ic_comparable <- same_method && same_nobs && same_data && all_converged && all_mml
+  all_current_contract <- nrow(tbl) > 0L &&
+    all(!is.na(tbl$ICContractVersion) &
+          tbl$ICContractVersion == mfrm_ic_contract_version())
+  all_stored_consistent <- nrow(tbl) > 0L &&
+    all(!is.na(tbl$StoredICConsistent) & tbl$StoredICConsistent)
+  all_ic_eligible <- nrow(tbl) > 0L &&
+    all(!is.na(tbl$ICEligible) & tbl$ICEligible)
+  all_ic_selectable <- nrow(tbl) > 0L &&
+    all(!is.na(tbl$ICSelectable) & tbl$ICSelectable) &&
+    all(!is.na(tbl$ICIntegrationSelectable) & tbl$ICIntegrationSelectable)
+  contract_vals <- tbl$ICContractVersion[!is.na(tbl$ICContractVersion)]
+  same_contract <- length(contract_vals) > 0L &&
+    length(unique(contract_vals)) == 1L &&
+    identical(unique(contract_vals), mfrm_ic_contract_version())
+  integration_vals <- tbl$IntegrationEvaluationId[
+    !is.na(tbl$IntegrationEvaluationId) & nzchar(tbl$IntegrationEvaluationId)
+  ]
+  same_integration <- length(integration_vals) == nrow(tbl) &&
+    length(unique(integration_vals)) == 1L
+  same_formula <- length(unique(tbl$AICFormula)) == 1L &&
+    length(unique(tbl$BICFormula)) == 1L &&
+    length(unique(tbl$SABICFormula)) == 1L
+  ic_comparable <- same_method && same_nobs && same_data && all_converged &&
+    all_mml && all_current_contract && all_stored_consistent &&
+    all_ic_eligible && all_ic_selectable && same_contract && same_integration &&
+    same_formula && same_constraint_basis
+  sabic_comparable <- ic_comparable &&
+    all(!is.na(tbl$SABICSelectable) & tbl$SABICSelectable)
 
   if (!isTRUE(nested)) {
     if (!same_method) {
       warning(
         "Models use different estimation methods (",
         paste(unique(method_vals), collapse = ", "),
-        "). Raw AIC/BIC values are shown, but cross-method deltas, weights, ",
+        "). Canonical IC ranking, deltas, weights, ",
         "and automatic preferences are suppressed.",
         call. = FALSE
       )
     } else if (!all_mml && all_converged) {
       warning(
         "Information-criterion ranking is limited to converged MML fits in this package. ",
-        "Raw AIC/BIC values are shown for ",
+        "Legacy descriptive values remain separately labelled for ",
         paste(unique(method_vals), collapse = ", "),
         " models, but deltas, weights, automatic preferences, and LRT were suppressed.",
         call. = FALSE
@@ -4267,26 +4603,70 @@ compare_mfrm <- function(..., labels = NULL, warn_constraints = TRUE, nested = F
     if (!same_nobs) {
       warning("Models were fit to different numbers of observations (",
               paste(obs_vals, collapse = ", "),
-              "). Raw AIC/BIC values are shown, but cross-sample deltas, weights, ",
+              "). Cross-sample deltas, weights, ",
               "and automatic preferences are suppressed.", call. = FALSE)
     }
     if (!same_data) {
       warning(
-        "Models were not fit to the same prepared response data. Raw AIC/BIC values are shown, ",
-        "but deltas, weights, automatic preferences, and likelihood-ratio testing were suppressed.",
+        "Models were not fit to the same prepared response data. ",
+        "Deltas, weights, automatic preferences, and likelihood-ratio testing were suppressed.",
         call. = FALSE
       )
     }
     if (!all_converged) {
       warning(
-        "At least one compared model requires optimizer or convergence review. Raw AIC/BIC values are shown, ",
-        "but IC ranking, weights, and likelihood-ratio testing were suppressed.",
+        "At least one compared model requires optimizer or convergence review. ",
+        "IC ranking, weights, and likelihood-ratio testing were suppressed.",
+        call. = FALSE
+      )
+    }
+    if (!all_current_contract) {
+      warning(
+        "At least one fit has a legacy, unknown, or incomplete information-criterion contract. ",
+        "LegacyAIC/LegacyBIC remain descriptive, but canonical ranking was suppressed; ",
+        "refit under the current package before comparison.",
+        call. = FALSE
+      )
+    } else if (!all_stored_consistent) {
+      warning(
+        "At least one stored information-criterion value or identity does not match ",
+        "the retained objective, parameter vector, prepared data, or integration setting. ",
+        "Canonical ranking was suppressed.",
+        call. = FALSE
+      )
+    }
+    if (all_mml && all_current_contract && !all_ic_eligible) {
+      warning(
+        "At least one MML fit is not eligible for the common information-criterion panel ",
+        "(`ICStatus`: ", paste(unique(tbl$ICStatus), collapse = ", "),
+        "). Non-unit observation weights and invalid likelihood contracts fail closed.",
+        call. = FALSE
+      )
+    }
+    if (all_mml && all_current_contract && all_ic_eligible &&
+        !all_ic_selectable) {
+      warning(
+        "Information-criterion ranking is screening/review-only at the supplied ",
+        "quadrature tier(s) (`ICIntegrationTier`: ",
+        paste(unique(tbl$ICIntegrationTier), collapse = ", "),
+        "). Raw criteria remain visible, but deltas, weights, preferences, and ",
+        "LRT are suppressed below q = 31. Refit every candidate with a common ",
+        "q >= 31 grid and check a denser grid when the decision is close.",
+        call. = FALSE
+      )
+    }
+    if (all_current_contract && all_mml && !same_integration) {
+      warning(
+        "Models do not share one integration-evaluation identity. Refit or reevaluate ",
+        "all candidates with the same locked quadrature setting before IC ranking.",
         call. = FALSE
       )
     }
   }
 
   tbl$ICComparable <- ic_comparable
+  tbl$SABICComparable <- sabic_comparable
+  tbl$ConstraintComparable <- same_constraint_basis
   preferred <- list()
 
   # -- Delta AIC and Akaike Weights --
@@ -4317,6 +4697,22 @@ compare_mfrm <- function(..., labels = NULL, warn_constraints = TRUE, nested = F
     tbl$BICWeight <- NA_real_
   }
 
+  # -- Delta SABIC and adjusted-BIC candidate-set weights --
+  if (sabic_comparable && any(is.finite(tbl$SABIC))) {
+    min_sabic <- min(tbl$SABIC, na.rm = TRUE)
+    tbl$Delta_SABIC <- tbl$SABIC - min_sabic
+    raw_sw <- exp(-0.5 * tbl$Delta_SABIC)
+    tbl$SABICWeight <- ifelse(
+      is.finite(raw_sw),
+      raw_sw / sum(raw_sw, na.rm = TRUE),
+      NA_real_
+    )
+    preferred$SABIC <- tbl$Label[which.min(tbl$SABIC)]
+  } else {
+    tbl$Delta_SABIC <- NA_real_
+    tbl$SABICWeight <- NA_real_
+  }
+
   # -- likelihood-ratio test (two models only) --
   lrt <- NULL
   lrt_status <- if (isTRUE(nested)) "requested" else "not_requested"
@@ -4332,15 +4728,17 @@ compare_mfrm <- function(..., labels = NULL, warn_constraints = TRUE, nested = F
       lrt_reason <- "Likelihood-ratio testing requires exactly two fitted models."
       warning("`nested = TRUE` was requested, but LRT requires exactly two fitted models. LRT was not computed.",
               call. = FALSE)
-    } else if (!same_method || !same_nobs || !same_data || !all_converged || !all_mml) {
+    } else if (!ic_comparable) {
       lrt_status <- "not_computed"
       lrt_reason <- paste(
         "Models do not share the same formal MML likelihood basis,",
-        "observation set, and convergence status."
+        "current selectable IC contract, observation set, integration identity,",
+        "and convergence status."
       )
       warning(
         "`nested = TRUE` was requested, but the models do not share the same ",
-        "formal MML likelihood basis, observation set, and convergence status. LRT was not computed.",
+        "formal MML likelihood basis, current selectable IC contract, observation set, ",
+        "integration identity, and convergence status. LRT was not computed.",
         call. = FALSE
       )
     } else if (!isTRUE(nesting_review$eligible)) {
@@ -4381,11 +4779,14 @@ compare_mfrm <- function(..., labels = NULL, warn_constraints = TRUE, nested = F
             Complex  = tbl$Label[idx_complex],
             ChiSq    = chi_sq,
             df       = df_diff,
-            p_value  = p_val
+            p_value  = p_val,
+            Interpretation = "nested_fit_evidence_not_practical_preference"
           )
-          preferred$LRT <- if (p_val < 0.05) tbl$Label[idx_complex] else tbl$Label[idx_simple]
           lrt_status <- "computed"
-          lrt_reason <- "Likelihood-ratio test computed after the structural nesting review passed."
+          lrt_reason <- paste(
+            "Likelihood-ratio test computed after the structural nesting review passed;",
+            "the p-value is not an automatic practical model preference."
+          )
         } else {
           lrt_status <- "not_computed"
           lrt_reason <- if (!is.finite(chi_sq) || !is.finite(df_diff)) {
@@ -4436,7 +4837,17 @@ compare_mfrm <- function(..., labels = NULL, warn_constraints = TRUE, nested = F
     same_data = same_data,
     all_inference_ready = all_converged,
     all_converged = all_converged,
+    all_current_contract = all_current_contract,
+    all_stored_ic_consistent = all_stored_consistent,
+    all_ic_eligible = all_ic_eligible,
+    all_ic_selectable = all_ic_selectable,
+    same_ic_contract = same_contract,
+    same_integration_evaluation = same_integration,
+    same_formula_contract = same_formula,
+    same_constraint_basis = same_constraint_basis,
+    constraint_components = constraint_components,
     ic_comparable = ic_comparable,
+    sabic_comparable = sabic_comparable,
     nested_requested = isTRUE(nested),
     nesting_review = nesting_review,
     lrt_status = lrt_status,
@@ -4475,21 +4886,48 @@ print.summary.mfrm_comparison <- function(x, ...) {
   tbl <- x$table
   # Format weight columns with 4 decimal places for readability
   fmt_tbl <- as.data.frame(tbl)
-  weight_cols <- intersect(c("AkaikeWeight", "BICWeight"), names(fmt_tbl))
+  weight_cols <- intersect(
+    c("AkaikeWeight", "BICWeight", "SABICWeight"),
+    names(fmt_tbl)
+  )
   for (wc in weight_cols) {
     fmt_tbl[[wc]] <- ifelse(is.na(fmt_tbl[[wc]]), NA_character_,
                             sprintf("%.4f", fmt_tbl[[wc]]))
   }
-  delta_cols <- intersect(c("Delta_AIC", "Delta_BIC"), names(fmt_tbl))
+  delta_cols <- intersect(
+    c("Delta_AIC", "Delta_BIC", "Delta_SABIC"),
+    names(fmt_tbl)
+  )
   for (dc in delta_cols) {
     fmt_tbl[[dc]] <- ifelse(is.na(fmt_tbl[[dc]]), NA_character_,
                             sprintf("%.2f", fmt_tbl[[dc]]))
   }
-  print(fmt_tbl, row.names = FALSE)
+  display_cols <- c(
+    "Label", "Model", "Method", "Persons", "Npar", "LogLik",
+    "AIC", "BIC", "SABIC", "Delta_AIC", "AkaikeWeight",
+    "Delta_BIC", "BICWeight", "Delta_SABIC", "SABICWeight",
+    "ICStatus", "ICIntegrationTier", "ICSelectable", "ICComparable",
+    "SABICComparable",
+    "InferenceReady"
+  )
+  if (any(!is.na(tbl$ICEligible) & !tbl$ICEligible) ||
+      any(tbl$ICContractState != "current", na.rm = TRUE)) {
+    display_cols <- c(
+      display_cols,
+      "WeightPolicy", "LegacyAIC", "LegacyBIC", "ICContractState",
+      "StoredICConsistent"
+    )
+  }
+  display_cols <- intersect(display_cols, names(fmt_tbl))
+  print(fmt_tbl[, display_cols, drop = FALSE], row.names = FALSE)
+  cat("  Full formula, sample-size, integration, and stored-value verification fields are in `$table`.\n")
 
   if (!isTRUE(x$comparison_basis$ic_comparable)) {
     cat("\nInformation-criterion ranking was suppressed because the models do not share\n")
-    cat("a comparable formal MML likelihood basis, observation set, and inference-ready status.\n")
+    cat("one current, selectable, verified MML likelihood, data, constraint, integration, and readiness basis.\n")
+  } else if (!isTRUE(x$comparison_basis$sabic_comparable)) {
+    cat("\nSABIC is displayed for sensitivity only; automatic SABIC selection is disabled\n")
+    cat("at 22 or fewer Persons.\n")
   }
 
   if (!is.null(x$lrt)) {
@@ -4497,6 +4935,7 @@ print.summary.mfrm_comparison <- function(x, ...) {
     cat(sprintf("  Chi-sq = %.3f, df = %d, p = %.4f\n",
                 x$lrt$ChiSq[1], x$lrt$df[1], x$lrt$p_value[1]))
     cat(sprintf("  %s vs %s\n", x$lrt$Simple[1], x$lrt$Complex[1]))
+    cat("  Interpretation: formal nested-fit evidence; practical gain and score utility require separate checks.\n")
   } else if (isTRUE(x$comparison_basis$nested_requested)) {
     cat("\nLikelihood-ratio test was not reported.\n")
     if (!is.null(x$comparison_basis$lrt_status) &&
@@ -4512,7 +4951,7 @@ print.summary.mfrm_comparison <- function(x, ...) {
 
   # -- evidence ratios --
   if (!is.null(x$evidence_ratios) && nrow(x$evidence_ratios) > 0) {
-    cat("\nEvidence ratios (Akaike weights):\n")
+    cat("\nRelative candidate-set ratios (Akaike weights; not model probabilities):\n")
     er <- x$evidence_ratios
     for (k in seq_len(nrow(er))) {
       ratio_str <- if (is.finite(er$EvidenceRatio[k])) {
@@ -4526,7 +4965,7 @@ print.summary.mfrm_comparison <- function(x, ...) {
   }
 
   if (length(x$preferred) > 0) {
-    cat("\nPreferred model:\n")
+    cat("\nMinimum criterion within this candidate set:\n")
     for (nm in names(x$preferred)) {
       cat(sprintf("  By %s: %s\n", nm, x$preferred[[nm]]))
     }

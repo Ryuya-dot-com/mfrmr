@@ -6878,7 +6878,7 @@ build_weighting_review <- function(rasch_fit,
     Trigger = c(
       "Use to inspect the equal-weighting reference precision split across slope-facet levels.",
       "Use to inspect how bounded GPCM redistributes precision across the same levels.",
-      "Use to review AIC/BIC and evidence ratios before making a model-choice argument."
+      "Use to review q>=31 comparable AIC/Person-BIC/SABIC and relative candidate-set weights before making a model-choice argument; close decisions need a denser common-grid check."
     )
   )
 
@@ -7197,7 +7197,7 @@ print.summary.mfrm_weighting_review <- function(x, ...) {
       "build_summary_table_bundle(); export_summary_appendix()"
     ),
     Interpretation = c(
-      "Use AIC/BIC/logLik as fit evidence, not as a standalone scoring decision.",
+      "Use q>=31 comparable AIC/Person-BIC/SABIC/logLik as candidate-set fit evidence, not as a standalone scoring decision; close decisions need a denser common-grid check.",
       "Use only when comparing an RSM/PCM reference to bounded GPCM.",
       "Review item/rater/criterion information redistribution before changing the operational model.",
       "Supported for RSM/PCM; available with explicit sensitivity-reporting caveats for bounded GPCM.",
@@ -7252,7 +7252,8 @@ print.summary.mfrm_weighting_review <- function(x, ...) {
 #' `build_model_choice_review()` is a user-facing synthesis helper. It does not
 #' estimate new models. It bundles:
 #'
-#' - [compare_mfrm()] for AIC/BIC/log-likelihood comparison;
+#' - [compare_mfrm()] for verified AIC/Person-BIC/SABIC/log-likelihood
+#'   comparison;
 #' - model-role guidance for `RSM`, `PCM`, and bounded `GPCM`;
 #' - downstream-route availability for APA output, score-side export, linking,
 #'   recovery, fair averages, bias screening, and summary-appendix handoff;
@@ -7267,6 +7268,8 @@ print.summary.mfrm_weighting_review <- function(x, ...) {
 #' The current route uses positive slopes, requires `slope_facet == step_facet`,
 #' identifies slopes on the log scale with geometric mean 1, and keeps several
 #' downstream score-side/reporting helpers outside the documented boundary.
+#' Model-choice ranking also requires the current selectable IC contract:
+#' q<31 fits retain raw criteria but produce a screening/review-only bundle.
 #'
 #' @return An object of class `mfrm_model_choice_review`.
 #' @seealso [compare_mfrm()], [build_weighting_review()],
@@ -7275,10 +7278,10 @@ print.summary.mfrm_weighting_review <- function(x, ...) {
 #' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit_rsm <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                     method = "MML", model = "RSM", quad_points = 7)
+#'                     method = "MML", model = "RSM", quad_points = 31)
 #' fit_pcm <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                     method = "MML", model = "PCM", step_facet = "Criterion",
-#'                     quad_points = 7)
+#'                     quad_points = 31)
 #' review <- build_model_choice_review(RSM = fit_rsm, PCM = fit_pcm)
 #' summary(review)
 #' }
@@ -7341,7 +7344,7 @@ build_model_choice_review <- function(...,
   if (!isTRUE(basis$ic_comparable)) {
     key_warnings <- c(
       key_warnings,
-      "Information-criterion ranking is descriptive because the compared fits do not all share a comparable formal MML basis, observation set, and convergence status."
+      "Information-criterion ranking is suppressed because the compared fits do not all share one current, selectable, verified MML likelihood, observation, constraint, integration, and readiness basis. q<31 fits remain screening/review-only."
     )
   }
   if (isTRUE(has_gpcm) && is.na(ref_labels$reference)) {
@@ -7486,7 +7489,21 @@ print.summary.mfrm_model_choice_review <- function(x, ...) {
   print_bullet_section("Next Actions", x$next_actions)
   if (nrow(x$comparison_table) > 0L) {
     cat("\nComparison Table\n")
-    print(round_numeric_df(as.data.frame(x$comparison_table), digits = digits), row.names = FALSE)
+    comparison <- round_numeric_df(
+      as.data.frame(x$comparison_table),
+      digits = digits
+    )
+    keep <- intersect(
+      c(
+        "Label", "Model", "Method", "Persons", "Npar", "LogLik",
+        "AIC", "BIC", "SABIC", "Delta_AIC", "Delta_BIC",
+        "Delta_SABIC", "ICStatus", "ICIntegrationTier", "ICSelectable",
+        "ICComparable", "SABICComparable", "InferenceReady"
+      ),
+      names(comparison)
+    )
+    print(comparison[, keep, drop = FALSE], row.names = FALSE)
+    cat("  Full IC audit fields remain available in `$comparison_table`.\n")
   }
   if (nrow(x$model_roles) > 0L) {
     cat("\nModel Roles\n")

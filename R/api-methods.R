@@ -8073,7 +8073,7 @@ print.summary.mfrm_bias <- function(x, ...) {
 #' not claim that FACETS was executed or that estimates are numerically
 #' equivalent to FACETS output.
 #' It returns a structured object and prints:
-#' - model fit overview (N, LogLik, AIC/BIC, convergence)
+#' - model fit overview (N, LogLik, the canonical/legacy IC status, convergence)
 #' - estimation settings that affect identification/scoring interpretation
 #' - facet-level estimate distribution (mean/SD/range)
 #' - person measure distribution
@@ -8085,7 +8085,13 @@ print.summary.mfrm_bias <- function(x, ...) {
 #'   measures
 #'
 #' @section Interpreting output:
-#' - `overview`: convergence and information criteria.
+#' - `overview`: convergence plus the versioned information-criterion contract.
+#'   For eligible fixed-facet MML fits, BIC/SABIC use unique Persons, not
+#'   response rows; JML, non-unit observation weights, and legacy objects do
+#'   not enter the common MML ranking panel. `ICSelectable` additionally
+#'   distinguishes raw screening/review criteria at q<31 from criteria that
+#'   may enter automatic same-grid comparison at q>=31; close decisions still
+#'   require a denser common-grid sensitivity check.
 #' - `readiness`: separate Numerical, Data, Design, Stability, Diagnostics,
 #'   and Reporting states. `InferenceReady` contributes only to Numerical;
 #'   a numerical pass cannot override a disconnected-design or boundary-
@@ -9496,6 +9502,12 @@ print.summary.mfrm_fit <- function(x, ...) {
         ))
       }
     }
+    if (identical(detail, "brief")) {
+      ic_lines <- mfrm_ic_console_lines(overview_raw, digits = digits)
+      if (length(ic_lines) > 0L) {
+        cat(paste0("  ", ic_lines, "\n"), sep = "")
+      }
+    }
   }
   if (!identical(profile, "fit")) {
     boundary <- as.character(
@@ -9727,7 +9739,10 @@ print.summary.mfrm_fit <- function(x, ...) {
       as.character(raw_ov$ConvergenceStatus %||% NA_character_)
     )
     cat("\nFit overview\n")
-    cat(sprintf("  LogLik: %s | AIC: %s | BIC: %s\n", ov$LogLik, ov$AIC, ov$BIC))
+    ic_lines <- mfrm_ic_console_lines(raw_ov, digits = digits)
+    if (length(ic_lines) > 0L) {
+      cat(paste0("  ", ic_lines, "\n"), sep = "")
+    }
     cat(sprintf(
       "  Optimizer code 0: %s | Status: %s | Basis: %s | Fn evals: %s | Gr evals: %s\n",
       ifelse(isTRUE(ov$Converged), "Yes", "No"),

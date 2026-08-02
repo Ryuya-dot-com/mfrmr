@@ -3763,8 +3763,10 @@ print.mfrm_fit <- function(x, ...) {
     cat(sprintf("  Model: %s | Method: %s\n", ov$Model %||% NA_character_, ov$Method %||% NA_character_))
     cat(sprintf("  N: %s | Persons: %s | Facets: %s | Categories: %s\n",
                 ov$N %||% NA, ov$Persons %||% NA, ov$Facets %||% NA, ov$Categories %||% NA))
-    cat(sprintf("  LogLik: %s | AIC: %s | BIC: %s\n",
-                ov$LogLik %||% NA, ov$AIC %||% NA, ov$BIC %||% NA))
+    ic_lines <- mfrm_ic_console_lines(x$summary, digits = 3L)
+    if (length(ic_lines) > 0L) {
+      cat(paste0("  ", ic_lines, "\n"), sep = "")
+    }
     if ("Converged" %in% names(ov) && "ConvergenceStatus" %in% names(ov)) {
       convergence <- mfrm_convergence_state(x)
       status_label <- switch(

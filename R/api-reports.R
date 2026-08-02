@@ -4803,7 +4803,10 @@ plot_bias_interaction <- function(x,
 #'
 #' By default, `report_text` includes:
 #' - model/data design summary (N, facet counts, scale range)
-#' - optimization/convergence metrics (`Converged`, `Iterations`, `LogLik`, `AIC`, `BIC`)
+#' - optimization/convergence metrics (`Converged`, `Iterations`, `LogLik`) plus
+#'   the eligible canonical MML AIC/Person-BIC/SABIC panel or its explicit
+#'   ineligibility and legacy-descriptive status; q<31 MML criteria are
+#'   explicitly labelled screening/review-only rather than automatic ranking
 #' - anchor/constraint summary (`noncenter_facet`, anchored levels, group anchors, dummy facets)
 #' - latent-regression population-model wording when `fit` has an active
 #'   `population_formula`

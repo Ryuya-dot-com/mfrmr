@@ -157,17 +157,21 @@ used in anchor-review recommendations.}
 used for MML integration over the person distribution. The default is
 \code{31}. Useful accuracy/runtime settings are:
 \tabular{ll}{
-\code{7}  \tab lightweight exploratory run; helpers such as
+\code{7}  \tab lightweight screening run; information-criterion deltas,
+weights, preferences, and LRT are disabled. Helpers such as
 \code{\link[=predict_mfrm_population]{predict_mfrm_population()}} and
 \code{\link[=reference_case_benchmark]{reference_case_benchmark()}} use this value. \cr
-\code{15} \tab intermediate analysis when runtime matters. \cr
-\code{31} \tab package default and a starting point for final analysis. \cr
+\code{15} \tab intermediate review run when runtime matters; automatic
+model ranking remains disabled. \cr
+\code{31} \tab package default and the starting grid for model comparison. \cr
 \verb{61+} \tab sensitivity analysis for narrow score distributions or
 demanding numerical comparisons.
 }
 Quadrature adequacy depends on the fitted distribution and score support.
 When substantive conclusions are sensitive, compare results under a
-denser rule and report the setting used.}
+denser rule and report the setting used. Raw AIC/BIC/SABIC remain visible
+below 31 points for diagnosis, but \code{\link[=compare_mfrm]{compare_mfrm()}} fails closed rather
+than turning a screening/review grid into automatic selection.}
 
 \item{maxit}{Computational ceiling on optimizer iterations. The default is
 \code{400}. This is not a convergence criterion or a model-selection control:
@@ -273,8 +277,12 @@ fits crash-resilient on shared compute environments.}
 \value{
 An object of class \code{mfrm_fit} (named list) with:
 \itemize{
-\item \code{summary}: one-row model summary (\code{LogLik}, \code{AIC}, \code{BIC}, convergence),
-including user-facing \code{Method}, engine-facing \code{MethodUsed}, MML-engine
+\item \code{summary}: one-row model summary including \code{LogLik}, \code{Deviance}, canonical
+free dimension \code{Npar}, response-row/weight/Person counts, the versioned
+information-criterion contract, Person-based MML \code{AIC}/\code{BIC}/\code{SABIC},
+explicitly descriptive legacy fields when the common panel is ineligible,
+and convergence; it also includes user-facing \code{Method}, engine-facing
+\code{MethodUsed}, MML-engine
 fields, terminal-gradient readiness, requested/selected-stage tolerance
 settings, and the actual L-BFGS-B \code{OptimizerFactr} / \code{OptimizerPgtol}
 controls when applicable
@@ -738,8 +746,10 @@ For MML runs, \code{quad_points} is the main accuracy/speed trade-off.
 The \verb{@param quad_points} tier table is the authoritative reference;
 in short:
 \itemize{
-\item \code{quad_points = 7} is a lightweight setting for quick iteration.
-\item \code{quad_points = 15} is an intermediate option when runtime matters.
+\item \code{quad_points = 7} is a lightweight screening setting; do not use its IC
+values for automatic model selection.
+\item \code{quad_points = 15} is an intermediate review option when runtime matters;
+automatic IC ranking remains disabled.
 \item \code{quad_points = 31} is the package default and a suitable starting point
 for a final analysis; always review convergence and, when conclusions are
 sensitive, compare a denser quadrature rule.
@@ -804,6 +814,35 @@ are currently supported, caveated, blocked, or deferred.
 }
 }
 
+\section{Information-criterion contract}{
+
+For an eligible fixed-facet \code{MML} fit, let \code{D = -2 * LogLik}, let \code{k} be
+\code{Npar} (the retained free optimization-vector dimension after constraints),
+and let \code{N_person} be the number of unique prepared Persons. The canonical
+panel is \code{AIC = D + 2 * k}, \code{BIC = D + log(N_person) * k}, and
+\code{SABIC = D + log((N_person + 2) / 24) * k}.
+
+\code{ResponseRows}, \code{WeightedResponseTotal}, \code{Persons}, and \code{ICSampleSize} are
+separate fields. The compatibility field \code{N} retains its earlier
+response-row or summed-observation-weight meaning and is not the 0.2.3 BIC
+sample size. Explicit all-unit weights remain eligible; every non-unit
+observation-weight fit, JML fit, and object without the current contract
+identity is excluded from the common MML panel. Its canonical
+\code{AIC}/\code{BIC}/\code{SABIC} fields are \code{NA}, while any retained raw values are
+explicitly named \code{LegacyAIC} and \code{LegacyBIC}. At 22 or fewer Persons,
+SABIC is displayed only as sensitivity evidence and
+\code{SABICSelectable = FALSE}.
+
+Integration adequacy is recorded separately from formula eligibility.
+\code{ICIntegrationTier} is \code{"coarse_screening"} below 15 points,
+\code{"intermediate_review"} at 15--30, \code{"standard_start"} at 31--60, and
+\code{"dense_sensitivity"} at 61 or more. Raw canonical criteria remain visible
+in every eligible MML tier, but \code{ICSelectable = FALSE} below 31 points;
+automatic deltas, criterion weights, preferences, and LRT are suppressed.
+A close or consequential q>=31 comparison should still be reevaluated on a
+denser common grid.
+}
+
 \section{References}{
 
 The ordered-category many-facet formulation follows Linacre (1989), with
@@ -813,6 +852,8 @@ formulation of Muraki (1992) under a package-specific positive
 log-slope identification convention. The \code{MML} route follows the
 quadrature-based marginal-likelihood framework of Bock and Aitkin (1981).
 \itemize{
+\item Akaike, H. (1974). \emph{A new look at the statistical model identification}.
+IEEE Transactions on Automatic Control, 19(6), 716-723.
 \item Andrich, D. (1978). \emph{A rating formulation for ordered response
 categories}. Psychometrika, 43(4), 561-573.
 \item Bock, R. D., & Aitkin, M. (1981). \emph{Marginal maximum likelihood estimation
@@ -832,6 +873,10 @@ EM algorithm}. Applied Psychological Measurement, 16(2), 159-176.
 \item Robitzsch, A., & Steinfeld, J. (2018). \emph{Item response models for human
 ratings: Overview, estimation methods, and implementation in R}.
 Psychological Test and Assessment Modeling, 60(1), 101-139.
+\item Schwarz, G. (1978). \emph{Estimating the dimension of a model}.
+Annals of Statistics, 6(2), 461-464.
+\item Sclove, S. L. (1987). \emph{Application of model-selection criteria to some
+problems in multivariate analysis}. Psychometrika, 52(3), 333-343.
 }
 }
 

@@ -674,6 +674,31 @@ summarize_convergence_metrics <- function(summary_row) {
   loglik <- if ("LogLik" %in% names(summary_row)) to_float(summary_row$LogLik[1]) else NA_real_
   aic <- if ("AIC" %in% names(summary_row)) to_float(summary_row$AIC[1]) else NA_real_
   bic <- if ("BIC" %in% names(summary_row)) to_float(summary_row$BIC[1]) else NA_real_
+  sabic <- if ("SABIC" %in% names(summary_row)) to_float(summary_row$SABIC[1]) else NA_real_
+  contract_current <- "ICContractVersion" %in% names(summary_row) &&
+    identical(
+      as.character(summary_row$ICContractVersion[1]),
+      mfrm_ic_contract_version()
+    )
+  ic_eligible <- contract_current && "ICEligible" %in% names(summary_row) &&
+    isTRUE(as.logical(summary_row$ICEligible[1]))
+  ic_selectable <- ic_eligible && "ICSelectable" %in% names(summary_row) &&
+    isTRUE(as.logical(summary_row$ICSelectable[1]))
+  ic_status <- if ("ICStatus" %in% names(summary_row)) {
+    as.character(summary_row$ICStatus[1])
+  } else {
+    "legacy_or_unknown"
+  }
+  integration_tier <- if ("ICIntegrationTier" %in% names(summary_row)) {
+    as.character(summary_row$ICIntegrationTier[1])
+  } else {
+    "legacy_or_unknown"
+  }
+  integration_q <- if ("ICQuadraturePoints" %in% names(summary_row)) {
+    suppressWarnings(as.integer(summary_row$ICQuadraturePoints[1]))
+  } else {
+    NA_integer_
+  }
   status <- if ("ConvergenceStatus" %in% names(summary_row)) as.character(summary_row$ConvergenceStatus[1]) else NA_character_
   detail <- if ("ConvergenceDetail" %in% names(summary_row)) as.character(summary_row$ConvergenceDetail[1]) else NA_character_
   grad_sup <- if ("TerminalGradientSupNorm" %in% names(summary_row)) to_float(summary_row$TerminalGradientSupNorm[1]) else NA_real_
@@ -695,13 +720,73 @@ summarize_convergence_metrics <- function(summary_row) {
   ll_txt <- if (is.finite(loglik)) fmt_num(loglik, 3) else "NA"
   aic_txt <- if (is.finite(aic)) fmt_num(aic, 3) else "NA"
   bic_txt <- if (is.finite(bic)) fmt_num(bic, 3) else "NA"
+  sabic_txt <- if (is.finite(sabic)) fmt_num(sabic, 3) else "NA"
+  criterion_txt <- if (ic_eligible) {
+    paste0(
+      ", canonical MML AIC = ", aic_txt,
+      ", Person-BIC = ", bic_txt,
+      ", Sclove SABIC = ", sabic_txt
+    )
+  } else {
+    paste0(
+      "). The canonical MML information-criterion panel was not eligible ",
+      "(status: ", ic_status
+    )
+  }
   out <- paste0(
     "Optimization ", conv_txt, " after ", iter_txt,
     " function evaluations",
     if (is.finite(gr_eval)) paste0(" and ", gr_txt, " gradient evaluations") else "",
     " (LogLik = ", ll_txt,
-    ", AIC = ", aic_txt, ", BIC = ", bic_txt, ")."
+    criterion_txt, ")."
   )
+  if (ic_eligible && !ic_selectable) {
+    out <- paste0(
+      out,
+      " These criteria are screening/review values only at q=",
+      if (is.finite(integration_q)) integration_q else "unknown",
+      " (", integration_tier,
+      "); automatic deltas, weights, preferences, and LRT are disabled below ",
+      "q=31."
+    )
+  }
+  persons <- if ("Persons" %in% names(summary_row)) {
+    suppressWarnings(as.integer(summary_row$Persons[1]))
+  } else {
+    NA_integer_
+  }
+  if (ic_eligible && is.finite(persons) && persons <= 22L) {
+    out <- paste0(
+      out,
+      " SABIC was retained for sensitivity only; automatic selection is ",
+      "disabled at 22 or fewer Persons."
+    )
+  } else if (!ic_eligible) {
+    legacy_aic <- if ("LegacyAIC" %in% names(summary_row)) {
+      to_float(summary_row$LegacyAIC[1])
+    } else if (!contract_current && "AIC" %in% names(summary_row)) {
+      to_float(summary_row$AIC[1])
+    } else {
+      NA_real_
+    }
+    legacy_bic <- if ("LegacyBIC" %in% names(summary_row)) {
+      to_float(summary_row$LegacyBIC[1])
+    } else if (!contract_current && "BIC" %in% names(summary_row)) {
+      to_float(summary_row$BIC[1])
+    } else {
+      NA_real_
+    }
+    if (is.finite(legacy_aic) || is.finite(legacy_bic)) {
+      out <- paste0(
+        out,
+        " Legacy descriptive AIC = ",
+        if (is.finite(legacy_aic)) fmt_num(legacy_aic, 3) else "NA",
+        "; legacy descriptive BIC = ",
+        if (is.finite(legacy_bic)) fmt_num(legacy_bic, 3) else "NA",
+        "; neither enters the common MML ranking panel."
+      )
+    }
+  }
   if (is.finite(grad_sup)) {
     out <- paste0(
       out,

@@ -183,7 +183,14 @@ fit <- fit_mfrm(
 
 `MML` integrates over the person distribution and returns posterior person
 summaries. The default uses 31 quadrature points. Record that setting and
-examine quadrature sensitivity when the application requires it.
+examine quadrature sensitivity when the application requires it. Eligible
+fits below 15 points retain raw AIC/BIC/SABIC for screening, and fits at
+15--30 points retain them for review, but automatic deltas, criterion weights,
+preferred-model labels, evidence ratios, and LRT are disabled below 31 points.
+Use 31--60 points as a comparison starting grid and 61 or more as a denser
+sensitivity grid. A close or consequential comparison still requires a
+prespecified common-grid sensitivity check; q>=31 alone is not evidence that
+integration error is negligible.
 
 Use `model = "PCM", step_facet = "Criterion"` when category steps differ
 across that facet. Choose the model from the scoring design and measurement
@@ -614,7 +621,8 @@ bundle <- build_conquest_overlap_bundle(
 )
 
 # Run the generated .cqc file in ConQuest separately, then normalize
-# the four CSV files requested by that command.
+# its four comparison CSV files. Retain the fifth, *_history.csv,
+# for the separate objective/free-dimension verification.
 conquest_tables <- normalize_conquest_overlap_exports(
   bundle,
   parameter_file = "conquest-overlap/conquest_overlap_conquest_parameters.csv",
@@ -637,9 +645,10 @@ conquest_review$attention_items
 
 `mfrmr` does not execute or control ConQuest, and it does not parse arbitrary
 raw ConQuest reports. The user runs ConQuest separately; mfrmr can normalize
-the four native CSV exports requested by its generated command. The comparison
-reports differences and does not declare software equivalence from a fixed
-tolerance.
+the four native comparison CSV exports requested by its generated command.
+The additional matrixout-history CSV is retained for release verification. The
+comparison reports differences and does not declare software equivalence from
+a fixed tolerance.
 
 The generated ConQuest command uses the fitted mfrmr quadrature-point count;
 the bundle records both values. Record the actual ConQuest version, edition,

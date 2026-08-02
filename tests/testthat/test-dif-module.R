@@ -37,6 +37,20 @@ mark_test_inference_review <- function(fit) {
   fit
 }
 
+refresh_test_ic_contract <- function(fit) {
+  contract <- mfrmr:::build_mfrm_ic_contract(
+    loglik = -as.numeric(fit$opt$value[1]),
+    npar = length(fit$opt$par),
+    prep = fit$prep,
+    config = fit$config,
+    method = fit$config$method
+  )
+  for (field in intersect(names(contract), names(fit$summary))) {
+    fit$summary[[field]][1] <- contract[[field]]
+  }
+  fit
+}
+
 # ================================================================
 # DIF diagnostic module
 # ================================================================
@@ -488,7 +502,7 @@ test_that("compare_mfrm reports comparable IC quantities on a common basis", {
     score = "Score",
     method = "MML",
     model = "RSM",
-    quad_points = 5,
+    quad_points = 31,
     maxit = 15
   ))
   fit_pcm <- suppressWarnings(fit_mfrm(
@@ -499,7 +513,7 @@ test_that("compare_mfrm reports comparable IC quantities on a common basis", {
     method = "MML",
     model = "PCM",
     step_facet = "Criterion",
-    quad_points = 5,
+    quad_points = 31,
     maxit = 15
   ))
   fit_rsm <- mark_test_inference_ready(fit_rsm)
@@ -514,34 +528,52 @@ test_that("compare_mfrm reports comparable IC quantities on a common basis", {
   expect_true("Delta_BIC" %in% names(tbl))
   expect_true("AkaikeWeight" %in% names(tbl))
   expect_true("BICWeight" %in% names(tbl))
-  expect_true(all(c("WeightedN", "ICSampleSize", "ICSampleSizeBasis") %in% names(tbl)))
+  expect_true(all(c(
+    "Deviance", "Npar", "npar", "ResponseRows", "WeightedN",
+    "WeightedResponseTotal", "Persons", "ICSampleSize", "ICSampleSizeBasis",
+    "SABIC", "Delta_SABIC", "SABICWeight", "ICContractVersion",
+    "IntegrationEvaluationId", "ICQuadraturePoints", "ICIntegrationTier",
+    "ICIntegrationStatus", "ICIntegrationSelectable", "ICSelectable",
+    "StoredICConsistent"
+  ) %in% names(tbl)))
   expect_equal(tbl$WeightedN, as.numeric(tbl$nobs))
-  expect_equal(tbl$ICSampleSize, as.numeric(tbl$nobs))
-  expect_equal(tbl$ICSampleSizeBasis, rep("row_count", nrow(tbl)))
+  expect_equal(tbl$ResponseRows, tbl$nobs)
+  expect_equal(tbl$WeightedResponseTotal, tbl$WeightedN)
+  expect_equal(tbl$ICSampleSize, as.numeric(tbl$Persons))
+  expect_equal(tbl$ICSampleSizeBasis, rep("person_count", nrow(tbl)))
+  expect_equal(tbl$Npar, tbl$npar)
+  expect_equal(tbl$Npar, vapply(
+    list(fit_rsm, fit_pcm), function(x) length(x$opt$par), integer(1)
+  ))
+  expect_equal(tbl$Deviance, -2 * tbl$LogLik, tolerance = 1e-10)
+  expect_equal(tbl$AIC, tbl$Deviance + 2 * tbl$Npar, tolerance = 1e-10)
+  expect_equal(
+    tbl$BIC,
+    tbl$Deviance + log(tbl$Persons) * tbl$Npar,
+    tolerance = 1e-10
+  )
+  expect_equal(
+    tbl$SABIC,
+    tbl$Deviance + log((tbl$Persons + 2) / 24) * tbl$Npar,
+    tolerance = 1e-10
+  )
 
   # Delta should have at least one zero (best model)
   expect_equal(min(tbl$Delta_AIC), 0)
   expect_equal(min(tbl$Delta_BIC), 0)
+  expect_equal(min(tbl$Delta_SABIC), 0)
 
   # Weights should sum to 1
   expect_equal(sum(tbl$AkaikeWeight), 1, tolerance = 1e-10)
   expect_equal(sum(tbl$BICWeight), 1, tolerance = 1e-10)
+  expect_equal(sum(tbl$SABICWeight), 1, tolerance = 1e-10)
   expect_true(isTRUE(comp$comparison_basis$ic_comparable))
+  expect_true(isTRUE(comp$comparison_basis$sabic_comparable))
   expect_true(isTRUE(comp$comparison_basis$same_data))
-
-  fit_rsm_w <- fit_rsm
-  fit_pcm_w <- fit_pcm
-  w <- rep(c(1, 2), length.out = nrow(fit_rsm_w$prep$data))
-  fit_rsm_w$config$weight_col <- "Weight"
-  fit_pcm_w$config$weight_col <- "Weight"
-  fit_rsm_w$prep$data$Weight <- w
-  fit_pcm_w$prep$data$Weight <- w
-  fit_rsm_w$summary$N[1] <- sum(w)
-  fit_pcm_w$summary$N[1] <- sum(w)
-  comp_w <- compare_mfrm(RSM = fit_rsm_w, PCM = fit_pcm_w)
-  expect_equal(comp_w$table$WeightedN, rep(sum(w), nrow(comp_w$table)))
-  expect_equal(comp_w$table$ICSampleSize, rep(sum(w), nrow(comp_w$table)))
-  expect_equal(comp_w$table$ICSampleSizeBasis, rep("sum_weights", nrow(comp_w$table)))
+  comparison_text <- paste(capture.output(print(summary(comp))), collapse = " ")
+  expect_match(comparison_text, "not model probabilities", fixed = TRUE)
+  expect_match(comparison_text, "Minimum criterion within this candidate set", fixed = TRUE)
+  expect_false(grepl("Preferred model", comparison_text, fixed = TRUE))
 
   comp_lrt <- compare_mfrm(RSM = fit_rsm, PCM = fit_pcm, nested = TRUE)
   n_steps <- fit_rsm$config$n_cat - 1L
@@ -555,6 +587,11 @@ test_that("compare_mfrm reports comparable IC quantities on a common basis", {
     diff(range(comp_lrt$table$npar)),
     expected_df
   )
+  expect_match(
+    paste(capture.output(print(summary(comp_lrt))), collapse = " "),
+    "formal nested-fit evidence; practical gain and score utility require separate checks",
+    fixed = TRUE
+  )
 })
 
 test_that("compare_mfrm evidence_ratios are reciprocal", {
@@ -567,7 +604,7 @@ test_that("compare_mfrm evidence_ratios are reciprocal", {
     score = "Score",
     method = "MML",
     model = "RSM",
-    quad_points = 5,
+    quad_points = 31,
     maxit = 15
   ))
   fit_pcm <- suppressWarnings(fit_mfrm(
@@ -578,7 +615,7 @@ test_that("compare_mfrm evidence_ratios are reciprocal", {
     method = "MML",
     model = "PCM",
     step_facet = "Criterion",
-    quad_points = 5,
+    quad_points = 31,
     maxit = 15
   ))
   fit_rsm <- mark_test_inference_ready(fit_rsm)
@@ -603,7 +640,7 @@ test_that("compare_mfrm print and summary work with new fields", {
     score = "Score",
     method = "MML",
     model = "RSM",
-    quad_points = 5,
+    quad_points = 31,
     maxit = 15
   ))
   fit_pcm <- suppressWarnings(fit_mfrm(
@@ -614,7 +651,7 @@ test_that("compare_mfrm print and summary work with new fields", {
     method = "MML",
     model = "PCM",
     step_facet = "Criterion",
-    quad_points = 5,
+    quad_points = 31,
     maxit = 15
   ))
   fit_rsm <- mark_test_inference_ready(fit_rsm)
@@ -724,7 +761,7 @@ test_that("compare_mfrm records why boundary LRTs are not reported", {
     score = "Score",
     method = "MML",
     model = "RSM",
-    quad_points = 5,
+    quad_points = 31,
     maxit = 15
   ))
   fit_pcm <- suppressWarnings(fit_mfrm(
@@ -735,18 +772,15 @@ test_that("compare_mfrm records why boundary LRTs are not reported", {
     method = "MML",
     model = "PCM",
     step_facet = "Criterion",
-    quad_points = 5,
+    quad_points = 31,
     maxit = 15
   ))
   fit_rsm <- mark_test_inference_ready(fit_rsm)
   fit_pcm <- mark_test_inference_ready(fit_pcm)
 
   fit_pcm_worse <- fit_pcm
-  fit_pcm_worse$summary$LogLik[1] <- fit_rsm$summary$LogLik[1] - 1
-  fit_pcm_worse$summary$AIC[1] <- 2 * length(fit_pcm_worse$opt$par) -
-    2 * fit_pcm_worse$summary$LogLik[1]
-  fit_pcm_worse$summary$BIC[1] <- log(nrow(fit_pcm_worse$prep$data)) *
-    length(fit_pcm_worse$opt$par) - 2 * fit_pcm_worse$summary$LogLik[1]
+  fit_pcm_worse$opt$value <- -(fit_rsm$summary$LogLik[1] - 1)
+  fit_pcm_worse <- refresh_test_ic_contract(fit_pcm_worse)
 
   expect_warning(
     comp_neg <- compare_mfrm(RSM = fit_rsm, PCM = fit_pcm_worse, nested = TRUE),
@@ -758,17 +792,16 @@ test_that("compare_mfrm records why boundary LRTs are not reported", {
   expect_output(print(summary(comp_neg)), "LRT status")
 
   fit_pcm_bad <- fit_pcm
-  fit_pcm_bad$summary$LogLik[1] <- NA_real_
-  fit_pcm_bad$summary$AIC[1] <- NA_real_
-  fit_pcm_bad$summary$BIC[1] <- NA_real_
+  fit_pcm_bad$opt$value <- NA_real_
+  fit_pcm_bad <- refresh_test_ic_contract(fit_pcm_bad)
 
   expect_warning(
     comp_na <- compare_mfrm(RSM = fit_rsm, PCM = fit_pcm_bad, nested = TRUE),
-    "non-finite"
+    "formal MML likelihood basis"
   )
   expect_null(comp_na$lrt)
   expect_identical(comp_na$comparison_basis$lrt_status, "not_computed")
-  expect_match(comp_na$comparison_basis$lrt_reason, "non-finite")
+  expect_match(comp_na$comparison_basis$lrt_reason, "formal MML likelihood basis")
 })
 
 test_that("compare_mfrm suppresses IC ranking for JML-only comparisons", {
@@ -822,7 +855,7 @@ test_that("compare_mfrm requires the same prepared response data for IC ranking"
     score = "Score",
     method = "MML",
     model = "RSM",
-    quad_points = 5,
+    quad_points = 31,
     maxit = 15
   ))
   fit_a <- mark_test_inference_ready(fit_a)
@@ -835,7 +868,7 @@ test_that("compare_mfrm requires the same prepared response data for IC ranking"
     score = "Score",
     method = "MML",
     model = "RSM",
-    quad_points = 5,
+    quad_points = 31,
     maxit = 15
   ))
   fit_perm <- mark_test_inference_ready(fit_perm)
@@ -853,7 +886,7 @@ test_that("compare_mfrm requires the same prepared response data for IC ranking"
     score = "Score",
     method = "MML",
     model = "RSM",
-    quad_points = 5,
+    quad_points = 31,
     maxit = 15
   ))
   fit_shuf <- mark_test_inference_ready(fit_shuf)

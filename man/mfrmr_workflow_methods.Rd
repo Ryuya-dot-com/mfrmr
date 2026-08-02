@@ -246,6 +246,8 @@ bounded \code{GPCM}:
 \code{\link[=compute_information]{compute_information()}} / \code{\link[=plot_information]{plot_information()}} when you want to inspect
 whether bounded \code{GPCM} is introducing substantively acceptable
 discrimination-based reweighting relative to the Rasch-family reference.
+Use one selectable q>=31 grid for every candidate and a denser common-grid
+sensitivity check when the comparison is close or consequential.
 \item Design planning and forecasting:
 \code{\link[=build_mfrm_sim_spec]{build_mfrm_sim_spec()}} or \code{\link[=extract_mfrm_sim_spec]{extract_mfrm_sim_spec()}} ->
 \code{\link[=evaluate_mfrm_recovery]{evaluate_mfrm_recovery()}} -> \code{\link[=assess_mfrm_recovery]{assess_mfrm_recovery()}} for

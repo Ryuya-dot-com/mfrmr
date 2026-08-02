@@ -159,11 +159,20 @@ test_that("CRAN-facing documentation excludes development-process language", {
     "future-branch active planning scaffold"
   )
 
+  # NEWS is an immutable historical record once a release is submitted. Keep
+  # the exact 0.2.2 wording visible without allowing the same process language
+  # to leak into current guides or future release notes.
+  historical_news_allowlist <-
+    "Shiny viewer remains interactive-only. The release-readiness review now"
+
   hits <- character(0)
   for (path in names(docs)) {
     lines <- docs[[path]]
     for (phrase in blocked) {
       idx <- grep(tolower(phrase), tolower(lines), fixed = TRUE)
+      if (identical(path, "NEWS.md") && length(idx) > 0L) {
+        idx <- idx[trimws(lines[idx]) != historical_news_allowlist]
+      }
       if (length(idx) > 0L) {
         hits <- c(hits, paste0(path, ":", idx, ": ", trimws(lines[idx])))
       }

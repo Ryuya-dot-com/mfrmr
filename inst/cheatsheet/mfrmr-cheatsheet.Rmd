@@ -207,8 +207,9 @@ plot_wright_unified(
 - Use `facets_feature_coverage()` for feature-by-feature alternatives.
 - Use `build_conquest_overlap_bundle(fit_lr)` only after fitting the documented
   unidimensional MML comparison. Run the generated `.cqc` file in ConQuest,
-  then pass its four CSV exports to `normalize_conquest_overlap_exports()` and
-  `review_conquest_overlap()`.
+  then pass its four comparison CSV exports to
+  `normalize_conquest_overlap_exports()` and `review_conquest_overlap()`;
+  retain the additional history CSV for objective/free-dimension verification.
 - mfrmr does not execute FACETS or ConQuest and does not claim general
   numerical equivalence with either program.
 
