@@ -53,6 +53,80 @@
   as.character(status$Status[match(section, status$Section)])[1L]
 }
 
+test_that("iteration-limited MML fits remain review-only across results", {
+  data <- .results_readiness_base_data()
+  fit <- NULL
+  expect_warning(
+    fit <- fit_mfrm(
+      data,
+      person = "Person",
+      facets = c("Rater", "Criterion"),
+      score = "Score",
+      rating_min = 1,
+      rating_max = 4,
+      method = "MML",
+      optimizer = "BFGS",
+      quad_points = 7,
+      maxit = 1,
+      reltol = 1e-12
+    ),
+    "status = iteration_limit",
+    fixed = TRUE
+  )
+
+  expect_false(isTRUE(fit$summary$InferenceReady))
+  expect_identical(fit$summary$ConvergenceStatus, "iteration_limit")
+
+  res <- suppressWarnings(mfrm_results(
+    fit,
+    include = "fit",
+    compute = "never"
+  ))
+  expect_identical(.results_readiness_value(res$readiness, "Numerical"), "fail")
+  expect_identical(.results_readiness_value(res$readiness, "Plot"), "review_only")
+  expect_identical(
+    .results_readiness_value(res$readiness, "Reporting"),
+    "review_before_reporting"
+  )
+  expect_identical(
+    .results_readiness_status_value(res$status, "numerical_readiness"),
+    "review"
+  )
+  expect_identical(
+    .results_readiness_status_value(res$status, "plot_interpretation"),
+    "review"
+  )
+  expect_identical(
+    .results_readiness_status_value(res$status, "reporting_readiness"),
+    "review"
+  )
+
+  numerical_triage <- res$triage[
+    res$triage$Area %in% "Numerical fit",
+    ,
+    drop = FALSE
+  ]
+  expect_equal(nrow(numerical_triage), 1L)
+  expect_identical(numerical_triage$Severity, "review")
+  expect_identical(
+    numerical_triage$Signal,
+    "numerical_fit_review_required"
+  )
+  expect_match(numerical_triage$Detail, "iteration limit", fixed = TRUE)
+
+  wright <- res$plot_map[res$plot_map$Type %in% "wright", , drop = FALSE]
+  expect_true(wright$Available)
+  expect_identical(wright$InterpretationStatus, "review_only")
+  expect_false(wright$InterpretationReady)
+
+  sx <- summary(res)
+  expect_identical(.results_readiness_value(sx$readiness, "Numerical"), "fail")
+  expect_true(any(
+    sx$next_actions$Area %in% "Numerical fit" &
+      grepl("iteration limit", sx$next_actions$Reason, fixed = TRUE)
+  ))
+})
+
 test_that("mfrm_results propagates a disconnected-design hold", {
   fit <- .results_readiness_fit(.results_readiness_disconnected_data())
   expect_true(isTRUE(fit$summary$InferenceReady))
@@ -174,6 +248,7 @@ test_that("fully connected results remain interpretation-ready", {
     compute = "never"
   ))
 
+  expect_identical(.results_readiness_value(res$readiness, "Numerical"), "pass")
   expect_identical(.results_readiness_value(res$readiness, "Data"), "pass")
   expect_identical(.results_readiness_value(res$readiness, "Design"), "pass_linked")
   expect_identical(.results_readiness_value(res$readiness, "Stability"), "pass")
@@ -186,6 +261,15 @@ test_that("fully connected results remain interpretation-ready", {
   ) %in% names(res$plot_map)))
   expect_true(res$plot_map$Available[res$plot_map$Type %in% "wright"])
   expect_true(res$plot_map$InterpretationReady[res$plot_map$Type %in% "wright"])
+  expect_identical(
+    .results_readiness_status_value(res$status, "numerical_readiness"),
+    "ok"
+  )
+  expect_true(any(
+    res$triage$Area %in% "Numerical fit" &
+      res$triage$Severity %in% "ok" &
+      res$triage$Signal %in% "numerical_readiness_pass"
+  ))
 
   # Summaries of older serialized result objects can reconstruct readiness.
   legacy <- res

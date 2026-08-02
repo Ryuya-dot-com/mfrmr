@@ -87,10 +87,12 @@ mfrm_results_add_readiness_status <- function(status, readiness) {
   status <- as.data.frame(status %||% data.frame(), stringsAsFactors = FALSE)
   specs <- data.frame(
     Section = c(
-      "data_readiness", "design_readiness", "stability_readiness",
-      "plot_interpretation", "reporting_readiness"
+      "numerical_readiness", "data_readiness", "design_readiness",
+      "stability_readiness", "plot_interpretation", "reporting_readiness"
     ),
-    Domain = c("Data", "Design", "Stability", "Plot", "Reporting"),
+    Domain = c(
+      "Numerical", "Data", "Design", "Stability", "Plot", "Reporting"
+    ),
     stringsAsFactors = FALSE
   )
   rows <- lapply(seq_len(nrow(specs)), function(i) {
@@ -1192,6 +1194,10 @@ mfrm_results_triage <- function(status, plot_map, components, table_index,
     )
   }
   add_readiness_domain(
+    "Numerical", "Numerical fit", "pass", "numerical_readiness_pass",
+    "numerical_fit_review_required"
+  )
+  add_readiness_domain(
     "Data", "Data review", "pass", "data_readiness_pass",
     "data_review_required"
   )
@@ -1466,6 +1472,29 @@ mfrm_results_next_actions <- function(status, plot_map, components, table_index,
     "summary(res)",
     "Confirms input mode, model, method, section status, table coverage, and available figures."
   )
+  numerical_review <- nrow(triage) > 0L &&
+    all(c("Area", "Severity", "Detail") %in% names(triage)) &&
+    any(
+      triage$Area %in% "Numerical fit" &
+        triage$Severity %in% c("not_available", "review"),
+      na.rm = TRUE
+    )
+  if (isTRUE(numerical_review)) {
+    numerical_row <- triage[
+      triage$Area %in% "Numerical fit" &
+        triage$Severity %in% c("not_available", "review"),
+      ,
+      drop = FALSE
+    ][1L, , drop = FALSE]
+    add(
+      1L,
+      "Numerical fit",
+      "Keep the fit review-only and resolve the numerical convergence gate.",
+      "summary(res$fit)$next_actions; summary(res)$readiness",
+      as.character(numerical_row$Detail[1L] %||%
+        "The numerical readiness gate did not pass.")
+    )
+  }
   if (nrow(plot_map) > 0L && any(plot_map$Type %in% "wright" & plot_map$Available %in% TRUE)) {
     wright_ready <- !"InterpretationReady" %in% names(plot_map) || any(
       plot_map$Type %in% "wright" &
