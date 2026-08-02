@@ -6444,19 +6444,53 @@ plot_residual_pca <- function(x,
   invisible(out)
 }
 
+bias_person_screen_note <- function(fit = NULL) {
+  source_person <- as.character(
+    fit$config$source_columns$person %||% "Person"
+  )[1]
+  source_note <- if (!is.na(source_person) && nzchar(source_person) &&
+      !identical(source_person, "Person")) {
+    paste0(
+      " In this fit, canonical `Person` denotes the source person column `",
+      source_person, "`."
+    )
+  } else {
+    ""
+  }
+  paste0(
+    "A Person-involving bias result is a cellwise conditional plug-in ",
+    "likelihood screen: fitted JML person measures or MML EAP scores, facet ",
+    "effects, and step parameters are held fixed.", source_note,
+    " It is not a jointly fitted Person x facet interaction from ",
+    "`fit_mfrm(facet_interactions = ...)`, and it does not support formal ",
+    "inference or a cell-level fairness decision. Sparse cells can be ",
+    "especially unstable; inspect `ObsN`, `Observd Count`, and `d.f.`, and ",
+    "use `bias_count_table(..., min_count_warn = 10)` before interpreting ",
+    "individual cells."
+  )
+}
+
+warn_bias_person_screen <- function(fit, helper = "estimate_bias()") {
+  rlang::warn(
+    paste0("`", helper, "` included `Person`. ", bias_person_screen_note(fit)),
+    class = "mfrmr_person_bias_screen_warning"
+  )
+}
+
 #' Estimate bias and interaction screening terms
 #'
 #' @param fit Output from [fit_mfrm()].
 #' @param diagnostics Output from [diagnose_mfrm()].
 #' @param facet_a First facet name. Provide together with `facet_b` for the
 #'   classic pairwise 2-way interaction. Ignored when `interaction_facets`
-#'   is supplied.
+#'   is supplied. The canonical `"Person"` role is accepted explicitly.
 #' @param facet_b Second facet name. See `facet_a`.
 #' @param interaction_facets Character vector of two or more facets to model as
 #'   one interaction effect. When supplied, this takes precedence over
 #'   `facet_a`/`facet_b`. Use this form (rather than `facet_a`/`facet_b`)
 #'   whenever you want 3+ way interactions, since `facet_a/facet_b` is
-#'   restricted to the pairwise case.
+#'   restricted to the pairwise case. The canonical `"Person"` role may be
+#'   supplied explicitly; see the Person-screening boundary below.
 #' @param max_abs Bound for absolute bias size.
 #' @param omit_extreme Omit extreme-only elements.
 #' @param max_iter Iteration cap.
@@ -6492,6 +6526,11 @@ plot_residual_pca <- function(x,
 #' - For two-way mode, use `facet_a` and `facet_b` (or `interaction_facets`
 #'   with length 2).
 #' - For higher-order mode, provide `interaction_facets` with length >= 3.
+#' - A Person-involving result is a conditional plug-in likelihood screen. It
+#'   holds fitted JML person measures or MML EAP scores and the other fitted
+#'   parameters fixed; it is not a jointly fitted Person-by-facet interaction
+#'   and does not support formal inference or a cell-level fairness decision.
+#'   The function emits a classed warning when `"Person"` is requested.
 #'
 #' @section What this screening means:
 #' `estimate_bias()` summarizes interaction departures from the additive MFRM.
@@ -6559,6 +6598,8 @@ plot_residual_pca <- function(x,
 #' - `facet_a`, `facet_b`: first two analyzed facet names (legacy compatibility)
 #' - `interaction_facets`, `interaction_order`, `interaction_mode`: full
 #'   interaction metadata
+#' - `person_interaction`, `person_source_column`, `person_interaction_note`:
+#'   Person-screening provenance and interpretation metadata
 #' - `iteration`: iteration history/metadata
 #' - `orientation_review`: facet-orientation sign-consistency review table
 #' - `mixed_sign`: logical flag indicating whether bias-size signs flip
@@ -6655,7 +6696,10 @@ estimate_bias <- function(fit,
   # Validate that every requested facet label actually names a facet in the
   # fit. Without this check, a typo (e.g. "Raters" with trailing s) used to
   # fall through as an empty list, which silently masked the error.
-  known_facets <- as.character(fit$config$facet_names %||% character())
+  known_facets <- unique(c(
+    "Person",
+    as.character(fit$config$facet_names %||% character())
+  ))
   unknown <- setdiff(as.character(interaction_facets), known_facets)
   if (length(unknown) > 0L) {
     stop(
@@ -6666,6 +6710,11 @@ estimate_bias <- function(fit,
       paste(shQuote(known_facets), collapse = ", "), ".",
       call. = FALSE
     )
+  }
+
+  person_interaction <- "Person" %in% interaction_facets
+  if (isTRUE(person_interaction)) {
+    warn_bias_person_screen(fit, helper = "estimate_bias()")
   }
 
   out <- estimate_bias_interaction(
@@ -6681,6 +6730,15 @@ estimate_bias <- function(fit,
   )
   if (is.list(out) && length(out) > 0) {
     class(out) <- c("mfrm_bias", class(out))
+    out$person_interaction <- person_interaction
+    out$person_source_column <- as.character(
+      fit$config$source_columns$person %||% "Person"
+    )[1]
+    out$person_interaction_note <- if (isTRUE(person_interaction)) {
+      bias_person_screen_note(fit)
+    } else {
+      ""
+    }
     if (identical(fit_model, "GPCM")) {
       out$method <- "GPCM-slope-aware"
       out$caveat <- paste0(

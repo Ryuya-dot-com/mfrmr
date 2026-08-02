@@ -2394,9 +2394,16 @@ audit_interaction_orientation <- function(config, interaction_facets) {
     ))
   }
 
-  sign_map <- config$facet_signs %||% list()
+  sign_map <- config$facet_signs %||% numeric(0)
   sign_vals <- vapply(interaction_facets, function(facet) {
-    sign_map[[facet]] %||% ifelse(identical(facet, "Person"), 1, -1)
+    # `facet_signs` contains modeled non-person facets only. Named atomic
+    # vectors throw before `%||%` can supply a fallback when indexed with a
+    # missing name, so membership must be checked before extraction.
+    if (!is.null(names(sign_map)) && facet %in% names(sign_map)) {
+      mapped <- suppressWarnings(as.numeric(sign_map[[facet]][1]))
+      if (is.finite(mapped)) return(mapped)
+    }
+    if (identical(facet, "Person")) 1 else -1
   }, numeric(1))
   positive_facets <- as.character(config$positive_facets %||% character(0))
   orientation_tbl <- tibble(
