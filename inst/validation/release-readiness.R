@@ -51,7 +51,7 @@ mfrmr_release_readiness_prompt_steps <- function(target_version = NULL) {
       "Do cran-comments, NEWS, and validation artifacts tell the same story about release scope, caveats, and deferred work?"
     ),
     Evidence = c(
-      "DESCRIPTION/CITATION version and date; authoritative roadmap; first NEWS heading; candidate manifest; source commit/tree and tarball SHA-256; frozen specification/checklist identity; tarball/check timestamps; check-log package version and --as-cran provenance; absence of development labels in current release files",
+      "DESCRIPTION release lifecycle, public baseline, version, and date policy; CITATION version and release date; authoritative roadmap; first NEWS heading; candidate manifest; source commit/tree and tarball SHA-256; frozen specification/checklist identity; tarball/check timestamps; check-log package version and --as-cran provenance; absence of development labels in current release files",
       "release-evidence-checklist blocker rows; targeted mathematical tests; recovery-validation summary",
       "gpcm_capability_matrix(); README; vignettes; NEWS deferred-work section; post-0.2.2 GPCM roadmap",
       "facets_positioning_guide(); facets_fit_review(); read_facets_fit_table(); output guide",
@@ -367,6 +367,7 @@ mfrmr_release_readiness_candidate_identity_status <- function(
       CandidateIdentityStatus = "not_applicable",
       CandidateManifest = paths$candidate_manifest %||% NA_character_,
       CandidateManifestAvailable = FALSE,
+      ReleaseStatusCandidate = NA,
       ManifestSchemaOK = NA,
       CandidateId = NA_character_,
       PackageVersionMatches = NA,
@@ -387,6 +388,24 @@ mfrmr_release_readiness_candidate_identity_status <- function(
 
   manifest_path <- paths$candidate_manifest %||% ""
   manifest_available <- file.exists(manifest_path)
+  description_path <- paths$description %||% ""
+  description <- if (file.exists(description_path)) {
+    tryCatch(read.dcf(description_path), error = function(...) {
+      matrix(character(0), nrow = 0L, ncol = 0L)
+    })
+  } else {
+    matrix(character(0), nrow = 0L, ncol = 0L)
+  }
+  release_status <- if (
+      nrow(description) > 0L &&
+      "Config/mfrmr/release-status" %in% colnames(description)) {
+    tolower(trimws(as.character(
+      description[1, "Config/mfrmr/release-status"]
+    )))
+  } else {
+    NA_character_
+  }
+  release_status_candidate <- identical(release_status, "candidate")
   manifest <- if (manifest_available) {
     tryCatch(
       utils::read.csv(
@@ -528,13 +547,16 @@ mfrmr_release_readiness_candidate_identity_status <- function(
       mfrmr_release_readiness_file_sha256(paths$evidence_checklist)
     )
   }
-  ok <- manifest_available && manifest_schema_ok &&
+  ok <- release_status_candidate && manifest_available && manifest_schema_ok &&
     isTRUE(package_version_matches) && isTRUE(tarball_hash_matches) &&
     isTRUE(check_log_hash_matches) && isTRUE(specification_id_matches) &&
     isTRUE(specification_hash_matches) && isTRUE(checklist_hash_matches) &&
     specification_frozen && confirmation_authorized && blocker_criteria_frozen
 
   issue <- character(0)
+  if (!release_status_candidate) {
+    issue <- c(issue, "DESCRIPTION release status is not candidate")
+  }
   if (!manifest_available) issue <- c(issue, "candidate manifest missing")
   if (manifest_available && !manifest_schema_ok) {
     issue <- c(issue, "manifest schema or identity format incomplete")
@@ -553,6 +575,7 @@ mfrmr_release_readiness_candidate_identity_status <- function(
     CandidateIdentityStatus = if (ok) "ok" else "concern",
     CandidateManifest = manifest_path,
     CandidateManifestAvailable = manifest_available,
+    ReleaseStatusCandidate = release_status_candidate,
     ManifestSchemaOK = manifest_schema_ok,
     CandidateId = values[["CandidateId"]],
     PackageVersionMatches = package_version_matches,
@@ -1246,6 +1269,10 @@ mfrmr_release_readiness_source_truth_status <- function(paths) {
   cff_lines <- mfrmr_release_readiness_read_lines(paths$cff)
   description_version <- description_value("Version")
   description_date <- description_value("Date")
+  release_status <- tolower(description_value(
+    "Config/mfrmr/release-status"
+  ))
+  public_version <- description_value("Config/mfrmr/public-version")
   cff_version <- mfrmr_release_readiness_cff_value(cff_lines, "version")
   cff_date <- mfrmr_release_readiness_cff_value(cff_lines, "date-released")
   patterns <- mfrmr_release_readiness_buildignore_patterns(paths$pkg_dir)
@@ -1274,17 +1301,48 @@ mfrmr_release_readiness_source_truth_status <- function(paths) {
   )]
   version_match <- !is.na(description_version) &&
     identical(description_version, cff_version)
-  date_match <- !is.na(description_date) &&
+  lifecycle_status_ok <- release_status %in%
+    c("development", "candidate", "released")
+  development_dates_unset <- identical(release_status, "development") &&
+    is.na(description_date) && is.na(cff_date)
+  dated_release_matches <- !is.na(description_date) &&
     identical(description_date, cff_date)
-  ok <- version_match && date_match && roadmap_available &&
+  release_date_policy_ok <- if (identical(release_status, "development")) {
+    development_dates_unset
+  } else if (release_status %in% c("candidate", "released")) {
+    dated_release_matches
+  } else {
+    FALSE
+  }
+  public_version_ok <- if (
+      release_status %in% c("development", "candidate") &&
+      !is.na(public_version) && !is.na(description_version)) {
+    isTRUE(tryCatch(
+      utils::compareVersion(public_version, description_version) < 0L,
+      error = function(...) FALSE
+    ))
+  } else if (identical(release_status, "released")) {
+    !is.na(public_version) && identical(public_version, description_version)
+  } else {
+    FALSE
+  }
+  date_match <- release_date_policy_ok
+  ok <- version_match && lifecycle_status_ok && public_version_ok &&
+    release_date_policy_ok && roadmap_available &&
     roadmap_excluded && roadmap_authoritative && length(forbidden_hits) == 0L
   data.frame(
     DescriptionVersion = description_version,
     CFFVersion = cff_version,
+    ReleaseStatus = release_status,
+    PublicVersion = public_version,
     DescriptionDate = description_date,
     CFFDate = cff_date,
     VersionMatchesCFF = version_match,
     DateMatchesCFF = date_match,
+    LifecycleStatusOK = lifecycle_status_ok,
+    PublicVersionOK = public_version_ok,
+    DevelopmentDatesUnset = development_dates_unset,
+    ReleaseDatePolicyOK = release_date_policy_ok,
     RoadmapAvailable = roadmap_available,
     RoadmapExcludedFromTarball = roadmap_excluded,
     RoadmapAuthoritative = roadmap_authoritative,
@@ -2115,7 +2173,10 @@ mfrmr_release_readiness_gate_summary <- function(version_status,
       } else {
         paste0(
           "cff_version_match=", source_truth_status$VersionMatchesCFF[1],
-          "; cff_date_match=", source_truth_status$DateMatchesCFF[1],
+          "; release_status=", source_truth_status$ReleaseStatus[1],
+          "; public_version=", source_truth_status$PublicVersion[1],
+          "; release_date_policy=",
+          source_truth_status$ReleaseDatePolicyOK[1],
           "; roadmap=", source_truth_status$RoadmapAvailable[1],
           "; roadmap_excluded=", source_truth_status$RoadmapExcludedFromTarball[1],
           "; roadmap_authoritative=", source_truth_status$RoadmapAuthoritative[1],

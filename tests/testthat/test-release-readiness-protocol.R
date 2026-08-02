@@ -284,11 +284,18 @@ test_that("release-readiness binds a 0.2.3 candidate to frozen hashed inputs", {
 
   root <- tempfile("candidate-identity")
   dir.create(root, recursive = TRUE)
+  description <- file.path(root, "DESCRIPTION")
   tarball <- file.path(root, "mfrmr_0.2.3.tar.gz")
   check_log <- file.path(root, "00check.log")
   specification <- file.path(root, "release-gate-spec-0.2.3.md")
   checklist <- file.path(root, "release-evidence-checklist-0.2.3.csv")
   manifest <- file.path(root, "release-candidate-manifest-0.2.3.csv")
+  writeLines(c(
+    "Package: mfrmr",
+    "Version: 0.2.3",
+    "Config/mfrmr/release-status: candidate",
+    "Config/mfrmr/public-version: 0.2.2"
+  ), description)
   writeLines("candidate tarball fixture", tarball)
   writeLines(c(
     "* using options '--run-donttest --as-cran'",
@@ -338,6 +345,7 @@ test_that("release-readiness binds a 0.2.3 candidate to frozen hashed inputs", {
   ), manifest, row.names = FALSE)
   paths <- list(
     target_version = "0.2.3",
+    description = description,
     candidate_manifest = manifest,
     tarball = tarball,
     check_log = check_log,
@@ -351,6 +359,7 @@ test_that("release-readiness binds a 0.2.3 candidate to frozen hashed inputs", {
   )
   expect_identical(status$CandidateIdentityStatus, "ok")
   expect_true(status$CandidateIdentityOK)
+  expect_true(status$ReleaseStatusCandidate)
   expect_true(status$ManifestSchemaOK)
   expect_true(status$PackageVersionMatches)
   expect_true(status$TarballHashMatches)
@@ -361,6 +370,31 @@ test_that("release-readiness binds a 0.2.3 candidate to frozen hashed inputs", {
   expect_true(status$SpecificationFrozen)
   expect_true(status$ConfirmationAuthorized)
   expect_true(status$BlockerCriteriaFrozen)
+
+  writeLines(c(
+    "Package: mfrmr",
+    "Version: 0.2.3",
+    "Config/mfrmr/release-status: development",
+    "Config/mfrmr/public-version: 0.2.2"
+  ), description)
+  development <- env$mfrmr_release_readiness_candidate_identity_status(
+    paths,
+    target_version = "0.2.3"
+  )
+  expect_identical(development$CandidateIdentityStatus, "concern")
+  expect_false(development$CandidateIdentityOK)
+  expect_false(development$ReleaseStatusCandidate)
+  expect_match(
+    development$Detail,
+    "DESCRIPTION release status is not candidate",
+    fixed = TRUE
+  )
+  writeLines(c(
+    "Package: mfrmr",
+    "Version: 0.2.3",
+    "Config/mfrmr/release-status: candidate",
+    "Config/mfrmr/public-version: 0.2.2"
+  ), description)
 
   writeLines(c(
     "# gate specification fixture",
@@ -888,7 +922,9 @@ test_that("release-readiness protocol checks source-truth alignment", {
   writeLines(c(
     "Package: mfrmr",
     "Version: 0.2.2",
-    "Date: 2026-07-26"
+    "Date: 2026-07-26",
+    "Config/mfrmr/release-status: candidate",
+    "Config/mfrmr/public-version: 0.2.1"
   ), file.path(root, "DESCRIPTION"))
   writeLines(c(
     "cff-version: 1.2.0",
@@ -909,6 +945,11 @@ test_that("release-readiness protocol checks source-truth alignment", {
 
   expect_true(status$VersionMatchesCFF)
   expect_true(status$DateMatchesCFF)
+  expect_identical(status$ReleaseStatus, "candidate")
+  expect_identical(status$PublicVersion, "0.2.1")
+  expect_true(status$LifecycleStatusOK)
+  expect_true(status$PublicVersionOK)
+  expect_true(status$ReleaseDatePolicyOK)
   expect_true(status$RoadmapAvailable)
   expect_true(status$RoadmapExcludedFromTarball)
   expect_true(status$RoadmapAuthoritative)
@@ -926,6 +967,37 @@ test_that("release-readiness protocol checks source-truth alignment", {
     "mfrmr_model_family_scope()",
     fixed = TRUE
   )
+
+  writeLines(c(
+    "Package: mfrmr",
+    "Version: 0.2.3",
+    "Config/mfrmr/release-status: development",
+    "Config/mfrmr/public-version: 0.2.2"
+  ), paths$description)
+  writeLines(c(
+    "cff-version: 1.2.0",
+    "version: \"0.2.3\""
+  ), paths$cff)
+  writeLines(
+    "Current contract: gpcm_capability_matrix().",
+    paths$gpcm_roadmap
+  )
+  development <- env$mfrmr_release_readiness_source_truth_status(paths)
+  expect_identical(development$ReleaseStatus, "development")
+  expect_identical(development$PublicVersion, "0.2.2")
+  expect_true(development$DevelopmentDatesUnset)
+  expect_true(development$ReleaseDatePolicyOK)
+  expect_true(development$SourceTruthOK)
+
+  writeLines(c(
+    "cff-version: 1.2.0",
+    "version: \"0.2.3\"",
+    "date-released: \"2026-08-03\""
+  ), paths$cff)
+  prematurely_dated <- env$mfrmr_release_readiness_source_truth_status(paths)
+  expect_false(prematurely_dated$DevelopmentDatesUnset)
+  expect_false(prematurely_dated$ReleaseDatePolicyOK)
+  expect_false(prematurely_dated$SourceTruthOK)
 })
 
 test_that("release-readiness protocol enforces semantic example guards", {

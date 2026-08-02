@@ -24,10 +24,13 @@ The roadmap is repository-only and is excluded from source-package tarballs.
   and an `MD5` manifest to its distributed source, so the submitted compressed
   digest and CRAN-distributed compressed digest are distinct identities even
   though the audited package payload agrees.
-- The isolated integration branch now carries package identity 0.2.3. This is
+- The `development/0.2.3` branch now carries package identity 0.2.3. This is
   an unreleased development target, not a release candidate: candidate freeze,
   confirmation, and submission remain prohibited until the M3-M5 evidence and
   identity gates pass.
+- `DESCRIPTION` records lifecycle `development` and public baseline 0.2.2;
+  `DESCRIPTION` and `CITATION.cff` intentionally carry no release date until
+  an explicit candidate freeze.
 - If CRAN later asks for a 0.2.2 correction, that work branches from the
   published/tagged source and must not absorb unfinished 0.2.3 implementation.
 
