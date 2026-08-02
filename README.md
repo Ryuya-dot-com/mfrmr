@@ -16,7 +16,9 @@ reproducibility, network review, and reporting support. It is not a general
 FACETS replacement: each `fit_mfrm()` call uses one response-model family and
 one observed score scale, and the current public API does not provide mixed
 response families, multiple independent rating scales, general threshold
-anchoring, or fixed-calibration operational scoring.
+anchoring, or an imported versioned frozen-calibration bundle for operational
+scoring. Posterior scoring from an existing fitted object is a separate
+analysis route.
 
 The recommended workflow is:
 

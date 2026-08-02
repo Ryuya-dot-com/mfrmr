@@ -78,6 +78,40 @@ test_that("FACETS positioning distinguishes native estimates from visual emulati
                      fixed = TRUE))
 })
 
+test_that("public documentation does not advertise later-release routes as current", {
+  pkg_root <- documentation_source_root()
+  testthat::skip_if(is.na(pkg_root), "source documentation files are not available")
+  docs <- read_public_text(pkg_root, public_documentation_files(pkg_root))
+  text <- tolower(paste(unlist(docs, use.names = FALSE), collapse = "\n"))
+  flat <- gsub("[[:space:]]+", " ", text)
+
+  prohibited_claims <- c(
+    "supports unrestricted gpcm",
+    "supports an unrestricted gpcm",
+    "provides unrestricted gpcm",
+    "supports multiple observed scales",
+    "supports multiple independent rating scales",
+    "supports general threshold anchors",
+    "supports threshold anchoring",
+    "supports versioned frozen calibration",
+    "supports a versioned frozen calibration",
+    "supports native multidimensional estimation",
+    "provides native multidimensional estimation"
+  )
+  hits <- prohibited_claims[vapply(
+    prohibited_claims,
+    grepl,
+    logical(1),
+    x = flat,
+    fixed = TRUE
+  )]
+
+  expect_identical(hits, character(0))
+  expect_match(flat, "one observed score scale", fixed = TRUE)
+  expect_match(flat, "imported versioned frozen-calibration bundle", fixed = TRUE)
+  expect_match(flat, "posterior scoring from an existing fitted object is a separate", fixed = TRUE)
+})
+
 test_that("ConQuest guidance states the external MML comparison boundary", {
   pkg_root <- documentation_source_root()
   testthat::skip_if(is.na(pkg_root), "source documentation files are not available")

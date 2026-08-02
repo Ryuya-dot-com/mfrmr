@@ -661,17 +661,17 @@ model cannot silently create a multidimensional `mfrmr` support claim.
 
 ### FACETS coverage and release tooling
 
-- [ ] Extend `facets_feature_coverage()` with separate axes for surface
+- [x] Extend `facets_feature_coverage()` with separate axes for surface
   coverage, statistical contract, validation evidence, and operational status,
   while retaining the current `Status` column for compatibility.
-- [ ] Distinguish familiar visual grammar, matched numerical evidence, and
+- [x] Distinguish familiar visual grammar, matched numerical evidence, and
   operational interchangeability as three different claims.
 - [ ] Require `--as-cran` provenance, metadata agreement, candidate identity,
   gate-specification identity, and current-versus-future API truth in release-
   readiness output.
 - [ ] Replace brittle prose-only pass counts with candidate-linked evidence or
   regenerate exact counts at each release.
-- [ ] Add negative tests ensuring future calibration, threshold-anchor,
+- [x] Add negative tests ensuring future calibration, threshold-anchor,
   multi-scale, and unrestricted-GPCM terms cannot be reported as current 0.2.3
   support.
 
