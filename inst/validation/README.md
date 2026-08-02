@@ -28,8 +28,14 @@ history, but they do not redefine release order or current API scope.
 
 - `release-readiness.R`: release-readiness review. Source this file and run
   `mfrmr_release_readiness_review(pkg_dir = ".")` from the package root. The
-  review checks version labels, the local check log, the CI check workflow,
-  public terminology, and the release evidence files.
+  review checks version labels, metadata agreement, `--as-cran` provenance,
+  the local check log, the CI check workflow, public terminology, current-
+  versus-future API truth, candidate identity, and the release evidence files.
+  For 0.2.3 and later it fails closed until a versioned
+  `release-candidate-manifest-<version>.csv` binds package/source/runtime and
+  registry identities to the exact tarball, selected check log, frozen gate
+  specification, and checklist hashes. A placeholder manifest must not be
+  created before M3; absence is intentionally reported as a concern.
 - `release-evidence-map-0.2.0.md`: narrative review map linking release
   claims to mathematical, statistical, UX, documentation, and engineering
   evidence.

@@ -194,7 +194,7 @@ The following remain outside 0.2.3:
 | M4: run confirmation | Run the locked core recovery/stress matrix, dimensionality challenge, and matched external comparisons without changing criteria or reusing discovery data as independent confirmation. | Candidate-linked internal and external evidence with every blocker classified. |
 | M5: release handoff | Run full regression, cross-platform CI, manuals, URL checks, CRAN-time examples, Win-builder, package-content audit, and public-claim audit. | All blocker rows `ok`, all caveats visible, and an exact checked tarball. |
 
-The repository now contains `0.2.3-draft.13` planning artifacts at
+The repository now contains `0.2.3-draft.14` planning artifacts at
 `inst/validation/release-gate-spec-0.2.3.md` and
 `inst/validation/release-evidence-checklist-0.2.3.csv`. They deliberately
 record unresolved pilot-calibrated criteria and therefore do not authorize
@@ -666,7 +666,7 @@ model cannot silently create a multidimensional `mfrmr` support claim.
   while retaining the current `Status` column for compatibility.
 - [x] Distinguish familiar visual grammar, matched numerical evidence, and
   operational interchangeability as three different claims.
-- [ ] Require `--as-cran` provenance, metadata agreement, candidate identity,
+- [x] Require `--as-cran` provenance, metadata agreement, candidate identity,
   gate-specification identity, and current-versus-future API truth in release-
   readiness output.
 - [ ] Replace brittle prose-only pass counts with candidate-linked evidence or

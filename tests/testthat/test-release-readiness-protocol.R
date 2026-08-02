@@ -276,6 +276,156 @@ test_that("release-readiness protocol requires --as-cran provenance", {
   expect_identical(gate$Status[gate$Gate == "package_check"], "concern")
 })
 
+test_that("release-readiness binds a 0.2.3 candidate to frozen hashed inputs", {
+  protocol <- release_readiness_protocol_path()
+  env <- new.env(parent = globalenv())
+  source(protocol, local = env)
+  skip_if_not_installed("digest")
+
+  root <- tempfile("candidate-identity")
+  dir.create(root, recursive = TRUE)
+  tarball <- file.path(root, "mfrmr_0.2.3.tar.gz")
+  check_log <- file.path(root, "00check.log")
+  specification <- file.path(root, "release-gate-spec-0.2.3.md")
+  checklist <- file.path(root, "release-evidence-checklist-0.2.3.csv")
+  manifest <- file.path(root, "release-candidate-manifest-0.2.3.csv")
+  writeLines("candidate tarball fixture", tarball)
+  writeLines(c(
+    "* using options '--run-donttest --as-cran'",
+    "* this is package 'mfrmr' version '0.2.3'",
+    "Status: OK"
+  ), check_log)
+  writeLines(c(
+    "# gate specification fixture",
+    "",
+    "| Field | Value |",
+    "| --- | --- |",
+    "| Specification ID | `0.2.3-frozen.1` |",
+    "| Confirmation authorized | Yes |"
+  ), specification)
+  utils::write.csv(data.frame(
+    ReleaseDecision = "blocker_if_failed",
+    CriterionState = "frozen_structural",
+    AcceptanceRule = "Exact identity fields and hashes agree",
+    stringsAsFactors = FALSE
+  ), checklist, row.names = FALSE)
+
+  manifest_values <- c(
+    CandidateId = "mfrmr-0.2.3-fixture",
+    PackageVersion = "0.2.3",
+    SourceCommit = strrep("a", 40L),
+    SourceTreeHash = strrep("b", 40L),
+    TarballSHA256 = env$mfrmr_release_readiness_file_sha256(tarball),
+    CheckLogSHA256 = env$mfrmr_release_readiness_file_sha256(check_log),
+    SpecificationId = "0.2.3-frozen.1",
+    SpecificationSHA256 = env$mfrmr_release_readiness_file_sha256(specification),
+    ChecklistSHA256 = env$mfrmr_release_readiness_file_sha256(checklist),
+    RVersion = R.version.string,
+    Platform = R.version$platform,
+    DependencyIdentity = "fixture-lock-sha256",
+    Compiler = "fixture-compiler",
+    EnvironmentFlags = "NOT_CRAN=false",
+    DataRegistryIdentity = "fixture-data-registry",
+    ModelRegistryIdentity = "fixture-model-registry",
+    IntegrationRegistryIdentity = "fixture-integration-registry",
+    ExternalRegistryIdentity = "not_applicable",
+    SeedRegistryIdentity = "fixture-seed-registry"
+  )
+  utils::write.csv(data.frame(
+    Field = names(manifest_values),
+    Value = unname(manifest_values),
+    stringsAsFactors = FALSE
+  ), manifest, row.names = FALSE)
+  paths <- list(
+    target_version = "0.2.3",
+    candidate_manifest = manifest,
+    tarball = tarball,
+    check_log = check_log,
+    gate_specification = specification,
+    evidence_checklist = checklist
+  )
+
+  status <- env$mfrmr_release_readiness_candidate_identity_status(
+    paths,
+    target_version = "0.2.3"
+  )
+  expect_identical(status$CandidateIdentityStatus, "ok")
+  expect_true(status$CandidateIdentityOK)
+  expect_true(status$ManifestSchemaOK)
+  expect_true(status$PackageVersionMatches)
+  expect_true(status$TarballHashMatches)
+  expect_true(status$CheckLogHashMatches)
+  expect_true(status$SpecificationIdMatches)
+  expect_true(status$SpecificationHashMatches)
+  expect_true(status$ChecklistHashMatches)
+  expect_true(status$SpecificationFrozen)
+  expect_true(status$ConfirmationAuthorized)
+  expect_true(status$BlockerCriteriaFrozen)
+
+  writeLines(c(
+    "# gate specification fixture",
+    "",
+    "| Field | Value |",
+    "| --- | --- |",
+    "| Specification ID | `0.2.3-draft.14` |",
+    "| Confirmation authorized | No |"
+  ), specification)
+  manifest_values[["SpecificationId"]] <- "0.2.3-draft.14"
+  manifest_values[["SpecificationSHA256"]] <-
+    env$mfrmr_release_readiness_file_sha256(specification)
+  utils::write.csv(data.frame(
+    Field = names(manifest_values),
+    Value = unname(manifest_values),
+    stringsAsFactors = FALSE
+  ), manifest, row.names = FALSE)
+  draft <- env$mfrmr_release_readiness_candidate_identity_status(
+    paths,
+    target_version = "0.2.3"
+  )
+  expect_identical(draft$CandidateIdentityStatus, "concern")
+  expect_true(draft$SpecificationIdMatches)
+  expect_true(draft$SpecificationHashMatches)
+  expect_false(draft$SpecificationFrozen)
+  expect_false(draft$ConfirmationAuthorized)
+
+  writeLines("mutated candidate tarball fixture", tarball)
+  mutated <- env$mfrmr_release_readiness_candidate_identity_status(
+    paths,
+    target_version = "0.2.3"
+  )
+  expect_identical(mutated$CandidateIdentityStatus, "concern")
+  expect_false(mutated$CandidateIdentityOK)
+  expect_false(mutated$TarballHashMatches)
+  expect_match(mutated$Detail, "tarball SHA-256 mismatch", fixed = TRUE)
+})
+
+test_that("release-readiness keeps the 0.2.3 current/future API truth explicit", {
+  protocol <- release_readiness_protocol_path()
+  env <- new.env(parent = globalenv())
+  source(protocol, local = env)
+
+  pkg_root <- normalizePath(test_path("..", ".."), winslash = "/", mustWork = TRUE)
+  if (!file.exists(file.path(pkg_root, "DESCRIPTION"))) {
+    pkg_root <- system.file(package = "mfrmr")
+  }
+  paths <- env$mfrmr_release_readiness_paths(
+    pkg_root,
+    target_version = "0.2.3"
+  )
+  status <- env$mfrmr_release_readiness_public_scope_status(
+    paths,
+    target_version = "0.2.3"
+  )
+
+  expect_identical(status$PublicScopeStatus, "ok")
+  expect_true(status$PublicScopeOK)
+  expect_equal(status$BoundaryRows, status$RequiredBoundaryRows)
+  expect_true(status$FutureRoutesBlocked)
+  expect_true(status$VisualClaimSeparated)
+  expect_true(status$ReadmeBoundaryExplicit)
+  expect_true(status$FutureArgumentsAbsent)
+})
+
 test_that("release-readiness protocol rejects stale tarball and check evidence", {
   protocol <- release_readiness_protocol_path()
   env <- new.env(parent = globalenv())
@@ -678,7 +828,8 @@ test_that("release-readiness protocol reviews the source tree shape", {
   expect_true(all(c(
     "prompt_steps", "gate_summary", "release_decision",
     "version_status", "check_status", "freshness_status", "ci_workflow_status",
-    "source_truth_status", "terminology_status", "example_policy_status",
+    "source_truth_status", "candidate_identity_status", "public_scope_status",
+    "terminology_status", "example_policy_status",
     "check_timing_scope",
     "checklist_status", "gpcm_scope_status", "external_recovery_status"
   ) %in% names(review)))
@@ -693,6 +844,14 @@ test_that("release-readiness protocol reviews the source tree shape", {
   }
   expect_true(file.exists(review$paths$gpcm_roadmap))
   expect_true(isTRUE(review$source_truth_status$SourceTruthOK[1]))
+  expect_identical(
+    review$candidate_identity_status$CandidateIdentityStatus[1],
+    "not_applicable"
+  )
+  expect_identical(
+    review$public_scope_status$PublicScopeStatus[1],
+    "not_applicable"
+  )
   expect_equal(review$gpcm_scope_status$GPCMScopeStatus[1], "ok")
   if (file.exists(file.path(pkg_root, ".github", "workflows", "R-CMD-check.yaml"))) {
     expect_true(isTRUE(review$ci_workflow_status$CIWorkflowOK[1]))

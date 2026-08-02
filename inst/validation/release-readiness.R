@@ -38,8 +38,9 @@ mfrmr_release_readiness_prompt_steps <- function(target_version = NULL) {
     Prompt = c(
       paste0(
         "Do DESCRIPTION, NEWS, generated help, the source tarball, and the ",
-        "selected check log all describe ", target_label, " rather than a ",
-        "development snapshot or stale release artifact?"
+        "selected check log all resolve to one candidate and frozen gate ",
+        "specification for ", target_label, " rather than a development ",
+        "snapshot or stale release artifact?"
       ),
       "Do blocker rows for identification, GPCM slope/information kernels, fair-average uncertainty, person fit, and recovery validation have explicit evidence?",
       "Are supported, caveated, blocked, and deferred bounded-GPCM routes visible before users reach unsupported score-side workflows?",
@@ -50,7 +51,7 @@ mfrmr_release_readiness_prompt_steps <- function(target_version = NULL) {
       "Do cran-comments, NEWS, and validation artifacts tell the same story about release scope, caveats, and deferred work?"
     ),
     Evidence = c(
-      "DESCRIPTION/CITATION version and date; authoritative roadmap; first NEWS heading; tarball/check timestamps; check-log package version and --as-cran provenance; absence of development labels in current release files",
+      "DESCRIPTION/CITATION version and date; authoritative roadmap; first NEWS heading; candidate manifest; source commit/tree and tarball SHA-256; frozen specification/checklist identity; tarball/check timestamps; check-log package version and --as-cran provenance; absence of development labels in current release files",
       "release-evidence-checklist blocker rows; targeted mathematical tests; recovery-validation summary",
       "gpcm_capability_matrix(); README; vignettes; NEWS deferred-work section; post-0.2.2 GPCM roadmap",
       "facets_positioning_guide(); facets_fit_review(); read_facets_fit_table(); output guide",
@@ -153,6 +154,14 @@ mfrmr_release_readiness_paths <- function(pkg_dir = ".",
       target_version = target_version,
       ext = ".csv"
     ),
+    gate_specification = file.path(
+      validation_dir,
+      paste0("release-gate-spec-", target_version, ".md")
+    ),
+    candidate_manifest = file.path(
+      validation_dir,
+      paste0("release-candidate-manifest-", target_version, ".csv")
+    ),
     gpcm_roadmap = mfrmr_release_readiness_versioned_file(
       validation_dir,
       prefix = "gpcm-post-",
@@ -168,6 +177,9 @@ mfrmr_release_readiness_paths <- function(pkg_dir = ".",
       ext = ".md"
     ),
     external_recovery_helper = file.path(validation_dir, "external-recovery-audit.R"),
+    facets_coverage_source = file.path(pkg_dir, "R", "help_facets_coverage.R"),
+    estimation_source = file.path(pkg_dir, "R", "api-estimation.R"),
+    readme = file.path(pkg_dir, "README.md"),
     check_log = file.path(pkg_dir, "mfrmr.Rcheck", "00check.log"),
     tarball = file.path(pkg_dir, paste0("mfrmr_", target_version, ".tar.gz"))
   )
@@ -296,6 +308,263 @@ mfrmr_release_readiness_read_lines <- function(path) {
     return(character(0))
   }
   readLines(path, warn = FALSE, encoding = "UTF-8")
+}
+
+mfrmr_release_readiness_contract_applies <- function(target_version,
+                                                       first_version = "0.2.3") {
+  if (!mfrmr_release_readiness_has_value(target_version)) {
+    return(FALSE)
+  }
+  isTRUE(tryCatch(
+    numeric_version(target_version[1]) >= numeric_version(first_version),
+    error = function(...) FALSE
+  ))
+}
+
+mfrmr_release_readiness_file_sha256 <- function(path) {
+  if (!file.exists(path) || !requireNamespace("digest", quietly = TRUE)) {
+    return(NA_character_)
+  }
+  tryCatch(
+    tolower(digest::digest(file = path, algo = "sha256")),
+    error = function(...) NA_character_
+  )
+}
+
+mfrmr_release_readiness_markdown_field <- function(path, field) {
+  lines <- mfrmr_release_readiness_read_lines(path)
+  if (length(lines) == 0L) {
+    return(NA_character_)
+  }
+  escaped <- gsub("([][{}()+*^$|\\?.])", "\\\\\\1", field)
+  hit <- grep(
+    paste0("^\\|[[:space:]]*", escaped, "[[:space:]]*\\|"),
+    lines,
+    value = TRUE,
+    perl = TRUE
+  )
+  if (length(hit) == 0L) {
+    return(NA_character_)
+  }
+  fields <- trimws(strsplit(hit[1], "\\|", fixed = FALSE)[[1]])
+  if (length(fields) < 3L) {
+    return(NA_character_)
+  }
+  sub("^`(.*)`$", "\\1", fields[3])
+}
+
+mfrmr_release_readiness_candidate_identity_status <- function(
+    paths,
+    target_version = NULL) {
+  target_version <- target_version %||% paths$target_version
+  applies <- mfrmr_release_readiness_contract_applies(target_version)
+  if (!applies) {
+    return(data.frame(
+      CandidateIdentityStatus = "not_applicable",
+      CandidateManifest = paths$candidate_manifest %||% NA_character_,
+      CandidateManifestAvailable = FALSE,
+      ManifestSchemaOK = NA,
+      CandidateId = NA_character_,
+      PackageVersionMatches = NA,
+      TarballHashMatches = NA,
+      CheckLogHashMatches = NA,
+      SpecificationId = NA_character_,
+      SpecificationIdMatches = NA,
+      SpecificationHashMatches = NA,
+      ChecklistHashMatches = NA,
+      SpecificationFrozen = NA,
+      ConfirmationAuthorized = NA,
+      BlockerCriteriaFrozen = NA,
+      CandidateIdentityOK = TRUE,
+      Detail = "candidate identity contract applies from 0.2.3",
+      stringsAsFactors = FALSE
+    ))
+  }
+
+  manifest_path <- paths$candidate_manifest %||% ""
+  manifest_available <- file.exists(manifest_path)
+  manifest <- if (manifest_available) {
+    tryCatch(
+      utils::read.csv(
+        manifest_path,
+        stringsAsFactors = FALSE,
+        check.names = FALSE
+      ),
+      error = function(...) data.frame()
+    )
+  } else {
+    data.frame()
+  }
+  manifest_columns_ok <- all(c("Field", "Value") %in% names(manifest))
+  duplicate_fields <- if (manifest_columns_ok) {
+    anyDuplicated(as.character(manifest$Field)) > 0L
+  } else {
+    TRUE
+  }
+  manifest_value <- function(field) {
+    if (!manifest_columns_ok) return(NA_character_)
+    idx <- which(as.character(manifest$Field) == field)
+    if (length(idx) != 1L) return(NA_character_)
+    trimws(as.character(manifest$Value[idx]))
+  }
+  required_fields <- c(
+    "CandidateId", "PackageVersion", "SourceCommit", "SourceTreeHash",
+    "TarballSHA256", "CheckLogSHA256", "SpecificationId", "SpecificationSHA256",
+    "ChecklistSHA256", "RVersion", "Platform", "DependencyIdentity",
+    "Compiler", "EnvironmentFlags", "DataRegistryIdentity",
+    "ModelRegistryIdentity", "IntegrationRegistryIdentity",
+    "ExternalRegistryIdentity", "SeedRegistryIdentity"
+  )
+  values <- stats::setNames(
+    vapply(required_fields, manifest_value, character(1)),
+    required_fields
+  )
+  required_values_ok <- manifest_columns_ok && !duplicate_fields &&
+    all(!is.na(values) & nzchar(values))
+  sha_fields <- c(
+    "TarballSHA256", "CheckLogSHA256", "SpecificationSHA256",
+    "ChecklistSHA256"
+  )
+  sha_format_ok <- required_values_ok && all(grepl(
+    "^[0-9a-f]{64}$",
+    tolower(values[sha_fields])
+  ))
+  git_format_ok <- required_values_ok && all(grepl(
+    "^[0-9a-f]{40,64}$",
+    tolower(values[c("SourceCommit", "SourceTreeHash")])
+  ))
+  manifest_schema_ok <- isTRUE(required_values_ok && sha_format_ok && git_format_ok)
+
+  specification_id <- mfrmr_release_readiness_markdown_field(
+    paths$gate_specification,
+    "Specification ID"
+  )
+  confirmation_authorized <- identical(tolower(
+    mfrmr_release_readiness_markdown_field(
+      paths$gate_specification,
+      "Confirmation authorized"
+    )
+  ), "yes")
+  specification_frozen <- mfrmr_release_readiness_has_value(specification_id) &&
+    grepl(
+      paste0("^", gsub("\\.", "\\\\.", target_version), "-frozen\\.[0-9]+$"),
+      specification_id
+    )
+
+  checklist <- if (file.exists(paths$evidence_checklist)) {
+    tryCatch(
+      utils::read.csv(
+        paths$evidence_checklist,
+        stringsAsFactors = FALSE,
+        check.names = FALSE
+      ),
+      error = function(...) data.frame()
+    )
+  } else {
+    data.frame()
+  }
+  blocker <- if ("ReleaseDecision" %in% names(checklist)) {
+    as.character(checklist$ReleaseDecision) == "blocker_if_failed"
+  } else {
+    rep(TRUE, nrow(checklist))
+  }
+  blocker_pilot_required <- if ("CriterionState" %in% names(checklist)) {
+    any(blocker & as.character(checklist$CriterionState) == "pilot_required")
+  } else {
+    TRUE
+  }
+  blocker_tbd <- if ("AcceptanceRule" %in% names(checklist)) {
+    any(blocker & grepl("\\bTBD\\b", as.character(checklist$AcceptanceRule),
+                        ignore.case = TRUE, perl = TRUE))
+  } else {
+    TRUE
+  }
+  blocker_criteria_frozen <- nrow(checklist) > 0L &&
+    !blocker_pilot_required && !blocker_tbd
+
+  package_version_matches <- if (!manifest_schema_ok) {
+    NA
+  } else {
+    identical(values[["PackageVersion"]], target_version[1])
+  }
+  tarball_hash_matches <- if (!manifest_schema_ok) {
+    NA
+  } else {
+    file.exists(paths$tarball) && identical(
+      tolower(values[["TarballSHA256"]]),
+      mfrmr_release_readiness_file_sha256(paths$tarball)
+    )
+  }
+  check_log_hash_matches <- if (!manifest_schema_ok) {
+    NA
+  } else {
+    file.exists(paths$check_log) && identical(
+      tolower(values[["CheckLogSHA256"]]),
+      mfrmr_release_readiness_file_sha256(paths$check_log)
+    )
+  }
+  specification_id_matches <- if (!manifest_schema_ok) {
+    NA
+  } else {
+    identical(values[["SpecificationId"]], specification_id)
+  }
+  specification_hash_matches <- if (!manifest_schema_ok) {
+    NA
+  } else {
+    identical(
+      tolower(values[["SpecificationSHA256"]]),
+      mfrmr_release_readiness_file_sha256(paths$gate_specification)
+    )
+  }
+  checklist_hash_matches <- if (!manifest_schema_ok) {
+    NA
+  } else {
+    identical(
+      tolower(values[["ChecklistSHA256"]]),
+      mfrmr_release_readiness_file_sha256(paths$evidence_checklist)
+    )
+  }
+  ok <- manifest_available && manifest_schema_ok &&
+    isTRUE(package_version_matches) && isTRUE(tarball_hash_matches) &&
+    isTRUE(check_log_hash_matches) && isTRUE(specification_id_matches) &&
+    isTRUE(specification_hash_matches) && isTRUE(checklist_hash_matches) &&
+    specification_frozen && confirmation_authorized && blocker_criteria_frozen
+
+  issue <- character(0)
+  if (!manifest_available) issue <- c(issue, "candidate manifest missing")
+  if (manifest_available && !manifest_schema_ok) {
+    issue <- c(issue, "manifest schema or identity format incomplete")
+  }
+  if (isFALSE(package_version_matches)) issue <- c(issue, "package version mismatch")
+  if (isFALSE(tarball_hash_matches)) issue <- c(issue, "tarball SHA-256 mismatch")
+  if (isFALSE(check_log_hash_matches)) issue <- c(issue, "check-log SHA-256 mismatch")
+  if (isFALSE(specification_id_matches)) issue <- c(issue, "specification ID mismatch")
+  if (isFALSE(specification_hash_matches)) issue <- c(issue, "specification SHA-256 mismatch")
+  if (isFALSE(checklist_hash_matches)) issue <- c(issue, "checklist SHA-256 mismatch")
+  if (!specification_frozen) issue <- c(issue, "specification is not frozen")
+  if (!confirmation_authorized) issue <- c(issue, "confirmation is not authorized")
+  if (!blocker_criteria_frozen) issue <- c(issue, "blocker criteria remain unfrozen")
+
+  data.frame(
+    CandidateIdentityStatus = if (ok) "ok" else "concern",
+    CandidateManifest = manifest_path,
+    CandidateManifestAvailable = manifest_available,
+    ManifestSchemaOK = manifest_schema_ok,
+    CandidateId = values[["CandidateId"]],
+    PackageVersionMatches = package_version_matches,
+    TarballHashMatches = tarball_hash_matches,
+    CheckLogHashMatches = check_log_hash_matches,
+    SpecificationId = specification_id,
+    SpecificationIdMatches = specification_id_matches,
+    SpecificationHashMatches = specification_hash_matches,
+    ChecklistHashMatches = checklist_hash_matches,
+    SpecificationFrozen = specification_frozen,
+    ConfirmationAuthorized = confirmation_authorized,
+    BlockerCriteriaFrozen = blocker_criteria_frozen,
+    CandidateIdentityOK = ok,
+    Detail = paste(unique(issue), collapse = " | "),
+    stringsAsFactors = FALSE
+  )
 }
 
 mfrmr_release_readiness_count_status <- function(status_line, label) {
@@ -792,6 +1061,179 @@ mfrmr_release_readiness_source_truth_status <- function(paths) {
   )
 }
 
+mfrmr_release_readiness_public_scope_status <- function(
+    paths,
+    target_version = NULL) {
+  target_version <- target_version %||% paths$target_version
+  if (!mfrmr_release_readiness_contract_applies(target_version)) {
+    return(data.frame(
+      PublicScopeStatus = "not_applicable",
+      BoundaryRows = 0L,
+      RequiredBoundaryRows = 0L,
+      FutureRoutesBlocked = NA,
+      VisualClaimSeparated = NA,
+      ReadmeBoundaryExplicit = NA,
+      FutureArgumentsAbsent = NA,
+      MissingBoundaryRows = "",
+      PublicScopeOK = TRUE,
+      Detail = "current-versus-future scope contract applies from 0.2.3",
+      stringsAsFactors = FALSE
+    ))
+  }
+
+  env <- new.env(parent = globalenv())
+  if (file.exists(paths$facets_coverage_source)) {
+    source(paths$facets_coverage_source, local = env)
+  } else if (isNamespaceLoaded("mfrmr") ||
+             requireNamespace("mfrmr", quietly = TRUE)) {
+    env$facets_feature_coverage <-
+      getExportedValue("mfrmr", "facets_feature_coverage")
+  }
+  coverage_available <- exists(
+    "facets_feature_coverage",
+    envir = env,
+    inherits = FALSE
+  )
+  coverage <- if (coverage_available) {
+    tryCatch(env$facets_feature_coverage(), error = function(...) data.frame())
+  } else {
+    data.frame()
+  }
+  required_columns <- c(
+    "FACETSArea", "FACETSFeature", "Status", "SurfaceCoverage",
+    "StatisticalContract", "ValidationEvidence", "OperationalStatus"
+  )
+  coverage_schema_ok <- all(required_columns %in% names(coverage))
+  future_features <- c(
+    "Versioned frozen-calibration import and operational scoring",
+    "General threshold or step anchors and starting-value import",
+    "Multiple observed scales and scale-specific PCM",
+    "Native multidimensional estimation and dimension-specific scores",
+    "Unrestricted GPCM"
+  )
+  future <- if (coverage_schema_ok) {
+    coverage[
+      coverage$FACETSArea == "Current scope boundary" &
+        coverage$FACETSFeature %in% future_features,
+      ,
+      drop = FALSE
+    ]
+  } else {
+    data.frame()
+  }
+  missing_boundary <- if (coverage_schema_ok) {
+    setdiff(future_features, future$FACETSFeature)
+  } else {
+    future_features
+  }
+  future_routes_blocked <- coverage_schema_ok &&
+    nrow(future) == length(future_features) &&
+    length(missing_boundary) == 0L &&
+    all(future$Status == "not_implemented") &&
+    all(future$SurfaceCoverage == "unavailable") &&
+    all(future$StatisticalContract == "not_available") &&
+    all(future$ValidationEvidence == "not_applicable") &&
+    all(future$OperationalStatus == "blocked")
+  wright <- if (coverage_schema_ok) {
+    coverage[
+      grepl("Table 6.0: all-facet Wright map rulers",
+            coverage$FACETSFeature, fixed = TRUE),
+      ,
+      drop = FALSE
+    ]
+  } else {
+    data.frame()
+  }
+  visual_claim_separated <- nrow(wright) == 1L &&
+    identical(wright$SurfaceCoverage[1],
+              "familiar_visual_grammar_available") &&
+    identical(wright$StatisticalContract[1],
+              "package_native_not_facets_equivalent") &&
+    identical(wright$ValidationEvidence[1],
+              "external_match_not_established") &&
+    identical(wright$OperationalStatus[1], "package_route_available")
+
+  readme <- tolower(paste(
+    mfrmr_release_readiness_read_lines(paths$readme),
+    collapse = " "
+  ))
+  readme <- gsub("[[:space:]]+", " ", readme)
+  readme_boundary_explicit <- all(vapply(
+    c(
+      "unidimensional many-facet ordered-response models",
+      "one observed score scale",
+      "documented bounded `gpcm` extension",
+      "imported versioned frozen-calibration bundle",
+      "posterior scoring from an existing fitted object is a separate"
+    ),
+    grepl,
+    logical(1),
+    x = readme,
+    fixed = TRUE
+  ))
+
+  estimation_lines <- mfrmr_release_readiness_read_lines(
+    paths$estimation_source
+  )
+  fit_start <- grep("^fit_mfrm <- function\\(", estimation_lines)
+  fit_signature <- ""
+  if (length(fit_start) > 0L) {
+    fit_end_relative <- grep(
+      "\\)[[:space:]]*\\{$",
+      estimation_lines[fit_start[1]:length(estimation_lines)]
+    )
+    if (length(fit_end_relative) > 0L) {
+      fit_end <- fit_start[1] + fit_end_relative[1] - 1L
+      fit_signature <- paste(estimation_lines[fit_start[1]:fit_end],
+                             collapse = " ")
+    }
+  }
+  future_arguments <- c(
+    "calibration_bundle", "frozen_calibration", "threshold_anchors",
+    "step_anchors", "scale_id", "dimensions"
+  )
+  if (nzchar(fit_signature)) {
+    future_arguments_absent <- !any(vapply(
+      future_arguments,
+      grepl,
+      logical(1),
+      x = fit_signature,
+      fixed = TRUE
+    )) && !grepl("...", fit_signature, fixed = TRUE)
+  } else if (isNamespaceLoaded("mfrmr") ||
+             requireNamespace("mfrmr", quietly = TRUE)) {
+    current_arguments <- names(formals(getExportedValue("mfrmr", "fit_mfrm")))
+    future_arguments_absent <- !"..." %in% current_arguments &&
+      !any(future_arguments %in% current_arguments)
+  } else {
+    future_arguments_absent <- FALSE
+  }
+
+  ok <- coverage_schema_ok && future_routes_blocked &&
+    visual_claim_separated && readme_boundary_explicit &&
+    future_arguments_absent
+  issue <- character(0)
+  if (!coverage_schema_ok) issue <- c(issue, "coverage axes missing")
+  if (!future_routes_blocked) issue <- c(issue, "future route promoted or missing")
+  if (!visual_claim_separated) issue <- c(issue, "visual/numerical/operational claims conflated")
+  if (!readme_boundary_explicit) issue <- c(issue, "README scope boundary incomplete")
+  if (!future_arguments_absent) issue <- c(issue, "future fit argument exposed or signature unavailable")
+
+  data.frame(
+    PublicScopeStatus = if (ok) "ok" else "concern",
+    BoundaryRows = nrow(future),
+    RequiredBoundaryRows = length(future_features),
+    FutureRoutesBlocked = future_routes_blocked,
+    VisualClaimSeparated = visual_claim_separated,
+    ReadmeBoundaryExplicit = readme_boundary_explicit,
+    FutureArgumentsAbsent = future_arguments_absent,
+    MissingBoundaryRows = paste(missing_boundary, collapse = " | "),
+    PublicScopeOK = ok,
+    Detail = paste(issue, collapse = " | "),
+    stringsAsFactors = FALSE
+  )
+}
+
 mfrmr_release_readiness_public_doc_files <- function(pkg_dir) {
   list_rmd <- function(path) {
     if (!dir.exists(path)) {
@@ -1221,6 +1663,8 @@ mfrmr_release_readiness_gate_summary <- function(version_status,
                                                  gpcm_scope_status = NULL,
                                                  freshness_status = NULL,
                                                  source_truth_status = NULL,
+                                                 candidate_identity_status = NULL,
+                                                 public_scope_status = NULL,
                                                  example_policy_status = NULL,
                                                  check_timing_scope = c(
                                                    "cran", "full_non_cran"
@@ -1283,6 +1727,35 @@ mfrmr_release_readiness_gate_summary <- function(version_status,
   }
   source_truth_ok <- is.null(source_truth_status) ||
     isTRUE(source_truth_status$SourceTruthOK[1])
+  target_version <- version_status$TargetVersion[1] %||%
+    check_status$TargetVersion[1]
+  identity_contract_applies <- mfrmr_release_readiness_contract_applies(
+    target_version
+  )
+  candidate_identity_gate_status <- if (is.null(candidate_identity_status)) {
+    if (identity_contract_applies) "concern" else "ok"
+  } else if (identical(
+    candidate_identity_status$CandidateIdentityStatus[1],
+    "not_applicable"
+  )) {
+    "ok"
+  } else if (isTRUE(candidate_identity_status$CandidateIdentityOK[1])) {
+    "ok"
+  } else {
+    "concern"
+  }
+  public_scope_gate_status <- if (is.null(public_scope_status)) {
+    if (identity_contract_applies) "concern" else "ok"
+  } else if (identical(
+    public_scope_status$PublicScopeStatus[1],
+    "not_applicable"
+  )) {
+    "ok"
+  } else if (isTRUE(public_scope_status$PublicScopeOK[1])) {
+    "ok"
+  } else {
+    "concern"
+  }
   example_policy_gate_status <- if (is.null(example_policy_status)) {
     "review"
   } else if (isTRUE(example_policy_status$ExamplePolicyOK[1])) {
@@ -1292,13 +1765,16 @@ mfrmr_release_readiness_gate_summary <- function(version_status,
   }
   rows <- data.frame(
     Gate = c(
-      "version_contract", "source_truth", "package_check", "check_timing",
-      "example_policy", "release_evidence_freshness", "ci_workflow",
-      "terminology", "evidence_artifacts"
+      "version_contract", "source_truth", "candidate_identity",
+      "public_scope", "package_check", "check_timing", "example_policy",
+      "release_evidence_freshness", "ci_workflow", "terminology",
+      "evidence_artifacts"
     ),
     Status = c(
       if (isTRUE(version_status$VersionOK[1])) "ok" else "concern",
       if (source_truth_ok) "ok" else "concern",
+      candidate_identity_gate_status,
+      public_scope_gate_status,
       package_check_status,
       check_timing_status,
       example_policy_gate_status,
@@ -1320,6 +1796,39 @@ mfrmr_release_readiness_gate_summary <- function(version_status,
           "; roadmap_authoritative=", source_truth_status$RoadmapAuthoritative[1],
           "; development_only_current_claims=",
           source_truth_status$DevelopmentOnlyCurrentClaims[1]
+        )
+      },
+      if (is.null(candidate_identity_status)) {
+        "candidate identity not checked separately"
+      } else {
+        paste0(
+          "status=", candidate_identity_status$CandidateIdentityStatus[1],
+          "; candidate_id=", candidate_identity_status$CandidateId[1],
+          "; manifest=", candidate_identity_status$CandidateManifestAvailable[1],
+          "; schema=", candidate_identity_status$ManifestSchemaOK[1],
+          "; tarball_hash=", candidate_identity_status$TarballHashMatches[1],
+          "; check_log_hash=", candidate_identity_status$CheckLogHashMatches[1],
+          "; spec_id=", candidate_identity_status$SpecificationId[1],
+          "; spec_frozen=", candidate_identity_status$SpecificationFrozen[1],
+          "; spec_hash=", candidate_identity_status$SpecificationHashMatches[1],
+          "; checklist_hash=", candidate_identity_status$ChecklistHashMatches[1],
+          "; detail=", candidate_identity_status$Detail[1]
+        )
+      },
+      if (is.null(public_scope_status)) {
+        "current-versus-future public scope not checked separately"
+      } else {
+        paste0(
+          "status=", public_scope_status$PublicScopeStatus[1],
+          "; boundary_rows=", public_scope_status$BoundaryRows[1],
+          "/", public_scope_status$RequiredBoundaryRows[1],
+          "; future_blocked=", public_scope_status$FutureRoutesBlocked[1],
+          "; visual_claim_separated=",
+          public_scope_status$VisualClaimSeparated[1],
+          "; readme_boundary=", public_scope_status$ReadmeBoundaryExplicit[1],
+          "; future_arguments_absent=",
+          public_scope_status$FutureArgumentsAbsent[1],
+          "; detail=", public_scope_status$Detail[1]
         )
       },
       paste0(
@@ -1462,6 +1971,7 @@ mfrmr_release_readiness_review <- function(pkg_dir = ".",
                                            check_log = NULL,
                                            tarball = NULL,
                                            checklist = NULL,
+                                           candidate_manifest = NULL,
                                            target_version = NULL,
                                            external_recovery_dir = NULL,
                                            check_timing_scope = NULL) {
@@ -1494,6 +2004,9 @@ mfrmr_release_readiness_review <- function(pkg_dir = ".",
   if (!is.null(checklist)) {
     paths$evidence_checklist <- checklist
   }
+  if (!is.null(candidate_manifest)) {
+    paths$candidate_manifest <- candidate_manifest
+  }
   version_status <- mfrmr_release_readiness_version_status(paths, target_version = target_version)
   check_status <- mfrmr_release_readiness_parse_check_log(
     paths$check_log,
@@ -1509,6 +2022,15 @@ mfrmr_release_readiness_review <- function(pkg_dir = ".",
     paths$pkg_dir
   )
   source_truth_status <- mfrmr_release_readiness_source_truth_status(paths)
+  candidate_identity_status <-
+    mfrmr_release_readiness_candidate_identity_status(
+      paths,
+      target_version = target_version
+    )
+  public_scope_status <- mfrmr_release_readiness_public_scope_status(
+    paths,
+    target_version = target_version
+  )
   checklist_status <- mfrmr_release_readiness_checklist_status(paths$evidence_checklist)
   ci_workflow_status <- mfrmr_release_readiness_ci_workflow_status(paths$ci_workflow)
   gpcm_scope_status <- mfrmr_release_readiness_gpcm_scope_status(
@@ -1525,6 +2047,8 @@ mfrmr_release_readiness_review <- function(pkg_dir = ".",
     gpcm_scope_status = gpcm_scope_status,
     freshness_status = freshness_status,
     source_truth_status = source_truth_status,
+    candidate_identity_status = candidate_identity_status,
+    public_scope_status = public_scope_status,
     example_policy_status = example_policy_status,
     check_timing_scope = check_timing_scope
   )
@@ -1542,6 +2066,8 @@ mfrmr_release_readiness_review <- function(pkg_dir = ".",
     ),
     version_status = version_status,
     source_truth_status = source_truth_status,
+    candidate_identity_status = candidate_identity_status,
+    public_scope_status = public_scope_status,
     check_status = check_status,
     freshness_status = freshness_status,
     ci_workflow_status = ci_workflow_status,
@@ -1567,6 +2093,8 @@ summary.mfrmr_release_readiness_review <- function(object, ...) {
     prompt_steps = object$prompt_steps,
     check_status = object$check_status,
     source_truth_status = object$source_truth_status,
+    candidate_identity_status = object$candidate_identity_status,
+    public_scope_status = object$public_scope_status,
     freshness_status = object$freshness_status,
     ci_workflow_status = object$ci_workflow_status,
     example_policy_status = object$example_policy_status,

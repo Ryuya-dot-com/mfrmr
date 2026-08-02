@@ -5,9 +5,9 @@
 | Field | Value |
 | --- | --- |
 | Target release | 0.2.3 |
-| Specification ID | `0.2.3-draft.13` |
-| Date | 2026-07-28 |
-| Status | M1 source review recorded; M2 IC contract v2, GHQ pilots, external-IC normalizer v1, audited ConQuest objective/free-dimension handoff, strict binary and four-category RSM/PCM node ladders with same-platform q=31 repeats, TAM import guards, the first dimension-aware TAM integration pilot, the fixed-fixture canonical-score/GPCM-transformation pilot, and the first additive RSM/PCM common-vector engine-path pilot are instrumented, while score/objective/parameter tolerance freeze, independent-platform replication, bootstrap, attribution, consequence, and confirmation work remain pending |
+| Specification ID | `0.2.3-draft.14` |
+| Date | 2026-08-03 |
+| Status | M1 source review recorded; M2 IC contract v2, GHQ pilots, external-IC normalizer v1, audited ConQuest objective/free-dimension handoff, strict binary and four-category RSM/PCM node ladders with same-platform q=31 repeats, TAM import guards, the first dimension-aware TAM integration pilot, the fixed-fixture canonical-score/GPCM-transformation pilot, the first additive RSM/PCM common-vector engine-path pilot, and fail-closed candidate/specification/public-scope readiness checks are instrumented, while score/objective/parameter tolerance freeze, independent-platform replication, bootstrap, attribution, consequence, candidate freeze, and confirmation work remain pending |
 | Confirmation authorized | No |
 | Evidence checklist | `release-evidence-checklist-0.2.3.csv` |
 | M1 review record | `release-gate-m1-review-0.2.3.md` |
@@ -117,7 +117,7 @@ The M3 manifest must record at least:
 
 | Field | Requirement |
 | --- | --- |
-| Package identity | Version, source commit, tree hash, and tarball SHA-256. |
+| Package identity | Version, source commit, tree hash, tarball SHA-256, and selected check-log SHA-256. |
 | Gate identity | Specification ID/hash and checklist hash. |
 | Runtime identity | R version, platform, dependency versions, compiler, and relevant environment flags. |
 | Data identity | Scenario ID, input hash, category map, missingness map, weight policy, and Person partition hash. |
@@ -125,6 +125,18 @@ The M3 manifest must record at least:
 | Integration identity | Engine, nodes, QMC setting, sequence/hash, seed where operative, and evaluation policy. |
 | External identity | Program, version/edition, run date, command/input/output hashes, and normalization version. |
 | Random identity | Generator seed registry, bootstrap seed registry, and failed-replicate policy. |
+
+The release-readiness reader expects
+`release-candidate-manifest-0.2.3.csv` as a two-column `Field`,`Value` table
+with exactly one non-empty row for each of `CandidateId`, `PackageVersion`,
+`SourceCommit`, `SourceTreeHash`, `TarballSHA256`, `SpecificationId`,
+`CheckLogSHA256`, `SpecificationSHA256`, `ChecklistSHA256`, `RVersion`, `Platform`,
+`DependencyIdentity`, `Compiler`, `EnvironmentFlags`,
+`DataRegistryIdentity`, `ModelRegistryIdentity`, `IntegrationRegistryIdentity`,
+`ExternalRegistryIdentity`, and `SeedRegistryIdentity`. SHA-256 and Git object
+fields must use lowercase or uppercase hexadecimal without a prefix. A
+registry may state `not_applicable` only when the frozen scenario registry
+proves that it is outside the candidate scope.
 
 No local absolute path, user name, identifier-bearing case data, license key,
 or proprietary binary is retained in repository evidence.
@@ -794,6 +806,7 @@ claim is reduced or deferred rather than decided ad hoc.
 | `0.2.3-draft.11` | Extended the fixed four-category ConQuest RSM/PCM pilot to q=7/15/31/61/91/121 ladders and fresh same-platform q=31 repeats; retained objective and transformed-coordinate agreement across both q=31--121 cores, byte-identical native q=31 outputs within each model, and diagnostic low-node instability/fail-closed evidence while leaving independent-platform replication, tolerance freeze, and candidate-linked evidence unresolved. |
 | `0.2.3-draft.12` | Added the fixed-fixture canonical free-score pilot, independently implemented three-step central differences at retained and nonzero-score points, the explicit free-log-slope to sum-zero-log to positive-slope GPCM Jacobian contract, and exact binary/unit-slope reductions; corrected the earlier box-constraint/projected-gradient wording while leaving `NUM-SCORE-TOL`, engine parity, expanded boundary-regime calibration, and confirmation unresolved. |
 | `0.2.3-draft.13` | Added the fixed-fixture additive RSM/PCM engine-path pilot, exact hashed raw-EM-to-common-direct-polish handoff, common-vector objective/score evaluation through direct/EM/hybrid contexts, free and expanded parameter comparisons, and an explicit GPCM/interaction/latent-regression fallback boundary; left `NUM-OBJECTIVE-TOL`, `NUM-PARAMETER-TOL`, broader grid/platform calibration, and confirmation unresolved. |
+| `0.2.3-draft.14` | Bound release-readiness output to an exact candidate-manifest schema, tarball/check-log/specification/checklist SHA-256 identities, a frozen specification ID, explicit confirmation authorization, and machine-checked current-versus-future public API truth; retained missing manifests, draft specifications, unfrozen blocker criteria, and every identity mismatch as concerns, so M3 and confirmation remain unauthorized. |
 
 ## Release decision algorithm
 
