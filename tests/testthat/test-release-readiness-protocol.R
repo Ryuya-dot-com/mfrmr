@@ -399,6 +399,142 @@ test_that("release-readiness binds a 0.2.3 candidate to frozen hashed inputs", {
   expect_match(mutated$Detail, "tarball SHA-256 mismatch", fixed = TRUE)
 })
 
+test_that("release-readiness reconstructs checklist decisions from hashed result rows", {
+  protocol <- release_readiness_protocol_path()
+  env <- new.env(parent = globalenv())
+  source(protocol, local = env)
+  skip_if_not_installed("digest")
+
+  root <- tempfile("gate-results")
+  dir.create(root, recursive = TRUE)
+  evidence <- file.path(root, "evidence.txt")
+  checklist <- file.path(root, "release-evidence-checklist-0.2.3.csv")
+  manifest <- file.path(root, "release-candidate-manifest-0.2.3.csv")
+  results_path <- file.path(root, "release-gate-results-0.2.3.csv")
+  writeLines("candidate-linked aggregate evidence", evidence)
+  utils::write.csv(data.frame(
+    Gate = c("G1", "G6", "G4"),
+    Item = c("structural_contract", "future_guard", "replication_scope"),
+    ScenarioId = c(
+      "NUM-BIN-REDUCE; NUM-RSM-CORE",
+      "ALL",
+      "DIM-EMP-CONFIRM"
+    ),
+    ReleaseDecision = c(
+      "blocker_if_failed",
+      "roadmap_if_missing",
+      "caveat_if_incomplete"
+    ),
+    stringsAsFactors = FALSE
+  ), checklist, row.names = FALSE)
+  commit <- strrep("a", 40L)
+  spec_id <- "0.2.3-frozen.1"
+  utils::write.csv(data.frame(
+    Field = c("SourceCommit", "SpecificationId"),
+    Value = c(commit, spec_id),
+    stringsAsFactors = FALSE
+  ), manifest, row.names = FALSE)
+  evidence_hash <- env$mfrmr_release_readiness_file_sha256(evidence)
+  results <- data.frame(
+    Gate = c("G1", "G1", "G6", "G4"),
+    Item = c(
+      "structural_contract", "structural_contract", "future_guard",
+      "replication_scope"
+    ),
+    ScenarioId = c(
+      "NUM-BIN-REDUCE", "NUM-RSM-CORE", "ALL", "DIM-EMP-CONFIRM"
+    ),
+    CandidateCommit = commit,
+    SpecId = spec_id,
+    EvidenceRole = "unit",
+    Metric = "exact structural rule",
+    Estimate = NA_character_,
+    Threshold = "all required assertions true",
+    Direction = "exact",
+    MonteCarloSE = NA_character_,
+    NumericalSE = NA_character_,
+    ReplicatesPlanned = NA_character_,
+    ReplicatesRetained = NA_character_,
+    FailedReplicates = NA_character_,
+    Status = "ok",
+    EvidencePath = "evidence.txt",
+    EvidenceHash = evidence_hash,
+    stringsAsFactors = FALSE
+  )
+  write_results <- function(value) {
+    utils::write.csv(value, results_path, row.names = FALSE, na = "")
+  }
+  write_results(results)
+  paths <- list(
+    target_version = "0.2.3",
+    pkg_dir = root,
+    gate_results = results_path,
+    evidence_checklist = checklist,
+    candidate_manifest = manifest
+  )
+  identity <- data.frame(
+    CandidateIdentityStatus = "ok",
+    CandidateIdentityOK = TRUE,
+    stringsAsFactors = FALSE
+  )
+
+  status <- env$mfrmr_release_readiness_gate_results_status(
+    paths,
+    candidate_identity_status = identity,
+    target_version = "0.2.3"
+  )
+  expect_identical(status$GateResultsStatus, "ok")
+  expect_true(status$GateResultsOK)
+  expect_true(status$IdentityRowsOK)
+  expect_true(status$EvidenceRowsOK)
+  expect_identical(status$MissingItems, "")
+  expect_identical(status$MissingScenarios, "")
+  expect_identical(status$BlockingItemsNotOK, "")
+
+  write_results(results[results$ScenarioId != "NUM-RSM-CORE", , drop = FALSE])
+  missing <- env$mfrmr_release_readiness_gate_results_status(
+    paths,
+    candidate_identity_status = identity,
+    target_version = "0.2.3"
+  )
+  expect_identical(missing$GateResultsStatus, "concern")
+  expect_match(missing$MissingScenarios, "NUM-RSM-CORE", fixed = TRUE)
+
+  wrong_identity <- results
+  wrong_identity$CandidateCommit[1] <- strrep("b", 40L)
+  write_results(wrong_identity)
+  mismatched <- env$mfrmr_release_readiness_gate_results_status(
+    paths,
+    candidate_identity_status = identity,
+    target_version = "0.2.3"
+  )
+  expect_identical(mismatched$GateResultsStatus, "concern")
+  expect_false(mismatched$IdentityRowsOK)
+
+  wrong_hash <- results
+  wrong_hash$EvidenceHash[1] <- strrep("0", 64L)
+  write_results(wrong_hash)
+  tampered <- env$mfrmr_release_readiness_gate_results_status(
+    paths,
+    candidate_identity_status = identity,
+    target_version = "0.2.3"
+  )
+  expect_identical(tampered$GateResultsStatus, "concern")
+  expect_false(tampered$EvidenceRowsOK)
+
+  caveated <- results
+  caveated$Status[caveated$Item == "replication_scope"] <- "review"
+  write_results(caveated)
+  review <- env$mfrmr_release_readiness_gate_results_status(
+    paths,
+    candidate_identity_status = identity,
+    target_version = "0.2.3"
+  )
+  expect_identical(review$GateResultsStatus, "review")
+  expect_false(review$GateResultsOK)
+  expect_match(review$CaveatItemsForReview, "G4::replication_scope", fixed = TRUE)
+})
+
 test_that("release-readiness keeps the 0.2.3 current/future API truth explicit", {
   protocol <- release_readiness_protocol_path()
   env <- new.env(parent = globalenv())
@@ -882,7 +1018,7 @@ test_that("release-readiness protocol reviews the source tree shape", {
     "prompt_steps", "gate_summary", "release_decision",
     "version_status", "check_status", "freshness_status", "ci_workflow_status",
     "source_truth_status", "candidate_identity_status", "public_scope_status",
-    "prose_count_status",
+    "gate_results_status", "prose_count_status",
     "terminology_status", "example_policy_status",
     "check_timing_scope",
     "checklist_status", "gpcm_scope_status", "external_recovery_status"
@@ -900,6 +1036,10 @@ test_that("release-readiness protocol reviews the source tree shape", {
   expect_true(isTRUE(review$source_truth_status$SourceTruthOK[1]))
   expect_identical(
     review$candidate_identity_status$CandidateIdentityStatus[1],
+    "not_applicable"
+  )
+  expect_identical(
+    review$gate_results_status$GateResultsStatus[1],
     "not_applicable"
   )
   expect_identical(

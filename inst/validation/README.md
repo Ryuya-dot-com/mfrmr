@@ -31,12 +31,17 @@ history, but they do not redefine release order or current API scope.
   review checks version labels, metadata agreement, `--as-cran` provenance,
   the local check log, the CI check workflow, public terminology, current-
   versus-future API truth, candidate identity, numeric pass-count prose, and
-  the release evidence files.
+  candidate-linked gate-result rows against the checklist, and the release
+  evidence files.
   For 0.2.3 and later it fails closed until a versioned
   `release-candidate-manifest-<version>.csv` binds package/source/runtime and
   registry identities to the exact tarball, selected check log, frozen gate
   specification, and checklist hashes. A placeholder manifest must not be
   created before M3; absence is intentionally reported as a concern.
+  `release-gate-results-<version>.csv` is also required from M4 onward; every
+  result must match the manifest commit/specification, resolve to a checklist
+  item and scenario, and point to a retained relative evidence path whose
+  SHA-256 matches.
 - `release-evidence-map-0.2.0.md`: narrative review map linking release
   claims to mathematical, statistical, UX, documentation, and engineering
   evidence.

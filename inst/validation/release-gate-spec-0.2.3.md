@@ -5,9 +5,9 @@
 | Field | Value |
 | --- | --- |
 | Target release | 0.2.3 |
-| Specification ID | `0.2.3-draft.15` |
+| Specification ID | `0.2.3-draft.16` |
 | Date | 2026-08-03 |
-| Status | M1 source review recorded; M2 IC contract v2, GHQ pilots, external-IC normalizer v1, audited ConQuest objective/free-dimension handoff, strict binary and four-category RSM/PCM node ladders with same-platform q=31 repeats, TAM import guards, the first dimension-aware TAM integration pilot, the fixed-fixture canonical-score/GPCM-transformation pilot, the first additive RSM/PCM common-vector engine-path pilot, and fail-closed candidate/specification/public-scope/readiness-prose checks are instrumented, while score/objective/parameter tolerance freeze, independent-platform replication, bootstrap, attribution, consequence, candidate freeze, and confirmation work remain pending |
+| Status | M1 source review recorded; M2 IC contract v2, GHQ pilots, external-IC normalizer v1, audited ConQuest objective/free-dimension handoff, strict binary and four-category RSM/PCM node ladders with same-platform q=31 repeats, TAM import guards, the first dimension-aware TAM integration pilot, the fixed-fixture canonical-score/GPCM-transformation pilot, the first additive RSM/PCM common-vector engine-path pilot, and fail-closed candidate/specification/result/public-scope/readiness-prose checks are instrumented, while score/objective/parameter tolerance freeze, independent-platform replication, bootstrap, attribution, consequence, candidate freeze, and confirmation work remain pending |
 | Confirmation authorized | No |
 | Evidence checklist | `release-evidence-checklist-0.2.3.csv` |
 | M1 review record | `release-gate-m1-review-0.2.3.md` |
@@ -160,6 +160,17 @@ Every generated gate result must contain:
 For an exact structural check, `Estimate`, `MonteCarloSE`, and `NumericalSE`
 may be empty, but `Status`, the exact rule, and evidence identity may not be.
 Aggregates must link to retained per-replicate evidence outside the package.
+
+The release-readiness reader expects these rows in
+`release-gate-results-0.2.3.csv`. `CandidateCommit` and `SpecId` must match the
+candidate manifest. Each `EvidencePath` is a repository-relative path without
+parent traversal and its `EvidenceHash` must match the retained file's
+SHA-256. Every checklist `Gate`/`Item` and every named semicolon-separated
+`ScenarioId` must resolve to at least one result row; `ALL` is the only
+wildcard. Blocker and roadmap-guard items finish only when every matched row
+is `ok`. A caveat item may finish as `review` only when no matched row is
+`concern`, `not_run`, or missing; that review state propagates to the overall
+readiness decision.
 
 ## Scenario registry
 
@@ -815,6 +826,7 @@ claim is reduced or deferred rather than decided ad hoc.
 | `0.2.3-draft.13` | Added the fixed-fixture additive RSM/PCM engine-path pilot, exact hashed raw-EM-to-common-direct-polish handoff, common-vector objective/score evaluation through direct/EM/hybrid contexts, free and expanded parameter comparisons, and an explicit GPCM/interaction/latent-regression fallback boundary; left `NUM-OBJECTIVE-TOL`, `NUM-PARAMETER-TOL`, broader grid/platform calibration, and confirmation unresolved. |
 | `0.2.3-draft.14` | Bound release-readiness output to an exact candidate-manifest schema, tarball/check-log/specification/checklist SHA-256 identities, a frozen specification ID, explicit confirmation authorization, and machine-checked current-versus-future public API truth; retained missing manifests, draft specifications, unfrozen blocker criteria, and every identity mismatch as concerns, so M3 and confirmation remain unauthorized. |
 | `0.2.3-draft.15` | Added a release-readiness guard against carrying numeric test/check pass counts forward in current README, NEWS, or cran-comments prose; historical NEWS sections remain untouched, while current engineering status must come from the exact candidate-linked logs and hashes. |
+| `0.2.3-draft.16` | Added fail-closed loading of candidate-linked gate-result rows, exact commit/specification identity checks, retained evidence-path SHA-256 verification, checklist item/scenario completeness, and blocker/roadmap/caveat status propagation into the release decision. |
 
 ## Release decision algorithm
 

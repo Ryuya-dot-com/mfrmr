@@ -162,6 +162,10 @@ mfrmr_release_readiness_paths <- function(pkg_dir = ".",
       validation_dir,
       paste0("release-candidate-manifest-", target_version, ".csv")
     ),
+    gate_results = file.path(
+      validation_dir,
+      paste0("release-gate-results-", target_version, ".csv")
+    ),
     gpcm_roadmap = mfrmr_release_readiness_versioned_file(
       validation_dir,
       prefix = "gpcm-post-",
@@ -563,6 +567,235 @@ mfrmr_release_readiness_candidate_identity_status <- function(
     BlockerCriteriaFrozen = blocker_criteria_frozen,
     CandidateIdentityOK = ok,
     Detail = paste(unique(issue), collapse = " | "),
+    stringsAsFactors = FALSE
+  )
+}
+
+mfrmr_release_readiness_gate_results_status <- function(
+    paths,
+    candidate_identity_status = NULL,
+    target_version = NULL) {
+  target_version <- target_version %||% paths$target_version
+  if (!mfrmr_release_readiness_contract_applies(target_version)) {
+    return(data.frame(
+      GateResultsStatus = "not_applicable",
+      GateResultsAvailable = FALSE,
+      Rows = 0L,
+      ChecklistItems = 0L,
+      MissingItems = "",
+      MissingScenarios = "",
+      UnknownItems = "",
+      IdentityRowsOK = NA,
+      EvidenceRowsOK = NA,
+      BlockingItemsNotOK = "",
+      CaveatItemsForReview = "",
+      GateResultsOK = TRUE,
+      Detail = "candidate-linked result contract applies from 0.2.3",
+      stringsAsFactors = FALSE
+    ))
+  }
+
+  results_path <- paths$gate_results %||% ""
+  results_available <- file.exists(results_path)
+  results <- if (results_available) {
+    tryCatch(
+      utils::read.csv(
+        results_path,
+        stringsAsFactors = FALSE,
+        check.names = FALSE,
+        na.strings = c("", "NA")
+      ),
+      error = function(...) data.frame()
+    )
+  } else {
+    data.frame()
+  }
+  required_columns <- c(
+    "Gate", "Item", "ScenarioId", "CandidateCommit", "SpecId",
+    "EvidenceRole", "Metric", "Estimate", "Threshold", "Direction",
+    "MonteCarloSE", "NumericalSE", "ReplicatesPlanned",
+    "ReplicatesRetained", "FailedReplicates", "Status", "EvidencePath",
+    "EvidenceHash"
+  )
+  schema_ok <- results_available && nrow(results) > 0L &&
+    all(required_columns %in% names(results))
+
+  checklist <- if (file.exists(paths$evidence_checklist)) {
+    tryCatch(
+      utils::read.csv(
+        paths$evidence_checklist,
+        stringsAsFactors = FALSE,
+        check.names = FALSE
+      ),
+      error = function(...) data.frame()
+    )
+  } else {
+    data.frame()
+  }
+  checklist_columns_ok <- all(
+    c("Gate", "Item", "ScenarioId", "ReleaseDecision") %in% names(checklist)
+  ) && nrow(checklist) > 0L
+
+  manifest <- if (file.exists(paths$candidate_manifest)) {
+    tryCatch(
+      utils::read.csv(
+        paths$candidate_manifest,
+        stringsAsFactors = FALSE,
+        check.names = FALSE
+      ),
+      error = function(...) data.frame()
+    )
+  } else {
+    data.frame()
+  }
+  manifest_value <- function(field) {
+    if (!all(c("Field", "Value") %in% names(manifest))) {
+      return(NA_character_)
+    }
+    idx <- which(as.character(manifest$Field) == field)
+    if (length(idx) != 1L) return(NA_character_)
+    trimws(as.character(manifest$Value[idx]))
+  }
+  candidate_commit <- manifest_value("SourceCommit")
+  specification_id <- manifest_value("SpecificationId")
+  candidate_identity_ok <- !is.null(candidate_identity_status) &&
+    isTRUE(candidate_identity_status$CandidateIdentityOK[1])
+
+  allowed_status <- c("ok", "concern", "review", "not_run", "not_applicable")
+  allowed_role <- c(
+    "unit", "pilot", "confirmation", "sensitivity", "external",
+    "engineering"
+  )
+  row_text_ok <- FALSE
+  identity_rows_ok <- FALSE
+  evidence_rows_ok <- FALSE
+  result_keys <- character(0)
+  missing_items <- character(0)
+  missing_scenarios <- character(0)
+  unknown_items <- character(0)
+  blocking_not_ok <- character(0)
+  caveat_review <- character(0)
+
+  if (schema_ok) {
+    nonempty_columns <- c(
+      "Gate", "Item", "ScenarioId", "CandidateCommit", "SpecId",
+      "EvidenceRole", "Metric", "Threshold", "Direction", "Status",
+      "EvidencePath", "EvidenceHash"
+    )
+    row_text_ok <- all(vapply(
+      nonempty_columns,
+      function(column) {
+        value <- as.character(results[[column]])
+        all(!is.na(value) & nzchar(trimws(value)))
+      },
+      logical(1)
+    )) && all(results$Status %in% allowed_status) &&
+      all(results$EvidenceRole %in% allowed_role)
+    identity_rows_ok <- isTRUE(candidate_identity_ok &&
+      mfrmr_release_readiness_has_value(candidate_commit) &&
+      mfrmr_release_readiness_has_value(specification_id) &&
+      all(results$CandidateCommit == candidate_commit) &&
+      all(results$SpecId == specification_id))
+
+    evidence_path <- gsub("\\\\", "/", as.character(results$EvidencePath))
+    absolute_path <- grepl("^(?:[A-Za-z]:/|/|//)", evidence_path, perl = TRUE)
+    parent_escape <- grepl("(^|/)\\.\\.(/|$)", evidence_path, perl = TRUE)
+    hash_format <- grepl(
+      "^[0-9a-f]{64}$",
+      tolower(as.character(results$EvidenceHash))
+    )
+    resolved <- file.path(paths$pkg_dir, evidence_path)
+    evidence_exists <- file.exists(resolved)
+    actual_hash <- vapply(
+      resolved,
+      mfrmr_release_readiness_file_sha256,
+      character(1)
+    )
+    evidence_rows_ok <- isTRUE(all(
+      !absolute_path & !parent_escape & hash_format & evidence_exists &
+        tolower(results$EvidenceHash) == actual_hash
+    ))
+    result_keys <- paste(results$Gate, results$Item, sep = "::")
+  }
+
+  if (schema_ok && checklist_columns_ok) {
+    checklist_keys <- paste(checklist$Gate, checklist$Item, sep = "::")
+    missing_items <- unique(checklist_keys[!checklist_keys %in% result_keys])
+    unknown_items <- unique(result_keys[!result_keys %in% checklist_keys])
+    split_scenarios <- function(value) {
+      trimws(strsplit(as.character(value), ";", fixed = TRUE)[[1]])
+    }
+    for (i in seq_len(nrow(checklist))) {
+      key <- checklist_keys[i]
+      idx <- which(result_keys == key)
+      expected <- split_scenarios(checklist$ScenarioId[i])
+      if (length(idx) > 0L && !"ALL" %in% expected) {
+        absent <- setdiff(expected, as.character(results$ScenarioId[idx]))
+        if (length(absent) > 0L) {
+          missing_scenarios <- c(
+            missing_scenarios,
+            paste0(key, "::", absent)
+          )
+        }
+      }
+      statuses <- if (length(idx) > 0L) {
+        as.character(results$Status[idx])
+      } else {
+        "missing"
+      }
+      decision <- as.character(checklist$ReleaseDecision[i])
+      if (decision %in% c("blocker_if_failed", "roadmap_if_missing") &&
+          any(is.na(statuses) | statuses != "ok")) {
+        blocking_not_ok <- c(blocking_not_ok, key)
+      }
+      if (identical(decision, "caveat_if_incomplete")) {
+        if (any(is.na(statuses) |
+                statuses %in% c("concern", "not_run", "missing"))) {
+          blocking_not_ok <- c(blocking_not_ok, key)
+        } else if (any(statuses %in% c("review", "not_applicable"))) {
+          caveat_review <- c(caveat_review, key)
+        }
+      }
+    }
+  }
+
+  concern <- !results_available || !schema_ok || !checklist_columns_ok ||
+    !row_text_ok || !identity_rows_ok || !evidence_rows_ok ||
+    length(missing_items) > 0L || length(missing_scenarios) > 0L ||
+    length(unknown_items) > 0L || length(blocking_not_ok) > 0L
+  status <- if (concern) {
+    "concern"
+  } else if (length(caveat_review) > 0L) {
+    "review"
+  } else {
+    "ok"
+  }
+  issue <- character(0)
+  if (!results_available) issue <- c(issue, "gate-results file missing")
+  if (results_available && !schema_ok) issue <- c(issue, "result schema incomplete")
+  if (!checklist_columns_ok) issue <- c(issue, "checklist schema incomplete")
+  if (schema_ok && !row_text_ok) issue <- c(issue, "result values or enums invalid")
+  if (schema_ok && !identity_rows_ok) issue <- c(issue, "candidate/specification identity mismatch")
+  if (schema_ok && !evidence_rows_ok) issue <- c(issue, "evidence path or SHA-256 mismatch")
+  if (length(missing_items) > 0L) issue <- c(issue, "checklist items missing")
+  if (length(missing_scenarios) > 0L) issue <- c(issue, "checklist scenarios missing")
+  if (length(unknown_items) > 0L) issue <- c(issue, "unknown result items")
+  if (length(blocking_not_ok) > 0L) issue <- c(issue, "blocking result not ok")
+
+  data.frame(
+    GateResultsStatus = status,
+    GateResultsAvailable = results_available,
+    Rows = nrow(results),
+    ChecklistItems = nrow(checklist),
+    MissingItems = paste(unique(missing_items), collapse = " | "),
+    MissingScenarios = paste(unique(missing_scenarios), collapse = " | "),
+    UnknownItems = paste(unique(unknown_items), collapse = " | "),
+    IdentityRowsOK = identity_rows_ok,
+    EvidenceRowsOK = evidence_rows_ok,
+    BlockingItemsNotOK = paste(unique(blocking_not_ok), collapse = " | "),
+    CaveatItemsForReview = paste(unique(caveat_review), collapse = " | "),
+    GateResultsOK = identical(status, "ok"),
+    Detail = paste(issue, collapse = " | "),
     stringsAsFactors = FALSE
   )
 }
@@ -1730,6 +1963,7 @@ mfrmr_release_readiness_gate_summary <- function(version_status,
                                                  freshness_status = NULL,
                                                  source_truth_status = NULL,
                                                  candidate_identity_status = NULL,
+                                                 gate_results_status = NULL,
                                                  public_scope_status = NULL,
                                                  prose_count_status = NULL,
                                                  example_policy_status = NULL,
@@ -1811,6 +2045,16 @@ mfrmr_release_readiness_gate_summary <- function(version_status,
   } else {
     "concern"
   }
+  gate_results_gate_status <- if (is.null(gate_results_status)) {
+    if (identity_contract_applies) "concern" else "ok"
+  } else if (identical(
+    gate_results_status$GateResultsStatus[1],
+    "not_applicable"
+  )) {
+    "ok"
+  } else {
+    as.character(gate_results_status$GateResultsStatus[1])
+  }
   public_scope_gate_status <- if (is.null(public_scope_status)) {
     if (identity_contract_applies) "concern" else "ok"
   } else if (identical(
@@ -1845,14 +2089,15 @@ mfrmr_release_readiness_gate_summary <- function(version_status,
   rows <- data.frame(
     Gate = c(
       "version_contract", "source_truth", "candidate_identity",
-      "public_scope", "evidence_counts", "package_check", "check_timing",
-      "example_policy", "release_evidence_freshness", "ci_workflow",
-      "terminology", "evidence_artifacts"
+      "gate_results", "public_scope", "evidence_counts", "package_check",
+      "check_timing", "example_policy", "release_evidence_freshness",
+      "ci_workflow", "terminology", "evidence_artifacts"
     ),
     Status = c(
       if (isTRUE(version_status$VersionOK[1])) "ok" else "concern",
       if (source_truth_ok) "ok" else "concern",
       candidate_identity_gate_status,
+      gate_results_gate_status,
       public_scope_gate_status,
       prose_count_gate_status,
       package_check_status,
@@ -1893,6 +2138,22 @@ mfrmr_release_readiness_gate_summary <- function(version_status,
           "; spec_hash=", candidate_identity_status$SpecificationHashMatches[1],
           "; checklist_hash=", candidate_identity_status$ChecklistHashMatches[1],
           "; detail=", candidate_identity_status$Detail[1]
+        )
+      },
+      if (is.null(gate_results_status)) {
+        "candidate-linked gate results not checked separately"
+      } else {
+        paste0(
+          "status=", gate_results_status$GateResultsStatus[1],
+          "; rows=", gate_results_status$Rows[1],
+          "; checklist_items=", gate_results_status$ChecklistItems[1],
+          "; identity=", gate_results_status$IdentityRowsOK[1],
+          "; evidence=", gate_results_status$EvidenceRowsOK[1],
+          "; missing_items=", gate_results_status$MissingItems[1],
+          "; missing_scenarios=", gate_results_status$MissingScenarios[1],
+          "; blocking_not_ok=", gate_results_status$BlockingItemsNotOK[1],
+          "; caveat_review=", gate_results_status$CaveatItemsForReview[1],
+          "; detail=", gate_results_status$Detail[1]
         )
       },
       if (is.null(public_scope_status)) {
@@ -2062,6 +2323,7 @@ mfrmr_release_readiness_review <- function(pkg_dir = ".",
                                            tarball = NULL,
                                            checklist = NULL,
                                            candidate_manifest = NULL,
+                                           gate_results = NULL,
                                            target_version = NULL,
                                            external_recovery_dir = NULL,
                                            check_timing_scope = NULL) {
@@ -2097,6 +2359,9 @@ mfrmr_release_readiness_review <- function(pkg_dir = ".",
   if (!is.null(candidate_manifest)) {
     paths$candidate_manifest <- candidate_manifest
   }
+  if (!is.null(gate_results)) {
+    paths$gate_results <- gate_results
+  }
   version_status <- mfrmr_release_readiness_version_status(paths, target_version = target_version)
   check_status <- mfrmr_release_readiness_parse_check_log(
     paths$check_log,
@@ -2126,6 +2391,11 @@ mfrmr_release_readiness_review <- function(pkg_dir = ".",
     target_version = target_version
   )
   checklist_status <- mfrmr_release_readiness_checklist_status(paths$evidence_checklist)
+  gate_results_status <- mfrmr_release_readiness_gate_results_status(
+    paths,
+    candidate_identity_status = candidate_identity_status,
+    target_version = target_version
+  )
   ci_workflow_status <- mfrmr_release_readiness_ci_workflow_status(paths$ci_workflow)
   gpcm_scope_status <- mfrmr_release_readiness_gpcm_scope_status(
     paths = paths,
@@ -2142,6 +2412,7 @@ mfrmr_release_readiness_review <- function(pkg_dir = ".",
     freshness_status = freshness_status,
     source_truth_status = source_truth_status,
     candidate_identity_status = candidate_identity_status,
+    gate_results_status = gate_results_status,
     public_scope_status = public_scope_status,
     prose_count_status = prose_count_status,
     example_policy_status = example_policy_status,
@@ -2162,6 +2433,7 @@ mfrmr_release_readiness_review <- function(pkg_dir = ".",
     version_status = version_status,
     source_truth_status = source_truth_status,
     candidate_identity_status = candidate_identity_status,
+    gate_results_status = gate_results_status,
     public_scope_status = public_scope_status,
     prose_count_status = prose_count_status,
     check_status = check_status,
@@ -2190,6 +2462,7 @@ summary.mfrmr_release_readiness_review <- function(object, ...) {
     check_status = object$check_status,
     source_truth_status = object$source_truth_status,
     candidate_identity_status = object$candidate_identity_status,
+    gate_results_status = object$gate_results_status,
     public_scope_status = object$public_scope_status,
     prose_count_status = object$prose_count_status,
     freshness_status = object$freshness_status,
