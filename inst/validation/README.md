@@ -30,7 +30,8 @@ history, but they do not redefine release order or current API scope.
   `mfrmr_release_readiness_review(pkg_dir = ".")` from the package root. The
   review checks version labels, metadata agreement, `--as-cran` provenance,
   the local check log, the CI check workflow, public terminology, current-
-  versus-future API truth, candidate identity, and the release evidence files.
+  versus-future API truth, candidate identity, numeric pass-count prose, and
+  the release evidence files.
   For 0.2.3 and later it fails closed until a versioned
   `release-candidate-manifest-<version>.csv` binds package/source/runtime and
   registry identities to the exact tarball, selected check log, frozen gate

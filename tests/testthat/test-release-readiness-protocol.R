@@ -426,6 +426,59 @@ test_that("release-readiness keeps the 0.2.3 current/future API truth explicit",
   expect_true(status$FutureArgumentsAbsent)
 })
 
+test_that("release-readiness rejects stale numeric pass counts in current prose", {
+  protocol <- release_readiness_protocol_path()
+  env <- new.env(parent = globalenv())
+  source(protocol, local = env)
+
+  root <- tempfile("prose-counts")
+  dir.create(root, recursive = TRUE)
+  readme <- file.path(root, "README.md")
+  news <- file.path(root, "NEWS.md")
+  cran_comments <- file.path(root, "cran-comments.md")
+  writeLines("Current package guide without fixed test counts.", readme)
+  writeLines(c(
+    "# mfrmr 0.2.3",
+    "",
+    "Current changes use candidate-linked release evidence.",
+    "",
+    "# mfrmr 0.2.2",
+    "Historical release record: 300 checks passed."
+  ), news)
+  writeLines(c(
+    "## R CMD check results",
+    "The installed-package selection completed with 392 passes."
+  ), cran_comments)
+  paths <- list(
+    target_version = "0.2.3",
+    readme = readme,
+    news = news,
+    cran_comments = cran_comments
+  )
+
+  stale <- env$mfrmr_release_readiness_prose_count_status(
+    paths,
+    target_version = "0.2.3"
+  )
+  expect_identical(stale$ProseCountStatus, "concern")
+  expect_false(stale$ProseCountsOK)
+  expect_equal(stale$PassCountClaims, 1L)
+  expect_match(stale$Examples, "392 passes", fixed = TRUE)
+  expect_false(grepl("300 checks", stale$Examples, fixed = TRUE))
+
+  writeLines(c(
+    "## R CMD check results",
+    "The exact candidate logs and hashes are retained in release evidence."
+  ), cran_comments)
+  current <- env$mfrmr_release_readiness_prose_count_status(
+    paths,
+    target_version = "0.2.3"
+  )
+  expect_identical(current$ProseCountStatus, "ok")
+  expect_true(current$ProseCountsOK)
+  expect_equal(current$PassCountClaims, 0L)
+})
+
 test_that("release-readiness protocol rejects stale tarball and check evidence", {
   protocol <- release_readiness_protocol_path()
   env <- new.env(parent = globalenv())
@@ -829,6 +882,7 @@ test_that("release-readiness protocol reviews the source tree shape", {
     "prompt_steps", "gate_summary", "release_decision",
     "version_status", "check_status", "freshness_status", "ci_workflow_status",
     "source_truth_status", "candidate_identity_status", "public_scope_status",
+    "prose_count_status",
     "terminology_status", "example_policy_status",
     "check_timing_scope",
     "checklist_status", "gpcm_scope_status", "external_recovery_status"
@@ -850,6 +904,10 @@ test_that("release-readiness protocol reviews the source tree shape", {
   )
   expect_identical(
     review$public_scope_status$PublicScopeStatus[1],
+    "not_applicable"
+  )
+  expect_identical(
+    review$prose_count_status$ProseCountStatus[1],
     "not_applicable"
   )
   expect_equal(review$gpcm_scope_status$GPCMScopeStatus[1], "ok")

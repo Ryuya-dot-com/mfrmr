@@ -1283,6 +1283,72 @@ mfrmr_release_readiness_term_status <- function(pkg_dir) {
   )
 }
 
+mfrmr_release_readiness_prose_count_status <- function(
+    paths,
+    target_version = NULL) {
+  target_version <- target_version %||% paths$target_version
+  if (!mfrmr_release_readiness_contract_applies(target_version)) {
+    return(data.frame(
+      ProseCountStatus = "not_applicable",
+      FilesScanned = 0L,
+      PassCountClaims = 0L,
+      Examples = "",
+      ProseCountsOK = TRUE,
+      stringsAsFactors = FALSE
+    ))
+  }
+
+  current_news <- mfrmr_release_readiness_read_lines(paths$news)
+  target_heading <- paste("# mfrmr", target_version[1])
+  heading_index <- which(current_news == target_heading)
+  if (length(heading_index) > 0L) {
+    start <- heading_index[1]
+    later_heading <- which(
+      seq_along(current_news) > start & grepl("^# mfrmr ", current_news)
+    )
+    end <- if (length(later_heading) > 0L) later_heading[1] - 1L else length(current_news)
+    current_news <- current_news[start:end]
+  } else {
+    current_news <- character(0)
+  }
+  documents <- list(
+    README.md = mfrmr_release_readiness_read_lines(paths$readme),
+    NEWS.current = current_news,
+    cran.comments = mfrmr_release_readiness_read_lines(paths$cran_comments)
+  )
+  patterns <- c(
+    "\\b[0-9][0-9,]*[[:space:]]+passes\\b",
+    "\\b[0-9][0-9,]*[[:space:]]+(tests?|checks?|assertions?)[[:space:]]+passed\\b",
+    "\\ball[[:space:]]+[0-9][0-9,]*[[:space:]]+(fits?|tests?|checks?|assertions?)[[:space:]]+passed\\b"
+  )
+  hits <- character(0)
+  for (document in names(documents)) {
+    lines <- documents[[document]]
+    if (length(lines) == 0L) next
+    idx <- unique(unlist(lapply(
+      patterns,
+      grep,
+      x = lines,
+      ignore.case = TRUE,
+      perl = TRUE
+    )))
+    if (length(idx) > 0L) {
+      hits <- c(
+        hits,
+        paste0(document, ":", idx, ": ", trimws(lines[idx]))
+      )
+    }
+  }
+  data.frame(
+    ProseCountStatus = if (length(hits) == 0L) "ok" else "concern",
+    FilesScanned = length(documents),
+    PassCountClaims = length(hits),
+    Examples = paste(utils::head(hits, 5L), collapse = " | "),
+    ProseCountsOK = length(hits) == 0L,
+    stringsAsFactors = FALSE
+  )
+}
+
 mfrmr_release_readiness_roxygen_marker_targets <- function(pkg_dir, marker) {
   r_dir <- file.path(pkg_dir, "R")
   if (!dir.exists(r_dir)) {
@@ -1665,6 +1731,7 @@ mfrmr_release_readiness_gate_summary <- function(version_status,
                                                  source_truth_status = NULL,
                                                  candidate_identity_status = NULL,
                                                  public_scope_status = NULL,
+                                                 prose_count_status = NULL,
                                                  example_policy_status = NULL,
                                                  check_timing_scope = c(
                                                    "cran", "full_non_cran"
@@ -1756,6 +1823,18 @@ mfrmr_release_readiness_gate_summary <- function(version_status,
   } else {
     "concern"
   }
+  prose_count_gate_status <- if (is.null(prose_count_status)) {
+    if (identity_contract_applies) "concern" else "ok"
+  } else if (identical(
+    prose_count_status$ProseCountStatus[1],
+    "not_applicable"
+  )) {
+    "ok"
+  } else if (isTRUE(prose_count_status$ProseCountsOK[1])) {
+    "ok"
+  } else {
+    "concern"
+  }
   example_policy_gate_status <- if (is.null(example_policy_status)) {
     "review"
   } else if (isTRUE(example_policy_status$ExamplePolicyOK[1])) {
@@ -1766,15 +1845,16 @@ mfrmr_release_readiness_gate_summary <- function(version_status,
   rows <- data.frame(
     Gate = c(
       "version_contract", "source_truth", "candidate_identity",
-      "public_scope", "package_check", "check_timing", "example_policy",
-      "release_evidence_freshness", "ci_workflow", "terminology",
-      "evidence_artifacts"
+      "public_scope", "evidence_counts", "package_check", "check_timing",
+      "example_policy", "release_evidence_freshness", "ci_workflow",
+      "terminology", "evidence_artifacts"
     ),
     Status = c(
       if (isTRUE(version_status$VersionOK[1])) "ok" else "concern",
       if (source_truth_ok) "ok" else "concern",
       candidate_identity_gate_status,
       public_scope_gate_status,
+      prose_count_gate_status,
       package_check_status,
       check_timing_status,
       example_policy_gate_status,
@@ -1829,6 +1909,16 @@ mfrmr_release_readiness_gate_summary <- function(version_status,
           "; future_arguments_absent=",
           public_scope_status$FutureArgumentsAbsent[1],
           "; detail=", public_scope_status$Detail[1]
+        )
+      },
+      if (is.null(prose_count_status)) {
+        "numeric pass-count prose not checked separately"
+      } else {
+        paste0(
+          "status=", prose_count_status$ProseCountStatus[1],
+          "; files_scanned=", prose_count_status$FilesScanned[1],
+          "; pass_count_claims=", prose_count_status$PassCountClaims[1],
+          "; examples=", prose_count_status$Examples[1]
         )
       },
       paste0(
@@ -2031,6 +2121,10 @@ mfrmr_release_readiness_review <- function(pkg_dir = ".",
     paths,
     target_version = target_version
   )
+  prose_count_status <- mfrmr_release_readiness_prose_count_status(
+    paths,
+    target_version = target_version
+  )
   checklist_status <- mfrmr_release_readiness_checklist_status(paths$evidence_checklist)
   ci_workflow_status <- mfrmr_release_readiness_ci_workflow_status(paths$ci_workflow)
   gpcm_scope_status <- mfrmr_release_readiness_gpcm_scope_status(
@@ -2049,6 +2143,7 @@ mfrmr_release_readiness_review <- function(pkg_dir = ".",
     source_truth_status = source_truth_status,
     candidate_identity_status = candidate_identity_status,
     public_scope_status = public_scope_status,
+    prose_count_status = prose_count_status,
     example_policy_status = example_policy_status,
     check_timing_scope = check_timing_scope
   )
@@ -2068,6 +2163,7 @@ mfrmr_release_readiness_review <- function(pkg_dir = ".",
     source_truth_status = source_truth_status,
     candidate_identity_status = candidate_identity_status,
     public_scope_status = public_scope_status,
+    prose_count_status = prose_count_status,
     check_status = check_status,
     freshness_status = freshness_status,
     ci_workflow_status = ci_workflow_status,
@@ -2095,6 +2191,7 @@ summary.mfrmr_release_readiness_review <- function(object, ...) {
     source_truth_status = object$source_truth_status,
     candidate_identity_status = object$candidate_identity_status,
     public_scope_status = object$public_scope_status,
+    prose_count_status = object$prose_count_status,
     freshness_status = object$freshness_status,
     ci_workflow_status = object$ci_workflow_status,
     example_policy_status = object$example_policy_status,

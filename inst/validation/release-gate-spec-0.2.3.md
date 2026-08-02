@@ -5,9 +5,9 @@
 | Field | Value |
 | --- | --- |
 | Target release | 0.2.3 |
-| Specification ID | `0.2.3-draft.14` |
+| Specification ID | `0.2.3-draft.15` |
 | Date | 2026-08-03 |
-| Status | M1 source review recorded; M2 IC contract v2, GHQ pilots, external-IC normalizer v1, audited ConQuest objective/free-dimension handoff, strict binary and four-category RSM/PCM node ladders with same-platform q=31 repeats, TAM import guards, the first dimension-aware TAM integration pilot, the fixed-fixture canonical-score/GPCM-transformation pilot, the first additive RSM/PCM common-vector engine-path pilot, and fail-closed candidate/specification/public-scope readiness checks are instrumented, while score/objective/parameter tolerance freeze, independent-platform replication, bootstrap, attribution, consequence, candidate freeze, and confirmation work remain pending |
+| Status | M1 source review recorded; M2 IC contract v2, GHQ pilots, external-IC normalizer v1, audited ConQuest objective/free-dimension handoff, strict binary and four-category RSM/PCM node ladders with same-platform q=31 repeats, TAM import guards, the first dimension-aware TAM integration pilot, the fixed-fixture canonical-score/GPCM-transformation pilot, the first additive RSM/PCM common-vector engine-path pilot, and fail-closed candidate/specification/public-scope/readiness-prose checks are instrumented, while score/objective/parameter tolerance freeze, independent-platform replication, bootstrap, attribution, consequence, candidate freeze, and confirmation work remain pending |
 | Confirmation authorized | No |
 | Evidence checklist | `release-evidence-checklist-0.2.3.csv` |
 | M1 review record | `release-gate-m1-review-0.2.3.md` |
@@ -137,6 +137,13 @@ with exactly one non-empty row for each of `CandidateId`, `PackageVersion`,
 fields must use lowercase or uppercase hexadecimal without a prefix. A
 registry may state `not_applicable` only when the frozen scenario registry
 proves that it is outside the candidate scope.
+
+Beginning with 0.2.3, the current README, current NEWS section, and
+`cran-comments.md` must not preserve numeric test/check pass counts as
+free-standing prose. Engineering status is reconstructed from candidate-linked
+logs and hashes; if a human-readable count is needed, it is regenerated from
+that exact evidence for the release rather than copied from a previous run.
+Historical NEWS sections are immutable and are not reclassified by this rule.
 
 No local absolute path, user name, identifier-bearing case data, license key,
 or proprietary binary is retained in repository evidence.
@@ -807,6 +814,7 @@ claim is reduced or deferred rather than decided ad hoc.
 | `0.2.3-draft.12` | Added the fixed-fixture canonical free-score pilot, independently implemented three-step central differences at retained and nonzero-score points, the explicit free-log-slope to sum-zero-log to positive-slope GPCM Jacobian contract, and exact binary/unit-slope reductions; corrected the earlier box-constraint/projected-gradient wording while leaving `NUM-SCORE-TOL`, engine parity, expanded boundary-regime calibration, and confirmation unresolved. |
 | `0.2.3-draft.13` | Added the fixed-fixture additive RSM/PCM engine-path pilot, exact hashed raw-EM-to-common-direct-polish handoff, common-vector objective/score evaluation through direct/EM/hybrid contexts, free and expanded parameter comparisons, and an explicit GPCM/interaction/latent-regression fallback boundary; left `NUM-OBJECTIVE-TOL`, `NUM-PARAMETER-TOL`, broader grid/platform calibration, and confirmation unresolved. |
 | `0.2.3-draft.14` | Bound release-readiness output to an exact candidate-manifest schema, tarball/check-log/specification/checklist SHA-256 identities, a frozen specification ID, explicit confirmation authorization, and machine-checked current-versus-future public API truth; retained missing manifests, draft specifications, unfrozen blocker criteria, and every identity mismatch as concerns, so M3 and confirmation remain unauthorized. |
+| `0.2.3-draft.15` | Added a release-readiness guard against carrying numeric test/check pass counts forward in current README, NEWS, or cran-comments prose; historical NEWS sections remain untouched, while current engineering status must come from the exact candidate-linked logs and hashes. |
 
 ## Release decision algorithm
 
