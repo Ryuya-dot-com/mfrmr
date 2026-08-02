@@ -1034,22 +1034,45 @@ test_that("release-readiness protocol reviews the source tree shape", {
   }
   expect_true(file.exists(review$paths$gpcm_roadmap))
   expect_true(isTRUE(review$source_truth_status$SourceTruthOK[1]))
-  expect_identical(
-    review$candidate_identity_status$CandidateIdentityStatus[1],
-    "not_applicable"
-  )
-  expect_identical(
-    review$gate_results_status$GateResultsStatus[1],
-    "not_applicable"
-  )
-  expect_identical(
-    review$public_scope_status$PublicScopeStatus[1],
-    "not_applicable"
-  )
-  expect_identical(
-    review$prose_count_status$ProseCountStatus[1],
-    "not_applicable"
-  )
+  contract_applies <- utils::compareVersion(
+    description_version,
+    "0.2.3"
+  ) >= 0L
+  if (contract_applies) {
+    expect_identical(
+      review$candidate_identity_status$CandidateIdentityStatus[1],
+      "concern"
+    )
+    expect_identical(
+      review$gate_results_status$GateResultsStatus[1],
+      "concern"
+    )
+    expect_identical(
+      review$public_scope_status$PublicScopeStatus[1],
+      "ok"
+    )
+    expect_identical(
+      review$prose_count_status$ProseCountStatus[1],
+      "ok"
+    )
+  } else {
+    expect_identical(
+      review$candidate_identity_status$CandidateIdentityStatus[1],
+      "not_applicable"
+    )
+    expect_identical(
+      review$gate_results_status$GateResultsStatus[1],
+      "not_applicable"
+    )
+    expect_identical(
+      review$public_scope_status$PublicScopeStatus[1],
+      "not_applicable"
+    )
+    expect_identical(
+      review$prose_count_status$ProseCountStatus[1],
+      "not_applicable"
+    )
+  }
   expect_equal(review$gpcm_scope_status$GPCMScopeStatus[1], "ok")
   if (file.exists(file.path(pkg_root, ".github", "workflows", "R-CMD-check.yaml"))) {
     expect_true(isTRUE(review$ci_workflow_status$CIWorkflowOK[1]))

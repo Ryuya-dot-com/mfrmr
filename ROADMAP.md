@@ -1,6 +1,6 @@
 # mfrmr development roadmap
 
-Status: authoritative project roadmap, reviewed 2026-07-27.
+Status: authoritative project roadmap, reviewed 2026-08-03.
 
 This file is the single source of truth for release sequencing. `NEWS.md`
 records completed user-visible changes. Files under `inst/validation/` provide
@@ -9,7 +9,8 @@ The roadmap is repository-only and is excluded from source-package tarballs.
 
 ## Current position
 
-- CRAN currently distributes 0.2.1.
+- CRAN currently distributes 0.2.2, published on 2026-07-27. That published
+  package is the immutable public baseline for all 0.2.3 development.
 - The exact 0.2.2 source asset is `mfrmr_0.2.2.tar.gz`, SHA-256
   `dddeaaba8d2d0684784fa774b349e8fa1d13570143341daad4aa31e2990e5d00`,
   built from tagged source commit `03915badf336eeaeb7ef7fbb5119c2880c541e63`.
@@ -18,12 +19,17 @@ The roadmap is repository-only and is excluded from source-package tarballs.
   matrix, the full non-CRAN suite, and pkgdown. The repository-only CRAN
   preparation change was squash-merged as `10cf3e8`; its tree also passed the
   post-merge package matrix and pkgdown.
-- Version 0.2.2 was submitted to CRAN on 2026-07-27 and is pending CRAN
-  processing. The submitted tarball, tag, and release asset are frozen. No
-  duplicate 0.2.2 submission is permitted while it is pending.
-- Roadmap-only 0.2.3 planning may proceed on an isolated branch. If CRAN asks
-  for a 0.2.2 correction, that work branches from the submitted/tagged source
-  and must not absorb unfinished 0.2.3 implementation.
+- Version 0.2.2 was accepted and published by CRAN on 2026-07-27. The submitted
+  tarball, tag, and release asset remain frozen. CRAN adds repository metadata
+  and an `MD5` manifest to its distributed source, so the submitted compressed
+  digest and CRAN-distributed compressed digest are distinct identities even
+  though the audited package payload agrees.
+- The isolated integration branch now carries package identity 0.2.3. This is
+  an unreleased development target, not a release candidate: candidate freeze,
+  confirmation, and submission remain prohibited until the M3-M5 evidence and
+  identity gates pass.
+- If CRAN later asks for a 0.2.2 correction, that work branches from the
+  published/tagged source and must not absorb unfinished 0.2.3 implementation.
 
 The central sequencing decision is deliberate: numerical trust and external
 overlap evidence come before new model families. Operational calibration and
@@ -125,14 +131,19 @@ The submitted candidate completed the following checks:
 - [x] Submit the immutable tarball to CRAN without rebuilding it after the
   repository-only preparation merge.
 
-Pending 0.2.2 publication follow-up is operational, not permission to broaden
-the package:
+Published 0.2.2 follow-up is operational, not permission to broaden the
+package:
 
-- [ ] Record the CRAN decision and any maintainer correspondence.
-- [ ] After acceptance, verify the CRAN package page, the fully populated check
-  matrix, and automatically built Windows/macOS binaries.
-- [ ] If CRAN requests a change, classify it before editing, choose an explicit
-  version policy, and keep the correction isolated from 0.2.3 development.
+- [x] Record CRAN acceptance and publication on 2026-07-27. No CRAN-requested
+  source correction is present in the repository record reviewed on
+  2026-08-03.
+- [x] Verify the CRAN package page and automatically built Windows/macOS
+  binaries for 0.2.2.
+- [ ] Resolve or attribute the current r-devel Debian GCC CRAN NOTE reporting
+  residual `~/tmp/scratch/Rtmp*` directories. Until then, describe the public
+  matrix as 12 `OK` and one `NOTE`, not as all-OK.
+- [x] Keep any future CRAN-requested 0.2.2 correction isolated from 0.2.3 and
+  require an explicit version policy before editing the published line.
 
 ## 0.2.3: numerical trust and external evidence
 
@@ -187,7 +198,7 @@ The following remain outside 0.2.3:
 
 | Milestone | Work | Required exit artifact |
 | --- | --- | --- |
-| M0: isolate 0.2.2 | Keep the submitted asset immutable. Roadmap, gate-specification, and pilot work may proceed on isolated branches, but no 0.2.3 package-payload change merges to `main` before the CRAN disposition. | Correction and development paths are separate; the CRAN disposition is recorded before M3. |
+| M0: freeze the published 0.2.2 baseline | Keep the accepted asset and tag immutable. Conduct 0.2.3 gate-specification, pilot, and package work only under the explicit 0.2.3 identity; any later 0.2.2 correction branches from the published tag. | CRAN acceptance is recorded, and correction and development paths remain separate before M3. |
 | M1: draft the gate specification | Define scenario IDs, estimands, parameter transformations, readiness states, evidence roles, blocking rows, information-criterion formulas/sample-size bases, dimensionality discovery/confirmation partitions, candidate Q matrices, consequence criteria, and explicit pilot-required numeric criteria. | Versioned draft `inst/validation/release-gate-spec-0.2.3.md` and `inst/validation/release-evidence-checklist-0.2.3.csv` committed with review; confirmation remains unauthorized. |
 | M2: instrument, pilot, and freeze | Add independent gradient/objective checks, scenario generators, corrected MML information-criterion instrumentation, external normalization, a TAM dimensionality runner, integration-stability checks, fail-closed import guards, and candidate manifests. Use pilot-only data to calibrate every unresolved criterion, then freeze the specification before confirmation. | Reproducible pilot report with criterion changes recorded plus a reviewed `0.2.3-frozen.*` specification/checklist containing no unresolved blocker criterion and no release decision. |
 | M3: freeze one candidate | Freeze source commit, dependency lock information, external-tool versions, input/partition/Q-matrix fingerprints, integration controls, seeds, and tarball digest. | Candidate manifest that uniquely identifies every internal and external input. |
@@ -296,10 +307,12 @@ scope are unchanged. Changing a confirmatory tolerance after seeing a result
 creates a new gate-specification version and requires the complete
 confirmatory run to be repeated.
 
-After 0.2.2 is accepted, ordinary development builds move to `0.2.2.9000`;
-`0.2.3` is reserved for the M3 release-candidate freeze. If CRAN instead asks
-for a correction, the correction version is decided first and the development
-version transition waits until that disposition is complete.
+Following 0.2.2 acceptance, the canonical integration source moves directly
+to `Version: 0.2.3` so unpublished behavior cannot masquerade as the CRAN
+0.2.2 package. This version identity names the development target; it does not
+authorize M3 candidate freeze, confirmatory evidence, or release claims. A
+candidate becomes valid only when the exact source, tarball, check log, frozen
+specification, checklist, and gate results are bound by the candidate manifest.
 
 ### Gate model
 
@@ -398,9 +411,9 @@ but it must not remain the implicit BIC sample size in 0.2.3.
   separate fields; do not silently repurpose the legacy summary `N`. Regression
   fixtures show that unbalanced and missing response layouts do not convert
   fixed-facet MML BIC back to response-row N.
-- [ ] At the deliberate development-version transition, add the visible
-  0.2.2-to-0.2.3 NEWS migration note. Do not put a 0.2.3 heading ahead of the
-  still-frozen `Version: 0.2.2` package identity.
+- [x] At the deliberate development-version transition, add the visible
+  0.2.2-to-0.2.3 NEWS migration note and align `DESCRIPTION` and
+  `CITATION.cff` on 0.2.3 while preserving the historical 0.2.2 NEWS section.
 - [x] Fail closed for non-unit observation weights until their sampling
   semantics are explicit. In particular, `sum(Weight)` is not automatically
   the number of independent Persons. In 0.2.3, explicit all-unit weights are
@@ -795,8 +808,8 @@ boundary. Experimental implementation alone is not a release claim.
    notes may add technical detail but may not redefine the release order.
 9. Pilot evidence may define a criterion; confirmatory evidence may only apply
    the frozen criterion. Changing it invalidates the confirmatory decision.
-10. A pending CRAN correction and next-version development remain isolated
-    until the published-version disposition is known.
+10. The published CRAN 0.2.2 baseline and next-version development remain
+    isolated; any later correction starts from the published tag.
 11. Residual exploration may generate a model, but cannot independently confirm
     that model on the same observations without an explicit sensitivity label.
 12. Better multidimensional fit and useful dimension-specific scores are

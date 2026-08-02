@@ -210,7 +210,7 @@ compiled-code change:
 
 ```sh
 R CMD build .
-_R_CHECK_TIMINGS_=0 R CMD check --as-cran --run-donttest mfrmr_0.2.2.tar.gz
+_R_CHECK_TIMINGS_=0 R CMD check --as-cran --run-donttest mfrmr_0.2.3.tar.gz
 ```
 
 Then run:
