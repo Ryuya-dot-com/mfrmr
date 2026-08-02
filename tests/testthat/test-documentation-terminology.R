@@ -170,7 +170,7 @@ test_that("CRAN-facing documentation excludes development-process language", {
     lines <- docs[[path]]
     for (phrase in blocked) {
       idx <- grep(tolower(phrase), tolower(lines), fixed = TRUE)
-      if (identical(path, "NEWS.md") && length(idx) > 0L) {
+      if (identical(basename(path), "NEWS.md") && length(idx) > 0L) {
         idx <- idx[trimws(lines[idx]) != historical_news_allowlist]
       }
       if (length(idx) > 0L) {
