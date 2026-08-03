@@ -251,7 +251,7 @@ The following remain outside 0.2.3:
 | M4: run confirmation | Run the locked recovery/stress matrix, FACETS JML core, ConQuest/TAM comparisons, dimensionality challenge, and matched external rows without changing criteria or reusing discovery/pilot data as independent confirmation. | Candidate-linked internal and external evidence with every blocker classified and every expected scenario/replicate accounted for. |
 | M5: release handoff | Run full regression, cross-platform CI, manuals, URL checks, CRAN-time examples, Win-builder, package-content audit, and public-claim audit. | All blocker rows `ok`, all caveats visible, and an exact checked tarball. |
 
-The repository now contains `0.2.3-draft.21` planning and pilot artifacts at
+The repository now contains `0.2.3-draft.22` planning and pilot artifacts at
 `inst/validation/release-gate-spec-0.2.3.md` and
 `inst/validation/release-evidence-checklist-0.2.3.csv`. They deliberately
 record unresolved pilot-calibrated criteria and therefore do not authorize
@@ -314,9 +314,11 @@ extreme-score output, and definition-specific interaction/bias/PCAR contracts
 before the next paired pilot. These are prerequisites to tolerance
 calibration, not completed release gates.
 
-### Draft.21 near-term corrective program
+### Draft.22 near-term corrective program
 
-Draft.21 converts the draft.20 diagnosis into an implementation sequence. Its
+Draft.21 converted the draft.20 diagnosis into an implementation sequence.
+Draft.22 completes the structural WP0 contract and makes that contract the
+fixed input to WP1--WP5. Its
 objective is not to maximize new diagnostics. It is to establish one source of
 truth for whether a fit, a parameter, and an external comparison are usable,
 and to make every downstream surface consume that source rather than
@@ -338,16 +340,39 @@ their states reach every affected summary, diagnostic, report, plot, export,
 and replay surface. WP7 cannot begin on new pilot seeds until WP0--WP6 are
 reviewed. Confirmation remains prohibited until the later frozen gate.
 
-| Work package | Depends on | Implementation boundary | Required exit artifact |
-| --- | --- | --- | --- |
-| `WP0-READINESS-CONTRACT` | draft.20 diagnosis | Freeze internal state names, scopes, severity/precedence, condition classes, object fields, legacy-object behavior, and exact adversarial fixtures before changing fit logic. | Reviewed schema/fixture note plus failing-before/passing-after tests; no external tolerance. |
-| `WP1-ESTIMABILITY` | WP0 | Build the estimator-specific free-parameter map and constrained design; detect structural aliases before optimization; distinguish exact alias from weak fitted information. | Unit/property tests, alias diagnostics, sparse-design benchmark, and zero false-ready exact controls. |
-| `WP2-CATEGORY-STEP` | WP0 | Audit declared, observed, retained, free, fixed, and unsupported category/step coordinates globally and by current `step_facet`; do not add threshold anchors. | RSM/PCM/GPCM reduction and missing-category fixtures plus parameter-scoped status tables. |
-| `WP3-JML-BOUNDARY` | WP0 | Detect JML element separation/extreme sufficient scores on the actual contributing row pattern; replace optimizer-dependent finite primary values with typed boundary states. | JML extreme/nonextreme fixtures, MML non-reduction guard, and explicit optional-display contract. |
-| `WP4-READINESS-PROPAGATION` | WP1--WP3 | Derive fit-, parameter-, and output-level readiness once and propagate it without surface-specific reinterpretation. | Cross-surface snapshot/semantic tests and a 0.2.2-object migration fixture. |
-| `WP5-COMPARISON-CONTRACT` | WP4 | Make FACETS and other external normalization metric-specific and fail closed before numeric aggregation. | Eligibility/rejection ledger with denominator accounting and no silent row loss. |
-| `WP6-SCALE-AND-ADVERSARIAL` | WP1--WP5 | Verify sparse computation, basis invariance, row-order invariance, malformed-input behavior, and target-size runtime/memory without claiming FACETS capacity parity. | Benchmark envelope and metamorphic/negative-test report; no dense design allocation at target sizes. |
-| `WP7-REPILOT-AND-FREEZE` | WP0--WP6 | Rerun the affected internal and FACETS 4.5.0 pilot cells on new pilot seeds, calibrate weak-information rules, then prepare the next reviewed frozen specification. | Complete pilot registry, reason-coded exclusions, MCSE plan, resolved blocker criteria, and still no confirmation result. |
+| Work package | Depends on | Current state | Implementation boundary | Required exit artifact |
+| --- | --- | --- | --- | --- |
+| `WP0-READINESS-CONTRACT` | draft.20 diagnosis | `complete_structural` | Freeze internal state names, scopes, severity/precedence, condition classes, object fields, legacy-object behavior, and exact adversarial fixtures before changing fit logic. | `readiness-contract-0.2.3.md`, its repository validator, 27-row fixture registry, and privacy/semantic tests; no external tolerance. |
+| `WP1-ESTIMABILITY` | WP0 | `next` | Build the estimator-specific free-parameter map and constrained design; detect structural aliases before optimization; distinguish exact alias from weak fitted information. | Unit/property tests, alias diagnostics, sparse-design benchmark, and zero false-ready exact controls. |
+| `WP2-CATEGORY-STEP` | WP0 | `queued` | Audit declared, observed, retained, free, fixed, and unsupported category/step coordinates globally and by current `step_facet`; do not add threshold anchors. | RSM/PCM/GPCM reduction and missing-category fixtures plus parameter-scoped status tables. |
+| `WP3-JML-BOUNDARY` | WP0 | `queued` | Detect JML element separation/extreme sufficient scores on the actual contributing row pattern; replace optimizer-dependent finite primary values with typed boundary states. | JML extreme/nonextreme fixtures, MML non-reduction guard, and explicit optional-display contract. |
+| `WP4-READINESS-PROPAGATION` | WP1--WP3 | `blocked_by_dependency` | Derive fit-, parameter-, and output-level readiness once and propagate it without surface-specific reinterpretation. | Cross-surface snapshot/semantic tests and a 0.2.2-object migration fixture. |
+| `WP5-COMPARISON-CONTRACT` | WP4 | `blocked_by_dependency` | Make FACETS and other external normalization metric-specific and fail closed before numeric aggregation. | Eligibility/rejection ledger with denominator accounting and no silent row loss. |
+| `WP6-SCALE-AND-ADVERSARIAL` | WP1--WP5 | `blocked_by_dependency` | Verify sparse computation, basis invariance, row-order invariance, malformed-input behavior, and target-size runtime/memory without claiming FACETS capacity parity. | Benchmark envelope and metamorphic/negative-test report; no dense design allocation at target sizes. |
+| `WP7-REPILOT-AND-FREEZE` | WP0--WP6 | `blocked_by_dependency` | Rerun the affected internal and FACETS 4.5.0 pilot cells on new pilot seeds, calibrate weak-information rules, then prepare the next reviewed frozen specification. | Complete pilot registry, reason-coded exclusions, MCSE plan, resolved blocker criteria, and still no confirmation result. |
+
+#### WP0 frozen boundary
+
+The normative structural record is
+`readiness-contract-0.2.3.md`. Its machine-readable vocabulary, derivation,
+legacy mapping, condition-class registry, and validator are in
+`readiness-contract-0.2.3.R`; exact expected cases are in
+`readiness-contract-fixtures-0.2.3.csv`. The contract identity is
+`mfrmr-internal-readiness-0.2.3-v1`.
+
+WP0 is structurally complete, not statistically confirmed. In particular, it
+freezes that `InferenceReady` is `TRUE` only for `FitReadiness = ready`, while
+parameter-scoped output preserves estimable coordinates from a
+`ready_with_exclusions` fit. It freezes fail-closed legacy mapping and
+metric-specific comparison eligibility. It does not claim that current fit,
+summary, plot, export, or normalizer code implements those states; that claim
+is prohibited until WP1--WP5 pass their runtime and propagation tests.
+
+WP0 also resolves pre-fit blocker behavior: invalid input, exact structural
+nonidentification, and unsupported free category/step coordinates will use
+typed errors carrying structured preflight records. Boundary exclusions and
+numerical review remain inspectable on returned fits. No 0.2.3 public bypass
+for an exactly unidentified fit is planned.
 
 #### Three readiness scopes
 
@@ -372,17 +397,18 @@ WP1 changes runtime behavior. In particular:
 - reports must show whether readiness applies to the whole fit, a restricted
   set of parameters, or a comparison only.
 
-The machine-readable component fields are provisionally:
+The machine-readable component fields frozen by WP0 are:
 
 `InputState`, `EstimabilityState`, `CategoryState`, `BoundaryState`,
 `NumericalState`, `FitReadiness`, `ParameterStatus`, `ComparisonEligibility`,
-`ReasonCode`, `ReadinessScope`, and `ReadinessContractVersion`.
+`ReasonCodes`, `ReadinessScope`, and `ReadinessContractVersion`.
 
-They are internal schema candidates, not public API promises. The first-screen
-precedence is fail closed: invalid/unsupported, exact nonidentification,
-numerical failure, parameter exclusions, weak-information review, then ready.
-Multiple reason codes are retained; a single most-severe label must not erase
-the causal audit trail.
+They remain internal schema rather than public API promises. The first-screen
+precedence is fail closed: blocked, legacy unknown, review,
+ready-with-exclusions, then ready. Multiple reason codes are retained; a
+single most-severe label must not erase the causal audit trail. Exact state
+vocabulary and derivation are owned by the WP0 contract rather than duplicated
+here.
 
 #### WP1: constrained estimability contract
 

@@ -32,6 +32,19 @@ but do not broaden current API scope.
   detailed release sequencing, evidence invalidation, local external-tool
   identities, and completion gates that do not belong in user-facing roadmap
   prose.
+- `readiness-contract-0.2.3.md`: frozen internal WP0 contract separating fit,
+  parameter, and metric-specific comparison readiness. It defines component
+  precedence, the conservative legacy `InferenceReady` mapping, typed
+  condition policy, and saved-0.2.2 behavior without claiming runtime
+  implementation or statistical confirmation.
+- `readiness-contract-0.2.3.R`: dependency-free repository validator and
+  machine-readable catalog for readiness states, reason codes, condition
+  classes, deterministic fit derivation, and legacy mapping.
+- `readiness-contract-fixtures-0.2.3.csv`: 27 exact positive, negative,
+  migration, and FACETS-comparison expectations covering balanced, sparse,
+  two-rater, category-support, extreme-score, numerical, and external-result
+  boundaries. These are structural expected answers, not completed fits or
+  release evidence.
 - `release-readiness.R`: release-readiness review. Source this file and run
   `mfrmr_release_readiness_review(pkg_dir = ".")` from the package root. The
   review checks version labels, metadata agreement, `--as-cran` provenance,

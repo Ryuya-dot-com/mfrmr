@@ -23,7 +23,9 @@ test_that("public roadmap is separated from internal release operations", {
     "0\\.2\\.3-draft", "SHA-256", "candidate manifest", "M1:", "M2:",
     "Confirmation authorized", "inst/validation", "C:/", "C:\\\\",
     "WP[0-9]-", "ReadinessContractVersion",
-    "population_assumption_linked", "metric_specific_comparison_eligibility"
+    "population_assumption_linked", "metric_specific_comparison_eligibility",
+    "ready_with_exclusions", "legacy_contract_missing",
+    "mfrmr-internal-readiness"
   )
   for (pattern in forbidden) {
     expect_false(grepl(pattern, public, perl = TRUE), info = pattern)
@@ -38,7 +40,7 @@ test_that("public roadmap is separated from internal release operations", {
   expect_true(any(grepl("inst/validation", ignore, fixed = TRUE)))
 })
 
-test_that("internal draft.21 readiness work packages remain explicit and private", {
+test_that("internal draft.22 readiness work packages remain explicit and private", {
   pkg_root <- normalizePath(testthat::test_path("..", ".."), mustWork = TRUE)
   internal_path <- file.path(
     pkg_root, "inst", "validation", "internal-roadmap-0.2.3.md"
@@ -49,7 +51,16 @@ test_that("internal draft.21 readiness work packages remain explicit and private
   checklist_path <- file.path(
     pkg_root, "inst", "validation", "release-evidence-checklist-0.2.3.csv"
   )
-  skip_if_not(all(file.exists(c(internal_path, gate_path, checklist_path))))
+  contract_path <- file.path(
+    pkg_root, "inst", "validation", "readiness-contract-0.2.3.md"
+  )
+  fixture_path <- file.path(
+    pkg_root, "inst", "validation",
+    "readiness-contract-fixtures-0.2.3.csv"
+  )
+  skip_if_not(all(file.exists(c(
+    internal_path, gate_path, checklist_path, contract_path, fixture_path
+  ))))
 
   internal <- paste(readLines(internal_path, warn = FALSE, encoding = "UTF-8"),
                     collapse = "\n")
@@ -63,8 +74,10 @@ test_that("internal draft.21 readiness work packages remain explicit and private
   expect_match(internal, "population_assumption_linked", fixed = TRUE)
   expect_match(internal, "ReadinessContractVersion", fixed = TRUE)
   expect_match(internal, "expected, eligible, rejected", fixed = TRUE)
-  expect_match(gate, "Specification ID | `0.2.3-draft.21`", fixed = TRUE)
+  expect_match(internal, "WP0 is structurally complete", fixed = TRUE)
+  expect_match(gate, "Specification ID | `0.2.3-draft.22`", fixed = TRUE)
   expect_true(all(c(
+    "readiness_contract_schema",
     "readiness_scope_and_propagation",
     "sparse_estimability_performance",
     "metric_specific_comparison_eligibility"
@@ -72,7 +85,125 @@ test_that("internal draft.21 readiness work packages remain explicit and private
   expect_identical(anyDuplicated(paste(checklist$Gate, checklist$Item)), 0L)
 })
 
-test_that("FACETS and diagnostic stress registries retain prior edge cells under draft.21", {
+test_that("WP0 readiness contract freezes scoped fail-closed semantics", {
+  pkg_root <- normalizePath(testthat::test_path("..", ".."), mustWork = TRUE)
+  validator_path <- file.path(
+    pkg_root, "inst", "validation", "readiness-contract-0.2.3.R"
+  )
+  fixture_path <- file.path(
+    pkg_root, "inst", "validation",
+    "readiness-contract-fixtures-0.2.3.csv"
+  )
+  skip_if_not(all(file.exists(c(validator_path, fixture_path))))
+
+  env <- new.env(parent = globalenv())
+  sys.source(validator_path, envir = env)
+  audit <- env$mfrmr_readiness_validate_fixtures(fixture_path, strict = TRUE)
+
+  expect_true(audit$Valid)
+  expect_identical(audit$Rows, 27L)
+  expect_identical(audit$FitRows, 14L)
+  expect_identical(audit$ParameterRows, 7L)
+  expect_identical(audit$ComparisonRows, 6L)
+  expect_identical(
+    audit$ContractVersion,
+    "mfrmr-internal-readiness-0.2.3-v1"
+  )
+
+  expect_true(env$mfrmr_readiness_inference_ready("ready"))
+  expect_false(env$mfrmr_readiness_inference_ready("ready_with_exclusions"))
+  expect_false(env$mfrmr_readiness_inference_ready("review"))
+  expect_false(env$mfrmr_readiness_inference_ready("blocked"))
+  expect_false(env$mfrmr_readiness_inference_ready("legacy_unknown"))
+  expect_identical(
+    env$mfrmr_readiness_derive_fit(
+      "pass", "identified", "adequate", "has_exclusions", "ready"
+    ),
+    "ready_with_exclusions"
+  )
+  expect_identical(
+    env$mfrmr_readiness_derive_fit(
+      "pass", "weak_information", "adequate", "has_exclusions", "ready"
+    ),
+    "review"
+  )
+  expect_identical(
+    env$mfrmr_readiness_derive_fit(
+      "pass", "identified", "unsupported_coordinate", "finite", "ready"
+    ),
+    "blocked"
+  )
+
+  expect_identical(env$mfrmr_readiness_legacy_map(TRUE)$FitReadiness,
+                   "legacy_unknown")
+  expect_false(env$mfrmr_readiness_legacy_map(TRUE)$InferenceReady)
+  expect_false(env$mfrmr_readiness_legacy_map(FALSE)$InferenceReady)
+
+  reasons <- env$mfrmr_readiness_reason_codes()
+  conditions <- env$mfrmr_readiness_condition_classes()
+  expect_identical(anyDuplicated(reasons$ReasonCode), 0L)
+  expect_true(all(grepl("^[a-z0-9]+(?:_[a-z0-9]+)*$",
+                        reasons$ReasonCode, perl = TRUE)))
+  expect_true(all(conditions$ParentClass == "mfrmr_readiness_condition"))
+
+  fixtures <- utils::read.csv(
+    fixture_path, stringsAsFactors = FALSE, check.names = FALSE
+  )
+  jml_zero <- fixtures[
+    fixtures$FixtureId == "two_rater_no_common_jml" &
+      fixtures$ReadinessScope == "fit", , drop = FALSE
+  ]
+  mml_zero <- fixtures[
+    fixtures$FixtureId == "two_rater_no_common_mml" &
+      fixtures$ReadinessScope == "fit", , drop = FALSE
+  ]
+  extreme_fit <- fixtures[
+    fixtures$FixtureId == "jml_extreme" &
+      fixtures$ReadinessScope == "fit", , drop = FALSE
+  ]
+  extreme_parameter <- fixtures[
+    fixtures$FixtureId == "jml_extreme" &
+      fixtures$ReadinessScope == "parameter", , drop = FALSE
+  ]
+  expect_identical(jml_zero$FitReadiness, "blocked")
+  expect_identical(mml_zero$FitReadiness, "review")
+  expect_identical(mml_zero$EstimabilityState,
+                   "population_assumption_linked")
+  expect_identical(extreme_fit$FitReadiness, "ready_with_exclusions")
+  expect_identical(extreme_parameter$ParameterStatus, "unbounded_high")
+})
+
+test_that("WP0 fixture validator rejects post-hoc readiness upgrades", {
+  pkg_root <- normalizePath(testthat::test_path("..", ".."), mustWork = TRUE)
+  validator_path <- file.path(
+    pkg_root, "inst", "validation", "readiness-contract-0.2.3.R"
+  )
+  fixture_path <- file.path(
+    pkg_root, "inst", "validation",
+    "readiness-contract-fixtures-0.2.3.csv"
+  )
+  skip_if_not(all(file.exists(c(validator_path, fixture_path))))
+
+  env <- new.env(parent = globalenv())
+  sys.source(validator_path, envir = env)
+  fixtures <- utils::read.csv(
+    fixture_path, stringsAsFactors = FALSE, check.names = FALSE
+  )
+  target <- fixtures$FixtureId == "two_rater_no_common_jml" &
+    fixtures$ReadinessScope == "fit"
+  fixtures$FitReadiness[target] <- "ready"
+  fixtures$InferenceReady[target] <- "TRUE"
+  mutated <- tempfile(fileext = ".csv")
+  on.exit(unlink(mutated), add = TRUE)
+  utils::write.csv(fixtures, mutated, row.names = FALSE, na = "")
+
+  audit <- env$mfrmr_readiness_validate_fixtures(mutated)
+  expect_false(audit$Valid)
+  expect_true(any(grepl("derives blocked, not ready", audit$Errors,
+                        fixed = TRUE)))
+})
+
+test_that("FACETS and diagnostic stress registries retain prior edge cells under draft.22", {
   pkg_root <- normalizePath(testthat::test_path("..", ".."),
                             winslash = "/", mustWork = TRUE)
   facets_path <- file.path(

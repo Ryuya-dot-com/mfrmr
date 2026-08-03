@@ -5,9 +5,9 @@
 | Field | Value |
 | --- | --- |
 | Target release | 0.2.3 |
-| Specification ID | `0.2.3-draft.21` |
+| Specification ID | `0.2.3-draft.22` |
 | Date | 2026-08-03 |
-| Status | M1 source review recorded; M2 IC, ConQuest/TAM, canonical-score, engine-path, fail-closed release-readiness, and FACETS 4.5.0 paired JML RSM/PCM stress pilots are present. The draft.20 divergence audit diagnosed exact aliases, category/step mismatch, and unmatched extreme displays. Draft.21 now sequences implementation through a typed three-scope readiness contract, estimator-specific constrained estimability, category/step support, JML boundary states, cross-surface propagation, metric-specific external eligibility, sparse-performance audit, and new-seed repilot. All existing simulations remain calibration evidence. Implementation, tolerance freeze, independent replication, recovery/coverage, bootstrap, attribution, consequence, support-envelope registry, candidate freeze, and confirmation remain pending. |
+| Status | M1 source review recorded; M2 IC, ConQuest/TAM, canonical-score, engine-path, fail-closed release-readiness, and FACETS 4.5.0 paired JML RSM/PCM stress pilots are present. The draft.20 divergence audit diagnosed exact aliases, category/step mismatch, and unmatched extreme displays. Draft.21 sequenced the corrective work; draft.22 freezes the internal WP0 three-scope readiness vocabulary, precedence, reason codes, legacy mapping, condition policy, and 27-row adversarial fixture registry. Runtime implementation remains sequenced through estimator-specific constrained estimability, category/step support, JML boundary states, cross-surface propagation, metric-specific external eligibility, sparse-performance audit, and new-seed repilot. All existing simulations remain calibration evidence. Runtime implementation, tolerance freeze, independent replication, recovery/coverage, bootstrap, attribution, consequence, support-envelope registry, candidate freeze, and confirmation remain pending. |
 | Confirmation authorized | No |
 | Evidence checklist | `release-evidence-checklist-0.2.3.csv` |
 | FACETS stress plan | `facets-jml-stress-plan-0.2.3.md` |
@@ -332,6 +332,17 @@ states; parameter output retains one status per displayed/fixed coordinate;
 external normalization retains eligibility per metric and parameter class.
 The legacy scalar `InferenceReady` is only a conservative compatibility
 summary and cannot be the sole input to a 0.2.3 gate.
+
+Draft.22 binds this gate to readiness contract
+`mfrmr-internal-readiness-0.2.3-v1` in
+`readiness-contract-0.2.3.md`, its repository-only schema validator, and the
+27-row adversarial fixture registry. `InferenceReady` is `TRUE` only for fit
+state `ready`; every other fit state maps to `FALSE`. A
+`ready_with_exclusions` fit retains separately estimable parameter rows, but
+old Boolean-only consumers cannot call the whole fit ready. Saved objects
+without the contract are `legacy_unknown`, regardless of their former scalar.
+This structural freeze completes WP0 only. It does not make current runtime
+surfaces compliant and does not satisfy the propagation or confirmation gate.
 
 - Replication counts are selected from a frozen Monte Carlo-precision target,
   not convenience or elapsed time alone.
@@ -949,6 +960,7 @@ claim is reduced or deferred rather than decided ad hoc.
 | `0.2.3-draft.19` | Added two-rater, severe category-imbalance, checkerboard-interaction, and residual-local-dependence FACETS 4.5.0 extension cells plus a separate interaction/bias/PCAR runner; diagnosed false-ready zero-common-Person and category-support states, weak-interaction screening limits, and weak-overlap PCA-definition sensitivity; added scenario IDs and required quantitative design/category/diagnostic gates while retaining all results as one-seed pilot evidence. |
 | `0.2.3-draft.20` | Added a repository divergence audit before FACETS tolerances; established exact rank deficiency in the zero-common-Person and other sparse controls, reclassified the severe PCM parameter gap as a retained-category/step-dimension mismatch plus false readiness rather than a demonstrated kernel defect, separated nonextreme Person agreement from FACETS adjusted extreme displays, and required estimability, category-contract, typed-extreme, and diagnostic-definition guards before confirmation. |
 | `0.2.3-draft.21` | Converted the divergence diagnosis into eight dependent work packages; separated fit-, parameter-, and metric-level readiness; made JML/MML estimability rules distinct; specified sparse rank and category/step records, generalized typed JML boundary states, required one-source cross-surface propagation and legacy-object handling, and made external eligibility metric-specific with complete rejection accounting before the new-seed repilot. |
+| `0.2.3-draft.22` | Completed the structural WP0 readiness contract: froze the internal v1 state vocabulary, deterministic fit precedence, conservative `InferenceReady` mapping, parameter and comparison states, controlled reason codes, typed condition/runtime policy, fail-closed 0.2.2-object mapping, and a validated 27-row adversarial fixture registry. Runtime implementation and every statistical threshold remain pending. |
 
 ## Release decision algorithm
 
