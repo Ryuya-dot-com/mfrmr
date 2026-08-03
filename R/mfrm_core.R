@@ -3795,11 +3795,20 @@ mfrm_estimate <- function(data, person_col, facet_cols, score_col,
   config$estimation_control$mml_engine_detail <- as.character(opt$mml_engine$Detail %||% NA_character_)
 
   # The pre-fit constrained rank audit deliberately excludes nonlinear GPCM
-  # slope and latent-population variance coordinates. For stationary retained
-  # solutions of modest dimension, instrument their local observed information
-  # without yet assigning a weak-information readiness state. The tolerance
-  # ladder remains diagnostic until its simulation rule is frozen.
+  # slope and latent-population variance coordinates. Verify their retained
+  # free-to-model coordinate transformations separately. For stationary
+  # retained solutions of modest dimension, also instrument local observed
+  # information without assigning a weak-information readiness state. Neither
+  # transformation rank nor the information ladder changes readiness before a
+  # parameterization-aware simulation rule is frozen.
   if (length(estimability_audit$nonlinear_blocks %||% character(0)) > 0L) {
+    estimability_audit$nonlinear_transformation <-
+      mfrmr_nonlinear_transformation_audit(
+        par = opt$par,
+        sizes = sizes,
+        config = config,
+        nonlinear_blocks = estimability_audit$nonlinear_blocks
+      )
     estimability_audit$fitted_information <- audit_mfrm_fitted_information(
       opt = opt,
       idx = idx,

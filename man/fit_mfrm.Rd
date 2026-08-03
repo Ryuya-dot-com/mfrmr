@@ -719,9 +719,14 @@ the common latent-population assumption and remain review-only.
 
 Inspect \code{fit$data_review$estimability}. RSM and PCM use the full linear
 free-coordinate check. For bounded GPCM and an active latent-regression
-residual variance, the additive block is audited before fitting. A stationary
-retained solution of modest free dimension also receives a local observed-
-information Hessian and a recorded eigenvalue-tolerance ladder in
+residual variance, the additive block is audited before fitting. A retained
+vector also records the analytic free-to-expanded log/natural-scale
+transformation Jacobians and a central-difference check in
+\code{fit$data_review$estimability$nonlinear_transformation}. This verifies the
+parameterization only; it is not a response-likelihood Jacobian or a
+structural-identification result. A stationary retained solution of modest
+free dimension also receives a local observed-information Hessian and a
+recorded eigenvalue-tolerance ladder in
 \code{fit$data_review$estimability$fitted_information}. Nonstationary or larger
 fits retain an explicit not-evaluated status. This fitted-information layer
 is diagnostic only: it does not yet classify weak information, make the

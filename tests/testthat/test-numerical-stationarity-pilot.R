@@ -221,7 +221,9 @@ test_that("the positive-slope GPCM Jacobian is explicit and checked", {
   expect_lt(review$summary$MaxAbsSlopeJacobianDifference, 1e-8)
   expect_true(all(review$table$ExpandedSlope > 0))
   expect_equal(
-    unique(review$table$ExpandedLogSlope),
+    review$table$ExpandedLogSlope[
+      !duplicated(review$table$ExpandedLevel)
+    ],
     c(free, -sum(free)),
     tolerance = 0
   )

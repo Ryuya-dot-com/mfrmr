@@ -659,6 +659,419 @@ mfrmr_fitted_information_block_summary <- function(hessian,
   do.call(rbind, rows)
 }
 
+mfrmr_numeric_transformation_jacobian <- function(transform,
+                                                   free,
+                                                   relative_step = 1e-6) {
+  free <- as.numeric(free)
+  relative_step <- as.numeric(relative_step[1])
+  baseline <- tryCatch(
+    as.numeric(transform(free)),
+    error = function(e) numeric(0)
+  )
+  if (length(free) == 0L || length(baseline) == 0L ||
+      !is.finite(relative_step) || relative_step <= 0 ||
+      any(!is.finite(free)) || any(!is.finite(baseline))) {
+    return(list(
+      valid = FALSE,
+      jacobian = matrix(numeric(0), nrow = length(baseline), ncol = length(free)),
+      relative_step = relative_step,
+      absolute_steps = numeric(0)
+    ))
+  }
+
+  absolute_steps <- relative_step * pmax(1, abs(free))
+  jacobian <- matrix(
+    NA_real_, nrow = length(baseline), ncol = length(free)
+  )
+  for (column in seq_along(free)) {
+    high <- low <- free
+    high[column] <- high[column] + absolute_steps[column]
+    low[column] <- low[column] - absolute_steps[column]
+    high_value <- tryCatch(as.numeric(transform(high)),
+                           error = function(e) numeric(0))
+    low_value <- tryCatch(as.numeric(transform(low)),
+                          error = function(e) numeric(0))
+    if (length(high_value) != length(baseline) ||
+        length(low_value) != length(baseline) ||
+        any(!is.finite(high_value)) || any(!is.finite(low_value))) {
+      next
+    }
+    jacobian[, column] <-
+      (high_value - low_value) / (2 * absolute_steps[column])
+  }
+
+  list(
+    valid = all(is.finite(jacobian)),
+    jacobian = jacobian,
+    relative_step = relative_step,
+    absolute_steps = absolute_steps
+  )
+}
+
+mfrmr_transformation_rank_ladder <- function(jacobian,
+                                             tolerances = c(1e-10, 1e-8, 1e-6)) {
+  jacobian <- suppressWarnings(as.matrix(jacobian))
+  if (!is.numeric(jacobian) || ncol(jacobian) == 0L ||
+      nrow(jacobian) == 0L || any(!is.finite(jacobian))) {
+    return(list(
+      valid = FALSE,
+      rank_ladder = data.frame(),
+      singular_values = numeric(0),
+      condition_index = NA_real_
+    ))
+  }
+  singular_values <- tryCatch(
+    as.numeric(base::svd(jacobian, nu = 0L, nv = 0L)$d),
+    error = function(e) numeric(0)
+  )
+  if (length(singular_values) != min(dim(jacobian)) ||
+      any(!is.finite(singular_values))) {
+    return(list(
+      valid = FALSE,
+      rank_ladder = data.frame(),
+      singular_values = singular_values,
+      condition_index = NA_real_
+    ))
+  }
+  scale <- max(singular_values)
+  thresholds <- if (is.finite(scale) && scale > 0) {
+    scale * as.numeric(tolerances)
+  } else {
+    as.numeric(tolerances)
+  }
+  ranks <- vapply(
+    thresholds,
+    function(threshold) sum(singular_values > threshold),
+    integer(1)
+  )
+  positive <- singular_values[singular_values > 0]
+  list(
+    valid = TRUE,
+    rank_ladder = data.frame(
+      RelativeTolerance = as.numeric(tolerances),
+      AbsoluteThreshold = thresholds,
+      Rank = ranks,
+      Nullity = as.integer(ncol(jacobian) - ranks),
+      stringsAsFactors = FALSE
+    ),
+    singular_values = singular_values,
+    condition_index = if (length(positive) > 0L) {
+      max(singular_values) / min(positive)
+    } else {
+      Inf
+    }
+  )
+}
+
+mfrmr_empty_transformation_summary <- function() {
+  data.frame(
+    Block = character(0),
+    CoordinateSystem = character(0),
+    FreeCoordinates = integer(0),
+    ExpandedCoordinates = integer(0),
+    ExpectedRank = integer(0),
+    LogCoordinateRank = integer(0),
+    NaturalCoordinateRank = integer(0),
+    LogFullColumnRank = logical(0),
+    NaturalFullColumnRank = logical(0),
+    NaturalMinimum = numeric(0),
+    NaturalMaximum = numeric(0),
+    InvariantResidual = numeric(0),
+    MaxAbsLogJacobianDifference = numeric(0),
+    MaxAbsNaturalJacobianDifference = numeric(0),
+    MaxScaledNaturalJacobianDifference = numeric(0),
+    LogConditionIndex = numeric(0),
+    NaturalConditionIndex = numeric(0),
+    Finite = logical(0),
+    Status = character(0),
+    stringsAsFactors = FALSE
+  )
+}
+
+mfrmr_invalid_transformation_summary <- function(block,
+                                                  coordinate_system,
+                                                  free_coordinates,
+                                                  expanded_coordinates) {
+  out <- mfrmr_empty_transformation_summary()[NA_integer_, , drop = FALSE]
+  out$Block <- as.character(block)
+  out$CoordinateSystem <- as.character(coordinate_system)
+  out$FreeCoordinates <- as.integer(free_coordinates)
+  out$ExpandedCoordinates <- as.integer(expanded_coordinates)
+  out$ExpectedRank <- as.integer(free_coordinates)
+  out$Finite <- FALSE
+  out$Status <- "invalid_configuration"
+  out
+}
+
+mfrmr_transformation_block_audit <- function(
+    block,
+    coordinate_system,
+    rank_labels,
+    free,
+    log_transform,
+    natural_transform,
+    analytic_log_jacobian,
+    analytic_natural_jacobian,
+    natural_values,
+    invariant_residual,
+    relative_step,
+    tolerances) {
+  numeric_log <- mfrmr_numeric_transformation_jacobian(
+    log_transform, free, relative_step
+  )
+  numeric_natural <- mfrmr_numeric_transformation_jacobian(
+    natural_transform, free, relative_step
+  )
+  log_rank <- mfrmr_transformation_rank_ladder(
+    analytic_log_jacobian, tolerances
+  )
+  natural_rank <- mfrmr_transformation_rank_ladder(
+    analytic_natural_jacobian, tolerances
+  )
+  primary_rank <- function(x) {
+    if (isTRUE(x$valid)) as.integer(x$rank_ladder$Rank[1]) else NA_integer_
+  }
+  difference <- function(analytic, numeric) {
+    if (!isTRUE(numeric$valid)) return(NA_real_)
+    max(abs(analytic - numeric$jacobian))
+  }
+  scaled_difference <- function(analytic, numeric) {
+    if (!isTRUE(numeric$valid)) return(NA_real_)
+    max(
+      abs(analytic - numeric$jacobian) /
+        pmax(1, abs(analytic), abs(numeric$jacobian))
+    )
+  }
+  log_rank_primary <- primary_rank(log_rank)
+  natural_rank_primary <- primary_rank(natural_rank)
+  free_coordinates <- length(free)
+  finite <- all(is.finite(natural_values)) && all(natural_values > 0) &&
+    isTRUE(numeric_log$valid) && isTRUE(numeric_natural$valid) &&
+    isTRUE(log_rank$valid) && isTRUE(natural_rank$valid)
+  summary <- data.frame(
+    Block = block,
+    CoordinateSystem = coordinate_system,
+    FreeCoordinates = free_coordinates,
+    ExpandedCoordinates = length(natural_values),
+    ExpectedRank = free_coordinates,
+    LogCoordinateRank = log_rank_primary,
+    NaturalCoordinateRank = natural_rank_primary,
+    LogFullColumnRank = isTRUE(log_rank_primary == free_coordinates),
+    NaturalFullColumnRank = isTRUE(
+      natural_rank_primary == free_coordinates
+    ),
+    NaturalMinimum = if (length(natural_values) > 0L) {
+      min(natural_values)
+    } else {
+      NA_real_
+    },
+    NaturalMaximum = if (length(natural_values) > 0L) {
+      max(natural_values)
+    } else {
+      NA_real_
+    },
+    InvariantResidual = as.numeric(invariant_residual),
+    MaxAbsLogJacobianDifference = difference(
+      analytic_log_jacobian, numeric_log
+    ),
+    MaxAbsNaturalJacobianDifference = difference(
+      analytic_natural_jacobian, numeric_natural
+    ),
+    MaxScaledNaturalJacobianDifference = scaled_difference(
+      analytic_natural_jacobian, numeric_natural
+    ),
+    LogConditionIndex = log_rank$condition_index,
+    NaturalConditionIndex = natural_rank$condition_index,
+    Finite = finite,
+    Status = if (finite) "evaluated_diagnostic_only" else "unavailable",
+    stringsAsFactors = FALSE
+  )
+  ladder_rows <- lapply(seq_along(rank_labels), function(index) {
+    rank <- list(log_rank, natural_rank)[[index]]
+    if (!isTRUE(rank$valid)) return(NULL)
+    value <- rank$rank_ladder
+    value$Block <- block
+    value$CoordinateSystem <- rank_labels[index]
+    value[, c(
+      "Block", "CoordinateSystem", "RelativeTolerance",
+      "AbsoluteThreshold", "Rank", "Nullity"
+    )]
+  })
+  ladder_rows <- Filter(Negate(is.null), ladder_rows)
+  list(
+    summary = summary,
+    rank_ladder = if (length(ladder_rows) > 0L) {
+      do.call(rbind, ladder_rows)
+    } else {
+      data.frame()
+    }
+  )
+}
+
+mfrmr_nonlinear_transformation_audit <- function(
+    par,
+    sizes,
+    config,
+    nonlinear_blocks,
+    relative_step = 1e-6,
+    tolerances = c(1e-10, 1e-8, 1e-6)) {
+  nonlinear_blocks <- as.character(nonlinear_blocks %||% character(0))
+  base <- list(
+    role = "free_to_expanded_nonlinear_parameter_transformation",
+    evaluation_point = "retained_optimizer_free_coordinate_vector",
+    attempted = FALSE,
+    status = "not_required",
+    nonlinear_blocks = nonlinear_blocks,
+    numerical_differentiation = list(
+      method = "coordinate_scaled_central_difference",
+      relative_step = as.numeric(relative_step[1])
+    ),
+    block_summary = mfrmr_empty_transformation_summary(),
+    rank_ladder = data.frame(),
+    parameterization_only = TRUE,
+    likelihood_jacobian_evaluated = FALSE,
+    structural_identification_classified = FALSE,
+    readiness_effect = "none_parameterization_audit_only",
+    detail = paste(
+      "No nonlinear free-coordinate transformation was required for this fit."
+    )
+  )
+  if (length(nonlinear_blocks) == 0L) return(base)
+
+  free_dimension <- sum(vapply(sizes, as.integer, integer(1)))
+  if (is.null(par) || length(par) != free_dimension || any(!is.finite(par))) {
+    base$status <- "not_evaluated_parameter_vector"
+    base$detail <- paste(
+      "The nonlinear transformation audit was not evaluated because the",
+      "retained free parameter vector was unavailable, non-finite, or",
+      "dimensionally inconsistent."
+    )
+    return(base)
+  }
+
+  slices <- build_param_slices(sizes)
+  results <- list()
+
+  if ("log_slopes" %in% nonlinear_blocks) {
+    slice <- as.integer(slices$log_slopes %||% integer(0))
+    free <- as.numeric(par[slice])
+    levels <- as.character(config$gpcm_spec$levels %||% character(0))
+    n_levels <- length(levels)
+    valid_config <- identical(config$model, "GPCM") &&
+      length(slice) > 0L && n_levels == length(free) + 1L
+    if (valid_config) {
+      transformed <- expand_gpcm_log_slopes(free, config$gpcm_spec)
+      log_jacobian <- sum_zero_jacobian(n_levels)
+      natural_jacobian <- diag(
+        transformed$slopes, nrow = n_levels
+      ) %*% log_jacobian
+      results[[length(results) + 1L]] <- mfrmr_transformation_block_audit(
+        block = "log_slopes",
+        coordinate_system = paste(
+          "free_log_slopes -> sum_zero_log_slopes ->",
+          "positive_geometric_mean_one_slopes"
+        ),
+        rank_labels = c(
+          "expanded_sum_zero_log_slopes",
+          "positive_geometric_mean_one_slopes"
+        ),
+        free = free,
+        log_transform = function(value) c(value, -sum(value)),
+        natural_transform = function(value) exp(c(value, -sum(value))),
+        analytic_log_jacobian = log_jacobian,
+        analytic_natural_jacobian = natural_jacobian,
+        natural_values = transformed$slopes,
+        invariant_residual = abs(mean(log(transformed$slopes))),
+        relative_step = relative_step,
+        tolerances = tolerances
+      )
+    } else {
+      results[[length(results) + 1L]] <- list(
+        summary = mfrmr_invalid_transformation_summary(
+          block = "log_slopes",
+          coordinate_system = "invalid_GPCM_slope_parameterization",
+          free_coordinates = length(free),
+          expanded_coordinates = n_levels
+        ),
+        rank_ladder = data.frame()
+      )
+    }
+  }
+
+  if ("log_sigma2" %in% nonlinear_blocks) {
+    slice <- as.integer(slices$log_sigma2 %||% integer(0))
+    free <- as.numeric(par[slice])
+    valid_config <- identical(config$method, "MML") &&
+      isTRUE(config$population_spec$active) && length(free) == 1L
+    if (valid_config) {
+      sigma2 <- exp(free)
+      log_jacobian <- matrix(1, nrow = 1L, ncol = 1L)
+      natural_jacobian <- matrix(sigma2, nrow = 1L, ncol = 1L)
+      results[[length(results) + 1L]] <- mfrmr_transformation_block_audit(
+        block = "log_sigma2",
+        coordinate_system =
+          "free_log_sigma2 -> positive_residual_variance",
+        rank_labels = c(
+          "log_residual_variance", "positive_residual_variance"
+        ),
+        free = free,
+        log_transform = identity,
+        natural_transform = exp,
+        analytic_log_jacobian = log_jacobian,
+        analytic_natural_jacobian = natural_jacobian,
+        natural_values = sigma2,
+        invariant_residual = 0,
+        relative_step = relative_step,
+        tolerances = tolerances
+      )
+    } else {
+      results[[length(results) + 1L]] <- list(
+        summary = mfrmr_invalid_transformation_summary(
+          block = "log_sigma2",
+          coordinate_system = "invalid_latent_variance_parameterization",
+          free_coordinates = length(free),
+          expanded_coordinates = 1L
+        ),
+        rank_ladder = data.frame()
+      )
+    }
+  }
+
+  base$attempted <- TRUE
+  base$block_summary <- if (length(results) > 0L) {
+    value <- do.call(rbind, lapply(results, `[[`, "summary"))
+    rownames(value) <- NULL
+    value
+  } else {
+    mfrmr_empty_transformation_summary()
+  }
+  ladder_rows <- Filter(
+    function(x) is.data.frame(x) && nrow(x) > 0L,
+    lapply(results, `[[`, "rank_ladder")
+  )
+  base$rank_ladder <- if (length(ladder_rows) > 0L) {
+    value <- do.call(rbind, ladder_rows)
+    rownames(value) <- NULL
+    value
+  } else {
+    data.frame()
+  }
+  base$status <- if (nrow(base$block_summary) > 0L &&
+                     all(base$block_summary$Status ==
+                           "evaluated_diagnostic_only")) {
+    "evaluated_diagnostic_only"
+  } else {
+    "partially_unavailable"
+  }
+  base$detail <- paste(
+    "This record verifies the free-to-expanded nonlinear parameter",
+    "transformations and their numerical derivatives only. It is not a",
+    "response-likelihood Jacobian, structural-identification classification,",
+    "weak-information rule, or readiness decision."
+  )
+  base
+}
+
 audit_mfrm_fitted_information <- function(opt,
                                           idx,
                                           config,
@@ -984,6 +1397,19 @@ audit_mfrm_estimability <- function(prep, idx, config, sizes) {
     observed_components = as.integer(components),
     counterfactual_jml = counterfactual,
     population_assumption_linked = isTRUE(population_assumption_linked),
+    nonlinear_transformation = list(
+      status = if (length(nonlinear_blocks) > 0L) {
+        "pending_after_optimization"
+      } else {
+        "not_required"
+      },
+      attempted = FALSE,
+      nonlinear_blocks = nonlinear_blocks,
+      parameterization_only = TRUE,
+      likelihood_jacobian_evaluated = FALSE,
+      structural_identification_classified = FALSE,
+      readiness_effect = "none_parameterization_audit_only"
+    ),
     fitted_information = list(
       status = if (length(nonlinear_blocks) > 0L) {
         "pending_after_optimization"

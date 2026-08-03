@@ -14,7 +14,11 @@ CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
   free coordinates, the estimability record now also stores a diagnostic
   observed-information Hessian tolerance ladder and nonlinear-block summary.
   This bounded calculation does not classify weak information, complete the
-  nonlinear preflight, or alter readiness.
+  nonlinear preflight, or alter readiness. The same estimability record now
+  verifies the analytic free-to-expanded transformation Jacobians for GPCM
+  log slopes and latent-regression residual variance against central
+  differences. Transformation rank is explicitly parameterization-only and
+  is not presented as response-likelihood identification.
 
 * Added a versioned information-criterion contract for fitted MML objects.
   BIC now uses the number of independent Persons rather than response rows or

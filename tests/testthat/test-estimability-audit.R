@@ -67,6 +67,7 @@ test_that("balanced JML constrained design is full rank and invariant", {
     audit$fitted_information$status,
     "pending_weak_information_calibration"
   )
+  expect_identical(audit$nonlinear_transformation$status, "not_required")
   expect_false(audit$fitted_information$weak_information_classified)
   expect_true(all(c("Person", "Rater", "Criterion", "steps") %in%
                     audit$parameter_blocks$Block))
@@ -310,6 +311,37 @@ test_that("GPCM additive rank does not overclaim nonlinear completeness", {
     audit$fitted_information$status,
     "evaluated_diagnostic_only"
   )
+  expect_identical(
+    audit$nonlinear_transformation$status,
+    "evaluated_diagnostic_only"
+  )
+  expect_identical(
+    audit$nonlinear_transformation$block_summary$Block,
+    "log_slopes"
+  )
+  expect_true(
+    audit$nonlinear_transformation$block_summary$LogFullColumnRank
+  )
+  expect_true(
+    audit$nonlinear_transformation$block_summary$NaturalFullColumnRank
+  )
+  expect_lt(
+    audit$nonlinear_transformation$block_summary$
+      MaxAbsLogJacobianDifference,
+    1e-8
+  )
+  expect_lt(
+    audit$nonlinear_transformation$block_summary$
+      MaxScaledNaturalJacobianDifference,
+    1e-8
+  )
+  expect_true(audit$nonlinear_transformation$parameterization_only)
+  expect_false(
+    audit$nonlinear_transformation$likelihood_jacobian_evaluated
+  )
+  expect_false(
+    audit$nonlinear_transformation$structural_identification_classified
+  )
   expect_true(audit$fitted_information$attempted)
   expect_equal(nrow(audit$fitted_information$rank_ladder), 3L)
   expect_identical(
@@ -378,6 +410,19 @@ test_that("latent residual variance enters fitted-information instrumentation", 
     "log_sigma2"
   )
   expect_identical(
+    audit$nonlinear_transformation$status,
+    "evaluated_diagnostic_only"
+  )
+  expect_identical(
+    audit$nonlinear_transformation$block_summary$Block,
+    "log_sigma2"
+  )
+  expect_equal(
+    audit$nonlinear_transformation$block_summary$NaturalMinimum,
+    fit$population$sigma2,
+    tolerance = 1e-12
+  )
+  expect_identical(
     audit$fitted_information$block_summary$FreeCoordinates,
     1L
   )
@@ -386,6 +431,88 @@ test_that("latent residual variance enters fitted-information instrumentation", 
   )))
   expect_false(audit$fitted_information$weak_information_classified)
   expect_false(audit$readiness$Complete)
+})
+
+test_that("nonlinear transformation Jacobians match known analytic maps", {
+  free_slopes <- c(-0.4, 0.1, 0.2)
+  free_log_sigma2 <- log(0.36)
+  audit <- mfrmr:::mfrmr_nonlinear_transformation_audit(
+    par = c(free_slopes, free_log_sigma2),
+    sizes = list(log_slopes = 3L, log_sigma2 = 1L),
+    config = list(
+      method = "MML",
+      model = "GPCM",
+      gpcm_spec = list(
+        levels = paste0("I", 1:4),
+        n_params = 3L
+      ),
+      population_spec = list(active = TRUE)
+    ),
+    nonlinear_blocks = c("log_slopes", "log_sigma2")
+  )
+
+  expect_identical(audit$status, "evaluated_diagnostic_only")
+  expect_identical(audit$block_summary$Block,
+                   c("log_slopes", "log_sigma2"))
+  expect_identical(audit$block_summary$ExpectedRank, c(3L, 1L))
+  expect_true(all(audit$block_summary$LogFullColumnRank))
+  expect_true(all(audit$block_summary$NaturalFullColumnRank))
+  expect_lt(max(audit$block_summary$MaxAbsLogJacobianDifference), 1e-8)
+  expect_lt(
+    max(audit$block_summary$MaxScaledNaturalJacobianDifference),
+    1e-8
+  )
+  expect_equal(
+    audit$block_summary$InvariantResidual[audit$block_summary$Block ==
+                                            "log_slopes"],
+    0,
+    tolerance = 1e-15
+  )
+  expect_equal(
+    audit$block_summary$NaturalMinimum[audit$block_summary$Block ==
+                                        "log_sigma2"],
+    0.36,
+    tolerance = 1e-12
+  )
+  expect_equal(nrow(audit$rank_ladder), 12L)
+  expect_false(audit$structural_identification_classified)
+  expect_identical(
+    audit$readiness_effect,
+    "none_parameterization_audit_only"
+  )
+})
+
+test_that("nonlinear transformation audit fails closed on malformed vectors", {
+  audit <- mfrmr:::mfrmr_nonlinear_transformation_audit(
+    par = c(0, 0),
+    sizes = list(log_slopes = 3L),
+    config = list(method = "MML", model = "GPCM"),
+    nonlinear_blocks = "log_slopes"
+  )
+
+  expect_identical(audit$status, "not_evaluated_parameter_vector")
+  expect_false(audit$attempted)
+  expect_false(audit$structural_identification_classified)
+})
+
+test_that("underflowed natural coordinates remain unavailable and nonbinding", {
+  audit <- mfrmr:::mfrmr_nonlinear_transformation_audit(
+    par = -1000,
+    sizes = list(log_sigma2 = 1L),
+    config = list(
+      method = "MML",
+      model = "RSM",
+      population_spec = list(active = TRUE)
+    ),
+    nonlinear_blocks = "log_sigma2"
+  )
+
+  expect_identical(audit$status, "partially_unavailable")
+  expect_identical(audit$block_summary$Status, "unavailable")
+  expect_false(audit$block_summary$Finite)
+  expect_false(audit$structural_identification_classified)
+  expect_identical(audit$readiness_effect,
+                   "none_parameterization_audit_only")
 })
 
 test_that("fitted-information eigenvalue ladder remains diagnostic", {
