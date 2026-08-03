@@ -61,7 +61,7 @@ but do not broaden current API scope.
   numerical, recovery, information-criterion, dimensionality, external,
   public-contract, and engineering gates. A `draft` status is not permission
   to run confirmation or evidence that a gate passed.
-- `facets-jml-stress-plan-0.2.3.md`: draft.20 plan for recording one selected
+- `facets-jml-stress-plan-0.2.3.md`: draft.21 plan for recording one selected
   FACETS executable/report/parser identity and running paired, truth-first JML
   RSM/PCM simulation stress tests across connected, anchor, sparse/topology,
   edge, and optional definition-matched fit/DFF families. It treats FACETS as

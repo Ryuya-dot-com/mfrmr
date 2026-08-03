@@ -5,9 +5,9 @@
 | Field | Value |
 | --- | --- |
 | Target release | 0.2.3 |
-| Specification ID | `0.2.3-draft.20` |
+| Specification ID | `0.2.3-draft.21` |
 | Date | 2026-08-03 |
-| Status | M1 source review recorded; M2 IC, ConQuest/TAM, canonical-score, engine-path, fail-closed release-readiness, and FACETS 4.5.0 paired JML RSM/PCM stress pilots are present. A draft.20 divergence audit shows that the zero-common-Person two-rater design is rank deficient, the severe PCM category row used different retained step dimensions, and raw weak-overlap Person maxima compare different extreme-score conventions. All remain one-seed calibration evidence. Constrained estimability, category-contract and typed-extreme guards, repository-owned external execution, multi-seed diagnostic operating characteristics, tolerance freeze, independent replication, recovery/coverage, bootstrap, attribution, consequence, support-envelope registry, candidate freeze, and confirmation remain pending. |
+| Status | M1 source review recorded; M2 IC, ConQuest/TAM, canonical-score, engine-path, fail-closed release-readiness, and FACETS 4.5.0 paired JML RSM/PCM stress pilots are present. The draft.20 divergence audit diagnosed exact aliases, category/step mismatch, and unmatched extreme displays. Draft.21 now sequences implementation through a typed three-scope readiness contract, estimator-specific constrained estimability, category/step support, JML boundary states, cross-surface propagation, metric-specific external eligibility, sparse-performance audit, and new-seed repilot. All existing simulations remain calibration evidence. Implementation, tolerance freeze, independent replication, recovery/coverage, bootstrap, attribution, consequence, support-envelope registry, candidate freeze, and confirmation remain pending. |
 | Confirmation authorized | No |
 | Evidence checklist | `release-evidence-checklist-0.2.3.csv` |
 | FACETS stress plan | `facets-jml-stress-plan-0.2.3.md` |
@@ -326,6 +326,13 @@ interval is supported, standard-error availability, run success,
 inference-ready rate, Monte Carlo standard error, terminal score, objective,
 condition indicator, and elapsed time.
 
+Readiness has three scopes: fit, parameter, and comparison. The stored fit
+record retains input, estimability, category, boundary, and numerical component
+states; parameter output retains one status per displayed/fixed coordinate;
+external normalization retains eligibility per metric and parameter class.
+The legacy scalar `InferenceReady` is only a conservative compatibility
+summary and cannot be the sole input to a 0.2.3 gate.
+
 - Replication counts are selected from a frozen Monte Carlo-precision target,
   not convenience or elapsed time alone.
 - A pooled mean cannot rescue a failed sample-size, family, facet, category,
@@ -342,6 +349,10 @@ condition indicator, and elapsed time.
   established, singular values and fitted information diagnose weak rather
   than exact identification; no universal condition-number cutoff is frozen
   in this draft.
+- The constrained audit is estimator-specific. JML includes free Person
+  coordinates; MML integrates them and must identify when a rater link rests
+  on a common latent-population assumption rather than shared Persons. Main-
+  effect rank cannot certify an interaction fit.
 - Category support records counts, maximum proportion, normalized entropy,
   local facet support, and threshold information by model. A consecutive
   global category range cannot confer readiness when a category is unused or
@@ -354,6 +365,9 @@ condition indicator, and elapsed time.
   FACETS adjusted display measure is not compared to an optimizer-dependent
   finite proxy as though both were the primary JML estimand; nonextreme Person
   measures remain a separate numeric stratum.
+- The same boundary contract applies to other JML element classes when their
+  sufficient score is extreme. MML/EAP Person results remain governed by the
+  population/prior model and are not relabelled as JML-unbounded.
 - `DES-DISCONNECTED` and other unidentified negative controls must not become
   inferentially ready. A false-ready result is a blocker.
 - The deterministic CRAN smoke tier demonstrates execution only. Release
@@ -827,6 +841,11 @@ verify the category map, retained scale/step dimension, active facets,
 constraints/anchors, parameter orientation, estimability, and extreme-score
 policy. A failed contract is retained as definition or failure-behavior
 evidence and is never averaged into an engine-agreement statistic.
+Eligibility is metric-specific: rejected extreme Person rows need not suppress
+a valid nonextreme comparison, while an unmatched PCM step dimension rejects
+parameter MAE even if row predictions are retained as descriptive sensitivity.
+Every aggregate reports expected, eligible, rejected-by-reason, missing, and
+failed denominators.
 
 FACETS evidence is generated in isolated synthetic run directories with exact
 replicate accounting, timeouts, exit/stderr capture, one process by default,
@@ -929,6 +948,7 @@ claim is reduced or deferred rather than decided ad hoc.
 | `0.2.3-draft.18` | Added the first paired FACETS 4.5.0 RSM/PCM stress driver and one-seed 44-run pilot; expanded missingness, sparse, topology, duplicate, category-support, extreme-score, and contamination cells; verified fail-closed disconnected-design reporting; identified binary connectivity as insufficient for a single-bridge design; recorded 4.5.1 reporting/test sensitivity; and retained every external numeric threshold and confirmation claim as unresolved. |
 | `0.2.3-draft.19` | Added two-rater, severe category-imbalance, checkerboard-interaction, and residual-local-dependence FACETS 4.5.0 extension cells plus a separate interaction/bias/PCAR runner; diagnosed false-ready zero-common-Person and category-support states, weak-interaction screening limits, and weak-overlap PCA-definition sensitivity; added scenario IDs and required quantitative design/category/diagnostic gates while retaining all results as one-seed pilot evidence. |
 | `0.2.3-draft.20` | Added a repository divergence audit before FACETS tolerances; established exact rank deficiency in the zero-common-Person and other sparse controls, reclassified the severe PCM parameter gap as a retained-category/step-dimension mismatch plus false readiness rather than a demonstrated kernel defect, separated nonextreme Person agreement from FACETS adjusted extreme displays, and required estimability, category-contract, typed-extreme, and diagnostic-definition guards before confirmation. |
+| `0.2.3-draft.21` | Converted the divergence diagnosis into eight dependent work packages; separated fit-, parameter-, and metric-level readiness; made JML/MML estimability rules distinct; specified sparse rank and category/step records, generalized typed JML boundary states, required one-source cross-surface propagation and legacy-object handling, and made external eligibility metric-specific with complete rejection accounting before the new-seed repilot. |
 
 ## Release decision algorithm
 

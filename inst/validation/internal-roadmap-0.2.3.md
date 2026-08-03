@@ -251,7 +251,7 @@ The following remain outside 0.2.3:
 | M4: run confirmation | Run the locked recovery/stress matrix, FACETS JML core, ConQuest/TAM comparisons, dimensionality challenge, and matched external rows without changing criteria or reusing discovery/pilot data as independent confirmation. | Candidate-linked internal and external evidence with every blocker classified and every expected scenario/replicate accounted for. |
 | M5: release handoff | Run full regression, cross-platform CI, manuals, URL checks, CRAN-time examples, Win-builder, package-content audit, and public-claim audit. | All blocker rows `ok`, all caveats visible, and an exact checked tarball. |
 
-The repository now contains `0.2.3-draft.20` planning and pilot artifacts at
+The repository now contains `0.2.3-draft.21` planning and pilot artifacts at
 `inst/validation/release-gate-spec-0.2.3.md` and
 `inst/validation/release-evidence-checklist-0.2.3.csv`. They deliberately
 record unresolved pilot-calibrated criteria and therefore do not authorize
@@ -313,6 +313,243 @@ estimability check, a category-map/retained-step comparison contract, typed
 extreme-score output, and definition-specific interaction/bias/PCAR contracts
 before the next paired pilot. These are prerequisites to tolerance
 calibration, not completed release gates.
+
+### Draft.21 near-term corrective program
+
+Draft.21 converts the draft.20 diagnosis into an implementation sequence. Its
+objective is not to maximize new diagnostics. It is to establish one source of
+truth for whether a fit, a parameter, and an external comparison are usable,
+and to make every downstream surface consume that source rather than
+reconstructing readiness independently.
+
+The dependency order is:
+
+```text
+WP0 contract/fixtures
+  -> WP1 constrained estimability ----+
+  -> WP2 category/step support -------+-> WP4 readiness propagation
+  -> WP3 JML boundary/extreme states -+       -> WP5 comparison eligibility
+                                               -> WP6 scale/performance audit
+                                               -> WP7 new pilot and gate freeze
+```
+
+WP1--WP3 may use separate fixtures, but none is complete until WP4 proves that
+their states reach every affected summary, diagnostic, report, plot, export,
+and replay surface. WP7 cannot begin on new pilot seeds until WP0--WP6 are
+reviewed. Confirmation remains prohibited until the later frozen gate.
+
+| Work package | Depends on | Implementation boundary | Required exit artifact |
+| --- | --- | --- | --- |
+| `WP0-READINESS-CONTRACT` | draft.20 diagnosis | Freeze internal state names, scopes, severity/precedence, condition classes, object fields, legacy-object behavior, and exact adversarial fixtures before changing fit logic. | Reviewed schema/fixture note plus failing-before/passing-after tests; no external tolerance. |
+| `WP1-ESTIMABILITY` | WP0 | Build the estimator-specific free-parameter map and constrained design; detect structural aliases before optimization; distinguish exact alias from weak fitted information. | Unit/property tests, alias diagnostics, sparse-design benchmark, and zero false-ready exact controls. |
+| `WP2-CATEGORY-STEP` | WP0 | Audit declared, observed, retained, free, fixed, and unsupported category/step coordinates globally and by current `step_facet`; do not add threshold anchors. | RSM/PCM/GPCM reduction and missing-category fixtures plus parameter-scoped status tables. |
+| `WP3-JML-BOUNDARY` | WP0 | Detect JML element separation/extreme sufficient scores on the actual contributing row pattern; replace optimizer-dependent finite primary values with typed boundary states. | JML extreme/nonextreme fixtures, MML non-reduction guard, and explicit optional-display contract. |
+| `WP4-READINESS-PROPAGATION` | WP1--WP3 | Derive fit-, parameter-, and output-level readiness once and propagate it without surface-specific reinterpretation. | Cross-surface snapshot/semantic tests and a 0.2.2-object migration fixture. |
+| `WP5-COMPARISON-CONTRACT` | WP4 | Make FACETS and other external normalization metric-specific and fail closed before numeric aggregation. | Eligibility/rejection ledger with denominator accounting and no silent row loss. |
+| `WP6-SCALE-AND-ADVERSARIAL` | WP1--WP5 | Verify sparse computation, basis invariance, row-order invariance, malformed-input behavior, and target-size runtime/memory without claiming FACETS capacity parity. | Benchmark envelope and metamorphic/negative-test report; no dense design allocation at target sizes. |
+| `WP7-REPILOT-AND-FREEZE` | WP0--WP6 | Rerun the affected internal and FACETS 4.5.0 pilot cells on new pilot seeds, calibrate weak-information rules, then prepare the next reviewed frozen specification. | Complete pilot registry, reason-coded exclusions, MCSE plan, resolved blocker criteria, and still no confirmation result. |
+
+#### Three readiness scopes
+
+The current scalar readiness vocabulary is insufficient. Draft.21 requires
+three linked scopes while retaining one conservative first-screen summary:
+
+| Scope | Required internal record | Examples of non-ready states |
+| --- | --- | --- |
+| Fit | `FitReadiness` plus component states | invalid input, unsupported model, structurally unidentified, numerical failure, review required |
+| Parameter | one row per displayed or fixed coordinate | aliased, unsupported step, weak information, JML unbounded low/high, fixed/anchored, estimable |
+| Comparison | one row per external metric and parameter class | model-contract mismatch, category/step mismatch, constraint mismatch, unidentified, unmatched boundary convention, eligible |
+
+`InferenceReady` remains a compatibility summary during 0.2.3, not the data
+model for new logic. WP0 must decide and test its conservative mapping before
+WP1 changes runtime behavior. In particular:
+
+- exact fit-level nonidentification can never map to `TRUE`;
+- an optimizer success code cannot improve a worse design/category state;
+- an excluded unbounded JML Person must not appear as a finite primary
+  estimate, but other demonstrably estimable parameter classes need not be
+  silently discarded; and
+- reports must show whether readiness applies to the whole fit, a restricted
+  set of parameters, or a comparison only.
+
+The machine-readable component fields are provisionally:
+
+`InputState`, `EstimabilityState`, `CategoryState`, `BoundaryState`,
+`NumericalState`, `FitReadiness`, `ParameterStatus`, `ComparisonEligibility`,
+`ReasonCode`, `ReadinessScope`, and `ReadinessContractVersion`.
+
+They are internal schema candidates, not public API promises. The first-screen
+precedence is fail closed: invalid/unsupported, exact nonidentification,
+numerical failure, parameter exclusions, weak-information review, then ready.
+Multiple reason codes are retained; a single most-severe label must not erase
+the causal audit trail.
+
+#### WP1: constrained estimability contract
+
+The pre-fit audit is estimator- and parameterization-specific:
+
+- JML includes free Person/facet coordinates and the linearly indexed
+  step/interaction coordinates, then applies centering, direct/group anchors,
+  fixed values, and structural absences before structural location rank is
+  judged. Nonlinear bounded-GPCM slope coordinates require their model
+  Jacobian/information audit and are not certified by an additive design rank.
+- MML integrates Person effects and therefore must not reuse the JML Person-
+  column rank rule. Panels linked only through a common latent distribution are
+  labelled `population_assumption_linked`; their interpretation requires
+  assignment and population-invariance evidence even when the marginal model
+  is algebraically identified.
+- Anchored coordinates are removed from the free vector and enter as known
+  offsets. Linear/group constraints are represented explicitly; they are not
+  approximated by dropping an arbitrary display column.
+- Interaction columns and step coordinates enter the audit only under the
+  model that actually fits them. A main-effect audit cannot certify an
+  interaction model.
+
+The implementation uses a staged computation. A graph/structural screen and a
+sparse free-coordinate location or derivative design come first as applicable.
+Sparse symbolic/numerical QR checks structural rank; a tolerance ladder and
+selected singular-value, Jacobian, or fitted-information diagnostics
+distinguish exact alias from near-alias. Dense SVD is limited to small
+explanation fixtures. Rank, tolerance, evaluation point, scale, contrast
+basis, free dimension, and any null-space explanation are recorded. A single
+universal condition-number cutoff is prohibited.
+
+Required invariance tests cover row permutation, level relabelling, alternative
+full-rank contrast bases, equivalent anchor parameterizations, and harmless
+zero-column removal. Required negative controls cover disconnected components,
+zero-common-Person JML panels, nested rater/Person groups, single bridges,
+unused interaction cells, and anchors that do or do not restore a common
+frame. A basis-dependent pass/fail result is a blocker.
+
+#### WP2: category and step contract
+
+Every fit records a category-support table with at least:
+
+`ScaleScope`, `StepScope`, `DeclaredCategories`, `ObservedGlobal`,
+`ObservedWithinScope`, `RetainedForFit`, `FreeStepCount`, `FixedStepCount`,
+`UnsupportedStep`, `ZeroType`, `InformationState`, and `ReasonCode`.
+
+The rules are model-specific:
+
+- RSM estimates one common ladder in the current fit. Global absence can
+  remove information about a common transition; absence within one facet
+  level is primarily a local-information issue when the transition is
+  supported elsewhere.
+- PCM uses the current `step_facet` ladders, so support must be checked within
+  every ladder. A global category count cannot establish a local PCM step.
+- bounded GPCM inherits the applicable category/step checks and additionally
+  keeps slope information separate; a stable slope cannot rescue an
+  unsupported transition.
+- a declared but unobserved boundary category is preserved as data semantics,
+  not reported as a data-estimated threshold. Threshold anchors and reusable
+  assertions remain 0.2.4 work.
+
+Structural zero, sampling zero, rare-but-observed, and severe concentration
+remain distinct. Count, proportion, and entropy may trigger review but cannot
+by themselves prove identification. Exact unsupported coordinates are decided
+from the parameter/support map; weak information is calibrated later from
+fitted information and recovery. FACETS `K`, category dropping, dummy-weight,
+and threshold-anchor cases are external policy controls, not new 0.2.3 mfrmr
+features.
+
+#### WP3: boundary and extreme contract
+
+Boundary detection applies to every estimated JML element for which an
+extreme sufficient-score argument is valid, not only Persons. It uses the
+model-implied attainable minimum/maximum on the exact contributing observations
+after missingness, signs, and supported positive weights. Fixed/anchored
+elements, separated interaction cells, and ordinary large finite estimates
+receive different statuses.
+
+For an unanchored JML extreme, the primary measure is typed as unbounded; its
+direction and response count remain available, while standard error and
+ordinary finite-fit statistics are unavailable unless separately justified.
+An optional adjusted display must name its formula and adjustment and cannot
+overwrite the primary field. FACETS-compatible adjustment is a comparison
+convention, not the mfrmr estimator target. MML/EAP Persons remain finite by
+the population/prior model and must not be relabelled as JML-unbounded merely
+because their observed response pattern is extreme.
+
+#### WP4--WP5: propagation and comparison eligibility
+
+One readiness builder owns state derivation. Print, summary, diagnostics,
+reports, plots, exports, support-envelope rows, and replay manifests consume
+the stored record. They may format it but may not infer a different state from
+warnings, parameter magnitude, or optimizer text. A saved 0.2.2 object without
+the contract is `legacy_unknown`; it is never silently upgraded by current
+display code. A deliberate re-audit/refit route may create a new-version
+record with provenance.
+
+External eligibility is metric-specific rather than one Boolean per run. The
+normalizer checks response family, estimator, included observations/weights,
+active facets, signs, category map, retained/free step dimension, anchors,
+constraints, coordinate transformation, parameter status, and extreme-score
+convention. A scenario may therefore permit a nonextreme Person comparison
+while rejecting extreme display values, or retain prediction sensitivity while
+rejecting PCM parameter MAE. Every rejection is counted by reason; aggregate
+denominators report expected, eligible, rejected, missing, and failed rows.
+
+#### WP6--WP7: scale discipline and repilot
+
+The implementation must not construct a dense response-by-parameter matrix for
+large sparse designs. WP6 benchmarks the graph screen, sparse design build,
+rank audit, fitted-information audit, storage overhead, and downstream report
+cost separately. Pilot target sizes are chosen from current mfrmr use and
+resource measurements; they are not inferred from FACETS' advertised maximum.
+If exact null-space explanation is too expensive, fail-closed classification
+remains mandatory and the detailed explanation may be a bounded diagnostic.
+
+WP7 first reruns deterministic fixtures, then the affected two-rater,
+single-bridge, disconnected, category-absence, severe-concentration, and
+extreme-score pilots on new pilot seeds. FACETS remains 4.5.0 for the primary
+local stratum. The rerun must show:
+
+- zero false-ready exact unidentified controls;
+- zero unsupported-step parameters labelled estimable;
+- no optimizer-dependent finite primary estimate for typed JML extremes;
+- unchanged supported balanced reductions within frozen regression tolerance;
+- no ineligible external row entering a numeric aggregate; and
+- complete reason-coded accounting before any weak-information threshold or
+  external tolerance is frozen.
+
+Only after those structural outcomes pass may multi-seed recovery calibrate
+weak-information and operating-envelope thresholds. Failure narrows 0.2.3
+claims or keeps the affected surface blocked; it does not accelerate 0.2.4 or
+0.2.5 features as a workaround.
+
+#### Change containment, risk register, and decision log
+
+Implementation is divided into reviewable commits in WP order. A contract/test
+commit precedes each behavior change; rank, category, boundary, propagation,
+normalization, and pilot changes are not combined into one unreviewable
+refactor. Until WP7 completes, no commit may add a response family, public
+`ScaleId`, threshold anchor, frozen-calibration API, or general active-facet
+dispatcher.
+
+| Risk | Adversarial failure | Required control |
+| --- | --- | --- |
+| Numerical rank masquerades as exact algebra | A tolerance or contrast choice changes pass/fail. | Structural screen, sparse-QR tolerance ladder, basis-invariance fixtures, recorded diagnostics, and `review` when exactness cannot be established. |
+| Safety audit destroys sparse scalability | A dense matrix exhausts memory before the model can be assessed. | Sparse construction, dimension forecast before allocation, bounded explanations, target-size memory/runtime gates, and an explicit unsupported-size state rather than bypass. |
+| Fail-closed becomes indiscriminate | One extreme Person suppresses otherwise estimable facet results, or a local category rarity blocks a common RSM ladder. | Fit/parameter/comparison scopes, model-specific rules, reduction fixtures, and reason-coded exclusions. |
+| Legacy behavior changes silently | A saved 0.2.2 object acquires 0.2.3 readiness semantics when printed. | Contract version, `legacy_unknown`, explicit re-audit/refit provenance, and serialized-object tests. |
+| External software defines mfrmr | FACETS category dropping or adjusted extremes are copied merely to reduce numerical differences. | Truth-first evaluation, explicit estimand choice, separate display convention, and architecture decisions independent of agreement magnitude. |
+| Valid rows disappear from aggregates | A normalizer silently drops hard cases and improves MAE. | Expected/eligible/rejected/missing/failed denominators and immutable reason ledger. |
+| Pilot becomes confirmation by repetition | Seeds or thresholds are changed until results look acceptable. | Registered pilot seeds, one declared escalation rule, spec revision for every criterion change, and disjoint confirmation seeds after freeze. |
+| Near-term fixes hard-code the future API | One-scale assumptions are embedded in fields later meant for `ScaleId`. | Use explicit scope keys internally, reserve versioned schema fields, and require one-scale reduction without exposing premature multi-scale behavior. |
+
+Each WP decision record contains: decision ID/date, affected estimand and
+surface, alternatives considered, selected rule, rejected shortcuts,
+fixture/evidence IDs, compatibility impact, performance impact, open risks,
+and which later evidence it invalidates. A rule promoted from pilot to frozen
+also records the pilot registry and why the chosen threshold is scientifically
+meaningful rather than merely observed to pass.
+
+WP completion does not mean that every initially proposed behavior survives.
+If a safe and scalable rule cannot be supported, the permitted outcomes are a
+narrower support envelope, a visible review/blocked state, or deferral. The
+impermissible outcomes are silently skipping the audit, loosening a criterion
+after viewing confirmation, or expanding later features to route around an
+unresolved core defect.
 
 Draft.17 promoted FACETS from a conditional supplied-output row to a mandatory
 JML RSM/PCM validation lane and adds

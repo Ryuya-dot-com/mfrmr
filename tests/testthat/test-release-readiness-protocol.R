@@ -21,7 +21,9 @@ test_that("public roadmap is separated from internal release operations", {
                     collapse = "\n")
   forbidden <- c(
     "0\\.2\\.3-draft", "SHA-256", "candidate manifest", "M1:", "M2:",
-    "Confirmation authorized", "inst/validation", "C:/", "C:\\\\"
+    "Confirmation authorized", "inst/validation", "C:/", "C:\\\\",
+    "WP[0-9]-", "ReadinessContractVersion",
+    "population_assumption_linked", "metric_specific_comparison_eligibility"
   )
   for (pattern in forbidden) {
     expect_false(grepl(pattern, public, perl = TRUE), info = pattern)
@@ -36,7 +38,41 @@ test_that("public roadmap is separated from internal release operations", {
   expect_true(any(grepl("inst/validation", ignore, fixed = TRUE)))
 })
 
-test_that("FACETS and diagnostic stress registries retain draft.20 edge cells", {
+test_that("internal draft.21 readiness work packages remain explicit and private", {
+  pkg_root <- normalizePath(testthat::test_path("..", ".."), mustWork = TRUE)
+  internal_path <- file.path(
+    pkg_root, "inst", "validation", "internal-roadmap-0.2.3.md"
+  )
+  gate_path <- file.path(
+    pkg_root, "inst", "validation", "release-gate-spec-0.2.3.md"
+  )
+  checklist_path <- file.path(
+    pkg_root, "inst", "validation", "release-evidence-checklist-0.2.3.csv"
+  )
+  skip_if_not(all(file.exists(c(internal_path, gate_path, checklist_path))))
+
+  internal <- paste(readLines(internal_path, warn = FALSE, encoding = "UTF-8"),
+                    collapse = "\n")
+  gate <- paste(readLines(gate_path, warn = FALSE, encoding = "UTF-8"),
+                collapse = "\n")
+  checklist <- utils::read.csv(checklist_path, stringsAsFactors = FALSE,
+                               check.names = FALSE)
+
+  expect_match(internal, "WP0-READINESS-CONTRACT", fixed = TRUE)
+  expect_match(internal, "WP7-REPILOT-AND-FREEZE", fixed = TRUE)
+  expect_match(internal, "population_assumption_linked", fixed = TRUE)
+  expect_match(internal, "ReadinessContractVersion", fixed = TRUE)
+  expect_match(internal, "expected, eligible, rejected", fixed = TRUE)
+  expect_match(gate, "Specification ID | `0.2.3-draft.21`", fixed = TRUE)
+  expect_true(all(c(
+    "readiness_scope_and_propagation",
+    "sparse_estimability_performance",
+    "metric_specific_comparison_eligibility"
+  ) %in% checklist$Item))
+  expect_identical(anyDuplicated(paste(checklist$Gate, checklist$Item)), 0L)
+})
+
+test_that("FACETS and diagnostic stress registries retain prior edge cells under draft.21", {
   pkg_root <- normalizePath(testthat::test_path("..", ".."),
                             winslash = "/", mustWork = TRUE)
   facets_path <- file.path(

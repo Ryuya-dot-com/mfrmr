@@ -1,6 +1,6 @@
 # FACETS JML stress-validation plan for mfrmr 0.2.3
 
-Status: `0.2.3-draft.20` planning and pilot artifact; confirmation is not authorized.
+Status: `0.2.3-draft.21` planning and pilot artifact; confirmation is not authorized.
 
 This plan is subordinate to `internal-roadmap-0.2.3.md` and the frozen
 release-gate specification. The repository-root `ROADMAP.md` contains only the
@@ -205,6 +205,13 @@ The executable comparison contract must additionally verify constrained
 full-rank estimability and the retained category/step dimension reported by
 each program. A failed contract remains edge/failure-behavior evidence and
 cannot contribute to a parameter tolerance or pooled correlation.
+
+Draft.21 applies this at metric and parameter-class scope rather than one
+Boolean per run. The normalization ledger records expected, eligible,
+rejected-by-reason, missing, and failed rows. An unmatched extreme Person can
+be rejected while nonextreme Persons remain eligible; an unmatched PCM step
+dimension rejects parameter MAE even when prediction/residual sensitivity is
+retained descriptively. No rejected row may disappear from denominators.
 
 RSM/PCM element and estimated-step parameters enter the mandatory common
 coordinate comparison. Person measures enter only matched JML rows and are
