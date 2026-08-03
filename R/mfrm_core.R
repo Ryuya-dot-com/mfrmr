@@ -3794,14 +3794,24 @@ mfrm_estimate <- function(data, person_col, facet_cols, score_col,
   config$estimation_control$mml_engine_used <- as.character(opt$mml_engine$Used %||% NA_character_)
   config$estimation_control$mml_engine_detail <- as.character(opt$mml_engine$Detail %||% NA_character_)
 
-  # For nonlinear MML fits, decompose the retained marginal log-likelihood
-  # score by observed Person response pattern. This is deliberately distinct
-  # from the JML conditional adjacent-logit kernel and from a structural map
-  # over every possible response pattern.
+  # For nonlinear MML fits, first decompose the retained observed-Person
+  # marginal scores, then evaluate bounded all-pattern expected information on
+  # each retained Person design. Both are distinct from the JML conditional
+  # adjacent-logit kernel and neither is promoted to a readiness decision.
   if (identical(config$method, "MML") &&
       length(estimability_audit$nonlinear_blocks %||% character(0)) > 0L) {
     estimability_audit$mml_observed_pattern_score <-
       audit_mfrm_mml_observed_pattern_score(
+        opt = opt,
+        prep = prep,
+        idx = idx,
+        config = config,
+        sizes = sizes,
+        quad_points = quad_points,
+        nonlinear_blocks = estimability_audit$nonlinear_blocks
+      )
+    estimability_audit$mml_all_pattern_information <-
+      audit_mfrm_mml_all_pattern_information(
         opt = opt,
         prep = prep,
         idx = idx,
@@ -3815,10 +3825,10 @@ mfrm_estimate <- function(data, person_col, facet_cols, score_col,
   }
 
   # For GPCM JML, combine the additive and log-slope coordinates in the exact
-  # retained adjacent-category response-kernel Jacobian. MML requires a
-  # Person-integrated response-pattern audit and therefore receives an
-  # explicit not-evaluated state rather than reusing the conditional JML
-  # result. Neither branch changes readiness in this implementation slice.
+  # retained adjacent-category response-kernel Jacobian. The corresponding
+  # conditional-kernel field remains explicitly not evaluated for MML rather
+  # than reusing it or relabelling the separate marginal-pattern audits.
+  # Neither branch changes readiness in this implementation slice.
   if (identical(config$model, "GPCM")) {
     estimability_audit$gpcm_response_kernel <-
       audit_mfrm_gpcm_response_kernel(

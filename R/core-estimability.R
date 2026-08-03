@@ -1297,8 +1297,9 @@ audit_mfrm_gpcm_response_kernel <- function(
       "MML integrates Person coordinates, so a conditional observation-level",
       "adjacent-logit Jacobian cannot certify the marginal person-pattern",
       "model. The fitted-information Hessian is a separate local likelihood",
-      "diagnostic. The separate observed-pattern score audit does not supply",
-      "the all-possible-pattern structural map, which remains pending."
+      "diagnostic. The separate observed-pattern and exhaustive retained-",
+      "design expected-information audits remain local and do not supply a",
+      "global marginal structural-identification result."
     )
     return(base)
   }
@@ -1495,6 +1496,222 @@ mfrmr_mml_observed_person_score_matrix <- function(par, idx, config, sizes,
     score = score,
     person_ids = contribution$person_ids,
     log_marginal = contribution$log_marginal
+  )
+}
+
+mfrmr_enumerate_response_patterns <- function(n_observations, n_categories) {
+  n_observations <- suppressWarnings(as.integer(n_observations)[1])
+  n_categories <- suppressWarnings(as.integer(n_categories)[1])
+  if (!is.finite(n_observations) || n_observations < 0L) {
+    stop("`n_observations` must be one non-negative integer.", call. = FALSE)
+  }
+  if (!is.finite(n_categories) || n_categories < 2L) {
+    stop("`n_categories` must be one integer of at least two.", call. = FALSE)
+  }
+  if (n_observations == 0L) {
+    return(matrix(integer(0), nrow = 1L, ncol = 0L))
+  }
+  pattern_count <- n_categories^n_observations
+  if (!is.finite(pattern_count) || pattern_count > .Machine$integer.max) {
+    stop("The requested response-pattern grid is too large to enumerate.",
+         call. = FALSE)
+  }
+  code <- 0:(as.integer(pattern_count) - 1L)
+  radix <- n_categories^(seq_len(n_observations) - 1L)
+  patterns <- outer(
+    code, radix,
+    FUN = function(value, place) floor(value / place) %% n_categories
+  )
+  storage.mode(patterns) <- "integer"
+  unname(patterns)
+}
+
+mfrmr_mml_evaluate_person_patterns <- function(
+    par,
+    person_idx,
+    config,
+    sizes,
+    quad,
+    patterns,
+    include_scores = TRUE) {
+  if (!identical(config$method, "MML")) {
+    stop("All-pattern marginal evaluation is defined here only for MML.",
+         call. = FALSE)
+  }
+  patterns <- as.matrix(patterns)
+  n_obs <- length(person_idx$score_k)
+  if (n_obs <= 0L || ncol(patterns) != n_obs || nrow(patterns) <= 0L) {
+    stop("The Person response-pattern matrix is empty or dimensionally invalid.",
+         call. = FALSE)
+  }
+  person_ids <- unique(as.integer(person_idx$person))
+  if (length(person_ids) != 1L || anyNA(person_ids)) {
+    stop("All-pattern marginal evaluation requires exactly one observed Person design.",
+         call. = FALSE)
+  }
+  n_cat <- as.integer(config$n_cat)
+  if (any(!is.finite(patterns)) || any(patterns < 0L) ||
+      any(patterns >= n_cat) || any(patterns != floor(patterns))) {
+    stop("The response-pattern matrix contains an invalid category index.",
+         call. = FALSE)
+  }
+  free_dimension <- sum(vapply(sizes, as.integer, integer(1)))
+  if (length(par) != free_dimension || any(!is.finite(par))) {
+    stop("The MML free parameter vector is unavailable or malformed.",
+         call. = FALSE)
+  }
+
+  params <- expand_params(par, sizes, config)
+  base_eta <- compute_base_eta(person_idx, params, config)
+  log_marginal <- numeric(nrow(patterns))
+  score <- if (isTRUE(include_scores)) {
+    matrix(NA_real_, nrow = nrow(patterns), ncol = free_dimension)
+  } else {
+    matrix(numeric(0), nrow = 0L, ncol = free_dimension)
+  }
+
+  for (pattern_row in seq_len(nrow(patterns))) {
+    pattern_idx <- person_idx
+    pattern_idx$score_k <- as.integer(patterns[pattern_row, ])
+    logprob_bundle <- mfrm_mml_logprob_bundle(
+      idx = pattern_idx,
+      config = config,
+      quad = quad,
+      params = params,
+      base_eta = base_eta,
+      include_probs = isTRUE(include_scores),
+      include_linear_part = isTRUE(include_scores) &&
+        identical(config$model, "GPCM")
+    )
+    posterior_bundle <- mfrm_mml_posterior_bundle(logprob_bundle)
+    marginal <- posterior_bundle$person_bundle$log_marginal
+    if (length(marginal) != 1L || !is.finite(marginal)) {
+      stop("A Person response-pattern marginal probability was non-finite.",
+           call. = FALSE)
+    }
+    log_marginal[pattern_row] <- marginal
+    if (isTRUE(include_scores)) {
+      score[pattern_row, ] <- -mfrm_grad_mml_core(
+        params = params,
+        base_eta = base_eta,
+        idx = pattern_idx,
+        config = config,
+        sizes = sizes,
+        quad = quad,
+        logprob_bundle = logprob_bundle,
+        posterior_bundle = posterior_bundle
+      )
+    }
+  }
+
+  if (isTRUE(include_scores) && any(!is.finite(score))) {
+    stop("An all-pattern marginal score was non-finite.", call. = FALSE)
+  }
+  list(
+    person_id = person_ids,
+    patterns = patterns,
+    log_marginal = log_marginal,
+    score = score
+  )
+}
+
+mfrmr_mml_all_pattern_workload <- function(idx, n_categories) {
+  person_ids <- sort(unique(as.integer(idx$person)))
+  person_ids <- person_ids[is.finite(person_ids)]
+  observation_counts <- vapply(person_ids, function(person_id) {
+    sum(as.integer(idx$person) == person_id)
+  }, integer(1))
+  log_pattern_counts <- observation_counts * log(as.numeric(n_categories))
+  pattern_counts <- ifelse(
+    log_pattern_counts <= log(.Machine$double.xmax),
+    exp(log_pattern_counts),
+    Inf
+  )
+  pattern_counts <- round(pattern_counts)
+  list(
+    person_ids = as.integer(person_ids),
+    observation_counts = as.integer(observation_counts),
+    pattern_counts = as.double(pattern_counts),
+    total_patterns = sum(pattern_counts)
+  )
+}
+
+mfrmr_mml_all_pattern_expected_information <- function(
+    par,
+    idx,
+    config,
+    sizes,
+    quad) {
+  if (!identical(config$method, "MML")) {
+    stop("All-pattern expected information is defined here only for MML.",
+         call. = FALSE)
+  }
+  weights <- idx$weight
+  if (!is.null(weights) &&
+      (any(!is.finite(weights)) || any(abs(weights - 1) > 1e-12))) {
+    stop("All-pattern expected information currently requires unit row weights.",
+         call. = FALSE)
+  }
+  workload <- mfrmr_mml_all_pattern_workload(idx, config$n_cat)
+  free_dimension <- sum(vapply(sizes, as.integer, integer(1)))
+  by_person <- vector("list", length(workload$person_ids))
+  weighted_score <- vector("list", length(workload$person_ids))
+  expected_score <- matrix(
+    0,
+    nrow = length(workload$person_ids),
+    ncol = free_dimension
+  )
+  probability_mass <- numeric(length(workload$person_ids))
+
+  for (person_position in seq_along(workload$person_ids)) {
+    person_id <- workload$person_ids[person_position]
+    rows <- which(as.integer(idx$person) == person_id)
+    person_idx <- mfrmr_subset_observation_indices(idx, rows)
+    patterns <- mfrmr_enumerate_response_patterns(
+      n_observations = length(rows),
+      n_categories = config$n_cat
+    )
+    evaluated <- mfrmr_mml_evaluate_person_patterns(
+      par = par,
+      person_idx = person_idx,
+      config = config,
+      sizes = sizes,
+      quad = quad,
+      patterns = patterns,
+      include_scores = TRUE
+    )
+    probability <- exp(evaluated$log_marginal)
+    if (any(!is.finite(probability)) || any(probability < 0)) {
+      stop("An all-pattern marginal probability was invalid.", call. = FALSE)
+    }
+    probability_mass[person_position] <- sum(probability)
+    expected_score[person_position, ] <- colSums(
+      evaluated$score * probability
+    )
+    weighted_score[[person_position]] <-
+      evaluated$score * sqrt(probability)
+    evaluated$probability <- probability
+    by_person[[person_position]] <- evaluated
+  }
+
+  weighted_score <- do.call(rbind, weighted_score)
+  expected_information <- crossprod(weighted_score)
+  if (nrow(weighted_score) != workload$total_patterns ||
+      ncol(weighted_score) != free_dimension ||
+      any(!is.finite(expected_information))) {
+    stop("The all-pattern expected-information assembly is malformed.",
+         call. = FALSE)
+  }
+  list(
+    person_ids = workload$person_ids,
+    observation_counts = workload$observation_counts,
+    pattern_counts = workload$pattern_counts,
+    total_patterns = workload$total_patterns,
+    probability_mass = probability_mass,
+    expected_score = expected_score,
+    weighted_score = unname(weighted_score),
+    expected_information = unname(expected_information),
+    by_person = by_person
   )
 }
 
@@ -1759,6 +1976,334 @@ audit_mfrm_mml_observed_pattern_score <- function(
     "marginal contribution. This observed-pattern matrix is not the map over",
     "all possible response patterns and does not classify identification,",
     "weak information, or readiness."
+  )
+  base
+}
+
+audit_mfrm_mml_all_pattern_information <- function(
+    opt,
+    prep,
+    idx,
+    config,
+    sizes,
+    quad_points,
+    nonlinear_blocks,
+    max_persons = 100L,
+    max_patterns_per_person = 4096,
+    max_total_patterns = 5000,
+    max_free_dimension = 80L,
+    max_score_elements = 4e5,
+    relative_step = 1e-6,
+    tolerances = c(1e-12, 1e-10, 1e-8)) {
+  nonlinear_blocks <- as.character(nonlinear_blocks %||% character(0))
+  free_dimension <- sum(vapply(sizes, as.integer, integer(1)))
+  n_cat <- as.integer(config$n_cat %||% 0L)
+  workload <- mfrmr_mml_all_pattern_workload(idx, max(n_cat, 2L))
+  person_designs <- length(workload$person_ids)
+  total_patterns <- workload$total_patterns
+  score_elements <- total_patterns * as.double(free_dimension)
+  weights <- idx$weight
+  unit_weights <- is.null(weights) ||
+    (all(is.finite(weights)) && all(abs(weights - 1) <= 1e-12))
+  severity <- as.character(
+    opt$optimizer_diagnostics$ConvergenceSeverity %||% NA_character_
+  )
+  empty_map <- mfrmr_estimability_map()
+  base <- list(
+    role = "all_response_patterns_expected_marginal_score_information",
+    evaluation_point = "retained_optimizer_free_coordinate_vector",
+    method = as.character(config$method),
+    model = as.character(config$model),
+    nonlinear_blocks = nonlinear_blocks,
+    optimizer_convergence_severity = severity,
+    attempted = FALSE,
+    status = if (identical(config$method, "MML") &&
+                 length(nonlinear_blocks) > 0L) {
+      "pending_after_optimization"
+    } else if (identical(config$method, "MML")) {
+      "not_required_linear_preflight_scope"
+    } else {
+      "not_applicable_estimator"
+    },
+    person_designs = as.integer(person_designs),
+    retained_observation_rows = length(idx$score_k),
+    retained_observations_per_person = data.frame(
+      Minimum = if (length(workload$observation_counts) > 0L) {
+        min(workload$observation_counts)
+      } else {
+        NA_integer_
+      },
+      Median = if (length(workload$observation_counts) > 0L) {
+        stats::median(workload$observation_counts)
+      } else {
+        NA_real_
+      },
+      Maximum = if (length(workload$observation_counts) > 0L) {
+        max(workload$observation_counts)
+      } else {
+        NA_integer_
+      },
+      stringsAsFactors = FALSE
+    ),
+    categories = n_cat,
+    total_response_patterns = as.double(total_patterns),
+    free_dimension = as.integer(free_dimension),
+    score_elements = as.double(score_elements),
+    execution_limits = list(
+      persons = as.integer(max_persons),
+      patterns_per_person = as.double(max_patterns_per_person),
+      total_patterns = as.double(max_total_patterns),
+      free_dimension = as.integer(max_free_dimension),
+      score_elements = as.double(max_score_elements)
+    ),
+    quadrature_points = as.integer(quad_points),
+    unit_row_weights_required = TRUE,
+    unit_row_weights_observed = isTRUE(unit_weights),
+    retained_observation_designs = TRUE,
+    missing_rows_imputed = FALSE,
+    observed_patterns_only = FALSE,
+    all_possible_response_patterns_evaluated = FALSE,
+    expected_information_evaluated = FALSE,
+    conditional_jml_kernel_reused = FALSE,
+    local_rank = NA_integer_,
+    local_nullity = NA_integer_,
+    local_rank_state = "not_evaluated",
+    tolerance_sensitive = FALSE,
+    rank_ladder = data.frame(),
+    parameter_blocks = data.frame(
+      Block = character(0), FreeCoordinates = integer(0)
+    ),
+    parameter_map = empty_map,
+    zero_coordinates = character(0),
+    null_directions = data.frame(),
+    probability_normalization = data.frame(
+      MinimumMass = NA_real_,
+      MedianMass = NA_real_,
+      MaximumMass = NA_real_,
+      MaximumAbsoluteMassError = NA_real_,
+      stringsAsFactors = FALSE
+    ),
+    expected_score_identity = data.frame(
+      MaximumPersonScoreAbs = NA_real_,
+      MaximumAggregateScoreAbs = NA_real_,
+      stringsAsFactors = FALSE
+    ),
+    expected_information_summary = data.frame(
+      MinimumEigenvalue = NA_real_,
+      MaximumEigenvalue = NA_real_,
+      MaximumAsymmetry = NA_real_,
+      Trace = NA_real_,
+      stringsAsFactors = FALSE
+    ),
+    numerical_differentiation = list(
+      status = "not_evaluated",
+      method = "coordinate_scaled_central_difference_of_selected_all_pattern_log_marginals",
+      relative_step = as.numeric(relative_step[1]),
+      selected_person_designs = 0L,
+      selected_patterns = 0L,
+      max_abs_difference = NA_real_,
+      max_scaled_difference = NA_real_
+    ),
+    structural_identification_classified = FALSE,
+    weak_information_classified = FALSE,
+    readiness_effect = "none_all_patterns_local_diagnostic_only",
+    detail = paste(
+      "No nonlinear MML block required the all-response-pattern expected",
+      "information audit in this implementation slice."
+    )
+  )
+  if (!identical(config$method, "MML") ||
+      length(nonlinear_blocks) == 0L) return(base)
+
+  if (!isTRUE(unit_weights)) {
+    base$status <- "not_evaluated_nonunit_row_weights"
+    base$detail <- paste(
+      "The exhaustive response-pattern probability identity currently",
+      "requires unit row weights. Nonunit likelihood weights do not define",
+      "the same normalized finite response-pattern distribution and are",
+      "therefore not silently reinterpreted."
+    )
+    return(base)
+  }
+  maximum_person_patterns <- if (length(workload$pattern_counts) > 0L) {
+    max(workload$pattern_counts)
+  } else {
+    Inf
+  }
+  if (person_designs <= 0L || free_dimension <= 0L || n_cat < 2L ||
+      person_designs > as.integer(max_persons) ||
+      maximum_person_patterns > as.double(max_patterns_per_person) ||
+      total_patterns > as.double(max_total_patterns) ||
+      free_dimension > as.integer(max_free_dimension) ||
+      score_elements > as.double(max_score_elements)) {
+    base$status <- "not_evaluated_execution_limit"
+    base$detail <- paste(
+      "The all-response-pattern expected-information audit exceeded a",
+      "recorded combinatorial or dimensional execution limit. This is a",
+      "computational state, not an estimability or readiness classification."
+    )
+    return(base)
+  }
+  if (is.null(opt$par) || length(opt$par) != free_dimension ||
+      any(!is.finite(opt$par))) {
+    base$status <- "not_evaluated_parameter_vector"
+    base$detail <- paste(
+      "The retained MML free parameter vector was unavailable, non-finite,",
+      "or dimensionally inconsistent."
+    )
+    return(base)
+  }
+
+  quad <- gauss_hermite_normal(max(1L, as.integer(quad_points)))
+  built <- tryCatch(
+    mfrmr_mml_all_pattern_expected_information(
+      par = opt$par,
+      idx = idx,
+      config = config,
+      sizes = sizes,
+      quad = quad
+    ),
+    error = function(e) e
+  )
+  base$attempted <- TRUE
+  if (inherits(built, "error")) {
+    base$status <- "unavailable"
+    base$detail <- paste0(
+      "The all-response-pattern expected information was unavailable: ",
+      conditionMessage(built), "."
+    )
+    return(base)
+  }
+  parameter_map <- tryCatch(
+    mfrmr_mml_optimizer_parameter_map(prep, idx, config, sizes),
+    error = function(e) e
+  )
+  if (inherits(parameter_map, "error")) {
+    base$status <- "unavailable"
+    base$detail <- paste0(
+      "The all-response-pattern parameter map was unavailable: ",
+      conditionMessage(parameter_map), "."
+    )
+    return(base)
+  }
+
+  rank <- suppressWarnings(
+    mfrmr_estimability_rank_audit(
+      design = Matrix::Matrix(built$weighted_score, sparse = TRUE),
+      parameter_map = parameter_map,
+      tolerances = tolerances,
+      structural_tolerance = tolerances[1]
+    )
+  )
+  information <- built$expected_information
+  information_symmetric <- (information + t(information)) / 2
+  information_eigenvalues <- eigen(
+    information_symmetric, symmetric = TRUE, only.values = TRUE
+  )$values
+  expected_aggregate <- colSums(built$expected_score)
+  probability_error <- abs(built$probability_mass - 1)
+
+  base$status <- "evaluated_all_patterns_local_diagnostic_only"
+  base$all_possible_response_patterns_evaluated <- TRUE
+  base$expected_information_evaluated <- TRUE
+  base$local_rank <- rank$Rank
+  base$local_nullity <- rank$Nullity
+  base$local_rank_state <- if (rank$Nullity == 0L) {
+    "all_patterns_locally_full_column_rank"
+  } else {
+    "all_patterns_locally_rank_deficient"
+  }
+  base$tolerance_sensitive <- isTRUE(rank$ToleranceSensitive)
+  base$rank_ladder <- rank$ToleranceRanks
+  base$parameter_map <- parameter_map
+  base$zero_coordinates <- rank$ZeroCoordinates
+  base$null_directions <- rank$NullDirections
+  base$parameter_blocks <- stats::aggregate(
+    rep(1L, nrow(parameter_map)),
+    by = list(Block = parameter_map$Block),
+    FUN = sum
+  ) |>
+    stats::setNames(c("Block", "FreeCoordinates"))
+  base$probability_normalization <- data.frame(
+    MinimumMass = min(built$probability_mass),
+    MedianMass = stats::median(built$probability_mass),
+    MaximumMass = max(built$probability_mass),
+    MaximumAbsoluteMassError = max(probability_error),
+    stringsAsFactors = FALSE
+  )
+  base$expected_score_identity <- data.frame(
+    MaximumPersonScoreAbs = max(abs(built$expected_score)),
+    MaximumAggregateScoreAbs = max(abs(expected_aggregate)),
+    stringsAsFactors = FALSE
+  )
+  base$expected_information_summary <- data.frame(
+    MinimumEigenvalue = min(information_eigenvalues),
+    MaximumEigenvalue = max(information_eigenvalues),
+    MaximumAsymmetry = max(abs(information - t(information))),
+    Trace = sum(diag(information)),
+    stringsAsFactors = FALSE
+  )
+
+  selected_positions <- unique(c(1L, length(built$person_ids)))
+  selected <- lapply(selected_positions, function(person_position) {
+    evaluated <- built$by_person[[person_position]]
+    pattern_rows <- unique(c(
+      1L,
+      as.integer(ceiling(nrow(evaluated$patterns) / 2)),
+      nrow(evaluated$patterns)
+    ))
+    person_id <- built$person_ids[person_position]
+    person_idx <- mfrmr_subset_observation_indices(
+      idx, which(as.integer(idx$person) == person_id)
+    )
+    list(
+      person_idx = person_idx,
+      patterns = evaluated$patterns[pattern_rows, , drop = FALSE],
+      score = evaluated$score[pattern_rows, , drop = FALSE]
+    )
+  })
+  analytic_selected <- do.call(rbind, lapply(selected, `[[`, "score"))
+  numeric <- mfrmr_numeric_transformation_jacobian(
+    transform = function(value) {
+      unlist(lapply(selected, function(selection) {
+        mfrmr_mml_evaluate_person_patterns(
+          par = value,
+          person_idx = selection$person_idx,
+          config = config,
+          sizes = sizes,
+          quad = quad,
+          patterns = selection$patterns,
+          include_scores = FALSE
+        )$log_marginal
+      }), use.names = FALSE)
+    },
+    free = opt$par,
+    relative_step = relative_step
+  )
+  base$numerical_differentiation$selected_person_designs <-
+    length(selected)
+  base$numerical_differentiation$selected_patterns <-
+    nrow(analytic_selected)
+  if (isTRUE(numeric$valid) &&
+      identical(dim(numeric$jacobian), dim(analytic_selected))) {
+    difference <- abs(analytic_selected - numeric$jacobian)
+    scaled <- difference /
+      pmax(1, abs(analytic_selected), abs(numeric$jacobian))
+    base$numerical_differentiation$status <- "evaluated"
+    base$numerical_differentiation$max_abs_difference <- max(difference)
+    base$numerical_differentiation$max_scaled_difference <- max(scaled)
+  } else {
+    base$numerical_differentiation$status <- "unavailable"
+  }
+  base$detail <- paste(
+    "For each observed Person design after row omission, every finite",
+    "category-response pattern is enumerated under unit weights. Marginal",
+    "probability mass, the zero expected-score identity, the score-outer-",
+    "product expected information, and selected independent derivatives are",
+    "checked in optimizer coordinates. This retained-point, observed-design",
+    "geometry is stronger than an observed-pattern rank but remains a local",
+    "diagnostic; it does not yet classify structural identification, weak",
+    "information, readiness, or external-comparison eligibility."
   )
   base
 }
@@ -2130,6 +2675,26 @@ audit_mfrm_estimability <- function(prep, idx, config, sizes) {
       structural_identification_classified = FALSE,
       weak_information_classified = FALSE,
       readiness_effect = "none_observed_patterns_diagnostic_only"
+    ),
+    mml_all_pattern_information = list(
+      role = "all_response_patterns_expected_marginal_score_information",
+      status = if (identical(config$method, "MML") &&
+                   length(nonlinear_blocks) > 0L) {
+        "pending_after_optimization"
+      } else if (identical(config$method, "MML")) {
+        "not_required_linear_preflight_scope"
+      } else {
+        "not_applicable_estimator"
+      },
+      attempted = FALSE,
+      observed_patterns_only = FALSE,
+      all_possible_response_patterns_evaluated = FALSE,
+      expected_information_evaluated = FALSE,
+      retained_observation_designs = TRUE,
+      missing_rows_imputed = FALSE,
+      structural_identification_classified = FALSE,
+      weak_information_classified = FALSE,
+      readiness_effect = "none_all_patterns_local_diagnostic_only"
     ),
     fitted_information = list(
       status = if (length(nonlinear_blocks) > 0L) {

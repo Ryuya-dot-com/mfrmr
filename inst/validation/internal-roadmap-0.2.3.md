@@ -311,7 +311,7 @@ The following remain outside 0.2.3:
 | M4: run confirmation | Run the locked recovery/stress matrix, FACETS JML core, ConQuest/TAM MML comparisons, TAM/immer JML convention grid, eligible immer CML/CCML rows, dimensionality challenge, and matched external rows without changing criteria or reusing discovery/pilot data as independent confirmation. | Candidate-linked internal and external evidence with every blocker classified and every expected scenario/replicate accounted for. |
 | M5: release handoff | Run full regression, cross-platform CI, manuals, URL checks, CRAN-time examples, Win-builder, package-content audit, and public-claim audit. | All blocker rows `ok`, all caveats visible, and an exact checked tarball. |
 
-The repository now contains `0.2.3-draft.28` planning and pilot artifacts at
+The repository now contains `0.2.3-draft.29` planning and pilot artifacts at
 `inst/validation/release-gate-spec-0.2.3.md` and
 `inst/validation/release-evidence-checklist-0.2.3.csv`, with the TAM/immer
 execution contract in `inst/validation/tam-immer-estimator-stress-plan-0.2.3.md`.
@@ -375,7 +375,7 @@ extreme-score output, and definition-specific interaction/bias/PCAR contracts
 before the next paired pilot. These are prerequisites to tolerance
 calibration, not completed release gates.
 
-### Draft.28 near-term corrective program
+### Draft.29 near-term corrective program
 
 Draft.21 converted the draft.20 diagnosis into an implementation sequence.
 Draft.22 completes the structural WP0 contract and makes that contract the
@@ -392,6 +392,10 @@ that conditional object as an MML person-integrated identification result.
 Draft.28 adds a separate MML observed-Person-pattern score decomposition, while
 refusing to reinterpret observed-pattern rank as the structural map over all
 possible response patterns.
+Draft.29 adds the next bounded MML layer: exhaustive finite response-pattern
+enumeration and score-outer-product expected information on each retained
+Person observation design, while retaining the result as local geometry rather
+than a global structural-identification decision.
 The program's objective is not to maximize new diagnostics. It
 is to establish one source of truth for whether a fit, a parameter, and an
 external comparison are usable, and to make every downstream surface consume
@@ -416,7 +420,7 @@ reviewed. Confirmation remains prohibited until the later frozen gate.
 | Work package | Depends on | Current state | Implementation boundary | Required exit artifact |
 | --- | --- | --- | --- | --- |
 | `WP0-READINESS-CONTRACT` | draft.20 diagnosis | `complete_structural` | Freeze internal state names, scopes, severity/precedence, condition classes, object fields, legacy-object behavior, and exact adversarial fixtures before changing fit logic. | `readiness-contract-0.2.3.md`, its repository validator, 27-row fixture registry, and privacy/semantic tests; no external tolerance. |
-| `WP1-ESTIMABILITY` | WP0 | `in_progress_mml_observed_pattern_instrumented` | Build the estimator-specific free-parameter map and constrained design; detect structural aliases before optimization; distinguish exact alias from weak fitted information. | Unit/property tests, alias diagnostics, sparse-design benchmark, and zero false-ready exact controls. |
+| `WP1-ESTIMABILITY` | WP0 | `in_progress_mml_all_pattern_instrumented` | Build the estimator-specific free-parameter map and constrained design; detect structural aliases before optimization; distinguish exact alias from weak fitted information. | Unit/property tests, alias diagnostics, sparse-design benchmark, and zero false-ready exact controls. |
 | `WP2-CATEGORY-STEP` | WP0 | `queued` | Audit declared, observed, retained, free, fixed, and unsupported category/step coordinates globally and by current `step_facet`; do not add threshold anchors. | RSM/PCM/GPCM reduction and missing-category fixtures plus parameter-scoped status tables. |
 | `WP3-JML-BOUNDARY` | WP0 | `queued` | Detect JML element separation/extreme sufficient scores on the actual contributing row pattern; replace optimizer-dependent finite primary values with typed boundary states. | JML extreme/nonextreme fixtures, MML non-reduction guard, and explicit optional-display contract. |
 | `WP4-READINESS-PROPAGATION` | WP1--WP3 | `blocked_by_dependency` | Derive fit-, parameter-, and output-level readiness once and propagate it without surface-specific reinterpretation. | Cross-surface snapshot/semantic tests and a 0.2.2-object migration fixture. |
@@ -666,11 +670,47 @@ hold while the observed-pattern matrix is rank deficient; this is retained as
 a direct negative control against converting observed-pattern rank into a
 structural decision. Execution caps are computational states only.
 
-WP1 is not complete. The JML conditional result and MML observed-pattern result
-are retained-point diagnostics. An all-possible-pattern or equivalent expected-
-information structural argument, active latent-variance property grids,
-alternative contrast/anchor/slope-facet grids, exact local-rank controls,
-sparse target-size memory/runtime evidence, a scalable alternative to the
+##### Draft.29 MML all-pattern expected-information slice
+
+For each bounded nonlinear MML fit that remains within the recorded execution
+envelope, the runtime now fixes each Person's retained observation design and
+enumerates every finite category-response vector on that design. Rows omitted
+as missing are not recreated or imputed: a Person with fewer retained rows has
+a correspondingly smaller response-pattern space. This first exhaustive
+implementation requires unit row weights because an arbitrary powered
+likelihood is not the same normalized finite response-pattern distribution.
+Nonunit weights receive an explicit non-evaluated state.
+
+For every pattern, the package evaluates the marginal probability and analytic
+score in the exact optimizer coordinate order. The stored audit verifies that
+each Person's pattern probabilities sum to one, that probability-weighted
+scores have expectation zero, and that score outer products form a symmetric
+positive-semidefinite expected-information matrix. Selected patterns from the
+first and last retained Person designs are checked against coordinate-scaled
+central differences. The fitted object stores workload, normalization,
+identity, eigenvalue, rank-ladder, derivative, and execution summaries, but not
+Person identifiers, pattern rows, score rows, or the expected-information
+matrix itself.
+
+The default envelope is at most 100 Person designs, 4,096 patterns for any one
+design, 5,000 total patterns, 80 free coordinates, and 400,000 pattern-by-
+coordinate score elements. These values are implementation caps, not supported
+capacity claims. Exact controls cover complete and one-row-missing GPCM
+designs, row permutation, latent-regression beta and residual variance,
+nonunit-weight rejection, and execution-limit rejection. In the balanced
+eight-Person GPCM control, all 2,048 patterns give probability-mass error below
+`6e-16`, expected-score error below `5e-15`, central-difference error below
+`7e-10`, and local rank 7 of 7, whereas the realized observed-pattern score
+matrix in draft.28 has rank 5 of 7. A one-node, zero-vector control makes the
+GPCM slope direction locally zero, demonstrating that even exhaustive-pattern
+rank remains evaluation-point and integration-rule dependent.
+
+WP1 is not complete. The JML conditional, MML observed-pattern, and MML
+all-pattern expected-information results are retained-point diagnostics. A
+global or parameter-grid structural argument, active latent-variance and GPCM
+property grids, alternative contrast/anchor/slope-facet grids, exact local-rank
+controls away from degenerate integration rules, sparse target-size memory and
+runtime evidence, a scalable alternative to exhaustive enumeration and the
 bounded dense Hessian, and calibrated weak-information classification remain
 pending. No FACETS tolerance or supported-capacity claim follows from this
 implementation slice.

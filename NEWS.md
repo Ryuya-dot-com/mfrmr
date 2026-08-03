@@ -25,7 +25,15 @@ CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
   Eligible nonlinear MML fits instead receive a bounded observed-Person-
   pattern score decomposition with objective, gradient, and numerical-
   derivative consistency checks. Observed-pattern rank remains diagnostic and
-  does not establish structural identification or alter readiness.
+  does not establish structural identification or alter readiness. Within a
+  bounded execution envelope and for unit row weights, the same fits now also
+  enumerate every response pattern on each retained Person observation design
+  and check probability normalization, zero expected score, expected
+  score-outer-product information, and selected numerical derivatives.
+  Missing rows shorten the retained design; nonunit weights and combinatorial
+  overflow receive explicit not-evaluated states. This exhaustive-pattern
+  rank is still a retained-point diagnostic and does not establish global
+  identification, weak-information status, readiness, or a capacity claim.
 
 * Added a versioned information-criterion contract for fitted MML objects.
   BIC now uses the number of independent Persons rather than response rows or

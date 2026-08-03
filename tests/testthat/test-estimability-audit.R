@@ -46,6 +46,18 @@
   )
 }
 
+test_that("bounded response-pattern enumeration is complete and unique", {
+  patterns <- mfrmr:::mfrmr_enumerate_response_patterns(
+    n_observations = 2L,
+    n_categories = 3L
+  )
+  expect_identical(dim(patterns), c(9L, 2L))
+  expect_identical(nrow(unique(as.data.frame(patterns))), 9L)
+  expect_identical(patterns[1, ], c(0L, 0L))
+  expect_identical(patterns[nrow(patterns), ], c(2L, 2L))
+  expect_identical(sort(unique(as.integer(patterns))), 0:2)
+})
+
 test_that("balanced JML constrained design is full rank and invariant", {
   data <- .estimability_balanced_data()
   fit <- suppressWarnings(.estimability_fit(data, "JML"))
@@ -71,6 +83,8 @@ test_that("balanced JML constrained design is full rank and invariant", {
   expect_identical(audit$gpcm_response_kernel$status,
                    "not_applicable_model")
   expect_identical(audit$mml_observed_pattern_score$status,
+                   "not_applicable_estimator")
+  expect_identical(audit$mml_all_pattern_information$status,
                    "not_applicable_estimator")
   expect_false(audit$fitted_information$weak_information_classified)
   expect_true(all(c("Person", "Rater", "Criterion", "steps") %in%
@@ -421,6 +435,61 @@ test_that("GPCM additive rank does not overclaim nonlinear completeness", {
   expect_false("person_ids" %in% names(pattern))
   expect_false("score" %in% names(pattern))
 
+  all_pattern <- audit$mml_all_pattern_information
+  expect_identical(
+    all_pattern$status,
+    "evaluated_all_patterns_local_diagnostic_only"
+  )
+  expect_true(all_pattern$attempted)
+  expect_identical(all_pattern$person_designs, 8L)
+  expect_identical(all_pattern$retained_observation_rows, nrow(data))
+  expect_equal(all_pattern$total_response_patterns, 8 * 4^4,
+               tolerance = 0)
+  expect_true(all_pattern$unit_row_weights_observed)
+  expect_true(all_pattern$retained_observation_designs)
+  expect_false(all_pattern$missing_rows_imputed)
+  expect_false(all_pattern$observed_patterns_only)
+  expect_true(all_pattern$all_possible_response_patterns_evaluated)
+  expect_true(all_pattern$expected_information_evaluated)
+  expect_false(all_pattern$conditional_jml_kernel_reused)
+  expect_identical(all_pattern$local_rank, all_pattern$free_dimension)
+  expect_identical(all_pattern$local_nullity, 0L)
+  expect_lt(
+    all_pattern$probability_normalization$MaximumAbsoluteMassError,
+    1e-12
+  )
+  expect_lt(
+    all_pattern$expected_score_identity$MaximumPersonScoreAbs,
+    1e-12
+  )
+  expect_lt(
+    all_pattern$expected_score_identity$MaximumAggregateScoreAbs,
+    1e-11
+  )
+  expect_gte(
+    all_pattern$expected_information_summary$MinimumEigenvalue,
+    -1e-10
+  )
+  expect_lt(
+    all_pattern$expected_information_summary$MaximumAsymmetry,
+    1e-12
+  )
+  expect_identical(all_pattern$numerical_differentiation$status,
+                   "evaluated")
+  expect_lt(all_pattern$numerical_differentiation$max_abs_difference,
+            1e-7)
+  expect_lt(all_pattern$numerical_differentiation$max_scaled_difference,
+            1e-7)
+  expect_false(all_pattern$structural_identification_classified)
+  expect_false(all_pattern$weak_information_classified)
+  expect_identical(
+    all_pattern$readiness_effect,
+    "none_all_patterns_local_diagnostic_only"
+  )
+  expect_false("person_ids" %in% names(all_pattern))
+  expect_false("weighted_score" %in% names(all_pattern))
+  expect_false("expected_information" %in% names(all_pattern))
+
   idx <- mfrmr:::build_indices(
     fit$prep,
     step_facet = fit$config$step_facet,
@@ -439,6 +508,39 @@ test_that("GPCM additive rank does not overclaim nonlinear completeness", {
     max(abs(unname(colSums(person_score$score)) - unname(-full_gradient))),
     1e-12
   )
+
+  expected_information <-
+    mfrmr:::mfrmr_mml_all_pattern_expected_information(
+      fit$opt$par, idx, fit$config, sizes, quad
+    )
+  expect_lt(
+    max(abs(
+      crossprod(expected_information$weighted_score) -
+        expected_information$expected_information
+    )),
+    1e-12
+  )
+  expect_lt(max(abs(expected_information$probability_mass - 1)), 1e-12)
+  expect_lt(max(abs(expected_information$expected_score)), 1e-12)
+
+  zero_information <-
+    mfrmr:::mfrmr_mml_all_pattern_expected_information(
+      rep(0, length(fit$opt$par)), idx, fit$config, sizes,
+      mfrmr:::gauss_hermite_normal(1L)
+    )
+  zero_map <- mfrmr:::mfrmr_mml_optimizer_parameter_map(
+    fit$prep, idx, fit$config, sizes
+  )
+  zero_rank <- suppressWarnings(
+    mfrmr:::mfrmr_estimability_rank_audit(
+      Matrix::Matrix(zero_information$weighted_score, sparse = TRUE),
+      zero_map
+    )
+  )
+  expect_lt(zero_rank$Rank, nrow(zero_map))
+  expect_true(any(grepl("log_slopes", zero_rank$ZeroCoordinates,
+                        fixed = TRUE)))
+  expect_lt(max(abs(zero_information$expected_score)), 1e-12)
 
   permuted_idx <- mfrmr:::mfrmr_subset_observation_indices(
     idx, rev(seq_along(idx$score_k))
@@ -462,6 +564,66 @@ test_that("GPCM additive rank does not overclaim nonlinear completeness", {
     )),
     1e-12
   )
+  permuted_expected_information <-
+    mfrmr:::mfrmr_mml_all_pattern_expected_information(
+      fit$opt$par, permuted_idx, fit$config, sizes, quad
+    )
+  expect_lt(
+    max(abs(
+      expected_information$expected_information -
+        permuted_expected_information$expected_information
+    )),
+    1e-10
+  )
+
+  retained_rows <- seq_along(idx$score_k)[-1L]
+  missing_idx <- mfrmr:::mfrmr_subset_observation_indices(idx, retained_rows)
+  missing <- mfrmr:::audit_mfrm_mml_all_pattern_information(
+    opt = fit$opt,
+    prep = fit$prep,
+    idx = missing_idx,
+    config = fit$config,
+    sizes = sizes,
+    quad_points = 5L,
+    nonlinear_blocks = "log_slopes"
+  )
+  expect_identical(
+    missing$status,
+    "evaluated_all_patterns_local_diagnostic_only"
+  )
+  expect_identical(
+    missing$retained_observations_per_person$Minimum,
+    3L
+  )
+  expect_identical(
+    missing$retained_observations_per_person$Maximum,
+    4L
+  )
+  expect_equal(missing$total_response_patterns, 7 * 4^4 + 4^3,
+               tolerance = 0)
+  expect_true(missing$retained_observation_designs)
+  expect_false(missing$missing_rows_imputed)
+  expect_lt(
+    missing$probability_normalization$MaximumAbsoluteMassError,
+    1e-12
+  )
+
+  weighted_idx <- idx
+  weighted_idx$weight[1] <- 2
+  weighted <- mfrmr:::audit_mfrm_mml_all_pattern_information(
+    opt = fit$opt,
+    prep = fit$prep,
+    idx = weighted_idx,
+    config = fit$config,
+    sizes = sizes,
+    quad_points = 5L,
+    nonlinear_blocks = "log_slopes"
+  )
+  expect_identical(weighted$status,
+                   "not_evaluated_nonunit_row_weights")
+  expect_false(weighted$attempted)
+  expect_false(weighted$unit_row_weights_observed)
+  expect_false(weighted$structural_identification_classified)
 
   limited <- mfrmr:::audit_mfrm_mml_observed_pattern_score(
     opt = fit$opt,
@@ -478,6 +640,29 @@ test_that("GPCM additive rank does not overclaim nonlinear completeness", {
   expect_false(limited$structural_identification_classified)
   expect_identical(limited$readiness_effect,
                    "none_observed_patterns_diagnostic_only")
+
+  all_pattern_limited <-
+    mfrmr:::audit_mfrm_mml_all_pattern_information(
+      opt = fit$opt,
+      prep = fit$prep,
+      idx = idx,
+      config = fit$config,
+      sizes = sizes,
+      quad_points = 5L,
+      nonlinear_blocks = "log_slopes",
+      max_total_patterns = 0
+    )
+  expect_identical(all_pattern_limited$status,
+                   "not_evaluated_execution_limit")
+  expect_false(all_pattern_limited$attempted)
+  expect_false(
+    all_pattern_limited$all_possible_response_patterns_evaluated
+  )
+  expect_false(all_pattern_limited$structural_identification_classified)
+  expect_identical(
+    all_pattern_limited$readiness_effect,
+    "none_all_patterns_local_diagnostic_only"
+  )
 })
 
 test_that("JML GPCM response-kernel Jacobian joins additive and slope coordinates", {
@@ -700,6 +885,26 @@ test_that("latent residual variance enters fitted-information instrumentation", 
   )
   expect_lt(pattern$numerical_differentiation$max_scaled_difference, 1e-7)
   expect_false(pattern$structural_identification_classified)
+  all_pattern <- audit$mml_all_pattern_information
+  expect_identical(
+    all_pattern$status,
+    "evaluated_all_patterns_local_diagnostic_only"
+  )
+  expect_true(all(c("beta", "log_sigma2") %in%
+                    all_pattern$parameter_blocks$Block))
+  expect_equal(all_pattern$total_response_patterns, n_person * 2^n_item,
+               tolerance = 0)
+  expect_lt(
+    all_pattern$probability_normalization$MaximumAbsoluteMassError,
+    1e-12
+  )
+  expect_lt(
+    all_pattern$expected_score_identity$MaximumPersonScoreAbs,
+    1e-10
+  )
+  expect_lt(all_pattern$numerical_differentiation$max_scaled_difference,
+            1e-7)
+  expect_false(all_pattern$structural_identification_classified)
 })
 
 test_that("nonlinear transformation Jacobians match known analytic maps", {

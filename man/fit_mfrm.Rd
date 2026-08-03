@@ -731,7 +731,14 @@ recorded eigenvalue-tolerance ladder in
 fits retain an explicit not-evaluated status. This fitted-information layer
 is diagnostic only: it does not yet classify weak information, make the
 nonlinear preflight complete, or turn full additive rank into a full-model
-estimability claim.
+estimability claim. Eligible nonlinear MML fits also receive bounded
+observed-pattern and all-response-pattern score checks. The latter operates
+on each Person's retained observation design under unit row weights and
+records probability-normalization, zero-expected-score, expected-information,
+and selected numerical-derivative summaries. Missing rows are not imputed;
+nonunit weights and excessive pattern grids retain explicit not-evaluated
+states. These retained-point diagnostics do not by themselves establish
+global structural identification, weak-information status, or readiness.
 }
 
 \section{Choosing maxit without result-driven tuning}{
