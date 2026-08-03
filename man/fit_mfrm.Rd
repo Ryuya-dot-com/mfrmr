@@ -701,6 +701,30 @@ This affects interpretation of reported facet measures.
 }
 }
 
+\section{Estimator-specific estimability preflight}{
+
+Before optimization, mfrmr builds a sparse adjacent-category-logit design
+in the same constrained free coordinates used by the optimizer. The check
+includes Person coordinates for JML, integrates them out for MML, and
+includes facet anchors, group constraints, signs, supported two-way
+interactions, and RSM/PCM step coordinates.
+
+An exactly rank-deficient design stops with a structured
+\code{mfrmr_estimability_error}; its \code{estimability} field records rank, nullity,
+parameter blocks, tolerance checks, and a bounded null-direction
+explanation. Optimization is not run. A full-rank MML fixed-effect design
+whose corresponding free-Person JML design is rank deficient returns a
+fit with an \code{mfrmr_estimability_warning}: its cross-panel contrasts rely on
+the common latent-population assumption and remain review-only.
+
+Inspect \code{fit$data_review$estimability}. RSM and PCM use the full linear
+free-coordinate check. For bounded GPCM and an active latent-regression
+residual variance, the additive block is audited but nonlinear slope or
+variance coordinates remain explicitly incomplete until their fitted-
+information check is available; a full additive rank is not a full-model
+estimability claim.
+}
+
 \section{Choosing maxit without result-driven tuning}{
 
 Treat \code{maxit} as a predeclared computational budget, not as a value to tune

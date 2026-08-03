@@ -40,7 +40,7 @@ test_that("public roadmap is separated from internal release operations", {
   expect_true(any(grepl("inst/validation", ignore, fixed = TRUE)))
 })
 
-test_that("internal draft.22 readiness work packages remain explicit and private", {
+test_that("internal draft.23 readiness work packages remain explicit and private", {
   pkg_root <- normalizePath(testthat::test_path("..", ".."), mustWork = TRUE)
   internal_path <- file.path(
     pkg_root, "inst", "validation", "internal-roadmap-0.2.3.md"
@@ -75,7 +75,10 @@ test_that("internal draft.22 readiness work packages remain explicit and private
   expect_match(internal, "ReadinessContractVersion", fixed = TRUE)
   expect_match(internal, "expected, eligible, rejected", fixed = TRUE)
   expect_match(internal, "WP0 is structurally complete", fixed = TRUE)
-  expect_match(gate, "Specification ID | `0.2.3-draft.22`", fixed = TRUE)
+  expect_match(internal, "in_progress_linear_block", fixed = TRUE)
+  expect_match(internal, "Corrective-program execution lanes", fixed = TRUE)
+  expect_match(internal, "partitioned\\s+exhaustively")
+  expect_match(gate, "Specification ID | `0.2.3-draft.23`", fixed = TRUE)
   expect_true(all(c(
     "readiness_contract_schema",
     "readiness_scope_and_propagation",
@@ -203,7 +206,7 @@ test_that("WP0 fixture validator rejects post-hoc readiness upgrades", {
                         fixed = TRUE)))
 })
 
-test_that("FACETS and diagnostic stress registries retain prior edge cells under draft.22", {
+test_that("FACETS and diagnostic stress registries retain prior edge cells under draft.23", {
   pkg_root <- normalizePath(testthat::test_path("..", ".."),
                             winslash = "/", mustWork = TRUE)
   facets_path <- file.path(

@@ -4,6 +4,14 @@ This is the unreleased development line after CRAN publication of 0.2.2.
 CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
 0.2.3 and must not be attributed retroactively to 0.2.2.
 
+* Added an estimator-specific sparse constrained estimability preflight for
+  RSM/PCM Person, facet, interaction, and step coordinates. Exact aliases now
+  stop before optimization with a structured audit; MML designs whose apparent
+  linkage depends on a common latent-population assumption remain review-only.
+  Bounded-GPCM slopes and active latent-regression residual variance are
+  explicitly outside the completed linear-block claim rather than being
+  certified by additive rank.
+
 * Added a versioned information-criterion contract for fitted MML objects.
   BIC now uses the number of independent Persons rather than response rows or
   summed observation weights, while response-row, weighted-total, and legacy

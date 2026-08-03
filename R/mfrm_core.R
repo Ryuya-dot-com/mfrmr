@@ -3483,7 +3483,8 @@ build_estimation_summary <- function(model, method, prep, config, sizes, opt) {
   as.integer(sum(flag == which, na.rm = TRUE))
 }
 
-build_mfrm_data_review <- function(prep, anchors = NULL, group_anchors = NULL) {
+build_mfrm_data_review <- function(prep, anchors = NULL, group_anchors = NULL,
+                                   estimability_audit = NULL) {
   facet_names <- as.character(prep$facet_names %||% character(0))
   subset_tables <- calc_subsets(prep$data, c("Person", facet_names))
   subset_summary <- as.data.frame(
@@ -3546,6 +3547,16 @@ build_mfrm_data_review <- function(prep, anchors = NULL, group_anchors = NULL) {
   } else {
     "review_not_assessed"
   }
+  estimability_state <- as.character(
+    estimability_audit$readiness$EstimabilityState[1] %||% NA_character_
+  )
+  if (identical(design_status, "pass_linked") &&
+      identical(estimability_state, "population_assumption_linked")) {
+    design_status <- "review_population_assumption_linked"
+  } else if (identical(design_status, "pass_linked") &&
+             identical(estimability_state, "weak_information")) {
+    design_status <- "review_weak_estimability"
+  }
   stability_status <- if (nrow(boundary_levels) > 0L) {
     "hold_boundary_separation"
   } else if (length(single_level_facets) > 0L) {
@@ -3580,7 +3591,8 @@ build_mfrm_data_review <- function(prep, anchors = NULL, group_anchors = NULL) {
     facet_support = as.data.frame(support, stringsAsFactors = FALSE),
     boundary_levels = as.data.frame(boundary_levels, stringsAsFactors = FALSE),
     single_level_facets = single_level_facets,
-    preparation_notes = prep_notes
+    preparation_notes = prep_notes,
+    estimability = estimability_audit
   )
 }
 
@@ -3686,11 +3698,29 @@ mfrm_estimate <- function(data, person_col, facet_cols, score_col,
   )
   sizes <- cfg$sizes
   start <- build_initial_param_vector(config, sizes)
+  estimability_audit <- audit_mfrm_estimability(
+    prep = prep,
+    idx = idx,
+    config = config,
+    sizes = sizes
+  )
+  config$estimability_audit <- estimability_audit
   data_review <- build_mfrm_data_review(
     prep = prep,
     anchors = anchor_df,
-    group_anchors = group_anchor_df
+    group_anchors = group_anchor_df,
+    estimability_audit = estimability_audit
   )
+  estimability_state <- as.character(
+    estimability_audit$readiness$EstimabilityState[1] %||% NA_character_
+  )
+  if (identical(estimability_state, "structurally_unidentified")) {
+    mfrmr_stop_unidentified(estimability_audit)
+  }
+  if (estimability_state %in%
+      c("population_assumption_linked", "weak_information")) {
+    mfrmr_warn_estimability(estimability_audit)
+  }
   design_status <- data_review$status$Status[
     match("Design", data_review$status$Domain)
   ]
@@ -3706,7 +3736,7 @@ mfrm_estimate <- function(data, person_col, facet_cols, score_col,
       "on hold until the design or an external linking justification is reviewed.",
       call. = FALSE
     )
-  } else if (startsWith(design_status, "review_")) {
+  } else if (identical(design_status, "review_disconnected_with_anchors")) {
     warning(
       "The observed measurement design is disconnected and includes supplied ",
       "anchors. Review whether those anchors justify cross-subset comparisons ",

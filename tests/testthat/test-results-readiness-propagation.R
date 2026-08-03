@@ -195,7 +195,7 @@ test_that("mfrm_results propagates a disconnected-design hold", {
   expect_identical(.results_readiness_value(sx$readiness, "Design"), "hold_disconnected")
 })
 
-test_that("a shared Criterion links otherwise disjoint Rater groups", {
+test_that("a shared Criterion does not replace shared-Person MML evidence", {
   data <- .results_readiness_shared_criterion_data()
   person_index <- .results_readiness_person_index(data)
   raters_a <- unique(data$Rater[person_index <= 10L])
@@ -214,27 +214,36 @@ test_that("a shared Criterion links otherwise disjoint Rater groups", {
     compute = "never"
   ))
 
-  expect_identical(.results_readiness_value(res$readiness, "Design"), "pass_linked")
+  expect_identical(
+    .results_readiness_value(res$readiness, "Design"),
+    "review_population_assumption_linked"
+  )
   expect_identical(
     .results_readiness_value(res$readiness, "Plot"),
-    "ready_for_diagnostic_interpretation"
+    "review_only"
   )
-  expect_identical(.results_readiness_status_value(res$status, "design_readiness"), "ok")
-  expect_identical(.results_readiness_status_value(res$status, "plot_interpretation"), "ok")
+  expect_identical(
+    .results_readiness_status_value(res$status, "design_readiness"),
+    "review"
+  )
+  expect_identical(
+    .results_readiness_status_value(res$status, "plot_interpretation"),
+    "review"
+  )
 
   wright <- res$plot_map[res$plot_map$Type %in% "wright", , drop = FALSE]
   expect_true(wright$Available)
   expect_identical(
     wright$InterpretationStatus,
-    "ready_for_diagnostic_interpretation"
+    "review_only"
   )
-  expect_true(wright$InterpretationReady)
+  expect_false(wright$InterpretationReady)
   expect_true(any(
     res$triage$Area %in% "Design / connectivity" &
-      res$triage$Severity %in% "ok"
+      res$triage$Severity %in% "review"
   ))
   expect_true(any(
-    res$triage$Area %in% "Wright map" & res$triage$Severity %in% "ok"
+    res$triage$Area %in% "Wright map" & res$triage$Severity %in% "review"
   ))
 })
 

@@ -5,9 +5,9 @@
 | Field | Value |
 | --- | --- |
 | Target release | 0.2.3 |
-| Specification ID | `0.2.3-draft.22` |
+| Specification ID | `0.2.3-draft.23` |
 | Date | 2026-08-03 |
-| Status | M1 source review recorded; M2 IC, ConQuest/TAM, canonical-score, engine-path, fail-closed release-readiness, and FACETS 4.5.0 paired JML RSM/PCM stress pilots are present. The draft.20 divergence audit diagnosed exact aliases, category/step mismatch, and unmatched extreme displays. Draft.21 sequenced the corrective work; draft.22 freezes the internal WP0 three-scope readiness vocabulary, precedence, reason codes, legacy mapping, condition policy, and 27-row adversarial fixture registry. Runtime implementation remains sequenced through estimator-specific constrained estimability, category/step support, JML boundary states, cross-surface propagation, metric-specific external eligibility, sparse-performance audit, and new-seed repilot. All existing simulations remain calibration evidence. Runtime implementation, tolerance freeze, independent replication, recovery/coverage, bootstrap, attribution, consequence, support-envelope registry, candidate freeze, and confirmation remain pending. |
+| Status | M1 source review recorded; M2 IC, ConQuest/TAM, canonical-score, engine-path, fail-closed release-readiness, and FACETS 4.5.0 paired JML RSM/PCM stress pilots are present. The draft.20 divergence audit diagnosed exact aliases, category/step mismatch, and unmatched extreme displays. Draft.21 sequenced the corrective work; draft.22 froze the internal WP0 three-scope readiness contract. Draft.23 implements the first WP1 slice: an estimator-specific sparse constrained RSM/PCM linear-block rank audit, structured pre-optimization alias errors, counterfactual-JML review for MML population-assumption linkage, and invariance/anchor/interaction controls. GPCM slope and latent-variance Jacobians, fitted-information review, category/step support, JML boundary states, complete cross-surface propagation, metric-specific external eligibility, sparse target-size benchmarks, and new-seed repilot remain pending. All existing simulations remain calibration evidence. Runtime completion, tolerance freeze, independent replication, recovery/coverage, bootstrap, attribution, consequence, support-envelope registry, candidate freeze, and confirmation remain pending. |
 | Confirmation authorized | No |
 | Evidence checklist | `release-evidence-checklist-0.2.3.csv` |
 | FACETS stress plan | `facets-jml-stress-plan-0.2.3.md` |
@@ -343,6 +343,16 @@ old Boolean-only consumers cannot call the whole fit ready. Saved objects
 without the contract are `legacy_unknown`, regardless of their former scalar.
 This structural freeze completes WP0 only. It does not make current runtime
 surfaces compliant and does not satisfy the propagation or confirmation gate.
+
+Draft.23 implements the RSM/PCM linear-coordinate portion of the estimability
+gate. Sparse QR acts on the optimizer's constrained Person/facet/interaction/
+step basis; exact deficiency stops before optimization with a structured
+condition. MML is audited without free Person columns and is compared with a
+counterfactual free-Person JML design so assumption-only panel linkage remains
+explicit. Dense SVD is restricted to bounded explanation fixtures. This does
+not complete G1/G2: nonlinear GPCM slope and latent-variance coordinates,
+fitted information, weak-information calibration, target-size performance,
+and the broader property grid remain unresolved.
 
 - Replication counts are selected from a frozen Monte Carlo-precision target,
   not convenience or elapsed time alone.
@@ -961,6 +971,7 @@ claim is reduced or deferred rather than decided ad hoc.
 | `0.2.3-draft.20` | Added a repository divergence audit before FACETS tolerances; established exact rank deficiency in the zero-common-Person and other sparse controls, reclassified the severe PCM parameter gap as a retained-category/step-dimension mismatch plus false readiness rather than a demonstrated kernel defect, separated nonextreme Person agreement from FACETS adjusted extreme displays, and required estimability, category-contract, typed-extreme, and diagnostic-definition guards before confirmation. |
 | `0.2.3-draft.21` | Converted the divergence diagnosis into eight dependent work packages; separated fit-, parameter-, and metric-level readiness; made JML/MML estimability rules distinct; specified sparse rank and category/step records, generalized typed JML boundary states, required one-source cross-surface propagation and legacy-object handling, and made external eligibility metric-specific with complete rejection accounting before the new-seed repilot. |
 | `0.2.3-draft.22` | Completed the structural WP0 readiness contract: froze the internal v1 state vocabulary, deterministic fit precedence, conservative `InferenceReady` mapping, parameter and comparison states, controlled reason codes, typed condition/runtime policy, fail-closed 0.2.2-object mapping, and a validated 27-row adversarial fixture registry. Runtime implementation and every statistical threshold remain pending. |
+| `0.2.3-draft.23` | Began WP1 runtime implementation with a sparse adjacent-category-logit rank audit in the actual RSM/PCM free-coordinate basis; added typed pre-optimization errors for exact aliases, counterfactual-JML classification of MML population-assumption linkage, bounded null explanations, and row-order, relabelling, anchor, PCM-step, interaction, and constraint-Jacobian controls. QR tolerance disagreement is diagnostic only and cannot become `weak_information` before the fitted-information rule is piloted and frozen. Nonlinear and fitted-information completion remains pending. |
 
 ## Release decision algorithm
 

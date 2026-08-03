@@ -251,7 +251,7 @@ The following remain outside 0.2.3:
 | M4: run confirmation | Run the locked recovery/stress matrix, FACETS JML core, ConQuest/TAM comparisons, dimensionality challenge, and matched external rows without changing criteria or reusing discovery/pilot data as independent confirmation. | Candidate-linked internal and external evidence with every blocker classified and every expected scenario/replicate accounted for. |
 | M5: release handoff | Run full regression, cross-platform CI, manuals, URL checks, CRAN-time examples, Win-builder, package-content audit, and public-claim audit. | All blocker rows `ok`, all caveats visible, and an exact checked tarball. |
 
-The repository now contains `0.2.3-draft.22` planning and pilot artifacts at
+The repository now contains `0.2.3-draft.23` planning and pilot artifacts at
 `inst/validation/release-gate-spec-0.2.3.md` and
 `inst/validation/release-evidence-checklist-0.2.3.csv`. They deliberately
 record unresolved pilot-calibrated criteria and therefore do not authorize
@@ -314,11 +314,12 @@ extreme-score output, and definition-specific interaction/bias/PCAR contracts
 before the next paired pilot. These are prerequisites to tolerance
 calibration, not completed release gates.
 
-### Draft.22 near-term corrective program
+### Draft.23 near-term corrective program
 
 Draft.21 converted the draft.20 diagnosis into an implementation sequence.
 Draft.22 completes the structural WP0 contract and makes that contract the
-fixed input to WP1--WP5. Its
+fixed input to WP1--WP5. Draft.23 begins WP1 with the estimator-specific sparse
+linear-block preflight described below. Its
 objective is not to maximize new diagnostics. It is to establish one source of
 truth for whether a fit, a parameter, and an external comparison are usable,
 and to make every downstream surface consume that source rather than
@@ -343,13 +344,38 @@ reviewed. Confirmation remains prohibited until the later frozen gate.
 | Work package | Depends on | Current state | Implementation boundary | Required exit artifact |
 | --- | --- | --- | --- | --- |
 | `WP0-READINESS-CONTRACT` | draft.20 diagnosis | `complete_structural` | Freeze internal state names, scopes, severity/precedence, condition classes, object fields, legacy-object behavior, and exact adversarial fixtures before changing fit logic. | `readiness-contract-0.2.3.md`, its repository validator, 27-row fixture registry, and privacy/semantic tests; no external tolerance. |
-| `WP1-ESTIMABILITY` | WP0 | `next` | Build the estimator-specific free-parameter map and constrained design; detect structural aliases before optimization; distinguish exact alias from weak fitted information. | Unit/property tests, alias diagnostics, sparse-design benchmark, and zero false-ready exact controls. |
+| `WP1-ESTIMABILITY` | WP0 | `in_progress_linear_block` | Build the estimator-specific free-parameter map and constrained design; detect structural aliases before optimization; distinguish exact alias from weak fitted information. | Unit/property tests, alias diagnostics, sparse-design benchmark, and zero false-ready exact controls. |
 | `WP2-CATEGORY-STEP` | WP0 | `queued` | Audit declared, observed, retained, free, fixed, and unsupported category/step coordinates globally and by current `step_facet`; do not add threshold anchors. | RSM/PCM/GPCM reduction and missing-category fixtures plus parameter-scoped status tables. |
 | `WP3-JML-BOUNDARY` | WP0 | `queued` | Detect JML element separation/extreme sufficient scores on the actual contributing row pattern; replace optimizer-dependent finite primary values with typed boundary states. | JML extreme/nonextreme fixtures, MML non-reduction guard, and explicit optional-display contract. |
 | `WP4-READINESS-PROPAGATION` | WP1--WP3 | `blocked_by_dependency` | Derive fit-, parameter-, and output-level readiness once and propagate it without surface-specific reinterpretation. | Cross-surface snapshot/semantic tests and a 0.2.2-object migration fixture. |
 | `WP5-COMPARISON-CONTRACT` | WP4 | `blocked_by_dependency` | Make FACETS and other external normalization metric-specific and fail closed before numeric aggregation. | Eligibility/rejection ledger with denominator accounting and no silent row loss. |
 | `WP6-SCALE-AND-ADVERSARIAL` | WP1--WP5 | `blocked_by_dependency` | Verify sparse computation, basis invariance, row-order invariance, malformed-input behavior, and target-size runtime/memory without claiming FACETS capacity parity. | Benchmark envelope and metamorphic/negative-test report; no dense design allocation at target sizes. |
 | `WP7-REPILOT-AND-FREEZE` | WP0--WP6 | `blocked_by_dependency` | Rerun the affected internal and FACETS 4.5.0 pilot cells on new pilot seeds, calibrate weak-information rules, then prepare the next reviewed frozen specification. | Complete pilot registry, reason-coded exclusions, MCSE plan, resolved blocker criteria, and still no confirmation result. |
+
+#### Corrective-program execution lanes
+
+The work packages use three non-interchangeable execution lanes:
+
+1. The **change-local contract lane** runs the smallest deterministic unit,
+   adversarial, privacy, and terminology set that can reject the current edit.
+   It is a development feedback gate, not statistical or release evidence.
+2. The **branch regression lane** runs every repository test, including the
+   non-CRAN suite, before a work-package handoff. If infrastructure time limits
+   require a split run, the sorted test-file manifest must be partitioned
+   exhaustively with no omitted file, every partition must retain its exit
+   status, and warnings/skips must be reconciled across partitions. Passing
+   only the change-local lane cannot substitute for this lane.
+3. The **candidate evidence lane** runs the frozen scenario registry,
+   cross-platform package matrix, heavy recovery/resampling, and external-tool
+   comparisons against one manifest-bound candidate. Branch-regression output
+   cannot be relabelled as candidate evidence, and candidate thresholds cannot
+   be changed after this lane begins.
+
+Runtime budgets for the first two lanes must be piloted separately. Slow
+simulation, resampling, and external comparisons may be scheduled outside the
+change-local lane, but no blocker may disappear from the exhaustive branch or
+candidate manifests. WP6 owns the target-size estimability runtime/memory
+envelope; G7 separately owns CRAN-controlled time.
 
 #### WP0 frozen boundary
 
@@ -446,6 +472,44 @@ zero-column removal. Required negative controls cover disconnected components,
 zero-common-Person JML panels, nested rater/Person groups, single bridges,
 unused interaction cells, and anchors that do or do not restore a common
 frame. A basis-dependent pass/fail result is a blocker.
+
+##### Draft.23 implementation slice
+
+The package now builds a sparse adjacent-category-logit design in the actual
+free coordinates for RSM/PCM. It includes free JML Person coordinates, omits
+them for MML, and applies the optimizer's facet/group-anchor Jacobians, facet
+signs, two-way sum-zero-marginal interaction basis, and RSM/PCM within-ladder
+step constraints. Columns are normalized before a recorded sparse-QR tolerance
+ladder; small negative controls receive bounded dense-SVD null explanations,
+while large designs do not cross the bounded dense-allocation threshold.
+Tolerance-ladder disagreement is retained as a diagnostic field only. It does
+not produce the `weak_information` readiness state until a fitted-information
+layer and a pilot-calibrated rule have been reviewed and frozen.
+
+Exact rank deficiency now raises a structured `mfrmr_estimability_error`
+before optimization. The condition carries the contract identity, rank,
+nullity, parameter-block counts, coordinate map, reason codes, tolerance
+results, and bounded null directions without printing Person identifiers in
+the error message. A full-rank MML fixed-effect block is also compared with a
+counterfactual free-Person JML design. If only MML is full rank, the fit is
+labelled `population_assumption_linked` and remains review-only; shared
+Criterion levels alone do not become shared-Person evidence.
+
+Current exact controls cover balanced JML, row permutation, level relabelling,
+RSM/PCM step coordinates, zero-common-Person JML versus MML, two alternative
+Rater anchors that restore rank, a missing interaction cell, and the equality
+of sparse constraint Jacobians with the optimizer expansion. Existing
+disconnected cases were reclassified by rank rather than by graph appearance:
+some remain full rank under their declared constraints but still retain a
+linking hold, whereas a balanced two-component Rater/criterion split stops as
+an exact alias.
+
+WP1 is not complete. Bounded-GPCM log slopes and active latent-regression
+residual variance are recorded as nonlinear unaudited blocks; additive full
+rank does not certify them. A fitted-information layer, a wider anchor/group/
+interaction property grid, sparse target-size memory/runtime evidence, and
+calibrated weak-information classification remain pending. No FACETS tolerance
+or supported-capacity claim follows from this implementation slice.
 
 #### WP2: category and step contract
 

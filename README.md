@@ -244,9 +244,15 @@ requires review.
 
 `InferenceReady` is deliberately a numerical status, not a publication
 decision. Require `Numerical = pass`, then inspect the separate Data, Design,
-and Stability rows in `fit_summary$readiness`. A disconnected design or a
-boundary-constant facet level remains a reporting hold even when the optimizer
-gradient is small. In an otherwise supported fit, a Reporting status such as
+and Stability rows in `fit_summary$readiness`. Before optimization, mfrmr now
+checks the estimator-specific constrained RSM/PCM free-coordinate design.
+Exact rank deficiency stops with a structured `mfrmr_estimability_error`;
+optimization cannot turn it into a usable fit. A disconnected design that is
+full rank only under its declared constraints, an MML panel linked through a
+common latent-population assumption rather than shared Persons, or a boundary-
+constant facet level remains a reporting hold or review even when the optimizer
+gradient is small. Inspect `fit$data_review$estimability` for the rank,
+nullity, parameter blocks, and check scope. In an otherwise supported fit, a Reporting status such as
 `ready_for_diagnostics_and_reporting_follow_up` means that fitting succeeded
 and the next diagnostic stage is pending; it does not mean that optimization
 failed or that the result is already manuscript-ready. Plots can still be

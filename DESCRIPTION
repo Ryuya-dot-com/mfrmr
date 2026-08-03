@@ -33,6 +33,7 @@ Depends:
 Imports:
     cli,
     dplyr,
+    Matrix,
     grDevices,
     graphics,
     tidyr,
