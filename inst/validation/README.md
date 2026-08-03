@@ -61,7 +61,7 @@ but do not broaden current API scope.
   numerical, recovery, information-criterion, dimensionality, external,
   public-contract, and engineering gates. A `draft` status is not permission
   to run confirmation or evidence that a gate passed.
-- `facets-jml-stress-plan-0.2.3.md`: draft.19 plan for recording one selected
+- `facets-jml-stress-plan-0.2.3.md`: draft.20 plan for recording one selected
   FACETS executable/report/parser identity and running paired, truth-first JML
   RSM/PCM simulation stress tests across connected, anchor, sparse/topology,
   edge, and optional definition-matched fit/DFF families. It treats FACETS as
@@ -84,6 +84,14 @@ but do not broaden current API scope.
   of the one-seed two-rater, category-imbalance, checkerboard-interaction, and
   local-dependence pilot. It records false-readiness risks and next calibration
   requirements; it is not confirmation or a diagnostic decision rule.
+- `facets-mfrmr-divergence-audit-0.2.3.R`: repository-only contract audit for
+  completed paired pilots. Before interpreting parameter differences it checks
+  constrained main-effect rank, declared versus FACETS-retained category/step
+  dimensions, and nonextreme versus extreme Person comparison strata.
+- `facets-mfrmr-divergence-audit-record-0.2.3.md`: draft.20 adversarial
+  diagnosis that reclassifies the severe PCM and raw extreme-Person gaps,
+  records the exact zero-common-Person rank deficiency, and defines the staged
+  0.2.3--0.2.5 correction architecture. It is not confirmation evidence.
 - `release-evidence-checklist-0.2.3.csv`: machine-readable 0.2.3 gate
   inventory. It preserves the existing `ReleaseDecision` field used by the
   readiness helper and adds scenario, criterion-state, and evidence-status

@@ -1,6 +1,6 @@
 # FACETS JML stress-validation plan for mfrmr 0.2.3
 
-Status: `0.2.3-draft.19` planning and pilot artifact; confirmation is not authorized.
+Status: `0.2.3-draft.20` planning and pilot artifact; confirmation is not authorized.
 
 This plan is subordinate to `internal-roadmap-0.2.3.md` and the frozen
 release-gate specification. The repository-root `ROADMAP.md` contains only the
@@ -108,6 +108,15 @@ showed that residual PCA can depend materially on the correlation/construction
 rule under weak overlap even when row residuals closely agree. These rows are
 pilot diagnostics, not passed gates.
 
+The subsequent draft.20 divergence audit is recorded in
+`facets-mfrmr-divergence-audit-record-0.2.3.md`. It must run before numerical
+agreement rules. It found that the zero-common-Person panel is rank deficient
+under the declared main-effect constraints, that the severe PCM row compares
+different retained category/step dimensions, and that extreme-score display
+conventions dominate several raw Person maxima. Future aggregation must reject
+rank- or category-contract failures and stratify nonextreme versus explicitly
+adjustment-matched extreme Person results.
+
 FACETS Table 14 interaction/bias analysis is not part of the current paired
 batch: the generated controls specify main effects and do not request `?B`
 terms. A future Table 14 lane must first match the interaction estimand,
@@ -191,6 +200,11 @@ Before any numeric comparison, each scenario record must define:
 - the free and expanded parameter vectors and the transformation between
   engine-native and common coordinates; and
 - which SE, fit, fair-average, or interaction statistic is genuinely common.
+
+The executable comparison contract must additionally verify constrained
+full-rank estimability and the retained category/step dimension reported by
+each program. A failed contract remains edge/failure-behavior evidence and
+cannot contribute to a parameter tolerance or pooled correlation.
 
 RSM/PCM element and estimated-step parameters enter the mandatory common
 coordinate comparison. Person measures enter only matched JML rows and are

@@ -251,7 +251,7 @@ The following remain outside 0.2.3:
 | M4: run confirmation | Run the locked recovery/stress matrix, FACETS JML core, ConQuest/TAM comparisons, dimensionality challenge, and matched external rows without changing criteria or reusing discovery/pilot data as independent confirmation. | Candidate-linked internal and external evidence with every blocker classified and every expected scenario/replicate accounted for. |
 | M5: release handoff | Run full regression, cross-platform CI, manuals, URL checks, CRAN-time examples, Win-builder, package-content audit, and public-claim audit. | All blocker rows `ok`, all caveats visible, and an exact checked tarball. |
 
-The repository now contains `0.2.3-draft.19` planning and pilot artifacts at
+The repository now contains `0.2.3-draft.20` planning and pilot artifacts at
 `inst/validation/release-gate-spec-0.2.3.md` and
 `inst/validation/release-evidence-checklist-0.2.3.csv`. They deliberately
 record unresolved pilot-calibrated criteria and therefore do not authorize
@@ -289,6 +289,30 @@ information states, multi-seed interaction/bias operating characteristics,
 and null/non-null PCAR calibration before the gate is frozen. FACETS Table 14
 bias evidence remains separate until a definition-matched `?B` control and
 parser exist.
+
+Draft.20 adds an adversarial divergence audit before any FACETS difference is
+allowed to calibrate a tolerance. It reclassifies three draft.19 observations:
+
+- the zero-common-Person two-rater main-effect design has one exact free
+  null direction after the declared centering constraints; common Criteria do
+  not identify a rater contrast confounded with nested Person-group location;
+- the severe PCM row is not a common parameter comparison because FACETS
+  dropped unsupported categories separately by Criterion while mfrmr retained
+  the declared four-category, three-step rectangular structure; the important
+  current defect is false readiness and a normalizer that did not reject the
+  dimension mismatch, not a demonstrated likelihood-kernel error; and
+- the largest weak-overlap Person differences are FACETS finite adjusted
+  extreme displays versus optimizer-dependent finite proxies to theoretically
+  unbounded mfrmr JML measures. Nonextreme Person MAE was far smaller and must
+  be reported separately.
+
+The repository audit and full interpretation are in
+`facets-mfrmr-divergence-audit-0.2.3.R` and
+`facets-mfrmr-divergence-audit-record-0.2.3.md`. M2 now requires a constrained
+estimability check, a category-map/retained-step comparison contract, typed
+extreme-score output, and definition-specific interaction/bias/PCAR contracts
+before the next paired pilot. These are prerequisites to tolerance
+calibration, not completed release gates.
 
 Draft.17 promoted FACETS from a conditional supplied-output row to a mandatory
 JML RSM/PCM validation lane and adds
@@ -466,6 +490,10 @@ must not be advertised as implemented.
   counts, bridge strength, articulation, component balance, and local
   information. A binary response-graph connection must not override a weak or
   unidentified rater comparison.
+- [ ] Construct the constrained free-coordinate design implied by active
+  facets, centering, anchors, and structural absences; reject exact rank
+  deficiency before fitting and expose aliased directions. Only after full
+  rank is established may fitted information diagnose weak identification.
 - [x] Add pilot cells for middle-category dominance, single-category
   dominance with an unused category, and skewed targeting; retain category
   counts, maximum proportion, and normalized entropy by model.
@@ -473,6 +501,14 @@ must not be advertised as implemented.
   concentration/entropy, local facet support, and threshold information. A
   globally consecutive category range is not sufficient evidence of usable
   step information.
+- [ ] Make external normalization compare the declared category map, retained
+  category map, and free step dimension by scale/step-facet level before any
+  element or Person tolerance. Category-dropping and `K` controls remain
+  failure-policy evidence unless the fitted dimensions genuinely match.
+- [ ] Represent an extreme JML Person primary result as typed low/high
+  unbounded status rather than an optimizer-dependent finite value. Any
+  finite adjusted display is named and kept outside the primary estimand;
+  external Person comparisons stratify nonextreme and adjustment-matched rows.
 - [ ] Record numerical convergence, identification, data/design readiness,
   inferential readiness, bias, RMSE, interval coverage where defined,
   terminal score, objective, condition indicators, and elapsed time by cell.
@@ -806,6 +842,13 @@ model cannot silently create a multidimensional `mfrmr` support claim.
     category imbalance, checkerboard interactions, and residual local
     dependence; bind the diagnostic rerun to exact FACETS-manifest seeds.
     Preserve the result as draft.19 calibration evidence only.
+  - [x] Run the draft.20 divergence audit on the completed 18-row extension
+    and 44-row expanded pilot. Preserve its rank, retained-category, and
+    extreme-score decomposition as diagnosis only; it rejects invalid
+    comparison rows and does not validate a model.
+  - [ ] Add the audit contract to the paired normalizer so unmatched category
+    maps/step dimensions, rank-deficient designs, and unmatched extreme-score
+    displays cannot enter parameter-agreement aggregates.
   - [ ] Add quantitative bridge-strength, articulation, component-balance, and
     local-information diagnostics. A single bridge must not inherit the same
     readiness meaning as a robustly crossed design merely because both graphs
@@ -912,6 +955,10 @@ numerical or 0.2.4 calibration problem.
 
 - [ ] Represent multiple independent rating scales through an explicit
   per-observation `ScaleId`; do not infer scale identity from category values.
+- [ ] Define a separate per-observation `ObservationModelId` for response
+  family, active facets, sign/weight/offset, and permitted interactions. Do
+  not overload `ScaleId` with both category-scale and likelihood-routing
+  semantics; structural facet absence is not an ordinary missing value.
 - [ ] First establish the reduction case of multiple RSM/binary scales with
   scale-specific category maps and score supports.
 - [ ] Then add scale-specific PCM with ragged threshold blocks, so scales and

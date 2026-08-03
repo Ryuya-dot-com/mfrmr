@@ -36,7 +36,7 @@ test_that("public roadmap is separated from internal release operations", {
   expect_true(any(grepl("inst/validation", ignore, fixed = TRUE)))
 })
 
-test_that("FACETS and diagnostic stress registries retain draft.19 edge cells", {
+test_that("FACETS and diagnostic stress registries retain draft.20 edge cells", {
   pkg_root <- normalizePath(testthat::test_path("..", ".."),
                             winslash = "/", mustWork = TRUE)
   facets_path <- file.path(
@@ -105,6 +105,70 @@ test_that("FACETS and diagnostic stress registries retain draft.19 edge cells", 
       truth$FacetA_Level == "R01" & truth$FacetB_Level == "C01"
     ],
     0.4
+  )
+})
+
+test_that("FACETS divergence audit fails closed on rank and category contracts", {
+  pkg_root <- normalizePath(testthat::test_path("..", ".."),
+                            winslash = "/", mustWork = TRUE)
+  audit_path <- file.path(
+    pkg_root, "inst", "validation",
+    "facets-mfrmr-divergence-audit-0.2.3.R"
+  )
+  skip_if_not(file.exists(audit_path))
+  env <- new.env(parent = globalenv())
+  sys.source(audit_path, envir = env)
+
+  complete <- expand.grid(
+    participant_id = sprintf("P%02d", 1:4),
+    rater_id = c("R01", "R02"),
+    criteria = c("C01", "C02"),
+    KEEP.OUT.ATTRS = FALSE,
+    stringsAsFactors = FALSE
+  )
+  complete$score <- rep(0:3, length.out = nrow(complete))
+  complete_rank <- env$mfrmr_divergence_design_audit(complete)
+  expect_true(complete_rank$FullColumnRank)
+  expect_equal(complete_rank$Nullity, 0L)
+
+  nested <- expand.grid(
+    participant_id = sprintf("P%02d", 1:4),
+    criteria = c("C01", "C02"),
+    KEEP.OUT.ATTRS = FALSE,
+    stringsAsFactors = FALSE
+  )
+  nested$rater_id <- ifelse(nested$participant_id %in% c("P01", "P02"),
+                            "R01", "R02")
+  nested$score <- rep(0:3, length.out = nrow(nested))
+  nested_rank <- env$mfrmr_divergence_design_audit(nested)
+  expect_false(nested_rank$FullColumnRank)
+  expect_equal(nested_rank$Nullity, 1L)
+
+  anchor <- tempfile(fileext = ".anc")
+  writeLines(c(
+    "Models =", "?,?,1,RS1,1 ; R3", "?,?,2,RS2,1 ; R3", "*",
+    "Rating (or partial credit) scale = RS1,R3,G,O",
+    " 0=,0,A", " 1=,-1,A", " 2=,0,A", " 3=,1,A", "*",
+    "Rating (or partial credit) scale = RS2,R3,G,O",
+    " 1=,0,A", " 2=,0,A", "*", "Labels =", "1=P01,0"
+  ), anchor)
+  pcm <- data.frame(
+    criteria = rep(c("C01", "C02"), each = 4L),
+    score = c(0:3, 1L, 1L, 2L, 2L),
+    stringsAsFactors = FALSE
+  )
+  category <- env$mfrmr_divergence_category_audit(pcm, "PCM", anchor)
+  expect_true(category$CategoryContractComparable[category$ScaleScope == "C01"])
+  expect_false(category$CategoryContractComparable[category$ScaleScope == "C02"])
+  expect_equal(category$RetainedCategories[category$ScaleScope == "C02"], 2L)
+
+  extreme <- env$mfrmr_divergence_extreme_rows(data.frame(
+    participant_id = rep(c("P01", "P02", "P03"), each = 2L),
+    score = c(0L, 0L, 1L, 2L, 3L, 3L)
+  ))
+  expect_identical(
+    extreme$ExtremeClass,
+    c("extreme_low", "nonextreme", "extreme_high")
   )
 })
 

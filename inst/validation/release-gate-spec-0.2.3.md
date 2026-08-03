@@ -5,9 +5,9 @@
 | Field | Value |
 | --- | --- |
 | Target release | 0.2.3 |
-| Specification ID | `0.2.3-draft.19` |
+| Specification ID | `0.2.3-draft.20` |
 | Date | 2026-08-03 |
-| Status | M1 source review recorded; M2 IC, ConQuest/TAM, canonical-score, engine-path, fail-closed release-readiness, and FACETS 4.5.0 paired JML RSM/PCM stress pilots are present. The initial pilot covers 22 scenarios per model; a nine-scenario-per-model extension adds two-rater, severe category-imbalance, checkerboard-interaction, and residual-dependence cells plus a separate diagnostic runner. All remain one-seed calibration evidence. Repository-owned external execution, quantitative topology/category-information diagnostics, multi-seed bias/interaction/PCAR operating characteristics, score/objective/parameter/external tolerance freeze, independent replication, recovery/coverage, bootstrap, attribution, consequence, support-envelope registry, candidate freeze, and confirmation remain pending. |
+| Status | M1 source review recorded; M2 IC, ConQuest/TAM, canonical-score, engine-path, fail-closed release-readiness, and FACETS 4.5.0 paired JML RSM/PCM stress pilots are present. A draft.20 divergence audit shows that the zero-common-Person two-rater design is rank deficient, the severe PCM category row used different retained step dimensions, and raw weak-overlap Person maxima compare different extreme-score conventions. All remain one-seed calibration evidence. Constrained estimability, category-contract and typed-extreme guards, repository-owned external execution, multi-seed diagnostic operating characteristics, tolerance freeze, independent replication, recovery/coverage, bootstrap, attribution, consequence, support-envelope registry, candidate freeze, and confirmation remain pending. |
 | Confirmation authorized | No |
 | Evidence checklist | `release-evidence-checklist-0.2.3.csv` |
 | FACETS stress plan | `facets-jml-stress-plan-0.2.3.md` |
@@ -336,10 +336,24 @@ condition indicator, and elapsed time.
   Person labels. The audit records rater-panel size, the Person-sharing graph,
   common-Person counts, bridge strength, articulation, component balance, and
   local information; binary connectivity alone cannot confer readiness.
+- Before optimization, the constrained free-coordinate design must be checked
+  for exact rank. A connected graph cannot confer readiness when a rater
+  contrast is aliased with nested Person locations. After full rank is
+  established, singular values and fitted information diagnose weak rather
+  than exact identification; no universal condition-number cutoff is frozen
+  in this draft.
 - Category support records counts, maximum proportion, normalized entropy,
   local facet support, and threshold information by model. A consecutive
   global category range cannot confer readiness when a category is unused or
   almost all responses occupy one category.
+- External parameter tolerances are applied only after declared and retained
+  category maps and free step dimensions agree within every relevant
+  step-facet level. A category-dropping FACETS fit is an edge-policy control,
+  not a numerical comparison to mfrmr's retained rectangular PCM steps.
+- Extreme JML Person results are compared by low/high/unbounded status. A
+  FACETS adjusted display measure is not compared to an optimizer-dependent
+  finite proxy as though both were the primary JML estimand; nonextreme Person
+  measures remain a separate numeric stratum.
 - `DES-DISCONNECTED` and other unidentified negative controls must not become
   inferentially ready. A false-ready result is a blocker.
 - The deterministic CRAN smoke tier demonstrates execution only. Release
@@ -350,11 +364,15 @@ Bias, RMSE, coverage, failure-rate, and Monte Carlo-precision thresholds are
 `pilot_required`. Existing helper defaults are not silently adopted as
 release thresholds.
 
-The draft.19 one-seed extension is calibration evidence for these rules. Its
-zero-common-Person two-rater rows and severely imbalanced PCM row were reported
-as ready by the existing audits despite large paired discrepancies. Those
-outcomes define false-readiness targets for the next runner; they do not set a
-numeric support boundary.
+The draft.19 one-seed extension and draft.20 divergence audit are calibration
+evidence for these rules. The constrained main-effect audit found nullity one
+for the zero-common-Person two-rater design. The severe PCM row was reported as
+ready despite unsupported mfrmr steps, while FACETS dropped categories and
+fit a smaller per-Criterion step dimension. Its raw parameter MAE is therefore
+not a common-estimand discrepancy. Large weak-overlap Person maxima were
+concentrated in FACETS-adjusted extreme scores; nonextreme MAE was 0.1465 for
+RSM and 0.1190 for PCM. These outcomes define fail-closed targets and
+comparison strata; they do not set a numeric support boundary.
 
 ## G3: information-criterion contract
 
@@ -804,6 +822,12 @@ MML EAP scores, and no JML-versus-MML equality criterion is permitted. No
 proprietary program is launched by package tests, and no proprietary binary,
 license material, or identifier-bearing external case file is committed.
 
+Before a FACETS row reaches a numeric tolerance, its comparison contract must
+verify the category map, retained scale/step dimension, active facets,
+constraints/anchors, parameter orientation, estimability, and extreme-score
+policy. A failed contract is retained as definition or failure-behavior
+evidence and is never averaged into an engine-agreement statistic.
+
 FACETS evidence is generated in isolated synthetic run directories with exact
 replicate accounting, timeouts, exit/stderr capture, one process by default,
 and fail-closed stale-output detection. The official-site version, executable
@@ -904,6 +928,7 @@ claim is reduced or deferred rather than decided ad hoc.
 | `0.2.3-draft.17` | Promoted FACETS from a conditional supplied-output row to a mandatory JML RSM/PCM stress lane; pinned local 4.5.0 with a non-blocking identity record and separate-version strata; separated truth recovery from program agreement; added anchor, topology, missingness, edge, optional DFF, Monte Carlo, stale-output, and support-envelope requirements; and retained all new numeric criteria as pilot-required. |
 | `0.2.3-draft.18` | Added the first paired FACETS 4.5.0 RSM/PCM stress driver and one-seed 44-run pilot; expanded missingness, sparse, topology, duplicate, category-support, extreme-score, and contamination cells; verified fail-closed disconnected-design reporting; identified binary connectivity as insufficient for a single-bridge design; recorded 4.5.1 reporting/test sensitivity; and retained every external numeric threshold and confirmation claim as unresolved. |
 | `0.2.3-draft.19` | Added two-rater, severe category-imbalance, checkerboard-interaction, and residual-local-dependence FACETS 4.5.0 extension cells plus a separate interaction/bias/PCAR runner; diagnosed false-ready zero-common-Person and category-support states, weak-interaction screening limits, and weak-overlap PCA-definition sensitivity; added scenario IDs and required quantitative design/category/diagnostic gates while retaining all results as one-seed pilot evidence. |
+| `0.2.3-draft.20` | Added a repository divergence audit before FACETS tolerances; established exact rank deficiency in the zero-common-Person and other sparse controls, reclassified the severe PCM parameter gap as a retained-category/step-dimension mismatch plus false readiness rather than a demonstrated kernel defect, separated nonextreme Person agreement from FACETS adjusted extreme displays, and required estimability, category-contract, typed-extreme, and diagnostic-definition guards before confirmation. |
 
 ## Release decision algorithm
 
@@ -916,7 +941,8 @@ claim is reduced or deferred rather than decided ad hoc.
    help, capability surface, and release notes for the affected result.
 5. Keep every roadmap row guarded from ordinary use.
 6. Require normalized common-likelihood evidence before cross-engine IC
-   comparison and matched estimands before parameter tolerances.
+   comparison and a passed model/category/constraint/estimability/reporting
+   contract before parameter tolerances.
 7. Require the practical-consequence classification in addition to formal
    dimensionality evidence.
 8. Run engineering release checks only after statistical blockers pass for one

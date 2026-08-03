@@ -53,7 +53,9 @@ Priorities are:
 - separate operating-characteristic studies for fixed facet interactions,
   bias/DIF screening, and exploratory residual-PCA signals, including null
   controls, planted alternatives, and confounded structures;
-- matched JML comparison with FACETS for supported RSM/PCM estimands;
+- matched JML comparison with FACETS for supported RSM/PCM estimands, preceded
+  by explicit checks for category-map and step-dimension identity, constrained
+  design estimability, and extreme-score convention;
 - matched MML comparison with ConQuest and TAM where likelihood,
   identification, and integration conventions can be aligned;
 - explicit classification of validated, caveated, exploratory, blocked, and
@@ -80,10 +82,15 @@ one observed scale. It is expected to include:
 ## 0.2.5: multiple observed scales
 
 Multiple rating scales will be represented by an explicit per-observation
-`ScaleId`. Scale identity will not be inferred from category values. The work
-will begin with reduction to the existing single-scale model, then add
-scale-specific category maps, PCM step structures, calibration namespaces,
-connectivity checks, diagnostics, and reporting.
+`ScaleId`. Scale identity will not be inferred from category values. A
+separate observation-model identity will describe the response family and the
+facets active for each observation; `ScaleId` alone will not be overloaded to
+perform both jobs. The work will begin with multiple ordinal scales that
+reduce exactly to the existing single-scale model, then add scale-specific
+category maps, PCM step structures, calibration namespaces, connectivity
+checks, diagnostics, and reporting. Mixed response-family and active-facet
+routing will be promoted only after their own identification and reduction
+tests pass.
 
 Multiple observed scales do not automatically imply a multidimensional latent
 trait. Native multidimensional estimation and dimension-specific scores remain

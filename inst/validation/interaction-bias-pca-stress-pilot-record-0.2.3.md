@@ -4,6 +4,16 @@ Status: `0.2.3-draft.19` one-seed calibration record. This is not
 confirmation, does not freeze a tolerance, and does not establish false-positive
 or power performance.
 
+Interpretive addendum: the later draft.20 divergence audit supersedes any
+reading of the raw severe-PCM or extreme-Person differences below as direct
+evidence of an estimator-kernel defect. FACETS dropped unsupported PCM
+categories by Criterion while mfrmr retained the declared step dimension, and
+FACETS finite adjusted extreme displays were compared with theoretically
+unbounded JML Person measures. The original numbers remain historical pilot
+observations; only definition-matched, full-rank, nonextreme strata may
+calibrate future numeric tolerances. See
+`facets-mfrmr-divergence-audit-record-0.2.3.md`.
+
 ## Purpose
 
 This pilot challenges three distinct diagnostic claims under two-rater,
@@ -68,10 +78,13 @@ same additive data produced a fitted-interaction RMSE of 14.981 for PCM and
 0.574 for RSM; the PCM target-cell estimate was -5.248 even though the true
 interaction was zero.
 
-This is model-specific evidence against a generic category-support pass. The
-gate must record minimum category count, maximum category proportion, entropy,
+This is model-specific evidence against a generic category-support pass, but
+the draft.20 decomposition shows that the raw FACETS parameter gap is not a
+common-estimand comparison. The gate must record minimum category count,
+maximum category proportion, entropy, local retained category maps,
 threshold-specific information, and model family. Empty support and extreme
-imbalance need separate fail-closed or review states.
+imbalance need separate fail-closed or review states, and an external
+normalizer must reject different free step dimensions before reporting MAE.
 
 ### Interaction estimation and bias screening
 
