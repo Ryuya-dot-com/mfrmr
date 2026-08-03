@@ -34,6 +34,12 @@ CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
   overflow receive explicit not-evaluated states. This exhaustive-pattern
   rank is still a retained-point diagnostic and does not establish global
   identification, weak-information status, readiness, or a capacity claim.
+  Exact duplicate Person observation designs are evaluated once and
+  reconstructed by their group multiplicity. Active latent-regression
+  covariate rows participate in the design identity, so different population
+  designs are not silently pooled. The audit records conceptual and evaluated
+  workload counts without retaining identifiers, covariates, or response
+  patterns.
 
 * Added a versioned information-criterion contract for fitted MML objects.
   BIC now uses the number of independent Persons rather than response rows or

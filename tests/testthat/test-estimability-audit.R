@@ -445,6 +445,18 @@ test_that("GPCM additive rank does not overclaim nonlinear completeness", {
   expect_identical(all_pattern$retained_observation_rows, nrow(data))
   expect_equal(all_pattern$total_response_patterns, 8 * 4^4,
                tolerance = 0)
+  expect_equal(all_pattern$evaluated_response_patterns, 4^4,
+               tolerance = 0)
+  expect_identical(all_pattern$unique_person_designs, 1L)
+  expect_identical(all_pattern$design_reuse$PersonDesigns, 8L)
+  expect_identical(all_pattern$design_reuse$UniquePersonDesigns, 1L)
+  expect_identical(all_pattern$design_reuse$ReusedPersonDesigns, 7L)
+  expect_identical(all_pattern$design_reuse$LargestDesignGroup, 8L)
+  expect_equal(
+    all_pattern$design_reuse$ConceptualToEvaluatedPatternRatio,
+    8,
+    tolerance = 0
+  )
   expect_true(all_pattern$unit_row_weights_observed)
   expect_true(all_pattern$retained_observation_designs)
   expect_false(all_pattern$missing_rows_imputed)
@@ -489,6 +501,8 @@ test_that("GPCM additive rank does not overclaim nonlinear completeness", {
   expect_false("person_ids" %in% names(all_pattern))
   expect_false("weighted_score" %in% names(all_pattern))
   expect_false("expected_information" %in% names(all_pattern))
+  expect_false("design_signatures" %in% names(all_pattern))
+  expect_false("population_design_rows" %in% names(all_pattern))
 
   idx <- mfrmr:::build_indices(
     fit$prep,
@@ -522,6 +536,43 @@ test_that("GPCM additive rank does not overclaim nonlinear completeness", {
   )
   expect_lt(max(abs(expected_information$probability_mass - 1)), 1e-12)
   expect_lt(max(abs(expected_information$expected_score)), 1e-12)
+  expect_equal(expected_information$total_patterns, 8 * 4^4,
+               tolerance = 0)
+  expect_equal(expected_information$evaluated_patterns, 4^4,
+               tolerance = 0)
+  expect_identical(expected_information$unique_person_designs, 1L)
+  expect_identical(expected_information$design_group_sizes, 8L)
+
+  unreused_expected_information <-
+    mfrmr:::mfrmr_mml_all_pattern_expected_information(
+      fit$opt$par, idx, fit$config, sizes, quad,
+      reuse_identical_designs = FALSE
+    )
+  expect_equal(unreused_expected_information$evaluated_patterns,
+               expected_information$total_patterns, tolerance = 0)
+  expect_identical(unreused_expected_information$unique_person_designs,
+                   8L)
+  expect_lt(
+    max(abs(
+      expected_information$expected_information -
+        unreused_expected_information$expected_information
+    )),
+    1e-12
+  )
+  expect_lt(
+    max(abs(
+      expected_information$expected_score -
+        unreused_expected_information$expected_score
+    )),
+    1e-12
+  )
+  expect_lt(
+    max(abs(
+      expected_information$probability_mass -
+        unreused_expected_information$probability_mass
+    )),
+    1e-12
+  )
 
   zero_information <-
     mfrmr:::mfrmr_mml_all_pattern_expected_information(
@@ -575,6 +626,32 @@ test_that("GPCM additive rank does not overclaim nonlinear completeness", {
     )),
     1e-10
   )
+  expect_identical(permuted_expected_information$unique_person_designs, 1L)
+  expect_equal(permuted_expected_information$evaluated_patterns, 4^4,
+               tolerance = 0)
+
+  mixed_rows <- unlist(lapply(seq_len(fit$config$n_person), function(id) {
+    rows <- which(as.integer(idx$person) == id)
+    if (id %% 2L == 1L) rev(rows) else rows
+  }), use.names = FALSE)
+  mixed_idx <- mfrmr:::mfrmr_subset_observation_indices(idx, mixed_rows)
+  mixed <- mfrmr:::audit_mfrm_mml_all_pattern_information(
+    opt = fit$opt,
+    prep = fit$prep,
+    idx = mixed_idx,
+    config = fit$config,
+    sizes = sizes,
+    quad_points = 5L,
+    nonlinear_blocks = "log_slopes"
+  )
+  expect_identical(
+    mixed$status,
+    "evaluated_all_patterns_local_diagnostic_only"
+  )
+  expect_identical(mixed$unique_person_designs, 1L)
+  expect_equal(mixed$evaluated_response_patterns, 4^4, tolerance = 0)
+  expect_identical(mixed$numerical_differentiation$status, "evaluated")
+  expect_lt(mixed$numerical_differentiation$max_scaled_difference, 1e-7)
 
   retained_rows <- seq_along(idx$score_k)[-1L]
   missing_idx <- mfrmr:::mfrmr_subset_observation_indices(idx, retained_rows)
@@ -601,6 +678,11 @@ test_that("GPCM additive rank does not overclaim nonlinear completeness", {
   )
   expect_equal(missing$total_response_patterns, 7 * 4^4 + 4^3,
                tolerance = 0)
+  expect_equal(missing$evaluated_response_patterns, 4^4 + 4^3,
+               tolerance = 0)
+  expect_identical(missing$unique_person_designs, 2L)
+  expect_identical(missing$design_reuse$ReusedPersonDesigns, 6L)
+  expect_identical(missing$design_reuse$LargestDesignGroup, 7L)
   expect_true(missing$retained_observation_designs)
   expect_false(missing$missing_rows_imputed)
   expect_lt(
@@ -663,6 +745,26 @@ test_that("GPCM additive rank does not overclaim nonlinear completeness", {
     all_pattern_limited$readiness_effect,
     "none_all_patterns_local_diagnostic_only"
   )
+
+  compressed_limit <-
+    mfrmr:::audit_mfrm_mml_all_pattern_information(
+      opt = fit$opt,
+      prep = fit$prep,
+      idx = idx,
+      config = fit$config,
+      sizes = sizes,
+      quad_points = 5L,
+      nonlinear_blocks = "log_slopes",
+      max_total_patterns = 4^4
+    )
+  expect_identical(
+    compressed_limit$status,
+    "evaluated_all_patterns_local_diagnostic_only"
+  )
+  expect_equal(compressed_limit$total_response_patterns, 8 * 4^4,
+               tolerance = 0)
+  expect_equal(compressed_limit$evaluated_response_patterns, 4^4,
+               tolerance = 0)
 })
 
 test_that("JML GPCM response-kernel Jacobian joins additive and slope coordinates", {
@@ -894,6 +996,32 @@ test_that("latent residual variance enters fitted-information instrumentation", 
                     all_pattern$parameter_blocks$Block))
   expect_equal(all_pattern$total_response_patterns, n_person * 2^n_item,
                tolerance = 0)
+  expect_equal(all_pattern$evaluated_response_patterns,
+               all_pattern$total_response_patterns, tolerance = 0)
+  expect_identical(all_pattern$unique_person_designs, n_person)
+  expect_identical(all_pattern$design_reuse$ReusedPersonDesigns, 0L)
+  latent_idx <- mfrmr:::build_indices(
+    fit$prep,
+    step_facet = fit$config$step_facet,
+    slope_facet = fit$config$slope_facet,
+    interaction_specs = fit$config$interaction_specs
+  )
+  latent_groups <- mfrmr:::mfrmr_mml_person_design_groups(
+    latent_idx, fit$config
+  )
+  expect_identical(latent_groups$unique_person_designs, n_person)
+  repeated_config <- fit$config
+  repeated_lookup <- repeated_config$population_spec$person_lookup
+  repeated_config$population_spec$design_matrix[
+    repeated_lookup[2L],
+  ] <- repeated_config$population_spec$design_matrix[
+    repeated_lookup[1L],
+  ]
+  repeated_groups <- mfrmr:::mfrmr_mml_person_design_groups(
+    latent_idx, repeated_config
+  )
+  expect_identical(repeated_groups$unique_person_designs, n_person - 1L)
+  expect_identical(max(repeated_groups$group_sizes), 2L)
   expect_lt(
     all_pattern$probability_normalization$MaximumAbsoluteMassError,
     1e-12

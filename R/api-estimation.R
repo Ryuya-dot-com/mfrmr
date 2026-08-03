@@ -566,7 +566,11 @@
 #' records probability-normalization, zero-expected-score, expected-information,
 #' and selected numerical-derivative summaries. Missing rows are not imputed;
 #' nonunit weights and excessive pattern grids retain explicit not-evaluated
-#' states. These retained-point diagnostics do not by themselves establish
+#' states. Mathematically identical Person observation designs are evaluated
+#' once and reconstructed by exact multiplicity; active latent-regression
+#' covariate rows are part of this identity. Only conceptual and evaluated
+#' workload summaries are retained. These retained-point diagnostics do not
+#' by themselves establish
 #' global structural identification, weak-information status, or readiness.
 #'
 #' @section Choosing maxit without result-driven tuning:

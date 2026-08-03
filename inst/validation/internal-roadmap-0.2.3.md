@@ -311,7 +311,7 @@ The following remain outside 0.2.3:
 | M4: run confirmation | Run the locked recovery/stress matrix, FACETS JML core, ConQuest/TAM MML comparisons, TAM/immer JML convention grid, eligible immer CML/CCML rows, dimensionality challenge, and matched external rows without changing criteria or reusing discovery/pilot data as independent confirmation. | Candidate-linked internal and external evidence with every blocker classified and every expected scenario/replicate accounted for. |
 | M5: release handoff | Run full regression, cross-platform CI, manuals, URL checks, CRAN-time examples, Win-builder, package-content audit, and public-claim audit. | All blocker rows `ok`, all caveats visible, and an exact checked tarball. |
 
-The repository now contains `0.2.3-draft.29` planning and pilot artifacts at
+The repository now contains `0.2.3-draft.30` planning and pilot artifacts at
 `inst/validation/release-gate-spec-0.2.3.md` and
 `inst/validation/release-evidence-checklist-0.2.3.csv`, with the TAM/immer
 execution contract in `inst/validation/tam-immer-estimator-stress-plan-0.2.3.md`.
@@ -375,7 +375,7 @@ extreme-score output, and definition-specific interaction/bias/PCAR contracts
 before the next paired pilot. These are prerequisites to tolerance
 calibration, not completed release gates.
 
-### Draft.29 near-term corrective program
+### Draft.30 near-term corrective program
 
 Draft.21 converted the draft.20 diagnosis into an implementation sequence.
 Draft.22 completes the structural WP0 contract and makes that contract the
@@ -396,6 +396,10 @@ Draft.29 adds the next bounded MML layer: exhaustive finite response-pattern
 enumeration and score-outer-product expected information on each retained
 Person observation design, while retaining the result as local geometry rather
 than a global structural-identification decision.
+Draft.30 removes exact duplicate Person-design computation from that bounded
+layer by canonicalizing the observation layout and reusing the all-pattern
+result only when facet, step, slope, interaction, and applicable latent-
+regression design rows are identical.
 The program's objective is not to maximize new diagnostics. It
 is to establish one source of truth for whether a fit, a parameter, and an
 external comparison are usable, and to make every downstream surface consume
@@ -420,7 +424,7 @@ reviewed. Confirmation remains prohibited until the later frozen gate.
 | Work package | Depends on | Current state | Implementation boundary | Required exit artifact |
 | --- | --- | --- | --- | --- |
 | `WP0-READINESS-CONTRACT` | draft.20 diagnosis | `complete_structural` | Freeze internal state names, scopes, severity/precedence, condition classes, object fields, legacy-object behavior, and exact adversarial fixtures before changing fit logic. | `readiness-contract-0.2.3.md`, its repository validator, 27-row fixture registry, and privacy/semantic tests; no external tolerance. |
-| `WP1-ESTIMABILITY` | WP0 | `in_progress_mml_all_pattern_instrumented` | Build the estimator-specific free-parameter map and constrained design; detect structural aliases before optimization; distinguish exact alias from weak fitted information. | Unit/property tests, alias diagnostics, sparse-design benchmark, and zero false-ready exact controls. |
+| `WP1-ESTIMABILITY` | WP0 | `in_progress_mml_all_pattern_design_reuse` | Build the estimator-specific free-parameter map and constrained design; detect structural aliases before optimization; distinguish exact alias from weak fitted information. | Unit/property tests, alias diagnostics, sparse-design benchmark, and zero false-ready exact controls. |
 | `WP2-CATEGORY-STEP` | WP0 | `queued` | Audit declared, observed, retained, free, fixed, and unsupported category/step coordinates globally and by current `step_facet`; do not add threshold anchors. | RSM/PCM/GPCM reduction and missing-category fixtures plus parameter-scoped status tables. |
 | `WP3-JML-BOUNDARY` | WP0 | `queued` | Detect JML element separation/extreme sufficient scores on the actual contributing row pattern; replace optimizer-dependent finite primary values with typed boundary states. | JML extreme/nonextreme fixtures, MML non-reduction guard, and explicit optional-display contract. |
 | `WP4-READINESS-PROPAGATION` | WP1--WP3 | `blocked_by_dependency` | Derive fit-, parameter-, and output-level readiness once and propagate it without surface-specific reinterpretation. | Cross-surface snapshot/semantic tests and a 0.2.2-object migration fixture. |
@@ -693,9 +697,11 @@ Person identifiers, pattern rows, score rows, or the expected-information
 matrix itself.
 
 The default envelope is at most 100 Person designs, 4,096 patterns for any one
-design, 5,000 total patterns, 80 free coordinates, and 400,000 pattern-by-
-coordinate score elements. These values are implementation caps, not supported
-capacity claims. Exact controls cover complete and one-row-missing GPCM
+design, 5,000 actually evaluated patterns after exact design reuse, 80 free
+coordinates, and 400,000 evaluated pattern-by-coordinate score elements. The
+conceptual Person-by-pattern total is recorded separately. These values are
+implementation caps, not supported capacity claims. Exact controls cover
+complete and one-row-missing GPCM
 designs, row permutation, latent-regression beta and residual variance,
 nonunit-weight rejection, and execution-limit rejection. In the balanced
 eight-Person GPCM control, all 2,048 patterns give probability-mass error below
@@ -705,12 +711,45 @@ matrix in draft.28 has rank 5 of 7. A one-node, zero-vector control makes the
 GPCM slope direction locally zero, demonstrating that even exhaustive-pattern
 rank remains evaluation-point and integration-rule dependent.
 
+##### Draft.30 exact Person-design reuse slice
+
+The exhaustive evaluator now canonicalizes the retained observation rows
+within each Person and creates an internal exact design signature from the
+ordered facet, step, slope, and interaction indices. When a latent-regression
+population model is active, the aligned numeric population-design row is part
+of the signature. Person identifiers and observed scores are excluded. Thus,
+Persons with the same measurement design can share one all-pattern evaluation,
+while a different missingness layout, facet assignment, interaction cell, or
+population covariate row prevents reuse.
+
+Each unique design is evaluated once. Its probability-weighted score matrix is
+scaled by the square root of the exact group multiplicity, so its crossproduct
+equals the sum of the corresponding Person-level expected-information
+matrices. Probability-mass and expected-score identities are still expanded
+per conceptual Person. The audit stores only Person-design count, unique-design
+count, reused-design count, largest group, conceptual/evaluated pattern counts,
+and their ratio; signatures, covariates, Person identifiers, pattern rows, and
+score matrices are not retained.
+
+Deterministic controls compare the reused path with a forced non-reuse path. In
+the balanced eight-Person GPCM fixture, 2,048 conceptual patterns reduce to 256
+evaluated patterns; the two expected-information matrices differ by less than
+`6e-14`, expected scores by less than `2e-16`, and probability masses are
+identical. One missing row creates exactly two design groups and 320 evaluated
+patterns rather than 1,856. Row reversal preserves the one-group result. In
+the continuous-covariate latent-regression fixture, all 50 design rows remain
+distinct; forcing two covariate rows to equality reduces the group count by
+exactly one. An exploratory local timing changed from approximately 1.67 to
+0.22 seconds for the balanced fixture, but this machine-specific observation
+is not a frozen benchmark or capacity claim.
+
 WP1 is not complete. The JML conditional, MML observed-pattern, and MML
 all-pattern expected-information results are retained-point diagnostics. A
 global or parameter-grid structural argument, active latent-variance and GPCM
 property grids, alternative contrast/anchor/slope-facet grids, exact local-rank
 controls away from degenerate integration rules, sparse target-size memory and
-runtime evidence, a scalable alternative to exhaustive enumeration and the
+runtime evidence, a scalable alternative when unique designs themselves still
+have exponentially large response spaces, an alternative to the
 bounded dense Hessian, and calibrated weak-information classification remain
 pending. No FACETS tolerance or supported-capacity claim follows from this
 implementation slice.

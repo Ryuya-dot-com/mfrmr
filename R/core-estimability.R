@@ -1615,6 +1615,96 @@ mfrmr_mml_evaluate_person_patterns <- function(
   )
 }
 
+mfrmr_mml_person_design_groups <- function(
+    idx,
+    config,
+    reuse_identical_designs = TRUE) {
+  person_ids <- sort(unique(as.integer(idx$person)))
+  person_ids <- person_ids[is.finite(person_ids)]
+  canonical_rows <- vector("list", length(person_ids))
+  signatures <- character(length(person_ids))
+  population_spec <- config$population_spec %||% list(active = FALSE)
+
+  for (person_position in seq_along(person_ids)) {
+    person_id <- person_ids[person_position]
+    rows <- which(as.integer(idx$person) == person_id)
+    order_keys <- list()
+    if (!is.null(idx$step_idx)) {
+      order_keys[[length(order_keys) + 1L]] <- as.integer(idx$step_idx[rows])
+    }
+    if (!is.null(idx$slope_idx)) {
+      order_keys[[length(order_keys) + 1L]] <- as.integer(idx$slope_idx[rows])
+    }
+    for (facet in names(idx$facets %||% list())) {
+      order_keys[[length(order_keys) + 1L]] <-
+        as.integer(idx$facets[[facet]][rows])
+    }
+    for (interaction in names(idx$interactions %||% list())) {
+      order_keys[[length(order_keys) + 1L]] <-
+        as.integer(idx$interactions[[interaction]][rows])
+    }
+    within_person_order <- if (length(order_keys) > 0L) {
+      do.call(
+        order,
+        c(order_keys, list(na.last = TRUE, method = "radix"))
+      )
+    } else {
+      seq_along(rows)
+    }
+    rows <- rows[within_person_order]
+    canonical_rows[[person_position]] <- as.integer(rows)
+    person_idx <- mfrmr_subset_observation_indices(idx, rows)
+
+    population_row <- NULL
+    if (isTRUE(population_spec$active)) {
+      lookup <- as.integer(population_spec$person_lookup %||% integer(0))
+      design <- population_spec$design_matrix
+      if (length(lookup) < person_id || is.na(lookup[person_id]) ||
+          is.null(design) || !is.matrix(design) ||
+          lookup[person_id] < 1L || lookup[person_id] > nrow(design)) {
+        stop("MML all-pattern design reuse could not align a population-design row.",
+             call. = FALSE)
+      }
+      population_row <- as.numeric(design[lookup[person_id], , drop = TRUE])
+    }
+    components <- list(
+      observation_rows = length(rows),
+      facets = lapply(person_idx$facets %||% list(), as.integer),
+      interactions = lapply(
+        person_idx$interactions %||% list(), as.integer
+      ),
+      step_idx = as.integer(person_idx$step_idx %||% integer(0)),
+      slope_idx = as.integer(person_idx$slope_idx %||% integer(0)),
+      population_design_row = population_row
+    )
+    serialized <- serialize(components, connection = NULL, version = 2)
+    signatures[person_position] <- paste(as.integer(serialized), collapse = ".")
+    if (!isTRUE(reuse_identical_designs)) {
+      signatures[person_position] <- paste0(
+        signatures[person_position], "|person_position=", person_position
+      )
+    }
+  }
+
+  unique_signatures <- unique(signatures)
+  group_index <- match(signatures, unique_signatures)
+  group_positions <- split(
+    seq_along(person_ids),
+    factor(group_index, levels = seq_along(unique_signatures))
+  )
+  list(
+    person_ids = as.integer(person_ids),
+    canonical_rows = canonical_rows,
+    group_positions = unname(group_positions),
+    representative_positions = as.integer(vapply(
+      group_positions, `[[`, integer(1), 1L
+    )),
+    group_sizes = as.integer(lengths(group_positions)),
+    unique_person_designs = as.integer(length(group_positions)),
+    reuse_identical_designs = isTRUE(reuse_identical_designs)
+  )
+}
+
 mfrmr_mml_all_pattern_workload <- function(idx, n_categories) {
   person_ids <- sort(unique(as.integer(idx$person)))
   person_ids <- person_ids[is.finite(person_ids)]
@@ -1641,7 +1731,8 @@ mfrmr_mml_all_pattern_expected_information <- function(
     idx,
     config,
     sizes,
-    quad) {
+    quad,
+    reuse_identical_designs = TRUE) {
   if (!identical(config$method, "MML")) {
     stop("All-pattern expected information is defined here only for MML.",
          call. = FALSE)
@@ -1653,19 +1744,27 @@ mfrmr_mml_all_pattern_expected_information <- function(
          call. = FALSE)
   }
   workload <- mfrmr_mml_all_pattern_workload(idx, config$n_cat)
+  design_groups <- mfrmr_mml_person_design_groups(
+    idx = idx,
+    config = config,
+    reuse_identical_designs = reuse_identical_designs
+  )
   free_dimension <- sum(vapply(sizes, as.integer, integer(1)))
   by_person <- vector("list", length(workload$person_ids))
-  weighted_score <- vector("list", length(workload$person_ids))
+  weighted_score <- vector("list", design_groups$unique_person_designs)
   expected_score <- matrix(
     0,
     nrow = length(workload$person_ids),
     ncol = free_dimension
   )
   probability_mass <- numeric(length(workload$person_ids))
+  evaluated_pattern_counts <- numeric(design_groups$unique_person_designs)
 
-  for (person_position in seq_along(workload$person_ids)) {
-    person_id <- workload$person_ids[person_position]
-    rows <- which(as.integer(idx$person) == person_id)
+  for (group_position in seq_len(design_groups$unique_person_designs)) {
+    member_positions <- design_groups$group_positions[[group_position]]
+    representative_position <- member_positions[1L]
+    person_id <- workload$person_ids[representative_position]
+    rows <- design_groups$canonical_rows[[representative_position]]
     person_idx <- mfrmr_subset_observation_indices(idx, rows)
     patterns <- mfrmr_enumerate_response_patterns(
       n_observations = length(rows),
@@ -1684,19 +1783,30 @@ mfrmr_mml_all_pattern_expected_information <- function(
     if (any(!is.finite(probability)) || any(probability < 0)) {
       stop("An all-pattern marginal probability was invalid.", call. = FALSE)
     }
-    probability_mass[person_position] <- sum(probability)
-    expected_score[person_position, ] <- colSums(
-      evaluated$score * probability
+    mass <- sum(probability)
+    one_person_expected_score <- colSums(evaluated$score * probability)
+    probability_mass[member_positions] <- mass
+    expected_score[member_positions, ] <- matrix(
+      one_person_expected_score,
+      nrow = length(member_positions),
+      ncol = free_dimension,
+      byrow = TRUE
     )
-    weighted_score[[person_position]] <-
-      evaluated$score * sqrt(probability)
+    weighted_score[[group_position]] <- evaluated$score *
+      sqrt(probability * length(member_positions))
+    evaluated_pattern_counts[group_position] <- nrow(evaluated$patterns)
     evaluated$probability <- probability
-    by_person[[person_position]] <- evaluated
+    for (person_position in member_positions) {
+      person_evaluated <- evaluated
+      person_evaluated$person_id <- workload$person_ids[person_position]
+      by_person[[person_position]] <- person_evaluated
+    }
   }
 
   weighted_score <- do.call(rbind, weighted_score)
   expected_information <- crossprod(weighted_score)
-  if (nrow(weighted_score) != workload$total_patterns ||
+  evaluated_patterns <- sum(evaluated_pattern_counts)
+  if (nrow(weighted_score) != evaluated_patterns ||
       ncol(weighted_score) != free_dimension ||
       any(!is.finite(expected_information))) {
     stop("The all-pattern expected-information assembly is malformed.",
@@ -1707,6 +1817,12 @@ mfrmr_mml_all_pattern_expected_information <- function(
     observation_counts = workload$observation_counts,
     pattern_counts = workload$pattern_counts,
     total_patterns = workload$total_patterns,
+    evaluated_pattern_counts = as.double(evaluated_pattern_counts),
+    evaluated_patterns = as.double(evaluated_patterns),
+    unique_person_designs = design_groups$unique_person_designs,
+    design_group_sizes = design_groups$group_sizes,
+    canonical_rows = design_groups$canonical_rows,
+    reuse_identical_designs = design_groups$reuse_identical_designs,
     probability_mass = probability_mass,
     expected_score = expected_score,
     weighted_score = unname(weighted_score),
@@ -1999,9 +2115,27 @@ audit_mfrm_mml_all_pattern_information <- function(
   free_dimension <- sum(vapply(sizes, as.integer, integer(1)))
   n_cat <- as.integer(config$n_cat %||% 0L)
   workload <- mfrmr_mml_all_pattern_workload(idx, max(n_cat, 2L))
+  design_groups <- tryCatch(
+    mfrmr_mml_person_design_groups(
+      idx = idx,
+      config = config,
+      reuse_identical_designs = TRUE
+    ),
+    error = function(e) e
+  )
   person_designs <- length(workload$person_ids)
   total_patterns <- workload$total_patterns
-  score_elements <- total_patterns * as.double(free_dimension)
+  unique_person_designs <- if (inherits(design_groups, "error")) {
+    NA_integer_
+  } else {
+    design_groups$unique_person_designs
+  }
+  evaluated_patterns <- if (inherits(design_groups, "error")) {
+    Inf
+  } else {
+    sum(workload$pattern_counts[design_groups$representative_positions])
+  }
+  score_elements <- evaluated_patterns * as.double(free_dimension)
   weights <- idx$weight
   unit_weights <- is.null(weights) ||
     (all(is.finite(weights)) && all(abs(weights - 1) <= 1e-12))
@@ -2047,12 +2181,36 @@ audit_mfrm_mml_all_pattern_information <- function(
     ),
     categories = n_cat,
     total_response_patterns = as.double(total_patterns),
+    evaluated_response_patterns = as.double(evaluated_patterns),
+    unique_person_designs = as.integer(unique_person_designs),
+    design_reuse = data.frame(
+      PersonDesigns = as.integer(person_designs),
+      UniquePersonDesigns = as.integer(unique_person_designs),
+      ReusedPersonDesigns = if (is.finite(unique_person_designs)) {
+        as.integer(person_designs - unique_person_designs)
+      } else {
+        NA_integer_
+      },
+      LargestDesignGroup = if (!inherits(design_groups, "error") &&
+                               length(design_groups$group_sizes) > 0L) {
+        max(design_groups$group_sizes)
+      } else {
+        NA_integer_
+      },
+      ConceptualToEvaluatedPatternRatio = if (is.finite(evaluated_patterns) &&
+                                               evaluated_patterns > 0) {
+        total_patterns / evaluated_patterns
+      } else {
+        NA_real_
+      },
+      stringsAsFactors = FALSE
+    ),
     free_dimension = as.integer(free_dimension),
     score_elements = as.double(score_elements),
     execution_limits = list(
       persons = as.integer(max_persons),
       patterns_per_person = as.double(max_patterns_per_person),
-      total_patterns = as.double(max_total_patterns),
+      evaluated_patterns = as.double(max_total_patterns),
       free_dimension = as.integer(max_free_dimension),
       score_elements = as.double(max_score_elements)
     ),
@@ -2125,6 +2283,14 @@ audit_mfrm_mml_all_pattern_information <- function(
     )
     return(base)
   }
+  if (inherits(design_groups, "error")) {
+    base$status <- "not_evaluated_design_grouping_unavailable"
+    base$detail <- paste0(
+      "The all-response-pattern Person-design grouping was unavailable: ",
+      conditionMessage(design_groups), "."
+    )
+    return(base)
+  }
   maximum_person_patterns <- if (length(workload$pattern_counts) > 0L) {
     max(workload$pattern_counts)
   } else {
@@ -2133,13 +2299,14 @@ audit_mfrm_mml_all_pattern_information <- function(
   if (person_designs <= 0L || free_dimension <= 0L || n_cat < 2L ||
       person_designs > as.integer(max_persons) ||
       maximum_person_patterns > as.double(max_patterns_per_person) ||
-      total_patterns > as.double(max_total_patterns) ||
+      evaluated_patterns > as.double(max_total_patterns) ||
       free_dimension > as.integer(max_free_dimension) ||
       score_elements > as.double(max_score_elements)) {
     base$status <- "not_evaluated_execution_limit"
     base$detail <- paste(
       "The all-response-pattern expected-information audit exceeded a",
-      "recorded combinatorial or dimensional execution limit. This is a",
+      "recorded evaluated-pattern or dimensional execution limit after exact",
+      "reuse of identical Person designs. This is a",
       "computational state, not an estimability or readiness classification."
     )
     return(base)
@@ -2161,7 +2328,8 @@ audit_mfrm_mml_all_pattern_information <- function(
       idx = idx,
       config = config,
       sizes = sizes,
-      quad = quad
+      quad = quad,
+      reuse_identical_designs = TRUE
     ),
     error = function(e) e
   )
@@ -2206,6 +2374,8 @@ audit_mfrm_mml_all_pattern_information <- function(
   base$status <- "evaluated_all_patterns_local_diagnostic_only"
   base$all_possible_response_patterns_evaluated <- TRUE
   base$expected_information_evaluated <- TRUE
+  base$evaluated_response_patterns <- built$evaluated_patterns
+  base$unique_person_designs <- built$unique_person_designs
   base$local_rank <- rank$Rank
   base$local_nullity <- rank$Nullity
   base$local_rank_state <- if (rank$Nullity == 0L) {
@@ -2252,9 +2422,8 @@ audit_mfrm_mml_all_pattern_information <- function(
       as.integer(ceiling(nrow(evaluated$patterns) / 2)),
       nrow(evaluated$patterns)
     ))
-    person_id <- built$person_ids[person_position]
     person_idx <- mfrmr_subset_observation_indices(
-      idx, which(as.integer(idx$person) == person_id)
+      idx, built$canonical_rows[[person_position]]
     )
     list(
       person_idx = person_idx,
@@ -2300,7 +2469,9 @@ audit_mfrm_mml_all_pattern_information <- function(
     "category-response pattern is enumerated under unit weights. Marginal",
     "probability mass, the zero expected-score identity, the score-outer-",
     "product expected information, and selected independent derivatives are",
-    "checked in optimizer coordinates. This retained-point, observed-design",
+    "checked in optimizer coordinates. Mathematically identical Person",
+    "designs, including any latent-regression design row, are evaluated once",
+    "and reconstructed by exact group multiplicity. This retained-point, observed-design",
     "geometry is stronger than an observed-pattern rank but remains a local",
     "diagnostic; it does not yet classify structural identification, weak",
     "information, readiness, or external-comparison eligibility."
