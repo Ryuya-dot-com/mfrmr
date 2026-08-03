@@ -63,7 +63,11 @@ the mapping is recorded in \code{fit$prep$score_map}. If \code{rating_min} /
 \code{rating_max} are supplied and the observed scores are a contiguous
 subset of that range (for example a 1-5 scale with only 2-5 observed),
 the supplied full range is retained so zero-count boundary categories
-remain part of the fitted score support.}
+remain visible in the data-support review. A zero-count boundary category
+is retained as review evidence. With \code{keep_original = TRUE}, however, an
+unobserved internal category in a polytomous fitted ladder creates an
+unsupported adjacent-step contrast and fitting stops before optimization
+with a structured category-support error.}
 
 \item{rating_min}{Optional minimum category value. Supply this with
 \code{rating_max} when the intended score scale includes unobserved boundary
@@ -445,7 +449,12 @@ If your observed categories do not start at 0, set \code{rating_min}/\code{ratin
 explicitly to avoid unintended recoding assumptions. For example, if the
 intended instrument is a 1-5 scale but the current sample only uses 2-5,
 set \verb{rating_min = 1, rating_max = 5} to retain the zero-count category 1
-in the score support.
+in the data-support review. That boundary absence is a review condition for
+the separate element-boundary contract, not by itself an unsupported free
+step contrast. By contrast, retaining an unobserved internal category in a
+polytomous fitted ladder creates an adjacent-step recession direction, so
+\code{fit_mfrm()} stops before optimization rather than reporting finite step
+estimates for that ladder.
 If these bounds are omitted, the observed score range is used and the
 provenance is stored in \code{fit$prep} and \code{summary(fit)$settings_overview}.
 Set \code{options(mfrmr.show_inferred_rating_range = TRUE)} when you want an

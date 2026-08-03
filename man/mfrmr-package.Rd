@@ -234,15 +234,17 @@ to a contiguous internal scale and the mapping is stored in
 \code{fit$prep$score_map}.
 \item If the intended scale has unused boundary categories, such as a 1-5 scale
 with only 2-5 observed, set \verb{rating_min = 1, rating_max = 5} so the
-zero-count boundary category remains in the fitted support. If unused
-intermediate categories should also remain in the original scale, set
-\code{keep_original = TRUE}.
+zero-count boundary category remains explicit in the data-support review.
+A missing boundary remains review evidence for the separate element-
+boundary contract. If unused intermediate categories should remain in the
+original scale, set \code{keep_original = TRUE}; a retained zero-count internal
+category in a polytomous fitted ladder creates an unsupported adjacent-
+step contrast, and \code{fit_mfrm()} returns a structured pre-optimization error.
 \item \code{summary(describe_mfrm_data(...))} reports retained zero-count categories
 in \code{Notes}, printed \code{Caveats}, and \verb{$caveats}; \code{summary(fit)} carries full
 structured rows into printed \code{Caveats} and \verb{$caveats}, with \verb{Key warnings}
 as a short triage subset. Summary-table exports route those rows through
-\code{score_category_caveats} or \code{analysis_caveats}. Treat adjacent thresholds
-as weakly identified when an intermediate category is unobserved.
+\code{score_category_caveats} or \code{analysis_caveats}.
 \item Optional columns such as \code{Subset}, \code{Weight}, and \code{Group} support linking,
 weighted analysis, and fairness-focused follow-up workflows.
 \item Packaged synthetic data is available via \code{\link[=load_mfrmr_data]{load_mfrmr_data()}} or \code{data()}.

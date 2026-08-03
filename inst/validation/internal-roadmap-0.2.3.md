@@ -311,7 +311,7 @@ The following remain outside 0.2.3:
 | M4: run confirmation | Run the locked recovery/stress matrix, FACETS JML core, ConQuest/TAM MML comparisons, TAM/immer JML convention grid, eligible immer CML/CCML rows, dimensionality challenge, and matched external rows without changing criteria or reusing discovery/pilot data as independent confirmation. | Candidate-linked internal and external evidence with every blocker classified and every expected scenario/replicate accounted for. |
 | M5: release handoff | Run full regression, cross-platform CI, manuals, URL checks, CRAN-time examples, Win-builder, package-content audit, and public-claim audit. | All blocker rows `ok`, all caveats visible, and an exact checked tarball. |
 
-The repository now contains `0.2.3-draft.30` planning and pilot artifacts at
+The repository now contains `0.2.3-draft.31` planning and pilot artifacts at
 `inst/validation/release-gate-spec-0.2.3.md` and
 `inst/validation/release-evidence-checklist-0.2.3.csv`, with the TAM/immer
 execution contract in `inst/validation/tam-immer-estimator-stress-plan-0.2.3.md`.
@@ -375,7 +375,7 @@ extreme-score output, and definition-specific interaction/bias/PCAR contracts
 before the next paired pilot. These are prerequisites to tolerance
 calibration, not completed release gates.
 
-### Draft.30 near-term corrective program
+### Draft.31 near-term corrective program
 
 Draft.21 converted the draft.20 diagnosis into an implementation sequence.
 Draft.22 completes the structural WP0 contract and makes that contract the
@@ -400,6 +400,10 @@ Draft.30 removes exact duplicate Person-design computation from that bounded
 layer by canonicalizing the observation layout and reusing the all-pattern
 result only when facet, step, slope, interaction, and applicable latent-
 regression design rows are identical.
+Draft.31 begins WP2 by separating declared category semantics from
+data-supported free-step estimation. It adds a model-scoped preflight, typed
+category blocker, parameter-scoped step statuses, and the first exact and weak
+support fixtures without adding threshold anchors or a multi-scale API.
 The program's objective is not to maximize new diagnostics. It
 is to establish one source of truth for whether a fit, a parameter, and an
 external comparison are usable, and to make every downstream surface consume
@@ -425,7 +429,7 @@ reviewed. Confirmation remains prohibited until the later frozen gate.
 | --- | --- | --- | --- | --- |
 | `WP0-READINESS-CONTRACT` | draft.20 diagnosis | `complete_structural` | Freeze internal state names, scopes, severity/precedence, condition classes, object fields, legacy-object behavior, and exact adversarial fixtures before changing fit logic. | `readiness-contract-0.2.3.md`, its repository validator, 27-row fixture registry, and privacy/semantic tests; no external tolerance. |
 | `WP1-ESTIMABILITY` | WP0 | `in_progress_mml_all_pattern_design_reuse` | Build the estimator-specific free-parameter map and constrained design; detect structural aliases before optimization; distinguish exact alias from weak fitted information. | Unit/property tests, alias diagnostics, sparse-design benchmark, and zero false-ready exact controls. |
-| `WP2-CATEGORY-STEP` | WP0 | `queued` | Audit declared, observed, retained, free, fixed, and unsupported category/step coordinates globally and by current `step_facet`; do not add threshold anchors. | RSM/PCM/GPCM reduction and missing-category fixtures plus parameter-scoped status tables. |
+| `WP2-CATEGORY-STEP` | WP0 | `in_progress_support_preflight` | Audit declared, observed, retained, free, fixed, and unsupported category/step coordinates globally and by current `step_facet`; do not add threshold anchors. | RSM/PCM/GPCM reduction and missing-category fixtures plus parameter-scoped status tables. |
 | `WP3-JML-BOUNDARY` | WP0 | `queued` | Detect JML element separation/extreme sufficient scores on the actual contributing row pattern; replace optimizer-dependent finite primary values with typed boundary states. | JML extreme/nonextreme fixtures, MML non-reduction guard, and explicit optional-display contract. |
 | `WP4-READINESS-PROPAGATION` | WP1--WP3 | `blocked_by_dependency` | Derive fit-, parameter-, and output-level readiness once and propagate it without surface-specific reinterpretation. | Cross-surface snapshot/semantic tests and a 0.2.2-object migration fixture. |
 | `WP5-COMPARISON-CONTRACT` | WP4 | `blocked_by_dependency` | Make FACETS, TAM, immer, and other external normalization metric-specific and fail closed before numeric aggregation; identify estimator, adjustment, person treatment, and software stratum explicitly. | Eligibility/rejection ledger with denominator accounting, method-mode identity, and no silent row loss. |
@@ -760,21 +764,23 @@ Every fit records a category-support table with at least:
 
 `ScaleScope`, `StepScope`, `DeclaredCategories`, `ObservedGlobal`,
 `ObservedWithinScope`, `RetainedForFit`, `FreeStepCount`, `FixedStepCount`,
-`UnsupportedStep`, `ZeroType`, `InformationState`, and `ReasonCode`.
+`UnsupportedCategory`, `UnsupportedStep`, `ZeroType`, `InformationState`, and
+`ReasonCode`.
 
 The rules are model-specific:
 
-- RSM estimates one common ladder in the current fit. Global absence can
-  remove information about a common transition; absence within one facet
-  level is primarily a local-information issue when the transition is
-  supported elsewhere.
+- RSM estimates one common ladder in the current fit. Global absence of an
+  internal category creates a common-step recession direction; absence only
+  within one facet level is primarily a local-information issue when the
+  category is supported elsewhere.
 - PCM uses the current `step_facet` ladders, so support must be checked within
   every ladder. A global category count cannot establish a local PCM step.
 - bounded GPCM inherits the applicable category/step checks and additionally
   keeps slope information separate; a stable slope cannot rescue an
-  unsupported transition.
+  unsupported internal-category step contrast.
 - a declared but unobserved boundary category is preserved as data semantics,
-  not reported as a data-estimated threshold. Threshold anchors and reusable
+  and is routed to weak/element-boundary review rather than misclassified as
+  an unsupported step-shape coordinate. Threshold anchors and reusable
   assertions remain 0.2.4 work.
 
 Structural zero, sampling zero, rare-but-observed, and severe concentration
@@ -784,6 +790,74 @@ from the parameter/support map; weak information is calibrated later from
 fitted information and recovery. FACETS `K`, category dropping, dummy-weight,
 and threshold-anchor cases are external policy controls, not new 0.2.3 mfrmr
 features.
+
+##### Draft.31 category/step preflight slice
+
+Every new fit now builds `category_support_audit` before optimization and
+stores it in both `config` and `data_review` when a fit is returned. The
+required scope table distinguishes declared, globally observed, observed
+within the fitted ladder, retained, free, fixed, derived, unsupported, zero-
+type, and information-state fields. Separate category-count, expanded-step
+status, and local facet-support tables preserve the evidence behind the scalar
+category state. `ScaleScope = single_observed_scale` is an explicit internal
+one-scale reduction key, not a public `ScaleId` feature or a claim that the
+future multiple-scale schema has been designed.
+Raw row counts and positive-weight support are stored separately; all exact
+support decisions use positive-weight observations, so frequency-weight
+semantics cannot be inferred from row presence alone.
+
+The exact preflight follows the actual within-ladder sum-zero free-coordinate
+map. If internal category `c` has zero positive-weight observations, the
+direction that increases the step below `c` and decreases the step above `c`
+drives only that category probability toward zero while leaving every other
+category exponent unchanged. This is an exact likelihood recession direction,
+even though observations can occur on both sides of both cumulative
+transitions. Conversely, absence of a boundary category does not by itself
+create this step-shape direction and is retained as weak/element-boundary
+evidence. A small fixed-eta numerical control confirms finite step estimates
+for lower- and upper-boundary gaps but diverging adjacent steps for an internal
+gap. RSM applies the internal-gap decision to its one shared ladder; a category
+absent only within a Rater, Criterion, or other local facet level is review
+evidence when it is supported globally. PCM and bounded GPCM apply the decision
+independently to every current `step_facet` ladder; a stable GPCM slope cannot
+override a missing internal category.
+The current within-ladder sum-zero parameterization has `K - 2` free step
+coordinates and one derived expanded step for `K` categories. Therefore a
+binary ladder has no free step coordinate and is not falsely blocked merely
+because one local scope is response-constant; that pattern remains weak or
+boundary evidence for later contracts.
+
+An unsupported free step raises `mfrmr_category_readiness_error`, carrying the
+fit-scope category state, reason codes, scope table, category counts, and
+parameter-scoped step statuses, before the optimizer runs. The condition
+message does not print Person identifiers. Declared categories remain in the
+audit and descriptive data review. Empty internal categories are exact
+unsupported contrasts; empty boundary categories, singleton category cells,
+and singleton cumulative-side cells remain `weak_information`. Entropy and
+concentration are recorded but do not yet trigger a numerical threshold.
+
+Deterministic controls now cover balanced PCM, a globally supported internal
+category absent from one PCM ladder, RSM reduction of a boundary category
+absent only locally, a globally empty internal category, bounded-GPCM
+inheritance, a boundary-gap negative control, the binary no-free-step negative
+control, row reversal, facet relabeling, reason-code/class behavior, and
+condition-message privacy. The existing public boundary-gap regression remains
+valid and is now explicitly protected against false blocking. Repeated design
+evaluation also preserves the category condition class, state, and reason
+codes, and returns a typed zero-row result schema when every replicate stops at
+preflight instead of collapsing to an unusable zero-column table.
+
+WP2 remains in progress. The singleton weak rule is a conservative structural
+review trigger, not a calibrated operating threshold. Severe concentration,
+local information eigenstructure, recovery-based weak classification,
+structural-zero declarations, threshold anchors, reusable frozen calibration,
+multiple observed scales, and metric-specific FACETS category/drop/`K`
+eligibility remain pending. WP4 must still combine category, estimability,
+boundary, input, and numerical components into the one stored readiness record
+and propagate it to all summaries, reports, plots, exports, and replay paths;
+until then a returned weak-category fit can still carry the legacy numerical
+`InferenceReady` scalar and must not be described as end-to-end readiness
+complete.
 
 #### WP3: boundary and extreme contract
 

@@ -212,15 +212,17 @@
 #'   `fit$prep$score_map`.
 #' - If the intended scale has unused boundary categories, such as a 1-5 scale
 #'   with only 2-5 observed, set `rating_min = 1, rating_max = 5` so the
-#'   zero-count boundary category remains in the fitted support. If unused
-#'   intermediate categories should also remain in the original scale, set
-#'   `keep_original = TRUE`.
+#'   zero-count boundary category remains explicit in the data-support review.
+#'   A missing boundary remains review evidence for the separate element-
+#'   boundary contract. If unused intermediate categories should remain in the
+#'   original scale, set `keep_original = TRUE`; a retained zero-count internal
+#'   category in a polytomous fitted ladder creates an unsupported adjacent-
+#'   step contrast, and [fit_mfrm()] returns a structured pre-optimization error.
 #' - `summary(describe_mfrm_data(...))` reports retained zero-count categories
 #'   in `Notes`, printed `Caveats`, and `$caveats`; `summary(fit)` carries full
 #'   structured rows into printed `Caveats` and `$caveats`, with `Key warnings`
 #'   as a short triage subset. Summary-table exports route those rows through
-#'   `score_category_caveats` or `analysis_caveats`. Treat adjacent thresholds
-#'   as weakly identified when an intermediate category is unobserved.
+#'   `score_category_caveats` or `analysis_caveats`.
 #' - Optional columns such as `Subset`, `Weight`, and `Group` support linking,
 #'   weighted analysis, and fairness-focused follow-up workflows.
 #' - Packaged synthetic data is available via [load_mfrmr_data()] or `data()`.

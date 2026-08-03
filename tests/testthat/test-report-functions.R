@@ -53,7 +53,7 @@ test_that("data_quality_report returns a bundle", {
 
 test_that("data_quality_report flags retained zero-frequency score categories", {
   d <- mfrmr:::sample_mfrm_data(seed = 42)
-  d <- d[d$Score != 3, , drop = FALSE]
+  d <- d[d$Score != 1, , drop = FALSE]
   fit <- suppressWarnings(
     fit_mfrm(
       d, "Person", c("Rater", "Task", "Criterion"), "Score",
@@ -69,13 +69,13 @@ test_that("data_quality_report flags retained zero-frequency score categories", 
     facets = c("Rater", "Task", "Criterion"),
     score = "Score"
   )
-  zero_row <- dq$category_counts[dq$category_counts$Score == 3, , drop = FALSE]
+  zero_row <- dq$category_counts[dq$category_counts$Score == 1, , drop = FALSE]
   expect_equal(nrow(zero_row), 1L)
   expect_true(isTRUE(zero_row$ZeroCount[1]))
-  expect_identical(zero_row$UnusedCategoryType[1], "internal")
-  expect_true("zero_count_intermediate_score_category" %in% dq$caveats$Condition)
-  expect_true(any(dq$quality_flags$Flag == "Intermediate score categories have zero observations"))
-  expect_true(any(dq$quality_overview$Area == "Score support" & dq$quality_overview$Status == "high"))
+  expect_identical(zero_row$UnusedCategoryType[1], "boundary")
+  expect_true("zero_count_boundary_score_category" %in% dq$caveats$Condition)
+  expect_true(any(dq$quality_flags$Flag == "Declared score categories have zero observations"))
+  expect_true(any(dq$quality_overview$Area == "Score support" & dq$quality_overview$Status == "review"))
   expect_identical(summary(dq)$preview_name, "quality_flags")
 
   p <- plot(dq, type = "score_support", preset = "monochrome", draw = FALSE)

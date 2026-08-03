@@ -146,7 +146,12 @@ fit_mfrm(
 declaration becomes `rating_min = 1, rating_max = 5`. For a partial-credit
 specification, pass `model = "PCM"` and identify the facet that carries the
 step thresholds with `step_facet = "Rater"` (or the appropriate facet
-name).
+name). The declaration preserves the intended category map, but it is not a
+threshold anchor. A missing boundary category remains review evidence for the
+separate element-boundary contract. A missing internal category in a
+polytomous fitted ladder creates an unsupported adjacent-step contrast and
+stops fitting before optimization. Review or revise the data support rather
+than copying FACETS category-dropping behavior implicitly.
 
 ### Anchoring
 

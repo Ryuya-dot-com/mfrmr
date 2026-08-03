@@ -3474,7 +3474,7 @@ build_data_quality_quality_flags <- function(summary_tbl,
     add_flag(
       "Score support", "high", "Intermediate score categories have zero observations",
       get_summary_count("IntermediateZeroCountScoreCategories"), "categories",
-      "Treat adjacent thresholds as weakly supported and document the score-support gap.",
+      "Do not report finite adjacent steps; collect data, revise the score support, or separate the ladder.",
       denominator = "categories"
     )
     add_flag(
@@ -3904,9 +3904,9 @@ collect_mfrm_caveats <- function(fit = NULL,
         message = paste0(
           "Unused intermediate score categories retained in the ", support_phrase, ": ",
           internal_text,
-          ". Adjacent threshold estimates are weakly identified; review `rating_scale_table()` / `category_structure_report()` and consider category collapsing before treating the thresholds as stable."
+          ". Under the current sum-zero step parameterization, a zero-count internal category creates an unsupported adjacent-step recession direction in its fitted ladder. New fits stop before optimization; legacy or descriptive objects must not present the adjacent steps as finite identified estimates."
         ),
-        action = "Review adjacent thresholds and category curves; collapse categories or collect additional data when threshold stability is required."
+        action = "Collect observations in the internal category, revise the score support or response model, or separate the affected ladder before fitting."
       )
     }
     if (length(boundary) > 0L) {

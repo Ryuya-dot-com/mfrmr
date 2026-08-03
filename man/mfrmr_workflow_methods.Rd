@@ -91,6 +91,9 @@ helper rather than the latent-regression estimator itself.
 If the intended rating scale includes categories not observed in the current
 data, make that support explicit. For example, use
 \verb{rating_min = 1, rating_max = 5} for a 1-5 scale with only 2-5 observed.
+This preserves the declaration in the data-support review. A zero-count
+boundary is review evidence for the separate element-boundary contract; it
+is not by itself an unsupported free-step contrast.
 If an intermediate category is unobserved (for example 1, 2, 4, 5 with no
 3), also set \code{keep_original = TRUE} if the zero-count category should remain
 in the fitted support. \code{summary(describe_mfrm_data(...))} reports retained
@@ -98,8 +101,9 @@ zero-count categories in \code{Notes}, printed \code{Caveats}, and \verb{$caveat
 \code{summary(fit)} carries full structured rows into printed \code{Caveats} and
 \verb{$caveats}, with \verb{Key warnings} as a short triage subset. Summary-table
 exports route those rows through \code{score_category_caveats} or
-\code{analysis_caveats}. Adjacent threshold estimates should still be treated as
-weakly identified when an intermediate category is unobserved.
+\code{analysis_caveats}. In a polytomous fitted ladder, a retained zero-count
+internal category creates an unsupported adjacent-step contrast and stops
+fitting before optimization.
 }
 
 \section{Planned assignment and structural missingness}{

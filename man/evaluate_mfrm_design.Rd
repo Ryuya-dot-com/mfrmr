@@ -133,7 +133,10 @@ alongside the standard result columns.
 \item \code{results}: facet-level replicate results, with the same design-variable
 alias columns when applicable.
 \item \code{rep_overview}: run-level status and timing, with the same design-variable
-alias columns when applicable.
+alias columns when applicable. Failed fits retain the condition class,
+failure component, and category-support state/reason codes when available;
+a completely failed design still returns the documented zero-row
+\code{results} schema rather than a zero-column table.
 \item \code{design_descriptor}: role-based design-variable metadata used by planning
 summaries and plots
 \item \code{planning_scope}: explicit record of the current planning contract

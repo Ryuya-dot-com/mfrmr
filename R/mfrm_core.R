@@ -3484,7 +3484,8 @@ build_estimation_summary <- function(model, method, prep, config, sizes, opt) {
 }
 
 build_mfrm_data_review <- function(prep, anchors = NULL, group_anchors = NULL,
-                                   estimability_audit = NULL) {
+                                   estimability_audit = NULL,
+                                   category_support_audit = NULL) {
   facet_names <- as.character(prep$facet_names %||% character(0))
   subset_tables <- calc_subsets(prep$data, c("Person", facet_names))
   subset_summary <- as.data.frame(
@@ -3592,7 +3593,8 @@ build_mfrm_data_review <- function(prep, anchors = NULL, group_anchors = NULL,
     boundary_levels = as.data.frame(boundary_levels, stringsAsFactors = FALSE),
     single_level_facets = single_level_facets,
     preparation_notes = prep_notes,
-    estimability = estimability_audit
+    estimability = estimability_audit,
+    category_support = category_support_audit
   )
 }
 
@@ -3698,18 +3700,25 @@ mfrm_estimate <- function(data, person_col, facet_cols, score_col,
   )
   sizes <- cfg$sizes
   start <- build_initial_param_vector(config, sizes)
+  category_support_audit <- audit_mfrm_category_support(
+    prep = prep,
+    config = config,
+    sizes = sizes
+  )
   estimability_audit <- audit_mfrm_estimability(
     prep = prep,
     idx = idx,
     config = config,
     sizes = sizes
   )
+  config$category_support_audit <- category_support_audit
   config$estimability_audit <- estimability_audit
   data_review <- build_mfrm_data_review(
     prep = prep,
     anchors = anchor_df,
     group_anchors = group_anchor_df,
-    estimability_audit = estimability_audit
+    estimability_audit = estimability_audit,
+    category_support_audit = category_support_audit
   )
   estimability_state <- as.character(
     estimability_audit$readiness$EstimabilityState[1] %||% NA_character_
@@ -3717,9 +3726,18 @@ mfrm_estimate <- function(data, person_col, facet_cols, score_col,
   if (identical(estimability_state, "structurally_unidentified")) {
     mfrmr_stop_unidentified(estimability_audit)
   }
+  category_state <- as.character(
+    category_support_audit$readiness$CategoryState[1] %||% NA_character_
+  )
+  if (identical(category_state, "unsupported_coordinate")) {
+    mfrmr_stop_unsupported_category(category_support_audit)
+  }
   if (estimability_state %in%
       c("population_assumption_linked", "weak_information")) {
     mfrmr_warn_estimability(estimability_audit)
+  }
+  if (identical(category_state, "weak_information")) {
+    mfrmr_warn_category_support(category_support_audit)
   }
   design_status <- data_review$status$Status[
     match("Design", data_review$status$Domain)

@@ -2642,8 +2642,7 @@ test_that("ConQuest overlap helpers auto-resolve conservative alias columns", {
 })
 
 test_that("build_mfrm_replay_script preserves keep_original and rating range", {
-  dat <- mfrmr:::sample_mfrm_data(seed = 42) |>
-    dplyr::filter(.data$Score %in% c(1, 3, 5))
+  dat <- mfrmr:::sample_mfrm_data(seed = 42)
 
   fit <- suppressWarnings(fit_mfrm(
     dat,

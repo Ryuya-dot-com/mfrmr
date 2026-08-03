@@ -4,6 +4,20 @@ This is the unreleased development line after CRAN publication of 0.2.2.
 CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
 0.2.3 and must not be attributed retroactively to 0.2.2.
 
+* Added a model-scoped category and step-support preflight. Every new fit now
+  distinguishes declared, globally observed, ladder-observed, retained, free,
+  derived, fixed, weak, and unsupported category/step coordinates. RSM uses
+  one shared-ladder support decision; PCM and bounded GPCM audit every current
+  `step_facet` ladder. An internal category with no positive-weight
+  observations creates an exact adjacent-step recession direction and now
+  stops before optimization with a structured error. Empty boundary
+  categories and local RSM gaps remain review evidence for the separate
+  element-boundary contract. Binary ladders do not invent a free threshold
+  blocker. Repeated
+  design evaluations retain category-error class/state/reason provenance in
+  `rep_overview` and preserve the documented zero-row results schema when all
+  fits in a design fail preflight.
+
 * Added an estimator-specific sparse constrained estimability preflight for
   RSM/PCM Person, facet, interaction, and step coordinates. Exact aliases now
   stop before optimization with a structured audit; MML designs whose apparent

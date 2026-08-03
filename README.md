@@ -160,11 +160,16 @@ connected. Without `expected_design`, structural missingness is reported as
 not assessed because an absent row may simply mean that the cell was never
 assigned.
 
-`rating_min` and `rating_max` retain unobserved boundary categories. If an
-intended intermediate category is also unobserved, use `keep_original = TRUE`
-in both `describe_mfrm_data()` and `fit_mfrm()`. Otherwise non-consecutive
-observed scores such as `1, 2, 4, 5` are mapped to a contiguous internal scale;
-always review the reported score map before interpreting steps.
+`rating_min` and `rating_max` retain unobserved boundary categories in the
+data-support review. A boundary gap remains review evidence for the separate
+element-boundary contract; it is not by itself an unsupported free-step
+contrast. If an intended intermediate category is unobserved, use
+`keep_original = TRUE` in both `describe_mfrm_data()` and `fit_mfrm()`. In a
+polytomous fitted ladder, that retained internal gap creates an exact
+adjacent-step recession direction, so fitting stops before optimization.
+Otherwise non-consecutive observed scores such as `1, 2, 4, 5` are mapped to a
+contiguous internal scale; always review the reported score map before
+interpreting steps.
 
 ### 2. Fit the model
 
