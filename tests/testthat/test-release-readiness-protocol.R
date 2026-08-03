@@ -45,7 +45,7 @@ test_that("public roadmap is separated from internal release operations", {
   expect_true(any(grepl("inst/validation", ignore, fixed = TRUE)))
 })
 
-test_that("internal draft.24 readiness and estimator work remain explicit and private", {
+test_that("internal draft.25 readiness and estimator work remain explicit and private", {
   pkg_root <- normalizePath(testthat::test_path("..", ".."), mustWork = TRUE)
   internal_path <- file.path(
     pkg_root, "inst", "validation", "internal-roadmap-0.2.3.md"
@@ -89,12 +89,14 @@ test_that("internal draft.24 readiness and estimator work remain explicit and pr
   expect_match(internal, "ReadinessContractVersion", fixed = TRUE)
   expect_match(internal, "expected, eligible, rejected", fixed = TRUE)
   expect_match(internal, "WP0 is structurally complete", fixed = TRUE)
-  expect_match(internal, "in_progress_linear_block", fixed = TRUE)
+  expect_match(internal, "in_progress_fitted_information_instrumented", fixed = TRUE)
+  expect_match(internal, "Draft.25 fitted-information instrumentation slice",
+               fixed = TRUE)
   expect_match(internal, "Corrective-program execution lanes", fixed = TRUE)
   expect_match(internal, "partitioned\\s+exhaustively")
   expect_match(internal, "Estimator ecosystem and maturity boundary", fixed = TRUE)
   expect_match(internal, "method = \"HRM\"", fixed = TRUE)
-  expect_match(gate, "Specification ID | `0.2.3-draft.24`", fixed = TRUE)
+  expect_match(gate, "Specification ID | `0.2.3-draft.25`", fixed = TRUE)
   expect_match(gate, "EXT-TAM-JML-RAW", fixed = TRUE)
   expect_match(gate, "EXT-IMMER-CCML", fixed = TRUE)
   expect_match(gate, "ALT-IMMER-HRM-LD", fixed = TRUE)
@@ -105,6 +107,7 @@ test_that("internal draft.24 readiness and estimator work remain explicit and pr
   expect_true(all(c(
     "readiness_contract_schema",
     "readiness_scope_and_propagation",
+    "fitted_information_instrumentation",
     "sparse_estimability_performance",
     "metric_specific_comparison_eligibility",
     "jml_estimator_maturity",
@@ -235,7 +238,7 @@ test_that("WP0 fixture validator rejects post-hoc readiness upgrades", {
                         fixed = TRUE)))
 })
 
-test_that("FACETS and diagnostic stress registries retain prior edge cells under draft.24", {
+test_that("FACETS and diagnostic stress registries retain prior edge cells under draft.25", {
   pkg_root <- normalizePath(testthat::test_path("..", ".."),
                             winslash = "/", mustWork = TRUE)
   facets_path <- file.path(

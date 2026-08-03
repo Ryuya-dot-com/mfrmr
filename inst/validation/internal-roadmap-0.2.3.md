@@ -311,7 +311,7 @@ The following remain outside 0.2.3:
 | M4: run confirmation | Run the locked recovery/stress matrix, FACETS JML core, ConQuest/TAM MML comparisons, TAM/immer JML convention grid, eligible immer CML/CCML rows, dimensionality challenge, and matched external rows without changing criteria or reusing discovery/pilot data as independent confirmation. | Candidate-linked internal and external evidence with every blocker classified and every expected scenario/replicate accounted for. |
 | M5: release handoff | Run full regression, cross-platform CI, manuals, URL checks, CRAN-time examples, Win-builder, package-content audit, and public-claim audit. | All blocker rows `ok`, all caveats visible, and an exact checked tarball. |
 
-The repository now contains `0.2.3-draft.24` planning and pilot artifacts at
+The repository now contains `0.2.3-draft.25` planning and pilot artifacts at
 `inst/validation/release-gate-spec-0.2.3.md` and
 `inst/validation/release-evidence-checklist-0.2.3.csv`, with the TAM/immer
 execution contract in `inst/validation/tam-immer-estimator-stress-plan-0.2.3.md`.
@@ -375,16 +375,18 @@ extreme-score output, and definition-specific interaction/bias/PCAR contracts
 before the next paired pilot. These are prerequisites to tolerance
 calibration, not completed release gates.
 
-### Draft.24 near-term corrective program
+### Draft.25 near-term corrective program
 
 Draft.21 converted the draft.20 diagnosis into an implementation sequence.
 Draft.22 completes the structural WP0 contract and makes that contract the
 fixed input to WP1--WP5. Draft.23 begins WP1 with the estimator-specific sparse
 linear-block preflight described below. Draft.24 adds the estimator-ecosystem
-boundary and makes correction mode part of external comparison identity. Its
-objective is not to maximize new diagnostics. It is to establish one source of
-truth for whether a fit, a parameter, and an external comparison are usable,
-and to make every downstream surface consume that source rather than
+boundary and makes correction mode part of external comparison identity.
+Draft.25 adds the first bounded post-fit information instrument for nonlinear
+coordinates without promoting that instrument to a weak-information rule. The
+program's objective is not to maximize new diagnostics. It is to establish one
+source of truth for whether a fit, a parameter, and an external comparison are
+usable, and to make every downstream surface consume that source rather than
 reconstructing readiness independently.
 
 The dependency order is:
@@ -406,7 +408,7 @@ reviewed. Confirmation remains prohibited until the later frozen gate.
 | Work package | Depends on | Current state | Implementation boundary | Required exit artifact |
 | --- | --- | --- | --- | --- |
 | `WP0-READINESS-CONTRACT` | draft.20 diagnosis | `complete_structural` | Freeze internal state names, scopes, severity/precedence, condition classes, object fields, legacy-object behavior, and exact adversarial fixtures before changing fit logic. | `readiness-contract-0.2.3.md`, its repository validator, 27-row fixture registry, and privacy/semantic tests; no external tolerance. |
-| `WP1-ESTIMABILITY` | WP0 | `in_progress_linear_block` | Build the estimator-specific free-parameter map and constrained design; detect structural aliases before optimization; distinguish exact alias from weak fitted information. | Unit/property tests, alias diagnostics, sparse-design benchmark, and zero false-ready exact controls. |
+| `WP1-ESTIMABILITY` | WP0 | `in_progress_fitted_information_instrumented` | Build the estimator-specific free-parameter map and constrained design; detect structural aliases before optimization; distinguish exact alias from weak fitted information. | Unit/property tests, alias diagnostics, sparse-design benchmark, and zero false-ready exact controls. |
 | `WP2-CATEGORY-STEP` | WP0 | `queued` | Audit declared, observed, retained, free, fixed, and unsupported category/step coordinates globally and by current `step_facet`; do not add threshold anchors. | RSM/PCM/GPCM reduction and missing-category fixtures plus parameter-scoped status tables. |
 | `WP3-JML-BOUNDARY` | WP0 | `queued` | Detect JML element separation/extreme sufficient scores on the actual contributing row pattern; replace optimizer-dependent finite primary values with typed boundary states. | JML extreme/nonextreme fixtures, MML non-reduction guard, and explicit optional-display contract. |
 | `WP4-READINESS-PROPAGATION` | WP1--WP3 | `blocked_by_dependency` | Derive fit-, parameter-, and output-level readiness once and propagate it without surface-specific reinterpretation. | Cross-surface snapshot/semantic tests and a 0.2.2-object migration fixture. |
@@ -566,12 +568,33 @@ some remain full rank under their declared constraints but still retain a
 linking hold, whereas a balanced two-component Rater/criterion split stops as
 an exact alias.
 
-WP1 is not complete. Bounded-GPCM log slopes and active latent-regression
-residual variance are recorded as nonlinear unaudited blocks; additive full
-rank does not certify them. A fitted-information layer, a wider anchor/group/
-interaction property grid, sparse target-size memory/runtime evidence, and
-calibrated weak-information classification remain pending. No FACETS tolerance
-or supported-capacity claim follows from this implementation slice.
+##### Draft.25 fitted-information instrumentation slice
+
+For a retained nonlinear fit that passes the existing terminal stationarity
+gate and has at most 80 free coordinates, the package now evaluates a dense
+numerical Hessian of the same negative log-likelihood and analytical gradient
+used by the direct optimizer. The stored record identifies the evaluation
+point, model and estimator, free dimension, execution limit, nonlinear blocks,
+explicit free-coordinate difference step, retained and reevaluated objective,
+objective difference, terminal gradient, Hessian asymmetry, full-vector
+symmetric-eigenvalue tolerance ladder, and nonlinear-block diagonal summary.
+Deterministic integration controls cover bounded-GPCM `log_slopes`
+and latent-regression `log_sigma2`; nonstationary, malformed-vector, oversized,
+and unavailable cases retain explicit not-evaluated states.
+
+This is instrumentation, not a decision rule. The 80-coordinate limit is a
+dense-Hessian execution cap, not an estimability threshold. No eigenvalue,
+rank, diagonal, or condition result produces `weak_information`, changes
+readiness, completes the nonlinear preflight, or licenses external agreement.
+Those semantics remain prohibited until the pilot grid establishes a
+parameterization-aware rule and WP4 propagates the frozen result consistently.
+
+WP1 is not complete. Additive full rank still does not certify bounded-GPCM
+log slopes or active latent-regression residual variance. Nonlinear structural
+Jacobians, a wider anchor/group/interaction property grid, sparse target-size
+memory/runtime evidence, a scalable alternative to the bounded dense Hessian,
+and calibrated weak-information classification remain pending. No FACETS
+tolerance or supported-capacity claim follows from this implementation slice.
 
 #### WP2: category and step contract
 

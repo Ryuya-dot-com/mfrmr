@@ -3794,6 +3794,24 @@ mfrm_estimate <- function(data, person_col, facet_cols, score_col,
   config$estimation_control$mml_engine_used <- as.character(opt$mml_engine$Used %||% NA_character_)
   config$estimation_control$mml_engine_detail <- as.character(opt$mml_engine$Detail %||% NA_character_)
 
+  # The pre-fit constrained rank audit deliberately excludes nonlinear GPCM
+  # slope and latent-population variance coordinates. For stationary retained
+  # solutions of modest dimension, instrument their local observed information
+  # without yet assigning a weak-information readiness state. The tolerance
+  # ladder remains diagnostic until its simulation rule is frozen.
+  if (length(estimability_audit$nonlinear_blocks %||% character(0)) > 0L) {
+    estimability_audit$fitted_information <- audit_mfrm_fitted_information(
+      opt = opt,
+      idx = idx,
+      config = config,
+      sizes = sizes,
+      quad_points = quad_points,
+      nonlinear_blocks = estimability_audit$nonlinear_blocks
+    )
+    config$estimability_audit <- estimability_audit
+    data_review$estimability <- estimability_audit
+  }
+
   # Stage 5: Build human-readable output tables.
   params <- expand_params(opt$par, sizes, config)
   person_tbl <- build_person_table(method, idx, config, params, prep, quad_points)

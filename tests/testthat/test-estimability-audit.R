@@ -63,6 +63,11 @@ test_that("balanced JML constrained design is full rank and invariant", {
     audit$readiness$AuditedFreeDimension,
     audit$readiness$OptimizerFreeDimension
   )
+  expect_identical(
+    audit$fitted_information$status,
+    "pending_weak_information_calibration"
+  )
+  expect_false(audit$fitted_information$weak_information_classified)
   expect_true(all(c("Person", "Rater", "Criterion", "steps") %in%
                     audit$parameter_blocks$Block))
 
@@ -293,7 +298,7 @@ test_that("GPCM additive rank does not overclaim nonlinear completeness", {
     step_facet = "Criterion",
     slope_facet = "Criterion",
     quad_points = 5,
-    maxit = 5
+    maxit = 50
   ))
   audit <- fit$data_review$estimability
   expect_identical(audit$design$state, "identified")
@@ -301,4 +306,142 @@ test_that("GPCM additive rank does not overclaim nonlinear completeness", {
   expect_true("log_slopes" %in% audit$nonlinear_blocks)
   expect_match(audit$readiness$ReasonCodes, "design_rank_not_evaluated",
                fixed = TRUE)
+  expect_identical(
+    audit$fitted_information$status,
+    "evaluated_diagnostic_only"
+  )
+  expect_true(audit$fitted_information$attempted)
+  expect_equal(nrow(audit$fitted_information$rank_ladder), 3L)
+  expect_identical(
+    audit$fitted_information$numerical_differentiation$free_coordinate_step,
+    1e-3
+  )
+  expect_true(all(is.finite(
+    unlist(audit$fitted_information$evaluation_summary[1, ], use.names = FALSE)
+  )))
+  expect_equal(
+    audit$fitted_information$evaluation_summary$ObjectiveDifference,
+    0,
+    tolerance = 1e-10
+  )
+  expect_identical(
+    audit$fitted_information$block_summary$Block,
+    "log_slopes"
+  )
+  expect_false(audit$fitted_information$weak_information_classified)
+  expect_identical(
+    audit$fitted_information$readiness_effect,
+    "none_pending_pilot_calibrated_rule"
+  )
+})
+
+test_that("latent residual variance enters fitted-information instrumentation", {
+  set.seed(2718)
+  n_person <- 50L
+  n_item <- 5L
+  persons <- paste0("P", sprintf("%03d", seq_len(n_person)))
+  items <- paste0("I", seq_len(n_item))
+  x <- stats::rnorm(n_person)
+  theta <- 0.25 + 0.9 * x + stats::rnorm(n_person, sd = 0.6)
+  item_beta <- seq(-1.2, 1.2, length.out = n_item)
+  data <- expand.grid(
+    Person = persons,
+    Item = items,
+    stringsAsFactors = FALSE
+  )
+  eta <- theta[match(data$Person, persons)] -
+    item_beta[match(data$Item, items)]
+  data$Score <- stats::rbinom(nrow(data), 1, stats::plogis(eta))
+  person_data <- data.frame(Person = persons, X = x)
+
+  fit <- suppressWarnings(fit_mfrm(
+    data,
+    person = "Person",
+    facets = "Item",
+    score = "Score",
+    model = "RSM",
+    method = "MML",
+    population_formula = ~ X,
+    person_data = person_data,
+    quad_points = 7,
+    maxit = 150
+  ))
+  audit <- fit$data_review$estimability
+
+  expect_identical(audit$nonlinear_blocks, "log_sigma2")
+  expect_identical(
+    audit$fitted_information$status,
+    "evaluated_diagnostic_only"
+  )
+  expect_identical(
+    audit$fitted_information$block_summary$Block,
+    "log_sigma2"
+  )
+  expect_identical(
+    audit$fitted_information$block_summary$FreeCoordinates,
+    1L
+  )
+  expect_true(all(is.finite(
+    unlist(audit$fitted_information$evaluation_summary[1, ], use.names = FALSE)
+  )))
+  expect_false(audit$fitted_information$weak_information_classified)
+  expect_false(audit$readiness$Complete)
+})
+
+test_that("fitted-information eigenvalue ladder remains diagnostic", {
+  result <- mfrmr:::mfrmr_information_rank_ladder(
+    diag(c(4, 1, 1e-9, -1e-7)),
+    tolerances = c(1e-10, 1e-8, 1e-6)
+  )
+
+  expect_true(result$valid)
+  expect_equal(nrow(result$rank_ladder), 3L)
+  expect_equal(result$rank_ladder$PositiveRank, c(3L, 2L, 2L))
+  expect_equal(result$rank_ladder$NegativeCount, c(1L, 1L, 0L))
+  expect_equal(result$rank_ladder$NearZeroCount, c(0L, 1L, 2L))
+  expect_equal(result$smallest_eigenvalue, -1e-7)
+  expect_equal(result$largest_eigenvalue, 4)
+})
+
+test_that("fitted-information execution limit is not a readiness classification", {
+  opt <- list(
+    par = rep(0, 81L),
+    optimizer_diagnostics = list(ConvergenceSeverity = "pass")
+  )
+  audit <- mfrmr:::audit_mfrm_fitted_information(
+    opt = opt,
+    idx = NULL,
+    config = list(method = "MML", model = "GPCM"),
+    sizes = list(log_slopes = 81L),
+    quad_points = 5L,
+    nonlinear_blocks = "log_slopes",
+    max_free_dimension = 80L
+  )
+
+  expect_identical(audit$status, "not_evaluated_dimension_limit")
+  expect_false(audit$attempted)
+  expect_false(audit$weak_information_classified)
+  expect_identical(audit$readiness_effect,
+                   "none_pending_pilot_calibrated_rule")
+  expect_match(audit$detail, "execution limit, not an estimability classification",
+               fixed = TRUE)
+})
+
+test_that("nonstationary retained states do not trigger fitted information", {
+  opt <- list(
+    par = rep(0, 2L),
+    optimizer_diagnostics = list(ConvergenceSeverity = "review")
+  )
+  audit <- mfrmr:::audit_mfrm_fitted_information(
+    opt = opt,
+    idx = NULL,
+    config = list(method = "MML", model = "GPCM"),
+    sizes = list(log_slopes = 2L),
+    quad_points = 5L,
+    nonlinear_blocks = "log_slopes"
+  )
+
+  expect_identical(audit$status, "not_evaluated_nonstationary")
+  expect_false(audit$attempted)
+  expect_false(audit$weak_information_classified)
 })

@@ -9,9 +9,11 @@
 # enter through their actual expansion Jacobians.
 #
 # GPCM log slopes and latent-regression residual variance are nonlinear
-# coordinates. The additive block is still audited, but a full-model
-# estimability claim is deferred until a fitted-information/Jacobian audit is
-# available. This distinction is retained in `Complete` and `NonlinearBlocks`.
+# coordinates. The additive block is audited before fitting. A bounded local
+# fitted-information instrument is available after a stationary fit, but a
+# full-model estimability claim remains deferred until structural nonlinear
+# audits and pilot-calibrated weak-information rules exist. This distinction
+# is retained in `Complete` and `NonlinearBlocks`.
 
 mfrmr_estimability_contract_version <- function() {
   "mfrmr-internal-readiness-0.2.3-v1"
@@ -556,6 +558,302 @@ mfrmr_estimability_rank_audit <- function(design, parameter_map,
   )
 }
 
+mfrmr_information_rank_ladder <- function(hessian,
+                                           tolerances = c(1e-10, 1e-8, 1e-6)) {
+  hessian <- suppressWarnings(as.matrix(hessian))
+  if (!is.numeric(hessian) || nrow(hessian) != ncol(hessian) ||
+      length(hessian) == 0L || any(!is.finite(hessian))) {
+    return(list(
+      valid = FALSE,
+      rank_ladder = data.frame(),
+      eigenvalues = numeric(0),
+      scale = NA_real_,
+      smallest_eigenvalue = NA_real_,
+      largest_eigenvalue = NA_real_
+    ))
+  }
+
+  symmetric <- (hessian + t(hessian)) / 2
+  eigenvalues <- tryCatch(
+    as.numeric(eigen(symmetric, symmetric = TRUE, only.values = TRUE)$values),
+    error = function(e) numeric(0)
+  )
+  if (length(eigenvalues) != nrow(symmetric) || any(!is.finite(eigenvalues))) {
+    return(list(
+      valid = FALSE,
+      rank_ladder = data.frame(),
+      eigenvalues = eigenvalues,
+      scale = NA_real_,
+      smallest_eigenvalue = NA_real_,
+      largest_eigenvalue = NA_real_
+    ))
+  }
+
+  scale <- max(abs(eigenvalues))
+  thresholds <- if (is.finite(scale) && scale > 0) {
+    scale * as.numeric(tolerances)
+  } else {
+    as.numeric(tolerances)
+  }
+  rank_ladder <- data.frame(
+    RelativeTolerance = as.numeric(tolerances),
+    AbsoluteThreshold = thresholds,
+    PositiveRank = vapply(
+      thresholds, function(threshold) sum(eigenvalues > threshold), integer(1)
+    ),
+    NegativeCount = vapply(
+      thresholds, function(threshold) sum(eigenvalues < -threshold), integer(1)
+    ),
+    NearZeroCount = vapply(
+      thresholds,
+      function(threshold) sum(abs(eigenvalues) <= threshold),
+      integer(1)
+    ),
+    stringsAsFactors = FALSE
+  )
+
+  list(
+    valid = TRUE,
+    rank_ladder = rank_ladder,
+    eigenvalues = eigenvalues,
+    scale = scale,
+    smallest_eigenvalue = min(eigenvalues),
+    largest_eigenvalue = max(eigenvalues)
+  )
+}
+
+mfrmr_fitted_information_block_summary <- function(hessian,
+                                                    sizes,
+                                                    blocks) {
+  slices <- build_param_slices(sizes)
+  rows <- lapply(as.character(blocks), function(block) {
+    slice <- as.integer(slices[[block]] %||% integer(0))
+    diagonal <- if (length(slice) > 0L) {
+      diag(hessian)[slice]
+    } else {
+      numeric(0)
+    }
+    data.frame(
+      Block = block,
+      FreeCoordinates = length(slice),
+      OptimizerIndexStart = if (length(slice) > 0L) min(slice) else NA_integer_,
+      OptimizerIndexEnd = if (length(slice) > 0L) max(slice) else NA_integer_,
+      FiniteDiagonal = length(diagonal) > 0L && all(is.finite(diagonal)),
+      MinimumDiagonal = if (length(diagonal) > 0L) min(diagonal) else NA_real_,
+      MaximumDiagonal = if (length(diagonal) > 0L) max(diagonal) else NA_real_,
+      stringsAsFactors = FALSE
+    )
+  })
+  if (length(rows) == 0L) {
+    return(data.frame(
+      Block = character(0),
+      FreeCoordinates = integer(0),
+      OptimizerIndexStart = integer(0),
+      OptimizerIndexEnd = integer(0),
+      FiniteDiagonal = logical(0),
+      MinimumDiagonal = numeric(0),
+      MaximumDiagonal = numeric(0),
+      stringsAsFactors = FALSE
+    ))
+  }
+  do.call(rbind, rows)
+}
+
+audit_mfrm_fitted_information <- function(opt,
+                                          idx,
+                                          config,
+                                          sizes,
+                                          quad_points,
+                                          nonlinear_blocks,
+                                          max_free_dimension = 80L,
+                                          tolerances = c(1e-10, 1e-8, 1e-6)) {
+  nonlinear_blocks <- as.character(nonlinear_blocks %||% character(0))
+  free_dimension <- sum(vapply(sizes, as.integer, integer(1)))
+  base <- list(
+    role = "observed_negative_loglikelihood_hessian_at_retained_solution",
+    evaluation_point = "retained_optimizer_free_coordinate_vector",
+    method = as.character(config$method),
+    model = as.character(config$model),
+    nonlinear_blocks = nonlinear_blocks,
+    attempted = FALSE,
+    status = "not_required",
+    free_dimension = as.integer(free_dimension),
+    dimension_limit = as.integer(max_free_dimension),
+    hessian_elements = as.double(free_dimension)^2,
+    numerical_differentiation = list(
+      method = "central_difference_of_analytical_gradient_via_stats_optimHess",
+      parameter_scale = 1,
+      free_coordinate_step = 1e-3
+    ),
+    evaluation_summary = data.frame(
+      RetainedObjective = NA_real_,
+      ReevaluatedObjective = NA_real_,
+      ObjectiveDifference = NA_real_,
+      GradientMaxAbs = NA_real_,
+      MaximumHessianAsymmetry = NA_real_,
+      stringsAsFactors = FALSE
+    ),
+    rank_ladder = data.frame(),
+    block_summary = mfrmr_fitted_information_block_summary(
+      matrix(numeric(0), nrow = 0L, ncol = 0L), sizes, character(0)
+    ),
+    eigenvalue_summary = data.frame(
+      Smallest = NA_real_,
+      Largest = NA_real_,
+      AbsoluteScale = NA_real_,
+      stringsAsFactors = FALSE
+    ),
+    weak_information_classified = FALSE,
+    readiness_effect = "none_pending_pilot_calibrated_rule",
+    detail = "No nonlinear free-coordinate block required this fitted-information slice."
+  )
+
+  if (length(nonlinear_blocks) == 0L) return(base)
+
+  severity <- as.character(
+    opt$optimizer_diagnostics$ConvergenceSeverity %||% NA_character_
+  )
+  if (!identical(severity, "pass")) {
+    base$status <- "not_evaluated_nonstationary"
+    base$detail <- paste(
+      "Fitted information was not evaluated because the retained optimizer",
+      "state did not pass the terminal numerical stationarity gate."
+    )
+    return(base)
+  }
+  if (free_dimension <= 0L || is.null(opt$par) ||
+      length(opt$par) != free_dimension || any(!is.finite(opt$par))) {
+    base$status <- "not_evaluated_parameter_vector"
+    base$detail <- paste(
+      "Fitted information was not evaluated because the retained free",
+      "parameter vector was unavailable, non-finite, or dimensionally inconsistent."
+    )
+    return(base)
+  }
+  if (free_dimension > as.integer(max_free_dimension)) {
+    base$status <- "not_evaluated_dimension_limit"
+    base$detail <- paste0(
+      "Fitted information requires a dense ", free_dimension, " x ",
+      free_dimension, " Hessian, exceeding the instrumentation limit of ",
+      as.integer(max_free_dimension), ". This is an execution limit, not an ",
+      "estimability classification."
+    )
+    return(base)
+  }
+
+  quad <- gauss_hermite_normal(max(1L, as.integer(quad_points)))
+  cache <- make_param_cache(
+    sizes = sizes,
+    config = config,
+    idx = idx,
+    is_mml = identical(config$method, "MML")
+  )
+  evaluator <- make_mfrm_direct_evaluator(
+    method = config$method,
+    cache = cache,
+    idx = idx,
+    config = config,
+    sizes = sizes,
+    quad = quad
+  )
+  evaluation <- tryCatch(
+    list(
+      value = as.numeric(evaluator$value(opt$par)),
+      gradient = as.numeric(evaluator$gradient(opt$par))
+    ),
+    error = function(e) list(value = NA_real_, gradient = numeric(0))
+  )
+  parameter_scale <- rep(1, free_dimension)
+  difference_step <- rep(1e-3, free_dimension)
+  hessian <- tryCatch(
+    stats::optimHess(
+      par = opt$par,
+      fn = evaluator$value,
+      gr = evaluator$gradient,
+      control = list(
+        fnscale = 1,
+        parscale = parameter_scale,
+        ndeps = difference_step
+      )
+    ),
+    error = function(e) e
+  )
+  base$attempted <- TRUE
+  if (inherits(hessian, "error") || is.null(hessian)) {
+    base$status <- "unavailable"
+    base$detail <- paste0(
+      "Fitted-information Hessian was unavailable: ",
+      if (inherits(hessian, "error")) conditionMessage(hessian) else "unknown error",
+      "."
+    )
+    return(base)
+  }
+
+  hessian <- suppressWarnings(as.matrix(hessian))
+  retained_objective <- as.numeric(opt$value %||% NA_real_)
+  reevaluated_objective <- as.numeric(evaluation$value[1] %||% NA_real_)
+  objective_difference <- if (is.finite(retained_objective) &&
+                              is.finite(reevaluated_objective)) {
+    reevaluated_objective - retained_objective
+  } else {
+    NA_real_
+  }
+  gradient_max_abs <- if (length(evaluation$gradient) > 0L &&
+                          all(is.finite(evaluation$gradient))) {
+    max(abs(evaluation$gradient))
+  } else {
+    NA_real_
+  }
+  maximum_asymmetry <- if (nrow(hessian) == ncol(hessian) &&
+                           all(is.finite(hessian))) {
+    max(abs(hessian - t(hessian)))
+  } else {
+    NA_real_
+  }
+  ladder <- mfrmr_information_rank_ladder(
+    hessian = hessian,
+    tolerances = tolerances
+  )
+  if (!isTRUE(ladder$valid)) {
+    base$status <- "unavailable"
+    base$detail <- paste(
+      "Fitted-information Hessian or its symmetric eigenvalue decomposition",
+      "was non-finite or unavailable."
+    )
+    return(base)
+  }
+
+  base$status <- "evaluated_diagnostic_only"
+  base$evaluation_summary <- data.frame(
+    RetainedObjective = retained_objective,
+    ReevaluatedObjective = reevaluated_objective,
+    ObjectiveDifference = objective_difference,
+    GradientMaxAbs = gradient_max_abs,
+    MaximumHessianAsymmetry = maximum_asymmetry,
+    stringsAsFactors = FALSE
+  )
+  base$rank_ladder <- ladder$rank_ladder
+  base$block_summary <- mfrmr_fitted_information_block_summary(
+    hessian = hessian,
+    sizes = sizes,
+    blocks = nonlinear_blocks
+  )
+  base$eigenvalue_summary <- data.frame(
+    Smallest = ladder$smallest_eigenvalue,
+    Largest = ladder$largest_eigenvalue,
+    AbsoluteScale = ladder$scale,
+    stringsAsFactors = FALSE
+  )
+  base$detail <- paste(
+    "The retained solution was evaluated through a dense numerical Hessian",
+    "of the same negative log-likelihood and analytical gradient used by the",
+    "direct optimizer, using a recorded free-coordinate difference step.",
+    "The tolerance ladder is diagnostic only; it does not",
+    "classify weak information or change readiness before pilot calibration."
+  )
+  base
+}
+
 audit_mfrm_estimability <- function(prep, idx, config, sizes) {
   primary <- mfrmr_estimability_adjacent_design(
     prep = prep, idx = idx, config = config, sizes = sizes
@@ -685,7 +983,18 @@ audit_mfrm_estimability <- function(prep, idx, config, sizes) {
     null_blocks = null_blocks,
     observed_components = as.integer(components),
     counterfactual_jml = counterfactual,
-    population_assumption_linked = isTRUE(population_assumption_linked)
+    population_assumption_linked = isTRUE(population_assumption_linked),
+    fitted_information = list(
+      status = if (length(nonlinear_blocks) > 0L) {
+        "pending_after_optimization"
+      } else {
+        "pending_weak_information_calibration"
+      },
+      attempted = FALSE,
+      nonlinear_blocks = nonlinear_blocks,
+      weak_information_classified = FALSE,
+      readiness_effect = "none_pending_pilot_calibrated_rule"
+    )
   )
 }
 

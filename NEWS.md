@@ -10,7 +10,11 @@ CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
   linkage depends on a common latent-population assumption remain review-only.
   Bounded-GPCM slopes and active latent-regression residual variance are
   explicitly outside the completed linear-block claim rather than being
-  certified by additive rank.
+  certified by additive rank. For stationary nonlinear fits with at most 80
+  free coordinates, the estimability record now also stores a diagnostic
+  observed-information Hessian tolerance ladder and nonlinear-block summary.
+  This bounded calculation does not classify weak information, complete the
+  nonlinear preflight, or alter readiness.
 
 * Added a versioned information-criterion contract for fitted MML objects.
   BIC now uses the number of independent Persons rather than response rows or

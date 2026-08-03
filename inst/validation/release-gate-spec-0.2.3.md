@@ -5,9 +5,9 @@
 | Field | Value |
 | --- | --- |
 | Target release | 0.2.3 |
-| Specification ID | `0.2.3-draft.24` |
+| Specification ID | `0.2.3-draft.25` |
 | Date | 2026-08-03 |
-| Status | M1 source review recorded; M2 IC, ConQuest/TAM, canonical-score, engine-path, fail-closed release-readiness, and FACETS 4.5.0 paired JML RSM/PCM stress pilots are present. The draft.20 divergence audit diagnosed exact aliases, category/step mismatch, and unmatched extreme displays. Draft.21 sequenced the corrective work; draft.22 froze the internal WP0 three-scope readiness contract. Draft.23 implements the first WP1 slice: an estimator-specific sparse constrained RSM/PCM linear-block rank audit, structured pre-optimization alias errors, counterfactual-JML review for MML population-assumption linkage, and invariance/anchor/interaction controls. Draft.24 separates MML/JML maturity; adds TAM/immer JML convention, CML/CCML reference, and HRM alternative-model lanes; and makes estimator adjustment and external package version part of comparison identity. No TAM/immer pilot has yet been run. GPCM slope and latent-variance Jacobians, fitted-information review, category/step support, JML boundary states, complete cross-surface propagation, metric-specific external eligibility, sparse target-size benchmarks, and new-seed repilot remain pending. All existing simulations remain calibration evidence. Runtime completion, tolerance freeze, independent replication, recovery/coverage, bootstrap, attribution, consequence, support-envelope registry, candidate freeze, and confirmation remain pending. |
+| Status | M1 source review recorded; M2 IC, ConQuest/TAM, canonical-score, engine-path, fail-closed release-readiness, and FACETS 4.5.0 paired JML RSM/PCM stress pilots are present. The draft.20 divergence audit diagnosed exact aliases, category/step mismatch, and unmatched extreme displays. Draft.21 sequenced the corrective work; draft.22 froze the internal WP0 three-scope readiness contract. Draft.23 implements the first WP1 slice: an estimator-specific sparse constrained RSM/PCM linear-block rank audit, structured pre-optimization alias errors, counterfactual-JML review for MML population-assumption linkage, and invariance/anchor/interaction controls. Draft.24 separates MML/JML maturity; adds TAM/immer JML convention, CML/CCML reference, and HRM alternative-model lanes; and makes estimator adjustment and external package version part of comparison identity. Draft.25 instruments a bounded local observed-information review for stationary nonlinear fits, covering GPCM log slopes and active latent-regression residual variance with an explicit dense-Hessian execution limit and diagnostic-only eigenvalue tolerance ladder. No weak-information or readiness classification follows from it. No TAM/immer pilot has yet been run. GPCM slope and latent-variance structural Jacobians, calibrated fitted-information rules, category/step support, JML boundary states, complete cross-surface propagation, metric-specific external eligibility, sparse target-size benchmarks, and new-seed repilot remain pending. All existing simulations remain calibration evidence. Runtime completion, tolerance freeze, independent replication, recovery/coverage, bootstrap, attribution, consequence, support-envelope registry, candidate freeze, and confirmation remain pending. |
 | Confirmation authorized | No |
 | Evidence checklist | `release-evidence-checklist-0.2.3.csv` |
 | FACETS stress plan | `facets-jml-stress-plan-0.2.3.md` |
@@ -368,6 +368,18 @@ explicit. Dense SVD is restricted to bounded explanation fixtures. This does
 not complete G1/G2: nonlinear GPCM slope and latent-variance coordinates,
 fitted information, weak-information calibration, target-size performance,
 and the broader property grid remain unresolved.
+
+Draft.25 adds only the first fitted-information instrument. For stationary
+retained fits with nonlinear free coordinates and total free dimension at most
+80, the runtime stores a symmetric-eigenvalue tolerance ladder from a dense
+numerical Hessian of the same direct negative log-likelihood and analytical
+gradient used in fitting, with an explicit free-coordinate step, objective
+reevaluation/difference, gradient maximum, Hessian asymmetry, and a nonlinear-
+block diagonal summary. It records
+explicit nonstationary, malformed-vector, dimension-limit, and unavailable
+states. The dimension cap is computational, not inferential. This result cannot
+create `weak_information`, change readiness, certify nonlinear structural
+identification, or satisfy G1/G2 before its pilot-calibrated rule is frozen.
 
 - Replication counts are selected from a frozen Monte Carlo-precision target,
   not convenience or elapsed time alone.
@@ -1055,6 +1067,7 @@ claim is reduced or deferred rather than decided ad hoc.
 | `0.2.3-draft.22` | Completed the structural WP0 readiness contract: froze the internal v1 state vocabulary, deterministic fit precedence, conservative `InferenceReady` mapping, parameter and comparison states, controlled reason codes, typed condition/runtime policy, fail-closed 0.2.2-object mapping, and a validated 27-row adversarial fixture registry. Runtime implementation and every statistical threshold remain pending. |
 | `0.2.3-draft.23` | Began WP1 runtime implementation with a sparse adjacent-category-logit rank audit in the actual RSM/PCM free-coordinate basis; added typed pre-optimization errors for exact aliases, counterfactual-JML classification of MML population-assumption linkage, bounded null explanations, and row-order, relabelling, anchor, PCM-step, interaction, and constraint-Jacobian controls. QR tolerance disagreement is diagnostic only and cannot become `weak_information` before the fitted-information rule is piloted and frozen. Nonlinear and fitted-information completion remains pending. |
 | `0.2.3-draft.24` | Separated workflow integration from estimator maturity; added the TAM/immer estimator stress plan with raw, extreme-adjusted, bias-corrected, and combined-default JML modes as distinct truth-first comparison strata; limited immer CML/CCML to eligible Rasch-family structural estimands; classified HRM as an alternative latent/local-dependence model; prohibited automatic transport of finite-item correction and ambiguous `GMFRM` naming; and left every new numerical threshold and pilot result unresolved. |
+| `0.2.3-draft.25` | Added the first bounded fitted-information instrument for stationary nonlinear fits: a dense numerical observed-information Hessian from the direct objective and analytical gradient, a diagnostic eigenvalue tolerance ladder, nonlinear-block summaries for GPCM log slopes and latent-regression residual variance, and explicit nonstationary/dimension-limit/unavailable states. The 80-coordinate cap is computational; no result classifies weak information, changes readiness, completes nonlinear structural identification, or freezes a release threshold. |
 
 ## Release decision algorithm
 
