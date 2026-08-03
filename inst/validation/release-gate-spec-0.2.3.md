@@ -5,14 +5,15 @@
 | Field | Value |
 | --- | --- |
 | Target release | 0.2.3 |
-| Specification ID | `0.2.3-draft.17` |
+| Specification ID | `0.2.3-draft.18` |
 | Date | 2026-08-03 |
-| Status | M1 source review recorded; M2 IC, ConQuest/TAM, canonical-score, engine-path, and fail-closed release-readiness instrumentation are present; a mandatory FACETS JML RSM/PCM stress plan and tool-qualification gate are now specified. FACETS runner/normalizer implementation, executable/report identity qualification, score/objective/parameter/external tolerance freeze, independent replication, recovery/coverage, bootstrap, attribution, consequence, support-envelope registry, candidate freeze, and confirmation remain pending. |
+| Status | M1 source review recorded; M2 IC, ConQuest/TAM, canonical-score, engine-path, fail-closed release-readiness, and a first FACETS 4.5.0 paired JML RSM/PCM stress pilot are present. The FACETS pilot covers 22 scenarios per model and records non-blocking tool identity, but remains one-seed calibration evidence. Repository-owned external execution, quantitative weak-link diagnostics, score/objective/parameter/external tolerance freeze, independent replication, recovery/coverage, bootstrap, attribution, consequence, support-envelope registry, candidate freeze, and confirmation remain pending. |
 | Confirmation authorized | No |
 | Evidence checklist | `release-evidence-checklist-0.2.3.csv` |
 | FACETS stress plan | `facets-jml-stress-plan-0.2.3.md` |
 | M1 review record | `release-gate-m1-review-0.2.3.md` |
-| Authoritative sequence | Repository-root `ROADMAP.md` |
+| Public direction | Repository-root `ROADMAP.md` |
+| Internal sequence | `internal-roadmap-0.2.3.md` |
 
 This document turns the 0.2.3 roadmap into a testable gate contract. It is a
 planning artifact, not evidence that any gate has passed. In particular,
@@ -232,8 +233,9 @@ Candidate identity is exact, not tolerance based.
   registry, seed registry, and integration registry must match their hashes.
 - An external result without executable hash/file metadata, output-reported
   version, command/control/input/output hashes, date, locale, parser/generator
-  and normalizer fingerprints is unresolved. Executable metadata and the
-  report header must agree with the version policy frozen after qualification.
+  and normalizer fingerprints is unresolved for release comparison. An
+  executable/report version difference is retained as a separate evidence
+  stratum and does not stop unrelated pilot execution.
 - A stale result from another candidate is a blocker even when its numerical
   values would pass.
 
@@ -745,15 +747,15 @@ orientation, and parameter transformation as far as the programs permit.
 Correlations are descriptive; blocker tolerances apply to signed/absolute
 differences on named estimands.
 
-FACETS is the required 0.2.3 external JML stress lane for RSM and PCM, subject
-to the separate qualification gate in
-`facets-jml-stress-plan-0.2.3.md`. The binary microcase qualifies orientation,
-constraints, parser behavior, and executable/report identity; it does not by
-itself validate polytomous recovery. Mandatory core families cover connected
-recovery, current element/group anchors, sparse/weak-link topology, and edge
-cases. Threshold anchors remain 0.2.4 scope. Fit and DFF/DIF rows remain
-optional promotions until definitions, null/non-null generators, multiplicity,
-and tolerances are frozen.
+FACETS 4.5.0 is the selected 0.2.3 external JML stress implementation for RSM
+and PCM. The environment record in `facets-jml-stress-plan-0.2.3.md` captures
+orientation, constraints, parser behavior, and executable/report identity but
+does not stop pilot execution when the current upstream release differs. The
+binary microcase does not by itself validate polytomous recovery. Mandatory
+core families cover connected recovery, current element/group anchors,
+sparse/weak-link topology, and edge cases. Threshold anchors remain 0.2.4
+scope. Fit and DFF/DIF rows remain optional promotions until definitions,
+null/non-null generators, multiplicity, and tolerances are frozen.
 
 FACETS is not ground truth. For every paired replicate, mfrmr and FACETS are
 first evaluated separately against the common generating truth, then compared
@@ -768,7 +770,8 @@ replicate accounting, timeouts, exit/stderr capture, one process by default,
 and fail-closed stale-output detection. The official-site version, executable
 file metadata, report-header version, executable SHA-256, controls, inputs,
 outputs, parser/generator versions, and candidate manifest are retained as
-distinct fields; version ambiguity or mixing is a blocker.
+distinct fields. Different versions are analyzed as separate sensitivity
+strata rather than silently pooled; the batch continues.
 
 External numerical tolerances are `pilot_required`; the mandatory scenario
 scope and fail-closed provenance rules are structural blockers now.
@@ -830,7 +833,7 @@ draft:
 | `DIM-PRACTICAL-GAIN` | Smallest practical predictive/score consequence. |
 | `DIM-BOOTSTRAP` | Bootstrap replication and failed/singular replicate policy. |
 | `EXT-CQ-TOL` | ConQuest signed/absolute tolerances by common estimand. |
-| `EXT-FACETS-IDENTITY` | Qualified executable SHA-256/file metadata, accepted report-header version rule, parser/generator identities, and stale/mixed-output rejection policy. |
+| `EXT-FACETS-IDENTITY` | Recorded executable SHA-256/file metadata, report-header version, parser/generator identities, and separate-stratum policy for version or stale-output differences. |
 | `EXT-FACETS-GRID` | Mandatory RSM/PCM core, anchor, sparse, and edge cells plus optional fit/DFF promotions and explicit exclusions. |
 | `EXT-FACETS-TOL` | Truth-recovery and transformed between-program tolerances by model, parameter/statistic, design cell, and estimand. |
 | `EXT-FACETS-MCSE` | Replication, complete-case accounting, Monte Carlo uncertainty, failed-run, and escalation rules. |
@@ -859,7 +862,8 @@ claim is reduced or deferred rather than decided ad hoc.
 | `0.2.3-draft.14` | Bound release-readiness output to an exact candidate-manifest schema, tarball/check-log/specification/checklist SHA-256 identities, a frozen specification ID, explicit confirmation authorization, and machine-checked current-versus-future public API truth; retained missing manifests, draft specifications, unfrozen blocker criteria, and every identity mismatch as concerns, so M3 and confirmation remain unauthorized. |
 | `0.2.3-draft.15` | Added a release-readiness guard against carrying numeric test/check pass counts forward in current README, NEWS, or cran-comments prose; historical NEWS sections remain untouched, while current engineering status must come from the exact candidate-linked logs and hashes. |
 | `0.2.3-draft.16` | Added fail-closed loading of candidate-linked gate-result rows, exact commit/specification identity checks, retained evidence-path SHA-256 verification, checklist item/scenario completeness, and blocker/roadmap/caveat status propagation into the release decision. |
-| `0.2.3-draft.17` | Promoted FACETS from a conditional supplied-output row to a mandatory qualified JML RSM/PCM stress lane; separated truth recovery from program agreement; added tool-identity, anchor, topology, edge, optional DFF, Monte Carlo, stale-output, and support-envelope requirements; and retained all new numeric criteria as pilot-required. |
+| `0.2.3-draft.17` | Promoted FACETS from a conditional supplied-output row to a mandatory JML RSM/PCM stress lane; pinned local 4.5.0 with a non-blocking identity record and separate-version strata; separated truth recovery from program agreement; added anchor, topology, missingness, edge, optional DFF, Monte Carlo, stale-output, and support-envelope requirements; and retained all new numeric criteria as pilot-required. |
+| `0.2.3-draft.18` | Added the first paired FACETS 4.5.0 RSM/PCM stress driver and one-seed 44-run pilot; expanded missingness, sparse, topology, duplicate, category-support, extreme-score, and contamination cells; verified fail-closed disconnected-design reporting; identified binary connectivity as insufficient for a single-bridge design; recorded 4.5.1 reporting/test sensitivity; and retained every external numeric threshold and confirmation claim as unresolved. |
 
 ## Release decision algorithm
 

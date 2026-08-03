@@ -7,6 +7,35 @@ release_readiness_protocol_path <- function() {
   }
 }
 
+test_that("public roadmap is separated from internal release operations", {
+  pkg_root <- normalizePath(testthat::test_path("..", ".."), mustWork = TRUE)
+  public_path <- file.path(pkg_root, "ROADMAP.md")
+  internal_path <- file.path(pkg_root, "inst", "validation",
+                             "internal-roadmap-0.2.3.md")
+  skip_if_not(file.exists(public_path))
+  expect_true(file.exists(internal_path))
+
+  public <- paste(readLines(public_path, warn = FALSE, encoding = "UTF-8"),
+                  collapse = "\n")
+  internal <- paste(readLines(internal_path, warn = FALSE, encoding = "UTF-8"),
+                    collapse = "\n")
+  forbidden <- c(
+    "0\\.2\\.3-draft", "SHA-256", "candidate manifest", "M1:", "M2:",
+    "Confirmation authorized", "inst/validation", "C:/", "C:\\\\"
+  )
+  for (pattern in forbidden) {
+    expect_false(grepl(pattern, public, perl = TRUE), info = pattern)
+  }
+  expect_match(public, "single source of truth for mfrmr's public release direction",
+               fixed = TRUE)
+  expect_match(internal, "internal development and validation roadmap",
+               fixed = TRUE)
+
+  ignore <- readLines(file.path(pkg_root, ".Rbuildignore"), warn = FALSE)
+  expect_true(any(grepl("ROADMAP", ignore, fixed = TRUE)))
+  expect_true(any(grepl("inst/validation", ignore, fixed = TRUE)))
+})
+
 release_readiness_gate_fixture <- function(env, check_status,
                                            freshness_status = NULL,
                                            example_policy_status = NULL,

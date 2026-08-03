@@ -1,11 +1,13 @@
 # FACETS JML stress-validation plan for mfrmr 0.2.3
 
-Status: `0.2.3-draft.17` planning artifact; confirmation is not authorized.
+Status: `0.2.3-draft.18` planning and pilot artifact; confirmation is not authorized.
 
-This plan is subordinate to the repository-root `ROADMAP.md` and the frozen
-release-gate specification. It defines how the locally available proprietary
-FACETS installation will be used as an external JML implementation without
-treating FACETS as ground truth or making it a package/runtime dependency.
+This plan is subordinate to `internal-roadmap-0.2.3.md` and the frozen
+release-gate specification. The repository-root `ROADMAP.md` contains only the
+public direction and support boundary. This file defines how the locally
+available proprietary FACETS installation will be used as an external JML
+implementation without treating FACETS as ground truth or making it a
+package/runtime dependency.
 
 ## Critical premise
 
@@ -36,46 +38,71 @@ validity, fairness, consequential validity, population transportability, or
 suitability for an operational high-stakes decision; those require separate
 domain evidence.
 
-## External-tool qualification
+## Execution version and identity record
 
 The 2026-08-03 environment audit found three different identities:
 
 | Evidence | Observed identity | Status |
 | --- | --- | --- |
-| Official FACETS page | FACETS 4.5.1, July 2026 | Current upstream reference; not yet locally qualified |
-| Local `Facets.exe` file metadata | File version 4.5.0; SHA-256 `dfb0afb0faa18f026d1b3b4175f22e42cc3764430eb83cbd368c7a572b3593a1` | Available, but no fresh report-header qualification run is yet bound to 0.2.3 |
+| Official FACETS page | FACETS 4.5.1, July 2026 | Upstream sensitivity reference |
+| Local `Facets.exe` file metadata | File version 4.5.0; SHA-256 `dfb0afb0faa18f026d1b3b4175f22e42cc3764430eb83cbd368c7a572b3593a1` | Fixed execution version for 0.2.3 pilot work |
 | Retained 2026-05-07 RSM/PCM reports | Report header FACETS 4.4.5 | Historical workflow evidence only; not 0.2.3 release evidence |
 
-The confirmation default is a locally installed and qualified copy of the
-current upstream FACETS release. If that version is unavailable, the frozen
-gate must name the older version, explain the limitation, and narrow the
-claim. No pilot or confirmation result may combine output from different
-FACETS versions under one external-program identity.
+FACETS 4.5.0 is the selected execution version. Its identity is recorded for
+reproducibility, but a difference from the current upstream version does not
+stop pilot execution. Results from another version are stored as a separate
+sensitivity stratum rather than pooled silently with 4.5.0.
 
-`EXT-FACETS-QUALIFY` must complete before simulation pilots:
+`EXT-FACETS-QUALIFY` is therefore a non-blocking environment record performed
+at the start of a batch:
 
 - run deterministic binary, RSM, and PCM microcases in batch mode;
 - capture the executable SHA-256, file metadata, report-header version, command
   schema, control/data/output hashes, run date, locale, and parser version;
 - verify that the echoed model, facet count, category support, observations,
   anchors, output tables, and element counts match the generated specification;
-- treat a zero process return code without the expected report and score-file
-  structure as failure;
+- record a zero process return code without the expected report and score-file
+  structure as a run failure, without cancelling unrelated scenario rows;
 - retain raw proprietary-program output outside the package and public source
   tarball, with normalized synthetic aggregates and hashes in repository
   evidence; and
-- repeat qualification after any binary, parser, control-template, locale, or
-  operating-system change.
+- write a new identity stratum after any binary, parser, control-template,
+  locale, or operating-system change.
 
-File-version metadata alone is insufficient: the report header is the runtime
-identity. Existing reports containing local absolute paths or identifiers must
-not be copied into public package evidence.
+File-version metadata and the report header are retained as separate runtime
+identity fields. A mismatch is reported and investigated, not used as an
+automatic batch stop. Existing reports containing local absolute paths or
+identifiers must not be copied into public package evidence.
+
+### Known 4.5.0 to 4.5.1 changes
+
+The official update history lists five 4.5.1 changes: replacement of the R
+Generalizability Theory plotting dependency, correction of an occasional
+analysis-window final line, display of fully unobserved `Labels=` elements in
+Table 2, five decimal places for Table 7 subgroup t-tests, and correction of
+Table 7 Welch t-tests to use sample variance rather than population variance.
+
+No RSM/PCM measure-estimation change is listed. Accordingly, 4.5.0 parameter
+recovery remains usable as the primary pilot lane. Two areas are explicitly
+version-sensitive: fully unobserved element reporting and Table 7 subgroup
+tests. Those are not promoted as 4.5.1-equivalent from a 4.5.0 run. A future
+4.5.1 sensitivity run should repeat `missing_entire_element` and
+`group_welch_unequal_n` cases; G-theory plot integration is outside the 0.2.3
+numerical core.
+
+The first expanded pilot is recorded in
+`facets-4.5.0-stress-pilot-record-0.2.3.md`. It is calibration evidence only.
+In particular, it showed that a single bridge can retain a binary
+`pass_linked` classification while parameter agreement deteriorates. The
+confirmation design must therefore add bridge-strength, articulation,
+component-balance, and local-information diagnostics rather than treating
+graph connectivity as sufficient evidence of stable identification.
 
 ## Scenario registry
 
 | Scenario family | Required role | Scope |
 | --- | --- | --- |
-| `EXT-FACETS-QUALIFY` | structural blocker | Binary/RSM and PCM microcases; binary/report/parser identity |
+| `EXT-FACETS-QUALIFY` | non-blocking provenance | Binary/RSM and PCM microcases; executable/report/parser identity |
 | `EXT-FACETS-RSM-CORE` | pilot then confirmation blocker | Connected matched JML RSM recovery and common-parameter comparison |
 | `EXT-FACETS-PCM-CORE` | pilot then confirmation blocker | Connected matched JML PCM recovery, criterion/item-specific steps, and common-parameter comparison |
 | `EXT-FACETS-ANCHOR` | pilot then confirmation blocker | Matched element and group-anchor cases already supported by 0.2.2; no threshold anchors |
@@ -110,13 +137,25 @@ Pilot starting values below are planning values, not frozen criteria:
 | Tasks | 3, 8 |
 | Criteria/items | 4, 10 |
 | Score categories | 2, 4, 7 with balanced, skewed, rare-boundary, and unused-category support |
-| Assignment density | complete, approximately 30%, approximately 10% with topology recorded separately |
-| Graph topology | well connected, weak bridge, articulation, zero-common-Person pair, disconnected |
+| Assignment density | complete, approximately 50%, 30%, 10%, 5%, and 1%, with topology recorded separately |
+| Graph topology | well connected, ring, chain, hub-and-spoke, weak bridge of width 1/2/5, articulation, zero-common-Person pair, disconnected |
+| Workload imbalance | balanced, mild imbalance, Pareto/Zipf-like rater load, and one dominant-rater hub |
 | Severity SD | approximately 0.25, 0.75, 1.50 logits |
 | Anchor pattern | none, approximately 20%, approximately 50%; individual and group anchors remain separate |
 | Extreme-score prevalence | none, moderate, high, with each program's adjustment/exclusion policy recorded |
 | DFF magnitude | null, approximately 0.5, approximately 1.0 logit where a common interaction is available |
-| Missingness | planned-by-design, conditionally nonrandom, and confounded/nested stress |
+| Missingness rate | 0%, 5%, 20%, 50%, 80%, 90%, and 95%, conditional on retaining the declared topology |
+| Missingness mechanism | planned assignment; observation-level MCAR; person-, rater-, item-, and score-dependent MAR/MNAR; block dropout; monotone dropout; fully unobserved labelled element |
+| Category support | global rare/unused category; category absent within one rater or item; skewed use; local floor/ceiling; heterogeneous category use |
+| Structural dependence | rater nested in site/task, item blocks, person clusters, rater drift, local response dependence, duplicate and conflicting duplicate cells |
+| Targeting | matched, persons too easy/hard, severity shifted, bimodal persons, heavy-tailed persons, and contaminated outliers |
+
+The mandatory core does not require every cross-product. It covers a balanced
+reference plus prespecified contrasts. Particularly important paired
+interactions are density by missingness mechanism, density by workload
+imbalance, severity dispersion by targeting, category rarity by sample size,
+and topology by rater drift. Fully unobserved elements are a reporting
+sensitivity because 4.5.1 changed their Table 2 display.
 
 The M2 pilot may change these values only through a new draft revision. The
 frozen specification must select the core cells and the replication count by
@@ -218,16 +257,18 @@ The expected boundary before confirmation is deliberately conservative:
 
 ## M2 implementation order
 
-1. Qualify one pinned FACETS version and freeze the parser/report schema.
+1. Record one selected FACETS version and pilot the parser/report schema.
 2. Extract a deterministic RSM/PCM microcase suite and verify parameter
    orientation, constraints, score files, and error classification.
 3. Build the shared simulation specification and paired mfrmr/FACETS runner.
 4. Pilot connected core, anchor, sparse/topology, edge, and DFF-sensitivity
    families without release decisions.
-5. Use pilot-only results to freeze scenario values, replication/MCSE rules,
+5. Add quantitative weak-link diagnostics and expand replicated stress cells
+   where the first pilot found large or unstable differences.
+6. Use pilot-only results to freeze scenario values, replication/MCSE rules,
    transformation maps, tolerances, and failed-run policy in a new frozen gate
    identity.
-6. Run confirmation once on disjoint seeds and one exact package candidate.
+7. Run confirmation once on disjoint seeds and one exact package candidate.
 
 Any change to the FACETS binary, report parser, data/control generator,
 parameter transformation, scenario grid, tolerance, or failed-replicate rule
@@ -237,6 +278,7 @@ after freeze invalidates the corresponding confirmation evidence.
 
 - CRAN mfrmr page: <https://cran.r-project.org/web/packages/mfrmr/index.html>
 - FACETS official product/features page: <https://www.winsteps.com/facets.htm>
+- FACETS official update history: <https://www.winsteps.com/facgood.htm>
 - CRAN TAM page: <https://cran.r-project.org/web/packages/TAM/index.html>
 
 These sources establish current distribution and advertised software scope;

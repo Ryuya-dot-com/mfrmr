@@ -11,9 +11,11 @@ Most package users can ignore this directory. Start with `README.md`,
 analysis guidance. The files here support package release checks and
 maintenance review; public release notes stay in `NEWS.md`.
 
-The repository-root `ROADMAP.md` is the single source of truth for active
-development sequencing. Files in this directory may add evidence or preserve
-history, but they do not redefine release order or current API scope.
+The repository-root `ROADMAP.md` is the single source of truth for public
+release direction and support boundaries. `internal-roadmap-0.2.3.md` owns
+maintainer sequencing, local-tool identities, candidate gates, and validation
+operations. Other files in this directory may add evidence or preserve history
+but do not broaden current API scope.
 
 ## Evidence types
 
@@ -26,6 +28,10 @@ history, but they do not redefine release order or current API scope.
 
 ## Primary files
 
+- `internal-roadmap-0.2.3.md`: repository-only maintainer roadmap containing
+  detailed release sequencing, evidence invalidation, local external-tool
+  identities, and completion gates that do not belong in user-facing roadmap
+  prose.
 - `release-readiness.R`: release-readiness review. Source this file and run
   `mfrmr_release_readiness_review(pkg_dir = ".")` from the package root. The
   review checks version labels, metadata agreement, `--as-cran` provenance,
@@ -55,12 +61,20 @@ history, but they do not redefine release order or current API scope.
   numerical, recovery, information-criterion, dimensionality, external,
   public-contract, and engineering gates. A `draft` status is not permission
   to run confirmation or evidence that a gate passed.
-- `facets-jml-stress-plan-0.2.3.md`: draft.17 plan for qualifying one exact
+- `facets-jml-stress-plan-0.2.3.md`: draft.18 plan for recording one selected
   FACETS executable/report/parser identity and running paired, truth-first JML
   RSM/PCM simulation stress tests across connected, anchor, sparse/topology,
   edge, and optional definition-matched fit/DFF families. It treats FACETS as
   an independent comparator rather than ground truth and contains no completed
   release evidence.
+- `facets-4.5.0-stress-pilot-0.2.3.R`: repository-only paired RSM/PCM
+  generator, mfrmr JML runner, FACETS 4.5.0 batch adapter, normalizer, and
+  reviewer. Direct execution requires `--work-dir=<path>`; raw proprietary
+  output stays outside the package tree.
+- `facets-4.5.0-stress-pilot-record-0.2.3.md`: compact draft.18 record of the
+  first 44-run, one-seed pilot, including tool identity, scenario accounting,
+  recovery/agreement warnings, disconnected fail-closed behavior, and the
+  weak-link diagnostic gap. It freezes no tolerance and is not confirmation.
 - `release-evidence-checklist-0.2.3.csv`: machine-readable 0.2.3 gate
   inventory. It preserves the existing `ReleaseDecision` field used by the
   readiness helper and adds scenario, criterion-state, and evidence-status
