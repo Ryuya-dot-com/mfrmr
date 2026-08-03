@@ -3347,6 +3347,21 @@ build_estimation_summary <- function(model, method, prep, config, sizes, opt) {
     "function_evaluations"
   }
 
+  boundary_readiness <- as.data.frame(
+    config$boundary_audit$readiness %||% data.frame(),
+    stringsAsFactors = FALSE
+  )
+  boundary_state <- if (nrow(boundary_readiness) > 0L) {
+    as.character(boundary_readiness$BoundaryState[1])
+  } else {
+    "not_evaluated"
+  }
+  boundary_reasons <- if (nrow(boundary_readiness) > 0L) {
+    as.character(boundary_readiness$ReasonCodes[1])
+  } else {
+    ""
+  }
+
   tibble(
     Model = model,
     Method = public_mfrm_method_label(method),
@@ -3388,7 +3403,10 @@ build_estimation_summary <- function(model, method, prep, config, sizes, opt) {
     LegacyICSampleSize = ic$LegacyICSampleSize,
     LegacyICSampleSizeBasis = ic$LegacyICSampleSizeBasis,
     Converged = opt$convergence == 0,
-    InferenceReady = identical(optimizer_diag$ConvergenceSeverity, "pass"),
+    InferenceReady = identical(optimizer_diag$ConvergenceSeverity, "pass") &&
+      boundary_state == "finite",
+    BoundaryState = boundary_state,
+    BoundaryReasonCodes = boundary_reasons,
     Iterations = iterations,
     IterationsBasis = iterations_basis,
     MMLEngineRequested = if (identical(method, "MML")) {
@@ -3890,6 +3908,14 @@ mfrm_estimate <- function(data, person_col, facet_cols, score_col,
   # Stage 5: Build human-readable output tables.
   params <- expand_params(opt$par, sizes, config)
   person_tbl <- build_person_table(method, idx, config, params, prep, quad_points)
+  boundary_audit <- audit_mfrm_person_boundary(
+    person_table = person_tbl,
+    config = config,
+    prep = prep
+  )
+  person_tbl <- apply_mfrm_person_boundary(person_tbl, boundary_audit)
+  config$boundary_audit <- boundary_audit
+  data_review$boundary <- boundary_audit
   facet_tbl <- build_other_facet_table(config, prep, params)
   interaction_tbl <- build_interaction_effect_table(config, prep, params)
   step_tbl <- build_step_table(config, prep, params)
@@ -9293,6 +9319,9 @@ mfrm_diagnostics <- function(res,
       Facet = "Person",
       Level = Person
     )
+  if (!"ParameterStatus" %in% names(person_tbl)) {
+    person_tbl$ParameterStatus <- NA_character_
+  }
   facet_tbl <- res$facets$others |>
     mutate(Level = as.character(Level))
 
@@ -9301,7 +9330,15 @@ mfrm_diagnostics <- function(res,
 
   measures <- bind_rows(
     person_tbl |>
-      select(Facet, Level, Estimate),
+      select(
+        Facet, Level, Estimate,
+        any_of(c(
+          "ParameterStatus", "BoundaryDirection", "ResponseExtreme",
+          "OptimizerEstimate", "DisplayEstimate", "DisplayAdjustment",
+          "PrimaryEstimateBasis", "OptimizerEstimateUse", "ReasonCodes",
+          "ReadinessContractVersion"
+        ))
+      ),
     facet_tbl |>
       select(Facet, Level, Estimate)
   ) |>
@@ -9310,12 +9347,53 @@ mfrm_diagnostics <- function(res,
     left_join(bias_tbl, by = c("Facet", "Level")) |>
     left_join(ptmea_tbl, by = c("Facet", "Level")) |>
     mutate(
-      CI_Lower = ifelse(is.finite(SE), Estimate - measure_ci_z * SE, NA_real_),
-      CI_Upper = ifelse(is.finite(SE), Estimate + measure_ci_z * SE, NA_real_),
+      BoundaryExcluded = dplyr::coalesce(
+        .data$ParameterStatus %in% c("unbounded_low", "unbounded_high"),
+        FALSE
+      ),
+      ModelSE = ifelse(.data$BoundaryExcluded, NA_real_, .data$ModelSE),
+      RealSE = ifelse(.data$BoundaryExcluded, NA_real_, .data$RealSE),
+      SE = ifelse(.data$BoundaryExcluded, NA_real_, .data$SE),
+      InferenceReady = ifelse(
+        .data$BoundaryExcluded, FALSE, .data$InferenceReady
+      ),
+      SupportsFormalInference = ifelse(
+        .data$BoundaryExcluded, FALSE, .data$SupportsFormalInference
+      ),
+      PrecisionTier = ifelse(
+        .data$BoundaryExcluded, "unavailable", .data$PrecisionTier
+      ),
+      SE_Method = ifelse(
+        .data$BoundaryExcluded,
+        "Unavailable for unbounded JML Person",
+        .data$SE_Method
+      ),
+      SEUse = ifelse(.data$BoundaryExcluded, "not_available", .data$SEUse),
+      CIBasis = ifelse(
+        .data$BoundaryExcluded,
+        "Not available for unbounded JML Person",
+        .data$CIBasis
+      ),
+      CIUse = ifelse(.data$BoundaryExcluded, "not_available", .data$CIUse),
+      CI_Lower = ifelse(
+        is.finite(Estimate) & is.finite(SE),
+        Estimate - measure_ci_z * SE,
+        NA_real_
+      ),
+      CI_Upper = ifelse(
+        is.finite(Estimate) & is.finite(SE),
+        Estimate + measure_ci_z * SE,
+        NA_real_
+      ),
       CI_Level = measure_ci_level,
-      CI_Method = "Normal approximation",
+      CI_Method = ifelse(
+        .data$BoundaryExcluded,
+        "Not available for unbounded JML Person",
+        "Normal approximation"
+      ),
       CIEligible = dplyr::coalesce(.data$SupportsFormalInference, FALSE),
       CILabel = dplyr::case_when(
+        .data$BoundaryExcluded ~ "No interval; typed unbounded JML Person",
         .data$PrecisionTier == "model_based" ~ "Model-based normal interval",
         .data$PrecisionTier == "hybrid" ~ "Approximate interval; review fallback SE",
         .data$PrecisionTier == "exploratory" ~ "Approximate interval; screening only",

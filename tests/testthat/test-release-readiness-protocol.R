@@ -112,11 +112,14 @@ test_that("internal draft.31 readiness and estimator work remain explicit and pr
   expect_match(internal,
                "Draft.31 category/step preflight slice",
                fixed = TRUE)
+  expect_match(internal,
+               "Draft.32 Person sufficient-score boundary slice",
+               fixed = TRUE)
   expect_match(internal, "Corrective-program execution lanes", fixed = TRUE)
   expect_match(internal, "partitioned\\s+exhaustively")
   expect_match(internal, "Estimator ecosystem and maturity boundary", fixed = TRUE)
   expect_match(internal, "method = \"HRM\"", fixed = TRUE)
-  expect_match(gate, "Specification ID | `0.2.3-draft.31`", fixed = TRUE)
+  expect_match(gate, "Specification ID | `0.2.3-draft.32`", fixed = TRUE)
   expect_match(gate, "EXT-TAM-JML-RAW", fixed = TRUE)
   expect_match(gate, "EXT-IMMER-CCML", fixed = TRUE)
   expect_match(gate, "ALT-IMMER-HRM-LD", fixed = TRUE)

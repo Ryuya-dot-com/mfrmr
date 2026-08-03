@@ -3118,7 +3118,21 @@ plot_wright_unified <- function(fit,
     extreme_placement = extreme_placement,
     persons_per_star = persons_per_star
   )
-  plot_core$person_hist <- graphics::hist(plot_core$person$Estimate, breaks = bins, plot = FALSE)
+  person_hist_values <- plot_core$person$Estimate[
+    is.finite(plot_core$person$Estimate)
+  ]
+  plot_core$person_hist <- if (length(person_hist_values) > 0L) {
+    graphics::hist(person_hist_values, breaks = bins, plot = FALSE)
+  } else {
+    structure(
+      list(
+        breaks = c(-0.5, 0.5), counts = 0L, density = 0,
+        intensities = 0, mids = 0, xname = "finite Person estimates",
+        equidist = TRUE
+      ),
+      class = "histogram"
+    )
+  }
   plot_data <- c(
     list(
       persons = plot_core$person$Estimate,

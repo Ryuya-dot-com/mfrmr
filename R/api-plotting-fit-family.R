@@ -831,7 +831,15 @@ build_wright_map_data <- function(x,
   }
   wright_style <- match_wright_style(wright_style, renderer = renderer)
   person_tbl <- tibble::as_tibble(x$facets$person)
-  person_tbl <- person_tbl[is.finite(person_tbl$Estimate), , drop = FALSE]
+  typed_extreme <- if ("ParameterStatus" %in% names(person_tbl)) {
+    as.character(person_tbl$ParameterStatus) %in%
+      c("unbounded_low", "unbounded_high")
+  } else {
+    rep(FALSE, nrow(person_tbl))
+  }
+  keep_person <- is.finite(person_tbl$Estimate) |
+    (identical(wright_style, "facets_style") & typed_extreme)
+  person_tbl <- person_tbl[keep_person, , drop = FALSE]
   if (nrow(person_tbl) == 0) stop("Person estimates are not available for Wright map.")
 
   facet_tbl <- tibble::as_tibble(x$facets$others)
@@ -1019,10 +1027,37 @@ build_wright_map_data <- function(x,
     ) |>
     dplyr::ungroup()
 
-  hist_data <- graphics::hist(person_tbl$Estimate, breaks = "FD", plot = FALSE)
-  y_range <- range(c(point_tbl$Estimate, person_tbl$Estimate), finite = TRUE)
+  finite_person_estimates <- person_tbl$Estimate[is.finite(person_tbl$Estimate)]
+  finite_person_center <- if (length(finite_person_estimates) > 0L) {
+    mean(finite_person_estimates)
+  } else {
+    NA_real_
+  }
+  hist_data <- if (length(finite_person_estimates) > 0L) {
+    graphics::hist(finite_person_estimates, breaks = "FD", plot = FALSE)
+  } else {
+    structure(
+      list(
+        breaks = c(-0.5, 0.5), counts = 0L, density = 0,
+        intensities = 0, mids = 0, xname = "finite Person estimates",
+        equidist = TRUE
+      ),
+      class = "histogram"
+    )
+  }
+  finite_range_basis <- c(point_tbl$Estimate, finite_person_estimates)
+  finite_range_basis <- finite_range_basis[is.finite(finite_range_basis)]
+  y_range <- if (length(finite_range_basis) > 0L) {
+    range(finite_range_basis)
+  } else {
+    c(-0.5, 0.5)
+  }
   if (!all(is.finite(y_range)) || diff(y_range) <= sqrt(.Machine$double.eps)) {
-    center <- mean(c(point_tbl$Estimate, person_tbl$Estimate), na.rm = TRUE)
+    center <- if (length(finite_range_basis) > 0L) {
+      mean(finite_range_basis)
+    } else {
+      0
+    }
     y_range <- center + c(-0.5, 0.5)
   }
   auto_range_policy <- "all_fitted_locations"
@@ -1085,15 +1120,25 @@ build_wright_map_data <- function(x,
       .groups = "drop"
     ) |>
     dplyr::mutate(
-      TargetGap = .data$Median - mean(person_tbl$Estimate, na.rm = TRUE),
-      DisplayTargetGap = .data$DisplayMedian - mean(person_tbl$Estimate, na.rm = TRUE)
+      TargetGap = .data$Median - finite_person_center,
+      DisplayTargetGap = .data$DisplayMedian - finite_person_center
     )
 
   person_stats <- tibble::tibble(
     N = nrow(person_tbl),
-    Mean = mean(person_tbl$Estimate, na.rm = TRUE),
-    Median = stats::median(person_tbl$Estimate, na.rm = TRUE),
-    SD = stats::sd(person_tbl$Estimate, na.rm = TRUE)
+    FiniteN = length(finite_person_estimates),
+    BoundaryExcludedN = nrow(person_tbl) - length(finite_person_estimates),
+    Mean = finite_person_center,
+    Median = if (length(finite_person_estimates) > 0L) {
+      stats::median(finite_person_estimates)
+    } else {
+      NA_real_
+    },
+    SD = if (length(finite_person_estimates) > 1L) {
+      stats::sd(finite_person_estimates)
+    } else {
+      NA_real_
+    }
   )
 
   display_settings <- tibble::tibble(

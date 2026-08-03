@@ -2770,10 +2770,11 @@ table6_2_facet_statistics <- function(fit,
 
   metric_ranges <- purrr::map_dfr(numeric_metrics, function(metric) {
     vals <- suppressWarnings(as.numeric(measure_tbl[[metric]]))
+    vals <- vals[is.finite(vals)]
     tibble::tibble(
       Metric = metric,
-      GlobalMin = if (any(is.finite(vals))) min(vals, na.rm = TRUE) else NA_real_,
-      GlobalMax = if (any(is.finite(vals))) max(vals, na.rm = TRUE) else NA_real_
+      GlobalMin = if (length(vals) > 0L) min(vals) else NA_real_,
+      GlobalMax = if (length(vals) > 0L) max(vals) else NA_real_
     )
   })
 
@@ -2822,10 +2823,24 @@ table6_2_facet_statistics <- function(fit,
       dplyr::group_by(.data$Facet) |>
       dplyr::summarise(
         Levels = dplyr::n(),
-        Mean = mean(.data[[metric]], na.rm = TRUE),
-        SD = stats::sd(.data[[metric]], na.rm = TRUE),
-        Min = min(.data[[metric]], na.rm = TRUE),
-        Max = max(.data[[metric]], na.rm = TRUE),
+        FiniteLevels = sum(is.finite(.data[[metric]])),
+        ExcludedLevels = dplyr::n() - sum(is.finite(.data[[metric]])),
+        Mean = {
+          values <- .data[[metric]][is.finite(.data[[metric]])]
+          if (length(values) > 0L) mean(values) else NA_real_
+        },
+        SD = {
+          values <- .data[[metric]][is.finite(.data[[metric]])]
+          if (length(values) > 1L) stats::sd(values) else NA_real_
+        },
+        Min = {
+          values <- .data[[metric]][is.finite(.data[[metric]])]
+          if (length(values) > 0L) min(values) else NA_real_
+        },
+        Max = {
+          values <- .data[[metric]][is.finite(.data[[metric]])]
+          if (length(values) > 0L) max(values) else NA_real_
+        },
         .groups = "drop"
       ) |>
       dplyr::mutate(

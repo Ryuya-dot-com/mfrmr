@@ -311,7 +311,7 @@ The following remain outside 0.2.3:
 | M4: run confirmation | Run the locked recovery/stress matrix, FACETS JML core, ConQuest/TAM MML comparisons, TAM/immer JML convention grid, eligible immer CML/CCML rows, dimensionality challenge, and matched external rows without changing criteria or reusing discovery/pilot data as independent confirmation. | Candidate-linked internal and external evidence with every blocker classified and every expected scenario/replicate accounted for. |
 | M5: release handoff | Run full regression, cross-platform CI, manuals, URL checks, CRAN-time examples, Win-builder, package-content audit, and public-claim audit. | All blocker rows `ok`, all caveats visible, and an exact checked tarball. |
 
-The repository now contains `0.2.3-draft.31` planning and pilot artifacts at
+The repository now contains `0.2.3-draft.32` planning and pilot artifacts at
 `inst/validation/release-gate-spec-0.2.3.md` and
 `inst/validation/release-evidence-checklist-0.2.3.csv`, with the TAM/immer
 execution contract in `inst/validation/tam-immer-estimator-stress-plan-0.2.3.md`.
@@ -375,7 +375,7 @@ extreme-score output, and definition-specific interaction/bias/PCAR contracts
 before the next paired pilot. These are prerequisites to tolerance
 calibration, not completed release gates.
 
-### Draft.31 near-term corrective program
+### Draft.32 near-term corrective program
 
 Draft.21 converted the draft.20 diagnosis into an implementation sequence.
 Draft.22 completes the structural WP0 contract and makes that contract the
@@ -404,6 +404,13 @@ Draft.31 begins WP2 by separating declared category semantics from
 data-supported free-step estimation. It adds a model-scoped preflight, typed
 category blocker, parameter-scoped step statuses, and the first exact and weak
 support fixtures without adding threshold anchors or a multi-scale API.
+Draft.32 begins WP3 with the Person sufficient-score boundary slice. It
+separates the unbounded JML primary value from the finite optimizer trace,
+distinguishes direct or implicit fixed constraints and constraint-coupled
+review cases, preserves finite MML/EAP estimates, suppresses ordinary SE/CI
+for typed boundaries, and gives FACETS-style endpoint placement an explicit
+display-only meaning. Generalized non-Person and interaction separation, a
+named finite adjustment formula, and complete WP4 propagation remain pending.
 The program's objective is not to maximize new diagnostics. It
 is to establish one source of truth for whether a fit, a parameter, and an
 external comparison are usable, and to make every downstream surface consume
@@ -430,7 +437,7 @@ reviewed. Confirmation remains prohibited until the later frozen gate.
 | `WP0-READINESS-CONTRACT` | draft.20 diagnosis | `complete_structural` | Freeze internal state names, scopes, severity/precedence, condition classes, object fields, legacy-object behavior, and exact adversarial fixtures before changing fit logic. | `readiness-contract-0.2.3.md`, its repository validator, 27-row fixture registry, and privacy/semantic tests; no external tolerance. |
 | `WP1-ESTIMABILITY` | WP0 | `in_progress_mml_all_pattern_design_reuse` | Build the estimator-specific free-parameter map and constrained design; detect structural aliases before optimization; distinguish exact alias from weak fitted information. | Unit/property tests, alias diagnostics, sparse-design benchmark, and zero false-ready exact controls. |
 | `WP2-CATEGORY-STEP` | WP0 | `in_progress_support_preflight` | Audit declared, observed, retained, free, fixed, and unsupported category/step coordinates globally and by current `step_facet`; do not add threshold anchors. | RSM/PCM/GPCM reduction and missing-category fixtures plus parameter-scoped status tables. |
-| `WP3-JML-BOUNDARY` | WP0 | `queued` | Detect JML element separation/extreme sufficient scores on the actual contributing row pattern; replace optimizer-dependent finite primary values with typed boundary states. | JML extreme/nonextreme fixtures, MML non-reduction guard, and explicit optional-display contract. |
+| `WP3-JML-BOUNDARY` | WP0 | `in_progress_person_boundary` | Detect JML element separation/extreme sufficient scores on the actual contributing row pattern; replace optimizer-dependent finite primary values with typed boundary states. The Person slice is implemented; constrained non-Person and interaction recession directions remain pending. | JML extreme/nonextreme fixtures, MML non-reduction guard, and explicit optional-display contract. |
 | `WP4-READINESS-PROPAGATION` | WP1--WP3 | `blocked_by_dependency` | Derive fit-, parameter-, and output-level readiness once and propagate it without surface-specific reinterpretation. | Cross-surface snapshot/semantic tests and a 0.2.2-object migration fixture. |
 | `WP5-COMPARISON-CONTRACT` | WP4 | `blocked_by_dependency` | Make FACETS, TAM, immer, and other external normalization metric-specific and fail closed before numeric aggregation; identify estimator, adjustment, person treatment, and software stratum explicitly. | Eligibility/rejection ledger with denominator accounting, method-mode identity, and no silent row loss. |
 | `WP6-SCALE-AND-ADVERSARIAL` | WP1--WP5 | `blocked_by_dependency` | Verify sparse computation, basis invariance, row-order invariance, malformed-input behavior, and target-size runtime/memory without claiming FACETS capacity parity. | Benchmark envelope and metamorphic/negative-test report; no dense design allocation at target sizes. |
@@ -877,6 +884,59 @@ convention, not the mfrmr estimator target. MML/EAP Persons remain finite by
 the population/prior model and must not be relabelled as JML-unbounded merely
 because their observed response pattern is extreme.
 
+##### Draft.32 Person sufficient-score boundary slice
+
+Every new fit now builds a Person-scoped boundary audit after optimization and
+stores it in `config$boundary_audit` and `data_review$boundary`. The audit uses
+the retained preparation data, so missing or non-contributing rows cannot make
+an otherwise nonextreme pattern appear extreme. Under the standard free-Person
+JML parameterization, an all-minimum or all-maximum retained response pattern
+has `ParameterStatus = unbounded_low` or `unbounded_high`; the primary
+`Estimate` is negative or positive infinity. The optimizer's finite stopping
+iterate is retained only in `OptimizerEstimate` with
+`OptimizerEstimateUse = numerical_trace_only`, while `DisplayEstimate` is
+missing and `DisplayAdjustment = none`. `ResponseRows` and
+`WeightedResponseTotal` retain the contributing row count and positive-weight
+total used by the classification.
+
+The constraint Jacobian separates three cases before applying that rule. A
+directly anchored or implicitly constraint-fixed Person is `fixed`, including
+an extreme response pattern; an individually free Person is eligible for the
+sufficient-score boundary result; and a centered or group-coupled extreme is
+retained as `weak_information` with `weak_design_information` until a
+constraint-aware recession-direction proof is implemented. This fail-closed
+case prevents both automatic infinity and automatic finite-MLE claims under a
+substantive coupled constraint. MML Persons remain finite EAP values with
+`mml_extreme_response_prior_regularized` and are never assigned an optimizer
+Person coordinate that the marginal model does not estimate.
+
+The Person table, fit summary, and diagnostic measure table now preserve the
+typed status. A fit with a proven Person exclusion records
+`BoundaryState = has_exclusions`; the legacy `InferenceReady` scalar becomes
+`FALSE`, while the estimable coordinates remain inspectable. Diagnostic SE,
+CI, and formal-inference eligibility are unavailable for the unbounded Person.
+The FACETS-style Wright renderer may place such Persons at the ruler endpoints
+when `extreme_placement = "ends"`; this is recorded as a plot placement, not a
+finite adjusted estimate. With `extreme_placement = "estimate"`, the row is
+omitted from the finite ruler rather than replaced by the optimizer trace.
+Native finite-density summaries exclude the unbounded rows.
+
+Deterministic controls cover low/high free JML boundaries, direct anchoring,
+constraint-coupled fail-closed behavior, finite MML/EAP non-reduction, missing
+rows, fit-summary scalar behavior, diagnostic SE/CI exclusion, and both Wright
+placement modes. Existing cross-constraint correlation tests now compare only
+common `estimable` Persons; typed boundaries cannot enter those numeric
+aggregates accidentally.
+
+WP3 remains in progress. The current audit does not infer separation for
+non-Person facets, interactions, steps, or slopes from a response-constant
+level. Those coordinates require a constrained likelihood recession-direction
+audit that respects facet signs, anchors, group constraints, interactions, and
+the exact active observation pattern. No FACETS-compatible finite adjustment
+formula has been added. Reports, exports, replay, legacy objects, and external
+normalizers remain WP4--WP5 work and may not reconstruct or upgrade the stored
+state independently.
+
 #### WP4--WP5: propagation and comparison eligibility
 
 One readiness builder owns state derivation. Print, summary, diagnostics,
@@ -1149,10 +1209,14 @@ must not be advertised as implemented.
   category map, and free step dimension by scale/step-facet level before any
   element or Person tolerance. Category-dropping and `K` controls remain
   failure-policy evidence unless the fitted dimensions genuinely match.
-- [ ] Represent an extreme JML Person primary result as typed low/high
-  unbounded status rather than an optimizer-dependent finite value. Any
-  finite adjusted display is named and kept outside the primary estimand;
-  external Person comparisons stratify nonextreme and adjustment-matched rows.
+- [x] Represent a standard free extreme JML Person primary result as typed
+  low/high unbounded status rather than an optimizer-dependent finite value;
+  preserve the finite iterate only as a numerical trace, keep MML/EAP finite,
+  and exclude the boundary from ordinary SE/CI and finite ruler placement.
+- [ ] Generalize the boundary proof to eligible constrained non-Person and
+  interaction elements, add any named finite adjustment only outside the
+  primary estimand, and make external Person comparisons stratify nonextreme
+  and explicitly adjustment-matched rows.
 - [ ] Record numerical convergence, identification, data/design readiness,
   inferential readiness, bias, RMSE, interval coverage where defined,
   terminal score, objective, condition indicators, and elapsed time by cell.
