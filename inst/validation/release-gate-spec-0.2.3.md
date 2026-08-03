@@ -5,12 +5,13 @@
 | Field | Value |
 | --- | --- |
 | Target release | 0.2.3 |
-| Specification ID | `0.2.3-draft.23` |
+| Specification ID | `0.2.3-draft.24` |
 | Date | 2026-08-03 |
-| Status | M1 source review recorded; M2 IC, ConQuest/TAM, canonical-score, engine-path, fail-closed release-readiness, and FACETS 4.5.0 paired JML RSM/PCM stress pilots are present. The draft.20 divergence audit diagnosed exact aliases, category/step mismatch, and unmatched extreme displays. Draft.21 sequenced the corrective work; draft.22 froze the internal WP0 three-scope readiness contract. Draft.23 implements the first WP1 slice: an estimator-specific sparse constrained RSM/PCM linear-block rank audit, structured pre-optimization alias errors, counterfactual-JML review for MML population-assumption linkage, and invariance/anchor/interaction controls. GPCM slope and latent-variance Jacobians, fitted-information review, category/step support, JML boundary states, complete cross-surface propagation, metric-specific external eligibility, sparse target-size benchmarks, and new-seed repilot remain pending. All existing simulations remain calibration evidence. Runtime completion, tolerance freeze, independent replication, recovery/coverage, bootstrap, attribution, consequence, support-envelope registry, candidate freeze, and confirmation remain pending. |
+| Status | M1 source review recorded; M2 IC, ConQuest/TAM, canonical-score, engine-path, fail-closed release-readiness, and FACETS 4.5.0 paired JML RSM/PCM stress pilots are present. The draft.20 divergence audit diagnosed exact aliases, category/step mismatch, and unmatched extreme displays. Draft.21 sequenced the corrective work; draft.22 froze the internal WP0 three-scope readiness contract. Draft.23 implements the first WP1 slice: an estimator-specific sparse constrained RSM/PCM linear-block rank audit, structured pre-optimization alias errors, counterfactual-JML review for MML population-assumption linkage, and invariance/anchor/interaction controls. Draft.24 separates MML/JML maturity; adds TAM/immer JML convention, CML/CCML reference, and HRM alternative-model lanes; and makes estimator adjustment and external package version part of comparison identity. No TAM/immer pilot has yet been run. GPCM slope and latent-variance Jacobians, fitted-information review, category/step support, JML boundary states, complete cross-surface propagation, metric-specific external eligibility, sparse target-size benchmarks, and new-seed repilot remain pending. All existing simulations remain calibration evidence. Runtime completion, tolerance freeze, independent replication, recovery/coverage, bootstrap, attribution, consequence, support-envelope registry, candidate freeze, and confirmation remain pending. |
 | Confirmation authorized | No |
 | Evidence checklist | `release-evidence-checklist-0.2.3.csv` |
 | FACETS stress plan | `facets-jml-stress-plan-0.2.3.md` |
+| TAM/immer stress plan | `tam-immer-estimator-stress-plan-0.2.3.md` |
 | M1 review record | `release-gate-m1-review-0.2.3.md` |
 | Public direction | Repository-root `ROADMAP.md` |
 | Internal sequence | `internal-roadmap-0.2.3.md` |
@@ -36,9 +37,12 @@ It does not add:
 - multiple observed `ScaleId` values or scale-specific PCM;
 - threshold/step anchors or frozen-calibration operational scoring;
 - unrestricted GPCM, posterior-predictive checks, MCMC, or multivariate
-  G-theory; or
-- a package/runtime dependency on ConQuest or FACETS. Locally executed,
-  synthetic external validation remains release evidence outside CRAN.
+  G-theory;
+- native CML/CCML, a new JML bias-correction option, or a hierarchical rater or
+  other latent local-dependence model family; or
+- a package/runtime dependency on ConQuest, FACETS, TAM, or immer. Locally
+  executed synthetic external validation remains release evidence outside
+  CRAN.
 
 The public estimator labels remain `MML` and `JML`. `JMLE` is an input alias
 for `JML`, not a separate estimator. Person estimates from MML and JML are not
@@ -214,6 +218,7 @@ following scenario classes.
 | `EXT-CQ-BINARY` | external | Matched unidimensional ConQuest binary MML core. |
 | `EXT-CQ-RSM` | external | Matched unidimensional ConQuest RSM MML core. |
 | `EXT-CQ-PCM` | external | Matched unidimensional ConQuest PCM MML core. |
+| `EXT-TAM-MML-1D` | external | Matched TAM unidimensional MML reference, separate from its dimensionality and JML lanes. |
 | `EXT-FACETS-QUALIFY` | external | Deterministic binary, RSM, and PCM microcases binding executable metadata/hash to report-header version and exact artifacts. |
 | `EXT-FACETS-RSM-CORE` | external | Paired JML RSM truth recovery and transformed parameter agreement over the mandatory connected core. |
 | `EXT-FACETS-PCM-CORE` | external | Paired JML PCM truth recovery and transformed parameter agreement over the mandatory connected core. |
@@ -221,6 +226,16 @@ following scenario classes.
 | `EXT-FACETS-SPARSE` | external | Sparse, weak-link, bridge, and disconnected topology classification and false-ready checks. |
 | `EXT-FACETS-EDGE` | external | Extreme score, category support, missingness, and failure-classification cases. |
 | `EXT-FACETS-DFF` | external | Optional definition-matched fit/DFF null and non-null rows; never part of core merely because FACETS emits them. |
+| `EXT-TAM-JML-RAW` | external | TAM JML with bias reduction and extreme-score adjustment disabled, compared on eligible common RSM/PCM structural estimands. |
+| `EXT-TAM-JML-ADJ` | external | TAM JML with its documented extreme-score adjustment and bias reduction disabled. |
+| `EXT-TAM-JML-BC` | external | TAM bias-reduced JML with extreme-score adjustment disabled. |
+| `EXT-TAM-JML-BC-ADJ` | external | TAM documented default bias-reduced and extreme-score-adjusted JML mode, never pooled with either factor alone. |
+| `EXT-IMMER-JML-RAW` | external | immer unadjusted JML on the matched Rasch-family design-matrix overlap. |
+| `EXT-IMMER-JML-EPS` | external | immer extreme-score-adjusted JML with adjusted and nonextreme Person rows reported separately. |
+| `EXT-IMMER-JML-BC` | external | immer bias-corrected JML as a distinct estimator convention. |
+| `EXT-IMMER-CML` | external | immer CML structural-parameter reference on eligible Rasch-family rows; no Person or bounded-GPCM claim. |
+| `EXT-IMMER-CCML` | external | immer CCML structural-parameter reference on eligible Rasch-family rows; no Person or bounded-GPCM claim. |
+| `ALT-IMMER-HRM-LD` | sensitivity | HRM-generated latent-rating/local-dependence challenge to additive mfrmr diagnostics, never an engine-equivalence row. |
 | `ENG-CRAN-SMOKE` | engineering | Deterministic CRAN-side package workload. |
 | `ENG-FULL-CORE` | engineering | Complete non-CRAN blocker suite and cross-platform matrix. |
 
@@ -839,6 +854,12 @@ orientation, and parameter transformation as far as the programs permit.
 Correlations are descriptive; blocker tolerances apply to signed/absolute
 differences on named estimands.
 
+TAM supplies a second MML reference where its unidimensional likelihood,
+population, design matrix, constraints, and integration evaluation can be
+matched. This row remains distinct from TAM's within-engine 1D/2D
+dimensionality challenge and from every TAM JML mode; none may borrow another
+row's likelihood or recovery conclusion.
+
 FACETS 4.5.0 is the selected 0.2.3 external JML stress implementation for RSM
 and PCM. The environment record in `facets-jml-stress-plan-0.2.3.md` captures
 orientation, constraints, parser behavior, and executable/report identity but
@@ -876,6 +897,57 @@ outputs, parser/generator versions, and candidate manifest are retained as
 distinct fields. Different versions are analyzed as separate sensitivity
 strata rather than silently pooled; the batch continues.
 
+TAM and immer add estimator-convention evidence, not a vote among programs.
+The primary identities are CRAN TAM 4.3-25 and CRAN immer 1.5-13. Audited
+development snapshots TAM 4.4-2 and immer 1.6-1 may be executed only as
+separately labelled sensitivity strata. Package version, source identity, R and
+dependency versions, function/default arguments, response/design-matrix hash,
+output hash, and normalizer version are mandatory provenance. A change in a
+default adjustment creates a different method-mode identity even if the
+package label otherwise appears unchanged.
+
+The JML grid includes mfrmr uncorrected JML and, where supported, TAM and immer
+unadjusted, extreme-score-adjusted, and bias-corrected modes. Each mode is
+declared before pilot results are inspected. Comparisons reuse the same
+observations, weights, category map, active facets, design-matrix columns,
+constraint/free-coordinate map, parameter orientation, and generating truth.
+Unadjusted and adjusted/corrected results are never pooled. Extreme and
+nonextreme Person rows receive separate denominators; any finite display for a
+theoretically unbounded extreme measure is not treated as ordinary parameter
+recovery.
+
+Truth recovery, interval coverage or explicit SE unavailability, false-ready
+and failed-run behavior, and transformed between-program differences are
+reported separately by model, parameter class, design cell, and method mode.
+The grid must include balanced exposure, unequal workload, two raters,
+sparse/weak-link assignment, planned and unplanned missingness, category
+imbalance, extreme scores, and an incidental-parameter sequence in which the
+number of Persons grows while observations per Person remain fixed. Agreement
+between two biased modes cannot pass, and the best-agreeing mode cannot be
+selected post hoc.
+
+A correction such as `(I - 1) / I` is reference evidence, not a native mfrmr
+specification. With arbitrary facets, missingness, unequal exposure, and
+design-matrix pseudoitems, the effective `I` must be defined before transport.
+A future native correction needs a separate proposal, balanced-case reduction,
+identification/anchor proof, and prespecified improvement in bias/RMSE without
+unacceptable coverage, boundary, or failure-rate cost.
+
+immer CML and CCML rows are eligible only for matched Rasch-family structural
+parameters that remain after conditioning. Their contract verifies the
+sufficient statistic, category support, design rank, constraint basis,
+missingness treatment, and parameter transformation. Person measures,
+bounded-GPCM quantities, latent-regression parameters, and quantities removed
+by conditioning are ineligible. These rows are external references and do not
+create native `fit_mfrm()` methods.
+
+The immer HRM lane is an alternative-data-generating-model stress test. It
+requires a frozen latent true-rating, rater severity/variability, prior, MCMC
+diagnostic, and replication contract. It evaluates the behavior of additive
+mfrmr readiness, bias, and residual diagnostics under local dependence; it is
+not included in parameter/objective engine tolerances, cannot be exposed as
+`method = "HRM"`, and cannot establish model preference from one fitted sample.
+
 External numerical tolerances are `pilot_required`; the mandatory scenario
 scope and fail-closed provenance rules are structural blockers now.
 
@@ -889,6 +961,10 @@ exports, and runtime guards must agree that:
 - AIC/BIC/SABIC apply only under the recorded MML comparability contract;
 - IC-derived weights are not unconditional model probabilities;
 - `JML` is canonical and `JMLE` is only an input alias;
+- a common MML/JML interface does not imply equal estimator maturity, and JML
+  correction/uncertainty limitations remain visible wherever relevant;
+- CML/CCML and HRM are not current `fit_mfrm()` estimator choices, and HRM is a
+  distinct latent-data/local-dependence model rather than a backend;
 - threshold anchors, frozen calibration, multiple scales, scale-specific PCM,
   native multidimensional scores, and unrestricted GPCM remain later work;
 - external comparisons cover matched rows rather than blanket equivalence; and
@@ -940,6 +1016,12 @@ draft:
 | `EXT-FACETS-GRID` | Mandatory RSM/PCM core, anchor, sparse, and edge cells plus optional fit/DFF promotions and explicit exclusions. |
 | `EXT-FACETS-TOL` | Truth-recovery and transformed between-program tolerances by model, parameter/statistic, design cell, and estimand. |
 | `EXT-FACETS-MCSE` | Replication, complete-case accounting, Monte Carlo uncertainty, failed-run, and escalation rules. |
+| `EXT-JML-MODE-GRID` | Frozen TAM/immer function arguments, raw/adjusted/bias-corrected method identities, balanced and adversarial design cells, and explicit exclusions. |
+| `EXT-JML-TOL` | Transformed between-program tolerances by structural parameter, nonextreme Person estimand, design cell, and JML convention. |
+| `EXT-JML-RECOVERY` | Truth-bias/RMSE and incidental-parameter trend limits by method mode; agreement alone cannot satisfy this criterion. |
+| `EXT-JML-COVERAGE` | Supported SE/interval availability, coverage, width, and boundary policy by method mode and parameter class. |
+| `EXT-CML-TOL` | CML/CCML structural-parameter transformation, recovery, and matched-overlap tolerance with explicit ineligible quantities. |
+| `EXT-EST-MCSE` | Replication, failed-run, complete-case denominator, Monte Carlo precision, and no-post-hoc-mode-selection rules for TAM/immer lanes. |
 
 No placeholder above may be filled after its confirmatory result is viewed.
 If pilot evidence cannot support a defensible threshold, the corresponding
@@ -972,6 +1054,7 @@ claim is reduced or deferred rather than decided ad hoc.
 | `0.2.3-draft.21` | Converted the divergence diagnosis into eight dependent work packages; separated fit-, parameter-, and metric-level readiness; made JML/MML estimability rules distinct; specified sparse rank and category/step records, generalized typed JML boundary states, required one-source cross-surface propagation and legacy-object handling, and made external eligibility metric-specific with complete rejection accounting before the new-seed repilot. |
 | `0.2.3-draft.22` | Completed the structural WP0 readiness contract: froze the internal v1 state vocabulary, deterministic fit precedence, conservative `InferenceReady` mapping, parameter and comparison states, controlled reason codes, typed condition/runtime policy, fail-closed 0.2.2-object mapping, and a validated 27-row adversarial fixture registry. Runtime implementation and every statistical threshold remain pending. |
 | `0.2.3-draft.23` | Began WP1 runtime implementation with a sparse adjacent-category-logit rank audit in the actual RSM/PCM free-coordinate basis; added typed pre-optimization errors for exact aliases, counterfactual-JML classification of MML population-assumption linkage, bounded null explanations, and row-order, relabelling, anchor, PCM-step, interaction, and constraint-Jacobian controls. QR tolerance disagreement is diagnostic only and cannot become `weak_information` before the fitted-information rule is piloted and frozen. Nonlinear and fitted-information completion remains pending. |
+| `0.2.3-draft.24` | Separated workflow integration from estimator maturity; added the TAM/immer estimator stress plan with raw, extreme-adjusted, bias-corrected, and combined-default JML modes as distinct truth-first comparison strata; limited immer CML/CCML to eligible Rasch-family structural estimands; classified HRM as an alternative latent/local-dependence model; prohibited automatic transport of finite-item correction and ambiguous `GMFRM` naming; and left every new numerical threshold and pilot result unresolved. |
 
 ## Release decision algorithm
 
@@ -1013,3 +1096,10 @@ claim is reduced or deferred rather than decided ad hoc.
   audited at commit `8fc1c216ff8bfd8a354ae760662a4897ae46a291`, records the
   native `aBIC` formula that must remain distinct from the common Sclove SABIC:
   https://github.com/alexanderrobitzsch/TAM/blob/8fc1c216ff8bfd8a354ae760662a4897ae46a291/R/tam_mml_ic_criteria.R
+- TAM 4.3-25 manual, including `tam.jml()` adjustment, bias-reduction, and
+  fixed-parameter arguments:
+  https://cran.r-project.org/web/packages/TAM/TAM.pdf
+- immer CRAN package record and current development manual, including
+  CML/CCML, JML convention, and HRM surfaces:
+  https://cran.r-project.org/web/packages/immer/index.html and
+  https://alexanderrobitzsch.r-universe.dev/immer/doc/manual.html

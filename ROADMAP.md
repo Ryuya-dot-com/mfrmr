@@ -23,6 +23,12 @@ workflow in R. Its value is not defined as feature parity with FACETS,
 ConQuest, TAM, or any other program. External programs are used as independent
 comparators where estimands and parameterizations can be matched.
 
+Its intended distinction is a direct many-facet specification combined with a
+shared data-review, diagnostic, visualization, and reporting workflow for the
+supported MML and JML routes. The project does not claim to be the first or
+only R implementation of either estimator. A common interface also does not
+imply that the two estimators have identical statistical maturity.
+
 The project develops in this order:
 
 | Version | Public goal |
@@ -53,15 +59,27 @@ Priorities are:
 - separate operating-characteristic studies for fixed facet interactions,
   bias/DIF screening, and exploratory residual-PCA signals, including null
   controls, planted alternatives, and confounded structures;
-- matched JML comparison with FACETS for supported RSM/PCM estimands, preceded
-  by explicit checks for category-map and step-dimension identity, constrained
-  design estimability, and extreme-score convention;
+- matched JML comparison with FACETS, TAM, and immer for supported RSM/PCM
+  estimands, preceded by explicit checks for category-map and step-dimension
+  identity, constrained design estimability, extreme-score convention, and
+  whether an unadjusted, extreme-score-adjusted, or bias-corrected estimator is
+  being compared;
 - matched MML comparison with ConQuest and TAM where likelihood,
   identification, and integration conventions can be aligned;
+- conditional-likelihood results from immer as separate Rasch-family reference
+  evidence where their estimands match, without treating CML or CCML as current
+  mfrmr fitting methods;
 - explicit classification of validated, caveated, exploratory, blocked, and
   unsupported combinations; and
 - clear separation between optimizer completion, statistical readiness, and
   suitability for use.
+
+For 0.2.3, MML and JML therefore receive separate recovery, uncertainty, and
+failure-mode conclusions. JML bias correction is a research question rather
+than a promised option. Conditional-likelihood estimation remains external
+reference evidence. Hierarchical rater models address a different latent-data
+and local-dependence structure and will not be presented as another estimator
+switch for the current additive MFRM.
 
 Passing simulation and software-comparison checks does not establish construct
 validity, fairness, population transportability, or suitability for a

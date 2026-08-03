@@ -32,6 +32,11 @@ test_that("public roadmap is separated from internal release operations", {
   }
   expect_match(public, "single source of truth for mfrmr's public release direction",
                fixed = TRUE)
+  expect_match(public,
+               "does not\\s+imply that the two estimators have identical statistical maturity")
+  expect_match(public, "CML or CCML as current\\s+mfrmr fitting methods")
+  expect_match(public, "Hierarchical rater models address a different",
+               fixed = TRUE)
   expect_match(internal, "internal development and validation roadmap",
                fixed = TRUE)
 
@@ -40,7 +45,7 @@ test_that("public roadmap is separated from internal release operations", {
   expect_true(any(grepl("inst/validation", ignore, fixed = TRUE)))
 })
 
-test_that("internal draft.23 readiness work packages remain explicit and private", {
+test_that("internal draft.24 readiness and estimator work remain explicit and private", {
   pkg_root <- normalizePath(testthat::test_path("..", ".."), mustWork = TRUE)
   internal_path <- file.path(
     pkg_root, "inst", "validation", "internal-roadmap-0.2.3.md"
@@ -51,6 +56,10 @@ test_that("internal draft.23 readiness work packages remain explicit and private
   checklist_path <- file.path(
     pkg_root, "inst", "validation", "release-evidence-checklist-0.2.3.csv"
   )
+  estimator_plan_path <- file.path(
+    pkg_root, "inst", "validation",
+    "tam-immer-estimator-stress-plan-0.2.3.md"
+  )
   contract_path <- file.path(
     pkg_root, "inst", "validation", "readiness-contract-0.2.3.md"
   )
@@ -59,7 +68,8 @@ test_that("internal draft.23 readiness work packages remain explicit and private
     "readiness-contract-fixtures-0.2.3.csv"
   )
   skip_if_not(all(file.exists(c(
-    internal_path, gate_path, checklist_path, contract_path, fixture_path
+    internal_path, gate_path, checklist_path, estimator_plan_path,
+    contract_path, fixture_path
   ))))
 
   internal <- paste(readLines(internal_path, warn = FALSE, encoding = "UTF-8"),
@@ -68,6 +78,10 @@ test_that("internal draft.23 readiness work packages remain explicit and private
                 collapse = "\n")
   checklist <- utils::read.csv(checklist_path, stringsAsFactors = FALSE,
                                check.names = FALSE)
+  estimator_plan <- paste(
+    readLines(estimator_plan_path, warn = FALSE, encoding = "UTF-8"),
+    collapse = "\n"
+  )
 
   expect_match(internal, "WP0-READINESS-CONTRACT", fixed = TRUE)
   expect_match(internal, "WP7-REPILOT-AND-FREEZE", fixed = TRUE)
@@ -78,12 +92,27 @@ test_that("internal draft.23 readiness work packages remain explicit and private
   expect_match(internal, "in_progress_linear_block", fixed = TRUE)
   expect_match(internal, "Corrective-program execution lanes", fixed = TRUE)
   expect_match(internal, "partitioned\\s+exhaustively")
-  expect_match(gate, "Specification ID | `0.2.3-draft.23`", fixed = TRUE)
+  expect_match(internal, "Estimator ecosystem and maturity boundary", fixed = TRUE)
+  expect_match(internal, "method = \"HRM\"", fixed = TRUE)
+  expect_match(gate, "Specification ID | `0.2.3-draft.24`", fixed = TRUE)
+  expect_match(gate, "EXT-TAM-JML-RAW", fixed = TRUE)
+  expect_match(gate, "EXT-IMMER-CCML", fixed = TRUE)
+  expect_match(gate, "ALT-IMMER-HRM-LD", fixed = TRUE)
+  expect_match(estimator_plan, "EXT-TAM-JML-BC-ADJ", fixed = TRUE)
+  expect_match(estimator_plan, "Increasing Persons while observations per Person stay fixed",
+               fixed = TRUE)
+  expect_match(estimator_plan, "No native CML/CCML milestone", fixed = TRUE)
   expect_true(all(c(
     "readiness_contract_schema",
     "readiness_scope_and_propagation",
     "sparse_estimability_performance",
-    "metric_specific_comparison_eligibility"
+    "metric_specific_comparison_eligibility",
+    "jml_estimator_maturity",
+    "tam_mml_core",
+    "tam_immer_jml_overlap",
+    "conditional_estimator_overlap",
+    "hrm_local_dependence_boundary",
+    "ecosystem_positioning_claims"
   ) %in% checklist$Item))
   expect_identical(anyDuplicated(paste(checklist$Gate, checklist$Item)), 0L)
 })
@@ -206,7 +235,7 @@ test_that("WP0 fixture validator rejects post-hoc readiness upgrades", {
                         fixed = TRUE)))
 })
 
-test_that("FACETS and diagnostic stress registries retain prior edge cells under draft.23", {
+test_that("FACETS and diagnostic stress registries retain prior edge cells under draft.24", {
   pkg_root <- normalizePath(testthat::test_path("..", ".."),
                             winslash = "/", mustWork = TRUE)
   facets_path <- file.path(

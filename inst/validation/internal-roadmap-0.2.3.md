@@ -224,6 +224,64 @@ JML and MML estimate persons differently, so agreement between their person
 measures is not a release gate. Comparisons must name a common estimand and
 transformation before a tolerance is applied.
 
+### Estimator ecosystem and maturity boundary
+
+One fitting interface is a workflow property, not evidence that its estimators
+have equal inferential maturity. The 0.2.3 gate therefore treats each estimator
+and correction convention as a separate method, even when the model formula
+and output labels look similar.
+
+| Surface | Audited reference state | 0.2.3 validation role | Boundary that must remain visible |
+| --- | --- | --- | --- |
+| mfrmr MML | Native RSM, PCM, and bounded-GPCM route with direct/hybrid/EM engine paths. | Primary recovery, stationarity, supported-interval, and ConQuest/TAM MML lane. | Population distribution and integration are part of the estimand; evidence cannot be borrowed from JML. |
+| mfrmr JML | Native RSM/PCM/bounded-GPCM route without a classical finite-item bias correction; structural-parameter SEs are observation-information approximations rather than a full profile-likelihood Hessian. | FACETS/TAM/immer comparison, education, and exploratory analysis; any stronger claim is earned separately by recovery and coverage. | Incidental-parameter bias, extreme scores, approximate uncertainty, and person-specific information remain explicit. |
+| TAM | CRAN 4.3-25 supplies MML and `tam.jml()`; the latter documents extreme-score adjustment, a default finite-item bias reduction, and fixed item/person parameters. | Independent MML overlap and JML sensitivity/reference lanes. | `tam.mml.mfr()` design-matrix handoff to `tam.jml()` does not make TAM's JML correction automatically valid for mfrmr's arbitrary-facet exposure patterns. |
+| immer | CRAN 1.5-13 supplies design-matrix CML/CCML, unadjusted/adjusted/bias-corrected JML modes, and a hierarchical rater model; development 1.6-1 is retained only as a separate sensitivity identity. | Rasch-family conditional-estimator references, JML convention grid, and a local-dependence/model-misspecification challenge. | CML/CCML do not estimate the same person quantities as JML/MML, and HRM is a different latent-data model fitted by MCMC rather than another additive-MFRM estimator switch. |
+
+The primary external identities are the CRAN releases current at the source
+audit: TAM 4.3-25 and immer 1.5-13. TAM 4.4-2 and immer 1.6-1 development
+snapshots may be run as separately labelled sensitivity strata. Development
+and CRAN results are never pooled, and a later installed version requires a new
+identity record, source audit, and comparison stratum.
+
+The executable comparison matrix, eligibility rules, stress axes, output
+schema, and architecture decision gates are maintained in
+`tam-immer-estimator-stress-plan-0.2.3.md`. That file is subordinate to this
+roadmap and the release-gate specification; it contains no completed evidence.
+
+The JML convention grid is deliberately adversarial. On the same generated
+observations and common parameter coordinates it includes mfrmr's uncorrected
+JML, FACETS' selected convention, TAM's unadjusted and documented
+adjusted/bias-reduced modes, and immer's unadjusted, extreme-score-adjusted,
+and bias-corrected modes. Extreme and nonextreme persons are summarized
+separately. Truth recovery, supported-interval coverage, failure behavior, and
+between-program differences are four different outputs; agreement cannot
+substitute for recovery.
+
+A classical multiplicative JML correction is not copied merely to reproduce an
+external value. Under arbitrary facets, sparse assignments, missingness,
+unequal rater workloads, and design-matrix pseudoitems, the effective item or
+occasion count in a factor such as `(I - 1) / I` is not automatically unique.
+Any native correction proposal must first define that exposure quantity,
+reduce to the established balanced case, preserve identification and anchors,
+and improve prespecified bias/RMSE without unacceptable coverage, boundary, or
+failure-rate cost. Otherwise JML remains uncorrected and explicitly caveated.
+
+Native CML/CCML is not promised by this comparison. The first decision point is
+an adapter and matched external study limited to identifiable Rasch-family
+structural parameters; person measures and bounded-GPCM claims are excluded.
+Only after accuracy, missingness/category limits, computation, maintenance, and
+user demand are quantified may an architecture decision record choose native
+implementation, an adapter, or continued external-reference status.
+
+HRM remains an alternative data-generating and local-dependence model. It must
+not appear as `method = "HRM"`. Any future implementation needs a distinct model
+family/API or companion package, a latent true-rating estimand, identification
+and MCMC diagnostics, posterior checks, and its own recovery gate. Likewise,
+the label `GMFRM` is prohibited unless a proposal disambiguates generalized
+response discrimination, rater-consistency parameters, and local-dependence
+structure; these are not interchangeable generalizations.
+
 The following remain outside 0.2.3:
 
 - threshold/step anchors and frozen-calibration operational scoring (0.2.4);
@@ -236,9 +294,11 @@ The following remain outside 0.2.3:
 - unrestricted GPCM, native multidimensional latent-trait estimation,
   dimension-specific score production, posterior-predictive checks, MCMC, and
   multivariate G-theory; and
-- a package/runtime dependency on proprietary ConQuest or FACETS software.
-  Their locally executed synthetic validation is release evidence, not code
-  required to install or use mfrmr.
+- native CML/CCML, a new JML bias-correction option, and hierarchical rater or
+  other latent local-dependence model families; and
+- a package/runtime dependency on ConQuest, FACETS, TAM, or immer. Their locally
+  executed synthetic validation is release evidence, not code required to
+  install or use mfrmr.
 
 ### Work sequence and evidence invalidation
 
@@ -246,16 +306,17 @@ The following remain outside 0.2.3:
 | --- | --- | --- |
 | M0: freeze the published 0.2.2 baseline | Keep the accepted asset and tag immutable. Conduct 0.2.3 gate-specification, pilot, and package work only under the explicit 0.2.3 identity; any later 0.2.2 correction branches from the published tag. | CRAN acceptance is recorded, and correction and development paths remain separate before M3. |
 | M1: draft the gate specification | Define scenario IDs, estimands, parameter transformations, readiness states, evidence roles, blocking rows, information-criterion formulas/sample-size bases, dimensionality discovery/confirmation partitions, candidate Q matrices, consequence criteria, and explicit pilot-required numeric criteria. | Versioned draft `inst/validation/release-gate-spec-0.2.3.md` and `inst/validation/release-evidence-checklist-0.2.3.csv` committed with review; confirmation remains unauthorized. |
-| M2: instrument, pilot, and freeze | Add independent gradient/objective checks, scenario generators, corrected MML information-criterion instrumentation, external normalization, a TAM dimensionality runner, integration-stability checks, fail-closed import guards, and candidate manifests. Pin the local FACETS 4.5.0 binary/report/parser identity without making upstream-version difference a stop rule, build the paired JML RSM/PCM stress runner, and pilot its core/anchor/sparse/edge families. Use pilot-only data to calibrate every unresolved criterion, then freeze the specification before confirmation. | Reproducible internal, ConQuest/TAM, and FACETS pilot reports with criterion changes recorded plus a reviewed `0.2.3-frozen.*` specification/checklist containing no unresolved blocker criterion and no release decision. |
+| M2: instrument, pilot, and freeze | Add independent gradient/objective checks, scenario generators, corrected MML information-criterion instrumentation, external normalization, a TAM dimensionality runner, integration-stability checks, fail-closed import guards, and candidate manifests. Pin the local FACETS 4.5.0 binary/report/parser identity without making upstream-version difference a stop rule, build the paired JML RSM/PCM stress runner, and pilot its core/anchor/sparse/edge families. Add TAM/immer runners that preserve every JML adjustment mode, isolate CML/CCML structural estimands, and treat HRM as an alternative-model stress lane. Use pilot-only data to calibrate every unresolved criterion, then freeze the specification before confirmation. | Reproducible internal, ConQuest/TAM, FACETS, and immer pilot reports with criterion changes recorded plus a reviewed `0.2.3-frozen.*` specification/checklist containing no unresolved blocker criterion and no release decision. |
 | M3: freeze one candidate | Freeze source commit, dependency lock information, external-tool executable/report identities, parser/generator versions, input/partition/Q-matrix/topology fingerprints, integration controls, seeds, failed-run policy, and tarball digest. | Candidate manifest that uniquely identifies every internal and external input and stratifies rather than silently pools external-program versions. |
-| M4: run confirmation | Run the locked recovery/stress matrix, FACETS JML core, ConQuest/TAM comparisons, dimensionality challenge, and matched external rows without changing criteria or reusing discovery/pilot data as independent confirmation. | Candidate-linked internal and external evidence with every blocker classified and every expected scenario/replicate accounted for. |
+| M4: run confirmation | Run the locked recovery/stress matrix, FACETS JML core, ConQuest/TAM MML comparisons, TAM/immer JML convention grid, eligible immer CML/CCML rows, dimensionality challenge, and matched external rows without changing criteria or reusing discovery/pilot data as independent confirmation. | Candidate-linked internal and external evidence with every blocker classified and every expected scenario/replicate accounted for. |
 | M5: release handoff | Run full regression, cross-platform CI, manuals, URL checks, CRAN-time examples, Win-builder, package-content audit, and public-claim audit. | All blocker rows `ok`, all caveats visible, and an exact checked tarball. |
 
-The repository now contains `0.2.3-draft.23` planning and pilot artifacts at
+The repository now contains `0.2.3-draft.24` planning and pilot artifacts at
 `inst/validation/release-gate-spec-0.2.3.md` and
-`inst/validation/release-evidence-checklist-0.2.3.csv`. They deliberately
-record unresolved pilot-calibrated criteria and therefore do not authorize
-confirmation or constitute release evidence. The source-grounded M1 review is
+`inst/validation/release-evidence-checklist-0.2.3.csv`, with the TAM/immer
+execution contract in `inst/validation/tam-immer-estimator-stress-plan-0.2.3.md`.
+They deliberately record unresolved pilot-calibrated criteria and therefore do
+not authorize confirmation or constitute release evidence. The source-grounded M1 review is
 recorded in `inst/validation/release-gate-m1-review-0.2.3.md`; the exact IC
 arithmetic/policy fixtures begin M2 instrumentation. M1 is content-complete
 but remains an open repository milestone until these artifacts receive the
@@ -314,12 +375,13 @@ extreme-score output, and definition-specific interaction/bias/PCAR contracts
 before the next paired pilot. These are prerequisites to tolerance
 calibration, not completed release gates.
 
-### Draft.23 near-term corrective program
+### Draft.24 near-term corrective program
 
 Draft.21 converted the draft.20 diagnosis into an implementation sequence.
 Draft.22 completes the structural WP0 contract and makes that contract the
 fixed input to WP1--WP5. Draft.23 begins WP1 with the estimator-specific sparse
-linear-block preflight described below. Its
+linear-block preflight described below. Draft.24 adds the estimator-ecosystem
+boundary and makes correction mode part of external comparison identity. Its
 objective is not to maximize new diagnostics. It is to establish one source of
 truth for whether a fit, a parameter, and an external comparison are usable,
 and to make every downstream surface consume that source rather than
@@ -348,9 +410,9 @@ reviewed. Confirmation remains prohibited until the later frozen gate.
 | `WP2-CATEGORY-STEP` | WP0 | `queued` | Audit declared, observed, retained, free, fixed, and unsupported category/step coordinates globally and by current `step_facet`; do not add threshold anchors. | RSM/PCM/GPCM reduction and missing-category fixtures plus parameter-scoped status tables. |
 | `WP3-JML-BOUNDARY` | WP0 | `queued` | Detect JML element separation/extreme sufficient scores on the actual contributing row pattern; replace optimizer-dependent finite primary values with typed boundary states. | JML extreme/nonextreme fixtures, MML non-reduction guard, and explicit optional-display contract. |
 | `WP4-READINESS-PROPAGATION` | WP1--WP3 | `blocked_by_dependency` | Derive fit-, parameter-, and output-level readiness once and propagate it without surface-specific reinterpretation. | Cross-surface snapshot/semantic tests and a 0.2.2-object migration fixture. |
-| `WP5-COMPARISON-CONTRACT` | WP4 | `blocked_by_dependency` | Make FACETS and other external normalization metric-specific and fail closed before numeric aggregation. | Eligibility/rejection ledger with denominator accounting and no silent row loss. |
+| `WP5-COMPARISON-CONTRACT` | WP4 | `blocked_by_dependency` | Make FACETS, TAM, immer, and other external normalization metric-specific and fail closed before numeric aggregation; identify estimator, adjustment, person treatment, and software stratum explicitly. | Eligibility/rejection ledger with denominator accounting, method-mode identity, and no silent row loss. |
 | `WP6-SCALE-AND-ADVERSARIAL` | WP1--WP5 | `blocked_by_dependency` | Verify sparse computation, basis invariance, row-order invariance, malformed-input behavior, and target-size runtime/memory without claiming FACETS capacity parity. | Benchmark envelope and metamorphic/negative-test report; no dense design allocation at target sizes. |
-| `WP7-REPILOT-AND-FREEZE` | WP0--WP6 | `blocked_by_dependency` | Rerun the affected internal and FACETS 4.5.0 pilot cells on new pilot seeds, calibrate weak-information rules, then prepare the next reviewed frozen specification. | Complete pilot registry, reason-coded exclusions, MCSE plan, resolved blocker criteria, and still no confirmation result. |
+| `WP7-REPILOT-AND-FREEZE` | WP0--WP6 | `blocked_by_dependency` | Rerun the affected internal and FACETS 4.5.0 pilot cells and the TAM/immer estimator grid on new pilot seeds, calibrate weak-information and estimator-specific rules, then prepare the next reviewed frozen specification. | Complete pilot registry, method-mode-specific reason-coded exclusions, MCSE plan, resolved blocker criteria, and still no confirmation result. |
 
 #### Corrective-program execution lanes
 
@@ -760,7 +822,7 @@ specification, checklist, and gate results are bound by the candidate manifest.
 | Sparse/design behavior | Connected sparse cells are classified correctly; disconnected and unidentified negative controls fail closed and cannot become inferentially ready. | Convergence without connectivity, category support, or identification evidence. |
 | Information criteria | Comparable MML fits expose the same observed-data likelihood basis, free dimension after constraints, Person-based sample size for the current fixed-facet model, exact AIC/BIC/SABIC formula, and locked integration evaluation. | Response-row `N`, summed observation weights, JML incidental-parameter IC ranking, an unlabeled native `aBIC`, or a ranking that changes across the integration ladder. |
 | Dimensionality challenge | Prespecified synthetic 1D/2D controls, matched mfrmr/TAM 1D fits, independently confirmed TAM alternatives, integration-stability checks, rater-by-criterion confounding checks, and consequence classifications meet their locked criteria. | A naive LRT p-value, significance driven only by large N, a Q matrix generated and confirmed on the same data, one QMC node count, or better multidimensional fit without score-utility evidence. |
-| External overlap | Matched ConQuest MML core rows and the pinned FACETS 4.5.0 JML RSM/PCM stress core pass locked, estimand-specific rules; optional FACETS fit/DFF rows are promoted only after definition matching. | Correlation alone, FACETS-as-truth reasoning, silently pooled executable/report versions, unmatched constraints, or comparison of MML/EAP persons with FACETS-style JML persons. |
+| External overlap | Matched ConQuest/TAM MML rows, the pinned FACETS 4.5.0 JML RSM/PCM stress core, the TAM/immer JML convention grid, and eligible immer CML/CCML structural rows pass locked, estimand-specific rules; optional FACETS fit/DFF and immer HRM challenge rows retain their distinct roles. | Correlation alone, any external program as truth, pooled adjustment/version modes, unmatched constraints, CML person comparisons, HRM-as-estimator reasoning, or comparison of MML/EAP persons with JML persons. |
 | Public contract | Code, help, README, vignettes, capability tables, exports, and runtime guards state the same support boundary. | A roadmap sentence or callable internal helper by itself. |
 | Engineering release | Exact-candidate checks, full suite, platform matrix, manuals, package contents, URLs, examples, timing, and Win-builder are acceptable. | A source-tree check that was not run on the upload tarball. |
 
@@ -1187,6 +1249,40 @@ model cannot silently create a multidimensional `mfrmr` support claim.
 - [ ] Do not use FACETS JML person measures as an external target for MML EAP
   person scores. Compare model parameters or JML outputs only where estimands,
   constraints, and extreme-score handling match.
+- [ ] Add a TAM/immer JML convention grid using identical generated rows,
+  category maps, weights, facet design matrices, free-coordinate
+  transformations, and truth. Preserve at least these identities separately:
+  mfrmr uncorrected JML; TAM unadjusted, extreme-adjusted, and documented
+  bias-reduced JML; immer unadjusted, extreme-adjusted, and bias-corrected JML.
+  Do not choose or pool modes after seeing which agrees most closely.
+- [ ] For every JML mode, report structural-parameter bias/RMSE, supported SE or
+  interval coverage, extreme and nonextreme Person behavior, false-ready and
+  failed-run rates, and the transformed between-program difference. A missing
+  SE is an explicit unsupported cell, not zero uncertainty. Current mfrmr
+  observation-information SEs remain exploratory until the coverage gate is
+  passed; the grid does not imply a profile-likelihood Hessian.
+- [ ] Stress the JML convention grid across balanced and unequal Person
+  information, two-rater panels, sparse/weak links, planned and unplanned
+  missingness, category imbalance, extreme scores, and increasing Persons with
+  fixed per-Person observations. The last axis is the incidental-parameter
+  control and must not be replaced by a large-N pooled summary.
+- [ ] Add immer CML and CCML only as conditional Rasch-family structural-
+  parameter references. Verify sufficient-statistic conditioning, design-
+  matrix rank, constraint basis, category support, and missingness eligibility.
+  Exclude Person estimates, bounded GPCM, latent-regression, and any quantity
+  eliminated by conditioning. CML/CCML evidence cannot be relabelled as a
+  native mfrmr capability.
+- [ ] Add an immer HRM-generated local-dependence challenge after its latent
+  true-rating, rater-severity/variability, prior, MCMC convergence, and label-
+  switching contracts are frozen. Evaluate how the current additive mfrmr
+  diagnostics fail or respond under this alternative. Do not include HRM rows
+  in engine-equivalence tolerances and do not infer that HRM is preferred from
+  one misspecified additive fit.
+- [ ] Record CRAN and development TAM/immer identities as separate strata,
+  including package version, source/repository identity, R version, dependency
+  versions, function arguments/defaults, design-matrix hash, input/output hash,
+  and normalizer version. A changed default is a new method-mode identity even
+  if the package version is unchanged locally.
 - [ ] Keep proprietary binaries and identifier-bearing case files outside the
   package while retaining commands, synthetic/public inputs, normalized
   aggregate outputs, hashes, versions, and run dates needed for audit.
@@ -1437,10 +1533,15 @@ A capability may be promoted only when all applicable items are complete:
 13. An information-criterion label never hides its likelihood basis, free-
     parameter count, independent sampling unit, exact formula, or integration
     evaluation.
-14. FACETS, ConQuest, and TAM are independent comparators, not truth. Simulation
-    truth, estimand matching, and between-program agreement are reported as
-    separate questions.
+14. FACETS, ConQuest, TAM, and immer are independent comparators, not truth.
+    Simulation truth, estimand matching, and between-program agreement are
+    reported as separate questions.
 15. External evidence binds the executable, version reported by the output,
     parser/generator identity, input/output hashes, and candidate. Version
     differences do not stop execution, but remain separate evidence strata;
     stale-output reuse is classified explicitly.
+16. Estimator correction and extreme-score adjustment are part of method
+    identity. Results from unadjusted, adjusted, bias-corrected, marginal, joint,
+    and conditional likelihood routes are never silently pooled.
+17. A hierarchical rater model or other local-dependence model is a competing
+    model family, not an optimization backend for the current additive MFRM.
