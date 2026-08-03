@@ -1072,6 +1072,329 @@ mfrmr_nonlinear_transformation_audit <- function(
   base
 }
 
+mfrmr_gpcm_log_slope_map <- function(config, sizes) {
+  levels <- as.character(config$gpcm_spec$levels %||% character(0))
+  n_free <- as.integer(sizes$log_slopes %||% 0L)
+  if (n_free == 0L) return(mfrmr_estimability_map())
+  if (length(levels) != n_free + 1L) {
+    stop(
+      "Internal GPCM response-kernel audit found an inconsistent slope map.",
+      call. = FALSE
+    )
+  }
+  slices <- build_param_slices(sizes)
+  mfrmr_estimability_map(
+    Block = rep("log_slopes", n_free),
+    Coordinate = paste0("log_slopes:", levels[seq_len(n_free)]),
+    Facet = rep(as.character(config$slope_facet), n_free),
+    Level = levels[seq_len(n_free)],
+    ReferenceLevel = rep(levels[length(levels)], n_free),
+    Constraint = rep("sum_zero_log_slopes", n_free),
+    OptimizerIndex = as.integer(slices$log_slopes)
+  )
+}
+
+mfrmr_gpcm_selected_log_slope_jacobian_sparse <- function(slope_index,
+                                                            n_levels) {
+  slope_index <- as.integer(slope_index)
+  n_levels <- as.integer(n_levels)
+  n_free <- max(n_levels - 1L, 0L)
+  if (n_free == 0L) {
+    return(mfrmr_empty_sparse_matrix(length(slope_index), 0L))
+  }
+  if (anyNA(slope_index) || any(slope_index < 1L) ||
+      any(slope_index > n_levels)) {
+    stop("The GPCM response-kernel audit found an invalid slope index.",
+         call. = FALSE)
+  }
+  direct_rows <- which(slope_index <= n_free)
+  reference_rows <- which(slope_index == n_levels)
+  Matrix::sparseMatrix(
+    i = c(
+      direct_rows,
+      rep(reference_rows, each = n_free)
+    ),
+    j = c(
+      slope_index[direct_rows],
+      rep(seq_len(n_free), times = length(reference_rows))
+    ),
+    x = c(
+      rep(1, length(direct_rows)),
+      rep(-1, length(reference_rows) * n_free)
+    ),
+    dims = c(length(slope_index), n_free)
+  )
+}
+
+mfrmr_gpcm_adjacent_logits <- function(par, idx, config, sizes) {
+  if (!identical(config$model, "GPCM") ||
+      !identical(config$method, "JML")) {
+    stop(
+      "The retained adjacent-logit response kernel is defined here only for JML GPCM.",
+      call. = FALSE
+    )
+  }
+  params <- expand_params(par, sizes, config)
+  eta <- compute_eta(idx, params, config)
+  n_obs <- length(eta)
+  n_steps <- max(as.integer(config$n_cat %||% 0L) - 1L, 0L)
+  if (n_obs == 0L || n_steps <= 0L) {
+    stop("The GPCM response-kernel audit requires retained observations and transitions.",
+         call. = FALSE)
+  }
+  step_idx <- as.integer(idx$step_idx)
+  slope_idx <- as.integer(idx$slope_idx)
+  if (length(step_idx) != n_obs || length(slope_idx) != n_obs ||
+      anyNA(step_idx) || anyNA(slope_idx)) {
+    stop("The GPCM response-kernel audit could not align step or slope indices.",
+         call. = FALSE)
+  }
+  step_obs <- params$steps_mat[step_idx, , drop = FALSE]
+  eta_minus_step <- matrix(eta, nrow = n_obs, ncol = n_steps) - step_obs
+  slope_obs <- as.numeric(params$slopes[slope_idx])
+  as.vector(eta_minus_step * matrix(
+    slope_obs, nrow = n_obs, ncol = n_steps
+  ))
+}
+
+mfrmr_gpcm_response_kernel_design <- function(prep, idx, config, sizes, par) {
+  if (!identical(config$model, "GPCM") ||
+      !identical(config$method, "JML")) {
+    stop(
+      "The retained response-kernel Jacobian is available only for JML GPCM.",
+      call. = FALSE
+    )
+  }
+  free_dimension <- sum(vapply(sizes, as.integer, integer(1)))
+  if (is.null(par) || length(par) != free_dimension || any(!is.finite(par))) {
+    stop("The retained GPCM free parameter vector is unavailable or malformed.",
+         call. = FALSE)
+  }
+
+  additive <- mfrmr_estimability_adjacent_design(
+    prep = prep,
+    idx = idx,
+    config = config,
+    sizes = sizes,
+    include_person = TRUE,
+    include_population_beta = FALSE
+  )
+  params <- expand_params(par, sizes, config)
+  eta <- compute_eta(idx, params, config)
+  n_obs <- length(eta)
+  n_steps <- additive$transitions
+  obs_index <- rep(seq_len(n_obs), times = n_steps)
+  transition <- rep(seq_len(n_steps), each = n_obs)
+  step_idx <- as.integer(idx$step_idx)
+  slope_idx <- as.integer(idx$slope_idx)
+  step_value <- params$steps_mat[cbind(step_idx[obs_index], transition)]
+  eta_minus_step <- eta[obs_index] - step_value
+  slope_repeated <- as.numeric(params$slopes[slope_idx[obs_index]])
+
+  additive_jacobian <- Matrix::Diagonal(x = slope_repeated) %*%
+    additive$design
+  n_slope_levels <- length(params$slopes)
+  slope_map <- mfrmr_gpcm_log_slope_map(config, sizes)
+  slope_jacobian <- if (n_slope_levels <= 1L) {
+    mfrmr_empty_sparse_matrix(nrow(additive$design), 0L)
+  } else {
+    selected <- mfrmr_gpcm_selected_log_slope_jacobian_sparse(
+      slope_index = slope_idx[obs_index],
+      n_levels = n_slope_levels
+    )
+    Matrix::Diagonal(x = slope_repeated * eta_minus_step) %*% selected
+  }
+  jacobian <- methods::as(
+    cbind(additive_jacobian, slope_jacobian), "dgCMatrix"
+  )
+  map <- rbind(additive$map, slope_map)
+  rownames(map) <- NULL
+  if (ncol(jacobian) != free_dimension || nrow(map) != free_dimension ||
+      !identical(as.integer(map$OptimizerIndex), seq_len(free_dimension))) {
+    stop(
+      "Internal GPCM response-kernel Jacobian does not match optimizer coordinates.",
+      call. = FALSE
+    )
+  }
+  list(
+    jacobian = jacobian,
+    parameter_map = map,
+    adjacent_logits = mfrmr_gpcm_adjacent_logits(par, idx, config, sizes),
+    observation_rows = n_obs,
+    transition_rows = nrow(jacobian),
+    transitions = n_steps,
+    additive_free_dimension = ncol(additive$design),
+    log_slope_free_dimension = ncol(slope_jacobian),
+    eta_minus_step = as.numeric(eta_minus_step),
+    slope_repeated = as.numeric(slope_repeated)
+  )
+}
+
+audit_mfrm_gpcm_response_kernel <- function(
+    prep,
+    idx,
+    config,
+    sizes,
+    par,
+    max_numeric_free_dimension = 80L,
+    max_numeric_elements = 2e6,
+    relative_step = 1e-6,
+    tolerances = c(1e-12, 1e-10, 1e-8)) {
+  free_dimension <- sum(vapply(sizes, as.integer, integer(1)))
+  base <- list(
+    role = "retained_gpcm_adjacent_category_logit_response_kernel_jacobian",
+    response_scale = "log(P[k]/P[k-1])",
+    evaluation_point = "retained_optimizer_free_coordinate_vector",
+    method = as.character(config$method),
+    model = as.character(config$model),
+    attempted = FALSE,
+    status = if (identical(config$model, "GPCM")) {
+      "pending_after_optimization"
+    } else {
+      "not_applicable_model"
+    },
+    kernel_scope = if (identical(config$method, "JML")) {
+      "conditional_response_given_retained_person_coordinates"
+    } else {
+      "person_integrated_response_pattern_required"
+    },
+    free_dimension = as.integer(free_dimension),
+    observation_rows = 0L,
+    transition_rows = 0L,
+    transitions = max(as.integer(config$n_cat %||% 0L) - 1L, 0L),
+    nonzero_entries = 0L,
+    local_rank = NA_integer_,
+    local_nullity = NA_integer_,
+    local_rank_state = "not_evaluated",
+    tolerance_sensitive = FALSE,
+    rank_ladder = data.frame(),
+    parameter_blocks = data.frame(
+      Block = character(0), FreeCoordinates = integer(0)
+    ),
+    parameter_map = mfrmr_estimability_map(),
+    zero_coordinates = character(0),
+    null_directions = data.frame(),
+    numerical_differentiation = list(
+      status = "not_evaluated",
+      method = "coordinate_scaled_central_difference",
+      relative_step = as.numeric(relative_step[1]),
+      free_dimension_limit = as.integer(max_numeric_free_dimension),
+      element_limit = as.double(max_numeric_elements),
+      max_abs_difference = NA_real_,
+      max_scaled_difference = NA_real_
+    ),
+    conditional_response_kernel_jacobian_evaluated = FALSE,
+    marginal_person_pattern_jacobian_evaluated = FALSE,
+    structural_identification_classified = FALSE,
+    readiness_effect = "none_pending_property_and_marginal_model_audits",
+    detail = "This response-kernel audit is not applicable to the fitted model."
+  )
+  if (!identical(config$model, "GPCM")) return(base)
+
+  if (identical(config$method, "MML")) {
+    base$status <- "not_evaluated_marginal_person_pattern_required"
+    base$detail <- paste(
+      "MML integrates Person coordinates, so a conditional observation-level",
+      "adjacent-logit Jacobian cannot certify the marginal person-pattern",
+      "model. The fitted-information Hessian is a separate local likelihood",
+      "diagnostic; a marginal response-pattern Jacobian remains pending."
+    )
+    return(base)
+  }
+  if (!identical(config$method, "JML")) {
+    base$status <- "not_evaluated_estimator_scope"
+    base$detail <- "The estimator is outside the implemented response-kernel scope."
+    return(base)
+  }
+
+  built <- tryCatch(
+    mfrmr_gpcm_response_kernel_design(prep, idx, config, sizes, par),
+    error = function(e) e
+  )
+  base$attempted <- TRUE
+  if (inherits(built, "error")) {
+    base$status <- "unavailable"
+    base$detail <- paste0(
+      "The retained JML GPCM response-kernel Jacobian was unavailable: ",
+      conditionMessage(built), "."
+    )
+    return(base)
+  }
+
+  rank <- mfrmr_estimability_rank_audit(
+    built$jacobian, built$parameter_map,
+    tolerances = tolerances,
+    structural_tolerance = tolerances[1]
+  )
+  block_summary <- if (nrow(built$parameter_map) == 0L) {
+    base$parameter_blocks
+  } else {
+    stats::aggregate(
+      rep(1L, nrow(built$parameter_map)),
+      by = list(Block = built$parameter_map$Block),
+      FUN = sum
+    ) |>
+      stats::setNames(c("Block", "FreeCoordinates"))
+  }
+  base$status <- "evaluated_local_diagnostic_only"
+  base$observation_rows <- as.integer(built$observation_rows)
+  base$transition_rows <- as.integer(built$transition_rows)
+  base$transitions <- as.integer(built$transitions)
+  base$nonzero_entries <- length(built$jacobian@x)
+  base$local_rank <- rank$Rank
+  base$local_nullity <- rank$Nullity
+  base$local_rank_state <- if (rank$Nullity == 0L) {
+    "locally_full_column_rank"
+  } else {
+    "locally_rank_deficient"
+  }
+  base$tolerance_sensitive <- isTRUE(rank$ToleranceSensitive)
+  base$rank_ladder <- rank$ToleranceRanks
+  base$parameter_blocks <- block_summary
+  base$parameter_map <- built$parameter_map
+  base$zero_coordinates <- rank$ZeroCoordinates
+  base$null_directions <- rank$NullDirections
+  base$conditional_response_kernel_jacobian_evaluated <- TRUE
+
+  numeric_elements <- as.double(built$transition_rows) *
+    as.double(free_dimension)
+  if (free_dimension <= as.integer(max_numeric_free_dimension) &&
+      numeric_elements <= as.double(max_numeric_elements)) {
+    numeric <- mfrmr_numeric_transformation_jacobian(
+      transform = function(value) {
+        mfrmr_gpcm_adjacent_logits(value, idx, config, sizes)
+      },
+      free = par,
+      relative_step = relative_step
+    )
+    if (isTRUE(numeric$valid) &&
+        identical(dim(numeric$jacobian), dim(built$jacobian))) {
+      analytic <- as.matrix(built$jacobian)
+      absolute_difference <- abs(analytic - numeric$jacobian)
+      scaled_difference <- absolute_difference /
+        pmax(1, abs(analytic), abs(numeric$jacobian))
+      base$numerical_differentiation$status <- "evaluated"
+      base$numerical_differentiation$max_abs_difference <-
+        max(absolute_difference)
+      base$numerical_differentiation$max_scaled_difference <-
+        max(scaled_difference)
+    } else {
+      base$numerical_differentiation$status <- "unavailable"
+    }
+  } else {
+    base$numerical_differentiation$status <-
+      "not_evaluated_execution_limit"
+  }
+  base$detail <- paste(
+    "The analytic Jacobian combines constrained Person/facet/interaction/step",
+    "coordinates with sum-zero log-slope coordinates for every retained JML",
+    "GPCM adjacent-category logit. Its local rank and independent derivative",
+    "check are diagnostic only; they do not yet classify structural or weak",
+    "identification or alter readiness."
+  )
+  base
+}
+
 audit_mfrm_fitted_information <- function(opt,
                                           idx,
                                           config,
@@ -1409,6 +1732,19 @@ audit_mfrm_estimability <- function(prep, idx, config, sizes) {
       likelihood_jacobian_evaluated = FALSE,
       structural_identification_classified = FALSE,
       readiness_effect = "none_parameterization_audit_only"
+    ),
+    gpcm_response_kernel = list(
+      role = "retained_gpcm_adjacent_category_logit_response_kernel_jacobian",
+      status = if (identical(config$model, "GPCM")) {
+        "pending_after_optimization"
+      } else {
+        "not_applicable_model"
+      },
+      attempted = FALSE,
+      conditional_response_kernel_jacobian_evaluated = FALSE,
+      marginal_person_pattern_jacobian_evaluated = FALSE,
+      structural_identification_classified = FALSE,
+      readiness_effect = "none_pending_property_and_marginal_model_audits"
     ),
     fitted_information = list(
       status = if (length(nonlinear_blocks) > 0L) {

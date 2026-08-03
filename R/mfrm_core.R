@@ -3794,6 +3794,24 @@ mfrm_estimate <- function(data, person_col, facet_cols, score_col,
   config$estimation_control$mml_engine_used <- as.character(opt$mml_engine$Used %||% NA_character_)
   config$estimation_control$mml_engine_detail <- as.character(opt$mml_engine$Detail %||% NA_character_)
 
+  # For GPCM JML, combine the additive and log-slope coordinates in the exact
+  # retained adjacent-category response-kernel Jacobian. MML requires a
+  # Person-integrated response-pattern audit and therefore receives an
+  # explicit not-evaluated state rather than reusing the conditional JML
+  # result. Neither branch changes readiness in this implementation slice.
+  if (identical(config$model, "GPCM")) {
+    estimability_audit$gpcm_response_kernel <-
+      audit_mfrm_gpcm_response_kernel(
+        prep = prep,
+        idx = idx,
+        config = config,
+        sizes = sizes,
+        par = opt$par
+      )
+    config$estimability_audit <- estimability_audit
+    data_review$estimability <- estimability_audit
+  }
+
   # The pre-fit constrained rank audit deliberately excludes nonlinear GPCM
   # slope and latent-population variance coordinates. Verify their retained
   # free-to-model coordinate transformations separately. For stationary

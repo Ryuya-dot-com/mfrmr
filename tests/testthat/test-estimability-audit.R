@@ -68,6 +68,8 @@ test_that("balanced JML constrained design is full rank and invariant", {
     "pending_weak_information_calibration"
   )
   expect_identical(audit$nonlinear_transformation$status, "not_required")
+  expect_identical(audit$gpcm_response_kernel$status,
+                   "not_applicable_model")
   expect_false(audit$fitted_information$weak_information_classified)
   expect_true(all(c("Person", "Rater", "Criterion", "steps") %in%
                     audit$parameter_blocks$Block))
@@ -365,6 +367,166 @@ test_that("GPCM additive rank does not overclaim nonlinear completeness", {
     audit$fitted_information$readiness_effect,
     "none_pending_pilot_calibrated_rule"
   )
+  expect_identical(
+    audit$gpcm_response_kernel$status,
+    "not_evaluated_marginal_person_pattern_required"
+  )
+  expect_false(
+    audit$gpcm_response_kernel$
+      conditional_response_kernel_jacobian_evaluated
+  )
+  expect_false(
+    audit$gpcm_response_kernel$
+      marginal_person_pattern_jacobian_evaluated
+  )
+  expect_match(
+    audit$gpcm_response_kernel$detail,
+    "cannot certify the marginal person-pattern",
+    fixed = TRUE
+  )
+})
+
+test_that("JML GPCM response-kernel Jacobian joins additive and slope coordinates", {
+  data <- .estimability_balanced_data()
+  fit <- suppressWarnings(fit_mfrm(
+    data,
+    person = "Person",
+    facets = c("Rater", "Criterion"),
+    score = "Score",
+    rating_min = 1,
+    rating_max = 4,
+    model = "GPCM",
+    method = "JML",
+    step_facet = "Criterion",
+    slope_facet = "Criterion",
+    maxit = 100
+  ))
+  audit <- fit$data_review$estimability$gpcm_response_kernel
+
+  expect_identical(audit$status, "evaluated_local_diagnostic_only")
+  expect_true(audit$attempted)
+  expect_true(audit$conditional_response_kernel_jacobian_evaluated)
+  expect_false(audit$marginal_person_pattern_jacobian_evaluated)
+  expect_false(audit$structural_identification_classified)
+  expect_identical(audit$local_rank_state, "locally_full_column_rank")
+  expect_identical(audit$local_rank, audit$free_dimension)
+  expect_identical(audit$local_nullity, 0L)
+  expect_identical(audit$observation_rows, nrow(data))
+  expect_identical(audit$transition_rows, 3L * nrow(data))
+  expect_identical(
+    audit$parameter_map$OptimizerIndex,
+    seq_len(audit$free_dimension)
+  )
+  expect_true("log_slopes" %in% audit$parameter_blocks$Block)
+  expect_identical(audit$numerical_differentiation$status, "evaluated")
+  expect_lt(audit$numerical_differentiation$max_abs_difference, 1e-7)
+  expect_lt(audit$numerical_differentiation$max_scaled_difference, 1e-7)
+  expect_identical(
+    audit$readiness_effect,
+    "none_pending_property_and_marginal_model_audits"
+  )
+
+  idx <- mfrmr:::build_indices(
+    fit$prep,
+    step_facet = fit$config$step_facet,
+    slope_facet = fit$config$slope_facet,
+    interaction_specs = fit$config$interaction_specs
+  )
+  sizes <- mfrmr:::build_param_sizes(fit$config)
+  slices <- mfrmr:::build_param_slices(sizes)
+  unit_par <- fit$opt$par
+  unit_par[slices$log_slopes] <- 0
+  combined <- mfrmr:::mfrmr_gpcm_response_kernel_design(
+    fit$prep, idx, fit$config, sizes, unit_par
+  )
+  additive <- mfrmr:::mfrmr_estimability_adjacent_design(
+    fit$prep, idx, fit$config, sizes,
+    include_person = TRUE,
+    include_population_beta = FALSE
+  )
+  additive_columns <- seq_len(ncol(additive$design))
+  expect_equal(
+    unname(as.matrix(combined$jacobian[, additive_columns, drop = FALSE])),
+    unname(as.matrix(additive$design)),
+    tolerance = 0
+  )
+  expect_equal(combined$adjacent_logits, combined$eta_minus_step,
+               tolerance = 1e-12)
+
+  limited <- mfrmr:::audit_mfrm_gpcm_response_kernel(
+    prep = fit$prep,
+    idx = idx,
+    config = fit$config,
+    sizes = sizes,
+    par = fit$opt$par,
+    max_numeric_free_dimension = 0L
+  )
+  expect_identical(limited$status, "evaluated_local_diagnostic_only")
+  expect_identical(
+    limited$numerical_differentiation$status,
+    "not_evaluated_execution_limit"
+  )
+  expect_true(limited$conditional_response_kernel_jacobian_evaluated)
+  expect_false(limited$structural_identification_classified)
+})
+
+test_that("GPCM selected log-slope expansion is sparse and exact", {
+  slope_index <- c(1L, 4L, 2L, 4L, 3L)
+  sparse <- mfrmr:::mfrmr_gpcm_selected_log_slope_jacobian_sparse(
+    slope_index = slope_index,
+    n_levels = 4L
+  )
+  dense <- mfrmr:::sum_zero_jacobian(4L)[slope_index, , drop = FALSE]
+
+  expect_s4_class(sparse, "dgCMatrix")
+  expect_equal(unname(as.matrix(sparse)), unname(dense), tolerance = 0)
+  expect_identical(nrow(sparse), length(slope_index))
+  expect_identical(ncol(sparse), 3L)
+})
+
+test_that("JML GPCM response-kernel rank is invariant to row permutation", {
+  data <- .estimability_balanced_data()
+  permuted <- data[c(seq(2L, nrow(data), by = 2L),
+                     seq(1L, nrow(data), by = 2L)), , drop = FALSE]
+  fit_one <- suppressWarnings(fit_mfrm(
+    data,
+    person = "Person",
+    facets = c("Rater", "Criterion"),
+    score = "Score",
+    rating_min = 1,
+    rating_max = 4,
+    model = "GPCM",
+    method = "JML",
+    step_facet = "Criterion",
+    slope_facet = "Criterion",
+    maxit = 100
+  ))
+  fit_two <- suppressWarnings(fit_mfrm(
+    permuted,
+    person = "Person",
+    facets = c("Rater", "Criterion"),
+    score = "Score",
+    rating_min = 1,
+    rating_max = 4,
+    model = "GPCM",
+    method = "JML",
+    step_facet = "Criterion",
+    slope_facet = "Criterion",
+    maxit = 100
+  ))
+  audit_one <- fit_one$data_review$estimability$gpcm_response_kernel
+  audit_two <- fit_two$data_review$estimability$gpcm_response_kernel
+
+  expect_identical(audit_two$status, audit_one$status)
+  expect_identical(audit_two$free_dimension, audit_one$free_dimension)
+  expect_identical(audit_two$local_rank, audit_one$local_rank)
+  expect_identical(audit_two$local_nullity, audit_one$local_nullity)
+  expect_identical(
+    audit_two$rank_ladder[, c("Rank", "Nullity")],
+    audit_one$rank_ladder[, c("Rank", "Nullity")]
+  )
+  expect_lt(audit_two$numerical_differentiation$max_scaled_difference,
+            1e-7)
 })
 
 test_that("latent residual variance enters fitted-information instrumentation", {

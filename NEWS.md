@@ -18,7 +18,10 @@ CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
   verifies the analytic free-to-expanded transformation Jacobians for GPCM
   log slopes and latent-regression residual variance against central
   differences. Transformation rank is explicitly parameterization-only and
-  is not presented as response-likelihood identification.
+  is not presented as response-likelihood identification. For JML GPCM fits,
+  the record additionally checks the combined additive and log-slope
+  adjacent-category response-kernel Jacobian. MML does not reuse that
+  conditional calculation as evidence about its integrated likelihood.
 
 * Added a versioned information-criterion contract for fitted MML objects.
   BIC now uses the number of independent Persons rather than response rows or
