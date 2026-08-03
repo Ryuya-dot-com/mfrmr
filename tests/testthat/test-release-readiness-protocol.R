@@ -45,7 +45,7 @@ test_that("public roadmap is separated from internal release operations", {
   expect_true(any(grepl("inst/validation", ignore, fixed = TRUE)))
 })
 
-test_that("internal draft.27 readiness and estimator work remain explicit and private", {
+test_that("internal draft.28 readiness and estimator work remain explicit and private", {
   pkg_root <- normalizePath(testthat::test_path("..", ".."), mustWork = TRUE)
   internal_path <- file.path(
     pkg_root, "inst", "validation", "internal-roadmap-0.2.3.md"
@@ -90,7 +90,7 @@ test_that("internal draft.27 readiness and estimator work remain explicit and pr
   expect_match(internal, "expected, eligible, rejected", fixed = TRUE)
   expect_match(internal, "WP0 is structurally complete", fixed = TRUE)
   expect_match(internal,
-               "in_progress_jml_gpcm_kernel_instrumented",
+               "in_progress_mml_observed_pattern_instrumented",
                fixed = TRUE)
   expect_match(internal, "Draft.25 fitted-information instrumentation slice",
                fixed = TRUE)
@@ -98,11 +98,13 @@ test_that("internal draft.27 readiness and estimator work remain explicit and pr
                fixed = TRUE)
   expect_match(internal, "Draft.27 JML GPCM conditional response-kernel slice",
                fixed = TRUE)
+  expect_match(internal, "Draft.28 MML observed Person-pattern score slice",
+               fixed = TRUE)
   expect_match(internal, "Corrective-program execution lanes", fixed = TRUE)
   expect_match(internal, "partitioned\\s+exhaustively")
   expect_match(internal, "Estimator ecosystem and maturity boundary", fixed = TRUE)
   expect_match(internal, "method = \"HRM\"", fixed = TRUE)
-  expect_match(gate, "Specification ID | `0.2.3-draft.27`", fixed = TRUE)
+  expect_match(gate, "Specification ID | `0.2.3-draft.28`", fixed = TRUE)
   expect_match(gate, "EXT-TAM-JML-RAW", fixed = TRUE)
   expect_match(gate, "EXT-IMMER-CCML", fixed = TRUE)
   expect_match(gate, "ALT-IMMER-HRM-LD", fixed = TRUE)
@@ -116,6 +118,7 @@ test_that("internal draft.27 readiness and estimator work remain explicit and pr
     "fitted_information_instrumentation",
     "nonlinear_parameterization_jacobians",
     "jml_gpcm_response_kernel_jacobian",
+    "mml_observed_person_pattern_score",
     "sparse_estimability_performance",
     "metric_specific_comparison_eligibility",
     "jml_estimator_maturity",
@@ -246,7 +249,7 @@ test_that("WP0 fixture validator rejects post-hoc readiness upgrades", {
                         fixed = TRUE)))
 })
 
-test_that("FACETS and diagnostic stress registries retain prior edge cells under draft.27", {
+test_that("FACETS and diagnostic stress registries retain prior edge cells under draft.28", {
   pkg_root <- normalizePath(testthat::test_path("..", ".."),
                             winslash = "/", mustWork = TRUE)
   facets_path <- file.path(

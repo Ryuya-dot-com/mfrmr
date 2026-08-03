@@ -70,6 +70,8 @@ test_that("balanced JML constrained design is full rank and invariant", {
   expect_identical(audit$nonlinear_transformation$status, "not_required")
   expect_identical(audit$gpcm_response_kernel$status,
                    "not_applicable_model")
+  expect_identical(audit$mml_observed_pattern_score$status,
+                   "not_applicable_estimator")
   expect_false(audit$fitted_information$weak_information_classified)
   expect_true(all(c("Person", "Rater", "Criterion", "steps") %in%
                     audit$parameter_blocks$Block))
@@ -384,6 +386,98 @@ test_that("GPCM additive rank does not overclaim nonlinear completeness", {
     "cannot certify the marginal person-pattern",
     fixed = TRUE
   )
+
+  pattern <- audit$mml_observed_pattern_score
+  expect_identical(
+    pattern$status,
+    "evaluated_observed_pattern_diagnostic_only"
+  )
+  expect_true(pattern$attempted)
+  expect_identical(pattern$person_rows, 8L)
+  expect_identical(pattern$free_dimension,
+                   audit$readiness$OptimizerFreeDimension)
+  expect_true(pattern$observed_patterns_only)
+  expect_false(pattern$all_possible_response_patterns_evaluated)
+  expect_false(pattern$conditional_jml_kernel_reused)
+  expect_false(pattern$structural_identification_classified)
+  expect_false(pattern$weak_information_classified)
+  expect_identical(
+    pattern$readiness_effect,
+    "none_observed_patterns_diagnostic_only"
+  )
+  expect_equal(
+    pattern$reconstruction$NegativeLogLikelihoodDifference,
+    0,
+    tolerance = 1e-12
+  )
+  expect_lt(
+    pattern$reconstruction$ScoreSumVsNegativeGradientMaxAbs,
+    1e-12
+  )
+  expect_identical(pattern$numerical_differentiation$status, "evaluated")
+  expect_lt(pattern$numerical_differentiation$max_abs_difference, 1e-7)
+  expect_lt(pattern$numerical_differentiation$max_scaled_difference, 1e-7)
+  expect_true("log_slopes" %in% pattern$parameter_blocks$Block)
+  expect_false("person_ids" %in% names(pattern))
+  expect_false("score" %in% names(pattern))
+
+  idx <- mfrmr:::build_indices(
+    fit$prep,
+    step_facet = fit$config$step_facet,
+    slope_facet = fit$config$slope_facet,
+    interaction_specs = fit$config$interaction_specs
+  )
+  sizes <- mfrmr:::build_param_sizes(fit$config)
+  quad <- mfrmr:::gauss_hermite_normal(5L)
+  person_score <- mfrmr:::mfrmr_mml_observed_person_score_matrix(
+    fit$opt$par, idx, fit$config, sizes, quad
+  )
+  full_gradient <- mfrmr:::mfrm_grad_mml(
+    fit$opt$par, idx, fit$config, sizes, quad
+  )
+  expect_lt(
+    max(abs(unname(colSums(person_score$score)) - unname(-full_gradient))),
+    1e-12
+  )
+
+  permuted_idx <- mfrmr:::mfrmr_subset_observation_indices(
+    idx, rev(seq_along(idx$score_k))
+  )
+  permuted_score <- mfrmr:::mfrmr_mml_observed_person_score_matrix(
+    fit$opt$par, permuted_idx, fit$config, sizes, quad
+  )
+  person_match <- match(person_score$person_ids, permuted_score$person_ids)
+  expect_false(anyNA(person_match))
+  expect_lt(
+    max(abs(
+      person_score$score -
+        permuted_score$score[person_match, , drop = FALSE]
+    )),
+    1e-10
+  )
+  expect_lt(
+    max(abs(
+      person_score$log_marginal -
+        permuted_score$log_marginal[person_match]
+    )),
+    1e-12
+  )
+
+  limited <- mfrmr:::audit_mfrm_mml_observed_pattern_score(
+    opt = fit$opt,
+    prep = fit$prep,
+    idx = idx,
+    config = fit$config,
+    sizes = sizes,
+    quad_points = 5L,
+    nonlinear_blocks = "log_slopes",
+    max_persons = 0L
+  )
+  expect_identical(limited$status, "not_evaluated_execution_limit")
+  expect_false(limited$attempted)
+  expect_false(limited$structural_identification_classified)
+  expect_identical(limited$readiness_effect,
+                   "none_observed_patterns_diagnostic_only")
 })
 
 test_that("JML GPCM response-kernel Jacobian joins additive and slope coordinates", {
@@ -593,6 +687,19 @@ test_that("latent residual variance enters fitted-information instrumentation", 
   )))
   expect_false(audit$fitted_information$weak_information_classified)
   expect_false(audit$readiness$Complete)
+  pattern <- audit$mml_observed_pattern_score
+  expect_identical(
+    pattern$status,
+    "evaluated_observed_pattern_diagnostic_only"
+  )
+  expect_true(all(c("beta", "log_sigma2") %in%
+                    pattern$parameter_blocks$Block))
+  expect_lt(
+    pattern$reconstruction$ScoreSumVsNegativeGradientMaxAbs,
+    1e-10
+  )
+  expect_lt(pattern$numerical_differentiation$max_scaled_difference, 1e-7)
+  expect_false(pattern$structural_identification_classified)
 })
 
 test_that("nonlinear transformation Jacobians match known analytic maps", {

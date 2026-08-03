@@ -3794,6 +3794,26 @@ mfrm_estimate <- function(data, person_col, facet_cols, score_col,
   config$estimation_control$mml_engine_used <- as.character(opt$mml_engine$Used %||% NA_character_)
   config$estimation_control$mml_engine_detail <- as.character(opt$mml_engine$Detail %||% NA_character_)
 
+  # For nonlinear MML fits, decompose the retained marginal log-likelihood
+  # score by observed Person response pattern. This is deliberately distinct
+  # from the JML conditional adjacent-logit kernel and from a structural map
+  # over every possible response pattern.
+  if (identical(config$method, "MML") &&
+      length(estimability_audit$nonlinear_blocks %||% character(0)) > 0L) {
+    estimability_audit$mml_observed_pattern_score <-
+      audit_mfrm_mml_observed_pattern_score(
+        opt = opt,
+        prep = prep,
+        idx = idx,
+        config = config,
+        sizes = sizes,
+        quad_points = quad_points,
+        nonlinear_blocks = estimability_audit$nonlinear_blocks
+      )
+    config$estimability_audit <- estimability_audit
+    data_review$estimability <- estimability_audit
+  }
+
   # For GPCM JML, combine the additive and log-slope coordinates in the exact
   # retained adjacent-category response-kernel Jacobian. MML requires a
   # Person-integrated response-pattern audit and therefore receives an

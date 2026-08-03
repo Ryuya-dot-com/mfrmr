@@ -1297,7 +1297,8 @@ audit_mfrm_gpcm_response_kernel <- function(
       "MML integrates Person coordinates, so a conditional observation-level",
       "adjacent-logit Jacobian cannot certify the marginal person-pattern",
       "model. The fitted-information Hessian is a separate local likelihood",
-      "diagnostic; a marginal response-pattern Jacobian remains pending."
+      "diagnostic. The separate observed-pattern score audit does not supply",
+      "the all-possible-pattern structural map, which remains pending."
     )
     return(base)
   }
@@ -1391,6 +1392,373 @@ audit_mfrm_gpcm_response_kernel <- function(
     "GPCM adjacent-category logit. Its local rank and independent derivative",
     "check are diagnostic only; they do not yet classify structural or weak",
     "identification or alter readiness."
+  )
+  base
+}
+
+mfrmr_subset_observation_indices <- function(idx, rows) {
+  rows <- as.integer(rows)
+  n_obs <- length(idx$score_k)
+  if (anyNA(rows) || any(rows < 1L) || any(rows > n_obs)) {
+    stop("Internal MML pattern-score audit received invalid observation rows.",
+         call. = FALSE)
+  }
+  subset_vector <- function(value) {
+    if (is.null(value)) return(NULL)
+    if (length(value) == n_obs) value[rows] else value
+  }
+  out <- idx
+  out$person <- subset_vector(idx$person)
+  out$score_k <- subset_vector(idx$score_k)
+  out$weight <- subset_vector(idx$weight)
+  out$step_idx <- subset_vector(idx$step_idx)
+  out$slope_idx <- subset_vector(idx$slope_idx)
+  out$facets <- lapply(idx$facets %||% list(), subset_vector)
+  out$interactions <- lapply(idx$interactions %||% list(), subset_vector)
+  out$criterion_splits <- if (!is.null(out$step_idx)) {
+    split(seq_along(out$step_idx), out$step_idx)
+  } else {
+    NULL
+  }
+  out$slope_splits <- if (!is.null(out$slope_idx)) {
+    split(seq_along(out$slope_idx), out$slope_idx)
+  } else {
+    NULL
+  }
+  out
+}
+
+mfrmr_mml_person_log_marginals <- function(par, idx, config, sizes, quad) {
+  if (!identical(config$method, "MML")) {
+    stop("Person-pattern marginal contributions are defined here only for MML.",
+         call. = FALSE)
+  }
+  free_dimension <- sum(vapply(sizes, as.integer, integer(1)))
+  if (length(par) != free_dimension || any(!is.finite(par))) {
+    stop("The MML free parameter vector is unavailable or malformed.",
+         call. = FALSE)
+  }
+  params <- expand_params(par, sizes, config)
+  base_eta <- compute_base_eta(idx, params, config)
+  logprob_bundle <- mfrm_mml_logprob_bundle(
+    idx = idx,
+    config = config,
+    quad = quad,
+    params = params,
+    base_eta = base_eta
+  )
+  person_bundle <- mfrm_mml_person_bundle(
+    log_prob_mat = logprob_bundle$log_prob_mat,
+    person_int = logprob_bundle$person_int,
+    quad_basis = logprob_bundle$quad_basis
+  )
+  list(
+    person_ids = as.integer(person_bundle$person_ids),
+    log_marginal = as.numeric(person_bundle$log_marginal)
+  )
+}
+
+mfrmr_mml_observed_person_score_matrix <- function(par, idx, config, sizes,
+                                                    quad) {
+  contribution <- mfrmr_mml_person_log_marginals(
+    par = par, idx = idx, config = config, sizes = sizes, quad = quad
+  )
+  params <- expand_params(par, sizes, config)
+  score_rows <- lapply(contribution$person_ids, function(person_id) {
+    rows <- which(as.integer(idx$person) == person_id)
+    person_idx <- mfrmr_subset_observation_indices(idx, rows)
+    person_base_eta <- compute_base_eta(person_idx, params, config)
+    # `mfrm_grad_mml_core()` returns the gradient of the negative marginal
+    # log-likelihood. Negating it gives the conventional log-likelihood score
+    # for this one observed Person response pattern.
+    -mfrm_grad_mml_core(
+      params = params,
+      base_eta = person_base_eta,
+      idx = person_idx,
+      config = config,
+      sizes = sizes,
+      quad = quad
+    )
+  })
+  score <- do.call(rbind, score_rows)
+  if (is.null(dim(score))) {
+    score <- matrix(score, nrow = length(contribution$person_ids), byrow = TRUE)
+  }
+  score <- unname(as.matrix(score))
+  free_dimension <- sum(vapply(sizes, as.integer, integer(1)))
+  if (nrow(score) != length(contribution$person_ids) ||
+      ncol(score) != free_dimension || any(!is.finite(score))) {
+    stop("Internal MML Person-pattern score matrix is malformed.",
+         call. = FALSE)
+  }
+  list(
+    score = score,
+    person_ids = contribution$person_ids,
+    log_marginal = contribution$log_marginal
+  )
+}
+
+mfrmr_mml_optimizer_parameter_map <- function(prep, idx, config, sizes) {
+  if (!identical(config$method, "MML")) {
+    stop("The MML optimizer map requires method = 'MML'.", call. = FALSE)
+  }
+  eta <- mfrmr_estimability_eta_design(
+    prep = prep,
+    idx = idx,
+    config = config,
+    sizes = sizes,
+    include_person = FALSE,
+    include_population_beta = TRUE
+  )
+  step <- mfrmr_step_jacobian_sparse(config, sizes)
+  step$map <- mfrmr_estimability_set_optimizer_index(
+    step$map, "steps", build_param_slices(sizes)
+  )
+  maps <- list(eta$map, step$map)
+  if (identical(config$model, "GPCM")) {
+    maps[[length(maps) + 1L]] <- mfrmr_gpcm_log_slope_map(config, sizes)
+  }
+  if (as.integer(sizes$log_sigma2 %||% 0L) > 0L) {
+    slices <- build_param_slices(sizes)
+    maps[[length(maps) + 1L]] <- mfrmr_estimability_map(
+      Block = "log_sigma2",
+      Coordinate = "log_sigma2:residual_variance",
+      Facet = "PersonPopulation",
+      Level = "residual_variance",
+      ReferenceLevel = "",
+      Constraint = "positive_via_log_scale",
+      OptimizerIndex = as.integer(slices$log_sigma2)
+    )
+  }
+  map <- do.call(rbind, maps)
+  rownames(map) <- NULL
+  map <- map[order(map$OptimizerIndex), , drop = FALSE]
+  rownames(map) <- NULL
+  free_dimension <- sum(vapply(sizes, as.integer, integer(1)))
+  if (nrow(map) != free_dimension ||
+      !identical(as.integer(map$OptimizerIndex), seq_len(free_dimension))) {
+    stop("Internal MML Person-pattern parameter map is incomplete.",
+         call. = FALSE)
+  }
+  map
+}
+
+audit_mfrm_mml_observed_pattern_score <- function(
+    opt,
+    prep,
+    idx,
+    config,
+    sizes,
+    quad_points,
+    nonlinear_blocks,
+    max_persons = 100L,
+    max_free_dimension = 80L,
+    max_score_elements = 8000,
+    relative_step = 1e-6,
+    tolerances = c(1e-12, 1e-10, 1e-8)) {
+  nonlinear_blocks <- as.character(nonlinear_blocks %||% character(0))
+  free_dimension <- sum(vapply(sizes, as.integer, integer(1)))
+  person_rows <- length(unique(as.integer(idx$person)))
+  severity <- as.character(
+    opt$optimizer_diagnostics$ConvergenceSeverity %||% NA_character_
+  )
+  base <- list(
+    role = "observed_person_log_marginal_pattern_score_jacobian",
+    evaluation_point = "retained_optimizer_free_coordinate_vector",
+    method = as.character(config$method),
+    model = as.character(config$model),
+    nonlinear_blocks = nonlinear_blocks,
+    optimizer_convergence_severity = severity,
+    attempted = FALSE,
+    status = if (identical(config$method, "MML") &&
+                 length(nonlinear_blocks) > 0L) {
+      "pending_after_optimization"
+    } else if (identical(config$method, "MML")) {
+      "not_required_linear_preflight_scope"
+    } else {
+      "not_applicable_estimator"
+    },
+    person_rows = as.integer(person_rows),
+    free_dimension = as.integer(free_dimension),
+    score_elements = as.double(person_rows) * as.double(free_dimension),
+    execution_limits = list(
+      persons = as.integer(max_persons),
+      free_dimension = as.integer(max_free_dimension),
+      score_elements = as.double(max_score_elements)
+    ),
+    quadrature_points = as.integer(quad_points),
+    observed_patterns_only = TRUE,
+    all_possible_response_patterns_evaluated = FALSE,
+    conditional_jml_kernel_reused = FALSE,
+    score_rank = NA_integer_,
+    score_nullity = NA_integer_,
+    score_rank_state = "not_evaluated",
+    tolerance_sensitive = FALSE,
+    rank_ladder = data.frame(),
+    parameter_blocks = data.frame(
+      Block = character(0), FreeCoordinates = integer(0)
+    ),
+    parameter_map = mfrmr_estimability_map(),
+    zero_coordinates = character(0),
+    null_directions = data.frame(),
+    score_row_norm_summary = data.frame(
+      Minimum = NA_real_, Median = NA_real_, Maximum = NA_real_
+    ),
+    reconstruction = data.frame(
+      NegativeLogLikelihoodDifference = NA_real_,
+      ScoreSumVsNegativeGradientMaxAbs = NA_real_,
+      stringsAsFactors = FALSE
+    ),
+    numerical_differentiation = list(
+      status = "not_evaluated",
+      method = "coordinate_scaled_central_difference_of_person_log_marginals",
+      relative_step = as.numeric(relative_step[1]),
+      max_abs_difference = NA_real_,
+      max_scaled_difference = NA_real_
+    ),
+    structural_identification_classified = FALSE,
+    weak_information_classified = FALSE,
+    readiness_effect = "none_observed_patterns_diagnostic_only",
+    detail = paste(
+      "No nonlinear MML block required the observed Person-pattern score",
+      "audit in this implementation slice."
+    )
+  )
+  if (!identical(config$method, "MML") ||
+      length(nonlinear_blocks) == 0L) return(base)
+
+  if (person_rows <= 0L || free_dimension <= 0L ||
+      person_rows > as.integer(max_persons) ||
+      free_dimension > as.integer(max_free_dimension) ||
+      as.double(person_rows) * as.double(free_dimension) >
+        as.double(max_score_elements)) {
+    base$status <- "not_evaluated_execution_limit"
+    base$detail <- paste(
+      "The observed Person-pattern score audit exceeded a recorded bounded",
+      "execution limit. This is a computational state, not an estimability",
+      "or readiness classification."
+    )
+    return(base)
+  }
+  if (is.null(opt$par) || length(opt$par) != free_dimension ||
+      any(!is.finite(opt$par))) {
+    base$status <- "not_evaluated_parameter_vector"
+    base$detail <- paste(
+      "The retained MML free parameter vector was unavailable, non-finite,",
+      "or dimensionally inconsistent."
+    )
+    return(base)
+  }
+
+  quad <- gauss_hermite_normal(max(1L, as.integer(quad_points)))
+  built <- tryCatch(
+    mfrmr_mml_observed_person_score_matrix(
+      par = opt$par,
+      idx = idx,
+      config = config,
+      sizes = sizes,
+      quad = quad
+    ),
+    error = function(e) e
+  )
+  base$attempted <- TRUE
+  if (inherits(built, "error")) {
+    base$status <- "unavailable"
+    base$detail <- paste0(
+      "The observed Person-pattern score matrix was unavailable: ",
+      conditionMessage(built), "."
+    )
+    return(base)
+  }
+
+  parameter_map <- tryCatch(
+    mfrmr_mml_optimizer_parameter_map(prep, idx, config, sizes),
+    error = function(e) e
+  )
+  if (inherits(parameter_map, "error")) {
+    base$status <- "unavailable"
+    base$detail <- paste0(
+      "The observed Person-pattern parameter map was unavailable: ",
+      conditionMessage(parameter_map), "."
+    )
+    return(base)
+  }
+  rank <- mfrmr_estimability_rank_audit(
+    design = Matrix::Matrix(built$score, sparse = TRUE),
+    parameter_map = parameter_map,
+    tolerances = tolerances,
+    structural_tolerance = tolerances[1]
+  )
+  full_objective <- mfrm_loglik_mml(opt$par, idx, config, sizes, quad)
+  full_negative_gradient <- mfrm_grad_mml(
+    opt$par, idx, config, sizes, quad
+  )
+  objective_difference <- -sum(built$log_marginal) - full_objective
+  gradient_difference <- colSums(built$score) + full_negative_gradient
+  row_norm <- sqrt(rowSums(built$score^2))
+
+  base$status <- "evaluated_observed_pattern_diagnostic_only"
+  base$score_rank <- rank$Rank
+  base$score_nullity <- rank$Nullity
+  base$score_rank_state <- if (rank$Nullity == 0L) {
+    "observed_pattern_full_column_rank"
+  } else {
+    "observed_pattern_rank_deficient"
+  }
+  base$tolerance_sensitive <- isTRUE(rank$ToleranceSensitive)
+  base$rank_ladder <- rank$ToleranceRanks
+  base$parameter_map <- parameter_map
+  base$zero_coordinates <- rank$ZeroCoordinates
+  base$null_directions <- rank$NullDirections
+  base$parameter_blocks <- stats::aggregate(
+    rep(1L, nrow(parameter_map)),
+    by = list(Block = parameter_map$Block),
+    FUN = sum
+  ) |>
+    stats::setNames(c("Block", "FreeCoordinates"))
+  base$score_row_norm_summary <- data.frame(
+    Minimum = min(row_norm),
+    Median = stats::median(row_norm),
+    Maximum = max(row_norm),
+    stringsAsFactors = FALSE
+  )
+  base$reconstruction <- data.frame(
+    NegativeLogLikelihoodDifference = objective_difference,
+    ScoreSumVsNegativeGradientMaxAbs = max(abs(gradient_difference)),
+    stringsAsFactors = FALSE
+  )
+
+  numeric <- mfrmr_numeric_transformation_jacobian(
+    transform = function(value) {
+      mfrmr_mml_person_log_marginals(
+        par = value,
+        idx = idx,
+        config = config,
+        sizes = sizes,
+        quad = quad
+      )$log_marginal
+    },
+    free = opt$par,
+    relative_step = relative_step
+  )
+  if (isTRUE(numeric$valid) &&
+      identical(dim(numeric$jacobian), dim(built$score))) {
+    difference <- abs(built$score - numeric$jacobian)
+    scaled <- difference /
+      pmax(1, abs(built$score), abs(numeric$jacobian))
+    base$numerical_differentiation$status <- "evaluated"
+    base$numerical_differentiation$max_abs_difference <- max(difference)
+    base$numerical_differentiation$max_scaled_difference <- max(scaled)
+  } else {
+    base$numerical_differentiation$status <- "unavailable"
+  }
+  base$detail <- paste(
+    "Rows are conventional log-likelihood scores for the observed marginal",
+    "Person response patterns. Their sum reconstructs the full MML score and",
+    "each row is checked against a central difference of that Person's log",
+    "marginal contribution. This observed-pattern matrix is not the map over",
+    "all possible response patterns and does not classify identification,",
+    "weak information, or readiness."
   )
   base
 }
@@ -1745,6 +2113,23 @@ audit_mfrm_estimability <- function(prep, idx, config, sizes) {
       marginal_person_pattern_jacobian_evaluated = FALSE,
       structural_identification_classified = FALSE,
       readiness_effect = "none_pending_property_and_marginal_model_audits"
+    ),
+    mml_observed_pattern_score = list(
+      role = "observed_person_log_marginal_pattern_score_jacobian",
+      status = if (identical(config$method, "MML") &&
+                   length(nonlinear_blocks) > 0L) {
+        "pending_after_optimization"
+      } else if (identical(config$method, "MML")) {
+        "not_required_linear_preflight_scope"
+      } else {
+        "not_applicable_estimator"
+      },
+      attempted = FALSE,
+      observed_patterns_only = TRUE,
+      all_possible_response_patterns_evaluated = FALSE,
+      structural_identification_classified = FALSE,
+      weak_information_classified = FALSE,
+      readiness_effect = "none_observed_patterns_diagnostic_only"
     ),
     fitted_information = list(
       status = if (length(nonlinear_blocks) > 0L) {

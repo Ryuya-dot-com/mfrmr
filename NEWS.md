@@ -22,6 +22,10 @@ CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
   the record additionally checks the combined additive and log-slope
   adjacent-category response-kernel Jacobian. MML does not reuse that
   conditional calculation as evidence about its integrated likelihood.
+  Eligible nonlinear MML fits instead receive a bounded observed-Person-
+  pattern score decomposition with objective, gradient, and numerical-
+  derivative consistency checks. Observed-pattern rank remains diagnostic and
+  does not establish structural identification or alter readiness.
 
 * Added a versioned information-criterion contract for fitted MML objects.
   BIC now uses the number of independent Persons rather than response rows or
