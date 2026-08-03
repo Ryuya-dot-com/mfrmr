@@ -197,7 +197,10 @@ The release owns these outcomes:
   estimator, model, parameter class, and design cell rather than pooled into a
   single success rate;
 - a prespecified stress envelope for connected, weakly linked, sparse, and
-  deliberately disconnected designs;
+  deliberately disconnected designs, including minimum-rater panels and
+  severely imbalanced category support;
+- separate operating-characteristic gates for fixed interaction recovery,
+  additive-model bias screening, and exploratory residual-PCA signals;
 - a candidate-linked dimensionality challenge that separates exploratory
   residual evidence, confirmatory external model comparison, and the practical
   value of any proposed dimension-specific score;
@@ -248,7 +251,7 @@ The following remain outside 0.2.3:
 | M4: run confirmation | Run the locked recovery/stress matrix, FACETS JML core, ConQuest/TAM comparisons, dimensionality challenge, and matched external rows without changing criteria or reusing discovery/pilot data as independent confirmation. | Candidate-linked internal and external evidence with every blocker classified and every expected scenario/replicate accounted for. |
 | M5: release handoff | Run full regression, cross-platform CI, manuals, URL checks, CRAN-time examples, Win-builder, package-content audit, and public-claim audit. | All blocker rows `ok`, all caveats visible, and an exact checked tarball. |
 
-The repository now contains `0.2.3-draft.18` planning and pilot artifacts at
+The repository now contains `0.2.3-draft.19` planning and pilot artifacts at
 `inst/validation/release-gate-spec-0.2.3.md` and
 `inst/validation/release-evidence-checklist-0.2.3.csv`. They deliberately
 record unresolved pilot-calibrated criteria and therefore do not authorize
@@ -260,7 +263,7 @@ normal commit/review handoff. M2 completes only after package instrumentation
 and pilot work have resolved every blocking criterion and the specification
 is promoted to a reviewed `0.2.3-frozen.*` identity.
 
-Draft.18 retains the FACETS lane introduced in draft.17 and adds the first
+Draft.19 retains the FACETS lane introduced in draft.17 and the first
 paired one-seed RSM/PCM stress pilot: 22 scenarios per model, 44 successful
 FACETS 4.5.0 reports, truth-first normalization, and mfrmr readiness capture.
 The deliberately disconnected RSM/PCM cells reached `hold_disconnected`, but
@@ -268,6 +271,24 @@ the single-bridge cells remained `pass_linked` despite degraded parameter
 agreement. This is a diagnosed gap: binary connectivity cannot serve as a
 weak-identification gate. M2 must add bridge-strength, articulation,
 component-balance, and local-information diagnostics before any freeze.
+
+Draft.19 also adds nine extension scenarios per model and a separate
+interaction/bias/PCAR runner. The extension showed that the current audit can
+label a two-rater one-rater-per-Person design `pass_linked` even when no
+Persons are shared, and can label a PCM dataset `pass` when one category
+contains 94.2% of responses and another is unused. The severe category
+threshold vector was centered to sum zero and both batches were rerun, so this
+finding is not attributed to an avoidable location-constraint mismatch. It
+also showed that a weak
+planted interaction can be missed by the residual bias screen, that severe
+category imbalance can create large spurious fitted interactions, and that
+weak-overlap residual PCA eigenvalues can diverge despite nearly identical
+row residuals. These are pilot diagnoses, not support claims. M2 must add a
+Person-sharing graph and minimum-rater-panel state, model-specific category-
+information states, multi-seed interaction/bias operating characteristics,
+and null/non-null PCAR calibration before the gate is frozen. FACETS Table 14
+bias evidence remains separate until a definition-matched `?B` control and
+parser exist.
 
 Draft.17 promoted FACETS from a conditional supplied-output row to a mandatory
 JML RSM/PCM validation lane and adds
@@ -438,6 +459,20 @@ must not be advertised as implemented.
 - [ ] Separate ordinary sparse-but-connected, weak-link/bridge, articulation,
   zero-common-person-pair, disconnected, empty-category, and extreme-score
   scenarios. Do not pool these into one generic `sparse` label.
+- [x] Add pilot cells for complete two-rater assignment, one rater per Person
+  with zero common Persons, and a three-Person bridge. The one-seed result
+  diagnoses false-readiness risk but does not freeze a minimum design.
+- [ ] Add a Person-sharing graph and report rater-panel size, common-Person
+  counts, bridge strength, articulation, component balance, and local
+  information. A binary response-graph connection must not override a weak or
+  unidentified rater comparison.
+- [x] Add pilot cells for middle-category dominance, single-category
+  dominance with an unused category, and skewed targeting; retain category
+  counts, maximum proportion, and normalized entropy by model.
+- [ ] Freeze model-specific category-support states using minimum counts,
+  concentration/entropy, local facet support, and threshold information. A
+  globally consecutive category range is not sufficient evidence of usable
+  step information.
 - [ ] Record numerical convergence, identification, data/design readiness,
   inferential readiness, bias, RMSE, interval coverage where defined,
   terminal score, objective, condition indicators, and elapsed time by cell.
@@ -456,6 +491,31 @@ must not be advertised as implemented.
   hide a failed core cell.
 - [ ] Retain per-replicate results outside the package, compact aggregate
   evidence in the repository, and a manifest linking both to the candidate.
+
+### Interaction, bias-screening, and residual-PCA stress
+
+- [x] Add one-seed zero-marginal Rater-by-Criterion checkerboards at 0.4 and
+  1.0 logits and retain additive bias-screen and fitted-interaction results
+  separately. The weak RSM bias screen missed its target in this seed; this is
+  a calibration finding, not a power estimate.
+- [ ] Calibrate null false-positive and non-null detection behavior over
+  effect size, cell information, sample size, topology, category support,
+  multiplicity method, and numerical-readiness state. Report Monte Carlo
+  uncertainty and failed-replicate accounting; do not promote `p <= .05` and
+  `|t| >= 2` as an automatic decision rule.
+- [x] Add planted local response dependence and compare mfrmr residual PC1 to
+  its residual-permutation cutoff and to FACETS raw-residual PC1 as descriptive
+  sensitivity. Retain the weak-overlap discrepancy even though matched
+  standardized residuals correlate above 0.996.
+- [ ] Freeze the residual definition, missing-pair correlation/smoothing rule,
+  permutation unit, quantile precision, and null/alternative seed grid. PCAR
+  remains exploratory hypothesis generation and cannot name a latent
+  dimension without an independently fitted alternative and consequence
+  analysis.
+- [ ] Build FACETS Table 14 bias controls with explicit `?B` terms only after
+  centering, estimand, SE, degrees-of-freedom, and multiplicity conventions are
+  definition-matched. Do not compare Table 14 mechanically with
+  `estimate_bias()` merely because both use the word bias.
 
 ### Information-criterion contract for fitted MML objects
 
@@ -742,6 +802,10 @@ model cannot silently create a multidimensional `mfrmr` support claim.
   - [x] Run a one-seed, 22-scenario-per-model calibration pilot with the local
     FACETS 4.5.0 executable; account for all 44 reports and preserve the result
     as non-confirmatory review evidence.
+  - [x] Run nine extension scenarios per model for two-rater panels, severe
+    category imbalance, checkerboard interactions, and residual local
+    dependence; bind the diagnostic rerun to exact FACETS-manifest seeds.
+    Preserve the result as draft.19 calibration evidence only.
   - [ ] Add quantitative bridge-strength, articulation, component-balance, and
     local-information diagnostics. A single bridge must not inherit the same
     readiness meaning as a robustly crossed design merely because both graphs

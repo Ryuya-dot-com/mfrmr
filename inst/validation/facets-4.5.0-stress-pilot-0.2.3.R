@@ -20,7 +20,7 @@ mfrmr_facets_450_sha256 <- function(path) {
   digest::digest(file = path, algo = "sha256")
 }
 
-mfrmr_facets_450_registry <- function(profile = c("expanded", "smoke")) {
+mfrmr_facets_450_registry <- function(profile = c("expanded", "smoke", "extension")) {
   profile <- match.arg(profile)
   out <- data.frame(
     Scenario = c(
@@ -45,7 +45,16 @@ mfrmr_facets_450_registry <- function(profile = c("expanded", "smoke")) {
       "exact_duplicate_cells",
       "conflicting_duplicate_cells",
       "rater_drift_contamination",
-      "small_n_sparse"
+      "small_n_sparse",
+      "two_rater_complete",
+      "two_rater_one_per_person",
+      "two_rater_weak_overlap",
+      "category_middle_dominant",
+      "category_single_dominant",
+      "category_skewed_person",
+      "interaction_checkerboard_weak",
+      "interaction_checkerboard_strong",
+      "residual_local_dependence"
     ),
     StressClass = c(
       "reference", "planned_missing", "planned_missing",
@@ -55,7 +64,10 @@ mfrmr_facets_450_registry <- function(profile = c("expanded", "smoke")) {
       "structural_missing", "nesting_confounding", "category_support",
       "category_support", "extreme_score", "version_sensitive_reporting",
       "duplicate_observation", "duplicate_observation", "temporal_instability",
-      "small_sparse"
+      "small_sparse", "minimum_rater_count", "minimum_rater_count",
+      "minimum_rater_count", "category_imbalance", "category_imbalance",
+      "category_imbalance",
+      "known_interaction", "known_interaction", "residual_structure"
     ),
     MissingMechanism = c(
       "none", "planned_rotation", "planned_linking",
@@ -63,7 +75,9 @@ mfrmr_facets_450_registry <- function(profile = c("expanded", "smoke")) {
       "score_dependent_MNAR", "monotone_block", "rater_workload_MAR",
       "planned_bridge", "planned_disconnection", "rater_by_item_block",
       "nested_with_shared_item", "outcome_dependent", "outcome_dependent",
-      "none", "entire_labelled_element", "none", "none", "none", "planned_sparse"
+      "none", "entire_labelled_element", "none", "none", "none", "planned_sparse",
+      "none", "planned_rotation_no_common_person", "planned_sparse_linking",
+      "none", "none", "none", "none", "none", "none"
     ),
     Topology = c(
       "complete", "rotating_connected", "sparse_linked",
@@ -72,7 +86,10 @@ mfrmr_facets_450_registry <- function(profile = c("expanded", "smoke")) {
       "two_disconnected_blocks", "connected_structural_hole",
       "two_rater_blocks_one_shared_item", "complete_after_outcome_filter",
       "complete_after_outcome_filter", "complete", "declared_unobserved_level",
-      "complete_with_duplicates", "complete_with_conflicts", "complete", "sparse_linked"
+      "complete_with_duplicates", "complete_with_conflicts", "complete", "sparse_linked",
+      "two_raters_complete", "two_raters_disjoint_person_sets",
+      "two_raters_few_common_persons", "complete", "complete", "complete",
+      "complete", "complete", "complete"
     ),
     ExpectedState = c(
       rep("review_recovery", 11),
@@ -80,7 +97,12 @@ mfrmr_facets_450_registry <- function(profile = c("expanded", "smoke")) {
       rep("review_recovery", 5),
       "version_sensitive_reporting",
       "review_duplicate_policy", "review_duplicate_policy",
-      "review_contamination_sensitivity", "review_recovery"
+      "review_contamination_sensitivity", "review_recovery",
+      "review_minimum_rater_information", "must_not_be_false_ready",
+      "review_weak_link_information", "review_category_information",
+      "review_category_identification", "review_category_information",
+      "review_interaction_sensitivity",
+      "review_interaction_sensitivity", "review_residual_sensitivity"
     ),
     stringsAsFactors = FALSE
   )
@@ -92,13 +114,32 @@ mfrmr_facets_450_registry <- function(profile = c("expanded", "smoke")) {
       "extreme_persons", "missing_entire_rater"
     )
     out <- out[out$Scenario %in% keep, , drop = FALSE]
+  } else if (identical(profile, "extension")) {
+    keep <- c(
+      "two_rater_complete", "two_rater_one_per_person",
+      "two_rater_weak_overlap", "category_middle_dominant",
+      "category_single_dominant", "category_skewed_person",
+      "interaction_checkerboard_weak",
+      "interaction_checkerboard_strong", "residual_local_dependence"
+    )
+    out <- out[out$Scenario %in% keep, , drop = FALSE]
   }
   rownames(out) <- NULL
   out
 }
 
-mfrmr_facets_450_thresholds <- function(model, criterion_levels) {
-  if (identical(model, "RSM")) return(c(-1.2, 0, 1.2))
+mfrmr_facets_450_thresholds <- function(model, criterion_levels, scenario = NULL) {
+  common <- if (identical(scenario, "category_middle_dominant")) {
+    c(-3, 0, 3)
+  } else if (identical(scenario, "category_single_dominant")) {
+    c(-8, 3, 5)
+  } else {
+    c(-1.2, 0, 1.2)
+  }
+  if (identical(model, "RSM")) return(common)
+  if (scenario %in% c("category_middle_dominant", "category_single_dominant")) {
+    return(stats::setNames(rep(list(common), length(criterion_levels)), criterion_levels))
+  }
   spreads <- seq(0.75, 1.35, length.out = length(criterion_levels))
   stats::setNames(
     lapply(spreads, function(x) c(-x, 0, x)),
@@ -110,30 +151,56 @@ mfrmr_facets_450_base <- function(scenario, model, seed) {
   build_spec <- mfrmr_facets_450_fun("build_mfrm_sim_spec")
   simulate <- mfrmr_facets_450_fun("simulate_mfrm_data")
   small <- identical(scenario, "small_n_sparse")
+  two_rater <- startsWith(scenario, "two_rater_")
   n_person <- if (small) 24L else 60L
-  n_rater <- 8L
+  n_rater <- if (two_rater) 2L else 8L
   n_criterion <- if (small) 4L else 5L
   criterion_levels <- sprintf("C%02d", seq_len(n_criterion))
-  assignment <- if (scenario %in% c("planned_sparse_linked", "small_n_sparse")) {
+  assignment <- if (scenario %in% c("planned_sparse_linked", "small_n_sparse",
+                                     "two_rater_weak_overlap")) {
     "sparse_linked"
-  } else if (identical(scenario, "rotating_25pct")) {
+  } else if (scenario %in% c("rotating_25pct", "two_rater_one_per_person")) {
     "rotating"
   } else {
     "crossed"
   }
-  raters_per_person <- if (identical(assignment, "crossed")) 8L else if (
+  raters_per_person <- if (identical(assignment, "crossed")) n_rater else if (
     identical(assignment, "rotating")
-  ) 2L else 1L
+  ) if (two_rater) 1L else 2L else 1L
   sparse_controls <- if (identical(assignment, "sparse_linked")) {
     list(
-      link_persons = if (small) 3L else 6L,
-      link_raters_per_person = if (small) 3L else 4L,
+      link_persons = if (small) 3L else if (two_rater) 3L else 6L,
+      link_raters_per_person = if (small) 3L else if (two_rater) 2L else 4L,
       assignment_mode = "balanced",
       min_common_persons_per_rater_pair = 1L
     )
   } else {
     NULL
   }
+  interaction_effects <- if (scenario %in% c(
+    "interaction_checkerboard_weak", "interaction_checkerboard_strong"
+  )) {
+    effect <- if (identical(scenario, "interaction_checkerboard_weak")) 0.4 else 1.0
+    data.frame(
+      Rater = c("R01", "R01", "R02", "R02"),
+      Criterion = c("C01", "C02", "C01", "C02"),
+      Effect = effect * c(1, -1, -1, 1),
+      stringsAsFactors = FALSE
+    )
+  } else if (identical(scenario, "residual_local_dependence")) {
+    set.seed(seed + 700L)
+    persons <- sprintf("P%03d", seq_len(n_person))
+    person_signal <- stats::rnorm(n_person, mean = 0, sd = 0.9)
+    data.frame(
+      Person = rep(persons, each = 2L),
+      Criterion = rep(c("C01", "C02"), times = n_person),
+      Effect = rep(person_signal, each = 2L),
+      stringsAsFactors = FALSE
+    )
+  } else {
+    NULL
+  }
+  empirical <- identical(scenario, "category_skewed_person")
   spec <- build_spec(
     n_person = n_person,
     n_rater = n_rater,
@@ -143,11 +210,16 @@ mfrmr_facets_450_base <- function(scenario, model, seed) {
     theta_sd = 1,
     rater_sd = 0.75,
     criterion_sd = 0.45,
-    thresholds = mfrmr_facets_450_thresholds(model, criterion_levels),
+    thresholds = mfrmr_facets_450_thresholds(model, criterion_levels, scenario),
     model = model,
     step_facet = "Criterion",
     assignment = assignment,
-    sparse_controls = sparse_controls
+    sparse_controls = sparse_controls,
+    interaction_effects = interaction_effects,
+    latent_distribution = if (empirical) "empirical" else "normal",
+    empirical_person = if (empirical) c(rep(-0.3, 9L), 2.7) else NULL,
+    empirical_rater = if (empirical) seq(-1, 1, length.out = n_rater) else NULL,
+    empirical_criterion = if (empirical) seq(-0.6, 0.6, length.out = n_criterion) else NULL
   )
   list(data = simulate(sim_spec = spec, seed = seed), spec = spec)
 }
@@ -166,8 +238,14 @@ mfrmr_facets_450_transform <- function(data, scenario, seed) {
   score_max <- max(data$Score, na.rm = TRUE)
   sentinel <- NULL
 
-  if (scenario %in% c("balanced_complete", "rotating_25pct",
-                       "planned_sparse_linked", "small_n_sparse")) {
+  if (scenario %in% c(
+    "balanced_complete", "rotating_25pct", "planned_sparse_linked",
+    "small_n_sparse", "two_rater_complete", "two_rater_one_per_person",
+    "two_rater_weak_overlap", "category_middle_dominant",
+    "category_single_dominant", "category_skewed_person",
+    "interaction_checkerboard_weak",
+    "interaction_checkerboard_strong", "residual_local_dependence"
+  )) {
     return(list(data = data, sentinel = sentinel))
   }
   if (identical(scenario, "mcar_20")) {
@@ -382,7 +460,7 @@ mfrmr_facets_450_fit_mfrmr <- function(data, truth_common, model, scenario) {
 mfrmr_generate_facets_450_stress_inputs <- function(pkg_dir = ".",
                                                      work_dir,
                                                      models = c("RSM", "PCM"),
-                                                     profile = c("expanded", "smoke"),
+                                                     profile = c("expanded", "smoke", "extension"),
                                                      seed = 450023L) {
   profile <- match.arg(profile)
   work_dir <- normalizePath(work_dir, winslash = "/", mustWork = FALSE)
@@ -411,6 +489,8 @@ mfrmr_generate_facets_450_stress_inputs <- function(pkg_dir = ".",
       fit <- mfrmr_facets_450_fit_mfrmr(data, truth_common, model, scenario)
       cells <- unique(data[, c("Person", "Rater", "Criterion"), drop = FALSE])
       declared <- length(truth_common$person) * length(truth_common$rater) * length(truth_common$criterion)
+      category_counts <- tabulate(as.integer(data$Score), nbins = 4L)
+      category_prob <- category_counts / sum(category_counts)
       manifests[[run_index]] <- data.frame(
         Model = model,
         Scenario = scenario,
@@ -423,6 +503,12 @@ mfrmr_generate_facets_450_stress_inputs <- function(pkg_dir = ".",
         ObservedRaters = length(unique(data$Rater)),
         ObservedCriteria = length(unique(data$Criterion)),
         ObservedCategories = paste(sort(unique(data$Score)), collapse = ";"),
+        CategoryCounts = paste(category_counts, collapse = ";"),
+        MinCategoryCount = min(category_counts),
+        MaxCategoryFraction = max(category_prob),
+        NormalizedCategoryEntropy = if (sum(category_prob > 0) > 1L) {
+          -sum(category_prob[category_prob > 0] * log(category_prob[category_prob > 0])) / log(4)
+        } else 0,
         InputSHA256 = mfrmr_facets_450_sha256(input_path),
         StressClass = registry$StressClass[i],
         MissingMechanism = registry$MissingMechanism[i],
@@ -584,7 +670,7 @@ mfrmr_run_facets_450_stress_pilot <- function(
     batch_runner = "../../FACETS/run_facets_batch.py",
     python = "python",
     models = c("RSM", "PCM"),
-    profile = c("expanded", "smoke"),
+    profile = c("expanded", "smoke", "extension"),
     seed = 450023L) {
   profile <- match.arg(profile)
   pkg_dir <- normalizePath(pkg_dir, winslash = "/", mustWork = TRUE)

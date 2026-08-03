@@ -36,6 +36,78 @@ test_that("public roadmap is separated from internal release operations", {
   expect_true(any(grepl("inst/validation", ignore, fixed = TRUE)))
 })
 
+test_that("FACETS and diagnostic stress registries retain draft.19 edge cells", {
+  pkg_root <- normalizePath(testthat::test_path("..", ".."),
+                            winslash = "/", mustWork = TRUE)
+  facets_path <- file.path(
+    pkg_root, "inst", "validation", "facets-4.5.0-stress-pilot-0.2.3.R"
+  )
+  diagnostic_path <- file.path(
+    pkg_root, "inst", "validation",
+    "interaction-bias-pca-stress-pilot-0.2.3.R"
+  )
+  skip_if_not(file.exists(facets_path))
+  skip_if_not(file.exists(diagnostic_path))
+
+  env <- new.env(parent = globalenv())
+  sys.source(facets_path, envir = env)
+  sys.source(diagnostic_path, envir = env)
+
+  expanded <- env$mfrmr_facets_450_registry("expanded")
+  extension <- env$mfrmr_facets_450_registry("extension")
+  smoke <- env$mfrmr_facets_450_registry("smoke")
+  diagnostic <- env$mfrmr_diag_stress_registry("expanded")
+
+  expect_equal(nrow(expanded), 31L)
+  expect_equal(nrow(extension), 9L)
+  expect_equal(nrow(smoke), 10L)
+  expect_equal(length(diagnostic), 10L)
+  expect_equal(length(env$mfrmr_diag_stress_registry("smoke")), 5L)
+  expect_identical(anyDuplicated(expanded$Scenario), 0L)
+  expect_setequal(
+    extension$Scenario,
+    setdiff(diagnostic, "balanced_complete")
+  )
+  expect_true(all(c(
+    "two_rater_one_per_person", "category_single_dominant",
+    "interaction_checkerboard_weak", "interaction_checkerboard_strong",
+    "residual_local_dependence"
+  ) %in% expanded$Scenario))
+
+  severe_rsm <- env$mfrmr_facets_450_thresholds(
+    "RSM", sprintf("C%02d", 1:5), "category_single_dominant"
+  )
+  severe_pcm <- env$mfrmr_facets_450_thresholds(
+    "PCM", sprintf("C%02d", 1:5), "category_single_dominant"
+  )
+  expect_equal(sum(severe_rsm), 0)
+  expect_true(all(vapply(severe_pcm, function(x) sum(x) == 0, logical(1))))
+
+  category <- env$mfrmr_diag_stress_category(data.frame(Score = c(1L, 2L, 2L, 2L)))
+  expect_identical(category$CategoryCounts, "1;3;0;0")
+  expect_equal(category$MinCategoryCount, 0L)
+  expect_equal(category$MaxCategoryFraction, 0.75)
+
+  truth <- env$mfrmr_diag_stress_interaction_truth(
+    data.frame(
+      Rater = rep(c("R01", "R02"), each = 2L),
+      Criterion = rep(c("C01", "C02"), times = 2L)
+    ),
+    data.frame(
+      Rater = c("R01", "R01", "R02", "R02"),
+      Criterion = c("C01", "C02", "C01", "C02"),
+      Effect = c(0.4, -0.4, -0.4, 0.4)
+    )
+  )
+  expect_equal(sum(truth$TrueEffect), 0)
+  expect_equal(
+    truth$TrueEffect[
+      truth$FacetA_Level == "R01" & truth$FacetB_Level == "C01"
+    ],
+    0.4
+  )
+})
+
 release_readiness_gate_fixture <- function(env, check_status,
                                            freshness_status = NULL,
                                            example_policy_status = NULL,

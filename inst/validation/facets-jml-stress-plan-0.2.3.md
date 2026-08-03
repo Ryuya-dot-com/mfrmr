@@ -1,6 +1,6 @@
 # FACETS JML stress-validation plan for mfrmr 0.2.3
 
-Status: `0.2.3-draft.18` planning and pilot artifact; confirmation is not authorized.
+Status: `0.2.3-draft.19` planning and pilot artifact; confirmation is not authorized.
 
 This plan is subordinate to `internal-roadmap-0.2.3.md` and the frozen
 release-gate specification. The repository-root `ROADMAP.md` contains only the
@@ -98,6 +98,23 @@ confirmation design must therefore add bridge-strength, articulation,
 component-balance, and local-information diagnostics rather than treating
 graph connectivity as sufficient evidence of stable identification.
 
+The draft.19 extension is recorded in
+`interaction-bias-pca-stress-pilot-record-0.2.3.md`. Nine additional scenarios
+per model challenged two-rater panels, severe category imbalance, planted
+checkerboard interactions, and local residual dependence. All 18 FACETS 4.5.0
+reports completed, but the result exposed false-readiness risks for zero-
+common-Person two-rater data and severely imbalanced PCM categories. It also
+showed that residual PCA can depend materially on the correlation/construction
+rule under weak overlap even when row residuals closely agree. These rows are
+pilot diagnostics, not passed gates.
+
+FACETS Table 14 interaction/bias analysis is not part of the current paired
+batch: the generated controls specify main effects and do not request `?B`
+terms. A future Table 14 lane must first match the interaction estimand,
+centering, uncertainty, multiplicity, and conditioning rules; it must not be
+treated as numerically equivalent to mfrmr's additive-model residual bias
+screen merely because both outputs use the word bias.
+
 ## Scenario registry
 
 | Scenario family | Required role | Scope |
@@ -133,7 +150,7 @@ Pilot starting values below are planning values, not frozen criteria:
 | Axis | Pilot levels or structures |
 | --- | --- |
 | Persons | 100, 300, 1000 |
-| Raters | 5, 20, 50 |
+| Raters | 2, 3, 5, 20, 50, with 2-rater cases stratified by shared-Person support |
 | Tasks | 3, 8 |
 | Criteria/items | 4, 10 |
 | Score categories | 2, 4, 7 with balanced, skewed, rare-boundary, and unused-category support |
@@ -146,7 +163,7 @@ Pilot starting values below are planning values, not frozen criteria:
 | DFF magnitude | null, approximately 0.5, approximately 1.0 logit where a common interaction is available |
 | Missingness rate | 0%, 5%, 20%, 50%, 80%, 90%, and 95%, conditional on retaining the declared topology |
 | Missingness mechanism | planned assignment; observation-level MCAR; person-, rater-, item-, and score-dependent MAR/MNAR; block dropout; monotone dropout; fully unobserved labelled element |
-| Category support | global rare/unused category; category absent within one rater or item; skewed use; local floor/ceiling; heterogeneous category use |
+| Category support | balanced; middle- or single-category dominance; global rare/unused category; category absent within one rater or item; skewed use; local floor/ceiling; heterogeneous category use; count/concentration/entropy recorded |
 | Structural dependence | rater nested in site/task, item blocks, person clusters, rater drift, local response dependence, duplicate and conflicting duplicate cells |
 | Targeting | matched, persons too easy/hard, severity shifted, bimodal persons, heavy-tailed persons, and contaminated outliers |
 
@@ -261,10 +278,11 @@ The expected boundary before confirmation is deliberately conservative:
 2. Extract a deterministic RSM/PCM microcase suite and verify parameter
    orientation, constraints, score files, and error classification.
 3. Build the shared simulation specification and paired mfrmr/FACETS runner.
-4. Pilot connected core, anchor, sparse/topology, edge, and DFF-sensitivity
-   families without release decisions.
-5. Add quantitative weak-link diagnostics and expand replicated stress cells
-   where the first pilot found large or unstable differences.
+4. Pilot connected core, anchor, sparse/topology, edge, interaction/bias, and
+   residual-dependence sensitivity families without release decisions.
+5. Add quantitative weak-link and category-information diagnostics; expand
+   null/non-null interaction, bias-screen, and PCAR replication where the
+   first pilots found large, unstable, or false-ready differences.
 6. Use pilot-only results to freeze scenario values, replication/MCSE rules,
    transformation maps, tolerances, and failed-run policy in a new frozen gate
    identity.

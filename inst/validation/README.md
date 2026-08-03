@@ -61,7 +61,7 @@ but do not broaden current API scope.
   numerical, recovery, information-criterion, dimensionality, external,
   public-contract, and engineering gates. A `draft` status is not permission
   to run confirmation or evidence that a gate passed.
-- `facets-jml-stress-plan-0.2.3.md`: draft.18 plan for recording one selected
+- `facets-jml-stress-plan-0.2.3.md`: draft.19 plan for recording one selected
   FACETS executable/report/parser identity and running paired, truth-first JML
   RSM/PCM simulation stress tests across connected, anchor, sparse/topology,
   edge, and optional definition-matched fit/DFF families. It treats FACETS as
@@ -69,12 +69,21 @@ but do not broaden current API scope.
   release evidence.
 - `facets-4.5.0-stress-pilot-0.2.3.R`: repository-only paired RSM/PCM
   generator, mfrmr JML runner, FACETS 4.5.0 batch adapter, normalizer, and
-  reviewer. Direct execution requires `--work-dir=<path>`; raw proprietary
-  output stays outside the package tree.
+  reviewer. Its expanded registry includes two-rater, category-imbalance,
+  planted-interaction, and local-residual-dependence cells. Direct execution
+  requires `--work-dir=<path>`; raw proprietary output stays outside the
+  package tree.
 - `facets-4.5.0-stress-pilot-record-0.2.3.md`: compact draft.18 record of the
   first 44-run, one-seed pilot, including tool identity, scenario accounting,
   recovery/agreement warnings, disconnected fail-closed behavior, and the
   weak-link diagnostic gap. It freezes no tolerance and is not confirmation.
+- `interaction-bias-pca-stress-pilot-0.2.3.R`: repository-only diagnostic
+  runner that keeps fitted interactions, residual bias screening, and
+  residual PCA separate while reusing exact paired FACETS scenario seeds.
+- `interaction-bias-pca-stress-pilot-record-0.2.3.md`: compact draft.19 record
+  of the one-seed two-rater, category-imbalance, checkerboard-interaction, and
+  local-dependence pilot. It records false-readiness risks and next calibration
+  requirements; it is not confirmation or a diagnostic decision rule.
 - `release-evidence-checklist-0.2.3.csv`: machine-readable 0.2.3 gate
   inventory. It preserves the existing `ReleaseDecision` field used by the
   readiness helper and adds scenario, criterion-state, and evidence-status

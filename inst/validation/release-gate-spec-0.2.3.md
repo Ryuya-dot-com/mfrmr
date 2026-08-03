@@ -5,9 +5,9 @@
 | Field | Value |
 | --- | --- |
 | Target release | 0.2.3 |
-| Specification ID | `0.2.3-draft.18` |
+| Specification ID | `0.2.3-draft.19` |
 | Date | 2026-08-03 |
-| Status | M1 source review recorded; M2 IC, ConQuest/TAM, canonical-score, engine-path, fail-closed release-readiness, and a first FACETS 4.5.0 paired JML RSM/PCM stress pilot are present. The FACETS pilot covers 22 scenarios per model and records non-blocking tool identity, but remains one-seed calibration evidence. Repository-owned external execution, quantitative weak-link diagnostics, score/objective/parameter/external tolerance freeze, independent replication, recovery/coverage, bootstrap, attribution, consequence, support-envelope registry, candidate freeze, and confirmation remain pending. |
+| Status | M1 source review recorded; M2 IC, ConQuest/TAM, canonical-score, engine-path, fail-closed release-readiness, and FACETS 4.5.0 paired JML RSM/PCM stress pilots are present. The initial pilot covers 22 scenarios per model; a nine-scenario-per-model extension adds two-rater, severe category-imbalance, checkerboard-interaction, and residual-dependence cells plus a separate diagnostic runner. All remain one-seed calibration evidence. Repository-owned external execution, quantitative topology/category-information diagnostics, multi-seed bias/interaction/PCAR operating characteristics, score/objective/parameter/external tolerance freeze, independent replication, recovery/coverage, bootstrap, attribution, consequence, support-envelope registry, candidate freeze, and confirmation remain pending. |
 | Confirmation authorized | No |
 | Evidence checklist | `release-evidence-checklist-0.2.3.csv` |
 | FACETS stress plan | `facets-jml-stress-plan-0.2.3.md` |
@@ -191,8 +191,11 @@ following scenario classes.
 | `REC-STANDARD-CORE` | pilot/confirmation | Typical connected designs for every claimed parameter class. |
 | `DES-SPARSE-LINKED` | pilot/confirmation | Sparse but connected rater assignment with explicit common-Person links. |
 | `DES-WEAK-BRIDGE` | pilot/confirmation | Weak links, bridge levels, and articulation cases. |
+| `DES-TWO-RATER` | pilot/confirmation | Two-rater complete and sparse panels, stratified by shared-Person support and local information. |
+| `DES-RATER-NO-COMMON-PERSON` | unit/confirmation | Two-rater negative control with no common Persons; unsupported comparisons must fail closed. |
 | `DES-DISCONNECTED` | unit/confirmation | Deliberately disconnected negative control that must fail closed. |
 | `DES-EMPTY-CATEGORY` | unit/confirmation | Empty or near-empty category support with a prespecified support classification. |
+| `DES-CATEGORY-IMBALANCE` | pilot/confirmation | Middle/single-category dominance, skewed targeting, concentration, entropy, and local support by model. |
 | `DES-EXTREME-SCORE` | pilot/confirmation | Extreme Person/facet score patterns separated from optimizer status. |
 | `IC-FORMULA` | unit | Exact AIC, Person-BIC, and Sclove-SABIC formulas. |
 | `IC-FREE-DIMENSION` | unit | Constraint-aware parameter count under centering, anchors, steps, slopes, interactions, and latent regression. |
@@ -202,6 +205,10 @@ following scenario classes.
 | `DIM-SYN-TRUE-2D` | pilot/confirmation | Prespecified 2D alternatives spanning moderate and high dimension correlations. |
 | `DIM-SYN-INTERACTION` | pilot/confirmation | Rater-by-criterion interaction without latent multidimensionality. |
 | `DIM-SYN-CONFOUNDED` | pilot/confirmation | Deliberately inseparable interaction/dimension negative control. |
+| `DIAG-BIAS-NULL` | pilot/confirmation | Additive null grid for conditional bias-screen false-positive and multiplicity behavior. |
+| `DIAG-BIAS-NONNULL` | pilot/confirmation | Planted zero-marginal facet interactions across effect size and cell information. |
+| `DIAG-PCAR-NULL` | pilot/confirmation | Prespecified residual-PCA null grid across topology and missingness. |
+| `DIAG-PCAR-LOCAL` | pilot/confirmation | Planted local response dependence with exploratory PCAR sensitivity and attribution controls. |
 | `DIM-EMP-DISCOVERY` | pilot | Residual PCAR/Q3-style hypothesis generation on discovery Persons only. |
 | `DIM-EMP-CONFIRM` | confirmation | Frozen TAM alternatives on untouched Persons or an external sample. |
 | `EXT-CQ-BINARY` | external | Matched unidimensional ConQuest binary MML core. |
@@ -325,6 +332,14 @@ condition indicator, and elapsed time.
   slope, or link-density cell.
 - Connected sparse, weak-link, bridge, articulation, disconnected,
   empty-category, and extreme-score cases retain separate labels.
+- Two-rater panels retain complete, shared-Person sparse, and zero-common-
+  Person labels. The audit records rater-panel size, the Person-sharing graph,
+  common-Person counts, bridge strength, articulation, component balance, and
+  local information; binary connectivity alone cannot confer readiness.
+- Category support records counts, maximum proportion, normalized entropy,
+  local facet support, and threshold information by model. A consecutive
+  global category range cannot confer readiness when a category is unused or
+  almost all responses occupy one category.
 - `DES-DISCONNECTED` and other unidentified negative controls must not become
   inferentially ready. A false-ready result is a blocker.
 - The deterministic CRAN smoke tier demonstrates execution only. Release
@@ -334,6 +349,12 @@ condition indicator, and elapsed time.
 Bias, RMSE, coverage, failure-rate, and Monte Carlo-precision thresholds are
 `pilot_required`. Existing helper defaults are not silently adopted as
 release thresholds.
+
+The draft.19 one-seed extension is calibration evidence for these rules. Its
+zero-common-Person two-rater rows and severely imbalanced PCM row were reported
+as ready by the existing audits despite large paired discrepancies. Those
+outcomes define false-readiness targets for the next runner; they do not set a
+numeric support boundary.
 
 ## G3: information-criterion contract
 
@@ -692,6 +713,24 @@ published maximum-relative-to-mean Q3*. Fixed residual cutoffs remain
 exploratory. A formal blocking Q3* route requires an explicit residual unit,
 multiplicity policy, and design-specific parametric bootstrap.
 
+`analyze_residual_pca()` is likewise an exploratory hypothesis generator.
+Before confirmation, `DIAG-PCAR-NULL` and `DIAG-PCAR-LOCAL` freeze the residual
+unit, missing-pair correlation and smoothing rules, permutation unit, retained
+quantile precision, topology/missingness grid, and failed-replicate policy.
+The draft.19 pilot detected planted local dependence but also flagged one
+balanced single-seed row, and weak-overlap PC1 differed between mfrmr and
+FACETS despite row-residual correlations above 0.996. External raw PCA and
+mfrmr permutation PCAR are therefore separate sensitivity definitions, not a
+pooled statistic.
+
+Fixed `Rater:Criterion` interaction recovery and `estimate_bias()` screening
+also remain separate. `DIAG-BIAS-NULL` and `DIAG-BIAS-NONNULL` estimate
+conditional false-positive and detection behavior across effect size, cell
+information, category support, topology, multiplicity, and numerical-
+readiness state. A conventional p-value/t screen is not a frozen automatic
+decision rule. FACETS Table 14 enters only through a separately parsed `?B`
+control after its estimand and uncertainty definitions are matched.
+
 ### Confirm
 
 - Freeze Q matrices, labels, variance/covariance constraints, response family,
@@ -864,6 +903,7 @@ claim is reduced or deferred rather than decided ad hoc.
 | `0.2.3-draft.16` | Added fail-closed loading of candidate-linked gate-result rows, exact commit/specification identity checks, retained evidence-path SHA-256 verification, checklist item/scenario completeness, and blocker/roadmap/caveat status propagation into the release decision. |
 | `0.2.3-draft.17` | Promoted FACETS from a conditional supplied-output row to a mandatory JML RSM/PCM stress lane; pinned local 4.5.0 with a non-blocking identity record and separate-version strata; separated truth recovery from program agreement; added anchor, topology, missingness, edge, optional DFF, Monte Carlo, stale-output, and support-envelope requirements; and retained all new numeric criteria as pilot-required. |
 | `0.2.3-draft.18` | Added the first paired FACETS 4.5.0 RSM/PCM stress driver and one-seed 44-run pilot; expanded missingness, sparse, topology, duplicate, category-support, extreme-score, and contamination cells; verified fail-closed disconnected-design reporting; identified binary connectivity as insufficient for a single-bridge design; recorded 4.5.1 reporting/test sensitivity; and retained every external numeric threshold and confirmation claim as unresolved. |
+| `0.2.3-draft.19` | Added two-rater, severe category-imbalance, checkerboard-interaction, and residual-local-dependence FACETS 4.5.0 extension cells plus a separate interaction/bias/PCAR runner; diagnosed false-ready zero-common-Person and category-support states, weak-interaction screening limits, and weak-overlap PCA-definition sensitivity; added scenario IDs and required quantitative design/category/diagnostic gates while retaining all results as one-seed pilot evidence. |
 
 ## Release decision algorithm
 

@@ -47,8 +47,12 @@ Priorities are:
 - standard-error and interval coverage where the interval definition is
   supported;
 - stress tests for small samples, sparse and weakly linked rating designs,
-  planned and unplanned missingness, uneven rater workloads, rare and unused
-  categories, extreme scores, severe raters, and disconnected designs;
+  two-rater panels, planned and unplanned missingness, uneven rater workloads,
+  rare, unused, and severely imbalanced categories, extreme scores, severe
+  raters, and disconnected designs;
+- separate operating-characteristic studies for fixed facet interactions,
+  bias/DIF screening, and exploratory residual-PCA signals, including null
+  controls, planted alternatives, and confounded structures;
 - matched JML comparison with FACETS for supported RSM/PCM estimands;
 - matched MML comparison with ConQuest and TAM where likelihood,
   identification, and integration conventions can be aligned;
