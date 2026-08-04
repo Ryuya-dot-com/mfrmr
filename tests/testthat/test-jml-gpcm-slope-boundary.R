@@ -93,6 +93,14 @@ test_that("GPCM slope-only monotone boundary path is certified", {
   # WP4 has not promoted this internal certificate to public primary values.
   expect_true(all(is.finite(fit$slopes$LogEstimate)))
   expect_true(all(is.finite(fit$slopes$Estimate)))
+  expect_identical(fit$readiness$fit$BoundaryState, "not_evaluated")
+  expect_identical(fit$readiness$fit$FitReadiness, "review")
+  expect_false(fit$readiness$fit$InferenceReady)
+  expect_match(
+    fit$readiness$fit$ReasonCodes,
+    "boundary_candidate_not_propagated",
+    fixed = TRUE
+  )
 })
 
 test_that("GPCM slope certificate agrees with an objective path oracle", {

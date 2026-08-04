@@ -311,7 +311,7 @@ The following remain outside 0.2.3:
 | M4: run confirmation | Run the locked recovery/stress matrix, FACETS JML core, ConQuest/TAM MML comparisons, TAM/immer JML convention grid, eligible immer CML/CCML rows, dimensionality challenge, and matched external rows without changing criteria or reusing discovery/pilot data as independent confirmation. | Candidate-linked internal and external evidence with every blocker classified and every expected scenario/replicate accounted for. |
 | M5: release handoff | Run full regression, cross-platform CI, manuals, URL checks, CRAN-time examples, Win-builder, package-content audit, and public-claim audit. | All blocker rows `ok`, all caveats visible, and an exact checked tarball. |
 
-The repository now contains `0.2.3-draft.36` planning and pilot artifacts at
+The repository now contains `0.2.3-draft.37` planning and pilot artifacts at
 `inst/validation/release-gate-spec-0.2.3.md` and
 `inst/validation/release-evidence-checklist-0.2.3.csv`, with the TAM/immer
 execution contract in `inst/validation/tam-immer-estimator-stress-plan-0.2.3.md`.
@@ -375,7 +375,7 @@ extreme-score output, and definition-specific interaction/bias/PCAR contracts
 before the next paired pilot. These are prerequisites to tolerance
 calibration, not completed release gates.
 
-### Draft.36 near-term corrective program
+### Draft.37 near-term corrective program
 
 Draft.21 converted the draft.20 diagnosis into an implementation sequence.
 Draft.22 completes the structural WP0 contract and makes that contract the
@@ -447,6 +447,24 @@ no strict slope-only ray at the retained symmetric point, yet has an improving
 path when Person coordinates move jointly. Consequently `scope_complete` is
 separate from `structural_identification_complete`, and a none-certified
 result can never become a finite-GPCM claim.
+Draft.37 begins WP4 with one runtime fit-readiness builder. It stores the
+Input, Estimability, Category, Boundary, and Numerical component rows and
+derives `FitReadiness`, the conservative compatibility `InferenceReady`
+scalar, all reason codes, and audit provenance once. Native fit summaries,
+`summary(fit)`, results bundles, convergence consumers, and plot-readiness
+screening now consume the stored fit record. MML is not downgraded by
+inapplicable JML audits. Applicable incomplete audits and genuinely
+unpropagated structural or slope targets fail closed, while a joint cone made
+only of already typed free extreme-Person directions does not create a second
+false candidate. The explicit legacy adapter returns `legacy_unknown` and
+never promotes an old Boolean. Convergence, summary, results, and fit-plot
+entry points all pass saved pre-contract objects through that adapter; a
+synthetic old object with successful optimizer fields remains review-only.
+The contract identifier is user-safe and does not expose internal work-package
+labels. This is a fit-level WP4 slice, not completion:
+full parameter records, promotion of non-Person and slope primary values,
+SE/CI handling beyond Persons, remaining reports/exports/replay consumers,
+serialized 0.2.2 migration evidence, and WP5 metric eligibility remain open.
 The program's objective is not to maximize new diagnostics. It
 is to establish one source of truth for whether a fit, a parameter, and an
 external comparison are usable, and to make every downstream surface consume
@@ -474,7 +492,7 @@ reviewed. Confirmation remains prohibited until the later frozen gate.
 | `WP1-ESTIMABILITY` | WP0 | `in_progress_mml_all_pattern_design_reuse` | Build the estimator-specific free-parameter map and constrained design; detect structural aliases before optimization; distinguish exact alias from weak fitted information. | Unit/property tests, alias diagnostics, sparse-design benchmark, and zero false-ready exact controls. |
 | `WP2-CATEGORY-STEP` | WP0 | `in_progress_support_preflight` | Audit declared, observed, retained, free, fixed, and unsupported category/step coordinates globally and by current `step_facet`; do not add threshold anchors. | RSM/PCM/GPCM reduction and missing-category fixtures plus parameter-scoped status tables. |
 | `WP3-JML-BOUNDARY` | WP0 | `in_progress_gpcm_slope_path_certificate` | Detect JML element separation/extreme sufficient scores on the actual contributing row pattern; replace optimizer-dependent finite primary values with typed boundary states. The Person primary-state slice, sparse-triplet Person-fixed structural certificate, companion joint Person-structural additive cone, and retained-additive GPCM slope-only monotone-path certificate are implemented. The GPCM slice is complete only for constant sum-zero log-slope rays with additive coordinates fixed; its negative result is not a global finite-MLE claim. Public-state promotion, general joint nonlinear GPCM paths, independent general solver parity, broader model/basis properties, and target-scale evidence remain pending. | JML extreme/nonextreme fixtures, MML non-reduction guard, constrained facet/interaction/joint/slope-path certificates, sparse/dense and independent microcase parity, nonlinear joint-path negative control, and explicit optional-display contract. |
-| `WP4-READINESS-PROPAGATION` | WP1--WP3 | `blocked_by_dependency` | Derive fit-, parameter-, and output-level readiness once and propagate it without surface-specific reinterpretation. | Cross-surface snapshot/semantic tests and a 0.2.2-object migration fixture. |
+| `WP4-READINESS-PROPAGATION` | WP1--WP3 | `in_progress_fit_record_and_front_door_consumers` | Derive fit-, parameter-, and output-level readiness once and propagate it without surface-specific reinterpretation. The fit record, deterministic precedence, conservative scalar, fail-closed synthetic legacy-object path, summary/results/convergence/plot front doors, and target-aware unpropagated-candidate rule are implemented; complete parameter and remaining output propagation depend on unfinished WP1--WP3 states. | Cross-surface snapshot/semantic tests and a real serialized 0.2.2-object migration fixture. |
 | `WP5-COMPARISON-CONTRACT` | WP4 | `blocked_by_dependency` | Make FACETS, TAM, immer, and other external normalization metric-specific and fail closed before numeric aggregation; identify estimator, adjustment, person treatment, and software stratum explicitly. | Eligibility/rejection ledger with denominator accounting, method-mode identity, and no silent row loss. |
 | `WP6-SCALE-AND-ADVERSARIAL` | WP1--WP5 | `blocked_by_dependency` | Verify sparse computation, basis invariance, row-order invariance, malformed-input behavior, and target-size runtime/memory without claiming FACETS capacity parity. | Benchmark envelope and metamorphic/negative-test report; no dense design allocation at target sizes. |
 | `WP7-REPILOT-AND-FREEZE` | WP0--WP6 | `blocked_by_dependency` | Rerun the affected internal and FACETS 4.5.0 pilot cells and the TAM/immer estimator grid on new pilot seeds, calibrate weak-information and estimator-specific rules, then prepare the next reviewed frozen specification. | Complete pilot registry, method-mode-specific reason-coded exclusions, MCSE plan, resolved blocker criteria, and still no confirmation result. |
@@ -511,7 +529,7 @@ The normative structural record is
 legacy mapping, condition-class registry, and validator are in
 `readiness-contract-0.2.3.R`; exact expected cases are in
 `readiness-contract-fixtures-0.2.3.csv`. The contract identity is
-`mfrmr-internal-readiness-0.2.3-v1`.
+`mfrmr-readiness-0.2.3-v1`.
 
 WP0 is structurally complete, not statistically confirmed. In particular, it
 freezes that `InferenceReady` is `TRUE` only for `FitReadiness = ready`, while
@@ -968,12 +986,14 @@ WP3 remains in progress. Response-constant non-Person levels are never treated
 as sufficient evidence by themselves: additive facet, interaction, and step
 claims now require the constrained likelihood recession certificates below.
 The resulting candidates are still internal and do not yet replace finite
-optimizer iterates in public non-Person tables or resolve the fit-level state
-of a constraint-coupled extreme Person. Slopes remain outside the linear cone;
+optimizer iterates in public non-Person tables. The stored fit-level record now
+fails closed when an applicable candidate has not been propagated, but it does
+not manufacture a primary parameter value. Slopes remain outside the linear cone;
 draft.36 audits a separate fixed-additive nonlinear path without changing that
 linear claim. No FACETS-compatible finite adjustment formula has been added. Reports,
-exports, replay, legacy objects, and external normalizers remain WP4--WP5 work
-and may not reconstruct or upgrade the stored state independently.
+exports, replay, serialized legacy-object evidence, and external normalizers
+remain WP4--WP5 work and may not reconstruct or upgrade the stored state
+independently.
 
 ##### Draft.33 Person-fixed structural recession certificate
 
@@ -1132,9 +1152,10 @@ counterexample that prevents `scope_complete = TRUE` from being read as
 `structural_identification_complete = TRUE`. A none-certified result means
 only that no audited constant slope-only ray exists at the retained additive
 point. WP3 remains open until broader joint nonlinear path logic, model/basis
-properties, and target-scale evidence are addressed. WP4 must still determine
-how a positive internal candidate changes primary values, SE/CI, readiness,
-plots, reports, exports, replay, legacy objects, and external eligibility.
+properties, and target-scale evidence are addressed. Draft.37 now makes an
+unpropagated positive candidate a fit-level review cause, but WP4 must still
+determine its primary parameter value, SE/CI suppression, and complete
+report/export/replay/external-eligibility propagation.
 
 #### WP4--WP5: propagation and comparison eligibility
 

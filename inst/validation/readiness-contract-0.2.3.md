@@ -2,7 +2,7 @@
 
 Status: `WP0-READINESS-CONTRACT` structural contract, 2026-08-03.
 
-Contract version: `mfrmr-internal-readiness-0.2.3-v1`.
+Contract version: `mfrmr-readiness-0.2.3-v1`.
 
 This is a repository-only maintainer contract. It freezes the vocabulary and
 derivation rules that WP1--WP5 must implement. It is not a public API promise,
@@ -172,6 +172,13 @@ lower-case snake case, append-only within contract v1, and scoped to fit,
 parameter, comparison, or an explicit combination. Display prose may be
 translated; stored codes may not be translated, concatenated into an
 unparseable message, or replaced by optimizer text.
+
+Draft.37 appends `boundary_candidate_not_propagated`,
+`boundary_audit_incomplete`, and `optimizer_review_required`. The first two
+prevent a positive but not yet primary-value-propagated recession candidate,
+or an incomplete applicable boundary audit, from being labelled finite. The
+third distinguishes a general optimizer review from the narrower terminal-
+gradient and iteration-limit causes.
 
 A consumer must retain all causal codes. It may choose one first-screen state
 using the frozen precedence, but cannot retain only the most severe reason.

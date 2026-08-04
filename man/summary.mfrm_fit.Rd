@@ -55,8 +55,8 @@ An object of class \code{summary.mfrm_fit} with:
 \itemize{
 \item \code{overview}: global model/fit indicators
 \item \code{status}: concise front-door status block for quick review
-\item \code{readiness}: domain-specific numerical, data, design, stability,
-diagnostic, and reporting states
+\item \code{readiness}: the stored fit-level state plus numerical, data, design,
+stability, diagnostic, and reporting workflow states
 \item \code{data_review}: structured connectivity and facet-support evidence used by
 the non-numerical readiness gates
 \item \code{key_warnings}: highest-priority warnings to review first
@@ -140,10 +140,11 @@ not enter the common MML ranking panel. \code{ICSelectable} additionally
 distinguishes raw screening/review criteria at q<31 from criteria that
 may enter automatic same-grid comparison at q>=31; close decisions still
 require a denser common-grid sensitivity check.
-\item \code{readiness}: separate Numerical, Data, Design, Stability, Diagnostics,
-and Reporting states. \code{InferenceReady} contributes only to Numerical;
-a numerical pass cannot override a disconnected-design or boundary-
-separation hold.
+\item \code{readiness}: the stored fit-readiness result followed by Numerical,
+Data, Design, Stability, Diagnostics, and Reporting workflow states.
+\code{InferenceReady} is a conservative compatibility scalar and is \code{TRUE}
+only when the stored \code{FitReadiness} is \code{ready}; numerical convergence
+cannot override input, estimability, category, or boundary review.
 \item \code{data_review}: overall multi-facet connectivity, facet-level score
 support, boundary-constant levels, single-level facets, and retained
 preparation notes behind the readiness rows.
@@ -195,12 +196,13 @@ fit <- fit_mfrm(
 )
 s <- summary(fit)
 s$overview[, c(
-  "Model", "Method", "Converged", "InferenceReady",
+  "Model", "Method", "Converged", "FitReadiness", "InferenceReady",
   "ConvergenceSeverity"
 )]
 s$readiness
-# `InferenceReady = TRUE` clears only the numerical gate. Also require the
-# Data, Design, and Stability rows to support the intended interpretation.
+# `InferenceReady = TRUE` means all five stored fit components passed.
+# Design, Stability, Diagnostics, and Reporting remain purpose-specific
+# workflow reviews rather than alternative fit-readiness derivations.
 # If Numerical is not a pass, inspect the retained polish stages; increasing
 # `maxit` alone may not resolve the review.
 s$person_overview

@@ -75,7 +75,9 @@ test_that("boundary separation is a stability hold, not a numerical pass", {
     "Boundary-constant"
   )
 
-  expect_true(isTRUE(fit$summary$InferenceReady))
+  expect_false(isTRUE(fit$summary$InferenceReady))
+  expect_identical(fit$summary$FitReadiness, "review")
+  expect_identical(fit$summary$CategoryState, "weak_information")
   expect_identical(
     fit$data_review$status$Status[
       fit$data_review$status$Domain == "Stability"

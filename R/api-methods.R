@@ -8092,10 +8092,11 @@ print.summary.mfrm_bias <- function(x, ...) {
 #'   distinguishes raw screening/review criteria at q<31 from criteria that
 #'   may enter automatic same-grid comparison at q>=31; close decisions still
 #'   require a denser common-grid sensitivity check.
-#' - `readiness`: separate Numerical, Data, Design, Stability, Diagnostics,
-#'   and Reporting states. `InferenceReady` contributes only to Numerical;
-#'   a numerical pass cannot override a disconnected-design or boundary-
-#'   separation hold.
+#' - `readiness`: the stored fit-readiness result followed by Numerical, Data,
+#'   Design, Stability, Diagnostics, and Reporting workflow states.
+#'   `InferenceReady` is a conservative compatibility scalar and is `TRUE`
+#'   only when the stored `FitReadiness` is `ready`; numerical convergence
+#'   cannot override input, estimability, category, or boundary review.
 #' - `data_review`: overall multi-facet connectivity, facet-level score
 #'   support, boundary-constant levels, single-level facets, and retained
 #'   preparation notes behind the readiness rows.
@@ -8134,8 +8135,8 @@ print.summary.mfrm_bias <- function(x, ...) {
 #' @return An object of class `summary.mfrm_fit` with:
 #' - `overview`: global model/fit indicators
 #' - `status`: concise front-door status block for quick review
-#' - `readiness`: domain-specific numerical, data, design, stability,
-#'   diagnostic, and reporting states
+#' - `readiness`: the stored fit-level state plus numerical, data, design,
+#'   stability, diagnostic, and reporting workflow states
 #' - `data_review`: structured connectivity and facet-support evidence used by
 #'   the non-numerical readiness gates
 #' - `key_warnings`: highest-priority warnings to review first
@@ -8196,12 +8197,13 @@ print.summary.mfrm_bias <- function(x, ...) {
 #' )
 #' s <- summary(fit)
 #' s$overview[, c(
-#'   "Model", "Method", "Converged", "InferenceReady",
+#'   "Model", "Method", "Converged", "FitReadiness", "InferenceReady",
 #'   "ConvergenceSeverity"
 #' )]
 #' s$readiness
-#' # `InferenceReady = TRUE` clears only the numerical gate. Also require the
-#' # Data, Design, and Stability rows to support the intended interpretation.
+#' # `InferenceReady = TRUE` means all five stored fit components passed.
+#' # Design, Stability, Diagnostics, and Reporting remain purpose-specific
+#' # workflow reviews rather than alternative fit-readiness derivations.
 #' # If Numerical is not a pass, inspect the retained polish stages; increasing
 #' # `maxit` alone may not resolve the review.
 #' s$person_overview
@@ -8697,6 +8699,25 @@ mfrm_fit_summary_core <- function(object, digits = 3, top_n = 5) {
   converged <- isTRUE(overview$Converged[1])
   engine_requested <- as.character(overview$MMLEngineRequested[1] %||% NA_character_)
   engine_used <- as.character(overview$MMLEngineUsed[1] %||% NA_character_)
+  stored_readiness <- as.data.frame(
+    mfrmr_get_readiness_record(object)$fit, stringsAsFactors = FALSE
+  )
+  has_stored_readiness <- nrow(stored_readiness) == 1L &&
+    "ReadinessContractVersion" %in% names(stored_readiness) &&
+    identical(
+      as.character(stored_readiness$ReadinessContractVersion[1]),
+      mfrmr_readiness_contract_version()
+    )
+  stored_value <- function(field, default = NA_character_) {
+    if (has_stored_readiness && field %in% names(stored_readiness)) {
+      stored_readiness[[field]][1]
+    } else {
+      default
+    }
+  }
+  fit_readiness_state <- as.character(stored_value(
+    "FitReadiness", "legacy_unknown"
+  ))
 
   review_status <- as.data.frame(
     data_review$status %||% data.frame(),
@@ -8712,24 +8733,58 @@ mfrm_fit_summary_core <- function(object, digits = 3, top_n = 5) {
       as.character(value[1L])
     }
   }
-  data_status <- domain_status("Data")
+  data_status <- if (has_stored_readiness) {
+    switch(
+      as.character(stored_value("InputState", "legacy_unknown")),
+      pass = "pass",
+      review = "review",
+      blocked = "blocked",
+      legacy_unknown = "legacy_unknown",
+      "not_assessed"
+    )
+  } else {
+    domain_status("Data")
+  }
   design_status <- domain_status("Design")
   stability_status <- domain_status("Stability")
-  numerical_status <- dplyr::case_when(
-    identical(convergence_severity, "pass") && converged ~ "pass",
-    identical(convergence_severity, "review") ~ "review",
-    TRUE ~ "fail"
-  )
+  numerical_status <- if (has_stored_readiness) {
+    switch(
+      as.character(stored_value("NumericalState", "legacy_unknown")),
+      ready = "pass",
+      review = "review",
+      failed = "fail",
+      not_run = "fail",
+      legacy_unknown = "legacy_unknown",
+      "not_assessed"
+    )
+  } else {
+    dplyr::case_when(
+      identical(convergence_severity, "pass") && converged ~ "pass",
+      identical(convergence_severity, "review") ~ "review",
+      TRUE ~ "fail"
+    )
+  }
   reporting_readiness <- dplyr::case_when(
+    identical(fit_readiness_state, "blocked") ~ "blocked_by_fit_readiness",
+    identical(fit_readiness_state, "legacy_unknown") && has_stored_readiness ~
+      "legacy_reaudit_or_refit_required",
     startsWith(design_status, "hold_") ~ "hold_for_design_review",
     startsWith(stability_status, "hold_") ~ "hold_for_stability_review",
-    !identical(numerical_status, "pass") ~ "review_before_reporting",
     startsWith(design_status, "review_") ~ "review_design_before_reporting",
+    fit_readiness_state %in% c("review", "ready_with_exclusions") ~
+      "review_before_reporting",
+    !identical(numerical_status, "pass") ~ "review_before_reporting",
     !identical(data_status, "pass") ~ "review_data_before_reporting",
     identical(method_label, "MML") ~ "ready_for_diagnostics_and_reporting_follow_up",
     TRUE ~ "exploratory_fit_ready_for_diagnostics"
   )
   overall_status <- dplyr::case_when(
+    identical(fit_readiness_state, "blocked") ~ "fit_blocked",
+    identical(fit_readiness_state, "review") ~ "review_required",
+    identical(fit_readiness_state, "ready_with_exclusions") ~
+      "usable_with_exclusions",
+    identical(fit_readiness_state, "legacy_unknown") && has_stored_readiness ~
+      "legacy_review_required",
     startsWith(design_status, "hold_") ||
       startsWith(stability_status, "hold_") ~ "review_required",
     identical(numerical_status, "review") ~ "reviewable_fit",
@@ -8781,9 +8836,11 @@ mfrm_fit_summary_core <- function(object, digits = 3, top_n = 5) {
   )
   readiness <- data.frame(
     Domain = c(
-      "Numerical", "Data", "Design", "Stability", "Diagnostics", "Reporting"
+      "Fit", "Numerical", "Data", "Design", "Stability", "Diagnostics",
+      "Reporting"
     ),
     Status = c(
+      fit_readiness_state,
       numerical_status,
       data_status,
       design_status,
@@ -8792,6 +8849,16 @@ mfrm_fit_summary_core <- function(object, digits = 3, top_n = 5) {
       reporting_readiness
     ),
     Detail = c(
+      if (has_stored_readiness) {
+        reasons <- as.character(stored_value("ReasonCodes", ""))
+        if (nzchar(reasons)) {
+          paste0("Stored readiness reasons: ", reasons, ".")
+        } else {
+          "All stored fit-readiness components passed."
+        }
+      } else {
+        "No current stored fit-readiness contract is available."
+      },
       as.character(overview$ConvergenceDetail[1] %||% ""),
       if (identical(data_status, "pass")) {
         "No preparation warning or review row was retained."

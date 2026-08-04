@@ -241,15 +241,20 @@ checks. Prespecify the estimator and controls before inspecting results. If a
 fit ends with `ConvergenceStatus = "iteration_limit"`, do not interpret or
 compare its estimates. Refit the same data, model, method, anchors, optimizer,
 tolerance, and quadrature rule using the next ceiling in a prespecified
-sequence. Use a result only after `Converged = TRUE`, `InferenceReady = TRUE`,
-and `Numerical = pass`; do not select among runs by coefficient size, fit
-statistics, significance, or agreement with an expected answer. Material
+sequence. Use a result only after `FitReadiness = ready`,
+`InferenceReady = TRUE`, and `Numerical = pass`; do not select among runs by
+coefficient size, fit statistics, significance, or agreement with an expected answer. Material
 differences between separately ready runs indicate numerical instability that
 requires review.
 
-`InferenceReady` is deliberately a numerical status, not a publication
-decision. Require `Numerical = pass`, then inspect the separate Data, Design,
-and Stability rows in `fit_summary$readiness`. Before optimization, mfrmr now
+`InferenceReady` is deliberately a conservative fit-level first screen, not a
+publication decision. It is `TRUE` only when Input, Estimability, Category,
+Boundary, and Numerical components all pass. Then inspect the separate Design,
+Stability, Diagnostics, and Reporting workflow rows in
+`fit_summary$readiness`. A fit object saved before this versioned record existed
+is labelled `legacy_unknown`; an older `InferenceReady = TRUE` value does not
+make its summaries, results, or plots interpretation-ready. Refit it under the
+current version to establish current readiness. Before optimization, mfrmr now
 checks the estimator-specific constrained RSM/PCM free-coordinate design.
 Exact rank deficiency stops with a structured `mfrmr_estimability_error`;
 optimization cannot turn it into a usable fit. A disconnected design that is

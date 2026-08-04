@@ -4,6 +4,17 @@ This is the unreleased development line after CRAN publication of 0.2.2.
 CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
 0.2.3 and must not be attributed retroactively to 0.2.2.
 
+* Added one versioned fit-readiness record that combines input review,
+  estimability, category support, parameter-boundary status, and numerical
+  diagnostics with deterministic precedence. `fit$summary$FitReadiness` and
+  the conservative `InferenceReady` scalar now come from that stored record;
+  summaries, result bundles, and plot review consume it instead of treating
+  optimizer convergence as end-to-end readiness. Localized typed exclusions
+  remain distinguishable from general review or failure. Objects saved without
+  the current record are labelled `legacy_unknown` by the compatibility
+  adapter rather than being upgraded from an older Boolean; convergence,
+  summary, result, and fit-plot entry points keep them review-only until refit.
+
 * Added a model-scoped category and step-support preflight. Every new fit now
   distinguishes declared, globally observed, ladder-observed, retained, free,
   derived, fixed, weak, and unsupported category/step coordinates. RSM uses

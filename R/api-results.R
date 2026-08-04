@@ -73,6 +73,7 @@ mfrm_results_readiness_is_ready <- function(domain, status) {
   }
   switch(
     domain,
+    Fit = identical(status, "ready"),
     Numerical = identical(status, "pass"),
     Data = identical(status, "pass"),
     Design = identical(status, "pass_linked"),
@@ -87,11 +88,11 @@ mfrm_results_add_readiness_status <- function(status, readiness) {
   status <- as.data.frame(status %||% data.frame(), stringsAsFactors = FALSE)
   specs <- data.frame(
     Section = c(
-      "numerical_readiness", "data_readiness", "design_readiness",
+      "fit_readiness", "numerical_readiness", "data_readiness", "design_readiness",
       "stability_readiness", "plot_interpretation", "reporting_readiness"
     ),
     Domain = c(
-      "Numerical", "Data", "Design", "Stability", "Plot", "Reporting"
+      "Fit", "Numerical", "Data", "Design", "Stability", "Plot", "Reporting"
     ),
     stringsAsFactors = FALSE
   )

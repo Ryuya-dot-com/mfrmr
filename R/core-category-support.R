@@ -15,7 +15,7 @@
 # Threshold anchors are not part of the 0.2.3 model.
 
 mfrmr_category_contract_version <- function() {
-  "mfrmr-internal-readiness-0.2.3-v1"
+  mfrmr_readiness_contract_version()
 }
 
 mfrmr_category_values_text <- function(x) {

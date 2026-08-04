@@ -5,7 +5,7 @@
 # WP1--WP5 in internal-roadmap-0.2.3.md.
 
 mfrmr_readiness_contract_version <- function() {
-  "mfrmr-internal-readiness-0.2.3-v1"
+  "mfrmr-readiness-0.2.3-v1"
 }
 
 mfrmr_readiness_contract_states <- function() {
@@ -74,9 +74,12 @@ mfrmr_readiness_reason_codes <- function() {
       "jml_extreme_high",
       "fixed_extreme_response",
       "mml_extreme_response_prior_regularized",
+      "boundary_candidate_not_propagated",
+      "boundary_audit_incomplete",
       "optimizer_failed",
       "iteration_limit",
       "terminal_gradient_review",
+      "optimizer_review_required",
       "numerical_not_run",
       "response_family_mismatch",
       "estimator_mismatch",
@@ -101,7 +104,8 @@ mfrmr_readiness_reason_codes <- function() {
       "fit;parameter;comparison", "fit;parameter;comparison",
       "fit;parameter", "fit;parameter;comparison",
       "fit;parameter;comparison", "parameter", "parameter;comparison",
-      "fit", "fit", "fit", "fit",
+      "fit;parameter", "fit",
+      "fit", "fit", "fit", "fit", "fit",
       "comparison", "comparison", "comparison", "comparison",
       "comparison", "comparison", "comparison", "comparison",
       "comparison", "comparison", "comparison", "comparison",
@@ -111,8 +115,8 @@ mfrmr_readiness_reason_codes <- function() {
       rep("input", 4L),
       rep("estimability", 6L),
       rep("category", 5L),
-      rep("boundary", 4L),
-      rep("numerical", 4L),
+      rep("boundary", 6L),
+      rep("numerical", 5L),
       rep("comparison", 14L)
     ),
     DefaultSeverity = c(
@@ -120,7 +124,8 @@ mfrmr_readiness_reason_codes <- function() {
       "blocked", "review", "blocked", "review", "blocked", "review",
       "blocked", "blocked", "blocked", "blocked", "review",
       "exclusion", "exclusion", "information", "information",
-      "blocked", "review", "review", "blocked",
+      "review", "review",
+      "blocked", "review", "review", "review", "blocked",
       rep("ineligible", 12L), "missing", "failed"
     ),
     stringsAsFactors = FALSE

@@ -16,7 +16,7 @@
 # is retained in `Complete` and `NonlinearBlocks`.
 
 mfrmr_estimability_contract_version <- function() {
-  "mfrmr-internal-readiness-0.2.3-v1"
+  mfrmr_readiness_contract_version()
 }
 
 mfrmr_empty_sparse_matrix <- function(nrow = 0L, ncol = 0L) {

@@ -45,7 +45,7 @@ test_that("public roadmap is separated from internal release operations", {
   expect_true(any(grepl("inst/validation", ignore, fixed = TRUE)))
 })
 
-test_that("internal draft.36 readiness and estimator work remain explicit and private", {
+test_that("internal draft.37 readiness and estimator work remain explicit and private", {
   pkg_root <- normalizePath(testthat::test_path("..", ".."), mustWork = TRUE)
   internal_path <- file.path(
     pkg_root, "inst", "validation", "internal-roadmap-0.2.3.md"
@@ -127,11 +127,12 @@ test_that("internal draft.36 readiness and estimator work remain explicit and pr
   expect_match(internal,
                "Draft.36 retained-additive GPCM log-slope boundary paths",
                fixed = TRUE)
+  expect_match(internal, "Draft.37 near-term corrective program", fixed = TRUE)
   expect_match(internal, "Corrective-program execution lanes", fixed = TRUE)
   expect_match(internal, "partitioned\\s+exhaustively")
   expect_match(internal, "Estimator ecosystem and maturity boundary", fixed = TRUE)
   expect_match(internal, "method = \"HRM\"", fixed = TRUE)
-  expect_match(gate, "Specification ID | `0.2.3-draft.36`", fixed = TRUE)
+  expect_match(gate, "Specification ID | `0.2.3-draft.37`", fixed = TRUE)
   expect_match(gate, "EXT-TAM-JML-RAW", fixed = TRUE)
   expect_match(gate, "EXT-IMMER-CCML", fixed = TRUE)
   expect_match(gate, "ALT-IMMER-HRM-LD", fixed = TRUE)
@@ -186,7 +187,7 @@ test_that("WP0 readiness contract freezes scoped fail-closed semantics", {
   expect_identical(audit$ComparisonRows, 6L)
   expect_identical(
     audit$ContractVersion,
-    "mfrmr-internal-readiness-0.2.3-v1"
+    "mfrmr-readiness-0.2.3-v1"
   )
 
   expect_true(env$mfrmr_readiness_inference_ready("ready"))

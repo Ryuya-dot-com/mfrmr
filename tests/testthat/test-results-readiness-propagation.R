@@ -86,7 +86,7 @@ test_that("iteration-limited MML fits remain review-only across results", {
   expect_identical(.results_readiness_value(res$readiness, "Plot"), "review_only")
   expect_identical(
     .results_readiness_value(res$readiness, "Reporting"),
-    "review_before_reporting"
+    "blocked_by_fit_readiness"
   )
   expect_identical(
     .results_readiness_status_value(res$status, "numerical_readiness"),
@@ -129,7 +129,8 @@ test_that("iteration-limited MML fits remain review-only across results", {
 
 test_that("mfrm_results propagates a disconnected-design hold", {
   fit <- .results_readiness_fit(.results_readiness_disconnected_data())
-  expect_true(isTRUE(fit$summary$InferenceReady))
+  expect_false(isTRUE(fit$summary$InferenceReady))
+  expect_identical(fit$summary$FitReadiness, "review")
   expect_equal(fit$data_review$overall_connectivity$components, 2L)
 
   diagnostics <- suppressWarnings(diagnose_mfrm(
@@ -206,7 +207,8 @@ test_that("a shared Criterion does not replace shared-Person MML evidence", {
   expect_gt(length(intersect(criteria_a, criteria_b)), 0L)
 
   fit <- .results_readiness_fit(data)
-  expect_true(isTRUE(fit$summary$InferenceReady))
+  expect_false(isTRUE(fit$summary$InferenceReady))
+  expect_identical(fit$summary$FitReadiness, "review")
   expect_equal(fit$data_review$overall_connectivity$components, 1L)
   res <- suppressWarnings(mfrm_results(
     fit,
@@ -218,6 +220,7 @@ test_that("a shared Criterion does not replace shared-Person MML evidence", {
     .results_readiness_value(res$readiness, "Design"),
     "review_population_assumption_linked"
   )
+  expect_identical(.results_readiness_value(res$readiness, "Fit"), "review")
   expect_identical(
     .results_readiness_value(res$readiness, "Plot"),
     "review_only"

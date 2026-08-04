@@ -9,7 +9,7 @@
 # response-constant level alone.
 
 mfrmr_boundary_contract_version <- function() {
-  "mfrmr-internal-readiness-0.2.3-v1"
+  mfrmr_readiness_contract_version()
 }
 
 mfrmr_person_constraint_rows <- function(config, persons) {

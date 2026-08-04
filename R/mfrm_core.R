@@ -46,8 +46,8 @@ get_weights <- function(df) {
 
 # Distinguish the optimizer's return code from whether the fitted result is
 # ready to support inferential claims. Older or imported fit objects may not
-# carry the richer diagnostics, so they retain their recorded convergence
-# value as a compatibility fallback.
+# carry the current readiness contract; their numerical return code remains
+# visible, but it cannot make inference ready without a current record.
 mfrm_convergence_state <- function(fit) {
   summary_row <- if (is.data.frame(fit)) {
     fit
@@ -69,26 +69,44 @@ mfrm_convergence_state <- function(fit) {
   severity <- tolower(trimws(as.character(first_value("ConvergenceSeverity", ""))))
   status <- tolower(trimws(as.character(first_value("ConvergenceStatus", ""))))
   detail <- as.character(first_value("ConvergenceDetail", ""))
-
-  severity_known <- severity %in% c("pass", "ok", "review", "warn", "warning", "fail", "error")
-  status_known <- status %in% c(
-    "converged", "converged_gradient_review", "reviewable_warning",
-    "iteration_limit", "optimizer_warning", "unknown"
-  )
-  inference_ready <- if (severity_known) {
-    severity %in% c("pass", "ok")
-  } else if (status_known) {
-    identical(status, "converged")
+  direct_current <- is.data.frame(fit) && nrow(summary_row) > 0L &&
+    "ReadinessContractVersion" %in% names(summary_row) &&
+    identical(
+      as.character(summary_row$ReadinessContractVersion[1]),
+      mfrmr_readiness_contract_version()
+    )
+  readiness_row <- if (direct_current) {
+    summary_row
   } else {
-    code_converged
+    mfrmr_get_readiness_record(fit)$fit
   }
+  readiness_value <- function(name, default = NA) {
+    if (nrow(readiness_row) > 0L && name %in% names(readiness_row)) {
+      readiness_row[[name]][1]
+    } else {
+      default
+    }
+  }
+  contract_version <- as.character(readiness_value(
+    "ReadinessContractVersion", ""
+  ))
+  recorded_inference_ready <- as.logical(readiness_value(
+    "InferenceReady", FALSE
+  ))
+  inference_ready <- identical(
+    contract_version, mfrmr_readiness_contract_version()
+  ) && isTRUE(recorded_inference_ready)
 
   list(
     code_converged = code_converged,
     inference_ready = isTRUE(inference_ready),
     severity = if (nzchar(severity)) severity else if (inference_ready) "pass" else "review",
     status = if (nzchar(status)) status else if (inference_ready) "converged" else "not_converged",
-    detail = detail
+    detail = detail,
+    fit_readiness = as.character(readiness_value(
+      "FitReadiness", "legacy_unknown"
+    )),
+    readiness_contract_version = contract_version
   )
 }
 
@@ -3270,7 +3288,8 @@ build_mfrm_ic_contract <- function(loglik, npar, prep, config, method) {
   )
 }
 
-build_estimation_summary <- function(model, method, prep, config, sizes, opt) {
+build_estimation_summary <- function(model, method, prep, config, sizes, opt,
+                                     readiness_record = NULL) {
   k_params <- as.integer(sum(unlist(sizes)))
   retained_npar <- length(opt$par %||% numeric(0))
   if (!identical(k_params, as.integer(retained_npar))) {
@@ -3347,19 +3366,46 @@ build_estimation_summary <- function(model, method, prep, config, sizes, opt) {
     "function_evaluations"
   }
 
-  boundary_readiness <- as.data.frame(
-    config$boundary_audit$readiness %||% data.frame(),
-    stringsAsFactors = FALSE
+  fit_readiness <- as.data.frame(
+    readiness_record$fit %||% data.frame(), stringsAsFactors = FALSE
   )
-  boundary_state <- if (nrow(boundary_readiness) > 0L) {
+  component_readiness <- as.data.frame(
+    readiness_record$components %||% data.frame(), stringsAsFactors = FALSE
+  )
+  boundary_readiness <- if (nrow(component_readiness) > 0L &&
+                            all(c("Component", "State") %in%
+                                names(component_readiness))) {
+    component_readiness[
+      component_readiness$Component == "boundary", , drop = FALSE
+    ]
+  } else {
+    as.data.frame(config$boundary_audit$readiness %||% data.frame(),
+                  stringsAsFactors = FALSE)
+  }
+  boundary_state <- if (nrow(fit_readiness) > 0L &&
+                        "BoundaryState" %in% names(fit_readiness)) {
+    as.character(fit_readiness$BoundaryState[1])
+  } else if (nrow(boundary_readiness) > 0L &&
+             "BoundaryState" %in% names(boundary_readiness)) {
     as.character(boundary_readiness$BoundaryState[1])
+  } else if (nrow(boundary_readiness) > 0L &&
+             "State" %in% names(boundary_readiness)) {
+    as.character(boundary_readiness$State[1])
   } else {
     "not_evaluated"
   }
-  boundary_reasons <- if (nrow(boundary_readiness) > 0L) {
+  boundary_reasons <- if (nrow(boundary_readiness) > 0L &&
+                          "ReasonCodes" %in% names(boundary_readiness)) {
     as.character(boundary_readiness$ReasonCodes[1])
   } else {
     ""
+  }
+  readiness_value <- function(field, default) {
+    if (nrow(fit_readiness) > 0L && field %in% names(fit_readiness)) {
+      fit_readiness[[field]][1]
+    } else {
+      default
+    }
   }
 
   tibble(
@@ -3403,9 +3449,28 @@ build_estimation_summary <- function(model, method, prep, config, sizes, opt) {
     LegacyICSampleSize = ic$LegacyICSampleSize,
     LegacyICSampleSizeBasis = ic$LegacyICSampleSizeBasis,
     Converged = opt$convergence == 0,
-    InferenceReady = identical(optimizer_diag$ConvergenceSeverity, "pass") &&
-      boundary_state == "finite",
+    ReadinessContractVersion = as.character(readiness_value(
+      "ReadinessContractVersion", NA_character_
+    )),
+    FitReadiness = as.character(readiness_value(
+      "FitReadiness", if (identical(optimizer_diag$ConvergenceSeverity, "pass") &&
+                           boundary_state == "finite") "ready" else "review"
+    )),
+    InferenceReady = as.logical(readiness_value(
+      "InferenceReady", identical(optimizer_diag$ConvergenceSeverity, "pass") &&
+        boundary_state == "finite"
+    )),
+    InputState = as.character(readiness_value("InputState", NA_character_)),
+    EstimabilityState = as.character(readiness_value(
+      "EstimabilityState", NA_character_
+    )),
+    CategoryState = as.character(readiness_value("CategoryState", NA_character_)),
     BoundaryState = boundary_state,
+    NumericalState = as.character(readiness_value("NumericalState", NA_character_)),
+    ReadinessReasonCodes = as.character(readiness_value("ReasonCodes", "")),
+    ReadinessAuditProvenance = as.character(readiness_value(
+      "AuditProvenance", ""
+    )),
     BoundaryReasonCodes = boundary_reasons,
     Iterations = iterations,
     IterationsBasis = iterations_basis,
@@ -3941,11 +4006,20 @@ mfrm_estimate <- function(data, person_col, facet_cols, score_col,
   person_tbl <- apply_mfrm_person_boundary(person_tbl, boundary_audit)
   config$boundary_audit <- boundary_audit
   data_review$boundary <- boundary_audit
+  readiness_record <- build_mfrm_readiness_record(
+    prep = prep,
+    data_review = data_review,
+    config = config,
+    opt = opt
+  )
   facet_tbl <- build_other_facet_table(config, prep, params)
   interaction_tbl <- build_interaction_effect_table(config, prep, params)
   step_tbl <- build_step_table(config, prep, params)
   slope_tbl <- build_slope_table(config, prep, params)
-  summary_tbl <- build_estimation_summary(model, method, prep, config, sizes, opt)
+  summary_tbl <- build_estimation_summary(
+    model, method, prep, config, sizes, opt,
+    readiness_record = readiness_record
+  )
 
   list(
     summary = summary_tbl,
@@ -3959,6 +4033,7 @@ mfrm_estimate <- function(data, person_col, facet_cols, score_col,
     ),
     steps = step_tbl,
     slopes = slope_tbl,
+    readiness = readiness_record,
     config = config,
     prep = prep,
     data_review = data_review,

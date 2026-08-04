@@ -139,8 +139,10 @@
 #'   `"hybrid"` uses EM as a warm start before the direct optimizer. Unsupported
 #'   combinations currently fall back to `"direct"` and record that fallback in
 #'   `fit$summary`. Direct, hybrid, and EM engines all require the common
-#'   terminal-gradient gate for `InferenceReady`; EM relative log-likelihood
-#'   convergence alone does not establish numerical readiness.
+#'   terminal-gradient gate for the Numerical component of fit readiness; EM
+#'   relative log-likelihood convergence alone does not establish numerical
+#'   readiness. `InferenceReady` is `TRUE` only when every stored fit-readiness
+#'   component passes.
 #' @param population_formula Optional one-sided formula for a person-level
 #'   latent-regression population model, for example `~ grade + ses`. Latent
 #'   regression is implemented only for
@@ -589,9 +591,10 @@
 #' 1. Choose the model, estimation method, optimizer, tolerance, quadrature
 #'    rule, and initial `maxit` before examining coefficient or fit results.
 #'    The default `maxit = 400` is the package starting point for an analysis.
-#' 2. Use estimates substantively only when `Converged` and `InferenceReady`
-#'    are both `TRUE` and the Numerical row of `summary(fit)$readiness` is
-#'    `pass`. Optimizer code zero alone is insufficient.
+#' 2. Use estimates substantively only when `FitReadiness == "ready"` and
+#'    `InferenceReady` is `TRUE`. Also inspect purpose-specific Design,
+#'    Stability, Diagnostics, and Reporting workflow rows. Optimizer code zero
+#'    alone is insufficient.
 #' 3. If `ConvergenceStatus == "iteration_limit"`, keep that fit review-only.
 #'    Refit the same data, model, method, anchors, optimizer, tolerance, and
 #'    quadrature rule with the next ceiling in a prespecified sequence, such as
@@ -805,8 +808,8 @@
 #'   reltol = 1e-11
 #' )
 #' fit_quick$summary[, c(
-#'   "Model", "Method", "N", "Converged", "InferenceReady",
-#'   "ConvergenceSeverity"
+#'   "Model", "Method", "N", "Converged", "FitReadiness",
+#'   "InferenceReady", "ConvergenceSeverity"
 #' )]
 #'
 #' \donttest{
@@ -825,11 +828,11 @@
 #' )
 #' fit$summary
 #' s_fit <- summary(fit)
-#' s_fit$overview[, c("Model", "Method", "Converged", "InferenceReady",
-#'                    "ConvergenceSeverity")]
-#' # `InferenceReady = FALSE` is a numerical stop signal. A TRUE value only
-#' # clears the package's optimizer review; model specification, design,
-#' # identification, and inferential assumptions still require review.
+#' s_fit$overview[, c("Model", "Method", "Converged", "FitReadiness",
+#'                    "InferenceReady", "ConvergenceSeverity")]
+#' # `InferenceReady = FALSE` is a conservative fit-level stop signal. The
+#' # stored component states identify whether input, estimability, category,
+#' # boundary, or numerical review caused it.
 #' s_fit$person_overview
 #' # Compare the person distribution with the facet and step locations. The
 #' # scale identification does not create universal targeting thresholds.

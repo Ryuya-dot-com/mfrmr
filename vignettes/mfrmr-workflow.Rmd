@@ -210,16 +210,17 @@ package default `maxit = 400` unless the analysis protocol states otherwise.
 If a run reaches `ConvergenceStatus = "iteration_limit"`, keep it review-only
 and repeat the same data, model, method, anchors, optimizer, tolerance, and
 quadrature rule with the next ceiling in a prespecified sequence. Interpret
-only a run with `Converged = TRUE`, `InferenceReady = TRUE`, and
+only a run with `FitReadiness = ready`, `InferenceReady = TRUE`, and
 `Numerical = pass`. If two separately ready runs differ materially, investigate
 numerical stability instead of selecting the preferred result. Report the
 requested ceiling, actual evaluations, convergence reason, and terminal
 gradient.
 
-`InferenceReady` describes this numerical gate only: Data, Design, Stability,
-Diagnostics, and Reporting remain separate rows in `fit_summary_toy$readiness`.
-For example, a disconnected design remains a reporting hold even if its
-optimizer converges. Conversely,
+`InferenceReady` is a conservative fit-level first screen: Input,
+Estimability, Category, Boundary, and Numerical components must all pass.
+Design, Stability, Diagnostics, and Reporting remain purpose-specific workflow
+rows in `fit_summary_toy$readiness`. For example, a diagnostic or reporting
+review can remain even when the stored fit record is ready. Conversely,
 `ready_for_diagnostics_and_reporting_follow_up` means that fitting completed
 and diagnostic review is the next stage; it is neither an optimization failure
 nor a claim that the analysis is already manuscript-ready.

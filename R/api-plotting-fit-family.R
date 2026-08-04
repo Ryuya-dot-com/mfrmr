@@ -2,6 +2,18 @@
 
 .mfrm_fit_plot_readiness <- function(fit) {
   convergence <- mfrm_convergence_state(fit)
+  stored <- as.data.frame(
+    mfrmr_get_readiness_record(fit)$fit, stringsAsFactors = FALSE
+  )
+  has_stored <- nrow(stored) == 1L &&
+    "ReadinessContractVersion" %in% names(stored) &&
+    identical(
+      as.character(stored$ReadinessContractVersion[1]),
+      mfrmr_readiness_contract_version()
+    )
+  stored_value <- function(field, default = NA_character_) {
+    if (has_stored && field %in% names(stored)) stored[[field]][1] else default
+  }
   data_review <- fit$data_review %||% list()
   review_status <- as.data.frame(
     data_review$status %||% data.frame(),
@@ -30,17 +42,33 @@
   convergence_severity <- tolower(trimws(as.character(
     convergence$severity %||% "review"
   )[1L]))
-  numerical_status <- if (isTRUE(convergence$inference_ready)) {
+  numerical_status <- if (has_stored) {
+    switch(
+      as.character(stored_value("NumericalState", "legacy_unknown")),
+      ready = "pass", review = "review", failed = "fail", not_run = "fail",
+      legacy_unknown = "legacy_unknown", "not_assessed"
+    )
+  } else if (isTRUE(convergence$inference_ready)) {
     "pass"
   } else if (convergence_severity %in% c("fail", "error")) {
     "fail"
   } else {
     "review"
   }
-  data_status <- domain_status("Data")
+  fit_status <- as.character(stored_value("FitReadiness", "legacy_unknown"))
+  data_status <- if (has_stored) {
+    switch(
+      as.character(stored_value("InputState", "legacy_unknown")),
+      pass = "pass", review = "review", blocked = "blocked",
+      legacy_unknown = "legacy_unknown", "not_assessed"
+    )
+  } else {
+    domain_status("Data")
+  }
   design_status <- domain_status("Design")
   stability_status <- domain_status("Stability")
-  interpretation_ready <- identical(numerical_status, "pass") &&
+  interpretation_ready <- (!has_stored || identical(fit_status, "ready")) &&
+    identical(numerical_status, "pass") &&
     identical(data_status, "pass") &&
     identical(design_status, "pass_linked") &&
     identical(stability_status, "pass")
@@ -50,8 +78,9 @@
     "review_only"
   }
   statuses <- data.frame(
-    Domain = c("Numerical", "Data", "Design", "Stability", "Plot"),
+    Domain = c("Fit", "Numerical", "Data", "Design", "Stability", "Plot"),
     Status = c(
+      fit_status,
       numerical_status,
       data_status,
       design_status,
@@ -62,13 +91,14 @@
   )
   detail <- if (interpretation_ready) {
     paste0(
-      "Fit-level numerical, data-support, connectivity, and stability gates ",
+      "Stored fit readiness plus numerical, data-support, connectivity, and stability gates ",
       "passed. Treat this display as diagnostic evidence, not automatic ",
       "publication approval."
     )
   } else {
     paste0(
-      "Review-only display: Numerical=", numerical_status,
+      "Review-only display: Fit=", fit_status,
+      ", Numerical=", numerical_status,
       ", Data=", data_status,
       ", Design=", design_status,
       ", Stability=", stability_status,
