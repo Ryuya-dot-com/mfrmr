@@ -63,7 +63,8 @@ Suggests:
     ggplot2 (>= 3.4.0),
     mirt,
     TAM,
-    eRm
+    eRm,
+    lpSolve
 VignetteBuilder: knitr
 Config/testthat/edition: 3
 Config/Needs/website: pkgdown

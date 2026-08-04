@@ -3913,6 +3913,14 @@ mfrm_estimate <- function(data, person_col, facet_cols, score_col,
     config = config,
     prep = prep
   )
+  boundary_audit$structural_additive <-
+    audit_mfrm_jml_structural_recession(
+      prep = prep,
+      idx = idx,
+      config = config,
+      sizes = sizes,
+      params = params
+    )
   person_tbl <- apply_mfrm_person_boundary(person_tbl, boundary_audit)
   config$boundary_audit <- boundary_audit
   data_review$boundary <- boundary_audit
