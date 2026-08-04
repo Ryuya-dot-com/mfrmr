@@ -250,25 +250,120 @@ mfrmr_jml_structural_target_system <- function(config, sizes, params) {
   list(metadata = metadata, expansion = methods::as(expansion, "dgCMatrix"))
 }
 
-mfrmr_jml_recession_lp_base <- function(contrast_design) {
-  contrast_design <- as.matrix(contrast_design)
+mfrmr_jml_recession_lp_base <- function(
+    contrast_design,
+    representation = c("sparse_triplet", "dense_reference")) {
+  representation <- match.arg(representation)
+  contrast_design <- methods::as(contrast_design, "dgCMatrix")
   n_parameters <- ncol(contrast_design)
-  constraint_matrix <- rbind(
-    cbind(contrast_design, -contrast_design),
-    cbind(diag(n_parameters), diag(n_parameters))
+  n_contrasts <- nrow(contrast_design)
+  constraint_matrix <- NULL
+  constraint_triplet <- matrix(
+    numeric(0), nrow = 0L, ncol = 3L,
+    dimnames = list(NULL, c("constraint", "variable", "value"))
   )
+  if (identical(representation, "dense_reference")) {
+    dense_contrast <- as.matrix(contrast_design)
+    constraint_matrix <- rbind(
+      cbind(dense_contrast, -dense_contrast),
+      cbind(diag(n_parameters), diag(n_parameters))
+    )
+  } else {
+    nonzero <- Matrix::summary(contrast_design)
+    contrast_triplet <- if (nrow(nonzero) > 0L) {
+      rbind(
+        cbind(nonzero$i, nonzero$j, nonzero$x),
+        cbind(nonzero$i, n_parameters + nonzero$j, -nonzero$x)
+      )
+    } else {
+      matrix(numeric(0), nrow = 0L, ncol = 3L)
+    }
+    box_rows <- n_contrasts + seq_len(n_parameters)
+    box_triplet <- rbind(
+      cbind(box_rows, seq_len(n_parameters), 1),
+      cbind(box_rows, n_parameters + seq_len(n_parameters), 1)
+    )
+    constraint_triplet <- rbind(contrast_triplet, box_triplet)
+    storage.mode(constraint_triplet) <- "double"
+    colnames(constraint_triplet) <- c("constraint", "variable", "value")
+  }
   list(
     contrast_design = contrast_design,
+    representation = representation,
     constraint_matrix = constraint_matrix,
+    constraint_triplet = constraint_triplet,
     constraint_direction = c(
-      rep(">=", nrow(contrast_design)),
+      rep(">=", n_contrasts),
       rep("<=", n_parameters)
     ),
     constraint_rhs = c(
-      rep(0, nrow(contrast_design)),
+      rep(0, n_contrasts),
       rep(1, n_parameters)
-    )
+    ),
+    n_parameters = as.integer(n_parameters),
+    n_constraints = as.integer(n_contrasts + n_parameters),
+    stored_constraint_nonzeros = if (identical(
+      representation, "sparse_triplet"
+    )) {
+      as.integer(nrow(constraint_triplet))
+    } else {
+      as.integer(sum(constraint_matrix != 0))
+    }
   )
+}
+
+mfrmr_jml_recession_run_lp <- function(lp_base,
+                                        objective,
+                                        extra_constraint = NULL,
+                                        extra_direction = NULL,
+                                        extra_rhs = NULL,
+                                        timeout = 2L) {
+  objective <- as.numeric(objective)
+  constraint_direction <- lp_base$constraint_direction
+  constraint_rhs <- lp_base$constraint_rhs
+  constraint_matrix <- lp_base$constraint_matrix
+  constraint_triplet <- lp_base$constraint_triplet
+
+  if (!is.null(extra_constraint)) {
+    extra_constraint <- as.numeric(extra_constraint)
+    if (length(extra_constraint) != length(objective) ||
+        length(extra_direction) != 1L || length(extra_rhs) != 1L) {
+      stop("Internal JML recession LP augmentation is malformed.",
+           call. = FALSE)
+    }
+    constraint_direction <- c(
+      constraint_direction, as.character(extra_direction)
+    )
+    constraint_rhs <- c(constraint_rhs, as.numeric(extra_rhs))
+    if (identical(lp_base$representation, "dense_reference")) {
+      constraint_matrix <- rbind(constraint_matrix, extra_constraint)
+    } else {
+      keep <- which(extra_constraint != 0)
+      if (length(keep) > 0L) {
+        extra_triplet <- cbind(
+          lp_base$n_constraints + 1L,
+          keep,
+          extra_constraint[keep]
+        )
+        storage.mode(extra_triplet) <- "double"
+        constraint_triplet <- rbind(constraint_triplet, extra_triplet)
+      }
+    }
+  }
+
+  arguments <- list(
+    direction = "max",
+    objective.in = objective,
+    const.dir = constraint_direction,
+    const.rhs = constraint_rhs,
+    timeout = as.integer(timeout)
+  )
+  if (identical(lp_base$representation, "dense_reference")) {
+    arguments$const.mat <- constraint_matrix
+  } else {
+    arguments$dense.const <- constraint_triplet
+  }
+  do.call(lpSolve::lp, arguments)
 }
 
 mfrmr_jml_recession_target_lp <- function(lp_base,
@@ -280,12 +375,9 @@ mfrmr_jml_recession_target_lp <- function(lp_base,
   n_parameters <- length(target)
   signed_target <- c(target, -target)
   capacity_fit <- tryCatch(
-    lpSolve::lp(
-      direction = "max",
-      objective.in = signed_target,
-      const.mat = lp_base$constraint_matrix,
-      const.dir = lp_base$constraint_direction,
-      const.rhs = lp_base$constraint_rhs,
+    mfrmr_jml_recession_run_lp(
+      lp_base = lp_base,
+      objective = signed_target,
       timeout = as.integer(timeout)
     ),
     error = function(e) e
@@ -327,17 +419,14 @@ mfrmr_jml_recession_target_lp <- function(lp_base,
   }
 
   target_floor <- max(objective_tolerance * 2, capacity * 1e-5)
-  augmented_matrix <- rbind(lp_base$constraint_matrix, signed_target)
-  augmented_direction <- c(lp_base$constraint_direction, ">=")
-  augmented_rhs <- c(lp_base$constraint_rhs, target_floor)
-  strict_objective <- colSums(lp_base$contrast_design)
+  strict_objective <- as.numeric(Matrix::colSums(lp_base$contrast_design))
   strict_fit <- tryCatch(
-    lpSolve::lp(
-      direction = "max",
-      objective.in = c(strict_objective, -strict_objective),
-      const.mat = augmented_matrix,
-      const.dir = augmented_direction,
-      const.rhs = augmented_rhs,
+    mfrmr_jml_recession_run_lp(
+      lp_base = lp_base,
+      objective = c(strict_objective, -strict_objective),
+      extra_constraint = signed_target,
+      extra_direction = ">=",
+      extra_rhs = target_floor,
       timeout = as.integer(timeout)
     ),
     error = function(e) e
@@ -401,9 +490,17 @@ audit_mfrm_jml_structural_recession <- function(prep,
                                                  config,
                                                  sizes,
                                                  params,
-                                                 max_lp_elements = 2e6,
+                                                 max_lp_elements = NULL,
+                                                 max_lp_nonzeros = 2e6,
+                                                 max_lp_constraints = 100000L,
+                                                 max_structural_coordinates = 500L,
                                                  max_target_directions = 200L,
-                                                 lp_timeout = 2L) {
+                                                 lp_timeout = 2L,
+                                                 lp_representation = c(
+                                                   "sparse_triplet",
+                                                   "dense_reference"
+                                                 )) {
+  lp_representation <- match.arg(lp_representation)
   method <- as.character(config$method %||% NA_character_)
   model <- as.character(config$model %||% NA_character_)
   empty_targets <- mfrmr_jml_recession_empty_target_table()
@@ -495,7 +592,11 @@ audit_mfrm_jml_structural_recession <- function(prep,
       ExpandedTargets = as.integer(nrow(targets)),
       FreeTargets = 0L,
       TargetDirections = 0L,
-      DenseLPElements = 0,
+      LPVariables = 0L,
+      LPConstraints = 0L,
+      SparseLPNonzeros = 0,
+      DenseReferenceElements = 0,
+      LPRepresentation = lp_representation,
       stringsAsFactors = FALSE
     )
     return(finish(
@@ -542,8 +643,20 @@ audit_mfrm_jml_structural_recession <- function(prep,
 
   free_target <- as.numeric(Matrix::rowSums(abs(target_expansion))) > 0
   target_directions <- 2L * sum(free_target)
-  lp_elements <- as.double(nrow(contrast) + ncol(contrast) + 1L) *
-    as.double(2L * ncol(contrast))
+  structural_coordinates <- ncol(contrast)
+  lp_constraints <- nrow(contrast) + structural_coordinates + 1L
+  lp_variables <- 2L * structural_coordinates
+  maximum_target_nonzeros <- if (any(free_target)) {
+    max(as.numeric(Matrix::rowSums(
+      target_expansion[free_target, , drop = FALSE] != 0
+    )))
+  } else {
+    0
+  }
+  sparse_lp_nonzeros <- 2 * length(contrast@x) +
+    2 * structural_coordinates + 2 * maximum_target_nonzeros
+  dense_reference_elements <- as.double(lp_constraints) *
+    as.double(lp_variables)
   dimensions <- data.frame(
     Observations = as.integer(adjacent$observation_rows),
     Categories = as.integer(adjacent$transitions + 1L),
@@ -552,10 +665,20 @@ audit_mfrm_jml_structural_recession <- function(prep,
     ExpandedTargets = as.integer(nrow(targets)),
     FreeTargets = as.integer(sum(free_target)),
     TargetDirections = as.integer(target_directions),
-    DenseLPElements = as.double(lp_elements),
+    LPVariables = as.integer(lp_variables),
+    LPConstraints = as.integer(lp_constraints),
+    SparseLPNonzeros = as.double(sparse_lp_nonzeros),
+    DenseReferenceElements = as.double(dense_reference_elements),
+    LPRepresentation = lp_representation,
     stringsAsFactors = FALSE
   )
-  if (lp_elements > as.double(max_lp_elements) ||
+  legacy_dense_limit_hit <- !is.null(max_lp_elements) &&
+    length(max_lp_elements) == 1L && is.finite(max_lp_elements) &&
+    dense_reference_elements > as.double(max_lp_elements)
+  if (legacy_dense_limit_hit ||
+      sparse_lp_nonzeros > as.double(max_lp_nonzeros) ||
+      lp_constraints > as.integer(max_lp_constraints) ||
+      structural_coordinates > as.integer(max_structural_coordinates) ||
       target_directions > as.integer(max_target_directions)) {
     targets$PositiveRecession <- NA
     targets$NegativeRecession <- NA
@@ -572,15 +695,21 @@ audit_mfrm_jml_structural_recession <- function(prep,
       "not_evaluated_size_limit", FALSE,
       paste0(
         "The bounded LP audit exceeded its current execution limit (",
-        format(lp_elements, scientific = FALSE), " dense elements; ",
-        target_directions, " target directions)."
+        format(sparse_lp_nonzeros, scientific = FALSE),
+        " sparse nonzeros; ", lp_constraints, " constraints; ",
+        structural_coordinates, " structural coordinates; ",
+        target_directions, " target directions; dense-reference equivalent ",
+        format(dense_reference_elements, scientific = FALSE), " elements)."
       ),
       target_status = targets,
       dimensions = dimensions
     ))
   }
 
-  lp_base <- mfrmr_jml_recession_lp_base(contrast)
+  lp_base <- mfrmr_jml_recession_lp_base(
+    contrast,
+    representation = lp_representation
+  )
   certificate_rows <- list()
   loading_rows <- list()
   positive <- negative <- rep(FALSE, nrow(targets))

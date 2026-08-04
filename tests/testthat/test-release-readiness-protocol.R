@@ -45,7 +45,7 @@ test_that("public roadmap is separated from internal release operations", {
   expect_true(any(grepl("inst/validation", ignore, fixed = TRUE)))
 })
 
-test_that("internal draft.33 readiness and estimator work remain explicit and private", {
+test_that("internal draft.34 readiness and estimator work remain explicit and private", {
   pkg_root <- normalizePath(testthat::test_path("..", ".."), mustWork = TRUE)
   internal_path <- file.path(
     pkg_root, "inst", "validation", "internal-roadmap-0.2.3.md"
@@ -118,11 +118,14 @@ test_that("internal draft.33 readiness and estimator work remain explicit and pr
   expect_match(internal,
                "Draft.33 Person-fixed structural recession certificate",
                fixed = TRUE)
+  expect_match(internal,
+               "Draft.34 sparse LP and independent microcase oracle",
+               fixed = TRUE)
   expect_match(internal, "Corrective-program execution lanes", fixed = TRUE)
   expect_match(internal, "partitioned\\s+exhaustively")
   expect_match(internal, "Estimator ecosystem and maturity boundary", fixed = TRUE)
   expect_match(internal, "method = \"HRM\"", fixed = TRUE)
-  expect_match(gate, "Specification ID | `0.2.3-draft.33`", fixed = TRUE)
+  expect_match(gate, "Specification ID | `0.2.3-draft.34`", fixed = TRUE)
   expect_match(gate, "EXT-TAM-JML-RAW", fixed = TRUE)
   expect_match(gate, "EXT-IMMER-CCML", fixed = TRUE)
   expect_match(gate, "ALT-IMMER-HRM-LD", fixed = TRUE)

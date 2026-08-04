@@ -28,6 +28,69 @@ fit_structural_recession_rater <- function(data, ...) {
   ))
 }
 
+structural_recession_problem <- function(fit) {
+  config <- fit$config
+  sizes <- mfrmr:::build_param_sizes(config)
+  idx <- mfrmr:::build_indices(
+    fit$prep,
+    step_facet = config$step_facet,
+    slope_facet = config$slope_facet,
+    interaction_specs = config$interaction_specs
+  )
+  params <- mfrmr:::expand_params(fit$opt$par, sizes, config)
+  adjacent <- mfrmr:::mfrmr_estimability_adjacent_design(
+    prep = fit$prep,
+    idx = idx,
+    config = config,
+    sizes = sizes,
+    include_person = TRUE,
+    include_population_beta = FALSE
+  )
+  structural_columns <- which(adjacent$map$Block != "Person")
+  optimizer_index <- as.integer(
+    adjacent$map$OptimizerIndex[structural_columns]
+  )
+  contrast <- mfrmr:::mfrmr_jml_observed_contrast_design(
+    adjacent_design = adjacent$design[, structural_columns, drop = FALSE],
+    score_k = idx$score_k,
+    n_obs = adjacent$observation_rows,
+    n_steps = adjacent$transitions
+  )
+  targets <- mfrmr:::mfrmr_jml_structural_target_system(
+    config, sizes, params
+  )
+  list(
+    config = config,
+    sizes = sizes,
+    idx = idx,
+    params = params,
+    contrast = contrast,
+    target_metadata = targets$metadata,
+    target_expansion = targets$expansion[, optimizer_index, drop = FALSE]
+  )
+}
+
+finite_grid_recession_oracle <- function(contrast, target, tolerance = 1e-10) {
+  contrast <- as.matrix(contrast)
+  target <- as.numeric(target)
+  n_parameters <- ncol(contrast)
+  stopifnot(n_parameters >= 1L, n_parameters <= 8L)
+  grid <- expand.grid(
+    rep(list(c(-1, 0, 1)), n_parameters),
+    KEEP.OUT.ATTRS = FALSE
+  )
+  direction <- as.matrix(grid)
+  direction <- direction[rowSums(abs(direction)) > 0, , drop = FALSE]
+  margins <- contrast %*% t(direction)
+  feasible <- apply(margins >= -tolerance, 2L, all) &
+    apply(margins > tolerance, 2L, any)
+  target_change <- as.numeric(direction %*% target)
+  c(
+    positive = any(feasible & target_change > tolerance),
+    negative = any(feasible & target_change < -tolerance)
+  )
+}
+
 test_that("sum-zero Rater separation receives an exact structural certificate", {
   skip_if_not_installed("lpSolve")
   fit <- fit_structural_recession_rater(
@@ -53,6 +116,58 @@ test_that("sum-zero Rater separation receives an exact structural certificate", 
   expect_true(all(certified$StrictContrastRows > 0L))
   expect_true(all(certified$PositiveContrastMargin > 0))
   expect_true(nrow(audit$direction_loadings) > 0L)
+  expect_identical(audit$dimensions$LPRepresentation, "sparse_triplet")
+  expect_lte(
+    audit$dimensions$SparseLPNonzeros,
+    audit$dimensions$DenseReferenceElements
+  )
+
+  problem <- structural_recession_problem(fit)
+  dense_reference <- mfrmr:::audit_mfrm_jml_structural_recession(
+    prep = fit$prep,
+    idx = problem$idx,
+    config = problem$config,
+    sizes = problem$sizes,
+    params = problem$params,
+    lp_representation = "dense_reference"
+  )
+  expect_identical(
+    dense_reference$target_status$CandidateStatus,
+    audit$target_status$CandidateStatus
+  )
+  expect_identical(
+    dense_reference$certificates$Certified,
+    audit$certificates$Certified
+  )
+  expect_equal(
+    dense_reference$certificates$TargetCapacity,
+    audit$certificates$TargetCapacity,
+    tolerance = 1e-8
+  )
+
+  reordered_fit <- fit_structural_recession_rater(
+    make_structural_recession_rater_data(TRUE)[24:1, , drop = FALSE]
+  )
+  reordered <- reordered_fit$config$boundary_audit$structural_additive
+  target_order <- order(audit$target_status$ParameterId)
+  reordered_target_order <- order(reordered$target_status$ParameterId)
+  expect_identical(
+    audit$target_status$CandidateStatus[target_order],
+    reordered$target_status$CandidateStatus[reordered_target_order]
+  )
+  certificate_order <- order(
+    audit$certificates$ParameterId,
+    audit$certificates$RequestedDirection
+  )
+  reordered_certificate_order <- order(
+    reordered$certificates$ParameterId,
+    reordered$certificates$RequestedDirection
+  )
+  expect_equal(
+    audit$certificates$TargetCapacity[certificate_order],
+    reordered$certificates$TargetCapacity[reordered_certificate_order],
+    tolerance = 1e-8
+  )
 
   # This slice stores the certificate but deliberately does not yet mutate
   # public result tables. Cross-surface primary-value propagation is WP4.
@@ -194,6 +309,73 @@ test_that("checkerboard interaction cells receive sign-specific certificates", {
     c("unbounded_high", "unbounded_low", "unbounded_low", "unbounded_high")
   )
   expect_true(all(interaction$EvaluationState == "evaluated"))
+
+  problem <- structural_recession_problem(fit)
+  dense_reference <- mfrmr:::audit_mfrm_jml_structural_recession(
+    prep = fit$prep,
+    idx = problem$idx,
+    config = problem$config,
+    sizes = problem$sizes,
+    params = problem$params,
+    lp_representation = "dense_reference"
+  )
+  dense_interaction <- dense_reference$target_status[
+    dense_reference$target_status$ParameterClass == "interaction",
+    , drop = FALSE
+  ]
+  dense_interaction <- dense_interaction[
+    match(interaction$ParameterId, dense_interaction$ParameterId),
+    , drop = FALSE
+  ]
+  expect_identical(
+    dense_interaction$CandidateStatus,
+    interaction$CandidateStatus
+  )
+
+  interaction_index <- which(
+    problem$target_metadata$ParameterClass == "interaction"
+  )
+  oracle <- t(vapply(interaction_index, function(target_index) {
+    finite_grid_recession_oracle(
+      problem$contrast,
+      problem$target_expansion[target_index, ]
+    )
+  }, numeric(2)))
+  expect_identical(
+    as.logical(oracle[, "positive"]),
+    interaction$PositiveRecession
+  )
+  expect_identical(
+    as.logical(oracle[, "negative"]),
+    interaction$NegativeRecession
+  )
+})
+
+test_that("sparse triplet constraints avoid the dense reference allocation", {
+  skip_if_not_installed("lpSolve")
+  n_rows <- 20000L
+  n_parameters <- 100L
+  contrast <- Matrix::sparseMatrix(
+    i = seq_len(n_rows),
+    j = ((seq_len(n_rows) - 1L) %% n_parameters) + 1L,
+    x = rep(c(-1, 1), length.out = n_rows),
+    dims = c(n_rows, n_parameters)
+  )
+  base <- mfrmr:::mfrmr_jml_recession_lp_base(
+    contrast,
+    representation = "sparse_triplet"
+  )
+
+  expect_null(base$constraint_matrix)
+  expect_identical(base$representation, "sparse_triplet")
+  expect_identical(
+    nrow(base$constraint_triplet),
+    2L * length(contrast@x) + 2L * n_parameters
+  )
+  expect_lt(
+    nrow(base$constraint_triplet),
+    (n_rows + n_parameters) * (2L * n_parameters) / 50
+  )
 })
 
 test_that("MML is not reduced to the JML structural recession contract", {
@@ -231,7 +413,7 @@ test_that("bounded execution limits fail closed without inventing a certificate"
     config = config,
     sizes = sizes,
     params = params,
-    max_lp_elements = 1
+    max_lp_nonzeros = 1
   )
 
   expect_identical(audit$state, "not_evaluated_size_limit")

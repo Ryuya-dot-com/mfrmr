@@ -311,7 +311,7 @@ The following remain outside 0.2.3:
 | M4: run confirmation | Run the locked recovery/stress matrix, FACETS JML core, ConQuest/TAM MML comparisons, TAM/immer JML convention grid, eligible immer CML/CCML rows, dimensionality challenge, and matched external rows without changing criteria or reusing discovery/pilot data as independent confirmation. | Candidate-linked internal and external evidence with every blocker classified and every expected scenario/replicate accounted for. |
 | M5: release handoff | Run full regression, cross-platform CI, manuals, URL checks, CRAN-time examples, Win-builder, package-content audit, and public-claim audit. | All blocker rows `ok`, all caveats visible, and an exact checked tarball. |
 
-The repository now contains `0.2.3-draft.33` planning and pilot artifacts at
+The repository now contains `0.2.3-draft.34` planning and pilot artifacts at
 `inst/validation/release-gate-spec-0.2.3.md` and
 `inst/validation/release-evidence-checklist-0.2.3.csv`, with the TAM/immer
 execution contract in `inst/validation/tam-immer-estimator-stress-plan-0.2.3.md`.
@@ -375,7 +375,7 @@ extreme-score output, and definition-specific interaction/bias/PCAR contracts
 before the next paired pilot. These are prerequisites to tolerance
 calibration, not completed release gates.
 
-### Draft.33 near-term corrective program
+### Draft.34 near-term corrective program
 
 Draft.21 converted the draft.20 diagnosis into an implementation sequence.
 Draft.22 completes the structural WP0 contract and makes that contract the
@@ -419,7 +419,11 @@ expanded non-Person facet, interaction, and step target in both directions.
 The certificate is stored internally and is not yet promoted over the finite
 optimizer iterate in public tables; that promotion requires WP4 propagation.
 GPCM log-slope directions, joint Person-structural recession directions,
-target-size sparse execution, and independent solver parity remain pending.
+target-size execution evidence, and general independent solver parity remain
+pending. Draft.34 replaces the certificate's dense constraint allocation with
+the solver's sparse triplet interface, retains a small dense-reference route,
+and adds an independent finite-grid oracle for prespecified low-dimensional
+microcases without claiming general solver independence or FACETS-scale parity.
 The program's objective is not to maximize new diagnostics. It
 is to establish one source of truth for whether a fit, a parameter, and an
 external comparison are usable, and to make every downstream surface consume
@@ -446,7 +450,7 @@ reviewed. Confirmation remains prohibited until the later frozen gate.
 | `WP0-READINESS-CONTRACT` | draft.20 diagnosis | `complete_structural` | Freeze internal state names, scopes, severity/precedence, condition classes, object fields, legacy-object behavior, and exact adversarial fixtures before changing fit logic. | `readiness-contract-0.2.3.md`, its repository validator, 27-row fixture registry, and privacy/semantic tests; no external tolerance. |
 | `WP1-ESTIMABILITY` | WP0 | `in_progress_mml_all_pattern_design_reuse` | Build the estimator-specific free-parameter map and constrained design; detect structural aliases before optimization; distinguish exact alias from weak fitted information. | Unit/property tests, alias diagnostics, sparse-design benchmark, and zero false-ready exact controls. |
 | `WP2-CATEGORY-STEP` | WP0 | `in_progress_support_preflight` | Audit declared, observed, retained, free, fixed, and unsupported category/step coordinates globally and by current `step_facet`; do not add threshold anchors. | RSM/PCM/GPCM reduction and missing-category fixtures plus parameter-scoped status tables. |
-| `WP3-JML-BOUNDARY` | WP0 | `in_progress_structural_certificate` | Detect JML element separation/extreme sufficient scores on the actual contributing row pattern; replace optimizer-dependent finite primary values with typed boundary states. The Person primary-state slice and a bounded Person-fixed additive structural certificate are implemented; structural certificate promotion, joint Person movement, nonlinear slopes, and scalable execution remain pending. | JML extreme/nonextreme fixtures, MML non-reduction guard, constrained facet/interaction certificates, solver parity, and explicit optional-display contract. |
+| `WP3-JML-BOUNDARY` | WP0 | `in_progress_sparse_certificate_parity` | Detect JML element separation/extreme sufficient scores on the actual contributing row pattern; replace optimizer-dependent finite primary values with typed boundary states. The Person primary-state slice and a sparse-triplet Person-fixed additive structural certificate are implemented, with dense-reference and low-dimensional finite-grid controls; structural certificate promotion, joint Person movement, nonlinear slopes, independent general solver parity, and target-scale evidence remain pending. | JML extreme/nonextreme fixtures, MML non-reduction guard, constrained facet/interaction certificates, sparse/dense and independent microcase parity, and explicit optional-display contract. |
 | `WP4-READINESS-PROPAGATION` | WP1--WP3 | `blocked_by_dependency` | Derive fit-, parameter-, and output-level readiness once and propagate it without surface-specific reinterpretation. | Cross-surface snapshot/semantic tests and a 0.2.2-object migration fixture. |
 | `WP5-COMPARISON-CONTRACT` | WP4 | `blocked_by_dependency` | Make FACETS, TAM, immer, and other external normalization metric-specific and fail closed before numeric aggregation; identify estimator, adjustment, person treatment, and software stratum explicitly. | Eligibility/rejection ledger with denominator accounting, method-mode identity, and no silent row loss. |
 | `WP6-SCALE-AND-ADVERSARIAL` | WP1--WP5 | `blocked_by_dependency` | Verify sparse computation, basis invariance, row-order invariance, malformed-input behavior, and target-size runtime/memory without claiming FACETS capacity parity. | Benchmark envelope and metamorphic/negative-test report; no dense design allocation at target sizes. |
@@ -976,12 +980,49 @@ boundary contract: its candidate statuses do not yet overwrite public facet,
 interaction, or step tables and do not change the Person-scoped fit-level
 `BoundaryState`.
 
-WP3 still requires sparse rather than dense LP construction at target sizes,
-an independent solver/parity fixture, property tests across row order and
-equivalent bases, joint Person-plus-structural recession directions, and a
-nonlinear GPCM log-slope argument. Only after those checks may WP4 promote a
-certified structural direction to the primary parameter state and propagate
-its SE/CI, plot, report, export, replay, legacy, and external-comparison effects.
+Draft.34 supersedes the dense construction in this paragraph. WP3 still
+requires an independent general solver/parity fixture, equivalent-basis and
+broader model-grid invariance properties, joint Person-plus-structural
+recession directions, a nonlinear GPCM log-slope argument, and measured
+runtime/memory evidence at the prespecified sparse target sizes. Only after
+those checks may WP4 promote a certified structural direction to the primary
+parameter state and propagate its SE/CI, plot, report, export, replay, legacy,
+and external-comparison effects.
+
+##### Draft.34 sparse LP and independent microcase oracle
+
+The default certificate now sends the constraint system to `lpSolve` as
+row-column-value triplets. It no longer constructs the dense matrix containing
+the positive and negative split variables. The box constraints and the
+target-floor augmentation use the same triplet representation. A deliberately
+bounded `dense_reference` route remains available only for parity tests and
+small diagnostic reproduction.
+
+The audit records variables, constraints, structural coordinates, target
+directions, sparse nonzero count, dense-reference equivalent elements, and the
+actual representation. Execution stops before solver entry when any frozen
+engineering ceiling is exceeded. These are computational guardrails, not
+evidence that the statistical model is weak or that FACETS-scale capacity has
+been achieved. The legacy dense-element argument remains a compatibility
+guard for internal callers but is no longer the default allocation rule.
+
+Three layers now reject implementation drift. First, every solver result still
+passes the observed-category contrast-margin certificate. Second, the sparse
+triplet and dense-reference formulations produce the same direction status and
+target capacity on both the two-Rater and checkerboard-interaction fixtures,
+and the two-Rater result is invariant to retained row order. Third, a test-only
+finite-grid oracle enumerates all `{-1, 0, 1}` directions in low-dimensional
+microcases and agrees with the LP classifications for the checkerboard
+interaction. The finite grid is an independent microcase oracle, not a complete
+cone solver for arbitrary dimension or fractional rays.
+
+A 20,000-row by 100-coordinate synthetic constraint-construction control
+verifies that the default object stores only sparse triplets and avoids the
+dense-reference allocation. It is an engineering allocation test, not a full
+fit benchmark, recovery result, or FACETS comparison. WP6 must still measure
+end-to-end runtime and peak memory across representative balanced, two-Rater,
+sparse-linked, missing, interaction, and category-imbalanced fits before any
+capacity claim or release ceiling is frozen.
 
 #### WP4--WP5: propagation and comparison eligibility
 
