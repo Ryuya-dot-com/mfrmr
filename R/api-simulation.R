@@ -5143,7 +5143,7 @@ design_eval_result_prototype <- function() {
 #' @examples
 #' \donttest{
 #' sim_eval <- suppressWarnings(evaluate_mfrm_design(
-#'   design = list(person = c(8, 12), rater = 2, criterion = 2, assignment = 1),
+#'   design = list(person = c(8, 12), rater = 2, criterion = 2, assignment = 2),
 #'   reps = 1,
 #'   maxit = 30,
 #'   seed = 123
@@ -5667,7 +5667,7 @@ evaluate_mfrm_design <- function(n_person = c(30, 50, 100),
 #'   n_person = c(8, 12),
 #'   n_rater = 2,
 #'   n_criterion = 2,
-#'   raters_per_person = 1,
+#'   raters_per_person = 2,
 #'   reps = 1,
 #'   maxit = 30,
 #'   seed = 123
@@ -5822,7 +5822,7 @@ print.summary.mfrm_design_evaluation <- function(x, ...) {
 #'   n_person = c(8, 12),
 #'   n_rater = 2,
 #'   n_criterion = 2,
-#'   raters_per_person = 1,
+#'   raters_per_person = 2,
 #'   reps = 1,
 #'   maxit = 30,
 #'   seed = 123
@@ -6003,7 +6003,7 @@ plot.mfrm_design_evaluation <- function(x,
 #'   n_person = c(8, 12),
 #'   n_rater = 2,
 #'   n_criterion = 2,
-#'   raters_per_person = 1,
+#'   raters_per_person = 2,
 #'   reps = 1,
 #'   maxit = 30,
 #'   seed = 123
@@ -8745,7 +8745,7 @@ signal_eval_metric_col <- function(signal, metric) {
 #' @examples
 #' \donttest{
 #' sig_eval <- suppressWarnings(evaluate_mfrm_signal_detection(
-#'   design = list(person = 8, rater = 2, criterion = 2, assignment = 1),
+#'   design = list(person = 8, rater = 2, criterion = 2, assignment = 2),
 #'   reps = 1,
 #'   maxit = 30,
 #'   bias_max_iter = 1,

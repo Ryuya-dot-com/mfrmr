@@ -22,6 +22,9 @@ CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
   RSM/PCM Person, facet, interaction, and step coordinates. Exact aliases now
   stop before optimization with a structured audit; MML designs whose apparent
   linkage depends on a common latent-population assumption remain review-only.
+  Simulation-design examples now use a crossed two-rater assignment so their
+  summaries remain populated under this preflight; an unlinked one-rater-per-
+  Person design continues to fail closed rather than fabricate recovery output.
   Bounded-GPCM slopes and active latent-regression residual variance are
   explicitly outside the completed linear-block claim rather than being
   certified by additive rank. For stationary nonlinear fits with at most 80

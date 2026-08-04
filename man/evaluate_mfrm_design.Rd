@@ -293,7 +293,7 @@ reporting}. Psychological Methods.
 \examples{
 \donttest{
 sim_eval <- suppressWarnings(evaluate_mfrm_design(
-  design = list(person = c(8, 12), rater = 2, criterion = 2, assignment = 1),
+  design = list(person = c(8, 12), rater = 2, criterion = 2, assignment = 2),
   reps = 1,
   maxit = 30,
   seed = 123
