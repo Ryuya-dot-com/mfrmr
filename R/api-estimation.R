@@ -770,8 +770,12 @@
 #'   Read `ParameterStatus`, `PrimaryLogEstimate`, `PrimaryEstimate`,
 #'   `SEEligible`, `CIEligible`, and `ReasonCodes` before interpretation. A
 #'   certified JML slope-only path receives a typed extended-real primary
-#'   boundary; a non-certified conditional path is not promoted to a finite
-#'   joint-GPCM claim. The conditional JML audit is not reused for MML.
+#'   boundary. A separate bounded check can identify a competitive path in
+#'   which additive coordinates and a pair of log slopes move together. That
+#'   stronger warning remains `not_evaluated`, with no primary value, because
+#'   it is not a global result for the non-concave GPCM likelihood. Failure to
+#'   find either path is likewise not promoted to a finite joint-GPCM claim.
+#'   The conditional JML boundary checks are not reused for MML.
 #'   `diagnose_mfrm()` may retain observed-information and delta-method values
 #'   in `Optimizer*SE` / `Optimizer*CI` columns, but ordinary `SE` / `CI`
 #'   columns remain unavailable while parameter readiness is not established.

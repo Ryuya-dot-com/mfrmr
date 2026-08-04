@@ -4003,6 +4003,14 @@ mfrm_estimate <- function(data, person_col, facet_cols, score_col,
       sizes = sizes,
       par = opt$par
     )
+  boundary_audit$gpcm_joint_boundary <-
+    audit_mfrm_jml_gpcm_joint_boundary(
+      prep = prep,
+      idx = idx,
+      config = config,
+      sizes = sizes,
+      par = opt$par
+    )
   person_tbl <- apply_mfrm_person_boundary(person_tbl, boundary_audit)
   config$boundary_audit <- boundary_audit
   data_review$boundary <- boundary_audit

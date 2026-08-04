@@ -99,8 +99,14 @@ sum-to-zero log-slope path while holding the retained additive coordinates
 fixed. Such a result yields `unbounded_low`, `unbounded_high`, or
 `unbounded_both`. If no such path is certified, the joint Person--facet--step--
 slope problem remains unevaluated; the finite optimizer output is retained only
-as a numerical trace. Under MML, Persons are integrated out, so this conditional
-JML certificate is not reused as marginal-likelihood evidence.
+as a numerical trace. A second bounded check lets additive coordinates move
+with an ordered positive/negative log-slope pair. A competitive path from this
+family is recorded as a candidate, but `ParameterStatus` remains
+`not_evaluated` and the primary value remains unavailable: this sufficient
+path result does not determine the global maximum of the non-concave GPCM
+likelihood. Failure to find such a path is equally limited to that family.
+Under MML, Persons are integrated out, so neither conditional JML result is
+reused as marginal-likelihood evidence.
 
 The same distinction applies to uncertainty. `diagnose_mfrm()` can retain the
 local covariance calculation as `Optimizer*SE` and `Optimizer*CI` fields for

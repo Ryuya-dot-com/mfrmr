@@ -21,7 +21,22 @@ local_dif_fixtures <- function(env = parent.frame()) {
 }
 
 mark_test_inference_ready <- function(fit) {
+  # This helper isolates information-criterion behavior from readiness. Since
+  # readiness is stored once on current fitted objects, changing only the
+  # legacy summary scalar would correctly have no effect.
+  if (inherits(fit$readiness, "mfrmr_readiness_record") &&
+      is.data.frame(fit$readiness$fit) && nrow(fit$readiness$fit) == 1L) {
+    fit$readiness$fit$InputState[1] <- "pass"
+    fit$readiness$fit$EstimabilityState[1] <- "identified"
+    fit$readiness$fit$CategoryState[1] <- "adequate"
+    fit$readiness$fit$BoundaryState[1] <- "finite"
+    fit$readiness$fit$NumericalState[1] <- "ready"
+    fit$readiness$fit$FitReadiness[1] <- "ready"
+    fit$readiness$fit$InferenceReady[1] <- TRUE
+    fit$readiness$fit$ReasonCodes[1] <- ""
+  }
   fit$summary$Converged[1] <- TRUE
+  fit$summary$FitReadiness[1] <- "ready"
   fit$summary$InferenceReady[1] <- TRUE
   fit$summary$ConvergenceCode[1] <- 0L
   fit$summary$ConvergenceStatus[1] <- "converged"
@@ -30,7 +45,15 @@ mark_test_inference_ready <- function(fit) {
 }
 
 mark_test_inference_review <- function(fit) {
+  if (inherits(fit$readiness, "mfrmr_readiness_record") &&
+      is.data.frame(fit$readiness$fit) && nrow(fit$readiness$fit) == 1L) {
+    fit$readiness$fit$NumericalState[1] <- "review"
+    fit$readiness$fit$FitReadiness[1] <- "review"
+    fit$readiness$fit$InferenceReady[1] <- FALSE
+    fit$readiness$fit$ReasonCodes[1] <- "optimizer_review_required"
+  }
   fit$summary$Converged[1] <- FALSE
+  fit$summary$FitReadiness[1] <- "review"
   fit$summary$InferenceReady[1] <- FALSE
   fit$summary$ConvergenceStatus[1] <- "optimizer_warning"
   fit$summary$ConvergenceSeverity[1] <- "review"

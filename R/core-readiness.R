@@ -7,7 +7,7 @@
 # or from a finite numerical proxy for an unbounded parameter.
 
 mfrmr_readiness_contract_version <- function() {
-  "mfrmr-readiness-0.2.3-v2"
+  "mfrmr-readiness-0.2.3-v3"
 }
 
 mfrmr_readiness_contract_states <- function() {
@@ -306,12 +306,22 @@ mfrmr_readiness_gpcm_slope_parameters <- function(config,
   slope_facet <- as.character(config$slope_facet %||% NA_character_)
   method <- as.character(config$method %||% NA_character_)
   audit <- config$boundary_audit$gpcm_slope_boundary %||% list()
+  joint_audit <- config$boundary_audit$gpcm_joint_boundary %||% list()
   targets <- as.data.frame(audit$target_status %||% data.frame(),
                            stringsAsFactors = FALSE)
+  joint_targets <- as.data.frame(
+    joint_audit$target_status %||% data.frame(), stringsAsFactors = FALSE
+  )
   slope_table <- as.data.frame(slope_table, stringsAsFactors = FALSE)
 
   target_index <- if (nrow(targets) > 0L && "Level" %in% names(targets)) {
     match(levels, as.character(targets$Level))
+  } else {
+    rep(NA_integer_, length(levels))
+  }
+  joint_target_index <- if (nrow(joint_targets) > 0L &&
+                            "Level" %in% names(joint_targets)) {
+    match(levels, as.character(joint_targets$Level))
   } else {
     rep(NA_integer_, length(levels))
   }
@@ -326,6 +336,14 @@ mfrmr_readiness_gpcm_slope_parameters <- function(config,
     if (field %in% names(targets)) {
       keep <- !is.na(target_index)
       out[keep] <- targets[[field]][target_index[keep]]
+    }
+    out
+  }
+  joint_target_value <- function(field, default = NA) {
+    out <- rep(default, length(levels))
+    if (field %in% names(joint_targets)) {
+      keep <- !is.na(joint_target_index)
+      out[keep] <- joint_targets[[field]][joint_target_index[keep]]
     }
     out
   }
@@ -351,6 +369,9 @@ mfrmr_readiness_gpcm_slope_parameters <- function(config,
     target_slope[!is.finite(optimizer_slope) & is.finite(target_slope)]
 
   candidate <- as.character(target_value("CandidateStatus", "not_evaluated"))
+  joint_candidate <- as.character(joint_target_value(
+    "CandidateStatus", "not_evaluated"
+  ))
   fixed_unit <- as.integer(config$gpcm_spec$n_params %||% 0L) == 0L ||
     identical(as.character(audit$state %||% ""),
               "no_free_log_slope_coordinates")
@@ -399,6 +420,19 @@ mfrmr_readiness_gpcm_slope_parameters <- function(config,
     direction[both] <- "both"
     reason[both] <- "jml_gpcm_slope_boundary_both"
     basis[both] <- "multiple_certified_slope_only_boundary_paths"
+
+    unresolved <- status == "not_evaluated"
+    joint_high <- unresolved & joint_candidate == "joint_boundary_path_high"
+    joint_low <- unresolved & joint_candidate == "joint_boundary_path_low"
+    joint_both <- unresolved & joint_candidate == "joint_boundary_path_both"
+    joint_none <- unresolved &
+      identical(as.character(joint_audit$state %||% ""), "none_certified")
+    reason[joint_high] <- "jml_gpcm_joint_boundary_candidate_high"
+    reason[joint_low] <- "jml_gpcm_joint_boundary_candidate_low"
+    reason[joint_both] <- "jml_gpcm_joint_boundary_candidate_both"
+    reason[joint_none] <- "jml_gpcm_joint_boundary_none_certified"
+    basis[joint_high | joint_low | joint_both] <-
+      "certified_joint_nonlinear_boundary_candidate_global_status_open"
   }
 
   comparison <- ifelse(
@@ -425,11 +459,15 @@ mfrmr_readiness_gpcm_slope_parameters <- function(config,
     PrimaryEstimateBasis = basis,
     OptimizerEstimateUse = optimizer_use,
     ReasonCodes = reason,
-    AuditState = rep(as.character(audit$state %||% "missing"), length(levels)),
+    AuditState = rep(paste0(
+      "slope_only=", audit$state %||% "missing",
+      ";joint_pair=", joint_audit$state %||% "missing"
+    ), length(levels)),
     AuditProvenance = rep(paste0(
       "gpcm_slope_parameter_readiness_v1;method=", method,
       ";identification=", config$gpcm_spec$identification %||% "unknown",
-      ";conditional_jml_scope=retained_additive_fixed"
+      ";conditional_jml_scope=retained_additive_fixed",
+      ";joint_pair_scope=linear_additive_constant_log_slope_rates"
     ), length(levels)),
     stringsAsFactors = FALSE
   )
@@ -538,6 +576,7 @@ mfrmr_readiness_boundary_component <- function(config) {
   structural <- audit$structural_additive %||% list()
   joint <- audit$joint_additive %||% list()
   slope <- audit$gpcm_slope_boundary %||% list()
+  gpcm_joint <- audit$gpcm_joint_boundary %||% list()
   person_status <- as.data.frame(audit$parameter_status %||% data.frame(),
                                  stringsAsFactors = FALSE)
 
@@ -616,6 +655,10 @@ mfrmr_readiness_boundary_component <- function(config) {
   } else {
     TRUE
   }
+  joint_gpcm_candidate <- identical(
+    as.character(gpcm_joint$state %||% ""),
+    "certified_competitive_joint_boundary_path"
+  )
   propagated <- !(additive_candidate || slope_candidate_unpropagated)
   complete <- person_complete && additive_complete && nonlinear_complete &&
     propagated
@@ -635,7 +678,11 @@ mfrmr_readiness_boundary_component <- function(config) {
         if (identical(method, "MML")) {
           "mml_gpcm_slope_boundary_not_evaluated"
         } else {
-          "jml_gpcm_joint_boundary_not_evaluated"
+          if (joint_gpcm_candidate) {
+            "jml_gpcm_joint_boundary_candidate"
+          } else {
+            "jml_gpcm_joint_boundary_not_evaluated"
+          }
         }
       }
     )
@@ -649,7 +696,8 @@ mfrmr_readiness_boundary_component <- function(config) {
       "person=", person_state,
       ";structural=", structural$state %||% "missing",
       ";joint=", joint$state %||% "missing",
-      ";slope=", slope$state %||% "missing"
+      ";slope=", slope$state %||% "missing",
+      ";gpcm_joint=", gpcm_joint$state %||% "missing"
     ),
     provenance = paste0(
       "person_and_constrained_recession_v1;method=", method,

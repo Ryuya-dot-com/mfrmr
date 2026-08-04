@@ -45,7 +45,7 @@ test_that("public roadmap is separated from internal release operations", {
   expect_true(any(grepl("inst/validation", ignore, fixed = TRUE)))
 })
 
-test_that("internal draft.39 readiness and GPCM comparison work remain explicit and private", {
+test_that("internal draft.40 GPCM boundary work remains explicit and private", {
   pkg_root <- normalizePath(testthat::test_path("..", ".."), mustWork = TRUE)
   internal_path <- file.path(
     pkg_root, "inst", "validation", "internal-roadmap-0.2.3.md"
@@ -132,7 +132,8 @@ test_that("internal draft.39 readiness and GPCM comparison work remain explicit 
   expect_match(internal, "partitioned\\s+exhaustively")
   expect_match(internal, "Estimator ecosystem and maturity boundary", fixed = TRUE)
   expect_match(internal, "method = \"HRM\"", fixed = TRUE)
-  expect_match(gate, "Specification ID | `0.2.3-draft.39`", fixed = TRUE)
+  expect_match(gate, "Specification ID | `0.2.3-draft.40`", fixed = TRUE)
+  expect_match(internal, "Draft.40 adds the first bounded joint nonlinear GPCM path family", fixed = TRUE)
   expect_match(internal, "GPCM discrepancy decomposition and stress envelope", fixed = TRUE)
   expect_match(internal, "different_slope_estimand", fixed = TRUE)
   expect_match(internal, "Table 7 discrimination is never a", fixed = TRUE)
@@ -158,6 +159,7 @@ test_that("internal draft.39 readiness and GPCM comparison work remain explicit 
     "jml_structural_recession_certificate",
     "jml_joint_recession_certificate",
     "jml_gpcm_slope_boundary_path",
+    "jml_gpcm_joint_boundary_path",
     "sparse_estimability_performance",
     "metric_specific_comparison_eligibility",
     "jml_estimator_maturity",
@@ -186,18 +188,20 @@ test_that("WP0 readiness contract freezes scoped fail-closed semantics", {
   audit <- env$mfrmr_readiness_validate_fixtures(fixture_path, strict = TRUE)
 
   expect_true(audit$Valid)
-  expect_identical(audit$Rows, 33L)
+  expect_identical(audit$Rows, 36L)
   expect_identical(audit$FitRows, 14L)
-  expect_identical(audit$ParameterRows, 13L)
+  expect_identical(audit$ParameterRows, 16L)
   expect_identical(audit$ComparisonRows, 6L)
   expect_identical(
     audit$ContractVersion,
-    "mfrmr-readiness-0.2.3-v2"
+    "mfrmr-readiness-0.2.3-v3"
   )
   expect_true(all(c("unbounded_both", "not_evaluated") %in%
                     env$mfrmr_readiness_contract_states()$ParameterStatus))
   expect_true(all(c(
     "jml_gpcm_slope_boundary_both",
+    "jml_gpcm_joint_boundary_candidate_both",
+    "jml_gpcm_joint_boundary_none_certified",
     "jml_gpcm_joint_boundary_not_evaluated",
     "mml_gpcm_slope_boundary_not_evaluated"
   ) %in% env$mfrmr_readiness_reason_codes()$ReasonCode))

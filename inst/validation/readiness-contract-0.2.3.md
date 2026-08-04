@@ -1,8 +1,8 @@
 # mfrmr 0.2.3 internal readiness contract
 
-Status: `WP0-READINESS-CONTRACT` structural contract, 2026-08-03.
+Status: `WP0-READINESS-CONTRACT` structural contract, 2026-08-05.
 
-Contract version: `mfrmr-readiness-0.2.3-v2`.
+Contract version: `mfrmr-readiness-0.2.3-v3`.
 
 This is a repository-only maintainer contract. It freezes the vocabulary and
 derivation rules that WP1--WP5 must implement. It is not a public API promise,
@@ -170,7 +170,7 @@ independent comparator, not the truth source for mfrmr's estimand.
 
 The controlled catalog is defined by
 `mfrmr_readiness_reason_codes()` in `readiness-contract-0.2.3.R`. Codes are
-lower-case snake case, append-only within contract v2, and scoped to fit,
+lower-case snake case, append-only within contract v3, and scoped to fit,
 parameter, comparison, or an explicit combination. Display prose may be
 translated; stored codes may not be translated, concatenated into an
 unparseable message, or replaced by optimizer text.
@@ -185,10 +185,19 @@ gradient and iteration-limit causes.
 A consumer must retain all causal codes. It may choose one first-screen state
 using the frozen precedence, but cannot retain only the most severe reason.
 New semantics require a new code. A spelling change or changed meaning
-requires a new readiness contract version. Contract v2 adds the GPCM-specific
+requires a new readiness contract version. Contract v2 added the GPCM-specific
 one-sided, two-sided, estimator-specific unevaluated, and fixed-unit-slope
 states needed to keep conditional JML path evidence separate from joint JML
-and marginal MML claims.
+and marginal MML claims. Contract v3 adds a second distinction: a certified
+competitive joint additive/log-slope boundary path is stronger than an
+unevaluated audit, but remains weaker than a global nonlinear identification
+result. It therefore keeps `ParameterStatus = "not_evaluated"`, withholds a
+primary value and ordinary SE/CI eligibility, and uses candidate-specific
+high, low, or both reason codes. A completed negative result for this bounded
+path family receives its own `none_certified` reason; it does not imply finite
+slopes. The fit remains under review in both cases until a global JML argument
+or an explicitly sufficient release rule is established. Conditional JML
+evidence is never transported to marginal MML.
 
 ## Condition and runtime policy
 
@@ -243,6 +252,9 @@ comparison expectations. The minimum controls include:
 - unsupported and rare PCM steps plus locally absent RSM categories;
 - generalized JML unbounded, anchored-extreme, and MML/EAP extreme behavior;
 - weak links, iteration limit, and optimizer failure;
+- slope-only low/high/both boundaries, joint high/low/both competitive
+  candidates, a scoped joint negative, marginal-MML non-reuse, and the
+  one-level fixed-slope reduction;
 - a saved 0.2.2 object without the contract; and
 - FACETS category/step-dimension, constraint, and extreme-display mismatches,
   plus eligible, missing, and failed external metrics.

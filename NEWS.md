@@ -18,9 +18,12 @@ CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
 * Added parameter-level readiness for free GPCM slopes. Certified JML
   fixed-additive slope paths now have typed low, high, or two-sided boundary
   states and extended-real primary values, while finite optimizer values remain
-  explicitly labelled numerical traces. A non-certified slope-only path is not
-  treated as proof of a finite joint GPCM maximum, and the conditional JML
-  certificate is not reused for MML. Approximate covariance calculations remain
+  explicitly labelled numerical traces. A bounded joint JML check now also
+  searches ordered slope-pair paths with simultaneous additive movement. A
+  competitive path is retained as a candidate rather than promoted to a global
+  unbounded estimate; a negative result remains limited to that path family.
+  Neither result is treated as proof of a finite joint GPCM maximum, and the
+  conditional JML evidence is not reused for MML. Approximate covariance calculations remain
   available in `Optimizer*SE` / `Optimizer*CI` fields, while ordinary slope
   uncertainty is withheld until estimator-specific readiness is established.
   `summary()` separates primary slope summaries from finite optimizer traces,

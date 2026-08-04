@@ -1,6 +1,6 @@
 # mfrmr internal development and validation roadmap
 
-Status: repository-only maintainer plan, refined 2026-08-04.
+Status: repository-only maintainer plan, refined 2026-08-05.
 
 The repository-root `ROADMAP.md` is the single source of truth for public
 release direction. This file owns internal sequencing, candidate gates, local
@@ -311,7 +311,7 @@ The following remain outside 0.2.3:
 | M4: run confirmation | Run the locked recovery/stress matrix, FACETS JML core, ConQuest/TAM MML comparisons, TAM/immer JML convention grid, eligible immer CML/CCML rows, dimensionality challenge, and matched external rows without changing criteria or reusing discovery/pilot data as independent confirmation. | Candidate-linked internal and external evidence with every blocker classified and every expected scenario/replicate accounted for. |
 | M5: release handoff | Run full regression, cross-platform CI, manuals, URL checks, CRAN-time examples, Win-builder, package-content audit, and public-claim audit. | All blocker rows `ok`, all caveats visible, and an exact checked tarball. |
 
-The repository now contains `0.2.3-draft.39` planning and pilot artifacts at
+The repository now contains `0.2.3-draft.40` planning and pilot artifacts at
 `inst/validation/release-gate-spec-0.2.3.md` and
 `inst/validation/release-evidence-checklist-0.2.3.csv`, with the TAM/immer
 execution contract in `inst/validation/tam-immer-estimator-stress-plan-0.2.3.md`.
@@ -491,6 +491,23 @@ Those facts change the validation design: FACETS and immer cannot be treated as
 free-slope numeric gold standards, and a TAM row is eligible only after an
 exact re-expression and identification audit.
 
+Draft.40 adds the first bounded joint nonlinear GPCM path family. For each
+ordered positive/negative slope pair, the expanded log-slope rates are fixed
+at `+1` and `-1`, while all constrained additive coordinates may move along a
+sparse linear-program direction. A certificate requires a strictly favorable
+observed-category direction in the high-slope group, weak support in every
+unchanged-slope group, a strictly favorable aggregate leading term as the
+low slope tends to zero, exact reconstruction of the retained likelihood, and
+an analytic boundary likelihood no worse than the retained fit. The
+unanchored two-Person checkerboard now supplies a positive case missed by the
+fixed-additive slope check; a repeated balanced-outcome design is the negative
+control. Direct likelihood paths, row reversal, workload ceilings, solver
+failure, and MML non-reuse are tested. This is deliberately recorded as a
+competitive boundary candidate, not a global GPCM result: the primary value
+and ordinary uncertainty remain unavailable, a negative result is scoped to
+this path family, and more general rate vectors, curved paths, and the marginal
+MML problem remain open.
+
 ### GPCM discrepancy decomposition and stress envelope
 
 No scalar "FACETS minus mfrmr" or "TAM minus mfrmr" result is interpretable
@@ -593,11 +610,11 @@ reviewed. Confirmation remains prohibited until the later frozen gate.
 
 | Work package | Depends on | Current state | Implementation boundary | Required exit artifact |
 | --- | --- | --- | --- | --- |
-| `WP0-READINESS-CONTRACT` | draft.20 diagnosis | `complete_structural_v2` | Freeze internal state names, scopes, severity/precedence, condition classes, object fields, legacy-object behavior, and exact adversarial fixtures before changing fit logic. | `readiness-contract-0.2.3.md`, its repository validator, 33-row fixture registry including six GPCM slope states, and privacy/semantic tests; no external tolerance. |
+| `WP0-READINESS-CONTRACT` | draft.20 diagnosis | `complete_structural_v3` | Freeze internal state names, scopes, severity/precedence, condition classes, object fields, legacy-object behavior, and exact adversarial fixtures before changing fit logic. | `readiness-contract-0.2.3.md`, its repository validator, 36-row fixture registry including nine GPCM slope states, and privacy/semantic tests; no external tolerance. |
 | `WP1-ESTIMABILITY` | WP0 | `in_progress_mml_all_pattern_design_reuse` | Build the estimator-specific free-parameter map and constrained design; detect structural aliases before optimization; distinguish exact alias from weak fitted information. | Unit/property tests, alias diagnostics, sparse-design benchmark, and zero false-ready exact controls. |
 | `WP2-CATEGORY-STEP` | WP0 | `in_progress_support_preflight` | Audit declared, observed, retained, free, fixed, and unsupported category/step coordinates globally and by current `step_facet`; do not add threshold anchors. | RSM/PCM/GPCM reduction and missing-category fixtures plus parameter-scoped status tables. |
-| `WP3-JML-BOUNDARY` | WP0 | `in_progress_joint_nonlinear_gpcm_boundary` | Detect JML element separation/extreme sufficient scores on the actual contributing row pattern; replace optimizer-dependent finite primary values with typed boundary states. The Person primary-state slice, sparse-triplet Person-fixed structural certificate, companion joint Person-structural additive cone, and retained-additive GPCM slope-only monotone-path certificate are implemented. The GPCM slice is complete only for constant sum-zero log-slope rays with additive coordinates fixed; its negative result is not a global finite-MLE claim. General joint nonlinear GPCM paths, independent general solver parity, broader model/basis properties, and target-scale evidence remain pending. | JML extreme/nonextreme fixtures, MML non-reduction guard, constrained facet/interaction/joint/slope-path certificates, sparse/dense and independent microcase parity, nonlinear joint-path negative control, and explicit optional-display contract. |
-| `WP4-READINESS-PROPAGATION` | WP1--WP3 | `in_progress_gpcm_slope_parameter_slice` | Derive fit-, parameter-, and output-level readiness once and propagate it without surface-specific reinterpretation. The fit record, deterministic precedence, conservative scalar, fail-closed synthetic legacy-object path, summary/results/convergence/plot front doors, target-aware unpropagated-candidate rule, and typed GPCM slope parameter/uncertainty slice are implemented; complete facet/interaction/step and remaining output propagation depend on unfinished WP1--WP3 states. | Cross-surface snapshot/semantic tests and a real serialized 0.2.2-object migration fixture. |
+| `WP3-JML-BOUNDARY` | WP0 | `in_progress_bounded_joint_nonlinear_gpcm_paths` | Detect JML element separation/extreme sufficient scores on the actual contributing row pattern; replace optimizer-dependent finite primary values with typed boundary states. The Person primary-state slice, sparse-triplet Person-fixed structural certificate, companion joint Person-structural additive cone, retained-additive GPCM slope-only monotone paths, and ordered-pair linear-additive/constant-log-slope joint path family are implemented. Positive joint paths remain candidates because the GPCM likelihood is globally non-concave; negative results are scoped. More general rate vectors, curved paths, global arguments, independent general solver parity, broader model/basis properties, and target-scale evidence remain pending. | JML extreme/nonextreme fixtures, MML non-reduction guard, constrained facet/interaction/joint/slope-path certificates, sparse/dense and independent microcase parity, nonlinear joint-path positive and negative controls, and explicit optional-display contract. |
+| `WP4-READINESS-PROPAGATION` | WP1--WP3 | `in_progress_gpcm_joint_candidate_slice` | Derive fit-, parameter-, and output-level readiness once and propagate it without surface-specific reinterpretation. The fit record, deterministic precedence, conservative scalar, fail-closed synthetic legacy-object path, summary/results/convergence/plot front doors, target-aware unpropagated-candidate rule, typed slope-only GPCM boundaries, and candidate-specific joint GPCM reasons under contract v3 are implemented. Competitive joint candidates remain `not_evaluated` with no primary value or ordinary uncertainty; complete facet/interaction/step and remaining output propagation depend on unfinished WP1--WP3 states. | Cross-surface snapshot/semantic tests and a real serialized 0.2.2-object migration fixture. |
 | `WP5-COMPARISON-CONTRACT` | WP4 | `blocked_by_dependency` | Make FACETS, TAM, immer, and other external normalization metric-specific and fail closed before numeric aggregation; identify estimator, adjustment, person treatment, and software stratum explicitly. | Eligibility/rejection ledger with denominator accounting, method-mode identity, and no silent row loss. |
 | `WP6-SCALE-AND-ADVERSARIAL` | WP1--WP5 | `blocked_by_dependency` | Verify sparse computation, basis invariance, row-order invariance, malformed-input behavior, and target-size runtime/memory without claiming FACETS capacity parity. | Benchmark envelope and metamorphic/negative-test report; no dense design allocation at target sizes. |
 | `WP7-REPILOT-AND-FREEZE` | WP0--WP6 | `blocked_by_dependency` | Rerun the affected internal and FACETS 4.5.0 pilot cells and the TAM/immer estimator grid on new pilot seeds, calibrate weak-information and estimator-specific rules, then prepare the next reviewed frozen specification. | Complete pilot registry, method-mode-specific reason-coded exclusions, MCSE plan, resolved blocker criteria, and still no confirmation result. |
@@ -634,7 +651,7 @@ The normative structural record is
 legacy mapping, condition-class registry, and validator are in
 `readiness-contract-0.2.3.R`; exact expected cases are in
 `readiness-contract-fixtures-0.2.3.csv`. The contract identity is
-`mfrmr-readiness-0.2.3-v2`.
+`mfrmr-readiness-0.2.3-v3`.
 
 WP0 is structurally complete, not statistically confirmed. In particular, it
 freezes that `InferenceReady` is `TRUE` only for `FitReadiness = ready`, while

@@ -65,7 +65,7 @@ test_that("balanced PCM records the complete category and step contract", {
 
   expect_identical(
     audit$contract_version,
-    "mfrmr-readiness-0.2.3-v2"
+    "mfrmr-readiness-0.2.3-v3"
   )
   expect_identical(audit$readiness$CategoryState, "adequate")
   expect_true(all(required %in% names(audit$support_table)))

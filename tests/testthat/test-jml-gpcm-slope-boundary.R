@@ -260,9 +260,12 @@ test_that("none-certified slope-only paths do not imply finite joint GPCM", {
   expect_true(all(is.na(fit$slopes$PrimaryEstimate)))
   expect_true(all(is.finite(fit$slopes$OptimizerLogEstimate)))
   expect_true(all(is.finite(fit$slopes$OptimizerEstimate)))
-  expect_true(all(
-    fit$slopes$ReasonCodes == "jml_gpcm_joint_boundary_not_evaluated"
-  ))
+  expected_reason <- if (requireNamespace("lpSolve", quietly = TRUE)) {
+    "jml_gpcm_joint_boundary_candidate_both"
+  } else {
+    "jml_gpcm_joint_boundary_not_evaluated"
+  }
+  expect_true(all(fit$slopes$ReasonCodes == expected_reason))
 
   # At the retained symmetric point all base utilities are tied, so the
   # slope-only audit correctly has no strict ray. Moving Person coordinates

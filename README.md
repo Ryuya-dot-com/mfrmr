@@ -718,9 +718,15 @@ vignette("mfrmr-gpcm-scope", package = "mfrmr")
 Free-slope GPCM fits are currently review-only at the parameter boundary gate.
 For JML, a certified fixed-additive slope path is recorded as
 `unbounded_low`, `unbounded_high`, or `unbounded_both`; failure to certify that
-narrow path does not establish a finite joint Person--step--slope maximum. For
-MML, the conditional JML certificate is not reused as marginal-likelihood
-evidence. Inspect `fit$slopes$ParameterStatus` and `PrimaryEstimate` before the
+narrow path does not establish a finite joint Person--step--slope maximum. A
+second bounded check allows additive coordinates and an ordered pair of log
+slopes to move together. A competitive path from this check is a stronger
+warning, but the slope remains `not_evaluated` and has no primary value because
+the non-concave GPCM likelihood has not been resolved globally. A negative
+result is limited to the checked path family and also does not establish a
+finite maximum. For MML, neither conditional JML result is reused as marginal-
+likelihood evidence. Inspect `fit$slopes$ParameterStatus` and
+`PrimaryEstimate` before the
 finite optimizer traces in `Estimate`. Approximate covariance values can be
 retained under `Optimizer*SE` and `Optimizer*CI`, but ordinary slope SE/CI
 fields remain unavailable until estimator-specific parameter readiness passes.
