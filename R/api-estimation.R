@@ -763,15 +763,23 @@
 #'   columns are attached to `fit$steps` when the Hessian is available.
 #'   For step-structure quality, also use the step-collapse and disordering
 #'   warnings from [diagnose_mfrm()] and [category_structure_report()].
-#' - `slopes`: estimated discrimination parameters for `GPCM` fits as
-#'   a one-row-per-slope-element `tibble` with `LogEstimate` and
-#'   `Estimate`. Bare fits keep this table as point estimates. For MML
-#'   bounded-`GPCM` fits, `diagnose_mfrm()` exposes log-slope SEs plus
-#'   positive-scale delta-method SEs and confidence limits in
-#'   `diagnostics$parameter_uncertainty$slopes`; when
-#'   `attach_diagnostics = TRUE`, those columns are attached to
-#'   `fit$slopes` when the Hessian is available. The identification
-#'   convention pins the geometric mean of slopes at 1.
+#' - `slopes`: discrimination parameters for `GPCM` fits as a
+#'   one-row-per-slope-element `tibble`. `LogEstimate` and `Estimate` retain
+#'   the finite optimizer values for compatibility and numerical diagnosis;
+#'   `OptimizerLogEstimate` / `OptimizerEstimate` name that role explicitly.
+#'   Read `ParameterStatus`, `PrimaryLogEstimate`, `PrimaryEstimate`,
+#'   `SEEligible`, `CIEligible`, and `ReasonCodes` before interpretation. A
+#'   certified JML slope-only path receives a typed extended-real primary
+#'   boundary; a non-certified conditional path is not promoted to a finite
+#'   joint-GPCM claim. The conditional JML audit is not reused for MML.
+#'   `diagnose_mfrm()` may retain observed-information and delta-method values
+#'   in `Optimizer*SE` / `Optimizer*CI` columns, but ordinary `SE` / `CI`
+#'   columns remain unavailable while parameter readiness is not established.
+#'   The identification convention pins the geometric mean of finite optimizer
+#'   slopes at 1.
+#' - `readiness`: the versioned fit record, five component rows, and current
+#'   parameter-level rows. The current parameter slice includes GPCM slopes;
+#'   other non-Person parameter classes remain scheduled for later propagation.
 #' - `interactions`: model-estimated facet interaction effects and metadata
 #'   when `facet_interactions` is supplied
 #' - `population`: population-model metadata. Ordinary fits keep an inactive

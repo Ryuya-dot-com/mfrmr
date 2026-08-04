@@ -5,7 +5,7 @@
 # WP1--WP5 in internal-roadmap-0.2.3.md.
 
 mfrmr_readiness_contract_version <- function() {
-  "mfrmr-readiness-0.2.3-v1"
+  "mfrmr-readiness-0.2.3-v2"
 }
 
 mfrmr_readiness_contract_states <- function() {
@@ -33,8 +33,8 @@ mfrmr_readiness_contract_states <- function() {
     ),
     ParameterStatus = c(
       "estimable", "fixed", "weak_information", "unbounded_low",
-      "unbounded_high", "aliased", "unsupported", "not_estimated",
-      "legacy_unknown"
+      "unbounded_high", "unbounded_both", "aliased", "unsupported",
+      "not_estimated", "not_evaluated", "legacy_unknown"
     ),
     ComparisonEligibility = c(
       "eligible", "ineligible", "missing", "failed", "not_applicable"
@@ -76,6 +76,12 @@ mfrmr_readiness_reason_codes <- function() {
       "mml_extreme_response_prior_regularized",
       "boundary_candidate_not_propagated",
       "boundary_audit_incomplete",
+      "jml_gpcm_slope_boundary_low",
+      "jml_gpcm_slope_boundary_high",
+      "jml_gpcm_slope_boundary_both",
+      "jml_gpcm_joint_boundary_not_evaluated",
+      "mml_gpcm_slope_boundary_not_evaluated",
+      "gpcm_unit_slope_fixed",
       "optimizer_failed",
       "iteration_limit",
       "terminal_gradient_review",
@@ -105,6 +111,9 @@ mfrmr_readiness_reason_codes <- function() {
       "fit;parameter", "fit;parameter;comparison",
       "fit;parameter;comparison", "parameter", "parameter;comparison",
       "fit;parameter", "fit",
+      "parameter;comparison", "parameter;comparison",
+      "parameter;comparison", "fit;parameter", "fit;parameter",
+      "parameter",
       "fit", "fit", "fit", "fit", "fit",
       "comparison", "comparison", "comparison", "comparison",
       "comparison", "comparison", "comparison", "comparison",
@@ -115,7 +124,7 @@ mfrmr_readiness_reason_codes <- function() {
       rep("input", 4L),
       rep("estimability", 6L),
       rep("category", 5L),
-      rep("boundary", 6L),
+      rep("boundary", 12L),
       rep("numerical", 5L),
       rep("comparison", 14L)
     ),
@@ -125,6 +134,7 @@ mfrmr_readiness_reason_codes <- function() {
       "blocked", "blocked", "blocked", "blocked", "review",
       "exclusion", "exclusion", "information", "information",
       "review", "review",
+      "exclusion", "exclusion", "exclusion", "review", "review", "fixed",
       "blocked", "review", "review", "review", "blocked",
       rep("ineligible", 12L), "missing", "failed"
     ),

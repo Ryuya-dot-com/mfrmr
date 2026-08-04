@@ -15,6 +15,19 @@ CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
   adapter rather than being upgraded from an older Boolean; convergence,
   summary, result, and fit-plot entry points keep them review-only until refit.
 
+* Added parameter-level readiness for free GPCM slopes. Certified JML
+  fixed-additive slope paths now have typed low, high, or two-sided boundary
+  states and extended-real primary values, while finite optimizer values remain
+  explicitly labelled numerical traces. A non-certified slope-only path is not
+  treated as proof of a finite joint GPCM maximum, and the conditional JML
+  certificate is not reused for MML. Approximate covariance calculations remain
+  available in `Optimizer*SE` / `Optimizer*CI` fields, while ordinary slope
+  uncertainty is withheld until estimator-specific readiness is established.
+  `summary()` separates primary slope summaries from finite optimizer traces,
+  and the documentation distinguishes FACETS' post-fit discrimination
+  diagnostic, TAM's non-faceted GPCM slope route, and `immer`'s equal-
+  discrimination or alternative-model reference roles.
+
 * Added a model-scoped category and step-support preflight. Every new fit now
   distinguishes declared, globally observed, ladder-observed, retained, free,
   derived, fixed, weak, and unsupported category/step coordinates. RSM uses

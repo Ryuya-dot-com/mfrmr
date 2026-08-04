@@ -715,6 +715,29 @@ gpcm_capability_matrix()
 vignette("mfrmr-gpcm-scope", package = "mfrmr")
 ```
 
+Free-slope GPCM fits are currently review-only at the parameter boundary gate.
+For JML, a certified fixed-additive slope path is recorded as
+`unbounded_low`, `unbounded_high`, or `unbounded_both`; failure to certify that
+narrow path does not establish a finite joint Person--step--slope maximum. For
+MML, the conditional JML certificate is not reused as marginal-likelihood
+evidence. Inspect `fit$slopes$ParameterStatus` and `PrimaryEstimate` before the
+finite optimizer traces in `Estimate`. Approximate covariance values can be
+retained under `Optimizer*SE` and `Optimizer*CI`, but ordinary slope SE/CI
+fields remain unavailable until estimator-specific parameter readiness passes.
+
+Cross-software slope values are not automatically matched estimands. FACETS'
+reported element discrimination is a post-fit diagnostic computed after the
+Rasch measures and does not feed back into the other estimates; it must not be
+treated as a free-GPCM slope estimate from `mfrmr`. TAM can estimate GPCM
+slopes through its 2PL/GPCM MML route, but its many-facet fitting route does
+not estimate those slopes. The current `immer` estimation routes provide PCM-
+design and hierarchical-rater references rather than a matched free-GPCM
+fit. Consequently, FACETS and `immer` are used for equal-discrimination
+reductions or deliberately different-model sensitivity checks. A TAM GPCM
+comparison is numeric only after the response kernel, slope grouping,
+threshold parameterization, latent-scale identification, retained rows, and
+category map have all been matched.
+
 For strict MML diagnostics, keep the two evidence bases distinct:
 
 ```r

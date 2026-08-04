@@ -90,15 +90,38 @@ test_that("GPCM slope-only monotone boundary path is certified", {
   expect_equal(sum(expanded$Loading), 0)
   expect_setequal(expanded$Loading, c(-1, 1))
 
-  # WP4 has not promoted this internal certificate to public primary values.
+  # The finite optimizer values remain available only as numerical traces;
+  # the parameter record carries the extended-real primary values.
   expect_true(all(is.finite(fit$slopes$LogEstimate)))
   expect_true(all(is.finite(fit$slopes$Estimate)))
+  expect_true(all(is.finite(fit$slopes$OptimizerLogEstimate)))
+  expect_true(all(is.finite(fit$slopes$OptimizerEstimate)))
+  expect_identical(
+    fit$slopes$ParameterStatus,
+    c("unbounded_high", "unbounded_low")
+  )
+  expect_identical(fit$slopes$BoundaryDirection, c("high", "low"))
+  expect_equal(fit$slopes$PrimaryLogEstimate, c(Inf, -Inf))
+  expect_equal(fit$slopes$PrimaryEstimate, c(Inf, 0))
+  expect_true(all(!fit$slopes$SEEligible))
+  expect_true(all(!fit$slopes$CIEligible))
+  expect_true(all(fit$slopes$ComparisonEligibility == "ineligible"))
+  expect_true(all(fit$slopes$OptimizerEstimateUse == "numerical_trace_only"))
+  expect_identical(
+    fit$readiness$parameters$ParameterStatus,
+    fit$slopes$ParameterStatus
+  )
   expect_identical(fit$readiness$fit$BoundaryState, "not_evaluated")
   expect_identical(fit$readiness$fit$FitReadiness, "review")
   expect_false(fit$readiness$fit$InferenceReady)
+  expect_false(grepl(
+    "boundary_candidate_not_propagated",
+    fit$readiness$fit$ReasonCodes,
+    fixed = TRUE
+  ))
   expect_match(
     fit$readiness$fit$ReasonCodes,
-    "boundary_candidate_not_propagated",
+    "jml_gpcm_joint_boundary_not_evaluated",
     fixed = TRUE
   )
 })
@@ -232,6 +255,14 @@ test_that("none-certified slope-only paths do not imply finite joint GPCM", {
     audit$target_status$CandidateStatus ==
       "none_certified_in_slope_only_paths"
   ))
+  expect_true(all(fit$slopes$ParameterStatus == "not_evaluated"))
+  expect_true(all(is.na(fit$slopes$PrimaryLogEstimate)))
+  expect_true(all(is.na(fit$slopes$PrimaryEstimate)))
+  expect_true(all(is.finite(fit$slopes$OptimizerLogEstimate)))
+  expect_true(all(is.finite(fit$slopes$OptimizerEstimate)))
+  expect_true(all(
+    fit$slopes$ReasonCodes == "jml_gpcm_joint_boundary_not_evaluated"
+  ))
 
   # At the retained symmetric point all base utilities are tied, so the
   # slope-only audit correctly has no strict ray. Moving Person coordinates
@@ -251,4 +282,88 @@ test_that("none-certified slope-only paths do not imply finite joint GPCM", {
     joint_path_log_likelihood[length(joint_path_log_likelihood)],
     joint_path_log_likelihood[1]
   )
+})
+
+test_that("GPCM slope parameter contract represents two-sided boundaries", {
+  fit <- fit_gpcm_slope_boundary_fixture()
+  config <- fit$config
+  targets <- config$boundary_audit$gpcm_slope_boundary$target_status
+  targets$CandidateStatus[targets$Level == "C1"] <- "boundary_path_both"
+  config$boundary_audit$gpcm_slope_boundary$target_status <- targets
+  raw_slopes <- as.data.frame(fit$slopes)[, c(
+    "SlopeFacet", "LogEstimate", "Estimate"
+  )]
+
+  parameters <- mfrmr:::mfrmr_readiness_gpcm_slope_parameters(
+    config, raw_slopes
+  )
+  c1 <- parameters[parameters$Level == "C1", , drop = FALSE]
+  expect_identical(c1$ParameterStatus, "unbounded_both")
+  expect_identical(c1$BoundaryDirection, "both")
+  expect_true(is.na(c1$PrimaryLogEstimate))
+  expect_true(is.na(c1$PrimaryEstimate))
+  expect_true(is.finite(c1$OptimizerLogEstimate))
+  expect_true(is.finite(c1$OptimizerEstimate))
+  expect_false(c1$SEEligible)
+  expect_false(c1$CIEligible)
+  expect_identical(c1$ComparisonEligibility, "ineligible")
+  expect_identical(c1$ReasonCodes, "jml_gpcm_slope_boundary_both")
+})
+
+test_that("MML GPCM is not relabelled by the conditional JML slope audit", {
+  data <- load_mfrmr_data("example_core")
+  fit <- suppressMessages(suppressWarnings(fit_mfrm(
+    data,
+    person = "Person",
+    facets = c("Rater", "Criterion"),
+    score = "Score",
+    method = "MML",
+    model = "GPCM",
+    step_facet = "Criterion",
+    slope_facet = "Criterion",
+    quad_points = 5,
+    maxit = 25
+  )))
+
+  expect_true(all(fit$slopes$ParameterStatus == "not_evaluated"))
+  expect_true(all(is.na(fit$slopes$PrimaryEstimate)))
+  expect_true(all(is.finite(fit$slopes$OptimizerEstimate)))
+  expect_true(all(
+    fit$slopes$ReasonCodes == "mml_gpcm_slope_boundary_not_evaluated"
+  ))
+  expect_identical(fit$readiness$fit$BoundaryState, "not_evaluated")
+  expect_identical(fit$readiness$fit$FitReadiness, "review")
+  expect_false(fit$readiness$fit$InferenceReady)
+  expect_match(
+    fit$readiness$fit$ReasonCodes,
+    "mml_gpcm_slope_boundary_not_evaluated",
+    fixed = TRUE
+  )
+})
+
+test_that("one-level GPCM slope reduction is fixed rather than estimated", {
+  config <- list(
+    model = "GPCM",
+    method = "JML",
+    slope_facet = "Criterion",
+    gpcm_spec = list(
+      levels = "C1", n_params = 0L,
+      identification = "sum_to_zero_log_slopes"
+    ),
+    boundary_audit = list(gpcm_slope_boundary = list(
+      state = "no_free_log_slope_coordinates"
+    ))
+  )
+  slopes <- data.frame(
+    SlopeFacet = "C1", LogEstimate = 0, Estimate = 1,
+    stringsAsFactors = FALSE
+  )
+  parameters <- mfrmr:::mfrmr_readiness_gpcm_slope_parameters(config, slopes)
+
+  expect_identical(parameters$ParameterStatus, "fixed")
+  expect_identical(parameters$BoundaryDirection, "fixed")
+  expect_equal(parameters$PrimaryLogEstimate, 0)
+  expect_equal(parameters$PrimaryEstimate, 1)
+  expect_identical(parameters$ComparisonEligibility, "not_applicable")
+  expect_identical(parameters$ReasonCodes, "gpcm_unit_slope_fixed")
 })

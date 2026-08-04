@@ -2,7 +2,7 @@
 
 Status: `WP0-READINESS-CONTRACT` structural contract, 2026-08-03.
 
-Contract version: `mfrmr-readiness-0.2.3-v1`.
+Contract version: `mfrmr-readiness-0.2.3-v2`.
 
 This is a repository-only maintainer contract. It freezes the vocabulary and
 derivation rules that WP1--WP5 must implement. It is not a public API promise,
@@ -119,9 +119,11 @@ reason codes, and the contract/audit identity.
 | `weak_information` | finite value retained with explicit review status | ineligible for blocking recovery until a frozen weak-information rule permits it |
 | `unbounded_low` | primary estimate is negative infinity or an explicit typed boundary, never an optimizer proxy | ineligible for ordinary numeric MAE/RMSE |
 | `unbounded_high` | primary estimate is positive infinity or an explicit typed boundary, never an optimizer proxy | ineligible for ordinary numeric MAE/RMSE |
+| `unbounded_both` | certified paths approach both boundaries, so no unique scalar primary estimate exists | ineligible for ordinary numeric MAE/RMSE |
 | `aliased` | no unique primary estimate | ineligible |
 | `unsupported` | no data-estimated coordinate | ineligible |
 | `not_estimated` | coordinate not part of this fitted contract | not applicable or ineligible as specified by the metric |
+| `not_evaluated` | an applicable parameter-level audit is incomplete; an optimizer value may be retained only as a numerical trace | ineligible |
 | `legacy_unknown` | preserve legacy display only; do not infer current status | ineligible |
 
 Boundary logic is estimator-specific. An unanchored extreme JML element can be
@@ -168,7 +170,7 @@ independent comparator, not the truth source for mfrmr's estimand.
 
 The controlled catalog is defined by
 `mfrmr_readiness_reason_codes()` in `readiness-contract-0.2.3.R`. Codes are
-lower-case snake case, append-only within contract v1, and scoped to fit,
+lower-case snake case, append-only within contract v2, and scoped to fit,
 parameter, comparison, or an explicit combination. Display prose may be
 translated; stored codes may not be translated, concatenated into an
 unparseable message, or replaced by optimizer text.
@@ -183,7 +185,10 @@ gradient and iteration-limit causes.
 A consumer must retain all causal codes. It may choose one first-screen state
 using the frozen precedence, but cannot retain only the most severe reason.
 New semantics require a new code. A spelling change or changed meaning
-requires a new readiness contract version.
+requires a new readiness contract version. Contract v2 adds the GPCM-specific
+one-sided, two-sided, estimator-specific unevaluated, and fixed-unit-slope
+states needed to keep conditional JML path evidence separate from joint JML
+and marginal MML claims.
 
 ## Condition and runtime policy
 

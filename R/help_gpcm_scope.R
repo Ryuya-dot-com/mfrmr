@@ -175,7 +175,7 @@ print.mfrmr_gpcm_capabilities <- function(x, ...) {
       "estimation_iteration_report()"
     ),
     Status = c(
-      "supported",
+      "supported_with_caveat",
       "supported_with_caveat",
       "supported",
       "supported",
@@ -199,7 +199,9 @@ print.mfrmr_gpcm_capabilities <- function(x, ...) {
       paste(
         "Requires an explicit step facet and currently keeps",
         "`slope_facet == step_facet`; MML direct is the documented and verified default,",
-        "and EM/hybrid fall back to direct."
+        "and EM/hybrid fall back to direct. Free-slope fits retain optimizer",
+        "values as numerical traces, while estimator-specific global boundary",
+        "readiness and inferential slope uncertainty remain under review."
       ),
       paste(
         "Residual-based mean-square and strict-marginal outputs remain",

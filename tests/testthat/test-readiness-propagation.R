@@ -46,6 +46,16 @@ make_unified_readiness_fixture <- function(
   config <- list(
     method = method,
     model = model,
+    slope_facet = if (identical(model, "GPCM")) "Rater" else NULL,
+    gpcm_spec = if (identical(model, "GPCM")) {
+      list(
+        levels = c("R1", "R2"),
+        n_params = 1L,
+        identification = "sum_to_zero_log_slopes"
+      )
+    } else {
+      NULL
+    },
     estimability_audit = list(
       complete = estimability_complete,
       readiness = data.frame(

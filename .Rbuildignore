@@ -1,6 +1,8 @@
 ^data-raw$
 (^|/)\.DS_Store$
 ^\.git$
+^\.check-
+^\.r-library$
 ^\.gitattributes$
 ^\.{2}Rcheck$
 ^mfrmr\.Rcheck$

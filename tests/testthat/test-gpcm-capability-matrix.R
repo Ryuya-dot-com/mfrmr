@@ -104,7 +104,7 @@ test_that("gpcm_capability_matrix exposes only user-facing route guidance", {
 
   expect_true(any(
     tbl$Area == "Core fitting and summaries" &
-      tbl$Status == "supported"
+      tbl$Status == "supported_with_caveat"
   ))
   expect_true(any(
     tbl$Area == "Exploratory diagnostics and residual follow-up" &

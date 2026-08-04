@@ -311,7 +311,7 @@ The following remain outside 0.2.3:
 | M4: run confirmation | Run the locked recovery/stress matrix, FACETS JML core, ConQuest/TAM MML comparisons, TAM/immer JML convention grid, eligible immer CML/CCML rows, dimensionality challenge, and matched external rows without changing criteria or reusing discovery/pilot data as independent confirmation. | Candidate-linked internal and external evidence with every blocker classified and every expected scenario/replicate accounted for. |
 | M5: release handoff | Run full regression, cross-platform CI, manuals, URL checks, CRAN-time examples, Win-builder, package-content audit, and public-claim audit. | All blocker rows `ok`, all caveats visible, and an exact checked tarball. |
 
-The repository now contains `0.2.3-draft.37` planning and pilot artifacts at
+The repository now contains `0.2.3-draft.39` planning and pilot artifacts at
 `inst/validation/release-gate-spec-0.2.3.md` and
 `inst/validation/release-evidence-checklist-0.2.3.csv`, with the TAM/immer
 execution contract in `inst/validation/tam-immer-estimator-stress-plan-0.2.3.md`.
@@ -452,8 +452,8 @@ Input, Estimability, Category, Boundary, and Numerical component rows and
 derives `FitReadiness`, the conservative compatibility `InferenceReady`
 scalar, all reason codes, and audit provenance once. Native fit summaries,
 `summary(fit)`, results bundles, convergence consumers, and plot-readiness
-screening now consume the stored fit record. MML is not downgraded by
-inapplicable JML audits. Applicable incomplete audits and genuinely
+screening now consume the stored fit record. MML is not downgraded merely by
+an inapplicable JML audit. Applicable incomplete audits and genuinely
 unpropagated structural or slope targets fail closed, while a joint cone made
 only of already typed free extreme-Person directions does not create a second
 false candidate. The explicit legacy adapter returns `legacy_unknown` and
@@ -461,10 +461,115 @@ never promotes an old Boolean. Convergence, summary, results, and fit-plot
 entry points all pass saved pre-contract objects through that adapter; a
 synthetic old object with successful optimizer fields remains review-only.
 The contract identifier is user-safe and does not expose internal work-package
-labels. This is a fit-level WP4 slice, not completion:
-full parameter records, promotion of non-Person and slope primary values,
-SE/CI handling beyond Persons, remaining reports/exports/replay consumers,
+labels.
+
+Draft.38 adds the first non-Person parameter slice and makes the GPCM
+asymmetry explicit. The readiness contract moves to v2 because a slope can
+have certified low and high paths simultaneously (`unbounded_both`) and an
+applicable estimator-specific audit can remain `not_evaluated`; neither state
+was representable in v1. Certified fixed-additive JML slope paths receive
+typed primary boundaries. A scoped negative retains only a finite numerical
+trace because Person, facet, step, or slope coordinates may still move jointly.
+MML receives no conclusion from the conditional JML certificate and remains
+review-only until a marginal boundary argument is implemented. Local Hessian
+SE/CI values are retained under `Optimizer*` names but ordinary inferential
+fields are withheld. The one-level unit-slope reduction is fixed rather than
+estimated. This remains a partial WP4 implementation:
+full facet/interaction/step parameter records, remaining reports/exports/replay consumers,
 serialized 0.2.2 migration evidence, and WP5 metric eligibility remain open.
+
+Draft.39 closes a misleading summary path and decomposes the GPCM comparison
+problem before more external runs are attempted. `summary.mfrm_fit()` no longer
+places a finite optimizer slope into the primary minimum, maximum, or geometric
+mean when parameter readiness is absent. Primary summaries remain missing;
+the numerical stopping values are labelled `Optimizer*`, accompanied by the
+parameter-status mixture and counts eligible for SE and external comparison.
+The public scope guide now also states that FACETS' reported element
+discrimination is a post-fit Rasch diagnostic, TAM's free GPCM slope route is
+not its many-facet route, and immer has no matched free-GPCM MFRM estimator.
+Those facts change the validation design: FACETS and immer cannot be treated as
+free-slope numeric gold standards, and a TAM row is eligible only after an
+exact re-expression and identification audit.
+
+### GPCM discrepancy decomposition and stress envelope
+
+No scalar "FACETS minus mfrmr" or "TAM minus mfrmr" result is interpretable
+until the following layers have been separated. A difference discovered in an
+earlier layer blocks numeric aggregation in every later layer; it is recorded
+as a specification difference, not repaired by choosing a favorable output
+column or rescaling after results are seen.
+
+| Layer | Adversarial question | Required evidence before comparison | Failure classification |
+| --- | --- | --- | --- |
+| Response kernel | Do cumulative adjacent-category utilities, signs, category origins, and observation weights define the same probabilities? | Probability and log-likelihood equality at prespecified parameter points, including K=2 and unit-slope reductions. | `different_model_kernel` |
+| Active structure | Does every row activate the same Person, facet, interaction, step, and slope term? | Row-level design digest and retained-row identity; structural absence is distinct from missing data. | `different_active_design` |
+| Step structure | Are thresholds common, scale-specific, or element-specific, and are empty internal categories retained, collapsed, or rejected? | Declared/observed/category maps, free dimensions, anchors, and transformed threshold equality. | `different_category_or_step_estimand` |
+| Slope structure | Is discrimination fixed, jointly estimated, post-fit diagnostic, grouped, or designed; which facet indexes it? | Parameter-role map and proof that the slope enters the fitted likelihood. | `different_slope_estimand` |
+| Identification | Which location, slope, and latent-variance constraints define the numerical scale? | Analytic transformation plus likelihood and Jacobian checks; transformations are frozen before output is viewed. | `identification_not_matched` |
+| Estimator | Are Persons optimized, integrated, conditioned out, adjusted, or hierarchically modeled? | Method, adjustment, quadrature/conditioning, prior/population, and extreme-score convention identity. | `different_estimator` |
+| Global geometry | Can Person, facet, step, and slope coordinates escape jointly even when a conditional slice is bounded? | JML joint nonlinear and MML marginal boundary audits with positive and negative controls. | `boundary_not_evaluated` |
+| Information | Is uncertainty based on local observed, expected, sandwich, profile, bootstrap, or posterior information? | Parameter-ready estimand plus estimator-specific coverage; local optimizer Hessians remain diagnostic traces. | `uncertainty_not_comparable` |
+| Data support | Do missingness, sparse bridges, two-rater overlap, weights, duplicate cells, and category imbalance leave the same effective information? | Retained contribution digest, topology and local-support strata, and zero false-ready exact controls. | `support_not_matched` |
+| Diagnostics | Are bias, interaction, residual PCA, fit, and discrimination outputs fitted parameters, conditional screens, or post-fit summaries? | Named estimand, conditioning set, null/non-null operating characteristics, and multiplicity policy. | `diagnostic_not_parameter_agreement` |
+| Output transform | Are logits, orientations, user scales, endpoints, finite adjustments, and labels identical? | Reversible transform record; extended-real boundaries never enter finite MAE/RMSE. | `output_transform_not_matched` |
+
+The GPCM simulation program uses a prespecified covering design rather than an
+uninterpretable full Cartesian product. Every core seed is crossed with the
+mandatory corner cases below, while additional pairwise combinations fill the
+covering array. Discovery, calibration, and confirmation seeds remain disjoint.
+
+| Axis | Required levels | Why it can expose a false agreement or false difference |
+| --- | --- | --- |
+| Estimator | JML; MML-direct; applicable lower-model reference | Conditional and marginal boundary or uncertainty evidence is not transportable. |
+| Slope levels | 1, 2, 4, and at least 12; balanced and highly unequal exposure | One level is fixed PCM; two levels maximizes constraint coupling; many levels tests sparse coordinate scaling. |
+| True slope spread | zero; mild; strong; near-zero/high pair; monotone and non-monotone association with severity | Separates exact reduction, useful discrimination, confounding, and boundary behavior. |
+| Categories | K=2, 3, 5, 7; different K only as a deliberate unsupported/multiple-scale control | Checks binary reduction, threshold dimension, and the present single-scale boundary. |
+| Category prevalence | balanced; rare interior; dominant middle; floor; ceiling; internal zero; boundary zero | Distinguishes weak information, exact step recession, Person extremes, and arbitrary category collapsing. |
+| Rater panel | 2, 3, 6, and many; complete overlap, one shared Person, and zero shared Persons | Separates algebraic identification from fragile or absent empirical linkage. |
+| Assignment | complete; sparse connected; weak bridge; disconnected; rater-by-proficiency routing | Tests topology, informative assignment, and latent-distribution sensitivity. |
+| Missingness | none; MCAR; Person-dependent; rater-dependent; category/proficiency-dependent | A common missing rate can conceal different effective likelihoods and biased slope recovery. |
+| Cell structure | unique cells; repeated cells treated as independent; explicit Occasion; unequal weights; zero weights | Distinguishes input multiplicity from modeled dependence and retained-row identity. |
+| Interactions | none; Person-by-rater; rater-by-criterion; slope-correlated and slope-orthogonal | Detects whether free slopes absorb local bias or whether omitted interaction is misread as discrimination. |
+| Diagnostics | residual PCA null/local-dependence signal; bias null/non-null; rater severity drift | Tests Type-I proxy and sensitivity separately; no diagnostic threshold is selected from the confirmation data. |
+| Sample size | small, standard, and target-scale sparse | Exposes incidental-parameter trends, quadrature limits, dense allocation, and execution ceilings. |
+
+Each eligible cell reports parameter bias/RMSE, supported SE availability and
+coverage, primary-versus-optimizer classification, false-ready rate, fit and
+parameter failure rates, category-support decisions, transformation residuals,
+runtime/memory, and Monte Carlo uncertainty. Diagnostic cells additionally
+report null flag rate, signal sensitivity, target localization, and the rate at
+which a slope absorbs a generated interaction. Results are stratified by
+estimator, support condition, parameter class, and external program/mode;
+pooled averages cannot satisfy a blocker.
+
+External roles are fixed as follows:
+
+- local FACETS 4.5.0 supplies the RSM/PCM and fixed/equal-discrimination
+  many-facet reference plus deliberately different post-fit discrimination,
+  bias, interaction, and residual outputs. Table 7 discrimination is never a
+  free-slope recovery target. The published 4.5.1 changes concern the R
+  G-theory menu, display/report fixes, missing-label reporting, and Table 7
+  subgroup t-test precision/variance; none authorizes transporting 4.5.1
+  estimation claims into the local 4.5.0 run. The version difference is kept
+  as provenance and sensitivity context, not a stop rule.
+- TAM 4.3-25 `tam.mml.2pl(..., irtmodel = "GPCM")`, grouped GPCM, or
+  `GPCM.design` is the candidate free-slope MML reference only for a design
+  that can be re-expressed exactly. `tam.mml.mfr()` cannot supply estimated
+  slopes, so combining its facet design with a separate slope output is
+  prohibited.
+- immer 1.5-13 supplies PCM-design JML/CML/CCML reductions and HRM
+  alternative-model challenges. It supplies no free-GPCM numeric gold
+  standard.
+- an independent package-native probability/objective/gradient oracle remains
+  mandatory even where an external result is eligible; software agreement
+  alone cannot validate a shared convention error.
+
+Source identities for this decomposition are the FACETS 4.5.1 manual and
+official change log retrieved 2026-08-04, the CRAN TAM 4.3-25 reference manual,
+and the CRAN immer 1.5-13 reference manual. Their URLs and retrieval dates
+belong in the external candidate manifest; a version change creates a new
+stratum rather than silently replacing these inputs.
+
 The program's objective is not to maximize new diagnostics. It
 is to establish one source of truth for whether a fit, a parameter, and an
 external comparison are usable, and to make every downstream surface consume
@@ -488,11 +593,11 @@ reviewed. Confirmation remains prohibited until the later frozen gate.
 
 | Work package | Depends on | Current state | Implementation boundary | Required exit artifact |
 | --- | --- | --- | --- | --- |
-| `WP0-READINESS-CONTRACT` | draft.20 diagnosis | `complete_structural` | Freeze internal state names, scopes, severity/precedence, condition classes, object fields, legacy-object behavior, and exact adversarial fixtures before changing fit logic. | `readiness-contract-0.2.3.md`, its repository validator, 27-row fixture registry, and privacy/semantic tests; no external tolerance. |
+| `WP0-READINESS-CONTRACT` | draft.20 diagnosis | `complete_structural_v2` | Freeze internal state names, scopes, severity/precedence, condition classes, object fields, legacy-object behavior, and exact adversarial fixtures before changing fit logic. | `readiness-contract-0.2.3.md`, its repository validator, 33-row fixture registry including six GPCM slope states, and privacy/semantic tests; no external tolerance. |
 | `WP1-ESTIMABILITY` | WP0 | `in_progress_mml_all_pattern_design_reuse` | Build the estimator-specific free-parameter map and constrained design; detect structural aliases before optimization; distinguish exact alias from weak fitted information. | Unit/property tests, alias diagnostics, sparse-design benchmark, and zero false-ready exact controls. |
 | `WP2-CATEGORY-STEP` | WP0 | `in_progress_support_preflight` | Audit declared, observed, retained, free, fixed, and unsupported category/step coordinates globally and by current `step_facet`; do not add threshold anchors. | RSM/PCM/GPCM reduction and missing-category fixtures plus parameter-scoped status tables. |
-| `WP3-JML-BOUNDARY` | WP0 | `in_progress_gpcm_slope_path_certificate` | Detect JML element separation/extreme sufficient scores on the actual contributing row pattern; replace optimizer-dependent finite primary values with typed boundary states. The Person primary-state slice, sparse-triplet Person-fixed structural certificate, companion joint Person-structural additive cone, and retained-additive GPCM slope-only monotone-path certificate are implemented. The GPCM slice is complete only for constant sum-zero log-slope rays with additive coordinates fixed; its negative result is not a global finite-MLE claim. Public-state promotion, general joint nonlinear GPCM paths, independent general solver parity, broader model/basis properties, and target-scale evidence remain pending. | JML extreme/nonextreme fixtures, MML non-reduction guard, constrained facet/interaction/joint/slope-path certificates, sparse/dense and independent microcase parity, nonlinear joint-path negative control, and explicit optional-display contract. |
-| `WP4-READINESS-PROPAGATION` | WP1--WP3 | `in_progress_fit_record_and_front_door_consumers` | Derive fit-, parameter-, and output-level readiness once and propagate it without surface-specific reinterpretation. The fit record, deterministic precedence, conservative scalar, fail-closed synthetic legacy-object path, summary/results/convergence/plot front doors, and target-aware unpropagated-candidate rule are implemented; complete parameter and remaining output propagation depend on unfinished WP1--WP3 states. | Cross-surface snapshot/semantic tests and a real serialized 0.2.2-object migration fixture. |
+| `WP3-JML-BOUNDARY` | WP0 | `in_progress_joint_nonlinear_gpcm_boundary` | Detect JML element separation/extreme sufficient scores on the actual contributing row pattern; replace optimizer-dependent finite primary values with typed boundary states. The Person primary-state slice, sparse-triplet Person-fixed structural certificate, companion joint Person-structural additive cone, and retained-additive GPCM slope-only monotone-path certificate are implemented. The GPCM slice is complete only for constant sum-zero log-slope rays with additive coordinates fixed; its negative result is not a global finite-MLE claim. General joint nonlinear GPCM paths, independent general solver parity, broader model/basis properties, and target-scale evidence remain pending. | JML extreme/nonextreme fixtures, MML non-reduction guard, constrained facet/interaction/joint/slope-path certificates, sparse/dense and independent microcase parity, nonlinear joint-path negative control, and explicit optional-display contract. |
+| `WP4-READINESS-PROPAGATION` | WP1--WP3 | `in_progress_gpcm_slope_parameter_slice` | Derive fit-, parameter-, and output-level readiness once and propagate it without surface-specific reinterpretation. The fit record, deterministic precedence, conservative scalar, fail-closed synthetic legacy-object path, summary/results/convergence/plot front doors, target-aware unpropagated-candidate rule, and typed GPCM slope parameter/uncertainty slice are implemented; complete facet/interaction/step and remaining output propagation depend on unfinished WP1--WP3 states. | Cross-surface snapshot/semantic tests and a real serialized 0.2.2-object migration fixture. |
 | `WP5-COMPARISON-CONTRACT` | WP4 | `blocked_by_dependency` | Make FACETS, TAM, immer, and other external normalization metric-specific and fail closed before numeric aggregation; identify estimator, adjustment, person treatment, and software stratum explicitly. | Eligibility/rejection ledger with denominator accounting, method-mode identity, and no silent row loss. |
 | `WP6-SCALE-AND-ADVERSARIAL` | WP1--WP5 | `blocked_by_dependency` | Verify sparse computation, basis invariance, row-order invariance, malformed-input behavior, and target-size runtime/memory without claiming FACETS capacity parity. | Benchmark envelope and metamorphic/negative-test report; no dense design allocation at target sizes. |
 | `WP7-REPILOT-AND-FREEZE` | WP0--WP6 | `blocked_by_dependency` | Rerun the affected internal and FACETS 4.5.0 pilot cells and the TAM/immer estimator grid on new pilot seeds, calibrate weak-information and estimator-specific rules, then prepare the next reviewed frozen specification. | Complete pilot registry, method-mode-specific reason-coded exclusions, MCSE plan, resolved blocker criteria, and still no confirmation result. |
@@ -529,7 +634,7 @@ The normative structural record is
 legacy mapping, condition-class registry, and validator are in
 `readiness-contract-0.2.3.R`; exact expected cases are in
 `readiness-contract-fixtures-0.2.3.csv`. The contract identity is
-`mfrmr-readiness-0.2.3-v1`.
+`mfrmr-readiness-0.2.3-v2`.
 
 WP0 is structurally complete, not statistically confirmed. In particular, it
 freezes that `InferenceReady` is `TRUE` only for `FitReadiness = ready`, while

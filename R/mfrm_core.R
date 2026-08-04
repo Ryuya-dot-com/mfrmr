@@ -4006,16 +4006,18 @@ mfrm_estimate <- function(data, person_col, facet_cols, score_col,
   person_tbl <- apply_mfrm_person_boundary(person_tbl, boundary_audit)
   config$boundary_audit <- boundary_audit
   data_review$boundary <- boundary_audit
+  slope_tbl <- build_slope_table(config, prep, params)
   readiness_record <- build_mfrm_readiness_record(
     prep = prep,
     data_review = data_review,
     config = config,
-    opt = opt
+    opt = opt,
+    slope_table = slope_tbl
   )
+  slope_tbl <- apply_mfrm_slope_readiness(slope_tbl, readiness_record)
   facet_tbl <- build_other_facet_table(config, prep, params)
   interaction_tbl <- build_interaction_effect_table(config, prep, params)
   step_tbl <- build_step_table(config, prep, params)
-  slope_tbl <- build_slope_table(config, prep, params)
   summary_tbl <- build_estimation_summary(
     model, method, prep, config, sizes, opt,
     readiness_record = readiness_record
@@ -8633,6 +8635,28 @@ compute_mml_structural_parameter_se <- function(res,
     slope_tbl$LogCI_Upper <- ifelse(is.finite(slope_tbl$LogSE), slope_tbl$LogEstimate + z * slope_tbl$LogSE, NA_real_)
     slope_tbl$CI_Lower <- ifelse(is.finite(slope_tbl$LogCI_Lower), exp(slope_tbl$LogCI_Lower), NA_real_)
     slope_tbl$CI_Upper <- ifelse(is.finite(slope_tbl$LogCI_Upper), exp(slope_tbl$LogCI_Upper), NA_real_)
+    slope_tbl$OptimizerLogSE <- slope_tbl$LogSE
+    slope_tbl$OptimizerSE <- slope_tbl$SE
+    slope_tbl$OptimizerLogCI_Lower <- slope_tbl$LogCI_Lower
+    slope_tbl$OptimizerLogCI_Upper <- slope_tbl$LogCI_Upper
+    slope_tbl$OptimizerCI_Lower <- slope_tbl$CI_Lower
+    slope_tbl$OptimizerCI_Upper <- slope_tbl$CI_Upper
+    uncertainty_eligible <- if ("SEEligible" %in% names(slope_tbl)) {
+      !is.na(slope_tbl$SEEligible) & as.logical(slope_tbl$SEEligible)
+    } else {
+      rep(TRUE, nrow(slope_tbl))
+    }
+    slope_tbl$LogSE[!uncertainty_eligible] <- NA_real_
+    slope_tbl$SE[!uncertainty_eligible] <- NA_real_
+    slope_tbl$LogCI_Lower[!uncertainty_eligible] <- NA_real_
+    slope_tbl$LogCI_Upper[!uncertainty_eligible] <- NA_real_
+    slope_tbl$CI_Lower[!uncertainty_eligible] <- NA_real_
+    slope_tbl$CI_Upper[!uncertainty_eligible] <- NA_real_
+    slope_tbl$UncertaintyEligibility <- ifelse(
+      uncertainty_eligible,
+      "eligible",
+      "not_eligible_parameter_readiness"
+    )
     slope_tbl$CI_Level <- ci_level
     slope_tbl$SE_Method <- se_method
     slope_tbl$SE_Status <- status

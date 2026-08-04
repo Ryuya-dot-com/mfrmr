@@ -75,7 +75,8 @@ when a population model uses model-matrix coding
 (Wright-map-style mean/SD comparison)
 \item \code{step_overview}: threshold/step diagnostics by PCM/GPCM \code{StepFacet}
 ladder, or for the common RSM ladder
-\item \code{slope_overview}: discrimination summary for \code{GPCM} fits
+\item \code{slope_overview}: parameter-readiness and explicitly labelled
+optimizer-trace summary for \code{GPCM} discriminations
 \item \code{interaction_overview}: model-estimated facet-interaction summary
 when the fit was specified with \code{facet_interactions}
 \item \code{settings_overview}: estimation-settings overview that pins the

@@ -302,15 +302,22 @@ controls when applicable
 columns are attached to \code{fit$steps} when the Hessian is available.
 For step-structure quality, also use the step-collapse and disordering
 warnings from \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} and \code{\link[=category_structure_report]{category_structure_report()}}.
-\item \code{slopes}: estimated discrimination parameters for \code{GPCM} fits as
-a one-row-per-slope-element \code{tibble} with \code{LogEstimate} and
-\code{Estimate}. Bare fits keep this table as point estimates. For MML
-bounded-\code{GPCM} fits, \code{diagnose_mfrm()} exposes log-slope SEs plus
-positive-scale delta-method SEs and confidence limits in
-\code{diagnostics$parameter_uncertainty$slopes}; when
-\code{attach_diagnostics = TRUE}, those columns are attached to
-\code{fit$slopes} when the Hessian is available. The identification
-convention pins the geometric mean of slopes at 1.
+\item \code{slopes}: discrimination parameters for \code{GPCM} fits as a
+one-row-per-slope-element \code{tibble}. \code{LogEstimate} and \code{Estimate} retain
+the finite optimizer values for compatibility and numerical diagnosis;
+\code{OptimizerLogEstimate} / \code{OptimizerEstimate} name that role explicitly.
+Read \code{ParameterStatus}, \code{PrimaryLogEstimate}, \code{PrimaryEstimate},
+\code{SEEligible}, \code{CIEligible}, and \code{ReasonCodes} before interpretation. A
+certified JML slope-only path receives a typed extended-real primary boundary;
+a non-certified conditional path is not promoted to a finite joint-GPCM claim.
+The conditional JML audit is not reused for MML. \code{diagnose_mfrm()} may retain
+observed-information and delta-method values in \code{Optimizer*SE} /
+\code{Optimizer*CI} columns, but ordinary \code{SE} / \code{CI} columns remain
+unavailable while parameter readiness is not established. The identification
+convention pins the geometric mean of finite optimizer slopes at 1.
+\item \code{readiness}: the versioned fit record, five component rows, and current
+parameter-level rows. The current parameter slice includes GPCM slopes; other
+non-Person parameter classes remain scheduled for later propagation.
 \item \code{interactions}: model-estimated facet interaction effects and metadata
 when \code{facet_interactions} is supplied
 \item \code{population}: population-model metadata. Ordinary fits keep an inactive

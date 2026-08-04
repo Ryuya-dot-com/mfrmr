@@ -18,8 +18,9 @@
 # This is deliberately narrower than a global nonlinear identification proof.
 # A negative result fixes the retained additive coordinates and cannot rule out
 # a path on which Person, facet, interaction, or step coordinates also move.
-# Candidate states remain internal until the common readiness propagation work
-# defines public primary values, uncertainty, and comparison eligibility.
+# Certified candidate directions feed the common parameter-readiness record.
+# They do not by themselves certify a finite joint GPCM maximum, uncertainty,
+# or external-comparison eligibility.
 
 mfrmr_jml_gpcm_slope_empty_group_table <- function() {
   data.frame(
@@ -183,8 +184,9 @@ audit_mfrm_jml_gpcm_slope_boundary <- function(
         "rays only. A none-certified result does not establish finite GPCM",
         "slopes, a global finite maximum, or nonlinear structural",
         "identification because additive coordinates may move jointly.",
-        "The internal candidate does not alter public slope values, standard",
-        "errors, readiness, reports, exports, or external comparison status."
+        "Certified directions can type parameter-level boundary values, but",
+        "they do not license standard errors, confidence intervals, a finite",
+        "joint-GPCM claim, or ordinary external numerical comparisons."
       )
     )
   }

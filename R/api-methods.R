@@ -8155,7 +8155,8 @@ print.summary.mfrm_bias <- function(x, ...) {
 #'   (Wright-map-style mean/SD comparison)
 #' - `step_overview`: threshold/step diagnostics by PCM/GPCM `StepFacet`
 #'   ladder, or for the common RSM ladder
-#' - `slope_overview`: discrimination summary for `GPCM` fits
+#' - `slope_overview`: parameter-readiness and explicitly labelled optimizer-
+#'   trace summary for `GPCM` discriminations
 #' - `interaction_overview`: model-estimated facet-interaction summary
 #'   when the fit was specified with `facet_interactions`
 #' - `settings_overview`: estimation-settings overview that pins the
@@ -8479,12 +8480,64 @@ mfrm_fit_summary_core <- function(object, digits = 3, top_n = 5) {
 
   slope_overview <- tibble::tibble()
   if (nrow(slope_tbl) > 0 && "Estimate" %in% names(slope_tbl)) {
+    optimizer_slope <- if ("OptimizerEstimate" %in% names(slope_tbl)) {
+      as.numeric(slope_tbl$OptimizerEstimate)
+    } else {
+      as.numeric(slope_tbl$Estimate)
+    }
+    primary_slope <- if ("PrimaryEstimate" %in% names(slope_tbl)) {
+      as.numeric(slope_tbl$PrimaryEstimate)
+    } else {
+      as.numeric(slope_tbl$Estimate)
+    }
+    slope_range_value <- function(x, fun) {
+      x <- x[is.finite(x)]
+      if (length(x) == 0L) return(NA_real_)
+      fun(x)
+    }
+    slope_geometric_mean <- function(x) {
+      x <- x[is.finite(x) & x > 0]
+      if (length(x) == 0L) return(NA_real_)
+      exp(mean(log(x)))
+    }
+    parameter_status <- if ("ParameterStatus" %in% names(slope_tbl)) {
+      paste(sort(unique(as.character(slope_tbl$ParameterStatus))), collapse = ",")
+    } else {
+      "legacy_unknown"
+    }
+    primary_ready <- length(primary_slope) > 0L &&
+      all(is.finite(primary_slope) & primary_slope > 0)
+    value_basis <- if (primary_ready) {
+      "primary"
+    } else if ("OptimizerEstimate" %in% names(slope_tbl)) {
+      "optimizer_trace"
+    } else {
+      "legacy_estimate"
+    }
     slope_overview <- tibble::tibble(
       Slopes = nrow(slope_tbl),
-      Min = min(slope_tbl$Estimate, na.rm = TRUE),
-      Max = max(slope_tbl$Estimate, na.rm = TRUE),
-      GeometricMean = exp(mean(log(slope_tbl$Estimate), na.rm = TRUE)),
-      Positive = all(is.finite(slope_tbl$Estimate) & slope_tbl$Estimate > 0)
+      ValueBasis = value_basis,
+      ParameterStatus = parameter_status,
+      PrimaryReady = primary_ready,
+      PrimaryFinite = sum(is.finite(primary_slope)),
+      Min = slope_range_value(primary_slope, min),
+      Max = slope_range_value(primary_slope, max),
+      GeometricMean = slope_geometric_mean(primary_slope),
+      Positive = if (primary_ready) TRUE else NA,
+      OptimizerMin = slope_range_value(optimizer_slope, min),
+      OptimizerMax = slope_range_value(optimizer_slope, max),
+      OptimizerGeometricMean = slope_geometric_mean(optimizer_slope),
+      OptimizerPositive = all(is.finite(optimizer_slope) & optimizer_slope > 0),
+      SEEligible = if ("SEEligible" %in% names(slope_tbl)) {
+        sum(as.logical(slope_tbl$SEEligible), na.rm = TRUE)
+      } else {
+        NA_integer_
+      },
+      ComparisonEligible = if ("ComparisonEligibility" %in% names(slope_tbl)) {
+        sum(as.character(slope_tbl$ComparisonEligibility) == "eligible", na.rm = TRUE)
+      } else {
+        NA_integer_
+      }
     )
   }
 
@@ -8679,7 +8732,7 @@ mfrm_fit_summary_core <- function(object, digits = 3, top_n = 5) {
   if (nrow(slope_overview) > 0) {
     notes <- c(
       notes,
-      "GPCM discriminations are reported under the package's positive log-slope identification with geometric-mean-one scaling."
+      "GPCM discriminations use positive log-slope identification with geometric-mean-one scaling; primary summaries remain missing until parameter readiness is established, while finite optimizer traces are labelled separately."
     )
   }
   if (nrow(interaction_overview) > 0) {
@@ -9877,7 +9930,7 @@ print.summary.mfrm_fit <- function(x, ...) {
     print(round_numeric_df(as.data.frame(x$step_overview), digits = digits), row.names = FALSE)
   }
   if (nrow(x$slope_overview %||% data.frame()) > 0) {
-    cat("\nSlope summary\n")
+    cat("\nSlope parameter readiness and optimizer trace\n")
     print(round_numeric_df(as.data.frame(x$slope_overview), digits = digits), row.names = FALSE)
   }
   if (nrow(x$interaction_overview %||% data.frame()) > 0) {

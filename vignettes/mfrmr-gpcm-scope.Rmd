@@ -90,6 +90,53 @@ The matrix is intentionally conservative. A row stays in `blocked` or
 scope statement includes the interpretation needed for a complete public
 workflow rather than only checking whether code executes.
 
+## Slope values, boundaries, and uncertainty
+
+The finite `LogEstimate` and `Estimate` columns in `fit$slopes` are optimizer
+outputs, not automatic evidence of a finite estimand. Use `ParameterStatus` and
+the `Primary*` columns first. Under JML, mfrmr can certify a monotone
+sum-to-zero log-slope path while holding the retained additive coordinates
+fixed. Such a result yields `unbounded_low`, `unbounded_high`, or
+`unbounded_both`. If no such path is certified, the joint Person--facet--step--
+slope problem remains unevaluated; the finite optimizer output is retained only
+as a numerical trace. Under MML, Persons are integrated out, so this conditional
+JML certificate is not reused as marginal-likelihood evidence.
+
+The same distinction applies to uncertainty. `diagnose_mfrm()` can retain the
+local covariance calculation as `Optimizer*SE` and `Optimizer*CI` fields for
+numerical review. Ordinary slope `SE` and confidence-limit fields remain
+unavailable when `SEEligible` or `CIEligible` is false. This avoids presenting
+a local Hessian around a finite stopping point as uncertainty for a parameter
+whose applicable global boundary status has not been established.
+
+## What can and cannot be compared across programs
+
+A column labelled "discrimination" is not sufficient evidence that two
+programs fitted the same GPCM. FACETS reports an element-discrimination
+diagnostic after estimating its Rasch measures and explicitly does not allow
+that diagnostic to alter the other estimates. It is therefore not a matched
+counterpart of a jointly estimated free slope in `mfrmr`. FACETS remains useful
+for unit- or explicitly fixed-discrimination reductions, category/threshold
+and facet-measure comparisons within a common Rasch specification, and as a
+deliberately different-model diagnostic benchmark.
+
+TAM's MML 2PL/GPCM route does estimate slopes, including grouped or designed
+slopes, but TAM documents that slopes are not estimated by its many-facet
+fitting function. A TAM comparison must therefore use a provably equivalent
+non-faceted or re-expressed design and must match the latent variance,
+threshold convention, slope grouping, category map, and retained observations
+before computing differences. `immer` provides PCM-design JML/CML/CCML routes
+and a hierarchical rater model, not a direct free-GPCM many-facet match. Its
+role is consequently a unit-slope reduction or alternative-model sensitivity
+analysis rather than free-slope numerical validation.
+
+These distinctions also govern diagnostics. FACETS' discrimination, `mfrmr`
+residual PCA or bias screens, and hierarchical-rater variance components answer
+different questions. Agreement among them can be supporting evidence; a
+difference is not a software error until the fitted likelihood, estimand,
+identification, data rows, and output transformation have first been shown to
+match.
+
 ## Source-grounded recovery interpretation
 
 The bounded `GPCM` route follows Muraki's generalized partial credit model
