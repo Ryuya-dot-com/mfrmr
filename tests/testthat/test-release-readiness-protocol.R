@@ -60,7 +60,7 @@ test_that("public roadmap and current NEWS exclude internal release operations",
   expect_true(any(grepl("inst/validation", ignore, fixed = TRUE)))
 })
 
-test_that("internal draft.47 roadmap and GPCM work remain explicit and private", {
+test_that("internal draft.48 roadmap and GPCM work remain explicit and private", {
   pkg_root <- normalizePath(testthat::test_path("..", ".."), mustWork = TRUE)
   internal_path <- file.path(
     pkg_root, "inst", "validation", "internal-roadmap-0.2.3.md"
@@ -110,12 +110,16 @@ test_that("internal draft.47 roadmap and GPCM work remain explicit and private",
     pkg_root, "inst", "validation",
     "target-scale-sparse-stress-pilot-record-0.2.3.md"
   )
+  target_bridge_record_path <- file.path(
+    pkg_root, "inst", "validation",
+    "target-scale-baseline-bridge-pilot-record-0.2.3.md"
+  )
   skip_if_not(all(file.exists(c(
     internal_path, gate_path, checklist_path, estimator_plan_path,
     contract_path, fixture_path, gpcm_smoke_record_path,
     attribution_smoke_record_path, attribution_replicated_record_path,
     checkpoint_record_path, metamorphic_record_path, roadmap_record_path,
-    target_scale_record_path
+    target_scale_record_path, target_bridge_record_path
   ))))
 
   internal <- paste(readLines(internal_path, warn = FALSE, encoding = "UTF-8"),
@@ -155,6 +159,10 @@ test_that("internal draft.47 roadmap and GPCM work remain explicit and private",
   )
   target_scale_record <- paste(
     readLines(target_scale_record_path, warn = FALSE, encoding = "UTF-8"),
+    collapse = "\n"
+  )
+  target_bridge_record <- paste(
+    readLines(target_bridge_record_path, warn = FALSE, encoding = "UTF-8"),
     collapse = "\n"
   )
 
@@ -207,7 +215,7 @@ test_that("internal draft.47 roadmap and GPCM work remain explicit and private",
   expect_match(internal, "partitioned\\s+exhaustively")
   expect_match(internal, "Estimator ecosystem and maturity boundary", fixed = TRUE)
   expect_match(internal, "method = \"HRM\"", fixed = TRUE)
-  expect_match(gate, "Specification ID | `0.2.3-draft.47`", fixed = TRUE)
+  expect_match(gate, "Specification ID | `0.2.3-draft.48`", fixed = TRUE)
   expect_match(internal, "Draft.40 adds the first bounded joint nonlinear GPCM path family", fixed = TRUE)
   expect_match(internal, "Draft.41 makes the prespecified GPCM stress envelope executable", fixed = TRUE)
   expect_match(internal, "Draft.42 adds the isolated-attribution layer", fixed = TRUE)
@@ -223,6 +231,8 @@ test_that("internal draft.47 roadmap and GPCM work remain explicit and private",
                "Draft.46 rechecks those official sources", fixed = TRUE)
   expect_match(internal,
                "Draft.47 begins target-scale execution", fixed = TRUE)
+  expect_match(internal,
+               "Draft.48 separates scale from adversity", fixed = TRUE)
   expect_match(internal, "`release_spine`", fixed = TRUE)
   expect_match(internal, "in_progress_core_slice_unblocked", fixed = TRUE)
   expect_match(internal,
@@ -296,6 +306,20 @@ test_that("internal draft.47 roadmap and GPCM work remain explicit and private",
   expect_match(
     target_scale_record,
     "be175b4f941b5a29c0d1d5bf4617a1bffb3f7399776e71616d6ac9410cfc388a",
+    fixed = TRUE
+  )
+  expect_match(target_bridge_record,
+               "same generated data through JML and MML", fixed = TRUE)
+  expect_match(target_bridge_record,
+               "one common truth hash", fixed = TRUE)
+  expect_match(
+    target_bridge_record,
+    "c3057c41358a49d3db9f52ecdd854a08883a9734d6cc35b6fae82af2628ba871",
+    fixed = TRUE
+  )
+  expect_match(
+    target_bridge_record,
+    "c69d07597b0ecd2814c25e5bf5865601ab15d76aa373c5c687d473c88c37779f",
     fixed = TRUE
   )
   expect_match(gate,
@@ -1978,6 +2002,121 @@ test_that("target-scale completion markers fail closed on artifact changes", {
   writeLines("changed target-scale result", artifact, useBytes = TRUE)
   expect_error(
     env$mfrmr_target_scale_validate_completion(
+      output_dir, marker$execution_sha256
+    ),
+    "hash or size mismatch"
+  )
+})
+
+test_that("target baseline and bridge execution is fixed and guarded", {
+  pkg_root <- normalizePath(test_path("..", ".."), winslash = "/",
+                            mustWork = TRUE)
+  runner <- file.path(
+    pkg_root, "inst", "validation",
+    "target-scale-baseline-bridge-pilot-0.2.3.R"
+  )
+  expect_true(file.exists(runner))
+  old_wd <- setwd(pkg_root)
+  on.exit(setwd(old_wd), add = TRUE)
+  env <- new.env(parent = globalenv())
+  source(runner, local = env)
+
+  dry <- env$mfrmr_run_target_scale_baseline_bridge(
+    dry_run = TRUE, progress = FALSE
+  )
+  expect_identical(
+    env$mfrmr_gpcm_repilot_hash_file(runner),
+    "6caf66044fff6a1bced6fcdb605bef061143f8115f081a6ea40055ef112637d5"
+  )
+  expect_identical(dry$execution_identity$DataCells, 13L)
+  expect_identical(dry$execution_identity$Routes, 26L)
+  expect_setequal(unique(dry$registry$Model), c("RSM", "PCM", "GPCM"))
+  expect_setequal(unique(dry$registry$Method), c("JML", "MML"))
+  expect_identical(nchar(
+    dry$execution_identity$DeclaredManifestSHA256
+  ), 64L)
+  expect_false(dry$execution_identity$PCARun)
+  expect_false(dry$execution_identity$ConfirmationAuthorized)
+  expect_false(dry$confirmation_authorized)
+  bridge <- dry$registry[
+    dry$registry$Design == "two_rater_bridge_gradient", , drop = FALSE
+  ]
+  expect_identical(sort(unique(bridge$LinkPersons)),
+                   c(0L, 1L, 2L, 5L, 10L, 20L, 40L))
+  expect_identical(unique(bridge$Seed), 248007L)
+  expect_identical(unique(bridge$TruthSeedGroup), "bridge_common_truth")
+
+  cells <- bridge[!duplicated(bridge$DataCellId), , drop = FALSE]
+  generated <- lapply(seq_len(nrow(cells)), function(i) {
+    env$mfrmr_target_bridge_build(cells[i, , drop = FALSE])
+  })
+  expect_identical(
+    vapply(generated, function(x) x$support$MinCommonPersons, integer(1)),
+    c(0L, 1L, 2L, 5L, 10L, 20L, 40L)
+  )
+  expect_length(unique(vapply(
+    generated, function(x) x$TruthHash, character(1)
+  )), 1L)
+
+  expect_error(
+    env$mfrmr_run_target_scale_baseline_bridge(
+      dry_run = FALSE, progress = FALSE
+    ),
+    "authorize = TRUE",
+    fixed = TRUE
+  )
+  existing_output <- tempfile("target-bridge-existing-")
+  dir.create(existing_output)
+  on.exit(unlink(existing_output, recursive = TRUE, force = TRUE), add = TRUE)
+  expect_error(
+    env$mfrmr_run_target_scale_baseline_bridge(
+      dry_run = FALSE, authorize = TRUE, output_dir = existing_output,
+      progress = FALSE
+    ),
+    "must not already exist"
+  )
+  expect_error(
+    env$mfrmr_run_target_scale_baseline_bridge(
+      dry_run = TRUE, quad_points = 2L, progress = FALSE
+    ),
+    "quad_points"
+  )
+})
+
+test_that("target baseline completion markers fail closed on artifact changes", {
+  pkg_root <- normalizePath(test_path("..", ".."), winslash = "/",
+                            mustWork = TRUE)
+  runner <- file.path(
+    pkg_root, "inst", "validation",
+    "target-scale-baseline-bridge-pilot-0.2.3.R"
+  )
+  old_wd <- setwd(pkg_root)
+  on.exit(setwd(old_wd), add = TRUE)
+  env <- new.env(parent = globalenv())
+  source(runner, local = env)
+  env$mfrmr_target_bridge_require_support()
+
+  output_dir <- tempfile("target-bridge-completion-")
+  dir.create(output_dir)
+  on.exit(unlink(output_dir, recursive = TRUE, force = TRUE), add = TRUE)
+  artifact <- file.path(output_dir, "result.txt")
+  writeLines("fixed target bridge result", artifact, useBytes = TRUE)
+  inventory <- env$mfrmr_target_scale_artifact_inventory(output_dir)
+  marker <- list(
+    schema = "mfrmr-target-baseline-bridge-completion-v1",
+    execution_sha256 = paste(rep("b", 64L), collapse = ""),
+    artifacts = inventory,
+    artifact_inventory_sha256 = env$mfrmr_gpcm_repilot_hash_object(inventory),
+    completed_utc = "2026-08-05 00:00:00 UTC",
+    confirmation_authorized = FALSE
+  )
+  saveRDS(marker, file.path(output_dir, "run-complete.rds"))
+  expect_invisible(env$mfrmr_target_bridge_validate_completion(
+    output_dir, marker$execution_sha256
+  ))
+  writeLines("changed target bridge result", artifact, useBytes = TRUE)
+  expect_error(
+    env$mfrmr_target_bridge_validate_completion(
       output_dir, marker$execution_sha256
     ),
     "hash or size mismatch"

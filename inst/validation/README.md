@@ -121,6 +121,16 @@ but do not broaden current API scope.
   inference-ready PCM-MML review cell, a blocked mixed-adversity GPCM-MML cell,
   and a residual-PCA computability warning without freezing a threshold or
   claiming FACETS-scale capacity parity.
+- `target-scale-baseline-bridge-pilot-0.2.3.R`: draft.48 guarded executor for
+  balanced and matched-sparse RSM/PCM/GPCM 400-Person baselines plus a
+  common-truth two-Rater PCM bridge gradient. It pairs identical data across
+  JML/MML, records Windows process-lifetime peak memory, refuses overwrite,
+  and keeps residual PCA disabled until its computability contract is fixed.
+- `target-scale-baseline-bridge-pilot-record-0.2.3.md`: hashed draft.48 record
+  of the authoritative 13-cell/26-route v2 run. It separates scale from
+  adversity, records zero unexpected failures and zero false-ready routes,
+  rejects a minimum-overlap conclusion from one nonmonotone seed, and keeps
+  the differently seeded v1 bridge results explicitly superseded.
 - `gpcm-isolated-attribution-pilot-0.2.3.R`: draft.42 repository-only
   one-axis attribution manifest and paired runner. It changes one of 11 axes
   around a fixed GPCM reference, sends each retained dataset through GPCM-JML,

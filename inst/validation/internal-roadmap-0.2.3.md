@@ -311,7 +311,7 @@ The following remain outside 0.2.3:
 | M4: run confirmation | Run the locked recovery/stress matrix, FACETS JML core, ConQuest/TAM MML comparisons, TAM/immer JML convention grid, eligible immer CML/CCML rows, dimensionality challenge, and matched external rows without changing criteria or reusing discovery/pilot data as independent confirmation. | Candidate-linked internal and external evidence with every blocker classified and every expected scenario/replicate accounted for. |
 | M5: release handoff | Run full regression, cross-platform CI, manuals, URL checks, CRAN-time examples, Win-builder, package-content audit, and public-claim audit. | All blocker rows `ok`, all caveats visible, and an exact checked tarball. |
 
-The repository now contains `0.2.3-draft.47` planning and pilot artifacts at
+The repository now contains `0.2.3-draft.48` planning and pilot artifacts at
 `inst/validation/release-gate-spec-0.2.3.md` and
 `inst/validation/release-evidence-checklist-0.2.3.csv`, with the TAM/immer
 execution contract in `inst/validation/tam-immer-estimator-stress-plan-0.2.3.md`.
@@ -684,14 +684,48 @@ and confirmation prohibition in a fresh session. Earlier v1/v2 bundles are
 retained as superseded evidence-integrity diagnostics. Full results and hashes
 are in `target-scale-sparse-stress-pilot-record-0.2.3.md`.
 
-This closes the atomic-resume slice of WP7, the current small-design MML
+Draft.47 closed the atomic-resume slice of WP7, the current small-design MML
 metamorphic slice of WP6, and the first target-scale construction/runtime
-feasibility slice. It does not close target-scale support bounds. Balanced
-RSM/PCM/GPCM baselines, weak-bridge gradients, OS peak-resident-memory
-measurement, the declared five-replicate pilot, recovery/coverage, malformed-
-input and replay properties, active population/anchor/interaction variants,
-external normalization, statistical criterion freeze, and confirmation remain
-open. Core execution is still unauthorized.
+feasibility slice. It did not close target-scale support bounds. Its immediate
+open items were balanced RSM/PCM/GPCM baselines, weak-bridge gradients, OS
+peak-resident-memory measurement, the declared five-replicate pilot,
+recovery/coverage, malformed-input and replay properties, active population/
+anchor/interaction variants, external normalization, statistical criterion
+freeze, and confirmation. Draft.48 addresses only the first three at a one-
+replicate calibration level; the wider gates remain open and core confirmation
+execution is still unauthorized.
+
+Draft.48 separates scale from adversity in the mixed draft.47 cells. It executes
+complete balanced and clean matched-sparse 400-Person RSM/PCM/GPCM baselines,
+plus a two-Rater PCM common-Person gradient at 0, 1, 2, 5, 10, 20, and 40.
+Each of the 13 data cells is passed unchanged to JML and MML; all 13 pairs have
+one data hash. All bridge levels use the same truth seed and one truth hash,
+removing the seed confounding discovered in the superseded v1 bridge output.
+The authoritative v2 completed all 26 routes with zero unexpected failures,
+one expected zero-overlap JML fail-closed route, zero false-ready routes, and
+nine inference-ready routes. This remains one-replicate calibration evidence.
+
+The clean baselines materially change the causal diagnosis. At 400 Persons,
+complete MML RSM/PCM fits were ready in about one second, whereas every clean
+12-Rater/12-Criterion MML baseline completed in 2.5--17 seconds but retained a
+terminal-gradient review; GPCM additionally retained an incomplete marginal-
+boundary audit. Clean sparse JML RSM, PCM, and GPCM took about 204, 480, and
+232 seconds and all reached the fixed iteration limit. Therefore sample size
+alone and GPCM nonlinearity alone cannot explain target-scale behavior. JML
+free-Person/extreme handling and design dimension, and MML numerical/boundary
+contracts, require distinct profiling lanes.
+
+The common-truth bridge traces are nonmonotone. Zero-overlap JML fails exact
+estimability, while zero-overlap MML remains review-only under
+`population_assumption_linked`. Positive-overlap MML routes are numerically
+ready, but one seed cannot define adequate overlap. Positive-overlap JML moves
+between `ready_with_exclusions` and iteration-limited blocked states. Binary
+connectivity, numerical readiness, or the best observed RMSE must not become a
+support threshold. Replicated estimator-specific recovery, local information,
+extreme-score, anchor, interaction, imbalance, and failure strata remain
+required. Process-lifetime peak working set is now recorded, but isolated-
+process memory attribution and capacity limits remain open. Full results and
+hashes are in `target-scale-baseline-bridge-pilot-record-0.2.3.md`.
 
 ### GPCM discrepancy decomposition and stress envelope
 
@@ -835,8 +869,8 @@ affected WP1--WP6 slices, criteria, and candidate identity are frozen.
 | `WP3-JML-BOUNDARY` | WP0 | `in_progress_bounded_joint_nonlinear_gpcm_paths` | Detect JML element separation/extreme sufficient scores on the actual contributing row pattern; replace optimizer-dependent finite primary values with typed boundary states. The Person primary-state slice, sparse-triplet Person-fixed structural certificate, companion joint Person-structural additive cone, retained-additive GPCM slope-only monotone paths, and ordered-pair linear-additive/constant-log-slope joint path family are implemented. Positive joint paths remain candidates because the GPCM likelihood is globally non-concave; negative results are scoped. More general rate vectors, curved paths, global arguments, independent general solver parity, broader model/basis properties, and target-scale evidence remain pending. | JML extreme/nonextreme fixtures, MML non-reduction guard, constrained facet/interaction/joint/slope-path certificates, sparse/dense and independent microcase parity, nonlinear joint-path positive and negative controls, and explicit optional-display contract. |
 | `WP4-READINESS-PROPAGATION` | WP1--WP3 | `in_progress_gpcm_joint_candidate_slice` | Derive fit-, parameter-, and output-level readiness once and propagate it without surface-specific reinterpretation. The fit record, deterministic precedence, conservative scalar, fail-closed synthetic legacy-object path, summary/results/convergence/plot front doors, target-aware unpropagated-candidate rule, typed slope-only GPCM boundaries, and candidate-specific joint GPCM reasons under contract v3 are implemented. Competitive joint candidates remain `not_evaluated` with no primary value or ordinary uncertainty; complete facet/interaction/step and remaining output propagation depend on unfinished WP1--WP3 states. | Cross-surface snapshot/semantic tests and a real serialized 0.2.2-object migration fixture. |
 | `WP5-COMPARISON-CONTRACT` | affected WP4 slice | `in_progress_core_slice_unblocked` | Make FACETS, TAM, immer, and other external normalization metric-specific and fail closed before numeric aggregation; identify estimator, adjustment, person treatment, and software stratum explicitly. Begin deterministic accepted/rejected fixtures and stable RSM/PCM metric slices now; unrelated GPCM, diagnostic, CML/CCML, and HRM rows remain ineligible until their own dependencies pass. | Eligibility/rejection ledger with denominator accounting, method-mode identity, and no silent row loss. |
-| `WP6-SCALE-AND-ADVERSARIAL` | affected WP1--WP4 slice | `in_progress_target_scale_feasibility_complete` | Verify sparse computation, basis invariance, row-order and label invariance, malformed-input behavior, optional-capability fail-closed behavior, and target-size runtime/memory without claiming FACETS capacity parity. Draft.43 corrects the common MML EAP Person-order defect; draft.44 binds package, runner, capability, RNG, and execution controls to checkpoints; draft.45 passes the 30-cell RSM/PCM/GPCM MML row/label/factor/missing/weight grid under numerical-ready production controls. Draft.47 executes the six prespecified 400-Person target cells with zero unexpected failures and zero false-ready results, but it also finds a blocked iteration-limited mixed-adversity GPCM MML cell and a residual-PCA computability-state gap. Balanced model/estimator baselines, weak-bridge gradients, OS peak memory, replicated recovery, JML properties, serialization/replay, active population/anchor/interaction, and malformed-input grids remain open. | Benchmark envelope and metamorphic/negative-test report; capability manifest; no dense design allocation at target sizes. |
-| `WP7-REPILOT-AND-FREEZE` | frozen release-spine profile plus affected WP0--WP6 slices | `in_progress_prespecification_calibration_only` | Prespecify replication counts, MCSE targets, failure denominators, seeds, and manifests in parallel. Calibration pilots may run only for explicitly stable slices and are invalidated by later affected code/contract changes. Draft.43 supplies feasibility and uncertainty warnings; draft.44 supplies atomic resume; draft.45 supplies the current MML metamorphic prerequisite; draft.46 separates mandatory, conditional, and deferred claims; draft.47 preserves the declared five-replicate target pilot while executing only one capacity-feasibility replicate. Confirmation remains globally unauthorized until the profile, criteria, and candidate are frozen. | Claim-disposition profile, complete pilot registry, atomic resumable execution, method-mode-specific exclusions, prespecified precision plan, resolved release-spine blockers, and still no confirmation result. |
+| `WP6-SCALE-AND-ADVERSARIAL` | affected WP1--WP4 slice | `in_progress_target_baseline_bridge_feasibility_complete` | Verify sparse computation, basis invariance, row-order and label invariance, malformed-input behavior, optional-capability fail-closed behavior, and target-size runtime/memory without claiming FACETS capacity parity. Draft.43 corrects the common MML EAP Person-order defect; draft.44 binds package, runner, capability, RNG, and execution controls to checkpoints; draft.45 passes the 30-cell RSM/PCM/GPCM MML row/label/factor/missing/weight grid under numerical-ready production controls. Draft.47 executes the six prespecified mixed-adversity 400-Person cells and exposes a residual-PCA computability gap. Draft.48 adds balanced/clean-sparse RSM/PCM/GPCM estimator baselines, an identical-truth two-Rater bridge gradient, and OS process peak-memory evidence. It shows that clean 12-Rater/12-Criterion JML routes are the principal runtime/iteration bottleneck under the fixed controls, while clean MML routes remain much faster but still need terminal-gradient and GPCM marginal-boundary resolution. Replicated recovery, isolated-process memory, JML properties, PCA computability, serialization/replay, active population/anchor/interaction, and malformed-input grids remain open. | Benchmark envelope and metamorphic/negative-test report; capability manifest; no dense design allocation at target sizes. |
+| `WP7-REPILOT-AND-FREEZE` | frozen release-spine profile plus affected WP0--WP6 slices | `in_progress_prespecification_calibration_only` | Prespecify replication counts, MCSE targets, failure denominators, seeds, and manifests in parallel. Calibration pilots may run only for explicitly stable slices and are invalidated by later affected code/contract changes. Draft.43 supplies feasibility and uncertainty warnings; draft.44 supplies atomic resume; draft.45 supplies the current MML metamorphic prerequisite; draft.46 separates mandatory, conditional, and deferred claims; draft.47 preserves the declared five-replicate mixed-adversity target pilot while executing one capacity replicate; draft.48 adds only a one-replicate common-truth baseline/bridge calibration and explicitly forbids selecting an overlap threshold from the nonmonotone traces. Confirmation remains globally unauthorized until the profile, criteria, and candidate are frozen. | Claim-disposition profile, complete pilot registry, atomic resumable execution, method-mode-specific exclusions, prespecified precision plan, resolved release-spine blockers, and still no confirmation result. |
 
 #### Corrective-program execution lanes
 
