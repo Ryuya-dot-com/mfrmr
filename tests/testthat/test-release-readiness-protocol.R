@@ -58,7 +58,7 @@ test_that("public roadmap and current NEWS exclude internal release operations",
   expect_true(any(grepl("inst/validation", ignore, fixed = TRUE)))
 })
 
-test_that("internal draft.42 GPCM stress work remains explicit and private", {
+test_that("internal draft.43 GPCM stress work remains explicit and private", {
   pkg_root <- normalizePath(testthat::test_path("..", ".."), mustWork = TRUE)
   internal_path <- file.path(
     pkg_root, "inst", "validation", "internal-roadmap-0.2.3.md"
@@ -88,10 +88,14 @@ test_that("internal draft.42 GPCM stress work remains explicit and private", {
     pkg_root, "inst", "validation",
     "gpcm-isolated-attribution-smoke-record-0.2.3.md"
   )
+  attribution_replicated_record_path <- file.path(
+    pkg_root, "inst", "validation",
+    "gpcm-attribution-replicated-feasibility-record-0.2.3.md"
+  )
   skip_if_not(all(file.exists(c(
     internal_path, gate_path, checklist_path, estimator_plan_path,
     contract_path, fixture_path, gpcm_smoke_record_path,
-    attribution_smoke_record_path
+    attribution_smoke_record_path, attribution_replicated_record_path
   ))))
 
   internal <- paste(readLines(internal_path, warn = FALSE, encoding = "UTF-8"),
@@ -110,6 +114,11 @@ test_that("internal draft.42 GPCM stress work remains explicit and private", {
   )
   attribution_smoke_record <- paste(
     readLines(attribution_smoke_record_path, warn = FALSE, encoding = "UTF-8"),
+    collapse = "\n"
+  )
+  attribution_replicated_record <- paste(
+    readLines(attribution_replicated_record_path, warn = FALSE,
+              encoding = "UTF-8"),
     collapse = "\n"
   )
 
@@ -162,10 +171,13 @@ test_that("internal draft.42 GPCM stress work remains explicit and private", {
   expect_match(internal, "partitioned\\s+exhaustively")
   expect_match(internal, "Estimator ecosystem and maturity boundary", fixed = TRUE)
   expect_match(internal, "method = \"HRM\"", fixed = TRUE)
-  expect_match(gate, "Specification ID | `0.2.3-draft.42`", fixed = TRUE)
+  expect_match(gate, "Specification ID | `0.2.3-draft.43`", fixed = TRUE)
   expect_match(internal, "Draft.40 adds the first bounded joint nonlinear GPCM path family", fixed = TRUE)
   expect_match(internal, "Draft.41 makes the prespecified GPCM stress envelope executable", fixed = TRUE)
   expect_match(internal, "Draft.42 adds the isolated-attribution layer", fixed = TRUE)
+  expect_match(internal,
+               "Draft.43 adds a guarded replicated-feasibility layer",
+               fixed = TRUE)
   expect_match(internal, "70 pilot cells covering all 1,330", fixed = TRUE)
   expect_match(gpcm_smoke_record, "zero false-ready rows", fixed = TRUE)
   expect_match(
@@ -179,6 +191,22 @@ test_that("internal draft.42 GPCM stress work remains explicit and private", {
     "3c5114b2657866f8874fa4ffd5fb82324b620e5c88e6540ba4d51c9e03e63b86",
     fixed = TRUE
   )
+  expect_match(attribution_replicated_record,
+               "EAP Person-order defect found and corrected", fixed = TRUE)
+  expect_match(attribution_replicated_record,
+               "0/2 gives `[0, 0.658]`", fixed = TRUE)
+  expect_match(
+    attribution_replicated_record,
+    "A3FF87ADB29ACC09FA8D141A390D793D36528FB712AEC96755F43221E94E6BD9",
+    fixed = TRUE
+  )
+  expect_match(
+    attribution_replicated_record,
+    "88EBD28817AD1924A9AE235F56301264D5EC47FD06A9416D6A4BA55C5C59DFA6",
+    fixed = TRUE
+  )
+  expect_match(gate, "Pre-fix EAP evidence is invalidated", fixed = TRUE)
+  expect_match(gate, "two-replicate", fixed = TRUE)
   expect_match(internal, "GPCM discrepancy decomposition and stress envelope", fixed = TRUE)
   expect_match(internal, "different_slope_estimand", fixed = TRUE)
   expect_match(internal, "Table 7 discrimination is never a", fixed = TRUE)
@@ -207,6 +235,7 @@ test_that("internal draft.42 GPCM stress work remains explicit and private", {
     "jml_gpcm_joint_boundary_path",
     "gpcm_stress_covering_grid",
     "gpcm_isolated_attribution_pilot",
+    "gpcm_attribution_replicated_feasibility",
     "sparse_estimability_performance",
     "metric_specific_comparison_eligibility",
     "jml_estimator_maturity",

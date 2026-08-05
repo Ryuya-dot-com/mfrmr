@@ -122,6 +122,17 @@ but do not broaden current API scope.
   local-dependence smoke. It records zero pair-identity violations and zero
   false-ready rows while treating residual PCA and optimizer slope errors as
   descriptive calibration traces only.
+- `gpcm-attribution-replicated-pilot-0.2.3.R`: draft.43 repository-only tiered
+  orchestration over the isolated-attribution runner. It prespecifies guarded
+  feasibility/core/expanded arm registries, Wilson intervals, Bernoulli and
+  numeric Monte Carlo error, route-set completeness, metric summaries, and
+  runtime forecasts without authorizing confirmation or freezing a criterion.
+- `gpcm-attribution-replicated-feasibility-record-0.2.3.md`: hashed draft.43
+  record of the corrected 80-route feasibility run. It documents the MML EAP
+  Person-order defect and its invalidated pre-fix rows, the exact corrective
+  public tarball/check identity, dependency-sensitive JML boundary capability,
+  two-replicate uncertainty, runtime, residual-PCA cautions, and prerequisites
+  for the guarded core tier.
 - `facets-mfrmr-divergence-audit-0.2.3.R`: repository-only contract audit for
   completed paired pilots. Before interpreting parameter differences it checks
   constrained main-effect rank, declared versus FACETS-retained category/step
