@@ -60,7 +60,7 @@ test_that("public roadmap and current NEWS exclude internal release operations",
   expect_true(any(grepl("inst/validation", ignore, fixed = TRUE)))
 })
 
-test_that("internal draft.49 roadmap and GPCM work remain explicit and private", {
+test_that("internal draft.50 roadmap and GPCM work remain explicit and private", {
   pkg_root <- normalizePath(testthat::test_path("..", ".."), mustWork = TRUE)
   internal_path <- file.path(
     pkg_root, "inst", "validation", "internal-roadmap-0.2.3.md"
@@ -118,13 +118,17 @@ test_that("internal draft.49 roadmap and GPCM work remain explicit and private",
     pkg_root, "inst", "validation",
     "jml-bottleneck-decomposition-pilot-record-0.2.3.md"
   )
+  jml_phase_record_path <- file.path(
+    pkg_root, "inst", "validation",
+    "jml-phase-profile-pilot-record-0.2.3.md"
+  )
   skip_if_not(all(file.exists(c(
     internal_path, gate_path, checklist_path, estimator_plan_path,
     contract_path, fixture_path, gpcm_smoke_record_path,
     attribution_smoke_record_path, attribution_replicated_record_path,
     checkpoint_record_path, metamorphic_record_path, roadmap_record_path,
     target_scale_record_path, target_bridge_record_path,
-    jml_profile_record_path
+    jml_profile_record_path, jml_phase_record_path
   ))))
 
   internal <- paste(readLines(internal_path, warn = FALSE, encoding = "UTF-8"),
@@ -172,6 +176,10 @@ test_that("internal draft.49 roadmap and GPCM work remain explicit and private",
   )
   jml_profile_record <- paste(
     readLines(jml_profile_record_path, warn = FALSE, encoding = "UTF-8"),
+    collapse = "\n"
+  )
+  jml_phase_record <- paste(
+    readLines(jml_phase_record_path, warn = FALSE, encoding = "UTF-8"),
     collapse = "\n"
   )
 
@@ -224,7 +232,7 @@ test_that("internal draft.49 roadmap and GPCM work remain explicit and private",
   expect_match(internal, "partitioned\\s+exhaustively")
   expect_match(internal, "Estimator ecosystem and maturity boundary", fixed = TRUE)
   expect_match(internal, "method = \"HRM\"", fixed = TRUE)
-  expect_match(gate, "Specification ID | `0.2.3-draft.49`", fixed = TRUE)
+  expect_match(gate, "Specification ID | `0.2.3-draft.50`", fixed = TRUE)
   expect_match(internal, "Draft.40 adds the first bounded joint nonlinear GPCM path family", fixed = TRUE)
   expect_match(internal, "Draft.41 makes the prespecified GPCM stress envelope executable", fixed = TRUE)
   expect_match(internal, "Draft.42 adds the isolated-attribution layer", fixed = TRUE)
@@ -244,6 +252,9 @@ test_that("internal draft.49 roadmap and GPCM work remain explicit and private",
                "Draft.48 separates scale from adversity", fixed = TRUE)
   expect_match(internal,
                "Draft.49 decomposes the JML computation hypothesis",
+               fixed = TRUE)
+  expect_match(internal,
+               "Draft.50 instruments the exact execution phases",
                fixed = TRUE)
   expect_match(internal, "`release_spine`", fixed = TRUE)
   expect_match(internal, "in_progress_core_slice_unblocked", fixed = TRUE)
@@ -346,6 +357,21 @@ test_that("internal draft.49 roadmap and GPCM work remain explicit and private",
   expect_match(
     jml_profile_record,
     "c035b0bf0ce93fc42f5252c6d036787a6c0cd5a041c8a2b2f1a277961dd51019",
+    fixed = TRUE
+  )
+  expect_match(jml_phase_record,
+               "structural and joint recession phases together consumed",
+               fixed = TRUE)
+  expect_match(jml_phase_record,
+               "optimizer switch can change numerical readiness", fixed = TRUE)
+  expect_match(
+    jml_phase_record,
+    "1827f40c3a1314363656123b755ab7a9edbacf6a6987d607d208e9d95b88ea95",
+    fixed = TRUE
+  )
+  expect_match(
+    jml_phase_record,
+    "4544117792cce08af26bc1bb4510eedf94b1647cf1fedd38527d4dd2b47148e7",
     fixed = TRUE
   )
   expect_match(gate,

@@ -3721,7 +3721,34 @@ mfrm_estimate <- function(data, person_col, facet_cols, score_col,
                           optimizer = "auto",
                           mml_engine = "direct",
                           checkpoint = NULL) {
+  # Internal validation instrumentation. The option is deliberately absent
+  # from the public fitting API because elapsed time is volatile metadata, not
+  # part of the statistical result. When enabled, timings are attached only
+  # after every estimate, audit, and readiness decision has been assembled.
+  # Consequently, no phase duration can feed back into optimization or alter a
+  # reporting gate.
+  phase_timing_enabled <- isTRUE(getOption("mfrmr.phase_timing", FALSE))
+  phase_timing_rows <- list()
+  phase_clock <- function() {
+    if (!phase_timing_enabled) return(NULL)
+    unname(proc.time()[["elapsed"]])
+  }
+  phase_finish <- function(phase, started, scope) {
+    if (!phase_timing_enabled) return(invisible(NULL))
+    phase_timing_rows[[length(phase_timing_rows) + 1L]] <<- data.frame(
+      Phase = as.character(phase),
+      ElapsedSeconds = max(0, phase_clock() - started),
+      Clock = "proc.time.elapsed",
+      Scope = as.character(scope),
+      DecisionUse = "diagnostic_only",
+      stringsAsFactors = FALSE
+    )
+    invisible(NULL)
+  }
+  estimation_started <- phase_clock()
+
   # Stage 1: Normalize model options and input data.
+  phase_started <- phase_clock()
   model <- match.arg(model)
   method <- match.arg(method)
   interaction_policy <- match.arg(interaction_policy)
@@ -3737,8 +3764,10 @@ mfrm_estimate <- function(data, person_col, facet_cols, score_col,
     keep_original = keep_original,
     missing_codes = missing_codes
   )
+  phase_finish("prepare_data", phase_started, "input normalization and retained data")
 
   # Stage 2: Resolve facet-level modeling choices.
+  phase_started <- phase_clock()
   resolved_families <- resolve_step_and_slope_facets(
     model = model,
     step_facet = step_facet,
@@ -3765,8 +3794,10 @@ mfrm_estimate <- function(data, person_col, facet_cols, score_col,
     min_obs_per_interaction = min_obs_per_interaction,
     interaction_policy = interaction_policy
   )
+  phase_finish("resolve_structure", phase_started, "model and active structure")
 
   # Stage 3: Build reusable structures for optimization.
+  phase_started <- phase_clock()
   idx <- build_indices(
     prep,
     step_facet = step_facet,
@@ -3802,17 +3833,26 @@ mfrm_estimate <- function(data, person_col, facet_cols, score_col,
   )
   sizes <- cfg$sizes
   start <- build_initial_param_vector(config, sizes)
+  phase_finish("build_design_config", phase_started, "indices, constraints, and starting values")
+
+  phase_started <- phase_clock()
   category_support_audit <- audit_mfrm_category_support(
     prep = prep,
     config = config,
     sizes = sizes
   )
+  phase_finish("category_support_audit", phase_started, "pre-fit category support")
+
+  phase_started <- phase_clock()
   estimability_audit <- audit_mfrm_estimability(
     prep = prep,
     idx = idx,
     config = config,
     sizes = sizes
   )
+  phase_finish("estimability_audit", phase_started, "pre-fit constrained estimability")
+
+  phase_started <- phase_clock()
   config$category_support_audit <- category_support_audit
   config$estimability_audit <- estimability_audit
   data_review <- build_mfrm_data_review(
@@ -3873,8 +3913,10 @@ mfrm_estimate <- function(data, person_col, facet_cols, score_col,
       call. = FALSE
     )
   }
+  phase_finish("data_review_and_guards", phase_started, "pre-fit review assembly and fail-closed guards")
 
   # Stage 4: Optimize model parameters.
+  phase_started <- phase_clock()
   opt <- run_mfrm_optimization(
     start = start,
     method = method,
@@ -3887,6 +3929,7 @@ mfrm_estimate <- function(data, person_col, facet_cols, score_col,
     optimizer = config$estimation_control$optimizer_requested,
     checkpoint = config$estimation_control$checkpoint
   )
+  phase_finish("optimization", phase_started, "objective evaluation and optimizer")
   config$estimation_control$optimizer_used <- as.character(
     opt$optimizer_plan$Used %||% opt$optimizer_diagnostics$OptimizerMethod %||% NA_character_
   )
@@ -3914,6 +3957,7 @@ mfrm_estimate <- function(data, person_col, facet_cols, score_col,
   config$estimation_control$mml_engine_used <- as.character(opt$mml_engine$Used %||% NA_character_)
   config$estimation_control$mml_engine_detail <- as.character(opt$mml_engine$Detail %||% NA_character_)
 
+  phase_started <- phase_clock()
   # For nonlinear MML fits, first decompose the retained observed-Person
   # marginal scores, then evaluate bounded all-pattern expected information on
   # each retained Person design. Both are distinct from the JML conditional
@@ -3988,15 +4032,23 @@ mfrm_estimate <- function(data, person_col, facet_cols, score_col,
     config$estimability_audit <- estimability_audit
     data_review$estimability <- estimability_audit
   }
+  phase_finish("post_optimization_audits", phase_started, "nonlinear score, kernel, transformation, and information audits")
 
   # Stage 5: Build human-readable output tables.
+  phase_started <- phase_clock()
   params <- expand_params(opt$par, sizes, config)
   person_tbl <- build_person_table(method, idx, config, params, prep, quad_points)
+  phase_finish("parameter_and_person_tables", phase_started, "parameter expansion and person summaries")
+
+  phase_started <- phase_clock()
   boundary_audit <- audit_mfrm_person_boundary(
     person_table = person_tbl,
     config = config,
     prep = prep
   )
+  phase_finish("person_boundary_audit", phase_started, "person extreme-score and boundary state")
+
+  phase_started <- phase_clock()
   boundary_audit$structural_additive <-
     audit_mfrm_jml_structural_recession(
       prep = prep,
@@ -4005,6 +4057,9 @@ mfrm_estimate <- function(data, person_col, facet_cols, score_col,
       sizes = sizes,
       params = params
     )
+  phase_finish("structural_recession_audit", phase_started, "additive structural recession directions")
+
+  phase_started <- phase_clock()
   boundary_audit$joint_additive <-
     audit_mfrm_jml_joint_recession(
       prep = prep,
@@ -4014,6 +4069,9 @@ mfrm_estimate <- function(data, person_col, facet_cols, score_col,
       params = params,
       person_boundary_audit = boundary_audit
     )
+  phase_finish("joint_recession_audit", phase_started, "joint additive recession directions")
+
+  phase_started <- phase_clock()
   boundary_audit$gpcm_slope_boundary <-
     audit_mfrm_jml_gpcm_slope_boundary(
       prep = prep,
@@ -4022,6 +4080,9 @@ mfrm_estimate <- function(data, person_col, facet_cols, score_col,
       sizes = sizes,
       par = opt$par
     )
+  phase_finish("gpcm_slope_boundary_audit", phase_started, "GPCM slope-only boundary directions")
+
+  phase_started <- phase_clock()
   boundary_audit$gpcm_joint_boundary <-
     audit_mfrm_jml_gpcm_joint_boundary(
       prep = prep,
@@ -4029,10 +4090,16 @@ mfrm_estimate <- function(data, person_col, facet_cols, score_col,
       config = config,
       sizes = sizes,
       par = opt$par
-    )
+  )
+  phase_finish("gpcm_joint_boundary_audit", phase_started, "GPCM joint additive-slope boundary directions")
+
+  phase_started <- phase_clock()
   person_tbl <- apply_mfrm_person_boundary(person_tbl, boundary_audit)
   config$boundary_audit <- boundary_audit
   data_review$boundary <- boundary_audit
+  phase_finish("boundary_application", phase_started, "apply boundary states to returned objects")
+
+  phase_started <- phase_clock()
   slope_tbl <- build_slope_table(config, prep, params)
   readiness_record <- build_mfrm_readiness_record(
     prep = prep,
@@ -4042,6 +4109,9 @@ mfrm_estimate <- function(data, person_col, facet_cols, score_col,
     slope_table = slope_tbl
   )
   slope_tbl <- apply_mfrm_slope_readiness(slope_tbl, readiness_record)
+  phase_finish("readiness_assembly", phase_started, "slope eligibility and fit readiness")
+
+  phase_started <- phase_clock()
   facet_tbl <- build_other_facet_table(config, prep, params)
   interaction_tbl <- build_interaction_effect_table(config, prep, params)
   step_tbl <- build_step_table(config, prep, params)
@@ -4049,6 +4119,17 @@ mfrm_estimate <- function(data, person_col, facet_cols, score_col,
     model, method, prep, config, sizes, opt,
     readiness_record = readiness_record
   )
+  phase_finish("remaining_output_tables", phase_started, "facet, interaction, step, and summary tables")
+
+  if (phase_timing_enabled) {
+    phase_finish("mfrm_estimate_total", estimation_started, "complete mfrm_estimate call")
+    phase_timing <- do.call(rbind, phase_timing_rows)
+    phase_timing$Order <- seq_len(nrow(phase_timing))
+    phase_timing <- phase_timing[, c(
+      "Order", "Phase", "ElapsedSeconds", "Clock", "Scope", "DecisionUse"
+    )]
+    config$phase_timing <- phase_timing
+  }
 
   list(
     summary = summary_tbl,
