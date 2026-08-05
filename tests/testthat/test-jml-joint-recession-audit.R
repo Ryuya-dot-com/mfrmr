@@ -38,6 +38,91 @@ fit_joint_recession_fixture <- function(separated = TRUE, reverse = FALSE) {
   ))
 }
 
+fit_known_person_cone_fixture <- function(reverse = FALSE,
+                                           structural_separation = FALSE) {
+  data <- expand.grid(
+    Person = paste0("P", 1:4),
+    Item = c("I1", "I2"),
+    KEEP.OUT.ATTRS = FALSE,
+    stringsAsFactors = FALSE
+  )
+  data$Score <- if (isTRUE(structural_separation)) {
+    c(1L, 1L, 1L, 1L, 1L, 0L, 0L, 0L)
+  } else {
+    c(1L, 0L, 1L, 0L, 1L, 1L, 0L, 1L)
+  }
+  data <- data[rep(seq_len(nrow(data)), each = 3L), , drop = FALSE]
+  if (isTRUE(reverse)) data <- data[nrow(data):1L, , drop = FALSE]
+  rownames(data) <- NULL
+  suppressWarnings(fit_mfrm(
+    data,
+    person = "Person",
+    facets = "Item",
+    score = "Score",
+    rating_min = 0,
+    rating_max = 1,
+    method = "JML",
+    model = "RSM",
+    maxit = 80
+  ))
+}
+
+fit_known_person_gpcm_cone_fixture <- function() {
+  data <- expand.grid(
+    Person = paste0("P", 1:4),
+    Criterion = c("C1", "C2"),
+    KEEP.OUT.ATTRS = FALSE,
+    stringsAsFactors = FALSE
+  )
+  data$Score <- c(1L, 0L, 1L, 0L, 1L, 1L, 0L, 1L)
+  data <- data[rep(seq_len(nrow(data)), each = 3L), , drop = FALSE]
+  rownames(data) <- NULL
+  suppressWarnings(fit_mfrm(
+    data,
+    person = "Person",
+    facets = "Criterion",
+    score = "Score",
+    rating_min = 0,
+    rating_max = 1,
+    method = "JML",
+    model = "GPCM",
+    step_facet = "Criterion",
+    slope_facet = "Criterion",
+    maxit = 150,
+    reltol = 1e-10
+  ))
+}
+
+fit_known_person_interaction_cone_fixture <- function() {
+  data <- expand.grid(
+    Person = paste0("P", 1:6),
+    Rater = c("R1", "R2"),
+    Criterion = c("C1", "C2"),
+    KEEP.OUT.ATTRS = FALSE,
+    stringsAsFactors = FALSE
+  )
+  person_index <- match(data$Person, paste0("P", 1:6))
+  rater_index <- match(data$Rater, c("R1", "R2"))
+  criterion_index <- match(data$Criterion, c("C1", "C2"))
+  data$Score <- as.integer(
+    (person_index + rater_index + criterion_index) %% 2L
+  )
+  data$Score[data$Person == "P1"] <- 1L
+  suppressWarnings(fit_mfrm(
+    data,
+    person = "Person",
+    facets = c("Rater", "Criterion"),
+    score = "Score",
+    rating_min = 0,
+    rating_max = 1,
+    method = "JML",
+    model = "RSM",
+    facet_interactions = "Rater:Criterion",
+    min_obs_per_interaction = 1,
+    maxit = 80
+  ))
+}
+
 joint_recession_problem <- function(fit) {
   config <- fit$config
   sizes <- mfrmr:::build_param_sizes(config)
@@ -252,6 +337,254 @@ test_that("joint sparse and dense certificates are row-order invariant", {
     reversed$certificates$TargetCapacity[reversed_order],
     tolerance = 1e-8
   )
+})
+
+test_that("quotient nullspace screen retains target-changing flat directions", {
+  skip_if_not_installed("lpSolve")
+  full_contrast <- Matrix::sparseMatrix(
+    i = c(1L, 2L, 3L),
+    j = c(1L, 2L, 2L),
+    x = c(1, 1, -1),
+    dims = c(3L, 3L)
+  )
+  full_base <- mfrmr:::mfrmr_jml_recession_lp_base(full_contrast)
+  full_cone <- mfrmr:::mfrmr_jml_recession_target_lp(
+    full_base,
+    target = as.numeric(Matrix::colSums(full_contrast)),
+    objective_tolerance = 1e-10,
+    certificate_tolerance = 1e-7
+  )
+  flat_target <- matrix(c(0, 0, 1), nrow = 1L)
+  full_target <- mfrmr:::mfrmr_jml_recession_target_lp(
+    full_base, target = as.numeric(flat_target)
+  )
+  expect_true(isTRUE(full_cone$certified))
+  expect_true(isTRUE(full_target$certified))
+
+  # Coordinate/row 1 is an independently improving known-Person boundary.
+  # Its quotient has only a flat third coordinate: a strict-cone screen is
+  # negative, but the selected target still moves in the quotient nullspace.
+  quotient <- full_contrast[2:3, 2:3, drop = FALSE]
+  quotient_cone <- mfrmr:::mfrmr_jml_recession_target_lp(
+    mfrmr:::mfrmr_jml_recession_lp_base(quotient),
+    target = as.numeric(Matrix::colSums(quotient)),
+    objective_tolerance = 1e-10,
+    certificate_tolerance = 1e-7
+  )
+  changing <- mfrmr:::mfrmr_jml_recession_target_nullspace_screen(
+    quotient, matrix(c(0, 1), nrow = 1L)
+  )
+  safe <- mfrmr:::mfrmr_jml_recession_target_nullspace_screen(
+    quotient, matrix(c(1, 0), nrow = 1L)
+  )
+  expect_false(isTRUE(quotient_cone$certified))
+  expect_identical(
+    changing$state, "target_changes_quotient_nullspace"
+  )
+  expect_true(isTRUE(changing$evaluated))
+  expect_false(isTRUE(changing$safe_to_skip))
+  expect_true(all(changing$rank_ladder$RankIncrement == 1L))
+  expect_identical(
+    safe$state, "no_target_change_in_quotient_nullspace"
+  )
+  expect_true(isTRUE(safe$safe_to_skip))
+  expect_true(all(safe$rank_ladder$RankIncrement == 0L))
+
+  near_quotient <- Matrix::Matrix(
+    rbind(c(1, 1), c(-1, -1)), sparse = TRUE
+  )
+  near <- mfrmr:::mfrmr_jml_recession_target_nullspace_screen(
+    near_quotient, matrix(c(1, 1 + 1e-9), nrow = 1L)
+  )
+  expect_false(isTRUE(near$safe_to_skip))
+  expect_true(isTRUE(near$tolerance_sensitive))
+  limited <- mfrmr:::mfrmr_jml_recession_target_nullspace_screen(
+    quotient, matrix(c(1, 0), nrow = 1L), max_target_rows = 0L
+  )
+  expect_identical(limited$state, "not_evaluated_size_limit")
+  expect_false(isTRUE(limited$evaluated))
+  expect_false(isTRUE(limited$safe_to_skip))
+})
+
+test_that("known free extreme Person cone skips equivalent target enumeration", {
+  skip_if_not_installed("lpSolve")
+  fit <- fit_known_person_cone_fixture()
+  joint <- fit$config$boundary_audit$joint_additive
+  person <- fit$config$boundary_audit$parameter_status
+  problem <- joint_recession_problem(fit)
+  legacy <- mfrmr:::audit_mfrm_jml_additive_recession(
+    prep = fit$prep,
+    idx = problem$idx,
+    config = problem$config,
+    sizes = problem$sizes,
+    params = problem$params,
+    coordinate_scope = "joint_person_structural",
+    target_person_ids = character(0),
+    profiled_person_ids = character(0),
+    screen_global_cone = TRUE
+  )
+
+  expect_identical(
+    person$ParameterStatus[match("Person:P1", person$ParameterId)],
+    "unbounded_high"
+  )
+  expect_identical(joint$state, "certified_recession")
+  expect_true(isTRUE(joint$complete))
+  expect_identical(
+    joint$prescreen$state,
+    "positive_known_person_cone_target_exclusion"
+  )
+  expect_true(isTRUE(joint$prescreen$target_enumeration_skipped))
+  expect_identical(joint$prescreen$target_lp_calls, 0L)
+  expect_gt(joint$prescreen$relevance_lp_calls, 0L)
+  expect_identical(
+    joint$prescreen$total_lp_calls,
+    joint$prescreen$cone_lp_calls +
+      joint$prescreen$relevance_lp_calls
+  )
+  expect_identical(
+    joint$relevance_screen$state,
+    "negative_quotient_no_target_null_movement"
+  )
+  expect_true(isTRUE(
+    joint$relevance_screen$selected_target_exclusion_certified
+  ))
+  expect_true(isTRUE(
+    joint$relevance_screen$nullspace_screen$safe_to_skip
+  ))
+  expect_identical(nrow(joint$certificates), 0L)
+
+  expect_identical(legacy$state, joint$state)
+  expect_identical(legacy$complete, joint$complete)
+  expect_gt(legacy$prescreen$target_lp_calls, 0L)
+  expect_identical(
+    legacy$target_status$CandidateStatus,
+    joint$target_status$CandidateStatus
+  )
+  expect_identical(
+    legacy$target_status$ReasonCodes,
+    joint$target_status$ReasonCodes
+  )
+  reversed <- fit_known_person_cone_fixture(TRUE)$config$boundary_audit$
+    joint_additive
+  expect_identical(reversed$prescreen$state, joint$prescreen$state)
+  expect_identical(
+    reversed$target_status$CandidateStatus,
+    joint$target_status$CandidateStatus
+  )
+
+  limited <- mfrmr:::audit_mfrm_jml_joint_recession(
+    prep = fit$prep,
+    idx = problem$idx,
+    config = problem$config,
+    sizes = problem$sizes,
+    params = problem$params,
+    person_boundary_audit = fit$config$boundary_audit,
+    max_target_directions = 0L
+  )
+  expect_identical(
+    limited$relevance_screen$state,
+    "negative_quotient_not_evaluated_size_limit_fallback"
+  )
+  expect_identical(limited$prescreen$state, "positive_cone_target_limit")
+  expect_false(isTRUE(limited$complete))
+})
+
+test_that("relevant quotient cone retains selected target enumeration", {
+  skip_if_not_installed("lpSolve")
+  fit <- fit_known_person_cone_fixture(structural_separation = TRUE)
+  joint <- fit$config$boundary_audit$joint_additive
+  expect_identical(
+    joint$relevance_screen$state,
+    "positive_quotient_cone_target_enumeration"
+  )
+  expect_false(isTRUE(
+    joint$relevance_screen$selected_target_exclusion_certified
+  ))
+  expect_identical(
+    joint$prescreen$state, "positive_cone_target_enumeration"
+  )
+  expect_false(isTRUE(joint$prescreen$target_enumeration_skipped))
+  expect_gt(joint$prescreen$relevance_lp_calls, 0L)
+  expect_gt(joint$prescreen$target_lp_calls, 0L)
+  expect_true(any(joint$certificates$Certified))
+})
+
+test_that("known-Person exclusion preserves conditional GPCM additive states", {
+  skip_if_not_installed("lpSolve")
+  fit <- fit_known_person_gpcm_cone_fixture()
+  joint <- fit$config$boundary_audit$joint_additive
+  problem <- joint_recession_problem(fit)
+  legacy <- mfrmr:::audit_mfrm_jml_additive_recession(
+    prep = fit$prep,
+    idx = problem$idx,
+    config = problem$config,
+    sizes = problem$sizes,
+    params = problem$params,
+    coordinate_scope = "joint_person_structural",
+    target_person_ids = character(0),
+    profiled_person_ids = character(0),
+    screen_global_cone = TRUE
+  )
+  expect_identical(
+    joint$prescreen$state,
+    "positive_known_person_cone_target_exclusion"
+  )
+  expect_identical(
+    joint$relevance_screen$state,
+    "negative_quotient_no_target_null_movement"
+  )
+  expect_false(isTRUE(joint$complete))
+  expect_identical(joint$complete, legacy$complete)
+  expect_gt(legacy$prescreen$target_lp_calls, 0L)
+  expect_identical(joint$prescreen$target_lp_calls, 0L)
+  expect_identical(
+    joint$target_status$CandidateStatus,
+    legacy$target_status$CandidateStatus
+  )
+  expect_identical(
+    joint$target_status$ReasonCodes,
+    legacy$target_status$ReasonCodes
+  )
+  expect_match(joint$limitations, "GPCM log-slope recession")
+})
+
+test_that("known-Person exclusion retains interaction target equivalence", {
+  skip_if_not_installed("lpSolve")
+  fit <- fit_known_person_interaction_cone_fixture()
+  joint <- fit$config$boundary_audit$joint_additive
+  problem <- joint_recession_problem(fit)
+  legacy <- mfrmr:::audit_mfrm_jml_additive_recession(
+    prep = fit$prep,
+    idx = problem$idx,
+    config = problem$config,
+    sizes = problem$sizes,
+    params = problem$params,
+    coordinate_scope = "joint_person_structural",
+    target_person_ids = character(0),
+    profiled_person_ids = character(0),
+    screen_global_cone = TRUE
+  )
+  expect_identical(
+    joint$prescreen$state,
+    "positive_known_person_cone_target_exclusion"
+  )
+  expect_true(any(joint$target_status$ParameterClass == "interaction"))
+  expect_true(all(
+    joint$target_status$CandidateStatus[
+      joint$target_status$ParameterClass == "interaction"
+    ] == "finite_in_audited_subspace"
+  ))
+  expect_identical(
+    joint$target_status$CandidateStatus,
+    legacy$target_status$CandidateStatus
+  )
+  expect_identical(
+    joint$target_status$ReasonCodes,
+    legacy$target_status$ReasonCodes
+  )
+  expect_gt(legacy$prescreen$target_lp_calls, 0L)
+  expect_identical(joint$prescreen$target_lp_calls, 0L)
 })
 
 test_that("global joint-cone screening stops cleanly when no ray exists", {

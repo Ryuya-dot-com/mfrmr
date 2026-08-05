@@ -511,6 +511,169 @@ mfrmr_jml_recession_target_lp <- function(lp_base,
   )
 }
 
+mfrmr_jml_recession_target_nullspace_screen <- function(
+    contrast_design,
+    target_expansion,
+    tolerances = c(1e-12, 1e-10, 1e-8),
+    max_nonzeros = 2e6,
+    max_rows = 100000L,
+    max_coordinates = 750L,
+    max_target_rows = 200L) {
+  contrast_design <- methods::as(contrast_design, "dgCMatrix")
+  target_expansion <- methods::as(target_expansion, "dgCMatrix")
+  tolerances <- as.numeric(tolerances)
+  finish <- function(state, evaluated, safe_to_skip,
+                     rank_ladder = data.frame(), detail = "") {
+    list(
+      contract_version =
+        "mfrmr-jml-selected-target-nullspace-screen-v1",
+      state = state,
+      evaluated = isTRUE(evaluated),
+      safe_to_skip = isTRUE(safe_to_skip),
+      target_null_movement = if (identical(
+        state, "target_changes_quotient_nullspace"
+      )) {
+        TRUE
+      } else if (isTRUE(safe_to_skip)) {
+        FALSE
+      } else {
+        NA
+      },
+      tolerance_sensitive = if (nrow(rank_ladder) > 0L) {
+        length(unique(rank_ladder$ContrastRank)) > 1L ||
+          length(unique(rank_ladder$AugmentedRank)) > 1L ||
+          length(unique(rank_ladder$RankIncrement)) > 1L
+      } else {
+        NA
+      },
+      contrast_rows = as.integer(nrow(contrast_design)),
+      target_rows = as.integer(nrow(target_expansion)),
+      coordinates = as.integer(ncol(contrast_design)),
+      stored_nonzeros = as.double(
+        length(contrast_design@x) + length(target_expansion@x)
+      ),
+      tolerances = tolerances,
+      rank_ladder = rank_ladder,
+      detail = detail
+    )
+  }
+
+  if (ncol(contrast_design) != ncol(target_expansion) ||
+      length(tolerances) < 1L || any(!is.finite(tolerances)) ||
+      any(tolerances <= 0) || any(!is.finite(contrast_design@x)) ||
+      any(!is.finite(target_expansion@x))) {
+    return(finish(
+      "not_evaluated_mapping", FALSE, FALSE,
+      detail = "Contrast and target coordinates or tolerances were malformed."
+    ))
+  }
+  free_target <- as.numeric(Matrix::rowSums(abs(target_expansion))) > 0
+  target_expansion <- target_expansion[free_target, , drop = FALSE]
+  if (nrow(target_expansion) == 0L) {
+    return(finish(
+      "no_free_selected_targets", TRUE, TRUE,
+      detail = "No selected target changes in the retained coordinates."
+    ))
+  }
+  stored_nonzeros <- as.double(
+    length(contrast_design@x) + length(target_expansion@x)
+  )
+  if (stored_nonzeros > as.double(max_nonzeros) ||
+      nrow(contrast_design) > as.integer(max_rows) ||
+      ncol(contrast_design) > as.integer(max_coordinates) ||
+      nrow(target_expansion) > as.integer(max_target_rows)) {
+    return(finish(
+      "not_evaluated_size_limit", FALSE, FALSE,
+      detail = paste0(
+        "The common-scale rank comparison exceeded its execution limit (",
+        format(stored_nonzeros, scientific = FALSE), " stored nonzeros; ",
+        nrow(contrast_design), " contrast rows; ",
+        nrow(target_expansion), " target rows; ",
+        ncol(contrast_design), " coordinates)."
+      )
+    ))
+  }
+  if (ncol(contrast_design) == 0L) {
+    return(finish(
+      "no_retained_coordinates", TRUE, TRUE,
+      detail = "No retained coordinate can change a selected target."
+    ))
+  }
+
+  combined <- rbind(contrast_design, target_expansion)
+  norm_sq <- as.numeric(Matrix::colSums(combined^2))
+  norms <- sqrt(pmax(norm_sq, 0))
+  if (any(!is.finite(norms))) {
+    return(finish(
+      "not_evaluated_rank", FALSE, FALSE,
+      detail = "Common column scaling was non-finite."
+    ))
+  }
+  inverse_norm <- ifelse(norms == 0, 1, 1 / norms)
+  scaling <- Matrix::Diagonal(x = inverse_norm)
+  contrast_scaled <- Matrix::drop0(methods::as(
+    contrast_design %*% scaling, "dgCMatrix"
+  ))
+  target_scaled <- Matrix::drop0(methods::as(
+    target_expansion %*% scaling, "dgCMatrix"
+  ))
+  augmented_scaled <- rbind(contrast_scaled, target_scaled)
+  rank_one <- function(x, tolerance) {
+    if (nrow(x) == 0L || ncol(x) == 0L) return(0L)
+    tryCatch(
+      suppressWarnings(as.integer(Matrix::rankMatrix(
+        x, method = "qr", tol = as.numeric(tolerance)
+      ))),
+      error = function(e) NA_integer_
+    )
+  }
+  contrast_rank <- vapply(
+    tolerances, function(tolerance) rank_one(contrast_scaled, tolerance),
+    integer(1)
+  )
+  augmented_rank <- vapply(
+    tolerances, function(tolerance) rank_one(augmented_scaled, tolerance),
+    integer(1)
+  )
+  rank_ladder <- data.frame(
+    Tolerance = tolerances,
+    ContrastRank = contrast_rank,
+    AugmentedRank = augmented_rank,
+    RankIncrement = as.integer(augmented_rank - contrast_rank),
+    stringsAsFactors = FALSE
+  )
+  if (anyNA(contrast_rank) || anyNA(augmented_rank) ||
+      any(rank_ladder$RankIncrement < 0L)) {
+    return(finish(
+      "not_evaluated_rank", FALSE, FALSE, rank_ladder,
+      "Sparse QR did not return a coherent common-scale rank ladder."
+    ))
+  }
+  tolerance_sensitive <-
+    length(unique(contrast_rank)) > 1L ||
+    length(unique(augmented_rank)) > 1L ||
+    length(unique(rank_ladder$RankIncrement)) > 1L
+  if (any(rank_ladder$RankIncrement > 0L)) {
+    return(finish(
+      "target_changes_quotient_nullspace", TRUE, FALSE, rank_ladder,
+      paste0(
+        "At least one selected target row increases quotient rank by ",
+        max(rank_ladder$RankIncrement), "."
+      )
+    ))
+  }
+  if (tolerance_sensitive) {
+    return(finish(
+      "tolerance_sensitive", TRUE, FALSE, rank_ladder,
+      "Rank was target-invariant but changed across guarded tolerances."
+    ))
+  }
+  finish(
+    "no_target_change_in_quotient_nullspace", TRUE, TRUE, rank_ladder,
+    "Every selected target row is in the quotient contrast row space."
+  )
+}
+
 audit_mfrm_jml_additive_recession <- function(prep,
                                                idx,
                                                config,
@@ -521,6 +684,7 @@ audit_mfrm_jml_additive_recession <- function(prep,
                                                  "joint_person_structural"
                                                ),
                                                target_person_ids = character(0),
+                                               profiled_person_ids = character(0),
                                                screen_global_cone = FALSE,
                                                max_lp_elements = NULL,
                                                max_lp_nonzeros = 2e6,
@@ -532,6 +696,9 @@ audit_mfrm_jml_additive_recession <- function(prep,
                                                lp_timeout = 2L,
                                                cone_objective_tolerance = 1e-10,
                                                cone_certificate_tolerance = 1e-7,
+                                               nullspace_tolerances = c(
+                                                 1e-12, 1e-10, 1e-8
+                                               ),
                                                lp_representation = c(
                                                  "sparse_triplet",
                                                  "dense_reference"
@@ -542,6 +709,10 @@ audit_mfrm_jml_additive_recession <- function(prep,
   target_person_ids <- unique(as.character(target_person_ids))
   target_person_ids <- target_person_ids[
     !is.na(target_person_ids) & nzchar(target_person_ids)
+  ]
+  profiled_person_ids <- unique(as.character(profiled_person_ids))
+  profiled_person_ids <- profiled_person_ids[
+    !is.na(profiled_person_ids) & nzchar(profiled_person_ids)
   ]
   method <- as.character(config$method %||% NA_character_)
   model <- as.character(config$model %||% NA_character_)
@@ -561,11 +732,35 @@ audit_mfrm_jml_additive_recession <- function(prep,
     cone_certified = NA,
     target_enumeration_skipped = FALSE,
     cone_lp_calls = 0L,
+    relevance_lp_calls = 0L,
     target_directions_evaluated = 0L,
     target_lp_calls = 0L,
     total_lp_calls = 0L,
     objective_tolerance = as.numeric(cone_objective_tolerance),
     certificate_tolerance = as.numeric(cone_certificate_tolerance)
+  )
+  relevance <- list(
+    contract_version = "mfrmr-jml-known-person-quotient-prescreen-v1",
+    requested = joint_scope && length(profiled_person_ids) > 0L,
+    state = if (joint_scope && length(profiled_person_ids) > 0L) {
+      "not_reached"
+    } else {
+      "not_applicable"
+    },
+    evaluated = FALSE,
+    mapping_valid = NA,
+    profiled_persons = as.integer(length(profiled_person_ids)),
+    removed_observations = 0L,
+    removed_contrast_rows = 0L,
+    removed_coordinates = 0L,
+    boundary_rays_valid = NA,
+    quotient_cone_evaluated = FALSE,
+    quotient_cone_certified = NA,
+    quotient_cone_lp_calls = 0L,
+    quotient_cone_capacity = NA_real_,
+    nullspace_screen = list(),
+    selected_target_exclusion_certified = FALSE,
+    detail = ""
   )
 
   finish <- function(state, complete, detail,
@@ -577,7 +772,8 @@ audit_mfrm_jml_additive_recession <- function(prep,
                      cone_loadings = empty_loadings) {
     prescreen_out <- prescreen
     prescreen_out$total_lp_calls <- as.integer(
-      prescreen_out$cone_lp_calls + prescreen_out$target_lp_calls
+      prescreen_out$cone_lp_calls + prescreen_out$relevance_lp_calls +
+        prescreen_out$target_lp_calls
     )
     list(
       contract_version = mfrmr_boundary_contract_version(),
@@ -597,6 +793,7 @@ audit_mfrm_jml_additive_recession <- function(prep,
       direction_loadings = loadings,
       dimensions = dimensions,
       prescreen = prescreen_out,
+      relevance_screen = relevance,
       detail = detail,
       limitations = if (joint_scope) {
         paste(
@@ -619,6 +816,7 @@ audit_mfrm_jml_additive_recession <- function(prep,
 
   if (!identical(method, "JML")) {
     prescreen$state <- "not_applicable_mml"
+    relevance$state <- "not_applicable_mml"
     return(finish(
       "not_applicable_mml", TRUE,
       "Additive fixed-effect recession certification is scoped to JML."
@@ -950,6 +1148,225 @@ audit_mfrm_jml_additive_recession <- function(prep,
       ))
     }
     prescreen$state <- "positive_cone_target_enumeration"
+    if (isTRUE(relevance$requested)) {
+      profiled_column <- match(
+        profiled_person_ids, as.character(structural_map$Coordinate)
+      )
+      observation_person_id <- paste0(
+        "Person:", prep$levels$Person[idx$person]
+      )
+      profiled_observation <- observation_person_id %in% profiled_person_ids
+      target_uses_profiled_coordinate <- if (
+        length(profiled_column) > 0L && !anyNA(profiled_column)
+      ) {
+        length(target_expansion[, profiled_column, drop = FALSE]@x) > 0L
+      } else {
+        TRUE
+      }
+      relevance$mapping_valid <-
+        length(profiled_column) == length(profiled_person_ids) &&
+        !anyNA(profiled_column) && !anyDuplicated(profiled_column) &&
+        all(structural_map$Block[profiled_column] == "Person") &&
+        setequal(
+          as.character(structural_map$Coordinate[profiled_column]),
+          profiled_person_ids
+        ) &&
+        all(profiled_person_ids %in% observation_person_id) &&
+        !any(profiled_person_ids %in% targets$ParameterId) &&
+        !target_uses_profiled_coordinate
+      if (!isTRUE(relevance$mapping_valid)) {
+        relevance$state <- "not_evaluated_mapping_fallback"
+        relevance$detail <- paste(
+          "Known free extreme Person rows, coordinates, and selected-target",
+          "mapping did not support quotient profiling; target enumeration",
+          "was retained."
+        )
+      } else {
+        boundary_ray_valid <- vapply(
+          seq_along(profiled_person_ids),
+          function(person_index) {
+            person_id <- profiled_person_ids[person_index]
+            observation_keep <- observation_person_id == person_id
+            scores <- as.integer(idx$score_k[observation_keep])
+            direction_sign <- if (
+              length(scores) > 0L && all(scores == 0L)
+            ) {
+              -1
+            } else if (
+              length(scores) > 0L &&
+                all(scores == as.integer(adjacent$transitions))
+            ) {
+              1
+            } else {
+              NA_real_
+            }
+            if (!is.finite(direction_sign)) return(FALSE)
+            contrast_keep <- rep(
+              observation_keep, each = as.integer(adjacent$transitions)
+            )
+            ray_margin <- direction_sign * as.numeric(
+              contrast[, profiled_column[person_index], drop = FALSE]
+            )
+            own_margin <- ray_margin[contrast_keep]
+            other_margin <- ray_margin[!contrast_keep]
+            length(own_margin) > 0L &&
+              all(is.finite(own_margin)) &&
+              min(own_margin) > as.numeric(cone_objective_tolerance) &&
+              (
+                length(other_margin) == 0L ||
+                  max(abs(other_margin)) <=
+                    as.numeric(cone_certificate_tolerance)
+              )
+          },
+          logical(1)
+        )
+        relevance$boundary_rays_valid <- all(boundary_ray_valid)
+        if (!isTRUE(relevance$boundary_rays_valid)) {
+          relevance$state <- "not_evaluated_boundary_ray_fallback"
+          relevance$detail <- paste(
+            "At least one profiled Person coordinate was not a verified",
+            "strict one-sided ray confined to that Person's observations;",
+            "target enumeration was retained."
+          )
+        } else {
+          retained_observation <- !profiled_observation
+          retained_contrast_row <- rep(
+            retained_observation, each = as.integer(adjacent$transitions)
+          )
+          retained_coordinate <- rep(TRUE, ncol(contrast))
+          retained_coordinate[profiled_column] <- FALSE
+          quotient_contrast <- contrast[
+            retained_contrast_row, retained_coordinate, drop = FALSE
+          ]
+          quotient_target_expansion <- target_expansion[
+            , retained_coordinate, drop = FALSE
+          ]
+          relevance$removed_observations <- as.integer(
+            sum(profiled_observation)
+          )
+          relevance$removed_contrast_rows <- as.integer(
+            sum(!retained_contrast_row)
+          )
+          relevance$removed_coordinates <- as.integer(
+            sum(!retained_coordinate)
+          )
+          quotient_cone <- if (ncol(quotient_contrast) == 0L) {
+            list(
+              evaluated = TRUE, certified = FALSE, solver_status = 0L,
+              target_capacity = 0, target_change = 0,
+              minimum_margin = 0, positive_margin = 0, strict_rows = 0L,
+              direction = numeric(0), lp_calls = 0L,
+              reason = "no_retained_coordinate"
+            )
+          } else {
+            mfrmr_jml_recession_target_lp(
+              lp_base = mfrmr_jml_recession_lp_base(
+                quotient_contrast, representation = lp_representation
+              ),
+              target = as.numeric(Matrix::colSums(quotient_contrast)),
+              objective_tolerance = as.numeric(cone_objective_tolerance),
+              certificate_tolerance =
+                as.numeric(cone_certificate_tolerance),
+              timeout = lp_timeout
+            )
+          }
+          relevance$quotient_cone_evaluated <-
+            isTRUE(quotient_cone$evaluated)
+          relevance$quotient_cone_certified <-
+            isTRUE(quotient_cone$certified)
+          relevance$quotient_cone_lp_calls <-
+            as.integer(quotient_cone$lp_calls %||% 0L)
+          relevance$quotient_cone_capacity <-
+            as.numeric(quotient_cone$target_capacity %||% NA_real_)
+          prescreen$relevance_lp_calls <- as.integer(
+            prescreen$relevance_lp_calls +
+              relevance$quotient_cone_lp_calls
+          )
+          if (!isTRUE(quotient_cone$evaluated)) {
+            relevance$state <- "not_evaluated_solver_fallback"
+            relevance$detail <- paste(
+              "The quotient cone solver did not complete; target",
+              "enumeration was retained."
+            )
+          } else if (isTRUE(quotient_cone$certified)) {
+            relevance$state <-
+              "positive_quotient_cone_target_enumeration"
+            relevance$evaluated <- TRUE
+            relevance$detail <- paste(
+              "A strictly improving quotient cone remained after known",
+              "Person boundaries were profiled out; target enumeration",
+              "was retained."
+            )
+          } else {
+            target_row_limit <- if (
+              length(max_target_directions) == 1L &&
+                is.finite(max_target_directions)
+            ) {
+              max(0L, as.integer(floor(max_target_directions / 2)))
+            } else {
+              nrow(quotient_target_expansion)
+            }
+            nullspace <- mfrmr_jml_recession_target_nullspace_screen(
+              contrast_design = quotient_contrast,
+              target_expansion = quotient_target_expansion,
+              tolerances = nullspace_tolerances,
+              max_nonzeros = max_lp_nonzeros,
+              max_rows = max_lp_constraints,
+              max_coordinates = max_additive_coordinates,
+              max_target_rows = target_row_limit
+            )
+            relevance$nullspace_screen <- nullspace
+            relevance$evaluated <- isTRUE(nullspace$evaluated)
+            if (isTRUE(nullspace$safe_to_skip)) {
+              relevance$state <-
+                "negative_quotient_no_target_null_movement"
+              relevance$selected_target_exclusion_certified <- TRUE
+              relevance$detail <- paste(
+                "The quotient strict cone was negative and every selected",
+                "target annihilated its nullspace."
+              )
+              prescreen$state <-
+                "positive_known_person_cone_target_exclusion"
+              prescreen$target_enumeration_skipped <- TRUE
+              targets$PositiveRecession <- FALSE
+              targets$NegativeRecession <- FALSE
+              targets$CandidateStatus <- ifelse(
+                free_target, "finite_in_audited_subspace", "fixed"
+              )
+              targets$EvaluationState <- "evaluated"
+              targets$ReasonCodes <- ifelse(
+                free_target,
+                "no_additive_recession_direction_certified",
+                "no_free_coordinate"
+              )
+              return(finish(
+                "certified_recession", !identical(model, "GPCM"),
+                paste0(
+                  "Certified a global joint additive recession cone fully ",
+                  "explained by ", length(profiled_person_ids),
+                  " ordinary free extreme Person boundary direction(s); ",
+                  "the quotient cone and selected-target nullspace screen ",
+                  "excluded recession for ", sum(free_target),
+                  " selected free expanded targets."
+                ),
+                target_status = targets,
+                dimensions = dimensions,
+                cone_certificate = cone_certificate,
+                cone_loadings = cone_loadings
+              ))
+            }
+            relevance$state <- paste0(
+              "negative_quotient_", nullspace$state, "_fallback"
+            )
+            relevance$detail <- paste(
+              "The quotient strict cone was negative, but selected-target",
+              "nullspace exclusion was not stable; target enumeration was",
+              "retained."
+            )
+          }
+        }
+      }
+    }
     if (target_directions > as.integer(max_target_directions)) {
       prescreen$state <- "positive_cone_target_limit"
       targets$PositiveRecession <- ifelse(free_target, NA, FALSE)
@@ -1151,12 +1568,17 @@ audit_mfrm_jml_joint_recession <- function(prep, idx, config, sizes, params,
     stringsAsFactors = FALSE
   )
   target_person_ids <- character(0)
+  profiled_person_ids <- character(0)
   if (nrow(person_status) > 0L &&
       all(c("ParameterId", "ParameterStatus", "ResponseExtreme") %in%
           names(person_status))) {
     unresolved <- person_status$ParameterStatus == "weak_information" &
       person_status$ResponseExtreme %in% c("low", "high")
     target_person_ids <- as.character(person_status$ParameterId[unresolved])
+    profiled <- person_status$ParameterStatus %in%
+      c("unbounded_low", "unbounded_high") &
+      person_status$ResponseExtreme %in% c("low", "high")
+    profiled_person_ids <- as.character(person_status$ParameterId[profiled])
   }
   audit_mfrm_jml_additive_recession(
     prep = prep,
@@ -1166,6 +1588,7 @@ audit_mfrm_jml_joint_recession <- function(prep, idx, config, sizes, params,
     params = params,
     coordinate_scope = "joint_person_structural",
     target_person_ids = target_person_ids,
+    profiled_person_ids = profiled_person_ids,
     screen_global_cone = TRUE,
     ...
   )

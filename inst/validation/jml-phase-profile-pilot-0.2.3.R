@@ -1,9 +1,10 @@
 # Repository-only execution-phase profile for mfrmr 0.2.3.
 #
 # This pilot instruments a fixed subset of the Draft49 JML bottleneck grid.
-# Schema v6 retains the guarded structural equivalence comparison and exposes
-# joint cone-screen versus target-enumeration work with fail-closed route
-# invariants.
+# Schema v8 retains the guarded structural equivalence comparison and exposes
+# the known-Person quotient/nullspace exclusion between the joint global cone
+# and target enumeration, including directly readable common-scale rank
+# ladders and fail-closed route invariants.
 # Elapsed time is diagnostic-only: it does not enter optimization, readiness,
 # recovery eligibility, or any release decision. The pilot estimates neither
 # operating characteristics nor a frozen runtime envelope.
@@ -130,7 +131,7 @@ mfrmr_jml_phase_identity <- function(registry, maxit, quad_points, reltol) {
     contract[, setdiff(names(contract), "ContractSHA256"), drop = FALSE]
   )
   execution <- data.frame(
-    Schema = "mfrmr-jml-phase-profile-v6",
+    Schema = "mfrmr-jml-phase-profile-v8",
     DataCells = length(unique(registry$DataCellId)),
     Routes = nrow(registry),
     Maxit = as.integer(maxit), QuadPoints = as.integer(quad_points),
@@ -256,12 +257,38 @@ mfrmr_jml_phase_run_route <- function(row, generated, maxit,
     JointConeCertified = NA,
     JointEnumerationSkipped = NA,
     JointConeLPCalls = NA_integer_,
+    JointRelevanceLPCalls = NA_integer_,
     JointConeObjectiveTolerance = NA_real_,
     JointConeCertificateTolerance = NA_real_,
     JointTargetDirectionsEvaluated = NA_integer_,
     JointTargetLPCalls = NA_integer_,
     JointTotalLPCalls = NA_integer_,
     JointTargetStatusSHA256 = NA_character_,
+    JointRelevanceContract = NA_character_,
+    JointRelevanceState = NA_character_,
+    JointRelevanceRequested = NA,
+    JointRelevanceEvaluated = NA,
+    JointProfiledPersons = NA_integer_,
+    JointRemovedObservations = NA_integer_,
+    JointRemovedContrastRows = NA_integer_,
+    JointRemovedCoordinates = NA_integer_,
+    JointBoundaryRaysValid = NA,
+    JointQuotientConeEvaluated = NA,
+    JointQuotientConeCertified = NA,
+    JointQuotientConeLPCalls = NA_integer_,
+    JointQuotientConeCapacity = NA_real_,
+    JointNullspaceContract = NA_character_,
+    JointNullspaceState = NA_character_,
+    JointNullspaceEvaluated = NA,
+    JointNullspaceSafeToSkip = NA,
+    JointNullspaceToleranceSensitive = NA,
+    JointNullspaceRankSHA256 = NA_character_,
+    JointNullspaceRankRows = NA_integer_,
+    JointNullspaceContrastRank = NA_integer_,
+    JointNullspaceAugmentedRank = NA_integer_,
+    JointNullspaceMaxRankIncrement = NA_integer_,
+    JointNullspaceRankLadder = NA_character_,
+    JointSelectedTargetExclusionCertified = NA,
     JointWorkContractValid = NA,
     SemanticResultSHA256 = NA_character_,
     OuterFitSeconds = outer_seconds, InstrumentedTotalSeconds = NA_real_,
@@ -495,6 +522,9 @@ mfrmr_jml_phase_run_route <- function(row, generated, maxit,
   base$JointConeLPCalls <- as.integer(
     joint_prescreen$cone_lp_calls %||% NA_integer_
   )
+  base$JointRelevanceLPCalls <- as.integer(
+    joint_prescreen$relevance_lp_calls %||% NA_integer_
+  )
   base$JointConeObjectiveTolerance <- as.numeric(
     joint_prescreen$objective_tolerance %||% NA_real_
   )
@@ -512,6 +542,84 @@ mfrmr_jml_phase_run_route <- function(row, generated, maxit,
   )
   base$JointTargetStatusSHA256 <-
     mfrmr_jml_phase_structural_status_hash(joint)
+  joint_relevance <- joint$relevance_screen %||% list()
+  joint_nullspace <- joint_relevance$nullspace_screen %||% list()
+  base$JointRelevanceContract <- as.character(
+    joint_relevance$contract_version %||% NA_character_
+  )
+  base$JointRelevanceState <- as.character(
+    joint_relevance$state %||% NA_character_
+  )
+  base$JointRelevanceRequested <- isTRUE(joint_relevance$requested)
+  base$JointRelevanceEvaluated <- isTRUE(joint_relevance$evaluated)
+  base$JointProfiledPersons <- as.integer(
+    joint_relevance$profiled_persons %||% NA_integer_
+  )
+  base$JointRemovedObservations <- as.integer(
+    joint_relevance$removed_observations %||% NA_integer_
+  )
+  base$JointRemovedContrastRows <- as.integer(
+    joint_relevance$removed_contrast_rows %||% NA_integer_
+  )
+  base$JointRemovedCoordinates <- as.integer(
+    joint_relevance$removed_coordinates %||% NA_integer_
+  )
+  base$JointBoundaryRaysValid <- if (is.na(
+    joint_relevance$boundary_rays_valid %||% NA
+  )) NA else isTRUE(joint_relevance$boundary_rays_valid)
+  base$JointQuotientConeEvaluated <- isTRUE(
+    joint_relevance$quotient_cone_evaluated
+  )
+  base$JointQuotientConeCertified <- if (is.na(
+    joint_relevance$quotient_cone_certified %||% NA
+  )) NA else isTRUE(joint_relevance$quotient_cone_certified)
+  base$JointQuotientConeLPCalls <- as.integer(
+    joint_relevance$quotient_cone_lp_calls %||% NA_integer_
+  )
+  base$JointQuotientConeCapacity <- as.numeric(
+    joint_relevance$quotient_cone_capacity %||% NA_real_
+  )
+  base$JointNullspaceContract <- as.character(
+    joint_nullspace$contract_version %||% NA_character_
+  )
+  base$JointNullspaceState <- as.character(
+    joint_nullspace$state %||% NA_character_
+  )
+  base$JointNullspaceEvaluated <- isTRUE(joint_nullspace$evaluated)
+  base$JointNullspaceSafeToSkip <- isTRUE(joint_nullspace$safe_to_skip)
+  base$JointNullspaceToleranceSensitive <- if (is.na(
+    joint_nullspace$tolerance_sensitive %||% NA
+  )) NA else isTRUE(joint_nullspace$tolerance_sensitive)
+  joint_rank_ladder <- as.data.frame(
+    joint_nullspace$rank_ladder %||% data.frame(), stringsAsFactors = FALSE
+  )
+  base$JointNullspaceRankSHA256 <- mfrmr_gpcm_repilot_hash_object(
+    joint_rank_ladder
+  )
+  base$JointNullspaceRankRows <- nrow(joint_rank_ladder)
+  if (nrow(joint_rank_ladder) > 0L && all(c(
+    "Tolerance", "ContrastRank", "AugmentedRank", "RankIncrement"
+  ) %in% names(joint_rank_ladder))) {
+    base$JointNullspaceContrastRank <- if (
+      length(unique(joint_rank_ladder$ContrastRank)) == 1L
+    ) as.integer(joint_rank_ladder$ContrastRank[1L]) else NA_integer_
+    base$JointNullspaceAugmentedRank <- if (
+      length(unique(joint_rank_ladder$AugmentedRank)) == 1L
+    ) as.integer(joint_rank_ladder$AugmentedRank[1L]) else NA_integer_
+    base$JointNullspaceMaxRankIncrement <- as.integer(max(
+      joint_rank_ladder$RankIncrement
+    ))
+    base$JointNullspaceRankLadder <- paste(sprintf(
+      "%.0e:%d/%d/+%d",
+      joint_rank_ladder$Tolerance,
+      joint_rank_ladder$ContrastRank,
+      joint_rank_ladder$AugmentedRank,
+      joint_rank_ladder$RankIncrement
+    ), collapse = ";")
+  }
+  base$JointSelectedTargetExclusionCertified <- isTRUE(
+    joint_relevance$selected_target_exclusion_certified
+  )
   if (identical(as.character(row$Method), "JML")) {
     common_valid <- identical(
       base$JointPrescreenContract,
@@ -521,20 +629,56 @@ mfrmr_jml_phase_run_route <- function(row, generated, maxit,
       is.finite(base$JointConeLPCalls) && base$JointConeLPCalls >= 1L &&
       identical(
         base$JointTotalLPCalls,
-        base$JointConeLPCalls + base$JointTargetLPCalls
+        base$JointConeLPCalls + base$JointRelevanceLPCalls +
+          base$JointTargetLPCalls
       )
     branch_valid <- if (isTRUE(base$JointConeCertified)) {
-      identical(
-        base$JointPrescreenState, "positive_cone_target_enumeration"
-      ) && !isTRUE(base$JointEnumerationSkipped) &&
+      if (identical(
+        base$JointPrescreenState,
+        "positive_known_person_cone_target_exclusion"
+      )) {
+        isTRUE(base$JointEnumerationSkipped) &&
+          identical(base$JointTargetDirectionsEvaluated, 0L) &&
+          identical(base$JointTargetLPCalls, 0L) &&
+          identical(base$JointTargetCertificateRows, 0L) &&
+          identical(
+            base$JointRelevanceContract,
+            "mfrmr-jml-known-person-quotient-prescreen-v1"
+          ) && isTRUE(base$JointRelevanceRequested) &&
+          isTRUE(base$JointRelevanceEvaluated) &&
+          base$JointProfiledPersons > 0L &&
+          identical(
+            base$JointRemovedCoordinates, base$JointProfiledPersons
+          ) && isTRUE(base$JointBoundaryRaysValid) &&
+          isTRUE(base$JointQuotientConeEvaluated) &&
+          !isTRUE(base$JointQuotientConeCertified) &&
+          base$JointQuotientConeLPCalls >= 1L &&
+          identical(
+            base$JointNullspaceContract,
+            "mfrmr-jml-selected-target-nullspace-screen-v1"
+          ) && isTRUE(base$JointNullspaceEvaluated) &&
+          isTRUE(base$JointNullspaceSafeToSkip) &&
+          !isTRUE(base$JointNullspaceToleranceSensitive) &&
+          identical(base$JointNullspaceRankRows, 3L) &&
+          is.finite(base$JointNullspaceContrastRank) &&
+          identical(
+            base$JointNullspaceContrastRank,
+            base$JointNullspaceAugmentedRank
+          ) && identical(base$JointNullspaceMaxRankIncrement, 0L) &&
+          isTRUE(base$JointSelectedTargetExclusionCertified)
+      } else {
         identical(
-          base$JointTargetDirectionsEvaluated,
-          base$JointTargetDirections
-        ) && identical(
-          base$JointTargetCertificateRows,
-          base$JointTargetDirectionsEvaluated
-        ) && base$JointTargetLPCalls >=
-          base$JointTargetDirectionsEvaluated
+          base$JointPrescreenState, "positive_cone_target_enumeration"
+        ) && !isTRUE(base$JointEnumerationSkipped) &&
+          identical(
+            base$JointTargetDirectionsEvaluated,
+            base$JointTargetDirections
+          ) && identical(
+            base$JointTargetCertificateRows,
+            base$JointTargetDirectionsEvaluated
+          ) && base$JointTargetLPCalls >=
+            base$JointTargetDirectionsEvaluated
+      }
     } else {
       identical(
         base$JointPrescreenState, "negative_cone_enumeration_skipped"
@@ -707,7 +851,7 @@ mfrmr_run_jml_phase_profile <- function(
   }
   phase_summary <- mfrmr_jml_phase_summarize(phases)
   summary <- data.frame(
-    Schema = "mfrmr-jml-phase-profile-summary-v6",
+    Schema = "mfrmr-jml-phase-profile-summary-v8",
     DataCells = length(unique(results$DataCellId)), Routes = nrow(results),
     SuccessfulRoutes = sum(results$FitSucceeded),
     TimingContractRoutes = sum(results$TimingContractValid),
@@ -760,6 +904,23 @@ mfrmr_run_jml_phase_profile <- function(
     JointConeLPCalls = sum(
       results$JointConeLPCalls[results$Method == "JML"], na.rm = TRUE
     ),
+    JointRelevanceLPCalls = sum(
+      results$JointRelevanceLPCalls[results$Method == "JML"],
+      na.rm = TRUE
+    ),
+    JointKnownPersonTargetExclusionRoutes = sum(
+      results$Method == "JML" &
+        results$JointSelectedTargetExclusionCertified,
+      na.rm = TRUE
+    ),
+    JointProfiledPersons = sum(
+      results$JointProfiledPersons[results$Method == "JML"],
+      na.rm = TRUE
+    ),
+    JointNullspaceSafeRoutes = sum(
+      results$Method == "JML" & results$JointNullspaceSafeToSkip,
+      na.rm = TRUE
+    ),
     JointTargetDirectionsEvaluated = sum(
       results$JointTargetDirectionsEvaluated[results$Method == "JML"],
       na.rm = TRUE
@@ -803,7 +964,7 @@ mfrmr_run_jml_phase_profile <- function(
   saveRDS(utils::sessionInfo(), file.path(staging, "session-info.rds"))
   inventory <- mfrmr_target_scale_artifact_inventory(staging)
   completion <- list(
-    schema = "mfrmr-jml-phase-profile-completion-v6",
+    schema = "mfrmr-jml-phase-profile-completion-v8",
     execution_sha256 = identity$execution$ExecutionSHA256,
     artifacts = inventory,
     artifact_inventory_sha256 = mfrmr_gpcm_repilot_hash_object(inventory),

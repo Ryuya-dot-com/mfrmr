@@ -849,23 +849,52 @@ those Persons out is negative in all three cells and takes 0.56 seconds versus
 30.16 seconds for the three original joint phases. These unequal one-run
 workloads freeze no performance rule.
 
-Draft.53 must not implement the quotient screen alone. A target-changing
-direction can be flat on every retained contrast and combine with an excluded
-Person ray that supplies strict improvement. The safe fast path must compose
-the sufficient-score boundary classification, a guarded check that every
-selected target annihilates the quotient nullspace, and the strictly improving
-quotient cone. Constraint-coupled extreme and ordinary nonextreme Persons stay
-in the joint geometry; unevaluated or near-tolerance states fail closed or
-retain enumeration. The group-constrained joint-positive fixture and a new
-target-changing flat-direction counterexample are mandatory before any fixed
-19-route equivalence rerun. Only after the estimand is preserved should shared
-LP models, warm starts, or alternative solvers be considered. Full findings
-and identities are in
-`jml-joint-cone-attribution-pilot-record-0.2.3.md`.
+Draft.53 implements the quotient screen only in conjunction with a guarded
+selected-target nullspace test. Each proposed ordinary free extreme Person is
+verified as a strict one-sided contrast ray confined to that Person's rows and
+absent from selected targets. The row-and-coordinate quotient then receives a
+guarded strict-cone LP. A negative quotient may skip enumeration only when
+common-column-scaled sparse QR gives stable equal base and target-augmented
+ranks at `1e-12`, `1e-10`, and `1e-8`. Rank increase, tolerance sensitivity,
+mapping/ray failure, solver failure, or size limits retain the old enumeration
+or its old target-limit state.
 
-RSM, bounded GPCM, target-scale positive-cone behavior, isolated-process
-memory, and replicated runtime remain outside the Draft.52 evidence. The
-optimizer-dispatch grid remains a separate numerical-readiness study.
+The target-changing flat-direction counterexample forces fallback despite a
+negative quotient strict cone. Real RSM safe, row-order, target-limit,
+structural-positive, constraint-coupled, interaction, and bounded-GPCM
+conditional-additive controls match complete legacy target states; MML and
+readiness remain unchanged. The fixed v8 profile preserves all 19 v6 semantic,
+readiness, numerical, boundary, optimizer, structural, joint, and target-status
+comparisons. Five routes profile 84 Person coordinates across duplicated
+optimizer routes; their three-tolerance rank increments are all zero. Joint
+target LP calls fall from 346 to zero, joint phase time from 62.52 to 18.82
+seconds, JML outer time from 87.10 to 43.53 seconds, and all-route outer time
+from 94.67 to 50.91 seconds. These one-run PCM timings freeze no rule. The
+completed v7 bundle is superseded because it hashed but did not print the rank
+ladder; v8 is authoritative. Full findings and identities are in
+`jml-joint-quotient-nullspace-prescreen-pilot-record-0.2.3.md`.
+
+Draft.53 verification also builds a clean exact 491-entry local source tarball
+and passes `R CMD check --no-manual` with `Status: OK`. Tarball and check-log
+hashes are kept in the package-external
+`.check-draft53-standard-no-manual-v3/verification-receipt.txt` to avoid
+self-referential mutation of a packaged roadmap. The first 497-entry artifact
+is superseded because it incorrectly included six hidden change-local scripts
+and received the corresponding hidden-file NOTE. This is neither an
+`--as-cran` result nor a candidate gate pass; full-manual, `--run-donttest`,
+dependency-present, external, candidate-linked, and confirmation checks remain
+open.
+
+Draft.54 should attribute the remaining structural and joint phases among
+adjacent-design construction, target mapping, contrast construction, sparse
+LP-base assembly, solver work, and rank work. Exact reuse of one full joint
+geometry by the Person-fixed structural audit is the leading hypothesis, but
+must match under anchors, groups, interactions, steps, weights, missing rows,
+and bounded GPCM slopes before implementation. Reusable LP models, warm starts,
+or alternative solvers follow only after construction-versus-solver time is
+known. Target-scale positive quotients, general RSM/GPCM coverage, isolated-
+process memory, replicated runtime, and the optimizer-dispatch grid remain
+separate work.
 
 Draft.51 verification exercises all 127 package-aware test files. The exact
 491-entry source tarball, SHA-256
