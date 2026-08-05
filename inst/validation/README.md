@@ -131,6 +131,16 @@ but do not broaden current API scope.
   adversity, records zero unexpected failures and zero false-ready routes,
   rejects a minimum-overlap conclusion from one nonmonotone seed, and keeps
   the differently seeded v1 bridge results explicitly superseded.
+- `jml-bottleneck-decomposition-pilot-0.2.3.R`: draft.49 guarded PCM
+  computation profiler for Person/row growth, fixed-row Rater-panel topology,
+  fixed-row Criterion/step growth, fixed-parameter row exposure, forced
+  extremes, and explicit BFGS/L-BFGS-B controls. It records design and
+  optimizer counters without treating total elapsed time as objective time.
+- `jml-bottleneck-decomposition-pilot-record-0.2.3.md`: hashed draft.49 record
+  of the authoritative 14-cell/34-route v3 run. It identifies an actionable
+  auto-optimizer hypothesis on the complete Person-size path, shows that BFGS
+  does not repair panel/step/extreme cases, and refuses pure-dimension or
+  capacity claims where topology, support, and phase timing remain confounded.
 - `gpcm-isolated-attribution-pilot-0.2.3.R`: draft.42 repository-only
   one-axis attribution manifest and paired runner. It changes one of 11 axes
   around a fixed GPCM reference, sends each retained dataset through GPCM-JML,

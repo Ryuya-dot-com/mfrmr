@@ -5,10 +5,10 @@
 | Field | Value |
 | --- | --- |
 | Target release | 0.2.3 |
-| Specification ID | `0.2.3-draft.48` |
+| Specification ID | `0.2.3-draft.49` |
 | Date | 2026-08-05 |
-| Status | M1 is recorded and M2 remains in progress. Draft.45 supplies a 30/30 small-design MML metamorphic pilot; draft.46 separates the 87-row inventory into a mandatory release spine, claim-conditional promotion, and deferred research; draft.47 executes the first guarded mixed-adversity 400-Person target-scale slice; draft.48 executes complete balanced and clean matched-sparse RSM/PCM/GPCM baselines plus a common-truth two-Rater PCM bridge gradient. All 26 draft.48 routes executed with zero unexpected failures and zero false-ready rows, but clean sparse JML routes remained iteration-limited, clean MML routes retained gradient/boundary review states, and the bridge traces were nonmonotone. No evidence row or numerical threshold is passed/frozen, and confirmation remains unauthorized. The machine-readable claim-disposition profile, replicated ADEMP recovery/precision, isolated-process capacity envelope, PCA computability, estimator-specific weak-information rule, metric-specific external eligibility, candidate identity, confirmation, and release engineering remain pending. All simulations remain calibration evidence. |
-| Current draft delta | Draft.48 separates scale from adversity. Thirteen 400-Person data cells cover complete balanced RSM/PCM/GPCM, matched sparse RSM/PCM/GPCM with 12 Raters, 12 Criteria, seven categories, and 40 shared Persons, and PCM two-Rater links at 0, 1, 2, 5, 10, 20, and 40 common Persons. Every cell is paired on identical data across JML/MML; every bridge level uses a single common truth. The authoritative 26-route v2 run records process-lifetime OS peak memory, refuses overwrite, validates artifact identity, and leaves PCA disabled pending a fail-closed computability state. It shows estimator-specific computational and support behavior but cannot define recovery, overlap, runtime, memory, or diagnostic thresholds from one replicate. The differently seeded v1 bridge output is superseded. The draft.46 portfolio policy remains controlling, and confirmation remains globally prohibited. |
+| Status | M1 is recorded and M2 remains in progress. Draft.45 supplies a 30/30 small-design MML metamorphic pilot; draft.46 separates the 87-row inventory into release-spine, claim-conditional, and deferred work; draft.47--48 execute mixed-adversity and baseline/bridge target-scale slices; draft.49 executes a 14-cell/34-route PCM JML bottleneck decomposition. All draft.49 routes executed with zero unexpected failures and zero false-ready rows. The current 200-parameter auto optimizer switch is an actionable hypothesis on the complete nonextreme Person-size path, but explicit BFGS does not repair Rater-panel, Criterion/step, or extreme-Person controls. Row count, free dimension, topology, and optimizer are not single monotone capacity rules. No evidence row or numerical threshold is passed/frozen, and confirmation remains unauthorized. Phase timing, a replicated cross-model optimizer grid, topology/exposure-matched controls, replicated ADEMP recovery/precision, isolated-process capacity, PCA computability, estimator-specific weak-information rules, metric-specific external eligibility, candidate identity, confirmation, and release engineering remain pending. All simulations remain calibration evidence. |
+| Current draft delta | Draft.49 profiles nested 50--400 Person PCM cells, fixed-row 3--12 Rater panel/topology cells, fixed-row 4--12 Criterion/step cells, fixed-parameter 1,200--7,200-row cells, and a matched forced-extreme control. Every cell has identical JML/MML data; selected JML cells add explicit BFGS/L-BFGS-B routes. P200/P400 auto L-BFGS-B blocked while explicit BFGS was ready, but R12, C12, and extreme BFGS controls remained blocked. The longest single-axis fit was about 51 seconds, so draft.48's hundreds-of-seconds result remains a compound-effect problem. Total elapsed per reported optimizer evaluation is labelled only as a proxy because audits are included. The guarded v3 bundle records process-lifetime OS memory, refuses overwrite, validates artifact identity, and leaves PCA disabled. One replicate cannot freeze an optimizer, convergence, runtime, memory, recovery, or support rule. The draft.46 portfolio policy remains controlling, and confirmation remains globally prohibited. |
 | Confirmation authorized | No |
 | Evidence checklist | `release-evidence-checklist-0.2.3.csv` |
 | FACETS stress plan | `facets-jml-stress-plan-0.2.3.md` |
@@ -462,6 +462,34 @@ required. Process-lifetime OS peak memory is recorded but is not per-cell
 allocation or a capacity limit. PCA remains unrun pending its computability
 state. Results and hashes are in
 `target-scale-baseline-bridge-pilot-record-0.2.3.md`.
+
+Draft.49 decomposes the draft.48 JML computation hypothesis with 14 PCM data
+cells and 34 routes. Person/row growth, fixed-row Rater panel/topology,
+fixed-row Criterion/step growth, fixed-parameter row exposure, and a matched
+forced-extreme control are fitted on identical JML/MML inputs. Selected JML
+cells add explicit optimizer controls. All routes executed with zero unexpected
+failure and zero false-ready result under the fixed 60-iteration calibration
+ceiling.
+
+The P200 and P400 complete nonextreme auto routes switched to L-BFGS-B and
+blocked, whereas explicit BFGS on the same data was ready in similar time;
+P200 explicit L-BFGS-B reproduced auto. This places a replicated optimizer-
+dispatch grid around the current 200-parameter threshold on the corrective
+path. It does not authorize a threshold change: BFGS remained blocked for the
+R12 panel, C12 step panel, and forced-extreme controls. Fixed-row Rater results
+also changed zero-common-Person pair topology, so they are not a pure Rater-
+dimension experiment.
+
+At fixed 249-parameter dimension, the 1,200-row sparse cell was slower and less
+well conditioned than 2,400 rows, while the 7,200-row cell was the slowest but
+ready. Forcing 20 low and 20 high Persons under the P200 truth approximately
+doubled JML time and blocked both optimizers. The largest single-axis fit was
+about 51 seconds, leaving the hundreds-of-seconds draft.48 result as a compound
+interaction rather than a single row/dimension effect. Phase-specific timing
+for preparation, sparse rank, boundary/recession audits, optimizer, and
+readiness is required before implementation changes or a capacity envelope.
+The full record is
+`jml-bottleneck-decomposition-pilot-record-0.2.3.md`.
 
 Draft.23 implements the RSM/PCM linear-coordinate portion of the estimability
 gate. Sparse QR acts on the optimizer's constrained Person/facet/interaction/
@@ -1247,6 +1275,7 @@ claim is reduced or deferred rather than decided ad hoc.
 | `0.2.3-draft.46` | Reassessed the 87-row inventory after the MML metamorphic pass. Introduced `release_spine`, `claim_conditional`, and `deferred` portfolios so optional research does not create an accidental infinite release scope, while an unsupported callable result cannot escape through a generic caveat. Unblocked stable metric-specific WP5 fixtures, noninferential WP6 target-size work, and WP7 precision/manifest prespecification for parallel calibration; confirmation remains blocked until a machine-readable item profile, fallbacks, dependencies, criteria, and candidate identity are frozen. Rechecked official mfrmr/TAM/immer/FACETS versions without changing the local FACETS 4.5.0 execution stratum. No evidence row passed and no criterion was frozen. |
 | `0.2.3-draft.47` | Added a guarded capacity-feasibility executor for all six already-declared executable 400-Person `target_sparse` cells. The run covers GPCM/PCM, JML/MML, sparse/disconnected assignment, 2--12 Raters, missingness, category imbalance/absence, weights, Occasion, interaction, bias/drift, local dependence, and residual PCA. All six cells executed with zero unexpected failures and zero false-ready rows; the mixed-adversity GPCM MML cell remained iteration-limited/blocked, two exact-rank controls failed before optimization, one PCM JML cell retained extreme-Person exclusions, and one imbalanced/missing PCM MML cell was ready but not statistically validated. The runner distinguishes one capacity replicate from five declared pilot replicates, refuses overwrite, binds runtime/manifest/artifact identity, and validates the bundle in a fresh session. Residual-PCA messages exposed a missing computability state, and R heap high-water values remain proxies rather than OS capacity evidence. No threshold, checklist row, FACETS-parity claim, candidate, or confirmation state was promoted. |
 | `0.2.3-draft.48` | Added a guarded 13-cell/26-route target baseline and bridge pilot. Complete balanced and clean matched-sparse 400-Person RSM/PCM/GPCM cells use identical data across JML/MML; a PCM two-Rater gradient varies 0--40 common Persons under one truth hash. All routes executed with zero unexpected failures and zero false-ready rows. Clean sparse JML routes were iteration-limited and hundreds of seconds; MML partners were much faster but retained gradient/boundary review. Zero-overlap JML failed closed, zero-overlap MML remained population-assumption-linked, and positive-overlap traces were nonmonotone. OS process-lifetime peak memory is now recorded, PCA remains disabled pending its computability contract, the differently seeded v1 bridge output is superseded, and no recovery, overlap, runtime, memory, external, candidate, or confirmation criterion is promoted. |
+| `0.2.3-draft.49` | Added a guarded 14-cell/34-route PCM JML bottleneck decomposition across Person/row growth, fixed-row Rater panel/topology, fixed-row Criterion/step growth, fixed-parameter exposure, forced extremes, paired MML controls, and explicit optimizers. P200/P400 auto L-BFGS-B blocked while explicit BFGS was ready, but R12, C12, and extreme BFGS controls remained blocked. Sparse low exposure was slower and less conditioned than a larger cell, while the largest-row cell was slowest but ready; no single monotone capacity rule survived. All routes executed with zero unexpected failure and zero false-ready state. Total elapsed/evaluation is explicitly a proxy including audits. Phase timing and replicated cross-model controls precede any optimizer change; no runtime, recovery, external, candidate, or confirmation criterion is promoted. |
 
 ## Release decision algorithm
 

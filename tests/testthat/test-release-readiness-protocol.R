@@ -60,7 +60,7 @@ test_that("public roadmap and current NEWS exclude internal release operations",
   expect_true(any(grepl("inst/validation", ignore, fixed = TRUE)))
 })
 
-test_that("internal draft.48 roadmap and GPCM work remain explicit and private", {
+test_that("internal draft.49 roadmap and GPCM work remain explicit and private", {
   pkg_root <- normalizePath(testthat::test_path("..", ".."), mustWork = TRUE)
   internal_path <- file.path(
     pkg_root, "inst", "validation", "internal-roadmap-0.2.3.md"
@@ -114,12 +114,17 @@ test_that("internal draft.48 roadmap and GPCM work remain explicit and private",
     pkg_root, "inst", "validation",
     "target-scale-baseline-bridge-pilot-record-0.2.3.md"
   )
+  jml_profile_record_path <- file.path(
+    pkg_root, "inst", "validation",
+    "jml-bottleneck-decomposition-pilot-record-0.2.3.md"
+  )
   skip_if_not(all(file.exists(c(
     internal_path, gate_path, checklist_path, estimator_plan_path,
     contract_path, fixture_path, gpcm_smoke_record_path,
     attribution_smoke_record_path, attribution_replicated_record_path,
     checkpoint_record_path, metamorphic_record_path, roadmap_record_path,
-    target_scale_record_path, target_bridge_record_path
+    target_scale_record_path, target_bridge_record_path,
+    jml_profile_record_path
   ))))
 
   internal <- paste(readLines(internal_path, warn = FALSE, encoding = "UTF-8"),
@@ -163,6 +168,10 @@ test_that("internal draft.48 roadmap and GPCM work remain explicit and private",
   )
   target_bridge_record <- paste(
     readLines(target_bridge_record_path, warn = FALSE, encoding = "UTF-8"),
+    collapse = "\n"
+  )
+  jml_profile_record <- paste(
+    readLines(jml_profile_record_path, warn = FALSE, encoding = "UTF-8"),
     collapse = "\n"
   )
 
@@ -215,7 +224,7 @@ test_that("internal draft.48 roadmap and GPCM work remain explicit and private",
   expect_match(internal, "partitioned\\s+exhaustively")
   expect_match(internal, "Estimator ecosystem and maturity boundary", fixed = TRUE)
   expect_match(internal, "method = \"HRM\"", fixed = TRUE)
-  expect_match(gate, "Specification ID | `0.2.3-draft.48`", fixed = TRUE)
+  expect_match(gate, "Specification ID | `0.2.3-draft.49`", fixed = TRUE)
   expect_match(internal, "Draft.40 adds the first bounded joint nonlinear GPCM path family", fixed = TRUE)
   expect_match(internal, "Draft.41 makes the prespecified GPCM stress envelope executable", fixed = TRUE)
   expect_match(internal, "Draft.42 adds the isolated-attribution layer", fixed = TRUE)
@@ -233,6 +242,9 @@ test_that("internal draft.48 roadmap and GPCM work remain explicit and private",
                "Draft.47 begins target-scale execution", fixed = TRUE)
   expect_match(internal,
                "Draft.48 separates scale from adversity", fixed = TRUE)
+  expect_match(internal,
+               "Draft.49 decomposes the JML computation hypothesis",
+               fixed = TRUE)
   expect_match(internal, "`release_spine`", fixed = TRUE)
   expect_match(internal, "in_progress_core_slice_unblocked", fixed = TRUE)
   expect_match(internal,
@@ -320,6 +332,20 @@ test_that("internal draft.48 roadmap and GPCM work remain explicit and private",
   expect_match(
     target_bridge_record,
     "c69d07597b0ecd2814c25e5bf5865601ab15d76aa373c5c687d473c88c37779f",
+    fixed = TRUE
+  )
+  expect_match(jml_profile_record,
+               "auto optimizer threshold at 200 parameters", fixed = TRUE)
+  expect_match(jml_profile_record,
+               "do not show a universal BFGS solution", fixed = TRUE)
+  expect_match(
+    jml_profile_record,
+    "36c1c81440827f11089e22b8e20a2dfb1677ad5d07c9d081140d5964167f29a9",
+    fixed = TRUE
+  )
+  expect_match(
+    jml_profile_record,
+    "c035b0bf0ce93fc42f5252c6d036787a6c0cd5a041c8a2b2f1a277961dd51019",
     fixed = TRUE
   )
   expect_match(gate,
@@ -2117,6 +2143,147 @@ test_that("target baseline completion markers fail closed on artifact changes", 
   writeLines("changed target bridge result", artifact, useBytes = TRUE)
   expect_error(
     env$mfrmr_target_bridge_validate_completion(
+      output_dir, marker$execution_sha256
+    ),
+    "hash or size mismatch"
+  )
+})
+
+test_that("JML bottleneck decomposition manifest is fixed and guarded", {
+  pkg_root <- normalizePath(test_path("..", ".."), winslash = "/",
+                            mustWork = TRUE)
+  runner <- file.path(
+    pkg_root, "inst", "validation",
+    "jml-bottleneck-decomposition-pilot-0.2.3.R"
+  )
+  expect_true(file.exists(runner))
+  old_wd <- setwd(pkg_root)
+  on.exit(setwd(old_wd), add = TRUE)
+  env <- new.env(parent = globalenv())
+  source(runner, local = env)
+
+  dry <- env$mfrmr_run_jml_bottleneck_profile(
+    dry_run = TRUE, progress = FALSE
+  )
+  expect_identical(
+    env$mfrmr_gpcm_repilot_hash_file(runner),
+    "fd8e11b52d09815d19a714090b02bbf76373a4748128b078a1fdc7a30e2f8ba5"
+  )
+  expect_identical(dry$execution_identity$DataCells, 14L)
+  expect_identical(dry$execution_identity$Routes, 34L)
+  expect_identical(nchar(
+    dry$execution_identity$DeclaredManifestSHA256
+  ), 64L)
+  expect_false(dry$execution_identity$PCARun)
+  expect_false(dry$execution_identity$ConfirmationAuthorized)
+  expect_false(dry$confirmation_authorized)
+  routes <- dry$registry
+  expect_identical(sum(
+    routes$Method == "JML" & routes$OptimizerRequested == "auto"
+  ), 14L)
+  expect_identical(sum(
+    routes$Method == "MML" & routes$OptimizerRequested == "auto"
+  ), 14L)
+  expect_identical(sum(routes$OptimizerRequested == "BFGS"), 5L)
+  expect_identical(sum(routes$OptimizerRequested == "L-BFGS-B"), 1L)
+  expect_setequal(
+    routes$DataCellId[routes$OptimizerRequested == "BFGS"],
+    c("JBP-P200", "JBP-P400", "JBP-R12", "JBP-C12-E04",
+      "JBP-P200-X20")
+  )
+
+  cells <- env$mfrmr_jml_profile_cells()
+  generated <- lapply(seq_len(nrow(cells)), function(i) {
+    env$mfrmr_jml_profile_build(cells[i, , drop = FALSE])
+  })
+  expect_identical(
+    vapply(generated, function(x) x$support$Rows, integer(1)),
+    c(600L, 1200L, 2400L, 4800L, rep(2400L, 6L),
+      1200L, 4800L, 7200L, 2400L)
+  )
+  expect_true(all(vapply(
+    generated, function(x) x$support$Rows == x$support$ExpectedRows,
+    logical(1)
+  )))
+  master_groups <- split(seq_len(nrow(cells)), cells$MasterGroup)
+  expect_true(all(vapply(master_groups, function(index) {
+    length(unique(vapply(
+      generated[index], function(x) x$MasterTruthHash, character(1)
+    ))) == 1L
+  }, logical(1))))
+  p200 <- which(cells$DataCellId == "JBP-P200")
+  x20 <- which(cells$DataCellId == "JBP-P200-X20")
+  expect_identical(generated[[p200]]$CellTruthHash,
+                   generated[[x20]]$CellTruthHash)
+  expect_identical(generated[[x20]]$support$ForcedExtremePersons, 40L)
+  expect_identical(generated[[x20]]$support$DataExtremeLowN, 20L)
+  expect_identical(generated[[x20]]$support$DataExtremeHighN, 20L)
+
+  expect_error(
+    env$mfrmr_run_jml_bottleneck_profile(
+      dry_run = FALSE, progress = FALSE
+    ),
+    "authorize = TRUE",
+    fixed = TRUE
+  )
+  existing_output <- tempfile("jml-profile-existing-")
+  dir.create(existing_output)
+  on.exit(unlink(existing_output, recursive = TRUE, force = TRUE), add = TRUE)
+  expect_error(
+    env$mfrmr_run_jml_bottleneck_profile(
+      dry_run = FALSE, authorize = TRUE, output_dir = existing_output,
+      progress = FALSE
+    ),
+    "must not already exist"
+  )
+  expect_error(
+    env$mfrmr_run_jml_bottleneck_profile(
+      dry_run = TRUE, quad_points = 2L, progress = FALSE
+    ),
+    "quad_points"
+  )
+  expect_error(
+    env$mfrmr_run_jml_bottleneck_profile(
+      dry_run = TRUE, reltol = 0, progress = FALSE
+    ),
+    "reltol"
+  )
+})
+
+test_that("JML profile completion markers fail closed on artifact changes", {
+  pkg_root <- normalizePath(test_path("..", ".."), winslash = "/",
+                            mustWork = TRUE)
+  runner <- file.path(
+    pkg_root, "inst", "validation",
+    "jml-bottleneck-decomposition-pilot-0.2.3.R"
+  )
+  old_wd <- setwd(pkg_root)
+  on.exit(setwd(old_wd), add = TRUE)
+  env <- new.env(parent = globalenv())
+  source(runner, local = env)
+  env$mfrmr_jml_profile_require_support()
+
+  output_dir <- tempfile("jml-profile-completion-")
+  dir.create(output_dir)
+  on.exit(unlink(output_dir, recursive = TRUE, force = TRUE), add = TRUE)
+  artifact <- file.path(output_dir, "result.txt")
+  writeLines("fixed JML profile result", artifact, useBytes = TRUE)
+  inventory <- env$mfrmr_target_scale_artifact_inventory(output_dir)
+  marker <- list(
+    schema = "mfrmr-jml-bottleneck-profile-completion-v1",
+    execution_sha256 = paste(rep("c", 64L), collapse = ""),
+    artifacts = inventory,
+    artifact_inventory_sha256 = env$mfrmr_gpcm_repilot_hash_object(inventory),
+    completed_utc = "2026-08-05 00:00:00 UTC",
+    confirmation_authorized = FALSE
+  )
+  saveRDS(marker, file.path(output_dir, "run-complete.rds"))
+  expect_invisible(env$mfrmr_jml_profile_validate_completion(
+    output_dir, marker$execution_sha256
+  ))
+  writeLines("changed JML profile result", artifact, useBytes = TRUE)
+  expect_error(
+    env$mfrmr_jml_profile_validate_completion(
       output_dir, marker$execution_sha256
     ),
     "hash or size mismatch"
