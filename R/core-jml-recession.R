@@ -62,7 +62,10 @@ mfrmr_jml_recession_empty_loading_table <- function() {
 mfrmr_jml_observed_contrast_design <- function(adjacent_design,
                                                 score_k,
                                                 n_obs,
-                                                n_steps) {
+                                                n_steps,
+                                                implementation = c(
+                                                  "preallocated", "reference"
+                                                )) {
   adjacent_design <- methods::as(adjacent_design, "dgCMatrix")
   score_k <- suppressWarnings(as.integer(score_k))
   n_obs <- as.integer(n_obs)
@@ -73,30 +76,78 @@ mfrmr_jml_observed_contrast_design <- function(adjacent_design,
     stop("Internal JML recession audit received a malformed adjacent design.",
          call. = FALSE)
   }
+  implementation <- match.arg(implementation)
 
   rows_per_observation <- n_steps
   n_contrasts <- n_obs * rows_per_observation
-  row_i <- integer(0)
-  col_j <- integer(0)
-  values <- numeric(0)
-  contrast_cursor <- 0L
+  if (identical(implementation, "reference")) {
+    row_i <- integer(0)
+    col_j <- integer(0)
+    values <- numeric(0)
+    contrast_cursor <- 0L
 
-  for (observation in seq_len(n_obs)) {
-    observed <- score_k[observation]
-    alternatives <- setdiff(0:n_steps, observed)
-    for (alternative in alternatives) {
-      contrast_cursor <- contrast_cursor + 1L
-      if (alternative < observed) {
-        transitions <- seq.int(alternative + 1L, observed)
-        signs <- rep(1, length(transitions))
-      } else {
-        transitions <- seq.int(observed + 1L, alternative)
-        signs <- rep(-1, length(transitions))
+    for (observation in seq_len(n_obs)) {
+      observed <- score_k[observation]
+      alternatives <- setdiff(0:n_steps, observed)
+      for (alternative in alternatives) {
+        contrast_cursor <- contrast_cursor + 1L
+        if (alternative < observed) {
+          transitions <- seq.int(alternative + 1L, observed)
+          signs <- rep(1, length(transitions))
+        } else {
+          transitions <- seq.int(observed + 1L, alternative)
+          signs <- rep(-1, length(transitions))
+        }
+        adjacent_rows <- (transitions - 1L) * n_obs + observation
+        row_i <- c(row_i, rep.int(contrast_cursor, length(adjacent_rows)))
+        col_j <- c(col_j, adjacent_rows)
+        values <- c(values, signs)
       }
-      adjacent_rows <- (transitions - 1L) * n_obs + observation
-      row_i <- c(row_i, rep.int(contrast_cursor, length(adjacent_rows)))
-      col_j <- c(col_j, adjacent_rows)
-      values <- c(values, signs)
+    }
+  } else {
+    templates <- lapply(0:n_steps, function(observed) {
+      alternatives <- setdiff(0:n_steps, observed)
+      widths <- abs(alternatives - observed)
+      transitions <- unlist(lapply(alternatives, function(alternative) {
+        if (alternative < observed) {
+          seq.int(alternative + 1L, observed)
+        } else {
+          seq.int(observed + 1L, alternative)
+        }
+      }), use.names = FALSE)
+      list(
+        contrast_row = rep.int(seq_along(alternatives), widths),
+        transition = as.integer(transitions),
+        value = rep.int(ifelse(alternatives < observed, 1, -1), widths)
+      )
+    })
+    template_sizes <- vapply(templates, function(template) {
+      length(template$transition)
+    }, integer(1))
+    stored_entries <- sum(as.double(template_sizes[score_k + 1L]))
+    if (!is.finite(stored_entries) || stored_entries > .Machine$integer.max) {
+      stop("Internal JML recession contrast design exceeded sparse index limits.",
+           call. = FALSE)
+    }
+
+    row_i <- integer(stored_entries)
+    col_j <- integer(stored_entries)
+    values <- numeric(stored_entries)
+    entry_cursor <- 0L
+    for (observation in seq_len(n_obs)) {
+      template <- templates[[score_k[observation] + 1L]]
+      width <- length(template$transition)
+      slots <- entry_cursor + seq_len(width)
+      row_i[slots] <-
+        (observation - 1L) * rows_per_observation + template$contrast_row
+      col_j[slots] <-
+        (template$transition - 1L) * n_obs + observation
+      values[slots] <- template$value
+      entry_cursor <- entry_cursor + width
+    }
+    if (entry_cursor != stored_entries) {
+      stop("Internal JML recession contrast allocation was inconsistent.",
+           call. = FALSE)
     }
   }
 
