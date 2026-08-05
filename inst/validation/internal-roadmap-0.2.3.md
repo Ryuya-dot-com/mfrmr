@@ -311,7 +311,7 @@ The following remain outside 0.2.3:
 | M4: run confirmation | Run the locked recovery/stress matrix, FACETS JML core, ConQuest/TAM MML comparisons, TAM/immer JML convention grid, eligible immer CML/CCML rows, dimensionality challenge, and matched external rows without changing criteria or reusing discovery/pilot data as independent confirmation. | Candidate-linked internal and external evidence with every blocker classified and every expected scenario/replicate accounted for. |
 | M5: release handoff | Run full regression, cross-platform CI, manuals, URL checks, CRAN-time examples, Win-builder, package-content audit, and public-claim audit. | All blocker rows `ok`, all caveats visible, and an exact checked tarball. |
 
-The repository now contains `0.2.3-draft.43` planning and pilot artifacts at
+The repository now contains `0.2.3-draft.44` planning and pilot artifacts at
 `inst/validation/release-gate-spec-0.2.3.md` and
 `inst/validation/release-evidence-checklist-0.2.3.csv`, with the TAM/immer
 execution contract in `inst/validation/tam-immer-estimator-stress-plan-0.2.3.md`.
@@ -605,6 +605,38 @@ the 600-row core tier, not optional conveniences. Full identity, hashes,
 invalidation rules, and next gates are in
 `gpcm-attribution-replicated-feasibility-record-0.2.3.md`.
 
+Draft.44 removes the all-or-nothing writer as a prerequisite to the guarded
+core tier without changing its statistical authorization. The replicated
+runner now checkpoints a complete four-route `DataCellId` rather than an
+individual route. This is the smallest reusable unit on which common retained-
+data identity is auditable. A same-directory temporary RDS must round-trip and
+match its payload hash before an atomic rename publishes the checkpoint;
+existing targets are never overwritten.
+
+Checkpoint-v1 identity binds the selected and declared manifests, tier,
+replicates, optimizer/quadrature/PCA controls, the content of the actually
+loaded mfrmr runtime, the three validation runners, R/platform/RNG, numerical
+runtime reporting, and the versions, runtime content, or absence of `digest`, `Matrix`,
+`lpSolve`, and `psych`. Absolute paths are provenance fields but not hash
+inputs. Resume is explicit and rejects schema, execution, cell-manifest,
+payload, ScenarioId, route-set, DataCellId, or declared-manifest disagreement.
+Unexpected RDS files fail closed; orphan unpublished partial files are ignored.
+
+Aggregate outputs receive an atomic completion marker only after every listed
+CSV/RDS and default checkpoint hash is known. Synthetic interruption,
+configuration mismatch, orphan-partial, artifact modification, and clean-run
+equivalence tests pass. A real reference cell also agrees with the old
+four-route execution on every result field except elapsed runtime and is
+identical after checkpoint reload. The historical draft.43 v4 artifacts
+predate checkpoint-v1 and cannot be resumed or relabelled. Full identity,
+hashes, and scope are recorded in
+`gpcm-attribution-checkpoint-resume-record-0.2.3.md`.
+
+This closes only the atomic-resume slice of WP7. The cross-model MML
+metamorphic grid, core replication/precision design, target-scale runtime,
+external normalization, statistical criterion freeze, and confirmation remain
+open. Core execution is still unauthorized.
+
 ### GPCM discrepancy decomposition and stress envelope
 
 No scalar "FACETS minus mfrmr" or "TAM minus mfrmr" result is interpretable
@@ -715,8 +747,8 @@ reviewed. Confirmation remains prohibited until the later frozen gate.
 | `WP3-JML-BOUNDARY` | WP0 | `in_progress_bounded_joint_nonlinear_gpcm_paths` | Detect JML element separation/extreme sufficient scores on the actual contributing row pattern; replace optimizer-dependent finite primary values with typed boundary states. The Person primary-state slice, sparse-triplet Person-fixed structural certificate, companion joint Person-structural additive cone, retained-additive GPCM slope-only monotone paths, and ordered-pair linear-additive/constant-log-slope joint path family are implemented. Positive joint paths remain candidates because the GPCM likelihood is globally non-concave; negative results are scoped. More general rate vectors, curved paths, global arguments, independent general solver parity, broader model/basis properties, and target-scale evidence remain pending. | JML extreme/nonextreme fixtures, MML non-reduction guard, constrained facet/interaction/joint/slope-path certificates, sparse/dense and independent microcase parity, nonlinear joint-path positive and negative controls, and explicit optional-display contract. |
 | `WP4-READINESS-PROPAGATION` | WP1--WP3 | `in_progress_gpcm_joint_candidate_slice` | Derive fit-, parameter-, and output-level readiness once and propagate it without surface-specific reinterpretation. The fit record, deterministic precedence, conservative scalar, fail-closed synthetic legacy-object path, summary/results/convergence/plot front doors, target-aware unpropagated-candidate rule, typed slope-only GPCM boundaries, and candidate-specific joint GPCM reasons under contract v3 are implemented. Competitive joint candidates remain `not_evaluated` with no primary value or ordinary uncertainty; complete facet/interaction/step and remaining output propagation depend on unfinished WP1--WP3 states. | Cross-surface snapshot/semantic tests and a real serialized 0.2.2-object migration fixture. |
 | `WP5-COMPARISON-CONTRACT` | WP4 | `blocked_by_dependency` | Make FACETS, TAM, immer, and other external normalization metric-specific and fail closed before numeric aggregation; identify estimator, adjustment, person treatment, and software stratum explicitly. | Eligibility/rejection ledger with denominator accounting, method-mode identity, and no silent row loss. |
-| `WP6-SCALE-AND-ADVERSARIAL` | WP1--WP5 | `blocked_by_dependency_with_eap_order_slice_complete` | Verify sparse computation, basis invariance, row-order and label invariance, malformed-input behavior, optional-capability fail-closed behavior, and target-size runtime/memory without claiming FACETS capacity parity. Draft.43 corrects and regression-tests the common MML EAP Person-order defect, but RSM/PCM/GPCM filtered-row, label, factor-level, and weight property grids remain open. | Benchmark envelope and metamorphic/negative-test report; capability manifest; no dense design allocation at target sizes. |
-| `WP7-REPILOT-AND-FREEZE` | WP0--WP6 | `in_progress_feasibility_repilot_only` | Rerun the affected internal and FACETS 4.5.0 pilot cells and the TAM/immer estimator grid on new pilot seeds, calibrate weak-information and estimator-specific rules, then prepare the next reviewed frozen specification. Draft.43 supplies the tiered replicated runner, complete 80-route feasibility ledger, MCSE/Wilson summaries, corrected EAP evidence, and runtime forecast. Two-replicate operating characteristics, missing checkpoint/resume, target-scale feasibility, external normalization, and criterion freeze remain blocked by unfinished WP1--WP6 evidence. | Complete pilot registry, atomic resumable execution, method-mode-specific reason-coded exclusions, prespecified MCSE/replication plan, resolved blocker criteria, and still no confirmation result. |
+| `WP6-SCALE-AND-ADVERSARIAL` | WP1--WP5 | `blocked_by_dependency_with_eap_order_and_identity_slices_complete` | Verify sparse computation, basis invariance, row-order and label invariance, malformed-input behavior, optional-capability fail-closed behavior, and target-size runtime/memory without claiming FACETS capacity parity. Draft.43 corrects the common MML EAP Person-order defect; draft.44 binds package, runner, capability, RNG, and execution controls to checkpoints. RSM/PCM/GPCM filtered-row, label, factor-level, and weight property grids remain open. | Benchmark envelope and metamorphic/negative-test report; capability manifest; no dense design allocation at target sizes. |
+| `WP7-REPILOT-AND-FREEZE` | WP0--WP6 | `in_progress_feasibility_with_atomic_resume` | Rerun the affected internal and FACETS 4.5.0 pilot cells and the TAM/immer estimator grid on new pilot seeds, calibrate weak-information and estimator-specific rules, then prepare the next reviewed frozen specification. Draft.43 supplies the corrected 80-route feasibility ledger and MCSE/Wilson summaries; draft.44 supplies atomic four-route-cell resume and a hashed completion marker. Two-replicate operating characteristics, the cross-model metamorphic grid, target-scale feasibility, external normalization, and criterion freeze remain blocked by unfinished WP1--WP6 evidence. | Complete pilot registry, atomic resumable execution, method-mode-specific reason-coded exclusions, prespecified MCSE/replication plan, resolved blocker criteria, and still no confirmation result. |
 
 #### Corrective-program execution lanes
 
@@ -2314,3 +2346,7 @@ A capability may be promoted only when all applicable items are complete:
     statistical failure; official validation environments record exact
     capability versions without making every optional dependency a runtime
     installation requirement.
+20. Reuse occurs only at the smallest complete comparison unit. A route-level
+    fragment, unpublished temporary file, aggregate without a valid completion
+    marker, or checkpoint whose package, runner, capability, manifest, or
+    control identity differs is recomputed or rejected, never silently pooled.

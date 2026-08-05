@@ -123,16 +123,24 @@ but do not broaden current API scope.
   false-ready rows while treating residual PCA and optimizer slope errors as
   descriptive calibration traces only.
 - `gpcm-attribution-replicated-pilot-0.2.3.R`: draft.43 repository-only tiered
-  orchestration over the isolated-attribution runner. It prespecifies guarded
-  feasibility/core/expanded arm registries, Wilson intervals, Bernoulli and
-  numeric Monte Carlo error, route-set completeness, metric summaries, and
-  runtime forecasts without authorizing confirmation or freezing a criterion.
+  orchestration over the isolated-attribution runner, extended in draft.44
+  with complete-cell atomic checkpoint/resume, execution/capability identity,
+  and a hashed completion marker. It prespecifies guarded feasibility/core/
+  expanded arm registries, Wilson intervals, Bernoulli and numeric Monte Carlo
+  error, route-set completeness, metric summaries, and runtime forecasts
+  without authorizing confirmation or freezing a criterion.
 - `gpcm-attribution-replicated-feasibility-record-0.2.3.md`: hashed draft.43
   record of the corrected 80-route feasibility run. It documents the MML EAP
   Person-order defect and its invalidated pre-fix rows, the exact corrective
   public tarball/check identity, dependency-sensitive JML boundary capability,
   two-replicate uncertainty, runtime, residual-PCA cautions, and prerequisites
   for the guarded core tier.
+- `gpcm-attribution-checkpoint-resume-record-0.2.3.md`: draft.44 structural
+  record for four-route data-cell checkpoints, execution/capability identity,
+  atomic publish, fail-closed resume, aggregate completion markers, synthetic
+  interruption/adulteration tests, and real reference-cell parity. It removes
+  the all-or-nothing writer as a core-tier runtime blocker without authorizing
+  the still-unfrozen core design.
 - `facets-mfrmr-divergence-audit-0.2.3.R`: repository-only contract audit for
   completed paired pilots. Before interpreting parameter differences it checks
   constrained main-effect rank, declared versus FACETS-retained category/step
