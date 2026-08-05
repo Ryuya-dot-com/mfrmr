@@ -110,6 +110,18 @@ but do not broaden current API scope.
   one known generator gap, zero false-ready results, zero external numeric-
   eligible rows, and an executable residual-PCA lane while explicitly
   withholding recovery, coverage, diagnostic-sensitivity, and release claims.
+- `gpcm-isolated-attribution-pilot-0.2.3.R`: draft.42 repository-only
+  one-axis attribution manifest and paired runner. It changes one of 11 axes
+  around a fixed GPCM reference, sends each retained dataset through GPCM-JML,
+  GPCM-MML, PCM-JML, and PCM-MML, verifies four-route data identity, and keeps
+  Person-estimand, parameter-coordinate, primary-slope, and lower-model roles
+  separate. The 40-arm, five-replicate pilot manifest has 800 rows; full
+  execution requires an explicit resource authorization.
+- `gpcm-isolated-attribution-smoke-record-0.2.3.md`: hashed draft.42 record of
+  the 24-row reference/two-rater/category-zero/zero-shared-Person/interaction/
+  local-dependence smoke. It records zero pair-identity violations and zero
+  false-ready rows while treating residual PCA and optimizer slope errors as
+  descriptive calibration traces only.
 - `facets-mfrmr-divergence-audit-0.2.3.R`: repository-only contract audit for
   completed paired pilots. Before interpreting parameter differences it checks
   constrained main-effect rank, declared versus FACETS-retained category/step

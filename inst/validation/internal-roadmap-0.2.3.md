@@ -311,7 +311,7 @@ The following remain outside 0.2.3:
 | M4: run confirmation | Run the locked recovery/stress matrix, FACETS JML core, ConQuest/TAM MML comparisons, TAM/immer JML convention grid, eligible immer CML/CCML rows, dimensionality challenge, and matched external rows without changing criteria or reusing discovery/pilot data as independent confirmation. | Candidate-linked internal and external evidence with every blocker classified and every expected scenario/replicate accounted for. |
 | M5: release handoff | Run full regression, cross-platform CI, manuals, URL checks, CRAN-time examples, Win-builder, package-content audit, and public-claim audit. | All blocker rows `ok`, all caveats visible, and an exact checked tarball. |
 
-The repository now contains `0.2.3-draft.41` planning and pilot artifacts at
+The repository now contains `0.2.3-draft.42` planning and pilot artifacts at
 `inst/validation/release-gate-spec-0.2.3.md` and
 `inst/validation/release-evidence-checklist-0.2.3.csv`, with the TAM/immer
 execution contract in `inst/validation/tam-immer-estimator-stress-plan-0.2.3.md`.
@@ -542,6 +542,32 @@ cells, one known generator gap, zero runner failures, zero false-ready rows,
 and zero external numeric-eligible rows without promoting those counts to
 recovery, coverage, diagnostic-sensitivity, or release evidence.
 
+Draft.42 adds the isolated-attribution layer required by the draft.41 smoke
+diagnosis. `gpcm-isolated-attribution-pilot-0.2.3.R` fixes one reference data-
+generating cell and changes exactly one of 11 axes per challenge. Every
+retained data cell is regenerated under the same seed for four explicitly
+different analysis routes: GPCM-JML, GPCM-MML, PCM-JML, and PCM-MML. A route
+set is usable only when all four retained-data hashes agree. Person estimates
+retain joint-fixed versus marginal-EAP labels; PCM is an exact truth-recovery
+route only for the unit-slope reduction; step, slope-level, rater, and Person
+dimension changes carry parameter-class coordinate exclusions. Finite GPCM
+optimizer slope error remains a diagnostic trace and cannot enter primary
+recovery while slope comparison eligibility is absent.
+
+The structural pilot manifest has 40 arms and five common-seed replicates,
+giving 800 route rows. It includes an explicit one-slope-level generator gap
+and reserves a disjoint confirmation seed range. Full execution is resource-
+significant and requires an explicit authorization after dry-run inspection;
+confirmation cannot be authorized through this runner. The hashed draft.42
+smoke runs 24 rows spanning the reference, two raters, internal category zero,
+zero shared Persons, Person-by-rater interaction, and local dependence. It
+records 22 fitted objects, two expected JML fail-closed results, zero retained-
+data identity violations, zero false-ready rows, zero primary-slope recovery-
+eligible rows, and zero external-numeric-eligible rows. Ready PCM rows under
+planted interaction/local dependence demonstrate that numerical readiness is
+not model adequacy. Residual PCA differences remain descriptive until a
+replicated null/non-null calibration freezes no earlier than WP7.
+
 ### GPCM discrepancy decomposition and stress envelope
 
 No scalar "FACETS minus mfrmr" or "TAM minus mfrmr" result is interpretable
@@ -653,7 +679,7 @@ reviewed. Confirmation remains prohibited until the later frozen gate.
 | `WP4-READINESS-PROPAGATION` | WP1--WP3 | `in_progress_gpcm_joint_candidate_slice` | Derive fit-, parameter-, and output-level readiness once and propagate it without surface-specific reinterpretation. The fit record, deterministic precedence, conservative scalar, fail-closed synthetic legacy-object path, summary/results/convergence/plot front doors, target-aware unpropagated-candidate rule, typed slope-only GPCM boundaries, and candidate-specific joint GPCM reasons under contract v3 are implemented. Competitive joint candidates remain `not_evaluated` with no primary value or ordinary uncertainty; complete facet/interaction/step and remaining output propagation depend on unfinished WP1--WP3 states. | Cross-surface snapshot/semantic tests and a real serialized 0.2.2-object migration fixture. |
 | `WP5-COMPARISON-CONTRACT` | WP4 | `blocked_by_dependency` | Make FACETS, TAM, immer, and other external normalization metric-specific and fail closed before numeric aggregation; identify estimator, adjustment, person treatment, and software stratum explicitly. | Eligibility/rejection ledger with denominator accounting, method-mode identity, and no silent row loss. |
 | `WP6-SCALE-AND-ADVERSARIAL` | WP1--WP5 | `blocked_by_dependency` | Verify sparse computation, basis invariance, row-order invariance, malformed-input behavior, and target-size runtime/memory without claiming FACETS capacity parity. | Benchmark envelope and metamorphic/negative-test report; no dense design allocation at target sizes. |
-| `WP7-REPILOT-AND-FREEZE` | WP0--WP6 | `blocked_by_dependency` | Rerun the affected internal and FACETS 4.5.0 pilot cells and the TAM/immer estimator grid on new pilot seeds, calibrate weak-information and estimator-specific rules, then prepare the next reviewed frozen specification. | Complete pilot registry, method-mode-specific reason-coded exclusions, MCSE plan, resolved blocker criteria, and still no confirmation result. |
+| `WP7-REPILOT-AND-FREEZE` | WP0--WP6 | `in_progress_attribution_manifest_only` | Rerun the affected internal and FACETS 4.5.0 pilot cells and the TAM/immer estimator grid on new pilot seeds, calibrate weak-information and estimator-specific rules, then prepare the next reviewed frozen specification. Draft.42 supplies the one-axis common-seed four-route GPCM attribution manifest and plumbing smoke; replicated operating characteristics, MCSE calibration, target-scale feasibility, external normalization, and criterion freeze remain blocked by unfinished WP1--WP6 evidence. | Complete pilot registry, method-mode-specific reason-coded exclusions, MCSE plan, resolved blocker criteria, and still no confirmation result. |
 
 #### Corrective-program execution lanes
 

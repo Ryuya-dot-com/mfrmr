@@ -58,7 +58,7 @@ test_that("public roadmap and current NEWS exclude internal release operations",
   expect_true(any(grepl("inst/validation", ignore, fixed = TRUE)))
 })
 
-test_that("internal draft.41 GPCM stress work remains explicit and private", {
+test_that("internal draft.42 GPCM stress work remains explicit and private", {
   pkg_root <- normalizePath(testthat::test_path("..", ".."), mustWork = TRUE)
   internal_path <- file.path(
     pkg_root, "inst", "validation", "internal-roadmap-0.2.3.md"
@@ -84,9 +84,14 @@ test_that("internal draft.41 GPCM stress work remains explicit and private", {
     pkg_root, "inst", "validation",
     "gpcm-stress-covering-grid-smoke-record-0.2.3.md"
   )
+  attribution_smoke_record_path <- file.path(
+    pkg_root, "inst", "validation",
+    "gpcm-isolated-attribution-smoke-record-0.2.3.md"
+  )
   skip_if_not(all(file.exists(c(
     internal_path, gate_path, checklist_path, estimator_plan_path,
-    contract_path, fixture_path, gpcm_smoke_record_path
+    contract_path, fixture_path, gpcm_smoke_record_path,
+    attribution_smoke_record_path
   ))))
 
   internal <- paste(readLines(internal_path, warn = FALSE, encoding = "UTF-8"),
@@ -101,6 +106,10 @@ test_that("internal draft.41 GPCM stress work remains explicit and private", {
   )
   gpcm_smoke_record <- paste(
     readLines(gpcm_smoke_record_path, warn = FALSE, encoding = "UTF-8"),
+    collapse = "\n"
+  )
+  attribution_smoke_record <- paste(
+    readLines(attribution_smoke_record_path, warn = FALSE, encoding = "UTF-8"),
     collapse = "\n"
   )
 
@@ -153,14 +162,21 @@ test_that("internal draft.41 GPCM stress work remains explicit and private", {
   expect_match(internal, "partitioned\\s+exhaustively")
   expect_match(internal, "Estimator ecosystem and maturity boundary", fixed = TRUE)
   expect_match(internal, "method = \"HRM\"", fixed = TRUE)
-  expect_match(gate, "Specification ID | `0.2.3-draft.41`", fixed = TRUE)
+  expect_match(gate, "Specification ID | `0.2.3-draft.42`", fixed = TRUE)
   expect_match(internal, "Draft.40 adds the first bounded joint nonlinear GPCM path family", fixed = TRUE)
   expect_match(internal, "Draft.41 makes the prespecified GPCM stress envelope executable", fixed = TRUE)
+  expect_match(internal, "Draft.42 adds the isolated-attribution layer", fixed = TRUE)
   expect_match(internal, "70 pilot cells covering all 1,330", fixed = TRUE)
   expect_match(gpcm_smoke_record, "zero false-ready rows", fixed = TRUE)
   expect_match(
     gpcm_smoke_record,
     "1157044b089f9b2c261f9feceb6bf25c16aa71435307afed635aef30c05c4994",
+    fixed = TRUE
+  )
+  expect_match(attribution_smoke_record, "zero pair-\\s+identity violations")
+  expect_match(
+    attribution_smoke_record,
+    "3c5114b2657866f8874fa4ffd5fb82324b620e5c88e6540ba4d51c9e03e63b86",
     fixed = TRUE
   )
   expect_match(internal, "GPCM discrepancy decomposition and stress envelope", fixed = TRUE)
@@ -190,6 +206,7 @@ test_that("internal draft.41 GPCM stress work remains explicit and private", {
     "jml_gpcm_slope_boundary_path",
     "jml_gpcm_joint_boundary_path",
     "gpcm_stress_covering_grid",
+    "gpcm_isolated_attribution_pilot",
     "sparse_estimability_performance",
     "metric_specific_comparison_eligibility",
     "jml_estimator_maturity",
@@ -1733,4 +1750,88 @@ test_that("GPCM local-dependence corner reaches exploratory residual PCA", {
   expect_identical(result$results$DistinguishedCellDuplicates, 0L)
   expect_false(result$results$InferenceReady)
   expect_false(result$results$FalseReady)
+})
+
+test_that("GPCM attribution manifest isolates one axis and four fit routes", {
+  pkg_root <- normalizePath(test_path("..", ".."), winslash = "/",
+                            mustWork = TRUE)
+  runner <- file.path(
+    pkg_root, "inst", "validation",
+    "gpcm-isolated-attribution-pilot-0.2.3.R"
+  )
+  expect_true(file.exists(runner))
+  env <- new.env(parent = globalenv())
+  source(runner, local = env)
+
+  pilot <- env$mfrmr_gpcm_attribution_manifest("pilot")
+  audit <- env$mfrmr_gpcm_attribution_manifest_audit(pilot)
+  expect_identical(audit$Arms, 40L)
+  expect_identical(audit$Rows, 800L)
+  expect_identical(audit$Replicates, 5L)
+  expect_true(audit$FourRoutesPerDataCell)
+  expect_true(audit$CompleteRouteSetPerDataCell)
+  expect_true(audit$OneSeedPerDataCell)
+  expect_true(audit$OneAxisChangePerChallenge)
+  expect_true(audit$KnownOneLevelGap)
+  expect_true(audit$ConfirmationSeparated)
+  expect_false(audit$ConfirmationAuthorized)
+  expect_identical(audit$NumericExternalEligibleRows, 0L)
+  expect_identical(audit$FrozenThresholdRows, 0L)
+  expect_identical(anyDuplicated(pilot$ScenarioId), 0L)
+  expect_true(all(pilot$ReleaseUse == "calibration_only"))
+  expect_true(all(pilot$ThresholdStatus == "pilot_required_not_frozen"))
+  expect_true(all(nchar(pilot$ManifestHash) == 64L))
+
+  expect_error(
+    env$mfrmr_run_gpcm_isolated_attribution_pilot(
+      "pilot", reps = 1L, progress = FALSE
+    ),
+    "resource-significant"
+  )
+  dry <- env$mfrmr_run_gpcm_isolated_attribution_pilot(
+    "pilot", reps = 1L, dry_run = TRUE, progress = FALSE
+  )
+  expect_identical(nrow(dry$manifest), 160L)
+  expect_false(dry$confirmation_authorized)
+  expect_identical(nrow(dry$results), 0L)
+})
+
+test_that("GPCM attribution routes retain identical paired data and fail closed", {
+  pkg_root <- normalizePath(test_path("..", ".."), winslash = "/",
+                            mustWork = TRUE)
+  runner <- file.path(
+    pkg_root, "inst", "validation",
+    "gpcm-isolated-attribution-pilot-0.2.3.R"
+  )
+  env <- new.env(parent = globalenv())
+  source(runner, local = env)
+  result <- env$mfrmr_run_gpcm_isolated_attribution_pilot(
+    "smoke",
+    arms = c("reference", "assignment_zero_shared"),
+    maxit = 30L,
+    quad_points = 5L,
+    progress = FALSE
+  )
+
+  expect_identical(result$summary$SelectedRows, 8L)
+  expect_identical(result$summary$DataCells, 2L)
+  expect_identical(result$summary$FalseReadyRows, 0L)
+  expect_identical(result$summary$PairIdentityViolations, 0L)
+  expect_true(all(result$results$PairedDataIdentity))
+  expect_true(all(!result$results$NumericExternalEligible))
+  expect_true(all(!result$results$SlopePrimaryMetricEligible))
+  hashes <- split(result$results$RetainedDataHash, result$results$DataCellId)
+  expect_true(all(vapply(hashes, function(x) length(unique(x)) == 1L,
+                         logical(1))))
+  reference <- result$results[result$results$ArmId == "reference", ]
+  expect_true(all(is.finite(reference$StepRMSE)))
+  expect_true(all(reference$StepContrastN == 12L))
+  zero_shared <- result$results[
+    result$results$ArmId == "assignment_zero_shared", , drop = FALSE
+  ]
+  expect_true(all(zero_shared$MinCommonPersons == 0L))
+  expect_true(all(!zero_shared$FalseReady))
+  expect_true(all(!result$contrasts$RecoveryClaimEligible))
+  expect_true(all(grepl("not_a_causal", result$contrasts$Interpretation,
+                        fixed = TRUE)))
 })
