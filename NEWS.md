@@ -8,6 +8,14 @@ CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
   The rendered public artifact no longer embeds a build machine's temporary
   directory, while the live return object still retains usable local paths.
 
+* Corrected MML Person EAP and posterior-SD alignment after retained rows are
+  permuted or filtered. Person-pattern posterior summaries are now mapped by
+  their internal Person indices before the fitted Person table and EAP-based
+  expected-score, residual, fit, bias, and residual-PCA diagnostics consume
+  them. Previously, stochastic or outcome-dependent row removal could pair
+  posterior summaries with the wrong Person labels even though the marginal
+  structural estimates were unaffected.
+
 * Added one versioned fit-readiness record that combines input review,
   estimability, category support, parameter-boundary status, and numerical
   diagnostics with deterministic precedence. `fit$summary$FitReadiness` and

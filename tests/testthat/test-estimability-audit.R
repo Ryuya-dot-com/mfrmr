@@ -599,6 +599,13 @@ test_that("GPCM additive rank does not overclaim nonlinear completeness", {
   permuted_score <- mfrmr:::mfrmr_mml_observed_person_score_matrix(
     fit$opt$par, permuted_idx, fit$config, sizes, quad
   )
+  params <- mfrmr:::expand_params(fit$opt$par, sizes, fit$config)
+  eap <- mfrmr:::compute_person_eap(idx, fit$config, params, quad)
+  permuted_eap <- mfrmr:::compute_person_eap(
+    permuted_idx, fit$config, params, quad
+  )
+  expect_equal(permuted_eap$Estimate, eap$Estimate, tolerance = 1e-12)
+  expect_equal(permuted_eap$SD, eap$SD, tolerance = 1e-12)
   person_match <- match(person_score$person_ids, permuted_score$person_ids)
   expect_false(anyNA(person_match))
   expect_lt(

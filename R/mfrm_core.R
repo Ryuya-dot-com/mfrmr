@@ -2141,7 +2141,26 @@ compute_person_eap <- function(idx, config, params, quad) {
   eap <- rowSums(nodes_mat * person_bundle$posterior)
   sd_eap <- sqrt(rowSums((nodes_mat - eap)^2 * person_bundle$posterior))
 
-  tibble(Estimate = eap, SD = sd_eap)
+  # `rowsum(..., reorder = FALSE)` retains the order in which Person indices
+  # first occur in the retained observation rows.  That order is not
+  # necessarily `1:n_person` after row permutation or outcome-dependent row
+  # filtering.  The fitted Person table, row-level expected scores, and all
+  # EAP-based diagnostics use the internal Person-level order, so align the
+  # posterior summaries explicitly before returning them.
+  n_person <- nrow(logprob_bundle$quad_basis$nodes)
+  person_ids <- as.integer(person_bundle$person_ids)
+  if (length(person_ids) != length(eap) || anyNA(person_ids) ||
+      any(person_ids < 1L | person_ids > n_person) ||
+      anyDuplicated(person_ids)) {
+    stop("Internal MML Person posterior indices were malformed.",
+         call. = FALSE)
+  }
+  eap_aligned <- rep(NA_real_, n_person)
+  sd_eap_aligned <- rep(NA_real_, n_person)
+  eap_aligned[person_ids] <- eap
+  sd_eap_aligned[person_ids] <- sd_eap
+
+  tibble(Estimate = eap_aligned, SD = sd_eap_aligned)
 }
 
 prepare_constraint_specs <- function(prep,
