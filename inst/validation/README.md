@@ -141,6 +141,15 @@ but do not broaden current API scope.
   interruption/adulteration tests, and real reference-cell parity. It removes
   the all-or-nothing writer as a core-tier runtime blocker without authorizing
   the still-unfrozen core design.
+- `mml-metamorphic-grid-0.2.3.R`: draft.45 repository-only guarded runner for
+  10 row, label, factor, missingness, and weight equivalence transformations
+  across RSM, PCM, and bounded-GPCM MML. It compares semantic parameter and
+  observation keys, separates input provenance from retained-data invariance,
+  requires numerical readiness, and keeps all tolerances pilot-only.
+- `mml-metamorphic-grid-record-0.2.3.md`: hashed draft.45 record of the
+  authoritative 30/30 v3 pilot pass, including the superseded loose-
+  convergence v1 failure, execution identity, maximum differences, and the
+  remaining target-size, replay, external, and statistical gates.
 - `facets-mfrmr-divergence-audit-0.2.3.R`: repository-only contract audit for
   completed paired pilots. Before interpreting parameter differences it checks
   constrained main-effect rank, declared versus FACETS-retained category/step

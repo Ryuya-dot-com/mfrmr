@@ -58,7 +58,7 @@ test_that("public roadmap and current NEWS exclude internal release operations",
   expect_true(any(grepl("inst/validation", ignore, fixed = TRUE)))
 })
 
-test_that("internal draft.44 GPCM stress work remains explicit and private", {
+test_that("internal draft.45 GPCM stress work remains explicit and private", {
   pkg_root <- normalizePath(testthat::test_path("..", ".."), mustWork = TRUE)
   internal_path <- file.path(
     pkg_root, "inst", "validation", "internal-roadmap-0.2.3.md"
@@ -96,11 +96,15 @@ test_that("internal draft.44 GPCM stress work remains explicit and private", {
     pkg_root, "inst", "validation",
     "gpcm-attribution-checkpoint-resume-record-0.2.3.md"
   )
+  metamorphic_record_path <- file.path(
+    pkg_root, "inst", "validation",
+    "mml-metamorphic-grid-record-0.2.3.md"
+  )
   skip_if_not(all(file.exists(c(
     internal_path, gate_path, checklist_path, estimator_plan_path,
     contract_path, fixture_path, gpcm_smoke_record_path,
     attribution_smoke_record_path, attribution_replicated_record_path,
-    checkpoint_record_path
+    checkpoint_record_path, metamorphic_record_path
   ))))
 
   internal <- paste(readLines(internal_path, warn = FALSE, encoding = "UTF-8"),
@@ -128,6 +132,10 @@ test_that("internal draft.44 GPCM stress work remains explicit and private", {
   )
   checkpoint_record <- paste(
     readLines(checkpoint_record_path, warn = FALSE, encoding = "UTF-8"),
+    collapse = "\n"
+  )
+  metamorphic_record <- paste(
+    readLines(metamorphic_record_path, warn = FALSE, encoding = "UTF-8"),
     collapse = "\n"
   )
 
@@ -180,7 +188,7 @@ test_that("internal draft.44 GPCM stress work remains explicit and private", {
   expect_match(internal, "partitioned\\s+exhaustively")
   expect_match(internal, "Estimator ecosystem and maturity boundary", fixed = TRUE)
   expect_match(internal, "method = \"HRM\"", fixed = TRUE)
-  expect_match(gate, "Specification ID | `0.2.3-draft.44`", fixed = TRUE)
+  expect_match(gate, "Specification ID | `0.2.3-draft.45`", fixed = TRUE)
   expect_match(internal, "Draft.40 adds the first bounded joint nonlinear GPCM path family", fixed = TRUE)
   expect_match(internal, "Draft.41 makes the prespecified GPCM stress envelope executable", fixed = TRUE)
   expect_match(internal, "Draft.42 adds the isolated-attribution layer", fixed = TRUE)
@@ -189,6 +197,9 @@ test_that("internal draft.44 GPCM stress work remains explicit and private", {
                fixed = TRUE)
   expect_match(internal,
                "Draft.44 removes the all-or-nothing writer", fixed = TRUE)
+  expect_match(internal,
+               "Draft.45 closes the small-design cross-model MML metamorphic slice",
+               fixed = TRUE)
   expect_match(internal, "70 pilot cells covering all 1,330", fixed = TRUE)
   expect_match(gpcm_smoke_record, "zero false-ready rows", fixed = TRUE)
   expect_match(
@@ -232,6 +243,14 @@ test_that("internal draft.44 GPCM stress work remains explicit and private", {
     fixed = TRUE
   )
   expect_match(gate, "complete four-route data cell", fixed = TRUE)
+  expect_match(metamorphic_record, "passed 30 of 30", fixed = TRUE)
+  expect_match(
+    metamorphic_record,
+    "2fc9e48a6722a77b2b0b5f95385fd9815533ef93327a38345fe0fa544d3cbefb",
+    fixed = TRUE
+  )
+  expect_match(metamorphic_record,
+               "The v1 directory is retained only as a", fixed = TRUE)
   expect_match(internal, "GPCM discrepancy decomposition and stress envelope", fixed = TRUE)
   expect_match(internal, "different_slope_estimand", fixed = TRUE)
   expect_match(internal, "Table 7 discrimination is never a", fixed = TRUE)
@@ -262,6 +281,7 @@ test_that("internal draft.44 GPCM stress work remains explicit and private", {
     "gpcm_isolated_attribution_pilot",
     "gpcm_attribution_replicated_feasibility",
     "gpcm_attribution_checkpoint_resume",
+    "mml_metamorphic_invariance_grid",
     "sparse_estimability_performance",
     "metric_specific_comparison_eligibility",
     "jml_estimator_maturity",
@@ -2125,5 +2145,118 @@ test_that("GPCM replicated checkpoints resume atomically and fail closed", {
       resume = TRUE
     ),
     "artifact hash mismatch"
+  )
+})
+
+test_that("MML metamorphic grid is prespecified, guarded, and fail closed", {
+  pkg_root <- normalizePath(test_path("..", ".."), winslash = "/",
+                            mustWork = TRUE)
+  runner <- file.path(
+    pkg_root, "inst", "validation", "mml-metamorphic-grid-0.2.3.R"
+  )
+  expect_true(file.exists(runner))
+  env <- new.env(parent = globalenv())
+  source(runner, local = env)
+
+  dry <- env$mfrmr_run_mml_metamorphic_grid(
+    dry_run = TRUE, progress = FALSE
+  )
+  expect_identical(
+    env$mfrmr_gpcm_repilot_hash_file(runner),
+    "2fc9e48a6722a77b2b0b5f95385fd9815533ef93327a38345fe0fa544d3cbefb"
+  )
+  expect_identical(dry$registry$Comparisons, 30L)
+  expect_identical(dry$registry$Models, 3L)
+  expect_identical(dry$registry$Scenarios, 10L)
+  expect_identical(dry$registry$Maxit, 400L)
+  expect_equal(dry$registry$Reltol, 1e-9, tolerance = 0)
+  expect_false(dry$registry$ConfirmationAuthorized)
+  expect_identical(dry$registry$CriterionState,
+                   "pilot_required_not_frozen")
+  expect_false(dry$confirmation_authorized)
+  expect_identical(nchar(dry$registry$DeclaredManifestSHA256), 64L)
+  expect_identical(nchar(dry$registry$SelectedManifestSHA256), 64L)
+  expect_identical(
+    dry$registry$DeclaredManifestSHA256,
+    dry$registry$SelectedManifestSHA256
+  )
+  expect_true(all(!dry$manifest$ConfirmationAuthorized))
+  expect_true(all(dry$manifest$CriterionState ==
+                    "pilot_required_not_frozen"))
+  expect_identical(
+    dry$manifest$ScenarioId[!dry$manifest$InputProvenanceEqualityRequired],
+    rep(c(
+      "missing_outcome_filter", "zero_weight_filter",
+      "appended_zero_weight_levels", "combined_filter_label_factor"
+    ), each = 3L)
+  )
+
+  selected <- env$mfrmr_run_mml_metamorphic_grid(
+    models = "PCM", scenarios = "row_reverse",
+    dry_run = TRUE, progress = FALSE
+  )
+  expect_identical(selected$registry$Comparisons, 1L)
+  expect_identical(selected$registry$Models, 1L)
+  expect_identical(selected$registry$Scenarios, 1L)
+  expect_false(identical(
+    selected$registry$DeclaredManifestSHA256,
+    selected$registry$SelectedManifestSHA256
+  ))
+  deduplicated <- env$mfrmr_run_mml_metamorphic_grid(
+    models = c("PCM", "PCM"), dry_run = TRUE, progress = FALSE
+  )
+  expect_identical(deduplicated$registry$Models, 1L)
+  expect_identical(deduplicated$registry$Comparisons, 10L)
+  expect_error(
+    env$mfrmr_run_mml_metamorphic_grid(
+      scenarios = "not_declared", dry_run = TRUE, progress = FALSE
+    ),
+    "Unknown metamorphic scenario"
+  )
+  expect_error(
+    env$mfrmr_run_mml_metamorphic_grid(progress = FALSE),
+    "authorize = TRUE",
+    fixed = TRUE
+  )
+  existing_output <- tempfile("mml-metamorphic-existing-")
+  dir.create(existing_output)
+  on.exit(unlink(existing_output, recursive = TRUE, force = TRUE), add = TRUE)
+  expect_error(
+    env$mfrmr_run_mml_metamorphic_grid(
+      authorize = TRUE, progress = FALSE, output_dir = existing_output
+    ),
+    "must not already exist"
+  )
+  expect_error(
+    env$mfrmr_run_mml_metamorphic_grid(
+      quad_points = 2L, dry_run = TRUE, progress = FALSE
+    ),
+    "quad_points"
+  )
+  expect_error(
+    env$mfrmr_run_mml_metamorphic_grid(
+      reltol = 0, dry_run = TRUE, progress = FALSE
+    ),
+    "reltol"
+  )
+
+  base <- env$mfrmr_mml_meta_base_data()
+  maps <- env$mfrmr_mml_meta_maps(base, person = TRUE, facets = TRUE)
+  relabelled <- env$mfrmr_mml_meta_relabel(base, maps)
+  expect_identical(
+    env$mfrmr_mml_meta_restore_map(relabelled$Person, maps$Person),
+    as.character(base$Person)
+  )
+  empty <- env$mfrmr_mml_meta_compare_table(
+    data.frame(id = "x"), data.frame(id = "x"), "slope", "id",
+    character(0), "parameter"
+  )
+  expect_identical(nrow(empty), 0L)
+  expect_identical(
+    names(empty),
+    c(
+      "Component", "Metric", "Comparable", "KeySetEqual", "N",
+      "MaxAbsDifference", "MeanAbsDifference", "ToleranceClass"
+    )
   )
 })

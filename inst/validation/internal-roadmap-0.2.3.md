@@ -311,7 +311,7 @@ The following remain outside 0.2.3:
 | M4: run confirmation | Run the locked recovery/stress matrix, FACETS JML core, ConQuest/TAM MML comparisons, TAM/immer JML convention grid, eligible immer CML/CCML rows, dimensionality challenge, and matched external rows without changing criteria or reusing discovery/pilot data as independent confirmation. | Candidate-linked internal and external evidence with every blocker classified and every expected scenario/replicate accounted for. |
 | M5: release handoff | Run full regression, cross-platform CI, manuals, URL checks, CRAN-time examples, Win-builder, package-content audit, and public-claim audit. | All blocker rows `ok`, all caveats visible, and an exact checked tarball. |
 
-The repository now contains `0.2.3-draft.44` planning and pilot artifacts at
+The repository now contains `0.2.3-draft.45` planning and pilot artifacts at
 `inst/validation/release-gate-spec-0.2.3.md` and
 `inst/validation/release-evidence-checklist-0.2.3.csv`, with the TAM/immer
 execution contract in `inst/validation/tam-immer-estimator-stress-plan-0.2.3.md`.
@@ -632,10 +632,40 @@ predate checkpoint-v1 and cannot be resumed or relabelled. Full identity,
 hashes, and scope are recorded in
 `gpcm-attribution-checkpoint-resume-record-0.2.3.md`.
 
-This closes only the atomic-resume slice of WP7. The cross-model MML
-metamorphic grid, core replication/precision design, target-scale runtime,
-external normalization, statistical criterion freeze, and confirmation remain
-open. Core execution is still unauthorized.
+Draft.45 closes the small-design cross-model MML metamorphic slice without
+freezing a numerical tolerance. The repository-only runner prespecifies ten
+semantic-equivalence transformations across RSM, PCM, and bounded GPCM:
+row reversal/permutation, unused and reordered factor levels, nonlexical
+Person/facet labels, missing outcomes versus explicit filtering, zero weights
+versus filtering, appended zero-weight levels, positive non-unit weights, and
+a combined filter/label/factor transformation. It compares Person posterior
+summaries, facets, steps, GPCM slopes, retained-observation expectations and
+residual quantities, objective values, semantic keys, and result states.
+
+The first execution deliberately exposed an orchestration defect: runner
+controls `maxit = 100`, `reltol = 1e-7` permitted optimizer code zero while
+both relabelled fits remained at `NumericalState = review`, producing five
+screen failures. The response was not to widen tolerances. The authoritative
+v3 uses the public production controls (`maxit = 400`, `reltol = 1e-9`), which
+activate bounded gradient polishing, and requires both fits to be numerically
+ready. All 30/30 comparisons then passed; maximum objective, parameter, and
+retained-observation differences were `3.112007e-09`, `1.862395e-05`, and
+`6.113984e-06`. Missing/zero-weight encodings retained their intentionally
+different input provenance while preserving every downstream result. The
+runner also rejects an existing output directory so a prior bundle cannot be
+overwritten; intermediate v2 had identical metric maxima before this storage
+guard was added. The thresholds remain `pilot_required_not_frozen`; this is a
+software-property pilot on one design, not recovery, coverage, or external
+agreement. Full
+identity and hashes are recorded in
+`mml-metamorphic-grid-record-0.2.3.md`.
+
+This closes the atomic-resume slice of WP7 and the current small-design MML
+metamorphic slice of WP6. Core replication/precision design, target-scale
+sparse runtime/memory, malformed-input and replay properties, active
+population/anchor/interaction variants, external normalization, statistical
+criterion freeze, and confirmation remain open. Core execution is still
+unauthorized.
 
 ### GPCM discrepancy decomposition and stress envelope
 
@@ -747,8 +777,8 @@ reviewed. Confirmation remains prohibited until the later frozen gate.
 | `WP3-JML-BOUNDARY` | WP0 | `in_progress_bounded_joint_nonlinear_gpcm_paths` | Detect JML element separation/extreme sufficient scores on the actual contributing row pattern; replace optimizer-dependent finite primary values with typed boundary states. The Person primary-state slice, sparse-triplet Person-fixed structural certificate, companion joint Person-structural additive cone, retained-additive GPCM slope-only monotone paths, and ordered-pair linear-additive/constant-log-slope joint path family are implemented. Positive joint paths remain candidates because the GPCM likelihood is globally non-concave; negative results are scoped. More general rate vectors, curved paths, global arguments, independent general solver parity, broader model/basis properties, and target-scale evidence remain pending. | JML extreme/nonextreme fixtures, MML non-reduction guard, constrained facet/interaction/joint/slope-path certificates, sparse/dense and independent microcase parity, nonlinear joint-path positive and negative controls, and explicit optional-display contract. |
 | `WP4-READINESS-PROPAGATION` | WP1--WP3 | `in_progress_gpcm_joint_candidate_slice` | Derive fit-, parameter-, and output-level readiness once and propagate it without surface-specific reinterpretation. The fit record, deterministic precedence, conservative scalar, fail-closed synthetic legacy-object path, summary/results/convergence/plot front doors, target-aware unpropagated-candidate rule, typed slope-only GPCM boundaries, and candidate-specific joint GPCM reasons under contract v3 are implemented. Competitive joint candidates remain `not_evaluated` with no primary value or ordinary uncertainty; complete facet/interaction/step and remaining output propagation depend on unfinished WP1--WP3 states. | Cross-surface snapshot/semantic tests and a real serialized 0.2.2-object migration fixture. |
 | `WP5-COMPARISON-CONTRACT` | WP4 | `blocked_by_dependency` | Make FACETS, TAM, immer, and other external normalization metric-specific and fail closed before numeric aggregation; identify estimator, adjustment, person treatment, and software stratum explicitly. | Eligibility/rejection ledger with denominator accounting, method-mode identity, and no silent row loss. |
-| `WP6-SCALE-AND-ADVERSARIAL` | WP1--WP5 | `blocked_by_dependency_with_eap_order_and_identity_slices_complete` | Verify sparse computation, basis invariance, row-order and label invariance, malformed-input behavior, optional-capability fail-closed behavior, and target-size runtime/memory without claiming FACETS capacity parity. Draft.43 corrects the common MML EAP Person-order defect; draft.44 binds package, runner, capability, RNG, and execution controls to checkpoints. RSM/PCM/GPCM filtered-row, label, factor-level, and weight property grids remain open. | Benchmark envelope and metamorphic/negative-test report; capability manifest; no dense design allocation at target sizes. |
-| `WP7-REPILOT-AND-FREEZE` | WP0--WP6 | `in_progress_feasibility_with_atomic_resume` | Rerun the affected internal and FACETS 4.5.0 pilot cells and the TAM/immer estimator grid on new pilot seeds, calibrate weak-information and estimator-specific rules, then prepare the next reviewed frozen specification. Draft.43 supplies the corrected 80-route feasibility ledger and MCSE/Wilson summaries; draft.44 supplies atomic four-route-cell resume and a hashed completion marker. Two-replicate operating characteristics, the cross-model metamorphic grid, target-scale feasibility, external normalization, and criterion freeze remain blocked by unfinished WP1--WP6 evidence. | Complete pilot registry, atomic resumable execution, method-mode-specific reason-coded exclusions, prespecified MCSE/replication plan, resolved blocker criteria, and still no confirmation result. |
+| `WP6-SCALE-AND-ADVERSARIAL` | WP1--WP5 | `in_progress_mml_metamorphic_small_design_complete` | Verify sparse computation, basis invariance, row-order and label invariance, malformed-input behavior, optional-capability fail-closed behavior, and target-size runtime/memory without claiming FACETS capacity parity. Draft.43 corrects the common MML EAP Person-order defect; draft.44 binds package, runner, capability, RNG, and execution controls to checkpoints; draft.45 passes the 30-cell RSM/PCM/GPCM MML row/label/factor/missing/weight grid under numerical-ready production controls. JML, serialization/replay, active population/anchor/interaction, malformed-input, and target-size sparse property grids remain open. | Benchmark envelope and metamorphic/negative-test report; capability manifest; no dense design allocation at target sizes. |
+| `WP7-REPILOT-AND-FREEZE` | WP0--WP6 | `in_progress_feasibility_with_atomic_resume_and_mml_metamorphic_prerequisite` | Rerun the affected internal and FACETS 4.5.0 pilot cells and the TAM/immer estimator grid on new pilot seeds, calibrate weak-information and estimator-specific rules, then prepare the next reviewed frozen specification. Draft.43 supplies the corrected 80-route feasibility ledger and MCSE/Wilson summaries; draft.44 supplies atomic four-route-cell resume and a hashed completion marker; draft.45 supplies the current small-design cross-model MML metamorphic prerequisite. Two-replicate operating characteristics, target-scale feasibility, external normalization, replication/precision design, and criterion freeze remain blocked by unfinished WP1--WP6 evidence. | Complete pilot registry, atomic resumable execution, method-mode-specific reason-coded exclusions, prespecified MCSE/replication plan, resolved blocker criteria, and still no confirmation result. |
 
 #### Corrective-program execution lanes
 
