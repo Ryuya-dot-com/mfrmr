@@ -60,7 +60,7 @@ test_that("public roadmap and current NEWS exclude internal release operations",
   expect_true(any(grepl("inst/validation", ignore, fixed = TRUE)))
 })
 
-test_that("internal draft.46 roadmap and GPCM work remain explicit and private", {
+test_that("internal draft.47 roadmap and GPCM work remain explicit and private", {
   pkg_root <- normalizePath(testthat::test_path("..", ".."), mustWork = TRUE)
   internal_path <- file.path(
     pkg_root, "inst", "validation", "internal-roadmap-0.2.3.md"
@@ -106,11 +106,16 @@ test_that("internal draft.46 roadmap and GPCM work remain explicit and private",
     pkg_root, "inst", "validation",
     "roadmap-reassessment-record-0.2.3.md"
   )
+  target_scale_record_path <- file.path(
+    pkg_root, "inst", "validation",
+    "target-scale-sparse-stress-pilot-record-0.2.3.md"
+  )
   skip_if_not(all(file.exists(c(
     internal_path, gate_path, checklist_path, estimator_plan_path,
     contract_path, fixture_path, gpcm_smoke_record_path,
     attribution_smoke_record_path, attribution_replicated_record_path,
-    checkpoint_record_path, metamorphic_record_path, roadmap_record_path
+    checkpoint_record_path, metamorphic_record_path, roadmap_record_path,
+    target_scale_record_path
   ))))
 
   internal <- paste(readLines(internal_path, warn = FALSE, encoding = "UTF-8"),
@@ -146,6 +151,10 @@ test_that("internal draft.46 roadmap and GPCM work remain explicit and private",
   )
   roadmap_record <- paste(
     readLines(roadmap_record_path, warn = FALSE, encoding = "UTF-8"),
+    collapse = "\n"
+  )
+  target_scale_record <- paste(
+    readLines(target_scale_record_path, warn = FALSE, encoding = "UTF-8"),
     collapse = "\n"
   )
 
@@ -198,7 +207,7 @@ test_that("internal draft.46 roadmap and GPCM work remain explicit and private",
   expect_match(internal, "partitioned\\s+exhaustively")
   expect_match(internal, "Estimator ecosystem and maturity boundary", fixed = TRUE)
   expect_match(internal, "method = \"HRM\"", fixed = TRUE)
-  expect_match(gate, "Specification ID | `0.2.3-draft.46`", fixed = TRUE)
+  expect_match(gate, "Specification ID | `0.2.3-draft.47`", fixed = TRUE)
   expect_match(internal, "Draft.40 adds the first bounded joint nonlinear GPCM path family", fixed = TRUE)
   expect_match(internal, "Draft.41 makes the prespecified GPCM stress envelope executable", fixed = TRUE)
   expect_match(internal, "Draft.42 adds the isolated-attribution layer", fixed = TRUE)
@@ -212,6 +221,8 @@ test_that("internal draft.46 roadmap and GPCM work remain explicit and private",
                fixed = TRUE)
   expect_match(internal,
                "Draft.46 rechecks those official sources", fixed = TRUE)
+  expect_match(internal,
+               "Draft.47 begins target-scale execution", fixed = TRUE)
   expect_match(internal, "`release_spine`", fixed = TRUE)
   expect_match(internal, "in_progress_core_slice_unblocked", fixed = TRUE)
   expect_match(internal,
@@ -273,6 +284,20 @@ test_that("internal draft.46 roadmap and GPCM work remain explicit and private",
                "Claim-conditional promotion", fixed = TRUE)
   expect_match(roadmap_record,
                "CRAN distributes TAM 4.3-25", fixed = TRUE)
+  expect_match(target_scale_record,
+               "zero\\s+false-ready results")
+  expect_match(target_scale_record,
+               "capacity-feasibility evidence", fixed = TRUE)
+  expect_match(
+    target_scale_record,
+    "6d6dea58d3e64fc6f06754ed90d024efaa1d61896dccc822adfc35b2c52036ef",
+    fixed = TRUE
+  )
+  expect_match(
+    target_scale_record,
+    "be175b4f941b5a29c0d1d5bf4617a1bffb3f7399776e71616d6ac9410cfc388a",
+    fixed = TRUE
+  )
   expect_match(gate,
                "any checklist item lacks a reviewed portfolio", fixed = TRUE)
   expect_match(internal, "GPCM discrepancy decomposition and stress envelope", fixed = TRUE)
@@ -1849,6 +1874,114 @@ test_that("GPCM local-dependence corner reaches exploratory residual PCA", {
   expect_identical(result$results$DistinguishedCellDuplicates, 0L)
   expect_false(result$results$InferenceReady)
   expect_false(result$results$FalseReady)
+})
+
+test_that("target-scale sparse feasibility execution is fixed and guarded", {
+  pkg_root <- normalizePath(test_path("..", ".."), winslash = "/",
+                            mustWork = TRUE)
+  runner <- file.path(
+    pkg_root, "inst", "validation",
+    "target-scale-sparse-stress-pilot-0.2.3.R"
+  )
+  expect_true(file.exists(runner))
+  env <- new.env(parent = globalenv())
+  source(runner, local = env)
+
+  dry <- env$mfrmr_run_target_scale_sparse_stress(
+    dry_run = TRUE, run_diagnostics = TRUE, progress = FALSE
+  )
+  expect_identical(
+    env$mfrmr_gpcm_repilot_hash_file(runner),
+    "50ee40562080cc5b2561d7e93bd9ec0eb13c451a6d728b8d61071bd0b306e0c8"
+  )
+  expect_identical(
+    dry$registry$ScenarioId,
+    c(
+      "GPCM-P-008", "GPCM-P-018", "GPCM-P-019",
+      "GPCM-P-024", "GPCM-P-031", "GPCM-P-040"
+    )
+  )
+  expect_true(all(dry$registry$SampleSize == "target_sparse"))
+  expect_true(all(dry$registry$NPersons == 400L))
+  expect_true(all(dry$registry$Executable))
+  expect_true(all(dry$registry$ExecutedReplicates == 1L))
+  expect_true(all(dry$registry$DeclaredPilotReplicates == 5L))
+  expect_true(all(!dry$registry$ConfirmationAuthorized))
+  expect_identical(dry$execution_identity$SelectedCells, 6L)
+  expect_identical(
+    dry$execution_identity$EvidenceUse,
+    "capacity_feasibility_calibration_only"
+  )
+  expect_false(dry$execution_identity$ConfirmationAuthorized)
+  expect_false(dry$confirmation_authorized)
+  expect_identical(nchar(dry$execution_identity$DeclaredManifestSHA256), 64L)
+  expect_identical(nchar(dry$execution_identity$SelectedManifestSHA256), 64L)
+  expect_false(identical(
+    dry$execution_identity$DeclaredManifestSHA256,
+    dry$execution_identity$SelectedManifestSHA256
+  ))
+
+  expect_error(
+    env$mfrmr_run_target_scale_sparse_stress(
+      dry_run = FALSE, progress = FALSE
+    ),
+    "authorize = TRUE",
+    fixed = TRUE
+  )
+  existing_output <- tempfile("target-scale-existing-")
+  dir.create(existing_output)
+  on.exit(unlink(existing_output, recursive = TRUE, force = TRUE), add = TRUE)
+  expect_error(
+    env$mfrmr_run_target_scale_sparse_stress(
+      dry_run = FALSE, authorize = TRUE, output_dir = existing_output,
+      progress = FALSE
+    ),
+    "must not already exist"
+  )
+  expect_error(
+    env$mfrmr_run_target_scale_sparse_stress(
+      dry_run = TRUE, quad_points = 2L, progress = FALSE
+    ),
+    "quad_points"
+  )
+})
+
+test_that("target-scale completion markers fail closed on artifact changes", {
+  pkg_root <- normalizePath(test_path("..", ".."), winslash = "/",
+                            mustWork = TRUE)
+  runner <- file.path(
+    pkg_root, "inst", "validation",
+    "target-scale-sparse-stress-pilot-0.2.3.R"
+  )
+  env <- new.env(parent = globalenv())
+  source(runner, local = env)
+  env$mfrmr_target_scale_require_support()
+
+  output_dir <- tempfile("target-scale-completion-")
+  dir.create(output_dir)
+  on.exit(unlink(output_dir, recursive = TRUE, force = TRUE), add = TRUE)
+  artifact <- file.path(output_dir, "result.txt")
+  writeLines("fixed target-scale result", artifact, useBytes = TRUE)
+  inventory <- env$mfrmr_target_scale_artifact_inventory(output_dir)
+  marker <- list(
+    schema = "mfrmr-target-scale-feasibility-completion-v1",
+    execution_sha256 = paste(rep("a", 64L), collapse = ""),
+    artifacts = inventory,
+    artifact_inventory_sha256 = env$mfrmr_gpcm_repilot_hash_object(inventory),
+    completed_utc = "2026-08-05 00:00:00 UTC",
+    confirmation_authorized = FALSE
+  )
+  saveRDS(marker, file.path(output_dir, "run-complete.rds"))
+  expect_invisible(env$mfrmr_target_scale_validate_completion(
+    output_dir, marker$execution_sha256
+  ))
+  writeLines("changed target-scale result", artifact, useBytes = TRUE)
+  expect_error(
+    env$mfrmr_target_scale_validate_completion(
+      output_dir, marker$execution_sha256
+    ),
+    "hash or size mismatch"
+  )
 })
 
 test_that("GPCM attribution manifest isolates one axis and four fit routes", {

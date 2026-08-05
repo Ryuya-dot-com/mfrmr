@@ -5,10 +5,10 @@
 | Field | Value |
 | --- | --- |
 | Target release | 0.2.3 |
-| Specification ID | `0.2.3-draft.46` |
+| Specification ID | `0.2.3-draft.47` |
 | Date | 2026-08-05 |
-| Status | M1 is recorded and M2 remains in progress. Draft.45 supplies a 30/30 small-design MML metamorphic pilot. Draft.46 reassesses the 87-row inventory and separates a mandatory release spine from claim-conditional promotion and deferred research; it passes no additional evidence row and authorizes no confirmation. Official sources still identify CRAN mfrmr 0.2.2, TAM 4.3-25, immer 1.5-13, and upstream FACETS 4.5.1, while licensed local FACETS 4.5.0 remains the primary execution stratum. The machine-readable claim-disposition profile, deterministic core propagation, target-size envelope, metric-specific external eligibility, ADEMP replication/precision freeze, candidate identity, confirmation, and release engineering remain pending. All simulations remain calibration evidence. |
-| Current draft delta | Draft.46 replaces an undifferentiated serial interpretation of 87 checklist rows with three portfolios: `release_spine`, `claim_conditional`, and `deferred`. Candidate identity, supported-core numerical/readiness guards, ADEMP recovery/failure evidence, target-size support bounds, minimal metric-matched FACETS/ConQuest-or-TAM overlap, public support-envelope consistency, and exact-candidate engineering form the mandatory spine. Unfinished GPCM slope/JML uncertainty/IC-ranking/diagnostic/external-aggregation evidence blocks its associated claim, which must be disabled, caveated, or deferred consistently rather than silently promoted. Multidimensional, native CML/CCML, HRM, posterior-predictive/heavy-backend, unrestricted-GPCM parity, 0.2.4 calibration, and 0.2.5 multiple-scale work do not block bounded 0.2.3 scope. Stable WP5/WP6/WP7 pilot-design slices may proceed in parallel; confirmation remains globally prohibited until a machine-readable item disposition, affected dependencies, criteria, and one candidate are frozen. |
+| Status | M1 is recorded and M2 remains in progress. Draft.45 supplies a 30/30 small-design MML metamorphic pilot; draft.46 separates the 87-row inventory into a mandatory release spine, claim-conditional promotion, and deferred research; draft.47 executes the first guarded 400-Person target-scale feasibility slice. Six of six prespecified cells executed with zero unexpected failures and zero false-ready rows, but the mixed-adversity free-slope GPCM MML cell remained iteration-limited/blocked and residual PCA exposed a computability-state gap. No evidence row or numerical threshold is passed/frozen, and confirmation remains unauthorized. The machine-readable claim-disposition profile, balanced target baselines and support bounds, weak-bridge gradient, operating-system peak-memory evidence, replicated ADEMP recovery/precision, metric-specific external eligibility, candidate identity, confirmation, and release engineering remain pending. All simulations remain calibration evidence. |
+| Current draft delta | Draft.47 executes rather than merely lists every already-prespecified executable `target_sparse` covering-grid cell: six 400-Person GPCM/PCM, JML/MML cases spanning sparse/disconnected designs, 2--12 Raters, missingness, category imbalance/absence, weights, Occasion, interactions, bias/drift, local dependence, and residual PCA. The guarded runner separates one executed capacity replicate from five declared pilot replicates; binds package, runner, capability, manifest, controls, and artifact identity; refuses overwrite; and validates the completion bundle in a fresh session. The result establishes bounded construction/runtime feasibility and zero false-ready behavior for these seeds only. It does not estimate recovery, coverage, diagnostic error rates, capacity limits, or FACETS parity. The draft.46 portfolio policy remains controlling, and confirmation remains globally prohibited. |
 | Confirmation authorized | No |
 | Evidence checklist | `release-evidence-checklist-0.2.3.csv` |
 | FACETS stress plan | `facets-jml-stress-plan-0.2.3.md` |
@@ -349,7 +349,7 @@ external normalization retains eligibility per metric and parameter class.
 The legacy scalar `InferenceReady` is only a conservative compatibility
 summary and cannot be the sole input to a 0.2.3 gate.
 
-Draft.46 continues to bind this gate to readiness contract
+Draft.47 continues to bind this gate to readiness contract
 `mfrmr-readiness-0.2.3-v3` in
 `readiness-contract-0.2.3.md`, its repository-only schema validator, and the
 36-row adversarial fixture registry. `InferenceReady` is `TRUE` only for fit
@@ -412,6 +412,31 @@ Confirmation remains globally prohibited until the portfolio profile,
 release-spine dependencies, numeric criteria, and candidate identity are
 frozen. The governing rationale and rechecked official version sources are in
 `roadmap-reassessment-record-0.2.3.md`.
+
+Draft.47 begins the noninferential target-size slice authorized by that
+governance decision. The six selected rows are exactly the executable
+`target_sparse` rows from the already-hashed 70-cell pilot manifest; no cell
+was added or removed after viewing a result. Each has 400 generated Persons
+and one executed seed, while the later pilot remains explicitly declared as
+five replicates per cell. All six executed with zero unexpected runner failure
+and zero false-ready state. Two disconnected exact-rank controls failed before
+optimization, two returned blocked/review states, one PCM JML fit retained
+extreme-Person exclusions, and one imbalanced/missing PCM MML fit was ready.
+The ready fit is not a recovery or diagnostic pass. The mixed-adversity GPCM
+MML fit reached the fixed iteration limit and remained blocked; its optimizer
+slope error is ineligible as primary recovery evidence.
+
+Four returned fits reached exploratory residual PCA. In the most complex GPCM
+cell, `psych` reported that the smoothed-correlation determinant and parts of
+the objective were undefined even though an object returned. Diagnostic
+promotion therefore requires a new fail-closed PCA computability state that
+captures messages, matrix rank/support, and smoothing/repair provenance. The
+run's R `gc()` high-water values are memory proxies, not OS peak resident
+memory or a supported-size ceiling. The authoritative independently validated
+bundle and all hashes are recorded in
+`target-scale-sparse-stress-pilot-record-0.2.3.md`. Balanced target baselines,
+weak-bridge gradients, OS memory, the five-replicate pilot, recovery/coverage,
+and every numeric criterion remain open.
 
 Draft.23 implements the RSM/PCM linear-coordinate portion of the estimability
 gate. Sparse QR acts on the optimizer's constrained Person/facet/interaction/
@@ -1195,6 +1220,7 @@ claim is reduced or deferred rather than decided ad hoc.
 | `0.2.3-draft.44` | Added atomic checkpoint/resume at the complete four-route data-cell boundary. Checkpoint-v1 identity combines selected and declared manifest hashes, actual execution controls, loaded mfrmr runtime content, the three validation runners, R/platform/RNG, numerical runtime reporting, and dependency availability/version/content. Verified same-directory temporary files are renamed into place; existing targets and unexpected RDS files fail closed. Resume validates schema, execution, cell-manifest, result payload, ScenarioId, route, DataCellId, and declared-manifest identity. Aggregate output receives a separately atomic completion marker whose artifact inventory and hashes must remain valid. Deterministic interruption, clean-run equality, mismatch, orphan-partial, path-traversal, and adulteration tests pass, and a real four-route reference cell matches the prior execution path except for elapsed runtime. The draft.43 artifacts remain historical and non-resumable. Metamorphic, target-scale, replication/precision, external, statistical-freeze, candidate, and confirmation gates remain open. |
 | `0.2.3-draft.45` | Added a guarded ten-transformation by three-model MML metamorphic grid. The runner distinguishes input provenance from retained-data/result invariance, hashes declared and selected manifests separately, compares semantic output keys and quantities, and requires both fits to be numerically ready. A loose-control v1 failed five relabelling comparisons at terminal-gradient review and was retained as a superseded diagnostic rather than repaired by wider tolerances. The production-control v3 passed 30/30 with zero warnings and maximum objective, parameter, and observation differences of `3.112007e-09`, `1.862395e-05`, and `6.113984e-06`. The final runner also refuses existing output directories and deduplicates model requests; v2 retained identical numeric maxima before that storage guard. This is pilot software-property evidence only; thresholds remain unfrozen, and target-size, JML/replay/active-structure, replication/precision, external, candidate, and confirmation gates remain open. |
 | `0.2.3-draft.46` | Reassessed the 87-row inventory after the MML metamorphic pass. Introduced `release_spine`, `claim_conditional`, and `deferred` portfolios so optional research does not create an accidental infinite release scope, while an unsupported callable result cannot escape through a generic caveat. Unblocked stable metric-specific WP5 fixtures, noninferential WP6 target-size work, and WP7 precision/manifest prespecification for parallel calibration; confirmation remains blocked until a machine-readable item profile, fallbacks, dependencies, criteria, and candidate identity are frozen. Rechecked official mfrmr/TAM/immer/FACETS versions without changing the local FACETS 4.5.0 execution stratum. No evidence row passed and no criterion was frozen. |
+| `0.2.3-draft.47` | Added a guarded capacity-feasibility executor for all six already-declared executable 400-Person `target_sparse` cells. The run covers GPCM/PCM, JML/MML, sparse/disconnected assignment, 2--12 Raters, missingness, category imbalance/absence, weights, Occasion, interaction, bias/drift, local dependence, and residual PCA. All six cells executed with zero unexpected failures and zero false-ready rows; the mixed-adversity GPCM MML cell remained iteration-limited/blocked, two exact-rank controls failed before optimization, one PCM JML cell retained extreme-Person exclusions, and one imbalanced/missing PCM MML cell was ready but not statistically validated. The runner distinguishes one capacity replicate from five declared pilot replicates, refuses overwrite, binds runtime/manifest/artifact identity, and validates the bundle in a fresh session. Residual-PCA messages exposed a missing computability state, and R heap high-water values remain proxies rather than OS capacity evidence. No threshold, checklist row, FACETS-parity claim, candidate, or confirmation state was promoted. |
 
 ## Release decision algorithm
 

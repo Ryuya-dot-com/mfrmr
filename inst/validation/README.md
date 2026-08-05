@@ -110,6 +110,17 @@ but do not broaden current API scope.
   one known generator gap, zero false-ready results, zero external numeric-
   eligible rows, and an executable residual-PCA lane while explicitly
   withholding recovery, coverage, diagnostic-sensitivity, and release claims.
+- `target-scale-sparse-stress-pilot-0.2.3.R`: draft.47 guarded executor for
+  the six already-prespecified executable `target_sparse` covering-grid cells.
+  It measures cell time and R heap high-water proxies, binds runtime and
+  artifact identity, refuses overwrite, and keeps one-replicate capacity
+  feasibility distinct from the declared five-replicate pilot.
+- `target-scale-sparse-stress-pilot-record-0.2.3.md`: hashed draft.47 record
+  of the authoritative six-cell v3 run. It records zero unexpected failures,
+  zero false-ready results, exact fail-closed disconnected controls, one
+  inference-ready PCM-MML review cell, a blocked mixed-adversity GPCM-MML cell,
+  and a residual-PCA computability warning without freezing a threshold or
+  claiming FACETS-scale capacity parity.
 - `gpcm-isolated-attribution-pilot-0.2.3.R`: draft.42 repository-only
   one-axis attribution manifest and paired runner. It changes one of 11 axes
   around a fixed GPCM reference, sends each retained dataset through GPCM-JML,
