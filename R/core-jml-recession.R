@@ -420,6 +420,7 @@ mfrmr_jml_recession_target_lp <- function(lp_base,
       positive_margin = NA_real_,
       strict_rows = NA_integer_,
       direction = rep(NA_real_, n_parameters),
+      lp_calls = 1L,
       reason = "linear_program_capacity_failed"
     ))
   }
@@ -436,6 +437,7 @@ mfrmr_jml_recession_target_lp <- function(lp_base,
       positive_margin = 0,
       strict_rows = 0L,
       direction = rep(0, n_parameters),
+      lp_calls = 1L,
       reason = "no_target_recession_direction"
     ))
   }
@@ -469,6 +471,7 @@ mfrmr_jml_recession_target_lp <- function(lp_base,
       positive_margin = NA_real_,
       strict_rows = NA_integer_,
       direction = rep(NA_real_, n_parameters),
+      lp_calls = 2L,
       reason = "linear_program_strictness_failed"
     ))
   }
@@ -499,6 +502,7 @@ mfrmr_jml_recession_target_lp <- function(lp_base,
     positive_margin = positive_margin,
     strict_rows = as.integer(strict_rows),
     direction = direction,
+    lp_calls = 2L,
     reason = if (isTRUE(certified)) {
       "certified_additive_recession_direction"
     } else {
@@ -526,6 +530,8 @@ audit_mfrm_jml_additive_recession <- function(prep,
                                                max_additive_coordinates = 750L,
                                                max_target_directions = 200L,
                                                lp_timeout = 2L,
+                                               cone_objective_tolerance = 1e-10,
+                                               cone_certificate_tolerance = 1e-7,
                                                lp_representation = c(
                                                  "sparse_triplet",
                                                  "dense_reference"
@@ -542,6 +548,25 @@ audit_mfrm_jml_additive_recession <- function(prep,
   empty_targets <- mfrmr_jml_recession_empty_target_table()
   empty_certificates <- mfrmr_jml_recession_empty_certificate_table()
   empty_loadings <- mfrmr_jml_recession_empty_loading_table()
+  prescreen <- list(
+    contract_version = "mfrmr-jml-global-cone-prescreen-v1",
+    requested = isTRUE(screen_global_cone),
+    scope = if (joint_scope) {
+      "joint_person_structural"
+    } else {
+      "structural_fixed_person"
+    },
+    state = if (isTRUE(screen_global_cone)) "not_reached" else "not_requested",
+    evaluated = FALSE,
+    cone_certified = NA,
+    target_enumeration_skipped = FALSE,
+    cone_lp_calls = 0L,
+    target_directions_evaluated = 0L,
+    target_lp_calls = 0L,
+    total_lp_calls = 0L,
+    objective_tolerance = as.numeric(cone_objective_tolerance),
+    certificate_tolerance = as.numeric(cone_certificate_tolerance)
+  )
 
   finish <- function(state, complete, detail,
                      target_status = empty_targets,
@@ -550,6 +575,10 @@ audit_mfrm_jml_additive_recession <- function(prep,
                      dimensions = data.frame(),
                      cone_certificate = empty_certificates,
                      cone_loadings = empty_loadings) {
+    prescreen_out <- prescreen
+    prescreen_out$total_lp_calls <- as.integer(
+      prescreen_out$cone_lp_calls + prescreen_out$target_lp_calls
+    )
     list(
       contract_version = mfrmr_boundary_contract_version(),
       method = method,
@@ -567,6 +596,7 @@ audit_mfrm_jml_additive_recession <- function(prep,
       cone_direction_loadings = cone_loadings,
       direction_loadings = loadings,
       dimensions = dimensions,
+      prescreen = prescreen_out,
       detail = detail,
       limitations = if (joint_scope) {
         paste(
@@ -588,12 +618,14 @@ audit_mfrm_jml_additive_recession <- function(prep,
   }
 
   if (!identical(method, "JML")) {
+    prescreen$state <- "not_applicable_mml"
     return(finish(
       "not_applicable_mml", TRUE,
       "Additive fixed-effect recession certification is scoped to JML."
     ))
   }
   if (!requireNamespace("lpSolve", quietly = TRUE)) {
+    prescreen$state <- "not_evaluated_dependency"
     return(finish(
       "not_evaluated_dependency", FALSE,
       "Package 'lpSolve' is required for the bounded internal certificate."
@@ -612,6 +644,7 @@ audit_mfrm_jml_additive_recession <- function(prep,
     error = function(e) e
   )
   if (inherits(adjacent, "error")) {
+    prescreen$state <- "not_evaluated_design"
     return(finish(
       "not_evaluated_design", FALSE,
       paste0("Adjacent design construction failed: ", conditionMessage(adjacent))
@@ -632,6 +665,7 @@ audit_mfrm_jml_additive_recession <- function(prep,
     error = function(e) e
   )
   if (inherits(target_system, "error")) {
+    prescreen$state <- "not_evaluated_mapping"
     return(finish(
       "not_evaluated_mapping", FALSE,
       paste0("Expanded target mapping failed: ", conditionMessage(target_system))
@@ -648,6 +682,7 @@ audit_mfrm_jml_additive_recession <- function(prep,
     rownames(targets) <- NULL
   }
   if (length(structural_columns) == 0L) {
+    prescreen$state <- "not_needed_no_free_coordinates"
     targets$PositiveRecession <- FALSE
     targets$NegativeRecession <- FALSE
     targets$CandidateStatus <- "fixed"
@@ -688,6 +723,7 @@ audit_mfrm_jml_additive_recession <- function(prep,
   }
   if (anyNA(structural_optimizer_index) ||
       anyDuplicated(structural_optimizer_index)) {
+    prescreen$state <- "not_evaluated_mapping"
     return(finish(
       "not_evaluated_mapping", FALSE,
       "Audited optimizer-coordinate mapping was incomplete or duplicated."
@@ -704,6 +740,7 @@ audit_mfrm_jml_additive_recession <- function(prep,
     error = function(e) e
   )
   if (inherits(contrast, "error")) {
+    prescreen$state <- "not_evaluated_contrast"
     return(finish(
       "not_evaluated_contrast", FALSE,
       paste0("Observed-category contrast construction failed: ",
@@ -715,6 +752,7 @@ audit_mfrm_jml_additive_recession <- function(prep,
     , structural_optimizer_index, drop = FALSE
   ]
   if (nrow(targets) != nrow(target_expansion)) {
+    prescreen$state <- "not_evaluated_mapping"
     return(finish(
       "not_evaluated_mapping", FALSE,
       "Expanded target metadata and Jacobian rows did not align."
@@ -773,6 +811,7 @@ audit_mfrm_jml_additive_recession <- function(prep,
       additive_coordinates > as.integer(max_additive_coordinates) ||
       (!joint_scope &&
        target_directions > as.integer(max_target_directions))) {
+    prescreen$state <- "not_evaluated_size_limit"
     targets$PositiveRecession <- NA
     targets$NegativeRecession <- NA
     targets$CandidateStatus <- ifelse(
@@ -808,14 +847,23 @@ audit_mfrm_jml_additive_recession <- function(prep,
   cone_certificate <- empty_certificates
   cone_loadings <- empty_loadings
   cone_certified <- FALSE
-  if (joint_scope && isTRUE(screen_global_cone)) {
+  if (isTRUE(screen_global_cone)) {
     cone_solved <- mfrmr_jml_recession_target_lp(
       lp_base = lp_base,
       target = as.numeric(Matrix::colSums(contrast)),
+      objective_tolerance = as.numeric(cone_objective_tolerance),
+      certificate_tolerance = as.numeric(cone_certificate_tolerance),
       timeout = lp_timeout
     )
+    prescreen$evaluated <- isTRUE(cone_solved$evaluated)
+    prescreen$cone_certified <- isTRUE(cone_solved$certified)
+    prescreen$cone_lp_calls <- as.integer(cone_solved$lp_calls %||% 0L)
     cone_certificate <- data.frame(
-      ParameterId = "__joint_additive_cone__",
+      ParameterId = if (joint_scope) {
+        "__joint_additive_cone__"
+      } else {
+        "__structural_additive_cone__"
+      },
       RequestedDirection = "likelihood_improving",
       SolverStatus = as.integer(cone_solved$solver_status),
       TargetCapacity = as.numeric(cone_solved$target_capacity),
@@ -832,7 +880,11 @@ audit_mfrm_jml_additive_recession <- function(prep,
       keep <- which(abs(cone_solved$direction) > 1e-9)
       if (length(keep) > 0L) {
         cone_loadings <- data.frame(
-          ParameterId = "__joint_additive_cone__",
+          ParameterId = if (joint_scope) {
+            "__joint_additive_cone__"
+          } else {
+            "__structural_additive_cone__"
+          },
           RequestedDirection = "likelihood_improving",
           OptimizerIndex = structural_optimizer_index[keep],
           Coordinate = structural_map$Coordinate[keep],
@@ -842,6 +894,7 @@ audit_mfrm_jml_additive_recession <- function(prep,
       }
     }
     if (!isTRUE(cone_solved$evaluated)) {
+      prescreen$state <- "not_evaluated_solver"
       targets$PositiveRecession <- ifelse(free_target, NA, FALSE)
       targets$NegativeRecession <- ifelse(free_target, NA, FALSE)
       targets$CandidateStatus <- ifelse(
@@ -863,6 +916,8 @@ audit_mfrm_jml_additive_recession <- function(prep,
       ))
     }
     if (!cone_certified) {
+      prescreen$state <- "negative_cone_enumeration_skipped"
+      prescreen$target_enumeration_skipped <- TRUE
       targets$PositiveRecession <- FALSE
       targets$NegativeRecession <- FALSE
       targets$CandidateStatus <- ifelse(
@@ -876,17 +931,27 @@ audit_mfrm_jml_additive_recession <- function(prep,
       )
       return(finish(
         "none_certified", !identical(model, "GPCM"),
-        paste0(
-          "No joint additive recession direction was certified for ",
-          sum(free_target), " selected free expanded targets."
-        ),
+        if (joint_scope) {
+          paste0(
+            "No joint additive recession direction was certified for ",
+            sum(free_target), " selected free expanded targets."
+          )
+        } else {
+          paste0(
+            "No additive structural recession direction was certified for ",
+            sum(free_target),
+            " free expanded targets with Person coordinates fixed."
+          )
+        },
         target_status = targets,
         dimensions = dimensions,
         cone_certificate = cone_certificate,
         cone_loadings = cone_loadings
       ))
     }
+    prescreen$state <- "positive_cone_target_enumeration"
     if (target_directions > as.integer(max_target_directions)) {
+      prescreen$state <- "positive_cone_target_limit"
       targets$PositiveRecession <- ifelse(free_target, NA, FALSE)
       targets$NegativeRecession <- ifelse(free_target, NA, FALSE)
       targets$CandidateStatus <- ifelse(
@@ -931,6 +996,12 @@ audit_mfrm_jml_additive_recession <- function(prep,
         lp_base = lp_base,
         target = signed_vector,
         timeout = lp_timeout
+      )
+      prescreen$target_directions_evaluated <- as.integer(
+        prescreen$target_directions_evaluated + 1L
+      )
+      prescreen$target_lp_calls <- as.integer(
+        prescreen$target_lp_calls + (solved$lp_calls %||% 0L)
       )
       if (identical(requested, "positive")) {
         evaluated_positive[target_index] <- isTRUE(solved$evaluated)
@@ -1058,7 +1129,9 @@ audit_mfrm_jml_additive_recession <- function(prep,
 }
 
 audit_mfrm_jml_structural_recession <- function(prep, idx, config, sizes,
-                                                 params, ...) {
+                                                 params,
+                                                 screen_global_cone = TRUE,
+                                                 ...) {
   audit_mfrm_jml_additive_recession(
     prep = prep,
     idx = idx,
@@ -1066,7 +1139,7 @@ audit_mfrm_jml_structural_recession <- function(prep, idx, config, sizes,
     sizes = sizes,
     params = params,
     coordinate_scope = "structural_fixed_person",
-    screen_global_cone = FALSE,
+    screen_global_cone = screen_global_cone,
     ...
   )
 }

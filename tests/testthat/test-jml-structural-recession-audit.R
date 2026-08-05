@@ -91,6 +91,33 @@ finite_grid_recession_oracle <- function(contrast, target, tolerance = 1e-10) {
   )
 }
 
+test_that("the cone exclusion tolerance cannot hide a near-boundary target", {
+  skip_if_not_installed("lpSolve")
+  contrast <- Matrix::sparseMatrix(
+    i = 1L, j = 1L, x = 5e-7, dims = c(1L, 1L)
+  )
+  lp_base <- mfrmr:::mfrmr_jml_recession_lp_base(contrast)
+
+  target <- mfrmr:::mfrmr_jml_recession_target_lp(
+    lp_base = lp_base, target = 1
+  )
+  unsafe_default_cone <- mfrmr:::mfrmr_jml_recession_target_lp(
+    lp_base = lp_base, target = as.numeric(Matrix::colSums(contrast))
+  )
+  guarded_cone <- mfrmr:::mfrmr_jml_recession_target_lp(
+    lp_base = lp_base,
+    target = as.numeric(Matrix::colSums(contrast)),
+    objective_tolerance = 1e-10,
+    certificate_tolerance = 1e-7
+  )
+
+  expect_true(isTRUE(target$certified))
+  expect_false(isTRUE(unsafe_default_cone$certified))
+  expect_true(isTRUE(guarded_cone$certified))
+  expect_gt(guarded_cone$positive_margin, 1e-7)
+  expect_gt(guarded_cone$strict_rows, 0L)
+})
+
 test_that("sum-zero Rater separation receives an exact structural certificate", {
   skip_if_not_installed("lpSolve")
   fit <- fit_structural_recession_rater(
@@ -121,8 +148,55 @@ test_that("sum-zero Rater separation receives an exact structural certificate", 
     audit$dimensions$SparseLPNonzeros,
     audit$dimensions$DenseReferenceElements
   )
+  expect_identical(
+    audit$prescreen$contract_version,
+    "mfrmr-jml-global-cone-prescreen-v1"
+  )
+  expect_true(isTRUE(audit$prescreen$requested))
+  expect_identical(
+    audit$prescreen$state,
+    "positive_cone_target_enumeration"
+  )
+  expect_true(isTRUE(audit$prescreen$evaluated))
+  expect_true(isTRUE(audit$prescreen$cone_certified))
+  expect_false(isTRUE(audit$prescreen$target_enumeration_skipped))
+  expect_identical(
+    audit$prescreen$target_directions_evaluated,
+    audit$dimensions$TargetDirections
+  )
+  expect_gt(audit$prescreen$cone_lp_calls, 0L)
+  expect_gte(
+    audit$prescreen$target_lp_calls,
+    audit$prescreen$target_directions_evaluated
+  )
+  expect_identical(
+    audit$prescreen$total_lp_calls,
+    audit$prescreen$cone_lp_calls + audit$prescreen$target_lp_calls
+  )
 
   problem <- structural_recession_problem(fit)
+  unscreened <- mfrmr:::audit_mfrm_jml_structural_recession(
+    prep = fit$prep,
+    idx = problem$idx,
+    config = problem$config,
+    sizes = problem$sizes,
+    params = problem$params,
+    screen_global_cone = FALSE
+  )
+  expect_identical(unscreened$state, audit$state)
+  expect_identical(unscreened$complete, audit$complete)
+  expect_identical(unscreened$target_status, audit$target_status)
+  expect_identical(
+    unscreened$certificates$Certified,
+    audit$certificates$Certified
+  )
+  expect_identical(unscreened$prescreen$state, "not_requested")
+  expect_identical(unscreened$prescreen$cone_lp_calls, 0L)
+  expect_identical(
+    unscreened$prescreen$target_directions_evaluated,
+    unscreened$dimensions$TargetDirections
+  )
+
   dense_reference <- mfrmr:::audit_mfrm_jml_structural_recession(
     prep = fit$prep,
     idx = problem$idx,
@@ -195,6 +269,36 @@ test_that("a response-constant level alone does not prove structural recession",
   expect_true(all(
     fit$prep$data$Score[as.character(fit$prep$data$Rater) == "R1"] == 0L
   ))
+
+  problem <- structural_recession_problem(fit)
+  unscreened <- mfrmr:::audit_mfrm_jml_structural_recession(
+    prep = fit$prep,
+    idx = problem$idx,
+    config = problem$config,
+    sizes = problem$sizes,
+    params = problem$params,
+    screen_global_cone = FALSE
+  )
+  expect_identical(unscreened$state, audit$state)
+  expect_identical(unscreened$complete, audit$complete)
+  expect_identical(unscreened$target_status, audit$target_status)
+  expect_true(isTRUE(audit$prescreen$requested))
+  expect_identical(
+    audit$prescreen$state,
+    "negative_cone_enumeration_skipped"
+  )
+  expect_true(isTRUE(audit$prescreen$evaluated))
+  expect_false(isTRUE(audit$prescreen$cone_certified))
+  expect_true(isTRUE(audit$prescreen$target_enumeration_skipped))
+  expect_gt(nrow(unscreened$certificates), 0L)
+  expect_identical(nrow(audit$certificates), 0L)
+  expect_identical(audit$prescreen$target_directions_evaluated, 0L)
+  expect_identical(audit$prescreen$target_lp_calls, 0L)
+  expect_gt(audit$prescreen$cone_lp_calls, 0L)
+  expect_lt(
+    audit$prescreen$total_lp_calls,
+    unscreened$prescreen$total_lp_calls
+  )
 })
 
 test_that("structural contrasts use retained positive-weight observations", {
@@ -424,4 +528,55 @@ test_that("bounded execution limits fail closed without inventing a certificate"
     audit$target_status$CandidateStatus == "not_evaluated_size_limit"
   ))
   expect_identical(nrow(audit$certificates), 0L)
+  expect_identical(audit$prescreen$state, "not_evaluated_size_limit")
+  expect_identical(audit$prescreen$total_lp_calls, 0L)
+})
+
+test_that("a failed structural cone solve cannot become a finite result", {
+  skip_if_not_installed("lpSolve")
+  fit <- fit_structural_recession_rater(
+    make_structural_recession_rater_data(FALSE)
+  )
+  problem <- structural_recession_problem(fit)
+
+  testthat::local_mocked_bindings(
+    mfrmr_jml_recession_target_lp = function(lp_base, target, ...) {
+      list(
+        evaluated = FALSE,
+        certified = FALSE,
+        solver_status = 5L,
+        target_capacity = NA_real_,
+        target_change = NA_real_,
+        minimum_margin = NA_real_,
+        positive_margin = NA_real_,
+        strict_rows = NA_integer_,
+        direction = rep(NA_real_, length(target)),
+        lp_calls = 1L,
+        reason = "forced_solver_failure"
+      )
+    },
+    .package = "mfrmr"
+  )
+
+  audit <- mfrmr:::audit_mfrm_jml_structural_recession(
+    prep = fit$prep,
+    idx = problem$idx,
+    config = problem$config,
+    sizes = problem$sizes,
+    params = problem$params
+  )
+
+  expect_identical(audit$state, "not_evaluated_solver")
+  expect_false(isTRUE(audit$complete))
+  expect_identical(audit$prescreen$state, "not_evaluated_solver")
+  expect_false(isTRUE(audit$prescreen$evaluated))
+  expect_identical(audit$prescreen$cone_lp_calls, 1L)
+  expect_identical(audit$prescreen$target_lp_calls, 0L)
+  expect_true(any(is.na(audit$target_status$PositiveRecession)))
+  expect_true(any(
+    audit$target_status$CandidateStatus == "not_evaluated_solver"
+  ))
+  expect_false(any(
+    audit$target_status$CandidateStatus == "finite_in_audited_subspace"
+  ))
 })
