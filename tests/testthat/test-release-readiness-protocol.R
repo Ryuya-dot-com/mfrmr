@@ -58,7 +58,7 @@ test_that("public roadmap and current NEWS exclude internal release operations",
   expect_true(any(grepl("inst/validation", ignore, fixed = TRUE)))
 })
 
-test_that("internal draft.43 GPCM stress work remains explicit and private", {
+test_that("internal draft.44 GPCM stress work remains explicit and private", {
   pkg_root <- normalizePath(testthat::test_path("..", ".."), mustWork = TRUE)
   internal_path <- file.path(
     pkg_root, "inst", "validation", "internal-roadmap-0.2.3.md"
@@ -92,10 +92,15 @@ test_that("internal draft.43 GPCM stress work remains explicit and private", {
     pkg_root, "inst", "validation",
     "gpcm-attribution-replicated-feasibility-record-0.2.3.md"
   )
+  checkpoint_record_path <- file.path(
+    pkg_root, "inst", "validation",
+    "gpcm-attribution-checkpoint-resume-record-0.2.3.md"
+  )
   skip_if_not(all(file.exists(c(
     internal_path, gate_path, checklist_path, estimator_plan_path,
     contract_path, fixture_path, gpcm_smoke_record_path,
-    attribution_smoke_record_path, attribution_replicated_record_path
+    attribution_smoke_record_path, attribution_replicated_record_path,
+    checkpoint_record_path
   ))))
 
   internal <- paste(readLines(internal_path, warn = FALSE, encoding = "UTF-8"),
@@ -119,6 +124,10 @@ test_that("internal draft.43 GPCM stress work remains explicit and private", {
   attribution_replicated_record <- paste(
     readLines(attribution_replicated_record_path, warn = FALSE,
               encoding = "UTF-8"),
+    collapse = "\n"
+  )
+  checkpoint_record <- paste(
+    readLines(checkpoint_record_path, warn = FALSE, encoding = "UTF-8"),
     collapse = "\n"
   )
 
@@ -171,13 +180,15 @@ test_that("internal draft.43 GPCM stress work remains explicit and private", {
   expect_match(internal, "partitioned\\s+exhaustively")
   expect_match(internal, "Estimator ecosystem and maturity boundary", fixed = TRUE)
   expect_match(internal, "method = \"HRM\"", fixed = TRUE)
-  expect_match(gate, "Specification ID | `0.2.3-draft.43`", fixed = TRUE)
+  expect_match(gate, "Specification ID | `0.2.3-draft.44`", fixed = TRUE)
   expect_match(internal, "Draft.40 adds the first bounded joint nonlinear GPCM path family", fixed = TRUE)
   expect_match(internal, "Draft.41 makes the prespecified GPCM stress envelope executable", fixed = TRUE)
   expect_match(internal, "Draft.42 adds the isolated-attribution layer", fixed = TRUE)
   expect_match(internal,
                "Draft.43 adds a guarded replicated-feasibility layer",
                fixed = TRUE)
+  expect_match(internal,
+               "Draft.44 removes the all-or-nothing writer", fixed = TRUE)
   expect_match(internal, "70 pilot cells covering all 1,330", fixed = TRUE)
   expect_match(gpcm_smoke_record, "zero false-ready rows", fixed = TRUE)
   expect_match(
@@ -205,8 +216,22 @@ test_that("internal draft.43 GPCM stress work remains explicit and private", {
     "88EBD28817AD1924A9AE235F56301264D5EC47FD06A9416D6A4BA55C5C59DFA6",
     fixed = TRUE
   )
-  expect_match(gate, "Pre-fix EAP evidence is invalidated", fixed = TRUE)
+  expect_match(
+    gate,
+    "Pre-fix Person and EAP-derived diagnostic evidence is invalidated",
+    fixed = TRUE
+  )
   expect_match(gate, "two-replicate", fixed = TRUE)
+  expect_match(checkpoint_record,
+               "mfrmr-gpcm-repilot-checkpoint-v1", fixed = TRUE)
+  expect_match(checkpoint_record,
+               "real reference data cell", fixed = TRUE)
+  expect_match(
+    checkpoint_record,
+    "f2b2e9db19a93ba4884cc9b669784b382799d1c876acc53920ffd0a446305d10",
+    fixed = TRUE
+  )
+  expect_match(gate, "complete four-route data cell", fixed = TRUE)
   expect_match(internal, "GPCM discrepancy decomposition and stress envelope", fixed = TRUE)
   expect_match(internal, "different_slope_estimand", fixed = TRUE)
   expect_match(internal, "Table 7 discrimination is never a", fixed = TRUE)
@@ -236,6 +261,7 @@ test_that("internal draft.43 GPCM stress work remains explicit and private", {
     "gpcm_stress_covering_grid",
     "gpcm_isolated_attribution_pilot",
     "gpcm_attribution_replicated_feasibility",
+    "gpcm_attribution_checkpoint_resume",
     "sparse_estimability_performance",
     "metric_specific_comparison_eligibility",
     "jml_estimator_maturity",
@@ -1888,6 +1914,10 @@ test_that("GPCM replicated pilot prespecifies tiers and uncertainty summaries", 
                    "pilot_required_not_frozen")
   expect_false(dry$confirmation_authorized)
   expect_null(dry$run)
+  expect_identical(nchar(dry$execution_identity$ExecutionSHA256), 64L)
+  expect_identical(dry$registry$Maxit, 120L)
+  expect_identical(dry$registry$QuadPoints, 7L)
+  expect_true(dry$registry$RunPCA)
   expect_error(
     env$mfrmr_run_gpcm_attribution_replicated_pilot(
       "core", reps = 1L, progress = FALSE
@@ -1931,4 +1961,169 @@ test_that("GPCM replicated pilot prespecifies tiers and uncertainty summaries", 
 
   manifest <- dry$registry
   expect_identical(nchar(manifest$ManifestHash), 64L)
+})
+
+test_that("GPCM replicated checkpoints resume atomically and fail closed", {
+  pkg_root <- normalizePath(test_path("..", ".."), winslash = "/",
+                            mustWork = TRUE)
+  runner <- file.path(
+    pkg_root, "inst", "validation",
+    "gpcm-attribution-replicated-pilot-0.2.3.R"
+  )
+  env <- new.env(parent = globalenv())
+  source(runner, local = env)
+  env$mfrmr_gpcm_repilot_require_runner()
+
+  calls <- 0L
+  env$mfrmr_gpcm_attribution_run_one <- function(
+      row, run_pca = FALSE, maxit = NULL, quad_points = 7L) {
+    calls <<- calls + 1L
+    out <- env$mfrmr_gpcm_attribution_empty_result(row, "fitted")
+    out$Executed <- TRUE
+    out$GenerationSucceeded <- TRUE
+    out$FitSucceeded <- TRUE
+    out$RuntimeSeconds <- 1
+    out$RetainedDataHash <- paste0("retained-", row$DataCellId)
+    out$FitReadiness <- "ready"
+    out$InferenceReady <- TRUE
+    out$PersonN <- 1L
+    out$PersonRMSE <- as.numeric(row$Replicate) / 10
+    out$StepContrastN <- 1L
+    out$PCAState <- if (isTRUE(run_pca)) {
+      "available_exploratory"
+    } else {
+      "not_run"
+    }
+    out
+  }
+
+  resumed_dir <- tempfile("gpcm-repilot-resume-")
+  fresh_dir <- tempfile("gpcm-repilot-fresh-")
+  dir.create(resumed_dir)
+  dir.create(fresh_dir)
+  on.exit(unlink(c(resumed_dir, fresh_dir), recursive = TRUE, force = TRUE),
+          add = TRUE)
+
+  expect_error(
+    env$mfrmr_run_gpcm_attribution_replicated_pilot(
+      "feasibility", reps = 1L, maxit = 11L, quad_points = 3L,
+      run_pca = FALSE, progress = FALSE, output_dir = resumed_dir,
+      interrupt_after_cells = 1L
+    ),
+    class = "mfrmr_gpcm_repilot_interruption"
+  )
+  checkpoint_dir <- file.path(resumed_dir, "checkpoints")
+  expect_identical(length(list.files(checkpoint_dir, pattern = "[.]rds$")),
+                   1L)
+  expect_identical(calls, 4L)
+  expect_error(
+    env$mfrmr_run_gpcm_attribution_replicated_pilot(
+      "feasibility", reps = 1L, maxit = 11L, quad_points = 3L,
+      run_pca = FALSE, progress = FALSE, output_dir = resumed_dir
+    ),
+    "require `resume = TRUE`"
+  )
+  unexpected <- file.path(checkpoint_dir, "unexpected.rds")
+  saveRDS(list(not = "a checkpoint"), unexpected)
+  expect_error(
+    env$mfrmr_run_gpcm_attribution_replicated_pilot(
+      "feasibility", reps = 1L, maxit = 11L, quad_points = 3L,
+      run_pca = FALSE, progress = FALSE, output_dir = resumed_dir,
+      resume = TRUE
+    ),
+    "unexpected RDS files"
+  )
+  unlink(unexpected)
+  writeLines("orphan temporary payload",
+             file.path(checkpoint_dir, ".orphan.partial"))
+
+  resumed <- env$mfrmr_run_gpcm_attribution_replicated_pilot(
+    "feasibility", reps = 1L, maxit = 11L, quad_points = 3L,
+    run_pca = FALSE, progress = FALSE, output_dir = resumed_dir,
+    resume = TRUE
+  )
+  expect_identical(calls, 40L)
+  expect_identical(resumed$checkpoint_summary$NewCells, 9L)
+  expect_identical(resumed$checkpoint_summary$ResumedCells, 1L)
+  expect_identical(resumed$checkpoint_summary$TotalCells, 10L)
+  expect_identical(resumed$registry$Maxit, 11L)
+  expect_identical(resumed$registry$QuadPoints, 3L)
+  expect_false(resumed$registry$RunPCA)
+  expect_identical(nrow(resumed$checkpoint_ledger), 10L)
+  expect_identical(sum(
+    resumed$checkpoint_ledger$Source == "resumed_checkpoint"
+  ), 1L)
+  expect_true(all(resumed$checkpoint_ledger$CompleteRouteSet))
+  expect_true(all(nchar(resumed$checkpoint_ledger$CheckpointSHA256) == 64L))
+  expect_true(all(c(
+    "execution-identity.csv", "package-identity.csv",
+    "runner-identity.csv", "capability-manifest.csv",
+    "checkpoint-ledger.csv", "run-complete.rds"
+  ) %in% list.files(resumed_dir)))
+  expect_silent(env$mfrmr_gpcm_repilot_validate_completion(
+    resumed_dir, resumed$execution_identity$ExecutionSHA256
+  ))
+  expect_identical(nchar(resumed$execution_identity$ExecutionSHA256), 64L)
+  expect_identical(row.names(resumed$runner_identity), as.character(1:3))
+  expect_false(any(grepl(pkg_root, unlist(resumed$runner_identity),
+                         fixed = TRUE)))
+  expect_true(all(c(
+    "R", "mfrmr", "digest", "Matrix", "lpSolve", "psych"
+  ) %in% resumed$capability_manifest$Capability))
+  package_capabilities <- resumed$capability_manifest$Capability %in%
+    c("mfrmr", "digest", "Matrix", "lpSolve", "psych")
+  expect_true(all(nchar(
+    resumed$capability_manifest$RuntimeSHA256[package_capabilities]
+  ) == 64L))
+
+  fresh <- env$mfrmr_run_gpcm_attribution_replicated_pilot(
+    "feasibility", reps = 1L, maxit = 11L, quad_points = 3L,
+    run_pca = FALSE, progress = FALSE, output_dir = fresh_dir
+  )
+  expect_identical(calls, 80L)
+  expect_identical(resumed$execution_identity$ExecutionSHA256,
+                   fresh$execution_identity$ExecutionSHA256)
+  expect_equal(resumed$run$results, fresh$run$results,
+               ignore_attr = TRUE)
+  expect_equal(resumed$run$contrasts, fresh$run$contrasts,
+               ignore_attr = TRUE)
+  expect_equal(resumed$analysis, fresh$analysis,
+               ignore_attr = TRUE)
+
+  marker_path <- file.path(resumed_dir, "run-complete.rds")
+  marker <- readRDS(marker_path)
+  unsafe_marker <- marker
+  unsafe_marker$artifacts$File[1L] <- "../outside.csv"
+  unsafe_marker$artifact_inventory_sha256 <-
+    env$mfrmr_gpcm_repilot_hash_object(unsafe_marker$artifacts)
+  saveRDS(unsafe_marker, marker_path)
+  expect_error(
+    env$mfrmr_gpcm_repilot_validate_completion(
+      resumed_dir, resumed$execution_identity$ExecutionSHA256
+    ),
+    "unsafe path"
+  )
+  saveRDS(marker, marker_path)
+
+  expect_error(
+    env$mfrmr_run_gpcm_attribution_replicated_pilot(
+      "feasibility", reps = 1L, maxit = 12L, quad_points = 3L,
+      run_pca = FALSE, progress = FALSE, output_dir = resumed_dir,
+      resume = TRUE
+    ),
+    "execution identity mismatch"
+  )
+
+  first_checkpoint <- list.files(
+    checkpoint_dir, pattern = "[.]rds$", full.names = TRUE
+  )[1L]
+  writeLines("not an RDS checkpoint", first_checkpoint)
+  expect_error(
+    env$mfrmr_run_gpcm_attribution_replicated_pilot(
+      "feasibility", reps = 1L, maxit = 11L, quad_points = 3L,
+      run_pca = FALSE, progress = FALSE, output_dir = resumed_dir,
+      resume = TRUE
+    ),
+    "artifact hash mismatch"
+  )
 })
