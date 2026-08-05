@@ -1,9 +1,9 @@
 # Repository-only execution-phase profile for mfrmr 0.2.3.
 #
 # This pilot instruments a fixed subset of the Draft49 JML bottleneck grid.
-# Schema v5 also compares the guarded structural global-cone prescreen with
-# the unscreened target-by-target audit on the same fitted object and records
-# the stricter cone-exclusion tolerances.
+# Schema v6 retains the guarded structural equivalence comparison and exposes
+# joint cone-screen versus target-enumeration work with fail-closed route
+# invariants.
 # Elapsed time is diagnostic-only: it does not enter optimization, readiness,
 # recovery eligibility, or any release decision. The pilot estimates neither
 # operating characteristics nor a frozen runtime envelope.
@@ -130,7 +130,7 @@ mfrmr_jml_phase_identity <- function(registry, maxit, quad_points, reltol) {
     contract[, setdiff(names(contract), "ContractSHA256"), drop = FALSE]
   )
   execution <- data.frame(
-    Schema = "mfrmr-jml-phase-profile-v5",
+    Schema = "mfrmr-jml-phase-profile-v6",
     DataCells = length(unique(registry$DataCellId)),
     Routes = nrow(registry),
     Maxit = as.integer(maxit), QuadPoints = as.integer(quad_points),
@@ -249,6 +249,20 @@ mfrmr_jml_phase_run_route <- function(row, generated, maxit,
     JointLPConstraints = NA_integer_, JointSparseLPNonzeros = NA_real_,
     JointConeCertificateRows = NA_integer_,
     JointTargetCertificateRows = NA_integer_,
+    JointTargetCertifiedDirections = NA_integer_,
+    JointPrescreenContract = NA_character_,
+    JointPrescreenState = NA_character_,
+    JointPrescreenEvaluated = NA,
+    JointConeCertified = NA,
+    JointEnumerationSkipped = NA,
+    JointConeLPCalls = NA_integer_,
+    JointConeObjectiveTolerance = NA_real_,
+    JointConeCertificateTolerance = NA_real_,
+    JointTargetDirectionsEvaluated = NA_integer_,
+    JointTargetLPCalls = NA_integer_,
+    JointTotalLPCalls = NA_integer_,
+    JointTargetStatusSHA256 = NA_character_,
+    JointWorkContractValid = NA,
     SemanticResultSHA256 = NA_character_,
     OuterFitSeconds = outer_seconds, InstrumentedTotalSeconds = NA_real_,
     PhaseSumExcludingTotal = NA_real_, PhaseCoverageRatio = NA_real_,
@@ -449,12 +463,89 @@ mfrmr_jml_phase_run_route <- function(row, generated, maxit,
   base$JointSparseLPNonzeros <- as.numeric(mfrmr_jml_profile_take(
     joint_dimensions, "SparseLPNonzeros", NA_real_
   ))
-  base$JointConeCertificateRows <- nrow(as.data.frame(
+  joint_cone_certificate <- as.data.frame(
     joint$cone_certificate %||% data.frame(), stringsAsFactors = FALSE
-  ))
-  base$JointTargetCertificateRows <- nrow(as.data.frame(
+  )
+  joint_certificates <- as.data.frame(
     joint$certificates %||% data.frame(), stringsAsFactors = FALSE
-  ))
+  )
+  base$JointConeCertificateRows <- nrow(joint_cone_certificate)
+  base$JointTargetCertificateRows <- nrow(joint_certificates)
+  base$JointTargetCertifiedDirections <- if (
+    "Certified" %in% names(joint_certificates)
+  ) {
+    sum(joint_certificates$Certified, na.rm = TRUE)
+  } else {
+    0L
+  }
+  joint_prescreen <- joint$prescreen %||% list()
+  base$JointPrescreenContract <- as.character(
+    joint_prescreen$contract_version %||% NA_character_
+  )
+  base$JointPrescreenState <- as.character(
+    joint_prescreen$state %||% NA_character_
+  )
+  base$JointPrescreenEvaluated <- isTRUE(joint_prescreen$evaluated)
+  base$JointConeCertified <- if (is.na(
+    joint_prescreen$cone_certified %||% NA
+  )) NA else isTRUE(joint_prescreen$cone_certified)
+  base$JointEnumerationSkipped <- isTRUE(
+    joint_prescreen$target_enumeration_skipped
+  )
+  base$JointConeLPCalls <- as.integer(
+    joint_prescreen$cone_lp_calls %||% NA_integer_
+  )
+  base$JointConeObjectiveTolerance <- as.numeric(
+    joint_prescreen$objective_tolerance %||% NA_real_
+  )
+  base$JointConeCertificateTolerance <- as.numeric(
+    joint_prescreen$certificate_tolerance %||% NA_real_
+  )
+  base$JointTargetDirectionsEvaluated <- as.integer(
+    joint_prescreen$target_directions_evaluated %||% NA_integer_
+  )
+  base$JointTargetLPCalls <- as.integer(
+    joint_prescreen$target_lp_calls %||% NA_integer_
+  )
+  base$JointTotalLPCalls <- as.integer(
+    joint_prescreen$total_lp_calls %||% NA_integer_
+  )
+  base$JointTargetStatusSHA256 <-
+    mfrmr_jml_phase_structural_status_hash(joint)
+  if (identical(as.character(row$Method), "JML")) {
+    common_valid <- identical(
+      base$JointPrescreenContract,
+      "mfrmr-jml-global-cone-prescreen-v1"
+    ) && isTRUE(base$JointPrescreenEvaluated) &&
+      identical(base$JointConeCertificateRows, 1L) &&
+      is.finite(base$JointConeLPCalls) && base$JointConeLPCalls >= 1L &&
+      identical(
+        base$JointTotalLPCalls,
+        base$JointConeLPCalls + base$JointTargetLPCalls
+      )
+    branch_valid <- if (isTRUE(base$JointConeCertified)) {
+      identical(
+        base$JointPrescreenState, "positive_cone_target_enumeration"
+      ) && !isTRUE(base$JointEnumerationSkipped) &&
+        identical(
+          base$JointTargetDirectionsEvaluated,
+          base$JointTargetDirections
+        ) && identical(
+          base$JointTargetCertificateRows,
+          base$JointTargetDirectionsEvaluated
+        ) && base$JointTargetLPCalls >=
+          base$JointTargetDirectionsEvaluated
+    } else {
+      identical(
+        base$JointPrescreenState, "negative_cone_enumeration_skipped"
+      ) && isTRUE(base$JointEnumerationSkipped) &&
+        identical(base$JointTargetDirectionsEvaluated, 0L) &&
+        identical(base$JointTargetLPCalls, 0L) &&
+        identical(base$JointTargetCertificateRows, 0L)
+    }
+    base$JointWorkContractValid <- isTRUE(common_valid) &&
+      isTRUE(branch_valid)
+  }
   base$SemanticResultSHA256 <- mfrmr_jml_phase_semantic_hash(fit)
   base$InstrumentedTotalSeconds <- total
   base$PhaseSumExcludingTotal <- phase_sum
@@ -593,6 +684,8 @@ mfrmr_run_jml_phase_profile <- function(
       any(results$FalseReady) ||
       any(!results$StructuralClassificationEquivalent[
         results$Method == "JML"
+      ]) || any(!results$JointWorkContractValid[
+        results$Method == "JML"
       ])) {
     stop("Phase-profile completion or fail-closed invariant failed.",
          call. = FALSE)
@@ -614,7 +707,7 @@ mfrmr_run_jml_phase_profile <- function(
   }
   phase_summary <- mfrmr_jml_phase_summarize(phases)
   summary <- data.frame(
-    Schema = "mfrmr-jml-phase-profile-summary-v5",
+    Schema = "mfrmr-jml-phase-profile-summary-v6",
     DataCells = length(unique(results$DataCellId)), Routes = nrow(results),
     SuccessfulRoutes = sum(results$FitSucceeded),
     TimingContractRoutes = sum(results$TimingContractValid),
@@ -649,6 +742,35 @@ mfrmr_run_jml_phase_profile <- function(
       results$LegacyStructuralTargetLPCalls[results$Method == "JML"],
       na.rm = TRUE
     ),
+    JointWorkContractRoutes = sum(
+      results$JointWorkContractValid, na.rm = TRUE
+    ),
+    JointPositiveConeRoutes = sum(
+      results$Method == "JML" & results$JointConeCertified,
+      na.rm = TRUE
+    ),
+    JointNegativeConeRoutes = sum(
+      results$Method == "JML" & !results$JointConeCertified,
+      na.rm = TRUE
+    ),
+    JointEnumerationSkippedRoutes = sum(
+      results$Method == "JML" & results$JointEnumerationSkipped,
+      na.rm = TRUE
+    ),
+    JointConeLPCalls = sum(
+      results$JointConeLPCalls[results$Method == "JML"], na.rm = TRUE
+    ),
+    JointTargetDirectionsEvaluated = sum(
+      results$JointTargetDirectionsEvaluated[results$Method == "JML"],
+      na.rm = TRUE
+    ),
+    JointTargetLPCalls = sum(
+      results$JointTargetLPCalls[results$Method == "JML"], na.rm = TRUE
+    ),
+    JointCertifiedTargetDirections = sum(
+      results$JointTargetCertifiedDirections[results$Method == "JML"],
+      na.rm = TRUE
+    ),
     StatisticalOperatingCharacteristicsEstimated = FALSE,
     RuntimeCriteriaFrozen = FALSE, ConfirmationAuthorized = FALSE,
     EvidenceUse = "phase_decomposition_calibration_only",
@@ -681,7 +803,7 @@ mfrmr_run_jml_phase_profile <- function(
   saveRDS(utils::sessionInfo(), file.path(staging, "session-info.rds"))
   inventory <- mfrmr_target_scale_artifact_inventory(staging)
   completion <- list(
-    schema = "mfrmr-jml-phase-profile-completion-v5",
+    schema = "mfrmr-jml-phase-profile-completion-v6",
     execution_sha256 = identity$execution$ExecutionSHA256,
     artifacts = inventory,
     artifact_inventory_sha256 = mfrmr_gpcm_repilot_hash_object(inventory),

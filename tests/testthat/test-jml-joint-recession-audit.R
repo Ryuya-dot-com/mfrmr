@@ -128,6 +128,29 @@ test_that("joint Person-structural recession closes the separated-audit gap", {
   expect_true(isTRUE(joint$cone_certificate$Certified))
   expect_gte(joint$cone_certificate$MinimumContrastMargin, -1e-7)
   expect_gt(joint$cone_certificate$StrictContrastRows, 0L)
+  expect_identical(
+    joint$prescreen$contract_version,
+    "mfrmr-jml-global-cone-prescreen-v1"
+  )
+  expect_identical(
+    joint$prescreen$state,
+    "positive_cone_target_enumeration"
+  )
+  expect_true(isTRUE(joint$prescreen$evaluated))
+  expect_true(isTRUE(joint$prescreen$cone_certified))
+  expect_false(isTRUE(joint$prescreen$target_enumeration_skipped))
+  expect_identical(
+    joint$prescreen$target_directions_evaluated,
+    joint$dimensions$TargetDirections
+  )
+  expect_gte(
+    joint$prescreen$target_lp_calls,
+    joint$prescreen$target_directions_evaluated
+  )
+  expect_identical(
+    joint$prescreen$total_lp_calls,
+    joint$prescreen$cone_lp_calls + joint$prescreen$target_lp_calls
+  )
 
   targets <- joint$target_status
   expect_setequal(
@@ -250,6 +273,20 @@ test_that("global joint-cone screening stops cleanly when no ray exists", {
   expect_true(isTRUE(joint$complete))
   expect_false(isTRUE(joint$cone_certificate$Certified))
   expect_identical(nrow(joint$certificates), 0L)
+  expect_identical(
+    joint$prescreen$state,
+    "negative_cone_enumeration_skipped"
+  )
+  expect_true(isTRUE(joint$prescreen$evaluated))
+  expect_false(isTRUE(joint$prescreen$cone_certified))
+  expect_true(isTRUE(joint$prescreen$target_enumeration_skipped))
+  expect_gt(joint$prescreen$cone_lp_calls, 0L)
+  expect_identical(joint$prescreen$target_directions_evaluated, 0L)
+  expect_identical(joint$prescreen$target_lp_calls, 0L)
+  expect_identical(
+    joint$prescreen$total_lp_calls,
+    joint$prescreen$cone_lp_calls
+  )
   expect_true(all(
     joint$target_status$CandidateStatus %in%
       c("finite_in_audited_subspace", "fixed")
@@ -275,6 +312,8 @@ test_that("joint coordinate limits fail closed and MML is not reinterpreted", {
   expect_identical(limited$state, "not_evaluated_size_limit")
   expect_false(isTRUE(limited$complete))
   expect_identical(nrow(limited$cone_certificate), 0L)
+  expect_identical(limited$prescreen$state, "not_evaluated_size_limit")
+  expect_identical(limited$prescreen$total_lp_calls, 0L)
 
   target_limited <- mfrmr:::audit_mfrm_jml_joint_recession(
     prep = fit$prep,
@@ -288,6 +327,12 @@ test_that("joint coordinate limits fail closed and MML is not reinterpreted", {
   expect_identical(target_limited$state, "certified_recession")
   expect_false(isTRUE(target_limited$complete))
   expect_true(isTRUE(target_limited$cone_certificate$Certified))
+  expect_identical(
+    target_limited$prescreen$state,
+    "positive_cone_target_limit"
+  )
+  expect_gt(target_limited$prescreen$cone_lp_calls, 0L)
+  expect_identical(target_limited$prescreen$target_lp_calls, 0L)
   expect_true(any(
     target_limited$target_status$CandidateStatus ==
       "not_evaluated_size_limit"
@@ -307,4 +352,6 @@ test_that("joint coordinate limits fail closed and MML is not reinterpreted", {
   )
   expect_identical(mml$state, "not_applicable_mml")
   expect_true(isTRUE(mml$complete))
+  expect_identical(mml$prescreen$state, "not_applicable_mml")
+  expect_identical(mml$prescreen$total_lp_calls, 0L)
 })

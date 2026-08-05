@@ -830,13 +830,42 @@ anchor, retained-row, size-limit, MML, and injected solver-failure controls.
 Full results and identities are in
 `jml-structural-cone-prescreen-pilot-record-0.2.3.md`.
 
-The dominant selected phase is now the joint recession audit. Draft.52 must
-attribute its cone and target work separately, especially for R12, C12-E02,
-and forced-extreme positive cones, before testing shared design/contrast
-construction, reusable LP models, warm starts, or alternative solvers. RSM,
-bounded GPCM, target-scale positive-cone behavior, isolated-process memory,
-and replicated runtime remain outside the Draft.51 evidence. The optimizer-
-dispatch grid remains a separate numerical-readiness study.
+Draft.52 attributes the remaining joint recession work without changing the
+production audit. Phase schema v6 preserves every v5 semantic, readiness,
+numerical, boundary, optimizer, structural, and joint state across the fixed
+19 routes. Seven negative joint cones consume 13.53 seconds and no target LPs;
+five positive cones consume 48.99 seconds and trigger 346 target LP calls, but
+none certifies a selected target direction.
+
+A separate fixed-runtime refit of the three distinct positive-cone cells
+projects each stored cone through the full target map. All 43 nonzero cone
+coordinates and expanded-target projections are exactly ordinary free extreme
+Persons already typed `unbounded_low/high`; structural coordinates and all 118
+selected target projections are zero. The existing readiness aggregator
+correctly treats such a cone as confirmation of a propagated Person boundary,
+so this is computation and responsibility duplication rather than a detected
+false-readiness path. A diagnostic row-and-coordinate quotient that profiles
+those Persons out is negative in all three cells and takes 0.56 seconds versus
+30.16 seconds for the three original joint phases. These unequal one-run
+workloads freeze no performance rule.
+
+Draft.53 must not implement the quotient screen alone. A target-changing
+direction can be flat on every retained contrast and combine with an excluded
+Person ray that supplies strict improvement. The safe fast path must compose
+the sufficient-score boundary classification, a guarded check that every
+selected target annihilates the quotient nullspace, and the strictly improving
+quotient cone. Constraint-coupled extreme and ordinary nonextreme Persons stay
+in the joint geometry; unevaluated or near-tolerance states fail closed or
+retain enumeration. The group-constrained joint-positive fixture and a new
+target-changing flat-direction counterexample are mandatory before any fixed
+19-route equivalence rerun. Only after the estimand is preserved should shared
+LP models, warm starts, or alternative solvers be considered. Full findings
+and identities are in
+`jml-joint-cone-attribution-pilot-record-0.2.3.md`.
+
+RSM, bounded GPCM, target-scale positive-cone behavior, isolated-process
+memory, and replicated runtime remain outside the Draft.52 evidence. The
+optimizer-dispatch grid remains a separate numerical-readiness study.
 
 Draft.51 verification exercises all 127 package-aware test files. The exact
 491-entry source tarball, SHA-256
