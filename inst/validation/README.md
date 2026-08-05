@@ -141,6 +141,21 @@ but do not broaden current API scope.
   auto-optimizer hypothesis on the complete Person-size path, shows that BFGS
   does not repair panel/step/extreme cases, and refuses pure-dimension or
   capacity claims where topology, support, and phase timing remain confounded.
+- `jml-lp-attribution-pilot-0.2.3.R` and its record: draft.56 guarded
+  attribution of LP-base, R-dispatch, and solver time, with independent GLPK
+  parity over 40 PCM/RSM/bounded-GPCM conditional-additive targets. The
+  independent result never affects a fit, and the validation-only dependencies
+  do not enter `DESCRIPTION`.
+- `jml-solver-qualification-pilot-0.2.3.R` and
+  `jml-solver-qualification-worker-0.2.3.R`: draft.57 guarded reacquisition,
+  balanced alternating timing, generated metamorphic properties, failure-
+  status controls, and isolated-process peak-memory calibration. A completed
+  negative result is preserved without making a solver candidate or dispatch
+  decision.
+- `jml-solver-qualification-pilot-record-0.2.3.md`: hashed draft.57 record of
+  280/280 ordinary paired matches, 94/96 property rows, an RSM positive-cone
+  GLPK scaling failure, insufficient failure-status specificity for both
+  high-level solver routes, and an explicit no-candidate/no-dispatch decision.
 - `gpcm-isolated-attribution-pilot-0.2.3.R`: draft.42 repository-only
   one-axis attribution manifest and paired runner. It changes one of 11 axes
   around a fixed GPCM reference, sends each retained dataset through GPCM-JML,
