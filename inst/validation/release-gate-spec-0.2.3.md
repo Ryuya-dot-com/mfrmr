@@ -5,10 +5,10 @@
 | Field | Value |
 | --- | --- |
 | Target release | 0.2.3 |
-| Specification ID | `0.2.3-draft.45` |
+| Specification ID | `0.2.3-draft.46` |
 | Date | 2026-08-05 |
-| Status | M1 is recorded and M2 remains in progress. Drafts 20--44 retain the diagnosed estimability, category/step, JML-boundary, GPCM-attribution, MML EAP-order, and atomic-resume work described in the change log. Draft.45 adds the first complete small-design RSM/PCM/GPCM MML metamorphic pilot: 30/30 row, label, factor, missingness, and weight equivalence comparisons pass under production convergence controls with numerical-ready fits. No TAM/immer pilot has yet been run. Global nonlinear arguments, calibrated information/support rules, generalized boundary states and cross-surface propagation, metric-specific external eligibility, target-size sparse benchmarks, a sufficiently replicated new-seed core, external normalization, tolerance freeze, recovery/coverage, diagnostic operating characteristics, candidate freeze, and confirmation remain pending. All simulations remain calibration evidence. |
-| Current draft delta | Draft.45 adds a guarded 30-cell MML metamorphic grid: ten row, identifier, factor-level, missingness, and weight equivalence transformations across RSM, PCM, and bounded GPCM. Semantic key sets, Person posterior summaries, facets, steps, slopes, retained-observation quantities, objectives, and result states are compared while input-provenance differences for missing/zero-weight encodings remain explicit. A loose-control v1 exposed five relabelling failures with `NumericalState = review`; the runner was corrected to production convergence controls and now fails closed unless both fits are numerically ready. The authoritative v3 passes 30/30 with maximum objective, parameter, and retained-observation differences `3.112007e-09`, `1.862395e-05`, and `6.113984e-06`. The runner also rejects an existing output directory, preventing silent evidence overwrite. Criteria remain pilot-only. This closes only the current small-design MML metamorphic slice: target-scale sparse performance, JML/replay/active-population/anchor/interaction properties, core replication/precision, external normalization, criterion freeze, candidate freeze, and confirmation remain open. |
+| Status | M1 is recorded and M2 remains in progress. Draft.45 supplies a 30/30 small-design MML metamorphic pilot. Draft.46 reassesses the 87-row inventory and separates a mandatory release spine from claim-conditional promotion and deferred research; it passes no additional evidence row and authorizes no confirmation. Official sources still identify CRAN mfrmr 0.2.2, TAM 4.3-25, immer 1.5-13, and upstream FACETS 4.5.1, while licensed local FACETS 4.5.0 remains the primary execution stratum. The machine-readable claim-disposition profile, deterministic core propagation, target-size envelope, metric-specific external eligibility, ADEMP replication/precision freeze, candidate identity, confirmation, and release engineering remain pending. All simulations remain calibration evidence. |
+| Current draft delta | Draft.46 replaces an undifferentiated serial interpretation of 87 checklist rows with three portfolios: `release_spine`, `claim_conditional`, and `deferred`. Candidate identity, supported-core numerical/readiness guards, ADEMP recovery/failure evidence, target-size support bounds, minimal metric-matched FACETS/ConQuest-or-TAM overlap, public support-envelope consistency, and exact-candidate engineering form the mandatory spine. Unfinished GPCM slope/JML uncertainty/IC-ranking/diagnostic/external-aggregation evidence blocks its associated claim, which must be disabled, caveated, or deferred consistently rather than silently promoted. Multidimensional, native CML/CCML, HRM, posterior-predictive/heavy-backend, unrestricted-GPCM parity, 0.2.4 calibration, and 0.2.5 multiple-scale work do not block bounded 0.2.3 scope. Stable WP5/WP6/WP7 pilot-design slices may proceed in parallel; confirmation remains globally prohibited until a machine-readable item disposition, affected dependencies, criteria, and one candidate are frozen. |
 | Confirmation authorized | No |
 | Evidence checklist | `release-evidence-checklist-0.2.3.csv` |
 | FACETS stress plan | `facets-jml-stress-plan-0.2.3.md` |
@@ -349,7 +349,7 @@ external normalization retains eligibility per metric and parameter class.
 The legacy scalar `InferenceReady` is only a conservative compatibility
 summary and cannot be the sole input to a 0.2.3 gate.
 
-Draft.45 continues to bind this gate to readiness contract
+Draft.46 continues to bind this gate to readiness contract
 `mfrmr-readiness-0.2.3-v3` in
 `readiness-contract-0.2.3.md`, its repository-only schema validator, and the
 36-row adversarial fixture registry. `InferenceReady` is `TRUE` only for fit
@@ -391,6 +391,27 @@ input-provenance/readiness audit fields, but they may not change the effective
 rows or downstream fit quantities. The 30/30 v3 pass is software-property
 pilot evidence only. It does not freeze the tolerances or replace sparse
 target-size, recovery, coverage, diagnostic, or external-comparison evidence.
+
+Draft.46 changes release-scope governance without changing an evidence result.
+The current 87-row checklist is an inventory and cannot be used as a count of
+equally mandatory serial tasks. Each `(Gate, Item)` must be assigned to one of
+three portfolios before criterion freeze: `release_spine` (must pass for the
+candidate), `claim_conditional` (must pass only to promote its named claim;
+otherwise the claim is disabled, unavoidably caveated, or deferred), or
+`deferred` (outside bounded 0.2.3 scope). Every conditional row must name its
+fail-closed fallback and affected public surfaces. No row is deleted, passed,
+or converted to confirmation evidence by portfolio assignment.
+
+WP5 deterministic eligibility work may begin for stable RSM/PCM metric slices
+without borrowing incomplete GPCM or diagnostic readiness. WP6 target-size
+construction/runtime evidence may proceed without waiting for external
+normalization. WP7 may prespecify replication, Monte Carlo precision, seeds,
+and manifests, and may run calibration pilots only on dependency-stable
+slices. A later affected code or contract change invalidates those rows.
+Confirmation remains globally prohibited until the portfolio profile,
+release-spine dependencies, numeric criteria, and candidate identity are
+frozen. The governing rationale and rechecked official version sources are in
+`roadmap-reassessment-record-0.2.3.md`.
 
 Draft.23 implements the RSM/PCM linear-coordinate portion of the estimability
 gate. Sparse QR acts on the optimizer's constrained Person/facet/interaction/
@@ -1173,23 +1194,32 @@ claim is reduced or deferred rather than decided ad hoc.
 | `0.2.3-draft.43` | Added guarded feasibility, core, and expanded replicated-attribution tiers, complete four-route/hash ledgers, Wilson intervals, numeric and Bernoulli Monte Carlo summaries, and runtime forecasting. The authoritative corrected feasibility run completed 80 of 80 routes and 20 of 20 data cells with zero identity violations, fit failures, false-ready rows, primary-slope eligible rows, or external-numeric eligible rows. Filtered-row arms exposed a common MML EAP Person-order defect; commit `655f6bf` aligns EAP and posterior-SD summaries by Person index and adds row-reversal invariance coverage. Pre-fix Person and EAP-derived diagnostic evidence is invalidated, while identical hashes show structural recovery and readiness were unchanged. A missing `lpSolve` run separately demonstrated dependency-sensitive fail-closed behavior; authoritative v4 used `lpSolve` 5.6.23. With only two replicates, wide Wilson intervals, no atomic resume, incomplete metamorphic grids, unmatched external normalizers, and open recovery/coverage and diagnostic calibration, no criterion, candidate, or confirmation state is frozen. |
 | `0.2.3-draft.44` | Added atomic checkpoint/resume at the complete four-route data-cell boundary. Checkpoint-v1 identity combines selected and declared manifest hashes, actual execution controls, loaded mfrmr runtime content, the three validation runners, R/platform/RNG, numerical runtime reporting, and dependency availability/version/content. Verified same-directory temporary files are renamed into place; existing targets and unexpected RDS files fail closed. Resume validates schema, execution, cell-manifest, result payload, ScenarioId, route, DataCellId, and declared-manifest identity. Aggregate output receives a separately atomic completion marker whose artifact inventory and hashes must remain valid. Deterministic interruption, clean-run equality, mismatch, orphan-partial, path-traversal, and adulteration tests pass, and a real four-route reference cell matches the prior execution path except for elapsed runtime. The draft.43 artifacts remain historical and non-resumable. Metamorphic, target-scale, replication/precision, external, statistical-freeze, candidate, and confirmation gates remain open. |
 | `0.2.3-draft.45` | Added a guarded ten-transformation by three-model MML metamorphic grid. The runner distinguishes input provenance from retained-data/result invariance, hashes declared and selected manifests separately, compares semantic output keys and quantities, and requires both fits to be numerically ready. A loose-control v1 failed five relabelling comparisons at terminal-gradient review and was retained as a superseded diagnostic rather than repaired by wider tolerances. The production-control v3 passed 30/30 with zero warnings and maximum objective, parameter, and observation differences of `3.112007e-09`, `1.862395e-05`, and `6.113984e-06`. The final runner also refuses existing output directories and deduplicates model requests; v2 retained identical numeric maxima before that storage guard. This is pilot software-property evidence only; thresholds remain unfrozen, and target-size, JML/replay/active-structure, replication/precision, external, candidate, and confirmation gates remain open. |
+| `0.2.3-draft.46` | Reassessed the 87-row inventory after the MML metamorphic pass. Introduced `release_spine`, `claim_conditional`, and `deferred` portfolios so optional research does not create an accidental infinite release scope, while an unsupported callable result cannot escape through a generic caveat. Unblocked stable metric-specific WP5 fixtures, noninferential WP6 target-size work, and WP7 precision/manifest prespecification for parallel calibration; confirmation remains blocked until a machine-readable item profile, fallbacks, dependencies, criteria, and candidate identity are frozen. Rechecked official mfrmr/TAM/immer/FACETS versions without changing the local FACETS 4.5.0 execution stratum. No evidence row passed and no criterion was frozen. |
 
 ## Release decision algorithm
 
 1. Reject evidence whose candidate/specification identity does not match.
-2. Mark the release `No-Go` for any blocker row that is `concern`, `review`,
-   `not_run`, or missing.
-3. Do not aggregate across a failed core cell or silently drop failed
+2. Mark the release `No-Go` while any checklist item lacks a reviewed portfolio
+   assignment or any `claim_conditional` item lacks an explicit fallback and
+   public-surface map.
+3. Mark the release `No-Go` for any `release_spine` blocker row that is
+   `concern`, `review`, `not_run`, or missing.
+4. Do not promote the claim controlled by a failed or unfinished
+   `claim_conditional` row. Mark the release `No-Go` if that result remains
+   primary, uncaveated, or inconsistently classified on any public surface.
+5. Keep `deferred` rows guarded and outside the candidate decision; expanding
+   public scope moves the affected row back into the spine before freeze.
+6. Do not aggregate across a failed core cell or silently drop failed
    replications.
-4. Permit a caveat row only when its limitation appears in the first screen,
+7. Permit a caveat row only when its limitation appears in the first screen,
    help, capability surface, and release notes for the affected result.
-5. Keep every roadmap row guarded from ordinary use.
-6. Require normalized common-likelihood evidence before cross-engine IC
+8. Keep every roadmap row guarded from ordinary use.
+9. Require normalized common-likelihood evidence before cross-engine IC
    comparison and a passed model/category/constraint/estimability/reporting
    contract before parameter tolerances.
-7. Require the practical-consequence classification in addition to formal
+10. Require the practical-consequence classification in addition to formal
    dimensionality evidence.
-8. Run engineering release checks only after statistical blockers pass for one
+11. Run engineering release checks only after statistical blockers pass for one
    frozen candidate.
 
 ## Source anchors

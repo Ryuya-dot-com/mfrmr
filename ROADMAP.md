@@ -1,6 +1,6 @@
 # mfrmr roadmap
 
-Status: public roadmap, updated 2026-08-03.
+Status: public roadmap, updated 2026-08-05.
 
 This file is the single source of truth for mfrmr's public release direction.
 It describes intended outcomes and support boundaries, not promises about exact
@@ -80,6 +80,13 @@ than a promised option. Conditional-likelihood estimation remains external
 reference evidence. Hierarchical rater models address a different latent-data
 and local-dependence structure and will not be presented as another estimator
 switch for the current additive MFRM.
+
+The 0.2.3 exit decision is claim-based. A model, estimator, parameter class,
+diagnostic, or comparison is promoted only when its own evidence and failure
+behavior are adequate. An unresolved exploratory surface does not have to be
+promoted merely because it is callable: it may remain explicitly exploratory,
+be disabled for primary use, or be deferred. Conversely, a caveat cannot be
+used to excuse a defect in a result that remains part of the supported core.
 
 Passing simulation and software-comparison checks does not establish construct
 validity, fairness, population transportability, or suitability for a

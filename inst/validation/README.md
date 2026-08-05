@@ -150,6 +150,11 @@ but do not broaden current API scope.
   authoritative 30/30 v3 pilot pass, including the superseded loose-
   convergence v1 failure, execution identity, maximum differences, and the
   remaining target-size, replay, external, and statistical gates.
+- `roadmap-reassessment-record-0.2.3.md`: draft.46 governance record that
+  rechecks official comparator versions, diagnoses the accidental 87-row
+  serial scope, and separates the mandatory release spine, claim-conditional
+  promotion, and deferred research. It revises execution order without
+  passing evidence, freezing criteria, or authorizing confirmation.
 - `facets-mfrmr-divergence-audit-0.2.3.R`: repository-only contract audit for
   completed paired pilots. Before interpreting parameter differences it checks
   constrained main-effect rank, declared versus FACETS-retained category/step

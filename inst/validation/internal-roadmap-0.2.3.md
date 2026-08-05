@@ -311,7 +311,7 @@ The following remain outside 0.2.3:
 | M4: run confirmation | Run the locked recovery/stress matrix, FACETS JML core, ConQuest/TAM MML comparisons, TAM/immer JML convention grid, eligible immer CML/CCML rows, dimensionality challenge, and matched external rows without changing criteria or reusing discovery/pilot data as independent confirmation. | Candidate-linked internal and external evidence with every blocker classified and every expected scenario/replicate accounted for. |
 | M5: release handoff | Run full regression, cross-platform CI, manuals, URL checks, CRAN-time examples, Win-builder, package-content audit, and public-claim audit. | All blocker rows `ok`, all caveats visible, and an exact checked tarball. |
 
-The repository now contains `0.2.3-draft.45` planning and pilot artifacts at
+The repository now contains `0.2.3-draft.46` planning and pilot artifacts at
 `inst/validation/release-gate-spec-0.2.3.md` and
 `inst/validation/release-evidence-checklist-0.2.3.csv`, with the TAM/immer
 execution contract in `inst/validation/tam-immer-estimator-stress-plan-0.2.3.md`.
@@ -748,6 +748,29 @@ and the CRAN immer 1.5-13 reference manual. Their URLs and retrieval dates
 belong in the external candidate manifest; a version change creates a new
 stratum rather than silently replacing these inputs.
 
+Draft.46 rechecks those official sources on 2026-08-05 and changes roadmap
+governance after the draft.45 metamorphic pass. CRAN still distributes mfrmr
+0.2.2, TAM 4.3-25, and immer 1.5-13; FACETS 4.5.1 remains the current upstream
+release while the licensed local 4.5.0 executable remains the required primary
+execution stratum. No comparator-version rebase is needed. The substantive
+change is portfolio control: 87 checklist rows cannot be interpreted as 87
+undifferentiated serial release blockers.
+
+The 0.2.3 exit decision now has three portfolios:
+
+| Portfolio | Meaning | Release treatment |
+| --- | --- | --- |
+| `release_spine` | Candidate identity; core numerical/readiness guards; ADEMP recovery and failure-mode envelope; sparse target envelope; minimal metric-matched external overlap; public support envelope; exact-candidate engineering. | Must pass for the frozen candidate. |
+| `claim_conditional` | GPCM primary slope/uncertainty, JML uncertainty or adjustment, automatic IC ranking, inferential diagnostics, dimensionality consequences, and external aggregation beyond a matched metric-mode slice. | Blocks that claim, not automatically the entire release. Unfinished claims must be disabled, remain unavoidably caveated/exploratory, or be deferred on every public surface. |
+| `deferred` | Native multidimensional, CML/CCML, HRM, posterior-predictive/MCMC/heavy backends, unrestricted GPCM/ecosystem parity, FACETS-scale capacity parity, 0.2.4 calibration, and 0.2.5 multiple-scale work. | Does not block a bounded 0.2.3 unless public scope is deliberately expanded. |
+
+No existing checklist row is deleted or promoted by this reclassification.
+The next governance artifact must map each `(Gate, Item)` to one portfolio and,
+for every conditional claim, name the fail-closed fallback. Until that
+machine-readable profile is reviewed, the current checklist remains an
+inventory rather than a release-minimum count. Full reasoning and official
+source URLs are recorded in `roadmap-reassessment-record-0.2.3.md`.
+
 The program's objective is not to maximize new diagnostics. It
 is to establish one source of truth for whether a fit, a parameter, and an
 external comparison are usable, and to make every downstream surface consume
@@ -759,15 +782,24 @@ The dependency order is:
 WP0 contract/fixtures
   -> WP1 constrained estimability ----+
   -> WP2 category/step support -------+-> WP4 readiness propagation
-  -> WP3 JML boundary/extreme states -+       -> WP5 comparison eligibility
-                                               -> WP6 scale/performance audit
-                                               -> WP7 new pilot and gate freeze
+  -> WP3 JML boundary/extreme states -+       -> WP5 eligible comparison slices
+                |                              -> WP6 internal scale/performance
+                +-> WP7 design/precision prespecification
+
+Frozen release-spine profile + affected WP1--WP6 slices + candidate identity
+  -> WP7 confirmation
 ```
 
-WP1--WP3 may use separate fixtures, but none is complete until WP4 proves that
-their states reach every affected summary, diagnostic, report, plot, export,
-and replay surface. WP7 cannot begin on new pilot seeds until WP0--WP6 are
-reviewed. Confirmation remains prohibited until the later frozen gate.
+WP1--WP3 may use separate fixtures, but a claim is not complete until WP4
+proves that its state reaches every affected summary, diagnostic, report,
+plot, export, and replay surface. WP5 accepted/rejected fixtures may proceed
+for stable RSM/PCM metric slices while unrelated GPCM or diagnostic propagation
+remains open. WP6 construction/runtime work may proceed in parallel when it
+makes no inferential promotion. WP7 may prespecify replication, MCSE, seeds,
+and manifests, and may run calibration pilots for explicitly stable slices.
+Any later code/contract change invalidates its affected rows by dependency
+identity. Confirmation remains prohibited until the release-spine profile,
+affected WP1--WP6 slices, criteria, and candidate identity are frozen.
 
 | Work package | Depends on | Current state | Implementation boundary | Required exit artifact |
 | --- | --- | --- | --- | --- |
@@ -776,9 +808,9 @@ reviewed. Confirmation remains prohibited until the later frozen gate.
 | `WP2-CATEGORY-STEP` | WP0 | `in_progress_support_preflight` | Audit declared, observed, retained, free, fixed, and unsupported category/step coordinates globally and by current `step_facet`; do not add threshold anchors. | RSM/PCM/GPCM reduction and missing-category fixtures plus parameter-scoped status tables. |
 | `WP3-JML-BOUNDARY` | WP0 | `in_progress_bounded_joint_nonlinear_gpcm_paths` | Detect JML element separation/extreme sufficient scores on the actual contributing row pattern; replace optimizer-dependent finite primary values with typed boundary states. The Person primary-state slice, sparse-triplet Person-fixed structural certificate, companion joint Person-structural additive cone, retained-additive GPCM slope-only monotone paths, and ordered-pair linear-additive/constant-log-slope joint path family are implemented. Positive joint paths remain candidates because the GPCM likelihood is globally non-concave; negative results are scoped. More general rate vectors, curved paths, global arguments, independent general solver parity, broader model/basis properties, and target-scale evidence remain pending. | JML extreme/nonextreme fixtures, MML non-reduction guard, constrained facet/interaction/joint/slope-path certificates, sparse/dense and independent microcase parity, nonlinear joint-path positive and negative controls, and explicit optional-display contract. |
 | `WP4-READINESS-PROPAGATION` | WP1--WP3 | `in_progress_gpcm_joint_candidate_slice` | Derive fit-, parameter-, and output-level readiness once and propagate it without surface-specific reinterpretation. The fit record, deterministic precedence, conservative scalar, fail-closed synthetic legacy-object path, summary/results/convergence/plot front doors, target-aware unpropagated-candidate rule, typed slope-only GPCM boundaries, and candidate-specific joint GPCM reasons under contract v3 are implemented. Competitive joint candidates remain `not_evaluated` with no primary value or ordinary uncertainty; complete facet/interaction/step and remaining output propagation depend on unfinished WP1--WP3 states. | Cross-surface snapshot/semantic tests and a real serialized 0.2.2-object migration fixture. |
-| `WP5-COMPARISON-CONTRACT` | WP4 | `blocked_by_dependency` | Make FACETS, TAM, immer, and other external normalization metric-specific and fail closed before numeric aggregation; identify estimator, adjustment, person treatment, and software stratum explicitly. | Eligibility/rejection ledger with denominator accounting, method-mode identity, and no silent row loss. |
-| `WP6-SCALE-AND-ADVERSARIAL` | WP1--WP5 | `in_progress_mml_metamorphic_small_design_complete` | Verify sparse computation, basis invariance, row-order and label invariance, malformed-input behavior, optional-capability fail-closed behavior, and target-size runtime/memory without claiming FACETS capacity parity. Draft.43 corrects the common MML EAP Person-order defect; draft.44 binds package, runner, capability, RNG, and execution controls to checkpoints; draft.45 passes the 30-cell RSM/PCM/GPCM MML row/label/factor/missing/weight grid under numerical-ready production controls. JML, serialization/replay, active population/anchor/interaction, malformed-input, and target-size sparse property grids remain open. | Benchmark envelope and metamorphic/negative-test report; capability manifest; no dense design allocation at target sizes. |
-| `WP7-REPILOT-AND-FREEZE` | WP0--WP6 | `in_progress_feasibility_with_atomic_resume_and_mml_metamorphic_prerequisite` | Rerun the affected internal and FACETS 4.5.0 pilot cells and the TAM/immer estimator grid on new pilot seeds, calibrate weak-information and estimator-specific rules, then prepare the next reviewed frozen specification. Draft.43 supplies the corrected 80-route feasibility ledger and MCSE/Wilson summaries; draft.44 supplies atomic four-route-cell resume and a hashed completion marker; draft.45 supplies the current small-design cross-model MML metamorphic prerequisite. Two-replicate operating characteristics, target-scale feasibility, external normalization, replication/precision design, and criterion freeze remain blocked by unfinished WP1--WP6 evidence. | Complete pilot registry, atomic resumable execution, method-mode-specific reason-coded exclusions, prespecified MCSE/replication plan, resolved blocker criteria, and still no confirmation result. |
+| `WP5-COMPARISON-CONTRACT` | affected WP4 slice | `in_progress_core_slice_unblocked` | Make FACETS, TAM, immer, and other external normalization metric-specific and fail closed before numeric aggregation; identify estimator, adjustment, person treatment, and software stratum explicitly. Begin deterministic accepted/rejected fixtures and stable RSM/PCM metric slices now; unrelated GPCM, diagnostic, CML/CCML, and HRM rows remain ineligible until their own dependencies pass. | Eligibility/rejection ledger with denominator accounting, method-mode identity, and no silent row loss. |
+| `WP6-SCALE-AND-ADVERSARIAL` | affected WP1--WP4 slice | `in_progress_mml_metamorphic_small_design_complete` | Verify sparse computation, basis invariance, row-order and label invariance, malformed-input behavior, optional-capability fail-closed behavior, and target-size runtime/memory without claiming FACETS capacity parity. Draft.43 corrects the common MML EAP Person-order defect; draft.44 binds package, runner, capability, RNG, and execution controls to checkpoints; draft.45 passes the 30-cell RSM/PCM/GPCM MML row/label/factor/missing/weight grid under numerical-ready production controls. Target-size construction/runtime may proceed without waiting for external comparison; JML, serialization/replay, active population/anchor/interaction, and malformed-input grids remain open. | Benchmark envelope and metamorphic/negative-test report; capability manifest; no dense design allocation at target sizes. |
+| `WP7-REPILOT-AND-FREEZE` | frozen release-spine profile plus affected WP0--WP6 slices | `in_progress_prespecification_calibration_only` | Prespecify replication counts, MCSE targets, failure denominators, seeds, and manifests in parallel. Calibration pilots may run only for explicitly stable slices and are invalidated by later affected code/contract changes. Draft.43 supplies feasibility and uncertainty warnings; draft.44 supplies atomic resume; draft.45 supplies the current MML metamorphic prerequisite; draft.46 separates mandatory, conditional, and deferred claims. Confirmation remains globally unauthorized until the profile, criteria, and candidate are frozen. | Claim-disposition profile, complete pilot registry, atomic resumable execution, method-mode-specific exclusions, prespecified precision plan, resolved release-spine blockers, and still no confirmation result. |
 
 #### Corrective-program execution lanes
 
