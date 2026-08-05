@@ -1835,3 +1835,71 @@ test_that("GPCM attribution routes retain identical paired data and fail closed"
   expect_true(all(grepl("not_a_causal", result$contrasts$Interpretation,
                         fixed = TRUE)))
 })
+
+test_that("GPCM replicated pilot prespecifies tiers and uncertainty summaries", {
+  pkg_root <- normalizePath(test_path("..", ".."), winslash = "/",
+                            mustWork = TRUE)
+  runner <- file.path(
+    pkg_root, "inst", "validation",
+    "gpcm-attribution-replicated-pilot-0.2.3.R"
+  )
+  expect_true(file.exists(runner))
+  env <- new.env(parent = globalenv())
+  source(runner, local = env)
+
+  dry <- env$mfrmr_run_gpcm_attribution_replicated_pilot(
+    "feasibility", dry_run = TRUE, progress = FALSE
+  )
+  expect_identical(dry$registry$Arms, 10L)
+  expect_identical(dry$registry$Replicates, 2L)
+  expect_identical(dry$registry$DataCells, 20L)
+  expect_identical(dry$registry$AnalysisRows, 80L)
+  expect_false(dry$registry$ConfirmationAuthorized)
+  expect_identical(dry$registry$ThresholdStatus,
+                   "pilot_required_not_frozen")
+  expect_false(dry$confirmation_authorized)
+  expect_null(dry$run)
+  expect_error(
+    env$mfrmr_run_gpcm_attribution_replicated_pilot(
+      "core", reps = 1L, progress = FALSE
+    ),
+    "authorize_core"
+  )
+  expect_error(
+    env$mfrmr_run_gpcm_attribution_replicated_pilot(
+      "expanded", reps = 1L, progress = FALSE
+    ),
+    "authorize_expanded"
+  )
+
+  interval <- env$mfrmr_gpcm_repilot_wilson(0L, 2L)
+  expect_equal(interval[["Lower"]], 0, tolerance = 1e-12)
+  expect_equal(interval[["Upper"]], 0.6576198, tolerance = 1e-6)
+
+  numeric_input <- data.frame(
+    ArmId = c("reference", "reference"),
+    ChangedAxis = c(NA_character_, NA_character_),
+    ChangedLevel = c(NA_character_, NA_character_),
+    Route = c("GPCM_MML", "GPCM_MML"),
+    FitModel = c("GPCM", "GPCM"),
+    FitMethod = c("MML", "MML"),
+    PersonRMSE = c(0.3, 0.5),
+    stringsAsFactors = FALSE
+  )
+  numeric_summary <- env$mfrmr_gpcm_repilot_numeric_summary(
+    numeric_input,
+    value_names = "PersonRMSE",
+    group_names = c(
+      "ArmId", "ChangedAxis", "ChangedLevel", "Route", "FitModel",
+      "FitMethod"
+    )
+  )
+  expect_identical(nrow(numeric_summary), 1L)
+  expect_true(is.na(numeric_summary$ChangedAxis))
+  expect_identical(numeric_summary$N, 2L)
+  expect_equal(numeric_summary$Mean, 0.4, tolerance = 1e-12)
+  expect_true(is.finite(numeric_summary$MCSE))
+
+  manifest <- dry$registry
+  expect_identical(nchar(manifest$ManifestHash), 64L)
+})

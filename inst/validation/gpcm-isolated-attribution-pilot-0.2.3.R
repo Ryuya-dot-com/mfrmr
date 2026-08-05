@@ -733,14 +733,17 @@ mfrmr_gpcm_attribution_contrasts <- function(results, manifest) {
                all.x = TRUE)
   out$ExecutionPairComplete <- out$Executed.Arm & out$Executed.Reference
   out$FitPairComplete <- out$FitSucceeded.Arm & out$FitSucceeded.Reference
-  out$SeedPaired <- TRUE
+  out$SeedPaired <- rep(TRUE, nrow(out))
   out$DescriptiveAttributionEligible <- out$ExecutionPairComplete &
     out$PairedDataIdentity.Arm & out$PairedDataIdentity.Reference &
     !out$FalseReady.Arm & !out$FalseReady.Reference
-  out$RecoveryClaimEligible <- FALSE
-  out$Interpretation <- paste0(
-    "one_manifest_axis_perturbation_with_common_seed;_",
-    "not_a_causal_or_external_equivalence_claim"
+  out$RecoveryClaimEligible <- rep(FALSE, nrow(out))
+  out$Interpretation <- rep(
+    paste0(
+      "one_manifest_axis_perturbation_with_common_seed;_",
+      "not_a_causal_or_external_equivalence_claim"
+    ),
+    nrow(out)
   )
   out
 }
