@@ -334,6 +334,105 @@ mfrmr_jml_recession_lp_base <- function(
   )
 }
 
+mfrmr_jml_recession_shared_geometry <- function(prep, idx, config, sizes,
+                                                  params) {
+  finish <- function(state, detail, adjacent = NULL,
+                     target_system = NULL, contrast = NULL) {
+    list(
+      contract_version = "mfrmr-jml-recession-shared-geometry-v1",
+      state = state,
+      ready = identical(state, "ready"),
+      adjacent = adjacent,
+      target_system = target_system,
+      contrast = contrast,
+      detail = detail
+    )
+  }
+
+  adjacent <- tryCatch(
+    mfrmr_estimability_adjacent_design(
+      prep = prep,
+      idx = idx,
+      config = config,
+      sizes = sizes,
+      include_person = TRUE,
+      include_population_beta = FALSE
+    ),
+    error = function(e) e
+  )
+  if (inherits(adjacent, "error")) {
+    return(finish(
+      "not_evaluated_design",
+      paste0("Adjacent design construction failed: ",
+             conditionMessage(adjacent))
+    ))
+  }
+
+  target_system <- tryCatch(
+    mfrmr_jml_structural_target_system(
+      config, sizes, params, include_person = TRUE
+    ),
+    error = function(e) e
+  )
+  if (inherits(target_system, "error")) {
+    return(finish(
+      "not_evaluated_mapping",
+      paste0("Expanded target mapping failed: ",
+             conditionMessage(target_system)),
+      adjacent = adjacent
+    ))
+  }
+
+  contrast <- tryCatch(
+    mfrmr_jml_observed_contrast_design(
+      adjacent_design = adjacent$design,
+      score_k = idx$score_k,
+      n_obs = adjacent$observation_rows,
+      n_steps = adjacent$transitions
+    ),
+    error = function(e) e
+  )
+  if (inherits(contrast, "error")) {
+    return(finish(
+      "not_evaluated_contrast",
+      paste0("Observed-category contrast construction failed: ",
+             conditionMessage(contrast)),
+      adjacent = adjacent,
+      target_system = target_system
+    ))
+  }
+
+  optimizer_index <- as.integer(adjacent$map$OptimizerIndex)
+  mapping_valid <-
+    is.data.frame(adjacent$map) &&
+    ncol(adjacent$design) == nrow(adjacent$map) &&
+    ncol(contrast) == ncol(adjacent$design) &&
+    is.data.frame(target_system$metadata) &&
+    nrow(target_system$metadata) == nrow(target_system$expansion) &&
+    !anyNA(optimizer_index) && !anyDuplicated(optimizer_index) &&
+    ncol(target_system$expansion) >= max(c(0L, optimizer_index))
+  if (!isTRUE(mapping_valid)) {
+    return(finish(
+      "not_evaluated_mapping",
+      "Shared recession geometry returned inconsistent coordinate mappings.",
+      adjacent = adjacent,
+      target_system = target_system,
+      contrast = contrast
+    ))
+  }
+
+  finish(
+    "ready",
+    paste(
+      "One full joint adjacent design, target system, and observed contrast",
+      "is available for exact structural column projection."
+    ),
+    adjacent = adjacent,
+    target_system = target_system,
+    contrast = methods::as(contrast, "dgCMatrix")
+  )
+}
+
 mfrmr_jml_recession_run_lp <- function(lp_base,
                                         objective,
                                         extra_constraint = NULL,
@@ -685,6 +784,7 @@ audit_mfrm_jml_additive_recession <- function(prep,
                                                ),
                                                target_person_ids = character(0),
                                                profiled_person_ids = character(0),
+                                               shared_geometry = NULL,
                                                screen_global_cone = FALSE,
                                                max_lp_elements = NULL,
                                                max_lp_nonzeros = 2e6,
@@ -830,17 +930,42 @@ audit_mfrm_jml_additive_recession <- function(prep,
     ))
   }
 
-  adjacent <- tryCatch(
-    mfrmr_estimability_adjacent_design(
-      prep = prep,
-      idx = idx,
-      config = config,
-      sizes = sizes,
-      include_person = TRUE,
-      include_population_beta = FALSE
-    ),
-    error = function(e) e
-  )
+  use_shared_geometry <- isTRUE(tryCatch(
+    is.list(shared_geometry) &&
+      identical(
+        shared_geometry$contract_version,
+        "mfrmr-jml-recession-shared-geometry-v1"
+      ) &&
+      isTRUE(shared_geometry$ready) &&
+      identical(shared_geometry$state, "ready") &&
+      is.list(shared_geometry$adjacent) &&
+      inherits(shared_geometry$adjacent$design, "Matrix") &&
+      is.data.frame(shared_geometry$adjacent$map) &&
+      inherits(shared_geometry$contrast, "Matrix") &&
+      ncol(shared_geometry$contrast) ==
+        ncol(shared_geometry$adjacent$design) &&
+      is.list(shared_geometry$target_system) &&
+      is.data.frame(shared_geometry$target_system$metadata) &&
+      inherits(shared_geometry$target_system$expansion, "Matrix") &&
+      nrow(shared_geometry$target_system$metadata) ==
+        nrow(shared_geometry$target_system$expansion),
+    error = function(e) FALSE
+  ))
+  adjacent <- if (use_shared_geometry) {
+    shared_geometry$adjacent
+  } else {
+    tryCatch(
+      mfrmr_estimability_adjacent_design(
+        prep = prep,
+        idx = idx,
+        config = config,
+        sizes = sizes,
+        include_person = TRUE,
+        include_population_beta = FALSE
+      ),
+      error = function(e) e
+    )
+  }
   if (inherits(adjacent, "error")) {
     prescreen$state <- "not_evaluated_design"
     return(finish(
@@ -856,12 +981,16 @@ audit_mfrm_jml_additive_recession <- function(prep,
   }
   structural_map <- adjacent$map[structural_columns, , drop = FALSE]
   structural_optimizer_index <- as.integer(structural_map$OptimizerIndex)
-  target_system <- tryCatch(
-    mfrmr_jml_structural_target_system(
-      config, sizes, params, include_person = joint_scope
-    ),
-    error = function(e) e
-  )
+  target_system <- if (use_shared_geometry) {
+    shared_geometry$target_system
+  } else {
+    tryCatch(
+      mfrmr_jml_structural_target_system(
+        config, sizes, params, include_person = joint_scope
+      ),
+      error = function(e) e
+    )
+  }
   if (inherits(target_system, "error")) {
     prescreen$state <- "not_evaluated_mapping"
     return(finish(
@@ -873,6 +1002,13 @@ audit_mfrm_jml_additive_recession <- function(prep,
   if (joint_scope) {
     target_keep <- targets$ParameterClass != "person" |
       targets$ParameterId %in% target_person_ids
+    targets <- targets[target_keep, , drop = FALSE]
+    target_system$expansion <- target_system$expansion[
+      target_keep, , drop = FALSE
+    ]
+    rownames(targets) <- NULL
+  } else if (use_shared_geometry) {
+    target_keep <- targets$ParameterClass != "person"
     targets <- targets[target_keep, , drop = FALSE]
     target_system$expansion <- target_system$expansion[
       target_keep, , drop = FALSE
@@ -928,15 +1064,19 @@ audit_mfrm_jml_additive_recession <- function(prep,
     ))
   }
 
-  contrast <- tryCatch(
-    mfrmr_jml_observed_contrast_design(
-      adjacent_design = adjacent$design[, structural_columns, drop = FALSE],
-      score_k = idx$score_k,
-      n_obs = adjacent$observation_rows,
-      n_steps = adjacent$transitions
-    ),
-    error = function(e) e
-  )
+  contrast <- if (use_shared_geometry) {
+    shared_geometry$contrast[, structural_columns, drop = FALSE]
+  } else {
+    tryCatch(
+      mfrmr_jml_observed_contrast_design(
+        adjacent_design = adjacent$design[, structural_columns, drop = FALSE],
+        score_k = idx$score_k,
+        n_obs = adjacent$observation_rows,
+        n_steps = adjacent$transitions
+      ),
+      error = function(e) e
+    )
+  }
   if (inherits(contrast, "error")) {
     prescreen$state <- "not_evaluated_contrast"
     return(finish(
@@ -1547,6 +1687,7 @@ audit_mfrm_jml_additive_recession <- function(prep,
 
 audit_mfrm_jml_structural_recession <- function(prep, idx, config, sizes,
                                                  params,
+                                                 shared_geometry = NULL,
                                                  screen_global_cone = TRUE,
                                                  ...) {
   audit_mfrm_jml_additive_recession(
@@ -1556,13 +1697,15 @@ audit_mfrm_jml_structural_recession <- function(prep, idx, config, sizes,
     sizes = sizes,
     params = params,
     coordinate_scope = "structural_fixed_person",
+    shared_geometry = shared_geometry,
     screen_global_cone = screen_global_cone,
     ...
   )
 }
 
 audit_mfrm_jml_joint_recession <- function(prep, idx, config, sizes, params,
-                                            person_boundary_audit, ...) {
+                                            person_boundary_audit,
+                                            shared_geometry = NULL, ...) {
   person_status <- as.data.frame(
     person_boundary_audit$parameter_status %||% data.frame(),
     stringsAsFactors = FALSE
@@ -1589,6 +1732,7 @@ audit_mfrm_jml_joint_recession <- function(prep, idx, config, sizes, params,
     coordinate_scope = "joint_person_structural",
     target_person_ids = target_person_ids,
     profiled_person_ids = profiled_person_ids,
+    shared_geometry = shared_geometry,
     screen_global_cone = TRUE,
     ...
   )

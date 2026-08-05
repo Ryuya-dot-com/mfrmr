@@ -885,16 +885,54 @@ and received the corresponding hidden-file NOTE. This is neither an
 dependency-present, external, candidate-linked, and confirmation checks remain
 open.
 
-Draft.54 should attribute the remaining structural and joint phases among
-adjacent-design construction, target mapping, contrast construction, sparse
-LP-base assembly, solver work, and rank work. Exact reuse of one full joint
-geometry by the Person-fixed structural audit is the leading hypothesis, but
-must match under anchors, groups, interactions, steps, weights, missing rows,
-and bounded GPCM slopes before implementation. Reusable LP models, warm starts,
-or alternative solvers follow only after construction-versus-solver time is
-known. Target-scale positive quotients, general RSM/GPCM coverage, isolated-
-process memory, replicated runtime, and the optimizer-dispatch grid remain
-separate work.
+Draft.54 attributes the remaining recession work and implements one optional
+shared-geometry path. A single full Person-plus-structural adjacent design,
+expanded-target system, and observed contrast is projected onto the exact non-
+Person columns/rows for the structural audit and reused by the joint audit.
+The path is accepted only after version, state, sparse-object, row, column, and
+optimizer-index validation; failed or malformed shared construction is
+discarded and both audits rerun their legacy construction. MML does not enter
+the path, and no shared object is stored in a fit.
+
+Whole-audit identity, exact sparse-column projection, and core-level fallback
+tests pass for RSM, criterion-step PCM, direct/group anchors, interaction,
+nonuniform/zero weights, missing-score removal, bounded GPCM's supported common
+step/slope facet, and malformed/injected-failure controls. The fixed 19-route
+component bundle passes all fits, ordinary phase contracts, component
+contracts, canonical Draft.53 comparisons, and false-ready checks. Every JML
+route constructs the three shared objects once and neither audit reconstructs
+them. Against the same-day Draft.53 canonical replay, combined structural and
+joint time falls from 33.00 to 21.07 seconds, JML outer time from 44.12 to 31.71
+seconds, and all 12 JML routes are faster. These one-run PCM results freeze no
+rule. Full findings and identities are in
+`jml-shared-recession-geometry-pilot-record-0.2.3.md`.
+
+Draft.54 verification also builds a clean exact 492-entry local source tarball
+and passes `R CMD check --no-manual` with `Status: OK`. Artifact and check-log
+hashes remain in the package-external
+`.check-draft54-standard-no-manual-v4/verification-receipt.txt` to avoid a
+self-referential packaged hash. This is neither an `--as-cran` result nor a
+candidate gate pass; full-manual, `--run-donttest`, dependency-present,
+external, candidate-linked, and confirmation checks remain open.
+
+The comparison also corrected an evidence-identity defect: the former
+serialized target-status hash could differ for `identical()` tables whose R
+internal representation differed after projection. The versioned canonical-v1
+hash now uses type-explicit values and explicit missing encodings. An unchanged
+Draft.53 runtime replay matches the original v8 bundle on all 16 selected
+semantic/state fields for all 19 routes; its target hashes change only because
+the identity representation changed.
+
+Draft.55 should target the new largest pure-construction remainder. The current
+observed-contrast builder consumes 10.28 of 21.03 JML component seconds, ahead
+of LP solver calls at 8.11 seconds, and grows triplet vectors repeatedly inside
+observation/category loops. A preallocated or direct sparse formulation must
+first reproduce the exact matrix across category counts, row/label order,
+missing/weighted retained rows, anchors, groups, interactions, steps, and GPCM.
+Only after fixed-route semantic and component comparison should reusable LP
+models, warm starts, or alternative solvers be reconsidered. Target-scale
+positive quotients, general RSM/GPCM performance, isolated-process memory,
+replicated runtime, and the optimizer-dispatch grid remain separate work.
 
 Draft.51 verification exercises all 127 package-aware test files. The exact
 491-entry source tarball, SHA-256
@@ -1048,8 +1086,8 @@ affected WP1--WP6 slices, criteria, and candidate identity are frozen.
 | `WP3-JML-BOUNDARY` | WP0 | `in_progress_bounded_joint_nonlinear_gpcm_paths` | Detect JML element separation/extreme sufficient scores on the actual contributing row pattern; replace optimizer-dependent finite primary values with typed boundary states. The Person primary-state slice, sparse-triplet Person-fixed structural certificate, companion joint Person-structural additive cone, retained-additive GPCM slope-only monotone paths, and ordered-pair linear-additive/constant-log-slope joint path family are implemented. Positive joint paths remain candidates because the GPCM likelihood is globally non-concave; negative results are scoped. More general rate vectors, curved paths, global arguments, independent general solver parity, broader model/basis properties, and target-scale evidence remain pending. | JML extreme/nonextreme fixtures, MML non-reduction guard, constrained facet/interaction/joint/slope-path certificates, sparse/dense and independent microcase parity, nonlinear joint-path positive and negative controls, and explicit optional-display contract. |
 | `WP4-READINESS-PROPAGATION` | WP1--WP3 | `in_progress_gpcm_joint_candidate_slice` | Derive fit-, parameter-, and output-level readiness once and propagate it without surface-specific reinterpretation. The fit record, deterministic precedence, conservative scalar, fail-closed synthetic legacy-object path, summary/results/convergence/plot front doors, target-aware unpropagated-candidate rule, typed slope-only GPCM boundaries, and candidate-specific joint GPCM reasons under contract v3 are implemented. Competitive joint candidates remain `not_evaluated` with no primary value or ordinary uncertainty; complete facet/interaction/step and remaining output propagation depend on unfinished WP1--WP3 states. | Cross-surface snapshot/semantic tests and a real serialized 0.2.2-object migration fixture. |
 | `WP5-COMPARISON-CONTRACT` | affected WP4 slice | `in_progress_core_slice_unblocked` | Make FACETS, TAM, immer, and other external normalization metric-specific and fail closed before numeric aggregation; identify estimator, adjustment, person treatment, and software stratum explicitly. Begin deterministic accepted/rejected fixtures and stable RSM/PCM metric slices now; unrelated GPCM, diagnostic, CML/CCML, and HRM rows remain ineligible until their own dependencies pass. | Eligibility/rejection ledger with denominator accounting, method-mode identity, and no silent row loss. |
-| `WP6-SCALE-AND-ADVERSARIAL` | affected WP1--WP4 slice | `in_progress_structural_prescreen_complete_joint_attribution_next` | Verify sparse computation, basis invariance, row-order and label invariance, malformed-input behavior, optional-capability fail-closed behavior, and target-size runtime/memory without claiming FACETS capacity parity. Draft.43 corrects the MML EAP Person-order defect; draft.44 binds execution identity; draft.45 passes the small-design MML metamorphic grid; draft.47 executes mixed-adversity target cells; draft.48 adds balanced/clean-sparse baselines, a common-truth two-Rater bridge gradient, and OS process peak memory; draft.49 decomposes Person/row, panel/topology, step/dimension, exposure, extreme, and optimizer axes; draft.50 attributes selected JML time; draft.51 implements and validates the guarded certificate-equivalent structural cone prescreen. The authoritative 19-route v5 profile records the stricter exclusion tolerance, preserves all selected v3/v4 semantic/readiness states and all 12 same-fit target classifications, and reduces structural time by 90.1%. Joint cone/target attribution now precedes any reuse, warm-start, or solver change. Topology/exposure-matched controls, isolated-process memory, RSM/GPCM positive-cone scale work, GPCM marginal-boundary and MML gradient work, PCA computability, serialization/replay, active population/anchor/interaction, and malformed-input grids remain open. | Benchmark envelope and metamorphic/negative-test report; capability manifest; no dense design allocation at target sizes. |
-| `WP7-REPILOT-AND-FREEZE` | frozen release-spine profile plus affected WP0--WP6 slices | `in_progress_prespecification_calibration_only` | Prespecify replication counts, MCSE targets, failure denominators, seeds, and manifests in parallel. Calibration pilots may run only for explicitly stable slices and are invalidated by later affected code/contract changes. Draft.43 supplies feasibility and uncertainty warnings; draft.44 supplies atomic resume; draft.45 supplies the current MML metamorphic prerequisite; draft.46 separates mandatory, conditional, and deferred claims; draft.47 preserves the declared five-replicate mixed-adversity target pilot while executing one capacity replicate; draft.48 adds a one-replicate common-truth baseline/bridge calibration; draft.49 adds one-replicate computation attribution; draft.50 separates optimizer readiness from recession-audit cost; draft.51 passes the structural change-local equivalence slice but remains one-replicate PCM calibration evidence. Joint attribution, RSM/GPCM coverage, replication, and isolated-process memory remain prerequisites to any runtime/capacity freeze. Neither the global optimizer threshold nor a runtime/capacity rule may be frozen from these profiles. Confirmation remains globally unauthorized until the profile, criteria, and candidate are frozen. | Claim-disposition profile, complete pilot registry, atomic resumable execution, method-mode-specific exclusions, prespecified precision plan, resolved release-spine blockers, and still no confirmation result. |
+| `WP6-SCALE-AND-ADVERSARIAL` | affected WP1--WP4 slice | `in_progress_shared_geometry_complete_contrast_constructor_next` | Verify sparse computation, basis invariance, row-order and label invariance, malformed-input behavior, optional-capability fail-closed behavior, and target-size runtime/memory without claiming FACETS capacity parity. Drafts.43--50 establish MML row-order correction, execution identity, metamorphic checks, capacity/baseline cells, JML bottleneck axes, and phase attribution. Drafts.51--53 implement guarded structural and joint target-exclusion reductions. Draft.54 proves exact shared structural/joint geometry, legacy fallback, canonical target-status identity, and 19-route component equivalence; combined audit time falls 36.2% in one PCM run without freezing a rule. Observed-contrast construction is now the largest measured remainder and receives an exact sparse-constructor slice before solver changes. Topology/exposure-matched controls, isolated-process memory, target-scale RSM/GPCM positive-cone work, GPCM marginal-boundary and MML gradient work, PCA computability, serialization/replay, active population/anchor/interaction, and broader malformed-input grids remain open. | Benchmark envelope and metamorphic/negative-test report; capability manifest; no dense design allocation at target sizes. |
+| `WP7-REPILOT-AND-FREEZE` | frozen release-spine profile plus affected WP0--WP6 slices | `in_progress_prespecification_calibration_only` | Prespecify replication counts, MCSE targets, failure denominators, seeds, and manifests in parallel. Calibration pilots may run only for explicitly stable slices and are invalidated by later affected code/contract changes. Drafts.43--49 supply feasibility, atomic resume, metamorphic prerequisites, claim tiers, target cells, common-truth baselines, and computation axes. Drafts.50--54 separate optimization from recession cost, reduce structural/joint work under exact equivalence, correct target-status evidence identity, and expose contrast construction plus LP solving as the remaining components. These are still one-replicate PCM calibration results. General RSM/GPCM target-scale coverage, replicated timing, independent solver evidence, and isolated-process memory remain prerequisites to any runtime/capacity freeze. Neither the global optimizer threshold nor a runtime/capacity rule may be frozen from these profiles. Confirmation remains globally unauthorized until the profile, criteria, and candidate are frozen. | Claim-disposition profile, complete pilot registry, atomic resumable execution, method-mode-specific exclusions, prespecified precision plan, resolved release-spine blockers, and still no confirmation result. |
 
 #### Corrective-program execution lanes
 

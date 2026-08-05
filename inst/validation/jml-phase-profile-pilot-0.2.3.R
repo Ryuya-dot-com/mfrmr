@@ -173,11 +173,44 @@ mfrmr_jml_phase_structural_status_hash <- function(audit) {
     "PositiveRecession", "NegativeRecession", "CandidateStatus",
     "EvaluationState", "ReasonCodes"
   ), names(status))
-  mfrmr_gpcm_repilot_hash_object(status[, keep, drop = FALSE])
+  status <- status[, keep, drop = FALSE]
+  canonical_value <- function(x) {
+    if (is.logical(x)) {
+      return(ifelse(
+        is.na(x), "<NA:logical>", ifelse(x, "TRUE", "FALSE")
+      ))
+    }
+    if (is.integer(x)) {
+      return(ifelse(is.na(x), "<NA:integer>", as.character(x)))
+    }
+    if (is.numeric(x)) {
+      return(ifelse(
+        is.na(x), "<NA:numeric>",
+        vapply(x, function(value) {
+          if (is.nan(value)) return("NaN")
+          if (is.infinite(value)) {
+            return(if (value > 0) "Inf" else "-Inf")
+          }
+          sprintf("%a", value)
+        }, character(1))
+      ))
+    }
+    value <- enc2utf8(as.character(x))
+    value[is.na(x)] <- "<NA:character>"
+    value
+  }
+  canonical <- list(
+    schema = "mfrmr-jml-target-status-canonical-v1",
+    columns = keep,
+    rows = nrow(status),
+    values = lapply(status, canonical_value)
+  )
+  mfrmr_gpcm_repilot_hash_object(canonical)
 }
 
 mfrmr_jml_phase_run_route <- function(row, generated, maxit,
-                                       quad_points, reltol) {
+                                       quad_points, reltol,
+                                       component_profiler = NULL) {
   fit_args <- list(
     data = generated$data, person = "Person",
     facets = c("Rater", "Criterion"), score = "Score",
@@ -192,6 +225,17 @@ mfrmr_jml_phase_run_route <- function(row, generated, maxit,
 
   old_opt <- options(mfrmr.phase_timing = TRUE)
   on.exit(options(old_opt), add = TRUE)
+  component_session <- if (is.function(component_profiler)) {
+    component_profiler()
+  } else {
+    NULL
+  }
+  component_stopped <- FALSE
+  on.exit({
+    if (!is.null(component_session) && !component_stopped) {
+      component_session$stop()
+    }
+  }, add = TRUE)
   invisible(gc(reset = TRUE))
   started <- proc.time()
   capture <- mfrmr_gpcm_stress_capture(
@@ -200,6 +244,13 @@ mfrmr_jml_phase_run_route <- function(row, generated, maxit,
   outer_seconds <- unname(as.numeric(
     (proc.time() - started)[["elapsed"]]
   ))
+  component_calls <- if (is.null(component_session)) {
+    data.frame()
+  } else {
+    value <- component_session$stop()
+    component_stopped <- TRUE
+    value
+  }
 
   base <- data.frame(
     ScenarioId = as.character(row$ScenarioId),
@@ -304,7 +355,9 @@ mfrmr_jml_phase_run_route <- function(row, generated, maxit,
   )
   if (inherits(capture$value, "error")) {
     base$Error <- conditionMessage(capture$value)
-    return(list(result = base, phases = data.frame()))
+    return(list(
+      result = base, phases = data.frame(), components = component_calls
+    ))
   }
 
   fit <- capture$value
@@ -718,7 +771,7 @@ mfrmr_jml_phase_run_route <- function(row, generated, maxit,
   base$FalseReady <- identical(
     as.character(row$ExpectedFitState), "must_not_be_inference_ready"
   ) && isTRUE(ready$InferenceReady)
-  list(result = base, phases = exclusive)
+  list(result = base, phases = exclusive, components = component_calls)
 }
 
 mfrmr_jml_phase_summarize <- function(phases) {

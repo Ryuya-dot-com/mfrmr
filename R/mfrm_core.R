@@ -4049,13 +4049,28 @@ mfrm_estimate <- function(data, person_col, facet_cols, score_col,
   phase_finish("person_boundary_audit", phase_started, "person extreme-score and boundary state")
 
   phase_started <- phase_clock()
+  shared_recession_geometry <- NULL
+  if (identical(config$method, "JML") &&
+      requireNamespace("lpSolve", quietly = TRUE)) {
+    shared_candidate <- mfrmr_jml_recession_shared_geometry(
+      prep = prep,
+      idx = idx,
+      config = config,
+      sizes = sizes,
+      params = params
+    )
+    if (isTRUE(shared_candidate$ready)) {
+      shared_recession_geometry <- shared_candidate
+    }
+  }
   boundary_audit$structural_additive <-
     audit_mfrm_jml_structural_recession(
       prep = prep,
       idx = idx,
       config = config,
       sizes = sizes,
-      params = params
+      params = params,
+      shared_geometry = shared_recession_geometry
     )
   phase_finish("structural_recession_audit", phase_started, "additive structural recession directions")
 
@@ -4067,7 +4082,8 @@ mfrm_estimate <- function(data, person_col, facet_cols, score_col,
       config = config,
       sizes = sizes,
       params = params,
-      person_boundary_audit = boundary_audit
+      person_boundary_audit = boundary_audit,
+      shared_geometry = shared_recession_geometry
     )
   phase_finish("joint_recession_audit", phase_started, "joint additive recession directions")
 
