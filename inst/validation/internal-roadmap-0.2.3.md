@@ -311,7 +311,7 @@ The following remain outside 0.2.3:
 | M4: run confirmation | Run the locked recovery/stress matrix, FACETS JML core, ConQuest/TAM MML comparisons, TAM/immer JML convention grid, eligible immer CML/CCML rows, dimensionality challenge, and matched external rows without changing criteria or reusing discovery/pilot data as independent confirmation. | Candidate-linked internal and external evidence with every blocker classified and every expected scenario/replicate accounted for. |
 | M5: release handoff | Run full regression, cross-platform CI, manuals, URL checks, CRAN-time examples, Win-builder, package-content audit, and public-claim audit. | All blocker rows `ok`, all caveats visible, and an exact checked tarball. |
 
-The repository now contains `0.2.3-draft.40` planning and pilot artifacts at
+The repository now contains `0.2.3-draft.41` planning and pilot artifacts at
 `inst/validation/release-gate-spec-0.2.3.md` and
 `inst/validation/release-evidence-checklist-0.2.3.csv`, with the TAM/immer
 execution contract in `inst/validation/tam-immer-estimator-stress-plan-0.2.3.md`.
@@ -508,6 +508,40 @@ and ordinary uncertainty remain unavailable, a negative result is scoped to
 this path family, and more general rate vectors, curved paths, and the marginal
 MML problem remain open.
 
+Draft.41 makes the prespecified GPCM stress envelope executable without
+pretending that a pilot manifest is confirmation. The repository-only
+`gpcm-stress-covering-grid-0.2.3.R` runner constructs a deterministic mixed-
+level pairwise covering array over 12 axes. The pilot manifest contains 70
+cells, including 12 mandatory adversarial corners, and covers all 1,330
+required two-axis level combinations. Separate `PCM_JML` and `PCM_MML` cells
+prevent the lower-model reference from being hidden inside a free-slope GPCM
+label. The smoke, pilot, and confirmation seed ranges are disjoint; only the
+confirmation profile is labelled as confirmation, and confirmation remains
+unauthorized. The current public simulator cannot generate a genuine
+one-slope-level case because it requires at least two criterion levels while
+GPCM requires the slope and step facet to coincide. Those cells remain an
+explicit non-executable gap rather than being silently replaced by equal true
+slopes across two estimated slope levels.
+
+The runner applies connected sparse, one-bridge, zero-shared-Person, routed,
+and disconnected assignments; MCAR, Person-, rater-, and outcome-dependent
+deletion; rare, dominant, floor, ceiling, internal-zero, and boundary-zero
+category support; repeated cells, explicit Occasion, unequal and zero weights;
+Person-by-rater and slope-related interactions; and local-dependence, bias,
+and drift signals. Every retained dataset receives a digest and support record,
+including category counts, common-Person counts, duplicate counts before and
+after Occasion, and positive-weight rows. Fit results keep primary slope
+availability, optimizer-only log-slope RMSE, readiness, boundary state,
+false-ready status, and optional exploratory residual PCA separate. All
+external numeric comparison flags remain false, all numeric thresholds remain
+`pilot_required_not_frozen`, and every output is `calibration_only` until the
+matched estimator/normalizer and candidate contracts are complete.
+The hashed one-seed smoke outcome is retained in
+`gpcm-stress-covering-grid-smoke-record-0.2.3.md`; it records six executed
+cells, one known generator gap, zero runner failures, zero false-ready rows,
+and zero external numeric-eligible rows without promoting those counts to
+recovery, coverage, diagnostic-sensitivity, or release evidence.
+
 ### GPCM discrepancy decomposition and stress envelope
 
 No scalar "FACETS minus mfrmr" or "TAM minus mfrmr" result is interpretable
@@ -533,7 +567,9 @@ column or rescaling after results are seen.
 The GPCM simulation program uses a prespecified covering design rather than an
 uninterpretable full Cartesian product. Every core seed is crossed with the
 mandatory corner cases below, while additional pairwise combinations fill the
-covering array. Discovery, calibration, and confirmation seeds remain disjoint.
+covering array. Draft.41 instantiates this as 70 pilot cells covering all 1,330
+two-axis level combinations. Discovery, calibration, and confirmation seeds
+remain disjoint.
 
 | Axis | Required levels | Why it can expose a false agreement or false difference |
 | --- | --- | --- |

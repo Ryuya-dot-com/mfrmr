@@ -109,3 +109,43 @@ test_that("precomputed workflow artifacts represent the canonical successful fit
   expect_identical(diagnostic_overview$Method, "MML")
   expect_identical(diagnostic_overview$PrecisionTier, "model_based")
 })
+
+test_that("public workflow artifacts do not expose build-machine paths", {
+  artifact_dir <- system.file(
+    "extdata", "vignette-artifacts",
+    package = "mfrmr",
+    mustWork = TRUE
+  )
+  export_files <- utils::read.csv(
+    file.path(artifact_dir, "workflow_export_files.csv"),
+    stringsAsFactors = FALSE,
+    check.names = FALSE
+  )
+
+  expect_identical(export_files$Path, basename(export_files$Path))
+  expect_false(any(grepl(
+    "([[:alpha:]]:|/)([/\\\\]|[^[:space:]])*(Users|AppData|Rtmp|Temp)([/\\\\]|$)",
+    export_files$Path,
+    ignore.case = TRUE,
+    perl = TRUE
+  )))
+
+  workflow_html <- system.file(
+    "doc", "mfrmr-workflow.html",
+    package = "mfrmr",
+    mustWork = TRUE
+  )
+  html <- paste(readLines(workflow_html, warn = FALSE), collapse = "\n")
+  expect_false(grepl(
+    "[[:alpha:]]:[/\\\\](Users|Documents and Settings)[/\\\\]",
+    html,
+    ignore.case = TRUE,
+    perl = TRUE
+  ))
+  expect_false(grepl(
+    "[[:alpha:]]:[/\\\\].*(AppData|Rtmp)[/\\\\]",
+    html,
+    ignore.case = TRUE,
+    perl = TRUE
+  ))
+})

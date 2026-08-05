@@ -4,6 +4,10 @@ This is the unreleased development line after CRAN publication of 0.2.2.
 CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
 0.2.3 and must not be attributed retroactively to 0.2.2.
 
+* Sanitized the workflow vignette's export preview to display path basenames.
+  The rendered public artifact no longer embeds a build machine's temporary
+  directory, while the live return object still retains usable local paths.
+
 * Added one versioned fit-readiness record that combines input review,
   estimability, category support, parameter-boundary status, and numerical
   diagnostics with deterministic precedence. `fit$summary$FitReadiness` and
@@ -92,13 +96,6 @@ CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
   incompatible likelihood contracts, and insufficient quadrature evidence
   fail closed for automatic model ranking.
 
-* Added draft numerical-trust instrumentation, retained outside the installed
-  package, for independent stationarity checks, direct/hybrid/EM engine-path
-  parity, integration-grid sensitivity, external information-criterion
-  normalization, ConQuest overlap, and TAM dimensionality challenges. These
-  are pilot and gate-development surfaces, not confirmation evidence or claims
-  of external equivalence.
-
 * Propagated numerical-readiness and information-criterion eligibility through
   fitted objects, summaries, comparisons, reports, exports, and replay
   metadata so a converged optimizer cannot silently become an inference-ready
@@ -114,12 +111,6 @@ CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
   general threshold anchors, multiple observed scales, native
   multidimensional estimation, and unrestricted GPCM remain explicitly
   outside the current public scope.
-
-* Bound the 0.2.3 release decision to an exact candidate manifest,
-  frozen gate specification, candidate-linked result rows, retained evidence
-  hashes, and current public-scope truth. Missing or mismatched candidate
-  identity, draft criteria, unauthorized confirmation, stale prose-only test
-  counts, and missing evidence remain release concerns.
 
 # mfrmr 0.2.2
 

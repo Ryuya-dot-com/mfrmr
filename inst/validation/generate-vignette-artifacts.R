@@ -112,7 +112,11 @@ mfrmr_generate_vignette_artifacts <- function(pkg_dir = ".",
     write_artifact("workflow_plot_components.csv", data.frame(Component = names(plot(fit_toy, draw = FALSE))), "names(plot(fit_toy, draw = FALSE))"),
     write_artifact("workflow_next_actions.csv", summary(res_toy)$next_actions, "summary(res_toy)$next_actions"),
     write_artifact("workflow_report_overview.csv", summary(report_toy)$overview, "summary(report_toy)$overview"),
-    write_artifact("workflow_export_files.csv", export_files, "head(export_toy$written_files)"),
+    write_artifact(
+      "workflow_export_files.csv",
+      export_files,
+      "head(export_toy$written_files), with Path reduced to basename"
+    ),
     write_artifact("workflow_summary_classes.csv", summary_classes, "class(summary(...))"),
     write_artifact("workflow_plot_object_components.csv", plot_components, "names(plot(..., draw = FALSE))"),
     write_artifact("workflow_visual_checklist.csv", visual_checklist, "reporting_checklist(...), Visual Displays")

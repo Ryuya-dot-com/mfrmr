@@ -40,7 +40,7 @@ but do not broaden current API scope.
 - `readiness-contract-0.2.3.R`: dependency-free repository validator and
   machine-readable catalog for readiness states, reason codes, condition
   classes, deterministic fit derivation, and legacy mapping.
-- `readiness-contract-fixtures-0.2.3.csv`: 27 exact positive, negative,
+- `readiness-contract-fixtures-0.2.3.csv`: 36 exact positive, negative,
   migration, and FACETS-comparison expectations covering balanced, sparse,
   two-rater, category-support, extreme-score, numerical, and external-result
   boundaries. These are structural expected answers, not completed fits or
@@ -97,6 +97,19 @@ but do not broaden current API scope.
   of the one-seed two-rater, category-imbalance, checkerboard-interaction, and
   local-dependence pilot. It records false-readiness risks and next calibration
   requirements; it is not confirmation or a diagnostic decision rule.
+- `gpcm-stress-covering-grid-0.2.3.R`: repository-only pairwise covering-grid
+  generator and runner for the prespecified GPCM stress envelope. It retains
+  mandatory corners, partitions smoke/pilot/confirmation seeds, records the
+  unsupported one-slope-level generator as a known gap, applies missingness,
+  category-support, topology, weight, repeated-cell, interaction, bias, drift,
+  and residual-PCA challenges, and keeps every external numeric comparison
+  ineligible until an exact estimand and normalizer contract exists. Its
+  thresholds remain unfrozen calibration inputs.
+- `gpcm-stress-covering-grid-smoke-record-0.2.3.md`: hashed draft.41 record of
+  the deterministic seven-row smoke profile. It documents six executed cells,
+  one known generator gap, zero false-ready results, zero external numeric-
+  eligible rows, and an executable residual-PCA lane while explicitly
+  withholding recovery, coverage, diagnostic-sensitivity, and release claims.
 - `facets-mfrmr-divergence-audit-0.2.3.R`: repository-only contract audit for
   completed paired pilots. Before interpreting parameter differences it checks
   constrained main-effect rank, declared versus FACETS-retained category/step

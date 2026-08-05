@@ -7,16 +7,21 @@ release_readiness_protocol_path <- function() {
   }
 }
 
-test_that("public roadmap is separated from internal release operations", {
+test_that("public roadmap and current NEWS exclude internal release operations", {
   pkg_root <- normalizePath(testthat::test_path("..", ".."), mustWork = TRUE)
   public_path <- file.path(pkg_root, "ROADMAP.md")
+  news_path <- file.path(pkg_root, "NEWS.md")
   internal_path <- file.path(pkg_root, "inst", "validation",
                              "internal-roadmap-0.2.3.md")
-  skip_if_not(file.exists(public_path))
+  skip_if_not(all(file.exists(c(public_path, news_path))))
   expect_true(file.exists(internal_path))
 
   public <- paste(readLines(public_path, warn = FALSE, encoding = "UTF-8"),
                   collapse = "\n")
+  news <- readLines(news_path, warn = FALSE, encoding = "UTF-8")
+  historical_boundary <- match("# mfrmr 0.2.2", news)
+  expect_true(is.finite(historical_boundary))
+  current_news <- paste(news[seq_len(historical_boundary - 1L)], collapse = "\n")
   internal <- paste(readLines(internal_path, warn = FALSE, encoding = "UTF-8"),
                     collapse = "\n")
   forbidden <- c(
@@ -29,6 +34,14 @@ test_that("public roadmap is separated from internal release operations", {
   )
   for (pattern in forbidden) {
     expect_false(grepl(pattern, public, perl = TRUE), info = pattern)
+  }
+  news_forbidden <- c(
+    "candidate manifest", "frozen gate", "gate-development",
+    "unauthorized confirmation", "candidate-linked result",
+    "internal development and validation roadmap"
+  )
+  for (pattern in news_forbidden) {
+    expect_false(grepl(pattern, current_news, fixed = TRUE), info = pattern)
   }
   expect_match(public, "single source of truth for mfrmr's public release direction",
                fixed = TRUE)
@@ -45,7 +58,7 @@ test_that("public roadmap is separated from internal release operations", {
   expect_true(any(grepl("inst/validation", ignore, fixed = TRUE)))
 })
 
-test_that("internal draft.40 GPCM boundary work remains explicit and private", {
+test_that("internal draft.41 GPCM stress work remains explicit and private", {
   pkg_root <- normalizePath(testthat::test_path("..", ".."), mustWork = TRUE)
   internal_path <- file.path(
     pkg_root, "inst", "validation", "internal-roadmap-0.2.3.md"
@@ -67,9 +80,13 @@ test_that("internal draft.40 GPCM boundary work remains explicit and private", {
     pkg_root, "inst", "validation",
     "readiness-contract-fixtures-0.2.3.csv"
   )
+  gpcm_smoke_record_path <- file.path(
+    pkg_root, "inst", "validation",
+    "gpcm-stress-covering-grid-smoke-record-0.2.3.md"
+  )
   skip_if_not(all(file.exists(c(
     internal_path, gate_path, checklist_path, estimator_plan_path,
-    contract_path, fixture_path
+    contract_path, fixture_path, gpcm_smoke_record_path
   ))))
 
   internal <- paste(readLines(internal_path, warn = FALSE, encoding = "UTF-8"),
@@ -80,6 +97,10 @@ test_that("internal draft.40 GPCM boundary work remains explicit and private", {
                                check.names = FALSE)
   estimator_plan <- paste(
     readLines(estimator_plan_path, warn = FALSE, encoding = "UTF-8"),
+    collapse = "\n"
+  )
+  gpcm_smoke_record <- paste(
+    readLines(gpcm_smoke_record_path, warn = FALSE, encoding = "UTF-8"),
     collapse = "\n"
   )
 
@@ -132,8 +153,16 @@ test_that("internal draft.40 GPCM boundary work remains explicit and private", {
   expect_match(internal, "partitioned\\s+exhaustively")
   expect_match(internal, "Estimator ecosystem and maturity boundary", fixed = TRUE)
   expect_match(internal, "method = \"HRM\"", fixed = TRUE)
-  expect_match(gate, "Specification ID | `0.2.3-draft.40`", fixed = TRUE)
+  expect_match(gate, "Specification ID | `0.2.3-draft.41`", fixed = TRUE)
   expect_match(internal, "Draft.40 adds the first bounded joint nonlinear GPCM path family", fixed = TRUE)
+  expect_match(internal, "Draft.41 makes the prespecified GPCM stress envelope executable", fixed = TRUE)
+  expect_match(internal, "70 pilot cells covering all 1,330", fixed = TRUE)
+  expect_match(gpcm_smoke_record, "zero false-ready rows", fixed = TRUE)
+  expect_match(
+    gpcm_smoke_record,
+    "1157044b089f9b2c261f9feceb6bf25c16aa71435307afed635aef30c05c4994",
+    fixed = TRUE
+  )
   expect_match(internal, "GPCM discrepancy decomposition and stress envelope", fixed = TRUE)
   expect_match(internal, "different_slope_estimand", fixed = TRUE)
   expect_match(internal, "Table 7 discrimination is never a", fixed = TRUE)
@@ -160,6 +189,7 @@ test_that("internal draft.40 GPCM boundary work remains explicit and private", {
     "jml_joint_recession_certificate",
     "jml_gpcm_slope_boundary_path",
     "jml_gpcm_joint_boundary_path",
+    "gpcm_stress_covering_grid",
     "sparse_estimability_performance",
     "metric_specific_comparison_eligibility",
     "jml_estimator_maturity",
@@ -1584,4 +1614,123 @@ test_that("release-readiness protocol reviews the source tree shape", {
     "ok"
   )
   expect_true(isTRUE(review$checklist_status$ChecklistAvailable[1]))
+})
+
+test_that("GPCM stress manifest covers every prespecified axis pair", {
+  pkg_root <- normalizePath(test_path("..", ".."), winslash = "/",
+                            mustWork = TRUE)
+  runner <- file.path(
+    pkg_root, "inst", "validation", "gpcm-stress-covering-grid-0.2.3.R"
+  )
+  expect_true(file.exists(runner))
+  env <- new.env(parent = globalenv())
+  source(runner, local = env)
+
+  pilot <- env$mfrmr_gpcm_stress_manifest("pilot")
+  confirmation <- env$mfrmr_gpcm_stress_manifest("confirmation")
+  coverage <- env$mfrmr_gpcm_stress_coverage(pilot)
+
+  expect_identical(nrow(pilot), 70L)
+  expect_identical(sum(pilot$DesignSource == "mandatory_corner"), 12L)
+  expect_identical(coverage$summary$RequiredPairs, 1330L)
+  expect_identical(coverage$summary$UncoveredPairs, 0L)
+  expect_true(coverage$summary$PairwiseComplete)
+  expect_identical(anyDuplicated(pilot$ScenarioId), 0L)
+  expect_false(any(pilot$Seed %in% confirmation$Seed))
+  expect_true(all(!pilot$NumericExternalEligible))
+  expect_true(all(pilot$ThresholdStatus == "pilot_required_not_frozen"))
+  expect_true(all(pilot$ReleaseUse == "calibration_only"))
+  expect_true(all(nchar(pilot$ManifestHash) == 64L))
+
+  one_level <- pilot[pilot$SlopeLevels == "one", , drop = FALSE]
+  expect_gt(nrow(one_level), 0L)
+  expect_true(all(!one_level$Executable))
+  expect_true(all(
+    one_level$ExecutionReason == "single_slope_level_generator_not_supported"
+  ))
+})
+
+test_that("GPCM stress smoke generator is deterministic and fails closed", {
+  pkg_root <- normalizePath(test_path("..", ".."), winslash = "/",
+                            mustWork = TRUE)
+  runner <- file.path(
+    pkg_root, "inst", "validation", "gpcm-stress-covering-grid-0.2.3.R"
+  )
+  env <- new.env(parent = globalenv())
+  source(runner, local = env)
+  smoke <- env$mfrmr_gpcm_stress_manifest("smoke")
+
+  executable <- smoke[smoke$Executable, , drop = FALSE]
+  support <- lapply(seq_len(nrow(executable)), function(i) {
+    generated <- env$mfrmr_gpcm_stress_build(executable[i, , drop = FALSE])
+    transformed <- env$mfrmr_gpcm_stress_transform(
+      generated, executable[i, , drop = FALSE]
+    )
+    env$mfrmr_gpcm_stress_support(
+      transformed$data, executable$NCategories[i]
+    )
+  })
+  hashes <- vapply(support, `[[`, character(1), "RetainedDataHash")
+  expect_true(all(nchar(hashes) == 64L))
+  expect_identical(anyDuplicated(hashes), 0L)
+
+  dry <- env$mfrmr_run_gpcm_stress_covering_grid(
+    "smoke", dry_run = TRUE, verbose = FALSE
+  )
+  dry_summary <- env$mfrmr_summarize_gpcm_stress_covering_grid(dry)
+  expect_true(dry_summary$PairwiseComplete)
+  expect_identical(dry_summary$UncoveredPairs, 0L)
+  expect_identical(dry_summary$KnownGapRows, 1L)
+  expect_identical(dry_summary$ExecutedRows, 0L)
+  expect_identical(dry_summary$NumericExternalEligibleRows, 0L)
+
+  negative_ids <- smoke$ScenarioId[smoke$CornerId %in% c(
+    "zero_shared_jml", "internal_zero_mml"
+  )]
+  negative <- env$mfrmr_run_gpcm_stress_covering_grid(
+    "smoke", scenario_ids = negative_ids, maxit = 50L, verbose = FALSE
+  )
+  expect_true(all(negative$results$Executed))
+  expect_true(all(!negative$results$FalseReady))
+  expect_identical(
+    negative$results$MinCommonPersons[
+      negative$results$CornerId == "zero_shared_jml"
+    ],
+    0L
+  )
+  expect_identical(
+    negative$results$ZeroCategories[
+      negative$results$CornerId == "internal_zero_mml"
+    ],
+    1L
+  )
+  expect_true(all(!negative$results$NumericExternalEligible))
+})
+
+test_that("GPCM local-dependence corner reaches exploratory residual PCA", {
+  pkg_root <- normalizePath(test_path("..", ".."), winslash = "/",
+                            mustWork = TRUE)
+  runner <- file.path(
+    pkg_root, "inst", "validation", "gpcm-stress-covering-grid-0.2.3.R"
+  )
+  env <- new.env(parent = globalenv())
+  source(runner, local = env)
+  smoke <- env$mfrmr_gpcm_stress_manifest("smoke")
+  scenario_id <- smoke$ScenarioId[
+    smoke$CornerId == "local_dependence_jml"
+  ]
+  result <- env$mfrmr_run_gpcm_stress_covering_grid(
+    "smoke",
+    scenario_ids = scenario_id,
+    run_diagnostics = TRUE,
+    maxit = 60L,
+    verbose = FALSE
+  )
+  expect_identical(result$results$RunState, "completed_calibration")
+  expect_identical(result$results$PCAState, "available_exploratory")
+  expect_true(is.finite(result$results$PCAFirstEigenvalue))
+  expect_gt(result$results$ExactCellDuplicates, 0L)
+  expect_identical(result$results$DistinguishedCellDuplicates, 0L)
+  expect_false(result$results$InferenceReady)
+  expect_false(result$results$FalseReady)
 })

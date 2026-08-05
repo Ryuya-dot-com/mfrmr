@@ -286,11 +286,15 @@ export_toy <- export_mfrm_results(
   overwrite = TRUE,
   acknowledge_sensitive = TRUE
 )
-head(export_toy$written_files)
+export_preview <- head(export_toy$written_files)
+export_preview$Path <- basename(export_preview$Path)
+export_preview
 ```
 
 The acknowledgement suppresses the warning only; it does not redact person
 identifiers, person-level results, local paths, or the complete RDS object.
+The preview above deliberately shows path basenames only; the returned export
+object retains the actual local paths needed by the current analysis session.
 Review every exported file under the study's data-handling policy before sharing.
 
 ```{r primary-route-artifacts, echo = FALSE, eval = is_cran_check}
