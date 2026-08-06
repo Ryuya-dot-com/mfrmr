@@ -166,6 +166,16 @@ but do not broaden current API scope.
   rows, 12/12 fresh-process matches, 4/4 deadline controls, a bounded
   normalization candidate, and explicit no-solver/no-dispatch/no-confirmation
   decisions.
+- `jml-target-positive-cone-pilot-0.2.3.R`: draft.59 guarded 400-Person
+  complete, balanced-sparse, and random-sparse RSM/GPCM topology pairs. It
+  separates safe evidence completion from normalization qualification, binds
+  ordinary/capture fit identities, and uses timeout-zero only as a post-failure
+  attribution reference.
+- `jml-target-positive-cone-pilot-record-0.2.3.md`: hashed draft.59 record of
+  3/3 topology/exposure matches, 64/64 safe solver rows, 61/64 provenance rows,
+  one ordinary/capture RSM joint-state divergence, three of ten timeout-
+  reference outcome changes, rejected target-scale normalization, and a new
+  recession-replay investigation requirement.
 - `gpcm-isolated-attribution-pilot-0.2.3.R`: draft.42 repository-only
   one-axis attribution manifest and paired runner. It changes one of 11 axes
   around a fixed GPCM reference, sends each retained dataset through GPCM-JML,
