@@ -176,6 +176,19 @@ but do not broaden current API scope.
   one ordinary/capture RSM joint-state divergence, three of ten timeout-
   reference outcome changes, rejected target-scale normalization, and a new
   recession-replay investigation requirement.
+- `jml-recession-replay-policy-pilot-0.2.3.R`: draft.60 guarded fresh-process
+  replay of seven exact draft.59 problems under current two-second, bounded
+  retry, bounded single-ten-second, and OS-bounded native-zero policies. It
+  journals capacity and strictness separately, validates every status-zero
+  solution on the original scale, and supports identity-bound checkpoint
+  reuse without permitting production selection.
+- `jml-recession-replay-policy-worker-0.2.3.R`: isolated draft.60 worker with
+  stage-attempt journals and an independent parent-process deadline.
+- `jml-recession-replay-policy-pilot-record-0.2.3.md`: hashed draft.60 record
+  of 112/112 completed and safe fresh processes, 27/28 stable cells, reproduced
+  two-second capacity/strictness instability, two bounded policies qualified
+  only for fit-level continuation, and explicit no-selection/no-production-
+  change/no-confirmation decisions.
 - `gpcm-isolated-attribution-pilot-0.2.3.R`: draft.42 repository-only
   one-axis attribution manifest and paired runner. It changes one of 11 axes
   around a fixed GPCM reference, sends each retained dataset through GPCM-JML,
