@@ -189,6 +189,22 @@ but do not broaden current API scope.
   two-second capacity/strictness instability, two bounded policies qualified
   only for fit-level continuation, and explicit no-selection/no-production-
   change/no-confirmation decisions.
+- `jml-recession-fit-policy-pilot-0.2.3.R`: draft.61 guarded full-fit policy
+  comparison over the six exact draft.59 RSM/GPCM routes. It captures every
+  target call after optimization, rotates four policy orders across three
+  fresh-process repetitions, verifies input/optimizer/semantic identities,
+  and applies a prespecified attempt-count consequence rule without using
+  elapsed time for selection.
+- `jml-recession-fit-policy-worker-0.2.3.R`: isolated draft.61 worker that
+  installs a validation-only target-LP policy, journals every solver attempt,
+  restores the namespace binding, and remains independently bounded by its
+  parent process.
+- `jml-recession-fit-policy-pilot-record-0.2.3.md`: hashed draft.61 record of
+  72/72 completed and safe fits, 23/24 stable policy-by-route cells, only 4/6
+  current-policy reference matches, two 6/6 qualified candidates, and the
+  prespecified selection of single-ten-second as an implementation candidate.
+  Production change, blocker closure, runtime freeze, and confirmation remain
+  false.
 - `gpcm-isolated-attribution-pilot-0.2.3.R`: draft.42 repository-only
   one-axis attribution manifest and paired runner. It changes one of 11 axes
   around a fixed GPCM reference, sends each retained dataset through GPCM-JML,
