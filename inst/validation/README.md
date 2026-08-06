@@ -156,6 +156,16 @@ but do not broaden current API scope.
   280/280 ordinary paired matches, 94/96 property rows, an RSM positive-cone
   GLPK scaling failure, insufficient failure-status specificity for both
   high-level solver routes, and an explicit no-candidate/no-dispatch decision.
+- `jml-solver-normalization-pilot-0.2.3.R` and
+  `jml-solver-normalization-worker-0.2.3.R`: draft.58 guarded six-source scale
+  ladder, original-scale post-solve verification, fresh-process reproduction,
+  and real child-process deadline controls. Normalization and solver candidacy
+  are separate decisions, and neither route can change a production result.
+- `jml-solver-normalization-pilot-record-0.2.3.md`: hashed draft.58 record of
+  144/144 provenance-safe rows, 66/72 raw versus 72/72 L1-normalized qualified
+  rows, 12/12 fresh-process matches, 4/4 deadline controls, a bounded
+  normalization candidate, and explicit no-solver/no-dispatch/no-confirmation
+  decisions.
 - `gpcm-isolated-attribution-pilot-0.2.3.R`: draft.42 repository-only
   one-axis attribution manifest and paired runner. It changes one of 11 axes
   around a fixed GPCM reference, sends each retained dataset through GPCM-JML,
