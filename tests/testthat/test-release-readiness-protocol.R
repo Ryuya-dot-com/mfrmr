@@ -60,7 +60,7 @@ test_that("public roadmap and current NEWS exclude internal release operations",
   expect_true(any(grepl("inst/validation", ignore, fixed = TRUE)))
 })
 
-test_that("internal draft.51 roadmap and GPCM work remain explicit and private", {
+test_that("internal draft.62 roadmap and GPCM work remain explicit and private", {
   pkg_root <- normalizePath(testthat::test_path("..", ".."), mustWork = TRUE)
   internal_path <- file.path(
     pkg_root, "inst", "validation", "internal-roadmap-0.2.3.md"
@@ -241,7 +241,7 @@ test_that("internal draft.51 roadmap and GPCM work remain explicit and private",
   expect_match(internal, "partitioned\\s+exhaustively")
   expect_match(internal, "Estimator ecosystem and maturity boundary", fixed = TRUE)
   expect_match(internal, "method = \"HRM\"", fixed = TRUE)
-  expect_match(gate, "Specification ID | `0.2.3-draft.51`", fixed = TRUE)
+  expect_match(gate, "Specification ID | `0.2.3-draft.62`", fixed = TRUE)
   expect_match(internal, "Draft.40 adds the first bounded joint nonlinear GPCM path family", fixed = TRUE)
   expect_match(internal, "Draft.41 makes the prespecified GPCM stress envelope executable", fixed = TRUE)
   expect_match(internal, "Draft.42 adds the isolated-attribution layer", fixed = TRUE)
@@ -268,10 +268,18 @@ test_that("internal draft.51 roadmap and GPCM work remain explicit and private",
   expect_match(internal,
                "Draft.51 implements the certificate-equivalent structural global-cone",
                fixed = TRUE)
+  expect_match(internal,
+               "Draft.62 implements the selected bounded single-ten-second policy",
+               fixed = TRUE)
   expect_match(internal, "`release_spine`", fixed = TRUE)
   expect_match(internal, "in_progress_core_slice_unblocked", fixed = TRUE)
   expect_match(internal,
-               "in_progress_prespecification_calibration_only", fixed = TRUE)
+               "in_progress_replay_blocker_resolved_nonlinear_gpcm_pca_ademp_resume",
+               fixed = TRUE)
+  expect_match(internal,
+               "in_progress_replay_resolved_profile_and_precision_remaining",
+               fixed = TRUE)
+  expect_match(gate, "`ReplayBlockerResolved=true`", fixed = TRUE)
   expect_match(internal, "70 pilot cells covering all 1,330", fixed = TRUE)
   expect_match(gpcm_smoke_record, "zero false-ready rows", fixed = TRUE)
   expect_match(

@@ -484,12 +484,26 @@ mfrmr_jml_recession_shared_geometry <- function(prep, idx, config, sizes,
   )
 }
 
+mfrmr_jml_recession_fit_policy <- function() {
+  list(
+    contract_version = "mfrmr-jml-recession-fit-policy-v1",
+    scope = "additive_structural_and_joint_recession",
+    native_timeout_seconds = 10L,
+    attempts_per_stage = 1L,
+    retry_after_unaccepted = FALSE,
+    maximum_native_seconds_per_positive_target = 20L
+  )
+}
+
 mfrmr_jml_recession_run_lp <- function(lp_base,
                                         objective,
                                         extra_constraint = NULL,
                                         extra_direction = NULL,
                                         extra_rhs = NULL,
-                                        timeout = 2L) {
+                                        timeout = (
+                                          mfrmr_jml_recession_fit_policy()$
+                                            native_timeout_seconds
+                                        )) {
   objective <- as.numeric(objective)
   constraint_direction <- lp_base$constraint_direction
   constraint_rhs <- lp_base$constraint_rhs
@@ -542,7 +556,10 @@ mfrmr_jml_recession_target_lp <- function(lp_base,
                                            target,
                                            objective_tolerance = 1e-7,
                                            certificate_tolerance = 1e-7,
-                                           timeout = 5L) {
+                                           timeout = (
+                                             mfrmr_jml_recession_fit_policy()$
+                                               native_timeout_seconds
+                                           )) {
   target <- as.numeric(target)
   n_parameters <- length(target)
   signed_target <- c(target, -target)
@@ -844,7 +861,10 @@ audit_mfrm_jml_additive_recession <- function(prep,
                                                max_person_coordinates = 500L,
                                                max_additive_coordinates = 750L,
                                                max_target_directions = 200L,
-                                               lp_timeout = 2L,
+                                               lp_timeout = (
+                                                 mfrmr_jml_recession_fit_policy()$
+                                                   native_timeout_seconds
+                                               ),
                                                cone_objective_tolerance = 1e-10,
                                                cone_certificate_tolerance = 1e-7,
                                                nullspace_tolerances = c(

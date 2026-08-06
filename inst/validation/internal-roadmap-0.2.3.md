@@ -1117,6 +1117,44 @@ General nonlinear GPCM, PCA computability, and ADEMP recovery/coverage remain
 separate open work and must not inherit a pass from this conditional-additive
 fit-policy result.
 
+Draft.62 implements the selected bounded single-ten-second policy as the
+versioned internal contract `mfrmr-jml-recession-fit-policy-v1`. The additive
+structural and joint recession audits now give each capacity and strictness
+stage one native ten-second attempt, do not retry an unaccepted result, and
+retain a maximum 20-second native allowance for a positive target that needs
+both stages. Nonzero or malformed solver results still fail closed and every
+accepted direction still passes the original-scale certificate. This is a
+fit-policy change only: the likelihood, optimizer, parameterization,
+readiness derivation, fitted-object schema, exported API, and nonlinear GPCM
+joint-pair audit are unchanged. In particular, the nonlinear GPCM audit keeps
+its separate two-second default because Draft.61 supplied no evidence for
+changing it.
+
+The post-implementation native exercise observes rather than replaces the
+production target-LP route. Across the same six complete, balanced-sparse,
+and random-sparse RSM/GPCM routes and three fresh-process repetitions, all 18
+fits complete safely with no parent kill. All 18 reproduce the selected
+Draft.61 candidate's complete result identity and target-call outcome; the 51
+native target calls use ten-second inputs, require 66 solver attempts, and
+produce six of six stable route cells. The final exact tarball has SHA-256
+`7ceb2848958f2f70084e987342eb3e58e6a38b2b41964ceb0d385ea276d92624`.
+Its sharded full non-CRAN regression covers all 129 test files with 13,172
+passing expectations, 38 expected fail-closed warnings, 23 optional-capability
+skips, and zero failures or errors. Its temporary-filesystem package check
+completes code, tests, examples, and vignettes with one offline optional-
+Suggests Rd-cross-reference NOTE and no WARNING. This is not a complete-
+dependency, manual, `--as-cran`, or release-candidate check.
+
+Once those final source-linked checks pass, the narrow recession replay
+blocker is resolved and the selected policy may remain in production. That
+decision does not freeze a supported workload envelope, promote any checklist
+criterion, or authorize confirmation. WP6 therefore returns to nonlinear
+GPCM joint geometry, residual-PCA computability, broader sparse/active-
+structure stress, and replay serialization. WP7 still owes replicated
+platform profiling, ADEMP recovery and coverage, metric-specific external
+eligibility, Monte Carlo precision, candidate identity, and the complete
+confirmation plan.
+
 Draft.51 verification exercises all 127 package-aware test files. The exact
 491-entry source tarball, SHA-256
 `bd72d5256d4f721ed735d08306bf6b8cba029108c913707b942095070d56a1df`,
@@ -1269,8 +1307,8 @@ affected WP1--WP6 slices, criteria, and candidate identity are frozen.
 | `WP3-JML-BOUNDARY` | WP0 | `in_progress_bounded_joint_nonlinear_gpcm_paths` | Detect JML element separation/extreme sufficient scores on the actual contributing row pattern; replace optimizer-dependent finite primary values with typed boundary states. The Person primary-state slice, sparse-triplet Person-fixed structural certificate, companion joint Person-structural additive cone, retained-additive GPCM slope-only monotone paths, and ordered-pair linear-additive/constant-log-slope joint path family are implemented. Positive joint paths remain candidates because the GPCM likelihood is globally non-concave; negative results are scoped. More general rate vectors, curved paths, global arguments, independent general solver parity, broader model/basis properties, and target-scale evidence remain pending. | JML extreme/nonextreme fixtures, MML non-reduction guard, constrained facet/interaction/joint/slope-path certificates, sparse/dense and independent microcase parity, nonlinear joint-path positive and negative controls, and explicit optional-display contract. |
 | `WP4-READINESS-PROPAGATION` | WP1--WP3 | `in_progress_gpcm_joint_candidate_slice` | Derive fit-, parameter-, and output-level readiness once and propagate it without surface-specific reinterpretation. The fit record, deterministic precedence, conservative scalar, fail-closed synthetic legacy-object path, summary/results/convergence/plot front doors, target-aware unpropagated-candidate rule, typed slope-only GPCM boundaries, and candidate-specific joint GPCM reasons under contract v3 are implemented. Competitive joint candidates remain `not_evaluated` with no primary value or ordinary uncertainty; complete facet/interaction/step and remaining output propagation depend on unfinished WP1--WP3 states. | Cross-surface snapshot/semantic tests and a real serialized 0.2.2-object migration fixture. |
 | `WP5-COMPARISON-CONTRACT` | affected WP4 slice | `in_progress_core_slice_unblocked` | Make FACETS, TAM, immer, and other external normalization metric-specific and fail closed before numeric aggregation; identify estimator, adjustment, person treatment, and software stratum explicitly. Begin deterministic accepted/rejected fixtures and stable RSM/PCM metric slices now; unrelated GPCM, diagnostic, CML/CCML, and HRM rows remain ineligible until their own dependencies pass. | Eligibility/rejection ledger with denominator accounting, method-mode identity, and no silent row loss. |
-| `WP6-SCALE-AND-ADVERSARIAL` | affected WP1--WP4 slice | `in_progress_single_10s_implementation_candidate_selected` | Verify sparse computation, basis invariance, row-order and label invariance, malformed-input behavior, optional-capability fail-closed behavior, and target-size runtime/memory without claiming FACETS capacity parity. Drafts.43--56 establish execution identity, exact guarded reductions, sparse construction, and solver attribution; Drafts.57--59 reject GLPK and target normalization while exposing native-timeout replay failure. Draft.60 qualifies two bounded problem-level policies. Draft.61 completes 72/72 safe full fits with zero parent kills, 23/24 stable cells, only 4/6 production-reference matches, and two 6/6 stable reference-matched candidates with invariant optimizer hashes. Under the frozen equal-bound rule, single-ten-second has no more attempts in 18/18 paired cells and fewer in six, so it alone advances to implementation. Draft.62 must implement and revalidate it before any production or blocker decision. Then return to nonlinear GPCM, PCA computability, serialization/replay, and broader active-structure grids. | Benchmark envelope and metamorphic/negative-test report; capability manifest; no dense design allocation at target sizes. |
-| `WP7-REPILOT-AND-FREEZE` | frozen release-spine profile plus affected WP0--WP6 slices | `in_progress_candidate_implementation_and_revalidation_required` | Prespecify replication counts, MCSE targets, failure denominators, seeds, and manifests in parallel. Calibration pilots may run only for explicitly stable slices and are invalidated by later affected code/contract changes. Drafts.43--60 supply resumability, invariance, computation attribution, exact reductions, solver-negative evidence, bounded normalization, and two bounded replay candidates. Draft.61 binds 72 fresh full fits, all-target calls, boundary/readiness outcomes, independent deadlines, and optimizer identities; both candidates match six of six reference routes. Its prespecified equal-20-second maximum-bound rule selects single-ten-second because it uses no more attempts in all 18 paired cells and fewer in six. This freezes an implementation candidate only. Draft.62 must implement the policy and reproduce native semantic/optimizer identities through affected unit, target-scale, regression, and package-check evidence before replay closure. General nonlinear GPCM, replicated platform timing, PCA criteria, ADEMP recovery/coverage, external eligibility, and the complete statistical precision plan remain open. Confirmation stays unauthorized until replay, profile, criteria, and candidate identity are frozen. | Claim-disposition profile, complete pilot registry, atomic resumable execution, method-mode-specific exclusions, prespecified precision plan, resolved release-spine blockers, and still no confirmation result. |
+| `WP6-SCALE-AND-ADVERSARIAL` | affected WP1--WP4 slice | `in_progress_replay_blocker_resolved_nonlinear_gpcm_pca_ademp_resume` | Verify sparse computation, basis invariance, row-order and label invariance, malformed-input behavior, optional-capability fail-closed behavior, and target-size runtime/memory without claiming FACETS capacity parity. Drafts.43--61 establish execution identity, exact guarded reductions, sparse construction, solver attribution, rejected alternatives, and selection of the bounded single-ten-second candidate. Draft.62 implements that policy for additive structural/joint audits and reproduces all 18 selected-candidate result identities and call outcomes over the six target-scale routes, with affected regression and package evidence bound to the implementation record. The narrow native-timeout replay blocker is resolved; no capacity or runtime envelope is frozen. Resume nonlinear GPCM joint geometry, PCA computability, serialization/replay, and broader active-structure grids. | Benchmark envelope and metamorphic/negative-test report; capability manifest; no dense design allocation at target sizes. |
+| `WP7-REPILOT-AND-FREEZE` | frozen release-spine profile plus affected WP0--WP6 slices | `in_progress_replay_resolved_profile_and_precision_remaining` | Prespecify replication counts, MCSE targets, failure denominators, seeds, and manifests in parallel. Calibration pilots may run only for explicitly stable slices and are invalidated by later affected code/contract changes. Draft.62 resolves only the additive JML recession replay blocker after native six-route identity, affected full-regression, and exact-tarball package checks. General nonlinear GPCM, replicated platform timing, PCA criteria, ADEMP recovery/coverage, external eligibility, the supported workload profile, and the complete statistical precision plan remain open. Confirmation stays unauthorized until profile, criteria, candidate identity, and all other release-spine blockers are frozen. | Claim-disposition profile, complete pilot registry, atomic resumable execution, method-mode-specific exclusions, prespecified precision plan, resolved release-spine blockers, and still no confirmation result. |
 
 #### Corrective-program execution lanes
 

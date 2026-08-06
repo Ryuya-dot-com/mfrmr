@@ -205,6 +205,20 @@ but do not broaden current API scope.
   prespecified selection of single-ten-second as an implementation candidate.
   Production change, blocker closure, runtime freeze, and confirmation remain
   false.
+- `jml-recession-native-policy-validation-0.2.3.R`: draft.62 guarded native
+  production-policy validation over the same six target-scale routes and three
+  fresh-process repetitions. It observes target calls without replacing the
+  production policy and compares complete result and call-outcome identities
+  with the selected draft.61 candidate.
+- `jml-recession-native-policy-regression-0.2.3.R`: draft.62 sharded full
+  non-CRAN regression runner and fail-closed aggregator. It binds the complete
+  test inventory, runner source, installed candidate, per-file outcomes, and
+  warning ledger before publishing a completion marker.
+- `jml-recession-native-policy-validation-record-0.2.3.md`: draft.62 source-
+  and candidate-linked implementation record. It resolves only the additive
+  JML recession replay blocker after native route identity, affected unit,
+  full-regression, and exact-tarball package checks; runtime/capacity,
+  nonlinear GPCM, PCA, ADEMP, and confirmation remain open.
 - `gpcm-isolated-attribution-pilot-0.2.3.R`: draft.42 repository-only
   one-axis attribution manifest and paired runner. It changes one of 11 axes
   around a fixed GPCM reference, sends each retained dataset through GPCM-JML,

@@ -91,6 +91,101 @@ finite_grid_recession_oracle <- function(contrast, target, tolerance = 1e-10) {
   )
 }
 
+test_that("the additive recession fit policy is explicit and bounded", {
+  policy <- mfrmr:::mfrmr_jml_recession_fit_policy()
+
+  expect_identical(
+    names(policy),
+    c(
+      "contract_version", "scope", "native_timeout_seconds",
+      "attempts_per_stage", "retry_after_unaccepted",
+      "maximum_native_seconds_per_positive_target"
+    )
+  )
+  expect_identical(
+    policy$contract_version,
+    "mfrmr-jml-recession-fit-policy-v1"
+  )
+  expect_identical(
+    policy$scope,
+    "additive_structural_and_joint_recession"
+  )
+  expect_identical(policy$native_timeout_seconds, 10L)
+  expect_identical(policy$attempts_per_stage, 1L)
+  expect_false(policy$retry_after_unaccepted)
+  expect_identical(
+    policy$maximum_native_seconds_per_positive_target,
+    20L
+  )
+
+  namespace <- asNamespace("mfrmr")
+  expect_identical(
+    eval(
+      formals(mfrmr:::mfrmr_jml_recession_run_lp)$timeout,
+      envir = namespace
+    ),
+    10L
+  )
+  expect_identical(
+    eval(
+      formals(mfrmr:::mfrmr_jml_recession_target_lp)$timeout,
+      envir = namespace
+    ),
+    10L
+  )
+  expect_identical(
+    eval(
+      formals(mfrmr:::audit_mfrm_jml_additive_recession)$lp_timeout,
+      envir = namespace
+    ),
+    10L
+  )
+  expect_identical(
+    eval(
+      formals(mfrmr:::audit_mfrm_jml_gpcm_joint_boundary)$lp_timeout,
+      envir = namespace
+    ),
+    2L
+  )
+})
+
+test_that("the target LP uses one policy-bound attempt per stage", {
+  skip_if_not_installed("lpSolve")
+  observed_timeout <- integer(0)
+  testthat::local_mocked_bindings(
+    mfrmr_jml_recession_run_lp = function(
+        lp_base,
+        objective,
+        extra_constraint = NULL,
+        extra_direction = NULL,
+        extra_rhs = NULL,
+        timeout) {
+      observed_timeout <<- c(observed_timeout, as.integer(timeout))
+      list(status = 0L, objval = 1, solution = c(1, 0))
+    },
+    .package = "mfrmr"
+  )
+  lp_base <- mfrmr:::mfrmr_jml_recession_lp_base(
+    Matrix::sparseMatrix(i = 1L, j = 1L, x = 1, dims = c(1L, 1L))
+  )
+
+  default <- mfrmr:::mfrmr_jml_recession_target_lp(
+    lp_base = lp_base,
+    target = 1
+  )
+  explicit <- mfrmr:::mfrmr_jml_recession_target_lp(
+    lp_base = lp_base,
+    target = 1,
+    timeout = 3L
+  )
+
+  expect_true(default$certified)
+  expect_true(explicit$certified)
+  expect_identical(default$lp_calls, 2L)
+  expect_identical(explicit$lp_calls, 2L)
+  expect_identical(observed_timeout, c(10L, 10L, 3L, 3L))
+})
+
 test_that("the cone exclusion tolerance cannot hide a near-boundary target", {
   skip_if_not_installed("lpSolve")
   contrast <- Matrix::sparseMatrix(
