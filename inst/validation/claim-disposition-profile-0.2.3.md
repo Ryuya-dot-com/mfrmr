@@ -10,7 +10,7 @@ execution, candidate freeze, or release.
 
 | Artifact | SHA-256 |
 | --- | --- |
-| `release-evidence-checklist-0.2.3.csv` | `570f507f34ef33aae504fb0fca60d1e962e6d43a58edf2ce7e649abd1a13bf14` |
+| `release-evidence-checklist-0.2.3.csv` | `6bcd62e53b39b6c295c366fb4ce3feb1c7af6ad265f8ba38c9457b037d13c9bc` |
 | `claim-disposition-profile-0.2.3.csv` | `545409821e4674a45cc10e3f03483fdbfa87b4762ad5da4521efcafba0f66eff` |
 
 The profile contains exactly one row for each of the checklist's 106 `Item`
@@ -37,11 +37,12 @@ that the integrity audit itself failed.
 
 The mapping reduces an undifferentiated 106-row programme to a 53-row release
 spine. It does not assert that those 53 rows currently pass. The current
-checklist snapshot contains 27 `not_run`, 23 `review`, and three `ok` spine
+checklist snapshot contains 26 `not_run`, 23 `review`, and four `ok` spine
 rows. The completed rows are the deterministic v3 readiness-contract schema,
-exact-model reductions, and estimator-vocabulary contract; they do not close
-runtime readiness propagation, a general numerical tolerance, ecosystem
-positioning, or any external-equivalence claim. The 32 conditional rows
+exact-model reductions, estimator-vocabulary contract, and tracked-repository
+external privacy/license boundary; they do not close runtime readiness
+propagation, a general numerical tolerance, ecosystem positioning, external
+tool identity, metric eligibility, or any external-equivalence claim. The 32 conditional rows
 contain 10 `not_run`, 21 `review`, and one `ok`; that completed execution-
 integrity row does not promote its parent GPCM claim.
 Nine current `concern` rows are deferred G-theory infrastructure rows and no

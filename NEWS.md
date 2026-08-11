@@ -17,6 +17,13 @@ CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
   active claim fallbacks, and deferred rows; it does not mistake a valid
   profile for release readiness.
 
+* Closed the deterministic repository-content slice of the external privacy
+  and licensing boundary. A tracked-file audit recomputes identities for
+  ConQuest, FACETS, TAM, and immer source/contract/test/aggregate artifacts and
+  rejects proprietary binaries, keys, identifier-bearing case formats, real
+  local paths, and escaping symlinks without printing matched values. Ignored
+  external result directories still require a separate candidate review.
+
 * Completed the sealed four-arm ConQuest 5.47.5 additive RSM/PCM q31/q61
   calibration outside the filesystem sandbox. Exact native A-matrix checks
   establish the 7/9-dimensional sum-zero bases, and q31/q61 final coordinates

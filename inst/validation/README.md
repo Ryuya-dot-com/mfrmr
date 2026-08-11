@@ -57,6 +57,11 @@ identify whether the opt-in layer ran and retain its test log.
   spine, claim-specific fail-closed fallbacks, or deferred work. The central
   release-readiness review verifies its integrity and reports the current
   spine-open decision without treating deferred concerns as release blockers.
+- `external-repository-boundary-audit-0.2.3.R` and its record: deterministic
+  tracked-file privacy/license audit for external-comparison assets. It
+  retains only finding classes and repository-relative paths, recomputes the
+  external artifact manifest, and does not inspect or authorize ignored local
+  result directories.
 - `readiness-contract-fixtures-0.2.3.csv`: 36 exact positive, negative,
   migration, and FACETS-comparison expectations covering balanced, sparse,
   two-rater, category-support, extreme-score, numerical, and external-result

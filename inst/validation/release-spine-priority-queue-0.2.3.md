@@ -281,3 +281,13 @@ resolve to `JML` across fit, summary, console, manifest, and replay surfaces;
 public documentation retains `MML` and `JML` as the only canonical method
 labels. Rows 72--76 remain open, and this wording closure does not establish
 equal estimator maturity or external equivalence.
+
+Wave C admission row 66 `external_privacy_and_license_boundary` is now
+structurally closed by
+`external-repository-boundary-audit-record-0.2.3.md`. The tracked-file audit
+recomputes hashes for 93 external-related artifacts across ConQuest, FACETS,
+TAM, and immer and found zero proprietary binaries, keys, identifier-bearing
+case assets, real local paths, or escaping symlinks. This does not inspect
+ignored result directories or establish numerical comparability. Rows 64
+`metric_specific_comparison_eligibility` and 59 `facets_tool_identity` remain
+the active Wave C admission dependencies; no external rerun is authorized.

@@ -49,7 +49,7 @@ run in this audit.
 
 | Artifact | Identity |
 | --- | --- |
-| local image | `/Users/tohokusla/Dropbox/ConQuest_5_47_5/ConQuest_5_47_5.dmg` |
+| local image | untracked local ConQuest 5.47.5 disk image |
 | image SHA-256 | `8526b086aa33ee4a7b30b3dc86399f1f287f2667ea86c0cf3016d673e4f6e329` |
 | bundled executable SHA-256 | `61d0b87f379f1578466b789866366c5cc633d31a6c3501e872861d44ff02da48` |
 | bundled manual SHA-256 | `60bce1a39f5430fd304178356fb943721f9f72c0ddee70a9866c28c87017459f` |

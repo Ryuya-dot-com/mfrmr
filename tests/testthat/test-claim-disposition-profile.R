@@ -26,8 +26,8 @@ test_that("claim disposition is one hash-bound fail-closed scope surface", {
   expect_identical(status$ChecklistRows, 106L)
   expect_identical(status$ProfileRows, 106L)
   expect_identical(status$ReleaseSpineRows, 53L)
-  expect_identical(status$ReleaseSpineClosedRows, 3L)
-  expect_identical(status$ReleaseSpineOpenRows, 50L)
+  expect_identical(status$ReleaseSpineClosedRows, 4L)
+  expect_identical(status$ReleaseSpineOpenRows, 49L)
   expect_identical(status$ReleaseSpineConcernRows, 0L)
   expect_identical(status$ConditionalRows, 32L)
   expect_identical(status$ConditionalClosedRows, 1L)
@@ -36,7 +36,7 @@ test_that("claim disposition is one hash-bound fail-closed scope surface", {
   expect_identical(status$DeferredConcernRows, 9L)
   expect_identical(
     status$ReleaseScopeDecision,
-    "release_no_go_50_spine_rows_open"
+    "release_no_go_49_spine_rows_open"
   )
 })
 
