@@ -197,6 +197,17 @@ basin. It neither supplies a continuous-integral certificate nor authorizes
 source-solution replacement; population-boundary and selection contracts
 remain ahead of Hessian, DFF, fit, and ranking work.
 
+P1c then evaluates the lower population-variance boundary without substituting
+a merely small positive variance. For fixed nuisance coordinates, bounded
+continuous response likelihoods converge to the degenerate distribution, and
+q=1 evaluates that limit exactly. The q=1 objective matches an independent
+conditional-GPCM reconstruction and is invariant to the unused finite
+log-variance placeholder. Nevertheless, none of the 12 three-start boundary
+nuisance traces passes stationarity. Returned expanded slopes are highly start
+sensitive, so finite objectives cannot be treated as a profiled zero-boundary
+solution. The next deterministic lane must combine zero variance with explicit
+log-slope paths; neither the finite interior nor the zero boundary is selected.
+
 ### Ordered work and exit criteria
 
 1. **Close the 0.2.3 deterministic core.** Retain the completed reflected
@@ -251,5 +262,8 @@ multiple solutions, quadrature, canonical objective/gradient/free-dimension
 agreement, transformed-coordinate differences, and exact DFF/fit/rank/
 readiness decision signatures. P0b, P1a, and P1b now narrow the reflected
 Person MML result to one finite-q-stable local low-variance candidate while
-leaving the population boundary, source-solution selection, and continuous-
-integration questions open; they do not authorize a large simulation.
+P1c closes only the fixed-nuisance zero-variance likelihood identity. The
+profiled zero boundary is blocked by nonstationary, slope-sensitive nuisance
+traces, while source-solution selection, the upper/joint boundary, and
+continuous-integration questions remain open. None authorizes a large
+simulation.

@@ -589,6 +589,19 @@ population-boundary and source-solution selection contracts. It still does
 not authorize a default replacement, continuous-integration certificate,
 Hessian inference, DFF/fit/rank decisions, or broad simulation.
 
+P1c now implements the fixed-nuisance `sigma2 -> 0+` likelihood limit exactly:
+q=1 has node zero and weight one, and all 12 returned boundary traces agree
+with a separately reconstructed conditional-GPCM likelihood to at most about
+`1.71e-12`. This closes the likelihood-evaluation identity, not the profiled
+boundary. Zero of the 12 three-start nuisance refits passes the existing
+stationarity rule; returned slopes range into highly start-sensitive regimes,
+with maximum observed values above 36,000 in one diagnostic trace. No magnitude
+is a frozen boundary cutoff, and no nonstationary trace enters the interior
+comparison denominator. The next bounded question is therefore a joint
+zero-variance/log-slope path, followed separately by the upper/joint variance
+path and a source-solution rule. P2 uncertainty and downstream decisions remain
+blocked.
+
 The first runtime-propagation slice is now stable for retained RSM/PCM fits.
 Manifest, export, and replay surfaces preserve the exact v3 source-readiness
 record, while replayed fits recompute rather than inherit readiness. Optimizer

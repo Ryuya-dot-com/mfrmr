@@ -166,6 +166,17 @@ Finite-q stability is therefore conditionally supported for one local basin,
 but no observed difference is converted into a tolerance, no continuous
 integral is certified, and no package solution is selected.
 
+The P1c record,
+`gpcm-zero-variance-boundary-p1c-record-0.2.3.md`, implements the fixed-
+nuisance lower-variance limit exactly using node-zero/weight-one q=1 and an
+independent conditional-GPCM oracle. All 12 boundary nuisance fits return, but
+zero pass the existing stationarity rule. Their expanded slopes are strongly
+start sensitive, and some diagnostic traces reach very large ratios; these are
+observables rather than a slope-boundary cutoff. P1c consequently compares no
+boundary objective with the qualified interior and selects no solution. It
+narrows the next boundary work to a prespecified joint zero-variance/log-slope
+path instead of treating population variance as an isolated regular parameter.
+
 ## Solution selection and coordinate agreement
 
 Initial values are registered before fitting and expressed in the identified
@@ -269,11 +280,13 @@ not retrospective widening of the tolerance.
    joint additive/log-slope scope, add the separate MML fixed-facet/slope and
    variance-profile scopes. P1a admitted the low-variance basin to a bounded
    q=31/61/91 refit, and P1b now conditionally closes that finite-q calibration
-   under a held-out q=121 evaluator. Retain the default/high basin only as a
-   diagnostic trace unless its stationarity is independently repaired. Next
-   define the population-boundary and source-solution selection contracts;
-   do not add q points by default, freeze an observed local-solution tolerance,
-   or call finite-grid agreement a continuous-integral certificate.
+   under a held-out q=121 evaluator. P1c closes the fixed-nuisance lower-limit
+   identity but finds no stationary zero-boundary nuisance candidate. Retain
+   the default/high basin only as a diagnostic trace; next audit the joint
+   zero-variance/log-slope path, then the separate upper/joint variance path
+   and source-solution selection contract. Do not add q points by default,
+   freeze an observed slope or solution tolerance, or call finite-grid
+   agreement a continuous-integral certificate.
 3. **P2 -- uncertainty eligibility.** Separate unregularized, regularized,
    profile, bootstrap, and posterior intervals; propagate typed status through
    all public surfaces; then run parameter-class coverage pilots with explicit

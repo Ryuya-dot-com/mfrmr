@@ -4,6 +4,17 @@ This is the unreleased development line after CRAN publication of 0.2.2.
 CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
 0.2.3 and must not be attributed retroactively to 0.2.2.
 
+* Added an exact fixed-nuisance GPCM zero-population-variance P1c audit. The
+  q=1 node-zero/weight-one likelihood agrees with an independent conditional-
+  GPCM oracle to about `1.71e-12` and is exactly invariant to its irrelevant
+  finite log-variance placeholder. However, none of 12 three-start boundary
+  nuisance refits passes the existing stationarity rule, and the returned
+  traces contain strongly start-sensitive expanded slopes. They are therefore
+  excluded from boundary-versus-interior comparison even though all return
+  finite objectives. The next narrow gate is a prespecified zero-variance-by-
+  slope joint path, not solution replacement, Hessian/DFF/fit/rank work, or a
+  broad simulation.
+
 * Added a bounded GPCM low-basin quadrature P1b audit. The P1a-qualified local
   basin is independently refit at q=31, 61, and 91 and every vector is
   reevaluated at held-out q=121 with analytic and independent numeric scores,

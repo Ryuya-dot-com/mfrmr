@@ -3992,6 +3992,30 @@ population-boundary plus source-solution selection contract, alongside the
 separate fixed-facet Rater endpoint lane; adding more q values, Hessian work,
 downstream DFF/fit/rank work, or broad simulation cannot bypass those gates.
 
+P1c is now complete in
+`gpcm-zero-variance-boundary-p1c-0.2.3.R` and its execution record. For fixed
+nuisance coordinates, q=1 exactly evaluates the `sigma2 -> 0+` degenerate
+population likelihood; all 12 returned boundary vectors match a separate
+conditional-GPCM oracle to within about `1.71e-12`, and q=1 is exactly
+invariant over finite placeholder log variances from `-32` through `32`.
+
+That mathematical identity does not produce a usable profiled boundary.
+Three starts per reflected scenario all return finite values, but zero of 12
+nuisance fits passes the existing stationarity rule. Expanded slopes are
+highly start sensitive, reaching about 36,532 in one diagnostic trace with
+ratios up to about `1.58e17`; these values are not converted into cutoffs.
+Increasing a representative run from 800 to 3,000 maximum iterations leaves
+the same precision-limited point, so repetition alone is not the next step.
+Fixed-nuisance natural-variance paths are retained diagnostically but excluded
+from the decision because their source traces are ineligible.
+
+The next efficient P1 slice is therefore a prespecified joint
+`sigma2 -> 0`/log-slope path using the exact q=1 oracle. It must distinguish a
+nonattained improving boundary from a stiff but finite local trace. The upper-
+variance joint path remains separate. Until both and the source-selection rule
+are resolved, the q-stable interior candidate remains local and Hessian,
+DFF/fit/rank, and broad simulation remain inadmissible.
+
 ##### Draft.33 Person-fixed structural recession certificate
 
 Every retained JML RSM/PCM fit now attempts a bounded linear-program audit of

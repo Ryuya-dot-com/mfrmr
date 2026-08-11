@@ -120,6 +120,14 @@ identify whether the opt-in layer ran and retain its test log.
   default lane is excluded before comparison. No tolerance, continuous-
   integral certificate, solution selection, or downstream inference is
   promoted, and the 24-arm execution is opt-in.
+- `gpcm-zero-variance-boundary-p1c-0.2.3.R` and
+  `gpcm-zero-variance-boundary-p1c-record-0.2.3.md`: exact q=1 implementation
+  of the fixed-nuisance `sigma2 -> 0+` GPCM likelihood, with an independent
+  direct conditional-likelihood oracle, three nuisance starts, a prior
+  derivative-step ladder, and a diagnostic q=121 natural-variance path. All
+  12 finite boundary traces remain nonstationary and comparison-ineligible;
+  observed slope dispersion redirects the next gate to a joint zero-variance/
+  slope path without freezing a cutoff or selecting a solution.
 - `maxit-ceiling-contract-0.2.3.R` and
   `maxit-ceiling-stable-slice-audit-0.2.3.md`: repository-only attempt-registry
   validator and evidence record enforcing a prespecified increasing ceiling
