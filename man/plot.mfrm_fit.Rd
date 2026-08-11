@@ -177,7 +177,9 @@ Invisibly, an \code{mfrm_plot_data} object (default and for any
 single \code{type}), or an \code{mfrm_plot_bundle} when
 \code{type = "bundle"} / \code{"all"} / \code{"default"}. Each returned fit plot
 includes domain-specific readiness and an interpretation status in its
-data payload.
+data payload. It also includes a one-row \code{scale_contract} table recording
+the fitted coordinate basis, population SD when applicable,
+discrimination basis, and bounded-GPCM MML identification convention.
 }
 \description{
 Plot fitted MFRM results with base R

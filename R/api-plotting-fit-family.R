@@ -2648,7 +2648,9 @@ draw_facet_plot <- function(facet_tbl,
 #'   single `type`), or an `mfrm_plot_bundle` when
 #'   `type = "bundle"` / `"all"` / `"default"`. Each returned fit plot
 #'   includes domain-specific readiness and an interpretation status in its
-#'   data payload.
+#'   data payload. It also includes a one-row `scale_contract` table recording
+#'   the fitted coordinate basis, population SD when applicable,
+#'   discrimination basis, and bounded-GPCM MML identification convention.
 #' @seealso [fit_mfrm()], [plot_wright_unified()], [plot_bubble()],
 #'   [mfrmr_visual_diagnostics]
 #' @concept confidence intervals
@@ -2787,7 +2789,9 @@ plot.mfrm_fit <- function(x,
   as_plot_data <- function(name, data) {
     data_names <- names(data) %||% rep("", length(data))
     duplicated_named <- nzchar(data_names) & duplicated(data_names, fromLast = TRUE)
-    out <- new_mfrm_plot_data(name, data[!duplicated_named])
+    data <- data[!duplicated_named]
+    data$scale_contract <- mfrm_fit_scale_contract(x)
+    out <- new_mfrm_plot_data(name, data)
     out <- .mfrm_attach_plot_readiness(out, fit_plot_readiness)
     if (!isTRUE(fit_plot_readiness$ready) && !isTRUE(readiness_warning_emitted)) {
       warning(fit_plot_readiness$detail, call. = FALSE)

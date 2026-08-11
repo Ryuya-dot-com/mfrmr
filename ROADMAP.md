@@ -126,6 +126,16 @@ Priorities are:
   coverage or confirmation;
 - matched MML comparison with ConQuest and TAM where likelihood,
   identification, and integration conventions can be aligned;
+- a source- and version-bound `sirt::rm.facets()` MML comparison, beginning
+  with the item-only GPCM and equal-discrimination many-facet reductions. The
+  comparison must align category support, threshold coordinates, slope
+  centering, trait distribution, quadrature grid, retained rows, and rounding
+  before assigning a numerical tolerance. The general sirt free-slope rater
+  model is a near-neighbour rather than a matched current-mfrmr estimand:
+  sirt places the product of item and rater slopes on the trait term and keeps
+  rater severity as a separate location term, whereas mfrmr assigns one slope
+  owner to the complete adjacent-category predictor. It will therefore remain
+  sensitivity evidence unless an exact submodel map is established;
 - conditional-likelihood results from immer as separate Rasch-family reference
   evidence where their estimands match, without treating CML or CCML as current
   mfrmr fitting methods;

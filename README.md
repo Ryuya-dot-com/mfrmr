@@ -35,6 +35,13 @@ The native Wright map is the required first fitted-scale figure in this
 workflow. A separate FACETS-style renderer is available when a familiar
 asterisk ruler and labelled category transitions are useful.
 
+The three basic fitted-object methods have deliberately different jobs:
+`print(fit)` is a compact triage view, `summary(fit)` is the canonical
+structured review surface, and `plot(fit, draw = FALSE)` returns reusable plot
+data. All three carry the same model/readiness basis; fitted-model plots also
+retain a `scale_contract` table so the latent-coordinate and discrimination
+scales are not inferred from axis labels alone.
+
 Package website: <https://ryuya-dot-com.github.io/mfrmr/>
 
 Source code: <https://github.com/Ryuya-dot-com/mfrmr>

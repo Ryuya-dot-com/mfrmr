@@ -4,6 +4,15 @@ This is the unreleased development line after CRAN publication of 0.2.2.
 CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
 0.2.3 and must not be attributed retroactively to 0.2.2.
 
+* Unified the basic fitted-object scale contract. `print(fit)` now exposes the
+  coordinate and discrimination bases (and population SD when applicable),
+  while every draw-free `plot(fit, ...)` payload carries the same structured
+  `scale_contract` used by the fit summary. Corrected the GPCM vignette's stale
+  fixed-standard-normal default and added a source-bounded sirt comparison
+  lane: item-only GPCM and equal-discrimination reductions are candidate
+  matches, whereas sirt's general item-by-rater slope kernel remains a
+  different-model sensitivity comparison.
+
 * Corrected bounded-GPCM MML scale identification. When no population formula
   is supplied, the new default `gpcm_mml_identification = "free_population"`
   activates an intercept-only `N(beta0, sigma2)` population model while

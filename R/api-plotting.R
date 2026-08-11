@@ -3759,10 +3759,28 @@ print.mfrm_fit <- function(x, ...) {
   if (is.list(x) && !is.null(x$summary) && nrow(x$summary) > 0) {
     ov <- round_numeric_df(as.data.frame(x$summary), digits = 3L)[1, , drop = FALSE]
     fit_summary <- tryCatch(summary(x), error = function(e) NULL)
+    scale_contract <- tryCatch(
+      mfrm_fit_scale_contract(x),
+      error = function(e) tibble::tibble()
+    )
     cat("mfrm_fit object\n")
     cat(sprintf("  Model: %s | Method: %s\n", ov$Model %||% NA_character_, ov$Method %||% NA_character_))
     cat(sprintf("  N: %s | Persons: %s | Facets: %s | Categories: %s\n",
                 ov$N %||% NA, ov$Persons %||% NA, ov$Facets %||% NA, ov$Categories %||% NA))
+    if (nrow(scale_contract) > 0L) {
+      population_sd <- as.numeric(scale_contract$PopulationSD[1])
+      population_text <- if (is.finite(population_sd)) {
+        paste0(" | Population SD: ", formatC(population_sd, digits = 3L, format = "fg"))
+      } else {
+        ""
+      }
+      cat(sprintf(
+        "  Scale: %s | Discrimination: %s%s\n",
+        scale_contract$CoordinateBasis[1],
+        scale_contract$SlopeBasis[1],
+        population_text
+      ))
+    }
     ic_lines <- mfrm_ic_console_lines(x$summary, digits = 3L)
     if (length(ic_lines) > 0L) {
       cat(paste0("  ", ic_lines, "\n"), sep = "")

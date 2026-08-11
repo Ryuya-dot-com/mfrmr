@@ -8412,6 +8412,67 @@ mfrm_summary_facet_recession_review <- function(object) {
     tibble::as_tibble()
 }
 
+mfrm_fit_scale_contract <- function(object) {
+  config <- object$config %||% list()
+  population <- object$population %||% list()
+  summary_row <- as.data.frame(object$summary %||% data.frame(), stringsAsFactors = FALSE)
+  summary_model <- if (nrow(summary_row) > 0L && "Model" %in% names(summary_row)) {
+    summary_row$Model[1]
+  } else {
+    NA_character_
+  }
+  summary_method <- if (nrow(summary_row) > 0L && "Method" %in% names(summary_row)) {
+    summary_row$Method[1]
+  } else {
+    NA_character_
+  }
+  model <- toupper(as.character(config$model %||% summary_model)[1])
+  method <- public_mfrm_method_label(
+    as.character(config$method %||% summary_method)[1]
+  )
+  population_active <- isTRUE(population$active)
+  population_sd <- if (population_active) {
+    sqrt(suppressWarnings(as.numeric(population$sigma2 %||% NA_real_)[1]))
+  } else if (identical(method, "MML")) {
+    1
+  } else {
+    NA_real_
+  }
+  if (!is.finite(population_sd) || population_sd <= 0) {
+    population_sd <- NA_real_
+  }
+
+  coordinate_basis <- if (identical(method, "MML") && population_active) {
+    "estimated_population_scale"
+  } else if (identical(method, "MML")) {
+    "fixed_standard_normal"
+  } else {
+    "joint_person_coordinate_scale"
+  }
+  slope_basis <- if (identical(model, "GPCM")) {
+    "geometric_mean_one_relative_discrimination"
+  } else {
+    "unit_discrimination"
+  }
+
+  tibble::tibble(
+    Model = model,
+    Method = method,
+    CoordinateBasis = coordinate_basis,
+    PopulationSD = population_sd,
+    SlopeBasis = slope_basis,
+    GpcmMmlIdentification = as.character(
+      config$gpcm_mml_identification %||% "not_applicable"
+    ),
+    FixedLatentSDSlopeField = if (identical(model, "GPCM") &&
+                                     identical(method, "MML")) {
+      "FixedLatentSDOptimizerEstimate"
+    } else {
+      NA_character_
+    }
+  )
+}
+
 mfrm_fit_summary_core <- function(object, digits = 3, top_n = 5) {
   if (is.null(object$summary) || nrow(object$summary) == 0) {
     stop("`object` does not contain fit summary information.")

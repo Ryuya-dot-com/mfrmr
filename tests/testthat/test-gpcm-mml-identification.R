@@ -77,6 +77,34 @@ test_that("default GPCM MML estimates the common population scale", {
     population_sd,
     tolerance = 1e-8
   )
+  fit_console <- capture.output(print(fit))
+  expect_true(any(grepl(
+    "Scale: estimated_population_scale",
+    fit_console,
+    fixed = TRUE
+  )))
+  expect_true(any(grepl(
+    "Discrimination: geometric_mean_one_relative_discrimination",
+    fit_console,
+    fixed = TRUE
+  )))
+  for (plot_type in c("wright", "pathway", "ccc")) {
+    plot_payload <- suppressWarnings(plot(fit, type = plot_type, draw = FALSE))
+    expect_s3_class(plot_payload, "mfrm_plot_data")
+    expect_identical(
+      plot_payload$data$scale_contract$GpcmMmlIdentification[1],
+      "free_population"
+    )
+    expect_equal(
+      plot_payload$data$scale_contract$PopulationSD[1],
+      population_sd,
+      tolerance = 1e-8
+    )
+    expect_identical(
+      plot_payload$data$scale_contract$SlopeBasis[1],
+      "geometric_mean_one_relative_discrimination"
+    )
+  }
   expect_identical(
     mfrmr:::resolve_dff_refit_controls(fit)$gpcm_mml_identification,
     "free_population"

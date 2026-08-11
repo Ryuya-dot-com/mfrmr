@@ -44,14 +44,17 @@ argument, a better-fitting bounded `GPCM` should be reported as sensitivity
 evidence rather than as an automatic replacement.
 
 The word *bounded* also marks an identification restriction. With default
-unconditional MML, ability is integrated on a fixed standard-normal reference
-scale, while the level-specific log slopes are additionally constrained to sum
-to zero (geometric mean 1). Thus the fitted slopes are relative
-discriminations with \(G-1\) free contrasts. A conventional fixed-ability-scale
-GPCM in which every slope could share an estimated value other than 1 is not
-contained in this branch. Under JML or active latent-regression MML, the same
-geometric-mean constraint also participates in resolving the ability/slope
-scale.
+MML, `gpcm_mml_identification = "free_population"` estimates an intercept-only
+person distribution \(N(\beta_0,\sigma^2)\), while the level-specific log
+slopes are constrained to sum to zero (geometric mean 1). The fitted slopes are
+therefore relative discriminations with \(G-1\) free contrasts, and
+\(\sigma\alpha_g\) gives the equivalent slope on a fixed-latent-standard-
+deviation scale. This retains the conventional common-discrimination degree
+of freedom. The explicit legacy mode
+`gpcm_mml_identification = "fixed_standard_normal"` instead fixes both
+\(\sigma=1\) and the slope geometric mean to one and is a narrower model.
+Under JML, the geometric-mean constraint resolves the scale of the jointly
+estimated person coordinates and slopes.
 
 ## Report wording templates
 
@@ -161,10 +164,19 @@ slopes, but TAM documents that slopes are not estimated by its many-facet
 fitting function. A TAM comparison must therefore use a provably equivalent
 non-faceted or re-expressed design and must match the latent variance,
 threshold convention, slope grouping, category map, and retained observations
-before computing differences. `immer` provides PCM-design JML/CML/CCML routes
-and a hierarchical rater model, not a direct free-GPCM many-facet match. Its
-role is consequently a unit-slope reduction or alternative-model sensitivity
-analysis rather than free-slope numerical validation.
+before computing differences. `sirt::rm.facets()` provides a useful second MML
+reference: it estimates item and/or rater slopes under product-one centering and
+an estimated normal trait spread. Its item-only GPCM and equal-discrimination
+many-facet reductions are candidate matched lanes after category, threshold,
+quadrature, and centering conventions are aligned. Its general free-slope rater
+kernel is not the current mfrmr kernel: sirt uses the product of item and rater
+slopes on the trait term while rater severity remains a separate location term,
+whereas mfrmr assigns one slope owner and multiplies the complete adjacent-
+category predictor. Such results are different-model sensitivity evidence, not
+automatic numerical validation. `immer` provides PCM-design JML/CML/CCML
+routes and a hierarchical rater model, not a direct free-GPCM many-facet match.
+Its role is consequently a unit-slope reduction or alternative-model
+sensitivity analysis rather than free-slope numerical validation.
 
 These distinctions also govern diagnostics. FACETS' discrimination, `mfrmr`
 residual PCA or bias screens, and hierarchical-rater variance components answer
