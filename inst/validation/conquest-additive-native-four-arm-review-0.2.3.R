@@ -134,11 +134,25 @@ mfrmr_review_conquest_additive_native_four_arms <- function(output_dir) {
     reference_manifest_file, check.names = FALSE, stringsAsFactors = FALSE
   )
   expected_run_ids <- c("rsm_q031", "rsm_q061", "pcm_q031", "pcm_q061")
+  plan_columns <- c("RunId", "Model", "Nodes", "ExpectedNpar")
   mfrmr_cq_native_four_arm_assert(
-    identical(as.character(manifest$RunId), expected_run_ids) &&
+    all(plan_columns %in% names(manifest)) &&
+      all(plan_columns %in% names(reference_manifest)) &&
+      identical(as.character(manifest$RunId), expected_run_ids) &&
       identical(as.character(reference_manifest$RunId), expected_run_ids) &&
+      identical(
+        manifest[, plan_columns, drop = FALSE],
+        reference_manifest[, plan_columns, drop = FALSE]
+      ) &&
+      identical(
+        as.character(manifest$WideSHA256),
+        as.character(reference_manifest$WideSHA256)
+      ) &&
       length(unique(reference_manifest$SourceTreeSHA256)) == 1L,
-    "The native and source-bound manifests do not cover the same sealed four arms."
+    paste(
+      "The native and source-bound manifests do not share the exact sealed",
+      "run/model/node/dimension/input identity."
+    )
   )
   plan <- manifest[, c("RunId", "Model", "Nodes", "ExpectedNpar")]
   summaries <- vector("list", nrow(plan))
@@ -340,6 +354,9 @@ mfrmr_review_conquest_additive_native_four_arms <- function(output_dir) {
     complete_console_transcripts = all(
       summary$ConsoleEndOfProgramObserved %in% TRUE
     ),
+    cross_manifest_plan_identical = TRUE,
+    cross_manifest_wide_sha256_identical = TRUE,
+    unit_weights_contract = TRUE,
     native_design_matrices_exact = TRUE,
     q31_q61_printed_final_coordinates_identical = TRUE,
     rsm_q31_repeat_core_byte_identical = repeat_core_byte_identical,

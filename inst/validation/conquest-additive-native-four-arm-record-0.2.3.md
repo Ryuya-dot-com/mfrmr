@@ -70,6 +70,10 @@ the value implicitly.
    distinguishes `Component = Facet` from `Component = Step`, its validator
    requires every estimate to be finite, and a regression test fixes the four
    criterion-specific free-step values.
+4. The four-arm reviewer verified native and reference artifact hashes but
+   joined the two manifests only by run ID. It now also requires exact equality
+   of model, quadrature nodes, free dimension, and wide-input SHA-256 before
+   any coordinate receives a matched identity status.
 
 These were validation/handoff defects. The independently reconstructed mfrmr
 probabilities and marginal likelihoods already passed; the native comparison
@@ -107,6 +111,12 @@ The machine-readable decision is
 - `ComparisonReady = FALSE`;
 - `ScientificEquivalenceInferred = FALSE`; and
 - `ConfirmationAuthorized = FALSE`.
+
+The external-comparison adapter now binds all 36 finite coordinate rows to the
+common eligibility ledger. Every row is rejected by
+`source_precision_mismatch`; zero rows enter an aggregate. This is evidence
+that the normalizer fails closed, not evidence that the printed differences
+pass.
 
 The next high-value step is not a large simulation. It is an independent
 numeric-resolution/tolerance adjudication followed by a fresh candidate-bound

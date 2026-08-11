@@ -123,11 +123,12 @@ caller-supplied inclusion-flag replacement, and source binding.
 Row 64 can move to `ok` only after each actual external normalizer constructs
 the expected registry before reading results, populates every identity axis
 from bound input/output metadata, and routes every bias, RMSE, coverage, rank,
-facet-separation, and convergence aggregate through this contract. Because
-FACETS is unavailable in the current environment, the first actual adapter
-binding is the available ConQuest core; it must retain the unresolved
-prospective tolerance boundary. TAM/immer follow with separate estimator and
-correction strata. The sirt lane begins with equal-discrimination and item-only
+facet-separation, and convergence aggregate through this contract. The first
+actual ConQuest additive binding now does this for 36 prespecified coordinate
+rows, but all are ineligible because source rounding remains unestablished.
+It closes plumbing only, not numerical acceptance. TAM/immer follow with
+separate estimator and correction strata. The sirt lane begins with
+equal-discrimination and item-only
 GPCM structural mappings, but its finite slope bounds and product-slope rater
 model must stay explicit. FACETS may enter only through a future portable bundle
 created in a licensed environment, and its historical 4.5.0 pilot or an

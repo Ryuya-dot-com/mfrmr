@@ -135,7 +135,13 @@ Priorities are:
   lane and strengthen native convergence evidence before high-replication
   coverage or confirmation;
 - matched MML comparison with ConQuest and TAM where likelihood,
-  identification, and integration conventions can be aligned;
+  identification, and integration conventions can be aligned. The first
+  actual ConQuest additive RSM/PCM binding now routes 36 prespecified
+  coordinates through the common eligibility ledger. All are finite but none
+  is eligible because the native CSV rounding rule remains unestablished;
+  zero rows enter an aggregate. This completes plumbing, not comparison
+  acceptance. Numeric-resolution adjudication and a prospective tolerance
+  precede any candidate-bound rerun;
 - a source- and version-bound `sirt::rm.facets()` MML comparison, beginning
   with the item-only GPCM and equal-discrimination many-facet reductions. The
   comparison must align category support, threshold coordinates, slope
@@ -739,10 +745,12 @@ termination state are part of that comparison. Screen-rounded values and
 same-named fit statistics are not acceptance evidence. A ConQuest
 `scoresfree` GPCM result is compared with bounded GPCM only through the exact
 probability-level item-only map now recorded in the repository; raw slope
-labels remain insufficient. The next work is deterministic public
-adapter/normalizer coverage and a candidate-bound replication, not a broad
-simulation. Multifacet generalized-item score ownership remains a separate,
-unproved overlap.
+labels remain insufficient. The deterministic ConQuest adapter/normalizer is
+now bound to the retained four-arm additive review and excludes every finite
+row under the unresolved source-precision contract. The next work is
+independent numeric-resolution adjudication followed by a prospective
+tolerance and candidate-bound replication, not a broad simulation. Multifacet
+generalized-item score ownership remains a separate, unproved overlap.
 
 G-theory remains a 0.2.3 contract/parser/algebra prototype. Its large
 numerical-rule simulation is deferred unless the claim-disposition review

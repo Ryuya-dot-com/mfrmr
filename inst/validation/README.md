@@ -984,8 +984,15 @@ identify whether the opt-in layer ran and retain its test log.
 - `external-comparison-eligibility-contract-record-0.2.3.md`: hash-bound
   structural-review record for 25 disposition fixtures across
   ConQuest, FACETS, TAM, immer, and sirt. Passing fixtures do not close
-  checklist row 64; actual normalizer bindings and the WP7 pilot remain
+  checklist row 64; program-specific bindings and the WP7 pilot remain
   outstanding.
+- `conquest-external-comparison-normalizer-0.2.3.R`: repository-only adapter
+  from the source-bound native additive four-arm review to the common
+  eligibility ledger. It creates the 36-row expected registry before reading
+  differences and retains missing, failed, unexpected, and rejected rows.
+- `conquest-external-comparison-normalizer-record-0.2.3.md`: actual retained-
+  output binding record. All 36 ConQuest rows are finite but rejected under
+  the unresolved source-precision contract, so zero rows enter an aggregate.
 - `release-evidence-checklist-0.2.3.csv`: machine-readable 0.2.3 gate
   inventory. It preserves the existing `ReleaseDecision` field used by the
   readiness helper and adds scenario, criterion-state, and evidence-status

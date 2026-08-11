@@ -4,6 +4,15 @@ This is the unreleased development line after CRAN publication of 0.2.2.
 CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
 0.2.3 and must not be attributed retroactively to 0.2.2.
 
+* Bound the retained ConQuest additive RSM/PCM four-arm review to the generic
+  external-comparison eligibility ledger. A pre-result registry fixes 36
+  coordinate rows; all 36 retained results are observed, successful, and
+  finite, but all are excluded because the native CSV rounding rule remains
+  unestablished. The upstream reviewer now also requires exact cross-manifest
+  equality of run, model, quadrature nodes, free dimension, and input SHA-256.
+  Missing, failed, unexpected, duplicate, model-conflicting, and unaudited-
+  precision controls fail closed. No tolerance or equivalence is promoted.
+
 * Extended the repository-only external-comparison admission contract so
   statistical penalties, finite parameter boxes, and source numerical
   precision cannot be hidden inside a generic estimator or correction label.

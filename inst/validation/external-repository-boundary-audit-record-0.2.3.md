@@ -24,7 +24,7 @@ ConQuest, FACETS, TAM, or immer numerical claim has passed.
 
 | Quantity | Result |
 | --- | ---: |
-| External artifact paths | 97 |
+| External artifact paths | 100 |
 | External software families | 4 |
 | Classified tracked data assets | 34 |
 | Unclassified tracked data assets | 0 |
@@ -43,7 +43,7 @@ The one allowed path fixture is the deliberately fictitious negative case in
 and is not evidence or a real local identity.
 
 The canonical path/family/role/file-hash manifest has SHA-256
-`5ce7b5307d4a4e4728cc1000e752511efd12fb36d6c91c6fe8e2aa2d33008c60`.
+`54e5d2ddfa585e35b73ee6a7e8ed26830696e9594920a050968e7887505907ae`.
 Paths use bytewise radix order so locale cannot change the identity. The
 manifest is reconstructed in memory so a newly tracked or changed external
 artifact cannot inherit an earlier hash.

@@ -290,7 +290,7 @@ equal estimator maturity or external equivalence.
 Wave C admission row 66 `external_privacy_and_license_boundary` is now
 structurally closed by
 `external-repository-boundary-audit-record-0.2.3.md`. The tracked-file audit
-recomputes hashes for 93 external-related artifacts across ConQuest, FACETS,
+recomputes hashes for 100 external-related artifacts across ConQuest, FACETS,
 TAM, and immer and found zero proprietary binaries, keys, identifier-bearing
 case assets, real local paths, or escaping symlinks. This does not inspect
 ignored result directories or establish numerical comparability.
@@ -304,10 +304,13 @@ parameter boxes, and retained source precision are independent admission axes;
 the free-slope sirt fixture therefore fails exact admission under its documented
 finite slope box while an equal-discrimination PCM fixture remains structurally
 admissible. Its evidence status is `review`, not `ok`: actual program
-normalizers have not yet populated the contract. The current environment can
-exercise ConQuest and the installed R comparators but cannot execute FACETS.
-Local Wave C work therefore starts with the ConQuest binding. Row 59 remains
-`review` and must be completed once in a
+normalizers have not yet populated every retained lane. The ConQuest additive
+RSM/PCM adapter now binds 36 prespecified native rows to the ledger; all 36 are
+finite but rejected by `source_precision_mismatch`, and zero enter an
+aggregate. Local Wave C therefore moves from ConQuest plumbing to independent
+numeric-resolution and prospective-tolerance adjudication before any
+candidate-bound rerun. The current environment cannot execute FACETS. Row 59
+remains `review` and must be completed once in a
 licensed external environment with executable, parser, generator, locale,
 command/control/input/output, run-date, and candidate identities in one
 portable bundle. Historical 4.5.0 output and synthetic placeholders cannot
